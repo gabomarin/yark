@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- **Create server** suggests the next game/query/RCON ports that avoid other YARK profiles (factory defaults `7777` / `27015` / `27020`, then +10 steps) with honest copy — no Settings range to configure (#55).
 - **Search Maps…** on Create/Edit Server Information: CurseForge Maps card grid, in-modal **View details** step (metadata header, screenshots carousel, description), Map Name confirm, and one-step link of `map`, `mapModId`, and enabled Project ID (#295).
 - Mods detail drawer: CurseForge **screenshot slider** (Mantine Carousel) with enlarge, plus clamped plain-text **description** on inspect; Worker forwards capped screenshot URLs and fetches description on get-by-id for all mods (#342).
 

@@ -5,12 +5,11 @@ import type {
   ServerProfile,
   ServerProfileInput,
 } from "@shared/types";
-import { offsetPort } from "@shared/types";
+import { suggestNextPortTriplet } from "@shared/port-suggest";
 import {
   normalizeWindowsPath,
   suggestCloneInstallDir,
 } from "@shared/server-install-path";
-import { findPortConflicts } from "./validation";
 import type { BackupService } from "../backups/backup-service";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
 import type { ServerRepository } from "../../infra/db/server-repository";
@@ -92,25 +91,27 @@ export class InstanceClone {
         copyNumber++;
       }
 
-      let offset = 10;
-      let input: ServerProfileInput;
-      for (;;) {
-        input = this.buildCloneInput(source, {
-          name,
-          sessionName: `${source.sessionName} (copy)`,
-          gamePort: offsetPort(source.gamePort, offset),
-          queryPort: offsetPort(source.queryPort, offset),
-          rconPort: offsetPort(source.rconPort, offset),
-          installDir,
-        });
-        if (findPortConflicts(existing, { ...input, id: undefined }).length === 0) {
-          break;
-        }
-        offset += 10;
-        if (offset > 1000) {
-          throw new Error("No free ports found for the clone");
-        }
+      const ports = suggestNextPortTriplet({
+        profiles: existing,
+        bases: {
+          gamePort: source.gamePort,
+          queryPort: source.queryPort,
+          rconPort: source.rconPort,
+        },
+        candidateName: name,
+      });
+      if (ports === null) {
+        throw new Error("No free ports found for the clone");
       }
+
+      const input = this.buildCloneInput(source, {
+        name,
+        sessionName: `${source.sessionName} (copy)`,
+        gamePort: ports.gamePort,
+        queryPort: ports.queryPort,
+        rconPort: ports.rconPort,
+        installDir,
+      });
 
       this.deps.assertValidInput(input);
       await this.deps.assertCreateInstallTarget(input.installDir);

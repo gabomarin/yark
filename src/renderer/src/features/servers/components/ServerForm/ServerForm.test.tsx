@@ -224,10 +224,10 @@ describe("ServerForm", () => {
     ).toHaveAttribute("aria-readonly", "true");
     expect(screen.getByRole("button", { name: /^save changes$/i })).toBeInTheDocument();
     expect(screen.getByText(/the island · 7777\/27015\/27020/i)).toBeInTheDocument();
-    expect(screen.getByText(/^reachability$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/game port/i)).toBeInTheDocument();
   });
 
-  it("previews port conflicts against the fleet (#178)", () => {
+  it("suggests non-conflicting ports against the fleet (#55)", () => {
     render(
       <AppProviders>
         <ServerForm
@@ -247,8 +247,43 @@ describe("ServerForm", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText(/port conflicts/i)).toBeInTheDocument();
-    expect(screen.getByText(/port 7777 \(game\)/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/game port/i)).toHaveValue("7787");
+    expect(screen.getByLabelText(/query port/i)).toHaveValue("27025");
+    expect(screen.getByLabelText(/rcon port/i)).toHaveValue("27030");
+    expect(
+      screen.getByText(/suggested to avoid other yark servers/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/port conflicts/i)).not.toBeInTheDocument();
+  });
+
+  it("keeps the create port suggestion hint after a manual port edit (#55)", async () => {
+    const user = userEvent.setup();
+    render(
+      <AppProviders>
+        <ServerForm
+          initial={null}
+          servers={[
+            profile({
+              id: "srv-a",
+              name: "The Island",
+              gamePort: 7777,
+              queryPort: 27015,
+              rconPort: 27020,
+            }),
+          ]}
+          onCancel={vi.fn()}
+          onSaved={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    const gamePort = screen.getByLabelText(/game port/i);
+    await user.clear(gamePort);
+    await user.type(gamePort, "9000");
+    expect(gamePort).toHaveValue("9000");
+    expect(
+      screen.getByText(/suggested to avoid other yark servers/i),
+    ).toBeInTheDocument();
   });
 
   it("does not show Mods or Extra arguments on create/edit (#93)", () => {
@@ -304,7 +339,7 @@ describe("ServerForm", () => {
     expect(screen.getByText(/^server information$/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /configuration wizard/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^save changes$/i })).toBeInTheDocument();
-    expect(screen.getByText(/^reachability$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/game port/i)).toBeInTheDocument();
     expect(screen.getByText(/the island · 7777\/27015\/27020/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/auto-start with yark/i)).toBeInTheDocument();
   });

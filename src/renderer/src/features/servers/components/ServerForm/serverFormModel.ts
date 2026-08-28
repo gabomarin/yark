@@ -1,6 +1,12 @@
 import {
   resolveServerInstallDir,
 } from "@shared/server-install-path";
+import {
+  DEFAULT_GAME_PORT,
+  DEFAULT_QUERY_PORT,
+  DEFAULT_RCON_PORT,
+  suggestNextPortTriplet,
+} from "@shared/port-suggest";
 import { KNOWN_MAPS, type ModMetadata, type ServerProfile, type ServerProfileInput } from "@shared/types";
 
 export interface ServerFormState {
@@ -24,13 +30,52 @@ export interface ServerFormState {
   modMetadataCache: Record<string, ModMetadata>;
 }
 
+/** Create-time port suggestion metadata for honest UI copy (#55). */
+export type CreatePortSuggestion = {
+  offset: number;
+  exhausted: boolean;
+};
+
+export function resolveCreatePortFields(
+  fleetProfiles: ReadonlyArray<
+    Pick<ServerProfile, "id" | "name" | "gamePort" | "queryPort" | "rconPort">
+  > = [],
+): {
+  gamePort: string;
+  queryPort: string;
+  rconPort: string;
+  suggestion: CreatePortSuggestion;
+} {
+  const suggested = suggestNextPortTriplet({ profiles: fleetProfiles });
+  if (suggested === null) {
+    return {
+      gamePort: String(DEFAULT_GAME_PORT),
+      queryPort: String(DEFAULT_QUERY_PORT),
+      rconPort: String(DEFAULT_RCON_PORT),
+      suggestion: { offset: 0, exhausted: true },
+    };
+  }
+  return {
+    gamePort: String(suggested.gamePort),
+    queryPort: String(suggested.queryPort),
+    rconPort: String(suggested.rconPort),
+    suggestion: { offset: suggested.offset, exhausted: false },
+  };
+}
+
 export function toServerFormState(
   profile: ServerProfile | null,
   defaultBaseFolder?: string | null,
   preferredCluster?: { clusterId: string; clusterDir: string } | null,
+  createPorts?: {
+    gamePort: string;
+    queryPort: string;
+    rconPort: string;
+  },
 ): ServerFormState {
   if (profile === null) {
     const base = defaultBaseFolder?.trim() ?? "";
+    const ports = createPorts ?? resolveCreatePortFields([]);
     return {
       name: "",
       map: KNOWN_MAPS[0],
@@ -39,9 +84,9 @@ export function toServerFormState(
       installDir: base,
       sessionName: "",
       maxPlayers: "70",
-      gamePort: "7777",
-      queryPort: "27015",
-      rconPort: "27020",
+      gamePort: ports.gamePort,
+      queryPort: ports.queryPort,
+      rconPort: ports.rconPort,
       serverPassword: "",
       adminPassword: "",
       clusterId: preferredCluster?.clusterId ?? "",

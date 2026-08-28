@@ -83,6 +83,7 @@ export function ServerForm(props: Props): ReactElement {
       showInactiveWarning={props.initial?.enabled === false && state.autoStart}
       moveDisabled={isCreate ? true : form.moveDisabled}
       moveDisabledReason={form.moveDisabledReason}
+      createPortSuggestion={isCreate ? form.createPortSuggestion : null}
       onNameChange={setField("name")}
       onSessionNameChange={setField("sessionName")}
       onMapChange={(next) =>

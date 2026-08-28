@@ -1,5 +1,11 @@
 import type { PortConflict, ServerProfile } from "./types";
 
+/** Fields required to detect profile-vs-profile port collisions. */
+export type PortConflictProfile = Pick<
+  ServerProfile,
+  "id" | "name" | "gamePort" | "queryPort" | "rconPort"
+>;
+
 type Entry = {
   id: string;
   name: string;
@@ -11,7 +17,7 @@ type Entry = {
  * `candidate` allows evaluating a draft without persisting it.
  */
 export function findPortConflicts(
-  profiles: ServerProfile[],
+  profiles: ReadonlyArray<PortConflictProfile>,
   candidate?: {
     id?: string;
     gamePort: number;
