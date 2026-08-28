@@ -58,7 +58,7 @@ function renderDrawer(detail: ModMetadata | null) {
 }
 
 describe("ServerModDetailDrawer #342", () => {
-  it("shows screenshot carousel and description when present", async () => {
+  it("shows description when present", async () => {
     const user = userEvent.setup();
     renderDrawer(baseDetail);
 
@@ -67,8 +67,8 @@ describe("ServerModDetailDrawer #342", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/long author notes/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /show more/i }),
-    ).toBeInTheDocument();
+      screen.queryByRole("button", { name: /show more/i }),
+    ).not.toBeInTheDocument();
 
     await user.click(
       screen.getByRole("button", { name: /screenshot 1, enlarge/i }),

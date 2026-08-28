@@ -8,6 +8,7 @@
  * Cache API for safe GETs, privacy-conscious structured logs.
  */
 
+import { decodeHtmlEntities } from "../../../src/shared/decode-html-entities";
 import { resolveWorkerConfig, type Env, type RateLimiter } from "./config";
 
 export type { Env };
@@ -601,7 +602,7 @@ async function fetchModDescription(
     if (typeof data !== "string") {
       return null;
     }
-    const trimmed = data.trim();
+    const trimmed = decodeHtmlEntities(data.trim());
     if (trimmed.length === 0) {
       return null;
     }
