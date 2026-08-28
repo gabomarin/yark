@@ -1,6 +1,8 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { isYarkE2eShortcutsActive } from "../shared/os-notification-events";
+
 /** Boot splash is skipped in E2E and when an operator opts out. */
 export const SPLASH_WIDTH = 520;
 export const SPLASH_HEIGHT = 560;
@@ -27,8 +29,7 @@ export function shouldShowSplash(
   if (env["YARK_SKIP_SPLASH"] === "1") {
     return false;
   }
-  const e2eUserData = env["YARK_E2E_USER_DATA"]?.trim();
-  if (e2eUserData !== undefined && e2eUserData !== "") {
+  if (isYarkE2eShortcutsActive(env)) {
     return false;
   }
   return true;

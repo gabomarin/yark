@@ -4,7 +4,7 @@ import {
   formatCrashOsToastBody,
   formatSteamCmdOsToastBody,
   formatYarkUpdateOsToastBody,
-  isYarkE2eUserDataEnv,
+  isYarkE2eShortcutsActive,
   shouldShowFleetOsNotification,
   shouldSkipNativeNotification,
   steamCmdOsToastSilent,
@@ -38,7 +38,7 @@ export function showNativeOsNotification(options: {
   if (
     shouldSkipNativeNotification({
       isSupported: Notification.isSupported(),
-      isE2e: isYarkE2eUserDataEnv(),
+      isE2e: isYarkE2eShortcutsActive(),
     })
   ) {
     return false;

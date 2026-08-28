@@ -80,15 +80,4 @@ describe("shouldAutoShowSetupWizard", () => {
       }),
     ).toBe(false);
   });
-
-  it("never auto-shows for E2E user-data profiles", () => {
-    expect(
-      shouldAutoShowSetupWizard({
-        record: null,
-        serverCount: 0,
-        e2eUserData: "C:\\tmp\\yark-e2e",
-        readOk: true,
-      }),
-    ).toBe(false);
-  });
 });

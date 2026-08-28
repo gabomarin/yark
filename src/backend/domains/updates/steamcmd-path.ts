@@ -4,11 +4,6 @@ import type { UpdateCriticalJob } from "./update-critical-jobs";
 export const STEAMCMD_MISSING_MESSAGE =
   "SteamCMD is not installed on this PC. Open Settings and install SteamCMD, then try again.";
 
-/** E2E / visual launches must not pick up a host SteamCMD install. */
-export function isSteamCmdSearchIsolated(e2eUserData: string | undefined): boolean {
-  return (e2eUserData ?? "").trim().length > 0;
-}
-
 /**
  * Ordered SteamCMD.exe candidates for disk discovery.
  * Isolated searches skip host Program Files / drive-root defaults.

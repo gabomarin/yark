@@ -4,21 +4,11 @@ import {
   STEAMCMD_MISSING_MESSAGE,
   buildSteamCmdCandidatePaths,
   buildSteamCmdInstallPowerShell,
-  isSteamCmdSearchIsolated,
   isSteamCmdVerifyExitAcceptable,
   normalizeSteamCmdExecutablePath,
   resolveSteamCmdExecutableCached,
   updateJobNeedsSteamCmdExecutable,
 } from "@backend/domains/updates/steamcmd-path";
-
-describe("isSteamCmdSearchIsolated", () => {
-  it("is true only for nonempty e2e user-data", () => {
-    expect(isSteamCmdSearchIsolated(undefined)).toBe(false);
-    expect(isSteamCmdSearchIsolated("")).toBe(false);
-    expect(isSteamCmdSearchIsolated("  ")).toBe(false);
-    expect(isSteamCmdSearchIsolated("C:\\tmp\\e2e")).toBe(true);
-  });
-});
 
 describe("buildSteamCmdCandidatePaths", () => {
   it("prefers configured, env, then managed dir", () => {

@@ -8,12 +8,12 @@ import {
   STEAMCMD_MISSING_MESSAGE,
   buildSteamCmdCandidatePaths,
   buildSteamCmdInstallPowerShell,
-  isSteamCmdSearchIsolated,
   isSteamCmdVerifyExitAcceptable,
   normalizeSteamCmdExecutablePath,
   resolveSteamCmdExecutableCached,
   updateJobNeedsSteamCmdExecutable,
 } from "./steamcmd-path";
+import { isYarkE2eShortcutsActive } from "@shared/os-notification-events";
 import {
   STEAMCMD_ENGLISH_ARGS,
   steamCmdSpawnEnv,
@@ -82,50 +82,56 @@ async installSteamCmd(): Promise<string> {
   const exePath = join(this.host.steamcmdDir, "steamcmd.exe");
   const command = buildSteamCmdInstallPowerShell(this.host.steamcmdDir);
 
-  await new Promise<void>((resolve, reject) => {
-    const child = spawn(
-      "powershell.exe",
-      ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", command],
-      {
-        windowsHide: true,
-        shell: false,
-      },
-    );
-    this.host.beginSteamCmdProcess(child, "install-steamcmd", null);
+  let installChild: ChildProcess | null = null;
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const child = spawn(
+        "powershell.exe",
+        ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", command],
+        {
+          windowsHide: true,
+          shell: false,
+        },
+      );
+      installChild = child;
+      this.host.beginSteamCmdProcess(child, "install-steamcmd", null);
 
-    let stderr = "";
-    child.stderr.on("data", (chunk) => {
-      const text = String(chunk);
-      stderr += text;
-      this.host.captureSteamCmdOutput(text, "install/stderr");
-    });
-    child.stdout.on("data", (chunk) => {
-      this.host.captureSteamCmdOutput(String(chunk), "install/stdout");
+      let stderr = "";
+      child.stderr.on("data", (chunk) => {
+        const text = String(chunk);
+        stderr += text;
+        this.host.captureSteamCmdOutput(text, "install/stderr");
+      });
+      child.stdout.on("data", (chunk) => {
+        this.host.captureSteamCmdOutput(String(chunk), "install/stdout");
+      });
+
+      child.once("error", (error) => {
+        reject(new Error(`Could not run PowerShell: ${error.message}`));
+      });
+
+      child.once("exit", (code) => {
+        if ((code ?? 1) !== 0) {
+          reject(new Error(`SteamCMD installation failed (exit ${code ?? 1}): ${stderr}`));
+          return;
+        }
+        resolve();
+      });
     });
 
-    child.once("error", (error) => {
-      this.host.endSteamCmdProcess(child);
-      reject(new Error(`Could not run PowerShell: ${error.message}`));
-    });
+    if (!existsSync(exePath)) {
+      throw new Error(`SteamCMD was not installed at ${exePath}`);
+    }
 
-    child.once("exit", (code) => {
-      this.host.endSteamCmdProcess(child);
-      if ((code ?? 1) !== 0) {
-        reject(new Error(`SteamCMD installation failed (exit ${code ?? 1}): ${stderr}`));
-        return;
-      }
-      resolve();
-    });
-  });
-
-  if (!existsSync(exePath)) {
-    throw new Error(`SteamCMD was not installed at ${exePath}`);
+    await this.verifySteamCmdExecutable(exePath);
+    this.persistSteamCmdPath(exePath);
+    this.host.appendSteamCmdConsole(`SteamCMD installed and validated at: ${exePath}`);
+    return exePath;
+  } finally {
+    if (installChild !== null) {
+      this.host.endSteamCmdProcess(installChild);
+    }
   }
-
-  await this.verifySteamCmdExecutable(exePath);
-  this.persistSteamCmdPath(exePath);
-  this.host.appendSteamCmdConsole(`SteamCMD installed and validated at: ${exePath}`);
-  return exePath;
 }
 
 async setSteamCmdExecutablePath(exePath: string): Promise<string> {
@@ -198,7 +204,7 @@ steamCmdCandidatePaths(): string[] {
     configured: this.host.settings.get("steamcmdPath"),
     envPath: process.env["STEAMCMD_PATH"],
     steamcmdDir: this.host.steamcmdDir,
-    isolated: isSteamCmdSearchIsolated(process.env["YARK_E2E_USER_DATA"]),
+    isolated: isYarkE2eShortcutsActive(),
     programFilesX86: process.env["ProgramFiles(x86)"],
     programFiles: process.env["ProgramFiles"],
     localAppData: process.env["LOCALAPPDATA"],
@@ -216,7 +222,7 @@ async findSteamCmdExecutable(): Promise<string | null> {
     }
   }
 
-  if (isSteamCmdSearchIsolated(process.env["YARK_E2E_USER_DATA"])) {
+  if (isYarkE2eShortcutsActive()) {
     return null;
   }
 

@@ -6,7 +6,9 @@ import {
   formatCrashOsToastBody,
   formatSteamCmdOsToastBody,
   formatYarkUpdateOsToastBody,
+  isYarkE2eFullUiEnv,
   isYarkE2eUserDataEnv,
+  isYarkE2eShortcutsActive,
   shouldNotifySteamCmdJobEvent,
   shouldShowFleetOsNotification,
   shouldSkipNativeNotification,
@@ -25,11 +27,34 @@ const prefsOn = {
 };
 
 describe("os-notification policy (#331)", () => {
-  it("skips native toasts in E2E and when unsupported", () => {
+  it("skips native toasts when E2E shortcuts are active", () => {
     expect(isYarkE2eUserDataEnv({ YARK_E2E_USER_DATA: "C:\\tmp\\e2e" })).toBe(
       true,
     );
     expect(isYarkE2eUserDataEnv({ YARK_E2E_USER_DATA: "  " })).toBe(false);
+    expect(
+      isYarkE2eFullUiEnv({
+        YARK_E2E_FULL_UI: "true",
+      }),
+    ).toBe(true);
+    expect(
+      isYarkE2eFullUiEnv({
+        YARK_E2E_FULL_UI: "false",
+      }),
+    ).toBe(false);
+    expect(isYarkE2eFullUiEnv({ YARK_E2E_FULL_UI: "yes" })).toBe(true);
+    expect(isYarkE2eFullUiEnv({ YARK_E2E_FULL_UI: "" })).toBe(false);
+    expect(isYarkE2eFullUiEnv({ YARK_E2E_FULL_UI: "2" })).toBe(false);
+    expect(isYarkE2eFullUiEnv({ YARK_E2E_FULL_UI: "truee" })).toBe(false);
+    expect(
+      isYarkE2eShortcutsActive({ YARK_E2E_USER_DATA: "C:\\tmp\\e2e" }),
+    ).toBe(true);
+    expect(
+      isYarkE2eShortcutsActive({
+        YARK_E2E_USER_DATA: "C:\\tmp\\e2e",
+        YARK_E2E_FULL_UI: "true",
+      }),
+    ).toBe(false);
     expect(shouldSkipNativeNotification({ isSupported: true, isE2e: true })).toBe(
       true,
     );

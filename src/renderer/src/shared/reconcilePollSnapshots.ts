@@ -183,6 +183,17 @@ export function reconcileSteamCmdStatus(
   next: SteamCmdStatus,
 ): SteamCmdStatus {
   if (previous === null) return next;
+  // Ignore late install-validation progress built before persist (older checkedAt).
+  // A newer poll that clears detection (settings wipe / missing path) still applies.
+  if (
+    previous.detected
+    && !next.detected
+    && previous.executablePath != null
+    && next.executablePath == null
+    && next.checkedAt <= previous.checkedAt
+  ) {
+    return previous;
+  }
   const previousJobs = previous.criticalJobs ?? [];
   const nextJobs = next.criticalJobs ?? [];
   if (
