@@ -3,7 +3,6 @@ import { Accordion, Badge, Group, Stack, Text } from "@mantine/core";
 import type { ServerOperationalLogs } from "@shared/types";
 import { formatLogDateTime } from "@shared/format-log-datetime";
 import type { ReactElement } from "react";
-import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EventDetailsBody } from "../../EventDetailsBody";
 import classes from "../../LogsPage.module.css";
 import {
@@ -36,7 +35,7 @@ export function LogsEventsTab(props: LogsEventsTabProps): ReactElement {
   } = props;
 
   return (
-    <AppSurfaceCard fill className={classes.fillPanel}>
+    <div className={classes.fillPanel}>
       <Stack gap="sm" className={classes.panelStack}>
         <LogsTabIntro
           embedded={embedded}
@@ -131,6 +130,6 @@ export function LogsEventsTab(props: LogsEventsTabProps): ReactElement {
           </div>
         )}
       </Stack>
-    </AppSurfaceCard>
+    </div>
   );
 }

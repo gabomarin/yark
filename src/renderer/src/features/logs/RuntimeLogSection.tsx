@@ -1,7 +1,6 @@
 import { FileText } from "@phosphor-icons/react";
 import { Group, Select, Stack, Text } from "@mantine/core";
 import type { ReactNode, ReactElement } from "react";
-import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { ConsoleSurface } from "@ui/ConsoleSurface/ConsoleSurface";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import classes from "./LogsPage.module.css";
@@ -27,7 +26,7 @@ export function RuntimeLogSection(props: Props): ReactElement {
   );
 
   return (
-    <AppSurfaceCard fill className={classes.fillPanel}>
+    <div className={classes.fillPanel}>
       <Stack gap="sm" className={classes.panelStack}>
         <Group justify="space-between" align="center" gap="sm" wrap="wrap">
           <Select
@@ -75,6 +74,6 @@ export function RuntimeLogSection(props: Props): ReactElement {
           />
         )}
       </Stack>
-    </AppSurfaceCard>
+    </div>
   );
 }

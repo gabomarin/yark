@@ -187,7 +187,7 @@ describe("DownloadsPage", () => {
       screen.getByText(/SteamCMD is ready\. Your installs, updates, and verify jobs will appear here\./i),
     ).toBeInTheDocument();
     expect(document.querySelector("[data-downloads-page]")).not.toBeNull();
-    expect(document.querySelector("[data-steamcmd-console]")).not.toBeNull();
+    expect(document.querySelector("[data-steamcmd-console]")).toBeNull();
     expect(screen.queryByText("progress: 38")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Install SteamCMD" })).not.toBeInTheDocument();
   });

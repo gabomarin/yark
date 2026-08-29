@@ -104,7 +104,7 @@ export function SettingsPage(props: Props): ReactElement {
           />
         </AppSurfaceCard>
 
-        <AppSurfaceCard tone="flat" fill radius="md" className={classes.panel}>
+        <div className={classes.panel}>
           <div ref={panelScrollRef} className={classes.panelScroll} data-settings-panel-scroll>
             {category === "general" && (
               <SettingsGeneralSection
@@ -174,7 +174,7 @@ export function SettingsPage(props: Props): ReactElement {
               </Stack>
             )}
           </div>
-        </AppSurfaceCard>
+        </div>
       </div>
     </PageScaffold>
   );

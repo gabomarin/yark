@@ -2,16 +2,16 @@
   display: flex;
   align-items: center;
   gap: var(--app-space-sm);
-  min-height: 76px;
-  padding: var(--app-space-sm) var(--app-space-md);
+  min-height: 0;
+  padding: var(--app-space-sm) 0;
   text-align: left;
-  border: 1px dashed var(--app-color-border);
-  border-radius: var(--app-radius-md);
-  background: color-mix(in srgb, var(--app-color-panel-cool) 74%, transparent);
+  border: none;
+  background: transparent;
 }
 
 .root[data-emphasis="page"] {
-  min-height: 104px;
+  min-height: 0;
+  padding-block: var(--app-space-md);
 }
 
 .root[data-layout="stacked"] {
@@ -22,30 +22,17 @@
   min-height: 220px;
   padding: var(--app-space-xl);
   text-align: center;
-  border-style: solid;
-  border-color: transparent;
-  background: transparent;
 }
 
 .icon {
   display: grid;
-  flex: 0 0 40px;
-  width: 40px;
-  height: 40px;
+  flex: 0 0 auto;
   place-items: center;
-  color: var(--app-color-accent);
-  border: 1px solid color-mix(in srgb, var(--app-color-accent) 30%, transparent);
-  border-radius: var(--app-radius-md);
-  background: color-mix(in srgb, var(--app-color-accent) 9%, transparent);
+  color: var(--app-color-muted);
 }
 
 .root[data-layout="stacked"] .icon {
-  flex-basis: 48px;
-  width: 48px;
-  height: 48px;
   margin-bottom: var(--app-space-xxs);
-  border-color: var(--app-color-border-subtle);
-  background: var(--app-color-surface-control);
 }
 
 .copy {

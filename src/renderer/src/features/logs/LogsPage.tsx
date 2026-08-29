@@ -16,7 +16,6 @@ import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import type { AppEvent, ServerProfile } from "@shared/types";
 import { formatLogDateTime } from "@shared/format-log-datetime";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { SearchField } from "@ui/SearchField/SearchField";
 import { EventDetailsBody } from "./EventDetailsBody";
@@ -143,7 +142,7 @@ export function LogsPage(props: Props): ReactElement {
       <Stack gap="lg" className={classes.logsContent} data-logs-page>
         {error !== null && <Alert color="red">{error}</Alert>}
 
-        <AppSurfaceCard fill className={classes.fillPanel}>
+        <div className={classes.fillPanel}>
           <Stack gap="sm" className={classes.panelStack}>
             <Group justify="space-between" align="flex-end" wrap="wrap" gap="sm">
               <Title order={3}>Activity across servers</Title>
@@ -289,7 +288,7 @@ export function LogsPage(props: Props): ReactElement {
               </div>
             )}
           </Stack>
-        </AppSurfaceCard>
+        </div>
       </Stack>
     </PageScaffold>
   );

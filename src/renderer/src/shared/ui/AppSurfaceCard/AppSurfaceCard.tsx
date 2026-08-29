@@ -18,10 +18,9 @@ interface Props extends InheritedCardProps {
 }
 
 /**
- * Homogeneous page/panel container on top of Mantine Card.
- * Content shells default to `tone="flat"` + `radius="md"` (#346). Prefer this
- * over local `.panel` fill/border copies. Use `cool` / `coolEmphasis` only for
- * rare accent cards (not page shells); `chrome` for shell rails.
+ * Card for a discrete entity or chrome rail — not the whole page pane (#469).
+ * Default `tone="flat"` + `radius="md"`. Use `cool` / `coolEmphasis` only for
+ * rare accent cards; `chrome` for shell rails (Settings nav).
  */
 export function AppSurfaceCard({
   children,

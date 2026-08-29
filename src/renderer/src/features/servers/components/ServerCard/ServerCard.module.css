@@ -2,15 +2,9 @@
   position: relative;
   overflow: hidden;
   border-radius: 0;
-  border-color: color-mix(in srgb, var(--app-color-border) 72%, var(--ark-blue-7));
-  background-color: var(--app-color-panel-cool);
-  background-image:
-    linear-gradient(
-      108deg,
-      var(--app-color-panel-cool-emphasis) 0%,
-      var(--app-color-panel-cool) 52%,
-      color-mix(in srgb, var(--app-color-panel-cool) 72%, var(--app-color-panel)) 100%
-    );
+  border-color: var(--app-color-border);
+  background-color: var(--app-color-panel);
+  background-image: none;
   max-width: 100%;
   background-clip: padding-box;
   /* Stack / status-dot from card width (sidebar shrinks content vs viewport) (#302). */
@@ -38,12 +32,8 @@
 }
 
 .card[data-tone="stopped"] {
-  background-image: linear-gradient(
-    108deg,
-    color-mix(in srgb, var(--app-color-panel-cool-emphasis) 22%, transparent) 0%,
-    transparent 58%
-  );
-  background-color: color-mix(in srgb, var(--app-color-panel-cool) 82%, var(--app-color-panel));
+  background-image: none;
+  background-color: var(--app-color-panel);
 }
 
 .card[data-tone="stopped"]::before {
@@ -77,22 +67,13 @@
 
 .card:hover {
   border-color: color-mix(in srgb, var(--app-color-border) 55%, var(--app-color-accent));
-  background-image:
-    linear-gradient(
-      108deg,
-      color-mix(in srgb, var(--app-color-panel-cool-emphasis) 88%, var(--ark-blue-4)) 0%,
-      color-mix(in srgb, var(--app-color-panel-cool) 92%, var(--ark-blue-3)) 56%,
-      color-mix(in srgb, var(--app-color-panel-cool) 76%, var(--app-color-panel)) 100%
-    );
+  background-image: none;
+  background-color: var(--app-color-surface-control);
 }
 
 .card[data-tone="stopped"]:hover {
-  background-image: linear-gradient(
-    108deg,
-    color-mix(in srgb, var(--app-color-panel-cool-emphasis) 34%, transparent) 0%,
-    transparent 58%
-  );
-  background-color: color-mix(in srgb, var(--app-color-panel-cool) 88%, var(--app-color-panel));
+  background-image: none;
+  background-color: var(--app-color-surface-control);
 }
 
 .card[data-tone="running"]:hover {

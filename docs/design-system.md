@@ -20,7 +20,9 @@ Source of truth for numeric tokens: `src/renderer/src/shared/theme/tokens.ts` �
 3. **Spacing** uses `--app-space-*` / Mantine `gap="sm"` — not one-off `10px` / `gap={6}`.
 4. **Extract shared chrome on the second real use** (same rule as #44).
 5. Prefer Mantine props (`radius`, `padding`, `gap`, `variant`) + CSS variables over raw hex/px.
-6. Content panels share **`AppSurfaceCard tone="flat"`**; `cool` / `coolEmphasis` are accent-only, not page shells.
+6. Pages sit on **`--app-color-bg`**. Use **`AppSurfaceCard`** for a discrete entity
+   (one cluster, one backup row, a chrome rail), not the whole Logs / Settings / form
+   pane. `cool` / `coolEmphasis` are accent-only.
 7. Custom CSS modules polish layout after Mantine + shared atoms are exhausted —
    they must not reimplement Mantine widgets.
 8. **Mantine CSS is layered.** Entry imports `@mantine/*/styles.layer.css` (and
@@ -110,7 +112,8 @@ Use this checklist when reviewing a screen or introducing a pattern. Each catego
 | Chrome | `--app-color-surface-chrome` (`#121213`) | `color-mix` of gray + blue for sidebars |
 | Raised / panels | `--app-color-panel` (`#1f1f1f`) | Translucent panel washes |
 | Controls | `--app-color-surface-control` (`#303030`) | Mixing control fill with `--ark-blue-*` |
-| Page / tool panels | `AppSurfaceCard tone="flat" radius="md"` | Local `.panel { background… border… }` or cool wash shells |
+| Page / tool panes | Sit on `--app-color-bg`; sections = heading + hairline | Wrapping Logs, Settings, or a form in one Card |
+| Discrete entities | `AppSurfaceCard tone="flat"` (cluster, backup row, chrome rail) | Cool wash as a page shell |
 | Accent heroes | `tone="coolEmphasis"` (rare) | Using cool wash as the default page shell |
 | Nested widgets | `tone="flat"` (or nested inside a flat shell) | Mixing Card + ad-hoc panel bg |
 | Shell rails | `tone="chrome"` or chrome parent + flat children | Cool gradients in sidebars |
@@ -160,7 +163,7 @@ gap: var(--app-space-sm);            // preferred in CSS modules
 
 Theme `defaultRadius` is **`sm`**. Avoid raw `border-radius` when a token fits. Tek icon tiles keep asymmetric radius by design (`AccentIconTile shape="tek"`).
 
-**Square vs rounded:** Overview server **list rows** (`ServerCard`) and the Clusters **How transfers work** Accordion are square (`radius={0}`) so stacked chrome reads as one list. Content panels use `AppSurfaceCard` default **`md`** (8px Comfortable); do not invent outer shells beside the atom (#346).
+**Square vs rounded:** Overview server **list rows** (`ServerCard`) and the Clusters **How transfers work** Accordion are square (`radius={0}`) so stacked chrome reads as one list. Discrete entity cards use `AppSurfaceCard` default **`md`** (8px Comfortable); do not wrap the whole page pane in a Card (#469).
 
 ### 4. Color / status
 
@@ -246,6 +249,7 @@ Native (non–ScrollArea) surfaces still use the thin global scrollbar without e
 ### 7. Empty states
 
 - Always `EmptyState` (`layout="inline"` | `"stacked"`).
+- No dashed tile or icon squircle — icon is unboxed; inline is title + one primary CTA.
 - Domain content (incomplete clusters, etc.) nests **inside** EmptyState — don’t rebuild the shell.
 
 ### 8. Typography (still light)
@@ -276,7 +280,7 @@ Native (non–ScrollArea) surfaces still use the thin global scrollbar without e
 | --- | --- |
 | Overview / marketing-ish empties | Comfortable (`EmptyState` inline/page) |
 | Workspace tools / backup rows | Compact (`xs`/`sm`, smaller ActionIcons) |
-| Page tool panels (Logs/Clusters) | Medium (`sm` stacks inside `AppSurfaceCard`) |
+| Page tool panels (Logs/Clusters) | Medium (`sm` stacks on the page canvas) |
 
 Don’t mix comfortable Overview padding into dense INI/backup toolbars without intent.
 
@@ -291,7 +295,7 @@ Don’t mix comfortable Overview padding into dense INI/backup toolbars without 
 | `flat` (default) | `tone="flat"` / `--app-surface-flat` | **Content panels** — sidebar pages and workspace tabs (#346) |
 | `chrome` | `tone="chrome"` | Shell-adjacent asides (Settings nav, workspace rails) |
 | `coolEmphasis` | `tone="coolEmphasis"` | Rare hero / primary-operation accent cards |
-| `cool` | `--app-surface-cool` | Rare accent tiles only (not page shells); Overview **ServerCard** is separate |
+| `cool` | `--app-surface-cool` | Rare accent tiles only (not page shells); Overview **ServerCard** is a square row, not this tone |
 
 ```tsx
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
@@ -356,7 +360,7 @@ in `src/main/index.ts`.
 ## When adding a new page
 
 1. Use `PageScaffold` (unless Overview / workspace shell).
-2. Wrap major sections in `AppSurfaceCard` (`fill` in split panes).
+2. Sit the page on `--app-color-bg`. Use `AppSurfaceCard` for a discrete entity or chrome rail, not the whole pane.
 3. Use `gap="sm"|…` / `--app-space-*` — no new magic px.
 4. Reuse `EmptyState` / `SearchField` / `SelectableListRow` / `ReadonlyPath` /
    `PathField` before inventing chrome.
@@ -383,7 +387,7 @@ line (#234).
 
 ## Still feature-local (by design)
 
-- `ServerCard` product chrome (square list rows, straight status rail; stopped keeps a faint fill + accent rail so it does not scan as Inactive)
+- `ServerCard` product chrome (square list rows, solid `--app-color-panel` fill, 3px status rail; no cool gradient)
 - Downloads queue / footer teaser elevation
 - Settings SteamCMD path row (`ReadonlyPath` + Choose… + Install CTA; not `PathField`)
 - Server workspace 3-column shell / INI editor tables
@@ -417,7 +421,6 @@ line (#234).
 | Type scale tokens | Meta/title sizes still ad-hoc | Third conflicting title size |
 | `PageSectionHeader` | Title + filter/actions repeats | Third identical header |
 | `DangerConfirmModal` pattern | Restore/delete/cleanup modals | After second modal copy-paste |
-| Form section Card defaults | ServerForm create/edit uses `AppSurfaceCard` | Revisit only if a new form invents local Card chrome |
 | React Compiler | **Postpone** default enable (#404). Opt-in: `YARK_REACT_COMPILER=1` / `npm run build:compiler`. Many skips on try/finally + eslint-disable; see [react-compiler-spike.md](react-compiler-spike.md). Current memo/`handlersRef` still cover Overview fan-out | Explicit compile-time memo budget / regression |
 
 ## Related

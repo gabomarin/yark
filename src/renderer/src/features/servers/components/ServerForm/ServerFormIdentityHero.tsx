@@ -36,7 +36,7 @@ export function ServerFormIdentityHero(props: Props): ReactElement {
         mapModId={props.mapModId}
         modThumbnailUrl={props.modThumbnailUrl}
         size={props.compact === true ? "md" : "lg"}
-        shape="tek"
+        shape="rounded"
         decorative
       />
       <Stack gap={2} className={classes.identityHeroCopy}>

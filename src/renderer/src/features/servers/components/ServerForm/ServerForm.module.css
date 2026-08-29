@@ -41,6 +41,15 @@
   background: color-mix(in srgb, var(--app-color-panel) 88%, transparent);
 }
 
+.formSection {
+  min-width: 0;
+}
+
+.formSection[data-span2] {
+  padding-top: var(--app-space-sm);
+  border-top: 1px solid var(--app-color-border);
+}
+
 .identityHero {
   display: flex;
   gap: var(--app-space-md);

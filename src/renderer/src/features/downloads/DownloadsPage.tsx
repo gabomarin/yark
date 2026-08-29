@@ -216,24 +216,30 @@ export function DownloadsPage(props: Props): ReactElement {
       fillViewport
     >
       <div className={classes.downloadsLayout} data-downloads-page>
-        <Splitter
-          orientation="vertical"
-          h="100%"
-          sizes={splitSizes}
-          onSizeChange={(sizes) =>
-            setSplitSizes([Math.round(Number(sizes[0])), Math.round(Number(sizes[1]))])
-          }
-        >
-          <Splitter.Pane defaultSize={DEFAULT_SPLIT_SIZES[0]} min={30}>
-            <div className={classes.upperPane}>
-              {steamcmdMissingBanner}
-              {queuePane}
-            </div>
-          </Splitter.Pane>
-          <Splitter.Pane defaultSize={DEFAULT_SPLIT_SIZES[1]} min={20}>
-            {consolePane}
-          </Splitter.Pane>
-        </Splitter>
+        {rows.length === 0 ? (
+          <div className={classes.upperPane}>
+            {queuePane}
+          </div>
+        ) : (
+          <Splitter
+            orientation="vertical"
+            h="100%"
+            sizes={splitSizes}
+            onSizeChange={(sizes) =>
+              setSplitSizes([Math.round(Number(sizes[0])), Math.round(Number(sizes[1]))])
+            }
+          >
+            <Splitter.Pane defaultSize={DEFAULT_SPLIT_SIZES[0]} min={30}>
+              <div className={classes.upperPane}>
+                {steamcmdMissingBanner}
+                {queuePane}
+              </div>
+            </Splitter.Pane>
+            <Splitter.Pane defaultSize={DEFAULT_SPLIT_SIZES[1]} min={20}>
+              {consolePane}
+            </Splitter.Pane>
+          </Splitter>
+        )}
       </div>
     </PageScaffold>
   );

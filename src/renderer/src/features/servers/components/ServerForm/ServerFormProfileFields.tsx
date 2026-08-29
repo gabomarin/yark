@@ -72,7 +72,6 @@ export function ServerFormProfileFields(
   props: ServerFormProfileFieldsProps,
 ): ReactElement {
   const embedded = props.embedded === true;
-  const cardPadding = embedded ? "sm" : "md";
   const gridGap = embedded ? "md" : "lg";
   const mapMod =
     props.mapModId === null
@@ -81,7 +80,7 @@ export function ServerFormProfileFields(
 
   return (
     <SimpleGrid cols={{ base: 1, md: 2 }} spacing={gridGap}>
-      <ServerFormSection tone="coolEmphasis" padding={cardPadding}>
+      <ServerFormSection flat={embedded}>
         <ServerFormIdentityHero
           name={props.name}
           mapToken={props.map}
@@ -144,11 +143,7 @@ export function ServerFormProfileFields(
         />
       </ServerFormSection>
 
-      <ServerFormSection
-        tone="cool"
-        fill={!embedded}
-        padding={cardPadding}
-      >
+      <ServerFormSection flat={embedded} fill={!embedded}>
         <ServerFormReachabilityFields
           inputSize={props.inputSize}
           servers={props.servers}
@@ -170,11 +165,7 @@ export function ServerFormProfileFields(
         />
       </ServerFormSection>
 
-      <ServerFormSection
-        tone="flat"
-        span2
-        padding={cardPadding}
-      >
+      <ServerFormSection flat={embedded} span2>
         <ServerFormClusterFields
           isCreate={props.isCreate}
           knownClusters={props.knownClusters}
@@ -191,12 +182,7 @@ export function ServerFormProfileFields(
       </ServerFormSection>
 
       {props.showStartup === true && (
-        <ServerFormSection
-          title="Startup"
-          tone="flat"
-          span2
-          padding={cardPadding}
-        >
+        <ServerFormSection title="Startup" flat={embedded} span2>
           <ServerFormStartupFields
             autoStart={props.autoStart === true}
             showInactiveWarning={props.showInactiveWarning === true}
