@@ -20,7 +20,7 @@ const ADMIN_LIST_FETCH_TIMEOUT_MS = 15_000;
 
 export type AdminListMode = "local" | "remote" | "misconfigured";
 
-export interface AdminListEntry {
+interface AdminListEntry {
   id: string;
   /** YARK-only display name from sidecar / learned Online hints (ASA does not store names). */
   name: string | null;
@@ -94,7 +94,7 @@ export function unwrapIniUrl(value: string | null | undefined): string {
  * True for YARK loopback admin-list HTTP (treated as Local mode in the UI).
  * ASA fetches these the same way as a remote gist.
  */
-export function isLoopbackAdminListUrl(value: string | null | undefined): boolean {
+function isLoopbackAdminListUrl(value: string | null | undefined): boolean {
   const url = unwrapIniUrl(value);
   if (!/^https?:\/\//i.test(url)) return false;
   try {
@@ -129,7 +129,7 @@ export function classifyAdminListUrl(
 }
 
 /** Stable 16-hex hash for an install dir (mirror filename stem). */
-export function adminListInstallHash(installDir: string): string {
+function adminListInstallHash(installDir: string): string {
   return createHash("sha256")
     .update(normalize(resolve(installDir)).toLowerCase())
     .digest("hex")
@@ -158,7 +158,7 @@ export function adminListAsaPointerPath(
 }
 
 /** UserData (or configured) mirror path used for loopback HTTP + space-free file://. */
-export function adminListMirrorFilePath(
+function adminListMirrorFilePath(
   installDir: string,
   asaMirrorRoot?: string | null,
 ): string | null {
@@ -201,12 +201,12 @@ export function formatLocalAdminListFileUrlForIni(
 }
 
 /** UTF-8 body, no BOM, LF line endings only (ASA-safe plain text). */
-export function formatAdminListIdsBody(ids: string[]): string {
+function formatAdminListIdsBody(ids: string[]): string {
   return ids.length === 0 ? "" : `${ids.join("\n")}\n`;
 }
 
 /** Write whitelist body as raw UTF-8 bytes (never injects a UTF-8 BOM). */
-export async function writeAdminListBodyFile(
+async function writeAdminListBodyFile(
   filePath: string,
   ids: string[],
 ): Promise<void> {
@@ -219,7 +219,7 @@ export async function writeAdminListBodyFile(
  * Parse wiki body to unique ids and rewrite the file when whitespace / blank
  * lines / comments would leave junk for ASA (or for the space-free mirror).
  */
-export async function sanitizeAdminListWikiFile(
+async function sanitizeAdminListWikiFile(
   installDir: string,
 ): Promise<string[]> {
   await ensureAdminListFile(installDir);
@@ -308,7 +308,7 @@ export function parseAdminListIds(raw: string): string[] {
 }
 
 /** Parse YARK names sidecar JSON (`{ [eosId]: name }`). */
-export function parseAdminListNamesJson(raw: string): Map<string, string> {
+function parseAdminListNamesJson(raw: string): Map<string, string> {
   const byKey = new Map<string, string>();
   try {
     const parsed: unknown = JSON.parse(raw);
@@ -327,7 +327,7 @@ export function parseAdminListNamesJson(raw: string): Map<string, string> {
   return byKey;
 }
 
-export function formatAdminListNamesJson(names: Map<string, string>): string {
+function formatAdminListNamesJson(names: Map<string, string>): string {
   const obj: Record<string, string> = {};
   const sorted = [...names.entries()].sort(([a], [b]) => a.localeCompare(b));
   for (const [key, name] of sorted) {
@@ -462,7 +462,7 @@ function localFileStats(installDir: string): {
 }
 
 /** Write one-id-per-line wiki file (creates parent dirs). */
-export async function writeAdminListIdsFile(
+async function writeAdminListIdsFile(
   installDir: string,
   ids: string[],
   asaMirrorRoot?: string | null,
@@ -473,32 +473,6 @@ export async function writeAdminListIdsFile(
   await clearLegacyAdminListFile(installDir);
   await syncAdminListAsaPointer(installDir, asaMirrorRoot);
   return path;
-}
-
-/** Append a single EOS id to the local wiki file (local mode helper). */
-export async function appendAdminListId(
-  installDir: string,
-  rawId: string,
-  asaMirrorRoot?: string | null,
-  loopbackBaseUrl?: string | null,
-): Promise<AdminListState> {
-  const id = rawId.trim().split(/[\s,]+/)[0]?.trim() ?? "";
-  if (id.length === 0) {
-    throw new Error("EOS id is required");
-  }
-  const { mode } = await readGusIntervalAndUrl(installDir);
-  if (mode !== "local") {
-    throw new Error(
-      "Switch to Local file and save that mode before adding ids to the local whitelist file.",
-    );
-  }
-  const existing = await readAdminListIdsFromFile(installDir);
-  const key = id.toLowerCase();
-  if (!existing.some((entry) => entry.toLowerCase() === key)) {
-    existing.push(id);
-    await writeAdminListIdsFile(installDir, existing, asaMirrorRoot);
-  }
-  return getAdminListState(installDir, asaMirrorRoot, loopbackBaseUrl);
 }
 
 /** Remove every AdminListURL assignment under [ServerSettings]. */

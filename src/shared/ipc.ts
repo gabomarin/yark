@@ -248,7 +248,7 @@ export interface OnlinePlayerInfo {
 }
 
 /** ASA administrator whitelist mode (#153). */
-export type AdminListModeDto = "local" | "remote" | "misconfigured";
+type AdminListModeDto = "local" | "remote" | "misconfigured";
 
 export interface AdminListStateDto {
   mode: AdminListModeDto;
@@ -261,17 +261,17 @@ export interface AdminListStateDto {
   fileByteLength: number;
 }
 
-export interface AdminListConfigDto {
+interface AdminListConfigDto {
   adminListUrl: string;
   updateAllowedCheatersInterval: number;
 }
 
-export interface AdminListValidateDto {
+interface AdminListValidateDto {
   count: number;
   ids: string[];
 }
 
-export interface AdminListLearnNamesDto {
+interface AdminListLearnNamesDto {
   updated: number;
 }
 
