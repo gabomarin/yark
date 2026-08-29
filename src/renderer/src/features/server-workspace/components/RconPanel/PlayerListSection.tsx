@@ -47,6 +47,10 @@ interface Props {
 }
 
 export function PlayerListSection(props: Props): ReactElement {
+  const {
+    playersPanelFocus,
+    onPlayersPanelFocusConsumed,
+  } = props;
   const [panelTab, setPanelTab] = useState<"survivors" | "admins">("survivors");
   const [actionKey, setActionKey] = useState<string | null>(null);
   const [panelRefreshing, setPanelRefreshing] = useState(false);
@@ -63,11 +67,12 @@ export function PlayerListSection(props: Props): ReactElement {
   }, [props.playerList.players]);
 
   useEffect(() => {
-    const focus = props.playersPanelFocus;
-    if (focus !== "survivors" && focus !== "admins") return;
-    setPanelTab(focus);
-    props.onPlayersPanelFocusConsumed?.();
-  }, [props.playersPanelFocus, props.onPlayersPanelFocusConsumed]);
+    if (playersPanelFocus !== "survivors" && playersPanelFocus !== "admins") {
+      return;
+    }
+    setPanelTab(playersPanelFocus);
+    onPlayersPanelFocusConsumed?.();
+  }, [playersPanelFocus, onPlayersPanelFocusConsumed]);
 
   const onBannedEntriesLoaded = useCallback((entries: OnlinePlayerInfo[]) => {
     setNameById((previous) => mergeNameHints(previous, entries));
