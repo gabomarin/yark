@@ -33,9 +33,9 @@ export const screenshots: Screenshot[] = [
   },
   {
     src: withBase("/screenshots/workspace-server.png"),
-    alt: "ASA dedicated server configuration in YARK with identity, Max players, Move installation, networking, cluster, and Auto-start",
+    alt: "ASA dedicated server configuration in YARK with visual Map picker, identity, Max players, Move installation, networking, cluster, and Auto-start",
     caption:
-      "Server configuration — identity, Move installation, ports, access, cluster, and Auto-start. Mods live on the Mods tab.",
+      "Server configuration — visual Map picker (Official / Map mods / Search Maps…), identity, ports, access, cluster, and Auto-start.",
   },
   {
     src: withBase("/screenshots/workspace-launch.png"),
@@ -45,9 +45,9 @@ export const screenshots: Screenshot[] = [
   },
   {
     src: withBase("/screenshots/workspace-mods.png"),
-    alt: "YARK Mods tab with Discover CurseForge browse, load-order table, enable toggles, and metadata",
+    alt: "YARK Mods tab with Discover CurseForge browse, load-order table, enable toggles, and detail screenshots",
     caption:
-      "Mods — Discover browse with categories and pagination, plus a dense load-order table with enable toggles.",
+      "Mods — Discover browse with categories and pagination, dense load-order table, and detail screenshots/description on inspect.",
   },
   {
     src: withBase("/screenshots/workspace-ini.png"),
@@ -57,9 +57,9 @@ export const screenshots: Screenshot[] = [
   },
   {
     src: withBase("/screenshots/workspace-backups.png"),
-    alt: "Per-server Backups tab in YARK with destination, schedule, Import, and Backup actions for an ASA world",
+    alt: "Per-server Backups tab in YARK with shared destination, Backup now, schedule, Import, and history for an ASA world",
     caption:
-      "Server Backups — schedule world saves, browse join/leave player archives, and restore world / players / INI per profile.",
+      "Server Backups — shared destination, Backup now in the history toolbar, world schedule, and restore for world / players / INI.",
   },
   {
     src: withBase("/screenshots/configuration-wizard.png"),

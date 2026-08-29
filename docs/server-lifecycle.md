@@ -459,8 +459,10 @@ Constants: `PORT_MIN = 1024`, `PORT_MAX = 65535`.
 
 Inter-profile: `findPortConflicts` flags the same numeric port used by
 different profile ids (any kind). Create/update check all other profiles;
-start checks **active** others only. Clone bumps ports by +10 (wraps within
-1024–65535; retry up to offset 1000).
+start checks **active** others only. **Create** and **Clone** (and auto-clone)
+suggest the next free game/query/RCON triplet via `suggestNextPortTriplet`
+(factory defaults `7777` / `27015` / `27020`, then +10 steps that skip ports
+already used by other YARK profiles).
 
 Host probe (start only): bind-probes UDP game/query and TCP RCON. Busy includes
 best-effort Windows owner PID/name (async PowerShell). Inconclusive never claims

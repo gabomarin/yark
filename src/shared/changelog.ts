@@ -24,6 +24,38 @@ const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.17.0",
+    date: "2026-08-29",
+    sections: [
+      {
+        title: "Added",
+        items: [
+          "RCON Admins: configure ASA admin whitelist via remote http(s) AdminListURL (Validate, interval, Current ids).",
+          "Create and Clone suggest the next free game/query/RCON ports across your YARK fleet.",
+          "Search Maps… on Server Information: CurseForge Maps grid, details with screenshots, and one-step map + mod link.",
+          "Mods detail drawer: CurseForge screenshot carousel and clamped plain-text description on inspect.",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "Server Information Map field opens a visual popover (Official thumbs, Map mods, Search Maps… / Custom…).",
+          "Official-token remasters keep mapModId and launch with -MapModID= when the pack is enabled.",
+          "Workspace Backups: shared Destination, Backup now in the history toolbar, and clearer embedded chrome.",
+          "Logs Backup history renamed (distinct from the Backups tab); shorter intros and operator toasts.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "Remaster World save folder persists when mapModId is set; clearing AdminListURL no longer reseeds Current ids from the names sidecar.",
+          "Clone port suggestions skip occupied fleet ports; RCON tab scrolls on narrow widths; SteamCMD Install refreshes the path field.",
+          "Search Maps… gates missing Maps category and avoids a flash while categories load; Mods description entities and overflow Show more.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.16.0",
     date: "2026-08-26",
     sections: [

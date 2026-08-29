@@ -10,6 +10,9 @@ export type RoadmapItem = {
  * Prefer operator-visible product work from open issues (not CI/packaging hygiene).
  * Not a ship promise — keep wording directional. Milestones on GitHub stay authoritative.
  *
+ * Shipped in v0.17.0 (removed from this list): RCON remote AdminListURL (#153),
+ * create/clone next-free ports (#55), visual Map picker (#460), Search Maps… (#295),
+ * Mods drawer screenshots/description (#342), workspace Backups/Logs polish (#231/#225).
  * Shipped in v0.16.0 (not previously listed here): Overview fleet metric strip
  * (#314), survivor counts (#301), dedicated-process RAM/CPU (#302), Overview
  * search persistence (#438), third-party notices / About link (#446).
@@ -34,15 +37,12 @@ export type RoadmapItem = {
  * profile-DB snapshots (#252), per-map world backups (#262), Electron fuses (#217).
  * Still omitted here (tracked in-repo): E2E/real-host validation (#12), Authenticode (#142),
  * incomplete-import opt-in (#283) is shipped with Import — not listed as future work.
+ * Local AdminListURL / hosted list files remain deferred (Hosted Resources / PHOST-001).
  */
 export const roadmapItems: RoadmapItem[] = [
   {
     tag: "planned",
-    text: "Admin whitelist controls on the RCON Players panel",
-  },
-  {
-    tag: "planned",
-    text: "Smarter default ports and suggestions when creating a new server",
+    text: "Local / hosted AdminListURL for ASA admin whitelist (beyond remote http(s))",
   },
   {
     tag: "planned",

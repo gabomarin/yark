@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-08-29
+
 ### Added
 
 - RCON **Admins** panel: configure ASA admin whitelist via **remote http(s) AdminListURL** only (Validate, interval, Current ids); Local file / loopback hosting deferred to Hosted Resources (PHOST-001). Display names still learned into a YARK sidecar when an EOS id is seen Online (#153).

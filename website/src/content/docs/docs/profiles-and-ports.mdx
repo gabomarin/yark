@@ -13,28 +13,34 @@ Each profile is one dedicated-server install YARK can manage: path, map, session
 | Field | Rule |
 | --- | --- |
 | Name | 1–64 characters (Windows folder-safe) |
-| Map + session | Required. **New server** is official maps only; edit / import / clone may use an enabled **Map mod** or **Custom…** |
+| Map + session | Required. **New server** is official maps + **Search Maps…**; edit / import / clone may also use an enabled **Map mod** or **Custom…** |
 | Max players | 0–255 on the Server form. Values 1–255 launch `-WinLiveMaxPlayers`. Empty or **0** omits the flag (ASA then defaults to 70). ASA ignores INI `MaxPlayers`. |
 | Install dir | Absolute Windows path (`C:\…` or UNC) |
-| Ports | 1024–65535; game, query, and RCON **distinct inside the profile** |
+| Ports | 1024–65535; game, query, and RCON **distinct inside the profile**. Create/Clone suggest the next free fleet triplet from defaults `7777` / `27015` / `27020` |
 | Admin password | Length ≥ 4 |
 | Mods | Unique Project IDs (map packs must be **enabled** when using a custom map) |
 | Cluster | If `clusterId` is set, `clusterDir` is required |
 
 ## Map field
 
-Server Information → **Map** groups options as:
+Server Information → **Map** is an input-like control that opens a visual popover:
 
 | Group | Use when |
 | --- | --- |
-| **Official** | Built-in ASA maps (e.g. The Island) |
-| **Map mods** | Enabled CurseForge **Maps** packs whose launch token YARK could detect |
-| **Other → Custom…** | You type the author launch token yourself (e.g. `Svartalfheim_WP`) |
+| **Official** | Built-in ASA maps (thumbnails; e.g. The Island) |
+| **Map mods** | Enabled CurseForge **Maps** packs whose launch token YARK could detect (edit / import / clone) |
+| **Search Maps…** | CurseForge Maps card grid → details (screenshots + description) → confirm Map Name; sets `map`, links `mapModId`, and enables the Project ID |
+| **Custom…** | You type the author launch token yourself (e.g. `Svartalfheim_WP`) — edit / import / clone escape hatch |
 
-**New server** only lists **Official**. After create (or on import / clone), choosing a **Map
-mod** sets the launch token and links the pack’s Project ID on the profile. Choosing an
-**official** map clears that link. **Custom…** is for tokens YARK could not list — you still
-need the matching map pack **enabled** on [Mods](/docs/mods/) for a correct boot.
+**New server** lists **Official** plus **Search Maps…** (no free-text Custom… on create). Choosing a
+**Map mod** or finishing **Search Maps…** sets the launch token and links the pack’s Project ID.
+Choosing a bare **official** map clears that link. **Official-token remasters** (packs that reuse a
+`KNOWN_MAPS` token) keep `mapModId` and launch with `-MapModID=` before `-mods=` when the pack is
+enabled. **Custom…** is for tokens YARK could not list — you still need the matching map pack
+**enabled** on [Mods](/docs/mods/) for a correct boot.
+
+Optional **World save folder** (when the on-disk `SavedArks` folder differs from the launch token)
+persists for custom maps and remasters that carry `mapModId`.
 
 Official maps use bundled artwork on cards, the workspace server list / Switch server
 panel, and the workspace header. Custom maps with a linked pack show that mod’s CurseForge
@@ -46,12 +52,12 @@ never copies map identity (including that link).
 <figure class="doc-shot">
   <img
     src={withBase("/screenshots/workspace-server.png")}
-    alt="Server configuration form with identity, networking ports, access passwords, and cluster fields"
+    alt="Server configuration form with visual Map picker, identity, networking ports, access passwords, and cluster fields"
     width="1440"
     height="900"
     loading="lazy"
   />
-  <figcaption>Server Workspace — identity, ports, access, and cluster fields for one profile.</figcaption>
+  <figcaption>Server Workspace — Map popover, identity, ports, access, and cluster fields for one profile.</figcaption>
 </figure>
 
 ## Port conflicts
@@ -61,14 +67,16 @@ YARK flags the **same numeric port** used by different profiles (any of game / q
 - **Create / update profile** — checked against all other profiles (live alerts on the create form)
 - **Start** — checked against **other active** servers, then a **host bind probe** (UDP game/query, TCP RCON)
 
-If the host probe finds a port **busy**, start is blocked (edit ports or **Start this session** on a suggested free set). If the probe is **inconclusive**, you can also **Start anyway** — that override never applies when a port is confirmed busy. Session ports affect INI and launch for that run only; the saved profile stays unchanged.
+**Create** and **Clone** suggest the next free game / query / RCON triplet across your YARK fleet
+(factory defaults `7777` / `27015` / `27020`, then +10 steps that skip ports already used by other
+profiles). There is no Settings range to configure.
 
-Clone bumps ports by +10 (wraps within 1024–65535; retries with higher offsets if needed).
+If the host probe finds a port **busy**, start is blocked (edit ports or **Start this session** on a suggested free set). If the probe is **inconclusive**, you can also **Start anyway** — that override never applies when a port is confirmed busy. Session ports affect INI and launch for that run only; the saved profile stays unchanged.
 
 ## Enable, disable, and clone
 
 - **Enable / Disable** — Inactive profiles stay out of Start / Restart / auto-start. Enabling does **not** require installation health Ready; Start still does.
-- **Clone** — duplicates profile fields with bumped ports and copies **Game.ini** / **GameUserSettings.ini** from the source (new ports and session name overwrite identity keys). **Copy entire server folder** (off by default) also copies binaries, Saved, and world data when the source is stopped and has files on disk; it stays off for empty or unreadable installs. A failed folder copy removes the incomplete clone.
+- **Clone** — duplicates profile fields with suggested free ports (same hunt as create) and copies **Game.ini** / **GameUserSettings.ini** from the source (new ports and session name overwrite identity keys). **Copy entire server folder** (off by default) also copies binaries, Saved, and world data when the source is stopped and has files on disk; it stays off for empty or unreadable installs. A failed folder copy removes the incomplete clone.
 
 ## Cluster on create
 
