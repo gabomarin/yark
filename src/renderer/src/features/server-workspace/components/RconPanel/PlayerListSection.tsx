@@ -182,7 +182,6 @@ export function PlayerListSection(props: Props): ReactElement {
               setPanelTab(value);
             }
           }}
-          keepMounted
           className={classes.playersTabs}
         >
           <Tabs.List grow>

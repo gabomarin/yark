@@ -141,6 +141,12 @@ Do **not** leave `AdminListURL` blank/`N/A` and expect the Saved file alone to
 grant admin – ASA commonly ignores that. Public gist (or similar) raw http(s)
 URLs are the supported product path until Hosted Resources ships.
 
+**Trust boundary (Validate / Current ids):** the renderer may ask main to
+`fetch` an operator-supplied http(s) URL (`admin-list:validate-url` and
+`admin-list:get` for remote mode). That is intentional for a local desktop
+operator. If a future web or remote-admin surface reused this IPC, block
+loopback / link-local / private ranges (SSRF) before shipping that path.
+
 ## IPC and push events
 
 | Channel | API | Role |

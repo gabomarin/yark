@@ -18,6 +18,9 @@ const MIN_UPDATE_ALLOWED_CHEATERS_INTERVAL = 3;
 
 const ADMIN_LIST_FETCH_TIMEOUT_MS = 15_000;
 
+/** Cap when scrubbing duplicate AdminListURL keys from GUS. */
+const MAX_ADMINLISTURL_OCCURRENCES = 32;
+
 export type AdminListMode = "local" | "remote" | "misconfigured";
 
 interface AdminListEntry {
@@ -478,14 +481,17 @@ async function writeAdminListIdsFile(
 /** Remove every AdminListURL assignment under [ServerSettings]. */
 function clearAllAdminListUrlKeys(text: string): string {
   let next = text;
-  for (let i = 0; i < 32; i += 1) {
+  for (let i = 0; i < MAX_ADMINLISTURL_OCCURRENCES; i += 1) {
     if (readIniServerSetting(next, "AdminListURL") === null) break;
     next = removeIniTextValue(next, "ServerSettings", "AdminListURL", 0);
   }
   return next;
 }
 
-/** Fetch remote admin list text; throws on non-OK HTTP or network failure. */
+/**
+ * Fetch remote admin list text; throws on non-OK HTTP or network failure.
+ * Operator-supplied URL from a trusted local renderer — see docs/rcon.md.
+ */
 async function fetchAdminListUrlText(url: string): Promise<string> {
   const unwrapped = unwrapIniUrl(url);
   if (!/^https?:\/\//i.test(unwrapped)) {
@@ -553,10 +559,8 @@ export function windowsPathFromAdminListFileUrl(fileUrl: string): string {
   if (/^\/[A-Za-z]:/.test(body)) {
     body = body.slice(1);
   }
-  // INI stores C:\\foo → body may still contain \\ pairs
-  while (body.includes("\\\\")) {
-    body = body.replace(/\\\\/g, "\\");
-  }
+  // INI stores doubled backslashes (C:\\foo); one global pass collapses pairs.
+  body = body.replace(/\\\\/g, "\\");
   return normalize(body);
 }
 

@@ -25,9 +25,9 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Mods detail drawer: decode CurseForge HTML entities in descriptions (`&lt;&lt;` → `<<`) and show **Show more/less** only when the clamped text actually overflows (#342).
 - Map-mod launch token detection when CurseForge stripped descriptions glue `Map Name: Token_WP` to `Mod ID` without whitespace (e.g. Bjarnheim) (#342).
 
-### Changed
+### Security
 
-- RCON **Admins** whitelist: remote http(s) **AdminListURL** form (Validate + interval); GUS visual row is read-only with an icon jump to RCON → Admins; Discard restores the draft; read-only while the dedicated is starting or running (#153).
+- Document AdminListURL Validate/get as operator-initiated main-process http(s) fetch (desktop trust boundary; SSRF note if IPC ever leaves local session) (#153).
 - Local/dev can set **`YARK_E2E_FULL_UI=true`** with an isolated `YARK_E2E_USER_DATA` profile to keep normal operator UI (splash, first-run setup assistant, What's new) while still avoiding real AppData.
 - Server Information **Map** field keeps an input-like closed control and opens a visual popover (Official thumbs, Map mods rows, Search Maps… / Custom…) instead of a plain text Select; the popover matches the field width, stays below it, and highlights the current pick with list-selected chrome and a check (#460).
 - Operator-facing **Map Name** hints no longer assume CurseForge always lists the name; copy points to the map community, wiki, or author notes when it does not (#295).

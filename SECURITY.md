@@ -62,6 +62,7 @@ These are documented product boundaries, not “free pass” bugs by themselves:
 - **Unsigned installers** and SmartScreen warnings until Authenticode lands ([#142](https://github.com/gabomarin/yark/issues/142)) — always verify the GitHub Release SHA-256
 - Vulnerabilities **only** in ARK / ASA, SteamCMD, CurseForge, or other third-party binaries YARK launches or downloads
 - Issues that require the operator to deliberately point `installDir` / backup paths at untrusted trees and then run Install / wipe / restore (still report if the app ignores its own wipe-safety or nested-path guards)
+- **Operator-initiated http(s) fetches** for RCON AdminListURL Validate / remote list load (`admin-list:validate-url`, `admin-list:get`) — the local operator is the trust boundary today; SSRF hardening would be required if that IPC were ever exposed beyond the desktop session ([docs/rcon.md](docs/rcon.md))
 - Social engineering, physical access, or compromised GitHub/npm accounts outside this project’s control
 
 ## Safe harbor

@@ -465,6 +465,7 @@ export function registerIpcHandlers(
     IPC.validateAdminListUrl,
     ipcArgSchemas[IPC.validateAdminListUrl],
     async ([serverId, url]) => {
+      // Ensure the profile exists; fetch does not need installDir.
       instances.installDirFor(serverId);
       return validateAdminListUrl(url);
     },

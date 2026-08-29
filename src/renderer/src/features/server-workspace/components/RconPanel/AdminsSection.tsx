@@ -42,6 +42,12 @@ export function AdminsSection(props: Props): ReactElement {
   const saveTooltip = readOnly
     ? "Stop the server to edit"
     : admins.saveTooltip;
+  const displayUrl = readOnly
+    ? (admins.state?.adminListUrl ?? "")
+    : admins.urlDraft;
+  const displayInterval = readOnly
+    ? (admins.state?.updateAllowedCheatersInterval ?? admins.intervalDraft)
+    : admins.intervalDraft;
 
   return (
     <div className={classes.adminSection}>
@@ -107,15 +113,8 @@ export function AdminsSection(props: Props): ReactElement {
         ) : null}
 
         <AdminsRemoteConfig
-          urlDraft={
-            readOnly ? (admins.state?.adminListUrl ?? "") : admins.urlDraft
-          }
-          intervalDraft={
-            readOnly
-              ? (admins.state?.updateAllowedCheatersInterval ??
-                admins.intervalDraft)
-              : admins.intervalDraft
-          }
+          urlDraft={displayUrl}
+          intervalDraft={displayInterval}
           validating={admins.validating}
           readOnly={readOnly}
           onUrlChange={admins.setUrlDraft}

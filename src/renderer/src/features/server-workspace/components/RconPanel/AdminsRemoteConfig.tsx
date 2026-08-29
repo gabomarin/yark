@@ -6,9 +6,8 @@ import {
 } from "@mantine/core";
 import type { ReactElement } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { ADMIN_LIST_MIN_INTERVAL_SEC } from "./adminListFormConstants";
 import classes from "./RconPanel.module.css";
-
-const MIN_INTERVAL = 3;
 
 export interface AdminsRemoteConfigProps {
   urlDraft: string;
@@ -44,9 +43,9 @@ export function AdminsRemoteConfig(props: AdminsRemoteConfigProps): ReactElement
         />
         <NumberInput
           label="Refresh interval (seconds)"
-          description="How often ASA re-fetches the list (min 3)."
+          description={`How often ASA re-fetches the list (min ${ADMIN_LIST_MIN_INTERVAL_SEC}).`}
           size="xs"
-          min={MIN_INTERVAL}
+          min={ADMIN_LIST_MIN_INTERVAL_SEC}
           value={props.intervalDraft}
           disabled={readOnly}
           readOnly={readOnly}
