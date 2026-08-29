@@ -36,8 +36,9 @@ Example logical command lines:
 ```
 
 Custom / modded maps use the same shape: author launch token in the map URL, and the map pack
-Project ID on `-mods=`. YARK does **not** write ASE `ActiveMapMod` or obsolete `-MapModID=`.
-See [Mods → Maps / custom worlds](/docs/mods/#maps--custom-worlds).
+Project ID on `-mods=`. YARK strips ASE `ActiveMapMod`. **`-MapModID=`** is added only for
+**official-token remasters** (launch token is a known official map **and** a linked `mapModId` is
+enabled) — otherwise token + `-mods=` only. See [Mods → Maps / custom worlds](/docs/mods/#maps--custom-worlds).
 
 ### Launch tab
 

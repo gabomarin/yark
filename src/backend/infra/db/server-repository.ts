@@ -123,6 +123,7 @@ export class ServerRepository {
     });
     const mapSaveFolder = persistableMapSaveFolder({
       map: input.map,
+      mapModId: input.mapModId,
       mapSaveFolder: input.mapSaveFolder,
     });
     const profile: ServerProfile = {
@@ -189,6 +190,7 @@ export class ServerRepository {
     });
     const mapSaveFolder = persistableMapSaveFolder({
       map: input.map,
+      mapModId: mapModId,
       mapSaveFolder:
         input.mapSaveFolder !== undefined
           ? input.mapSaveFolder

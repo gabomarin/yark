@@ -23,7 +23,7 @@ import { withBase } from "../../../data/site";
   />
   <figcaption>
     Sidebar Logs — fleet view of recent problems and activity. Open a row to jump into that
-    server’s Workspace Logs (Events / Runtime / Updates / Backups).
+    server’s Workspace Logs (Events / Runtime / Updates / Backup history).
   </figcaption>
 </figure>
 
@@ -34,7 +34,7 @@ Workspace sections:
 | **Events** | SQLite event stream (with structured details when available) |
 | **Runtime** | In-memory buffer: process output + live tail of `ShooterGame.log` (native console on or off) |
 | **Updates** | Files under app userData `update-logs/` |
-| **Backups** | Backup operation history for that server |
+| **Backup history** | Backup operation history for that server (named to stay distinct from the create/restore **Backups** tab) |
 
 ## Event details (“What / Cause / Where / Try next”)
 

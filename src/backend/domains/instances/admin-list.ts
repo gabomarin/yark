@@ -611,11 +611,11 @@ async function seedLocalIdsFromNamesSidecar(
 /** Snapshot of admin whitelist config + current id list for the UI. */
 export async function getAdminListState(
   installDir: string,
-  asaMirrorRoot?: string | null,
+  _asaMirrorRoot?: string | null,
   _loopbackBaseUrl?: string | null,
 ): Promise<AdminListState> {
-  // Do not rewrite GUS on read — product UI is remote-URL-only for now.
-  await seedLocalIdsFromNamesSidecar(installDir, asaMirrorRoot);
+  // Do not rewrite GUS or the wiki file on read — product UI is remote-URL-only.
+  // Seeding from the names sidecar belongs only on explicit local-mode writes.
 
   const { adminListUrl, updateAllowedCheatersInterval, mode } =
     await readGusIntervalAndUrl(installDir);

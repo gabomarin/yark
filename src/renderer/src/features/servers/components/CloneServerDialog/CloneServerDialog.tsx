@@ -12,7 +12,6 @@ import {
   TextInput,
 } from "@mantine/core";
 import type { CloneInstallProgress, InstallationHealthStatus, ServerProfile } from "@shared/types";
-import { offsetPort } from "@shared/types";
 import {
   getServerFolderNameError,
   isValidServerFolderName,
@@ -26,10 +25,17 @@ import {
   cloneCopyWarning,
   isCloneCopyUnavailable,
 } from "./cloneCopyAvailability";
+import {
+  cloneDialogFormState,
+  isValidClonePort,
+  type CloneFormState,
+} from "./cloneServerDialogModel";
 
 interface Props {
   opened: boolean;
   sourceServer: ServerProfile | null;
+  /** Fleet profiles for non-conflicting port suggestion (#55). */
+  fleetServers?: ReadonlyArray<ServerProfile>;
   /** True when the source process is still live (copy requires Stop). */
   sourceBusy?: boolean;
   /** Install health of the source; copy is disabled when there are no files to duplicate. */
@@ -49,55 +55,18 @@ interface CloneParams {
   copyInstallFolder: boolean;
 }
 
-interface FormState {
-  name: string;
-  sessionName: string;
-  gamePort: string;
-  queryPort: string;
-  rconPort: string;
-  installDir: string;
-  copyInstallFolder: boolean;
-}
-
-function toFormState(source: ServerProfile | null): FormState {
-  if (!source) {
-    return {
-      name: "",
-      sessionName: "",
-      gamePort: "7777",
-      queryPort: "27015",
-      rconPort: "27020",
-      installDir: "",
-      copyInstallFolder: false,
-    };
-  }
-
-  const name = `${source.name}-copy`;
-  return {
-    name,
-    sessionName: `${source.sessionName}-copy`,
-    gamePort: String(offsetPort(source.gamePort, 10)),
-    queryPort: String(offsetPort(source.queryPort, 10)),
-    rconPort: String(offsetPort(source.rconPort, 10)),
-    installDir: suggestCloneInstallDir(source.installDir, name),
-    copyInstallFolder: false,
-  };
-}
-
-function isValidPort(value: string): boolean {
-  const port = Number(value);
-  return Number.isInteger(port) && port >= 1024 && port <= 65535;
-}
-
 export function CloneServerDialog(props: Props): ReactElement {
-  const [state, setState] = useState<FormState>(() => toFormState(props.sourceServer));
+  const fleet = props.fleetServers ?? [];
+  const [state, setState] = useState<CloneFormState>(() =>
+    cloneDialogFormState(props.sourceServer, fleet),
+  );
   const [loading, setLoading] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [progress, setProgress] = useState<CloneInstallProgress | null>(null);
 
   // Sync form state when sourceServer changes
   useEffect(() => {
-    setState(toFormState(props.sourceServer));
+    setState(cloneDialogFormState(props.sourceServer, props.fleetServers ?? []));
     setLoading(false);
     setCancelling(false);
     setProgress(null);
@@ -122,9 +91,9 @@ export function CloneServerDialog(props: Props): ReactElement {
     : null;
 
   const portsValid =
-    isValidPort(state.gamePort) &&
-    isValidPort(state.queryPort) &&
-    isValidPort(state.rconPort);
+    isValidClonePort(state.gamePort) &&
+    isValidClonePort(state.queryPort) &&
+    isValidClonePort(state.rconPort);
 
   const copyUnavailable = isCloneCopyUnavailable(props.sourceHealth);
   const wantsCopy = state.copyInstallFolder && !copyUnavailable;
@@ -143,11 +112,13 @@ export function CloneServerDialog(props: Props): ReactElement {
     if (copying) {
       return;
     }
-    setState(toFormState(props.sourceServer));
+    // Form reset also runs in the sourceServer.id / opened effect; fleet is only
+    // needed when reopening from a new source, not on every fleet array identity.
+    setState(cloneDialogFormState(props.sourceServer, props.fleetServers ?? []));
     setProgress(null);
     props.onClose();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- sourceServer content is stable for the dialog lifecycle
-  }, [copying, props.onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fleetServers identity is unstable; sourceServer.id effect resets the form
+  }, [copying, props.onClose, props.sourceServer]);
 
   const handleClone = useCallback(async () => {
     if (!canSubmit) return;
@@ -166,7 +137,7 @@ export function CloneServerDialog(props: Props): ReactElement {
           copyInstallFolder: wantsCopy,
         });
         if (ok) {
-          setState(toFormState(props.sourceServer));
+          setState(cloneDialogFormState(props.sourceServer, props.fleetServers ?? []));
           setProgress(null);
           props.onClose();
         }

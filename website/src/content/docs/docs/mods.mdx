@@ -15,6 +15,7 @@ The Workspace **Mods** tab stores CurseForge **Project IDs** per profile.
 - Newly added IDs start **disabled** — enable them explicitly before they appear on `-mods=`. Add shows a **Mod Added** toast (two can stay visible; a third drops the oldest). Disabled inventory rows are dimmed (thumb + text) while the Enabled switch stays full strength; row **Remove** stays red **subtle**. One CurseForge category sits under the mod name (Maps uses attention color; extra tags as +N with a hover list). The detail drawer can enable, disable, and remove a configured ID, add a Discover result to this server, and shows a Maps launch-token hint (current map unchanged).
 - **Discover** browses CurseForge on open: category filter, in-field search (icon / Enter), pagination, and catalog sort from table headers (Name / Downloads / Updated), with Clear sort back to Popularity. The table scrolls in the panel with a fixed pagination footer. If the category list cannot load yet, Discover still works with a soft failure.
 - Names / summaries / links come from a small Cloudflare Worker proxy and are cached locally
+- The detail drawer can show a CurseForge **screenshot carousel** and a clamped plain-text **description** when inspect fetches get-by-id metadata
 
 <figure class="doc-shot">
   <img
@@ -29,26 +30,32 @@ The Workspace **Mods** tab stores CurseForge **Project IDs** per profile.
 
 ## Maps / custom worlds
 
-CurseForge **Maps** packs are ordinary Project IDs on `-mods=` — ASA does **not** use legacy
-`ActiveMapMod` / `-MapModID=` for these boots. A correct custom-map server needs **both**:
+CurseForge **Maps** packs are ordinary Project IDs on `-mods=`. ASA does **not** use legacy
+`ActiveMapMod`. **`-MapModID=`** applies only to **official-token remasters** (see
+[Profiles & ports](/docs/profiles-and-ports/)). A correct custom-map server needs **both**:
 
 1. The map pack Project ID **enabled** on this Mods tab, and  
 2. The author launch token selected under **Server Information → Map** (see [Profiles & ports](/docs/profiles-and-ports/))
 
 ### Happy path
 
-Create the profile on an **official** map first (**New server** does not offer Custom…). Then:
+**Fast path:** **New server** → **Map** → **Search Maps…** → pick a CurseForge Maps card → confirm
+Map Name. YARK sets the launch token, links `mapModId`, and enables the Project ID in one step.
+
+**From Mods (after create on an official map):**
 
 1. Add the map pack Project ID (or URL) on Mods — it starts disabled  
 2. **Enable** it — YARK shows a toast that the mod is available under Map; your current map is **not** changed  
-3. Open the **Server** tab → **Map** → pick the pack under **Map mods** (or **Custom…** if you must type the token yourself)  
+3. Open the **Server** tab → **Map** → pick the pack under **Map mods**, use **Search Maps…**, or **Custom…** if you must type the token yourself  
 4. Check **Launch** preview, then **Start**
 
 Enabling a Maps mod never overwrites the map you already have. You choose when to switch.
 
 If YARK can read a `Map Name:` / `Server Name:` / `*_WP` token from CurseForge metadata, the pack
-appears under **Map mods** (the detail drawer also shows that token). If not, use **Custom…** with the token from the author page, and keep
-the map pack enabled on Mods.
+appears under **Map mods** (the detail drawer also shows that token). Operator copy does **not**
+assume CurseForge always lists the name — check the map community, wiki, or author notes when it
+does not. If inference fails, use **Custom…** with the token from the author page, and keep the
+map pack enabled on Mods.
 
 <Aside type="tip">
   Start is blocked when a custom map’s linked map mod is missing, disabled, or unset. Fix the Map

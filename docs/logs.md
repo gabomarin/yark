@@ -102,7 +102,7 @@ Export (`logs:export`) resolves the same fields so text dumps stay useful.
 | Events | SQLite `events` for that server |
 | Runtime | In-memory buffer: stdout/stderr plus live tail of `ShooterGame/Saved/Logs/ShooterGame.log` (native console on or off). Cleared on the next Start, not on crash. |
 | Updates | Files under userData `update-logs/` (`{serverId}-….log`) |
-| Backups | Backup records from `BackupService` / repository |
+| Backups (**Backup history** in the UI) | Backup records from `BackupService` / repository |
 
 While the Runtime tab is selected, the panel quietly refreshes about every 1.5s
 via `logs:runtime` (runtime buffer only — not a full `logs:list`). Stale responses

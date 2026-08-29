@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-08-29
+
 ### Added
 
 - RCON **Admins** panel: configure ASA admin whitelist via **remote http(s) AdminListURL** only (Validate, interval, Current ids); Local file / loopback hosting deferred to Hosted Resources (PHOST-001). Display names still learned into a YARK sidecar when an EOS id is seen Online (#153).
@@ -18,6 +20,9 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Remaster **World save folder** is persisted when `mapModId` is set (official-token remasters no longer lose a custom SavedArks folder on save).
+- Clearing remote AdminListURL no longer rewrites `AllowedCheaterAccountIDs.txt` from the names sidecar on read (false Current ids after clear).
+- Clone dialog suggests the next free game/query/RCON triplet across the fleet (same hunt as create/auto-clone), not only source+10; fallback +10 wraps via `offsetPort` near the port ceiling.
 - RCON tab scrolls when Players/Admins stacks below the console on narrow widths (content was clipped with no scrollbar).
 - **Install SteamCMD** in Settings keeps the loading state through validation and the path field updates as soon as install finishes (no second click).
 - **Search Maps…** refuses unfiltered CurseForge search when the Maps class/category id is missing, instead of showing all ASA mods (#295).
@@ -28,6 +33,9 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Security
 
 - Document AdminListURL Validate/get as operator-initiated main-process http(s) fetch (desktop trust boundary; SSRF note if IPC ever leaves local session) (#153).
+
+### Changed
+
 - Local/dev can set **`YARK_E2E_FULL_UI=true`** with an isolated `YARK_E2E_USER_DATA` profile to keep normal operator UI (splash, first-run setup assistant, What's new) while still avoiding real AppData.
 - Server Information **Map** field keeps an input-like closed control and opens a visual popover (Official thumbs, Map mods rows, Search Maps… / Custom…) instead of a plain text Select; the popover matches the field width, stays below it, and highlights the current pick with list-selected chrome and a check (#460).
 - Operator-facing **Map Name** hints no longer assume CurseForge always lists the name; copy points to the map community, wiki, or author notes when it does not (#295).
