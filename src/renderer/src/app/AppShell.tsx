@@ -565,6 +565,7 @@ export function AppShell({
             ? servers.find((s) => s.id === overlay.sourceServerId) ?? null
             : null
         }
+        fleetServers={servers}
         sourceBusy={
           overlay?.kind === "clone"
             ? statuses.get(overlay.sourceServerId)?.processLive === true

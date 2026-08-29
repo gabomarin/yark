@@ -112,13 +112,16 @@ export function persistableMapModId(fields: MapIdentityFields): string | null {
 
 /**
  * Relative SavedArks folder name only (no path separators). Null when empty or
- * official map — auto-resolve uses `{MapToken}` then strip `_WP`.
+ * bare official map — auto-resolve uses `{MapToken}` then strip `_WP`.
+ * Official-token remasters (`mapModId` set) may persist an explicit folder.
  */
 export function persistableMapSaveFolder(fields: {
   map: string;
+  mapModId?: string | null;
   mapSaveFolder?: string | null;
 }): string | null {
-  if (isOfficialMap(fields.map)) {
+  const mapModId = fields.mapModId?.trim() ?? "";
+  if (isOfficialMap(fields.map) && mapModId.length === 0) {
     return null;
   }
   const raw = fields.mapSaveFolder?.trim() ?? "";

@@ -477,7 +477,7 @@ describe("admin-list", () => {
     }
   });
 
-  it("seeds empty local wiki from names sidecar keys on read", async () => {
+  it("does not seed empty wiki from names sidecar on read", async () => {
     const {
       adminListNamesPath,
       getAdminListState: getState,
@@ -500,12 +500,8 @@ describe("admin-list", () => {
       expect(existsSync(adminListNamesPath(root))).toBe(true);
       const state = await getState(root);
       expect(state.mode).toBe("local");
-      expect(state.entries.map((e) => e.id)).toEqual([
-        "0002e03af5f4487985e94c6ba4080369",
-      ]);
-      expect(await readFile(adminListPath(root), "utf8")).toContain(
-        "0002e03af5f4487985e94c6ba4080369",
-      );
+      expect(state.entries).toEqual([]);
+      expect((await readFile(adminListPath(root), "utf8")).trim()).toBe("");
     } finally {
       await rm(root, { recursive: true, force: true });
     }
