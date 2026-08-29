@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { ActionIcon, Badge, Group, Text, Tooltip } from "@mantine/core";
+import { ActionIcon, Group, Text, Tooltip } from "@mantine/core";
 import { ArrowDown, ArrowUp, X } from "@phosphor-icons/react";
 import type { ServerProfile, ServerStatus } from "@shared/types";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
@@ -67,9 +67,9 @@ export function ClusterMemberRow(props: Props): ReactElement {
             {props.server.name}
           </Text>
           {!props.server.enabled && (
-            <Badge size="xs" color="gray" variant="light">
+            <Text size="xs" c="dimmed">
               Inactive
-            </Badge>
+            </Text>
           )}
         </Group>
         <Text size="xs" c="dimmed">

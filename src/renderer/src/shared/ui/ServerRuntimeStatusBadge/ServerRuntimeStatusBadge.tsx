@@ -1,8 +1,7 @@
 import type { ReactElement } from "react";
-import { Badge, Tooltip, type BadgeProps } from "@mantine/core";
+import { Group, Text, Tooltip, type BadgeProps } from "@mantine/core";
 import type { ServerStatus } from "@shared/types";
 import {
-  serverRuntimeStatusColor,
   serverRuntimeStatusLabel,
   serverRuntimeStatusTone,
 } from "./serverRuntimeStatus";
@@ -18,7 +17,7 @@ interface Props {
   variant?: BadgeProps["variant"];
   className?: string;
   /**
-   * `label` = text Badge (default). `dot` = color-only status like the
+   * `label` = word + dot (default). `dot` = color-only status like the
    * workspace server rail — frees horizontal space on narrow Overview cards.
    */
   appearance?: "label" | "dot";
@@ -28,51 +27,68 @@ function statusIsProcessing(status: ServerStatus | string): boolean {
   return status === "starting" || status === "stopping";
 }
 
+function toneFromColorOverride(
+  color: string | undefined,
+): ReturnType<typeof serverRuntimeStatusTone> | null {
+  if (color === "blue") return "info";
+  if (color === "green") return "ok";
+  if (color === "red") return "bad";
+  if (color === "gray") return "muted";
+  return null;
+}
+
 export function ServerRuntimeStatusBadge({
   status,
   label,
   color,
   size = "xs",
-  variant = "light",
   className,
   appearance = "label",
 }: Props): ReactElement {
   const text = label ?? serverRuntimeStatusLabel(status);
-  const tone =
-    color === "blue"
-      ? "info"
-      : color === "green"
-        ? "ok"
-        : color === "red"
-          ? "bad"
-          : color === "gray"
-            ? "muted"
-            : serverRuntimeStatusTone(status);
+  const tone = toneFromColorOverride(color) ?? serverRuntimeStatusTone(status);
+  const processing = statusIsProcessing(status) || undefined;
+  const textSize = size === "sm" || size === "md" || size === "lg" ? "sm" : "xs";
+
+  const dot = (
+    <span
+      className={classes.statusDot}
+      data-tone={tone}
+      data-processing={processing}
+    />
+  );
 
   if (appearance === "dot") {
     return (
       <Tooltip label={text} withArrow>
         <span
-          className={`${classes.statusDot}${className ? ` ${className}` : ""}`}
-          data-tone={tone}
-          data-processing={statusIsProcessing(status) || undefined}
-          data-runtime-status-dot
+          className={className}
           role="status"
           aria-label={text}
-        />
+          data-runtime-status-dot
+          data-tone={tone}
+          data-processing={processing}
+        >
+          {dot}
+        </span>
       </Tooltip>
     );
   }
 
   return (
-    <Badge
-      size={size}
-      variant={variant}
-      tt="none"
-      color={color ?? serverRuntimeStatusColor(status)}
-      className={className}
+    <Group
+      gap="xxs"
+      wrap="nowrap"
+      align="center"
+      className={`${classes.statusWord}${className ? ` ${className}` : ""}`}
+      role="status"
+      aria-label={text}
+      data-runtime-status
     >
-      {text}
-    </Badge>
+      {dot}
+      <Text size={textSize} fw={600} span data-tone={tone} className={classes.statusLabel}>
+        {text}
+      </Text>
+    </Group>
   );
 }

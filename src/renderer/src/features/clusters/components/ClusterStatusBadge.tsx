@@ -1,6 +1,5 @@
 import type { ReactElement } from "react";
-import { CheckCircle, Warning, WarningCircle } from "@phosphor-icons/react";
-import { Badge } from "@mantine/core";
+import { Text } from "@mantine/core";
 import type { ClusterComplianceReport } from "@shared/types";
 
 interface Props {
@@ -10,27 +9,20 @@ interface Props {
 
 export function ClusterStatusBadge({ report, size = "sm" }: Props): ReactElement {
   const hasWarnings = report.issues.some((issue) => issue.severity === "warning");
-  const color = report.ok ? (hasWarnings ? "yellow" : "teal") : "red";
+  const tone = report.ok ? (hasWarnings ? "warn" : "ok") : "bad";
   const label = report.ok ? (hasWarnings ? "Warnings" : "Ready") : "Errors";
+  const textSize = size === "lg" || size === "md" ? "sm" : "xs";
 
   return (
-    <Badge
-      size={size}
-      color={color}
-      variant="light"
-      leftSection={
-        report.ok ? (
-          hasWarnings ? (
-            <Warning size={12} />
-          ) : (
-            <CheckCircle size={12} />
-          )
-        ) : (
-          <WarningCircle size={12} />
-        )
-      }
+    <Text
+      size={textSize}
+      fw={600}
+      span
+      data-cluster-status={label}
+      data-tone={tone}
+      c={tone === "ok" ? "ok.5" : tone === "warn" ? "fossil.4" : "red.6"}
     >
       {label}
-    </Badge>
+    </Text>
   );
 }

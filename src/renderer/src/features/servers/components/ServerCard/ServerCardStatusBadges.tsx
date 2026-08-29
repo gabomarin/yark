@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { Badge } from "@mantine/core";
+import { Text } from "@mantine/core";
 import type { ServerStatus } from "@shared/types";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
 import classes from "./ServerCard.module.css";
@@ -48,9 +48,9 @@ export function ServerCardStatusBadges(props: Props): ReactElement {
         />
       </span>
       {!props.serverEnabled && (
-        <Badge size={props.compact ? "xs" : "sm"} variant="light" color="gray">
+        <Text size={props.compact ? "xs" : "sm"} c="dimmed">
           Inactive
-        </Badge>
+        </Text>
       )}
     </div>
   );

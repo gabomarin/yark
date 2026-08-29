@@ -165,13 +165,15 @@ Theme `defaultRadius` is **`sm`**. Avoid raw `border-radius` when a token fits. 
 ### 4. Color / status
 
 - Semantic: `--app-color-ok|warn|attention|danger` (danger aliases bad). Use Mantine
-  `color="attention"` for update / needs-attention controls (matches the server-card
-  attention rail).   Use `color="fossil"` for unsaved-leave alerts (same amber as
-  `--app-color-fossil` / warn). Restart **filled** uses **`--app-color-fossil-filled`**
-  (richer amber; alerts keep base fossil).   **`color="red"`** maps to **`--app-color-bad`** for **filled** delete/remove
+  `color="attention"` or `color="fossil"` for needs-attention (same amber; lime `#E6ED62`
+  is not used). Restart **filled** uses **`--app-color-fossil-filled`**.
+  **`color="red"`** maps to **`--app-color-bad`** for **filled** delete/remove
   commits and **`--app-color-danger-bright`** for menu danger rows, Stop
   (`variant="light"`), and icons on dark chrome — not Mantine’s default coral. Version status text uses
   theme shade refs (`c="ok.5"`, `c="attention.5"`).
+- **Status grammar:** runtime and cluster health are a **word + dot/rail**, not a light Badge.
+  Counts are a sentence (or MetaStrip). **Badge** is reserved for rare attention (Needs setup,
+  blocking lock copy) — at most one per page.
 - **Inline Alert surfaces** (theme `Alert` `--alert-bg` / `--alert-bd`): solid `--app-color-panel` fill plus a 1px semantic border (`cryo` / `fossil` / `bad`). Do not use translucent MagicPath washes.
 - Text: `--app-color-text` / `--app-color-muted`.
 - Borders: `--app-color-border` / `--app-color-border-subtle`.
@@ -310,7 +312,7 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 | `AccentIconTile` | `shared/ui/AccentIconTile/` | Tek / rounded icon tiles |
 | `MapArtThumb` | `shared/ui/MapArtThumb/` | ASA map artwork thumb (list + header) |
 | `SearchField` | `shared/ui/SearchField/` | Search inputs — see **SearchField variants** below |
-| `ServerRuntimeStatusBadge` | `shared/ui/ServerRuntimeStatusBadge/` | Process status badge |
+| `ServerRuntimeStatusBadge` | `shared/ui/ServerRuntimeStatusBadge/` | Process status word + dot |
 | `ReadonlyPath` | `shared/ui/ReadonlyPath/` | Bordered monospace chip for configured filesystem paths |
 | `PathField` | `shared/ui/PathField/` | Read-only path chip + Browse/Clear actions |
 | `ConsoleSurface` | `shared/ui/ConsoleSurface/` | ScrollArea monospace console for SteamCMD / Logs (plain text, stick-to-bottom) |

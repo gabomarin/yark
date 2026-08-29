@@ -16,18 +16,7 @@ export function serverRuntimeStatusLabel(status: ServerStatus | string): string 
   return status;
 }
 
-/** Mantine Badge color for a runtime status. */
-export function serverRuntimeStatusColor(status: ServerStatus | string): string {
-  if (status === "running") return "green";
-  if (status === "error") return "red";
-  if (status === "starting" || status === "stopping") return "blue";
-  return "gray";
-}
-
-/**
- * Compact list-thumb tone used by workspace server switcher rows.
- * Maps onto the same semantic colors as {@link serverRuntimeStatusColor}.
- */
+/** Compact list-thumb tone for runtime status (word + dot). */
 export function serverRuntimeStatusTone(
   status: ServerStatus | string,
 ): "ok" | "warn" | "bad" | "info" | "muted" {

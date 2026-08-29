@@ -83,6 +83,38 @@ export function summarizeClusterReports(reports: ClusterComplianceReport[]): {
   };
 }
 
+/** One sentence for the Clusters header — not a row of count chips (#470). */
+export function formatClusterSummaryLine(input: {
+  clusterCount: number;
+  readyCount: number;
+  errorCount: number;
+  warningOnlyCount: number;
+  unclusteredCount: number;
+  dirWithoutIdCount: number;
+}): string {
+  const parts = [
+    `${input.clusterCount} cluster${input.clusterCount === 1 ? "" : "s"}`,
+    `${input.readyCount} ready`,
+  ];
+  if (input.errorCount > 0) {
+    parts.push(`${input.errorCount} with errors`);
+  }
+  if (input.warningOnlyCount > 0) {
+    parts.push(`${input.warningOnlyCount} with warnings`);
+  }
+  if (input.unclusteredCount > 0) {
+    parts.push(
+      `${input.unclusteredCount} server${input.unclusteredCount === 1 ? "" : "s"} not in a cluster`,
+    );
+  }
+  if (input.dirWithoutIdCount > 0) {
+    parts.push(
+      `${input.dirWithoutIdCount} with directory but no Cluster ID`,
+    );
+  }
+  return parts.join(" · ");
+}
+
 export function resolveMembers(
   report: ClusterComplianceReport | null,
   serverById: Map<string, ServerProfile>,

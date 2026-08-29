@@ -6,7 +6,6 @@ import {
   HardDrives,
 } from "@phosphor-icons/react";
 import {
-  Badge,
   Button,
   Group,
   NumberInput,
@@ -56,9 +55,9 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
               <HardDrives size={16} />
               <Title order={4}>{row.serverName}</Title>
               {props.server?.enabled === false && (
-                <Badge size="xs" color="gray" variant="light">
+                <Text size="xs" c="dimmed">
                   Inactive
-                </Badge>
+                </Text>
               )}
               <Tooltip
                 label={backupHealthTooltip(row.health)}
@@ -66,19 +65,10 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
                 maw={320}
                 withArrow
               >
-                <Badge color={backupHealthColor(row.health)} variant="light">
+                <Text size="sm" fw={600} c={backupHealthColor(row.health)} span>
                   {backupHealthLabel(row.health)}
-                </Badge>
+                </Text>
               </Tooltip>
-              {row.policy.enabled ? (
-                <Badge color="teal" variant="outline">
-                  Schedule {row.policy.intervalMinutes}m
-                </Badge>
-              ) : (
-                <Badge color="gray" variant="outline">
-                  Schedule off
-                </Badge>
-              )}
             </Group>
             <Text size="sm" c="dimmed" mb={4}>
               Destination
@@ -89,6 +79,9 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
               {row.latest !== null
                 ? ` (${row.latest.kind} · ${row.latest.type} · ${row.latest.status})`
                 : ""}
+              {row.policy.enabled
+                ? ` · Schedule ${row.policy.intervalMinutes}m`
+                : " · Schedule off"}
             </Text>
             <Text size="xs" c="dimmed">
               Counts – world {row.counts.world} · players {row.counts.players} · ini{" "}
