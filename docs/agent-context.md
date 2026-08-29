@@ -107,7 +107,7 @@ paths or the Notion hub URL in tracked files.
   editing). Server tab shows Cancel when the profile is dirty.
   Animated **startup splash** (#317) until main is ready (skipped in E2E).
   In-app **What's new** (#290) from `src/shared/changelog.ts` (Settings, sidebar
-  version, one-shot after upgrade). Runtime **ShooterGame.log** tail stays on with
+  version, one-shot after upgrade; This version vs Earlier releases). Runtime **ShooterGame.log** tail stays on with
   native console; crash buffer until next Start (#326).
 - Settings is live in the shell (SteamCMD path, desktop shell, density, and related preferences — no light/dark theme control). Full map: [settings.md](settings.md). Clusters surfaces `clusterId` / `clusterDir` compliance reports (not a live transfer probe); real-host checklist: [spikes/22-cluster-live-transfers.md](spikes/22-cluster-live-transfers.md) (#22). Workspace **RCON** tab: [rcon.md](rcon.md).
 - Sidebar Backups settings page and per-server workspace Backups tab are live.

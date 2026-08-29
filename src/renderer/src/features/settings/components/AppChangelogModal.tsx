@@ -2,12 +2,12 @@ import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 import { ArrowSquareOut } from "@phosphor-icons/react";
 import {
+  Accordion,
   Button,
   Group,
   Modal,
   ScrollArea,
   SegmentedControl,
-  Stack,
   Text,
 } from "@mantine/core";
 import {
@@ -15,7 +15,13 @@ import {
   getRecentChangelog,
   type ChangelogEntry,
 } from "@shared/changelog";
+import {
+  changelogNoteCount,
+  changelogNoteCountLabel,
+  formatChangelogDate,
+} from "@features/settings/model/changelogViewModel";
 import { AppChangelogList } from "./AppChangelogList";
+import classes from "./AppChangelog.module.css";
 
 type AppChangelogTab = "current" | "recent";
 
@@ -35,114 +41,156 @@ interface Props {
 export function AppChangelogModal(props: Props): ReactElement {
   const initialTab = props.initialTab ?? "current";
   const [tab, setTab] = useState<AppChangelogTab>(initialTab);
-
-  useEffect(() => {
-    if (props.opened) {
-      setTab(initialTab);
-    }
-  }, [props.opened, initialTab]);
+  const [openVersion, setOpenVersion] = useState<string | null>(null);
 
   const source = props.entries;
+  const versionLabel = props.appVersion.replace(/^v/i, "");
   const current = getChangelogForVersion(props.appVersion, source);
   const recent = getRecentChangelog(undefined, source);
-  const title =
-    tab === "current"
-      ? `What's new in v${props.appVersion.replace(/^v/i, "")}`
-      : "Changelog";
-  const subtitle =
-    tab === "current"
-      ? "Shown once after you install this YARK version."
-      : "Curated notes bundled with the app (offline).";
+  const newestVersion = recent[0]?.version ?? null;
+  const headerDate =
+    current !== null ? formatChangelogDate(current.date) : null;
+
+  useEffect(() => {
+    if (!props.opened) {
+      return;
+    }
+    setTab(initialTab);
+    setOpenVersion(newestVersion);
+  }, [props.opened, initialTab, newestVersion]);
 
   const handleClose = () => {
     props.onDismiss?.();
     props.onClose();
   };
 
-  const openGitHub = () => {
-    void window.api.openYarkReleaseNotes();
-  };
-
   return (
-    <Modal
+    <Modal.Root
       opened={props.opened}
       onClose={handleClose}
-      title={
-        <Stack gap={4}>
-          <Text fw={600} size="sm" data-changelog-modal-title>
-            {title}
-          </Text>
-          <Text size="xs" c="dimmed">
-            {subtitle}
-          </Text>
-        </Stack>
-      }
-      size="md"
       centered
-      radius="lg"
-      padding="md"
+      size={672}
+      radius={8}
+      classNames={{
+        content: classes.content,
+        header: classes.header,
+        body: classes.body,
+        title: classes.title,
+      }}
     >
-      <Stack gap="md" data-changelog-modal>
-        <SegmentedControl
-          size="xs"
-          value={tab}
-          onChange={(value) => setTab(value as AppChangelogTab)}
-          data={[
-            { label: "This version", value: "current" },
-            { label: "Recent", value: "recent" },
-          ]}
-          data-changelog-tab
-        />
-
-        <ScrollArea.Autosize mah={360} type="auto" offsetScrollbars>
-          {tab === "current" ? (
-            current !== null ? (
-              <AppChangelogList entries={[current]} compact />
-            ) : (
-              <Text size="xs" c="dimmed">
-                No curated notes for v{props.appVersion} yet.
+      <Modal.Overlay backgroundOpacity={0.5} color="#000" />
+      <Modal.Content radius={8}>
+        <Modal.Header>
+          <div className={classes.headerTop}>
+            <div>
+              <Modal.Title data-changelog-modal-title>
+                What&apos;s new
+              </Modal.Title>
+              <Text size="xs" className={classes.meta}>
+                v{versionLabel}
+                {headerDate !== null && (
+                  <>
+                    <span className={classes.metaSep} aria-hidden>
+                      ·
+                    </span>
+                    <Text size="xs" component="time" inherit>
+                      {headerDate}
+                    </Text>
+                  </>
+                )}
               </Text>
-            )
-          ) : recent.length > 0 ? (
-            <AppChangelogList entries={recent} />
-          ) : (
-            <Text size="xs" c="dimmed">
-              No curated release notes available.
-            </Text>
-          )}
-        </ScrollArea.Autosize>
+            </div>
+            <Modal.CloseButton aria-label="Close" />
+          </div>
+          <SegmentedControl
+            size="xs"
+            radius={6}
+            fullWidth
+            value={tab}
+            onChange={(value) => setTab(value as AppChangelogTab)}
+            data={[
+              { label: "This version", value: "current" },
+              { label: "Earlier releases", value: "recent" },
+            ]}
+            className={classes.tabs}
+            data-changelog-tab
+          />
+        </Modal.Header>
 
-        <Group justify="space-between" gap="xs" wrap="wrap">
-          <Button
-            size="compact-xs"
-            variant="subtle"
-            leftSection={<ArrowSquareOut size={14} />}
-            onClick={() => void openGitHub()}
-            data-changelog-github
+        <Modal.Body data-changelog-modal>
+          <ScrollArea.Autosize
+            mah={480}
+            type="auto"
+            offsetScrollbars
+            className={classes.scroll}
+            classNames={{ viewport: classes.scrollViewport }}
           >
-            Full notes on GitHub
-          </Button>
-          <Group gap="xs">
-            {tab === "current" && (
-              <Button
-                size="compact-xs"
-                variant="default"
-                onClick={() => setTab("recent")}
-                data-changelog-browse-recent
+            {tab === "current" ? (
+              current !== null ? (
+                <AppChangelogList entries={[current]} />
+              ) : (
+                <Text size="sm" className={classes.empty}>
+                  No curated notes for v{versionLabel} yet.
+                </Text>
+              )
+            ) : recent.length > 0 ? (
+              <Accordion
+                chevronPosition="right"
+                chevronSize={12}
+                transitionDuration={0}
+                value={openVersion}
+                onChange={setOpenVersion}
+                className={classes.accordion}
+                classNames={{
+                  item: classes.accordionItem,
+                  control: classes.accordionControl,
+                  panel: classes.accordionPanel,
+                }}
               >
-                Browse recent
-              </Button>
+                {recent.map((entry) => (
+                  <Accordion.Item key={entry.version} value={entry.version}>
+                    <Accordion.Control>
+                      <Group justify="space-between" gap="sm" wrap="nowrap">
+                        <Text size="sm" fw={openVersion === entry.version ? 600 : 500} span>
+                          v{entry.version}
+                        </Text>
+                        <Text size="xs" className={classes.accordionMeta} span>
+                          {`${formatChangelogDate(entry.date)} · ${changelogNoteCountLabel(changelogNoteCount(entry))}`}
+                        </Text>
+                      </Group>
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      <AppChangelogList entries={[entry]} />
+                    </Accordion.Panel>
+                  </Accordion.Item>
+                ))}
+              </Accordion>
+            ) : (
+              <Text size="sm" className={classes.empty}>
+                No curated release notes available.
+              </Text>
             )}
+          </ScrollArea.Autosize>
+
+          <div className={classes.footer}>
             <Button
               size="compact-xs"
-              onClick={handleClose}
-              data-changelog-got-it
+              variant="subtle"
+              className={classes.github}
+              rightSection={<ArrowSquareOut size={12} />}
+              onClick={() => {
+                void window.api.openYarkReleaseNotes();
+              }}
+              data-changelog-github
             >
+              Full notes on GitHub
+            </Button>
+            <Button size="compact-xs" radius={8} onClick={handleClose} data-changelog-got-it>
               Got it
             </Button>
-          </Group>
-        </Group>
-      </Stack>
-    </Modal>
+          </div>
+        </Modal.Body>
+      </Modal.Content>
+    </Modal.Root>
   );
 }

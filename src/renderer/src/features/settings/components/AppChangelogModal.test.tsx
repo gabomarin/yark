@@ -27,7 +27,7 @@ afterEach(() => {
 });
 
 describe("AppChangelogModal", () => {
-  it("opens What's new for the current version and can browse recent", async () => {
+  it("opens What's new for the current version and can browse earlier releases", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
     const onDismiss = vi.fn();
@@ -48,12 +48,16 @@ describe("AppChangelogModal", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText(/What's new in v0\.11\.0/i)).toBeInTheDocument();
+    expect(screen.getByText("What's new")).toBeInTheDocument();
+    expect(screen.getByText("v0.11.0", { exact: false })).toBeInTheDocument();
+    expect(screen.getByText("12 Aug 2026")).toBeInTheDocument();
     expect(screen.getByText("In-app changelog notes.")).toBeInTheDocument();
     expect(screen.queryByText("Older note.")).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /browse recent/i }));
+    await user.click(screen.getByRole("radio", { name: /earlier releases/i }));
+    await user.click(screen.getByRole("button", { name: /v0\.10\.0/i }));
     expect(screen.getByText("Older note.")).toBeInTheDocument();
+    expect(screen.getByText(/1 Aug 2026/)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /got it/i }));
     expect(onDismiss).toHaveBeenCalledTimes(1);
@@ -77,7 +81,7 @@ describe("AppChangelogModal", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText(/What's new in v0\.12\.0/i)).toBeInTheDocument();
+    expect(screen.getByText("What's new")).toBeInTheDocument();
     expect(
       screen.getByText(/No curated notes for v0\.12\.0 yet/i),
     ).toBeInTheDocument();

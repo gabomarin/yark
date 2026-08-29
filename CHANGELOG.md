@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- **What's new** is a wider release brief: solid panel fill, section rails instead of badges, and Earlier releases as an accordion.
+
 ## [0.17.0] - 2026-08-29
 
 ### Added
