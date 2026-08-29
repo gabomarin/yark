@@ -12,6 +12,12 @@ import type { BackupService } from "../backend/domains/backups/backup-service";
 import type { PlayerSessionWatcher } from "../backend/domains/backups/player-session-watcher";
 import type { ProcessMetricsSampler } from "../backend/domains/instances/process-metrics-sampler";
 import type { InstanceService } from "../backend/domains/instances/instance-service";
+import {
+  getAdminListState,
+  learnAdminListNames,
+  setAdminListConfig,
+  validateAdminListUrl,
+} from "../backend/domains/instances/admin-list";
 import { probeImportInstall } from "../backend/domains/instances/import-existing-install";
 import type { IniService } from "../backend/domains/config/ini-service";
 import type { ClusterIniTemplateService } from "../backend/domains/config/cluster-ini-template-service";
@@ -446,6 +452,30 @@ export function registerIpcHandlers(
       throw new Error(`Could not open BanList.txt: ${error}`);
     }
   });
+
+  handleValidated(IPC.getAdminList, ipcArgSchemas[IPC.getAdminList], async ([serverId]) =>
+    getAdminListState(instances.installDirFor(serverId)),
+  );
+
+  handleValidated(IPC.setAdminList, ipcArgSchemas[IPC.setAdminList], async ([serverId, config]) =>
+    setAdminListConfig(instances.installDirFor(serverId), config),
+  );
+
+  handleValidated(
+    IPC.validateAdminListUrl,
+    ipcArgSchemas[IPC.validateAdminListUrl],
+    async ([serverId, url]) => {
+      instances.installDirFor(serverId);
+      return validateAdminListUrl(url);
+    },
+  );
+
+  handleValidated(
+    IPC.learnAdminListNames,
+    ipcArgSchemas[IPC.learnAdminListNames],
+    async ([serverId, hints]) =>
+      learnAdminListNames(instances.installDirFor(serverId), hints),
+  );
 
   handleValidated(IPC.eventsRecent, ipcArgSchemas[IPC.eventsRecent], ([limit]) =>
     repo.recentEvents(limit),

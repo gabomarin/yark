@@ -1,4 +1,13 @@
-import { ActionIcon, Button, Group, Stack, Text, Loader, Tooltip } from "@mantine/core";
+import {
+  ActionIcon,
+  Button,
+  Group,
+  Loader,
+  Stack,
+  Tabs,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { ArrowClockwise } from "@phosphor-icons/react";
 import type { OnlinePlayerInfo } from "@shared/ipc";
@@ -7,6 +16,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { BannedPlayersSection } from "./BannedPlayersSection";
+import { AdminsSection } from "./AdminsSection";
 import {
   PlayerIdentityRow,
   mergeNameHints,
@@ -29,13 +39,20 @@ interface Props {
   onRefreshPlayers: (serverId: string) => Promise<void>;
   onKickPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
   onBanPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
+  /** Blocks admin-list GUS writes while INI Files is dirty. */
+  iniDirty?: boolean;
+  /** Focus Survivors/Admins sub-tab once (e.g. from INI AdminListURL link). */
+  playersPanelFocus?: "survivors" | "admins" | null;
+  onPlayersPanelFocusConsumed?: () => void;
 }
 
 export function PlayerListSection(props: Props): ReactElement {
+  const [panelTab, setPanelTab] = useState<"survivors" | "admins">("survivors");
   const [actionKey, setActionKey] = useState<string | null>(null);
   const [panelRefreshing, setPanelRefreshing] = useState(false);
   const [nameById, setNameById] = useState(() => new Map<string, string>());
   const reloadBannedRef = useRef<(() => Promise<void>) | null>(null);
+  const reloadAdminsRef = useRef<(() => Promise<void>) | null>(null);
   const rconDisabled =
     !props.serverRunning || !props.rconConnected || props.playerList.loading;
 
@@ -44,6 +61,13 @@ export function PlayerListSection(props: Props): ReactElement {
       mergeNameHints(previous, props.playerList.players),
     );
   }, [props.playerList.players]);
+
+  useEffect(() => {
+    const focus = props.playersPanelFocus;
+    if (focus !== "survivors" && focus !== "admins") return;
+    setPanelTab(focus);
+    props.onPlayersPanelFocusConsumed?.();
+  }, [props.playersPanelFocus, props.onPlayersPanelFocusConsumed]);
 
   const onBannedEntriesLoaded = useCallback((entries: OnlinePlayerInfo[]) => {
     setNameById((previous) => mergeNameHints(previous, entries));
@@ -55,6 +79,7 @@ export function PlayerListSection(props: Props): ReactElement {
       async () => {
         await props.onRefreshPlayers(props.serverId);
         await (reloadBannedRef.current?.() ?? Promise.resolve());
+        await (reloadAdminsRef.current?.() ?? Promise.resolve());
       },
       () => {
         setPanelRefreshing(false);
@@ -131,12 +156,12 @@ export function PlayerListSection(props: Props): ReactElement {
     <AppSurfaceCard tone="flat" padding="sm" radius="md" className={classes.playersPanel}>
       <Stack gap="sm">
         <div className={classes.header}>
-          <Text className={classes.title}>Survivors</Text>
+          <Text className={classes.title}>Players</Text>
           <Tooltip label="Refresh panel">
             <ActionIcon
               size="sm"
               variant="default"
-              aria-label="Refresh survivors panel"
+              aria-label="Refresh players panel"
               loading={panelRefreshing || props.playerList.loading}
               onClick={() => void refreshAll()}
             >
@@ -145,72 +170,102 @@ export function PlayerListSection(props: Props): ReactElement {
           </Tooltip>
         </div>
 
-        <Text className={classes.sectionTitle}>Online</Text>
+        <Tabs
+          value={panelTab}
+          onChange={(value) => {
+            if (value === "survivors" || value === "admins") {
+              setPanelTab(value);
+            }
+          }}
+          keepMounted
+          className={classes.playersTabs}
+        >
+          <Tabs.List grow>
+            <Tabs.Tab value="survivors">Survivors</Tabs.Tab>
+            <Tabs.Tab value="admins">Admins</Tabs.Tab>
+          </Tabs.List>
 
-        {props.playerList.error !== null ? (
-          <Text size="sm" c="red">
-            {props.playerList.error}
-          </Text>
-        ) : statusMessage !== null ? (
-          <Group gap="xs">
-            {statusMessage === "Loading…" ? <Loader size="xs" /> : null}
-            <Text size="sm" c="dimmed">
-              {statusMessage}
-            </Text>
-          </Group>
-        ) : (
-          <div className={classes.playerList}>
-            {props.playerList.players.map((player) => {
-              const busy = actionKey === player.key;
-              const name = resolvePlayerDisplayName(
-                player.key,
-                player.name,
-                nameById,
-              );
-              return (
-                <PlayerIdentityRow
-                  key={player.key}
-                  name={name}
-                  playerKey={player.key}
-                  actions={
-                    <>
-                      <Button
-                        size="xs"
-                        variant="light"
-                        color="orange"
-                        disabled={rconDisabled || busy}
-                        loading={busy}
-                        onClick={() =>
-                          void runAction(player.key, () =>
-                            props.onKickPlayer(props.serverId, player.key),
-                          )
+          <Tabs.Panel value="survivors" pt="sm">
+            <Stack gap="sm">
+              <Text className={classes.sectionTitle}>Online</Text>
+
+              {props.playerList.error !== null ? (
+                <Text size="sm" c="red">
+                  {props.playerList.error}
+                </Text>
+              ) : statusMessage !== null ? (
+                <Group gap="xs">
+                  {statusMessage === "Loading…" ? <Loader size="xs" /> : null}
+                  <Text size="sm" c="dimmed">
+                    {statusMessage}
+                  </Text>
+                </Group>
+              ) : (
+                <div className={classes.playerList}>
+                  {props.playerList.players.map((player) => {
+                    const busy = actionKey === player.key;
+                    const name = resolvePlayerDisplayName(
+                      player.key,
+                      player.name,
+                      nameById,
+                    );
+                    return (
+                      <PlayerIdentityRow
+                        key={player.key}
+                        name={name}
+                        playerKey={player.key}
+                        actions={
+                          <>
+                            <Button
+                              size="xs"
+                              variant="light"
+                              color="orange"
+                              disabled={rconDisabled || busy}
+                              loading={busy}
+                              onClick={() =>
+                                void runAction(player.key, () =>
+                                  props.onKickPlayer(props.serverId, player.key),
+                                )
+                              }
+                            >
+                              Kick
+                            </Button>
+                            <Button
+                              size="xs"
+                              variant="filled"
+                              color="red"
+                              disabled={rconDisabled || busy}
+                              onClick={() => confirmBan(player)}
+                            >
+                              Ban
+                            </Button>
+                          </>
                         }
-                      >
-                        Kick
-                      </Button>
-                      <Button
-                        size="xs"
-                        variant="filled"
-                        color="red"
-                        disabled={rconDisabled || busy}
-                        onClick={() => confirmBan(player)}
-                      >
-                        Ban
-                      </Button>
-                    </>
-                  }
-                />
-              );
-            })}
-          </div>
-        )}
+                      />
+                    );
+                  })}
+                </div>
+              )}
 
-        <BannedPlayersSection
-          serverId={props.serverId}
-          nameById={nameById}
-          reloadRef={reloadBannedRef}
-          onEntriesLoaded={onBannedEntriesLoaded}
-        />
+              <BannedPlayersSection
+                serverId={props.serverId}
+                nameById={nameById}
+                reloadRef={reloadBannedRef}
+                onEntriesLoaded={onBannedEntriesLoaded}
+              />
+            </Stack>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="admins" pt="sm">
+            <AdminsSection
+              serverId={props.serverId}
+              iniDirty={props.iniDirty === true}
+              nameById={nameById}
+              reloadRef={reloadAdminsRef}
+              readOnly={props.serverRunning || props.serverStarting === true}
+            />
+          </Tabs.Panel>
+        </Tabs>
       </Stack>
     </AppSurfaceCard>
   );

@@ -209,6 +209,40 @@ describe("ServerWorkspacePage", () => {
         ok: true,
         data: { banned: [], warning: null },
       })),
+      getAdminList: vi.fn(async () => ({
+        ok: true,
+        data: {
+          mode: "local" as const,
+          adminListUrl: "",
+          updateAllowedCheatersInterval: 600,
+          entries: [],
+          listError: null,
+          filePath: "C:\\ARK\\ShooterGame\\Saved\\AllowedCheaterAccountIDs.txt",
+          fileExists: true,
+          fileByteLength: 0,
+        },
+      })),
+      setAdminList: vi.fn(async () => ({
+        ok: true,
+        data: {
+          mode: "local" as const,
+          adminListUrl: "",
+          updateAllowedCheatersInterval: 600,
+          entries: [],
+          listError: null,
+          filePath: "C:\\ARK\\ShooterGame\\Saved\\AllowedCheaterAccountIDs.txt",
+          fileExists: true,
+          fileByteLength: 0,
+        },
+      })),
+      validateAdminListUrl: vi.fn(async () => ({
+        ok: true,
+        data: { count: 0, ids: [] },
+      })),
+      learnAdminListNames: vi.fn(async () => ({
+        ok: true,
+        data: { updated: 0 },
+      })),
       onRconStatusChanged: vi.fn(() => () => undefined),
       onPlayerListUpdated: vi.fn(() => () => undefined),
       getAppUpdateStatus: vi.fn(async () => ({

@@ -58,6 +58,9 @@ export function WorkspaceTabs(props: Props): ReactElement {
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   /** Snapshot at open so refresh remounts do not rewrite the dialog mid-move. */
   const [moveServer, setMoveServer] = useState<ServerProfile | null>(null);
+  const [rconPlayersFocus, setRconPlayersFocus] = useState<
+    "survivors" | "admins" | null
+  >(null);
 
   return (
     <>
@@ -132,6 +135,10 @@ export function WorkspaceTabs(props: Props): ReactElement {
                   filesJobActive={props.filesJobActive}
                   onDirtyChange={props.onIniDirtyChange}
                   onRegisterSave={props.onRegisterIniSave}
+                  onOpenAdminList={() => {
+                    setRconPlayersFocus("admins");
+                    props.onChange("rcon");
+                  }}
                 />
               </div>
             )}
@@ -172,6 +179,9 @@ export function WorkspaceTabs(props: Props): ReactElement {
                 events={props.events}
                 rconHistory={props.rconHistory}
                 playerList={props.playerList}
+                iniDirty={props.iniDirty}
+                playersPanelFocus={rconPlayersFocus}
+                onPlayersPanelFocusConsumed={() => setRconPlayersFocus(null)}
                 onSendRcon={props.onSendRcon}
                 onClearRconHistory={props.onClearRconHistory}
                 onRconTabFocusChanged={props.onRconTabFocusChanged}

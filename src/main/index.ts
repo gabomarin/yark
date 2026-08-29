@@ -401,7 +401,12 @@ if (gotSingleInstanceLock) {
       settings,
       join(userData, "backups"),
     );
-    const instances = new InstanceService(repo, processManager, backupService, locks);
+    const instances = new InstanceService(
+      repo,
+      processManager,
+      backupService,
+      locks,
+    );
     const backupScheduler = new BackupScheduler(backupService);
     const playerSessionWatcher = new PlayerSessionWatcher(
       backupService,

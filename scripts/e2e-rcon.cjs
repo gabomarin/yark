@@ -210,6 +210,10 @@ async function run() {
     await page.getByLabel(/rcon command/i).waitFor({ state: "visible" });
     await page.getByText("Online", { exact: true }).waitFor({ state: "visible" });
     await page.getByText("Banned", { exact: true }).waitFor({ state: "visible" });
+    await page.getByRole("tab", { name: "Admins" }).click();
+    await page.getByLabel("AdminListURL").waitFor({ state: "visible", timeout: 10_000 });
+    await page.getByText("Current ids", { exact: true }).waitFor({ state: "visible" });
+    await page.getByRole("tab", { name: "Survivors" }).click();
     await page.getByText("Console history", { exact: true }).waitFor({ state: "visible" });
 
     // Mock marks the server running — chips enabled; Send needs a command.

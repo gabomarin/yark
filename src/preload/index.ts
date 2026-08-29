@@ -100,6 +100,14 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.unbanPlayer, serverId, playerKey),
   openBanListFile: (serverId: string) =>
     ipcRenderer.invoke(IPC.openBanListFile, serverId),
+  getAdminList: (serverId: string) =>
+    ipcRenderer.invoke(IPC.getAdminList, serverId),
+  setAdminList: (serverId: string, config) =>
+    ipcRenderer.invoke(IPC.setAdminList, serverId, config),
+  validateAdminListUrl: (serverId: string, url: string) =>
+    ipcRenderer.invoke(IPC.validateAdminListUrl, serverId, url),
+  learnAdminListNames: (serverId: string, hints) =>
+    ipcRenderer.invoke(IPC.learnAdminListNames, serverId, hints),
   recentEvents: (limit: number) =>
     ipcRenderer.invoke(IPC.eventsRecent, limit),
   pickPath: (kind, defaultPath, title) =>

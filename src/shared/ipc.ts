@@ -119,6 +119,10 @@ export const IPC = {
   listBannedPlayers: "rcon:list-banned-players",
   unbanPlayer: "rcon:unban-player",
   openBanListFile: "rcon:open-ban-list-file",
+  getAdminList: "admin-list:get",
+  setAdminList: "admin-list:set-config",
+  validateAdminListUrl: "admin-list:validate-url",
+  learnAdminListNames: "admin-list:learn-names",
   eventsRecent: "events:recent",
   pickPath: "fs:pick-path",
   appListDataFolders: "app:list-data-folders",
@@ -241,6 +245,34 @@ export interface RconStatusChangedPush {
 export interface OnlinePlayerInfo {
   key: string;
   name: string | null;
+}
+
+/** ASA administrator whitelist mode (#153). */
+export type AdminListModeDto = "local" | "remote" | "misconfigured";
+
+export interface AdminListStateDto {
+  mode: AdminListModeDto;
+  adminListUrl: string;
+  updateAllowedCheatersInterval: number;
+  entries: Array<{ id: string; name: string | null }>;
+  listError: string | null;
+  filePath: string;
+  fileExists: boolean;
+  fileByteLength: number;
+}
+
+export interface AdminListConfigDto {
+  adminListUrl: string;
+  updateAllowedCheatersInterval: number;
+}
+
+export interface AdminListValidateDto {
+  count: number;
+  ids: string[];
+}
+
+export interface AdminListLearnNamesDto {
+  updated: number;
 }
 
 export interface PlayerListUpdatedPush {
@@ -379,6 +411,19 @@ export interface RendererApi {
     IpcResult<{ banned: OnlinePlayerInfo[]; warning: string | null }>
   >;
   openBanListFile(serverId: string): Promise<IpcResult<void>>;
+  getAdminList(serverId: string): Promise<IpcResult<AdminListStateDto>>;
+  setAdminList(
+    serverId: string,
+    config: AdminListConfigDto,
+  ): Promise<IpcResult<AdminListStateDto>>;
+  validateAdminListUrl(
+    serverId: string,
+    url: string,
+  ): Promise<IpcResult<AdminListValidateDto>>;
+  learnAdminListNames(
+    serverId: string,
+    hints: Array<{ id: string; name: string }>,
+  ): Promise<IpcResult<AdminListLearnNamesDto>>;
   recentEvents(limit: number): Promise<IpcResult<AppEvent[]>>;
   pickPath(
     kind: PickPathKind,
