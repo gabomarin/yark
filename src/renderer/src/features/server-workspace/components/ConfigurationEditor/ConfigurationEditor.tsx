@@ -27,6 +27,8 @@ interface Props {
   filesJobActive?: boolean;
   onDirtyChange?: (dirty: boolean) => void;
   onRegisterSave?: (save: (() => Promise<boolean>) | null) => void;
+  /** Open RCON → Admins (AdminListURL is managed there). */
+  onOpenAdminList?: () => void;
 }
 
 export function ConfigurationEditor(props: Props): ReactElement {
@@ -118,6 +120,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
               onToggleSection={editor.toggleSection}
               onUpdateValue={editor.updateValue}
               onResetRowToDefault={editor.resetRowToDefault}
+              onOpenAdminList={props.onOpenAdminList}
             />
 
             <Group justify="space-between" className={classes.footer}>

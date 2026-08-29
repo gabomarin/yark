@@ -24,6 +24,10 @@ interface Props {
   onRefreshPlayers: (serverId: string) => Promise<void>;
   onKickPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
   onBanPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
+  /** When true, Admins panel will not write AdminListURL to GUS. */
+  iniDirty?: boolean;
+  playersPanelFocus?: "survivors" | "admins" | null;
+  onPlayersPanelFocusConsumed?: () => void;
 }
 
 type QuickCommand = {
@@ -129,7 +133,7 @@ export function RconPanel(props: Props): ReactElement {
   return (
     <div className={classes.root}>
       <div className={classes.mainColumn}>
-        <AppSurfaceCard tone="flat" fill padding="sm" radius="md" className={classes.mainPanel}>
+        <AppSurfaceCard tone="flat" padding="sm" radius="md" className={classes.mainPanel}>
           <Stack gap="sm">
             <div className={classes.header}>
               <div>
@@ -243,6 +247,9 @@ export function RconPanel(props: Props): ReactElement {
         serverStarting={isStarting}
         rconConnected={rconConnected}
         playerList={props.playerList}
+        iniDirty={props.iniDirty === true}
+        playersPanelFocus={props.playersPanelFocus}
+        onPlayersPanelFocusConsumed={props.onPlayersPanelFocusConsumed}
         onRefreshPlayers={props.onRefreshPlayers}
         onKickPlayer={props.onKickPlayer}
         onBanPlayer={props.onBanPlayer}

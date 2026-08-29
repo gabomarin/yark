@@ -109,6 +109,10 @@ export const VALIDATED_IPC_CHANNELS = [
   IPC.listBannedPlayers,
   IPC.unbanPlayer,
   IPC.openBanListFile,
+  IPC.getAdminList,
+  IPC.setAdminList,
+  IPC.validateAdminListUrl,
+  IPC.learnAdminListNames,
   IPC.eventsRecent,
   IPC.appSetUiDensity,
   IPC.appSetOpenNativeConsole,
@@ -265,6 +269,29 @@ export const ipcArgSchemas = {
   [IPC.listBannedPlayers]: z.tuple([serverIdSchema]),
   [IPC.unbanPlayer]: z.tuple([serverIdSchema, playerKeySchema]),
   [IPC.openBanListFile]: z.tuple([serverIdSchema]),
+  [IPC.getAdminList]: z.tuple([serverIdSchema]),
+  [IPC.setAdminList]: z.tuple([
+    serverIdSchema,
+    z.object({
+      adminListUrl: z.string().max(MAX_STRING_PARAM_LENGTH),
+      updateAllowedCheatersInterval: z.number().finite(),
+    }),
+  ]),
+  [IPC.validateAdminListUrl]: z.tuple([
+    serverIdSchema,
+    z.string().max(MAX_STRING_PARAM_LENGTH),
+  ]),
+  [IPC.learnAdminListNames]: z.tuple([
+    serverIdSchema,
+    z
+      .array(
+        z.object({
+          id: z.string().min(1).max(MAX_STRING_PARAM_LENGTH),
+          name: z.string().min(1).max(MAX_STRING_PARAM_LENGTH),
+        }),
+      )
+      .max(500),
+  ]),
   [IPC.eventsRecent]: z.tuple([z.number().int().positive().max(5_000)]),
   [IPC.pickPath]: ipcTuple(
     pickPathKindSchema,

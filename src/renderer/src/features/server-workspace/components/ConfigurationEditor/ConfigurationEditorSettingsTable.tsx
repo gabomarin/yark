@@ -21,6 +21,7 @@ interface Props {
     occurrence?: number,
   ) => void;
   onResetRowToDefault: (row: IniSettingReference) => void;
+  onOpenAdminList?: () => void;
 }
 
 export function ConfigurationEditorSettingsTable(props: Props): ReactElement {
@@ -86,6 +87,7 @@ export function ConfigurationEditorSettingsTable(props: Props): ReactElement {
                         busy={busy}
                         onUpdateValue={onUpdateValue}
                         onResetRowToDefault={onResetRowToDefault}
+                        onOpenAdminList={props.onOpenAdminList}
                       />
                     );
                   })}

@@ -11,20 +11,23 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- RCON **Admins** panel: configure ASA admin whitelist via **remote http(s) AdminListURL** only (Validate, interval, Current ids); Local file / loopback hosting deferred to Hosted Resources (PHOST-001). Display names still learned into a YARK sidecar when an EOS id is seen Online (#153).
 - **Create server** suggests the next game/query/RCON ports that avoid other YARK profiles (factory defaults `7777` / `27015` / `27020`, then +10 steps) with honest copy — no Settings range to configure (#55).
 - **Search Maps…** on Create/Edit Server Information: CurseForge Maps card grid, in-modal **View details** step (metadata header, screenshots carousel, description), Map Name confirm, and one-step link of `map`, `mapModId`, and enabled Project ID (#295).
 - Mods detail drawer: CurseForge **screenshot slider** (Mantine Carousel) with enlarge, plus clamped plain-text **description** on inspect; Worker forwards capped screenshot URLs and fetches description on get-by-id for all mods (#342).
 
 ### Fixed
 
+- RCON tab scrolls when Players/Admins stacks below the console on narrow widths (content was clipped with no scrollbar).
 - **Install SteamCMD** in Settings keeps the loading state through validation and the path field updates as soon as install finishes (no second click).
 - **Search Maps…** refuses unfiltered CurseForge search when the Maps class/category id is missing, instead of showing all ASA mods (#295).
 - **Search Maps…** no longer flashes a transient category-unavailable error while CurseForge categories are still loading (#295).
 - Mods detail drawer: decode CurseForge HTML entities in descriptions (`&lt;&lt;` → `<<`) and show **Show more/less** only when the clamped text actually overflows (#342).
 - Map-mod launch token detection when CurseForge stripped descriptions glue `Map Name: Token_WP` to `Mod ID` without whitespace (e.g. Bjarnheim) (#342).
 
-### Changed
+### Security
 
+- Document AdminListURL Validate/get as operator-initiated main-process http(s) fetch (desktop trust boundary; SSRF note if IPC ever leaves local session) (#153).
 - Local/dev can set **`YARK_E2E_FULL_UI=true`** with an isolated `YARK_E2E_USER_DATA` profile to keep normal operator UI (splash, first-run setup assistant, What's new) while still avoiding real AppData.
 - Server Information **Map** field keeps an input-like closed control and opens a visual popover (Official thumbs, Map mods rows, Search Maps… / Custom…) instead of a plain text Select; the popover matches the field width, stays below it, and highlights the current pick with list-selected chrome and a check (#460).
 - Operator-facing **Map Name** hints no longer assume CurseForge always lists the name; copy points to the map community, wiki, or author notes when it does not (#295).

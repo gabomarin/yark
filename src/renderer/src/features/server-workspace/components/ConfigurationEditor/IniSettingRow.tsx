@@ -1,4 +1,4 @@
-import { ArrowUUpLeft } from "@phosphor-icons/react";
+import { ArrowUUpLeft, ArrowSquareOut } from "@phosphor-icons/react";
 import {
   ActionIcon,
   NumberInput,
@@ -30,6 +30,16 @@ interface Props {
     occurrence?: number,
   ) => void;
   onResetRowToDefault: (row: IniSettingReference) => void;
+  /** Jump to RCON → Admins for AdminListURL (not edited in INI Files). */
+  onOpenAdminList?: () => void;
+}
+
+function isAdminListUrlRow(row: IniSettingReference): boolean {
+  return (
+    row.fileKey === "gameUserSettings" &&
+    row.section.trim().toLowerCase() === "serversettings" &&
+    row.key.trim().toLowerCase() === "adminlisturl"
+  );
 }
 
 export function IniSettingRow(props: Props): ReactElement {
@@ -44,6 +54,7 @@ export function IniSettingRow(props: Props): ReactElement {
   const canResetDefault = defaultValue !== null && defaultValue !== row.value;
   const label =
     row.duplicateCount > 1 ? `${row.key} #${row.occurrence + 1}` : row.key;
+  const adminListUrl = isAdminListUrlRow(row);
 
   return (
     <div className={classes.row}>
@@ -59,7 +70,15 @@ export function IniSettingRow(props: Props): ReactElement {
         </Text>
       </div>
       <div>
-        {kind === "boolean" ? (
+        {adminListUrl ? (
+          <Text
+            size="sm"
+            style={{ wordBreak: "break-all" }}
+            c={row.value.trim().length > 0 ? undefined : "dimmed"}
+          >
+            {row.value.trim().length > 0 ? row.value : "Not set"}
+          </Text>
+        ) : kind === "boolean" ? (
           <Switch
             checked={row.value.toLowerCase() === "true"}
             onChange={(event) =>
@@ -102,27 +121,44 @@ export function IniSettingRow(props: Props): ReactElement {
           />
         )}
       </div>
-      <Text c="dimmed" size="sm">
-        {lookupSettingDescription(row.fileKey, row.section, row.key)}
-      </Text>
+      <div>
+        <Text c="dimmed" size="sm">
+          {adminListUrl
+            ? `${lookupSettingDescription(row.fileKey, row.section, row.key)} Edit in RCON → Admins.`
+            : lookupSettingDescription(row.fileKey, row.section, row.key)}
+        </Text>
+      </div>
       <div className={classes.rowActions}>
-        <Tooltip
-          label={
-            canResetDefault
-              ? `Default: ${defaultValue}`
-              : "No known default for this key/section"
-          }
-        >
-          <ActionIcon
-            variant="subtle"
-            color="gray"
-            disabled={!canResetDefault || busy}
-            aria-label={`Reset ${row.key} to default`}
-            onClick={() => onResetRowToDefault(row)}
+        {adminListUrl && props.onOpenAdminList ? (
+          <Tooltip label="Open RCON → Admins">
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              aria-label="Open RCON → Admins"
+              onClick={props.onOpenAdminList}
+            >
+              <ArrowSquareOut size={14} />
+            </ActionIcon>
+          </Tooltip>
+        ) : (
+          <Tooltip
+            label={
+              canResetDefault
+                ? `Default: ${defaultValue}`
+                : "No known default for this key/section"
+            }
           >
-            <ArrowUUpLeft size={14} />
-          </ActionIcon>
-        </Tooltip>
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              disabled={!canResetDefault || busy}
+              aria-label={`Reset ${row.key} to default`}
+              onClick={() => onResetRowToDefault(row)}
+            >
+              <ArrowUUpLeft size={14} />
+            </ActionIcon>
+          </Tooltip>
+        )}
       </div>
     </div>
   );

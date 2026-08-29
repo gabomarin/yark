@@ -1,21 +1,39 @@
 ---
 title: Use the RCON console on a running ASA dedicated server
-description: Workspace RCON in YARK for a running ARK Ascended dedicated server — commands, history, online players, and BanList.txt management.
+description: Workspace RCON in YARK for a running ARK Ascended dedicated server — commands, history, survivors, BanList, and admin whitelist config.
 ---
 
 import { Aside } from "@astrojs/starlight/components";
 
-The workspace **RCON** tab is the admin console for a dedicated server that is **`running`**: a persistent localhost RCON session, command history, online players, and `BanList.txt` management.
+The workspace **RCON** tab is the admin console for a dedicated server that is **`running`**: a persistent localhost RCON session, command history, online survivors, `BanList.txt`, and ASA **administrator whitelist** settings.
 
 Readiness while **starting** and graceful stop still use RCON under the hood; see [Start, stop, restart](/docs/lifecycle/).
 
 ## What you can do
 
 - Send console commands and review responses in the session history (history survives switching workspace tabs inside the app session)
-- Kick / Ban / Unban from the players and ban list panels
+- Kick / Ban / Unban from the survivors and ban list panels
+- Configure admin whitelist with a **remote http(s) AdminListURL** (Validate, refresh interval). Save writes `GameUserSettings.ini` unless the INI Files tab has unsaved edits; Discard restores the draft. Local file / loopback hosting is deferred.
 - Use SidePanel **Save world** / **Broadcast**, which share the same send path
 
 Host is always `127.0.0.1`. Auth uses the profile admin password and the **runtime** RCON port for that session.
+
+## Administrator whitelist
+
+ASA auto-admins use EOS / Ark ids (32-character), not Steam ids.
+
+Paste a public **http(s)** list URL (one EOS id per line — for example a GitHub
+Gist raw link) and Save. **Restart** so ASA picks up the URL, then the dedicated
+re-fetches on **UpdateAllowedCheatersInterval** (default 600 seconds; minimum 3).
+
+Local `file://` / in-app hosted lists are **not** in the product UI yet (planned
+under Hosted Resources). Until then, use a remote URL.
+
+The whitelist is **not** stored in YARK’s database.
+
+<Aside type="note">
+  In-app add/remove of admin ids is planned separately; this release configures the remote URL and shows the current list.
+</Aside>
 
 ## When the console is available
 
@@ -26,7 +44,7 @@ Host is always `127.0.0.1`. Auth uses the profile admin password and the **runti
 | **stopping** / **stopped** | Session torn down after stop |
 
 <Aside type="caution">
-  Treat RCON responses and BanList contents as sensitive. Do not paste admin passwords or full ban lists into public bug reports.
+  Treat RCON responses, BanList, and admin whitelist contents as sensitive. Do not paste admin passwords or full id lists into public bug reports.
 </Aside>
 
 ## Related
