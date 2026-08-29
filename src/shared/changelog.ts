@@ -49,7 +49,7 @@ export const changelog: ChangelogEntry[] = [
         title: "Fixed",
         items: [
           "Remaster World save folder persists when mapModId is set; clearing AdminListURL no longer reseeds Current ids from the names sidecar.",
-          "Clone port suggestions skip occupied fleet ports; RCON tab scrolls on narrow widths; SteamCMD Install refreshes the path field.",
+          "Clone port suggestions skip occupied fleet ports (fallback +10 wraps near the port ceiling); RCON tab scrolls on narrow widths; SteamCMD Install refreshes the path field.",
           "Search Maps… gates missing Maps category and avoids a flash while categories load; Mods description entities and overflow Show more.",
         ],
       },

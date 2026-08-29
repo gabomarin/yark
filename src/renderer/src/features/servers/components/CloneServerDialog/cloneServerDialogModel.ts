@@ -1,4 +1,4 @@
-import type { ServerProfile } from "@shared/types";
+import { offsetPort, type ServerProfile } from "@shared/types";
 import { suggestNextPortTriplet } from "@shared/port-suggest";
 import { suggestCloneInstallDir } from "@shared/server-install-path";
 
@@ -15,6 +15,19 @@ export interface CloneFormState {
 export function isValidClonePort(value: string): boolean {
   const port = Number(value);
   return Number.isInteger(port) && port >= 1024 && port <= 65535;
+}
+
+/** Source ports +10, wrapped into the legal ASA port range. */
+function sourcePortsPlusTen(source: ServerProfile): {
+  gamePort: number;
+  queryPort: number;
+  rconPort: number;
+} {
+  return {
+    gamePort: offsetPort(source.gamePort, 10),
+    queryPort: offsetPort(source.queryPort, 10),
+    rconPort: offsetPort(source.rconPort, 10),
+  };
 }
 
 /** Initial clone form ports/name/path from the source profile and fleet. */
@@ -35,8 +48,9 @@ export function cloneDialogFormState(
   }
 
   const name = `${source.name}-copy`;
+  const sourcePlusTen = sourcePortsPlusTen(source);
   // Prefer fleet-aware hunt starting at the source triplet (offset 0 conflicts with
-  // source when it is in `fleet`). Empty fleet → start at source+10.
+  // source when it is in `fleet`). Empty fleet → start at source+10 (wrapped).
   const suggested = suggestNextPortTriplet({
     profiles: fleet,
     bases:
@@ -46,18 +60,10 @@ export function cloneDialogFormState(
             queryPort: source.queryPort,
             rconPort: source.rconPort,
           }
-        : {
-            gamePort: source.gamePort + 10,
-            queryPort: source.queryPort + 10,
-            rconPort: source.rconPort + 10,
-          },
+        : sourcePlusTen,
     candidateName: name,
   });
-  const ports = suggested ?? {
-    gamePort: source.gamePort + 10,
-    queryPort: source.queryPort + 10,
-    rconPort: source.rconPort + 10,
-  };
+  const ports = suggested ?? sourcePlusTen;
   return {
     name,
     sessionName: `${source.sessionName}-copy`,

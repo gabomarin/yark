@@ -112,11 +112,13 @@ export function CloneServerDialog(props: Props): ReactElement {
     if (copying) {
       return;
     }
+    // Form reset also runs in the sourceServer.id / opened effect; fleet is only
+    // needed when reopening from a new source, not on every fleet array identity.
     setState(cloneDialogFormState(props.sourceServer, props.fleetServers ?? []));
     setProgress(null);
     props.onClose();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- sourceServer content is stable for the dialog lifecycle
-  }, [copying, props.onClose, props.sourceServer, props.fleetServers]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fleetServers identity is unstable; sourceServer.id effect resets the form
+  }, [copying, props.onClose, props.sourceServer]);
 
   const handleClone = useCallback(async () => {
     if (!canSubmit) return;

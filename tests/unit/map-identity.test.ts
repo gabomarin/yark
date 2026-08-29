@@ -306,4 +306,38 @@ describe("persistableMapSaveFolder", () => {
       }),
     ).toBe("ReforgedIsland");
   });
+
+  it("nulls empty folder even when mapModId is set on an official token", () => {
+    expect(
+      persistableMapSaveFolder({
+        map: "TheIsland_WP",
+        mapModId: "1460513",
+        mapSaveFolder: "",
+      }),
+    ).toBeNull();
+    expect(
+      persistableMapSaveFolder({
+        map: "TheIsland_WP",
+        mapModId: "1460513",
+        mapSaveFolder: "   ",
+      }),
+    ).toBeNull();
+  });
+
+  it("nulls unsafe remaster folder names", () => {
+    expect(
+      persistableMapSaveFolder({
+        map: "TheIsland_WP",
+        mapModId: "1460513",
+        mapSaveFolder: "Con",
+      }),
+    ).toBeNull();
+    expect(
+      persistableMapSaveFolder({
+        map: "TheIsland_WP",
+        mapModId: "1460513",
+        mapSaveFolder: "Folder/Sub",
+      }),
+    ).toBeNull();
+  });
 });

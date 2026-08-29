@@ -22,7 +22,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - Remaster **World save folder** is persisted when `mapModId` is set (official-token remasters no longer lose a custom SavedArks folder on save).
 - Clearing remote AdminListURL no longer rewrites `AllowedCheaterAccountIDs.txt` from the names sidecar on read (false Current ids after clear).
-- Clone dialog suggests the next free game/query/RCON triplet across the fleet (same hunt as create/auto-clone), not only source+10.
+- Clone dialog suggests the next free game/query/RCON triplet across the fleet (same hunt as create/auto-clone), not only source+10; fallback +10 wraps via `offsetPort` near the port ceiling.
 - RCON tab scrolls when Players/Admins stacks below the console on narrow widths (content was clipped with no scrollbar).
 - **Install SteamCMD** in Settings keeps the loading state through validation and the path field updates as soon as install finishes (no second click).
 - **Search Maps…** refuses unfiltered CurseForge search when the Maps class/category id is missing, instead of showing all ASA mods (#295).
