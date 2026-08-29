@@ -20,7 +20,11 @@
 }
 
 .navLink {
-  border-radius: var(--app-radius-control);
+  border-radius: var(--app-radius-sm);
+}
+
+.navLink[data-active] {
+  box-shadow: var(--app-list-selected-inset);
 }
 
 .panelScroll {

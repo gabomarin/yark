@@ -1,11 +1,10 @@
-/* Solid panel fill from the MagicPath mock (#1f1f1f), not navy-mixed --app-color-panel. */
 .content {
-  --paper-bg: var(--ark-gray-3);
-  --paper-background: var(--ark-gray-3);
-  --paper-radius: 8px;
-  background: var(--ark-gray-3);
-  border-radius: 8px;
-  border: 1px solid var(--ark-gray-6);
+  --paper-bg: var(--app-color-panel);
+  --paper-background: var(--app-color-panel);
+  --paper-radius: var(--app-radius-md);
+  background: var(--app-color-panel);
+  border-radius: var(--app-radius-md);
+  border: 1px solid var(--app-color-border);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -16,8 +15,8 @@
   flex-shrink: 0;
   flex-direction: column;
   align-items: stretch;
-  background: var(--ark-gray-3);
-  border-bottom: 1px solid var(--ark-gray-6);
+  background: var(--app-color-panel);
+  border-bottom: 1px solid var(--app-color-border);
   padding: var(--app-space-md) var(--app-space-lg) var(--app-space-sm);
 }
 
@@ -48,8 +47,8 @@
 
 .tabs {
   width: 100%;
-  background: var(--ark-gray-2);
-  border: 1px solid var(--ark-gray-6);
+  background: var(--app-color-surface-chrome);
+  border: 1px solid var(--app-color-border);
 }
 
 .tabs :global(.mantine-SegmentedControl-indicator) {
@@ -70,7 +69,7 @@
   flex-direction: column;
   min-height: 0;
   padding: 0;
-  background: var(--ark-gray-3);
+  background: var(--app-color-panel);
   overflow: hidden;
 }
 
@@ -170,7 +169,7 @@
 
 .accordionItem {
   background: transparent;
-  border-bottom: 1px solid var(--ark-gray-6);
+  border-bottom: 1px solid var(--app-color-border);
 }
 
 .accordionItem:last-child {
@@ -187,7 +186,7 @@
 }
 
 .accordionControl:hover {
-  background: color-mix(in srgb, var(--ark-gray-4) 70%, transparent);
+  background: color-mix(in srgb, var(--app-color-surface-control) 55%, transparent);
 }
 
 .accordionPanel {
@@ -210,9 +209,9 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--app-space-xs);
-  border-top: 1px solid var(--ark-gray-6);
+  border-top: 1px solid var(--app-color-border);
   padding: var(--app-space-sm) var(--app-space-lg);
-  background: var(--ark-gray-3);
+  background: var(--app-color-panel);
 }
 
 .github {

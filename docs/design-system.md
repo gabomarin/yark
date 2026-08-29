@@ -106,11 +106,17 @@ Use this checklist when reviewing a screen or introducing a pattern. Each catego
 
 | Rule | Do | Don’t |
 | --- | --- | --- |
+| Page canvas | Sit on `--app-color-bg` (`#0c1427`) | Wrapping the viewport in a mixed navy card |
+| Chrome | `--app-color-surface-chrome` (`#121213`) | `color-mix` of gray + blue for sidebars |
+| Raised / panels | `--app-color-panel` (`#1f1f1f`) | Translucent panel washes |
+| Controls | `--app-color-surface-control` (`#303030`) | Mixing control fill with `--ark-blue-*` |
 | Page / tool panels | `AppSurfaceCard tone="flat" radius="md"` | Local `.panel { background… border… }` or cool wash shells |
 | Accent heroes | `tone="coolEmphasis"` (rare) | Using cool wash as the default page shell |
 | Nested widgets | `tone="flat"` (or nested inside a flat shell) | Mixing Card + ad-hoc panel bg |
 | Shell rails | `tone="chrome"` or chrome parent + flat children | Cool gradients in sidebars |
 | Status accent | `statusTone` on `AppSurfaceCard` | One-off `box-shadow: inset 3px…` |
+
+Solid **bg / raised / control** come from `tokens.ts` + `theme.ts`. Do **not** introduce `color-mix` in those token definitions; mix only on hover/focus, lightly. `--app-*` and `--mantine-color-dark-*` alias the same hexes (#468).
 
 ### 2. Spacing / density
 
@@ -147,14 +153,14 @@ gap: var(--app-space-sm);            // preferred in CSS modules
 
 | Token | Comfortable (px) | Compact (px) | Use |
 | --- | ---: | ---: | --- |
-| `--app-radius-sm` | 10 | 8 | Small chips / tight widgets |
-| `--app-radius-control` | 12 | 10 | Inputs, list rows, search |
-| `--app-radius-md` | 14 | 11 | Content `AppSurfaceCard` default, nested cards / Paper |
-| `--app-radius-lg` | 18 | 15 | Rare oversized / hero cards |
+| `--app-radius-sm` | 6 | 5 | Default chrome, Badge, NavLink, Card/Paper/Alert |
+| `--app-radius-control` | 6 | 5 | Inputs, list rows, search (same step as `sm`) |
+| `--app-radius-md` | 8 | 7 | Content `AppSurfaceCard` default, nested panels |
+| `--app-radius-lg` | 10 | 8 | Rare oversized / hero cards |
 
-Avoid raw `border-radius: 8px|14px` when a token fits. Tek icon tiles keep asymmetric radius by design (`AccentIconTile shape="tek"`).
+Theme `defaultRadius` is **`sm`**. Avoid raw `border-radius` when a token fits. Tek icon tiles keep asymmetric radius by design (`AccentIconTile shape="tek"`).
 
-**Square vs rounded:** Overview server **list rows** (`ServerCard`) and the Clusters **How transfers work** Accordion are square (`radius={0}`) so stacked chrome reads as one list. Content panels use `AppSurfaceCard` default **`md`**; do not invent outer `14px` / `12px` shells beside the atom (#346).
+**Square vs rounded:** Overview server **list rows** (`ServerCard`) and the Clusters **How transfers work** Accordion are square (`radius={0}`) so stacked chrome reads as one list. Content panels use `AppSurfaceCard` default **`md`** (8px Comfortable); do not invent outer shells beside the atom (#346).
 
 ### 4. Color / status
 
@@ -166,9 +172,7 @@ Avoid raw `border-radius: 8px|14px` when a token fits. Tek icon tiles keep asymm
   commits and **`--app-color-danger-bright`** for menu danger rows, Stop
   (`variant="light"`), and icons on dark chrome — not Mantine’s default coral. Version status text uses
   theme shade refs (`c="ok.5"`, `c="attention.5"`).
-- **Inline Alert surfaces** (theme `Alert` `--alert-bg` / `--alert-bd`): `blue` =
-  translucent blue wash; `yellow` / `fossil` / `attention` = translucent panel
-  (`bg-card/60` recipe) + fossil border; `red` = translucent danger wash.
+- **Inline Alert surfaces** (theme `Alert` `--alert-bg` / `--alert-bd`): solid `--app-color-panel` fill plus a 1px semantic border (`cryo` / `fossil` / `bad`). Do not use translucent MagicPath washes.
 - Text: `--app-color-text` / `--app-color-muted`.
 - Borders: `--app-color-border` / `--app-color-border-subtle`.
 - Never hardcode status hex (`#e5484d`, `#58c89a`, …) in feature CSS.
@@ -177,7 +181,8 @@ Avoid raw `border-radius: 8px|14px` when a token fits. Tek icon tiles keep asymm
 
 - Selected rows: `SelectableListRow` → `--app-list-selected-bg` + `--app-list-selected-inset`.
   Feature list rows that cannot use `SelectableListRow` still bind those two vars (no
-  one-off `inset 3px` / local selection gradients).
+  one-off `inset 3px` / local selection gradients). Active **NavLink** (sidebar, Settings
+  categories) uses the same quiet fill + 3px inset — not a `variant="light"` capsule.
 - Focus rings: reuse existing `:focus-visible` patterns (ark-blue outline), don’t invent per-page rings.
 
 ### 5b. Page-local job status (toolbar cohesion)

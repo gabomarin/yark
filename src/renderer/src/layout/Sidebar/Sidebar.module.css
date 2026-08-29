@@ -82,12 +82,12 @@
 .navLink {
   position: relative;
   min-height: 42px;
-  border-radius: var(--app-radius-control);
+  border-radius: var(--app-radius-sm);
   color: var(--app-color-text);
-  /* Tune Mantine NavLink active tokens; no custom ::before rail. */
-  --nl-bg: var(--ark-blue-a4);
-  --nl-hover: var(--ark-blue-a3);
-  --nl-color: var(--app-color-text);
+}
+
+.navLink[data-active] {
+  box-shadow: var(--app-list-selected-inset);
 }
 
 .sidebar[data-icon-mode] .navLink {
