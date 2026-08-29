@@ -1,25 +1,135 @@
-.entry {
-  padding-bottom: var(--app-space-md);
-  border-bottom: 1px solid color-mix(in srgb, var(--mantine-color-dark-4) 60%, transparent);
-}
-
-.entry:last-child {
-  padding-bottom: 0;
-  border-bottom: none;
-}
-
-.entryCompact {
-  /* single-version view — no list separators */
-  padding-bottom: 0;
-}
-
-.entryHeader {
+/* Solid panel fill from the MagicPath mock (#1f1f1f), not navy-mixed --app-color-panel. */
+.content {
+  --paper-bg: var(--ark-gray-3);
+  --paper-background: var(--ark-gray-3);
+  --paper-radius: 8px;
+  background: var(--ark-gray-3);
+  border-radius: 8px;
+  border: 1px solid var(--ark-gray-6);
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: min(720px, 90vh);
+}
+
+.header {
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: stretch;
+  background: var(--ark-gray-3);
+  border-bottom: 1px solid var(--ark-gray-6);
+  padding: var(--app-space-md) var(--app-space-lg) var(--app-space-sm);
+}
+
+.headerTop {
+  display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: var(--app-space-xs);
+  gap: var(--app-space-sm);
   margin-bottom: var(--app-space-sm);
+}
+
+.title {
+  font-size: var(--mantine-font-size-md);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--app-color-text);
+}
+
+.meta {
+  margin-top: var(--app-space-xxs);
+  color: var(--app-color-muted);
+}
+
+.metaSep {
+  margin-inline: var(--app-space-xxs);
+  color: var(--ark-gray-8);
+}
+
+.tabs {
+  width: 100%;
+  background: var(--ark-gray-2);
+  border: 1px solid var(--ark-gray-6);
+}
+
+.tabs :global(.mantine-SegmentedControl-indicator) {
+  background: var(--ark-blue-6);
+}
+
+.tabs :global(.mantine-SegmentedControl-label) {
+  color: var(--app-color-muted);
+}
+
+.tabs :global(.mantine-SegmentedControl-label[data-active]) {
+  color: var(--mantine-color-blue-1);
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0;
+  background: var(--ark-gray-3);
+  overflow: hidden;
+}
+
+.scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+.scrollViewport {
+  padding: var(--app-space-lg);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-lg);
+}
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-lg);
+}
+
+.section {
+  padding-left: var(--app-space-sm);
+  border-left: 3px solid var(--changelog-rail, var(--app-color-muted));
+}
+
+.section[data-kind="Added"] {
+  --changelog-rail: var(--app-color-accent);
+}
+
+.section[data-kind="Changed"] {
+  --changelog-rail: var(--app-color-fossil);
+}
+
+.section[data-kind="Fixed"] {
+  --changelog-rail: var(--app-color-ok);
+}
+
+.section[data-kind="Security"] {
+  --changelog-rail: var(--app-color-danger-bright);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: baseline;
+  gap: var(--app-space-xs);
+  margin-bottom: var(--app-space-xs);
+}
+
+.sectionTitle {
+  letter-spacing: -0.01em;
+  color: var(--app-color-text);
+}
+
+.sectionCount {
+  color: var(--ark-gray-8);
 }
 
 .itemList {
@@ -28,7 +138,7 @@
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: var(--app-space-xs);
+  gap: var(--app-space-sm);
 }
 
 .item {
@@ -39,9 +149,80 @@
 
 .itemDot {
   flex-shrink: 0;
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
   margin-top: 0.45rem;
   border-radius: 999px;
-  background: var(--mantine-color-blue-5);
+  background: var(--changelog-rail, var(--app-color-accent));
+}
+
+.itemText {
+  margin: 0;
+  max-width: 62ch;
+  line-height: 1.6;
+  color: var(--app-color-text);
+}
+
+.accordion {
+  display: flex;
+  flex-direction: column;
+}
+
+.accordionItem {
+  background: transparent;
+  border-bottom: 1px solid var(--ark-gray-6);
+}
+
+.accordionItem:last-child {
+  border-bottom: none;
+}
+
+.accordionControl {
+  padding-inline: var(--app-space-xxs);
+  background: transparent;
+}
+
+.accordionControl :global(.mantine-Accordion-label) {
+  width: 100%;
+}
+
+.accordionControl:hover {
+  background: color-mix(in srgb, var(--ark-gray-4) 70%, transparent);
+}
+
+.accordionPanel {
+  padding-top: 0;
+  padding-bottom: var(--app-space-md);
+  padding-inline: var(--app-space-xxs);
+}
+
+.accordionMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-xs);
+  color: var(--ark-gray-8);
+}
+
+.footer {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--app-space-xs);
+  border-top: 1px solid var(--ark-gray-6);
+  padding: var(--app-space-sm) var(--app-space-lg);
+  background: var(--ark-gray-3);
+}
+
+.github {
+  color: var(--ark-blue-11);
+}
+
+.github:hover {
+  color: var(--mantine-color-blue-1);
+}
+
+.empty {
+  color: var(--app-color-muted);
 }

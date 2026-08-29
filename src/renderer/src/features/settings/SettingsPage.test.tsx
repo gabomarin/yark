@@ -721,9 +721,9 @@ describe("SettingsPage", () => {
       expect(window.api.getAppUpdateStatus).toHaveBeenCalled();
     });
     await user.click(screen.getByRole("button", { name: /What's new/i }));
-    expect(await screen.findByText("Changelog")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Got it/i })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /Got it/i })).toBeInTheDocument();
     expect(document.querySelector("[data-changelog-modal]")).not.toBeNull();
+    expect(screen.getByRole("radio", { name: /earlier releases/i })).toBeChecked();
   });
 
   it("leaves checking state when the update IPC call rejects", async () => {
