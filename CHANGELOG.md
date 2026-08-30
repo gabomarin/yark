@@ -27,6 +27,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - Logs, crash excerpts, events, and IPC errors omit GameUserSettings password settings and redact leftover credential assignments. SQLite and ASA INI stay plaintext for the same Windows user (#144).
 
+### Fixed
+
+- Fleet **Cleanup** “keep limit” now matches scheduled world retention: last N archives **per map**, so rotating maps no longer deletes the other map’s backups.
+
 ## [0.17.0] - 2026-08-29
 
 ### Added

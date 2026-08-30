@@ -6,7 +6,7 @@ import type {
   BackupPolicy,
   BackupRecord,
 } from "@shared/types";
-import { ALL_BACKUP_KINDS, retainCountForKind } from "./backup-policy-helpers";
+import { ALL_BACKUP_KINDS, retainCountForKind, worldRetentionKey } from "./backup-policy-helpers";
 
 export interface BackupCleanupPlanItem {
   backup: BackupRecord;
@@ -108,6 +108,21 @@ export function planBackupCleanup(input: PlanBackupCleanupInput): BackupCleanupP
             byPlayer.set(key, list);
           }
           for (const [, list] of byPlayer) {
+            for (const backup of list.slice(retain)) {
+              mark(backup, server.name, "over retain policy");
+            }
+          }
+          continue;
+        }
+        if (kind === "world") {
+          const byMap = new Map<string, BackupRecord[]>();
+          for (const backup of completed) {
+            const key = worldRetentionKey(backup);
+            const list = byMap.get(key) ?? [];
+            list.push(backup);
+            byMap.set(key, list);
+          }
+          for (const [, list] of byMap) {
             for (const backup of list.slice(retain)) {
               mark(backup, server.name, "over retain policy");
             }

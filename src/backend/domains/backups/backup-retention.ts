@@ -8,11 +8,7 @@ import { playersRetentionKey } from "@shared/backup-player-meta";
 import type { BackupPolicy, BackupRecord } from "@shared/types";
 import type { BackupRepository } from "../../infra/db/backup-repository";
 import type { ServerRepository } from "../../infra/db/server-repository";
-import { ALL_BACKUP_KINDS, retainCountForKind } from "./backup-policy-helpers";
-
-function worldRetentionKey(backup: BackupRecord): string {
-  return backup.mapToken?.trim().toLowerCase() || "__unscoped__";
-}
+import { ALL_BACKUP_KINDS, retainCountForKind, worldRetentionKey } from "./backup-policy-helpers";
 
 export interface BackupRetentionHost {
   servers: ServerRepository;
