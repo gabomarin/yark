@@ -32,6 +32,7 @@ MagicPath UX mock: https://magicpath.ai/files/444694713119952896
 - Wipe On = after successful scheduled restart (no standalone wipe schedule in MVP)
 - Auto-update On = Steam `buildid` newer via existing poll (~15 min cache) — no faster poll
 - Per-job Broadcast presets/templates; last minute ≤60s = 1 Hz countdown (#487 / #489)
+  (`Restart in {n}s` / `Update in {n}s` — product rule, wired when execution lands)
 - Do not invent a second lifecycle stack — reuse restart / safe update / RCON
 
 World backup schedule stays on the Backups tab; log retention stays in Settings.

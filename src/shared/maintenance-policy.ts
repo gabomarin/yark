@@ -32,10 +32,6 @@ export const DEFAULT_UPDATE_WARNINGS: MaintenanceJobWarnings = {
   template: "Server update in {time}",
 };
 
-/** Short last-minute templates (1 Hz ticker — not operator-editable in MVP). */
-export const MAINTENANCE_LAST_MINUTE_RESTART_TEMPLATE = "Restart in {n}s";
-export const MAINTENANCE_LAST_MINUTE_UPDATE_TEMPLATE = "Update in {n}s";
-
 export function defaultMaintenancePolicy(serverId: string, updatedAt: string): MaintenancePolicy {
   return {
     serverId,
