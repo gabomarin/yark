@@ -2,7 +2,7 @@ import { Card, type CardProps } from "@mantine/core";
 import type { ReactNode, ReactElement } from "react";
 import classes from "./AppSurfaceCard.module.css";
 
-export type AppSurfaceTone = "cool" | "coolEmphasis" | "flat" | "chrome";
+type AppSurfaceTone = "cool" | "coolEmphasis" | "flat" | "chrome";
 
 type InheritedCardProps = Omit<CardProps, "children" | "classNames" | "className" | "withBorder">;
 
