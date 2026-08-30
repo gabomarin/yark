@@ -13,6 +13,7 @@ import {
 } from "@shared/left-running";
 import { rconExec } from "../rcon/rcon-client";
 import { diagnoseAsaStartupFailure, type AsaStartupFailure } from "@shared/asa-startup-failure";
+import { sanitizeDiagnosticText } from "@shared/credential-redaction";
 import { readAsaLogSessionExcerpt } from "./asa-log-tail";
 import { createAdoptedChildHandle } from "./adopted-child";
 import { killWinProcessTreeAsync } from "./kill-win-process-tree";
@@ -728,7 +729,11 @@ export class ProcessManager extends EventEmitter {
   }
 
   private appendRuntimeLog(serverId: string, source: string, message: string): void {
-    const line = message.trim();
+    const sanitized = sanitizeDiagnosticText(message);
+    if (message.trim().length > 0 && sanitized.trim().length === 0) {
+      return;
+    }
+    const line = sanitized.trim();
     if (line.length === 0) {
       return;
     }

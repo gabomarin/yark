@@ -12,7 +12,7 @@ Protect three content scopes independently:
 | --- | --- | --- |
 | `world` | `{installDir}/ShooterGame/Saved/SavedArks/{MapToken}/` (or mod folder without `_WP`, e.g. `Svartalfheim/` for launch token `Svartalfheim_WP`) | `SavedArks/{MapToken}/` (primary `.ark`, anti-corruption bak, profiles/tribes; no dated autosaves) |
 | `players` | `.arkprofile` / `.arkprofile.bak` / `.profilebak` under `SavedArks` and `SaveGames` (join/leave only) | `PlayerProfiles/{id}.arkprofile` (flat; no map subfolder) |
-| `ini` | `Game.ini` + `GameUserSettings.ini` in `Config/WindowsServer` | `ConfigWindowsServer/` |
+| `ini` | `Game.ini` + `GameUserSettings.ini` in `Config/WindowsServer` (plaintext GUS passwords) | `ConfigWindowsServer/` |
 
 **Breaking (0.10):** world archives are **per-map**, not a full `SavedArks` tree. Older full-folder world ZIPs are not restored by the current path.
 

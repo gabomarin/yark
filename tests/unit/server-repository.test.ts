@@ -193,6 +193,16 @@ describe("ServerRepository", () => {
     });
   });
 
+  it("omits GUS password settings from stored events", () => {
+    repo.addEvent("srv-1", "error", "error", "GUS\nServerAdminPassword=hunter2-secret", {
+      excerpt: "ServerPassword=join-secret\nMaxPlayers=70",
+    });
+    const events = repo.recentEvents(1);
+    expect(events[0]!.message).not.toMatch(/ServerAdminPassword/i);
+    expect(events[0]!.message).not.toContain("hunter2-secret");
+    expect(events[0]!.details?.excerpt).toBe("MaxPlayers=70");
+  });
+
   it("promotes leftover Launch/extra WinLiveMaxPlayers into max_players", () => {
     const created = repo.create(input({ extraArgs: ["-NoBattlEye"], maxPlayers: 70 }));
     db.prepare(

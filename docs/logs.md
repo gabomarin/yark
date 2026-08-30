@@ -15,6 +15,9 @@ or seeds logs for development and QA.
   deleting the SQLite database wholesale.
 - Bound YARK-owned operational history with a conservative retention policy
   (#84) while never taking ownership of ASA runtime log files.
+- Diagnostic dumps that include GameUserSettings or server configuration **omit**
+  password settings (`ServerAdminPassword` / `ServerPassword`) instead of
+  reprinting them (#144). Leftover assignment forms in IPC errors are redacted.
 
 ## Module map
 
@@ -24,6 +27,7 @@ or seeds logs for development and QA.
 | Retention scheduler | `src/backend/domains/logs/log-retention-scheduler.ts` |
 | Shared defaults / normalize | `src/shared/log-retention.ts` |
 | Event persistence | `src/backend/infra/db/server-repository.ts` (`addEvent`) |
+| Diagnostic omit/redact (#144) | `src/shared/credential-redaction.ts` |
 | DB migration (details column) | `src/backend/infra/db/database.ts` (migration **v6**) |
 | Detail catalog + merge | `src/shared/event-details.ts` (`resolveEventDetails`) |
 | Contracts | `src/shared/types.ts` (`AppEvent`, `AppEventDetails`, `ServerOperationalLogs`, `LogRetentionSettings`) |

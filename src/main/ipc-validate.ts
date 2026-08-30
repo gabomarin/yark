@@ -7,6 +7,7 @@ import { ipcMain } from "electron";
 import type { z } from "zod";
 import type { IpcResult } from "../shared/ipc";
 import { formatZodError } from "../shared/ipc/primitives";
+import { sanitizeDiagnosticText } from "../shared/credential-redaction";
 
 const validatedChannels = new Set<string>();
 
@@ -21,7 +22,9 @@ function wrapIpcResult<T>(fn: () => T | Promise<T>): Promise<IpcResult<T>> {
     .then((data): IpcResult<T> => ({ ok: true, data }))
     .catch((err: unknown): IpcResult<T> => ({
       ok: false,
-      error: err instanceof Error ? err.message : String(err),
+      error: sanitizeDiagnosticText(
+        err instanceof Error ? err.message : String(err),
+      ),
     }));
 }
 

@@ -335,6 +335,23 @@ describe("handleValidated", () => {
     expect(domain).toHaveBeenCalledWith(["srv-9"]);
   });
 
+  it("redacts credential assignments in IPC error strings", async () => {
+    const { handleValidated } = await import("../../src/main/ipc-validate");
+    handleValidated("test:secret-err", z.tuple([]), () => {
+      throw new Error("INI write failed ServerAdminPassword=hunter2-secret");
+    });
+
+    const handler = handleMock.mock.calls[0]?.[1] as (
+      event: unknown,
+      ...args: unknown[]
+    ) => Promise<{ ok: boolean; error?: string }>;
+
+    const result = await handler({});
+    expect(result.ok).toBe(false);
+    expect(result.error).not.toContain("hunter2-secret");
+    expect(result.error).toContain("••••••••");
+  });
+
   it("refuses duplicate channel registration", async () => {
     const { handleValidated } = await import("../../src/main/ipc-validate");
     const schema = z.tuple([]);

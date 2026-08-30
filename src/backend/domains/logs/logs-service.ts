@@ -15,6 +15,11 @@ import type {
 } from "@shared/types";
 import { resolveEventDetails } from "@shared/event-details";
 import {
+  collectKnownSecrets,
+  sanitizeAppEvent,
+  sanitizeDiagnosticText,
+} from "@shared/credential-redaction";
+import {
   LOG_RETENTION_SETTINGS_KEY,
   assertLogRetentionSettings,
   daysToCutoffIso,
@@ -153,9 +158,11 @@ export class LogsService {
       this.listUpdateLogsForServer(serverId),
       this.backups.list(serverId, 100),
     ]);
+    const secrets = collectKnownSecrets(this.repo.list());
     const events = this.repo
       .recentEvents(500)
-      .filter((event) => event.serverId === serverId);
+      .filter((event) => event.serverId === serverId)
+      .map((event) => sanitizeAppEvent(event, secrets));
     const runtime = this.getRuntimeLogSnapshot(serverId);
 
     return {
@@ -175,9 +182,13 @@ export class LogsService {
     if (server === null) {
       throw new Error("Server does not exist");
     }
+    const secrets = collectKnownSecrets(this.repo.list());
     return {
       serverId,
-      runtimeLogLines: this.processes.getRuntimeLogSnapshot(serverId, limit),
+      runtimeLogLines: this.processes
+        .getRuntimeLogSnapshot(serverId, limit)
+        .map((line) => sanitizeDiagnosticText(line, secrets))
+        .filter((line) => line.trim().length > 0),
     };
   }
 
@@ -197,10 +208,9 @@ export class LogsService {
   async readUpdateLog(serverId: string, fileName: string, maxBytes = 250_000): Promise<string> {
     const path = this.resolveUpdateLogPath(serverId, fileName);
     const content = await readFile(path, "utf8");
-    if (content.length <= maxBytes) {
-      return content;
-    }
-    return content.slice(content.length - maxBytes);
+    const sliced =
+      content.length <= maxBytes ? content : content.slice(content.length - maxBytes);
+    return sanitizeDiagnosticText(sliced, collectKnownSecrets(this.repo.list()));
   }
 
   clearEvents(serverId: string): number {
@@ -419,7 +429,12 @@ export class LogsService {
       }
     }
 
-    await writeFile(destinationPath, `${sections.join("\n")}\n`, "utf8");
+    const secrets = collectKnownSecrets(this.repo.list());
+    await writeFile(
+      destinationPath,
+      sanitizeDiagnosticText(`${sections.join("\n")}\n`, secrets),
+      "utf8",
+    );
     return destinationPath;
   }
 

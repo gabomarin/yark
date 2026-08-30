@@ -11,10 +11,12 @@ import { Aside } from "@astrojs/starlight/components";
 - No YARK cloud account
 - Backup ZIP contents live where you configure (often under the install folder)
 
-“Local” does not mean encrypted. In the current prerelease, server/admin credentials are stored
-in the local profile database and in the ASA INI files that require them. YARK does not currently
-apply Windows DPAPI protection to the database copy. A process or person able to read files as
-your Windows user may be able to recover those credentials.
+“Local” does not mean every copy is secret from the same Windows user. The profile
+database stores admin and join passwords as ordinary columns. ASA still requires those
+values in `GameUserSettings.ini`, so a process or person who can read your install
+folder (or AppData) as your Windows user can recover them from INI, INI backup
+ZIPs, or the profile DB. YARK does not claim an extra encryption layer on top of
+that Windows-account boundary.
 
 ## Network use
 
@@ -31,9 +33,11 @@ The desktop app does **not** embed a CurseForge API key. Lookups send Project ID
 ## Secrets hygiene
 
 <Aside type="danger">
-  Admin and RCON passwords live in local profiles and ASA INI files. INI backups can contain the
-  same secrets. Treat app-data copies, backup ZIPs, screenshots, shared logs, exported configs,
-  and GitHub issue attachments carefully.
+  Admin and RCON passwords live in ASA INI files and in YARK’s local profile
+  database. INI backups can contain the same secrets. Treat install folders,
+  backup ZIPs, screenshots, shared logs, exported configs, and GitHub issue
+  attachments carefully. YARK omits password settings from diagnostic dumps; it
+  does not encrypt the files the dedicated server must read.
 </Aside>
 
 - Prefer the site / Releases download buttons over random mirrors  
@@ -53,13 +57,16 @@ be installed.
 
 ## Current protection boundary
 
-- Windows account and filesystem permissions are the primary at-rest boundary today.
-- The local SQLite copy of server credentials is not yet encrypted by YARK.
-- ASA requires credentials in its own configuration, so protecting the database copy cannot
-  remove every plaintext occurrence.
-- YARK should be locked or closed before letting an untrusted person use the same Windows session.
-- Credential-storage hardening is tracked publicly in
-  [#144](https://github.com/gabomarin/yark/issues/144).
+- Windows account and filesystem permissions are the primary at-rest boundary for
+  **INI files**, install trees, and the local profile database.
+- ASA requires credentials in its own configuration, so the dedicated server and
+  YARK both store them as plaintext for this Windows user.
+- Logs, crash excerpts, and operational-log exports omit GUS password settings
+  rather than reprinting them.
+- YARK should be locked or closed before letting an untrusted person use the same
+  Windows session.
+- The written threat model (SQLite vs INI vs diagnostics) lives in the
+  repository: [`docs/credential-threat-model.md`](https://github.com/gabomarin/yark/blob/main/docs/credential-threat-model.md).
 
 ## Process trust
 
