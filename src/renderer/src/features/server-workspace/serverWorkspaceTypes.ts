@@ -5,7 +5,8 @@ export type WorkspaceTab =
   | "iniFiles"
   | "backups"
   | "logs"
-  | "rcon";
+  | "rcon"
+  | "maintenance";
 
 export interface RconHistoryEntry {
   id: string;

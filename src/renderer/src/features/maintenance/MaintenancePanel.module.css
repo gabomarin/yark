@@ -1,0 +1,171 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-sm);
+}
+
+.honesty {
+  margin: 0;
+  color: var(--app-color-muted);
+  font-size: var(--mantine-font-size-xs);
+}
+
+.slab {
+  border: 1px solid var(--app-color-border);
+  background: var(--app-color-panel);
+  border-radius: 0;
+}
+
+.slabHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--app-space-xs);
+  padding: var(--app-space-sm) var(--app-space-md);
+  border: none;
+  width: 100%;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.slabHeader:focus-visible {
+  outline: 2px solid var(--ark-blue-9);
+  outline-offset: 2px;
+}
+
+.slabBody {
+  border-top: 1px solid var(--app-color-border);
+  padding: var(--app-space-sm) var(--app-space-md);
+}
+
+.upNextBody {
+  padding: var(--app-space-md);
+}
+
+.upNextLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--app-color-muted);
+}
+
+.upNextTitle {
+  margin: var(--app-space-xxs) 0 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.chevron {
+  display: inline-block;
+  transition: transform 120ms ease;
+  color: var(--app-color-muted);
+}
+
+.chevronOpen {
+  transform: rotate(90deg);
+}
+
+.fieldLabel {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--app-color-muted);
+}
+
+.presetChip {
+  min-width: 7.5rem;
+  padding: 6px 10px;
+  border-radius: 5px;
+  border: 1px solid var(--app-color-border);
+  background: var(--app-color-control, #303030);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.presetChip:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.presetChip:focus-visible {
+  outline: 2px solid var(--ark-blue-9);
+  outline-offset: 2px;
+}
+
+.presetChipActive {
+  border-color: var(--ark-blue-9);
+  background: color-mix(in srgb, var(--ark-blue-9) 22%, var(--app-color-panel));
+}
+
+.presetTitle {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--app-color-text);
+}
+
+.presetChipActive .presetTitle {
+  color: var(--ark-blue-11);
+}
+
+.presetHint {
+  display: block;
+  font-size: 10px;
+  color: var(--app-color-muted);
+}
+
+.offsetChip {
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 5px;
+  border: 1px solid var(--app-color-border);
+  background: var(--app-color-control, #303030);
+  color: var(--app-color-muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.offsetChip:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.offsetChipOn {
+  border-color: var(--ark-blue-9);
+  background: color-mix(in srgb, var(--ark-blue-9) 28%, var(--app-color-panel));
+  color: var(--ark-blue-11);
+}
+
+.offsetChip:focus-visible {
+  outline: 2px solid var(--ark-blue-9);
+  outline-offset: 2px;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.preview {
+  margin: 0;
+  padding-left: 8px;
+  border-left: 2px solid var(--ark-blue-9);
+}
+
+.nestedRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--app-space-sm);
+  padding: 8px 10px;
+  border: 1px solid var(--app-color-border);
+  background: var(--app-color-chrome, #121213);
+}

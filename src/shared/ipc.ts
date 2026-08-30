@@ -9,6 +9,8 @@ import type {
   BackupKind,
   BackupPolicy,
   BackupPolicyStatus,
+  MaintenancePolicy,
+  MaintenancePolicyStatus,
   BackupRecord,
   RestoreBackupOptions,
   ClusterComplianceReport,
@@ -186,6 +188,9 @@ export const IPC = {
   backupsRestore: "backups:restore",
   backupsGetPolicy: "backups:get-policy",
   backupsSetPolicy: "backups:set-policy",
+  maintenanceGetPolicy: "maintenance:get-policy",
+  maintenanceSetPolicy: "maintenance:set-policy",
+  maintenanceClearSchedulePause: "maintenance:clear-schedule-pause",
   backupsResolveRoot: "backups:resolve-root",
   backupsOpenFolder: "backups:open-folder",
   backupsOpenRoot: "backups:open-root",
@@ -587,6 +592,14 @@ export interface RendererApi {
     serverId: string,
     policy: Omit<BackupPolicy, "serverId" | "updatedAt">,
   ): Promise<IpcResult<BackupPolicy>>;
+  getMaintenancePolicy(serverId: string): Promise<IpcResult<MaintenancePolicyStatus>>;
+  setMaintenancePolicy(
+    serverId: string,
+    policy: Omit<MaintenancePolicy, "serverId" | "updatedAt">,
+  ): Promise<IpcResult<MaintenancePolicy>>;
+  clearMaintenanceSchedulePause(
+    serverId: string,
+  ): Promise<IpcResult<MaintenancePolicyStatus>>;
   resolveBackupRoot(serverId: string): Promise<IpcResult<string>>;
   openBackupFolder(serverId: string, backupId: string): Promise<IpcResult<void>>;
   openBackupRoot(serverId: string): Promise<IpcResult<void>>;

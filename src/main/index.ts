@@ -13,6 +13,9 @@ import { ServerRepository } from "../backend/infra/db/server-repository";
 import { ProcessManager } from "../backend/infra/process/process-manager";
 import { BackupService } from "../backend/domains/backups/backup-service";
 import { BackupScheduler } from "../backend/domains/backups/backup-scheduler";
+import { MaintenanceScheduler } from "../backend/domains/maintenance/maintenance-scheduler";
+import { MaintenanceService } from "../backend/domains/maintenance/maintenance-service";
+import { MaintenanceRepository } from "../backend/infra/db/maintenance-repository";
 import { PlayerSessionWatcher } from "../backend/domains/backups/player-session-watcher";
 import { ProcessMetricsSampler } from "../backend/domains/instances/process-metrics-sampler";
 import { IniService } from "../backend/domains/config/ini-service";
@@ -391,6 +394,7 @@ if (gotSingleInstanceLock) {
     const repo = new ServerRepository(db);
     setIpcDiagnosticKnownSecrets(() => collectKnownSecrets(repo.list()));
     const backupRepo = new BackupRepository(db);
+    const maintenanceRepo = new MaintenanceRepository(db);
     const processManager = new ProcessManager({
       onProcessCheckpoint: (record) => upsertLeftRunningProcess(settings, record),
       onProcessCheckpointCleared: (serverId) =>
@@ -412,6 +416,8 @@ if (gotSingleInstanceLock) {
       locks,
     );
     const backupScheduler = new BackupScheduler(backupService);
+    const maintenanceService = new MaintenanceService(maintenanceRepo, repo);
+    const maintenanceScheduler = new MaintenanceScheduler(maintenanceService);
     const playerSessionWatcher = new PlayerSessionWatcher(
       backupService,
       repo,
@@ -474,6 +480,7 @@ if (gotSingleInstanceLock) {
     );
 
     backupScheduler.start();
+    maintenanceScheduler.start();
     playerSessionWatcher.start();
     processMetricsSampler.start();
     const logRetentionScheduler = new LogRetentionScheduler(logsService);
@@ -597,6 +604,7 @@ if (gotSingleInstanceLock) {
       updateService,
       modsService,
       backupService,
+      maintenanceService,
       moveInstallService,
       {
         app: userData,
@@ -967,6 +975,7 @@ if (gotSingleInstanceLock) {
 
     app.on("will-quit", () => {
       backupScheduler.stop();
+      maintenanceScheduler.stop();
       playerSessionWatcher.stop();
       processMetricsSampler.stop();
       if (trayRefreshTimer !== null) {
