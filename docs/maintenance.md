@@ -24,6 +24,7 @@ MagicPath UX mock: https://magicpath.ai/files/444694713119952896
   - Up next empty / armed summary (Run now disabled until #487)
   - Collapsed Restart / Wipe / Auto-update with schedule + per-job warning presets persisted
   - Expand while Off shows the same controls disabled; turning Restart Off also clears wipe
+  - Last-run / countdown / Run now placeholders land with execution slices (#487+)
 
 ## Product rules (epic)
 

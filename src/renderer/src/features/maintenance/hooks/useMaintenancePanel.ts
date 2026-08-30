@@ -40,23 +40,20 @@ export function useMaintenancePanel(serverId: string) {
           setError(result.error ?? "Could not save maintenance policy");
           return false;
         }
-        const status = await window.api.getMaintenancePolicy(serverId);
-        if (status.ok) {
-          setPolicy(status.data);
-        } else {
-          setPolicy({ ...result.data, schedulePaused: policy?.schedulePaused ?? false });
-        }
+        setPolicy(result.data);
         return true;
       } finally {
         setBusy(false);
       }
     },
-    [serverId, policy?.schedulePaused],
+    [serverId],
   );
 
   const patch = useCallback(
     async (partial: Partial<PolicyWrite>) => {
       if (policy === null) return false;
+      // Full-document write: merge against the panel's last known policy while
+      // `busy` serializes edits so we do not interleave two client merges.
       const {
         serverId: _s,
         updatedAt: _u,

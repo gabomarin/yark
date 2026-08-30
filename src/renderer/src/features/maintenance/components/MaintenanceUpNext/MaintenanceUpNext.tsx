@@ -58,6 +58,7 @@ export function MaintenanceUpNext(props: Props): ReactElement {
               {subtitle}
             </Text>
             {policy.restartEnabled && (
+              // TODO(#487): replace placeholder with lastRestartAt / last result from the job runner.
               <Text size="xs" c="dimmed" mt={4}>
                 Last restart · —
               </Text>

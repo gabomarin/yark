@@ -596,7 +596,7 @@ export interface RendererApi {
   setMaintenancePolicy(
     serverId: string,
     policy: Omit<MaintenancePolicy, "serverId" | "updatedAt">,
-  ): Promise<IpcResult<MaintenancePolicy>>;
+  ): Promise<IpcResult<MaintenancePolicyStatus>>;
   clearMaintenanceSchedulePause(
     serverId: string,
   ): Promise<IpcResult<MaintenancePolicyStatus>>;

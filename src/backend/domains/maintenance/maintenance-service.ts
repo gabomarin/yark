@@ -26,7 +26,7 @@ export class MaintenanceService {
   setPolicy(
     serverId: string,
     patch: Omit<MaintenancePolicy, "serverId" | "updatedAt">,
-  ): MaintenancePolicy {
+  ): MaintenancePolicyStatus {
     if (this.servers.get(serverId) === null) {
       throw new Error("Server does not exist");
     }
@@ -40,12 +40,15 @@ export class MaintenanceService {
     } else if (wipeEnabled) {
       restartEnabled = true;
     }
-    return this.repo.setPolicy({
+    // Full-document upsert (client sends the whole write payload). Atomic per
+    // server_id via INSERT … ON CONFLICT in MaintenanceRepository.
+    this.repo.setPolicy({
       serverId,
       ...patch,
       restartEnabled,
       wipeEnabled,
     });
+    return this.getPolicy(serverId);
   }
 
   clearSchedulePause(serverId: string): MaintenancePolicyStatus {
