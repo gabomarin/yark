@@ -191,6 +191,8 @@ export const IPC = {
   maintenanceGetPolicy: "maintenance:get-policy",
   maintenanceSetPolicy: "maintenance:set-policy",
   maintenanceClearSchedulePause: "maintenance:clear-schedule-pause",
+  maintenanceRunRestartNow: "maintenance:run-restart-now",
+  maintenanceCancelUpcoming: "maintenance:cancel-upcoming",
   backupsResolveRoot: "backups:resolve-root",
   backupsOpenFolder: "backups:open-folder",
   backupsOpenRoot: "backups:open-root",
@@ -598,6 +600,12 @@ export interface RendererApi {
     policy: Omit<MaintenancePolicy, "serverId" | "updatedAt">,
   ): Promise<IpcResult<MaintenancePolicyStatus>>;
   clearMaintenanceSchedulePause(
+    serverId: string,
+  ): Promise<IpcResult<MaintenancePolicyStatus>>;
+  runMaintenanceRestartNow(
+    serverId: string,
+  ): Promise<IpcResult<MaintenancePolicyStatus>>;
+  cancelMaintenanceUpcoming(
     serverId: string,
   ): Promise<IpcResult<MaintenancePolicyStatus>>;
   resolveBackupRoot(serverId: string): Promise<IpcResult<string>>;

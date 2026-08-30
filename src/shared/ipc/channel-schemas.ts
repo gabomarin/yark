@@ -173,6 +173,8 @@ export const VALIDATED_IPC_CHANNELS = [
   IPC.maintenanceGetPolicy,
   IPC.maintenanceSetPolicy,
   IPC.maintenanceClearSchedulePause,
+  IPC.maintenanceRunRestartNow,
+  IPC.maintenanceCancelUpcoming,
   IPC.backupsResolveRoot,
   IPC.backupsOpenFolder,
   IPC.backupsOpenRoot,
@@ -442,6 +444,8 @@ export const ipcArgSchemas = {
   [IPC.maintenanceGetPolicy]: z.tuple([serverIdSchema]),
   [IPC.maintenanceSetPolicy]: z.tuple([serverIdSchema, maintenancePolicyWriteSchema]),
   [IPC.maintenanceClearSchedulePause]: z.tuple([serverIdSchema]),
+  [IPC.maintenanceRunRestartNow]: z.tuple([serverIdSchema]),
+  [IPC.maintenanceCancelUpcoming]: z.tuple([serverIdSchema]),
   [IPC.backupsResolveRoot]: z.tuple([serverIdSchema]),
   [IPC.backupsOpenFolder]: z.tuple([
     serverIdSchema,

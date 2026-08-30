@@ -690,8 +690,8 @@ export interface MaintenanceJobWarnings {
 }
 
 /**
- * Per-server maintenance policies (default all off). Execution lands in later
- * slices (#487–#489); slice 1 persists flags and warning config only (#486).
+ * Per-server maintenance policies (default all off).
+ * Restart countdown executes in #487; wipe / Steam-newer in #488–#489.
  */
 export interface MaintenancePolicy {
   serverId: string;
@@ -709,14 +709,30 @@ export interface MaintenancePolicy {
   updatedAt: string;
 }
 
-/** Policy plus session-only fail-streak pause for the UI. */
+/** Policy plus session runtime fields for the Maintenance UI. */
 export interface MaintenancePolicyStatus extends MaintenancePolicy {
   /**
    * True when automatic maintenance is paused for this YARK session after
    * repeated failures. Does not change enabled flags. Cleared on app restart.
    */
   schedulePaused: boolean;
+  /** ISO local-target for the next scheduled restart, when known. */
+  nextRestartAt: string | null;
+  /** Countdown remaining ms when a warning window is active. */
+  countdownRemainingMs: number | null;
+  countdownPhase: MaintenanceCountdownPhase;
+  /** ISO of last completed maintenance restart attempt (session or persisted). */
+  lastRestartAt: string | null;
+  lastRestartOk: boolean | null;
+  /** True when Cancel can stop an upcoming countdown. */
+  cancelable: boolean;
 }
+
+export type MaintenanceCountdownPhase =
+  | "idle"
+  | "warning"
+  | "last_minute"
+  | "restarting";
 
 export interface BackupPolicy {
   serverId: string;

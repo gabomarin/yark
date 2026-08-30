@@ -416,7 +416,12 @@ if (gotSingleInstanceLock) {
       locks,
     );
     const backupScheduler = new BackupScheduler(backupService);
-    const maintenanceService = new MaintenanceService(maintenanceRepo, repo);
+    const maintenanceService = new MaintenanceService(
+      maintenanceRepo,
+      repo,
+      processManager,
+      instances,
+    );
     const maintenanceScheduler = new MaintenanceScheduler(maintenanceService);
     const playerSessionWatcher = new PlayerSessionWatcher(
       backupService,

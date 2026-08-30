@@ -272,6 +272,10 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.maintenanceSetPolicy, serverId, policy),
   clearMaintenanceSchedulePause: (serverId: string) =>
     ipcRenderer.invoke(IPC.maintenanceClearSchedulePause, serverId),
+  runMaintenanceRestartNow: (serverId: string) =>
+    ipcRenderer.invoke(IPC.maintenanceRunRestartNow, serverId),
+  cancelMaintenanceUpcoming: (serverId: string) =>
+    ipcRenderer.invoke(IPC.maintenanceCancelUpcoming, serverId),
   resolveBackupRoot: (serverId: string) =>
     ipcRenderer.invoke(IPC.backupsResolveRoot, serverId),
   openBackupFolder: (serverId: string, backupId: string) =>

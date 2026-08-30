@@ -965,6 +965,18 @@ export function registerIpcHandlers(
     ([serverId]) => maintenance.clearSchedulePause(serverId),
   );
 
+  handleValidated(
+    IPC.maintenanceRunRestartNow,
+    ipcArgSchemas[IPC.maintenanceRunRestartNow],
+    ([serverId]) => maintenance.runRestartNow(serverId),
+  );
+
+  handleValidated(
+    IPC.maintenanceCancelUpcoming,
+    ipcArgSchemas[IPC.maintenanceCancelUpcoming],
+    ([serverId]) => maintenance.cancelUpcoming(serverId),
+  );
+
   handleValidated(IPC.backupsResolveRoot, ipcArgSchemas[IPC.backupsResolveRoot], ([serverId]) =>
     backups.resolveBackupRootDir(serverId),
   );
