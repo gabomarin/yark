@@ -21,8 +21,9 @@ Source of truth for numeric tokens: `src/renderer/src/shared/theme/tokens.ts` â†
 4. **Extract shared chrome on the second real use** (same rule as #44).
 5. Prefer Mantine props (`radius`, `padding`, `gap`, `variant`) + CSS variables over raw hex/px.
 6. Pages sit on **`--app-color-bg`**. Use **`AppSurfaceCard`** for a discrete entity
-   (one cluster, one backup row, a chrome rail), not the whole Logs / Settings / form
-   pane. `cool` / `coolEmphasis` are accent-only.
+   (one cluster, one backup row, a chrome rail), not the whole Logs / Settings pane.
+   Create/edit **form sections** are flush square cards (`radius={0}`, no grid gap).
+   `cool` / `coolEmphasis` are accent-only.
 7. Custom CSS modules polish layout after Mantine + shared atoms are exhausted â€”
    they must not reimplement Mantine widgets.
 8. **Mantine CSS is layered.** Entry imports `@mantine/*/styles.layer.css` (and
@@ -112,7 +113,7 @@ Use this checklist when reviewing a screen or introducing a pattern. Each catego
 | Chrome | `--app-color-surface-chrome` (`#121213`) | `color-mix` of gray + blue for sidebars |
 | Raised / panels | `--app-color-panel` (`#1f1f1f`) | Translucent panel washes |
 | Controls | `--app-color-surface-control` (`#303030`) | Mixing control fill with `--ark-blue-*` |
-| Page / tool panes | Sit on `--app-color-bg`; sections = heading + hairline | Wrapping Logs, Settings, or a form in one Card |
+| Page / tool panes | Sit on `--app-color-bg`; form sections = flush square cards | Wrapping Logs, Settings, or the whole form in one rounded Card |
 | Discrete entities | `AppSurfaceCard tone="flat"` (cluster, backup row, chrome rail) | Cool wash as a page shell |
 | Accent heroes | `tone="coolEmphasis"` (rare) | Using cool wash as the default page shell |
 | Nested widgets | `tone="flat"` (or nested inside a flat shell) | Mixing Card + ad-hoc panel bg |
@@ -163,7 +164,7 @@ gap: var(--app-space-sm);            // preferred in CSS modules
 
 Theme `defaultRadius` is **`sm`**. Avoid raw `border-radius` when a token fits. Tek icon tiles keep asymmetric radius by design (`AccentIconTile shape="tek"`).
 
-**Square vs rounded:** Overview server **list rows** (`ServerCard`) and the Clusters **How transfers work** Accordion are square (`radius={0}`) so stacked chrome reads as one list. Discrete entity cards use `AppSurfaceCard` default **`md`** (8px Comfortable); do not wrap the whole page pane in a Card (#469).
+**Square vs rounded:** Overview server **list rows** (`ServerCard`), create/edit **form sections**, and the Clusters **How transfers work** Accordion are square (`radius={0}`) so stacked chrome reads as one slab. Discrete entity cards use `AppSurfaceCard` default **`md`** (8px Comfortable); do not wrap the whole Logs/Settings pane in a Card (#469).
 
 ### 4. Color / status
 

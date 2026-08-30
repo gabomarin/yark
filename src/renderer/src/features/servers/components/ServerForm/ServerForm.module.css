@@ -41,13 +41,18 @@
   background: color-mix(in srgb, var(--app-color-panel) 88%, transparent);
 }
 
-.formSection {
-  min-width: 0;
+.fieldsGrid {
+  overflow: hidden;
+  padding-right: 1px;
+  padding-bottom: 1px;
 }
 
-.formSection[data-span2] {
-  padding-top: var(--app-space-sm);
-  border-top: 1px solid var(--app-color-border);
+.formSection {
+  min-width: 0;
+  border-radius: 0;
+  box-shadow: none;
+  margin-right: -1px;
+  margin-bottom: -1px;
 }
 
 .identityHero {

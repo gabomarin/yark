@@ -1,5 +1,6 @@
 import type { ReactElement, ReactNode } from "react";
 import { Stack, Text, Title } from "@mantine/core";
+import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import classes from "./ServerForm.module.css";
 
 interface Props {
@@ -7,19 +8,18 @@ interface Props {
   /** Optional meta above the title (create Identity / Reachability). */
   eyebrow?: string;
   children: ReactNode;
-  /** Embedded edit: compact stack. Page: heading + hairline on the canvas. */
-  flat?: boolean;
   fill?: boolean;
   span2?: boolean;
+  padding?: "sm" | "md";
 }
 
 export function ServerFormSection({
   title,
   eyebrow,
   children,
-  flat = false,
   fill = false,
   span2 = false,
+  padding = "md",
 }: Props): ReactElement {
   const spanClass = span2 ? classes.span2 : undefined;
   const eyebrowNode =
@@ -29,25 +29,13 @@ export function ServerFormSection({
       </Text>
     ) : null;
 
-  if (flat) {
-    return (
-      <Stack gap="xs" className={spanClass}>
-        {eyebrowNode}
-        {title !== undefined && (
-          <Text fw={600} fz="sm">
-            {title}
-          </Text>
-        )}
-        {children}
-      </Stack>
-    );
-  }
-
   return (
-    <section
-      className={[classes.formSection, spanClass, fill ? classes.sectionFill : undefined]
-        .filter(Boolean)
-        .join(" ")}
+    <AppSurfaceCard
+      tone="flat"
+      fill={fill}
+      padding={padding}
+      radius={0}
+      className={[classes.formSection, spanClass].filter(Boolean).join(" ")}
       data-span2={span2 || undefined}
     >
       <Stack gap="sm" className={fill ? classes.sectionFill : undefined}>
@@ -55,6 +43,6 @@ export function ServerFormSection({
         {title !== undefined && <Title order={4}>{title}</Title>}
         {children}
       </Stack>
-    </section>
+    </AppSurfaceCard>
   );
 }
