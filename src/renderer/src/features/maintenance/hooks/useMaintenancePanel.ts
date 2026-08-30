@@ -1,8 +1,22 @@
 import { useCallback, useEffect, useState } from "react";
 import type { MaintenancePolicy, MaintenancePolicyStatus } from "@shared/types";
 import { defaultMaintenancePolicy } from "@shared/maintenance-policy";
+import { modals } from "@mantine/modals";
 
 type PolicyWrite = Omit<MaintenancePolicy, "serverId" | "updatedAt">;
+
+function idleStatus(serverId: string): MaintenancePolicyStatus {
+  return {
+    ...defaultMaintenancePolicy(serverId, new Date().toISOString()),
+    schedulePaused: false,
+    nextRestartAt: null,
+    countdownRemainingMs: null,
+    countdownPhase: "idle",
+    lastRestartAt: null,
+    lastRestartOk: null,
+    cancelable: false,
+  };
+}
 
 export function useMaintenancePanel(serverId: string) {
   const [policy, setPolicy] = useState<MaintenancePolicyStatus | null>(null);
@@ -13,22 +27,29 @@ export function useMaintenancePanel(serverId: string) {
   const [updateOpen, setUpdateOpen] = useState(false);
 
   const load = useCallback(async () => {
-    setError(null);
     const result = await window.api.getMaintenancePolicy(serverId);
     if (!result.ok) {
       setError(result.error ?? "Could not load maintenance policy");
-      setPolicy({
-        ...defaultMaintenancePolicy(serverId, new Date().toISOString()),
-        schedulePaused: false,
-      });
+      setPolicy(idleStatus(serverId));
       return;
     }
+    setError(null);
     setPolicy(result.data);
   }, [serverId]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Poll while a countdown is active so Up next stays live (1s IPC is fine locally).
+  const phase = policy?.countdownPhase ?? "idle";
+  useEffect(() => {
+    if (phase === "idle") return undefined;
+    const id = window.setInterval(() => {
+      void load();
+    }, 1_000);
+    return () => window.clearInterval(id);
+  }, [phase, load]);
 
   const save = useCallback(
     async (next: PolicyWrite) => {
@@ -52,12 +73,16 @@ export function useMaintenancePanel(serverId: string) {
   const patch = useCallback(
     async (partial: Partial<PolicyWrite>) => {
       if (policy === null) return false;
-      // Full-document write: merge against the panel's last known policy while
-      // `busy` serializes edits so we do not interleave two client merges.
       const {
         serverId: _s,
         updatedAt: _u,
         schedulePaused: _p,
+        nextRestartAt: _n,
+        countdownRemainingMs: _c,
+        countdownPhase: _ph,
+        lastRestartAt: _l,
+        lastRestartOk: _ok,
+        cancelable: _ca,
         ...rest
       } = policy;
       return save({ ...rest, ...partial });
@@ -80,6 +105,48 @@ export function useMaintenancePanel(serverId: string) {
     }
   }, [serverId]);
 
+  const cancelUpcoming = useCallback(async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await window.api.cancelMaintenanceUpcoming(serverId);
+      if (!result.ok) {
+        setError(result.error ?? "Could not cancel countdown");
+        return;
+      }
+      setPolicy(result.data);
+    } finally {
+      setBusy(false);
+    }
+  }, [serverId]);
+
+  const runRestartNow = useCallback(() => {
+    modals.openConfirmModal({
+      title: "Run restart now?",
+      centered: true,
+      children:
+        "Players get a short final warning, then a graceful restart with backup. Continue?",
+      labels: { confirm: "Yes, restart", cancel: "Back" },
+      confirmProps: { color: "blue" },
+      onConfirm: () => {
+        void (async () => {
+          setBusy(true);
+          setError(null);
+          try {
+            const result = await window.api.runMaintenanceRestartNow(serverId);
+            if (!result.ok) {
+              setError(result.error ?? "Could not start restart now");
+              return;
+            }
+            setPolicy(result.data);
+          } finally {
+            setBusy(false);
+          }
+        })();
+      },
+    });
+  }, [serverId]);
+
   return {
     policy,
     busy,
@@ -92,6 +159,8 @@ export function useMaintenancePanel(serverId: string) {
     setUpdateOpen,
     patch,
     resumeSchedules,
+    cancelUpcoming,
+    runRestartNow,
     reload: load,
   };
 }

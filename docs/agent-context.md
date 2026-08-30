@@ -67,7 +67,7 @@ paths or the Notion hub URL in tracked files.
 ## Engineering runbooks
 
 - [backups.md](backups.md) — ZIP kinds, reconcile, all-servers health/cleanup, IPC, schedules, player sessions.
-- [maintenance.md](maintenance.md) — workspace Maintenance tab, policies, scheduler (#315 / #486).
+- [maintenance.md](maintenance.md) — workspace Maintenance tab, policies, restart countdown (#315 / #486 / #487).
 - [updates-steamcmd.md](updates-steamcmd.md) — caches, safe update auto-stop/rollback, availability compare, progress push, Windows real-host validation.
 - [e2e-validation.md](e2e-validation.md) — PR CI Electron E2E vs prepared-host / manual release matrix (#12). UI changes must update affected `scripts/e2e-*.cjs` in the same PR.
 - [critical-job-recovery.md](critical-job-recovery.md) — durable phases, replay policy, queue quarantine, and operator recovery actions.

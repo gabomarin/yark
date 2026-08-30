@@ -8,8 +8,8 @@ same honesty as [backups.md](backups.md) world schedule.
 
 | Slice | Issue | State |
 | --- | --- | --- |
-| Tab + job model | #486 | In progress — policies, idle scheduler, Up next + schedule/warning editors (no execution) |
-| Restart + broadcast | #487 | Pending |
+| Tab + job model | #486 | Done — policies, Up next shell, schedule/warning editors |
+| Restart + broadcast | #487 | In progress — countdown, 1 Hz last minute, Run now / Cancel |
 | Wipe after restart | #488 | Pending |
 | Auto-update (Steam newer) | #489 | Pending |
 
@@ -18,21 +18,24 @@ MagicPath UX mock: https://magicpath.ai/files/444694713119952896
 ## Building blocks
 
 - Policies: SQLite `maintenance_policies` (migration 18), `MaintenanceRepository` / `MaintenanceService`
-- Scheduler: `MaintenanceScheduler` (~60s coalesce), wired in `main/index.ts`
-- IPC: `maintenance:get-policy` / `set-policy` / `clear-schedule-pause`
+- Restart runtime: `MaintenanceRestartRuntime` (countdown + Broadcast + `InstanceService.restart`)
+- Scheduler: `MaintenanceScheduler` (~60s coalesce) arms windows when within the warning lead
+- IPC: `maintenance:get-policy` / `set-policy` / `clear-schedule-pause` / `run-restart-now` / `cancel-upcoming`
+- Shared schedule helpers: `src/shared/maintenance-schedule.ts` (offsets, next local time, templates)
 - UI: `features/maintenance/MaintenancePanel` on workspace tab `maintenance`
-  - Up next empty / armed summary (Run now disabled until #487)
-  - Collapsed Restart / Wipe / Auto-update with schedule + per-job warning presets persisted
+  - Up next: empty / armed / live countdown; **Run restart now** (confirm → ~10s window) / **Cancel window**
+  - Collapsed Restart / Wipe / Auto-update with schedule + per-job warning presets
   - Expand while Off shows the same controls disabled; turning Restart Off also clears wipe
-  - Last-run / countdown / Run now placeholders land with execution slices (#487+)
+  - Fail-streak pause (3 consecutive) with Resume — session only, like world backup schedules
 
-## Product rules (epic)
+## Restart countdown (#487)
 
-- Default every job **off**
-- Wipe On = after successful scheduled restart (no standalone wipe schedule in MVP)
-- Auto-update On = Steam `buildid` newer via existing poll (~15 min cache) — no faster poll
-- Per-job Broadcast presets/templates; last minute ≤60s = 1 Hz countdown (#487 / #489)
-  (`Restart in {n}s` / `Update in {n}s` — product rule, wired when execution lands)
-- Do not invent a second lifecycle stack — reuse restart / safe update / RCON
+1. Scheduler tick finds an enabled restart within `max(offsets, 60s)` of the local target and the server is running.
+2. Preset/custom offsets fire `Broadcast` once each as remaining crosses them.
+3. Last ≤60s: 1 Hz `Restart in {n}s` regardless of preset; Cancel clears the timer immediately.
+4. At T0: `InstanceService.restart` (SaveWorld → DoExit → pre_restart backup → start). No second lifecycle stack.
+5. Skip / fail gates: disabled, not running, already in countdown, session pause, RCON errors (counted toward fail-streak).
+
+Wipe (#488) runs after a successful maintenance restart. Auto-update (#489) uses Steam-newer on the existing poll.
 
 World backup schedule stays on the Backups tab; log retention stays in Settings.

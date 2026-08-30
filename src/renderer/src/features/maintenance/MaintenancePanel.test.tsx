@@ -6,25 +6,33 @@ import {
   previewWarningMessage,
   warningsForPreset,
 } from "./model/maintenancePanelModel";
+import type { MaintenancePolicyStatus } from "@shared/types";
+
+function status(
+  partial: Partial<MaintenancePolicyStatus> = {},
+): MaintenancePolicyStatus {
+  return {
+    ...defaultMaintenancePolicy("s1", "2026-01-01T00:00:00.000Z"),
+    schedulePaused: false,
+    nextRestartAt: null,
+    countdownRemainingMs: null,
+    countdownPhase: "idle",
+    lastRestartAt: null,
+    lastRestartOk: null,
+    cancelable: false,
+    ...partial,
+  };
+}
 
 describe("maintenancePanelModel", () => {
   it("formats weekly restart summary", () => {
-    const policy = {
-      ...defaultMaintenancePolicy("s1", "2026-01-01T00:00:00.000Z"),
-      restartEnabled: true,
-      schedulePaused: false,
-    };
-    expect(formatRestartSummary(policy)).toBe(
+    expect(formatRestartSummary(status({ restartEnabled: true }))).toBe(
       "Sunday 04:00 · Standard warnings",
     );
   });
 
   it("anyJobArmed is false when all off", () => {
-    const policy = {
-      ...defaultMaintenancePolicy("s1", "2026-01-01T00:00:00.000Z"),
-      schedulePaused: false,
-    };
-    expect(anyJobArmed(policy)).toBe(false);
+    expect(anyJobArmed(status())).toBe(false);
   });
 
   it("applies restart quiet preset offsets", () => {

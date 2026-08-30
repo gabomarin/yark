@@ -6,16 +6,29 @@ import classes from "../../MaintenancePanel.module.css";
 
 interface Props {
   policy: MaintenancePolicyStatus;
+  busy: boolean;
+  onRunRestartNow: () => void;
+  onCancelUpcoming: () => void;
 }
 
-/** Up next hero — empty or armed summary (#486). */
-export function MaintenanceUpNext(props: Props): ReactElement {
-  const armed =
-    props.policy.restartEnabled ||
-    props.policy.wipeEnabled ||
-    props.policy.updateEnabled;
+function formatCountdown(ms: number): string {
+  const totalSec = Math.max(0, Math.ceil(ms / 1_000));
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
 
-  if (!armed) {
+/** Up next hero — empty, armed, or live countdown (#487). */
+export function MaintenanceUpNext(props: Props): ReactElement {
+  const policy = props.policy;
+  const armed =
+    policy.restartEnabled || policy.wipeEnabled || policy.updateEnabled;
+  const live =
+    policy.countdownPhase === "warning"
+    || policy.countdownPhase === "last_minute"
+    || policy.countdownPhase === "restarting";
+
+  if (!armed && !live) {
     return (
       <section className={classes.slab} data-maintenance-up-next>
         <div className={classes.upNextBody}>
@@ -30,22 +43,48 @@ export function MaintenanceUpNext(props: Props): ReactElement {
     );
   }
 
-  const policy = props.policy;
   const day = DAY_LABELS[policy.restartDayOfWeek] ?? "Sunday";
-  const title = policy.restartEnabled
-    ? policy.restartCadence === "daily"
-      ? `Restart · Daily ${policy.restartTimeLocal}`
-      : `Restart · ${day} ${policy.restartTimeLocal}`
-    : policy.updateEnabled
-      ? "Waiting for a new Ark server update"
-      : "Wild dino wipe";
-  const subtitle = policy.restartEnabled
-    ? `Local time · players warned before stop${
-        policy.wipeEnabled ? " · then wipe wild dinos" : ""
-      }`
-    : policy.updateEnabled
-      ? "Starts when a new Ark server update is available. Restart schedule not required."
-      : "Needs a restart schedule — wipe runs when that restart finishes";
+  let title: string;
+  let subtitle: string;
+
+  if (live && policy.countdownRemainingMs !== null) {
+    title =
+      policy.countdownPhase === "restarting"
+        ? "Restarting…"
+        : `Restart in ${formatCountdown(policy.countdownRemainingMs)}`;
+    subtitle =
+      policy.countdownPhase === "last_minute"
+        ? "Final warnings every second · Cancel stops them immediately"
+        : "Players are being warned in-game";
+  } else if (policy.restartEnabled) {
+    title =
+      policy.restartCadence === "daily"
+        ? `Restart · Daily ${policy.restartTimeLocal}`
+        : `Restart · ${day} ${policy.restartTimeLocal}`;
+    const nextHint =
+      policy.nextRestartAt !== null
+        ? ` · next ${new Date(policy.nextRestartAt).toLocaleString()}`
+        : "";
+    subtitle = `Local time · players warned before stop${
+      policy.wipeEnabled ? " · then wipe wild dinos" : ""
+    }${nextHint}`;
+  } else if (policy.updateEnabled) {
+    title = "Waiting for a new Ark server update";
+    subtitle =
+      "Starts when a new Ark server update is available. Restart schedule not required.";
+  } else {
+    title = "Wild dino wipe";
+    subtitle = "Needs a restart schedule — wipe runs when that restart finishes";
+  }
+
+  const lastLine =
+    policy.lastRestartAt !== null
+      ? `Last restart · ${policy.lastRestartOk === false ? "failed" : "OK"} · ${new Date(
+          policy.lastRestartAt,
+        ).toLocaleString()}`
+      : policy.restartEnabled
+        ? "Last restart · —"
+        : null;
 
   return (
     <section className={classes.slab} data-maintenance-up-next>
@@ -57,22 +96,36 @@ export function MaintenanceUpNext(props: Props): ReactElement {
             <Text size="sm" c="dimmed" mt={4}>
               {subtitle}
             </Text>
-            {policy.restartEnabled && (
-              // TODO(#487): replace placeholder with lastRestartAt / last result from the job runner.
+            {lastLine !== null && (
               <Text size="xs" c="dimmed" mt={4}>
-                Last restart · —
+                {lastLine}
               </Text>
             )}
           </div>
-          {policy.restartEnabled && (
-            <Button
-              size="xs"
-              disabled
-              title="Run now arrives with timed restart warnings"
-            >
-              Run restart now
-            </Button>
-          )}
+          <Group gap="xs" wrap="wrap">
+            {policy.cancelable && (
+              <Button
+                size="xs"
+                color="red"
+                variant="light"
+                loading={props.busy}
+                onClick={props.onCancelUpcoming}
+              >
+                Cancel window
+              </Button>
+            )}
+            {policy.restartEnabled
+              && !live
+              && policy.countdownPhase === "idle" && (
+              <Button
+                size="xs"
+                loading={props.busy}
+                onClick={props.onRunRestartNow}
+              >
+                Run restart now
+              </Button>
+            )}
+          </Group>
         </Group>
       </div>
     </section>

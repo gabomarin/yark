@@ -15,8 +15,8 @@ interface Props {
 }
 
 /**
- * Workspace Maintenance tab shell (#486) — Up next + collapsed job rows.
- * Execution (countdown / wipe / Steam-newer) lands in #487–#489.
+ * Workspace Maintenance tab (#486 / #487) — Up next + job rows.
+ * Wipe / Steam-newer execution lands in #488–#489.
  */
 export function MaintenancePanel(props: Props): ReactElement {
   const panel = useMaintenancePanel(props.server.id);
@@ -54,7 +54,14 @@ export function MaintenancePanel(props: Props): ReactElement {
         </Alert>
       )}
 
-      {policy !== null && <MaintenanceUpNext policy={policy} />}
+      {policy !== null && (
+        <MaintenanceUpNext
+          policy={policy}
+          busy={panel.busy}
+          onRunRestartNow={panel.runRestartNow}
+          onCancelUpcoming={() => void panel.cancelUpcoming()}
+        />
+      )}
 
       {policy !== null && policy.wipeEnabled && (
         <Text size="xs" c="dimmed" pl={4}>
