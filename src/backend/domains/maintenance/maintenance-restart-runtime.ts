@@ -28,6 +28,11 @@ import type { MaintenanceRepository } from "../../infra/db/maintenance-repositor
 interface ActiveCountdown {
   serverId: string;
   targetAtMs: number;
+  /**
+   * ISO of the scheduled local target from `nextLocalRestartAt` (schedule only).
+   * Used so Cancel / skip mark the same occurrence `considerSchedule` checks.
+   */
+  scheduleTargetKey: string | null;
   /** Offset labels already Broadcast for this window. */
   firedOffsets: Set<string>;
   cancelRequested: boolean;
@@ -47,7 +52,7 @@ export class MaintenanceRestartRuntime {
   private readonly failStreak = new Map<string, number>();
   private readonly active = new Map<string, ActiveCountdown>();
   private readonly lastRestart = new Map<string, LastRestartMemory>();
-  /** Scheduled target keys already completed this process (`ISO` of target). */
+  /** Scheduled target keys already completed/skipped this process. */
   private readonly completedTargets = new Set<string>();
 
   constructor(
@@ -128,7 +133,7 @@ export class MaintenanceRestartRuntime {
       throw new Error("A maintenance countdown is already active");
     }
     const targetAtMs = Date.now() + MAINTENANCE_RUN_NOW_LEAD_MS;
-    this.startCountdown(policy, targetAtMs, "run_now");
+    this.startCountdown(policy, targetAtMs, "run_now", null);
     return this.enrichStatus(policy);
   }
 
@@ -137,9 +142,27 @@ export class MaintenanceRestartRuntime {
     if (active !== undefined) {
       active.cancelRequested = true;
       this.clearTimer(active);
+      this.markOccurrenceDone(active);
       this.active.delete(serverId);
     }
     return this.enrichStatus(this.repo.getPolicy(serverId));
+  }
+
+  private markOccurrenceDone(state: ActiveCountdown): void {
+    if (state.scheduleTargetKey !== null) {
+      this.completedTargets.add(state.scheduleTargetKey);
+    }
+  }
+
+  private isCurrentTick(
+    serverId: string,
+    expectedTargetAtMs: number,
+  ): ActiveCountdown | null {
+    const state = this.active.get(serverId);
+    if (state === undefined) return null;
+    if (state.cancelRequested) return null;
+    if (state.targetAtMs !== expectedTargetAtMs) return null;
+    return state;
   }
 
   private async considerSchedule(policy: MaintenancePolicy): Promise<void> {
@@ -176,17 +199,24 @@ export class MaintenanceRestartRuntime {
       return;
     }
 
-    this.startCountdown(policy, Math.max(now + 1_000, next.getTime()), "schedule");
+    this.startCountdown(
+      policy,
+      Math.max(now + 1_000, next.getTime()),
+      "schedule",
+      targetKey,
+    );
   }
 
   private startCountdown(
     policy: MaintenancePolicy,
     targetAtMs: number,
     source: "schedule" | "run_now",
+    scheduleTargetKey: string | null,
   ): void {
     const state: ActiveCountdown = {
       serverId: policy.serverId,
       targetAtMs,
+      scheduleTargetKey,
       firedOffsets: new Set(),
       cancelRequested: false,
       phase: targetAtMs - Date.now() <= 60_000 ? "last_minute" : "warning",
@@ -195,7 +225,7 @@ export class MaintenanceRestartRuntime {
       source,
     };
     this.active.set(policy.serverId, state);
-    void this.tickCountdown(policy.serverId);
+    void this.tickCountdown(policy.serverId, targetAtMs);
   }
 
   private clearTimer(state: ActiveCountdown): void {
@@ -205,25 +235,46 @@ export class MaintenanceRestartRuntime {
     }
   }
 
-  private scheduleNextTick(serverId: string, delayMs: number): void {
-    const state = this.active.get(serverId);
-    if (state === undefined) return;
+  private scheduleNextTick(
+    serverId: string,
+    expectedTargetAtMs: number,
+    delayMs: number,
+  ): void {
+    const state = this.isCurrentTick(serverId, expectedTargetAtMs);
+    if (state === null) return;
     this.clearTimer(state);
     state.timer = setTimeout(() => {
-      void this.tickCountdown(serverId);
+      void this.tickCountdown(serverId, expectedTargetAtMs);
     }, delayMs);
     state.timer.unref();
   }
 
-  private async tickCountdown(serverId: string): Promise<void> {
-    const state = this.active.get(serverId);
-    if (state === undefined) return;
-    if (state.cancelRequested) {
-      this.active.delete(serverId);
+  /** Operator/YARK intentional stop — not an unexpected death. */
+  private isIntentionalStop(serverId: string): boolean {
+    if (this.instances.isStopInProgress(serverId)) return true;
+    return this.processes.getStatus(serverId).status === "stopping";
+  }
+
+  private async tickCountdown(
+    serverId: string,
+    expectedTargetAtMs: number,
+  ): Promise<void> {
+    const state = this.isCurrentTick(serverId, expectedTargetAtMs);
+    if (state === null) {
+      const orphan = this.active.get(serverId);
+      if (orphan?.cancelRequested === true) this.active.delete(serverId);
       return;
     }
+
     if (!this.processes.isActive(serverId)) {
+      this.clearTimer(state);
       this.active.delete(serverId);
+      if (this.isIntentionalStop(serverId)) {
+        // Skip this occurrence; do not inflate fail-streak.
+        this.markOccurrenceDone(state);
+        return;
+      }
+      this.markOccurrenceDone(state);
       this.recordFail(serverId, "Server stopped during maintenance countdown");
       return;
     }
@@ -247,15 +298,11 @@ export class MaintenanceRestartRuntime {
           `Broadcast ${renderLastMinuteRestart(sec)}`,
           { recordEvent: false },
         );
-      } catch (error) {
-        this.active.delete(serverId);
-        this.recordFail(
-          serverId,
-          error instanceof Error ? error.message : String(error),
-        );
-        return;
+      } catch {
+        // Soft-fail: keep the window so a transient RCON blip can recover.
       }
-      this.scheduleNextTick(serverId, 1_000);
+      if (this.isCurrentTick(serverId, expectedTargetAtMs) === null) return;
+      this.scheduleNextTick(serverId, expectedTargetAtMs, 1_000);
       return;
     }
 
@@ -268,23 +315,20 @@ export class MaintenanceRestartRuntime {
       const offsetMs = parseMaintenanceOffsetToMs(label);
       if (offsetMs === null) continue;
       if (state.firedOffsets.has(label)) continue;
-      // Fire when we first cross this offset (remaining <= offset, once).
-      if (remainingMs <= offsetMs) {
-        state.firedOffsets.add(label);
-        try {
-          await this.instances.execRcon(
-            serverId,
-            `Broadcast ${renderWarningTemplate(policy.restartWarnings.template, remainingMs)}`,
-            { recordEvent: false },
-          );
-        } catch (error) {
-          this.active.delete(serverId);
-          this.recordFail(
-            serverId,
-            error instanceof Error ? error.message : String(error),
-          );
-          return;
-        }
+      if (remainingMs > offsetMs) continue;
+
+      try {
+        await this.instances.execRcon(
+          serverId,
+          `Broadcast ${renderWarningTemplate(policy.restartWarnings.template, remainingMs)}`,
+          { recordEvent: false },
+        );
+        const still = this.isCurrentTick(serverId, expectedTargetAtMs);
+        if (still === null) return;
+        still.firedOffsets.add(label);
+      } catch {
+        // Soft-fail warning Broadcast — retry next tick until it sticks or we pass.
+        if (this.isCurrentTick(serverId, expectedTargetAtMs) === null) return;
       }
     }
 
@@ -296,7 +340,8 @@ export class MaintenanceRestartRuntime {
       const untilFire = remainingMs - offsetMs;
       if (untilFire > 0 && untilFire < wakeIn) wakeIn = untilFire;
     }
-    this.scheduleNextTick(serverId, Math.max(250, wakeIn));
+    if (this.isCurrentTick(serverId, expectedTargetAtMs) === null) return;
+    this.scheduleNextTick(serverId, expectedTargetAtMs, Math.max(250, wakeIn));
   }
 
   private async executeRestart(
@@ -305,27 +350,29 @@ export class MaintenanceRestartRuntime {
   ): Promise<void> {
     if (state.runPromise !== null) return;
     const serverId = policy.serverId;
-    const targetKey = new Date(state.targetAtMs).toISOString();
+    const expectedTargetAtMs = state.targetAtMs;
     state.runPromise = (async () => {
       try {
-        if (state.cancelRequested) return;
+        if (this.isCurrentTick(serverId, expectedTargetAtMs) === null) return;
         await this.instances.restart(serverId);
         const atIso = new Date().toISOString();
         this.lastRestart.set(serverId, { atIso, ok: true });
         this.failStreak.delete(serverId);
-        if (state.source === "schedule") {
-          this.completedTargets.add(targetKey);
-        }
+        this.markOccurrenceDone(state);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         this.lastRestart.set(serverId, {
           atIso: new Date().toISOString(),
           ok: false,
         });
+        this.markOccurrenceDone(state);
         this.recordFail(serverId, message);
       } finally {
         this.clearTimer(state);
-        this.active.delete(serverId);
+        const current = this.active.get(serverId);
+        if (current !== undefined && current.targetAtMs === expectedTargetAtMs) {
+          this.active.delete(serverId);
+        }
       }
     })();
     await state.runPromise;

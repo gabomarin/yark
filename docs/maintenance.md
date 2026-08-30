@@ -32,9 +32,15 @@ MagicPath UX mock: https://magicpath.ai/files/444694713119952896
 
 1. Scheduler tick finds an enabled restart within `max(offsets, 60s)` of the local target and the server is running.
 2. Preset/custom offsets fire `Broadcast` once each as remaining crosses them.
-3. Last ≤60s: 1 Hz `Restart in {n}s` regardless of preset; Cancel clears the timer immediately.
+3. Last ≤60s: 1 Hz `Restart in {n}s` regardless of preset; Cancel clears the timer immediately
+   and skips that scheduled occurrence (no re-arm until the next local window).
 4. At T0: `InstanceService.restart` (SaveWorld → DoExit → pre_restart backup → start). No second lifecycle stack.
-5. Skip / fail gates: disabled, not running, already in countdown, session pause, RCON errors (counted toward fail-streak).
+5. Skip / fail gates:
+   - Disabled / not running / already in countdown / session pause — do not arm
+   - Transient RCON Broadcast errors during warning / last-minute — soft-fail (retry next tick); do **not** abort the window or inflate fail-streak
+   - Unexpected process death during countdown — abort + fail-streak
+   - Operator/YARK intentional stop (`isStopInProgress` / status `stopping`) — abort without fail-streak
+   - Fail-streak pause after 3 consecutive hard failures (restart execute / unexpected stop)
 
 Wipe (#488) runs after a successful maintenance restart. Auto-update (#489) uses Steam-newer on the existing poll.
 

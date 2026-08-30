@@ -18,6 +18,12 @@ function idleStatus(serverId: string): MaintenancePolicyStatus {
   };
 }
 
+/** Live Up next: 1s in last minute; slower earlier; pause when tab hidden. */
+function pollIntervalMs(phase: MaintenancePolicyStatus["countdownPhase"]): number {
+  if (phase === "last_minute" || phase === "restarting") return 1_000;
+  return 3_000;
+}
+
 export function useMaintenancePanel(serverId: string) {
   const [policy, setPolicy] = useState<MaintenancePolicyStatus | null>(null);
   const [busy, setBusy] = useState(false);
@@ -41,14 +47,42 @@ export function useMaintenancePanel(serverId: string) {
     void load();
   }, [load]);
 
-  // Poll while a countdown is active so Up next stays live (1s IPC is fine locally).
   const phase = policy?.countdownPhase ?? "idle";
   useEffect(() => {
     if (phase === "idle") return undefined;
-    const id = window.setInterval(() => {
+
+    let id: number | null = null;
+
+    const clear = () => {
+      if (id !== null) {
+        window.clearInterval(id);
+        id = null;
+      }
+    };
+
+    const arm = () => {
+      clear();
+      if (document.hidden) return;
+      id = window.setInterval(() => {
+        void load();
+      }, pollIntervalMs(phase));
+    };
+
+    const onVisibility = () => {
+      if (document.hidden) {
+        clear();
+        return;
+      }
       void load();
-    }, 1_000);
-    return () => window.clearInterval(id);
+      arm();
+    };
+
+    arm();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      clear();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [phase, load]);
 
   const save = useCallback(
