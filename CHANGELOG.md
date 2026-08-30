@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- **Wild dino wipe** after a successful maintenance restart (optional SaveWorld first); Launch wipe-on-every-start unchanged (#488).
 - Scheduled **restart** maintenance: Broadcast countdown (last minute 1 Hz), Run restart now / Cancel, and graceful restart with backup (#487).
 - Workspace **Maintenance** tab shell: per-server policies (default off), idle scheduler, Up next, and schedule/warning editors matching the #315 mock — restart / wipe / auto-update execution comes in follow-up slices (#486).
 - Keyboard: Ctrl+K Spotlight, Tab to server cards, Shift+F10 for the row menu, and Escape to dismiss menus and confirm dialogs (setup wizard still needs Skip / Close / Back) (#476).

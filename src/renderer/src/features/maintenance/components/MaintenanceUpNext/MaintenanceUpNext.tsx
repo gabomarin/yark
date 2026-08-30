@@ -26,7 +26,8 @@ export function MaintenanceUpNext(props: Props): ReactElement {
   const live =
     policy.countdownPhase === "warning"
     || policy.countdownPhase === "last_minute"
-    || policy.countdownPhase === "restarting";
+    || policy.countdownPhase === "restarting"
+    || policy.countdownPhase === "wiping";
 
   if (!armed && !live) {
     return (
@@ -49,13 +50,19 @@ export function MaintenanceUpNext(props: Props): ReactElement {
 
   if (live && policy.countdownRemainingMs !== null) {
     title =
-      policy.countdownPhase === "restarting"
-        ? "Restarting…"
-        : `Restart in ${formatCountdown(policy.countdownRemainingMs)}`;
+      policy.countdownPhase === "wiping"
+        ? "Wiping wild dinos…"
+        : policy.countdownPhase === "restarting"
+          ? "Restarting…"
+          : `Restart in ${formatCountdown(policy.countdownRemainingMs)}`;
     subtitle =
-      policy.countdownPhase === "last_minute"
-        ? "Final warnings every second · Cancel stops them immediately"
-        : "Players are being warned in-game";
+      policy.countdownPhase === "wiping"
+        ? "Waiting for ready, then DestroyWildDinos"
+        : policy.countdownPhase === "last_minute"
+          ? "Final warnings every second · Cancel stops them immediately"
+          : policy.countdownPhase === "restarting"
+            ? "Graceful restart with backup"
+            : "Players are being warned in-game";
   } else if (policy.restartEnabled) {
     title =
       policy.restartCadence === "daily"
@@ -77,7 +84,7 @@ export function MaintenanceUpNext(props: Props): ReactElement {
     subtitle = "Needs a restart schedule — wipe runs when that restart finishes";
   }
 
-  const lastLine =
+  const lastRestartLine =
     policy.lastRestartAt !== null
       ? `Last restart · ${policy.lastRestartOk === false ? "failed" : "OK"} · ${new Date(
           policy.lastRestartAt,
@@ -85,6 +92,12 @@ export function MaintenanceUpNext(props: Props): ReactElement {
       : policy.restartEnabled
         ? "Last restart · —"
         : null;
+  const lastWipeLine =
+    policy.wipeEnabled && policy.lastWipeAt !== null
+      ? `Last wipe · ${policy.lastWipeOk === false ? "failed" : "OK"} · ${new Date(
+          policy.lastWipeAt,
+        ).toLocaleString()}`
+      : null;
 
   return (
     <section className={classes.slab} data-maintenance-up-next>
@@ -96,9 +109,14 @@ export function MaintenanceUpNext(props: Props): ReactElement {
             <Text size="sm" c="dimmed" mt={4}>
               {subtitle}
             </Text>
-            {lastLine !== null && (
+            {lastRestartLine !== null && (
               <Text size="xs" c="dimmed" mt={4}>
-                {lastLine}
+                {lastRestartLine}
+              </Text>
+            )}
+            {lastWipeLine !== null && (
+              <Text size="xs" c="dimmed" mt={lastRestartLine === null ? 4 : 2}>
+                {lastWipeLine}
               </Text>
             )}
           </div>

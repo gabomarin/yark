@@ -111,3 +111,13 @@ export const MAINTENANCE_RESTART_FAIL_LIMIT = 3;
  * blips recover, a stuck RCON aborts instead of retrying forever.
  */
 export const MAINTENANCE_RCON_SOFT_FAIL_LIMIT = 3;
+
+/**
+ * Extra wait after the dedicated reports ready before DestroyWildDinos (#488).
+ * Ready-wait already settles ~15s after first RCON; this gives wildlife spawn
+ * a short additional window (product range ~15–30s).
+ */
+export const MAINTENANCE_WIPE_POST_READY_MS = 20_000;
+
+/** Cap waiting for post-restart running + RCON before wipe. */
+export const MAINTENANCE_WIPE_READY_TIMEOUT_MS = 10 * 60 * 1_000;

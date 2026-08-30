@@ -724,6 +724,9 @@ export interface MaintenancePolicyStatus extends MaintenancePolicy {
   /** ISO of last completed maintenance restart attempt (session or persisted). */
   lastRestartAt: string | null;
   lastRestartOk: boolean | null;
+  /** ISO of last post-restart wild wipe attempt (session). */
+  lastWipeAt: string | null;
+  lastWipeOk: boolean | null;
   /** True when Cancel can stop an upcoming countdown. */
   cancelable: boolean;
 }
@@ -732,7 +735,8 @@ export type MaintenanceCountdownPhase =
   | "idle"
   | "warning"
   | "last_minute"
-  | "restarting";
+  | "restarting"
+  | "wiping";
 
 export interface BackupPolicy {
   serverId: string;

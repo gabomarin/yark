@@ -9,8 +9,8 @@ same honesty as [backups.md](backups.md) world schedule.
 | Slice | Issue | State |
 | --- | --- | --- |
 | Tab + job model | #486 | Done — policies, Up next shell, schedule/warning editors |
-| Restart + broadcast | #487 | In progress — countdown, 1 Hz last minute, Run now / Cancel |
-| Wipe after restart | #488 | Pending |
+| Restart + broadcast | #487 | Done — countdown, 1 Hz last minute, Run now / Cancel |
+| Wipe after restart | #488 | In progress — DestroyWildDinos after successful maintenance restart |
 | Auto-update (Steam newer) | #489 | Pending |
 
 MagicPath UX mock: https://magicpath.ai/files/444694713119952896
@@ -18,12 +18,12 @@ MagicPath UX mock: https://magicpath.ai/files/444694713119952896
 ## Building blocks
 
 - Policies: SQLite `maintenance_policies` (migration 18), `MaintenanceRepository` / `MaintenanceService`
-- Restart runtime: `MaintenanceRestartRuntime` (countdown + Broadcast + `InstanceService.restart`)
+- Restart runtime: `MaintenanceRestartRuntime` (countdown + Broadcast + `InstanceService.restart` + optional wipe)
 - Scheduler: `MaintenanceScheduler` (~60s coalesce) arms windows when within the warning lead
 - IPC: `maintenance:get-policy` / `set-policy` / `clear-schedule-pause` / `run-restart-now` / `cancel-upcoming`
-- Shared schedule helpers: `src/shared/maintenance-schedule.ts` (offsets, next local time, templates)
+- Shared schedule helpers: `src/shared/maintenance-schedule.ts` (offsets, next local time, templates, wipe settle)
 - UI: `features/maintenance/MaintenancePanel` on workspace tab `maintenance`
-  - Up next: empty / armed / live countdown; **Run restart now** (confirm → ~10s window) / **Cancel window**
+  - Up next: empty / armed / live countdown / wiping; **Run restart now** / **Cancel window**
   - Collapsed Restart / Wipe / Auto-update with schedule + per-job warning presets
   - Expand while Off shows the same controls disabled; turning Restart Off also clears wipe
   - Fail-streak pause (3 consecutive) with Resume — session only, like world backup schedules
@@ -42,6 +42,16 @@ MagicPath UX mock: https://magicpath.ai/files/444694713119952896
    - Unexpected process death (typically status `error`) — abort + fail-streak
    - Fail-streak pause after 3 consecutive hard failures
 
-Wipe (#488) runs after a successful maintenance restart. Auto-update (#489) uses Steam-newer on the existing poll.
+## Wild wipe after restart (#488)
+
+When **Wild dino wipe** is On (and restart is armed — turning wipe On enables restart):
+
+1. After a **successful** maintenance restart (schedule or Run now), wait until status is `running`.
+2. Ensure RCON, wait `MAINTENANCE_WIPE_POST_READY_MS` (~20s) for settle / wildlife spawn.
+3. Optional `SaveWorld` when `wipeSaveWorldFirst` is true, then `DestroyWildDinos`.
+4. Wipe failure is recorded (`lastWipeOk`) and logged as an event; it does **not** inflate the restart fail-streak.
+5. Launch `-ForceRespawnDinos` (wipe on every start) stays on the Launch tab — unchanged.
+
+Auto-update (#489) uses Steam-newer on the existing poll.
 
 World backup schedule stays on the Backups tab; log retention stays in Settings.
