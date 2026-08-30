@@ -202,6 +202,7 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
       onContextMenu={onContextMenu}
       onKeyDown={onKeyDown}
       {...menuTriggerProps}
+      aria-label={`Server ${server.name}`}
     >
       <Stack gap={compact ? "xs" : "sm"}>
         <div className={classes.mainRow}>

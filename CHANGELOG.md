@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Keyboard: Ctrl+K Spotlight, Tab to server cards, Shift+F10 for the row menu, and Escape to dismiss menus and confirm dialogs (setup wizard still needs Skip / Close / Back) (#476).
+
 ### Changed
 
 - Logs and Settings sit on the page canvas instead of a full-pane card; create/edit form sections are flush square panels (no gap, no radius) with a **rounded** map thumb; fleet and server Logs lists/consoles are the same flush slab; expanded log rows use the Open in server highlight; **Logs severity defaults to All** (not Problems); empty states drop the dashed tile; Downloads hides the console until a job exists; ServerCard uses a flat fill, a 3px status rail, and a cryo hover border (#469).

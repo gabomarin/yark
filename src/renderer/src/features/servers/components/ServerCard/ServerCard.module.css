@@ -65,6 +65,11 @@
   z-index: 1;
 }
 
+.card:focus-visible {
+  outline: 2px solid var(--ark-blue-a8);
+  outline-offset: -2px;
+}
+
 .card:hover {
   border-color: var(--app-color-accent);
   background-image: none;

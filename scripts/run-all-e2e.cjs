@@ -14,6 +14,7 @@ const projectRoot = path.resolve(__dirname, "..");
 
 const tests = [
   { name: "e2e:smoke", cmd: "npm run e2e:smoke" },
+  { name: "e2e:keyboard", cmd: "npm run e2e:keyboard" },
   { name: "e2e", cmd: "npm run e2e" },
   { name: "e2e:install-health", cmd: "npm run e2e:install-health" },
   { name: "e2e:host-port-probe", cmd: "npm run e2e:host-port-probe" },

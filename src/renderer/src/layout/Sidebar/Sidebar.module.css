@@ -114,6 +114,11 @@
   background: color-mix(in srgb, var(--app-color-text) 4%, transparent);
 }
 
+.navLink:focus-visible {
+  outline: 2px solid var(--ark-blue-a8);
+  outline-offset: 2px;
+}
+
 .steamCmdButton {
   position: relative;
   min-height: 42px;
