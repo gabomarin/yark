@@ -259,7 +259,6 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
               versionRefreshHint={view.versionRefreshHint}
               playerList={playerList}
               processMetrics={processMetrics}
-              workspaceOpenLabel={workspaceOpenLabel}
               onOpenWorkspace={onOpenWorkspace}
             />
           </div>

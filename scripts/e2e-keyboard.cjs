@@ -1,5 +1,6 @@
 /**
- * Keyboard smoke: Spotlight, Overview card menu, dismissible modal (#476).
+ * Keyboard smoke: Spotlight, Overview card menu, dismissible modal (#476),
+ * search Escape, fleet strip, workspace tabs, Settings categories (#477).
  *
  * Local (not PR CI). Isolated YARK_E2E_USER_DATA.
  *
@@ -101,6 +102,41 @@ async function run() {
     await dialog.waitFor({ state: "visible", timeout: 8000 });
     await page.keyboard.press("Escape");
     await dialog.waitFor({ state: "hidden", timeout: 8000 });
+
+    const search = page.getByRole("textbox", { name: "Search servers" });
+    await search.fill("no-match-zzzz");
+    await search.press("Escape");
+    assert.equal(await search.inputValue(), "");
+
+    const running = page.getByRole("button", { name: /^Running/ }).first();
+    await running.focus();
+    await page.keyboard.press("Enter");
+
+    await card.getByRole("button", { name: /Open settings for/ }).click();
+    const serverTab = page.getByRole("tab", { name: "Server" });
+    await serverTab.waitFor({ state: "visible", timeout: 10000 });
+    await serverTab.focus();
+    await page.keyboard.press("ArrowRight");
+    assert.equal(
+      await page.getByRole("tab", { name: "INI Files" }).getAttribute("aria-selected"),
+      "true",
+    );
+
+    await leaveWorkspaceToServers(page);
+    await page.getByRole("button", { name: "Settings", exact: true }).first().click();
+    await page.getByRole("heading", { name: "Settings", level: 1 }).waitFor({
+      state: "visible",
+      timeout: 10000,
+    });
+    const steamCmd = page
+      .getByRole("navigation", { name: "Settings categories" })
+      .getByRole("button", { name: "SteamCMD" });
+    await steamCmd.focus();
+    await page.keyboard.press("Enter");
+    await page.locator("[data-steamcmd-path]").waitFor({
+      state: "visible",
+      timeout: 8000,
+    });
 
     succeeded = true;
     console.log("E2E_OK");

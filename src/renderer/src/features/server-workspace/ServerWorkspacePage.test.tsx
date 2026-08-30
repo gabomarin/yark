@@ -369,6 +369,20 @@ describe("ServerWorkspacePage", () => {
     expect(onSelectServer).toHaveBeenCalledWith("srv-b");
   });
 
+  it("switches workspace tabs with arrow keys (#477)", async () => {
+    const user = setupUser();
+    renderWorkspace();
+
+    const serverTab = screen.getByRole("tab", { name: "Server" });
+    expect(serverTab).toHaveAttribute("aria-selected", "true");
+    serverTab.focus();
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("tab", { name: "INI Files" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
   it("opens the Backups tab with create and history UI", async () => {
     const user = setupUser();
     renderWorkspace();

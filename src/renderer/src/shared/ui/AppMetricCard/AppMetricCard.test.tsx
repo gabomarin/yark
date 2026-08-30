@@ -33,5 +33,24 @@ describe("AppMetricCard", () => {
     await user.click(button);
     expect(onClick).toHaveBeenCalledTimes(1);
   });
+
+  it("toggles from the keyboard as a pressed button (#477)", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+
+    render(
+      <AppProviders>
+        <AppMetricCard label="Running" value="1" onClick={onClick} />
+      </AppProviders>,
+    );
+
+    const button = screen.getByRole("button", { name: /Running/i });
+    expect(button).toHaveAttribute("aria-pressed", "false");
+    button.focus();
+    await user.keyboard("{Enter}");
+    expect(onClick).toHaveBeenCalledTimes(1);
+    await user.keyboard(" ");
+    expect(onClick).toHaveBeenCalledTimes(2);
+  });
 });
 

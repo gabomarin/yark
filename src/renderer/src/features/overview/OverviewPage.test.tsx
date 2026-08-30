@@ -496,6 +496,21 @@ describe("OverviewPage", () => {
     expect(onSearchChange).toHaveBeenCalledWith("");
   });
 
+  it("clears Overview search on Escape when the field is focused (#477)", async () => {
+    const user = userEvent.setup();
+    const onSearchChange = vi.fn();
+
+    renderOverview({
+      servers: [server],
+      search: "Island",
+      onSearchChange,
+    });
+
+    await user.click(screen.getByRole("textbox", { name: "Search servers" }));
+    await user.keyboard("{Escape}");
+    expect(onSearchChange).toHaveBeenCalledWith("");
+  });
+
   it("keeps search across Overview unmount when held above the page (#438)", async () => {
     const user = userEvent.setup();
 
