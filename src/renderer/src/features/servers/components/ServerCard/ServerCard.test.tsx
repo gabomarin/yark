@@ -457,6 +457,81 @@ describe("ServerCard", () => {
     expect(onOpenFolder).toHaveBeenCalledTimes(1);
   });
 
+  it("opens the row menu from Shift+F10 on the focused card (#476)", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={installed}
+          officialSteamBuild={null}
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+          onDelete={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    const card = screen.getByLabelText("Server The Island");
+    card.focus();
+    await user.keyboard("{Shift>}{F10}{/Shift}");
+    expect(await screen.findByRole("menu")).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Open folder" })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  it("starts from the keyboard on the focused Start control (#476)", async () => {
+    const user = userEvent.setup();
+    const onStart = vi.fn();
+
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={installed}
+          officialSteamBuild={null}
+          onStart={onStart}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+          onDelete={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    await user.tab();
+    const start = screen.getByRole("button", { name: /^Start server$/i });
+    start.focus();
+    await user.keyboard("{Enter}");
+    expect(onStart).toHaveBeenCalledTimes(1);
+  });
+
   it("does not claim right-click while SteamCMD owns the server lock", () => {
     render(
       <AppProviders>

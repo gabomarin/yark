@@ -168,6 +168,7 @@ export function SetupWizard(props: Props): ReactElement {
       size="lg"
       centered
       closeOnClickOutside={false}
+      closeOnEscape={false}
       withCloseButton={!props.busy}
       overlayProps={{ mod: { "setup-wizard-overlay": true } }}
     >

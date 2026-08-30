@@ -168,6 +168,47 @@ describe("SetupWizard", () => {
     expect(screen.getByText("Welcome to YARK")).toBeInTheDocument();
   });
 
+  it("does not skip first-run on Escape (#476)", async () => {
+    const user = userEvent.setup();
+    const onSkip = vi.fn();
+    const onDismiss = vi.fn();
+    stubWizardApi();
+
+    render(
+      <AppProviders>
+        <SetupWizard
+          opened
+          mode="first-run"
+          servers={[]}
+          desktopShell={desktopShell}
+          busy={false}
+          steamCmdStatus={null}
+          steamCmdBusy={false}
+          defaultBaseFolder={null}
+          uiDensity="compact"
+          onPickSteamCmdPath={vi.fn()}
+          onInstallSteamCmd={vi.fn()}
+          onDefaultBaseFolderChange={vi.fn()}
+          onUiDensityChange={vi.fn()}
+          openNativeTerminalOnStart={false}
+          onOpenNativeTerminalOnStartChange={vi.fn()}
+          onSkip={onSkip}
+          onDismiss={onDismiss}
+          onPathsShellDone={vi.fn()}
+          onCreateServer={vi.fn()}
+          onImport={vi.fn()}
+          onExplore={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole("dialog", { name: "Set up YARK" })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expect(onSkip).not.toHaveBeenCalled();
+    expect(onDismiss).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog", { name: "Set up YARK" })).toBeInTheDocument();
+  });
+
   it("lets Continue proceed on Paths while SteamCMD is busy", async () => {
     const user = userEvent.setup();
     stubWizardApi();

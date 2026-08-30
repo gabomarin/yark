@@ -192,6 +192,22 @@ Theme `defaultRadius` is **`sm`**. Avoid raw `border-radius` when a token fits. 
   categories) uses the same quiet fill + 3px inset — not a `variant="light"` capsule.
 - Focus rings: reuse existing `:focus-visible` patterns (ark-blue outline), don’t invent per-page rings.
 
+### 5a. Keyboard contract (#475)
+
+YARK is a Windows desktop **tool**, not a vim mode. Keyboard covers fleet triage and lifecycle. Prefer Mantine (`Modal` trap, `Tabs`, `Menu`, `Spotlight`, `:focus-visible`) over custom handlers.
+
+| Key | Contract |
+| --- | --- |
+| **Tab** | Natural order: sidebar → page chrome → controls. Overview: Tab to the server card, then to Start/Stop/Restart/Enable/Update/kebab. |
+| **Enter / Space** | Activate the focused button or NavLink. Do **not** treat Enter on the card chrome as Open workspace (use the identity open control) so Tab-to-card + Shift+F10 cannot accidental-open. |
+| **Escape** | Closes Spotlight, menus, and dismissible modals; restores focus to the opener. Does **not** skip the first-run setup wizard (Skip / Close / Back stay explicit). Does not cancel in-flight SteamCMD/stop without the existing confirm. |
+| **Ctrl+K** (Cmd+K) | Spotlight: jump to a route or open a server workspace. |
+| **Shift+F10** / ContextMenu | Opens the same kebab actions on a focused **server card**. DataTable body rows stay mouse-context; use the row kebab. |
+
+**Out of scope:** global Start/Stop/Restart hotkeys; PathField typing (browse + Clear); SteamCMD/runtime console command bindings; full screen-reader certification.
+
+PathField remains browse-only (`aria-readonly`). Playwright must not `.fill()` those chips.
+
 ### 5b. Page-local job status (toolbar cohesion)
 
 When a page action starts a longer job (e.g. Overview **Check Servers Health**),
