@@ -104,3 +104,10 @@ export function renderLastMinuteRestart(remainingSec: number): string {
 export const MAINTENANCE_RUN_NOW_LEAD_MS = 10_000;
 
 export const MAINTENANCE_RESTART_FAIL_LIMIT = 3;
+
+/**
+ * Consecutive Broadcast failures within one countdown window before hard-fail.
+ * Warning ticks are sparse (~15s); last-minute is 1 Hz — either way, a few
+ * blips recover, a stuck RCON aborts instead of retrying forever.
+ */
+export const MAINTENANCE_RCON_SOFT_FAIL_LIMIT = 3;

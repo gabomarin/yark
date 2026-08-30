@@ -18,10 +18,11 @@ function idleStatus(serverId: string): MaintenancePolicyStatus {
   };
 }
 
-/** Live Up next: 1s in last minute; slower earlier; pause when tab hidden. */
+/** Live Up next: 1s in last minute; relaxed in warning; pause when tab hidden. */
 function pollIntervalMs(phase: MaintenancePolicyStatus["countdownPhase"]): number {
   if (phase === "last_minute" || phase === "restarting") return 1_000;
-  return 3_000;
+  // Warning windows span minutes; avoid fleet-wide 1–3s IPC chatter.
+  return 15_000;
 }
 
 export function useMaintenancePanel(serverId: string) {

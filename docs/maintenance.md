@@ -37,10 +37,10 @@ MagicPath UX mock: https://magicpath.ai/files/444694713119952896
 4. At T0: `InstanceService.restart` (SaveWorld → DoExit → pre_restart backup → start). No second lifecycle stack.
 5. Skip / fail gates:
    - Disabled / not running / already in countdown / session pause — do not arm
-   - Transient RCON Broadcast errors during warning / last-minute — soft-fail (retry next tick); do **not** abort the window or inflate fail-streak
-   - Unexpected process death during countdown — abort + fail-streak
-   - Operator/YARK intentional stop (`isStopInProgress` / status `stopping`) — abort without fail-streak
-   - Fail-streak pause after 3 consecutive hard failures (restart execute / unexpected stop)
+   - Operator/YARK intentional stop (`isStopInProgress` / status `stopping`|`stopped`) — abort without fail-streak (checked while process may still be live)
+   - Transient RCON Broadcast errors — soft-fail up to 3 consecutive ticks, then hard-fail + fail-streak
+   - Unexpected process death (typically status `error`) — abort + fail-streak
+   - Fail-streak pause after 3 consecutive hard failures
 
 Wipe (#488) runs after a successful maintenance restart. Auto-update (#489) uses Steam-newer on the existing poll.
 

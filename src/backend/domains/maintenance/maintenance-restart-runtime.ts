@@ -7,6 +7,7 @@ import {
 } from "@shared/maintenance-policy";
 import {
   MAINTENANCE_RESTART_FAIL_LIMIT,
+  MAINTENANCE_RCON_SOFT_FAIL_LIMIT,
   MAINTENANCE_RUN_NOW_LEAD_MS,
   maxWarningLeadMs,
   nextLocalRestartAt,
@@ -35,9 +36,16 @@ interface ActiveCountdown {
   scheduleTargetKey: string | null;
   /** Offset labels already Broadcast for this window. */
   firedOffsets: Set<string>;
+  /** Consecutive Broadcast failures in this window (soft-fail → hard-fail). */
+  rconFailStreak: number;
   cancelRequested: boolean;
   phase: MaintenanceCountdownPhase;
   timer: NodeJS.Timeout | null;
+  /**
+   * Bumped whenever the timer is cleared so a queued setTimeout callback that
+   * races with cancel / reschedule is ignored even if `active` still matches.
+   */
+  timerGeneration: number;
   runPromise: Promise<void> | null;
   source: "schedule" | "run_now";
 }
@@ -173,6 +181,7 @@ export class MaintenanceRestartRuntime {
     const server = this.servers.get(policy.serverId);
     if (server === null || !server.enabled) return;
     if (!this.processes.isActive(policy.serverId)) return;
+    if (this.isIntentionalStop(policy.serverId)) return;
 
     const now = Date.now();
     const next = nextLocalRestartAt(
@@ -218,9 +227,11 @@ export class MaintenanceRestartRuntime {
       targetAtMs,
       scheduleTargetKey,
       firedOffsets: new Set(),
+      rconFailStreak: 0,
       cancelRequested: false,
       phase: targetAtMs - Date.now() <= 60_000 ? "last_minute" : "warning",
       timer: null,
+      timerGeneration: 0,
       runPromise: null,
       source,
     };
@@ -233,6 +244,7 @@ export class MaintenanceRestartRuntime {
       clearTimeout(state.timer);
       state.timer = null;
     }
+    state.timerGeneration += 1;
   }
 
   private scheduleNextTick(
@@ -243,16 +255,60 @@ export class MaintenanceRestartRuntime {
     const state = this.isCurrentTick(serverId, expectedTargetAtMs);
     if (state === null) return;
     this.clearTimer(state);
+    const generation = state.timerGeneration;
     state.timer = setTimeout(() => {
+      // Re-check immediately: clearTimeout does not dequeue an already-queued
+      // macrotask, and cancel/reschedule may have raced past clearTimer.
+      const current = this.isCurrentTick(serverId, expectedTargetAtMs);
+      if (current === null || current.timerGeneration !== generation) return;
       void this.tickCountdown(serverId, expectedTargetAtMs);
     }, delayMs);
     state.timer.unref();
   }
 
-  /** Operator/YARK intentional stop — not an unexpected death. */
+  /**
+   * Operator/YARK shutdown in progress or just finished — not an unexpected death.
+   * `isActive` stays true while status is `stopping`, so this must be checked
+   * before Broadcast / restart work, not only after `!isActive`.
+   */
   private isIntentionalStop(serverId: string): boolean {
     if (this.instances.isStopInProgress(serverId)) return true;
-    return this.processes.getStatus(serverId).status === "stopping";
+    const status = this.processes.getStatus(serverId).status;
+    return status === "stopping" || status === "stopped";
+  }
+
+  private abortWindowQuiet(state: ActiveCountdown): void {
+    this.clearTimer(state);
+    this.markOccurrenceDone(state);
+    this.active.delete(state.serverId);
+  }
+
+  private abortWindowHard(state: ActiveCountdown, message: string): void {
+    this.clearTimer(state);
+    this.markOccurrenceDone(state);
+    this.active.delete(state.serverId);
+    this.recordFail(state.serverId, message);
+  }
+
+  /** Soft-fail Broadcast; hard-fail after consecutive tick failures. */
+  private noteRconOutcome(
+    state: ActiveCountdown,
+    ok: boolean,
+    errorMessage: string,
+  ): "continue" | "abort" {
+    if (ok) {
+      state.rconFailStreak = 0;
+      return "continue";
+    }
+    state.rconFailStreak += 1;
+    if (state.rconFailStreak >= MAINTENANCE_RCON_SOFT_FAIL_LIMIT) {
+      this.abortWindowHard(
+        state,
+        `RCON Broadcast failed ${state.rconFailStreak} times: ${errorMessage}`,
+      );
+      return "abort";
+    }
+    return "continue";
   }
 
   private async tickCountdown(
@@ -266,16 +322,18 @@ export class MaintenanceRestartRuntime {
       return;
     }
 
+    // Catch UI/stop-all while process is still live (status `stopping`).
+    if (this.isIntentionalStop(serverId)) {
+      this.abortWindowQuiet(state);
+      return;
+    }
+
     if (!this.processes.isActive(serverId)) {
-      this.clearTimer(state);
-      this.active.delete(serverId);
-      if (this.isIntentionalStop(serverId)) {
-        // Skip this occurrence; do not inflate fail-streak.
-        this.markOccurrenceDone(state);
-        return;
-      }
-      this.markOccurrenceDone(state);
-      this.recordFail(serverId, "Server stopped during maintenance countdown");
+      // Unexpected exit (typically status `error`) — count toward fail-streak.
+      this.abortWindowHard(
+        state,
+        "Server stopped during maintenance countdown",
+      );
       return;
     }
 
@@ -292,16 +350,23 @@ export class MaintenanceRestartRuntime {
     if (remainingMs <= 60_000) {
       state.phase = "last_minute";
       const sec = remainingMs / 1_000;
+      let broadcastOk = true;
+      let broadcastError = "";
       try {
         await this.instances.execRcon(
           serverId,
           `Broadcast ${renderLastMinuteRestart(sec)}`,
           { recordEvent: false },
         );
-      } catch {
-        // Soft-fail: keep the window so a transient RCON blip can recover.
+      } catch (error) {
+        broadcastOk = false;
+        broadcastError = error instanceof Error ? error.message : String(error);
       }
-      if (this.isCurrentTick(serverId, expectedTargetAtMs) === null) return;
+      const still = this.isCurrentTick(serverId, expectedTargetAtMs);
+      if (still === null) return;
+      if (this.noteRconOutcome(still, broadcastOk, broadcastError) === "abort") {
+        return;
+      }
       this.scheduleNextTick(serverId, expectedTargetAtMs, 1_000);
       return;
     }
@@ -317,19 +382,24 @@ export class MaintenanceRestartRuntime {
       if (state.firedOffsets.has(label)) continue;
       if (remainingMs > offsetMs) continue;
 
+      let broadcastOk = true;
+      let broadcastError = "";
       try {
         await this.instances.execRcon(
           serverId,
           `Broadcast ${renderWarningTemplate(policy.restartWarnings.template, remainingMs)}`,
           { recordEvent: false },
         );
-        const still = this.isCurrentTick(serverId, expectedTargetAtMs);
-        if (still === null) return;
-        still.firedOffsets.add(label);
-      } catch {
-        // Soft-fail warning Broadcast — retry next tick until it sticks or we pass.
-        if (this.isCurrentTick(serverId, expectedTargetAtMs) === null) return;
+      } catch (error) {
+        broadcastOk = false;
+        broadcastError = error instanceof Error ? error.message : String(error);
       }
+      const still = this.isCurrentTick(serverId, expectedTargetAtMs);
+      if (still === null) return;
+      if (this.noteRconOutcome(still, broadcastOk, broadcastError) === "abort") {
+        return;
+      }
+      if (broadcastOk) still.firedOffsets.add(label);
     }
 
     // Wake near next offset or last-minute boundary.
@@ -354,6 +424,10 @@ export class MaintenanceRestartRuntime {
     state.runPromise = (async () => {
       try {
         if (this.isCurrentTick(serverId, expectedTargetAtMs) === null) return;
+        if (this.isIntentionalStop(serverId)) {
+          this.abortWindowQuiet(state);
+          return;
+        }
         await this.instances.restart(serverId);
         const atIso = new Date().toISOString();
         this.lastRestart.set(serverId, { atIso, ok: true });

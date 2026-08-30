@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { defaultMaintenancePolicy } from "../src/shared/maintenance-policy";
+import { MAINTENANCE_RCON_SOFT_FAIL_LIMIT } from "../src/shared/maintenance-schedule";
 import { MaintenanceRestartRuntime } from "../src/backend/domains/maintenance/maintenance-restart-runtime";
 import type { MaintenancePolicy } from "../src/shared/types";
 
@@ -21,7 +22,7 @@ function makeRuntime(policy: MaintenancePolicy) {
     isActive: vi.fn(() => true),
     getStatus: vi.fn(() => ({
       serverId: policy.serverId,
-      status: "running",
+      status: "running" as "running" | "stopping" | "stopped" | "error" | "starting",
       processLive: true,
       pid: 1,
       startedAt: null,
@@ -81,7 +82,16 @@ describe("MaintenanceRestartRuntime", () => {
       const { runtime, processes, instances, servers } = makeRuntime(policy);
       await runtime.runRestartNow("s1");
 
-      processes.isActive.mockReturnValue(false);
+      // Still "active" while stopping — intentional abort must catch this path.
+      processes.isActive.mockReturnValue(true);
+      processes.getStatus.mockReturnValue({
+        serverId: "s1",
+        status: "stopping",
+        processLive: true,
+        pid: 1,
+        startedAt: null,
+        lastError: null,
+      });
       instances.isStopInProgress.mockReturnValue(true);
 
       await vi.advanceTimersByTimeAsync(1_100);
@@ -94,22 +104,14 @@ describe("MaintenanceRestartRuntime", () => {
     }
   });
 
-  it("keeps the countdown after a transient warning Broadcast failure", async () => {
+  it("keeps the countdown after a transient Broadcast failure", async () => {
     vi.useFakeTimers();
     try {
       const policy = {
         ...defaultMaintenancePolicy("s1", "2026-01-01T00:00:00.000Z"),
         restartEnabled: true,
-        restartWarnings: {
-          preset: "quiet" as const,
-          customOffsets: ["5m"],
-          template: "Server restart in {time}",
-        },
       };
       const { runtime, instances, servers } = makeRuntime(policy);
-      // Arm via private path: long window by patching runRestartNow lead — use schedule cycle.
-      // Direct: start with runRestartNow then we need longer window — call consider via list.
-      // Use runRestartNow and override execRcon to fail; last_minute soft-fails too.
       instances.execRcon.mockRejectedValueOnce(new Error("RCON down"));
       await runtime.runRestartNow("s1");
       await vi.advanceTimersByTimeAsync(50);
@@ -118,6 +120,31 @@ describe("MaintenanceRestartRuntime", () => {
       expect(status.countdownPhase).toBe("last_minute");
       expect(status.cancelable).toBe(true);
       expect(servers.addEvent).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("hard-fails after consecutive RCON Broadcast failures", async () => {
+    vi.useFakeTimers();
+    try {
+      const policy = {
+        ...defaultMaintenancePolicy("s1", "2026-01-01T00:00:00.000Z"),
+        restartEnabled: true,
+      };
+      const { runtime, instances, servers } = makeRuntime(policy);
+      instances.execRcon.mockRejectedValue(new Error("RCON permanently down"));
+      await runtime.runRestartNow("s1");
+
+      for (let i = 0; i < MAINTENANCE_RCON_SOFT_FAIL_LIMIT; i++) {
+        await vi.advanceTimersByTimeAsync(1_100);
+      }
+
+      expect(runtime.enrichStatus(policy).countdownPhase).toBe("idle");
+      expect(servers.addEvent).toHaveBeenCalled();
+      expect(String(servers.addEvent.mock.calls[0]?.[3] ?? "")).toMatch(
+        /Maintenance restart failed/,
+      );
     } finally {
       vi.useRealTimers();
     }
