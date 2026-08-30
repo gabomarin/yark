@@ -202,6 +202,35 @@ export const backupPolicyWriteSchema = z
   })
   .strict();
 
+const maintenanceBroadcastPresetSchema = z.enum([
+  "quiet",
+  "standard",
+  "strict",
+  "custom",
+]);
+
+const maintenanceJobWarningsSchema = z
+  .object({
+    preset: maintenanceBroadcastPresetSchema,
+    customOffsets: z.array(z.string().min(1).max(8)).max(12),
+    template: z.string().min(1).max(500),
+  })
+  .strict();
+
+export const maintenancePolicyWriteSchema = z
+  .object({
+    restartEnabled: z.boolean(),
+    wipeEnabled: z.boolean(),
+    updateEnabled: z.boolean(),
+    restartCadence: z.enum(["weekly", "daily"]),
+    restartDayOfWeek: z.number().int().min(0).max(6),
+    restartTimeLocal: z.string().regex(/^\d{2}:\d{2}$/),
+    wipeSaveWorldFirst: z.boolean(),
+    restartWarnings: maintenanceJobWarningsSchema,
+    updateWarnings: maintenanceJobWarningsSchema,
+  })
+  .strict();
+
 export const restoreBackupOptionsSchema = z
   .object({
     restoreProfilesTribes: z.boolean().optional(),

@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Workspace **Maintenance** tab shell: per-server policies (default off), idle scheduler, Up next, and schedule/warning editors matching the #315 mock — restart / wipe / auto-update execution comes in follow-up slices (#486).
 - Keyboard: Ctrl+K Spotlight, Tab to server cards, Shift+F10 for the row menu, and Escape to dismiss menus and confirm dialogs (setup wizard still needs Skip / Close / Back) (#476).
 - Keyboard: Overview search Escape clears; fleet strip tiles toggle with Enter/Space; workspace tabs and Settings categories are Tab-reachable. Card version/meta cells stay mouse-only (#477).
 

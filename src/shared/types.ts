@@ -677,6 +677,47 @@ export interface RestoreBackupOptions {
   restoreProfilesTribes?: boolean;
 }
 
+/** Player-warning cadence preset for a maintenance job (#315). */
+export type MaintenanceBroadcastPreset = "quiet" | "standard" | "strict" | "custom";
+
+/** Per-job Broadcast offsets + template (restart vs auto-update are separate). */
+export interface MaintenanceJobWarnings {
+  preset: MaintenanceBroadcastPreset;
+  /** Offset labels such as `30m`, `15m`, `5m`, `1m`, `10s`. */
+  customOffsets: string[];
+  /** In-game message; use `{time}` for remaining duration. */
+  template: string;
+}
+
+/**
+ * Per-server maintenance policies (default all off). Execution lands in later
+ * slices (#487–#489); slice 1 persists flags and warning config only (#486).
+ */
+export interface MaintenancePolicy {
+  serverId: string;
+  restartEnabled: boolean;
+  wipeEnabled: boolean;
+  updateEnabled: boolean;
+  restartCadence: "weekly" | "daily";
+  /** 0 = Sunday … 6 = Saturday (local Windows clock). */
+  restartDayOfWeek: number;
+  /** `HH:mm` 24h local time. */
+  restartTimeLocal: string;
+  wipeSaveWorldFirst: boolean;
+  restartWarnings: MaintenanceJobWarnings;
+  updateWarnings: MaintenanceJobWarnings;
+  updatedAt: string;
+}
+
+/** Policy plus session-only fail-streak pause for the UI. */
+export interface MaintenancePolicyStatus extends MaintenancePolicy {
+  /**
+   * True when automatic maintenance is paused for this YARK session after
+   * repeated failures. Does not change enabled flags. Cleared on app restart.
+   */
+  schedulePaused: boolean;
+}
+
 export interface BackupPolicy {
   serverId: string;
   /** When true, creates world backups on `intervalMinutes` while the server is running. */
