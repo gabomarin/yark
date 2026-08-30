@@ -414,6 +414,12 @@ if (gotSingleInstanceLock) {
       processManager,
       backupService,
       locks,
+      {
+        resolveOpenNativeConsole: () =>
+          parseOpenNativeConsolePref(
+            settings.get(OPEN_NATIVE_CONSOLE_SETTING_KEY),
+          ),
+      },
     );
     const backupScheduler = new BackupScheduler(backupService);
     const logsService = new LogsService(

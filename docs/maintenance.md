@@ -38,6 +38,10 @@ how often Steam is checked.
 5. Does not overlap a restart countdown on the same server.
 6. Fail-streak pause (3) with Resume — shared alert with restart.
 
+Restart / post-update **start** uses Settings **Show server console on start**
+(`InstanceService` fills `openNativeConsole` when callers omit it) — same as
+manual Start/Restart.
+
 Restart countdown (#487) unchanged. Wipe (#488) is post-restart when that slice lands.
 
 World backup schedule stays on the Backups tab; log retention stays in Settings.

@@ -17,6 +17,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Maintenance restart and post-update start honor Settings **Show server console on start** (they no longer spawn hidden when the preference is on) (#489).
 - Maintenance tab Alerts (errors / schedule pause) stay readable instead of collapsing to a thin border when job sections are expanded (#489).
 
 ### Changed
