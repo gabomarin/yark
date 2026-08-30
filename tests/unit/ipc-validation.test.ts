@@ -352,6 +352,26 @@ describe("handleValidated", () => {
     expect(result.error).toContain("••••••••");
   });
 
+  it("redacts known live secrets in IPC error strings", async () => {
+    const { handleValidated, setIpcDiagnosticKnownSecrets } = await import(
+      "../../src/main/ipc-validate"
+    );
+    setIpcDiagnosticKnownSecrets(() => ["hunter2-secret"]);
+    handleValidated("test:bare-secret-err", z.tuple([]), () => {
+      throw new Error("RCON rejected hunter2-secret from 127.0.0.1");
+    });
+
+    const handler = handleMock.mock.calls[0]?.[1] as (
+      event: unknown,
+      ...args: unknown[]
+    ) => Promise<{ ok: boolean; error?: string }>;
+
+    const result = await handler({});
+    expect(result.ok).toBe(false);
+    expect(result.error).not.toContain("hunter2-secret");
+    expect(result.error).toContain("••••••••");
+  });
+
   it("refuses duplicate channel registration", async () => {
     const { handleValidated } = await import("../../src/main/ipc-validate");
     const schema = z.tuple([]);

@@ -26,6 +26,19 @@ describe("credential diagnostic sanitizer", () => {
     expect(sanitized).toContain("RCONPort=27020");
   });
 
+  it("drops section headers whose only assignments were password settings", () => {
+    const raw = [
+      "[ServerSettings]",
+      "ServerAdminPassword=hunter2-secret",
+      "[SessionSettings]",
+      "SessionName=Island",
+    ].join("\n");
+    const sanitized = omitIniPasswordSettings(raw);
+    expect(sanitized).not.toContain("[ServerSettings]");
+    expect(sanitized).toContain("[SessionSettings]");
+    expect(sanitized).toContain("SessionName=Island");
+  });
+
   it("omits password keys from pretty-printed config dumps", () => {
     const raw = [
       "{",
@@ -53,6 +66,14 @@ describe("credential diagnostic sanitizer", () => {
     expect(sanitized).toContain(`ServerAdminPassword=${REDACTED_SECRET}`);
   });
 
+  it("redacts assignment values that contain & or spaces when quoted", () => {
+    const sanitized = sanitizeDiagnosticText(
+      'INI write failed ServerAdminPassword="p&ss word"',
+    );
+    expect(sanitized).not.toContain("p&ss");
+    expect(sanitized).toContain(`ServerAdminPassword=${REDACTED_SECRET}`);
+  });
+
   it("redacts bearer tokens and API keys", () => {
     const raw =
       "Authorization: Bearer tok_abc and x-api-key=cf_secret";
@@ -69,6 +90,14 @@ describe("credential diagnostic sanitizer", () => {
     );
     expect(sanitized).not.toContain("hunter2-secret");
     expect(sanitized).toContain(REDACTED_SECRET);
+  });
+
+  it("does not redact a known secret as a substring of a longer word", () => {
+    const sanitized = sanitizeDiagnosticText(
+      "administrator login failed",
+      ["admin"],
+    );
+    expect(sanitized).toBe("administrator login failed");
   });
 
   it("omits password fields from config objects", () => {
@@ -105,10 +134,11 @@ describe("credential diagnostic sanitizer", () => {
   it("collects admin and join passwords of sufficient length", () => {
     expect(
       collectKnownSecrets([
+        { adminPassword: "abcd", serverPassword: "join99" },
+        { adminPassword: "abc", serverPassword: null },
         { adminPassword: "admin1234", serverPassword: "join99" },
-        { adminPassword: "ab", serverPassword: null },
       ]),
-    ).toEqual(["admin1234", "join99"]);
+    ).toEqual(["abcd", "join99", "admin1234"]);
   });
 
   it("recognizes GUS password keys", () => {

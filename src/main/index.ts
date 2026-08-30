@@ -38,7 +38,9 @@ import { ModsService } from "../backend/domains/mods/mods-service";
 import { InstanceLockManager } from "../backend/orchestration/instance-lock-manager";
 import { AppUpdateService } from "./app-update-service";
 import { attachDevToolsShortcuts, isDevToolsAllowed } from "./devtools";
+import { collectKnownSecrets } from "../shared/credential-redaction";
 import { registerIpcHandlers } from "./ipc-handlers";
+import { setIpcDiagnosticKnownSecrets } from "./ipc-validate";
 import {
   applyTrayContextMenu,
   createAppTray,
@@ -387,11 +389,13 @@ if (gotSingleInstanceLock) {
       splash.setPosition(aligned.x, aligned.y);
     }
     const repo = new ServerRepository(db);
+    setIpcDiagnosticKnownSecrets(() => collectKnownSecrets(repo.list()));
     const backupRepo = new BackupRepository(db);
     const processManager = new ProcessManager({
       onProcessCheckpoint: (record) => upsertLeftRunningProcess(settings, record),
       onProcessCheckpointCleared: (serverId) =>
         removeLeftRunningProcess(settings, serverId),
+      knownSecrets: () => collectKnownSecrets(repo.list()),
     });
     const locks = new InstanceLockManager();
     const backupService = new BackupService(

@@ -11,9 +11,19 @@ import { sanitizeDiagnosticText } from "../shared/credential-redaction";
 
 const validatedChannels = new Set<string>();
 
+let ipcKnownSecrets: () => readonly string[] = () => [];
+
+/** Wire live profile passwords so IPC `ok: false` can redact bare secrets. */
+export function setIpcDiagnosticKnownSecrets(
+  provider: () => readonly string[],
+): void {
+  ipcKnownSecrets = provider;
+}
+
 /** Reset between unit tests only. */
 export function resetValidatedIpcChannelsForTests(): void {
   validatedChannels.clear();
+  ipcKnownSecrets = () => [];
 }
 
 function wrapIpcResult<T>(fn: () => T | Promise<T>): Promise<IpcResult<T>> {
@@ -24,6 +34,7 @@ function wrapIpcResult<T>(fn: () => T | Promise<T>): Promise<IpcResult<T>> {
       ok: false,
       error: sanitizeDiagnosticText(
         err instanceof Error ? err.message : String(err),
+        ipcKnownSecrets(),
       ),
     }));
 }

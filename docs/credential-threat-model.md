@@ -58,8 +58,16 @@ password settings.
 When a log, crash excerpt, event, or export must show GameUserSettings or
 server configuration, YARK **drops** `ServerAdminPassword` / `ServerPassword`
 (and matching JSON fields) instead of echoing them, even as bullets. Inline
-leaks (`ServerAdminPassword=…` in an error string) and known live secrets are
-redacted. Sanitized **support bundles** ([#85](https://github.com/gabomarin/yark/issues/85))
+leaks (`ServerAdminPassword=…` in an error string) and **known live secrets**
+(profile passwords of length ≥ 4, word-bounded) are redacted on:
+
+- Log list / export / update-log reads (`LogsService`)
+- Runtime console **append** (ProcessManager wired with `knownSecrets` from the profile DB)
+- IPC `ok: false` strings (`setIpcDiagnosticKnownSecrets` at boot)
+- Crash excerpts (`planUnexpectedServerCrashEvent`)
+
+A known secret of 4 characters such as `admin` does not rewrite `administrator`.
+Sanitized **support bundles** ([#85](https://github.com/gabomarin/yark/issues/85))
 must reuse these rules.
 
 ## Backup and restore
@@ -84,6 +92,7 @@ has (often inherited from the disk). Treat install folders as trusted.
 - Same-user malware, memory dumps, or an unlocked session
 - Plaintext ASA INI, INI backup ZIPs, and the SQLite profile copy
 - Operator-pasted passwords in screenshots or GitHub issues
+- Known-secret redaction uses word boundaries; exotic passwords that are substrings of other tokens can still match when bounded by non-word characters
 - Replacing Windows account / BitLocker / device encryption
 
 ## Module map
@@ -92,11 +101,11 @@ has (often inherited from the disk). Treat install folders as trusted.
 | --- | --- |
 | Omit + redact | `src/shared/credential-redaction.ts` |
 | IPC errors | `src/main/ipc-validate.ts` |
-| Events | `src/backend/infra/db/server-repository.ts` (`addEvent` / `recentEvents`) |
+| Events | `src/backend/infra/db/server-repository.ts` (`addEvent` write + `recentEvents` read; LogsService does not wrap again) |
 | Log list / export / runtime / update-log reads | `src/backend/domains/logs/logs-service.ts` |
-| Runtime console ring | `src/backend/infra/process/process-manager.ts` |
+| Runtime console ring | `src/backend/infra/process/process-manager.ts` (omit/redact on append) |
 | Crash excerpts | `src/backend/domains/instances/instance-crash.ts` |
-| Cluster INI previews (omit owned keys) | `src/backend/domains/config/ini-compose.ts` |
+| Cluster INI previews (omit owned keys) | `src/backend/domains/config/ini-compose.ts` — **pre-existing** `omitYarkOwnedFromIniPreview`; not added by #144 |
 
 Related operator copy: [Security & privacy](https://getyark.com/docs/security-privacy/),
 [`SECURITY.md`](../SECURITY.md), [profile-database.md](profile-database.md),

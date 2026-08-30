@@ -277,6 +277,10 @@ export class ServerRepository {
     return result.changes > 0;
   }
 
+  /**
+   * Persist an operator event. Sanitizes message/details on write so GUS
+   * password settings never land in SQLite.
+   */
   addEvent(
     serverId: string | null,
     type: AppEvent["type"],
@@ -309,6 +313,11 @@ export class ServerRepository {
     return Number(result.lastInsertRowid);
   }
 
+  /**
+   * Newest events first. Sanitizes again on read so rows written before #144
+   * stay clean in Overview / Logs (canonical read-side choke point; callers
+   * should not wrap with {@link sanitizeAppEvent}).
+   */
   recentEvents(limit: number): AppEvent[] {
     const rows = this.db
       .prepare(
