@@ -15,18 +15,26 @@ export class MaintenanceScheduler {
 
   start(): void {
     if (this.timer !== null) return;
+    // Fire once immediately so a window already inside the warning lead
+    // (e.g. Daily 13:20 with 5m warnings at 13:16) arms without waiting
+    // for the first interval tick.
+    this.scheduleCycle();
     this.timer = setInterval(() => {
-      if (this.cyclePromise !== null) return;
-      this.cyclePromise = this.service
-        .runScheduledCycle()
-        .catch((error: unknown) => {
-          console.error("Scheduled maintenance cycle failed", error);
-        })
-        .finally(() => {
-          this.cyclePromise = null;
-        });
+      this.scheduleCycle();
     }, this.tickMs);
     this.timer.unref();
+  }
+
+  private scheduleCycle(): void {
+    if (this.cyclePromise !== null) return;
+    this.cyclePromise = this.service
+      .runScheduledCycle()
+      .catch((error: unknown) => {
+        console.error("Scheduled maintenance cycle failed", error);
+      })
+      .finally(() => {
+        this.cyclePromise = null;
+      });
   }
 
   stop(): void {
