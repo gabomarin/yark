@@ -29,13 +29,17 @@ export function MaintenancePanel(props: Props): ReactElement {
       </Text>
 
       {panel.error !== null && (
-        <Alert color="red" title="Maintenance">
+        <Alert className={classes.alert} color="red" title="Maintenance">
           {panel.error}
         </Alert>
       )}
 
       {policy?.schedulePaused === true && (
-        <Alert color="red" title="Paused after repeated failures">
+        <Alert
+          className={classes.alert}
+          color="red"
+          title="Paused after repeated failures"
+        >
           <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
             <Text size="sm" c="dimmed">
               Automatic runs are paused for this YARK session. Policy stays

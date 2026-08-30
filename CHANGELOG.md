@@ -15,6 +15,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Scheduled **restart** maintenance: Broadcast countdown (last minute 1 Hz), Run restart now / Cancel, and graceful restart with backup (#487).
 - Workspace **Maintenance** tab shell: per-server policies (default off), idle scheduler, Up next, and schedule/warning editors matching the #315 mock — restart / wipe / auto-update execution comes in follow-up slices (#486).
 
+### Fixed
+
+- Maintenance tab Alerts (errors / schedule pause) stay readable instead of collapsing to a thin border when job sections are expanded (#489).
+
 ### Changed
 
 - Maintenance warning presets no longer offer a **10s** offset — the last minute already Broadcasts every second (#489).

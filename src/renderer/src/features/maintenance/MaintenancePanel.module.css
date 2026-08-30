@@ -1,7 +1,18 @@
+/* Workspace tabPanel gives children flex:1 + min-height:0; scroll here so
+   Alerts / Up next are not flex-crushed when job sections expand. */
 .panel {
   display: flex;
   flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
   gap: var(--app-space-sm);
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.alert {
+  flex-shrink: 0;
 }
 
 .honesty {
