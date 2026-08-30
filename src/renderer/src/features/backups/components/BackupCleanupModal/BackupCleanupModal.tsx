@@ -61,7 +61,8 @@ export function BackupCleanupModal(props: Props): ReactElement {
           }}
         />
         <Checkbox
-          label="Delete older backups past each server's keep limit (world per map)"
+          label="Delete older backups past each server's keep limit"
+          description="World archives: last N per map (same as scheduled retention)"
           checked={props.cleanupOptions.enforceRetention}
           onChange={(event) => {
             props.onClearPreview();
