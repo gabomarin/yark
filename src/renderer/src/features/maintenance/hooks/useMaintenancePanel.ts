@@ -12,16 +12,24 @@ function idleStatus(serverId: string): MaintenancePolicyStatus {
     nextRestartAt: null,
     countdownRemainingMs: null,
     countdownPhase: "idle",
+    countdownKind: null,
     lastRestartAt: null,
     lastRestartOk: null,
+    lastUpdateAt: null,
+    lastUpdateOk: null,
     cancelable: false,
   };
 }
 
-/** Live Up next: 1s in last minute; relaxed in warning; pause when tab hidden. */
+/** Live Up next: 1s in last minute / job; relaxed in warning; pause when tab hidden. */
 function pollIntervalMs(phase: MaintenancePolicyStatus["countdownPhase"]): number {
-  if (phase === "last_minute" || phase === "restarting") return 1_000;
-  // Warning windows span minutes; avoid fleet-wide 1–3s IPC chatter.
+  if (
+    phase === "last_minute"
+    || phase === "restarting"
+    || phase === "updating"
+  ) {
+    return 1_000;
+  }
   return 15_000;
 }
 
@@ -115,8 +123,11 @@ export function useMaintenancePanel(serverId: string) {
         nextRestartAt: _n,
         countdownRemainingMs: _c,
         countdownPhase: _ph,
+        countdownKind: _ck,
         lastRestartAt: _l,
         lastRestartOk: _ok,
+        lastUpdateAt: _lu,
+        lastUpdateOk: _luo,
         cancelable: _ca,
         ...rest
       } = policy;
@@ -182,6 +193,33 @@ export function useMaintenancePanel(serverId: string) {
     });
   }, [serverId]);
 
+  const runUpdateNow = useCallback(() => {
+    modals.openConfirmModal({
+      title: "Run update now?",
+      centered: true,
+      children:
+        "Players get a short final warning, then a safe update with backup. The server restarts if it was running. Continue?",
+      labels: { confirm: "Yes, update", cancel: "Back" },
+      confirmProps: { color: "blue" },
+      onConfirm: () => {
+        void (async () => {
+          setBusy(true);
+          setError(null);
+          try {
+            const result = await window.api.runMaintenanceUpdateNow(serverId);
+            if (!result.ok) {
+              setError(result.error ?? "Could not start update now");
+              return;
+            }
+            setPolicy(result.data);
+          } finally {
+            setBusy(false);
+          }
+        })();
+      },
+    });
+  }, [serverId]);
+
   return {
     policy,
     busy,
@@ -196,6 +234,7 @@ export function useMaintenancePanel(serverId: string) {
     resumeSchedules,
     cancelUpcoming,
     runRestartNow,
+    runUpdateNow,
     reload: load,
   };
 }

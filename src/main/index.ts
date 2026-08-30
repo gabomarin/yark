@@ -416,11 +416,29 @@ if (gotSingleInstanceLock) {
       locks,
     );
     const backupScheduler = new BackupScheduler(backupService);
+    const logsService = new LogsService(
+      repo,
+      backupService,
+      join(userData, "update-logs"),
+      processManager,
+      settings,
+    );
+    const updateService = new UpdateService(
+      repo,
+      backupService,
+      instances,
+      processManager,
+      locks,
+      settings,
+      join(userData, "update-logs"),
+      join(userData, "steamcmd"),
+    );
     const maintenanceService = new MaintenanceService(
       maintenanceRepo,
       repo,
       processManager,
       instances,
+      updateService,
     );
     const maintenanceScheduler = new MaintenanceScheduler(maintenanceService);
     const playerSessionWatcher = new PlayerSessionWatcher(
@@ -447,23 +465,6 @@ if (gotSingleInstanceLock) {
       locks,
       backupService,
       processManager,
-    );
-    const logsService = new LogsService(
-      repo,
-      backupService,
-      join(userData, "update-logs"),
-      processManager,
-      settings,
-    );
-    const updateService = new UpdateService(
-      repo,
-      backupService,
-      instances,
-      processManager,
-      locks,
-      settings,
-      join(userData, "update-logs"),
-      join(userData, "steamcmd"),
     );
     const moveInstallService = new MoveInstallService(
       repo,

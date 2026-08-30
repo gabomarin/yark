@@ -8,6 +8,7 @@ interface Props {
   policy: MaintenancePolicyStatus;
   busy: boolean;
   onRunRestartNow: () => void;
+  onRunUpdateNow: () => void;
   onCancelUpcoming: () => void;
 }
 
@@ -18,7 +19,7 @@ function formatCountdown(ms: number): string {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-/** Up next hero — empty, armed, or live countdown (#487). */
+/** Up next hero — empty, armed, or live countdown (#487 / #489). */
 export function MaintenanceUpNext(props: Props): ReactElement {
   const policy = props.policy;
   const armed =
@@ -26,7 +27,9 @@ export function MaintenanceUpNext(props: Props): ReactElement {
   const live =
     policy.countdownPhase === "warning"
     || policy.countdownPhase === "last_minute"
-    || policy.countdownPhase === "restarting";
+    || policy.countdownPhase === "restarting"
+    || policy.countdownPhase === "updating";
+  const isUpdateWindow = policy.countdownKind === "update";
 
   if (!armed && !live) {
     return (
@@ -48,14 +51,20 @@ export function MaintenanceUpNext(props: Props): ReactElement {
   let subtitle: string;
 
   if (live && policy.countdownRemainingMs !== null) {
-    title =
-      policy.countdownPhase === "restarting"
-        ? "Restarting…"
-        : `Restart in ${formatCountdown(policy.countdownRemainingMs)}`;
-    subtitle =
-      policy.countdownPhase === "last_minute"
-        ? "Final warnings every second · Cancel stops them immediately"
-        : "Players are being warned in-game";
+    if (policy.countdownPhase === "updating") {
+      title = "Updating…";
+      subtitle = "Safe update with backup · queued in Downloads";
+    } else if (policy.countdownPhase === "restarting") {
+      title = "Restarting…";
+      subtitle = "Graceful restart with backup";
+    } else {
+      const verb = isUpdateWindow ? "Update" : "Restart";
+      title = `${verb} in ${formatCountdown(policy.countdownRemainingMs)}`;
+      subtitle =
+        policy.countdownPhase === "last_minute"
+          ? "Final warnings every second · Cancel stops them immediately"
+          : "Players are being warned in-game";
+    }
   } else if (policy.restartEnabled) {
     title =
       policy.restartCadence === "daily"
@@ -71,13 +80,13 @@ export function MaintenanceUpNext(props: Props): ReactElement {
   } else if (policy.updateEnabled) {
     title = "Waiting for a new Ark server update";
     subtitle =
-      "Starts when a new Ark server update is available. Restart schedule not required.";
+      "Starts when Steam reports a newer dedicated build. Restart schedule not required.";
   } else {
     title = "Wild dino wipe";
     subtitle = "Needs a restart schedule — wipe runs when that restart finishes";
   }
 
-  const lastLine =
+  const lastRestartLine =
     policy.lastRestartAt !== null
       ? `Last restart · ${policy.lastRestartOk === false ? "failed" : "OK"} · ${new Date(
           policy.lastRestartAt,
@@ -85,6 +94,12 @@ export function MaintenanceUpNext(props: Props): ReactElement {
       : policy.restartEnabled
         ? "Last restart · —"
         : null;
+  const lastUpdateLine =
+    policy.updateEnabled && policy.lastUpdateAt !== null
+      ? `Last auto-update · ${policy.lastUpdateOk === false ? "failed" : "OK"} · ${new Date(
+          policy.lastUpdateAt,
+        ).toLocaleString()}`
+      : null;
 
   return (
     <section className={classes.slab} data-maintenance-up-next>
@@ -96,9 +111,14 @@ export function MaintenanceUpNext(props: Props): ReactElement {
             <Text size="sm" c="dimmed" mt={4}>
               {subtitle}
             </Text>
-            {lastLine !== null && (
+            {lastRestartLine !== null && (
               <Text size="xs" c="dimmed" mt={4}>
-                {lastLine}
+                {lastRestartLine}
+              </Text>
+            )}
+            {lastUpdateLine !== null && (
+              <Text size="xs" c="dimmed" mt={lastRestartLine === null ? 4 : 2}>
+                {lastUpdateLine}
               </Text>
             )}
           </div>
@@ -123,6 +143,18 @@ export function MaintenanceUpNext(props: Props): ReactElement {
                 onClick={props.onRunRestartNow}
               >
                 Run restart now
+              </Button>
+            )}
+            {policy.updateEnabled
+              && !live
+              && policy.countdownPhase === "idle" && (
+              <Button
+                size="xs"
+                variant="light"
+                loading={props.busy}
+                onClick={props.onRunUpdateNow}
+              >
+                Run update now
               </Button>
             )}
           </Group>

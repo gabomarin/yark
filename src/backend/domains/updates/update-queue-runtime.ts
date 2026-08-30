@@ -23,6 +23,7 @@ import {
   sanitizeUpdateJobContext,
   shouldOmitInterruptedUpdateJobOnLoad,
   type UpdateCriticalJob,
+  type UpdateCriticalJobContext,
   type UpdateCriticalJobType,
 } from "./update-critical-jobs";
 import {
@@ -245,9 +246,29 @@ export class UpdateQueueRuntime {
     await completion;
   }
 
-  async enqueueAndStart(type: UpdateCriticalJobType, serverId: string): Promise<void> {
-    await this.enqueueAndReturnJobId(type, serverId);
+  async enqueueAndStart(
+    type: UpdateCriticalJobType,
+    serverId: string,
+    initialContext?: UpdateCriticalJobContext,
+  ): Promise<void> {
+    await this.enqueueAndReturnJobId(type, serverId, initialContext);
     this.deps.scheduleProcess();
+  }
+
+  hasOccupyingFilesJob(serverId: string): boolean {
+    return (
+      occupyingFilesJobForServer(
+        this.queue
+          .filter((job) => isFilesJobOperation(job.type))
+          .map((job) => ({
+            id: job.id,
+            serverId: job.serverId,
+            operation: job.type,
+            status: job.status,
+          })),
+        serverId,
+      ) !== null
+    );
   }
 
   async processQueue(): Promise<void> {
@@ -314,6 +335,7 @@ export class UpdateQueueRuntime {
   private async enqueueAndReturnJobId(
     type: UpdateCriticalJobType,
     serverId: string,
+    initialContext?: UpdateCriticalJobContext,
   ): Promise<string> {
     await this.deps.ensureSteamCmdReadyForOperator();
     const existing = this.queue.find(
@@ -380,7 +402,7 @@ export class UpdateQueueRuntime {
       recoveryReason: null,
       idempotencyKey: makeIdempotencyKey(type, serverId),
       operatorRetryAllowed: false,
-      context: {},
+      context: { ...(initialContext ?? {}) },
     };
     this.queue.push(job);
     this.persist();

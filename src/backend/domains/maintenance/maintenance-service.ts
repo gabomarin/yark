@@ -3,20 +3,24 @@ import type { MaintenanceRepository } from "../../infra/db/maintenance-repositor
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { ProcessManager } from "../../infra/process/process-manager";
 import type { InstanceService } from "../instances/instance-service";
+import type { UpdateService } from "../updates/update-service";
 import { MaintenanceRestartRuntime } from "./maintenance-restart-runtime";
+import { MaintenanceUpdateRuntime } from "./maintenance-update-runtime";
 
 /**
- * Maintenance policies + scheduled restart countdown (#486 / #487).
- * Wipe / Steam-newer execution lands in #488–#489.
+ * Maintenance policies, restart countdown (#487), wipe hook (#488 when present),
+ * and Steam-newer auto-update (#489).
  */
 export class MaintenanceService {
   private readonly restartRuntime: MaintenanceRestartRuntime;
+  private readonly updateRuntime: MaintenanceUpdateRuntime;
 
   constructor(
     private readonly repo: MaintenanceRepository,
     private readonly servers: ServerRepository,
     processes: ProcessManager,
     instances: InstanceService,
+    updates: UpdateService,
   ) {
     this.restartRuntime = new MaintenanceRestartRuntime(
       repo,
@@ -24,10 +28,23 @@ export class MaintenanceService {
       processes,
       instances,
     );
+    this.updateRuntime = new MaintenanceUpdateRuntime(
+      repo,
+      servers,
+      processes,
+      instances,
+      updates,
+      this.restartRuntime,
+    );
+    this.restartRuntime.setPeerBusyCheck((serverId) =>
+      this.updateRuntime.hasActiveCountdown(serverId),
+    );
   }
 
   getPolicy(serverId: string): MaintenancePolicyStatus {
-    return this.restartRuntime.enrichStatus(this.repo.getPolicy(serverId));
+    return this.updateRuntime.mergeStatus(
+      this.restartRuntime.enrichStatus(this.repo.getPolicy(serverId)),
+    );
   }
 
   setPolicy(
@@ -55,18 +72,28 @@ export class MaintenanceService {
 
   clearSchedulePause(serverId: string): MaintenancePolicyStatus {
     this.restartRuntime.clearSchedulePause(serverId);
+    this.updateRuntime.clearSchedulePause(serverId);
     return this.getPolicy(serverId);
   }
 
   async runRestartNow(serverId: string): Promise<MaintenancePolicyStatus> {
-    return this.restartRuntime.runRestartNow(serverId);
+    await this.restartRuntime.runRestartNow(serverId);
+    return this.getPolicy(serverId);
+  }
+
+  async runUpdateNow(serverId: string): Promise<MaintenancePolicyStatus> {
+    await this.updateRuntime.runUpdateNow(serverId);
+    return this.getPolicy(serverId);
   }
 
   cancelUpcoming(serverId: string): MaintenancePolicyStatus {
-    return this.restartRuntime.cancelUpcoming(serverId);
+    this.restartRuntime.cancelUpcoming(serverId);
+    this.updateRuntime.cancelUpcoming(serverId);
+    return this.getPolicy(serverId);
   }
 
   async runScheduledCycle(): Promise<void> {
     await this.restartRuntime.runScheduledCycle();
+    await this.updateRuntime.runScheduledCycle();
   }
 }

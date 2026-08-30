@@ -1,91 +1,76 @@
 /**
- * Per-server scheduled restart countdown + InstanceService.restart (#487).
+ * Opt-in auto-update when Steam buildid differs (#489).
+ * Broadcast countdown (update presets + last-minute 1 Hz), then
+ * UpdateService.enqueueUpdateForMaintenance (wasRunning → stop → safe update → start).
  */
 
 import {
-  MAINTENANCE_RESTART_PRESET_OFFSETS,
+  MAINTENANCE_UPDATE_PRESET_OFFSETS,
 } from "@shared/maintenance-policy";
 import {
   MAINTENANCE_RESTART_FAIL_LIMIT,
   MAINTENANCE_RCON_SOFT_FAIL_LIMIT,
   MAINTENANCE_RUN_NOW_LEAD_MS,
   maxWarningLeadMs,
-  nextLocalRestartAt,
   parseMaintenanceOffsetToMs,
-  renderLastMinuteRestart,
+  renderLastMinuteUpdate,
   renderWarningTemplate,
   resolveWarningOffsetLabels,
 } from "@shared/maintenance-schedule";
+import { isServerUpdateAvailable } from "@shared/server-update-status";
 import type {
   MaintenanceCountdownPhase,
   MaintenancePolicy,
   MaintenancePolicyStatus,
 } from "@shared/types";
 import type { InstanceService } from "../instances/instance-service";
+import type { UpdateService } from "../updates/update-service";
 import type { ProcessManager } from "../../infra/process/process-manager";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { MaintenanceRepository } from "../../infra/db/maintenance-repository";
+import type { MaintenanceRestartRuntime } from "./maintenance-restart-runtime";
 
-interface ActiveCountdown {
+interface ActiveUpdateCountdown {
   serverId: string;
   targetAtMs: number;
-  /**
-   * ISO of the scheduled local target from `nextLocalRestartAt` (schedule only).
-   * Used so Cancel / skip mark the same occurrence `considerSchedule` checks.
-   */
-  scheduleTargetKey: string | null;
-  /** Offset labels already Broadcast for this window. */
+  /** `${serverId}:${officialSteamBuild}` — skip re-arm while this build is pending. */
+  availabilityKey: string;
   firedOffsets: Set<string>;
-  /** Consecutive Broadcast failures in this window (soft-fail → hard-fail). */
   rconFailStreak: number;
   cancelRequested: boolean;
   phase: MaintenanceCountdownPhase;
   timer: NodeJS.Timeout | null;
-  /**
-   * Bumped whenever the timer is cleared so a queued setTimeout callback that
-   * races with cancel / reschedule is ignored even if `active` still matches.
-   */
   timerGeneration: number;
   runPromise: Promise<void> | null;
   source: "schedule" | "run_now";
 }
 
-interface LastRestartMemory {
+interface LastUpdateMemory {
   atIso: string;
   ok: boolean;
 }
 
-export class MaintenanceRestartRuntime {
+export class MaintenanceUpdateRuntime {
   private readonly pausedServerIds = new Set<string>();
   private readonly failStreak = new Map<string, number>();
-  private readonly active = new Map<string, ActiveCountdown>();
-  private readonly lastRestart = new Map<string, LastRestartMemory>();
-  /** Scheduled target keys already completed/skipped this process. */
-  private readonly completedTargets = new Set<string>();
-
-  private peerBusy: ((serverId: string) => boolean) | null = null;
+  private readonly active = new Map<string, ActiveUpdateCountdown>();
+  private readonly lastUpdate = new Map<string, LastUpdateMemory>();
+  /** Availability keys already armed/enqueued this session. */
+  private readonly handledAvailability = new Set<string>();
 
   constructor(
     private readonly repo: MaintenanceRepository,
     private readonly servers: ServerRepository,
     private readonly processes: ProcessManager,
     private readonly instances: InstanceService,
+    private readonly updates: UpdateService,
+    private readonly restarts: MaintenanceRestartRuntime,
   ) {}
-
-  /** Avoid overlapping restart + auto-update windows on the same server. */
-  setPeerBusyCheck(check: (serverId: string) => boolean): void {
-    this.peerBusy = check;
-  }
-
-  private isPeerBusy(serverId: string): boolean {
-    return this.peerBusy?.(serverId) === true;
-  }
 
   isSchedulePaused(serverId: string): boolean {
     return this.pausedServerIds.has(serverId);
   }
 
-  /** True while a restart warning / restart / wipe window is active. */
   hasActiveCountdown(serverId: string): boolean {
     return this.active.has(serverId);
   }
@@ -95,160 +80,167 @@ export class MaintenanceRestartRuntime {
     this.failStreak.delete(serverId);
   }
 
-  enrichStatus(policy: MaintenancePolicy): MaintenancePolicyStatus {
-    const active = this.active.get(policy.serverId);
-    const last = this.lastRestart.get(policy.serverId);
+  /** Overlay update session fields onto restart-enriched status. */
+  mergeStatus(status: MaintenancePolicyStatus): MaintenancePolicyStatus {
+    const active = this.active.get(status.serverId);
+    const last = this.lastUpdate.get(status.serverId);
     const now = Date.now();
-    let nextRestartAt: string | null = null;
-    if (policy.restartEnabled && active === undefined) {
-      const next = nextLocalRestartAt(
-        policy.restartCadence,
-        policy.restartDayOfWeek,
-        policy.restartTimeLocal,
-        now,
-      );
-      if (next !== null) nextRestartAt = next.toISOString();
-    } else if (active !== undefined) {
-      nextRestartAt = new Date(active.targetAtMs).toISOString();
+    const updatePaused = this.pausedServerIds.has(status.serverId);
+    if (active === undefined) {
+      return {
+        ...status,
+        schedulePaused: status.schedulePaused || updatePaused,
+        lastUpdateAt: last?.atIso ?? null,
+        lastUpdateOk: last?.ok ?? null,
+      };
     }
-
     return {
-      ...policy,
-      schedulePaused: this.pausedServerIds.has(policy.serverId),
-      nextRestartAt,
+      ...status,
+      schedulePaused: status.schedulePaused || updatePaused,
       countdownRemainingMs:
-        active !== undefined ? Math.max(0, active.targetAtMs - now) : null,
-      countdownPhase: active?.phase ?? "idle",
-      countdownKind: active !== undefined ? "restart" : null,
-      lastRestartAt: last?.atIso ?? null,
-      lastRestartOk: last?.ok ?? null,
-      lastUpdateAt: null,
-      lastUpdateOk: null,
+        active.phase === "warning" || active.phase === "last_minute"
+          ? Math.max(0, active.targetAtMs - now)
+          : 0,
+      countdownPhase: active.phase,
+      countdownKind: "update",
+      lastUpdateAt: last?.atIso ?? null,
+      lastUpdateOk: last?.ok ?? null,
       cancelable:
-        active !== undefined
-        && (active.phase === "warning" || active.phase === "last_minute")
+        (active.phase === "warning" || active.phase === "last_minute")
         && !active.cancelRequested,
     };
   }
 
   async runScheduledCycle(): Promise<void> {
     const policies = this.repo.listPolicies();
+    let installSnapshot: Awaited<
+      ReturnType<InstanceService["installationInfo"]>
+    > | null = null;
+
     for (const policy of policies) {
       try {
-        await this.considerSchedule(policy);
+        if (!policy.updateEnabled) continue;
+        if (this.pausedServerIds.has(policy.serverId)) continue;
+        if (this.active.has(policy.serverId)) continue;
+        if (this.restarts.hasActiveCountdown(policy.serverId)) continue;
+        if (this.updates.hasOccupyingFilesJob(policy.serverId)) continue;
+
+        const server = this.servers.get(policy.serverId);
+        if (server === null || !server.enabled) continue;
+
+        if (installSnapshot === null) {
+          installSnapshot = await this.instances.installationInfo(false);
+        }
+        const installation = installSnapshot.servers.find(
+          (row) => row.serverId === policy.serverId,
+        );
+        if (
+          !isServerUpdateAvailable(
+            installation,
+            installSnapshot.officialSteamBuild,
+          )
+        ) {
+          continue;
+        }
+        const official = installSnapshot.officialSteamBuild ?? "unknown";
+        const availabilityKey = `${policy.serverId}:${official}`;
+        if (this.handledAvailability.has(availabilityKey)) continue;
+
+        if (!this.processes.isActive(policy.serverId)) {
+          // Stopped + outdated: queue safe update without Broadcast.
+          this.handledAvailability.add(availabilityKey);
+          try {
+            await this.updates.enqueueUpdate(policy.serverId);
+            this.lastUpdate.set(policy.serverId, {
+              atIso: new Date().toISOString(),
+              ok: true,
+            });
+            this.failStreak.delete(policy.serverId);
+          } catch (error) {
+            this.handledAvailability.delete(availabilityKey);
+            this.recordFail(
+              policy.serverId,
+              error instanceof Error ? error.message : String(error),
+            );
+          }
+          continue;
+        }
+
+        if (this.isIntentionalStop(policy.serverId)) continue;
+
+        const offsets = resolveWarningOffsetLabels(
+          policy.updateWarnings,
+          MAINTENANCE_UPDATE_PRESET_OFFSETS,
+        );
+        const lead = maxWarningLeadMs(offsets);
+        const targetAtMs = Date.now() + lead;
+        this.handledAvailability.add(availabilityKey);
+        this.startCountdown(policy, targetAtMs, "schedule", availabilityKey);
       } catch (error) {
         console.error(
-          `Maintenance schedule tick failed for ${policy.serverId}`,
+          `Maintenance update tick failed for ${policy.serverId}`,
           error,
         );
       }
     }
   }
 
-  async runRestartNow(serverId: string): Promise<MaintenancePolicyStatus> {
+  async runUpdateNow(serverId: string): Promise<MaintenancePolicyStatus> {
     const policy = this.repo.getPolicy(serverId);
     const server = this.servers.get(serverId);
     if (server === null) throw new Error("Server does not exist");
     if (!server.enabled) throw new Error("Server is disabled");
-    if (!this.processes.isActive(serverId)) {
-      throw new Error("Server is not running");
+    if (!policy.updateEnabled) {
+      throw new Error("Auto-update is off for this server");
     }
     if (this.pausedServerIds.has(serverId)) {
       throw new Error("Maintenance schedules are paused for this server");
     }
-    if (this.active.has(serverId)) {
+    if (this.active.has(serverId) || this.restarts.hasActiveCountdown(serverId)) {
       throw new Error("A maintenance countdown is already active");
     }
-    if (this.isPeerBusy(serverId)) {
-      throw new Error("A maintenance countdown is already active");
+    if (this.updates.hasOccupyingFilesJob(serverId)) {
+      throw new Error("A files job is already queued for this server");
     }
-    const targetAtMs = Date.now() + MAINTENANCE_RUN_NOW_LEAD_MS;
-    this.startCountdown(policy, targetAtMs, "run_now", null);
-    return this.enrichStatus(policy);
-  }
-
-  cancelUpcoming(serverId: string): MaintenancePolicyStatus {
-    const active = this.active.get(serverId);
-    if (active !== undefined) {
-      active.cancelRequested = true;
-      this.clearTimer(active);
-      this.markOccurrenceDone(active);
-      this.active.delete(serverId);
+    if (!this.processes.isActive(serverId)) {
+      throw new Error("Server is not running — use Downloads Update while stopped");
     }
-    return this.enrichStatus(this.repo.getPolicy(serverId));
-  }
-
-  private markOccurrenceDone(state: ActiveCountdown): void {
-    if (state.scheduleTargetKey !== null) {
-      this.completedTargets.add(state.scheduleTargetKey);
+    const snapshot = await this.instances.installationInfo(false);
+    const installation = snapshot.servers.find((row) => row.serverId === serverId);
+    if (!isServerUpdateAvailable(installation, snapshot.officialSteamBuild)) {
+      throw new Error("No Steam update is available for this server");
     }
-  }
-
-  private isCurrentTick(
-    serverId: string,
-    expectedTargetAtMs: number,
-  ): ActiveCountdown | null {
-    const state = this.active.get(serverId);
-    if (state === undefined) return null;
-    if (state.cancelRequested) return null;
-    if (state.targetAtMs !== expectedTargetAtMs) return null;
-    return state;
-  }
-
-  private async considerSchedule(policy: MaintenancePolicy): Promise<void> {
-    if (!policy.restartEnabled) return;
-    if (this.pausedServerIds.has(policy.serverId)) return;
-    if (this.active.has(policy.serverId)) return;
-    if (this.isPeerBusy(policy.serverId)) return;
-
-    const server = this.servers.get(policy.serverId);
-    if (server === null || !server.enabled) return;
-    if (!this.processes.isActive(policy.serverId)) return;
-    if (this.isIntentionalStop(policy.serverId)) return;
-
-    const now = Date.now();
-    const next = nextLocalRestartAt(
-      policy.restartCadence,
-      policy.restartDayOfWeek,
-      policy.restartTimeLocal,
-      now,
-    );
-    if (next === null) return;
-    const targetKey = next.toISOString();
-    if (this.completedTargets.has(targetKey)) return;
-
-    const offsets = resolveWarningOffsetLabels(
-      policy.restartWarnings,
-      MAINTENANCE_RESTART_PRESET_OFFSETS,
-    );
-    const lead = maxWarningLeadMs(offsets);
-    const remaining = next.getTime() - now;
-    if (remaining > lead) return;
-
-    // Too late for a useful warning window — skip this occurrence.
-    if (remaining < -30_000) {
-      this.completedTargets.add(targetKey);
-      return;
-    }
-
+    const official = snapshot.officialSteamBuild ?? "unknown";
+    const availabilityKey = `${serverId}:${official}`;
+    this.handledAvailability.add(availabilityKey);
     this.startCountdown(
       policy,
-      Math.max(now + 1_000, next.getTime()),
-      "schedule",
-      targetKey,
+      Date.now() + MAINTENANCE_RUN_NOW_LEAD_MS,
+      "run_now",
+      availabilityKey,
     );
+    return this.mergeStatus(this.restarts.enrichStatus(policy));
+  }
+
+  cancelUpcoming(serverId: string): void {
+    const active = this.active.get(serverId);
+    if (active === undefined) return;
+    active.cancelRequested = true;
+    this.clearTimer(active);
+    this.handledAvailability.delete(active.availabilityKey);
+    this.active.delete(serverId);
   }
 
   private startCountdown(
     policy: MaintenancePolicy,
     targetAtMs: number,
     source: "schedule" | "run_now",
-    scheduleTargetKey: string | null,
+    availabilityKey: string,
   ): void {
-    const state: ActiveCountdown = {
+    const state: ActiveUpdateCountdown = {
       serverId: policy.serverId,
       targetAtMs,
-      scheduleTargetKey,
+      availabilityKey,
       firedOffsets: new Set(),
       rconFailStreak: 0,
       cancelRequested: false,
@@ -262,12 +254,23 @@ export class MaintenanceRestartRuntime {
     void this.tickCountdown(policy.serverId, targetAtMs);
   }
 
-  private clearTimer(state: ActiveCountdown): void {
+  private clearTimer(state: ActiveUpdateCountdown): void {
     if (state.timer !== null) {
       clearTimeout(state.timer);
       state.timer = null;
     }
     state.timerGeneration += 1;
+  }
+
+  private isCurrentTick(
+    serverId: string,
+    expectedTargetAtMs: number,
+  ): ActiveUpdateCountdown | null {
+    const state = this.active.get(serverId);
+    if (state === undefined) return null;
+    if (state.cancelRequested) return null;
+    if (state.targetAtMs !== expectedTargetAtMs) return null;
+    return state;
   }
 
   private scheduleNextTick(
@@ -280,8 +283,6 @@ export class MaintenanceRestartRuntime {
     this.clearTimer(state);
     const generation = state.timerGeneration;
     state.timer = setTimeout(() => {
-      // Re-check immediately: clearTimeout does not dequeue an already-queued
-      // macrotask, and cancel/reschedule may have raced past clearTimer.
       const current = this.isCurrentTick(serverId, expectedTargetAtMs);
       if (current === null || current.timerGeneration !== generation) return;
       void this.tickCountdown(serverId, expectedTargetAtMs);
@@ -289,33 +290,26 @@ export class MaintenanceRestartRuntime {
     state.timer.unref();
   }
 
-  /**
-   * Operator/YARK shutdown in progress or just finished — not an unexpected death.
-   * `isActive` stays true while status is `stopping`, so this must be checked
-   * before Broadcast / restart work, not only after `!isActive`.
-   */
   private isIntentionalStop(serverId: string): boolean {
     if (this.instances.isStopInProgress(serverId)) return true;
     const status = this.processes.getStatus(serverId).status;
     return status === "stopping" || status === "stopped";
   }
 
-  private abortWindowQuiet(state: ActiveCountdown): void {
+  private abortQuiet(state: ActiveUpdateCountdown): void {
     this.clearTimer(state);
-    this.markOccurrenceDone(state);
+    this.handledAvailability.delete(state.availabilityKey);
     this.active.delete(state.serverId);
   }
 
-  private abortWindowHard(state: ActiveCountdown, message: string): void {
+  private abortHard(state: ActiveUpdateCountdown, message: string): void {
     this.clearTimer(state);
-    this.markOccurrenceDone(state);
     this.active.delete(state.serverId);
     this.recordFail(state.serverId, message);
   }
 
-  /** Soft-fail Broadcast; hard-fail after consecutive tick failures. */
   private noteRconOutcome(
-    state: ActiveCountdown,
+    state: ActiveUpdateCountdown,
     ok: boolean,
     errorMessage: string,
   ): "continue" | "abort" {
@@ -325,7 +319,8 @@ export class MaintenanceRestartRuntime {
     }
     state.rconFailStreak += 1;
     if (state.rconFailStreak >= MAINTENANCE_RCON_SOFT_FAIL_LIMIT) {
-      this.abortWindowHard(
+      this.handledAvailability.delete(state.availabilityKey);
+      this.abortHard(
         state,
         `RCON Broadcast failed ${state.rconFailStreak} times: ${errorMessage}`,
       );
@@ -345,18 +340,13 @@ export class MaintenanceRestartRuntime {
       return;
     }
 
-    // Catch UI/stop-all while process is still live (status `stopping`).
     if (this.isIntentionalStop(serverId)) {
-      this.abortWindowQuiet(state);
+      this.abortQuiet(state);
       return;
     }
-
     if (!this.processes.isActive(serverId)) {
-      // Unexpected exit (typically status `error`) — count toward fail-streak.
-      this.abortWindowHard(
-        state,
-        "Server stopped during maintenance countdown",
-      );
+      this.handledAvailability.delete(state.availabilityKey);
+      this.abortHard(state, "Server stopped during update countdown");
       return;
     }
 
@@ -365,20 +355,19 @@ export class MaintenanceRestartRuntime {
     const remainingMs = state.targetAtMs - now;
 
     if (remainingMs <= 0) {
-      state.phase = "restarting";
-      await this.executeRestart(policy, state);
+      state.phase = "updating";
+      await this.executeUpdate(policy, state);
       return;
     }
 
     if (remainingMs <= 60_000) {
       state.phase = "last_minute";
-      const sec = remainingMs / 1_000;
       let broadcastOk = true;
       let broadcastError = "";
       try {
         await this.instances.execRcon(
           serverId,
-          `Broadcast ${renderLastMinuteRestart(sec)}`,
+          `Broadcast ${renderLastMinuteUpdate(remainingMs / 1_000)}`,
           { recordEvent: false },
         );
       } catch (error) {
@@ -396,8 +385,8 @@ export class MaintenanceRestartRuntime {
 
     state.phase = "warning";
     const offsets = resolveWarningOffsetLabels(
-      policy.restartWarnings,
-      MAINTENANCE_RESTART_PRESET_OFFSETS,
+      policy.updateWarnings,
+      MAINTENANCE_UPDATE_PRESET_OFFSETS,
     );
     for (const label of offsets) {
       const offsetMs = parseMaintenanceOffsetToMs(label);
@@ -410,7 +399,7 @@ export class MaintenanceRestartRuntime {
       try {
         await this.instances.execRcon(
           serverId,
-          `Broadcast ${renderWarningTemplate(policy.restartWarnings.template, remainingMs)}`,
+          `Broadcast ${renderWarningTemplate(policy.updateWarnings.template, remainingMs)}`,
           { recordEvent: false },
         );
       } catch (error) {
@@ -425,7 +414,6 @@ export class MaintenanceRestartRuntime {
       if (broadcastOk) still.firedOffsets.add(label);
     }
 
-    // Wake near next offset or last-minute boundary.
     let wakeIn = Math.min(remainingMs - 60_000, 15_000);
     for (const label of offsets) {
       const offsetMs = parseMaintenanceOffsetToMs(label);
@@ -437,9 +425,9 @@ export class MaintenanceRestartRuntime {
     this.scheduleNextTick(serverId, expectedTargetAtMs, Math.max(250, wakeIn));
   }
 
-  private async executeRestart(
+  private async executeUpdate(
     policy: MaintenancePolicy,
-    state: ActiveCountdown,
+    state: ActiveUpdateCountdown,
   ): Promise<void> {
     if (state.runPromise !== null) return;
     const serverId = policy.serverId;
@@ -448,21 +436,22 @@ export class MaintenanceRestartRuntime {
       try {
         if (this.isCurrentTick(serverId, expectedTargetAtMs) === null) return;
         if (this.isIntentionalStop(serverId)) {
-          this.abortWindowQuiet(state);
+          this.abortQuiet(state);
           return;
         }
-        await this.instances.restart(serverId);
-        const atIso = new Date().toISOString();
-        this.lastRestart.set(serverId, { atIso, ok: true });
+        await this.updates.enqueueUpdateForMaintenance(serverId);
+        this.lastUpdate.set(serverId, {
+          atIso: new Date().toISOString(),
+          ok: true,
+        });
         this.failStreak.delete(serverId);
-        this.markOccurrenceDone(state);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        this.lastRestart.set(serverId, {
+        this.lastUpdate.set(serverId, {
           atIso: new Date().toISOString(),
           ok: false,
         });
-        this.markOccurrenceDone(state);
+        this.handledAvailability.delete(state.availabilityKey);
         this.recordFail(serverId, message);
       } finally {
         this.clearTimer(state);
@@ -478,13 +467,13 @@ export class MaintenanceRestartRuntime {
   private recordFail(serverId: string, message: string): void {
     const streak = (this.failStreak.get(serverId) ?? 0) + 1;
     this.failStreak.set(serverId, streak);
-    this.servers.addEvent(serverId, "error", "error", "Maintenance restart failed", {
-      what: "A maintenance restart did not complete.",
+    this.servers.addEvent(serverId, "error", "error", "Maintenance auto-update failed", {
+      what: "A maintenance auto-update did not complete.",
       cause: message,
       suggestion:
         streak >= MAINTENANCE_RESTART_FAIL_LIMIT
           ? "Automatic maintenance is paused for this YARK session — resume when ready."
-          : "Check RCON, locks, and server health, then retry or wait for the next window.",
+          : "Check Downloads / SteamCMD, then retry or wait for the next detection.",
     });
     if (streak >= MAINTENANCE_RESTART_FAIL_LIMIT) {
       this.pausedServerIds.add(serverId);

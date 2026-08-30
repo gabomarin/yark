@@ -17,8 +17,11 @@ function status(
     nextRestartAt: null,
     countdownRemainingMs: null,
     countdownPhase: "idle",
+    countdownKind: null,
     lastRestartAt: null,
     lastRestartOk: null,
+    lastUpdateAt: null,
+    lastUpdateOk: null,
     cancelable: false,
     ...partial,
   };

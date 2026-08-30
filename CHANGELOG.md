@@ -11,8 +11,13 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Opt-in **auto-update** on Steam-newer: Broadcast countdown (last minute 1 Hz), then safe update with restart-if-was-running (#489).
 - Scheduled **restart** maintenance: Broadcast countdown (last minute 1 Hz), Run restart now / Cancel, and graceful restart with backup (#487).
 - Workspace **Maintenance** tab shell: per-server policies (default off), idle scheduler, Up next, and schedule/warning editors matching the #315 mock — restart / wipe / auto-update execution comes in follow-up slices (#486).
+
+### Changed
+
+- Maintenance warning presets no longer offer a **10s** offset — the last minute already Broadcasts every second (#489).
 - Keyboard: Ctrl+K Spotlight, Tab to server cards, Shift+F10 for the row menu, and Escape to dismiss menus and confirm dialogs (setup wizard still needs Skip / Close / Back) (#476).
 - Keyboard: Overview search Escape clears; fleet strip tiles toggle with Enter/Space; workspace tabs and Settings categories are Tab-reachable. Card version/meta cells stay mouse-only (#477).
 

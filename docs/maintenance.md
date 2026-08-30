@@ -8,40 +8,36 @@ same honesty as [backups.md](backups.md) world schedule.
 
 | Slice | Issue | State |
 | --- | --- | --- |
-| Tab + job model | #486 | Done — policies, Up next shell, schedule/warning editors |
-| Restart + broadcast | #487 | In progress — countdown, 1 Hz last minute, Run now / Cancel |
-| Wipe after restart | #488 | Pending |
-| Auto-update (Steam newer) | #489 | Pending |
+| Tab + job model | #486 | Done |
+| Restart + broadcast | #487 | Done |
+| Wipe after restart | #488 | Separate PR when open |
+| Auto-update (Steam newer) | #489 | In progress — Broadcast then safe update |
 
 MagicPath UX mock: https://magicpath.ai/files/444694713119952896
 
 ## Building blocks
 
-- Policies: SQLite `maintenance_policies` (migration 18), `MaintenanceRepository` / `MaintenanceService`
-- Restart runtime: `MaintenanceRestartRuntime` (countdown + Broadcast + `InstanceService.restart`)
-- Scheduler: `MaintenanceScheduler` (~60s coalesce) arms windows when within the warning lead
-- IPC: `maintenance:get-policy` / `set-policy` / `clear-schedule-pause` / `run-restart-now` / `cancel-upcoming`
-- Shared schedule helpers: `src/shared/maintenance-schedule.ts` (offsets, next local time, templates)
-- UI: `features/maintenance/MaintenancePanel` on workspace tab `maintenance`
-  - Up next: empty / armed / live countdown; **Run restart now** (confirm → ~10s window) / **Cancel window**
-  - Collapsed Restart / Wipe / Auto-update with schedule + per-job warning presets
-  - Expand while Off shows the same controls disabled; turning Restart Off also clears wipe
-  - Fail-streak pause (3 consecutive) with Resume — session only, like world backup schedules
+- Policies: SQLite `maintenance_policies` (migration 18)
+- `MaintenanceRestartRuntime` — schedule / Run now restart countdown
+- `MaintenanceUpdateRuntime` — Steam-newer detection + update countdown
+- Scheduler: `MaintenanceScheduler` (~60s)
+- IPC: get/set policy, clear pause, run-restart-now, run-update-now, cancel-upcoming
+- UI: Up next + Restart / Wipe / Auto-update sections
 
-## Restart countdown (#487)
+## Auto-update (#489)
 
-1. Scheduler tick finds an enabled restart within `max(offsets, 60s)` of the local target and the server is running.
-2. Preset/custom offsets fire `Broadcast` once each as remaining crosses them.
-3. Last ≤60s: 1 Hz `Restart in {n}s` regardless of preset; Cancel clears the timer immediately
-   and skips that scheduled occurrence (no re-arm until the next local window).
-4. At T0: `InstanceService.restart` (SaveWorld → DoExit → pre_restart backup → start). No second lifecycle stack.
-5. Skip / fail gates:
-   - Disabled / not running / already in countdown / session pause — do not arm
-   - Operator/YARK intentional stop (`isStopInProgress` / status `stopping`|`stopped`) — abort without fail-streak (checked while process may still be live)
-   - Transient RCON Broadcast errors — soft-fail up to 3 consecutive ticks, then hard-fail + fail-streak
-   - Unexpected process death (typically status `error`) — abort + fail-streak
-   - Fail-streak pause after 3 consecutive hard failures
+**Trigger:** existing Steam `buildid` mismatch (`isServerUpdateAvailable` via
+`instances.installationInfo` — 15 min official cache). Presets do **not** change
+how often Steam is checked.
 
-Wipe (#488) runs after a successful maintenance restart. Auto-update (#489) uses Steam-newer on the existing poll.
+1. Scheduler tick finds `updateEnabled` + outdated + not busy.
+2. **Running:** arm Broadcast window from `updateWarnings` (last ≤60s = 1 Hz `Update in {n}s`).
+3. **Stopped:** enqueue normal `UpdateService.enqueueUpdate` (no Broadcast).
+4. At T0 (running): `enqueueUpdateForMaintenance` sets `wasRunning` so perform does
+   stop `{ backup: false }` → pre_update backup → SteamCMD → start.
+5. Does not overlap a restart countdown on the same server.
+6. Fail-streak pause (3) with Resume — shared alert with restart.
+
+Restart countdown (#487) unchanged. Wipe (#488) is post-restart when that slice lands.
 
 World backup schedule stays on the Backups tab; log retention stays in Settings.

@@ -721,9 +721,14 @@ export interface MaintenancePolicyStatus extends MaintenancePolicy {
   /** Countdown remaining ms when a warning window is active. */
   countdownRemainingMs: number | null;
   countdownPhase: MaintenanceCountdownPhase;
+  /** Which job owns the live countdown, when any. */
+  countdownKind: "restart" | "update" | null;
   /** ISO of last completed maintenance restart attempt (session or persisted). */
   lastRestartAt: string | null;
   lastRestartOk: boolean | null;
+  /** ISO of last maintenance auto-update attempt (session). */
+  lastUpdateAt: string | null;
+  lastUpdateOk: boolean | null;
   /** True when Cancel can stop an upcoming countdown. */
   cancelable: boolean;
 }
@@ -732,7 +737,8 @@ export type MaintenanceCountdownPhase =
   | "idle"
   | "warning"
   | "last_minute"
-  | "restarting";
+  | "restarting"
+  | "updating";
 
 export interface BackupPolicy {
   serverId: string;

@@ -15,8 +15,8 @@ interface Props {
 }
 
 /**
- * Workspace Maintenance tab (#486 / #487) — Up next + job rows.
- * Wipe / Steam-newer execution lands in #488–#489.
+ * Workspace Maintenance tab (#486 / #487 / #489) — Up next + job rows.
+ * Wipe-after-restart lands in #488 when merged.
  */
 export function MaintenancePanel(props: Props): ReactElement {
   const panel = useMaintenancePanel(props.server.id);
@@ -59,6 +59,7 @@ export function MaintenancePanel(props: Props): ReactElement {
           policy={policy}
           busy={panel.busy}
           onRunRestartNow={panel.runRestartNow}
+          onRunUpdateNow={panel.runUpdateNow}
           onCancelUpcoming={() => void panel.cancelUpcoming()}
         />
       )}

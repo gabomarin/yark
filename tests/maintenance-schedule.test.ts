@@ -5,6 +5,7 @@ import {
   nextLocalRestartAt,
   parseMaintenanceOffsetToMs,
   renderLastMinuteRestart,
+  renderLastMinuteUpdate,
   renderWarningTemplate,
 } from "../src/shared/maintenance-schedule";
 
@@ -40,6 +41,7 @@ describe("maintenance-schedule", () => {
       "Server restart in 1 minute",
     );
     expect(renderLastMinuteRestart(9.2)).toBe("Restart in 10s");
+    expect(renderLastMinuteUpdate(9.2)).toBe("Update in 10s");
     expect(maxWarningLeadMs(["5m", "30m"])).toBe(30 * 60_000);
   });
 });

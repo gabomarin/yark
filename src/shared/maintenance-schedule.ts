@@ -100,6 +100,13 @@ export function renderLastMinuteRestart(remainingSec: number): string {
   return LAST_MINUTE_RESTART_TEMPLATE.replaceAll("{n}", String(n));
 }
 
+const LAST_MINUTE_UPDATE_TEMPLATE = "Update in {n}s";
+
+export function renderLastMinuteUpdate(remainingSec: number): string {
+  const n = Math.max(0, Math.ceil(remainingSec));
+  return LAST_MINUTE_UPDATE_TEMPLATE.replaceAll("{n}", String(n));
+}
+
 /** Lead time for Run now (short confirm → final warning window). */
 export const MAINTENANCE_RUN_NOW_LEAD_MS = 10_000;
 
