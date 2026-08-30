@@ -5,6 +5,10 @@ a local SQLite file under Electron `userData`:
 
 `yark-server-manager.db`
 
+Admin and join passwords are ordinary TEXT columns on `servers` (same Windows-user
+boundary as `GameUserSettings.ini`). Diagnostic logs omit those settings; they are
+not encrypted in the database. Details: [credential-threat-model.md](credential-threat-model.md).
+
 ## Boot open
 
 `src/backend/infra/db/database.ts` `openDatabase`:

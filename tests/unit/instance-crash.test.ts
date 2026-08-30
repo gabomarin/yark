@@ -24,4 +24,28 @@ describe("planUnexpectedServerCrashEvent", () => {
     expect(planned.details.context.missingModIds).toBe("123");
     expect(planned.notify.serverName).toBe("Island");
   });
+
+  it("omits GUS password settings from crash excerpts", () => {
+    const planned = planUnexpectedServerCrashEvent({
+      payload: {
+        serverId: "srv-1",
+        exitCode: 1,
+        phase: "starting",
+        lastError: "Assertion failed",
+        diagnosis: {
+          kind: "fatal",
+          summary: "Assertion failed",
+          cause: "fatal",
+          suggestion: "Retry",
+          excerpt:
+            "[ServerSettings]\nServerAdminPassword=hunter2-secret\nMaxPlayers=70",
+          missingModIds: [],
+        },
+      },
+      serverName: "Island",
+    });
+    expect(planned.details.excerpt).not.toMatch(/ServerAdminPassword/i);
+    expect(planned.details.excerpt).not.toContain("hunter2-secret");
+    expect(planned.details.excerpt).toContain("MaxPlayers=70");
+  });
 });

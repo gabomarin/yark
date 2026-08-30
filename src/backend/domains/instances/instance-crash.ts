@@ -3,6 +3,7 @@ import {
   type ServerCrashedNotifyPayload,
 } from "@shared/os-notification-events";
 import type { AsaStartupFailure } from "@shared/asa-startup-failure";
+import { sanitizeDiagnosticText } from "@shared/credential-redaction";
 
 export interface UnexpectedServerCrashPayload {
   serverId: string;
@@ -15,6 +16,7 @@ export interface UnexpectedServerCrashPayload {
 export function planUnexpectedServerCrashEvent(input: {
   payload: UnexpectedServerCrashPayload;
   serverName: string;
+  knownSecrets?: readonly string[];
 }): {
   eventType: typeof OS_NOTIFY_CRASH_EVENT_TYPE;
   severity: "error";
@@ -39,19 +41,24 @@ export function planUnexpectedServerCrashEvent(input: {
     diagnosis?.summary
     ?? input.payload.lastError
     ?? `Server "${input.serverName}" exited unexpectedly`;
-  const excerpt = diagnosis?.excerpt?.trim() ?? "";
+  const secrets = input.knownSecrets ?? [];
+  const excerpt = sanitizeDiagnosticText(
+    diagnosis?.excerpt?.trim() ?? "",
+    secrets,
+  ).trim();
+  const safeSummary = sanitizeDiagnosticText(summary, secrets);
   return {
     eventType: OS_NOTIFY_CRASH_EVENT_TYPE,
     severity: "error",
-    summary,
+    summary: safeSummary,
     details: {
-      what: summary,
+      what: safeSummary,
       cause: diagnosis?.cause,
       location: "ShooterGame/Saved/Logs/ShooterGame.log",
       suggestion: diagnosis?.suggestion,
       excerpt: excerpt.length > 0 ? excerpt : undefined,
       context: {
-        lastError: input.payload.lastError,
+        lastError: sanitizeDiagnosticText(input.payload.lastError, secrets),
         phase: input.payload.phase,
         exitCode: input.payload.exitCode,
         missingModIds:
@@ -64,7 +71,7 @@ export function planUnexpectedServerCrashEvent(input: {
       serverId: input.payload.serverId,
       serverName: input.serverName,
       eventId: 0,
-      summary,
+      summary: safeSummary,
     },
   };
 }

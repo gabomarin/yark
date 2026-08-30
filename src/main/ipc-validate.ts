@@ -7,12 +7,23 @@ import { ipcMain } from "electron";
 import type { z } from "zod";
 import type { IpcResult } from "../shared/ipc";
 import { formatZodError } from "../shared/ipc/primitives";
+import { sanitizeDiagnosticText } from "../shared/credential-redaction";
 
 const validatedChannels = new Set<string>();
+
+let ipcKnownSecrets: () => readonly string[] = () => [];
+
+/** Wire live profile passwords so IPC `ok: false` can redact bare secrets. */
+export function setIpcDiagnosticKnownSecrets(
+  provider: () => readonly string[],
+): void {
+  ipcKnownSecrets = provider;
+}
 
 /** Reset between unit tests only. */
 export function resetValidatedIpcChannelsForTests(): void {
   validatedChannels.clear();
+  ipcKnownSecrets = () => [];
 }
 
 function wrapIpcResult<T>(fn: () => T | Promise<T>): Promise<IpcResult<T>> {
@@ -21,7 +32,10 @@ function wrapIpcResult<T>(fn: () => T | Promise<T>): Promise<IpcResult<T>> {
     .then((data): IpcResult<T> => ({ ok: true, data }))
     .catch((err: unknown): IpcResult<T> => ({
       ok: false,
-      error: err instanceof Error ? err.message : String(err),
+      error: sanitizeDiagnosticText(
+        err instanceof Error ? err.message : String(err),
+        ipcKnownSecrets(),
+      ),
     }));
 }
 

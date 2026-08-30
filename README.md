@@ -131,9 +131,11 @@ operator walkthrough.
   through validated application handling.
 - Profiles, settings, events, and backup metadata are stored locally in embedded SQLite. YARK has
   no user account or application cloud.
-- Server/admin credentials currently exist in the local profile database and in ASA-required INI
-  files. The database copy is not yet protected with Windows DPAPI; INI backups may also contain
-  credentials.
+- Server/admin credentials live in the local profile database and in ASA INI files
+  as plaintext for the same Windows user. Logs and exports omit GUS password
+  settings instead of reprinting them. See
+  [Security & privacy](https://getyark.com/docs/security-privacy/)
+  and [docs/credential-threat-model.md](docs/credential-threat-model.md).
 - CurseForge metadata requests use a small Cloudflare Worker so the upstream API key is never
   embedded in the Electron application.
 - Recursive install/backup/move/cache copies do not follow Windows directory junctions; destination

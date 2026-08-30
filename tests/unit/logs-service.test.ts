@@ -78,12 +78,15 @@ describe("LogsService runtime logs", () => {
     const profile = makeProfile(root);
     const repo = {
       get: (id: string) => (id === profile.id ? profile : null),
+      list: () => [profile],
       recentEvents: () => [],
     } as unknown as ServerRepository;
 
     const processes = {
       getRuntimeLogSnapshot: (_id: string, _limit?: number) => [
         "[2026-07-22T00:00:00.000Z] [stdout] server started",
+        "ServerAdminPassword=super-secret-pass",
+        "MaxPlayers=70",
       ],
     } as unknown as ProcessManager;
 
@@ -97,8 +100,11 @@ describe("LogsService runtime logs", () => {
     const logs = await service.listServerLogs(profile.id);
 
     expect(logs.updateFiles.length).toBe(1);
-    expect(logs.runtimeLogLines.length).toBe(1);
+    expect(logs.runtimeLogLines.length).toBe(2);
     expect(logs.runtimeLogLines[0]).toContain("server started");
+    expect(logs.runtimeLogLines.join("\n")).not.toContain("super-secret-pass");
+    expect(logs.runtimeLogLines.join("\n")).not.toMatch(/ServerAdminPassword/i);
+    expect(logs.runtimeLogLines.join("\n")).toContain("MaxPlayers=70");
   });
 
   it("exports operational logs to a file", async () => {
@@ -111,6 +117,7 @@ describe("LogsService runtime logs", () => {
     const profile = makeProfile(root);
     const repo = {
       get: (id: string) => (id === profile.id ? profile : null),
+      list: () => [profile],
       recentEvents: () => [
         {
           id: 1,
@@ -133,6 +140,7 @@ describe("LogsService runtime logs", () => {
     const processes = {
       getRuntimeLogSnapshot: (_id: string, _limit?: number) => [
         "[2026-07-22T00:00:00.000Z] [stdout] server started",
+        "ServerAdminPassword=super-secret-pass",
       ],
     } as unknown as ProcessManager;
 
@@ -150,6 +158,8 @@ describe("LogsService runtime logs", () => {
     const content = readFileSync(outFile, "utf8");
     expect(content).toContain("Operational logs for srv-logs-1");
     expect(content).toContain("server started");
+    expect(content).not.toContain("super-secret-pass");
+    expect(content).not.toMatch(/ServerAdminPassword/i);
     expect(content).toContain("srv-logs-1-1.log");
     expect(content).toContain("update output");
     expect(content).toContain("Backup scheduled/world failed");
@@ -172,6 +182,7 @@ describe("LogsService runtime logs", () => {
     let deletedEvents = 0;
     const repo = {
       get: (id: string) => (id === profile.id ? profile : null),
+      list: () => [profile],
       recentEvents: () => [],
       deleteEventsForServer: (id: string) => {
         expect(id).toBe(profile.id);

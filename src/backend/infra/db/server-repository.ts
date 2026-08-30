@@ -1,5 +1,11 @@
 import type { DatabaseSync } from "node:sqlite";
 import { randomUUID } from "node:crypto";
+import {
+  collectKnownSecrets,
+  sanitizeAppEvent,
+  sanitizeDiagnosticText,
+  sanitizeDiagnosticValue,
+} from "@shared/credential-redaction";
 import type {
   AppEvent,
   AppEventDetails,
@@ -271,6 +277,10 @@ export class ServerRepository {
     return result.changes > 0;
   }
 
+  /**
+   * Persist an operator event. Sanitizes message/details on write so GUS
+   * password settings never land in SQLite.
+   */
   addEvent(
     serverId: string | null,
     type: AppEvent["type"],
@@ -278,8 +288,16 @@ export class ServerRepository {
     message: string,
     details?: AppEventDetails | null,
   ): number {
+    const secrets = collectKnownSecrets(this.list());
+    const safeMessage = sanitizeDiagnosticText(message, secrets);
+    const safeDetails =
+      details !== undefined && details !== null
+        ? (sanitizeDiagnosticValue(details, secrets) as AppEventDetails)
+        : details;
     const detailsJson =
-      details !== undefined && details !== null ? JSON.stringify(details) : null;
+      safeDetails !== undefined && safeDetails !== null
+        ? JSON.stringify(safeDetails)
+        : null;
     const result = this.db
       .prepare(
         "INSERT INTO events (server_id, type, severity, message, created_at, details) VALUES (?, ?, ?, ?, ?, ?)",
@@ -288,13 +306,18 @@ export class ServerRepository {
         serverId,
         type,
         severity,
-        message,
+        safeMessage,
         new Date().toISOString(),
         detailsJson,
       );
     return Number(result.lastInsertRowid);
   }
 
+  /**
+   * Newest events first. Sanitizes again on read so rows written before #144
+   * stay clean in Overview / Logs (canonical read-side choke point; callers
+   * should not wrap with {@link sanitizeAppEvent}).
+   */
   recentEvents(limit: number): AppEvent[] {
     const rows = this.db
       .prepare(
@@ -309,15 +332,21 @@ export class ServerRepository {
       created_at: string;
       details: string | null;
     }>;
-    return rows.map((r) => ({
-      id: r.id,
-      serverId: r.server_id,
-      type: r.type,
-      severity: r.severity,
-      message: r.message,
-      createdAt: r.created_at,
-      details: parseEventDetails(r.details),
-    }));
+    const secrets = collectKnownSecrets(this.list());
+    return rows.map((r) =>
+      sanitizeAppEvent(
+        {
+          id: r.id,
+          serverId: r.server_id,
+          type: r.type,
+          severity: r.severity,
+          message: r.message,
+          createdAt: r.created_at,
+          details: parseEventDetails(r.details),
+        },
+        secrets,
+      ),
+    );
   }
 
   deleteEventsForServer(serverId: string): number {

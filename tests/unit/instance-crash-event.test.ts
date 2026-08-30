@@ -34,6 +34,7 @@ describe("InstanceService unexpected-exit events", () => {
   it("records server_crashed with a persisted log excerpt on unexpected-exit", () => {
     const repo = {
       get: vi.fn(() => profile),
+      list: vi.fn(() => [profile]),
       addEvent: vi.fn().mockReturnValue(42),
     } as unknown as ServerRepository;
     const processes = new EventEmitter() as unknown as ProcessManager;
@@ -81,6 +82,7 @@ describe("InstanceService unexpected-exit events", () => {
   it("does not record server_crashed on a live error status (spawn/readiness/kill failure)", () => {
     const repo = {
       get: vi.fn(() => profile),
+      list: vi.fn(() => [profile]),
       addEvent: vi.fn(),
     } as unknown as ServerRepository;
     const processes = new EventEmitter() as unknown as ProcessManager;

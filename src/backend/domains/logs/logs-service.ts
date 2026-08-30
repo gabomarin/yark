@@ -15,6 +15,10 @@ import type {
 } from "@shared/types";
 import { resolveEventDetails } from "@shared/event-details";
 import {
+  collectKnownSecrets,
+  sanitizeDiagnosticText,
+} from "@shared/credential-redaction";
+import {
   LOG_RETENTION_SETTINGS_KEY,
   assertLogRetentionSettings,
   daysToCutoffIso,
@@ -144,29 +148,15 @@ export class LogsService {
   ) {}
 
   async listServerLogs(serverId: string): Promise<ServerOperationalLogs> {
-    const server = this.repo.get(serverId);
-    if (server === null) {
-      throw new Error("Server does not exist");
-    }
-
-    const [updateFiles, backups] = await Promise.all([
-      this.listUpdateLogsForServer(serverId),
-      this.backups.list(serverId, 100),
-    ]);
-    const events = this.repo
-      .recentEvents(500)
-      .filter((event) => event.serverId === serverId);
-    const runtime = this.getRuntimeLogSnapshot(serverId);
-
-    return {
-      serverId,
-      updateFiles,
-      backups,
-      events,
-      runtimeLogLines: runtime.runtimeLogLines,
-    };
+    const secrets = this.collectProfileSecrets();
+    return this.buildServerLogs(serverId, secrets);
   }
 
+  /**
+   * Operator-facing runtime snapshot (IPC `logs:runtime`). Always sanitizes.
+   * Distinct from {@link ProcessManager.getRuntimeLogSnapshot}, which is the
+   * unsanitized in-memory ring.
+   */
   getRuntimeLogSnapshot(
     serverId: string,
     limit = 400,
@@ -177,8 +167,64 @@ export class LogsService {
     }
     return {
       serverId,
-      runtimeLogLines: this.processes.getRuntimeLogSnapshot(serverId, limit),
+      runtimeLogLines: this.sanitizeRuntimeLines(
+        this.processes.getRuntimeLogSnapshot(serverId, limit),
+        this.collectProfileSecrets(),
+      ),
     };
+  }
+
+  private collectProfileSecrets(): string[] {
+    return collectKnownSecrets(this.repo.list());
+  }
+
+  private sanitizeRuntimeLines(
+    lines: string[],
+    secrets: readonly string[],
+  ): string[] {
+    return lines
+      .map((line) => sanitizeDiagnosticText(line, secrets))
+      .filter((line) => line.trim().length > 0);
+  }
+
+  private async buildServerLogs(
+    serverId: string,
+    secrets: readonly string[],
+  ): Promise<ServerOperationalLogs> {
+    const server = this.repo.get(serverId);
+    if (server === null) {
+      throw new Error("Server does not exist");
+    }
+
+    const [updateFiles, backups] = await Promise.all([
+      this.listUpdateLogsForServer(serverId),
+      this.backups.list(serverId, 100),
+    ]);
+    return {
+      serverId,
+      updateFiles,
+      backups,
+      events: this.repo
+        .recentEvents(500)
+        .filter((event) => event.serverId === serverId),
+      runtimeLogLines: this.sanitizeRuntimeLines(
+        this.processes.getRuntimeLogSnapshot(serverId, 400),
+        secrets,
+      ),
+    };
+  }
+
+  private async readAndSanitizeUpdateLog(
+    serverId: string,
+    fileName: string,
+    maxBytes: number,
+    secrets: readonly string[],
+  ): Promise<string> {
+    const path = this.resolveUpdateLogPath(serverId, fileName);
+    const content = await readFile(path, "utf8");
+    const sliced =
+      content.length <= maxBytes ? content : content.slice(content.length - maxBytes);
+    return sanitizeDiagnosticText(sliced, secrets);
   }
 
   resolveUpdateLogPath(serverId: string, fileName: string): string {
@@ -195,12 +241,12 @@ export class LogsService {
   }
 
   async readUpdateLog(serverId: string, fileName: string, maxBytes = 250_000): Promise<string> {
-    const path = this.resolveUpdateLogPath(serverId, fileName);
-    const content = await readFile(path, "utf8");
-    if (content.length <= maxBytes) {
-      return content;
-    }
-    return content.slice(content.length - maxBytes);
+    return this.readAndSanitizeUpdateLog(
+      serverId,
+      fileName,
+      maxBytes,
+      this.collectProfileSecrets(),
+    );
   }
 
   clearEvents(serverId: string): number {
@@ -360,7 +406,8 @@ export class LogsService {
   }
 
   async exportServerLogs(serverId: string, destinationPath: string): Promise<string> {
-    const logs = await this.listServerLogs(serverId);
+    const secrets = this.collectProfileSecrets();
+    const logs = await this.buildServerLogs(serverId, secrets);
     const sections: string[] = [];
 
     sections.push(`# Operational logs for ${serverId}`);
@@ -412,14 +459,18 @@ export class LogsService {
       for (const file of logs.updateFiles.slice(0, 3)) {
         sections.push(`\n### ${file.fileName}`);
         sections.push(`Modified: ${file.modifiedAt} | Size: ${file.sizeBytes} bytes`);
-        sections.push(await this.readUpdateLog(serverId, file.fileName, 120_000));
+        sections.push(await this.readAndSanitizeUpdateLog(serverId, file.fileName, 120_000, secrets));
       }
       if (logs.updateFiles.length > 3) {
         sections.push(`\n(${logs.updateFiles.length - 3} additional files omitted)`);
       }
     }
 
-    await writeFile(destinationPath, `${sections.join("\n")}\n`, "utf8");
+    await writeFile(
+      destinationPath,
+      sanitizeDiagnosticText(`${sections.join("\n")}\n`, secrets),
+      "utf8",
+    );
     return destinationPath;
   }
 

@@ -71,7 +71,8 @@ paths or the Notion hub URL in tracked files.
 - [e2e-validation.md](e2e-validation.md) — PR CI Electron E2E vs prepared-host / manual release matrix (#12). UI changes must update affected `scripts/e2e-*.cjs` in the same PR.
 - [critical-job-recovery.md](critical-job-recovery.md) — durable phases, replay policy, queue quarantine, and operator recovery actions.
 - [profile-database.md](profile-database.md) — SQLite boot open/migrate, busy_timeout, corrupt-DB operator recovery (#218).
-- [logs.md](logs.md) — event `details`, clear/export IPC, `logsFocus`, seed/visual helpers.
+- [logs.md](logs.md) — event `details`, clear/export IPC, `logsFocus`, seed/visual helpers. GUS password settings are omitted from diagnostic dumps (#144).
+- [credential-threat-model.md](credential-threat-model.md) — local admin/join password boundary (SQLite + INI plaintext; logs omit password settings).
 - [server-lifecycle.md](server-lifecycle.md) — launch args, profile→INI sync, spawn, start/stop/kill, INI sanitize / assistant; custom / Maps pack launch + Start blockers (#65 Phase 1 / #190–#195). Research archive: [spikes/65-modded-asa-maps.md](spikes/65-modded-asa-maps.md).
 - [launch-options-catalog.md](launch-options-catalog.md) — verified ASA CLI catalog (#92); regenerates via `npm run catalog:launch-options`.
 - [rcon.md](rcon.md) — workspace RCON console, persistent session, players, ban list.

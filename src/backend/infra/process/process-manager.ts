@@ -13,6 +13,7 @@ import {
 } from "@shared/left-running";
 import { rconExec } from "../rcon/rcon-client";
 import { diagnoseAsaStartupFailure, type AsaStartupFailure } from "@shared/asa-startup-failure";
+import { sanitizeDiagnosticText } from "@shared/credential-redaction";
 import { readAsaLogSessionExcerpt } from "./asa-log-tail";
 import { createAdoptedChildHandle } from "./adopted-child";
 import { killWinProcessTreeAsync } from "./kill-win-process-tree";
@@ -107,6 +108,8 @@ export interface ProcessManagerOptions {
   onProcessCheckpoint?: (record: LeftRunningProcessIdentity) => void;
   /** Clear durable identity after a managed process exits/stops. */
   onProcessCheckpointCleared?: (serverId: string) => void;
+  /** Live profile passwords for runtime-console omit/redact (#144). */
+  knownSecrets?: () => readonly string[];
 }
 
 const RCON_HOST = "127.0.0.1";
@@ -142,6 +145,7 @@ export class ProcessManager extends EventEmitter {
     | ((record: LeftRunningProcessIdentity) => void)
     | null;
   private readonly onProcessCheckpointCleared: ((serverId: string) => void) | null;
+  private readonly knownSecrets: () => readonly string[];
   /** Prefer persistent session when wired from InstanceService. */
   private rconExecutor: ManagedRconExecutor | null = null;
 
@@ -158,6 +162,7 @@ export class ProcessManager extends EventEmitter {
       options?.queryOsIdentity ?? ((pid) => queryWindowsProcessIdentity(pid));
     this.onProcessCheckpoint = options?.onProcessCheckpoint ?? null;
     this.onProcessCheckpointCleared = options?.onProcessCheckpointCleared ?? null;
+    this.knownSecrets = options?.knownSecrets ?? (() => []);
   }
 
   /**
@@ -728,7 +733,11 @@ export class ProcessManager extends EventEmitter {
   }
 
   private appendRuntimeLog(serverId: string, source: string, message: string): void {
-    const line = message.trim();
+    const sanitized = sanitizeDiagnosticText(message, this.knownSecrets());
+    if (message.trim().length > 0 && sanitized.trim().length === 0) {
+      return;
+    }
+    const line = sanitized.trim();
     if (line.length === 0) {
       return;
     }

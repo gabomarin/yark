@@ -13,6 +13,7 @@ import {
   EMPTY_WIPE_STALE_MESSAGE,
 } from "@shared/types";
 import { applyServerProfilePatch } from "@shared/server-profile";
+import { collectKnownSecrets } from "@shared/credential-redaction";
 import { EventEmitter } from "node:events";
 import { existsSync } from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
@@ -655,6 +656,7 @@ export class InstanceService extends EventEmitter {
     const planned = planUnexpectedServerCrashEvent({
       payload,
       serverName: name,
+      knownSecrets: collectKnownSecrets(this.repo.list()),
     });
     const eventId = this.repo.addEvent(
       payload.serverId,
