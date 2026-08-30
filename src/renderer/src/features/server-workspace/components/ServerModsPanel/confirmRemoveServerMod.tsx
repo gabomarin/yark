@@ -1,5 +1,7 @@
-import { Text } from "@mantine/core";
-import { modals } from "@mantine/modals";
+import {
+  dangerConfirmBody,
+  openDangerConfirmModal,
+} from "@ui/DangerConfirmModal/openDangerConfirmModal";
 import type { ModRow } from "./serverModsModel";
 
 /** Confirm before removing a configured mod (table, context menu, drawer). */
@@ -14,16 +16,17 @@ export function confirmRemoveServerMod(
   if (row.id === null) return;
   options?.onPendingChange?.(true);
   let removeStarted = false;
-  modals.openConfirmModal({
+  openDangerConfirmModal({
     title: "Remove mod?",
-    children: (
-      <Text size="sm">
+    children: dangerConfirmBody(
+      <>
         Remove <strong>{row.name}</strong> from this server and discard its
         cached metadata?
-      </Text>
+      </>,
     ),
-    labels: { confirm: "Remove mod", cancel: "Cancel" },
-    confirmProps: { color: "red" },
+    confirmLabel: "Remove mod",
+    // Mantine confirm: Cancel button → onCancel; ESC / overlay → onClose only
+    // (ModalsProvider hardcodes Modal.onClose, then handleCloseModal runs props.onClose).
     onClose: () => {
       if (!removeStarted) {
         options?.onPendingChange?.(false);

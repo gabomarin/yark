@@ -1,9 +1,12 @@
 import { ActionIcon, Button, Group, Loader, Text, Tooltip } from "@mantine/core";
-import { modals } from "@mantine/modals";
 import { FileText } from "@phosphor-icons/react";
 import type { OnlinePlayerInfo } from "@shared/ipc";
 import type { MutableRefObject, ReactElement } from "react";
 import { useCallback, useEffect, useState } from "react";
+import {
+  dangerConfirmBody,
+  openDangerConfirmModal,
+} from "@ui/DangerConfirmModal/openDangerConfirmModal";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import {
@@ -72,14 +75,14 @@ export function BannedPlayersSection(props: Props): ReactElement {
       player.name,
       props.nameById,
     );
-    modals.openConfirmModal({
+    openDangerConfirmModal({
       title: "Unban survivor?",
-      children: (
-        <Text size="sm">
+      children: dangerConfirmBody(
+        <>
           Remove <strong>{label}</strong> from the ban list?
-        </Text>
+        </>,
       ),
-      labels: { confirm: "Unban", cancel: "Cancel" },
+      confirmLabel: "Unban",
       onConfirm: () => {
         setActionKey(player.key);
         void runWithFinally(

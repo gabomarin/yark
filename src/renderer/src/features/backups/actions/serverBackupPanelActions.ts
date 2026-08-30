@@ -1,5 +1,3 @@
-import { Text } from "@mantine/core";
-import { modals } from "@mantine/modals";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { playerBackupDisplayName } from "@shared/backup-player-meta";
 import type {
@@ -7,12 +5,14 @@ import type {
   BackupRecord,
   ServerProfile,
 } from "@shared/types";
+import {
+  dangerConfirmBody,
+  openDangerConfirmModal,
+} from "@ui/DangerConfirmModal/openDangerConfirmModal";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
 import {
   createElement,
-  type ComponentType,
   type Dispatch,
-  type ReactNode,
   type SetStateAction,
 } from "react";
 import { runBackupExport, runBackupImport } from "../backupPortability";
@@ -54,14 +54,6 @@ interface BackupPanelActionOptions {
   setRestoreTarget: Dispatch<SetStateAction<BackupRecord | null>>;
   setRestoreProfilesTribes: Dispatch<SetStateAction<boolean>>;
   load: (serverId: string, options?: { quiet?: boolean }) => Promise<void>;
-}
-
-function confirmationText(children: ReactNode) {
-  const ConfirmationText = Text as ComponentType<{
-    size?: string;
-    children?: ReactNode;
-  }>;
-  return createElement(ConfirmationText, { size: "sm" }, children);
 }
 
 export function createServerBackupPanelActions(
@@ -190,27 +182,25 @@ export function createServerBackupPanelActions(
     if (actionableSelectedIds.length === 0) return;
     const ids = [...actionableSelectedIds];
     const count = ids.length;
-    modals.openConfirmModal({
+    openDangerConfirmModal({
       title: `Delete selected ${activeKindLabel.toLowerCase()} backups?`,
-      children: confirmationText([
+      children: dangerConfirmBody([
         "Permanently delete ",
         createElement("strong", { key: "count" }, count),
         ` ${activeKindLabel.toLowerCase()} backup${count === 1 ? "" : "s"} from disk and the database? This cannot be undone.`,
       ]),
-      labels: { confirm: "Delete", cancel: "Cancel" },
-      confirmProps: { color: "red" },
+      confirmLabel: "Delete",
       onConfirm: () => void deleteBackupsByIds(ids),
     });
   };
 
   const confirmClearFailed = () => {
-    modals.openConfirmModal({
+    openDangerConfirmModal({
       title: `Clear failed ${activeKindLabel.toLowerCase()} backups?`,
-      children: confirmationText(
+      children: dangerConfirmBody(
         `Remove every failed ${activeKindLabel.toLowerCase()} record for this server from history. Archives are usually already missing; this is catalog cleanup.`,
       ),
-      labels: { confirm: "Clear failed", cancel: "Cancel" },
-      confirmProps: { color: "red" },
+      confirmLabel: "Clear failed",
       onConfirm: () => void runBusy(async () => {
         const result = await window.api.deleteFailedBackups(server.id, activeKind);
         if (!result.ok) {
@@ -231,15 +221,14 @@ export function createServerBackupPanelActions(
     if (backup.status === "running") return;
     const label =
       backup.kind === "players" ? playerBackupDisplayName(backup) : activeKindLabel;
-    modals.openConfirmModal({
+    openDangerConfirmModal({
       title: `Delete ${label.toLowerCase()} backup?`,
-      children: confirmationText([
+      children: dangerConfirmBody([
         "Permanently delete this ",
         createElement("strong", { key: "label" }, label),
         " backup from disk and the database? This cannot be undone.",
       ]),
-      labels: { confirm: "Delete", cancel: "Cancel" },
-      confirmProps: { color: "red" },
+      confirmLabel: "Delete",
       onConfirm: () => void deleteBackupsByIds([backup.id]),
     });
   };

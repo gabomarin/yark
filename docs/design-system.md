@@ -241,9 +241,9 @@ Primary destructive **Button**s use **`color="red" variant="filled"`** — **Sto
 | Kebab danger **Menu.Item** | `color="red"` (inherits `--app-color-danger-bright`) |
 | Dense **ActionIcon** (delete/remove and secondary row icons) | Prefer `variant="subtle"` with semantic `color` (#397); use **`filled`** only for labeled destructive **Button**s |
 
-| Confirm modals | `confirmProps: { color: "red" }` (Mantine default `filled`) |
+| Confirm modals (delete / clear / ban / remove / force-close) | `openDangerConfirmModal` + optional `dangerConfirmBody` (`shared/ui/DangerConfirmModal/`) — red confirm, Cancel default (#235) |
 
-**Exceptions (not red filled):** red **Alert** / **Badge** (error state, not actions); **menu** row actions (`serverCardMenuActions`, backup/mods context menus — separate pass); **Remove from YARK** (profile-only delete) keeps default primary styling; discard/unsaved-leave flows use **fossil** or default buttons.
+**Exceptions (not red filled):** red **Alert** / **Badge** (error state, not actions); **menu** row actions (`serverCardMenuActions`, backup/mods context menus — separate pass); **Remove from YARK** (profile-only delete) keeps default primary styling; multi-button unsaved-leave (`openUnsavedLeaveModal`) uses **fossil** / default buttons.
 
 Reference: `ServerModDetailDrawer` Remove footer (#344); quiet row icons (#397).
 
@@ -342,6 +342,42 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 | `PathField` | `shared/ui/PathField/` | Read-only path chip + Browse/Clear actions |
 | `ConsoleSurface` | `shared/ui/ConsoleSurface/` | ScrollArea monospace console for SteamCMD / Logs (plain text, stick-to-bottom) |
 | `AppMetricCard` | `shared/ui/AppMetricCard/` | Compact scalar metric tile (fleet strips; optional RingProgress) |
+| `openDangerConfirmModal` | `shared/ui/DangerConfirmModal/` | Destructive confirm helper (`modals.openConfirmModal` + red confirm) |
+
+### Danger confirm modals (#235)
+
+Use **`openDangerConfirmModal`** for irreversible or harmful confirms (delete backups/logs,
+remove mod, ban/unban, clear SteamCMD cache, force-close). Do **not** invent a second
+`confirmProps: { color: "red" }` paste.
+
+```tsx
+import {
+  dangerConfirmBody,
+  openDangerConfirmModal,
+} from "@ui/DangerConfirmModal/openDangerConfirmModal";
+
+openDangerConfirmModal({
+  title: "Delete backup?",
+  children: dangerConfirmBody(
+    <>
+      Permanently delete <strong>{label}</strong>? This cannot be undone.
+    </>,
+  ),
+  confirmLabel: "Delete",
+  onConfirm: () => void deleteOne(),
+});
+```
+
+- **`confirmLabel`** is required (no drifting “OK” / “Confirm”).
+- **Cancel** defaults to `"Cancel"`; override with `cancelLabel` only when needed.
+- Confirm button color is always **`red`** (cannot be overridden).
+- Prefer **`dangerConfirmBody`** for plain / mixed text (`Text size="sm"`). Pass an
+  `Alert` (or other composed node) as `children` when the body needs richer chrome.
+- Modal **`onClose`** (from Mantine `ModalSettings`) still runs on any dismiss,
+  including Escape / overlay — use it for cleanup that must not depend on Cancel alone.
+- **Out of scope:** yellow INI reset-to-defaults, host-port probe, unsaved-leave /
+  discard-draft (`openUnsavedLeaveModal`, fossil buttons), and **Delete server**
+  (mode picker modal).
 
 ### SearchField variants
 
@@ -441,7 +477,6 @@ line (#234).
 | Feature CSS spacing sweep | Hundreds of hardcoded px remain | Touch file → snap to tokens |
 | Type scale tokens | Meta/title sizes still ad-hoc | Third conflicting title size |
 | `PageSectionHeader` | Title + filter/actions repeats | Third identical header |
-| `DangerConfirmModal` pattern | Restore/delete/cleanup modals | After second modal copy-paste |
 | React Compiler | **Postpone** default enable (#404). Opt-in: `YARK_REACT_COMPILER=1` / `npm run build:compiler`. Many skips on try/finally + eslint-disable; see [react-compiler-spike.md](react-compiler-spike.md). Current memo/`handlersRef` still cover Overview fan-out | Explicit compile-time memo budget / regression |
 
 ## Related

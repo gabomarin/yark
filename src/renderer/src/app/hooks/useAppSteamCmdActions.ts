@@ -1,7 +1,6 @@
 import { createElement, useCallback } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { Alert } from "@mantine/core";
-import { modals } from "@mantine/modals";
 import type { ServerProfile, SteamCmdCacheKind, SteamCmdStatus } from "@shared/types";
 import {
   decideFilesJobEnqueue,
@@ -10,6 +9,7 @@ import {
 } from "@shared/files-job-priority";
 import type { Overlay } from "@app/model/appOverlay";
 import type { Route } from "@layout/Sidebar/Sidebar";
+import { openDangerConfirmModal } from "@ui/DangerConfirmModal/openDangerConfirmModal";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
 import type { useAppFleetRefresh } from "@app/hooks/useAppFleetRefresh";
 
@@ -211,15 +211,14 @@ export function useAppSteamCmdActions(options: {
         kind === "depot"
           ? "Removes temporary files Steam already downloaded. The next install or update will download them again."
           : "Removes the ready-made ARK server copy used to set up new servers faster. The next install will rebuild it first.";
-      modals.openConfirmModal({
+      openDangerConfirmModal({
         title: `Clear ${label}?`,
         children: createElement(
           Alert,
           { color: "orange", variant: "light", title: "Cannot be undone" },
           detail,
         ),
-        labels: { confirm: "Clear cache", cancel: "Cancel" },
-        confirmProps: { color: "red" },
+        confirmLabel: "Clear cache",
         onConfirm: () => {
           void (async () => {
             const result = await window.api.clearSteamCmdCache(kind);
