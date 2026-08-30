@@ -77,11 +77,11 @@ const comfortableSpacing = {
 } as const;
 
 const comfortableRadius = {
-  sm: 10,
-  md: 14,
-  lg: 18,
-  /** Inputs, list rows, search — tighter than card `md`. */
-  control: 12,
+  sm: 6,
+  md: 8,
+  lg: 10,
+  /** Inputs, list rows, search — same as `sm` so controls are not squircles. */
+  control: 6,
 } as const;
 
 /** Mantine default fontSizes; Compact scales these the same as spacing. */
@@ -130,7 +130,8 @@ const sharedColors = {
   bgAccent: radixPalette.gray[1],
   panel: radixPalette.gray[2],
   panelAlt: radixPalette.gray[3],
-  border: radixPalette.gray[5],
+  /** Hairline between page / panel / control — solid, not mixed with blue. */
+  border: radixPalette.gray[6],
   text: radixPalette.gray[11],
   muted: radixPalette.gray[10],
   accent: radixPalette.blue[8],
@@ -150,7 +151,7 @@ const sharedColors = {
 } as const;
 
 const sharedShadows = {
-  panel: "0 1px 0 rgba(255, 255, 255, 0.025)",
+  panel: "0 1px 0 rgba(255, 255, 255, 0.06)",
 } as const;
 
 /** Mantine `color="red"` — `--app-color-bad` (filled) + `--app-color-danger-bright` (text/icons). */

@@ -32,29 +32,19 @@ function createAppCssVariablesResolver(
     variables: {
       ...radixCssVariables,
       "--app-color-bg": "var(--ark-background)",
-      "--app-color-surface-chrome":
-        "color-mix(in srgb, var(--ark-gray-2) 88%, var(--ark-blue-2))",
-      "--app-color-surface-panel":
-        "color-mix(in srgb, var(--ark-gray-3) 86%, var(--ark-blue-2))",
-      "--app-color-surface-control":
-        "color-mix(in srgb, var(--ark-gray-5) 72%, var(--ark-blue-3))",
-      "--app-color-surface-control-hover":
-        "color-mix(in srgb, var(--ark-gray-5) 64%, var(--ark-blue-4))",
-      "--app-color-border-subtle":
-        "color-mix(in srgb, var(--ark-gray-6) 82%, var(--ark-blue-7))",
-      "--app-color-border-control":
-        "color-mix(in srgb, var(--ark-gray-9) 72%, var(--ark-blue-8))",
-      "--app-color-text-soft":
-        "color-mix(in srgb, var(--ark-gray-12) 88%, var(--ark-gray-11))",
-      "--app-color-muted-soft":
-        "color-mix(in srgb, var(--ark-gray-11) 88%, var(--ark-gray-10))",
+      "--app-color-surface-chrome": "var(--ark-gray-2)",
+      "--app-color-surface-panel": "var(--ark-gray-3)",
+      "--app-color-surface-control": "var(--ark-gray-5)",
+      "--app-color-surface-control-hover": "var(--ark-gray-6)",
+      "--app-color-border-subtle": "var(--ark-gray-7)",
+      "--app-color-border-control": "var(--ark-gray-9)",
+      "--app-color-text-soft": "var(--ark-gray-12)",
+      "--app-color-muted-soft": "var(--ark-gray-11)",
       "--app-color-bg-accent": "var(--app-color-surface-chrome)",
       "--app-color-panel": "var(--app-color-surface-panel)",
       "--app-color-panel-alt": "var(--app-color-surface-control)",
-      "--app-color-panel-cool":
-        "color-mix(in srgb, var(--ark-gray-3) 84%, var(--ark-blue-2))",
-      "--app-color-panel-cool-emphasis":
-        "color-mix(in srgb, var(--ark-gray-3) 72%, var(--ark-blue-3))",
+      "--app-color-panel-cool": "var(--app-color-surface-panel)",
+      "--app-color-panel-cool-emphasis": "var(--app-color-surface-panel)",
       "--app-color-border": "var(--app-color-border-subtle)",
       "--app-color-text": "var(--app-color-text-soft)",
       "--app-color-muted": "var(--app-color-muted-soft)",
@@ -86,24 +76,19 @@ function createAppCssVariablesResolver(
       "--app-shadow-panel": tokens.shadows.panel,
       "--app-shadow-elevated": "0 18px 36px rgba(0, 0, 0, 0.32)",
       /* Shared surface recipes — prefer AppSurfaceCard / these vars over copy-pasted gradients */
-      "--app-surface-border":
-        "color-mix(in srgb, var(--app-color-border) 72%, var(--ark-blue-7))",
-      "--app-surface-cool":
-        "linear-gradient(112deg, color-mix(in srgb, var(--app-color-panel-cool-emphasis) 48%, var(--app-color-panel-cool)) 0%, var(--app-color-panel-cool) 44%, color-mix(in srgb, var(--app-color-panel-cool) 82%, var(--app-color-panel)) 100%)",
-      "--app-surface-cool-emphasis":
-        "linear-gradient(108deg, var(--app-color-panel-cool-emphasis) 0%, var(--app-color-panel-cool) 52%, color-mix(in srgb, var(--app-color-panel-cool) 76%, var(--app-color-panel)) 100%)",
+      "--app-surface-border": "var(--app-color-border)",
+      "--app-surface-cool": "none",
+      "--app-surface-cool-emphasis": "none",
       "--app-surface-flat": "var(--app-color-panel)",
       "--app-surface-chrome": "var(--app-color-surface-chrome)",
-      "--app-list-selected-bg":
-        "linear-gradient(90deg, color-mix(in srgb, var(--ark-gray-4) 70%, var(--ark-blue-4)) 0%, color-mix(in srgb, var(--ark-gray-3) 82%, var(--ark-blue-3)) 100%)",
+      "--app-list-selected-bg": "var(--app-color-surface-control)",
       "--app-list-selected-inset": "inset 3px 0 0 var(--ark-blue-9)",
-      "--app-anchor-color": "color-mix(in srgb, var(--app-color-cryo) 50%, white)",
-      "--app-anchor-hover-color":
-        "color-mix(in srgb, var(--app-color-cryo) 35%, white)",
+      "--app-anchor-color": "var(--ark-blue-11)",
+      "--app-anchor-hover-color": "var(--ark-blue-12)",
     },
     light: {},
     dark: {
-      "--mantine-color-body": "var(--ark-background)",
+      "--mantine-color-body": "var(--app-color-bg)",
       "--mantine-color-text": "var(--app-color-text)",
       "--mantine-color-dimmed": "var(--app-color-muted)",
       "--mantine-color-dark-0": "var(--app-color-text)",
@@ -112,10 +97,10 @@ function createAppCssVariablesResolver(
       "--mantine-color-dark-3": "var(--ark-gray-8)",
       "--mantine-color-dark-4": "var(--ark-gray-7)",
       "--mantine-color-dark-5": "var(--ark-gray-6)",
-      "--mantine-color-dark-6": "var(--ark-gray-4)",
-      "--mantine-color-dark-7": "var(--ark-gray-3)",
-      "--mantine-color-dark-8": "var(--ark-gray-2)",
-      "--mantine-color-dark-9": "var(--ark-gray-1)",
+      "--mantine-color-dark-6": "var(--app-color-surface-control)",
+      "--mantine-color-dark-7": "var(--app-color-surface-panel)",
+      "--mantine-color-dark-8": "var(--app-color-surface-chrome)",
+      "--mantine-color-dark-9": "var(--app-color-bg)",
       "--mantine-color-blue-0": "var(--ark-blue-12)",
       "--mantine-color-blue-1": "var(--ark-blue-11)",
       "--mantine-color-blue-2": "var(--ark-blue-8)",
@@ -211,7 +196,7 @@ function createAppTheme(
     /** Dark text on light filled colors (fossil Restart, attention); white on red/teal filled. */
     autoContrast: true,
     fontFamily: '"Segoe UI", Arial, sans-serif',
-    defaultRadius: "md",
+    defaultRadius: "sm",
     /** Aligns `gap="xs"|…` / `p="md"` with `--app-space-*` (overrides Mantine defaults). */
     spacing: {
       xxs: `${tokens.spacing.xxs}px`,
@@ -320,7 +305,7 @@ function createAppTheme(
       Alert: {
         defaultProps: {
           variant: "light",
-          radius: "md",
+          radius: "sm",
         },
         // Mantine paints via --alert-bg / --alert-bd; styles.backgroundColor does not win.
         vars: (_theme: unknown, props: { color?: string | undefined }) => {
@@ -330,22 +315,17 @@ function createAppTheme(
           if (tone === "message") {
             return {
               root: {
-                "--alert-bg":
-                  "color-mix(in srgb, var(--ark-blue-8) 14%, transparent)",
-                "--alert-bd":
-                  "1px solid color-mix(in srgb, var(--ark-blue-8) 28%, transparent)",
+                "--alert-bg": "var(--app-color-panel)",
+                "--alert-bd": "1px solid var(--app-color-cryo)",
                 "--alert-color": "var(--app-color-text)",
               },
             };
           }
           if (tone === "warn") {
-            // MagicPath mock: bg-card/60 + border fossil/40 (translucent, not solid mix).
             return {
               root: {
-                "--alert-bg":
-                  "color-mix(in srgb, var(--app-color-panel) 60%, transparent)",
-                "--alert-bd":
-                  "1px solid color-mix(in srgb, var(--app-color-fossil) 40%, transparent)",
+                "--alert-bg": "var(--app-color-panel)",
+                "--alert-bd": "1px solid var(--app-color-fossil)",
                 "--alert-color": "var(--app-color-text)",
               },
             };
@@ -353,10 +333,8 @@ function createAppTheme(
           if (tone === "error") {
             return {
               root: {
-                "--alert-bg":
-                  "color-mix(in srgb, var(--app-color-bad) 14%, transparent)",
-                "--alert-bd":
-                  "1px solid color-mix(in srgb, var(--app-color-bad) 45%, transparent)",
+                "--alert-bg": "var(--app-color-panel)",
+                "--alert-bd": "1px solid var(--app-color-bad)",
                 "--alert-color": "var(--app-color-text)",
               },
             };
@@ -364,16 +342,33 @@ function createAppTheme(
           return { root: {} };
         },
       },
+      Badge: {
+        defaultProps: {
+          radius: "sm",
+        },
+      },
+      NavLink: {
+        defaultProps: {
+          radius: "sm",
+        },
+        styles: {
+          root: {
+            "--nl-bg": "var(--app-color-surface-control)",
+            "--nl-hover": "var(--app-color-surface-control-hover)",
+            "--nl-color": "var(--app-color-text)",
+          },
+        },
+      },
       Card: {
         defaultProps: {
           withBorder: true,
-          radius: "lg",
+          radius: "sm",
           padding: "md",
         },
       },
       Paper: {
         defaultProps: {
-          radius: "md",
+          radius: "sm",
         },
       },
       ScrollArea: {

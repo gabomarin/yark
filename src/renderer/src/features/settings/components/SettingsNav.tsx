@@ -44,7 +44,6 @@ export function SettingsNav(props: Props): ReactElement {
               component="button"
               type="button"
               active={active}
-              variant="light"
               label={item.label}
               aria-label={item.label}
               leftSection={<Icon size={16} weight={active ? "fill" : "regular"} />}

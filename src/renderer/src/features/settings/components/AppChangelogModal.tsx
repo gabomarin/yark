@@ -70,7 +70,7 @@ export function AppChangelogModal(props: Props): ReactElement {
       onClose={handleClose}
       centered
       size={672}
-      radius={8}
+      radius="md"
       classNames={{
         content: classes.content,
         header: classes.header,
@@ -79,7 +79,7 @@ export function AppChangelogModal(props: Props): ReactElement {
       }}
     >
       <Modal.Overlay backgroundOpacity={0.5} color="#000" />
-      <Modal.Content radius={8}>
+      <Modal.Content radius="md">
         <Modal.Header>
           <div className={classes.headerTop}>
             <div>
@@ -104,7 +104,7 @@ export function AppChangelogModal(props: Props): ReactElement {
           </div>
           <SegmentedControl
             size="xs"
-            radius={6}
+            radius="sm"
             fullWidth
             value={tab}
             onChange={(value) => setTab(value as AppChangelogTab)}
@@ -185,7 +185,7 @@ export function AppChangelogModal(props: Props): ReactElement {
             >
               Full notes on GitHub
             </Button>
-            <Button size="compact-xs" radius={8} onClick={handleClose} data-changelog-got-it>
+            <Button size="compact-xs" radius="md" onClick={handleClose} data-changelog-got-it>
               Got it
             </Button>
           </div>

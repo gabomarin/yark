@@ -16,10 +16,10 @@ describe("UI density tokens (#62)", () => {
       xl: 28,
     });
     expect(comfortable.radius).toEqual({
-      sm: 10,
-      md: 14,
-      lg: 18,
-      control: 12,
+      sm: 6,
+      md: 8,
+      lg: 10,
+      control: 6,
     });
     expect(comfortable.fontSizes).toEqual({
       xs: 12,

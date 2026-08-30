@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Panels, cards, and alerts use solid fills and a tighter 6–10px radius so chrome, page, and controls read as distinct layers (#468).
 - **What's new** is a wider release brief: solid panel fill, section rails instead of badges, and Earlier releases as an accordion.
 
 ## [0.17.0] - 2026-08-29
