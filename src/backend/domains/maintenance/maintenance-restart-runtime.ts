@@ -331,7 +331,7 @@ export class MaintenanceRestartRuntime {
     if (state.rconFailStreak >= MAINTENANCE_RCON_SOFT_FAIL_LIMIT) {
       this.abortWindowHard(
         state,
-        `RCON Broadcast failed ${state.rconFailStreak} times: ${errorMessage}`,
+        `RCON ServerChat failed ${state.rconFailStreak} times: ${errorMessage}`,
       );
       return "abort";
     }
@@ -382,7 +382,7 @@ export class MaintenanceRestartRuntime {
       try {
         await this.instances.execRcon(
           serverId,
-          `Broadcast ${renderLastMinuteRestart(sec)}`,
+          `ServerChat ${renderLastMinuteRestart(sec)}`,
           { recordEvent: false },
         );
       } catch (error) {
@@ -414,7 +414,7 @@ export class MaintenanceRestartRuntime {
       try {
         await this.instances.execRcon(
           serverId,
-          `Broadcast ${renderWarningTemplate(policy.restartWarnings.template, remainingMs)}`,
+          `ServerChat ${renderWarningTemplate(policy.restartWarnings.template, remainingMs)}`,
           { recordEvent: false },
         );
       } catch (error) {

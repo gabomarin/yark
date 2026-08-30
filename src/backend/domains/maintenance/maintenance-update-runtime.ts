@@ -147,7 +147,7 @@ export class MaintenanceUpdateRuntime {
         if (this.handledAvailability.has(availabilityKey)) continue;
 
         if (!this.processes.isActive(policy.serverId)) {
-          // Stopped + outdated: queue safe update without Broadcast.
+          // Stopped + outdated: queue safe update without player warning.
           this.handledAvailability.add(availabilityKey);
           try {
             await this.updates.enqueueUpdate(policy.serverId);
@@ -327,7 +327,7 @@ export class MaintenanceUpdateRuntime {
       this.handledAvailability.delete(state.availabilityKey);
       this.abortHard(
         state,
-        `RCON Broadcast failed ${state.rconFailStreak} times: ${errorMessage}`,
+        `RCON ServerChat failed ${state.rconFailStreak} times: ${errorMessage}`,
       );
       return "abort";
     }
@@ -372,7 +372,7 @@ export class MaintenanceUpdateRuntime {
       try {
         await this.instances.execRcon(
           serverId,
-          `Broadcast ${renderLastMinuteUpdate(remainingMs / 1_000)}`,
+          `ServerChat ${renderLastMinuteUpdate(remainingMs / 1_000)}`,
           { recordEvent: false },
         );
       } catch (error) {
@@ -404,7 +404,7 @@ export class MaintenanceUpdateRuntime {
       try {
         await this.instances.execRcon(
           serverId,
-          `Broadcast ${renderWarningTemplate(policy.updateWarnings.template, remainingMs)}`,
+          `ServerChat ${renderWarningTemplate(policy.updateWarnings.template, remainingMs)}`,
           { recordEvent: false },
         );
       } catch (error) {

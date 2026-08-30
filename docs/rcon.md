@@ -16,7 +16,7 @@ RCON tab** and related IPC (#17 / #154 / #153).
 - Give operators Kick / Ban / Unban and a console history that survives tab
   switches inside the app session.
 - Share the same send path with SidePanel **Save world** and RCON quick chips
-  (including **Broadcast**, which prefills the command input).
+  (including **ServerChat**, which prefills the command input).
 
 ## Module map
 
@@ -92,7 +92,7 @@ Host is always `127.0.0.1`. Auth uses the profile `adminPassword` and the
 
 ### Console
 
-- Quick chips: `SaveWorld`, `Broadcast ` (prefill), `ListPlayers`,
+- Quick chips: `SaveWorld`, `ServerChat ` (prefill), `ListPlayers`,
   `DestroyWildDinos`, `GetChat`, `DoExit`.
 - Free-text send (Enter). No `cheat` rewrite — commands are trimmed and sent as
   typed (UI advises omitting `cheat`).
