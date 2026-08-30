@@ -199,7 +199,7 @@ Statuses: `disconnected` \| `connecting` \| `connected` \| `error`.
 | `tests/unit/instance-rcon.test.ts` | Auto-connect, retry gate, Kick/Ban/Unban, audit vs silent |
 | `tests/unit/ban-list.test.ts` | Paths, parse, remove preserves metadata, BanListURL helpers |
 | `tests/unit/admin-list.test.ts` | Wiki path, mode, interval clamp, ensure clears legacy, set-config |
-| `…/ServerWorkspacePage.test.tsx` | RCON tab, history, SidePanel Save/Broadcast |
+| `…/ServerWorkspacePage.test.tsx` | RCON tab, history, SidePanel Save/ServerChat |
 | `…/RconStatusIcon.test.tsx` | Status badge / retry |
 | `npm run e2e:rcon` (`scripts/e2e-rcon.cjs`) | Windows UI + mock RCON; HD/FHD/QHD shots |
 

@@ -39,7 +39,7 @@ export function MaintenancePlayerWarnings(props: Props): ReactElement {
       <div>
         <Text className={classes.fieldLabel}>Player warnings · how often</Text>
         <Text size="xs" c="dimmed" mt={2}>
-          In-game Broadcast before this job. Separate from{" "}
+          In-game ServerChat before this job. Separate from{" "}
           {props.kind === "restart" ? "auto-update" : "restart schedule"}.
         </Text>
       </div>
