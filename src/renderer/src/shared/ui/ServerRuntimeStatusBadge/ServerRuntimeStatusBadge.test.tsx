@@ -12,6 +12,10 @@ describe("ServerRuntimeStatusBadge", () => {
   it("renders the status label by default", () => {
     renderBadge(<ServerRuntimeStatusBadge status="running" />);
     expect(screen.getByText("Running")).toBeInTheDocument();
+    expect(screen.getByRole("status", { name: "Running" })).toHaveAttribute(
+      "data-runtime-status",
+    );
+    expect(document.querySelector(".mantine-Badge-root")).toBeNull();
   });
 
   it("renders a status-only dot with accessible name (#302)", () => {

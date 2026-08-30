@@ -571,9 +571,8 @@ describe("SettingsPage", () => {
       onOpenNativeTerminalOnStartChange,
     });
 
-    expect(screen.getByText("Needs setup")).toBeInTheDocument();
-
     await openCategory(user, "SteamCMD");
+    expect(screen.getByText("Needs setup")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Install SteamCMD/i })).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /^Open$/i })[0]).toBeDisabled();
 
@@ -602,7 +601,6 @@ describe("SettingsPage", () => {
       },
     });
 
-    expect(screen.getByText("Working")).toBeInTheDocument();
     await openCategory(user, "SteamCMD");
     expect(screen.getByText("Installing…")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^choose/i })).toBeDisabled();

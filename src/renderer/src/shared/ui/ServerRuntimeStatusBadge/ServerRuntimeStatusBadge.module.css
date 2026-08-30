@@ -1,27 +1,56 @@
+.statusWord {
+  display: inline-flex;
+}
+
+.statusLabel {
+  color: var(--app-color-muted);
+  line-height: 1.2;
+}
+
+.statusLabel[data-tone="ok"] {
+  color: var(--app-color-ok);
+}
+
+.statusLabel[data-tone="info"] {
+  color: var(--app-color-cryo);
+}
+
+.statusLabel[data-tone="bad"] {
+  color: var(--app-color-danger-bright);
+}
+
+.statusLabel[data-tone="warn"] {
+  color: var(--app-color-fossil);
+}
+
 .statusDot {
   display: inline-block;
   width: 8px;
   height: 8px;
   border-radius: 999px;
   flex-shrink: 0;
-  background: var(--mantine-color-gray-6);
+  background: var(--app-color-muted);
   vertical-align: middle;
 }
 
 .statusDot[data-tone="ok"] {
-  background: var(--mantine-color-green-6);
+  background: var(--app-color-ok);
 }
 
 .statusDot[data-tone="info"] {
-  background: var(--mantine-color-blue-6);
+  background: var(--app-color-cryo);
 }
 
 .statusDot[data-tone="bad"] {
-  background: var(--mantine-color-red-6);
+  background: var(--app-color-danger-bright);
+}
+
+.statusDot[data-tone="warn"] {
+  background: var(--app-color-fossil);
 }
 
 .statusDot[data-tone="muted"] {
-  background: var(--mantine-color-gray-6);
+  background: var(--app-color-muted);
 }
 
 .statusDot[data-processing="true"] {

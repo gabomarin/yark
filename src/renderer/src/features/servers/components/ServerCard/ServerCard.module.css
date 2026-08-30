@@ -176,7 +176,7 @@
   flex-shrink: 0;
 }
 
-/* Default: text Badge. Dot shown when the card container is narrow (#302). */
+/* Default: status word. Dot shown when the card container is narrow (#302). */
 .statusDotSlot {
   display: none;
   align-items: center;

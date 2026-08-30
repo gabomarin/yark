@@ -55,7 +55,6 @@ export function SettingsPage(props: Props): ReactElement {
         : "general",
   );
   const panelScrollRef = useRef<HTMLDivElement>(null);
-  const steamCmdNeedsSetup = props.steamCmdStatus?.detected !== true;
 
   useEffect(() => {
     if (focusYarkUpdates !== true) {
@@ -101,8 +100,6 @@ export function SettingsPage(props: Props): ReactElement {
         <AppSurfaceCard tone="chrome" fill padding="sm" className={classes.navCard}>
           <SettingsNav
             active={category}
-            steamCmdNeedsSetup={steamCmdNeedsSetup}
-            steamCmdBusy={props.steamCmdBusy === true}
             onChange={setCategory}
           />
         </AppSurfaceCard>

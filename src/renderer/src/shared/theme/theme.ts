@@ -242,18 +242,18 @@ function createAppTheme(
         radixPalette.blue[2],
         radixPalette.blue[0],
       ],
-      /** Matches `--app-color-attention` / server-card attention rail. */
+      /** Same ladder as fossil — needs-attention is amber, not lime (#470). */
       attention: [
-        "#fbfce3",
-        "#f7f9c4",
-        "#f2f5a0",
-        "#eef17c",
-        "#eaef6e",
+        "#fbf4e8",
+        "#f5e6c8",
+        "#edcfa0",
+        "#e5b878",
         tokens.colors.attention,
-        "#cfd645",
-        "#aeb234",
-        "#8a8e28",
-        "#676b1e",
+        tokens.colors.fossilFilled,
+        "#a65408",
+        "#8a4607",
+        "#6e3805",
+        "#4a2603",
       ],
       /** Index 5 = filled Restart; index 4 = base fossil for alerts/light. */
       fossil: [

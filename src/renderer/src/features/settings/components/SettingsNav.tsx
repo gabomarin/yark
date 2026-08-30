@@ -6,7 +6,7 @@ import {
   HardDrives,
   Info,
 } from "@phosphor-icons/react";
-import { Badge, NavLink, Stack } from "@mantine/core";
+import { NavLink, Stack } from "@mantine/core";
 import {
   SETTINGS_CATEGORIES,
   type SettingsCategory,
@@ -26,8 +26,6 @@ const CATEGORY_ICONS: Record<
 
 interface Props {
   active: SettingsCategory;
-  steamCmdNeedsSetup: boolean;
-  steamCmdBusy: boolean;
   onChange: (category: SettingsCategory) => void;
 }
 
@@ -47,13 +45,6 @@ export function SettingsNav(props: Props): ReactElement {
               label={item.label}
               aria-label={item.label}
               leftSection={<Icon size={16} weight={active ? "fill" : "regular"} />}
-              rightSection={
-                item.id === "steamcmd" && (props.steamCmdNeedsSetup || props.steamCmdBusy) ? (
-                  <Badge size="xs" color="yellow" variant="light" tt="none">
-                    {props.steamCmdBusy ? "Working" : "Needs setup"}
-                  </Badge>
-                ) : undefined
-              }
               className={classes.navLink}
               onClick={() => props.onChange(item.id)}
             />

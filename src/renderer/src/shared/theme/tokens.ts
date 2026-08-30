@@ -137,8 +137,8 @@ const sharedColors = {
   accent: radixPalette.blue[8],
   ok: "#58c89a",
   warn: "#d9a85f",
-  /** Needs-attention UI (update pending, card rail). */
-  attention: "#E6ED62",
+  /** Needs-attention UI (update pending, card rail) — fossil/amber, not lime (#470). */
+  attention: "#d9a85f",
   /** Alerts, rails, destructive filled buttons. */
   bad: "#BE3636",
   /** Menu danger rows + Stop icon on dark surfaces (readable, matches card Stop light). */

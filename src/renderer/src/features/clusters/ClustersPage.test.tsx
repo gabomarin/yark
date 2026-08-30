@@ -257,8 +257,7 @@ describe("ClustersPage", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText("2 clusters")).toBeInTheDocument();
-    expect(screen.getByText("1 with errors")).toBeInTheDocument();
+    expect(screen.getByText(/2 clusters · 1 ready · 1 with errors/)).toBeInTheDocument();
 
     // Broken clusters sort first — detail should show beta's error.
     expect(screen.getByText(/no cluster directory configured/i)).toBeInTheDocument();
