@@ -1,0 +1,11 @@
+.status[data-tone="ok"] {
+  color: var(--app-color-ok);
+}
+
+.status[data-tone="warn"] {
+  color: var(--app-color-fossil);
+}
+
+.status[data-tone="bad"] {
+  color: var(--app-color-danger-bright);
+}

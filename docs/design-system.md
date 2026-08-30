@@ -105,7 +105,9 @@ First-run setup also: [`.cursor/rules/setup-wizard.mdc`](../.cursor/rules/setup-
 
 Use this checklist when reviewing a screen or introducing a pattern. Each category should have **one recipe**, not N local variants.
 
-### 1. Surfaces / containers
+### 1. Surface tokens
+
+Solid **bg / raised / control** come from `tokens.ts` + `theme.ts`. Do **not** introduce `color-mix` in those token definitions; mix only on hover/focus, lightly. `--app-*` and `--mantine-color-dark-*` alias the same hexes (#468).
 
 | Rule | Do | Don’t |
 | --- | --- | --- |
@@ -119,8 +121,6 @@ Use this checklist when reviewing a screen or introducing a pattern. Each catego
 | Nested widgets | `tone="flat"` (or nested inside a flat shell) | Mixing Card + ad-hoc panel bg |
 | Shell rails | `tone="chrome"` or chrome parent + flat children | Cool gradients in sidebars |
 | Status accent | `statusTone` on `AppSurfaceCard` | One-off `box-shadow: inset 3px…` |
-
-Solid **bg / raised / control** come from `tokens.ts` + `theme.ts`. Do **not** introduce `color-mix` in those token definitions; mix only on hover/focus, lightly. `--app-*` and `--mantine-color-dark-*` alias the same hexes (#468).
 
 ### 2. Spacing / density
 
@@ -162,7 +162,7 @@ gap: var(--app-space-sm);            // preferred in CSS modules
 | `--app-radius-md` | 8 | 7 | Content `AppSurfaceCard` default, nested panels |
 | `--app-radius-lg` | 10 | 8 | Rare oversized / hero cards |
 
-Theme `defaultRadius` is **`sm`**. Avoid raw `border-radius` when a token fits. Tek icon tiles keep asymmetric radius by design (`AccentIconTile shape="tek"`).
+Theme `defaultRadius` is **`sm`**. Avoid raw `border-radius` when a token fits. Tek icon tiles keep asymmetric radius by design (`AccentIconTile shape="tek"`). Create/edit **Identity** map art uses `MapArtThumb shape="rounded"` so the thumb matches flush square form sections; default `tek` remains for brand-like thumbs elsewhere.
 
 **Square vs rounded:** Overview server **list rows** (`ServerCard`), create/edit **form sections**, Logs event/backup/update lists, and the Clusters **How transfers work** Accordion are square (`radius={0}`) so stacked chrome reads as one slab. Discrete entity cards use `AppSurfaceCard` default **`md`** (8px Comfortable); do not wrap the whole Logs/Settings pane in a Card (#469).
 
@@ -173,8 +173,9 @@ Theme `defaultRadius` is **`sm`**. Avoid raw `border-radius` when a token fits. 
   is not used). Restart **filled** uses **`--app-color-fossil-filled`**.
   **`color="red"`** maps to **`--app-color-bad`** for **filled** delete/remove
   commits and **`--app-color-danger-bright`** for menu danger rows, Stop
-  (`variant="light"`), and icons on dark chrome — not Mantine’s default coral. Version status text uses
-  theme shade refs (`c="ok.5"`, `c="attention.5"`).
+  (`variant="light"`), and icons on dark chrome — not Mantine’s default coral.
+  Status words use `--app-color-ok|fossil|danger-bright|muted` (CSS `data-tone`),
+  not Mantine shade refs like `c="ok.5"`.
 - **Status grammar:** runtime and cluster health are a **word + dot/rail**, not a light Badge.
   Counts are a sentence (or MetaStrip). **Badge** is reserved for rare attention (Needs setup,
   blocking lock copy) — at most one per page.
@@ -315,7 +316,7 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 | `RowActionMenu` | `shared/ui/RowActionMenu/` | Shared kebab + context-menu action model (`RowActionEntry`) |
 | `SelectableListRow` | `shared/ui/SelectableListRow/` | Selected list/row chrome |
 | `AccentIconTile` | `shared/ui/AccentIconTile/` | Tek / rounded icon tiles |
-| `MapArtThumb` | `shared/ui/MapArtThumb/` | ASA map artwork thumb (list + header) |
+| `MapArtThumb` | `shared/ui/MapArtThumb/` | ASA map artwork thumb (list + header). Default `tek`; form Identity is `rounded` (#469) |
 | `SearchField` | `shared/ui/SearchField/` | Search inputs — see **SearchField variants** below |
 | `ServerRuntimeStatusBadge` | `shared/ui/ServerRuntimeStatusBadge/` | Process status word + dot |
 | `ReadonlyPath` | `shared/ui/ReadonlyPath/` | Bordered monospace chip for configured filesystem paths |

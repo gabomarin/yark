@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { Text } from "@mantine/core";
 import type { ClusterComplianceReport } from "@shared/types";
+import classes from "./ClusterStatusBadge.module.css";
 
 interface Props {
   report: ClusterComplianceReport;
@@ -18,9 +19,8 @@ export function ClusterStatusBadge({ report, size = "sm" }: Props): ReactElement
       size={textSize}
       fw={600}
       span
-      data-cluster-status={label}
+      className={classes.status}
       data-tone={tone}
-      c={tone === "ok" ? "ok.5" : tone === "warn" ? "fossil.4" : "red.6"}
     >
       {label}
     </Text>

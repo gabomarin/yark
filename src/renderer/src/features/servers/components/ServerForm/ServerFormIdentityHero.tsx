@@ -31,6 +31,7 @@ export function ServerFormIdentityHero(props: Props): ReactElement {
 
   return (
     <div className={classes.identityHero} data-identity-hero>
+      {/* Rounded: form sections are square slabs; tek stays on brand tiles (#469). */}
       <MapArtThumb
         mapId={props.mapToken}
         mapModId={props.mapModId}

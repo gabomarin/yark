@@ -48,7 +48,7 @@ export function ServerCardStatusBadges(props: Props): ReactElement {
         />
       </span>
       {!props.serverEnabled && (
-        <Text size={props.compact ? "xs" : "sm"} c="dimmed">
+        <Text size={props.compact ? "xs" : "sm"} fw={600} className={classes.inactiveLabel}>
           Inactive
         </Text>
       )}
