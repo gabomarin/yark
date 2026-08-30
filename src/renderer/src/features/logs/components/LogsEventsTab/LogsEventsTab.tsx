@@ -89,7 +89,9 @@ export function LogsEventsTab(props: LogsEventsTabProps): ReactElement {
                   <Accordion.Item
                     key={event.id}
                     value={String(event.id)}
-                    className={focused ? classes.eventRowFocused : undefined}
+                    className={
+                      focused || expanded ? classes.eventRowFocused : undefined
+                    }
                   >
                     <Accordion.Control data-log-event-id={event.id}>
                       <Group

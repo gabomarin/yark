@@ -241,7 +241,15 @@ export function LogsPage(props: Props): ReactElement {
                         ? (server?.name ?? "Unknown server")
                         : "System";
                     return (
-                      <Accordion.Item key={event.id} value={String(event.id)}>
+                      <Accordion.Item
+                        key={event.id}
+                        value={String(event.id)}
+                        className={
+                          expandedEventId === event.id
+                            ? classes.eventRowFocused
+                            : undefined
+                        }
+                      >
                         <Accordion.Control>
                           <div className={classes.fleetRow}>
                             <Text size="sm" c="dimmed" className={classes.fleetWhen}>

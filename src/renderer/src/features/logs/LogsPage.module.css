@@ -209,6 +209,8 @@
   margin-inline-end: var(--app-space-xs);
 }
 
+.updateList .updateHistoryRow[data-selected],
+.updateList .updateHistoryRow[data-selected]:hover,
 .eventRowFocused {
   border-color: color-mix(in srgb, var(--ark-blue-7) 65%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ark-blue-7) 35%, transparent);

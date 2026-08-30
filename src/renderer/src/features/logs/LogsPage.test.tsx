@@ -74,6 +74,9 @@ describe("LogsPage", () => {
     expect(
       await screen.findByText(/A SteamCMD install, update, or verify job failed/i),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Update failed on Island/i }).closest("[class*='eventRowFocused']"),
+    ).toBeTruthy();
     await user.click(screen.getByRole("button", { name: /Open in server/i }));
     expect(onOpenServerLogs).toHaveBeenCalledWith(
       server.id,
