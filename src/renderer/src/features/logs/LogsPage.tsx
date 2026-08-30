@@ -16,7 +16,6 @@ import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import type { AppEvent, ServerProfile } from "@shared/types";
 import { formatLogDateTime } from "@shared/format-log-datetime";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { SearchField } from "@ui/SearchField/SearchField";
 import { EventDetailsBody } from "./EventDetailsBody";
@@ -48,7 +47,7 @@ export function LogsPage(props: Props): ReactElement {
   const [fleetEvents, setFleetEvents] = useState<AppEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("problems");
+  const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("all");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("24h");
   const [search, setSearch] = useState("");
   const [expandedEventId, setExpandedEventId] = useState<number | null>(null);
@@ -143,7 +142,7 @@ export function LogsPage(props: Props): ReactElement {
       <Stack gap="lg" className={classes.logsContent} data-logs-page>
         {error !== null && <Alert color="red">{error}</Alert>}
 
-        <AppSurfaceCard fill className={classes.fillPanel}>
+        <div className={classes.fillPanel}>
           <Stack gap="sm" className={classes.panelStack}>
             <Group justify="space-between" align="flex-end" wrap="wrap" gap="sm">
               <Title order={3}>Activity across servers</Title>
@@ -152,11 +151,11 @@ export function LogsPage(props: Props): ReactElement {
                   aria-label="Severity filter"
                   value={severityFilter}
                   onChange={(value) =>
-                    setSeverityFilter((value as SeverityFilter) ?? "problems")
+                    setSeverityFilter((value as SeverityFilter) ?? "all")
                   }
                   data={[
-                    { value: "problems", label: "Problems" },
                     { value: "all", label: "All severity" },
+                    { value: "problems", label: "Problems" },
                     { value: "error", label: "Errors" },
                     { value: "warning", label: "Warnings" },
                     { value: "info", label: "Info" },
@@ -211,7 +210,8 @@ export function LogsPage(props: Props): ReactElement {
             ) : (
               <div className={classes.eventList} data-logs-scroll-region="fleet">
                 <Accordion
-                  variant="separated"
+                  variant="contained"
+                  radius={0}
                   keepMounted={false}
                   transitionDuration={0}
                   value={
@@ -241,7 +241,15 @@ export function LogsPage(props: Props): ReactElement {
                         ? (server?.name ?? "Unknown server")
                         : "System";
                     return (
-                      <Accordion.Item key={event.id} value={String(event.id)}>
+                      <Accordion.Item
+                        key={event.id}
+                        value={String(event.id)}
+                        className={
+                          expandedEventId === event.id
+                            ? classes.eventRowFocused
+                            : undefined
+                        }
+                      >
                         <Accordion.Control>
                           <div className={classes.fleetRow}>
                             <Text size="sm" c="dimmed" className={classes.fleetWhen}>
@@ -289,7 +297,7 @@ export function LogsPage(props: Props): ReactElement {
               </div>
             )}
           </Stack>
-        </AppSurfaceCard>
+        </div>
       </Stack>
     </PageScaffold>
   );

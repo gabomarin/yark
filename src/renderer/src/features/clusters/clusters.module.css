@@ -17,8 +17,12 @@
 }
 
 .emptyCard {
+  /* Parent Clusters split pane already fills the viewport (#469). */
+  display: flex;
   flex: 1;
+  flex-direction: column;
   min-height: 0;
+  height: 100%;
 }
 
 .incompleteBlock {
@@ -103,6 +107,10 @@
 .memberRow[data-clickable="true"]:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--mantine-color-blue-6) 70%, transparent);
   outline-offset: 2px;
+}
+
+.inactiveLabel {
+  color: var(--app-color-muted);
 }
 
 .memberBody {

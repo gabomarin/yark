@@ -2,7 +2,6 @@ import type { ReactElement } from "react";
 import { FolderSimple } from "@phosphor-icons/react";
 import { Button, Stack, Text } from "@mantine/core";
 import type { ServerProfile } from "@shared/types";
-import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import { groupServersByClusterDir } from "../clusterModel";
@@ -20,7 +19,7 @@ export function ClusterEmptyState(props: Props): ReactElement {
   const incompleteGroups = groupServersByClusterDir(props.dirWithoutIdServers);
 
   return (
-    <AppSurfaceCard fill className={classes.emptyCard}>
+    <div className={classes.emptyCard}>
       <EmptyState
         layout="stacked"
         icon={<FolderSimple size={24} />}
@@ -72,6 +71,6 @@ export function ClusterEmptyState(props: Props): ReactElement {
           </Stack>
         )}
       </EmptyState>
-    </AppSurfaceCard>
+    </div>
   );
 }

@@ -2,7 +2,8 @@ import { Card, type CardProps } from "@mantine/core";
 import type { ReactNode, ReactElement } from "react";
 import classes from "./AppSurfaceCard.module.css";
 
-export type AppSurfaceTone = "cool" | "coolEmphasis" | "flat" | "chrome";
+/** Module-private; do not export — knip treats unused exported types as errors. */
+type AppSurfaceTone = "cool" | "coolEmphasis" | "flat" | "chrome";
 
 type InheritedCardProps = Omit<CardProps, "children" | "classNames" | "className" | "withBorder">;
 
@@ -18,10 +19,9 @@ interface Props extends InheritedCardProps {
 }
 
 /**
- * Homogeneous page/panel container on top of Mantine Card.
- * Content shells default to `tone="flat"` + `radius="md"` (#346). Prefer this
- * over local `.panel` fill/border copies. Use `cool` / `coolEmphasis` only for
- * rare accent cards (not page shells); `chrome` for shell rails.
+ * Card for a discrete entity or chrome rail — not the whole page pane (#469).
+ * Default `tone="flat"` + `radius="md"`. Use `cool` / `coolEmphasis` only for
+ * rare accent cards; `chrome` for shell rails (Settings nav).
  */
 export function AppSurfaceCard({
   children,

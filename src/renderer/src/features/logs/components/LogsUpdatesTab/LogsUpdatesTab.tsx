@@ -16,7 +16,6 @@ import {
 import type { ServerOperationalLogs, ServerUpdateLogFile } from "@shared/types";
 import { formatLogDateTime } from "@shared/format-log-datetime";
 import type { ReactElement } from "react";
-import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { ConsoleSurface } from "@ui/ConsoleSurface/ConsoleSurface";
 import { SelectableListRow } from "@ui/SelectableListRow/SelectableListRow";
 import classes from "../../LogsPage.module.css";
@@ -86,7 +85,7 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
         }
       />
       <div className={classes.updatesLayout}>
-        <AppSurfaceCard fill className={`${classes.historyPanel} ${classes.fillPanel}`}>
+        <div className={`${classes.historyPanel} ${classes.fillPanel}`}>
           <Stack gap="sm" className={classes.panelStack}>
             <Title order={4} className={classes.panelTitle}>
               Job history
@@ -112,6 +111,7 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
                       selected={selectedUpdateFile === file.fileName}
                       onClick={() => onOpenUpdateLog(serverId, file.fileName)}
                       title={file.fileName}
+                      className={classes.updateHistoryRow}
                       trailing={
                         <Badge
                           color={statusColor(file.status)}
@@ -134,9 +134,9 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
               </div>
             )}
           </Stack>
-        </AppSurfaceCard>
+        </div>
 
-        <AppSurfaceCard fill className={`${classes.detailPanel} ${classes.fillPanel}`}>
+        <div className={`${classes.detailPanel} ${classes.fillPanel}`}>
           <Stack gap="sm" className={classes.panelStack}>
             <Group
               justify="space-between"
@@ -208,6 +208,7 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
                 </div>
                 <ConsoleSurface
                   fill
+                  className={classes.squareConsole}
                   text={
                     updateContent.length > 0 ? updateContent : "Loading log content…"
                   }
@@ -216,7 +217,7 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
               </>
             )}
           </Stack>
-        </AppSurfaceCard>
+        </div>
       </div>
     </Stack>
   );

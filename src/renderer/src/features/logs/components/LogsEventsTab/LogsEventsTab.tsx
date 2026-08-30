@@ -3,7 +3,6 @@ import { Accordion, Badge, Group, Stack, Text } from "@mantine/core";
 import type { ServerOperationalLogs } from "@shared/types";
 import { formatLogDateTime } from "@shared/format-log-datetime";
 import type { ReactElement } from "react";
-import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EventDetailsBody } from "../../EventDetailsBody";
 import classes from "../../LogsPage.module.css";
 import {
@@ -36,7 +35,7 @@ export function LogsEventsTab(props: LogsEventsTabProps): ReactElement {
   } = props;
 
   return (
-    <AppSurfaceCard fill className={classes.fillPanel}>
+    <div className={classes.fillPanel}>
       <Stack gap="sm" className={classes.panelStack}>
         <LogsTabIntro
           embedded={embedded}
@@ -64,7 +63,8 @@ export function LogsEventsTab(props: LogsEventsTabProps): ReactElement {
         ) : (
           <div className={classes.eventList} data-logs-scroll-region="events">
             <Accordion
-              variant="separated"
+              variant="contained"
+              radius={0}
               keepMounted={false}
               transitionDuration={0}
               value={expandedEventId !== null ? String(expandedEventId) : null}
@@ -89,7 +89,9 @@ export function LogsEventsTab(props: LogsEventsTabProps): ReactElement {
                   <Accordion.Item
                     key={event.id}
                     value={String(event.id)}
-                    className={focused ? classes.eventRowFocused : undefined}
+                    className={
+                      focused || expanded ? classes.eventRowFocused : undefined
+                    }
                   >
                     <Accordion.Control data-log-event-id={event.id}>
                       <Group
@@ -131,6 +133,6 @@ export function LogsEventsTab(props: LogsEventsTabProps): ReactElement {
           </div>
         )}
       </Stack>
-    </AppSurfaceCard>
+    </div>
   );
 }

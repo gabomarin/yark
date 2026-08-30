@@ -10,6 +10,7 @@ import { ServerFormMapField } from "./ServerFormMapField";
 import { ServerFormReachabilityFields } from "./ServerFormReachabilityFields";
 import { ServerFormSection } from "./ServerFormSection";
 import { ServerFormStartupFields } from "./ServerFormStartupFields";
+import classes from "./ServerForm.module.css";
 
 export interface ServerFormProfileFieldsProps {
   isCreate: boolean;
@@ -73,15 +74,18 @@ export function ServerFormProfileFields(
 ): ReactElement {
   const embedded = props.embedded === true;
   const cardPadding = embedded ? "sm" : "md";
-  const gridGap = embedded ? "md" : "lg";
   const mapMod =
     props.mapModId === null
       ? null
       : props.mapMods.find((mod) => mod.id === props.mapModId) ?? null;
 
   return (
-    <SimpleGrid cols={{ base: 1, md: 2 }} spacing={gridGap}>
-      <ServerFormSection tone="coolEmphasis" padding={cardPadding}>
+    <SimpleGrid
+      cols={{ base: 1, md: 2 }}
+      spacing={0}
+      className={classes.fieldsGrid}
+    >
+      <ServerFormSection padding={cardPadding}>
         <ServerFormIdentityHero
           name={props.name}
           mapToken={props.map}
@@ -144,11 +148,7 @@ export function ServerFormProfileFields(
         />
       </ServerFormSection>
 
-      <ServerFormSection
-        tone="cool"
-        fill={!embedded}
-        padding={cardPadding}
-      >
+      <ServerFormSection padding={cardPadding} fill={!embedded}>
         <ServerFormReachabilityFields
           inputSize={props.inputSize}
           servers={props.servers}
@@ -170,11 +170,7 @@ export function ServerFormProfileFields(
         />
       </ServerFormSection>
 
-      <ServerFormSection
-        tone="flat"
-        span2
-        padding={cardPadding}
-      >
+      <ServerFormSection padding={cardPadding} span2>
         <ServerFormClusterFields
           isCreate={props.isCreate}
           knownClusters={props.knownClusters}
@@ -191,12 +187,7 @@ export function ServerFormProfileFields(
       </ServerFormSection>
 
       {props.showStartup === true && (
-        <ServerFormSection
-          title="Startup"
-          tone="flat"
-          span2
-          padding={cardPadding}
-        >
+        <ServerFormSection title="Startup" padding={cardPadding} span2>
           <ServerFormStartupFields
             autoStart={props.autoStart === true}
             showInactiveWarning={props.showInactiveWarning === true}

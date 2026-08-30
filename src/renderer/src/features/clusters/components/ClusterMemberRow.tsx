@@ -67,7 +67,7 @@ export function ClusterMemberRow(props: Props): ReactElement {
             {props.server.name}
           </Text>
           {!props.server.enabled && (
-            <Text size="xs" c="dimmed">
+            <Text size="xs" fw={600} className={classes.inactiveLabel}>
               Inactive
             </Text>
           )}

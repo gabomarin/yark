@@ -16,13 +16,8 @@
   top: 0;
   right: -1px;
   width: 1px;
-  height: 96px;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--app-color-cryo) 45%, transparent),
-    transparent 100%
-  );
-  opacity: 0.55;
+  height: 100%;
+  background: var(--app-color-border);
   content: "";
 }
 
@@ -244,10 +239,6 @@
 
 :global([data-ui-density="compact"]) .versionChip {
   padding-top: var(--app-space-xxs);
-}
-
-:global([data-ui-density="compact"]) .sidebar::after {
-  height: 72px;
 }
 
 .appVersionRow {

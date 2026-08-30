@@ -1,9 +1,6 @@
 import type { ReactElement, ReactNode } from "react";
 import { Stack, Text, Title } from "@mantine/core";
-import {
-  AppSurfaceCard,
-  type AppSurfaceTone,
-} from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import classes from "./ServerForm.module.css";
 
 interface Props {
@@ -11,9 +8,6 @@ interface Props {
   /** Optional meta above the title (create Identity / Reachability). */
   eyebrow?: string;
   children: ReactNode;
-  /** Embedded edit: flat stack. Page: AppSurfaceCard tone. */
-  flat?: boolean;
-  tone?: AppSurfaceTone;
   fill?: boolean;
   span2?: boolean;
   padding?: "sm" | "md";
@@ -23,8 +17,6 @@ export function ServerFormSection({
   title,
   eyebrow,
   children,
-  flat = false,
-  tone = "cool",
   fill = false,
   span2 = false,
   padding = "md",
@@ -37,26 +29,14 @@ export function ServerFormSection({
       </Text>
     ) : null;
 
-  if (flat) {
-    return (
-      <Stack gap="xs" className={spanClass}>
-        {eyebrowNode}
-        {title !== undefined && (
-          <Text fw={600} fz="sm">
-            {title}
-          </Text>
-        )}
-        {children}
-      </Stack>
-    );
-  }
-
   return (
     <AppSurfaceCard
-      tone={tone}
+      tone="flat"
       fill={fill}
       padding={padding}
-      className={spanClass}
+      radius={0}
+      className={[classes.formSection, spanClass].filter(Boolean).join(" ")}
+      data-span2={span2 || undefined}
     >
       <Stack gap="sm" className={fill ? classes.sectionFill : undefined}>
         {eyebrowNode}

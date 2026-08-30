@@ -3,7 +3,6 @@ import { ActionIcon, Button, Group, Stack, Text, Tooltip } from "@mantine/core";
 import type { ServerOperationalLogs } from "@shared/types";
 import { formatLogDateTime } from "@shared/format-log-datetime";
 import type { ReactElement } from "react";
-import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import classes from "../../LogsPage.module.css";
 import {
@@ -36,7 +35,7 @@ export function LogsBackupsTab(props: LogsBackupsTabProps): ReactElement {
   } = props;
 
   return (
-    <AppSurfaceCard fill className={classes.fillPanel}>
+    <div className={classes.fillPanel}>
       <Stack gap="sm" className={classes.panelStack}>
         <LogsTabIntro
           embedded={embedded}
@@ -129,6 +128,6 @@ export function LogsBackupsTab(props: LogsBackupsTabProps): ReactElement {
           </div>
         )}
       </Stack>
-    </AppSurfaceCard>
+    </div>
   );
 }
