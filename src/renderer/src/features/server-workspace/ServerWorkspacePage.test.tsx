@@ -878,7 +878,7 @@ describe("ServerWorkspacePage", () => {
     await user.click(screen.getByRole("button", { name: "Cancel" }));
     const dialog = await screen.findByRole("dialog", { name: "Leave the wizard" });
     await user.click(
-      within(dialog).getByRole("button", { name: "Discard draft" }),
+      within(dialog).getByRole("button", { name: "Discard and continue" }),
     );
 
     expect(

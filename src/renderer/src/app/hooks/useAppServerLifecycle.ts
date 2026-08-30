@@ -1,7 +1,6 @@
 import { createElement, useCallback, useEffect, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { Alert } from "@mantine/core";
-import { modals } from "@mantine/modals";
 import type {
   ServerProfile,
   SessionPortSet,
@@ -15,6 +14,7 @@ import type { Overlay } from "@app/model/appOverlay";
 import type { Route } from "@layout/Sidebar/Sidebar";
 import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
 import { openHostPortProbeModal } from "@features/servers/hostPortProbeModal";
+import { openDangerConfirmModal } from "@ui/DangerConfirmModal/openDangerConfirmModal";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
 import type { useAppFleetRefresh } from "@app/hooks/useAppFleetRefresh";
 
@@ -163,15 +163,14 @@ export function useAppServerLifecycle(options: {
     (id: string) => {
       const server = servers.find((item) => item.id === id);
       const label = server?.name ?? id;
-      modals.openConfirmModal({
+      openDangerConfirmModal({
         title: `Force close "${label}"`,
         children: createElement(
           Alert,
           { color: "red", title: "No save", variant: "light" },
           "Closes the server immediately without saving. This can corrupt the world if it was not saved first. Prefer Stop when possible.",
         ),
-        labels: { confirm: "Force close", cancel: "Cancel" },
-        confirmProps: { color: "red" },
+        confirmLabel: "Force close",
         onConfirm: () => {
           void runAction(() => window.api.killServer(id));
         },

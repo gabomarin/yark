@@ -1,13 +1,13 @@
-import { Text } from "@mantine/core";
-import { modals } from "@mantine/modals";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import type { ServerOperationalLogs } from "@shared/types";
+import {
+  dangerConfirmBody,
+  openDangerConfirmModal,
+} from "@ui/DangerConfirmModal/openDangerConfirmModal";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
 import {
   createElement,
-  type ComponentType,
   type Dispatch,
-  type ReactNode,
   type SetStateAction,
 } from "react";
 import { formatUpdateJobLabel, replaceRuntimeLogs } from "../model/serverLogsFormat";
@@ -25,14 +25,6 @@ interface ServerLogsPanelActionOptions {
   setUpdateContent: Dispatch<SetStateAction<string>>;
   runtimeRevisionRef: { current: number };
   load: (serverId: string) => Promise<ServerOperationalLogs | void>;
-}
-
-function confirmationText(children: ReactNode) {
-  const ConfirmationText = Text as ComponentType<{
-    size?: string;
-    children?: ReactNode;
-  }>;
-  return createElement(ConfirmationText, { size: "sm" }, children);
 }
 
 export function createServerLogsPanelActions(
@@ -97,15 +89,14 @@ export function createServerLogsPanelActions(
   const confirmClearEvents = () => {
     const count = logs?.events.length ?? 0;
     if (count === 0) return;
-    modals.openConfirmModal({
+    openDangerConfirmModal({
       title: "Clear events?",
-      children: confirmationText([
+      children: dangerConfirmBody([
         "Permanently delete ",
         createElement("strong", { key: "count" }, count),
         ` event${count === 1 ? "" : "s"} for this server? This cannot be undone.`,
       ]),
-      labels: { confirm: "Clear events", cancel: "Cancel" },
-      confirmProps: { color: "red" },
+      confirmLabel: "Clear events",
       onConfirm: () => {
         setBusy(true);
         void runWithFinally(
@@ -131,13 +122,12 @@ export function createServerLogsPanelActions(
 
   const confirmClearRuntime = () => {
     if ((logs?.runtimeLogLines.length ?? 0) === 0) return;
-    modals.openConfirmModal({
+    openDangerConfirmModal({
       title: "Clear runtime log?",
-      children: confirmationText(
+      children: dangerConfirmBody(
         "Clear captured console output for this server from the manager buffer? New lines will appear again while the process is running.",
       ),
-      labels: { confirm: "Clear runtime", cancel: "Cancel" },
-      confirmProps: { color: "red" },
+      confirmLabel: "Clear runtime",
       onConfirm: () => {
         setBusy(true);
         void runWithFinally(
@@ -164,15 +154,14 @@ export function createServerLogsPanelActions(
   const confirmClearUpdateLogs = () => {
     const count = logs?.updateFiles.length ?? 0;
     if (count === 0) return;
-    modals.openConfirmModal({
+    openDangerConfirmModal({
       title: "Clear update logs?",
-      children: confirmationText([
+      children: dangerConfirmBody([
         "Permanently delete ",
         createElement("strong", { key: "count" }, count),
         ` update log${count === 1 ? "" : "s"} for this server? This cannot be undone.`,
       ]),
-      labels: { confirm: "Clear update logs", cancel: "Cancel" },
-      confirmProps: { color: "red" },
+      confirmLabel: "Clear update logs",
       onConfirm: () => {
         setBusy(true);
         void runWithFinally(
@@ -203,9 +192,9 @@ export function createServerLogsPanelActions(
     if (selectedUpdateFile === null) return;
     const fileName = selectedUpdateFile;
     const stamp = selectedUpdateInfo?.modifiedAt ?? new Date().toISOString();
-    modals.openConfirmModal({
+    openDangerConfirmModal({
       title: "Delete this update log?",
-      children: confirmationText([
+      children: dangerConfirmBody([
         "Permanently delete the job log ",
         createElement(
           "strong",
@@ -214,8 +203,7 @@ export function createServerLogsPanelActions(
         ),
         "? This cannot be undone.",
       ]),
-      labels: { confirm: "Delete log", cancel: "Cancel" },
-      confirmProps: { color: "red" },
+      confirmLabel: "Delete log",
       onConfirm: () => {
         setBusy(true);
         void runWithFinally(
@@ -255,9 +243,9 @@ export function createServerLogsPanelActions(
       });
       return;
     }
-    modals.openConfirmModal({
+    openDangerConfirmModal({
       title: "Delete all listed backups?",
-      children: confirmationText([
+      children: dangerConfirmBody([
         "Permanently delete ",
         createElement("strong", { key: "count" }, count),
         ` backup archive${count === 1 ? "" : "s"} from disk and the database? This cannot be undone.`,
@@ -265,8 +253,7 @@ export function createServerLogsPanelActions(
           ? ` ${skippedRunning} running backup${skippedRunning === 1 ? "" : "s"} will be skipped.`
           : "",
       ]),
-      labels: { confirm: "Delete backups", cancel: "Cancel" },
-      confirmProps: { color: "red" },
+      confirmLabel: "Delete backups",
       onConfirm: () => {
         setBusy(true);
         void runWithFinally(
@@ -289,15 +276,14 @@ export function createServerLogsPanelActions(
   };
 
   const confirmDeleteBackup = (backupId: string, label: string) => {
-    modals.openConfirmModal({
+    openDangerConfirmModal({
       title: "Delete backup?",
-      children: confirmationText([
+      children: dangerConfirmBody([
         "Permanently delete ",
         createElement("strong", { key: "label" }, label),
         " from disk and the database? This cannot be undone.",
       ]),
-      labels: { confirm: "Delete", cancel: "Cancel" },
-      confirmProps: { color: "red" },
+      confirmLabel: "Delete",
       onConfirm: () => {
         setBusy(true);
         void runWithFinally(

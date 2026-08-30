@@ -8,12 +8,15 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
-import { modals } from "@mantine/modals";
 import { ArrowClockwise } from "@phosphor-icons/react";
 import type { OnlinePlayerInfo } from "@shared/ipc";
 import type { ReactElement } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import {
+  dangerConfirmBody,
+  openDangerConfirmModal,
+} from "@ui/DangerConfirmModal/openDangerConfirmModal";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { BannedPlayersSection } from "./BannedPlayersSection";
 import { AdminsSection } from "./AdminsSection";
@@ -109,15 +112,14 @@ export function PlayerListSection(props: Props): ReactElement {
 
   const confirmBan = (player: OnlinePlayerInfo): void => {
     const label = resolvePlayerDisplayName(player.key, player.name, nameById);
-    modals.openConfirmModal({
+    openDangerConfirmModal({
       title: "Ban survivor?",
-      children: (
-        <Text size="sm">
+      children: dangerConfirmBody(
+        <>
           Ban <strong>{label}</strong>?
-        </Text>
+        </>,
       ),
-      labels: { confirm: "Ban", cancel: "Cancel" },
-      confirmProps: { color: "red" },
+      confirmLabel: "Ban",
       onConfirm: () => {
         void runAction(player.key, async () => {
           const ok = await props.onBanPlayer(props.serverId, player.key);

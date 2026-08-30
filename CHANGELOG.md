@@ -16,6 +16,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Destructive confirms (logs purge, backup delete, mod remove, ban/unban, force-close, SteamCMD cache clear, and related) share one **`openDangerConfirmModal`** helper so red confirm styling and Cancel labels stay consistent (#235).
 - Logs and Settings sit on the page canvas instead of a full-pane card; create/edit form sections are flush square panels (no gap, no radius) with a **rounded** map thumb; fleet and server Logs lists/consoles are the same flush slab; expanded log rows use the Open in server highlight; **Logs severity defaults to All** (not Problems); empty states drop the dashed tile; Downloads hides the console until a job exists; ServerCard uses a flat fill, a 3px status rail, and a cryo hover border (#469).
 - Runtime status, cluster counts, and backup health use words (and a status dot) instead of light-pill badges; needs-attention is fossil amber (#470).
 - Panels, cards, and alerts use solid fills and a tighter 6–10px radius so chrome, page, and controls read as distinct layers (#468).

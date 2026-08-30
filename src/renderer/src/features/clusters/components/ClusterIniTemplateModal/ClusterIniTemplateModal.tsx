@@ -8,7 +8,6 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { modals } from "@mantine/modals";
 import type {
   IniFileKey,
   IniPreview,
@@ -17,6 +16,11 @@ import type {
 import { stripYarkOwnedFromPayload } from "@shared/yark-owned-ini-keys";
 import { sanitizeServerIniPayload } from "@features/server-workspace/iniModel";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
+import {
+  dangerConfirmBody,
+  openDangerConfirmModal,
+} from "@ui/DangerConfirmModal/openDangerConfirmModal";
+import { openUnsavedLeaveModal } from "@features/server-workspace/openUnsavedLeaveModal";
 import { IniEditorNav } from "@ui/IniEditorNav/IniEditorNav";
 import { ClusterIniTemplateVisualPanel } from "./ClusterIniTemplateVisualPanel";
 import { ClusterIniTemplateModalFooter } from "./ClusterIniTemplateModalFooter";
@@ -145,16 +149,15 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
   };
 
   const handleDelete = (): void => {
-    modals.openConfirmModal({
+    openDangerConfirmModal({
       title: "Delete INI template?",
-      children: (
-        <Text size="sm">
+      children: dangerConfirmBody(
+        <>
           Removes the saved template for “{props.clusterId}”. Member server INI
           files on disk are not deleted.
-        </Text>
+        </>,
       ),
-      labels: { confirm: "Delete template", cancel: "Cancel" },
-      confirmProps: { color: "red" },
+      confirmLabel: "Delete template",
       onConfirm: () => {
         setSaving(true);
         setError(null);
@@ -180,14 +183,14 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
 
   const requestClose = (): void => {
     if (dirty) {
-      modals.openConfirmModal({
-        title: "Discard changes?",
-        children: (
-          <Text size="sm">Unsaved template edits will be lost.</Text>
-        ),
-        labels: { confirm: "Discard", cancel: "Keep editing" },
-        confirmProps: { color: "red" },
-        onConfirm: () => props.onClose(),
+      openUnsavedLeaveModal({
+        copy: {
+          kind: "confirm",
+          title: "Discard changes?",
+          alertTitle: "Unsaved edits",
+          message: "Unsaved template edits will be lost.",
+        },
+        onDiscard: () => props.onClose(),
       });
       return;
     }
