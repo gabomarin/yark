@@ -1,13 +1,13 @@
 import type { MaintenanceBroadcastPreset, MaintenanceJobWarnings, MaintenancePolicy } from "./types";
 
-/** Quiet / Standard / Strict offset lists (minutes or seconds labels). */
+/** Quiet / Standard / Strict offset lists (long window only; last ≤60s is always 1 Hz). */
 export const MAINTENANCE_RESTART_PRESET_OFFSETS: Record<
   Exclude<MaintenanceBroadcastPreset, "custom">,
   readonly string[]
 > = {
   quiet: ["5m"],
   standard: ["30m", "15m", "5m", "1m"],
-  strict: ["30m", "15m", "5m", "1m", "10s"],
+  strict: ["30m", "15m", "10m", "5m", "1m"],
 };
 
 /** Shorter defaults for auto-update warnings. */
@@ -17,7 +17,7 @@ export const MAINTENANCE_UPDATE_PRESET_OFFSETS: Record<
 > = {
   quiet: ["5m"],
   standard: ["15m", "5m", "1m"],
-  strict: ["15m", "5m", "1m", "10s"],
+  strict: ["15m", "10m", "5m", "1m"],
 };
 
 export const DEFAULT_RESTART_WARNINGS: MaintenanceJobWarnings = {

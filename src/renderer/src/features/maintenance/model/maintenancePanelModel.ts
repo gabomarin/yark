@@ -21,9 +21,9 @@ export const DAY_LABELS = [
 export const CUSTOM_OFFSET_OPTIONS = [
   "30m",
   "15m",
+  "10m",
   "5m",
   "1m",
-  "10s",
 ] as const;
 
 export const PRESET_LABELS: Record<
@@ -32,7 +32,10 @@ export const PRESET_LABELS: Record<
 > = {
   quiet: { title: "Quiet", hint: "One warning at 5 minutes" },
   standard: { title: "Standard", hint: "A few timed warnings" },
-  strict: { title: "Strict", hint: "Standard + final 10 seconds" },
+  strict: {
+    title: "Strict",
+    hint: "More warnings before the last minute (always 1/s)",
+  },
   custom: { title: "Custom", hint: "Pick your own times" },
 };
 

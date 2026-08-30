@@ -683,7 +683,7 @@ export type MaintenanceBroadcastPreset = "quiet" | "standard" | "strict" | "cust
 /** Per-job Broadcast offsets + template (restart vs auto-update are separate). */
 export interface MaintenanceJobWarnings {
   preset: MaintenanceBroadcastPreset;
-  /** Offset labels such as `30m`, `15m`, `5m`, `1m`, `10s`. */
+  /** Offset labels such as `30m`, `15m`, `5m`, `1m` (long window; last minute is always 1 Hz). */
   customOffsets: string[];
   /** In-game message; use `{time}` for remaining duration. */
   template: string;
