@@ -27,6 +27,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - Logs, crash excerpts, events, and IPC errors omit GameUserSettings password settings and redact leftover credential assignments. SQLite and ASA INI stay plaintext for the same Windows user (#144).
 
+### Fixed
+
+- Fleet **Cleanup** “keep limit” now matches scheduled world retention: last N archives **per map**, so rotating maps no longer deletes the other map’s backups.
+
 ## [0.17.0] - 2026-08-29
 
 ### Added
@@ -38,7 +42,6 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
-- Fleet **Cleanup** “keep limit” now matches scheduled world retention: last N archives **per map**, so rotating maps no longer deletes the other map’s backups.
 - Remaster **World save folder** is persisted when `mapModId` is set (official-token remasters no longer lose a custom SavedArks folder on save).
 - Clearing remote AdminListURL no longer rewrites `AllowedCheaterAccountIDs.txt` from the names sidecar on read (false Current ids after clear).
 - Clone dialog suggests the next free game/query/RCON triplet across the fleet (same hunt as create/auto-clone), not only source+10; fallback +10 wraps via `offsetPort` near the port ceiling.
