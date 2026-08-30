@@ -8,6 +8,11 @@ export function retainCountForKind(policy: BackupPolicy, kind: BackupKind): numb
   return policy.retainCountIni;
 }
 
+/** Pool key for world retain-N (per map token). Unscoped rows share one pool. */
+export function worldRetentionKey(backup: { mapToken: string | null }): string {
+  return backup.mapToken?.trim().toLowerCase() || "__unscoped__";
+}
+
 export function assertRetainCount(label: string, value: number): void {
   if (value < 1 || value > 500) {
     throw new Error(`${label} must be between 1 and 500`);

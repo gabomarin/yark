@@ -258,7 +258,8 @@ UI restore uses a confirm modal (world: profiles/tribes checkbox). Update rollba
   World/players ZIPs use **moderate deflate (level 4)** for ASA save blobs;
   `manifest.json` and other small files still use default deflate.
 - Retention keeps the last N **completed** world backups **per map token** (and
-  players by `playersRetentionKey`). Failed rows are not pruned by retain counts.
+  players by `playersRetentionKey`). Fleet **Cleanup** “keep limit” uses the same
+  per-map / per-player pools (not a flat world list). Failed rows are not pruned by retain counts.
   Cannot delete `running` backups. Operators can **Clear failed** on the server
   Backups history tab to remove every failed row for that server and kind
   (catalog cleanup when the ZIP is already gone).
