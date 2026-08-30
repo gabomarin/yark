@@ -72,8 +72,8 @@ export function SearchField({
       : undefined;
   const iconSize = searchFieldIconSize(size);
   const isSubmit = onSubmit !== undefined;
-  const showClear =
-    !isSubmit && clearable && value.trim().length > 0;
+  const hasFilterText = value.trim().length > 0;
+  const showClear = !isSubmit && clearable && hasFilterText;
 
   const inputClass = [
     classes.input,
@@ -92,7 +92,7 @@ export function SearchField({
       onKeyDown={(event) => {
         onKeyDown?.(event);
         if (event.defaultPrevented) return;
-        if (event.key === "Escape" && !isSubmit && value.length > 0) {
+        if (event.key === "Escape" && !isSubmit && hasFilterText) {
           event.preventDefault();
           onChange("");
           return;

@@ -29,6 +29,10 @@ function ringColor(tone: AppMetricTone): string {
 /**
  * Compact scalar metric tile for fleet strips (Backups health, etc.).
  * Prefer this over feature-local StatCard clones.
+ *
+ * Clickable tiles (`onClick`) are **toggles**: `aria-pressed` follows `active`.
+ * Do not reuse this as a one-shot action — a false pressed state is wrong for
+ * that pattern.
  */
 export function AppMetricCard(props: Props): ReactElement {
   const {

@@ -37,6 +37,22 @@ describe("SearchField", () => {
     expect(onChange).toHaveBeenCalledWith("");
   });
 
+  it("treats whitespace-only filter text like empty for Escape and clear", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+
+    render(
+      <AppProviders>
+        <SearchField value="   " onChange={onChange} label="Search servers" />
+      </AppProviders>,
+    );
+
+    expect(screen.queryByRole("button", { name: "Clear search" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("textbox", { name: "Search servers" }));
+    await user.keyboard("{Escape}");
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
   it("hides clear when empty and keeps submit magnifier without clear", () => {
     const onSubmit = vi.fn();
 

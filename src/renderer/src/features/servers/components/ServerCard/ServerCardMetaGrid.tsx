@@ -30,7 +30,6 @@ interface Props {
    * so the RAM / CPU column stays hidden (#302).
    */
   processMetrics?: ProcessMetricsUpdatedPush | null;
-  workspaceOpenLabel: string;
   onOpenWorkspace: () => void;
 }
 
@@ -72,7 +71,6 @@ export function ServerCardMetaGrid(props: Props): ReactElement {
     <UnstyledButton
       className={classes.metaOpen}
       onClick={props.onOpenWorkspace}
-      aria-label={props.workspaceOpenLabel}
       tabIndex={-1}
       aria-hidden
     >
