@@ -21,7 +21,7 @@ function idleStatus(serverId: string): MaintenancePolicyStatus {
   };
 }
 
-/** Live Up next: 1s in last minute / job; relaxed in warning; pause when tab hidden. */
+/** Live Up next poll while the Maintenance tab is open. */
 function pollIntervalMs(phase: MaintenancePolicyStatus["countdownPhase"]): number {
   if (
     phase === "last_minute"
@@ -30,7 +30,9 @@ function pollIntervalMs(phase: MaintenancePolicyStatus["countdownPhase"]): numbe
   ) {
     return 1_000;
   }
-  return 15_000;
+  if (phase === "warning") return 3_000;
+  // Idle but jobs may arm from the ~60s scheduler — keep Up next honest.
+  return 10_000;
 }
 
 export function useMaintenancePanel(serverId: string) {
@@ -56,10 +58,11 @@ export function useMaintenancePanel(serverId: string) {
     void load();
   }, [load]);
 
+  // Always poll while this tab is mounted so a scheduler-armed countdown
+  // appears even if the first paint was idle (Run restart now used to error
+  // with "already active" while Up next still looked idle).
   const phase = policy?.countdownPhase ?? "idle";
   useEffect(() => {
-    if (phase === "idle") return undefined;
-
     let id: number | null = null;
 
     const clear = () => {

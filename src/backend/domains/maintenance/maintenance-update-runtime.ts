@@ -197,7 +197,12 @@ export class MaintenanceUpdateRuntime {
       throw new Error("Maintenance schedules are paused for this server");
     }
     if (this.active.has(serverId) || this.restarts.hasActiveCountdown(serverId)) {
-      throw new Error("A maintenance countdown is already active");
+      if (this.active.has(serverId)) {
+        return this.mergeStatus(this.restarts.enrichStatus(policy));
+      }
+      throw new Error(
+        "A restart countdown is already active — Cancel it first, or wait",
+      );
     }
     if (this.updates.hasOccupyingFilesJob(serverId)) {
       throw new Error("A files job is already queued for this server");

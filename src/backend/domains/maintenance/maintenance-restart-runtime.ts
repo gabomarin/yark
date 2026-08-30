@@ -157,10 +157,14 @@ export class MaintenanceRestartRuntime {
       throw new Error("Maintenance schedules are paused for this server");
     }
     if (this.active.has(serverId)) {
-      throw new Error("A maintenance countdown is already active");
+      // Scheduler already armed this window — return live status (UI may have
+      // been idle until the next poll).
+      return this.enrichStatus(policy);
     }
     if (this.isPeerBusy(serverId)) {
-      throw new Error("A maintenance countdown is already active");
+      throw new Error(
+        "An auto-update countdown is already active — Cancel it first, or wait",
+      );
     }
     const targetAtMs = Date.now() + MAINTENANCE_RUN_NOW_LEAD_MS;
     this.startCountdown(policy, targetAtMs, "run_now", null);
