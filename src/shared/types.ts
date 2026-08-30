@@ -729,6 +729,11 @@ export interface MaintenancePolicyStatus extends MaintenancePolicy {
   /** ISO of last maintenance auto-update attempt (session). */
   lastUpdateAt: string | null;
   lastUpdateOk: boolean | null;
+  /**
+   * True when Steam reports a newer dedicated build than this install
+   * (same signal as Downloads / auto-update arming).
+   */
+  steamUpdateAvailable: boolean;
   /** True when Cancel can stop an upcoming countdown. */
   cancelable: boolean;
 }

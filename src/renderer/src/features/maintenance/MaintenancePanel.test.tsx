@@ -23,6 +23,7 @@ function status(
     lastUpdateAt: null,
     lastUpdateOk: null,
     cancelable: false,
+    steamUpdateAvailable: false,
     ...partial,
   };
 }

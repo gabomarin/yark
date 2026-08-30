@@ -23,6 +23,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- **Run update now** stays disabled until Steam reports a newer dedicated build (#489).
 - Maintenance warning presets no longer offer a **10s** offset — the last minute already ServerChats every second (#489).
 - Keyboard: Ctrl+K Spotlight, Tab to server cards, Shift+F10 for the row menu, and Escape to dismiss menus and confirm dialogs (setup wizard still needs Skip / Close / Back) (#476).
 - Keyboard: Overview search Escape clears; fleet strip tiles toggle with Enter/Space; workspace tabs and Settings categories are Tab-reachable. Card version/meta cells stay mouse-only (#477).

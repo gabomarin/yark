@@ -315,6 +315,7 @@ export function createRendererApiMock(
         lastRestartOk: null,
         lastUpdateAt: null,
         lastUpdateOk: null,
+        steamUpdateAvailable: false,
         cancelable: false,
       },
     }),

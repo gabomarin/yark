@@ -17,6 +17,7 @@ function idleStatus(serverId: string): MaintenancePolicyStatus {
     lastRestartOk: null,
     lastUpdateAt: null,
     lastUpdateOk: null,
+    steamUpdateAvailable: false,
     cancelable: false,
   };
 }

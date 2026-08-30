@@ -1,4 +1,4 @@
-import { Button, Group, Text } from "@mantine/core";
+import { Button, Group, Text, Tooltip } from "@mantine/core";
 import type { MaintenancePolicyStatus } from "@shared/types";
 import type { ReactElement } from "react";
 import { DAY_LABELS } from "../../model/maintenancePanelModel";
@@ -148,14 +148,26 @@ export function MaintenanceUpNext(props: Props): ReactElement {
             {policy.updateEnabled
               && !live
               && policy.countdownPhase === "idle" && (
-              <Button
-                size="xs"
-                variant="light"
-                loading={props.busy}
-                onClick={props.onRunUpdateNow}
+              <Tooltip
+                label={
+                  policy.steamUpdateAvailable
+                    ? "Warn players, then run YARK's safe update"
+                    : "No newer Steam dedicated build detected"
+                }
+                withArrow
               >
-                Run update now
-              </Button>
+                <span>
+                  <Button
+                    size="xs"
+                    variant="light"
+                    loading={props.busy}
+                    disabled={!policy.steamUpdateAvailable}
+                    onClick={props.onRunUpdateNow}
+                  >
+                    Run update now
+                  </Button>
+                </span>
+              </Tooltip>
             )}
           </Group>
         </Group>

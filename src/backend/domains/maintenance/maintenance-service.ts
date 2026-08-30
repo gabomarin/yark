@@ -41,16 +41,17 @@ export class MaintenanceService {
     );
   }
 
-  getPolicy(serverId: string): MaintenancePolicyStatus {
-    return this.updateRuntime.mergeStatus(
-      this.restartRuntime.enrichStatus(this.repo.getPolicy(serverId)),
-    );
+  async getPolicy(serverId: string): Promise<MaintenancePolicyStatus> {
+    const base = this.restartRuntime.enrichStatus(this.repo.getPolicy(serverId));
+    const steamUpdateAvailable =
+      await this.updateRuntime.isSteamUpdateAvailable(serverId);
+    return this.updateRuntime.mergeStatus(base, steamUpdateAvailable);
   }
 
-  setPolicy(
+  async setPolicy(
     serverId: string,
     patch: Omit<MaintenancePolicy, "serverId" | "updatedAt">,
-  ): MaintenancePolicyStatus {
+  ): Promise<MaintenancePolicyStatus> {
     if (this.servers.get(serverId) === null) {
       throw new Error("Server does not exist");
     }
@@ -70,7 +71,7 @@ export class MaintenanceService {
     return this.getPolicy(serverId);
   }
 
-  clearSchedulePause(serverId: string): MaintenancePolicyStatus {
+  async clearSchedulePause(serverId: string): Promise<MaintenancePolicyStatus> {
     this.restartRuntime.clearSchedulePause(serverId);
     this.updateRuntime.clearSchedulePause(serverId);
     return this.getPolicy(serverId);
@@ -86,7 +87,7 @@ export class MaintenanceService {
     return this.getPolicy(serverId);
   }
 
-  cancelUpcoming(serverId: string): MaintenancePolicyStatus {
+  async cancelUpcoming(serverId: string): Promise<MaintenancePolicyStatus> {
     this.restartRuntime.cancelUpcoming(serverId);
     this.updateRuntime.cancelUpcoming(serverId);
     return this.getPolicy(serverId);

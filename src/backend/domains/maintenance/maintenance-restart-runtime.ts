@@ -124,6 +124,7 @@ export class MaintenanceRestartRuntime {
       lastRestartOk: last?.ok ?? null,
       lastUpdateAt: null,
       lastUpdateOk: null,
+      steamUpdateAvailable: false,
       cancelable:
         active !== undefined
         && (active.phase === "warning" || active.phase === "last_minute")

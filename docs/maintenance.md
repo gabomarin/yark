@@ -22,7 +22,8 @@ MagicPath UX mock: https://magicpath.ai/files/444694713119952896
 - `MaintenanceUpdateRuntime` — Steam-newer detection + update countdown (`ServerChat`)
 - Scheduler: `MaintenanceScheduler` (~60s)
 - IPC: get/set policy, clear pause, run-restart-now, run-update-now, cancel-upcoming
-- UI: Up next + Restart / Wipe / Auto-update sections
+- UI: Up next + Restart / Wipe / Auto-update sections (**Run update now** only when
+  `steamUpdateAvailable`)
 
 ## Auto-update (#489)
 

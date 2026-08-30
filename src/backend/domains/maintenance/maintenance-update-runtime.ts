@@ -81,7 +81,10 @@ export class MaintenanceUpdateRuntime {
   }
 
   /** Overlay update session fields onto restart-enriched status. */
-  mergeStatus(status: MaintenancePolicyStatus): MaintenancePolicyStatus {
+  mergeStatus(
+    status: MaintenancePolicyStatus,
+    steamUpdateAvailable: boolean,
+  ): MaintenancePolicyStatus {
     const active = this.active.get(status.serverId);
     const last = this.lastUpdate.get(status.serverId);
     const now = Date.now();
@@ -92,6 +95,7 @@ export class MaintenanceUpdateRuntime {
         schedulePaused: status.schedulePaused || updatePaused,
         lastUpdateAt: last?.atIso ?? null,
         lastUpdateOk: last?.ok ?? null,
+        steamUpdateAvailable,
       };
     }
     return {
@@ -105,10 +109,18 @@ export class MaintenanceUpdateRuntime {
       countdownKind: "update",
       lastUpdateAt: last?.atIso ?? null,
       lastUpdateOk: last?.ok ?? null,
+      steamUpdateAvailable,
       cancelable:
         (active.phase === "warning" || active.phase === "last_minute")
         && !active.cancelRequested,
     };
+  }
+
+  /** Same Steam-newer check as auto-update arming / Run update now. */
+  async isSteamUpdateAvailable(serverId: string): Promise<boolean> {
+    const snapshot = await this.instances.installationInfo(false);
+    const installation = snapshot.servers.find((row) => row.serverId === serverId);
+    return isServerUpdateAvailable(installation, snapshot.officialSteamBuild);
   }
 
   async runScheduledCycle(): Promise<void> {
@@ -198,7 +210,7 @@ export class MaintenanceUpdateRuntime {
     }
     if (this.active.has(serverId) || this.restarts.hasActiveCountdown(serverId)) {
       if (this.active.has(serverId)) {
-        return this.mergeStatus(this.restarts.enrichStatus(policy));
+        return this.mergeStatus(this.restarts.enrichStatus(policy), true);
       }
       throw new Error(
         "A restart countdown is already active — Cancel it first, or wait",
@@ -224,7 +236,7 @@ export class MaintenanceUpdateRuntime {
       "run_now",
       availabilityKey,
     );
-    return this.mergeStatus(this.restarts.enrichStatus(policy));
+    return this.mergeStatus(this.restarts.enrichStatus(policy), true);
   }
 
   cancelUpcoming(serverId: string): void {
