@@ -73,6 +73,11 @@
   font: inherit;
 }
 
+.root[data-clickable]:focus-visible {
+  outline: 2px solid var(--ark-blue-a8);
+  outline-offset: 2px;
+}
+
 .root[data-clickable]:hover:not([data-active]) {
   background: color-mix(in srgb, var(--app-color-panel) 92%, var(--ark-blue-8));
 }

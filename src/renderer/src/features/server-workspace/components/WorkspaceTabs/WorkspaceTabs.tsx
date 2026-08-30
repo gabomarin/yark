@@ -71,7 +71,7 @@ export function WorkspaceTabs(props: Props): ReactElement {
         }}
         className={classes.tabs}
       >
-        <Tabs.List className={classes.tabList}>
+        <Tabs.List className={classes.tabList} aria-label="Workspace tabs">
           <Tabs.Tab value="server">Server</Tabs.Tab>
           <Tabs.Tab value="iniFiles">INI Files</Tabs.Tab>
           <Tabs.Tab value="mods">Mods</Tabs.Tab>

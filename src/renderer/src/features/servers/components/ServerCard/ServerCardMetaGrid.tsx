@@ -66,6 +66,8 @@ export function ServerCardMetaGrid(props: Props): ReactElement {
   if (survivorsMeta != null) metaCols += 1;
   if (ramCpuMeta != null) metaCols += 1;
 
+  // Decorative open-hit only: identity control is the keyboard path. Version
+  // hints stay mouse/hover (#477).
   return (
     <UnstyledButton
       className={classes.metaOpen}

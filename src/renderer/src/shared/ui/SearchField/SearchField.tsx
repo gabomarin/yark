@@ -92,6 +92,11 @@ export function SearchField({
       onKeyDown={(event) => {
         onKeyDown?.(event);
         if (event.defaultPrevented) return;
+        if (event.key === "Escape" && !isSubmit && value.length > 0) {
+          event.preventDefault();
+          onChange("");
+          return;
+        }
         if (isSubmit && event.key === "Enter") {
           event.preventDefault();
           onSubmit();

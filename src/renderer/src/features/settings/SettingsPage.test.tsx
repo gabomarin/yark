@@ -227,6 +227,17 @@ describe("SettingsPage", () => {
     expect(screen.getByText("Download cache")).toBeInTheDocument();
   });
 
+  it("opens SteamCMD with Enter on the focused category nav (#477)", async () => {
+    const user = userEvent.setup();
+    stubSettingsApi();
+    renderSettings();
+
+    const nav = screen.getByRole("navigation", { name: "Settings categories" });
+    within(nav).getByRole("button", { name: "SteamCMD" }).focus();
+    await user.keyboard("{Enter}");
+    expect(document.querySelector("[data-steamcmd-path]")).toBeInTheDocument();
+  });
+
   it("opens the SteamCMD category when focusSteamCmd is set", () => {
     stubSettingsApi();
     const onSteamCmdFocused = vi.fn();

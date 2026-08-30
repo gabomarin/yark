@@ -200,9 +200,12 @@ YARK is a Windows desktop **tool**, not a vim mode. Keyboard covers fleet triage
 | --- | --- |
 | **Tab** | Natural order: sidebar → page chrome → controls. Overview: Tab to the server card, then to Start/Stop/Restart/Enable/Update/kebab. |
 | **Enter / Space** | Activate the focused button or NavLink. Do **not** treat Enter on the card chrome as Open workspace (use the identity open control) so Tab-to-card + Shift+F10 cannot accidental-open. |
-| **Escape** | Closes Spotlight, menus, and dismissible modals; restores focus to the opener. Does **not** skip the first-run setup wizard (Skip / Close / Back stay explicit). Does not cancel in-flight SteamCMD/stop without the existing confirm. |
+| **Escape** | Closes Spotlight, menus, and dismissible modals; restores focus to the opener. **SearchField** filter (Overview, etc.): clears the query when the field is focused and non-empty. Does **not** skip the first-run setup wizard (Skip / Close / Back stay explicit). Does not cancel in-flight SteamCMD/stop without the existing confirm. |
 | **Ctrl+K** (Cmd+K) | Spotlight: jump to a route or open a server workspace. |
 | **Shift+F10** / ContextMenu | Opens the same kebab actions on a focused **server card**. DataTable body rows stay mouse-context; use the row kebab. |
+| **Arrow / Home / End** | Workspace **tablist** (`Workspace tabs`): Mantine activates the next tab on arrow (keep `activateTabWithKeyboard` default). |
+
+**Mouse-only (documented):** Overview card **meta grid** (map / version / survivors) is `aria-hidden` + `tabIndex={-1}` so it does not steal Tab. Open the server with the identity control. Version-refresh hints stay hover/tooltip.
 
 **Out of scope:** global Start/Stop/Restart hotkeys; PathField typing (browse + Clear); SteamCMD/runtime console command bindings; full screen-reader certification.
 

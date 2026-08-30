@@ -9,7 +9,7 @@ binaries, SteamCMD, backups, rollback).
 | Scenario | Command | Gate | Notes |
 | --- | --- | --- | --- |
 | Electron launch + empty Overview | `npm run build && npm run e2e:smoke` | Local | Isolated `YARK_E2E_USER_DATA`; CRUD already covers launch + shell nav in CI |
-| Keyboard smoke (Spotlight, card menu, Escape) | `npm run build && npm run e2e:keyboard` | Local | Ctrl+K, Shift+F10 on a server card, Escape on Delete dialog (#476) |
+| Keyboard smoke (Spotlight, card menu, Escape) | `npm run build && npm run e2e:keyboard` | Local | Ctrl+K, Shift+F10, Escape on Delete; search Escape; workspace arrows; Settings category Enter (#476, #477) |
 | Create / clone / delete UI | `npm run build && npm run e2e` | **PR CI** | Disposable dirs under `C:\asa-e2e\…` |
 | Install-health badges | `npm run build && npm run e2e:install-health` | **PR CI** | Fake FS fixtures only |
 | Host port probe modal | `npm run build && npm run e2e:host-port-probe` | **PR CI** | Occupies UDP then asserts modal |
@@ -87,7 +87,7 @@ modals, workspace tabs, PathFields):
 | UI surface | Likely scripts |
 | --- | --- |
 | Shell nav, Overview, New server / Clone / Delete | `e2e` (`e2e:smoke` for empty Overview locally) |
-| Keyboard: Ctrl+K, Shift+F10, Escape | `e2e:keyboard` (local) |
+| Keyboard: Ctrl+K, Shift+F10, Escape, search, tabs | `e2e:keyboard` (local) |
 | Page titles without restating subtitles | `e2e`, `e2e:clusters-membership` (`e2e:smoke` locally) |
 | Settings category sidebar or labels | `e2e:launch-args`, `e2e:quit-policy`, `e2e:log-retention` |
 | First-run setup wizard / splash | Any launch that must set `YARK_E2E_USER_DATA` |
