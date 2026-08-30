@@ -111,6 +111,7 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
                       selected={selectedUpdateFile === file.fileName}
                       onClick={() => onOpenUpdateLog(serverId, file.fileName)}
                       title={file.fileName}
+                      className={classes.updateHistoryRow}
                       trailing={
                         <Badge
                           color={statusColor(file.status)}
@@ -207,6 +208,7 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
                 </div>
                 <ConsoleSurface
                   fill
+                  className={classes.squareConsole}
                   text={
                     updateContent.length > 0 ? updateContent : "Loading log content…"
                   }

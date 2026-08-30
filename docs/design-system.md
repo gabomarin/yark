@@ -164,7 +164,7 @@ gap: var(--app-space-sm);            // preferred in CSS modules
 
 Theme `defaultRadius` is **`sm`**. Avoid raw `border-radius` when a token fits. Tek icon tiles keep asymmetric radius by design (`AccentIconTile shape="tek"`).
 
-**Square vs rounded:** Overview server **list rows** (`ServerCard`), create/edit **form sections**, and the Clusters **How transfers work** Accordion are square (`radius={0}`) so stacked chrome reads as one slab. Discrete entity cards use `AppSurfaceCard` default **`md`** (8px Comfortable); do not wrap the whole Logs/Settings pane in a Card (#469).
+**Square vs rounded:** Overview server **list rows** (`ServerCard`), create/edit **form sections**, Logs event/backup/update lists, and the Clusters **How transfers work** Accordion are square (`radius={0}`) so stacked chrome reads as one slab. Discrete entity cards use `AppSurfaceCard` default **`md`** (8px Comfortable); do not wrap the whole Logs/Settings pane in a Card (#469).
 
 ### 4. Color / status
 
@@ -400,7 +400,7 @@ line (#234).
 
 | Surface | Decision |
 | --- | --- |
-| Server Logs events / Fleet Logs | Mantine **Accordion** (`variant="separated"`, controlled, `keepMounted={false}`) |
+| Server Logs events / Fleet Logs | Mantine **Accordion** (`variant="contained"`, `radius={0}`, controlled, `keepMounted={false}`) |
 | Overview recent activity | Mantine **Timeline** (chronological; no expand) |
 | Event detail body | Shared `EventDetailsBody` inside Accordion.Panel |
 

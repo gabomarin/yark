@@ -69,6 +69,7 @@ export function RuntimeLogSection(props: Props): ReactElement {
         ) : (
           <ConsoleSurface
             fill
+            className={classes.squareConsole}
             text={filtered.join("\n")}
             data-logs-scroll-region="runtime"
           />

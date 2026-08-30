@@ -63,7 +63,8 @@ export function LogsEventsTab(props: LogsEventsTabProps): ReactElement {
         ) : (
           <div className={classes.eventList} data-logs-scroll-region="events">
             <Accordion
-              variant="separated"
+              variant="contained"
+              radius={0}
               keepMounted={false}
               transitionDuration={0}
               value={expandedEventId !== null ? String(expandedEventId) : null}

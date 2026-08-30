@@ -11,7 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
-- Logs and Settings sit on the page canvas instead of a full-pane card; create/edit form sections are flush square panels (no gap, no radius); empty states drop the dashed tile; Downloads hides the console until a job exists; ServerCard uses a flat fill and a 3px status rail (#469).
+- Logs and Settings sit on the page canvas instead of a full-pane card; create/edit form sections are flush square panels (no gap, no radius); fleet and server Logs lists/consoles are the same flush slab; Logs severity defaults to All; empty states drop the dashed tile; Downloads hides the console until a job exists; ServerCard uses a flat fill and a 3px status rail (#469).
 - Runtime status, cluster counts, and backup health use words (and a status dot) instead of light-pill badges; needs-attention is fossil amber (#470).
 - Panels, cards, and alerts use solid fills and a tighter 6–10px radius so chrome, page, and controls read as distinct layers (#468).
 - **What's new** is a wider release brief: solid panel fill, section rails instead of badges, and Earlier releases as an accordion.

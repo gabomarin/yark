@@ -66,6 +66,9 @@ describe("LogsPage", () => {
     );
 
     expect(await screen.findByText("Activity across servers")).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Severity filter" })).toHaveValue(
+      "All severity",
+    );
     expect(await screen.findByText(/Update failed on Island/i)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /Update failed on Island/i }));
     expect(

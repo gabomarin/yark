@@ -18,8 +18,10 @@
   min-width: 0;
 }
 
-.fleetAccordionItem {
-  background: color-mix(in srgb, var(--app-color-panel) 35%, transparent);
+.fleetAccordionItem,
+.eventAccordionItem {
+  background: var(--app-color-panel);
+  border-radius: 0;
 }
 
 .fleetAccordionControl {
@@ -145,14 +147,22 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: var(--app-space-xs);
+  gap: 0;
   min-height: 0;
   padding-right: var(--app-space-xxs);
   overflow: auto;
 }
 
-.eventAccordionItem {
-  background: color-mix(in srgb, var(--app-color-panel) 35%, transparent);
+.updateHistoryRow {
+  border-radius: 0;
+}
+
+.updateHistoryRow + .updateHistoryRow {
+  margin-top: -1px;
+}
+
+.squareConsole {
+  border-radius: 0;
 }
 
 .eventAccordionControl {
@@ -166,6 +176,17 @@
 .eventRowMain {
   min-width: 0;
   flex: 1;
+}
+
+.eventRow {
+  padding: var(--app-space-sm);
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: 0;
+  background: var(--app-color-panel);
+}
+
+.eventRow + .eventRow {
+  margin-top: -1px;
 }
 
 .backupPathRow {
@@ -302,7 +323,7 @@
   height: 58px;
   padding: var(--app-space-xxs) var(--app-space-xs);
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-control);
+  border-radius: 0;
   background: var(--app-color-surface-control);
 }
 

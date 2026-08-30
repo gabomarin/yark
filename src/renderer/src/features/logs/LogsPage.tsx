@@ -47,7 +47,7 @@ export function LogsPage(props: Props): ReactElement {
   const [fleetEvents, setFleetEvents] = useState<AppEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("problems");
+  const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("all");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("24h");
   const [search, setSearch] = useState("");
   const [expandedEventId, setExpandedEventId] = useState<number | null>(null);
@@ -151,11 +151,11 @@ export function LogsPage(props: Props): ReactElement {
                   aria-label="Severity filter"
                   value={severityFilter}
                   onChange={(value) =>
-                    setSeverityFilter((value as SeverityFilter) ?? "problems")
+                    setSeverityFilter((value as SeverityFilter) ?? "all")
                   }
                   data={[
-                    { value: "problems", label: "Problems" },
                     { value: "all", label: "All severity" },
+                    { value: "problems", label: "Problems" },
                     { value: "error", label: "Errors" },
                     { value: "warning", label: "Warnings" },
                     { value: "info", label: "Info" },
@@ -210,7 +210,8 @@ export function LogsPage(props: Props): ReactElement {
             ) : (
               <div className={classes.eventList} data-logs-scroll-region="fleet">
                 <Accordion
-                  variant="separated"
+                  variant="contained"
+                  radius={0}
                   keepMounted={false}
                   transitionDuration={0}
                   value={
