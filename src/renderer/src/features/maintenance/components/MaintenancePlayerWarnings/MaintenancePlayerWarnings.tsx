@@ -39,8 +39,8 @@ export function MaintenancePlayerWarnings(props: Props): ReactElement {
       <div>
         <Text className={classes.fieldLabel}>Player warnings · how often</Text>
         <Text size="xs" c="dimmed" mt={2}>
-          In-game Broadcast before this job. Separate from{" "}
-          {props.kind === "restart" ? "auto-update" : "restart schedule"}.
+          Timed Broadcasts before this job. The last minute always counts down
+          every second — pick times above 1 minute here.
         </Text>
       </div>
       <Group gap={6} wrap="wrap">
