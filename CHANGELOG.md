@@ -11,11 +11,13 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Workspace **Maintenance** tab shell: per-server policies (default off), idle scheduler, Up next, and schedule/warning editors matching the #315 mock — restart / wipe / auto-update execution comes in follow-up slices (#486).
 - Keyboard: Ctrl+K Spotlight, Tab to server cards, Shift+F10 for the row menu, and Escape to dismiss menus and confirm dialogs (setup wizard still needs Skip / Close / Back) (#476).
 - Keyboard: Overview search Escape clears; fleet strip tiles toggle with Enter/Space; workspace tabs and Settings categories are Tab-reachable. Card version/meta cells stay mouse-only (#477).
 
 ### Changed
 
+- Destructive confirms (logs purge, backup delete, mod remove, ban/unban, force-close, SteamCMD cache clear, and related) share one **`openDangerConfirmModal`** helper so red confirm styling and Cancel labels stay consistent (#235).
 - Logs and Settings sit on the page canvas instead of a full-pane card; create/edit form sections are flush square panels (no gap, no radius) with a **rounded** map thumb; fleet and server Logs lists/consoles are the same flush slab; expanded log rows use the Open in server highlight; **Logs severity defaults to All** (not Problems); empty states drop the dashed tile; Downloads hides the console until a job exists; ServerCard uses a flat fill, a 3px status rail, and a cryo hover border (#469).
 - Runtime status, cluster counts, and backup health use words (and a status dot) instead of light-pill badges; needs-attention is fossil amber (#470).
 - Panels, cards, and alerts use solid fills and a tighter 6–10px radius so chrome, page, and controls read as distinct layers (#468).

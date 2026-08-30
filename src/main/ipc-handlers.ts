@@ -9,6 +9,7 @@ import type {
   ServerProfilePatch,
 } from "../shared/types";
 import type { BackupService } from "../backend/domains/backups/backup-service";
+import type { MaintenanceService } from "../backend/domains/maintenance/maintenance-service";
 import type { PlayerSessionWatcher } from "../backend/domains/backups/player-session-watcher";
 import type { ProcessMetricsSampler } from "../backend/domains/instances/process-metrics-sampler";
 import type { InstanceService } from "../backend/domains/instances/instance-service";
@@ -87,6 +88,7 @@ export function registerIpcHandlers(
   updates: UpdateService,
   mods: ModsService,
   backups: BackupService,
+  maintenance: MaintenanceService,
   moveInstall: MoveInstallService,
   appDataFolders: AppDataFolderRoots,
   settings: AppSettingsRepository,
@@ -943,6 +945,24 @@ export function registerIpcHandlers(
 
   handleValidated(IPC.backupsSetPolicy, ipcArgSchemas[IPC.backupsSetPolicy], ([serverId, policy]) =>
     backups.setPolicy(serverId, policy),
+  );
+
+  handleValidated(
+    IPC.maintenanceGetPolicy,
+    ipcArgSchemas[IPC.maintenanceGetPolicy],
+    ([serverId]) => maintenance.getPolicy(serverId),
+  );
+
+  handleValidated(
+    IPC.maintenanceSetPolicy,
+    ipcArgSchemas[IPC.maintenanceSetPolicy],
+    ([serverId, policy]) => maintenance.setPolicy(serverId, policy),
+  );
+
+  handleValidated(
+    IPC.maintenanceClearSchedulePause,
+    ipcArgSchemas[IPC.maintenanceClearSchedulePause],
+    ([serverId]) => maintenance.clearSchedulePause(serverId),
   );
 
   handleValidated(IPC.backupsResolveRoot, ipcArgSchemas[IPC.backupsResolveRoot], ([serverId]) =>

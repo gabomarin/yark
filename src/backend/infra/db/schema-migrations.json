@@ -66,5 +66,9 @@
   {
     "version": 17,
     "sql": "\n      CREATE INDEX idx_servers_created_at ON servers (created_at ASC, id ASC);\n    "
+  },
+  {
+    "version": 18,
+    "sql": "\n      CREATE TABLE maintenance_policies (\n        server_id TEXT PRIMARY KEY,\n        restart_enabled INTEGER NOT NULL DEFAULT 0,\n        wipe_enabled INTEGER NOT NULL DEFAULT 0,\n        update_enabled INTEGER NOT NULL DEFAULT 0,\n        restart_cadence TEXT NOT NULL DEFAULT 'weekly',\n        restart_day_of_week INTEGER NOT NULL DEFAULT 0,\n        restart_time_local TEXT NOT NULL DEFAULT '04:00',\n        wipe_save_world_first INTEGER NOT NULL DEFAULT 1,\n        restart_warnings_json TEXT NOT NULL,\n        update_warnings_json TEXT NOT NULL,\n        updated_at TEXT NOT NULL\n      );\n    "
   }
 ]

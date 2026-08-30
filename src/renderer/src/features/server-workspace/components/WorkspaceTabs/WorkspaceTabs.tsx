@@ -1,6 +1,7 @@
 import { Tabs } from "@mantine/core";
 import type { AppEvent, ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { ServerBackupPanel } from "@features/backups/ServerBackupPanel";
+import { MaintenancePanel } from "@features/maintenance/MaintenancePanel";
 import { ServerLogsPanel, type ServerLogsFocus } from "@features/logs/ServerLogsPanel";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
 import { MoveInstallDialog } from "@features/servers/components/MoveInstallDialog/MoveInstallDialog";
@@ -79,6 +80,7 @@ export function WorkspaceTabs(props: Props): ReactElement {
           <Tabs.Tab value="backups">Backups</Tabs.Tab>
           <Tabs.Tab value="logs">Logs</Tabs.Tab>
           <Tabs.Tab value="rcon">RCON</Tabs.Tab>
+          <Tabs.Tab value="maintenance">Maintenance</Tabs.Tab>
         </Tabs.List>
 
         <div className={classes.tabPanel}>
@@ -189,6 +191,10 @@ export function WorkspaceTabs(props: Props): ReactElement {
                 onKickPlayer={props.onKickPlayer}
                 onBanPlayer={props.onBanPlayer}
               />
+            )}
+
+            {props.value === "maintenance" && (
+              <MaintenancePanel server={props.server} />
             )}
           </WorkspacePanelErrorBoundary>
         </div>

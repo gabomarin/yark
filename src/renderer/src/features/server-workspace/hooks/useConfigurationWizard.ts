@@ -1,5 +1,4 @@
 import { useForm, type UseFormReturnType } from "@mantine/form";
-import { modals } from "@mantine/modals";
 import { defaultClusterIniFileSelection } from "@shared/cluster-ini-file-selection";
 import type {
   ClusterIniTemplate,
@@ -7,6 +6,7 @@ import type {
   ServerProfile,
 } from "@shared/types";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { openUnsavedLeaveModal } from "@features/server-workspace/openUnsavedLeaveModal";
 import {
   applyDifficultyLevel,
   applyWizardDraftToIni,
@@ -231,13 +231,15 @@ export function useConfigurationWizard(options: UseConfigurationWizardOptions): 
       options.onCancel();
       return;
     }
-    modals.openConfirmModal({
-      title: "Leave the wizard",
-      children:
-        "The draft has changes that have not been applied yet. The server INI files will remain untouched.",
-      labels: { confirm: "Discard draft", cancel: "Keep editing" },
-      confirmProps: { color: "red" },
-      onConfirm: options.onCancel,
+    openUnsavedLeaveModal({
+      copy: {
+        kind: "confirm",
+        title: "Leave the wizard",
+        alertTitle: "Draft not applied",
+        message:
+          "The draft has changes that have not been applied yet. The server INI files will remain untouched.",
+      },
+      onDiscard: options.onCancel,
     });
   };
 
