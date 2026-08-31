@@ -18,21 +18,26 @@ interface Props {
 }
 
 /** Restart schedule: multi-day + Mantine TimePicker (#315). */
-export function MaintenanceRestartSchedule(props: Props): ReactElement {
+export function MaintenanceRestartSchedule({
+  policy,
+  disabled,
+  onPatchDays,
+  onPatchTime,
+}: Props): ReactElement {
   const [timeDropdownOpened, setTimeDropdownOpened] = useState(false);
-  const [timeLocal, setTimeLocal] = useState(props.policy.restartTimeLocal);
-  const days = normalizeRestartDaysOfWeek(props.policy.restartDaysOfWeek);
+  const [timeLocal, setTimeLocal] = useState(policy.restartTimeLocal);
+  const days = normalizeRestartDaysOfWeek(policy.restartDaysOfWeek);
   const everyDay = days.length === 7;
 
   useEffect(() => {
-    setTimeLocal(props.policy.restartTimeLocal);
-  }, [props.policy.restartTimeLocal]);
+    setTimeLocal(policy.restartTimeLocal);
+  }, [policy.restartTimeLocal]);
 
   const commitTimeIfChanged = useCallback(() => {
-    if (timeLocal !== props.policy.restartTimeLocal) {
-      props.onPatchTime(timeLocal);
+    if (timeLocal !== policy.restartTimeLocal) {
+      onPatchTime(timeLocal);
     }
-  }, [timeLocal, props.policy.restartTimeLocal, props.onPatchTime]);
+  }, [timeLocal, policy.restartTimeLocal, onPatchTime]);
 
   return (
     <Stack gap="sm">
@@ -46,8 +51,8 @@ export function MaintenanceRestartSchedule(props: Props): ReactElement {
         <Button
           size="compact-xs"
           variant={everyDay ? "light" : "default"}
-          disabled={props.disabled}
-          onClick={() => props.onPatchDays([...ALL_RESTART_DAYS_OF_WEEK])}
+          disabled={disabled}
+          onClick={() => onPatchDays([...ALL_RESTART_DAYS_OF_WEEK])}
         >
           Every day
         </Button>
@@ -57,14 +62,14 @@ export function MaintenanceRestartSchedule(props: Props): ReactElement {
             <button
               key={label}
               type="button"
-              disabled={props.disabled}
+              disabled={disabled}
               className={`${classes.offsetChip}${on ? ` ${classes.offsetChipOn}` : ""}`}
               onClick={() => {
                 const next = on
                   ? days.filter((d) => d !== dow)
                   : [...days, dow];
                 if (next.length === 0) return;
-                props.onPatchDays(normalizeRestartDaysOfWeek(next));
+                onPatchDays(normalizeRestartDaysOfWeek(next));
               }}
             >
               {label}
@@ -81,7 +86,7 @@ export function MaintenanceRestartSchedule(props: Props): ReactElement {
             setTimeLocal(hhmm);
           }
         }}
-        disabled={props.disabled}
+        disabled={disabled}
         size="xs"
         w={200}
         format="24h"
@@ -94,7 +99,7 @@ export function MaintenanceRestartSchedule(props: Props): ReactElement {
           <ActionIcon
             variant="default"
             size="sm"
-            disabled={props.disabled}
+            disabled={disabled}
             aria-label="Open time list"
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => setTimeDropdownOpened(true)}

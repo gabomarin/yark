@@ -8,7 +8,7 @@ import {
   MAINTENANCE_UPDATE_PRESET_OFFSETS,
 } from "@shared/maintenance-policy";
 import {
-  MAINTENANCE_RESTART_FAIL_LIMIT,
+  MAINTENANCE_FAIL_LIMIT,
   MAINTENANCE_RCON_SOFT_FAIL_LIMIT,
   MAINTENANCE_RUN_NOW_LEAD_MS,
   maxWarningLeadMs,
@@ -55,12 +55,25 @@ function isUpdateCountdownBroadcastPhase(
 /** After a failed arm/run, wait before re-trying the same Steam build. */
 const MAINTENANCE_UPDATE_RETRY_COOLDOWN_MS = 5 * 60 * 1_000;
 
+/** Reuse installationInfo across UI polls within this window (#315 review F). */
+const STEAM_AVAILABILITY_CACHE_MS = 30_000;
+
 interface LastUpdateMemory {
   atIso: string;
   ok: boolean;
 }
 
+interface SteamAvailabilityCache {
+  atMs: number;
+  officialSteamBuild: string | null;
+  byServerId: Map<string, boolean>;
+}
+
 export class MaintenanceUpdateRuntime {
+  /**
+   * Session-only pause / fail streak / last outcome / handled Steam builds.
+   * Cleared when YARK quits — see docs/maintenance.md § Session runtime state.
+   */
   private readonly pausedServerIds = new Set<string>();
   private readonly failStreak = new Map<string, number>();
   private readonly active = new Map<string, ActiveUpdateCountdown>();
@@ -69,6 +82,7 @@ export class MaintenanceUpdateRuntime {
   private readonly handledAvailability = new Set<string>();
   /** Earliest retry time per availability key after a failed update. */
   private readonly availabilityRetryAfterMs = new Map<string, number>();
+  private steamAvailabilityCache: SteamAvailabilityCache | null = null;
 
   constructor(
     private readonly repo: MaintenanceRepository,
@@ -130,9 +144,34 @@ export class MaintenanceUpdateRuntime {
 
   /** Same Steam-newer check as auto-update arming / Run update now. */
   async isSteamUpdateAvailable(serverId: string): Promise<boolean> {
+    const cached = this.steamAvailabilityCache;
+    const now = Date.now();
+    if (
+      cached !== null
+      && now - cached.atMs < STEAM_AVAILABILITY_CACHE_MS
+    ) {
+      const hit = cached.byServerId.get(serverId);
+      if (hit !== undefined) return hit;
+    }
+
     const snapshot = await this.instances.installationInfo(false);
-    const installation = snapshot.servers.find((row) => row.serverId === serverId);
-    return isServerUpdateAvailable(installation, snapshot.officialSteamBuild);
+    const byServerId = new Map<string, boolean>();
+    for (const row of snapshot.servers) {
+      byServerId.set(
+        row.serverId,
+        isServerUpdateAvailable(row, snapshot.officialSteamBuild),
+      );
+    }
+    this.steamAvailabilityCache = {
+      atMs: now,
+      officialSteamBuild: snapshot.officialSteamBuild,
+      byServerId,
+    };
+    return byServerId.get(serverId) ?? false;
+  }
+
+  private invalidateSteamAvailabilityCache(): void {
+    this.steamAvailabilityCache = null;
   }
 
   async runScheduledCycle(): Promise<void> {
@@ -154,6 +193,7 @@ export class MaintenanceUpdateRuntime {
 
         if (installSnapshot === null) {
           installSnapshot = await this.instances.installationInfo(false);
+          this.invalidateSteamAvailabilityCache();
         }
         const installation = installSnapshot.servers.find(
           (row) => row.serverId === policy.serverId,
@@ -171,23 +211,10 @@ export class MaintenanceUpdateRuntime {
         if (!this.canArmAvailability(availabilityKey)) continue;
 
         if (!this.processes.isActive(policy.serverId)) {
-          // Stopped + outdated: safe update without player warning (wait for completion).
+          // Stopped + outdated: enqueue and wait off the cycle loop so other
+          // policies can arm countdowns without blocking on SteamCMD.
           this.markAvailabilityHandled(availabilityKey);
-          try {
-            await this.updates.updateServer(policy.serverId);
-            this.lastUpdate.set(policy.serverId, {
-              atIso: new Date().toISOString(),
-              ok: true,
-            });
-            this.failStreak.delete(policy.serverId);
-          } catch (error) {
-            this.scheduleAvailabilityRetry(availabilityKey);
-            this.recordFail(
-              policy.serverId,
-              error instanceof Error ? error.message : String(error),
-              error,
-            );
-          }
+          void this.runStoppedServerUpdate(policy.serverId, availabilityKey);
           continue;
         }
 
@@ -207,6 +234,29 @@ export class MaintenanceUpdateRuntime {
           error,
         );
       }
+    }
+  }
+
+  /** Wait for safe update completion without blocking `runScheduledCycle`. */
+  private async runStoppedServerUpdate(
+    serverId: string,
+    availabilityKey: string,
+  ): Promise<void> {
+    try {
+      await this.updates.updateServer(serverId);
+      this.lastUpdate.set(serverId, {
+        atIso: new Date().toISOString(),
+        ok: true,
+      });
+      this.failStreak.delete(serverId);
+      this.invalidateSteamAvailabilityCache();
+    } catch (error) {
+      this.scheduleAvailabilityRetry(availabilityKey);
+      this.recordFail(
+        serverId,
+        error instanceof Error ? error.message : String(error),
+        error,
+      );
     }
   }
 
@@ -327,6 +377,7 @@ export class MaintenanceUpdateRuntime {
       if (current === null || current.timerGeneration !== generation) return;
       void this.tickCountdown(serverId, expectedTargetAtMs);
     }, delayMs);
+    // Same as restart runtime: unref is safe while Electron main stays alive.
     state.timer.unref();
   }
 
@@ -501,6 +552,7 @@ export class MaintenanceUpdateRuntime {
           ok: true,
         });
         this.failStreak.delete(serverId);
+        this.invalidateSteamAvailabilityCache();
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         this.lastUpdate.set(serverId, {
@@ -557,11 +609,11 @@ export class MaintenanceUpdateRuntime {
       what: "A maintenance auto-update did not complete.",
       cause: message,
       suggestion:
-        streak >= MAINTENANCE_RESTART_FAIL_LIMIT
+        streak >= MAINTENANCE_FAIL_LIMIT
           ? "Automatic maintenance is paused for this YARK session — resume when ready."
           : "Check Downloads / SteamCMD, then retry or wait for the next detection.",
     });
-    if (streak >= MAINTENANCE_RESTART_FAIL_LIMIT) {
+    if (streak >= MAINTENANCE_FAIL_LIMIT) {
       this.pausedServerIds.add(serverId);
     }
   }

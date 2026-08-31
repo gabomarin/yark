@@ -112,7 +112,8 @@ export function renderLastMinuteUpdate(remainingSec: number): string {
 /** Lead time for Run now (short confirm → final warning window). */
 export const MAINTENANCE_RUN_NOW_LEAD_MS = 10_000;
 
-export const MAINTENANCE_RESTART_FAIL_LIMIT = 3;
+/** Consecutive hard failures before session pause (restart and auto-update). */
+export const MAINTENANCE_FAIL_LIMIT = 3;
 
 /**
  * Consecutive ServerChat failures within one countdown window before hard-fail.

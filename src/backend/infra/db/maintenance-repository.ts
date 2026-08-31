@@ -96,18 +96,31 @@ function rowToPolicy(row: PolicyRow): MaintenancePolicy {
 export class MaintenanceRepository {
   constructor(private readonly db: DatabaseSync) {}
 
+  /** Read-only: returns defaults when no row exists (does not INSERT). */
   getPolicy(serverId: string): MaintenancePolicy {
     const row = this.db
       .prepare("SELECT * FROM maintenance_policies WHERE server_id = ?")
       .get(serverId) as unknown as PolicyRow | undefined;
     if (row !== undefined) return rowToPolicy(row);
+    return defaultMaintenancePolicy(serverId, new Date().toISOString());
+  }
+
+  /**
+   * Idempotent seed for a server profile. Uses INSERT OR IGNORE so concurrent
+   * callers cannot race on UNIQUE(server_id).
+   */
+  ensurePolicy(serverId: string): void {
+    const existing = this.db
+      .prepare("SELECT 1 AS ok FROM maintenance_policies WHERE server_id = ?")
+      .get(serverId) as { ok: number } | undefined;
+    if (existing !== undefined) return;
 
     const now = new Date().toISOString();
     const defaults = defaultMaintenancePolicy(serverId, now);
     const daysJson = JSON.stringify(defaults.restartDaysOfWeek);
     this.db
       .prepare(
-        `INSERT INTO maintenance_policies (
+        `INSERT OR IGNORE INTO maintenance_policies (
           server_id, restart_enabled, wipe_enabled, update_enabled,
           restart_cadence, restart_day_of_week, restart_time_local,
           restart_days_of_week_json,
@@ -122,7 +135,13 @@ export class MaintenanceRepository {
         JSON.stringify(defaults.updateWarnings),
         now,
       );
-    return defaults;
+  }
+
+  /** Seed default-off rows for every profile (scheduler + first open). */
+  ensurePoliciesForServers(serverIds: readonly string[]): void {
+    for (const serverId of serverIds) {
+      this.ensurePolicy(serverId);
+    }
   }
 
   setPolicy(
