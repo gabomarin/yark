@@ -493,6 +493,14 @@ export class UpdateService extends EventEmitter {
     return this.queueRuntime.hasOccupyingFilesJob(serverId);
   }
 
+  /**
+   * True when Downloads is held for the operator (paused job or interrupted
+   * restart leftover). Maintenance auto-update must not stop servers behind this.
+   */
+  isQueueHeldForOperator(): boolean {
+    return this.queueRuntime.isHeldForOperator();
+  }
+
   /** Forces app_update validate (ignores “fresh” cache) and syncs to the server. */
   async verifyServerFiles(serverId: string): Promise<void> {
     this.assertStopBackupIdle(serverId);

@@ -18,6 +18,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Maintenance **auto-update** does not arm, Run update now, or stop at T0 while Downloads is paused — so a live map is not taken offline behind an operator hold (#489).
 - Maintenance **auto-update** stops the dedicated at countdown T0 before queuing SteamCMD so players are offline when warnings hit zero even if another server is still updating; the map restarts after that job finishes (#489).
 - Maintenance **auto-update** waits for the full stop → SteamCMD → start job before marking success, and cools down failed Steam builds for 5 minutes before retrying (#489).
 - Maintenance policy reads no longer INSERT on `getPolicy`; defaults seed via `ensurePolicy` (`INSERT OR IGNORE`) on UI open and each scheduler cycle (#315).
@@ -26,6 +27,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Maintenance restart and post-update start honor Settings **Show server console on start** (they no longer spawn hidden when the preference is on) (#489).
 - Maintenance tab Alerts (errors / schedule pause) stay readable instead of collapsing to a thin border when job sections are expanded (#489).
 - Fleet **Cleanup** “keep limit” now matches scheduled world retention: last N archives **per map**, so rotating maps no longer deletes the other map’s backups.
+- Fleet **Cleanup** “Keep only last N” also keeps world archives **per map** (same pools as retention), not a flat cross-map list.
 
 ### Changed
 

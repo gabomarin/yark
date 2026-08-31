@@ -140,9 +140,13 @@ When **Wild dino wipe** is On (toggle in Up next; turning wipe On enables restar
 5. **Stopped:** start `updateServer` **without awaiting inside the policy loop**
    (completion still updates `lastUpdate*` off-loop).
 6. Does not overlap a restart countdown on the same server.
-7. Fail-streak pause (`MAINTENANCE_FAIL_LIMIT`) with Resume; failed Steam builds also
+7. Skips arming / Run update now / T0 stop while Downloads is **paused** (or otherwise
+   held for the operator) so a live map is not taken offline behind that hold. Scheduled
+   **restart** maintenance does not yet share this gate — follow-up if restart countdowns
+   should also defer while Downloads is held.
+8. Fail-streak pause (`MAINTENANCE_FAIL_LIMIT`) with Resume; failed Steam builds also
    cool down 5 minutes before re-arm. Availability key = `${serverId}:${officialBuild}`.
-8. **Run update now** requires `updateEnabled` + running + Steam newer; stopped servers
+9. **Run update now** requires `updateEnabled` + running + Steam newer; stopped servers
    get an error (“use Downloads”).
 
 `getPolicy` on the repository is read-only (defaults when no row). Rows seed via
@@ -173,6 +177,7 @@ scheduler cycle.
 | Cancelled restart comes back after relaunch | `completedTargets` is in-memory only |
 | Cancelled update returns | Availability was released; cooldown may still apply after a fail |
 | Run update now disabled / errors | Need running + Steam newer; stopped → Downloads |
+| Update countdown never arms | Downloads is paused or held for the operator |
 | Players still online at update T0 | T0 stop failed or was skipped; check stop errors / cancel race |
 | Wipe ran but animals returned | `-ForceRespawnDinos` on Launch is separate; wipe is one-shot after restart |
 | Console missing after maintenance start | Settings **Show server console on start** was off |

@@ -166,6 +166,26 @@ export function planBackupCleanup(input: PlanBackupCleanupInput): BackupCleanupP
           }
           continue;
         }
+        // Same per-map pools as enforceRetention / scheduled world retention (#492 residual).
+        if (kind === "world") {
+          const byMap = new Map<string, BackupRecord[]>();
+          for (const backup of completed) {
+            const key = worldRetentionKey(backup);
+            const list = byMap.get(key) ?? [];
+            list.push(backup);
+            byMap.set(key, list);
+          }
+          for (const [, list] of byMap) {
+            for (const backup of list.slice(keepLastPerKind)) {
+              mark(
+                backup,
+                server.name,
+                `keep last ${keepLastPerKind}/world`,
+              );
+            }
+          }
+          continue;
+        }
         for (const backup of completed.slice(keepLastPerKind)) {
           mark(backup, server.name, `keep last ${keepLastPerKind}/${kind}`);
         }

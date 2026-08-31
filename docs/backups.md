@@ -262,9 +262,8 @@ UI restore uses a confirm modal (world: profiles/tribes checkbox). Update rollba
   - **Delete older backups past each server's keep limit** (`enforceRetention`) —
     same pools as scheduled retention (world **per map**, players **per player**,
     flat INI).
-  - **Keep only last N per kind** (`keepLastPerKind`) — flat newest-first list for
-    world and INI; players still use per-player pools. (Not per-map for world —
-    use enforceRetention when rotating maps.)
+  - **Keep only last N per kind** (`keepLastPerKind`) — same per-map / per-player
+    pools for world and players; flat INI (#497).
   Failed rows are not pruned by retain counts.
   Cannot delete `running` backups. Operators can **Clear failed** on the server
   Backups history tab to remove every failed row for that server and kind

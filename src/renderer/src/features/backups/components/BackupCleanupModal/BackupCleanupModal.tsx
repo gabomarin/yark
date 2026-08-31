@@ -118,7 +118,7 @@ export function BackupCleanupModal(props: Props): ReactElement {
             }}
             w={90}
           />
-          <Text size="sm">per kind (per player for profiles)</Text>
+          <Text size="sm">per kind (per map for world, per player for profiles)</Text>
         </Group>
         <Checkbox
           label="Protect newest successful world backup per server"
