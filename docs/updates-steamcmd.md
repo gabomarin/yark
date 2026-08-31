@@ -85,11 +85,21 @@ server is stopped at request and execution time
        → rethrow (job fails / may retry up to 3 times)
 ```
 
-New update jobs are accepted only while the server is stopped and recheck that state
-inside the per-server execution lock. This prevents a queued or resumed job from
-updating a server that started while it was waiting. Rollback leaves it stopped.
-Legacy jobs that recorded running intent before this policy changed retain their
-stop/restart recovery behavior.
+New update jobs from Overview / Downloads (`servers:update-now`) are accepted only
+while the server is stopped and recheck that state inside the per-server execution
+lock. This prevents a queued or resumed job from updating a server that started
+while it was waiting. Rollback leaves it stopped. Legacy jobs that recorded running
+intent before this policy changed retain their stop/restart recovery behavior.
+
+**Maintenance exception (#489 / #498):** workspace Maintenance auto-update / Run
+update now stops the dedicated at countdown T0 (`backup: false`) so players are
+offline when warnings hit zero, then calls
+`UpdateService.enqueueUpdateForMaintenance(serverId, { wasRunning: true })` and
+waits for `pre_update` world+ini → SteamCMD → start (or rollback). Passing
+`wasRunning: true` after the caller-owned stop is required so the job restarts
+the map; omitting it after a stop would leave the server stopped. Stopped-server
+auto-update still uses the normal stopped `updateServer` path. Full job model:
+[maintenance.md](maintenance.md).
 
 An update produces exactly one stable `pre_update` archive set and does not create a
 `pre_stop` set for the same job. See [backups.md](backups.md).
@@ -144,6 +154,7 @@ Requires a display and `ELECTRON_RUN_AS_NODE` unset. Fixtures under `C:\asa-e2e`
 | --- | --- |
 | `servers:install-files` | Queue base-file install for a server |
 | `servers:update-now` | Queue safe update for a stopped server; rejects an active process at request or execution time |
+| `enqueueUpdateForMaintenance` (internal) | Maintenance-only; after T0 stop, queue the same safe-update pipeline with `{ wasRunning: true }` so the map restarts |
 | `servers:verify-files` | Queue integrity verify (same auto-stop/restart contract; no pre_update) |
 | `servers:installation` | Installation snapshot + official build/version |
 | `steamcmd:status` | Path, caches, busy/progress/queue |
@@ -157,7 +168,7 @@ Requires a display and `ELECTRON_RUN_AS_NODE` unset. Fixtures under `C:\asa-e2e`
 | `logs:read-update` / `logs:open-update-file` / `logs:delete-update` / `logs:clear-updates` | Per-server update log files |
 | **Push** `push:steamcmd-progress` | Live `{ status, console }` while ops run |
 
-UI entry points: **Downloads** page (queue + live console) + Overview / workspace install/update/verify; onboarding “Install files”. Update requires a stopped server. Verify stays enabled while running (tooltip explains auto-stop). Start stays locked while a files job is queued or active. **Update** / **Install** can replace a queued **Verify** for the same server (toast: replaced in the queue — no Needs attention leftover). A running Verify is not cancelled; the operator must cancel it first or wait. Verify on top of Update/Install is refused (“already in Downloads”). Duplicate clicks of the same operation toast “Already in Downloads”. The Overview card shows a queued or busy progress strip.
+UI entry points: **Downloads** page (queue + live console) + Overview / workspace install/update/verify; onboarding “Install files”. Card / Overview **Update** requires a stopped server. Workspace **Maintenance** auto-update stops at countdown T0 then queues via `enqueueUpdateForMaintenance({ wasRunning: true })` — see above. Verify stays enabled while running (tooltip explains auto-stop). Start stays locked while a files job is queued or active. **Update** / **Install** can replace a queued **Verify** for the same server (toast: replaced in the queue — no Needs attention leftover). A running Verify is not cancelled; the operator must cancel it first or wait. Verify on top of Update/Install is refused (“already in Downloads”). Duplicate clicks of the same operation toast “Already in Downloads”. The Overview card shows a queued or busy progress strip.
 
 **Pause** is for install, update, and file copy. Verify is SteamCMD `app_update … validate` with no resume checkpoint, so the UI offers **Cancel** instead — pausing and resuming would restart the scan at 0%. Pause during an in-progress rollback is refused (yellow toast) instead of cancelling. On Downloads, **Pause** / **Cancel** for the active job sit on the Active queue row; queued, paused, cancelled, and needs-attention rows expose their actions on the row as well. Cancel stops only the active SteamCMD job; other queued Downloads rows stay queued and start after unwind. Cancelled jobs stay visible under Needs attention with **Retry** and **Dismiss**. Retry re-queues that job. Clicking Install, Update, or Verify again also replaces a cancelled leftover of the same type. Failed or blocked jobs still need Retry or Dismiss on Downloads.
 
