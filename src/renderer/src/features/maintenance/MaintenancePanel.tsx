@@ -15,8 +15,8 @@ interface Props {
 }
 
 /**
- * Workspace Maintenance tab (#486 / #487) — Up next + job rows.
- * Wipe / Steam-newer execution lands in #488–#489.
+ * Workspace Maintenance tab (#486–#488) — Up next + job rows.
+ * Steam-newer auto-update lands in #489.
  */
 export function MaintenancePanel(props: Props): ReactElement {
   const panel = useMaintenancePanel(props.server.id);

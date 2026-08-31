@@ -312,6 +312,8 @@ export function createRendererApiMock(
         countdownPhase: "idle",
         lastRestartAt: null,
         lastRestartOk: null,
+        lastWipeAt: null,
+        lastWipeOk: null,
         cancelable: false,
       },
     }),

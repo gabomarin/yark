@@ -683,7 +683,7 @@ export type MaintenanceBroadcastPreset = "quiet" | "standard" | "strict" | "cust
 /** Per-job Broadcast offsets + template (restart vs auto-update are separate). */
 export interface MaintenanceJobWarnings {
   preset: MaintenanceBroadcastPreset;
-  /** Offset labels such as `30m`, `15m`, `5m`, `1m`, `10s`. */
+  /** Offset labels such as `30m`, `15m`, `5m`, `1m` (long window; last minute is always 1 Hz). */
   customOffsets: string[];
   /** In-game message; use `{time}` for remaining duration. */
   template: string;
@@ -724,6 +724,9 @@ export interface MaintenancePolicyStatus extends MaintenancePolicy {
   /** ISO of last completed maintenance restart attempt (session or persisted). */
   lastRestartAt: string | null;
   lastRestartOk: boolean | null;
+  /** ISO of last post-restart wild wipe attempt (session). */
+  lastWipeAt: string | null;
+  lastWipeOk: boolean | null;
   /** True when Cancel can stop an upcoming countdown. */
   cancelable: boolean;
 }
@@ -732,7 +735,8 @@ export type MaintenanceCountdownPhase =
   | "idle"
   | "warning"
   | "last_minute"
-  | "restarting";
+  | "restarting"
+  | "wiping";
 
 export interface BackupPolicy {
   serverId: string;

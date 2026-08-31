@@ -14,13 +14,21 @@ function idleStatus(serverId: string): MaintenancePolicyStatus {
     countdownPhase: "idle",
     lastRestartAt: null,
     lastRestartOk: null,
+    lastWipeAt: null,
+    lastWipeOk: null,
     cancelable: false,
   };
 }
 
-/** Live Up next: 1s in last minute; relaxed in warning; pause when tab hidden. */
+/** Live Up next: 1s in last minute / wipe; relaxed in warning; pause when tab hidden. */
 function pollIntervalMs(phase: MaintenancePolicyStatus["countdownPhase"]): number {
-  if (phase === "last_minute" || phase === "restarting") return 1_000;
+  if (
+    phase === "last_minute"
+    || phase === "restarting"
+    || phase === "wiping"
+  ) {
+    return 1_000;
+  }
   // Warning windows span minutes; avoid fleet-wide 1–3s IPC chatter.
   return 15_000;
 }
@@ -117,6 +125,8 @@ export function useMaintenancePanel(serverId: string) {
         countdownPhase: _ph,
         lastRestartAt: _l,
         lastRestartOk: _ok,
+        lastWipeAt: _lw,
+        lastWipeOk: _lwo,
         cancelable: _ca,
         ...rest
       } = policy;
