@@ -39,7 +39,7 @@ function createAppCssVariablesResolver(
       "--app-color-border-subtle": "var(--ark-gray-7)",
       "--app-color-border-control": "var(--ark-gray-9)",
       "--app-color-text-soft": "var(--ark-gray-12)",
-      "--app-color-muted-soft": "var(--ark-gray-11)",
+      "--app-color-muted-soft": tokens.colors.muted,
       "--app-color-bg-accent": "var(--app-color-surface-chrome)",
       "--app-color-panel": "var(--app-color-surface-panel)",
       "--app-color-panel-alt": "var(--app-color-surface-control)",

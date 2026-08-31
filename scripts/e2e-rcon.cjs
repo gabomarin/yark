@@ -279,17 +279,17 @@ async function run() {
       state: "visible",
       timeout: 10_000,
     });
-    await page.getByRole("button", { name: "Broadcast" }).click();
-    const broadcastInput = page.getByLabel(/rcon command/i);
-    await broadcastInput.waitFor({ state: "visible" });
+    await page.getByRole("button", { name: "ServerChat" }).click();
+    const chatInput = page.getByLabel(/rcon command/i);
+    await chatInput.waitFor({ state: "visible" });
     assert.equal(
-      await broadcastInput.inputValue(),
-      "Broadcast ",
-      "Broadcast chip should prefill the command input",
+      await chatInput.inputValue(),
+      "ServerChat ",
+      "ServerChat chip should prefill the command input",
     );
-    await broadcastInput.fill("Broadcast E2E hello");
+    await chatInput.fill("ServerChat E2E hello");
     await page.getByRole("button", { name: /^Send$/i }).click();
-    await page.getByText("E2E:Broadcast E2E hello", { exact: true }).waitFor({
+    await page.getByText("E2E:ServerChat E2E hello", { exact: true }).waitFor({
       state: "visible",
       timeout: 10_000,
     });

@@ -23,6 +23,7 @@ const tests = [
   { name: "e2e:mods", cmd: "npm run e2e:mods" },
   { name: "e2e:launch-args", cmd: "npm run e2e:launch-args" },
   { name: "e2e:log-retention", cmd: "npm run e2e:log-retention" },
+  { name: "e2e:maintenance", cmd: "npm run e2e:maintenance" },
   { name: "e2e:quit-policy", cmd: "npm run e2e:quit-policy" },
   { name: "e2e:rcon", cmd: "npm run e2e:rcon" },
   { name: "e2e:clusters-membership", cmd: "npm run e2e:clusters-membership" },

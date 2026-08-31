@@ -59,9 +59,14 @@ import {
   ENRICHED_INSTALL_INSPECT,
   InstanceFleetInstall,
 } from "./instance-fleet-install";
+import {
+  defaultResolveOpenNativeConsole,
+  withOpenNativeConsolePref,
+  type InstanceServiceOptions,
+} from "./instance-start-options";
 
 export type { StopServerOptions } from "./instance-stop";
-
+export type { InstanceServiceOptions } from "./instance-start-options";
 
 /**
  * Instance orchestration service: validated CRUD + lifecycle.
@@ -79,14 +84,18 @@ export class InstanceService extends EventEmitter {
   private readonly rcon: InstanceRcon;
   private readonly clones: InstanceClone;
   private readonly stops: InstanceStop;
+  private readonly resolveOpenNativeConsole: () => boolean;
 
   constructor(
     private readonly repo: ServerRepository,
     private readonly processes: ProcessManager,
     private readonly backups: BackupService,
     private readonly locks: InstanceLockManager,
+    options?: InstanceServiceOptions,
   ) {
     super();
+    this.resolveOpenNativeConsole =
+      options?.resolveOpenNativeConsole ?? defaultResolveOpenNativeConsole;
     this.fleetInstall = new InstanceFleetInstall({ repo });
     this.creates = new InstanceCreate({
       repo,
@@ -441,9 +450,13 @@ export class InstanceService extends EventEmitter {
       allowInconclusive: options?.skipPortValidation === true,
     });
     await syncProfileSettingsToIni(effective);
-    this.processes.start(effective, options);
+    const startOptions = withOpenNativeConsolePref(
+      options,
+      this.resolveOpenNativeConsole,
+    );
+    this.processes.start(effective, startOptions);
     const sessionNote =
-      options?.sessionPorts != null
+      startOptions.sessionPorts != null
         ? ` (session ports game ${effective.gamePort} / query ${effective.queryPort} / RCON ${effective.rconPort}; saved profile unchanged)`
         : "";
     this.repo.addEvent(

@@ -139,6 +139,10 @@ args** directly with `cwd = installDir`:
 | Piped (default) | `false` | `true` on Windows | `true` | `true` | ignore / pipe / pipe |
 | Native console (`openNativeConsole`) | `false` | `true` on Windows | `false` | `true` | ignore |
 
+`InstanceService.start` / `restart` / `startForMaintenance` apply Settings
+`openNativeConsoleOnStart` when the caller omits `openNativeConsole` (maintenance
+and post-update resume). Explicit IPC values still win.
+
 Constraints:
 
 - Do **not** wrap with `.cmd` / `cmd /c` / `start` — wrong tracked PID and a

@@ -1,26 +1,44 @@
 import { Alert, Button, Group, Stack, Text } from "@mantine/core";
-import type { ServerProfile } from "@shared/types";
+import type {
+  ServerInstallationInfo,
+  ServerProfile,
+  ServerRuntimeInfo,
+} from "@shared/types";
 import type { ReactElement } from "react";
 import {
   MaintenanceRestartSection,
   MaintenanceUpdateSection,
-  MaintenanceWipeSection,
 } from "./components/MaintenanceJobSections/MaintenanceJobSections";
 import { MaintenanceUpNext } from "./components/MaintenanceUpNext/MaintenanceUpNext";
 import { useMaintenancePanel } from "./hooks/useMaintenancePanel";
+import {
+  MAINTENANCE_RUN_RESTART_NOW_HINT,
+  maintenanceRunRestartNowGate,
+} from "./model/maintenancePanelModel";
 import classes from "./MaintenancePanel.module.css";
 
 interface Props {
   server: ServerProfile;
+  runtime: ServerRuntimeInfo | null;
+  installation: ServerInstallationInfo | null;
+  filesJobActive: boolean;
+  startBusy?: boolean;
 }
 
 /**
- * Workspace Maintenance tab (#486–#488) — Up next + job rows.
- * Steam-newer auto-update lands in #489.
+ * Workspace Maintenance tab (#486–#489) — Up next + job rows.
  */
 export function MaintenancePanel(props: Props): ReactElement {
   const panel = useMaintenancePanel(props.server.id);
   const policy = panel.policy;
+  const status = props.runtime?.status ?? "stopped";
+  const runRestartGate = maintenanceRunRestartNowGate({
+    status,
+    enabled: props.server.enabled,
+    filesJobActive: props.filesJobActive,
+    installation: props.installation,
+    startBusy: props.startBusy,
+  });
 
   return (
     <Stack gap="sm" className={classes.panel} data-maintenance-panel>
@@ -29,13 +47,17 @@ export function MaintenancePanel(props: Props): ReactElement {
       </Text>
 
       {panel.error !== null && (
-        <Alert color="red" title="Maintenance">
+        <Alert className={classes.alert} color="red" title="Maintenance">
           {panel.error}
         </Alert>
       )}
 
       {policy?.schedulePaused === true && (
-        <Alert color="red" title="Paused after repeated failures">
+        <Alert
+          className={classes.alert}
+          color="red"
+          title="Paused after repeated failures"
+        >
           <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
             <Text size="sm" c="dimmed">
               Automatic runs are paused for this YARK session. Policy stays
@@ -58,15 +80,18 @@ export function MaintenancePanel(props: Props): ReactElement {
         <MaintenanceUpNext
           policy={policy}
           busy={panel.busy}
+          runRestartNowDisabled={!runRestartGate.allowed}
+          runRestartNowTooltip={
+            runRestartGate.allowed
+              ? MAINTENANCE_RUN_RESTART_NOW_HINT
+              : runRestartGate.reason
+          }
           onRunRestartNow={panel.runRestartNow}
+          onRunUpdateNow={panel.runUpdateNow}
           onCancelUpcoming={() => void panel.cancelUpcoming()}
+          patch={panel.patch}
+          onWipeEnable={() => panel.setRestartOpen(true)}
         />
-      )}
-
-      {policy !== null && policy.wipeEnabled && (
-        <Text size="xs" c="dimmed" pl={4}>
-          · Wipe wild dinos after restart
-        </Text>
       )}
 
       {policy !== null && (
@@ -77,14 +102,6 @@ export function MaintenancePanel(props: Props): ReactElement {
             open={panel.restartOpen}
             onToggleOpen={() => panel.setRestartOpen((v) => !v)}
             onOpen={() => panel.setRestartOpen(true)}
-            patch={panel.patch}
-          />
-          <MaintenanceWipeSection
-            policy={policy}
-            busy={panel.busy}
-            open={panel.wipeOpen}
-            onToggleOpen={() => panel.setWipeOpen((v) => !v)}
-            onOpen={() => panel.setWipeOpen(true)}
             patch={panel.patch}
           />
           <MaintenanceUpdateSection

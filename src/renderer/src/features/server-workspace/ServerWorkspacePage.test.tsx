@@ -459,8 +459,8 @@ describe("ServerWorkspacePage", () => {
 
     expect(onSendRcon).toHaveBeenLastCalledWith("srv-a", "cheat ListPlayers");
 
-    await user.click(screen.getByRole("button", { name: "Broadcast" }));
-    expect(input).toHaveValue("Broadcast ");
+    await user.click(screen.getByRole("button", { name: "ServerChat" }));
+    expect(input).toHaveValue("ServerChat ");
   });
 
   it("shows RCON responses in the compact history panel", async () => {

@@ -972,6 +972,12 @@ export function registerIpcHandlers(
   );
 
   handleValidated(
+    IPC.maintenanceRunUpdateNow,
+    ipcArgSchemas[IPC.maintenanceRunUpdateNow],
+    ([serverId]) => maintenance.runUpdateNow(serverId),
+  );
+
+  handleValidated(
     IPC.maintenanceCancelUpcoming,
     ipcArgSchemas[IPC.maintenanceCancelUpcoming],
     ([serverId]) => maintenance.cancelUpcoming(serverId),

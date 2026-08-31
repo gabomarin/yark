@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { MaintenancePolicy, MaintenancePolicyStatus } from "@shared/types";
 import { defaultMaintenancePolicy } from "@shared/maintenance-policy";
 import { modals } from "@mantine/modals";
+import { maintenancePolicyWriteFromStatus } from "../model/maintenancePanelModel";
 
 type PolicyWrite = Omit<MaintenancePolicy, "serverId" | "updatedAt">;
 
@@ -12,25 +13,31 @@ function idleStatus(serverId: string): MaintenancePolicyStatus {
     nextRestartAt: null,
     countdownRemainingMs: null,
     countdownPhase: "idle",
+    countdownKind: null,
     lastRestartAt: null,
     lastRestartOk: null,
+    lastUpdateAt: null,
+    lastUpdateOk: null,
+    steamUpdateAvailable: false,
     lastWipeAt: null,
     lastWipeOk: null,
     cancelable: false,
   };
 }
 
-/** Live Up next: 1s in last minute / wipe; relaxed in warning; pause when tab hidden. */
+/** Live Up next poll while the Maintenance tab is open. */
 function pollIntervalMs(phase: MaintenancePolicyStatus["countdownPhase"]): number {
   if (
     phase === "last_minute"
     || phase === "restarting"
+    || phase === "updating"
     || phase === "wiping"
   ) {
     return 1_000;
   }
-  // Warning windows span minutes; avoid fleet-wide 1–3s IPC chatter.
-  return 15_000;
+  if (phase === "warning") return 3_000;
+  // Idle but jobs may arm from the ~60s scheduler — keep Up next honest.
+  return 10_000;
 }
 
 export function useMaintenancePanel(serverId: string) {
@@ -38,7 +45,6 @@ export function useMaintenancePanel(serverId: string) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [restartOpen, setRestartOpen] = useState(false);
-  const [wipeOpen, setWipeOpen] = useState(false);
   const [updateOpen, setUpdateOpen] = useState(false);
 
   const load = useCallback(async () => {
@@ -56,10 +62,11 @@ export function useMaintenancePanel(serverId: string) {
     void load();
   }, [load]);
 
+  // Always poll while this tab is mounted so a scheduler-armed countdown
+  // appears even if the first paint was idle (Run restart now used to error
+  // with "already active" while Up next still looked idle).
   const phase = policy?.countdownPhase ?? "idle";
   useEffect(() => {
-    if (phase === "idle") return undefined;
-
     let id: number | null = null;
 
     const clear = () => {
@@ -95,8 +102,9 @@ export function useMaintenancePanel(serverId: string) {
   }, [phase, load]);
 
   const save = useCallback(
-    async (next: PolicyWrite) => {
-      setBusy(true);
+    async (next: PolicyWrite, options?: { withBusy?: boolean }) => {
+      const withBusy = options?.withBusy ?? true;
+      if (withBusy) setBusy(true);
       setError(null);
       try {
         const result = await window.api.setMaintenancePolicy(serverId, next);
@@ -107,7 +115,7 @@ export function useMaintenancePanel(serverId: string) {
         setPolicy(result.data);
         return true;
       } finally {
-        setBusy(false);
+        if (withBusy) setBusy(false);
       }
     },
     [serverId],
@@ -116,23 +124,15 @@ export function useMaintenancePanel(serverId: string) {
   const patch = useCallback(
     async (partial: Partial<PolicyWrite>) => {
       if (policy === null) return false;
-      const {
-        serverId: _s,
-        updatedAt: _u,
-        schedulePaused: _p,
-        nextRestartAt: _n,
-        countdownRemainingMs: _c,
-        countdownPhase: _ph,
-        lastRestartAt: _l,
-        lastRestartOk: _ok,
-        lastWipeAt: _lw,
-        lastWipeOk: _lwo,
-        cancelable: _ca,
-        ...rest
-      } = policy;
-      return save({ ...rest, ...partial });
+      const next = { ...maintenancePolicyWriteFromStatus(policy), ...partial };
+      setPolicy((prev) => (prev === null ? prev : { ...prev, ...partial }));
+      const ok = await save(next, { withBusy: false });
+      if (!ok) {
+        await load();
+      }
+      return ok;
     },
-    [policy, save],
+    [policy, save, load],
   );
 
   const resumeSchedules = useCallback(async () => {
@@ -167,7 +167,7 @@ export function useMaintenancePanel(serverId: string) {
 
   const runRestartNow = useCallback(() => {
     modals.openConfirmModal({
-      title: "Run restart now?",
+      title: "Run scheduled restart now?",
       centered: true,
       children:
         "Players get a short final warning, then a graceful restart with backup. Continue?",
@@ -192,20 +192,46 @@ export function useMaintenancePanel(serverId: string) {
     });
   }, [serverId]);
 
+  const runUpdateNow = useCallback(() => {
+    modals.openConfirmModal({
+      title: "Run update now?",
+      centered: true,
+      children:
+        "Players get a short final warning, then a safe update with backup. The server restarts if it was running. Continue?",
+      labels: { confirm: "Yes, update", cancel: "Back" },
+      confirmProps: { color: "blue" },
+      onConfirm: () => {
+        void (async () => {
+          setBusy(true);
+          setError(null);
+          try {
+            const result = await window.api.runMaintenanceUpdateNow(serverId);
+            if (!result.ok) {
+              setError(result.error ?? "Could not start update now");
+              return;
+            }
+            setPolicy(result.data);
+          } finally {
+            setBusy(false);
+          }
+        })();
+      },
+    });
+  }, [serverId]);
+
   return {
     policy,
     busy,
     error,
     restartOpen,
-    wipeOpen,
     updateOpen,
     setRestartOpen,
-    setWipeOpen,
     setUpdateOpen,
     patch,
     resumeSchedules,
     cancelUpcoming,
     runRestartNow,
+    runUpdateNow,
     reload: load,
   };
 }

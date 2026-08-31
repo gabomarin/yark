@@ -26,7 +26,7 @@ This repository contains a desktop application for managing dedicated ARK Surviv
   `as unknown as RendererApi`) are fine until they force mechanical edits on
   every new IPC method — then migrate that suite to the shared factory. Details:
   [component-structure.md](component-structure.md) (Tests).
-- After `npm install`, Husky hooks run typecheck/lint on commit and typecheck/test/lint on push; CI also runs build + `lint` + `knip`. `npm run lint` is size caps, Actions pins, and ESLint (`eslint.config.mjs`). `npm run knip` finds unused files, exports, dependencies, and unused CSS files (`knip.jsonc`; not unused CSS classes).
+- After `npm install`, Husky hooks run typecheck/lint on commit and typecheck/test/lint on push; CI also runs `knip` (see [knip.md](knip.md)). `npm run lint` is size caps, Actions pins, and ESLint (`eslint.config.mjs`). `npm run knip` finds unused files, exports, dependencies, and unused CSS files (`knip.jsonc`; not unused CSS classes). **Run knip locally before commit/push when you change exports, files, or dependencies** — hooks do not run it.
 - Optional renderer hygiene: `npx react-doctor@latest --verbose --scope changed` on UI PRs (baseline and ignored rules: [react-doctor.md](react-doctor.md), root `doctor.config.json`).
 - React Compiler is **opt-in** only (`YARK_REACT_COMPILER=1` / `npm run build:compiler`); default stays off — spike write-up [react-compiler-spike.md](react-compiler-spike.md) (#404).
 - For visible renderer changes, follow the mandatory [visual testing protocol](visual-testing.md), including HD, Full HD, and QHD/2K review.
@@ -67,7 +67,7 @@ paths or the Notion hub URL in tracked files.
 ## Engineering runbooks
 
 - [backups.md](backups.md) — ZIP kinds, reconcile, all-servers health/cleanup, IPC, schedules, player sessions.
-- [maintenance.md](maintenance.md) — workspace Maintenance tab, restart countdown, wipe-after-restart (#315 / #486–#488).
+- [maintenance.md](maintenance.md) — workspace Maintenance tab, restart countdown, wipe-after-restart, Steam-newer auto-update (#315 / #486–#489).
 - [updates-steamcmd.md](updates-steamcmd.md) — caches, safe update auto-stop/rollback, availability compare, progress push, Windows real-host validation.
 - [e2e-validation.md](e2e-validation.md) — PR CI Electron E2E vs prepared-host / manual release matrix (#12). UI changes must update affected `scripts/e2e-*.cjs` in the same PR.
 - [critical-job-recovery.md](critical-job-recovery.md) — durable phases, replay policy, queue quarantine, and operator recovery actions.
@@ -127,6 +127,20 @@ paths or the Notion hub URL in tracked files.
 ## Recommended verification
 
 Before closing significant changes:
+
+```bash
+npm run typecheck
+npm run lint
+npm run knip
+npm test
+npm run build
+```
+
+**Knip** is not in Husky hooks; CI fails PRs on unused exports/files/deps. Run
+`npm run knip` before commit or push whenever you add/remove exports, files, or
+dependencies. Fix guide: [knip.md](knip.md).
+
+The older one-liner still works:
 
 ```bash
 npm test

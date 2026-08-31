@@ -77,7 +77,7 @@ the Server tab / workspace.
 
 | Control | Storage | Default | Notes |
 | --- | --- | --- | --- |
-| Show server console on start | SQLite `openNativeConsoleOnStart` (`"1"`/`"0"`) | off | Passed as `StartServerOptions.openNativeConsole` on Start, Restart, and Auto-start. Also on first-run Windows step. Legacy `localStorage` `overview.openNativeTerminalOnStart` migrates once. |
+| Show server console on start | SQLite `openNativeConsoleOnStart` (`"1"`/`"0"`) | off | Applied on Start / Restart / Auto-start IPC and on backend starts that omit the flag (maintenance restart, post-update resume). Also on first-run Windows step. Legacy `localStorage` `overview.openNativeTerminalOnStart` migrates once. |
 | Default base folder | `localStorage` `settings.defaultServerBaseFolder` | unset | Prefills create-server base path only |
 | Server auto-start summary | Profile `autoStart` | off | Lists opted-in servers; edit on the Server tab |
 

@@ -18,6 +18,7 @@ import {
   renderLastMinuteRestart,
   renderWarningTemplate,
   resolveWarningOffsetLabels,
+  shouldUseLastMinuteChat,
 } from "@shared/maintenance-schedule";
 import type {
   MaintenanceCountdownPhase,
@@ -78,6 +79,8 @@ export class MaintenanceRestartRuntime {
   /** Scheduled target keys already completed/skipped this process. */
   private readonly completedTargets = new Set<string>();
 
+  private peerBusy: ((serverId: string) => boolean) | null = null;
+
   constructor(
     private readonly repo: MaintenanceRepository,
     private readonly servers: ServerRepository,
@@ -85,8 +88,22 @@ export class MaintenanceRestartRuntime {
     private readonly instances: InstanceService,
   ) {}
 
+  /** Avoid overlapping restart + auto-update windows on the same server. */
+  setPeerBusyCheck(check: (serverId: string) => boolean): void {
+    this.peerBusy = check;
+  }
+
+  private isPeerBusy(serverId: string): boolean {
+    return this.peerBusy?.(serverId) === true;
+  }
+
   isSchedulePaused(serverId: string): boolean {
     return this.pausedServerIds.has(serverId);
+  }
+
+  /** True while a restart warning / restart / wipe window is active. */
+  hasActiveCountdown(serverId: string): boolean {
+    return this.active.has(serverId);
   }
 
   clearSchedulePause(serverId: string): void {
@@ -102,8 +119,7 @@ export class MaintenanceRestartRuntime {
     let nextRestartAt: string | null = null;
     if (policy.restartEnabled && active === undefined) {
       const next = nextLocalRestartAt(
-        policy.restartCadence,
-        policy.restartDayOfWeek,
+        policy.restartDaysOfWeek,
         policy.restartTimeLocal,
         now,
       );
@@ -124,8 +140,12 @@ export class MaintenanceRestartRuntime {
             ? 0
             : null,
       countdownPhase: active?.phase ?? "idle",
+      countdownKind: active !== undefined ? "restart" : null,
       lastRestartAt: last?.atIso ?? null,
       lastRestartOk: last?.ok ?? null,
+      lastUpdateAt: null,
+      lastUpdateOk: null,
+      steamUpdateAvailable: false,
       lastWipeAt: wipe?.atIso ?? null,
       lastWipeOk: wipe?.ok ?? null,
       cancelable:
@@ -161,7 +181,14 @@ export class MaintenanceRestartRuntime {
       throw new Error("Maintenance schedules are paused for this server");
     }
     if (this.active.has(serverId)) {
-      throw new Error("A maintenance countdown is already active");
+      // Scheduler already armed this window — return live status (UI may have
+      // been idle until the next poll).
+      return this.enrichStatus(policy);
+    }
+    if (this.isPeerBusy(serverId)) {
+      throw new Error(
+        "An auto-update countdown is already active — Cancel it first, or wait",
+      );
     }
     const targetAtMs = Date.now() + MAINTENANCE_RUN_NOW_LEAD_MS;
     this.startCountdown(policy, targetAtMs, "run_now", null);
@@ -200,6 +227,7 @@ export class MaintenanceRestartRuntime {
     if (!policy.restartEnabled) return;
     if (this.pausedServerIds.has(policy.serverId)) return;
     if (this.active.has(policy.serverId)) return;
+    if (this.isPeerBusy(policy.serverId)) return;
 
     const server = this.servers.get(policy.serverId);
     if (server === null || !server.enabled) return;
@@ -208,8 +236,7 @@ export class MaintenanceRestartRuntime {
 
     const now = Date.now();
     const next = nextLocalRestartAt(
-      policy.restartCadence,
-      policy.restartDayOfWeek,
+      policy.restartDaysOfWeek,
       policy.restartTimeLocal,
       now,
     );
@@ -245,6 +272,7 @@ export class MaintenanceRestartRuntime {
     source: "schedule" | "run_now",
     scheduleTargetKey: string | null,
   ): void {
+    const remaining = targetAtMs - Date.now();
     const state: ActiveCountdown = {
       serverId: policy.serverId,
       targetAtMs,
@@ -252,7 +280,13 @@ export class MaintenanceRestartRuntime {
       firedOffsets: new Set(),
       rconFailStreak: 0,
       cancelRequested: false,
-      phase: targetAtMs - Date.now() <= 60_000 ? "last_minute" : "warning",
+      phase: shouldUseLastMinuteChat(
+        remaining,
+        policy.restartWarnings,
+        source,
+      )
+        ? "last_minute"
+        : "warning",
       timer: null,
       timerGeneration: 0,
       runPromise: null,
@@ -327,7 +361,7 @@ export class MaintenanceRestartRuntime {
     if (state.rconFailStreak >= MAINTENANCE_RCON_SOFT_FAIL_LIMIT) {
       this.abortWindowHard(
         state,
-        `RCON Broadcast failed ${state.rconFailStreak} times: ${errorMessage}`,
+        `RCON ServerChat failed ${state.rconFailStreak} times: ${errorMessage}`,
       );
       return "abort";
     }
@@ -370,7 +404,13 @@ export class MaintenanceRestartRuntime {
       return;
     }
 
-    if (remainingMs <= 60_000) {
+    if (
+      shouldUseLastMinuteChat(
+        remainingMs,
+        policy.restartWarnings,
+        state.source,
+      )
+    ) {
       state.phase = "last_minute";
       const sec = remainingMs / 1_000;
       let broadcastOk = true;
@@ -378,7 +418,7 @@ export class MaintenanceRestartRuntime {
       try {
         await this.instances.execRcon(
           serverId,
-          `Broadcast ${renderLastMinuteRestart(sec)}`,
+          `ServerChat ${renderLastMinuteRestart(sec)}`,
           { recordEvent: false },
         );
       } catch (error) {
@@ -391,6 +431,16 @@ export class MaintenanceRestartRuntime {
         return;
       }
       this.scheduleNextTick(serverId, expectedTargetAtMs, 1_000);
+      return;
+    }
+
+    if (remainingMs <= 60_000) {
+      state.phase = "warning";
+      this.scheduleNextTick(
+        serverId,
+        expectedTargetAtMs,
+        Math.max(250, remainingMs),
+      );
       return;
     }
 
@@ -410,7 +460,7 @@ export class MaintenanceRestartRuntime {
       try {
         await this.instances.execRcon(
           serverId,
-          `Broadcast ${renderWarningTemplate(policy.restartWarnings.template, remainingMs)}`,
+          `ServerChat ${renderWarningTemplate(policy.restartWarnings.template, remainingMs)}`,
           { recordEvent: false },
         );
       } catch (error) {

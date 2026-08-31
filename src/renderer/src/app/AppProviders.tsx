@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
 import { MantineProvider } from "@mantine/core";
+import { DatesProvider } from "@mantine/dates";
 import {
   createContext,
   useContext,
@@ -75,6 +76,14 @@ export function AppProviders({
             hideDetached: false,
           },
         },
+        TimePicker: {
+          defaultProps: {
+            popoverProps: {
+              withinPortal: false,
+              transitionProps: { duration: 0 },
+            },
+          },
+        },
       },
     };
   }, [density]);
@@ -102,21 +111,23 @@ export function AppProviders({
         cssVariablesResolver={cssVariablesResolver}
         defaultColorScheme="dark"
       >
-        <ModalsProvider
-          modalProps={{
-            centered: true,
-            radius: "md",
-            ...(process.env.VITEST === "true"
-              ? { transitionProps: { duration: 0 } }
-              : {}),
-          }}
-          labels={{ confirm: "Confirm", cancel: "Cancel" }}
-        >
-          <RowActionMenuProvider>
-            <Notifications position="bottom-right" autoClose={notificationsAutoClose} />
-            {children}
-          </RowActionMenuProvider>
-        </ModalsProvider>
+        <DatesProvider settings={{ consistentWeeks: true }}>
+          <ModalsProvider
+            modalProps={{
+              centered: true,
+              radius: "md",
+              ...(process.env.VITEST === "true"
+                ? { transitionProps: { duration: 0 } }
+                : {}),
+            }}
+            labels={{ confirm: "Confirm", cancel: "Cancel" }}
+          >
+            <RowActionMenuProvider>
+              <Notifications position="bottom-right" autoClose={notificationsAutoClose} />
+              {children}
+            </RowActionMenuProvider>
+          </ModalsProvider>
+        </DatesProvider>
       </MantineProvider>
     </UiDensityContext.Provider>
   );

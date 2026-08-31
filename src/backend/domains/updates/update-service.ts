@@ -27,6 +27,7 @@ import {
 } from "../../orchestration/critical-job-recovery";
 import {
   type UpdateCriticalJob,
+  type UpdateCriticalJobContext,
 } from "./update-critical-jobs";
 import {
   isPreUpdateBackupEvidenceComplete,
@@ -473,6 +474,22 @@ export class UpdateService extends EventEmitter {
     await this.enqueueAndStart("update", serverId);
   }
 
+  /**
+   * Maintenance auto-update (#489): allow a running server and persist
+   * `wasRunning` so performUpdate stops → SteamCMD → starts again.
+   * Waits for the full stop → update → start (or rollback) pipeline.
+   */
+  async enqueueUpdateForMaintenance(serverId: string): Promise<void> {
+    this.assertStopBackupIdle(serverId);
+    const wasRunning = this.processes.isActive(serverId);
+    await this.enqueueAndWait("update", serverId, { wasRunning });
+  }
+
+  /** True when this server already has an occupying files job (update/install/verify). */
+  hasOccupyingFilesJob(serverId: string): boolean {
+    return this.queueRuntime.hasOccupyingFilesJob(serverId);
+  }
+
   /** Forces app_update validate (ignores “fresh” cache) and syncs to the server. */
   async verifyServerFiles(serverId: string): Promise<void> {
     this.assertStopBackupIdle(serverId);
@@ -501,15 +518,17 @@ export class UpdateService extends EventEmitter {
   private async enqueueAndWait(
     type: "install-files" | "update" | "verify-files",
     serverId: string,
+    initialContext?: UpdateCriticalJobContext,
   ): Promise<void> {
-    await this.queueRuntime.enqueueAndWait(type, serverId);
+    await this.queueRuntime.enqueueAndWait(type, serverId, initialContext);
   }
 
   private async enqueueAndStart(
     type: "install-files" | "update" | "verify-files",
     serverId: string,
+    initialContext?: UpdateCriticalJobContext,
   ): Promise<void> {
-    await this.queueRuntime.enqueueAndStart(type, serverId);
+    await this.queueRuntime.enqueueAndStart(type, serverId, initialContext);
   }
 
   private async processQueue(): Promise<void> {

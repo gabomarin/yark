@@ -1,4 +1,46 @@
-import type { MaintenanceJobWarnings, MaintenancePolicy } from "./types";
+import type { MaintenanceJobWarnings } from "./types";
+import { normalizeRestartDaysOfWeek } from "./maintenance-restart-days";
+
+/**
+ * Next local-clock restart instant strictly after `fromMs` on one of `daysOfWeek`.
+ */
+export function nextLocalRestartAt(
+  daysOfWeek: readonly number[],
+  timeLocal: string,
+  fromMs: number,
+): Date | null {
+  const days = normalizeRestartDaysOfWeek(daysOfWeek);
+  const parts = /^(\d{2}):(\d{2})$/.exec(timeLocal);
+  if (parts === null) return null;
+  const hour = Number(parts[1]);
+  const minute = Number(parts[2]);
+  if (hour > 23 || minute > 59) return null;
+
+  const from = new Date(fromMs);
+  for (let add = 0; add <= 14; add++) {
+    const candidate = new Date(from);
+    candidate.setSeconds(0, 0);
+    candidate.setMilliseconds(0);
+    candidate.setDate(from.getDate() + add);
+    candidate.setHours(hour, minute, 0, 0);
+    if (days.includes(candidate.getDay()) && candidate.getTime() > fromMs) {
+      return candidate;
+    }
+  }
+  return null;
+}
+
+/** Whether the countdown should enter 1 Hz last-minute ServerChat. */
+export function shouldUseLastMinuteChat(
+  remainingMs: number,
+  warnings: MaintenanceJobWarnings,
+  source: "schedule" | "run_now",
+): boolean {
+  if (remainingMs > 60_000) return false;
+  if (source === "run_now") return true;
+  if (warnings.preset === "none") return false;
+  return warnings.lastMinuteChat;
+}
 
 const OFFSET_RE = /^(\d+)(s|m)$/i;
 
@@ -17,6 +59,7 @@ export function resolveWarningOffsetLabels(
   warnings: MaintenanceJobWarnings,
   presetTable: Record<"quiet" | "standard" | "strict", readonly string[]>,
 ): string[] {
+  if (warnings.preset === "none") return [];
   if (warnings.preset === "custom") {
     return warnings.customOffsets.filter((o) => parseMaintenanceOffsetToMs(o) !== null);
   }
@@ -24,6 +67,7 @@ export function resolveWarningOffsetLabels(
 }
 
 export function maxWarningLeadMs(offsetLabels: readonly string[]): number {
+  if (offsetLabels.length === 0) return 0;
   let max = 60_000;
   for (const label of offsetLabels) {
     const ms = parseMaintenanceOffsetToMs(label);
@@ -32,49 +76,7 @@ export function maxWarningLeadMs(offsetLabels: readonly string[]): number {
   return max;
 }
 
-/**
- * Next local-clock restart instant strictly after `fromMs`.
- * `restartDayOfWeek`: 0 = Sunday … 6 = Saturday (weekly only).
- */
-export function nextLocalRestartAt(
-  cadence: MaintenancePolicy["restartCadence"],
-  dayOfWeek: number,
-  timeLocal: string,
-  fromMs: number,
-): Date | null {
-  const parts = /^(\d{2}):(\d{2})$/.exec(timeLocal);
-  if (parts === null) return null;
-  const hour = Number(parts[1]);
-  const minute = Number(parts[2]);
-  if (hour > 23 || minute > 59) return null;
-
-  const from = new Date(fromMs);
-  if (cadence === "daily") {
-    const candidate = new Date(from);
-    candidate.setSeconds(0, 0);
-    candidate.setMilliseconds(0);
-    candidate.setHours(hour, minute, 0, 0);
-    if (candidate.getTime() <= fromMs) {
-      candidate.setDate(candidate.getDate() + 1);
-    }
-    return candidate;
-  }
-
-  const dow = Math.min(6, Math.max(0, Math.trunc(dayOfWeek)));
-  for (let add = 0; add <= 7; add++) {
-    const candidate = new Date(from);
-    candidate.setSeconds(0, 0);
-    candidate.setMilliseconds(0);
-    candidate.setDate(from.getDate() + add);
-    candidate.setHours(hour, minute, 0, 0);
-    if (candidate.getDay() === dow && candidate.getTime() > fromMs) {
-      return candidate;
-    }
-  }
-  return null;
-}
-
-/** Human phrase for `{time}` in long-window Broadcast templates. */
+/** Human phrase for `{time}` in long-window ServerChat templates. */
 export function formatWarningTimePhrase(remainingMs: number): string {
   const sec = Math.max(0, Math.ceil(remainingMs / 1_000));
   if (sec < 60) {
@@ -100,13 +102,20 @@ export function renderLastMinuteRestart(remainingSec: number): string {
   return LAST_MINUTE_RESTART_TEMPLATE.replaceAll("{n}", String(n));
 }
 
+const LAST_MINUTE_UPDATE_TEMPLATE = "Update in {n}s";
+
+export function renderLastMinuteUpdate(remainingSec: number): string {
+  const n = Math.max(0, Math.ceil(remainingSec));
+  return LAST_MINUTE_UPDATE_TEMPLATE.replaceAll("{n}", String(n));
+}
+
 /** Lead time for Run now (short confirm → final warning window). */
 export const MAINTENANCE_RUN_NOW_LEAD_MS = 10_000;
 
 export const MAINTENANCE_RESTART_FAIL_LIMIT = 3;
 
 /**
- * Consecutive Broadcast failures within one countdown window before hard-fail.
+ * Consecutive ServerChat failures within one countdown window before hard-fail.
  * Warning ticks are sparse (~15s); last-minute is 1 Hz — either way, a few
  * blips recover, a stuck RCON aborts instead of retrying forever.
  */

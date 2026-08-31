@@ -9,11 +9,31 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Opt-in **auto-update** on Steam-newer: ServerChat countdown (last minute 1 Hz), then safe update with restart-if-was-running (#489).
+- Scheduled **restart** maintenance: ServerChat countdown (last minute 1 Hz), Run restart now / Cancel, and graceful restart with backup (#487).
+- **Wild dino wipe** after a successful maintenance restart (optional SaveWorld, then DestroyWildDinos) (#488).
+- Workspace **Maintenance** tab shell: per-server policies (default off), idle scheduler, Up next, and schedule/warning editors matching the #315 mock (#486).
+
+### Fixed
+
+- Maintenance **auto-update** waits for the full stop → SteamCMD → start job before marking success, and cools down failed Steam builds for 5 minutes before retrying (#489).
+- Maintenance warnings and the RCON quick chip use **ServerChat** instead of **Broadcast** — ASA often accepts `Broadcast` over RCON with “no response” but does not show it in-game (#487).
+- Maintenance restart and post-update start honor Settings **Show server console on start** (they no longer spawn hidden when the preference is on) (#489).
+- Maintenance tab Alerts (errors / schedule pause) stay readable instead of collapsing to a thin border when job sections are expanded (#489).
+- Fleet **Cleanup** “keep limit” now matches scheduled world retention: last N archives **per map**, so rotating maps no longer deletes the other map’s backups.
+
 ### Changed
 
-- Maintenance warning presets no longer offer a **10s** offset — the last minute already Broadcasts every second (#488).
-- Scheduled **restart** maintenance: Broadcast countdown (last minute 1 Hz), Run restart now / Cancel, and graceful restart with backup (#487).
-- Workspace **Maintenance** tab shell: per-server policies (default off), idle scheduler, Up next, and schedule/warning editors matching the #315 mock — restart / wipe / auto-update execution comes in follow-up slices (#486).
+- Restart schedule: pick **multiple weekdays** (e.g. Mon & Fri), Mantine **TimePicker** for local time, and an optional **last minute in chat** toggle (#489).
+- Maintenance **Wild dino wipe** toggle lives in **Up next** (no separate job accordion); save-world-before-wipe is always on (#489).
+- Player warnings add an **Off** preset; **Custom** with no times selected falls back to Off and re-selects all times when chosen again (#489).
+- Auto-update copy refers to a new **Ark server version** instead of Steam; **Up next** shows the next restart time before warning detail (#489).
+- Playwright **`e2e:maintenance`** covers the Maintenance tab (Up next, restart schedule, wipe toggle, warnings Off) (#489).
+- Muted helper text (`c="dimmed"`, `--app-color-muted`) is slightly brighter for readability on dark surfaces (#489).
+- **Run update now** stays disabled until Steam reports a newer dedicated build (#489).
+- Maintenance warning presets no longer offer a **10s** offset — the last minute already ServerChats every second (#488 / #489).
 - Keyboard: Ctrl+K Spotlight, Tab to server cards, Shift+F10 for the row menu, and Escape to dismiss menus and confirm dialogs (setup wizard still needs Skip / Close / Back) (#476).
 - Keyboard: Overview search Escape clears; fleet strip tiles toggle with Enter/Space; workspace tabs and Settings categories are Tab-reachable. Card version/meta cells stay mouse-only (#477).
 
@@ -28,10 +48,6 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Security
 
 - Logs, crash excerpts, events, and IPC errors omit GameUserSettings password settings and redact leftover credential assignments. SQLite and ASA INI stay plaintext for the same Windows user (#144).
-
-### Fixed
-
-- Fleet **Cleanup** “keep limit” now matches scheduled world retention: last N archives **per map**, so rotating maps no longer deletes the other map’s backups.
 
 ## [0.17.0] - 2026-08-29
 

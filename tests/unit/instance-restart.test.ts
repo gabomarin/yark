@@ -150,6 +150,31 @@ describe("InstanceService.restart", () => {
     expect(backupOrder).toBeLessThan(startOrder);
   });
 
+  it("applies Settings Show server console when restart omits openNativeConsole", async () => {
+    const profile = makeProfile();
+    const repo = makeRepo(profile);
+    const processes = makeProcesses(profile);
+    const backups = {
+      createPreStopBackup: vi.fn(),
+      createPreRestartBackup: vi.fn(async () => []),
+    } as unknown as BackupService;
+
+    const service = new InstanceService(
+      repo,
+      processes,
+      backups,
+      new InstanceLockManager(),
+      { resolveOpenNativeConsole: () => true },
+    );
+
+    await service.restart(profile.id);
+
+    expect(processes.start).toHaveBeenCalledWith(
+      profile,
+      expect.objectContaining({ openNativeConsole: true }),
+    );
+  });
+
   it("rejects when the server is not running", async () => {
     const profile = makeProfile();
     const repo = makeRepo(profile);
