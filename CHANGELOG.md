@@ -29,6 +29,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Maintenance **Wild dino wipe** toggle lives in **Up next** (no separate job accordion); save-world-before-wipe is always on (#489).
 - Player warnings add an **Off** preset; **Custom** with no times selected falls back to Off and re-selects all times when chosen again (#489).
 - Auto-update copy refers to a new **Ark server version** instead of Steam; **Up next** shows the next restart time before warning detail (#489).
+- Playwright **`e2e:maintenance`** covers the Maintenance tab (Up next, restart schedule, wipe toggle, warnings Off) (#489).
 - Muted helper text (`c="dimmed"`, `--app-color-muted`) is slightly brighter for readability on dark surfaces (#489).
 - **Run update now** stays disabled until Steam reports a newer dedicated build (#489).
 - Maintenance warning presets no longer offer a **10s** offset — the last minute already ServerChats every second (#488 / #489).

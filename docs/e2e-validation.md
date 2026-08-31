@@ -100,6 +100,7 @@ modals, workspace tabs, PathFields):
 | Copy configuration | `e2e:copy-configuration` |
 | Downloads queue / critical-job recovery | `e2e:critical-job-recovery`, `e2e:downloads-pause-resume`, `node scripts/visual-downloads.cjs` |
 | Log retention (Settings → Logs) | `e2e:log-retention` |
+| Workspace Maintenance tab | `e2e:maintenance` |
 
 Cursor rule: [`.cursor/rules/e2e-ui.mdc`](../.cursor/rules/e2e-ui.mdc).
 

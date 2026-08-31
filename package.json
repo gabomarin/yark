@@ -45,6 +45,7 @@
     "e2e:kill-leftover": "node scripts/e2e-kill-leftover.cjs",
     "e2e:all": "node scripts/run-all-e2e.cjs",
     "e2e:log-retention": "node scripts/e2e-log-retention.cjs",
+    "e2e:maintenance": "node scripts/e2e-maintenance.cjs",
     "e2e:clusters-membership": "node scripts/e2e-clusters-membership.cjs",
     "e2e:copy-configuration": "node scripts/e2e-copy-configuration.cjs",
     "e2e:clone-copy": "node scripts/e2e-clone-copy.cjs",
