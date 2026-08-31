@@ -1,8 +1,5 @@
-import type { MaintenanceJobWarnings, MaintenancePolicy } from "./types";
-import {
-  formatRestartDaysSummary,
-  normalizeRestartDaysOfWeek,
-} from "./maintenance-restart-days";
+import type { MaintenanceJobWarnings } from "./types";
+import { normalizeRestartDaysOfWeek } from "./maintenance-restart-days";
 
 /**
  * Next local-clock restart instant strictly after `fromMs` on one of `daysOfWeek`.
@@ -123,12 +120,6 @@ export const MAINTENANCE_RESTART_FAIL_LIMIT = 3;
  * blips recover, a stuck RCON aborts instead of retrying forever.
  */
 export const MAINTENANCE_RCON_SOFT_FAIL_LIMIT = 3;
-
-/** Operator-facing schedule line for the restart job section. */
-export function formatRestartScheduleLine(policy: MaintenancePolicy): string {
-  const days = formatRestartDaysSummary(policy.restartDaysOfWeek);
-  return `${days} at ${policy.restartTimeLocal} (this PC)`;
-}
 
 /**
  * Extra wait after the dedicated reports ready before DestroyWildDinos (#488).

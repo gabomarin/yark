@@ -187,7 +187,11 @@ Common validation commands:
 | Pre-commit | Typecheck and lint |
 | Pre-push | Typecheck, tests, and lint |
 
-GitHub Actions runs typecheck, lint, and tests on `windows-latest` in parallel with
+Knip (`npm run knip`) runs in CI but **not** in Husky hooks. Run it locally before
+commit or push when you change exports, files, or dependencies — see
+[docs/knip.md](docs/knip.md).
+
+GitHub Actions runs typecheck, lint, knip, and tests on `windows-latest` in parallel with
 build + Electron E2E (CRUD, install-health, host-port-probe) for pull requests
 and pushes to `main`. Prepared-host ASA validation is tracked
 separately because it needs a real-server environment.

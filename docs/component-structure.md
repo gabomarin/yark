@@ -157,7 +157,8 @@ folder convention examples: `features/backups/`, `features/logs/`, `app/hooks/`.
 (`eslint.config.mjs`: TypeScript + React hooks) after the size/Actions-pin
 checks. CI also runs `npm run knip` (`knip.jsonc`) for unused files, exports,
 dependencies, and unused CSS **files** — not unused classes inside a
-`.module.css`. Size caps on `src/renderer/src/features/**/*.{ts,tsx}` (excluding
+`.module.css`. Knip is **not** in Husky hooks; run it before commit/push when you
+touch exports or deps ([knip.md](knip.md)). Size caps on `src/renderer/src/features/**/*.{ts,tsx}` (excluding
 `*.test.*`):
 
 - New/ungrandfathered React component files (`.tsx`) must stay ≤ **350** lines.

@@ -16,11 +16,9 @@ import {
   ALL_RESTART_DAYS_OF_WEEK,
   formatRestartDaysSummary,
   normalizeRestartDaysOfWeek,
-  RESTART_DAY_LABELS,
   RESTART_DAY_SHORT,
 } from "@shared/maintenance-restart-days";
 
-export const DAY_LABELS = RESTART_DAY_LABELS;
 export const DAY_SHORT = RESTART_DAY_SHORT;
 
 export const CUSTOM_OFFSET_OPTIONS = [
@@ -31,7 +29,7 @@ export const CUSTOM_OFFSET_OPTIONS = [
   "1m",
 ] as const;
 
-export function defaultCustomWarningOffsets(): string[] {
+function defaultCustomWarningOffsets(): string[] {
   return [...CUSTOM_OFFSET_OPTIONS];
 }
 
@@ -169,7 +167,7 @@ export function formatRestartSummary(policy: MaintenancePolicyStatus): string {
   return `${days} ${policy.restartTimeLocal} · ${warningsLabel}`;
 }
 
-export function formatJobWarningsLabel(warnings: MaintenanceJobWarnings): string {
+function formatJobWarningsLabel(warnings: MaintenanceJobWarnings): string {
   if (warnings.preset === "none") return "No warnings";
   if (warnings.preset === "custom") return "Custom warnings";
   return `${PRESET_LABELS[warnings.preset].title} warnings`;

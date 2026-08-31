@@ -1,5 +1,5 @@
 /** 0 = Sunday … 6 = Saturday (local Windows clock). */
-export const RESTART_DAY_LABELS = [
+const RESTART_DAY_LABELS = [
   "Sunday",
   "Monday",
   "Tuesday",

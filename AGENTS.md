@@ -94,6 +94,8 @@ Notes specific to running this in the Linux cloud VM:
   TypeScript gate. `npm run lint` runs feature-file size caps, Actions pin check, and
   ESLint 9 ([docs/component-structure.md](docs/component-structure.md), `eslint.config.mjs`).
   `npm run knip` finds unused files, exports, deps, and unused CSS files (`knip.jsonc`).
+  Run knip locally before commit/push when changing exports or dependencies — hooks do
+  not run it; see [docs/knip.md](docs/knip.md).
   Optional UI hygiene: `npx react-doctor@latest --verbose --scope changed`
   ([docs/react-doctor.md](docs/react-doctor.md)).
   `npm run build` is clean.
