@@ -85,7 +85,8 @@ export function MaintenanceUpNext(props: Props): ReactElement {
     policy.countdownPhase === "warning"
     || policy.countdownPhase === "last_minute"
     || policy.countdownPhase === "restarting"
-    || policy.countdownPhase === "updating";
+    || policy.countdownPhase === "updating"
+    || policy.countdownPhase === "wiping";
   const isUpdateWindow = policy.countdownKind === "update";
 
   const daysLabel = formatRestartDaysSummary(policy.restartDaysOfWeek);
@@ -124,6 +125,9 @@ export function MaintenanceUpNext(props: Props): ReactElement {
     if (policy.countdownPhase === "updating") {
       title = "Updating…";
       subtitle = "Safe update with backup · queued in Downloads";
+    } else if (policy.countdownPhase === "wiping") {
+      title = "Wiping wild dinos…";
+      subtitle = "Waiting for ready, then DestroyWildDinos";
     } else if (policy.countdownPhase === "restarting") {
       title = "Restarting…";
       subtitle = "Graceful restart with backup";
@@ -167,6 +171,12 @@ export function MaintenanceUpNext(props: Props): ReactElement {
           policy.lastUpdateAt,
         )}`
       : null;
+  const lastWipeLine =
+    policy.wipeEnabled && policy.lastWipeAt !== null
+      ? `Last wipe · ${policy.lastWipeOk === false ? "failed" : "OK"} · ${formatMaintenanceLocalDateTime(
+          policy.lastWipeAt,
+        )}`
+      : null;
 
   return (
     <section className={classes.slab} data-maintenance-up-next>
@@ -186,6 +196,17 @@ export function MaintenanceUpNext(props: Props): ReactElement {
             {lastUpdateLine !== null && (
               <Text size="xs" c="dimmed" mt={lastRestartLine === null ? 4 : 2}>
                 {lastUpdateLine}
+              </Text>
+            )}
+            {lastWipeLine !== null && (
+              <Text
+                size="xs"
+                c="dimmed"
+                mt={
+                  lastRestartLine === null && lastUpdateLine === null ? 4 : 2
+                }
+              >
+                {lastWipeLine}
               </Text>
             )}
           </div>

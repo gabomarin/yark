@@ -683,7 +683,7 @@ export type MaintenanceBroadcastPreset = "none" | "quiet" | "standard" | "strict
 /** Per-job ServerChat offsets + template (restart vs auto-update are separate). */
 export interface MaintenanceJobWarnings {
   preset: MaintenanceBroadcastPreset;
-  /** Offset labels such as `30m`, `15m`, `5m`, `1m`, `10s`. */
+  /** Offset labels such as `30m`, `15m`, `5m`, `1m` (long window; last minute is always 1 Hz). */
   customOffsets: string[];
   /** In-game message; use `{time}` for remaining duration. */
   template: string;
@@ -735,6 +735,9 @@ export interface MaintenancePolicyStatus extends MaintenancePolicy {
    * (same signal as Downloads / auto-update arming).
    */
   steamUpdateAvailable: boolean;
+  /** ISO of last post-restart wild wipe attempt (session). */
+  lastWipeAt: string | null;
+  lastWipeOk: boolean | null;
   /** True when Cancel can stop an upcoming countdown. */
   cancelable: boolean;
 }
@@ -744,7 +747,8 @@ export type MaintenanceCountdownPhase =
   | "warning"
   | "last_minute"
   | "restarting"
-  | "updating";
+  | "updating"
+  | "wiping";
 
 export interface BackupPolicy {
   serverId: string;

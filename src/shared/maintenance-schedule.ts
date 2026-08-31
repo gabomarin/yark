@@ -129,3 +129,13 @@ export function formatRestartScheduleLine(policy: MaintenancePolicy): string {
   const days = formatRestartDaysSummary(policy.restartDaysOfWeek);
   return `${days} at ${policy.restartTimeLocal} (this PC)`;
 }
+
+/**
+ * Extra wait after the dedicated reports ready before DestroyWildDinos (#488).
+ * Ready-wait already settles ~15s after first RCON; this gives wildlife spawn
+ * a short additional window (product range ~15–30s).
+ */
+export const MAINTENANCE_WIPE_POST_READY_MS = 20_000;
+
+/** Cap waiting for post-restart running + RCON before wipe. */
+export const MAINTENANCE_WIPE_READY_TIMEOUT_MS = 10 * 60 * 1_000;

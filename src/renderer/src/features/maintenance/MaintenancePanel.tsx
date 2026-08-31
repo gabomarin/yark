@@ -26,8 +26,7 @@ interface Props {
 }
 
 /**
- * Workspace Maintenance tab (#486 / #487 / #489) — Up next + job rows.
- * Wipe-after-restart lands in #488 when merged.
+ * Workspace Maintenance tab (#486–#489) — Up next + job rows.
  */
 export function MaintenancePanel(props: Props): ReactElement {
   const panel = useMaintenancePanel(props.server.id);

@@ -31,6 +31,8 @@ function status(
     lastUpdateAt: null,
     lastUpdateOk: null,
     steamUpdateAvailable: false,
+    lastWipeAt: null,
+    lastWipeOk: null,
     cancelable: false,
     ...partial,
   };

@@ -1,5 +1,6 @@
 /**
- * Per-server scheduled restart countdown + InstanceService.restart (#487).
+ * Per-server scheduled restart countdown + InstanceService.restart (#487)
+ * and optional post-restart wild wipe (#488).
  */
 
 import {
@@ -9,6 +10,8 @@ import {
   MAINTENANCE_RESTART_FAIL_LIMIT,
   MAINTENANCE_RCON_SOFT_FAIL_LIMIT,
   MAINTENANCE_RUN_NOW_LEAD_MS,
+  MAINTENANCE_WIPE_POST_READY_MS,
+  MAINTENANCE_WIPE_READY_TIMEOUT_MS,
   maxWarningLeadMs,
   nextLocalRestartAt,
   parseMaintenanceOffsetToMs,
@@ -56,11 +59,23 @@ interface LastRestartMemory {
   ok: boolean;
 }
 
+interface LastWipeMemory {
+  atIso: string;
+  ok: boolean;
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms).unref?.();
+  });
+}
+
 export class MaintenanceRestartRuntime {
   private readonly pausedServerIds = new Set<string>();
   private readonly failStreak = new Map<string, number>();
   private readonly active = new Map<string, ActiveCountdown>();
   private readonly lastRestart = new Map<string, LastRestartMemory>();
+  private readonly lastWipe = new Map<string, LastWipeMemory>();
   /** Scheduled target keys already completed/skipped this process. */
   private readonly completedTargets = new Set<string>();
 
@@ -99,6 +114,7 @@ export class MaintenanceRestartRuntime {
   enrichStatus(policy: MaintenancePolicy): MaintenancePolicyStatus {
     const active = this.active.get(policy.serverId);
     const last = this.lastRestart.get(policy.serverId);
+    const wipe = this.lastWipe.get(policy.serverId);
     const now = Date.now();
     let nextRestartAt: string | null = null;
     if (policy.restartEnabled && active === undefined) {
@@ -117,7 +133,12 @@ export class MaintenanceRestartRuntime {
       schedulePaused: this.pausedServerIds.has(policy.serverId),
       nextRestartAt,
       countdownRemainingMs:
-        active !== undefined ? Math.max(0, active.targetAtMs - now) : null,
+        active !== undefined
+        && (active.phase === "warning" || active.phase === "last_minute")
+          ? Math.max(0, active.targetAtMs - now)
+          : active !== undefined
+            ? 0
+            : null,
       countdownPhase: active?.phase ?? "idle",
       countdownKind: active !== undefined ? "restart" : null,
       lastRestartAt: last?.atIso ?? null,
@@ -125,6 +146,8 @@ export class MaintenanceRestartRuntime {
       lastUpdateAt: null,
       lastUpdateOk: null,
       steamUpdateAvailable: false,
+      lastWipeAt: wipe?.atIso ?? null,
+      lastWipeOk: wipe?.ok ?? null,
       cancelable:
         active !== undefined
         && (active.phase === "warning" || active.phase === "last_minute")
@@ -483,6 +506,39 @@ export class MaintenanceRestartRuntime {
         this.lastRestart.set(serverId, { atIso, ok: true });
         this.failStreak.delete(serverId);
         this.markOccurrenceDone(state);
+
+        if (policy.wipeEnabled) {
+          const still = this.isCurrentTick(serverId, expectedTargetAtMs);
+          if (still === null) return;
+          still.phase = "wiping";
+          try {
+            await this.runPostRestartWipe(serverId, policy);
+            this.lastWipe.set(serverId, {
+              atIso: new Date().toISOString(),
+              ok: true,
+            });
+          } catch (wipeError) {
+            const message =
+              wipeError instanceof Error ? wipeError.message : String(wipeError);
+            this.lastWipe.set(serverId, {
+              atIso: new Date().toISOString(),
+              ok: false,
+            });
+            // Restart already succeeded — do not inflate restart fail-streak.
+            this.servers.addEvent(
+              serverId,
+              "error",
+              "error",
+              "Maintenance wild wipe failed",
+              {
+                what: "Post-restart DestroyWildDinos did not complete.",
+                cause: message,
+                suggestion:
+                  "Confirm RCON works, then wipe manually from the RCON panel or wait for the next restart window.",
+              },
+            );
+          }
+        }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         this.lastRestart.set(serverId, {
@@ -500,6 +556,75 @@ export class MaintenanceRestartRuntime {
       }
     })();
     await state.runPromise;
+  }
+
+  /**
+   * After a successful maintenance restart: wait for ready, settle, optional
+   * SaveWorld, then DestroyWildDinos (#488). Launch ForceRespawnDinos is unchanged.
+   */
+  private async runPostRestartWipe(
+    serverId: string,
+    policy: MaintenancePolicy,
+  ): Promise<void> {
+    await this.waitUntilRunningForWipe(serverId);
+    if (this.isIntentionalStop(serverId)) {
+      throw new Error("Stop in progress during post-restart wipe");
+    }
+    await this.ensureRconForWipe(serverId);
+    await delay(MAINTENANCE_WIPE_POST_READY_MS);
+    if (this.isIntentionalStop(serverId)) {
+      throw new Error("Stop in progress during post-restart wipe");
+    }
+    if (!this.processes.isActive(serverId)) {
+      throw new Error("Server stopped before wild wipe");
+    }
+    if (policy.wipeSaveWorldFirst) {
+      await this.instances.execRcon(serverId, "SaveWorld", {
+        recordEvent: false,
+      });
+    }
+    await this.instances.execRcon(serverId, "DestroyWildDinos", {
+      recordEvent: false,
+    });
+  }
+
+  private async waitUntilRunningForWipe(serverId: string): Promise<void> {
+    const deadline = Date.now() + MAINTENANCE_WIPE_READY_TIMEOUT_MS;
+    while (Date.now() < deadline) {
+      if (this.isIntentionalStop(serverId)) {
+        throw new Error("Stop in progress while waiting for post-restart ready");
+      }
+      const status = this.processes.getStatus(serverId).status;
+      if (status === "running") return;
+      if (status === "error" || status === "stopped") {
+        throw new Error(
+          `Server left starting (${status}) before post-restart wipe`,
+        );
+      }
+      await delay(500);
+    }
+    throw new Error("Timed out waiting for server ready after restart (wipe)");
+  }
+
+  private async ensureRconForWipe(serverId: string): Promise<void> {
+    const deadline = Date.now() + 60_000;
+    let lastError = "RCON not ready";
+    while (Date.now() < deadline) {
+      if (this.isIntentionalStop(serverId)) {
+        throw new Error("Stop in progress while waiting for RCON (wipe)");
+      }
+      try {
+        await this.instances.retryRconConnection(serverId);
+        await this.instances.execRcon(serverId, "ListPlayers", {
+          recordEvent: false,
+        });
+        return;
+      } catch (error) {
+        lastError = error instanceof Error ? error.message : String(error);
+        await delay(1_000);
+      }
+    }
+    throw new Error(`RCON not ready for wipe: ${lastError}`);
   }
 
   private recordFail(serverId: string, message: string): void {

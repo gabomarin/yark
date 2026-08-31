@@ -19,6 +19,8 @@ function idleStatus(serverId: string): MaintenancePolicyStatus {
     lastUpdateAt: null,
     lastUpdateOk: null,
     steamUpdateAvailable: false,
+    lastWipeAt: null,
+    lastWipeOk: null,
     cancelable: false,
   };
 }
@@ -29,6 +31,7 @@ function pollIntervalMs(phase: MaintenancePolicyStatus["countdownPhase"]): numbe
     phase === "last_minute"
     || phase === "restarting"
     || phase === "updating"
+    || phase === "wiping"
   ) {
     return 1_000;
   }

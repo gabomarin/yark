@@ -32,6 +32,7 @@ function makeRuntime(policy: MaintenancePolicy) {
   const instances = {
     execRcon: vi.fn(async () => "ok"),
     restart: vi.fn(async () => undefined),
+    retryRconConnection: vi.fn(async () => undefined),
     isStopInProgress: vi.fn(() => false),
   };
   const runtime = new MaintenanceRestartRuntime(
@@ -145,6 +146,47 @@ describe("MaintenanceRestartRuntime", () => {
       expect(String(servers.addEvent.mock.calls[0]?.[3] ?? "")).toMatch(
         /Maintenance restart failed/,
       );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("runs SaveWorld + DestroyWildDinos after a successful restart when wipe is On", async () => {
+    vi.useFakeTimers();
+    try {
+      const policy = {
+        ...defaultMaintenancePolicy("s1", "2026-01-01T00:00:00.000Z"),
+        restartEnabled: true,
+        wipeEnabled: true,
+        wipeSaveWorldFirst: true,
+      };
+      const { runtime, instances, processes } = makeRuntime(policy);
+      instances.restart.mockImplementation(async () => {
+        processes.getStatus.mockReturnValue({
+          serverId: "s1",
+          status: "running",
+          processLive: true,
+          pid: 1,
+          startedAt: null,
+          lastError: null,
+        });
+      });
+
+      await runtime.runRestartNow("s1");
+      // Drain last-minute ticks through T0 + wipe settle (20s) + RCON probes.
+      await vi.advanceTimersByTimeAsync(12_000);
+      await vi.advanceTimersByTimeAsync(25_000);
+
+      expect(instances.restart).toHaveBeenCalled();
+      const cmds = instances.execRcon.mock.calls.map(
+        (c: unknown[]) => String(c[1] ?? ""),
+      );
+      expect(cmds.some((c: string) => c === "SaveWorld")).toBe(true);
+      expect(cmds.some((c: string) => c === "DestroyWildDinos")).toBe(true);
+      const status = runtime.enrichStatus(policy);
+      expect(status.lastRestartOk).toBe(true);
+      expect(status.lastWipeOk).toBe(true);
+      expect(status.countdownPhase).toBe("idle");
     } finally {
       vi.useRealTimers();
     }
