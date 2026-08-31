@@ -141,7 +141,9 @@ args** directly with `cwd = installDir`:
 
 `InstanceService.start` / `restart` / `startForMaintenance` apply Settings
 `openNativeConsoleOnStart` when the caller omits `openNativeConsole` (maintenance
-and post-update resume). Explicit IPC values still win.
+and post-update resume). Explicit IPC values still win. Scheduled / Run-now
+maintenance restart uses `InstanceService.restart` (same `pre_restart` path) and
+omits the console flag so Settings fill it — see [maintenance.md](maintenance.md).
 
 Constraints:
 
