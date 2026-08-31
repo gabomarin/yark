@@ -42,6 +42,7 @@ export class MaintenanceService {
   }
 
   async getPolicy(serverId: string): Promise<MaintenancePolicyStatus> {
+    this.repo.ensurePolicy(serverId);
     const base = this.restartRuntime.enrichStatus(this.repo.getPolicy(serverId));
     const steamUpdateAvailable =
       await this.updateRuntime.isSteamUpdateAvailable(serverId);
@@ -94,6 +95,7 @@ export class MaintenanceService {
   }
 
   async runScheduledCycle(): Promise<void> {
+    this.repo.ensurePoliciesForServers(this.servers.list().map((s) => s.id));
     await this.restartRuntime.runScheduledCycle();
     await this.updateRuntime.runScheduledCycle();
   }

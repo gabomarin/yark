@@ -7,7 +7,7 @@ import {
   MAINTENANCE_RESTART_PRESET_OFFSETS,
 } from "@shared/maintenance-policy";
 import {
-  MAINTENANCE_RESTART_FAIL_LIMIT,
+  MAINTENANCE_FAIL_LIMIT,
   MAINTENANCE_RCON_SOFT_FAIL_LIMIT,
   MAINTENANCE_RUN_NOW_LEAD_MS,
   MAINTENANCE_WIPE_POST_READY_MS,
@@ -71,6 +71,11 @@ function delay(ms: number): Promise<void> {
 }
 
 export class MaintenanceRestartRuntime {
+  /**
+   * Session-only pause / fail streak / completed schedule keys / last outcome.
+   * Cleared when YARK quits — intentional (same honesty as backup schedule
+   * requiring the app open). See docs/maintenance.md § Session runtime state.
+   */
   private readonly pausedServerIds = new Set<string>();
   private readonly failStreak = new Map<string, number>();
   private readonly active = new Map<string, ActiveCountdown>();
@@ -320,6 +325,8 @@ export class MaintenanceRestartRuntime {
       if (current === null || current.timerGeneration !== generation) return;
       void this.tickCountdown(serverId, expectedTargetAtMs);
     }, delayMs);
+    // unref: do not keep Node alive for idle countdown timers alone. The Electron
+    // main process always has other refs, so ticks still fire in normal desktop use.
     state.timer.unref();
   }
 
@@ -634,11 +641,11 @@ export class MaintenanceRestartRuntime {
       what: "A maintenance restart did not complete.",
       cause: message,
       suggestion:
-        streak >= MAINTENANCE_RESTART_FAIL_LIMIT
+        streak >= MAINTENANCE_FAIL_LIMIT
           ? "Automatic maintenance is paused for this YARK session — resume when ready."
           : "Check RCON, locks, and server health, then retry or wait for the next window.",
     });
-    if (streak >= MAINTENANCE_RESTART_FAIL_LIMIT) {
+    if (streak >= MAINTENANCE_FAIL_LIMIT) {
       this.pausedServerIds.add(serverId);
     }
   }
