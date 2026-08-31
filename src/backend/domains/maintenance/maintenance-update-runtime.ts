@@ -46,6 +46,15 @@ interface ActiveUpdateCountdown {
   source: "schedule" | "run_now";
 }
 
+function isUpdateCountdownBroadcastPhase(
+  phase: MaintenanceCountdownPhase,
+): boolean {
+  return phase === "warning" || phase === "last_minute";
+}
+
+/** After a failed arm/run, wait before re-trying the same Steam build. */
+const MAINTENANCE_UPDATE_RETRY_COOLDOWN_MS = 5 * 60 * 1_000;
+
 interface LastUpdateMemory {
   atIso: string;
   ok: boolean;
@@ -58,6 +67,8 @@ export class MaintenanceUpdateRuntime {
   private readonly lastUpdate = new Map<string, LastUpdateMemory>();
   /** Availability keys already armed/enqueued this session. */
   private readonly handledAvailability = new Set<string>();
+  /** Earliest retry time per availability key after a failed update. */
+  private readonly availabilityRetryAfterMs = new Map<string, number>();
 
   constructor(
     private readonly repo: MaintenanceRepository,
@@ -103,7 +114,7 @@ export class MaintenanceUpdateRuntime {
       ...status,
       schedulePaused: status.schedulePaused || updatePaused,
       countdownRemainingMs:
-        active.phase === "warning" || active.phase === "last_minute"
+        isUpdateCountdownBroadcastPhase(active.phase)
           ? Math.max(0, active.targetAtMs - now)
           : 0,
       countdownPhase: active.phase,
@@ -112,7 +123,7 @@ export class MaintenanceUpdateRuntime {
       lastUpdateOk: last?.ok ?? null,
       steamUpdateAvailable,
       cancelable:
-        (active.phase === "warning" || active.phase === "last_minute")
+        isUpdateCountdownBroadcastPhase(active.phase)
         && !active.cancelRequested,
     };
   }
@@ -157,23 +168,24 @@ export class MaintenanceUpdateRuntime {
         }
         const official = installSnapshot.officialSteamBuild ?? "unknown";
         const availabilityKey = `${policy.serverId}:${official}`;
-        if (this.handledAvailability.has(availabilityKey)) continue;
+        if (!this.canArmAvailability(availabilityKey)) continue;
 
         if (!this.processes.isActive(policy.serverId)) {
-          // Stopped + outdated: queue safe update without player warning.
-          this.handledAvailability.add(availabilityKey);
+          // Stopped + outdated: safe update without player warning (wait for completion).
+          this.markAvailabilityHandled(availabilityKey);
           try {
-            await this.updates.enqueueUpdate(policy.serverId);
+            await this.updates.updateServer(policy.serverId);
             this.lastUpdate.set(policy.serverId, {
               atIso: new Date().toISOString(),
               ok: true,
             });
             this.failStreak.delete(policy.serverId);
           } catch (error) {
-            this.handledAvailability.delete(availabilityKey);
+            this.scheduleAvailabilityRetry(availabilityKey);
             this.recordFail(
               policy.serverId,
               error instanceof Error ? error.message : String(error),
+              error,
             );
           }
           continue;
@@ -187,7 +199,7 @@ export class MaintenanceUpdateRuntime {
         );
         const lead = maxWarningLeadMs(offsets);
         const targetAtMs = Date.now() + lead;
-        this.handledAvailability.add(availabilityKey);
+        this.markAvailabilityHandled(availabilityKey);
         this.startCountdown(policy, targetAtMs, "schedule", availabilityKey);
       } catch (error) {
         console.error(
@@ -220,6 +232,9 @@ export class MaintenanceUpdateRuntime {
     if (this.updates.hasOccupyingFilesJob(serverId)) {
       throw new Error("A files job is already queued for this server");
     }
+    if (this.instances.isStopInProgress(serverId)) {
+      throw new Error("Server stop is in progress — try again when idle");
+    }
     if (!this.processes.isActive(serverId)) {
       throw new Error("Server is not running — use Downloads Update while stopped");
     }
@@ -230,7 +245,7 @@ export class MaintenanceUpdateRuntime {
     }
     const official = snapshot.officialSteamBuild ?? "unknown";
     const availabilityKey = `${serverId}:${official}`;
-    this.handledAvailability.add(availabilityKey);
+    this.markAvailabilityHandled(availabilityKey);
     this.startCountdown(
       policy,
       Date.now() + MAINTENANCE_RUN_NOW_LEAD_MS,
@@ -245,7 +260,7 @@ export class MaintenanceUpdateRuntime {
     if (active === undefined) return;
     active.cancelRequested = true;
     this.clearTimer(active);
-    this.handledAvailability.delete(active.availabilityKey);
+    this.releaseAvailability(active.availabilityKey);
     this.active.delete(serverId);
   }
 
@@ -323,7 +338,7 @@ export class MaintenanceUpdateRuntime {
 
   private abortQuiet(state: ActiveUpdateCountdown): void {
     this.clearTimer(state);
-    this.handledAvailability.delete(state.availabilityKey);
+    this.releaseAvailability(state.availabilityKey);
     this.active.delete(state.serverId);
   }
 
@@ -344,7 +359,7 @@ export class MaintenanceUpdateRuntime {
     }
     state.rconFailStreak += 1;
     if (state.rconFailStreak >= MAINTENANCE_RCON_SOFT_FAIL_LIMIT) {
-      this.handledAvailability.delete(state.availabilityKey);
+      this.releaseAvailability(state.availabilityKey);
       this.abortHard(
         state,
         `RCON ServerChat failed ${state.rconFailStreak} times: ${errorMessage}`,
@@ -370,7 +385,7 @@ export class MaintenanceUpdateRuntime {
       return;
     }
     if (!this.processes.isActive(serverId)) {
-      this.handledAvailability.delete(state.availabilityKey);
+      this.releaseAvailability(state.availabilityKey);
       this.abortHard(state, "Server stopped during update countdown");
       return;
     }
@@ -492,8 +507,8 @@ export class MaintenanceUpdateRuntime {
           atIso: new Date().toISOString(),
           ok: false,
         });
-        this.handledAvailability.delete(state.availabilityKey);
-        this.recordFail(serverId, message);
+        this.scheduleAvailabilityRetry(state.availabilityKey);
+        this.recordFail(serverId, message, error);
       } finally {
         this.clearTimer(state);
         const current = this.active.get(serverId);
@@ -505,7 +520,37 @@ export class MaintenanceUpdateRuntime {
     await state.runPromise;
   }
 
-  private recordFail(serverId: string, message: string): void {
+  private canArmAvailability(availabilityKey: string): boolean {
+    if (!this.handledAvailability.has(availabilityKey)) return true;
+    const retryAfter = this.availabilityRetryAfterMs.get(availabilityKey);
+    if (retryAfter === undefined) return false;
+    if (Date.now() < retryAfter) return false;
+    this.releaseAvailability(availabilityKey);
+    return true;
+  }
+
+  private markAvailabilityHandled(availabilityKey: string): void {
+    this.handledAvailability.add(availabilityKey);
+    this.availabilityRetryAfterMs.delete(availabilityKey);
+  }
+
+  private scheduleAvailabilityRetry(availabilityKey: string): void {
+    this.handledAvailability.add(availabilityKey);
+    this.availabilityRetryAfterMs.set(
+      availabilityKey,
+      Date.now() + MAINTENANCE_UPDATE_RETRY_COOLDOWN_MS,
+    );
+  }
+
+  private releaseAvailability(availabilityKey: string): void {
+    this.handledAvailability.delete(availabilityKey);
+    this.availabilityRetryAfterMs.delete(availabilityKey);
+  }
+
+  private recordFail(serverId: string, message: string, error?: unknown): void {
+    if (error !== undefined) {
+      console.error(`Maintenance auto-update failed for ${serverId}`, error);
+    }
     const streak = (this.failStreak.get(serverId) ?? 0) + 1;
     this.failStreak.set(serverId, streak);
     this.servers.addEvent(serverId, "error", "error", "Maintenance auto-update failed", {

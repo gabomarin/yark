@@ -55,9 +55,9 @@ When **Wild dino wipe** is On (toggle in Up next; turning wipe On enables restar
 
 1. Scheduler tick finds `updateEnabled` + outdated + not busy.
 2. **Running:** arm ServerChat window from `updateWarnings` (last ≤60s = 1 Hz `Update in {n}s`).
-3. **Stopped:** enqueue normal `UpdateService.enqueueUpdate` (no player warning).
-4. At T0 (running): `enqueueUpdateForMaintenance` sets `wasRunning` so perform does
-   stop `{ backup: false }` → pre_update backup → SteamCMD → start.
+3. **Stopped:** enqueue `UpdateService.updateServer` and wait for completion (no player warning).
+4. At T0 (running): `enqueueUpdateForMaintenance` sets `wasRunning` and **waits** for
+   stop `{ backup: false }` → pre_update backup → SteamCMD → start (or rollback).
 5. Does not overlap a restart countdown on the same server.
 6. Fail-streak pause (3) with Resume — shared alert with restart.
 

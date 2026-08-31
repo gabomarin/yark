@@ -18,6 +18,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Maintenance **auto-update** waits for the full stop → SteamCMD → start job before marking success, and cools down failed Steam builds for 5 minutes before retrying (#489).
 - Maintenance warnings and the RCON quick chip use **ServerChat** instead of **Broadcast** — ASA often accepts `Broadcast` over RCON with “no response” but does not show it in-game (#487).
 - Maintenance restart and post-update start honor Settings **Show server console on start** (they no longer spawn hidden when the preference is on) (#489).
 - Maintenance tab Alerts (errors / schedule pause) stay readable instead of collapsing to a thin border when job sections are expanded (#489).

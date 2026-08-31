@@ -232,8 +232,12 @@ export class UpdateQueueRuntime {
     return true;
   }
 
-  async enqueueAndWait(type: UpdateCriticalJobType, serverId: string): Promise<void> {
-    const jobId = await this.enqueueAndReturnJobId(type, serverId);
+  async enqueueAndWait(
+    type: UpdateCriticalJobType,
+    serverId: string,
+    initialContext?: UpdateCriticalJobContext,
+  ): Promise<void> {
+    const jobId = await this.enqueueAndReturnJobId(type, serverId, initialContext);
     const job = this.queue.find((candidate) => candidate.id === jobId);
     if (job !== undefined) {
       job.context.operatorAwaited = true;
