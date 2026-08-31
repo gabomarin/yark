@@ -18,7 +18,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
-- Maintenance **auto-update** stops the dedicated at countdown T0 before queuing SteamCMD, so players are offline when warnings hit zero even if another server is still updating; the map restarts after that job finishes (#489).
+- Maintenance **auto-update** stops the dedicated at countdown T0 before queuing SteamCMD so players are offline when warnings hit zero even if another server is still updating; the map restarts after that job finishes (#489).
 - Maintenance **auto-update** waits for the full stop → SteamCMD → start job before marking success, and cools down failed Steam builds for 5 minutes before retrying (#489).
 - Maintenance policy reads no longer INSERT on `getPolicy`; defaults seed via `ensurePolicy` (`INSERT OR IGNORE`) on UI open and each scheduler cycle (#315).
 - Stopped-server auto-update no longer blocks the maintenance schedule loop while SteamCMD runs (#489).

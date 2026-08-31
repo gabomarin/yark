@@ -549,13 +549,26 @@ export class MaintenanceUpdateRuntime {
         // Stop at T0 (like official fleet downtime) so players are offline when
         // the countdown hits 0 — even if SteamCMD is still busy with another server.
         // Restart after the queued update via wasRunning: true.
+        //
+        // Do not call isIntentionalStop() after our stop — status becomes
+        // "stopped" by design. Re-check cancel / tick identity instead, and
+        // bail before stop if the process is already gone (operator raced us).
         const wasRunning = this.processes.isActive(serverId);
-        if (wasRunning) {
+        if (!wasRunning) {
+          this.abortQuiet(state);
+          return;
+        }
+        try {
           await this.instances.stop(serverId, { backup: false });
+        } catch (error) {
+          const detail = error instanceof Error ? error.message : String(error);
+          throw new Error(
+            `Tried to stop the server before maintenance update but stop failed (wasRunning=true): ${detail}`,
+          );
         }
         if (this.isCurrentTick(serverId, expectedTargetAtMs) === null) return;
         await this.updates.enqueueUpdateForMaintenance(serverId, {
-          wasRunning,
+          wasRunning: true,
         });
         this.lastUpdate.set(serverId, {
           atIso: new Date().toISOString(),
