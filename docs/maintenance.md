@@ -83,7 +83,9 @@ availability snapshot). Presets do **not** change how often Steam is checked.
    server starts again (or rolls back on failure).
 6. Does not overlap a restart countdown on the same server.
 7. Skips arming / Run update now / T0 stop while Downloads is **paused** (or otherwise
-   held for the operator) so a live map is not taken offline behind that hold.
+   held for the operator) so a live map is not taken offline behind that hold. Scheduled
+   **restart** maintenance does not yet share this gate — follow-up if restart countdowns
+   should also defer while Downloads is held.
 8. Fail-streak pause (`MAINTENANCE_FAIL_LIMIT`, 3) with Resume — shared alert with restart;
    failed Steam builds also cool down 5 minutes before re-arm.
 

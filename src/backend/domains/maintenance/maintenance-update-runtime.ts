@@ -288,7 +288,7 @@ export class MaintenanceUpdateRuntime {
     }
     if (this.updates.isQueueHeldForOperator()) {
       throw new Error(
-        "Downloads is paused — resume or dismiss the paused job before Run update now",
+        "Downloads is on hold for the operator (paused or interrupted) — resume or dismiss before triggering an update",
       );
     }
     if (this.instances.isStopInProgress(serverId)) {

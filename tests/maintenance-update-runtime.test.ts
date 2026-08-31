@@ -181,16 +181,30 @@ describe("MaintenanceUpdateRuntime T0 stop-before-queue (#489)", () => {
     }
   });
 
-  it("rejects runUpdateNow while Downloads is paused", async () => {
+  it("rejects runUpdateNow while Downloads is held for the operator", async () => {
     const policy = {
       ...defaultMaintenancePolicy("s1", "2026-01-01T00:00:00.000Z"),
       updateEnabled: true,
     };
     const { runtime, updates } = makeRuntime(policy);
     updates.isQueueHeldForOperator.mockReturnValue(true);
-    await expect(runtime.runUpdateNow("s1")).rejects.toThrow(/Downloads is paused/i);
+    await expect(runtime.runUpdateNow("s1")).rejects.toThrow(
+      /on hold for the operator.*before triggering an update/i,
+    );
   });
 
+  it("skips runScheduledCycle while Downloads is held for the operator", async () => {
+    const policy = {
+      ...defaultMaintenancePolicy("s1", "2026-01-01T00:00:00.000Z"),
+      updateEnabled: true,
+    };
+    const { runtime, instances, updates } = makeRuntime(policy);
+    updates.isQueueHeldForOperator.mockReturnValue(true);
+    await expect(runtime.runScheduledCycle()).resolves.toBeUndefined();
+    expect(instances.installationInfo).not.toHaveBeenCalled();
+  });
+
+  // Covers executeUpdate T0 stop guard only — tickCountdown does not abort mid-window on pause.
   it("does not stop at T0 when Downloads becomes paused during the countdown", async () => {
     vi.useFakeTimers();
     try {
