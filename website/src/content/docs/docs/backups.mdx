@@ -72,7 +72,7 @@ New archives are named `{server}-{kind}-{type}-…-{YYYYMMDD-HHmmss}.zip` (compa
 | Restart | Fail-hard **`pre_restart`** (world + INI) after stop, before start |
 | Safe update | Fail-hard **`pre_update`** (world + INI) before SteamCMD work |
 
-Default schedule policy (when enabled): interval 60 minutes; retain ~20 world **per map** / ~20 players / ~10 INI (configurable). Fleet **Cleanup** “keep limit” uses those same per-map / per-player pools. The schedule waits a full interval after the process becomes active, counts failed attempts toward the interval, and can pause for the rest of the YARK session after repeated failures (policy stays enabled). Use **Clear failed** on the history toolbar to drop failed rows that left no archive on disk.
+Default schedule policy (when enabled): interval 60 minutes; retain ~20 world **per map** / ~20 players / ~10 INI (configurable). Fleet **Cleanup** “keep limit” and “Keep only last N” use those same per-map / per-player pools. The schedule waits a full interval after the process becomes active, counts failed attempts toward the interval, and can pause for the rest of the YARK session after repeated failures (policy stays enabled). Use **Clear failed** on the history toolbar to drop failed rows that left no archive on disk.
 
 <Aside type="tip">
   Stale / “never backed up” warnings on the fleet page only apply when the schedule is **on**
