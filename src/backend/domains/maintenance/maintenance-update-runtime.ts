@@ -175,6 +175,10 @@ export class MaintenanceUpdateRuntime {
   }
 
   async runScheduledCycle(): Promise<void> {
+    // Do not arm warnings or queue updates while Downloads is paused — otherwise
+    // T0 would stop a live map behind an operator hold.
+    if (this.updates.isQueueHeldForOperator()) return;
+
     const policies = this.repo.listPolicies();
     let installSnapshot: Awaited<
       ReturnType<InstanceService["installationInfo"]>
@@ -281,6 +285,11 @@ export class MaintenanceUpdateRuntime {
     }
     if (this.updates.hasOccupyingFilesJob(serverId)) {
       throw new Error("A files job is already queued for this server");
+    }
+    if (this.updates.isQueueHeldForOperator()) {
+      throw new Error(
+        "Downloads is on hold for the operator (paused or interrupted) — resume or dismiss before triggering an update",
+      );
     }
     if (this.instances.isStopInProgress(serverId)) {
       throw new Error("Server stop is in progress — try again when idle");
@@ -543,6 +552,11 @@ export class MaintenanceUpdateRuntime {
       try {
         if (this.isCurrentTick(serverId, expectedTargetAtMs) === null) return;
         if (this.isIntentionalStop(serverId)) {
+          this.abortQuiet(state);
+          return;
+        }
+        // Pause may have landed during the warning window — do not stop behind it.
+        if (this.updates.isQueueHeldForOperator()) {
           this.abortQuiet(state);
           return;
         }
