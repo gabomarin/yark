@@ -25,6 +25,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Maintenance restart and post-update start honor Settings **Show server console on start** (they no longer spawn hidden when the preference is on) (#489).
 - Maintenance tab Alerts (errors / schedule pause) stay readable instead of collapsing to a thin border when job sections are expanded (#489).
 - Fleet **Cleanup** “keep limit” now matches scheduled world retention: last N archives **per map**, so rotating maps no longer deletes the other map’s backups.
+- Fleet **Cleanup** “Keep only last N” also keeps world archives **per map** (same pools as retention), not a flat cross-map list.
 
 ### Changed
 

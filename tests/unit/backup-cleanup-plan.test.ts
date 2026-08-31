@@ -207,6 +207,52 @@ describe("planBackupCleanup", () => {
     expect(plan.map((item) => item.backup.id).sort()).toEqual(["a-old", "i-old"]);
     expect(plan.every((item) => item.reason === "over retain policy")).toBe(true);
   });
+
+  it("keepLastPerKind retains N world archives per map token", () => {
+    const mkWorld = (id: string, mapToken: string, stamp: string) =>
+      backup({
+        id,
+        kind: "world",
+        status: "completed",
+        mapToken,
+        completedAt: stamp,
+      });
+    const islandNew = mkWorld("i-new", "TheIsland_WP", "2026-03-01T00:00:00.000Z");
+    const islandMid = mkWorld("i-mid", "TheIsland_WP", "2026-02-01T00:00:00.000Z");
+    const islandOld = mkWorld("i-old", "TheIsland_WP", "2026-01-01T00:00:00.000Z");
+    const aberrNew = mkWorld("a-new", "Aberration_WP", "2026-03-15T00:00:00.000Z");
+    const aberrMid = mkWorld("a-mid", "Aberration_WP", "2026-02-15T00:00:00.000Z");
+    const aberrOld = mkWorld("a-old", "Aberration_WP", "2026-01-15T00:00:00.000Z");
+    // Newest-first interleaved across maps — a flat slice(2) would delete
+    // mid/old from both maps; per-map pools should only mark the oldest each.
+    const newestFirst = [
+      aberrNew,
+      islandNew,
+      aberrMid,
+      islandMid,
+      aberrOld,
+      islandOld,
+    ];
+
+    const plan = planBackupCleanup({
+      options: {
+        serverIds: null,
+        includeFailed: false,
+        enforceRetention: false,
+        olderThanDays: null,
+        keepLastPerKind: 2,
+        protectNewestWorld: false,
+      },
+      servers: [{ id: "srv-1", name: "Rotated" }],
+      catalog: catalog({
+        backups: newestFirst,
+        completedByKind: { world: newestFirst },
+      }),
+    });
+
+    expect(plan.map((item) => item.backup.id).sort()).toEqual(["a-old", "i-old"]);
+    expect(plan.every((item) => item.reason === "keep last 2/world")).toBe(true);
+  });
 });
 
 describe("summarizeCleanupPlan", () => {
