@@ -82,7 +82,9 @@ availability snapshot). Presets do **not** change how often Steam is checked.
 5. Queue safe update with `wasRunning: true` and **wait**; after SteamCMD finishes the
    server starts again (or rolls back on failure).
 6. Does not overlap a restart countdown on the same server.
-7. Fail-streak pause (`MAINTENANCE_FAIL_LIMIT`, 3) with Resume — shared alert with restart;
+7. Skips arming / Run update now / T0 stop while Downloads is **paused** (or otherwise
+   held for the operator) so a live map is not taken offline behind that hold.
+8. Fail-streak pause (`MAINTENANCE_FAIL_LIMIT`, 3) with Resume — shared alert with restart;
    failed Steam builds also cool down 5 minutes before re-arm.
 
 `getPolicy` on the repository is read-only (defaults when no row). Rows are seeded with
