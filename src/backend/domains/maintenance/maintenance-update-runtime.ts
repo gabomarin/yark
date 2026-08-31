@@ -1,7 +1,7 @@
 /**
  * Opt-in auto-update when Steam buildid differs (#489).
- * Broadcast countdown (update presets + last-minute 1 Hz), then
- * UpdateService.enqueueUpdateForMaintenance (wasRunning → stop → safe update → start).
+ * Broadcast countdown (update presets + last-minute 1 Hz), then stop at T0 and
+ * UpdateService.enqueueUpdateForMaintenance (wasRunning → queue → SteamCMD → start).
  */
 
 import {
@@ -546,7 +546,17 @@ export class MaintenanceUpdateRuntime {
           this.abortQuiet(state);
           return;
         }
-        await this.updates.enqueueUpdateForMaintenance(serverId);
+        // Stop at T0 (like official fleet downtime) so players are offline when
+        // the countdown hits 0 — even if SteamCMD is still busy with another server.
+        // Restart after the queued update via wasRunning: true.
+        const wasRunning = this.processes.isActive(serverId);
+        if (wasRunning) {
+          await this.instances.stop(serverId, { backup: false });
+        }
+        if (this.isCurrentTick(serverId, expectedTargetAtMs) === null) return;
+        await this.updates.enqueueUpdateForMaintenance(serverId, {
+          wasRunning,
+        });
         this.lastUpdate.set(serverId, {
           atIso: new Date().toISOString(),
           ok: true,

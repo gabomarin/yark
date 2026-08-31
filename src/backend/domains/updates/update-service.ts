@@ -475,13 +475,16 @@ export class UpdateService extends EventEmitter {
   }
 
   /**
-   * Maintenance auto-update (#489): allow a running server and persist
-   * `wasRunning` so performUpdate stops → SteamCMD → starts again.
-   * Waits for the full stop → update → start (or rollback) pipeline.
+   * Maintenance auto-update (#489): queue a safe update and wait until it finishes.
+   * Callers that already stopped the process for player-aligned T0 must pass
+   * `wasRunning: true` so performUpdate restarts after SteamCMD.
    */
-  async enqueueUpdateForMaintenance(serverId: string): Promise<void> {
+  async enqueueUpdateForMaintenance(
+    serverId: string,
+    options?: { wasRunning?: boolean },
+  ): Promise<void> {
     this.assertStopBackupIdle(serverId);
-    const wasRunning = this.processes.isActive(serverId);
+    const wasRunning = options?.wasRunning ?? this.processes.isActive(serverId);
     await this.enqueueAndWait("update", serverId, { wasRunning });
   }
 

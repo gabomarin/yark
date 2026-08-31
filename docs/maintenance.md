@@ -77,8 +77,10 @@ availability snapshot). Presets do **not** change how often Steam is checked.
 2. **Running:** arm ServerChat window from `updateWarnings` (last ≤60s = 1 Hz `Update in {n}s`).
 3. **Stopped:** start `UpdateService.updateServer` **without awaiting inside the policy
    loop** (completion still updates `lastUpdate*` off-loop).
-4. At T0 (running): `enqueueUpdateForMaintenance` sets `wasRunning` and **waits** for
-   stop `{ backup: false }` → pre_update backup → SteamCMD → start (or rollback).
+4. At T0 (**running** countdown): **stop immediately** (`backup: false`) so the map
+   goes offline when warnings hit 0 — even if another Downloads job is still running —
+   then queue safe update with `wasRunning` and **wait**; after SteamCMD finishes the
+   server starts again (or rolls back on failure).
 5. Does not overlap a restart countdown on the same server.
 6. Fail-streak pause (`MAINTENANCE_FAIL_LIMIT`, 3) with Resume — shared alert with restart;
    failed Steam builds also cool down 5 minutes before re-arm.
