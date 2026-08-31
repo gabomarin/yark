@@ -43,6 +43,9 @@ ASA note: `Broadcast` over RCON often returns “Server received, But no respons
 but does not appear in-game; warnings use `ServerChat` (global chat) instead —
 same pattern as AASM / POK-manager.
 
+Restart schedule uses **restartDaysOfWeek** (0=Sun … 6=Sat), local `HH:mm` time, and
+per-job `lastMinuteChat` (last ≤60s ServerChat every second; Run now always does this).
+
 Restart / post-update **start** uses Settings **Show server console on start**
 (`InstanceService` fills `openNativeConsole` when callers omit it) — same as
 manual Start/Restart.

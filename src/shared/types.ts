@@ -678,15 +678,17 @@ export interface RestoreBackupOptions {
 }
 
 /** Player-warning cadence preset for a maintenance job (#315). */
-export type MaintenanceBroadcastPreset = "quiet" | "standard" | "strict" | "custom";
+export type MaintenanceBroadcastPreset = "none" | "quiet" | "standard" | "strict" | "custom";
 
-/** Per-job Broadcast offsets + template (restart vs auto-update are separate). */
+/** Per-job ServerChat offsets + template (restart vs auto-update are separate). */
 export interface MaintenanceJobWarnings {
   preset: MaintenanceBroadcastPreset;
   /** Offset labels such as `30m`, `15m`, `5m`, `1m`, `10s`. */
   customOffsets: string[];
   /** In-game message; use `{time}` for remaining duration. */
   template: string;
+  /** Last ≤60s: ServerChat every second (Run now always uses this). */
+  lastMinuteChat: boolean;
 }
 
 /**
@@ -698,9 +700,8 @@ export interface MaintenancePolicy {
   restartEnabled: boolean;
   wipeEnabled: boolean;
   updateEnabled: boolean;
-  restartCadence: "weekly" | "daily";
-  /** 0 = Sunday … 6 = Saturday (local Windows clock). */
-  restartDayOfWeek: number;
+  /** 0 = Sunday … 6 = Saturday (local Windows clock). At least one day. */
+  restartDaysOfWeek: number[];
   /** `HH:mm` 24h local time. */
   restartTimeLocal: string;
   wipeSaveWorldFirst: boolean;

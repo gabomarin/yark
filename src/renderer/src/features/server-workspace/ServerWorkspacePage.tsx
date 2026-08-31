@@ -212,6 +212,7 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
           stopJobActive={stopJobActive}
           filesLockReason={filesLockReason}
           stopLockReason={stopLockReason}
+          startBusy={props.startBusy === true}
           iniDirty={iniDirty}
           iniEditorVersion={iniEditorVersion}
           logsFocus={props.logsFocus}

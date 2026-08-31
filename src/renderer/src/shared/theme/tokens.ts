@@ -133,7 +133,8 @@ const sharedColors = {
   /** Hairline between page / panel / control — solid, not mixed with blue. */
   border: radixPalette.gray[6],
   text: radixPalette.gray[11],
-  muted: radixPalette.gray[10],
+  /** Helper / Mantine `c="dimmed"` — slightly above gray-10 for dark UI. */
+  muted: "#c0c0c1",
   accent: radixPalette.blue[8],
   ok: "#58c89a",
   warn: "#d9a85f",

@@ -15,6 +15,7 @@ import {
   renderLastMinuteRestart,
   renderWarningTemplate,
   resolveWarningOffsetLabels,
+  shouldUseLastMinuteChat,
 } from "@shared/maintenance-schedule";
 import type {
   MaintenanceCountdownPhase,
@@ -102,8 +103,7 @@ export class MaintenanceRestartRuntime {
     let nextRestartAt: string | null = null;
     if (policy.restartEnabled && active === undefined) {
       const next = nextLocalRestartAt(
-        policy.restartCadence,
-        policy.restartDayOfWeek,
+        policy.restartDaysOfWeek,
         policy.restartTimeLocal,
         now,
       );
@@ -213,8 +213,7 @@ export class MaintenanceRestartRuntime {
 
     const now = Date.now();
     const next = nextLocalRestartAt(
-      policy.restartCadence,
-      policy.restartDayOfWeek,
+      policy.restartDaysOfWeek,
       policy.restartTimeLocal,
       now,
     );
@@ -250,6 +249,7 @@ export class MaintenanceRestartRuntime {
     source: "schedule" | "run_now",
     scheduleTargetKey: string | null,
   ): void {
+    const remaining = targetAtMs - Date.now();
     const state: ActiveCountdown = {
       serverId: policy.serverId,
       targetAtMs,
@@ -257,7 +257,13 @@ export class MaintenanceRestartRuntime {
       firedOffsets: new Set(),
       rconFailStreak: 0,
       cancelRequested: false,
-      phase: targetAtMs - Date.now() <= 60_000 ? "last_minute" : "warning",
+      phase: shouldUseLastMinuteChat(
+        remaining,
+        policy.restartWarnings,
+        source,
+      )
+        ? "last_minute"
+        : "warning",
       timer: null,
       timerGeneration: 0,
       runPromise: null,
@@ -375,7 +381,13 @@ export class MaintenanceRestartRuntime {
       return;
     }
 
-    if (remainingMs <= 60_000) {
+    if (
+      shouldUseLastMinuteChat(
+        remainingMs,
+        policy.restartWarnings,
+        state.source,
+      )
+    ) {
       state.phase = "last_minute";
       const sec = remainingMs / 1_000;
       let broadcastOk = true;
@@ -396,6 +408,16 @@ export class MaintenanceRestartRuntime {
         return;
       }
       this.scheduleNextTick(serverId, expectedTargetAtMs, 1_000);
+      return;
+    }
+
+    if (remainingMs <= 60_000) {
+      state.phase = "warning";
+      this.scheduleNextTick(
+        serverId,
+        expectedTargetAtMs,
+        Math.max(250, remainingMs),
+      );
       return;
     }
 

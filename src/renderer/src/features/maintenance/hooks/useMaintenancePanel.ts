@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { MaintenancePolicy, MaintenancePolicyStatus } from "@shared/types";
 import { defaultMaintenancePolicy } from "@shared/maintenance-policy";
 import { modals } from "@mantine/modals";
+import { maintenancePolicyWriteFromStatus } from "../model/maintenancePanelModel";
 
 type PolicyWrite = Omit<MaintenancePolicy, "serverId" | "updatedAt">;
 
@@ -41,7 +42,6 @@ export function useMaintenancePanel(serverId: string) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [restartOpen, setRestartOpen] = useState(false);
-  const [wipeOpen, setWipeOpen] = useState(false);
   const [updateOpen, setUpdateOpen] = useState(false);
 
   const load = useCallback(async () => {
@@ -99,8 +99,9 @@ export function useMaintenancePanel(serverId: string) {
   }, [phase, load]);
 
   const save = useCallback(
-    async (next: PolicyWrite) => {
-      setBusy(true);
+    async (next: PolicyWrite, options?: { withBusy?: boolean }) => {
+      const withBusy = options?.withBusy ?? true;
+      if (withBusy) setBusy(true);
       setError(null);
       try {
         const result = await window.api.setMaintenancePolicy(serverId, next);
@@ -111,7 +112,7 @@ export function useMaintenancePanel(serverId: string) {
         setPolicy(result.data);
         return true;
       } finally {
-        setBusy(false);
+        if (withBusy) setBusy(false);
       }
     },
     [serverId],
@@ -120,24 +121,15 @@ export function useMaintenancePanel(serverId: string) {
   const patch = useCallback(
     async (partial: Partial<PolicyWrite>) => {
       if (policy === null) return false;
-      const {
-        serverId: _s,
-        updatedAt: _u,
-        schedulePaused: _p,
-        nextRestartAt: _n,
-        countdownRemainingMs: _c,
-        countdownPhase: _ph,
-        countdownKind: _ck,
-        lastRestartAt: _l,
-        lastRestartOk: _ok,
-        lastUpdateAt: _lu,
-        lastUpdateOk: _luo,
-        cancelable: _ca,
-        ...rest
-      } = policy;
-      return save({ ...rest, ...partial });
+      const next = { ...maintenancePolicyWriteFromStatus(policy), ...partial };
+      setPolicy((prev) => (prev === null ? prev : { ...prev, ...partial }));
+      const ok = await save(next, { withBusy: false });
+      if (!ok) {
+        await load();
+      }
+      return ok;
     },
-    [policy, save],
+    [policy, save, load],
   );
 
   const resumeSchedules = useCallback(async () => {
@@ -172,7 +164,7 @@ export function useMaintenancePanel(serverId: string) {
 
   const runRestartNow = useCallback(() => {
     modals.openConfirmModal({
-      title: "Run restart now?",
+      title: "Run scheduled restart now?",
       centered: true,
       children:
         "Players get a short final warning, then a graceful restart with backup. Continue?",
@@ -229,10 +221,8 @@ export function useMaintenancePanel(serverId: string) {
     busy,
     error,
     restartOpen,
-    wipeOpen,
     updateOpen,
     setRestartOpen,
-    setWipeOpen,
     setUpdateOpen,
     patch,
     resumeSchedules,

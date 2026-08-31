@@ -1,5 +1,5 @@
-import { Group, Stack, Text, TextInput } from "@mantine/core";
-import type { MaintenanceBroadcastPreset, MaintenanceJobWarnings } from "@shared/types";
+import { Badge, Group, Stack, Switch, Text, TextInput } from "@mantine/core";
+import type { MaintenanceJobWarnings } from "@shared/types";
 import {
   MAINTENANCE_RESTART_PRESET_OFFSETS,
   MAINTENANCE_UPDATE_PRESET_OFFSETS,
@@ -8,7 +8,10 @@ import type { ReactElement } from "react";
 import {
   CUSTOM_OFFSET_OPTIONS,
   PRESET_LABELS,
+  WARNING_PRESET_ORDER,
   previewWarningMessage,
+  toggleCustomWarningOffset,
+  warningsForPreset,
 } from "../../model/maintenancePanelModel";
 import classes from "../../MaintenancePanel.module.css";
 
@@ -19,7 +22,7 @@ interface Props {
   onChange: (next: MaintenanceJobWarnings) => void;
 }
 
-/** Per-job Broadcast presets + template (MagicPath mock). */
+/** Per-job ServerChat presets + template (MagicPath mock). */
 export function MaintenancePlayerWarnings(props: Props): ReactElement {
   const table =
     props.kind === "restart"
@@ -28,27 +31,48 @@ export function MaintenancePlayerWarnings(props: Props): ReactElement {
   const offsets =
     props.warnings.preset === "custom"
       ? props.warnings.customOffsets
-      : table[props.warnings.preset];
+      : props.warnings.preset === "none"
+        ? []
+        : table[props.warnings.preset];
   const previewTime = props.kind === "restart" ? "15 minutes" : "5 minutes";
-  const standardHint =
-    props.kind === "restart" ? "30 / 15 / 5 / 1 minute" : "15 / 5 / 1 minute";
   const preview = previewWarningMessage(props.warnings.template, previewTime);
+  const warningsOff = props.warnings.preset === "none";
+
+  function offsetBadges(offsetLabels: readonly string[]): ReactElement {
+    return (
+      <div className={classes.sendsAtBlock}>
+        <Text size="sm" fw={500} className={classes.sendsAtLabel}>
+          Sends at
+        </Text>
+        <Group gap={6} wrap="wrap">
+          {offsetLabels.map((offset) => (
+            <Badge
+              key={offset}
+              size="md"
+              variant="light"
+              color="gray"
+              tt="none"
+              className={classes.offsetBadge}
+            >
+              {offset}
+            </Badge>
+          ))}
+        </Group>
+      </div>
+    );
+  }
 
   return (
     <Stack gap="xs">
       <div>
         <Text className={classes.fieldLabel}>Player warnings · how often</Text>
         <Text size="xs" c="dimmed" mt={2}>
-          In-game ServerChat before this job. Separate from{" "}
-          {props.kind === "restart" ? "auto-update" : "restart schedule"}.
+          In-game ServerChat before this job.
         </Text>
       </div>
       <Group gap={6} wrap="wrap">
-        {(Object.keys(PRESET_LABELS) as MaintenanceBroadcastPreset[]).map(
-          (key) => {
+        {WARNING_PRESET_ORDER.map((key) => {
             const active = props.warnings.preset === key;
-            const hint =
-              key === "standard" ? standardHint : PRESET_LABELS[key].hint;
             return (
               <button
                 key={key}
@@ -56,26 +80,25 @@ export function MaintenancePlayerWarnings(props: Props): ReactElement {
                 disabled={props.disabled}
                 className={`${classes.presetChip}${active ? ` ${classes.presetChipActive}` : ""}`}
                 onClick={() => {
-                  if (key === "custom") {
-                    props.onChange({ ...props.warnings, preset: "custom" });
-                    return;
-                  }
-                  props.onChange({
-                    preset: key,
-                    customOffsets: [...table[key]],
-                    template: props.warnings.template,
-                  });
+                  props.onChange(
+                    warningsForPreset(props.kind, key, props.warnings),
+                  );
                 }}
               >
                 <span className={classes.presetTitle}>
                   {PRESET_LABELS[key].title}
                 </span>
-                <span className={classes.presetHint}>{hint}</span>
               </button>
             );
           },
         )}
       </Group>
+      {warningsOff ? (
+        <Text size="xs" c="dimmed">
+          No in-game warnings before this job. Run now still warns players briefly.
+        </Text>
+      ) : (
+        <>
       {props.warnings.preset === "custom" ? (
         <Group gap={4} wrap="wrap">
           {CUSTOM_OFFSET_OPTIONS.map((offset) => {
@@ -87,14 +110,9 @@ export function MaintenancePlayerWarnings(props: Props): ReactElement {
                 disabled={props.disabled}
                 className={`${classes.offsetChip}${on ? ` ${classes.offsetChipOn}` : ""}`}
                 onClick={() => {
-                  const customOffsets = on
-                    ? props.warnings.customOffsets.filter((x) => x !== offset)
-                    : [...props.warnings.customOffsets, offset];
-                  props.onChange({
-                    ...props.warnings,
-                    preset: "custom",
-                    customOffsets,
-                  });
+                  props.onChange(
+                    toggleCustomWarningOffset(props.warnings, offset),
+                  );
                 }}
               >
                 {offset}
@@ -103,14 +121,35 @@ export function MaintenancePlayerWarnings(props: Props): ReactElement {
           })}
         </Group>
       ) : (
-        <Text size="xs" c="dimmed" className={classes.tabular}>
-          Sends at: {offsets.join(" · ")}
-        </Text>
+        offsetBadges(offsets)
       )}
+      {props.warnings.preset === "custom"
+        && props.warnings.customOffsets.length > 0
+        && offsetBadges(props.warnings.customOffsets)}
+      <div className={classes.nestedRow}>
+        <div>
+          <Text size="sm" fw={500}>Last minute in chat</Text>
+          <Text size="xs" c="dimmed">
+            Every second for the final 60 seconds. Run now always uses this.
+          </Text>
+        </div>
+        <Switch
+          size="sm"
+          checked={props.warnings.lastMinuteChat}
+          disabled={props.disabled}
+          aria-label="Last minute in chat"
+          onChange={(e) => {
+            props.onChange({
+              ...props.warnings,
+              lastMinuteChat: e.currentTarget.checked,
+            });
+          }}
+        />
+      </div>
       <TextInput
         size="xs"
         label="Warning message"
-        description="Players see this in-game. Use {time} for the countdown."
+        description="Players see this in global chat. Use {time} for the countdown."
         value={props.warnings.template}
         disabled={props.disabled}
         onChange={(e) => {
@@ -123,6 +162,8 @@ export function MaintenancePlayerWarnings(props: Props): ReactElement {
       <Text size="sm" fs="italic" c="dimmed" className={classes.preview}>
         Preview: “{preview}”
       </Text>
+        </>
+      )}
     </Stack>
   );
 }

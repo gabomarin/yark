@@ -203,6 +203,7 @@ export const backupPolicyWriteSchema = z
   .strict();
 
 const maintenanceBroadcastPresetSchema = z.enum([
+  "none",
   "quiet",
   "standard",
   "strict",
@@ -214,6 +215,7 @@ const maintenanceJobWarningsSchema = z
     preset: maintenanceBroadcastPresetSchema,
     customOffsets: z.array(z.string().min(1).max(8)).max(12),
     template: z.string().min(1).max(500),
+    lastMinuteChat: z.boolean(),
   })
   .strict();
 
@@ -222,8 +224,10 @@ export const maintenancePolicyWriteSchema = z
     restartEnabled: z.boolean(),
     wipeEnabled: z.boolean(),
     updateEnabled: z.boolean(),
-    restartCadence: z.enum(["weekly", "daily"]),
-    restartDayOfWeek: z.number().int().min(0).max(6),
+    restartDaysOfWeek: z
+      .array(z.number().int().min(0).max(6))
+      .min(1)
+      .max(7),
     restartTimeLocal: z.string().regex(/^\d{2}:\d{2}$/),
     wipeSaveWorldFirst: z.boolean(),
     restartWarnings: maintenanceJobWarningsSchema,

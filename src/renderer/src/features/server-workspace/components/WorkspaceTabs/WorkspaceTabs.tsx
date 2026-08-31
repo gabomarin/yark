@@ -33,6 +33,7 @@ interface Props {
   stopJobActive: boolean;
   filesLockReason: string;
   stopLockReason: string;
+  startBusy?: boolean;
   iniDirty: boolean;
   iniEditorVersion: number;
   logsFocus?: ServerLogsFocus | null;
@@ -194,7 +195,13 @@ export function WorkspaceTabs(props: Props): ReactElement {
             )}
 
             {props.value === "maintenance" && (
-              <MaintenancePanel server={props.server} />
+              <MaintenancePanel
+                server={props.server}
+                runtime={props.runtime}
+                installation={props.installation}
+                filesJobActive={props.filesJobActive || props.stopJobActive}
+                startBusy={props.startBusy}
+              />
             )}
           </WorkspacePanelErrorBoundary>
         </div>

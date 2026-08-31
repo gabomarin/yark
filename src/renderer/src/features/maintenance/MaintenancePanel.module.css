@@ -91,8 +91,8 @@
 }
 
 .presetChip {
-  min-width: 7.5rem;
-  padding: 6px 10px;
+  min-width: 4.5rem;
+  padding: 6px 12px;
   border-radius: 5px;
   border: 1px solid var(--app-color-border);
   background: var(--app-color-control, #303030);
@@ -127,10 +127,20 @@
   color: var(--ark-blue-11);
 }
 
-.presetHint {
-  display: block;
-  font-size: 10px;
-  color: var(--app-color-muted);
+.sendsAtBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+}
+
+.sendsAtLabel {
+  color: var(--app-color-text);
+}
+
+.offsetBadge {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .offsetChip {

@@ -16,6 +16,7 @@ import {
   renderLastMinuteUpdate,
   renderWarningTemplate,
   resolveWarningOffsetLabels,
+  shouldUseLastMinuteChat,
 } from "@shared/maintenance-schedule";
 import { isServerUpdateAvailable } from "@shared/server-update-status";
 import type {
@@ -254,6 +255,7 @@ export class MaintenanceUpdateRuntime {
     source: "schedule" | "run_now",
     availabilityKey: string,
   ): void {
+    const remaining = targetAtMs - Date.now();
     const state: ActiveUpdateCountdown = {
       serverId: policy.serverId,
       targetAtMs,
@@ -261,7 +263,13 @@ export class MaintenanceUpdateRuntime {
       firedOffsets: new Set(),
       rconFailStreak: 0,
       cancelRequested: false,
-      phase: targetAtMs - Date.now() <= 60_000 ? "last_minute" : "warning",
+      phase: shouldUseLastMinuteChat(
+        remaining,
+        policy.updateWarnings,
+        source,
+      )
+        ? "last_minute"
+        : "warning",
       timer: null,
       timerGeneration: 0,
       runPromise: null,
@@ -377,7 +385,13 @@ export class MaintenanceUpdateRuntime {
       return;
     }
 
-    if (remainingMs <= 60_000) {
+    if (
+      shouldUseLastMinuteChat(
+        remainingMs,
+        policy.updateWarnings,
+        state.source,
+      )
+    ) {
       state.phase = "last_minute";
       let broadcastOk = true;
       let broadcastError = "";
@@ -397,6 +411,16 @@ export class MaintenanceUpdateRuntime {
         return;
       }
       this.scheduleNextTick(serverId, expectedTargetAtMs, 1_000);
+      return;
+    }
+
+    if (remainingMs <= 60_000) {
+      state.phase = "warning";
+      this.scheduleNextTick(
+        serverId,
+        expectedTargetAtMs,
+        Math.max(250, remainingMs),
+      );
       return;
     }
 
