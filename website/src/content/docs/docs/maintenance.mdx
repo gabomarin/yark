@@ -1,0 +1,49 @@
+---
+title: Schedule restarts and auto-updates for ASA dedicated servers
+description: How YARK’s Maintenance tab schedules restarts, wild dino wipes, and opt-in auto-updates with in-game chat warnings while the app is open.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+import { withBase } from "../../../data/site";
+
+The workspace **Maintenance** tab schedules per-server jobs while **YARK is open** (tray-hidden is fine; quit is not). Everything defaults **off**.
+
+<figure class="doc-shot">
+  <img
+    src={withBase("/screenshots/workspace-maintenance.png")}
+    alt="YARK Maintenance tab showing Up next, restart schedule, wild dino wipe, and auto-update controls"
+    width="1440"
+    height="900"
+    loading="lazy"
+  />
+  <figcaption>Maintenance — Up next, restart schedule, optional wipe, and Steam-newer auto-update with player warnings.</figcaption>
+</figure>
+
+## What you can schedule
+
+| Job | What it does |
+| --- | --- |
+| **Restart** | Warn players in chat, then graceful restart with backup |
+| **Wild dino wipe** | After a successful maintenance restart: SaveWorld, then DestroyWildDinos |
+| **Auto-update** | When a newer dedicated build is available: warn, stop the map, update via Downloads, start again |
+
+## Player warnings
+
+Pick how often players see in-game **ServerChat** before the job (Off / Minimal / Regular / Frequent / Custom). The last minute can chat every second. **Run now** still warns briefly even when warnings are Off.
+
+## Honesty
+
+- Jobs need YARK running — same honesty as scheduled world backups.
+- After repeated hard failures in this session, automatic runs pause until you **Resume** (policy stays enabled).
+- Auto-update **skips** while Downloads is paused, so a live map is not taken offline behind that hold.
+- Card **Update** on Overview still expects a stopped server; Maintenance is the path that stops for you at countdown end.
+
+<Aside type="tip">
+  Test on a non-production profile first. Take a world backup before enabling wipe or auto-update.
+</Aside>
+
+## Related
+
+- [Updates & SteamCMD](/docs/updates-and-steamcmd/) — Downloads queue and safe update
+- [Start, stop, restart](/docs/lifecycle/) — graceful restart with backup
+- [Backups](/docs/backups/) — world schedule (separate from Maintenance)

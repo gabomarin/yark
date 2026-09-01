@@ -82,6 +82,16 @@ export const faqItems: FaqItem[] = [
       </p>`,
   },
   {
+    question: "Can YARK schedule restarts or auto-updates?",
+    answerHtml: `
+      <p>
+        Yes — the per-server <strong>Maintenance</strong> tab (off by default) can schedule
+        restarts with in-game chat warnings, an optional wild dino wipe after restart, and
+        opt-in auto-update when a newer dedicated build is available. Jobs only run while
+        YARK is open (same honesty as scheduled world backups).
+      </p>`,
+  },
+  {
     question: "Does YARK download CurseForge mods for me?",
     answerHtml: `
       <p>

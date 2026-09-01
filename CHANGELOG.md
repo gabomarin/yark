@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-08-31
+
 ### Added
 
 - Per-server **Maintenance** tab (off by default): see what’s next, schedule jobs, and set player warning presets while YARK is open (#486).

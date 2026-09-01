@@ -651,6 +651,32 @@ async function run() {
       await settle(page, 800);
       await shot(page, path.join(outDir, "workspace-backups.png"));
 
+      await page.getByRole("tab", { name: "Maintenance" }).click();
+      await page.locator("[data-maintenance-panel]").waitFor({
+        state: "visible",
+        timeout: 10000,
+      });
+      await settle(page, 500);
+      const restartSwitch = page.getByRole("switch", {
+        name: "Enable restart schedule",
+      });
+      if ((await restartSwitch.count()) > 0 && !(await restartSwitch.isChecked())) {
+        await restartSwitch.evaluate((el) => {
+          el.scrollIntoView({ block: "center" });
+          el.click();
+        });
+        await settle(page, 800);
+      }
+      const wipeSwitch = page.getByRole("switch", { name: /Wild dino wipe/i });
+      if ((await wipeSwitch.count()) > 0 && !(await wipeSwitch.isChecked())) {
+        await wipeSwitch.evaluate((el) => {
+          el.scrollIntoView({ block: "center" });
+          el.click();
+        });
+        await settle(page, 500);
+      }
+      await shot(page, path.join(outDir, "workspace-maintenance.png"));
+
       await page.getByRole("tab", { name: "Server" }).click();
       await settle(page, 300);
       const wizardBtn = page.getByRole("button", { name: "Configuration wizard" });
