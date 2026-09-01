@@ -168,6 +168,7 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
               />
               <NumberInput
                 label="Keep last world"
+                description="Per map"
                 min={1}
                 max={500}
                 value={draft.retainCountWorld}

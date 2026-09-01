@@ -22,6 +22,34 @@ interface Props {
   onChange: (next: MaintenanceJobWarnings) => void;
 }
 
+function OffsetBadges({
+  offsetLabels,
+}: {
+  offsetLabels: readonly string[];
+}): ReactElement {
+  return (
+    <div className={classes.sendsAtBlock}>
+      <Text size="sm" fw={500} className={classes.sendsAtLabel}>
+        Sends at
+      </Text>
+      <Group gap={6} wrap="wrap">
+        {offsetLabels.map((offset) => (
+          <Badge
+            key={offset}
+            size="md"
+            variant="light"
+            color="gray"
+            tt="none"
+            className={classes.offsetBadge}
+          >
+            {offset}
+          </Badge>
+        ))}
+      </Group>
+    </div>
+  );
+}
+
 /** Per-job ServerChat presets + template (MagicPath mock). */
 export function MaintenancePlayerWarnings(props: Props): ReactElement {
   const table =
@@ -37,30 +65,6 @@ export function MaintenancePlayerWarnings(props: Props): ReactElement {
   const previewTime = props.kind === "restart" ? "15 minutes" : "5 minutes";
   const preview = previewWarningMessage(props.warnings.template, previewTime);
   const warningsOff = props.warnings.preset === "none";
-
-  function offsetBadges(offsetLabels: readonly string[]): ReactElement {
-    return (
-      <div className={classes.sendsAtBlock}>
-        <Text size="sm" fw={500} className={classes.sendsAtLabel}>
-          Sends at
-        </Text>
-        <Group gap={6} wrap="wrap">
-          {offsetLabels.map((offset) => (
-            <Badge
-              key={offset}
-              size="md"
-              variant="light"
-              color="gray"
-              tt="none"
-              className={classes.offsetBadge}
-            >
-              {offset}
-            </Badge>
-          ))}
-        </Group>
-      </div>
-    );
-  }
 
   return (
     <Stack gap="xs">
@@ -121,11 +125,11 @@ export function MaintenancePlayerWarnings(props: Props): ReactElement {
           })}
         </Group>
       ) : (
-        offsetBadges(offsets)
+        <OffsetBadges offsetLabels={offsets} />
       )}
       {props.warnings.preset === "custom"
         && props.warnings.customOffsets.length > 0
-        && offsetBadges(props.warnings.customOffsets)}
+        && <OffsetBadges offsetLabels={props.warnings.customOffsets} />}
       <div className={classes.nestedRow}>
         <div>
           <Text size="sm" fw={500}>Last minute in chat</Text>
@@ -167,3 +171,4 @@ export function MaintenancePlayerWarnings(props: Props): ReactElement {
     </Stack>
   );
 }
+

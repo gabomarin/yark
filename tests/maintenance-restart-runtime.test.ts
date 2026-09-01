@@ -191,4 +191,56 @@ describe("MaintenanceRestartRuntime", () => {
       vi.useRealTimers();
     }
   });
+
+  it("arms a scheduled restart when player warnings are Off", async () => {
+    vi.useFakeTimers();
+    try {
+      // 30s before local noon so nextLocalRestartAt (second=0) is still today.
+      const now = new Date(2026, 5, 1, 11, 59, 30, 0);
+      vi.setSystemTime(now);
+      const policy = {
+        ...defaultMaintenancePolicy("s1", "t"),
+        restartEnabled: true,
+        restartDaysOfWeek: [now.getDay()],
+        restartTimeLocal: "12:00",
+        restartWarnings: {
+          preset: "none" as const,
+          customOffsets: [],
+          lastMinuteChat: true,
+          template: "Server restart in {time}",
+        },
+      };
+      const { runtime } = makeRuntime(policy);
+      await runtime.runScheduledCycle();
+      const status = runtime.enrichStatus(policy);
+      expect(status.countdownPhase).not.toBe("idle");
+      expect(status.cancelable).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("notifies the peer runtime when fail-streak pauses schedules", async () => {
+    vi.useFakeTimers();
+    try {
+      const policy = {
+        ...defaultMaintenancePolicy("s1", "2026-01-01T00:00:00.000Z"),
+        restartEnabled: true,
+      };
+      const { runtime, instances } = makeRuntime(policy);
+      const peer = vi.fn();
+      runtime.setPeerPauseNotify(peer);
+      instances.restart.mockRejectedValue(new Error("restart boom"));
+
+      for (let i = 0; i < 3; i++) {
+        await runtime.runRestartNow("s1");
+        await vi.advanceTimersByTimeAsync(12_000);
+      }
+
+      expect(runtime.isSchedulePaused("s1")).toBe(true);
+      expect(peer).toHaveBeenCalledWith("s1");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
