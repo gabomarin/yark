@@ -1,9 +1,13 @@
 # Profile database (SQLite boot + recovery)
 
-YARK persists server profiles, settings, backups metadata, and related state in
-a local SQLite file under Electron `userData`:
+YARK persists server profiles, settings, backups metadata, maintenance policies,
+and related state in a local SQLite file under Electron `userData`:
 
 `yark-server-manager.db`
+
+Per-server **Maintenance** defaults live in `maintenance_policies` (migration 18+;
+days JSON in migration 19). Policies default off; session pause / countdown state
+is not persisted — see [maintenance.md](maintenance.md).
 
 Admin and join passwords are ordinary TEXT columns on `servers` (same Windows-user
 boundary as `GameUserSettings.ini`). Diagnostic logs omit those settings; they are

@@ -91,15 +91,17 @@ paths or the Notion hub URL in tracked files.
 - **Remove from YARK** vs **Delete everything** (#267): `servers:delete` requires `{ deleteInstallFiles }`. Profile-only never wipes `installDir`; full wipe keeps shared-path and wipe-safety guards. Details: [server-lifecycle.md](server-lifecycle.md#remove-or-delete-a-server-267).
 - **Import install** (#254 / #283): ready trees continue by default; incomplete requires `allowIncompleteInstall` (UI checkbox + backend); empty/nested stay blocked. Details: [server-lifecycle.md](server-lifecycle.md#import-existing-asa-install-254--283).
 - Server Workspace keeps `Server`, **INI Files**, `Mods`, **Launch**, `Backups`,
-  `Logs`, and **RCON** as its regular navigation. **Launch** edits curated
+  `Logs`, **RCON**, and **Maintenance** as its regular navigation. **Launch** edits curated
   structured ASA flags plus raw Extra arguments (command preview / conflicts);
   create/edit Server no longer hosts Mods IDs or Extra arguments. Workspace
   **Backups** is operational (create / restore / history / destination for that
   server) with kind subtabs (**World save** | **Player profiles** | **INI**).
   Sidebar **Backups** is generalized configuration across servers (schedule /
   destination / retention) with “Open in server” to jump into the workspace tab.
-  **Mods** manages CurseForge Project IDs (enable/disable without dropping IDs,
-  Worker-backed metadata, launch `-mods=` for enabled only) — full map:
+  **Maintenance** is per-server scheduled restart, optional wipe-after-restart, and
+  opt-in Steam-newer auto-update — full map: [maintenance.md](maintenance.md)
+  (#315 / #486–#489). **Mods** manages CurseForge Project IDs (enable/disable without
+  dropping IDs, Worker-backed metadata, launch `-mods=` for enabled only) — full map:
   [mods.md](mods.md). CurseForge proxy abuse controls:
   [curseforge-proxy.md](curseforge-proxy.md) (#70). A six-step configuration
   assistant launches on demand from `Server`; it uses an isolated draft and

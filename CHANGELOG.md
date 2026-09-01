@@ -31,6 +31,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Docs: expand Maintenance engineering runbook (IPC, cancel/pause, constants, T0 stop-before-queue, pitfalls) and clarify Cleanup keep-limit vs keep-last-N; cross-link Updates / lifecycle / profile DB (#315).
 - Restart schedule: pick **multiple weekdays** (e.g. Mon & Fri), Mantine **TimePicker** for local time, and an optional **last minute in chat** toggle (#489).
 - Maintenance **Wild dino wipe** toggle lives in **Up next** (no separate job accordion); save-world-before-wipe is always on (#489).
 - Player warnings add an **Off** preset; **Custom** with no times selected falls back to Off and re-selects all times when chosen again (#489).
