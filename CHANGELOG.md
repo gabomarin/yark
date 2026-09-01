@@ -11,10 +11,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
-- Workspace **Maintenance** tab: per-server policies (default off), idle scheduler, **Up next**, and schedule/warning editors (#315 / #486). Warnings use **ServerChat** (not Broadcast); presets Off / Minimal / Regular / Frequent / Custom (no 10s offset — last minute already chats every second); Custom with no times falls back to Off.
-- Scheduled **restart**: multi-weekday local time (TimePicker), optional last-minute chat, Run restart now / Cancel, and graceful restart with backup; honors Settings **Show server console on start** (#487).
-- Optional **Wild dino wipe** after a successful maintenance restart — toggle in **Up next**; SaveWorld then DestroyWildDinos (#488).
-- Opt-in **auto-update** when Steam reports a newer dedicated build (#489): ServerChat countdown (copy: new **Ark server version**); stop at T0 before SteamCMD even if another Downloads job is running; skip arm / Run update now / T0 stop while Downloads is paused; wait for stop → SteamCMD → start (restart-if-was-running); cool failed builds for 5 minutes; **Run update now** only while running and Steam-newer.
+- Per-server **Maintenance** tab (off by default): see what’s next, schedule jobs, and set player warning presets while YARK is open (#486).
+- Scheduled **restart** with in-game chat countdown, pick one or more weekdays and a local time, Run now / Cancel, and a graceful restart with backup (#487).
+- Optional **wild dino wipe** right after a successful maintenance restart (#488).
+- Opt-in **auto-update** when a newer dedicated build is available: warn players, stop the map when the countdown ends, update, then start again — skipped while Downloads is paused (#489).
 
 ### Fixed
 
@@ -23,8 +23,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
-- Docs: expand Maintenance engineering runbook (IPC, cancel/pause, constants, T0 stop-before-queue, pitfalls) and clarify Cleanup keep-limit vs keep-last-N; cross-link Updates / lifecycle / profile DB (#315).
-- Muted helper text (`c="dimmed"`, `--app-color-muted`) is slightly brighter for readability on dark surfaces.
+- Docs: Maintenance runbook and fleet Cleanup retain rules (#315).
+- Muted helper text is slightly brighter on dark surfaces.
 - Keyboard: Ctrl+K Spotlight, Tab to server cards, Shift+F10 for the row menu, and Escape to dismiss menus and confirm dialogs (setup wizard still needs Skip / Close / Back) (#476).
 - Keyboard: Overview search Escape clears; fleet strip tiles toggle with Enter/Space; workspace tabs and Settings categories are Tab-reachable. Card version/meta cells stay mouse-only (#477).
 - Destructive confirms (logs purge, backup delete, mod remove, ban/unban, force-close, SteamCMD cache clear, and related) share one **`openDangerConfirmModal`** helper so red confirm styling and Cancel labels stay consistent (#235).
