@@ -62,6 +62,12 @@ export const screenshots: Screenshot[] = [
       "Server Backups — shared destination, Backup now in the history toolbar, world schedule, and restore for world / players / INI.",
   },
   {
+    src: withBase("/screenshots/workspace-maintenance.png"),
+    alt: "YARK Maintenance tab with Up next, restart schedule, wild dino wipe, and auto-update controls for an ASA dedicated server",
+    caption:
+      "Maintenance — schedule restarts, optional wild dino wipe, and opt-in auto-update with in-game chat warnings while YARK is open.",
+  },
+  {
     src: withBase("/screenshots/configuration-wizard.png"),
     alt: "YARK configuration assistant with experience-profile cards and a six-step wizard",
     caption:

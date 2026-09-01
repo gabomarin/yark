@@ -10,6 +10,10 @@ export type RoadmapItem = {
  * Prefer operator-visible product work from open issues (not CI/packaging hygiene).
  * Not a ship promise — keep wording directional. Milestones on GitHub stay authoritative.
  *
+ * Shipped in v0.18.0 (removed from this list): Maintenance tab — scheduled restart,
+ * wild wipe, opt-in auto-update (#486–#489); keyboard P0/P1 (#476/#477); canvas shells /
+ * status words / surface tokens (#468–#470); What's new brief (#466); danger confirms
+ * (#235); credential redaction in diagnostics (#144); Cleanup per-map retain (#492/#497).
  * Shipped in v0.17.0 (removed from this list): RCON remote AdminListURL (#153),
  * create/clone next-free ports (#55), visual Map picker (#460), Search Maps… (#295),
  * Mods drawer screenshots/description (#342), workspace Backups/Logs polish (#231/#225).

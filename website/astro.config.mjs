@@ -129,6 +129,7 @@ export default defineConfig({
           label: "Day-to-day operations",
           items: [
             { label: "Start, stop, restart", link: "/docs/lifecycle/" },
+            { label: "Maintenance", link: "/docs/maintenance/" },
             { label: "RCON console", link: "/docs/rcon/" },
             { label: "Updates & SteamCMD", link: "/docs/updates-and-steamcmd/" },
             { label: "Backups", link: "/docs/backups/" },

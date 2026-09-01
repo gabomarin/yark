@@ -24,6 +24,43 @@ const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.18.0",
+    date: "2026-08-31",
+    sections: [
+      {
+        title: "Added",
+        items: [
+          "Per-server Maintenance tab (off by default): Up next, schedules, and player warning presets while YARK is open.",
+          "Scheduled restart with in-game chat countdown, weekdays + local time, Run now / Cancel, and graceful restart with backup.",
+          "Optional wild dino wipe right after a successful maintenance restart.",
+          "Opt-in auto-update when a newer dedicated build is available — warn players, stop at countdown end, update, then start again (skipped while Downloads is paused).",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "Keyboard: Ctrl+K Spotlight, Overview cards and menus, workspace tabs, and Settings categories.",
+          "Status uses words and a status dot instead of light-pill badges; panels use solid fills and tighter radius.",
+          "Logs and Settings sit on the page canvas; What's new is a wider release brief.",
+          "Destructive confirms share one red-styled danger modal helper.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "Scheduled restart still runs when player warnings are Off; fail-streak pause stops both restart and auto-update.",
+          "Fleet Cleanup keep-limit and Keep last N keep world archives per map when rotating maps.",
+        ],
+      },
+      {
+        title: "Security",
+        items: [
+          "Logs, crash excerpts, events, and IPC errors omit GameUserSettings password settings and redact leftover credential assignments.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.17.0",
     date: "2026-08-29",
     sections: [
