@@ -18,8 +18,9 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
-- Fleet **Cleanup** “keep limit” now matches scheduled world retention: last N archives **per map**, so rotating maps no longer deletes the other map’s backups.
-- Fleet **Cleanup** “Keep only last N” also keeps world archives **per map** (same pools as retention), not a flat cross-map list.
+- Scheduled **restart** still runs when player warnings are Off (arms in the last minute before T0 instead of never firing).
+- Maintenance fail-streak pause now stops **both** restart and auto-update for that server (banner matched behavior).
+- Fleet **Cleanup** keep-limit and Keep last N keep world archives **per map**, so rotating maps no longer deletes the other map’s backups.
 
 ### Changed
 

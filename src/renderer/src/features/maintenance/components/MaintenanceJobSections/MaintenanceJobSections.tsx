@@ -52,24 +52,26 @@ export function MaintenanceRestartSection(props: SharedProps): ReactElement {
 
   return (
     <section className={classes.slab}>
-      <button
-        type="button"
-        className={classes.slabHeader}
-        aria-expanded={props.open}
-        onClick={props.onToggleOpen}
-      >
-        <Group gap="xs" wrap="nowrap" align="flex-start">
-          <Chevron open={props.open} />
-          <div>
-            <Text size="sm" fw={600}>
-              Restart schedule
-            </Text>
-            <Text size="xs" c="dimmed">
-              {policy.restartEnabled ? formatRestartSummary(policy) : "Off"}
-            </Text>
-          </div>
-        </Group>
-        <Group gap="xs" onClick={(e) => e.stopPropagation()}>
+      <div className={classes.slabHeader}>
+        <button
+          type="button"
+          className={classes.slabHeaderToggle}
+          aria-expanded={props.open}
+          onClick={props.onToggleOpen}
+        >
+          <Group gap="xs" wrap="nowrap" align="flex-start">
+            <Chevron open={props.open} />
+            <div>
+              <Text size="sm" fw={600}>
+                Restart schedule
+              </Text>
+              <Text size="xs" c="dimmed">
+                {policy.restartEnabled ? formatRestartSummary(policy) : "Off"}
+              </Text>
+            </div>
+          </Group>
+        </button>
+        <Group gap="xs">
           <Text size="xs" c="dimmed">
             {policy.restartEnabled ? "On" : "Off"}
           </Text>
@@ -92,7 +94,7 @@ export function MaintenanceRestartSection(props: SharedProps): ReactElement {
             }}
           />
         </Group>
-      </button>
+      </div>
       {props.open && (
         <div className={classes.slabBody}>
           <Stack gap="sm">
@@ -132,24 +134,26 @@ export function MaintenanceUpdateSection(props: SharedProps): ReactElement {
 
   return (
     <section className={classes.slab} style={{ marginTop: -1 }}>
-      <button
-        type="button"
-        className={classes.slabHeader}
-        aria-expanded={props.open}
-        onClick={props.onToggleOpen}
-      >
-        <Group gap="xs" wrap="nowrap" align="flex-start">
-          <Chevron open={props.open} />
-          <div>
-            <Text size="sm" fw={600}>
-              Auto-update
-            </Text>
-            <Text size="xs" c="dimmed">
-              {formatUpdateSummary(policy)}
-            </Text>
-          </div>
-        </Group>
-        <Group gap="xs" onClick={(e) => e.stopPropagation()}>
+      <div className={classes.slabHeader}>
+        <button
+          type="button"
+          className={classes.slabHeaderToggle}
+          aria-expanded={props.open}
+          onClick={props.onToggleOpen}
+        >
+          <Group gap="xs" wrap="nowrap" align="flex-start">
+            <Chevron open={props.open} />
+            <div>
+              <Text size="sm" fw={600}>
+                Auto-update
+              </Text>
+              <Text size="xs" c="dimmed">
+                {formatUpdateSummary(policy)}
+              </Text>
+            </div>
+          </Group>
+        </button>
+        <Group gap="xs">
           <Text size="xs" c="dimmed">
             {policy.updateEnabled ? "On" : "Off"}
           </Text>
@@ -166,7 +170,7 @@ export function MaintenanceUpdateSection(props: SharedProps): ReactElement {
             }}
           />
         </Group>
-      </button>
+      </div>
       {props.open && (
         <div className={classes.slabBody}>
           <Stack gap="sm">

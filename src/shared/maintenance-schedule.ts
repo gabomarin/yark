@@ -76,6 +76,12 @@ export function maxWarningLeadMs(offsetLabels: readonly string[]): number {
   return max;
 }
 
+/**
+ * Scheduler tick interval (~60s). When player warnings are Off, restart still
+ * needs a non-zero arm window so `considerSchedule` can fire at T0.
+ */
+export const MAINTENANCE_SCHEDULER_TICK_MS = 60_000;
+
 /** Human phrase for `{time}` in long-window ServerChat templates. */
 export function formatWarningTimePhrase(remainingMs: number): string {
   const sec = Math.max(0, Math.ceil(remainingMs / 1_000));

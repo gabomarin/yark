@@ -1,3 +1,4 @@
+import { MAINTENANCE_SCHEDULER_TICK_MS } from "@shared/maintenance-schedule";
 import type { MaintenanceService } from "./maintenance-service";
 
 /**
@@ -10,7 +11,7 @@ export class MaintenanceScheduler {
 
   constructor(
     private readonly service: MaintenanceService,
-    private readonly tickMs = 60_000,
+    private readonly tickMs = MAINTENANCE_SCHEDULER_TICK_MS,
   ) {}
 
   start(): void {

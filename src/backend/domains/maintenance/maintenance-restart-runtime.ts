@@ -10,6 +10,7 @@ import {
   MAINTENANCE_FAIL_LIMIT,
   MAINTENANCE_RCON_SOFT_FAIL_LIMIT,
   MAINTENANCE_RUN_NOW_LEAD_MS,
+  MAINTENANCE_SCHEDULER_TICK_MS,
   MAINTENANCE_WIPE_POST_READY_MS,
   MAINTENANCE_WIPE_READY_TIMEOUT_MS,
   maxWarningLeadMs,
@@ -85,6 +86,7 @@ export class MaintenanceRestartRuntime {
   private readonly completedTargets = new Set<string>();
 
   private peerBusy: ((serverId: string) => boolean) | null = null;
+  private peerPauseNotify: ((serverId: string) => void) | null = null;
 
   constructor(
     private readonly repo: MaintenanceRepository,
@@ -96,6 +98,11 @@ export class MaintenanceRestartRuntime {
   /** Avoid overlapping restart + auto-update windows on the same server. */
   setPeerBusyCheck(check: (serverId: string) => boolean): void {
     this.peerBusy = check;
+  }
+
+  /** When this runtime hits the fail-streak pause, pause the peer job too. */
+  setPeerPauseNotify(notify: (serverId: string) => void): void {
+    this.peerPauseNotify = notify;
   }
 
   private isPeerBusy(serverId: string): boolean {
@@ -111,6 +118,11 @@ export class MaintenanceRestartRuntime {
     return this.active.has(serverId);
   }
 
+  /** Pause from the peer runtime (fail-streak) without bumping this job's streak. */
+  pauseScheduleFromPeer(serverId: string): void {
+    this.pausedServerIds.add(serverId);
+  }
+
   clearSchedulePause(serverId: string): void {
     this.pausedServerIds.delete(serverId);
     this.failStreak.delete(serverId);
@@ -121,8 +133,9 @@ export class MaintenanceRestartRuntime {
     const last = this.lastRestart.get(policy.serverId);
     const wipe = this.lastWipe.get(policy.serverId);
     const now = Date.now();
+    const paused = this.pausedServerIds.has(policy.serverId);
     let nextRestartAt: string | null = null;
-    if (policy.restartEnabled && active === undefined) {
+    if (policy.restartEnabled && active === undefined && !paused) {
       const next = nextLocalRestartAt(
         policy.restartDaysOfWeek,
         policy.restartTimeLocal,
@@ -253,15 +266,13 @@ export class MaintenanceRestartRuntime {
       policy.restartWarnings,
       MAINTENANCE_RESTART_PRESET_OFFSETS,
     );
-    const lead = maxWarningLeadMs(offsets);
+    // Warnings Off → lead 0; still arm within one scheduler tick so T0 runs.
+    const armWindowMs = Math.max(
+      maxWarningLeadMs(offsets),
+      MAINTENANCE_SCHEDULER_TICK_MS,
+    );
     const remaining = next.getTime() - now;
-    if (remaining > lead) return;
-
-    // Too late for a useful warning window — skip this occurrence.
-    if (remaining < -30_000) {
-      this.completedTargets.add(targetKey);
-      return;
-    }
+    if (remaining > armWindowMs) return;
 
     this.startCountdown(
       policy,
@@ -647,6 +658,7 @@ export class MaintenanceRestartRuntime {
     });
     if (streak >= MAINTENANCE_FAIL_LIMIT) {
       this.pausedServerIds.add(serverId);
+      this.peerPauseNotify?.(serverId);
     }
   }
 }

@@ -83,6 +83,7 @@ export class MaintenanceUpdateRuntime {
   /** Earliest retry time per availability key after a failed update. */
   private readonly availabilityRetryAfterMs = new Map<string, number>();
   private steamAvailabilityCache: SteamAvailabilityCache | null = null;
+  private peerPauseNotify: ((serverId: string) => void) | null = null;
 
   constructor(
     private readonly repo: MaintenanceRepository,
@@ -93,12 +94,22 @@ export class MaintenanceUpdateRuntime {
     private readonly restarts: MaintenanceRestartRuntime,
   ) {}
 
+  /** When this runtime hits the fail-streak pause, pause the peer job too. */
+  setPeerPauseNotify(notify: (serverId: string) => void): void {
+    this.peerPauseNotify = notify;
+  }
+
   isSchedulePaused(serverId: string): boolean {
     return this.pausedServerIds.has(serverId);
   }
 
   hasActiveCountdown(serverId: string): boolean {
     return this.active.has(serverId);
+  }
+
+  /** Pause from the peer runtime (fail-streak) without bumping this job's streak. */
+  pauseScheduleFromPeer(serverId: string): void {
+    this.pausedServerIds.add(serverId);
   }
 
   clearSchedulePause(serverId: string): void {
@@ -652,6 +663,7 @@ export class MaintenanceUpdateRuntime {
     });
     if (streak >= MAINTENANCE_FAIL_LIMIT) {
       this.pausedServerIds.add(serverId);
+      this.peerPauseNotify?.(serverId);
     }
   }
 }

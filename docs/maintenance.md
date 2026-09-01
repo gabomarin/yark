@@ -77,8 +77,10 @@ restart/update/wipe outcome live **only in memory for the current YARK process**
 
 - Quitting YARK clears them. A server auto-paused after 3 failures will schedule again
   on the next launch until it fails again (or the operator uses **Resume**).
-- Restart and update keep **separate** `pausedServerIds` / fail-streak maps. UI
-  `schedulePaused` is the **OR** of both; Resume clears both.
+- Restart and update keep **separate** fail-streak counters, but hitting the
+  fail limit on either job **pauses both** for that server this session (banner
+  and Resume match). UI `schedulePaused` is the **OR** of both pause sets;
+  Resume clears both.
 - A restart occurrence cancelled or completed in this session will not re-arm until
   YARK restarts (`completedTargets`). Update cancel **releases** the availability key
   and **may re-arm** the same Steam build later.
@@ -106,7 +108,8 @@ Weekly uses **restartDaysOfWeek** (0=Sun … 6=Sat), local `HH:mm`, and per-job
 Execute path (schedule or Run now):
 
 1. Requires enabled + running + not paused + peer update countdown idle.
-2. Arms only when remaining ≤ max warning lead.
+2. Arms only when remaining ≤ max warning lead (at least one scheduler tick when
+   warnings are Off, so T0 still runs without chat).
 3. At T0: `InstanceService.restart` (omit `openNativeConsole`) → stop `{ backup: false }` →
    fail-hard `pre_restart` → `startForMaintenance` (Settings **Show server console on start**
    fills when omitted — see [server-lifecycle.md](server-lifecycle.md)).

@@ -39,6 +39,12 @@ export class MaintenanceService {
     this.restartRuntime.setPeerBusyCheck((serverId) =>
       this.updateRuntime.hasActiveCountdown(serverId),
     );
+    this.restartRuntime.setPeerPauseNotify((serverId) => {
+      this.updateRuntime.pauseScheduleFromPeer(serverId);
+    });
+    this.updateRuntime.setPeerPauseNotify((serverId) => {
+      this.restartRuntime.pauseScheduleFromPeer(serverId);
+    });
   }
 
   async getPolicy(serverId: string): Promise<MaintenancePolicyStatus> {

@@ -34,15 +34,25 @@
   justify-content: space-between;
   gap: var(--app-space-xs);
   padding: var(--app-space-sm) var(--app-space-md);
-  border: none;
   width: 100%;
+}
+
+.slabHeaderToggle {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--app-space-xs);
+  min-width: 0;
+  border: none;
+  padding: 0;
   background: transparent;
   color: inherit;
   text-align: left;
   cursor: pointer;
 }
 
-.slabHeader:focus-visible {
+.slabHeaderToggle:focus-visible {
   outline: 2px solid var(--ark-blue-9);
   outline-offset: 2px;
 }
