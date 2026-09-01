@@ -11,40 +11,22 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
-- Opt-in **auto-update** on Steam-newer: ServerChat countdown (last minute 1 Hz), then safe update with restart-if-was-running (#489).
-- Scheduled **restart** maintenance: ServerChat countdown (last minute 1 Hz), Run restart now / Cancel, and graceful restart with backup (#487).
-- **Wild dino wipe** after a successful maintenance restart (optional SaveWorld, then DestroyWildDinos) (#488).
-- Workspace **Maintenance** tab shell: per-server policies (default off), idle scheduler, Up next, and schedule/warning editors matching the #315 mock (#486).
+- Workspace **Maintenance** tab: per-server policies (default off), idle scheduler, **Up next**, and schedule/warning editors (#315 / #486). Warnings use **ServerChat** (not Broadcast); presets Off / Minimal / Regular / Frequent / Custom (no 10s offset — last minute already chats every second); Custom with no times falls back to Off.
+- Scheduled **restart**: multi-weekday local time (TimePicker), optional last-minute chat, Run restart now / Cancel, and graceful restart with backup; honors Settings **Show server console on start** (#487).
+- Optional **Wild dino wipe** after a successful maintenance restart — toggle in **Up next**; SaveWorld then DestroyWildDinos (#488).
+- Opt-in **auto-update** when Steam reports a newer dedicated build (#489): ServerChat countdown (copy: new **Ark server version**); stop at T0 before SteamCMD even if another Downloads job is running; skip arm / Run update now / T0 stop while Downloads is paused; wait for stop → SteamCMD → start (restart-if-was-running); cool failed builds for 5 minutes; **Run update now** only while running and Steam-newer.
 
 ### Fixed
 
-- Maintenance **auto-update** does not arm, Run update now, or stop at T0 while Downloads is paused — so a live map is not taken offline behind an operator hold (#489).
-- Maintenance **auto-update** stops the dedicated at countdown T0 before queuing SteamCMD so players are offline when warnings hit zero even if another server is still updating; the map restarts after that job finishes (#489).
-- Maintenance **auto-update** waits for the full stop → SteamCMD → start job before marking success, and cools down failed Steam builds for 5 minutes before retrying (#489).
-- Maintenance policy reads no longer INSERT on `getPolicy`; defaults seed via `ensurePolicy` (`INSERT OR IGNORE`) on UI open and each scheduler cycle (#315).
-- Stopped-server auto-update no longer blocks the maintenance schedule loop while SteamCMD runs (#489).
-- Maintenance warnings and the RCON quick chip use **ServerChat** instead of **Broadcast** — ASA often accepts `Broadcast` over RCON with “no response” but does not show it in-game (#487).
-- Maintenance restart and post-update start honor Settings **Show server console on start** (they no longer spawn hidden when the preference is on) (#489).
-- Maintenance tab Alerts (errors / schedule pause) stay readable instead of collapsing to a thin border when job sections are expanded (#489).
 - Fleet **Cleanup** “keep limit” now matches scheduled world retention: last N archives **per map**, so rotating maps no longer deletes the other map’s backups.
 - Fleet **Cleanup** “Keep only last N” also keeps world archives **per map** (same pools as retention), not a flat cross-map list.
 
 ### Changed
 
 - Docs: expand Maintenance engineering runbook (IPC, cancel/pause, constants, T0 stop-before-queue, pitfalls) and clarify Cleanup keep-limit vs keep-last-N; cross-link Updates / lifecycle / profile DB (#315).
-- Restart schedule: pick **multiple weekdays** (e.g. Mon & Fri), Mantine **TimePicker** for local time, and an optional **last minute in chat** toggle (#489).
-- Maintenance **Wild dino wipe** toggle lives in **Up next** (no separate job accordion); save-world-before-wipe is always on (#489).
-- Player warnings add an **Off** preset; **Custom** with no times selected falls back to Off and re-selects all times when chosen again (#489).
-- Auto-update copy refers to a new **Ark server version** instead of Steam; **Up next** shows the next restart time before warning detail (#489).
-- Playwright **`e2e:maintenance`** covers the Maintenance tab (Up next, restart schedule, wipe toggle, warnings Off) (#489).
-- Muted helper text (`c="dimmed"`, `--app-color-muted`) is slightly brighter for readability on dark surfaces (#489).
-- **Run update now** stays disabled until Steam reports a newer dedicated build (#489).
-- Maintenance warning presets no longer offer a **10s** offset — the last minute already ServerChats every second (#488 / #489).
+- Muted helper text (`c="dimmed"`, `--app-color-muted`) is slightly brighter for readability on dark surfaces.
 - Keyboard: Ctrl+K Spotlight, Tab to server cards, Shift+F10 for the row menu, and Escape to dismiss menus and confirm dialogs (setup wizard still needs Skip / Close / Back) (#476).
 - Keyboard: Overview search Escape clears; fleet strip tiles toggle with Enter/Space; workspace tabs and Settings categories are Tab-reachable. Card version/meta cells stay mouse-only (#477).
-
-### Changed
-
 - Destructive confirms (logs purge, backup delete, mod remove, ban/unban, force-close, SteamCMD cache clear, and related) share one **`openDangerConfirmModal`** helper so red confirm styling and Cancel labels stay consistent (#235).
 - Logs and Settings sit on the page canvas instead of a full-pane card; create/edit form sections are flush square panels (no gap, no radius) with a **rounded** map thumb; fleet and server Logs lists/consoles are the same flush slab; expanded log rows use the Open in server highlight; **Logs severity defaults to All** (not Problems); empty states drop the dashed tile; Downloads hides the console until a job exists; ServerCard uses a flat fill, a 3px status rail, and a cryo hover border (#469).
 - Runtime status, cluster counts, and backup health use words (and a status dot) instead of light-pill badges; needs-attention is fossil amber (#470).
