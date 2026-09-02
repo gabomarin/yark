@@ -1,10 +1,10 @@
 import { Badge, Stack, Text, Tooltip } from "@mantine/core";
 import type { DataTableColumn } from "mantine-datatable";
 import { backupFinishedAt, parsePlayerKeyFromNotes, playerBackupDisplayName } from "@shared/backup-player-meta";
-import { formatLogDateTime } from "@shared/format-log-datetime";
 import type { BackupKind, BackupRecord } from "@shared/types";
 import { BackupHistoryRowActions } from "./BackupHistoryRowActions";
 import { archiveFileName } from "./backupHistorySort";
+import { formatBackupWhenLabel } from "./model/serverBackupPanelModel";
 import classes from "./BackupsPage.module.css";
 
 function statusColor(status: BackupRecord["status"]): string {
@@ -19,7 +19,6 @@ export interface BackupHistoryColumnInput {
   busy: boolean;
   opsLocked: boolean;
   formatSize: (sizeBytes: number) => string;
-  formatRelativeTime: (iso: string) => string;
   onCopyDetails: (backup: BackupRecord) => void;
   onOpenFolder: (backupId: string) => void;
   onExport: (backup: BackupRecord) => void;
@@ -130,10 +129,9 @@ export function buildBackupHistoryTableColumns(
       resizable: true,
       render: (backup) => {
         const finishedAt = backupFinishedAt(backup);
-        const relative = input.formatRelativeTime(finishedAt);
-        const absolute = formatLogDateTime(finishedAt, { fallback: finishedAt });
+        const { primary, tooltip } = formatBackupWhenLabel(finishedAt);
         return (
-          <Tooltip label={absolute} withArrow>
+          <Tooltip label={tooltip} withArrow>
             <Text
               fw={600}
               size="sm"
@@ -141,7 +139,7 @@ export function buildBackupHistoryTableColumns(
               {...(!isPlayersTab ? { "data-backup-title": true } : {})}
               className={classes.backupTitle}
             >
-              {relative}
+              {primary}
             </Text>
           </Tooltip>
         );

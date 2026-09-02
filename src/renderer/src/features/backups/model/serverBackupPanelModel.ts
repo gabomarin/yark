@@ -1,4 +1,5 @@
 import { playerBackupDisplayName } from "@shared/backup-player-meta";
+import { formatLogDateTime } from "@shared/format-log-datetime";
 import type {
   BackupKind,
   BackupPolicy,
@@ -14,7 +15,16 @@ export const KIND_TABS: Array<{ kind: BackupKind; label: string }> = [
   { kind: "ini", label: "INI" },
 ];
 
-const relativeTimeFormat = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
+/** English only until app i18n (#358). Do not use the OS locale. */
+const relativeTimeFormat = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+
+/** Relative primary label for backups younger than this; absolute beyond. */
+export const BACKUP_WHEN_RECENT_MS = 24 * 60 * 60 * 1000;
+
+export type BackupWhenLabel = {
+  primary: string;
+  tooltip: string;
+};
 
 export function formatSize(sizeBytes: number): string {
   if (sizeBytes <= 0) return "–";
@@ -39,6 +49,29 @@ export function formatRelativeTime(iso: string, nowMs = Date.now()): string {
   const diffMonth = Math.round(diffDay / 30);
   if (Math.abs(diffMonth) < 12) return relativeTimeFormat.format(diffMonth, "month");
   return relativeTimeFormat.format(Math.round(diffMonth / 12), "year");
+}
+
+/**
+ * Backup history Date cell: English relative within 24h, local timestamp older.
+ * Tooltip always shows the alternate form (#515).
+ */
+export function formatBackupWhenLabel(
+  iso: string,
+  nowMs = Date.now(),
+  options?: { recentThresholdMs?: number },
+): BackupWhenLabel {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) {
+    return { primary: iso, tooltip: iso };
+  }
+  const threshold = options?.recentThresholdMs ?? BACKUP_WHEN_RECENT_MS;
+  const relative = formatRelativeTime(iso, nowMs);
+  const absolute = formatLogDateTime(iso, { fallback: iso });
+  const ageMs = Math.abs(date.getTime() - nowMs);
+  if (ageMs < threshold) {
+    return { primary: relative, tooltip: absolute };
+  }
+  return { primary: absolute, tooltip: relative };
 }
 
 export function kindLabel(kind: BackupKind): string {
