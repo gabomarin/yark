@@ -68,9 +68,9 @@ New archives are named `{server}-{kind}-{type}-…-{YYYYMMDD-HHmmss}.zip` (compa
 | World schedule | Optional; **world only**; server must be **active**; interval minimum 5 minutes |
 | Player join/leave | Session watcher snapshots (not gated by the world schedule) |
 | INI-on-save | Debounced after a successful INI save |
-| Stop | Best-effort **`pre_stop`** (world + INI) after graceful exit |
-| Restart | Fail-hard **`pre_restart`** (world + INI) after stop, before start |
-| Safe update | Fail-hard **`pre_update`** (world + INI) before SteamCMD work |
+| Stop | Best-effort **`pre_stop`** (world) after graceful exit |
+| Restart | Fail-hard **`pre_restart`** (world) after stop, before start |
+| Safe update | Fail-hard **`pre_update`** (world) before SteamCMD work |
 
 Default schedule policy (when enabled): interval 60 minutes; retain ~20 world **per map** / ~20 players / ~10 INI (configurable). Fleet **Cleanup** “Delete older backups past each server's keep limit” and **Keep only last N per kind** use those same per-map / per-player pools (world and players; INI stays flat). The schedule waits a full interval after the process becomes active, counts failed attempts toward the interval, and can pause for the rest of the YARK session after repeated failures (policy stays enabled). Use **Clear failed** on the history toolbar to drop failed rows that left no archive on disk.
 

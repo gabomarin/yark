@@ -236,7 +236,7 @@ export class UpdatePerformer {
         } else {
           this.checkpointJob(job, "creating-pre-update-backup");
           this.appendSteamCmdConsole(
-            "Creating pre-update backups (world, INI) before SteamCMD…",
+            "Creating pre-update backup (world) before SteamCMD…",
           );
           this.setProgress(
             5,

@@ -46,10 +46,10 @@ describe("pre-update backup helpers", () => {
   it("detects resume and evidence completeness", () => {
     expect(shouldResumeFromPreUpdateBackup(undefined)).toBe(false);
     expect(shouldResumeFromPreUpdateBackup(["bu-world"])).toBe(true);
-    expect(isPreUpdateBackupEvidenceComplete(["bu-world", "bu-ini"], 2, 2)).toBe(true);
-    expect(isPreUpdateBackupEvidenceComplete(["bu-world", "bu-players", "bu-ini"], 2, 2)).toBe(true);
-    expect(isPreUpdateBackupEvidenceComplete([], 0, 2)).toBe(false);
-    expect(isPreUpdateBackupEvidenceComplete(["bu-world"], 1, 2)).toBe(false);
+    expect(isPreUpdateBackupEvidenceComplete(["bu-world"], 1, 1)).toBe(true);
+    expect(isPreUpdateBackupEvidenceComplete(["bu-world", "bu-players", "bu-ini"], 1, 1)).toBe(true);
+    expect(isPreUpdateBackupEvidenceComplete([], 0, 1)).toBe(false);
+    expect(isPreUpdateBackupEvidenceComplete(["bu-world"], 0, 1)).toBe(false);
   });
 
   it("formats labels and progress percent", () => {

@@ -142,7 +142,7 @@ export class BackupCreatePipeline {
     notes: string | null,
     options?: { playerKey?: string; waitForProfile?: boolean },
   ): Promise<BackupRecord | null> {
-    // The full stop batch already includes world + INI; do not queue
+    // The full stop batch already includes world; do not queue
     // automatic single-kind work behind it while the app may be waiting to quit.
     if (this.host.preStopBackupServers.has(serverId)) return Promise.resolve(null);
     return this.withServerBackupJob(serverId, () =>

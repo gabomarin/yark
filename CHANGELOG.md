@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Critical-path backups (pre-stop, pre-restart, pre-update) archive **world only** — INI stays on save / Backup now so stop and update are faster and avoid duplicate INI ZIPs (#518).
 - Backup history **Date** shows English relative time for the last 24 hours and a local timestamp for older rows (tooltip shows the other form) (#515).
 
 ## [0.18.0] - 2026-08-31

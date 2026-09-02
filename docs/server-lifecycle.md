@@ -187,7 +187,7 @@ IPC:
 | --- | --- |
 | `servers:start` | sync INI → `ProcessManager.start` |
 | `servers:set-enabled` | Locked explicit enable/disable transition; never starts or stops ASA implicitly. |
-| `servers:stop` | `InstanceService.stop`: RCON `SaveWorld` → wait `SAVE_WAIT_MS` (8s) → `DoExit` exact process → best-effort stable `pre_stop` backup (world/ini). Progress via `push:server-stop-progress`. Pass `{ backup: false }` to skip the snapshot (SteamCMD update/verify, restart). |
+| `servers:stop` | `InstanceService.stop`: RCON `SaveWorld` → wait `SAVE_WAIT_MS` (8s) → `DoExit` exact process → best-effort stable `pre_stop` backup (world only; #518). Progress via `push:server-stop-progress`. Pass `{ backup: false }` to skip the snapshot (SteamCMD update/verify, restart). |
 | `servers:restart` | `InstanceService.restart`: lock `"restart"` → stop with `{ backup: false }` → fail-hard `pre_restart` backup → start. Options match `servers:start` (`StartServerOptions`). |
 | `servers:kill` | immediate terminate (warning event; UI confirms) |
 
@@ -363,7 +363,7 @@ list: [rcon.md](rcon.md).
 3. `finishGracefulStop` validates the ownership handle, then `DoExit` / kill
    fallback. A replacement process is left untouched.
 4. Unless `{ backup: false }`, `BackupService.createPreStopBackup` packages
-   stable stopped files (skip flush; kinds world/ini).
+   stable stopped files (skip flush; kind world only — #518).
 5. Clear stop-progress. Event distinguishes saved, RCON-killed, externally
    exited, and backup-failed outcomes.
 
@@ -387,7 +387,7 @@ path (`InstanceService.stopAllForAppQuit`, including pre-stop backup).
    spawn), then graceful `stopAllForAppQuit` if any process is still active.
 5. `enqueueStop(id, false)` — SaveWorld / DoExit **without** a nested
    `pre_stop` snapshot (avoids double backup and nested `stop-and-backup` lock).
-6. `createPreRestartBackup` (`pre_restart`, world/ini, `skipFlush: true`)
+6. `createPreRestartBackup` (`pre_restart`, world only, `skipFlush: true`; #518)
    — **fail-hard**: on failure the server stays stopped and start is not called.
 7. `startForMaintenance` under the same `"restart"` lock (same start path as
    `servers:start`, including `openNativeConsole` from the renderer).

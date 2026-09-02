@@ -119,8 +119,9 @@ export const faqItems: FaqItem[] = [
       <p>
         Backups are ZIP archives per server for <strong>world</strong>, <strong>players</strong>
         (join/leave snapshots), and <strong>INI</strong>. Schedule world backups; player profiles
-        are saved when players join or leave. Safe update / restart create world + INI snapshots
+        are saved when players join or leave. Safe update / restart create a world snapshot
         on the critical path (world archives already include profiles for the active map).
+        INI archives still come from saves in the INI editor and manual Backup now.
       </p>`,
   },
   {
