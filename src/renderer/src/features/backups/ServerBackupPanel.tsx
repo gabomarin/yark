@@ -14,7 +14,6 @@ import { BackupListToolbar } from "./components/BackupListToolbar/BackupListTool
 import { ServerBackupDestination } from "./components/ServerBackupDestination/ServerBackupDestination";
 import { ServerBackupHeader } from "./components/ServerBackupHeader/ServerBackupHeader";
 import {
-  formatRelativeTime,
   formatSize,
   KIND_TABS,
 } from "./model/serverBackupPanelModel";
@@ -182,7 +181,6 @@ export function ServerBackupPanel(props: Props): ReactElement {
                 onRestore={panel.confirmRestore}
                 onDelete={panel.confirmDeleteOne}
                 formatSize={formatSize}
-                formatRelativeTime={formatRelativeTime}
               />
             </div>
           </Stack>

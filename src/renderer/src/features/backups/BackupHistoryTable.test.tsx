@@ -49,7 +49,6 @@ describe("BackupHistoryTable", () => {
           onRestore={onRestore}
           onDelete={vi.fn()}
           formatSize={() => "1.0 KB"}
-          formatRelativeTime={() => "1 minute ago"}
         />
       </AppProviders>,
     );
@@ -86,7 +85,6 @@ describe("BackupHistoryTable", () => {
           onRestore={vi.fn()}
           onDelete={vi.fn()}
           formatSize={() => "1.0 KB"}
-          formatRelativeTime={() => "1 minute ago"}
         />
       </AppProviders>,
     );
@@ -110,7 +108,6 @@ describe("BackupHistoryTable", () => {
           onRestore={vi.fn()}
           onDelete={vi.fn()}
           formatSize={() => "1.0 KB"}
-          formatRelativeTime={() => "1 minute ago"}
         />
       </AppProviders>,
     );
@@ -170,7 +167,6 @@ describe("BackupHistoryTable", () => {
           onRestore={vi.fn()}
           onDelete={vi.fn()}
           formatSize={() => "1.0 KB"}
-          formatRelativeTime={(iso) => iso}
         />
       </AppProviders>,
     );

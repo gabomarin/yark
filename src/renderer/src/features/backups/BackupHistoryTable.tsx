@@ -32,7 +32,6 @@ interface Props {
   onRestore: (backup: BackupRecord) => void;
   onDelete: (backup: BackupRecord) => void;
   formatSize: (sizeBytes: number) => string;
-  formatRelativeTime: (iso: string) => string;
 }
 
 const CONTEXT_SOURCE_ID = "backup-history-table";
@@ -70,7 +69,6 @@ export function BackupHistoryTable(props: Props): ReactElement {
         busy: props.busy,
         opsLocked: props.opsLocked,
         formatSize: props.formatSize,
-        formatRelativeTime: props.formatRelativeTime,
         onCopyDetails: props.onCopyDetails,
         onOpenFolder: props.onOpenFolder,
         onExport: props.onExport,
@@ -82,7 +80,6 @@ export function BackupHistoryTable(props: Props): ReactElement {
       props.kind,
       props.busy,
       props.opsLocked,
-      props.formatRelativeTime,
       props.formatSize,
       props.onCopyDetails,
       props.onOpenFolder,
