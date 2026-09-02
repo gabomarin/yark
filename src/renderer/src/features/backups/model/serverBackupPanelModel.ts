@@ -15,7 +15,7 @@ export const KIND_TABS: Array<{ kind: BackupKind; label: string }> = [
   { kind: "ini", label: "INI" },
 ];
 
-/** English only until app i18n (#515). Do not use the OS locale. */
+/** English only until app i18n (#358). Do not use the OS locale. */
 const relativeTimeFormat = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
 
 /** Relative primary label for backups younger than this; absolute beyond. */
