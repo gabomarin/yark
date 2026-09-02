@@ -240,8 +240,8 @@ export class UpdatePerformer {
           );
           this.setProgress(
             5,
-            "Creating pre-update backups…",
-            "World / INI snapshots protect rollback if SteamCMD fails",
+            "Creating pre-update backup…",
+            "A world snapshot protects rollback if SteamCMD fails",
           );
           preUpdateBackups = await this.backups.createPreUpdateBackupForJob(serverId, {
             onKindProgress: (kind, index, total) => {

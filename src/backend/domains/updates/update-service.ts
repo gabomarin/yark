@@ -728,7 +728,7 @@ export class UpdateService extends EventEmitter {
       job.serverId,
       backupIds,
     );
-    // Legacy jobs may persist a `players` id; evidence is complete when world+ini exist.
+    // Legacy jobs may persist `players` / `ini` ids; evidence is complete when world exists.
     if (
       !isPreUpdateBackupEvidenceComplete(
         backupIds,

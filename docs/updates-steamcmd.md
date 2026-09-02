@@ -95,7 +95,7 @@ intent before this policy changed retain their stop/restart recovery behavior.
 update now stops the dedicated at countdown T0 (`backup: false`) so players are
 offline when warnings hit zero, then calls
 `UpdateService.enqueueUpdateForMaintenance(serverId, { wasRunning: true })` and
-waits for `pre_update` world+ini → SteamCMD → start (or rollback). Passing
+waits for `pre_update` world → SteamCMD → start (or rollback). Passing
 `wasRunning: true` after the caller-owned stop is required so the job restarts
 the map; omitting it after a stop would leave the server stopped. Stopped-server
 auto-update still uses the normal stopped `updateServer` path. Full job model:

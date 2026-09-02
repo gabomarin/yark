@@ -136,7 +136,7 @@ When **Wild dino wipe** is On (toggle in Up next; turning wipe On enables restar
 3. At T0: **stop immediately** (`backup: false`) so the map goes offline when
    warnings hit 0 — even if another Downloads job is still running (#498).
 4. Then `UpdateService.enqueueUpdateForMaintenance(serverId, { wasRunning: true })`
-   and **wait** for `pre_update` world+ini → SteamCMD → start (or rollback).
+   and **wait** for `pre_update` world → SteamCMD → start (or rollback).
    Callers that already stopped for player-aligned downtime must pass
    `wasRunning: true`; otherwise the queue would see a stopped process and leave
    it stopped after SteamCMD. See [updates-steamcmd.md](updates-steamcmd.md).
