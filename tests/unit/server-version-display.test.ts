@@ -162,4 +162,26 @@ describe("shouldHintVersionRefreshesOnStart", () => {
       }),
     ).toBe(false);
   });
+
+  it("hints when Steam is current and versionRefreshPending after Verify (#490)", () => {
+    expect(
+      shouldHintVersionRefreshesOnStart({
+        updateState: "current",
+        localVersion: "92.25",
+        officialVersion: "92.25",
+        versionRefreshPending: true,
+      }),
+    ).toBe(true);
+  });
+
+  it("never hints when updateState is available even if pending (#490)", () => {
+    expect(
+      shouldHintVersionRefreshesOnStart({
+        updateState: "available",
+        localVersion: "92.25",
+        officialVersion: "92.28",
+        versionRefreshPending: true,
+      }),
+    ).toBe(false);
+  });
 });

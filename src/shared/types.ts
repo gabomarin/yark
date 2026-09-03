@@ -130,6 +130,12 @@ export interface ServerInstallationInfo {
   steamBuild: string | null;
   /** Version detected from runtime logs (ARK Version: x.y). */
   arkVersion: string | null;
+  /**
+   * True when the install-dir Steam appmanifest is newer than the on-disk
+   * sources used for the displayed ARK Version (post-Update/Verify, pre-boot).
+   * Optional for older snapshots / test fixtures — treat missing as false.
+   */
+  versionRefreshPending?: boolean;
   /** Backward compatibility with the previous UI. */
   version: string | null;
   binaryPath: string;

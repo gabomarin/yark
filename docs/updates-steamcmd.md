@@ -112,11 +112,13 @@ Pre-update archives use backup type `pre_update` and kind `world`
 
 | Signal | Source | Used for |
 | --- | --- | --- |
-| Local Steam build | `{installDir}/steamapps/appmanifest_2430930.acf` → `build N` | Compare |
+| Local Steam build | `{installDir}/steamapps/appmanifest_2430930.acf` → `build N` only (never shared SteamCMD / content-cache manifests) | Compare |
 | Public Steam build | `https://api.steamcmd.net/v1/info/2430930` (public branch `buildid`) | Compare |
 | Official ARK Version | Wildcard `https://cdn2.arkdedicated.com/asa/officialserverstatus.ini` | **UI only** |
 
-`isServerUpdateAvailable` / `getServerUpdateState` compare **Steam builds only**. Never treat runtime `ARK Version` vs an official/live server version as an update decision — staggered ASA rollouts make those non-equivalent.
+`isServerUpdateAvailable` / `getServerUpdateState` compare **Steam builds only**. Local build **≥** official counts as current (SteamCMD can finish before the public probe catches up — #490). Never treat runtime `ARK Version` vs an official/live server version as an update decision — staggered ASA rollouts make those non-equivalent.
+
+After Update/Verify, when the install-dir appmanifest is newer than `version.txt` / logs that feed the Version cell, the card keeps the **“Version refreshes after you start”** hint while Steam is already current so the UI does not look settled on a stale ARK label (#490).
 
 Official version and official build each cache for **15 minutes** in-process (`OFFICIAL_VERSION_TTL_MS`). `servers:installation` accepts `forceOfficialCheck` to bypass (used by **Check server updates**, **Update All**, and **Check installs**). The status line is also parsed for network state (`Online` / `Deploying` / `Offline`); Deploying tints the sidebar version and shows a pulsing indicator.
 

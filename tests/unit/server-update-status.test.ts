@@ -28,13 +28,22 @@ describe("getServerUpdateState", () => {
     expect(getServerUpdateState(installation(), "build 24346423")).toBe("current");
   });
 
-  it("marks update only when comparable Steam builds differ", () => {
+  it("marks update only when the local Steam build is behind official", () => {
     expect(
       getServerUpdateState(
         installation({ steamBuild: "build 24300000" }),
         "build 24346423",
       ),
     ).toBe("available");
+  });
+
+  it("treats a local Steam build ahead of the official probe as current (#490)", () => {
+    expect(
+      getServerUpdateState(
+        installation({ steamBuild: "build 25000000" }),
+        "build 24346423",
+      ),
+    ).toBe("current");
   });
 
   it("does not invent a state when a comparable build is missing", () => {

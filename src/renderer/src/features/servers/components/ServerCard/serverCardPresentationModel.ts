@@ -154,6 +154,7 @@ export function deriveServerCardView(input: {
     updateState,
     localVersion,
     officialVersion: input.officialVersion,
+    versionRefreshPending: input.installation?.versionRefreshPending === true,
   })
     ? VERSION_REFRESHES_ON_START_HINT
     : null;

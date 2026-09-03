@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Fixed
+
+- Server **Version** / **Update** chrome no longer desyncs after Update, Verify, or a second Steam build: compare uses the install-dir appmanifest only, treats local-ahead builds as current, and keeps the refresh-after-start hint when files are newer than the displayed ARK label (#490).
+
 ## [0.18.1] - 2026-09-02
 
 ### Changed
