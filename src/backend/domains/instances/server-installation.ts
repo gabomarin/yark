@@ -310,6 +310,10 @@ async function readFileTailAsync(
 /**
  * True when install-dir Steam appmanifest is newer than version.txt / logs that
  * feed the displayed ARK Version — after Update/Verify, before the next boot.
+ *
+ * When `build` is ARK-style but `versionFileMtimeMs` is null (no version.txt /
+ * Build.version on disk), we still consider `arkVersion` + log mtimes — that is
+ * intentional, not a missing early return.
  */
 function versionRefreshPendingFromSources(input: {
   manifestMtimeMs: number | null;
@@ -331,6 +335,8 @@ function versionRefreshPendingFromSources(input: {
   if (input.arkVersion !== null && isArkStyleVersion(input.arkVersion) && input.newestLogMtimeMs != null) {
     sourceMtimes.push(input.newestLogMtimeMs);
   }
+  // No usable source mtimes (e.g. ARK-style build with missing version files and
+  // no log-derived arkVersion) → not pending.
   if (sourceMtimes.length === 0) return false;
   return Math.max(...sourceMtimes) < input.manifestMtimeMs;
 }
@@ -362,6 +368,13 @@ async function maxExistingMtimeMsAsync(paths: string[]): Promise<number | null> 
   return max;
 }
 
+/**
+ * Newest mtime among `ShooterGame/Saved/Logs/*.{log,txt}`.
+ * Only call when `arkVersion` was probed — fleet cheap passes skip log tails and
+ * therefore skip this scan. Expect a small ASA rotation (typically under ~20 files);
+ * full inspect results are also memoized for `INSTALL_INSPECT_TTL_MS` (~20s)
+ * unless `bypassCache` is set.
+ */
 function newestLogMtimeMsSync(installDir: string): number | null {
   const logsDir = join(installDir, "ShooterGame", "Saved", "Logs");
   if (!existsSync(logsDir)) return null;
@@ -448,7 +461,9 @@ function buildInspectedInstallation(
         build,
         arkVersion,
         versionFileMtimeMs: maxExistingMtimeMs(versionCandidatePaths(installDir)),
-        newestLogMtimeMs: newestLogMtimeMsSync(installDir),
+        // Skip Logs readdir unless we actually have a log-derived arkVersion.
+        newestLogMtimeMs:
+          arkVersion !== null ? newestLogMtimeMsSync(installDir) : null,
       })
     : false;
 
@@ -507,7 +522,9 @@ async function buildInspectedInstallationAsync(
         versionFileMtimeMs: await maxExistingMtimeMsAsync(
           versionCandidatePaths(installDir),
         ),
-        newestLogMtimeMs: await newestLogMtimeMsAsync(installDir),
+        // Skip Logs readdir unless we actually have a log-derived arkVersion.
+        newestLogMtimeMs:
+          arkVersion !== null ? await newestLogMtimeMsAsync(installDir) : null,
       })
     : false;
 
