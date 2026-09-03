@@ -24,6 +24,18 @@ const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.18.2",
+    date: "2026-09-03",
+    sections: [
+      {
+        title: "Fixed",
+        items: [
+          "Server Version / Update chrome no longer desyncs after Update, Verify, or a second Steam build — install-dir appmanifest only, local-ahead builds count as current, and the refresh hint stays when files are newer than the displayed ARK label.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.18.1",
     date: "2026-09-02",
     sections: [
