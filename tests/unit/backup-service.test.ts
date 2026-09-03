@@ -187,7 +187,7 @@ describe("BackupService kinds and retention", () => {
 
   it("resumes a pre-update critical job without duplicating completed kinds", async () => {
     const first = await service.createPreUpdateBackupForJob(profile.id);
-    expect(first).toHaveLength(2);
+    expect(first).toHaveLength(1);
     const markerMatch = first[0]?.notes?.match(/\[critical-job:([^\]]+)\]/);
     expect(markerMatch?.[1]).toBeDefined();
     if (markerMatch?.[1] === undefined) return;
@@ -218,9 +218,9 @@ describe("BackupService kinds and retention", () => {
     settingsStore.set("backupCriticalJobsQueue.v1", JSON.stringify([job]));
     const restarted = new BackupService(servers, repo, processes, settings);
     const resumed = await restarted.createPreUpdateBackupForJob(profile.id);
-    expect(resumed).toHaveLength(2);
+    expect(resumed).toHaveLength(1);
     expect(repo.listBackups(profile.id, 100).filter((row) => row.type === "pre_update"))
-      .toHaveLength(2);
+      .toHaveLength(1);
     expect(settingsStore.get("backupCriticalJobsQueue.v1")).toBe("[]");
   });
 
@@ -256,7 +256,6 @@ describe("BackupService kinds and retention", () => {
 
     expect(recovered.map((backup) => backup.kind)).toEqual([
       "world",
-      "ini",
     ]);
     expect(recovered.every((backup) =>
       backup.type === "pre_update"
@@ -322,7 +321,7 @@ describe("BackupService kinds and retention", () => {
 
   it("requires on-disk archives when reusing persisted pre-update backup evidence", async () => {
     const backups = await service.createPreUpdateBackupForJob(profile.id);
-    expect(backups).toHaveLength(2);
+    expect(backups).toHaveLength(1);
     const removed = backups[0];
     expect(removed).toBeDefined();
     if (removed === undefined) return;
@@ -332,13 +331,13 @@ describe("BackupService kinds and retention", () => {
       profile.id,
       backups.map((backup) => backup.id),
     );
-    expect(completed).toHaveLength(1);
+    expect(completed).toHaveLength(0);
     expect(completed.every((backup) => existsSync(backup.path))).toBe(true);
   });
 
-  it("ignores a legacy players id when collecting critical pre-update evidence (#275)", async () => {
+  it("ignores legacy players and ini ids when collecting critical pre-update evidence (#275, #518)", async () => {
     const critical = await service.createPreUpdateBackupForJob(profile.id);
-    expect(critical.map((backup) => backup.kind)).toEqual(["world", "ini"]);
+    expect(critical.map((backup) => backup.kind)).toEqual(["world"]);
 
     const playersPath = join(installDir, "Backups", "legacy-players-pre-update.zip");
     await mkdir(dirname(playersPath), { recursive: true });
@@ -352,15 +351,25 @@ describe("BackupService kinds and retention", () => {
     });
     repo.completeBackup(players.id, 7);
 
+    const iniPath = join(installDir, "Backups", "legacy-ini-pre-update.zip");
+    await writeFile(iniPath, "ini", "utf8");
+    const ini = repo.createBackupStart({
+      serverId: profile.id,
+      type: "pre_update",
+      kind: "ini",
+      path: iniPath,
+      notes: "legacy pre-update ini",
+    });
+    repo.completeBackup(ini.id, 5);
+
     const completed = service.getCompletedBackupsForCriticalJob(profile.id, [
       critical[0]!.id,
       players.id,
-      critical[1]!.id,
+      ini.id,
     ]);
-    expect(completed.map((backup) => backup.kind)).toEqual(["world", "ini"]);
+    expect(completed.map((backup) => backup.kind)).toEqual(["world"]);
     expect(completed.map((backup) => backup.id)).toEqual([
       critical[0]!.id,
-      critical[1]!.id,
     ]);
   });
 

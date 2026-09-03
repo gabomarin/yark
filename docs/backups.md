@@ -183,8 +183,9 @@ User stop (`servers:stop` via `InstanceService.stop`):
 1. RCON `SaveWorld` + wait.
 2. RCON `DoExit` + wait for the exact managed process. A replacement process is
    never touched; an external process exit is treated as already stopped.
-3. `createPreStopBackup` with `skipFlush: true` creates `pre_stop` archives for
-   **world** and **ini** (profiles travel with the world map folder).
+3. `createPreStopBackup` with `skipFlush: true` creates a `pre_stop` archive for
+   **world** only (profiles travel with the world map folder; INI stays on
+   `ini:save` / manual Backup now — #518).
    Packaging happens after exit so the source files remain stable.
 4. Progress phases push on
    `push:server-stop-progress` (overview card + workspace alert).
@@ -202,8 +203,8 @@ User restart (`servers:restart` via `InstanceService.restart`):
 
 1. Reject if the server process is not active; hold lock purpose `"restart"`.
 2. Stop with `{ backup: false }` (SaveWorld / DoExit, no `pre_stop`).
-3. `createPreRestartBackup` with `skipFlush: true` creates `pre_restart`
-   archives for **world** and **ini**.
+3. `createPreRestartBackup` with `skipFlush: true` creates a `pre_restart`
+   archive for **world** only (#518).
 4. Backup failure is **fail-hard** — start is not called; the server stays
    stopped.
 5. On success, start with the same options as `servers:start` (including
@@ -336,7 +337,7 @@ After a successful `ini:save`, `createIniSaveBackup` debounces **2s** per server
   from the next missing kind. Restore outcomes remain blocked with Retry/Dismiss
   actions instead of being replayed blindly. See
   [Critical job crash recovery](critical-job-recovery.md).
-- Pre-update creates **world + ini** (`CRITICAL_BACKUP_KINDS`). World archives already include profiles/tribes for the active map.
+- Pre-update creates **world** only (`CRITICAL_BACKUP_KINDS`, #518). World archives already include profiles/tribes for the active map. INI continues via `ini:save` / manual Backup now.
 - Safe update requires a stopped server, then creates this set. It must **not**
   also produce a `pre_stop` archive set for the same job. Acceptance and
   real-host checklist:

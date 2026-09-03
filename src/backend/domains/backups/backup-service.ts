@@ -391,8 +391,8 @@ export class BackupService extends EventEmitter {
 
   /**
    * Resolve on-disk completed pre-update backups for resume/rollback.
-   * Returns only {@link CRITICAL_BACKUP_KINDS} (world + ini), in that order.
-   * Extra persisted ids (e.g. legacy `players` from before #275) are ignored.
+   * Returns only {@link CRITICAL_BACKUP_KINDS} (world), in that order.
+   * Extra persisted ids (e.g. legacy `players` / `ini` from earlier builds) are ignored.
    */
   getCompletedBackupsForCriticalJob(
     serverId: string,

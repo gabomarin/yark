@@ -38,7 +38,7 @@ function makeProfile(id = "srv-update-1"): ServerProfile {
 
 function makePreUpdateBackups(serverId: string): BackupRecord[] {
   const now = new Date().toISOString();
-  return (["world", "ini"] as const).map((kind, index) => ({
+  return (["world"] as const).map((kind, index) => ({
     id: `bu-${kind}`,
     serverId,
     type: "pre_update",
@@ -53,7 +53,7 @@ function makePreUpdateBackups(serverId: string): BackupRecord[] {
   }));
 }
 
-/** Legacy pre-#275 evidence that still lists a players archive id. */
+/** Legacy pre-#275 / pre-#518 evidence that still lists extra archive ids. */
 function makeLegacyPreUpdateBackupIds(serverId: string): {
   ids: string[];
   critical: BackupRecord[];
@@ -74,7 +74,7 @@ function makeLegacyPreUpdateBackupIds(serverId: string): {
     mapToken: null,
   };
   return {
-    ids: [critical[0]!.id, players.id, critical[1]!.id],
+    ids: [critical[0]!.id, players.id, "bu-ini"],
     critical,
   };
 }
@@ -140,8 +140,7 @@ function createHarness(options?: {
       (_serverId: string, backupIds: readonly string[]) =>
         makePreUpdateBackups(profile.id).filter(
           (backup) =>
-            backupIds.includes(backup.id)
-            && (backup.kind === "world" || backup.kind === "ini"),
+            backupIds.includes(backup.id) && backup.kind === "world",
         ),
     ),
     restoreBackupForJob: vi.fn(async () => {
@@ -497,9 +496,8 @@ describe("UpdateService safe update orchestration", () => {
   it("blocks resumed update when persisted pre-update backup evidence is incomplete", async () => {
     const h = createHarness({ wasRunning: false });
     dirs.push(h.logDir);
-    const backups = makePreUpdateBackups(h.profile.id);
-    // Only world present — ini missing is incomplete for critical resume.
-    h.backups.getCompletedBackupsForCriticalJob.mockReturnValue([backups[0]!]);
+    // World id was persisted, but the archive is missing on disk.
+    h.backups.getCompletedBackupsForCriticalJob.mockReturnValue([]);
     const now = new Date().toISOString();
     const job = {
       id: "update-missing-evidence",
@@ -517,7 +515,7 @@ describe("UpdateService safe update orchestration", () => {
       operatorRetryAllowed: false,
       context: {
         wasRunning: false,
-        preUpdateBackupIds: backups.map((backup) => backup.id),
+        preUpdateBackupIds: ["bu-world"],
       },
     };
 
@@ -595,7 +593,8 @@ describe("UpdateService safe update orchestration", () => {
       context: {
         wasRunning: true,
         preUpdateBackupIds: backups.map((backup) => backup.id),
-        rollbackRestoredBackupIds: [backups[0]!.id],
+        // Interrupted before any restore completed — still need world.
+        rollbackRestoredBackupIds: [],
       },
     };
 
@@ -798,22 +797,16 @@ describe("UpdateService safe update orchestration", () => {
 
     await expect(h.performUpdate()).rejects.toThrow(/SteamCMD exited with code 1/);
 
-    expect(h.backups.restoreBackupForJob).toHaveBeenCalledTimes(2);
+    expect(h.backups.restoreBackupForJob).toHaveBeenCalledTimes(1);
     expect(h.backups.restoreBackupForJob).toHaveBeenCalledWith(
       h.profile.id,
       "bu-world",
-      expect.objectContaining({ onProgressMessage: expect.any(Function) }),
-    );
-    expect(h.backups.restoreBackupForJob).toHaveBeenCalledWith(
-      h.profile.id,
-      "bu-ini",
       expect.objectContaining({ onProgressMessage: expect.any(Function) }),
     );
     expect(h.order).toEqual([
       "stop",
       "pre_update",
       "steam",
-      "restore",
       "restore",
       "start",
     ]);

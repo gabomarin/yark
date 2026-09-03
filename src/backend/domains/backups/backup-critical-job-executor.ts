@@ -7,7 +7,7 @@ import { isReadableZipArchive, zipHasBackupLayout } from "./backup-archive";
 import type { BackupCriticalJob } from "./backup-critical-jobs";
 import { isRestoreHistoryOwnedByJob as restoreHistoryOwnedByJob } from "./backup-restore";
 
-export const CRITICAL_BACKUP_KINDS: readonly BackupKind[] = ["world", "ini"];
+export const CRITICAL_BACKUP_KINDS: readonly BackupKind[] = ["world"];
 
 export interface BackupCriticalJobProgressHandlers {
   onKindProgress?: (kind: BackupKind, index: number, total: number) => void;
@@ -69,7 +69,7 @@ export class DefaultBackupCriticalJobExecutor implements BackupCriticalJobExecut
   ): Promise<BackupRecord[]> {
     control.throwIfCancelled();
     control.progress?.onProgressMessage?.(
-      "Creating pre-update backups (world, INI) before SteamCMD…",
+      "Creating pre-update backup (world) before SteamCMD…",
     );
     control.checkpoint("reconciling-backups");
     await this.deps.reconcileDiskBackups(job.serverId);
@@ -144,7 +144,7 @@ export class DefaultBackupCriticalJobExecutor implements BackupCriticalJobExecut
       control.checkpoint(`backup-complete:${kind}`);
     }
 
-    control.progress?.onProgressMessage?.("Pre-update backups completed.");
+    control.progress?.onProgressMessage?.("Pre-update backup completed.");
     return CRITICAL_BACKUP_KINDS.map((kind) => completedByKind.get(kind)!);
   }
 

@@ -79,9 +79,7 @@ describe("InstanceService.stop", () => {
             ) => void;
           },
         ) => {
-          options?.onKindProgress?.("world", 0, 3);
-          options?.onKindProgress?.("players", 1, 3);
-          options?.onKindProgress?.("ini", 2, 3);
+          options?.onKindProgress?.("world", 0, 1);
           return [];
         },
       ),
@@ -123,7 +121,7 @@ describe("InstanceService.stop", () => {
       progress
         .filter((p) => p.phase === "backing_up")
         .map((p) => p.percent),
-    ).toEqual([40, 63, 85]);
+    ).toEqual([85]);
     expect(progress.at(-1)).toMatchObject({
       serverId: profile.id,
       active: false,

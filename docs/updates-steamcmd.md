@@ -78,7 +78,7 @@ operator review. See [Critical job crash recovery](critical-job-recovery.md).
 
 ```text
 server is stopped at request and execution time
-  → create pre_update backups (world + ini)
+  → create pre_update backup (world)
   → SteamCMD update + robocopy sync
   → on any failure after backups exist:
        restore each pre_update backup
@@ -95,7 +95,7 @@ intent before this policy changed retain their stop/restart recovery behavior.
 update now stops the dedicated at countdown T0 (`backup: false`) so players are
 offline when warnings hit zero, then calls
 `UpdateService.enqueueUpdateForMaintenance(serverId, { wasRunning: true })` and
-waits for `pre_update` world+ini → SteamCMD → start (or rollback). Passing
+waits for `pre_update` world → SteamCMD → start (or rollback). Passing
 `wasRunning: true` after the caller-owned stop is required so the job restarts
 the map; omitting it after a stop would leave the server stopped. Stopped-server
 auto-update still uses the normal stopped `updateServer` path. Full job model:
@@ -104,8 +104,8 @@ auto-update still uses the normal stopped `updateServer` path. Full job model:
 An update produces exactly one stable `pre_update` archive set and does not create a
 `pre_stop` set for the same job. See [backups.md](backups.md).
 
-Pre-update archives use backup type `pre_update` and kinds `world` / `ini`
-(`CRITICAL_BACKUP_KINDS`). Per-server update logs land under userData `update-logs/` as
+Pre-update archives use backup type `pre_update` and kind `world`
+(`CRITICAL_BACKUP_KINDS`; INI is not on the critical path — #518). Per-server update logs land under userData `update-logs/` as
 `{serverId}-{timestamp}.log`.
 
 ## Update availability (not SteamCMD)
@@ -257,7 +257,7 @@ Requires: Node 22.12+ (`node:sqlite` and the current Electron toolchain), Playwr
 - A **test-owned or disposable** ASA server profile (unique game/query/RCON ports;
   admin password ≥ 4 characters). Do not use an operator production world unless you
   accept snapshot/rollback risk.
-- Enough disk for SteamCMD cache + one `pre_update` set (world/ini).
+- Enough disk for SteamCMD cache + one `pre_update` world archive.
 - Note expected duration (SteamCMD validate + robocopy can take many minutes).
 - Cleanup: leave operator-owned installs untouched; delete only profiles/paths you created for the run.
 
