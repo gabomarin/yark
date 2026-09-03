@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.18.1] - 2026-09-02
+
 ### Changed
 
 - Critical-path backups (pre-stop, pre-restart, pre-update) archive **world only** — INI stays on save / Backup now so stop and update are faster and avoid duplicate INI ZIPs (#518).
