@@ -4,7 +4,7 @@ import { isInstallationReady } from "./installation-health";
 export type ServerUpdateState = "available" | "current" | "unknown";
 
 /** Parse `build 123456` → numeric id, or null when not a Steam build label. */
-export function parseSteamBuildId(label: string | null | undefined): number | null {
+function parseSteamBuildId(label: string | null | undefined): number | null {
   if (label == null) return null;
   const match = label.trim().match(/^build\s+(\d+)$/i);
   if (match?.[1] === undefined) return null;
