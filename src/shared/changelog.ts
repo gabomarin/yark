@@ -24,6 +24,19 @@ const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.18.1",
+    date: "2026-09-02",
+    sections: [
+      {
+        title: "Changed",
+        items: [
+          "Critical-path backups (pre-stop, pre-restart, pre-update) archive world only — INI stays on save / Backup now.",
+          "Backup history Date shows English relative time for the last 24 hours and a local timestamp for older rows.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.18.0",
     date: "2026-08-31",
     sections: [
