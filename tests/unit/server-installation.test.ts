@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync, utimesSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -88,7 +88,7 @@ describe("inspectServerInstallation", () => {
     }
   });
 
-  it("uses SteamCMD appmanifest buildid when installdir matches", () => {
+  it("does not use ancestor SteamCMD appmanifest for update compare (#490)", () => {
     const steamRoot = makeTmpDir();
     const installDir = join(steamRoot, "asa", "island");
     try {
@@ -106,14 +106,14 @@ describe("inspectServerInstallation", () => {
       const info = inspectServerInstallation("srv-4", installDir);
       expect(info.installed).toBe(true);
       expect(info.build).toBeNull();
-      expect(info.steamBuild).toBe("build 16123456");
+      expect(info.steamBuild).toBeNull();
       expect(info.version).toBeNull();
     } finally {
       rmSync(steamRoot, { recursive: true, force: true });
     }
   });
 
-  it("ignores ambiguous buildid when multiple manifests do not match", () => {
+  it("ignores shared SteamCMD manifests that do not match the install (#490)", () => {
     const steamRoot = makeTmpDir();
     const extraSteamRoot = makeTmpDir();
     const previousEnv = process.env["ARK_STEAMCMD_DIR"];
@@ -154,7 +154,7 @@ describe("inspectServerInstallation", () => {
     }
   });
 
-  it("uses buildid as steamBuild when there are no ARK-style version sources", () => {
+  it("does not invent steamBuild from a lone shared SteamCMD manifest (#490)", () => {
     const steamRoot = makeTmpDir();
     const installDir = join(steamRoot, "asa", "xsd");
     try {
@@ -172,14 +172,14 @@ describe("inspectServerInstallation", () => {
       const info = inspectServerInstallation("srv-5b", installDir);
       expect(info.installed).toBe(true);
       expect(info.build).toBeNull();
-      expect(info.steamBuild).toBe("build 19999999");
+      expect(info.steamBuild).toBeNull();
       expect(info.version).toBeNull();
     } finally {
       rmSync(steamRoot, { recursive: true, force: true });
     }
   });
 
-  it("detects buildid even when steamapps is several levels above", () => {
+  it("does not walk ancestor steamapps for steamBuild (#490)", () => {
     const steamRoot = makeTmpDir();
     const installDir = join(steamRoot, "servers", "grupo-a", "island");
     try {
@@ -197,14 +197,14 @@ describe("inspectServerInstallation", () => {
       const info = inspectServerInstallation("srv-6", installDir);
       expect(info.installed).toBe(true);
       expect(info.build).toBeNull();
-      expect(info.steamBuild).toBe("build 17123456");
+      expect(info.steamBuild).toBeNull();
       expect(info.version).toBeNull();
     } finally {
       rmSync(steamRoot, { recursive: true, force: true });
     }
   });
 
-  it("detects buildid when SteamCMD is in a folder outside the server", () => {
+  it("does not use SteamCMD outside the install for steamBuild (#490)", () => {
     const serverRoot = makeTmpDir();
     const steamRoot = makeTmpDir();
     const previousEnv = process.env["ARK_STEAMCMD_DIR"];
@@ -225,7 +225,7 @@ describe("inspectServerInstallation", () => {
       const info = inspectServerInstallation("srv-7", installDir);
       expect(info.installed).toBe(true);
       expect(info.build).toBeNull();
-      expect(info.steamBuild).toBe("build 18123456");
+      expect(info.steamBuild).toBeNull();
       expect(info.version).toBeNull();
     } finally {
       if (previousEnv === undefined) {
@@ -235,6 +235,72 @@ describe("inspectServerInstallation", () => {
       }
       rmSync(serverRoot, { recursive: true, force: true });
       rmSync(steamRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("prefers the install-dir appmanifest over a newer shared SteamCMD build (#490)", () => {
+    const installDir = makeTmpDir();
+    const steamRoot = makeTmpDir();
+    const previousEnv = process.env["ARK_STEAMCMD_DIR"];
+    try {
+      const binDir = join(installDir, "ShooterGame", "Binaries", "Win64");
+      mkdirSync(binDir, { recursive: true });
+      writeFileSync(join(binDir, "ArkAscendedServer.exe"), "fake-binary");
+      mkdirSync(join(installDir, "steamapps"), { recursive: true });
+      writeFileSync(
+        join(installDir, "steamapps", "appmanifest_2430930.acf"),
+        '"AppState"\n{\n  "appid" "2430930"\n  "buildid" "100"\n  "installdir" "asa"\n}',
+      );
+      mkdirSync(join(steamRoot, "steamapps"), { recursive: true });
+      writeFileSync(
+        join(steamRoot, "steamapps", "appmanifest_2430930.acf"),
+        '"AppState"\n{\n  "appid" "2430930"\n  "buildid" "999"\n  "installdir" "asa"\n}',
+      );
+      process.env["ARK_STEAMCMD_DIR"] = steamRoot;
+
+      const info = inspectServerInstallation("srv-local-wins", installDir, {
+        bypassCache: true,
+      });
+      expect(info.steamBuild).toBe("build 100");
+    } finally {
+      if (previousEnv === undefined) {
+        delete process.env["ARK_STEAMCMD_DIR"];
+      } else {
+        process.env["ARK_STEAMCMD_DIR"] = previousEnv;
+      }
+      rmSync(installDir, { recursive: true, force: true });
+      rmSync(steamRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("marks versionRefreshPending when appmanifest is newer than version.txt (#490)", () => {
+    const installDir = makeTmpDir();
+    try {
+      const binDir = join(installDir, "ShooterGame", "Binaries", "Win64");
+      mkdirSync(binDir, { recursive: true });
+      writeFileSync(join(binDir, "ArkAscendedServer.exe"), "fake-binary");
+      writeFileSync(join(binDir, "version.txt"), "92.25\n");
+      const versionPath = join(binDir, "version.txt");
+      const old = Date.now() - 60_000;
+      utimesSync(versionPath, old / 1000, old / 1000);
+
+      mkdirSync(join(installDir, "steamapps"), { recursive: true });
+      const manifestPath = join(installDir, "steamapps", "appmanifest_2430930.acf");
+      writeFileSync(
+        manifestPath,
+        '"AppState"\n{\n  "appid" "2430930"\n  "buildid" "250"\n  "installdir" "asa"\n}',
+      );
+      const newer = Date.now();
+      utimesSync(manifestPath, newer / 1000, newer / 1000);
+
+      const info = inspectServerInstallation("srv-pending", installDir, {
+        bypassCache: true,
+      });
+      expect(info.steamBuild).toBe("build 250");
+      expect(info.build).toBe("92.25");
+      expect(info.versionRefreshPending).toBe(true);
+    } finally {
+      rmSync(installDir, { recursive: true, force: true });
     }
   });
 

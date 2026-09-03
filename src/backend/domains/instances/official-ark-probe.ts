@@ -234,15 +234,25 @@ export async function readOfficialArkBuildCached(force = false): Promise<string 
     return officialBuildCache.value;
   }
 
-  if (officialBuildCache.inFlight !== null) {
+  if (!force && officialBuildCache.inFlight !== null) {
     return officialBuildCache.inFlight;
+  }
+
+  if (force && officialBuildCache.inFlight !== null) {
+    await officialBuildCache.inFlight.catch(() => null);
   }
 
   officialBuildCache.inFlight = fetchOfficialArkBuild()
     .then((value) => {
-      officialBuildCache.value = value;
-      officialBuildCache.checkedAt = Date.now();
-      return value;
+      if (value !== null) {
+        officialBuildCache.value = value;
+        officialBuildCache.checkedAt = Date.now();
+        return value;
+      }
+      // Keep last success; shorten TTL so the next poll can retry (#490).
+      officialBuildCache.checkedAt =
+        Date.now() - OFFICIAL_VERSION_TTL_MS + 30_000;
+      return officialBuildCache.value;
     })
     .finally(() => {
       officialBuildCache.inFlight = null;

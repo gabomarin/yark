@@ -6,6 +6,7 @@ import {
   buildInstallationHealthFields,
   type InstallationHealthReasonCode,
 } from "@shared/installation-health";
+import { isArkStyleVersion } from "@shared/server-version-display";
 import type {
   InstallationHealthStatus,
   ServerInstallationInfo,
@@ -18,8 +19,8 @@ import {
 } from "./install-health";
 import {
   normalizePath,
-  readBuildIdFromManifest,
-  readBuildIdFromManifestAsync,
+  readLocalSteamManifestMtimeMs,
+  readLocalSteamManifestMtimeMsAsync,
   readSteamBuildFromLocalManifest,
   readSteamBuildFromLocalManifestAsync,
 } from "./install-steam-build";
@@ -306,6 +307,97 @@ async function readFileTailAsync(
   }
 }
 
+/**
+ * True when install-dir Steam appmanifest is newer than version.txt / logs that
+ * feed the displayed ARK Version — after Update/Verify, before the next boot.
+ *
+ * When `build` is ARK-style but `versionFileMtimeMs` is null (no version.txt /
+ * Build.version on disk), we still consider `arkVersion` + log mtimes — that is
+ * intentional, not a missing early return.
+ */
+function versionRefreshPendingFromSources(input: {
+  manifestMtimeMs: number | null;
+  build: string | null;
+  arkVersion: string | null;
+  versionFileMtimeMs: number | null;
+  newestLogMtimeMs: number | null;
+}): boolean {
+  if (input.manifestMtimeMs == null) return false;
+  const hasDisplay =
+    (input.build !== null && isArkStyleVersion(input.build))
+    || (input.arkVersion !== null && isArkStyleVersion(input.arkVersion));
+  if (!hasDisplay) return false;
+
+  const sourceMtimes: number[] = [];
+  if (input.build !== null && isArkStyleVersion(input.build) && input.versionFileMtimeMs != null) {
+    sourceMtimes.push(input.versionFileMtimeMs);
+  }
+  if (input.arkVersion !== null && isArkStyleVersion(input.arkVersion) && input.newestLogMtimeMs != null) {
+    sourceMtimes.push(input.newestLogMtimeMs);
+  }
+  // No usable source mtimes (e.g. ARK-style build with missing version files and
+  // no log-derived arkVersion) → not pending.
+  if (sourceMtimes.length === 0) return false;
+  return Math.max(...sourceMtimes) < input.manifestMtimeMs;
+}
+
+function maxExistingMtimeMs(paths: string[]): number | null {
+  let max: number | null = null;
+  for (const filePath of paths) {
+    try {
+      if (!existsSync(filePath)) continue;
+      const mtimeMs = statSync(filePath).mtimeMs;
+      if (max === null || mtimeMs > max) max = mtimeMs;
+    } catch {
+      // Best effort.
+    }
+  }
+  return max;
+}
+
+async function maxExistingMtimeMsAsync(paths: string[]): Promise<number | null> {
+  let max: number | null = null;
+  for (const filePath of paths) {
+    try {
+      const mtimeMs = (await stat(filePath)).mtimeMs;
+      if (max === null || mtimeMs > max) max = mtimeMs;
+    } catch {
+      // Best effort.
+    }
+  }
+  return max;
+}
+
+/**
+ * Newest mtime among `ShooterGame/Saved/Logs/*.{log,txt}`.
+ * Only call when `arkVersion` was probed — fleet cheap passes skip log tails and
+ * therefore skip this scan. Expect a small ASA rotation (typically under ~20 files);
+ * full inspect results are also memoized for `INSTALL_INSPECT_TTL_MS` (~20s)
+ * unless `bypassCache` is set.
+ */
+function newestLogMtimeMsSync(installDir: string): number | null {
+  const logsDir = join(installDir, "ShooterGame", "Saved", "Logs");
+  if (!existsSync(logsDir)) return null;
+  let logNames: string[];
+  try {
+    logNames = readdirSync(logsDir).filter((name) => /\.(log|txt)$/i.test(name));
+  } catch {
+    return null;
+  }
+  return maxExistingMtimeMs(logNames.map((name) => join(logsDir, name)));
+}
+
+async function newestLogMtimeMsAsync(installDir: string): Promise<number | null> {
+  const logsDir = join(installDir, "ShooterGame", "Saved", "Logs");
+  let logNames: string[];
+  try {
+    logNames = (await readdir(logsDir)).filter((name) => /\.(log|txt)$/i.test(name));
+  } catch {
+    return null;
+  }
+  return maxExistingMtimeMsAsync(logNames.map((name) => join(logsDir, name)));
+}
+
 const INSTALL_INSPECT_TTL_MS = 20_000;
 
 const installInspectCache = new Map<
@@ -347,9 +439,9 @@ function buildInspectedInstallation(
   // fleet scans cannot freeze Electron across many ready installs.
   // Steam buildids stay on `steamBuild` only — never in display `build`/`version`
   // (those are ARK-style product versions like 92.28).
+  // Update compare uses install-dir appmanifest only (#490) — never shared SteamCMD.
   const steamBuild = ready
-    ? (readSteamBuildFromLocalManifest(installDir) ??
-      readBuildIdFromManifest(installDir))
+    ? readSteamBuildFromLocalManifest(installDir)
     : null;
   const build = ready
     ? (
@@ -363,6 +455,17 @@ function buildInspectedInstallation(
     ready && options?.allowLogVersionProbe === true
       ? readArkVersionFromLogs(installDir)
       : null;
+  const versionRefreshPending = ready
+    ? versionRefreshPendingFromSources({
+        manifestMtimeMs: readLocalSteamManifestMtimeMs(installDir),
+        build,
+        arkVersion,
+        versionFileMtimeMs: maxExistingMtimeMs(versionCandidatePaths(installDir)),
+        // Skip Logs readdir unless we actually have a log-derived arkVersion.
+        newestLogMtimeMs:
+          arkVersion !== null ? newestLogMtimeMsSync(installDir) : null,
+      })
+    : false;
 
   return {
     serverId,
@@ -370,6 +473,7 @@ function buildInspectedInstallation(
     build,
     steamBuild,
     arkVersion,
+    versionRefreshPending,
     version: build,
     binaryPath,
     checkedAt: new Date().toISOString(),
@@ -397,9 +501,7 @@ async function buildInspectedInstallationAsync(
   let arkVersion: string | null = null;
 
   if (ready) {
-    steamBuild =
-      (await readSteamBuildFromLocalManifestAsync(installDir))
-      ?? (await readBuildIdFromManifestAsync(installDir));
+    steamBuild = await readSteamBuildFromLocalManifestAsync(installDir);
     build =
       (await readVersionFromKnownFilesAsync(installDir))
       ?? (
@@ -412,12 +514,27 @@ async function buildInspectedInstallationAsync(
     }
   }
 
+  const versionRefreshPending = ready
+    ? versionRefreshPendingFromSources({
+        manifestMtimeMs: await readLocalSteamManifestMtimeMsAsync(installDir),
+        build,
+        arkVersion,
+        versionFileMtimeMs: await maxExistingMtimeMsAsync(
+          versionCandidatePaths(installDir),
+        ),
+        // Skip Logs readdir unless we actually have a log-derived arkVersion.
+        newestLogMtimeMs:
+          arkVersion !== null ? await newestLogMtimeMsAsync(installDir) : null,
+      })
+    : false;
+
   return {
     serverId,
     ...healthFields,
     build,
     steamBuild,
     arkVersion,
+    versionRefreshPending,
     version: build,
     binaryPath,
     checkedAt: new Date().toISOString(),

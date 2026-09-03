@@ -65,15 +65,31 @@ export const VERSION_REFRESHES_ON_START_HINT =
  * Wildcard's informational official version, the label is likely from a prior
  * boot/log. Dedicated installs often ship ahead of officials during staggered
  * ASA rollouts — do not hint in that case (restart will not match official).
+ *
+ * `versionRefreshPending` (install-dir appmanifest newer than version/log
+ * sources after Update/Verify) also keeps the hint so we never look "settled"
+ * on a stale ARK label while Steam is already current (#490).
  */
 export function shouldHintVersionRefreshesOnStart(input: {
   updateState: ServerUpdateState;
   localVersion: string | null | undefined;
   officialVersion: string | null | undefined;
+  versionRefreshPending?: boolean;
 }): boolean {
   if (input.updateState !== "current") return false;
   const local = input.localVersion?.trim() || null;
   const official = input.officialVersion?.trim() || null;
+
+  // Dedicated ahead of Wildcard: restart will not converge on official (#442).
+  if (local !== null && official !== null) {
+    const order = compareArkVersionLabels(local, official);
+    if (order !== null && order > 0) return false;
+  }
+
+  if (input.versionRefreshPending === true && local !== null) {
+    return true;
+  }
+
   if (local === null || official === null) return false;
   const order = compareArkVersionLabels(local, official);
   return order !== null && order < 0;

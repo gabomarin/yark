@@ -147,6 +147,7 @@ function sameInstall(
     && left.build === right.build
     && left.steamBuild === right.steamBuild
     && left.arkVersion === right.arkVersion
+    && left.versionRefreshPending === right.versionRefreshPending
     && left.version === right.version
     && left.guidance === right.guidance
     && left.checkedAt === right.checkedAt

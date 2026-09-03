@@ -27,6 +27,7 @@ export function stubInstallationInfo(
     build: partial.build ?? null,
     steamBuild: partial.steamBuild ?? null,
     arkVersion: partial.arkVersion ?? null,
+    versionRefreshPending: partial.versionRefreshPending ?? false,
     version: partial.version ?? partial.build ?? null,
     binaryPath:
       partial.binaryPath ??
