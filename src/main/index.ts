@@ -103,20 +103,21 @@ if (!app.isPackaged && e2eUserData) {
 
 // Packaged installs stay single-instance (focus existing window). Unpackaged
 // (`npm run dev` / `electron .`) skips the lock so a local build can run beside
-// an installed YARK even if `YARK_E2E_USER_DATA` is unset. With that env set
-// (see `.env.example` / `.env.local`), unpackaged already uses a separate
-// userData folder from the packaged AppData profile.
-const gotSingleInstanceLock = app.isPackaged
-  ? app.requestSingleInstanceLock()
-  : true;
-if (!gotSingleInstanceLock) {
-  app.quit();
-} else if (process.platform === "win32" && app.isPackaged) {
-  // Must match electron-builder `appId` / Start Menu shortcut so Windows
-  // associates the taskbar button (and toasts) with YARK's .exe icon.
-  // Do not set this while unpackaged: an explicit AUMID makes Windows ignore
-  // BrowserWindow `{ icon }` and fall back to electron.exe (Electron atom).
-  app.setAppUserModelId("com.yark.servermanager");
+// an installed YARK. Without `YARK_E2E_USER_DATA`, unpackaged shares the
+// packaged AppData SQLite profile — concurrent writes can corrupt it; set the
+// env whenever both may be open (see docs/server-lifecycle.md / `.env.example`).
+let isPrimaryInstance = true;
+if (app.isPackaged) {
+  isPrimaryInstance = app.requestSingleInstanceLock();
+  if (!isPrimaryInstance) {
+    app.quit();
+  } else if (process.platform === "win32") {
+    // Must match electron-builder `appId` / Start Menu shortcut so Windows
+    // associates the taskbar button (and toasts) with YARK's .exe icon.
+    // Do not set this while unpackaged: an explicit AUMID makes Windows ignore
+    // BrowserWindow `{ icon }` and fall back to electron.exe (Electron atom).
+    app.setAppUserModelId("com.yark.servermanager");
+  }
 }
 
 let mainWindow: BrowserWindow | null = null;
@@ -124,7 +125,7 @@ let appTray: Tray | null = null;
 /** Set once the main window exists; drained if second-instance fired during boot. */
 let pendingSecondInstanceReveal = false;
 
-if (app.isPackaged && gotSingleInstanceLock) {
+if (app.isPackaged && isPrimaryInstance) {
   // Register early so a second launch during whenReady still focuses the UI.
   app.on("second-instance", () => {
     if (mainWindow !== null && !mainWindow.isDestroyed()) {
@@ -250,7 +251,7 @@ function createWindow(
   return win;
 }
 
-if (gotSingleInstanceLock) {
+if (isPrimaryInstance) {
   void app.whenReady().then(async () => {
     // No native File/Edit/View/Help bar — Quit lives on the system tray menu.
     Menu.setApplicationMenu(null);

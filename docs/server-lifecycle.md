@@ -445,9 +445,10 @@ the window visible through wait/save/backup progress).
   builds register `YARK.exe`. This does **not** auto-start ASA servers (#53).
 - Packaged second-instance launches focus the existing window
   (`requestSingleInstanceLock`). Unpackaged/`npm run dev` skips that lock so a
-  local build can run beside an installed YARK. Prefer
-  `YARK_E2E_USER_DATA` in `.env.local` (see `.env.example`) so unpackaged uses a
-  separate profile from packaged AppData.
+  local build can run beside an installed YARK. Set `YARK_E2E_USER_DATA` in
+  `.env.local` (see `.env.example`) whenever both may be open — without it they
+  share the same `%APPDATA%` SQLite profile, and concurrent writes can corrupt
+  the database.
 
 `StartServerOptions.sessionPorts` optionally overrides game/query/RCON for a
 single start (INI sync + launch). It does **not** update the saved profile;
