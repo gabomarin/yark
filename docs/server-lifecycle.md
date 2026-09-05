@@ -443,7 +443,11 @@ the window visible through wait/save/backup progress).
   toggling does not leave duplicate login registrations. Dev (`electron .`)
   registers the Electron binary with the app path as an argument; packaged
   builds register `YARK.exe`. This does **not** auto-start ASA servers (#53).
-- Second-instance launches focus the existing window (`requestSingleInstanceLock`).
+- Packaged second-instance launches focus the existing window
+  (`requestSingleInstanceLock`). Unpackaged/`npm run dev` skips that lock so a
+  local build can run beside an installed YARK. Prefer
+  `YARK_E2E_USER_DATA` in `.env.local` (see `.env.example`) so unpackaged uses a
+  separate profile from packaged AppData.
 
 `StartServerOptions.sessionPorts` optionally overrides game/query/RCON for a
 single start (INI sync + launch). It does **not** update the saved profile;

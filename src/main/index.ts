@@ -101,7 +101,14 @@ if (!app.isPackaged && e2eUserData) {
   app.setPath("userData", e2eUserData);
 }
 
-const gotSingleInstanceLock = app.requestSingleInstanceLock();
+// Packaged installs stay single-instance (focus existing window). Unpackaged
+// (`npm run dev` / `electron .`) skips the lock so a local build can run beside
+// an installed YARK even if `YARK_E2E_USER_DATA` is unset. With that env set
+// (see `.env.example` / `.env.local`), unpackaged already uses a separate
+// userData folder from the packaged AppData profile.
+const gotSingleInstanceLock = app.isPackaged
+  ? app.requestSingleInstanceLock()
+  : true;
 if (!gotSingleInstanceLock) {
   app.quit();
 } else if (process.platform === "win32" && app.isPackaged) {
@@ -117,7 +124,7 @@ let appTray: Tray | null = null;
 /** Set once the main window exists; drained if second-instance fired during boot. */
 let pendingSecondInstanceReveal = false;
 
-if (gotSingleInstanceLock) {
+if (app.isPackaged && gotSingleInstanceLock) {
   // Register early so a second launch during whenReady still focuses the UI.
   app.on("second-instance", () => {
     if (mainWindow !== null && !mainWindow.isDestroyed()) {
