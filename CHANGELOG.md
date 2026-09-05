@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- Unpackaged / `npm run dev` no longer takes the single-instance lock, so a local build can run beside an installed YARK (packaged installs stay single-instance).
+
 ## [0.18.2] - 2026-09-03
 
 ### Fixed
