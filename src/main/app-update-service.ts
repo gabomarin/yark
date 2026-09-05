@@ -45,7 +45,7 @@ export class AppUpdateService {
   private readonly listeners = new Set<StatusListener>();
   private startupTimer: NodeJS.Timeout | null = null;
   private configured = false;
-  /** Active packaged feed check; `error` events defer to `checkForUpdate` (#521). */
+  /** Active packaged feed check; `error` events defer to `checkForUpdate` (#521). Cleared in that method's `finally` so suppression cannot stick across checks. */
   private activeCheckKind: "quiet" | "manual" | null = null;
 
   constructor(
@@ -172,6 +172,10 @@ export class AppUpdateService {
         }
       }
 
+      console.warn(
+        "YARK update feed not ready; showing short operator copy",
+        error,
+      );
       this.emit({
         ...this.status,
         phase: "error",
@@ -181,6 +185,7 @@ export class AppUpdateService {
       return this.getStatus();
     }
 
+    console.error("YARK update check failed", error);
     this.emit({
       ...this.status,
       phase: "error",
@@ -221,6 +226,7 @@ export class AppUpdateService {
       }
       return this.getStatus();
     } catch (error: unknown) {
+      console.error("YARK update download failed", error);
       const message = operatorFacingAppUpdateError(error);
       this.emit({
         ...this.status,
@@ -328,6 +334,7 @@ export class AppUpdateService {
 
     autoUpdater.on("error", (error: Error) => {
       // Feed-check failures are classified in `checkForUpdate` catch (#521).
+      // `activeCheckKind` is always cleared in that method's `finally`.
       if (this.activeCheckKind !== null) {
         return;
       }
@@ -338,6 +345,7 @@ export class AppUpdateService {
         console.warn("YARK updater: transient feed error ignored", error);
         return;
       }
+      console.error("YARK updater error", error);
       this.emit({
         ...this.status,
         phase: "error",

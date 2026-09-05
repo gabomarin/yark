@@ -216,6 +216,12 @@ export const APP_UPDATE_FEED_NOT_READY_MESSAGE =
  * True for mid-publish / network blips on the packaged update feed (missing
  * `latest.yml`, 404, DNS/timeouts). Quiet checks should stay silent; manual
  * Check now may fall back to the GitHub API or show short copy (#521).
+ *
+ * Classification is intentionally string/`code`-based: electron-updater does not
+ * expose a stable typed reason for “feed incomplete”. Match the known
+ * `Cannot find latest.yml… HttpError: 404` wording and common Node network
+ * codes; revisit this helper if electron-updater or the GitHub provider changes
+ * those messages.
  */
 export function isTransientAppUpdateFeedError(error: unknown): boolean {
   const message = errorMessageLower(error);
@@ -228,9 +234,6 @@ export function isTransientAppUpdateFeedError(error: unknown): boolean {
       || message.includes("httperror")
       || message.includes("not found"))
   ) {
-    return true;
-  }
-  if (message.includes("404") && message.includes("latest.yml")) {
     return true;
   }
   // Incomplete release assets while the tag exists but the workflow is still uploading.
@@ -263,7 +266,9 @@ export function isTransientAppUpdateFeedError(error: unknown): boolean {
 
 /**
  * Single-line operator-facing updater error. Transient feed races use the
- * fixed mid-publish copy; other failures keep the first line only (#521).
+ * fixed mid-publish copy; other failures keep the first line only so Settings
+ * never shows multi-line HTTP dumps (#521). Full error objects must still be
+ * logged by callers — detail past line 1 is intentionally dropped from the UI.
  */
 export function operatorFacingAppUpdateError(error: unknown): string {
   if (isTransientAppUpdateFeedError(error)) {
