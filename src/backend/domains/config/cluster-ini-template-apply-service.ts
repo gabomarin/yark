@@ -399,6 +399,8 @@ export class ClusterIniTemplateApplyService {
     if (files.game) {
       await writeFile(current.gameIniPath, payload.game, "utf8");
     }
+    // Disk is authoritative after template apply; drop any leftover queue (#530).
+    this.ini.clearPendingServerIni(current.serverId);
   }
 
   private requireServer(serverId: string): ServerProfile {

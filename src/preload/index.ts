@@ -12,7 +12,7 @@ import type {
   StartServerOptions,
   SteamCmdCacheKind,
 } from "../shared/types";
-import type { SteamCmdProgressPush, BackupsChangedPush, ServerStopProgressPush, MoveInstallProgressPush, CloneInstallProgressPush, RconStatusChangedPush, PlayerListUpdatedPush, ProcessMetricsUpdatedPush, OsNotificationOpenPush } from "../shared/ipc";
+import type { SteamCmdProgressPush, BackupsChangedPush, ServerIniChangedPush, ServerStopProgressPush, MoveInstallProgressPush, CloneInstallProgressPush, RconStatusChangedPush, PlayerListUpdatedPush, ProcessMetricsUpdatedPush, OsNotificationOpenPush } from "../shared/ipc";
 import { normalizeCloneInstallProgress, normalizeMoveInstallProgress, normalizeServerStopProgress } from "../shared/types";
 
 const api: RendererApi = {
@@ -356,6 +356,14 @@ const api: RendererApi = {
     ipcRenderer.on(IPC_PUSH.backupsChanged, handler);
     return () => {
       ipcRenderer.removeListener(IPC_PUSH.backupsChanged, handler);
+    };
+  },
+  onServerIniChanged: (listener) => {
+    const handler = (_e: unknown, payload: ServerIniChangedPush) =>
+      listener(payload);
+    ipcRenderer.on(IPC_PUSH.serverIniChanged, handler);
+    return () => {
+      ipcRenderer.removeListener(IPC_PUSH.serverIniChanged, handler);
     };
   },
   onRconStatusChanged: (listener) => {

@@ -46,6 +46,8 @@ export function useConfigurationEditor(options: {
   iniMode: "visual" | "text";
   setIniMode: (mode: "visual" | "text") => void;
   dirty: boolean;
+  /** True when the editor baseline is a queued draft (#530). */
+  pendingQueued: boolean;
   groupedRows: ReturnType<typeof groupSettingReferencesByUiCategory>;
   categoryOptions: { value: string; label: string }[];
   fileLabel: string;
@@ -86,6 +88,15 @@ export function useConfigurationEditor(options: {
   });
 
   const dirty = iniPayloadsDirty(payload, baseline);
+  const pendingQueued = snapshot?.pending === true;
+  const dirtyRef = useRef(dirty);
+  useEffect(() => {
+    dirtyRef.current = dirty;
+  });
+  const payloadRef = useRef(payload);
+  useEffect(() => {
+    payloadRef.current = payload;
+  });
 
   const publishDirty = (
     nextPayload: ServerIniPayload | null,
@@ -93,6 +104,31 @@ export function useConfigurationEditor(options: {
   ): void => {
     onDirtyChangeRef.current?.(iniPayloadsDirty(nextPayload, nextBaseline));
   };
+
+  const applyLoadedSnapshot = (
+    data: ServerIniSnapshot,
+    options?: { preserveDirty?: boolean },
+  ): void => {
+    const sanitized = sanitizeServerIniPayload(data.payload);
+    const keepDirty =
+      options?.preserveDirty === true
+      && dirtyRef.current
+      && payloadRef.current !== null;
+    if (keepDirty && payloadRef.current !== null) {
+      // Keep in-editor edits; refresh pending chrome from the push source.
+      setSnapshot({ ...data, payload: payloadRef.current });
+      return;
+    }
+    setSnapshot({ ...data, payload: sanitized });
+    setPayload(sanitized);
+    setBaseline(sanitized);
+    setPreview(null);
+    publishDirty(sanitized, sanitized);
+  };
+  const applyLoadedSnapshotRef = useRef(applyLoadedSnapshot);
+  useEffect(() => {
+    applyLoadedSnapshotRef.current = applyLoadedSnapshot;
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -113,11 +149,7 @@ export function useConfigurationEditor(options: {
           publishDirty(null, null);
           return;
         }
-        const sanitized = sanitizeServerIniPayload(result.data.payload);
-        setSnapshot({ ...result.data, payload: sanitized });
-        setPayload(sanitized);
-        setBaseline(sanitized);
-        publishDirty(sanitized, sanitized);
+        applyLoadedSnapshotRef.current(result.data);
       },
       () => {
         if (!cancelled) {
@@ -129,6 +161,21 @@ export function useConfigurationEditor(options: {
     return () => {
       cancelled = true;
     };
+  }, [serverId]);
+
+  useEffect(() => {
+    return window.api.onServerIniChanged((event) => {
+      if (event.serverId !== serverId) {
+        return;
+      }
+      void (async () => {
+        const result = await window.api.readServerIni(serverId);
+        if (!result.ok) {
+          return;
+        }
+        applyLoadedSnapshotRef.current(result.data, { preserveDirty: true });
+      })();
+    });
   }, [serverId]);
 
   const activeFileKey = iniFile;
@@ -288,14 +335,36 @@ export function useConfigurationEditor(options: {
         setPayload(sanitized);
         setPreview(result.data);
         setBaseline(sanitized);
+        setSnapshot((prev) =>
+          prev === null
+            ? prev
+            : {
+                ...prev,
+                payload: sanitized,
+                pending: result.data.pending,
+                pendingUpdatedAt: result.data.pending
+                  ? (prev.pendingUpdatedAt ?? new Date().toISOString())
+                  : null,
+              },
+        );
         publishDirty(sanitized, sanitized);
-        showOperatorToast({
-          title: "INI saved",
-          message:
-            result.data.changedCount > 0
-              ? `Saved ${result.data.changedCount} change${result.data.changedCount === 1 ? "" : "s"}.`
-              : "Saved with no changes.",
-        });
+        if (result.data.pending) {
+          showOperatorToast({
+            title: "INI queued",
+            message:
+              result.data.changedCount > 0
+                ? `Queued ${result.data.changedCount} change${result.data.changedCount === 1 ? "" : "s"} — applies when the server stops.`
+                : "Queued with no changes — applies when the server stops.",
+          });
+        } else {
+          showOperatorToast({
+            title: "INI saved",
+            message:
+              result.data.changedCount > 0
+                ? `Saved ${result.data.changedCount} change${result.data.changedCount === 1 ? "" : "s"}.`
+                : "Saved with no changes.",
+          });
+        }
         return true;
       },
       () => {
@@ -362,6 +431,7 @@ export function useConfigurationEditor(options: {
     iniMode,
     setIniMode,
     dirty,
+    pendingQueued,
     groupedRows,
     categoryOptions,
     fileLabel,

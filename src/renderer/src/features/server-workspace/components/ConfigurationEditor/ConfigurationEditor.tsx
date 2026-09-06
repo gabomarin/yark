@@ -82,6 +82,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
           onDismissError={() => editor.setError(null)}
           serverActive={props.serverActive === true}
           filesJobActive={filesJobActive}
+          pendingQueued={editor.pendingQueued}
         />
 
         {props.section === "iniFiles" && editor.iniMode === "visual" && (

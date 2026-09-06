@@ -368,6 +368,7 @@ export function createRendererApiMock(
     onMoveInstallProgress: vi.fn(() => () => undefined),
     onCloneInstallProgress: vi.fn(() => () => undefined),
     onBackupsChanged: vi.fn(() => () => undefined),
+    onServerIniChanged: vi.fn(() => () => undefined),
     onRconStatusChanged: vi.fn(() => () => undefined),
     onPlayerListUpdated: vi.fn(() => () => undefined),
     onProcessMetricsUpdated: vi.fn(() => () => undefined),

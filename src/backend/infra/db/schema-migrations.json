@@ -74,5 +74,9 @@
   {
     "version": 19,
     "sql": "\n      ALTER TABLE maintenance_policies ADD COLUMN restart_days_of_week_json TEXT NOT NULL DEFAULT '[0]';\n      UPDATE maintenance_policies SET restart_days_of_week_json = CASE\n        WHEN restart_cadence = 'daily' THEN '[0,1,2,3,4,5,6]'\n        ELSE '[' || restart_day_of_week || ']'\n      END;\n    "
+  },
+  {
+    "version": 20,
+    "sql": "\n      CREATE TABLE pending_server_ini (\n        server_id TEXT PRIMARY KEY NOT NULL,\n        game_user_settings_ini TEXT NOT NULL DEFAULT '',\n        game_ini TEXT NOT NULL DEFAULT '',\n        updated_at TEXT NOT NULL\n      );\n    "
   }
 ]

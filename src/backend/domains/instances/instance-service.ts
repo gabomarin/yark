@@ -111,6 +111,7 @@ export class InstanceService extends EventEmitter {
       backups,
       locks,
       emitProgress: (payload) => this.emit("stop-progress", payload),
+      flushPendingServerIni: options?.flushPendingServerIni,
     });
     this.clones = new InstanceClone({
       repo,
@@ -449,6 +450,7 @@ export class InstanceService extends EventEmitter {
     await assertHostPortsAvailable(effective, others, {
       allowInconclusive: options?.skipPortValidation === true,
     });
+    await this.stops.flushPendingIni(id);
     await syncProfileSettingsToIni(effective);
     const startOptions = withOpenNativeConsolePref(
       options,
@@ -619,6 +621,7 @@ export class InstanceService extends EventEmitter {
     }
     const profile = this.mustGet(id);
     await this.processes.kill(id);
+    await this.stops.flushPendingIni(id);
     this.repo.addEvent(
       id,
       "server_stopped",

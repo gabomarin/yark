@@ -112,6 +112,8 @@ describe("ServerWorkspacePage", () => {
           gameIniPath: `C:/ARK/${serverId}/Game.ini`,
           gameUserSettingsExisted: true,
           gameIniExisted: true,
+          pending: false,
+          pendingUpdatedAt: null,
           payload: {
             gameUserSettings: `[ServerSettings]\nXPMultiplier=1.5\nAllowFlyerCarryPVE=True\n`,
             game: `[/Script/ShooterGame.ShooterGameMode]\nXPMultiplier=1.0\n`,
@@ -120,8 +122,15 @@ describe("ServerWorkspacePage", () => {
       })),
       saveServerIni: vi.fn(async () => ({
         ok: true,
-        data: { valid: true, issues: [], diff: [], changedCount: 1 },
+        data: {
+          valid: true,
+          issues: [],
+          diff: [],
+          changedCount: 1,
+          pending: false,
+        },
       })),
+      onServerIniChanged: vi.fn(() => () => undefined),
       previewServerIni: vi.fn(async () => ({
         ok: true,
         data: { valid: true, issues: [], diff: [], changedCount: 1 },
@@ -790,6 +799,8 @@ describe("ServerWorkspacePage", () => {
         gameIniPath: "C:/ARK/srv-a/Game.ini",
         gameUserSettingsExisted: true,
         gameIniExisted: true,
+        pending: false,
+        pendingUpdatedAt: null,
         payload: {
           gameUserSettings: "[ServerSettings]\nAllowFlyerCarryPVE=True\n",
           game: "[Custom]\nTotallyUnknownSettingXYZ=1\n",
@@ -837,6 +848,8 @@ describe("ServerWorkspacePage", () => {
         gameIniPath: "C:/ARK/srv-a/Game.ini",
         gameUserSettingsExisted: true,
         gameIniExisted: true,
+        pending: false,
+        pendingUpdatedAt: null,
         payload: {
           gameUserSettings: [
             "[ServerSettings]",

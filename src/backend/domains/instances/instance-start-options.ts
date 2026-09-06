@@ -8,6 +8,11 @@ export interface InstanceServiceOptions {
    * `openNativeConsole` (maintenance restart, post-update start, …).
    */
   resolveOpenNativeConsole?: () => boolean;
+  /**
+   * Flush queued GUS/Game.ini drafts after stop / before start (#530).
+   * Idempotent when nothing is pending.
+   */
+  flushPendingServerIni?: (serverId: string) => Promise<boolean>;
 }
 
 export function defaultResolveOpenNativeConsole(): boolean {

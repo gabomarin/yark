@@ -4,6 +4,8 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ServerProfile } from "@shared/types";
 import { IniService } from "@backend/domains/config/ini-service";
+import { openDatabase } from "@backend/infra/db/database";
+import { PendingServerIniRepository } from "@backend/infra/db/pending-server-ini-repository";
 import { InstanceLockManager } from "@backend/orchestration/instance-lock-manager";
 import type { ServerRepository } from "@backend/infra/db/server-repository";
 
@@ -32,17 +34,45 @@ function makeProfile(installDir: string): ServerProfile {
   };
 }
 
-function makeService(installDir: string, addEvent = vi.fn()) {
+function makeService(
+  installDir: string,
+  options?: {
+    addEvent?: ReturnType<typeof vi.fn>;
+    isServerActive?: () => boolean;
+    withPending?: boolean;
+  },
+) {
   const profile = makeProfile(installDir);
+  const addEvent = options?.addEvent ?? vi.fn();
   const repo = {
     get: (id: string) => (id === profile.id ? profile : null),
     addEvent,
   } as unknown as ServerRepository;
 
+  const locks = new InstanceLockManager();
+  if (options?.withPending === true) {
+    const db = openDatabase(":memory:");
+    const pending = new PendingServerIniRepository(db);
+    return {
+      service: new IniService(repo, locks, {
+        pending,
+        isServerActive: options.isServerActive ?? (() => false),
+      }),
+      profile,
+      addEvent,
+      locks,
+      pending,
+      db,
+    };
+  }
+
   return {
-    service: new IniService(repo, new InstanceLockManager()),
+    service: new IniService(repo, locks),
     profile,
     addEvent,
+    locks,
+    pending: null,
+    db: null,
   };
 }
 
@@ -199,6 +229,7 @@ describe("IniService semantic validation", () => {
     });
 
     expect(preview.valid).toBe(true);
+    expect(preview.pending).toBe(false);
     expect(preview.changedCount).toBeGreaterThan(0);
     expect(addEvent).toHaveBeenCalledTimes(1);
     const saved = readFileSync(gameUserSettingsPath(installDir), "utf8");
@@ -251,6 +282,7 @@ describe("IniService semantic validation", () => {
     const { service, profile } = makeService(installDir);
     const snapshot = await service.readServerIni(profile.id);
 
+    expect(snapshot.pending).toBe(false);
     expect(snapshot.payload.gameUserSettings).toContain("MaxPlayers=70");
     expect(snapshot.payload.gameUserSettings).not.toContain(
       "ShooterGameUserSettings",
@@ -260,5 +292,196 @@ describe("IniService semantic validation", () => {
     );
     expect(snapshot.payload.gameUserSettings).not.toContain("ResolutionSizeX");
     expect(readFileSync(settingsPath, "utf8")).toBe(rawSettings);
+  });
+});
+
+describe("IniService pending queue (#530)", () => {
+  it("queues GUS and Game.ini while active without writing live files", async () => {
+    const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
+    tmpDirs.push(installDir);
+    prepareIniFiles(installDir);
+    writeFileSync(
+      gameUserSettingsPath(installDir),
+      "[ServerSettings]\nRCONPort=27020\n",
+      "utf8",
+    );
+    writeFileSync(gameIniPath(installDir), "[Game]\nFoo=1\n", "utf8");
+
+    const { service, profile, pending, db } = makeService(installDir, {
+      withPending: true,
+      isServerActive: () => true,
+    });
+
+    const changed: Array<{ serverId: string; pending: boolean }> = [];
+    service.on("changed", (payload) => changed.push(payload));
+
+    const result = await service.saveServerIni(profile.id, {
+      gameUserSettings: "[ServerSettings]\nRCONPort=27020\nXPMultiplier=2.0\n",
+      game: "[Game]\nFoo=1\nBar=2\n",
+    });
+
+    expect(result.pending).toBe(true);
+    expect(result.valid).toBe(true);
+    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).toBe(
+      "[ServerSettings]\nRCONPort=27020\n",
+    );
+    expect(readFileSync(gameIniPath(installDir), "utf8")).toBe("[Game]\nFoo=1\n");
+    expect(pending?.get(profile.id)?.payload.gameUserSettings).toContain(
+      "XPMultiplier=2.0",
+    );
+    expect(pending?.get(profile.id)?.payload.game).toContain("Bar=2");
+    expect(changed).toEqual([{ serverId: profile.id, pending: true }]);
+
+    const snapshot = await service.readServerIni(profile.id);
+    expect(snapshot.pending).toBe(true);
+    expect(snapshot.payload.gameUserSettings).toContain("XPMultiplier=2.0");
+    expect(snapshot.payload.game).toContain("Bar=2");
+
+    db?.close();
+  });
+
+  it("replaces a prior queued draft on a second save while active", async () => {
+    const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
+    tmpDirs.push(installDir);
+    prepareIniFiles(installDir);
+
+    const { service, profile, pending, db } = makeService(installDir, {
+      withPending: true,
+      isServerActive: () => true,
+    });
+
+    await service.saveServerIni(profile.id, {
+      gameUserSettings: "[ServerSettings]\nRCONPort=27020\nXPMultiplier=2.0\n",
+      game: "[Game]\nA=1\n",
+    });
+    await service.saveServerIni(profile.id, {
+      gameUserSettings: "[ServerSettings]\nRCONPort=27020\nXPMultiplier=3.0\n",
+      game: "[Game]\nA=2\n",
+    });
+
+    expect(pending?.get(profile.id)?.payload.gameUserSettings).toContain(
+      "XPMultiplier=3.0",
+    );
+    expect(pending?.get(profile.id)?.payload.game).toContain("A=2");
+    db?.close();
+  });
+
+  it("flushes pending INI to disk when idle and clears the queue", async () => {
+    const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
+    tmpDirs.push(installDir);
+    prepareIniFiles(installDir);
+    writeFileSync(
+      gameUserSettingsPath(installDir),
+      "[ServerSettings]\nRCONPort=27020\n",
+      "utf8",
+    );
+
+    let active = true;
+    const { service, profile, pending, locks, db } = makeService(installDir, {
+      withPending: true,
+      isServerActive: () => active,
+    });
+
+    await service.saveServerIni(profile.id, {
+      gameUserSettings: "[ServerSettings]\nRCONPort=27020\nXPMultiplier=2.5\n",
+      game: "[Game]\nQueued=1\n",
+    });
+    active = false;
+
+    const changed: Array<{ pending: boolean }> = [];
+    service.on("changed", (payload) => changed.push({ pending: payload.pending }));
+
+    // Simulate stop holding the instance lock (must not deadlock on flush).
+    await locks.withLock(profile.id, "stop-and-backup", async () => {
+      const flushed = await service.flushPendingServerIni(profile.id);
+      expect(flushed).toBe(true);
+    });
+
+    expect(pending?.get(profile.id)).toBeNull();
+    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).toContain(
+      "XPMultiplier=2.5",
+    );
+    expect(readFileSync(gameIniPath(installDir), "utf8")).toContain("Queued=1");
+    expect(changed.at(-1)).toEqual({ pending: false });
+
+    const after = await service.readServerIni(profile.id);
+    expect(after.pending).toBe(false);
+    expect(after.payload.gameUserSettings).toContain("XPMultiplier=2.5");
+
+    const second = await service.flushPendingServerIni(profile.id);
+    expect(second).toBe(false);
+    db?.close();
+  });
+
+  it("writes immediately when stopped and clears any leftover pending row", async () => {
+    const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
+    tmpDirs.push(installDir);
+    prepareIniFiles(installDir);
+
+    const { service, profile, pending, db } = makeService(installDir, {
+      withPending: true,
+      isServerActive: () => false,
+    });
+    pending?.upsert(profile.id, {
+      gameUserSettings: "[ServerSettings]\nRCONPort=27020\nStale=1\n",
+      game: "",
+    });
+
+    const result = await service.saveServerIni(profile.id, {
+      gameUserSettings: "[ServerSettings]\nRCONPort=27020\nFresh=1\n",
+      game: "[Game]\nOk=1\n",
+    });
+
+    expect(result.pending).toBe(false);
+    expect(pending?.get(profile.id)).toBeNull();
+    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).toContain("Fresh=1");
+    expect(readFileSync(gameIniPath(installDir), "utf8")).toContain("Ok=1");
+    db?.close();
+  });
+
+  it("keeps Server-tab profile keys over an older pending draft on flush", async () => {
+    const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
+    tmpDirs.push(installDir);
+    prepareIniFiles(installDir);
+
+    const profile = makeProfile(installDir);
+    profile.sessionName = "OriginalSession";
+    const addEvent = vi.fn();
+    const repo = {
+      get: (id: string) => (id === profile.id ? profile : null),
+      addEvent,
+    } as unknown as ServerRepository;
+    const locks = new InstanceLockManager();
+    const db = openDatabase(":memory:");
+    const pendingRepo = new PendingServerIniRepository(db);
+    let active = true;
+    const service = new IniService(repo, locks, {
+      pending: pendingRepo,
+      isServerActive: () => active,
+    });
+
+    await service.saveServerIni(profile.id, {
+      gameUserSettings:
+        "[ServerSettings]\nRCONPort=27020\nXPMultiplier=2.0\n\n[SessionSettings]\nSessionName=OriginalSession\n",
+      game: "[Game]\nQueued=1\n",
+    });
+
+    // Operator changes Server tab while still running / before flush.
+    profile.sessionName = "UpdatedFromServerTab";
+    active = false;
+
+    const snapshot = await service.readServerIni(profile.id);
+    expect(snapshot.pending).toBe(true);
+    expect(snapshot.payload.gameUserSettings).toContain("UpdatedFromServerTab");
+    expect(snapshot.payload.gameUserSettings).toContain("XPMultiplier=2.0");
+
+    await service.flushPendingServerIni(profile.id);
+
+    const gus = readFileSync(gameUserSettingsPath(installDir), "utf8");
+    expect(gus).toContain("UpdatedFromServerTab");
+    expect(gus).not.toContain("OriginalSession");
+    expect(gus).toContain("XPMultiplier=2.0");
+    expect(readFileSync(gameIniPath(installDir), "utf8")).toContain("Queued=1");
+    db.close();
   });
 });

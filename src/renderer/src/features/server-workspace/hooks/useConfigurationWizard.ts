@@ -378,8 +378,10 @@ export function useConfigurationWizard(options: UseConfigurationWizardOptions): 
         }
         const appliedCount = previewResult.data.changedCount;
         showOperatorToast({
-          title: "Configuration applied",
-          message: `${appliedCount} setting${appliedCount === 1 ? " was" : "s were"} updated on ${options.server.name}.`,
+          title: result.data.pending ? "Configuration queued" : "Configuration applied",
+          message: result.data.pending
+            ? `${appliedCount} setting${appliedCount === 1 ? "" : "s"} queued for ${options.server.name} — applies when the server stops.`
+            : `${appliedCount} setting${appliedCount === 1 ? " was" : "s were"} updated on ${options.server.name}.`,
         });
         setSaved(true);
         form.resetDirty();
