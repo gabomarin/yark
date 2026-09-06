@@ -7,6 +7,7 @@ import {
   GearSix,
   HardDrives,
   ShareNetwork,
+  SignOut,
   SquaresFour,
 } from "@phosphor-icons/react";
 import {
@@ -42,6 +43,10 @@ const NAV_ITEMS: NavItem[] = [
   { id: "logs", label: "Logs", icon: FileText },
   { id: "settings", label: "Settings", icon: GearSix },
 ];
+
+/** Operator-facing hover copy for sidebar Quit (#532). */
+export const QUIT_YARK_TOOLTIP =
+  "Quit YARK — Stops every managed server safely (save world, then exit), then closes YARK completely. To keep servers and backups running, close the window instead — YARK stays in the tray.";
 
 interface Props {
   route: Route;
@@ -364,6 +369,29 @@ export function Sidebar(props: Props): ReactElement {
           )}
         </Group>
       )}
+
+      <Tooltip
+        label={QUIT_YARK_TOOLTIP}
+        multiline
+        w={260}
+        position="right"
+        withArrow
+        openDelay={200}
+      >
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          size={steamCmdIconSize}
+          aria-label="Quit YARK"
+          className={classes.quitIcon}
+          data-yark-quit
+          onClick={() => {
+            void window.api.quitApp();
+          }}
+        >
+          <SignOut size={compact ? 14 : 16} weight="bold" aria-hidden />
+        </ActionIcon>
+      </Tooltip>
     </MantineStack>
   );
 }

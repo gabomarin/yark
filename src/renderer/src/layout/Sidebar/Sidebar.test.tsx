@@ -2,7 +2,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
-import { Sidebar } from "@layout/Sidebar/Sidebar";
+import { QUIT_YARK_TOOLTIP, Sidebar } from "@layout/Sidebar/Sidebar";
 
 afterEach(() => {
   cleanup();
@@ -205,5 +205,67 @@ describe("Sidebar YARK version update affordance", () => {
     expect(
       await screen.findByRole("tooltip", { name: /Quick jump · Ctrl\+K/i }),
     ).toBeInTheDocument();
+  });
+});
+
+describe("Sidebar Quit YARK (#532)", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it("shows operator tooltip and invokes quitApp", async () => {
+    const user = userEvent.setup();
+    const quitApp = vi.fn().mockResolvedValue({ ok: true, data: undefined });
+    window.api = { quitApp } as unknown as typeof window.api;
+
+    render(
+      <AppProviders>
+        <Sidebar
+          route="overview"
+          onNavigate={vi.fn()}
+          steamCmdDetected
+          steamCmdRunning={false}
+          officialVersion="1.0"
+          officialNetworkStatus="online"
+          appVersion="0.5.2"
+        />
+      </AppProviders>,
+    );
+
+    const quitButton = screen.getByRole("button", { name: "Quit YARK" });
+    expect(quitButton).toHaveAttribute("data-yark-quit");
+
+    await user.hover(quitButton);
+    expect(
+      await screen.findByRole("tooltip", {
+        name: QUIT_YARK_TOOLTIP,
+      }),
+    ).toBeInTheDocument();
+
+    await user.click(quitButton);
+    expect(quitApp).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps Quit available in icon rail mode", () => {
+    window.api = {
+      quitApp: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
+    } as unknown as typeof window.api;
+
+    render(
+      <AppProviders>
+        <Sidebar
+          route="overview"
+          onNavigate={vi.fn()}
+          steamCmdDetected
+          steamCmdRunning={false}
+          officialVersion="1.0"
+          officialNetworkStatus="online"
+          appVersion="0.5.2"
+          iconMode
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole("button", { name: "Quit YARK" })).toBeInTheDocument();
   });
 });

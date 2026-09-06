@@ -400,9 +400,10 @@ table: lock conflict / not running → reject before work; stop failure → no
 backup/start; backup failure → stopped, no start; start failure → left stopped
 with a completed `pre_restart` snapshot.
 
-**App quit (#59):** Tray **Quit YARK** and closing the window with **Close
-window to tray** disabled both enter `before-quit`. When managed servers are
-active, YARK always shows a confirmation dialog (Stop / Cancel):
+**App quit (#59):** Tray **Quit YARK**, sidebar footer **Quit YARK** (#532), and
+closing the window with **Close window to tray** disabled all enter
+`before-quit`. When managed servers are active, YARK always shows a confirmation
+dialog (Stop / Cancel):
 
 - **Stop**: wait for any still-starting servers, then graceful stop (SaveWorld →
   DoExit → pre-stop backup) with stop-progress in the UI, then quit.
@@ -439,8 +440,9 @@ the window visible through wait/save/backup progress).
   the system tray instead of quitting. Minimize still uses the normal taskbar.
   Optional Windows banner (Settings → General → **Desktop alerts** →
   **Hide to tray**, default on; also requires the master switch);
-  click the banner or tray icon to reopen. Quit from the tray menu
-  to exit. There is no native application menu bar (Electron default File/Edit/
+  click the banner or tray icon to reopen. Quit from the tray menu or the
+  sidebar footer **Quit YARK** control (#532) to exit. There is no native
+  application menu bar (Electron default File/Edit/
   View/Help is disabled).
 - **Start with Windows** (default off): uses Electron `setLoginItemSettings` so
   toggling does not leave duplicate login registrations. Dev (`electron .`)

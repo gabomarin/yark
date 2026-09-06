@@ -95,6 +95,8 @@ export function registerIpcHandlers(
   playerSessionWatcher: PlayerSessionWatcher,
   processMetricsSampler: ProcessMetricsSampler,
   appUpdate: AppUpdateService,
+  /** Same entry as tray Quit YARK (`isQuitting` + `app.quit()`). */
+  requestAppQuit: () => void,
 ): void {
   handleValidated(IPC.serversList, ipcArgSchemas[IPC.serversList], () => instances.list());
 
@@ -1081,4 +1083,8 @@ export function registerIpcHandlers(
   handleValidated(IPC.appOpenYarkReleaseNotes, ipcArgSchemas[IPC.appOpenYarkReleaseNotes], () =>
     appUpdate.openReleaseNotes(),
   );
+
+  handleValidated(IPC.appQuit, ipcArgSchemas[IPC.appQuit], () => {
+    requestAppQuit();
+  });
 }

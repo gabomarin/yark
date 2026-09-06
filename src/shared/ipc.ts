@@ -151,6 +151,8 @@ export const IPC = {
   appDownloadUpdate: "app:download-update",
   appInstallUpdate: "app:install-update",
   appOpenYarkReleaseNotes: "app:open-yark-release-notes",
+  /** Real quit (same path as tray Quit YARK) — not hide-to-tray. */
+  appQuit: "app:quit",
   iniRead: "ini:read",
   iniPreview: "ini:preview",
   iniSave: "ini:save",
@@ -476,6 +478,8 @@ export interface RendererApi {
   downloadAppUpdate(): Promise<IpcResult<AppUpdateStatus>>;
   installAppUpdate(): Promise<IpcResult<void>>;
   openYarkReleaseNotes(): Promise<IpcResult<void>>;
+  /** Same path as tray Quit YARK (confirm + graceful stop when servers are active). */
+  quitApp(): Promise<IpcResult<void>>;
   readServerIni(serverId: string): Promise<IpcResult<ServerIniSnapshot>>;
   openServerIniInEditor(
     serverId: string,

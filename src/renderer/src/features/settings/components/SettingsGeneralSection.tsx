@@ -36,8 +36,8 @@ export function SettingsGeneralSection(props: Props): ReactElement {
           <Text size="sm" fw={600}>Close window to tray</Text>
           <Text size="xs" c="dimmed" mt={2}>
             Closing the window hides YARK in the system tray instead of quitting.
-            Use the tray icon to show the window again or quit. Minimize still uses
-            the taskbar. Quitting while servers are running always asks for
+            Use the tray icon or the sidebar Quit control to show the window again
+            or quit. Minimize still uses the taskbar. Quitting while servers are running always asks for
             confirmation (Stop or Cancel).
           </Text>
         </div>

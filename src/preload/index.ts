@@ -155,6 +155,7 @@ const api: RendererApi = {
   downloadAppUpdate: () => ipcRenderer.invoke(IPC.appDownloadUpdate),
   installAppUpdate: () => ipcRenderer.invoke(IPC.appInstallUpdate),
   openYarkReleaseNotes: () => ipcRenderer.invoke(IPC.appOpenYarkReleaseNotes),
+  quitApp: () => ipcRenderer.invoke(IPC.appQuit),
   readServerIni: (serverId: string) =>
     ipcRenderer.invoke(IPC.iniRead, serverId),
   openServerIniInEditor: (serverId: string, fileKey: "gameUserSettings" | "game") =>
