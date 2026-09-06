@@ -51,7 +51,7 @@ export function lookupAsaUiCategory(
 
 /**
  * Dedicated-server vanilla INI sections that ship with ASA stock configs.
- * Anything else (custom mod headers) is treated as mod-authored for UI grouping.
+ * Custom mod headers stay uncategorized (Other) and nest by section in the UI.
  */
 const KNOWN_VANILLA_INI_SECTIONS = new Set([
   "serversettings",
@@ -93,9 +93,9 @@ function fallbackUiCategory(section: string, key: string): AsaUiCategoryId {
   const s = section.toLowerCase();
   if (s.includes("messageoftheday")) return "chat";
   if (s.includes("sessionsettings")) return "general";
-  // Mod-authored custom sections → Mods (not Other dump).
+  // Custom / mod-authored sections → Other (last category; nested by section in UI).
   if (!isKnownVanillaIniSection(section)) {
-    return "mods";
+    return "other";
   }
   if (/pve/.test(k)) return "pve";
   if (/pvp/.test(k)) return "pvp";

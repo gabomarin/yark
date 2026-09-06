@@ -11,7 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
-- Visual INI editor (and Copy configuration) put custom mod `[Section]` keys under **Mods**, grouped by INI section, instead of dumping them into **Other** (#516).
+- Visual INI editor (and Copy configuration) keep custom mod `[Section]` keys under **Other** (last category), nested by INI section, with expand/collapse controls on the Other header (#516).
 
 ### Changed
 

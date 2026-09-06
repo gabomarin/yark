@@ -55,7 +55,26 @@
   color: var(--ark-blue-11) !important;
 }
 
-/* Nested INI section under Mods / multi-section Other */
+/* Other category: not collapsible; expand/collapse icons target section subgroups */
+.sectionHeaderStatic {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-xs);
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 14px;
+  border: none;
+  border-block: 1px solid color-mix(in srgb, var(--ark-blue-6) 55%, transparent);
+  border-radius: 0;
+  background: var(--app-color-ini-category);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  box-shadow: inset 3px 0 0 0 var(--ark-blue-9);
+}
+
+/* Nested INI section under Other */
 .subsectionHeader {
   display: flex;
   align-items: center;

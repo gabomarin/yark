@@ -1,11 +1,12 @@
 import type { ReactElement } from "react";
 import { CaretDown, CaretRight, FunnelSimple } from "@phosphor-icons/react";
-import { Badge, Button, Group, Select, Text, Textarea } from "@mantine/core";
+import { ActionIcon, Badge, Button, Group, Select, Text, Textarea, Tooltip } from "@mantine/core";
 import type { IniFileKey, ServerIniPayload } from "@shared/types";
 import { isAsaIgnoredIniMaxPlayers, isYarkOwnedIniKey } from "@shared/yark-owned-ini-keys";
 import {
   filterIniSettingReferences,
   groupSettingReferencesByUiCategory,
+  iniUiSectionCollapseKey,
   parseIniRows,
   setIniValue,
   textForFile,
@@ -162,6 +163,126 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
             </Text>
           ) : (
             groupedRows.map((group) => {
+              const sectionGroups = group.sectionGroups;
+              const nestedOther =
+                group.category === "other" &&
+                sectionGroups !== undefined &&
+                sectionGroups.length > 0;
+
+              if (nestedOther) {
+                return (
+                  <div key={group.category} className={classes.sectionBlock}>
+                    <div className={chrome.sectionHeaderStatic} data-ini-other-header>
+                      <Group gap="xs" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+                        <Text fw={700} size="sm" className={chrome.sectionHeaderLabel}>
+                          {group.label}
+                        </Text>
+                        <Badge size="xs" variant="outline" className={chrome.sectionCount}>
+                          {group.rows.length}
+                        </Badge>
+                      </Group>
+                      <Group gap={4} wrap="nowrap">
+                        <Tooltip label="Collapse all sections">
+                          <ActionIcon
+                            variant="subtle"
+                            size="sm"
+                            color="gray"
+                            aria-label="Collapse all Other sections"
+                            onClick={() => {
+                              setCollapsed((prev) => {
+                                const next = { ...prev };
+                                for (const sectionGroup of sectionGroups) {
+                                  next[
+                                    iniUiSectionCollapseKey(
+                                      group.category,
+                                      sectionGroup.section,
+                                    )
+                                  ] = true;
+                                }
+                                return next;
+                              });
+                            }}
+                          >
+                            <CaretRight size={14} />
+                          </ActionIcon>
+                        </Tooltip>
+                        <Tooltip label="Expand all sections">
+                          <ActionIcon
+                            variant="subtle"
+                            size="sm"
+                            color="gray"
+                            aria-label="Expand all Other sections"
+                            onClick={() => {
+                              setCollapsed((prev) => {
+                                const next = { ...prev };
+                                for (const sectionGroup of sectionGroups) {
+                                  next[
+                                    iniUiSectionCollapseKey(
+                                      group.category,
+                                      sectionGroup.section,
+                                    )
+                                  ] = false;
+                                }
+                                return next;
+                              });
+                            }}
+                          >
+                            <CaretDown size={14} />
+                          </ActionIcon>
+                        </Tooltip>
+                      </Group>
+                    </div>
+                    {sectionGroups.map((sectionGroup) => {
+                      const collapseKey = iniUiSectionCollapseKey(
+                        group.category,
+                        sectionGroup.section,
+                      );
+                      const sectionCollapsed = collapsed[collapseKey] === true;
+                      return (
+                        <div key={collapseKey}>
+                          <button
+                            type="button"
+                            className={chrome.subsectionHeader}
+                            aria-expanded={!sectionCollapsed}
+                            data-ini-section-subheader={sectionGroup.section}
+                            onClick={() =>
+                              setCollapsed((prev) => ({
+                                ...prev,
+                                [collapseKey]: !sectionCollapsed,
+                              }))
+                            }
+                          >
+                            {sectionCollapsed ? (
+                              <CaretRight size={13} />
+                            ) : (
+                              <CaretDown size={13} />
+                            )}
+                            <Text fw={600} size="xs" className={chrome.subsectionHeaderLabel}>
+                              {sectionGroup.label}
+                            </Text>
+                            <Badge
+                              size="xs"
+                              variant="outline"
+                              className={chrome.subsectionCount}
+                            >
+                              {sectionGroup.rows.length}
+                            </Badge>
+                          </button>
+                          {!sectionCollapsed &&
+                            sectionGroup.rows.map((row) => (
+                              <ClusterIniTemplateSettingRow
+                                key={`${row.section}-${row.key}-${row.occurrence}`}
+                                row={row}
+                                onChange={updateValue}
+                              />
+                            ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              }
+
               const isCollapsed = collapsed[group.category] === true;
               return (
                 <div key={group.category} className={classes.sectionBlock}>
@@ -185,58 +306,13 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                     </Badge>
                   </button>
                   {!isCollapsed &&
-                    (group.sectionGroups !== undefined && group.sectionGroups.length > 0
-                      ? group.sectionGroups.map((sectionGroup) => {
-                          const collapseKey = `${group.category}\u001f${sectionGroup.section}`;
-                          const sectionCollapsed = collapsed[collapseKey] === true;
-                          return (
-                            <div key={collapseKey}>
-                              <button
-                                type="button"
-                                className={chrome.subsectionHeader}
-                                aria-expanded={!sectionCollapsed}
-                                data-ini-section-subheader={sectionGroup.section}
-                                onClick={() =>
-                                  setCollapsed((prev) => ({
-                                    ...prev,
-                                    [collapseKey]: !sectionCollapsed,
-                                  }))
-                                }
-                              >
-                                {sectionCollapsed ? (
-                                  <CaretRight size={13} />
-                                ) : (
-                                  <CaretDown size={13} />
-                                )}
-                                <Text fw={600} size="xs" className={chrome.subsectionHeaderLabel}>
-                                  {sectionGroup.label}
-                                </Text>
-                                <Badge
-                                  size="xs"
-                                  variant="outline"
-                                  className={chrome.subsectionCount}
-                                >
-                                  {sectionGroup.rows.length}
-                                </Badge>
-                              </button>
-                              {!sectionCollapsed &&
-                                sectionGroup.rows.map((row) => (
-                                  <ClusterIniTemplateSettingRow
-                                    key={`${row.section}-${row.key}-${row.occurrence}`}
-                                    row={row}
-                                    onChange={updateValue}
-                                  />
-                                ))}
-                            </div>
-                          );
-                        })
-                      : group.rows.map((row) => (
-                          <ClusterIniTemplateSettingRow
-                            key={`${row.section}-${row.key}-${row.occurrence}`}
-                            row={row}
-                            onChange={updateValue}
-                          />
-                        )))}
+                    group.rows.map((row) => (
+                      <ClusterIniTemplateSettingRow
+                        key={`${row.section}-${row.key}-${row.occurrence}`}
+                        row={row}
+                        onChange={updateValue}
+                      />
+                    ))}
                 </div>
               );
             })

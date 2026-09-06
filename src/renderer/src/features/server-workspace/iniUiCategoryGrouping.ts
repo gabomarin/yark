@@ -35,7 +35,7 @@ export interface IniUiCategoryGroup<T extends IniGroupingRow = IniGroupingRow> {
   category: AsaUiCategoryId;
   label: string;
   rows: T[];
-  /** Mods always; Other when more than one INI section is present. */
+  /** Other nests by INI section (mod configs + misc leftovers). */
   sectionGroups?: IniUiSectionGroup<T>[];
 }
 
@@ -47,14 +47,7 @@ function compareIniRowsBySectionThenKey(
 }
 
 function shouldNestByIniSection(category: AsaUiCategoryId, rows: IniGroupingRow[]): boolean {
-  if (category === "mods") {
-    return rows.length > 0;
-  }
-  if (category === "other") {
-    const sections = new Set(rows.map((row) => row.section.toLowerCase()));
-    return sections.size > 1;
-  }
-  return false;
+  return category === "other" && rows.length > 0;
 }
 
 function buildIniSectionGroups<T extends IniGroupingRow>(rows: T[]): IniUiSectionGroup<T>[] {
@@ -84,7 +77,7 @@ function sortCategoryRows<T extends IniGroupingRow>(
   category: AsaUiCategoryId,
   list: T[],
 ): void {
-  if (category === "mods" || category === "other") {
+  if (category === "other") {
     list.sort(compareIniRowsBySectionThenKey);
     return;
   }
@@ -146,7 +139,7 @@ export function groupSettingReferencesByUiCategory<T extends IniGroupingReferenc
     if (list === undefined || list.length === 0) {
       return [];
     }
-    if (definition.id === "mods" || definition.id === "other") {
+    if (definition.id === "other") {
       list.sort(
         (a, b) =>
           a.section.localeCompare(b.section) ||

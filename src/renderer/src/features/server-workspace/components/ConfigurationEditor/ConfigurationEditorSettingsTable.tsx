@@ -1,5 +1,5 @@
 import { CaretDown, CaretRight } from "@phosphor-icons/react";
-import { Badge, Group, Text } from "@mantine/core";
+import { ActionIcon, Badge, Group, Text, Tooltip } from "@mantine/core";
 import type { IniFileKey } from "@shared/types";
 import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
 import type { ReactElement } from "react";
@@ -18,6 +18,7 @@ interface Props {
   collapsedSections: Record<string, boolean>;
   busy: boolean;
   onToggleSection: (sectionName: string) => void;
+  onSetSectionGroupsCollapsed: (category: string, collapsed: boolean) => void;
   onUpdateValue: (
     fileKey: IniFileKey,
     rowSection: string,
@@ -37,12 +38,11 @@ function renderSettingRows(
   onOpenAdminList: Props["onOpenAdminList"],
 ): ReactElement[] {
   return rows.map((row) => {
-    const settingRow = row;
-    const controlId = `${settingRow.fileKey}\u001f${settingRow.section}\u001f${settingRow.key}\u001f${settingRow.occurrence}`;
+    const controlId = `${row.fileKey}\u001f${row.section}\u001f${row.key}\u001f${row.occurrence}`;
     return (
       <IniSettingRow
         key={controlId}
-        row={settingRow}
+        row={row}
         busy={busy}
         onUpdateValue={onUpdateValue}
         onResetRowToDefault={onResetRowToDefault}
@@ -97,6 +97,50 @@ function renderSectionGroups(
   });
 }
 
+function OtherCategoryHeader(props: {
+  label: string;
+  rowCount: number;
+  onCollapseSubgroups: () => void;
+  onExpandSubgroups: () => void;
+}): ReactElement {
+  return (
+    <div className={chrome.sectionHeaderStatic} data-ini-other-header>
+      <Group gap="xs" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+        <Text fw={700} size="sm" className={chrome.sectionHeaderLabel}>
+          {props.label}
+        </Text>
+        <Badge size="xs" variant="outline" className={chrome.sectionCount}>
+          {props.rowCount}
+        </Badge>
+      </Group>
+      <Group gap={4} wrap="nowrap">
+        <Tooltip label="Collapse all sections">
+          <ActionIcon
+            variant="subtle"
+            size="sm"
+            color="gray"
+            aria-label="Collapse all Other sections"
+            onClick={props.onCollapseSubgroups}
+          >
+            <CaretRight size={14} />
+          </ActionIcon>
+        </Tooltip>
+        <Tooltip label="Expand all sections">
+          <ActionIcon
+            variant="subtle"
+            size="sm"
+            color="gray"
+            aria-label="Expand all Other sections"
+            onClick={props.onExpandSubgroups}
+          >
+            <CaretDown size={14} />
+          </ActionIcon>
+        </Tooltip>
+      </Group>
+    </div>
+  );
+}
+
 export function ConfigurationEditorSettingsTable(props: Props): ReactElement {
   const {
     loading,
@@ -104,6 +148,7 @@ export function ConfigurationEditorSettingsTable(props: Props): ReactElement {
     collapsedSections,
     busy,
     onToggleSection,
+    onSetSectionGroupsCollapsed,
     onUpdateValue,
     onResetRowToDefault,
   } = props;
@@ -129,8 +174,40 @@ export function ConfigurationEditorSettingsTable(props: Props): ReactElement {
         )}
         {!loading &&
           groupedRows.map((group) => {
-            const collapsed = collapsedSections[group.category] === true;
             const sectionGroups = group.sectionGroups;
+            const nestedOther =
+              group.category === "other" &&
+              sectionGroups !== undefined &&
+              sectionGroups.length > 0;
+
+            if (nestedOther) {
+              return (
+                <div key={group.category} className={classes.sectionBlock}>
+                  <OtherCategoryHeader
+                    label={group.label}
+                    rowCount={group.rows.length}
+                    onCollapseSubgroups={() =>
+                      onSetSectionGroupsCollapsed(group.category, true)
+                    }
+                    onExpandSubgroups={() =>
+                      onSetSectionGroupsCollapsed(group.category, false)
+                    }
+                  />
+                  {renderSectionGroups(
+                    sectionGroups,
+                    group.category,
+                    collapsedSections,
+                    busy,
+                    onToggleSection,
+                    onUpdateValue,
+                    onResetRowToDefault,
+                    props.onOpenAdminList,
+                  )}
+                </div>
+              );
+            }
+
+            const collapsed = collapsedSections[group.category] === true;
             return (
               <div key={group.category} className={classes.sectionBlock}>
                 <button
@@ -151,24 +228,13 @@ export function ConfigurationEditorSettingsTable(props: Props): ReactElement {
                 </button>
 
                 {!collapsed &&
-                  (sectionGroups !== undefined && sectionGroups.length > 0
-                    ? renderSectionGroups(
-                        sectionGroups,
-                        group.category,
-                        collapsedSections,
-                        busy,
-                        onToggleSection,
-                        onUpdateValue,
-                        onResetRowToDefault,
-                        props.onOpenAdminList,
-                      )
-                    : renderSettingRows(
-                        group.rows as IniSettingReference[],
-                        busy,
-                        onUpdateValue,
-                        onResetRowToDefault,
-                        props.onOpenAdminList,
-                      ))}
+                  renderSettingRows(
+                    group.rows as IniSettingReference[],
+                    busy,
+                    onUpdateValue,
+                    onResetRowToDefault,
+                    props.onOpenAdminList,
+                  )}
               </div>
             );
           })}

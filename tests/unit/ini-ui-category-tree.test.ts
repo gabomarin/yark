@@ -41,7 +41,7 @@ describe("listIniUiCategoryTree", () => {
     ]);
   });
 
-  it("puts custom mod sections under Mods like the visual editor", () => {
+  it("puts custom mod sections under Other like the visual editor", () => {
     const text = [
       "[ServerSettings]",
       "ActiveMods=1,2",
@@ -52,16 +52,16 @@ describe("listIniUiCategoryTree", () => {
     ].join("\n");
 
     const tree = listIniUiCategoryTree(text, "gameUserSettings");
-    const mods = tree.find((c) => c.id === "mods");
-    expect(mods?.keys).toEqual(
+    expect(tree.at(-1)?.id).toBe("other");
+    const other = tree.find((c) => c.id === "other");
+    expect(other?.keys).toEqual(
       expect.arrayContaining([
-        { section: "ServerSettings", key: "ActiveMods" },
+        { section: "ServerSettings", key: "ObscureVanillaLeftoverFlag" },
         { section: "SuperStructures", key: "EnableSomething" },
       ]),
     );
-    expect(mods?.keys.some((k) => k.section === "SuperStructures")).toBe(true);
-    const other = tree.find((c) => c.id === "other");
-    expect(other?.keys.some((k) => k.key === "ObscureVanillaLeftoverFlag")).toBe(true);
-    expect(other?.keys.some((k) => k.section === "SuperStructures")).toBeFalsy();
+    expect(other?.keys.some((k) => k.section === "SuperStructures")).toBe(true);
+    const mods = tree.find((c) => c.id === "mods");
+    expect(mods?.keys).toEqual([{ section: "ServerSettings", key: "ActiveMods" }]);
   });
 });

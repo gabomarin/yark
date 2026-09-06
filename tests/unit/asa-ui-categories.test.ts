@@ -37,11 +37,11 @@ describe("asa UI categories", () => {
     expect(
       resolveAsaUiCategory("gameUserSettings", "ServerSettings", "TotallyUnknownVanillaMiscXYZ"),
     ).toBe("other");
-    // Custom mod section → Mods (not Other)
-    expect(resolveAsaUiCategory("game", "Custom", "TotallyUnknownSettingXYZ")).toBe("mods");
+    // Custom mod section → Other (last category; nested by section in UI)
+    expect(resolveAsaUiCategory("game", "Custom", "TotallyUnknownSettingXYZ")).toBe("other");
     expect(
       resolveAsaUiCategory("gameUserSettings", "SuperStructures", "SomeModToggle"),
-    ).toBe("mods");
+    ).toBe("other");
   });
 
   it("filters and groups editor rows by UI category", () => {
@@ -62,7 +62,7 @@ XPMultiplier=2.0
     expect(groups.some((group) => group.category === "general")).toBe(true);
   });
 
-  it("groups custom mod sections under Mods with per-section subgroups", () => {
+  it("groups custom mod sections under Other with per-section subgroups", () => {
     const text = `[ServerSettings]
 ActiveMods=1,2
 ObscureVanillaLeftoverFlag=False
@@ -74,18 +74,19 @@ CoolFeature=1
 `;
     const rows = parseIniRows(text);
     const groups = groupRowsByUiCategory(rows, "gameUserSettings");
-    const mods = groups.find((group) => group.category === "mods");
-    expect(mods).toBeDefined();
-    expect(mods?.rows.map((row) => row.key).sort()).toEqual(
-      ["ActiveMods", "CoolFeature", "EnableSomething", "MaxSlots"].sort(),
+    expect(groups.at(-1)?.category).toBe("other");
+    const other = groups.find((group) => group.category === "other");
+    expect(other).toBeDefined();
+    expect(other?.rows.map((row) => row.key).sort()).toEqual(
+      ["CoolFeature", "EnableSomething", "MaxSlots", "ObscureVanillaLeftoverFlag"].sort(),
     );
-    expect(mods?.sectionGroups?.map((g) => g.section)).toEqual([
+    expect(other?.sectionGroups?.map((g) => g.section)).toEqual([
       "MyAwesomeMod",
       "ServerSettings",
       "SuperStructures",
     ]);
-    const other = groups.find((group) => group.category === "other");
-    expect(other?.rows.some((row) => row.key === "ObscureVanillaLeftoverFlag")).toBe(true);
-    expect(other?.rows.some((row) => row.section === "SuperStructures")).toBeFalsy();
+    const mods = groups.find((group) => group.category === "mods");
+    expect(mods?.rows.map((row) => row.key)).toEqual(["ActiveMods"]);
+    expect(mods?.sectionGroups).toBeUndefined();
   });
 });

@@ -74,8 +74,8 @@ The source is never mutated.
 Merge/Replace use Mantine `Tooltip`.
 
 INI pickers group settings by the same ASA UI categories as the server
-Configuration editor (Rates, Breeding, Mods, …), not raw `[Section]` headers.
-Custom mod INI sections classify under **Mods** (same as the visual editor);
+Configuration editor (Rates, Breeding, …). Custom mod INI sections stay under
+**Other** (last), nested by `[Section]` like the visual editor.
 Selection still maps to section+key for merge/replace compose.
 
 Mods and launch arguments also expose Merge/Replace: merge appends missing

@@ -811,12 +811,14 @@ describe("ServerWorkspacePage", () => {
     expect(categorySelect).toHaveValue("All settings (1)");
 
     await user.click(categorySelect);
-    expect(screen.getByRole("option", { name: "Mods (1)" })).toBeVisible();
-    expect(screen.queryByRole("option", { name: /Other/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Other (1)" })).toBeVisible();
+    expect(screen.queryByRole("option", { name: /Mods/ })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("option", { name: "Mods (1)" }));
-    expect(categorySelect).toHaveValue("Mods (1)");
+    await user.click(screen.getByRole("option", { name: "Other (1)" }));
+    expect(categorySelect).toHaveValue("Other (1)");
     expect(screen.getByRole("button", { name: /Custom/ })).toBeVisible();
+    expect(screen.getByLabelText("Collapse all Other sections")).toBeVisible();
+    expect(screen.getByLabelText("Expand all Other sections")).toBeVisible();
 
     await user.click(within(fileSwitch).getByRole("radio", { name: "GameUserSettings.ini" }));
     await waitFor(() => {
