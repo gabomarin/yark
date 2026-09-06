@@ -612,7 +612,7 @@ if (isPrimaryInstance) {
     let allowQuit = false;
     /**
      * Quit coordination:
-     * - `isQuitting`: real shutdown started (tray Quit / settle / before-quit).
+     * - `isQuitting`: real shutdown started (tray / sidebar Quit / settle / before-quit).
      *   Window `close` must not re-hide to tray while this is true.
      * - `allowQuit`: stop/settle finished; next `app.quit()` / `before-quit` may exit.
      * - `pendingQuit`: single-flight promise for async stop-before-quit work.
@@ -620,6 +620,14 @@ if (isPrimaryInstance) {
     let isQuitting = false;
     let pendingQuit: Promise<void> | null = null;
     let quitPolicyPromptInFlight = false;
+
+    const requestAppQuit = (): void => {
+      // Real quit path — goes through before-quit (#59 confirm Stop / Cancel).
+      // Must set isQuitting before app.quit() so window `close` does not
+      // re-interpret the shutdown as “hide to tray”.
+      isQuitting = true;
+      app.quit();
+    };
 
     const appUpdateService = new AppUpdateService({
       evaluate: evaluateAppUpdateSafety,
@@ -652,15 +660,8 @@ if (isPrimaryInstance) {
       playerSessionWatcher,
       processMetricsSampler,
       appUpdateService,
+      requestAppQuit,
     );
-
-    const requestAppQuit = (): void => {
-      // Real quit path — goes through before-quit (#59 confirm Stop / Cancel).
-      // Must set isQuitting before app.quit() so window `close` does not
-      // re-interpret the shutdown as “hide to tray”.
-      isQuitting = true;
-      app.quit();
-    };
 
     const countActiveServers = (): number =>
       repo.list().filter((profile) => processManager.isActive(profile.id)).length;

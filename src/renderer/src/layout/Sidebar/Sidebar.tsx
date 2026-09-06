@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import { useState } from "react";
 import {
   ArrowCircleUp,
   Circle,
@@ -7,6 +8,7 @@ import {
   GearSix,
   HardDrives,
   ShareNetwork,
+  SignOut,
   SquaresFour,
 } from "@phosphor-icons/react";
 import {
@@ -24,6 +26,7 @@ import { useUiDensity } from "@app/AppProviders";
 import type { OfficialNetworkStatus } from "@shared/types";
 import { Fragment } from "react";
 import yarkLogo from "../../assets/brand/yark-logo.png";
+import { QuitYarkModal } from "./QuitYarkModal";
 import classes from "./Sidebar.module.css";
 
 export type Route = "overview" | "downloads" | "clusters" | "backups" | "logs" | "settings";
@@ -42,6 +45,10 @@ const NAV_ITEMS: NavItem[] = [
   { id: "logs", label: "Logs", icon: FileText },
   { id: "settings", label: "Settings", icon: GearSix },
 ];
+
+/** Operator-facing hover copy for sidebar Quit (#532). */
+export const QUIT_YARK_TOOLTIP =
+  "Stops servers safely and closes YARK. Close the window to keep them running in the tray.";
 
 interface Props {
   route: Route;
@@ -82,6 +89,7 @@ export function Sidebar(props: Props): ReactElement {
   const density = useUiDensity();
   const compact = density === "compact";
   const iconMode = props.iconMode === true;
+  const [quitOpened, setQuitOpened] = useState(false);
   const navIconSize = compact ? 16 : 18;
   // Keep secondary sidebar copy readable in Compact without enlarging Comfortable.
   const metadataTextSize = compact ? "sm" : "xs";
@@ -268,102 +276,156 @@ export function Sidebar(props: Props): ReactElement {
         </div>
       )}
 
-      {iconMode ? (
-        <Group gap={4} wrap="nowrap" justify="center" className={classes.appVersionRow}>
-          {updateAvailable && props.onYarkUpdateClick !== undefined && (
-            <Tooltip
-              label={`Update ${props.yarkUpdateAvailableVersion} available – open Settings`}
-              position="right"
-              withArrow
-            >
-              <UnstyledButton
-                className={classes.appVersionUpdateIconBtn}
-                onClick={props.onYarkUpdateClick}
-                aria-label={`YARK update available, version ${props.yarkUpdateAvailableVersion}`}
-                data-yark-update-version
+      <div className={classes.sidebarFooter}>
+        {iconMode ? (
+          <Group gap={4} wrap="nowrap" justify="center" className={classes.appVersionRow}>
+            {updateAvailable && props.onYarkUpdateClick !== undefined && (
+              <Tooltip
+                label={`Update ${props.yarkUpdateAvailableVersion} available – open Settings`}
+                position="right"
+                withArrow
               >
-                <ArrowCircleUp
-                  size={compact ? 12 : 14}
-                  weight="bold"
-                  className={classes.appVersionUpdateIcon}
-                  aria-hidden
-                />
-              </UnstyledButton>
-            </Tooltip>
-          )}
-          {props.onWhatsNewClick !== undefined ? (
-            <Tooltip label={`YARK v${props.appVersion} – What's new`} position="right" withArrow>
-              <UnstyledButton
-                className={
-                  updateAvailable ? classes.appVersionLabelUpdate : classes.appVersionLabelRail
-                }
-                onClick={props.onWhatsNewClick}
-                aria-label={`What's new in YARK v${props.appVersion}`}
+                <UnstyledButton
+                  className={classes.appVersionUpdateIconBtn}
+                  onClick={props.onYarkUpdateClick}
+                  aria-label={`YARK update available, version ${props.yarkUpdateAvailableVersion}`}
+                  data-yark-update-version
+                >
+                  <ArrowCircleUp
+                    size={compact ? 12 : 14}
+                    weight="bold"
+                    className={classes.appVersionUpdateIcon}
+                    aria-hidden
+                  />
+                </UnstyledButton>
+              </Tooltip>
+            )}
+            {props.onWhatsNewClick !== undefined ? (
+              <Tooltip label={`YARK v${props.appVersion} – What's new`} position="right" withArrow>
+                <UnstyledButton
+                  className={
+                    updateAvailable ? classes.appVersionLabelUpdate : classes.appVersionLabelRail
+                  }
+                  onClick={props.onWhatsNewClick}
+                  aria-label={`What's new in YARK v${props.appVersion}`}
+                  data-yark-app-version
+                >
+                  {versionLabel}
+                </UnstyledButton>
+              </Tooltip>
+            ) : (
+              <Text
+                size={metadataTextSize}
+                c="dimmed"
                 data-yark-app-version
+                className={classes.appVersionLabelRail}
               >
-                {versionLabel}
-              </UnstyledButton>
-            </Tooltip>
-          ) : (
-            <Text
-              size={metadataTextSize}
-              c="dimmed"
-              data-yark-app-version
-              className={classes.appVersionLabelRail}
-            >
-              v{props.appVersion}
-            </Text>
-          )}
-        </Group>
-      ) : (
-        <Group gap={5} wrap="nowrap" justify="center" className={classes.appVersionRow}>
-          {updateAvailable && props.onYarkUpdateClick !== undefined && (
-            <Tooltip
-              label={`YARK update available (v${props.yarkUpdateAvailableVersion}) – open Settings to update`}
-              multiline
-              w={220}
-              position="right"
-            >
-              <UnstyledButton
-                className={classes.appVersionUpdateIconBtn}
-                onClick={props.onYarkUpdateClick}
-                aria-label={`YARK update available, version ${props.yarkUpdateAvailableVersion}`}
-                data-yark-update-version
+                v{props.appVersion}
+              </Text>
+            )}
+          </Group>
+        ) : (
+          <Group gap={5} wrap="nowrap" justify="center" className={classes.appVersionRow}>
+            {updateAvailable && props.onYarkUpdateClick !== undefined && (
+              <Tooltip
+                label={`YARK update available (v${props.yarkUpdateAvailableVersion}) – open Settings to update`}
+                multiline
+                w={220}
+                position="right"
               >
-                <ArrowCircleUp
-                  size={compact ? 13 : 15}
-                  weight="bold"
-                  className={classes.appVersionUpdateIcon}
-                  aria-hidden
-                />
-              </UnstyledButton>
-            </Tooltip>
-          )}
-          {props.onWhatsNewClick !== undefined ? (
-            <Tooltip label="What's new in this version" position="right">
-              <UnstyledButton
-                className={
-                  updateAvailable ? classes.appVersionLabelUpdate : classes.appVersionLabel
-                }
-                onClick={props.onWhatsNewClick}
-                aria-label={`What's new in YARK v${props.appVersion}`}
+                <UnstyledButton
+                  className={classes.appVersionUpdateIconBtn}
+                  onClick={props.onYarkUpdateClick}
+                  aria-label={`YARK update available, version ${props.yarkUpdateAvailableVersion}`}
+                  data-yark-update-version
+                >
+                  <ArrowCircleUp
+                    size={compact ? 13 : 15}
+                    weight="bold"
+                    className={classes.appVersionUpdateIcon}
+                    aria-hidden
+                  />
+                </UnstyledButton>
+              </Tooltip>
+            )}
+            {props.onWhatsNewClick !== undefined ? (
+              <Tooltip label="What's new in this version" position="right">
+                <UnstyledButton
+                  className={
+                    updateAvailable ? classes.appVersionLabelUpdate : classes.appVersionLabel
+                  }
+                  onClick={props.onWhatsNewClick}
+                  aria-label={`What's new in YARK v${props.appVersion}`}
+                  data-yark-app-version
+                >
+                  {versionLabel}
+                </UnstyledButton>
+              </Tooltip>
+            ) : (
+              <Text
+                size={metadataTextSize}
+                c="dimmed"
                 data-yark-app-version
+                className={classes.appVersionLabel}
               >
-                {versionLabel}
-              </UnstyledButton>
-            </Tooltip>
-          ) : (
-            <Text
-              size={metadataTextSize}
-              c="dimmed"
-              data-yark-app-version
-              className={classes.appVersionLabel}
-            >
-              v{props.appVersion}
-            </Text>
-          )}
-        </Group>
-      )}
+                v{props.appVersion}
+              </Text>
+            )}
+          </Group>
+        )}
+
+        <div className={classes.quitControl}>
+          <Tooltip
+            label={QUIT_YARK_TOOLTIP}
+            multiline
+            w={260}
+            position="right"
+            withArrow
+            openDelay={200}
+          >
+            {iconMode ? (
+              <ActionIcon
+                variant="subtle"
+                size={steamCmdIconSize}
+                aria-label="Quit YARK"
+                className={classes.quitIcon}
+                data-yark-quit
+                onClick={() => {
+                  setQuitOpened(true);
+                }}
+              >
+                <SignOut size={compact ? 14 : 16} weight="regular" aria-hidden />
+              </ActionIcon>
+            ) : (
+              <Button
+                size={compact ? "xs" : "sm"}
+                variant="subtle"
+                justify="center"
+                fullWidth
+                leftSection={<SignOut size={compact ? 14 : 16} weight="regular" aria-hidden />}
+                className={classes.quitButton}
+                data-yark-quit
+                onClick={() => {
+                  setQuitOpened(true);
+                }}
+              >
+                Quit YARK
+              </Button>
+            )}
+          </Tooltip>
+        </div>
+      </div>
+
+      <QuitYarkModal
+        opened={quitOpened}
+        onClose={() => {
+          setQuitOpened(false);
+        }}
+        onConfirm={() => {
+          setQuitOpened(false);
+          void window.api.quitApp();
+        }}
+      />
     </MantineStack>
   );
 }

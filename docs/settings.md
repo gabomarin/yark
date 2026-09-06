@@ -34,6 +34,7 @@ the Server tab / workspace.
 | Window bounds / maximized | `src/main/window-state.ts` (`app_settings.windowState`) |
 | Windows login item | `src/main/windows-login-item.ts` |
 | Tray icon / menu | `src/main/app-tray.ts` |
+| Sidebar Quit YARK | `Sidebar.tsx` footer → `app:quit` (#532) |
 | Shared keys / defaults | `src/shared/desktop-shell.ts`, `src/shared/ui-density.ts`, `src/shared/open-native-console.ts`, `src/shared/log-retention.ts`, `src/shared/app-update.ts` |
 | Density theme apply | `src/renderer/src/app/AppProviders.tsx`, `src/renderer/src/main.tsx` |
 | SteamCMD service | `src/backend/domains/updates/*` (path/install/caches) |
@@ -93,6 +94,7 @@ IPC for shell / density / console:
 | `app:set-close-window-to-tray` | `setCloseWindowToTray` |
 | `app:set-start-with-windows` | `setStartWithWindows` |
 | `app:set-tray-close-hint-dismissed` | `setTrayCloseHintDismissed` |
+| `app:quit` | `quitApp` — same real-quit path as tray **Quit YARK** (#532); not hide-to-tray |
 | `app:set-os-notify-enabled` / `app:set-os-notify-crash` / `app:set-os-notify-steamcmd` / `app:set-os-notify-yark-update` | Desktop alerts master + crash + installs/updates + YARK update categories (#331) |
 | `app:list-data-folders` / `app:open-data-folder` | App / backups / update-logs / steamcmd roots under `userData` |
 

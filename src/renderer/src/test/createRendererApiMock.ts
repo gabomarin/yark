@@ -389,6 +389,7 @@ export function createRendererApiMock(
       error: "not packaged",
     }),
     openYarkReleaseNotes: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
+    quitApp: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
     onAppUpdate: vi.fn(() => () => undefined),
     onOsNotificationOpen: vi.fn(() => () => undefined),
     ...overrides,

@@ -68,7 +68,7 @@ export function SetupWizardShellStep(props: Props): ReactElement {
           <Text size="sm" fw={600}>Close window to tray</Text>
           <Text size="xs" c="dimmed" mt={2}>
             The close button hides YARK in the tray. Servers keep running until you
-            quit from the tray icon.
+            quit from the tray menu or the sidebar Quit control.
           </Text>
         </div>
         <div className={classes.settingControl}>
