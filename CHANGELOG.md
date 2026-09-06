@@ -15,7 +15,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
-- INI visual category headers use the neutral control surface (thin blue rail only) instead of a navy fill (#516).
+- INI visual category headers use a cool slate (`#1c2538`) between hull and control gray — enough lift vs workspace chrome without the old navy wash (#516).
 - Unpackaged / `npm run dev` no longer takes the single-instance lock, so a local build can run beside an installed YARK (packaged installs stay single-instance).
 
 ### Fixed

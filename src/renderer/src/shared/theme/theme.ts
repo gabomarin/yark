@@ -49,7 +49,7 @@ function createAppCssVariablesResolver(
       "--app-color-text": "var(--app-color-text-soft)",
       "--app-color-muted": "var(--app-color-muted-soft)",
       "--app-color-accent": "var(--ark-blue-9)",
-      "--app-color-ini-category": "var(--app-color-surface-control)",
+      "--app-color-ini-category": "var(--ark-blue-ini-category)",
       "--app-color-ok": tokens.colors.ok,
       "--app-color-warn": tokens.colors.warn,
       "--app-color-attention": tokens.colors.attention,

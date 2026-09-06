@@ -1,6 +1,6 @@
 /**
  * Shared INI editor chrome (nav row + visual category headers).
- * Category header bar: --app-color-ini-category → surface-control; blue rail only.
+ * Category header: cool slate (--app-color-ini-category / #1c2538) + blue rail.
  */
 
 .nav {
@@ -25,7 +25,7 @@
   margin: 0;
   padding: 14px;
   border: none;
-  border-block: 1px solid var(--app-color-border-subtle);
+  border-block: 1px solid color-mix(in srgb, var(--ark-blue-6) 35%, var(--app-color-border-subtle));
   border-radius: 0;
   background: var(--app-color-ini-category);
   color: inherit;
@@ -36,7 +36,7 @@
 }
 
 .sectionHeader:hover {
-  background: var(--app-color-surface-control-hover);
+  background: color-mix(in srgb, var(--app-color-ini-category) 72%, var(--ark-blue-4));
 }
 
 .sectionHeader:focus-visible {
@@ -50,9 +50,9 @@
 }
 
 .sectionCount {
-  border: 1px solid var(--app-color-border-subtle) !important;
-  background: transparent !important;
-  color: var(--app-color-muted) !important;
+  border: 1px solid color-mix(in srgb, var(--ark-blue-8) 40%, var(--app-color-border-subtle)) !important;
+  background: color-mix(in srgb, var(--app-color-ini-category) 70%, var(--ark-blue-2)) !important;
+  color: var(--ark-blue-11) !important;
 }
 
 /* Other category: not collapsible; expand/collapse icons target section subgroups */
@@ -65,7 +65,7 @@
   margin: 0;
   padding: 14px;
   border: none;
-  border-block: 1px solid var(--app-color-border-subtle);
+  border-block: 1px solid color-mix(in srgb, var(--ark-blue-6) 35%, var(--app-color-border-subtle));
   border-radius: 0;
   background: var(--app-color-ini-category);
   color: inherit;
@@ -74,7 +74,7 @@
   box-shadow: inset 3px 0 0 0 var(--ark-blue-9);
 }
 
-/* Nested INI section under Other */
+/* Nested INI section under Other — stays on neutral control so categories read louder */
 .subsectionHeader {
   display: flex;
   align-items: center;
@@ -86,7 +86,7 @@
   border: none;
   border-bottom: 1px solid var(--app-color-border-subtle);
   border-radius: 0;
-  background: color-mix(in srgb, var(--app-color-surface-control) 88%, var(--ark-gray-2));
+  background: var(--app-color-surface-control);
   color: inherit;
   font: inherit;
   text-align: left;
