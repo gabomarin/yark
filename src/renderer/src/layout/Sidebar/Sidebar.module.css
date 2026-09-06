@@ -246,6 +246,31 @@
   padding-top: var(--app-space-xxs);
 }
 
+/* App version + Quit as one footer unit under SteamCMD / ARK official (#532). */
+.sidebarFooter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--app-space-xs);
+  width: 100%;
+  margin-top: var(--app-space-xxs);
+  padding-top: var(--app-space-sm);
+  border-top: 1px solid color-mix(in srgb, var(--app-color-border) 32%, transparent);
+}
+
+.sidebar[data-icon-mode] .sidebarFooter {
+  gap: var(--app-space-xxs);
+  padding-top: var(--app-space-xs);
+}
+
+.quitControl {
+  width: 100%;
+}
+
+.sidebar[data-icon-mode] .quitControl {
+  width: auto;
+}
+
 .appVersionRow {
   width: 100%;
 }
@@ -313,17 +338,47 @@
   font-weight: 700;
 }
 
+.quitButton {
+  min-height: 34px;
+  border-radius: var(--app-radius-control);
+  color: var(--app-color-muted);
+  font-weight: 500;
+}
+
+.quitButton :global(.mantine-Button-inner) {
+  justify-content: center;
+}
+
+.quitButton :global(.mantine-Button-section[data-position="left"]) {
+  margin-inline-end: var(--app-space-xs);
+}
+
+.quitButton:hover {
+  color: var(--app-color-danger-bright);
+  background: color-mix(in srgb, var(--app-color-danger-bright) 10%, transparent);
+}
+
+.quitButton:focus-visible {
+  outline: 2px solid var(--app-color-cryo);
+  outline-offset: 2px;
+}
+
 .quitIcon {
-  color: var(--mantine-color-dimmed);
+  color: var(--app-color-muted);
 }
 
 .quitIcon:hover {
-  color: var(--mantine-color-red-5);
+  color: var(--app-color-danger-bright);
+  background: color-mix(in srgb, var(--app-color-danger-bright) 10%, transparent);
 }
 
 .quitIcon:focus-visible {
   outline: 2px solid var(--app-color-cryo);
   outline-offset: 2px;
+}
+
+:global([data-ui-density="compact"]) .quitButton {
+  min-height: 30px;
 }
 
 @keyframes yark-update-nudge {
