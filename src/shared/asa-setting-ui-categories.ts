@@ -50,6 +50,30 @@ export function lookupAsaUiCategory(
 }
 
 /**
+ * Dedicated-server vanilla INI sections that ship with ASA stock configs.
+ * Custom mod headers stay uncategorized (Other) and nest by section in the UI.
+ */
+const KNOWN_VANILLA_INI_SECTIONS = new Set([
+  "serversettings",
+  "sessionsettings",
+  "messageoftheday",
+  "/script/engine.gamesession",
+  "/script/shootergame.shootergamemode",
+]);
+
+/**
+ * True for stock ASA dedicated-server sections (and empty/root).
+ * Custom `[ModName]` / unknown `/Script/…` headers are not vanilla.
+ */
+export function isKnownVanillaIniSection(section: string): boolean {
+  const s = section.trim().toLowerCase();
+  if (s.length === 0 || s === "(root)") {
+    return true;
+  }
+  return KNOWN_VANILLA_INI_SECTIONS.has(s);
+}
+
+/**
  * UI category for a setting. Uses the JSON; if missing, light heuristic.
  */
 export function resolveAsaUiCategory(
@@ -69,6 +93,10 @@ function fallbackUiCategory(section: string, key: string): AsaUiCategoryId {
   const s = section.toLowerCase();
   if (s.includes("messageoftheday")) return "chat";
   if (s.includes("sessionsettings")) return "general";
+  // Custom / mod-authored sections → Other (last category; nested by section in UI).
+  if (!isKnownVanillaIniSection(section)) {
+    return "other";
+  }
   if (/pve/.test(k)) return "pve";
   if (/pvp/.test(k)) return "pvp";
   if (/baby|imprint|egg|mate|breed/.test(k)) return "breeding";

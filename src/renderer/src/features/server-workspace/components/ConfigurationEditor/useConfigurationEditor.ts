@@ -12,6 +12,7 @@ import {
   defaultTextForFile,
   filterIniSettingReferences,
   groupSettingReferencesByUiCategory,
+  iniUiSectionCollapseKey,
   lookupDefaultValue,
   parseIniRows,
   sanitizeServerIniPayload,
@@ -60,6 +61,7 @@ export function useConfigurationEditor(options: {
   resetActiveFileToDefaults: () => void;
   resetRowToDefault: (row: IniSettingReference) => void;
   toggleSection: (sectionName: string) => void;
+  setSectionGroupsCollapsed: (category: string, collapsed: boolean) => void;
   setAllSectionsCollapsed: (collapsed: boolean) => void;
   saveIni: () => Promise<boolean>;
   openExternal: () => Promise<void>;
@@ -243,10 +245,30 @@ export function useConfigurationEditor(options: {
     }));
   };
 
+  const setSectionGroupsCollapsed = (category: string, collapsed: boolean) => {
+    const group = groupedRows.find((item) => item.category === category);
+    if (group?.sectionGroups === undefined || group.sectionGroups.length === 0) {
+      return;
+    }
+    setCollapsedSections((prev) => {
+      const next = { ...prev };
+      for (const sectionGroup of group.sectionGroups ?? []) {
+        next[iniUiSectionCollapseKey(group.category, sectionGroup.section)] = collapsed;
+      }
+      return next;
+    });
+  };
+
   const setAllSectionsCollapsed = (collapsed: boolean) => {
     const next: Record<string, boolean> = {};
     for (const group of groupedRows) {
-      next[group.category] = collapsed;
+      if (group.sectionGroups !== undefined && group.sectionGroups.length > 0) {
+        for (const sectionGroup of group.sectionGroups) {
+          next[iniUiSectionCollapseKey(group.category, sectionGroup.section)] = collapsed;
+        }
+      } else {
+        next[group.category] = collapsed;
+      }
     }
     setCollapsedSections(next);
   };
@@ -349,6 +371,7 @@ export function useConfigurationEditor(options: {
     resetActiveFileToDefaults,
     resetRowToDefault,
     toggleSection,
+    setSectionGroupsCollapsed,
     setAllSectionsCollapsed,
     saveIni,
     openExternal,

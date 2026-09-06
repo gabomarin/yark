@@ -118,6 +118,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
               collapsedSections={editor.collapsedSections}
               busy={editor.busy}
               onToggleSection={editor.toggleSection}
+              onSetSectionGroupsCollapsed={editor.setSectionGroupsCollapsed}
               onUpdateValue={editor.updateValue}
               onResetRowToDefault={editor.resetRowToDefault}
               onOpenAdminList={props.onOpenAdminList}

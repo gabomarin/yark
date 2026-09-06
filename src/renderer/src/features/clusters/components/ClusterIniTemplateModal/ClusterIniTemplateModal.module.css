@@ -77,7 +77,8 @@
   border: 1px solid var(--app-color-border-subtle);
   border-radius: var(--app-radius-md);
   overflow: auto;
-  background: var(--app-color-surface-chrome);
+  /* ~90% deep blue, soft black deepen — see design-system INI exception */
+  background: color-mix(in srgb, var(--app-color-ini-category) 90%, #000);
 }
 
 .tableHead,
@@ -90,6 +91,11 @@
   box-sizing: border-box;
   width: 100%;
   min-width: 720px;
+}
+
+/* Opaque plates over the tinted table body — no translucent rows */
+.row {
+  background: var(--app-color-surface-chrome);
 }
 
 .tableHead {
@@ -109,9 +115,7 @@
   width: max(100%, 720px);
 }
 
-.sectionBlock + .sectionBlock {
-  border-top: 1px solid var(--app-color-border-subtle);
-}
+/* Separators come from category header border-bottom only (avoids double lines when collapsed). */
 
 .row + .row {
   border-top: 1px solid color-mix(in srgb, var(--app-color-border-subtle) 68%, transparent);

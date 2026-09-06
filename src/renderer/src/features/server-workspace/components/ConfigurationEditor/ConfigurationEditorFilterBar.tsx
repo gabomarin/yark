@@ -1,4 +1,4 @@
-import { FunnelSimple } from "@phosphor-icons/react";
+import { ArrowsInLineVertical, ArrowsOutLineVertical, FunnelSimple } from "@phosphor-icons/react";
 import { Badge, Button, Group, Select } from "@mantine/core";
 import type { ReactElement } from "react";
 import { SearchField } from "@ui/SearchField/SearchField";
@@ -54,10 +54,22 @@ export function ConfigurationEditorFilterBar(props: Props): ReactElement {
         nothingFoundMessage="No categories"
         onChange={(value) => onFilterChange((value ?? "all") as IniFilterId)}
       />
-      <Button size="xs" variant="light" onClick={onCollapseAll}>
+      <Button
+        size="xs"
+        variant="light"
+        color="gray"
+        leftSection={<ArrowsInLineVertical size={14} />}
+        onClick={onCollapseAll}
+      >
         Collapse
       </Button>
-      <Button size="xs" variant="light" onClick={onExpandAll}>
+      <Button
+        size="xs"
+        variant="light"
+        color="gray"
+        leftSection={<ArrowsOutLineVertical size={14} />}
+        onClick={onExpandAll}
+      >
         Expand
       </Button>
       {dirty && (

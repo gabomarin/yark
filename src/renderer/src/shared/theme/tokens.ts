@@ -4,8 +4,11 @@ export type { UiDensity } from "@shared/ui-density";
 
 export const radixPalette = {
   background: "#0c1427",
-  /** INI editor category group header fill. */
-  iniCategory: "#131F43",
+  /**
+   * INI category header fill — deep blue (not gray-slate) between hull
+   * (`#0c1427`) and ark-blue-2. Base for the subtle ~90% blue header lift.
+   */
+  iniCategory: "#0d1836",
   blue: [
     "#061232",
     "#06143c",

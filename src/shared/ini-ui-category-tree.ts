@@ -67,7 +67,7 @@ export function listIniUiCategoryTree(
     if (list === undefined || list.length === 0) continue;
     list.sort(
       (a, b) =>
-        a.key.localeCompare(b.key) || a.section.localeCompare(b.section),
+        a.section.localeCompare(b.section) || a.key.localeCompare(b.key),
     );
     groups.push({
       id: def.id,

@@ -121,6 +121,9 @@ Solid **bg / raised / control** come from `tokens.ts` + `theme.ts`. Do **not** i
 | Nested widgets | `tone="flat"` (or nested inside a flat shell) | Mixing Card + ad-hoc panel bg |
 | Shell rails | `tone="chrome"` or chrome parent + flat children | Cool gradients in sidebars |
 | Status accent | `statusTone` on `AppSurfaceCard` | One-off `box-shadow: inset 3px…` |
+| **Exception — INI editor chrome** (#516) | Category headers: deep blue `--app-color-ini-category` (`#0d1836`) + **subtle** blue lift (~90% token) + 3px ark-blue rail. **Other** subgroups: `surface-control` gray + soft ~80%/20% black deepen (no blue wash). Table body tint + opaque setting rows. Hairline `border-bottom` only | Cool **gradients** on page shells / filter bar / `tableWrap`; gray-slate category slabs; strong blue→black washes; translucent setting rows; stacked thick borders when collapsed |
+
+Solid surfaces stay the default. Category bands stay louder (blue) than **Other** subgroups (gray shade only). Category lifts stay **subtle** (~90%); subgroup shade is a bit stronger (~80%/20%). Setting rows stay fully opaque chrome. Do **not** paint cool gradients on `tableWrap`, the filter bar, or the workspace shell.
 
 ### 2. Spacing / density
 
@@ -447,7 +450,7 @@ line (#234).
 - `ServerCard` product chrome (square list rows, solid `--app-color-panel` fill, 3px status rail; no cool gradient)
 - Downloads queue / footer teaser elevation
 - Settings SteamCMD path row (`ReadonlyPath` + Choose… + Install CTA; not `PathField`)
-- Server workspace 3-column shell / INI editor tables
+- Server workspace 3-column shell / INI editor tables (category headers + solid body tint exception — § Surfaces)
 - Domain empty **content** — wrap with shared EmptyState shell
 - Clusters `MetaStrip` (feature-local until a second screen needs the same strip)
 - Backup volume detail cards (multi-line destination/disk copy; scalar strip uses `AppMetricCard`)

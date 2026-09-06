@@ -1,36 +1,29 @@
 import type { ReactElement } from "react";
-import { CaretDown, CaretRight, ArrowCounterClockwise, FunnelSimple } from "@phosphor-icons/react";
 import {
-  Badge,
-  Button,
-  Group,
-  NumberInput,
-  Select,
-  Switch,
-  Text,
-  TextInput,
-  Textarea,
-} from "@mantine/core";
+  ArrowsInLineVertical,
+  ArrowsOutLineVertical,
+  CaretDown,
+  CaretRight,
+  FunnelSimple,
+} from "@phosphor-icons/react";
+import { ActionIcon, Badge, Button, Group, Select, Text, Textarea, Tooltip } from "@mantine/core";
 import type { IniFileKey, ServerIniPayload } from "@shared/types";
 import { isAsaIgnoredIniMaxPlayers, isYarkOwnedIniKey } from "@shared/yark-owned-ini-keys";
 import {
   filterIniSettingReferences,
   groupSettingReferencesByUiCategory,
-  lookupDefaultValue,
-  lookupSettingDescription,
+  iniUiSectionCollapseKey,
   parseIniRows,
-  resolveControlKind,
-  sectionShortName,
   setIniValue,
   textForFile,
   withFileText,
   type IniFilterId,
   type IniSettingReference,
 } from "@features/server-workspace/iniModel";
-import { numberInputValueFromIni } from "@features/server-workspace/iniNumberInput";
 import { useMemo, useState } from "react";
 import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
 import { SearchField } from "@ui/SearchField/SearchField";
+import { ClusterIniTemplateSettingRow } from "./ClusterIniTemplateSettingRow";
 import classes from "./ClusterIniTemplateModal.module.css";
 
 interface Props {
@@ -148,15 +141,31 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
         <Button
           size="xs"
           variant="light"
+          color="gray"
+          leftSection={<ArrowsInLineVertical size={14} />}
           onClick={() => {
             const next: Record<string, boolean> = {};
-            for (const group of groupedRows) next[group.category] = true;
+            for (const group of groupedRows) {
+              if (group.sectionGroups !== undefined && group.sectionGroups.length > 0) {
+                for (const sectionGroup of group.sectionGroups) {
+                  next[iniUiSectionCollapseKey(group.category, sectionGroup.section)] = true;
+                }
+              } else {
+                next[group.category] = true;
+              }
+            }
             setCollapsed(next);
           }}
         >
           Collapse
         </Button>
-        <Button size="xs" variant="light" onClick={() => setCollapsed({})}>
+        <Button
+          size="xs"
+          variant="light"
+          color="gray"
+          leftSection={<ArrowsOutLineVertical size={14} />}
+          onClick={() => setCollapsed({})}
+        >
           Expand
         </Button>
       </Group>
@@ -176,6 +185,126 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
             </Text>
           ) : (
             groupedRows.map((group) => {
+              const sectionGroups = group.sectionGroups;
+              const nestedOther =
+                group.category === "other" &&
+                sectionGroups !== undefined &&
+                sectionGroups.length > 0;
+
+              if (nestedOther) {
+                return (
+                  <div key={group.category} className={classes.sectionBlock}>
+                    <div className={chrome.sectionHeaderStatic} data-ini-other-header>
+                      <Group gap="xs" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+                        <Text fw={700} size="sm" className={chrome.sectionHeaderLabel}>
+                          {group.label}
+                        </Text>
+                        <Badge size="xs" variant="outline" className={chrome.sectionCount}>
+                          {group.rows.length}
+                        </Badge>
+                      </Group>
+                      <Group gap={4} wrap="nowrap">
+                        <Tooltip label="Collapse all sections">
+                          <ActionIcon
+                            variant="subtle"
+                            size="sm"
+                            color="gray"
+                            aria-label="Collapse all Other sections"
+                            onClick={() => {
+                              setCollapsed((prev) => {
+                                const next = { ...prev };
+                                for (const sectionGroup of sectionGroups) {
+                                  next[
+                                    iniUiSectionCollapseKey(
+                                      group.category,
+                                      sectionGroup.section,
+                                    )
+                                  ] = true;
+                                }
+                                return next;
+                              });
+                            }}
+                          >
+                            <ArrowsInLineVertical size={14} />
+                          </ActionIcon>
+                        </Tooltip>
+                        <Tooltip label="Expand all sections">
+                          <ActionIcon
+                            variant="subtle"
+                            size="sm"
+                            color="gray"
+                            aria-label="Expand all Other sections"
+                            onClick={() => {
+                              setCollapsed((prev) => {
+                                const next = { ...prev };
+                                for (const sectionGroup of sectionGroups) {
+                                  next[
+                                    iniUiSectionCollapseKey(
+                                      group.category,
+                                      sectionGroup.section,
+                                    )
+                                  ] = false;
+                                }
+                                return next;
+                              });
+                            }}
+                          >
+                            <ArrowsOutLineVertical size={14} />
+                          </ActionIcon>
+                        </Tooltip>
+                      </Group>
+                    </div>
+                    {sectionGroups.map((sectionGroup) => {
+                      const collapseKey = iniUiSectionCollapseKey(
+                        group.category,
+                        sectionGroup.section,
+                      );
+                      const sectionCollapsed = collapsed[collapseKey] === true;
+                      return (
+                        <div key={collapseKey}>
+                          <button
+                            type="button"
+                            className={chrome.subsectionHeader}
+                            aria-expanded={!sectionCollapsed}
+                            data-ini-section-subheader={sectionGroup.section}
+                            onClick={() =>
+                              setCollapsed((prev) => ({
+                                ...prev,
+                                [collapseKey]: !sectionCollapsed,
+                              }))
+                            }
+                          >
+                            {sectionCollapsed ? (
+                              <CaretRight size={13} />
+                            ) : (
+                              <CaretDown size={13} />
+                            )}
+                            <Text fw={600} size="xs" className={chrome.subsectionHeaderLabel}>
+                              {sectionGroup.label}
+                            </Text>
+                            <Badge
+                              size="xs"
+                              variant="outline"
+                              className={chrome.subsectionCount}
+                            >
+                              {sectionGroup.rows.length}
+                            </Badge>
+                          </button>
+                          {!sectionCollapsed &&
+                            sectionGroup.rows.map((row) => (
+                              <ClusterIniTemplateSettingRow
+                                key={`${row.section}-${row.key}-${row.occurrence}`}
+                                row={row}
+                                onChange={updateValue}
+                              />
+                            ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              }
+
               const isCollapsed = collapsed[group.category] === true;
               return (
                 <div key={group.category} className={classes.sectionBlock}>
@@ -200,7 +329,7 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                   </button>
                   {!isCollapsed &&
                     group.rows.map((row) => (
-                      <SettingRow
+                      <ClusterIniTemplateSettingRow
                         key={`${row.section}-${row.key}-${row.occurrence}`}
                         row={row}
                         onChange={updateValue}
@@ -213,111 +342,5 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
         </div>
       </div>
     </div>
-  );
-}
-
-function SettingRow(props: {
-  row: IniSettingReference;
-  onChange: (
-    section: string,
-    key: string,
-    value: string,
-    occurrence?: number,
-  ) => void;
-}): ReactElement {
-  const { row, onChange } = props;
-  const kind = resolveControlKind(row.value, {
-    fileKey: row.fileKey,
-    section: row.section,
-    key: row.key,
-  });
-  const defaultValue = lookupDefaultValue(row.fileKey, row.section, row.key);
-  const canReset = defaultValue !== null && defaultValue !== row.value;
-  const label =
-    row.duplicateCount > 1 ? `${row.key} #${row.occurrence + 1}` : row.key;
-
-  return (
-    <div className={classes.row}>
-      <div>
-        <Text fw={600} size="sm">
-          {label}
-        </Text>
-        <Text c="dimmed" size="xs">
-          {sectionShortName(row.section)}
-        </Text>
-      </div>
-      <div>
-        {kind === "boolean" ? (
-          <Switch
-            checked={row.value.toLowerCase() === "true"}
-            onChange={(event) =>
-              onChange(
-                row.section,
-                row.key,
-                event.currentTarget.checked ? "True" : "False",
-                row.occurrence,
-              )
-            }
-          />
-        ) : kind === "number" ? (
-          <NumberInput
-            value={numberInputValueFromIni(row.value)}
-            onChange={(value) =>
-              onChange(
-                row.section,
-                row.key,
-                value === "" || value === undefined ? "" : String(value),
-                row.occurrence,
-              )
-            }
-            decimalScale={4}
-            hideControls={false}
-          />
-        ) : (
-          <TextInput
-            value={row.value}
-            onChange={(event) =>
-              onChange(
-                row.section,
-                row.key,
-                event.currentTarget.value,
-                row.occurrence,
-              )
-            }
-          />
-        )}
-      </div>
-      <Text c="dimmed" size="sm" lineClamp={3}>
-        {lookupSettingDescription(row.fileKey, row.section, row.key)}
-      </Text>
-      <ActionReset
-        disabled={!canReset}
-        onClick={() => {
-          if (defaultValue !== null) {
-            onChange(row.section, row.key, defaultValue, row.occurrence);
-          }
-        }}
-        label={row.key}
-      />
-    </div>
-  );
-}
-
-function ActionReset(props: {
-  disabled: boolean;
-  onClick: () => void;
-  label: string;
-}): ReactElement {
-  return (
-    <Button
-      variant="subtle"
-      size="compact-xs"
-      aria-label={`Reset ${props.label} to default`}
-      disabled={props.disabled}
-      onClick={props.onClick}
-      px={6}
-    >
-      <ArrowCounterClockwise size={16} />
-    </Button>
   );
 }
