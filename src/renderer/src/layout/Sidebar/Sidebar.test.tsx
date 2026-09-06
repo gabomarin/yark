@@ -246,7 +246,8 @@ describe("Sidebar Quit YARK (#532)", () => {
     expect(quitApp).not.toHaveBeenCalled();
 
     const dialog = await screen.findByRole("dialog");
-    expect(dialog).toHaveTextContent(/stops every managed server safely/i);
+    expect(dialog).toHaveAttribute("data-yark-quit-modal");
+    expect(dialog).toHaveTextContent(/stopped safely first/i);
     await user.click(within(dialog).getByRole("button", { name: "Quit YARK" }));
     expect(quitApp).toHaveBeenCalledTimes(1);
   });

@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import { useState } from "react";
 import {
   ArrowCircleUp,
   Circle,
@@ -25,7 +26,7 @@ import { useUiDensity } from "@app/AppProviders";
 import type { OfficialNetworkStatus } from "@shared/types";
 import { Fragment } from "react";
 import yarkLogo from "../../assets/brand/yark-logo.png";
-import { confirmQuitYark } from "./confirmQuitYark";
+import { QuitYarkModal } from "./QuitYarkModal";
 import classes from "./Sidebar.module.css";
 
 export type Route = "overview" | "downloads" | "clusters" | "backups" | "logs" | "settings";
@@ -47,7 +48,7 @@ const NAV_ITEMS: NavItem[] = [
 
 /** Operator-facing hover copy for sidebar Quit (#532). */
 export const QUIT_YARK_TOOLTIP =
-  "Quit YARK — Stops every managed server safely (save world, then exit), then closes YARK completely. To keep servers and backups running, close the window instead — YARK stays in the tray.";
+  "Stops servers safely and closes YARK. Close the window to keep them running in the tray.";
 
 interface Props {
   route: Route;
@@ -88,6 +89,7 @@ export function Sidebar(props: Props): ReactElement {
   const density = useUiDensity();
   const compact = density === "compact";
   const iconMode = props.iconMode === true;
+  const [quitOpened, setQuitOpened] = useState(false);
   const navIconSize = compact ? 16 : 18;
   // Keep secondary sidebar copy readable in Compact without enlarging Comfortable.
   const metadataTextSize = compact ? "sm" : "xs";
@@ -389,7 +391,7 @@ export function Sidebar(props: Props): ReactElement {
                 className={classes.quitIcon}
                 data-yark-quit
                 onClick={() => {
-                  confirmQuitYark();
+                  setQuitOpened(true);
                 }}
               >
                 <SignOut size={compact ? 14 : 16} weight="regular" aria-hidden />
@@ -404,7 +406,7 @@ export function Sidebar(props: Props): ReactElement {
                 className={classes.quitButton}
                 data-yark-quit
                 onClick={() => {
-                  confirmQuitYark();
+                  setQuitOpened(true);
                 }}
               >
                 Quit YARK
@@ -413,6 +415,17 @@ export function Sidebar(props: Props): ReactElement {
           </Tooltip>
         </div>
       </div>
+
+      <QuitYarkModal
+        opened={quitOpened}
+        onClose={() => {
+          setQuitOpened(false);
+        }}
+        onConfirm={() => {
+          setQuitOpened(false);
+          void window.api.quitApp();
+        }}
+      />
     </MantineStack>
   );
 }

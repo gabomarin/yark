@@ -12,7 +12,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Added
 
 - Visual INI editor (and Copy configuration) keep custom mod `[Section]` keys under **Other** (last category), nested by INI section, with expand/collapse controls on the Other header (#516).
-- Sidebar footer **Quit YARK** (hover tooltip + confirm modal; safe stop vs close-to-tray) uses the same quit path as the tray menu (#532).
+- Sidebar footer **Quit YARK** (hover tooltip + What's-new-style confirm; safe stop vs tray) uses the same quit path as the tray menu (#532).
 
 ### Changed
 

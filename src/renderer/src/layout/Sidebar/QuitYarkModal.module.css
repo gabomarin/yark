@@ -1,0 +1,66 @@
+.content {
+  --paper-bg: var(--app-color-panel);
+  --paper-background: var(--app-color-panel);
+  --paper-radius: var(--app-radius-md);
+  background: var(--app-color-panel);
+  border-radius: var(--app-radius-md);
+  border: 1px solid var(--app-color-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.header {
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: stretch;
+  background: var(--app-color-panel);
+  border-bottom: 1px solid var(--app-color-border);
+  padding: var(--app-space-md) var(--app-space-lg) var(--app-space-sm);
+}
+
+.headerTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--app-space-sm);
+}
+
+.title {
+  font-size: var(--mantine-font-size-md);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--app-color-text);
+}
+
+.meta {
+  margin-top: var(--app-space-xxs);
+  color: var(--app-color-muted);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  background: var(--app-color-panel);
+}
+
+.copy {
+  padding: var(--app-space-lg);
+}
+
+.hint {
+  color: var(--app-color-muted);
+}
+
+.footer {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--app-space-xs);
+  border-top: 1px solid var(--app-color-border);
+  padding: var(--app-space-sm) var(--app-space-lg);
+  background: var(--app-color-panel);
+}
