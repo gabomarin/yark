@@ -1,4 +1,4 @@
-import { CaretDown, CaretRight } from "@phosphor-icons/react";
+import { CaretDoubleDown, CaretDoubleRight, CaretDown, CaretRight } from "@phosphor-icons/react";
 import { ActionIcon, Badge, Group, Text, Tooltip } from "@mantine/core";
 import type { IniFileKey } from "@shared/types";
 import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
@@ -122,7 +122,7 @@ function OtherCategoryHeader(props: {
             aria-label="Collapse all Other sections"
             onClick={props.onCollapseSubgroups}
           >
-            <CaretRight size={14} />
+            <CaretDoubleRight size={14} />
           </ActionIcon>
         </Tooltip>
         <Tooltip label="Expand all sections">
@@ -133,7 +133,7 @@ function OtherCategoryHeader(props: {
             aria-label="Expand all Other sections"
             onClick={props.onExpandSubgroups}
           >
-            <CaretDown size={14} />
+            <CaretDoubleDown size={14} />
           </ActionIcon>
         </Tooltip>
       </Group>

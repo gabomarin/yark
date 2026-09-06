@@ -1,5 +1,11 @@
 import type { ReactElement } from "react";
-import { CaretDown, CaretRight, FunnelSimple } from "@phosphor-icons/react";
+import {
+  CaretDoubleDown,
+  CaretDoubleRight,
+  CaretDown,
+  CaretRight,
+  FunnelSimple,
+} from "@phosphor-icons/react";
 import { ActionIcon, Badge, Button, Group, Select, Text, Textarea, Tooltip } from "@mantine/core";
 import type { IniFileKey, ServerIniPayload } from "@shared/types";
 import { isAsaIgnoredIniMaxPlayers, isYarkOwnedIniKey } from "@shared/yark-owned-ini-keys";
@@ -135,15 +141,31 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
         <Button
           size="xs"
           variant="light"
+          color="gray"
+          leftSection={<CaretDoubleRight size={14} />}
           onClick={() => {
             const next: Record<string, boolean> = {};
-            for (const group of groupedRows) next[group.category] = true;
+            for (const group of groupedRows) {
+              if (group.sectionGroups !== undefined && group.sectionGroups.length > 0) {
+                for (const sectionGroup of group.sectionGroups) {
+                  next[iniUiSectionCollapseKey(group.category, sectionGroup.section)] = true;
+                }
+              } else {
+                next[group.category] = true;
+              }
+            }
             setCollapsed(next);
           }}
         >
           Collapse
         </Button>
-        <Button size="xs" variant="light" onClick={() => setCollapsed({})}>
+        <Button
+          size="xs"
+          variant="light"
+          color="gray"
+          leftSection={<CaretDoubleDown size={14} />}
+          onClick={() => setCollapsed({})}
+        >
           Expand
         </Button>
       </Group>
@@ -203,7 +225,7 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                               });
                             }}
                           >
-                            <CaretRight size={14} />
+                            <CaretDoubleRight size={14} />
                           </ActionIcon>
                         </Tooltip>
                         <Tooltip label="Expand all sections">
@@ -227,7 +249,7 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                               });
                             }}
                           >
-                            <CaretDown size={14} />
+                            <CaretDoubleDown size={14} />
                           </ActionIcon>
                         </Tooltip>
                       </Group>
