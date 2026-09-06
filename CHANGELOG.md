@@ -13,6 +13,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - Unpackaged / `npm run dev` no longer takes the single-instance lock, so a local build can run beside an installed YARK (packaged installs stay single-instance).
 
+### Fixed
+
+- YARK self-update no longer shows a raw `latest.yml` / HttpError blob during a mid-publish race: quiet startup checks stay silent, and **Check now** falls back to GitHub Releases or a short retry message (#521).
+
 ## [0.18.2] - 2026-09-03
 
 ### Fixed

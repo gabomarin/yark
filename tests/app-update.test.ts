@@ -9,6 +9,10 @@ import {
   pickNewestAllowedRelease,
   shouldPreserveAppUpdateProgress,
   stripVersionPrefix,
+  APP_UPDATE_FEED_NOT_READY_MESSAGE,
+  isTransientAppUpdateFeedError,
+  operatorFacingAppUpdateError,
+  restorePhaseAfterQuietFeedFailure,
 } from "../src/shared/app-update";
 
 describe("app-update helpers", () => {
@@ -112,5 +116,55 @@ describe("app-update helpers", () => {
     expect(shouldPreserveAppUpdateProgress("available", "0.9.1", "0.9.1")).toBe(
       false,
     );
+  });
+
+  it("classifies missing latest.yml and network blips as transient feed errors", () => {
+    expect(
+      isTransientAppUpdateFeedError(
+        new Error(
+          "Cannot find latest.yml in the latest release artifacts (https://github.com/gabomarin/yark/releases/download/v0.18.1/latest.yml): HttpError: 404",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      isTransientAppUpdateFeedError(
+        new Error('HttpError: 404 "Not Found"\n  at ...\nlatest.yml'),
+      ),
+    ).toBe(true);
+    expect(
+      isTransientAppUpdateFeedError(
+        Object.assign(new Error("getaddrinfo ENOTFOUND github.com"), {
+          code: "ENOTFOUND",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      isTransientAppUpdateFeedError(new Error("Downloaded update had an invalid version.")),
+    ).toBe(false);
+    expect(
+      isTransientAppUpdateFeedError(new Error("Check for a YARK update before downloading.")),
+    ).toBe(false);
+  });
+
+  it("maps transient feed errors to short operator copy and trims hard errors", () => {
+    expect(
+      operatorFacingAppUpdateError(
+        new Error(
+          "Cannot find latest.yml in the latest release artifacts (.../latest.yml): HttpError: 404",
+        ),
+      ),
+    ).toBe(APP_UPDATE_FEED_NOT_READY_MESSAGE);
+    expect(
+      operatorFacingAppUpdateError(new Error("Line one\nAuthorization: Bearer secret")),
+    ).toBe("Line one");
+  });
+
+  it("restores a non-error phase after a quiet transient feed failure", () => {
+    expect(restorePhaseAfterQuietFeedFailure("idle")).toBe("idle");
+    expect(restorePhaseAfterQuietFeedFailure("up-to-date")).toBe("up-to-date");
+    expect(restorePhaseAfterQuietFeedFailure("available")).toBe("available");
+    expect(restorePhaseAfterQuietFeedFailure("checking")).toBe("idle");
+    expect(restorePhaseAfterQuietFeedFailure("error")).toBe("idle");
+    expect(restorePhaseAfterQuietFeedFailure("ready")).toBe("ready");
   });
 });

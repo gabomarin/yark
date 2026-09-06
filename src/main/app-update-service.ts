@@ -6,8 +6,11 @@ import {
   createIdleAppUpdateStatus,
   installBlockMessage,
   isAppUpdateInFlight,
+  isTransientAppUpdateFeedError,
+  operatorFacingAppUpdateError,
   parseReleaseVersion,
   pickNewestAllowedRelease,
+  restorePhaseAfterQuietFeedFailure,
   shouldPreserveAppUpdateProgress,
   YARK_RELEASES_API,
   YARK_RELEASES_URL,
@@ -42,6 +45,8 @@ export class AppUpdateService {
   private readonly listeners = new Set<StatusListener>();
   private startupTimer: NodeJS.Timeout | null = null;
   private configured = false;
+  /** Active packaged feed check; `error` events defer to `checkForUpdate` (#521). Cleared in that method's `finally` so suppression cannot stick across checks. */
+  private activeCheckKind: "quiet" | "manual" | null = null;
 
   constructor(
     private readonly safety: AppUpdateSafetyGate,
@@ -69,7 +74,7 @@ export class AppUpdateService {
       this.startupTimer = null;
       // Do not wipe a finished/in-progress download with the startup check.
       if (isAppUpdateInFlight(this.status.phase)) return;
-      void this.checkForUpdate().catch((error: unknown) => {
+      void this.checkForUpdate({ quiet: true }).catch((error: unknown) => {
         console.error("Quiet YARK update check failed", error);
       });
     }, delayMs);
@@ -83,8 +88,10 @@ export class AppUpdateService {
     }
   }
 
-  async checkForUpdate(): Promise<AppUpdateStatus> {
+  async checkForUpdate(options?: { quiet?: boolean }): Promise<AppUpdateStatus> {
+    const quiet = options?.quiet === true;
     const preserveInFlight = isAppUpdateInFlight(this.status.phase);
+    const phaseBeforeCheck = this.status.phase;
     if (!preserveInFlight) {
       this.emit({
         ...this.status,
@@ -94,6 +101,7 @@ export class AppUpdateService {
       });
     }
 
+    this.activeCheckKind = quiet ? "quiet" : "manual";
     try {
       if (this.isPackaged) {
         this.ensureUpdaterConfigured();
@@ -119,19 +127,72 @@ export class AppUpdateService {
       await this.checkViaGitHubApi();
       return this.getStatus();
     } catch (error: unknown) {
-      // Keep a downloaded/in-progress update usable if the re-check fails.
-      if (isAppUpdateInFlight(this.status.phase)) {
+      return await this.handleCheckFailure(error, quiet, phaseBeforeCheck);
+    } finally {
+      this.activeCheckKind = null;
+    }
+  }
+
+  /**
+   * Classify feed/network failures for quiet vs manual checks (#521).
+   * Download/install errors stay hard elsewhere.
+   */
+  private async handleCheckFailure(
+    error: unknown,
+    quiet: boolean,
+    phaseBeforeCheck: AppUpdateStatus["phase"],
+  ): Promise<AppUpdateStatus> {
+    // Keep a downloaded/in-progress update usable if the re-check fails.
+    if (isAppUpdateInFlight(this.status.phase)) {
+      return this.getStatus();
+    }
+
+    if (isTransientAppUpdateFeedError(error)) {
+      if (quiet) {
+        console.warn("Quiet YARK update check: update feed not ready yet", error);
+        this.emit({
+          ...this.status,
+          phase: restorePhaseAfterQuietFeedFailure(phaseBeforeCheck),
+          error: null,
+          percent: null,
+        });
         return this.getStatus();
       }
-      const message = error instanceof Error ? error.message : String(error);
+
+      // Manual Check now: prefer GitHub API when latest.yml is mid-publish.
+      if (this.isPackaged) {
+        try {
+          await this.checkViaGitHubApi();
+          return this.getStatus();
+        } catch (fallbackError: unknown) {
+          console.warn(
+            "YARK update feed missing; GitHub API fallback also failed",
+            fallbackError,
+          );
+        }
+      }
+
+      console.warn(
+        "YARK update feed not ready; showing short operator copy",
+        error,
+      );
       this.emit({
         ...this.status,
         phase: "error",
-        error: message,
+        error: operatorFacingAppUpdateError(error),
         percent: null,
       });
       return this.getStatus();
     }
+
+    console.error("YARK update check failed", error);
+    this.emit({
+      ...this.status,
+      phase: "error",
+      error: operatorFacingAppUpdateError(error),
+      percent: null,
+    });
+    return this.getStatus();
   }
 
   async downloadUpdate(): Promise<AppUpdateStatus> {
@@ -165,7 +226,8 @@ export class AppUpdateService {
       }
       return this.getStatus();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
+      console.error("YARK update download failed", error);
+      const message = operatorFacingAppUpdateError(error);
       this.emit({
         ...this.status,
         phase: "error",
@@ -271,10 +333,23 @@ export class AppUpdateService {
     });
 
     autoUpdater.on("error", (error: Error) => {
+      // Feed-check failures are classified in `checkForUpdate` catch (#521).
+      // `activeCheckKind` is always cleared in that method's `finally`.
+      if (this.activeCheckKind !== null) {
+        return;
+      }
+      if (
+        !isAppUpdateInFlight(this.status.phase)
+        && isTransientAppUpdateFeedError(error)
+      ) {
+        console.warn("YARK updater: transient feed error ignored", error);
+        return;
+      }
+      console.error("YARK updater error", error);
       this.emit({
         ...this.status,
         phase: "error",
-        error: error.message,
+        error: operatorFacingAppUpdateError(error),
         percent: null,
       });
     });

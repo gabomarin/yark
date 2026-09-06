@@ -170,7 +170,10 @@ against GitHub Releases (`latest.yml` from the release workflow). While the app 
 as prerelease). From `1.0.0+`, only non-prerelease releases count. No silent
 download — operator must Check → Download → Restart and install. A later
 Check now (or the quiet ~60s startup check) must not downgrade `ready` /
-`downloading` back to Download for the same version.
+`downloading` back to Download for the same version. If `latest.yml` is missing
+mid-publish (tag before assets finish uploading), the quiet check stays silent
+and **Check now** falls back to the GitHub Releases API or shows a short “try
+again in a few minutes” line instead of the raw `HttpError` (#521).
 
 | Control | IPC | Notes |
 | --- | --- | --- |

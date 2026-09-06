@@ -207,3 +207,107 @@ export function createIdleAppUpdateStatus(
     installBlockedMessage: installBlockMessage(isPackaged ? "not-ready" : "dev"),
   };
 }
+
+/** Operator copy when the GitHub update feed is incomplete mid-publish (#521). */
+export const APP_UPDATE_FEED_NOT_READY_MESSAGE =
+  "Update feed not ready yet — try again in a few minutes.";
+
+/**
+ * True for mid-publish / network blips on the packaged update feed (missing
+ * `latest.yml`, 404, DNS/timeouts). Quiet checks should stay silent; manual
+ * Check now may fall back to the GitHub API or show short copy (#521).
+ *
+ * Classification is intentionally string/`code`-based: electron-updater does not
+ * expose a stable typed reason for “feed incomplete”. Match the known
+ * `Cannot find latest.yml… HttpError: 404` wording and common Node network
+ * codes; revisit this helper if electron-updater or the GitHub provider changes
+ * those messages.
+ */
+export function isTransientAppUpdateFeedError(error: unknown): boolean {
+  const message = errorMessageLower(error);
+  const code = errorCodeLower(error);
+
+  if (
+    message.includes("latest.yml")
+    && (message.includes("404")
+      || message.includes("cannot find")
+      || message.includes("httperror")
+      || message.includes("not found"))
+  ) {
+    return true;
+  }
+  // Incomplete release assets while the tag exists but the workflow is still uploading.
+  if (
+    message.includes("cannot find")
+    && message.includes("latest release artifacts")
+  ) {
+    return true;
+  }
+
+  const networkCodes = new Set([
+    "enotfound",
+    "etimedout",
+    "econnreset",
+    "econnrefused",
+    "eai_again",
+    "enetunreach",
+    "err_internet_disconnected",
+  ]);
+  if (networkCodes.has(code)) return true;
+  if (networkCodes.has(message)) return true;
+  for (const token of networkCodes) {
+    if (message.includes(token)) return true;
+  }
+  if (message.includes("network") && message.includes("timeout")) return true;
+  if (message.includes("getaddrinfo")) return true;
+
+  return false;
+}
+
+/**
+ * Single-line operator-facing updater error. Transient feed races use the
+ * fixed mid-publish copy; other failures keep the first line only so Settings
+ * never shows multi-line HTTP dumps (#521). Full error objects must still be
+ * logged by callers — detail past line 1 is intentionally dropped from the UI.
+ */
+export function operatorFacingAppUpdateError(error: unknown): string {
+  if (isTransientAppUpdateFeedError(error)) {
+    return APP_UPDATE_FEED_NOT_READY_MESSAGE;
+  }
+  const raw = error instanceof Error ? error.message : String(error);
+  const firstLine = (raw.split(/\r?\n/)[0] ?? raw).trim();
+  if (firstLine.length === 0) {
+    return "YARK update check failed.";
+  }
+  return firstLine.length > 200 ? `${firstLine.slice(0, 197)}...` : firstLine;
+}
+
+/**
+ * Phase to keep after a quiet check hits a transient feed failure — never
+ * `error` or `checking` (#521).
+ */
+export function restorePhaseAfterQuietFeedFailure(
+  phaseBeforeCheck: AppUpdatePhase,
+): AppUpdatePhase {
+  if (phaseBeforeCheck === "downloading" || phaseBeforeCheck === "ready") {
+    return phaseBeforeCheck;
+  }
+  if (phaseBeforeCheck === "error" || phaseBeforeCheck === "checking") {
+    return "idle";
+  }
+  return phaseBeforeCheck;
+}
+
+function errorMessageLower(error: unknown): string {
+  if (error instanceof Error) return error.message.toLowerCase();
+  return String(error).toLowerCase();
+}
+
+function errorCodeLower(error: unknown): string {
+  if (error === null || typeof error !== "object") return "";
+  if (!("code" in error)) return "";
+  const code = (error as { code: unknown }).code;
+  if (typeof code === "string") return code.toLowerCase();
+  if (typeof code === "number") return String(code);
+  return "";
+}
