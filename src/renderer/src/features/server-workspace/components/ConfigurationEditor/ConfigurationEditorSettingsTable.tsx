@@ -3,7 +3,12 @@ import { Badge, Group, Text } from "@mantine/core";
 import type { IniFileKey } from "@shared/types";
 import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
 import type { ReactElement } from "react";
-import type { IniSettingReference, IniUiCategoryGroup } from "../../iniModel";
+import {
+  iniUiSectionCollapseKey,
+  type IniSettingReference,
+  type IniUiCategoryGroup,
+  type IniUiSectionGroup,
+} from "../../iniModel";
 import classes from "./ConfigurationEditor.module.css";
 import { IniSettingRow } from "./IniSettingRow";
 
@@ -22,6 +27,74 @@ interface Props {
   ) => void;
   onResetRowToDefault: (row: IniSettingReference) => void;
   onOpenAdminList?: () => void;
+}
+
+function renderSettingRows(
+  rows: IniSettingReference[],
+  busy: boolean,
+  onUpdateValue: Props["onUpdateValue"],
+  onResetRowToDefault: Props["onResetRowToDefault"],
+  onOpenAdminList: Props["onOpenAdminList"],
+): ReactElement[] {
+  return rows.map((row) => {
+    const settingRow = row;
+    const controlId = `${settingRow.fileKey}\u001f${settingRow.section}\u001f${settingRow.key}\u001f${settingRow.occurrence}`;
+    return (
+      <IniSettingRow
+        key={controlId}
+        row={settingRow}
+        busy={busy}
+        onUpdateValue={onUpdateValue}
+        onResetRowToDefault={onResetRowToDefault}
+        onOpenAdminList={onOpenAdminList}
+      />
+    );
+  });
+}
+
+function renderSectionGroups(
+  sectionGroups: IniUiSectionGroup[],
+  category: IniUiCategoryGroup["category"],
+  collapsedSections: Record<string, boolean>,
+  busy: boolean,
+  onToggleSection: (sectionName: string) => void,
+  onUpdateValue: Props["onUpdateValue"],
+  onResetRowToDefault: Props["onResetRowToDefault"],
+  onOpenAdminList: Props["onOpenAdminList"],
+): ReactElement[] {
+  return sectionGroups.map((sectionGroup) => {
+    const collapseKey = iniUiSectionCollapseKey(category, sectionGroup.section);
+    const sectionCollapsed = collapsedSections[collapseKey] === true;
+    return (
+      <div key={collapseKey}>
+        <button
+          type="button"
+          className={chrome.subsectionHeader}
+          aria-expanded={!sectionCollapsed}
+          data-ini-section-subheader={sectionGroup.section}
+          onClick={() => onToggleSection(collapseKey)}
+        >
+          <Group gap="xs" wrap="nowrap">
+            {sectionCollapsed ? <CaretRight size={13} /> : <CaretDown size={13} />}
+            <Text fw={600} size="xs" className={chrome.subsectionHeaderLabel}>
+              {sectionGroup.label}
+            </Text>
+            <Badge size="xs" variant="outline" className={chrome.subsectionCount}>
+              {sectionGroup.rows.length}
+            </Badge>
+          </Group>
+        </button>
+        {!sectionCollapsed &&
+          renderSettingRows(
+            sectionGroup.rows as IniSettingReference[],
+            busy,
+            onUpdateValue,
+            onResetRowToDefault,
+            onOpenAdminList,
+          )}
+      </div>
+    );
+  });
 }
 
 export function ConfigurationEditorSettingsTable(props: Props): ReactElement {
@@ -57,6 +130,7 @@ export function ConfigurationEditorSettingsTable(props: Props): ReactElement {
         {!loading &&
           groupedRows.map((group) => {
             const collapsed = collapsedSections[group.category] === true;
+            const sectionGroups = group.sectionGroups;
             return (
               <div key={group.category} className={classes.sectionBlock}>
                 <button
@@ -77,20 +151,24 @@ export function ConfigurationEditorSettingsTable(props: Props): ReactElement {
                 </button>
 
                 {!collapsed &&
-                  group.rows.map((row) => {
-                    const settingRow = row as IniSettingReference;
-                    const controlId = `${settingRow.fileKey}\u001f${settingRow.section}\u001f${settingRow.key}\u001f${settingRow.occurrence}`;
-                    return (
-                      <IniSettingRow
-                        key={controlId}
-                        row={settingRow}
-                        busy={busy}
-                        onUpdateValue={onUpdateValue}
-                        onResetRowToDefault={onResetRowToDefault}
-                        onOpenAdminList={props.onOpenAdminList}
-                      />
-                    );
-                  })}
+                  (sectionGroups !== undefined && sectionGroups.length > 0
+                    ? renderSectionGroups(
+                        sectionGroups,
+                        group.category,
+                        collapsedSections,
+                        busy,
+                        onToggleSection,
+                        onUpdateValue,
+                        onResetRowToDefault,
+                        props.onOpenAdminList,
+                      )
+                    : renderSettingRows(
+                        group.rows as IniSettingReference[],
+                        busy,
+                        onUpdateValue,
+                        onResetRowToDefault,
+                        props.onOpenAdminList,
+                      ))}
               </div>
             );
           })}

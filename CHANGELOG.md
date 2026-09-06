@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Visual INI editor (and Copy configuration) put custom mod `[Section]` keys under **Mods**, grouped by INI section, instead of dumping them into **Other** (#516).
+
 ### Changed
 
 - Unpackaged / `npm run dev` no longer takes the single-instance lock, so a local build can run beside an installed YARK (packaged installs stay single-instance).

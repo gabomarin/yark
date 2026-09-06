@@ -40,4 +40,28 @@ describe("listIniUiCategoryTree", () => {
       { section: "ServerSettings", key: "XPMultiplier" },
     ]);
   });
+
+  it("puts custom mod sections under Mods like the visual editor", () => {
+    const text = [
+      "[ServerSettings]",
+      "ActiveMods=1,2",
+      "ObscureVanillaLeftoverFlag=False",
+      "[SuperStructures]",
+      "EnableSomething=True",
+      "",
+    ].join("\n");
+
+    const tree = listIniUiCategoryTree(text, "gameUserSettings");
+    const mods = tree.find((c) => c.id === "mods");
+    expect(mods?.keys).toEqual(
+      expect.arrayContaining([
+        { section: "ServerSettings", key: "ActiveMods" },
+        { section: "SuperStructures", key: "EnableSomething" },
+      ]),
+    );
+    expect(mods?.keys.some((k) => k.section === "SuperStructures")).toBe(true);
+    const other = tree.find((c) => c.id === "other");
+    expect(other?.keys.some((k) => k.key === "ObscureVanillaLeftoverFlag")).toBe(true);
+    expect(other?.keys.some((k) => k.section === "SuperStructures")).toBeFalsy();
+  });
 });

@@ -54,3 +54,42 @@
   background: color-mix(in srgb, var(--ark-blue-1) 40%, var(--app-color-ini-category)) !important;
   color: var(--ark-blue-11) !important;
 }
+
+/* Nested INI section under Mods / multi-section Other */
+.subsectionHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-xs);
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 8px 14px 8px 28px;
+  border: none;
+  border-bottom: 1px solid var(--app-color-border-subtle);
+  border-radius: 0;
+  background: color-mix(in srgb, var(--app-color-surface-control) 88%, var(--ark-blue-2));
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.subsectionHeader:hover {
+  background: color-mix(in srgb, var(--app-color-surface-control) 70%, var(--ark-blue-3));
+}
+
+.subsectionHeader:focus-visible {
+  outline: 2px solid var(--ark-blue-9);
+  outline-offset: -2px;
+}
+
+.subsectionHeaderLabel {
+  color: var(--app-color-text);
+  letter-spacing: 0.01em;
+}
+
+.subsectionCount {
+  border: 1px solid var(--app-color-border-subtle) !important;
+  background: transparent !important;
+  color: var(--app-color-muted) !important;
+}

@@ -6,7 +6,6 @@ import {
 } from "@shared/asa-server-settings";
 import { lookupIniSettingInput } from "@shared/ini-setting-meta";
 import {
-  ASA_UI_CATEGORIES,
   asaUiCategoryLabel,
   resolveAsaUiCategory,
   type AsaUiCategoryId,
@@ -22,6 +21,16 @@ import {
   type IniTextRow,
 } from "@shared/ini-text";
 import { isAsaIgnoredIniMaxPlayers, isYarkOwnedIniKey } from "@shared/yark-owned-ini-keys";
+
+export type {
+  IniUiCategoryGroup,
+  IniUiSectionGroup,
+} from "./iniUiCategoryGrouping";
+export {
+  groupRowsByUiCategory,
+  groupSettingReferencesByUiCategory,
+  iniUiSectionCollapseKey,
+} from "./iniUiCategoryGrouping";
 
 export interface IniSettingRow {
   section: string;
@@ -40,12 +49,6 @@ export interface IniSettingReference extends IniSettingRow {
 export type IniFilterId = "all" | AsaUiCategoryId;
 
 export type IniControlKind = "boolean" | "number" | "text";
-
-export interface IniUiCategoryGroup {
-  category: AsaUiCategoryId;
-  label: string;
-  rows: IniSettingRow[];
-}
 
 export function textForFile(payload: ServerIniPayload, fileKey: IniFileKey): string {
   return fileKey === "gameUserSettings" ? payload.gameUserSettings : payload.game;
@@ -299,75 +302,6 @@ export function filterIniSettingReferences(
   return rows.filter(
     (row) => filterIniRows([row], search, filter, row.fileKey).length === 1,
   );
-}
-
-/** Group by UI category (heuristic JSON), in taxonomy order. */
-export function groupRowsByUiCategory(
-  rows: IniSettingRow[],
-  fileKey: IniFileKey,
-): IniUiCategoryGroup[] {
-  const buckets = new Map<AsaUiCategoryId, IniSettingRow[]>();
-  for (const row of rows) {
-    const category = resolveAsaUiCategory(fileKey, row.section, row.key);
-    const list = buckets.get(category);
-    if (list !== undefined) {
-      list.push(row);
-    } else {
-      buckets.set(category, [row]);
-    }
-  }
-
-  const groups: IniUiCategoryGroup[] = [];
-  for (const def of ASA_UI_CATEGORIES) {
-    const list = buckets.get(def.id);
-    if (list === undefined || list.length === 0) {
-      continue;
-    }
-    list.sort((a, b) => a.key.localeCompare(b.key) || a.section.localeCompare(b.section));
-    groups.push({
-      category: def.id,
-      label: asaUiCategoryLabel(def.id),
-      rows: list,
-    });
-  }
-  return groups;
-}
-
-export function groupSettingReferencesByUiCategory(
-  rows: IniSettingReference[],
-): Array<{
-  category: AsaUiCategoryId;
-  label: string;
-  rows: IniSettingReference[];
-}> {
-  const buckets = new Map<AsaUiCategoryId, IniSettingReference[]>();
-  for (const row of rows) {
-    const category = resolveAsaUiCategory(row.fileKey, row.section, row.key);
-    const list = buckets.get(category);
-    if (list !== undefined) {
-      list.push(row);
-    } else {
-      buckets.set(category, [row]);
-    }
-  }
-
-  return ASA_UI_CATEGORIES.flatMap((definition) => {
-    const list = buckets.get(definition.id);
-    if (list === undefined || list.length === 0) {
-      return [];
-    }
-    list.sort(
-      (a, b) =>
-        a.key.localeCompare(b.key) ||
-        a.fileKey.localeCompare(b.fileKey) ||
-        a.section.localeCompare(b.section),
-    );
-    return [{
-      category: definition.id,
-      label: asaUiCategoryLabel(definition.id),
-      rows: list,
-    }];
-  });
 }
 
 function rowIdentity(row: Pick<IniTextRow, "section" | "key">): string {
