@@ -4,7 +4,7 @@ export type { UiDensity } from "@shared/ui-density";
 
 export const radixPalette = {
   background: "#0c1427",
-  /** INI editor category group header fill. */
+  /** Legacy Launch Options tint (`--ark-blue-ini-category`). INI headers use surface-control. */
   iniCategory: "#131F43",
   blue: [
     "#061232",

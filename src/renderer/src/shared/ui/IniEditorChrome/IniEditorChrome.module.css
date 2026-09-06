@@ -1,6 +1,6 @@
 /**
  * Shared INI editor chrome (nav row + visual category headers).
- * Category header bar: --app-color-ini-category (#131F43).
+ * Category header bar: --app-color-ini-category → surface-control; blue rail only.
  */
 
 .nav {
@@ -25,7 +25,7 @@
   margin: 0;
   padding: 14px;
   border: none;
-  border-block: 1px solid color-mix(in srgb, var(--ark-blue-6) 55%, transparent);
+  border-block: 1px solid var(--app-color-border-subtle);
   border-radius: 0;
   background: var(--app-color-ini-category);
   color: inherit;
@@ -36,7 +36,7 @@
 }
 
 .sectionHeader:hover {
-  background: color-mix(in srgb, var(--app-color-ini-category) 72%, var(--ark-blue-3));
+  background: var(--app-color-surface-control-hover);
 }
 
 .sectionHeader:focus-visible {
@@ -45,14 +45,14 @@
 }
 
 .sectionHeaderLabel {
-  color: var(--ark-blue-12);
+  color: var(--app-color-text);
   letter-spacing: 0.01em;
 }
 
 .sectionCount {
-  border: 1px solid color-mix(in srgb, var(--ark-blue-8) 55%, transparent) !important;
-  background: color-mix(in srgb, var(--ark-blue-1) 40%, var(--app-color-ini-category)) !important;
-  color: var(--ark-blue-11) !important;
+  border: 1px solid var(--app-color-border-subtle) !important;
+  background: transparent !important;
+  color: var(--app-color-muted) !important;
 }
 
 /* Other category: not collapsible; expand/collapse icons target section subgroups */
@@ -65,7 +65,7 @@
   margin: 0;
   padding: 14px;
   border: none;
-  border-block: 1px solid color-mix(in srgb, var(--ark-blue-6) 55%, transparent);
+  border-block: 1px solid var(--app-color-border-subtle);
   border-radius: 0;
   background: var(--app-color-ini-category);
   color: inherit;
@@ -86,7 +86,7 @@
   border: none;
   border-bottom: 1px solid var(--app-color-border-subtle);
   border-radius: 0;
-  background: color-mix(in srgb, var(--app-color-surface-control) 88%, var(--ark-blue-2));
+  background: color-mix(in srgb, var(--app-color-surface-control) 88%, var(--ark-gray-2));
   color: inherit;
   font: inherit;
   text-align: left;
@@ -94,7 +94,7 @@
 }
 
 .subsectionHeader:hover {
-  background: color-mix(in srgb, var(--app-color-surface-control) 70%, var(--ark-blue-3));
+  background: var(--app-color-surface-control-hover);
 }
 
 .subsectionHeader:focus-visible {
