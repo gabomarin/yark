@@ -1,6 +1,8 @@
 /**
- * Shared INI editor chrome (nav row + visual category headers).
- * Category header: cool slate (--app-color-ini-category / #1c2538) + blue rail.
+ * Shared INI editor chrome (nav row + visual category / Other subgroup headers).
+ * Categories: deep blue + subtle ~90% lift + 3px rail.
+ * Other subgroups: surface-control gray + ~80%/20% shade (no blue wash).
+ * See docs/design-system.md (INI editor chrome exception).
  */
 
 .nav {
@@ -15,6 +17,17 @@
   padding-bottom: 1px;
 }
 
+/* Shared category-band fill — mostly blue; soft deepen only (~10% toward black). */
+.sectionHeader,
+.sectionHeaderStatic {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--app-color-ini-category) 90%, var(--ark-blue-5)) 0%,
+    var(--app-color-ini-category) 55%,
+    color-mix(in srgb, var(--app-color-ini-category) 90%, #000) 100%
+  );
+}
+
 /* Native <button> — avoid Mantine UnstyledButton resetting background/padding. */
 .sectionHeader {
   display: flex;
@@ -25,9 +38,9 @@
   margin: 0;
   padding: 14px;
   border: none;
-  border-block: 1px solid color-mix(in srgb, var(--ark-blue-6) 35%, var(--app-color-border-subtle));
+  /* Bottom only — border-block stacks into thick lines when collapsed */
+  border-bottom: 1px solid color-mix(in srgb, var(--ark-blue-8) 18%, var(--app-color-border-subtle));
   border-radius: 0;
-  background: var(--app-color-ini-category);
   color: inherit;
   font: inherit;
   text-align: left;
@@ -36,7 +49,11 @@
 }
 
 .sectionHeader:hover {
-  background: color-mix(in srgb, var(--app-color-ini-category) 72%, var(--ark-blue-4));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--app-color-ini-category) 82%, var(--ark-blue-5)) 0%,
+    color-mix(in srgb, var(--app-color-ini-category) 88%, #000) 100%
+  );
 }
 
 .sectionHeader:focus-visible {
@@ -65,16 +82,15 @@
   margin: 0;
   padding: 14px;
   border: none;
-  border-block: 1px solid color-mix(in srgb, var(--ark-blue-6) 35%, var(--app-color-border-subtle));
+  border-bottom: 1px solid color-mix(in srgb, var(--ark-blue-8) 18%, var(--app-color-border-subtle));
   border-radius: 0;
-  background: var(--app-color-ini-category);
   color: inherit;
   font: inherit;
   text-align: left;
   box-shadow: inset 3px 0 0 0 var(--ark-blue-9);
 }
 
-/* Nested INI section under Other — stays on neutral control so categories read louder */
+/* Nested under Other — control gray with a soft ~80%/20% darken (quieter than categories). */
 .subsectionHeader {
   display: flex;
   align-items: center;
@@ -86,7 +102,11 @@
   border: none;
   border-bottom: 1px solid var(--app-color-border-subtle);
   border-radius: 0;
-  background: var(--app-color-surface-control);
+  background: linear-gradient(
+    180deg,
+    var(--app-color-surface-control) 0%,
+    color-mix(in srgb, var(--app-color-surface-control) 80%, #000) 100%
+  );
   color: inherit;
   font: inherit;
   text-align: left;
@@ -94,7 +114,11 @@
 }
 
 .subsectionHeader:hover {
-  background: var(--app-color-surface-control-hover);
+  background: linear-gradient(
+    180deg,
+    var(--app-color-surface-control-hover) 0%,
+    color-mix(in srgb, var(--app-color-surface-control-hover) 78%, #000) 100%
+  );
 }
 
 .subsectionHeader:focus-visible {

@@ -5,10 +5,10 @@ export type { UiDensity } from "@shared/ui-density";
 export const radixPalette = {
   background: "#0c1427",
   /**
-   * INI category header fill — cool slate between hull (`#0c1427`) and control
-   * gray (`#303030`). Enough lift vs workspace chrome without a navy wash.
+   * INI category header fill — deep blue (not gray-slate) between hull
+   * (`#0c1427`) and ark-blue-2. Base for the subtle ~90% blue header lift.
    */
-  iniCategory: "#1c2538",
+  iniCategory: "#0d1836",
   blue: [
     "#061232",
     "#06143c",
