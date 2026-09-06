@@ -18,8 +18,11 @@ export function gameUserSettingsIniPath(installDir: string): string {
 }
 
 /**
- * Writes profile networking / auth settings into GameUserSettings.ini so they
- * do not need to appear on the dedicated-server command line.
+ * Low-level idle disk write of profile networking / auth into GameUserSettings.ini.
+ *
+ * Do **not** call this while the dedicated process may be live — ASA can clobber
+ * the file. Prefer {@link applyProfileOwnedIni} / `IniService.syncProfileOwnedKeys`
+ * so running servers queue into the pending INI draft (#530).
  *
  * Keys (must stay aligned with `@shared/yark-owned-ini-keys` `profileSync`):
  * - `[ServerSettings]` RCONEnabled, RCONPort, ServerAdminPassword, ServerPassword
@@ -42,4 +45,23 @@ export async function syncProfileSettingsToIni(
 
   await mkdir(dirname(path), { recursive: true });
   await writeFile(path, text, "utf8");
+}
+
+/**
+ * Apply profile-owned GUS keys. When `syncViaIniService` is wired (production),
+ * uses the pending-queue gate while ASA is live; otherwise falls back to a
+ * direct disk write (unit tests, clone seed on a stopped install).
+ */
+export async function applyProfileOwnedIni(
+  profile: ServerProfile,
+  syncViaIniService?: (
+    serverId: string,
+    profile?: ServerProfile,
+  ) => Promise<void>,
+): Promise<void> {
+  if (syncViaIniService !== undefined) {
+    await syncViaIniService(profile.id, profile);
+    return;
+  }
+  await syncProfileSettingsToIni(profile);
 }

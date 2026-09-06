@@ -23,6 +23,7 @@ import { ClusterIniTemplateService } from "../backend/domains/config/cluster-ini
 import { ClusterIniTemplateApplyService } from "../backend/domains/config/cluster-ini-template-apply-service";
 import { ConfigTransferService } from "../backend/domains/config/config-transfer-service";
 import { ClusterIniTemplateRepository } from "../backend/infra/db/cluster-ini-template-repository";
+import { PendingServerIniRepository } from "../backend/infra/db/pending-server-ini-repository";
 import { InstanceService } from "../backend/domains/instances/instance-service";
 import { runAutoStartOnLaunch } from "../backend/domains/instances/auto-start";
 import {
@@ -88,7 +89,7 @@ import type {
   ServerCrashedNotifyPayload,
   SteamCmdJobTerminalPayload,
 } from "../shared/os-notification-events";
-import { IPC_PUSH, type SteamCmdProgressPush, type ServerStopProgressPush, type MoveInstallProgressPush, type CloneInstallProgressPush, type RconStatusChangedPush, type PlayerListUpdatedPush, type ProcessMetricsUpdatedPush } from "../shared/ipc";
+import { IPC_PUSH, type SteamCmdProgressPush, type ServerStopProgressPush, type MoveInstallProgressPush, type CloneInstallProgressPush, type RconStatusChangedPush, type PlayerListUpdatedPush, type ProcessMetricsUpdatedPush, type ServerIniChangedPush } from "../shared/ipc";
 import type { AppUpdateStatus } from "../shared/app-update";
 import { normalizeCloneInstallProgress, normalizeServerStopProgress } from "../shared/types";
 import type { BackupChangedPush } from "../backend/domains/backups/backup-service";
@@ -417,6 +418,11 @@ if (isPrimaryInstance) {
       settings,
       join(userData, "backups"),
     );
+    const pendingServerIniRepo = new PendingServerIniRepository(db);
+    const iniService = new IniService(repo, locks, {
+      pending: pendingServerIniRepo,
+      isServerActive: (serverId) => processManager.isActive(serverId),
+    });
     const instances = new InstanceService(
       repo,
       processManager,
@@ -427,6 +433,17 @@ if (isPrimaryInstance) {
           parseOpenNativeConsolePref(
             settings.get(OPEN_NATIVE_CONSOLE_SETTING_KEY),
           ),
+        flushPendingServerIni: async (serverId) => {
+          const flushed = await iniService.flushPendingServerIni(serverId);
+          if (flushed) {
+            void backupService
+              .createIniSaveBackup(serverId)
+              .catch(() => undefined);
+          }
+          return flushed;
+        },
+        syncProfileOwnedKeys: (serverId, profile) =>
+          iniService.syncProfileOwnedKeys(serverId, profile),
       },
     );
     const backupScheduler = new BackupScheduler(backupService);
@@ -461,7 +478,6 @@ if (isPrimaryInstance) {
       processManager,
     );
     const processMetricsSampler = new ProcessMetricsSampler(processManager);
-    const iniService = new IniService(repo, locks);
     const clusterIniRepo = new ClusterIniTemplateRepository(db);
     const clusterIniService = new ClusterIniTemplateService(clusterIniRepo);
     const clusterIniApplyService = new ClusterIniTemplateApplyService(
@@ -796,6 +812,10 @@ if (isPrimaryInstance) {
 
     backupService.on("changed", (payload: BackupChangedPush) => {
       sendToRenderer(IPC_PUSH.backupsChanged, payload);
+    });
+
+    iniService.on("changed", (payload: ServerIniChangedPush) => {
+      sendToRenderer(IPC_PUSH.serverIniChanged, payload);
     });
 
     instances.on("rcon-status-changed", (payload: RconStatusChangedPush) => {

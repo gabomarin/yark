@@ -589,6 +589,8 @@ export class ConfigTransferService {
     if (selection.game.enabled) {
       await writeFile(current.gameIniPath, payload.game, "utf8");
     }
+    // Disk is authoritative after transfer; drop any leftover queue (#530).
+    this.ini.clearPendingServerIni(current.serverId);
   }
 
   private async rollbackTarget(

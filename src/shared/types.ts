@@ -951,6 +951,19 @@ export interface ServerIniSnapshot {
   /** True if the file already existed on disk before this read. */
   gameIniExisted: boolean;
   payload: ServerIniPayload;
+  /**
+   * True when `payload` is a durable pending draft (queued while the process
+   * was live) rather than the live install files alone (#530).
+   */
+  pending: boolean;
+  /** ISO timestamp of the pending draft when `pending` is true. */
+  pendingUpdatedAt: string | null;
+}
+
+/** Result of `ini:save` — may be queued instead of written to disk (#530). */
+export interface ServerIniSaveResult extends IniPreview {
+  /** True when the payload was queued for flush after the process stops. */
+  pending: boolean;
 }
 
 /**

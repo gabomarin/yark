@@ -14,10 +14,25 @@ import {
 } from "@shared/server-profile";
 import type { ServerProfile, ServerProfileInput } from "@shared/types";
 
-vi.mock("@backend/domains/instances/sync-profile-ini", () => ({
-  syncProfileSettingsToIni: vi.fn(async () => undefined),
-  gameUserSettingsIniPath: vi.fn(() => "C:\\asa\\island\\GameUserSettings.ini"),
-}));
+vi.mock("@backend/domains/instances/sync-profile-ini", () => {
+  const syncProfileSettingsToIni = vi.fn(async (_profile?: unknown) => undefined);
+  return {
+    syncProfileSettingsToIni,
+    applyProfileOwnedIni: vi.fn(
+      async (
+        profile: { id: string },
+        syncVia?: (serverId: string, profile?: unknown) => Promise<void>,
+      ) => {
+        if (syncVia !== undefined) {
+          await syncVia(profile.id, profile);
+          return;
+        }
+        await syncProfileSettingsToIni(profile);
+      },
+    ),
+    gameUserSettingsIniPath: vi.fn(() => "C:\\asa\\island\\GameUserSettings.ini"),
+  };
+});
 
 function input(overrides: Partial<ServerProfileInput> = {}): ServerProfileInput {
   return {

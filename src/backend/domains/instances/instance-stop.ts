@@ -14,6 +14,7 @@ import {
   buildServerStoppedEventMessage,
   type StopJobOutcome,
 } from "./instance-lifecycle";
+import { flushPendingIniBestEffort } from "./flush-pending-ini";
 
 export interface StopServerOptions {
   /** When true (default), create a stable stop backup after process exit. */
@@ -28,6 +29,8 @@ interface InstanceStopDependencies {
   backups: BackupService;
   locks: InstanceLockManager;
   emitProgress: (payload: ServerStopProgress) => void;
+  /** Flush queued INI drafts once the process has exited (#530). */
+  flushPendingServerIni?: (serverId: string) => Promise<boolean>;
 }
 
 /**
@@ -119,6 +122,17 @@ export class InstanceStop {
     return job;
   }
 
+  /** Flush queued GUS/Game.ini after the process has exited (#530). */
+  async flushPendingIni(id: string): Promise<void> {
+    const profile = this.mustGet(id);
+    await flushPendingIniBestEffort(
+      this.dependencies.flushPendingServerIni,
+      this.dependencies.repo,
+      id,
+      profile.name,
+    );
+  }
+
   enqueue(
     id: string,
     wantBackup: boolean,
@@ -164,6 +178,12 @@ export class InstanceStop {
         );
         await this.dependencies.processes.waitWhileStarting(id);
         if (!this.dependencies.processes.isActive(id)) {
+          await flushPendingIniBestEffort(
+            this.dependencies.flushPendingServerIni,
+            this.dependencies.repo,
+            id,
+            profile.name,
+          );
           return "absent";
         }
       }
@@ -181,10 +201,22 @@ export class InstanceStop {
       const preparation =
         await this.dependencies.processes.beginGracefulStop(runtimeProfile);
       if (preparation.phase === "absent") {
+        await flushPendingIniBestEffort(
+          this.dependencies.flushPendingServerIni,
+          this.dependencies.repo,
+          id,
+          profile.name,
+        );
         return "absent";
       }
 
       if (preparation.phase === "killed") {
+        await flushPendingIniBestEffort(
+          this.dependencies.flushPendingServerIni,
+          this.dependencies.repo,
+          id,
+          profile.name,
+        );
         this.dependencies.repo.addEvent(
           id,
           "server_stopped",
@@ -248,6 +280,13 @@ export class InstanceStop {
           );
         }
       }
+
+      await flushPendingIniBestEffort(
+        this.dependencies.flushPendingServerIni,
+        this.dependencies.repo,
+        id,
+        profile.name,
+      );
 
       this.dependencies.repo.addEvent(
         id,

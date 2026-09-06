@@ -115,9 +115,12 @@ Engineering Mods inventory / `-mods=`: [mods.md](mods.md). Operator guide: websi
 
 ## Profile → INI sync
 
-`syncProfileSettingsToIni(profile)` writes
+Production path: `applyProfileOwnedIni` → `IniService.syncProfileOwnedKeys`
+(queued while the process is live; disk write only when idle) (#530).
+
+Low-level `syncProfileSettingsToIni(profile)` still writes
 `{installDir}/ShooterGame/Saved/Config/WindowsServer/GameUserSettings.ini`
-(seeds from `defaultGameUserSettingsIni` when missing):
+directly (clone seed / tests when IniService is not wired):
 
 | Section | Keys |
 | --- | --- |
@@ -126,8 +129,8 @@ Engineering Mods inventory / `-mods=`: [mods.md](mods.md). Operator guide: websi
 
 **When:**
 
-- `InstanceService.start` — **awaited** before `ProcessManager.start`
-- `InstanceService.update` — fire-and-forget (start syncs again if the file was missing)
+- `InstanceService.start` — **awaited** before `ProcessManager.start` (idle write or no-op queue)
+- `InstanceService.update` — fire-and-forget via the same gate (queues while running)
 
 ## Process spawn
 
@@ -515,9 +518,27 @@ Paths under `{installDir}/ShooterGame/Saved/Config/WindowsServer/`:
 `GameUserSettings.ini`, `Game.ini`.
 
 - Read seeds missing files from `src/shared/defaults` and always returns
-  `sanitizeServerIniPayload` (disk is not rewritten on read).
-- Save (lock purpose `"ini-save"`): sanitize → semantic validate → write both
-  files → event; IPC best-effort `createIniSaveBackup`.
+  `sanitizeServerIniPayload` (disk is not rewritten on read). When a durable
+  **pending** draft exists (`pending_server_ini`), read returns that payload with
+  `pending: true` so leave/return keeps the operator’s edits (#530).
+- Save (lock purpose `"ini-save"`):
+  - **Process idle:** sanitize → semantic validate → write both files → clear
+    pending → event; IPC best-effort `createIniSaveBackup`.
+  - **Process live** (`ProcessManager.isActive`: starting / running / stopping /
+    live error): same validate, then **queue** both files in SQLite (last save
+    wins) — do **not** write the live install files (ASA can clobber them).
+    Emits `push:server-ini-changed` so an open Configuration editor reloads.
+- **Flush** after the process has exited (plain Stop, force-kill paths) and
+  again as a start-guard before `syncProfileSettingsToIni` (covers crash /
+  quit without Start). Restart order: Stop → flush → pre_restart backup →
+  Start (flush no-op) → profile sync → spawn. Flush is idempotent and skips
+  taking `ini-save` when stop/restart/start already holds the instance lock.
+  Queue / read / flush / profile sync always re-apply **profile-owned** GUS
+  keys from the Server profile (SessionName, ports, passwords, …). Server-tab
+  saves call `IniService.syncProfileOwnedKeys` (via `applyProfileOwnedIni`):
+  while the process is live the draft is updated and **live install files are
+  not written**; while idle the disk write runs as before. Low-level
+  `syncProfileSettingsToIni` remains for clone seed / idle-only paths.
 - Sanitize strips client noise (`ShooterGameUserSettings`, scalability /
   resolution / volume keys, etc.). Never treat stripped noise as dirty pending
   edits.
@@ -530,6 +551,8 @@ Paths under `{installDir}/ShooterGame/Saved/Config/WindowsServer/`:
   keys so they are not mistaken for the live cap. INI edits do not change the
   Server form field.
 - Reset-to-defaults is UI-only (no `ini:reset` IPC).
+- **Open in editor** opens the on-disk path (may lag a queued draft); the INI
+  editor alert says so while pending.
 
 ## Configuration assistant
 

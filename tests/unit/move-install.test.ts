@@ -37,9 +37,24 @@ vi.mock("@backend/domains/instances/server-installation", async (importOriginal)
   };
 });
 
-vi.mock("@backend/domains/instances/sync-profile-ini", () => ({
-  syncProfileSettingsToIni: vi.fn(async () => undefined),
-}));
+vi.mock("@backend/domains/instances/sync-profile-ini", () => {
+  const syncProfileSettingsToIni = vi.fn(async (_profile?: unknown) => undefined);
+  return {
+    syncProfileSettingsToIni,
+    applyProfileOwnedIni: vi.fn(
+      async (
+        profile: { id: string },
+        syncVia?: (serverId: string, profile?: unknown) => Promise<void>,
+      ) => {
+        if (syncVia !== undefined) {
+          await syncVia(profile.id, profile);
+          return;
+        }
+        await syncProfileSettingsToIni(profile);
+      },
+    ),
+  };
+});
 
 vi.mock("@backend/infra/process/host-port-probe", () => ({
   assertHostPortsAvailable: vi.fn(async () => undefined),

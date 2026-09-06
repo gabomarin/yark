@@ -710,10 +710,12 @@ export function registerIpcHandlers(
   );
 
   handleValidated(IPC.iniSave, ipcArgSchemas[IPC.iniSave], async ([serverId, payload]) => {
-    const preview = await ini.saveServerIni(serverId, payload);
-    // Best-effort automatic INI snapshot after a successful user save.
-    void backups.createIniSaveBackup(serverId).catch(() => undefined);
-    return preview;
+    const result = await ini.saveServerIni(serverId, payload);
+    // Disk write only — queued drafts must not snapshot stale live files (#530).
+    if (!result.pending) {
+      void backups.createIniSaveBackup(serverId).catch(() => undefined);
+    }
+    return result;
   });
 
   handleValidated(IPC.clusterIniGet, ipcArgSchemas[IPC.clusterIniGet], ([clusterId]) =>

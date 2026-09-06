@@ -7,9 +7,24 @@ import { InstanceLockManager } from "@backend/orchestration/instance-lock-manage
 import type { ServerProfile } from "@shared/types";
 import { inspectServerInstallationAsync } from "@backend/domains/instances/server-installation";
 
-vi.mock("@backend/domains/instances/sync-profile-ini", () => ({
-  syncProfileSettingsToIni: vi.fn(async () => undefined),
-}));
+vi.mock("@backend/domains/instances/sync-profile-ini", () => {
+  const syncProfileSettingsToIni = vi.fn(async (_profile?: unknown) => undefined);
+  return {
+    syncProfileSettingsToIni,
+    applyProfileOwnedIni: vi.fn(
+      async (
+        profile: { id: string },
+        syncVia?: (serverId: string, profile?: unknown) => Promise<void>,
+      ) => {
+        if (syncVia !== undefined) {
+          await syncVia(profile.id, profile);
+          return;
+        }
+        await syncProfileSettingsToIni(profile);
+      },
+    ),
+  };
+});
 
 vi.mock("@backend/infra/process/host-port-probe", () => ({
   assertHostPortsAvailable: vi.fn(async () => undefined),
@@ -374,7 +389,7 @@ describe("InstanceService.restart", () => {
     const service = new InstanceService(repo, processes, backups, locks);
 
     const syncMod = await import("@backend/domains/instances/sync-profile-ini");
-    vi.mocked(syncMod.syncProfileSettingsToIni).mockImplementation(async () => {
+    vi.mocked(syncMod.applyProfileOwnedIni).mockImplementation(async () => {
       await startGate;
     });
 
@@ -404,7 +419,7 @@ describe("InstanceService.restart", () => {
       expect(processes.isActive(profile.id)).toBe(false);
       expect(service.shouldBlockAppQuit()).toBe(false);
     } finally {
-      vi.mocked(syncMod.syncProfileSettingsToIni).mockImplementation(
+      vi.mocked(syncMod.applyProfileOwnedIni).mockImplementation(
         async () => undefined,
       );
     }

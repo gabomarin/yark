@@ -6,7 +6,7 @@ import type { ProcessManager } from "@backend/infra/process/process-manager";
 import type { ServerRepository } from "@backend/infra/db/server-repository";
 import type { ServerProfile, ServerProfileInput } from "@shared/types";
 import { inspectServerInstallation } from "@backend/domains/instances/server-installation";
-import { syncProfileSettingsToIni } from "@backend/domains/instances/sync-profile-ini";
+import { syncProfileSettingsToIni, applyProfileOwnedIni } from "@backend/domains/instances/sync-profile-ini";
 import { seedCloneIniFiles } from "@backend/domains/instances/clone-ini-seed";
 import {
   assertEnoughFreeSpaceForCopy,
@@ -32,9 +32,24 @@ vi.mock("@backend/domains/instances/server-installation", async (importOriginal)
   };
 });
 
-vi.mock("@backend/domains/instances/sync-profile-ini", () => ({
-  syncProfileSettingsToIni: vi.fn(async () => undefined),
-}));
+vi.mock("@backend/domains/instances/sync-profile-ini", () => {
+  const syncProfileSettingsToIni = vi.fn(async (_profile?: unknown) => undefined);
+  return {
+    syncProfileSettingsToIni,
+    applyProfileOwnedIni: vi.fn(
+      async (
+        profile: { id: string },
+        syncVia?: (serverId: string, profile?: unknown) => Promise<void>,
+      ) => {
+        if (syncVia !== undefined) {
+          await syncVia(profile.id, profile);
+          return;
+        }
+        await syncProfileSettingsToIni(profile);
+      },
+    ),
+  };
+});
 
 vi.mock("@backend/domains/instances/clone-ini-seed", () => ({
   seedCloneIniFiles: vi.fn(async () => undefined),
@@ -250,10 +265,10 @@ describe("InstanceService enabled state", () => {
     const syncGate = new Promise<void>((resolve) => {
       releaseSync = resolve;
     });
-    vi.mocked(syncProfileSettingsToIni).mockImplementation(async () => syncGate);
+    vi.mocked(applyProfileOwnedIni).mockImplementation(async () => syncGate);
 
     const startPromise = service.start(source.id);
-    await vi.waitFor(() => expect(syncProfileSettingsToIni).toHaveBeenCalled());
+    await vi.waitFor(() => expect(applyProfileOwnedIni).toHaveBeenCalled());
     await expect(service.setServerEnabled(source.id, false)).rejects.toThrow(
       /running job \(start\)/,
     );

@@ -34,6 +34,7 @@ import type {
   CloneInstallProgress,
   MoveInstallProgress,
   ServerIniPayload,
+  ServerIniSaveResult,
   ServerIniSnapshot,
   ServerInstallationSnapshot,
   ServerProfilePatch,
@@ -221,6 +222,7 @@ export const IPC_PUSH = {
   moveInstallProgress: "push:move-install-progress",
   cloneInstallProgress: "push:clone-install-progress",
   backupsChanged: "push:backups-changed",
+  serverIniChanged: "push:server-ini-changed",
   rconStatusChanged: "push:rcon-status-changed",
   playerListUpdated: "push:player-list-updated",
   processMetricsUpdated: "push:process-metrics-updated",
@@ -241,6 +243,12 @@ export type CloneInstallProgressPush = CloneInstallProgress;
 
 export interface BackupsChangedPush {
   serverId: string;
+}
+
+export interface ServerIniChangedPush {
+  serverId: string;
+  /** True when a durable pending draft remains; false after flush or disk save. */
+  pending: boolean;
 }
 
 export interface RconStatusChangedPush {
@@ -480,7 +488,7 @@ export interface RendererApi {
   saveServerIni(
     serverId: string,
     payload: ServerIniPayload,
-  ): Promise<IpcResult<IniPreview>>;
+  ): Promise<IpcResult<ServerIniSaveResult>>;
   getClusterIniTemplate(
     clusterId: string,
   ): Promise<IpcResult<ClusterIniTemplate | null>>;
@@ -671,6 +679,9 @@ export interface RendererApi {
   ): () => void;
   onBackupsChanged(
     listener: (payload: BackupsChangedPush) => void,
+  ): () => void;
+  onServerIniChanged(
+    listener: (payload: ServerIniChangedPush) => void,
   ): () => void;
   onRconStatusChanged(
     listener: (payload: RconStatusChangedPush) => void,

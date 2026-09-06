@@ -6,7 +6,7 @@ import type { ProcessManager } from "@backend/infra/process/process-manager";
 import type { ServerRepository } from "@backend/infra/db/server-repository";
 import type { ServerProfile } from "@shared/types";
 import { inspectServerInstallation } from "@backend/domains/instances/server-installation";
-import { syncProfileSettingsToIni } from "@backend/domains/instances/sync-profile-ini";
+import { applyProfileOwnedIni, syncProfileSettingsToIni } from "@backend/domains/instances/sync-profile-ini";
 import { assertHostPortsAvailable } from "@backend/infra/process/host-port-probe";
 import { formatHostPortBusyError } from "@shared/host-port-probe-errors";
 
@@ -28,9 +28,28 @@ vi.mock("@backend/domains/instances/server-installation", async (importOriginal)
   };
 });
 
-vi.mock("@backend/domains/instances/sync-profile-ini", () => ({
-  syncProfileSettingsToIni: vi.fn(async () => undefined),
-}));
+vi.mock("@backend/domains/instances/sync-profile-ini", () => {
+  const syncProfileSettingsToIni = vi.fn(async (_profile?: unknown) => undefined);
+  return {
+    syncProfileSettingsToIni,
+    applyProfileOwnedIni: vi.fn(
+      async (
+        profile: { id: string },
+        syncVia?: (serverId: string, profile?: unknown) => Promise<void>,
+      ) => {
+        if (syncVia !== undefined) {
+          await syncVia(profile.id, profile);
+          return;
+        }
+        await syncProfileSettingsToIni(profile);
+      },
+    ),
+    gameUserSettingsIniPath: vi.fn(
+      (installDir: string) =>
+        `${installDir}\\ShooterGame\\Saved\\Config\\WindowsServer\\GameUserSettings.ini`,
+    ),
+  };
+});
 
 vi.mock("@backend/infra/process/host-port-probe", () => ({
   assertHostPortsAvailable: vi.fn(async () => undefined),
@@ -185,6 +204,13 @@ describe("InstanceService host port start gate", () => {
       expect.objectContaining(sessionPorts),
       [],
       { allowInconclusive: false },
+    );
+    expect(applyProfileOwnedIni).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: source.id,
+        ...sessionPorts,
+      }),
+      undefined,
     );
     expect(syncProfileSettingsToIni).toHaveBeenCalledWith(
       expect.objectContaining({
