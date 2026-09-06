@@ -18,6 +18,8 @@ Paths under each install:
 
 - Read seeds missing files from built-in defaults and sanitizes client noise (resolution, volume, scalability keys, etc.)
 - Save sanitizes → validates a few semantic ranges → writes both files → best-effort INI backup
+- While the dedicated server is **running**, Save queues a durable draft instead of writing live files ASA can overwrite; YARK flushes that draft after **Stop** or before the next **Start**
+- Visual editor **Other** keeps custom mod `[Section]` keys nested by section (expand/collapse on the Other header)
 - Do not expect generic INI libraries to round-trip ASA — section names can contain dots literally
 
 Semantic checks include RCON port range and `DifficultyOffset` 0–1 when `[ServerSettings]` is present, and leftover `MaxPlayers` 1–255 on `[/Script/Engine.GameSession]` or `[ServerSettings]` if those keys are present. **Max players** on the Server form (1–255) launches `-WinLiveMaxPlayers` — that is the live cap. ASA ignores INI `MaxPlayers`. Empty or **0** omits the flag (ASA then defaults to 70).

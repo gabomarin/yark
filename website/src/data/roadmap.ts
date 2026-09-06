@@ -10,6 +10,9 @@ export type RoadmapItem = {
  * Prefer operator-visible product work from open issues (not CI/packaging hygiene).
  * Not a ship promise — keep wording directional. Milestones on GitHub stay authoritative.
  *
+ * Shipped in v0.19.0 (removed from this list): INI Other section subgroups (#516),
+ * sidebar Quit YARK (#532), pending INI queue while running (#530), softer
+ * self-update feed errors (#521), unpackaged skip single-instance lock (#528).
  * Shipped in v0.18.0 (removed from this list): Maintenance tab — scheduled restart,
  * wild wipe, opt-in auto-update (#486–#489); keyboard P0/P1 (#476/#477); canvas shells /
  * status words / surface tokens (#468–#470); What's new brief (#466); danger confirms

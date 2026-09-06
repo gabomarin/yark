@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-09-06
+
 ### Added
 
 - Visual INI editor (and Copy configuration) keep custom mod `[Section]` keys under **Other** (last category), nested by INI section, with expand/collapse controls on the Other header (#516).
@@ -774,6 +776,9 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Tracked in-repo TODO / historical planning docs (moved to local agent context).
 
 [Unreleased]: #unreleased
+[0.19.0]: #0190---2026-09-06
+[0.18.2]: #0182---2026-09-03
+[0.18.1]: #0181---2026-09-02
 [0.18.0]: #0180---2026-08-31
 [0.17.0]: #0170---2026-08-29
 [0.16.0]: #0160---2026-08-26

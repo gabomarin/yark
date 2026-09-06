@@ -24,6 +24,33 @@ const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.19.0",
+    date: "2026-09-06",
+    sections: [
+      {
+        title: "Added",
+        items: [
+          "Visual INI editor keeps custom mod sections under Other, nested by INI section, with expand/collapse on the Other header.",
+          "Sidebar footer Quit YARK (tooltip + confirm) uses the same safe quit path as the tray menu.",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "INI visual editor: clearer category headers, Other subgroups, and Collapse/Expand controls.",
+          "Unpackaged / npm run dev no longer takes the single-instance lock, so a local build can run beside an installed YARK.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "Saving GameUserSettings.ini / Game.ini while a server is running queues a durable draft and flushes after Stop or before the next Start.",
+          "YARK self-update no longer shows a raw latest.yml error during a mid-publish race; Check now falls back to GitHub Releases or a short retry message.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.18.2",
     date: "2026-09-03",
     sections: [
