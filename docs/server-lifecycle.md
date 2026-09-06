@@ -441,9 +441,9 @@ the window visible through wait/save/backup progress).
   Optional Windows banner (Settings → General → **Desktop alerts** →
   **Hide to tray**, default on; also requires the master switch);
   click the banner or tray icon to reopen. Quit from the tray menu or the
-  sidebar footer **Quit YARK** control (#532) to exit. There is no native
-  application menu bar (Electron default File/Edit/
-  View/Help is disabled).
+  sidebar footer **Quit YARK** control (#532; confirm modal, then the same
+  quit path) to exit. There is no native application menu bar (Electron default
+  File/Edit/View/Help is disabled).
 - **Start with Windows** (default off): uses Electron `setLoginItemSettings` so
   toggling does not leave duplicate login registrations. Dev (`electron .`)
   registers the Electron binary with the app path as an argument; packaged

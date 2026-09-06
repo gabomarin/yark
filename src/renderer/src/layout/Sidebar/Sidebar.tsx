@@ -25,6 +25,7 @@ import { useUiDensity } from "@app/AppProviders";
 import type { OfficialNetworkStatus } from "@shared/types";
 import { Fragment } from "react";
 import yarkLogo from "../../assets/brand/yark-logo.png";
+import { confirmQuitYark } from "./confirmQuitYark";
 import classes from "./Sidebar.module.css";
 
 export type Route = "overview" | "downloads" | "clusters" | "backups" | "logs" | "settings";
@@ -388,7 +389,7 @@ export function Sidebar(props: Props): ReactElement {
                 className={classes.quitIcon}
                 data-yark-quit
                 onClick={() => {
-                  void window.api.quitApp();
+                  confirmQuitYark();
                 }}
               >
                 <SignOut size={compact ? 14 : 16} weight="regular" aria-hidden />
@@ -403,7 +404,7 @@ export function Sidebar(props: Props): ReactElement {
                 className={classes.quitButton}
                 data-yark-quit
                 onClick={() => {
-                  void window.api.quitApp();
+                  confirmQuitYark();
                 }}
               >
                 Quit YARK
