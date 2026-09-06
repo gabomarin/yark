@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { Button, Modal, Stack, Text } from "@mantine/core";
+import { Button, Modal, Text } from "@mantine/core";
 import classes from "./QuitYarkModal.module.css";
 
 interface Props {
@@ -39,15 +39,11 @@ export function QuitYarkModal(props: Props): ReactElement {
         </Modal.Header>
 
         <Modal.Body>
-          <Stack gap="sm" className={classes.copy}>
+          <div className={classes.copy}>
             <Text size="sm">
               Any servers that are still running will be stopped safely first.
             </Text>
-            <Text size="sm" className={classes.hint}>
-              Only want to hide YARK? Close the window instead — servers keep
-              running in the tray.
-            </Text>
-          </Stack>
+          </div>
 
           <div className={classes.footer}>
             <Button

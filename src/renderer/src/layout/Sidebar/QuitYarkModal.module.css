@@ -49,10 +49,6 @@
   padding: var(--app-space-lg);
 }
 
-.hint {
-  color: var(--app-color-muted);
-}
-
 .footer {
   flex-shrink: 0;
   display: flex;

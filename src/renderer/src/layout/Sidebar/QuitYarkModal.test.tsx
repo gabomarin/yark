@@ -25,7 +25,7 @@ describe("QuitYarkModal (#532)", () => {
     expect(screen.getByText("Quit YARK?")).toBeInTheDocument();
     expect(screen.getByText(/closes the server manager on this pc/i)).toBeInTheDocument();
     expect(dialog).toHaveTextContent(/stopped safely first/i);
-    expect(dialog).toHaveTextContent(/close the window instead/i);
+    expect(dialog).not.toHaveTextContent(/close the window instead/i);
 
     await user.click(screen.getByRole("button", { name: "Quit YARK" }));
     expect(onConfirm).toHaveBeenCalledTimes(1);
