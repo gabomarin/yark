@@ -18,8 +18,6 @@ import type { InstanceLockManager } from "../../orchestration/instance-lock-mana
 import { applyProfileOwnedKeysToGameUserSettings } from "./ini-compose";
 import { buildIniPreview } from "./ini-preview";
 
-export type { ServerIniChangedPush } from "@shared/ipc";
-
 export interface IniServiceOptions {
   pending: PendingServerIniRepository;
   /** True while ASA may still overwrite live install INIs (#530). */
