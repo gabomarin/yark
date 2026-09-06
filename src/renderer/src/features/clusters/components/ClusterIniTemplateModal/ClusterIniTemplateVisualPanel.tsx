@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import {
-  CaretDoubleDown,
-  CaretDoubleRight,
+  ArrowsInLineVertical,
+  ArrowsOutLineVertical,
   CaretDown,
   CaretRight,
   FunnelSimple,
@@ -142,7 +142,7 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
           size="xs"
           variant="light"
           color="gray"
-          leftSection={<CaretDoubleRight size={14} />}
+          leftSection={<ArrowsInLineVertical size={14} />}
           onClick={() => {
             const next: Record<string, boolean> = {};
             for (const group of groupedRows) {
@@ -163,7 +163,7 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
           size="xs"
           variant="light"
           color="gray"
-          leftSection={<CaretDoubleDown size={14} />}
+          leftSection={<ArrowsOutLineVertical size={14} />}
           onClick={() => setCollapsed({})}
         >
           Expand
@@ -225,7 +225,7 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                               });
                             }}
                           >
-                            <CaretDoubleRight size={14} />
+                            <ArrowsInLineVertical size={14} />
                           </ActionIcon>
                         </Tooltip>
                         <Tooltip label="Expand all sections">
@@ -249,7 +249,7 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                               });
                             }}
                           >
-                            <CaretDoubleDown size={14} />
+                            <ArrowsOutLineVertical size={14} />
                           </ActionIcon>
                         </Tooltip>
                       </Group>

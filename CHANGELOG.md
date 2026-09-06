@@ -15,7 +15,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
-- INI visual editor: subtle deep-blue category headers, gray Other subgroups with a soft shade lift, soft table tint, hairline separators, opaque setting rows (documented design-system exception) (#516).
+- INI visual editor: subtle deep-blue category headers, gray Other subgroups with a soft shade lift, soft table tint, hairline separators, opaque setting rows; Collapse/Expand use vertical in/out arrows (documented design-system exception) (#516).
 - Unpackaged / `npm run dev` no longer takes the single-instance lock, so a local build can run beside an installed YARK (packaged installs stay single-instance).
 
 ### Fixed

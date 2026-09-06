@@ -1,4 +1,4 @@
-import { CaretDoubleDown, CaretDoubleRight, FunnelSimple } from "@phosphor-icons/react";
+import { ArrowsInLineVertical, ArrowsOutLineVertical, FunnelSimple } from "@phosphor-icons/react";
 import { Badge, Button, Group, Select } from "@mantine/core";
 import type { ReactElement } from "react";
 import { SearchField } from "@ui/SearchField/SearchField";
@@ -58,7 +58,7 @@ export function ConfigurationEditorFilterBar(props: Props): ReactElement {
         size="xs"
         variant="light"
         color="gray"
-        leftSection={<CaretDoubleRight size={14} />}
+        leftSection={<ArrowsInLineVertical size={14} />}
         onClick={onCollapseAll}
       >
         Collapse
@@ -67,7 +67,7 @@ export function ConfigurationEditorFilterBar(props: Props): ReactElement {
         size="xs"
         variant="light"
         color="gray"
-        leftSection={<CaretDoubleDown size={14} />}
+        leftSection={<ArrowsOutLineVertical size={14} />}
         onClick={onExpandAll}
       >
         Expand
