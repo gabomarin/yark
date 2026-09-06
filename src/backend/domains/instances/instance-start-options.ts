@@ -1,4 +1,4 @@
-import type { StartServerOptions } from "@shared/types";
+import type { ServerProfile, StartServerOptions } from "@shared/types";
 import { DEFAULT_OPEN_NATIVE_CONSOLE } from "@shared/open-native-console";
 
 /** Optional InstanceService deps beyond repo/process/backup/lock. */
@@ -13,6 +13,14 @@ export interface InstanceServiceOptions {
    * Idempotent when nothing is pending.
    */
   flushPendingServerIni?: (serverId: string) => Promise<boolean>;
+  /**
+   * Apply profile-owned GUS keys via IniService (queues while live) (#530).
+   * When omitted, falls back to direct `syncProfileSettingsToIni` (tests).
+   */
+  syncProfileOwnedKeys?: (
+    serverId: string,
+    profile?: ServerProfile,
+  ) => Promise<void>;
 }
 
 export function defaultResolveOpenNativeConsole(): boolean {

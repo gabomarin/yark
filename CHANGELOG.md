@@ -20,7 +20,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
-- While a dedicated server is running, saving **GameUserSettings.ini** / **Game.ini** queues a durable draft (instead of writing live files ASA can overwrite), flushes it after Stop or before the next Start, reloads an open INI editor in place, and keeps Server-tab profile keys authoritative over that draft (#530).
+- While a dedicated server is running, saving **GameUserSettings.ini** / **Game.ini** queues a durable draft (instead of writing live files ASA can overwrite), flushes it after Stop or before the next Start, reloads an open INI editor in place, and routes Server-tab profile INI sync through the same queue so live disk is never written while ASA is active (#530).
 - YARK self-update no longer shows a raw `latest.yml` / HttpError blob during a mid-publish race: quiet startup checks stay silent, and **Check now** falls back to GitHub Releases or a short retry message (#521).
 
 ## [0.18.2] - 2026-09-03

@@ -442,6 +442,8 @@ if (isPrimaryInstance) {
           }
           return flushed;
         },
+        syncProfileOwnedKeys: (serverId, profile) =>
+          iniService.syncProfileOwnedKeys(serverId, profile),
       },
     );
     const backupScheduler = new BackupScheduler(backupService);

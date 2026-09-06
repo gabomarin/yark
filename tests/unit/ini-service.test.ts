@@ -439,6 +439,79 @@ describe("IniService pending queue (#530)", () => {
     db?.close();
   });
 
+  it("queues profile-owned keys while active without writing live GUS", async () => {
+    const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
+    tmpDirs.push(installDir);
+    prepareIniFiles(installDir);
+    writeFileSync(
+      gameUserSettingsPath(installDir),
+      "[ServerSettings]\nRCONPort=27020\nXPMultiplier=1.0\n\n[SessionSettings]\nSessionName=DiskSession\n",
+      "utf8",
+    );
+
+    const profile = makeProfile(installDir);
+    profile.sessionName = "QueuedFromServerTab";
+    const repo = {
+      get: (id: string) => (id === profile.id ? profile : null),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+    const db = openDatabase(":memory:");
+    const pendingRepo = new PendingServerIniRepository(db);
+    const service = new IniService(repo, new InstanceLockManager(), {
+      pending: pendingRepo,
+      isServerActive: () => true,
+    });
+
+    await service.syncProfileOwnedKeys(profile.id, profile);
+
+    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).toContain(
+      "DiskSession",
+    );
+    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).not.toContain(
+      "QueuedFromServerTab",
+    );
+    const pending = pendingRepo.get(profile.id);
+    expect(pending?.payload.gameUserSettings).toContain("QueuedFromServerTab");
+    expect(pending?.payload.gameUserSettings).toContain("XPMultiplier=1.0");
+    db.close();
+  });
+
+  it("merges profile sync into an existing gameplay pending draft while active", async () => {
+    const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
+    tmpDirs.push(installDir);
+    prepareIniFiles(installDir);
+
+    const profile = makeProfile(installDir);
+    profile.sessionName = "First";
+    const repo = {
+      get: (id: string) => (id === profile.id ? profile : null),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+    const db = openDatabase(":memory:");
+    const pendingRepo = new PendingServerIniRepository(db);
+    const service = new IniService(repo, new InstanceLockManager(), {
+      pending: pendingRepo,
+      isServerActive: () => true,
+    });
+
+    await service.saveServerIni(profile.id, {
+      gameUserSettings:
+        "[ServerSettings]\nRCONPort=27020\nXPMultiplier=3.0\n\n[SessionSettings]\nSessionName=First\n",
+      game: "[Game]\nKeep=1\n",
+    });
+    profile.sessionName = "AfterServerTab";
+    await service.syncProfileOwnedKeys(profile.id, profile);
+
+    const pending = pendingRepo.get(profile.id);
+    expect(pending?.payload.gameUserSettings).toContain("AfterServerTab");
+    expect(pending?.payload.gameUserSettings).toContain("XPMultiplier=3.0");
+    expect(pending?.payload.game).toContain("Keep=1");
+    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).not.toContain(
+      "AfterServerTab",
+    );
+    db.close();
+  });
+
   it("keeps Server-tab profile keys over an older pending draft on flush", async () => {
     const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
     tmpDirs.push(installDir);
@@ -446,10 +519,9 @@ describe("IniService pending queue (#530)", () => {
 
     const profile = makeProfile(installDir);
     profile.sessionName = "OriginalSession";
-    const addEvent = vi.fn();
     const repo = {
       get: (id: string) => (id === profile.id ? profile : null),
-      addEvent,
+      addEvent: vi.fn(),
     } as unknown as ServerRepository;
     const locks = new InstanceLockManager();
     const db = openDatabase(":memory:");
@@ -466,7 +538,6 @@ describe("IniService pending queue (#530)", () => {
       game: "[Game]\nQueued=1\n",
     });
 
-    // Operator changes Server tab while still running / before flush.
     profile.sessionName = "UpdatedFromServerTab";
     active = false;
 

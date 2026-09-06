@@ -38,7 +38,7 @@ import {
   invalidateInstallInspectCache,
   inspectServerInstallationAsync,
 } from "./server-installation";
-import { syncProfileSettingsToIni } from "./sync-profile-ini";
+import { applyProfileOwnedIni } from "./sync-profile-ini";
 import {
   isInstallationReady,
 } from "@shared/installation-health";
@@ -85,6 +85,7 @@ export class InstanceService extends EventEmitter {
   private readonly clones: InstanceClone;
   private readonly stops: InstanceStop;
   private readonly resolveOpenNativeConsole: () => boolean;
+  private readonly syncProfileOwnedKeys?: InstanceServiceOptions["syncProfileOwnedKeys"];
 
   constructor(
     private readonly repo: ServerRepository,
@@ -96,6 +97,7 @@ export class InstanceService extends EventEmitter {
     super();
     this.resolveOpenNativeConsole =
       options?.resolveOpenNativeConsole ?? defaultResolveOpenNativeConsole;
+    this.syncProfileOwnedKeys = options?.syncProfileOwnedKeys;
     this.fleetInstall = new InstanceFleetInstall({ repo });
     this.creates = new InstanceCreate({
       repo,
@@ -208,7 +210,7 @@ export class InstanceService extends EventEmitter {
     if (updated === null) {
       throw new Error("Server does not exist");
     }
-    void syncProfileSettingsToIni(updated).catch(() => {
+    void applyProfileOwnedIni(updated, this.syncProfileOwnedKeys).catch(() => {
       // INI may be missing until install; start() syncs again before launch.
     });
     this.repo.addEvent(
@@ -451,7 +453,7 @@ export class InstanceService extends EventEmitter {
       allowInconclusive: options?.skipPortValidation === true,
     });
     await this.stops.flushPendingIni(id);
-    await syncProfileSettingsToIni(effective);
+    await applyProfileOwnedIni(effective, this.syncProfileOwnedKeys);
     const startOptions = withOpenNativeConsolePref(
       options,
       this.resolveOpenNativeConsole,
@@ -794,5 +796,4 @@ export class InstanceService extends EventEmitter {
       );
     }
   }
-
 }

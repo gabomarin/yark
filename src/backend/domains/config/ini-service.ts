@@ -10,6 +10,7 @@ import type {
   ServerIniPayload,
   ServerIniSaveResult,
   ServerIniSnapshot,
+  ServerProfile,
 } from "@shared/types";
 import type { PendingServerIniRepository } from "../../infra/db/pending-server-ini-repository";
 import type { ServerRepository } from "../../infra/db/server-repository";
@@ -122,6 +123,63 @@ export class IniService extends EventEmitter {
       this.emitChanged(serverId, false);
       return { ...preview, pending: false };
     });
+  }
+
+  /**
+   * Apply profile-owned GUS keys through the same queue/disk gate as INI save (#530).
+   * While the process is live: merge into the pending draft (create one from disk
+   * if needed) — never write live install files. While idle: write disk and clear
+   * pending. Optional `profile` covers Start session-port overlays.
+   */
+  async syncProfileOwnedKeys(
+    serverId: string,
+    profile?: ServerProfile,
+  ): Promise<void> {
+    if (this.locks.isLocked(serverId)) {
+      await this.syncProfileOwnedKeysBody(serverId, profile);
+      return;
+    }
+    await this.locks.withLock(serverId, "ini-save", () =>
+      this.syncProfileOwnedKeysBody(serverId, profile),
+    );
+  }
+
+  private async syncProfileOwnedKeysBody(
+    serverId: string,
+    profileOverride?: ServerProfile,
+  ): Promise<void> {
+    const server = profileOverride ?? this.repo.get(serverId);
+    if (server === null) {
+      throw new Error("Server does not exist");
+    }
+
+    const disk = await this.readDiskSnapshot(serverId);
+    const pending = this.options?.pending.get(serverId) ?? null;
+    const base =
+      pending !== null
+        ? sanitizeServerIniPayload(pending.payload)
+        : disk.payload;
+    const next: ServerIniPayload = {
+      gameUserSettings: applyProfileOwnedKeysToGameUserSettings(
+        base.gameUserSettings,
+        server,
+      ),
+      game: base.game,
+    };
+
+    const active = this.options?.isServerActive(serverId) === true;
+    if (active) {
+      if (this.options === undefined) {
+        throw new Error("Pending INI queue is not configured");
+      }
+      this.options.pending.upsert(serverId, next);
+      this.emitChanged(serverId, true);
+      return;
+    }
+
+    await this.writePayloadToDisk(disk, next);
+    this.options?.pending.delete(serverId);
+    this.emitChanged(serverId, false);
   }
 
   /**

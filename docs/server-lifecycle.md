@@ -115,9 +115,12 @@ Engineering Mods inventory / `-mods=`: [mods.md](mods.md). Operator guide: websi
 
 ## Profile → INI sync
 
-`syncProfileSettingsToIni(profile)` writes
+Production path: `applyProfileOwnedIni` → `IniService.syncProfileOwnedKeys`
+(queued while the process is live; disk write only when idle) (#530).
+
+Low-level `syncProfileSettingsToIni(profile)` still writes
 `{installDir}/ShooterGame/Saved/Config/WindowsServer/GameUserSettings.ini`
-(seeds from `defaultGameUserSettingsIni` when missing):
+directly (clone seed / tests when IniService is not wired):
 
 | Section | Keys |
 | --- | --- |
@@ -126,8 +129,8 @@ Engineering Mods inventory / `-mods=`: [mods.md](mods.md). Operator guide: websi
 
 **When:**
 
-- `InstanceService.start` — **awaited** before `ProcessManager.start`
-- `InstanceService.update` — fire-and-forget (start syncs again if the file was missing)
+- `InstanceService.start` — **awaited** before `ProcessManager.start` (idle write or no-op queue)
+- `InstanceService.update` — fire-and-forget via the same gate (queues while running)
 
 ## Process spawn
 
@@ -530,9 +533,12 @@ Paths under `{installDir}/ShooterGame/Saved/Config/WindowsServer/`:
   quit without Start). Restart order: Stop → flush → pre_restart backup →
   Start (flush no-op) → profile sync → spawn. Flush is idempotent and skips
   taking `ini-save` when stop/restart/start already holds the instance lock.
-  Queue / read / flush always re-apply **profile-owned** GUS keys from the
-  Server profile (SessionName, ports, passwords, …) so a later Server-tab
-  edit is not overwritten by an older pending draft.
+  Queue / read / flush / profile sync always re-apply **profile-owned** GUS
+  keys from the Server profile (SessionName, ports, passwords, …). Server-tab
+  saves call `IniService.syncProfileOwnedKeys` (via `applyProfileOwnedIni`):
+  while the process is live the draft is updated and **live install files are
+  not written**; while idle the disk write runs as before. Low-level
+  `syncProfileSettingsToIni` remains for clone seed / idle-only paths.
 - Sanitize strips client noise (`ShooterGameUserSettings`, scalability /
   resolution / volume keys, etc.). Never treat stripped noise as dirty pending
   edits.
