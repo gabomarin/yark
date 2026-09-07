@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Fixed
+
+- Discord `#releases` notify sends an explicit `User-Agent` (Cloudflare was rejecting Python-urllib’s default with `403` / `1010`); Release Windows no longer fails the job if Discord notify errors after assets are uploaded.
+
 ## [0.20.0] - 2026-09-07
 
 ### Added
