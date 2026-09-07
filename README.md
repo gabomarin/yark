@@ -34,6 +34,8 @@
   <a href="https://github.com/gabomarin/yark/releases">Releases</a>
   ·
   <a href="https://github.com/gabomarin/yark/issues">Issues</a>
+  ·
+  <a href="https://discord.gg/cQNeCq87rq">Discord</a>
 </p>
 
 > [!WARNING]
