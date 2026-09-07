@@ -1,11 +1,10 @@
 name: Discord release notify
 
-# Posts a #releases-style message to Discord when a GitHub Release is published.
-# Requires repository secret DISCORD_RELEASES_WEBHOOK_URL (Discord channel webhook).
+# Manual re-announce / dry-run only. Production posts run at the end of
+# Release Windows (after installer assets are on the GitHub Release).
+# Requires repository secret DISCORD_RELEASES_WEBHOOK_URL.
 
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       tag:
@@ -17,7 +16,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: discord-release-notify-${{ github.event.release.tag_name || inputs.tag || github.run_id }}
+  group: discord-release-notify-${{ inputs.tag || github.run_id }}
   cancel-in-progress: false
 
 jobs:
@@ -25,82 +24,20 @@ jobs:
     if: github.repository == 'gabomarin/yark'
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
       - name: Post release changelog to Discord
         env:
           GH_TOKEN: ${{ github.token }}
           WEBHOOK_URL: ${{ secrets.DISCORD_RELEASES_WEBHOOK_URL }}
-          EVENT_NAME: ${{ github.event_name }}
           INPUT_TAG: ${{ inputs.tag }}
-          RELEASE_ID: ${{ github.event.release.id }}
+          RELEASE_JSON: ${{ runner.temp }}/release.json
         run: |
           set -euo pipefail
           if [ -z "${WEBHOOK_URL}" ]; then
-            echo "::error::Missing secret DISCORD_RELEASES_WEBHOOK_URL. Create a Discord webhook in #releases and add it as a repository secret."
+            echo "::error::Missing secret DISCORD_RELEASES_WEBHOOK_URL"
             exit 1
           fi
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${INPUT_TAG}" > "$RUNNER_TEMP/release.json"
-          else
-            gh api "repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}" > "$RUNNER_TEMP/release.json"
-          fi
-          python3 <<'PY'
-          import json, os, pathlib, urllib.error, urllib.request
-
-          data = json.loads(
-              pathlib.Path(os.environ["RUNNER_TEMP"]).joinpath("release.json").read_text(encoding="utf-8")
-          )
-          tag = (data.get("tag_name") or "").strip()
-          name = (data.get("name") or tag).strip()
-          html_url = (data.get("html_url") or "").strip()
-          prerelease = bool(data.get("prerelease"))
-          body = (data.get("body") or "").strip()
-          webhook = os.environ["WEBHOOK_URL"].strip()
-
-          title = f"**{name}**" if name.startswith("YARK") or name == tag else f"**YARK {tag}**"
-          if prerelease:
-              title += " _(prerelease)_"
-
-          header = (
-              f"{title} is available.\n"
-              f"\n"
-              f"Download: <https://getyark.com>\n"
-              f"Release notes: <{html_url}>\n"
-          )
-
-          # Discord content hard limit is 2000 characters.
-          max_len = 2000
-          suffix = "\n\n_(truncated — full notes on GitHub)_"
-          if body:
-              available = max_len - len(header) - len("\n") - len(suffix)
-              if available < 80:
-                  content = header
-              elif len(body) <= available:
-                  content = header + "\n" + body
-              else:
-                  cut = body[: max(0, available)].rstrip()
-                  nl = cut.rfind("\n")
-                  if nl > available // 2:
-                      cut = cut[:nl].rstrip()
-                  content = header + "\n" + cut + suffix
-          else:
-              content = header
-
-          payload = {
-              "content": content,
-              # SUPPRESS_EMBEDS — avoid GitHub/link preview cards
-              "flags": 4,
-              "allowed_mentions": {"parse": []},
-          }
-          req = urllib.request.Request(
-              webhook,
-              data=json.dumps(payload).encode("utf-8"),
-              headers={"Content-Type": "application/json"},
-              method="POST",
-          )
-          try:
-              with urllib.request.urlopen(req, timeout=30) as resp:
-                  print(f"Discord webhook OK ({resp.status})")
-          except urllib.error.HTTPError as e:
-              detail = e.read().decode("utf-8", errors="replace")
-              raise SystemExit(f"Discord webhook failed: {e.code} {detail}") from e
-          PY
+          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${INPUT_TAG}" > "$RELEASE_JSON"
+          python3 scripts/ci/discord-release-notify.py
