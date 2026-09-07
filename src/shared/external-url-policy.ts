@@ -7,6 +7,7 @@ const ALLOWED_EXTERNAL_HOSTS = new Set([
   "ark.wiki.gg",
   "curseforge.com",
   "www.curseforge.com",
+  "discord.gg",
   "github.com",
   "www.github.com",
 ]);

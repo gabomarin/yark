@@ -162,3 +162,20 @@ jobs:
             dist/*.exe
             dist/*.yml
           fail_on_unmatched_files: true
+
+      # After softprops uploads installer assets — not on tag push alone.
+      - name: Notify Discord #releases
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WEBHOOK_URL: ${{ secrets.DISCORD_RELEASES_WEBHOOK_URL }}
+          TAG: ${{ steps.tag.outputs.name }}
+          RELEASE_JSON: ${{ runner.temp }}/release.json
+        run: |
+          set -euo pipefail
+          if [ -z "${WEBHOOK_URL}" ]; then
+            echo "::error::Missing secret DISCORD_RELEASES_WEBHOOK_URL"
+            exit 1
+          fi
+          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" > "$RELEASE_JSON"
+          python scripts/ci/discord-release-notify.py

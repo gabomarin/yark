@@ -1,0 +1,43 @@
+name: Discord release notify
+
+# Manual re-announce / dry-run only. Production posts run at the end of
+# Release Windows (after installer assets are on the GitHub Release).
+# Requires repository secret DISCORD_RELEASES_WEBHOOK_URL.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to announce (e.g. v0.19.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: discord-release-notify-${{ inputs.tag || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    if: github.repository == 'gabomarin/yark'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Post release changelog to Discord
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WEBHOOK_URL: ${{ secrets.DISCORD_RELEASES_WEBHOOK_URL }}
+          INPUT_TAG: ${{ inputs.tag }}
+          RELEASE_JSON: ${{ runner.temp }}/release.json
+        run: |
+          set -euo pipefail
+          if [ -z "${WEBHOOK_URL}" ]; then
+            echo "::error::Missing secret DISCORD_RELEASES_WEBHOOK_URL"
+            exit 1
+          fi
+          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${INPUT_TAG}" > "$RELEASE_JSON"
+          python3 scripts/ci/discord-release-notify.py

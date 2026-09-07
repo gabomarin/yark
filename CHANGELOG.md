@@ -11,6 +11,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- GitHub Action posts each published release (tag + changelog body) to Discord `#releases` after the Windows release job finishes uploading installer assets (`DISCORD_RELEASES_WEBHOOK_URL`).
+- Settings → About **Community** links for GitHub and Discord as neutral buttons with brand icons; Discord invite opens via the external-host allowlist.
 - Workspace **Ark Server API** tab: install/uninstall community API + Version.dll (cached downloads), **Load on Start**, add plugin from zip, enable/disable via `Disabled_Plugins`, delete plugin with confirm, and a **Loading Ark Server API…** status while Version.dll/plugins delay the server window (#243).
 
 ### Changed

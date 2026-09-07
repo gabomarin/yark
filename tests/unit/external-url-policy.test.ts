@@ -5,7 +5,7 @@ import {
 } from "@shared/external-url-policy";
 
 describe("isAllowedExternalUrl", () => {
-  it("allows wiki, CurseForge, and GitHub https links", () => {
+  it("allows wiki, CurseForge, GitHub, and Discord invite https links", () => {
     expect(
       isAllowedExternalUrl(
         "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options",
@@ -19,6 +19,7 @@ describe("isAllowedExternalUrl", () => {
     expect(
       isAllowedExternalUrl("https://github.com/gabomarin/yark/releases"),
     ).toBe(true);
+    expect(isAllowedExternalUrl("https://discord.gg/cQNeCq87rq")).toBe(true);
   });
 
   it("rejects non-http schemes and unknown hosts", () => {

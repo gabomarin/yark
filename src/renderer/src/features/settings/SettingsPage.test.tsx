@@ -758,6 +758,21 @@ describe("SettingsPage", () => {
     });
   });
 
+  it("links GitHub and Discord community on About", async () => {
+    const user = userEvent.setup();
+    stubSettingsApi();
+    renderSettings();
+    await openCategory(user, "About");
+
+    const github = screen.getByRole("link", { name: /^GitHub$/i });
+    expect(github).toHaveAttribute("href", "https://github.com/gabomarin/yark");
+    expect(github).toHaveAttribute("target", "_blank");
+
+    const discord = screen.getByRole("link", { name: /^Discord$/i });
+    expect(discord).toHaveAttribute("href", "https://discord.gg/cQNeCq87rq");
+    expect(discord).toHaveAttribute("target", "_blank");
+  });
+
   it("links third-party notices on About", async () => {
     const user = userEvent.setup();
     stubSettingsApi();

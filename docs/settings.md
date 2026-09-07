@@ -26,7 +26,7 @@ the Server tab / workspace.
 | Auto-start summary | `…/components/SettingsAutoStartSection.tsx` |
 | SteamCMD | `…/components/SettingsSteamCmdSection.tsx` |
 | Log retention | `…/components/SettingsLogRetentionSection.tsx` |
-| About (YARK updates, app data folders, third-party notices) | `…/components/SettingsYarkUpdateSection.tsx`, `…/components/SettingsAppDataSection.tsx`, `…/components/SettingsAboutLegalSection.tsx` |
+| About (YARK updates, app data folders, community links, third-party notices) | `…/components/SettingsYarkUpdateSection.tsx`, `…/components/SettingsAppDataSection.tsx`, `…/components/SettingsAboutCommunitySection.tsx`, `…/components/SettingsAboutLegalSection.tsx` |
 | Density / console-on-start load/migrate | `…/settingsModel.ts` |
 | First-run setup wizard | `src/renderer/src/features/setup-wizard/` (`onboarding.v1`) |
 | Tray / Windows startup hook | `…/hooks/useDesktopShellPreferences.ts` |

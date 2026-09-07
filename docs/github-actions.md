@@ -13,11 +13,31 @@ human-readable version comment on the line above each `uses:` entry. Mutable tag
 | [`.github/workflows/website-ci.yml`](../.github/workflows/website-ci.yml) | Astro site build | `contents: read` |
 | [`.github/workflows/changelog.yml`](../.github/workflows/changelog.yml) | Require Unreleased changelog | `contents: read`, `pull-requests: read` |
 | [`.github/workflows/pages.yml`](../.github/workflows/pages.yml) | Deploy site to GitHub Pages | `contents: read`, `pages: write`, `id-token: write` |
-| [`.github/workflows/release.yml`](../.github/workflows/release.yml) | Windows NSIS → GitHub Release | workflow `contents: read`; job elevates `contents: write` only to publish |
+| [`.github/workflows/release.yml`](../.github/workflows/release.yml) | Windows NSIS → GitHub Release; Discord `#releases` notify after assets upload | workflow `contents: read`; job elevates `contents: write` only to publish |
+| [`.github/workflows/discord-release-notify.yml`](../.github/workflows/discord-release-notify.yml) | Manual Discord re-announce for an existing tag (`workflow_dispatch`) | `contents: read` |
 
 Release runs only when `github.repository == 'gabomarin/yark'` (tag push or
 `workflow_dispatch`). It does not run on pull requests, so fork PRs cannot publish
 releases or consume release write tokens.
+
+### Discord release notify
+
+After **Release Windows** finishes creating the GitHub Release **with installer
+assets**, the same job posts the tag and release-notes body to Discord
+(`scripts/ci/discord-release-notify.py`). It refuses to post if the release has
+no assets yet.
+
+1. In Discord: `#releases` → Edit channel → **Integrations** → **Webhooks** → New
+   Webhook → copy the URL.
+2. In GitHub: repo **Settings → Secrets and variables → Actions** → New repository
+   secret named `DISCORD_RELEASES_WEBHOOK_URL` → paste the webhook URL.
+3. Optional dry-run (existing tag only): Actions → **Discord release notify** →
+   Run workflow → enter a tag that already has assets (e.g. `v0.19.0`).
+
+The notifier uses Python + the Discord webhook HTTP API only (no third-party
+Discord Action). Message `flags` include `SUPPRESS_EMBEDS` so GitHub links do not
+expand into preview cards. Long release notes are truncated to Discord’s
+2000-character limit with a pointer to the full GitHub release page.
 
 Official Windows packages require repository variable
 `YARK_CURSEFORGE_PROXY_URL` (baked into main at build time; see
