@@ -176,9 +176,9 @@ describe("InstanceService.updatePatch concurrency (#209)", () => {
     expect(
       (
         instances as unknown as {
-          profileWrites: { chains: Map<string, unknown> };
+          profileWrites: { hasPending: (id: string) => boolean };
         }
-      ).profileWrites.chains.has(created.id),
+      ).profileWrites.hasPending(created.id),
     ).toBe(false);
   });
 
