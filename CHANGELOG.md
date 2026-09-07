@@ -16,6 +16,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Pending INI queue no longer drops gameplay edits when a Server-tab profile sync races an in-flight save, and partial cluster/config INI writes materialize the full draft before clearing the queue (#530).
 - Discord `#releases` posts omit the SemVer cut PR bullet (`release: vX.Y.Z`) from GitHub auto-generated notes.
 
 ## [0.20.0] - 2026-09-07

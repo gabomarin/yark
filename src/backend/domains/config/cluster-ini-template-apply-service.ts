@@ -389,17 +389,21 @@ export class ClusterIniTemplateApplyService {
     files: ClusterIniTemplateFileSelection,
   ): Promise<void> {
     await mkdir(dirname(current.gameUserSettingsPath), { recursive: true });
-    if (files.gameUserSettings) {
+    const hadPending = this.ini.hasPendingServerIni(current.serverId);
+    const writeGus = hadPending || files.gameUserSettings;
+    const writeGame = hadPending || files.game;
+    // Pending drafts hold both files; a partial template write must still
+    // materialize the non-selected file before clearPending (#530).
+    if (writeGus) {
       await writeFile(
         current.gameUserSettingsPath,
         payload.gameUserSettings,
         "utf8",
       );
     }
-    if (files.game) {
+    if (writeGame) {
       await writeFile(current.gameIniPath, payload.game, "utf8");
     }
-    // Disk is authoritative after template apply; drop any leftover queue (#530).
     this.ini.clearPendingServerIni(current.serverId);
   }
 
