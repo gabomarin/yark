@@ -1,0 +1,46 @@
+---
+title: Optional Ark Server API and community plugins
+description: How YARK’s Ark Server API tab installs the community API, Load on Start, and plugin zips for ASA dedicated servers on Windows.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+import { withBase } from "../../../data/site";
+
+The workspace **Ark Server API** tab is optional support for the community
+[ArkServerApi](https://github.com/ArkServerApi/AsaApi) stack (Version.dll / loader +
+plugins). It is **not** Wildcard, not CurseForge `-mods=`, and YARK does not endorse
+third-party DLLs.
+
+<figure class="doc-shot">
+  <img
+    src={withBase("/screenshots/workspace-asa-api.png")}
+    alt="YARK Ark Server API tab showing install and Load on Start controls"
+    width="1440"
+    height="900"
+    loading="lazy"
+  />
+  <figcaption>
+    Ark Server API — install from GitHub releases, Load on Start, and plugin zip management.
+  </figcaption>
+</figure>
+
+<Aside type="caution" title="Experimental">
+  ASA game patches often break the community API until authors publish a new build.
+  Use a non-production profile first, and keep world backups.
+</Aside>
+
+## What you can do
+
+| Action | Notes |
+| --- | --- |
+| **Install** | Downloads the latest API release into this server’s Win64 folder (cached under YARK app data) |
+| **Remove** | Deletes API / loader / plugins; game files stay. Stop the server first |
+| **Load on Start** | Off by default. Prefer Version.dll so Start stays on the normal game process |
+| **Add plugin zip** | Installs into `ArkApi\Plugins\<Name>`; disable moves to `Disabled_Plugins` |
+
+## Honesty
+
+- Windows only.
+- While Load on Start is on, Overview / workspace may show **Loading Ark Server API…** until the server window is ready.
+- SteamCMD update / move should preserve `Version.dll`, `AsaApiLoader.exe`, and `ArkApi\` — verify after big update jobs if something looks wiped.
+- Full engineering notes: repo `docs/asa-api.md`.

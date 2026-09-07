@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-09-07
+
 ### Added
 
 - GitHub Action posts each published release (tag + changelog body) to Discord `#releases` after the Windows release job finishes uploading installer assets (`DISCORD_RELEASES_WEBHOOK_URL`).
@@ -787,6 +789,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Tracked in-repo TODO / historical planning docs (moved to local agent context).
 
 [Unreleased]: #unreleased
+[0.20.0]: #0200---2026-09-07
 [0.19.0]: #0190---2026-09-06
 [0.18.2]: #0182---2026-09-03
 [0.18.1]: #0181---2026-09-02

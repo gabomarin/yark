@@ -24,6 +24,27 @@ const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.20.0",
+    date: "2026-09-07",
+    sections: [
+      {
+        title: "Added",
+        items: [
+          "Workspace Ark Server API tab: install community API + Version.dll, Load on Start, and plugin zip enable/disable (experimental).",
+          "Settings → About Community links for GitHub and the YARK Discord.",
+          "Published GitHub releases can announce to Discord #releases after installer assets upload.",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "RCON quick commands no longer include DoExit — use Stop for a safe shutdown.",
+          "Ark Server API confirmations use the same panel chrome as What's new / Quit YARK.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.19.0",
     date: "2026-09-06",
     sections: [

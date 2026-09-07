@@ -46,6 +46,7 @@ export function ServerAsaApiPanel(props: Props): ReactElement {
         radius="md"
         className={classes.panel}
         data-testid="server-asaapi-panel"
+        data-asa-api-panel
       >
         <div className={classes.scroll}>
           <Stack gap="sm">

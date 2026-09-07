@@ -10,6 +10,9 @@ export type RoadmapItem = {
  * Prefer operator-visible product work from open issues (not CI/packaging hygiene).
  * Not a ship promise — keep wording directional. Milestones on GitHub stay authoritative.
  *
+ * Shipped in v0.20.0 (removed from this list): experimental Ark Server API workspace
+ * tab (#243), Settings → About Community GitHub/Discord links, Discord #releases
+ * notify after Windows release assets upload.
  * Shipped in v0.19.0 (removed from this list): INI Other section subgroups (#516),
  * sidebar Quit YARK (#532), pending INI queue while running (#530), softer
  * self-update feed errors (#521), unpackaged skip single-instance lock (#528).
