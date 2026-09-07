@@ -19,6 +19,9 @@
   <a href="https://github.com/gabomarin/yark/releases">
     <img src="https://img.shields.io/github/downloads/gabomarin/yark/total" alt="Cumulative downloads">
   </a>
+  <a href="https://discord.gg/DQ8nes63w7">
+    <img src="https://img.shields.io/badge/Discord-join_chat-5865F2?logo=discord&logoColor=white" alt="Join the YARK Discord">
+  </a>
   <img src="https://img.shields.io/badge/status-prerelease-orange" alt="Prerelease">
   <a href="LICENSE">
     <img src="https://img.shields.io/github/license/gabomarin/yark" alt="GPL-3.0 license">
@@ -35,7 +38,7 @@
   ·
   <a href="https://github.com/gabomarin/yark/issues">Issues</a>
   ·
-  <a href="https://discord.gg/cQNeCq87rq">Discord</a>
+  <a href="https://discord.gg/DQ8nes63w7">Discord</a>
 </p>
 
 > [!WARNING]

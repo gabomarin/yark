@@ -769,7 +769,7 @@ describe("SettingsPage", () => {
     expect(github).toHaveAttribute("target", "_blank");
 
     const discord = screen.getByRole("link", { name: /^Discord$/i });
-    expect(discord).toHaveAttribute("href", "https://discord.gg/cQNeCq87rq");
+    expect(discord).toHaveAttribute("href", "https://discord.gg/DQ8nes63w7");
     expect(discord).toHaveAttribute("target", "_blank");
   });
 

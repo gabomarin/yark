@@ -42,6 +42,7 @@ export const site = {
   statusLabel: `Public prerelease · v${version} · not production-ready`,
   repoUrl: "https://github.com/gabomarin/yark",
   releasesUrl: "https://github.com/gabomarin/yark/releases",
+  discordUrl: "https://discord.gg/DQ8nes63w7",
   downloadUrl: windowsSetupDownloadUrl(version),
   downloadLabel: "Download for Windows",
   ogImagePath: "/screenshots/overview.png",

@@ -1,6 +1,8 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import DiscordIcon from "../components/DiscordIcon.astro";
 import DownloadIcon from "../components/DownloadIcon.astro";
+import GithubIcon from "../components/GithubIcon.astro";
 import ProductStage from "../components/ProductStage.astro";
 import ResponsiveShot from "../components/ResponsiveShot.astro";
 import { site, withBase } from "../data/site";
@@ -53,7 +55,14 @@ const logoSrcset = `${withBase("/media/yark-logo-320.webp")} 320w, ${withBase("/
           {site.downloadLabel}
         </a>
         <a class="cta ghost" href={site.releasesUrl}>All releases</a>
-        <a class="cta ghost" href={site.repoUrl}>GitHub</a>
+        <a class="cta ghost" href={site.repoUrl}>
+          <GithubIcon />
+          GitHub
+        </a>
+        <a class="cta ghost" href={site.discordUrl}>
+          <DiscordIcon />
+          Discord
+        </a>
       </div>
       <p class="status-pill" data-hero-item>{site.statusLabel}</p>
       <p class="release-trust" data-hero-item>
@@ -220,7 +229,8 @@ const logoSrcset = `${withBase("/media/yark-logo-320.webp")} 320w, ${withBase("/
     <h2 data-reveal-child>About this site</h2>
     <p class="section-lede" data-reveal-child>
       Product pages and operator docs for YARK. Source and license: GPL-3.0 on{" "}
-      <a href={site.repoUrl}>GitHub</a>.
+      <a href={site.repoUrl}>GitHub</a>. Chat and support:{" "}
+      <a href={site.discordUrl}>Discord</a>.
     </p>
   </section>
 </BaseLayout>
