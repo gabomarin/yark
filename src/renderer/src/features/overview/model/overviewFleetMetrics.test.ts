@@ -14,7 +14,11 @@ import {
 const base: Omit<ServerProfile, "id" | "name" | "enabled"> = {
   map: "TheIsland_WP",
   installDir: "C:/ARK",
-  autoStart: false,
+  
+    autoStart: false,
+  
+    useAsaApi: false,
+    useAsaApiLoader: false,
   sessionName: "s",
   maxPlayers: 70,
   gamePort: 7777,
@@ -327,3 +331,4 @@ describe("overviewFleetMetrics", () => {
     });
   });
 });
+

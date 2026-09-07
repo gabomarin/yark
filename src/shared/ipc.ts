@@ -1,6 +1,8 @@
 import type { OnboardingRecord } from "./onboarding";
 import type {
   AppEvent,
+  AsaApiInstallProgress,
+  AsaApiStatus,
   BackupCleanupOptions,
   BackupCleanupPreview,
   BackupCleanupResult,
@@ -59,7 +61,12 @@ import type { DesktopShellPreferences } from "./desktop-shell";
 type PickPathKind = "directory" | "file" | "save";
 
 /** App-managed folders under Electron userData (Settings diagnostics). */
-export type AppDataFolderKind = "app" | "backups" | "updateLogs" | "steamcmd";
+export type AppDataFolderKind =
+  | "app"
+  | "backups"
+  | "updateLogs"
+  | "steamcmd"
+  | "asaApiCache";
 
 export interface AppDataFolderInfo {
   kind: AppDataFolderKind;
@@ -94,6 +101,15 @@ export const IPC = {
   serversMoveInstallDismissCleanup: "servers:move-install-dismiss-cleanup",
   serversOpenFolder: "servers:open-folder",
   serversOpenNativeTerminal: "servers:open-native-terminal",
+  serversAsaApiStatus: "servers:asa-api-status",
+  serversAsaApiInstall: "servers:asa-api-install",
+  serversAsaApiUninstall: "servers:asa-api-uninstall",
+  serversAsaApiSetPluginEnabled: "servers:asa-api-set-plugin-enabled",
+  serversAsaApiDeletePlugin: "servers:asa-api-delete-plugin",
+  serversAsaApiAddPluginZip: "servers:asa-api-add-plugin-zip",
+  serversAsaApiOpenWin64: "servers:asa-api-open-win64",
+  serversAsaApiOpenPlugins: "servers:asa-api-open-plugins",
+  serversAsaApiClearCache: "servers:asa-api-clear-cache",
   serversStatuses: "servers:statuses",
   serversInstallation: "servers:installation",
   steamcmdStatus: "steamcmd:status",
@@ -223,6 +239,7 @@ export const IPC_PUSH = {
   serverStopProgress: "push:server-stop-progress",
   moveInstallProgress: "push:move-install-progress",
   cloneInstallProgress: "push:clone-install-progress",
+  asaApiInstallProgress: "push:asa-api-install-progress",
   backupsChanged: "push:backups-changed",
   serverIniChanged: "push:server-ini-changed",
   rconStatusChanged: "push:rcon-status-changed",
@@ -242,6 +259,8 @@ export type ServerStopProgressPush = ServerStopProgress;
 export type MoveInstallProgressPush = MoveInstallProgress;
 
 export type CloneInstallProgressPush = CloneInstallProgress;
+
+export type AsaApiInstallProgressPush = AsaApiInstallProgress;
 
 export interface BackupsChangedPush {
   serverId: string;
@@ -384,6 +403,23 @@ export interface RendererApi {
   dismissMoveServerInstallCleanup(id: string): Promise<IpcResult<void>>;
   openServerFolder(id: string): Promise<IpcResult<void>>;
   openServerNativeTerminal(id: string): Promise<IpcResult<void>>;
+  getAsaApiStatus(id: string): Promise<IpcResult<AsaApiStatus>>;
+  installAsaApi(id: string): Promise<IpcResult<AsaApiStatus>>;
+  uninstallAsaApi(id: string): Promise<IpcResult<AsaApiStatus>>;
+  setAsaApiPluginEnabled(
+    id: string,
+    pluginName: string,
+    enabled: boolean,
+  ): Promise<IpcResult<AsaApiStatus>>;
+  deleteAsaApiPlugin(
+    id: string,
+    pluginName: string,
+  ): Promise<IpcResult<AsaApiStatus>>;
+  /** Opens a zip picker; null when canceled. */
+  addAsaApiPluginZip(id: string): Promise<IpcResult<AsaApiStatus | null>>;
+  openAsaApiWin64(id: string): Promise<IpcResult<void>>;
+  openAsaApiPlugins(id: string): Promise<IpcResult<void>>;
+  clearAsaApiCache(): Promise<IpcResult<void>>;
   installSteamCmd(): Promise<IpcResult<string>>;
   cancelSteamCmd(): Promise<IpcResult<boolean>>;
   pauseSteamCmd(): Promise<IpcResult<boolean>>;
@@ -680,6 +716,9 @@ export interface RendererApi {
   ): () => void;
   onCloneInstallProgress(
     listener: (payload: CloneInstallProgressPush) => void,
+  ): () => void;
+  onAsaApiInstallProgress(
+    listener: (payload: AsaApiInstallProgressPush) => void,
   ): () => void;
   onBackupsChanged(
     listener: (payload: BackupsChangedPush) => void,

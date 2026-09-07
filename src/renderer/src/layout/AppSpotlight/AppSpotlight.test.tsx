@@ -28,7 +28,9 @@ const server: ServerProfile = {
   map: "ScorchedEarth_WP",
   installDir: "C:/ARK/Scorched",
   enabled: true,
-  autoStart: false,
+    autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
   sessionName: "Scorched Cluster",
   maxPlayers: 70,
   gamePort: 7777,
@@ -130,3 +132,4 @@ describe("AppSpotlight", () => {
     ).toBeGreaterThanOrEqual(1);
   });
 });
+

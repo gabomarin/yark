@@ -63,6 +63,8 @@ function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
     installDir: "C:\\ARK\\Island",
     enabled: true,
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     sessionName: "Island Session",
     maxPlayers: 70,
     gamePort: 7777,
@@ -343,3 +345,4 @@ describe("InstanceService host port start gate", () => {
     );
   });
 });
+

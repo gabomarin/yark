@@ -22,7 +22,11 @@ function profile(partial: Partial<ServerProfile> & Pick<ServerProfile, "id" | "n
     mods: [],
     disabledMods: [],
     modMetadataCache: {},
+    
     autoStart: false,
+    
+    useAsaApi: false,
+    useAsaApiLoader: false,
     enabled: true,
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
@@ -450,3 +454,4 @@ describe("ServerForm", () => {
     });
   });
 });
+

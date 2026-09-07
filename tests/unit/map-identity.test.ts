@@ -21,6 +21,8 @@ function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
     installDir: "C:\\asa\\svart",
     enabled: true,
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     sessionName: "Svart Home",
     maxPlayers: 70,
     gamePort: 7777,
@@ -341,3 +343,4 @@ describe("persistableMapSaveFolder", () => {
     ).toBeNull();
   });
 });
+

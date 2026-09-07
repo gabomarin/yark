@@ -9,7 +9,16 @@ const SERVER_RUNTIME_STATUS_LABEL: Record<ServerStatus, string> = {
   error: "Error",
 };
 
-export function serverRuntimeStatusLabel(status: ServerStatus | string): string {
+export function serverRuntimeStatusLabel(
+  status: ServerStatus | string,
+  options?: { asaApiLoading?: boolean },
+): string {
+  if (
+    options?.asaApiLoading === true
+    && (status === "starting" || status === "stopped" || status === "error")
+  ) {
+    return "Loading Ark Server API…";
+  }
   if (status in SERVER_RUNTIME_STATUS_LABEL) {
     return SERVER_RUNTIME_STATUS_LABEL[status as ServerStatus];
   }

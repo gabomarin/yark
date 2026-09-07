@@ -23,7 +23,9 @@ const profile = {
   extraArgs: [],
   mods: [],
   enabled: true,
-  autoStart: false,
+    autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
   createdAt: "2026-07-23T00:00:00.000Z",
   updatedAt: "2026-07-23T00:00:00.000Z",
 };
@@ -956,6 +958,44 @@ describe("ServerCard", () => {
     expect(screen.getByRole("button", { name: "More options" })).toBeEnabled();
   });
 
+  it("shows Loading Ark Server API while asaApiLoading is true", () => {
+    render(
+      <AppProviders>
+        <ServerCard
+          server={{ ...profile, useAsaApi: true }}
+          runtime={{
+            serverId: profile.id,
+            status: "starting",
+            processLive: true,
+            pid: null,
+            startedAt: null,
+            lastError: null,
+            asaApiLoading: true,
+          }}
+          installation={installed}
+          officialSteamBuild="build 24346423"
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+          onDelete={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getAllByText("Loading Ark Server API…").length).toBeGreaterThan(0);
+  });
+
   it("opens Downloads from the progress label while SteamCMD is busy", async () => {
     const user = userEvent.setup();
     const onOpenDownloads = vi.fn();
@@ -1531,3 +1571,4 @@ describe("ServerCard", () => {
     expect(screen.getByRole("button", { name: /Installing files… – open Downloads/i })).toBeInTheDocument();
   });
 });
+

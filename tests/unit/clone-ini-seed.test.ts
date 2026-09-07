@@ -23,6 +23,8 @@ function profile(installDir: string): ServerProfile {
     installDir,
     enabled: true,
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     sessionName: "Winter Session",
     maxPlayers: 70,
     gamePort: 7787,
@@ -126,3 +128,4 @@ describe("seedCloneIniFiles", () => {
     expect(gus[flatKey("SessionSettings", "SessionName")]).toBe("Winter Session");
   });
 });
+

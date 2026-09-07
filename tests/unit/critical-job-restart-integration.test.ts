@@ -19,6 +19,8 @@ function profile(): ServerProfile {
     installDir: "C:\\asa-e2e\\servers\\restart-fixture",
     enabled: true,
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     sessionName: "Restart fixture",
     maxPlayers: 70,
     gamePort: 7777,
@@ -861,3 +863,4 @@ describe("UpdateService restart simulation at durable phase boundaries", () => {
     expect(service.getSteamCmdStatus().criticalJobs).toEqual([]);
   });
 });
+

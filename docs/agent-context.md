@@ -179,6 +179,7 @@ cmd.exe /c npm run build
 ## Implementation notes
 
 - Launch args, profile→INI sync, Windows spawn flags, start/stop/kill/restart, readiness, port rules, INI sanitize, and the on-demand configuration assistant: [server-lifecycle.md](server-lifecycle.md). Do not add a permanent Guided Configuration tab; keep the six-step assistant on-demand from `Server`.
+- Optional community **Ark Server API** tab (install + Version.dll default inject, optional loader, plugins): [asa-api.md](asa-api.md) (#243).
 - **Main-process I/O (#145):** do not add `execFileSync` / `spawnSync` / sync directory walks on fleet, start, stop, or SteamCMD cancel paths. Use `execFileBounded` / `fs.promises` / `killWinProcessTreeAsync`. Measurements and inventory: [server-lifecycle.md](server-lifecycle.md#main-process-io-145).
 - **App refresh contract (#163):** `App.refresh` is the shared host poll. Prefer push (`onStatus`, `onBackupsChanged`, SteamCMD progress, etc.) for live runtime. Do **not** `useEffect(..., [props.servers])` (or the whole `servers` array) to reload page data — poll identity / re-render is not a membership signal. Patterns:
   - **Lookup only** (`useMemo` name maps, enabled flags): OK to depend on `props.servers`.

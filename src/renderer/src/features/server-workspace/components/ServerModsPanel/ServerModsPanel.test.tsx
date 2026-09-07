@@ -58,7 +58,9 @@ const server: ServerProfile = {
   map: "TheIsland_WP",
   installDir: "C:\\ARK\\TheIsland",
   enabled: true,
-  autoStart: false,
+    autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
   sessionName: "YARK",
   maxPlayers: 70,
   gamePort: 7777,
@@ -708,3 +710,4 @@ describe("ServerModsPanel", () => {
     expect(await screen.findByText("Loading…")).toBeInTheDocument();
   });
 });
+

@@ -26,6 +26,8 @@ interface Props {
   onFocusConsumed?: () => void;
   /** Workspace only — jump to create/restore on the Backups tab. */
   onOpenBackupsTab?: () => void;
+  /** True while Ark Server API inject delays ShooterGame.log (#243). */
+  asaApiLoading?: boolean;
 }
 
 export function ServerLogsPanel(props: Props): ReactElement {
@@ -100,6 +102,7 @@ export function ServerLogsPanel(props: Props): ReactElement {
             runtimeLogLines={panel.logs?.runtimeLogLines ?? null}
             sourceFilter={panel.runtimeSourceFilter}
             onSourceFilterChange={panel.setRuntimeSourceFilter}
+            asaApiLoading={props.asaApiLoading === true}
             clearAction={
               <LogsClearAction
                 label="Clear captured runtime console output"

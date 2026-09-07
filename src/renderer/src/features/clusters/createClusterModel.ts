@@ -218,6 +218,8 @@ export function serverProfileToInput(server: ServerProfile): ServerProfileInput 
     disabledMods: server.disabledMods ?? [],
     modMetadataCache: server.modMetadataCache ?? {},
     autoStart: server.autoStart,
+    useAsaApi: server.useAsaApi === true,
+    useAsaApiLoader: server.useAsaApiLoader === true,
   };
 }
 
@@ -232,3 +234,4 @@ export function buildCreateClusterInput(
     clusterDir: normalizeWindowsPath(clusterDir),
   };
 }
+

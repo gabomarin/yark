@@ -19,6 +19,8 @@ function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
     installDir: "C:\\asa\\island",
     enabled: true,
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     sessionName: "My Island",
     maxPlayers: 70,
     gamePort: 7777,
@@ -266,3 +268,4 @@ describe("formatLaunchCommandLine", () => {
     );
   });
 });
+

@@ -13,7 +13,9 @@ const server = {
   map: "TheIsland_WP",
   installDir: "C:/ARK/TheIsland",
   enabled: true,
-  autoStart: false,
+    autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
   sessionName: "The Island Cluster",
   maxPlayers: 70,
   gamePort: 7777,
@@ -586,3 +588,4 @@ describe("OverviewPage", () => {
     expect(screen.getByRole("textbox", { name: "Search servers" })).toHaveValue("Island");
   });
 });
+

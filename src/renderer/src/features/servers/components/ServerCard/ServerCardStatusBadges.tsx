@@ -10,6 +10,8 @@ interface Props {
   stopBusy: boolean;
   serverEnabled: boolean;
   compact: boolean;
+  /** True while Ark Server API inject/plugins delay ShooterGame.log (#243). */
+  asaApiLoading?: boolean;
 }
 
 /** Label + CSS-swapped status dot for narrow card containers (#302). */
@@ -18,13 +20,19 @@ export function ServerCardStatusBadges(props: Props): ReactElement {
     props.startBusy && (props.status === "stopped" || props.status === "error")
       ? "starting"
       : props.status;
+  const asaApiLoading =
+    props.asaApiLoading === true
+    && (displayStatus === "starting" || props.status === "starting");
   const statusLabel = props.stopBusy
     ? "Stopping…"
+    : asaApiLoading
+      ? "Loading Ark Server API…"
     : props.startBusy && (props.status === "stopped" || props.status === "error")
       ? "Starting…"
       : undefined;
   const statusColor =
     props.stopBusy
+    || asaApiLoading
     || (props.startBusy && (props.status === "stopped" || props.status === "error"))
       ? "blue"
       : undefined;

@@ -82,7 +82,7 @@ async function openWorkspaceAndAssistant(page, serverName) {
     .first()
     .click();
 
-  await page.getByRole("tab", { name: "Server" }).waitFor({ timeout: 10000 });
+  await page.getByRole("tab", { name: "Server", exact: true }).waitFor({ timeout: 10000 });
   await page.getByRole("tab", { name: "INI Files" }).waitFor({ timeout: 10000 });
   await page.getByRole("tab", { name: "Mods" }).waitFor({ timeout: 10000 });
 

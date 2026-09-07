@@ -6,7 +6,8 @@ export type WorkspaceTab =
   | "backups"
   | "logs"
   | "rcon"
-  | "maintenance";
+  | "maintenance"
+  | "asaApi";
 
 export interface RconHistoryEntry {
   id: string;

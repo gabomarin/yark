@@ -151,6 +151,8 @@ export function serverFormToInput(
     disabledMods: state.disabledMods,
     modMetadataCache: state.modMetadataCache,
     autoStart: state.autoStart,
+    useAsaApi: initial?.useAsaApi === true,
+    useAsaApiLoader: initial?.useAsaApiLoader === true,
   };
 }
 

@@ -13,20 +13,15 @@ import {
 } from "@shared/left-running";
 import { rconExec } from "../rcon/rcon-client";
 import { diagnoseAsaStartupFailure, type AsaStartupFailure } from "@shared/asa-startup-failure";
-import { sanitizeDiagnosticText } from "@shared/credential-redaction";
 import { readAsaLogSessionExcerpt } from "./asa-log-tail";
 import { createAdoptedChildHandle } from "./adopted-child";
 import { killWinProcessTreeAsync } from "./kill-win-process-tree";
 import { queryWindowsProcessIdentity } from "./windows-process-identity";
+import { windowsProcessHasMainWindow } from "./windows-process-main-window";
 import { spawnAsaProcess } from "./process-spawn";
 import {
   DEFAULT_READY_PROBE_MIN_WAIT_MS,
   DEFAULT_READY_SETTLE_MS,
-  RUNTIME_LOG_SOURCES,
-  appendRuntimeLogRing,
-  formatRuntimeLogLine,
-  runtimeLogPartialKey,
-  splitRuntimeLogChunk,
   type RuntimeLogSource,
 } from "./process-readiness";
 import {
@@ -58,6 +53,13 @@ import {
   isUnexpectedManagedExit,
   planManagedExitLastError,
 } from "./process-stop";
+import { AsaApiWindowPoller } from "./process-asa-api-loading";
+import {
+  appendProcessRuntimeLog,
+  captureProcessRuntimeChunk,
+  clearProcessRuntimePartials,
+  flushProcessRuntimePartials,
+} from "./process-runtime-logs";
 
 export type {
   BeginGracefulStopResult,
@@ -104,6 +106,13 @@ export interface ProcessManagerOptions {
   createAdoptedChild?: (pid: number) => ChildProcess;
   /** OS identity probe (crash-recovery checkpoints / Leave snapshot). */
   queryOsIdentity?: (pid: number) => Promise<LiveProcessIdentity | null>;
+  /**
+   * Detect a visible main window for AsaApi boot UX (#243).
+   * Defaults to a Windows MainWindowHandle probe.
+   */
+  hasMainWindow?: (pid: number) => Promise<boolean>;
+  /** Main-window poll interval while asaApiLoading (default 2s). */
+  asaApiWindowPollMs?: number;
   /** Persist durable identity while a managed process is active. */
   onProcessCheckpoint?: (record: LeftRunningProcessIdentity) => void;
   /** Clear durable identity after a managed process exits/stops. */
@@ -141,6 +150,7 @@ export class ProcessManager extends EventEmitter {
   private readonly queryOsIdentity: (
     pid: number,
   ) => Promise<LiveProcessIdentity | null>;
+  private readonly hasMainWindow: (pid: number) => Promise<boolean>;
   private readonly onProcessCheckpoint:
     | ((record: LeftRunningProcessIdentity) => void)
     | null;
@@ -148,6 +158,7 @@ export class ProcessManager extends EventEmitter {
   private readonly knownSecrets: () => readonly string[];
   /** Prefer persistent session when wired from InstanceService. */
   private rconExecutor: ManagedRconExecutor | null = null;
+  private readonly asaApiWindowPoller: AsaApiWindowPoller;
 
   constructor(options?: ProcessManagerOptions) {
     super();
@@ -160,9 +171,19 @@ export class ProcessManager extends EventEmitter {
     this.createAdoptedChild = options?.createAdoptedChild ?? createAdoptedChildHandle;
     this.queryOsIdentity =
       options?.queryOsIdentity ?? ((pid) => queryWindowsProcessIdentity(pid));
+    this.hasMainWindow =
+      options?.hasMainWindow ?? ((pid) => windowsProcessHasMainWindow(pid));
     this.onProcessCheckpoint = options?.onProcessCheckpoint ?? null;
     this.onProcessCheckpointCleared = options?.onProcessCheckpointCleared ?? null;
     this.knownSecrets = options?.knownSecrets ?? (() => []);
+    this.asaApiWindowPoller = new AsaApiWindowPoller(
+      options?.asaApiWindowPollMs ?? 2_000,
+      {
+        processes: this.processes,
+        hasMainWindow: (pid) => this.hasMainWindow(pid),
+        clearAsaApiLoading: (id, msg) => this.clearAsaApiLoading(id, msg),
+      },
+    );
   }
 
   /**
@@ -189,7 +210,7 @@ export class ProcessManager extends EventEmitter {
   }
 
   /**
-   * True when a managed child is still in the OS process table (exit not observed).
+   * True when a managed child is still in the OS process table.
    */
   hasLiveProcess(serverId: string): boolean {
     const managed = this.processes.get(serverId);
@@ -209,6 +230,7 @@ export class ProcessManager extends EventEmitter {
         pid: null,
         startedAt: null,
         lastError: null,
+        asaApiLoading: false,
       };
     }
     return {
@@ -218,6 +240,7 @@ export class ProcessManager extends EventEmitter {
       pid: managed.child.pid ?? null,
       startedAt: managed.startedAt,
       lastError: managed.lastError,
+      asaApiLoading: managed.asaApiLoading === true,
     };
   }
 
@@ -477,6 +500,9 @@ export class ProcessManager extends EventEmitter {
         this.appendRuntimeLog(serverId, source, message),
       registerManaged: (serverId, managed) => {
         this.processes.set(serverId, managed);
+        if (managed.asaApiLoading === true) {
+          this.asaApiWindowPoller.ensure();
+        }
       },
       getManaged: (serverId) => this.processes.get(serverId),
       captureRuntimeChunk: (serverId, source, chunk) =>
@@ -598,6 +624,15 @@ export class ProcessManager extends EventEmitter {
     managed: ManagedProcess,
   ): Promise<void> {
     this.stopManagedCapture(serverId, managed);
+    const loaderPid = managed.loaderPid;
+    if (
+      process.platform === "win32" &&
+      typeof loaderPid === "number" &&
+      loaderPid > 0 &&
+      (await killWinProcessTreeAsync(loaderPid))
+    ) {
+      return;
+    }
     const pid = managed.child.pid;
     if (
       process.platform === "win32"
@@ -706,49 +741,49 @@ export class ProcessManager extends EventEmitter {
     source: RuntimeLogSource,
     chunk: string,
   ): void {
-    const key = runtimeLogPartialKey(serverId, source);
-    const previous = this.runtimePartials.get(key) ?? "";
-    const { completeLines, remainder } = splitRuntimeLogChunk(previous, chunk);
-    this.runtimePartials.set(key, remainder);
-    for (const line of completeLines) {
-      this.appendRuntimeLog(serverId, source, line);
-    }
+    captureProcessRuntimeChunk(
+      this.runtimePartials,
+      (id, src, message) => this.appendRuntimeLog(id, src, message),
+      serverId,
+      source,
+      chunk,
+      () =>
+        this.clearAsaApiLoading(
+          serverId,
+          "Ark Server API finished loading; following normal server startup.",
+        ),
+    );
+  }
+
+  /** Drop Overview “Loading Ark Server API…” when the console appears or logs write. */
+  private clearAsaApiLoading(serverId: string, message: string): void {
+    const managed = this.processes.get(serverId);
+    if (managed === undefined || managed.asaApiLoading !== true) return;
+    managed.asaApiLoading = false;
+    this.appendRuntimeLog(serverId, "system", message);
+    this.emitStatus(serverId);
+    this.asaApiWindowPoller.stopIfIdle();
   }
 
   private flushRuntimePartials(serverId: string): void {
-    for (const source of RUNTIME_LOG_SOURCES) {
-      const key = runtimeLogPartialKey(serverId, source);
-      const pending = this.runtimePartials.get(key);
-      this.runtimePartials.delete(key);
-      if (pending !== undefined && pending.trim().length > 0) {
-        this.appendRuntimeLog(serverId, source, pending);
-      }
-    }
+    flushProcessRuntimePartials(
+      this.runtimePartials,
+      (id, src, message) => this.appendRuntimeLog(id, src, message),
+      serverId,
+    );
   }
 
   private clearRuntimePartials(serverId: string): void {
-    for (const source of RUNTIME_LOG_SOURCES) {
-      this.runtimePartials.delete(runtimeLogPartialKey(serverId, source));
-    }
+    clearProcessRuntimePartials(this.runtimePartials, serverId);
   }
 
   private appendRuntimeLog(serverId: string, source: string, message: string): void {
-    const sanitized = sanitizeDiagnosticText(message, this.knownSecrets());
-    if (message.trim().length > 0 && sanitized.trim().length === 0) {
-      return;
-    }
-    const line = sanitized.trim();
-    if (line.length === 0) {
-      return;
-    }
-
-    const list = this.runtimeLogs.get(serverId) ?? [];
-    this.runtimeLogs.set(
+    appendProcessRuntimeLog(
+      this.runtimeLogs,
+      this.knownSecrets,
       serverId,
-      appendRuntimeLogRing(
-        list,
-        formatRuntimeLogLine(new Date().toISOString(), source, line),
-      ),
+      source,
+      message,
     );
   }
 }

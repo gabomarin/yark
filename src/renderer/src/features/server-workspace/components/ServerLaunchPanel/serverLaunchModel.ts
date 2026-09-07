@@ -14,8 +14,15 @@ import {
   type StructuredLaunchUiOption,
 } from "@shared/structured-launch-options";
 
-export function previewBinaryPath(installDir: string): string {
-  return `${installDir.replace(/[\\/]+$/, "")}\\ShooterGame\\Binaries\\Win64\\ArkAscendedServer.exe`;
+export function previewBinaryPath(
+  installDir: string,
+  opts: { useAsaApi?: boolean; useAsaApiLoader?: boolean } = {},
+): string {
+  const win64 = `${installDir.replace(/[\\/]+$/, "")}\\ShooterGame\\Binaries\\Win64`;
+  if (opts.useAsaApi === true && opts.useAsaApiLoader === true) {
+    return `${win64}\\AsaApiLoader.exe`;
+  }
+  return `${win64}\\ArkAscendedServer.exe`;
 }
 
 /**

@@ -24,6 +24,7 @@ export interface ReadyWaitManaged {
   lastError: string | null;
   startedAt: string;
   readinessGeneration: number;
+  asaApiLoading?: boolean;
 }
 
 export interface ReadyWaitTiming {
@@ -194,6 +195,7 @@ export async function waitUntilReady(
 
       managed.status = "running";
       managed.lastError = null;
+      managed.asaApiLoading = false;
       host.appendRuntimeLog(
         profile.id,
         "system",

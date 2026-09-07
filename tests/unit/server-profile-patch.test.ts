@@ -54,6 +54,8 @@ function input(overrides: Partial<ServerProfileInput> = {}): ServerProfileInput 
     disabledMods: [],
     modMetadataCache: {},
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     ...overrides,
   };
 }
@@ -172,8 +174,31 @@ describe("InstanceService.updatePatch concurrency (#209)", () => {
     // Settled chains drop their Map entry so deleted/churned IDs cannot leak.
     await Promise.resolve();
     expect(
-      (instances as unknown as { profileWriteChains: Map<string, unknown> })
-        .profileWriteChains.has(created.id),
+      (
+        instances as unknown as {
+          profileWrites: { hasPending: (id: string) => boolean };
+        }
+      ).profileWrites.hasPending(created.id),
     ).toBe(false);
   });
+
+  it("applies asaApi patch without clearing mods", async () => {
+    const created = repo.create(input());
+    const updated = await instances.updatePatch(created.id, {
+      group: "asaApi",
+      useAsaApi: true,
+      useAsaApiLoader: true,
+    });
+    expect(updated.useAsaApi).toBe(true);
+    expect(updated.useAsaApiLoader).toBe(true);
+    expect(updated.mods).toEqual(["111"]);
+    expect(
+      isServerProfilePatch({
+        group: "asaApi",
+        useAsaApi: false,
+        useAsaApiLoader: false,
+      }),
+    ).toBe(true);
+  });
 });
+

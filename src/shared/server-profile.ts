@@ -27,6 +27,8 @@ export function serverProfileToInput(server: ServerProfile): ServerProfileInput 
     disabledMods: server.disabledMods ?? [],
     modMetadataCache: server.modMetadataCache ?? {},
     autoStart: server.autoStart,
+    useAsaApi: server.useAsaApi === true,
+    useAsaApiLoader: server.useAsaApiLoader === true,
   };
 }
 
@@ -44,6 +46,13 @@ export function applyServerProfilePatch(
       ...base,
       extraArgs: patch.extraArgs,
       structuredLaunchArgs: patch.structuredLaunchArgs,
+    };
+  }
+  if (patch.group === "asaApi") {
+    return {
+      ...base,
+      useAsaApi: patch.useAsaApi === true,
+      useAsaApiLoader: patch.useAsaApiLoader === true,
     };
   }
   return {
@@ -76,6 +85,12 @@ export function isServerProfilePatch(value: unknown): value is ServerProfilePatc
         (body.modMetadataCache !== null &&
           typeof body.modMetadataCache === "object" &&
           !Array.isArray(body.modMetadataCache)))
+    );
+  }
+  if (body.group === "asaApi") {
+    return (
+      typeof body.useAsaApi === "boolean" &&
+      typeof body.useAsaApiLoader === "boolean"
     );
   }
   return false;

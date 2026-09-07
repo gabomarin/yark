@@ -15,6 +15,7 @@ import { RconPanel } from "../RconPanel/RconPanel";
 import type { PlayerListState } from "../RconPanel/PlayerListSection";
 import { ServerModsPanel } from "../ServerModsPanel/ServerModsPanel";
 import { ServerLaunchPanel } from "../ServerLaunchPanel/ServerLaunchPanel";
+import { ServerAsaApiPanel } from "../ServerAsaApiPanel/ServerAsaApiPanel";
 import { WorkspacePanelErrorBoundary } from "@ui/WorkspacePanelErrorBoundary/WorkspacePanelErrorBoundary";
 import classes from "../../ServerWorkspacePage.module.css";
 
@@ -82,6 +83,7 @@ export function WorkspaceTabs(props: Props): ReactElement {
           <Tabs.Tab value="logs">Logs</Tabs.Tab>
           <Tabs.Tab value="rcon">RCON</Tabs.Tab>
           <Tabs.Tab value="maintenance">Maintenance</Tabs.Tab>
+          <Tabs.Tab value="asaApi">Ark Server API</Tabs.Tab>
         </Tabs.List>
 
         <div className={classes.tabPanel}>
@@ -172,6 +174,7 @@ export function WorkspaceTabs(props: Props): ReactElement {
                 focus={props.logsFocus}
                 onFocusConsumed={props.onLogsFocusConsumed}
                 onOpenBackupsTab={() => props.onChange("backups")}
+                asaApiLoading={props.runtime?.asaApiLoading === true}
               />
             )}
 
@@ -201,6 +204,14 @@ export function WorkspaceTabs(props: Props): ReactElement {
                 installation={props.installation}
                 filesJobActive={props.filesJobActive || props.stopJobActive}
                 startBusy={props.startBusy}
+              />
+            )}
+
+            {props.value === "asaApi" && (
+              <ServerAsaApiPanel
+                key={props.server.id}
+                server={props.server}
+                onServerUpdated={props.onServerUpdated}
               />
             )}
           </WorkspacePanelErrorBoundary>

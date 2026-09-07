@@ -25,6 +25,8 @@ function input(overrides: Partial<ServerProfileInput> = {}): ServerProfileInput 
     extraArgs: ["-NoBattlEye"],
     mods: ["111", "222"],
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     ...overrides,
   };
 }
@@ -57,7 +59,7 @@ describe("ServerRepository", () => {
   it("persists autoStart on create and update", () => {
     const created = repo.create(input({ autoStart: true }));
     expect(created.autoStart).toBe(true);
-    const updated = repo.update(created.id, input({ autoStart: false, name: "Island" }));
+    const updated = repo.update(created.id, input({ name: "Island" }));
     expect(updated!.autoStart).toBe(false);
   });
 
@@ -261,3 +263,4 @@ describe("ServerRepository", () => {
     expect(() => backfillMaxPlayersFromLegacyLaunchArgs(db)).toThrow(/invalid JSON/i);
   });
 });
+

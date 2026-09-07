@@ -9,6 +9,15 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Workspace **Ark Server API** tab: install/uninstall community API + Version.dll (cached downloads), **Load on Start**, add plugin from zip, enable/disable via `Disabled_Plugins`, delete plugin with confirm, and a **Loading Ark Server API…** status while Version.dll/plugins delay the server window (#243).
+
+### Changed
+
+- RCON quick commands no longer include **DoExit** — use Stop for a safe shutdown.
+- Ark Server API confirmations (Remove, Clear cache, Delete plugin) use the same panel chrome as What's new / Quit YARK.
+
 ## [0.19.0] - 2026-09-06
 
 ### Added

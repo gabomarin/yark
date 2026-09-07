@@ -1,0 +1,83 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.scroll {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: var(--app-space-md);
+  scrollbar-gutter: stable;
+}
+
+.groupTitle {
+  color: var(--app-color-cryo);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: var(--app-space-xs);
+}
+
+.statusGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--app-space-xs);
+}
+
+@media (min-width: 720px) {
+  .statusGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.optionRow {
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-sm);
+  background: color-mix(in srgb, var(--app-color-bg) 35%, transparent);
+  padding: 0.4rem 0.55rem;
+}
+
+.optionRowDisabled {
+  opacity: 0.85;
+}
+
+.optionLabel {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.7rem;
+  color: var(--app-color-cryo);
+  cursor: help;
+  border-bottom: 1px dotted color-mix(in srgb, var(--app-color-cryo) 45%, transparent);
+  border-radius: 2px;
+  outline: none;
+}
+
+.optionLabel:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--app-color-cryo) 65%, transparent);
+  outline-offset: 2px;
+}
+
+.pluginList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pluginRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--app-space-xs);
+  padding: 0.55rem 0.75rem;
+  border-top: 1px solid var(--app-color-border-subtle);
+}
+
+.pluginRow:first-child {
+  border-top: 0;
+}

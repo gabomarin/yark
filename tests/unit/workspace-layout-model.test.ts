@@ -20,6 +20,8 @@ function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
     installDir: "C:\\ARK\\TheIsland",
     enabled: true,
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     sessionName: "YARK",
     maxPlayers: 70,
     gamePort: 7777,
@@ -85,3 +87,4 @@ describe("workspaceLayoutModel", () => {
     expect(groups.map((g) => g.label)).toEqual(["__unclustered__", "Unclustered"]);
   });
 });
+

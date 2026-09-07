@@ -15,6 +15,8 @@ function makeProfile(id = "srv-1"): ServerProfile {
     installDir: "C:/ARK/StopTest",
     enabled: true,
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     sessionName: "Session",
     maxPlayers: 70,
     gamePort: 7777,
@@ -320,3 +322,4 @@ describe("InstanceService.stop", () => {
     });
   });
 });
+

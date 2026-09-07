@@ -260,6 +260,8 @@ export function ServerLaunchPanel(props: Props): ReactElement {
 
           <ServerLaunchPreview
             installDir={props.server.installDir}
+            useAsaApi={props.server.useAsaApi === true}
+            useAsaApiLoader={props.server.useAsaApiLoader === true}
             inputSize={inputSize}
             open={previewOpen}
             onToggle={() => setPreviewOpen((v) => !v)}

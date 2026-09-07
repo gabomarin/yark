@@ -1,13 +1,15 @@
 import { BrowserWindow, dialog, shell, type OpenDialogOptions, type SaveDialogOptions } from "electron";
 import { spawn } from "node:child_process";
 import { mkdir } from "node:fs/promises";
-import { IPC } from "../shared/ipc";
+import { IPC, IPC_PUSH } from "../shared/ipc";
 import { ipcArgSchemas } from "../shared/ipc/channel-schemas";
 import { canonicalCurseForgeAsaModUrl } from "../shared/curseforge-url";
 import type {
+  AsaApiInstallProgress,
   ServerProfileInput,
   ServerProfilePatch,
 } from "../shared/types";
+import { normalizeAsaApiInstallProgress } from "../shared/types";
 import type { BackupService } from "../backend/domains/backups/backup-service";
 import type { MaintenanceService } from "../backend/domains/maintenance/maintenance-service";
 import type { PlayerSessionWatcher } from "../backend/domains/backups/player-session-watcher";
@@ -26,6 +28,7 @@ import type { ClusterIniTemplateApplyService } from "../backend/domains/config/c
 import type { ConfigTransferService } from "../backend/domains/config/config-transfer-service";
 import type { LogsService } from "../backend/domains/logs/logs-service";
 import type { ModsService } from "../backend/domains/mods/mods-service";
+import { AsaApiService } from "../backend/domains/asa-api/asa-api-service";
 import type { UpdateService } from "../backend/domains/updates/update-service";
 import type { MoveInstallService } from "../backend/domains/instances/move-install-service";
 import type { AppSettingsRepository } from "../backend/infra/db/app-settings-repository";
@@ -65,6 +68,7 @@ export interface AppDataFolderRoots {
   backups: string;
   updateLogs: string;
   steamcmd: string;
+  asaApiCache: string;
 }
 
 function fileStamp(date = new Date()): string {
@@ -98,6 +102,8 @@ export function registerIpcHandlers(
   /** Same entry as tray Quit YARK (`isQuitting` + `app.quit()`). */
   requestAppQuit: () => void,
 ): void {
+  const asaApi = new AsaApiService(appDataFolders.asaApiCache);
+
   handleValidated(IPC.serversList, ipcArgSchemas[IPC.serversList], () => instances.list());
 
   handleValidated(IPC.serversCreate, ipcArgSchemas[IPC.serversCreate], async ([input]) => {
@@ -307,6 +313,163 @@ export function registerIpcHandlers(
         windowsVerbatimArguments: true,
       });
       child.unref();
+    },
+  );
+
+  handleValidated(IPC.serversAsaApiStatus, ipcArgSchemas[IPC.serversAsaApiStatus], async ([id]) => {
+    const installDir = instances.installDirFor(id);
+    return asaApi.getStatus(installDir);
+  });
+
+  handleValidated(
+    IPC.serversAsaApiInstall,
+    ipcArgSchemas[IPC.serversAsaApiInstall],
+    async ([id]) => {
+      if (instances.statuses().some((s) => s.serverId === id && s.processLive)) {
+        throw new Error("Stop the server before installing AsaApi");
+      }
+      const installDir = instances.installDirFor(id);
+      const sendProgress = (payload: AsaApiInstallProgress): void => {
+        const normalized = normalizeAsaApiInstallProgress(payload);
+        for (const win of BrowserWindow.getAllWindows()) {
+          if (!win.isDestroyed()) {
+            win.webContents.send(IPC_PUSH.asaApiInstallProgress, normalized);
+          }
+        }
+      };
+      try {
+        return await asaApi.install(installDir, {
+          serverId: id,
+          onProgress: sendProgress,
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        sendProgress({
+          serverId: id,
+          active: false,
+          phase: null,
+          label: message,
+          percent: null,
+          bytesDownloaded: null,
+          bytesTotal: null,
+          assetLabel: null,
+          error: message,
+        });
+        throw error;
+      }
+    },
+  );
+
+  handleValidated(
+    IPC.serversAsaApiUninstall,
+    ipcArgSchemas[IPC.serversAsaApiUninstall],
+    async ([id]) => {
+      if (instances.statuses().some((s) => s.serverId === id && s.processLive)) {
+        throw new Error("Stop the server before uninstalling AsaApi");
+      }
+      const installDir = instances.installDirFor(id);
+      const status = await asaApi.uninstall(installDir);
+      const existing = repo.get(id);
+      if (
+        existing !== null &&
+        (existing.useAsaApi === true || existing.useAsaApiLoader === true)
+      ) {
+        await instances.updatePatch(id, {
+          group: "asaApi",
+          useAsaApi: false,
+          useAsaApiLoader: false,
+        });
+      }
+      return status;
+    },
+  );
+
+  handleValidated(
+    IPC.serversAsaApiSetPluginEnabled,
+    ipcArgSchemas[IPC.serversAsaApiSetPluginEnabled],
+    async ([id, pluginName, enabled]) => {
+      if (instances.statuses().some((s) => s.serverId === id && s.processLive)) {
+        throw new Error("Stop the server before enabling or disabling AsaApi plugins");
+      }
+      const installDir = instances.installDirFor(id);
+      return asaApi.setPluginEnabled(installDir, pluginName, enabled);
+    },
+  );
+
+  handleValidated(
+    IPC.serversAsaApiDeletePlugin,
+    ipcArgSchemas[IPC.serversAsaApiDeletePlugin],
+    async ([id, pluginName]) => {
+      if (instances.statuses().some((s) => s.serverId === id && s.processLive)) {
+        throw new Error("Stop the server before deleting AsaApi plugins");
+      }
+      const installDir = instances.installDirFor(id);
+      return asaApi.deletePlugin(installDir, pluginName);
+    },
+  );
+
+  handleValidated(
+    IPC.serversAsaApiAddPluginZip,
+    ipcArgSchemas[IPC.serversAsaApiAddPluginZip],
+    async ([id]) => {
+      if (instances.statuses().some((s) => s.serverId === id && s.processLive)) {
+        throw new Error("Stop the server before adding AsaApi plugins");
+      }
+      const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
+      const openOptions: OpenDialogOptions = {
+        title: "Add AsaApi plugin zip",
+        properties: ["openFile"],
+        filters: [{ name: "ZIP archives", extensions: ["zip"] }],
+      };
+      const picked =
+        win !== undefined
+          ? await dialog.showOpenDialog(win, openOptions)
+          : await dialog.showOpenDialog(openOptions);
+      if (picked.canceled || picked.filePaths.length === 0) {
+        return null;
+      }
+      const zipPath = picked.filePaths[0];
+      if (zipPath === undefined || zipPath.length === 0) {
+        return null;
+      }
+      const installDir = instances.installDirFor(id);
+      return asaApi.installPluginFromZip(installDir, zipPath);
+    },
+  );
+
+  handleValidated(
+    IPC.serversAsaApiOpenWin64,
+    ipcArgSchemas[IPC.serversAsaApiOpenWin64],
+    async ([id]) => {
+      const installDir = instances.installDirFor(id);
+      const targetPath = asaApi.win64Path(installDir);
+      await mkdir(targetPath, { recursive: true });
+      const error = await shell.openPath(targetPath);
+      if (error.length > 0) {
+        throw new Error(`Could not open Win64 folder: ${error}`);
+      }
+    },
+  );
+
+  handleValidated(
+    IPC.serversAsaApiOpenPlugins,
+    ipcArgSchemas[IPC.serversAsaApiOpenPlugins],
+    async ([id]) => {
+      const installDir = instances.installDirFor(id);
+      const targetPath = asaApi.pluginsPath(installDir);
+      await mkdir(targetPath, { recursive: true });
+      const error = await shell.openPath(targetPath);
+      if (error.length > 0) {
+        throw new Error(`Could not open Plugins folder: ${error}`);
+      }
+    },
+  );
+
+  handleValidated(
+    IPC.serversAsaApiClearCache,
+    ipcArgSchemas[IPC.serversAsaApiClearCache],
+    async () => {
+      await asaApi.clearDownloadCache();
     },
   );
 
@@ -536,6 +699,11 @@ export function registerIpcHandlers(
       kind: "steamcmd" as const,
       label: "Bundled SteamCMD",
       path: appDataFolders.steamcmd,
+    },
+    {
+      kind: "asaApiCache" as const,
+      label: "Ark Server API downloads",
+      path: appDataFolders.asaApiCache,
     },
   ]);
 

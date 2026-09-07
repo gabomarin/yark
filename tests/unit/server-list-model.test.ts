@@ -19,6 +19,8 @@ function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
     installDir: "C:\\ARK\\TheIsland",
     enabled: true,
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     sessionName: "YARK",
     maxPlayers: 70,
     gamePort: 7777,
@@ -81,3 +83,4 @@ describe("serverListModel", () => {
     expect(sorted.map((row) => row.id)).toEqual(["a-id", "m-id", "z-id"]);
   });
 });
+

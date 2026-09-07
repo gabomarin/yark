@@ -12,8 +12,8 @@ import type {
   StartServerOptions,
   SteamCmdCacheKind,
 } from "../shared/types";
-import type { SteamCmdProgressPush, BackupsChangedPush, ServerIniChangedPush, ServerStopProgressPush, MoveInstallProgressPush, CloneInstallProgressPush, RconStatusChangedPush, PlayerListUpdatedPush, ProcessMetricsUpdatedPush, OsNotificationOpenPush } from "../shared/ipc";
-import { normalizeCloneInstallProgress, normalizeMoveInstallProgress, normalizeServerStopProgress } from "../shared/types";
+import type { SteamCmdProgressPush, BackupsChangedPush, ServerIniChangedPush, ServerStopProgressPush, MoveInstallProgressPush, CloneInstallProgressPush, AsaApiInstallProgressPush, RconStatusChangedPush, PlayerListUpdatedPush, ProcessMetricsUpdatedPush, OsNotificationOpenPush } from "../shared/ipc";
+import { normalizeAsaApiInstallProgress, normalizeCloneInstallProgress, normalizeMoveInstallProgress, normalizeServerStopProgress } from "../shared/types";
 
 const api: RendererApi = {
   listServers: () => ipcRenderer.invoke(IPC.serversList),
@@ -56,6 +56,18 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.serversMoveInstallDismissCleanup, id),
   openServerFolder: (id: string) => ipcRenderer.invoke(IPC.serversOpenFolder, id),
   openServerNativeTerminal: (id: string) => ipcRenderer.invoke(IPC.serversOpenNativeTerminal, id),
+  getAsaApiStatus: (id: string) => ipcRenderer.invoke(IPC.serversAsaApiStatus, id),
+  installAsaApi: (id: string) => ipcRenderer.invoke(IPC.serversAsaApiInstall, id),
+  uninstallAsaApi: (id: string) => ipcRenderer.invoke(IPC.serversAsaApiUninstall, id),
+  setAsaApiPluginEnabled: (id: string, pluginName: string, enabled: boolean) =>
+    ipcRenderer.invoke(IPC.serversAsaApiSetPluginEnabled, id, pluginName, enabled),
+  deleteAsaApiPlugin: (id: string, pluginName: string) =>
+    ipcRenderer.invoke(IPC.serversAsaApiDeletePlugin, id, pluginName),
+  addAsaApiPluginZip: (id: string) =>
+    ipcRenderer.invoke(IPC.serversAsaApiAddPluginZip, id),
+  openAsaApiWin64: (id: string) => ipcRenderer.invoke(IPC.serversAsaApiOpenWin64, id),
+  openAsaApiPlugins: (id: string) => ipcRenderer.invoke(IPC.serversAsaApiOpenPlugins, id),
+  clearAsaApiCache: () => ipcRenderer.invoke(IPC.serversAsaApiClearCache),
   installSteamCmd: () => ipcRenderer.invoke(IPC.steamcmdInstall),
   cancelSteamCmd: () => ipcRenderer.invoke(IPC.steamcmdCancel),
   pauseSteamCmd: () => ipcRenderer.invoke(IPC.steamcmdPause),
@@ -350,6 +362,15 @@ const api: RendererApi = {
     ipcRenderer.on(IPC_PUSH.cloneInstallProgress, handler);
     return () => {
       ipcRenderer.removeListener(IPC_PUSH.cloneInstallProgress, handler);
+    };
+  },
+  onAsaApiInstallProgress: (listener) => {
+    const handler = (_e: unknown, payload: AsaApiInstallProgressPush) => {
+      listener(normalizeAsaApiInstallProgress(payload));
+    };
+    ipcRenderer.on(IPC_PUSH.asaApiInstallProgress, handler);
+    return () => {
+      ipcRenderer.removeListener(IPC_PUSH.asaApiInstallProgress, handler);
     };
   },
   onBackupsChanged: (listener) => {

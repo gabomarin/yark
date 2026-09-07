@@ -72,6 +72,12 @@ export const nonEmptyStringSchema = (label: string, max = MAX_STRING_PARAM_LENGT
     .min(1, `${label} required`)
     .max(max, `${label} too long`);
 
+/** AsaApi plugin folder name (no path separators / `..`). */
+export const asaApiPluginNameSchema = nonEmptyStringSchema("Plugin name", 128).refine(
+  (value) => !/[\\/]/.test(value) && !value.includes("..") && value !== "." && value !== "..",
+  { message: "Invalid plugin name" },
+);
+
 /** Free-text commands — do not trim (leading spaces may be meaningful). */
 export const rconCommandTextSchema = z
   .string()
@@ -107,6 +113,7 @@ export const appDataFolderKindSchema = z.enum([
   "backups",
   "updateLogs",
   "steamcmd",
+  "asaApiCache",
 ]);
 
 export const iniFileKeySchema = z.enum(["gameUserSettings", "game"]);

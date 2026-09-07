@@ -20,6 +20,8 @@ function makeProfile(id = "srv-update-1"): ServerProfile {
     installDir: "C:/ARK/SafeUpdateTest",
     enabled: true,
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     sessionName: "Session",
     maxPlayers: 70,
     gamePort: 7777,
@@ -990,3 +992,4 @@ describe("UpdateService safe update orchestration", () => {
     await verifyPromise;
   });
 });
+

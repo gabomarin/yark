@@ -33,6 +33,17 @@ export interface ServerProfile {
    * Ignored while `enabled` is false. Default false (opt-in).
    */
   autoStart: boolean;
+  /**
+   * When true, Start uses community AsaApi (#243). Default inject is
+   * `Version.dll` beside ArkAscendedServer.exe (no loader adopt). Set
+   * `useAsaApiLoader` to prefer AsaApiLoader.exe instead.
+   */
+  useAsaApi: boolean;
+  /**
+   * When true with `useAsaApi`, Start spawns `AsaApiLoader.exe` and adopts the
+   * game child. Default false — prefer Version.dll for a single game PID.
+   */
+  useAsaApiLoader: boolean;
   sessionName: string;
   /**
    * Slot limit for `-WinLiveMaxPlayers` only. ASA ignores INI MaxPlayers.
@@ -86,7 +97,93 @@ type ServerProfileModsPatch = {
   modMetadataCache?: Record<string, ModMetadata>;
 };
 
-export type ServerProfilePatch = ServerProfileLaunchPatch | ServerProfileModsPatch;
+type ServerProfileAsaApiPatch = {
+  group: "asaApi";
+  useAsaApi: boolean;
+  useAsaApiLoader: boolean;
+};
+
+export type ServerProfilePatch =
+  | ServerProfileLaunchPatch
+  | ServerProfileModsPatch
+  | ServerProfileAsaApiPatch;
+
+/** One native AsaApi plugin folder under Win64\\ArkApi\\Plugins (#243). */
+export interface AsaApiPluginInfo {
+  name: string;
+  folderName: string;
+  enabled: boolean;
+  dllPresent: boolean;
+  configFile: string | null;
+}
+
+/** Detected AsaApi install state for one server profile (#243). */
+export interface AsaApiStatus {
+  /** Loader, Version.dll (active or YARK-off), or ArkApi\\AsaApi.dll present. */
+  installedOnDisk: boolean;
+  loaderPresent: boolean;
+  loaderPath: string | null;
+  versionDllPresent: boolean;
+  versionDllDisabledPresent: boolean;
+  versionDllPath: string | null;
+  apiCorePresent: boolean;
+  win64Path: string;
+  pluginsPath: string;
+  plugins: AsaApiPluginInfo[];
+  loaderSizeBytes: number | null;
+  /** Set after a successful YARK install from GitHub; otherwise null. */
+  installedVersionLabel: string | null;
+}
+
+/** Phases for AsaApi GitHub download + extract (#243). */
+type AsaApiInstallProgressPhase =
+  | "resolving"
+  | "downloading"
+  | "extracting"
+  | "finishing";
+
+/** Live progress while Install / Check for API update runs. */
+export interface AsaApiInstallProgress {
+  serverId: string;
+  active: boolean;
+  phase: AsaApiInstallProgressPhase | null;
+  label: string;
+  percent: number | null;
+  bytesDownloaded: number | null;
+  bytesTotal: number | null;
+  assetLabel: string | null;
+  error: string | null;
+}
+
+/** Normalize AsaApi install push payloads so partial emitters stay UI-safe. */
+export function normalizeAsaApiInstallProgress(
+  payload: Partial<AsaApiInstallProgress> &
+    Pick<AsaApiInstallProgress, "serverId" | "active">,
+): AsaApiInstallProgress {
+  const phase =
+    payload.phase === "resolving"
+    || payload.phase === "downloading"
+    || payload.phase === "extracting"
+    || payload.phase === "finishing"
+      ? payload.phase
+      : null;
+  const percent =
+    typeof payload.percent === "number" && Number.isFinite(payload.percent)
+      ? Math.max(0, Math.min(100, payload.percent))
+      : null;
+  return {
+    serverId: payload.serverId,
+    active: payload.active === true,
+    phase,
+    label: typeof payload.label === "string" ? payload.label : "",
+    percent,
+    bytesDownloaded:
+      typeof payload.bytesDownloaded === "number" ? payload.bytesDownloaded : null,
+    bytesTotal: typeof payload.bytesTotal === "number" ? payload.bytesTotal : null,
+    assetLabel: typeof payload.assetLabel === "string" ? payload.assetLabel : null,
+    error: typeof payload.error === "string" ? payload.error : null,
+  };
+}
 
 export interface ServerRuntimeInfo {
   serverId: string;
@@ -96,6 +193,12 @@ export interface ServerRuntimeInfo {
   pid: number | null;
   startedAt: string | null;
   lastError: string | null;
+  /**
+   * True while Start used Ark Server API and ShooterGame.log has not produced
+   * new lines yet (Version.dll / plugins can delay the server window).
+   * Optional on older snapshots / test fixtures — treat missing as false.
+   */
+  asaApiLoading?: boolean;
 }
 
 /**

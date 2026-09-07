@@ -30,6 +30,8 @@ function makeServer(
     mods: [],
     enabled: true,
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     createdAt: "2026-07-23T00:00:00.000Z",
     updatedAt: "2026-07-23T00:00:00.000Z",
     ...overrides,
@@ -194,3 +196,4 @@ describe("membershipModel", () => {
     expect(candidates.find((c) => c.server.id === "r")?.eligible).toBe(false);
   });
 });
+

@@ -55,6 +55,8 @@ function makeProfile(installDir: string): ServerProfile {
     installDir,
     enabled: true,
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     sessionName: "Lifecycle Session",
     maxPlayers: 70,
     gamePort: 7777,
@@ -288,30 +290,75 @@ describe("ProcessManager lifecycle ownership", () => {
     expect(manager.getStatus(profile.id).lastError).toContain("spawn ENOENT");
   });
 
-  it("reports error with live child as active until exit is observed", async () => {
-    cleanupRoot = await mkdtemp(join(tmpdir(), "yark-process-lifecycle-"));
+  it("reports asaApiLoading until ShooterGame.log produces new lines", async () => {
+    cleanupRoot = await mkdtemp(join(tmpdir(), "yark-process-asaapi-"));
     const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
     await mkdir(binaryDir, { recursive: true });
     await writeFile(join(binaryDir, "ArkAscendedServer.exe"), "");
+    await writeFile(join(binaryDir, "Version.dll"), "v");
+    const logsDir = join(cleanupRoot, "ShooterGame", "Saved", "Logs");
+    await mkdir(logsDir, { recursive: true });
+    const logPath = join(logsDir, "ShooterGame.log");
+    await writeFile(logPath, "pre-start line\n");
 
     const child = fakeChild();
     const manager = new ProcessManager({
       spawnProcess: () => child,
+      hasMainWindow: async () => false,
     });
-    const profile = makeProfile(cleanupRoot);
+    const profile = { ...makeProfile(cleanupRoot), useAsaApi: true };
 
-    manager.start(profile, { skipReadinessCheck: true });
+    manager.start(profile);
+    expect(manager.getStatus(profile.id).asaApiLoading).toBe(true);
+    expect(manager.getRuntimeLogSnapshot(profile.id).join("\n")).toContain(
+      "Loading Ark Server API",
+    );
+
     child.emit("spawn");
-    expect(manager.isActive(profile.id)).toBe(true);
+    expect(manager.getStatus(profile.id).asaApiLoading).toBe(true);
 
-    child.emit("exit", 1);
-    expect(manager.getStatus(profile.id).status).toBe("error");
-    expect(manager.getStatus(profile.id).processLive).toBe(false);
-    expect(manager.hasLiveProcess(profile.id)).toBe(false);
-    expect(manager.isActive(profile.id)).toBe(false);
+    await appendFile(logPath, "post-start line from ASA\n");
+    await vi.waitFor(() => {
+      expect(manager.getStatus(profile.id).asaApiLoading).toBe(false);
+    });
+    expect(manager.getRuntimeLogSnapshot(profile.id).join("\n")).toContain(
+      "Ark Server API finished loading",
+    );
 
-    (child as ChildProcess & { resetExitObservation: () => void }).resetExitObservation();
-    expect(manager.hasLiveProcess(profile.id)).toBe(true);
-    expect(manager.isActive(profile.id)).toBe(true);
+    await manager.kill(profile.id);
+  });
+
+  it("clears asaApiLoading when the process main window appears", async () => {
+    cleanupRoot = await mkdtemp(join(tmpdir(), "yark-process-asaapi-win-"));
+    const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
+    await mkdir(binaryDir, { recursive: true });
+    await writeFile(join(binaryDir, "ArkAscendedServer.exe"), "");
+    await writeFile(join(binaryDir, "Version.dll"), "v");
+
+    const child = fakeChild();
+    Object.assign(child, { pid: 4242 });
+    let windowUp = false;
+    const manager = new ProcessManager({
+      spawnProcess: () => child,
+      hasMainWindow: async () => windowUp,
+      asaApiWindowPollMs: 50,
+    });
+    const profile = { ...makeProfile(cleanupRoot), useAsaApi: true };
+
+    manager.start(profile);
+    child.emit("spawn");
+    expect(manager.getStatus(profile.id).asaApiLoading).toBe(true);
+    expect(manager.getStatus(profile.id).status).toBe("starting");
+
+    windowUp = true;
+    await vi.waitFor(() => {
+      expect(manager.getStatus(profile.id).asaApiLoading).toBe(false);
+    });
+    expect(manager.getRuntimeLogSnapshot(profile.id).join("\n")).toContain(
+      "server console is up",
+    );
+
+    await manager.kill(profile.id);
   });
 });
+

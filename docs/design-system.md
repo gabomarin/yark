@@ -345,6 +345,7 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 | `PathField` | `shared/ui/PathField/` | Read-only path chip + Browse/Clear actions |
 | `ConsoleSurface` | `shared/ui/ConsoleSurface/` | ScrollArea monospace console for SteamCMD / Logs (plain text, stick-to-bottom) |
 | `AppMetricCard` | `shared/ui/AppMetricCard/` | Compact scalar metric tile (fleet strips; optional RingProgress) |
+| `AppPanelConfirmModal` | `shared/ui/AppPanelConfirmModal/` | What's-new-style confirm (panel chrome; Quit YARK / Ark Server API) |
 | `openDangerConfirmModal` | `shared/ui/DangerConfirmModal/` | Destructive confirm helper (`modals.openConfirmModal` + red confirm) |
 
 ### Danger confirm modals (#235)

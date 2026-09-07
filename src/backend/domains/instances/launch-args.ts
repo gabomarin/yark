@@ -21,6 +21,29 @@ export function serverBinaryPath(installDir: string): string {
   );
 }
 
+/** Path to community AsaApiLoader.exe (same Win64 folder) (#243). */
+function asaApiLoaderBinaryPath(installDir: string): string {
+  return join(
+    installDir,
+    "ShooterGame",
+    "Binaries",
+    "Win64",
+    "AsaApiLoader.exe",
+  );
+}
+
+/**
+ * Executable YARK should spawn for Start. When AsaApi is on and loader mode is
+ * selected, prefers AsaApiLoader.exe; otherwise ArkAscendedServer.exe
+ * (Version.dll inject when useAsaApi without loader).
+ */
+export function resolveLaunchBinaryPath(profile: ServerProfile): string {
+  if (profile.useAsaApi === true && profile.useAsaApiLoader === true) {
+    return asaApiLoaderBinaryPath(profile.installDir);
+  }
+  return serverBinaryPath(profile.installDir);
+}
+
 /** True for the ASA/Unreal map URL argument. */
 export function isUnrealMapUrlArg(arg: string): boolean {
   return /SessionName=/.test(arg) && !arg.startsWith("-");

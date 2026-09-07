@@ -30,7 +30,9 @@ const serverA = {
   extraArgs: [],
   mods: ["111"],
   enabled: true,
-  autoStart: false,
+    autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
   createdAt: "2026-07-23T00:00:00.000Z",
   updatedAt: "2026-07-23T00:00:00.000Z",
 };
@@ -1417,3 +1419,4 @@ describe("ServerWorkspacePage", () => {
     expect(window.api.updateServer).toHaveBeenCalled();
   });
 });
+

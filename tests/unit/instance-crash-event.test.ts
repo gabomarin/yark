@@ -14,7 +14,9 @@ const profile: ServerProfile = {
   map: "TheIsland_WP",
   installDir: "C:\\ARK\\Island",
   enabled: true,
-  autoStart: false,
+    autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
   sessionName: "Island",
   maxPlayers: 70,
   gamePort: 7777,
@@ -106,3 +108,4 @@ describe("InstanceService unexpected-exit events", () => {
     expect(repo.addEvent).not.toHaveBeenCalled();
   });
 });
+

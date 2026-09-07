@@ -33,6 +33,8 @@ interface ServerRow {
   install_dir: string;
   enabled: number;
   auto_start: number;
+  use_asa_api: number;
+  use_asa_api_loader: number;
   session_name: string;
   max_players: number;
   game_port: number;
@@ -83,6 +85,8 @@ function rowToProfile(row: ServerRow): ServerProfile {
     installDir: row.install_dir,
     enabled: row.enabled === 1,
     autoStart: row.auto_start === 1,
+    useAsaApi: row.use_asa_api === 1,
+    useAsaApiLoader: row.use_asa_api_loader === 1,
     sessionName: row.session_name,
     maxPlayers: row.max_players,
     gamePort: row.game_port,
@@ -138,6 +142,8 @@ export class ServerRepository {
       mapSaveFolder,
       enabled,
       autoStart: input.autoStart === true,
+      useAsaApi: input.useAsaApi === true,
+      useAsaApiLoader: input.useAsaApiLoader === true,
       disabledMods: input.disabledMods ?? [],
       modMetadataCache: input.modMetadataCache ?? {},
       structuredLaunchArgs: normalizeStructuredLaunchArgs(
@@ -150,12 +156,12 @@ export class ServerRepository {
     this.db
       .prepare(
         `INSERT INTO servers (
-          id, name, map, map_mod_id, map_save_folder, install_dir, enabled, auto_start, session_name,
+          id, name, map, map_mod_id, map_save_folder, install_dir, enabled, auto_start, use_asa_api, use_asa_api_loader, session_name,
           max_players, game_port, query_port, rcon_port,
           server_password, admin_password,
           cluster_id, cluster_dir, extra_args, structured_launch_args, mods,
           disabled_mods, mod_metadata_cache, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         profile.id,
@@ -166,6 +172,8 @@ export class ServerRepository {
         profile.installDir,
         profile.enabled ? 1 : 0,
         profile.autoStart ? 1 : 0,
+        profile.useAsaApi ? 1 : 0,
+        profile.useAsaApiLoader ? 1 : 0,
         profile.sessionName,
         profile.maxPlayers,
         profile.gamePort,
@@ -211,6 +219,8 @@ export class ServerRepository {
           cluster_id = ?, cluster_dir = ?, extra_args = ?, structured_launch_args = ?, mods = ?,
           disabled_mods = ?, mod_metadata_cache = ?,
           auto_start = ?,
+          use_asa_api = ?,
+          use_asa_api_loader = ?,
           updated_at = ?
         WHERE id = ?`,
       )
@@ -239,6 +249,8 @@ export class ServerRepository {
         JSON.stringify(input.disabledMods ?? existing.disabledMods ?? []),
         JSON.stringify(input.modMetadataCache ?? existing.modMetadataCache ?? {}),
         input.autoStart === true ? 1 : 0,
+        input.useAsaApi === true ? 1 : 0,
+        input.useAsaApiLoader === true ? 1 : 0,
         updatedAt,
         id,
       );
