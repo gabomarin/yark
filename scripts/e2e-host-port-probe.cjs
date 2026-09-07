@@ -225,7 +225,7 @@ async function run() {
     modal = await waitForProbeModal(page);
     await page.locator("[data-host-port-probe-edit]").click();
     await modal.waitFor({ state: "hidden", timeout: 5_000 });
-    await page.getByRole("tab", { name: "Server" }).waitFor({
+    await page.getByRole("tab", { name: "Server", exact: true }).waitFor({
       state: "visible",
       timeout: 15_000,
     });

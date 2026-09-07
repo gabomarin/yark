@@ -161,7 +161,7 @@ async function run() {
     await card
       .getByRole("button", { name: new RegExp(`Open settings for ${serverName}`, "i") })
       .click();
-    await page.getByRole("tab", { name: "Server" }).waitFor({
+    await page.getByRole("tab", { name: "Server", exact: true }).waitFor({
       state: "visible",
       timeout: 15_000,
     });
@@ -207,7 +207,7 @@ async function run() {
     assert.match(movedSave, new RegExp(saveMarker));
 
     // UI shows the new install path on the Server tab after Close refresh.
-    await page.getByRole("tab", { name: "Server" }).click();
+    await page.getByRole("tab", { name: "Server", exact: true }).click();
     await expectText(page.locator("[data-server-form-scroll]"), finalDest);
 
     const actionableErrors = errors.filter(

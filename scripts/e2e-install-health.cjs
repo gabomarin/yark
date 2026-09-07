@@ -277,7 +277,7 @@ async function run() {
     await readyCard
       .getByRole("button", { name: new RegExp(`Open settings for ${FIXTURES[4].name}`, "i") })
       .click();
-    await page.getByRole("tab", { name: "Server" }).waitFor({
+    await page.getByRole("tab", { name: "Server", exact: true }).waitFor({
       state: "visible",
       timeout: 15_000,
     });

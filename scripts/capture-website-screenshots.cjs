@@ -241,7 +241,7 @@ async function openWorkspaceByName(page, name) {
   }).first();
   await card.waitFor({ state: "visible", timeout: 10000 });
   await card.getByRole("button", { name: /Open settings/i }).click();
-  await page.getByRole("tab", { name: "Server" }).waitFor({ state: "visible", timeout: 15000 });
+  await page.getByRole("tab", { name: "Server", exact: true }).waitFor({ state: "visible", timeout: 15000 });
   await settle(page, 500);
 }
 
@@ -611,7 +611,7 @@ async function run() {
         await ensureDemoMods(page);
       }
 
-      await page.getByRole("tab", { name: "Server" }).click();
+      await page.getByRole("tab", { name: "Server", exact: true }).click();
       await settle(page, 500);
       await shot(page, path.join(outDir, "workspace-server.png"));
 
@@ -677,7 +677,7 @@ async function run() {
       }
       await shot(page, path.join(outDir, "workspace-maintenance.png"));
 
-      await page.getByRole("tab", { name: "Server" }).click();
+      await page.getByRole("tab", { name: "Server", exact: true }).click();
       await settle(page, 300);
       const wizardBtn = page.getByRole("button", { name: "Configuration wizard" });
       if ((await wizardBtn.count()) > 0) {

@@ -113,7 +113,7 @@ async function run() {
     await page.keyboard.press("Enter");
 
     await card.getByRole("button", { name: /Open settings for/ }).click();
-    const serverTab = page.getByRole("tab", { name: "Server" });
+    const serverTab = page.getByRole("tab", { name: "Server", exact: true });
     await serverTab.waitFor({ state: "visible", timeout: 10000 });
     await serverTab.focus();
     await page.keyboard.press("ArrowRight");
