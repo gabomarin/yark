@@ -36,8 +36,10 @@ no assets yet.
 
 The notifier uses Python + the Discord webhook HTTP API only (no third-party
 Discord Action). Requests set an explicit `User-Agent` (Cloudflare returns
-`403` / error `1010` for Python-urllib’s default UA). Message `flags` include
-`SUPPRESS_EMBEDS` so GitHub links do not expand into preview cards. Long
+`403` / error `1010` for Python-urllib’s default UA). Auto-generated “What’s
+Changed” bullets whose title is the SemVer cut PR (`release: vX.Y.Z`) are
+stripped before posting — they are not operator changelog. Message `flags`
+include `SUPPRESS_EMBEDS` so GitHub links do not expand into preview cards. Long
 release notes are truncated to Discord’s 2000-character limit with a pointer to
 the full GitHub release page. On **Release Windows**, Discord notify uses
 `continue-on-error` so a webhook outage does not fail the packaging job after

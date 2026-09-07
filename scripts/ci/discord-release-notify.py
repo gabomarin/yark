@@ -11,9 +11,39 @@ from __future__ import annotations
 import json
 import os
 import pathlib
+import re
 import sys
 import urllib.error
 import urllib.request
+
+# Auto-generated "What's Changed" often includes the SemVer cut PR itself
+# (title `release: vX.Y.Z`) — not operator-facing changelog.
+_RELEASE_CUT_PR_LINE = re.compile(
+    r"^\s*[\*\-]?\s*release:\s*v?\d[\w.+-]*\b",
+    re.IGNORECASE,
+)
+
+
+def filter_release_notes_body(body: str) -> str:
+    """Drop release-cut PR bullets from GitHub auto-generated notes."""
+    kept: list[str] = []
+    for line in body.splitlines():
+        if _RELEASE_CUT_PR_LINE.match(line):
+            continue
+        kept.append(line)
+    # Collapse runs of blank lines left by removals.
+    out: list[str] = []
+    blank = False
+    for line in kept:
+        if line.strip() == "":
+            if blank:
+                continue
+            blank = True
+            out.append("")
+        else:
+            blank = False
+            out.append(line)
+    return "\n".join(out).strip()
 
 
 def main() -> int:
@@ -37,7 +67,7 @@ def main() -> int:
     name = (data.get("name") or tag).strip()
     html_url = (data.get("html_url") or "").strip()
     prerelease = bool(data.get("prerelease"))
-    body = (data.get("body") or "").strip()
+    body = filter_release_notes_body((data.get("body") or "").strip())
 
     title = f"**{name}**" if name.startswith("YARK") or name == tag else f"**YARK {tag}**"
     if prerelease:
