@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { Anchor, Group, Text, Title } from "@mantine/core";
+import { Button, Group, Text, Title } from "@mantine/core";
 import {
   YARK_DISCORD_INVITE_URL,
   YARK_GITHUB_URL,
@@ -23,31 +23,33 @@ export function SettingsAboutCommunitySection(): ReactElement {
       <Text size="sm" c="dimmed">
         Source, issues, and operator chat for YARK.
       </Text>
-      <Group gap="md" align="center" mt={4}>
-        <Anchor
+      <Group gap="sm" align="center" mt="xs">
+        <Button
+          component="a"
           href={YARK_GITHUB_URL}
           target="_blank"
           rel="noreferrer"
           size="sm"
+          variant="default"
+          color="gray"
+          leftSection={<GithubMarkIcon size={16} />}
           data-settings-community-github
         >
-          <Group gap={6} align="center" component="span" wrap="nowrap">
-            <GithubMarkIcon size={16} />
-            <span>GitHub</span>
-          </Group>
-        </Anchor>
-        <Anchor
+          GitHub
+        </Button>
+        <Button
+          component="a"
           href={YARK_DISCORD_INVITE_URL}
           target="_blank"
           rel="noreferrer"
           size="sm"
+          variant="default"
+          color="gray"
+          leftSection={<DiscordMarkIcon size={16} />}
           data-settings-community-discord
         >
-          <Group gap={6} align="center" component="span" wrap="nowrap">
-            <DiscordMarkIcon size={16} />
-            <span>Discord</span>
-          </Group>
-        </Anchor>
+          Discord
+        </Button>
       </Group>
     </section>
   );
