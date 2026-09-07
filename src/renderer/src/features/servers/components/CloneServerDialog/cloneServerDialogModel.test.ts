@@ -22,6 +22,8 @@ function profile(partial: Partial<ServerProfile> & Pick<ServerProfile, "id" | "n
     installDir: `C:\\ARK\\${partial.name}`,
     enabled: true,
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     sessionName: `${partial.name} Session`,
     maxPlayers: 70,
     gamePort: 7777,
@@ -138,3 +140,4 @@ describe("cloneDialogFormState", () => {
     expect(Number(state.gamePort)).toBeLessThanOrEqual(65535);
   });
 });
+

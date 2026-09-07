@@ -93,7 +93,8 @@ Host is always `127.0.0.1`. Auth uses the profile `adminPassword` and the
 ### Console
 
 - Quick chips: `SaveWorld`, `ServerChat ` (prefill), `ListPlayers`,
-  `DestroyWildDinos`, `GetChat`, `DoExit`.
+  `DestroyWildDinos`, `GetChat`. Prefer **Stop** over raw `DoExit` so YARK can
+  save / back up first.
 - Free-text send (Enter). No `cheat` rewrite — commands are trimmed and sent as
   typed (UI advises omitting `cheat`).
 - History: `pending` → `success` \| `error`. Empty body / ASA

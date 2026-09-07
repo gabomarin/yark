@@ -54,6 +54,8 @@ function input(overrides: Partial<ServerProfileInput> = {}): ServerProfileInput 
     disabledMods: [],
     modMetadataCache: {},
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     ...overrides,
   };
 }
@@ -176,4 +178,24 @@ describe("InstanceService.updatePatch concurrency (#209)", () => {
         .profileWriteChains.has(created.id),
     ).toBe(false);
   });
+
+  it("applies asaApi patch without clearing mods", async () => {
+    const created = repo.create(input());
+    const updated = await instances.updatePatch(created.id, {
+      group: "asaApi",
+      useAsaApi: true,
+      useAsaApiLoader: true,
+    });
+    expect(updated.useAsaApi).toBe(true);
+    expect(updated.useAsaApiLoader).toBe(true);
+    expect(updated.mods).toEqual(["111"]);
+    expect(
+      isServerProfilePatch({
+        group: "asaApi",
+        useAsaApi: false,
+        useAsaApiLoader: false,
+      }),
+    ).toBe(true);
+  });
 });
+

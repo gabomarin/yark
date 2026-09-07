@@ -53,6 +53,8 @@ function makeProfile(installDir: string): ServerProfile {
     installDir,
     enabled: true,
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     sessionName: "Island",
     maxPlayers: 70,
     gamePort: 7777,
@@ -2480,3 +2482,4 @@ describe("computeBackupServerHealth", () => {
     ).toBe("warning");
   });
 });
+

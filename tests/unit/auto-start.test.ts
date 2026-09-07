@@ -9,7 +9,9 @@ function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
     map: "TheIsland_WP",
     installDir: "C:\\ARK\\Island",
     enabled: true,
-    autoStart: true,
+    autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     sessionName: "Island",
     maxPlayers: 70,
     gamePort: 7777,
@@ -138,3 +140,4 @@ describe("runAutoStartOnLaunch", () => {
     expect(addEvent).not.toHaveBeenCalled();
   });
 });
+

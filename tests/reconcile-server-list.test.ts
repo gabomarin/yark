@@ -11,6 +11,8 @@ function profile(
     installDir: "C:\\ARK",
     enabled: true,
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     sessionName: "YARK",
     maxPlayers: 70,
     gamePort: 7777,
@@ -53,3 +55,4 @@ describe("reconcileServerList", () => {
     expect(reconciled[1]?.updatedAt).toBe("t2");
   });
 });
+

@@ -35,6 +35,12 @@ affect start and config writes are summarized at the end.
 | IPC | `src/shared/ipc.ts`, `src/preload/index.ts`, `src/main/ipc-handlers.ts` |
 
 Binary path: `{installDir}/ShooterGame/Binaries/Win64/ArkAscendedServer.exe`
+
+When the profile has **Load on Start** enabled (**Ark Server API** tab, #243), Start
+defaults to **Version.dll** inject and still spawns `ArkAscendedServer.exe`.
+Optional **Use older loader instead** parks Version.dll, spawns the loader, then
+adopts the game child PID for status / Leave / kill. Details:
+[asa-api.md](asa-api.md).
 (`serverBinaryPath`).
 
 ## CLI vs INI split

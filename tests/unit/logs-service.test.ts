@@ -18,6 +18,8 @@ function makeProfile(installDir: string, id = "srv-logs-1"): ServerProfile {
     installDir,
     enabled: true,
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     sessionName: "Logs",
     maxPlayers: 70,
     gamePort: 7777,
@@ -491,3 +493,4 @@ describe("LogsService retention (#84)", () => {
     }
   });
 });
+

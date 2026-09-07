@@ -40,7 +40,11 @@ function profileInput(mods: string[]): ServerProfileInput {
     clusterDir: null,
     extraArgs: [],
     mods,
+    
     autoStart: false,
+    
+    useAsaApi: false,
+    useAsaApiLoader: false,
   };
 }
 
@@ -345,3 +349,4 @@ describe("ModsService.enrichNewServerMods", () => {
     expect(result.modMetadataCache?.["947033"]).toEqual(awesome);
   });
 });
+

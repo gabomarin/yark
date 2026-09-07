@@ -22,7 +22,9 @@ const server = {
   extraArgs: [],
   mods: [],
   enabled: true,
-  autoStart: false,
+    autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
   createdAt: "2026-07-23T00:00:00.000Z",
   updatedAt: "2026-07-23T00:00:00.000Z",
 };
@@ -124,3 +126,4 @@ describe("LogsPage", () => {
     expect(recentEvents).toHaveBeenCalledTimes(1);
   });
 });
+

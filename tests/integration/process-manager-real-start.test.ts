@@ -42,6 +42,8 @@ function makeProfile(installDir: string): ServerProfile {
     mods: [],
     enabled: true,
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     createdAt: now,
     updatedAt: now,
   };
@@ -139,3 +141,4 @@ describe("ProcessManager real start (Windows)", () => {
     await runStartProof(spaced, parent);
   }, 40_000);
 });
+

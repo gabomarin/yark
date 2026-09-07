@@ -33,7 +33,11 @@ function baseInput(installDir: string): ServerProfileInput {
     clusterDir: null,
     extraArgs: [],
     mods: [],
+    
     autoStart: false,
+    
+    useAsaApi: false,
+    useAsaApiLoader: false,
   };
 }
 
@@ -147,3 +151,4 @@ describe("InstanceService.importExisting incomplete opt-in (#283)", () => {
     expect(repo.create).not.toHaveBeenCalled();
   });
 });
+

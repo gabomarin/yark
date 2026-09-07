@@ -78,5 +78,13 @@
   {
     "version": 20,
     "sql": "\n      CREATE TABLE pending_server_ini (\n        server_id TEXT PRIMARY KEY NOT NULL,\n        game_user_settings_ini TEXT NOT NULL DEFAULT '',\n        game_ini TEXT NOT NULL DEFAULT '',\n        updated_at TEXT NOT NULL\n      );\n    "
+  },
+  {
+    "version": 21,
+    "sql": "\n      ALTER TABLE servers ADD COLUMN use_asa_api_loader INTEGER NOT NULL DEFAULT 0;\n    "
+  },
+  {
+    "version": 22,
+    "sql": "\n      ALTER TABLE servers ADD COLUMN use_asa_api INTEGER NOT NULL DEFAULT 0;\n      UPDATE servers SET use_asa_api = 1 WHERE use_asa_api_loader = 1;\n    "
   }
 ]

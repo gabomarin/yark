@@ -202,6 +202,8 @@ export class InstanceClone {
       disabledMods: [...(source.disabledMods ?? [])],
       modMetadataCache: { ...(source.modMetadataCache ?? {}) },
       autoStart: source.autoStart,
+      useAsaApi: source.useAsaApi === true,
+      useAsaApiLoader: source.useAsaApiLoader === true,
     };
   }
 

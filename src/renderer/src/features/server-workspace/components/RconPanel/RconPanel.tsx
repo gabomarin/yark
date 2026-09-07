@@ -42,7 +42,6 @@ const QUICK_COMMANDS: QuickCommand[] = [
   { label: "ListPlayers", command: "ListPlayers" },
   { label: "DestroyWildDinos", command: "DestroyWildDinos", danger: true },
   { label: "GetChat", command: "GetChat" },
-  { label: "DoExit", command: "DoExit", danger: true },
 ] as const;
 
 function formatRconTime(date: string): string {
@@ -170,7 +169,7 @@ export function RconPanel(props: Props): ReactElement {
             <div className={classes.commandBlock}>
               <TextInput
                 label="RCON command"
-                placeholder="e.g., ListPlayers, SaveWorld, or DoExit"
+                placeholder="e.g., ListPlayers, SaveWorld, or ServerChat"
                 size="xs"
                 value={command}
                 classNames={{ input: searchFieldClasses.input }}

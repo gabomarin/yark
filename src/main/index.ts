@@ -655,6 +655,7 @@ if (isPrimaryInstance) {
         backups: join(userData, "backups"),
         updateLogs: join(userData, "update-logs"),
         steamcmd: join(userData, "steamcmd"),
+        asaApiCache: join(userData, "cache", "asa-api"),
       },
       settings,
       playerSessionWatcher,

@@ -27,6 +27,8 @@ function makeProfile(installDir: string, id = "srv-1"): ServerProfile {
     installDir,
     enabled: true,
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     sessionName: "Session",
     maxPlayers: 70,
     gamePort: 7777,
@@ -270,3 +272,4 @@ describe("InstanceService.delete", () => {
     ).resolves.toBeUndefined();
   });
 });
+

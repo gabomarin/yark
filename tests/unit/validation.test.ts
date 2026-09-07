@@ -23,6 +23,8 @@ function validInput(overrides: Partial<ServerProfileInput> = {}): ServerProfileI
     extraArgs: [],
     mods: [],
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     ...overrides,
   };
 }
@@ -33,6 +35,8 @@ function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
     id: "id-1",
     enabled: true,
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
     ...overrides,
@@ -293,3 +297,4 @@ describe("findPortConflicts", () => {
     });
   });
 });
+

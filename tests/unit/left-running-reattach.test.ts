@@ -38,6 +38,8 @@ function makeProfile(id: string, installDir: string): ServerProfile {
     installDir,
     enabled: true,
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     sessionName: "Reattach",
     maxPlayers: 70,
     gamePort: 7777,
@@ -292,3 +294,4 @@ describe("reattachLeftRunningProcesses", () => {
     expect(settings.get(LEFT_RUNNING_PROCESSES_SETTING_KEY)).toBeNull();
   });
 });
+

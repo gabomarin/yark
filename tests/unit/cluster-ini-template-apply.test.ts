@@ -42,6 +42,8 @@ function makeProfile(
     installDir,
     enabled: true,
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     sessionName: "Ragnarok PvE",
     maxPlayers: 70,
     gamePort: 7777,
@@ -544,3 +546,4 @@ describe("ClusterIniTemplateApplyService", () => {
     ).rejects.toThrow(/at least one INI file/i);
   });
 });
+

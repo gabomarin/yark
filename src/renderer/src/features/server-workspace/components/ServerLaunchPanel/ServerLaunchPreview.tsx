@@ -6,6 +6,8 @@ import classes from "./ServerLaunchPanel.module.css";
 
 interface Props {
   installDir: string;
+  useAsaApi?: boolean;
+  useAsaApiLoader?: boolean;
   inputSize: "xs" | "sm";
   open: boolean;
   onToggle: () => void;
@@ -32,7 +34,10 @@ export function ServerLaunchPreview(props: Props): ReactElement {
           </Text>
           <code className={classes.previewCode}>
             <span className={classes.previewRaw}>
-              &quot;{previewBinaryPath(props.installDir)}&quot;{" "}
+              &quot;{previewBinaryPath(props.installDir, {
+                useAsaApi: props.useAsaApi,
+                useAsaApiLoader: props.useAsaApiLoader,
+              })}&quot;{" "}
             </span>
             {props.yark.map((t) => (
               <span key={`y-${t}`} className={classes.previewYark}>

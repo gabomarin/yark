@@ -22,6 +22,8 @@ function profile(installDir: string, overrides: Partial<ServerProfile> = {}): Se
     installDir,
     enabled: true,
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     sessionName: "gabo",
     maxPlayers: 70,
     gamePort: 7777,
@@ -94,3 +96,4 @@ describe("syncProfileSettingsToIni", () => {
     expect(flat[flatKey("ServerSettings", "RCONEnabled")]).toBe("True");
   });
 });
+

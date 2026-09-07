@@ -8,7 +8,11 @@ import {
 const base: Omit<ServerProfile, "id" | "name" | "enabled" | "clusterId"> = {
   map: "TheIsland_WP",
   installDir: "C:/ARK",
-  autoStart: false,
+  
+    autoStart: false,
+  
+    useAsaApi: false,
+    useAsaApiLoader: false,
   sessionName: "s",
   maxPlayers: 70,
   gamePort: 7777,
@@ -53,3 +57,4 @@ describe("overviewServerFilter", () => {
     expect(filterOverviewServers(servers, "  ").map((s) => s.id)).toEqual(["1", "2"]);
   });
 });
+

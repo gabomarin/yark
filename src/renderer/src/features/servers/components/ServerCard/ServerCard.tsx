@@ -248,6 +248,14 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
                 stopBusy={stopBusy}
                 serverEnabled={server.enabled}
                 compact={compact}
+                asaApiLoading={
+                  runtime?.asaApiLoading === true
+                  || (
+                    startBusy
+                    && server.useAsaApi === true
+                    && (status === "stopped" || status === "error")
+                  )
+                }
               />
             </div>
 

@@ -13,6 +13,7 @@ import {
   EMPTY_WIPE_STALE_MESSAGE,
 } from "@shared/types";
 import { applyServerProfilePatch } from "@shared/server-profile";
+import { syncAsaApiVersionDllForProfile } from "../asa-api/asa-api-inject";
 import { collectKnownSecrets } from "@shared/credential-redaction";
 import { EventEmitter } from "node:events";
 import { existsSync } from "node:fs";
@@ -34,6 +35,7 @@ import {
   installDirKey,
 } from "./install-dir-safety";
 import { assertNotInsideAsaInstall } from "./import-existing-install";
+import { ProfileWriteQueue } from "./profile-write-queue";
 import {
   invalidateInstallInspectCache,
   inspectServerInstallationAsync,
@@ -73,7 +75,7 @@ export type { InstanceServiceOptions } from "./instance-start-options";
  */
 export class InstanceService extends EventEmitter {
   /** Serializes profile row writes so Launch/Mods patches cannot clobber (#209). */
-  private readonly profileWriteChains = new Map<string, Promise<unknown>>();
+  private readonly profileWrites = new ProfileWriteQueue();
   /**
    * Serializes fleet-wide profile creation (create / import / clone) so uniqueness
    * checks for name, ports, and installDir cannot race across concurrent IPC (#254).
@@ -237,25 +239,16 @@ export class InstanceService extends EventEmitter {
         throw new Error("Server does not exist");
       }
       const merged = await prepare(applyServerProfilePatch(existing, patch), existing);
+      if (patch.group === "asaApi") {
+        syncAsaApiVersionDllForProfile(existing.installDir, merged);
+      }
       return this.update(id, merged);
     });
   }
 
   /** Queue profile mutations so overlapping IPC updates run one-at-a-time per server. */
   async withProfileWrite<T>(id: string, work: () => Promise<T> | T): Promise<T> {
-    const previous = this.profileWriteChains.get(id) ?? Promise.resolve();
-    const run = previous.then(() => work(), () => work());
-    const settled = run.then(
-      () => undefined,
-      () => undefined,
-    );
-    this.profileWriteChains.set(id, settled);
-    void settled.finally(() => {
-      if (this.profileWriteChains.get(id) === settled) {
-        this.profileWriteChains.delete(id);
-      }
-    });
-    return run;
+    return this.profileWrites.withWrite(id, work);
   }
 
   /**

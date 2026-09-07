@@ -154,7 +154,12 @@ export function SidePanel(props: Props): ReactElement {
       <AppSurfaceCard tone="flat" padding="sm" radius="md" className={classes.card}>
         <Stack gap={6}>
           <Text className={classes.widgetTitle}>Status</Text>
-          <MetaRow label="Status" value={serverRuntimeStatusLabel(status)} />
+          <MetaRow
+            label="Status"
+            value={serverRuntimeStatusLabel(status, {
+              asaApiLoading: props.runtime?.asaApiLoading === true,
+            })}
+          />
           <MetaRow label="Uptime" value={uptime} />
           <MetaRow label="Survivors" value={survivors} />
           <MetaRow label="RAM" value={ram} />

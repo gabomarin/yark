@@ -31,6 +31,8 @@ function makeProfile(installDir: string): ServerProfile {
     installDir,
     enabled: true,
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     sessionName: "Leave Session",
     maxPlayers: 70,
     gamePort: 7777,
@@ -393,3 +395,4 @@ describe("ProcessManager crash-recovery checkpoints", () => {
     expect(manager.isActive(profile.id)).toBe(false);
   });
 });
+

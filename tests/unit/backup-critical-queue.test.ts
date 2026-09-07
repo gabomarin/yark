@@ -18,6 +18,8 @@ function makeProfile(): ServerProfile {
     installDir: "C:\\ARK",
     enabled: true,
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     sessionName: "Island",
     maxPlayers: 70,
     gamePort: 7777,
@@ -132,3 +134,4 @@ describe("BackupCriticalQueue", () => {
     },
   );
 });
+

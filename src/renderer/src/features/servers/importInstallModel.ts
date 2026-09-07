@@ -132,6 +132,8 @@ export function formToProfileInput(
     disabledMods: [...mods],
     modMetadataCache: cache,
     autoStart: form.autoStart,
+    useAsaApi: false,
+    useAsaApiLoader: false,
   };
 }
 

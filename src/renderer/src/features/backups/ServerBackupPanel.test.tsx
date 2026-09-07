@@ -13,7 +13,9 @@ const server: ServerProfile = {
   map: "TheIsland_WP",
   installDir: "C:/ARK/srv-1",
   enabled: true,
-  autoStart: false,
+    autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
   sessionName: "Island",
   maxPlayers: 70,
   gamePort: 7777,
@@ -602,3 +604,4 @@ describe("ServerBackupPanel", () => {
     expect(screen.queryByText("C:/backups/world")).not.toBeInTheDocument();
   });
 });
+

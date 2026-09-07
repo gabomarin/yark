@@ -57,6 +57,8 @@ function server(overrides: Partial<ServerProfile> = {}): ServerProfile {
     installDir: "C:/ARK/Island",
     enabled: true,
     autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
     sessionName: "Island",
     maxPlayers: 70,
     gamePort: 7777,
@@ -346,3 +348,4 @@ describe("DownloadsPage", () => {
     expect(pageHandlers.onOpenSettings).toHaveBeenCalledTimes(1);
   });
 });
+

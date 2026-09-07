@@ -11,7 +11,9 @@ const source: ServerProfile = {
   map: "TheIsland_WP",
   installDir: "C:\\ARK\\Island",
   enabled: false,
-  autoStart: false,
+    autoStart: false,
+    useAsaApi: false,
+    useAsaApiLoader: false,
   sessionName: "Island Session",
   maxPlayers: 70,
   gamePort: 7777,
@@ -229,3 +231,4 @@ describe("CloneServerDialog", () => {
     expect(screen.getByRole("button", { name: "Clone server" })).toBeEnabled();
   });
 });
+
