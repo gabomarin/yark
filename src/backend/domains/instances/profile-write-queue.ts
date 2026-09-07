@@ -5,6 +5,11 @@
 export class ProfileWriteQueue {
   private readonly chains = new Map<string, Promise<unknown>>();
 
+  /** True while a write chain entry still exists for this id (tests / diagnostics). */
+  hasPending(id: string): boolean {
+    return this.chains.has(id);
+  }
+
   async withWrite<T>(id: string, work: () => Promise<T> | T): Promise<T> {
     const previous = this.chains.get(id) ?? Promise.resolve();
     const run = previous.then(
