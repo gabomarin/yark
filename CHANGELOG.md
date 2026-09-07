@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- Discord `#releases` announce prefers the **Yark Bot** Discord application (`DISCORD_BOT_TOKEN`) instead of the legacy “Github Release” webhook identity.
+
 ### Fixed
 
 - Discord `#releases` posts omit the SemVer cut PR bullet (`release: vX.Y.Z`) from GitHub auto-generated notes.
