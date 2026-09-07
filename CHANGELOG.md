@@ -19,6 +19,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Website gallery screenshots use seeded demo content (ready installs, logs, backups, mods, Ark Server API, full INI defaults) so docs shots are not empty-state heavy.
 - RCON quick commands no longer include **DoExit** — use Stop for a safe shutdown.
 - Ark Server API confirmations (Remove, Clear cache, Delete plugin) use the same panel chrome as What's new / Quit YARK.
 

@@ -25,10 +25,17 @@
  *   WEBSITE_DEMO_MOD_IDS         comma-separated CurseForge Project IDs
  *   WEBSITE_DEMO_CLUSTER_ID      Cluster ID applied to demo members
  *   WEBSITE_DEMO_CLUSTER_DIR     shared cluster directory for that Cluster ID
- *   WEBSITE_SCREENSHOT_ONLY      `downloads` = recapture downloads.png only
+ *   WEBSITE_SCREENSHOT_ONLY      `downloads` = recapture downloads.png only;
+ *                                `asa-api` = recapture workspace-asa-api.png only
+ *                                (still needs a seeded fleet + stub API files)
+ *
+ * Gallery seed writes ready fake ASA trees, SteamCMD stub path, activity events,
+ * completed backups (+ world schedule), cluster INI template, and enabled demo mods
+ * so marketing shots are not empty-state heavy.
  */
 const assert = require("node:assert/strict");
 const { execFileSync } = require("node:child_process");
+const { randomUUID } = require("node:crypto");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
@@ -233,6 +240,19 @@ async function ensureDemoMods(page) {
   await settle(page, 900);
 }
 
+async function dismissNotifications(page) {
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    const close = page.getByRole("button", { name: /close/i });
+    if ((await close.count()) === 0) return;
+    try {
+      await close.first().click({ timeout: 800 });
+      await settle(page, 150);
+    } catch {
+      return;
+    }
+  }
+}
+
 async function openWorkspaceByName(page, name) {
   await goNav(page, "Servers");
   await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 15000 });
@@ -265,7 +285,20 @@ function galleryJob(id, type, serverId, status, phase, extra = {}) {
   };
 }
 
-function compileHangingSteamCmdStub(dir) {
+function minutesAgoIso(minutes) {
+  return new Date(Date.now() - minutes * 60 * 1000).toISOString();
+}
+
+function hoursAgoIso(hours) {
+  return new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
+}
+
+/**
+ * @param {string} dir
+ * @param {{ hangMs?: number }} [options]
+ */
+function compileSteamCmdStub(dir, options = {}) {
+  const hangMs = options.hangMs ?? 0;
   fs.mkdirSync(dir, { recursive: true });
   const stubExe = path.join(dir, "steamcmd.exe");
   const stubPs1 = path.join(dir, "build-stub.ps1");
@@ -283,7 +316,7 @@ function compileHangingSteamCmdStub(dir) {
       "    var quitOnly = args.Any(a => a == \"+quit\") && !args.Any(a => a == \"+app_update\");",
       "    if (!quitOnly) {",
       "      Console.WriteLine(\"Update state (0x0) 0/1, 0 -- [ 38%]\");",
-      "      System.Threading.Thread.Sleep(180000);",
+      `      System.Threading.Thread.Sleep(${hangMs});`,
       "    }",
       "    return 0;",
       "  }",
@@ -304,27 +337,231 @@ function compileHangingSteamCmdStub(dir) {
   return stubExe;
 }
 
+function compileHangingSteamCmdStub(dir) {
+  return compileSteamCmdStub(dir, { hangMs: 180000 });
+}
+
+/** Persistent idle SteamCMD stub so the sidebar is not "SteamCMD missing". */
+function ensureGallerySteamCmdStub() {
+  const dir = path.join(DEMO_INSTALL_ROOT, "_steamcmd-stub");
+  const stubExe = path.join(dir, "steamcmd.exe");
+  if (fs.existsSync(stubExe)) return stubExe;
+  return compileSteamCmdStub(dir, { hangMs: 0 });
+}
+
+function upsertAppSetting(db, key, value, updatedAt) {
+  db.prepare(
+    `INSERT INTO app_settings (key, value, updated_at) VALUES (?, ?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+  ).run(key, value, updatedAt);
+}
+
+/** Fake ready ASA tree (exe + version + full default INIs for the visual editor). */
+function seedDemoReadyInstall(installDir) {
+  const win64 = path.join(installDir, "ShooterGame", "Binaries", "Win64");
+  const config = path.join(installDir, "ShooterGame", "Saved", "Config", "WindowsServer");
+  const engine = path.join(installDir, "Engine");
+  const defaultsDir = path.join(projectRoot, "src", "shared", "defaults");
+  fs.mkdirSync(win64, { recursive: true });
+  fs.mkdirSync(config, { recursive: true });
+  fs.mkdirSync(engine, { recursive: true });
+  fs.writeFileSync(path.join(win64, "ArkAscendedServer.exe"), "fake-asa-binary\n");
+  fs.writeFileSync(path.join(win64, "version.txt"), "93.19\n");
+  // Copy shared defaults (hundreds of keys). A minimal stub only has YARK-owned
+  // keys, which the visual editor hides → "All settings (0)".
+  fs.copyFileSync(
+    path.join(defaultsDir, "GameUserSettings.ini"),
+    path.join(config, "GameUserSettings.ini"),
+  );
+  fs.copyFileSync(
+    path.join(defaultsDir, "Game.ini"),
+    path.join(config, "Game.ini"),
+  );
+}
+
+/** Minimal on-disk AsaApi layout so the marketing panel shows the installed UI. */
+function seedDemoAsaApiInstall(installDir) {
+  const win64 = path.join(installDir, "ShooterGame", "Binaries", "Win64");
+  const arkApi = path.join(win64, "ArkApi");
+  const pluginDir = path.join(arkApi, "Plugins", "Permissions");
+  fs.mkdirSync(pluginDir, { recursive: true });
+  fs.writeFileSync(path.join(win64, "Version.dll"), Buffer.alloc(64));
+  fs.writeFileSync(path.join(arkApi, "AsaApi.dll"), Buffer.alloc(64));
+  fs.writeFileSync(path.join(pluginDir, "Permissions.dll"), Buffer.alloc(64));
+  fs.writeFileSync(
+    path.join(pluginDir, "config.json"),
+    `${JSON.stringify({ Enabled: true }, null, 2)}\n`,
+  );
+}
+
+function demoModMetadataCache() {
+  const names = {
+    "947033": "Cybers Structures QoL+",
+    "928793": "Pelayori's Cryo Storage",
+    "940975": "Awesome Spyglass!",
+  };
+  /** @type {Record<string, object>} */
+  const cache = {};
+  for (const id of DEMO_MOD_IDS) {
+    cache[id] = {
+      id,
+      name: names[id] ?? `Demo mod ${id}`,
+      summary: "Seeded for website gallery screenshots.",
+      thumbnailUrl: null,
+      authors: ["YARK Demo"],
+      downloadCount: 1_250_000,
+      dateModified: "2026-08-01T00:00:00.000Z",
+      curseforgeUrl: `https://www.curseforge.com/ark-survival-ascended/mods/${id}`,
+      slug: `demo-${id}`,
+      categories: ["Structures"],
+    };
+  }
+  return cache;
+}
+
+/**
+ * @param {import("node:sqlite").DatabaseSync} db
+ * @param {{ id: string, name: string, mapId: string, installDir: string }} server
+ * @param {{ world: number, players: number, ini: number, scheduleEnabled: boolean }} plan
+ */
+function seedServerBackups(db, server, plan) {
+  const backupRoot = path.join(server.installDir, "Backups");
+  fs.mkdirSync(backupRoot, { recursive: true });
+  const now = new Date().toISOString();
+  db.prepare(
+    `INSERT INTO backup_policies (
+      server_id, enabled, interval_minutes, retain_count,
+      retain_count_players, retain_count_ini, retain_days, backup_dir, updated_at
+    ) VALUES (?, ?, 60, 20, 20, 10, 14, NULL, ?)
+     ON CONFLICT(server_id) DO UPDATE SET
+       enabled = excluded.enabled,
+       interval_minutes = excluded.interval_minutes,
+       updated_at = excluded.updated_at`,
+  ).run(server.id, plan.scheduleEnabled ? 1 : 0, now);
+
+  const insert = db.prepare(
+    `INSERT INTO backups (
+      id, server_id, type, kind, path, size_bytes, status,
+      created_at, completed_at, notes, map_token
+    ) VALUES (?, ?, ?, ?, ?, ?, 'completed', ?, ?, ?, ?)`,
+  );
+
+  const specs = [
+    ...Array.from({ length: plan.world }, (_, i) => ({
+      kind: "world",
+      type: i === 0 ? "scheduled" : "manual",
+      minutesAgo: 12 + i * 90,
+      size: 1_850_000_000 - i * 40_000_000,
+      label: "world",
+    })),
+    ...Array.from({ length: plan.players }, (_, i) => ({
+      kind: "players",
+      type: "manual",
+      minutesAgo: 30 + i * 60,
+      size: 42_000_000 - i * 2_000_000,
+      label: "players",
+    })),
+    ...Array.from({ length: plan.ini }, (_, i) => ({
+      kind: "ini",
+      type: "manual",
+      minutesAgo: 45 + i * 120,
+      size: 18_000 + i * 500,
+      label: "ini",
+    })),
+  ];
+
+  for (const spec of specs) {
+    const createdAt = minutesAgoIso(spec.minutesAgo);
+    const fileName = `${spec.label}-${createdAt.replace(/[:.]/g, "-")}.zip`;
+    const filePath = path.join(backupRoot, fileName);
+    fs.writeFileSync(filePath, Buffer.alloc(Math.min(spec.size, 4096), 1));
+    insert.run(
+      randomUUID(),
+      server.id,
+      spec.type,
+      spec.kind,
+      filePath,
+      spec.size,
+      createdAt,
+      createdAt,
+      `Gallery seed ${spec.kind}`,
+      spec.kind === "world" ? server.mapId : null,
+    );
+  }
+}
+
+/**
+ * @param {import("node:sqlite").DatabaseSync} db
+ * @param {Array<{ id: string, name: string }>} servers
+ */
+function seedGalleryActivityEvents(db, servers) {
+  db.prepare("DELETE FROM events").run();
+  const insert = db.prepare(
+    `INSERT INTO events (server_id, type, severity, message, created_at, details)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+  );
+  const byName = new Map(servers.map((row) => [row.name, row.id]));
+  const islandId = byName.get(DEMO_SERVER);
+  const scorchedId = byName.get("Scorched Earth");
+  const ragnarokId = byName.get("Ragnarok");
+
+  /** @type {Array<[string | undefined, string, string, string, number, string | null]>} */
+  const rows = [
+    [islandId, "server_started", "info", "The Island started", 0.4, null],
+    [islandId, "backup_created", "info", "World backup completed (scheduled)", 0.6, null],
+    [islandId, "server_updated", "info", "Enabled Cybers Structures QoL+ on The Island", 1.2, null],
+    [scorchedId, "server_stopped", "info", "Scorched Earth stopped (manual)", 2.5, null],
+    [ragnarokId, "update_completed", "info", "Ragnarok verified — files OK", 3.1, null],
+    [islandId, "installation_health_degraded", "warning", "RCON password unchanged since first create", 4.0, null],
+    [scorchedId, "update_failed", "error", "Verify interrupted — SteamCMD busy", 5.5, null],
+    [islandId, "server_stopped", "info", "The Island stopped", 8.0, null],
+    [ragnarokId, "backup_created", "info", "INI backup completed (manual)", 10.0, null],
+  ];
+  for (const [serverId, type, severity, message, hoursAgo, details] of rows) {
+    if (!serverId) continue;
+    insert.run(serverId, type, severity, message, hoursAgoIso(hoursAgo), details);
+  }
+}
+
 /** Replace isolated-profile servers after first boot. Maps/cluster live on the rows. */
 function seedGalleryFleetSql(userData) {
   const dbPath = path.join(userData, "yark-server-manager.db");
   assert.ok(fs.existsSync(dbPath), `DB missing at ${dbPath}`);
   const db = new DatabaseSync(dbPath);
+  db.prepare("DELETE FROM backups").run();
+  db.prepare("DELETE FROM backup_policies").run();
+  db.prepare("DELETE FROM events").run();
+  db.prepare("DELETE FROM cluster_ini_templates").run();
   db.prepare("DELETE FROM servers").run();
   const now = new Date().toISOString();
+  const steamCmd = ensureGallerySteamCmdStub();
+  upsertAppSetting(db, "steamcmdPath", steamCmd, now);
+
+  const modIdsJson = JSON.stringify(DEMO_MOD_IDS);
+  const modMetaJson = JSON.stringify(demoModMetadataCache());
   const insert = db.prepare(
     `INSERT INTO servers (
       id, name, map, install_dir, enabled, session_name,
       game_port, query_port, rcon_port,
       server_password, admin_password,
       cluster_id, cluster_dir, extra_args, mods,
-      disabled_mods, mod_metadata_cache, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      disabled_mods, mod_metadata_cache, use_asa_api, use_asa_api_loader,
+      created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   );
+
+  /** @type {Array<{ id: string, name: string, mapId: string, installDir: string }>} */
+  const seeded = [];
   DEMO_FLEET.forEach((demo, index) => {
     const installDir = path.join(DEMO_INSTALL_ROOT, demo.folder);
-    fs.mkdirSync(installDir, { recursive: true });
+    seedDemoReadyInstall(installDir);
+    const enableAsaApi = demo.name === DEMO_SERVER;
+    if (enableAsaApi) {
+      seedDemoAsaApiInstall(installDir);
+    }
+    const id = `gallery-dl-${index}`;
     insert.run(
-      `gallery-dl-${index}`,
+      id,
       demo.name,
       demo.mapId,
       installDir,
@@ -338,13 +575,81 @@ function seedGalleryFleetSql(userData) {
       DEMO_CLUSTER_ID,
       DEMO_CLUSTER_DIR,
       "[]",
+      modIdsJson,
       "[]",
-      "[]",
-      "{}",
+      modMetaJson,
+      enableAsaApi ? 1 : 0,
+      0,
       now,
       now,
     );
+    seeded.push({ id, name: demo.name, mapId: demo.mapId, installDir });
   });
+
+  // Featured Launch tab: a few curated flags enabled (no search filter in capture).
+  db.prepare(
+    `UPDATE servers SET structured_launch_args = ? WHERE id = ?`,
+  ).run(
+    JSON.stringify({
+      servergamelog: { enabled: true },
+      servergamelogincludetribelogs: { enabled: true },
+      forceallowcaveflyers: { enabled: true },
+      notifyadmincommandsinchat: { enabled: true },
+    }),
+    seeded[0]?.id ?? "gallery-dl-0",
+  );
+
+  db.prepare(
+    `INSERT INTO cluster_ini_templates (
+      cluster_id, game_user_settings_ini, game_ini, updated_at
+    ) VALUES (?, ?, ?, ?)`,
+  ).run(
+    DEMO_CLUSTER_ID,
+    [
+      "[ServerSettings]",
+      "XPMultiplier=2.0",
+      "TamingSpeedMultiplier=3.0",
+      "HarvestAmountMultiplier=2.5",
+      "",
+    ].join("\n"),
+    [
+      "[/Script/ShooterGame.ShooterGameMode]",
+      "BabyMatureSpeedMultiplier=3.0",
+      "EggHatchSpeedMultiplier=3.0",
+      "",
+    ].join("\n"),
+    now,
+  );
+
+  for (const server of seeded) {
+    if (server.name === DEMO_SERVER) {
+      seedServerBackups(db, server, {
+        world: 3,
+        players: 2,
+        ini: 1,
+        scheduleEnabled: true,
+      });
+    } else if (server.name === "Scorched Earth") {
+      seedServerBackups(db, server, {
+        world: 1,
+        players: 1,
+        ini: 0,
+        scheduleEnabled: true,
+      });
+    } else {
+      seedServerBackups(db, server, {
+        world: 1,
+        players: 0,
+        ini: 1,
+        scheduleEnabled: false,
+      });
+    }
+  }
+
+  seedGalleryActivityEvents(
+    db,
+    seeded.map((row) => ({ id: row.id, name: row.name })),
+  );
   db.close();
 }
 
@@ -512,6 +817,39 @@ async function run() {
       return;
     }
 
+    if (only === "asa-api") {
+      const boot = await launchIsolatedApp(userData);
+      try {
+        const page = await boot.firstWindow();
+        await page.waitForLoadState("domcontentloaded");
+      } finally {
+        await quitApp(boot);
+      }
+      seedGalleryFleetSql(userData);
+      applyDemoMapsInDb(userData);
+      const app = await launchIsolatedApp(userData);
+      try {
+        const page = await app.firstWindow();
+        page.on("dialog", async (dialog) => {
+          await dialog.accept();
+        });
+        await page.waitForLoadState("domcontentloaded");
+        await page.setViewportSize(VIEWPORT);
+        await openWorkspaceByName(page, DEMO_SERVER);
+        await page.getByRole("tab", { name: "Ark Server API" }).click();
+        await page.locator("[data-asa-api-panel]").waitFor({
+          state: "visible",
+          timeout: 10000,
+        });
+        await settle(page, 700);
+        await shot(page, path.join(outDir, "workspace-asa-api.png"));
+      } finally {
+        await quitApp(app);
+      }
+      console.log("WEBSITE_SCREENSHOTS_OK");
+      return;
+    }
+
     // Pass 1: setup assistant shots on an empty isolated profile.
     {
       const app = await launchIsolatedApp(userData);
@@ -552,6 +890,7 @@ async function run() {
       await goNav(page, "Servers");
       await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 10000 });
       await settle(page, 700);
+      await dismissNotifications(page);
       await shot(page, path.join(outDir, "overview.png"));
 
       await goNav(page, "Clusters");
@@ -573,6 +912,7 @@ async function run() {
         }
       }
       await settle(page, 800);
+      await dismissNotifications(page);
       await shot(page, path.join(outDir, "clusters.png"));
 
       await goNav(page, "Settings");
@@ -593,6 +933,7 @@ async function run() {
         await settle(page, 250);
       }
       await settle(page, 200);
+      await dismissNotifications(page);
       await shot(page, path.join(outDir, "settings.png"));
 
       await goNav(page, "Logs");
@@ -601,6 +942,7 @@ async function run() {
         timeout: 10000,
       });
       await settle(page, 700);
+      await dismissNotifications(page);
       await shot(page, path.join(outDir, "logs.png"));
 
       await openWorkspaceByName(page, featured);
@@ -610,22 +952,33 @@ async function run() {
       if (!hasAnyModId) {
         await ensureDemoMods(page);
       }
+      await dismissNotifications(page);
 
       await page.getByRole("tab", { name: "Server", exact: true }).click();
       await settle(page, 500);
+      await dismissNotifications(page);
       await shot(page, path.join(outDir, "workspace-server.png"));
 
       await page.getByRole("tab", { name: "Launch" }).click();
-      await settle(page, 400);
+      await settle(page, 600);
+      // Keep the curated list visible — do not leave a search that matches nothing.
       const launchSearch = page.getByPlaceholder("Filter flags by name, description, or group");
       if ((await launchSearch.count()) > 0) {
-        await launchSearch.fill("cross");
-        await settle(page, 500);
+        await launchSearch.fill("");
+        await settle(page, 400);
       }
+      await dismissNotifications(page);
       await shot(page, path.join(outDir, "workspace-launch.png"));
 
       await page.getByRole("tab", { name: "INI Files" }).click();
-      await settle(page, 900);
+      await settle(page, 1200);
+      // Defaults seed → catalogued keys visible (not YARK-owned-only stub → 0 rows).
+      await page.getByText("AdminLogging", { exact: true }).first().waitFor({
+        state: "visible",
+        timeout: 20000,
+      });
+      await settle(page, 500);
+      await dismissNotifications(page);
       await shot(page, path.join(outDir, "workspace-ini.png"));
 
       await page.getByRole("tab", { name: "Mods" }).click();
@@ -645,10 +998,12 @@ async function run() {
           // Keep Server mods view if Discover chrome is not interactive.
         }
       }
+      await dismissNotifications(page);
       await shot(page, path.join(outDir, "workspace-mods.png"));
 
       await page.getByRole("tab", { name: "Backups" }).click();
       await settle(page, 800);
+      await dismissNotifications(page);
       await shot(page, path.join(outDir, "workspace-backups.png"));
 
       await page.getByRole("tab", { name: "Maintenance" }).click();
@@ -675,6 +1030,7 @@ async function run() {
         });
         await settle(page, 500);
       }
+      await dismissNotifications(page);
       await shot(page, path.join(outDir, "workspace-maintenance.png"));
 
       await page.getByRole("tab", { name: "Ark Server API" }).click();
@@ -683,6 +1039,7 @@ async function run() {
         timeout: 10000,
       });
       await settle(page, 500);
+      await dismissNotifications(page);
       await shot(page, path.join(outDir, "workspace-asa-api.png"));
 
       await page.getByRole("tab", { name: "Server", exact: true }).click();
@@ -695,6 +1052,7 @@ async function run() {
           timeout: 10000,
         });
         await settle(page, 700);
+        await dismissNotifications(page);
         await shot(page, path.join(outDir, "configuration-wizard.png"));
         const cancel = page.getByRole("button", { name: "Cancel" });
         if ((await cancel.count()) > 0) {
@@ -713,6 +1071,7 @@ async function run() {
         timeout: 10000,
       });
       await settle(page, 800);
+      await dismissNotifications(page);
       await shot(page, path.join(outDir, "backups.png"));
     } finally {
       await quitApp(app);
