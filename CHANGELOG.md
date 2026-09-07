@@ -11,7 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
-- Discord `#releases` announce prefers the **Yark Bot** Discord application (`DISCORD_BOT_TOKEN`) instead of the legacy “Github Release” webhook identity.
+- Discord `#releases` announce prefers the **Yark Bot** Discord application (`DISCORD_BOT_TOKEN` + repo variable `DISCORD_RELEASES_CHANNEL_ID`); notify is skipped when the channel variable is unset (no hardcoded channel id).
 
 ### Fixed
 

@@ -25,20 +25,23 @@ releases or consume release write tokens.
 After **Release Windows** finishes creating the GitHub Release **with installer
 assets**, the same job posts the tag and release-notes body to Discord
 (`scripts/ci/discord-release-notify.py`) **as the Yark Bot Discord application**.
-It refuses to post if the release has no assets yet.
+It refuses to post if the release has no assets yet. If repo variable
+`DISCORD_RELEASES_CHANNEL_ID` is unset, Discord notify is **skipped** (no
+hardcoded channel fallback).
 
 1. Discord Developer Portal → your **Yark Bot** application → Bot → copy the
    token. Ensure the bot is invited to the YARK server with **Send Messages** in
    `#releases`.
-2. In GitHub: repo **Settings → Secrets and variables → Actions** → New
-   repository secret `DISCORD_BOT_TOKEN` → paste the bot token.
-3. Channel id defaults to YARK `#releases`
-   (`1546322340659339395`). Override with repo variable
-   `DISCORD_RELEASES_CHANNEL_ID` if the channel moves.
-4. Optional dry-run: Actions → **Discord release notify** → Run workflow → enter
-   a tag that already has assets (e.g. `v0.20.0`).
-5. Legacy fallback: secret `DISCORD_RELEASES_WEBHOOK_URL` still works if the bot
-   token is unset (posts under the webhook’s own name, not Yark Bot).
+2. In GitHub: repo **Settings → Secrets and variables → Actions**:
+   - Secret `DISCORD_BOT_TOKEN` → bot token
+   - Variable `DISCORD_RELEASES_CHANNEL_ID` → `#releases` channel snowflake
+     (Developer Mode → right-click channel → Copy Channel ID)
+3. Optional dry-run: Actions → **Discord release notify** → Run workflow → enter
+   a tag that already has assets (e.g. `v0.20.0`). The workflow job is skipped
+   when `DISCORD_RELEASES_CHANNEL_ID` is unset.
+4. Legacy fallback: secret `DISCORD_RELEASES_WEBHOOK_URL` still works if the bot
+   token is unset (posts under the webhook’s own name, not Yark Bot) — only when
+   the channel variable is also set.
 
 The notifier uses Python + the Discord HTTP API only (no third-party Discord
 Action). Requests set an explicit `User-Agent` (Cloudflare returns `403` /

@@ -2,8 +2,9 @@ name: Discord release notify
 
 # Manual re-announce / dry-run only. Production posts run at the end of
 # Release Windows (after installer assets are on the GitHub Release).
-# Preferred: DISCORD_BOT_TOKEN (posts as Yark Bot) + DISCORD_RELEASES_CHANNEL_ID.
-# Legacy fallback: DISCORD_RELEASES_WEBHOOK_URL.
+# Requires repo variable DISCORD_RELEASES_CHANNEL_ID and secret DISCORD_BOT_TOKEN
+# (posts as Yark Bot). Skips when the channel variable is unset.
+# Legacy fallback: DISCORD_RELEASES_WEBHOOK_URL (only if channel var is set).
 
 on:
   workflow_dispatch:
@@ -22,7 +23,7 @@ concurrency:
 
 jobs:
   notify:
-    if: github.repository == 'gabomarin/yark'
+    if: github.repository == 'gabomarin/yark' && vars.DISCORD_RELEASES_CHANNEL_ID != ''
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -32,8 +33,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
-          # YARK Server Manager → #releases (override via repo variable if needed)
-          DISCORD_RELEASES_CHANNEL_ID: ${{ vars.DISCORD_RELEASES_CHANNEL_ID || '1546322340659339395' }}
+          DISCORD_RELEASES_CHANNEL_ID: ${{ vars.DISCORD_RELEASES_CHANNEL_ID }}
           WEBHOOK_URL: ${{ secrets.DISCORD_RELEASES_WEBHOOK_URL }}
           INPUT_TAG: ${{ inputs.tag }}
           RELEASE_JSON: ${{ runner.temp }}/release.json
