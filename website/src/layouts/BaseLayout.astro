@@ -3,6 +3,8 @@ import "@fontsource-variable/instrument-sans/wght.css";
 import instrumentSansLatin from "@fontsource-variable/instrument-sans/files/instrument-sans-latin-wght-normal.woff2?url";
 import "@fontsource/ibm-plex-mono/latin-400.css";
 import "../styles/global.css";
+import DiscordIcon from "../components/DiscordIcon.astro";
+import GithubIcon from "../components/GithubIcon.astro";
 import SiteNav from "../components/SiteNav.astro";
 import SeoHead from "../components/SeoHead.astro";
 import CloudflareAnalytics from "../components/CloudflareAnalytics.astro";
@@ -72,7 +74,15 @@ const pageTitle = title;
         <span class="link-sep" aria-hidden="true">·</span>
         GPL-3.0
         <span class="link-sep" aria-hidden="true">·</span>
-        <a href={site.repoUrl}>gabomarin/yark</a>
+        <a class="footer-social" href={site.repoUrl}>
+          <GithubIcon class="footer-icon" />
+          gabomarin/yark
+        </a>
+        <span class="link-sep" aria-hidden="true">·</span>
+        <a class="footer-social" href={site.discordUrl}>
+          <DiscordIcon class="footer-icon" />
+          Discord
+        </a>
       </p>
     </footer>
     <script>

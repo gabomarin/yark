@@ -171,7 +171,9 @@ export const faqItems: FaqItem[] = [
     answerHtml: `
       <p>
         Open an issue on
-        <a href="https://github.com/gabomarin/yark/issues">GitHub Issues</a>.
+        <a href="https://github.com/gabomarin/yark/issues">GitHub Issues</a>
+        or join the
+        <a href="https://discord.gg/DQ8nes63w7">YARK Discord</a>.
         Include the YARK version, what you tried, and relevant logs (avoid pasting admin/RCON
         passwords). Operator guides live under <a href="${import.meta.env.BASE_URL}docs/">Docs</a>.
       </p>`,

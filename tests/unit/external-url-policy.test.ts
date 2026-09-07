@@ -19,7 +19,7 @@ describe("isAllowedExternalUrl", () => {
     expect(
       isAllowedExternalUrl("https://github.com/gabomarin/yark/releases"),
     ).toBe(true);
-    expect(isAllowedExternalUrl("https://discord.gg/cQNeCq87rq")).toBe(true);
+    expect(isAllowedExternalUrl("https://discord.gg/DQ8nes63w7")).toBe(true);
   });
 
   it("rejects non-http schemes and unknown hosts", () => {

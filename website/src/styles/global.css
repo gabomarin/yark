@@ -840,6 +840,18 @@ code {
   margin: 0;
 }
 
+.footer-social {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.footer-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex-shrink: 0;
+}
+
 .section-lede strong {
   color: color-mix(in srgb, var(--ink) 88%, var(--cryo));
   font-weight: 600;

@@ -48,6 +48,11 @@ export default defineConfig({
           label: "GitHub",
           href: "https://github.com/gabomarin/yark",
         },
+        {
+          icon: "discord",
+          label: "Discord",
+          href: "https://discord.gg/DQ8nes63w7",
+        },
       ],
       editLink: {
         baseUrl: "https://github.com/gabomarin/yark/edit/main/website/",

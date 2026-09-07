@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Public Discord invite is now [discord.gg/DQ8nes63w7](https://discord.gg/DQ8nes63w7) (README, website, and Settings → About).
 - Discord `#releases` announce prefers the **Yark Bot** Discord application (`DISCORD_BOT_TOKEN` + repo variable `DISCORD_RELEASES_CHANNEL_ID`); notify is skipped when the channel variable is unset (no hardcoded channel id).
 
 ### Fixed
