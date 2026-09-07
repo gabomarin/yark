@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- Discord `#releases` announce prefers the **Yark Bot** Discord application (`DISCORD_BOT_TOKEN` + repo variable `DISCORD_RELEASES_CHANNEL_ID`); notify is skipped when the channel variable is unset (no hardcoded channel id).
+
 ### Fixed
 
 - Discord `#releases` posts omit the SemVer cut PR bullet (`release: vX.Y.Z`) from GitHub auto-generated notes.

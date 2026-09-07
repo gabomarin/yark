@@ -164,20 +164,23 @@ jobs:
           fail_on_unmatched_files: true
 
       # After softprops uploads installer assets — not on tag push alone.
-      # continue-on-error: release assets already published; Discord outages
-      # must not fail the Release Windows job.
+      # Skips when DISCORD_RELEASES_CHANNEL_ID is unset. continue-on-error: release
+      # assets already published; Discord outages must not fail Release Windows.
       - name: Notify Discord #releases
+        if: ${{ vars.DISCORD_RELEASES_CHANNEL_ID != '' }}
         continue-on-error: true
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_RELEASES_CHANNEL_ID: ${{ vars.DISCORD_RELEASES_CHANNEL_ID }}
           WEBHOOK_URL: ${{ secrets.DISCORD_RELEASES_WEBHOOK_URL }}
           TAG: ${{ steps.tag.outputs.name }}
           RELEASE_JSON: ${{ runner.temp }}/release.json
         run: |
           set -euo pipefail
-          if [ -z "${WEBHOOK_URL}" ]; then
-            echo "::error::Missing secret DISCORD_RELEASES_WEBHOOK_URL"
+          if [ -z "${DISCORD_BOT_TOKEN}" ] && [ -z "${WEBHOOK_URL}" ]; then
+            echo "::error::Set secret DISCORD_BOT_TOKEN (preferred) or DISCORD_RELEASES_WEBHOOK_URL"
             exit 1
           fi
           gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" > "$RELEASE_JSON"
