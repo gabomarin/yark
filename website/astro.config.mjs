@@ -130,6 +130,7 @@ export default defineConfig({
           items: [
             { label: "Start, stop, restart", link: "/docs/lifecycle/" },
             { label: "Maintenance", link: "/docs/maintenance/" },
+            { label: "Ark Server API", link: "/docs/ark-server-api/" },
             { label: "RCON console", link: "/docs/rcon/" },
             { label: "Updates & SteamCMD", link: "/docs/updates-and-steamcmd/" },
             { label: "Backups", link: "/docs/backups/" },

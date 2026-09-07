@@ -677,6 +677,14 @@ async function run() {
       }
       await shot(page, path.join(outDir, "workspace-maintenance.png"));
 
+      await page.getByRole("tab", { name: "Ark Server API" }).click();
+      await page.locator("[data-asa-api-panel]").waitFor({
+        state: "visible",
+        timeout: 10000,
+      });
+      await settle(page, 500);
+      await shot(page, path.join(outDir, "workspace-asa-api.png"));
+
       await page.getByRole("tab", { name: "Server", exact: true }).click();
       await settle(page, 300);
       const wizardBtn = page.getByRole("button", { name: "Configuration wizard" });

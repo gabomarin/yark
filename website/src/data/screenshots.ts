@@ -68,6 +68,12 @@ export const screenshots: Screenshot[] = [
       "Maintenance — schedule restarts, optional wild dino wipe, and opt-in auto-update with in-game chat warnings while YARK is open.",
   },
   {
+    src: withBase("/screenshots/workspace-asa-api.png"),
+    alt: "YARK Ark Server API tab for installing community API, Load on Start, and plugin zip management on an ASA dedicated server",
+    caption:
+      "Ark Server API — optional community API install, Load on Start, and plugin enable/disable (experimental; not Wildcard).",
+  },
+  {
     src: withBase("/screenshots/configuration-wizard.png"),
     alt: "YARK configuration assistant with experience-profile cards and a six-step wizard",
     caption:
