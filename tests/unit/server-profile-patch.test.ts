@@ -174,8 +174,11 @@ describe("InstanceService.updatePatch concurrency (#209)", () => {
     // Settled chains drop their Map entry so deleted/churned IDs cannot leak.
     await Promise.resolve();
     expect(
-      (instances as unknown as { profileWriteChains: Map<string, unknown> })
-        .profileWriteChains.has(created.id),
+      (
+        instances as unknown as {
+          profileWrites: { chains: Map<string, unknown> };
+        }
+      ).profileWrites.chains.has(created.id),
     ).toBe(false);
   });
 

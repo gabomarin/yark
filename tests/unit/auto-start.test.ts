@@ -9,7 +9,7 @@ function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
     map: "TheIsland_WP",
     installDir: "C:\\ARK\\Island",
     enabled: true,
-    autoStart: false,
+    autoStart: true,
     useAsaApi: false,
     useAsaApiLoader: false,
     sessionName: "Island",
