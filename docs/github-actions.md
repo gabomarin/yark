@@ -35,9 +35,13 @@ no assets yet.
    Run workflow → enter a tag that already has assets (e.g. `v0.19.0`).
 
 The notifier uses Python + the Discord webhook HTTP API only (no third-party
-Discord Action). Message `flags` include `SUPPRESS_EMBEDS` so GitHub links do not
-expand into preview cards. Long release notes are truncated to Discord’s
-2000-character limit with a pointer to the full GitHub release page.
+Discord Action). Requests set an explicit `User-Agent` (Cloudflare returns
+`403` / error `1010` for Python-urllib’s default UA). Message `flags` include
+`SUPPRESS_EMBEDS` so GitHub links do not expand into preview cards. Long
+release notes are truncated to Discord’s 2000-character limit with a pointer to
+the full GitHub release page. On **Release Windows**, Discord notify uses
+`continue-on-error` so a webhook outage does not fail the packaging job after
+assets are already published.
 
 Official Windows packages require repository variable
 `YARK_CURSEFORGE_PROXY_URL` (baked into main at build time; see

@@ -76,7 +76,11 @@ def main() -> int:
     req = urllib.request.Request(
         webhook,
         data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            # Cloudflare rejects Python-urllib's default User-Agent (403 / 1010).
+            "User-Agent": "YARK-release-notify/1.0 (+https://github.com/gabomarin/yark)",
+        },
         method="POST",
     )
     try:
