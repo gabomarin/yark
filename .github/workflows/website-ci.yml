@@ -5,8 +5,8 @@ on:
     paths:
       - "website/**"
       - "package.json"
-      - ".github/workflows/website-ci.yml"
       - ".github/workflows/pages.yml"
+      - ".github/workflows/website-ci.yml"
   push:
     branches: [main]
     paths:

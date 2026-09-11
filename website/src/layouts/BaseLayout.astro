@@ -7,7 +7,6 @@ import DiscordIcon from "../components/DiscordIcon.astro";
 import GithubIcon from "../components/GithubIcon.astro";
 import SiteNav from "../components/SiteNav.astro";
 import SeoHead from "../components/SeoHead.astro";
-import CloudflareAnalytics from "../components/CloudflareAnalytics.astro";
 import { site, withBase } from "../data/site";
 
 interface Props {
@@ -89,6 +88,5 @@ const pageTitle = title;
       import { initPresence } from "../scripts/presence";
       initPresence();
     </script>
-    <CloudflareAnalytics />
   </body>
 </html>

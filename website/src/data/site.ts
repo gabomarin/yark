@@ -14,7 +14,7 @@ function windowsSetupDownloadUrl(ver: string): string {
 
 /**
  * Public site origin for canonical / Open Graph / JSON-LD.
- * Custom domain on GitHub Pages: https://getyark.com/
+ * Custom domain on Cloudflare Pages: https://getyark.com/
  */
 export const siteOrigin = "https://getyark.com";
 

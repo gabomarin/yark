@@ -1,4 +1,8 @@
-name: Deploy GitHub Pages
+# Build website/ (Astro) and deploy dist/ to Cloudflare Pages (Direct Upload).
+# Secrets (repo Settings → Secrets and variables → Actions):
+#   CLOUDFLARE_API_TOKEN   — Account API token with Cloudflare Pages Edit
+#   CLOUDFLARE_ACCOUNT_ID  — from Cloudflare dashboard → Workers & Pages
+name: Deploy Cloudflare Pages
 
 on:
   push:
@@ -9,27 +13,16 @@ on:
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
-# Top-level defaults; job also sets these explicitly (OIDC requires id-token: write).
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
-  # Avoid cancelling mid-OIDC / deploy when a second Pages push lands.
-  cancel-in-progress: false
+  group: cloudflare-pages-getyark
+  cancel-in-progress: true
 
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -43,26 +36,13 @@ jobs:
 
       - name: Install and build site
         working-directory: website
-        env:
-          # Optional: Cloudflare Web Analytics beacon (repo variable; public by design).
-          PUBLIC_CF_WEB_ANALYTICS_TOKEN: ${{ vars.PUBLIC_CF_WEB_ANALYTICS_TOKEN }}
         run: |
           npm ci
           npm run build
 
-      - name: Setup Pages
-        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3
         with:
-          enablement: true
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
-        with:
-          path: website/dist
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
-        with:
-          # Default is 10m; give OIDC + Pages status polling more headroom on flaky runs.
-          timeout: "900000"
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy website/dist --project-name=getyark
