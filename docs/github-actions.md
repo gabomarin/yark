@@ -12,7 +12,7 @@ human-readable version comment on the line above each `uses:` entry. Mutable tag
 | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Parallel `windows-latest` jobs: typecheck + lint + knip + test; build + Electron E2E CRUD / install-health / host-port-probe (#12) | `contents: read` |
 | [`.github/workflows/website-ci.yml`](../.github/workflows/website-ci.yml) | Astro site build | `contents: read` |
 | [`.github/workflows/changelog.yml`](../.github/workflows/changelog.yml) | Require Unreleased changelog | `contents: read`, `pull-requests: read` |
-| [`.github/workflows/pages.yml`](../.github/workflows/pages.yml) | Deploy site to GitHub Pages | `contents: read`, `pages: write`, `id-token: write` |
+| [`.github/workflows/pages.yml`](../.github/workflows/pages.yml) | Deploy site to Cloudflare Pages (`getyark`) | `contents: read` |
 | [`.github/workflows/release.yml`](../.github/workflows/release.yml) | Windows NSIS → GitHub Release; Discord `#releases` notify after assets upload | workflow `contents: read`; job elevates `contents: write` only to publish |
 | [`.github/workflows/discord-release-notify.yml`](../.github/workflows/discord-release-notify.yml) | Manual Discord re-announce for an existing tag (`workflow_dispatch`) | `contents: read` |
 

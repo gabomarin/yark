@@ -1,4 +1,4 @@
-# Project website (GitHub Pages)
+# Project website (Cloudflare Pages)
 
 Public product site and operator docs for YARK server manager.
 
@@ -18,16 +18,16 @@ Public product site and operator docs for YARK server manager.
 
 | Path | Role |
 | --- | --- |
-| `website/src/pages/` | Marketing routes (`/`, `/faq/`, `/changelog/`) plus canonical `404.astro` → `dist/404.html` for GitHub Pages |
+| `website/src/pages/` | Marketing routes (`/`, `/faq/`, `/changelog/`) plus canonical `404.astro` → `dist/404.html` for Cloudflare Pages |
 | `website/src/content/docs/docs/` | Starlight docs under `/docs/` |
 | `website/public/` | Favicons, logo, screenshots |
 | `website/astro.config.mjs` | `base: "/"`, Starlight sidebar, dark-only theme, `disable404Route: true` (avoid duplicate `/404` with docs catch-all); remark plugin prefixes content `/docs/…` links with that base |
-| `.github/workflows/pages.yml` | Build Astro → deploy `website/dist` |
+| `.github/workflows/pages.yml` | Build Astro → deploy `website/dist` to Cloudflare Pages project `getyark` |
 
 ## 404 page
 
 Canonical not-found page: [`website/src/pages/404.astro`](../website/src/pages/404.astro)
-→ `website/dist/404.html` (what GitHub Pages serves for missing paths).
+→ `website/dist/404.html` (what Cloudflare Pages serves for missing paths).
 
 Do **not** add `website/src/content/docs/404.md` while Starlight’s docs catch-all
 is enabled — that collides with the dedicated `/404` route and reintroduces an
@@ -62,19 +62,21 @@ Workflow: [`.github/workflows/pages.yml`](../.github/workflows/pages.yml)
 - Triggers: push to `main` touching `website/**`, root `package.json` (version for
   download URL), or the workflow; plus `workflow_dispatch`
 - `npm ci` + `npm run build` in `website/`
-- Artifact: `website/dist`
-- Permissions: `contents: read`, `pages: write`, `id-token: write`
+- Artifact: `website/dist` → Cloudflare Pages project **`getyark`** (`getyark.pages.dev`)
+- Permissions: `contents: read`
+- Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
 
-**One-time repo setup:** Settings → Pages → Source = **GitHub Actions**, Custom domain = `getyark.com` (DNS at the registrar; `website/public/CNAME` keeps the domain on deploy).
+**One-time Cloudflare setup:** Custom domains `getyark.com` and `www.getyark.com` on the
+`getyark` Pages project (same account as the `getyark.com` DNS zone).
 
 After deploy, submit `https://getyark.com/sitemap-index.xml` in Search Console
 when you care about SEO indexing.
 
 ### SEO notes (getyark.com)
 
-- GitHub repo **About → Website** must be `https://getyark.com` (not the old
-  `gabomarin.github.io/yark` Pages URL). Topics and description should match the
-  product site, not leftover github.io copy.
+- GitHub repo **About → Website** must be `https://getyark.com` (not a `*.pages.dev` or
+  old `gabomarin.github.io/yark` URL). Topics and description should match the
+  product site.
 - Home `SoftwareApplication` JSON-LD may include `screenshot` and `featureList`
   (`website/src/components/SeoHead.astro`). Keep `featureList` aligned with the
   landing capability bullets when those change; there is no automated check.
@@ -88,19 +90,14 @@ when you care about SEO indexing.
 
 ## Analytics (optional)
 
-Privacy-first traffic via [Cloudflare Web Analytics](https://www.cloudflare.com/web-analytics/)
-(no cookie banner required for the default beacon).
+Privacy-first traffic via [Cloudflare Web Analytics](https://www.cloudflare.com/web-analytics/).
+Because `getyark.com` is proxied through Cloudflare, prefer the **automatic** setup
+(edge JS injection) in the dashboard — do not embed a manual beacon in the Astro build.
 
-1. Cloudflare dashboard → **Web Analytics** → **Add a site** → hostname `getyark.com`
-   (JS snippet mode is fine; DNS does not need to move to Cloudflare).
-2. Copy the **token** from the beacon snippet (`data-cf-beacon='{"token":"…"}'`).
-3. GitHub repo **Settings → Secrets and variables → Actions → Variables** →
-   create `PUBLIC_CF_WEB_ANALYTICS_TOKEN` with that token.
-4. Redeploy Pages (`workflow_dispatch` on Deploy GitHub Pages, or push a `website/**` change).
-
-Local preview skips the beacon unless you set the same env var when building. The token is
-public by design (it ships in HTML); keeping it in a GitHub Actions variable avoids baking
-a personal site id into every fork clone.
+1. Cloudflare dashboard → **Analytics & Logs → Web Analytics** → **Add a site** →
+   hostname `getyark.com`.
+2. Enable automatic snippet injection for the proxied hostname.
+3. Confirm metrics under Web Analytics (do not also add a manual `beacon.min.js` tag).
 
 ## Screenshots
 

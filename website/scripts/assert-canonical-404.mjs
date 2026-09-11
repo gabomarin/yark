@@ -1,7 +1,7 @@
 /**
- * Regression guard for #149: GitHub Pages needs a single root `404.html`.
- * Starlight’s injected `/404` plus `content/docs/404.md` used to conflict and
- * warn; the canonical source is `website/src/pages/404.astro`.
+ * Regression guard for #149: Cloudflare Pages (and static hosts) need a single
+ * root `404.html`. Starlight’s injected `/404` plus `content/docs/404.md` used
+ * to conflict and warn; the canonical source is `website/src/pages/404.astro`.
  */
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -22,7 +22,7 @@ if (!existsSync(dist)) {
   const nested404 = join(dist, "404", "index.html");
 
   if (!existsSync(html404)) {
-    fail("expected dist/404.html (GitHub Pages custom 404 artifact)");
+    fail("expected dist/404.html (static custom 404 artifact)");
   } else {
     console.log("assert-canonical-404: found dist/404.html");
   }
