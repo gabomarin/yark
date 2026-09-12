@@ -9,6 +9,10 @@ Per-server **Maintenance** defaults live in `maintenance_policies` (migration 18
 days JSON in migration 19). Policies default off; session pause / countdown state
 is not persisted — see [maintenance.md](maintenance.md).
 
+Optional community **Ark Server API** Load-on-Start flags live on `servers` as
+`use_asa_api` / `use_asa_api_loader` (INTEGER 0/1, default 0). Disk API/plugin
+files are under the install Win64 folder, not SQLite — see [asa-api.md](asa-api.md).
+
 Admin and join passwords are ordinary TEXT columns on `servers` (same Windows-user
 boundary as `GameUserSettings.ini`). Diagnostic logs omit those settings; they are
 not encrypted in the database. Details: [credential-threat-model.md](credential-threat-model.md).

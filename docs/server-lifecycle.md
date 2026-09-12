@@ -562,6 +562,20 @@ Paths under `{installDir}/ShooterGame/Saved/Config/WindowsServer/`:
 - **Open in editor** opens the on-disk path (may lag a queued draft); the INI
   editor alert says so while pending.
 
+### Visual categories and Other subgroups (#516)
+
+Shared taxonomy: `src/shared/asa-setting-ui-categories.ts` (+ generated
+`asa-setting-ui-categories-data.json`). Lookup is by `file\0section\0key`;
+missing keys use a light heuristic. Non-vanilla INI sections (anything outside
+the stock dedicated headers such as `ServerSettings`, `SessionSettings`,
+`/Script/ShooterGame.ShooterGameMode`, …) fall through to **Other**.
+
+Renderer grouping: `iniUiCategoryGrouping.ts`. **Only Other** nests rows by
+`[Section]` (`sectionGroups`); Collapse/Expand on the Other header toggles those
+subgroups. Copy configuration and cluster template visual pickers reuse the same
+tree (`ini-ui-category-tree.ts`). Visual chrome exception:
+[design-system.md](design-system.md) § surfaces (#516).
+
 ## Configuration assistant
 
 On-demand from the Server tab — **not** a permanent nav tab. Six steps:

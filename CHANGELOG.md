@@ -19,6 +19,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - Discord `#releases` posts omit the SemVer cut PR bullet (`release: vX.Y.Z`) from GitHub auto-generated notes.
 
+### Docs
+
+- Expanded **Ark Server API** engineering runbook (IPC, inject modes, cache, SteamCMD overwrite pitfall) and INI **Other** subgroup categorization notes (#243, #516).
+
 ## [0.20.0] - 2026-09-07
 
 ### Added
