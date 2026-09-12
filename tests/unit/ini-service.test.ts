@@ -557,5 +557,65 @@ describe("IniService pending queue (#530)", () => {
     expect(readFileSync(gameIniPath(installDir), "utf8")).toContain("Queued=1");
     db.close();
   });
+
+  it("does not let a concurrent profile sync clobber an in-flight queued save", async () => {
+    const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
+    tmpDirs.push(installDir);
+    prepareIniFiles(installDir);
+    writeFileSync(
+      gameUserSettingsPath(installDir),
+      "[ServerSettings]\nRCONPort=27020\nXPMultiplier=1.0\n\n[SessionSettings]\nSessionName=DiskSession\n",
+      "utf8",
+    );
+    writeFileSync(gameIniPath(installDir), "[Game]\nKeepDisk=1\n", "utf8");
+
+    const profile = makeProfile(installDir);
+    profile.sessionName = "DiskSession";
+    const repo = {
+      get: (id: string) => (id === profile.id ? profile : null),
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+    const locks = new InstanceLockManager();
+    const db = openDatabase(":memory:");
+    const pendingRepo = new PendingServerIniRepository(db);
+    const service = new IniService(repo, locks, {
+      pending: pendingRepo,
+      isServerActive: () => true,
+    });
+
+    // Deterministic interleaving: during save's first read, start a profile
+    // sync. The sync must enqueue behind this save on the mutation chain so it
+    // merges into the queued gameplay draft instead of upserting stale disk.
+    const realRead = service.readServerIni.bind(service);
+    let injected = false;
+    let syncPromise: Promise<void> = Promise.resolve();
+    service.readServerIni = async (serverId: string) => {
+      const snapshot = await realRead(serverId);
+      if (!injected) {
+        injected = true;
+        profile.sessionName = "FromServerTab";
+        // Do not await — awaiting would deadlock the mutation chain.
+        syncPromise = service.syncProfileOwnedKeys(profile.id, profile);
+        await Promise.resolve();
+      }
+      return snapshot;
+    };
+
+    await service.saveServerIni(profile.id, {
+      gameUserSettings:
+        "[ServerSettings]\nRCONPort=27020\nXPMultiplier=9.0\n\n[SessionSettings]\nSessionName=DiskSession\n",
+      game: "[Game]\nQueuedGameplay=1\n",
+    });
+    await syncPromise;
+
+    const pending = pendingRepo.get(profile.id);
+    expect(pending?.payload.gameUserSettings).toContain("XPMultiplier=9.0");
+    expect(pending?.payload.gameUserSettings).toContain("FromServerTab");
+    expect(pending?.payload.game).toContain("QueuedGameplay=1");
+    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).toContain(
+      "XPMultiplier=1.0",
+    );
+    db.close();
+  });
 });
 

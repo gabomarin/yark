@@ -34,12 +34,37 @@ export interface IniServiceOptions {
  * so Server-tab edits are not clobbered by an older INI draft.
  */
 export class IniService extends EventEmitter {
+  /**
+   * Per-server FIFO for pending/disk mutations. Instance locks are still used so
+   * save conflicts with stop/start, but `isLocked` reentry must not let a
+   * concurrent Server-tab sync clobber an in-flight INI save (#530).
+   */
+  private readonly iniMutationChains = new Map<string, Promise<unknown>>();
+
   constructor(
     private readonly repo: ServerRepository,
     private readonly locks: InstanceLockManager,
     private readonly options?: IniServiceOptions,
   ) {
     super();
+  }
+
+  /** True when a durable queued draft exists for this server. */
+  hasPendingServerIni(serverId: string): boolean {
+    return (this.options?.pending.get(serverId) ?? null) !== null;
+  }
+
+  private withIniMutation<T>(serverId: string, work: () => Promise<T>): Promise<T> {
+    const previous = this.iniMutationChains.get(serverId) ?? Promise.resolve();
+    const run = previous.then(work, work);
+    this.iniMutationChains.set(
+      serverId,
+      run.then(
+        () => undefined,
+        () => undefined,
+      ),
+    );
+    return run;
   }
 
   async readServerIni(serverId: string): Promise<ServerIniSnapshot> {
@@ -78,49 +103,51 @@ export class IniService extends EventEmitter {
     serverId: string,
     payload: ServerIniPayload,
   ): Promise<ServerIniSaveResult> {
-    return this.locks.withLock(serverId, "ini-save", async () => {
-      const current = await this.readServerIni(serverId);
-      const sanitized = sanitizeServerIniPayload(payload);
-      const preview = this.previewWithCurrent(current.payload, sanitized);
-      if (!preview.valid) {
-        throw new Error(
-          `Invalid INI: ${preview.issues.map((i) => `${i.fileKey}: ${i.message}`).join(" | ")}`,
-        );
-      }
-
-      const active = this.options?.isServerActive(serverId) === true;
-      if (active) {
-        if (this.options === undefined) {
-          throw new Error("Pending INI queue is not configured");
+    return this.locks.withLock(serverId, "ini-save", () =>
+      this.withIniMutation(serverId, async () => {
+        const current = await this.readServerIni(serverId);
+        const sanitized = sanitizeServerIniPayload(payload);
+        const preview = this.previewWithCurrent(current.payload, sanitized);
+        if (!preview.valid) {
+          throw new Error(
+            `Invalid INI: ${preview.issues.map((i) => `${i.fileKey}: ${i.message}`).join(" | ")}`,
+          );
         }
-        // Bake current profile identity into the draft so Server-tab values
-        // stay aligned; read/flush also re-apply from the live profile (#530).
-        const queued = this.withProfileOwnedKeys(serverId, sanitized);
-        this.options.pending.upsert(serverId, queued);
+
+        const active = this.options?.isServerActive(serverId) === true;
+        if (active) {
+          if (this.options === undefined) {
+            throw new Error("Pending INI queue is not configured");
+          }
+          // Bake current profile identity into the draft so Server-tab values
+          // stay aligned; read/flush also re-apply from the live profile (#530).
+          const queued = this.withProfileOwnedKeys(serverId, sanitized);
+          this.options.pending.upsert(serverId, queued);
+          this.repo.addEvent(
+            serverId,
+            "server_updated",
+            "info",
+            `INI configuration queued (${preview.changedCount} changes; applies when stopped)`,
+          );
+          this.emitChanged(serverId, true);
+          return { ...preview, pending: true };
+        }
+
+        await this.writePayloadToDisk(
+          current,
+          this.withProfileOwnedKeys(serverId, sanitized),
+        );
+        this.options?.pending.delete(serverId);
         this.repo.addEvent(
           serverId,
           "server_updated",
           "info",
-          `INI configuration queued (${preview.changedCount} changes; applies when stopped)`,
+          `INI configuration updated (${preview.changedCount} changes)`,
         );
-        this.emitChanged(serverId, true);
-        return { ...preview, pending: true };
-      }
-
-      await this.writePayloadToDisk(
-        current,
-        this.withProfileOwnedKeys(serverId, sanitized),
-      );
-      this.options?.pending.delete(serverId);
-      this.repo.addEvent(
-        serverId,
-        "server_updated",
-        "info",
-        `INI configuration updated (${preview.changedCount} changes)`,
-      );
-      this.emitChanged(serverId, false);
-      return { ...preview, pending: false };
-    });
+        this.emitChanged(serverId, false);
+        return { ...preview, pending: false };
+      }),
+    );
   }
 
   /**
@@ -133,13 +160,17 @@ export class IniService extends EventEmitter {
     serverId: string,
     profile?: ServerProfile,
   ): Promise<void> {
+    const run = (): Promise<void> =>
+      this.withIniMutation(serverId, () =>
+        this.syncProfileOwnedKeysBody(serverId, profile),
+      );
+    // Reentrant for stop/start/restart that already hold the instance lock, but
+    // still serialize with save/flush via withIniMutation.
     if (this.locks.isLocked(serverId)) {
-      await this.syncProfileOwnedKeysBody(serverId, profile);
+      await run();
       return;
     }
-    await this.locks.withLock(serverId, "ini-save", () =>
-      this.syncProfileOwnedKeysBody(serverId, profile),
-    );
+    await this.locks.withLock(serverId, "ini-save", run);
   }
 
   private async syncProfileOwnedKeysBody(
@@ -187,12 +218,12 @@ export class IniService extends EventEmitter {
    * (stop / restart / start).
    */
   async flushPendingServerIni(serverId: string): Promise<boolean> {
+    const run = (): Promise<boolean> =>
+      this.withIniMutation(serverId, () => this.flushPendingServerIniBody(serverId));
     if (this.locks.isLocked(serverId)) {
-      return this.flushPendingServerIniBody(serverId);
+      return run();
     }
-    return this.locks.withLock(serverId, "ini-save", () =>
-      this.flushPendingServerIniBody(serverId),
-    );
+    return this.locks.withLock(serverId, "ini-save", run);
   }
 
   private async flushPendingServerIniBody(serverId: string): Promise<boolean> {
