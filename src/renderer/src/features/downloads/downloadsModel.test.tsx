@@ -5,9 +5,11 @@ import {
   buildDownloadsTeaser,
   defaultSelectedRowId,
   downloadConsoleBody,
+  downloadStatusLine,
   downloadsBadgeCount,
   filesQueueStateByServerId,
   queuedJobDetailHint,
+  shouldAutoExpandAdvancedLog,
   type DownloadRow,
 } from "./downloadsModel";
 import { downloadRowMeta, formatDownloadPhase } from "./downloadsCopy";
@@ -295,6 +297,23 @@ describe("downloadsModel", () => {
         ["live output"],
       ),
     ).toBe("live output");
+    expect(shouldAutoExpandAdvancedLog([queued as DownloadRow])).toBe(false);
+    expect(
+      shouldAutoExpandAdvancedLog([{ id: "i1", kind: "interrupted" } as DownloadRow]),
+    ).toBe(true);
+    expect(
+      downloadStatusLine(
+        {
+          subtitle: "Updating server files…",
+          phase: "downloading",
+          statusLabel: "running",
+          byteProgress: null,
+          byteProgressNoun: null,
+          percent: null,
+        } as DownloadRow,
+        "Waiting for progress…",
+      ),
+    ).toContain("Waiting for progress…");
   });
 
   it("classifies a restart-interrupted job under Active with Retry, not Needs attention", () => {

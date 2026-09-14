@@ -1,4 +1,5 @@
-import { Badge, Stack, Text, Tooltip } from "@mantine/core";
+import { Stack, Text, Tooltip } from "@mantine/core";
+import { StatusWord } from "@ui/StatusWord/StatusWord";
 import type { DataTableColumn } from "mantine-datatable";
 import { backupFinishedAt, parsePlayerKeyFromNotes, playerBackupDisplayName } from "@shared/backup-player-meta";
 import { formatMapDisplayName } from "@shared/map-identity";
@@ -12,10 +13,12 @@ import {
 } from "./model/serverBackupPanelModel";
 import classes from "./BackupsPage.module.css";
 
-function statusColor(status: BackupRecord["status"]): string {
-  if (status === "completed") return "green";
-  if (status === "failed") return "red";
-  return "yellow";
+function statusTone(
+  status: BackupRecord["status"],
+): "ok" | "warn" | "danger" {
+  if (status === "completed") return "ok";
+  if (status === "failed") return "danger";
+  return "warn";
 }
 
 export interface BackupHistoryColumnInput {
@@ -170,9 +173,9 @@ export function buildBackupHistoryTableColumns(
       sortable: true,
       resizable: true,
       render: (backup) => (
-        <Badge size="xs" color={statusColor(backup.status)} variant="light">
+        <StatusWord tone={statusTone(backup.status)}>
           {backup.status}
-        </Badge>
+        </StatusWord>
       ),
     },
     {
@@ -183,9 +186,9 @@ export function buildBackupHistoryTableColumns(
       sortable: true,
       resizable: true,
       render: (backup) => (
-        <Badge size="xs" variant="outline" color="gray">
+        <Text size="xs" c="dimmed">
           {formatBackupTypeLabel(backup.type)}
-        </Badge>
+        </Text>
       ),
     },
     {

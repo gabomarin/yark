@@ -275,7 +275,10 @@ UI restore uses a confirm modal (world: profiles/tribes checkbox). Update rollba
   **Date** (time only), Size, Status, Type, Actions. Columns are sortable
   (default Date newest-first) and resizable; content columns use `width: 0%`
   (hug content) and **Actions** uses `width: 100%` so leftover space stays on
-  the right without inflating File/Status/Type.
+  the right without inflating File/Status/Type. Status is a word + dot
+  (`StatusWord`); Type is dimmed text. Toolbar **Delete** / **Clear failed**
+  are subtle; filled red stays on the confirm modal. A dismissible World vs
+  players vs INI hint lives on the panel header.
 
 ### Backup health and alerts (all servers)
 

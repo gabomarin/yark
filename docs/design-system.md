@@ -179,9 +179,11 @@ Theme `defaultRadius` is **`sm`**. Avoid raw `border-radius` when a token fits. 
   (`variant="light"`), and icons on dark chrome — not Mantine’s default coral.
   Status words use `--app-color-ok|fossil|danger-bright|muted` (CSS `data-tone`),
   not Mantine shade refs like `c="ok.5"`.
-- **Status grammar:** runtime and cluster health are a **word + dot/rail**, not a light Badge.
+- **Status grammar:** runtime, cluster, and backup health/status are a **word + dot**
+  (`ServerRuntimeStatusBadge` / `StatusWord`), not a light Badge.
   Counts are a sentence (or MetaStrip). **Badge** is reserved for rare attention (Needs setup,
-  blocking lock copy) — at most one per page.
+  blocking lock copy, Logs ERROR/WARNING). Routine Logs **INFO** stays a gray chip, not an
+  attention color. At most one attention-colored chip per page.
 - **Inline Alert surfaces** (theme `Alert` `--alert-bg` / `--alert-bd`): solid `--app-color-panel` fill plus a 1px semantic border (`cryo` / `fossil` / `bad`). Do not use translucent MagicPath washes.
 - Text: `--app-color-text` / `--app-color-muted`.
 - Borders: `--app-color-border` / `--app-color-border-subtle`.
@@ -235,7 +237,7 @@ Manual **Check Servers Health** ends with a toast (attention count or “all hea
 
 ### 5d. Destructive actions (inline controls)
 
-Primary destructive **Button**s use **`color="red" variant="filled"`** — **Stop**, **Force close**, labeled Remove/Delete, Ban, cancel in-flight jobs (expanded SteamCMD dock Cancel, backup toolbar Delete). Dense **icon-only** row/list **ActionIcon**s prefer **`variant="subtle"`** (keep `color` for meaning: red delete, orange restore, teal resume, yellow pause) so a column of fills does not dominate the row — backups history, cluster members, logs clear/delete, Downloads queue, minimized SteamCMD Cancel (#397). Workspace **server list** (full or icon rail) is switch-and-select among enabled profiles only — disabled profiles stay on Overview (no Show disabled in the rail) (#526). **Add server** / **Import** live on Overview (#397). **Restart** uses **`color="fossil" variant="filled"`** in the workspace lifecycle row and Overview card (warm amber, same weight as Stop). Theme **`autoContrast: true`** uses dark label/icon on light filled colors (fossil, attention). Kebab **Stop safely** / **Force close** / **Delete** use `Menu.Item color="red"`; **Restart** uses `color="fossil"`.
+Primary destructive **Button**s use **`color="red" variant="filled"`** — **Stop**, **Force close**, labeled Remove/Delete, Ban, cancel in-flight jobs (expanded SteamCMD dock Cancel). Header **Delete** / **Clear failed** on Backups history use **`variant="subtle"`**; filled red stays on the confirm modal. Dense **icon-only** row/list **ActionIcon**s prefer **`variant="subtle"`** (keep `color` for meaning: red delete, orange restore, teal resume, yellow pause) so a column of fills does not dominate the row — backups history, cluster members, logs clear/delete, Downloads queue, minimized SteamCMD Cancel (#397). Workspace **server list** (full or icon rail) is switch-and-select among enabled profiles only — disabled profiles stay on Overview (no Show disabled in the rail) (#526). **Add server** / **Import** live on Overview (#397). **Restart** uses **`color="fossil" variant="filled"`** in the workspace lifecycle row and Overview card (warm amber, same weight as Stop). Theme **`autoContrast: true`** uses dark label/icon on light filled colors (fossil, attention). Kebab **Stop safely** / **Force close** / **Delete** use `Menu.Item color="red"`; **Restart** uses `color="fossil"`.
 
 | Surface | Recipe |
 | --- | --- |
@@ -246,7 +248,7 @@ Primary destructive **Button**s use **`color="red" variant="filled"`** — **Sto
 
 | Confirm modals (delete / clear / ban / remove / force-close) | `openDangerConfirmModal` + optional `dangerConfirmBody` (`shared/ui/DangerConfirmModal/`) — red confirm, Cancel default (#235) |
 
-**Exceptions (not red filled):** red **Alert** / **Badge** (error state, not actions); **menu** row actions (`serverCardMenuActions`, backup/mods context menus — separate pass); **Remove from YARK** (profile-only delete) keeps default primary styling; multi-button unsaved-leave (`openUnsavedLeaveModal`) uses **fossil** / default buttons.
+**Exceptions (not red filled):** red **Alert** / **Badge** (error state, not actions); backup history toolbar **Delete** / **Clear failed** (`variant="subtle"`); **menu** row actions (`serverCardMenuActions`, backup/mods context menus — separate pass); **Remove from YARK** (profile-only delete) keeps default primary styling; multi-button unsaved-leave (`openUnsavedLeaveModal`) uses **fossil** / default buttons.
 
 Reference: `ServerModDetailDrawer` Remove footer (#344); quiet row icons (#397).
 
@@ -280,7 +282,8 @@ Native (non–ScrollArea) surfaces still use the thin global scrollbar without e
 
 | Role | Current convention |
 | --- | --- |
-| Page title | PageScaffold `h1` via `--app-font-page` (Comfortable **28px** / Compact ≈23px) |
+| Page title | PageScaffold `h1` via `--app-font-page` + `--app-font-display` (Segoe UI Variable Display / Semibold; Comfortable **28px** / Compact ≈23px). Body stays Segoe UI. |
+| Metric labels | `AppMetricCard` `.label` uses `--app-font-display` |
 | Panel title | Mantine `Title order={3|4}` |
 | Meta labels | Clusters `MetaStrip` (uppercase + tracking); server-card meta is sentence case |
 | Body / muted | Mantine `Text` + `c="dimmed"` |
@@ -341,6 +344,8 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 | `MapArtThumb` | `shared/ui/MapArtThumb/` | ASA map artwork thumb (list + header). Default `tek`; form Identity is `rounded` (#469) |
 | `SearchField` | `shared/ui/SearchField/` | Search inputs — see **SearchField variants** below |
 | `ServerRuntimeStatusBadge` | `shared/ui/ServerRuntimeStatusBadge/` | Process status word + dot |
+| `StatusWord` | `shared/ui/StatusWord/` | Generic status word + dot (backup health/history; quieter than Badge) |
+| `DismissibleHint` | `shared/ui/DismissibleHint/` | Operator gotcha Alert with a stable localStorage dismiss key |
 | `ReadonlyPath` | `shared/ui/ReadonlyPath/` | Bordered monospace chip for configured filesystem paths |
 | `PathField` | `shared/ui/PathField/` | Read-only path chip + Browse/Clear actions |
 | `ConsoleSurface` | `shared/ui/ConsoleSurface/` | ScrollArea monospace console for SteamCMD / Logs (plain text, stick-to-bottom) |

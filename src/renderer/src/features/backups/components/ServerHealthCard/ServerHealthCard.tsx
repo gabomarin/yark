@@ -18,10 +18,10 @@ import {
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { PathField } from "@ui/PathField/PathField";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
+import { StatusWord } from "@ui/StatusWord/StatusWord";
 import type { BackupServerHealth, ServerProfile } from "@shared/types";
 import type { BackupPolicyDraft } from "../../backupPolicyDraft";
 import {
-  backupHealthColor,
   backupHealthLabel,
   backupHealthTooltip,
   formatBackupBytes,
@@ -42,6 +42,15 @@ export interface ServerHealthCardProps {
   onBrowse: () => void;
   onDraftChange: (draft: BackupPolicyDraft) => void;
   onSave: () => void;
+}
+
+function healthTone(
+  health: BackupServerHealth["health"],
+): "ok" | "warn" | "danger" | "neutral" {
+  if (health === "ok") return "ok";
+  if (health === "warning") return "warn";
+  if (health === "critical") return "danger";
+  return "neutral";
 }
 
 export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
@@ -65,9 +74,9 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
                 maw={320}
                 withArrow
               >
-                <Text size="sm" fw={600} c={backupHealthColor(row.health)} span>
+                <StatusWord tone={healthTone(row.health)}>
                   {backupHealthLabel(row.health)}
-                </Text>
+                </StatusWord>
               </Tooltip>
             </Group>
             <Text size="sm" c="dimmed" mb={4}>

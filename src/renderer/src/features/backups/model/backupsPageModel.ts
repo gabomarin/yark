@@ -14,13 +14,6 @@ export function formatBackupBytes(bytes: number | null | undefined): string {
   return `${Math.round(bytes)} B`;
 }
 
-export function backupHealthColor(health: BackupHealthStatus): string {
-  if (health === "ok") return "teal";
-  if (health === "warning") return "yellow";
-  if (health === "critical") return "red";
-  return "gray";
-}
-
 export function backupHealthLabel(health: BackupHealthStatus): string {
   if (health === "ok") return "Protected";
   if (health === "warning") return "At risk";

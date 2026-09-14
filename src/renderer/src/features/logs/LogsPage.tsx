@@ -11,14 +11,16 @@ import {
   Stack,
   Text,
   Title,
+  Tooltip,
 } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import type { AppEvent, ServerProfile } from "@shared/types";
-import { formatLogDateTime } from "@shared/format-log-datetime";
+import { formatWhenLabel } from "@shared/format-log-datetime";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { SearchField } from "@ui/SearchField/SearchField";
 import { EventDetailsBody } from "./EventDetailsBody";
+import { EventSeverityMark } from "./components/EventSeverityMark/EventSeverityMark";
 import type { ServerLogsFocus } from "./ServerLogsPanel";
 import classes from "./LogsPage.module.css";
 
@@ -28,12 +30,6 @@ type TimeFilter = "24h" | "7d" | "all";
 interface Props {
   servers: ServerProfile[];
   onOpenServerLogs: (serverId: string, focus?: ServerLogsFocus) => void;
-}
-
-function severityColor(severity: AppEvent["severity"]): string {
-  if (severity === "error") return "red";
-  if (severity === "warning") return "yellow";
-  return "gray";
 }
 
 function focusForEvent(event: AppEvent): ServerLogsFocus {
@@ -240,6 +236,7 @@ export function LogsPage(props: Props): ReactElement {
                       event.serverId !== null
                         ? (server?.name ?? "Unknown server")
                         : "System";
+                    const when = formatWhenLabel(event.createdAt);
                     return (
                       <Accordion.Item
                         key={event.id}
@@ -251,21 +248,25 @@ export function LogsPage(props: Props): ReactElement {
                         }
                       >
                         <Accordion.Control>
-                          <div className={classes.fleetRow}>
-                            <Text size="sm" c="dimmed" className={classes.fleetWhen}>
-                              {formatLogDateTime(event.createdAt)}
-                            </Text>
-                            <Badge color={severityColor(event.severity)} variant="light">
-                              {event.severity}
-                            </Badge>
-                            <Text size="sm" fw={600} className={classes.fleetServer}>
-                              {serverName}
-                            </Text>
-                            {server?.enabled === false && (
-                              <Badge size="xs" color="gray" variant="light">
-                                Inactive
-                              </Badge>
-                            )}
+                          <div className={classes.fleetRow} data-fleet-row>
+                            <Tooltip label={when.tooltip}>
+                              <Text size="sm" c="dimmed" className={classes.fleetWhen}>
+                                {when.primary}
+                              </Text>
+                            </Tooltip>
+                            <span className={classes.fleetSeverity} data-fleet-severity>
+                              <EventSeverityMark severity={event.severity} />
+                            </span>
+                            <Group gap="xs" wrap="nowrap" className={classes.fleetServer}>
+                              <Text size="sm" fw={600} span>
+                                {serverName}
+                              </Text>
+                              {server?.enabled === false && (
+                                <Badge size="xs" color="gray" variant="light">
+                                  Inactive
+                                </Badge>
+                              )}
+                            </Group>
                             <Text size="sm" className={classes.fleetMessage}>
                               {event.message}
                             </Text>

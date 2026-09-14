@@ -9,7 +9,7 @@ import type {
   ServerProfile,
   SteamCmdStatus,
 } from "@shared/types";
-import { formatDownloadPhase } from "./downloadsCopy";
+import { downloadRowMeta, formatDownloadPhase } from "./downloadsCopy";
 import {
   FILES_QUEUE_OPERATIONS,
   isOperatorVisibleCriticalJob,
@@ -279,6 +279,25 @@ export function downloadConsoleBody(
     return "Waiting for progress…";
   }
   return lines.slice(-120).join("\n");
+}
+
+export function downloadStatusLine(
+  row: DownloadRow | null,
+  consoleBody: string,
+): string {
+  if (row === null) return "SteamCMD log";
+  const parts = [downloadRowMeta(row)];
+  if (row.percent !== null) {
+    parts.push(`${row.percent.toFixed(0)}%`);
+  }
+  if (consoleBody === "Waiting for progress…") {
+    parts.push("Waiting for progress…");
+  }
+  return parts.join(" · ");
+}
+
+export function shouldAutoExpandAdvancedLog(rows: DownloadRow[]): boolean {
+  return rows.some((row) => row.kind === "attention" || row.kind === "interrupted");
 }
 
 /** Detail hint for a queued files job — reflects queue order, not only the live row. */

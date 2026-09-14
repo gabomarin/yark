@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DownloadSimple } from "@phosphor-icons/react";
-import { Alert, Button, Splitter, Stack } from "@mantine/core";
+import { Alert, Button, Group, Splitter, Stack, Text } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
@@ -10,7 +10,9 @@ import {
   buildDownloadRows,
   defaultSelectedRowId,
   downloadConsoleBody,
+  downloadStatusLine,
   findDownloadRow,
+  shouldAutoExpandAdvancedLog,
   type DownloadRow,
   type DownloadRowKind,
 } from "./downloadsModel";
@@ -34,6 +36,7 @@ interface Props {
 }
 
 const DEFAULT_SPLIT_SIZES: [number, number] = [52, 48];
+const ADVANCED_LOG_STORAGE_KEY = "yark.downloads.advancedLog.expanded.v1";
 
 export function DownloadsPage(props: Props): ReactElement {
   const serversById = useMemo(() => {
@@ -62,6 +65,10 @@ export function DownloadsPage(props: Props): ReactElement {
     key: "yark.downloads.splitSizes",
     defaultValue: DEFAULT_SPLIT_SIZES,
   });
+  const [logExpanded, setLogExpanded] = useLocalStorage({
+    key: ADVANCED_LOG_STORAGE_KEY,
+    defaultValue: false,
+  });
   const queueRef = useRef<HTMLElement>(null);
   useDownloadQueueFlip(
     queueRef,
@@ -78,6 +85,12 @@ export function DownloadsPage(props: Props): ReactElement {
   const selected = findDownloadRow(rows, selectedId);
   const groups: DownloadRowKind[] = ["active", "interrupted", "paused", "queued", "cancelled", "attention"];
   const consoleBody = downloadConsoleBody(rows, props.console?.lines ?? []);
+  const statusLine = downloadStatusLine(selected, consoleBody);
+  const autoExpandLog = shouldAutoExpandAdvancedLog(rows);
+
+  useEffect(() => {
+    if (autoExpandLog) setLogExpanded(true);
+  }, [autoExpandLog, setLogExpanded]);
 
   const cancelRow = (row: DownloadRow) => {
     if (row.kind === "queued" && row.job !== null) {
@@ -210,17 +223,44 @@ export function DownloadsPage(props: Props): ReactElement {
     </div>
   );
 
+  const logToggle = (
+    <Group
+      justify="space-between"
+      wrap="nowrap"
+      gap="sm"
+      className={classes.logDockBar}
+    >
+      <Text size="sm" className={classes.logStatus} lineClamp={1} data-downloads-status>
+        {statusLine}
+      </Text>
+      <Button
+        size="compact-xs"
+        variant="subtle"
+        aria-label={logExpanded ? "Hide advanced log" : "Advanced log"}
+        aria-expanded={logExpanded}
+        aria-controls="downloads-advanced-log"
+        onClick={() => setLogExpanded(!logExpanded)}
+      >
+        {logExpanded ? "Hide advanced log" : "Advanced log"}
+      </Button>
+    </Group>
+  );
+
   return (
     <PageScaffold
       title="Downloads"
       fillViewport
     >
-      <div className={classes.downloadsLayout} data-downloads-page>
+      <div
+        className={classes.downloadsLayout}
+        data-downloads-page
+        data-advanced-log-expanded={logExpanded || undefined}
+      >
         {rows.length === 0 ? (
           <div className={classes.upperPane}>
             {queuePane}
           </div>
-        ) : (
+        ) : logExpanded ? (
           <Splitter
             orientation="vertical"
             h="100%"
@@ -236,9 +276,18 @@ export function DownloadsPage(props: Props): ReactElement {
               </div>
             </Splitter.Pane>
             <Splitter.Pane defaultSize={DEFAULT_SPLIT_SIZES[1]} min={20}>
-              {consolePane}
+              <div className={classes.consoleStack} id="downloads-advanced-log">
+                {logToggle}
+                {consolePane}
+              </div>
             </Splitter.Pane>
           </Splitter>
+        ) : (
+          <div className={classes.upperPane}>
+            {steamcmdMissingBanner}
+            {queuePane}
+            {logToggle}
+          </div>
         )}
       </div>
     </PageScaffold>

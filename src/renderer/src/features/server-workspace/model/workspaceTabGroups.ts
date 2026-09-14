@@ -1,6 +1,6 @@
 import type { WorkspaceTab } from "../serverWorkspaceTypes";
 
-export type WorkspaceTabGroupId = "configure" | "operate" | "recover";
+type WorkspaceTabGroupId = "configure" | "operate" | "recover";
 
 export interface WorkspaceTabSpec {
   value: WorkspaceTab;

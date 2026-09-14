@@ -5,7 +5,10 @@ import { AppProviders } from "@app/AppProviders";
 import type { CriticalJobSummary, ServerProfile, SteamCmdStatus } from "@shared/types";
 import { DownloadsPage } from "./DownloadsPage";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  window.localStorage.removeItem("yark.downloads.advancedLog.expanded.v1");
+});
 
 function job(overrides: Partial<CriticalJobSummary> & Pick<CriticalJobSummary, "id" | "operation" | "status">): CriticalJobSummary {
   return {
@@ -229,6 +232,10 @@ describe("DownloadsPage", () => {
     renderPage(populatedStatus());
 
     expect(document.querySelector("[data-download-live-action]")).not.toBeNull();
+    const logToggle = screen.getByRole("button", { name: /advanced log/i });
+    if (logToggle.getAttribute("aria-expanded") !== "true") {
+      await user.click(logToggle);
+    }
     expect(screen.getByText("progress: 38")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Scorched/ }));
@@ -284,7 +291,7 @@ describe("DownloadsPage", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText("Waiting for progress…")).toBeInTheDocument();
+    expect(screen.getByText(/Waiting for progress/)).toBeInTheDocument();
   });
 
   it("shows SteamCMD console output for restart-interrupted jobs", () => {

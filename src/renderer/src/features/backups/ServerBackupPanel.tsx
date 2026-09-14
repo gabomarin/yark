@@ -1,10 +1,11 @@
-import { Alert, Group, Stack, Tabs, Text, Title } from "@mantine/core";
+import { Alert, Group, Stack, Tabs, Title } from "@mantine/core";
 import type {
   ServerInstallationInfo,
   ServerProfile,
   ServerRuntimeInfo,
 } from "@shared/types";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { DismissibleHint } from "@ui/DismissibleHint/DismissibleHint";
 import type { ReactElement } from "react";
 import { BackupHistoryTable } from "./BackupHistoryTable";
 import { BackupRestoreModal } from "./BackupRestoreModal";
@@ -55,9 +56,12 @@ export function ServerBackupPanel(props: Props): ReactElement {
         <Group justify="space-between" wrap="wrap" gap="sm" align="flex-end">
           <div>
             <Title order={3}>Backups for {props.server.name}</Title>
-            <Text size="sm" c="dimmed">
+            <DismissibleHint
+              storageKey="yark.backups.kindsHint.dismissed.v1"
+              title="World vs players vs INI"
+            >
               World schedule is separate from player join/leave and INI-on-save backups.
-            </Text>
+            </DismissibleHint>
           </div>
         </Group>
       )}

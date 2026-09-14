@@ -77,6 +77,7 @@ function createAppCssVariablesResolver(
       "--app-form-description-size": `${tokens.formDescription}px`,
       "--app-form-label-size": `${tokens.formLabel}px`,
       "--app-font-page": `${tokens.pageTitle}px`,
+      "--app-font-display": '"Segoe UI Variable Display", "Segoe UI Semibold", "Segoe UI", Arial, sans-serif',
       "--app-shadow-panel": tokens.shadows.panel,
       "--app-shadow-elevated": "0 18px 36px rgba(0, 0, 0, 0.32)",
       /* Shared surface recipes — prefer AppSurfaceCard / these vars over copy-pasted gradients */

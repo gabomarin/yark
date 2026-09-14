@@ -109,6 +109,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--app-space-xs);
+  font-family: var(--app-font-display);
   font-size: 11px;
   line-height: 1.2;
   letter-spacing: 0.04em;

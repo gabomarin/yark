@@ -1,5 +1,9 @@
 import { playerBackupDisplayName } from "@shared/backup-player-meta";
-import { formatLogDateTime } from "@shared/format-log-datetime";
+import {
+  WHEN_RECENT_MS,
+  formatRelativeTime,
+  formatWhenLabel,
+} from "@shared/format-log-datetime";
 import { formatMapDisplayName } from "@shared/map-identity";
 import type {
   BackupKind,
@@ -42,16 +46,9 @@ export function formatBackupHistoryTitle(backup: BackupRecord): string {
   return typeLabel;
 }
 
-/** English only until app i18n (#358). Do not use the OS locale. */
-const relativeTimeFormat = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
-
-/** Relative primary label for backups younger than this; absolute beyond. */
-export const BACKUP_WHEN_RECENT_MS = 24 * 60 * 60 * 1000;
-
-export type BackupWhenLabel = {
-  primary: string;
-  tooltip: string;
-};
+export const BACKUP_WHEN_RECENT_MS = WHEN_RECENT_MS;
+export { formatRelativeTime };
+export const formatBackupWhenLabel = formatWhenLabel;
 
 export function formatSize(sizeBytes: number): string {
   if (sizeBytes <= 0) return "–";
@@ -59,46 +56,6 @@ export function formatSize(sizeBytes: number): string {
     return `${(sizeBytes / (1024 * 1024)).toFixed(2)} MB`;
   }
   return `${(sizeBytes / 1024).toFixed(1)} KB`;
-}
-
-export function formatRelativeTime(iso: string, nowMs = Date.now()): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-  const diffSec = Math.round((date.getTime() - nowMs) / 1000);
-  const abs = Math.abs(diffSec);
-  if (abs < 60) return relativeTimeFormat.format(diffSec, "second");
-  const diffMin = Math.round(diffSec / 60);
-  if (Math.abs(diffMin) < 60) return relativeTimeFormat.format(diffMin, "minute");
-  const diffHour = Math.round(diffMin / 60);
-  if (Math.abs(diffHour) < 24) return relativeTimeFormat.format(diffHour, "hour");
-  const diffDay = Math.round(diffHour / 24);
-  if (Math.abs(diffDay) < 30) return relativeTimeFormat.format(diffDay, "day");
-  const diffMonth = Math.round(diffDay / 30);
-  if (Math.abs(diffMonth) < 12) return relativeTimeFormat.format(diffMonth, "month");
-  return relativeTimeFormat.format(Math.round(diffMonth / 12), "year");
-}
-
-/**
- * Backup history Date cell: English relative within 24h, local timestamp older.
- * Tooltip always shows the alternate form (#515).
- */
-export function formatBackupWhenLabel(
-  iso: string,
-  nowMs = Date.now(),
-  options?: { recentThresholdMs?: number },
-): BackupWhenLabel {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) {
-    return { primary: iso, tooltip: iso };
-  }
-  const threshold = options?.recentThresholdMs ?? BACKUP_WHEN_RECENT_MS;
-  const relative = formatRelativeTime(iso, nowMs);
-  const absolute = formatLogDateTime(iso, { fallback: iso });
-  const ageMs = Math.abs(date.getTime() - nowMs);
-  if (ageMs < threshold) {
-    return { primary: relative, tooltip: absolute };
-  }
-  return { primary: absolute, tooltip: relative };
 }
 
 export function kindLabel(kind: BackupKind): string {

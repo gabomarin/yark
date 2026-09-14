@@ -1,9 +1,10 @@
 import { ClockCounterClockwise } from "@phosphor-icons/react";
-import { Accordion, Badge, Group, Stack, Text } from "@mantine/core";
+import { Accordion, Group, Stack, Text, Tooltip } from "@mantine/core";
 import type { ServerOperationalLogs } from "@shared/types";
-import { formatLogDateTime } from "@shared/format-log-datetime";
+import { formatWhenLabel } from "@shared/format-log-datetime";
 import type { ReactElement } from "react";
 import { EventDetailsBody } from "../../EventDetailsBody";
+import { EventSeverityMark } from "../EventSeverityMark/EventSeverityMark";
 import classes from "../../LogsPage.module.css";
 import {
   LogsClearAction,
@@ -101,26 +102,16 @@ export function LogsEventsTab(props: LogsEventsTabProps): ReactElement {
                         wrap="nowrap"
                       >
                         <div className={classes.eventRowMain}>
-                          <Text size="sm" c="dimmed">
-                            {formatLogDateTime(event.createdAt)}
-                          </Text>
-                          <Text size="sm" fw={expanded ? 600 : 400}>
+                          <Tooltip label={formatWhenLabel(event.createdAt).tooltip}>
+                            <Text size="sm" c="dimmed">
+                              {formatWhenLabel(event.createdAt).primary}
+                            </Text>
+                          </Tooltip>
+                          <Text size="sm" fw={expanded ? 600 : 400} className={classes.eventMessage}>
                             {event.message}
                           </Text>
                         </div>
-                        <Badge
-                          className={classes.eventSeverityBadge}
-                          color={
-                            event.severity === "error"
-                              ? "red"
-                              : event.severity === "warning"
-                                ? "yellow"
-                                : "gray"
-                          }
-                          variant="light"
-                        >
-                          {event.severity}
-                        </Badge>
+                        <EventSeverityMark severity={event.severity} />
                       </Group>
                     </Accordion.Control>
                     <Accordion.Panel>

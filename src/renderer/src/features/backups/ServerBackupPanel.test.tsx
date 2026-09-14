@@ -421,7 +421,9 @@ describe("ServerBackupPanel", () => {
         }),
       );
     });
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("alert", { name: "World vs players vs INI" }),
+    ).toBeVisible();
 
     await user.click(screen.getByRole("tab", { name: "INI" }));
     await user.click(screen.getByRole("button", { name: /^Backup now$/i }));
