@@ -57,6 +57,9 @@ describe("surface and radius tokens (#468)", () => {
     }
     expect(resolved.variables["--app-surface-cool"]).toBe("none");
     expect(resolved.variables["--app-surface-cool-emphasis"]).toBe("none");
+    expect(resolved.variables["--app-color-primary"]).toBe("var(--app-color-accent)");
+    expect(resolved.variables["--app-color-accent-deep"]).toBe("var(--ark-blue-3)");
+    expect(resolved.variables["--app-color-panel-raised"]).toBe("var(--ark-gray-4)");
     expect(resolved.dark["--mantine-color-body"]).toBe("var(--app-color-bg)");
     expect(resolved.dark["--mantine-color-dark-7"]).toBe("var(--app-color-surface-panel)");
     expect(resolved.dark["--mantine-color-dark-6"]).toBe("var(--app-color-surface-control)");

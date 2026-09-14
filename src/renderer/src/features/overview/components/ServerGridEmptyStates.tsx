@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { HardDrives, MagnifyingGlass, Plus } from "@phosphor-icons/react";
-import { Button, Group, Skeleton, VisuallyHidden } from "@mantine/core";
+import { Alert, Button, Group, Skeleton, VisuallyHidden } from "@mantine/core";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import type { OverviewFleetFilter } from "@features/overview/model/overviewFleetMetrics";
 import classes from "../OverviewPage.module.css";
@@ -16,6 +16,8 @@ interface Props {
   onImportServer: () => void;
   onClearFleetFilter: () => void;
   onClearSearch: () => void;
+  steamCmdNeedsSetup?: boolean;
+  onOpenSteamCmdSettings?: () => void;
 }
 
 export function ServerGridEmptyStates(props: Props): ReactElement | null {
@@ -48,14 +50,21 @@ export function ServerGridEmptyStates(props: Props): ReactElement | null {
   }
 
   if (props.serverCount === 0) {
+    const steamCmdSetup =
+      props.steamCmdNeedsSetup === true && props.onOpenSteamCmdSettings !== undefined;
     return (
       <EmptyState
         icon={<HardDrives size={24} weight="duotone" />}
         title="Create your first server"
-        description="Add a profile on this PC, then install dedicated server files."
+        description={
+          steamCmdSetup
+            ? "Add a profile on this PC, then install dedicated server files. SteamCMD is not set up yet – YARK uses it to download those files."
+            : "Add a profile on this PC, then install dedicated server files."
+        }
         titleOrder="h3"
+        layout="stacked"
         action={
-          <Group gap="xs">
+          <Group gap="xs" justify="center">
             <Button
               leftSection={<Plus size={16} />}
               onClick={props.onCreateServer}
@@ -70,9 +79,25 @@ export function ServerGridEmptyStates(props: Props): ReactElement | null {
             >
               Import existing install
             </Button>
+            {steamCmdSetup ? (
+              <Button
+                variant="default"
+                onClick={props.onOpenSteamCmdSettings}
+                data-cta-prominence="secondary"
+              >
+                Set up SteamCMD
+              </Button>
+            ) : null}
           </Group>
         }
-      />
+      >
+        {steamCmdSetup ? (
+          <Alert color="yellow" variant="light" title="SteamCMD needs setup">
+            Open Settings to install or point at SteamCMD, or run the setup assistant
+            again from Settings.
+          </Alert>
+        ) : null}
+      </EmptyState>
     );
   }
 

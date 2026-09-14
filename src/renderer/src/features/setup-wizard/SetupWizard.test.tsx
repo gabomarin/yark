@@ -520,7 +520,7 @@ describe("SetupWizard", () => {
     expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 
-  it("shows the cluster directory error when Yes has no default base folder", async () => {
+  it("keeps Continue disabled without a false required error when Yes has no default base folder", async () => {
     const user = userEvent.setup();
     stubWizardApi();
 
@@ -557,7 +557,8 @@ describe("SetupWizard", () => {
     await user.click(screen.getByRole("button", { name: /^continue$/i }));
     await user.click(screen.getByRole("radio", { name: /yes/i }));
 
-    expect(screen.getByText("Cluster directory is required.")).toBeInTheDocument();
+    expect(screen.queryByText("Cluster directory is required.")).not.toBeInTheDocument();
+    expect(screen.getByText("Not set – choose a folder")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^continue$/i })).toBeDisabled();
   });
 

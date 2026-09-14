@@ -18,12 +18,37 @@ import { listDirWithoutIdServers, groupServersByClusterDir } from "./clusterMode
 /** Absolute Windows path (drive letter or UNC) — mirrors backend validation. */
 const WINDOWS_ABS_PATH = /^(?:[a-zA-Z]:[\\/]|\\\\)/;
 
-/** Unique default Cluster ID (operator can still type a human-readable name). */
-export function suggestClusterId(): string {
-  return (
-    globalThis.crypto?.randomUUID?.() ??
-    `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
+/** Cluster IDs already used on profiles (case-insensitive uniqueness). */
+export function listKnownClusterIds(servers: ServerProfile[]): string[] {
+  return [
+    ...new Set(
+      servers
+        .map((server) => server.clusterId)
+        .filter((id): id is string => id !== null && id.trim().length > 0)
+        .map((id) => id.trim()),
+    ),
+  ];
+}
+
+/**
+ * Short default Cluster ID (`yark`, then `yark-2`, …). Pass current IDs so
+ * Generate bumps instead of repeating the slug.
+ */
+export function suggestClusterId(taken: Iterable<string> = []): string {
+  const takenSet = new Set(
+    [...taken]
+      .map((id) => id.trim().toLowerCase())
+      .filter((id) => id.length > 0),
   );
+  const base = "yark";
+  if (!takenSet.has(base)) {
+    return base;
+  }
+  let n = 2;
+  while (takenSet.has(`${base}-${n}`)) {
+    n += 1;
+  }
+  return `${base}-${n}`;
 }
 
 export type CreateClusterStep = 1 | 2 | 3;

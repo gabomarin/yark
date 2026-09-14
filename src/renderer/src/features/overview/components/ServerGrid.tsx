@@ -68,6 +68,8 @@ interface Props {
   onDeleteServer: (serverId: string) => void;
   onToggleServerEnabled?: (serverId: string, enabled: boolean) => void;
   onOpenDownloads?: (serverId: string) => void;
+  steamCmdNeedsSetup?: boolean;
+  onOpenSteamCmdSettings?: () => void;
 }
 
 export function ServerGrid(props: Props): ReactElement {
@@ -272,6 +274,8 @@ export function ServerGrid(props: Props): ReactElement {
           onImportServer={props.onImportServer}
           onClearFleetFilter={() => setFleetFilter("all")}
           onClearSearch={() => props.onSearchChange("")}
+          steamCmdNeedsSetup={props.steamCmdNeedsSetup}
+          onOpenSteamCmdSettings={props.onOpenSteamCmdSettings}
         />
 
         {!props.loading &&

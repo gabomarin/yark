@@ -42,7 +42,7 @@ export function CreateClusterIdentityStep(props: Props): ReactElement {
       <PathField
         label="Shared cluster directory"
         description="Folder used for Cross-ARK transfers."
-        placeholder="D:\\ASA\\Clusters\\Ember"
+        placeholder="Not set – choose a folder"
         value={props.clusterDir}
         required
         busy={props.browsing}

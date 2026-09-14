@@ -49,6 +49,10 @@ function createAppCssVariablesResolver(
       "--app-color-text": "var(--app-color-text-soft)",
       "--app-color-muted": "var(--app-color-muted-soft)",
       "--app-color-accent": "var(--ark-blue-9)",
+      /* Aliases so Downloads / feature CSS color-mix can paint (Slice 1). */
+      "--app-color-primary": "var(--app-color-accent)",
+      "--app-color-accent-deep": "var(--ark-blue-3)",
+      "--app-color-panel-raised": "var(--ark-gray-4)",
       "--app-color-ini-category": "var(--ark-blue-ini-category)",
       "--app-color-ok": tokens.colors.ok,
       "--app-color-warn": tokens.colors.warn,

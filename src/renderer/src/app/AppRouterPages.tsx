@@ -153,6 +153,7 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
             onCopyConfiguration={(id) => actions.setCopyConfig({ sourceServerId: id })}
             onDeleteServer={(id) => actions.confirmDeleteServer(id)}
             onToggleServerEnabled={(id, enabled) => void actions.setServerEnabled(id, enabled)}
+            onOpenSteamCmdSettings={openSteamCmdSettings}
           />
         ),
       }}

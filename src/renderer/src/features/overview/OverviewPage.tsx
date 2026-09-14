@@ -72,6 +72,8 @@ interface Props {
   onCopyConfiguration: (serverId: string) => void;
   onDeleteServer: (serverId: string) => void;
   onToggleServerEnabled?: (serverId: string, enabled: boolean) => void;
+  /** Settings → SteamCMD (empty-fleet setup prompt). */
+  onOpenSteamCmdSettings?: () => void;
 }
 
 export function OverviewPage(props: Props): ReactElement {
@@ -210,24 +212,30 @@ export function OverviewPage(props: Props): ReactElement {
           onDeleteServer={props.onDeleteServer}
           onToggleServerEnabled={props.onToggleServerEnabled}
           onOpenDownloads={props.onOpenDownloads}
+          steamCmdNeedsSetup={steamCmdStatus?.detected === false}
+          onOpenSteamCmdSettings={props.onOpenSteamCmdSettings}
         />
 
-        <div className={classes.narrowLogsLink}>
-          <Button
-            variant="subtle"
-            size="compact-sm"
-            rightSection={<ArrowRight size={14} />}
-            onClick={props.onViewAllActivity}
-          >
-            View logs
-          </Button>
-        </div>
+        {props.servers.length > 0 ? (
+          <>
+            <div className={classes.narrowLogsLink}>
+              <Button
+                variant="subtle"
+                size="compact-sm"
+                rightSection={<ArrowRight size={14} />}
+                onClick={props.onViewAllActivity}
+              >
+                View logs
+              </Button>
+            </div>
 
-        <RecentActivityPanel
-          events={props.events}
-          loading={props.loading ?? false}
-          onViewAll={props.onViewAllActivity}
-        />
+            <RecentActivityPanel
+              events={props.events}
+              loading={props.loading ?? false}
+              onViewAll={props.onViewAllActivity}
+            />
+          </>
+        ) : null}
       </div>
     </div>
   );

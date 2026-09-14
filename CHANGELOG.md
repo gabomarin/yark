@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Empty Servers is centered with a SteamCMD setup prompt; selected chrome uses a brighter family accent (`#3b8cff`); new clusters default to `yark` / `yark-2`.
 - Public product site (`getyark.com`) deploys to **Cloudflare Pages** (`getyark`) instead of GitHub Pages; Web Analytics uses Cloudflare’s automatic proxied injection (no in-repo beacon).
 - Public Discord invite is now [discord.gg/DQ8nes63w7](https://discord.gg/DQ8nes63w7) (README, website, and Settings → About).
 - Discord `#releases` announce prefers the **Yark Bot** Discord application (`DISCORD_BOT_TOKEN` + repo variable `DISCORD_RELEASES_CHANNEL_ID`); notify is skipped when the channel variable is unset (no hardcoded channel id).

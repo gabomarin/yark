@@ -56,8 +56,9 @@ export function suggestSetupClusterDir(
 
 /**
  * Keep an auto-suggested cluster folder aligned with the current default base.
- * `markDirTouched` only shows the empty-dir error immediately; Continue still
- * uses {@link canContinueClusterStep} (untouched vs touched does not gate it).
+ * Never mark the dir touched here — an empty suggestion must not show
+ * “required” under a path-like placeholder. Continue still uses
+ * {@link canContinueClusterStep}.
  */
 export function syncAutoSuggestedClusterDir(input: {
   shareCluster: boolean;
@@ -72,7 +73,8 @@ export function syncAutoSuggestedClusterDir(input: {
   return {
     clusterDir,
     dirAutoSuggested: clusterDir.length > 0,
-    markDirTouched: clusterDir.length === 0,
+    // Empty auto-suggest must not look like a filled path + required error.
+    markDirTouched: false,
   };
 }
 

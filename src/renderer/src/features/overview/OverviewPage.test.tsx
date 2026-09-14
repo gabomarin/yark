@@ -246,6 +246,44 @@ describe("OverviewPage", () => {
 
     expect(document.querySelector("[data-overview-fleet-metrics]")).toBeNull();
     expect(screen.getByText("Create your first server")).toBeInTheDocument();
+    expect(screen.getByText("Create your first server").closest("[data-layout]")).toHaveAttribute(
+      "data-layout",
+      "stacked",
+    );
+    expect(screen.queryByRole("button", { name: "View logs" })).not.toBeInTheDocument();
+  });
+
+  it("prompts SteamCMD setup on the empty fleet", async () => {
+    const user = userEvent.setup();
+    const onOpenSteamCmdSettings = vi.fn();
+    renderOverview({
+      servers: [],
+      onOpenSteamCmdSettings,
+      steamCmdStatus: {
+        detected: false,
+        executablePath: null,
+        depotCacheDir: null,
+        contentCacheDir: null,
+        busy: false,
+        running: false,
+        operation: null,
+        serverId: null,
+        startedAt: null,
+        pid: null,
+        progressPercent: null,
+        progressLabel: null,
+        progressBytesDownloaded: null,
+        progressBytesTotal: null,
+        lastLine: null,
+        queuedCount: 0,
+        criticalJobs: [],
+        checkedAt: "2026-07-24T00:00:00.000Z",
+      },
+    });
+
+    expect(screen.getByText("SteamCMD needs setup")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Set up SteamCMD" }));
+    expect(onOpenSteamCmdSettings).toHaveBeenCalledOnce();
   });
 
   it("filters the grid from fleet metric tiles and clears on second click (#314)", async () => {
