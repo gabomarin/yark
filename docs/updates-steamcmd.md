@@ -60,7 +60,7 @@ Changing the SteamCMD path via `steamcmd:set-path` resets the freshness timestam
 Pipeline for each files job:
 
 1. Ensure `asa_content_cache` (SteamCMD `app_update` … `validate`, unless install reuses fresh cache).
-2. **Robocopy** cache → server `installDir`, excluding `ShooterGame\Saved` (worlds, INI, players). Shared helper uses `/E` + `/XJ` (no junction traversal) and refuses destination trees that already contain links (#322).
+2. **Robocopy** cache → server `installDir`, excluding `ShooterGame\Saved` (worlds, INI, players). Shared helper uses `/E` + `/XJ` (no junction traversal) and refuses destination trees that already contain links (#322). Win64 community AsaApi files (`Version.dll`, `AsaApiLoader.exe`, `ArkApi\`) are **not** excluded — see [asa-api.md](asa-api.md#pitfalls).
 3. If robocopy fails → fallback: SteamCMD `app_update` **directly** on the server install dir.
 
 | Action | Public constraint | After success |
@@ -230,6 +230,7 @@ operator continue while SteamCMD is still installing.
 | Repeated downloads when installing another server | Cache older than 15 minutes, missing manifest, or SteamCMD path changed |
 | Console in Spanish / stuck `0.0%` while `[ N%]` lines scroll | SteamCMD bootstrapper follows Windows UI language. We force `-language english`; percent still reads from `[ N%]`. Restart the update after this build. |
 | World/INI wiped after update | Should not happen via robocopy path (`ShooterGame\Saved` excluded); check whether fallback direct `app_update` on install dir was used (console mentions cache sync failure) |
+| Ark Server API / plugins gone after Update | Expected: robocopy sync overwrites Win64 from the content cache (only `ShooterGame\Saved` is excluded). Re-Install from the Ark Server API tab ([asa-api.md](asa-api.md)) |
 | Console stuck on “Waiting for progress…” during Update | Older builds were silent while zipping pre-update backups (large imported worlds take minutes). Current builds log backup kinds; Cancel aborts that phase without a fake rollback |
 | Job stuck after crash | Queue persisted in settings `criticalJobsQueue.v1`; pending jobs resume on next launch when SteamCMD is ready |
 | Install failed: *Could not run SteamCMD* | `steamcmd.exe` not found — Choose a path or **Install SteamCMD** in Settings, then retry. Creating the profile itself does not need SteamCMD. |

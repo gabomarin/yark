@@ -42,5 +42,5 @@ third-party DLLs.
 
 - Windows only.
 - While Load on Start is on, Overview / workspace may show **Loading Ark Server API…** until the server window is ready.
-- SteamCMD update / move should preserve `Version.dll`, `AsaApiLoader.exe`, and `ArkApi\` — verify after big update jobs if something looks wiped.
+- SteamCMD **Update / Verify** can overwrite Win64 community files (`Version.dll`, `AsaApiLoader.exe`, `ArkApi\`) because sync only excludes `ShooterGame\Saved`. Re-check the tab (or Install again) after an update if Load on Start fails. Move installation copies the whole tree, so API files move with the server when they were present on the source.
 - Full engineering notes: repo `docs/asa-api.md`.
