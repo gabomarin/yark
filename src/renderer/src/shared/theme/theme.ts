@@ -78,6 +78,7 @@ function createAppCssVariablesResolver(
       "--app-form-label-size": `${tokens.formLabel}px`,
       "--app-font-page": `${tokens.pageTitle}px`,
       "--app-font-display": '"Segoe UI Variable Display", "Segoe UI Semibold", "Segoe UI", Arial, sans-serif',
+      "--app-font-mono": '"Cascadia Mono", Consolas, monospace',
       "--app-shadow-panel": tokens.shadows.panel,
       "--app-shadow-elevated": "0 18px 36px rgba(0, 0, 0, 0.32)",
       /* Shared surface recipes — prefer AppSurfaceCard / these vars over copy-pasted gradients */
@@ -201,6 +202,7 @@ function createAppTheme(
     /** Dark text on light filled colors (fossil Restart, attention); white on red/teal filled. */
     autoContrast: true,
     fontFamily: '"Segoe UI", Arial, sans-serif',
+    fontFamilyMonospace: '"Cascadia Mono", Consolas, monospace',
     defaultRadius: "sm",
     /** Aligns `gap="xs"|…` / `p="md"` with `--app-space-*` (overrides Mantine defaults). */
     spacing: {

@@ -194,7 +194,7 @@ describe("DownloadsPage", () => {
     expect(document.querySelector("[data-downloads-page]")).not.toBeNull();
     expect(document.querySelector("[data-steamcmd-console]")).toBeNull();
     expect(screen.queryByText("progress: 38")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Install SteamCMD" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Open SteamCMD settings" })).toBeInTheDocument();
   });
 
   it("offers Install SteamCMD from the empty state when SteamCMD is missing", async () => {

@@ -37,6 +37,12 @@ export function formatBackupTypeLabel(type: BackupType): string {
   return BACKUP_TYPE_LABELS[type] ?? type;
 }
 
+export function formatBackupKindLabel(kind: BackupKind): string {
+  if (kind === "world") return "World save";
+  if (kind === "players") return "Player profiles";
+  return "INI";
+}
+
 /** World/INI history title: friendly map (when known) plus why the archive exists. */
 export function formatBackupHistoryTitle(backup: BackupRecord): string {
   const typeLabel = formatBackupTypeLabel(backup.type);

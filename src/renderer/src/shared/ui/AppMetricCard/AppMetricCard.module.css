@@ -35,6 +35,11 @@
   border-color: var(--app-color-border);
 }
 
+.root[data-zero]:not([data-active]) .label,
+.root[data-zero]:not([data-active]) .value {
+  color: var(--app-color-muted);
+}
+
 .root[data-tone="warning"][data-zero]:not([data-active]) .label,
 .root[data-tone="warning"][data-zero]:not([data-active]) .value,
 .root[data-tone="danger"][data-zero]:not([data-active]) .label,

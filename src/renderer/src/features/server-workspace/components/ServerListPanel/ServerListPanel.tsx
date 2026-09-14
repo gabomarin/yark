@@ -99,11 +99,11 @@ export function ServerListPanel(props: Props): ReactElement {
             <Group justify="space-between" gap="xs" wrap="nowrap">
               <Text className={classes.title}>All servers</Text>
               {props.onToggleRail !== undefined && (
-                <Tooltip label="Collapse to icon rail">
+                <Tooltip label="Collapse server list">
                   <ActionIcon
                     variant="subtle"
                     size="sm"
-                    aria-label="Collapse to icon rail"
+                    aria-label="Collapse server list"
                     onClick={props.onToggleRail}
                   >
                     <CaretRight size={14} style={{ transform: "rotate(180deg)" }} />

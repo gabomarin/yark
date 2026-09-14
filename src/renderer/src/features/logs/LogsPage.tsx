@@ -16,6 +16,7 @@ import {
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import type { AppEvent, ServerProfile } from "@shared/types";
 import { formatWhenLabel } from "@shared/format-log-datetime";
+import { collapseConsecutiveEvents, formatEventMessageForDisplay } from "@shared/event-details";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { SearchField } from "@ui/SearchField/SearchField";
@@ -121,6 +122,11 @@ export function LogsPage(props: Props): ReactElement {
     });
   }, [fleetEvents, timeFilter, severityFilter, search, serverById]);
 
+  const collapsedFleetEvents = useMemo(
+    () => collapseConsecutiveEvents(filteredFleetEvents),
+    [filteredFleetEvents],
+  );
+
   return (
     <PageScaffold
       title="Logs"
@@ -146,6 +152,7 @@ export function LogsPage(props: Props): ReactElement {
                 <Select
                   aria-label="Severity filter"
                   value={severityFilter}
+                  allowDeselect={false}
                   onChange={(value) =>
                     setSeverityFilter((value as SeverityFilter) ?? "all")
                   }
@@ -156,18 +163,19 @@ export function LogsPage(props: Props): ReactElement {
                     { value: "warning", label: "Warnings" },
                     { value: "info", label: "Info" },
                   ]}
-                  w={150}
+                  w={160}
                 />
                 <Select
                   aria-label="Time filter"
                   value={timeFilter}
+                  allowDeselect={false}
                   onChange={(value) => setTimeFilter((value as TimeFilter) ?? "24h")}
                   data={[
                     { value: "24h", label: "Last 24h" },
                     { value: "7d", label: "Last 7 days" },
                     { value: "all", label: "All time" },
                   ]}
-                  w={140}
+                  w={150}
                 />
                 <SearchField
                   value={search}
@@ -227,7 +235,7 @@ export function LogsPage(props: Props): ReactElement {
                     panel: classes.eventAccordionPanel,
                   }}
                 >
-                  {filteredFleetEvents.map((event) => {
+                  {collapsedFleetEvents.map(({ event, count }) => {
                     const server =
                       event.serverId !== null
                         ? serverById.get(event.serverId)
@@ -268,7 +276,8 @@ export function LogsPage(props: Props): ReactElement {
                               )}
                             </Group>
                             <Text size="sm" className={classes.fleetMessage}>
-                              {event.message}
+                              {formatEventMessageForDisplay(event.message)}
+                              {count > 1 ? ` · ×${count}` : ""}
                             </Text>
                           </div>
                         </Accordion.Control>

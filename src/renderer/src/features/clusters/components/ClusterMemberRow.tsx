@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import { ActionIcon, Group, Text, Tooltip } from "@mantine/core";
 import { ArrowDown, ArrowUp, X } from "@phosphor-icons/react";
 import type { ServerProfile, ServerStatus } from "@shared/types";
+import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
 import classes from "../clusters.module.css";
 
@@ -62,19 +63,24 @@ export function ClusterMemberRow(props: Props): ReactElement {
       }}
     >
       <div className={classes.memberBody}>
-        <Group gap="xs">
-          <Text fw={600} size="sm">
-            {props.server.name}
-          </Text>
-          {!props.server.enabled && (
-            <Text size="xs" fw={600} className={classes.inactiveLabel}>
-              Inactive
+        <Group gap="xs" wrap="nowrap" align="flex-start">
+          <MapArtThumb mapId={props.server.map} size="sm" decorative />
+          <div>
+            <Group gap="xs">
+              <Text fw={600} size="sm">
+                {props.server.name}
+              </Text>
+              {!props.server.enabled && (
+                <Text size="xs" fw={600} className={classes.inactiveLabel}>
+                  Inactive
+                </Text>
+              )}
+            </Group>
+            <Text size="xs" c="dimmed">
+              {props.subtitle}
             </Text>
-          )}
+          </div>
         </Group>
-        <Text size="xs" c="dimmed">
-          {props.subtitle}
-        </Text>
         {showRemove && props.canRemove === false && props.removeReason != null && (
           <Text size="xs" c="orange">
             {props.removeReason}

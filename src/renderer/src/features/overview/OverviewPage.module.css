@@ -1,9 +1,13 @@
 .page {
+  display: flex;
+  flex-direction: column;
   width: 100%;
   max-width: 2200px;
-  min-height: 100vh;
+  height: 100%;
+  min-height: 0;
   margin: 0 auto;
   padding: var(--app-space-lg) var(--app-space-xl) var(--app-space-xl);
+  overflow: auto;
 }
 
 .header {
@@ -37,6 +41,8 @@
 .headerActionButton {
   padding-inline: 0;
   background: transparent;
+  min-height: 24px;
+  font-size: 12px;
 }
 
 .headerActionButton:hover:not(:disabled):not([data-disabled]) {
@@ -54,16 +60,20 @@
 
 .content {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: var(--app-space-lg);
   min-width: 0;
+  min-height: 0;
 }
 
 .serverSection {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: var(--app-space-sm);
   min-width: 0;
+  min-height: 0;
 }
 
 .fleetMetrics {
@@ -217,7 +227,7 @@
   .content {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
-    align-items: start;
+    align-items: stretch;
     gap: var(--app-space-xl);
   }
 

@@ -263,7 +263,7 @@ async function pickPathField(app, page, ariaLabel, folderPath, options = {}) {
  * Open Settings and a category in the in-page sidebar (#298).
  * Do not click the shell Servers/Logs buttons — those labels collide.
  * @param {import('playwright').Page} page
- * @param {string} categoryLabel General | Servers | SteamCMD | Logs | About
+ * @param {string} categoryLabel General | Profiles | SteamCMD | Log files | About
  */
 async function openSettingsCategory(page, categoryLabel) {
   await page.getByRole("button", { name: "Settings", exact: true }).first().click();

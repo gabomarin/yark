@@ -141,6 +141,8 @@ export function ServerForm(props: Props): ReactElement {
           submitLabel={isCreate ? "Create server" : "Save changes"}
           submitSize={form.inputSize}
           saving={form.saving}
+          submitDisabled={!form.canSubmit}
+          submitDisabledReason={form.submitDisabledReason}
           onSubmit={() => void form.submit()}
           onCancel={() => form.confirmLeaveIfDirty(props.onCancel)}
         >

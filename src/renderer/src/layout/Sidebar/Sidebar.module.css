@@ -75,14 +75,9 @@
 }
 
 .navLink {
-  position: relative;
   min-height: 42px;
   border-radius: var(--app-radius-sm);
   color: var(--app-color-text);
-}
-
-.navLink[data-active] {
-  box-shadow: var(--app-list-selected-inset);
 }
 
 .sidebar[data-icon-mode] .navLink {
@@ -108,15 +103,6 @@
 
 .navLink :global(.mantine-NavLink-section[data-position="left"]) {
   margin-inline-end: var(--app-space-xs);
-}
-
-.navLink:hover:not([data-active]) {
-  background: color-mix(in srgb, var(--app-color-text) 4%, transparent);
-}
-
-.navLink:focus-visible {
-  outline: 2px solid var(--ark-blue-a8);
-  outline-offset: 2px;
 }
 
 .steamCmdButton {
@@ -170,17 +156,17 @@
 
 .versionValue {
   color: var(--app-color-cryo);
-  font-family: Consolas, "Cascadia Mono", monospace;
+  font-family: var(--app-font-mono);
 }
 
 .versionValueDeploying {
   color: var(--app-color-attention);
-  font-family: Consolas, "Cascadia Mono", monospace;
+  font-family: var(--app-font-mono);
 }
 
 .versionValueOffline {
   color: var(--app-color-bad);
-  font-family: Consolas, "Cascadia Mono", monospace;
+  font-family: var(--app-font-mono);
 }
 
 .versionRow {
@@ -289,7 +275,7 @@
 }
 
 .appVersionLabelRail {
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.2;
   word-break: break-all;
 }

@@ -133,7 +133,7 @@ export function OverviewHeader({
         >
           Check server updates
         </Button>
-        {onUpdateAllOutdated !== undefined ? (
+        {onUpdateAllOutdated !== undefined && canUpdateAllOutdated ? (
           <Button
             variant="transparent"
             color="gray"
@@ -142,7 +142,7 @@ export function OverviewHeader({
               label: classes.headerActionButtonLabel,
             }}
             onClick={onUpdateAllOutdated}
-            disabled={!canUpdateAllOutdated || openingUpdateAllOutdated}
+            disabled={openingUpdateAllOutdated}
             loading={openingUpdateAllOutdated}
           >
             Update All

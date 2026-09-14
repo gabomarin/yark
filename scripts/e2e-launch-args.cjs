@@ -265,14 +265,14 @@ async function run() {
     await page.waitForLoadState("domcontentloaded");
     await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 15_000 });
 
-    // Piped mode: Show server console on start must stay off (Settings → Servers).
+    // Piped mode: Show server console on start must stay off (Settings → Profiles).
     await page.evaluate(async () => {
       if (typeof window.api?.setOpenNativeConsole === "function") {
         await window.api.setOpenNativeConsole(false);
       }
       window.localStorage.setItem("overview.openNativeTerminalOnStart", "0");
     });
-    await openSettingsCategory(page, "Servers");
+    await openSettingsCategory(page, "Profiles");
     await page.getByText("Show server console on start", { exact: true }).waitFor({
       state: "visible",
       timeout: 10_000,

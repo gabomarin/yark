@@ -17,6 +17,7 @@ export interface AppFormOverlaysProps {
   registerOverlayLeaveGuard: (guard: ((action: () => void) => void) | null) => void;
   runWithOverlayLeaveGuard: (action: () => void) => void;
   consumePendingSetupCluster: () => void;
+  clearOverviewSearch: () => void;
 }
 
 export function AppFormOverlays(props: AppFormOverlaysProps): ReactElement {
@@ -30,6 +31,7 @@ export function AppFormOverlays(props: AppFormOverlaysProps): ReactElement {
     registerOverlayLeaveGuard,
     runWithOverlayLeaveGuard,
     consumePendingSetupCluster,
+    clearOverviewSearch,
   } = props;
   const { servers, refresh } = fleet;
   const { defaultBaseFolder, extraClusterOptions } = settings;
@@ -47,6 +49,7 @@ export function AppFormOverlays(props: AppFormOverlaysProps): ReactElement {
           onCancel={() => runWithOverlayLeaveGuard(() => setOverlay(null))}
           onSaved={(created) => {
             consumePendingSetupCluster();
+            clearOverviewSearch();
             if (created !== undefined) {
               setOverlay({ kind: "workspace", serverId: created.id, onboarding: true });
               void refresh();

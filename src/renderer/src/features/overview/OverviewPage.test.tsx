@@ -124,7 +124,7 @@ describe("OverviewPage", () => {
     expect(screen.queryByRole("button", { name: /^Online/i })).not.toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "Search servers" })).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "View logs" }).length).toBeGreaterThan(0);
-    expect(screen.getByText("The Island")).toBeInTheDocument();
+    expect(screen.getByLabelText("Server The Island")).toBeInTheDocument();
     expect(screen.getByText("Scorched Earth")).toBeInTheDocument();
     expect(screen.queryByText("Advertencias")).not.toBeInTheDocument();
 
@@ -329,11 +329,11 @@ describe("OverviewPage", () => {
     expect(metrics).not.toBeNull();
     const metricsScope = within(metrics as HTMLElement);
 
-    expect(screen.getByText("The Island")).toBeInTheDocument();
+    expect(screen.getByLabelText("Server The Island")).toBeInTheDocument();
     expect(screen.getByText("Scorched Earth")).toBeInTheDocument();
 
     await user.click(metricsScope.getByRole("button", { name: /^Running/i }));
-    expect(screen.getByText("The Island")).toBeInTheDocument();
+    expect(screen.getByLabelText("Server The Island")).toBeInTheDocument();
     expect(screen.queryByText("Scorched Earth")).not.toBeInTheDocument();
     expect(screen.getByText(/1 result/)).toBeInTheDocument();
 
@@ -427,7 +427,7 @@ describe("OverviewPage", () => {
 
     await user.click(screen.getByRole("checkbox", { name: "Show disabled" }));
     expect(screen.getByText("Frozen Fjord")).toBeInTheDocument();
-    expect(screen.getByText("The Island")).toBeInTheDocument();
+    expect(screen.getByLabelText("Server The Island")).toBeInTheDocument();
   });
 
   it("keeps disabled-only fleets out of the enabled list until Show disabled is on", async () => {
@@ -442,12 +442,12 @@ describe("OverviewPage", () => {
       screen.queryByRole("button", { name: "Clear search" }),
     ).not.toBeInTheDocument();
     await user.click(screen.getByRole("checkbox", { name: "Show disabled" }));
-    expect(screen.getByText("The Island")).toBeInTheDocument();
+    expect(screen.getByLabelText("Server The Island")).toBeInTheDocument();
     expect(screen.getByText("Inactive")).toBeInTheDocument();
     expect(screen.queryByText("No enabled servers")).not.toBeInTheDocument();
   });
 
-  it("disables Update All until a stopped server is eligible (#378)", () => {
+  it("hides Update All until a stopped server is eligible (#378)", () => {
     renderOverview({
       statuses: new Map([
         [
@@ -466,7 +466,7 @@ describe("OverviewPage", () => {
       officialSteamBuild: "build 111",
     });
 
-    expect(screen.getByRole("button", { name: "Update All" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Update All" })).not.toBeInTheDocument();
   });
 
   it("opens the update-all preview when the fleet action is enabled (#378)", async () => {
@@ -529,7 +529,7 @@ describe("OverviewPage", () => {
 
     const searchBox = screen.getByRole("textbox", { name: "Search servers" });
     expect(searchBox).toHaveValue("Island");
-    expect(screen.getByText("The Island")).toBeInTheDocument();
+    expect(screen.getByLabelText("Server The Island")).toBeInTheDocument();
     expect(screen.queryByText("Scorched Earth")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Clear search" }));

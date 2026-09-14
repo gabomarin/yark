@@ -83,6 +83,8 @@ export function ServerFormEmbedded(props: Props): ReactElement {
             size={props.inputSize}
             onClick={props.onSubmit}
             loading={props.saving}
+            disabled={!props.isDirty}
+            title={props.isDirty ? undefined : "No unsaved changes"}
           >
             Save changes
           </Button>

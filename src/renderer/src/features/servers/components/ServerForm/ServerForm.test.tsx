@@ -45,8 +45,9 @@ describe("ServerForm", () => {
     expect(screen.getAllByLabelText(/name/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/^map$/i)).toBeInTheDocument();
     expect(screen.getByText(/new server/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /^create server$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^create server$/i })).toBeDisabled();
     expect(screen.queryByRole("button", { name: /^save$/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/name required/i)).toBeInTheDocument();
     expect(screen.getByText(/untitled profile/i)).toBeInTheDocument();
     expect(screen.getByText(/the island · 7777\/27015\/27020/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^browse$/i })).toBeInTheDocument();

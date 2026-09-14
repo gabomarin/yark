@@ -1,5 +1,5 @@
 import { APP_VERSION } from "@shared/app-version";
-import { useState, type Dispatch, type ReactElement, type SetStateAction } from "react";
+import type { Dispatch, ReactElement, SetStateAction } from "react";
 import type { Overlay } from "@app/model/appOverlay";
 import type {
   AppFleetSlice,
@@ -35,7 +35,7 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
   const { shell, route, setOverlay, fleet, lifecycle, steamCmd, overview, rcon, settings } =
     props;
   /** Survives Overview unmount when switching sidebar routes (#438). */
-  const [overviewSearch, setOverviewSearch] = useState("");
+  const { search: overviewSearch, setSearch: setOverviewSearch } = overview;
   const { servers, statuses, installationInfo, processMetricsByServer, events, reports, refresh } =
     fleet;
   const { stopProgressByServerId, startBusyByServerId, actions } = lifecycle;
@@ -73,6 +73,7 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
     setDefaultBaseFolder,
     desktopShell,
     onRunSetupAgain,
+    landOnGeneralToken,
   } = settings;
 
   return (
@@ -241,6 +242,7 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
             onClearSteamCmdCache={clearSteamCmdCache}
             desktopShell={desktopShell}
             onRunSetupAgain={onRunSetupAgain}
+            landOnGeneralToken={landOnGeneralToken}
           />
         ),
       }}

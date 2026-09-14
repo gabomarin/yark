@@ -259,7 +259,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-family: var(--mantine-font-family-monospace, ui-monospace, monospace);
+  font-family: var(--app-font-mono);
   font-size: 11px;
 }
 

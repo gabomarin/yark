@@ -107,7 +107,7 @@ async function run() {
         `${size.name}: horizontal overflow on SteamCMD`,
       );
 
-      await openSettingsCategory(page, "Logs");
+      await openSettingsCategory(page, "Log files");
       await page.getByRole("heading", { name: "Log retention", level: 3 }).waitFor({
         timeout: 10000,
       });

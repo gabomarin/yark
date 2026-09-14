@@ -167,7 +167,7 @@ describe("ServerListPanel", () => {
       </AppProviders>,
     );
 
-    await user.click(screen.getByRole("button", { name: "Collapse to icon rail" }));
+    await user.click(screen.getByRole("button", { name: "Collapse server list" }));
     expect(onToggleRail).toHaveBeenCalledTimes(1);
   });
 

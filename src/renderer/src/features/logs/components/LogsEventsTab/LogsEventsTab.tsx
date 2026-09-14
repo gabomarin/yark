@@ -2,6 +2,7 @@ import { ClockCounterClockwise } from "@phosphor-icons/react";
 import { Accordion, Group, Stack, Text, Tooltip } from "@mantine/core";
 import type { ServerOperationalLogs } from "@shared/types";
 import { formatWhenLabel } from "@shared/format-log-datetime";
+import { collapseConsecutiveEvents, formatEventMessageForDisplay } from "@shared/event-details";
 import type { ReactElement } from "react";
 import { EventDetailsBody } from "../../EventDetailsBody";
 import { EventSeverityMark } from "../EventSeverityMark/EventSeverityMark";
@@ -83,7 +84,7 @@ export function LogsEventsTab(props: LogsEventsTabProps): ReactElement {
                 panel: classes.eventAccordionPanel,
               }}
             >
-              {logs.events.map((event) => {
+              {collapseConsecutiveEvents(logs.events).map(({ event, count }) => {
                 const focused = highlightedEventId === event.id;
                 const expanded = expandedEventId === event.id;
                 return (
@@ -108,7 +109,8 @@ export function LogsEventsTab(props: LogsEventsTabProps): ReactElement {
                             </Text>
                           </Tooltip>
                           <Text size="sm" fw={expanded ? 600 : 400} className={classes.eventMessage}>
-                            {event.message}
+                            {formatEventMessageForDisplay(event.message)}
+                            {count > 1 ? ` · ×${count}` : ""}
                           </Text>
                         </div>
                         <EventSeverityMark severity={event.severity} />

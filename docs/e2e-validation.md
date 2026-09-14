@@ -48,7 +48,7 @@ Requirements:
   `waitForOverview` hits the main window without a modal overlay. Local/dev can
   set `YARK_E2E_FULL_UI=true` to keep normal operator UI on an isolated profile.
   Scripts and CI must **not** set `YARK_E2E_FULL_UI`.
-- Settings uses a **category sidebar** (General, Servers, SteamCMD, Logs, About).
+- Settings uses a **category sidebar** (General, Profiles, SteamCMD, Log files, About).
   Click the in-page `Settings categories` nav — not the shell Servers/Logs
   buttons, which share those labels. Helper: `openSettingsCategory` in
   [`scripts/e2e-launch.cjs`](../scripts/e2e-launch.cjs).

@@ -25,8 +25,12 @@ import {
   backupHealthLabel,
   backupHealthTooltip,
   formatBackupBytes,
-  formatBackupWhen,
 } from "../../model/backupsPageModel";
+import {
+  formatBackupKindLabel,
+  formatBackupTypeLabel,
+  formatBackupWhenLabel,
+} from "../../model/serverBackupPanelModel";
 import classes from "../../BackupsPage.module.css";
 
 export interface ServerHealthCardProps {
@@ -68,26 +72,28 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
                   Inactive
                 </Text>
               )}
-              <Tooltip
-                label={backupHealthTooltip(row.health)}
-                multiline
-                maw={320}
-                withArrow
-              >
-                <StatusWord tone={healthTone(row.health)}>
-                  {backupHealthLabel(row.health)}
-                </StatusWord>
-              </Tooltip>
+              {row.health !== "ok" ? (
+                <Tooltip
+                  label={backupHealthTooltip(row.health)}
+                  multiline
+                  maw={320}
+                  withArrow
+                >
+                  <StatusWord tone={healthTone(row.health)}>
+                    {backupHealthLabel(row.health)}
+                  </StatusWord>
+                </Tooltip>
+              ) : null}
             </Group>
             <Text size="sm" c="dimmed" mb={4}>
               Destination
             </Text>
             <ReadonlyPath value={row.resolvedRoot} compact />
             <Text size="xs" c="dimmed">
-              Latest: {formatBackupWhen(row.latest?.createdAt)}
-              {row.latest !== null
-                ? ` (${row.latest.kind} · ${row.latest.type} · ${row.latest.status})`
-                : ""}
+              Latest:{" "}
+              {row.latest === null
+                ? "none"
+                : `${formatBackupWhenLabel(row.latest.createdAt).primary} (${formatBackupKindLabel(row.latest.kind)} · ${formatBackupTypeLabel(row.latest.type)} · ${row.latest.status})`}
               {row.policy.enabled
                 ? ` · Schedule ${row.policy.intervalMinutes}m`
                 : " · Schedule off"}
@@ -102,6 +108,13 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
           </div>
           <Group gap="xs">
             <Button
+              variant="light"
+              leftSection={<ArrowSquareOut size={16} />}
+              onClick={props.onOpenServer}
+            >
+              Open in server
+            </Button>
+            <Button
               variant="subtle"
               leftSection={<FolderOpen size={16} />}
               onClick={props.onOpenDestination}
@@ -110,14 +123,8 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
               Open destination
             </Button>
             <Button
-              variant="light"
-              leftSection={<ArrowSquareOut size={16} />}
-              onClick={props.onOpenServer}
-            >
-              Open in server
-            </Button>
-            <Button
-              variant="default"
+              variant="subtle"
+              color="gray"
               onClick={props.onToggleExpand}
             >
               {props.expanded ? "Hide settings" : "Edit settings"}

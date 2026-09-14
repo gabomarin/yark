@@ -1,7 +1,6 @@
 import type { ReactElement } from "react";
 import {
   ActionIcon,
-  Alert,
   Button,
   Group,
   Stack,
@@ -9,9 +8,10 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
-import { FolderOpen, Plus, Trash, WarningCircle } from "@phosphor-icons/react";
+import { FolderOpen, Plus, Trash } from "@phosphor-icons/react";
 import type { AsaApiPluginInfo, AsaApiStatus } from "@shared/types";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { DismissibleHint } from "@ui/DismissibleHint/DismissibleHint";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import {
   asaApiInjectLabel,
@@ -253,9 +253,12 @@ export function ServerAsaApiInstalledSection(props: Props): ReactElement {
         </Text>
       </section>
 
-      <Alert color="yellow" icon={<WarningCircle size={16} />}>
-        Experimental YARK integration – behavior and UI may change.
-      </Alert>
+      <DismissibleHint
+        storageKey="yark.asaApi.experimentalHint.dismissed.v1"
+        title="Experimental integration"
+      >
+        Behavior and UI may change.
+      </DismissibleHint>
 
       <Group justify="flex-end">
         <Button

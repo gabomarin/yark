@@ -152,9 +152,9 @@ export function DownloadsPage(props: Props): ReactElement {
               : "Install SteamCMD in Settings first. Installs, updates, and verify jobs will appear here."
           }
           action={
-            !props.status.detected && props.onOpenSettings !== undefined ? (
+            props.onOpenSettings !== undefined ? (
               <Button size="compact-sm" variant="light" onClick={props.onOpenSettings}>
-                Install SteamCMD
+                {props.status.detected ? "Open SteamCMD settings" : "Install SteamCMD"}
               </Button>
             ) : undefined
           }

@@ -1,0 +1,31 @@
+.root {
+  position: relative;
+}
+
+.root:hover:not([data-active]) {
+  background: color-mix(in srgb, var(--app-color-text) 4%, transparent);
+}
+
+.root:focus-visible {
+  outline: 2px solid var(--ark-blue-a8);
+  outline-offset: 2px;
+}
+
+.root[data-active] {
+  background: var(--app-list-selected-bg);
+  box-shadow: none;
+}
+
+/* Fluent NavigationView: short left accent notch, not a full-height inset. */
+.root[data-active]::before {
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  width: 3px;
+  height: 16px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: var(--ark-blue-9);
+  content: "";
+  pointer-events: none;
+}

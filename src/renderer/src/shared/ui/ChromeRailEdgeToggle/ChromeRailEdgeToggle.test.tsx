@@ -15,12 +15,12 @@ describe("ChromeRailEdgeToggle", () => {
           iconMode={false}
           onToggle={onToggle}
           expandLabel="Expand navigation"
-          collapseLabel="Collapse to icon rail"
+          collapseLabel="Collapse navigation"
         />
       </AppProviders>,
     );
 
-    await user.click(screen.getByRole("button", { name: "Collapse to icon rail" }));
+    await user.click(screen.getByRole("button", { name: "Collapse navigation" }));
     expect(onToggle).toHaveBeenCalledTimes(1);
   });
 
@@ -31,7 +31,7 @@ describe("ChromeRailEdgeToggle", () => {
           iconMode
           onToggle={vi.fn()}
           expandLabel="Expand server list"
-          collapseLabel="Collapse to icon rail"
+          collapseLabel="Collapse navigation"
         />
       </AppProviders>,
     );

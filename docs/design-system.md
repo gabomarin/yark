@@ -193,8 +193,11 @@ Theme `defaultRadius` is **`sm`**. Avoid raw `border-radius` when a token fits. 
 
 - Selected rows: `SelectableListRow` → `--app-list-selected-bg` + `--app-list-selected-inset`.
   Feature list rows that cannot use `SelectableListRow` still bind those two vars (no
-  one-off `inset 3px` / local selection gradients). Active **NavLink** (sidebar, Settings
-  categories) uses the same quiet fill + 3px inset — not a `variant="light"` capsule.
+  one-off `inset 3px` / local selection gradients).
+- App **sidebar** and Settings **category rail**: compose `navSelectedClassName`
+  (`shared/ui/NavSelected`) onto Mantine `NavLink` — rounded fill
+  (`--app-list-selected-bg`) plus a short left accent notch (`--ark-blue-9`).
+  Do not wrap a second NavLink; do not use the full-height list inset on those rails.
 - Focus rings: reuse existing `:focus-visible` patterns (ark-blue outline), don’t invent per-page rings.
 
 ### 5a. Keyboard contract (#475)
@@ -287,6 +290,7 @@ Native (non–ScrollArea) surfaces still use the thin global scrollbar without e
 | Panel title | Mantine `Title order={3|4}` |
 | Meta labels | Clusters `MetaStrip` (uppercase + tracking); server-card meta is sentence case |
 | Body / muted | Mantine `Text` + `c="dimmed"` |
+| Monospace | `--app-font-mono` / Mantine `fontFamilyMonospace`: Cascadia Mono, Consolas, monospace (PathField, consoles, flags, Cluster IDs). `ReadonlyPath` can `truncate="start"` so the leaf folder stays visible. |
 
 **Follow-up candidate:** `--app-font-meta|title` if more screens invent competing sizes (12 vs 11 meta, 18 vs 16 panel titles).
 

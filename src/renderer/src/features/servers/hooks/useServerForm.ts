@@ -67,6 +67,8 @@ export function useServerForm(options: UseServerFormOptions): {
   knownClusters: ReturnType<typeof listKnownClusterOptions>;
   nameFolderError: string | null;
   resolvedInstallPreview: string;
+  canSubmit: boolean;
+  submitDisabledReason: string | undefined;
   setField: (
     field: Exclude<keyof ServerFormState, "mapModId" | "autoStart">,
   ) => (value: string) => void;
@@ -181,12 +183,10 @@ export function useServerForm(options: UseServerFormOptions): {
     [options.extraClusterOptions, options.servers],
   );
 
-  const nameFolderError = useMemo(() => {
-    if (state.name.trim().length === 0) {
-      return null;
-    }
-    return getServerFolderNameError(state.name);
-  }, [state.name]);
+  const nameFolderError = useMemo(
+    () => getServerFolderNameError(state.name),
+    [state.name],
+  );
 
   const resolvedInstallPreview = useMemo(() => {
     if (!isCreate) {
@@ -201,6 +201,36 @@ export function useServerForm(options: UseServerFormOptions): {
     }
     return resolveServerInstallDir(state.installDir, state.name);
   }, [isCreate, state.installDir, state.name]);
+
+  const canSubmit = useMemo(() => {
+    if (nameFolderError !== null) return false;
+    if (isCreate) {
+      return resolvedInstallPreview.length > 0 && createPathIssue === null;
+    }
+    return isDirty;
+  }, [
+    createPathIssue,
+    isCreate,
+    isDirty,
+    nameFolderError,
+    resolvedInstallPreview,
+  ]);
+
+  const submitDisabledReason = useMemo(() => {
+    if (!isCreate && !isDirty) return "No unsaved changes";
+    if (nameFolderError !== null) return nameFolderError;
+    if (isCreate && resolvedInstallPreview.length === 0) {
+      return "Enter a name and choose a base folder";
+    }
+    if (isCreate && createPathIssue !== null) return createPathIssue;
+    return undefined;
+  }, [
+    createPathIssue,
+    isCreate,
+    isDirty,
+    nameFolderError,
+    resolvedInstallPreview,
+  ]);
 
   const setField =
     (field: Exclude<keyof ServerFormState, "mapModId" | "autoStart">) =>
@@ -398,6 +428,8 @@ export function useServerForm(options: UseServerFormOptions): {
     knownClusters,
     nameFolderError,
     resolvedInstallPreview,
+    canSubmit,
+    submitDisabledReason,
     setField,
     mapMods,
     mapFieldKey,
