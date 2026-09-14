@@ -545,8 +545,12 @@ Paths under `{installDir}/ShooterGame/Saved/Config/WindowsServer/`:
   keys from the Server profile (SessionName, ports, passwords, …). Server-tab
   saves call `IniService.syncProfileOwnedKeys` (via `applyProfileOwnedIni`):
   while the process is live the draft is updated and **live install files are
-  not written**; while idle the disk write runs as before. Low-level
-  `syncProfileSettingsToIni` remains for clone seed / idle-only paths.
+  not written**; while idle the disk write runs as before. Save / sync / flush
+  share a per-server mutation FIFO so a lock-reentrant profile sync cannot
+  clobber an in-flight queued save. Low-level `syncProfileSettingsToIni`
+  remains for clone seed / idle-only paths. Config transfer and cluster
+  template apply materialize any pending draft (both files) before
+  `clearPending` when only one INI file was selected.
 - Sanitize strips client noise (`ShooterGameUserSettings`, scalability /
   resolution / volume keys, etc.). Never treat stripped noise as dirty pending
   edits.

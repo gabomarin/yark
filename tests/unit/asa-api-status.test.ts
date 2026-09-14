@@ -1,9 +1,8 @@
-import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
+import { existsSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { rmSync } from "node:fs";
 import {
   resolveAsaApiInjectMode,
   syncAsaApiVersionDll,
@@ -157,6 +156,36 @@ describe("asa-api inject mode", () => {
     syncAsaApiVersionDll(root, "loader");
     expect(existsSync(active)).toBe(false);
     expect(existsSync(disabled)).toBe(true);
+  });
+
+  it("prefers a fresh Version.dll over a stale YARK-off park when both exist", async () => {
+    root = await mkdtemp(join(tmpdir(), "yark-asaapi-dual-"));
+    const win64 = join(root, "ShooterGame", "Binaries", "Win64");
+    await mkdir(win64, { recursive: true });
+    const active = join(win64, "Version.dll");
+    const disabled = join(win64, "Version.dll.yark-off");
+    await writeFile(disabled, "OLD");
+    await writeFile(active, "NEW");
+
+    // Start / toggle with AsaApi off must park the fresh extract, not delete it.
+    syncAsaApiVersionDll(root, "off");
+    expect(existsSync(active)).toBe(false);
+    expect(existsSync(disabled)).toBe(true);
+    expect(await readFile(disabled, "utf8")).toBe("NEW");
+
+    await writeFile(active, "NEWER");
+    await writeFile(disabled, "OLD");
+    syncAsaApiVersionDll(root, "versionDll");
+    expect(existsSync(active)).toBe(true);
+    expect(existsSync(disabled)).toBe(false);
+    expect(await readFile(active, "utf8")).toBe("NEWER");
+
+    await writeFile(active, "LOADER-NEW");
+    await writeFile(disabled, "OLD");
+    syncAsaApiVersionDll(root, "loader");
+    expect(existsSync(active)).toBe(false);
+    expect(existsSync(disabled)).toBe(true);
+    expect(await readFile(disabled, "utf8")).toBe("LOADER-NEW");
   });
 });
 
