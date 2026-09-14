@@ -6,7 +6,7 @@ import { optimizeMarketingImages } from "./src/integrations/optimize-marketing-i
 
 const siteBase = "/";
 
-/** Canonical public site (`https://getyark.com/` via GitHub Pages custom domain). */
+/** Canonical public site (`https://getyark.com/` via Cloudflare Pages). */
 export default defineConfig({
   site: "https://getyark.com",
   base: siteBase,
@@ -34,7 +34,7 @@ export default defineConfig({
       description:
         "Operator docs for YARK — Windows manager for local ARK: Survival Ascended dedicated servers (SteamCMD, backups, mods, INI).",
       // Keep Starlight from injecting its own `/404` — the canonical page is
-      // `src/pages/404.astro` → `dist/404.html` for GitHub Pages (#149).
+      // `src/pages/404.astro` → `dist/404.html` for Cloudflare Pages (#149).
       disable404Route: true,
       favicon: "/favicon.ico",
       logo: {

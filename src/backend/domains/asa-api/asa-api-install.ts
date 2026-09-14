@@ -1,4 +1,4 @@
-import { createWriteStream } from "node:fs";
+import { createWriteStream, existsSync } from "node:fs";
 import { dirname } from "node:path";
 import { Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
@@ -15,6 +15,7 @@ import {
   ASA_API_VERSION_LOADER_RELEASES_LATEST,
   asaApiCoreDllPath,
   asaApiLoaderPath,
+  asaApiVersionDllDisabledPath,
   asaApiVersionDllPath,
   asaWin64Dir,
 } from "./asa-api-paths";
@@ -337,6 +338,13 @@ export async function installAsaApiIntoInstall(
     assetLabel: versionAsset.name,
   });
   await extractZip(versionZip.zipPath, win64);
+
+  // VersionLoader always writes Version.dll. Drop any parked YARK-off copy so
+  // syncAsaApiVersionDll cannot prefer a stale park over this extract.
+  const parkedVersionDll = asaApiVersionDllDisabledPath(installDir);
+  if (existsSync(parkedVersionDll)) {
+    await rm(parkedVersionDll, { force: true });
+  }
 
   emit({
     phase: "finishing",

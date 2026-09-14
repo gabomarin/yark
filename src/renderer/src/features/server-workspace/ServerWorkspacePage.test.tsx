@@ -1228,7 +1228,13 @@ describe("ServerWorkspacePage", () => {
       </AppProviders>,
     );
 
-    expect(screen.getAllByText("Inactive").length).toBeGreaterThan(0);
+    expect(screen.getByText("Inactive")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /The Island · TheIsland_WP · Stopped · Inactive/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Scorched Earth · ScorchedEarth_WP · Stopped/i }),
+    ).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /^Enable$/i }));
     expect(onToggleServerEnabled).toHaveBeenCalledWith(serverA.id, true);
   });

@@ -247,7 +247,7 @@ Persistence uses Node's built-in `node:sqlite`; there is no separate backend ser
 | [Component structure](docs/component-structure.md) | Renderer composition and feature-file policy. |
 | [Design system](docs/design-system.md) | Theme tokens, shared surfaces, interaction patterns, and visual conventions. |
 | [Visual testing](docs/visual-testing.md) | Required evidence and helpers for visible UI changes. |
-| [Website](docs/website.md) | Astro/Starlight development, screenshots, CI, and GitHub Pages deployment. |
+| [Website](docs/website.md) | Astro/Starlight development, screenshots, CI, and Cloudflare Pages deployment. |
 | [Versioning](docs/versioning.md) | SemVer, changelog policy, packaging, signing state, and release checklist. |
 | [Agent context](docs/agent-context.md) | Repository orientation for AI-assisted development. |
 

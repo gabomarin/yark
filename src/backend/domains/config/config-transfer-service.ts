@@ -581,17 +581,22 @@ export class ConfigTransferService {
     selection: ConfigTransferSelection,
   ): Promise<void> {
     await mkdir(dirname(current.gameUserSettingsPath), { recursive: true });
-    if (selection.gameUserSettings.enabled) {
+    const hadPending = this.ini.hasPendingServerIni(current.serverId);
+    const writeGus = hadPending || selection.gameUserSettings.enabled;
+    const writeGame = hadPending || selection.game.enabled;
+    // When a pending draft exists, `payload` already carries the merged
+    // non-selected file from that draft — both files must hit disk before we
+    // drop the queue or Game.ini / GUS edits are lost (#530).
+    if (writeGus) {
       await writeFile(
         current.gameUserSettingsPath,
         payload.gameUserSettings,
         "utf8",
       );
     }
-    if (selection.game.enabled) {
+    if (writeGame) {
       await writeFile(current.gameIniPath, payload.game, "utf8");
     }
-    // Disk is authoritative after transfer; drop any leftover queue (#530).
     this.ini.clearPendingServerIni(current.serverId);
   }
 

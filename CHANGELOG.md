@@ -11,11 +11,15 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Public product site (`getyark.com`) deploys to **Cloudflare Pages** (`getyark`) instead of GitHub Pages; Web Analytics uses Cloudflare’s automatic proxied injection (no in-repo beacon).
 - Public Discord invite is now [discord.gg/DQ8nes63w7](https://discord.gg/DQ8nes63w7) (README, website, and Settings → About).
 - Discord `#releases` announce prefers the **Yark Bot** Discord application (`DISCORD_BOT_TOKEN` + repo variable `DISCORD_RELEASES_CHANNEL_ID`); notify is skipped when the channel variable is unset (no hardcoded channel id).
 
 ### Fixed
 
+- Ark Server API no longer deletes a freshly installed `Version.dll` when a parked `Version.dll.yark-off` is also present (reinstall / Start with Load off).
+- Pending INI queue no longer drops gameplay edits when a Server-tab profile sync races an in-flight save, and partial cluster/config INI writes materialize the full draft before clearing the queue (#530).
+- Workspace **All servers** lists only enabled servers; disabled profiles stay on Overview (#526).
 - Discord `#releases` posts omit the SemVer cut PR bullet (`release: vX.Y.Z`) from GitHub auto-generated notes.
 
 ### Docs
