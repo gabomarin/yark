@@ -17,6 +17,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Workspace **All servers** lists only enabled servers; disabled profiles stay on Overview (#526).
 - Discord `#releases` posts omit the SemVer cut PR bullet (`release: vX.Y.Z`) from GitHub auto-generated notes.
 
 ## [0.20.0] - 2026-09-07
