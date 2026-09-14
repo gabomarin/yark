@@ -1,9 +1,4 @@
-import { formatLogDateTime } from "@shared/format-log-datetime";
 import type { BackupHealthStatus } from "@shared/types";
-
-export function formatBackupWhen(iso: string | null | undefined): string {
-  return formatLogDateTime(iso);
-}
 
 export function formatBackupBytes(bytes: number | null | undefined): string {
   if (bytes == null || !Number.isFinite(bytes)) return "–";
