@@ -11,7 +11,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
-- Empty Servers is centered with a SteamCMD setup prompt; selected chrome uses a brighter family accent (`#3b8cff`); new clusters default to `yark` / `yark-2`.
+- Empty Servers is centered with a SteamCMD setup prompt; selected chrome uses a brighter family accent (`#3b8cff`); new clusters default to `yark-cluster-1` / `yark-cluster-2`.
+- Workspace tabs stay in one row as a desktop tab strip (**Backups** after Launch, **Ark Server API** last); Launch flags keep the CLI token first with a human summary underneath; maps and backup rows use human names (zip secondary); Overview Open is the identity block with a visible chevron.
 - Public product site (`getyark.com`) deploys to **Cloudflare Pages** (`getyark`) instead of GitHub Pages; Web Analytics uses Cloudflare’s automatic proxied injection (no in-repo beacon).
 - Public Discord invite is now [discord.gg/DQ8nes63w7](https://discord.gg/DQ8nes63w7) (README, website, and Settings → About).
 - Discord `#releases` announce prefers the **Yark Bot** Discord application (`DISCORD_BOT_TOKEN` + repo variable `DISCORD_RELEASES_CHANNEL_ID`); notify is skipped when the channel variable is unset (no hardcoded channel id).
@@ -20,7 +21,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - Ark Server API no longer deletes a freshly installed `Version.dll` when a parked `Version.dll.yark-off` is also present (reinstall / Start with Load off).
 - Pending INI queue no longer drops gameplay edits when a Server-tab profile sync races an in-flight save, and partial cluster/config INI writes materialize the full draft before clearing the queue (#530).
-- Workspace **All servers** lists only enabled servers; disabled profiles stay on Overview (#526).
+- INI **Text** editor fills the workspace pane; the GameUserSettings Server-tab override hint can be dismissed.
+- Page canvas uses hull navy instead of pure black, so empty Servers no longer reads as a black hole.
 - Discord `#releases` posts omit the SemVer cut PR bullet (`release: vX.Y.Z`) from GitHub auto-generated notes.
 
 ### Docs

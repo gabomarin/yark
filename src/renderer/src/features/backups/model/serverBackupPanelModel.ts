@@ -1,9 +1,11 @@
 import { playerBackupDisplayName } from "@shared/backup-player-meta";
 import { formatLogDateTime } from "@shared/format-log-datetime";
+import { formatMapDisplayName } from "@shared/map-identity";
 import type {
   BackupKind,
   BackupPolicy,
   BackupRecord,
+  BackupType,
   ServerRuntimeInfo,
 } from "@shared/types";
 
@@ -14,6 +16,31 @@ export const KIND_TABS: Array<{ kind: BackupKind; label: string }> = [
   { kind: "players", label: "Player profiles" },
   { kind: "ini", label: "INI" },
 ];
+
+const BACKUP_TYPE_LABELS: Record<BackupType, string> = {
+  manual: "Manual",
+  scheduled: "Scheduled",
+  pre_stop: "Before stop",
+  pre_restart: "Before restart",
+  pre_update: "Before update",
+  pre_restore: "Before restore",
+  player_connect: "Player join",
+  player_disconnect: "Player leave",
+  ini_save: "INI save",
+};
+
+export function formatBackupTypeLabel(type: BackupType): string {
+  return BACKUP_TYPE_LABELS[type] ?? type;
+}
+
+/** World/INI history title: friendly map (when known) plus why the archive exists. */
+export function formatBackupHistoryTitle(backup: BackupRecord): string {
+  const typeLabel = formatBackupTypeLabel(backup.type);
+  if (backup.mapToken !== null && backup.mapToken.trim().length > 0) {
+    return `${formatMapDisplayName(backup.mapToken)} · ${typeLabel}`;
+  }
+  return typeLabel;
+}
 
 /** English only until app i18n (#358). Do not use the OS locale. */
 const relativeTimeFormat = new Intl.RelativeTimeFormat("en", { numeric: "auto" });

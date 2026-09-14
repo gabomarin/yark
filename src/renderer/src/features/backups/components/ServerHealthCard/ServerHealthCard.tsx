@@ -49,7 +49,7 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
   return (
     <AppSurfaceCard>
       <Stack gap="sm">
-        <Group justify="space-between" align="flex-start" wrap="wrap">
+        <Group justify="space-between" align="flex-start" wrap="wrap" className={classes.healthCardHeader}>
           <div>
             <Group gap="xs">
               <HardDrives size={16} />
@@ -107,9 +107,21 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
             >
               Open in server
             </Button>
-            <Button variant="default" onClick={props.onToggleExpand}>
+            <Button
+              variant="default"
+              onClick={props.onToggleExpand}
+            >
               {props.expanded ? "Hide settings" : "Edit settings"}
             </Button>
+            {props.expanded && draft !== undefined ? (
+              <Button
+                leftSection={<FloppyDisk size={16} />}
+                loading={props.busy}
+                onClick={props.onSave}
+              >
+                Save
+              </Button>
+            ) : null}
           </Group>
         </Group>
 
@@ -210,13 +222,6 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
                 }
                 className={classes.policyField}
               />
-              <Button
-                leftSection={<FloppyDisk size={16} />}
-                loading={props.busy}
-                onClick={props.onSave}
-              >
-                Save
-              </Button>
             </Group>
           </Stack>
         )}

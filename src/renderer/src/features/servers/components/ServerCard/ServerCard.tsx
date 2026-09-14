@@ -1,12 +1,12 @@
-import { memo, type ReactElement } from "react";
-import { Card, Group, Stack, Text, UnstyledButton } from "@mantine/core";
+import { memo, type KeyboardEvent, type ReactElement } from "react";
+import { Card, Stack, Text, UnstyledButton } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
 import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
-import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import { useRowContextMenu } from "@ui/RowActionMenu/useRowContextMenu";
 import { ServerCardActions } from "./ServerCardActions";
+import { ServerCardIdentity } from "./ServerCardIdentity";
 import { ServerCardMetaGrid } from "./ServerCardMetaGrid";
 import { ServerCardProgress } from "./ServerCardProgress";
 import { ServerCardStatusBadges } from "./ServerCardStatusBadges";
@@ -182,10 +182,22 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
     onDelete,
     onToggleEnabled,
   });
-  const { onContextMenu, onKeyDown, menuTriggerProps } = useRowContextMenu(
+  const { onContextMenu, onKeyDown: onContextKeyDown, menuTriggerProps } = useRowContextMenu(
     menuEntries,
     { disabled: menuDisabled },
   );
+
+  const onCardKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
+    onContextKeyDown(event);
+    if (event.defaultPrevented) return;
+    if (event.key !== "Enter") return;
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    if (target.closest("[data-row-actions]")) return;
+    if (event.currentTarget !== target) return;
+    event.preventDefault();
+    onOpenWorkspace();
+  };
 
   return (
     <Card
@@ -200,7 +212,7 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
       data-server-card
       data-server-name={server.name}
       onContextMenu={onContextMenu}
-      onKeyDown={onKeyDown}
+      onKeyDown={onCardKeyDown}
       {...menuTriggerProps}
       aria-label={`Server ${server.name}`}
     >
@@ -208,39 +220,12 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
         <div className={classes.mainRow}>
           <div className={classes.cardHit}>
             <div className={classes.identityRow}>
-              <UnstyledButton
-                className={classes.identityOpen}
-                onClick={onOpenWorkspace}
-                aria-label={workspaceOpenLabel}
-              >
-                <Group
-                  gap={compact ? "xs" : "sm"}
-                  align="center"
-                  wrap="nowrap"
-                  className={classes.identity}
-                >
-                  <MapArtThumb
-                    mapId={server.map}
-                    mapModId={server.mapModId}
-                    modThumbnailUrl={
-                      server.mapModId
-                        ? server.modMetadataCache?.[server.mapModId]?.thumbnailUrl
-                        : null
-                    }
-                    size={compact ? "md" : "lg"}
-                    shape="rounded"
-                    className={classes.thumb}
-                  />
-                  <div className={classes.identityText}>
-                    <Text className={classes.title} lineClamp={1}>
-                      {server.name}
-                    </Text>
-                    <Text className={classes.subtitle} c="dimmed" lineClamp={1}>
-                      {server.sessionName}
-                    </Text>
-                  </div>
-                </Group>
-              </UnstyledButton>
+              <ServerCardIdentity
+                server={server}
+                compact={compact}
+                openLabel={workspaceOpenLabel}
+                onOpenWorkspace={onOpenWorkspace}
+              />
 
               <ServerCardStatusBadges
                 status={status}

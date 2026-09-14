@@ -43,6 +43,8 @@
 .tabs:global(.mantine-Tabs-root) {
   display: flex;
   flex-direction: column;
+  --tabs-list-border-width: 1px;
+  --tabs-list-gap: 1px;
 }
 
 .tabPanel {
@@ -51,9 +53,8 @@
   height: 0;
   min-height: 0;
   flex: 1 1 0%;
-  padding-top: 14px;
+  padding-top: var(--app-space-sm);
   overflow: hidden;
-  background: var(--app-color-surface-chrome);
 }
 
 .tabPanel > * {
@@ -61,29 +62,49 @@
   min-height: 0;
 }
 
-.tabList {
+.tabChrome {
   position: sticky;
   top: 0;
   z-index: 4;
   flex-shrink: 0;
-  background: var(--app-color-surface-chrome);
+  background: transparent;
 }
 
-.tabList :global(.mantine-Tabs-tab[data-active]) {
-  background: color-mix(in srgb, var(--app-color-accent) 10%, var(--app-color-surface-control));
-  box-shadow: inset 0 -1px 0 var(--app-color-accent);
-  color: var(--app-color-text);
+.tabList {
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+  width: 100%;
+  overflow-x: auto;
+  background: transparent;
+}
+
+.tabList :global(.mantine-Tabs-tab) {
+  background: var(--app-color-surface-chrome);
+  color: var(--app-color-muted);
 }
 
 .tabList :global(.mantine-Tabs-tab:hover) {
   background: var(--app-color-surface-control-hover);
+  color: var(--app-color-text);
+}
+
+.tabList :global(.mantine-Tabs-tab[data-active]) {
+  background: color-mix(in srgb, var(--app-color-accent) 12%, var(--app-color-surface-control-hover));
+  color: var(--app-color-text);
+  box-shadow: inset 0 -1px 0 var(--app-color-accent);
+}
+
+.tabList :global(.mantine-Tabs-tab[data-active]:hover) {
+  background: color-mix(in srgb, var(--app-color-accent) 16%, var(--app-color-surface-control-hover));
+  color: var(--app-color-text);
 }
 
 .configHost {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  flex: 1;
+  flex: 1 1 0;
+  overflow: hidden;
 }
 
 .drawerContent {

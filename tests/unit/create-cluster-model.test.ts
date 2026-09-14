@@ -198,10 +198,10 @@ describe("createClusterModel", () => {
     expect(input.name).toBe("Island");
   });
 
-  it("suggests yark, then yark-2 when that slug is taken", () => {
-    expect(suggestClusterId()).toBe("yark");
-    expect(suggestClusterId(["yark"])).toBe("yark-2");
-    expect(suggestClusterId(["YARK", "yark-2"])).toBe("yark-3");
+  it("suggests yark-cluster-1, then yark-cluster-2 when that slug is taken", () => {
+    expect(suggestClusterId()).toBe("yark-cluster-1");
+    expect(suggestClusterId(["yark-cluster-1"])).toBe("yark-cluster-2");
+    expect(suggestClusterId(["YARK-CLUSTER-1", "yark-cluster-2"])).toBe("yark-cluster-3");
     expect(listKnownClusterIds([
       makeServer({ id: "a", name: "A", clusterId: "ember" }),
       makeServer({ id: "b", name: "B", clusterId: null }),

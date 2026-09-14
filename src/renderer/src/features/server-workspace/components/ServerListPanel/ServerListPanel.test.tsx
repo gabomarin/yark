@@ -109,7 +109,7 @@ describe("ServerListPanel", () => {
     expect(screen.queryByText("Running")).not.toBeInTheDocument();
     expect(screen.getByText("Island")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /Island · TheIsland_WP · Running/i }),
+      screen.getByRole("button", { name: /Island · The Island · Running/i }),
     ).toBeInTheDocument();
   });
 
@@ -148,7 +148,7 @@ describe("ServerListPanel", () => {
     expect(screen.queryByLabelText("Search servers")).not.toBeInTheDocument();
     expect(screen.queryByText("The Island")).not.toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /The Island · TheIsland_WP · Stopped/i }),
+      screen.getByRole("button", { name: /The Island · The Island · Stopped/i }),
     ).toBeInTheDocument();
   });
 
@@ -272,7 +272,7 @@ describe("ServerListPanel", () => {
     );
 
     expect(
-      screen.getByRole("button", { name: /The Island · TheIsland_WP · Stopped/i }),
+      screen.getByRole("button", { name: /The Island · The Island · Stopped/i }),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /Frozen · Ragnarok_WP/i }),

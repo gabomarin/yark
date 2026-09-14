@@ -20,7 +20,7 @@ const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
-const { openSettingsCategory } = require("./e2e-launch.cjs");
+const { openSettingsCategory, openWorkspaceTab } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -316,7 +316,7 @@ async function run() {
       "Native console should not open for this e2e",
     );
 
-    await page.getByRole("tab", { name: "Logs" }).click();
+    await openWorkspaceTab(page, "Logs");
     await page.getByRole("tab", { name: "Runtime" }).click();
     const runtimePre = page.locator('[data-logs-scroll-region="runtime"]');
     await runtimePre.waitFor({ state: "visible", timeout: 10_000 });

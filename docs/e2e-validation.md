@@ -9,7 +9,7 @@ binaries, SteamCMD, backups, rollback).
 | Scenario | Command | Gate | Notes |
 | --- | --- | --- | --- |
 | Electron launch + empty Overview | `npm run build && npm run e2e:smoke` | Local | Isolated `YARK_E2E_USER_DATA`; CRUD already covers launch + shell nav in CI |
-| Keyboard smoke (Spotlight, card menu, Escape) | `npm run build && npm run e2e:keyboard` | Local | Ctrl+K, Shift+F10, Escape on Delete; search Escape; workspace arrows; Settings category Enter (#476, #477) |
+| Keyboard smoke (Spotlight, card menu, Escape) | `npm run build && npm run e2e:keyboard` | Local | Ctrl+K, Shift+F10, Escape on Delete; search Escape; **Open settings** identity control; workspace arrows; Settings category Enter (#476, #477) |
 | Create / clone / delete UI | `npm run build && npm run e2e` | **PR CI** | Disposable dirs under `C:\asa-e2e\…` |
 | Install-health badges | `npm run build && npm run e2e:install-health` | **PR CI** | Fake FS fixtures only |
 | Host port probe modal | `npm run build && npm run e2e:host-port-probe` | **PR CI** | Occupies UDP then asserts modal |

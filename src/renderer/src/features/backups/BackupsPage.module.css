@@ -34,6 +34,13 @@
   background: color-mix(in srgb, var(--app-color-panel) 45%, transparent);
 }
 
+.healthCardHeader {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--app-color-panel);
+}
+
 .policyField {
   width: 88px;
 }

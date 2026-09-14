@@ -593,14 +593,13 @@ describe("ServerBackupPanel", () => {
     expect(screen.getByLabelText(/Destination/i)).toHaveTextContent("D:\\Custom\\Backups");
   });
 
-  it("uses relative time as the world row title with type chip", async () => {
+  it("uses a human backup title with a type chip", async () => {
     renderPanel([worldBackup]);
     await screen.findByRole("button", { name: /Open folder C:\/backups\/world/i });
     const title = document.querySelector("[data-backup-title]");
     expect(title).not.toBeNull();
-    expect(title?.textContent).not.toBe("manual");
-    expect(title?.textContent?.length).toBeGreaterThan(0);
-    expect(screen.getByText("manual")).toBeInTheDocument();
+    expect(title?.textContent).toBe("The Island · Manual");
+    expect(screen.getByText("Manual")).toBeInTheDocument();
     expect(screen.queryByText("C:/backups/world")).not.toBeInTheDocument();
   });
 });

@@ -91,7 +91,7 @@ paths or the Notion hub URL in tracked files.
 - **Remove from YARK** vs **Delete everything** (#267): `servers:delete` requires `{ deleteInstallFiles }`. Profile-only never wipes `installDir`; full wipe keeps shared-path and wipe-safety guards. Details: [server-lifecycle.md](server-lifecycle.md#remove-or-delete-a-server-267).
 - **Import install** (#254 / #283): ready trees continue by default; incomplete requires `allowIncompleteInstall` (UI checkbox + backend); empty/nested stay blocked. Details: [server-lifecycle.md](server-lifecycle.md#import-existing-asa-install-254--283).
 - Server Workspace keeps `Server`, **INI Files**, `Mods`, **Launch**, `Backups`,
-  `Logs`, **RCON**, and **Maintenance** as its regular navigation. **Launch** edits curated
+  `Logs`, **RCON**, **Maintenance**, and **Ark Server API** as its navigation. **Launch** edits curated
   structured ASA flags plus raw Extra arguments (command preview / conflicts);
   create/edit Server no longer hosts Mods IDs or Extra arguments. Workspace
   **Backups** is operational (create / restore / history / destination for that

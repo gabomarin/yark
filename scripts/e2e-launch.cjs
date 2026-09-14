@@ -388,6 +388,17 @@ async function removeFixtureDir(target) {
   throw lastError;
 }
 
+/**
+ * Open a workspace peer tab.
+ * @param {import("playwright").Page} page
+ * @param {string} name
+ */
+async function openWorkspaceTab(page, name) {
+  const tab = page.getByRole("tab", { name, exact: true });
+  await tab.waitFor({ state: "visible", timeout: 15000 });
+  await tab.click();
+}
+
 module.exports = {
   projectRoot,
   createE2eFixtureRoots,
@@ -400,6 +411,7 @@ module.exports = {
   stubFolderPicker,
   pickPathField,
   openSettingsCategory,
+  openWorkspaceTab,
   initProfileDatabase,
   removeFixtureDir,
 };

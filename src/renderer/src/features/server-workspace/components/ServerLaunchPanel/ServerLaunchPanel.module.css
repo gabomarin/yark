@@ -74,8 +74,7 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.7rem;
   color: var(--app-color-cryo);
-  cursor: help;
-  border-bottom: 1px dotted color-mix(in srgb, var(--app-color-cryo) 45%, transparent);
+  cursor: default;
   border-radius: 2px;
   outline: none;
 }

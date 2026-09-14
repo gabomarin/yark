@@ -10,6 +10,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { _electron: electron } = require("playwright");
+const { openWorkspaceTab } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -66,8 +67,7 @@ async function captureLogsSurface(page, outDir, size) {
   await goNav(page, "Servers");
   await page.locator("[data-server-card]").first().waitFor({ state: "visible", timeout: 10000 });
   await page.locator("[data-server-card]").first().getByRole("button", { name: /Open settings/i }).click();
-  await page.getByRole("tab", { name: "Logs" }).waitFor({ timeout: 10000 });
-  await page.getByRole("tab", { name: "Logs" }).click();
+  await openWorkspaceTab(page, "Logs");
   await page.locator("[data-server-logs-panel]").waitFor({ state: "visible", timeout: 10000 });
   await page.waitForTimeout(300);
   await shot(page, outDir, `${size.name}-03-server-events`);

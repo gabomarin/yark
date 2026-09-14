@@ -31,8 +31,8 @@ export function listKnownClusterIds(servers: ServerProfile[]): string[] {
 }
 
 /**
- * Short default Cluster ID (`yark`, then `yark-2`, …). Pass current IDs so
- * Generate bumps instead of repeating the slug.
+ * Short default Cluster ID (`yark-cluster-1`, then `yark-cluster-2`, …).
+ * Pass current IDs so Generate bumps instead of repeating the slug.
  */
 export function suggestClusterId(taken: Iterable<string> = []): string {
   const takenSet = new Set(
@@ -40,15 +40,12 @@ export function suggestClusterId(taken: Iterable<string> = []): string {
       .map((id) => id.trim().toLowerCase())
       .filter((id) => id.length > 0),
   );
-  const base = "yark";
-  if (!takenSet.has(base)) {
-    return base;
-  }
-  let n = 2;
-  while (takenSet.has(`${base}-${n}`)) {
+  const prefix = "yark-cluster-";
+  let n = 1;
+  while (takenSet.has(`${prefix}${n}`)) {
     n += 1;
   }
-  return `${base}-${n}`;
+  return `${prefix}${n}`;
 }
 
 export type CreateClusterStep = 1 | 2 | 3;

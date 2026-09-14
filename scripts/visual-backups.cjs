@@ -8,7 +8,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { _electron: electron } = require("playwright");
-const { pickPathField } = require("./e2e-launch.cjs");
+const { pickPathField, openWorkspaceTab } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -104,8 +104,7 @@ async function openFirstWorkspace(app, page, outDir) {
   const firstCard = page.locator("[data-server-card]").first();
   assert.ok((await firstCard.count()) > 0, "Need at least one server for backups visual review");
   await firstCard.getByRole("button", { name: /Open settings/i }).click();
-  await page.getByRole("tab", { name: "Backups" }).waitFor({ timeout: 10000 });
-  await page.getByRole("tab", { name: "Backups" }).click();
+  await openWorkspaceTab(page, "Backups");
   await page.getByRole("tab", { name: "World save" }).waitFor({ timeout: 10000 });
   await page.locator("[data-backup-list]").waitFor({ state: "visible", timeout: 10000 });
 }
