@@ -17,6 +17,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Restoring an **INI** backup clears any leftover Configuration draft so Start cannot flush queued edits over the restored files (#530).
 - Ark Server API no longer deletes a freshly installed `Version.dll` when a parked `Version.dll.yark-off` is also present (reinstall / Start with Load off).
 - Pending INI queue no longer drops gameplay edits when a Server-tab profile sync races an in-flight save, and partial cluster/config INI writes materialize the full draft before clearing the queue (#530).
 - Workspace **All servers** lists only enabled servers; disabled profiles stay on Overview (#526).

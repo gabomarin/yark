@@ -98,7 +98,7 @@ Unsafe or corrupt ZIPs are rejected before anything is written outside the manag
 
    - **World** — overlays the archived map folder (other SavedArks maps stay put); optional profiles/tribes toggle
    - **Players** — overlays flat profile files into the **current** map folder (does not wipe unrelated live profiles)
-   - **INI** — copies present INI files into live config
+   - **INI** — copies present INI files into live config and drops any leftover Configuration draft so the next Start cannot flush queued edits over the restore
 
 <Aside type="caution">
   Restore history is recorded internally; a full restore-audit UI is still on the roadmap.

@@ -550,7 +550,9 @@ Paths under `{installDir}/ShooterGame/Saved/Config/WindowsServer/`:
   clobber an in-flight queued save. Low-level `syncProfileSettingsToIni`
   remains for clone seed / idle-only paths. Config transfer and cluster
   template apply materialize any pending draft (both files) before
-  `clearPending` when only one INI file was selected.
+  `clearPending` when only one INI file was selected. INI backup restore also
+  calls `clearPending` after writing disk so a draft left after crash cannot
+  overwrite the restored files on the next Start flush.
 - Sanitize strips client noise (`ShooterGameUserSettings`, scalability /
   resolution / volume keys, etc.). Never treat stripped noise as dirty pending
   edits.
