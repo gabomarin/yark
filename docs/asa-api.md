@@ -53,9 +53,12 @@ SQLite columns `use_asa_api` / `use_asa_api_loader` map to profile
 | both true | `loader` | `AsaApiLoader.exe` | Parked (loader must not see active Version.dll) |
 
 `syncAsaApiVersionDll` / `syncAsaApiVersionDllForProfile` rename between
-`Version.dll` and `Version.dll.yark-off`. If both active and parked exist when
-parking, the active file is deleted. Version.dll mode throws if neither file
-exists (operator must Install first). Called from Start / profile-flag updates
+`Version.dll` and `Version.dll.yark-off`. If both exist, the active file wins:
+a stale park is deleted, then off/loader mode parks that active copy. Never
+delete a freshly extracted `Version.dll` in favor of `Version.dll.yark-off`.
+Install also drops a leftover park after extracting VersionLoader so the next
+sync cannot restore a stale DLL. Version.dll mode throws if neither file exists
+(operator must Install first). Called from Start / profile-flag updates
 (`InstanceService`).
 
 Clone copies both flags; Import install seeds them **false**. Config transfer
@@ -90,8 +93,9 @@ Confirms (Remove, Clear cache, Delete plugin) use `AppPanelConfirmModal`
 1. Fetch latest releases (`User-Agent: YARK-server-manager`).
 2. Prefer `AsaApi_*.zip` from AsaApi; VersionLoader / `Version*.zip` from AsaApiLoader.
 3. Obtain each zip (cache hit by path + size, else download to `.partial`).
-4. Extract both into Win64; require `AsaApiLoader.exe`, `Version.dll` (or
-   `.yark-off`), and `ArkApi\AsaApi.dll`.
+4. Extract both into Win64, then delete a leftover `Version.dll.yark-off` so it
+   cannot shadow the new extract. Require `AsaApiLoader.exe`, `Version.dll` (or
+   a parked `.yark-off` if that is all that remains), and `ArkApi\AsaApi.dll`.
 5. Return status with `installedVersionLabel` = AsaApi release tag (UI keeps a
    session hint; `getStatus` does **not** persist the tag — disk scans return
    `installedVersionLabel: null`).
