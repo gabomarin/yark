@@ -838,7 +838,7 @@ describe("ServerWorkspacePage", () => {
     const fileSwitch = screen.getByRole("radiogroup", { name: "INI file" });
     await user.click(within(fileSwitch).getByRole("radio", { name: "Game.ini" }));
     await waitFor(() => {
-      expect(screen.getAllByText("TotallyUnknownSettingXYZ").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("Totally Unknown Setting XYZ").length).toBeGreaterThan(0);
     });
 
     const categorySelect = screen.getByRole("combobox", {
@@ -858,7 +858,7 @@ describe("ServerWorkspacePage", () => {
 
     await user.click(within(fileSwitch).getByRole("radio", { name: "GameUserSettings.ini" }));
     await waitFor(() => {
-      expect(screen.getAllByText("AllowFlyerCarryPVE").length).toBeGreaterThan(0);
+      expect(screen.getByLabelText("Reset AllowFlyerCarryPVE to default")).toBeInTheDocument();
       expect(categorySelect).toHaveValue("All settings (1)");
     });
   });
@@ -893,7 +893,7 @@ describe("ServerWorkspacePage", () => {
 
     await user.click(screen.getByRole("tab", { name: "INI Files" }));
     await waitFor(() => {
-      expect(screen.getByText("XPMultiplier")).toBeInTheDocument();
+      expect(screen.getByLabelText("Reset XPMultiplier to default")).toBeInTheDocument();
     });
 
     expect(
@@ -972,7 +972,7 @@ describe("ServerWorkspacePage", () => {
     await waitFor(() => {
       expect(window.api.readServerIni).toHaveBeenCalledTimes(1);
     });
-    expect(await screen.findByText("XPMultiplier")).toBeVisible();
+    expect(await screen.findByLabelText("Reset XPMultiplier to default")).toBeVisible();
   });
 
   it("warns in raw GameUserSettings that Server settings override max players", async () => {
@@ -980,7 +980,7 @@ describe("ServerWorkspacePage", () => {
     renderWorkspace();
 
     await user.click(screen.getByRole("tab", { name: "INI Files" }));
-    await screen.findByText("XPMultiplier");
+    await screen.findByLabelText("Reset XPMultiplier to default");
     await user.click(screen.getByRole("radio", { name: "Text" }));
 
     expect(
@@ -1000,7 +1000,7 @@ describe("ServerWorkspacePage", () => {
     renderWorkspace();
 
     await user.click(screen.getByRole("tab", { name: "INI Files" }));
-    await screen.findByText("XPMultiplier");
+    await screen.findByLabelText("Reset XPMultiplier to default");
     await user.click(screen.getByRole("radio", { name: "Text" }));
     await user.click(screen.getByRole("button", { name: "Dismiss" }));
 
@@ -1011,7 +1011,7 @@ describe("ServerWorkspacePage", () => {
     cleanup();
     renderWorkspace();
     await user.click(screen.getByRole("tab", { name: "INI Files" }));
-    await screen.findByText("XPMultiplier");
+    await screen.findByLabelText("Reset XPMultiplier to default");
     await user.click(screen.getByRole("radio", { name: "Text" }));
 
     expect(
@@ -1027,7 +1027,7 @@ describe("ServerWorkspacePage", () => {
     renderWorkspace();
 
     await user.click(screen.getByRole("tab", { name: "INI Files" }));
-    await screen.findByText("XPMultiplier");
+    await screen.findByLabelText("Reset XPMultiplier to default");
     await user.click(screen.getByRole("radio", { name: "Text" }));
     await user.click(screen.getByRole("radio", { name: "Game.ini" }));
 
