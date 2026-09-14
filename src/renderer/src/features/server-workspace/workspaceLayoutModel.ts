@@ -66,6 +66,16 @@ export interface ServerClusterGroup {
   servers: ServerProfile[];
 }
 
+/**
+ * Workspace All servers (full list and icon rail) switches among enabled
+ * profiles only (#526). Disabled profiles stay on Overview (Show disabled)
+ * and Settings. Opening a disabled profile's workspace still works; that
+ * profile is omitted here — Enable stays on the workspace header.
+ */
+export function enabledWorkspaceRailServers(servers: ServerProfile[]): ServerProfile[] {
+  return servers.filter((server) => server.enabled);
+}
+
 /** Group servers by `clusterId`; null/empty → Unclustered (key `""`, never collides with a real id). */
 export function groupServersByCluster(servers: ServerProfile[]): ServerClusterGroup[] {
   const map = new Map<string, ServerProfile[]>();

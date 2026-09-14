@@ -213,6 +213,72 @@ describe("ServerListPanel", () => {
     expect(screen.getByText("Island")).toBeInTheDocument();
   });
 
+  it("omits disabled profiles from the list, search, and cluster count (#526)", async () => {
+    const user = userEvent.setup();
+    const disabled = profile({
+      id: "srv-off",
+      name: "Frozen",
+      map: "Ragnarok_WP",
+      enabled: false,
+      clusterId: "Alpha",
+    });
+    render(
+      <AppProviders>
+        <ServerListPanel
+          servers={[
+            profile({ id: "a", name: "Island", clusterId: "Alpha" }),
+            disabled,
+          ]}
+          selectedServerId="a"
+          statuses={new Map()}
+          onSelectServer={() => undefined}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByText("Island")).toBeInTheDocument();
+    expect(screen.queryByText("Frozen")).not.toBeInTheDocument();
+    expect(screen.queryByText("Inactive")).not.toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: /show disabled/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Alpha\s*1$/i })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Frozen · Ragnarok_WP · Stopped · Inactive/i }),
+    ).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Search servers"), "Frozen");
+    expect(screen.queryByText("Frozen")).not.toBeInTheDocument();
+    expect(screen.queryByText("Island")).not.toBeInTheDocument();
+  });
+
+  it("omits a disabled selected profile from the icon rail (#526)", () => {
+    render(
+      <AppProviders>
+        <ServerListPanel
+          servers={[
+            profile(),
+            profile({
+              id: "srv-off",
+              name: "Frozen",
+              map: "Ragnarok_WP",
+              enabled: false,
+            }),
+          ]}
+          selectedServerId="srv-off"
+          statuses={new Map()}
+          iconMode
+          onSelectServer={() => undefined}
+        />
+      </AppProviders>,
+    );
+
+    expect(
+      screen.getByRole("button", { name: /The Island · TheIsland_WP · Stopped/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Frozen · Ragnarok_WP/i }),
+    ).not.toBeInTheDocument();
+  });
+
   it("shows sort and view controls with shared prefs (#351)", () => {
     render(
       <AppProviders>

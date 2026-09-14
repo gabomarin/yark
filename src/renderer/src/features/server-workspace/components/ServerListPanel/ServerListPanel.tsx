@@ -13,7 +13,7 @@ import { ServerListControls } from "@features/servers/components/ServerListContr
 import { useServerListPreferences } from "@features/servers/hooks/useServerListPreferences";
 import { sortServers } from "@features/servers/serverListModel";
 import { SearchField } from "@ui/SearchField/SearchField";
-import { groupServersByCluster } from "../../workspaceLayoutModel";
+import { enabledWorkspaceRailServers, groupServersByCluster } from "../../workspaceLayoutModel";
 import { ServerListPanelBody } from "./ServerListPanelBody";
 import classes from "./ServerListPanel.module.css";
 
@@ -38,18 +38,22 @@ export function ServerListPanel(props: Props): ReactElement {
   /** Expand control size: compact sm, else md (#233). */
   const expandSize = compact ? "sm" : "md";
 
+  const listed = useMemo(
+    () => enabledWorkspaceRailServers(props.servers),
+    [props.servers],
+  );
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     const base =
       query.length === 0
-        ? props.servers
-        : props.servers.filter((server) =>
+        ? listed
+        : listed.filter((server) =>
             [server.name, server.map, server.clusterId ?? ""].some((field) =>
               field.toLowerCase().includes(query),
             ),
           );
     return sortServers(base, sort);
-  }, [props.servers, search, sort]);
+  }, [listed, search, sort]);
 
   const groups = useMemo(() => groupServersByCluster(filtered), [filtered]);
 
