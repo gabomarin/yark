@@ -161,7 +161,11 @@ Report shape:
   `-WinLiveMaxPlayers` from the profile (ASA ignores INI `MaxPlayers`, so
   templates must not author it). Owned keys and INI MaxPlayers are omitted from
   operator previews; secrets are redacted. Unselected files are left unchanged
-  on disk / in the template.
+  on disk / in the template — except when the member still has a
+  `pending_server_ini` draft: restore/seed materialize **both** INI files from
+  the composed payload before clearing the queue (same contract as config
+  transfer; #530 / #545). Details:
+  [server-lifecycle.md](server-lifecycle.md) (INI read / save / sanitize).
 - Restore/seed take a local `.yark-pre-template` snapshot before write, and a
   cataloged INI backup when the install is Ready.
 - Promote updates only the selected SQLite template files (member installs
