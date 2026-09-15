@@ -23,6 +23,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Create server no longer stays blocked after you change the install path: a disk warning from the previous folder is dropped as soon as the new path is checked.
 - Renderer errors show a Reload screen instead of a blank navy window.
 
 - Fleet Logs event rows keep When / severity / server in place so the message uses the leftover width instead of clipping in a 140px column.

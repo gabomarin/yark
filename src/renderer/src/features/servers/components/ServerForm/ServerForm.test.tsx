@@ -2,7 +2,8 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
-import type { ServerProfile } from "@shared/types";
+import type { IpcResult } from "@shared/ipc";
+import type { ImportInstallProbe, ServerInstallationInfo, ServerProfile } from "@shared/types";
 import { ServerForm } from "./ServerForm";
 
 function profile(partial: Partial<ServerProfile> & Pick<ServerProfile, "id" | "name">): ServerProfile {
@@ -34,6 +35,70 @@ function profile(partial: Partial<ServerProfile> & Pick<ServerProfile, "id" | "n
   };
 }
 
+function probeResult(
+  installDir: string,
+  health: ServerInstallationInfo["health"],
+): ImportInstallProbe {
+  return {
+    installDir,
+    installation: {
+      serverId: "probe",
+      installed: health === "ready",
+      health,
+      reasonCodes: [],
+      guidance: "",
+      build: null,
+      steamBuild: null,
+      arkVersion: null,
+      version: null,
+      binaryPath: "C:\\ark\\New\\ShooterGame\\Binaries\\Win64\\ArkAscendedServer.exe",
+      checkedAt: "2026-01-01T00:00:00.000Z",
+    },
+    suggestions: {
+      name: "New",
+      sessionName: "New",
+      maxPlayers: 70,
+      map: "TheIsland_WP",
+      mapModId: null,
+      gamePort: 7777,
+      queryPort: 27015,
+      rconPort: 27020,
+      adminPassword: "admin",
+      serverPassword: null,
+      mods: [],
+    },
+    canContinue: false,
+    nestedSubfolder: false,
+    suggestedInstallDir: null,
+    alreadyManagedBy: null,
+  };
+}
+
+function stubCreatePathProbes(): {
+  resolve: (dir: string, health: ServerInstallationInfo["health"]) => void;
+} {
+  const pending = new Map<string, Array<(value: IpcResult<ImportInstallProbe>) => void>>();
+  window.api = {
+    ...(window.api ?? {}),
+    probeImportInstall: vi.fn((dir: string) => {
+      return new Promise<IpcResult<ImportInstallProbe>>((resolve) => {
+        const list = pending.get(dir) ?? [];
+        list.push(resolve);
+        pending.set(dir, list);
+      });
+    }),
+  } as typeof window.api;
+  return {
+    resolve: (dir, health) => {
+      const list = pending.get(dir) ?? [];
+      pending.set(dir, []);
+      for (const resolve of list) {
+        resolve({ ok: true, data: probeResult(dir, health) });
+      }
+    },
+  };
+}
+
 describe("ServerForm", () => {
   it("renders the main fields", () => {
     render(
@@ -55,6 +120,69 @@ describe("ServerForm", () => {
       "aria-readonly",
       "true",
     );
+  });
+
+  it("enables Create server after a vacant install-path probe", async () => {
+    const user = userEvent.setup();
+    const probes = stubCreatePathProbes();
+    const vacant = "C:\\ark\\Alpha";
+
+    render(
+      <AppProviders>
+        <ServerForm
+          initial={null}
+          defaultBaseFolder={"C:\\ark"}
+          onCancel={vi.fn()}
+          onSaved={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    await user.type(screen.getByRole("textbox", { name: /^name$/i }), "Alpha");
+    await waitFor(() => {
+      expect(window.api.probeImportInstall).toHaveBeenCalledWith(vacant);
+    });
+    probes.resolve(vacant, "empty");
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /^create server$/i })).toBeEnabled();
+    });
+  });
+
+  it("drops a stale disk warning when the create path changes", async () => {
+    const user = userEvent.setup();
+    const probes = stubCreatePathProbes();
+    const occupied = "C:\\ark\\Alpha";
+    const vacant = "C:\\ark\\Beta";
+
+    render(
+      <AppProviders>
+        <ServerForm
+          initial={null}
+          defaultBaseFolder={"C:\\ark"}
+          onCancel={vi.fn()}
+          onSaved={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    const name = screen.getByRole("textbox", { name: /^name$/i });
+    await user.type(name, "Alpha");
+    await waitFor(() => {
+      expect(window.api.probeImportInstall).toHaveBeenCalledWith(occupied);
+    });
+    probes.resolve(occupied, "ready");
+    expect(await screen.findByText(/install folder is not empty/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^create server$/i })).toBeDisabled();
+
+    await user.clear(name);
+    await user.type(name, "Beta");
+    await waitFor(() => {
+      expect(window.api.probeImportInstall).toHaveBeenCalledWith(vacant);
+    });
+    await waitFor(() => {
+      expect(screen.queryByText(/install folder is not empty/i)).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /^create server$/i })).toBeEnabled();
+    });
   });
 
   it("does not confirm leave after a successful save resets the dirty baseline (#299)", async () => {
@@ -321,8 +449,10 @@ describe("ServerForm", () => {
     );
 
     expect(screen.queryByRole("button", { name: /^cancel$/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^save changes$/i })).toBeDisabled();
     const name = screen.getByRole("textbox", { name: /^name$/i });
     await user.type(name, " X");
+    expect(screen.getByRole("button", { name: /^save changes$/i })).toBeEnabled();
     await user.click(screen.getByRole("button", { name: /^cancel$/i }));
     expect(name).toHaveValue("The Island");
     expect(screen.queryByRole("button", { name: /^cancel$/i })).not.toBeInTheDocument();
@@ -343,7 +473,7 @@ describe("ServerForm", () => {
 
     expect(screen.getByText(/^server information$/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /configuration wizard/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /^save changes$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^save changes$/i })).toBeDisabled();
     expect(screen.getByLabelText(/game port/i)).toBeInTheDocument();
     expect(screen.getByText(/the island · 7777\/27015\/27020/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/auto-start with yark/i)).toBeInTheDocument();
