@@ -1,3 +1,4 @@
+const { STEAMCMD_PATH } = require("./e2e-dom-hooks.cjs");
 /**
  * Settings page visual review — docs/visual-testing.md
  * Usage: npm run build && node scripts/visual-settings.cjs
@@ -36,7 +37,7 @@ async function openSettingsCategory(page, label) {
 }
 
 async function measureSettings(page) {
-  return page.evaluate(() => {
+  return page.evaluate((steamCmdSel) => {
     const root = document.documentElement;
     const body = document.body;
     const pageRoot = document.querySelector("[data-settings-page]");
@@ -48,11 +49,11 @@ async function measureSettings(page) {
       hasHorizontalOverflow:
         Math.max(root.scrollWidth, body.scrollWidth) > root.clientWidth + 1,
       pageVisible: pageRoot !== null && (pageRect?.width ?? 0) > 0,
-      hasSteamCmdPath: document.querySelector("[data-steamcmd-path]") !== null,
+      hasSteamCmdPath: document.querySelector(steamCmdSel) !== null,
       mainScrollHeight: main?.scrollHeight ?? null,
       mainClientHeight: main?.clientHeight ?? null,
     };
-  });
+  }, STEAMCMD_PATH);
 }
 
 async function run() {

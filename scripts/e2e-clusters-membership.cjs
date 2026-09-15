@@ -1,3 +1,4 @@
+const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
 /**
  * E2E: Clusters create / add / remove membership (#41 + #42).
  *
@@ -89,7 +90,7 @@ async function createServer(app, page, name, installDir, ports) {
   await page.getByRole("button", { name: "Create server" }).click();
   await dismissOnboarding(page);
   await page
-    .locator("[data-server-card]", { has: page.getByText(name, { exact: true }) })
+    .locator(SERVER_CARD, { has: page.getByText(name, { exact: true }) })
     .first()
     .waitFor({ state: "visible", timeout: 15000 });
 }

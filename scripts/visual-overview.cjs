@@ -1,3 +1,4 @@
+const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
 /**
  * Overview visual review per docs/visual-testing.md (#96).
  * Captures empty / small / populated fleet fixtures, Compact + Comfortable
@@ -73,7 +74,7 @@ async function waitForOverviewLayoutReady(page) {
 }
 
 async function measureOverview(page) {
-  return page.evaluate(() => {
+  return page.evaluate((serverCardSel) => {
     const root = document.documentElement;
     const body = document.body;
     const overview = document.querySelector("[data-overview-page]");
@@ -115,14 +116,14 @@ async function measureOverview(page) {
       serversWidth: serversRect?.width ?? null,
       activityWidth: activityRect?.width ?? null,
       sideBySide,
-      cardCount: document.querySelectorAll("[data-server-card]").length,
+      cardCount: document.querySelectorAll(serverCardSel).length,
       density: root.getAttribute("data-ui-density"),
       scanVisible: scanStatus !== null,
       scanOnButton,
       scanTop: scanRect?.top ?? null,
       checkTop: checkRect?.top ?? null,
     };
-  });
+  }, SERVER_CARD);
 }
 
 async function setDensity(page, density) {
@@ -235,7 +236,7 @@ async function run() {
     // Init schema on an empty profile, then capture empty Overview.
     await withOverviewSession(userData, async (page, errors) => {
       await setDensity(page, "comfortable");
-      assert.equal(await page.locator("[data-server-card]").count(), 0);
+      assert.equal(await page.locator(SERVER_CARD).count(), 0);
       await captureMatrix(page, outDir, "empty-comfortable", reports);
       if (errors.length > 0) throw new Error(errors.join("\n"));
     });
@@ -243,7 +244,7 @@ async function run() {
     seedServers(userData, 1);
     await withOverviewSession(userData, async (page, errors) => {
       await setDensity(page, "comfortable");
-      assert.equal(await page.locator("[data-server-card]").count(), 1);
+      assert.equal(await page.locator(SERVER_CARD).count(), 1);
       console.log("VISUAL_OVERVIEW_FLEET_SMALL=1");
       await captureMatrix(page, outDir, "small-comfortable", reports);
       if (errors.length > 0) throw new Error(errors.join("\n"));
@@ -252,7 +253,7 @@ async function run() {
     seedServers(userData, 4);
     await withOverviewSession(userData, async (page, errors) => {
       await setDensity(page, "comfortable");
-      assert.equal(await page.locator("[data-server-card]").count(), 4);
+      assert.equal(await page.locator(SERVER_CARD).count(), 4);
       console.log("VISUAL_OVERVIEW_FLEET_POPULATED=4");
       await captureMatrix(page, outDir, "populated-comfortable", reports);
 

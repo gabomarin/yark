@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import { Group, SimpleGrid, Text } from "@mantine/core";
 import { AppMetricCard, type AppMetricTone } from "@ui/AppMetricCard/AppMetricCard";
 import type { BackupFleetSummary } from "@shared/types";
+import { BACKUP_FLEET_QUIET_ATTR } from "../../backupsTestIds";
 import classes from "./BackupFleetMetrics.module.css";
 
 type BackupHealthFilter = "all" | "at_risk" | "failed" | "protected";
@@ -84,7 +85,7 @@ export function BackupFleetMetrics(props: Props): ReactElement {
   if (props.quiet) {
     return (
       <Group align="flex-end" justify="space-between" gap="md" wrap="wrap">
-        <Text size="sm" c="dimmed" maw={420} data-backup-fleet-quiet>
+        <Text size="sm" c="dimmed" maw={420} {...{ [BACKUP_FLEET_QUIET_ATTR]: true }}>
           No backups yet. Create and restore from each server’s Backups tab.
         </Text>
         <SimpleGrid cols={1} spacing="sm" className={classes.quietDiskMetric}>

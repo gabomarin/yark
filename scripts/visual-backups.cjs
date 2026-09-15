@@ -1,3 +1,4 @@
+const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
 /**
  * Workspace Backups tab visual review — docs/visual-testing.md
  * Usage: node scripts/visual-backups.cjs
@@ -67,7 +68,7 @@ async function ensureServer(app, page, outDir) {
   await page.locator("[data-overview-page]").waitFor({ timeout: 15000 });
   await page.waitForTimeout(500);
 
-  const cards = page.locator("[data-server-card]");
+  const cards = page.locator(SERVER_CARD);
   try {
     await cards.first().waitFor({ state: "visible", timeout: 5000 });
   } catch {
@@ -95,13 +96,13 @@ async function ensureServer(app, page, outDir) {
   await page.getByLabel("RCON port").fill("37020");
   await page.locator("input[type='password']").last().fill("visual-test-admin");
   await page.getByRole("button", { name: "Create server" }).click();
-  await page.locator("[data-server-card]").first().waitFor({ state: "visible", timeout: 15000 });
+  await page.locator(SERVER_CARD).first().waitFor({ state: "visible", timeout: 15000 });
   return { created: true, name: serverName };
 }
 
 async function openFirstWorkspace(app, page, outDir) {
   await ensureServer(app, page, outDir);
-  const firstCard = page.locator("[data-server-card]").first();
+  const firstCard = page.locator(SERVER_CARD).first();
   assert.ok((await firstCard.count()) > 0, "Need at least one server for backups visual review");
   await firstCard.getByRole("button", { name: /Open settings/i }).click();
   await openWorkspaceTab(page, "Backups");

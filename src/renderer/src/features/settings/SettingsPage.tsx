@@ -21,6 +21,7 @@ import {
   type UiDensity,
 } from "./settingsModel";
 import type { DesktopShellPreferencesController } from "./hooks/useDesktopShellPreferences";
+import { SETTINGS_PANEL_SCROLL_ATTR } from "./settingsTestIds";
 import classes from "./SettingsPage.module.css";
 
 interface Props {
@@ -138,7 +139,11 @@ export function SettingsPage(props: Props): ReactElement {
         </AppSurfaceCard>
 
         <div className={classes.panel}>
-          <div ref={panelScrollRef} className={classes.panelScroll} data-settings-panel-scroll>
+          <div
+            ref={panelScrollRef}
+            className={classes.panelScroll}
+            {...{ [SETTINGS_PANEL_SCROLL_ATTR]: true }}
+          >
             {category === "general" && (
               <SettingsGeneralSection
                 uiDensity={props.uiDensity}

@@ -1,3 +1,4 @@
+const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
 /**
  * E2E suite: create → clone → route nav → delete (#12).
  *
@@ -20,7 +21,7 @@ const {
 } = require("./e2e-launch.cjs");
 
 async function waitForCardByName(page, name, timeout = 15000) {
-  const card = page.locator("[data-server-card]", {
+  const card = page.locator(SERVER_CARD, {
     has: page.getByText(name, { exact: true }),
   });
   await card.first().waitFor({ state: "visible", timeout });
@@ -52,7 +53,7 @@ async function openServerMoreMenu(page, card) {
 
 async function removeServerIfPresent(page, name) {
   const card = page
-    .locator("[data-server-card]", {
+    .locator(SERVER_CARD, {
       has: page.getByText(name, { exact: true }),
     })
     .first();

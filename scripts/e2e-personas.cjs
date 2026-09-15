@@ -1,3 +1,4 @@
+const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
 /**
  * E2E by user personas (beginner and experienced)
  * + baseline visual checks at 1280x720, 1920x1080, and 2560x1440.
@@ -100,7 +101,7 @@ async function runExperiencedFlow(page, serverName) {
   await search.fill(serverName);
   await page.getByText(serverName).first().waitFor({ timeout: 10000 });
 
-  const card = page.locator("[data-server-card]", {
+  const card = page.locator(SERVER_CARD, {
     has: page.getByText(serverName, { exact: true }),
   }).first();
   await card.waitFor({ state: "visible", timeout: 10000 });
@@ -117,7 +118,7 @@ async function runExperiencedFlow(page, serverName) {
   await dialog.getByRole("button", { name: "Clone server" }).click();
   await dialog.waitFor({ state: "hidden", timeout: 15_000 });
 
-  const cloneTitle = page.locator("[data-server-card]", {
+  const cloneTitle = page.locator(SERVER_CARD, {
     has: page.getByText(expectedCloneName, { exact: true }),
   }).first();
   await cloneTitle.waitFor({ state: "visible", timeout: 15_000 });
@@ -139,7 +140,7 @@ async function runExperiencedFlow(page, serverName) {
   await waitOverviewReady(page);
 
   await search.fill(cloneName);
-  const cloneCard = page.locator("[data-server-card]", {
+  const cloneCard = page.locator(SERVER_CARD, {
     has: page.getByText(cloneName, { exact: true }),
   }).first();
   await cloneCard.waitFor({ state: "visible", timeout: 10000 });
@@ -164,7 +165,7 @@ async function deleteServerIfPresent(page, serverName) {
   }
   await search.fill(serverName);
 
-  const card = page.locator("[data-server-card]", {
+  const card = page.locator(SERVER_CARD, {
     has: page.getByText(serverName, { exact: true }),
   }).first();
 

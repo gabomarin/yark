@@ -1,3 +1,4 @@
+const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
 /**
  * E2E: temp profile → create → SteamCMD install → start → kill UI → reattach (#59).
  *
@@ -225,7 +226,7 @@ async function createServer(app, page, serverName, baseFolder, ports) {
   await leaveWorkspaceToServers(page);
 
   const card = page
-    .locator("[data-server-card]", {
+    .locator(SERVER_CARD, {
       has: page.getByText(serverName, { exact: true }),
     })
     .first();

@@ -1,3 +1,4 @@
+const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
 /**
  * Visual review: Overview server-card column alignment across install states.
  * Usage: node scripts/visual-server-card-align.cjs
@@ -26,7 +27,7 @@ const META_ALIGN_TOLERANCE_PX = 2;
 async function waitForOverview(page) {
   await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 15000 });
   await page.locator("[data-server-list]").waitFor({ state: "visible", timeout: 15000 });
-  await page.locator("[data-server-card]").first().waitFor({ state: "visible", timeout: 15000 });
+  await page.locator(SERVER_CARD).first().waitFor({ state: "visible", timeout: 15000 });
 }
 
 async function measureCardAlignment(page) {

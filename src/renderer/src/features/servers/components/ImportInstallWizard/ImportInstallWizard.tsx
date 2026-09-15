@@ -7,6 +7,7 @@ import {
 } from "@shared/server-install-path";
 import { isOfficialMap, normalizeMapToken } from "@shared/map-identity";
 import { MAP_NAME_COPY } from "@shared/map-name-copy";
+import { hasMapTokenWpSuffix } from "@shared/map-token-suggest";
 import type { ImportInstallProbe, ModMetadata, ServerProfile } from "@shared/types";
 import type { KnownClusterOption } from "@features/clusters/knownClusterOptions";
 import { listKnownClusterOptions } from "@features/clusters/knownClusterOptions";
@@ -188,7 +189,7 @@ export function ImportInstallWizard(props: Props): ReactElement {
       setError(MAP_NAME_COPY.mustNotContainSpaces);
       return;
     }
-    if (!isOfficialMap(mapToken) && !mapToken.includes("_WP")) {
+    if (!isOfficialMap(mapToken) && !hasMapTokenWpSuffix(mapToken)) {
       setError(MAP_NAME_COPY.customUsuallyEndsWp);
       return;
     }

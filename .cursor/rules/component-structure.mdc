@@ -13,7 +13,15 @@ When editing or adding renderer UI, follow [docs/component-structure.md](../../d
 - Prefer feature-local `components/` + `<area>Model.ts`; do not create global `atoms/` trees.
 - Split pages/sections at ~250–300 lines, 3+ visual blocks, or duplicated JSX.
 - Pages compose; organisms/molecules render; model files hold pure helpers.
-- Keep `data-*` selectors stable for visual/e2e scripts. If you change visible
-  copy, roles, or those selectors, update `scripts/e2e-*.cjs` in the same PR
+- Named constants by default for settings keys, localStorage, `data-*` hooks,
+  and ASA domain tokens — inline literals only as a last resort (comment why).
+  See [docs/component-structure.md](../../docs/component-structure.md#named-constants--avoid-magic-literals).
+  Do **not** rename persisted key **values** without a migration.
+- Keep `data-*` selectors stable for visual/e2e scripts. Prefer feature-local
+  `*TestIds.ts` (or a constant on the component); E2E uses
+  `scripts/e2e-dom-hooks.cjs`. If you change visible copy, roles, or those
+  selectors, update `scripts/e2e-*.cjs` in the same PR
   ([docs/e2e-validation.md](../../docs/e2e-validation.md#ui-changes-and-e2e)).
+- When touching feature CSS, snap magic spacing px to `--app-space-*` /
+  Mantine spacing ([docs/design-system.md](../../docs/design-system.md)).
 - Reference layout: `src/renderer/src/features/clusters/`.

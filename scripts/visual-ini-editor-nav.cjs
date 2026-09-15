@@ -1,3 +1,4 @@
+const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
 /**
  * INI editor nav (file + Visual/Text) layout alignment —
  * docs/visual-testing.md
@@ -64,7 +65,7 @@ async function ensureServer(app, page, outDir) {
   await page.locator("[data-overview-page]").waitFor({ timeout: 15000 });
   await page.waitForTimeout(400);
 
-  const cards = page.locator("[data-server-card]");
+  const cards = page.locator(SERVER_CARD);
   if ((await cards.count()) > 0) {
     return;
   }
@@ -85,13 +86,13 @@ async function ensureServer(app, page, outDir) {
   await page.getByLabel("RCON port").fill("38021");
   await page.locator("input[type='password']").last().fill("visual-test-admin");
   await page.getByRole("button", { name: "Create server" }).click();
-  await page.locator("[data-server-card]").first().waitFor({ state: "visible", timeout: 15000 });
+  await page.locator(SERVER_CARD).first().waitFor({ state: "visible", timeout: 15000 });
 }
 
 async function openWorkspaceIni(page) {
   await goNav(page, "Servers");
   await page.locator("[data-overview-page]").waitFor({ timeout: 15000 });
-  await page.locator("[data-server-card]").first().getByRole("button", { name: /Open settings/i }).click();
+  await page.locator(SERVER_CARD).first().getByRole("button", { name: /Open settings/i }).click();
   await page.waitForTimeout(400);
   await page.getByRole("tab", { name: "INI Files" }).click();
   await page.waitForTimeout(400);

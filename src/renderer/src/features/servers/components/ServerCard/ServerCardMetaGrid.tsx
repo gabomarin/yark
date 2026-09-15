@@ -12,6 +12,7 @@ import {
   resolveServerSurvivorCount,
 } from "@features/servers/model/serverCardSurvivorMeta";
 import { ServerCardMetaItem } from "./ServerCardMetaItem";
+import { META_GRID_ATTR } from "./serverCardTestIds";
 import classes from "./ServerCard.module.css";
 
 interface Props {
@@ -77,7 +78,7 @@ export function ServerCardMetaGrid(props: Props): ReactElement {
     >
       <div
         className={classes.metaGrid}
-        data-meta-grid
+        {...{ [META_GRID_ATTR]: true }}
         data-meta-cols={String(metaCols)}
       >
         <ServerCardMetaItem

@@ -1,3 +1,4 @@
+const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
 /**
  * INI settings table: min-width + horizontal scroll, no desc/restore overlap.
  * Usage: npm run build && node scripts/visual-ini-table-scroll.cjs
@@ -69,7 +70,7 @@ async function run() {
     await page.waitForLoadState("domcontentloaded");
     await page.getByRole("button", { name: "Servers" }).first().click();
     await page
-      .locator("[data-server-card]")
+      .locator(SERVER_CARD)
       .first()
       .getByRole("button", { name: /Open settings/i })
       .click();

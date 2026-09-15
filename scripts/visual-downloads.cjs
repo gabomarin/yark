@@ -1,3 +1,4 @@
+const { serverCardByName } = require("./e2e-dom-hooks.cjs");
 /**
  * Downloads queue visual review per docs/visual-testing.md (#201).
  *
@@ -299,7 +300,7 @@ async function openServers(page) {
 
 async function replaceQueuedVerifyFromOverview(page, serverName) {
   await openServers(page);
-  const card = page.locator(`[data-server-card][data-server-name="${serverName}"]`);
+  const card = page.locator(serverCardByName(serverName));
   await card.waitFor({ state: "visible", timeout: 15_000 });
   await card.scrollIntoViewIfNeeded();
   const installBtn = card.getByRole("button", { name: "Install server files" });

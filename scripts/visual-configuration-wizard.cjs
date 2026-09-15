@@ -1,3 +1,4 @@
+const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
 /**
  * Configuration wizard chrome visual audit — docs/visual-testing.md (#224)
  * Usage: npm run build && node scripts/visual-configuration-wizard.cjs
@@ -144,7 +145,7 @@ async function returnToWizard(page) {
   if (await wizardBtn.isVisible().catch(() => false)) {
     await wizardBtn.click();
   } else {
-    await page.locator("[data-server-card]").first().getByRole("button", { name: /Open settings/i }).click();
+    await page.locator(SERVER_CARD).first().getByRole("button", { name: /Open settings/i }).click();
     await page.getByRole("button", { name: "Configuration wizard" }).click();
   }
   await page.locator("[data-configuration-wizard]").waitFor({ state: "visible", timeout: 15000 });

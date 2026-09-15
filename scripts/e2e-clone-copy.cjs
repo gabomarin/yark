@@ -1,3 +1,4 @@
+const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
 /**
  * Isolated E2E for Clone server (#160): INI seed vs full-folder copy.
  *
@@ -116,7 +117,7 @@ function seedDatabase(dbPath, fixtures) {
 }
 
 async function waitForCardByName(page, name, timeout = 15000) {
-  const card = page.locator("[data-server-card]", {
+  const card = page.locator(SERVER_CARD, {
     has: page.getByText(name, { exact: true }),
   });
   await card.first().waitFor({ state: "visible", timeout });

@@ -364,6 +364,36 @@ const YARK_OWNED_STEMS = new Set([
   "notransferfromfiltering",
 ]);
 
+/** `-port=N` — YARK-owned game port (#458). */
+export function yarkPortArg(gamePort: number): string {
+  return `-port=${gamePort}`;
+}
+
+/** `-WinLiveMaxPlayers=N` when slots &gt; 0. */
+export function yarkWinLiveMaxPlayersArg(maxPlayers: number): string {
+  return `-WinLiveMaxPlayers=${maxPlayers}`;
+}
+
+/** Default platform when neither structured nor raw supply `-ServerPlatform`. */
+export const YARK_DEFAULT_SERVER_PLATFORM_ARG = "-ServerPlatform=ALL";
+
+/** `-mods=a,b,c` for enabled CurseForge project IDs. */
+export function yarkModsArg(modIds: readonly string[]): string {
+  return `-mods=${modIds.join(",")}`;
+}
+
+/** Cluster trio when both id and dir are set. */
+export function yarkClusterArgs(
+  clusterId: string,
+  clusterDir: string,
+): string[] {
+  return [
+    `-clusterid=${clusterId}`,
+    `-ClusterDirOverride=${clusterDir}`,
+    "-NoTransferFromFiltering",
+  ];
+}
+
 /**
  * Case-insensitive conflicts across structured + raw (+ YARK-owned stems in raw).
  */

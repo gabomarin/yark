@@ -3,6 +3,7 @@ import { Broom, CloudArrowDown, FolderOpen } from "@phosphor-icons/react";
 import { Button, Group, Stack, Text, Title } from "@mantine/core";
 import type { SteamCmdCacheKind, SteamCmdStatus } from "@shared/types";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
+import { STEAMCMD_PATH_ATTR } from "../settingsTestIds";
 import classes from "../SettingsPage.module.css";
 
 interface Props {
@@ -44,7 +45,7 @@ export function SettingsSteamCmdSection(props: Props): ReactElement {
           className={classes.pathChip}
           value={executablePath}
           emptyLabel="No steamcmd.exe selected yet"
-          data-steamcmd-path
+          {...{ [STEAMCMD_PATH_ATTR]: true }}
         />
         <Group gap="xs" wrap="wrap" className={classes.pathActions}>
           <Button

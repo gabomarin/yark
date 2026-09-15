@@ -59,9 +59,9 @@
 .row {
   display: grid;
   grid-template-columns: minmax(180px, 1.1fr) minmax(200px, 1fr) minmax(240px, 1.4fr) 48px;
-  gap: 12px;
+  gap: var(--app-space-sm);
   align-items: center;
-  padding: 10px 14px;
+  padding: var(--app-space-xs) var(--app-space-sm);
   box-sizing: border-box;
   width: 100%;
   min-width: 720px;
@@ -123,12 +123,12 @@
 }
 
 .footer {
-  padding-top: 4px;
+  padding-top: var(--app-space-xxs);
 }
 
 .modRow {
-  padding: 10px 12px;
-  border: 1px solid var(--app-color-border-subtle);
+  padding: var(--app-space-xs) var(--app-space-sm);
+  border: 1px solid var(--app-color-border-subtle); /* hairline */
   border-radius: var(--app-radius-md);
   background: var(--app-color-surface-chrome);
 }

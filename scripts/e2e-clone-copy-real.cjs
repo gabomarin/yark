@@ -1,3 +1,4 @@
+const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
 /**
  * Real-host E2E (#160): SteamCMD install a disposable ASA server, then clone
  * profile/INI only and clone with full folder copy.
@@ -117,7 +118,7 @@ function assertContains(haystack, needle, label) {
 }
 
 async function waitForCardByName(page, name, timeout = 15000) {
-  const card = page.locator("[data-server-card]", {
+  const card = page.locator(SERVER_CARD, {
     has: page.getByText(name, { exact: true }),
   });
   await card.first().waitFor({ state: "visible", timeout });

@@ -8,6 +8,7 @@ import type { ChildProcess } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import type { SteamCmdCacheKind } from "../../../shared/types";
+import { ASA_APP_ID } from "../../../shared/asa-steam";
 import {
   DEFAULT_ROBOCOPY_THREADS,
   isOperationCancelledError,
@@ -22,7 +23,7 @@ import {
 /** Threads for robocopy — leave disk headroom so Electron stays responsive. */
 export const ASA_CONTENT_SYNC_ROBOCOPY_THREADS = DEFAULT_ROBOCOPY_THREADS;
 
-export const ASA_APP_ID = "2430930";
+export { ASA_APP_ID } from "../../../shared/asa-steam";
 
 /** Server folders that must not be overwritten when syncing from the cache. */
 const ASA_CONTENT_SYNC_EXCLUDE_DIRS = ["ShooterGame\\Saved"] as const;

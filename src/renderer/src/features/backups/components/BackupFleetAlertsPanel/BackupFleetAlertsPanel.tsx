@@ -3,6 +3,7 @@ import { Broom, Warning, WarningCircle } from "@phosphor-icons/react";
 import { Button, Group, Text, Tooltip } from "@mantine/core";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import type { BackupFleetAlert } from "@shared/types";
+import { BACKUP_ALERTS_LIST_ATTR } from "../../backupsTestIds";
 import classes from "./BackupFleetAlertsPanel.module.css";
 
 export interface OpenFailedBackupLogsArgs {
@@ -39,7 +40,7 @@ export function BackupFleetAlertsPanel(props: Props): ReactElement | null {
       data-backup-alerts-panel
       aria-label="Backup alerts"
     >
-      <ul className={classes.list} data-backup-alerts-list>
+      <ul className={classes.list} {...{ [BACKUP_ALERTS_LIST_ATTR]: true }}>
         {props.alerts.map((alert) => {
           const isFailed = alert.kind === "failed";
           const showLogs =
