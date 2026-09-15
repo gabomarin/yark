@@ -113,8 +113,12 @@ via `logs:runtime` (runtime buffer only — not a full `logs:list`). Stale respo
 after switching servers are ignored. A compact **Source** select filters
 All / System / Server log / Process. The viewer hides YARK capture timestamps;
 Server log lines show Unreal stamps interpreted as UTC and formatted locally.
-UI timestamps across Events / Runtime / Updates / Backups use `formatLogDateTime`
-(`YYYY-MM-DD HH:MM:SS`, with `.mmm` for Unreal stamps). Runtime tails
+Fleet Logs and workspace Events keep a severity badge on every row: **ERROR** /
+**WARNING** use attention color, **INFO** is a quiet gray chip. Event **When** uses English relative time for the
+last 24 hours (`12 minutes ago`) with the exact local stamp on hover
+(`formatWhenLabel` in `format-log-datetime.ts`). Runtime / Updates still use
+`formatLogDateTime` (`YYYY-MM-DD HH:MM:SS`, with `.mmm` for Unreal stamps);
+workspace Backups history shares the same relative When helper. Runtime tails
 `ShooterGame/Saved/Logs/ShooterGame.log` in both native-console and piped modes
 (truncate/rotation handling) and buffers partial lines/UTF-16 bytes. Native
 console still opens the OS window; it does not replace Runtime. The buffer is

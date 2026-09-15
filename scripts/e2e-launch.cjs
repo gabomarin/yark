@@ -263,7 +263,7 @@ async function pickPathField(app, page, ariaLabel, folderPath, options = {}) {
  * Open Settings and a category in the in-page sidebar (#298).
  * Do not click the shell Servers/Logs buttons — those labels collide.
  * @param {import('playwright').Page} page
- * @param {string} categoryLabel General | Servers | SteamCMD | Logs | About
+ * @param {string} categoryLabel General | Profiles | SteamCMD | Log files | About
  */
 async function openSettingsCategory(page, categoryLabel) {
   await page.getByRole("button", { name: "Settings", exact: true }).first().click();
@@ -388,6 +388,17 @@ async function removeFixtureDir(target) {
   throw lastError;
 }
 
+/**
+ * Open a workspace peer tab.
+ * @param {import("playwright").Page} page
+ * @param {string} name
+ */
+async function openWorkspaceTab(page, name) {
+  const tab = page.getByRole("tab", { name, exact: true });
+  await tab.waitFor({ state: "visible", timeout: 15000 });
+  await tab.click();
+}
+
 module.exports = {
   projectRoot,
   createE2eFixtureRoots,
@@ -400,6 +411,7 @@ module.exports = {
   stubFolderPicker,
   pickPathField,
   openSettingsCategory,
+  openWorkspaceTab,
   initProfileDatabase,
   removeFixtureDir,
 };

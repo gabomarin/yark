@@ -111,8 +111,12 @@ async function run() {
     const running = page.getByRole("button", { name: /^Running/ }).first();
     await running.focus();
     await page.keyboard.press("Enter");
+    // Restore All: Enter on Running filters to running-only and hides a new stopped server.
+    await page.keyboard.press("Enter");
 
-    await card.getByRole("button", { name: /Open settings for/ }).click();
+    const openSettings = card.getByRole("button", { name: /Open settings for/ });
+    await openSettings.waitFor({ state: "visible", timeout: 15000 });
+    await openSettings.click();
     const serverTab = page.getByRole("tab", { name: "Server", exact: true });
     await serverTab.waitFor({ state: "visible", timeout: 10000 });
     await serverTab.focus();

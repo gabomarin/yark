@@ -1,3 +1,4 @@
+import { formatMapDisplayName } from "@shared/map-identity";
 import type { ServerProfile } from "@shared/types";
 
 /** Filter overview server lists by name / map / cluster id (case-insensitive). */
@@ -10,9 +11,12 @@ export function filterOverviewServers(
     return servers;
   }
   return servers.filter((server) =>
-    [server.name, server.map, server.clusterId ?? ""].some((field) =>
-      field.toLowerCase().includes(query),
-    ),
+    [
+      server.name,
+      server.map,
+      formatMapDisplayName(server.map),
+      server.clusterId ?? "",
+    ].some((field) => field.toLowerCase().includes(query)),
   );
 }
 

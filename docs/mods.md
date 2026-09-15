@@ -92,6 +92,9 @@ Workspace → **Mods** has two views (`SegmentedControl`):
 5. Add resolves the row through `mods:get-by-reference`, then persists. New IDs
    start disabled (same toast as Add by URL).
 
+A dismissible **Project ID vs Discover** hint explains that Discover is search
+and Add by ID is paste — operators can close it for this PC.
+
 ### Add by Project ID / URL
 
 Comma-separated Project IDs and/or ASA CurseForge mod URLs

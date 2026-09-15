@@ -56,7 +56,7 @@ describe("BackupHistoryTable", () => {
     expect(screen.getByRole("button", { name: /File/i })).toBeTruthy();
     expect(screen.getByRole("button", { name: /Map/i })).toBeTruthy();
     expect(screen.getByRole("button", { name: /Date/i })).toBeTruthy();
-    expect(screen.getByText("TheIsland_WP")).toBeTruthy();
+    expect(screen.getByText("The Island")).toBeTruthy();
 
     const row = document.querySelector("[data-backup-row]");
     expect(row).not.toBeNull();

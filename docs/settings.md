@@ -11,9 +11,11 @@ the Server tab / workspace.
   the profile that owns them; Settings only summarizes where helpful.
 - Persist durable prefs in SQLite `app_settings`; keep a few create-flow
   conveniences in renderer `localStorage`.
-- Category rail (General, Servers, SteamCMD, Logs, About) — one pane at a
-  time, like a native desktop settings window. Sidebar YARK-update icon
-  opens **About**.
+- Category rail (General, Profiles, SteamCMD, Log files, About) — one pane at a
+  time, like a native desktop settings window. The last category is remembered
+  on this PC. The selected category uses the same rounded pill + left accent
+  notch as the app sidebar (`navSelectedClassName`). Sidebar YARK-update icon opens **About**; Downloads missing-SteamCMD
+  opens **SteamCMD**. Closing the setup assistant returns to **General**.
 
 ## Module map
 
@@ -22,7 +24,7 @@ the Server tab / workspace.
 | Page shell | `src/renderer/src/features/settings/SettingsPage.tsx` |
 | Category rail | `…/components/SettingsNav.tsx` (`SETTINGS_CATEGORIES`) |
 | General | `…/components/SettingsGeneralSection.tsx` |
-| Servers (console, base folder) | `…/components/SettingsServersSection.tsx` |
+| Profiles (console, base folder) | `…/components/SettingsServersSection.tsx` |
 | Auto-start summary | `…/components/SettingsAutoStartSection.tsx` |
 | SteamCMD | `…/components/SettingsSteamCmdSection.tsx` |
 | Log retention | `…/components/SettingsLogRetentionSection.tsx` |
@@ -74,7 +76,7 @@ the Server tab / workspace.
 | Window size / position | SQLite `windowState` | **maximized** | Remembers last bounds + maximized; off-screen → maximize again |
 | Open setup assistant | SQLite `onboarding.v1` | unset until skip/complete | Empty fleet reopens the full wizard; otherwise Paths + Windows only. Does not reset SteamCMD (#298) |
 
-### Servers
+### Profiles
 
 | Control | Storage | Default | Notes |
 | --- | --- | --- | --- |

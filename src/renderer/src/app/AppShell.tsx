@@ -41,6 +41,7 @@ import {
   readDefaultBaseFolderPref,
   writeDefaultBaseFolderPref,
   writeOpenNativeConsolePref,
+  writeSettingsCategoryPref,
   writeUiDensityPref,
   type UiDensity,
 } from "@features/settings/settingsModel";
@@ -103,6 +104,8 @@ export function AppShell({
   const [importInstallOpen, setImportInstallOpen] = useState(false);
   /** Remount Import wizard on each open so step/probe state resets without adjust-on-prop effects. */
   const [importWizardKey, setImportWizardKey] = useState(0);
+  /** Lives here so Overview search survives sidebar unmounts; cleared after create/clone/import. */
+  const [overviewSearch, setOverviewSearch] = useState("");
   const [deleteServerId, setDeleteServerId] = useState<string | null>(null);
   /** Dirty-leave guard registered by the active workspace or form overlay. */
   const overlayLeaveGuardRef = useRef<((action: () => void) => void) | null>(null);
@@ -125,6 +128,11 @@ export function AppShell({
   const [appUpdateStatus, setAppUpdateStatus] = useState<AppUpdateStatus | null>(null);
   const [focusYarkUpdates, setFocusYarkUpdates] = useState(false);
   const [focusSteamCmd, setFocusSteamCmd] = useState(false);
+  const [settingsLandOnGeneralToken, setSettingsLandOnGeneralToken] = useState(0);
+  const landSettingsOnGeneral = useCallback(() => {
+    writeSettingsCategoryPref("general");
+    setSettingsLandOnGeneralToken((token) => token + 1);
+  }, []);
   const desktopShell = useDesktopShellPreferences();
   const {
     changelogOpen,
@@ -415,6 +423,7 @@ export function AppShell({
     <AppProviders density={uiDensity}>
       <AppSpotlight
         servers={servers}
+        currentRoute={route}
         onNavigate={navigate}
         onOpenServer={openServerFromSpotlight}
       />
@@ -445,24 +454,34 @@ export function AppShell({
         }
         onSkip={async () => {
           await finishSetupWizard("skipped", null);
+          landSettingsOnGeneral();
         }}
-        onDismiss={closeSetupWizard}
-        onPathsShellDone={closeSetupWizard}
+        onDismiss={() => {
+          closeSetupWizard();
+          landSettingsOnGeneral();
+        }}
+        onPathsShellDone={() => {
+          closeSetupWizard();
+          landSettingsOnGeneral();
+        }}
         onCreateServer={async (cluster) => {
           if (!(await finishSetupWizard("completed", cluster))) {
             return;
           }
+          landSettingsOnGeneral();
           setOverlay({ kind: "create" });
         }}
         onImport={async (cluster) => {
           if (!(await finishSetupWizard("completed", cluster))) {
             return;
           }
+          landSettingsOnGeneral();
           setImportWizardKey((key) => key + 1);
           setImportInstallOpen(true);
         }}
         onExplore={async (cluster) => {
           await finishSetupWizard("completed", cluster);
+          landSettingsOnGeneral();
         }}
       />
       <AppMainRouter
@@ -531,6 +550,8 @@ export function AppShell({
           setImportInstallOpen,
           installScan,
           runInstallHealthScan,
+          search: overviewSearch,
+          setSearch: setOverviewSearch,
         }}
         settings={{
           focusYarkUpdates,
@@ -546,6 +567,7 @@ export function AppShell({
           extraClusterOptions,
           desktopShell,
           onRunSetupAgain,
+          landOnGeneralToken: settingsLandOnGeneralToken,
         }}
         chrome={{
           officialVersion,
@@ -577,14 +599,16 @@ export function AppShell({
             : null
         }
         onClose={() => setOverlay(null)}
-        onClone={async (params) =>
-          runAction(() =>
+        onClone={async (params) => {
+          const ok = await runAction(() =>
             window.api.cloneServerWithParams(
               overlay?.kind === "clone" ? overlay.sourceServerId : "",
               params,
             ),
-          )
-        }
+          );
+          if (ok) setOverviewSearch("");
+          return ok;
+        }}
       />
       <DeleteServerModal
         key={deleteServerId ?? "closed"}
@@ -657,6 +681,7 @@ export function AppShell({
         onImported={(profile) => {
           consumePendingSetupCluster();
           setImportInstallOpen(false);
+          setOverviewSearch("");
           // Skip first-steps onboarding — imported installs already have INI/world (#254).
           setOverlay({
             kind: "workspace",

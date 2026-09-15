@@ -110,7 +110,7 @@ describe("setupWizardModel", () => {
     ).toEqual({
       clusterDir: "",
       dirAutoSuggested: false,
-      markDirTouched: true,
+      markDirTouched: false,
     });
     expect(
       syncAutoSuggestedClusterDir({

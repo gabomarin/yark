@@ -42,6 +42,7 @@ const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
 const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
+const { openWorkspaceTab } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -836,7 +837,7 @@ async function run() {
         await page.waitForLoadState("domcontentloaded");
         await page.setViewportSize(VIEWPORT);
         await openWorkspaceByName(page, DEMO_SERVER);
-        await page.getByRole("tab", { name: "Ark Server API" }).click();
+        await openWorkspaceTab(page, "Ark Server API");
         await page.locator("[data-asa-api-panel]").waitFor({
           state: "visible",
           timeout: 10000,
@@ -1001,12 +1002,12 @@ async function run() {
       await dismissNotifications(page);
       await shot(page, path.join(outDir, "workspace-mods.png"));
 
-      await page.getByRole("tab", { name: "Backups" }).click();
+      await openWorkspaceTab(page, "Backups");
       await settle(page, 800);
       await dismissNotifications(page);
       await shot(page, path.join(outDir, "workspace-backups.png"));
 
-      await page.getByRole("tab", { name: "Maintenance" }).click();
+      await openWorkspaceTab(page, "Maintenance");
       await page.locator("[data-maintenance-panel]").waitFor({
         state: "visible",
         timeout: 10000,
@@ -1033,7 +1034,7 @@ async function run() {
       await dismissNotifications(page);
       await shot(page, path.join(outDir, "workspace-maintenance.png"));
 
-      await page.getByRole("tab", { name: "Ark Server API" }).click();
+      await openWorkspaceTab(page, "Ark Server API");
       await page.locator("[data-asa-api-panel]").waitFor({
         state: "visible",
         timeout: 10000,

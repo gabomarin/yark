@@ -60,11 +60,13 @@ function DiskFreeCard(props: {
   const hint =
     props.summary.disks.length > 1
       ? disk != null
-        ? `Tightest: ${disk.volumePath} · ${props.summary.disks.length} volumes`
-        : `${props.summary.disks.length} volumes`
+        ? `Windows volume · Tightest: ${disk.volumePath} · ${props.summary.disks.length} volumes`
+        : `Windows volume · ${props.summary.disks.length} volumes`
       : disk?.usedPercent != null
-        ? `${disk.volumePath} · ${disk.usedPercent.toFixed(0)}% used`
-        : disk?.volumePath;
+        ? `Windows volume · ${disk.volumePath} · ${disk.usedPercent.toFixed(0)}% used`
+        : disk?.volumePath != null
+          ? `Windows volume · ${disk.volumePath}`
+          : "Windows volume";
 
   return (
     <AppMetricCard

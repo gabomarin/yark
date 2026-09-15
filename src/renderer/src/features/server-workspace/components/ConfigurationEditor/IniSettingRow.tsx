@@ -14,6 +14,7 @@ import {
   lookupSettingDescription,
   resolveControlKind,
   sectionShortName,
+  humanizeIniKey,
   type IniSettingReference,
 } from "../../iniModel";
 import { numberInputValueFromIni } from "../../iniNumberInput";
@@ -52,8 +53,10 @@ export function IniSettingRow(props: Props): ReactElement {
   });
   const defaultValue = lookupDefaultValue(row.fileKey, row.section, row.key);
   const canResetDefault = defaultValue !== null && defaultValue !== row.value;
-  const label =
+  const keyLabel =
     row.duplicateCount > 1 ? `${row.key} #${row.occurrence + 1}` : row.key;
+  const humanLabel = humanizeIniKey(row.key);
+  const label = humanLabel.length > 0 && humanLabel !== row.key ? humanLabel : keyLabel;
   const adminListUrl = isAdminListUrlRow(row);
 
   return (
@@ -63,7 +66,7 @@ export function IniSettingRow(props: Props): ReactElement {
           {label}
         </Text>
         <Text c="dimmed" size="xs">
-          {sectionShortName(row.section)}
+          {keyLabel === label ? sectionShortName(row.section) : `${keyLabel} · ${sectionShortName(row.section)}`}
           {row.duplicateCount > 1
             ? ` · ${row.occurrence + 1}/${row.duplicateCount}`
             : ""}

@@ -12,6 +12,7 @@ import {
   pruneSelectedServerIds,
   resolveSelectedCandidates,
   sharedPrefillClusterDir,
+  listKnownClusterIds,
   suggestClusterId,
   serverProfileToInput,
   toggleSelectedServerId,
@@ -45,7 +46,9 @@ export function CreateClusterModal(props: Props): ReactElement {
   const [selectedIds, setSelectedIds] = useState(() =>
     initialSelectedIds(props.servers, props.statuses),
   );
-  const [clusterId, setClusterId] = useState(() => suggestClusterId());
+  const [clusterId, setClusterId] = useState(() =>
+    suggestClusterId(listKnownClusterIds(props.servers)),
+  );
   const [clusterDir, setClusterDir] = useState("");
   const [idTouched, setIdTouched] = useState(false);
   const [dirTouched, setDirTouched] = useState(false);
@@ -240,7 +243,9 @@ export function CreateClusterModal(props: Props): ReactElement {
               setIdTouched(true);
             }}
             onGenerateId={() => {
-              setClusterId(suggestClusterId());
+              setClusterId(
+                suggestClusterId([...listKnownClusterIds(props.servers), clusterId]),
+              );
               setIdTouched(true);
             }}
             onClusterDirChange={(value) => {

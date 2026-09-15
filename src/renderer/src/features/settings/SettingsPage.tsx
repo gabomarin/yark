@@ -14,7 +14,12 @@ import { SettingsNav } from "./components/SettingsNav";
 import { SettingsServersSection } from "./components/SettingsServersSection";
 import { SettingsSteamCmdSection } from "./components/SettingsSteamCmdSection";
 import { SettingsYarkUpdateSection } from "./components/SettingsYarkUpdateSection";
-import type { SettingsCategory, UiDensity } from "./settingsModel";
+import {
+  readSettingsCategoryPref,
+  writeSettingsCategoryPref,
+  type SettingsCategory,
+  type UiDensity,
+} from "./settingsModel";
 import type { DesktopShellPreferencesController } from "./hooks/useDesktopShellPreferences";
 import classes from "./SettingsPage.module.css";
 
@@ -43,19 +48,46 @@ interface Props {
   steamCmdBusy?: boolean;
   onRunSetupAgain?: () => void;
   desktopShell: DesktopShellPreferencesController;
+  /**
+   * Bumped when the setup wizard closes so Settings returns to General
+   * (unless a SteamCMD / About deep link is active).
+   */
+  landOnGeneralToken?: number;
 }
 
 export function SettingsPage(props: Props): ReactElement {
-  const { focusYarkUpdates, onYarkUpdatesFocused, focusSteamCmd, onSteamCmdFocused } = props;
+  const {
+    focusYarkUpdates,
+    onYarkUpdatesFocused,
+    focusSteamCmd,
+    onSteamCmdFocused,
+    landOnGeneralToken = 0,
+  } = props;
   const desktopShell = props.desktopShell;
   const [category, setCategory] = useState<SettingsCategory>(() =>
     props.focusYarkUpdates === true
       ? "about"
       : props.focusSteamCmd === true
         ? "steamcmd"
-        : "general",
+        : (readSettingsCategoryPref() ?? "general"),
   );
   const panelScrollRef = useRef<HTMLDivElement>(null);
+  const seenLandOnGeneralToken = useRef(landOnGeneralToken);
+
+  useEffect(() => {
+    writeSettingsCategoryPref(category);
+  }, [category]);
+
+  useEffect(() => {
+    if (landOnGeneralToken === seenLandOnGeneralToken.current) {
+      return;
+    }
+    seenLandOnGeneralToken.current = landOnGeneralToken;
+    if (focusYarkUpdates === true || focusSteamCmd === true) {
+      return;
+    }
+    setCategory("general");
+  }, [landOnGeneralToken, focusYarkUpdates, focusSteamCmd]);
 
   useEffect(() => {
     if (focusYarkUpdates !== true) {

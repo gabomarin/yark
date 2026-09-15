@@ -8,6 +8,7 @@ import type {
 } from "@shared/types";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
+import { formatMapDisplayName } from "@shared/map-identity";
 import { MetaStrip } from "./MetaStrip/MetaStrip";
 import { formatCheckedAt, sharedClusterDir } from "../clusterModel";
 import { resolveServerRuntime } from "../createClusterModel";
@@ -163,6 +164,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
                   value={sharedDir}
                   emptyLabel="Not the same on every server"
                   compact
+                  truncate="start"
                 />
               ),
             },
@@ -183,7 +185,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
             <Button
               size="compact-xs"
               color="red"
-              variant="filled"
+              variant="subtle"
               disabled={
                 !memberStatuses.some((entry) => entry.canRemove)
               }
@@ -219,11 +221,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
                     hasTemplate={hasTemplate}
                     canTemplateApply={canTemplateApply}
                     templateApplyReason={templateApplyReason}
-                    subtitle={`${server.map}${
-                      server.clusterDir !== null
-                        ? ` · ${server.clusterDir}`
-                        : " · no cluster directory"
-                    }`}
+                    subtitle={formatMapDisplayName(server.map)}
                     onOpen={props.onOpenServer}
                     onRemove={(serverId) => {
                       setRemoveInitialIds([serverId]);

@@ -10,6 +10,8 @@ type Props = {
   mutedWhenEmpty?: boolean;
   /** Tighter padding for nested rows (caches, dialogs). */
   compact?: boolean;
+  /** Ellipsis the start of long paths so the leaf folder stays visible. */
+  truncate?: "start";
   className?: string;
 } & Omit<HTMLAttributes<HTMLDivElement>, "children" | "className">;
 
@@ -18,6 +20,7 @@ export function ReadonlyPath({
   emptyLabel = "Not set",
   mutedWhenEmpty = true,
   compact = false,
+  truncate,
   className,
   title,
   ...rest
@@ -26,6 +29,7 @@ export function ReadonlyPath({
   const empty = trimmed.length === 0;
   const display = empty ? emptyLabel : trimmed;
   const muted = empty && mutedWhenEmpty;
+  const truncateStart = truncate === "start" && !empty;
 
   return (
     <div
@@ -36,13 +40,18 @@ export function ReadonlyPath({
         classes.root,
         compact ? classes.compact : null,
         muted ? classes.muted : null,
+        truncateStart ? classes.truncateStart : null,
         className ?? null,
       ]
         .filter((part): part is string => typeof part === "string" && part.length > 0)
         .join(" ")}
       title={title ?? (empty ? undefined : trimmed)}
     >
-      {display}
+      {truncateStart ? (
+        <span className={classes.truncateStartInner}>{display}</span>
+      ) : (
+        display
+      )}
     </div>
   );
 }

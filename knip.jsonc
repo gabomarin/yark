@@ -15,6 +15,7 @@
   "ignore": [
     "website/**",
     "workers/**",
+    "electron-mcp-server/**",
     // One-shot icon rebuild (brand/README.md); optional sharp / png-to-ico.
     "brand/_build-icons.cjs"
   ],

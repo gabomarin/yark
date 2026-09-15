@@ -61,7 +61,13 @@ export function DownloadRowButton(props: {
         </span>
         <span className={classes.rowProgressCol}>
           {row.percent !== null ? (
-            <Progress value={row.percent} size="sm" radius="xl" striped animated />
+            <Progress
+              value={row.percent}
+              size={row.kind === "active" || row.kind === "interrupted" ? "md" : "sm"}
+              radius="xl"
+              striped
+              animated={row.kind === "active"}
+            />
           ) : null}
         </span>
         <span className={classes.rowPercent}>

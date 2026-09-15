@@ -7,6 +7,7 @@ import {
   Info,
 } from "@phosphor-icons/react";
 import { NavLink, Stack } from "@mantine/core";
+import { navSelectedClassName } from "@ui/NavSelected/navSelectedClassName";
 import {
   SETTINGS_CATEGORIES,
   type SettingsCategory,
@@ -45,7 +46,7 @@ export function SettingsNav(props: Props): ReactElement {
               label={item.label}
               aria-label={item.label}
               leftSection={<Icon size={16} weight={active ? "fill" : "regular"} />}
-              className={classes.navLink}
+              className={navSelectedClassName(classes.navLink)}
               onClick={() => props.onChange(item.id)}
             />
           );

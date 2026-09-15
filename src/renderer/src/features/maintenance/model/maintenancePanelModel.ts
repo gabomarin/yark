@@ -197,7 +197,7 @@ function formatJobWarningsHint(warnings: MaintenanceJobWarnings): string | null 
 }
 
 export function formatUpdateSummary(policy: MaintenancePolicyStatus): string {
-  if (!policy.updateEnabled) return "Off";
+  if (!policy.updateEnabled) return "Not scheduled";
   const { preset } = policy.updateWarnings;
   if (preset === "none") {
     return `No warnings · ${AUTO_UPDATE_TRIGGER_COPY}`;

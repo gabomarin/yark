@@ -71,7 +71,7 @@ export function ClustersPage(props: Props): ReactElement {
       }
     >
       <Stack gap="md" className={classes.content} data-clusters-page>
-        <ClusterGuidanceCard defaultOpen={sortedReports.length === 0} />
+        <ClusterGuidanceCard />
         <ClusterSummaryBadges
           clusterCount={sortedReports.length}
           readyCount={sortedReports.length - errorCount}
@@ -79,6 +79,13 @@ export function ClustersPage(props: Props): ReactElement {
           warningOnlyCount={warningOnlyCount}
           unclusteredCount={unclusteredCount}
           dirWithoutIdCount={dirWithoutIdServers.length}
+          onUnclusteredClick={() => {
+            if (sortedReports.length > 0) {
+              setSelectedClusterId(sortedReports[0]!.clusterId);
+              return;
+            }
+            setCreateOpen(true);
+          }}
         />
 
         {sortedReports.length === 0 ? (

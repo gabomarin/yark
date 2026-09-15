@@ -87,6 +87,46 @@ describe("ServerCard", () => {
 
     await user.click(screen.getByRole("button", { name: /Open settings for The Island/i }));
     expect(onOpenWorkspace).toHaveBeenCalledTimes(1);
+    expect(document.querySelector("[data-open-settings]")).toBeTruthy();
+    expect(document.querySelector('[data-meta-label="Map"]')).toHaveTextContent("The Island");
+  });
+
+  it("opens workspace when Enter is pressed on the card, not on row actions", async () => {
+    const user = userEvent.setup();
+    const onOpenWorkspace = vi.fn();
+    const onStart = vi.fn();
+
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={installed}
+          officialSteamBuild={null}
+          onStart={onStart}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={onOpenWorkspace}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+          onDelete={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    const card = screen.getByLabelText("Server The Island");
+    card.focus();
+    await user.keyboard("{Enter}");
+    expect(onOpenWorkspace).toHaveBeenCalledTimes(1);
+    expect(onStart).not.toHaveBeenCalled();
   });
 
   it("shows an inactive badge and enable action for a disabled profile", async () => {

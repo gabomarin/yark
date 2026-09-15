@@ -9,6 +9,7 @@ import {
   listCreateClusterCandidates,
   pruneSelectedServerIds,
   sharedPrefillClusterDir,
+  listKnownClusterIds,
   suggestClusterId,
   toggleSelectedServerId,
 } from "@features/clusters/createClusterModel";
@@ -197,12 +198,14 @@ describe("createClusterModel", () => {
     expect(input.name).toBe("Island");
   });
 
-  it("suggests a unique cluster id", () => {
-    const a = suggestClusterId();
-    const b = suggestClusterId();
-    expect(a.length).toBeGreaterThan(8);
-    expect(b.length).toBeGreaterThan(8);
-    expect(a).not.toBe(b);
+  it("suggests yark-cluster-1, then yark-cluster-2 when that slug is taken", () => {
+    expect(suggestClusterId()).toBe("yark-cluster-1");
+    expect(suggestClusterId(["yark-cluster-1"])).toBe("yark-cluster-2");
+    expect(suggestClusterId(["YARK-CLUSTER-1", "yark-cluster-2"])).toBe("yark-cluster-3");
+    expect(listKnownClusterIds([
+      makeServer({ id: "a", name: "A", clusterId: "ember" }),
+      makeServer({ id: "b", name: "B", clusterId: null }),
+    ])).toEqual(["ember"]);
   });
 });
 

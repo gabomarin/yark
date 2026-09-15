@@ -89,6 +89,42 @@ describe("LogsPage", () => {
     );
   });
 
+  it("keeps a gray info badge so the message stays in the last column", async () => {
+    vi.mocked(window.api.recentEvents).mockResolvedValue({
+      ok: true,
+      data: [
+        {
+          id: 1,
+          serverId: server.id,
+          type: "server_started",
+          severity: "info",
+          message:
+            "Server started after a long SteamCMD verify and file copy finished",
+          createdAt: new Date().toISOString(),
+          details: null,
+        },
+      ],
+    });
+
+    render(
+      <AppProviders>
+        <LogsPage servers={[server]} onOpenServerLogs={vi.fn()} />
+      </AppProviders>,
+    );
+
+    expect(
+      await screen.findByText(
+        /Server started after a long SteamCMD verify and file copy finished/i,
+      ),
+    ).toBeInTheDocument();
+    const row = document.querySelector("[data-fleet-row]");
+    expect(row?.children).toHaveLength(4);
+    expect(row?.querySelector("[data-fleet-severity]")).toBeTruthy();
+    expect(row?.querySelector("[data-fleet-severity]")?.textContent?.trim()).toBe(
+      "info",
+    );
+  });
+
   it("labels activity from a disabled server as inactive", async () => {
     render(
       <AppProviders>

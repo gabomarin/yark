@@ -153,7 +153,7 @@ describe("maintenancePanelModel", () => {
         }),
       ),
     ).toBe("Your warning times · when a new Ark server version is available");
-    expect(formatUpdateSummary(status())).toBe("Off");
+    expect(formatUpdateSummary(status())).toBe("Not scheduled");
   });
 
   it("policy write omits runtime status fields", () => {

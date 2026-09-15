@@ -84,7 +84,7 @@ describe("AppSpotlight", () => {
 
     spotlight.open();
     expect(
-      await screen.findByPlaceholderText("Jump to page or server…"),
+      await screen.findByPlaceholderText("Jump to page or server (Ctrl+K)…"),
     ).toBeInTheDocument();
 
     const settings = screen.getByRole("button", { name: /Settings/i });

@@ -202,6 +202,8 @@ describe("ServerLogsPanel", () => {
     );
 
     expect(await screen.findByText("Something broke")).toBeInTheDocument();
+    expect(screen.getByText("error")).toBeInTheDocument();
+    expect(screen.getByText("info")).toBeInTheDocument();
     const control = document.querySelector('[data-log-event-id="42"]');
     expect(control).toBeTruthy();
     expect(control?.closest("[class*='eventRowFocused']")).toBeTruthy();
