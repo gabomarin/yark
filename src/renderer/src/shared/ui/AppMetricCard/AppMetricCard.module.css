@@ -31,6 +31,22 @@
   color: var(--mantine-color-yellow-4);
 }
 
+.root[data-zero]:not([data-active]) {
+  border-color: var(--app-color-border);
+}
+
+.root[data-zero]:not([data-active]) .label,
+.root[data-zero]:not([data-active]) .value {
+  color: var(--app-color-muted);
+}
+
+.root[data-tone="warning"][data-zero]:not([data-active]) .label,
+.root[data-tone="warning"][data-zero]:not([data-active]) .value,
+.root[data-tone="danger"][data-zero]:not([data-active]) .label,
+.root[data-tone="danger"][data-zero]:not([data-active]) .value {
+  color: var(--app-color-muted);
+}
+
 .root[data-tone="danger"] .label,
 .root[data-tone="danger"] .value {
   color: var(--mantine-color-red-4);
@@ -98,6 +114,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--app-space-xs);
+  font-family: var(--app-font-display);
   font-size: 11px;
   line-height: 1.2;
   letter-spacing: 0.04em;

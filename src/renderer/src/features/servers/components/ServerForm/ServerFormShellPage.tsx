@@ -1,6 +1,6 @@
 import type { ReactElement, ReactNode } from "react";
 import { ArrowLeft } from "@phosphor-icons/react";
-import { Button, Group, Stack, Text } from "@mantine/core";
+import { Button, Group, Stack, Text, Tooltip } from "@mantine/core";
 import classes from "./ServerForm.module.css";
 
 interface Props {
@@ -9,6 +9,8 @@ interface Props {
   submitLabel: string;
   submitSize: "xs" | "sm";
   saving: boolean;
+  submitDisabled?: boolean;
+  submitDisabledReason?: string;
   onSubmit: () => void;
   onCancel: () => void;
   children: ReactNode;
@@ -43,13 +45,24 @@ export function ServerFormShellPage(props: Props): ReactElement {
           >
             Back
           </Button>
-          <Button
-            size={props.submitSize}
-            onClick={props.onSubmit}
-            loading={props.saving}
+          <Tooltip
+            label={props.submitDisabledReason}
+            disabled={
+              props.submitDisabled !== true ||
+              props.submitDisabledReason === undefined
+            }
           >
-            {props.submitLabel}
-          </Button>
+            <span>
+              <Button
+                size={props.submitSize}
+                onClick={props.onSubmit}
+                loading={props.saving}
+                disabled={props.submitDisabled === true}
+              >
+                {props.submitLabel}
+              </Button>
+            </span>
+          </Tooltip>
         </Group>
       </footer>
     </div>

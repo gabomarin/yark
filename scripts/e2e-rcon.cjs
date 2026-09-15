@@ -21,6 +21,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
+const { openWorkspaceTab } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -158,11 +159,7 @@ async function openRconTab(page) {
   await card
     .getByRole("button", { name: new RegExp(`Open settings for ${serverName}`, "i") })
     .click();
-  await page.getByRole("tab", { name: "RCON" }).waitFor({
-    state: "visible",
-    timeout: 15_000,
-  });
-  await page.getByRole("tab", { name: "RCON" }).click();
+  await openWorkspaceTab(page, "RCON");
   await page.getByText(/Admin commands for the active server/i).waitFor({
     state: "visible",
     timeout: 10_000,

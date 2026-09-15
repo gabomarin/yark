@@ -52,6 +52,14 @@ describe("overviewServerFilter", () => {
       server({ id: "2", name: "Scorched", map: "ScorchedEarth_WP", clusterId: null }),
     ];
     expect(filterOverviewServers(servers, "island").map((s) => s.id)).toEqual(["1"]);
+    expect(filterOverviewServers(servers, "the island").map((s) => s.id)).toEqual(["1"]);
+    expect(
+      filterOverviewServers(
+        [server({ id: "3", name: "Alpha", map: "TheIsland_WP", clusterId: null })],
+        "the island",
+      ).map((s) => s.id),
+    ).toEqual(["3"]);
+    expect(filterOverviewServers(servers, "scorched earth").map((s) => s.id)).toEqual(["2"]);
     expect(filterOverviewServers(servers, "scorched").map((s) => s.id)).toEqual(["2"]);
     expect(filterOverviewServers(servers, "alpha").map((s) => s.id)).toEqual(["1"]);
     expect(filterOverviewServers(servers, "  ").map((s) => s.id)).toEqual(["1", "2"]);

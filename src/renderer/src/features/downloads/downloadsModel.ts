@@ -9,7 +9,7 @@ import type {
   ServerProfile,
   SteamCmdStatus,
 } from "@shared/types";
-import { formatDownloadPhase } from "./downloadsCopy";
+import { downloadRowMeta, formatDownloadPhase } from "./downloadsCopy";
 import {
   FILES_QUEUE_OPERATIONS,
   isOperatorVisibleCriticalJob,
@@ -261,6 +261,8 @@ export function findDownloadRow(
   return rows.find((row) => row.id === selectedId) ?? null;
 }
 
+export const DOWNLOAD_CONSOLE_WAITING = "Waiting for progress…";
+
 /** SteamCMD console text for the Downloads lower pane — active or paused job output; cleared on resume. */
 export function downloadConsoleBody(
   rows: DownloadRow[],
@@ -276,9 +278,43 @@ export function downloadConsoleBody(
     return "";
   }
   if (lines.length === 0) {
-    return "Waiting for progress…";
+    return DOWNLOAD_CONSOLE_WAITING;
   }
   return lines.slice(-120).join("\n");
+}
+
+export function downloadStatusLine(
+  row: DownloadRow | null,
+  waitingForProgress = false,
+): string {
+  if (row === null) return "SteamCMD log";
+  const parts = [downloadRowMeta(row)];
+  if (row.percent !== null) {
+    parts.push(`${row.percent.toFixed(0)}%`);
+    return parts.join(" · ");
+  }
+  if (waitingForProgress) {
+    parts.push(DOWNLOAD_CONSOLE_WAITING);
+  }
+  return parts.join(" · ");
+}
+
+export function advancedLogAttentionIds(rows: readonly DownloadRow[]): string[] {
+  return rows
+    .filter((row) => row.kind === "attention" || row.kind === "interrupted")
+    .map((row) => row.id);
+}
+
+/** True when an attention/interrupted job has not been auto-opened yet this session. */
+export function shouldAutoExpandAdvancedLog(
+  rows: readonly DownloadRow[],
+  alreadyOpenedFor: readonly string[] = [],
+): boolean {
+  const seen = new Set(alreadyOpenedFor);
+  return rows.some(
+    (row) =>
+      (row.kind === "attention" || row.kind === "interrupted") && !seen.has(row.id),
+  );
 }
 
 /** Detail hint for a queued files job — reflects queue order, not only the live row. */

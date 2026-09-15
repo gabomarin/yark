@@ -1,16 +1,24 @@
-import { Badge, Stack, Text, Tooltip } from "@mantine/core";
+import { Stack, Text, Tooltip } from "@mantine/core";
+import { StatusWord } from "@ui/StatusWord/StatusWord";
 import type { DataTableColumn } from "mantine-datatable";
 import { backupFinishedAt, parsePlayerKeyFromNotes, playerBackupDisplayName } from "@shared/backup-player-meta";
+import { formatMapDisplayName } from "@shared/map-identity";
 import type { BackupKind, BackupRecord } from "@shared/types";
 import { BackupHistoryRowActions } from "./BackupHistoryRowActions";
 import { archiveFileName } from "./backupHistorySort";
-import { formatBackupWhenLabel } from "./model/serverBackupPanelModel";
+import {
+  formatBackupHistoryTitle,
+  formatBackupTypeLabel,
+  formatBackupWhenLabel,
+} from "./model/serverBackupPanelModel";
 import classes from "./BackupsPage.module.css";
 
-function statusColor(status: BackupRecord["status"]): string {
-  if (status === "completed") return "green";
-  if (status === "failed") return "red";
-  return "yellow";
+function statusTone(
+  status: BackupRecord["status"],
+): "ok" | "warn" | "danger" {
+  if (status === "completed") return "ok";
+  if (status === "failed") return "danger";
+  return "warn";
 }
 
 export interface BackupHistoryColumnInput {
@@ -47,9 +55,11 @@ export function buildBackupHistoryTableColumns(
           resizable: true,
           render: (backup) =>
             backup.mapToken !== null ? (
-              <Badge size="xs" variant="light" color="blue" data-backup-map-token>
-                {backup.mapToken}
-              </Badge>
+              <Tooltip label={backup.mapToken} withArrow>
+                <Text size="xs" fw={600} data-backup-map-token title={backup.mapToken}>
+                  {formatMapDisplayName(backup.mapToken)}
+                </Text>
+              </Tooltip>
             ) : (
               <Text size="xs" c="dimmed">
                 –
@@ -98,6 +108,15 @@ export function buildBackupHistoryTableColumns(
         return (
           <Stack gap={2}>
             <Text
+              fw={600}
+              size="sm"
+              className={classes.backupTitle}
+              title={backup.path}
+              data-backup-title
+            >
+              {formatBackupHistoryTitle(backup)}
+            </Text>
+            <Text
               size="xs"
               c="dimmed"
               className={classes.backupFileName}
@@ -106,16 +125,6 @@ export function buildBackupHistoryTableColumns(
             >
               {archiveFileName(backup.path)}
             </Text>
-            {backup.notes !== null && backup.notes.length > 0 ? (
-              <Text
-                size="xs"
-                c="dimmed"
-                className={classes.backupNotes}
-                title={backup.notes}
-              >
-                {backup.notes}
-              </Text>
-            ) : null}
           </Stack>
         );
       },
@@ -136,7 +145,6 @@ export function buildBackupHistoryTableColumns(
               fw={600}
               size="sm"
               data-backup-date
-              {...(!isPlayersTab ? { "data-backup-title": true } : {})}
               className={classes.backupTitle}
             >
               {primary}
@@ -165,9 +173,9 @@ export function buildBackupHistoryTableColumns(
       sortable: true,
       resizable: true,
       render: (backup) => (
-        <Badge size="xs" color={statusColor(backup.status)} variant="light">
+        <StatusWord tone={statusTone(backup.status)}>
           {backup.status}
-        </Badge>
+        </StatusWord>
       ),
     },
     {
@@ -178,9 +186,9 @@ export function buildBackupHistoryTableColumns(
       sortable: true,
       resizable: true,
       render: (backup) => (
-        <Badge size="xs" variant="outline" color="gray">
-          {backup.type}
-        </Badge>
+        <Text size="xs" c="dimmed">
+          {formatBackupTypeLabel(backup.type)}
+        </Text>
       ),
     },
     {

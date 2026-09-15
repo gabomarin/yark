@@ -5,6 +5,7 @@ import type { ComponentProps } from "react";
 import { AppProviders } from "@app/AppProviders";
 import { DEFAULT_LOG_RETENTION_SETTINGS } from "@shared/log-retention";
 import type { SteamCmdStatus } from "@shared/types";
+import { SETTINGS_CATEGORY_STORAGE_KEY } from "./settingsModel";
 import { SettingsPage } from "./SettingsPage";
 
 const readyStatus: SteamCmdStatus = {
@@ -135,48 +136,54 @@ async function openCategory(
   await user.click(within(nav).getByRole("button", { name: label }));
 }
 
+function defaultSettingsProps(
+  overrides: Partial<ComponentProps<typeof SettingsPage>> = {},
+): ComponentProps<typeof SettingsPage> {
+  return {
+    appVersion: "0.1.0",
+    steamCmdStatus: readyStatus,
+    servers: [],
+    installationInfo: new Map(),
+    onOpenServer: vi.fn(),
+    openNativeTerminalOnStart: false,
+    onOpenNativeTerminalOnStartChange: vi.fn(),
+    uiDensity: "compact",
+    onUiDensityChange: vi.fn(),
+    defaultBaseFolder: null,
+    onDefaultBaseFolderChange: vi.fn(),
+    onPickSteamCmdPath: vi.fn(),
+    onInstallSteamCmd: vi.fn(),
+    onOpenSteamCmdCache: vi.fn(),
+    onClearSteamCmdCache: vi.fn(),
+    desktopShell: {
+      closeWindowToTray: true,
+      startWithWindows: false,
+      trayCloseHintDismissed: false,
+      osNotifyEnabled: true,
+      osNotifyCrash: true,
+      osNotifySteamCmd: true,
+      osNotifyYarkUpdate: true,
+      desktopShellReady: true,
+      onCloseWindowToTrayChange: vi.fn(),
+      onStartWithWindowsChange: vi.fn(),
+      onTrayCloseHintDismissedChange: vi.fn(),
+      onOsNotifyEnabledChange: vi.fn(),
+      onOsNotifyCrashChange: vi.fn(),
+      onOsNotifySteamCmdChange: vi.fn(),
+      onOsNotifyYarkUpdateChange: vi.fn(),
+      shellError: null,
+      clearShellError: vi.fn(),
+    },
+    ...overrides,
+  };
+}
+
 function renderSettings(
   overrides: Partial<ComponentProps<typeof SettingsPage>> = {},
-): void {
-  render(
+) {
+  return render(
     <AppProviders>
-      <SettingsPage
-        appVersion="0.1.0"
-        steamCmdStatus={readyStatus}
-        servers={[]}
-        installationInfo={new Map()}
-        onOpenServer={vi.fn()}
-        openNativeTerminalOnStart={false}
-        onOpenNativeTerminalOnStartChange={vi.fn()}
-        uiDensity="compact"
-        onUiDensityChange={vi.fn()}
-        defaultBaseFolder={null}
-        onDefaultBaseFolderChange={vi.fn()}
-        onPickSteamCmdPath={vi.fn()}
-        onInstallSteamCmd={vi.fn()}
-        onOpenSteamCmdCache={vi.fn()}
-        onClearSteamCmdCache={vi.fn()}
-        desktopShell={{
-          closeWindowToTray: true,
-          startWithWindows: false,
-          trayCloseHintDismissed: false,
-          osNotifyEnabled: true,
-          osNotifyCrash: true,
-          osNotifySteamCmd: true,
-          osNotifyYarkUpdate: true,
-          desktopShellReady: true,
-          onCloseWindowToTrayChange: vi.fn(),
-          onStartWithWindowsChange: vi.fn(),
-          onTrayCloseHintDismissedChange: vi.fn(),
-          onOsNotifyEnabledChange: vi.fn(),
-          onOsNotifyCrashChange: vi.fn(),
-          onOsNotifySteamCmdChange: vi.fn(),
-          onOsNotifyYarkUpdateChange: vi.fn(),
-          shellError: null,
-          clearShellError: vi.fn(),
-        }}
-        {...overrides}
-      />
+      <SettingsPage {...defaultSettingsProps(overrides)} />
     </AppProviders>,
   );
 }
@@ -184,6 +191,7 @@ function renderSettings(
 describe("SettingsPage", () => {
   afterEach(() => {
     cleanup();
+    window.localStorage.removeItem(SETTINGS_CATEGORY_STORAGE_KEY);
     vi.restoreAllMocks();
   });
 
@@ -251,6 +259,50 @@ describe("SettingsPage", () => {
     expect(onSteamCmdFocused).toHaveBeenCalled();
   });
 
+  it("remembers the last Settings category after leaving and returning", async () => {
+    const user = userEvent.setup();
+    stubSettingsApi();
+    renderSettings();
+    await openCategory(user, "Log files");
+    expect(screen.getByText("Log retention")).toBeInTheDocument();
+
+    cleanup();
+    stubSettingsApi();
+    renderSettings();
+    expect(screen.getByText("Log retention")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "General" })).not.toBeInTheDocument();
+  });
+
+  it("opens SteamCMD from a deep link even when Logs was the last category", () => {
+    window.localStorage.setItem(SETTINGS_CATEGORY_STORAGE_KEY, JSON.stringify("logs"));
+    stubSettingsApi();
+    const onSteamCmdFocused = vi.fn();
+    renderSettings({
+      steamCmdStatus: { ...readyStatus, detected: false, executablePath: null },
+      focusSteamCmd: true,
+      onSteamCmdFocused,
+    });
+
+    expect(document.querySelector("[data-steamcmd-path]")).toBeInTheDocument();
+    expect(onSteamCmdFocused).toHaveBeenCalled();
+  });
+
+  it("returns to General when the setup wizard close token increments", async () => {
+    const user = userEvent.setup();
+    stubSettingsApi();
+    const view = renderSettings({ landOnGeneralToken: 0 });
+    await openCategory(user, "Log files");
+    expect(screen.getByText("Log retention")).toBeInTheDocument();
+
+    view.rerender(
+      <AppProviders>
+        <SettingsPage {...defaultSettingsProps({ landOnGeneralToken: 1 })} />
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole("heading", { name: "General" })).toBeInTheDocument();
+  });
+
   it("offers the setup assistant when the parent provides the callback", async () => {
     const user = userEvent.setup();
     const onRunSetupAgain = vi.fn();
@@ -269,7 +321,7 @@ describe("SettingsPage", () => {
     const panel = document.querySelector<HTMLElement>("[data-settings-panel-scroll]");
     expect(panel).not.toBeNull();
     panel!.scrollTop = 240;
-    await openCategory(user, "Servers");
+    await openCategory(user, "Profiles");
     expect(panel).toHaveProperty("scrollTop", 0);
   });
 
@@ -470,7 +522,7 @@ describe("SettingsPage", () => {
       onDefaultBaseFolderChange,
     });
 
-    await openCategory(user, "Servers");
+    await openCategory(user, "Profiles");
     const baseRow = document.querySelector("[data-default-base-folder]");
     expect(baseRow).not.toBeNull();
     await user.click(
@@ -485,7 +537,7 @@ describe("SettingsPage", () => {
       defaultBaseFolder: "D:/ARK",
       onDefaultBaseFolderChange,
     });
-    await openCategory(user, "Servers");
+    await openCategory(user, "Profiles");
     const baseRowFilled = document.querySelector("[data-default-base-folder]");
     await user.click(
       Array.from(baseRowFilled!.querySelectorAll("button")).find((el) =>
@@ -587,7 +639,7 @@ describe("SettingsPage", () => {
     expect(screen.getByRole("button", { name: /Install SteamCMD/i })).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /^Open$/i })[0]).toBeDisabled();
 
-    await openCategory(user, "Servers");
+    await openCategory(user, "Profiles");
     await user.click(
       screen.getByRole("switch", {
         name: /Show native console when a server starts/i,
@@ -645,7 +697,7 @@ describe("SettingsPage", () => {
     stubSettingsApi({ previewLogCleanup });
 
     renderSettings();
-    await openCategory(user, "Logs");
+    await openCategory(user, "Log files");
 
     await waitFor(() => {
       expect(window.api.getLogRetentionSettings).toHaveBeenCalled();
@@ -672,7 +724,7 @@ describe("SettingsPage", () => {
     stubSettingsApi({ setLogRetentionSettings });
 
     renderSettings();
-    await openCategory(user, "Logs");
+    await openCategory(user, "Log files");
 
     const autoCleanup = await screen.findByRole("switch", {
       name: "Clean up logs automatically",

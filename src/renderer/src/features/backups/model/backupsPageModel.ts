@@ -1,9 +1,4 @@
-import { formatLogDateTime } from "@shared/format-log-datetime";
 import type { BackupHealthStatus } from "@shared/types";
-
-export function formatBackupWhen(iso: string | null | undefined): string {
-  return formatLogDateTime(iso);
-}
 
 export function formatBackupBytes(bytes: number | null | undefined): string {
   if (bytes == null || !Number.isFinite(bytes)) return "–";
@@ -12,13 +7,6 @@ export function formatBackupBytes(bytes: number | null | undefined): string {
   if (abs >= 1024 ** 2) return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
   if (abs >= 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${Math.round(bytes)} B`;
-}
-
-export function backupHealthColor(health: BackupHealthStatus): string {
-  if (health === "ok") return "teal";
-  if (health === "warning") return "yellow";
-  if (health === "critical") return "red";
-  return "gray";
 }
 
 export function backupHealthLabel(health: BackupHealthStatus): string {

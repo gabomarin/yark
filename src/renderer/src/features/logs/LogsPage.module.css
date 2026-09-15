@@ -9,8 +9,8 @@
 
 .fleetRow {
   display: grid;
-  grid-template-columns: 160px 88px 140px minmax(0, 1fr);
-  gap: var(--app-space-xs);
+  grid-template-columns: max-content auto minmax(7rem, max-content) minmax(0, 1fr);
+  column-gap: var(--app-space-sm);
   align-items: center;
   text-align: left;
   color: inherit;
@@ -24,12 +24,26 @@
   border-radius: 0;
 }
 
-.fleetAccordionControl {
+.fleetAccordionControl,
+.eventAccordionControl {
   padding-block: var(--app-space-xs);
+  text-align: left;
+}
+
+.fleetAccordionControl :global(.mantine-Accordion-label),
+.eventAccordionControl :global(.mantine-Accordion-label) {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
 }
 
 .fleetWhen,
-.fleetServer,
+.fleetSeverity,
+.fleetServer {
+  min-width: 0;
+  white-space: nowrap;
+}
+
 .fleetMessage {
   min-width: 0;
   overflow: hidden;
@@ -165,8 +179,9 @@
   border-radius: 0;
 }
 
-.eventAccordionControl {
-  text-align: left;
+.eventMessage {
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 
 .eventAccordionPanel {

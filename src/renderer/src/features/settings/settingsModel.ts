@@ -26,11 +26,41 @@ export const SETTINGS_CATEGORIES: ReadonlyArray<{
   label: string;
 }> = [
   { id: "general", label: "General" },
-  { id: "servers", label: "Servers" },
+  { id: "servers", label: "Profiles" },
   { id: "steamcmd", label: "SteamCMD" },
-  { id: "logs", label: "Logs" },
+  { id: "logs", label: "Log files" },
   { id: "about", label: "About" },
 ];
+
+/** Last Settings category rail selection on this PC. */
+export const SETTINGS_CATEGORY_STORAGE_KEY = "yark.settings.category.v1";
+
+function isSettingsCategory(value: unknown): value is SettingsCategory {
+  return SETTINGS_CATEGORIES.some((item) => item.id === value);
+}
+
+export function readSettingsCategoryPref(): SettingsCategory | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  const raw = window.localStorage.getItem(SETTINGS_CATEGORY_STORAGE_KEY);
+  if (raw === null || raw.trim() === "") {
+    return null;
+  }
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return isSettingsCategory(parsed) ? parsed : null;
+  } catch {
+    return isSettingsCategory(raw) ? raw : null;
+  }
+}
+
+export function writeSettingsCategoryPref(category: SettingsCategory): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.localStorage.setItem(SETTINGS_CATEGORY_STORAGE_KEY, JSON.stringify(category));
+}
 
 const DEFAULT_BASE_FOLDER_PREF_KEY = "settings.defaultServerBaseFolder";
 

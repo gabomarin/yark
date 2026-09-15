@@ -132,7 +132,7 @@ function CacheRow(props: CacheRowProps): ReactElement {
         </Button>
         <Button
           size="compact-xs"
-          variant="filled"
+          variant="subtle"
           color="red"
           leftSection={<Broom size={14} />}
           disabled={props.disabled || props.path === null}

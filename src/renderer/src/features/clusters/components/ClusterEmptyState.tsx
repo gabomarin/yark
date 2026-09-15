@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { FolderSimple } from "@phosphor-icons/react";
 import { Button, Stack, Text } from "@mantine/core";
+import { formatMapDisplayName } from "@shared/map-identity";
 import type { ServerProfile } from "@shared/types";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
@@ -52,6 +53,7 @@ export function ClusterEmptyState(props: Props): ReactElement {
                   <ReadonlyPath
                     value={dir}
                     compact
+                    truncate="start"
                     emptyLabel="No directory"
                     aria-label="Incomplete cluster directory"
                   />
@@ -60,7 +62,7 @@ export function ClusterEmptyState(props: Props): ReactElement {
                       <ClusterMemberRow
                         key={server.id}
                         server={server}
-                        subtitle={`${server.map} · missing Cluster ID`}
+                        subtitle={`${formatMapDisplayName(server.map)} · missing Cluster ID`}
                         onOpen={props.onOpenServer}
                       />
                     ))}

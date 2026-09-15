@@ -57,6 +57,8 @@ export function AppMetricCard(props: Props): ReactElement {
     .join(" ");
 
   const clickable = onClick !== undefined;
+  const numericZero =
+    value === 0 || (typeof value === "string" && value.trim() === "0");
 
   return (
     <Card
@@ -69,6 +71,7 @@ export function AppMetricCard(props: Props): ReactElement {
       onClick={onClick}
       data-tone={tone === "default" ? undefined : tone}
       data-active={active || undefined}
+      data-zero={numericZero && !active ? true : undefined}
       data-clickable={clickable || undefined}
       aria-pressed={clickable ? active : undefined}
     >

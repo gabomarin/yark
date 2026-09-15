@@ -13,6 +13,7 @@ const {
   waitForOverview,
   quitElectronApp,
   pickPathField,
+  openWorkspaceTab,
   removeFixtureDir,
 } = require("./e2e-launch.cjs");
 
@@ -86,7 +87,7 @@ async function createServer(app, page, serverName, installDir, ports) {
     // onboarding not shown
   }
 
-  await page.getByRole("tab", { name: "Maintenance" }).waitFor({
+  await page.getByRole("tab", { name: "Server", exact: true }).waitFor({
     state: "visible",
     timeout: 15000,
   });
@@ -103,8 +104,7 @@ async function clickSwitch(page, name) {
 }
 
 async function openMaintenanceTab(page) {
-  const tab = page.getByRole("tab", { name: "Maintenance" });
-  await tab.click();
+  await openWorkspaceTab(page, "Maintenance");
   await page.locator("[data-maintenance-panel]").waitFor({
     state: "visible",
     timeout: 10000,

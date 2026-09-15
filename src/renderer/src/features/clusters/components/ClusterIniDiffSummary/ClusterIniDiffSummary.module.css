@@ -81,7 +81,7 @@
 }
 
 .value {
-  font-family: var(--mantine-font-family-monospace);
+  font-family: var(--app-font-mono);
   font-size: 12px;
   color: var(--app-color-muted);
   overflow: hidden;
@@ -90,7 +90,7 @@
 }
 
 .valueAfter {
-  font-family: var(--mantine-font-family-monospace);
+  font-family: var(--app-font-mono);
   font-size: 12px;
   color: var(--mantine-color-blue-3);
   overflow: hidden;

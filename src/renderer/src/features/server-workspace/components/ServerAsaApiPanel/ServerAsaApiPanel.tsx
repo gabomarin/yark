@@ -71,7 +71,7 @@ export function ServerAsaApiPanel(props: Props): ReactElement {
                   </Button>
                   <Button
                     size={inputSize}
-                    variant="light"
+                    variant="subtle"
                     color="red"
                     leftSection={<Trash size={14} />}
                     loading={panel.isBusy("uninstall")}

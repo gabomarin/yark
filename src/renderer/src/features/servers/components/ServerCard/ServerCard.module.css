@@ -131,6 +131,7 @@
 .identityOpen {
   flex: 1;
   min-width: 0;
+  min-height: 2.5rem;
 }
 
 .identityOpen,
@@ -140,6 +141,18 @@
   color: inherit;
   text-align: left;
   cursor: pointer;
+}
+
+.openChevron {
+  flex-shrink: 0;
+  color: var(--app-color-muted);
+  opacity: 0.75;
+}
+
+.identityOpen:hover .openChevron,
+.identityOpen:focus-visible .openChevron {
+  color: var(--app-color-accent);
+  opacity: 1;
 }
 
 .identityOpen:hover .thumb,

@@ -17,6 +17,10 @@ import {
   type StructuredLaunchUiOption,
 } from "@shared/structured-launch-options";
 import classes from "./ServerLaunchPanel.module.css";
+import {
+  launchOptionDisplayTitle,
+  launchOptionTokenLabel,
+} from "./serverLaunchModel";
 
 interface Props {
   option: StructuredLaunchUiOption;
@@ -40,8 +44,8 @@ export function ServerLaunchOptionRow(props: Props): ReactElement {
   const dependencyMet = props.dependencyMet !== false;
   const enabled = props.selection?.enabled === true && dependencyMet;
   const caution = Boolean(props.option.curation.operatorWarning) && enabled;
-  const label =
-    props.option.entry.token.split(/[=\s]/)[0] ?? props.option.entry.id;
+  const summary = launchOptionDisplayTitle(props.option);
+  const tokenLabel = launchOptionTokenLabel(props.option);
   const isMulti =
     props.option.curation.multiSelect === true &&
     (props.option.curation.enumOptions?.length ?? 0) > 0;
@@ -66,10 +70,10 @@ export function ServerLaunchOptionRow(props: Props): ReactElement {
           checked={enabled}
           size="sm"
           disabled={!dependencyMet}
-          aria-label={`Enable ${label}`}
+          aria-label={`Enable ${tokenLabel}`}
           onChange={(e) => props.onEnabledChange(e.currentTarget.checked)}
         />
-        <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
+        <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
           <Group gap={6} wrap="nowrap" align="center">
             <Tooltip
               label={optionTooltip(props.option)}
@@ -80,7 +84,7 @@ export function ServerLaunchOptionRow(props: Props): ReactElement {
               events={{ hover: true, focus: true, touch: true }}
             >
               <span className={classes.optionLabel} tabIndex={0}>
-                {label}
+                {tokenLabel}
               </span>
             </Tooltip>
             {caution ? (
@@ -99,6 +103,9 @@ export function ServerLaunchOptionRow(props: Props): ReactElement {
               </Badge>
             ) : null}
           </Group>
+          <Text size="xs" c="dimmed">
+            {summary}
+          </Text>
           {caution ? (
             <Text
               size="xs"

@@ -19,7 +19,7 @@ export function ClusterListPanel(props: Props): ReactElement {
     <AppSurfaceCard fill className={classes.listPanel}>
       <Stack gap="sm" className={classes.panelStack}>
         <Title order={3} size="h4">
-          Clusters
+          All clusters
         </Title>
         <div className={classes.clusterList}>
           {props.reports.map((report) => {

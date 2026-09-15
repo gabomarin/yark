@@ -52,5 +52,22 @@ describe("AppMetricCard", () => {
     await user.keyboard(" ");
     expect(onClick).toHaveBeenCalledTimes(2);
   });
+
+  it("marks idle zero tiles so warning/danger tones can mute", () => {
+    const { rerender } = render(
+      <AppProviders>
+        <AppMetricCard label="Needs attention" value={0} tone="warning" />
+      </AppProviders>,
+    );
+
+    expect(document.querySelector("[data-zero]")).not.toBeNull();
+
+    rerender(
+      <AppProviders>
+        <AppMetricCard label="Needs attention" value={0} tone="warning" active />
+      </AppProviders>,
+    );
+    expect(document.querySelector("[data-zero]")).toBeNull();
+  });
 });
 

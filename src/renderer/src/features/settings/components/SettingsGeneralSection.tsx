@@ -35,10 +35,7 @@ export function SettingsGeneralSection(props: Props): ReactElement {
         <div className={classes.settingCopy}>
           <Text size="sm" fw={600}>Close window to tray</Text>
           <Text size="xs" c="dimmed" mt={2}>
-            Closing the window hides YARK in the system tray instead of quitting.
-            Use the tray icon or the sidebar Quit control to show the window again
-            or quit. Minimize still uses the taskbar. Quitting while servers are running always asks for
-            confirmation (Stop or Cancel).
+            Closing the window hides YARK in the tray. Use the tray icon or Quit to show it again or exit.
           </Text>
         </div>
         <div className={classes.settingControl}>
@@ -95,8 +92,7 @@ export function SettingsGeneralSection(props: Props): ReactElement {
         <div className={classes.settingCopy}>
           <Text size="sm" fw={600}>Installs and updates</Text>
           <Text size="xs" c="dimmed" mt={2}>
-            When installing, updating, or checking server files finishes or
-            fails.
+            When installing, updating, or checking server files finishes or fails.
           </Text>
         </div>
         <div className={classes.settingControl}>
@@ -155,8 +151,7 @@ export function SettingsGeneralSection(props: Props): ReactElement {
         <div className={classes.settingCopy}>
           <Text size="sm" fw={600}>Start with Windows</Text>
           <Text size="xs" c="dimmed" mt={2}>
-            Open YARK when you sign in to Windows. Does not start dedicated servers –
-            turn on Auto-start with YARK on each server.
+            Open YARK at Windows sign-in. Does not start dedicated servers.
           </Text>
         </div>
         <div className={classes.settingControl}>
@@ -175,10 +170,7 @@ export function SettingsGeneralSection(props: Props): ReactElement {
         <div className={classes.settingCopy}>
           <Text size="sm" fw={600}>Quick jump</Text>
           <Text size="xs" c="dimmed" mt={2}>
-            Press <Text span fw={600} inherit>Ctrl</Text>+
-            <Text span fw={600} inherit>K</Text> to jump to Servers, Clusters,
-            Backups, Logs, Settings, or open a server workspace by name.
-            Recent pages and servers appear at the top.
+            Press Ctrl+K to jump to a page or open a server by name.
           </Text>
         </div>
       </div>
@@ -213,8 +205,7 @@ export function SettingsGeneralSection(props: Props): ReactElement {
           <div className={classes.settingCopy}>
             <Text size="sm" fw={600}>Setup assistant</Text>
             <Text size="xs" c="dimmed" mt={2}>
-              Review SteamCMD, server-folder, and Windows options. With no servers
-              yet, it also offers a cluster and your first map.
+              Review SteamCMD, folder, and Windows options. Empty fleet also offers a first map.
             </Text>
           </div>
           <div className={classes.settingControl}>

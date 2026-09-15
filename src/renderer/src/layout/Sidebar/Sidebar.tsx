@@ -24,6 +24,7 @@ import {
 } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
 import type { OfficialNetworkStatus } from "@shared/types";
+import { navSelectedClassName } from "@ui/NavSelected/navSelectedClassName";
 import { Fragment } from "react";
 import yarkLogo from "../../assets/brand/yark-logo.png";
 import { QuitYarkModal } from "./QuitYarkModal";
@@ -190,7 +191,7 @@ export function Sidebar(props: Props): ReactElement {
                   </Text>
                 ) : undefined
               }
-              className={classes.navLink}
+              className={navSelectedClassName(classes.navLink)}
               onClick={() => props.onNavigate(item.id)}
             />
           );

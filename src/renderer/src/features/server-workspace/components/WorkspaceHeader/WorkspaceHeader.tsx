@@ -19,6 +19,7 @@ import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@
 import { isInstallationReady } from "@shared/installation-health";
 import { resolveDisplayedServerVersion } from "@shared/server-version-display";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
+import { formatMapDisplayName } from "@shared/map-identity";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
 import { RconStatusIcon } from "../RconStatusIcon/RconStatusIcon";
 import { workspaceHeaderControls } from "./workspaceHeaderControls";
@@ -93,8 +94,8 @@ export function WorkspaceHeader(props: Props): ReactElement {
               </Badge>
             )}
           </Group>
-          <Text size="xs" c="dimmed" lineClamp={1}>
-            {props.server.map} · port {props.server.gamePort} · version {version}
+          <Text size="xs" c="dimmed" lineClamp={1} title={props.server.map}>
+            {formatMapDisplayName(props.server.map)} · port {props.server.gamePort} · version {version}
           </Text>
         </Stack>
       </Group>

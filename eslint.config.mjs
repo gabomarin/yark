@@ -25,6 +25,7 @@ export default defineConfig(
     ".magicpath-*/**",
     ".magicpath/**",
     ".tmp-magicpath-*/**",
+    "electron-mcp-server/**",
   ]),
 
   {

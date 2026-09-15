@@ -66,7 +66,7 @@ export function MaintenanceRestartSection(props: SharedProps): ReactElement {
                 Restart schedule
               </Text>
               <Text size="xs" c="dimmed">
-                {policy.restartEnabled ? formatRestartSummary(policy) : "Off"}
+                {policy.restartEnabled ? formatRestartSummary(policy) : "Not scheduled"}
               </Text>
             </div>
           </Group>

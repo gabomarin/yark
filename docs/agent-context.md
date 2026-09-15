@@ -78,7 +78,7 @@ paths or the Notion hub URL in tracked files.
 - [config-transfer.md](config-transfer.md) — one-shot Copy configuration between profiles (#95); pending-draft source/target rules (#530).
 - [launch-options-catalog.md](launch-options-catalog.md) — verified ASA CLI catalog (#92); regenerates via `npm run catalog:launch-options`.
 - [rcon.md](rcon.md) — workspace RCON console, persistent session, players, ban list.
-- [settings.md](settings.md) — app-wide prefs, category rail (General / Servers / SteamCMD / Logs / About), desktop shell, SteamCMD path, density, auto-start summary.
+- [settings.md](settings.md) — app-wide prefs, category rail (General / Profiles / SteamCMD / Log files / About), desktop shell, SteamCMD path, density, auto-start summary.
 - [clusters.md](clusters.md) — transfer-compliance reports, cluster launch trio, Clusters page. Live-host archive: [spikes/22-cluster-live-transfers.md](spikes/22-cluster-live-transfers.md) (#22).
 - [mods.md](mods.md) — workspace CurseForge inventory, enable/disable, load order, metadata proxy, `-mods=`.
 - [curseforge-proxy.md](curseforge-proxy.md) — Worker abuse controls, URL ownership, secret rotation.
@@ -92,7 +92,7 @@ paths or the Notion hub URL in tracked files.
 - **Remove from YARK** vs **Delete everything** (#267): `servers:delete` requires `{ deleteInstallFiles }`. Profile-only never wipes `installDir`; full wipe keeps shared-path and wipe-safety guards. Details: [server-lifecycle.md](server-lifecycle.md#remove-or-delete-a-server-267).
 - **Import install** (#254 / #283): ready trees continue by default; incomplete requires `allowIncompleteInstall` (UI checkbox + backend); empty/nested stay blocked. Details: [server-lifecycle.md](server-lifecycle.md#import-existing-asa-install-254--283).
 - Server Workspace keeps `Server`, **INI Files**, `Mods`, **Launch**, `Backups`,
-  `Logs`, **RCON**, and **Maintenance** as its regular navigation. **Launch** edits curated
+  `Logs`, **RCON**, **Maintenance**, and **Ark Server API** as its navigation. **Launch** edits curated
   structured ASA flags plus raw Extra arguments (command preview / conflicts);
   create/edit Server no longer hosts Mods IDs or Extra arguments. Workspace
   **Backups** is operational (create / restore / history / destination for that
@@ -124,7 +124,7 @@ paths or the Notion hub URL in tracked files.
     the **current** map folder; no manual “all players” create or Players Import (#275).
   - **INI**: `retainCountIni`; manual + automatic `ini_save` after successful INI save (debounced ~2s).
   - Workspace UI: destination/schedule only on World subtab; auto-refresh (~12s) + Refresh button + `push:backups-changed` for live list updates.
-- SteamCMD progress/console streaming is live via `push:steamcmd-progress` on the **Downloads** page (footer teaser on other pages). Path/install are on **Settings**. Overview **Update All** (#378) and server-list sort/view toggles (#351) live on the fleet **Servers** page. Richer per-file update-log streaming in Logs may still feel incomplete. Full workflows: [updates-steamcmd.md](updates-steamcmd.md).
+- SteamCMD progress/console streaming is live via `push:steamcmd-progress` on the **Downloads** page (one-line status; **Advanced log** for stdout; footer teaser on other pages). Path/install are on **Settings**. Overview **Update All** (#378) and server-list sort/view toggles (#351) live on the fleet **Servers** page. Richer per-file update-log streaming in Logs may still feel incomplete. Full workflows: [updates-steamcmd.md](updates-steamcmd.md).
 - Safe-update real-host checklist (Windows ASA) lives in [updates-steamcmd.md](updates-steamcmd.md#real-host-validation-windows); broader lifecycle aggregation / PR E2E gates: [e2e-validation.md](e2e-validation.md) (GitHub **#12**).
 
 ## Recommended verification

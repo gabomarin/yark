@@ -31,7 +31,7 @@ function MaintenanceWipeToggle(props: {
   const { policy } = props;
   const subtitle = policy.wipeEnabled
     ? "After scheduled restart"
-    : "Off · does not remove tames or structures";
+    : "Does not remove tames or structures";
 
   return (
     <div className={classes.nestedRow}>

@@ -102,6 +102,9 @@ export interface AppOverviewSlice {
   setImportInstallOpen: Dispatch<SetStateAction<boolean>>;
   installScan: { active: boolean; reason: "startup" | "manual" | null };
   runInstallHealthScan: (reason: "startup" | "manual") => Promise<void>;
+  /** Survives Overview unmount, create/clone/import overlays (#438). */
+  search: string;
+  setSearch: Dispatch<SetStateAction<string>>;
 }
 
 export interface AppSettingsSlice {
@@ -118,6 +121,8 @@ export interface AppSettingsSlice {
   extraClusterOptions: KnownClusterOption[] | undefined;
   desktopShell: DesktopShellPreferencesController;
   onRunSetupAgain: () => void;
+  /** Bumped when the setup wizard closes so Settings returns to General. */
+  landOnGeneralToken: number;
 }
 
 /** Inputs for `buildShellChrome` / `AppShellChromeProps` (sidebar chrome). */

@@ -67,7 +67,7 @@ export function AppShellLayout({ children, ...props }: Props): ReactElement {
           iconMode={sidebarRail.iconMode}
           onToggle={sidebarRail.toggleRail}
           expandLabel="Expand navigation"
-          collapseLabel="Collapse to icon rail"
+          collapseLabel="Collapse navigation"
         />
       </AppShell.Navbar>
       <AppShell.Main>
