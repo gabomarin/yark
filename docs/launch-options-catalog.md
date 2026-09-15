@@ -62,7 +62,7 @@ template noise is stripped; ASA/ASE facts stay in `summary` + `details`.
 ## UI curation for structured controls (#93)
 
 Wiki `category` is almost always `Command line`. Structured controls live on a
-dedicated Server Workspace tab **Launch** (after Mods), not inside the
+dedicated Server Workspace **Launch** tab (after Mods), not inside the
 Create/Edit Server form. Create starts with empty structured selections;
 configure after create (Extra arguments remain available on Launch).
 

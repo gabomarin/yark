@@ -16,6 +16,7 @@ import type { PlayerListState } from "../RconPanel/PlayerListSection";
 import { ServerModsPanel } from "../ServerModsPanel/ServerModsPanel";
 import { ServerLaunchPanel } from "../ServerLaunchPanel/ServerLaunchPanel";
 import { ServerAsaApiPanel } from "../ServerAsaApiPanel/ServerAsaApiPanel";
+import { WorkspaceTabList } from "../WorkspaceTabList/WorkspaceTabList";
 import { WorkspacePanelErrorBoundary } from "@ui/WorkspacePanelErrorBoundary/WorkspacePanelErrorBoundary";
 import classes from "../../ServerWorkspacePage.module.css";
 
@@ -68,23 +69,15 @@ export function WorkspaceTabs(props: Props): ReactElement {
   return (
     <>
       <Tabs
+        variant="default"
+        radius="sm"
         value={props.value}
         onChange={(value) => {
           if (value !== null) props.onChange(value as WorkspaceTab);
         }}
         className={classes.tabs}
       >
-        <Tabs.List className={classes.tabList} aria-label="Workspace tabs">
-          <Tabs.Tab value="server">Server</Tabs.Tab>
-          <Tabs.Tab value="iniFiles">INI Files</Tabs.Tab>
-          <Tabs.Tab value="mods">Mods</Tabs.Tab>
-          <Tabs.Tab value="launch">Launch</Tabs.Tab>
-          <Tabs.Tab value="backups">Backups</Tabs.Tab>
-          <Tabs.Tab value="logs">Logs</Tabs.Tab>
-          <Tabs.Tab value="rcon">RCON</Tabs.Tab>
-          <Tabs.Tab value="maintenance">Maintenance</Tabs.Tab>
-          <Tabs.Tab value="asaApi">Ark Server API</Tabs.Tab>
-        </Tabs.List>
+        <WorkspaceTabList />
 
         <div className={classes.tabPanel}>
           <WorkspacePanelErrorBoundary

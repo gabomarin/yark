@@ -20,7 +20,7 @@ const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
-const { openSettingsCategory } = require("./e2e-launch.cjs");
+const { openSettingsCategory, openWorkspaceTab } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -265,14 +265,14 @@ async function run() {
     await page.waitForLoadState("domcontentloaded");
     await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 15_000 });
 
-    // Piped mode: Show server console on start must stay off (Settings → Servers).
+    // Piped mode: Show server console on start must stay off (Settings → Profiles).
     await page.evaluate(async () => {
       if (typeof window.api?.setOpenNativeConsole === "function") {
         await window.api.setOpenNativeConsole(false);
       }
       window.localStorage.setItem("overview.openNativeTerminalOnStart", "0");
     });
-    await openSettingsCategory(page, "Servers");
+    await openSettingsCategory(page, "Profiles");
     await page.getByText("Show server console on start", { exact: true }).waitFor({
       state: "visible",
       timeout: 10_000,
@@ -316,7 +316,7 @@ async function run() {
       "Native console should not open for this e2e",
     );
 
-    await page.getByRole("tab", { name: "Logs" }).click();
+    await openWorkspaceTab(page, "Logs");
     await page.getByRole("tab", { name: "Runtime" }).click();
     const runtimePre = page.locator('[data-logs-scroll-region="runtime"]');
     await runtimePre.waitFor({ state: "visible", timeout: 10_000 });

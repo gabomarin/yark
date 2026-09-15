@@ -16,7 +16,7 @@ export function SettingsServersSection(props: Props): ReactElement {
   return (
     <section className={classes.section} aria-labelledby="settings-servers">
       <Title order={3} size="h4" id="settings-servers">
-        Servers
+        Profiles
       </Title>
 
       <div className={classes.settingRow}>

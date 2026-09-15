@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatMapDisplayName,
   isOfficialMap,
   isSafeMapToken,
   mapIdentityStartBlockers,
@@ -39,6 +40,14 @@ function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
     ...overrides,
   };
 }
+
+describe("formatMapDisplayName", () => {
+  it("uses official catalog labels and keeps custom tokens", () => {
+    expect(formatMapDisplayName("TheIsland_WP")).toBe("The Island");
+    expect(formatMapDisplayName("Svartalfheim_WP")).toBe("Svartalfheim_WP");
+    expect(formatMapDisplayName("  ")).toBe("Custom map");
+  });
+});
 
 describe("isOfficialMap / resolveMapIdentity", () => {
   it("keeps hardcoded official labels on KNOWN_MAP_OPTIONS", () => {

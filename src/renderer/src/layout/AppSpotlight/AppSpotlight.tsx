@@ -14,6 +14,7 @@ import {
 import type { Route } from "@layout/Sidebar/Sidebar";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import type { ServerProfile } from "@shared/types";
+import { formatMapDisplayName } from "@shared/map-identity";
 import {
   sortServersForSpotlight,
   SPOTLIGHT_NAV_ITEMS,
@@ -27,13 +28,14 @@ import classes from "./AppSpotlight.module.css";
 
 interface Props {
   servers: ServerProfile[];
+  currentRoute?: Route;
   onNavigate: (route: Route) => void;
   onOpenServer: (serverId: string) => void;
 }
 
 const SEARCH_PROPS = {
   leftSection: <MagnifyingGlass size={18} />,
-  placeholder: "Jump to page or server…",
+  placeholder: "Jump to page or server (Ctrl+K)…",
   "aria-label": "Quick jump search",
 } as const;
 
@@ -114,7 +116,9 @@ export function AppSpotlight(props: Props): ReactElement {
 
     const navigateGroup: SpotlightActionGroupData = {
       group: "Navigate",
-      actions: SPOTLIGHT_NAV_ITEMS.map((item) => {
+      actions: SPOTLIGHT_NAV_ITEMS.filter(
+        (item) => item.id !== props.currentRoute,
+      ).map((item) => {
         const Icon = item.icon;
         return {
           id: `nav:${item.id}`,
@@ -132,8 +136,8 @@ export function AppSpotlight(props: Props): ReactElement {
       actions: sortServersForSpotlight(props.servers).map((server) => ({
         id: `server:${server.id}`,
         label: server.name,
-        description: `${server.map} · Open workspace`,
-        keywords: [server.map, server.sessionName, server.installDir, server.id],
+        description: `${formatMapDisplayName(server.map)} · Open workspace`,
+        keywords: [server.map, formatMapDisplayName(server.map), server.sessionName, server.installDir, server.id],
         leftSection: serverThumb(server),
         onClick: () => callbacksRef.current.onOpenServer(server.id),
       })),
@@ -147,7 +151,7 @@ export function AppSpotlight(props: Props): ReactElement {
     return next;
     // Fingerprints keep the memo aligned with content, not object identity.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional keys
-  }, [serverKey, recentKey]);
+  }, [serverKey, recentKey, props.currentRoute]);
 
   return (
     <Spotlight
@@ -198,8 +202,8 @@ function resolveRecentAction(
   return {
     id: `recent:server:${server.id}`,
     label: server.name,
-    description: `${server.map} · Recent`,
-    keywords: [server.map, server.sessionName, server.installDir, server.id, "recent"],
+    description: `${formatMapDisplayName(server.map)} · Recent`,
+    keywords: [server.map, formatMapDisplayName(server.map), server.sessionName, server.installDir, server.id, "recent"],
     leftSection: serverThumb(server),
     rightSection: (
       <ClockCounterClockwise size={14} aria-hidden className={classes.recentMark} />

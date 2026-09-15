@@ -8,6 +8,7 @@ import type { DesktopShellPreferencesController } from "@features/settings/hooks
 import {
   getClusterDirFormError,
   getClusterIdFormError,
+  listKnownClusterIds,
   suggestClusterId,
 } from "@features/clusters/createClusterModel";
 import { SetupWizardClusterStep } from "./components/SetupWizardClusterStep";
@@ -53,7 +54,9 @@ export function SetupWizard(props: Props): ReactElement {
   const steps = stepsForMode(props.mode);
   const [stepIndex, setStepIndex] = useState(0);
   const [shareCluster, setShareCluster] = useState(false);
-  const [clusterId, setClusterId] = useState(() => suggestClusterId());
+  const [clusterId, setClusterId] = useState(() =>
+    suggestClusterId(listKnownClusterIds(props.servers)),
+  );
   const [clusterDir, setClusterDir] = useState("");
   const [idTouched, setIdTouched] = useState(false);
   const [dirTouched, setDirTouched] = useState(false);
@@ -66,11 +69,13 @@ export function SetupWizard(props: Props): ReactElement {
     }
     setStepIndex(0);
     setShareCluster(false);
-    setClusterId(suggestClusterId());
+    // Snapshot taken IDs at open; do not reset mid-flow if the fleet list updates.
+    setClusterId(suggestClusterId(listKnownClusterIds(props.servers)));
     setClusterDir("");
     setIdTouched(false);
     setDirTouched(false);
     setDirAutoSuggested(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- open/mode only
   }, [props.opened, props.mode]);
 
   useEffect(() => {
@@ -251,7 +256,9 @@ export function SetupWizard(props: Props): ReactElement {
               setIdTouched(true);
             }}
             onGenerateId={() => {
-              setClusterId(suggestClusterId());
+              setClusterId(
+                suggestClusterId([...listKnownClusterIds(props.servers), clusterId]),
+              );
               setIdTouched(true);
               if (dirAutoSuggested || clusterDir.trim().length === 0) {
                 setDirAutoSuggested(true);

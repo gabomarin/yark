@@ -138,7 +138,9 @@ export function RconPanel(props: Props): ReactElement {
               <div>
                 <Text className={classes.title}>RCON</Text>
                 <Text size="sm" className={classes.helper}>
-                  Admin commands for the active server. Commands work best without the 'cheat' prefix (e.g., SaveWorld, ListPlayers, DestroyWildDinos).
+                  {isRunning
+                    ? "Admin commands for the active server. Commands work best without the 'cheat' prefix (e.g., SaveWorld, ListPlayers, DestroyWildDinos)."
+                    : "Start the server to send RCON commands."}
                 </Text>
               </div>
             </div>
@@ -152,6 +154,7 @@ export function RconPanel(props: Props): ReactElement {
                   variant={item.danger ? "light" : "default"}
                   color={item.danger ? "red" : "gray"}
                   disabled={!isRunning}
+                  title={isRunning ? undefined : "Start the server to send commands"}
                   onClick={() => {
                     // ServerChat / Broadcast need a message — prefill for editing.
                     if (item.command.endsWith(" ")) {

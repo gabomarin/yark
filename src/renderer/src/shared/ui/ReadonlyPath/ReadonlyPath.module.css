@@ -6,7 +6,7 @@
   border-radius: var(--app-radius-control);
   background: color-mix(in srgb, var(--ark-gray-2) 72%, transparent);
   color: var(--app-color-text);
-  font-family: Consolas, "Cascadia Mono", monospace;
+  font-family: var(--app-font-mono);
   font-size: 11px;
   line-height: 1.45;
   overflow-wrap: anywhere;
@@ -21,4 +21,17 @@
   padding: var(--app-space-xxs) var(--app-space-xs);
   font-size: 11px;
   line-height: 1.4;
+}
+
+.truncateStart {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  direction: rtl;
+  text-align: left;
+}
+
+.truncateStartInner {
+  direction: ltr;
+  unicode-bidi: plaintext;
 }

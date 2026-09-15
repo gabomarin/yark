@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
-import { Alert, SegmentedControl, Stack } from "@mantine/core";
+import { Alert, Stack } from "@mantine/core";
 import { isMetadataServiceNotConfiguredMessage } from "@shared/curseforge-proxy-url";
 import type { ModMetadata, ModSearchPage, ServerProfile } from "@shared/types";
 import { prepareModAddApply, type ModAddImportProgress } from "@shared/mod-add-input";
@@ -258,18 +258,15 @@ export function ServerModsPanel(props: Props): ReactElement {
 
   return (
     <AppSurfaceCard tone="flat" fill padding={0} radius="md" className={classes.root}>
-      <ServerModsHeader activeCount={activeCount} disabledCount={disabledCount} />
+      <ServerModsHeader
+        activeCount={activeCount}
+        disabledCount={disabledCount}
+        discovering={view === "discover"}
+        onDiscover={() => setView("discover")}
+        onBack={() => setView("server")}
+      />
       <div className={classes.content}>
         <Stack gap="md" className={classes.contentStack}>
-          <SegmentedControl
-            value={view}
-            onChange={(value) => setView(value as "server" | "discover")}
-            data={[
-              { value: "server", label: `Server mods (${configuredIds.length})` },
-              { value: "discover", label: "Discover mods" },
-            ]}
-            className={classes.viewSelector}
-          />
           {error !== null && (
             <Alert
               color={isMetadataServiceNotConfiguredMessage(error) ? "yellow" : "red"}

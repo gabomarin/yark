@@ -4,8 +4,16 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import type { CriticalJobSummary, ServerProfile, SteamCmdStatus } from "@shared/types";
 import { DownloadsPage } from "./DownloadsPage";
+import {
+  ADVANCED_LOG_SEEN_IDS_KEY,
+  ADVANCED_LOG_STORAGE_KEY,
+} from "./useAdvancedLogExpanded";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  window.localStorage.removeItem(ADVANCED_LOG_STORAGE_KEY);
+  window.sessionStorage.removeItem(ADVANCED_LOG_SEEN_IDS_KEY);
+});
 
 function job(overrides: Partial<CriticalJobSummary> & Pick<CriticalJobSummary, "id" | "operation" | "status">): CriticalJobSummary {
   return {
@@ -191,7 +199,7 @@ describe("DownloadsPage", () => {
     expect(document.querySelector("[data-downloads-page]")).not.toBeNull();
     expect(document.querySelector("[data-steamcmd-console]")).toBeNull();
     expect(screen.queryByText("progress: 38")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Install SteamCMD" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Open SteamCMD settings" })).toBeInTheDocument();
   });
 
   it("offers Install SteamCMD from the empty state when SteamCMD is missing", async () => {
@@ -229,6 +237,10 @@ describe("DownloadsPage", () => {
     renderPage(populatedStatus());
 
     expect(document.querySelector("[data-download-live-action]")).not.toBeNull();
+    const logToggle = screen.getByRole("button", { name: /advanced log/i });
+    if (logToggle.getAttribute("aria-expanded") !== "true") {
+      await user.click(logToggle);
+    }
     expect(screen.getByText("progress: 38")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Scorched/ }));
@@ -256,7 +268,8 @@ describe("DownloadsPage", () => {
     expect(pageHandlers.onPauseLive).not.toHaveBeenCalled();
   });
 
-  it("shows Waiting for progress in the console when an active job has no SteamCMD output yet", () => {
+  it("shows Waiting for progress in the console when an active job has no SteamCMD output yet", async () => {
+    const user = userEvent.setup();
     render(
       <AppProviders>
         <DownloadsPage
@@ -284,7 +297,8 @@ describe("DownloadsPage", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText("Waiting for progress…")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /^Advanced log$/i }));
+    expect(screen.getByText(/Waiting for progress/)).toBeInTheDocument();
   });
 
   it("shows SteamCMD console output for restart-interrupted jobs", () => {
@@ -322,6 +336,85 @@ describe("DownloadsPage", () => {
     expect(consolePane).not.toBeNull();
     expect(consolePane?.textContent).toContain("Update state (0x61) downloading");
     expect(consolePane?.textContent).toContain("Retry when ready");
+  });
+
+  it("does not reopen Advanced log for the same leftover after Hide", async () => {
+    const user = userEvent.setup();
+    const leftover = baseStatus({
+      busy: true,
+      criticalJobs: [
+        job({
+          id: "job-interrupted",
+          operation: "update",
+          status: "failed",
+          phase: "applying-files",
+          recoveryReason:
+            'YARK closed during phase "applying-files". Retry to continue.',
+          nextActions: ["retry", "dismiss"],
+        }),
+      ],
+    });
+    const { unmount } = render(
+      <AppProviders>
+        <DownloadsPage
+          status={leftover}
+          console={{ lines: ["last steamcmd line"], updatedAt: "2026-08-18T00:00:00.000Z" }}
+          servers={[server()]}
+          {...handlers()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole("button", { name: /^Hide advanced log$/i })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /^Hide advanced log$/i }));
+    expect(screen.getByRole("button", { name: /^Advanced log$/i })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    unmount();
+
+    render(
+      <AppProviders>
+        <DownloadsPage
+          status={leftover}
+          console={{ lines: ["last steamcmd line"], updatedAt: "2026-08-18T00:00:00.000Z" }}
+          servers={[server()]}
+          {...handlers()}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByRole("button", { name: /^Advanced log$/i })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+
+    const newerLeftover = baseStatus({
+      busy: true,
+      criticalJobs: [
+        job({
+          id: "job-interrupted-2",
+          operation: "update",
+          status: "failed",
+          phase: "applying-files",
+          recoveryReason:
+            'YARK closed during phase "applying-files". Retry to continue.',
+          nextActions: ["retry", "dismiss"],
+        }),
+      ],
+    });
+    cleanup();
+    render(
+      <AppProviders>
+        <DownloadsPage
+          status={newerLeftover}
+          console={{ lines: ["new leftover"], updatedAt: "2026-08-18T00:01:00.000Z" }}
+          servers={[server()]}
+          {...handlers()}
+        />
+      </AppProviders>,
+    );
+    expect(screen.getByRole("button", { name: /^Hide advanced log$/i })).toBeInTheDocument();
   });
 
   it("shows the SteamCMD missing banner when leftovers remain", async () => {

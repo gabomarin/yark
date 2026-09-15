@@ -169,7 +169,7 @@
   min-width: 0;
   color: var(--app-color-muted);
   font-size: var(--mantine-font-size-xxs);
-  font-family: var(--mantine-font-family-monospace);
+  font-family: var(--app-font-mono);
   word-break: break-all;
 }
 

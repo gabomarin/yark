@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { Stack, Text } from "@mantine/core";
-import { KNOWN_MAP_OPTIONS } from "@shared/types";
+import { formatMapDisplayName } from "@shared/map-identity";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import classes from "./ServerForm.module.css";
 
@@ -13,15 +13,6 @@ interface Props {
   queryPort: string;
   rconPort: string;
   compact?: boolean;
-}
-
-function mapLabel(mapToken: string): string {
-  const known = KNOWN_MAP_OPTIONS.find((entry) => entry.id === mapToken);
-  if (known !== undefined) {
-    return known.label;
-  }
-  const trimmed = mapToken.trim();
-  return trimmed.length > 0 ? trimmed : "Custom map";
 }
 
 /** Identity scan strip: map art + name + ports (#292). */
@@ -45,7 +36,7 @@ export function ServerFormIdentityHero(props: Props): ReactElement {
           {title}
         </Text>
         <Text fz="sm" c="dimmed">
-          {mapLabel(props.mapToken)} · {ports}
+          {formatMapDisplayName(props.mapToken)} · {ports}
         </Text>
       </Stack>
     </div>

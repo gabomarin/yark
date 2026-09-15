@@ -29,15 +29,6 @@
   border-radius: var(--app-radius-sm);
 }
 
-.navLink:focus-visible {
-  outline: 2px solid var(--ark-blue-a8);
-  outline-offset: 2px;
-}
-
-.navLink[data-active] {
-  box-shadow: var(--app-list-selected-inset);
-}
-
 .panelScroll {
   overflow: auto;
   min-height: 0;

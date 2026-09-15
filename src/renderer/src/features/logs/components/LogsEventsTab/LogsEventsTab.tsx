@@ -1,9 +1,11 @@
 import { ClockCounterClockwise } from "@phosphor-icons/react";
-import { Accordion, Badge, Group, Stack, Text } from "@mantine/core";
+import { Accordion, Group, Stack, Text, Tooltip } from "@mantine/core";
 import type { ServerOperationalLogs } from "@shared/types";
-import { formatLogDateTime } from "@shared/format-log-datetime";
+import { formatWhenLabel } from "@shared/format-log-datetime";
+import { collapseConsecutiveEvents, formatEventMessageForDisplay } from "@shared/event-details";
 import type { ReactElement } from "react";
 import { EventDetailsBody } from "../../EventDetailsBody";
+import { EventSeverityMark } from "../EventSeverityMark/EventSeverityMark";
 import classes from "../../LogsPage.module.css";
 import {
   LogsClearAction,
@@ -82,7 +84,7 @@ export function LogsEventsTab(props: LogsEventsTabProps): ReactElement {
                 panel: classes.eventAccordionPanel,
               }}
             >
-              {logs.events.map((event) => {
+              {collapseConsecutiveEvents(logs.events).map(({ event, count }) => {
                 const focused = highlightedEventId === event.id;
                 const expanded = expandedEventId === event.id;
                 return (
@@ -101,26 +103,17 @@ export function LogsEventsTab(props: LogsEventsTabProps): ReactElement {
                         wrap="nowrap"
                       >
                         <div className={classes.eventRowMain}>
-                          <Text size="sm" c="dimmed">
-                            {formatLogDateTime(event.createdAt)}
-                          </Text>
-                          <Text size="sm" fw={expanded ? 600 : 400}>
-                            {event.message}
+                          <Tooltip label={formatWhenLabel(event.createdAt).tooltip}>
+                            <Text size="sm" c="dimmed">
+                              {formatWhenLabel(event.createdAt).primary}
+                            </Text>
+                          </Tooltip>
+                          <Text size="sm" fw={expanded ? 600 : 400} className={classes.eventMessage}>
+                            {formatEventMessageForDisplay(event.message)}
+                            {count > 1 ? ` · ×${count}` : ""}
                           </Text>
                         </div>
-                        <Badge
-                          className={classes.eventSeverityBadge}
-                          color={
-                            event.severity === "error"
-                              ? "red"
-                              : event.severity === "warning"
-                                ? "yellow"
-                                : "gray"
-                          }
-                          variant="light"
-                        >
-                          {event.severity}
-                        </Badge>
+                        <EventSeverityMark severity={event.severity} />
                       </Group>
                     </Accordion.Control>
                     <Accordion.Panel>

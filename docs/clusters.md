@@ -126,7 +126,7 @@ Report shape:
 
 - Guidance card: both ID + directory required; page ≠ live transfer validation.
 - **Create cluster** wizard: pick one or more stopped unclustered servers, set/generate a
-  unique Cluster ID, choose a shared Windows directory, preview, then save
+  unique Cluster ID (`yark-cluster-1`, then `yark-cluster-2`, …), choose a shared Windows directory, preview, then save
   membership via `servers:update` (no standalone cluster entity). Partial save
   failures roll profiles back to the previous cluster fields when possible.
 - Summary badges: cluster count, ready (no errors), error clusters, warning-only
@@ -134,7 +134,9 @@ Report shape:
 - Empty state when no reports: explains missing IDs; lists servers that have a
   directory but no ID, grouped by path; offers Create cluster when servers exist.
 - List + detail: select a cluster, inspect servers / shared dir / issues;
-  “Open server” jumps to workspace; **Add servers** / **Remove** manage membership
+  “Open server” jumps to workspace; **Add servers** / **Remove servers** manage membership
+  (header Remove is subtle red; filled red stays on the confirm modal). Member rows show
+  map art, name, and status — the shared directory lives once in the meta strip.
   when the cluster has a canonical ID and one shared directory (#41). Partial save
   failures roll profiles back when possible. Removal clears profile fields only.
   **Create / Edit INI template** opens a cluster-scoped Game.ini /

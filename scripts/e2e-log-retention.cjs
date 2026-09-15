@@ -228,7 +228,7 @@ async function launchApp(projectRoot, userData) {
 }
 
 async function waitSettingsReady(page) {
-  await openSettingsCategory(page, "Logs");
+  await openSettingsCategory(page, "Log files");
   await page.getByRole("heading", { name: "Settings", level: 1 }).waitFor({
     timeout: 10000,
   });

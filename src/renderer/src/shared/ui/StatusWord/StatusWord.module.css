@@ -1,0 +1,35 @@
+.root {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--app-color-text);
+  text-transform: capitalize;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--app-color-muted);
+  flex-shrink: 0;
+}
+
+.root[data-tone="ok"] .dot {
+  background: var(--app-color-ok);
+}
+
+.root[data-tone="warn"] .dot {
+  background: var(--app-color-warn);
+}
+
+.root[data-tone="danger"] .dot {
+  background: var(--app-color-danger);
+}
+
+.root[data-tone="neutral"] {
+  font-weight: 500;
+  color: var(--app-color-muted);
+}

@@ -75,11 +75,6 @@
   flex: 0 0 240px;
 }
 
-.viewSelector {
-  align-self: flex-start;
-  flex-shrink: 0;
-}
-
 .tableStack {
   flex: 1;
   min-height: 0;

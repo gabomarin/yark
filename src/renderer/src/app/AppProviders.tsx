@@ -16,6 +16,7 @@ import {
 } from "@theme/theme";
 import type { UiDensity } from "@theme/tokens";
 import { RowActionMenuProvider } from "@ui/RowActionMenu/RowActionMenuProvider";
+import { isRendererTest } from "@renderer/shared/isRendererTest";
 
 const UiDensityContext = createContext<UiDensity>("compact");
 
@@ -34,7 +35,7 @@ export function AppProviders({
 }: Props): ReactElement {
   const theme = useMemo(() => {
     const base = createAppThemeForDensity(density);
-    if (process.env.VITEST !== "true") {
+    if (!isRendererTest()) {
       return base;
     }
     // jsdom + Floating UI: keep Menu/Select dropdowns mounted inline and
@@ -102,7 +103,7 @@ export function AppProviders({
     };
   }, [density]);
 
-  const notificationsAutoClose = process.env.VITEST === "true" ? false : 5000;
+  const notificationsAutoClose = isRendererTest() ? false : 5000;
 
   return (
     <UiDensityContext.Provider value={density}>
@@ -116,7 +117,7 @@ export function AppProviders({
             modalProps={{
               centered: true,
               radius: "md",
-              ...(process.env.VITEST === "true"
+              ...(isRendererTest()
                 ? { transitionProps: { duration: 0 } }
                 : {}),
             }}

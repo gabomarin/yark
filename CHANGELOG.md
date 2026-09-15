@@ -11,6 +11,12 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Overview search clears after create, clone, or import so a leftover filter cannot hide the new server; cluster members show map art without repeating the shared folder; header **Remove** actions are quiet red; consoles and path chips share Cascadia Mono / Consolas. Settings remembers the last category (SteamCMD / About deep links still win; the setup assistant lands on **General**).
+- Downloads keeps a one-line job status and hides the SteamCMD log until **Advanced log** (opens on failed/interrupted jobs); Logs keeps severity badges, with INFO in quiet gray; backup status is a word plus a dot; Mods/Backups gotchas can be dismissed.
+- Workspace tabs stay in one row as a desktop tab strip (**Backups** after Launch, **Ark Server API** last); Launch flags keep the CLI token first with a human summary underneath; maps and backup rows use human names (zip secondary); Overview Open is the identity block with a visible chevron.
+- Create server stays disabled until name and base folder resolve; Server-tab **Save** waits for unsaved edits. Quick jump shows friendly maps and Ctrl+K; Settings inner categories are **Profiles** and **Log files**. Collapse controls say Collapse navigation / Collapse server list. Fleet Backups, Logs, RCON, Mods Discover, Downloads empty, and INI rows use clearer operator chrome.
+- Sidebar and Settings category rails share a rounded selected pill with a short left accent notch (Fluent-style desktop nav).
+- Empty Servers is centered with a SteamCMD setup prompt; selected chrome uses a brighter family accent (`#3b8cff`); new clusters default to `yark-cluster-1` / `yark-cluster-2`.
 - Public product site (`getyark.com`) deploys to **Cloudflare Pages** (`getyark`) instead of GitHub Pages; Web Analytics uses Cloudflare’s automatic proxied injection (no in-repo beacon).
 - Public Discord invite is now [discord.gg/DQ8nes63w7](https://discord.gg/DQ8nes63w7) (README, website, and Settings → About).
 - Discord `#releases` announce prefers the **Yark Bot** Discord application (`DISCORD_BOT_TOKEN` + repo variable `DISCORD_RELEASES_CHANNEL_ID`); notify is skipped when the channel variable is unset (no hardcoded channel id).
@@ -18,9 +24,15 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Fixed
 
 - Restoring an **INI** backup clears any leftover Configuration draft so Start cannot flush queued edits over the restored files (#530).
+- Create server no longer stays blocked after you change the install path: a disk warning from the previous folder is dropped as soon as the new path is checked.
+- Downloads **Advanced log** auto-opens only for a new failed or interrupted job, and stays collapsed if you hid it for the same leftovers.
+- Renderer errors show a Reload screen instead of a blank navy window.
+
+- Fleet Logs event rows keep When / severity / server in place so the message uses the leftover width instead of clipping in a 140px column.
 - Ark Server API no longer deletes a freshly installed `Version.dll` when a parked `Version.dll.yark-off` is also present (reinstall / Start with Load off).
 - Pending INI queue no longer drops gameplay edits when a Server-tab profile sync races an in-flight save, and partial cluster/config INI writes materialize the full draft before clearing the queue (#530).
-- Workspace **All servers** lists only enabled servers; disabled profiles stay on Overview (#526).
+- INI **Text** editor fills the workspace pane; the GameUserSettings Server-tab override hint can be dismissed.
+- Page canvas uses hull navy instead of pure black, so empty Servers no longer reads as a black hole.
 - Discord `#releases` posts omit the SemVer cut PR bullet (`release: vX.Y.Z`) from GitHub auto-generated notes.
 
 ### Docs

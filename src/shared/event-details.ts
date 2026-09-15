@@ -164,6 +164,39 @@ function formatContextValue(value: string | number | boolean | null): string {
   return String(value);
 }
 
+function isOpaqueJobContext(label: string, value: string): boolean {
+  const key = label.toLowerCase().replace(/[\s_-]/g, "");
+  if (!(key.includes("job") || key.endsWith("runid"))) {
+    return false;
+  }
+  return value.trim().length > 0;
+}
+
+/** Strip trailing hex job ids from operator-facing event lines. */
+export function formatEventMessageForDisplay(message: string): string {
+  return message.replace(/\s*\(([a-f0-9]{7,16})\)\s*$/i, "").trim();
+}
+
+export function collapseConsecutiveEvents<
+  T extends { type: string; message: string; serverId?: string | null },
+>(events: T[]): Array<{ event: T; count: number }> {
+  const out: Array<{ event: T; count: number }> = [];
+  for (const event of events) {
+    const last = out[out.length - 1];
+    if (
+      last !== undefined &&
+      last.event.type === event.type &&
+      last.event.message === event.message &&
+      (last.event.serverId ?? null) === (event.serverId ?? null)
+    ) {
+      last.count += 1;
+      continue;
+    }
+    out.push({ event, count: 1 });
+  }
+  return out;
+}
+
 /** Merge stored event details with a type-based catalog for older rows. */
 export function resolveEventDetails(event: AppEvent): ResolvedEventDetails {
   const catalog = catalogFor(event);
@@ -172,10 +205,12 @@ export function resolveEventDetails(event: AppEvent): ResolvedEventDetails {
     ...(catalog.context ?? {}),
     ...(stored.context ?? {}),
   };
-  const context = Object.entries(mergedContext).map(([label, value]) => ({
-    label,
-    value: formatContextValue(value),
-  }));
+  const context = Object.entries(mergedContext)
+    .map(([label, value]) => ({
+      label,
+      value: formatContextValue(value),
+    }))
+    .filter((item) => !isOpaqueJobContext(item.label, item.value));
 
   return {
     what: stored.what ?? catalog.what ?? event.message,

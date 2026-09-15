@@ -49,6 +49,10 @@ function createAppCssVariablesResolver(
       "--app-color-text": "var(--app-color-text-soft)",
       "--app-color-muted": "var(--app-color-muted-soft)",
       "--app-color-accent": "var(--ark-blue-9)",
+      /* Aliases so Downloads / feature CSS color-mix can paint (Slice 1). */
+      "--app-color-primary": "var(--app-color-accent)",
+      "--app-color-accent-deep": "var(--ark-blue-3)",
+      "--app-color-panel-raised": "var(--ark-gray-4)",
       "--app-color-ini-category": "var(--ark-blue-ini-category)",
       "--app-color-ok": tokens.colors.ok,
       "--app-color-warn": tokens.colors.warn,
@@ -73,6 +77,8 @@ function createAppCssVariablesResolver(
       "--app-form-description-size": `${tokens.formDescription}px`,
       "--app-form-label-size": `${tokens.formLabel}px`,
       "--app-font-page": `${tokens.pageTitle}px`,
+      "--app-font-display": '"Segoe UI Variable Display", "Segoe UI Semibold", "Segoe UI", Arial, sans-serif',
+      "--app-font-mono": '"Cascadia Mono", Consolas, monospace',
       "--app-shadow-panel": tokens.shadows.panel,
       "--app-shadow-elevated": "0 18px 36px rgba(0, 0, 0, 0.32)",
       /* Shared surface recipes — prefer AppSurfaceCard / these vars over copy-pasted gradients */
@@ -196,6 +202,7 @@ function createAppTheme(
     /** Dark text on light filled colors (fossil Restart, attention); white on red/teal filled. */
     autoContrast: true,
     fontFamily: '"Segoe UI", Arial, sans-serif',
+    fontFamilyMonospace: '"Cascadia Mono", Consolas, monospace',
     defaultRadius: "sm",
     /** Aligns `gap="xs"|…` / `p="md"` with `--app-space-*` (overrides Mantine defaults). */
     spacing: {

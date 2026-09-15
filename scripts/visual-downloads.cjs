@@ -351,6 +351,12 @@ async function runAttentionScenario(outDir, findings, errors) {
     await page.locator("[data-steamcmd-missing-banner]").waitFor({ state: "visible", timeout: 10_000 });
     await page.getByText("Needs attention", { exact: true }).waitFor({ state: "visible" });
     await page.getByText("Paused", { exact: true }).waitFor({ state: "visible" });
+    assert.equal(
+      await page.getByRole("button", { name: /^Hide advanced log$/i }).count(),
+      1,
+      "Needs attention auto-opens Advanced log",
+    );
+    assert.equal(await page.locator("[data-steamcmd-console]").count(), 1);
 
     await assertRowKind(page, "job-paused", "paused");
     await assertRowKind(page, "job-pending-legacy", "attention");
@@ -487,6 +493,9 @@ async function runHappyPathScenario(outDir, findings, errors, stubExe) {
       0,
       "Happy path must not dump live jobs into Needs attention",
     );
+    assert.equal(await page.locator("[data-steamcmd-console]").count(), 0, "Advanced log stays collapsed");
+    assert.equal(await page.getByRole("button", { name: /^Advanced log$/i }).count(), 1);
+    assert.equal(await page.locator("[data-downloads-status]").count(), 1);
 
     for (const size of sizes) {
       await page.setViewportSize({ width: size.width, height: size.height });

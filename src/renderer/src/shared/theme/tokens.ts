@@ -18,8 +18,8 @@ export const radixPalette = {
     "#274489",
     "#335197",
     "#4160a8",
-    "#4c6db5",
-    "#3f5fa6",
+    "#3b8cff",
+    "#5ca0ff",
     "#90b5ff",
     "#cde2ff",
   ],
@@ -138,6 +138,7 @@ const sharedColors = {
   text: radixPalette.gray[11],
   /** Helper / Mantine `c="dimmed"` — slightly above gray-10 for dark UI. */
   muted: "#c0c0c1",
+  /** Selected chrome / filled primary — family accent `#3b8cff` (`--ark-blue-9`). */
   accent: radixPalette.blue[8],
   ok: "#58c89a",
   warn: "#d9a85f",

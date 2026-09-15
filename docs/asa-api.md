@@ -35,7 +35,7 @@ SteamCMD sync excludes only `ShooterGame\Saved` — see
 | Spawn binary / loader adopt | `launch-args.ts`, `process-start.ts`, `process-manager.ts` |
 | “Loading Ark Server API…” window poll | `process-asa-api-loading.ts` |
 | IPC wiring | `src/main/ipc-handlers.ts`, `src/shared/ipc.ts` |
-| UI | `…/ServerAsaApiPanel/*` (workspace tab after Maintenance) |
+| UI | `…/ServerAsaApiPanel/*` (workspace tab last) |
 | Schema | `schema-migrations.json` (`use_asa_api`, `use_asa_api_loader`) |
 
 Cache root: `<userData>/cache/asa-api` (`appDataFolders.asaApiCache` in
@@ -67,7 +67,7 @@ the target).
 
 ## Operator surface
 
-Workspace tab **Ark Server API** (last tab, after Maintenance):
+Workspace tab **Ark Server API** (last in the workspace row):
 
 1. **Install** — latest GitHub release of `ArkServerApi/AsaApi` (~25–30 MB zip)
    plus `ArkServerApi/AsaApiLoader` VersionLoader zip into this server’s Win64,
