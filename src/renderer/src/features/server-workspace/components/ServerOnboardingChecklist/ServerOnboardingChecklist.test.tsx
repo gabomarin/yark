@@ -45,6 +45,26 @@ function renderChecklist(installation: ServerInstallationInfo | null): {
 }
 
 describe("ServerOnboardingChecklist", () => {
+  it("uses shared AppSurfaceCard chrome for the shell and steps (#237)", () => {
+    const { container } = render(
+      <AppProviders>
+        <ServerOnboardingChecklist
+          server={server}
+          installation={null}
+          onDismiss={vi.fn()}
+          onOpenAssistant={vi.fn()}
+          onInstallFiles={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    const root = container.querySelector("[data-server-onboarding-checklist]");
+    expect(root).not.toBeNull();
+    expect(root).toHaveAttribute("data-tone", "flat");
+    // Two nested step cards (shell itself is also flat; querySelectorAll is descendants-only).
+    expect(root!.querySelectorAll('[data-tone="flat"]').length).toBe(2);
+  });
+
   it("uses Install files as the single filled primary when files are missing (#236)", () => {
     renderChecklist(null);
 

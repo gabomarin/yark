@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- First-steps onboarding checklist uses shared **AppSurfaceCard** chrome and spacing tokens instead of a one-off panel recipe (#237).
 - Overview search clears after create, clone, or import so a leftover filter cannot hide the new server; cluster members show map art without repeating the shared folder; header **Remove** actions are quiet red; consoles and path chips share Cascadia Mono / Consolas. Settings remembers the last category (SteamCMD / About deep links still win; the setup assistant lands on **General**).
 - Downloads keeps a one-line job status and hides the SteamCMD log until **Advanced log** (opens on failed/interrupted jobs); Logs keeps severity badges, with INFO in quiet gray; backup status is a word plus a dot; Mods/Backups gotchas can be dismissed.
 - Workspace tabs stay in one row as a desktop tab strip (**Backups** after Launch, **Ark Server API** last); Launch flags keep the CLI token first with a human summary underneath; maps and backup rows use human names (zip secondary); Overview Open is the identity block with a visible chevron.

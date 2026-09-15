@@ -7,6 +7,7 @@ import {
 import { Button, Group, Stack, Text, Title } from "@mantine/core";
 import { isInstallationReady } from "@shared/server/installation-health";
 import type { ServerInstallationInfo, ServerProfile } from "@shared/types";
+import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { useState } from "react";
 import classes from "./ServerOnboardingChecklist.module.css";
 
@@ -23,7 +24,14 @@ export function ServerOnboardingChecklist(props: Props): ReactElement {
   const filesInstalled = isInstallationReady(props.installation);
 
   return (
-    <div className={classes.root}>
+    <AppSurfaceCard
+      tone="flat"
+      fill
+      padding={0}
+      radius="md"
+      className={classes.root}
+      data-server-onboarding-checklist
+    >
       <header className={classes.header}>
         <div>
           <Text c="dimmed" size="xs" fw={600}>
@@ -46,8 +54,8 @@ export function ServerOnboardingChecklist(props: Props): ReactElement {
       </header>
 
       <div className={classes.content}>
-        <Stack gap="md">
-          <section className={classes.card}>
+        <Stack gap="md" className={classes.steps}>
+          <AppSurfaceCard tone="flat" padding="md" radius="md" className={classes.step}>
             <Group gap="sm" mb="xs">
               <Title order={4}>Play experience</Title>
               {experienceDone && (
@@ -78,9 +86,9 @@ export function ServerOnboardingChecklist(props: Props): ReactElement {
                 Use defaults
               </Button>
             </Group>
-          </section>
+          </AppSurfaceCard>
 
-          <section className={classes.card}>
+          <AppSurfaceCard tone="flat" padding="md" radius="md" className={classes.step}>
             <Group gap="sm" mb="xs">
               <HardDrives size={18} />
               <Title order={4}>Server files</Title>
@@ -108,9 +116,9 @@ export function ServerOnboardingChecklist(props: Props): ReactElement {
                 Done, go to workspace
               </Button>
             </Group>
-          </section>
+          </AppSurfaceCard>
         </Stack>
       </div>
-    </div>
+    </AppSurfaceCard>
   );
 }
