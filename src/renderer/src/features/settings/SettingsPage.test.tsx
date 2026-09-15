@@ -5,7 +5,7 @@ import type { ComponentProps } from "react";
 import { AppProviders } from "@app/AppProviders";
 import { DEFAULT_LOG_RETENTION_SETTINGS } from "@shared/settings/log-retention";
 import type { SteamCmdStatus } from "@shared/types";
-import { SETTINGS_CATEGORY_STORAGE_KEY } from "./settingsModel";
+import { SETTINGS_CATEGORY_STORAGE_KEY, DEFAULT_BASE_FOLDER_STORAGE_KEY } from "./settingsModel";
 import {
   DEFAULT_BASE_FOLDER_SELECTOR,
   SETTINGS_PANEL_SCROLL_SELECTOR,
@@ -197,6 +197,7 @@ describe("SettingsPage", () => {
   afterEach(() => {
     cleanup();
     window.localStorage.removeItem(SETTINGS_CATEGORY_STORAGE_KEY);
+    window.localStorage.removeItem(DEFAULT_BASE_FOLDER_STORAGE_KEY);
     vi.restoreAllMocks();
   });
 
