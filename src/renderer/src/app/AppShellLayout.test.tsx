@@ -103,7 +103,7 @@ describe("AppShellLayout", () => {
       </AppProviders>,
     );
 
-    const toggle = screen.getByRole("button", { name: "Collapse to icon rail" });
+    const toggle = screen.getByRole("button", { name: "Collapse navigation" });
     expect(toggle).toBeInTheDocument();
     await user.click(toggle);
     expect(screen.getByRole("button", { name: "Expand navigation" })).toBeInTheDocument();

@@ -1,5 +1,5 @@
 import { MAP_NAME_COPY } from "./map-name-copy";
-import { KNOWN_MAPS } from "./types";
+import { KNOWN_MAP_OPTIONS, KNOWN_MAPS } from "./types";
 
 /** Official ASA map launch tokens shipped in `KNOWN_MAPS`. */
 export type OfficialMapId = (typeof KNOWN_MAPS)[number];
@@ -30,6 +30,19 @@ const OFFICIAL_MAP_SET = new Set<string>(KNOWN_MAPS);
 /** True when `map` is an official `KNOWN_MAPS` token. */
 export function isOfficialMap(map: string): map is OfficialMapId {
   return OFFICIAL_MAP_SET.has(map.trim());
+}
+
+/**
+ * Operator-facing map name. Official maps use the catalog label; custom tokens
+ * stay as typed. Empty input is "Custom map".
+ */
+export function formatMapDisplayName(mapToken: string): string {
+  const trimmed = mapToken.trim();
+  if (trimmed.length === 0) {
+    return "Custom map";
+  }
+  const known = KNOWN_MAP_OPTIONS.find((entry) => entry.id === trimmed);
+  return known?.label ?? trimmed;
 }
 
 /**

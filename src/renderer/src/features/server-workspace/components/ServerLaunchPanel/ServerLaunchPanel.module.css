@@ -71,11 +71,10 @@
 }
 
 .optionLabel {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--app-font-mono);
   font-size: 0.7rem;
   color: var(--app-color-cryo);
-  cursor: help;
-  border-bottom: 1px dotted color-mix(in srgb, var(--app-color-cryo) 45%, transparent);
+  cursor: default;
   border-radius: 2px;
   outline: none;
 }
@@ -89,7 +88,7 @@
   display: block;
   white-space: pre-wrap;
   word-break: break-all;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--app-font-mono);
   font-size: 0.7rem;
   line-height: 1.5;
 }

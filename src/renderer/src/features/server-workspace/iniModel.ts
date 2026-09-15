@@ -98,7 +98,7 @@ export function lookupSettingDescription(
   section: string,
   key: string,
 ): string {
-  return lookupAsaDescription(fileKey, section, key) ?? humanizeKey(key);
+  return lookupAsaDescription(fileKey, section, key) ?? humanizeIniKey(key);
 }
 
 /** Preserves file order; does not flatten dotted sections. */
@@ -240,7 +240,7 @@ function isLikelyStringSettingKey(keyLower: string): boolean {
   );
 }
 
-function humanizeKey(key: string): string {
+export function humanizeIniKey(key: string): string {
   return key
     .replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/_/g, " ")
@@ -284,7 +284,7 @@ export function filterIniRows(
       row.key,
       row.value,
       description,
-      humanizeKey(row.key),
+      humanizeIniKey(row.key),
       asaUiCategoryLabel(category),
       category,
     ]

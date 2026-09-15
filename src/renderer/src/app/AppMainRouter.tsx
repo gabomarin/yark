@@ -78,6 +78,7 @@ export function AppMainRouter(props: AppMainRouterProps): ReactElement {
         registerOverlayLeaveGuard={navigation.registerOverlayLeaveGuard}
         runWithOverlayLeaveGuard={navigation.runWithOverlayLeaveGuard}
         consumePendingSetupCluster={navigation.consumePendingSetupCluster}
+        clearOverviewSearch={() => overview.setSearch("")}
       />
     );
   }

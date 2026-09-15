@@ -185,6 +185,20 @@ function structuredLaunchSearchHaystack(
   return haystack;
 }
 
+/** Human summary shown under the CLI token. */
+export function launchOptionDisplayTitle(option: StructuredLaunchUiOption): string {
+  const summary = option.entry.summary.trim();
+  if (summary.length > 0) {
+    return summary.replace(/\.+$/, "");
+  }
+  return option.entry.token.split(/[=\s]/)[0] ?? option.entry.id;
+}
+
+/** CLI token shown as the primary Launch-row label (search still matches both). */
+export function launchOptionTokenLabel(option: StructuredLaunchUiOption): string {
+  return option.entry.token.split(/[=\s]/)[0] ?? option.entry.id;
+}
+
 /** Operator-visible text for Launch tab search (#352). */
 function matchesStructuredLaunchSearch(
   option: StructuredLaunchUiOption,

@@ -269,10 +269,11 @@ describe("ClustersPage", () => {
     await user.click(screen.getByRole("button", { name: /alpha/i }));
     const detail = document.querySelector('[data-cluster-detail="alpha"]');
     expect(detail).not.toBeNull();
-    const islandLabel = within(detail as HTMLElement).getByText("The Island");
-    const islandRow = islandLabel.closest("[class*='memberRow']");
+    const islandRow = within(detail as HTMLElement).getByRole("button", {
+      name: "Open The Island",
+    });
     expect(islandRow).not.toBeNull();
-    await user.click(islandRow as HTMLElement);
+    await user.click(islandRow);
     expect(onOpenServer).toHaveBeenCalledWith("srv-a");
   });
 

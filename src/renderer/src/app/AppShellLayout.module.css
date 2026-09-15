@@ -3,7 +3,7 @@
   min-height: 100vh;
   isolation: isolate;
   overflow: visible;
-  background-color: var(--ark-gray-1);
+  background-color: var(--app-color-bg);
   background-image:
     radial-gradient(ellipse 58% 48% at 92% -10%, var(--ark-blue-a3), transparent 70%),
     radial-gradient(
@@ -15,7 +15,7 @@
       145deg,
       color-mix(in srgb, var(--ark-background) 88%, var(--ark-gray-3)) 0%,
       var(--ark-background) 42%,
-      #11141c 100%
+      var(--ark-background) 100%
     );
 }
 

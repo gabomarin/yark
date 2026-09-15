@@ -57,7 +57,7 @@ body,
 }
 
 body {
-  background: var(--ark-gray-1);
+  background: var(--app-color-bg);
   color: var(--app-color-text);
   font-family: "Segoe UI", Arial, sans-serif;
 }

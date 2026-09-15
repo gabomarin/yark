@@ -158,6 +158,7 @@ describe("ServerLaunchPanel", () => {
 
     const label = screen.getByText("-NoBattlEye");
     expect(label.tabIndex).toBe(0);
+    expect(screen.getByText("Run server without BattleEye")).toBeInTheDocument();
   });
 
   it("filters curated flags by token, description, or group (#352)", async () => {

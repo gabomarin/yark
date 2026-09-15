@@ -146,6 +146,32 @@ async function run() {
     await ensureServer(app, page, outDir);
     await openWorkspaceIni(page);
 
+    await page.getByRole("radio", { name: "Text" }).click();
+    await page.locator("[data-ini-raw-editor]").waitFor({ state: "visible", timeout: 10000 });
+    const rawFill = await page.evaluate(() => {
+      const host = document.querySelector("[data-ini-raw-editor]");
+      const editor = document.querySelector("[data-configuration-editor]");
+      const input =
+        host instanceof HTMLTextAreaElement
+          ? host
+          : host instanceof HTMLElement
+            ? host.querySelector("textarea")
+            : null;
+      if (!(input instanceof HTMLElement) || !(editor instanceof HTMLElement)) {
+        return { ok: false, inputHeight: 0, editorHeight: 0 };
+      }
+      const inputHeight = input.getBoundingClientRect().height;
+      const editorHeight = editor.getBoundingClientRect().height;
+      return { ok: true, inputHeight, editorHeight };
+    });
+    assert.equal(rawFill.ok, true, "INI Text raw editor present");
+    assert.ok(
+      rawFill.inputHeight >= Math.min(280, rawFill.editorHeight * 0.45),
+      `INI Text editor should fill remaining pane (input=${rawFill.inputHeight}, editor=${rawFill.editorHeight})`,
+    );
+    await page.getByRole("radio", { name: "Visual" }).click();
+    await page.waitForTimeout(250);
+
     for (const size of sizes) {
       await page.setViewportSize({ width: size.width, height: size.height });
       await page.waitForTimeout(350);

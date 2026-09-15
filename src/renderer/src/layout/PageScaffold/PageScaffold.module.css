@@ -20,8 +20,10 @@
 
 .heading h1 {
   margin: 0;
+  font-family: var(--app-font-display);
   font-size: var(--app-font-page);
   line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
 .heading p {

@@ -75,7 +75,7 @@
 .versionValue {
   margin-top: 0.15rem;
   color: var(--app-color-cryo);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--app-font-mono);
   font-size: var(--mantine-font-size-sm);
 }
 
@@ -114,7 +114,7 @@
 }
 
 .filterCount {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--app-font-mono);
   font-size: 0.65rem;
   opacity: 0.9;
   padding: 0.05rem 0.35rem;
@@ -228,7 +228,7 @@
 }
 
 .token {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--app-font-mono);
   font-size: var(--mantine-font-size-sm);
   color: var(--app-color-cryo);
 }
@@ -249,7 +249,7 @@
 .rowExample {
   margin-top: 0.25rem;
   color: var(--app-color-cryo);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--app-font-mono);
   font-size: var(--mantine-font-size-xs);
   opacity: 0.9;
 }
@@ -270,7 +270,7 @@
 
 .detailToken {
   margin-top: var(--mantine-spacing-xs);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--app-font-mono);
   font-size: clamp(1rem, 0.95rem + 0.35vw, 1.25rem);
   color: var(--app-color-cryo);
   word-break: break-all;
@@ -310,7 +310,7 @@
   white-space: nowrap;
   color: var(--app-color-muted);
   background: transparent;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--app-font-mono);
 }
 
 .toneOk {
@@ -359,6 +359,6 @@
 }
 
 .mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--app-font-mono);
   color: var(--app-color-cryo);
 }

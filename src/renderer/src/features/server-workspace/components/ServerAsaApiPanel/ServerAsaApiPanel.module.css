@@ -48,7 +48,7 @@
 }
 
 .optionLabel {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--app-font-mono);
   font-size: 0.7rem;
   color: var(--app-color-cryo);
   cursor: help;

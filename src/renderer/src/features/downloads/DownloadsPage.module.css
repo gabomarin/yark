@@ -49,6 +49,24 @@
   padding: var(--app-space-xs);
 }
 
+.consoleStack {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.logDockBar {
+  flex-shrink: 0;
+  padding: var(--app-space-xs) var(--app-space-sm);
+  border-top: 1px solid var(--app-color-border-subtle);
+}
+
+.logStatus {
+  min-width: 0;
+  color: var(--app-color-text);
+}
+
 .sectionLabel {
   padding-inline: 2px;
   font-size: 11px;

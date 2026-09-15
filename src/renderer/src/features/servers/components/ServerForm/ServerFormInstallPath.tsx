@@ -40,7 +40,10 @@ export function ServerFormInstallPath(props: Props): ReactElement {
     );
   }, [props.fleetInstalls, props.isCreate, props.resolvedInstallPreview]);
 
-  const [diskWarning, setDiskWarning] = useState<string | null>(null);
+  const [diskWarning, setDiskWarning] = useState<{
+    path: string;
+    message: string | null;
+  } | null>(null);
   const [debouncedPreview] = useDebouncedValue(props.resolvedInstallPreview, 400);
 
   useEffect(() => {
@@ -53,25 +56,39 @@ export function ServerFormInstallPath(props: Props): ReactElement {
       setDiskWarning(null);
       return;
     }
+    const probedPath = debouncedPreview;
     let cancelled = false;
-    void probe(debouncedPreview).then((result) => {
-      if (cancelled) {
-        return;
-      }
-      if (!result.ok) {
-        setDiskWarning(null);
-        return;
-      }
-      setDiskWarning(diskCreateInstallWarning(result.data));
-    });
+    setDiskWarning(null);
+    void probe(probedPath)
+      .then((result) => {
+        if (cancelled) {
+          return;
+        }
+        if (!result.ok) {
+          setDiskWarning(null);
+          return;
+        }
+        setDiskWarning({
+          path: probedPath,
+          message: diskCreateInstallWarning(result.data),
+        });
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setDiskWarning(null);
+        }
+      });
     return () => {
       cancelled = true;
     };
   }, [debouncedPreview, fleetWarning, props.isCreate]);
 
-  const createPathIssue =
-    fleetWarning ??
-    (props.resolvedInstallPreview === debouncedPreview ? diskWarning : null);
+  const diskIssue =
+    props.resolvedInstallPreview === debouncedPreview &&
+    diskWarning?.path === debouncedPreview
+      ? diskWarning.message
+      : null;
+  const createPathIssue = fleetWarning ?? diskIssue;
 
   useEffect(() => {
     onCreatePathIssueChange?.(

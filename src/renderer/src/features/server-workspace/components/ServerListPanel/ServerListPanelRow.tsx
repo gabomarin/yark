@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { Badge, Text, Tooltip, UnstyledButton } from "@mantine/core";
 import type { ServerProfile } from "@shared/types";
+import { formatMapDisplayName } from "@shared/map-identity";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import {
   serverRuntimeStatusLabel,
@@ -9,7 +10,7 @@ import {
 import classes from "./ServerListPanel.module.css";
 
 function rowAccessibleName(server: ServerProfile, status: string): string {
-  const parts = [server.name, server.map, serverRuntimeStatusLabel(status)];
+  const parts = [server.name, formatMapDisplayName(server.map), serverRuntimeStatusLabel(status)];
   if (!server.enabled) {
     parts.push("Inactive");
   }
@@ -72,7 +73,7 @@ export function ServerListPanelRow(props: {
                 title={props.server.map}
                 lineClamp={1}
               >
-                {props.server.map}
+                {formatMapDisplayName(props.server.map)}
               </Text>
               {!props.server.enabled && (
                 <Badge size="xs" variant="light" color="gray" mt={4} tt="none">

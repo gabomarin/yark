@@ -17,6 +17,8 @@ interface Props {
   tone?: ServerCardMetaTone;
   /** Optional non-intrusive tooltip (e.g. stale Version label explainer). */
   hint?: string | null;
+  /** Hover text without the warning icon (e.g. map launch token). */
+  tooltip?: string | null;
 }
 
 /** Map status tones → Mantine `c` shades (theme.colors + index). */
@@ -54,6 +56,7 @@ export function ServerCardMetaItem({
   value,
   tone = "default",
   hint = null,
+  tooltip = null,
 }: Props): ReactElement {
   const valueTone = tone === "warn" ? "attention" : tone;
   const hasHint = hint != null && hint.length > 0;
@@ -103,6 +106,10 @@ export function ServerCardMetaItem({
           withArrow
           events={{ hover: true, focus: false, touch: true }}
         >
+          {valueRow}
+        </Tooltip>
+      ) : tooltip != null && tooltip.length > 0 ? (
+        <Tooltip label={tooltip} withArrow>
           {valueRow}
         </Tooltip>
       ) : (

@@ -18,15 +18,19 @@ import {
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { PathField } from "@ui/PathField/PathField";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
+import { StatusWord } from "@ui/StatusWord/StatusWord";
 import type { BackupServerHealth, ServerProfile } from "@shared/types";
 import type { BackupPolicyDraft } from "../../backupPolicyDraft";
 import {
-  backupHealthColor,
   backupHealthLabel,
   backupHealthTooltip,
   formatBackupBytes,
-  formatBackupWhen,
 } from "../../model/backupsPageModel";
+import {
+  formatBackupKindLabel,
+  formatBackupTypeLabel,
+  formatBackupWhenLabel,
+} from "../../model/serverBackupPanelModel";
 import classes from "../../BackupsPage.module.css";
 
 export interface ServerHealthCardProps {
@@ -44,12 +48,21 @@ export interface ServerHealthCardProps {
   onSave: () => void;
 }
 
+function healthTone(
+  health: BackupServerHealth["health"],
+): "ok" | "warn" | "danger" | "neutral" {
+  if (health === "ok") return "ok";
+  if (health === "warning") return "warn";
+  if (health === "critical") return "danger";
+  return "neutral";
+}
+
 export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
   const { row, draft } = props;
   return (
     <AppSurfaceCard>
       <Stack gap="sm">
-        <Group justify="space-between" align="flex-start" wrap="wrap">
+        <Group justify="space-between" align="flex-start" wrap="wrap" className={classes.healthCardHeader}>
           <div>
             <Group gap="xs">
               <HardDrives size={16} />
@@ -59,26 +72,28 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
                   Inactive
                 </Text>
               )}
-              <Tooltip
-                label={backupHealthTooltip(row.health)}
-                multiline
-                maw={320}
-                withArrow
-              >
-                <Text size="sm" fw={600} c={backupHealthColor(row.health)} span>
-                  {backupHealthLabel(row.health)}
-                </Text>
-              </Tooltip>
+              {row.health !== "ok" ? (
+                <Tooltip
+                  label={backupHealthTooltip(row.health)}
+                  multiline
+                  maw={320}
+                  withArrow
+                >
+                  <StatusWord tone={healthTone(row.health)}>
+                    {backupHealthLabel(row.health)}
+                  </StatusWord>
+                </Tooltip>
+              ) : null}
             </Group>
             <Text size="sm" c="dimmed" mb={4}>
               Destination
             </Text>
             <ReadonlyPath value={row.resolvedRoot} compact />
             <Text size="xs" c="dimmed">
-              Latest: {formatBackupWhen(row.latest?.createdAt)}
-              {row.latest !== null
-                ? ` (${row.latest.kind} · ${row.latest.type} · ${row.latest.status})`
-                : ""}
+              Latest:{" "}
+              {row.latest === null
+                ? "none"
+                : `${formatBackupWhenLabel(row.latest.createdAt).primary} (${formatBackupKindLabel(row.latest.kind)} · ${formatBackupTypeLabel(row.latest.type)} · ${row.latest.status})`}
               {row.policy.enabled
                 ? ` · Schedule ${row.policy.intervalMinutes}m`
                 : " · Schedule off"}
@@ -93,6 +108,13 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
           </div>
           <Group gap="xs">
             <Button
+              variant="light"
+              leftSection={<ArrowSquareOut size={16} />}
+              onClick={props.onOpenServer}
+            >
+              Open in server
+            </Button>
+            <Button
               variant="subtle"
               leftSection={<FolderOpen size={16} />}
               onClick={props.onOpenDestination}
@@ -101,15 +123,21 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
               Open destination
             </Button>
             <Button
-              variant="light"
-              leftSection={<ArrowSquareOut size={16} />}
-              onClick={props.onOpenServer}
+              variant="subtle"
+              color="gray"
+              onClick={props.onToggleExpand}
             >
-              Open in server
-            </Button>
-            <Button variant="default" onClick={props.onToggleExpand}>
               {props.expanded ? "Hide settings" : "Edit settings"}
             </Button>
+            {props.expanded && draft !== undefined ? (
+              <Button
+                leftSection={<FloppyDisk size={16} />}
+                loading={props.busy}
+                onClick={props.onSave}
+              >
+                Save
+              </Button>
+            ) : null}
           </Group>
         </Group>
 
@@ -210,13 +238,6 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
                 }
                 className={classes.policyField}
               />
-              <Button
-                leftSection={<FloppyDisk size={16} />}
-                loading={props.busy}
-                onClick={props.onSave}
-              >
-                Save
-              </Button>
             </Group>
           </Stack>
         )}

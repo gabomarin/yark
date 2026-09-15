@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import { UnstyledButton } from "@mantine/core";
 import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
 import type { ServerProfile, ServerStatus } from "@shared/types";
+import { formatMapDisplayName } from "@shared/map-identity";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 import {
   formatServerRamCpuMeta,
@@ -79,7 +80,11 @@ export function ServerCardMetaGrid(props: Props): ReactElement {
         data-meta-grid
         data-meta-cols={String(metaCols)}
       >
-        <ServerCardMetaItem label="Map" value={props.server.map} />
+        <ServerCardMetaItem
+          label="Map"
+          value={formatMapDisplayName(props.server.map)}
+          tooltip={props.server.map}
+        />
         <ServerCardMetaItem label="Cluster" value={props.server.clusterId ?? "–"} />
         <ServerCardMetaItem label="Mods" value={String(props.server.mods.length)} />
         {survivorsMeta != null ? (

@@ -159,7 +159,7 @@ export function BackupListToolbar(props: Props): ReactElement {
           <span>
             <Button
               color="red"
-              variant="filled"
+              variant="subtle"
               size="compact-sm"
               leftSection={<Trash size={14} />}
               disabled={busy || createLocked === true || actionableSelectedCount === 0}
@@ -173,7 +173,7 @@ export function BackupListToolbar(props: Props): ReactElement {
         <Tooltip label="Remove every failed row for this server and backup kind">
           <Button
             color="red"
-            variant="filled"
+            variant="subtle"
             size="compact-sm"
             disabled={busy || createLocked === true}
             onClick={onClearFailed}
