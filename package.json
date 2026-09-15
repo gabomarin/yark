@@ -14,6 +14,7 @@
     "dev": "electron-vite dev",
     "dev:compiler": "node scripts/with-react-compiler.cjs electron-vite dev",
     "build": "electron-vite build",
+    "build:report": "node scripts/build-renderer-report.cjs",
     "build:compiler": "node scripts/with-react-compiler.cjs electron-vite build",
     "start": "electron-vite preview",
     "package": "electron-vite build && electron-builder --win",

@@ -1,7 +1,8 @@
 import { defineConfig, externalizeDepsPlugin } from "electron-vite";
 import react from "@vitejs/plugin-react";
-import { copyFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { relative, resolve } from "node:path";
+import { gzipSync } from "node:zlib";
 import type { Plugin } from "vite";
 
 /**
@@ -72,6 +73,65 @@ function copySplashAssetsPlugin(): Plugin {
     writeBundle: copy,
   };
 }
+
+/**
+ * Emits a production renderer inventory without changing the normal build.
+ *
+ * The report is deliberately opt-in: it is evidence for #147 / #527, not a
+ * bundle budget or a new artifact shipped to operators.
+ */
+function rendererBundleReportPlugin(): Plugin | null {
+  if (process.env.YARK_BUNDLE_REPORT !== "1") return null;
+
+  return {
+    name: "yark-renderer-bundle-report",
+    generateBundle(_, bundle) {
+      const chunks = Object.values(bundle)
+        .filter((entry): entry is Extract<(typeof bundle)[string], { type: "chunk" }> =>
+          entry.type === "chunk",
+        )
+        .map((chunk) => {
+          const modules = Object.entries(chunk.modules)
+            .map(([id, module]) => ({
+              id: relative(__dirname, id).replaceAll("\\", "/"),
+              renderedBytes: module.renderedLength,
+              originalBytes: module.originalLength,
+            }))
+            .sort((left, right) => right.renderedBytes - left.renderedBytes);
+
+          return {
+            fileName: chunk.fileName,
+            isEntry: chunk.isEntry,
+            imports: chunk.imports,
+            dynamicImports: chunk.dynamicImports,
+            rawBytes: Buffer.byteLength(chunk.code),
+            gzipBytes: gzipSync(chunk.code).byteLength,
+            modules,
+          };
+        })
+        .sort((left, right) => right.rawBytes - left.rawBytes);
+
+      const outputPath = resolve(__dirname, "artifacts", "renderer-bundle-report.json");
+      mkdirSync(resolve(__dirname, "artifacts"), { recursive: true });
+      writeFileSync(
+        outputPath,
+        `${JSON.stringify(
+          {
+            schemaVersion: 1,
+            generatedAt: new Date().toISOString(),
+            appVersion,
+            chunks,
+          },
+          null,
+          2,
+        )}\n`,
+      );
+      console.info(`[bundle-report] wrote ${outputPath}`);
+    },
+  };
+}
+
+const rendererBundleReport = rendererBundleReportPlugin();
 
 const rendererAlias = {
   ...sharedAlias,
@@ -156,6 +216,7 @@ export default defineConfig({
             }
           : {},
       ),
+      ...(rendererBundleReport === null ? [] : [rendererBundleReport]),
     ],
     resolve: { alias: rendererAlias },
     define: appDefines,

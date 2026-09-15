@@ -62,6 +62,13 @@
   min-height: 0;
 }
 
+.panelLoading {
+  display: grid;
+  place-items: center;
+  min-height: 8rem;
+  color: var(--app-color-muted);
+}
+
 .tabChrome {
   position: sticky;
   top: 0;

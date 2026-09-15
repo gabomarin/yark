@@ -58,8 +58,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
-        run: npm run build
+      - name: Build and report renderer bundle
+        run: npm run build:report
+
+      - name: Upload renderer bundle report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: renderer-bundle-report
+          path: artifacts/renderer-bundle-report.json
+          if-no-files-found: error
 
       # Electron UI gates (#12). Isolated YARK_E2E_USER_DATA; no real ASA depot.
       # Smoke is local-only: CRUD already covers launch, Overview, and shell nav.

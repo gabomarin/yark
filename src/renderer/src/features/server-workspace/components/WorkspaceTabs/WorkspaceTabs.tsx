@@ -1,24 +1,45 @@
 import { Tabs } from "@mantine/core";
 import type { AppEvent, ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import { lazy, Suspense, useState, type ReactElement } from "react";
 import { ServerBackupPanel } from "@features/backups/ServerBackupPanel";
-import { MaintenancePanel } from "@features/maintenance/MaintenancePanel";
-import { ServerLogsPanel, type ServerLogsFocus } from "@features/logs/ServerLogsPanel";
+import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
+import { RconPanel } from "../RconPanel/RconPanel";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
 import { MoveInstallDialog } from "@features/servers/components/MoveInstallDialog/MoveInstallDialog";
-import { useState, type ReactElement } from "react";
 import type {
   RconHistoryEntry,
   WorkspaceTab,
 } from "../../serverWorkspaceTypes";
 import { ConfigurationEditor } from "../ConfigurationEditor/ConfigurationEditor";
-import { RconPanel } from "../RconPanel/RconPanel";
 import type { PlayerListState } from "../RconPanel/PlayerListSection";
-import { ServerModsPanel } from "../ServerModsPanel/ServerModsPanel";
-import { ServerLaunchPanel } from "../ServerLaunchPanel/ServerLaunchPanel";
-import { ServerAsaApiPanel } from "../ServerAsaApiPanel/ServerAsaApiPanel";
 import { WorkspaceTabList } from "../WorkspaceTabList/WorkspaceTabList";
 import { WorkspacePanelErrorBoundary } from "@ui/WorkspacePanelErrorBoundary/WorkspacePanelErrorBoundary";
 import classes from "../../ServerWorkspacePage.module.css";
+
+const MaintenancePanel = lazy(async () => {
+  const module = await import("@features/maintenance/MaintenancePanel");
+  return { default: module.MaintenancePanel };
+});
+const ServerLogsPanel = lazy(async () => {
+  const module = await import("@features/logs/ServerLogsPanel");
+  return { default: module.ServerLogsPanel };
+});
+const ServerModsPanel = lazy(async () => {
+  const module = await import("../ServerModsPanel/ServerModsPanel");
+  return { default: module.ServerModsPanel };
+});
+const ServerLaunchPanel = lazy(async () => {
+  const module = await import("../ServerLaunchPanel/ServerLaunchPanel");
+  return { default: module.ServerLaunchPanel };
+});
+const ServerAsaApiPanel = lazy(async () => {
+  const module = await import("../ServerAsaApiPanel/ServerAsaApiPanel");
+  return { default: module.ServerAsaApiPanel };
+});
+
+function WorkspacePanelLoading(): ReactElement {
+  return <div className={classes.panelLoading}>Loading workspace panel…</div>;
+}
 
 interface Props {
   value: WorkspaceTab;
@@ -80,133 +101,133 @@ export function WorkspaceTabs(props: Props): ReactElement {
         <WorkspaceTabList />
 
         <div className={classes.tabPanel}>
-          <WorkspacePanelErrorBoundary
-            resetKey={`${props.value}:${props.server.id}:${props.server.installDir}`}
-          >
-            {props.value === "server" && (
-              <ServerForm
-                // Remount when install path changes (Move) without remounting on every
-                // mods/metadata refresh (updatedAt), which closed the Map select mid-pick.
-                key={`${props.server.id}:${props.server.installDir}`}
-                initial={props.server}
-                servers={props.servers}
-                variant="embedded"
-                serverActive={props.opsLocked}
-                filesJobActive={props.filesJobActive}
-                onCancel={props.onBack}
-                onSaved={props.onServerUpdated}
-                onRegisterLeaveGuard={props.onRegisterProfileLeaveGuard}
-                onDirtyChange={props.onProfileDirtyChange}
-                onRegisterSave={props.onRegisterProfileSave}
-                onOpenMoveInstall={() => {
-                  setMoveServer(props.server);
-                  setMoveDialogOpen(true);
-                }}
-                onOpenConfigurationAssistant={props.onOpenAssistant}
-                configurationAssistantDisabled={props.iniDirty}
-              />
-            )}
-
-            {props.value === "mods" && (
-              <ServerModsPanel
-                key={props.server.id}
-                server={props.server}
-                onServerUpdated={props.onServerUpdated}
-              />
-            )}
-
-            {props.value === "launch" && (
-              <ServerLaunchPanel
-                key={props.server.id}
-                server={props.server}
-                onServerUpdated={props.onServerUpdated}
-              />
-            )}
-
-            {props.value === "iniFiles" && (
-              <div className={classes.configHost}>
-                <ConfigurationEditor
-                  key={`${props.server.id}:${props.iniEditorVersion}`}
-                  server={props.server}
-                  section="iniFiles"
+          <WorkspacePanelErrorBoundary resetKey={`${props.value}:${props.server.id}:${props.server.installDir}`}>
+            <Suspense fallback={<WorkspacePanelLoading />}>
+              {props.value === "server" && (
+                <ServerForm
+                  // Remount when install path changes (Move) without remounting on every
+                  // mods/metadata refresh (updatedAt), which closed the Map select mid-pick.
+                  key={`${props.server.id}:${props.server.installDir}`}
+                  initial={props.server}
+                  servers={props.servers}
+                  variant="embedded"
                   serverActive={props.opsLocked}
                   filesJobActive={props.filesJobActive}
-                  onDirtyChange={props.onIniDirtyChange}
-                  onRegisterSave={props.onRegisterIniSave}
-                  onOpenAdminList={() => {
-                    setRconPlayersFocus("admins");
-                    props.onChange("rcon");
+                  onCancel={props.onBack}
+                  onSaved={props.onServerUpdated}
+                  onRegisterLeaveGuard={props.onRegisterProfileLeaveGuard}
+                  onDirtyChange={props.onProfileDirtyChange}
+                  onRegisterSave={props.onRegisterProfileSave}
+                  onOpenMoveInstall={() => {
+                    setMoveServer(props.server);
+                    setMoveDialogOpen(true);
                   }}
+                  onOpenConfigurationAssistant={props.onOpenAssistant}
+                  configurationAssistantDisabled={props.iniDirty}
                 />
-              </div>
-            )}
+              )}
 
-            {props.value === "backups" && (
-              <ServerBackupPanel
-                server={props.server}
-                runtime={props.runtime}
-                installation={props.installation}
-                embedded
-                opsLocked={props.opsLocked}
-                opsLockReason={
-                  props.stopJobActive
-                    ? props.stopLockReason
-                    : props.filesJobActive
-                      ? props.filesLockReason
-                      : undefined
-                }
-                createLocked={props.stopJobActive}
-                createLockReason={props.stopLockReason}
-              />
-            )}
+              {props.value === "mods" && (
+                <ServerModsPanel
+                  key={props.server.id}
+                  server={props.server}
+                  onServerUpdated={props.onServerUpdated}
+                />
+              )}
 
-            {props.value === "logs" && (
-              <ServerLogsPanel
-                server={props.server}
-                embedded
-                focus={props.logsFocus}
-                onFocusConsumed={props.onLogsFocusConsumed}
-                onOpenBackupsTab={() => props.onChange("backups")}
-                asaApiLoading={props.runtime?.asaApiLoading === true}
-              />
-            )}
+              {props.value === "launch" && (
+                <ServerLaunchPanel
+                  key={props.server.id}
+                  server={props.server}
+                  onServerUpdated={props.onServerUpdated}
+                />
+              )}
 
-            {props.value === "rcon" && (
-              <RconPanel
-                server={props.server}
-                runtime={props.runtime}
-                events={props.events}
-                rconHistory={props.rconHistory}
-                playerList={props.playerList}
-                iniDirty={props.iniDirty}
-                playersPanelFocus={rconPlayersFocus}
-                onPlayersPanelFocusConsumed={() => setRconPlayersFocus(null)}
-                onSendRcon={props.onSendRcon}
-                onClearRconHistory={props.onClearRconHistory}
-                onRconTabFocusChanged={props.onRconTabFocusChanged}
-                onRefreshPlayers={props.onRefreshPlayers}
-                onKickPlayer={props.onKickPlayer}
-                onBanPlayer={props.onBanPlayer}
-              />
-            )}
+              {props.value === "iniFiles" && (
+                <div className={classes.configHost}>
+                  <ConfigurationEditor
+                    key={`${props.server.id}:${props.iniEditorVersion}`}
+                    server={props.server}
+                    section="iniFiles"
+                    serverActive={props.opsLocked}
+                    filesJobActive={props.filesJobActive}
+                    onDirtyChange={props.onIniDirtyChange}
+                    onRegisterSave={props.onRegisterIniSave}
+                    onOpenAdminList={() => {
+                      setRconPlayersFocus("admins");
+                      props.onChange("rcon");
+                    }}
+                  />
+                </div>
+              )}
 
-            {props.value === "maintenance" && (
-              <MaintenancePanel
-                server={props.server}
-                runtime={props.runtime}
-                installation={props.installation}
-                filesJobActive={props.filesJobActive || props.stopJobActive}
-                startBusy={props.startBusy}
-              />
-            )}
+              {props.value === "backups" && (
+                <ServerBackupPanel
+                  server={props.server}
+                  runtime={props.runtime}
+                  installation={props.installation}
+                  embedded
+                  opsLocked={props.opsLocked}
+                  opsLockReason={
+                    props.stopJobActive
+                      ? props.stopLockReason
+                      : props.filesJobActive
+                        ? props.filesLockReason
+                        : undefined
+                  }
+                  createLocked={props.stopJobActive}
+                  createLockReason={props.stopLockReason}
+                />
+              )}
 
-            {props.value === "asaApi" && (
-              <ServerAsaApiPanel
-                key={props.server.id}
-                server={props.server}
-                onServerUpdated={props.onServerUpdated}
-              />
-            )}
+              {props.value === "logs" && (
+                <ServerLogsPanel
+                  server={props.server}
+                  embedded
+                  focus={props.logsFocus}
+                  onFocusConsumed={props.onLogsFocusConsumed}
+                  onOpenBackupsTab={() => props.onChange("backups")}
+                  asaApiLoading={props.runtime?.asaApiLoading === true}
+                />
+              )}
+
+              {props.value === "rcon" && (
+                <RconPanel
+                  server={props.server}
+                  runtime={props.runtime}
+                  events={props.events}
+                  rconHistory={props.rconHistory}
+                  playerList={props.playerList}
+                  iniDirty={props.iniDirty}
+                  playersPanelFocus={rconPlayersFocus}
+                  onPlayersPanelFocusConsumed={() => setRconPlayersFocus(null)}
+                  onSendRcon={props.onSendRcon}
+                  onClearRconHistory={props.onClearRconHistory}
+                  onRconTabFocusChanged={props.onRconTabFocusChanged}
+                  onRefreshPlayers={props.onRefreshPlayers}
+                  onKickPlayer={props.onKickPlayer}
+                  onBanPlayer={props.onBanPlayer}
+                />
+              )}
+
+              {props.value === "maintenance" && (
+                <MaintenancePanel
+                  server={props.server}
+                  runtime={props.runtime}
+                  installation={props.installation}
+                  filesJobActive={props.filesJobActive || props.stopJobActive}
+                  startBusy={props.startBusy}
+                />
+              )}
+
+              {props.value === "asaApi" && (
+                <ServerAsaApiPanel
+                  key={props.server.id}
+                  server={props.server}
+                  onServerUpdated={props.onServerUpdated}
+                />
+              )}
+            </Suspense>
           </WorkspacePanelErrorBoundary>
         </div>
       </Tabs>
