@@ -39,6 +39,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Changed
 
 - First-steps onboarding checklist uses shared **AppSurfaceCard** chrome and spacing tokens instead of a one-off panel recipe (#237).
+- Settings and Clusters use a fused master-detail slab (no gutter, fills the viewport): **chrome** surface for contrast vs the page canvas, raised panel SettingsCards/rows inside. Settings is flush to the app sidebar; **Desktop alerts** nests event toggles in one group. List selection uses a Fluent short left notch (no status notch on the Clusters detail pane). Workspace server rail uses the same short notch as the sidebar.
+- Operator gotchas (`DismissibleHint`) render as an InfoBar (solid panel + left accent) instead of a translucent Alert wash.
 - Overview search clears after create, clone, or import so a leftover filter cannot hide the new server; cluster members show map art without repeating the shared folder; header **Remove** actions are quiet red; consoles and path chips share Cascadia Mono / Consolas. Settings remembers the last category (SteamCMD / About deep links still win; the setup assistant lands on **General**).
 - Downloads keeps a one-line job status and hides the SteamCMD log until **Advanced log** (opens on failed/interrupted jobs); Logs keeps severity badges, with INFO in quiet gray; backup status is a word plus a dot; Mods/Backups gotchas can be dismissed.
 - Workspace tabs stay in one row as a desktop tab strip (**Backups** after Launch, **Ark Server API** last); Launch flags keep the CLI token first with a human summary underneath; maps and backup rows use human names (zip secondary); Overview Open is the identity block with a visible chevron.

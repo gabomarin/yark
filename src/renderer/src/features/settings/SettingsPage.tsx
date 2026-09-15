@@ -130,13 +130,24 @@ export function SettingsPage(props: Props): ReactElement {
     <PageScaffold
       title="Settings"
       fillViewport
+      edgeToEdge
+      showHeader={false}
     >
       <div className={classes.layout} data-settings-page>
-        <AppSurfaceCard tone="chrome" fill padding="sm" className={classes.navCard}>
-          <SettingsNav
-            active={category}
-            onChange={setCategory}
-          />
+        <AppSurfaceCard
+          tone="chrome"
+          fill
+          radius={0}
+          padding="sm"
+          className={classes.navCard}
+        >
+          <div className={classes.navPane}>
+            <h1 className={classes.navTitle}>Settings</h1>
+            <SettingsNav
+              active={category}
+              onChange={setCategory}
+            />
+          </div>
         </AppSurfaceCard>
 
         <div className={classes.panel}>

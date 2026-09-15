@@ -115,11 +115,11 @@ Solid **bg / raised / control** come from `tokens.ts` + `theme.ts`. Do **not** i
 | Chrome | `--app-color-surface-chrome` (`#121213`) | `color-mix` of gray + blue for sidebars |
 | Raised / panels | `--app-color-panel` (`#1f1f1f`) | Translucent panel washes |
 | Controls | `--app-color-surface-control` (`#303030`) | Mixing control fill with `--ark-blue-*` |
-| Page / tool panes | Sit on `--app-color-bg`; form sections = flush square cards | Wrapping Logs, Settings, or the whole form in one rounded Card |
-| Discrete entities | `AppSurfaceCard tone="flat"` (cluster, backup row, chrome rail) | Cool wash as a page shell |
+| Page / tool panes | Sit on `--app-color-bg`; fused master-detail slabs use **chrome** | Wrapping Logs or the whole form in one rounded Card |
+| Discrete entities | `AppSurfaceCard tone="flat"` (cluster row, backup row) | Cool wash as a page shell |
 | Accent heroes | `tone="coolEmphasis"` (rare) | Using cool wash as the default page shell |
-| Nested widgets | `tone="flat"` (or nested inside a flat shell) | Mixing Card + ad-hoc panel bg |
-| Shell rails | `tone="chrome"` or chrome parent + flat children | Cool gradients in sidebars |
+| Nested widgets | `tone="flat"` / panel on chrome parent | Mixing Card + ad-hoc panel bg |
+| Shell rails / fused panes | `tone="chrome"` or chrome slab + panel children | Cool gradients in sidebars |
 | Status accent | `statusTone` on `AppSurfaceCard` | One-off `box-shadow: inset 3px…` |
 | **Exception — INI editor chrome** (#516) | Category headers: deep blue `--app-color-ini-category` (`#0d1836`) + **subtle** blue lift (~90% token) + 3px ark-blue rail. **Other** subgroups: `surface-control` gray + soft ~80%/20% black deepen (no blue wash). Table body tint + opaque setting rows. Hairline `border-bottom` only | Cool **gradients** on page shells / filter bar / `tableWrap`; gray-slate category slabs; strong blue→black washes; translucent setting rows; stacked thick borders when collapsed |
 
@@ -167,7 +167,9 @@ gap: var(--app-space-sm);            // preferred in CSS modules
 
 Theme `defaultRadius` is **`sm`**. Avoid raw `border-radius` when a token fits. Tek icon tiles keep asymmetric radius by design (`AccentIconTile shape="tek"`). Create/edit **Identity** map art uses `MapArtThumb shape="rounded"` so the thumb matches flush square form sections; default `tek` remains for brand-like thumbs elsewhere.
 
-**Square vs rounded:** Overview server **list rows** (`ServerCard`), create/edit **form sections**, Logs event/backup/update lists, and the Clusters **How transfers work** Accordion are square (`radius={0}`) so stacked chrome reads as one slab. Discrete entity cards use `AppSurfaceCard` default **`md`** (8px Comfortable); do not wrap the whole Logs/Settings pane in a Card (#469).
+**Square vs rounded:** Overview server **list rows** (`ServerCard`), create/edit **form sections**, Logs event/backup/update lists, and the Clusters **How transfers work** Accordion are square (`radius={0}`) so stacked chrome reads as one slab. **Fused master-detail** (Clusters list+detail, Settings category+content): one square slab (`gap: 0`, shared outer border, 1px divider), **`--app-color-surface-chrome` fill** for contrast against the page canvas, raised **panel** SettingsCards/rows inside. Settings is flush to the app sidebar (`PageScaffold edgeToEdge`). Discrete entity cards use `AppSurfaceCard` default **`md`** (8px Comfortable); do not wrap the whole Logs page canvas in a Card (#469).
+
+**Settings preference rows:** consecutive `.settingRow` cells live in `.settingStack` — a square contiguous slab (`radius: 0`, shared hairlines, no gap). Title + one-line description, control on the right. Master toggles with child options use `.settingGroup` (one outer card; children are internal hairline rows, not indented mini-cards).
 
 ### 4. Color / status
 
@@ -198,6 +200,9 @@ Theme `defaultRadius` is **`sm`**. Avoid raw `border-radius` when a token fits. 
   (`shared/ui/NavSelected`) onto Mantine `NavLink` — rounded fill
   (`--app-list-selected-bg`) plus a short left accent notch (`--ark-blue-9`).
   Do not wrap a second NavLink; do not use the full-height list inset on those rails.
+- **Clusters All-clusters list** and the **workspace server rail** use the same short
+  notch (not the full-height inset). Pass `selectedChrome="notch"` on
+  `SelectableListRow`, or mirror the NavSelected `::before` recipe on custom rows.
 - Focus rings: reuse existing `:focus-visible` patterns (ark-blue outline), don’t invent per-page rings.
 
 ### 5a. Keyboard contract (#475)
@@ -324,7 +329,7 @@ Don’t mix comfortable Overview padding into dense INI/backup toolbars without 
 | Tone | CSS / component | Use for |
 | --- | --- | --- |
 | `flat` (default) | `tone="flat"` / `--app-surface-flat` | **Content panels** — sidebar pages and workspace tabs (#346) |
-| `chrome` | `tone="chrome"` | Shell-adjacent asides (Settings nav, workspace rails) |
+| `chrome` | `tone="chrome"` | Shell rails, Settings category pane, **fused master-detail slabs** (contrast vs page canvas) |
 | `coolEmphasis` | `tone="coolEmphasis"` | Rare hero / primary-operation accent cards |
 | `cool` | `--app-surface-cool` | Rare accent tiles only (not page shells); Overview **ServerCard** is a square row, not this tone |
 
@@ -349,7 +354,7 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 | `SearchField` | `shared/ui/SearchField/` | Search inputs — see **SearchField variants** below |
 | `ServerRuntimeStatusBadge` | `shared/ui/ServerRuntimeStatusBadge/` | Process status word + dot |
 | `StatusWord` | `shared/ui/StatusWord/` | Generic status word + dot (backup health/history; quieter than Badge) |
-| `DismissibleHint` | `shared/ui/DismissibleHint/` | Operator gotcha Alert with a stable localStorage dismiss key |
+| `DismissibleHint` | `shared/ui/DismissibleHint/` | Operator gotcha as Fluent-style InfoBar (solid panel + left accent + dismiss); stable localStorage key |
 | `ReadonlyPath` | `shared/ui/ReadonlyPath/` | Bordered monospace chip for configured filesystem paths |
 | `PathField` | `shared/ui/PathField/` | Read-only path chip + Browse/Clear actions |
 | `ConsoleSurface` | `shared/ui/ConsoleSurface/` | ScrollArea monospace console for SteamCMD / Logs (plain text, stick-to-bottom) |

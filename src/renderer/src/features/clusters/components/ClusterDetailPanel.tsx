@@ -115,8 +115,8 @@ export function ClusterDetailPanel(props: Props): ReactElement {
   return (
     <AppSurfaceCard
       fill
+      radius={0}
       className={classes.detailPanel}
-      statusTone={props.report.ok ? "ok" : "error"}
       data-cluster-detail={props.report.clusterId}
     >
       <Stack gap="md" className={classes.panelStack}>
@@ -156,6 +156,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
         )}
 
         <MetaStrip
+          className={classes.detailMeta}
           items={[
             {
               label: "Shared cluster directory",

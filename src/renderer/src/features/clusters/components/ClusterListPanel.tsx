@@ -16,7 +16,7 @@ interface Props {
 
 export function ClusterListPanel(props: Props): ReactElement {
   return (
-    <AppSurfaceCard fill className={classes.listPanel}>
+    <AppSurfaceCard fill radius={0} className={classes.listPanel}>
       <Stack gap="sm" className={classes.panelStack}>
         <Title order={3} size="h4">
           All clusters
@@ -32,6 +32,8 @@ export function ClusterListPanel(props: Props): ReactElement {
               <SelectableListRow
                 key={report.clusterId}
                 selected={selected}
+                variant="ghost"
+                selectedChrome="notch"
                 data-cluster-card={report.clusterId}
                 onClick={() => props.onSelect(report.clusterId)}
                 trailing={<ClusterStatusBadge report={report} />}

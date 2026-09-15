@@ -183,6 +183,7 @@ export function SettingsLogRetentionSection(): ReactElement {
         </Text>
       )}
 
+      <div className={classes.settingStack}>
       <div className={classes.settingRow}>
         <div className={classes.settingCopy}>
           <Text size="sm" fw={600}>Everyday activity history</Text>
@@ -308,6 +309,7 @@ export function SettingsLogRetentionSection(): ReactElement {
             aria-label="Clean up logs automatically"
           />
         </div>
+      </div>
       </div>
 
       <Button

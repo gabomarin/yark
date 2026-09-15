@@ -9,6 +9,10 @@
   overflow: hidden;
 }
 
+.page[data-edge-to-edge] {
+  padding: 0;
+}
+
 .header {
   display: flex;
   align-items: flex-start;

@@ -1,0 +1,57 @@
+.root {
+  position: relative;
+  display: flex;
+  gap: var(--app-space-sm);
+  align-items: flex-start;
+  padding: var(--app-space-sm) var(--app-space-md) var(--app-space-sm)
+    calc(var(--app-space-md) + 3px);
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-sm);
+  background: var(--app-color-surface-control);
+}
+
+/* Fluent InfoBar: left severity accent, not a translucent Alert wash. */
+.root::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 3px;
+  border-radius: 3px 0 0 3px;
+  background: var(--ark-blue-9);
+  content: "";
+  pointer-events: none;
+}
+
+.root[data-tone="warn"]::before {
+  background: var(--app-color-fossil);
+}
+
+.root[data-tone="ok"]::before {
+  background: var(--app-color-ok);
+}
+
+.body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title {
+  color: var(--app-color-text);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.copy {
+  color: var(--app-color-muted);
+  line-height: 1.4;
+}
+
+.dismiss {
+  flex: 0 0 auto;
+  margin-top: -2px;
+  margin-right: -4px;
+}

@@ -1,11 +1,19 @@
+/*
+ * Fused NavigationView slab (same grammar as Clusters): chrome fill, no gutter,
+ * square outer border. Category pane + content share one surface; SettingsCards
+ * stay raised panel on top of chrome for contrast.
+ */
 .layout {
   display: grid;
   grid-template-columns: minmax(176px, 208px) minmax(0, 1fr);
-  gap: var(--app-space-sm);
+  gap: 0;
   flex: 1 1 0;
   min-height: 0;
   height: 100%;
   overflow: hidden;
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: 0;
+  background: var(--app-color-surface-chrome);
 }
 
 .navCard,
@@ -14,10 +22,37 @@
   overflow: hidden;
 }
 
+.navCard {
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-right: 1px solid var(--app-color-border-subtle) !important;
+}
+
+.navPane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-sm);
+  height: 100%;
+  min-height: 0;
+}
+
+.navTitle {
+  margin: 0;
+  padding: var(--app-space-xxs) var(--app-space-xxs) 0;
+  font-family: var(--app-font-display);
+  font-size: var(--app-font-page);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
 .panel {
   display: flex;
   flex-direction: column;
   height: 100%;
+  background: transparent;
 }
 
 .navStack {
@@ -33,6 +68,19 @@
   overflow: auto;
   min-height: 0;
   height: 100%;
+  padding: var(--app-space-md) var(--app-space-lg);
+}
+
+@media (max-width: 960px) {
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .navCard {
+    border-right: none !important;
+    border-bottom: 1px solid var(--app-color-border-subtle) !important;
+  }
 }
 
 .section {
@@ -41,11 +89,37 @@
   gap: var(--app-space-sm);
 }
 
+/* Contiguous square SettingsCard stack (no flex gap between rows). */
+.settingStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/*
+ * WinUI SettingsCard cell: square corners, shared hairlines, title + lede,
+ * control on the right.
+ */
 .settingRow {
   display: flex;
   gap: var(--app-space-md);
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
+  padding: var(--app-space-sm) var(--app-space-md);
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: 0;
+  background: var(--app-color-surface-panel);
+}
+
+.settingStack > .settingRow + .settingRow,
+.settingStack > .settingRow + .settingBlock,
+.settingStack > .settingBlock + .settingRow,
+.settingStack > .settingRow + .settingGroup,
+.settingStack > .settingGroup + .settingRow,
+.settingStack > .settingGroup + .settingGroup,
+.settingStack > .settingBlock + .settingGroup,
+.settingStack > .settingGroup + .settingBlock {
+  margin-top: -1px;
 }
 
 .settingCopy {
@@ -55,17 +129,45 @@
 
 .settingControl {
   flex: 0 0 auto;
-  padding-top: 2px;
+  display: flex;
+  align-items: center;
+  padding-top: 0;
 }
 
-.settingRowNested {
-  padding-left: var(--app-space-lg);
+/*
+ * Nested SettingsExpander-style group: one outer card, master row on top,
+ * children as internal hairline rows (no separate bordered cards).
+ */
+.settingGroup {
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: 0;
+  background: var(--app-color-surface-panel);
+}
+
+.settingGroup > .settingRow {
+  border: none;
+  background: transparent;
+}
+
+.settingGroupChild {
+  display: flex;
+  gap: var(--app-space-md);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--app-space-sm) var(--app-space-md) var(--app-space-sm)
+    calc(var(--app-space-md) + var(--app-space-md));
+  border-top: 1px solid var(--app-color-border-subtle);
+  background: transparent;
 }
 
 .settingBlock {
   display: flex;
   flex-direction: column;
   gap: var(--app-space-sm);
+  padding: var(--app-space-sm) var(--app-space-md);
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: 0;
+  background: var(--app-color-surface-panel);
 }
 
 .pathActionsRow {

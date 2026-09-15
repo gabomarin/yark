@@ -44,18 +44,55 @@
   gap: var(--app-space-xs);
 }
 
+/* One WinUI master-detail slab: chrome fill (contrast vs page canvas), no gap, square. */
 .layout {
   display: grid;
   grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
-  gap: var(--app-space-sm);
+  gap: 0;
   flex: 1 1 0;
   min-height: 0;
   overflow: hidden;
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: 0;
+  background: var(--app-color-surface-chrome);
 }
 
 .layout > * {
   min-height: 0;
   overflow: hidden;
+}
+
+.listPanel,
+.detailPanel {
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.listPanel {
+  border-right: 1px solid var(--app-color-border-subtle) !important;
+}
+
+/* Path-first meta: long directory gets the leftover width; counts stay tight. */
+.detailMeta {
+  grid-template-columns: minmax(0, 1fr) 3.25rem 3.25rem 4.75rem;
+  column-gap: var(--app-space-sm);
+  align-items: start;
+}
+
+.detailMeta > *:first-child {
+  min-width: 0;
+}
+
+.detailMeta > *:not(:first-child) {
+  max-width: 4.75rem;
+}
+
+@media (max-width: 1100px) {
+  .detailMeta {
+    grid-template-columns: minmax(0, 1fr) 3rem 3rem 4.25rem;
+  }
 }
 
 .panelStack {
@@ -172,5 +209,10 @@
   .layout {
     grid-template-columns: 1fr;
     grid-template-rows: minmax(160px, 0.7fr) minmax(240px, 1.3fr);
+  }
+
+  .listPanel {
+    border-right: none !important;
+    border-bottom: 1px solid var(--app-color-border-subtle) !important;
   }
 }

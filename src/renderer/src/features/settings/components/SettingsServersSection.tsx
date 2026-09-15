@@ -20,6 +20,7 @@ export function SettingsServersSection(props: Props): ReactElement {
         Profiles
       </Title>
 
+      <div className={classes.settingStack}>
       <div className={classes.settingRow}>
         <div className={classes.settingCopy}>
           <Text size="sm" fw={600}>Show server console on start</Text>
@@ -71,6 +72,7 @@ export function SettingsServersSection(props: Props): ReactElement {
             </Button>
           </Group>
         </div>
+      </div>
       </div>
     </section>
   );

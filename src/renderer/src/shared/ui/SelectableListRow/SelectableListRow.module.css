@@ -39,6 +39,25 @@
   box-shadow: var(--app-list-selected-inset);
 }
 
+/* Fluent NavigationView-style short left notch (Clusters list). */
+.row[data-selected][data-selected-chrome="notch"] {
+  position: relative;
+  box-shadow: none;
+}
+
+.row[data-selected][data-selected-chrome="notch"]::before {
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  width: 3px;
+  height: 16px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: var(--ark-blue-9);
+  content: "";
+  pointer-events: none;
+}
+
 .row:focus-visible {
   outline: 2px solid var(--ark-blue-a8);
   outline-offset: 2px;
