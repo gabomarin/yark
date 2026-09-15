@@ -30,9 +30,6 @@ export function planManagedExitLastError(input: {
   if (input.diagnosisSummary !== null) {
     return input.diagnosisSummary;
   }
-  if (!input.wasStarting && isOperatorClosedExit(input.exitCode)) {
-    return `Process was closed by the operator (code ${input.exitCode ?? "unknown"})`;
-  }
   return input.wasStarting
     ? `Process exited during startup (code ${input.exitCode ?? "unknown"})`
     : `Process exited unexpectedly (code ${input.exitCode ?? "unknown"})`;

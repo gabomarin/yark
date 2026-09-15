@@ -10,7 +10,9 @@ or seeds logs for development and QA.
 - Attach structured **What / Cause / Where / Try next** details to events so
   failures (especially safe update / rollback) are actionable. `server_crashed`
   also stores a short sanitised ShooterGame.log excerpt (Fatal / CFCore) because
-  Runtime is in-memory only.
+  Runtime is in-memory only. Operator-closed console exits while `running`
+  (known Windows exit codes) are clean stops and do not emit `server_crashed`
+  (#524).
 - Keep clear/export paths explicit so diagnostic data can be reset without
   deleting the SQLite database wholesale.
 - Bound YARK-owned operational history with a conservative retention policy

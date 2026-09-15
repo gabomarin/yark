@@ -50,6 +50,7 @@ import {
 } from "./process-graceful-stop";
 import {
   formatProcessExitLogLine,
+  isOperatorClosedExit,
   isUnexpectedManagedExit,
   planManagedExitLastError,
 } from "./process-stop";
@@ -697,6 +698,13 @@ export class ProcessManager extends EventEmitter {
       exitCode: code,
     });
     if (!unexpected) {
+      if (wasRunning && isOperatorClosedExit(code)) {
+        this.appendRuntimeLog(
+          serverId,
+          "system",
+          "Server window was closed by the operator",
+        );
+      }
       if (managed.status !== "error") {
         this.processes.delete(serverId);
       }
