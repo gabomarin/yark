@@ -103,6 +103,7 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
   const status = runtime?.status ?? "stopped";
   const view = deriveServerCardView({
     status,
+    lastError: runtime?.lastError ?? null,
     installation,
     officialSteamBuild: props.officialSteamBuild,
     officialVersion: props.officialVersion,
@@ -313,9 +314,17 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
           <UnstyledButton
             className={classes.runtimeError}
             onClick={onReviewError}
-            aria-label="Review error – open runtime logs"
+            aria-label={
+              status === "stopped"
+                ? "Review notice – open runtime logs"
+                : "Review error – open runtime logs"
+            }
           >
-            <Text c="red" size="sm" className={classes.runtimeErrorText}>
+            <Text
+              c={status === "stopped" ? "yellow" : "red"}
+              size="sm"
+              className={classes.runtimeErrorText}
+            >
               {runtime.lastError}
             </Text>
           </UnstyledButton>

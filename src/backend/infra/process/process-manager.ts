@@ -52,6 +52,7 @@ import {
   formatProcessExitLogLine,
   isOperatorClosedExit,
   isUnexpectedManagedExit,
+  OPERATOR_CLOSED_NOTICE,
   planManagedExitLastError,
 } from "./process-stop";
 import { AsaApiWindowPoller } from "./process-asa-api-loading";
@@ -699,11 +700,13 @@ export class ProcessManager extends EventEmitter {
     });
     if (!unexpected) {
       if (wasRunning && isOperatorClosedExit(code)) {
-        this.appendRuntimeLog(
-          serverId,
-          "system",
-          "Server window was closed by the operator",
-        );
+        // Keep the managed entry so Overview can show a warning notice (like
+        // crash lastError), without treating this as an unexpected exit.
+        managed.status = "stopped";
+        managed.lastError = OPERATOR_CLOSED_NOTICE;
+        this.appendRuntimeLog(serverId, "system", OPERATOR_CLOSED_NOTICE);
+        this.emitStatus(serverId);
+        return;
       }
       if (managed.status !== "error") {
         this.processes.delete(serverId);

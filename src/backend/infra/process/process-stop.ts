@@ -1,5 +1,8 @@
 const OPERATOR_CLOSED_EXIT_CODES = new Set([0xc000013a, 0x40010004, 0x40010005]);
 
+/** Short card / Runtime notice when the operator closes the native console. */
+export const OPERATOR_CLOSED_NOTICE = "Closed by user";
+
 export function isOperatorClosedExit(exitCode: number | null): boolean {
   if (exitCode === null) return false;
   // Node may report negative numbers for large unsigned NTSTATUS codes.

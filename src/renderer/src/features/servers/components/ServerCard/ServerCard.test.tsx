@@ -1381,6 +1381,55 @@ describe("ServerCard", () => {
     expect(onReviewError).toHaveBeenCalledTimes(1);
   });
 
+  it("shows Closed by user as a warning notice when the console was closed while running", async () => {
+    const user = userEvent.setup();
+    const onReviewError = vi.fn();
+
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={{
+            serverId: profile.id,
+            status: "stopped",
+            processLive: false,
+            pid: null,
+            startedAt: null,
+            lastError: "Closed by user",
+          }}
+          installation={installed}
+          officialSteamBuild={null}
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={onReviewError}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+          onDelete={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(document.querySelector(SERVER_CARD_SELECTOR)).toHaveAttribute(
+      "data-tone",
+      "attention",
+    );
+    const notice = screen.getByRole("button", {
+      name: /Review notice – open runtime logs/i,
+    });
+    expect(notice).toHaveTextContent("Closed by user");
+    await user.click(notice);
+    expect(onReviewError).toHaveBeenCalledTimes(1);
+  });
+
   it("enables Restart only while the server is running", async () => {
     const user = userEvent.setup();
     const onRestart = vi.fn();
