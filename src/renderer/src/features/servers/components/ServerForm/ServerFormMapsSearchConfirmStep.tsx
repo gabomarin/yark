@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactElement } from "react";
 import { Alert, Button, Group, Image, Stack, Text, TextInput } from "@mantine/core";
 import { PuzzlePiece } from "@phosphor-icons/react";
-import { MAP_NAME_COPY } from "@shared/map-name-copy";
+import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
 import type { ModMetadata } from "@shared/types";
 import { mapSaveFolderDescriptionStyles } from "@ui/mapFieldStyles";
 import type { MapsSearchRow } from "./mapsSearchModel";

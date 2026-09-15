@@ -1,11 +1,11 @@
 import { existsSync, type Dirent } from "node:fs";
 import { basename, join, relative } from "node:path";
 import { readdir } from "node:fs/promises";
-import { isSafeMapToken, isSafeWindowsFolderName } from "@shared/map-identity";
+import { isSafeMapToken, isSafeWindowsFolderName } from "@shared/asa/map-identity";
 import {
   hasMapTokenWpSuffix,
   stripMapTokenWpSuffix,
-} from "@shared/map-token-suggest";
+} from "@shared/asa/map-token-suggest";
 import {
   isRealDirectory,
   isTraversableDirectoryDirent,

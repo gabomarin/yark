@@ -2,10 +2,10 @@ import {
   getServerFolderNameError,
   isValidServerFolderName,
   resolveServerInstallDir,
-} from "@shared/server-install-path";
-import { isOfficialMap, normalizeMapToken } from "@shared/map-identity";
-import { MAP_NAME_COPY } from "@shared/map-name-copy";
-import { hasMapTokenWpSuffix } from "@shared/map-token-suggest";
+} from "@shared/server/server-install-path";
+import { isOfficialMap, normalizeMapToken } from "@shared/asa/map-identity";
+import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
+import { hasMapTokenWpSuffix } from "@shared/asa/map-token-suggest";
 import type { ServerProfile } from "@shared/types";
 import {
   useCallback,

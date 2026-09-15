@@ -6,7 +6,7 @@ import {
   DEFAULT_OS_NOTIFY_STEAMCMD,
   DEFAULT_OS_NOTIFY_YARK_UPDATE,
   DEFAULT_START_WITH_WINDOWS,
-} from "@shared/desktop-shell";
+} from "@shared/settings/desktop-shell";
 
 export interface DesktopShellPreferencesController {
   closeWindowToTray: boolean;

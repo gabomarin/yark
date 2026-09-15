@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   asaLaunchOptionEntries,
   lookupLaunchOptionById,
-} from "@shared/asa-launch-options-catalog";
+} from "@shared/asa/asa-launch-options-catalog";
 import {
   CATALOG_STATUS_FILTERS,
   catalogBrowseSecondary,

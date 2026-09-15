@@ -1,15 +1,15 @@
-import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini-defaults";
+import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini/ini-defaults";
 import {
   lookupAsaDefaultValue,
   lookupAsaDescription,
   lookupAsaSetting,
-} from "@shared/asa-server-settings";
-import { lookupIniSettingInput } from "@shared/ini-setting-meta";
+} from "@shared/asa/asa-server-settings";
+import { lookupIniSettingInput } from "@shared/ini/ini-setting-meta";
 import {
   asaUiCategoryLabel,
   resolveAsaUiCategory,
   type AsaUiCategoryId,
-} from "@shared/asa-setting-ui-categories";
+} from "@shared/asa/asa-setting-ui-categories";
 import type { IniFileKey, ServerIniPayload } from "@shared/types";
 import {
   isClientIniKey,
@@ -19,8 +19,8 @@ import {
   sectionShortName,
   setIniTextValue,
   type IniTextRow,
-} from "@shared/ini-text";
-import { isAsaIgnoredIniMaxPlayers, isYarkOwnedIniKey } from "@shared/yark-owned-ini-keys";
+} from "@shared/ini/ini-text";
+import { isAsaIgnoredIniMaxPlayers, isYarkOwnedIniKey } from "@shared/asa/yark-owned-ini-keys";
 
 export type {
   IniUiCategoryGroup,

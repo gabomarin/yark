@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { Anchor, Modal } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
-import { asaLaunchOptionsCatalog } from "@shared/asa-launch-options-catalog";
+import { asaLaunchOptionsCatalog } from "@shared/asa/asa-launch-options-catalog";
 import { LaunchOptionsCatalogEntriesTab } from "./LaunchOptionsCatalogEntriesTab";
 import classes from "./LaunchOptionsCatalogModal.module.css";
 

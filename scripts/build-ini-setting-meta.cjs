@@ -1,5 +1,5 @@
 /**
- * Build src/shared/ini-setting-meta.json from defaults/*.ini only.
+ * Build src/shared/ini/ini-setting-meta.json from defaults/*.ini only.
  *
  * Usage: node scripts/build-ini-setting-meta.cjs
  */
@@ -9,8 +9,8 @@ const path = require("node:path");
 const ROOT = path.resolve(__dirname, "..");
 const GUS_PATH = path.join(ROOT, "src/shared/defaults/GameUserSettings.ini");
 const GAME_PATH = path.join(ROOT, "src/shared/defaults/Game.ini");
-const OVERRIDES_PATH = path.join(ROOT, "src/shared/ini-setting-input-overrides.json");
-const OUT_PATH = path.join(ROOT, "src/shared/ini-setting-meta.json");
+const OVERRIDES_PATH = path.join(ROOT, "src/shared/ini/ini-setting-input-overrides.json");
+const OUT_PATH = path.join(ROOT, "src/shared/ini/ini-setting-meta.json");
 
 function clean(s) {
   return String(s || "")

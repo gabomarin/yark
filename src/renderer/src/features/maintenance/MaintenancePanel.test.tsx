@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultMaintenancePolicy } from "@shared/maintenance-policy";
+import { defaultMaintenancePolicy } from "@shared/maintenance/maintenance-policy";
 import {
   anyJobArmed,
   formatRestartSummary,

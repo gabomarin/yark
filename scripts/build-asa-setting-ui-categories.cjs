@@ -1,5 +1,5 @@
 /**
- * Generates src/shared/asa-setting-ui-categories-data.json
+ * Generates src/shared/asa/asa-setting-ui-categories-data.json
  * Heuristics + manual overrides on top of ini-setting-meta (defaults-derived).
  *
  * Usage: node scripts/build-asa-setting-ui-categories.cjs
@@ -8,8 +8,8 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const ROOT = path.resolve(__dirname, "..");
-const CATALOG_PATH = path.join(ROOT, "src/shared/ini-setting-meta.json");
-const OUT_PATH = path.join(ROOT, "src/shared/asa-setting-ui-categories-data.json");
+const CATALOG_PATH = path.join(ROOT, "src/shared/ini/ini-setting-meta.json");
+const OUT_PATH = path.join(ROOT, "src/shared/asa/asa-setting-ui-categories-data.json");
 
 /** @type {Array<{ id: string, label: string }>} */
 const CATEGORIES = [

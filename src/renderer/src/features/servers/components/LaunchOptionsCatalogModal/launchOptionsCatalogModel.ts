@@ -1,7 +1,7 @@
 import type {
   AsaLaunchOptionEntry,
   AsaLaunchOptionStatus,
-} from "@shared/asa-launch-options-catalog";
+} from "@shared/asa/asa-launch-options-catalog";
 
 /** Filters shown in the browse modal (`unsupported` rows omitted). */
 export type CatalogStatusFilter =

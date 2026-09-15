@@ -4,7 +4,7 @@
 
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
-import { normalizeWindowsPath } from "@shared/server-install-path";
+import { normalizeWindowsPath } from "@shared/server/server-install-path";
 import { installDirKey, isWindowsDriveRoot } from "./install-dir-safety";
 
 /** Persisted absolute staging paths awaiting sweep after interrupted moves. */

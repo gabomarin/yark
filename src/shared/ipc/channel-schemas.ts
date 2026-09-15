@@ -6,8 +6,8 @@
 
 import { z } from "zod";
 import { IPC } from "../ipc";
-import { onboardingRecordSchema } from "../onboarding";
-import { isServerProfilePatch } from "../server-profile";
+import { onboardingRecordSchema } from "../settings/onboarding";
+import { isServerProfilePatch } from "../server/server-profile";
 import {
   appDataFolderKindSchema,
   backupCleanupOptionsSchema,

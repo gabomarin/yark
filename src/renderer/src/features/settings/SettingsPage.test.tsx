@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ComponentProps } from "react";
 import { AppProviders } from "@app/AppProviders";
-import { DEFAULT_LOG_RETENTION_SETTINGS } from "@shared/log-retention";
+import { DEFAULT_LOG_RETENTION_SETTINGS } from "@shared/settings/log-retention";
 import type { SteamCmdStatus } from "@shared/types";
 import { SETTINGS_CATEGORY_STORAGE_KEY } from "./settingsModel";
 import {

@@ -1,12 +1,12 @@
 import {
   resolveServerInstallDir,
-} from "@shared/server-install-path";
+} from "@shared/server/server-install-path";
 import {
   DEFAULT_GAME_PORT,
   DEFAULT_QUERY_PORT,
   DEFAULT_RCON_PORT,
   suggestNextPortTriplet,
-} from "@shared/port-suggest";
+} from "@shared/server/port-suggest";
 import { KNOWN_MAPS, type ModMetadata, type ServerProfile, type ServerProfileInput } from "@shared/types";
 
 export interface ServerFormState {

@@ -1,5 +1,5 @@
 /**
- * Build src/shared/asa-launch-options-catalog.json from ark.wiki.gg
+ * Build src/shared/asa/asa-launch-options-catalog.json from ark.wiki.gg
  * "Server configuration" → Command line options (`{{Server config variable}}`).
  *
  * ASA column on the wiki renders Check_mark / Missing from `inASA` (Yes / No / Unknown).
@@ -13,7 +13,7 @@ const path = require("node:path");
 const https = require("node:https");
 
 const ROOT = path.resolve(__dirname, "..");
-const OUT_PATH = path.join(ROOT, "src/shared/asa-launch-options-catalog.json");
+const OUT_PATH = path.join(ROOT, "src/shared/asa/asa-launch-options-catalog.json");
 const SOURCE_URL =
   "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options";
 const API_URL =

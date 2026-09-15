@@ -1,13 +1,13 @@
 import {
   curseForgeAsaSlugFromUrl,
   getCurseForgeAsaModUrlError,
-} from "@shared/curseforge-url";
-import { BUILD_CURSEFORGE_PROXY_URL } from "@shared/curseforge-proxy-build-url";
+} from "@shared/mods/curseforge-url";
+import { BUILD_CURSEFORGE_PROXY_URL } from "@shared/mods/curseforge-proxy-build-url";
 import {
   MetadataServiceNotConfiguredError,
   normalizeCurseforgeProxyUrl,
-} from "@shared/curseforge-proxy-url";
-import { normalizeModScreenshotUrls } from "@shared/mod-screenshot-urls";
+} from "@shared/mods/curseforge-proxy-url";
+import { normalizeModScreenshotUrls } from "@shared/mods/mod-screenshot-urls";
 import type {
   ModCategory,
   ModMetadata,

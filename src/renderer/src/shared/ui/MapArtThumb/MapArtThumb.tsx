@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactElement } from "react";
 import { HardDrives } from "@phosphor-icons/react";
-import { resolveMapThumbnailUrl } from "@shared/map-identity";
+import { resolveMapThumbnailUrl } from "@shared/asa/map-identity";
 import { resolveMapArtUrl } from "./mapArt";
 import classes from "./MapArtThumb.module.css";
 

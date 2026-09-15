@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
-import { ASA_APP_ID } from "@shared/asa-steam";
+import { ASA_APP_ID } from "@shared/asa/asa-steam";
 
 /** Collapse path separators for stable Windows install-dir comparisons/cache keys. */
 export function normalizePath(value: string): string {

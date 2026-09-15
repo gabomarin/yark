@@ -6,7 +6,7 @@ import {
   formatHostPortBusyError,
   formatHostPortInconclusiveError,
   type SessionPortSet,
-} from "@shared/host-port-probe-errors";
+} from "@shared/server/host-port-probe-errors";
 import { PORT_MAX, PORT_MIN, type ServerProfile } from "@shared/types";
 
 const execFileAsync = promisify(execFile);

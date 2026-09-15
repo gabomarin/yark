@@ -2,7 +2,7 @@ import type {
   ServerProfile,
   ServerProfileInput,
   ServerProfilePatch,
-} from "./types";
+} from "../types";
 
 /** Convert a persisted profile to create/update input (drops generated fields). */
 export function serverProfileToInput(server: ServerProfile): ServerProfileInput {

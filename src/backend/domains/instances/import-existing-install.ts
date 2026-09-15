@@ -6,16 +6,16 @@
 import { existsSync } from "node:fs";
 import { readdir, readFile, stat } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
-import { flattenIniText, INI_FLAT_SEP } from "@shared/ini-text";
-import { isOfficialMap, normalizeMapToken } from "@shared/map-identity";
+import { flattenIniText, INI_FLAT_SEP } from "@shared/ini/ini-text";
+import { isOfficialMap, normalizeMapToken } from "@shared/asa/map-identity";
 import {
   IMPORT_BARE_MAP_TOKEN_WP_RE,
   SAVE_STEM_MAP_TOKEN_WP_RE,
-} from "@shared/map-token-suggest";
+} from "@shared/asa/map-token-suggest";
 import {
   normalizeWindowsPath,
   serverFolderName,
-} from "@shared/server-install-path";
+} from "@shared/server/server-install-path";
 import { KNOWN_MAPS, type ImportInstallProbe, type ImportInstallSuggestions, type ServerInstallationInfo } from "@shared/types";
 import { resolveMemberIdentity } from "../config/ini-compose";
 import { installDirKey } from "./install-dir-safety";

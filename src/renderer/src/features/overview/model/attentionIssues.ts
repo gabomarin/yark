@@ -1,8 +1,8 @@
 import {
   installationHealthLabel,
   isInstallationReady,
-} from "@shared/installation-health";
-import { getServerUpdateState } from "@shared/server-update-status";
+} from "@shared/server/installation-health";
+import { getServerUpdateState } from "@shared/server/server-update-status";
 import type {
   ServerInstallationInfo,
   ServerProfile,

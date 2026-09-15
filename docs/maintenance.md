@@ -24,7 +24,7 @@ MagicPath UX mock: https://magicpath.ai/files/444694713119952896
 | Restart + wipe | `MaintenanceRestartRuntime` |
 | Steam-newer update | `MaintenanceUpdateRuntime` |
 | Scheduler | `MaintenanceScheduler` (~60s; fires once on start; overlapping ticks coalesce; `.unref()`) |
-| Shared helpers | `src/shared/maintenance-schedule.ts`, `maintenance-policy.ts`, `maintenance-restart-days.ts` |
+| Shared helpers | `src/shared/maintenance/maintenance-schedule.ts`, `maintenance-policy.ts`, `maintenance-restart-days.ts` (same folder) |
 | UI | `src/renderer/src/features/maintenance/` |
 
 ## IPC

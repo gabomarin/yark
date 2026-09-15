@@ -1,6 +1,6 @@
-import { findPortConflicts } from "@shared/port-conflicts";
+import { findPortConflicts } from "@shared/server/port-conflicts";
 import type { ServerProfile, ServerProfileInput, ServerRuntimeInfo } from "@shared/types";
-import type { ServerProcessRuntime } from "@shared/server-process-idle";
+import type { ServerProcessRuntime } from "@shared/server/server-process-idle";
 import { sharedClusterDir } from "./clusterModel";
 import {
   buildCreateClusterInput,

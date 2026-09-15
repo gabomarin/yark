@@ -6,7 +6,7 @@ import {
   type LeaveIdentityMatch,
   type LeftRunningProcessIdentity,
   type LiveProcessIdentity,
-} from "@shared/left-running";
+} from "@shared/settings/left-running";
 import {
   readLeftRunningProcesses,
   removeLeftRunningProcess,

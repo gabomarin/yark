@@ -1,4 +1,4 @@
-import type { ServerInstallationInfo } from "./types";
+import type { ServerInstallationInfo } from "../types";
 import type { ServerUpdateState } from "./server-update-status";
 
 /** ARK-style network/product versions like `92.28`, `v57.18` (not Steam `build 123`). */

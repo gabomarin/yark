@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { access, readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
-import type { InstallationHealthReasonCode } from "@shared/installation-health";
+import type { InstallationHealthReasonCode } from "@shared/server/installation-health";
 import type { InstallationHealthStatus } from "@shared/types";
 
 const ASA_MARKER_NAMES = ["ShooterGame", "Engine", "steamapps"] as const;

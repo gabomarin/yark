@@ -18,9 +18,9 @@ import {
   installationHealthLabel,
   isInstallOfferHealth,
   isInstallationReady,
-} from "@shared/installation-health";
-import { formatServerUptime } from "@shared/server-uptime";
-import { resolveDisplayedServerVersion } from "@shared/server-version-display";
+} from "@shared/server/installation-health";
+import { formatServerUptime } from "@shared/server/server-uptime";
+import { resolveDisplayedServerVersion } from "@shared/server/server-version-display";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 import {
   formatCpuPercent,
@@ -34,7 +34,7 @@ import {
   canEnqueueFilesJobFromMenu,
   filesQueueKindToStatus,
   isFilesJobOperation,
-} from "@shared/files-job-priority";
+} from "@shared/server/files-job-priority";
 import classes from "./SidePanel.module.css";
 
 interface Props {

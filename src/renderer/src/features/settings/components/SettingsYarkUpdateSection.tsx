@@ -8,8 +8,8 @@ import {
 } from "@phosphor-icons/react";
 import { Button, Group, Progress, Text, Title } from "@mantine/core";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
-import type { AppUpdateStatus } from "@shared/app-update";
-import { createIdleAppUpdateStatus } from "@shared/app-update";
+import type { AppUpdateStatus } from "@shared/settings/app-update";
+import { createIdleAppUpdateStatus } from "@shared/settings/app-update";
 import { AppChangelogModal } from "./AppChangelogModal";
 import classes from "../SettingsPage.module.css";
 

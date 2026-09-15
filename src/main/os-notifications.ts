@@ -13,8 +13,8 @@ import {
   type ServerCrashedNotifyPayload,
   type SteamCmdJobTerminalPayload,
   type YarkUpdateNotifyPayload,
-} from "../shared/os-notification-events";
-import type { DesktopShellPreferences } from "../shared/desktop-shell";
+} from "../shared/settings/os-notification-events";
+import type { DesktopShellPreferences } from "../shared/settings/desktop-shell";
 import { IPC_PUSH, type OsNotificationOpenPush } from "../shared/ipc";
 
 function isBrowserWindowFocusedVisible(

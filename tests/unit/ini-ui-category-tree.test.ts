@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { listIniUiCategoryTree } from "@shared/ini-ui-category-tree";
+import { listIniUiCategoryTree } from "@shared/ini/ini-ui-category-tree";
 
 describe("listIniUiCategoryTree", () => {
   it("groups GUS keys by ASA UI categories like the INI editor", () => {

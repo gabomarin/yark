@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ServerStatus } from "@shared/types";
-import type { ServerUpdateState } from "@shared/server-update-status";
+import type { ServerUpdateState } from "@shared/server/server-update-status";
 import {
   resolveRestartAction,
   resolveRuntimeAction,

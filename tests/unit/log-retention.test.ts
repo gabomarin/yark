@@ -6,7 +6,7 @@ import {
   isFailureUpdateLogStatus,
   normalizeLogRetentionSettings,
   parseLogRetentionSettings,
-} from "@shared/log-retention";
+} from "@shared/settings/log-retention";
 
 describe("log-retention helpers", () => {
   it("parses missing/invalid JSON as defaults", () => {

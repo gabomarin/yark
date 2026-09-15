@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getServerUpdateState } from "@shared/server-update-status";
+import { getServerUpdateState } from "@shared/server/server-update-status";
 import type { ServerInstallationInfo } from "@shared/types";
 import { stubInstallationInfo } from "../helpers/installation-info";
 

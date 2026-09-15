@@ -1,8 +1,8 @@
 import { existsSync } from "node:fs";
 import { cp, mkdir, stat } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
-import { isSafeMapToken } from "@shared/map-identity";
-import { MAP_NAME_COPY } from "@shared/map-name-copy";
+import { isSafeMapToken } from "@shared/asa/map-identity";
+import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
 import type { BackupKind, ServerProfile } from "@shared/types";
 import { listFilesRecursiveSafe } from "../../infra/fs/reparse-points";
 import {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createIdleAppUpdateStatus } from "@shared/app-update";
+import { createIdleAppUpdateStatus } from "@shared/settings/app-update";
 import {
   yarkUpdateToastCopy,
   yarkUpdateToastDedupeKey,

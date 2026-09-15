@@ -1,4 +1,4 @@
-import { findPortConflicts } from "@shared/port-conflicts";
+import { findPortConflicts } from "@shared/server/port-conflicts";
 import type {
   ClusterComplianceIssue,
   ClusterComplianceReport,

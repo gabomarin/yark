@@ -12,20 +12,20 @@ import type {
 import {
   EMPTY_WIPE_STALE_MESSAGE,
 } from "@shared/types";
-import { applyServerProfilePatch } from "@shared/server-profile";
+import { applyServerProfilePatch } from "@shared/server/server-profile";
 import { syncAsaApiVersionDllForProfile } from "../asa-api/asa-api-inject";
 import { collectKnownSecrets } from "@shared/credential-redaction";
 import { EventEmitter } from "node:events";
 import { existsSync } from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini-defaults";
+import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini/ini-defaults";
 import type { BackupService } from "../backups/backup-service";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { ProcessManager, UnexpectedManagedExit } from "../../infra/process/process-manager";
 import type { RconSessionManager } from "../../infra/rcon/rcon-session-manager";
-import { mapIdentityStartBlockers } from "@shared/map-identity";
+import { mapIdentityStartBlockers } from "@shared/asa/map-identity";
 import { findPortConflicts, validateProfileInput } from "./validation";
 import { checkClusterCompliance } from "../cluster/compliance";
 import type { ListedPlayer } from "../backups/list-players";
@@ -43,7 +43,7 @@ import {
 import { applyProfileOwnedIni } from "./sync-profile-ini";
 import {
   isInstallationReady,
-} from "@shared/installation-health";
+} from "@shared/server/installation-health";
 import { assertHostPortsAvailable } from "../../infra/process/host-port-probe";
 import { planUnexpectedServerCrashEvent } from "./instance-crash";
 import {

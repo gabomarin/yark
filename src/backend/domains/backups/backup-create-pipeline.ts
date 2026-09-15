@@ -8,7 +8,7 @@ import { mkdir, rm, writeFile } from "node:fs/promises";
 import { basename, join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
-import { formatBackupFileStamp } from "@shared/backup-file-stamp";
+import { formatBackupFileStamp } from "@shared/backups/backup-file-stamp";
 import type {
   BackupKind,
   BackupPolicy,

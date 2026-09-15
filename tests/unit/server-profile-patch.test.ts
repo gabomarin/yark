@@ -11,7 +11,7 @@ import {
   applyServerProfilePatch,
   isServerProfilePatch,
   serverProfileToInput,
-} from "@shared/server-profile";
+} from "@shared/server/server-profile";
 import type { ServerProfile, ServerProfileInput } from "@shared/types";
 
 vi.mock("@backend/domains/instances/sync-profile-ini", () => {

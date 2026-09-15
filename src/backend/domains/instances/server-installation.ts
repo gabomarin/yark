@@ -5,8 +5,8 @@ import { join } from "node:path";
 import {
   buildInstallationHealthFields,
   type InstallationHealthReasonCode,
-} from "@shared/installation-health";
-import { isArkStyleVersion } from "@shared/server-version-display";
+} from "@shared/server/installation-health";
+import { isArkStyleVersion } from "@shared/server/server-version-display";
 import type {
   InstallationHealthStatus,
   ServerInstallationInfo,

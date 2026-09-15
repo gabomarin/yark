@@ -3,8 +3,8 @@ import {
   DEFAULT_RESTART_WARNINGS,
   DEFAULT_UPDATE_WARNINGS,
   defaultMaintenancePolicy,
-} from "@shared/maintenance-policy";
-import { normalizeRestartDaysOfWeek } from "@shared/maintenance-restart-days";
+} from "@shared/maintenance/maintenance-policy";
+import { normalizeRestartDaysOfWeek } from "@shared/maintenance/maintenance-restart-days";
 import type {
   MaintenanceBroadcastPreset,
   MaintenanceJobWarnings,

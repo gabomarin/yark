@@ -1,4 +1,4 @@
-import { MAINTENANCE_SCHEDULER_TICK_MS } from "@shared/maintenance-schedule";
+import { MAINTENANCE_SCHEDULER_TICK_MS } from "@shared/maintenance/maintenance-schedule";
 import type { MaintenanceService } from "./maintenance-service";
 
 /**

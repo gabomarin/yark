@@ -4,10 +4,10 @@ import { Alert, Button, Group, Modal, Stack, Stepper } from "@mantine/core";
 import {
   getServerFolderNameError,
   isValidServerFolderName,
-} from "@shared/server-install-path";
-import { isOfficialMap, normalizeMapToken } from "@shared/map-identity";
-import { MAP_NAME_COPY } from "@shared/map-name-copy";
-import { hasMapTokenWpSuffix } from "@shared/map-token-suggest";
+} from "@shared/server/server-install-path";
+import { isOfficialMap, normalizeMapToken } from "@shared/asa/map-identity";
+import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
+import { hasMapTokenWpSuffix } from "@shared/asa/map-token-suggest";
 import type { ImportInstallProbe, ModMetadata, ServerProfile } from "@shared/types";
 import type { KnownClusterOption } from "@features/clusters/knownClusterOptions";
 import { listKnownClusterOptions } from "@features/clusters/knownClusterOptions";

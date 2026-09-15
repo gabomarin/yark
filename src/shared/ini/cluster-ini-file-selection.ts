@@ -3,7 +3,7 @@
  * Default both = legacy full-pair behavior from #89.
  */
 
-import type { ClusterIniTemplateFileSelection, ServerIniPayload } from "./types";
+import type { ClusterIniTemplateFileSelection, ServerIniPayload } from "../types";
 
 const DEFAULT_CLUSTER_INI_FILE_SELECTION: ClusterIniTemplateFileSelection =
   {

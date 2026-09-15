@@ -1,13 +1,13 @@
 import type { ReactElement } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { Stack, TextInput } from "@mantine/core";
-import { isBareOfficialMap } from "@shared/map-identity";
-import { MAP_NAME_COPY } from "@shared/map-name-copy";
+import { isBareOfficialMap } from "@shared/asa/map-identity";
+import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
 import { mapSaveFolderDescriptionStyles } from "@ui/mapFieldStyles";
 import {
   isMapModCandidate,
   suggestMapTokenFromMetadata,
-} from "@shared/map-token-suggest";
+} from "@shared/asa/map-token-suggest";
 import { KNOWN_MAP_OPTIONS, type ModMetadata } from "@shared/types";
 import type { MapsSearchApplyPayload } from "./mapsSearchModel";
 import { ServerFormMapsSearchModal } from "./ServerFormMapsSearchModal";

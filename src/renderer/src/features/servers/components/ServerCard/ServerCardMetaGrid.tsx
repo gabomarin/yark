@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import { UnstyledButton } from "@mantine/core";
 import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
 import type { ServerProfile, ServerStatus } from "@shared/types";
-import { formatMapDisplayName } from "@shared/map-identity";
+import { formatMapDisplayName } from "@shared/asa/map-identity";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 import {
   formatServerRamCpuMeta,

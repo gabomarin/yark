@@ -12,7 +12,7 @@ import {
   filterLaunchOptions,
   type AsaLaunchOptionEntry,
   type AsaLaunchOptionStatus,
-} from "@shared/asa-launch-options-catalog";
+} from "@shared/asa/asa-launch-options-catalog";
 import { SearchField } from "@ui/SearchField/SearchField";
 import {
   CATALOG_STATUS_FILTERS,

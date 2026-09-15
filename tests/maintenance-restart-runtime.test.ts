@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { defaultMaintenancePolicy } from "../src/shared/maintenance-policy";
-import { MAINTENANCE_RCON_SOFT_FAIL_LIMIT } from "../src/shared/maintenance-schedule";
+import { defaultMaintenancePolicy } from "../src/shared/maintenance/maintenance-policy";
+import { MAINTENANCE_RCON_SOFT_FAIL_LIMIT } from "../src/shared/maintenance/maintenance-schedule";
 import { MaintenanceRestartRuntime } from "../src/backend/domains/maintenance/maintenance-restart-runtime";
 import type { MaintenancePolicy } from "../src/shared/types";
 

@@ -1,4 +1,4 @@
-import { backupFinishedAt, playersRetentionKey } from "@shared/backup-player-meta";
+import { backupFinishedAt, playersRetentionKey } from "@shared/backups/backup-player-meta";
 import type {
   BackupCleanupOptions,
   BackupCleanupPreview,

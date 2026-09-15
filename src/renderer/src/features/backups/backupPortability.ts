@@ -1,5 +1,5 @@
-import { backupFinishedAt } from "@shared/backup-player-meta";
-import { formatBackupFileStamp } from "@shared/backup-file-stamp";
+import { backupFinishedAt } from "@shared/backups/backup-player-meta";
+import { formatBackupFileStamp } from "@shared/backups/backup-file-stamp";
 import type { BackupKind, BackupRecord } from "@shared/types";
 
 /** Safe filename fragment for Windows/macOS paths. */

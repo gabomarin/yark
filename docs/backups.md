@@ -40,7 +40,7 @@ Triggers are separated on purpose:
 | Player sessions | `src/backend/domains/backups/player-session-watcher.ts` |
 | `ListPlayers` parse | `src/backend/domains/backups/list-players.ts` |
 | Persistence | `src/backend/infra/db/backup-repository.ts` |
-| Player note helpers | `src/shared/backup-player-meta.ts` |
+| Player note helpers | `src/shared/backups/backup-player-meta.ts` |
 | Contracts | `src/shared/types.ts`, `src/shared/ipc.ts` |
 | IPC | `src/main/ipc-handlers.ts`, `src/preload/index.ts` |
 | UI (all servers / sidebar) | `src/renderer/src/features/backups/BackupsPage.tsx` |

@@ -1,4 +1,4 @@
-import type { AppEvent } from "./types";
+import type { AppEvent } from "../types";
 import { parseStoredBoolean } from "./desktop-shell";
 
 /**

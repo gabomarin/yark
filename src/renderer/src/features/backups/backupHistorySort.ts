@@ -1,5 +1,5 @@
 import type { DataTableSortStatus } from "mantine-datatable";
-import { backupFinishedAt, playerBackupDisplayName } from "@shared/backup-player-meta";
+import { backupFinishedAt, playerBackupDisplayName } from "@shared/backups/backup-player-meta";
 import type { BackupRecord } from "@shared/types";
 
 export function archiveFileName(path: string): string {

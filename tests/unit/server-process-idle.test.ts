@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   clusterProcessBusyReason,
   isServerProcessLive,
-} from "@shared/server-process-idle";
+} from "@shared/server/server-process-idle";
 
 describe("server-process-idle", () => {
   it("treats transitional statuses as live when processLive is false", () => {

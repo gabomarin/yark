@@ -15,7 +15,7 @@ import {
   encodeServerPlatformSelection,
   type StructuredLaunchArgState,
   type StructuredLaunchUiOption,
-} from "@shared/structured-launch-options";
+} from "@shared/asa/structured-launch-options";
 import classes from "./ServerLaunchPanel.module.css";
 import {
   launchOptionDisplayTitle,

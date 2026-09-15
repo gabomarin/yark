@@ -10,9 +10,9 @@ import {
   LEFT_RUNNING_SCHEMA_VERSION,
   type LeftRunningProcessIdentity,
   type LiveProcessIdentity,
-} from "@shared/left-running";
+} from "@shared/settings/left-running";
 import { rconExec } from "../rcon/rcon-client";
-import { diagnoseAsaStartupFailure, type AsaStartupFailure } from "@shared/asa-startup-failure";
+import { diagnoseAsaStartupFailure, type AsaStartupFailure } from "@shared/asa/asa-startup-failure";
 import { readAsaLogSessionExcerpt } from "./asa-log-tail";
 import { createAdoptedChildHandle } from "./adopted-child";
 import { killWinProcessTreeAsync } from "./kill-win-process-tree";

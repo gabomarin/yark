@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { defaultGameUserSettingsIni } from "@shared/ini-defaults";
+import { defaultGameUserSettingsIni } from "@shared/ini/ini-defaults";
 import type { ServerProfile } from "@shared/types";
 import { applyProfileOwnedKeysToGameUserSettings } from "../config/ini-compose";
 
@@ -24,7 +24,7 @@ export function gameUserSettingsIniPath(installDir: string): string {
  * the file. Prefer {@link applyProfileOwnedIni} / `IniService.syncProfileOwnedKeys`
  * so running servers queue into the pending INI draft (#530).
  *
- * Keys (must stay aligned with `@shared/yark-owned-ini-keys` `profileSync`):
+ * Keys (must stay aligned with `@shared/asa/yark-owned-ini-keys` `profileSync`):
  * - `[ServerSettings]` RCONEnabled, RCONPort, ServerAdminPassword, ServerPassword
  * - `[SessionSettings]` SessionName, Port, QueryPort
  * - Start composes `-WinLiveMaxPlayers=` when `maxPlayers` is 1–255
@@ -32,7 +32,7 @@ export function gameUserSettingsIniPath(installDir: string): string {
  *
  * Mods are **not** written here — ASA launches with `-mods=` from `profile.mods`
  * (CurseForge). ASE-era INI keys such as ActiveMods stay out of templates
- * (`aseLegacy` in `@shared/yark-owned-ini-keys`).
+ * (`aseLegacy` in `@shared/asa/yark-owned-ini-keys`).
  */
 export async function syncProfileSettingsToIni(
   profile: ServerProfile,

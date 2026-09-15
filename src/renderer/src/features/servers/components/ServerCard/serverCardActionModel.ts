@@ -1,6 +1,6 @@
 import type { ServerStatus } from "@shared/types";
-import type { ServerUpdateState } from "@shared/server-update-status";
-import type { SteamCmdProgressOperation } from "@shared/steamcmd-progress";
+import type { ServerUpdateState } from "@shared/server/server-update-status";
+import type { SteamCmdProgressOperation } from "@shared/server/steamcmd-progress";
 
 /** Leading Play slot: Enable / Start / Stop. Disabled profiles always show Enable even without install files (#132); Start hides until files are ready. */
 export type ServerCardRuntimeAction = {

@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { Badge, Text, Tooltip, UnstyledButton } from "@mantine/core";
 import type { ServerProfile } from "@shared/types";
-import { formatMapDisplayName } from "@shared/map-identity";
+import { formatMapDisplayName } from "@shared/asa/map-identity";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import {
   serverRuntimeStatusLabel,

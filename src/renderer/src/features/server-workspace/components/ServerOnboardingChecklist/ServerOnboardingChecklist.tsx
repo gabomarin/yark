@@ -5,7 +5,7 @@ import {
   SkipForward,
 } from "@phosphor-icons/react";
 import { Button, Group, Stack, Text, Title } from "@mantine/core";
-import { isInstallationReady } from "@shared/installation-health";
+import { isInstallationReady } from "@shared/server/installation-health";
 import type { ServerInstallationInfo, ServerProfile } from "@shared/types";
 import { useState } from "react";
 import classes from "./ServerOnboardingChecklist.module.css";

@@ -1,4 +1,4 @@
-import { steamCmdByteProgressNoun } from "@shared/steamcmd-progress";
+import { steamCmdByteProgressNoun } from "@shared/server/steamcmd-progress";
 import type { SteamCmdStatus } from "@shared/types";
 import type { DownloadRow } from "./downloadsModel";
 

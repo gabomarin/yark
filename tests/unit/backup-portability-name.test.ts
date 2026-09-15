@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatBackupFileStamp } from "@shared/backup-file-stamp";
+import { formatBackupFileStamp } from "@shared/backups/backup-file-stamp";
 import {
   slugFilePart,
   suggestedExportFileName,

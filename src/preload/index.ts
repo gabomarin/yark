@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from "electron";
 import { IPC, IPC_PUSH, type RendererApi } from "../shared/ipc";
-import type { AppUpdateStatus } from "../shared/app-update";
+import type { AppUpdateStatus } from "../shared/settings/app-update";
 import type {
   BackupKind,
   ClusterIniTemplateFileSelection,

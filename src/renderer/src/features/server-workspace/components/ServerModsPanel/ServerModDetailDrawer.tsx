@@ -17,9 +17,9 @@ import {
   isMapCategoryLabel,
   isMapModCandidate,
   suggestMapTokenFromMetadata,
-} from "@shared/map-token-suggest";
+} from "@shared/asa/map-token-suggest";
 import type { ModMetadata } from "@shared/types";
-import { MAP_NAME_COPY } from "@shared/map-name-copy";
+import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
 import { copyTextToClipboard } from "@ui/copyToClipboard";
 import { MapNameHint } from "@ui/MapNameHint/MapNameHint";
 import { MetaRow } from "@ui/MetaRow/MetaRow";

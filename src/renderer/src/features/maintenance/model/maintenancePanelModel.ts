@@ -6,18 +6,18 @@ import type {
   ServerInstallationInfo,
   ServerStatus,
 } from "@shared/types";
-import { isInstallationReady } from "@shared/installation-health";
+import { isInstallationReady } from "@shared/server/installation-health";
 import { workspaceHeaderControls } from "@features/server-workspace/components/WorkspaceHeader/workspaceHeaderControls";
 import {
   MAINTENANCE_RESTART_PRESET_OFFSETS,
   MAINTENANCE_UPDATE_PRESET_OFFSETS,
-} from "@shared/maintenance-policy";
+} from "@shared/maintenance/maintenance-policy";
 import {
   ALL_RESTART_DAYS_OF_WEEK,
   formatRestartDaysSummary,
   normalizeRestartDaysOfWeek,
   RESTART_DAY_SHORT,
-} from "@shared/maintenance-restart-days";
+} from "@shared/maintenance/maintenance-restart-days";
 
 export const DAY_SHORT = RESTART_DAY_SHORT;
 

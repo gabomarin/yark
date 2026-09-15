@@ -8,7 +8,7 @@
  * Cache API for safe GETs, privacy-conscious structured logs.
  */
 
-import { decodeHtmlEntities } from "../../../src/shared/decode-html-entities";
+import { decodeHtmlEntities } from "../../../src/shared/mods/decode-html-entities";
 import { resolveWorkerConfig, type Env, type RateLimiter } from "./config";
 
 export type { Env };

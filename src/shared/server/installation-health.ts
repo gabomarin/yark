@@ -1,4 +1,4 @@
-import type { InstallationHealthStatus, ServerInstallationInfo } from "./types";
+import type { InstallationHealthStatus, ServerInstallationInfo } from "../types";
 
 /** Stable reason codes produced by the install-health classifier. */
 export type InstallationHealthReasonCode =

@@ -11,7 +11,7 @@ import {
   isFilesJobOperation,
   isOccupyingFilesJobStatus,
   occupyingFilesJobForServer,
-} from "../../../shared/files-job-priority";
+} from "../../../shared/server/files-job-priority";
 import {
   canCancelUpdateCriticalJob,
   isUpdateJobInterruptedAmbiguous,

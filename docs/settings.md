@@ -37,7 +37,7 @@ the Server tab / workspace.
 | Windows login item | `src/main/windows-login-item.ts` |
 | Tray icon / menu | `src/main/app-tray.ts` |
 | Sidebar Quit YARK | `Sidebar.tsx` footer → `app:quit` (#532) |
-| Shared keys / defaults | `src/shared/desktop-shell.ts`, `src/shared/ui-density.ts`, `src/shared/open-native-console.ts`, `src/shared/log-retention.ts`, `src/shared/app-update.ts` |
+| Shared keys / defaults | `src/shared/settings/desktop-shell.ts`, `src/shared/settings/ui-density.ts`, `src/shared/settings/open-native-console.ts`, `src/shared/settings/log-retention.ts`, `src/shared/settings/app-update.ts` |
 | Density theme apply | `src/renderer/src/app/AppProviders.tsx`, `src/renderer/src/main.tsx` |
 | SteamCMD service | `src/backend/domains/updates/*` (path/install/caches) |
 | YARK self-update | `src/main/app-update-service.ts` |
@@ -204,7 +204,7 @@ silent outside Settings status text.
   Backups page. Defaults and normalize rules: [backups.md](backups.md).
 - **Quit policy (#59)** — always Stop / Cancel when quitting with active
   servers; no Settings Ask/Stop preference.
-- **INI setting meta** (`src/shared/ini-setting-meta.json`) — descriptions / value types / inferred editor inputs from `defaults/*.ini` (`npm run catalog:ini-meta`); unrelated to this Settings page.
+- **INI setting meta** (`src/shared/ini/ini-setting-meta.json`) — descriptions / value types / inferred editor inputs from `defaults/*.ini` (`npm run catalog:ini-meta`); unrelated to this Settings page.
 
 ## Common pitfalls
 

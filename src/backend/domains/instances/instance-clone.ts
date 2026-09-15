@@ -5,11 +5,11 @@ import type {
   ServerProfile,
   ServerProfileInput,
 } from "@shared/types";
-import { suggestNextPortTriplet } from "@shared/port-suggest";
+import { suggestNextPortTriplet } from "@shared/server/port-suggest";
 import {
   normalizeWindowsPath,
   suggestCloneInstallDir,
-} from "@shared/server-install-path";
+} from "@shared/server/server-install-path";
 import type { BackupService } from "../backups/backup-service";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
 import type { ServerRepository } from "../../infra/db/server-repository";

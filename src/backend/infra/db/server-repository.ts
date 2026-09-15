@@ -16,12 +16,12 @@ import type {
 import {
   persistableMapModId,
   persistableMapSaveFolder,
-} from "@shared/map-identity";
+} from "@shared/asa/map-identity";
 import {
   emptyStructuredLaunchArgs,
   normalizeStructuredLaunchArgs,
   type StructuredLaunchArgs,
-} from "@shared/structured-launch-options";
+} from "@shared/asa/structured-launch-options";
 
 interface ServerRow {
   id: string;

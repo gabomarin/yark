@@ -1,4 +1,4 @@
-import { formatMapDisplayName } from "@shared/map-identity";
+import { formatMapDisplayName } from "@shared/asa/map-identity";
 import type { ServerProfile } from "@shared/types";
 
 /** Filter overview server lists by name / map / cluster id (case-insensitive). */

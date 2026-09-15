@@ -2,11 +2,11 @@ import {
   decideFilesJobEnqueue,
   occupyingFilesJobForServer,
   type FilesJobEnqueueDecision,
-} from "@shared/files-job-priority";
-import { isInstallationReady } from "@shared/installation-health";
+} from "@shared/server/files-job-priority";
+import { isInstallationReady } from "@shared/server/installation-health";
 import {
   getServerUpdateState,
-} from "@shared/server-update-status";
+} from "@shared/server/server-update-status";
 import type {
   CriticalJobSummary,
   ServerInstallationInfo,

@@ -7,9 +7,9 @@ import {
   asaUiCategoryLabel,
   resolveAsaUiCategory,
   type AsaUiCategoryId,
-} from "./asa-setting-ui-categories";
+} from "../asa/asa-setting-ui-categories";
 import { isClientIniNoise, parseIniTextRows } from "./ini-text";
-import { isYarkOwnedIniKey } from "./yark-owned-ini-keys";
+import { isYarkOwnedIniKey } from "../asa/yark-owned-ini-keys";
 
 export type IniUiFileKey = "gameUserSettings" | "game";
 

@@ -11,7 +11,7 @@ import type {
 import {
   shouldNotifySteamCmdJobEvent,
   type SteamCmdJobTerminalPayload,
-} from "../../../shared/os-notification-events";
+} from "../../../shared/settings/os-notification-events";
 import {
   CRITICAL_BACKUP_KINDS,
   type BackupService,

@@ -6,7 +6,7 @@
 import { existsSync } from "node:fs";
 import { copyFile, mkdir, rm, stat } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
-import { formatBackupFileStamp } from "@shared/backup-file-stamp";
+import { formatBackupFileStamp } from "@shared/backups/backup-file-stamp";
 import type { BackupKind, BackupRecord, ServerProfile } from "@shared/types";
 import type { BackupRepository } from "../../infra/db/backup-repository";
 import type { ServerRepository } from "../../infra/db/server-repository";

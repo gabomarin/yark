@@ -59,10 +59,13 @@ paths or the Notion hub URL in tracked files.
 - [src/preload](../src/preload): exposed APIs for the renderer.
 - [src/renderer](../src/renderer): React UI, layouts, features, and components.
 - [src/backend](../src/backend): services, domains, process management, and persistence.
-- [src/shared](../src/shared): shared types and IPC contracts. External browser opens
-  (`target=_blank`, YARK update release notes) go through
+- [src/shared](../src/shared): shared types and IPC contracts, grouped by domain
+  (`asa/`, `settings/`, `ini/`, `server/`, `mods/`, `backups/`, `maintenance/`,
+  plus root `types.ts` / `ipc.ts`). External browser opens (`target=_blank`,
+  YARK update release notes) go through
   [`external-url-policy.ts`](../src/shared/external-url-policy.ts) before
-  `shell.openExternal`.
+  `shell.openExternal`. Prefer a domain subfolder over a flat new file when the
+  module clearly belongs to one of those areas.
 - [docs](../docs): in-repo agent docs (this file, runbooks, visual testing, [website](website.md)). Private plans: Notion Product Lab; local stubs under `.cursor/project-context/`.
 - [website](../website): static Cloudflare Pages project site (`getyark`) + versioned feature screenshots.
 - [AGENTS.md](../AGENTS.md): Cursor Cloud / Linux VM specifics (display, `ELECTRON_RUN_AS_NODE`, expected vitest path failures, e2e notes).
@@ -114,7 +117,7 @@ paths or the Notion hub URL in tracked files.
   INI Files with unsaved drafts (fossil alert; Save and continue / Discard / Keep
   editing). Server tab shows Cancel when the profile is dirty.
   Animated **startup splash** (#317) until main is ready (skipped in E2E).
-  In-app **What's new** (#290) from `src/shared/changelog.ts` (Settings, sidebar
+  In-app **What's new** (#290) from `src/shared/settings/changelog.ts` (Settings, sidebar
   version, one-shot after upgrade; This version vs Earlier releases). Runtime **ShooterGame.log** tail stays on with
   native console; crash buffer until next Start (#326).
 - Settings is live in the shell (SteamCMD path, desktop shell, density, and related preferences — no light/dark theme control). Full map: [settings.md](settings.md). Clusters surfaces `clusterId` / `clusterDir` compliance reports (not a live transfer probe); real-host checklist: [spikes/22-cluster-live-transfers.md](spikes/22-cluster-live-transfers.md) (#22). Workspace **RCON** tab: [rcon.md](rcon.md).

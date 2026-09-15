@@ -4,7 +4,7 @@ import {
   findLaunchArgConflicts,
   normalizeStructuredLaunchArgs,
   type StructuredLaunchArgs,
-} from "@shared/structured-launch-options";
+} from "@shared/asa/structured-launch-options";
 import { joinRawExtraArgs, parseRawExtraArgs } from "./serverLaunchModel";
 
 const VALUE_PERSIST_DEBOUNCE_MS = 400;

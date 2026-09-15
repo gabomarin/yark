@@ -1,6 +1,6 @@
 import type { ServerProfile } from "@shared/types";
 import type { KnownClusterOption } from "@features/clusters/knownClusterOptions";
-import { normalizeWindowsPath } from "@shared/server-install-path";
+import { normalizeWindowsPath } from "@shared/server/server-install-path";
 import {
   getClusterDirFormError,
   getClusterIdFormError,

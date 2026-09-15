@@ -16,7 +16,7 @@ import {
   getServerFolderNameError,
   isValidServerFolderName,
   suggestCloneInstallDir,
-} from "@shared/server-install-path";
+} from "@shared/server/server-install-path";
 import { PathField } from "@ui/PathField/PathField";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { CloneCopyProgress } from "./CloneCopyProgress";

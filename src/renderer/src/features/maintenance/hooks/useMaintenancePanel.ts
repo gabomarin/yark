@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { MaintenancePolicy, MaintenancePolicyStatus } from "@shared/types";
-import { defaultMaintenancePolicy } from "@shared/maintenance-policy";
+import { defaultMaintenancePolicy } from "@shared/maintenance/maintenance-policy";
 import { modals } from "@mantine/modals";
 import { maintenancePolicyWriteFromStatus } from "../model/maintenancePanelModel";
 

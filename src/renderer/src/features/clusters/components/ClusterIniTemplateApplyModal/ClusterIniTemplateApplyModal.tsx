@@ -12,7 +12,7 @@ import {
 import {
   clusterIniFileSelectionHasWork,
   defaultClusterIniFileSelection,
-} from "@shared/cluster-ini-file-selection";
+} from "@shared/ini/cluster-ini-file-selection";
 import type {
   ClusterIniTemplateApplyOperation,
   ClusterIniTemplateFileSelection,

@@ -5,7 +5,7 @@ import {
   classifyLeaveCandidate,
   type LeftRunningProcessIdentity,
   type LiveProcessIdentity,
-} from "@shared/left-running";
+} from "@shared/settings/left-running";
 import {
   AsaSavedLogsTailer,
   captureAsaLogSessionAnchor,

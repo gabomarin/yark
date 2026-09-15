@@ -10,7 +10,7 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import type { FleetInstallRef } from "@shared/server-install-path";
+import type { FleetInstallRef } from "@shared/server/server-install-path";
 import type { MoveInstallProgress, ServerProfile } from "@shared/types";
 import { normalizeMoveInstallProgress } from "@shared/types";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";

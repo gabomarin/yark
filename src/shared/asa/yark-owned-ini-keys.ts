@@ -1,4 +1,4 @@
-import type { ServerIniPayload } from "./types";
+import type { ServerIniPayload } from "../types";
 
 /**
  * GameUserSettings keys that cluster INI templates must not author.

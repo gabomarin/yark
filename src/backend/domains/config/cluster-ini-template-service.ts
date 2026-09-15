@@ -1,6 +1,6 @@
-import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini-defaults";
-import { sanitizeServerIniPayload } from "@shared/ini-text";
-import { stripYarkOwnedFromPayload } from "@shared/yark-owned-ini-keys";
+import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini/ini-defaults";
+import { sanitizeServerIniPayload } from "@shared/ini/ini-text";
+import { stripYarkOwnedFromPayload } from "@shared/asa/yark-owned-ini-keys";
 import type {
   ClusterIniTemplate,
   IniPreview,

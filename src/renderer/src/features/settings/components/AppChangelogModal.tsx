@@ -14,7 +14,7 @@ import {
   getChangelogForVersion,
   getRecentChangelog,
   type ChangelogEntry,
-} from "@shared/changelog";
+} from "@shared/settings/changelog";
 import {
   changelogNoteCount,
   changelogNoteCountLabel,

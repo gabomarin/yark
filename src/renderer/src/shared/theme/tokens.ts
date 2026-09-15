@@ -1,6 +1,6 @@
-import type { UiDensity } from "@shared/ui-density";
+import type { UiDensity } from "@shared/settings/ui-density";
 
-export type { UiDensity } from "@shared/ui-density";
+export type { UiDensity } from "@shared/settings/ui-density";
 
 export const radixPalette = {
   background: "#0c1427",

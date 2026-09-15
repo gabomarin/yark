@@ -17,7 +17,7 @@ import {
   type AppUpdateInstallBlockReason,
   type AppUpdateStatus,
   type GithubReleaseRef,
-} from "../shared/app-update";
+} from "../shared/settings/app-update";
 import { APP_VERSION } from "../shared/app-version";
 import { requireAllowedExternalUrl } from "../shared/external-url-policy";
 

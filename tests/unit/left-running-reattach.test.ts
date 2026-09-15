@@ -13,7 +13,7 @@ import {
   LEFT_RUNNING_PROCESSES_SETTING_KEY,
   LEFT_RUNNING_SCHEMA_VERSION,
   type LeftRunningProcessIdentity,
-} from "@shared/left-running";
+} from "@shared/settings/left-running";
 import type { ServerProfile } from "@shared/types";
 
 function fakeAdoptedChild(pid: number): ChildProcess {

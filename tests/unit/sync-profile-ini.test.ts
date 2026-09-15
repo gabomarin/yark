@@ -6,7 +6,7 @@ import {
   gameUserSettingsIniPath,
   syncProfileSettingsToIni,
 } from "@backend/domains/instances/sync-profile-ini";
-import { flattenIniText, INI_FLAT_SEP } from "@shared/ini-text";
+import { flattenIniText, INI_FLAT_SEP } from "@shared/ini/ini-text";
 import type { ServerProfile } from "@shared/types";
 
 function flatKey(section: string, key: string): string {

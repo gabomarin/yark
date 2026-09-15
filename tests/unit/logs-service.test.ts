@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import type { AppEvent, LogRetentionSettings, ServerProfile } from "@shared/types";
-import { DEFAULT_LOG_RETENTION_SETTINGS } from "@shared/log-retention";
+import { DEFAULT_LOG_RETENTION_SETTINGS } from "@shared/settings/log-retention";
 import { LogsService, type BackupLogSource } from "@backend/domains/logs/logs-service";
 import type { AppSettingsRepository } from "@backend/infra/db/app-settings-repository";
 import type { ServerRepository } from "@backend/infra/db/server-repository";

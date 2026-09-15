@@ -13,7 +13,7 @@ import type {
   IniPreview,
   ServerIniPayload,
 } from "@shared/types";
-import { stripYarkOwnedFromPayload } from "@shared/yark-owned-ini-keys";
+import { stripYarkOwnedFromPayload } from "@shared/asa/yark-owned-ini-keys";
 import { sanitizeServerIniPayload } from "@features/server-workspace/iniModel";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import {

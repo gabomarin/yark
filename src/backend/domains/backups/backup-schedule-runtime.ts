@@ -2,7 +2,7 @@
  * Scheduled world-backup cycle orchestration for BackupService.
  */
 
-import { backupFinishedAt } from "@shared/backup-player-meta";
+import { backupFinishedAt } from "@shared/backups/backup-player-meta";
 import type { ServerProfile } from "@shared/types";
 import type { BackupRepository } from "../../infra/db/backup-repository";
 import type { ServerRepository } from "../../infra/db/server-repository";

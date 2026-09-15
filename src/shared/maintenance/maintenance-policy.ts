@@ -2,7 +2,7 @@ import type {
   MaintenanceBroadcastPreset,
   MaintenanceJobWarnings,
   MaintenancePolicy,
-} from "./types";
+} from "../types";
 
 /** Minimal / Regular / Frequent offset lists (long window; last minute optional via `lastMinuteChat`). */
 export const MAINTENANCE_RESTART_PRESET_OFFSETS: Record<

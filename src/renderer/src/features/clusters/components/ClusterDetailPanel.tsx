@@ -8,7 +8,7 @@ import type {
 } from "@shared/types";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
-import { formatMapDisplayName } from "@shared/map-identity";
+import { formatMapDisplayName } from "@shared/asa/map-identity";
 import { MetaStrip } from "./MetaStrip/MetaStrip";
 import { formatCheckedAt, sharedClusterDir } from "../clusterModel";
 import { resolveServerRuntime } from "../createClusterModel";

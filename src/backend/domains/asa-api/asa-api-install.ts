@@ -5,7 +5,7 @@ import { pipeline } from "node:stream/promises";
 import { Readable } from "node:stream";
 import { mkdir, rm } from "node:fs/promises";
 import { extractZip } from "../backups/backup-archive";
-import { formatSteamCmdByteProgress } from "@shared/steamcmd-progress";
+import { formatSteamCmdByteProgress } from "@shared/server/steamcmd-progress";
 import type { AsaApiInstallProgress, AsaApiStatus } from "@shared/types";
 import {
   ASA_API_GITHUB_OWNER,

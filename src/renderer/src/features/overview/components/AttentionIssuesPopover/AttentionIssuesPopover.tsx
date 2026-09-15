@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { Popover, Stack, Text } from "@mantine/core";
-import { formatInstallationCheckedAt } from "@shared/installation-health";
+import { formatInstallationCheckedAt } from "@shared/server/installation-health";
 import type { AttentionIssue } from "../../model/attentionIssues";
 import classes from "./AttentionIssuesPopover.module.css";
 

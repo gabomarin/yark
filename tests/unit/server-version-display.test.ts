@@ -6,7 +6,7 @@ import {
   resolveDisplayedServerVersion,
   shouldHintVersionRefreshesOnStart,
   VERSION_REFRESHES_ON_START_HINT,
-} from "@shared/server-version-display";
+} from "@shared/server/server-version-display";
 
 describe("resolveDisplayedServerVersion", () => {
   it("prefers an ARK-style file build over a stale log arkVersion", () => {

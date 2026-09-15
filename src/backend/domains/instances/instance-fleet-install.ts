@@ -11,8 +11,8 @@ import {
   readOfficialArkBuildCached,
   readOfficialArkVersionCached,
 } from "./server-installation";
-import { isInstallHealthDegradation } from "@shared/installation-health";
-import { resolveDisplayedServerVersion } from "@shared/server-version-display";
+import { isInstallHealthDegradation } from "@shared/server/installation-health";
+import { resolveDisplayedServerVersion } from "@shared/server/server-version-display";
 import {
   FLEET_INSPECT_CONCURRENCY,
   mapPool,

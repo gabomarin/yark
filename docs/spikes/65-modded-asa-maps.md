@@ -25,8 +25,8 @@ rows; not every batch item).
 
 Helpers / UI:
 
-- [`src/shared/map-identity.ts`](../../src/shared/map-identity.ts) — official vs custom, validation, Start blockers
-- [`src/shared/map-token-suggest.ts`](../../src/shared/map-token-suggest.ts) — Maps category + `Map Name` / `Server Name` / `*_WP` heuristics (uses `description` when present)
+- [`src/shared/asa/map-identity.ts`](../../src/shared/asa/map-identity.ts) — official vs custom, validation, Start blockers
+- [`src/shared/asa/map-token-suggest.ts`](../../src/shared/asa/map-token-suggest.ts) — Maps category + `Map Name` / `Server Name` / `*_WP` heuristics (uses `description` when present)
 - [`ServerFormMapField`](../../src/renderer/src/features/servers/components/ServerForm/ServerFormMapField.tsx) — grouped Map select
 
 ## Evidence catalog

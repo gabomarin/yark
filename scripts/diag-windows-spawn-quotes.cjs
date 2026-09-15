@@ -29,7 +29,7 @@ function quoteWindowsArg(value) {
 
 function mapUrlToWindowsVerbatimArg(logical) {
   // Escape `\` before `"` so existing backslashes are not eaten by `\"` pairs
-  // (same order as escapeQuotedLaunchValue in src/shared/launch-map-url.ts).
+  // (same order as escapeQuotedLaunchValue in src/shared/asa/launch-map-url.ts).
   return logical.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 

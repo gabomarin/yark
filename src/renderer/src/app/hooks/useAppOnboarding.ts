@@ -1,11 +1,11 @@
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { APP_VERSION } from "@shared/app-version";
-import { shouldShowWhatsNewForVersion } from "@shared/changelog";
+import { shouldShowWhatsNewForVersion } from "@shared/settings/changelog";
 import {
   createOnboardingRecord,
   shouldAutoShowSetupWizard,
   type OnboardingRecord,
-} from "@shared/onboarding";
+} from "@shared/settings/onboarding";
 import {
   type PendingSetupCluster,
   type SetupWizardMode,

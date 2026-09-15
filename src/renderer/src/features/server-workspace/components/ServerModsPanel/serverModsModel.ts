@@ -1,4 +1,4 @@
-import { isMapCategoryLabel } from "@shared/map-token-suggest";
+import { isMapCategoryLabel } from "@shared/asa/map-token-suggest";
 import type { ModMetadata, ModSearchPage } from "@shared/types";
 
 export interface ModRow {

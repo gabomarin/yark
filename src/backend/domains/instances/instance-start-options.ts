@@ -1,5 +1,5 @@
 import type { ServerProfile, StartServerOptions } from "@shared/types";
-import { DEFAULT_OPEN_NATIVE_CONSOLE } from "@shared/open-native-console";
+import { DEFAULT_OPEN_NATIVE_CONSOLE } from "@shared/settings/open-native-console";
 
 /** Optional InstanceService deps beyond repo/process/backup/lock. */
 export interface InstanceServiceOptions {

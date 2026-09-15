@@ -5,7 +5,7 @@ import {
   LEFT_RUNNING_SCHEMA_VERSION,
   parseLeftRunningProcesses,
   type LeftRunningProcessIdentity,
-} from "@shared/left-running";
+} from "@shared/settings/left-running";
 
 function makeRecord(
   overrides: Partial<LeftRunningProcessIdentity> = {},

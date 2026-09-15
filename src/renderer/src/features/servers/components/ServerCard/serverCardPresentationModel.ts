@@ -3,18 +3,18 @@ import {
   installationHealthLabel,
   isInstallOfferHealth,
   isInstallationReady,
-} from "@shared/installation-health";
+} from "@shared/server/installation-health";
 import {
   getServerUpdateState,
   type ServerUpdateState,
-} from "@shared/server-update-status";
-import { resolveDisplayedServerVersion, shouldHintVersionRefreshesOnStart, VERSION_REFRESHES_ON_START_HINT } from "@shared/server-version-display";
+} from "@shared/server/server-update-status";
+import { resolveDisplayedServerVersion, shouldHintVersionRefreshesOnStart, VERSION_REFRESHES_ON_START_HINT } from "@shared/server/server-version-display";
 import {
   formatSteamCmdByteProgress,
   hasMeaningfulSteamCmdByteProgress,
   steamCmdByteProgressNoun,
   steamCmdProgressFallbackLabel,
-} from "@shared/steamcmd-progress";
+} from "@shared/server/steamcmd-progress";
 import {
   resolvePrimaryAction,
   resolveRestartAction,
@@ -24,7 +24,7 @@ import {
 import {
   canEnqueueFilesJobFromMenu,
   filesJobOccupantFromUi,
-} from "@shared/files-job-priority";
+} from "@shared/server/files-job-priority";
 
 export type SteamCmdOperation =
   | "install-steamcmd"

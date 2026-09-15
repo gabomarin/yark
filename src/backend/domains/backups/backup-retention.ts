@@ -4,7 +4,7 @@
 
 import { basename } from "node:path";
 import { rm } from "node:fs/promises";
-import { playersRetentionKey } from "@shared/backup-player-meta";
+import { playersRetentionKey } from "@shared/backups/backup-player-meta";
 import type { BackupPolicy, BackupRecord } from "@shared/types";
 import type { BackupRepository } from "../../infra/db/backup-repository";
 import type { ServerRepository } from "../../infra/db/server-repository";

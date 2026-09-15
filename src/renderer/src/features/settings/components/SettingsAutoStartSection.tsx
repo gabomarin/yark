@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { Play } from "@phosphor-icons/react";
 import { Badge, Button, Group, Stack, Text, Title } from "@mantine/core";
-import { isInstallationReady } from "@shared/installation-health";
+import { isInstallationReady } from "@shared/server/installation-health";
 import type { ServerInstallationInfo, ServerProfile } from "@shared/types";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import classes from "../SettingsPage.module.css";

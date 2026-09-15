@@ -1,4 +1,4 @@
-import { parseIniTextRows, setIniTextValue } from "@shared/ini-text";
+import { parseIniTextRows, setIniTextValue } from "@shared/ini/ini-text";
 import type { IniFileKey, ServerIniPayload } from "@shared/types";
 import { SETTINGS, type WizardSetting } from "./configurationWizardIniSettings";
 import {

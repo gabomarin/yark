@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import type { AppUpdateStatus } from "@shared/app-update";
+import type { AppUpdateStatus } from "@shared/settings/app-update";
 import type { RendererApi } from "@shared/ipc";
 
 /** Stable ISO timestamp for fixture payloads — bump when suites assert on age. */

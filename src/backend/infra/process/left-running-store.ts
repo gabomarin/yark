@@ -3,7 +3,7 @@ import {
   LEFT_RUNNING_PROCESSES_SETTING_KEY,
   parseLeftRunningProcesses,
   type LeftRunningProcessIdentity,
-} from "@shared/left-running";
+} from "@shared/settings/left-running";
 
 export function readLeftRunningProcesses(
   settings: AppSettingsRepository,

@@ -3,7 +3,7 @@
  * Shared between renderer validation and backend composition.
  */
 
-import { isYarkOwnedIniKey } from "./yark-owned-ini-keys";
+import { isYarkOwnedIniKey } from "../asa/yark-owned-ini-keys";
 
 export type ConfigTransferIniStrategy = "merge" | "replace";
 

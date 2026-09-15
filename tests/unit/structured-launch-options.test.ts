@@ -10,7 +10,7 @@ import {
   parseWinLiveMaxPlayersValue,
   takeLegacyWinLiveMaxPlayers,
   STRUCTURED_LAUNCH_GROUP_ORDER,
-} from "@shared/structured-launch-options";
+} from "@shared/asa/structured-launch-options";
 
 describe("structured-launch-options", () => {
   it("curation ids resolve to supported catalog entries", () => {

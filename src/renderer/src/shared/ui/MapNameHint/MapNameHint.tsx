@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { Alert, Stack, Text } from "@mantine/core";
-import type { suggestMapTokenFromMetadata } from "@shared/map-token-suggest";
-import { MAP_NAME_COPY } from "@shared/map-name-copy";
+import type { suggestMapTokenFromMetadata } from "@shared/asa/map-token-suggest";
+import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
 import { CopyMetadataRow } from "@ui/CopyMetadataRow/CopyMetadataRow";
 import { mapFieldHelperTextProps } from "@ui/mapFieldStyles";
 import classes from "./MapNameHint.module.css";

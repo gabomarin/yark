@@ -6,7 +6,7 @@ import {
   occupyingFilesJobForServer,
   pickOccupyingFilesJob,
   type FilesJobOccupant,
-} from "@shared/files-job-priority";
+} from "@shared/server/files-job-priority";
 
 const verifyQueued: FilesJobOccupant = {
   id: "v1",

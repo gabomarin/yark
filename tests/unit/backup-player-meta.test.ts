@@ -5,7 +5,7 @@ import {
   parsePlayerNameFromNotes,
   playerBackupDisplayName,
   playersRetentionKey,
-} from "@shared/backup-player-meta";
+} from "@shared/backups/backup-player-meta";
 import type { BackupRecord } from "@shared/types";
 
 function backup(partial: Partial<BackupRecord> & Pick<BackupRecord, "notes" | "type">): BackupRecord {

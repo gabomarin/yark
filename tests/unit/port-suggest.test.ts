@@ -5,7 +5,7 @@ import {
   DEFAULT_RCON_PORT,
   PORT_SUGGEST_MAX_OFFSET,
   suggestNextPortTriplet,
-} from "@shared/port-suggest";
+} from "@shared/server/port-suggest";
 
 function profile(
   id: string,

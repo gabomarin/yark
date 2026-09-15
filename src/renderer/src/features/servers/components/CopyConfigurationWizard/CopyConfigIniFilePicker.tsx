@@ -8,7 +8,7 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { CaretDown, CaretRight } from "@phosphor-icons/react";
-import type { ConfigTransferIniFileSelection } from "@shared/config-transfer";
+import type { ConfigTransferIniFileSelection } from "@shared/ini/config-transfer";
 import type { ConfigTransferIniCategoryInfo } from "@shared/types";
 import {
   MERGE_STRATEGY_TOOLTIP,

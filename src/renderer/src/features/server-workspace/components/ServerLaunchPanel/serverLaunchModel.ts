@@ -1,5 +1,5 @@
 import type { ServerProfile } from "@shared/types";
-import { buildMapUrlArg } from "@shared/launch-map-url";
+import { buildMapUrlArg } from "@shared/asa/launch-map-url";
 import {
   argsIncludeServerPlatform,
   buildStructuredLaunchArgList,
@@ -17,7 +17,7 @@ import {
   type StructuredLaunchArgs,
   type StructuredLaunchGroupId,
   type StructuredLaunchUiOption,
-} from "@shared/structured-launch-options";
+} from "@shared/asa/structured-launch-options";
 
 export function previewBinaryPath(
   installDir: string,

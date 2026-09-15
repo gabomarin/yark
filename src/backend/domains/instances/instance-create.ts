@@ -4,7 +4,7 @@ import {
   installDirConflictMessage,
   normalizeWindowsPath,
   resolveServerInstallDir,
-} from "@shared/server-install-path";
+} from "@shared/server/server-install-path";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import { findPortConflicts, validateProfileInput } from "./validation";
 import {

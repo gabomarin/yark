@@ -4,7 +4,7 @@ import {
   getRecentChangelog,
   shouldShowWhatsNewForVersion,
   type ChangelogEntry,
-} from "@shared/changelog";
+} from "@shared/settings/changelog";
 
 const sample: ChangelogEntry[] = [
   {

@@ -4,7 +4,7 @@ import type { SteamCmdConsoleSnapshot } from "../../../shared/types";
 import {
   parseSteamCmdProgressLine,
   formatSteamCmdByteProgress,
-} from "../../../shared/steamcmd-progress";
+} from "../../../shared/server/steamcmd-progress";
 import {
   STEAMCMD_CONSOLE_MAX_LINES,
   STEAMCMD_PROGRESS_CONSOLE_LOG_MIN_DELTA,

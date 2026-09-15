@@ -17,7 +17,7 @@ import {
   DEFAULT_LOG_RETENTION_SETTINGS,
   MAX_LOG_RETENTION_DAYS,
   MIN_LOG_RETENTION_DAYS,
-} from "@shared/log-retention";
+} from "@shared/settings/log-retention";
 import { showOperatorToast } from "@ui/operatorToast";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { LogRetentionCleanupModal } from "./LogRetentionCleanupModal";

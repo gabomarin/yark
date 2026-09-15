@@ -17,7 +17,7 @@ import {
   truncateToastBody,
   yarkUpdateOsToastDedupeKey,
   yarkUpdateOsToastSilent,
-} from "@shared/os-notification-events";
+} from "@shared/settings/os-notification-events";
 
 const prefsOn = {
   osNotifyEnabled: true,

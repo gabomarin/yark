@@ -16,7 +16,7 @@ import {
   parseStoredBoolean,
   serializeStoredBoolean,
   type DesktopShellPreferences,
-} from "../shared/desktop-shell";
+} from "../shared/settings/desktop-shell";
 
 export function readDesktopShellPreferences(
   settings: AppSettingsRepository,

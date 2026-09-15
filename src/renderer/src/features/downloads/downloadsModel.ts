@@ -3,7 +3,7 @@ import {
   formatSteamCmdByteProgress,
   hasMeaningfulSteamCmdByteProgress,
   steamCmdByteProgressNoun,
-} from "@shared/steamcmd-progress";
+} from "@shared/server/steamcmd-progress";
 import type {
   CriticalJobSummary,
   ServerProfile,

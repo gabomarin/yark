@@ -1,4 +1,4 @@
-import { backupFinishedAt } from "@shared/backup-player-meta";
+import { backupFinishedAt } from "@shared/backups/backup-player-meta";
 import type {
   BackupDiskAlertSettings,
   BackupFleetAlert,

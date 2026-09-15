@@ -7,7 +7,7 @@ import {
   parseSteamCmdProgressLine,
   steamCmdByteProgressNoun,
   steamCmdProgressFallbackLabel,
-} from "@shared/steamcmd-progress";
+} from "@shared/server/steamcmd-progress";
 
 describe("parseSteamCmdProgressLine", () => {
   it("parses SteamCMD progress percent, bytes and state", () => {

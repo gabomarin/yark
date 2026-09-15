@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { Alert, Stack, Text } from "@mantine/core";
-import { findPortConflicts } from "@shared/port-conflicts";
+import { findPortConflicts } from "@shared/server/port-conflicts";
 import { PORT_MAX, PORT_MIN, type ServerProfile } from "@shared/types";
 import { useMemo } from "react";
 

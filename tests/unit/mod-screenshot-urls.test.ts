@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   MAX_MOD_SCREENSHOT_URLS,
   normalizeModScreenshotUrls,
-} from "@shared/mod-screenshot-urls";
+} from "@shared/mods/mod-screenshot-urls";
 
 describe("normalizeModScreenshotUrls", () => {
   it("keeps https URLs only and caps length", () => {

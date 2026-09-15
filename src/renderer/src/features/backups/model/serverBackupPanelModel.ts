@@ -1,10 +1,10 @@
-import { playerBackupDisplayName } from "@shared/backup-player-meta";
+import { playerBackupDisplayName } from "@shared/backups/backup-player-meta";
 import {
   WHEN_RECENT_MS,
   formatRelativeTime,
   formatWhenLabel,
 } from "@shared/format-log-datetime";
-import { formatMapDisplayName } from "@shared/map-identity";
+import { formatMapDisplayName } from "@shared/asa/map-identity";
 import type {
   BackupKind,
   BackupPolicy,

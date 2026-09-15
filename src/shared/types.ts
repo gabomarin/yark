@@ -1,5 +1,5 @@
-import type { ConfigTransferSelection } from "./config-transfer";
-import type { StructuredLaunchArgs } from "./structured-launch-options";
+import type { ConfigTransferSelection } from "./ini/config-transfer";
+import type { StructuredLaunchArgs } from "./asa/structured-launch-options";
 
 /** Lifecycle status of a server instance. */
 export type ServerStatus =

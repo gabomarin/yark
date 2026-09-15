@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ChangelogEntry } from "@shared/changelog";
+import type { ChangelogEntry } from "@shared/settings/changelog";
 import {
   changelogNoteCount,
   changelogNoteCountLabel,

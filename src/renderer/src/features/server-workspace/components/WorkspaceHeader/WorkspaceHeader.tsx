@@ -16,10 +16,10 @@ import {
   Title,
 } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
-import { isInstallationReady } from "@shared/installation-health";
-import { resolveDisplayedServerVersion } from "@shared/server-version-display";
+import { isInstallationReady } from "@shared/server/installation-health";
+import { resolveDisplayedServerVersion } from "@shared/server/server-version-display";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
-import { formatMapDisplayName } from "@shared/map-identity";
+import { formatMapDisplayName } from "@shared/asa/map-identity";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
 import { RconStatusIcon } from "../RconStatusIcon/RconStatusIcon";
 import { workspaceHeaderControls } from "./workspaceHeaderControls";

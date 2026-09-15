@@ -6,7 +6,7 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
-import { formatMapDisplayName } from "@shared/map-identity";
+import { formatMapDisplayName } from "@shared/asa/map-identity";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { useMemo, useState } from "react";
 import { useUiDensity } from "@app/AppProviders";

@@ -1,4 +1,4 @@
-import type { ChangelogEntry } from "@shared/changelog";
+import type { ChangelogEntry } from "@shared/settings/changelog";
 
 const MONTHS = [
   "Jan",

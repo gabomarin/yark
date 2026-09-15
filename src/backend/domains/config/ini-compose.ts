@@ -1,5 +1,5 @@
-import { flattenIniText, INI_FLAT_SEP, setIniTextValue } from "@shared/ini-text";
-import { isAsaIgnoredIniMaxPlayers, isYarkOwnedIniKey } from "@shared/yark-owned-ini-keys";
+import { flattenIniText, INI_FLAT_SEP, setIniTextValue } from "@shared/ini/ini-text";
+import { isAsaIgnoredIniMaxPlayers, isYarkOwnedIniKey } from "@shared/asa/yark-owned-ini-keys";
 import type { IniDiffEntry, IniPreview, ServerIniPayload, ServerProfile } from "@shared/types";
 import { prepareClusterIniTemplatePayload } from "./cluster-ini-template-service";
 

@@ -2,7 +2,7 @@ import {
   flattenIniText,
   parseIniTextRows,
   splitFlatIniKey,
-} from "@shared/ini-text";
+} from "@shared/ini/ini-text";
 import type {
   IniDiffEntry,
   IniPreview,
