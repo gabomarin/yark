@@ -19,7 +19,13 @@ import type { ServerRepository } from "@backend/infra/db/server-repository";
 import type { AppSettingsRepository } from "@backend/infra/db/app-settings-repository";
 import type { ServerProfile } from "@shared/types";
 import type { DatabaseSync } from "node:sqlite";
-import { BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY } from "@backend/domains/backups/backup-critical-queue";
+import {
+  BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY,
+} from "@backend/domains/backups/backup-critical-queue";
+import {
+  BACKUP_DISK_ALERTS_SETTING_KEY,
+  BACKUP_FLEET_ALERTS_DISMISSED_SETTING_KEY,
+} from "@backend/domains/backups/backup-fleet-ops";
 
 vi.mock("@backend/infra/rcon/rcon-client", () => ({
   rconExec: vi.fn(async () => "ok"),
@@ -2165,6 +2171,15 @@ describe("BackupService kinds and retention", () => {
     service.dismissFleetAlert(alert!.id, alert!.fingerprint);
     const hidden = await service.getFleetSummary();
     expect(hidden.alerts.find((row) => row.id === `failed:${profile.id}`)).toBeUndefined();
+    expect(settingsStore.get(BACKUP_FLEET_ALERTS_DISMISSED_SETTING_KEY)).toContain(alert!.id);
+
+    const disk = service.setDiskAlertSettings({
+      warnUsedPercent: 80,
+      criticalUsedPercent: 90,
+      warnFreeBytes: 10 * 1024 * 1024 * 1024,
+    });
+    expect(disk.warnUsedPercent).toBe(80);
+    expect(settingsStore.get(BACKUP_DISK_ALERTS_SETTING_KEY)).toContain('"warnUsedPercent":80');
 
     const newer = repo.createBackupStart({
       serverId: profile.id,
