@@ -178,7 +178,7 @@ Queued install/update/verify rows can **Move up in queue** / **Move down in queu
 
 If SteamCMD is not installed, Install/Update/Verify **do not queue**. Pending leftovers from a previous session **block** with Retry so they cannot fail into pre-update backup leftovers. When SteamCMD **is** ready, pending leftovers **resume on launch** unless a **Paused** job or a **Retry**-held interrupt (YARK closed mid-job) is still in the queue.
 
-The SteamCMD console stays collapsed until **Advanced log** (or a Needs attention / interrupted job auto-opens it). When open, it follows the **Active** job while one is running and keeps the last output when that job is **Paused**; it clears when you **Resume**. The one-line status under the queue is enough for progress (`Verifying integrity · 38%`).
+The SteamCMD console stays collapsed until **Advanced log** (or a new Needs attention / interrupted job auto-opens it once this session; hiding it keeps those leftovers collapsed). When open, it follows the **Active** job while one is running and keeps the last output when that job is **Paused**; it clears when you **Resume**. The one-line status under the queue is enough for progress (`Verifying integrity · 38%`).
 
 ## Progress
 

@@ -153,7 +153,7 @@ available. Unset `ELECTRON_RUN_AS_NODE` first (see [AGENTS.md](../AGENTS.md)).
 | `node scripts/visual-setup-wizard.cjs` | Isolated first-run setup assistant at HD / Full HD / QHD |
 | `node scripts/visual-configuration-wizard.cjs` | Configuration wizard Profile / Pace / selected card at HD / Full HD / QHD (#224) |
 | `node scripts/visual-serverform.cjs` | Playwright review of Create ServerForm (empty / filled / cluster) at HD / Full HD / QHD (#292) |
-| `node scripts/visual-downloads.cjs` | Isolated Downloads: Needs attention auto-opens Advanced log; happy path keeps it collapsed with a one-line status; HD / Full HD / QHD (#201) |
+| `node scripts/visual-downloads.cjs` | Isolated Downloads: Needs attention auto-opens Advanced log on first view; happy path keeps it collapsed with a one-line status; HD / Full HD / QHD (#201) |
 | `node scripts/seed-server-logs.cjs [serverName]` | Clear + seed events/update logs into Electron userData (override with `YARK_USER_DATA`) |
 
 Also: `npm run e2e:smoke` / `npm run e2e` launch the compiled app via Playwright

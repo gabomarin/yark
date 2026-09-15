@@ -9,14 +9,15 @@ import type { ServerProfile, SteamCmdConsoleSnapshot, SteamCmdStatus } from "@sh
 import {
   buildDownloadRows,
   defaultSelectedRowId,
+  DOWNLOAD_CONSOLE_WAITING,
   downloadConsoleBody,
   downloadStatusLine,
   findDownloadRow,
-  shouldAutoExpandAdvancedLog,
   type DownloadRow,
   type DownloadRowKind,
 } from "./downloadsModel";
 import { DownloadRowButton, sectionTitle } from "./DownloadsQueueRows";
+import { useAdvancedLogExpanded } from "./useAdvancedLogExpanded";
 import { useDownloadQueueFlip } from "./useDownloadQueueFlip";
 import { ConsoleSurface } from "@ui/ConsoleSurface/ConsoleSurface";
 import classes from "./DownloadsPage.module.css";
@@ -32,11 +33,10 @@ interface Props {
   onResumeJob: (jobId: string) => void;
   onDismissJob: (jobId: string) => void;
   onReorderJob: (jobId: string, direction: "up" | "down") => void;
-  onOpenSettings?: () => void;
+  onOpenSettings: () => void;
 }
 
 const DEFAULT_SPLIT_SIZES: [number, number] = [52, 48];
-const ADVANCED_LOG_STORAGE_KEY = "yark.downloads.advancedLog.expanded.v1";
 
 export function DownloadsPage(props: Props): ReactElement {
   const serversById = useMemo(() => {
@@ -65,10 +65,7 @@ export function DownloadsPage(props: Props): ReactElement {
     key: "yark.downloads.splitSizes",
     defaultValue: DEFAULT_SPLIT_SIZES,
   });
-  const [logExpanded, setLogExpanded] = useLocalStorage({
-    key: ADVANCED_LOG_STORAGE_KEY,
-    defaultValue: false,
-  });
+  const { logExpanded, toggleLogExpanded } = useAdvancedLogExpanded(rows);
   const queueRef = useRef<HTMLElement>(null);
   useDownloadQueueFlip(
     queueRef,
@@ -85,12 +82,10 @@ export function DownloadsPage(props: Props): ReactElement {
   const selected = findDownloadRow(rows, selectedId);
   const groups: DownloadRowKind[] = ["active", "interrupted", "paused", "queued", "cancelled", "attention"];
   const consoleBody = downloadConsoleBody(rows, props.console?.lines ?? []);
-  const statusLine = downloadStatusLine(selected, consoleBody);
-  const autoExpandLog = shouldAutoExpandAdvancedLog(rows);
-
-  useEffect(() => {
-    if (autoExpandLog) setLogExpanded(true);
-  }, [autoExpandLog, setLogExpanded]);
+  const statusLine = downloadStatusLine(
+    selected,
+    consoleBody === DOWNLOAD_CONSOLE_WAITING,
+  );
 
   const cancelRow = (row: DownloadRow) => {
     if (row.kind === "queued" && row.job !== null) {
@@ -122,16 +117,14 @@ export function DownloadsPage(props: Props): ReactElement {
         <Stack gap="xs">
           Install SteamCMD in Settings before installs, updates, or verify can
           run.
-          {props.onOpenSettings !== undefined && (
-            <Button
-              size="compact-sm"
-              variant="light"
-              color="red"
-              onClick={props.onOpenSettings}
-            >
-              Install SteamCMD
-            </Button>
-          )}
+          <Button
+            size="compact-sm"
+            variant="light"
+            color="red"
+            onClick={props.onOpenSettings}
+          >
+            Install SteamCMD
+          </Button>
         </Stack>
       </Alert>
     ) : null;
@@ -152,11 +145,9 @@ export function DownloadsPage(props: Props): ReactElement {
               : "Install SteamCMD in Settings first. Installs, updates, and verify jobs will appear here."
           }
           action={
-            props.onOpenSettings !== undefined ? (
-              <Button size="compact-sm" variant="light" onClick={props.onOpenSettings}>
-                {props.status.detected ? "Open SteamCMD settings" : "Install SteamCMD"}
-              </Button>
-            ) : undefined
+            <Button size="compact-sm" variant="light" onClick={props.onOpenSettings}>
+              {props.status.detected ? "Open SteamCMD settings" : "Install SteamCMD"}
+            </Button>
           }
           layout="stacked"
           titleOrder="h3"
@@ -239,7 +230,7 @@ export function DownloadsPage(props: Props): ReactElement {
         aria-label={logExpanded ? "Hide advanced log" : "Advanced log"}
         aria-expanded={logExpanded}
         aria-controls="downloads-advanced-log"
-        onClick={() => setLogExpanded(!logExpanded)}
+        onClick={toggleLogExpanded}
       >
         {logExpanded ? "Hide advanced log" : "Advanced log"}
       </Button>

@@ -104,6 +104,7 @@ export function AppShell({
   const [importInstallOpen, setImportInstallOpen] = useState(false);
   /** Remount Import wizard on each open so step/probe state resets without adjust-on-prop effects. */
   const [importWizardKey, setImportWizardKey] = useState(0);
+  /** Lives here so Overview search survives sidebar unmounts; cleared after create/clone/import. */
   const [overviewSearch, setOverviewSearch] = useState("");
   const [deleteServerId, setDeleteServerId] = useState<string | null>(null);
   /** Dirty-leave guard registered by the active workspace or form overlay. */
