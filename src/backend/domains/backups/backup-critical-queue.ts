@@ -19,7 +19,8 @@ import {
   type BackupCriticalJob, type BackupCriticalJobType,
 } from "./backup-critical-jobs";
 
-const BACKUP_CRITICAL_JOBS_KEY = "backupCriticalJobsQueue.v1";
+/** SQLite `app_settings.key` for the durable backup critical-job queue (#455). */
+export const BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY = "backupCriticalJobsQueue.v1";
 const BACKUP_JOB_RETRY_DELAY_MS = 5000;
 export { CRITICAL_BACKUP_KINDS } from "./backup-critical-job-executor";
 export type { BackupCriticalJobProgressHandlers } from "./backup-critical-job-executor";
@@ -446,7 +447,7 @@ export class BackupCriticalQueue {
   }
 
   private loadQueue(): BackupCriticalJob[] {
-    const raw = this.deps.settings.get(BACKUP_CRITICAL_JOBS_KEY);
+    const raw = this.deps.settings.get(BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY);
     if (raw === null || raw.trim().length === 0) {
       return [];
     }
@@ -537,19 +538,19 @@ export class BackupCriticalQueue {
         jobs.push(migrated);
       }
       if (invalidEntryFound) {
-        this.deps.settings.set(`${BACKUP_CRITICAL_JOBS_KEY}.quarantine.${Date.now()}`, raw);
+        this.deps.settings.set(`${BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY}.quarantine.${Date.now()}`, raw);
       }
-      this.deps.settings.set(BACKUP_CRITICAL_JOBS_KEY, JSON.stringify(jobs));
+      this.deps.settings.set(BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY, JSON.stringify(jobs));
       return jobs;
     } catch {
-      this.deps.settings.set(`${BACKUP_CRITICAL_JOBS_KEY}.quarantine.${Date.now()}`, raw);
-      this.deps.settings.set(BACKUP_CRITICAL_JOBS_KEY, "[]");
+      this.deps.settings.set(`${BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY}.quarantine.${Date.now()}`, raw);
+      this.deps.settings.set(BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY, "[]");
       return [];
     }
   }
 
   private persistQueue(): void {
-    this.deps.settings.set(BACKUP_CRITICAL_JOBS_KEY, JSON.stringify(this.queue));
+    this.deps.settings.set(BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY, JSON.stringify(this.queue));
   }
 
   private removeJob(jobId: string): void {

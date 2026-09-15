@@ -51,7 +51,8 @@ import {
 } from "./steamcmd-content-cache";
 import { CriticalJobRecoveryBlockedError } from "./update-perform";
 
-const CRITICAL_JOBS_KEY = "criticalJobsQueue.v1";
+/** SQLite `app_settings.key` for the durable update/files critical-job queue (#455). */
+export const UPDATE_CRITICAL_JOBS_QUEUE_SETTING_KEY = "criticalJobsQueue.v1";
 const JOB_RETRY_DELAY_MS = 5000;
 
 type JobEventType =
@@ -138,7 +139,7 @@ export class UpdateQueueRuntime {
   }
 
   persist(): void {
-    this.deps.settings.set(CRITICAL_JOBS_KEY, JSON.stringify(this.queue));
+    this.deps.settings.set(UPDATE_CRITICAL_JOBS_QUEUE_SETTING_KEY, JSON.stringify(this.queue));
   }
 
   checkpoint(job: UpdateCriticalJob | undefined, phase: string): void {
@@ -535,7 +536,7 @@ export class UpdateQueueRuntime {
   }
 
   private loadQueue(): UpdateCriticalJob[] {
-    const raw = this.deps.settings.get(CRITICAL_JOBS_KEY);
+    const raw = this.deps.settings.get(UPDATE_CRITICAL_JOBS_QUEUE_SETTING_KEY);
     if (raw === null || raw.trim().length === 0) return [];
     try {
       const parsed = JSON.parse(raw) as Array<Partial<UpdateCriticalJob>>;
@@ -603,13 +604,13 @@ export class UpdateQueueRuntime {
         jobs.push(migrated);
       }
       if (invalidEntryFound) {
-        this.deps.settings.set(`${CRITICAL_JOBS_KEY}.quarantine.${Date.now()}`, raw);
+        this.deps.settings.set(`${UPDATE_CRITICAL_JOBS_QUEUE_SETTING_KEY}.quarantine.${Date.now()}`, raw);
       }
-      this.deps.settings.set(CRITICAL_JOBS_KEY, JSON.stringify(jobs));
+      this.deps.settings.set(UPDATE_CRITICAL_JOBS_QUEUE_SETTING_KEY, JSON.stringify(jobs));
       return jobs;
     } catch {
-      this.deps.settings.set(`${CRITICAL_JOBS_KEY}.quarantine.${Date.now()}`, raw);
-      this.deps.settings.set(CRITICAL_JOBS_KEY, "[]");
+      this.deps.settings.set(`${UPDATE_CRITICAL_JOBS_QUEUE_SETTING_KEY}.quarantine.${Date.now()}`, raw);
+      this.deps.settings.set(UPDATE_CRITICAL_JOBS_QUEUE_SETTING_KEY, "[]");
       return [];
     }
   }

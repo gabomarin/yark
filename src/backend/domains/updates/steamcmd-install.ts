@@ -20,6 +20,7 @@ import {
   resolveSteamCmdHome,
 } from "./steamcmd-content-cache";
 import type { UpdateCriticalJob } from "./update-critical-jobs";
+import { STEAMCMD_PATH_SETTING_KEY } from "@shared/settings/steamcmd-path-setting";
 
 export interface SteamCmdInstallHost {
   readonly settings: AppSettingsRepository;
@@ -55,7 +56,7 @@ export class SteamCmdInstall {
   private steamCmdConfirmedMissing = false;
 
   constructor(private readonly host: SteamCmdInstallHost) {
-    const configured = this.host.settings.get("steamcmdPath")?.trim();
+    const configured = this.host.settings.get(STEAMCMD_PATH_SETTING_KEY)?.trim();
     if (configured != null && configured.length > 0) {
       this.lastKnownSteamCmdPath = configured;
     }
@@ -178,7 +179,7 @@ async ensureSteamCmdReadyForOperator(job?: UpdateCriticalJob): Promise<void> {
 }
 
 findSteamCmdExecutableCached(): string | null {
-  const configured = this.host.settings.get("steamcmdPath");
+  const configured = this.host.settings.get(STEAMCMD_PATH_SETTING_KEY);
   const resolved = resolveSteamCmdExecutableCached({
     confirmedMissing: this.steamCmdConfirmedMissing,
     lastKnownPath: this.lastKnownSteamCmdPath,
@@ -201,7 +202,7 @@ findSteamCmdExecutableCached(): string | null {
 
 steamCmdCandidatePaths(): string[] {
   return buildSteamCmdCandidatePaths({
-    configured: this.host.settings.get("steamcmdPath"),
+    configured: this.host.settings.get(STEAMCMD_PATH_SETTING_KEY),
     envPath: process.env["STEAMCMD_PATH"],
     steamcmdDir: this.host.steamcmdDir,
     isolated: isYarkE2eShortcutsActive(),
@@ -259,7 +260,7 @@ async findSteamCmdExecutable(): Promise<string | null> {
 persistSteamCmdPath(exePath: string): void {
   this.steamCmdConfirmedMissing = false;
   this.lastKnownSteamCmdPath = exePath;
-  this.host.settings.set("steamcmdPath", exePath);
+  this.host.settings.set(STEAMCMD_PATH_SETTING_KEY, exePath);
   process.env["STEAMCMD_PATH"] = exePath;
   process.env["ARK_STEAMCMD_DIR"] = dirname(exePath);
 }

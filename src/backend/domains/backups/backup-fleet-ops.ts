@@ -26,14 +26,16 @@ import {
   type DismissedFleetAlertEntry,
 } from "./backup-fleet";
 
-const DISK_ALERT_SETTINGS_KEY = "backupDiskAlerts.v1";
+/** SQLite `app_settings.key` for fleet backup disk-alert thresholds (#455). */
+export const BACKUP_DISK_ALERTS_SETTING_KEY = "backupDiskAlerts.v1";
 const DEFAULT_DISK_ALERT_SETTINGS: BackupDiskAlertSettings = {
   warnUsedPercent: 85,
   criticalUsedPercent: 95,
   warnFreeBytes: 20 * 1024 * 1024 * 1024,
 };
-/** Dismissed fleet alerts: alertId → fingerprint that was hidden. */
-const DISMISSED_FLEET_ALERTS_KEY = "backupFleetAlerts.dismissed.v1";
+/** SQLite `app_settings.key` for dismissed fleet-alert fingerprints (#455). */
+export const BACKUP_FLEET_ALERTS_DISMISSED_SETTING_KEY =
+  "backupFleetAlerts.dismissed.v1";
 
 export interface BackupFleetOpsHost {
   servers: ServerRepository;
@@ -53,7 +55,7 @@ export class BackupFleetOps {
 
   setDiskAlertSettings(settings: BackupDiskAlertSettings): BackupDiskAlertSettings {
     const next = normalizeDiskAlertSettings(settings);
-    this.host.settings.set(DISK_ALERT_SETTINGS_KEY, JSON.stringify(next));
+    this.host.settings.set(BACKUP_DISK_ALERTS_SETTING_KEY, JSON.stringify(next));
     return next;
   }
 
@@ -130,7 +132,7 @@ export class BackupFleetOps {
   }
 
   private readDiskAlertSettings(): BackupDiskAlertSettings {
-    const raw = this.host.settings.get(DISK_ALERT_SETTINGS_KEY);
+    const raw = this.host.settings.get(BACKUP_DISK_ALERTS_SETTING_KEY);
     if (raw === null || raw.trim().length === 0) {
       return { ...DEFAULT_DISK_ALERT_SETTINGS };
     }
@@ -156,7 +158,7 @@ export class BackupFleetOps {
   }
 
   private readDismissedFleetAlerts(): Record<string, DismissedFleetAlertEntry> {
-    const raw = this.host.settings.get(DISMISSED_FLEET_ALERTS_KEY);
+    const raw = this.host.settings.get(BACKUP_FLEET_ALERTS_DISMISSED_SETTING_KEY);
     if (raw === null || raw.trim().length === 0) return {};
     try {
       const parsed = JSON.parse(raw) as Record<string, Partial<DismissedFleetAlertEntry>>;
@@ -191,7 +193,7 @@ export class BackupFleetOps {
   private writeDismissedFleetAlerts(
     map: Record<string, DismissedFleetAlertEntry>,
   ): void {
-    this.host.settings.set(DISMISSED_FLEET_ALERTS_KEY, JSON.stringify(map));
+    this.host.settings.set(BACKUP_FLEET_ALERTS_DISMISSED_SETTING_KEY, JSON.stringify(map));
   }
 
   /** Drop alerts whose current fingerprint was dismissed; prune stale dismiss rows. */

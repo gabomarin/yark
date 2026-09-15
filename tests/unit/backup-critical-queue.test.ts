@@ -1,13 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   BackupCriticalQueue,
+  BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY,
   type BackupCriticalQueueDependencies,
 } from "@backend/domains/backups/backup-critical-queue";
 import type { BackupCriticalJobExecutor } from "@backend/domains/backups/backup-critical-job-executor";
 import type { BackupCriticalJob } from "@backend/domains/backups/backup-critical-jobs";
 import type { ServerProfile } from "@shared/types";
 
-const QUEUE_KEY = "backupCriticalJobsQueue.v1";
+const QUEUE_KEY = BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY;
 
 function makeProfile(): ServerProfile {
   const now = new Date().toISOString();

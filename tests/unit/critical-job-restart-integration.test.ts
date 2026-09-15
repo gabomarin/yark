@@ -7,8 +7,10 @@ import type { InstanceService } from "@backend/domains/instances/instance-servic
 import type { ProcessManager } from "@backend/infra/process/process-manager";
 import type { ServerRepository } from "@backend/infra/db/server-repository";
 import type { ServerProfile } from "@shared/types";
+import { UPDATE_CRITICAL_JOBS_QUEUE_SETTING_KEY } from "@backend/domains/updates/update-queue-runtime";
+import { STEAMCMD_PATH_SETTING_KEY } from "@shared/settings/steamcmd-path-setting";
 
-const QUEUE_KEY = "criticalJobsQueue.v1";
+const QUEUE_KEY = UPDATE_CRITICAL_JOBS_QUEUE_SETTING_KEY;
 
 function profile(): ServerProfile {
   const now = "2026-08-01T00:00:00.000Z";
@@ -63,7 +65,7 @@ function createRestartedService(
 ) {
   const values = new Map<string, string>([
     [QUEUE_KEY, JSON.stringify(jobs)],
-    ["steamcmdPath", "C:\\steamcmd\\steamcmd.exe"],
+    [STEAMCMD_PATH_SETTING_KEY, "C:\\steamcmd\\steamcmd.exe"],
   ]);
   const settings = {
     get: vi.fn((key: string) => values.get(key) ?? null),
