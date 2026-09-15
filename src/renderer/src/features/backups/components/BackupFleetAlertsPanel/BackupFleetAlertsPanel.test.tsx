@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import type { BackupFleetAlert } from "@shared/types";
+import { BACKUP_ALERTS_LIST_SELECTOR } from "../../backupsTestIds";
 import { BackupFleetAlertsPanel } from "./BackupFleetAlertsPanel";
 
 afterEach(() => {
@@ -64,7 +65,7 @@ describe("BackupFleetAlertsPanel", () => {
     expect(screen.getByLabelText("Backup alerts")).toBeInTheDocument();
     expect(screen.queryByText("Alerts")).not.toBeInTheDocument();
 
-    expect(document.querySelector("[data-backup-alerts-list]")).not.toBeNull();
+    expect(document.querySelector(BACKUP_ALERTS_LIST_SELECTOR)).not.toBeNull();
 
     // Failed alerts only offer Logs (deep-link), not Open.
     expect(screen.getAllByRole("button", { name: "Open" })).toHaveLength(1);

@@ -6,6 +6,11 @@ import { AppProviders } from "@app/AppProviders";
 import { DEFAULT_LOG_RETENTION_SETTINGS } from "@shared/log-retention";
 import type { SteamCmdStatus } from "@shared/types";
 import { SETTINGS_CATEGORY_STORAGE_KEY } from "./settingsModel";
+import {
+  DEFAULT_BASE_FOLDER_SELECTOR,
+  SETTINGS_PANEL_SCROLL_SELECTOR,
+  STEAMCMD_PATH_SELECTOR,
+} from "./settingsTestIds";
 import { SettingsPage } from "./SettingsPage";
 
 const readyStatus: SteamCmdStatus = {
@@ -223,12 +228,12 @@ describe("SettingsPage", () => {
     expect(screen.getByText("Display size")).toBeInTheDocument();
     expect(screen.getByLabelText("Display size")).toBeInTheDocument();
     expect(screen.queryByText("Show server console on start")).not.toBeInTheDocument();
-    expect(document.querySelector("[data-steamcmd-path]")).toBeNull();
+    expect(document.querySelector(STEAMCMD_PATH_SELECTOR)).toBeNull();
     expect(screen.queryByText(/YARK server manager · v0.1.0/i)).not.toBeInTheDocument();
 
     const user = userEvent.setup();
     await openCategory(user, "SteamCMD");
-    expect(document.querySelector("[data-steamcmd-path]")).toHaveTextContent(
+    expect(document.querySelector(STEAMCMD_PATH_SELECTOR)).toHaveTextContent(
       "C:/steamcmd/steamcmd.exe",
     );
     expect(screen.getByText("Ready")).toBeInTheDocument();
@@ -243,7 +248,7 @@ describe("SettingsPage", () => {
     const nav = screen.getByRole("navigation", { name: "Settings categories" });
     within(nav).getByRole("button", { name: "SteamCMD" }).focus();
     await user.keyboard("{Enter}");
-    expect(document.querySelector("[data-steamcmd-path]")).toBeInTheDocument();
+    expect(document.querySelector(STEAMCMD_PATH_SELECTOR)).toBeInTheDocument();
   });
 
   it("opens the SteamCMD category when focusSteamCmd is set", () => {
@@ -255,7 +260,7 @@ describe("SettingsPage", () => {
       onSteamCmdFocused,
     });
 
-    expect(document.querySelector("[data-steamcmd-path]")).toBeInTheDocument();
+    expect(document.querySelector(STEAMCMD_PATH_SELECTOR)).toBeInTheDocument();
     expect(onSteamCmdFocused).toHaveBeenCalled();
   });
 
@@ -283,7 +288,7 @@ describe("SettingsPage", () => {
       onSteamCmdFocused,
     });
 
-    expect(document.querySelector("[data-steamcmd-path]")).toBeInTheDocument();
+    expect(document.querySelector(STEAMCMD_PATH_SELECTOR)).toBeInTheDocument();
     expect(onSteamCmdFocused).toHaveBeenCalled();
   });
 
@@ -318,7 +323,7 @@ describe("SettingsPage", () => {
     stubSettingsApi();
     renderSettings();
 
-    const panel = document.querySelector<HTMLElement>("[data-settings-panel-scroll]");
+    const panel = document.querySelector<HTMLElement>(SETTINGS_PANEL_SCROLL_SELECTOR);
     expect(panel).not.toBeNull();
     panel!.scrollTop = 240;
     await openCategory(user, "Profiles");
@@ -523,7 +528,7 @@ describe("SettingsPage", () => {
     });
 
     await openCategory(user, "Profiles");
-    const baseRow = document.querySelector("[data-default-base-folder]");
+    const baseRow = document.querySelector(DEFAULT_BASE_FOLDER_SELECTOR);
     expect(baseRow).not.toBeNull();
     await user.click(
       Array.from(baseRow!.querySelectorAll("button")).find((el) =>
@@ -538,7 +543,7 @@ describe("SettingsPage", () => {
       onDefaultBaseFolderChange,
     });
     await openCategory(user, "Profiles");
-    const baseRowFilled = document.querySelector("[data-default-base-folder]");
+    const baseRowFilled = document.querySelector(DEFAULT_BASE_FOLDER_SELECTOR);
     await user.click(
       Array.from(baseRowFilled!.querySelectorAll("button")).find((el) =>
         /^Clear$/i.test(el.textContent ?? ""),

@@ -6,6 +6,11 @@ import {
   argsIncludeServerPlatform,
   buildStructuredLaunchArgList,
   isWinLiveMaxPlayersArg,
+  YARK_DEFAULT_SERVER_PLATFORM_ARG,
+  yarkClusterArgs,
+  yarkModsArg,
+  yarkPortArg,
+  yarkWinLiveMaxPlayersArg,
 } from "@shared/structured-launch-options";
 
 export { buildMapUrlArg } from "@shared/launch-map-url";
@@ -131,13 +136,13 @@ export function buildLaunchArgs(profile: ServerProfile): string[] {
     (arg) => !isWinLiveMaxPlayersArg(arg),
   );
   const trailingArgs = [...structuredArgs, ...extraArgs];
-  const args: string[] = [mapUrl, `-port=${profile.gamePort}`];
+  const args: string[] = [mapUrl, yarkPortArg(profile.gamePort)];
   if (profile.maxPlayers > 0) {
-    args.push(`-WinLiveMaxPlayers=${profile.maxPlayers}`);
+    args.push(yarkWinLiveMaxPlayersArg(profile.maxPlayers));
   }
 
   if (!argsIncludeServerPlatform(trailingArgs)) {
-    args.push("-ServerPlatform=ALL");
+    args.push(YARK_DEFAULT_SERVER_PLATFORM_ARG);
   }
 
   const disabledMods = new Set(profile.disabledMods ?? []);
@@ -150,12 +155,10 @@ export function buildLaunchArgs(profile: ServerProfile): string[] {
     args.push(`-MapModID=${mapModLaunchId}`);
   }
   if (enabledMods.length > 0) {
-    args.push(`-mods=${enabledMods.join(",")}`);
+    args.push(yarkModsArg(enabledMods));
   }
   if (profile.clusterId !== null && profile.clusterDir !== null) {
-    args.push(`-clusterid=${profile.clusterId}`);
-    args.push(`-ClusterDirOverride=${profile.clusterDir}`);
-    args.push("-NoTransferFromFiltering");
+    args.push(...yarkClusterArgs(profile.clusterId, profile.clusterDir));
   }
   args.push(...trailingArgs);
   return args;

@@ -31,6 +31,9 @@ This repository contains a desktop application for managing dedicated ARK Surviv
 - React Compiler is **opt-in** only (`YARK_REACT_COMPILER=1` / `npm run build:compiler`); default stays off — spike write-up [react-compiler-spike.md](react-compiler-spike.md) (#404).
 - For visible renderer changes, follow the mandatory [visual testing protocol](visual-testing.md), including HD, Full HD, and QHD/2K review.
 - When growing or splitting React UI, follow [component-structure.md](component-structure.md) (pragmatic Atomic Design for agents). Backend/renderer mega-file boundaries and phased extraction: [decomposition-146.md](decomposition-146.md) (#146).
+- Named constants for settings keys, localStorage, `data-*` hooks, and ASA
+  domain tokens — see [component-structure.md](component-structure.md#named-constants--avoid-magic-literals)
+  (#453). Do not rename persisted on-disk key values without a migration.
 - Prefer **Mantine** components/props for renderer UI wherever they fit (Stepper,
   Modal, Tooltip, forms, layout) before custom chrome; see
   [design-system.md](design-system.md) and

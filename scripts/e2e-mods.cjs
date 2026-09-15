@@ -1,3 +1,4 @@
+const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
 /**
  * E2E: Server Workspace Mods tab (add Project ID, enable/disable, cleanup).
  *
@@ -57,7 +58,7 @@ async function dismissOpenMenus(page) {
 
 async function removeServerIfPresent(page, name) {
   const card = page
-    .locator("[data-server-card]", {
+    .locator(SERVER_CARD, {
       has: page.getByText(name, { exact: true }),
     })
     .first();

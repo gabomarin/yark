@@ -20,6 +20,7 @@ import {
   deriveServerCardView,
   type SteamCmdOperation,
 } from "./serverCardModel";
+import { SERVER_CARD_ATTR } from "./serverCardTestIds";
 import classes from "./ServerCard.module.css";
 
 type ServerCardSharedProps = {
@@ -209,7 +210,7 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
       data-disabled={!server.enabled}
       data-queued={steamCmdQueued || undefined}
       data-ui-density={density}
-      data-server-card
+      {...{ [SERVER_CARD_ATTR]: true }}
       data-server-name={server.name}
       onContextMenu={onContextMenu}
       onKeyDown={onCardKeyDown}

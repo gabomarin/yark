@@ -1,3 +1,4 @@
+const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
 /**
  * E2E: Workspace Maintenance tab — Up next, restart schedule, wipe toggle, warnings Off (#489).
  *
@@ -37,7 +38,7 @@ async function dismissOpenMenus(page) {
 
 async function removeServerIfPresent(page, name) {
   const card = page
-    .locator("[data-server-card]", {
+    .locator(SERVER_CARD, {
       has: page.getByText(name, { exact: true }),
     })
     .first();

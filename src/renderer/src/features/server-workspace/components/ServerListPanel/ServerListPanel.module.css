@@ -9,13 +9,13 @@
 }
 
 .panel[data-icon-mode] .list {
-  padding: 8px 6px;
+  padding: var(--app-space-xs) var(--app-space-xxs);
   align-items: center;
 }
 
 .panel[data-icon-mode] .item {
   justify-content: center;
-  padding: 6px;
+  padding: var(--app-space-xxs);
   gap: 0;
 }
 
@@ -55,7 +55,7 @@
 .cluster {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--app-space-xxs);
 }
 
 .clusterRail {
@@ -74,7 +74,7 @@
   align-items: center;
   gap: var(--app-space-xs);
   width: 100%;
-  padding: 4px 6px;
+  padding: var(--app-space-xxs) var(--app-space-xxs);
   border-radius: var(--app-radius-sm);
   color: inherit;
   text-align: left;
@@ -116,9 +116,9 @@
   align-items: center;
   gap: var(--app-space-xs);
   width: 100%;
-  padding: 6px 12px 6px 8px;
+  padding: var(--app-space-xxs) var(--app-space-sm) var(--app-space-xxs) var(--app-space-xs);
   border-radius: var(--app-radius-control);
-  border: 1px solid transparent;
+  border: 1px solid transparent; /* hairline */
   text-align: left;
   color: inherit;
   transition:
@@ -166,9 +166,9 @@
 
 .statusDot {
   position: absolute;
-  right: -1px;
+  right: -1px; /* hairline overlap on thumb */
   bottom: -1px;
-  border: 1.5px solid var(--app-color-surface-chrome);
+  border: 1.5px solid var(--app-color-surface-chrome); /* status-dot chrome */
 }
 
 .item[data-status-tone="ok"] .statusDot,
@@ -200,7 +200,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 1px; /* tight name/meta stack — not spacing scale */
 }
 
 .itemName {

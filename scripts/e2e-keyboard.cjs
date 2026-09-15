@@ -1,3 +1,4 @@
+const { SERVER_CARD, STEAMCMD_PATH } = require("./e2e-dom-hooks.cjs");
 /**
  * Keyboard smoke: Spotlight, Overview card menu, dismissible modal (#476),
  * search Escape, fleet strip, workspace tabs, Settings categories (#477).
@@ -21,7 +22,7 @@ const {
 } = require("./e2e-launch.cjs");
 
 async function waitForCardByName(page, name, timeout = 15000) {
-  const card = page.locator("[data-server-card]", {
+  const card = page.locator(SERVER_CARD, {
     has: page.getByText(name, { exact: true }),
   });
   await card.first().waitFor({ state: "visible", timeout });
@@ -137,7 +138,7 @@ async function run() {
       .getByRole("button", { name: "SteamCMD" });
     await steamCmd.focus();
     await page.keyboard.press("Enter");
-    await page.locator("[data-steamcmd-path]").waitFor({
+    await page.locator(STEAMCMD_PATH).waitFor({
       state: "visible",
       timeout: 8000,
     });

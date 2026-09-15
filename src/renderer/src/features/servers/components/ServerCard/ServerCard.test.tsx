@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import { ServerCard } from "./ServerCard";
+import { META_GRID_SELECTOR, SERVER_CARD_SELECTOR } from "./serverCardTestIds";
 
 afterEach(cleanup);
 
@@ -79,8 +80,8 @@ describe("ServerCard", () => {
     await user.click(screen.getByRole("button", { name: /^Start server$/i }));
     expect(onStart).toHaveBeenCalledTimes(1);
 
-    expect(document.querySelector("[data-server-card]")).toHaveAttribute("data-tone", "stopped");
-    expect(document.querySelector("[data-server-card]")).not.toHaveAttribute(
+    expect(document.querySelector(SERVER_CARD_SELECTOR)).toHaveAttribute("data-tone", "stopped");
+    expect(document.querySelector(SERVER_CARD_SELECTOR)).not.toHaveAttribute(
       "data-disabled",
       "true",
     );
@@ -338,7 +339,7 @@ describe("ServerCard", () => {
     const ramCpuMeta = document.querySelector('[data-meta-label="RAM / CPU"]');
     expect(ramCpuMeta).not.toBeNull();
     expect(ramCpuMeta).toHaveTextContent("14.2 GB · 38%");
-    expect(document.querySelector("[data-meta-grid]")).toHaveAttribute(
+    expect(document.querySelector(META_GRID_SELECTOR)).toHaveAttribute(
       "data-meta-cols",
       "6",
     );
@@ -489,7 +490,7 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    const card = document.querySelector("[data-server-card]");
+    const card = document.querySelector(SERVER_CARD_SELECTOR);
     expect(card).not.toBeNull();
     fireEvent.contextMenu(card!);
 
@@ -602,7 +603,7 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    const card = document.querySelector("[data-server-card]");
+    const card = document.querySelector(SERVER_CARD_SELECTOR);
     expect(card).not.toBeNull();
     const event = new MouseEvent("contextmenu", {
       bubbles: true,
@@ -1231,7 +1232,7 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    expect(document.querySelector("[data-server-card]")).toHaveAttribute("data-queued");
+    expect(document.querySelector(SERVER_CARD_SELECTOR)).toHaveAttribute("data-queued");
     expect(screen.getByText(/Queued · Verifying integrity/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^Start server$/i })).toBeDisabled();
     await user.click(
@@ -1526,11 +1527,11 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    expect(document.querySelector("[data-server-card]")).toHaveAttribute(
+    expect(document.querySelector(SERVER_CARD_SELECTOR)).toHaveAttribute(
       "data-ui-density",
       "compact",
     );
-    expect(document.querySelector("[data-server-card] [data-shape]")).toHaveAttribute(
+    expect(document.querySelector(`${SERVER_CARD_SELECTOR} [data-shape]`)).toHaveAttribute(
       "data-size",
       "md",
     );
@@ -1553,11 +1554,11 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    expect(document.querySelector("[data-server-card]")).toHaveAttribute(
+    expect(document.querySelector(SERVER_CARD_SELECTOR)).toHaveAttribute(
       "data-ui-density",
       "comfortable",
     );
-    expect(document.querySelector("[data-server-card] [data-shape]")).toHaveAttribute(
+    expect(document.querySelector(`${SERVER_CARD_SELECTOR} [data-shape]`)).toHaveAttribute(
       "data-size",
       "lg",
     );

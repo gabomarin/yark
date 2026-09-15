@@ -1,3 +1,4 @@
+const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
 /**
  * E2E: structured + raw Launch args appear on the real spawn Commandline (#93).
  *
@@ -218,7 +219,7 @@ async function waitForCommandLine(page, timeoutMs = 15_000) {
 }
 
 function cardFor(page) {
-  return page.locator("[data-server-card]", {
+  return page.locator(SERVER_CARD, {
     has: page.getByText(serverName, { exact: true }),
   }).first();
 }

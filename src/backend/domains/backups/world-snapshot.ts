@@ -3,6 +3,10 @@ import { basename, join, relative } from "node:path";
 import { readdir } from "node:fs/promises";
 import { isSafeMapToken, isSafeWindowsFolderName } from "@shared/map-identity";
 import {
+  hasMapTokenWpSuffix,
+  stripMapTokenWpSuffix,
+} from "@shared/map-token-suggest";
+import {
   isRealDirectory,
   isTraversableDirectoryDirent,
 } from "../../infra/fs/reparse-points";
@@ -42,8 +46,8 @@ export function worldMapDirNameCandidates(
   };
   push(mapSaveFolder ?? "");
   push(token);
-  if (/_WP$/i.test(token)) {
-    push(token.replace(/_WP$/i, ""));
+  if (hasMapTokenWpSuffix(token)) {
+    push(stripMapTokenWpSuffix(token));
   }
   return out;
 }

@@ -1,6 +1,6 @@
 import { get } from "node:https";
 import type { OfficialNetworkStatus } from "@shared/types";
-import { ASA_APP_ID } from "./install-steam-build";
+import { ASA_APP_ID, asaSteamCmdInfoUrl } from "@shared/asa-steam";
 
 const OFFICIAL_VERSION_TTL_MS = 15 * 60 * 1000;
 const OFFICIAL_SERVER_STATUS_URL =
@@ -80,7 +80,7 @@ function extractOfficialBuildFromPayload(payload: unknown): string | null {
 
 function fetchOfficialArkBuild(): Promise<string | null> {
   return new Promise((resolve) => {
-    const req = get("https://api.steamcmd.net/v1/info/2430930", (res) => {
+    const req = get(asaSteamCmdInfoUrl(), (res) => {
       if ((res.statusCode ?? 500) >= 400) {
         resolve(null);
         res.resume();

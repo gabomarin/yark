@@ -1,3 +1,4 @@
+const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
 /**
  * Capture website gallery screenshots into website/public/screenshots/
  * (or WEBSITE_SCREENSHOT_OUT).
@@ -257,7 +258,7 @@ async function dismissNotifications(page) {
 async function openWorkspaceByName(page, name) {
   await goNav(page, "Servers");
   await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 15000 });
-  const card = page.locator("[data-server-card]", {
+  const card = page.locator(SERVER_CARD, {
     has: page.getByText(name, { exact: true }),
   }).first();
   await card.waitFor({ state: "visible", timeout: 10000 });

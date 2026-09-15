@@ -1,3 +1,4 @@
+const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
 /**
  * E2E: Settings log retention (#84).
  *
@@ -147,7 +148,7 @@ async function dismissOpenMenus(page) {
 }
 
 async function removeServerIfPresent(page, name) {
-  const card = page.locator("[data-server-card]", {
+  const card = page.locator(SERVER_CARD, {
     has: page.getByText(name, { exact: true }),
   }).first();
   if ((await card.count()) === 0) {

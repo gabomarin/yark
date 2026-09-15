@@ -1,9 +1,7 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
-
-/** ASA dedicated server Steam AppID. */
-export const ASA_APP_ID = "2430930";
+import { ASA_APP_ID } from "@shared/asa-steam";
 
 /** Collapse path separators for stable Windows install-dir comparisons/cache keys. */
 export function normalizePath(value: string): string {

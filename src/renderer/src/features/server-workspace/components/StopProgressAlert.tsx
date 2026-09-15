@@ -2,6 +2,10 @@ import type { ReactElement } from "react";
 import { Alert, Progress, Stack, Text } from "@mantine/core";
 import type { ServerStopProgress } from "@shared/types";
 
+/** Stable `data-*` hook for stop progress (#457). Value must stay stable. */
+const STOP_PROGRESS_ATTR = "data-stop-progress";
+export const STOP_PROGRESS_SELECTOR = "[data-stop-progress]";
+
 interface Props {
   progress: ServerStopProgress;
 }
@@ -24,7 +28,7 @@ export function StopProgressAlert({ progress }: Props): ReactElement {
         ? "Backing up"
         : "Stopping server";
   return (
-    <Alert color="blue" title={title} mb="sm" data-stop-progress>
+    <Alert color="blue" title={title} mb="sm" {...{ [STOP_PROGRESS_ATTR]: true }}>
       <Stack gap="xs">
         <Text size="sm">{label}</Text>
         <Progress

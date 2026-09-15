@@ -1,4 +1,4 @@
-import { suggestMapTokenFromMetadata } from "@shared/map-token-suggest";
+import { suggestMapTokenFromMetadata, hasMapTokenWpSuffix } from "@shared/map-token-suggest";
 import type {
   ModCategory,
   ModMetadata,
@@ -81,7 +81,7 @@ export function isValidMapLaunchToken(token: string): boolean {
   const trimmed = token.trim();
   return (
     trimmed.length > 0
-    && trimmed.includes("_WP")
+    && hasMapTokenWpSuffix(trimmed)
     && !/\s/.test(trimmed)
   );
 }

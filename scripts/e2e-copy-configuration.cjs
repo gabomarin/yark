@@ -1,3 +1,4 @@
+const { SERVER_CARD, serverCardByName } = require("./e2e-dom-hooks.cjs");
 /**
  * E2E: Copy configuration (#95) — isolated one-shot A → B/C transfer.
  *
@@ -148,13 +149,13 @@ async function createServer(app, page, name, installDir, ports) {
   await page.getByRole("button", { name: "Create server" }).click();
   await dismissOnboarding(page);
   await page
-    .locator("[data-server-card]", { has: page.getByText(name, { exact: true }) })
+    .locator(SERVER_CARD, { has: page.getByText(name, { exact: true }) })
     .first()
     .waitFor({ state: "visible", timeout: 15000 });
 }
 
 async function openServerWorkspace(page, name) {
-  const card = page.locator(`[data-server-card][data-server-name="${name}"]`).first();
+  const card = page.locator(serverCardByName(name)).first();
   await card.waitFor({ state: "visible", timeout: 15000 });
   await card
     .getByRole("button", { name: new RegExp(`Open settings for ${escapeRegExp(name)}`, "i") })

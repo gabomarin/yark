@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import { FolderOpen } from "@phosphor-icons/react";
 import { Button, Group, Switch, Text, Title } from "@mantine/core";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
+import { DEFAULT_BASE_FOLDER_ATTR } from "../settingsTestIds";
 import classes from "../SettingsPage.module.css";
 
 interface Props {
@@ -45,7 +46,7 @@ export function SettingsServersSection(props: Props): ReactElement {
             New servers are created here, each in its own named subfolder.
           </Text>
         </div>
-        <div className={classes.pathActionsRow} data-default-base-folder>
+        <div className={classes.pathActionsRow} {...{ [DEFAULT_BASE_FOLDER_ATTR]: true }}>
           <ReadonlyPath
             className={classes.pathChip}
             value={props.defaultBaseFolder}

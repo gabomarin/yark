@@ -126,6 +126,29 @@ detail panels inline when those can be named organisms.
 - Callbacks stay at the page/`App` boundary (`onOpenServer`, `onRefresh`).
 - Avoid deep context for one-off page composition.
 
+## Named constants / avoid magic literals
+
+Prefer **named exports** for identifiers that are easy to mistype or duplicate.
+Inline string/number literals are allowed only when necessary or as a **last
+resort** (comment why). Child slices of [#453](https://github.com/gabomarin/yark/issues/453)
+follow this table at edited call sites.
+
+| Kind | Default | Last resort (must comment why) |
+| --- | --- | --- |
+| SQLite `settings.get` / `set` | Exported `*_SETTING_KEY` next to the owning module (or extend an existing settings module). **New** keys get a constant **before** the first call site. | A throwaway script/test that will not land, or a one-off read of a **legacy** key during a documented migration. |
+| Renderer `localStorage` / `sessionStorage` | Named export next to the feature (`LIST_RAIL_STORAGE_KEY` pattern). New keys: `yark.<feature>.<field>` and `.v1` when the payload is versioned. | Same as settings: migration-only reads of an old key, then delete the exception when the migrator ships. |
+| `data-*` test hooks | Constant next to the component (or feature-local `*TestIds.ts`). JSX and tests/E2E import the **same** string. Playwright scripts are CommonJS — use `scripts/e2e-dom-hooks.cjs` for hooks E2E queries, kept in sync with the TS exports via unit test. **Do not** invent a repo-wide `domHooks.ts` unless duplication across many features later justifies it. | A true one-off selector in a single test file that will never be reused. |
+| ASA / domain tokens | Named export in the domain module (`map-token-suggest`, `structured-launch-options`, Steam app id). | A regex or suffix used in **one** function with a clear local name — do not constant-wrap every unique pattern. |
+| CSS px | Mantine spacing / `--app-space-*` when touching the file ([design-system.md](design-system.md)). | Hairlines, third-party overrides, or a layout that tokens cannot express — comment in CSS. |
+| IPC / push channels | Existing `src/shared/ipc.ts` only. | **Never** inline a new channel string. |
+
+**Do not rename** persisted SQLite or localStorage **values** without a migration
+and tests in the same PR. The constant name may change; the on-disk string must
+stay stable. Examples of do-not-rename values (import the exported constant —
+do not re-spell the string): `onboarding.v1`, `logRetention.v1`,
+`closeWindowToTray`, `uiDensity`, `yark.spotlightRecent.v1`, list-rail /
+settings-category storage keys.
+
 ## Refactor recipe (for agents)
 
 When asked to “simplify” or when hitting the split checklist:

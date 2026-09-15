@@ -5,6 +5,7 @@ import {
 } from "@shared/server-install-path";
 import { isOfficialMap, normalizeMapToken } from "@shared/map-identity";
 import { MAP_NAME_COPY } from "@shared/map-name-copy";
+import { hasMapTokenWpSuffix } from "@shared/map-token-suggest";
 import type { ServerProfile } from "@shared/types";
 import {
   useCallback,
@@ -339,7 +340,7 @@ export function useServerForm(options: UseServerFormOptions): {
         return false;
       }
     }
-    if (!isOfficialMap(mapToken) && !mapToken.includes("_WP")) {
+    if (!isOfficialMap(mapToken) && !hasMapTokenWpSuffix(mapToken)) {
       setError(MAP_NAME_COPY.customUsuallyEndsWp);
       return false;
     }

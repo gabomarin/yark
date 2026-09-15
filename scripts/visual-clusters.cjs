@@ -1,3 +1,4 @@
+const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
 /**
  * Clusters page visual + navigation review — docs/visual-testing.md
  * Usage: npm run build && node scripts/visual-clusters.cjs
@@ -65,7 +66,7 @@ async function ensureClusterSeed(app, page, outDir) {
   await page.locator("[data-overview-page]").waitFor({ timeout: 15000 });
   await page.waitForTimeout(400);
 
-  const cards = page.locator("[data-server-card]");
+  const cards = page.locator(SERVER_CARD);
   if ((await cards.count()) === 0) {
     const installDir = path.join(outDir, "visual-cluster-server");
     fs.mkdirSync(installDir, { recursive: true });
@@ -83,7 +84,7 @@ async function ensureClusterSeed(app, page, outDir) {
     await page.getByLabel("RCON port").fill("38020");
     await page.locator("input[type='password']").last().fill("visual-test-admin");
     await page.getByRole("button", { name: "Create server" }).click();
-    await page.locator("[data-server-card]").first().waitFor({ state: "visible", timeout: 15000 });
+    await page.locator(SERVER_CARD).first().waitFor({ state: "visible", timeout: 15000 });
     return { seeded: true };
   }
 

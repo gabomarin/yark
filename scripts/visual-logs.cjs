@@ -1,3 +1,4 @@
+const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
 /**
  * Visual review of fleet + server Logs tabs with seeded real-looking data (#96).
  * Captures HD / Full HD / QHD evidence for changed Logs chrome.
@@ -65,8 +66,8 @@ async function captureLogsSurface(page, outDir, size) {
   }
 
   await goNav(page, "Servers");
-  await page.locator("[data-server-card]").first().waitFor({ state: "visible", timeout: 10000 });
-  await page.locator("[data-server-card]").first().getByRole("button", { name: /Open settings/i }).click();
+  await page.locator(SERVER_CARD).first().waitFor({ state: "visible", timeout: 10000 });
+  await page.locator(SERVER_CARD).first().getByRole("button", { name: /Open settings/i }).click();
   await openWorkspaceTab(page, "Logs");
   await page.locator("[data-server-logs-panel]").waitFor({ state: "visible", timeout: 10000 });
   await page.waitForTimeout(300);

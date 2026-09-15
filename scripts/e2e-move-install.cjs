@@ -1,3 +1,4 @@
+const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
 /**
  * E2E: Move installation copy/rename → verify → commit (#56).
  *
@@ -125,7 +126,7 @@ async function quitApp(app) {
 }
 
 function cardFor(page, name) {
-  return page.locator("[data-server-card]", {
+  return page.locator(SERVER_CARD, {
     has: page.getByText(name, { exact: true }),
   }).first();
 }

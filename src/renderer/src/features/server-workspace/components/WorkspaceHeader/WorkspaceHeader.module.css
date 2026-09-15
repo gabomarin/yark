@@ -2,10 +2,10 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--app-space-md);
   flex-wrap: wrap;
   flex-shrink: 0;
-  padding: 16px 20px 14px;
+  padding: var(--app-space-md) var(--app-space-lg) var(--app-space-sm);
 }
 
 .identity {
@@ -27,7 +27,7 @@
 
 @media (max-width: 760px) {
   .header {
-    padding-inline: 14px;
+    padding-inline: var(--app-space-sm);
   }
 
   .controls {

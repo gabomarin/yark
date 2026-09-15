@@ -13,6 +13,7 @@ import { setupUser } from "@renderer/test/setupUser";
 import { ServerWorkspacePage, type RconHistoryEntry } from "./ServerWorkspacePage";
 import { INI_GUS_OVERRIDE_HINT_STORAGE_KEY } from "./components/ConfigurationEditor/configurationEditorModel";
 import type { PlayerListState } from "./components/RconPanel/PlayerListSection";
+import { STOP_PROGRESS_SELECTOR } from "./components/StopProgressAlert";
 
 const serverA = {
   id: "srv-a",
@@ -1236,7 +1237,7 @@ describe("ServerWorkspacePage", () => {
       </AppProviders>,
     );
 
-    expect(document.querySelector("[data-stop-progress]")).not.toBeNull();
+    expect(document.querySelector(STOP_PROGRESS_SELECTOR)).not.toBeNull();
     expect(screen.getByText("Backing up")).toBeInTheDocument();
     expect(screen.getByText("Backing up player profiles…")).toBeInTheDocument();
     expect(

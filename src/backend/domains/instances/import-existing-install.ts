@@ -9,6 +9,10 @@ import { basename, dirname, join } from "node:path";
 import { flattenIniText, INI_FLAT_SEP } from "@shared/ini-text";
 import { isOfficialMap, normalizeMapToken } from "@shared/map-identity";
 import {
+  IMPORT_BARE_MAP_TOKEN_WP_RE,
+  SAVE_STEM_MAP_TOKEN_WP_RE,
+} from "@shared/map-token-suggest";
+import {
   normalizeWindowsPath,
   serverFolderName,
 } from "@shared/server-install-path";
@@ -317,7 +321,7 @@ function suggestMapFromText(text: string): string | null {
     }
   }
   // Custom *_WP tokens in filenames / leftovers.
-  const custom = text.match(/\b([A-Za-z][A-Za-z0-9]*_WP)\b/);
+  const custom = text.match(IMPORT_BARE_MAP_TOKEN_WP_RE);
   if (custom !== null) {
     return normalizeMapToken(custom[1]!);
   }
@@ -349,7 +353,7 @@ export function mapTokenFromWorldSaveName(fileName: string): string | null {
       return token;
     }
   }
-  const custom = stem.match(/^([A-Za-z][A-Za-z0-9]*_WP)(?:_|$)/);
+  const custom = stem.match(SAVE_STEM_MAP_TOKEN_WP_RE);
   if (custom !== null) {
     return normalizeMapToken(custom[1]!);
   }

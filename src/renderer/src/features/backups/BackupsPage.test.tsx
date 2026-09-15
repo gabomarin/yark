@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import type { BackupFleetSummary, ServerProfile } from "@shared/types";
+import { BACKUP_FLEET_QUIET_SELECTOR } from "./backupsTestIds";
 import { BackupsPage } from "./BackupsPage";
 
 const server: ServerProfile = {
@@ -307,7 +308,7 @@ describe("BackupsPage", () => {
     );
 
     expect(await screen.findByText(/No backups yet/i)).toBeInTheDocument();
-    expect(document.querySelector("[data-backup-fleet-quiet]")).toBeInTheDocument();
+    expect(document.querySelector(BACKUP_FLEET_QUIET_SELECTOR)).toBeInTheDocument();
   });
 
   it("keeps fleet KPIs when a schedule is on with no backup files yet", async () => {
@@ -343,7 +344,7 @@ describe("BackupsPage", () => {
     );
 
     expect(await screen.findByText("0/1")).toBeInTheDocument();
-    expect(document.querySelector("[data-backup-fleet-quiet]")).toBeNull();
+    expect(document.querySelector(BACKUP_FLEET_QUIET_SELECTOR)).toBeNull();
     expect(screen.queryByText(/No backups yet/i)).not.toBeInTheDocument();
   });
 
@@ -398,14 +399,14 @@ describe("BackupsPage", () => {
 
     expect(await screen.findByText(/No backups yet/i)).toBeInTheDocument();
     expect(screen.getByText("Disk free")).toBeInTheDocument();
-    expect(document.querySelector("[data-backup-fleet-quiet]")).toBeInTheDocument();
+    expect(document.querySelector(BACKUP_FLEET_QUIET_SELECTOR)).toBeInTheDocument();
 
     for (const listener of changedListeners) {
       listener({ serverId: "srv-1" });
     }
 
     await waitFor(() => {
-      expect(document.querySelector("[data-backup-fleet-quiet]")).toBeNull();
+      expect(document.querySelector(BACKUP_FLEET_QUIET_SELECTOR)).toBeNull();
     });
     expect(screen.getByText("0/1")).toBeInTheDocument();
     expect(screen.getByText("Backup used")).toBeInTheDocument();

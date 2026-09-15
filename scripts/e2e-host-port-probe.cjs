@@ -1,3 +1,4 @@
+const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
 /**
  * E2E: host TCP/UDP port probe before start (#91).
  *
@@ -150,7 +151,7 @@ async function quitApp(app) {
 }
 
 function cardFor(page) {
-  return page.locator("[data-server-card]", {
+  return page.locator(SERVER_CARD, {
     has: page.getByText(serverName, { exact: true }),
   }).first();
 }

@@ -9,6 +9,11 @@ import {
   redactLaunchArgForPreview,
   structuredLaunchGroupLabel,
   STRUCTURED_LAUNCH_GROUP_ORDER,
+  YARK_DEFAULT_SERVER_PLATFORM_ARG,
+  yarkClusterArgs,
+  yarkModsArg,
+  yarkPortArg,
+  yarkWinLiveMaxPlayersArg,
   type StructuredLaunchArgs,
   type StructuredLaunchGroupId,
   type StructuredLaunchUiOption,
@@ -69,10 +74,10 @@ export function joinRawExtraArgs(args: string[]): string {
 export function yarkOwnedPreviewTokens(server: ServerProfile): string[] {
   const parts = [
     buildMapUrlArg(server.map, server.sessionName),
-    `-port=${server.gamePort}`,
+    yarkPortArg(server.gamePort),
   ];
   if (server.maxPlayers > 0) {
-    parts.push(`-WinLiveMaxPlayers=${server.maxPlayers}`);
+    parts.push(yarkWinLiveMaxPlayersArg(server.maxPlayers));
   }
   const structured = buildStructuredLaunchArgList(
     server.structuredLaunchArgs,
@@ -82,15 +87,13 @@ export function yarkOwnedPreviewTokens(server: ServerProfile): string[] {
   );
   const trailing = [...structured, ...extraArgs];
   if (!argsIncludeServerPlatform(trailing)) {
-    parts.push("-ServerPlatform=ALL");
+    parts.push(YARK_DEFAULT_SERVER_PLATFORM_ARG);
   }
   const disabled = new Set(server.disabledMods ?? []);
   const mods = server.mods.filter((id) => !disabled.has(id));
-  if (mods.length > 0) parts.push(`-mods=${mods.join(",")}`);
+  if (mods.length > 0) parts.push(yarkModsArg(mods));
   if (server.clusterId && server.clusterDir) {
-    parts.push(`-clusterid=${server.clusterId}`);
-    parts.push(`-ClusterDirOverride=${server.clusterDir}`);
-    parts.push("-NoTransferFromFiltering");
+    parts.push(...yarkClusterArgs(server.clusterId, server.clusterDir));
   }
   return parts;
 }
