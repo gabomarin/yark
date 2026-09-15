@@ -298,10 +298,12 @@ describe("ProcessManager lifecycle ownership", () => {
 
     const child = fakeChild();
     const unexpected = vi.fn();
+    const operatorClosed = vi.fn();
     const manager = new ProcessManager({
       spawnProcess: () => child,
     });
     manager.on("unexpected-exit", unexpected);
+    manager.on("operator-closed", operatorClosed);
     const profile = makeProfile(cleanupRoot);
 
     manager.start(profile, { skipReadinessCheck: true });
@@ -312,6 +314,12 @@ describe("ProcessManager lifecycle ownership", () => {
     child.emit("exit", 0xc000013a | 0);
 
     expect(unexpected).not.toHaveBeenCalled();
+    expect(operatorClosed).toHaveBeenCalledWith(
+      expect.objectContaining({
+        serverId: profile.id,
+        phase: "running",
+      }),
+    );
     expect(manager.getStatus(profile.id)).toMatchObject({
       status: "stopped",
       processLive: false,
@@ -330,10 +338,12 @@ describe("ProcessManager lifecycle ownership", () => {
 
     const child = fakeChild();
     const unexpected = vi.fn();
+    const operatorClosed = vi.fn();
     const manager = new ProcessManager({
       spawnProcess: () => child,
     });
     manager.on("unexpected-exit", unexpected);
+    manager.on("operator-closed", operatorClosed);
     const profile = makeProfile(cleanupRoot);
 
     manager.start(profile);
@@ -341,6 +351,13 @@ describe("ProcessManager lifecycle ownership", () => {
     child.emit("exit", 0x40010004);
 
     expect(unexpected).not.toHaveBeenCalled();
+    expect(operatorClosed).toHaveBeenCalledWith(
+      expect.objectContaining({
+        serverId: profile.id,
+        phase: "starting",
+        exitCode: 0x40010004,
+      }),
+    );
     expect(manager.getStatus(profile.id)).toMatchObject({
       status: "stopped",
       processLive: false,

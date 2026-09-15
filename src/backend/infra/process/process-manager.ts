@@ -12,8 +12,7 @@ import {
   type LiveProcessIdentity,
 } from "@shared/settings/left-running";
 import { rconExec } from "../rcon/rcon-client";
-import { diagnoseAsaStartupFailure, type AsaStartupFailure } from "@shared/asa/asa-startup-failure";
-import { readAsaLogSessionExcerpt } from "./asa-log-tail";
+import type { AsaStartupFailure } from "@shared/asa/asa-startup-failure";
 import { createAdoptedChildHandle } from "./adopted-child";
 import { killWinProcessTreeAsync } from "./kill-win-process-tree";
 import { queryWindowsProcessIdentity } from "./windows-process-identity";
@@ -49,12 +48,9 @@ import {
   type ProcessGracefulStopHost,
 } from "./process-graceful-stop";
 import {
-  formatProcessExitLogLine,
-  isOperatorClosedExit,
-  isUnexpectedManagedExit,
-  OPERATOR_CLOSED_NOTICE,
-  planManagedExitLastError,
+  type OperatorClosedExit,
 } from "./process-stop";
+import { handleManagedProcessExit } from "./process-managed-exit";
 import { AsaApiWindowPoller } from "./process-asa-api-loading";
 import {
   appendProcessRuntimeLog,
@@ -63,6 +59,7 @@ import {
   flushProcessRuntimePartials,
 } from "./process-runtime-logs";
 
+export type { OperatorClosedExit };
 export type {
   BeginGracefulStopResult,
   FinishGracefulStopResult,
@@ -678,69 +675,32 @@ export class ProcessManager extends EventEmitter {
     managed: ManagedProcess,
     code: number | null,
   ): void {
-    const wasStopping = managed.status === "stopping";
-    const wasStarting = managed.status === "starting";
-    const wasRunning = managed.status === "running";
-    managed.readinessGeneration += 1;
-    managed.logTailer?.stop();
-    managed.logTailer = null;
-    if (this.processes.get(serverId) !== managed) return;
-    this.flushRuntimePartials(serverId);
-    this.appendRuntimeLog(
+    handleManagedProcessExit(
+      {
+        getManaged: (id) => this.processes.get(id),
+        flushRuntimePartials: (id) => this.flushRuntimePartials(id),
+        appendRuntimeLog: (id, source, message) =>
+          this.appendRuntimeLog(id, source, message),
+        clearProcessCheckpoint: (id) => this.clearProcessCheckpoint(id),
+        getRuntimeLogSnapshot: (id, limit) =>
+          this.getRuntimeLogSnapshot(id, limit),
+        deleteManagedUnlessError: (id, entry) => {
+          if (entry.status !== "error") {
+            this.processes.delete(id);
+          }
+        },
+        emitOperatorClosed: (payload) => {
+          this.emit("operator-closed", payload);
+        },
+        emitUnexpectedExit: (payload) => {
+          this.emit("unexpected-exit", payload);
+        },
+        emitStatus: (id) => this.emitStatus(id),
+      },
       serverId,
-      "system",
-      formatProcessExitLogLine(code),
+      managed,
+      code,
     );
-    this.clearProcessCheckpoint(serverId);
-    const unexpected = isUnexpectedManagedExit({
-      wasStopping,
-      wasStarting,
-      wasRunning,
-      exitCode: code,
-    });
-    if (!unexpected) {
-      if ((wasRunning || wasStarting) && isOperatorClosedExit(code)) {
-        // Keep the managed entry so Overview can show a warning notice (like
-        // crash lastError), without treating this as an unexpected exit.
-        managed.status = "stopped";
-        managed.lastError = OPERATOR_CLOSED_NOTICE;
-        this.appendRuntimeLog(serverId, "system", OPERATOR_CLOSED_NOTICE);
-        this.emitStatus(serverId);
-        return;
-      }
-      if (managed.status !== "error") {
-        this.processes.delete(serverId);
-      }
-      this.emitStatus(serverId);
-      return;
-    }
-
-    const diagnosis = diagnoseAsaStartupFailure(
-      [
-        this.getRuntimeLogSnapshot(serverId, 400).join("\n"),
-        readAsaLogSessionExcerpt(managed.installDir, managed.logSessionAnchor),
-      ].join("\n"),
-    );
-    if (diagnosis !== null) {
-      this.appendRuntimeLog(serverId, "error", diagnosis.summary);
-      for (const line of diagnosis.excerpt.split("\n")) {
-        this.appendRuntimeLog(serverId, "log", line);
-      }
-    }
-    managed.status = "error";
-    managed.lastError = planManagedExitLastError({
-      wasStarting,
-      exitCode: code,
-      diagnosisSummary: diagnosis?.summary ?? null,
-    });
-    this.emit("unexpected-exit", {
-      serverId,
-      exitCode: code,
-      phase: wasStarting ? "starting" : "running",
-      lastError: managed.lastError,
-      diagnosis,
-    } satisfies UnexpectedManagedExit);
-    this.emitStatus(serverId);
   }
 
   private emitStatus(serverId: string): void {

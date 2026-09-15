@@ -96,6 +96,10 @@ function catalogFor(event: AppEvent): AppEventDetails {
         suggestion:
           "Open Logs → Runtime (ShooterGame.log). After a SteamCMD update, check Mods for cosmetics or PC-only IDs if CFCore reported mods not installed.",
       };
+    case "server_stopped":
+      return {
+        what: "The server process was stopped by the manager.",
+      };
     case "server_started":
       return {
         what: "The server process was started by the manager.",
@@ -125,10 +129,6 @@ function catalogFor(event: AppEvent): AppEventDetails {
       return {
         what: "A saved server profile was disabled.",
         suggestion: "The profile stays editable and can be re-enabled from the workspace.",
-      };
-    case "server_stopped":
-      return {
-        what: "The server process was stopped by the manager.",
       };
     case "error":
       return {
