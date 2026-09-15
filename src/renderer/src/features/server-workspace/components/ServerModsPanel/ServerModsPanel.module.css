@@ -40,6 +40,19 @@
   min-width: 0;
 }
 
+.viewSelector {
+  align-self: flex-start;
+  flex-shrink: 0;
+}
+
+.statusAlert {
+  flex-shrink: 0;
+}
+
+.statusAlertWrapper {
+  align-items: center;
+}
+
 .sectionLayout {
   display: flex;
   flex-direction: column;
