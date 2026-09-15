@@ -10,6 +10,7 @@ import {
   buildDownloadRows,
   defaultSelectedRowId,
   DOWNLOAD_CONSOLE_WAITING,
+  DOWNLOADS_SPLIT_SIZES_STORAGE_KEY,
   downloadConsoleBody,
   downloadStatusLine,
   findDownloadRow,
@@ -62,7 +63,7 @@ export function DownloadsPage(props: Props): ReactElement {
     defaultSelectedRowId(rows),
   );
   const [splitSizes, setSplitSizes] = useLocalStorage<[number, number]>({
-    key: "yark.downloads.splitSizes",
+    key: DOWNLOADS_SPLIT_SIZES_STORAGE_KEY,
     defaultValue: DEFAULT_SPLIT_SIZES,
   });
   const { logExpanded, toggleLogExpanded } = useAdvancedLogExpanded(rows);

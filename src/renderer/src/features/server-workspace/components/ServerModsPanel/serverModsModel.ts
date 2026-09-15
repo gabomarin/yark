@@ -26,6 +26,10 @@ export interface ModRow {
 
 export type ModRowSortAccessor = "name" | "downloadCount" | "updatedAt";
 
+/** localStorage: operator dismissed the Project ID vs Discover hint (#456). */
+export const MODS_PROJECT_ID_HINT_STORAGE_KEY =
+  "yark.mods.projectIdHint.dismissed.v1";
+
 export interface ModRowSortStatus {
   columnAccessor: ModRowSortAccessor;
   direction: "asc" | "desc";

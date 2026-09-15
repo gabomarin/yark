@@ -21,6 +21,10 @@ export const KIND_TABS: Array<{ kind: BackupKind; label: string }> = [
   { kind: "ini", label: "INI" },
 ];
 
+/** localStorage: operator dismissed the World/players/INI kinds hint (#456). */
+export const BACKUPS_KINDS_HINT_STORAGE_KEY =
+  "yark.backups.kindsHint.dismissed.v1";
+
 const BACKUP_TYPE_LABELS: Record<BackupType, string> = {
   manual: "Manual",
   scheduled: "Scheduled",

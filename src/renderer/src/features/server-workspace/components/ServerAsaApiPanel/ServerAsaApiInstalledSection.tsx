@@ -16,6 +16,7 @@ import { EmptyState } from "@ui/EmptyState/EmptyState";
 import {
   asaApiInjectLabel,
   pluginCountLabel,
+  ASA_API_EXPERIMENTAL_HINT_STORAGE_KEY,
   type AsaApiBusyKind,
 } from "./asaApiPanelModel";
 import classes from "./ServerAsaApiPanel.module.css";
@@ -254,7 +255,7 @@ export function ServerAsaApiInstalledSection(props: Props): ReactElement {
       </section>
 
       <DismissibleHint
-        storageKey="yark.asaApi.experimentalHint.dismissed.v1"
+        storageKey={ASA_API_EXPERIMENTAL_HINT_STORAGE_KEY}
         title="Experimental integration"
       >
         Behavior and UI may change.

@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { Button, Group, Text, Title } from "@mantine/core";
 import { DismissibleHint } from "@ui/DismissibleHint/DismissibleHint";
+import { MODS_PROJECT_ID_HINT_STORAGE_KEY } from "./serverModsModel";
 import classes from "./ServerModsPanel.module.css";
 
 interface Props {
@@ -11,14 +12,15 @@ interface Props {
   onBack: () => void;
 }
 
-const MODS_HINT_KEY = "yark.mods.projectIdHint.dismissed.v1";
-
 export function ServerModsHeader(props: Props): ReactElement {
   return (
     <header className={classes.header}>
       <div>
         <Title order={3}>Mods</Title>
-        <DismissibleHint storageKey={MODS_HINT_KEY} title="Project ID vs Discover">
+        <DismissibleHint
+          storageKey={MODS_PROJECT_ID_HINT_STORAGE_KEY}
+          title="Project ID vs Discover"
+        >
           Add a known CurseForge Project ID or mod URL on this tab. Discover
           searches the ASA catalog — it is not the same as pasting an ID.
         </DismissibleHint>
