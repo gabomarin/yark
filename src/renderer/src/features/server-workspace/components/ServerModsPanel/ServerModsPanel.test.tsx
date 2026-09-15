@@ -399,7 +399,7 @@ describe("ServerModsPanel", () => {
     const user = userEvent.setup();
     renderPanel();
 
-    await user.click(screen.getByRole("button", { name: "Discover mods" }));
+    await user.click(screen.getByRole("radio", { name: "Discover mods" }));
     await user.click(screen.getByRole("button", { name: "Search mods" }));
     await user.click(await screen.findByText("Super Spyglass Plus"));
     const dialog = await screen.findByRole("dialog");
@@ -635,7 +635,7 @@ describe("ServerModsPanel", () => {
     const user = userEvent.setup();
     renderPanel();
 
-    await user.click(screen.getByRole("button", { name: "Discover mods" }));
+    await user.click(screen.getByRole("radio", { name: "Discover mods" }));
     await waitFor(() => {
       expect(api.searchMods).toHaveBeenCalled();
     });
@@ -670,7 +670,7 @@ describe("ServerModsPanel", () => {
     const user = userEvent.setup();
     renderPanel();
 
-    await user.click(screen.getByRole("button", { name: "Discover mods" }));
+    await user.click(screen.getByRole("radio", { name: "Discover mods" }));
     expect(screen.getByRole("textbox", { name: "Search" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Search mods" }));
     expect(await screen.findByText("Super Spyglass Plus")).toBeInTheDocument();
@@ -703,11 +703,10 @@ describe("ServerModsPanel", () => {
     const user = userEvent.setup();
     renderPanel();
 
-    await user.click(screen.getByRole("button", { name: "Discover mods" }));
+    await user.click(screen.getByRole("radio", { name: "Discover mods" }));
     await user.click(screen.getByRole("button", { name: "Search mods" }));
     await user.click(await screen.findByText("Super Spyglass Plus"));
 
     expect(await screen.findByText("Loading…")).toBeInTheDocument();
   });
 });
-

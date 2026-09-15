@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { Button, Group, Text, Title } from "@mantine/core";
+import { Group, Text, Title } from "@mantine/core";
 import { DismissibleHint } from "@ui/DismissibleHint/DismissibleHint";
 import { MODS_PROJECT_ID_HINT_STORAGE_KEY } from "./serverModsModel";
 import classes from "./ServerModsPanel.module.css";
@@ -7,9 +7,6 @@ import classes from "./ServerModsPanel.module.css";
 interface Props {
   activeCount: number;
   disabledCount: number;
-  discovering: boolean;
-  onDiscover: () => void;
-  onBack: () => void;
 }
 
 export function ServerModsHeader(props: Props): ReactElement {
@@ -33,15 +30,6 @@ export function ServerModsHeader(props: Props): ReactElement {
           <Text size="sm" c="dimmed">
             {props.disabledCount} disabled
           </Text>
-        )}
-        {props.discovering ? (
-          <Button variant="subtle" onClick={props.onBack}>
-            Back to server mods
-          </Button>
-        ) : (
-          <Button variant="light" onClick={props.onDiscover}>
-            Discover mods
-          </Button>
         )}
       </Group>
     </header>
