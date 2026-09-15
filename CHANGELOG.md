@@ -36,6 +36,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Docs
 
+- Documented `pending_server_ini` in the profile-database runbook and corrected Copy configuration / cluster template apply notes for queued INI drafts (#530).
 - Expanded **Ark Server API** engineering runbook (IPC, inject modes, cache, SteamCMD overwrite pitfall) and INI **Other** subgroup categorization notes (#243, #516).
 
 ## [0.20.0] - 2026-09-07

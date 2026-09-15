@@ -25,8 +25,10 @@ without cloning identity, paths, ports, saves, or cluster membership.
 5. Review a target workspace when a single copy succeeded; YARK does **not**
    start or restart targets.
 
-Source may be running; the copy always uses the persisted on-disk / profile
-snapshot, not live ASA memory.
+Source may be running. INI bytes come from `IniService.readServerIni` — the
+install files, or a queued `pending_server_ini` draft when one exists (#530) —
+not live ASA process memory. Profile fields (mods, launch args, passwords) still
+come from the SQLite profile.
 
 ## Never copied
 
@@ -58,8 +60,12 @@ cluster templates (#40) and bulk apply (#90) can reuse the same engine.
 2. Assert stopped + fingerprint match  
 3. Write `.yark-pre-copy` snapshot (+ optional catalog backup)  
 4. INI files after composition + target-owned reapply (before profile update so
-   async profile→INI sync cannot clobber copied rates; only selected INI files
-   are written)  
+   async profile→INI sync cannot clobber copied rates). Normally only selected
+   INI files are written; if the **target** still has a `pending_server_ini`
+   row, both files are materialized from the composed payload before
+   `clearPendingServerIni` so a partial selection cannot drop the other draft
+   file (#530 / #545). Queue / flush semantics:
+   [server-lifecycle.md](server-lifecycle.md) (INI read / save / sanitize).
 5. Profile fields (mods / Extra arguments + structured Launch options / passwords)  
 6. Backup policy schedule/retention (target `backupDir` is preserved)  
 7. Emit one auditable event  
