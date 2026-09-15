@@ -23,6 +23,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Restoring an **INI** backup clears any leftover Configuration draft so Start cannot flush queued edits over the restored files (#530).
 - Create server no longer stays blocked after you change the install path: a disk warning from the previous folder is dropped as soon as the new path is checked.
 - Downloads **Advanced log** auto-opens only for a new failed or interrupted job, and stays collapsed if you hid it for the same leftovers.
 - Renderer errors show a Reload screen instead of a blank navy window.

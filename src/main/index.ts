@@ -411,18 +411,21 @@ if (isPrimaryInstance) {
       knownSecrets: () => collectKnownSecrets(repo.list()),
     });
     const locks = new InstanceLockManager();
+    const pendingServerIniRepo = new PendingServerIniRepository(db);
+    const iniService = new IniService(repo, locks, {
+      pending: pendingServerIniRepo,
+      isServerActive: (serverId) => processManager.isActive(serverId),
+    });
     const backupService = new BackupService(
       repo,
       backupRepo,
       processManager,
       settings,
       join(userData, "backups"),
+      (serverId) => {
+        iniService.clearPendingServerIni(serverId);
+      },
     );
-    const pendingServerIniRepo = new PendingServerIniRepository(db);
-    const iniService = new IniService(repo, locks, {
-      pending: pendingServerIniRepo,
-      isServerActive: (serverId) => processManager.isActive(serverId),
-    });
     const instances = new InstanceService(
       repo,
       processManager,

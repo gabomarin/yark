@@ -1000,6 +1000,72 @@ describe("BackupService kinds and retention", () => {
     expect(record?.kind).toBe("ini");
   });
 
+  it("clears pending Configuration draft after INI restore so Start cannot overwrite it", async () => {
+    const restoreApply = await import("@backend/domains/backups/backup-restore-apply");
+    const applySpy = vi
+      .spyOn(restoreApply, "applyRestore")
+      .mockResolvedValue(undefined);
+
+    const { PendingServerIniRepository } = await import(
+      "@backend/infra/db/pending-server-ini-repository"
+    );
+    const pendingDb = openDatabase(":memory:");
+    const pendingRepo = new PendingServerIniRepository(pendingDb);
+    pendingRepo.upsert(profile.id, {
+      gameUserSettings: "[ServerSettings]\nServerName=QueuedDraft\n",
+      game: "[/Script/Engine]\nx=queued\n",
+    });
+
+    const withClear = new BackupService(
+      servers,
+      repo,
+      processes,
+      settings,
+      join(installDir, "_root"),
+      (serverId) => {
+        pendingRepo.delete(serverId);
+      },
+    );
+
+    const iniPath = join(installDir, "Backups", "INI", "pending-clear-ini.zip");
+    await mkdir(dirname(iniPath), { recursive: true });
+    await writeFile(iniPath, "ini-zip", "utf8");
+    const iniBackup = repo.createBackupStart({
+      serverId: profile.id,
+      type: "manual",
+      kind: "ini",
+      path: iniPath,
+      notes: null,
+    });
+    repo.completeBackup(iniBackup.id, 4);
+
+    await withClear.restoreBackup(profile.id, iniBackup.id);
+    expect(applySpy).toHaveBeenCalled();
+    expect(pendingRepo.get(profile.id)).toBeNull();
+
+    pendingRepo.upsert(profile.id, {
+      gameUserSettings: "[ServerSettings]\nServerName=StillQueued\n",
+      game: "[/Script/Engine]\nx=still\n",
+    });
+    const worldPath = join(installDir, "Backups", "World", "pending-clear-world.zip");
+    await mkdir(dirname(worldPath), { recursive: true });
+    await writeFile(worldPath, "world-zip", "utf8");
+    const worldBackup = repo.createBackupStart({
+      serverId: profile.id,
+      type: "manual",
+      kind: "world",
+      path: worldPath,
+      notes: null,
+    });
+    repo.completeBackup(worldBackup.id, 8);
+
+    await withClear.restoreBackup(profile.id, worldBackup.id);
+    expect(pendingRepo.get(profile.id)).not.toBeNull();
+
+    applySpy.mockRestore();
+    pendingDb.close();
+  });
+
   it("restores world data (including profiles) without touching INI", async () => {
     const created = await service.createManualBackup(profile.id, ["world"]);
     const worldBackup = created[0];

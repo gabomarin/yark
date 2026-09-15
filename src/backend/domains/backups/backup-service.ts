@@ -118,6 +118,13 @@ export class BackupService extends EventEmitter {
     private readonly processes: ProcessManager,
     private readonly settings: AppSettingsRepository,
     _legacyRootBackupDir?: string,
+    /**
+     * Drop a queued Configuration draft after INI files are restored to disk
+     * (same contract as config transfer / cluster template apply). Without this,
+     * a leftover `pending_server_ini` row overlays the restore in the editor and
+     * Start flush rewrites the restored files.
+     */
+    private readonly clearPendingServerIni?: (serverId: string) => void,
   ) {
     super();
     this.reconciler = new BackupReconciler({
@@ -751,12 +758,15 @@ export class BackupService extends EventEmitter {
     return this.reconciler.reconcileInterruptedRunningBackups(serverId);
   }
 
-  private applyRestore(
+  private async applyRestore(
     server: ServerProfile,
     backup: BackupRecord,
     options?: RestoreBackupOptions,
   ): Promise<void> {
-    return applyRestore(server, backup, options);
+    await applyRestore(server, backup, options);
+    if (backup.kind === "ini") {
+      this.clearPendingServerIni?.(server.id);
+    }
   }
 
 }

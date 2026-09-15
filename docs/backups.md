@@ -220,7 +220,9 @@ User restart (`servers:restart` via `InstanceService.restart`):
 4. Apply:
    - **world** — overlay into live `SavedArks/{MapToken}/` only (sibling map folders untouched). Optional `restoreProfilesTribes` (default **true**) controls whether `.arkprofile` / `.arktribe` companions are copied; map `.ark` + anti-corruption bak always apply. INI untouched.
    - **players** — overlays flat files from `PlayerProfiles/` into the **current** live map folder (`resolveWorldMapSaveDir`); does not wipe unrelated live profiles. Nested legacy `PlayerProfiles/SavedArks/...` archives are rejected.
-   - **ini** — copy present `Game.ini` / `GameUserSettings.ini` into live config.
+   - **ini** — copy present `Game.ini` / `GameUserSettings.ini` into live config,
+     then `clearPendingServerIni` so a leftover Configuration draft cannot overlay
+     the restored files or be flushed over them on the next Start (#530).
 5. Restore history is written to SQLite; there is **no** list IPC/UI for it yet.
 
 UI restore uses a confirm modal (world: profiles/tribes checkbox). Update rollback uses the queued `restoreBackupForJob` path (profiles/tribes on).
