@@ -1,3 +1,11 @@
+const OPERATOR_CLOSED_EXIT_CODES = new Set([0xc000013a, 0x40010004, 0x40010005]);
+
+export function isOperatorClosedExit(exitCode: number | null): boolean {
+  if (exitCode === null) return false;
+  // Node may report negative numbers for large unsigned NTSTATUS codes.
+  return OPERATOR_CLOSED_EXIT_CODES.has(exitCode >>> 0);
+}
+
 export function isUnexpectedManagedExit(input: {
   wasStopping: boolean;
   wasStarting: boolean;
@@ -6,7 +14,7 @@ export function isUnexpectedManagedExit(input: {
 }): boolean {
   return (
     !input.wasStopping
-    && (input.wasStarting || (input.wasRunning && input.exitCode !== 0))
+    && (input.wasStarting || (input.wasRunning && !isOperatorClosedExit(input.exitCode) && input.exitCode !== 0))
   );
 }
 
@@ -21,6 +29,9 @@ export function planManagedExitLastError(input: {
 }): string {
   if (input.diagnosisSummary !== null) {
     return input.diagnosisSummary;
+  }
+  if (!input.wasStarting && isOperatorClosedExit(input.exitCode)) {
+    return `Process was closed by the operator (code ${input.exitCode ?? "unknown"})`;
   }
   return input.wasStarting
     ? `Process exited during startup (code ${input.exitCode ?? "unknown"})`
