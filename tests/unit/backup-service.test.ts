@@ -19,6 +19,7 @@ import type { ServerRepository } from "@backend/infra/db/server-repository";
 import type { AppSettingsRepository } from "@backend/infra/db/app-settings-repository";
 import type { ServerProfile } from "@shared/types";
 import type { DatabaseSync } from "node:sqlite";
+import { BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY } from "@backend/domains/backups/backup-critical-queue";
 
 vi.mock("@backend/infra/rcon/rcon-client", () => ({
   rconExec: vi.fn(async () => "ok"),
@@ -217,13 +218,13 @@ describe("BackupService kinds and retention", () => {
     };
 
     // Simulate a crash before the latest in-memory checkpoint was persisted.
-    settingsStore.set("backupCriticalJobsQueue.v1", JSON.stringify([job]));
+    settingsStore.set(BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY, JSON.stringify([job]));
     const restarted = new BackupService(servers, repo, processes, settings);
     const resumed = await restarted.createPreUpdateBackupForJob(profile.id);
     expect(resumed).toHaveLength(1);
     expect(repo.listBackups(profile.id, 100).filter((row) => row.type === "pre_update"))
       .toHaveLength(1);
-    expect(settingsStore.get("backupCriticalJobsQueue.v1")).toBe("[]");
+    expect(settingsStore.get(BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY)).toBe("[]");
   });
 
   it("rebuilds pre-update progress when persisted context is corrupt", async () => {
@@ -252,7 +253,7 @@ describe("BackupService kinds and retention", () => {
         nextKindIndex: 99,
       },
     };
-    settingsStore.set("backupCriticalJobsQueue.v1", JSON.stringify([job]));
+    settingsStore.set(BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY, JSON.stringify([job]));
     const restarted = new BackupService(servers, repo, processes, settings);
     const recovered = await restarted.createPreUpdateBackupForJob(profile.id);
 
@@ -264,7 +265,7 @@ describe("BackupService kinds and retention", () => {
       && backup.serverId === profile.id
       && backup.notes?.includes(`[critical-job:${job.id}]`) === true,
     )).toBe(true);
-    expect(settingsStore.get("backupCriticalJobsQueue.v1")).toBe("[]");
+    expect(settingsStore.get(BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY)).toBe("[]");
   });
 
   it("reconciles restore history and safeguard evidence without repeating a completed restore", async () => {
@@ -294,7 +295,7 @@ describe("BackupService kinds and retention", () => {
       },
     };
     const insertRestoreHistory = vi.spyOn(repo, "insertRestoreHistory");
-    settingsStore.set("backupCriticalJobsQueue.v1", JSON.stringify([job]));
+    settingsStore.set(BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY, JSON.stringify([job]));
     const recovering = new BackupService(servers, repo, processes, settings);
     await recovering.restoreBackupForJob(profile.id, source.id);
     const historyId = insertRestoreHistory.mock.results[0]?.value;
@@ -311,7 +312,7 @@ describe("BackupService kinds and retention", () => {
     job.status = "running";
     job.phase = "applying-restore";
     job.context.restoreHistoryId = historyId;
-    settingsStore.set("backupCriticalJobsQueue.v1", JSON.stringify([job]));
+    settingsStore.set(BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY, JSON.stringify([job]));
     const restarted = new BackupService(servers, repo, processes, settings);
     expect(restarted.getCriticalJobs()).toEqual([]);
     expect(
@@ -411,7 +412,7 @@ describe("BackupService kinds and retention", () => {
       },
     ]);
     const settings = {
-      get: vi.fn((key: string) => (key === "backupCriticalJobsQueue.v1" ? rawQueue : null)),
+      get: vi.fn((key: string) => (key === BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY ? rawQueue : null)),
       set: vi.fn(),
     } as unknown as AppSettingsRepository;
     const servers = {
@@ -436,7 +437,11 @@ describe("BackupService kinds and retention", () => {
 
     expect(recovered.getCriticalJobs()).toEqual([]);
     expect(settings.set).toHaveBeenCalledWith(
-      expect.stringMatching(/^backupCriticalJobsQueue\.v1\.quarantine\./),
+      expect.stringMatching(
+        new RegExp(
+          `^${BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY.replaceAll(".", "\\.")}\\.quarantine\\.`,
+        ),
+      ),
       rawQueue,
     );
   });
@@ -474,7 +479,7 @@ describe("BackupService kinds and retention", () => {
     const rawQueue = JSON.stringify(duplicateRows);
     const settings = {
       get: vi.fn((key: string) =>
-        key === "backupCriticalJobsQueue.v1" ? rawQueue : null),
+        key === BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY ? rawQueue : null),
       set: vi.fn(),
     } as unknown as AppSettingsRepository;
     const servers = {
@@ -502,7 +507,11 @@ describe("BackupService kinds and retention", () => {
       nextActions: ["retry", "dismiss"],
     });
     expect(settings.set).toHaveBeenCalledWith(
-      expect.stringMatching(/^backupCriticalJobsQueue\.v1\.quarantine\./),
+      expect.stringMatching(
+        new RegExp(
+          `^${BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY.replaceAll(".", "\\.")}\\.quarantine\\.`,
+        ),
+      ),
       rawQueue,
     );
   });

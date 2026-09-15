@@ -10,6 +10,7 @@ import type { ServerRepository } from "@backend/infra/db/server-repository";
 import type { AppSettingsRepository } from "@backend/infra/db/app-settings-repository";
 import { InstanceLockManager } from "@backend/orchestration/instance-lock-manager";
 import type { BackupRecord, ServerProfile } from "@shared/types";
+import { STEAMCMD_PATH_SETTING_KEY } from "@shared/settings/steamcmd-path-setting";
 
 function makeProfile(id = "srv-update-1"): ServerProfile {
   const now = new Date().toISOString();
@@ -179,7 +180,7 @@ function createHarness(options?: {
       ? options.steamCmdPath
       : "C:\\steamcmd\\steamcmd.exe";
   const settings = {
-    get: vi.fn((key: string) => (key === "steamcmdPath" ? steamCmdPath : null)),
+    get: vi.fn((key: string) => (key === STEAMCMD_PATH_SETTING_KEY ? steamCmdPath : null)),
     set: vi.fn(),
   } as unknown as AppSettingsRepository;
 

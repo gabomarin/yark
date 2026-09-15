@@ -3,7 +3,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import type { AppEvent, LogRetentionSettings, ServerProfile } from "@shared/types";
-import { DEFAULT_LOG_RETENTION_SETTINGS } from "@shared/settings/log-retention";
+import {
+  DEFAULT_LOG_RETENTION_SETTINGS,
+  LOG_RETENTION_SETTINGS_KEY,
+} from "@shared/settings/log-retention";
 import { LogsService, type BackupLogSource } from "@backend/domains/logs/logs-service";
 import type { AppSettingsRepository } from "@backend/infra/db/app-settings-repository";
 import type { ServerRepository } from "@backend/infra/db/server-repository";
@@ -228,7 +231,7 @@ describe("LogsService runtime logs", () => {
 describe("LogsService retention (#84)", () => {
   it("rejects invalid retention settings and preserves the previous policy", () => {
     const settings = memorySettings({
-      "logRetention.v1": JSON.stringify(DEFAULT_LOG_RETENTION_SETTINGS),
+      [LOG_RETENTION_SETTINGS_KEY]: JSON.stringify(DEFAULT_LOG_RETENTION_SETTINGS),
     });
     const service = new LogsService(
       { get: () => null, list: () => [], listAllEvents: () => [] } as unknown as ServerRepository,
@@ -312,7 +315,7 @@ describe("LogsService retention (#84)", () => {
       emptyBackupSource(),
       updatesDir,
       { getRuntimeLogSnapshot: () => [] } as unknown as ProcessManager,
-      memorySettings({ "logRetention.v1": JSON.stringify(policy) }),
+      memorySettings({ [LOG_RETENTION_SETTINGS_KEY]: JSON.stringify(policy) }),
     );
 
     const preview = await service.previewCleanup({ categories: ["events"] });
@@ -375,7 +378,7 @@ describe("LogsService retention (#84)", () => {
       emptyBackupSource(),
       updatesDir,
       { getRuntimeLogSnapshot: () => [] } as unknown as ProcessManager,
-      memorySettings({ "logRetention.v1": JSON.stringify(policy) }),
+      memorySettings({ [LOG_RETENTION_SETTINGS_KEY]: JSON.stringify(policy) }),
     );
 
     const preview = await service.previewCleanup({ categories: ["updateLogs"] });
@@ -419,7 +422,7 @@ describe("LogsService retention (#84)", () => {
       updatesDir,
       { getRuntimeLogSnapshot: () => [] } as unknown as ProcessManager,
       memorySettings({
-        "logRetention.v1": JSON.stringify(DEFAULT_LOG_RETENTION_SETTINGS),
+        [LOG_RETENTION_SETTINGS_KEY]: JSON.stringify(DEFAULT_LOG_RETENTION_SETTINGS),
       }),
     );
 
@@ -468,7 +471,7 @@ describe("LogsService retention (#84)", () => {
       updatesDir,
       { getRuntimeLogSnapshot: () => [] } as unknown as ProcessManager,
       memorySettings({
-        "logRetention.v1": JSON.stringify({
+        [LOG_RETENTION_SETTINGS_KEY]: JSON.stringify({
           ...DEFAULT_LOG_RETENTION_SETTINGS,
           updateLogsRetainCount: 1,
         }),
