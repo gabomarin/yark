@@ -699,7 +699,7 @@ export class ProcessManager extends EventEmitter {
       exitCode: code,
     });
     if (!unexpected) {
-      if (wasRunning && isOperatorClosedExit(code)) {
+      if ((wasRunning || wasStarting) && isOperatorClosedExit(code)) {
         // Keep the managed entry so Overview can show a warning notice (like
         // crash lastError), without treating this as an unexpected exit.
         managed.status = "stopped";

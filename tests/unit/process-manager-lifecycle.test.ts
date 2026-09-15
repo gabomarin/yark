@@ -322,6 +322,35 @@ describe("ProcessManager lifecycle ownership", () => {
     );
   });
 
+  it("treats operator-closed exit while starting as stopped with Closed by user notice", async () => {
+    cleanupRoot = await mkdtemp(join(tmpdir(), "yark-process-operator-closed-start-"));
+    const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
+    await mkdir(binaryDir, { recursive: true });
+    await writeFile(join(binaryDir, "ArkAscendedServer.exe"), "");
+
+    const child = fakeChild();
+    const unexpected = vi.fn();
+    const manager = new ProcessManager({
+      spawnProcess: () => child,
+    });
+    manager.on("unexpected-exit", unexpected);
+    const profile = makeProfile(cleanupRoot);
+
+    manager.start(profile);
+    expect(manager.getStatus(profile.id).status).toBe("starting");
+    child.emit("exit", 0x40010004);
+
+    expect(unexpected).not.toHaveBeenCalled();
+    expect(manager.getStatus(profile.id)).toMatchObject({
+      status: "stopped",
+      processLive: false,
+      lastError: "Closed by user",
+    });
+    expect(manager.getRuntimeLogSnapshot(profile.id).join("\n")).toContain(
+      "Closed by user",
+    );
+  });
+
   it("reports asaApiLoading until ShooterGame.log produces new lines", async () => {
     cleanupRoot = await mkdtemp(join(tmpdir(), "yark-process-asaapi-"));
     const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");

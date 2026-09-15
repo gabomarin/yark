@@ -26,7 +26,7 @@ describe("process-stop helpers", () => {
     ).toBe(false);
   });
 
-  it("treats operator-closed exit codes as clean stops only while running", () => {
+  it("treats operator-closed exit codes as clean stops while starting or running", () => {
     const controlC = 0xc000013a;
     const endTask = 0x40010004;
     const controlBreak = 0x40010005;
@@ -63,7 +63,7 @@ describe("process-stop helpers", () => {
         wasRunning: false,
         exitCode: controlC,
       }),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       isUnexpectedManagedExit({
         wasStopping: false,

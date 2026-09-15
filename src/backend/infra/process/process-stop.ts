@@ -15,10 +15,9 @@ export function isUnexpectedManagedExit(input: {
   wasRunning: boolean;
   exitCode: number | null;
 }): boolean {
-  return (
-    !input.wasStopping
-    && (input.wasStarting || (input.wasRunning && !isOperatorClosedExit(input.exitCode) && input.exitCode !== 0))
-  );
+  if (input.wasStopping) return false;
+  if (isOperatorClosedExit(input.exitCode)) return false;
+  return input.wasStarting || (input.wasRunning && input.exitCode !== 0);
 }
 
 export function formatProcessExitLogLine(exitCode: number | null): string {
