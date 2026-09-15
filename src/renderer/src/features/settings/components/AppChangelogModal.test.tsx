@@ -2,7 +2,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
-import type { ChangelogEntry } from "@shared/changelog";
+import type { ChangelogEntry } from "@shared/settings/changelog";
 import { AppChangelogModal } from "@features/settings/components/AppChangelogModal";
 
 const entries: ChangelogEntry[] = [

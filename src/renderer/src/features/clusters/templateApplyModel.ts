@@ -1,4 +1,4 @@
-import type { ServerProcessRuntime } from "@shared/server-process-idle";
+import type { ServerProcessRuntime } from "@shared/server/server-process-idle";
 import { clusterProcessBusyReason } from "./createClusterModel";
 
 /** Restore / promote / seed require an idle (non-running) server. */

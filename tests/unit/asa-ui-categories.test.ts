@@ -4,7 +4,7 @@ import {
   isKnownVanillaIniSection,
   lookupAsaUiCategory,
   resolveAsaUiCategory,
-} from "@shared/asa-setting-ui-categories";
+} from "@shared/asa/asa-setting-ui-categories";
 import {
   filterIniRows,
   groupRowsByUiCategory,

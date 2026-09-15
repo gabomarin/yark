@@ -2,7 +2,7 @@ import {
   emptyIniFileSelection,
   type ConfigTransferIniFileSelection,
   type ConfigTransferSelection,
-} from "@shared/config-transfer";
+} from "@shared/ini/config-transfer";
 import type {
   ConfigTransferIniCategoryInfo,
   ServerProfile,

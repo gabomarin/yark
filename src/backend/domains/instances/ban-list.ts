@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { parseIniTextRows } from "@shared/ini-text";
+import { parseIniTextRows } from "@shared/ini/ini-text";
 import { serverBinaryPath } from "./launch-args";
 
 /** Primary BanList path next to the dedicated binary (ASA convention). */

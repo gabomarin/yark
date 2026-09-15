@@ -23,8 +23,8 @@ apply to the listed portions only.
 | --- | --- |
 | `src/shared/defaults/Game.ini` | Default ASA dedicated `Game.ini` body |
 | `src/shared/defaults/GameUserSettings.ini` | Default ASA dedicated `GameUserSettings.ini` body |
-| `src/shared/ini-setting-meta.json` | Editor metadata (`description`, `valueType`, defaults) generated from the files above (`npm run catalog:ini-meta`) |
-| `src/shared/asa-setting-ui-categories-data.json` | INI editor category groupings derived from `ini-setting-meta.json` |
+| `src/shared/ini/ini-setting-meta.json` | Editor metadata (`description`, `valueType`, defaults) generated from the files above (`npm run catalog:ini-meta`) |
+| `src/shared/asa/asa-setting-ui-categories-data.json` | INI editor category groupings derived from `ini-setting-meta.json` |
 
 YARK may reorder sections, normalize placeholder values (e.g. empty `ActiveMods=`),
 or edit comments. Game setting names and factual defaults originate from ARK /
@@ -52,7 +52,7 @@ under the same license family.
 
 | Path | Role |
 | --- | --- |
-| `src/shared/asa-launch-options-catalog.json` | Versioned ASA launch-flag metadata (descriptions, ASA/ASE columns, examples) |
+| `src/shared/asa/asa-launch-options-catalog.json` | Versioned ASA launch-flag metadata (descriptions, ASA/ASE columns, examples) |
 | `scripts/build-asa-launch-options-catalog.cjs` | Offline regeneration script (`npm run catalog:launch-options`) |
 
 The wiki is **not** fetched at runtime. Operator-facing copy in the Launch tab

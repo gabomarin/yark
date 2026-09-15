@@ -1,6 +1,6 @@
 import { offsetPort, type ServerProfile } from "@shared/types";
-import { suggestNextPortTriplet } from "@shared/port-suggest";
-import { suggestCloneInstallDir } from "@shared/server-install-path";
+import { suggestNextPortTriplet } from "@shared/server/port-suggest";
+import { suggestCloneInstallDir } from "@shared/server/server-install-path";
 
 export interface CloneFormState {
   name: string;

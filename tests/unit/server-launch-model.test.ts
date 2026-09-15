@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildMapUrlArg } from "@shared/launch-map-url";
+import { buildMapUrlArg } from "@shared/asa/launch-map-url";
 import type { ServerProfile } from "@shared/types";
 import {
   joinRawExtraArgs,

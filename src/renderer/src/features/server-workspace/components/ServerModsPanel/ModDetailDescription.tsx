@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ReactElement } from "react";
 import { Button, Stack, Text } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
-import { decodeHtmlEntities } from "@shared/decode-html-entities";
+import { decodeHtmlEntities } from "@shared/mods/decode-html-entities";
 
 interface Props {
   text: string;

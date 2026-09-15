@@ -1,4 +1,4 @@
-import type { ServerStatus } from "./types";
+import type { ServerStatus } from "../types";
 
 export interface ServerProcessRuntime {
   status: ServerStatus;

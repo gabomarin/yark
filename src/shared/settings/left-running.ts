@@ -3,7 +3,7 @@
  * Never trust PID alone — pair with creation time, executable, and command line.
  */
 
-import { PORT_MAX, PORT_MIN, type SessionPortSet } from "./types";
+import { PORT_MAX, PORT_MIN, type SessionPortSet } from "../types";
 
 export const LEFT_RUNNING_PROCESSES_SETTING_KEY = "leftRunningProcesses";
 

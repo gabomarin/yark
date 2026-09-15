@@ -3,9 +3,9 @@ import {
   asaUiCategoryLabel,
   resolveAsaUiCategory,
   type AsaUiCategoryId,
-} from "@shared/asa-setting-ui-categories";
+} from "@shared/asa/asa-setting-ui-categories";
 import type { IniFileKey } from "@shared/types";
-import { sectionShortName } from "@shared/ini-text";
+import { sectionShortName } from "@shared/ini/ini-text";
 
 /** Minimal row shape for category grouping (avoids circular import with iniModel). */
 export interface IniGroupingRow {

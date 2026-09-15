@@ -7,7 +7,7 @@ import {
 import {
   METADATA_SERVICE_NOT_CONFIGURED_MESSAGE,
   normalizeCurseforgeProxyUrl,
-} from "@shared/curseforge-proxy-url";
+} from "@shared/mods/curseforge-proxy-url";
 import type { ModMetadata, ServerProfileInput } from "@shared/types";
 
 const awesome: ModMetadata = {

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowsLeftRight } from "@phosphor-icons/react";
 import { Alert, Button, Group, Stack, Text } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
-import type { FleetInstallRef } from "@shared/server-install-path";
+import type { FleetInstallRef } from "@shared/server/server-install-path";
 import { PathField } from "@ui/PathField/PathField";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import {

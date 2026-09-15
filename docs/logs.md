@@ -25,7 +25,7 @@ or seeds logs for development and QA.
 | --- | --- |
 | Aggregation / export / clear / retention | `src/backend/domains/logs/logs-service.ts` |
 | Retention scheduler | `src/backend/domains/logs/log-retention-scheduler.ts` |
-| Shared defaults / normalize | `src/shared/log-retention.ts` |
+| Shared defaults / normalize | `src/shared/settings/log-retention.ts` |
 | Event persistence | `src/backend/infra/db/server-repository.ts` (`addEvent`) |
 | Diagnostic omit/redact (#144) | `src/shared/credential-redaction.ts` |
 | DB migration (details column) | `src/backend/infra/db/database.ts` (migration **v6**) |

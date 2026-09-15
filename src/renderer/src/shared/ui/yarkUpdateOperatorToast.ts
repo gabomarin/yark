@@ -1,4 +1,4 @@
-import type { AppUpdateStatus } from "@shared/app-update";
+import type { AppUpdateStatus } from "@shared/settings/app-update";
 
 /** Stable key so we toast once per phase+version (quiet check + Settings Check now). */
 export function yarkUpdateToastDedupeKey(status: AppUpdateStatus): string | null {

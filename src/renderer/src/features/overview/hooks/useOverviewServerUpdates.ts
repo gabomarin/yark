@@ -10,7 +10,7 @@ import type {
 import {
   getServerUpdateState,
   isServerUpdateAvailable,
-} from "@shared/server-update-status";
+} from "@shared/server/server-update-status";
 import {
   buildUpdateAllOutdatedPlan,
   canOpenUpdateAllOutdated,

@@ -1,12 +1,12 @@
 import {
   getWindowsPathError,
   normalizeWindowsPath,
-} from "@shared/server-install-path";
-import { findPortConflicts } from "@shared/port-conflicts";
+} from "@shared/server/server-install-path";
+import { findPortConflicts } from "@shared/server/port-conflicts";
 import {
   clusterProcessBusyReason as sharedClusterProcessBusyReason,
   type ServerProcessRuntime,
-} from "@shared/server-process-idle";
+} from "@shared/server/server-process-idle";
 import type {
   ServerProfile,
   ServerProfileInput,

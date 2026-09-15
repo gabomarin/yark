@@ -3,7 +3,7 @@ import {
   canonicalCurseForgeAsaModUrl,
   curseForgeAsaSlugFromUrl,
   getCurseForgeAsaModUrlError,
-} from "@shared/curseforge-url";
+} from "@shared/mods/curseforge-url";
 
 describe("CurseForge ASA mod URLs", () => {
   it("accepts and canonicalizes a mod detail URL", () => {

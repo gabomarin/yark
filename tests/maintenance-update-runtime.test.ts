@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { defaultMaintenancePolicy } from "../src/shared/maintenance-policy";
+import { defaultMaintenancePolicy } from "../src/shared/maintenance/maintenance-policy";
 import { MaintenanceUpdateRuntime } from "../src/backend/domains/maintenance/maintenance-update-runtime";
 import type { MaintenancePolicy } from "../src/shared/types";
 import { stubInstallationInfo } from "./helpers/installation-info";

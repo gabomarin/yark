@@ -1,8 +1,8 @@
 import {
   OS_NOTIFY_CRASH_EVENT_TYPE,
   type ServerCrashedNotifyPayload,
-} from "@shared/os-notification-events";
-import type { AsaStartupFailure } from "@shared/asa-startup-failure";
+} from "@shared/settings/os-notification-events";
+import type { AsaStartupFailure } from "@shared/asa/asa-startup-failure";
 import { sanitizeDiagnosticText } from "@shared/credential-redaction";
 
 export interface UnexpectedServerCrashPayload {

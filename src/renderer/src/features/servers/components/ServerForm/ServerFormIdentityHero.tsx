@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { Stack, Text } from "@mantine/core";
-import { formatMapDisplayName } from "@shared/map-identity";
+import { formatMapDisplayName } from "@shared/asa/map-identity";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import classes from "./ServerForm.module.css";
 

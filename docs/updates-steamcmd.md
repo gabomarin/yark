@@ -21,7 +21,7 @@ ASA Steam app id: **`2430930`**.
 | Cache paths, freshness, robocopy sync | `src/backend/domains/updates/steamcmd-content-cache.ts` |
 | Disk-based download estimate | `src/backend/domains/updates/steamcmd-disk-progress.ts` |
 | Local install snapshot + official build/version | `src/backend/domains/instances/server-installation.ts` |
-| Availability compare (`buildid` only) | `src/shared/server-update-status.ts` |
+| Availability compare (`buildid` only) | `src/shared/server/server-update-status.ts` |
 | Contracts | `src/shared/ipc.ts`, `src/shared/types.ts`, `src/shared/steamcmd-progress.ts` |
 | IPC | `src/main/ipc-handlers.ts`, `src/preload/index.ts` |
 | UI | `src/renderer/src/features/settings/*` (path/install), Downloads page, Overview cards, workspace SidePanel |

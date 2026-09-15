@@ -5,7 +5,7 @@ import {
   OPEN_NATIVE_CONSOLE_SETTING_KEY,
   encodeOpenNativeConsolePref,
   parseStoredOpenNativeConsole,
-} from "@shared/open-native-console";
+} from "@shared/settings/open-native-console";
 import type { DatabaseSync } from "node:sqlite";
 
 describe("AppSettingsRepository openNativeConsoleOnStart (#350)", () => {

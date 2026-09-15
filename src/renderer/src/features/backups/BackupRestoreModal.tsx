@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { Button, Checkbox, Group, Modal, Stack, Text } from "@mantine/core";
-import { backupFinishedAt } from "@shared/backup-player-meta";
+import { backupFinishedAt } from "@shared/backups/backup-player-meta";
 import { formatLogDateTime } from "@shared/format-log-datetime";
 import type { BackupRecord } from "@shared/types";
 

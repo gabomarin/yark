@@ -2,7 +2,7 @@ import { cleanup, render, screen, waitFor, within } from "@testing-library/react
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import { notifications } from "@mantine/notifications";
-import { formatPlayerSessionNotes } from "@shared/backup-player-meta";
+import { formatPlayerSessionNotes } from "@shared/backups/backup-player-meta";
 import type { BackupRecord, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { setupUser } from "@renderer/test/setupUser";
 import { ServerBackupPanel } from "./ServerBackupPanel";

@@ -18,8 +18,8 @@ import {
   getWindowsPathError,
   normalizeWindowsPath,
   selfNestInstallWarning,
-} from "@shared/server-install-path";
-import { isInstallationReady } from "@shared/installation-health";
+} from "@shared/server/server-install-path";
+import { isInstallationReady } from "@shared/server/installation-health";
 import type { MoveInstallProgress } from "@shared/types";
 import { readVolumeSpace, volumeRootForPath } from "../backups/backup-disk";
 import type { BackupService } from "../backups/backup-service";

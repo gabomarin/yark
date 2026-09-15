@@ -1,6 +1,6 @@
 /**
  * Compatibility facade over ini-setting-meta (defaults-derived).
- * Prefer `@shared/ini-setting-meta` for new code.
+ * Prefer `@shared/ini/ini-setting-meta` for new code.
  */
 import {
   iniSettingMetaList,
@@ -11,7 +11,7 @@ import {
   settingsMetaForFile,
   type IniMetaFileKey,
   type IniSettingMeta,
-} from "./ini-setting-meta";
+} from "../ini/ini-setting-meta";
 
 export type AsaIniFileKey = IniMetaFileKey;
 

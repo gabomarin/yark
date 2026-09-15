@@ -1,6 +1,6 @@
 import type { Dispatch, ReactElement, SetStateAction } from "react";
 import { Badge, Group, Stack, Text } from "@mantine/core";
-import type { ConfigTransferSelection } from "@shared/config-transfer";
+import type { ConfigTransferSelection } from "@shared/ini/config-transfer";
 import type { ConfigTransferDescribeResult } from "@shared/types";
 import {
   EXTRA_ARGS_MERGE_TOOLTIP,

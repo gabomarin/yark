@@ -1,4 +1,4 @@
-import type { MaintenanceJobWarnings } from "./types";
+import type { MaintenanceJobWarnings } from "../types";
 import { normalizeRestartDaysOfWeek } from "./maintenance-restart-days";
 
 /**

@@ -9,7 +9,7 @@ import {
   useCombobox,
 } from "@mantine/core";
 import { CaretDown, Check, HardDrives, MagnifyingGlass } from "@phosphor-icons/react";
-import { MAP_NAME_COPY } from "@shared/map-name-copy";
+import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
 import { KNOWN_MAP_OPTIONS, type ModMetadata } from "@shared/types";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import { resolveMapArtUrl } from "@ui/MapArtThumb/mapArt";

@@ -10,7 +10,7 @@ import {
   selfNestInstallWarning,
   suggestCloneInstallDir,
   windowsPathParentDir,
-} from "@shared/server-install-path";
+} from "@shared/server/server-install-path";
 
 describe("server-install-path", () => {
   it("rejects folder names with Windows-incompatible characters", () => {

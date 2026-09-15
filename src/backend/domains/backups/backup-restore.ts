@@ -1,6 +1,6 @@
 import { dirname } from "node:path";
-import { isSafeMapToken, isSafeWindowsFolderName } from "@shared/map-identity";
-import { MAP_NAME_COPY } from "@shared/map-name-copy";
+import { isSafeMapToken, isSafeWindowsFolderName } from "@shared/asa/map-identity";
+import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
 import {
   isAntiCorruptionWorldSaveName,
   isPrimaryWorldSaveName,

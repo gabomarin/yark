@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import { Checkbox, Stack, Text } from "@mantine/core";
 import {
   clusterIniFileSelectionHasWork,
-} from "@shared/cluster-ini-file-selection";
+} from "@shared/ini/cluster-ini-file-selection";
 import type { ClusterIniTemplateFileSelection } from "@shared/types";
 
 interface Props {

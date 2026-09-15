@@ -1,4 +1,4 @@
-import type { ServerInstallationInfo } from "./types";
+import type { ServerInstallationInfo } from "../types";
 import { isInstallationReady } from "./installation-health";
 
 export type ServerUpdateState = "available" | "current" | "unknown";

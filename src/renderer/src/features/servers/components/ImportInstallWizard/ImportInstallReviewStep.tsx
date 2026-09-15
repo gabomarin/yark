@@ -11,7 +11,7 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { isMetadataServiceNotConfiguredMessage } from "@shared/curseforge-proxy-url";
+import { isMetadataServiceNotConfiguredMessage } from "@shared/mods/curseforge-proxy-url";
 import type { ImportInstallProbe, ModMetadata } from "@shared/types";
 
 interface Props {

@@ -6,8 +6,8 @@ import {
   loadOpenNativeConsolePref,
   loadUiDensityPref,
 } from "@features/settings/settingsModel";
-import { DEFAULT_OPEN_NATIVE_CONSOLE } from "@shared/open-native-console";
-import { DEFAULT_UI_DENSITY } from "@shared/ui-density";
+import { DEFAULT_OPEN_NATIVE_CONSOLE } from "@shared/settings/open-native-console";
+import { DEFAULT_UI_DENSITY } from "@shared/settings/ui-density";
 import "@mantine/core/styles.layer.css";
 import "@mantine/dates/styles.layer.css";
 import "@mantine/carousel/styles.css";

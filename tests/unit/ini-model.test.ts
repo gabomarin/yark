@@ -4,7 +4,7 @@ import {
   sectionShortName,
   setIniTextValue,
   stripClientIniKeys,
-} from "@shared/ini-text";
+} from "@shared/ini/ini-text";
 import {
   filterIniRows,
   inferControlKind,

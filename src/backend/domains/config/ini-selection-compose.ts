@@ -7,12 +7,12 @@ import {
   parseIniTextRows,
   removeIniTextValue,
   setIniTextValue,
-} from "@shared/ini-text";
+} from "@shared/ini/ini-text";
 import {
   isConfigTransferBlockedGusKey,
   type ConfigTransferIniFileSelection,
   type ConfigTransferSelection,
-} from "@shared/config-transfer";
+} from "@shared/ini/config-transfer";
 import type { ServerIniPayload, ServerProfile } from "@shared/types";
 import {
   applyProfileOwnedKeysToGameUserSettings,

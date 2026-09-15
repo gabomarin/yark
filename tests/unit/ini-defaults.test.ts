@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini-defaults";
+import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini/ini-defaults";
 
 const defaultsDir = join(__dirname, "../../src/shared/defaults");
 

@@ -1,4 +1,4 @@
-import { suggestMapTokenFromMetadata, hasMapTokenWpSuffix } from "@shared/map-token-suggest";
+import { suggestMapTokenFromMetadata, hasMapTokenWpSuffix } from "@shared/asa/map-token-suggest";
 import type {
   ModCategory,
   ModMetadata,

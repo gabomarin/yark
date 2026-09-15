@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   assertClusterIniTemplateFileSelection,
   mergeClusterIniPayloadByFileSelection,
-} from "@shared/cluster-ini-file-selection";
+} from "@shared/ini/cluster-ini-file-selection";
 
 describe("cluster-ini-file-selection", () => {
   it("defaults omitted selection to both files", () => {

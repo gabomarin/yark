@@ -6,7 +6,7 @@
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini-defaults";
+import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini/ini-defaults";
 import type { ServerProfile } from "@shared/types";
 import { assertDestAndParentNotReparsePoints } from "../../infra/fs/reparse-points";
 import { syncProfileSettingsToIni } from "./sync-profile-ini";

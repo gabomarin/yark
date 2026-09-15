@@ -1,4 +1,4 @@
-import type { BackupRecord } from "./types";
+import type { BackupRecord } from "../types";
 
 const PLAYER_KEY_NOTE_RE = /\[playerKey=([^\]]+)\]/i;
 const PLAYER_NAME_NOTE_RE = /\[playerName=([^\]]+)\]/i;

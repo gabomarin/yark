@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decodeHtmlEntities } from "../../src/shared/decode-html-entities";
+import { decodeHtmlEntities } from "../../src/shared/mods/decode-html-entities";
 
 describe("decodeHtmlEntities", () => {
   it("decodes CurseForge decorative angle brackets", () => {

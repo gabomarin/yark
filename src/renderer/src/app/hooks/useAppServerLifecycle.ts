@@ -7,7 +7,7 @@ import type {
   StartServerOptions,
 } from "@shared/types";
 import type { OsNotificationOpenPush } from "@shared/ipc";
-import { isHostPortBusyError, isHostPortProbeError } from "@shared/host-port-probe-errors";
+import { isHostPortBusyError, isHostPortProbeError } from "@shared/server/host-port-probe-errors";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { claimStartBusy, releaseStartBusy } from "@app/model/startBusyGuard";
 import type { Overlay } from "@app/model/appOverlay";

@@ -13,7 +13,7 @@ import {
   isTransientAppUpdateFeedError,
   operatorFacingAppUpdateError,
   restorePhaseAfterQuietFeedFailure,
-} from "../src/shared/app-update";
+} from "../src/shared/settings/app-update";
 
 describe("app-update helpers", () => {
   it("strips optional v prefix", () => {

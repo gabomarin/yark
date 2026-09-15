@@ -1,7 +1,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { isYarkE2eShortcutsActive } from "../shared/os-notification-events";
+import { isYarkE2eShortcutsActive } from "../shared/settings/os-notification-events";
 
 /** Boot splash is skipped in E2E and when an operator opts out. */
 export const SPLASH_WIDTH = 520;

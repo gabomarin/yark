@@ -4,7 +4,7 @@ import {
   parseOnboardingRecord,
   serializeOnboardingRecord,
   shouldAutoShowSetupWizard,
-} from "@shared/onboarding";
+} from "@shared/settings/onboarding";
 
 describe("parseOnboardingRecord", () => {
   it("returns null for missing or blank values", () => {

@@ -1,5 +1,5 @@
 import { MAP_NAME_COPY } from "./map-name-copy";
-import { KNOWN_MAP_OPTIONS, KNOWN_MAPS } from "./types";
+import { KNOWN_MAP_OPTIONS, KNOWN_MAPS } from "../types";
 
 /** Official ASA map launch tokens shipped in `KNOWN_MAPS`. */
 export type OfficialMapId = (typeof KNOWN_MAPS)[number];

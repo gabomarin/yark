@@ -1,8 +1,8 @@
 import { Stack, Text, Tooltip } from "@mantine/core";
 import { StatusWord } from "@ui/StatusWord/StatusWord";
 import type { DataTableColumn } from "mantine-datatable";
-import { backupFinishedAt, parsePlayerKeyFromNotes, playerBackupDisplayName } from "@shared/backup-player-meta";
-import { formatMapDisplayName } from "@shared/map-identity";
+import { backupFinishedAt, parsePlayerKeyFromNotes, playerBackupDisplayName } from "@shared/backups/backup-player-meta";
+import { formatMapDisplayName } from "@shared/asa/map-identity";
 import type { BackupKind, BackupRecord } from "@shared/types";
 import { BackupHistoryRowActions } from "./BackupHistoryRowActions";
 import { archiveFileName } from "./backupHistorySort";

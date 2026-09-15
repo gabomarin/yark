@@ -6,7 +6,7 @@ import {
   UI_DENSITY_SETTING_KEY,
   isUiDensity,
   parseUiDensity,
-} from "@shared/ui-density";
+} from "@shared/settings/ui-density";
 import {
   loadUiDensityPref,
   writeUiDensityPref,

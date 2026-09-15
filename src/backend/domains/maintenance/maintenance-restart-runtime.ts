@@ -5,7 +5,7 @@
 
 import {
   MAINTENANCE_RESTART_PRESET_OFFSETS,
-} from "@shared/maintenance-policy";
+} from "@shared/maintenance/maintenance-policy";
 import {
   MAINTENANCE_FAIL_LIMIT,
   MAINTENANCE_RCON_SOFT_FAIL_LIMIT,
@@ -20,7 +20,7 @@ import {
   renderWarningTemplate,
   resolveWarningOffsetLabels,
   shouldUseLastMinuteChat,
-} from "@shared/maintenance-schedule";
+} from "@shared/maintenance/maintenance-schedule";
 import type {
   MaintenanceCountdownPhase,
   MaintenancePolicy,

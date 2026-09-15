@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { PORT_MAX, PORT_MIN } from "../types";
-import { MAX_WINDOWS_PATH_LENGTH } from "../server-install-path";
+import { MAX_WINDOWS_PATH_LENGTH } from "../server/server-install-path";
 import {
   MAX_LOG_RETENTION_DAYS,
   MIN_LOG_RETENTION_DAYS,
-} from "../log-retention";
+} from "../settings/log-retention";
 
 /** Absolute Windows path (drive letter or UNC). */
 const WINDOWS_ABS_PATH = /^(?:[a-zA-Z]:[\\/]|\\\\)/;

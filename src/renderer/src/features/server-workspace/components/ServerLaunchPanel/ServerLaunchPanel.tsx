@@ -9,13 +9,13 @@ import {
   Textarea,
 } from "@mantine/core";
 import { MagnifyingGlass } from "@phosphor-icons/react";
-import { validateMapIdentity } from "@shared/map-identity";
+import { validateMapIdentity } from "@shared/asa/map-identity";
 import type { ServerProfile } from "@shared/types";
 import {
   buildStructuredLaunchToken,
   isStructuredDependencyMet,
   isStructuredOptionEffectivelyEnabled,
-} from "@shared/structured-launch-options";
+} from "@shared/asa/structured-launch-options";
 import { useUiDensity } from "@app/AppProviders";
 import { LaunchOptionsCatalogModal } from "@features/servers/components/LaunchOptionsCatalogModal/LaunchOptionsCatalogModal";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";

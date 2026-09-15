@@ -3,14 +3,14 @@ import {
   OPEN_NATIVE_CONSOLE_LEGACY_LOCAL_STORAGE_KEY,
   parseOpenNativeConsolePref,
   parseStoredOpenNativeConsole,
-} from "@shared/open-native-console";
+} from "@shared/settings/open-native-console";
 import {
   DEFAULT_UI_DENSITY,
   UI_DENSITY_LEGACY_LOCAL_STORAGE_KEY,
   isUiDensity,
   parseUiDensity,
   type UiDensity,
-} from "@shared/ui-density";
+} from "@shared/settings/ui-density";
 
 export type { UiDensity };
 

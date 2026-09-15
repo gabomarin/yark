@@ -1,6 +1,6 @@
 import { get } from "node:https";
 import type { OfficialNetworkStatus } from "@shared/types";
-import { ASA_APP_ID, asaSteamCmdInfoUrl } from "@shared/asa-steam";
+import { ASA_APP_ID, asaSteamCmdInfoUrl } from "@shared/asa/asa-steam";
 
 const OFFICIAL_VERSION_TTL_MS = 15 * 60 * 1000;
 const OFFICIAL_SERVER_STATUS_URL =

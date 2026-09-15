@@ -1,4 +1,4 @@
-import type { IniFileKey, ServerIniPayload } from "./types";
+import type { IniFileKey, ServerIniPayload } from "../types";
 import { setIniTextValue } from "./ini-text";
 
 interface IniPresetUpdate {

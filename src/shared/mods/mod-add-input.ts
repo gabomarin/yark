@@ -1,5 +1,5 @@
 import { getCurseForgeAsaModUrlError } from "./curseforge-url";
-import type { ModMetadata } from "./types";
+import type { ModMetadata } from "../types";
 
 /** Default references resolved per persist/progress batch. */
 const MOD_ADD_URL_BATCH_SIZE = 5;

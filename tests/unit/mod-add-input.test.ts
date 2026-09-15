@@ -4,7 +4,7 @@ import {
   isCurseForgeProjectId,
   parseModAddInput,
   prepareModAddApply,
-} from "@shared/mod-add-input";
+} from "@shared/mods/mod-add-input";
 import type { ModMetadata } from "@shared/types";
 
 const sampleDetail: ModMetadata = {

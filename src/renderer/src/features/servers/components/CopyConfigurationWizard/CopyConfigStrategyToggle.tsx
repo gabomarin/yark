@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { Button, Group, Tooltip } from "@mantine/core";
-import type { ConfigTransferIniStrategy } from "@shared/config-transfer";
+import type { ConfigTransferIniStrategy } from "@shared/ini/config-transfer";
 
 interface Props {
   strategy: ConfigTransferIniStrategy;

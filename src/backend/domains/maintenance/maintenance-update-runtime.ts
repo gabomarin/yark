@@ -6,7 +6,7 @@
 
 import {
   MAINTENANCE_UPDATE_PRESET_OFFSETS,
-} from "@shared/maintenance-policy";
+} from "@shared/maintenance/maintenance-policy";
 import {
   MAINTENANCE_FAIL_LIMIT,
   MAINTENANCE_RCON_SOFT_FAIL_LIMIT,
@@ -17,8 +17,8 @@ import {
   renderWarningTemplate,
   resolveWarningOffsetLabels,
   shouldUseLastMinuteChat,
-} from "@shared/maintenance-schedule";
-import { isServerUpdateAvailable } from "@shared/server-update-status";
+} from "@shared/maintenance/maintenance-schedule";
+import { isServerUpdateAvailable } from "@shared/server/server-update-status";
 import type {
   MaintenanceCountdownPhase,
   MaintenancePolicy,

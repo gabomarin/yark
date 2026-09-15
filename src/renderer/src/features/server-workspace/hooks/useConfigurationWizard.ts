@@ -1,5 +1,5 @@
 import { useForm, type UseFormReturnType } from "@mantine/form";
-import { defaultClusterIniFileSelection } from "@shared/cluster-ini-file-selection";
+import { defaultClusterIniFileSelection } from "@shared/ini/cluster-ini-file-selection";
 import type {
   ClusterIniTemplate,
   ServerIniSnapshot,

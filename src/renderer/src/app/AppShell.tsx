@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { APP_VERSION } from "@shared/app-version";
-import type { AppUpdateStatus } from "@shared/app-update";
+import type { AppUpdateStatus } from "@shared/settings/app-update";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { notifications } from "@mantine/notifications";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
@@ -45,7 +45,7 @@ import {
   writeUiDensityPref,
   type UiDensity,
 } from "@features/settings/settingsModel";
-import { DEFAULT_OPEN_NATIVE_CONSOLE } from "@shared/open-native-console";
+import { DEFAULT_OPEN_NATIVE_CONSOLE } from "@shared/settings/open-native-console";
 import { useDesktopShellPreferences } from "@features/settings/hooks/useDesktopShellPreferences";
 import type { Route } from "@layout/Sidebar/Sidebar";
 import { AppSpotlight } from "@layout/AppSpotlight/AppSpotlight";

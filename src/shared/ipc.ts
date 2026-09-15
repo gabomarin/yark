@@ -1,4 +1,4 @@
-import type { OnboardingRecord } from "./onboarding";
+import type { OnboardingRecord } from "./settings/onboarding";
 import type {
   AppEvent,
   AsaApiInstallProgress,
@@ -54,9 +54,9 @@ import type {
   StartServerOptions,
   DeleteServerOptions,
 } from "./types";
-import type { AppUpdateStatus } from "./app-update";
-import type { UiDensity } from "./ui-density";
-import type { DesktopShellPreferences } from "./desktop-shell";
+import type { AppUpdateStatus } from "./settings/app-update";
+import type { UiDensity } from "./settings/ui-density";
+import type { DesktopShellPreferences } from "./settings/desktop-shell";
 
 type PickPathKind = "directory" | "file" | "save";
 

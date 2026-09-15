@@ -10,7 +10,7 @@ import {
   isHostPortProbeError,
   isInconclusiveHostPortProbeError,
   parseSuggestedSessionPorts,
-} from "@shared/host-port-probe-errors";
+} from "@shared/server/host-port-probe-errors";
 import {
   assertHostPortsAvailable,
   collectReservedPorts,

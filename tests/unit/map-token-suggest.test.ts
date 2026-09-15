@@ -5,7 +5,7 @@ import {
   isMapModCandidate,
   suggestMapTokenFromMetadata,
   suggestMapTokenFromModText,
-} from "@shared/map-token-suggest";
+} from "@shared/asa/map-token-suggest";
 import type { ModMetadata } from "@shared/types";
 
 /** Author-style description snippets for catalog fixtures (#65). */

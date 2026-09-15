@@ -4,7 +4,7 @@ import {
   humanizeHostPortProbeError,
   isHostPortBusyError,
   parseSuggestedSessionPorts,
-} from "@shared/host-port-probe-errors";
+} from "@shared/server/host-port-probe-errors";
 import type { SessionPortSet } from "@shared/types";
 
 export function openHostPortProbeModal(args: {

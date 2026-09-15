@@ -14,7 +14,7 @@ import {
 import type { Route } from "@layout/Sidebar/Sidebar";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import type { ServerProfile } from "@shared/types";
-import { formatMapDisplayName } from "@shared/map-identity";
+import { formatMapDisplayName } from "@shared/asa/map-identity";
 import {
   sortServersForSpotlight,
   SPOTLIGHT_NAV_ITEMS,

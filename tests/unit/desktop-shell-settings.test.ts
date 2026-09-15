@@ -17,7 +17,7 @@ import {
   TRAY_CLOSE_HINT_DISMISSED_SETTING_KEY,
   parseStoredBoolean,
   serializeStoredBoolean,
-} from "@shared/desktop-shell";
+} from "@shared/settings/desktop-shell";
 import {
   readDesktopShellPreferences,
   setCloseWindowToTray,

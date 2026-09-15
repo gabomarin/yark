@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDebouncedValue } from "@mantine/hooks";
-import type { FleetInstallRef } from "@shared/server-install-path";
+import type { FleetInstallRef } from "@shared/server/server-install-path";
 import type { ImportInstallProbe } from "@shared/types";
 import { diskMoveInstallWarning } from "../ServerForm/createInstallPathWarning";
 import { moveDestPreviewIssue } from "./moveInstallPathWarning";

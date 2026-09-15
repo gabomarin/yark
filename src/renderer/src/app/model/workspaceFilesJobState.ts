@@ -1,4 +1,4 @@
-import { isFilesJobOperation, type FilesJobOperation } from "@shared/files-job-priority";
+import { isFilesJobOperation, type FilesJobOperation } from "@shared/server/files-job-priority";
 import type { ServerFilesQueueState } from "@features/downloads/downloadsModel";
 import type { SteamCmdStatus } from "@shared/types";
 

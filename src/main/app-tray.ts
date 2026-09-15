@@ -1,7 +1,7 @@
 import { Menu, Tray, nativeImage, type BrowserWindow, type NativeImage } from "electron";
 import { existsSync } from "node:fs";
 
-export { formatTrayServerStatus } from "@shared/app-tray-status";
+export { formatTrayServerStatus } from "@shared/settings/app-tray-status";
 
 export interface AppTrayOptions {
   iconPath: string | undefined;

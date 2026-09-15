@@ -4,7 +4,7 @@ import {
   DEFAULT_GAME_PORT,
   DEFAULT_QUERY_PORT,
   DEFAULT_RCON_PORT,
-} from "@shared/port-suggest";
+} from "@shared/server/port-suggest";
 
 describe("parseOptionalMaxPlayers", () => {
   it("treats empty, blank, and non-numeric input as 0 (omit -WinLiveMaxPlayers)", () => {

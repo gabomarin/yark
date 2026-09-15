@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ServerIniPayload } from "@shared/types";
-import { applyIniPreset, listIniPresets } from "@shared/ini-presets";
-import { parseIniTextRows, setIniTextValue } from "@shared/ini-text";
+import { applyIniPreset, listIniPresets } from "@shared/ini/ini-presets";
+import { parseIniTextRows, setIniTextValue } from "@shared/ini/ini-text";
 
 describe("ini-presets", () => {
   it("exposes available common presets", () => {

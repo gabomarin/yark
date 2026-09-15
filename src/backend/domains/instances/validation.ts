@@ -1,16 +1,16 @@
 import { z } from "zod";
-import { MAP_NAME_COPY } from "@shared/map-name-copy";
+import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
 import {
   isOfficialMap,
   isValidMapSaveFolder,
   validateMapIdentity,
-} from "@shared/map-identity";
+} from "@shared/asa/map-identity";
 import {
   getServerFolderNameError,
   getWindowsPathError,
   MAX_WINDOWS_PATH_LENGTH,
-} from "@shared/server-install-path";
-import { findLaunchArgConflicts } from "@shared/structured-launch-options";
+} from "@shared/server/server-install-path";
+import { findLaunchArgConflicts } from "@shared/asa/structured-launch-options";
 import {
   PORT_MAX,
   PORT_MIN,
@@ -18,7 +18,7 @@ import {
   type ValidationIssue,
 } from "@shared/types";
 
-export { findPortConflicts } from "@shared/port-conflicts";
+export { findPortConflicts } from "@shared/server/port-conflicts";
 
 /** Absolute Windows path (drive letter or UNC). */
 const WINDOWS_ABS_PATH = /^(?:[a-zA-Z]:[\\/]|\\\\)/;

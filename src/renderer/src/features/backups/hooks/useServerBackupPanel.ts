@@ -1,5 +1,5 @@
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
-import { isInstallationReady } from "@shared/installation-health";
+import { isInstallationReady } from "@shared/server/installation-health";
 import type {
   BackupKind,
   BackupPolicyStatus,

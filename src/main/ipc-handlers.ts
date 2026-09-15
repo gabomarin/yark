@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import { mkdir } from "node:fs/promises";
 import { IPC, IPC_PUSH } from "../shared/ipc";
 import { ipcArgSchemas } from "../shared/ipc/channel-schemas";
-import { canonicalCurseForgeAsaModUrl } from "../shared/curseforge-url";
+import { canonicalCurseForgeAsaModUrl } from "../shared/mods/curseforge-url";
 import type {
   AsaApiInstallProgress,
   ServerProfileInput,
@@ -33,20 +33,20 @@ import type { UpdateService } from "../backend/domains/updates/update-service";
 import type { MoveInstallService } from "../backend/domains/instances/move-install-service";
 import type { AppSettingsRepository } from "../backend/infra/db/app-settings-repository";
 import type { ServerRepository } from "../backend/infra/db/server-repository";
-import { UI_DENSITY_SETTING_KEY, isUiDensity, type UiDensity } from "../shared/ui-density";
+import { UI_DENSITY_SETTING_KEY, isUiDensity, type UiDensity } from "../shared/settings/ui-density";
 import {
   OPEN_NATIVE_CONSOLE_SETTING_KEY,
   encodeOpenNativeConsolePref,
   parseStoredOpenNativeConsole,
-} from "../shared/open-native-console";
-import { LAST_SEEN_CHANGELOG_VERSION_SETTING_KEY } from "../shared/changelog";
+} from "../shared/settings/open-native-console";
+import { LAST_SEEN_CHANGELOG_VERSION_SETTING_KEY } from "../shared/settings/changelog";
 import {
   ONBOARDING_SETTING_KEY,
   parseOnboardingRecord,
   serializeOnboardingRecord,
   type OnboardingRecord,
-} from "../shared/onboarding";
-import { isYarkE2eShortcutsActive } from "../shared/os-notification-events";
+} from "../shared/settings/onboarding";
+import { isYarkE2eShortcutsActive } from "../shared/settings/os-notification-events";
 import { APP_VERSION } from "../shared/app-version";
 import {
   readDesktopShellPreferences,
@@ -59,7 +59,7 @@ import {
   setTrayCloseHintDismissed,
 } from "./desktop-shell-settings";
 import { applyWindowsLoginItem } from "./windows-login-item";
-import type { DesktopShellPreferences } from "../shared/desktop-shell";
+import type { DesktopShellPreferences } from "../shared/settings/desktop-shell";
 import type { AppUpdateService } from "./app-update-service";
 import { handleValidated } from "./ipc-validate";
 

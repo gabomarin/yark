@@ -3,8 +3,8 @@ import { notifications } from "@mantine/notifications";
 import {
   isMapModCandidate,
   suggestMapTokenFromMetadata,
-} from "@shared/map-token-suggest";
-import { MAP_NAME_COPY } from "@shared/map-name-copy";
+} from "@shared/asa/map-token-suggest";
+import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
 import type { ModMetadata } from "@shared/types";
 
 interface PersistCacheFn {

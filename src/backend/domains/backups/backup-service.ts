@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events";
 import { rm } from "node:fs/promises";
 import { basename, dirname } from "node:path";
-import { formatPlayerSessionNotes } from "@shared/backup-player-meta";
+import { formatPlayerSessionNotes } from "@shared/backups/backup-player-meta";
 import type {
   BackupCleanupOptions,
   BackupCleanupPreview,
@@ -54,7 +54,7 @@ import { BackupFleetOps } from "./backup-fleet-ops";
 export {
   formatPlayerSessionNotes,
   playersRetentionKey,
-} from "@shared/backup-player-meta";
+} from "@shared/backups/backup-player-meta";
 export { computeBackupServerHealth } from "./backup-fleet";
 export { CRITICAL_BACKUP_KINDS } from "./backup-critical-queue";
 

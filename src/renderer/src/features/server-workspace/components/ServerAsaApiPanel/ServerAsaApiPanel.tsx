@@ -13,7 +13,7 @@ import type { ServerProfile } from "@shared/types";
 import {
   formatSteamCmdByteProgress,
   hasMeaningfulSteamCmdByteProgress,
-} from "@shared/steamcmd-progress";
+} from "@shared/server/steamcmd-progress";
 import { useUiDensity } from "@app/AppProviders";
 import { AppPanelConfirmModal } from "@ui/AppPanelConfirmModal/AppPanelConfirmModal";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";

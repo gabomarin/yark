@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import type { ServerProfile } from "@shared/types";
-import { buildMapUrlArg } from "@shared/launch-map-url";
-import { linkedOfficialMapModLaunchId } from "@shared/map-identity";
+import { buildMapUrlArg } from "@shared/asa/launch-map-url";
+import { linkedOfficialMapModLaunchId } from "@shared/asa/map-identity";
 import {
   argsIncludeServerPlatform,
   buildStructuredLaunchArgList,
@@ -11,9 +11,9 @@ import {
   yarkModsArg,
   yarkPortArg,
   yarkWinLiveMaxPlayersArg,
-} from "@shared/structured-launch-options";
+} from "@shared/asa/structured-launch-options";
 
-export { buildMapUrlArg } from "@shared/launch-map-url";
+export { buildMapUrlArg } from "@shared/asa/launch-map-url";
 
 /** Path to the dedicated server executable inside the install. */
 export function serverBinaryPath(installDir: string): string {

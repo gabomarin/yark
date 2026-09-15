@@ -6,14 +6,14 @@ import {
   lookupAsaDefaultValue,
   lookupAsaDescription,
   lookupAsaSetting,
-} from "@shared/asa-server-settings";
+} from "@shared/asa/asa-server-settings";
 import {
   iniSettingMetaStats,
   lookupIniSettingInput,
   lookupIniSettingMeta,
-} from "@shared/ini-setting-meta";
-import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini-defaults";
-import { isClientIniKey } from "@shared/ini-text";
+} from "@shared/ini/ini-setting-meta";
+import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini/ini-defaults";
+import { isClientIniKey } from "@shared/ini/ini-text";
 
 describe("ini-setting-meta (defaults-derived)", () => {
   it("exposes settings generated from defaults", () => {

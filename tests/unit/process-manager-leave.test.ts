@@ -7,7 +7,7 @@ import type { ChildProcess } from "node:child_process";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProcessManager } from "@backend/infra/process/process-manager";
 import type { ServerProfile } from "@shared/types";
-import { LEFT_RUNNING_SCHEMA_VERSION } from "@shared/left-running";
+import { LEFT_RUNNING_SCHEMA_VERSION } from "@shared/settings/left-running";
 
 function fakeChild(pid = 5555): ChildProcess {
   const child = new EventEmitter() as ChildProcess;

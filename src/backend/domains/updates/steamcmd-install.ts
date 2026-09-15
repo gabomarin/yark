@@ -13,7 +13,7 @@ import {
   resolveSteamCmdExecutableCached,
   updateJobNeedsSteamCmdExecutable,
 } from "./steamcmd-path";
-import { isYarkE2eShortcutsActive } from "@shared/os-notification-events";
+import { isYarkE2eShortcutsActive } from "@shared/settings/os-notification-events";
 import {
   STEAMCMD_ENGLISH_ARGS,
   steamCmdSpawnEnv,

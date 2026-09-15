@@ -5,7 +5,7 @@ import {
   stripYarkOwnedFromPayload,
   stripYarkOwnedIniKeys,
   YARK_OWNED_INI_KEYS,
-} from "@shared/yark-owned-ini-keys";
+} from "@shared/asa/yark-owned-ini-keys";
 
 describe("yark-owned-ini-keys", () => {
   it("lists profile-synced and ASE-legacy GameUserSettings keys", () => {

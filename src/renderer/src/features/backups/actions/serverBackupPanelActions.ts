@@ -1,5 +1,5 @@
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
-import { playerBackupDisplayName } from "@shared/backup-player-meta";
+import { playerBackupDisplayName } from "@shared/backups/backup-player-meta";
 import type {
   BackupKind,
   BackupRecord,

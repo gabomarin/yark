@@ -3,7 +3,7 @@ import { dirname, join } from "node:path";
 import {
   assertClusterIniTemplateFileSelection,
   mergeClusterIniPayloadByFileSelection,
-} from "@shared/cluster-ini-file-selection";
+} from "@shared/ini/cluster-ini-file-selection";
 import type {
   BackupRecord,
   ClusterIniTemplate,
@@ -14,7 +14,7 @@ import type {
   ServerProfile,
   ServerRuntimeInfo,
 } from "@shared/types";
-import { isServerProcessLive } from "@shared/server-process-idle";
+import { isServerProcessLive } from "@shared/server/server-process-idle";
 import type { ClusterIniTemplateRepository } from "../../infra/db/cluster-ini-template-repository";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";

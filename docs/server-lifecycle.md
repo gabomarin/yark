@@ -18,7 +18,7 @@ affect start and config writes are summarized at the end.
 | Role | Path |
 | --- | --- |
 | Launch args | `src/backend/domains/instances/launch-args.ts` |
-| ASA launch-options catalog (#92) | `src/shared/asa-launch-options-catalog.ts` (+ JSON); see [launch-options-catalog.md](launch-options-catalog.md) |
+| ASA launch-options catalog (#92) | `src/shared/asa/asa-launch-options-catalog.ts` (+ JSON); see [launch-options-catalog.md](launch-options-catalog.md) |
 | Profile → INI sync | `src/backend/domains/instances/sync-profile-ini.ts` |
 | Orchestration | `src/backend/domains/instances/instance-service.ts` |
 | Profile validation | `src/backend/domains/instances/validation.ts` |
@@ -27,8 +27,8 @@ affect start and config writes are summarized at the end.
 | Process lifecycle | `src/backend/infra/process/process-manager.ts` |
 | Process RAM/CPU sample (#302) | `src/backend/domains/instances/process-metrics-sampler.ts`, `src/backend/infra/process/windows-process-sample.ts` |
 | INI read/save | `src/backend/domains/config/ini-service.ts` |
-| INI text / sanitize | `src/shared/ini-text.ts` |
-| Defaults | `src/shared/defaults/*.ini`, `src/shared/ini-defaults.ts` |
+| INI text / sanitize | `src/shared/ini/ini-text.ts` |
+| Defaults | `src/shared/defaults/*.ini`, `src/shared/ini/ini-defaults.ts` |
 | Config assistant model | `src/renderer/src/features/server-workspace/configurationWizardModel.ts` |
 | Config assistant UI | `…/components/ConfigurationWizard.tsx` |
 | Restart composition | `src/renderer/src/App.tsx` (`stop` then `start`) |
@@ -570,7 +570,7 @@ Paths under `{installDir}/ShooterGame/Saved/Config/WindowsServer/`:
 
 ### Visual categories and Other subgroups (#516)
 
-Shared taxonomy: `src/shared/asa-setting-ui-categories.ts` (+ generated
+Shared taxonomy: `src/shared/asa/asa-setting-ui-categories.ts` (+ generated
 `asa-setting-ui-categories-data.json`). Lookup is by `file\0section\0key`;
 missing keys use a light heuristic. Non-vanilla INI sections (anything outside
 the stock dedicated headers such as `ServerSettings`, `SessionSettings`,

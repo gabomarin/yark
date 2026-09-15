@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { FolderSimple } from "@phosphor-icons/react";
 import { Button, Stack, Text } from "@mantine/core";
-import { formatMapDisplayName } from "@shared/map-identity";
+import { formatMapDisplayName } from "@shared/asa/map-identity";
 import type { ServerProfile } from "@shared/types";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";

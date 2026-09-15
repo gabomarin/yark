@@ -7,7 +7,7 @@ import {
   encodeOpenNativeConsolePref,
   parseOpenNativeConsolePref,
   parseStoredOpenNativeConsole,
-} from "@shared/open-native-console";
+} from "@shared/settings/open-native-console";
 import {
   loadOpenNativeConsolePref,
   writeOpenNativeConsolePref,

@@ -1,4 +1,4 @@
-import type { AppEvent, LogRetentionSettings, ServerUpdateLogStatus } from "./types";
+import type { AppEvent, LogRetentionSettings, ServerUpdateLogStatus } from "../types";
 
 /** SQLite `app_settings.key` for log retention policy JSON. */
 export const LOG_RETENTION_SETTINGS_KEY = "logRetention.v1";

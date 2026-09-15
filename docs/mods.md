@@ -30,11 +30,11 @@ Research archive: [spikes/65-modded-asa-maps.md](spikes/65-modded-asa-maps.md).
 | Metadata client | `src/backend/domains/mods/mods-service.ts` |
 | Offline / unit mock catalog | `src/backend/domains/mods/mock-mod-catalog.ts` |
 | Add-input parse / batched URL resolve | `src/shared/mod-add-input.ts` |
-| Proxy URL normalize + not-configured error | `src/shared/curseforge-proxy-url.ts` |
-| Build-time official URL inject | `src/shared/curseforge-proxy-build-url.ts` |
+| Proxy URL normalize + not-configured error | `src/shared/mods/curseforge-proxy-url.ts` |
+| Build-time official URL inject | `src/shared/mods/curseforge-proxy-build-url.ts` |
 | Launch `-mods=` | `src/backend/domains/instances/launch-args.ts` |
-| Map-mod category / token heuristics | `src/shared/map-token-suggest.ts`, `src/shared/map-identity.ts` |
-| Profile patch merge | `src/shared/server-profile.ts` |
+| Map-mod category / token heuristics | `src/shared/asa/map-token-suggest.ts`, `src/shared/asa/map-identity.ts` |
+| Profile patch merge | `src/shared/server/server-profile.ts` |
 | Workspace UI | `…/ServerModsPanel/*` (`AppSurfaceCard` shell, Discover `SearchField`, `serverModsModel.ts`, `serverModsListMutations.ts`) |
 | Load-order table | `ServerModsTable.tsx` via [YarkDataTable](datatable.md) |
 | Enrich on create / full update / patch | `src/main/ipc-handlers.ts` → `ModsService.enrichNewServerMods` |

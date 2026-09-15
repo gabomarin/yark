@@ -1,5 +1,5 @@
 import { isOfficialMap } from "./map-identity";
-import type { ModMetadata } from "./types";
+import type { ModMetadata } from "../types";
 
 /** ASA dedicated-server map token suffix (e.g. `TheIsland_WP`) (#458). */
 const ASA_MAP_TOKEN_SUFFIX = "_WP";

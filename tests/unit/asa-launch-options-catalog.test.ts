@@ -6,7 +6,7 @@ import {
   isSelectableLaunchOption,
   listSelectableLaunchOptions,
   lookupLaunchOptionById,
-} from "@shared/asa-launch-options-catalog";
+} from "@shared/asa/asa-launch-options-catalog";
 
 describe("asa-launch-options-catalog (#92)", () => {
   it("exposes summary, details, and a concrete example per entry", () => {

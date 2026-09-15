@@ -3,7 +3,7 @@ import { mkdir, stat } from "node:fs/promises";
 import { basename, dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { pipeline } from "node:stream/promises";
 import type { BackupKind, BackupType } from "@shared/types";
-import { isSafeMapToken, isSafeWindowsFolderName } from "@shared/map-identity";
+import { isSafeMapToken, isSafeWindowsFolderName } from "@shared/asa/map-identity";
 import yazl from "yazl";
 import yauzl from "yauzl";
 import {

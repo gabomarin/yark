@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultMaintenancePolicy } from "@shared/maintenance-policy";
+import { defaultMaintenancePolicy } from "@shared/maintenance/maintenance-policy";
 import {
   formatWarningTimePhrase,
   maxWarningLeadMs,
@@ -10,12 +10,12 @@ import {
   renderWarningTemplate,
   resolveWarningOffsetLabels,
   shouldUseLastMinuteChat,
-} from "../src/shared/maintenance-schedule";
-import { MAINTENANCE_RESTART_PRESET_OFFSETS } from "../src/shared/maintenance-policy";
+} from "../src/shared/maintenance/maintenance-schedule";
+import { MAINTENANCE_RESTART_PRESET_OFFSETS } from "../src/shared/maintenance/maintenance-policy";
 import {
   formatRestartDaysSummary,
   normalizeRestartDaysOfWeek,
-} from "../src/shared/maintenance-restart-days";
+} from "../src/shared/maintenance/maintenance-restart-days";
 
 describe("maintenance-schedule", () => {
   it("parses offset labels", () => {

@@ -6,7 +6,7 @@ import {
   isInstallHealthDegradation,
   isInstallOfferHealth,
   isInstallationReady,
-} from "@shared/installation-health";
+} from "@shared/server/installation-health";
 import { stubInstallationInfo } from "../helpers/installation-info";
 
 describe("installation-health helpers", () => {

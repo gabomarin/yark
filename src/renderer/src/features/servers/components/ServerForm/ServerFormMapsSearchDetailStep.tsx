@@ -9,8 +9,8 @@ import {
   Text,
 } from "@mantine/core";
 import { ArrowSquareOut, MapTrifold, PuzzlePiece } from "@phosphor-icons/react";
-import { decodeHtmlEntities } from "@shared/decode-html-entities";
-import { suggestMapTokenFromMetadata } from "@shared/map-token-suggest";
+import { decodeHtmlEntities } from "@shared/mods/decode-html-entities";
+import { suggestMapTokenFromMetadata } from "@shared/asa/map-token-suggest";
 import type { ModMetadata } from "@shared/types";
 import { CopyMetadataRow } from "@ui/CopyMetadataRow/CopyMetadataRow";
 import { MapNameHint } from "@ui/MapNameHint/MapNameHint";

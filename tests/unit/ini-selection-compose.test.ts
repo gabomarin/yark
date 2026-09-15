@@ -4,8 +4,8 @@ import {
   composeStringList,
   emptyConfigTransferSelection,
   emptyIniFileSelection,
-} from "@shared/config-transfer";
-import { removeIniTextValue } from "@shared/ini-text";
+} from "@shared/ini/config-transfer";
+import { removeIniTextValue } from "@shared/ini/ini-text";
 import {
   composeIniFileFromSelection,
   composeIniPayloadFromSelection,

@@ -1,5 +1,5 @@
 export type {
   ChangelogEntry,
   ChangelogSection,
-} from "../../../src/shared/changelog";
-export { changelog } from "../../../src/shared/changelog";
+} from "../../../src/shared/settings/changelog";
+export { changelog } from "../../../src/shared/settings/changelog";

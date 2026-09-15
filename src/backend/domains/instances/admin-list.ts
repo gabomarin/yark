@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync, statSync } from "node:fs";
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { dirname, join, normalize, parse, resolve, basename } from "node:path";
-import { removeIniTextValue, setIniTextValue } from "@shared/ini-text";
+import { removeIniTextValue, setIniTextValue } from "@shared/ini/ini-text";
 import {
   isBlankOrNaUrl,
   readIniServerSetting,

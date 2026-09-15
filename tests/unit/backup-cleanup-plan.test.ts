@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatPlayerSessionNotes } from "@shared/backup-player-meta";
+import { formatPlayerSessionNotes } from "@shared/backups/backup-player-meta";
 import {
   planBackupCleanup,
   summarizeCleanupPlan,

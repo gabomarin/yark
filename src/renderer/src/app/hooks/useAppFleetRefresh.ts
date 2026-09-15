@@ -14,7 +14,7 @@ import type {
   SteamCmdStatus,
 } from "@shared/types";
 import { createGenerationGate, decideRefreshGeneration } from "@shared/createGenerationGate";
-import { getServerUpdateState } from "@shared/server-update-status";
+import { getServerUpdateState } from "@shared/server/server-update-status";
 import { reconcileServerList } from "@renderer/shared/reconcileServerList";
 import {
   reconcileClusterReports,

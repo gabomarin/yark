@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { Alert, Stack } from "@mantine/core";
-import { isMetadataServiceNotConfiguredMessage } from "@shared/curseforge-proxy-url";
+import { isMetadataServiceNotConfiguredMessage } from "@shared/mods/curseforge-proxy-url";
 import type { ModMetadata, ModSearchPage, ServerProfile } from "@shared/types";
-import { prepareModAddApply, type ModAddImportProgress } from "@shared/mod-add-input";
+import { prepareModAddApply, type ModAddImportProgress } from "@shared/mods/mod-add-input";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { ServerModDetailDrawer } from "./ServerModDetailDrawer";

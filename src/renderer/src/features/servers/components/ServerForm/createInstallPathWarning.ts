@@ -2,7 +2,7 @@ import {
   findInstallDirConflict,
   installDirConflictMessage,
   type FleetInstallRef,
-} from "@shared/server-install-path";
+} from "@shared/server/server-install-path";
 import type { ImportInstallProbe } from "@shared/types";
 
 export function fleetCreateInstallWarning(

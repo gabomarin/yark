@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { DEFAULT_OPEN_NATIVE_CONSOLE } from "@shared/open-native-console";
+import { DEFAULT_OPEN_NATIVE_CONSOLE } from "@shared/settings/open-native-console";
 import { AppShell, type AppShellProps } from "@app/AppShell";
 
 export type AppProps = AppShellProps;

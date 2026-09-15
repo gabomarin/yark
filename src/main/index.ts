@@ -29,11 +29,11 @@ import { runAutoStartOnLaunch } from "../backend/domains/instances/auto-start";
 import {
   isFilesJobOperation,
   isOccupyingFilesJobStatus,
-} from "../shared/files-job-priority";
+} from "../shared/server/files-job-priority";
 import {
   OPEN_NATIVE_CONSOLE_SETTING_KEY,
   parseOpenNativeConsolePref,
-} from "../shared/open-native-console";
+} from "../shared/settings/open-native-console";
 import { LogsService } from "../backend/domains/logs/logs-service";
 import { LogRetentionScheduler } from "../backend/domains/logs/log-retention-scheduler";
 import { UpdateService } from "../backend/domains/updates/update-service";
@@ -88,9 +88,9 @@ import {
 import type {
   ServerCrashedNotifyPayload,
   SteamCmdJobTerminalPayload,
-} from "../shared/os-notification-events";
+} from "../shared/settings/os-notification-events";
 import { IPC_PUSH, type SteamCmdProgressPush, type ServerStopProgressPush, type MoveInstallProgressPush, type CloneInstallProgressPush, type RconStatusChangedPush, type PlayerListUpdatedPush, type ProcessMetricsUpdatedPush, type ServerIniChangedPush } from "../shared/ipc";
-import type { AppUpdateStatus } from "../shared/app-update";
+import type { AppUpdateStatus } from "../shared/settings/app-update";
 import { normalizeCloneInstallProgress, normalizeServerStopProgress } from "../shared/types";
 import type { BackupChangedPush } from "../backend/domains/backups/backup-service";
 import type { ServerRuntimeInfo } from "../shared/types";

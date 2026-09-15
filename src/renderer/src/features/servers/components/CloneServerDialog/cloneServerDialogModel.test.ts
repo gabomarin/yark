@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { offsetPort, type ServerProfile } from "@shared/types";
-import * as portSuggest from "@shared/port-suggest";
+import * as portSuggest from "@shared/server/port-suggest";
 import { cloneDialogFormState, isValidClonePort } from "./cloneServerDialogModel";
 
-vi.mock("@shared/port-suggest", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@shared/port-suggest")>();
+vi.mock("@shared/server/port-suggest", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@shared/server/port-suggest")>();
   return {
     ...actual,
     suggestNextPortTriplet: vi.fn(actual.suggestNextPortTriplet),
@@ -13,7 +13,7 @@ vi.mock("@shared/port-suggest", async (importOriginal) => {
 
 const mockedSuggest = vi.mocked(portSuggest.suggestNextPortTriplet);
 const realSuggest = (
-  await vi.importActual<typeof import("@shared/port-suggest")>("@shared/port-suggest")
+  await vi.importActual<typeof import("@shared/server/port-suggest")>("@shared/server/port-suggest")
 ).suggestNextPortTriplet;
 
 function profile(partial: Partial<ServerProfile> & Pick<ServerProfile, "id" | "name">): ServerProfile {

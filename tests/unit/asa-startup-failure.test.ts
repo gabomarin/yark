@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { diagnoseAsaStartupFailure, sanitizeAsaLogExcerpt } from "@shared/asa-startup-failure";
+import { diagnoseAsaStartupFailure, sanitizeAsaLogExcerpt } from "@shared/asa/asa-startup-failure";
 
 const CFCORE_SNIPPET = `
 [2026.08.13-22.52.16:111][  0]LogCFCore: Detected OS Windows: 10.0.26200.1.256.64bit

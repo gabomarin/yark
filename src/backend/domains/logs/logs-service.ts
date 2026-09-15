@@ -26,7 +26,7 @@ import {
   isFailureUpdateLogStatus,
   normalizeLogRetentionSettings,
   parseLogRetentionSettings,
-} from "@shared/log-retention";
+} from "@shared/settings/log-retention";
 import type { AppSettingsRepository } from "../../infra/db/app-settings-repository";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { ProcessManager } from "../../infra/process/process-manager";

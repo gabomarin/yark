@@ -1,4 +1,4 @@
-import type { LiveProcessIdentity } from "@shared/left-running";
+import type { LiveProcessIdentity } from "@shared/settings/left-running";
 import { execFileBounded } from "./exec-file-bounded";
 
 interface WmiProcessRow {

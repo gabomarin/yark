@@ -7,7 +7,7 @@ import {
   composeStringList,
   configTransferSelectionHasWork,
   type ConfigTransferSelection,
-} from "@shared/config-transfer";
+} from "@shared/ini/config-transfer";
 import type {
   BackupPolicy,
   ConfigTransferCommitResult,
@@ -29,8 +29,8 @@ import {
   composeIniPayloadFromSelection,
   profileToIniIdentity,
 } from "./ini-selection-compose";
-import { listIniUiCategoryTree } from "@shared/ini-ui-category-tree";
-import { buildStructuredLaunchArgList } from "@shared/structured-launch-options";
+import { listIniUiCategoryTree } from "@shared/ini/ini-ui-category-tree";
+import { buildStructuredLaunchArgList } from "@shared/asa/structured-launch-options";
 
 export interface ServerRuntimeStatusReader {
   getStatus(serverId: string): { status: ServerStatus };

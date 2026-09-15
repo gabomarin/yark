@@ -9,7 +9,7 @@ import {
   resolveMapIdentity,
   resolveMapThumbnailUrl,
   validateMapIdentity,
-} from "@shared/map-identity";
+} from "@shared/asa/map-identity";
 import { KNOWN_MAP_OPTIONS, KNOWN_MAPS } from "@shared/types";
 import { buildLaunchArgs } from "@backend/domains/instances/launch-args";
 import type { ServerProfile } from "@shared/types";

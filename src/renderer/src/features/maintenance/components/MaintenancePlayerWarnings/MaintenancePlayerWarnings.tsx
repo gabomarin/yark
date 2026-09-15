@@ -3,7 +3,7 @@ import type { MaintenanceJobWarnings } from "@shared/types";
 import {
   MAINTENANCE_RESTART_PRESET_OFFSETS,
   MAINTENANCE_UPDATE_PRESET_OFFSETS,
-} from "@shared/maintenance-policy";
+} from "@shared/maintenance/maintenance-policy";
 import type { ReactElement } from "react";
 import {
   CUSTOM_OFFSET_OPTIONS,

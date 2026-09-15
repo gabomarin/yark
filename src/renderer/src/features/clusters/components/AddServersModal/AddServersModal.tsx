@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import {
   clusterIniFileSelectionHasWork,
-} from "@shared/cluster-ini-file-selection";
+} from "@shared/ini/cluster-ini-file-selection";
 import type {
   ClusterIniTemplateFileSelection,
   ServerProfile,

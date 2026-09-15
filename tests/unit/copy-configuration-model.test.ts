@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { emptyIniFileSelection } from "@shared/config-transfer";
+import { emptyIniFileSelection } from "@shared/ini/config-transfer";
 import {
   categorySelectionState,
   fileSelectionState,

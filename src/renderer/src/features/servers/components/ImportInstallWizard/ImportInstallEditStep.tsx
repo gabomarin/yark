@@ -7,7 +7,7 @@ import {
   Stack,
   TextInput,
 } from "@mantine/core";
-import { isOfficialMap, normalizeMapToken } from "@shared/map-identity";
+import { isOfficialMap, normalizeMapToken } from "@shared/asa/map-identity";
 import type { KnownClusterOption } from "@features/clusters/knownClusterOptions";
 import type { ModMetadata, ServerProfile } from "@shared/types";
 import { ServerFormCreateClusterFields } from "../ServerForm/ServerFormCreateClusterFields";

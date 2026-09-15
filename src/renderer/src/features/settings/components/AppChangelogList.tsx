@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { Text } from "@mantine/core";
-import type { ChangelogEntry, ChangelogSection } from "@shared/changelog";
+import type { ChangelogEntry, ChangelogSection } from "@shared/settings/changelog";
 import classes from "./AppChangelog.module.css";
 
 function SectionBlock(props: { section: ChangelogSection }): ReactElement {

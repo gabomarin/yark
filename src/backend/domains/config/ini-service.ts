@@ -2,8 +2,8 @@ import { EventEmitter } from "node:events";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini-defaults";
-import { sanitizeServerIniPayload } from "@shared/ini-text";
+import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini/ini-defaults";
+import { sanitizeServerIniPayload } from "@shared/ini/ini-text";
 import type { ServerIniChangedPush } from "@shared/ipc";
 import type {
   IniPreview,

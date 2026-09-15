@@ -7,8 +7,8 @@ controls in [#93](https://github.com/gabomarin/yark/issues/93).
 ## Source of truth
 
 Runtime reads the committed file
-[`src/shared/asa-launch-options-catalog.json`](../src/shared/asa-launch-options-catalog.json)
-via [`asa-launch-options-catalog.ts`](../src/shared/asa-launch-options-catalog.ts).
+[`src/shared/asa/asa-launch-options-catalog.json`](../src/shared/asa/asa-launch-options-catalog.json)
+via [`asa-launch-options-catalog.ts`](../src/shared/asa/asa-launch-options-catalog.ts).
 
 The wiki is **not** fetched or trusted at runtime. Regenerate offline with:
 

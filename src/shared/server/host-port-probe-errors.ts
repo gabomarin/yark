@@ -1,4 +1,4 @@
-import { PORT_MAX, PORT_MIN, type SessionPortSet } from "./types";
+import { PORT_MAX, PORT_MIN, type SessionPortSet } from "../types";
 
 /** Thrown when a host bind probe confirms the port is in use. */
 const HOST_PORT_BUSY_PREFIX = "HOST_PORT_BUSY:";

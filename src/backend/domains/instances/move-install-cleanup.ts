@@ -3,7 +3,7 @@
  */
 
 import { access, rm } from "node:fs/promises";
-import { normalizeWindowsPath } from "@shared/server-install-path";
+import { normalizeWindowsPath } from "@shared/server/server-install-path";
 import type { MoveInstallProgress } from "@shared/types";
 import type { ProcessManager } from "../../infra/process/process-manager";
 import type { ServerRepository } from "../../infra/db/server-repository";

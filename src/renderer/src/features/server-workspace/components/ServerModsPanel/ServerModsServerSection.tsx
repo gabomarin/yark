@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { Button } from "@mantine/core";
 import { PuzzlePiece } from "@phosphor-icons/react";
-import type { ModAddImportProgress } from "@shared/mod-add-input";
+import type { ModAddImportProgress } from "@shared/mods/mod-add-input";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { ServerModsTable } from "./ServerModsTable";
 import { ServerModsUrlInput } from "./ServerModsUrlInput";

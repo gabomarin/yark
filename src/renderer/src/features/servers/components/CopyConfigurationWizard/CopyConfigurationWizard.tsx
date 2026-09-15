@@ -1,8 +1,8 @@
 import type { ReactElement } from "react";
 import { useCallback, useMemo, useState } from "react";
 import { Alert, Modal, Stack, Stepper, Text } from "@mantine/core";
-import type { ConfigTransferSelection } from "@shared/config-transfer";
-import { emptyConfigTransferSelection } from "@shared/config-transfer";
+import type { ConfigTransferSelection } from "@shared/ini/config-transfer";
+import { emptyConfigTransferSelection } from "@shared/ini/config-transfer";
 import type {
   ConfigTransferDescribeResult,
   ConfigTransferPreview,

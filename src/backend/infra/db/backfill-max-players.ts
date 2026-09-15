@@ -3,7 +3,7 @@ import {
   normalizeStructuredLaunchArgs,
   takeLegacyWinLiveMaxPlayers,
   type StructuredLaunchArgs,
-} from "@shared/structured-launch-options";
+} from "@shared/asa/structured-launch-options";
 
 /** Schema version that owns the one-time Launch → `max_players` backfill. */
 export const MAX_PLAYERS_LAUNCH_BACKFILL_SCHEMA_VERSION = 16;

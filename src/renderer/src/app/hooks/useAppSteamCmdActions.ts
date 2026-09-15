@@ -6,7 +6,7 @@ import {
   decideFilesJobEnqueue,
   filesJobEnqueueCopy,
   occupyingFilesJobForServer,
-} from "@shared/files-job-priority";
+} from "@shared/server/files-job-priority";
 import type { Overlay } from "@app/model/appOverlay";
 import type { Route } from "@layout/Sidebar/Sidebar";
 import { openDangerConfirmModal } from "@ui/DangerConfirmModal/openDangerConfirmModal";

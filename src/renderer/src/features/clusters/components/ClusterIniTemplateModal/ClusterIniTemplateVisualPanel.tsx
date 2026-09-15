@@ -8,7 +8,7 @@ import {
 } from "@phosphor-icons/react";
 import { ActionIcon, Badge, Button, Group, Select, Text, Textarea, Tooltip } from "@mantine/core";
 import type { IniFileKey, ServerIniPayload } from "@shared/types";
-import { isAsaIgnoredIniMaxPlayers, isYarkOwnedIniKey } from "@shared/yark-owned-ini-keys";
+import { isAsaIgnoredIniMaxPlayers, isYarkOwnedIniKey } from "@shared/asa/yark-owned-ini-keys";
 import {
   filterIniSettingReferences,
   groupSettingReferencesByUiCategory,

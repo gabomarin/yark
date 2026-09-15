@@ -6,7 +6,7 @@ import type { BackupService } from "@backend/domains/backups/backup-service";
 import type { ProcessManager } from "@backend/infra/process/process-manager";
 import type { ServerRepository } from "@backend/infra/db/server-repository";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
-import { diagnoseAsaStartupFailure } from "@shared/asa-startup-failure";
+import { diagnoseAsaStartupFailure } from "@shared/asa/asa-startup-failure";
 
 const profile: ServerProfile = {
   id: "srv-crash",

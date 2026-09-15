@@ -8,7 +8,7 @@ import type { ServerProfile } from "@shared/types";
 import { inspectServerInstallation } from "@backend/domains/instances/server-installation";
 import { applyProfileOwnedIni, syncProfileSettingsToIni } from "@backend/domains/instances/sync-profile-ini";
 import { assertHostPortsAvailable } from "@backend/infra/process/host-port-probe";
-import { formatHostPortBusyError } from "@shared/host-port-probe-errors";
+import { formatHostPortBusyError } from "@shared/server/host-port-probe-errors";
 
 vi.mock("@backend/domains/instances/server-installation", async (importOriginal) => {
   const actual = await importOriginal<
