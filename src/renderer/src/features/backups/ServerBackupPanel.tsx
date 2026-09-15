@@ -17,6 +17,7 @@ import { ServerBackupHeader } from "./components/ServerBackupHeader/ServerBackup
 import {
   formatSize,
   KIND_TABS,
+  BACKUPS_KINDS_HINT_STORAGE_KEY,
 } from "./model/serverBackupPanelModel";
 import { useServerBackupPanel } from "./hooks/useServerBackupPanel";
 
@@ -57,7 +58,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
           <div>
             <Title order={3}>Backups for {props.server.name}</Title>
             <DismissibleHint
-              storageKey="yark.backups.kindsHint.dismissed.v1"
+              storageKey={BACKUPS_KINDS_HINT_STORAGE_KEY}
               title="World vs players vs INI"
             >
               World schedule is separate from player join/leave and INI-on-save backups.

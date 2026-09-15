@@ -3,6 +3,10 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import {
+  SERVER_LIST_SORT_STORAGE_KEY,
+  SERVER_LIST_VIEW_STORAGE_KEY,
+} from "../../../servers/serverListModel";
 import { ServerListPanel } from "./ServerListPanel";
 
 function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
@@ -35,8 +39,8 @@ function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
 describe("ServerListPanel", () => {
   afterEach(() => {
     cleanup();
-    window.localStorage.removeItem("yark.serverListView");
-    window.localStorage.removeItem("yark.serverListSort");
+    window.localStorage.removeItem(SERVER_LIST_VIEW_STORAGE_KEY);
+    window.localStorage.removeItem(SERVER_LIST_SORT_STORAGE_KEY);
   });
 
   it("shows map art thumbs for official and custom maps (#193)", () => {
@@ -297,7 +301,7 @@ describe("ServerListPanel", () => {
   });
 
   it("renders a flat list when view is ungrouped (#351)", () => {
-    window.localStorage.setItem("yark.serverListView", "ungrouped");
+    window.localStorage.setItem(SERVER_LIST_VIEW_STORAGE_KEY, "ungrouped");
     render(
       <AppProviders>
         <ServerListPanel

@@ -1,5 +1,9 @@
 import type { AsaApiPluginInfo } from "@shared/types";
 
+/** localStorage: operator dismissed the ASA API experimental hint (#456). */
+export const ASA_API_EXPERIMENTAL_HINT_STORAGE_KEY =
+  "yark.asaApi.experimentalHint.dismissed.v1";
+
 export type AsaApiBusyKind =
   | "install"
   | "uninstall"

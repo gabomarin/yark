@@ -20,6 +20,9 @@ export { buildDownloadsTeaser } from "./downloadsTeaserModel";
 export type { ServerFilesQueueState } from "./downloadsFilesQueueModel";
 export { filesQueueStateByServerId } from "./downloadsFilesQueueModel";
 
+/** localStorage: Downloads page splitter sizes (#456). */
+export const DOWNLOADS_SPLIT_SIZES_STORAGE_KEY = "yark.downloads.splitSizes";
+
 export type DownloadRowKind = "active" | "interrupted" | "queued" | "paused" | "cancelled" | "attention";
 
 export type DownloadRow = {
