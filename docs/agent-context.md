@@ -76,6 +76,7 @@ paths or the Notion hub URL in tracked files.
 - [maintenance.md](maintenance.md) — workspace Maintenance tab, restart countdown, wipe-after-restart, Steam-newer auto-update (#315 / #486–#489).
 - [updates-steamcmd.md](updates-steamcmd.md) — caches, safe update auto-stop/rollback, availability compare, progress push, Windows real-host validation.
 - [e2e-validation.md](e2e-validation.md) — PR CI Electron E2E vs prepared-host / manual release matrix (#12). UI changes must update affected `scripts/e2e-*.cjs` in the same PR.
+- [renderer-bundle.md](renderer-bundle.md) — production chunk report (`npm run build:report`) and Windows working-set baseline for idle RAM work (#147, #527).
 - [critical-job-recovery.md](critical-job-recovery.md) — durable phases, replay policy, queue quarantine, and operator recovery actions.
 - [profile-database.md](profile-database.md) — SQLite boot open/migrate, busy_timeout, corrupt-DB operator recovery (#218); `pending_server_ini` drafts (#530).
 - [logs.md](logs.md) — event `details`, clear/export IPC, `logsFocus`, seed/visual helpers. GUS password settings are omitted from diagnostic dumps (#144).

@@ -21,6 +21,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Public product site (`getyark.com`) deploys to **Cloudflare Pages** (`getyark`) instead of GitHub Pages; Web Analytics uses Cloudflare’s automatic proxied injection (no in-repo beacon).
 - Public Discord invite is now [discord.gg/DQ8nes63w7](https://discord.gg/DQ8nes63w7) (README, website, and Settings → About).
 - Discord `#releases` announce prefers the **Yark Bot** Discord application (`DISCORD_BOT_TOKEN` + repo variable `DISCORD_RELEASES_CHANNEL_ID`); notify is skipped when the channel variable is unset (no hardcoded channel id).
+- Secondary workspace panels load when their tabs open, reducing the initial renderer entry chunk (#527).
 
 ### Fixed
 
@@ -38,6 +39,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Docs
 
+- Added renderer bundle reports and a Windows memory-measurement guide to investigate idle RAM growth (#147, #527).
 - Documented `pending_server_ini` in the profile-database runbook and corrected Copy configuration / cluster template apply notes for queued INI drafts (#530).
 - Expanded **Ark Server API** engineering runbook (IPC, inject modes, cache, SteamCMD overwrite pitfall) and INI **Other** subgroup categorization notes (#243, #516).
 

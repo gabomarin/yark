@@ -4,6 +4,7 @@ react-doctor-triage.mjs
 node_modules/
 out/
 dist/
+artifacts/
 *.log
 __pycache__/
 *.pyc
