@@ -422,7 +422,7 @@ describe("ServerBackupPanel", () => {
       );
     });
     expect(
-      screen.getByRole("alert", { name: "World vs players vs INI" }),
+      screen.getByRole("status", { name: "World vs players vs INI" }),
     ).toBeVisible();
 
     await user.click(screen.getByRole("tab", { name: "INI" }));

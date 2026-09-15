@@ -1,4 +1,29 @@
 .downloadsLayout {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--app-color-surface-chrome);
+  padding: var(--app-space-md);
+  gap: var(--app-space-sm);
+}
+
+.pageHeader {
+  flex-shrink: 0;
+}
+
+.pageTitle {
+  margin: 0;
+  font-family: var(--app-font-display);
+  font-size: var(--app-font-page);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.splitHost {
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -21,7 +46,7 @@
 .upperPane {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
   min-height: 0;
   overflow: hidden;
 }

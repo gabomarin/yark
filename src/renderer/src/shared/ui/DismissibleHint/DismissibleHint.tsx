@@ -25,7 +25,12 @@ export function DismissibleHint(props: Props): ReactElement | null {
   });
   if (dismissed) return null;
   return (
-    <div className={classes.root} data-tone={tone} role="status">
+    <div
+      className={classes.root}
+      data-tone={tone}
+      role="status"
+      aria-label={props.title}
+    >
       <div className={classes.body}>
         <Text size="sm" className={classes.title}>
           {props.title}

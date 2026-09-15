@@ -131,21 +131,32 @@ export function LogsPage(props: Props): ReactElement {
     <PageScaffold
       title="Logs"
       fillViewport
-      actions={
-        <Button
-          variant="default"
-          onClick={() => void loadFleet()}
-          disabled={loading}
-        >
-          Reload
-        </Button>
-      }
+      edgeToEdge
+      showHeader={false}
     >
-      <Stack gap="lg" className={classes.logsContent} data-logs-page>
-        {error !== null && <Alert color="red">{error}</Alert>}
+      <div className={classes.pageShell} data-logs-page>
+        <Group
+          justify="space-between"
+          align="center"
+          wrap="wrap"
+          gap="sm"
+          className={classes.pageHeader}
+        >
+          <h1 className={classes.pageTitle}>Logs</h1>
+          <Button
+            variant="default"
+            onClick={() => void loadFleet()}
+            disabled={loading}
+          >
+            Reload
+          </Button>
+        </Group>
 
-        <div className={classes.fillPanel}>
-          <Stack gap="sm" className={classes.panelStack}>
+        <Stack gap="sm" className={classes.logsContent}>
+          {error !== null && <Alert color="red">{error}</Alert>}
+
+          <div className={classes.fillPanel}>
+            <Stack gap="sm" className={classes.panelStack}>
             <Group justify="space-between" align="flex-end" wrap="wrap" gap="sm">
               <Title order={3}>Activity across servers</Title>
               <Group gap="sm" wrap="wrap">
@@ -309,6 +320,7 @@ export function LogsPage(props: Props): ReactElement {
           </Stack>
         </div>
       </Stack>
+      </div>
     </PageScaffold>
   );
 }

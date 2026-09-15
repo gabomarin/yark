@@ -1,3 +1,28 @@
+.pageShell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--app-color-surface-chrome);
+  padding: var(--app-space-md);
+  gap: var(--app-space-sm);
+}
+
+.pageHeader {
+  flex-shrink: 0;
+}
+
+.pageTitle {
+  margin: 0;
+  font-family: var(--app-font-display);
+  font-size: var(--app-font-page);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
 .content {
   flex: 1;
   min-height: 0;
@@ -17,12 +42,14 @@
 }
 
 .emptyCard {
-  /* Parent Clusters split pane already fills the viewport (#469). */
   display: flex;
   flex: 1;
   flex-direction: column;
   min-height: 0;
   height: 100%;
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: 0;
+  background: transparent;
 }
 
 .incompleteBlock {
@@ -44,7 +71,7 @@
   gap: var(--app-space-xs);
 }
 
-/* One WinUI master-detail slab: chrome fill (contrast vs page canvas), no gap, square. */
+/* Master-detail split inside the chrome page shell. */
 .layout {
   display: grid;
   grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
@@ -54,7 +81,7 @@
   overflow: hidden;
   border: 1px solid var(--app-color-border-subtle);
   border-radius: 0;
-  background: var(--app-color-surface-chrome);
+  background: transparent;
 }
 
 .layout > * {

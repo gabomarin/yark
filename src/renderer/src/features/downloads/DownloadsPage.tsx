@@ -242,38 +242,45 @@ export function DownloadsPage(props: Props): ReactElement {
     <PageScaffold
       title="Downloads"
       fillViewport
+      edgeToEdge
+      showHeader={false}
     >
       <div
         className={classes.downloadsLayout}
         data-downloads-page
         data-advanced-log-expanded={logExpanded || undefined}
       >
+        <div className={classes.pageHeader}>
+          <h1 className={classes.pageTitle}>Downloads</h1>
+        </div>
         {rows.length === 0 ? (
           <div className={classes.upperPane}>
             {queuePane}
           </div>
         ) : logExpanded ? (
-          <Splitter
-            orientation="vertical"
-            h="100%"
-            sizes={splitSizes}
-            onSizeChange={(sizes) =>
-              setSplitSizes([Math.round(Number(sizes[0])), Math.round(Number(sizes[1]))])
-            }
-          >
-            <Splitter.Pane defaultSize={DEFAULT_SPLIT_SIZES[0]} min={30}>
-              <div className={classes.upperPane}>
-                {steamcmdMissingBanner}
-                {queuePane}
-              </div>
-            </Splitter.Pane>
-            <Splitter.Pane defaultSize={DEFAULT_SPLIT_SIZES[1]} min={20}>
-              <div className={classes.consoleStack} id="downloads-advanced-log">
-                {logToggle}
-                {consolePane}
-              </div>
-            </Splitter.Pane>
-          </Splitter>
+          <div className={classes.splitHost}>
+            <Splitter
+              orientation="vertical"
+              h="100%"
+              sizes={splitSizes}
+              onSizeChange={(sizes) =>
+                setSplitSizes([Math.round(Number(sizes[0])), Math.round(Number(sizes[1]))])
+              }
+            >
+              <Splitter.Pane defaultSize={DEFAULT_SPLIT_SIZES[0]} min={30}>
+                <div className={classes.upperPane}>
+                  {steamcmdMissingBanner}
+                  {queuePane}
+                </div>
+              </Splitter.Pane>
+              <Splitter.Pane defaultSize={DEFAULT_SPLIT_SIZES[1]} min={20}>
+                <div className={classes.consoleStack} id="downloads-advanced-log">
+                  {logToggle}
+                  {consolePane}
+                </div>
+              </Splitter.Pane>
+            </Splitter>
+          </div>
         ) : (
           <div className={classes.upperPane}>
             {steamcmdMissingBanner}

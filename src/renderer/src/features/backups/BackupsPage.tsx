@@ -30,94 +30,106 @@ export function BackupsPage(props: Props): ReactElement {
     <PageScaffold
       title="Backups"
       fillViewport
-      actions={
-        <Group gap="sm">
-          <Button
-            variant="default"
-            onClick={() => void fleet.load({ forceDraftSync: true })}
-            loading={fleet.loading}
-          >
-            Refresh
-          </Button>
-          <Button
-            variant="light"
-            disabled={props.servers.length === 0}
-            onClick={fleet.openCleanupModalFromToolbar}
-          >
-            Cleanup…
-          </Button>
-        </Group>
-      }
+      edgeToEdge
+      showHeader={false}
     >
-      <Stack gap="md" className={classes.content}>
-        {props.servers.length === 0 ? (
-          <AppSurfaceCard>
-            <EmptyState
-              icon={<HardDrives size={22} />}
-              title="No servers yet"
-              description="Create a server first to configure backups."
-            />
-          </AppSurfaceCard>
-        ) : fleet.loading && fleet.summary === null ? (
-          <AppSurfaceCard>
-            <Text c="dimmed">Loading backup health…</Text>
-          </AppSurfaceCard>
-        ) : fleet.summary !== null ? (
-          <>
-            <BackupFleetAlertsPanel
-              alerts={fleet.summary.alerts}
-              onOpenServerBackups={props.onOpenServerBackups}
-              onOpenFailedBackupLogs={props.onOpenFailedBackupLogs}
-              onDismissAlert={(alert) => void fleet.dismissFleetAlert(alert)}
-              onOpenCleanup={fleet.openCleanupModal}
-            />
+      <div className={classes.toolShell} data-backups-page>
+        <Group
+          justify="space-between"
+          align="center"
+          wrap="wrap"
+          gap="sm"
+          className={classes.pageHeader}
+        >
+          <h1 className={classes.pageTitle}>Backups</h1>
+          <Group gap="sm">
+            <Button
+              variant="default"
+              onClick={() => void fleet.load({ forceDraftSync: true })}
+              loading={fleet.loading}
+            >
+              Refresh
+            </Button>
+            <Button
+              variant="light"
+              disabled={props.servers.length === 0}
+              onClick={fleet.openCleanupModalFromToolbar}
+            >
+              Cleanup…
+            </Button>
+          </Group>
+        </Group>
 
-            <BackupFleetMetrics
-              summary={fleet.summary}
-              quiet={fleet.backupFleetQuiet}
-              healthFilter={fleet.healthFilter}
-              onHealthFilter={fleet.setHealthFilter}
-              onOpenDiskSettings={() => {
-                fleet.setDiskDraft(fleet.summary!.diskSettings);
-                fleet.setDiskModalOpen(true);
-              }}
-            />
-
-            {fleet.summary.disks.length > 0 && !fleet.backupFleetQuiet && (
-              <BackupVolumeStrip
-                disks={fleet.summary.disks}
-                diskSettings={fleet.summary.diskSettings}
+        <Stack gap="md" className={classes.content}>
+          {props.servers.length === 0 ? (
+            <AppSurfaceCard>
+              <EmptyState
+                icon={<HardDrives size={22} />}
+                title="No servers yet"
+                description="Create a server first to configure backups."
               />
-            )}
+            </AppSurfaceCard>
+          ) : fleet.loading && fleet.summary === null ? (
+            <AppSurfaceCard>
+              <Text c="dimmed">Loading backup health…</Text>
+            </AppSurfaceCard>
+          ) : fleet.summary !== null ? (
+            <>
+              <BackupFleetAlertsPanel
+                alerts={fleet.summary.alerts}
+                onOpenServerBackups={props.onOpenServerBackups}
+                onOpenFailedBackupLogs={props.onOpenFailedBackupLogs}
+                onDismissAlert={(alert) => void fleet.dismissFleetAlert(alert)}
+                onOpenCleanup={fleet.openCleanupModal}
+              />
 
-            <BackupsPageServerSection
-              filteredServers={fleet.filteredServers}
-              drafts={fleet.drafts}
-              expandedId={fleet.expandedId}
-              busyId={fleet.busyId}
-              browsingId={fleet.browsingId}
-              healthFilter={fleet.healthFilter}
-              onHealthFilter={fleet.setHealthFilter}
-              serverById={fleet.serverById}
-              onToggleExpand={(serverId) =>
-                fleet.setExpandedId(
-                  fleet.expandedId === serverId ? null : serverId,
-                )
-              }
-              onOpenDestination={(serverId) => void fleet.openDestination(serverId)}
-              onOpenServer={props.onOpenServerBackups}
-              onBrowse={(server) => void fleet.browseBackupDir(server)}
-              onDraftChange={(serverId, next) =>
-                fleet.setDrafts((previous) => ({
-                  ...previous,
-                  [serverId]: next,
-                }))
-              }
-              onSave={(serverId) => void fleet.savePolicy(serverId)}
-            />
-          </>
-        ) : null}
-      </Stack>
+              <BackupFleetMetrics
+                summary={fleet.summary}
+                quiet={fleet.backupFleetQuiet}
+                healthFilter={fleet.healthFilter}
+                onHealthFilter={fleet.setHealthFilter}
+                onOpenDiskSettings={() => {
+                  fleet.setDiskDraft(fleet.summary!.diskSettings);
+                  fleet.setDiskModalOpen(true);
+                }}
+              />
+
+              {fleet.summary.disks.length > 0 && !fleet.backupFleetQuiet && (
+                <BackupVolumeStrip
+                  disks={fleet.summary.disks}
+                  diskSettings={fleet.summary.diskSettings}
+                />
+              )}
+
+              <BackupsPageServerSection
+                filteredServers={fleet.filteredServers}
+                drafts={fleet.drafts}
+                expandedId={fleet.expandedId}
+                busyId={fleet.busyId}
+                browsingId={fleet.browsingId}
+                healthFilter={fleet.healthFilter}
+                onHealthFilter={fleet.setHealthFilter}
+                serverById={fleet.serverById}
+                onToggleExpand={(serverId) =>
+                  fleet.setExpandedId(
+                    fleet.expandedId === serverId ? null : serverId,
+                  )
+                }
+                onOpenDestination={(serverId) => void fleet.openDestination(serverId)}
+                onOpenServer={props.onOpenServerBackups}
+                onBrowse={(server) => void fleet.browseBackupDir(server)}
+                onDraftChange={(serverId, next) =>
+                  fleet.setDrafts((previous) => ({
+                    ...previous,
+                    [serverId]: next,
+                  }))
+                }
+                onSave={(serverId) => void fleet.savePolicy(serverId)}
+              />
+            </>
+          ) : null}
+        </Stack>
+      </div>
 
       <BackupDiskAlertModal
         opened={fleet.diskModalOpen}
