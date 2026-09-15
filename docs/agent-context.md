@@ -61,7 +61,7 @@ paths or the Notion hub URL in tracked files.
   [`external-url-policy.ts`](../src/shared/external-url-policy.ts) before
   `shell.openExternal`.
 - [docs](../docs): in-repo agent docs (this file, runbooks, visual testing, [website](website.md)). Private plans: Notion Product Lab; local stubs under `.cursor/project-context/`.
-- [website](../website): static GitHub Pages project site + versioned feature screenshots.
+- [website](../website): static Cloudflare Pages project site (`getyark`) + versioned feature screenshots.
 - [AGENTS.md](../AGENTS.md): Cursor Cloud / Linux VM specifics (display, `ELECTRON_RUN_AS_NODE`, expected vitest path failures, e2e notes).
 
 ## Engineering runbooks
@@ -71,17 +71,18 @@ paths or the Notion hub URL in tracked files.
 - [updates-steamcmd.md](updates-steamcmd.md) — caches, safe update auto-stop/rollback, availability compare, progress push, Windows real-host validation.
 - [e2e-validation.md](e2e-validation.md) — PR CI Electron E2E vs prepared-host / manual release matrix (#12). UI changes must update affected `scripts/e2e-*.cjs` in the same PR.
 - [critical-job-recovery.md](critical-job-recovery.md) — durable phases, replay policy, queue quarantine, and operator recovery actions.
-- [profile-database.md](profile-database.md) — SQLite boot open/migrate, busy_timeout, corrupt-DB operator recovery (#218).
+- [profile-database.md](profile-database.md) — SQLite boot open/migrate, busy_timeout, corrupt-DB operator recovery (#218); `pending_server_ini` drafts (#530).
 - [logs.md](logs.md) — event `details`, clear/export IPC, `logsFocus`, seed/visual helpers. GUS password settings are omitted from diagnostic dumps (#144).
 - [credential-threat-model.md](credential-threat-model.md) — local admin/join password boundary (SQLite + INI plaintext; logs omit password settings).
-- [server-lifecycle.md](server-lifecycle.md) — launch args, profile→INI sync, spawn, start/stop/kill, INI sanitize / assistant; custom / Maps pack launch + Start blockers (#65 Phase 1 / #190–#195). Research archive: [spikes/65-modded-asa-maps.md](spikes/65-modded-asa-maps.md).
+- [server-lifecycle.md](server-lifecycle.md) — launch args, profile→INI sync, spawn, start/stop/kill, INI sanitize / pending queue / assistant; custom / Maps pack launch + Start blockers (#65 Phase 1 / #190–#195). Research archive: [spikes/65-modded-asa-maps.md](spikes/65-modded-asa-maps.md).
+- [config-transfer.md](config-transfer.md) — one-shot Copy configuration between profiles (#95); pending-draft source/target rules (#530).
 - [launch-options-catalog.md](launch-options-catalog.md) — verified ASA CLI catalog (#92); regenerates via `npm run catalog:launch-options`.
 - [rcon.md](rcon.md) — workspace RCON console, persistent session, players, ban list.
 - [settings.md](settings.md) — app-wide prefs, category rail (General / Profiles / SteamCMD / Log files / About), desktop shell, SteamCMD path, density, auto-start summary.
 - [clusters.md](clusters.md) — transfer-compliance reports, cluster launch trio, Clusters page. Live-host archive: [spikes/22-cluster-live-transfers.md](spikes/22-cluster-live-transfers.md) (#22).
 - [mods.md](mods.md) — workspace CurseForge inventory, enable/disable, load order, metadata proxy, `-mods=`.
 - [curseforge-proxy.md](curseforge-proxy.md) — Worker abuse controls, URL ownership, secret rotation.
-- [website.md](website.md) — GitHub Pages deploy, screenshot gallery capture/redaction, version pill sync.
+- [website.md](website.md) — Cloudflare Pages deploy (`getyark`), screenshot gallery capture/redaction, version pill sync.
 
 ## Current functional status
 

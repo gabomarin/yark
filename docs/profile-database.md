@@ -13,6 +13,15 @@ Optional community **Ark Server API** Load-on-Start flags live on `servers` as
 `use_asa_api` / `use_asa_api_loader` (INTEGER 0/1, default 0). Disk API/plugin
 files are under the install Win64 folder, not SQLite — see [asa-api.md](asa-api.md).
 
+Durable **pending Configuration drafts** while a dedicated process is live sit in
+`pending_server_ini` (migration 20; #530): one row per `server_id` with both
+`GameUserSettings.ini` and `Game.ini` text plus `updated_at` (last save wins).
+Flush after stop / before start writes the install files; idle disk saves and
+config-transfer / cluster template apply clear the row after materializing both
+files when needed. Behavior: [server-lifecycle.md](server-lifecycle.md) (INI
+read / save / sanitize). Repository:
+`src/backend/infra/db/pending-server-ini-repository.ts`.
+
 Admin and join passwords are ordinary TEXT columns on `servers` (same Windows-user
 boundary as `GameUserSettings.ini`). Diagnostic logs omit those settings; they are
 not encrypted in the database. Details: [credential-threat-model.md](credential-threat-model.md).
@@ -89,6 +98,7 @@ profile DB — see [server-lifecycle.md](server-lifecycle.md#import-existing-asa
 | Open + migrate + busy_timeout + snapshot hooks | `src/backend/infra/db/database.ts` |
 | SQL migration list (app + E2E `initProfileDatabase`) | `src/backend/infra/db/schema-migrations.json` |
 | E2E schema seed (no Electron boot) | `scripts/e2e-init-profile-db.cjs` |
+| Pending live INI drafts (`pending_server_ini`) | `src/backend/infra/db/pending-server-ini-repository.ts` |
 | Snapshot write + rotation | `src/backend/infra/db/database-snapshots.ts` |
 | Quarantine rename helpers | `src/backend/infra/db/database-recovery.ts` |
 | Recovery dialog loop | `src/main/database-boot-recovery.ts` |
