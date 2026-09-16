@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-09-16
+
 ### Added
 
 - Overview shows a one-time **Discord invite** card in the bottom-right corner; opening or dismissing it keeps it out of the way on later launches (#567).

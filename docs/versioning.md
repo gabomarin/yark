@@ -127,28 +127,117 @@ Then watch **Actions → Release Windows**. Rebuild an existing tag via
 
 ## Release checklist
 
-1. Move items from `## [Unreleased]` in `CHANGELOG.md` into a new section
-   `## [X.Y.Z] - YYYY-MM-DD` with `Added` / `Changed` / `Fixed` / `Removed` as needed.
-2. Bump `package.json` `"version"` to `X.Y.Z` (and refresh the lockfile metadata
-   via `npm version X.Y.Z --no-git-tag-version` if you want npm to edit it).
-3. Confirm the sidebar shows `vX.Y.Z` after `npm run dev` / build (driven by
-   `APP_VERSION`).
-4. Run verification appropriate to the change:
-   - `npm run typecheck`
-   - `npm test`
-   - `npm run build` (optional local `npm run package` smoke)
-5. Sync the curated changelog in `src/shared/settings/changelog.ts` (site + in-app What's
-   new; `website/src/data/changelog.ts` re-exports it). Version pill / download
-   CTA follow `package.json` via `website/src/data/site.ts`.
-6. Commit with a message that names the version (e.g. `release: v0.2.0`) and merge
-   to `main`.
-7. Tag `vX.Y.Z` on that commit and `git push origin vX.Y.Z` — CI publishes the
-   installer to the GitHub Release.
-8. Leave a fresh empty `## [Unreleased]` section at the top of `CHANGELOG.md`
-   for the next cycle.
-9. Download the published installer, compare its GitHub-provided SHA-256 digest, and confirm the
-   public site's release-trust copy matches reality. Once #142 lands, also verify Authenticode,
-   publisher identity, and timestamp before considering the release complete.
+### Phase 0 — Pre-release quality gates
+
+Run these **before** bumping any version or touching the changelog. Every gate
+must pass; a failure blocks the release until fixed.
+
+1. **Bugbash** — manual walkthrough of the main operator flows on the current
+   `main` build:
+   - Create / clone / delete a server.
+   - Start → running → RCON-ready → Stop / Restart.
+   - Backup create → restore (test-owned profile only).
+   - INI visual editor: open, edit a key, save, verify diff preview.
+   - Mods: browse, install, remove.
+   - Logs: filter by severity, open runtime / update / backup logs.
+   - Settings: each category (General, Profiles, SteamCMD, Log files, About).
+   - Downloads: queue a SteamCMD job, pause → resume.
+   - Keyboard: Ctrl+K Spotlight, Shift+F10 card menu, Escape to dismiss.
+   Record pass/fail per flow; note any regressions vs the previous release.
+
+2. **React Doctor** — renderer/backend hygiene (not a merge gate, but a
+   pre-release snapshot):
+   ```
+   npx react-doctor@latest --verbose --scope changed
+   npx react-doctor@latest design --verbose
+   ```
+   Avoid regressing newly introduced **errors**. Do not mass-fix warnings.
+   See [react-doctor.md](react-doctor.md) for baseline and rules turned off.
+
+3. **Static analysis**
+   ```
+   npm run typecheck
+   npm run lint
+   npm run knip
+   ```
+   All three must be clean. `knip` catches unused files, exports, and deps;
+   see [knip.md](knip.md).
+
+4. **Unit / integration tests**
+   ```
+   npm test
+   ```
+   All tests green. On Linux, the ~8 Windows-path tests are expected failures;
+   validate via `cmd.exe /c "npm test"` on Windows or in CI.
+
+5. **E2E suite** — run the full matrix appropriate to the changes shipped
+   ([e2e-validation.md](e2e-validation.md)):
+   ```
+   npm run build
+   npm run e2e:smoke          # empty-fleet overview
+   npm run e2e:keyboard        # Ctrl+K, Shift+F10, Escape
+   npm run e2e                 # CRUD + shell nav (CI gate)
+   npm run e2e:install-health  # install-state badges
+   npm run e2e:host-port-probe # UDP conflict modal
+   ```
+   Add any **UI-changing** script from the mapping table in `e2e-validation.md`
+   (e.g. `e2e:mods`, `e2e:launch-args`, `e2e:clusters-membership`) when the
+   release touches those surfaces. All must pass on Windows.
+
+6. **Production build + bundle report**
+   ```
+   npm run build
+   npm run build:report
+   ```
+   Confirm the bundle report shows no unexpected chunk growth. Optionally run
+   `npm run package` locally for a smoke of the NSIS installer.
+
+### Phase 1 — Changelog + version bump
+
+7. Move items from `## [Unreleased]` in `CHANGELOG.md` into a new section
+   `## [X.Y.Z] - YYYY-MM-DD` with `Added` / `Changed` / `Fixed` / `Removed`
+   / `Docs` / `Security` as needed.
+8. Bump `package.json` `"version"` to `X.Y.Z` (and refresh the lockfile
+   metadata via `npm version X.Y.Z --no-git-tag-version` if you want npm to
+   edit it).
+9. Confirm the sidebar shows `vX.Y.Z` after `npm run dev` / build (driven by
+   `APP_VERSION` from `src/shared/app-version.ts`).
+10. Sync the curated changelog in `src/shared/settings/changelog.ts` (site +
+    in-app What's new; `website/src/data/changelog.ts` re-exports it). Version
+    pill / download CTA follow `package.json` via `website/src/data/site.ts`.
+
+### Phase 2 — Website / docs
+
+11. If the release includes **visual renderer changes**: re-capture screenshots
+    (`scripts/capture-website-screenshots.cjs`) and update
+    `website/public/screenshots/`. Follow [website.md](website.md) and
+    [visual-testing.md](visual-testing.md).
+12. Verify `website/src/data/site.ts` reads the new version from `package.json`
+    (download CTA URL and version pill update automatically).
+13. Sync operator docs if runbooks or IPC contracts changed — check that
+    `website/src/content/docs/docs/` mirrors the latest `docs/` runbooks.
+
+### Phase 3 — Commit, tag, push
+
+14. Commit with a message that names the version (e.g. `release: v0.21.0`) and
+    merge to `main` (squash merge is the default).
+15. Tag `vX.Y.Z` on that commit and `git push origin vX.Y.Z` — CI publishes
+    the installer to the GitHub Release.
+16. Leave a fresh empty `## [Unreleased]` section at the top of `CHANGELOG.md`
+    for the next cycle.
+
+### Phase 4 — Post-release verification
+
+17. Watch **Actions → Release Windows** in GitHub Actions; confirm the workflow
+    succeeds and the `.exe` + `latest.yml` assets are uploaded.
+18. Download the published installer, compare its GitHub-provided SHA-256
+    digest, and confirm the public site's release-trust copy matches reality.
+    Once #142 lands, also verify Authenticode, publisher identity, and
+    timestamp before considering the release complete.
+19. Confirm `https://getyark.com/` reflects the new version (hero pill,
+    download CTA) and the changelog page shows the new entry.
+20. Submit `https://getyark.com/sitemap-index.xml` in Search Console if SEO
+    indexing is a concern for this release.
 
 ## What belongs in the changelog
 

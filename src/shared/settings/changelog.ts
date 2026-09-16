@@ -24,6 +24,37 @@ const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.21.0",
+    date: "2026-09-16",
+    sections: [
+      {
+        title: "Added",
+        items: [
+          "Overview shows a one-time Discord invite card in the bottom-right corner.",
+          "Optional Discord webhook alerts for server events and SteamCMD jobs, with per-event controls, custom message templates, delivery testing, and cooldown protection.",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "Operator UX sweep: clearer chrome, Fluent-style nav pills, safer create/save, and a desktop tab strip for workspace tabs.",
+          "Secondary workspace panels load when their tabs open, reducing the initial renderer chunk.",
+          "Mods restores the compact Server mods / Discover segmented switcher.",
+          "Public product site deploys to Cloudflare Pages; Discord invite updated.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "Closing the server console window (or End task / Ctrl+C) no longer shows a crash state — recorded as Closed by user.",
+          "Restoring an INI backup clears leftover Configuration drafts so Start cannot flush queued edits.",
+          "Pending INI queue no longer drops gameplay edits when a profile sync races an in-flight save.",
+          "Renderer errors show a Reload screen instead of a blank window.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.20.0",
     date: "2026-09-07",
     sections: [

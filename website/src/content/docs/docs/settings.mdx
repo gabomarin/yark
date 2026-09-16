@@ -55,6 +55,23 @@ Use **Open setup assistant** under General to review SteamCMD, server-folder, an
 
 Settings lists profiles that opted into **Auto-start with YARK**. Turn the preference on or off on each server’s Server tab (Startup). Auto-start is separate from **Start with Windows**.
 
+## Discord webhooks
+
+Optional one-way notifications to a Discord channel. The master switch defaults
+off; seven event filters are available (server ready, clean stop, closed by
+user, unexpected crash, and SteamCMD job start / success / failure). Identical
+events for the same server have a two-minute cooldown.
+
+- The webhook URL is stored in local SQLite, shown as a password field, never
+  included in YARK logs or delivery errors, and sent only to
+  `https://discord.com/api/webhooks/...`.
+- Each event can use a custom message template with `{server}` and (for
+  SteamCMD events) `{detail}` placeholders; empty templates keep the built-in
+  copy. Mentions stay disabled.
+- **Send test** posts a notification using the focused field's template.
+- Delivery runs only while YARK is running; there is no bot and no remote
+  command channel — Discord cannot control YARK.
+
 ## YARK updates
 
 **YARK updates** checks GitHub Releases for a newer desktop build (not ASA/SteamCMD). After launch, YARK quietly checks in the background; when an update is available (or a download finishes), you get an operator toast and the sidebar version uses an accent color — click either to open Settings → About. Then **Check now** → **Download** → **Restart and install**. Install is blocked while servers or critical jobs are busy. Unpackaged/dev builds can check but cannot install. If a mid-publish race leaves `latest.yml` missing, quiet checks stay silent and **Check now** falls back to GitHub Releases or a short retry message.
