@@ -106,6 +106,7 @@
     "knip": "^6.32.2",
     "playwright": "^1.61.1",
     "react": "^19.2.8",
+    "react-doctor": "^0.9.14",
     "react-dom": "^19.2.8",
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.67.0",
