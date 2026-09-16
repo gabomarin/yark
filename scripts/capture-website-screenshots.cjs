@@ -975,7 +975,8 @@ async function run() {
       await page.getByRole("tab", { name: "INI Files" }).click();
       await settle(page, 1200);
       // Defaults seed → catalogued keys visible (not YARK-owned-only stub → 0 rows).
-      await page.getByText("AdminLogging", { exact: true }).first().waitFor({
+      // The visual editor shows humanized keys ("Admin Logging", not "AdminLogging").
+      await page.getByText("Admin Logging", { exact: true }).first().waitFor({
         state: "visible",
         timeout: 20000,
       });

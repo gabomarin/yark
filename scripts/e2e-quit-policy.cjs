@@ -108,10 +108,12 @@ async function run() {
     );
     assert.equal(await page.getByRole("radio", { name: "Leave" }).count(), 0);
 
-    const trayHelp = page.getByText(/Quitting while servers are running always asks/i);
+    const trayHelp = page.getByText(
+      /Closing the window hides YARK in the tray/i,
+    );
     assert.ok(
       (await trayHelp.count()) > 0,
-      "Close-to-tray help should mention always-ask quit confirmation",
+      "Close-to-tray help should describe hiding YARK in the tray",
     );
 
     const traySwitch = page.getByRole("switch", {
