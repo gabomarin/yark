@@ -22,6 +22,7 @@ import {
   filterOverviewServers,
   partitionOverviewServers,
 } from "@features/overview/model/overviewServerFilter";
+import { DiscordInviteCard } from "./components/DiscordInviteCard/DiscordInviteCard";
 import { OverviewHeader } from "./components/OverviewHeader";
 import { RecentActivityPanel } from "./components/RecentActivityPanel";
 import { ServerGrid, type SteamCmdCardJobRef } from "./components/ServerGrid";
@@ -237,6 +238,9 @@ export function OverviewPage(props: Props): ReactElement {
           </>
         ) : null}
       </div>
+
+      {/* One-time community CTA — in-flow bottom-right, dismissible (#567). */}
+      <DiscordInviteCard />
     </div>
   );
 }
