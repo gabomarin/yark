@@ -372,6 +372,18 @@
   line-height: 1.35;
 }
 
+.crashRecoveryNotice {
+  padding-right: var(--app-space-xs);
+}
+
+.crashRecoveryIcon {
+  position: absolute;
+  top: 50%;
+  left: 24px;
+  color: var(--app-color-attention);
+  transform: translateY(-50%);
+}
+
 @media (min-width: 1600px) {
   .cardHit {
     grid-template-columns: minmax(220px, 0.7fr) minmax(0, 2.2fr);
@@ -444,6 +456,18 @@
     padding-left: 0;
   }
 
+  .card:not([data-ui-density="compact"]) .crashRecoveryNotice {
+    padding-left: 0;
+  }
+
+  .card:not([data-ui-density="compact"]) .crashRecoveryNotice .runtimeErrorText {
+    padding-left: 24px;
+  }
+
+  .card:not([data-ui-density="compact"]) .crashRecoveryIcon {
+    left: 0;
+  }
+
   .card:not([data-ui-density="compact"]) .progressHint {
     padding-left: 0;
   }
@@ -463,6 +487,10 @@
 
 .card[data-ui-density="compact"] .runtimeError {
   padding-left: 40px;
+}
+
+.card[data-ui-density="compact"] .crashRecoveryIcon {
+  left: 16px;
 }
 
 .card[data-ui-density="compact"] .progressHint {
@@ -522,5 +550,13 @@
   .card[data-ui-density="compact"] .runtimeError,
   .card[data-ui-density="compact"] .progressHint {
     padding-left: 0;
+  }
+
+  .card[data-ui-density="compact"] .crashRecoveryNotice .runtimeErrorText {
+    padding-left: 24px;
+  }
+
+  .card[data-ui-density="compact"] .crashRecoveryIcon {
+    left: 0;
   }
 }

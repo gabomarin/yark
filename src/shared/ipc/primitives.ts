@@ -248,6 +248,16 @@ export const restoreBackupOptionsSchema = z
   })
   .strict();
 
+export const crashRecoveryPolicyWriteSchema = z
+  .object({
+    enabled: z.boolean(),
+    maxAttempts: z.number().int().min(1).max(10),
+    backoffSeconds: z.number().int().min(5).max(3600),
+    stabilitySeconds: z.number().int().min(60).max(86400),
+    paused: z.boolean(),
+  })
+  .strict();
+
 export const backupDiskAlertSettingsSchema = z
   .object({
     warnUsedPercent: z.number().int().min(50).max(99),

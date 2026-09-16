@@ -86,5 +86,9 @@
   {
     "version": 22,
     "sql": "\n      ALTER TABLE servers ADD COLUMN use_asa_api INTEGER NOT NULL DEFAULT 0;\n      UPDATE servers SET use_asa_api = 1 WHERE use_asa_api_loader = 1;\n    "
+  },
+  {
+    "version": 23,
+    "sql": "\n      CREATE TABLE crash_recovery_policies (\n        server_id TEXT PRIMARY KEY,\n        enabled INTEGER NOT NULL DEFAULT 0,\n        max_attempts INTEGER NOT NULL DEFAULT 3,\n        backoff_seconds INTEGER NOT NULL DEFAULT 30,\n        stability_seconds INTEGER NOT NULL DEFAULT 600,\n        attempts INTEGER NOT NULL DEFAULT 0,\n        paused INTEGER NOT NULL DEFAULT 0,\n        last_failure_reason TEXT,\n        updated_at TEXT NOT NULL\n      );\n    "
   }
 ]

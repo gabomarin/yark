@@ -1,5 +1,6 @@
 import { vi } from "vitest";
 import type { AppUpdateStatus } from "@shared/settings/app-update";
+import { defaultCrashRecoveryPolicy } from "@shared/crash-recovery/crash-recovery-policy";
 import type { RendererApi } from "@shared/ipc";
 
 /** Stable ISO timestamp for fixture payloads — bump when suites assert on age. */
@@ -377,6 +378,12 @@ export function createRendererApiMock(
     runMaintenanceRestartNow: vi.fn(),
     runMaintenanceUpdateNow: vi.fn(),
     cancelMaintenanceUpcoming: vi.fn(),
+    getCrashRecoveryPolicy: vi.fn().mockResolvedValue({
+      ok: true,
+      data: defaultCrashRecoveryPolicy("srv-1", TEST_NOW),
+    }),
+    setCrashRecoveryPolicy: vi.fn(),
+    resetCrashRecoveryAttempts: vi.fn(),
     resolveBackupRoot: vi.fn().mockResolvedValue({ ok: true, data: "C:/ARK/Backups" }),
     openBackupFolder: vi.fn(),
     openBackupRoot: vi.fn(),

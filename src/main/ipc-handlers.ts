@@ -12,6 +12,7 @@ import type {
 import { normalizeAsaApiInstallProgress } from "../shared/types";
 import type { BackupService } from "../backend/domains/backups/backup-service";
 import type { MaintenanceService } from "../backend/domains/maintenance/maintenance-service";
+import type { CrashRecoveryService } from "../backend/domains/crash-recovery/crash-recovery-service";
 import type { PlayerSessionWatcher } from "../backend/domains/backups/player-session-watcher";
 import type { ProcessMetricsSampler } from "../backend/domains/instances/process-metrics-sampler";
 import type { InstanceService } from "../backend/domains/instances/instance-service";
@@ -100,6 +101,7 @@ export function registerIpcHandlers(
   mods: ModsService,
   backups: BackupService,
   maintenance: MaintenanceService,
+  crashRecovery: CrashRecoveryService,
   moveInstall: MoveInstallService,
   appDataFolders: AppDataFolderRoots,
   settings: AppSettingsRepository,
@@ -539,7 +541,7 @@ export function registerIpcHandlers(
   );
 
   handleValidated(IPC.serversStatuses, ipcArgSchemas[IPC.serversStatuses], () =>
-    instances.statuses(),
+    instances.statuses().map((status) => crashRecovery.annotateStatus(status)),
   );
 
   handleValidated(
@@ -1184,6 +1186,24 @@ export function registerIpcHandlers(
     IPC.maintenanceCancelUpcoming,
     ipcArgSchemas[IPC.maintenanceCancelUpcoming],
     ([serverId]) => maintenance.cancelUpcoming(serverId),
+  );
+
+  handleValidated(
+    IPC.crashRecoveryGetPolicy,
+    ipcArgSchemas[IPC.crashRecoveryGetPolicy],
+    ([serverId]) => crashRecovery.getPolicy(serverId),
+  );
+
+  handleValidated(
+    IPC.crashRecoverySetPolicy,
+    ipcArgSchemas[IPC.crashRecoverySetPolicy],
+    ([serverId, policy]) => crashRecovery.setPolicy(serverId, policy),
+  );
+
+  handleValidated(
+    IPC.crashRecoveryResetAttempts,
+    ipcArgSchemas[IPC.crashRecoveryResetAttempts],
+    ([serverId]) => crashRecovery.resetAttempts(serverId),
   );
 
   handleValidated(IPC.backupsResolveRoot, ipcArgSchemas[IPC.backupsResolveRoot], ([serverId]) =>

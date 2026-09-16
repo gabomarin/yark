@@ -25,7 +25,8 @@ MagicPath UX mock: https://magicpath.ai/files/444694713119952896
 | Steam-newer update | `MaintenanceUpdateRuntime` |
 | Scheduler | `MaintenanceScheduler` (~60s; fires once on start; overlapping ticks coalesce; `.unref()`) |
 | Shared helpers | `src/shared/maintenance/maintenance-schedule.ts`, `maintenance-policy.ts`, `maintenance-restart-days.ts` (same folder) |
-| UI | `src/renderer/src/features/maintenance/` |
+| Crash recovery | `crash_recovery_policies` (migration 23), `CrashRecoveryRepository`, `CrashRecoveryService` (#563) |
+| UI | `src/renderer/src/features/maintenance/`, `src/renderer/src/features/crash-recovery/` |
 
 ## IPC
 
@@ -156,10 +157,51 @@ When **Wild dino wipe** is On (toggle in Up next; turning wipe On enables restar
 `ensurePolicy` / `ensurePoliciesForServers` (`INSERT OR IGNORE`) from UI open + each
 scheduler cycle.
 
+## Crash recovery (#563)
+
+**Optional, default off** per-server policy (block at the bottom of this tab) that
+restarts a dedicated after a **real unexpected exit**. Intentional Stop/Restart,
+disabled profiles, active Maintenance windows, held lifecycle locks, and an
+exhausted budget never restart. Reattach (#59) and assisted restore (#525) stay
+separate. Operator-closed console exits are classified as clean stops (#524) and
+never reach this path.
+
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| Enable | Off | Opt in per server |
+| Restart attempts | 3 | Automatic restarts allowed before it stops |
+| Delay before retry | 30s | Attempt N waits `N × base` (linear: 30/60/90s) so short-lived causes have time to clear |
+| Reset attempts after | 10 min | Measured from the live process uptime: once it has been up this long the attempts start over (a later crash counts as attempt 1). Time spent stopped is not counted |
+
+- Reset semantics: a run past the window clears the counter to 0, so the next crash
+  is attempt 1. The reset is applied both while the run is live (when the policy is
+  read) and recomputed at crash time, so it does not depend on opening the panel.
+  Stopped/idle time and intentional Stop/Restart never reset or consume the budget.
+
+- Attempt budget, `paused`, and last failure reason persist in
+  `crash_recovery_policies` (migration 23). Quitting YARK does not resume a pending
+  retry, but reopening does **not** reset the budget.
+- `exhausted` = `attempts >= maxAttempts`; **Reset attempts** clears the budget and
+  arms recovery again. **Pause auto-restart** halts pending/future retries without
+  disabling the policy.
+- A crash during `starting` (never reached ready) uses the **same** budget — there is
+  no separate corrupt-save heuristic.
+- Restart goes through `InstanceService.start`, so port/install/profile guards still
+  apply; failures are recorded as `auto_restart_failed` and are not retried until the
+  next crash.
+- While a retry is pending, the ServerCard (Overview and workspace) and the workspace
+  header show a live `Restarting in Ns` notice; clicking the card notice opens Runtime
+  logs. It clears when the retry fires, the server comes back up another way (manual
+  Start/Restart, maintenance), it is paused, or the attempts run out.
+- Events: `auto_restart_scheduled`, `auto_restart_failed`, `auto_restart_exhausted`
+  (Events tab; the existing crash notification is unchanged).
+
 ## UI model
 
 - `MaintenancePanel` + `MaintenanceUpNext` + `MaintenanceRestartSchedule` +
   `MaintenanceJobSections` + `MaintenancePlayerWarnings`
+- Crash recovery block: `features/crash-recovery/` (`CrashRecoverySection` +
+  `useCrashRecoveryPanel`, own 5s poll while the tab is open)
 - Model: `model/maintenancePanelModel.ts`; hook: `hooks/useMaintenancePanel.ts`
 - Wipe toggle in Up next; On forces `restartEnabled`
 - **Run update now** only when `steamUpdateAvailable`
@@ -184,6 +226,8 @@ scheduler cycle.
 | Players still online at update T0 | T0 stop failed or was skipped; check stop errors / cancel race |
 | Wipe ran but animals returned | `-ForceRespawnDinos` on Launch is separate; wipe is one-shot after restart |
 | Console missing after maintenance start | Settings **Show server console on start** was off |
+| Crash recovery not restarting | Policy off/paused, profile Inactive, budget exhausted, or a Maintenance window/lock held |
+| Crash recovery restarts twice quickly | Expected: attempt N waits `N × backoff`; a run shorter than the stability window does not reset the budget |
 
 ## Tests / e2e
 

@@ -120,6 +120,24 @@ function catalogFor(event: AppEvent): AppEventDetails {
         suggestion:
           "Read the error detail, fix install/ports/locks, then start manually or fix auto-start eligibility.",
       };
+    case "auto_restart_scheduled":
+      return {
+        what: "The server crashed on its own, so crash recovery scheduled a restart.",
+        suggestion:
+          "Pause or turn off crash recovery on the Maintenance tab to stop automatic restarts.",
+      };
+    case "auto_restart_failed":
+      return {
+        what: "Crash recovery could not start the server again.",
+        suggestion:
+          "Open Logs → Runtime and check the install, then start the server by hand. YARK will not try again until the next crash.",
+      };
+    case "auto_restart_exhausted":
+      return {
+        what: "Crash recovery used every restart try without the server staying up.",
+        suggestion:
+          "Fix the cause of the crash, then Reset tries on the Maintenance tab (or start the server by hand) to arm crash recovery again.",
+      };
     case "server_enabled":
       return {
         what: "A saved server profile was re-enabled.",

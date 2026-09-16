@@ -86,6 +86,19 @@ export function prunePlayerListsForNonRunning(
   return changed ? next : previous;
 }
 
+function sameCrashRecovery(
+  left: ServerRuntimeInfo["crashRecovery"],
+  right: ServerRuntimeInfo["crashRecovery"],
+): boolean {
+  if (left == null || right == null) return left == null && right == null;
+  return (
+    left.attempt === right.attempt
+    && left.maxAttempts === right.maxAttempts
+    && left.restartAt === right.restartAt
+    && left.reason === right.reason
+  );
+}
+
 function sameRuntime(
   left: ServerRuntimeInfo,
   right: ServerRuntimeInfo,
@@ -97,6 +110,7 @@ function sameRuntime(
     && left.startedAt === right.startedAt
     && left.processLive === right.processLive
     && left.lastError === right.lastError
+    && sameCrashRecovery(left.crashRecovery, right.crashRecovery)
   );
 }
 export function reconcileStatusMap(

@@ -199,6 +199,18 @@ async function run() {
     const runUpdateNow = page.getByRole("button", { name: "Run update now" });
     assert.equal(await runUpdateNow.isDisabled(), true);
 
+    const crashRecoverySwitch = page.getByRole("switch", {
+      name: "Enable crash recovery",
+    });
+    await crashRecoverySwitch.waitFor({ state: "attached", timeout: 10000 });
+    assert.equal(await crashRecoverySwitch.isChecked(), false);
+    await clickSwitch(page, "Enable crash recovery");
+    assert.equal(await crashRecoverySwitch.isChecked(), true);
+    await page.getByText("Restart attempts", { exact: true }).waitFor({
+      state: "visible",
+      timeout: 5000,
+    });
+
     await leaveWorkspaceToServers(page);
     await removeServerIfPresent(page, serverName);
 

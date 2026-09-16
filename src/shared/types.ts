@@ -199,6 +199,22 @@ export interface ServerRuntimeInfo {
    * Optional on older snapshots / test fixtures — treat missing as false.
    */
   asaApiLoading?: boolean;
+  /**
+   * Present while crash recovery (#563) has a retry scheduled for this server.
+   * `null`/missing means no pending restart. Optional on older snapshots.
+   */
+  crashRecovery?: CrashRecoveryRuntime | null;
+}
+
+/** Transient auto-restart notice while a crash-recovery retry is scheduled (#563). */
+export interface CrashRecoveryRuntime {
+  /** Attempt number within the budget (1-based). */
+  attempt: number;
+  maxAttempts: number;
+  /** ISO time the scheduled retry fires. */
+  restartAt: string;
+  /** Crash reason that triggered recovery (may include diagnosis). */
+  reason: string | null;
 }
 
 /**
@@ -498,6 +514,9 @@ export interface AppEvent {
     | "auto_start_skipped"
     | "auto_start_succeeded"
     | "auto_start_failed"
+    | "auto_restart_scheduled"
+    | "auto_restart_failed"
+    | "auto_restart_exhausted"
     | "rcon_command"
     | "backup_created"
     | "backup_deleted"
@@ -858,6 +877,32 @@ export type MaintenanceCountdownPhase =
   | "restarting"
   | "updating"
   | "wiping";
+
+/**
+ * Optional, default-off per-server crash recovery (#563).
+ * Restarts an ASA dedicated after an unexpected process exit, within a bounded
+ * attempt budget that resets after a stable run. Does not cover reattach or
+ * operator Stop/Restart.
+ */
+export interface CrashRecoveryPolicy {
+  serverId: string;
+  enabled: boolean;
+  /** Restart attempts allowed before the budget is exhausted (1–10). */
+  maxAttempts: number;
+  /** Base backoff; attempt N waits `backoffSeconds × N` (linear). */
+  backoffSeconds: number;
+  /** Continuous uptime that resets the budget before a crash is counted. */
+  stabilitySeconds: number;
+  /** Restart attempts since the last stable run (persisted). */
+  attempts: number;
+  /** Operator paused auto-restart without disabling the policy (persisted). */
+  paused: boolean;
+  /** Derived: `attempts >= maxAttempts`. */
+  exhausted: boolean;
+  /** Last crash reason that triggered recovery, for operator context. */
+  lastFailureReason: string | null;
+  updatedAt: string;
+}
 
 export interface BackupPolicy {
   serverId: string;

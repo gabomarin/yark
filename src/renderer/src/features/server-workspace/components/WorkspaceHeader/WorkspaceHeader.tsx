@@ -21,6 +21,7 @@ import { resolveDisplayedServerVersion } from "@shared/server/server-version-dis
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import { formatMapDisplayName } from "@shared/asa/map-identity";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
+import { CrashRecoveryHeaderBadge } from "@features/crash-recovery/components/CrashRecoveryHeaderBadge";
 import { RconStatusIcon } from "../RconStatusIcon/RconStatusIcon";
 import { workspaceHeaderControls } from "./workspaceHeaderControls";
 import classes from "./WorkspaceHeader.module.css";
@@ -87,6 +88,7 @@ export function WorkspaceHeader(props: Props): ReactElement {
               {props.server.name}
             </Title>
             <ServerRuntimeStatusBadge status={displayStatus} size="sm" />
+            <CrashRecoveryHeaderBadge recovery={props.runtime?.crashRecovery} />
             {status === "running" && <RconStatusIcon serverId={props.server.id} />}
             {!props.server.enabled && (
               <Badge size="sm" variant="light" color="gray">
