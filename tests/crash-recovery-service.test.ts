@@ -10,13 +10,14 @@ import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 class FakeProcesses extends EventEmitter {
   startedAt: string | null = new Date().toISOString();
   active = false;
+  live = false;
 
   getStatus(serverId: string) {
     return {
       serverId,
-      status: "error" as const,
-      processLive: false,
-      pid: null,
+      status: (this.live ? "running" : "error") as ServerRuntimeInfo["status"],
+      processLive: this.live,
+      pid: this.live ? 4242 : null,
       startedAt: this.startedAt,
       lastError: null,
     };
@@ -52,7 +53,12 @@ function makeHarness() {
       return events.length;
     },
   };
-  const start = vi.fn(async () => undefined);
+  const start = vi.fn(async () => {
+    // A real start replaces the managed entry with a fresh process.
+    processes.live = true;
+    processes.active = true;
+    processes.startedAt = new Date().toISOString();
+  });
   const instances = {
     start,
     isStopInProgress: () => false,
@@ -79,6 +85,9 @@ function enable(repo: CrashRecoveryRepository, maxAttempts = 3) {
 }
 
 function crash(processes: FakeProcesses, lastError = "boom") {
+  // The exit event fires after the process is already gone.
+  processes.live = false;
+  processes.active = false;
   processes.emit("unexpected-exit", {
     serverId: "s1",
     exitCode: 1,
@@ -277,6 +286,7 @@ describe("CrashRecoveryService", () => {
   it("shows a fresh count once the live run passes the stability window", () => {
     enable(h.repo);
     h.repo.recordAttempt("s1", 2, "boom");
+    h.processes.live = true;
     h.processes.startedAt = new Date(Date.now() - 18 * 60_000).toISOString();
 
     const policy = h.service.getPolicy("s1");
@@ -287,8 +297,41 @@ describe("CrashRecoveryService", () => {
   it("keeps the count while the live run is still short", () => {
     enable(h.repo);
     h.repo.recordAttempt("s1", 2, "boom");
+    h.processes.live = true;
     h.processes.startedAt = new Date(Date.now() - 60_000).toISOString();
 
     expect(h.service.getPolicy("s1").attempts).toBe(2);
+  });
+
+  it("waits longer before each retry", async () => {
+    enable(h.repo);
+    crash(h.processes, "c1");
+    expect(h.events.at(-1)?.message).toContain("in 30s");
+
+    await vi.advanceTimersByTimeAsync(30_000);
+    crash(h.processes, "c2");
+    expect(h.events.at(-1)?.message).toContain("in 60s");
+
+    await vi.advanceTimersByTimeAsync(60_000);
+    crash(h.processes, "c3");
+    expect(h.events.at(-1)?.message).toContain("in 90s");
+  });
+
+  it("does not reset the budget from a dead process during backoff", async () => {
+    enable(h.repo);
+    h.processes.live = true;
+    h.processes.startedAt = new Date(Date.now() - 18 * 60_000).toISOString();
+
+    crash(h.processes); // long run -> stabilized -> attempt 1
+    expect(h.repo.getPolicy("s1").attempts).toBe(1);
+
+    // Panel poll while the crashed entry (dead process) is still retained.
+    h.service.getPolicy("s1");
+    expect(h.repo.getPolicy("s1").attempts).toBe(1);
+
+    await vi.advanceTimersByTimeAsync(30_000);
+    crash(h.processes, "c2");
+    expect(h.events.at(-1)?.message).toContain("attempt 2 of 3");
+    expect(h.events.at(-1)?.message).toContain("in 60s");
   });
 });

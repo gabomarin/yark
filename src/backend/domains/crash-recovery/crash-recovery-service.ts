@@ -106,6 +106,9 @@ export class CrashRecoveryService {
 
   /** True when the live process has been up at least the stability window. */
   private isStableRun(serverId: string, policy: CrashRecoveryPolicy): boolean {
+    // Only a live process counts: after a crash the managed entry is retained
+    // with its old startedAt, and its uptime keeps growing while it is dead.
+    if (this.processes.getStatus(serverId).processLive !== true) return false;
     const uptimeMs = this.uptimeMsFor(serverId);
     return uptimeMs !== null && uptimeMs >= policy.stabilitySeconds * 1000;
   }
