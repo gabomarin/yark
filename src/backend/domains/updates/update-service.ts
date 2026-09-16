@@ -12,6 +12,7 @@ import {
   shouldNotifySteamCmdJobEvent,
   type SteamCmdJobTerminalPayload,
 } from "../../../shared/settings/os-notification-events";
+import type { DiscordUpdateEventPayload } from "../../../shared/settings/discord-webhook";
 import {
   CRITICAL_BACKUP_KINDS,
   type BackupService,
@@ -362,10 +363,19 @@ export class UpdateService extends EventEmitter {
     if (job !== undefined) {
       job.latestEventId = eventId;
     }
+    const server = job?.serverId !== undefined ? this.servers.get(job.serverId) : null;
+    const eventPayload: DiscordUpdateEventPayload = {
+      type,
+      severity,
+      serverId: job?.serverId ?? null,
+      serverName: server?.name ?? null,
+      jobId: job?.id ?? null,
+      eventId,
+      message,
+    };
+    this.emit("job-event", eventPayload);
     const osNotify = options?.osNotify !== false;
     if (osNotify && shouldNotifySteamCmdJobEvent(type, severity)) {
-      const server =
-        job?.serverId !== undefined ? this.servers.get(job.serverId) : null;
       const payload: SteamCmdJobTerminalPayload = {
         type,
         severity,

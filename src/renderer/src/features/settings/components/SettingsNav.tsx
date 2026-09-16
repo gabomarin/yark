@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import {
   CloudArrowDown,
+  DiscordLogo,
   FileText,
   GearSix,
   HardDrives,
@@ -21,6 +22,7 @@ const CATEGORY_ICONS: Record<
   general: GearSix,
   servers: HardDrives,
   steamcmd: CloudArrowDown,
+  discord: DiscordLogo,
   logs: FileText,
   about: Info,
 };

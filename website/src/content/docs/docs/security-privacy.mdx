@@ -27,14 +27,15 @@ that Windows-account boundary.
 | CurseForge metadata Worker | Names/summaries/links/screenshots for Project IDs; plain-text **description** on get-by-id inspect (self-hostable from the repo) |
 | GitHub | Manual installer download, and in-app **YARK updates** check/download from Releases |
 | Operator-chosen AdminListURL | RCON **Admins** Validate / Apply fetches your remote http(s) whitelist URL from the main process (desktop trust boundary; not a YARK cloud hop) |
+| Discord (optional) | Outbound server lifecycle and SteamCMD event notifications through the webhook URL you provide |
 
 The desktop app does **not** embed a CurseForge API key. Lookups send Project IDs / search queries — not profiles, passwords, or install paths.
 
 ## Secrets hygiene
 
 <Aside type="danger">
-  Admin and RCON passwords live in ASA INI files and in YARK’s local profile
-  database. INI backups can contain the same secrets. Treat install folders,
+  Admin and RCON passwords, plus an optional Discord webhook token, live in YARK’s
+  local profile database. ASA credentials also live in INI files and backups. Treat install folders,
   backup ZIPs, screenshots, shared logs, exported configs, and GitHub issue
   attachments carefully. YARK omits password settings from diagnostic dumps; it
   does not encrypt the files the dedicated server must read.
@@ -43,6 +44,7 @@ The desktop app does **not** embed a CurseForge API key. Lookups send Project ID
 - Prefer the site / Releases download buttons over random mirrors  
 - Compare the installer SHA-256 with the digest on the matching GitHub Release
 - Strip passwords before posting logs or INI snippets
+- Never share a Discord webhook URL; revoke it in Discord if exposed
 - Store backups only in locations trusted by the same Windows account boundary
 
 ## Verify the installer
@@ -63,6 +65,9 @@ be installed.
   YARK both store them as plaintext for this Windows user.
 - Logs, crash excerpts, and operational-log exports omit GUS password settings
   rather than reprinting them.
+- Discord webhook URLs are accepted only on Discord's HTTPS webhook endpoint,
+  omitted from logs and delivery errors, and used for outbound notifications only
+  while YARK is running. Messages disable mentions and expose no control commands.
 - YARK should be locked or closed before letting an untrusted person use the same
   Windows session.
 - The written threat model (SQLite vs INI vs diagnostics) lives in the

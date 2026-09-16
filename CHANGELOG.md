@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Optional Discord webhook alerts cover server ready/clean stop/closed by user/crash and SteamCMD job start/finish/failure, with per-event controls, custom per-event message templates (`{server}` / `{detail}` tokens), delivery testing, and cooldown protection (#241). Events group into **Server events** and **SteamCMD jobs**; each template field previews its rendered message live, and **Send test** uses the focused field's template. Template fields for SteamCMD events hint that `{detail}` is available; other events flag `{detail}` as unsupported, and rendered messages drop an unsupported `{detail}` instead of leaving blank text.
+
 ### Changed
 
 - First-steps onboarding checklist uses shared **AppSurfaceCard** chrome and spacing tokens instead of a one-off panel recipe (#237).

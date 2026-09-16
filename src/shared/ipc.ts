@@ -57,6 +57,7 @@ import type {
 import type { AppUpdateStatus } from "./settings/app-update";
 import type { UiDensity } from "./settings/ui-density";
 import type { DesktopShellPreferences } from "./settings/desktop-shell";
+import type { DiscordWebhookPreferences } from "./settings/discord-webhook";
 
 type PickPathKind = "directory" | "file" | "save";
 
@@ -162,6 +163,9 @@ export const IPC = {
   appSetOsNotifyCrash: "app:set-os-notify-crash",
   appSetOsNotifySteamCmd: "app:set-os-notify-steamcmd",
   appSetOsNotifyYarkUpdate: "app:set-os-notify-yark-update",
+  appGetDiscordWebhook: "app:get-discord-webhook",
+  appSetDiscordWebhook: "app:set-discord-webhook",
+  appTestDiscordWebhook: "app:test-discord-webhook",
   appGetUpdateStatus: "app:get-update-status",
   appCheckForUpdate: "app:check-for-update",
   appDownloadUpdate: "app:download-update",
@@ -509,6 +513,14 @@ export interface RendererApi {
   setOsNotifyCrash(enabled: boolean): Promise<IpcResult<boolean>>;
   setOsNotifySteamCmd(enabled: boolean): Promise<IpcResult<boolean>>;
   setOsNotifyYarkUpdate(enabled: boolean): Promise<IpcResult<boolean>>;
+  getDiscordWebhook(): Promise<IpcResult<DiscordWebhookPreferences>>;
+  setDiscordWebhook(
+    preferences: DiscordWebhookPreferences,
+  ): Promise<IpcResult<DiscordWebhookPreferences>>;
+  testDiscordWebhook(
+    webhookUrl: string,
+    description?: string,
+  ): Promise<IpcResult<void>>;
   getAppUpdateStatus(): Promise<IpcResult<AppUpdateStatus>>;
   checkForAppUpdate(): Promise<IpcResult<AppUpdateStatus>>;
   downloadAppUpdate(): Promise<IpcResult<AppUpdateStatus>>;

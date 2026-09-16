@@ -162,6 +162,11 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.appSetOsNotifySteamCmd, enabled),
   setOsNotifyYarkUpdate: (enabled) =>
     ipcRenderer.invoke(IPC.appSetOsNotifyYarkUpdate, enabled),
+  getDiscordWebhook: () => ipcRenderer.invoke(IPC.appGetDiscordWebhook),
+  setDiscordWebhook: (preferences) =>
+    ipcRenderer.invoke(IPC.appSetDiscordWebhook, preferences),
+  testDiscordWebhook: (webhookUrl, description) =>
+    ipcRenderer.invoke(IPC.appTestDiscordWebhook, webhookUrl, description),
   getAppUpdateStatus: () => ipcRenderer.invoke(IPC.appGetUpdateStatus),
   checkForAppUpdate: () => ipcRenderer.invoke(IPC.appCheckForUpdate),
   downloadAppUpdate: () => ipcRenderer.invoke(IPC.appDownloadUpdate),

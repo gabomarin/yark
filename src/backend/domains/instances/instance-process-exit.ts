@@ -10,6 +10,7 @@ import {
   planUnexpectedServerCrashEvent,
 } from "./instance-crash";
 import type { ServerCrashedNotifyPayload } from "@shared/settings/os-notification-events";
+import type { DiscordClosedByUserPayload } from "@shared/settings/discord-webhook";
 
 export function recordUnexpectedProcessExit(
   repo: Pick<ServerRepository, "get" | "list" | "addEvent">,
@@ -39,6 +40,7 @@ export function recordUnexpectedProcessExit(
 export function recordOperatorClosedExit(
   repo: Pick<ServerRepository, "get" | "addEvent">,
   payload: OperatorClosedExit,
+  emitClosedByUser?: (notify: DiscordClosedByUserPayload) => void,
 ): void {
   const profile = repo.get(payload.serverId);
   const planned = planOperatorClosedServerEvent({
@@ -48,11 +50,16 @@ export function recordOperatorClosedExit(
     exitCode: payload.exitCode,
     notice: OPERATOR_CLOSED_NOTICE,
   });
-  repo.addEvent(
+  const eventId = repo.addEvent(
     payload.serverId,
     planned.eventType,
     planned.severity,
     planned.summary,
     planned.details,
   );
+  emitClosedByUser?.({
+    serverId: payload.serverId,
+    serverName: profile?.name ?? payload.serverId,
+    eventId,
+  });
 }

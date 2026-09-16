@@ -144,7 +144,9 @@ export class InstanceService extends EventEmitter {
       });
     });
     this.processes.on("operator-closed", (payload: OperatorClosedExit) => {
-      recordOperatorClosedExit(this.repo, payload);
+      recordOperatorClosedExit(this.repo, payload, (notify) => {
+        this.emit("server-closed-by-user", notify);
+      });
     });
   }
 

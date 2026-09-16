@@ -178,8 +178,65 @@
   min-width: 0;
 }
 
+.discordConnectionCard {
+  overflow: visible;
+}
+
+.discordWebhookField {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.discordEventCard {
+  overflow: hidden;
+  align-self: start;
+}
+
+.discordEventCardHeader {
+  min-height: 42px;
+  padding: var(--app-space-sm) var(--app-space-md);
+  border-bottom: 1px solid var(--app-color-border-subtle);
+  color: var(--app-color-text);
+  background: color-mix(in srgb, var(--app-color-accent) 6%, transparent);
+}
+
+.discordEventRow {
+  padding: var(--app-space-sm) var(--app-space-md);
+  border-bottom: 1px solid var(--app-color-border-subtle);
+  transition: background-color 120ms ease;
+}
+
+.discordEventRow:last-child {
+  border-bottom: 0;
+}
+
+.discordEventRow:hover {
+  background: color-mix(in srgb, var(--app-color-accent) 4%, transparent);
+}
+
+.discordEventIdentity {
+  min-width: 0;
+}
+
+.discordEventEditor {
+  margin-top: var(--app-space-sm);
+  padding-top: var(--app-space-sm);
+  border-top: 1px solid var(--app-color-border-subtle);
+}
+
+.discordPrivacyNote {
+  padding: var(--app-space-xs) var(--app-space-sm);
+  border-radius: var(--app-radius-sm);
+  background: color-mix(in srgb, var(--app-color-panel-cool) 46%, transparent);
+}
+
 @media (max-width: 720px) {
   .cacheRow {
+    flex-direction: column;
+  }
+
+  .discordConnectionFields {
+    align-items: stretch;
     flex-direction: column;
   }
 }

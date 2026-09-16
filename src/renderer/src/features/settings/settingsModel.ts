@@ -18,6 +18,7 @@ export type SettingsCategory =
   | "general"
   | "servers"
   | "steamcmd"
+  | "discord"
   | "logs"
   | "about";
 
@@ -28,6 +29,7 @@ export const SETTINGS_CATEGORIES: ReadonlyArray<{
   { id: "general", label: "General" },
   { id: "servers", label: "Profiles" },
   { id: "steamcmd", label: "SteamCMD" },
+  { id: "discord", label: "Discord" },
   { id: "logs", label: "Log files" },
   { id: "about", label: "About" },
 ];

@@ -41,6 +41,7 @@ import { MoveInstallService } from "../backend/domains/instances/move-install-se
 import { ModsService } from "../backend/domains/mods/mods-service";
 import { InstanceLockManager } from "../backend/orchestration/instance-lock-manager";
 import { AppUpdateService } from "./app-update-service";
+import { DiscordWebhookService } from "./discord-webhook-service";
 import { attachDevToolsShortcuts, isDevToolsAllowed } from "./devtools";
 import { collectKnownSecrets } from "../shared/credential-redaction";
 import { registerIpcHandlers } from "./ipc-handlers";
@@ -94,6 +95,7 @@ import type { AppUpdateStatus } from "../shared/settings/app-update";
 import { normalizeCloneInstallProgress, normalizeServerStopProgress } from "../shared/types";
 import type { BackupChangedPush } from "../backend/domains/backups/backup-service";
 import type { ServerRuntimeInfo } from "../shared/types";
+import type { DiscordClosedByUserPayload, DiscordUpdateEventPayload } from "../shared/settings/discord-webhook";
 
 const e2eUserData = process.env["YARK_E2E_USER_DATA"]?.trim();
 if (!app.isPackaged && e2eUserData) {
@@ -396,6 +398,7 @@ if (isPrimaryInstance) {
       throw error;
     }
     const settings = new AppSettingsRepository(db);
+    const discordWebhook = new DiscordWebhookService(settings);
     if (splash !== null && !splash.isDestroyed()) {
       const aligned = splashPositionForStored(readStoredWindowState(settings));
       splash.setPosition(aligned.x, aligned.y);
@@ -664,6 +667,7 @@ if (isPrimaryInstance) {
       playerSessionWatcher,
       processMetricsSampler,
       appUpdateService,
+      discordWebhook,
       requestAppQuit,
     );
 
@@ -780,9 +784,27 @@ if (isPrimaryInstance) {
       appTray = createAppTray(trayOptions());
     };
 
+    const previousServerStatuses = new Map<string, ServerRuntimeInfo["status"]>();
     processManager.on("status", (info: ServerRuntimeInfo) => {
       sendToRenderer(IPC_PUSH.serverStatus, info);
       scheduleTrayMenuRefresh();
+      const previous = previousServerStatuses.get(info.serverId);
+      previousServerStatuses.set(info.serverId, info.status);
+      const profile = repo.get(info.serverId);
+      if (profile === null) return;
+      if (info.status === "running" && previous === "starting") {
+        discordWebhook.notifyLifecycle({
+          serverId: info.serverId,
+          serverName: profile.name,
+          status: "started",
+        });
+      } else if (info.status === "stopped" && previous === "stopping") {
+        discordWebhook.notifyLifecycle({
+          serverId: info.serverId,
+          serverName: profile.name,
+          status: "stopped",
+        });
+      }
     });
 
     updateService.on("progress", (payload: SteamCmdProgressPush) => {
@@ -791,6 +813,15 @@ if (isPrimaryInstance) {
 
     instances.on("server-crashed", (payload: ServerCrashedNotifyPayload) => {
       fleetOsNotifier.notifyCrash(payload);
+      discordWebhook.notifyCrash(payload);
+    });
+
+    instances.on("server-closed-by-user", (payload: DiscordClosedByUserPayload) => {
+      discordWebhook.notifyClosedByUser(payload);
+    });
+
+    updateService.on("job-event", (payload: DiscordUpdateEventPayload) => {
+      discordWebhook.notifyUpdate(payload);
     });
 
     updateService.on("job-terminal", (payload: SteamCmdJobTerminalPayload) => {

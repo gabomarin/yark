@@ -58,7 +58,8 @@ fix is confirmed.
 
 These are documented product boundaries, not “free pass” bugs by themselves:
 
-- **Local Windows account access** reading ASA INI files, INI backup ZIPs, or the local SQLite profile (all may contain plaintext passwords), or another process already running as the same user — documented residual risk ([#144](https://github.com/gabomarin/yark/issues/144), [docs/credential-threat-model.md](docs/credential-threat-model.md))
+- **Local Windows account access** reading ASA INI files, INI backup ZIPs, or the local SQLite profile (which may contain plaintext passwords and an optional Discord webhook token), or another process already running as the same user — documented residual risk ([#144](https://github.com/gabomarin/yark/issues/144), [docs/credential-threat-model.md](docs/credential-threat-model.md))
+- **Operator-configured Discord webhook delivery** — YARK accepts only official `https://discord.com/api/webhooks/...` URLs, sends outbound event embeds with mentions disabled, and never exposes remote control commands. Revoke a webhook in Discord if its URL is disclosed.
 - **Unsigned installers** and SmartScreen warnings until Authenticode lands ([#142](https://github.com/gabomarin/yark/issues/142)) — always verify the GitHub Release SHA-256
 - Vulnerabilities **only** in ARK / ASA, SteamCMD, CurseForge, or other third-party binaries YARK launches or downloads
 - Issues that require the operator to deliberately point `installDir` / backup paths at untrusted trees and then run Install / wipe / restore (still report if the app ignores its own wipe-safety or nested-path guards)
