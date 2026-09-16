@@ -191,7 +191,8 @@ never reach this path.
   next crash.
 - While a retry is pending, the ServerCard (Overview and workspace) and the workspace
   header show a live `Restarting in Ns` notice; clicking the card notice opens Runtime
-  logs. It clears when the retry fires, is paused, or the attempts run out.
+  logs. It clears when the retry fires, the server comes back up another way (manual
+  Start/Restart, maintenance), it is paused, or the attempts run out.
 - Events: `auto_restart_scheduled`, `auto_restart_failed`, `auto_restart_exhausted`
   (Events tab; the existing crash notification is unchanged).
 

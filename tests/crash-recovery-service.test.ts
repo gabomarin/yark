@@ -283,6 +283,34 @@ describe("CrashRecoveryService", () => {
     expect(h.start).not.toHaveBeenCalled();
   });
 
+  it("clears the pending notice when the server starts outside recovery", async () => {
+    enable(h.repo);
+    const base: ServerRuntimeInfo = {
+      serverId: "s1",
+      status: "error",
+      processLive: false,
+      pid: null,
+      startedAt: null,
+      lastError: "boom",
+    };
+    crash(h.processes);
+    expect(h.service.annotateStatus(base).crashRecovery ?? null).not.toBeNull();
+
+    // Manual Start / maintenance brings the server up before the timer fires.
+    h.processes.emit("status", {
+      serverId: "s1",
+      status: "starting",
+      processLive: true,
+      pid: 4242,
+      startedAt: new Date().toISOString(),
+      lastError: null,
+    });
+    expect(h.service.annotateStatus(base).crashRecovery ?? null).toBeNull();
+
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(h.start).not.toHaveBeenCalled();
+  });
+
   it("shows a fresh count once the live run passes the stability window", () => {
     enable(h.repo);
     h.repo.recordAttempt("s1", 2, "boom");

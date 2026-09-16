@@ -78,6 +78,7 @@ export class CrashRecoveryService {
     if (this.started) return;
     this.started = true;
     this.processes.on("unexpected-exit", this.onUnexpectedExit);
+    this.processes.on("status", this.onProcessStatus);
     this.repo.ensurePoliciesForServers(this.servers.list().map((s) => s.id));
   }
 
@@ -85,6 +86,7 @@ export class CrashRecoveryService {
     if (!this.started) return;
     this.started = false;
     this.processes.off("unexpected-exit", this.onUnexpectedExit);
+    this.processes.off("status", this.onProcessStatus);
     for (const timer of this.timers.values()) {
       clearTimeout(timer);
     }
@@ -140,6 +142,16 @@ export class CrashRecoveryService {
     payload: UnexpectedManagedExit,
   ): void => {
     this.handleCrash(payload);
+  };
+
+  /**
+   * The server came back up outside crash recovery (manual Start/Restart,
+   * maintenance, …): drop the pending retry so the countdown notice disappears
+   * and the timer cannot fire a second start.
+   */
+  private readonly onProcessStatus = (info: ServerRuntimeInfo): void => {
+    if (info.status !== "starting" && info.status !== "running") return;
+    if (this.pending.has(info.serverId)) this.clearPending(info.serverId);
   };
 
   private handleCrash(payload: UnexpectedManagedExit): void {
