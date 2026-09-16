@@ -13,6 +13,7 @@ import { SettingsLogRetentionSection } from "./components/SettingsLogRetentionSe
 import { SettingsNav } from "./components/SettingsNav";
 import { SettingsServersSection } from "./components/SettingsServersSection";
 import { SettingsSteamCmdSection } from "./components/SettingsSteamCmdSection";
+import { SettingsDiscordSection } from "./components/SettingsDiscordSection";
 import { SettingsYarkUpdateSection } from "./components/SettingsYarkUpdateSection";
 import {
   readSettingsCategoryPref,
@@ -192,6 +193,7 @@ export function SettingsPage(props: Props): ReactElement {
                 onClearSteamCmdCache={props.onClearSteamCmdCache}
               />
             )}
+            {category === "discord" && <SettingsDiscordSection />}
             {category === "logs" && <SettingsLogRetentionSection />}
             {category === "about" && (
               <Stack gap="lg">

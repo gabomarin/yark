@@ -136,9 +136,10 @@ operator walkthrough.
   through validated application handling.
 - Profiles, settings, events, and backup metadata are stored locally in embedded SQLite. YARK has
   no user account or application cloud.
-- Server/admin credentials live in the local profile database and in ASA INI files
+- Server/admin credentials and an optional Discord webhook token live in the local profile database; ASA credentials also live in INI files
   as plaintext for the same Windows user. Logs and exports omit GUS password
-  settings instead of reprinting them. See
+  settings and never print the Discord webhook URL. Webhook notifications are
+  outbound-only to Discord and run only while YARK is open. See
   [Security & privacy](https://getyark.com/docs/security-privacy/)
   and [docs/credential-threat-model.md](docs/credential-threat-model.md).
 - CurseForge metadata requests use a small Cloudflare Worker so the upstream API key is never

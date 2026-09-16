@@ -61,6 +61,13 @@ import {
 import { applyWindowsLoginItem } from "./windows-login-item";
 import type { DesktopShellPreferences } from "../shared/settings/desktop-shell";
 import type { AppUpdateService } from "./app-update-service";
+import type { DiscordWebhookService } from "./discord-webhook-service";
+import {
+  DISCORD_WEBHOOK_SETTING_KEY,
+  isDiscordWebhookUrl,
+  serializeDiscordWebhookPreferences,
+  type DiscordWebhookPreferences,
+} from "../shared/settings/discord-webhook";
 import { handleValidated } from "./ipc-validate";
 
 export interface AppDataFolderRoots {
@@ -99,6 +106,7 @@ export function registerIpcHandlers(
   playerSessionWatcher: PlayerSessionWatcher,
   processMetricsSampler: ProcessMetricsSampler,
   appUpdate: AppUpdateService,
+  discordWebhook: DiscordWebhookService,
   /** Same entry as tray Quit YARK (`isQuitting` + `app.quit()`). */
   requestAppQuit: () => void,
 ): void {
@@ -857,6 +865,29 @@ export function registerIpcHandlers(
     IPC.appSetOsNotifyYarkUpdate,
     ipcArgSchemas[IPC.appSetOsNotifyYarkUpdate],
     ([enabled]): boolean => setOsNotifyYarkUpdate(settings, enabled),
+  );
+
+  handleValidated(IPC.appGetDiscordWebhook, ipcArgSchemas[IPC.appGetDiscordWebhook], () =>
+    discordWebhook.getPreferences(),
+  );
+
+  handleValidated(
+    IPC.appSetDiscordWebhook,
+    ipcArgSchemas[IPC.appSetDiscordWebhook],
+    ([preferences]): DiscordWebhookPreferences => {
+      const value = preferences as DiscordWebhookPreferences;
+      if (value.webhookUrl.length > 0 && !isDiscordWebhookUrl(value.webhookUrl)) {
+        throw new Error("Enter a valid discord.com webhook URL");
+      }
+      settings.set(DISCORD_WEBHOOK_SETTING_KEY, serializeDiscordWebhookPreferences(value));
+      return discordWebhook.getPreferences();
+    },
+  );
+
+  handleValidated(
+    IPC.appTestDiscordWebhook,
+    ipcArgSchemas[IPC.appTestDiscordWebhook],
+    async ([webhookUrl, description]) => discordWebhook.test(webhookUrl, description),
   );
 
   handleValidated(IPC.iniRead, ipcArgSchemas[IPC.iniRead], ([serverId]) =>

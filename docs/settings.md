@@ -11,7 +11,7 @@ the Server tab / workspace.
   the profile that owns them; Settings only summarizes where helpful.
 - Persist durable prefs in SQLite `app_settings`; keep a few create-flow
   conveniences in renderer `localStorage`.
-- Category rail (General, Profiles, SteamCMD, Log files, About) — one pane at a
+- Category rail (General, Profiles, SteamCMD, Discord, Log files, About) — one pane at a
   time, like a native desktop settings window. The last category is remembered
   on this PC. The selected category uses the same rounded pill + left accent
   notch as the app sidebar (`navSelectedClassName`). Sidebar YARK-update icon opens **About**; Downloads missing-SteamCMD
@@ -27,6 +27,7 @@ the Server tab / workspace.
 | Profiles (console, base folder) | `…/components/SettingsServersSection.tsx` |
 | Auto-start summary | `…/components/SettingsAutoStartSection.tsx` |
 | SteamCMD | `…/components/SettingsSteamCmdSection.tsx` |
+| Discord webhooks | `…/components/SettingsDiscordSection.tsx` |
 | Log retention | `…/components/SettingsLogRetentionSection.tsx` |
 | About (YARK updates, app data folders, community links, third-party notices) | `…/components/SettingsYarkUpdateSection.tsx`, `…/components/SettingsAppDataSection.tsx`, `…/components/SettingsAboutCommunitySection.tsx`, `…/components/SettingsAboutLegalSection.tsx` |
 | Density / console-on-start load/migrate | `…/settingsModel.ts` |
@@ -50,6 +51,7 @@ the Server tab / workspace.
 | Close-to-tray, tray toast, Start with Windows | Per-server `autoStart` toggle (Server tab → Startup) |
 | UI density (compact / comfortable) | Theme is **hardcoded dark** (`AppProviders`) — no light/dark control |
 | SteamCMD path + shared caches | Live progress: **Downloads** page + footer teaser + Logs → Updates |
+| Discord webhook + event filters | One-way notifications only; Discord cannot control YARK |
 | Default create base folder (`localStorage`) | Profile `installDir` (absolute, per server) |
 | App data folder shortcuts | Backup disk-alert thresholds (Backups page modal) |
 | Opted-in auto-start **summary** | Quit-with-servers Stop/Cancel dialog (hardcoded in main; not a Setting) |
@@ -83,6 +85,31 @@ the Server tab / workspace.
 | Show server console on start | SQLite `openNativeConsoleOnStart` (`"1"`/`"0"`) | off | Applied on Start / Restart / Auto-start IPC and on backend starts that omit the flag (maintenance restart, post-update resume). Also on first-run Windows step. Legacy `localStorage` `overview.openNativeTerminalOnStart` migrates once. |
 | Default base folder | `localStorage` `settings.defaultServerBaseFolder` | unset | Prefills create-server base path only |
 | Server auto-start summary | Profile `autoStart` | off | Lists opted-in servers; edit on the Server tab |
+
+### Discord (#241)
+
+Discord integration is optional and webhook-only. The master switch defaults off;
+seven event filters are available, with six defaulting on and **Closed by user**
+defaulting off. The webhook URL is stored in local SQLite under
+`discord.webhook.v1`, displayed as a password field, never included in YARK logs or
+delivery errors, and sent only to `https://discord.com/api/webhooks/...`.
+
+Notifications cover server ready, clean stop, closed by user, unexpected crash, and SteamCMD job
+start, success, or failure/rollback. Identical event categories for the same server
+have a two-minute cooldown. Messages disable Discord mentions. Optionally provide a
+custom message template per event (with `{server}` and, for SteamCMD events,
+`{detail}` placeholders); empty templates keep the built-in copy. Templates
+support Discord text formatting (bold, italics, underline, strikethrough, code),
+but mentions remain disabled. Events are grouped into **Server events** and
+**SteamCMD jobs**; each template field shows a live preview of its rendered
+message. **Send test** posts a notification using the focused field's template
+(or the built-in copy when the field is empty). `{detail}` is only substituted
+on SteamCMD events; on other events the token is dropped from the rendered
+message and the matching field flags it as invalid when entered. Delivery runs only
+while YARK is running; the integration provides no bot and no remote commands.
+
+IPC: `app:get-discord-webhook`, `app:set-discord-webhook`, and
+`app:test-discord-webhook`.
 
 IPC for shell / density / console:
 

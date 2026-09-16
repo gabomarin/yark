@@ -6,6 +6,7 @@
 
 import { z } from "zod";
 import { IPC } from "../ipc";
+import { DISCORD_MESSAGE_MAX_LENGTH } from "../settings/discord-webhook";
 import { onboardingRecordSchema } from "../settings/onboarding";
 import { isServerProfilePatch } from "../server/server-profile";
 import {
@@ -136,6 +137,9 @@ export const VALIDATED_IPC_CHANNELS = [
   IPC.appSetOsNotifyCrash,
   IPC.appSetOsNotifySteamCmd,
   IPC.appSetOsNotifyYarkUpdate,
+  IPC.appGetDiscordWebhook,
+  IPC.appSetDiscordWebhook,
+  IPC.appTestDiscordWebhook,
   IPC.appCheckForUpdate,
   IPC.appDownloadUpdate,
   IPC.appInstallUpdate,
@@ -352,6 +356,27 @@ export const ipcArgSchemas = {
   [IPC.appSetOsNotifyCrash]: z.tuple([z.boolean()]),
   [IPC.appSetOsNotifySteamCmd]: z.tuple([z.boolean()]),
   [IPC.appSetOsNotifyYarkUpdate]: z.tuple([z.boolean()]),
+  [IPC.appGetDiscordWebhook]: z.tuple([]),
+  [IPC.appSetDiscordWebhook]: z.tuple([
+    z.object({
+      enabled: z.boolean(),
+      webhookUrl: z.string().max(MAX_URL_LENGTH),
+      events: z.object({
+        serverStarted: z.boolean(),
+        serverStopped: z.boolean(),
+        serverClosedByUser: z.boolean(),
+        serverCrashed: z.boolean(),
+        updateStarted: z.boolean(),
+        updateCompleted: z.boolean(),
+        updateFailed: z.boolean(),
+      }),
+      customMessages: z.record(z.string()).optional(),
+    }),
+  ]),
+  [IPC.appTestDiscordWebhook]: z.tuple([
+    z.string().max(MAX_URL_LENGTH),
+    z.string().max(DISCORD_MESSAGE_MAX_LENGTH).optional(),
+  ]),
   [IPC.appGetUpdateStatus]: z.tuple([]),
   [IPC.appCheckForUpdate]: z.tuple([]),
   [IPC.appDownloadUpdate]: z.tuple([]),

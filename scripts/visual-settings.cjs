@@ -5,9 +5,13 @@ const { STEAMCMD_PATH } = require("./e2e-dom-hooks.cjs");
  */
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
-const os = require("node:os");
 const path = require("node:path");
-const { _electron: electron } = require("playwright");
+const {
+  launchElectronApp,
+  waitForOverview,
+  quitElectronApp,
+  removeFixtureDir,
+} = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -60,23 +64,24 @@ async function run() {
   const projectRoot = path.resolve(__dirname, "..");
   process.chdir(projectRoot);
 
-  const outDir = path.join(os.tmpdir(), "ark-gbo-visual-settings");
+  const outDir = path.join(projectRoot, "artifacts", "visual-settings");
   fs.mkdirSync(outDir, { recursive: true });
 
-  const app = await electron.launch({ args: ["."], cwd: projectRoot });
+  const profileDir = path.join(
+    projectRoot,
+    "artifacts",
+    `visual-settings-profile-${Date.now()}-${process.pid}`,
+  );
+  fs.mkdirSync(profileDir, { recursive: true });
+  const app = await launchElectronApp({ profileDir });
   const errors = [];
 
   try {
-    const page = await app.firstWindow();
+    const page = await waitForOverview(app);
     page.on("console", (message) => {
       if (message.type() === "error") errors.push(`console: ${message.text()}`);
     });
     page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
-
-    await page.waitForLoadState("domcontentloaded");
-    await page.getByRole("heading", { name: "Servers", level: 1 }).waitFor({
-      timeout: 20000,
-    });
 
     await goNav(page, "Settings");
     await page.getByRole("heading", { name: "Settings", level: 1 }).waitFor({
@@ -108,6 +113,45 @@ async function run() {
         `${size.name}: horizontal overflow on SteamCMD`,
       );
 
+      await openSettingsCategory(page, "Discord");
+      await page.getByRole("heading", { name: "Discord", level: 3 }).waitFor({
+        timeout: 10000,
+      });
+      const discord = await measureSettings(page);
+      assert.equal(
+        discord.hasHorizontalOverflow,
+        false,
+        `${size.name}: horizontal overflow on Discord`,
+      );
+      const eventColumns = await page.evaluate(() => {
+        const server = document.querySelector("[data-discord-server-events]")?.getBoundingClientRect();
+        const steamCmd = document.querySelector("[data-discord-steamcmd-jobs]")?.getBoundingClientRect();
+        return server != null && steamCmd != null
+          ? { sameRow: Math.abs(server.top - steamCmd.top) < 2, steamCmdRightOfServer: steamCmd.left > server.left }
+          : null;
+      });
+      assert.ok(eventColumns, `${size.name}: Discord event groups missing`);
+      assert.equal(eventColumns.sameRow, true, `${size.name}: Discord groups are not in one row`);
+      assert.equal(eventColumns.steamCmdRightOfServer, true, `${size.name}: SteamCMD jobs are not in the right column`);
+      await shot(page, outDir, `settings-discord-${size.name}`);
+
+      const discordMaster = page.getByRole("switch", { name: "Discord alerts" });
+      if (!(await discordMaster.isChecked())) {
+        await discordMaster.check({ force: true });
+        await page.waitForTimeout(250);
+      }
+      const customizeCrash = page.getByRole("button", {
+        name: "Customize message for Server crash",
+      });
+      await customizeCrash.click();
+      await page.getByLabel("Custom message for Server crash").waitFor({
+        state: "visible",
+        timeout: 5000,
+      });
+      await page.waitForTimeout(350);
+      await shot(page, outDir, `settings-discord-customize-${size.name}`);
+      await customizeCrash.click();
+
       await openSettingsCategory(page, "Log files");
       await page.getByRole("heading", { name: "Log retention", level: 3 }).waitFor({
         timeout: 10000,
@@ -130,7 +174,8 @@ async function run() {
     }
     console.log("VISUAL_SETTINGS_OK");
   } finally {
-    await app.close();
+    await quitElectronApp(app);
+    await removeFixtureDir(profileDir);
   }
 }
 

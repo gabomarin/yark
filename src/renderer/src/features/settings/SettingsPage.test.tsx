@@ -60,6 +60,25 @@ function stubSettingsApi(
     setOsNotifyCrash: vi.fn().mockResolvedValue({ ok: true, data: true }),
     setOsNotifySteamCmd: vi.fn().mockResolvedValue({ ok: true, data: true }),
     setOsNotifyYarkUpdate: vi.fn().mockResolvedValue({ ok: true, data: true }),
+    getDiscordWebhook: vi.fn().mockResolvedValue({
+      ok: true,
+      data: {
+        enabled: false,
+        webhookUrl: "",
+        events: {
+          serverStarted: true,
+          serverStopped: true,
+          serverClosedByUser: false,
+          serverCrashed: true,
+          updateStarted: true,
+          updateCompleted: true,
+          updateFailed: true,
+        },
+        customMessages: {},
+      },
+    }),
+    setDiscordWebhook: vi.fn(),
+    testDiscordWebhook: vi.fn(),
     getAppUpdateStatus: vi.fn().mockResolvedValue({
       ok: true,
       data: {
