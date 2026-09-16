@@ -77,8 +77,24 @@ function stubSettingsApi(
         customMessages: {},
       },
     }),
-    setDiscordWebhook: vi.fn(),
-    testDiscordWebhook: vi.fn(),
+    setDiscordWebhook: vi.fn().mockResolvedValue({
+      ok: true,
+      data: {
+        enabled: false,
+        webhookUrl: "",
+        events: {
+          serverStarted: true,
+          serverStopped: true,
+          serverClosedByUser: false,
+          serverCrashed: true,
+          updateStarted: true,
+          updateCompleted: true,
+          updateFailed: true,
+        },
+        customMessages: {},
+      },
+    }),
+    testDiscordWebhook: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
     getAppUpdateStatus: vi.fn().mockResolvedValue({
       ok: true,
       data: {

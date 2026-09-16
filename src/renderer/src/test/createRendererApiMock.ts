@@ -17,6 +17,22 @@ const TEST_CHANGELOG_VERSION = "0.11.0";
 /** Official ASA build string shown on Overview when mounting App. */
 export const TEST_OFFICIAL_VERSION = "358.12";
 
+/** Discord webhook preferences fixture for get/set stubs (#241). */
+const TEST_DISCORD_WEBHOOK_PREFERENCES = {
+  enabled: false,
+  webhookUrl: "",
+  events: {
+    serverStarted: true,
+    serverStopped: true,
+    serverClosedByUser: false,
+    serverCrashed: true,
+    updateStarted: true,
+    updateCompleted: true,
+    updateFailed: true,
+  },
+  customMessages: {},
+};
+
 const idleAppUpdateStatus: AppUpdateStatus = {
   phase: "idle",
   currentVersion: TEST_APP_VERSION,
@@ -252,23 +268,13 @@ export function createRendererApiMock(
     setOsNotifyYarkUpdate: vi.fn().mockResolvedValue({ ok: true, data: true }),
     getDiscordWebhook: vi.fn().mockResolvedValue({
       ok: true,
-      data: {
-        enabled: false,
-        webhookUrl: "",
-        events: {
-          serverStarted: true,
-          serverStopped: true,
-          serverClosedByUser: false,
-          serverCrashed: true,
-          updateStarted: true,
-          updateCompleted: true,
-          updateFailed: true,
-        },
-        customMessages: {},
-      },
+      data: { ...TEST_DISCORD_WEBHOOK_PREFERENCES },
     }),
-    setDiscordWebhook: vi.fn(),
-    testDiscordWebhook: vi.fn(),
+    setDiscordWebhook: vi.fn().mockResolvedValue({
+      ok: true,
+      data: { ...TEST_DISCORD_WEBHOOK_PREFERENCES },
+    }),
+    testDiscordWebhook: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
     readServerIni: vi.fn(),
     openServerIniInEditor: vi.fn(),
     previewServerIni: vi.fn(),

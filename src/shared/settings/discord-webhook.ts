@@ -50,7 +50,8 @@ export interface DiscordMessageContext {
   detail?: string;
 }
 
-function safeText(value: string, max = DISCORD_MESSAGE_MAX_LENGTH): string {
+/** Trim a value, neutralize Discord mentions, and cap its length. */
+export function safeText(value: string, max = DISCORD_MESSAGE_MAX_LENGTH): string {
   const trimmed = value.trim().replace(/@(?!\u200b)/g, "@\u200b");
   return trimmed.length <= max ? trimmed : `${trimmed.slice(0, max - 1)}…`;
 }

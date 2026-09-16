@@ -8,6 +8,7 @@ import {
   isDiscordWebhookUrl,
   parseDiscordWebhookPreferences,
   renderDiscordMessage,
+  safeText,
   type DiscordMessageContext,
   type DiscordUpdateEventPayload,
   type DiscordClosedByUserPayload,
@@ -25,11 +26,6 @@ interface DiscordLifecyclePayload {
 }
 
 type FetchLike = typeof fetch;
-
-function safeText(value: string, max = 500): string {
-  const trimmed = value.trim().replaceAll("@", "@\u200b");
-  return trimmed.length <= max ? trimmed : `${trimmed.slice(0, max - 1)}…`;
-}
 
 export class DiscordWebhookService {
   private readonly lastSentAt = new Map<string, number>();
