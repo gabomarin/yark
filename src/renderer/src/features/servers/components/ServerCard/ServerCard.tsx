@@ -1,15 +1,15 @@
 import { memo, type KeyboardEvent, type ReactElement } from "react";
-import { Card, Stack, Text, UnstyledButton } from "@mantine/core";
+import { Card, Stack } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
 import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 import { useRowContextMenu } from "@ui/RowActionMenu/useRowContextMenu";
 import { ServerCardActions } from "./ServerCardActions";
-import { CrashRecoveryNotice } from "./CrashRecoveryNotice";
 import { ServerCardIdentity } from "./ServerCardIdentity";
 import { ServerCardMetaGrid } from "./ServerCardMetaGrid";
 import { ServerCardProgress } from "./ServerCardProgress";
+import { ServerCardRuntimeNotice } from "./ServerCardRuntimeNotice";
 import { ServerCardStatusBadges } from "./ServerCardStatusBadges";
 import { buildServerCardMenuActions } from "./serverCardMenuActions";
 import {
@@ -311,33 +311,7 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
           />
         )}
 
-        {runtime?.crashRecovery != null ? (
-          <CrashRecoveryNotice
-            recovery={runtime.crashRecovery}
-            onOpenLogs={onReviewError}
-          />
-        ) : (
-          runtime?.lastError !== null
-          && runtime?.lastError !== undefined && (
-            <UnstyledButton
-              className={classes.runtimeError}
-              onClick={onReviewError}
-              aria-label={
-                status === "stopped"
-                  ? "Review notice – open runtime logs"
-                  : "Review error – open runtime logs"
-              }
-            >
-              <Text
-                c={status === "stopped" ? "yellow" : "red"}
-                size="sm"
-                className={classes.runtimeErrorText}
-              >
-                {runtime.lastError}
-              </Text>
-            </UnstyledButton>
-          )
-        )}
+        <ServerCardRuntimeNotice runtime={runtime} onReviewError={onReviewError} />
       </Stack>
     </Card>
   );

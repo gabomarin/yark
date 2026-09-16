@@ -10,9 +10,18 @@ import {
 
 /**
  * Workspace-header pill while crash recovery (#563) has a retry scheduled.
- * Complements the card notice without pushing the header layout around.
+ * Renders nothing when no retry is pending so the header stays branch-free.
  */
 export function CrashRecoveryHeaderBadge({
+  recovery,
+}: {
+  recovery: CrashRecoveryRuntime | null | undefined;
+}): ReactElement | null {
+  if (recovery == null) return null;
+  return <CrashRecoveryHeaderBadgeInner recovery={recovery} />;
+}
+
+function CrashRecoveryHeaderBadgeInner({
   recovery,
 }: {
   recovery: CrashRecoveryRuntime;

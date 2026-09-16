@@ -25,4 +25,13 @@ describe("CrashRecoveryHeaderBadge", () => {
       vi.useRealTimers();
     }
   });
+
+  it("renders nothing when no retry is pending", () => {
+    const { container } = render(
+      <AppProviders>
+        <CrashRecoveryHeaderBadge recovery={null} />
+      </AppProviders>,
+    );
+    expect(container.querySelector("[data-crash-recovery-badge]")).toBeNull();
+  });
 });

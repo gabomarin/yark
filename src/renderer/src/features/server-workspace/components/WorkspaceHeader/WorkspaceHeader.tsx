@@ -88,9 +88,7 @@ export function WorkspaceHeader(props: Props): ReactElement {
               {props.server.name}
             </Title>
             <ServerRuntimeStatusBadge status={displayStatus} size="sm" />
-            {props.runtime?.crashRecovery != null && (
-              <CrashRecoveryHeaderBadge recovery={props.runtime.crashRecovery} />
-            )}
+            <CrashRecoveryHeaderBadge recovery={props.runtime?.crashRecovery} />
             {status === "running" && <RconStatusIcon serverId={props.server.id} />}
             {!props.server.enabled && (
               <Badge size="sm" variant="light" color="gray">
