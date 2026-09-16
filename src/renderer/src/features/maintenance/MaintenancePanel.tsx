@@ -10,6 +10,7 @@ import {
   MaintenanceUpdateSection,
 } from "./components/MaintenanceJobSections/MaintenanceJobSections";
 import { MaintenanceUpNext } from "./components/MaintenanceUpNext/MaintenanceUpNext";
+import { CrashRecoverySection } from "./components/CrashRecoverySection/CrashRecoverySection";
 import { useMaintenancePanel } from "./hooks/useMaintenancePanel";
 import {
   MAINTENANCE_RUN_RESTART_NOW_HINT,
@@ -114,6 +115,8 @@ export function MaintenancePanel(props: Props): ReactElement {
           />
         </>
       )}
+
+      <CrashRecoverySection serverId={props.server.id} />
     </Stack>
   );
 }

@@ -296,6 +296,12 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.maintenanceRunUpdateNow, serverId),
   cancelMaintenanceUpcoming: (serverId: string) =>
     ipcRenderer.invoke(IPC.maintenanceCancelUpcoming, serverId),
+  getCrashRecoveryPolicy: (serverId: string) =>
+    ipcRenderer.invoke(IPC.crashRecoveryGetPolicy, serverId),
+  setCrashRecoveryPolicy: (serverId, policy) =>
+    ipcRenderer.invoke(IPC.crashRecoverySetPolicy, serverId, policy),
+  resetCrashRecoveryAttempts: (serverId: string) =>
+    ipcRenderer.invoke(IPC.crashRecoveryResetAttempts, serverId),
   resolveBackupRoot: (serverId: string) =>
     ipcRenderer.invoke(IPC.backupsResolveRoot, serverId),
   openBackupFolder: (serverId: string, backupId: string) =>

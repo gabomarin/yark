@@ -6,6 +6,7 @@ import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 import { useRowContextMenu } from "@ui/RowActionMenu/useRowContextMenu";
 import { ServerCardActions } from "./ServerCardActions";
+import { CrashRecoveryNotice } from "./CrashRecoveryNotice";
 import { ServerCardIdentity } from "./ServerCardIdentity";
 import { ServerCardMetaGrid } from "./ServerCardMetaGrid";
 import { ServerCardProgress } from "./ServerCardProgress";
@@ -310,24 +311,32 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
           />
         )}
 
-        {runtime?.lastError !== null && runtime?.lastError !== undefined && (
-          <UnstyledButton
-            className={classes.runtimeError}
-            onClick={onReviewError}
-            aria-label={
-              status === "stopped"
-                ? "Review notice – open runtime logs"
-                : "Review error – open runtime logs"
-            }
-          >
-            <Text
-              c={status === "stopped" ? "yellow" : "red"}
-              size="sm"
-              className={classes.runtimeErrorText}
+        {runtime?.crashRecovery != null ? (
+          <CrashRecoveryNotice
+            recovery={runtime.crashRecovery}
+            onOpenLogs={onReviewError}
+          />
+        ) : (
+          runtime?.lastError !== null
+          && runtime?.lastError !== undefined && (
+            <UnstyledButton
+              className={classes.runtimeError}
+              onClick={onReviewError}
+              aria-label={
+                status === "stopped"
+                  ? "Review notice – open runtime logs"
+                  : "Review error – open runtime logs"
+              }
             >
-              {runtime.lastError}
-            </Text>
-          </UnstyledButton>
+              <Text
+                c={status === "stopped" ? "yellow" : "red"}
+                size="sm"
+                className={classes.runtimeErrorText}
+              >
+                {runtime.lastError}
+              </Text>
+            </UnstyledButton>
+          )
         )}
       </Stack>
     </Card>

@@ -180,6 +180,36 @@ describe("reconcilePollSnapshots", () => {
     );
   });
 
+  it("detects a crash-recovery notice change on a runtime row (#563)", () => {
+    const base: ServerRuntimeInfo = {
+      serverId: "a",
+      status: "error",
+      processLive: false,
+      pid: null,
+      startedAt: null,
+      lastError: "boom",
+    };
+    const pending: ServerRuntimeInfo = {
+      ...base,
+      crashRecovery: {
+        attempt: 1,
+        maxAttempts: 3,
+        restartAt: "2026-01-01T00:00:30.000Z",
+        reason: "boom",
+      },
+    };
+    expect(reconcileStatusMap(new Map([["a", base]]), [{ ...base }])).toEqual(
+      new Map([["a", base]]),
+    );
+    const withNotice = reconcileStatusMap(new Map([["a", base]]), [pending]);
+    expect(withNotice.get("a")?.crashRecovery?.attempt).toBe(1);
+
+    const cleared = reconcileStatusMap(new Map([["a", pending]]), [
+      { ...base, crashRecovery: null },
+    ]);
+    expect(cleared.get("a")?.crashRecovery ?? null).toBeNull();
+  });
+
   it("reuses the player-list map when roster content is unchanged", () => {
     const state = {
       players: [{ key: "1", name: "Alice" }],

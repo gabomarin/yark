@@ -16,6 +16,8 @@ import { BackupScheduler } from "../backend/domains/backups/backup-scheduler";
 import { MaintenanceScheduler } from "../backend/domains/maintenance/maintenance-scheduler";
 import { MaintenanceService } from "../backend/domains/maintenance/maintenance-service";
 import { MaintenanceRepository } from "../backend/infra/db/maintenance-repository";
+import { CrashRecoveryService } from "../backend/domains/crash-recovery/crash-recovery-service";
+import { CrashRecoveryRepository } from "../backend/infra/db/crash-recovery-repository";
 import { PlayerSessionWatcher } from "../backend/domains/backups/player-session-watcher";
 import { ProcessMetricsSampler } from "../backend/domains/instances/process-metrics-sampler";
 import { IniService } from "../backend/domains/config/ini-service";
@@ -407,6 +409,7 @@ if (isPrimaryInstance) {
     setIpcDiagnosticKnownSecrets(() => collectKnownSecrets(repo.list()));
     const backupRepo = new BackupRepository(db);
     const maintenanceRepo = new MaintenanceRepository(db);
+    const crashRecoveryRepo = new CrashRecoveryRepository(db);
     const processManager = new ProcessManager({
       onProcessCheckpoint: (record) => upsertLeftRunningProcess(settings, record),
       onProcessCheckpointCleared: (serverId) =>
@@ -478,6 +481,22 @@ if (isPrimaryInstance) {
       updateService,
     );
     const maintenanceScheduler = new MaintenanceScheduler(maintenanceService);
+    const crashRecoveryService = new CrashRecoveryService(
+      crashRecoveryRepo,
+      repo,
+      processManager,
+      instances,
+      locks,
+    );
+    crashRecoveryService.setMaintenanceActiveCheck((serverId) =>
+      maintenanceService.isMaintenanceActive(serverId),
+    );
+    crashRecoveryService.setRuntimeChangeNotify((serverId) => {
+      sendToRenderer(
+        IPC_PUSH.serverStatus,
+        crashRecoveryService.annotateStatus(processManager.getStatus(serverId)),
+      );
+    });
     const playerSessionWatcher = new PlayerSessionWatcher(
       backupService,
       repo,
@@ -523,6 +542,7 @@ if (isPrimaryInstance) {
 
     backupScheduler.start();
     maintenanceScheduler.start();
+    crashRecoveryService.start();
     playerSessionWatcher.start();
     processMetricsSampler.start();
     const logRetentionScheduler = new LogRetentionScheduler(logsService);
@@ -655,6 +675,7 @@ if (isPrimaryInstance) {
       modsService,
       backupService,
       maintenanceService,
+      crashRecoveryService,
       moveInstallService,
       {
         app: userData,
@@ -785,7 +806,8 @@ if (isPrimaryInstance) {
     };
 
     const previousServerStatuses = new Map<string, ServerRuntimeInfo["status"]>();
-    processManager.on("status", (info: ServerRuntimeInfo) => {
+    processManager.on("status", (statusInfo: ServerRuntimeInfo) => {
+      const info = crashRecoveryService.annotateStatus(statusInfo);
       sendToRenderer(IPC_PUSH.serverStatus, info);
       scheduleTrayMenuRefresh();
       const previous = previousServerStatuses.get(info.serverId);
@@ -1052,6 +1074,7 @@ if (isPrimaryInstance) {
     app.on("will-quit", () => {
       backupScheduler.stop();
       maintenanceScheduler.stop();
+      crashRecoveryService.dispose();
       playerSessionWatcher.stop();
       processMetricsSampler.stop();
       if (trayRefreshTimer !== null) {

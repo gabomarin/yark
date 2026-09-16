@@ -84,6 +84,17 @@ export class MaintenanceService {
     return this.getPolicy(serverId);
   }
 
+  /**
+   * True while a restart or auto-update warning/execution window owns this
+   * server. Crash recovery must not restart into an active maintenance window.
+   */
+  isMaintenanceActive(serverId: string): boolean {
+    return (
+      this.restartRuntime.hasActiveCountdown(serverId)
+      || this.updateRuntime.hasActiveCountdown(serverId)
+    );
+  }
+
   async runRestartNow(serverId: string): Promise<MaintenancePolicyStatus> {
     await this.restartRuntime.runRestartNow(serverId);
     return this.getPolicy(serverId);

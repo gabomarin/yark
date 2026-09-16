@@ -23,6 +23,7 @@ import type {
   ConfigTransferCommitResult,
   ConfigTransferDescribeResult,
   ConfigTransferPreview,
+  CrashRecoveryPolicy,
   IniPreview,
   InstallationServersMode,
   LogCleanupOptions,
@@ -217,6 +218,9 @@ export const IPC = {
   maintenanceRunRestartNow: "maintenance:run-restart-now",
   maintenanceRunUpdateNow: "maintenance:run-update-now",
   maintenanceCancelUpcoming: "maintenance:cancel-upcoming",
+  crashRecoveryGetPolicy: "crash-recovery:get-policy",
+  crashRecoverySetPolicy: "crash-recovery:set-policy",
+  crashRecoveryResetAttempts: "crash-recovery:reset-attempts",
   backupsResolveRoot: "backups:resolve-root",
   backupsOpenFolder: "backups:open-folder",
   backupsOpenRoot: "backups:open-root",
@@ -672,6 +676,17 @@ export interface RendererApi {
   cancelMaintenanceUpcoming(
     serverId: string,
   ): Promise<IpcResult<MaintenancePolicyStatus>>;
+  getCrashRecoveryPolicy(serverId: string): Promise<IpcResult<CrashRecoveryPolicy>>;
+  setCrashRecoveryPolicy(
+    serverId: string,
+    policy: Omit<
+      CrashRecoveryPolicy,
+      "serverId" | "updatedAt" | "attempts" | "exhausted" | "lastFailureReason"
+    >,
+  ): Promise<IpcResult<CrashRecoveryPolicy>>;
+  resetCrashRecoveryAttempts(
+    serverId: string,
+  ): Promise<IpcResult<CrashRecoveryPolicy>>;
   resolveBackupRoot(serverId: string): Promise<IpcResult<string>>;
   openBackupFolder(serverId: string, backupId: string): Promise<IpcResult<void>>;
   openBackupRoot(serverId: string): Promise<IpcResult<void>>;
