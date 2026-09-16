@@ -273,4 +273,22 @@ describe("CrashRecoveryService", () => {
     await vi.advanceTimersByTimeAsync(60_000);
     expect(h.start).not.toHaveBeenCalled();
   });
+
+  it("shows a fresh count once the live run passes the stability window", () => {
+    enable(h.repo);
+    h.repo.recordAttempt("s1", 2, "boom");
+    h.processes.startedAt = new Date(Date.now() - 18 * 60_000).toISOString();
+
+    const policy = h.service.getPolicy("s1");
+    expect(policy.attempts).toBe(0);
+    expect(policy.exhausted).toBe(false);
+  });
+
+  it("keeps the count while the live run is still short", () => {
+    enable(h.repo);
+    h.repo.recordAttempt("s1", 2, "boom");
+    h.processes.startedAt = new Date(Date.now() - 60_000).toISOString();
+
+    expect(h.service.getPolicy("s1").attempts).toBe(2);
+  });
 });

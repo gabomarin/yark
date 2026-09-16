@@ -94,7 +94,20 @@ export class CrashRecoveryService {
 
   getPolicy(serverId: string): CrashRecoveryPolicy {
     this.repo.ensurePolicy(serverId);
-    return this.repo.getPolicy(serverId);
+    const policy = this.repo.getPolicy(serverId);
+    // A current run past the stability window already counts as fresh, so show
+    // the reset now instead of waiting for the next crash to recompute it.
+    if (policy.attempts > 0 && this.isStableRun(serverId, policy)) {
+      this.repo.reset(serverId);
+      return this.repo.getPolicy(serverId);
+    }
+    return policy;
+  }
+
+  /** True when the live process has been up at least the stability window. */
+  private isStableRun(serverId: string, policy: CrashRecoveryPolicy): boolean {
+    const uptimeMs = this.uptimeMsFor(serverId);
+    return uptimeMs !== null && uptimeMs >= policy.stabilitySeconds * 1000;
   }
 
   setPolicy(

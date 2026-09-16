@@ -176,7 +176,7 @@ export function CrashRecoverySection({
                 />
                 <NumberInput
                   label="Reset attempts after (minutes of uptime)"
-                  description="If the server runs this long before crashing, YARK resets the retry count. Time while stopped does not count."
+                  description="Once the server has been running this long, the attempt count starts over. Time while stopped does not count."
                   size="xs"
                   min={CRASH_RECOVERY_LIMITS.minStabilitySeconds / 60}
                   max={CRASH_RECOVERY_LIMITS.maxStabilitySeconds / 60}

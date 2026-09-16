@@ -171,11 +171,12 @@ never reach this path.
 | Enable | Off | Opt in per server |
 | Restart attempts | 3 | Automatic restarts allowed before it stops |
 | Delay before retry | 30s | Attempt N waits `N × base` (linear: 30/60/90s) so short-lived causes have time to clear |
-| Reset attempts after | 10 min | Measured **at crash time**: if the process that crashed had been up at least this long, the attempts restart at 1. Time spent stopped is not counted |
+| Reset attempts after | 10 min | Measured from the live process uptime: once it has been up this long the attempts start over (a later crash counts as attempt 1). Time spent stopped is not counted |
 
-- Reset semantics: the counter is cleared to 0 when the crashed process had been up
-  past the window; that same crash is then counted as attempt 1. Stopped/idle time and
-  intentional Stop/Restart never reset or consume the budget.
+- Reset semantics: a run past the window clears the counter to 0, so the next crash
+  is attempt 1. The reset is applied both while the run is live (when the policy is
+  read) and recomputed at crash time, so it does not depend on opening the panel.
+  Stopped/idle time and intentional Stop/Restart never reset or consume the budget.
 
 - Attempt budget, `paused`, and last failure reason persist in
   `crash_recovery_policies` (migration 23). Quitting YARK does not resume a pending
