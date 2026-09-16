@@ -58,7 +58,8 @@
     "prepare": "husky",
     "catalog:ini-meta": "node scripts/build-ini-setting-meta.cjs",
     "catalog:launch-options": "node scripts/build-asa-launch-options-catalog.cjs",
-    "catalog:rebuild": "npm run catalog:ini-meta && npm run catalog:ui-categories && npm run catalog:launch-options"
+    "catalog:rebuild": "npm run catalog:ini-meta && npm run catalog:ui-categories && npm run catalog:launch-options",
+    "doctor": "npx react-doctor@latest"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
