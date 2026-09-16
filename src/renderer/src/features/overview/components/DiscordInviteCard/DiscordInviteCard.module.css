@@ -1,0 +1,42 @@
+/* In-flow placement keeps the one-time promo clear of operator toasts, docks,
+   server actions, and Recent activity while retaining the Overview corner. */
+.positioner {
+  align-self: flex-end;
+  width: min(29rem, 100%);
+  margin-block-start: var(--app-space-lg);
+}
+
+.card {
+  border-color: color-mix(
+    in srgb,
+    var(--app-color-accent) 32%,
+    var(--app-color-border)
+  );
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--app-space-sm);
+}
+
+.identity,
+.copy {
+  min-width: 0;
+}
+
+.actions {
+  flex-shrink: 0;
+}
+
+@media (max-width: 520px) {
+  .positioner {
+    width: 100%;
+  }
+
+  .layout {
+    align-items: start;
+    gap: var(--app-space-xs);
+  }
+}

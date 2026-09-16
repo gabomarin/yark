@@ -82,6 +82,7 @@ async function measureOverview(page) {
     const servers = document.querySelector("[data-server-list]");
     const activity = document.querySelector("[data-recent-activity]");
     const scanStatus = document.querySelector("[data-install-health-scan]");
+    const discordInvite = document.querySelector("[data-discord-invite-card]");
     const checkBtn = Array.from(document.querySelectorAll("button")).find((el) =>
       /Check Servers Health|Checking servers health/i.test(el.textContent ?? ""),
     );
@@ -94,6 +95,24 @@ async function measureOverview(page) {
     const activityRect = activityVisible ? activity.getBoundingClientRect() : undefined;
     const scanRect = scanStatus?.getBoundingClientRect();
     const checkRect = checkBtn?.getBoundingClientRect();
+    const inviteRect = discordInvite?.getBoundingClientRect();
+    const invitePosition = discordInvite
+      ? getComputedStyle(discordInvite).position
+      : null;
+
+    const inviteOverlapsContent =
+      inviteRect !== undefined &&
+      overviewRect !== undefined &&
+      content !== null &&
+      (() => {
+        const contentRect = content.getBoundingClientRect();
+        return !(
+          inviteRect.right <= contentRect.left ||
+          inviteRect.left >= contentRect.right ||
+          inviteRect.bottom <= contentRect.top ||
+          inviteRect.top >= contentRect.bottom
+        );
+      })();
 
     const sideBySide =
       activityVisible &&
@@ -122,6 +141,9 @@ async function measureOverview(page) {
       scanOnButton,
       scanTop: scanRect?.top ?? null,
       checkTop: checkRect?.top ?? null,
+      discordInviteVisible: discordInvite !== null,
+      discordInvitePosition: invitePosition,
+      discordInviteOverlapsContent: inviteOverlapsContent,
     };
   }, SERVER_CARD);
 }
@@ -237,7 +259,19 @@ async function run() {
     await withOverviewSession(userData, async (page, errors) => {
       await setDensity(page, "comfortable");
       assert.equal(await page.locator(SERVER_CARD).count(), 0);
+      assert.equal(
+        await page.locator("[data-discord-invite-card]").count(),
+        1,
+        "Discord invite should appear for a fresh operator profile",
+      );
       await captureMatrix(page, outDir, "empty-comfortable", reports);
+      await page.locator("[data-discord-invite-dismiss]").click();
+      await page.locator("[data-discord-invite-card]").waitFor({ state: "detached" });
+      assert.equal(
+        await page.locator("[data-discord-invite-card]").count(),
+        0,
+        "Discord invite should close immediately",
+      );
       if (errors.length > 0) throw new Error(errors.join("\n"));
     });
 
@@ -245,6 +279,11 @@ async function run() {
     await withOverviewSession(userData, async (page, errors) => {
       await setDensity(page, "comfortable");
       assert.equal(await page.locator(SERVER_CARD).count(), 1);
+      assert.equal(
+        await page.locator("[data-discord-invite-card]").count(),
+        0,
+        "Discord invite dismissal should persist after an app restart",
+      );
       console.log("VISUAL_OVERVIEW_FLEET_SMALL=1");
       await captureMatrix(page, outDir, "small-comfortable", reports);
       if (errors.length > 0) throw new Error(errors.join("\n"));
@@ -335,6 +374,18 @@ async function run() {
         true,
         `Unexpected side-by-side layout at ${report.prefix} ${report.viewport}`,
       );
+      if (report.metrics.discordInviteVisible) {
+        assert.notEqual(
+          report.metrics.discordInvitePosition,
+          "fixed",
+          `Discord invite should stay in Overview flow at ${report.viewport}`,
+        );
+        assert.equal(
+          report.metrics.discordInviteOverlapsContent,
+          false,
+          `Discord invite overlaps Overview content at ${report.viewport}`,
+        );
+      }
     }
 
     const qhdPopulated = reports.find(
