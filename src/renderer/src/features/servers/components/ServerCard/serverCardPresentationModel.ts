@@ -72,6 +72,8 @@ function resolveRowTone(input: {
   steamCmdQueued?: boolean;
   stopBusy?: boolean;
   status: ServerStatus;
+  /** Soft notice after operator-closed console (#524); keeps attention tone. */
+  lastError?: string | null;
   isInstallationReady: boolean;
   updateAvailable: boolean;
   serverEnabled?: boolean;
@@ -80,6 +82,14 @@ function resolveRowTone(input: {
   if (input.steamCmdQueued === true) return "queued";
   if (input.status === "running") return "running";
   if (input.status === "error") return "error";
+  if (
+    input.status === "stopped"
+    && input.lastError !== null
+    && input.lastError !== undefined
+    && input.lastError.length > 0
+  ) {
+    return "attention";
+  }
   if (!input.isInstallationReady || input.updateAvailable) return "attention";
   return "stopped";
 }
@@ -126,6 +136,7 @@ function resolveVersionMetaTone(input: {
 
 export function deriveServerCardView(input: {
   status: ServerStatus;
+  lastError?: string | null;
   serverEnabled?: boolean;
   installation: ServerInstallationInfo | null;
   officialSteamBuild: string | null;
@@ -247,6 +258,7 @@ export function deriveServerCardView(input: {
       steamCmdQueued,
       stopBusy,
       status: input.status,
+      lastError: input.lastError,
       isInstallationReady: ready,
       updateAvailable,
       serverEnabled,

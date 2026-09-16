@@ -182,7 +182,13 @@ Constraints:
   An unexpected exit during `starting` (including exit code 0) is an error;
   YARK records `server_crashed` only after that process exit (not spawn/RCON/kill
   failures while the child is still live), with a bounded ShooterGame.log excerpt
-  from **this** run when CFCore/Fatal lines are present.
+  from **this** run when CFCore/Fatal lines are present. Closing the native
+  console (or Task Manager End task / Ctrl+C) while `starting` or `running`
+  uses known Windows operator-closed exit codes (`0xC000013A`, `0x40010004`,
+  `0x40010005`) and is treated as a clean stop: status becomes `stopped` with a
+  **Closed by user** warning on the card, Runtime and Events (`server_stopped`
+  warning) keep the same notice, and no crash toast / `server_crashed` event
+  fires (#524).
 - `servers:open-native-terminal` opens a separate `cmd` in the install dir; that
   is **not** the game process.
 

@@ -14,7 +14,6 @@ import {
 } from "@shared/types";
 import { applyServerProfilePatch } from "@shared/server/server-profile";
 import { syncAsaApiVersionDllForProfile } from "../asa-api/asa-api-inject";
-import { collectKnownSecrets } from "@shared/credential-redaction";
 import { EventEmitter } from "node:events";
 import { existsSync } from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
@@ -23,7 +22,11 @@ import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini/ini-defa
 import type { BackupService } from "../backups/backup-service";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
 import type { ServerRepository } from "../../infra/db/server-repository";
-import type { ProcessManager, UnexpectedManagedExit } from "../../infra/process/process-manager";
+import type {
+  OperatorClosedExit,
+  ProcessManager,
+  UnexpectedManagedExit,
+} from "../../infra/process/process-manager";
 import type { RconSessionManager } from "../../infra/rcon/rcon-session-manager";
 import { mapIdentityStartBlockers } from "@shared/asa/map-identity";
 import { findPortConflicts, validateProfileInput } from "./validation";
@@ -45,7 +48,10 @@ import {
   isInstallationReady,
 } from "@shared/server/installation-health";
 import { assertHostPortsAvailable } from "../../infra/process/host-port-probe";
-import { planUnexpectedServerCrashEvent } from "./instance-crash";
+import {
+  recordOperatorClosedExit,
+  recordUnexpectedProcessExit,
+} from "./instance-process-exit";
 import {
   applySessionPortsToProfile,
   validateSessionPorts,
@@ -133,7 +139,12 @@ export class InstanceService extends EventEmitter {
       emitProgress: (payload) => this.emit("clone-progress", payload),
     });
     this.processes.on("unexpected-exit", (payload: UnexpectedManagedExit) => {
-      this.recordUnexpectedProcessExit(payload);
+      recordUnexpectedProcessExit(this.repo, payload, (notify) => {
+        this.emit("server-crashed", notify);
+      });
+    });
+    this.processes.on("operator-closed", (payload: OperatorClosedExit) => {
+      recordOperatorClosedExit(this.repo, payload);
     });
   }
 
@@ -659,27 +670,6 @@ export class InstanceService extends EventEmitter {
     servers: ServerInstallationInfo[];
   }> {
     return this.fleetInstall.installationInfo(forceOfficialCheck, serversMode);
-  }
-
-  private recordUnexpectedProcessExit(payload: UnexpectedManagedExit): void {
-    const profile = this.repo.get(payload.serverId);
-    const name = profile?.name ?? payload.serverId;
-    const planned = planUnexpectedServerCrashEvent({
-      payload,
-      serverName: name,
-      knownSecrets: collectKnownSecrets(this.repo.list()),
-    });
-    const eventId = this.repo.addEvent(
-      payload.serverId,
-      planned.eventType,
-      planned.severity,
-      planned.summary,
-      planned.details,
-    );
-    this.emit("server-crashed", {
-      ...planned.notify,
-      eventId,
-    });
   }
 
   /** Update health memory and emit degradation-only events. */

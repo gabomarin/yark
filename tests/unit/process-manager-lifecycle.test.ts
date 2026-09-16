@@ -290,6 +290,84 @@ describe("ProcessManager lifecycle ownership", () => {
     expect(manager.getStatus(profile.id).lastError).toContain("spawn ENOENT");
   });
 
+  it("treats operator-closed exit while running as stopped with Closed by user notice", async () => {
+    cleanupRoot = await mkdtemp(join(tmpdir(), "yark-process-operator-closed-"));
+    const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
+    await mkdir(binaryDir, { recursive: true });
+    await writeFile(join(binaryDir, "ArkAscendedServer.exe"), "");
+
+    const child = fakeChild();
+    const unexpected = vi.fn();
+    const operatorClosed = vi.fn();
+    const manager = new ProcessManager({
+      spawnProcess: () => child,
+    });
+    manager.on("unexpected-exit", unexpected);
+    manager.on("operator-closed", operatorClosed);
+    const profile = makeProfile(cleanupRoot);
+
+    manager.start(profile, { skipReadinessCheck: true });
+    child.emit("spawn");
+    expect(manager.getStatus(profile.id).status).toBe("running");
+
+    // Node may surface STATUS_CONTROL_C_EXIT as a signed Int32.
+    child.emit("exit", 0xc000013a | 0);
+
+    expect(unexpected).not.toHaveBeenCalled();
+    expect(operatorClosed).toHaveBeenCalledWith(
+      expect.objectContaining({
+        serverId: profile.id,
+        phase: "running",
+      }),
+    );
+    expect(manager.getStatus(profile.id)).toMatchObject({
+      status: "stopped",
+      processLive: false,
+      lastError: "Closed by user",
+    });
+    expect(manager.getRuntimeLogSnapshot(profile.id).join("\n")).toContain(
+      "Closed by user",
+    );
+  });
+
+  it("treats operator-closed exit while starting as stopped with Closed by user notice", async () => {
+    cleanupRoot = await mkdtemp(join(tmpdir(), "yark-process-operator-closed-start-"));
+    const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
+    await mkdir(binaryDir, { recursive: true });
+    await writeFile(join(binaryDir, "ArkAscendedServer.exe"), "");
+
+    const child = fakeChild();
+    const unexpected = vi.fn();
+    const operatorClosed = vi.fn();
+    const manager = new ProcessManager({
+      spawnProcess: () => child,
+    });
+    manager.on("unexpected-exit", unexpected);
+    manager.on("operator-closed", operatorClosed);
+    const profile = makeProfile(cleanupRoot);
+
+    manager.start(profile);
+    expect(manager.getStatus(profile.id).status).toBe("starting");
+    child.emit("exit", 0x40010004);
+
+    expect(unexpected).not.toHaveBeenCalled();
+    expect(operatorClosed).toHaveBeenCalledWith(
+      expect.objectContaining({
+        serverId: profile.id,
+        phase: "starting",
+        exitCode: 0x40010004,
+      }),
+    );
+    expect(manager.getStatus(profile.id)).toMatchObject({
+      status: "stopped",
+      processLive: false,
+      lastError: "Closed by user",
+    });
+    expect(manager.getRuntimeLogSnapshot(profile.id).join("\n")).toContain(
+      "Closed by user",
+    );
+  });
+
   it("reports asaApiLoading until ShooterGame.log produces new lines", async () => {
     cleanupRoot = await mkdtemp(join(tmpdir(), "yark-process-asaapi-"));
     const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");

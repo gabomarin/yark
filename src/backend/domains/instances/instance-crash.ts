@@ -75,3 +75,40 @@ export function planUnexpectedServerCrashEvent(input: {
     },
   };
 }
+
+export function planOperatorClosedServerEvent(input: {
+  serverId: string;
+  serverName: string;
+  phase: "starting" | "running";
+  exitCode: number | null;
+  notice: string;
+}): {
+  eventType: "server_stopped";
+  severity: "warning";
+  summary: string;
+  details: {
+    what: string;
+    cause: string;
+    suggestion: string;
+    context: {
+      phase: "starting" | "running";
+      exitCode: number | null;
+    };
+  };
+} {
+  return {
+    eventType: "server_stopped",
+    severity: "warning",
+    summary: `Server "${input.serverName}" ${input.notice.toLowerCase()}`,
+    details: {
+      what: "The server console window was closed by the operator.",
+      cause:
+        "Console close, Ctrl+C/Break, or Task Manager End task while YARK still managed the process.",
+      suggestion: "Start the server again from Overview when you are ready.",
+      context: {
+        phase: input.phase,
+        exitCode: input.exitCode,
+      },
+    },
+  };
+}
