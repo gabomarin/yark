@@ -58,7 +58,8 @@
     "prepare": "husky",
     "catalog:ini-meta": "node scripts/build-ini-setting-meta.cjs",
     "catalog:launch-options": "node scripts/build-asa-launch-options-catalog.cjs",
-    "catalog:rebuild": "npm run catalog:ini-meta && npm run catalog:ui-categories && npm run catalog:launch-options"
+    "catalog:rebuild": "npm run catalog:ini-meta && npm run catalog:ui-categories && npm run catalog:launch-options",
+    "doctor": "npx react-doctor@latest"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
@@ -105,6 +106,7 @@
     "knip": "^6.32.2",
     "playwright": "^1.61.1",
     "react": "^19.2.8",
+    "react-doctor": "^0.9.14",
     "react-dom": "^19.2.8",
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.67.0",
