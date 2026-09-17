@@ -35,7 +35,6 @@ export function ServerLaunchPreview(props: Props): ReactElement {
             <span className={classes.previewStructured}>Structured</span>
             {" · "}
             <span className={classes.previewRaw}>Raw</span>
-            {" · secrets redacted"}
           </Text>
           <code className={classes.previewCode}>
             <span className={classes.previewRaw}>

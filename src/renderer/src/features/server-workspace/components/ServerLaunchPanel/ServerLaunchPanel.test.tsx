@@ -256,7 +256,7 @@ describe("ServerLaunchPanel", () => {
       /previewStructured/,
     );
     expect(within(legend).getByText("Raw").className).toMatch(/previewRaw/);
-    expect(legend).toHaveTextContent(/secrets redacted/i);
+    expect(legend).not.toHaveTextContent(/secrets redacted/i);
   });
 });
 
