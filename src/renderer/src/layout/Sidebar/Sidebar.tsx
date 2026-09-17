@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import { useState } from "react";
 import {
   ArrowCircleUp,
+  Broadcast,
   Circle,
   DownloadSimple,
   FileText,
@@ -13,6 +14,7 @@ import {
 } from "@phosphor-icons/react";
 import {
   ActionIcon,
+  Badge,
   Button,
   Divider,
   Group,
@@ -30,12 +32,21 @@ import yarkLogo from "../../assets/brand/yark-logo.png";
 import { QuitYarkModal } from "./QuitYarkModal";
 import classes from "./Sidebar.module.css";
 
-export type Route = "overview" | "downloads" | "clusters" | "backups" | "logs" | "settings";
+export type Route =
+  | "overview"
+  | "downloads"
+  | "clusters"
+  | "backups"
+  | "logs"
+  | "hostedResources"
+  | "settings";
 
 interface NavItem {
   id: Route;
   label: string;
   icon: typeof HardDrives;
+  /** Renders an Experimental chip (default-off experiment). */
+  experimental?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -44,6 +55,12 @@ const NAV_ITEMS: NavItem[] = [
   { id: "downloads", label: "Downloads", icon: DownloadSimple },
   { id: "backups", label: "Backups", icon: HardDrives },
   { id: "logs", label: "Logs", icon: FileText },
+  {
+    id: "hostedResources",
+    label: "Hosted Resources",
+    icon: Broadcast,
+    experimental: true,
+  },
   { id: "settings", label: "Settings", icon: GearSix },
 ];
 
@@ -189,6 +206,10 @@ export function Sidebar(props: Props): ReactElement {
                   >
                     {props.downloadCount}
                   </Text>
+                ) : item.experimental === true ? (
+                  <Badge variant="light" color="gray" size="xs" radius="sm">
+                    Experimental
+                  </Badge>
                 ) : undefined
               }
               className={navSelectedClassName(classes.navLink)}

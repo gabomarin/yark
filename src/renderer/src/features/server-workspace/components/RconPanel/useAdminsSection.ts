@@ -44,7 +44,8 @@ export function useAdminsSection(args: UseAdminsSectionArgs) {
 
   const applyStateToDrafts = useCallback((next: AdminListStateDto): void => {
     setState(next);
-    const url = next.mode === "remote" ? next.adminListUrl : "";
+    const url =
+      next.mode === "remote" || next.mode === "loopback" ? next.adminListUrl : "";
     setUrlDraft(url);
     setIntervalDraft(next.updateAllowedCheatersInterval);
     setSavedUrl(url);

@@ -15,6 +15,7 @@ import { ClustersPage } from "@features/clusters/ClustersPage";
 import { DownloadsPage } from "@features/downloads/DownloadsPage";
 import { LogsPage } from "@features/logs/LogsPage";
 import { BackupsPage } from "@features/backups/BackupsPage";
+import { HostedResourcesPage } from "@features/hosted-resources/HostedResourcesPage";
 import { OverviewPage } from "@features/overview/OverviewPage";
 import { SettingsPage } from "@features/settings/SettingsPage";
 import type { Route } from "@layout/Sidebar/Sidebar";
@@ -215,6 +216,9 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
             }
           />
         ),
+      }}
+      hostedResources={{
+        page: <HostedResourcesPage />,
       }}
       settings={{
         page: (

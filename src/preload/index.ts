@@ -336,6 +336,32 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.modsGetByReference, ref),
   openCurseForgeMod: (url) =>
     ipcRenderer.invoke(IPC.modsOpenCurseForge, url),
+  getHostedResourcesOverview: () =>
+    ipcRenderer.invoke(IPC.hostedResourcesGetOverview),
+  setHostedResourcesEnabled: (enabled) =>
+    ipcRenderer.invoke(IPC.hostedResourcesSetEnabled, enabled),
+  setHostedResourcesPort: (port) =>
+    ipcRenderer.invoke(IPC.hostedResourcesSetPort, port),
+  createHostedResource: (input) =>
+    ipcRenderer.invoke(IPC.hostedResourcesCreateResource, input),
+  publishHostedResourceContent: (resourceId, content, metadata) =>
+    ipcRenderer.invoke(IPC.hostedResourcesPublishContent, resourceId, content, metadata),
+  getHostedResourceContent: (resourceId) =>
+    ipcRenderer.invoke(IPC.hostedResourcesGetContent, resourceId),
+  publishHostedResourceRevision: (resourceId, revisionId) =>
+    ipcRenderer.invoke(IPC.hostedResourcesPublishRevision, resourceId, revisionId),
+  renameHostedResource: (resourceId, displayName) =>
+    ipcRenderer.invoke(IPC.hostedResourcesRenameResource, resourceId, displayName),
+  updateHostedResourceMetadata: (resourceId, input) =>
+    ipcRenderer.invoke(IPC.hostedResourcesUpdateMetadata, resourceId, input),
+  listHostedResourceRevisions: (resourceId) =>
+    ipcRenderer.invoke(IPC.hostedResourcesListRevisions, resourceId),
+  setHostedResourceEnabled: (resourceId, enabled) =>
+    ipcRenderer.invoke(IPC.hostedResourcesSetResourceEnabled, resourceId, enabled),
+  deleteHostedResource: (resourceId) =>
+    ipcRenderer.invoke(IPC.hostedResourcesDeleteResource, resourceId),
+  getHostedResourcesDiagnostics: () =>
+    ipcRenderer.invoke(IPC.hostedResourcesDiagnostics),
   onServerStatus: (listener) => {
     const handler = (_e: unknown, info: ServerRuntimeInfo) => listener(info);
     ipcRenderer.on(IPC_PUSH.serverStatus, handler);

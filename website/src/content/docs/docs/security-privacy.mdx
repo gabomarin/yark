@@ -27,6 +27,7 @@ that Windows-account boundary.
 | CurseForge metadata Worker | Names/summaries/links/screenshots for Project IDs; plain-text **description** on get-by-id inspect (self-hostable from the repo) |
 | GitHub | Manual installer download, and in-app **YARK updates** check/download from Releases |
 | Operator-chosen AdminListURL | RCON **Admins** Validate / Apply fetches your remote http(s) whitelist URL from the main process (desktop trust boundary; not a YARK cloud hop) |
+| Local loopback HTTP host (experimental, off by default) | Serves only the text/INI/JSON resources you publish, to `127.0.0.1` only, so ASA can fetch them; never LAN/WAN, and URLs stop working when YARK exits |
 | Discord (optional) | Outbound server lifecycle and SteamCMD event notifications through the webhook URL you provide |
 
 The desktop app does **not** embed a CurseForge API key. Lookups send Project IDs / search queries — not profiles, passwords, or install paths.
@@ -68,6 +69,11 @@ be installed.
 - Discord webhook URLs are accepted only on Discord's HTTPS webhook endpoint,
   omitted from logs and delivery errors, and used for outbound notifications only
   while YARK is running. Messages disable mentions and expose no control commands.
+- The experimental **Hosted Resources** host is off until you enable it, binds
+  `127.0.0.1` only, serves just the published bodies of resources you enable (never
+  arbitrary files), fails closed if the port is busy or owned by another process, and
+  stops serving when YARK exits. **Disable** stops serving immediately and is
+  reversible; **Delete** removes the resource and its versions.
 - YARK should be locked or closed before letting an untrusted person use the same
   Windows session.
 - The written threat model (SQLite vs INI vs diagnostics) lives in the

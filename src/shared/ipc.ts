@@ -59,6 +59,7 @@ import type { AppUpdateStatus } from "./settings/app-update";
 import type { UiDensity } from "./settings/ui-density";
 import type { DesktopShellPreferences } from "./settings/desktop-shell";
 import type { DiscordWebhookPreferences } from "./settings/discord-webhook";
+import type { HostedResourceFormat } from "./settings/hosted-resources";
 
 type PickPathKind = "directory" | "file" | "save";
 
@@ -239,6 +240,19 @@ export const IPC = {
   modsListCategories: "mods:list-categories",
   modsGetByReference: "mods:get-by-reference",
   modsOpenCurseForge: "mods:open-curseforge",
+  hostedResourcesGetOverview: "hosted-resources:get-overview",
+  hostedResourcesSetEnabled: "hosted-resources:set-enabled",
+  hostedResourcesSetPort: "hosted-resources:set-port",
+  hostedResourcesCreateResource: "hosted-resources:create-resource",
+  hostedResourcesPublishContent: "hosted-resources:publish-content",
+  hostedResourcesGetContent: "hosted-resources:get-content",
+  hostedResourcesPublishRevision: "hosted-resources:publish-revision",
+  hostedResourcesRenameResource: "hosted-resources:rename-resource",
+  hostedResourcesUpdateMetadata: "hosted-resources:update-metadata",
+  hostedResourcesListRevisions: "hosted-resources:list-revisions",
+  hostedResourcesSetResourceEnabled: "hosted-resources:set-resource-enabled",
+  hostedResourcesDeleteResource: "hosted-resources:delete-resource",
+  hostedResourcesDiagnostics: "hosted-resources:diagnostics",
 } as const;
 
 /** Push channel (main -> renderer). */
@@ -294,7 +308,7 @@ export interface OnlinePlayerInfo {
 }
 
 /** ASA administrator whitelist mode (#153). */
-type AdminListModeDto = "local" | "remote" | "misconfigured";
+type AdminListModeDto = "local" | "loopback" | "remote" | "misconfigured";
 
 export interface AdminListStateDto {
   mode: AdminListModeDto;
@@ -319,6 +333,86 @@ interface AdminListValidateDto {
 
 interface AdminListLearnNamesDto {
   updated: number;
+}
+
+/** Experimental loopback HTTP host for published text/JSON/INI resources (#564). */
+export interface HostedResourcesStateDto {
+  /** Operator opt-in. Off until enabled; default-off experiment. */
+  enabled: boolean;
+  port: number;
+  /** Always `127.0.0.1` in this experiment. */
+  bindHost: string;
+  listening: boolean;
+  /** Fail-closed reason when the configured port is unavailable / foreign-owned. */
+  error: string | null;
+}
+
+export interface HostedResourceDto {
+  id: string;
+  displayName: string;
+  format: HostedResourceFormat;
+  /** Canonical URL for the current port. Unavailable while YARK is closed. */
+  url: string;
+  /** Disabled resources keep their data but are never served. */
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+  revisionCount: number;
+  publishedRevisionId: string | null;
+  publishedSequence: number | null;
+  publishedSha256: string | null;
+  /** UTF-8 byte length of the currently served body, or null when unpublished. */
+  publishedSizeBytes: number | null;
+  notes: string;
+  tags: string[];
+}
+
+export interface HostedResourceRevisionDto {
+  id: string;
+  sequence: number;
+  sha256: string;
+  published: boolean;
+  createdAt: string;
+  publishedAt: string | null;
+  /** Null when the revision validated cleanly. */
+  validationMessage: string | null;
+  sizeBytes: number;
+}
+
+export interface HostedResourcesOverviewDto {
+  state: HostedResourcesStateDto;
+  resources: HostedResourceDto[];
+}
+
+/** Per-resource served-bytes self-check (not proof the game accepted it). */
+export interface HostedResourceDiagnosticDto {
+  resourceId: string;
+  displayName: string;
+  url: string;
+  enabled: boolean;
+  published: boolean;
+  declaredSha256: string | null;
+  /** SHA-256 of the bytes served over loopback, or null when unreachable. */
+  servedSha256: string | null;
+  servedOk: boolean;
+  requestCount: number;
+}
+
+export interface HostedResourceReferenceDto {
+  resourceId: string;
+  serverId: string;
+  serverName: string;
+  /** INI key the exact YARK URL was found under (no name heuristics). */
+  key: string;
+  url: string;
+}
+
+export interface HostedResourcesDiagnosticsDto {
+  state: HostedResourcesStateDto;
+  /** Loopback ownership probe: only YARK's listener answers with its marker. */
+  ownership: { ok: boolean; message: string };
+  resources: HostedResourceDiagnosticDto[];
+  references: HostedResourceReferenceDto[];
 }
 
 export interface PlayerListUpdatedPush {
@@ -733,6 +827,45 @@ export interface RendererApi {
   listModCategories(): Promise<IpcResult<ModCategory[]>>;
   getModByReference(ref: string): Promise<IpcResult<ModMetadata>>;
   openCurseForgeMod(url: string): Promise<IpcResult<void>>;
+  getHostedResourcesOverview(): Promise<IpcResult<HostedResourcesOverviewDto>>;
+  setHostedResourcesEnabled(
+    enabled: boolean,
+  ): Promise<IpcResult<HostedResourcesStateDto>>;
+  setHostedResourcesPort(port: number): Promise<IpcResult<HostedResourcesStateDto>>;
+  createHostedResource(input: {
+    displayName: string;
+    format: HostedResourceFormat;
+    content: string;
+    notes?: string;
+    tags?: string[];
+  }): Promise<IpcResult<HostedResourceDto>>;
+  publishHostedResourceContent(
+    resourceId: string,
+    content: string,
+    metadata?: { displayName: string; notes: string; tags: string[] },
+  ): Promise<IpcResult<HostedResourceDto>>;
+  getHostedResourceContent(resourceId: string): Promise<IpcResult<string>>;
+  publishHostedResourceRevision(
+    resourceId: string,
+    revisionId: string,
+  ): Promise<IpcResult<HostedResourceDto>>;
+  renameHostedResource(
+    resourceId: string,
+    displayName: string,
+  ): Promise<IpcResult<HostedResourceDto>>;
+  updateHostedResourceMetadata(
+    resourceId: string,
+    input: { displayName: string; notes: string; tags: string[] },
+  ): Promise<IpcResult<HostedResourceDto>>;
+  listHostedResourceRevisions(
+    resourceId: string,
+  ): Promise<IpcResult<HostedResourceRevisionDto[]>>;
+  setHostedResourceEnabled(
+    resourceId: string,
+    enabled: boolean,
+  ): Promise<IpcResult<HostedResourceDto>>;
+  deleteHostedResource(resourceId: string): Promise<IpcResult<void>>;
+  getHostedResourcesDiagnostics(): Promise<IpcResult<HostedResourcesDiagnosticsDto>>;
   onServerStatus(
     listener: (info: ServerRuntimeInfo) => void,
   ): () => void;

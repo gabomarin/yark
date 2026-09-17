@@ -85,6 +85,7 @@ paths or the Notion hub URL in tracked files.
 - [config-transfer.md](config-transfer.md) — one-shot Copy configuration between profiles (#95); pending-draft source/target rules (#530).
 - [launch-options-catalog.md](launch-options-catalog.md) — verified ASA CLI catalog (#92); regenerates via `npm run catalog:launch-options`.
 - [rcon.md](rcon.md) — workspace RCON console, persistent session, players, ban list.
+- [hosted-resources.md](hosted-resources.md) — experimental, default-off loopback HTTP host for versioned text/INI/JSON URL bodies (#564).
 - [settings.md](settings.md) — app-wide prefs, category rail (General / Profiles / SteamCMD / Log files / About), desktop shell, SteamCMD path, density, auto-start summary.
 - [clusters.md](clusters.md) — transfer-compliance reports, cluster launch trio, Clusters page. Live-host archive: [spikes/22-cluster-live-transfers.md](spikes/22-cluster-live-transfers.md) (#22).
 - [mods.md](mods.md) — workspace CurseForge inventory, enable/disable, load order, metadata proxy, `-mods=`.

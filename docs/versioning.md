@@ -101,6 +101,8 @@ Workflow: [`.github/workflows/release.yml`](../.github/workflows/release.yml)
 
 Unpackaged `npm run dev` / `npm start` still use Electron’s default fuse wire. E2E/visual helpers unset `ELECTRON_RUN_AS_NODE` for those workflows; that env escape is disabled only on packaged binaries.
 
+`runAsNode` stays off even though a future detached [Hosted Resources](hosted-resources.md) host could spawn a lighter Node child with it. Flipping it would turn the signed `YARK.exe` into a general-purpose Node interpreter (allowlisting / code-signing abuse; ASAR integrity does not cover node mode), paid by every install for one optional feature. Prefer a host-only YARK relaunch or a bundled Node runtime if that helper is ever built.
+
 ### Local `npm run package` on Windows
 
 If packaging fails extracting `winCodeSign` with:

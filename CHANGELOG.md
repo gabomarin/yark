@@ -13,9 +13,12 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - Manual restart warnings can use compact Quiet, Standard, or Frequent player-notification presets before the graceful restart (#573).
 - Optional per-server **crash recovery**: after a real unexpected exit, YARK can restart the dedicated automatically within a bounded attempt budget — configurable max attempts, linear backoff, and a stability window that resets the budget. Default off; intentional stops, disabled profiles, active Maintenance windows, held locks, and exhausted budgets never restart. Attempt/pause state persists across relaunch, the Maintenance tab shows attempt N of M, paused, exhausted, and the last failure reason, and the server card shows a live auto-restart countdown when a retry is scheduled (#563).
+- Experimental, default-off **Hosted Resources** now supports operator notes and normalized tags for quickly identifying resources, with clearer ASA dynamic-config examples and a guided “next step” for connecting a copied URL to a server setting (#564).
+- Hosted Resource edits now publish content and operator metadata atomically; listener settings and diagnostics are serialized to keep reported state consistent with the requested operation (#564).
 
 ### Fixed
 
+- A loopback `AdminListURL` (for example a **Hosted Resources** URL) is now kept verbatim in `GameUserSettings.ini` instead of being rewritten to a `file://` pointer, so the Admins field keeps showing the URL and **Current ids** reads the served list (#564).
 - Launch **Show effective command preview** legend uses the same colors as the command tokens (YARK-owned, Structured, Caution, Raw) (#510).
 
 ## [0.21.0] - 2026-09-16

@@ -53,6 +53,18 @@ a pre-migrate snapshot when an on-disk DB already exists). A failed healthy-boot
 snapshot is logged but does not block opening a database that already passed its
 integrity checks.
 
+### Migration numbering
+
+Migrations are forward-only and keyed on `PRAGMA user_version`: only rows with
+`version > current` run. Two consequences:
+
+- Never reuse a version number across parallel PRs. If another PR lands the same
+  number first, renumber the later one — a duplicate is skipped, not merged.
+- A profile whose `user_version` is **ahead** of the code (for example a dev / isolated
+  profile migrated by a different branch) silently skips new migrations, so a table can
+  be missing while its IPC handler exists. Align the number with what actually ships, or
+  lower that profile's `user_version` so the pending migration runs.
+
 ## Profile DB snapshots (#252)
 
 Known-good copies are taken **before** corruption or a bad migration — not after

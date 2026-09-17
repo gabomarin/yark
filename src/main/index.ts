@@ -1,5 +1,5 @@
 import { app, BrowserWindow, Menu, dialog, screen, shell, type Tray } from "electron";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { DatabaseSync } from "node:sqlite";
 import { AppSettingsRepository } from "../backend/infra/db/app-settings-repository";
@@ -41,6 +41,9 @@ import { LogRetentionScheduler } from "../backend/domains/logs/log-retention-sch
 import { UpdateService } from "../backend/domains/updates/update-service";
 import { MoveInstallService } from "../backend/domains/instances/move-install-service";
 import { ModsService } from "../backend/domains/mods/mods-service";
+import { HostedResourcesService } from "../backend/domains/hosted-resources/hosted-resources-service";
+import { HostedResourcesRepository } from "../backend/infra/db/hosted-resources-repository";
+import { gameUserSettingsIniPath } from "../backend/domains/instances/sync-profile-ini";
 import { InstanceLockManager } from "../backend/orchestration/instance-lock-manager";
 import { AppUpdateService } from "./app-update-service";
 import { DiscordWebhookService } from "./discord-webhook-service";
@@ -407,6 +410,22 @@ if (isPrimaryInstance) {
     }
     const repo = new ServerRepository(db);
     setIpcDiagnosticKnownSecrets(() => collectKnownSecrets(repo.list()));
+    // ponytail: reads every managed INI on each diagnostics call; cache if the
+    // fleet grows. Off by default, so this only runs when the operator asks.
+    const hostedResources = new HostedResourcesService({
+      repo: new HostedResourcesRepository(db),
+      settings,
+      readReferenceSources: () =>
+        repo.list().map((profile) => {
+          let text = "";
+          try {
+            text = readFileSync(gameUserSettingsIniPath(profile.installDir), "utf8");
+          } catch {
+            text = "";
+          }
+          return { serverId: profile.id, serverName: profile.name, text };
+        }),
+    });
     const backupRepo = new BackupRepository(db);
     const maintenanceRepo = new MaintenanceRepository(db);
     const crashRecoveryRepo = new CrashRecoveryRepository(db);
@@ -555,6 +574,7 @@ if (isPrimaryInstance) {
     processMetricsSampler.start();
     const logRetentionScheduler = new LogRetentionScheduler(logsService);
     logRetentionScheduler.start();
+    void hostedResources.start();
     applyWindowsLoginItem(readDesktopShellPreferences(settings).startWithWindows);
 
     // Drop leftover YARK move-staging dirs from interrupted attempts (#56).
@@ -697,6 +717,7 @@ if (isPrimaryInstance) {
       processMetricsSampler,
       appUpdateService,
       discordWebhook,
+      hostedResources,
       requestAppQuit,
     );
 
@@ -1087,6 +1108,7 @@ if (isPrimaryInstance) {
       crashRecoveryService.dispose();
       playerSessionWatcher.stop();
       processMetricsSampler.stop();
+      void hostedResources.dispose();
       if (trayRefreshTimer !== null) {
         clearTimeout(trayRefreshTimer);
         trayRefreshTimer = null;

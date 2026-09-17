@@ -54,6 +54,7 @@ describe("appSpotlightModel", () => {
       "Downloads",
       "Backups",
       "Logs",
+      "Hosted Resources",
       "Settings",
     ]);
     expect(SPOTLIGHT_NAV_ITEMS.every((item) => item.icon != null)).toBe(true);
