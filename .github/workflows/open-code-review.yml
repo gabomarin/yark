@@ -1,0 +1,147 @@
+name: OpenCodeReview
+
+on:
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Pull request number to review
+        required: true
+        type: string
+      provider:
+        description: LLM provider to use
+        required: true
+        default: primary
+        type: choice
+        options:
+          - primary
+          - fallback
+          - retry
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: >-
+    ${{
+      github.event_name == 'workflow_dispatch'
+      && format('ocr-{0}', inputs.pr_number)
+      || (
+        github.event.issue.pull_request
+        && startsWith(github.event.comment.body, '/open-code-review')
+        && format('ocr-{0}', github.event.issue.number)
+        || format('ocr-noop-{0}', github.run_id)
+      )
+    }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    name: Review pull request
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: >-
+      ${{
+        github.event_name == 'workflow_dispatch'
+        || (
+          github.event_name == 'issue_comment'
+          && github.event.issue.pull_request
+          && github.event.comment.user.type != 'Bot'
+          && (
+            github.event.comment.author_association == 'MEMBER'
+            || github.event.comment.author_association == 'OWNER'
+            || github.event.comment.author_association == 'COLLABORATOR'
+          )
+          && startsWith(github.event.comment.body, '/open-code-review')
+        )
+      }}
+    steps:
+      - name: Resolve provider and validate command
+        id: provider
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          REQUESTED_PROVIDER: ${{ inputs.provider || '' }}
+          PRIMARY_CONFIGURED: ${{ vars.OCR_PRIMARY_URL != '' && vars.OCR_PRIMARY_MODEL != '' && secrets.OCR_PRIMARY_API_KEY != '' }}
+          FALLBACK_CONFIGURED: ${{ vars.OCR_FALLBACK_URL != '' && vars.OCR_FALLBACK_MODEL != '' && secrets.OCR_FALLBACK_API_KEY != '' }}
+        with:
+          script: |
+            const requestedProvider = process.env.REQUESTED_PROVIDER;
+            let provider = requestedProvider || 'primary';
+
+            if (context.eventName === 'issue_comment') {
+              const command = context.payload.comment.body.trim();
+              const match = command.match(/^\/open-code-review(?:\s+(primary|fallback|retry))?$/i);
+
+              if (!match) {
+                core.setFailed('Use exactly /open-code-review, /open-code-review primary, /open-code-review retry, or /open-code-review fallback.');
+                return;
+              }
+
+              const commandProvider = match[1]?.toLowerCase();
+              provider = commandProvider === 'fallback' ? 'fallback' : commandProvider === 'retry' ? 'retry' : 'primary';
+            }
+
+            if (!['primary', 'fallback'].includes(provider)) {
+              if (provider !== 'retry') {
+                core.setFailed(`Unsupported provider: ${provider}`);
+                return;
+              }
+            }
+
+            const configured = provider === 'fallback'
+              ? process.env.FALLBACK_CONFIGURED === 'true'
+              : process.env.PRIMARY_CONFIGURED === 'true';
+            if (!configured) {
+              core.setFailed(`${provider} OpenCodeReview provider is not fully configured.`);
+              return;
+            }
+
+            core.setOutput('provider', provider);
+
+      - name: Resolve pull request refs
+        id: pr-context
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          PR_NUMBER: ${{ github.event.issue.number || inputs.pr_number }}
+        with:
+          script: |
+            const pullNumber = Number(process.env.PR_NUMBER);
+            if (!Number.isInteger(pullNumber) || pullNumber < 1) {
+              core.setFailed(`Invalid pull request number: ${process.env.PR_NUMBER}`);
+              return;
+            }
+
+            let pullRequest;
+            try {
+              ({ data: pullRequest } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pullNumber,
+              }));
+            } catch (error) {
+              core.setFailed(`Unable to load pull request #${pullNumber}: ${error.message}`);
+              return;
+            }
+
+            core.setOutput('base_ref', pullRequest.base.ref);
+            core.setOutput('head_sha', pullRequest.head.sha);
+
+      - name: Run OpenCodeReview
+        uses: alibaba/open-code-review@f1101fd7f51304c82e4a4f292bbee88aea0823cf # v1.12.4
+        with:
+          llm_url: ${{ steps.provider.outputs.provider == 'fallback' && vars.OCR_FALLBACK_URL || vars.OCR_PRIMARY_URL }}
+          llm_auth_token: ${{ steps.provider.outputs.provider == 'fallback' && secrets.OCR_FALLBACK_API_KEY || secrets.OCR_PRIMARY_API_KEY }}
+          llm_model: ${{ steps.provider.outputs.provider == 'fallback' && vars.OCR_FALLBACK_MODEL || vars.OCR_PRIMARY_MODEL }}
+          llm_use_anthropic: false
+          language: English
+          ocr_version: "1.12.4"
+          sticky_summary: true
+          incremental: true
+          checkpoint_range: true
+          full_review: ${{ steps.provider.outputs.provider == 'retry' }}
+          github_token: ${{ github.token }}
+          pr_number: ${{ github.event.issue.number || inputs.pr_number }}
+          base_ref: ${{ steps.pr-context.outputs.base_ref }}
+          head_sha: ${{ steps.pr-context.outputs.head_sha }}

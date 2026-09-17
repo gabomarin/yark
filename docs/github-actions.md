@@ -14,6 +14,36 @@ human-readable version comment on the line above each `uses:` entry. Mutable tag
 | [`.github/workflows/changelog.yml`](../.github/workflows/changelog.yml) | Require Unreleased changelog | `contents: read`, `pull-requests: read` |
 | [`.github/workflows/pages.yml`](../.github/workflows/pages.yml) | Deploy site to Cloudflare Pages (`getyark`) | `contents: read` |
 | [`.github/workflows/release.yml`](../.github/workflows/release.yml) | Windows NSIS → GitHub Release; Discord `#releases` notify after assets upload | workflow `contents: read`; job elevates `contents: write` only to publish |
+| [`.github/workflows/open-code-review.yml`](../.github/workflows/open-code-review.yml) | On-demand AI review for a PR with primary/fallback model selection; no automatic run on pushes | `contents: read`, `pull-requests: write` |
+
+### OpenCodeReview
+
+The reviewer runs only when an authorized collaborator comments on a pull request
+or when it is started from **Actions → OpenCodeReview → Run workflow**. It does not
+run for every PR push.
+
+Configure these repository **Variables**:
+
+- `OCR_PRIMARY_URL` — primary OpenAI-compatible endpoint.
+- `OCR_PRIMARY_MODEL` — primary model name.
+- `OCR_FALLBACK_URL` — fallback OpenAI-compatible endpoint.
+- `OCR_FALLBACK_MODEL` — fallback model name.
+
+Configure these repository **Secrets**:
+
+- `OCR_PRIMARY_API_KEY` — credential for the primary endpoint.
+- `OCR_FALLBACK_API_KEY` — credential for the fallback endpoint.
+
+Use these exact PR comments:
+
+- `/open-code-review` — review with the primary provider.
+- `/open-code-review primary` — review with the primary provider.
+- `/open-code-review retry` — force a full review with the primary provider.
+- `/open-code-review fallback` — review with the fallback provider.
+
+Repeated reviews use sticky summaries, incremental comments, and checkpoint ranges
+to avoid repeating already reviewed changes. The explicit `retry` command bypasses
+the checkpoint and reviews the full PR again.
 | [`.github/workflows/discord-release-notify.yml`](../.github/workflows/discord-release-notify.yml) | Manual Discord re-announce for an existing tag (`workflow_dispatch`) | `contents: read` |
 
 Release runs only when `github.repository == 'gabomarin/yark'` (tag push or
