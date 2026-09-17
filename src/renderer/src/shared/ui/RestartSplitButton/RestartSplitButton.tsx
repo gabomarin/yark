@@ -36,83 +36,109 @@ export function RestartSplitButton(props: Props): ReactElement {
   const remaining = useCountdownRemaining(manualCountdown?.targetAtMs ?? null);
 
   if (manualCountdown !== null) {
-    const label = remaining === null ? "" : formatRestartCountdown(remaining);
-    return (
-      <Button
-        size={size}
-        color="red"
-        variant="light"
-        leftSection={<X size={14} weight="bold" />}
-        onClick={props.onCancel}
-        data-restart-warning-cancel
-      >
-        {label.length > 0 ? `Cancel restart · ${label}` : "Cancel restart"}
-      </Button>
-    );
+    return <ManualRestartCancelButton size={size} remaining={remaining} onCancel={props.onCancel} />;
   }
 
-  const warningDisabled = !props.canRestartWithWarning;
-  const warningHint = !props.canRestartWithWarning
-    ? "Server must be running and not busy"
-    : undefined;
-
   if (!props.manualRestartWarningsEnabled) {
-    return (
-      <Button
-        size={size}
-        variant="filled"
-        color="fossil"
-        leftSection={restartBusy ? undefined : <ArrowsClockwise size={14} weight="bold" />}
-        onClick={props.onRestartNow}
-        disabled={!props.canRestartNow}
-        loading={restartBusy}
-        data-restart-action
-      >
-        {restartBusy ? "Restarting…" : "Restart now"}
-      </Button>
-    );
+    return <RestartNowButton {...props} size={size} restartBusy={restartBusy} />;
   }
 
   return (
     <Button.Group>
-      <Button
-        size={size}
-        variant="filled"
-        color="fossil"
-        leftSection={restartBusy ? undefined : <ArrowsClockwise size={14} weight="bold" />}
-        onClick={props.onRestartNow}
-        disabled={!props.canRestartNow}
-        loading={restartBusy}
-        data-restart-action
-      >
-        {restartBusy ? "Restarting…" : "Restart now"}
-      </Button>
-      <Menu shadow="md" withinPortal position="bottom-end">
-        <Menu.Target>
-          <Button
-            size={size}
-            variant="filled"
-            color="fossil"
-            px="xs"
-            aria-label="More restart options"
-            disabled={restartBusy || !props.canRestartNow}
-            data-restart-menu-target
-          >
-            <CaretDown size={14} weight="bold" />
-          </Button>
-        </Menu.Target>
-        <Menu.Dropdown>
-          <Menu.Item
-            leftSection={<Warning size={16} />}
-            disabled={warningDisabled}
-            title={warningHint}
-            onClick={props.onRestartWithWarning}
-            data-restart-with-warning
-          >
-            Restart with player warning
-          </Menu.Item>
-        </Menu.Dropdown>
-      </Menu>
+      <RestartNowButton {...props} size={size} restartBusy={restartBusy} />
+      <RestartWarningMenu {...props} size={size} restartBusy={restartBusy} />
     </Button.Group>
+  );
+}
+
+function ManualRestartCancelButton({
+  size,
+  remaining,
+  onCancel,
+}: {
+  size: NonNullable<Props["size"]>;
+  remaining: number | null;
+  onCancel: () => void;
+}): ReactElement {
+  const label = remaining === null ? "" : formatRestartCountdown(remaining);
+
+  return (
+    <Button
+      size={size}
+      color="red"
+      variant="light"
+      leftSection={<X size={14} weight="bold" />}
+      onClick={onCancel}
+      data-restart-warning-cancel
+    >
+      {label.length > 0 ? `Cancel restart · ${label}` : "Cancel restart"}
+    </Button>
+  );
+}
+
+function RestartNowButton({
+  size,
+  canRestartNow,
+  restartBusy,
+  onRestartNow,
+}: Pick<Props, "canRestartNow" | "onRestartNow"> & {
+  size: NonNullable<Props["size"]>;
+  restartBusy: boolean;
+}): ReactElement {
+  return (
+    <Button
+      size={size}
+      variant="filled"
+      color="fossil"
+      leftSection={restartBusy ? undefined : <ArrowsClockwise size={14} weight="bold" />}
+      onClick={onRestartNow}
+      disabled={!canRestartNow}
+      loading={restartBusy}
+      data-restart-action
+    >
+      {restartBusy ? "Restarting…" : "Restart now"}
+    </Button>
+  );
+}
+
+function RestartWarningMenu({
+  size,
+  restartBusy,
+  canRestartNow,
+  canRestartWithWarning,
+  onRestartWithWarning,
+}: Pick<Props, "canRestartNow" | "canRestartWithWarning" | "onRestartWithWarning"> & {
+  size: NonNullable<Props["size"]>;
+  restartBusy: boolean;
+}): ReactElement {
+  const warningDisabled = !canRestartWithWarning;
+
+  return (
+    <Menu shadow="md" withinPortal position="bottom-end">
+      <Menu.Target>
+        <Button
+          size={size}
+          variant="filled"
+          color="fossil"
+          px="xs"
+          aria-label="More restart options"
+          disabled={restartBusy || !canRestartNow}
+          data-restart-menu-target
+        >
+          <CaretDown size={14} weight="bold" />
+        </Button>
+      </Menu.Target>
+      <Menu.Dropdown>
+        <Menu.Item
+          leftSection={<Warning size={16} />}
+          disabled={warningDisabled}
+          title={warningDisabled ? "Server must be running and not busy" : undefined}
+          onClick={onRestartWithWarning}
+          data-restart-with-warning
+        >
+          Restart with player warning
+        </Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
   );
 }
