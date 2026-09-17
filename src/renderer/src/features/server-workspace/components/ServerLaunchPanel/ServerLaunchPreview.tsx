@@ -29,8 +29,13 @@ export function ServerLaunchPreview(props: Props): ReactElement {
       </Button>
       {props.open ? (
         <AppSurfaceCard tone="flat">
-          <Text size="xs" c="dimmed" mb={6}>
-            YARK-owned · Structured · Raw · secrets redacted
+          <Text size="xs" c="dimmed" mb={6} data-testid="launch-preview-legend">
+            <span className={classes.previewYark}>YARK-owned</span>
+            {" · "}
+            <span className={classes.previewStructured}>Structured</span>
+            {" · "}
+            <span className={classes.previewRaw}>Raw</span>
+            {" · secrets redacted"}
           </Text>
           <code className={classes.previewCode}>
             <span className={classes.previewRaw}>
