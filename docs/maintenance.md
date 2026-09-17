@@ -38,6 +38,7 @@ No push channel — the Maintenance tab polls `getPolicy` while mounted.
 | `maintenanceSetPolicy` | `maintenance:set-policy` | `setMaintenancePolicy` | zod `maintenancePolicyWriteSchema` |
 | `maintenanceClearSchedulePause` | `maintenance:clear-schedule-pause` | `clearMaintenanceSchedulePause` | Clears **both** runtimes’ pauses + fail streaks |
 | `maintenanceRunRestartNow` | `maintenance:run-restart-now` | `runMaintenanceRestartNow` | Short lead → countdown |
+| `maintenanceRunRestartWarning` | `maintenance:run-manual-restart-warning` | `runMaintenanceRestartWarning` | Opt-in manual warning window → graceful restart |
 | `maintenanceRunUpdateNow` | `maintenance:run-update-now` | `runMaintenanceUpdateNow` | Requires running + Steam newer |
 | `maintenanceCancelUpcoming` | `maintenance:cancel-upcoming` | `cancelMaintenanceUpcoming` | Cancels both runtimes’ active windows |
 
@@ -64,11 +65,33 @@ From `maintenance-policy.ts` (labels in UI: Off / Minimal / Regular / Frequent /
 | --- | --- | --- | --- |
 | Restart | `5m` | `30m,15m,5m,1m` | `30m,15m,10m,5m,1m` |
 | Update | `5m` | `15m,5m,1m` | `15m,10m,5m,1m` |
+| Manual restart | `5m` | `5m,1m` | `10m,5m,1m` |
 
 Defaults: Sunday **04:00**, templates `Server restart/update in {time}`, `lastMinuteChat: true`.
 Last-minute lines are **fixed** (not editable): `Restart in {n}s` / `Update in {n}s`.
 **Custom** with no valid times → Off; choosing Custom again selects all default chips
 (`30m|15m|10m|5m|1m`). ASA warnings use **`ServerChat`**, not `Broadcast`.
+
+## Manual restart warnings (#573)
+
+The Maintenance tab has a separate per-server **Manual restart warnings** toggle,
+off by default. When enabled, the Restart split button offers **Restart with
+player warning** without changing the immediate **Restart now** action. Manual
+warnings use three short fixed presets so the action stays easy to scan:
+
+| Preset | Messages before restart |
+| --- | --- |
+| Minimal | `5m` |
+| Regular (default) | `5m`, `1m` |
+| Frequent | `10m`, `5m`, `1m` |
+
+The optional last-minute chat countdown uses the fixed `Restart in {n}s` copy.
+The operator can cancel while the warning window is active; if players already
+received a warning, YARK sends one `Server restart canceled. The server will
+remain online.` ServerChat message. Stop stays unavailable until the operator
+cancels the queued restart; Force close remains an emergency action. At zero the
+existing graceful restart path runs. Manual warning settings are separate from
+the weekly restart schedule and do not add a second permanent restart button.
 
 ## Session runtime state
 

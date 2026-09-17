@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import { defaultMaintenancePolicy } from "../src/shared/maintenance/maintenance-policy";
+import {
+  defaultMaintenancePolicy,
+  normalizeManualRestartWarnings,
+} from "../src/shared/maintenance/maintenance-policy";
 import { MAINTENANCE_RCON_SOFT_FAIL_LIMIT } from "../src/shared/maintenance/maintenance-schedule";
 import { MaintenanceRestartRuntime } from "../src/backend/domains/maintenance/maintenance-restart-runtime";
 import type { MaintenancePolicy } from "../src/shared/types";
@@ -45,6 +48,102 @@ function makeRuntime(policy: MaintenancePolicy) {
 }
 
 describe("MaintenanceRestartRuntime", () => {
+  it("uses the manual restart warning cadence instead of the weekly schedule cadence", async () => {
+    const policy = {
+      ...defaultMaintenancePolicy("s1", "2026-01-01T00:00:00.000Z"),
+      manualRestartWarningsEnabled: true,
+    };
+    const { runtime } = makeRuntime(policy);
+    const armed = await runtime.runManualRestartWarning("s1");
+    expect(armed.nextRestartAt).not.toBeNull();
+    expect(Date.parse(armed.nextRestartAt!) - Date.now()).toBeGreaterThan(4 * 60_000);
+    expect(Date.parse(armed.nextRestartAt!) - Date.now()).toBeLessThan(6 * 60_000);
+  });
+
+  it("keeps a manual countdown running when the renderer notification throws", async () => {
+    const policy = {
+      ...defaultMaintenancePolicy("s1", "2026-01-01T00:00:00.000Z"),
+      manualRestartWarningsEnabled: true,
+    };
+    const { runtime, instances } = makeRuntime(policy);
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    runtime.setRuntimeChangeNotify(() => {
+      throw new Error("renderer unavailable");
+    });
+
+    try {
+      const armed = await runtime.runManualRestartWarning("s1");
+      expect(armed.countdownKind).toBe("manual");
+      await vi.waitFor(() => {
+        expect(instances.execRcon).toHaveBeenCalledWith(
+          "s1",
+          "ServerChat Server restart in 5 minutes",
+          { recordEvent: false },
+        );
+      });
+      expect(errorSpy).toHaveBeenCalled();
+      runtime.cancelUpcoming("s1");
+    } finally {
+      errorSpy.mockRestore();
+    }
+  });
+
+  it("normalizes legacy custom manual warnings to the Standard cadence", async () => {
+    const policy = {
+      ...defaultMaintenancePolicy("s1", "2026-01-01T00:00:00.000Z"),
+      manualRestartWarningsEnabled: true,
+      manualRestartWarnings: {
+        ...defaultMaintenancePolicy("s1", "t").manualRestartWarnings,
+        preset: "custom" as const,
+        customOffsets: ["30m"],
+        lastMinuteChat: false,
+      },
+    };
+    const { runtime, instances } = makeRuntime(policy);
+    const armed = await runtime.runManualRestartWarning("s1");
+    expect(Date.parse(armed.nextRestartAt!) - Date.now()).toBeGreaterThan(4 * 60_000);
+    expect(Date.parse(armed.nextRestartAt!) - Date.now()).toBeLessThan(6 * 60_000);
+    expect(normalizeManualRestartWarnings(policy.manualRestartWarnings)).toMatchObject({
+      preset: "standard",
+      customOffsets: ["5m", "1m"],
+      lastMinuteChat: false,
+    });
+    expect(instances.execRcon).toHaveBeenCalledWith(
+      "s1",
+      "ServerChat Server restart in 5 minutes",
+      { recordEvent: false },
+    );
+    runtime.cancelUpcoming("s1");
+  });
+
+  it("cancels a queued manual restart before it reaches the target", async () => {
+    const policy = {
+      ...defaultMaintenancePolicy("s1", "2026-01-01T00:00:00.000Z"),
+      manualRestartWarningsEnabled: true,
+    };
+    const { runtime, instances } = makeRuntime(policy);
+    const armed = await runtime.runManualRestartWarning("s1");
+    expect(armed.countdownKind).toBe("manual");
+    await vi.waitFor(() => {
+      expect(instances.execRcon).toHaveBeenCalledWith(
+        "s1",
+        "ServerChat Server restart in 5 minutes",
+        { recordEvent: false },
+      );
+    });
+    const cancelled = runtime.cancelUpcoming("s1");
+    expect(cancelled.countdownKind).toBeNull();
+    expect(cancelled.cancelable).toBe(false);
+    expect(instances.restart).not.toHaveBeenCalled();
+    await vi.waitFor(() => {
+      expect(instances.execRcon).toHaveBeenCalledWith(
+        "s1",
+        "ServerChat Server restart canceled. The server will remain online.",
+        { recordEvent: false },
+      );
+    });
+  });
+
   it("runRestartNow arms a short countdown and cancel clears it", async () => {
     const policy = {
       ...defaultMaintenancePolicy("s1", "2026-01-01T00:00:00.000Z"),

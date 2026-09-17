@@ -231,6 +231,8 @@ export const maintenancePolicyWriteSchema = z
     restartEnabled: z.boolean(),
     wipeEnabled: z.boolean(),
     updateEnabled: z.boolean(),
+    manualRestartWarningsEnabled: z.boolean(),
+    manualRestartWarnings: maintenanceJobWarningsSchema,
     restartDaysOfWeek: z
       .array(z.number().int().min(0).max(6))
       .min(1)

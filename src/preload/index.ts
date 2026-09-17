@@ -292,6 +292,8 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.maintenanceClearSchedulePause, serverId),
   runMaintenanceRestartNow: (serverId: string) =>
     ipcRenderer.invoke(IPC.maintenanceRunRestartNow, serverId),
+  runMaintenanceRestartWarning: (serverId: string) =>
+    ipcRenderer.invoke(IPC.maintenanceRunRestartWarning, serverId),
   runMaintenanceUpdateNow: (serverId: string) =>
     ipcRenderer.invoke(IPC.maintenanceRunUpdateNow, serverId),
   cancelMaintenanceUpcoming: (serverId: string) =>

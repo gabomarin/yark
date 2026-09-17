@@ -24,6 +24,16 @@ export const MAINTENANCE_UPDATE_PRESET_OFFSETS: Record<
   strict: ["15m", "10m", "5m", "1m"],
 };
 
+/** Short manual-restart cadence presets (#573). */
+export const MAINTENANCE_MANUAL_RESTART_PRESET_OFFSETS: Record<
+  Exclude<MaintenanceBroadcastPreset, "custom" | "none">,
+  readonly string[]
+> = {
+  quiet: ["5m"],
+  standard: ["5m", "1m"],
+  strict: ["10m", "5m", "1m"],
+};
+
 export const DEFAULT_RESTART_WARNINGS: MaintenanceJobWarnings = {
   preset: "standard",
   customOffsets: [...MAINTENANCE_RESTART_PRESET_OFFSETS.standard],
@@ -38,12 +48,42 @@ export const DEFAULT_UPDATE_WARNINGS: MaintenanceJobWarnings = {
   lastMinuteChat: true,
 };
 
+/** Manual restart warning window (#573): short fixed cadence presets. */
+export const MANUAL_RESTART_WARNING_DEFAULT_WARNINGS: MaintenanceJobWarnings = {
+  preset: "standard",
+  customOffsets: [...MAINTENANCE_MANUAL_RESTART_PRESET_OFFSETS.standard],
+  template: "Server restart in {time}",
+  lastMinuteChat: true,
+};
+
+/**
+ * Manual warnings never expose a custom cadence. Normalize legacy rows so the
+ * armed window, messages, and Maintenance UI all use the same Standard preset.
+ */
+export function normalizeManualRestartWarnings(
+  warnings: MaintenanceJobWarnings,
+): MaintenanceJobWarnings {
+  if (warnings.preset !== "custom" && warnings.preset !== "none") {
+    return warnings;
+  }
+  return {
+    ...warnings,
+    preset: "standard",
+    customOffsets: [...MAINTENANCE_MANUAL_RESTART_PRESET_OFFSETS.standard],
+  };
+}
+
 export function defaultMaintenancePolicy(serverId: string, updatedAt: string): MaintenancePolicy {
   return {
     serverId,
     restartEnabled: false,
     wipeEnabled: false,
     updateEnabled: false,
+    manualRestartWarningsEnabled: false,
+    manualRestartWarnings: {
+      ...MANUAL_RESTART_WARNING_DEFAULT_WARNINGS,
+      customOffsets: [...MANUAL_RESTART_WARNING_DEFAULT_WARNINGS.customOffsets],
+    },
     restartDaysOfWeek: [0],
     restartTimeLocal: "04:00",
     wipeSaveWorldFirst: true,

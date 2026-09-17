@@ -9,6 +9,7 @@ import {
   MaintenanceRestartSection,
   MaintenanceUpdateSection,
 } from "./components/MaintenanceJobSections/MaintenanceJobSections";
+import { MaintenanceManualRestartSection } from "./components/MaintenanceManualRestartSection/MaintenanceManualRestartSection";
 import { MaintenanceUpNext } from "./components/MaintenanceUpNext/MaintenanceUpNext";
 import { CrashRecoverySection } from "./components/CrashRecoverySection/CrashRecoverySection";
 import { useMaintenancePanel } from "./hooks/useMaintenancePanel";
@@ -111,6 +112,17 @@ export function MaintenancePanel(props: Props): ReactElement {
             open={panel.updateOpen}
             onToggleOpen={() => panel.setUpdateOpen((v) => !v)}
             onOpen={() => panel.setUpdateOpen(true)}
+            patch={panel.patch}
+          />
+          <MaintenanceManualRestartSection
+            policy={policy}
+            busy={panel.busy}
+            open={panel.manualOpen}
+            manualRestartPending={
+              props.runtime?.maintenance?.countdown?.kind === "manual"
+            }
+            onToggleOpen={() => panel.setManualOpen((v) => !v)}
+            onOpen={() => panel.setManualOpen(true)}
             patch={panel.patch}
           />
         </>

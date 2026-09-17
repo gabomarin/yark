@@ -497,6 +497,14 @@ if (isPrimaryInstance) {
         crashRecoveryService.annotateStatus(processManager.getStatus(serverId)),
       );
     });
+    maintenanceService.setRuntimeChangeNotify((serverId) => {
+      sendToRenderer(
+        IPC_PUSH.serverStatus,
+        maintenanceService.annotateStatus(
+          crashRecoveryService.annotateStatus(processManager.getStatus(serverId)),
+        ),
+      );
+    });
     const playerSessionWatcher = new PlayerSessionWatcher(
       backupService,
       repo,
@@ -807,7 +815,9 @@ if (isPrimaryInstance) {
 
     const previousServerStatuses = new Map<string, ServerRuntimeInfo["status"]>();
     processManager.on("status", (statusInfo: ServerRuntimeInfo) => {
-      const info = crashRecoveryService.annotateStatus(statusInfo);
+      const info = maintenanceService.annotateStatus(
+        crashRecoveryService.annotateStatus(statusInfo),
+      );
       sendToRenderer(IPC_PUSH.serverStatus, info);
       scheduleTrayMenuRefresh();
       const previous = previousServerStatuses.get(info.serverId);

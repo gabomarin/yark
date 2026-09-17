@@ -43,6 +43,9 @@ export interface ServerWorkspacePageProps {
   onStartServer: (serverId: string) => void;
   onStopServer: (serverId: string) => void;
   onRestartServer: (serverId: string) => void;
+  /** Manual restart with a player warning countdown (#573). */
+  onRestartWithWarning?: (serverId: string) => void;
+  onCancelRestartWarning?: (serverId: string) => void;
   onKillServer: (serverId: string) => void;
   onToggleServerEnabled?: (serverId: string, enabled: boolean) => void;
   onOpenFolder: (serverId: string) => void;

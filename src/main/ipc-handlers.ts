@@ -541,7 +541,11 @@ export function registerIpcHandlers(
   );
 
   handleValidated(IPC.serversStatuses, ipcArgSchemas[IPC.serversStatuses], () =>
-    instances.statuses().map((status) => crashRecovery.annotateStatus(status)),
+    instances
+      .statuses()
+      .map((status) =>
+        maintenance.annotateStatus(crashRecovery.annotateStatus(status)),
+      ),
   );
 
   handleValidated(
@@ -1174,6 +1178,12 @@ export function registerIpcHandlers(
     IPC.maintenanceRunRestartNow,
     ipcArgSchemas[IPC.maintenanceRunRestartNow],
     ([serverId]) => maintenance.runRestartNow(serverId),
+  );
+
+  handleValidated(
+    IPC.maintenanceRunRestartWarning,
+    ipcArgSchemas[IPC.maintenanceRunRestartWarning],
+    ([serverId]) => maintenance.runManualRestartWarning(serverId),
   );
 
   handleValidated(

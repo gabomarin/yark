@@ -6,11 +6,17 @@ import {
   Eye,
   Play,
   Stop,
+  Warning,
+  XCircle,
 } from "@phosphor-icons/react";
 import { ActionIcon, Group, Menu, Tooltip } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
-import type { ServerStatus } from "@shared/types";
+import type { ServerMaintenanceRuntime, ServerStatus } from "@shared/types";
 import { RowActionMenuItems } from "@ui/RowActionMenu/RowActionMenuItems";
+import {
+  formatRestartCountdown,
+  useCountdownRemaining,
+} from "@ui/RestartSplitButton/useCountdownRemaining";
 import type {
   ServerCardRestartAction,
   ServerCardRuntimeAction,
@@ -36,8 +42,13 @@ interface Props {
   runtimeAction: ServerCardRuntimeAction;
   restartAction: ServerCardRestartAction;
   updateAction: ServerCardUpdateAction;
+  /** Manual restart warning setting + live countdown (#573). */
+  maintenance?: ServerMaintenanceRuntime | null;
   onRuntimeAction: () => void;
   onRestart: () => void;
+  onRestartWithWarning?: () => void;
+  onCancelRestartWarning?: () => void;
+  onConfigureRestartWarnings?: () => void;
   onUpdateNow: () => void;
   onOpenWorkspace: () => void;
   onStop: () => void;
@@ -90,6 +101,27 @@ export function ServerCardActions(props: Props): ReactElement {
   // Only model.disabled blocks icons. Do not blanket-disable Cancel/Stop during
   // starting/stopping — Overview needs escape hatches when a transition sticks.
   const menuDisabled = props.steamCmdBusy || props.stopBusy || props.startBusy === true;
+  const manualCountdown =
+    props.maintenance?.countdown?.kind === "manual"
+      ? props.maintenance.countdown
+      : null;
+  const hasManualRestartOptions =
+    props.maintenance?.manualRestartWarningsEnabled === true
+    && props.onRestartWithWarning !== undefined;
+  const countdownRemaining = useCountdownRemaining(
+    manualCountdown?.targetAtMs ?? null,
+  );
+  const cancelRestartLabel =
+    countdownRemaining === null
+      ? "Cancel restart"
+      : `Cancel restart · ${formatRestartCountdown(countdownRemaining)}`;
+  const stopBlockedByManualRestart = manualCountdown !== null;
+  const runtimeActionDisabled =
+    runtimeAction.disabled
+    || (stopBlockedByManualRestart && runtimeAction.kind === "stop");
+  const runtimeActionHint = stopBlockedByManualRestart && runtimeAction.kind === "stop"
+    ? "Cancel the queued restart first"
+    : runtimeAction.hint ?? runtimeAction.label;
   const menuEntries = buildServerCardMenuActions({
     status: props.status,
     isActive: props.isActive,
@@ -103,6 +135,10 @@ export function ServerCardActions(props: Props): ReactElement {
     checkingUpdates: props.checkingUpdates,
     updateAction: props.updateAction,
     serverEnabled: props.serverEnabled ?? true,
+    manualRestartWarningsEnabled: props.maintenance?.manualRestartWarningsEnabled ?? false,
+    manualRestartPending: stopBlockedByManualRestart,
+    onRestartWithWarning: props.onRestartWithWarning,
+    onConfigureRestartWarnings: props.onConfigureRestartWarnings,
     onOpenWorkspace: props.onOpenWorkspace,
     onStop: props.onStop,
     onRestart: props.onRestart,
@@ -122,14 +158,14 @@ export function ServerCardActions(props: Props): ReactElement {
   return (
     <Group gap="xs" wrap="nowrap" className={classes.rowActions} data-row-actions>
       {runtimeAction.visible ? (
-        <Tooltip label={runtimeAction.hint ?? runtimeAction.label} withArrow>
+        <Tooltip label={runtimeActionHint} withArrow>
           <span className={classes.tooltipTarget}>
             <ActionIcon
               size={actionSize}
               variant={runtimeAction.variant}
               color={runtimeAction.color}
               aria-label={runtimeAction.label}
-              disabled={runtimeAction.disabled}
+              disabled={runtimeActionDisabled}
               loading={runtimeAction.kind === "starting" || runtimeAction.kind === "stopping"}
               onClick={props.onRuntimeAction}
               className={classes.iconAction}
@@ -155,23 +191,76 @@ export function ServerCardActions(props: Props): ReactElement {
       )}
 
       {restartAction.visible ? (
-        <Tooltip label={restartAction.label} withArrow>
-          <span className={classes.tooltipTarget}>
-            <ActionIcon
-              size={actionSize}
-              variant={restartAction.variant}
-              color={restartAction.color}
-              aria-label={restartAction.label}
-              disabled={restartAction.disabled}
-              loading={restartAction.label === "Restarting…"}
-              onClick={props.onRestart}
-              className={classes.iconAction}
-              data-restart-action
-            >
-              <ArrowsClockwise size={iconSize} weight="bold" />
-            </ActionIcon>
-          </span>
-        </Tooltip>
+        manualCountdown !== null ? (
+          <Tooltip label={cancelRestartLabel} withArrow>
+            <span className={classes.tooltipTarget}>
+              <ActionIcon
+                size={actionSize}
+                variant="light"
+                color="red"
+                aria-label={cancelRestartLabel}
+                onClick={props.onCancelRestartWarning}
+                className={classes.iconAction}
+                data-restart-action
+                data-restart-warning-cancel
+              >
+                <XCircle size={iconSize} weight="bold" />
+              </ActionIcon>
+            </span>
+          </Tooltip>
+        ) : hasManualRestartOptions ? (
+          <Menu shadow="md" withinPortal position="bottom-end">
+            <Menu.Target>
+              <ActionIcon
+                size={actionSize}
+                variant={restartAction.variant}
+                color={restartAction.color}
+                aria-label="Restart options"
+                title="Restart options"
+                disabled={restartAction.disabled}
+                loading={restartAction.label === "Restarting…"}
+                className={classes.iconAction}
+                data-restart-action
+                data-restart-options
+              >
+                <ArrowsClockwise size={iconSize} weight="bold" />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item
+                leftSection={<ArrowsClockwise size={16} weight="bold" />}
+                onClick={props.onRestart}
+              >
+                Restart now
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<Warning size={16} />}
+                onClick={() => props.onRestartWithWarning?.()}
+                data-restart-with-warning
+              >
+                Restart with player warning
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        ) : (
+          <Tooltip label={restartAction.label} withArrow>
+            <span className={classes.tooltipTarget}>
+              <ActionIcon
+                size={actionSize}
+                variant={restartAction.variant}
+                color={restartAction.color}
+                aria-label={restartAction.label}
+                disabled={restartAction.disabled}
+                loading={restartAction.label === "Restarting…"}
+                onClick={props.onRestart}
+                className={classes.iconAction}
+                data-restart-action
+              >
+                <ArrowsClockwise size={iconSize} weight="bold" />
+              </ActionIcon>
+            </span>
+          </Tooltip>
+        )
       ) : (
         <span className={classes.tooltipTarget} aria-hidden>
           <ActionIcon

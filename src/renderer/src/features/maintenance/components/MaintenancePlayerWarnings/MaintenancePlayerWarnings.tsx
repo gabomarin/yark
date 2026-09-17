@@ -1,12 +1,14 @@
 import { Badge, Group, Stack, Switch, Text, TextInput } from "@mantine/core";
 import type { MaintenanceJobWarnings } from "@shared/types";
 import {
+  MAINTENANCE_MANUAL_RESTART_PRESET_OFFSETS,
   MAINTENANCE_RESTART_PRESET_OFFSETS,
   MAINTENANCE_UPDATE_PRESET_OFFSETS,
 } from "@shared/maintenance/maintenance-policy";
 import type { ReactElement } from "react";
 import {
   CUSTOM_OFFSET_OPTIONS,
+  formatMaintenancePresetHint,
   PRESET_LABELS,
   WARNING_PRESET_ORDER,
   previewWarningMessage,
@@ -16,7 +18,7 @@ import {
 import classes from "../../MaintenancePanel.module.css";
 
 interface Props {
-  kind: "restart" | "update";
+  kind: "restart" | "update" | "manual";
   warnings: MaintenanceJobWarnings;
   disabled: boolean;
   onChange: (next: MaintenanceJobWarnings) => void;
@@ -55,16 +57,21 @@ export function MaintenancePlayerWarnings(props: Props): ReactElement {
   const table =
     props.kind === "restart"
       ? MAINTENANCE_RESTART_PRESET_OFFSETS
-      : MAINTENANCE_UPDATE_PRESET_OFFSETS;
+      : props.kind === "manual"
+        ? MAINTENANCE_MANUAL_RESTART_PRESET_OFFSETS
+        : MAINTENANCE_UPDATE_PRESET_OFFSETS;
   const offsets =
     props.warnings.preset === "custom"
       ? props.warnings.customOffsets
       : props.warnings.preset === "none"
         ? []
         : table[props.warnings.preset];
-  const previewTime = props.kind === "restart" ? "15 minutes" : "5 minutes";
+  const previewTime = props.kind === "manual" ? "5 minutes" : props.kind === "restart" ? "15 minutes" : "5 minutes";
   const preview = previewWarningMessage(props.warnings.template, previewTime);
   const warningsOff = props.warnings.preset === "none";
+  const presetOrder = props.kind === "manual"
+    ? (["quiet", "standard", "strict"] as const)
+    : WARNING_PRESET_ORDER;
 
   return (
     <Stack gap="xs">
@@ -75,7 +82,7 @@ export function MaintenancePlayerWarnings(props: Props): ReactElement {
         </Text>
       </div>
       <Group gap={6} wrap="wrap">
-        {WARNING_PRESET_ORDER.map((key) => {
+        {presetOrder.map((key) => {
             const active = props.warnings.preset === key;
             return (
               <button
@@ -103,7 +110,12 @@ export function MaintenancePlayerWarnings(props: Props): ReactElement {
         </Text>
       ) : (
         <>
-      {props.warnings.preset === "custom" ? (
+      {props.kind === "manual" && (
+        <Text size="xs" c="dimmed">
+          Short, fixed warning times keep manual restarts easy to scan. Regular sends notices at {formatMaintenancePresetHint("manual", "standard")}.
+        </Text>
+      )}
+      {props.kind !== "manual" && props.warnings.preset === "custom" ? (
         <Group gap={4} wrap="wrap">
           {CUSTOM_OFFSET_OPTIONS.map((offset) => {
             const on = props.warnings.customOffsets.includes(offset);
@@ -127,7 +139,7 @@ export function MaintenancePlayerWarnings(props: Props): ReactElement {
       ) : (
         <OffsetBadges offsetLabels={offsets} />
       )}
-      {props.warnings.preset === "custom"
+      {props.kind !== "manual" && props.warnings.preset === "custom"
         && props.warnings.customOffsets.length > 0
         && <OffsetBadges offsetLabels={props.warnings.customOffsets} />}
       <div className={classes.nestedRow}>
@@ -171,4 +183,3 @@ export function MaintenancePlayerWarnings(props: Props): ReactElement {
     </Stack>
   );
 }
-

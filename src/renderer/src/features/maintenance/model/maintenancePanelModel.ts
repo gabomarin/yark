@@ -9,6 +9,7 @@ import type {
 import { isInstallationReady } from "@shared/server/installation-health";
 import { workspaceHeaderControls } from "@features/server-workspace/components/WorkspaceHeader/workspaceHeaderControls";
 import {
+  MAINTENANCE_MANUAL_RESTART_PRESET_OFFSETS,
   MAINTENANCE_RESTART_PRESET_OFFSETS,
   MAINTENANCE_UPDATE_PRESET_OFFSETS,
 } from "@shared/maintenance/maintenance-policy";
@@ -58,14 +59,16 @@ export const AUTO_UPDATE_TRIGGER_COPY =
 
 /** Chip hint for a built-in warning preset (offset list in plain language). */
 export function formatMaintenancePresetHint(
-  kind: "restart" | "update",
+  kind: "restart" | "update" | "manual",
   preset: Exclude<MaintenanceBroadcastPreset, "custom" | "none">,
 ): string {
   if (preset === "quiet") return PRESET_LABELS.quiet.hint;
   const table =
     kind === "restart"
       ? MAINTENANCE_RESTART_PRESET_OFFSETS
-      : MAINTENANCE_UPDATE_PRESET_OFFSETS;
+      : kind === "manual"
+        ? MAINTENANCE_MANUAL_RESTART_PRESET_OFFSETS
+        : MAINTENANCE_UPDATE_PRESET_OFFSETS;
   return table[preset].map(formatMaintenanceOffsetLabel).join(" · ");
 }
 
@@ -84,6 +87,8 @@ export function maintenancePolicyWriteFromStatus(
     restartEnabled: policy.restartEnabled,
     wipeEnabled: policy.wipeEnabled,
     updateEnabled: policy.updateEnabled,
+    manualRestartWarningsEnabled: policy.manualRestartWarningsEnabled,
+    manualRestartWarnings: policy.manualRestartWarnings,
     restartDaysOfWeek: policy.restartDaysOfWeek,
     restartTimeLocal: policy.restartTimeLocal,
     wipeSaveWorldFirst: true,
@@ -214,7 +219,7 @@ export function anyJobArmed(policy: MaintenancePolicyStatus): boolean {
 }
 
 export function warningsForPreset(
-  kind: "restart" | "update",
+  kind: "restart" | "update" | "manual",
   preset: MaintenanceBroadcastPreset,
   previous: MaintenanceJobWarnings,
 ): MaintenanceJobWarnings {
@@ -236,7 +241,9 @@ export function warningsForPreset(
   const table =
     kind === "restart"
       ? MAINTENANCE_RESTART_PRESET_OFFSETS
-      : MAINTENANCE_UPDATE_PRESET_OFFSETS;
+      : kind === "manual"
+        ? MAINTENANCE_MANUAL_RESTART_PRESET_OFFSETS
+        : MAINTENANCE_UPDATE_PRESET_OFFSETS;
   return {
     preset,
     customOffsets: [...table[preset]],

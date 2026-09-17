@@ -46,6 +46,7 @@ export function useMaintenancePanel(serverId: string) {
   const [error, setError] = useState<string | null>(null);
   const [restartOpen, setRestartOpen] = useState(false);
   const [updateOpen, setUpdateOpen] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
 
   const load = useCallback(async () => {
     const result = await window.api.getMaintenancePolicy(serverId);
@@ -227,6 +228,8 @@ export function useMaintenancePanel(serverId: string) {
     updateOpen,
     setRestartOpen,
     setUpdateOpen,
+    manualOpen,
+    setManualOpen,
     patch,
     resumeSchedules,
     cancelUpcoming,

@@ -210,6 +210,38 @@ describe("reconcilePollSnapshots", () => {
     expect(cleared.get("a")?.crashRecovery ?? null).toBeNull();
   });
 
+  it("detects a manual restart countdown change on a runtime row (#573)", () => {
+    const base: ServerRuntimeInfo = {
+      serverId: "a",
+      status: "running",
+      processLive: true,
+      pid: 1,
+      startedAt: "t",
+      lastError: null,
+      maintenance: {
+        manualRestartWarningsEnabled: true,
+        countdown: null,
+      },
+    };
+    const queued: ServerRuntimeInfo = {
+      ...base,
+      maintenance: {
+        manualRestartWarningsEnabled: true,
+        countdown: {
+          kind: "manual",
+          phase: "warning",
+          targetAtMs: 1_800_000,
+        },
+      },
+    };
+
+    const withCountdown = reconcileStatusMap(new Map([["a", base]]), [queued]);
+    expect(withCountdown.get("a")?.maintenance?.countdown?.kind).toBe("manual");
+
+    const cleared = reconcileStatusMap(new Map([["a", queued]]), [base]);
+    expect(cleared.get("a")?.maintenance?.countdown).toBeNull();
+  });
+
   it("reuses the player-list map when roster content is unchanged", () => {
     const state = {
       players: [{ key: "1", name: "Alice" }],

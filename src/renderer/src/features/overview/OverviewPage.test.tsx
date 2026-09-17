@@ -77,6 +77,9 @@ function renderOverview(
     onStartServer: vi.fn(),
     onStopServer: vi.fn(),
     onRestartServer: vi.fn(),
+    onRestartWithWarning: vi.fn(),
+    onCancelRestartWarning: vi.fn(),
+    onConfigureRestartWarnings: vi.fn(),
     onKillServer: vi.fn(),
     onOpenFolder: vi.fn(),
     onInstallFiles: vi.fn(),
@@ -181,6 +184,9 @@ describe("OverviewPage", () => {
           onStartServer={vi.fn()}
           onStopServer={vi.fn()}
           onRestartServer={vi.fn()}
+          onRestartWithWarning={vi.fn()}
+          onCancelRestartWarning={vi.fn()}
+          onConfigureRestartWarnings={vi.fn()}
           onKillServer={vi.fn()}
           onOpenFolder={vi.fn()}
           onInstallFiles={vi.fn()}
@@ -386,6 +392,9 @@ describe("OverviewPage", () => {
           onStartServer={vi.fn()}
           onStopServer={vi.fn()}
           onRestartServer={vi.fn()}
+          onRestartWithWarning={vi.fn()}
+          onCancelRestartWarning={vi.fn()}
+          onConfigureRestartWarnings={vi.fn()}
           onKillServer={vi.fn()}
           onOpenFolder={vi.fn()}
           onInstallFiles={vi.fn()}
@@ -594,6 +603,9 @@ describe("OverviewPage", () => {
               onStartServer={vi.fn()}
               onStopServer={vi.fn()}
               onRestartServer={vi.fn()}
+          onRestartWithWarning={vi.fn()}
+          onCancelRestartWarning={vi.fn()}
+          onConfigureRestartWarnings={vi.fn()}
               onKillServer={vi.fn()}
               onOpenFolder={vi.fn()}
               onInstallFiles={vi.fn()}

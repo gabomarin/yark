@@ -145,6 +145,9 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
             onStartServer={(id) => void actions.startServer(id)}
             onStopServer={(id) => void actions.runAction(() => window.api.stopServer(id))}
             onRestartServer={(id) => void actions.restartServer(id)}
+            onRestartWithWarning={(id) => void actions.restartServerWithWarning(id)}
+            onCancelRestartWarning={(id) => void actions.cancelRestartWarning(id)}
+            onConfigureRestartWarnings={(id) => actions.openServerMaintenance(id)}
             onKillServer={(id) => actions.confirmKillServer(id)}
             onOpenFolder={(id) => void actions.runAction(() => window.api.openServerFolder(id))}
             onInstallFiles={(id) => startSteamFilesJob(id, "install")}

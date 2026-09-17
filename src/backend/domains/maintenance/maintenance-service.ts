@@ -1,4 +1,4 @@
-import type { MaintenancePolicy, MaintenancePolicyStatus } from "@shared/types";
+import type { MaintenancePolicy, MaintenancePolicyStatus, ServerRuntimeInfo } from "@shared/types";
 import type { MaintenanceRepository } from "../../infra/db/maintenance-repository";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { ProcessManager } from "../../infra/process/process-manager";
@@ -95,8 +95,23 @@ export class MaintenanceService {
     );
   }
 
+  /** Live countdown changes (arm/teardown) so main can re-push runtime status. */
+  setRuntimeChangeNotify(notify: (serverId: string) => void): void {
+    this.restartRuntime.setRuntimeChangeNotify(notify);
+  }
+
+  /** Manual-restart opt-in + live countdown for ServerRuntimeInfo (#573). */
+  annotateStatus(info: ServerRuntimeInfo): ServerRuntimeInfo {
+    return this.restartRuntime.annotateStatus(info);
+  }
+
   async runRestartNow(serverId: string): Promise<MaintenancePolicyStatus> {
     await this.restartRuntime.runRestartNow(serverId);
+    return this.getPolicy(serverId);
+  }
+
+  async runManualRestartWarning(serverId: string): Promise<MaintenancePolicyStatus> {
+    await this.restartRuntime.runManualRestartWarning(serverId);
     return this.getPolicy(serverId);
   }
 

@@ -204,6 +204,24 @@ export interface ServerRuntimeInfo {
    * `null`/missing means no pending restart. Optional on older snapshots.
    */
   crashRecovery?: CrashRecoveryRuntime | null;
+  /**
+   * Manual restart warnings opt-in + live maintenance countdown (#573).
+   * Optional on older snapshots — treat missing as disabled.
+   */
+  maintenance?: ServerMaintenanceRuntime | null;
+}
+
+/** Manual restart warning setting + live countdown surfaced on cards/header (#573). */
+export interface ServerMaintenanceRuntime {
+  /** Per-server "Manual restart warnings" toggle. */
+  manualRestartWarningsEnabled: boolean;
+  /** Active maintenance countdown, or null when idle. */
+  countdown: {
+    kind: "restart" | "manual";
+    phase: MaintenanceCountdownPhase;
+    /** Epoch ms when the countdown fires (T0). Renderer derives remaining locally. */
+    targetAtMs: number;
+  } | null;
 }
 
 /** Transient auto-restart notice while a crash-recovery retry is scheduled (#563). */
@@ -828,6 +846,16 @@ export interface MaintenancePolicy {
   restartEnabled: boolean;
   wipeEnabled: boolean;
   updateEnabled: boolean;
+  /**
+   * Opt-in per server: enable "Restart with player warning" from the manual
+   * Restart split button (#573). Default off.
+   */
+  manualRestartWarningsEnabled: boolean;
+  /**
+   * Short warning cadence for a manual restart (#573); custom offsets are
+   * retained for schema compatibility but are not exposed in the manual UI.
+   */
+  manualRestartWarnings: MaintenanceJobWarnings;
   /** 0 = Sunday … 6 = Saturday (local Windows clock). At least one day. */
   restartDaysOfWeek: number[];
   /** `HH:mm` 24h local time. */
@@ -851,7 +879,7 @@ export interface MaintenancePolicyStatus extends MaintenancePolicy {
   countdownRemainingMs: number | null;
   countdownPhase: MaintenanceCountdownPhase;
   /** Which job owns the live countdown, when any. */
-  countdownKind: "restart" | "update" | null;
+  countdownKind: "restart" | "update" | "manual" | null;
   /** ISO of last completed maintenance restart attempt (session or persisted). */
   lastRestartAt: string | null;
   lastRestartOk: boolean | null;

@@ -112,6 +112,8 @@ export function AppWorkspaceOverlay(props: AppWorkspaceOverlayProps): ReactEleme
         onStartServer={(id) => void actions.startServer(id)}
         onStopServer={(id) => void actions.runAction(() => window.api.stopServer(id))}
         onRestartServer={(id) => void actions.restartServer(id)}
+        onRestartWithWarning={(id) => void actions.restartServerWithWarning(id)}
+        onCancelRestartWarning={(id) => void actions.cancelRestartWarning(id)}
         onKillServer={(id) => actions.confirmKillServer(id)}
         onToggleServerEnabled={(id, enabled) => void actions.setServerEnabled(id, enabled)}
         onOpenFolder={(id) => void actions.runAction(() => window.api.openServerFolder(id))}
