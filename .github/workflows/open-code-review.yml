@@ -17,6 +17,7 @@ on:
         options:
           - primary
           - fallback
+          - retry
 
 permissions:
   contents: read
@@ -62,6 +63,8 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         env:
           REQUESTED_PROVIDER: ${{ inputs.provider || '' }}
+          PRIMARY_CONFIGURED: ${{ vars.OCR_PRIMARY_URL != '' && vars.OCR_PRIMARY_MODEL != '' && secrets.OCR_PRIMARY_API_KEY != '' }}
+          FALLBACK_CONFIGURED: ${{ vars.OCR_FALLBACK_URL != '' && vars.OCR_FALLBACK_MODEL != '' && secrets.OCR_FALLBACK_API_KEY != '' }}
         with:
           script: |
             const requestedProvider = process.env.REQUESTED_PROVIDER;
@@ -76,11 +79,22 @@ jobs:
                 return;
               }
 
-              provider = match[1]?.toLowerCase() === 'fallback' ? 'fallback' : 'primary';
+              const commandProvider = match[1]?.toLowerCase();
+              provider = commandProvider === 'fallback' ? 'fallback' : commandProvider === 'retry' ? 'retry' : 'primary';
             }
 
             if (!['primary', 'fallback'].includes(provider)) {
-              core.setFailed(`Unsupported provider: ${provider}`);
+              if (provider !== 'retry') {
+                core.setFailed(`Unsupported provider: ${provider}`);
+                return;
+              }
+            }
+
+            const configured = provider === 'fallback'
+              ? process.env.FALLBACK_CONFIGURED === 'true'
+              : process.env.PRIMARY_CONFIGURED === 'true';
+            if (!configured) {
+              core.setFailed(`${provider} OpenCodeReview provider is not fully configured.`);
               return;
             }
 
@@ -99,11 +113,17 @@ jobs:
               return;
             }
 
-            const { data: pullRequest } = await github.rest.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: pullNumber,
-            });
+            let pullRequest;
+            try {
+              ({ data: pullRequest } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pullNumber,
+              }));
+            } catch (error) {
+              core.setFailed(`Unable to load pull request #${pullNumber}: ${error.message}`);
+              return;
+            }
 
             core.setOutput('base_ref', pullRequest.base.ref);
             core.setOutput('head_sha', pullRequest.head.sha);
@@ -120,6 +140,7 @@ jobs:
           sticky_summary: true
           incremental: true
           checkpoint_range: true
+          full_review: ${{ steps.provider.outputs.provider == 'retry' }}
           github_token: ${{ github.token }}
           pr_number: ${{ github.event.issue.number || inputs.pr_number }}
           base_ref: ${{ steps.pr-context.outputs.base_ref }}
