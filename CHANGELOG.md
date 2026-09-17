@@ -16,7 +16,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
-- Launch **Show effective command preview** legend uses the same colors as the command tokens (YARK-owned, Structured, Raw) (#510).
+- Launch **Show effective command preview** legend uses the same colors as the command tokens (YARK-owned, Structured, Caution, Raw) (#510).
 
 ## [0.21.0] - 2026-09-16
 

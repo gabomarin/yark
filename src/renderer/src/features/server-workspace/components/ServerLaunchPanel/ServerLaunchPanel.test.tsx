@@ -255,6 +255,9 @@ describe("ServerLaunchPanel", () => {
     expect(within(legend).getByText("Structured").className).toMatch(
       /previewStructured/,
     );
+    expect(within(legend).getByText("Caution").className).toMatch(
+      /previewCaution/,
+    );
     expect(within(legend).getByText("Raw").className).toMatch(/previewRaw/);
     expect(legend).not.toHaveTextContent(/secrets redacted/i);
   });
