@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
@@ -239,6 +239,27 @@ describe("ServerLaunchPanel", () => {
     expect(securitySectionAfter).not.toBeNull();
     const countAfter = securitySectionAfter!.textContent?.match(/\d+\/\d+/)?.[0];
     expect(countAfter).toBe(countBefore);
+  });
+
+  it("colors preview legend terms to match token classes (#510)", () => {
+    render(
+      <AppProviders>
+        <ServerLaunchPanel server={profile()} onServerUpdated={vi.fn()} />
+      </AppProviders>,
+    );
+
+    const legend = screen.getByTestId("launch-preview-legend");
+    expect(within(legend).getByText("YARK-owned").className).toMatch(
+      /previewYark/,
+    );
+    expect(within(legend).getByText("Structured").className).toMatch(
+      /previewStructured/,
+    );
+    expect(within(legend).getByText("Caution").className).toMatch(
+      /previewCaution/,
+    );
+    expect(within(legend).getByText("Raw").className).toMatch(/previewRaw/);
+    expect(legend).not.toHaveTextContent(/secrets redacted/i);
   });
 });
 
