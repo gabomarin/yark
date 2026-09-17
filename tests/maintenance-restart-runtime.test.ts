@@ -60,6 +60,34 @@ describe("MaintenanceRestartRuntime", () => {
     expect(Date.parse(armed.nextRestartAt!) - Date.now()).toBeLessThan(6 * 60_000);
   });
 
+  it("keeps a manual countdown running when the renderer notification throws", async () => {
+    const policy = {
+      ...defaultMaintenancePolicy("s1", "2026-01-01T00:00:00.000Z"),
+      manualRestartWarningsEnabled: true,
+    };
+    const { runtime, instances } = makeRuntime(policy);
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    runtime.setRuntimeChangeNotify(() => {
+      throw new Error("renderer unavailable");
+    });
+
+    try {
+      const armed = await runtime.runManualRestartWarning("s1");
+      expect(armed.countdownKind).toBe("manual");
+      await vi.waitFor(() => {
+        expect(instances.execRcon).toHaveBeenCalledWith(
+          "s1",
+          "ServerChat Server restart in 5 minutes",
+          { recordEvent: false },
+        );
+      });
+      expect(errorSpy).toHaveBeenCalled();
+      runtime.cancelUpcoming("s1");
+    } finally {
+      errorSpy.mockRestore();
+    }
+  });
+
   it("normalizes legacy custom manual warnings to the Standard cadence", async () => {
     const policy = {
       ...defaultMaintenancePolicy("s1", "2026-01-01T00:00:00.000Z"),

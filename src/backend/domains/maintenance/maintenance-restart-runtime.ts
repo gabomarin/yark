@@ -120,6 +120,15 @@ export class MaintenanceRestartRuntime {
     this.runtimeChange = notify;
   }
 
+  /** Renderer updates are observational and must never own the countdown. */
+  private notifyRuntimeChange(serverId: string): void {
+    try {
+      this.runtimeChange(serverId);
+    } catch (error) {
+      console.error(`Maintenance runtime status update failed for ${serverId}`, error);
+    }
+  }
+
   private isPeerBusy(serverId: string): boolean {
     return this.peerBusy?.(serverId) === true;
   }
@@ -335,7 +344,7 @@ export class MaintenanceRestartRuntime {
       this.clearTimer(active);
       this.markOccurrenceDone(active);
       this.active.delete(serverId);
-      this.runtimeChange(serverId);
+      this.notifyRuntimeChange(serverId);
       if (shouldNotifyPlayers) {
         void this.instances
           .execRcon(
@@ -434,7 +443,7 @@ export class MaintenanceRestartRuntime {
       source,
     };
     this.active.set(policy.serverId, state);
-    this.runtimeChange(policy.serverId);
+    this.notifyRuntimeChange(policy.serverId);
     void this.tickCountdown(policy.serverId, targetAtMs);
   }
 
@@ -482,7 +491,7 @@ export class MaintenanceRestartRuntime {
     this.clearTimer(state);
     this.markOccurrenceDone(state);
     this.active.delete(state.serverId);
-    this.runtimeChange(state.serverId);
+    this.notifyRuntimeChange(state.serverId);
   }
 
   private abortWindowHard(state: ActiveCountdown, message: string): void {
@@ -490,7 +499,7 @@ export class MaintenanceRestartRuntime {
     this.markOccurrenceDone(state);
     this.active.delete(state.serverId);
     this.recordFail(state.serverId, message);
-    this.runtimeChange(state.serverId);
+    this.notifyRuntimeChange(state.serverId);
   }
 
   /** Soft-fail Broadcast; hard-fail after consecutive tick failures. */
@@ -695,7 +704,7 @@ export class MaintenanceRestartRuntime {
         if (current !== undefined && current.targetAtMs === expectedTargetAtMs) {
           this.active.delete(serverId);
         }
-        this.runtimeChange(serverId);
+        this.notifyRuntimeChange(serverId);
       }
     })();
     await state.runPromise;

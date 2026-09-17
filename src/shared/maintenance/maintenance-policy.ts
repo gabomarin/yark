@@ -63,7 +63,9 @@ export const MANUAL_RESTART_WARNING_DEFAULT_WARNINGS: MaintenanceJobWarnings = {
 export function normalizeManualRestartWarnings(
   warnings: MaintenanceJobWarnings,
 ): MaintenanceJobWarnings {
-  if (warnings.preset !== "custom") return warnings;
+  if (warnings.preset !== "custom" && warnings.preset !== "none") {
+    return warnings;
+  }
   return {
     ...warnings,
     preset: "standard",
