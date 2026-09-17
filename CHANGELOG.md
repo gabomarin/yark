@@ -17,6 +17,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- A loopback `AdminListURL` (for example a **Hosted Resources** URL) is now kept verbatim in `GameUserSettings.ini` instead of being rewritten to a `file://` pointer, so the Admins field keeps showing the URL and **Current ids** reads the served list (#564).
 - Launch **Show effective command preview** legend uses the same colors as the command tokens (YARK-owned, Structured, Caution, Raw) (#510).
 
 ## [0.21.0] - 2026-09-16

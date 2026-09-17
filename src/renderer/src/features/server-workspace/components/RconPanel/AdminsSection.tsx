@@ -147,7 +147,9 @@ export function AdminsSection(props: Props): ReactElement {
           admins.state.entries.length === 0 &&
           !admins.state.listError ? (
           <Text size="sm" c="dimmed">
-            {admins.state.mode === "remote" ? "No ids in the list." : "No list URL set."}
+            {admins.state.mode === "remote" || admins.state.mode === "loopback"
+              ? "No ids in the list."
+              : "No list URL set."}
           </Text>
         ) : admins.state !== null && admins.state.entries.length > 0 ? (
           <div className={classes.playerList}>

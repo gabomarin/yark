@@ -21,7 +21,7 @@ const ADMIN_LIST_FETCH_TIMEOUT_MS = 15_000;
 /** Cap when scrubbing duplicate AdminListURL keys from GUS. */
 const MAX_ADMINLISTURL_OCCURRENCES = 32;
 
-export type AdminListMode = "local" | "remote" | "misconfigured";
+export type AdminListMode = "local" | "loopback" | "remote" | "misconfigured";
 
 interface AdminListEntry {
   id: string;
@@ -114,9 +114,9 @@ function isLoopbackAdminListUrl(value: string | null | undefined): boolean {
 
 /**
  * Classifies AdminListURL for ASA / YARK:
- * - blank / N/A → local (legacy; YARK rewrites to file:// or loopback on save)
+ * - blank / N/A → local (legacy; YARK rewrites to file:// on save)
  * - file:// → local
- * - http(s) on loopback → local (YARK gateway)
+ * - http(s) on loopback → loopback (served by the YARK local host, kept verbatim)
  * - other http(s) → remote
  * - anything else → misconfigured
  */
@@ -126,7 +126,7 @@ export function classifyAdminListUrl(
   const url = unwrapIniUrl(value);
   if (isBlankOrNaUrl(url)) return "local";
   if (/^file:\/\//i.test(url)) return "local";
-  if (isLoopbackAdminListUrl(url)) return "local";
+  if (isLoopbackAdminListUrl(url)) return "loopback";
   if (/^https?:\/\//i.test(url)) return "remote";
   return "misconfigured";
 }
@@ -544,9 +544,11 @@ async function readGusIntervalAndUrl(installDir: string): Promise<{
   const mode = classifyAdminListUrl(rawUrl);
   const unwrapped = unwrapIniUrl(rawUrl);
   return {
-    // UI only shows http(s) for Remote; local uses file:// under the hood.
+    // UI shows http(s) for remote/loopback; `local` (blank / file://) has no URL to show.
     adminListUrl:
-      mode === "remote" && !isBlankOrNaUrl(unwrapped) ? unwrapped : "",
+      (mode === "remote" || mode === "loopback") && !isBlankOrNaUrl(unwrapped)
+        ? unwrapped
+        : "",
     updateAllowedCheatersInterval: parseUpdateAllowedCheatersInterval(rawInterval),
     mode,
   };
@@ -624,7 +626,9 @@ export async function getAdminListState(
   let ids: string[] = [];
   let listError: string | null = null;
 
-  if (mode === "remote") {
+  if (mode === "remote" || mode === "loopback") {
+    // Loopback resolves to the YARK local host, which serves the same text body
+    // a browseable URL would, so it is fetched exactly like a remote list.
     try {
       const text = await fetchAdminListUrlText(adminListUrl);
       ids = parseAdminListIds(text);
@@ -700,7 +704,8 @@ export async function setAdminListConfig(
     const unwrapped = unwrapIniUrl(input.adminListUrl);
     if (isBlankOrNaUrl(unwrapped)) {
       // Cleared — leave AdminListURL absent (optional; server runs without it).
-    } else if (/^file:\/\//i.test(unwrapped) || isLoopbackAdminListUrl(unwrapped)) {
+    } else if (/^file:\/\//i.test(unwrapped)) {
+      // Legacy file:// pointer — normalize to the canonical space-free form.
       await syncAdminListAsaPointer(installDir, asaMirrorRoot);
       text = setIniTextValue(
         text,
@@ -713,6 +718,7 @@ export async function setAdminListConfig(
       );
     }
   } else {
+    // remote + loopback: keep the operator's http(s) URL verbatim.
     text = setIniTextValue(
       text,
       "ServerSettings",
@@ -731,8 +737,7 @@ export async function setAdminListConfig(
   if (
     mode === "local" &&
     !isBlankOrNaUrl(unwrapIniUrl(input.adminListUrl)) &&
-    (/^file:\/\//i.test(unwrapIniUrl(input.adminListUrl)) ||
-      isLoopbackAdminListUrl(input.adminListUrl))
+    /^file:\/\//i.test(unwrapIniUrl(input.adminListUrl))
   ) {
     let existing = await readAdminListIdsFromFile(installDir);
     if (

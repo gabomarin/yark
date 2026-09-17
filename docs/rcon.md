@@ -131,7 +131,7 @@ line). Not BanList format. Not exclusive-join player whitelist.
 | Item | Detail |
 | --- | --- |
 | Product UI (now) | **Remote http(s) AdminListURL only** — URL field, Validate, `UpdateAllowedCheatersInterval`, Current ids |
-| Local / loopback | Experimental, default-off **Hosted Resources** loopback host now exists ([docs/hosted-resources.md](hosted-resources.md), [#564](https://github.com/gabomarin/yark/issues/564)). Paste its `http://127.0.0.1:<port>/r/<token>` URL into `AdminListURL`. AdminList-from-star wiring is still a follow-up; sanitize / mirror / `file:///` helpers remain |
+| Local / loopback | Experimental, default-off **Hosted Resources** loopback host now exists ([docs/hosted-resources.md](hosted-resources.md), [#564](https://github.com/gabomarin/yark/issues/564)). Paste its `http://127.0.0.1:<port>/r/<token>` URL into `AdminListURL`; YARK classifies it as **loopback** mode, keeps the URL verbatim, and fetches it for `Current ids` like a remote list. AdminList-from-star wiring is still a follow-up; sanitize / mirror / `file:///` helpers remain |
 | Interval | Default **600**; values **&lt; 3** → **3** |
 | Restart vs poll | Changing URL → **restart** dedicated once; then re-fetches on interval |
 | While starting / running | Admins tab is **read-only**; stop the dedicated to change settings |

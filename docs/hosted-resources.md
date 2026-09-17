@@ -56,7 +56,7 @@ means YARK returned those bytes; it does not mean ASA loaded them.
 
 | Consumer | Expected body | Where it is set |
 | --- | --- | --- |
-| `AdminListURL` | Plain text, one EOS / Ark id per line | `GameUserSettings.ini` |
+| `AdminListURL` | Plain text, one EOS / Ark id per line | `GameUserSettings.ini` (RCON → Admins) |
 | `BanListURL` | Plain text ban entries | `GameUserSettings.ini` |
 | `BadWordListURL` / `BadWordWhiteListURL` | Plain text word list | `GameUserSettings.ini` |
 | `CustomDynamicConfigUrl` (+ `-UseDynamicConfig`) | **INI** — flat `Key=Value` lines | Launch arg or `GameUserSettings.ini` |
@@ -70,6 +70,43 @@ Mod settings are a different story: ASA mods read their options from local
 `[ModSettings]` / per-mod sections of `GameUserSettings.ini`, and Ark Server API plugins
 read a local `config.json`. Neither fetches INI over HTTP, so the loopback host does not
 serve mod settings.
+
+### AdminListURL + loopback mode
+
+When `AdminListURL` points at `127.0.0.1` / `localhost`, YARK classifies it as **loopback**
+mode (not `local`): the URL is written to `GameUserSettings.ini` **verbatim** and the
+Admins tab shows it and reads `Current ids` by fetching it, exactly like a remote list.
+Only blank / `file://` values use the legacy local rewrite. This also means a loopback URL
+is **not** clobbered to a `file://` pointer on save or on the before-start pointer refresh.
+
+## Verifying it works
+
+There is **no in-game signal for `AdminListURL`** by itself. Use the strongest signal you
+can get, and do not treat "I am admin in game" as proof — that can come from
+`ServerAdminPassword` instead of the whitelist.
+
+| Signal | Where | Strength |
+| --- | --- | --- |
+| `ForceUpdateDynamicConfig` changes a rate in game (taming/harvest) | In game, admin/RCON | **Unambiguous** — the INI body was applied |
+| RCON cheat-id query returns your EOS id | RCON console | Strong — ASA parsed the fetched body |
+| Admins tab shows the URL + `Current ids` | YARK UI | Shows YARK read the served body |
+| Diagnostics request count rising | YARK UI | ASA is polling your host (not that it applied the list) |
+
+Recommended smoke test:
+
+1. Start the test server once and stop it so `GameUserSettings.ini` exists.
+2. Hosted Resources → **Enabled** → **New resource** (Plain text, one EOS id per line) →
+   **Create resource** → copy the URL.
+3. In the server's RCON → **Admins** tab, paste the URL, set
+   `UpdateAllowedCheatersInterval` to **3**, and **Apply**.
+4. Start the server, then **Run diagnostics**: a rising request count proves ASA is
+   fetching your host.
+5. For an unambiguous in-game check, use `CustomDynamicConfigUrl` with an INI resource
+   (e.g. `TamingSpeedMultiplier=5.0`) plus `-UseDynamicConfig`, then run
+   `ForceUpdateDynamicConfig` and confirm the rate changed. Use `SaveWorld` instead of the
+   cheat if you prefer — the dynamic config is re-read on world (auto)save.
+6. Edit → Save a new body, then force the update again (or wait for autosave) — ASA does
+   not hot-reload on its own.
 
 ## Content validation
 

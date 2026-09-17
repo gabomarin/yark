@@ -306,7 +306,7 @@ export interface OnlinePlayerInfo {
 }
 
 /** ASA administrator whitelist mode (#153). */
-type AdminListModeDto = "local" | "remote" | "misconfigured";
+type AdminListModeDto = "local" | "loopback" | "remote" | "misconfigured";
 
 export interface AdminListStateDto {
   mode: AdminListModeDto;

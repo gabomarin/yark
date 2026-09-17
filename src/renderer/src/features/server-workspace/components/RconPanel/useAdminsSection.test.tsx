@@ -152,6 +152,35 @@ describe("useAdminsSection", () => {
     });
   });
 
+  it("shows a loopback AdminListURL in the field and keeps it after save (#564)", async () => {
+    const loopbackUrl =
+      "http://127.0.0.1:8935/r/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    vi.mocked(window.api.getAdminList).mockResolvedValue({
+      ok: true,
+      data: remoteState({ mode: "loopback", adminListUrl: loopbackUrl }),
+    });
+
+    const { result } = renderHook(() =>
+      useAdminsSection({ serverId: "srv-1", iniDirty: false }),
+    );
+
+    await waitFor(() => {
+      expect(result.current.urlDraft).toBe(loopbackUrl);
+    });
+    expect(result.current.draftDirty).toBe(false);
+
+    act(() => {
+      result.current.setIntervalDraft(30);
+    });
+    await act(async () => {
+      await result.current.saveConfig();
+    });
+    expect(window.api.setAdminList).toHaveBeenCalledWith("srv-1", {
+      adminListUrl: loopbackUrl,
+      updateAllowedCheatersInterval: 30,
+    });
+  });
+
   it("registers reloadRef with the load function", async () => {
     const reloadRef = { current: null as (() => Promise<void>) | null };
     renderHook(() =>

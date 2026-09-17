@@ -113,13 +113,13 @@ describe("admin-list", () => {
     ).toMatch(/^"http:\/\/127\.0\.0\.1:34567\/[a-f0-9]{16}\.txt"$/);
   });
 
-  it("classifies loopback http AdminListURL as local", () => {
+  it("classifies loopback http AdminListURL as loopback (kept verbatim)", () => {
     expect(
       classifyAdminListUrl("http://127.0.0.1:34567/c4537c5632d684ee.txt"),
-    ).toBe("local");
+    ).toBe("loopback");
     expect(
       classifyAdminListUrl('"http://localhost:9/aaaaaaaaaaaaaaaa.txt"'),
-    ).toBe("local");
+    ).toBe("loopback");
   });
 
   it("mirrors ASA pointer under configured userData admin-lists when wiki path has spaces", () => {
@@ -385,6 +385,46 @@ describe("admin-list", () => {
       expect(readIniServerSetting(gus, "UpdateAllowedCheatersInterval")).toBe(
         "3",
       );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("keeps a loopback AdminListURL verbatim instead of rewriting to file:// (#564)", async () => {
+    const root = await mkdtemp(join(tmpdir(), "yark-admin-loopback-"));
+    try {
+      await mkdir(join(root, "ShooterGame", "Saved", "Config", "WindowsServer"), {
+        recursive: true,
+      });
+      await writeFile(
+        gameUserSettingsIniPath(root),
+        "[ServerSettings]\nSessionName=Test\n",
+        "utf8",
+      );
+
+      const url = "http://127.0.0.1:8935/r/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => ({ ok: true, text: async () => "EOSID0001\n" })),
+      );
+
+      const state = await setAdminListConfig(root, {
+        adminListUrl: url,
+        updateAllowedCheatersInterval: 10,
+      });
+
+      expect(state.mode).toBe("loopback");
+      expect(state.adminListUrl).toBe(url);
+      expect(state.entries).toEqual([{ id: "EOSID0001", name: null }]);
+
+      const gus = await readFile(gameUserSettingsIniPath(root), "utf8");
+      expect(readIniServerSetting(gus, "AdminListURL")).toBe(`"${url}"`);
+      expect(readIniServerSetting(gus, "UpdateAllowedCheatersInterval")).toBe("10");
+
+      // Reload keeps the operator's URL visible (not blanked like file:// local mode).
+      const reloaded = await getAdminListState(root);
+      expect(reloaded.mode).toBe("loopback");
+      expect(reloaded.adminListUrl).toBe(url);
     } finally {
       await rm(root, { recursive: true, force: true });
     }
