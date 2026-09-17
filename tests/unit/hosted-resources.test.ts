@@ -139,6 +139,10 @@ describe("hosted resources settings", () => {
     expect(validateHostedResourceContent("text", "").ok).toBe(false);
     expect(validateHostedResourceContent("ini", "[ServerSettings]\nA=B").ok).toBe(true);
     expect(validateHostedResourceContent("ini", "not ini at all").ok).toBe(false);
+    // The official dynamicconfig.ini is flat and section-less; do not require [Section].
+    expect(
+      validateHostedResourceContent("ini", "TamingSpeedMultiplier=2.0\nXPMultiplier=2.0").ok,
+    ).toBe(true);
     expect(
       validateHostedResourceContent("text", "x".repeat(HOSTED_RESOURCES_MAX_CONTENT_BYTES)).ok,
     ).toBe(true);

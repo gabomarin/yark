@@ -48,6 +48,36 @@ separate — none of them proves the game accepted the resource:
 The panel also shows observed request counts since YARK started. A served match only
 means YARK returned those bytes; it does not mean ASA loaded them.
 
+## Known consumers (ASA)
+
+| Consumer | Expected body | Where it is set |
+| --- | --- | --- |
+| `AdminListURL` | Plain text, one EOS / Ark id per line | `GameUserSettings.ini` |
+| `BanListURL` | Plain text ban entries | `GameUserSettings.ini` |
+| `BadWordListURL` / `BadWordWhiteListURL` | Plain text word list | `GameUserSettings.ini` |
+| `CustomDynamicConfigUrl` (+ `-UseDynamicConfig`) | **INI** — flat `Key=Value` lines | Launch arg or `GameUserSettings.ini` |
+| `CustomLiveTuningUrl` | **JSON** | Launch arg or `GameUserSettings.ini` |
+
+`CustomDynamicConfigUrl` only accepts **HTTP** (HTTPS is unsupported), which is exactly
+what the loopback host provides. ASA re-reads the dynamic config on world (auto)save or
+after `ForceUpdateDynamicConfig`, so the YARK-exit availability caveat applies there too.
+
+Mod settings are a different story: ASA mods read their options from local
+`[ModSettings]` / per-mod sections of `GameUserSettings.ini`, and Ark Server API plugins
+read a local `config.json`. Neither fetches INI over HTTP, so the loopback host does not
+serve mod settings.
+
+## Content validation
+
+- **JSON**: parsed with `JSON.parse`; invalid JSON is rejected.
+- **INI**: only requires at least one `Key=Value` line. This is deliberately shallow —
+  the official `dynamicconfig.ini` is a flat, section-less file, so requiring a
+  `[Section]` would reject the primary ASA consumer.
+- **Plain text**: no format to check.
+- Size (512 KB, UTF-8 bytes) is enforced for every format.
+- **Syntax only**: YARK does not validate ASA's supported-key schema and does not bind
+  heuristics to setting names. An unknown key is ignored by ASA, not a YARK error.
+
 ## Port changes and stale URLs
 
 Changing the port does not rewrite server INIs in this iteration. After a port change,

@@ -109,8 +109,14 @@ export function validateHostedResourceContent(
     }
   }
   if (format === "ini") {
+    // Deliberately shallow: the official `dynamicconfig.ini` is a flat, section-less
+    // list of `Key=Value` lines, so requiring a `[Section]` would reject the primary
+    // ASA consumer. We validate syntax, not ASA's supported-key schema.
     if (parseIniTextRows(content).length === 0) {
-      return { ok: false, message: "Content has no INI settings." };
+      return {
+        ok: false,
+        message: "Content has no INI settings (expected `Key=Value` lines).",
+      };
     }
   }
   return { ok: true, message: null };
