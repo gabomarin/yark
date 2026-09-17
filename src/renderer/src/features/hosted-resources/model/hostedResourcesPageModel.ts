@@ -16,7 +16,7 @@ export const HOSTED_RESOURCE_FORMAT_OPTIONS: FormatOption[] = [
   {
     value: "ini",
     label: "INI",
-    description: "Section and key/value settings.",
+    description: "Flat Key=Value lines for ASA dynamic configuration.",
   },
   {
     value: "json",
@@ -37,7 +37,7 @@ export function contentPlaceholder(format: HostedResourceFormat): string {
     return '{\n  "example": true\n}';
   }
   if (format === "ini") {
-    return "[ServerSettings]\nKey=Value";
+    return "TamingSpeedMultiplier=5.0\nHarvestAmountMultiplier=2.0";
   }
   return "EOSID0000000000000000000000000000\nEOSID1111111111111111111111111111";
 }

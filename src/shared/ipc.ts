@@ -245,8 +245,10 @@ export const IPC = {
   hostedResourcesSetPort: "hosted-resources:set-port",
   hostedResourcesCreateResource: "hosted-resources:create-resource",
   hostedResourcesPublishContent: "hosted-resources:publish-content",
+  hostedResourcesGetContent: "hosted-resources:get-content",
   hostedResourcesPublishRevision: "hosted-resources:publish-revision",
   hostedResourcesRenameResource: "hosted-resources:rename-resource",
+  hostedResourcesUpdateMetadata: "hosted-resources:update-metadata",
   hostedResourcesListRevisions: "hosted-resources:list-revisions",
   hostedResourcesSetResourceEnabled: "hosted-resources:set-resource-enabled",
   hostedResourcesDeleteResource: "hosted-resources:delete-resource",
@@ -361,6 +363,8 @@ export interface HostedResourceDto {
   publishedSha256: string | null;
   /** UTF-8 byte length of the currently served body, or null when unpublished. */
   publishedSizeBytes: number | null;
+  notes: string;
+  tags: string[];
 }
 
 export interface HostedResourceRevisionDto {
@@ -832,11 +836,15 @@ export interface RendererApi {
     displayName: string;
     format: HostedResourceFormat;
     content: string;
+    notes?: string;
+    tags?: string[];
   }): Promise<IpcResult<HostedResourceDto>>;
   publishHostedResourceContent(
     resourceId: string,
     content: string,
+    metadata?: { displayName: string; notes: string; tags: string[] },
   ): Promise<IpcResult<HostedResourceDto>>;
+  getHostedResourceContent(resourceId: string): Promise<IpcResult<string>>;
   publishHostedResourceRevision(
     resourceId: string,
     revisionId: string,
@@ -844,6 +852,10 @@ export interface RendererApi {
   renameHostedResource(
     resourceId: string,
     displayName: string,
+  ): Promise<IpcResult<HostedResourceDto>>;
+  updateHostedResourceMetadata(
+    resourceId: string,
+    input: { displayName: string; notes: string; tags: string[] },
   ): Promise<IpcResult<HostedResourceDto>>;
   listHostedResourceRevisions(
     resourceId: string,

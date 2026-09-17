@@ -10,6 +10,8 @@ export interface HostedResourceRow {
   updatedAt: string;
   /** Null while enabled; set to the disable timestamp while disabled. */
   disabledAt: string | null;
+  notes: string;
+  tags: string[];
 }
 
 export interface HostedResourceRevisionRow {
@@ -41,6 +43,8 @@ interface ResourceDbRow {
   created_at: string;
   updated_at: string;
   disabled_at: string | null;
+  notes: string;
+  tags_json: string;
 }
 
 interface SummaryDbRow extends ResourceDbRow {
@@ -63,6 +67,15 @@ interface RevisionDbRow {
 }
 
 function toResource(row: ResourceDbRow): HostedResourceRow {
+  let tags: string[] = [];
+  try {
+    const parsed: unknown = JSON.parse(row.tags_json);
+    if (Array.isArray(parsed)) {
+      tags = parsed.filter((tag): tag is string => typeof tag === "string");
+    }
+  } catch {
+    tags = [];
+  }
   return {
     id: row.id,
     token: row.token,
@@ -71,6 +84,8 @@ function toResource(row: ResourceDbRow): HostedResourceRow {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     disabledAt: row.disabled_at,
+    notes: row.notes,
+    tags,
   };
 }
 
@@ -144,8 +159,8 @@ export class HostedResourcesRepository {
     this.db
       .prepare(
         `INSERT INTO hosted_resources
-           (id, token, display_name, format, created_at, updated_at, disabled_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+           (id, token, display_name, format, created_at, updated_at, disabled_at, notes, tags_json)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         row.id,
@@ -155,6 +170,8 @@ export class HostedResourcesRepository {
         row.createdAt,
         row.updatedAt,
         row.disabledAt,
+        row.notes,
+        JSON.stringify(row.tags),
       );
   }
 
@@ -162,6 +179,20 @@ export class HostedResourcesRepository {
     this.db
       .prepare("UPDATE hosted_resources SET display_name = ?, updated_at = ? WHERE id = ?")
       .run(displayName, updatedAt, id);
+  }
+
+  updateMetadata(
+    id: string,
+    displayName: string,
+    notes: string,
+    tags: string[],
+    updatedAt: string,
+  ): void {
+    this.db
+      .prepare(
+        "UPDATE hosted_resources SET display_name = ?, notes = ?, tags_json = ?, updated_at = ? WHERE id = ?",
+      )
+      .run(displayName, notes, JSON.stringify(tags), updatedAt, id);
   }
 
   /** Disabling is reversible: `null` re-enables serving. */
@@ -251,6 +282,69 @@ export class HostedResourcesRepository {
       this.db
         .prepare("UPDATE hosted_resources SET updated_at = ? WHERE id = ?")
         .run(publishedAt, resourceId);
+      this.db.exec("COMMIT;");
+    } catch (error) {
+      try {
+        this.db.exec("ROLLBACK;");
+      } catch {
+        // ignore rollback failure; original error is what matters
+      }
+      throw error;
+    }
+  }
+
+  /** Atomically publishes a revision and updates the operator metadata with it. */
+  publishNewRevision(input: {
+    resourceId: string;
+    displayName: string;
+    notes: string;
+    tags: string[];
+    publishedAt: string;
+    revision: HostedResourceRevisionRow;
+  }): void {
+    this.db.exec("BEGIN;");
+    try {
+      const sequenceRow = this.db
+        .prepare(
+          "SELECT COALESCE(MAX(sequence), 0) AS maxSequence FROM hosted_resource_revisions WHERE resource_id = ?",
+        )
+        .get(input.resourceId) as unknown as { maxSequence: number };
+      const revision = { ...input.revision, sequence: sequenceRow.maxSequence + 1 };
+      this.db
+        .prepare(
+          `UPDATE hosted_resource_revisions SET published_at = NULL
+           WHERE resource_id = ? AND published_at IS NOT NULL`,
+        )
+        .run(input.resourceId);
+      this.db
+        .prepare(
+          `INSERT INTO hosted_resource_revisions
+             (id, resource_id, sequence, content, sha256, validation, created_at, published_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .run(
+          revision.id,
+          revision.resourceId,
+          revision.sequence,
+          revision.content,
+          revision.sha256,
+          revision.validation,
+          revision.createdAt,
+          revision.publishedAt,
+        );
+      this.db
+        .prepare(
+          `UPDATE hosted_resources
+           SET display_name = ?, notes = ?, tags_json = ?, updated_at = ?
+           WHERE id = ?`,
+        )
+        .run(
+          input.displayName,
+          input.notes,
+          JSON.stringify(input.tags),
+          input.publishedAt,
+          input.resourceId,
+        );
       this.db.exec("COMMIT;");
     } catch (error) {
       try {

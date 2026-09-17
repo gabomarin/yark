@@ -46,7 +46,7 @@ export function HostedResourcesPage(): ReactElement {
   return (
     <PageScaffold
       title="Hosted Resources"
-      subtitle="Publish text, JSON, or INI files over a local-only URL that ASA can load instead of an external host."
+      subtitle="Publish text, JSON, or INI content over a URL that ASA can load from this PC."
       actions={
         <Button
           variant="default"
@@ -72,7 +72,9 @@ export function HostedResourcesPage(): ReactElement {
             <Stack gap="sm">
               <Group justify="space-between" align="flex-start">
                 <div>
-                  <Text fw={600}>{state.enabled ? "Host is on" : "Host is off"}</Text>
+                  <Text fw={600}>
+                    {state.enabled ? "Hosted Resources is enabled" : "Hosted Resources is disabled"}
+                  </Text>
                   <Text size="sm" c="dimmed">
                     {state.enabled
                       ? state.listening
@@ -153,6 +155,11 @@ export function HostedResourcesPage(): ReactElement {
           </AppSurfaceCard>
         ) : (
           <>
+            <Alert color="blue" variant="light" title="Next step">
+              Copy a resource URL and paste it into the server setting that uses it, such
+              as <code>AdminListURL</code> in RCON → Admins. Keep YARK running while ASA
+              needs to refresh the URL.
+            </Alert>
             <Group justify="flex-end">
               <Button onClick={controller.openCreate}>New resource</Button>
             </Group>
@@ -163,7 +170,7 @@ export function HostedResourcesPage(): ReactElement {
                 referencedServerCount={referenceCountFor(resource.id)}
                 observedRequests={observedRequestsFor(resource.id)}
                 busy={controller.busy !== null}
-                onEdit={() => controller.openEdit(resource)}
+                onEdit={() => void controller.openEdit(resource)}
                 onRevisions={() => void controller.openRevisions(resource)}
                 onToggleEnabled={(enabled) =>
                   controller.toggleResourceEnabled(resource, enabled)

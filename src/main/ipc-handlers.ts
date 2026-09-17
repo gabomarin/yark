@@ -1346,8 +1346,14 @@ export function registerIpcHandlers(
   handleValidated(
     IPC.hostedResourcesPublishContent,
     ipcArgSchemas[IPC.hostedResourcesPublishContent],
-    ([resourceId, content]) =>
-      hostedResources.publishContent(resourceId, content),
+    ([resourceId, content, metadata]) =>
+      hostedResources.publishContent(resourceId, content, metadata),
+  );
+
+  handleValidated(
+    IPC.hostedResourcesGetContent,
+    ipcArgSchemas[IPC.hostedResourcesGetContent],
+    ([resourceId]) => hostedResources.getPublishedContent(resourceId),
   );
 
   handleValidated(
@@ -1362,6 +1368,12 @@ export function registerIpcHandlers(
     ipcArgSchemas[IPC.hostedResourcesRenameResource],
     ([resourceId, displayName]) =>
       hostedResources.renameResource(resourceId, displayName),
+  );
+
+  handleValidated(
+    IPC.hostedResourcesUpdateMetadata,
+    ipcArgSchemas[IPC.hostedResourcesUpdateMetadata],
+    ([resourceId, input]) => hostedResources.updateMetadata(resourceId, input),
   );
 
   handleValidated(

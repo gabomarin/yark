@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
-import { Badge, Button, Group, Modal, ScrollArea, Stack, Text } from "@mantine/core";
+import { Badge, Button, Group, ScrollArea, Stack, Text } from "@mantine/core";
 import type { HostedResourceRevisionDto } from "@shared/ipc";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import { revisionLabel, shortSha } from "../../model/hostedResourcesPageModel";
 
 interface Props {
@@ -13,7 +14,13 @@ interface Props {
 
 export function HostedResourceRevisionsModal(props: Props): ReactElement {
   return (
-    <Modal opened={props.opened} onClose={props.onClose} title="Revisions" size="lg">
+    <AppPanelModal
+      opened={props.opened}
+      onClose={props.onClose}
+      title="Revisions"
+      meta="Published versions of this hosted resource"
+      size={672}
+    >
       <Stack gap="xs">
         {props.revisions.length === 0 ? (
           <Text size="sm" c="dimmed">
@@ -58,6 +65,6 @@ export function HostedResourceRevisionsModal(props: Props): ReactElement {
           </ScrollArea.Autosize>
         )}
       </Stack>
-    </Modal>
+    </AppPanelModal>
   );
 }

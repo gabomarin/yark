@@ -1,6 +1,22 @@
 import type { ReactElement } from "react";
-import { Button, Group, Modal, Select, Stack, Text, Textarea, TextInput } from "@mantine/core";
-import { HOSTED_RESOURCES_MAX_CONTENT_BYTES } from "@shared/settings/hosted-resources";
+import {
+  Button,
+  Group,
+  Select,
+  Stack,
+  TagsInput,
+  Text,
+  Textarea,
+  TextInput,
+} from "@mantine/core";
+import {
+  HOSTED_RESOURCES_MAX_CONTENT_BYTES,
+  HOSTED_RESOURCES_MAX_DISPLAY_NAME_LENGTH,
+  HOSTED_RESOURCES_MAX_NOTES_LENGTH,
+  HOSTED_RESOURCES_MAX_TAGS,
+  HOSTED_RESOURCE_TAG_OPTIONS,
+} from "@shared/settings/hosted-resources";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import {
   contentByteLength,
   contentPlaceholder,
@@ -23,25 +39,26 @@ export function HostedResourceEditorModal(props: Props): ReactElement {
   const contentBytes = draft === null ? 0 : contentByteLength(draft.content);
   const overLimit = contentBytes > HOSTED_RESOURCES_MAX_CONTENT_BYTES;
   return (
-    <Modal
+    <AppPanelModal
       opened={draft !== null}
       onClose={props.onClose}
       title={isCreate ? "New hosted resource" : `Edit content · ${draft?.displayName ?? ""}`}
-      size="lg"
+      meta={isCreate ? "Publish a local URL for ASA to load" : "Update the content served by this URL"}
+      size={672}
     >
       {draft !== null && (
         <Stack gap="sm">
+          <TextInput
+            label="Display name"
+            placeholder="Admins allowlist"
+            value={draft.displayName}
+            onChange={(event) => props.onChange({ displayName: event.currentTarget.value })}
+            maxLength={HOSTED_RESOURCES_MAX_DISPLAY_NAME_LENGTH}
+            required
+            data-hosted-resource-name
+          />
           {isCreate ? (
             <>
-              <TextInput
-                label="Display name"
-                placeholder="Admins allowlist"
-                value={draft.displayName}
-                onChange={(event) => props.onChange({ displayName: event.currentTarget.value })}
-                maxLength={120}
-                required
-                data-hosted-resource-name
-              />
               <Select
                 label="Format"
                 description={
@@ -65,10 +82,35 @@ export function HostedResourceEditorModal(props: Props): ReactElement {
             </>
           ) : (
             <Text size="sm" c="dimmed">
-              Saving replaces the bytes the URL serves. The previous version is kept and
+              Save publishes a new version immediately. The previous version is kept and
               can be restored from Revisions.
             </Text>
           )}
+          <Textarea
+            label="Operator notes"
+            placeholder="What is this resource used for?"
+            description="Shown only in YARK to help identify the resource."
+            value={draft.notes}
+            onChange={(event) => props.onChange({ notes: event.currentTarget.value })}
+            maxLength={HOSTED_RESOURCES_MAX_NOTES_LENGTH}
+            minRows={2}
+            maxRows={4}
+            data-hosted-resource-notes
+          />
+          <TagsInput
+            label="Tags"
+            placeholder="Select or create tags"
+            description="Choose an ASA use or create a custom tag for mods and local conventions."
+            data={HOSTED_RESOURCE_TAG_OPTIONS}
+            value={draft.tagsText.split(",").map((tag) => tag.trim()).filter(Boolean)}
+            onChange={(tags) =>
+              props.onChange({ tagsText: tags.map((tag) => tag.trim().toLowerCase()).join(", ") })
+            }
+            splitChars={[","]}
+            maxTags={HOSTED_RESOURCES_MAX_TAGS}
+            clearable
+            data-hosted-resource-tags
+          />
           <Textarea
             label="Content"
             placeholder={contentPlaceholder(draft.format)}
@@ -97,6 +139,6 @@ export function HostedResourceEditorModal(props: Props): ReactElement {
           </Group>
         </Stack>
       )}
-    </Modal>
+    </AppPanelModal>
   );
 }

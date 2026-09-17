@@ -38,6 +38,8 @@ export interface HostedResourceEditorDraft {
   displayName: string;
   format: HostedResourceFormat;
   content: string;
+  notes: string;
+  tagsText: string;
 }
 
 export interface HostedResourcesController {
@@ -56,7 +58,7 @@ export interface HostedResourcesController {
   setPortDraft: (value: number | string) => void;
   applyPort: () => Promise<void>;
   openCreate: () => void;
-  openEdit: (resource: HostedResourceDto) => void;
+  openEdit: (resource: HostedResourceDto) => Promise<void>;
   closeEditor: () => void;
   updateEditor: (patch: Partial<HostedResourceEditorDraft>) => void;
   submitEditor: () => Promise<void>;
@@ -157,16 +159,25 @@ export function useHostedResourcesPage(): HostedResourcesController {
       displayName: "",
       format: "text",
       content: "",
+      notes: "",
+      tagsText: "",
     });
   }, []);
 
-  const openEdit = useCallback((resource: HostedResourceDto) => {
+  const openEdit = useCallback(async (resource: HostedResourceDto) => {
+    const result = await attempt(() => window.api.getHostedResourceContent(resource.id));
+    if (!result.ok) {
+      showOperatorError(result.error, "Could not load the published content");
+      return;
+    }
     setEditor({
       mode: "publish",
       resourceId: resource.id,
       displayName: resource.displayName,
       format: resource.format,
-      content: "",
+      content: result.data,
+      notes: resource.notes,
+      tagsText: resource.tags.join(", "),
     });
   }, []);
 
@@ -183,14 +194,15 @@ export function useHostedResourcesPage(): HostedResourcesController {
       return;
     }
     const displayName = editor.displayName.trim();
-    if (editor.mode === "create" && displayName.length === 0) {
+    if (displayName.length === 0) {
       showOperatorError("Display name is required.");
       return;
     }
     if (editor.content.trim().length === 0) {
-      showOperatorError("Content is empty.");
+      showOperatorError("Add the new content before saving.");
       return;
     }
+    const tags = editor.tagsText.split(",").map((tag) => tag.trim()).filter(Boolean);
     setBusy("editor");
     await runWithFinally(
       async () => {
@@ -200,10 +212,13 @@ export function useHostedResourcesPage(): HostedResourcesController {
                 displayName,
                 format: editor.format,
                 content: editor.content,
+                notes: editor.notes,
+                tags,
               })
             : window.api.publishHostedResourceContent(
                 editor.resourceId ?? "",
                 editor.content,
+                { displayName, notes: editor.notes, tags },
               ),
         );
         if (!result.ok) {

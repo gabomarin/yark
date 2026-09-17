@@ -28,8 +28,9 @@ expect an HTTP URL body (for example `AdminListURL`, `BanListURL`). The experime
 2. Set one port (default `8935`) and **Apply port**. If the port is busy, the host
    fails closed and shows an error — YARK never assumes an open port belongs to it.
 3. **New resource**: pick a display name and format, paste the body, and **Create
-   resource**. The editor shows a live UTF-8 size counter and enforces the **512 KB**
-   cap per version.
+   resource**. Add optional operator notes and tags such as `admin-list`, `ban-list`,
+   or `dynamic-config`; custom tags can be added for mods or local conventions. The editor shows a live UTF-8
+   size counter and enforces the **512 KB** cap per version.
 4. Copy the URL and paste it into the server setting or mod config that expects it
    (for example `AdminListURL` in `GameUserSettings.ini`).
 5. To change the body, use **Edit** and **Save**. Every save keeps the previous version
@@ -127,6 +128,15 @@ Recommended smoke test:
 - **Syntax only**: YARK does not validate ASA's supported-key schema and does not bind
   heuristics to setting names. An unknown key is ignored by ASA, not a YARK error.
 
+## Notes and tags
+
+Notes and tags are YARK-only metadata; they never change the body served at the URL.
+Tags are normalized to lowercase, deduplicated, and limited to 12 labels of 32
+characters each. The editor suggests the ASA URL consumers `admin-list`, `ban-list`,
+and `dynamic-config`; operators can also create custom tags for mods, maps, or local
+conventions. Tags provide stable metadata for a future resource picker in server URL
+settings.
+
 ## Port changes and stale URLs
 
 Changing the port does not rewrite server INIs in this iteration. After a port change,
@@ -187,8 +197,10 @@ host-only YARK relaunch or a bundled minimal Node runtime. Fuse rationale:
 - Each **Save** appends an immutable version and makes it the served body atomically.
 - Resource bodies are never rendered as HTML or executed: YARK stores them as text,
   serves fixed non-HTML MIME types with `nosniff`, and the UI only shows a body in an
-  editable text field. A script-like body cannot run on this path, so there is no script
-  sniffing — content validation is shape (JSON/INI) and size only.
+  editable text field. The body crosses main/preload/renderer only to populate that
+  plain editor; it is never interpreted, injected into the DOM, or executed. A
+  script-like body cannot run on this path, so there is no script sniffing — content
+  validation is shape (JSON/INI) and size only.
 - Request/header timeouts and a connection cap bound slow or abusive clients.
 - Bodies, full tokens, admin IDs, and secret-bearing URLs are never logged.
 

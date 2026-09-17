@@ -42,8 +42,36 @@ export const HOSTED_RESOURCE_CONTENT_TYPES: Record<HostedResourceFormat, string>
 
 /** Upper bound for a single revision body (validated before publishing). */
 export const HOSTED_RESOURCES_MAX_CONTENT_BYTES = 512 * 1024;
+export const HOSTED_RESOURCES_MAX_DISPLAY_NAME_LENGTH = 120;
+export const HOSTED_RESOURCES_MAX_NOTES_LENGTH = 500;
+export const HOSTED_RESOURCES_MAX_TAGS = 12;
+export const HOSTED_RESOURCES_MAX_TAG_LENGTH = 32;
 
 export type HostedResourceFormat = "json" | "ini" | "text";
+
+/** Common ASA URL consumers; MultiSelect also permits operator-defined tags. */
+export const HOSTED_RESOURCE_TAG_OPTIONS = [
+  { value: "admin-list", label: "Admin list" },
+  { value: "ban-list", label: "Ban list" },
+  { value: "dynamic-config", label: "Dynamic config" },
+];
+
+/** Stable, case-insensitive tags used for operator categorisation and future selectors. */
+export function normalizeHostedResourceTags(tags: readonly string[]): string[] {
+  const normalized = new Set<string>();
+  for (const tag of tags) {
+    const value = tag.trim().toLowerCase();
+    if (value.length === 0) continue;
+    if (value.length > HOSTED_RESOURCES_MAX_TAG_LENGTH) {
+      throw new Error(`Tags must be ${HOSTED_RESOURCES_MAX_TAG_LENGTH} characters or fewer.`);
+    }
+    normalized.add(value);
+    if (normalized.size > HOSTED_RESOURCES_MAX_TAGS) {
+      throw new Error(`Use at most ${HOSTED_RESOURCES_MAX_TAGS} tags per resource.`);
+    }
+  }
+  return [...normalized];
+}
 
 export function isHostedResourcesPort(value: number): boolean {
   return (

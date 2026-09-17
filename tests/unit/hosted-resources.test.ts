@@ -19,6 +19,7 @@ import {
   HOSTED_RESOURCES_PORT_SETTING_KEY,
   formatHostedResourceUrl,
   isHostedResourcesPort,
+  normalizeHostedResourceTags,
   parseHostedResourcesPort,
   validateHostedResourceContent,
 } from "@shared/settings/hosted-resources";
@@ -123,6 +124,19 @@ async function startServing(harness: Harness): Promise<number> {
 }
 
 describe("hosted resources settings", () => {
+  it("applies rapid enable changes in request order", async () => {
+    const harness = createHarness();
+    const first = harness.service.setEnabled(true);
+    const second = harness.service.setEnabled(false);
+
+    const [firstState, secondState] = await Promise.all([first, second]);
+
+    expect(firstState.enabled).toBe(true);
+    expect(firstState.listening).toBe(true);
+    expect(secondState.enabled).toBe(false);
+    expect(secondState.listening).toBe(false);
+  });
+
   it("clamps invalid ports to the default", () => {
     expect(parseHostedResourcesPort(null)).toBe(8935);
     expect(parseHostedResourcesPort("0")).toBe(8935);
@@ -151,6 +165,15 @@ describe("hosted resources settings", () => {
     ).toBe(false);
   });
 
+  it("normalizes tags for stable operator categorisation", () => {
+    expect(normalizeHostedResourceTags([" Admins ", "PVE", "admins", ""])).toEqual([
+      "admins",
+      "pve",
+    ]);
+    expect(() => normalizeHostedResourceTags(["x".repeat(33)])).toThrow(/32/);
+    expect(() => normalizeHostedResourceTags(Array.from({ length: 13 }, (_, i) => `tag-${i}`))).toThrow(/12/);
+  });
+
   it("treats only loopback addresses as local", () => {
     expect(isLoopbackAddress("127.0.0.1")).toBe(true);
     expect(isLoopbackAddress("::1")).toBe(true);
@@ -171,6 +194,29 @@ describe("hosted resources repository", () => {
     expect(repo.listResourceSummaries()).toEqual([]);
   });
 
+  it("persists notes and normalized tags", () => {
+    const harness = createHarness();
+    const resource = harness.service.createResource({
+      displayName: "Admins",
+      format: "text",
+      content: "EOSID1",
+      notes: "Primary allowlist",
+      tags: [" Admins ", "PVE", "admins"],
+    });
+
+    expect(resource.notes).toBe("Primary allowlist");
+    expect(resource.tags).toEqual(["admins", "pve"]);
+
+    const updated = harness.service.updateMetadata(resource.id, {
+      displayName: "Main admins",
+      notes: "Used on the island server",
+      tags: ["production"],
+    });
+    expect(updated.displayName).toBe("Main admins");
+    expect(updated.notes).toBe("Used on the island server");
+    expect(updated.tags).toEqual(["production"]);
+  });
+
   it("swaps the published revision atomically and never serves unpublished ones", () => {
     const db = openDatabase(":memory:");
     openDbs.push(db);
@@ -184,6 +230,8 @@ describe("hosted resources repository", () => {
       createdAt: now,
       updatedAt: now,
       disabledAt: null,
+      notes: "",
+      tags: [],
     });
     repo.insertRevision({
       id: "rev1",
@@ -302,7 +350,7 @@ describe("hosted resources HTTP host", () => {
     expect((await send(port, path)).status).toBe(200);
   });
 
-  it("swaps served bytes atomically on publish", async () => {
+  it("swaps served bytes and metadata atomically on publish", async () => {
     const harness = createHarness();
     const port = await startServing(harness);
     const resource = harness.service.createResource({
@@ -312,13 +360,20 @@ describe("hosted resources HTTP host", () => {
     });
     const path = `/r/${resource.url.split("/r/")[1]}`;
 
-    harness.service.publishContent(resource.id, "v2");
+    harness.service.publishContent(resource.id, "v2", {
+      displayName: "Updated admins",
+      notes: "Used by the moderation team",
+      tags: ["admin-list"],
+    });
     const response = await send(port, path);
     expect(response.body).toBe("v2");
     expect(response.headers["content-length"]).toBe("2");
 
     const overview = harness.service.getOverview();
     expect(overview.resources[0]?.publishedSizeBytes).toBe(2);
+    expect(overview.resources[0]?.displayName).toBe("Updated admins");
+    expect(overview.resources[0]?.notes).toBe("Used by the moderation team");
+    expect(overview.resources[0]?.tags).toEqual(["admin-list"]);
   });
 
   it("fails closed when the port is owned by another process", async () => {

@@ -344,12 +344,16 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.hostedResourcesSetPort, port),
   createHostedResource: (input) =>
     ipcRenderer.invoke(IPC.hostedResourcesCreateResource, input),
-  publishHostedResourceContent: (resourceId, content) =>
-    ipcRenderer.invoke(IPC.hostedResourcesPublishContent, resourceId, content),
+  publishHostedResourceContent: (resourceId, content, metadata) =>
+    ipcRenderer.invoke(IPC.hostedResourcesPublishContent, resourceId, content, metadata),
+  getHostedResourceContent: (resourceId) =>
+    ipcRenderer.invoke(IPC.hostedResourcesGetContent, resourceId),
   publishHostedResourceRevision: (resourceId, revisionId) =>
     ipcRenderer.invoke(IPC.hostedResourcesPublishRevision, resourceId, revisionId),
   renameHostedResource: (resourceId, displayName) =>
     ipcRenderer.invoke(IPC.hostedResourcesRenameResource, resourceId, displayName),
+  updateHostedResourceMetadata: (resourceId, input) =>
+    ipcRenderer.invoke(IPC.hostedResourcesUpdateMetadata, resourceId, input),
   listHostedResourceRevisions: (resourceId) =>
     ipcRenderer.invoke(IPC.hostedResourcesListRevisions, resourceId),
   setHostedResourceEnabled: (resourceId, enabled) =>

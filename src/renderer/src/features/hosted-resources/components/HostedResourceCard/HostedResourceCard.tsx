@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import {
   ClockCounterClockwise,
   Copy,
+  DotsThreeVertical,
   PencilSimple,
   Power,
   Trash,
@@ -9,9 +10,9 @@ import {
 import {
   ActionIcon,
   Badge,
-  Button,
   CopyButton,
   Group,
+  Menu,
   Stack,
   Text,
   Tooltip,
@@ -69,33 +70,50 @@ export function HostedResourceCard(props: Props): ReactElement {
                 </Tooltip>
               )}
             </CopyButton>
-            <Tooltip label="Revisions">
-              <ActionIcon variant="subtle" aria-label="Revisions" onClick={props.onRevisions}>
-                <ClockCounterClockwise size={16} />
-              </ActionIcon>
-            </Tooltip>
-            <Tooltip label={disabled ? "Enable" : "Disable"}>
+            <Tooltip label="Edit">
               <ActionIcon
                 variant="subtle"
-                color={disabled ? "teal" : "orange"}
-                aria-label={disabled ? "Enable resource" : "Disable resource"}
-                onClick={() => props.onToggleEnabled(disabled)}
+                aria-label="Edit"
+                onClick={props.onEdit}
                 disabled={props.busy}
               >
-                <Power size={16} />
+                <PencilSimple size={16} />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Delete">
-              <ActionIcon
-                variant="subtle"
-                color="red"
-                aria-label="Delete resource"
-                onClick={props.onDelete}
-                disabled={props.busy}
-              >
-                <Trash size={16} />
-              </ActionIcon>
-            </Tooltip>
+            <Menu shadow="md" withinPortal position="bottom-end">
+              <Menu.Target>
+                <ActionIcon
+                  variant="subtle"
+                  aria-label="More resource actions"
+                  disabled={props.busy}
+                >
+                  <DotsThreeVertical size={16} />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item
+                  leftSection={<ClockCounterClockwise size={16} />}
+                  onClick={props.onRevisions}
+                >
+                  Revisions
+                </Menu.Item>
+                <Menu.Item
+                  leftSection={<Power size={16} />}
+                  color={disabled ? "teal" : "orange"}
+                  onClick={() => props.onToggleEnabled(disabled)}
+                >
+                  {disabled ? "Enable resource" : "Disable resource"}
+                </Menu.Item>
+                <Menu.Divider />
+                <Menu.Item
+                  leftSection={<Trash size={16} />}
+                  color="red"
+                  onClick={props.onDelete}
+                >
+                  Delete resource
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
           </Group>
         </Group>
 
@@ -106,6 +124,17 @@ export function HostedResourceCard(props: Props): ReactElement {
         <Text size="sm" c="dimmed">
           {resourcePublishedLabel(resource)}
         </Text>
+
+        {resource.notes.length > 0 && <Text size="sm">{resource.notes}</Text>}
+        {resource.tags.length > 0 && (
+          <Group gap="xs">
+            {resource.tags.map((tag) => (
+              <Badge key={tag} variant="light" color="blue" size="sm">
+                {tag}
+              </Badge>
+            ))}
+          </Group>
+        )}
 
         <Group gap="lg">
           <Text size="xs" c="dimmed" data-hosted-resource-current-size>
@@ -125,18 +154,6 @@ export function HostedResourceCard(props: Props): ReactElement {
               ? "Requests: run diagnostics"
               : `${props.observedRequests} request${props.observedRequests === 1 ? "" : "s"} observed`}
           </Text>
-        </Group>
-
-        <Group>
-          <Button
-            size="xs"
-            variant="light"
-            leftSection={<PencilSimple size={14} />}
-            onClick={props.onEdit}
-            disabled={props.busy}
-          >
-            Edit
-          </Button>
         </Group>
       </Stack>
     </AppSurfaceCard>
