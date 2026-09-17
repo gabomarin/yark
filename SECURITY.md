@@ -64,6 +64,7 @@ These are documented product boundaries, not “free pass” bugs by themselves:
 - Vulnerabilities **only** in ARK / ASA, SteamCMD, CurseForge, or other third-party binaries YARK launches or downloads
 - Issues that require the operator to deliberately point `installDir` / backup paths at untrusted trees and then run Install / wipe / restore (still report if the app ignores its own wipe-safety or nested-path guards)
 - **Operator-initiated http(s) fetches** for RCON AdminListURL Validate / remote list load (`admin-list:validate-url`, `admin-list:get`) — the local operator is the trust boundary today; SSRF hardening would be required if that IPC were ever exposed beyond the desktop session ([docs/rcon.md](docs/rcon.md))
+- **Experimental Hosted Resources loopback host** ([#564](https://github.com/gabomarin/yark/issues/564), default off) — binds `127.0.0.1` only, serves published immutable revisions by opaque token over `GET`/`HEAD`, fails closed when the port is busy or foreign-owned, and is not a LAN/WAN/HTTPS server. It is a local, same-machine capability; the URL is disclosed to whatever can read the INI, and it stops working when YARK exits ([docs/hosted-resources.md](docs/hosted-resources.md))
 - Social engineering, physical access, or compromised GitHub/npm accounts outside this project’s control
 
 ## Safe harbor

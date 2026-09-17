@@ -1,0 +1,10 @@
+.content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* Keep cards at content height so fillViewport does not crush them. */
+.content > * {
+  flex-shrink: 0;
+}

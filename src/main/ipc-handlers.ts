@@ -63,6 +63,7 @@ import { applyWindowsLoginItem } from "./windows-login-item";
 import type { DesktopShellPreferences } from "../shared/settings/desktop-shell";
 import type { AppUpdateService } from "./app-update-service";
 import type { DiscordWebhookService } from "./discord-webhook-service";
+import type { HostedResourcesService } from "../backend/domains/hosted-resources/hosted-resources-service";
 import {
   DISCORD_WEBHOOK_SETTING_KEY,
   isDiscordWebhookUrl,
@@ -109,6 +110,7 @@ export function registerIpcHandlers(
   processMetricsSampler: ProcessMetricsSampler,
   appUpdate: AppUpdateService,
   discordWebhook: DiscordWebhookService,
+  hostedResources: HostedResourcesService,
   /** Same entry as tray Quit YARK (`isQuitting` + `app.quit()`). */
   requestAppQuit: () => void,
 ): void {
@@ -1316,4 +1318,73 @@ export function registerIpcHandlers(
   handleValidated(IPC.appQuit, ipcArgSchemas[IPC.appQuit], () => {
     requestAppQuit();
   });
+
+  handleValidated(
+    IPC.hostedResourcesGetOverview,
+    ipcArgSchemas[IPC.hostedResourcesGetOverview],
+    () => hostedResources.getOverview(),
+  );
+
+  handleValidated(
+    IPC.hostedResourcesSetEnabled,
+    ipcArgSchemas[IPC.hostedResourcesSetEnabled],
+    ([enabled]) => hostedResources.setEnabled(enabled),
+  );
+
+  handleValidated(
+    IPC.hostedResourcesSetPort,
+    ipcArgSchemas[IPC.hostedResourcesSetPort],
+    ([port]) => hostedResources.setPort(port),
+  );
+
+  handleValidated(
+    IPC.hostedResourcesCreateResource,
+    ipcArgSchemas[IPC.hostedResourcesCreateResource],
+    ([input]) => hostedResources.createResource(input),
+  );
+
+  handleValidated(
+    IPC.hostedResourcesPublishContent,
+    ipcArgSchemas[IPC.hostedResourcesPublishContent],
+    ([resourceId, content]) =>
+      hostedResources.publishContent(resourceId, content),
+  );
+
+  handleValidated(
+    IPC.hostedResourcesPublishRevision,
+    ipcArgSchemas[IPC.hostedResourcesPublishRevision],
+    ([resourceId, revisionId]) =>
+      hostedResources.publishRevision(resourceId, revisionId),
+  );
+
+  handleValidated(
+    IPC.hostedResourcesRenameResource,
+    ipcArgSchemas[IPC.hostedResourcesRenameResource],
+    ([resourceId, displayName]) =>
+      hostedResources.renameResource(resourceId, displayName),
+  );
+
+  handleValidated(
+    IPC.hostedResourcesListRevisions,
+    ipcArgSchemas[IPC.hostedResourcesListRevisions],
+    ([resourceId]) => hostedResources.listRevisions(resourceId),
+  );
+
+  handleValidated(
+    IPC.hostedResourcesRevokeResource,
+    ipcArgSchemas[IPC.hostedResourcesRevokeResource],
+    ([resourceId]) => hostedResources.revokeResource(resourceId),
+  );
+
+  handleValidated(
+    IPC.hostedResourcesDeleteResource,
+    ipcArgSchemas[IPC.hostedResourcesDeleteResource],
+    ([resourceId]) => hostedResources.deleteResource(resourceId),
+  );
+
+  handleValidated(
+    IPC.hostedResourcesDiagnostics,
+    ipcArgSchemas[IPC.hostedResourcesDiagnostics],
+    () => hostedResources.runDiagnostics(),
+  );
 }

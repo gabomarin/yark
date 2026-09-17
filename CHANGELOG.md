@@ -13,6 +13,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - Manual restart warnings can use compact Quiet, Standard, or Frequent player-notification presets before the graceful restart (#573).
 - Optional per-server **crash recovery**: after a real unexpected exit, YARK can restart the dedicated automatically within a bounded attempt budget — configurable max attempts, linear backoff, and a stability window that resets the budget. Default off; intentional stops, disabled profiles, active Maintenance windows, held locks, and exhausted budgets never restart. Attempt/pause state persists across relaunch, the Maintenance tab shows attempt N of M, paused, exhausted, and the last failure reason, and the server card shows a live auto-restart countdown when a retry is scheduled (#563).
+- Experimental, default-off **Hosted Resources**: a loopback-only HTTP host (`http://127.0.0.1:<port>/r/<token>`) that serves versioned text / INI / JSON bodies with atomic publishes, revision restore, revocation, and exact-URL discovery in managed server INIs, so URL-body ASA settings no longer need Gist, Pastebin, or an external web server. Ships with diagnostics (ownership, served-byte hash, references) and updates to the security docs (#564).
 
 ### Fixed
 

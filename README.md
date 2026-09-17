@@ -147,6 +147,10 @@ operator walkthrough.
 - Recursive install/backup/move/cache copies do not follow Windows directory junctions; destination
   trees that already contain links fail closed before writes
   ([#322](https://github.com/gabomarin/yark/issues/322)).
+- Experimental **Hosted Resources** (default off) is a loopback-only HTTP host on `127.0.0.1`
+  that serves published text/INI/JSON revisions by opaque token; it never binds LAN/WAN,
+  fails closed when the port is busy or foreign-owned, and stops serving when YARK exits
+  ([docs/hosted-resources.md](docs/hosted-resources.md)).
 - Current installers are unsigned. Authenticode signing and RFC 3161 timestamp verification are
   tracked in [#142](https://github.com/gabomarin/yark/issues/142).
 

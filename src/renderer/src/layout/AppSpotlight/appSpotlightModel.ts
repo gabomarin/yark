@@ -1,10 +1,11 @@
 import {
+  Broadcast,
+  DownloadSimple,
   FileText,
   GearSix,
   HardDrives,
   ShareNetwork,
   SquaresFour,
-  DownloadSimple,
 } from "@phosphor-icons/react";
 import type { Route } from "@layout/Sidebar/Sidebar";
 import type { ServerProfile } from "@shared/types";
@@ -54,6 +55,13 @@ export const SPOTLIGHT_NAV_ITEMS: SpotlightNavItem[] = [
     description: "Fleet activity and problems",
     keywords: ["log", "events", "activity"],
     icon: FileText,
+  },
+  {
+    id: "hostedResources",
+    label: "Hosted Resources",
+    description: "Experimental local URL host",
+    keywords: ["hosted", "url", "http", "loopback", "adminlist"],
+    icon: Broadcast,
   },
   {
     id: "settings",

@@ -29,6 +29,10 @@ interface DownloadsSlot {
   page: ReactNode;
 }
 
+interface HostedResourcesSlot {
+  page: ReactNode;
+}
+
 interface Props {
   route: Route;
   appVersion: string;
@@ -46,6 +50,7 @@ interface Props {
   logs: LogsSlot | null;
   backups: BackupsSlot | null;
   settings: SettingsSlot | null;
+  hostedResources: HostedResourcesSlot | null;
   error?: string | null;
   onDismissError?: () => void;
   busyOverlay?: AppBusyOverlayContent | null;
@@ -90,6 +95,12 @@ export function AppRouter(props: Props): ReactElement {
         return props.settings?.page ?? (
           <PlaceholderPage
             title="Settings"
+          />
+        );
+      case "hostedResources":
+        return props.hostedResources?.page ?? (
+          <PlaceholderPage
+            title="Hosted Resources"
           />
         );
       default:

@@ -8,6 +8,11 @@ import { z } from "zod";
 import { IPC } from "../ipc";
 import { DISCORD_MESSAGE_MAX_LENGTH } from "../settings/discord-webhook";
 import { onboardingRecordSchema } from "../settings/onboarding";
+import {
+  HOSTED_RESOURCES_MAX_CONTENT_BYTES,
+  HOSTED_RESOURCES_MAX_PORT,
+  HOSTED_RESOURCES_MIN_PORT,
+} from "../settings/hosted-resources";
 import { isServerProfilePatch } from "../server/server-profile";
 import {
   appDataFolderKindSchema,
@@ -219,6 +224,18 @@ export const VALIDATED_IPC_CHANNELS = [
   IPC.logsGetRetentionSettings,
   IPC.backupsFleetSummary,
   IPC.backupsGetDiskAlertSettings,
+  // Wave 4 — experimental hosted resources (#564)
+  IPC.hostedResourcesGetOverview,
+  IPC.hostedResourcesSetEnabled,
+  IPC.hostedResourcesSetPort,
+  IPC.hostedResourcesCreateResource,
+  IPC.hostedResourcesPublishContent,
+  IPC.hostedResourcesPublishRevision,
+  IPC.hostedResourcesRenameResource,
+  IPC.hostedResourcesListRevisions,
+  IPC.hostedResourcesRevokeResource,
+  IPC.hostedResourcesDeleteResource,
+  IPC.hostedResourcesDiagnostics,
 ] as const;
 
 export type ValidatedIpcChannel = (typeof VALIDATED_IPC_CHANNELS)[number];
@@ -535,4 +552,44 @@ export const ipcArgSchemas = {
   [IPC.backupsSetDiskAlertSettings]: z.tuple([backupDiskAlertSettingsSchema]),
   [IPC.backupsPreviewCleanup]: z.tuple([backupCleanupOptionsSchema]),
   [IPC.backupsRunCleanup]: z.tuple([backupCleanupOptionsSchema]),
+  [IPC.hostedResourcesGetOverview]: z.tuple([]),
+  [IPC.hostedResourcesSetEnabled]: z.tuple([z.boolean()]),
+  [IPC.hostedResourcesSetPort]: z.tuple([
+    z
+      .number()
+      .int()
+      .min(HOSTED_RESOURCES_MIN_PORT)
+      .max(HOSTED_RESOURCES_MAX_PORT),
+  ]),
+  [IPC.hostedResourcesCreateResource]: z.tuple([
+    z
+      .object({
+        displayName: nonEmptyStringSchema("Display name", 120),
+        format: z.enum(["json", "ini", "text"]),
+        content: z.string().max(HOSTED_RESOURCES_MAX_CONTENT_BYTES),
+      })
+      .strict(),
+  ]),
+  [IPC.hostedResourcesPublishContent]: z.tuple([
+    nonEmptyStringSchema("Resource id", 128),
+    z.string().max(HOSTED_RESOURCES_MAX_CONTENT_BYTES),
+  ]),
+  [IPC.hostedResourcesPublishRevision]: z.tuple([
+    nonEmptyStringSchema("Resource id", 128),
+    nonEmptyStringSchema("Revision id", 128),
+  ]),
+  [IPC.hostedResourcesRenameResource]: z.tuple([
+    nonEmptyStringSchema("Resource id", 128),
+    nonEmptyStringSchema("Display name", 120),
+  ]),
+  [IPC.hostedResourcesListRevisions]: z.tuple([
+    nonEmptyStringSchema("Resource id", 128),
+  ]),
+  [IPC.hostedResourcesRevokeResource]: z.tuple([
+    nonEmptyStringSchema("Resource id", 128),
+  ]),
+  [IPC.hostedResourcesDeleteResource]: z.tuple([
+    nonEmptyStringSchema("Resource id", 128),
+  ]),
+  [IPC.hostedResourcesDiagnostics]: z.tuple([]),
 } as const satisfies Record<ValidatedIpcChannel, z.ZodTypeAny>;

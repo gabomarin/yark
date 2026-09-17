@@ -131,7 +131,7 @@ line). Not BanList format. Not exclusive-join player whitelist.
 | Item | Detail |
 | --- | --- |
 | Product UI (now) | **Remote http(s) AdminListURL only** — URL field, Validate, `UpdateAllowedCheatersInterval`, Current ids |
-| Local / loopback | Deferred to **PHOST-001** (Hosted Resources). Backend helpers for sanitize / space-free mirror / `file:///` remain for that work |
+| Local / loopback | Experimental, default-off **Hosted Resources** loopback host now exists ([docs/hosted-resources.md](hosted-resources.md), [#564](https://github.com/gabomarin/yark/issues/564)). Paste its `http://127.0.0.1:<port>/r/<token>` URL into `AdminListURL`. AdminList-from-star wiring is still a follow-up; sanitize / mirror / `file:///` helpers remain |
 | Interval | Default **600**; values **&lt; 3** → **3** |
 | Restart vs poll | Changing URL → **restart** dedicated once; then re-fetches on interval |
 | While starting / running | Admins tab is **read-only**; stop the dedicated to change settings |
@@ -140,7 +140,8 @@ line). Not BanList format. Not exclusive-join player whitelist.
 
 Do **not** leave `AdminListURL` blank/`N/A` and expect the Saved file alone to
 grant admin – ASA commonly ignores that. Public gist (or similar) raw http(s)
-URLs are the supported product path until Hosted Resources ships.
+URLs remain supported, and the experimental Hosted Resources loopback host
+([docs/hosted-resources.md](hosted-resources.md)) is the local alternative.
 
 **Trust boundary (Validate / Current ids):** the renderer may ask main to
 `fetch` an operator-supplied http(s) URL (`admin-list:validate-url` and
