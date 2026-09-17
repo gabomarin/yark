@@ -139,9 +139,13 @@ line). Not BanList format. Not exclusive-join player whitelist.
 | Not in SQLite | Whitelist is the remote URL + INI; names sidecar is app-only |
 
 Do **not** leave `AdminListURL` blank/`N/A` and expect the Saved file alone to
-grant admin – ASA commonly ignores that. Public gist (or similar) raw http(s)
-URLs remain supported, and the experimental Hosted Resources loopback host
-([docs/hosted-resources.md](hosted-resources.md)) is the local alternative.
+grant admin – ASA commonly ignores that (community Procmon traces show current ASA
+does not read `ShooterGame/Saved/AllowedCheaterAccountIDs.txt`). Public gist (or
+similar) raw http(s) URLs remain supported, and the experimental Hosted Resources
+loopback host ([docs/hosted-resources.md](hosted-resources.md)) is the local
+alternative. In `local` mode `Current ids` is a disk read of that file, not proof
+ASA applied it; whether to keep showing it is part of the follow-up local AdminList
+work.
 
 **Trust boundary (Validate / Current ids):** the renderer may ask main to
 `fetch` an operator-supplied http(s) URL (`admin-list:validate-url` and

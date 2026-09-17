@@ -79,6 +79,14 @@ Admins tab shows it and reads `Current ids` by fetching it, exactly like a remot
 Only blank / `file://` values use the legacy local rewrite. This also means a loopback URL
 is **not** clobbered to a `file://` pointer on save or on the before-start pointer refresh.
 
+**`Current ids` is not proof ASA applied the list.** YARK reads whatever the configured
+source returns — it never confirms ASA parsed or honored it. In `local` mode (`AdminListURL`
+blank or `file://`) `Current ids` reads `ShooterGame/Saved/AllowedCheaterAccountIDs.txt`
+from disk, and community reports (Procmon traces) indicate current ASA does not read that
+file at all, so a non-empty list there does not mean admins are granted. Prefer a loopback
+or remote URL. Whether to keep showing the disk read in `local` mode is tracked in the
+follow-up local AdminList work, not here.
+
 ## Verifying it works
 
 There is **no in-game signal for `AdminListURL`** by itself. Use the strongest signal you
