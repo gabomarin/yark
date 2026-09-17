@@ -4,6 +4,7 @@
  */
 
 import {
+  MAINTENANCE_MANUAL_RESTART_PRESET_OFFSETS,
   MAINTENANCE_RESTART_PRESET_OFFSETS,
 } from "@shared/maintenance/maintenance-policy";
 import {
@@ -23,8 +24,11 @@ import {
 } from "@shared/maintenance/maintenance-schedule";
 import type {
   MaintenanceCountdownPhase,
+  MaintenanceJobWarnings,
   MaintenancePolicy,
   MaintenancePolicyStatus,
+  ServerMaintenanceRuntime,
+  ServerRuntimeInfo,
 } from "@shared/types";
 import type { InstanceService } from "../instances/instance-service";
 import type { ProcessManager } from "../../infra/process/process-manager";
@@ -52,7 +56,7 @@ interface ActiveCountdown {
    */
   timerGeneration: number;
   runPromise: Promise<void> | null;
-  source: "schedule" | "run_now";
+  source: "schedule" | "run_now" | "manual";
 }
 
 interface LastRestartMemory {
@@ -64,6 +68,9 @@ interface LastWipeMemory {
   atIso: string;
   ok: boolean;
 }
+
+const MANUAL_RESTART_CANCELED_CHAT =
+  "Server restart canceled. The server will remain online.";
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => {
@@ -87,6 +94,8 @@ export class MaintenanceRestartRuntime {
 
   private peerBusy: ((serverId: string) => boolean) | null = null;
   private peerPauseNotify: ((serverId: string) => void) | null = null;
+  /** Called when a countdown arms/tears down so main can re-push status (#573). */
+  private runtimeChange: (serverId: string) => void = () => {};
 
   constructor(
     private readonly repo: MaintenanceRepository,
@@ -105,8 +114,31 @@ export class MaintenanceRestartRuntime {
     this.peerPauseNotify = notify;
   }
 
+  /** Called when the live countdown state changes so main can re-push status. */
+  setRuntimeChangeNotify(notify: (serverId: string) => void): void {
+    this.runtimeChange = notify;
+  }
+
   private isPeerBusy(serverId: string): boolean {
     return this.peerBusy?.(serverId) === true;
+  }
+
+  /** Warning config that owns a window: manual restart uses its own job. */
+  private warningsForSource(
+    policy: MaintenancePolicy,
+    source: ActiveCountdown["source"],
+  ): MaintenanceJobWarnings {
+    return source === "manual"
+      ? policy.manualRestartWarnings
+      : policy.restartWarnings;
+  }
+
+  private presetTableForSource(
+    source: ActiveCountdown["source"],
+  ): Record<"quiet" | "standard" | "strict", readonly string[]> {
+    return source === "manual"
+      ? MAINTENANCE_MANUAL_RESTART_PRESET_OFFSETS
+      : MAINTENANCE_RESTART_PRESET_OFFSETS;
   }
 
   isSchedulePaused(serverId: string): boolean {
@@ -158,7 +190,12 @@ export class MaintenanceRestartRuntime {
             ? 0
             : null,
       countdownPhase: active?.phase ?? "idle",
-      countdownKind: active !== undefined ? "restart" : null,
+      countdownKind:
+        active !== undefined
+          ? active.source === "manual"
+            ? "manual"
+            : "restart"
+          : null,
       lastRestartAt: last?.atIso ?? null,
       lastRestartOk: last?.ok ?? null,
       lastUpdateAt: null,
@@ -171,6 +208,24 @@ export class MaintenanceRestartRuntime {
         && (active.phase === "warning" || active.phase === "last_minute")
         && !active.cancelRequested,
     };
+  }
+
+  /** Manual-restart opt-in + live countdown for ServerRuntimeInfo (#573). */
+  annotateStatus(info: ServerRuntimeInfo): ServerRuntimeInfo {
+    const policy = this.repo.getPolicy(info.serverId);
+    const status = this.enrichStatus(policy);
+    const maintenance: ServerMaintenanceRuntime = {
+      manualRestartWarningsEnabled: policy.manualRestartWarningsEnabled,
+      countdown:
+        status.countdownKind !== null && status.nextRestartAt !== null
+          ? {
+              kind: status.countdownKind,
+              phase: status.countdownPhase,
+              targetAtMs: Date.parse(status.nextRestartAt),
+            }
+          : null,
+    };
+    return { ...info, maintenance };
   }
 
   async runScheduledCycle(): Promise<void> {
@@ -213,13 +268,87 @@ export class MaintenanceRestartRuntime {
     return this.enrichStatus(policy);
   }
 
+  /**
+   * Manual "Restart with player warning" (#573): opt-in per server. The configured
+   * warning offsets define both the cadence and the window length (longest
+   * offset), then the same graceful restart path as Run now.
+   */
+  async runManualRestartWarning(serverId: string): Promise<MaintenancePolicyStatus> {
+    const policy = this.repo.getPolicy(serverId);
+    if (!policy.manualRestartWarningsEnabled) {
+      throw new Error("Manual restart warnings are off for this server");
+    }
+    // Manual warnings intentionally expose only the three short presets. If a
+    // policy written by an earlier build still says `custom`, keep the manual
+    // action safe and predictable by using the Standard cadence rather than a
+    // legacy 30-minute custom window.
+    const manualWarnings =
+      policy.manualRestartWarnings.preset === "custom"
+        ? {
+            ...policy.manualRestartWarnings,
+            preset: "standard" as const,
+          }
+        : policy.manualRestartWarnings;
+    const offsets = resolveWarningOffsetLabels(
+      manualWarnings,
+      MAINTENANCE_MANUAL_RESTART_PRESET_OFFSETS,
+    );
+    const leadMs = maxWarningLeadMs(offsets);
+    if (leadMs <= 0) {
+      throw new Error(
+        "Add at least one warning time in Maintenance → Manual restart warnings",
+      );
+    }
+    const server = this.servers.get(serverId);
+    if (server === null) throw new Error("Server does not exist");
+    if (!server.enabled) throw new Error("Server is disabled");
+    if (!this.processes.isActive(serverId)) {
+      throw new Error("Server is not running");
+    }
+    if (this.pausedServerIds.has(serverId)) {
+      throw new Error("Maintenance schedules are paused for this server");
+    }
+    if (this.isIntentionalStop(serverId)) {
+      throw new Error("A stop is already in progress for this server");
+    }
+    const active = this.active.get(serverId);
+    if (active !== undefined) {
+      if (active.source !== "manual") {
+        throw new Error("Another maintenance countdown is already active");
+      }
+      return this.enrichStatus(policy);
+    }
+    if (this.isPeerBusy(serverId)) {
+      throw new Error(
+        "An auto-update countdown is already active — Cancel it first, or wait",
+      );
+    }
+    this.startCountdown(policy, Date.now() + leadMs, "manual", null);
+    return this.enrichStatus(policy);
+  }
+
   cancelUpcoming(serverId: string): MaintenancePolicyStatus {
     const active = this.active.get(serverId);
     if (active !== undefined) {
+      const shouldNotifyPlayers =
+        active.source === "manual" && active.firedOffsets.size > 0;
       active.cancelRequested = true;
       this.clearTimer(active);
       this.markOccurrenceDone(active);
       this.active.delete(serverId);
+      this.runtimeChange(serverId);
+      if (shouldNotifyPlayers) {
+        void this.instances
+          .execRcon(
+            serverId,
+            `ServerChat ${MANUAL_RESTART_CANCELED_CHAT}`,
+            { recordEvent: false },
+          )
+          .catch(() => {
+            // The restart is already cancelled. A disconnected RCON session
+            // must not turn that operator action back into an active window.
+          });
+      }
     }
     return this.enrichStatus(this.repo.getPolicy(serverId));
   }
@@ -285,10 +414,11 @@ export class MaintenanceRestartRuntime {
   private startCountdown(
     policy: MaintenancePolicy,
     targetAtMs: number,
-    source: "schedule" | "run_now",
+    source: "schedule" | "run_now" | "manual",
     scheduleTargetKey: string | null,
   ): void {
     const remaining = targetAtMs - Date.now();
+    const warnings = this.warningsForSource(policy, source);
     const state: ActiveCountdown = {
       serverId: policy.serverId,
       targetAtMs,
@@ -296,11 +426,7 @@ export class MaintenanceRestartRuntime {
       firedOffsets: new Set(),
       rconFailStreak: 0,
       cancelRequested: false,
-      phase: shouldUseLastMinuteChat(
-        remaining,
-        policy.restartWarnings,
-        source,
-      )
+      phase: shouldUseLastMinuteChat(remaining, warnings, source)
         ? "last_minute"
         : "warning",
       timer: null,
@@ -309,6 +435,7 @@ export class MaintenanceRestartRuntime {
       source,
     };
     this.active.set(policy.serverId, state);
+    this.runtimeChange(policy.serverId);
     void this.tickCountdown(policy.serverId, targetAtMs);
   }
 
@@ -356,6 +483,7 @@ export class MaintenanceRestartRuntime {
     this.clearTimer(state);
     this.markOccurrenceDone(state);
     this.active.delete(state.serverId);
+    this.runtimeChange(state.serverId);
   }
 
   private abortWindowHard(state: ActiveCountdown, message: string): void {
@@ -363,6 +491,7 @@ export class MaintenanceRestartRuntime {
     this.markOccurrenceDone(state);
     this.active.delete(state.serverId);
     this.recordFail(state.serverId, message);
+    this.runtimeChange(state.serverId);
   }
 
   /** Soft-fail Broadcast; hard-fail after consecutive tick failures. */
@@ -422,13 +551,9 @@ export class MaintenanceRestartRuntime {
       return;
     }
 
-    if (
-      shouldUseLastMinuteChat(
-        remainingMs,
-        policy.restartWarnings,
-        state.source,
-      )
-    ) {
+    const warnings = this.warningsForSource(policy, state.source);
+
+    if (shouldUseLastMinuteChat(remainingMs, warnings, state.source)) {
       state.phase = "last_minute";
       const sec = remainingMs / 1_000;
       let broadcastOk = true;
@@ -464,8 +589,8 @@ export class MaintenanceRestartRuntime {
 
     state.phase = "warning";
     const offsets = resolveWarningOffsetLabels(
-      policy.restartWarnings,
-      MAINTENANCE_RESTART_PRESET_OFFSETS,
+      warnings,
+      this.presetTableForSource(state.source),
     );
     for (const label of offsets) {
       const offsetMs = parseMaintenanceOffsetToMs(label);
@@ -478,7 +603,7 @@ export class MaintenanceRestartRuntime {
       try {
         await this.instances.execRcon(
           serverId,
-          `ServerChat ${renderWarningTemplate(policy.restartWarnings.template, remainingMs)}`,
+          `ServerChat ${renderWarningTemplate(warnings.template, remainingMs)}`,
           { recordEvent: false },
         );
       } catch (error) {
@@ -571,6 +696,7 @@ export class MaintenanceRestartRuntime {
         if (current !== undefined && current.targetAtMs === expectedTargetAtMs) {
           this.active.delete(serverId);
         }
+        this.runtimeChange(serverId);
       }
     })();
     await state.runPromise;

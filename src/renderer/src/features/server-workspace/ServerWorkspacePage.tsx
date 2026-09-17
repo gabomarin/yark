@@ -261,6 +261,16 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
         onStart={() => props.onStartServer(selectedServer.id)}
         onStop={() => props.onStopServer(selectedServer.id)}
         onRestart={() => props.onRestartServer(selectedServer.id)}
+        onRestartWithWarning={
+          props.onRestartWithWarning === undefined
+            ? undefined
+            : () => props.onRestartWithWarning?.(selectedServer.id)
+        }
+        onCancelRestartWarning={
+          props.onCancelRestartWarning === undefined
+            ? undefined
+            : () => props.onCancelRestartWarning?.(selectedServer.id)
+        }
         onToggleEnabled={() =>
           props.onToggleServerEnabled?.(selectedServer.id, !selectedServer.enabled)
         }

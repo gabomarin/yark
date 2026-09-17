@@ -11,7 +11,10 @@ import {
   resolveWarningOffsetLabels,
   shouldUseLastMinuteChat,
 } from "../src/shared/maintenance/maintenance-schedule";
-import { MAINTENANCE_RESTART_PRESET_OFFSETS } from "../src/shared/maintenance/maintenance-policy";
+import {
+  MAINTENANCE_MANUAL_RESTART_PRESET_OFFSETS,
+  MAINTENANCE_RESTART_PRESET_OFFSETS,
+} from "../src/shared/maintenance/maintenance-policy";
 import {
   formatRestartDaysSummary,
   normalizeRestartDaysOfWeek,
@@ -73,6 +76,16 @@ describe("maintenance-schedule", () => {
       resolveWarningOffsetLabels(warnings, MAINTENANCE_RESTART_PRESET_OFFSETS),
     ).toEqual([]);
     expect(maxWarningLeadMs([])).toBe(0);
+  });
+
+  it("uses short, fixed manual restart warning presets", () => {
+    expect(MAINTENANCE_MANUAL_RESTART_PRESET_OFFSETS).toEqual({
+      quiet: ["5m"],
+      standard: ["5m", "1m"],
+      strict: ["10m", "5m", "1m"],
+    });
+    const policy = defaultMaintenancePolicy("s1", "t");
+    expect(policy.manualRestartWarnings.customOffsets).toEqual(["5m", "1m"]);
   });
 
   it("formats template phrases and last-minute copy", () => {

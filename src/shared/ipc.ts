@@ -216,6 +216,7 @@ export const IPC = {
   maintenanceSetPolicy: "maintenance:set-policy",
   maintenanceClearSchedulePause: "maintenance:clear-schedule-pause",
   maintenanceRunRestartNow: "maintenance:run-restart-now",
+  maintenanceRunRestartWarning: "maintenance:run-restart-warning",
   maintenanceRunUpdateNow: "maintenance:run-update-now",
   maintenanceCancelUpcoming: "maintenance:cancel-upcoming",
   crashRecoveryGetPolicy: "crash-recovery:get-policy",
@@ -668,6 +669,9 @@ export interface RendererApi {
     serverId: string,
   ): Promise<IpcResult<MaintenancePolicyStatus>>;
   runMaintenanceRestartNow(
+    serverId: string,
+  ): Promise<IpcResult<MaintenancePolicyStatus>>;
+  runMaintenanceRestartWarning(
     serverId: string,
   ): Promise<IpcResult<MaintenancePolicyStatus>>;
   runMaintenanceUpdateNow(

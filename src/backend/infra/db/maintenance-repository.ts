@@ -2,6 +2,7 @@ import type { DatabaseSync } from "node:sqlite";
 import {
   DEFAULT_RESTART_WARNINGS,
   DEFAULT_UPDATE_WARNINGS,
+  MANUAL_RESTART_WARNING_DEFAULT_WARNINGS,
   defaultMaintenancePolicy,
 } from "@shared/maintenance/maintenance-policy";
 import { normalizeRestartDaysOfWeek } from "@shared/maintenance/maintenance-restart-days";
@@ -16,6 +17,8 @@ interface PolicyRow {
   restart_enabled: number;
   wipe_enabled: number;
   update_enabled: number;
+  manual_restart_warnings: number;
+  manual_restart_warning_json: string | null;
   restart_cadence: string;
   restart_day_of_week: number;
   restart_time_local: string;
@@ -83,6 +86,11 @@ function rowToPolicy(row: PolicyRow): MaintenancePolicy {
     restartEnabled: row.restart_enabled === 1,
     wipeEnabled: row.wipe_enabled === 1,
     updateEnabled: row.update_enabled === 1,
+    manualRestartWarningsEnabled: row.manual_restart_warnings === 1,
+    manualRestartWarnings: parseWarnings(
+      row.manual_restart_warning_json ?? "",
+      MANUAL_RESTART_WARNING_DEFAULT_WARNINGS,
+    ),
     restartDaysOfWeek: parseRestartDaysOfWeek(row),
     restartTimeLocal:
       /^\d{2}:\d{2}$/.test(row.restart_time_local) ? row.restart_time_local : "04:00",
@@ -160,14 +168,18 @@ export class MaintenanceRepository {
       .prepare(
         `INSERT INTO maintenance_policies (
           server_id, restart_enabled, wipe_enabled, update_enabled,
+          manual_restart_warnings,
+          manual_restart_warning_json,
           restart_cadence, restart_day_of_week, restart_time_local,
           restart_days_of_week_json,
           wipe_save_world_first, restart_warnings_json, update_warnings_json, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(server_id) DO UPDATE SET
           restart_enabled = excluded.restart_enabled,
           wipe_enabled = excluded.wipe_enabled,
           update_enabled = excluded.update_enabled,
+          manual_restart_warnings = excluded.manual_restart_warnings,
+          manual_restart_warning_json = excluded.manual_restart_warning_json,
           restart_cadence = excluded.restart_cadence,
           restart_day_of_week = excluded.restart_day_of_week,
           restart_time_local = excluded.restart_time_local,
@@ -182,6 +194,8 @@ export class MaintenanceRepository {
         input.restartEnabled ? 1 : 0,
         input.wipeEnabled ? 1 : 0,
         input.updateEnabled ? 1 : 0,
+        input.manualRestartWarningsEnabled ? 1 : 0,
+        JSON.stringify(input.manualRestartWarnings),
         legacyCadence,
         legacyDay,
         time,

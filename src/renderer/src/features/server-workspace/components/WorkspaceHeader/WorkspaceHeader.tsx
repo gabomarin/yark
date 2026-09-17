@@ -1,6 +1,5 @@
 import type { ReactElement } from "react";
 import {
-  ArrowsClockwise,
   Eye,
   HardDrives,
   Play,
@@ -19,6 +18,7 @@ import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@
 import { isInstallationReady } from "@shared/server/installation-health";
 import { resolveDisplayedServerVersion } from "@shared/server/server-version-display";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
+import { RestartSplitButton } from "@ui/RestartSplitButton/RestartSplitButton";
 import { formatMapDisplayName } from "@shared/asa/map-identity";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
 import { CrashRecoveryHeaderBadge } from "@features/crash-recovery/components/CrashRecoveryHeaderBadge";
@@ -38,6 +38,9 @@ interface Props {
   onStart: () => void;
   onStop: () => void;
   onRestart: () => void;
+  /** Manual restart with a player warning countdown (#573). */
+  onRestartWithWarning?: () => void;
+  onCancelRestartWarning?: () => void;
   onToggleEnabled?: () => void;
   onOpenServerSwitcher?: () => void;
   onOpenServerActions?: () => void;
@@ -65,6 +68,8 @@ export function WorkspaceHeader(props: Props): ReactElement {
   const startLoading = startBusy && (status === "stopped" || status === "error");
   // Only a true Restart (clicked while running) loads; Start must keep Restart static.
   const restartLoading = startBusy && status === "running";
+  const manualRestartPending =
+    props.runtime?.maintenance?.countdown?.kind === "manual";
 
   return (
     <header className={classes.header}>
@@ -136,27 +141,30 @@ export function WorkspaceHeader(props: Props): ReactElement {
               {startLoading ? "Starting…" : "Start"}
             </Button>
           )}
-          <Button
-            size="sm"
-            variant="filled"
-            color="fossil"
-            leftSection={
-              restartLoading ? undefined : <ArrowsClockwise size={14} weight="bold" />
+          <RestartSplitButton
+            countdown={props.runtime?.maintenance?.countdown ?? null}
+            manualRestartWarningsEnabled={
+              props.runtime?.maintenance?.manualRestartWarningsEnabled ?? false
             }
-            onClick={props.onRestart}
-            disabled={!canRestart}
-            loading={restartLoading}
-            title={props.filesJobActive === true ? lockTitle : undefined}
-          >
-            {restartLoading ? "Restarting…" : "Restart"}
-          </Button>
+            canRestartNow={canRestart}
+            canRestartWithWarning={canRestart}
+            restartBusy={restartLoading}
+            onRestartNow={props.onRestart}
+            onRestartWithWarning={() => props.onRestartWithWarning?.()}
+            onCancel={() => props.onCancelRestartWarning?.()}
+          />
           <Button
             size="sm"
             color="red"
             variant="filled"
             leftSection={<Stop size={14} weight="fill" />}
             onClick={props.onStop}
-            disabled={!canStop}
+            disabled={!canStop || manualRestartPending}
+            title={
+              manualRestartPending
+                ? "Cancel the queued restart first"
+                : undefined
+            }
           >
             Stop
           </Button>

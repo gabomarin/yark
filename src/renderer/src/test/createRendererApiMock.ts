@@ -342,6 +342,7 @@ export function createRendererApiMock(
         restartEnabled: false,
         wipeEnabled: false,
         updateEnabled: false,
+        manualRestartWarnings: false,
         restartDaysOfWeek: [0],
         restartTimeLocal: "04:00",
         wipeSaveWorldFirst: true,
@@ -376,6 +377,7 @@ export function createRendererApiMock(
     setMaintenancePolicy: vi.fn(),
     clearMaintenanceSchedulePause: vi.fn(),
     runMaintenanceRestartNow: vi.fn(),
+    runMaintenanceRestartWarning: vi.fn(),
     runMaintenanceUpdateNow: vi.fn(),
     cancelMaintenanceUpcoming: vi.fn(),
     getCrashRecoveryPolicy: vi.fn().mockResolvedValue({

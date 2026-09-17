@@ -83,6 +83,9 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
     onStop,
     onKill,
     onRestart,
+    onRestartWithWarning,
+    onCancelRestartWarning,
+    onConfigureRestartWarnings,
     onOpenWorkspace,
     onOpenLogs,
     onReviewError,
@@ -170,6 +173,9 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
     checkingUpdates,
     updateAction: view.updateAction,
     serverEnabled: server.enabled,
+    manualRestartWarnings: runtime?.maintenance?.manualRestartWarningsEnabled ?? false,
+    onRestartWithWarning,
+    onConfigureRestartWarnings,
     onOpenWorkspace,
     onStop,
     onRestart,
@@ -275,10 +281,14 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
             runtimeAction={view.runtimeAction}
             restartAction={view.restartAction}
             updateAction={view.updateAction}
+            maintenance={runtime?.maintenance ?? null}
             onRuntimeAction={runRuntimeAction}
             onOpenWorkspace={onOpenWorkspace}
             onStop={onStop}
             onRestart={onRestart}
+            onRestartWithWarning={onRestartWithWarning}
+            onCancelRestartWarning={onCancelRestartWarning}
+            onConfigureRestartWarnings={onConfigureRestartWarnings}
             onOpenFolder={onOpenFolder}
             onOpenLogs={onOpenLogs}
             onCheckUpdates={onCheckUpdates}

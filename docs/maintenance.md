@@ -70,6 +70,27 @@ Last-minute lines are **fixed** (not editable): `Restart in {n}s` / `Update in {
 **Custom** with no valid times → Off; choosing Custom again selects all default chips
 (`30m|15m|10m|5m|1m`). ASA warnings use **`ServerChat`**, not `Broadcast`.
 
+## Manual restart warnings (#573)
+
+The Maintenance tab has a separate per-server **Manual restart warnings** toggle,
+off by default. When enabled, the Restart split button offers **Restart with
+player warning** without changing the immediate **Restart now** action. Manual
+warnings use three short fixed presets so the action stays easy to scan:
+
+| Preset | Messages before restart |
+| --- | --- |
+| Quiet | `5m` |
+| Standard (default) | `5m`, `1m` |
+| Frequent | `10m`, `5m`, `1m` |
+
+The optional last-minute chat countdown uses the fixed `Restart in {n}s` copy.
+The operator can cancel while the warning window is active; if players already
+received a warning, YARK sends one `Server restart canceled. The server will
+remain online.` ServerChat message. Stop stays unavailable until the operator
+cancels the queued restart; Force close remains an emergency action. At zero the
+existing graceful restart path runs. Manual warning settings are separate from
+the weekly restart schedule and do not add a second permanent restart button.
+
 ## Session runtime state
 
 Pause after fail-streak, fail counts, `completedTargets` (restart occurrences already

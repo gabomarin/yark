@@ -132,6 +132,12 @@ describe("maintenancePanelModel", () => {
     expect(next.customOffsets).toEqual(["5m"]);
   });
 
+  it("applies the short manual restart preset offsets", () => {
+    const base = defaultMaintenancePolicy("s1", "t").manualRestartWarnings;
+    const next = warningsForPreset("manual", "standard", base);
+    expect(next.customOffsets).toEqual(["5m", "1m"]);
+  });
+
   it("previews warning template", () => {
     expect(previewWarningMessage("Server restart in {time}", "15 minutes")).toBe(
       "Server restart in 15 minutes",

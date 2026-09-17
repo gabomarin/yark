@@ -34,7 +34,7 @@ export function nextLocalRestartAt(
 export function shouldUseLastMinuteChat(
   remainingMs: number,
   warnings: MaintenanceJobWarnings,
-  source: "schedule" | "run_now",
+  source: "schedule" | "run_now" | "manual",
 ): boolean {
   if (remainingMs > 60_000) return false;
   if (source === "run_now") return true;

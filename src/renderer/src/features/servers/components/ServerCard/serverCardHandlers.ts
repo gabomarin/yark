@@ -9,6 +9,10 @@ export interface ServerCardHandlers {
   onStopServer: (serverId: string) => void;
   onKillServer: (serverId: string) => void;
   onRestartServer: (serverId: string) => void;
+  /** Manual restart with a player warning countdown (#573). */
+  onRestartWithWarning: (serverId: string) => void;
+  onCancelRestartWarning: (serverId: string) => void;
+  onConfigureRestartWarnings: (serverId: string) => void;
   onOpenWorkspace: (server: ServerProfile) => void;
   onOpenLogs: (serverId: string) => void;
   onReviewError: (serverId: string) => void;
@@ -29,6 +33,9 @@ export type ServerCardCallbackProps = {
   onStop: () => void;
   onKill: () => void;
   onRestart: () => void;
+  onRestartWithWarning?: () => void;
+  onCancelRestartWarning?: () => void;
+  onConfigureRestartWarnings?: () => void;
   onOpenWorkspace: () => void;
   onOpenLogs: () => void;
   onReviewError: () => void;
@@ -54,6 +61,9 @@ export function bindServerCardHandlers(
     onStop: () => handlers.onStopServer(id),
     onKill: () => handlers.onKillServer(id),
     onRestart: () => handlers.onRestartServer(id),
+    onRestartWithWarning: () => handlers.onRestartWithWarning(id),
+    onCancelRestartWarning: () => handlers.onCancelRestartWarning(id),
+    onConfigureRestartWarnings: () => handlers.onConfigureRestartWarnings(id),
     onOpenWorkspace: () => handlers.onOpenWorkspace(server),
     onOpenLogs: () => handlers.onOpenLogs(id),
     onReviewError: () => handlers.onReviewError(id),

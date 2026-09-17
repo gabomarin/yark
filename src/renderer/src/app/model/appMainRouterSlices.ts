@@ -42,6 +42,10 @@ export interface AppFleetSlice {
 interface ServerLifecycleActions {
   startServer: (id: string) => void;
   restartServer: (id: string) => void;
+  /** Manual restart with a player warning window (#573). */
+  restartServerWithWarning: (id: string) => void;
+  cancelRestartWarning: (id: string) => void;
+  openServerMaintenance: (serverId: string) => void;
   confirmKillServer: (id: string) => void;
   setServerEnabled: (id: string, enabled: boolean) => void;
   openServerLogs: (serverId: string, focus?: ServerLogsFocus) => void;

@@ -159,6 +159,56 @@ export function useAppServerLifecycle(options: {
     ],
   );
 
+  /** Manual restart with a player warning window (#573). */
+  const restartServerWithWarning = useCallback(
+    async (id: string) => {
+      if (!claimStartBusy(startBusyByServerIdRef, id)) {
+        return;
+      }
+      setStartBusyByServerId(new Set(startBusyByServerIdRef.current));
+      await runWithFinally(
+        async () => {
+          const result = await window.api.runMaintenanceRestartWarning(id);
+          if (!result.ok) {
+            showOperatorError(
+              result.error ?? "Could not start the restart warning",
+              "Could not restart server",
+            );
+          }
+          await refresh();
+        },
+        () => {
+          releaseStartBusy(startBusyByServerIdRef, id);
+          setStartBusyByServerId(new Set(startBusyByServerIdRef.current));
+        },
+      );
+    },
+    [refresh],
+  );
+
+  const cancelRestartWarning = useCallback(
+    async (id: string) => {
+      const result = await window.api.cancelMaintenanceUpcoming(id);
+      if (!result.ok) {
+        showOperatorError(
+          result.error ?? "Could not cancel the restart warning",
+          "Could not cancel restart",
+        );
+      }
+      await refresh();
+    },
+    [refresh],
+  );
+
+  /** Opens the workspace Maintenance tab (Restart warning setup). */
+  const openServerMaintenance = useCallback(
+    (serverId: string) => {
+      setRoute("overview");
+      setOverlay({ kind: "workspace", serverId, initialTab: "maintenance" });
+    },
+    [setOverlay, setRoute],
+  );
+
   const confirmKillServer = useCallback(
     (id: string) => {
       const server = servers.find((item) => item.id === id);
@@ -231,6 +281,9 @@ export function useAppServerLifecycle(options: {
     startBusyByServerId,
     startServer,
     restartServer,
+    restartServerWithWarning,
+    cancelRestartWarning,
+    openServerMaintenance,
     confirmKillServer,
     openServerLogs,
     openServerBackups,

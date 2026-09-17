@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Stop,
   Trash,
+  Warning,
   XCircle,
 } from "@phosphor-icons/react";
 import type { ServerStatus } from "@shared/types";
@@ -32,6 +33,12 @@ export interface ServerCardMenuActionInput {
   checkingUpdates: boolean;
   updateAction: ServerCardUpdateAction;
   serverEnabled: boolean;
+  /** Manual restart warning opt-in (#573). */
+  manualRestartWarnings?: boolean;
+  /** A manual restart countdown owns the normal stop flow until cancelled. */
+  manualRestartPending?: boolean;
+  onRestartWithWarning?: () => void;
+  onConfigureRestartWarnings?: () => void;
   onOpenWorkspace: () => void;
   onStop: () => void;
   onRestart: () => void;
@@ -123,6 +130,11 @@ export function buildServerCardMenuActions(
         label: "Stop safely",
         color: "red",
         icon: <Stop size={ICON} weight="fill" />,
+        disabled: input.manualRestartPending === true,
+        title:
+          input.manualRestartPending === true
+            ? "Cancel the queued restart first"
+            : undefined,
         onClick: input.onStop,
       },
       {
@@ -134,6 +146,19 @@ export function buildServerCardMenuActions(
         onClick: input.onRestart,
       },
     );
+    if (
+      input.manualRestartWarnings === true
+      && input.onRestartWithWarning !== undefined
+    ) {
+      entries.push({
+        kind: "item",
+        key: "restart-with-warning",
+        label: "Restart with player warning",
+        color: "fossil",
+        icon: <Warning size={ICON} />,
+        onClick: () => input.onRestartWithWarning?.(),
+      });
+    }
   } else if (input.status === "starting") {
     entries.push({
       kind: "item",
@@ -164,6 +189,19 @@ export function buildServerCardMenuActions(
     { kind: "divider", key: "div-maintenance" },
     { kind: "label", key: "label-maintenance", label: "Maintenance" },
   );
+
+  if (
+    input.manualRestartWarnings !== true
+    && input.onConfigureRestartWarnings !== undefined
+  ) {
+    entries.push({
+      kind: "item",
+      key: "configure-manual-restart-warnings",
+      label: "Warn players on manual restart…",
+      icon: <Warning size={ICON} color="var(--mantine-color-blue-6)" />,
+      onClick: () => input.onConfigureRestartWarnings?.(),
+    });
+  }
 
   if (input.isInstallationReady) {
     entries.push(

@@ -99,6 +99,26 @@ function sameCrashRecovery(
   );
 }
 
+function sameMaintenance(
+  left: ServerRuntimeInfo["maintenance"],
+  right: ServerRuntimeInfo["maintenance"],
+): boolean {
+  if (left == null || right == null) return left == null && right == null;
+  if (left.manualRestartWarningsEnabled !== right.manualRestartWarningsEnabled) {
+    return false;
+  }
+  const leftCountdown = left.countdown;
+  const rightCountdown = right.countdown;
+  if (leftCountdown == null || rightCountdown == null) {
+    return leftCountdown == null && rightCountdown == null;
+  }
+  return (
+    leftCountdown.kind === rightCountdown.kind
+    && leftCountdown.phase === rightCountdown.phase
+    && leftCountdown.targetAtMs === rightCountdown.targetAtMs
+  );
+}
+
 function sameRuntime(
   left: ServerRuntimeInfo,
   right: ServerRuntimeInfo,
@@ -111,6 +131,7 @@ function sameRuntime(
     && left.processLive === right.processLive
     && left.lastError === right.lastError
     && sameCrashRecovery(left.crashRecovery, right.crashRecovery)
+    && sameMaintenance(left.maintenance, right.maintenance)
   );
 }
 export function reconcileStatusMap(

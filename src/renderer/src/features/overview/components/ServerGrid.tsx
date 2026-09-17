@@ -56,6 +56,9 @@ interface Props {
   onStartServer: (serverId: string) => void;
   onStopServer: (serverId: string) => void;
   onRestartServer: (serverId: string) => void;
+  onRestartWithWarning: (serverId: string) => void;
+  onCancelRestartWarning: (serverId: string) => void;
+  onConfigureRestartWarnings: (serverId: string) => void;
   onKillServer: (serverId: string) => void;
   onOpenFolder: (serverId: string) => void;
   onInstallFiles: (serverId: string) => void;
@@ -88,6 +91,12 @@ export function ServerGrid(props: Props): ReactElement {
       onStopServer: (serverId) => propsRef.current.onStopServer(serverId),
       onKillServer: (serverId) => propsRef.current.onKillServer(serverId),
       onRestartServer: (serverId) => propsRef.current.onRestartServer(serverId),
+      onRestartWithWarning: (serverId) =>
+        propsRef.current.onRestartWithWarning(serverId),
+      onCancelRestartWarning: (serverId) =>
+        propsRef.current.onCancelRestartWarning(serverId),
+      onConfigureRestartWarnings: (serverId) =>
+        propsRef.current.onConfigureRestartWarnings(serverId),
       onOpenWorkspace: (server) => propsRef.current.onOpenWorkspace(server),
       onOpenLogs: (serverId) => propsRef.current.onOpenLogs(serverId),
       onReviewError: (serverId) => propsRef.current.onReviewError(serverId),
