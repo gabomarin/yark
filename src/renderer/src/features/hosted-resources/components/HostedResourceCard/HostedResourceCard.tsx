@@ -2,9 +2,9 @@ import type { ReactElement } from "react";
 import {
   ClockCounterClockwise,
   Copy,
-  Prohibit,
+  PencilSimple,
+  Power,
   Trash,
-  UploadSimple,
 } from "@phosphor-icons/react";
 import {
   ActionIcon,
@@ -30,14 +30,15 @@ interface Props {
   /** Null until diagnostics have run. */
   observedRequests: number | null;
   busy: boolean;
-  onPublish: () => void;
+  onEdit: () => void;
   onRevisions: () => void;
-  onRevoke: () => void;
+  onToggleEnabled: (enabled: boolean) => void;
   onDelete: () => void;
 }
 
 export function HostedResourceCard(props: Props): ReactElement {
   const { resource } = props;
+  const disabled = !resource.enabled;
   return (
     <AppSurfaceCard data-hosted-resource-card={resource.id}>
       <Stack gap="xs">
@@ -47,9 +48,9 @@ export function HostedResourceCard(props: Props): ReactElement {
             <Badge variant="light" color="gray" size="sm">
               {formatLabel(resource.format)}
             </Badge>
-            {resource.revoked && (
-              <Badge variant="light" color="red" size="sm">
-                Revoked
+            {disabled && (
+              <Badge variant="light" color="gray" size="sm">
+                Disabled
               </Badge>
             )}
           </Group>
@@ -61,7 +62,7 @@ export function HostedResourceCard(props: Props): ReactElement {
                     variant="subtle"
                     aria-label="Copy URL"
                     onClick={copy}
-                    disabled={resource.revoked}
+                    disabled={disabled}
                   >
                     <Copy size={16} />
                   </ActionIcon>
@@ -73,15 +74,15 @@ export function HostedResourceCard(props: Props): ReactElement {
                 <ClockCounterClockwise size={16} />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Revoke">
+            <Tooltip label={disabled ? "Enable" : "Disable"}>
               <ActionIcon
                 variant="subtle"
-                color="orange"
-                aria-label="Revoke resource"
-                onClick={props.onRevoke}
-                disabled={resource.revoked || props.busy}
+                color={disabled ? "teal" : "orange"}
+                aria-label={disabled ? "Enable resource" : "Disable resource"}
+                onClick={() => props.onToggleEnabled(disabled)}
+                disabled={props.busy}
               >
-                <Prohibit size={16} />
+                <Power size={16} />
               </ActionIcon>
             </Tooltip>
             <Tooltip label="Delete">
@@ -130,11 +131,11 @@ export function HostedResourceCard(props: Props): ReactElement {
           <Button
             size="xs"
             variant="light"
-            leftSection={<UploadSimple size={14} />}
-            onClick={props.onPublish}
-            disabled={resource.revoked || props.busy}
+            leftSection={<PencilSimple size={14} />}
+            onClick={props.onEdit}
+            disabled={props.busy}
           >
-            Publish new revision
+            Edit
           </Button>
         </Group>
       </Stack>

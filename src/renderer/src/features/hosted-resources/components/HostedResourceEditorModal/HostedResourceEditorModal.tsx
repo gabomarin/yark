@@ -26,7 +26,7 @@ export function HostedResourceEditorModal(props: Props): ReactElement {
     <Modal
       opened={draft !== null}
       onClose={props.onClose}
-      title={isCreate ? "New hosted resource" : `New revision · ${draft?.displayName ?? ""}`}
+      title={isCreate ? "New hosted resource" : `Edit content · ${draft?.displayName ?? ""}`}
       size="lg"
     >
       {draft !== null && (
@@ -65,14 +65,14 @@ export function HostedResourceEditorModal(props: Props): ReactElement {
             </>
           ) : (
             <Text size="sm" c="dimmed">
-              Publishing replaces the bytes the URL serves. The previous revision is kept
-              and can be restored from Revisions.
+              Saving replaces the bytes the URL serves. The previous version is kept and
+              can be restored from Revisions.
             </Text>
           )}
           <Textarea
             label="Content"
             placeholder={contentPlaceholder(draft.format)}
-            description={`Validated as UTF-8 before publishing; drafts are never served. Max ${formatByteSize(
+            description={`Validated as UTF-8 before saving. Max ${formatByteSize(
               HOSTED_RESOURCES_MAX_CONTENT_BYTES,
             )}.`}
             value={draft.content}
@@ -92,7 +92,7 @@ export function HostedResourceEditorModal(props: Props): ReactElement {
               Cancel
             </Button>
             <Button loading={props.busy} disabled={overLimit} onClick={props.onSubmit}>
-              {isCreate ? "Publish resource" : "Publish revision"}
+              {isCreate ? "Create resource" : "Save"}
             </Button>
           </Group>
         </Stack>

@@ -5,7 +5,7 @@
  * - Bind is fixed to 127.0.0.1 and exclusive; a busy/foreign port fails closed.
  * - GET/HEAD only; opaque high-entropy tokens resolve through SQLite.
  * - Request paths never map to filesystem paths; only the single published
- *   revision of a non-revoked resource is served.
+ *   revision of an enabled resource is served.
  * - No CORS, cookies, redirects, proxy behavior, or directory listings.
  * - Bodies and tokens are never logged.
  */
@@ -217,7 +217,7 @@ export class HostedResourcesService {
       format: input.format,
       createdAt: now,
       updatedAt: now,
-      revokedAt: null,
+      disabledAt: null,
     };
     this.deps.repo.insertResource(resource);
     this.deps.repo.insertRevision({
@@ -282,9 +282,10 @@ export class HostedResourcesService {
     }));
   }
 
-  revokeResource(resourceId: string): HostedResourceDto {
+  setResourceEnabled(resourceId: string, enabled: boolean): HostedResourceDto {
     this.mustGetResource(resourceId);
-    this.deps.repo.revokeResource(resourceId, new Date().toISOString());
+    const now = new Date().toISOString();
+    this.deps.repo.setResourceDisabled(resourceId, enabled ? null : now, now);
     return this.toResourceDto(this.mustGetSummary(resourceId), this.getState().port);
   }
 
@@ -300,13 +301,14 @@ export class HostedResourcesService {
     for (const summary of this.deps.repo.listResourceSummaries()) {
       const url = formatHostedResourceUrl(state.port, summary.token);
       let servedSha256: string | null = null;
-      if (state.listening && summary.revokedAt === null && summary.publishedRevisionId !== null) {
+      if (state.listening && summary.disabledAt === null && summary.publishedRevisionId !== null) {
         servedSha256 = await this.fetchServedSha256(url);
       }
       resources.push({
         resourceId: summary.id,
         displayName: summary.displayName,
         url,
+        enabled: summary.disabledAt === null,
         published: summary.publishedRevisionId !== null,
         declaredSha256: summary.publishedSha256,
         servedSha256,
@@ -420,7 +422,7 @@ export class HostedResourcesService {
     }
 
     const resource = this.deps.repo.getResourceByToken(token);
-    if (resource === null || resource.revokedAt !== null) {
+    if (resource === null || resource.disabledAt !== null) {
       this.sendStatus(res, 404);
       return;
     }
@@ -490,7 +492,7 @@ export class HostedResourcesService {
     }
     const resources = this.deps.repo
       .listResourceSummaries()
-      .filter((row) => row.revokedAt === null);
+      .filter((row) => row.disabledAt === null);
     const references: HostedResourceReferenceDto[] = [];
     for (const source of sources) {
       const rows = parseIniTextRows(source.text);
@@ -524,9 +526,6 @@ export class HostedResourcesService {
     if (resource === null) {
       throw new Error("Resource not found.");
     }
-    if (resource.revokedAt !== null) {
-      throw new Error("Resource is revoked; delete it instead.");
-    }
     return resource;
   }
 
@@ -549,7 +548,7 @@ export class HostedResourcesService {
       displayName: row.displayName,
       format: row.format,
       url: formatHostedResourceUrl(port, row.token),
-      revoked: row.revokedAt !== null,
+      enabled: row.disabledAt === null,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
       revisionCount: row.revisionCount,

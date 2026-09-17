@@ -36,7 +36,7 @@ export function HostedResourceRevisionsModal(props: Props): ReactElement {
                       </Text>
                       {revision.published && (
                         <Badge variant="light" color="teal" size="sm">
-                          Served
+                          Current
                         </Badge>
                       )}
                     </Group>

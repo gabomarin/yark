@@ -8,7 +8,8 @@ export interface HostedResourceRow {
   format: HostedResourceFormat;
   createdAt: string;
   updatedAt: string;
-  revokedAt: string | null;
+  /** Null while enabled; set to the disable timestamp while disabled. */
+  disabledAt: string | null;
 }
 
 export interface HostedResourceRevisionRow {
@@ -39,7 +40,7 @@ interface ResourceDbRow {
   format: string;
   created_at: string;
   updated_at: string;
-  revoked_at: string | null;
+  disabled_at: string | null;
 }
 
 interface SummaryDbRow extends ResourceDbRow {
@@ -69,7 +70,7 @@ function toResource(row: ResourceDbRow): HostedResourceRow {
     format: row.format as HostedResourceFormat,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-    revokedAt: row.revoked_at,
+    disabledAt: row.disabled_at,
   };
 }
 
@@ -143,7 +144,7 @@ export class HostedResourcesRepository {
     this.db
       .prepare(
         `INSERT INTO hosted_resources
-           (id, token, display_name, format, created_at, updated_at, revoked_at)
+           (id, token, display_name, format, created_at, updated_at, disabled_at)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
@@ -153,7 +154,7 @@ export class HostedResourcesRepository {
         row.format,
         row.createdAt,
         row.updatedAt,
-        row.revokedAt,
+        row.disabledAt,
       );
   }
 
@@ -163,11 +164,11 @@ export class HostedResourcesRepository {
       .run(displayName, updatedAt, id);
   }
 
-  /** Revocation is terminal; the row stays for audit but never serves again. */
-  revokeResource(id: string, revokedAt: string): void {
+  /** Disabling is reversible: `null` re-enables serving. */
+  setResourceDisabled(id: string, disabledAt: string | null, updatedAt: string): void {
     this.db
-      .prepare("UPDATE hosted_resources SET revoked_at = ?, updated_at = ? WHERE id = ?")
-      .run(revokedAt, revokedAt, id);
+      .prepare("UPDATE hosted_resources SET disabled_at = ?, updated_at = ? WHERE id = ?")
+      .run(disabledAt, updatedAt, id);
   }
 
   deleteResource(id: string): void {

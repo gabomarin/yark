@@ -11,7 +11,7 @@ const resource: HostedResourceDto = {
   displayName: "Admins allowlist",
   format: "text",
   url: "http://127.0.0.1:8935/r/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-  revoked: false,
+  enabled: true,
   createdAt: "2026-07-24T00:00:00.000Z",
   updatedAt: "2026-07-24T00:00:00.000Z",
   revisionCount: 2,
@@ -90,8 +90,34 @@ describe("HostedResourcesPage", () => {
     expect(screen.getByText("Current size: 4.0 KB")).toBeInTheDocument();
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: "Publish new revision" }));
+    await user.click(screen.getByRole("button", { name: "Edit" }));
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
     expect(screen.getByText(/0 B \/ 512 KB/)).toBeInTheDocument();
+  });
+
+  it("disables a resource after confirmation", async () => {
+    const user = userEvent.setup();
+    const api = createRendererApiMock({
+      getHostedResourcesOverview: vi
+        .fn()
+        .mockResolvedValue({ ok: true, data: overview(true, [resource]) }),
+      setHostedResourceEnabled: vi.fn().mockResolvedValue({ ok: true, data: resource }),
+    });
+    Object.defineProperty(window, "api", { configurable: true, value: api });
+
+    render(
+      <AppProviders>
+        <HostedResourcesPage />
+      </AppProviders>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Disable resource" }));
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Disable" }));
+    await waitFor(() => {
+      expect(api.setHostedResourceEnabled).toHaveBeenCalledWith(resource.id, false);
+    });
   });
 });

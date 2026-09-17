@@ -163,9 +163,11 @@ export function HostedResourcesPage(): ReactElement {
                 referencedServerCount={referenceCountFor(resource.id)}
                 observedRequests={observedRequestsFor(resource.id)}
                 busy={controller.busy !== null}
-                onPublish={() => controller.openPublish(resource)}
+                onEdit={() => controller.openEdit(resource)}
                 onRevisions={() => void controller.openRevisions(resource)}
-                onRevoke={() => controller.confirmRevoke(resource)}
+                onToggleEnabled={(enabled) =>
+                  controller.toggleResourceEnabled(resource, enabled)
+                }
                 onDelete={() => controller.confirmDelete(resource)}
               />
             ))}

@@ -1,6 +1,6 @@
 # Hosted Resources (experimental, loopback HTTP)
 
-Hosted Resources publishes versioned **text**, **INI**, or **JSON** bodies over a
+Hosted Resources serves versioned **text**, **INI**, or **JSON** bodies over a
 local-only URL that ASA can fetch directly:
 
 ```
@@ -17,22 +17,26 @@ expect an HTTP URL body (for example `AdminListURL`, `BanListURL`). The experime
   reverse-proxy mode in this experiment.
 - URLs stop working the moment YARK exits, even if ASA keeps running. A URL is also
   invalid after a port change or when another process owns the port.
-- Drafts are never served. Only the single published revision of a non-revoked
-  resource is reachable.
-- Revocation is immediate, including after a restart.
+- Disabled resources are never served; only the single saved version of an
+  enabled resource is reachable.
+- Disabling is immediate, including after a restart, and is reversible — re-enabling
+  serves the current version again.
 
 ## Operator workflow
 
 1. Open **Hosted Resources** in the sidebar and turn the host on.
 2. Set one port (default `8935`) and **Apply port**. If the port is busy, the host
    fails closed and shows an error — YARK never assumes an open port belongs to it.
-3. **New resource**: pick a display name and format, paste the body, and publish. The
-   editor shows a live UTF-8 size counter and enforces the **512 KB** per-revision cap.
+3. **New resource**: pick a display name and format, paste the body, and **Create
+   resource**. The editor shows a live UTF-8 size counter and enforces the **512 KB**
+   cap per version.
 4. Copy the URL and paste it into the server setting or mod config that expects it
    (for example `AdminListURL` in `GameUserSettings.ini`).
-5. To change the body, use **Publish new revision**. Previous revisions stay listed and
-   can be **restored**; the swap is atomic, so a request always sees exactly one
-   revision.
+5. To change the body, use **Edit** and **Save**. Every save keeps the previous version
+   listed under **Revisions**, where it can be **restored**. The swap is atomic, so a
+   request always sees exactly one version.
+6. **Disable** stops serving immediately (reversible); **Delete** removes the resource
+   and its versions.
 
 ## Diagnostics
 
@@ -100,7 +104,7 @@ manually. Never trust a stale URL after a port change or a failed ownership chec
   out of scope for this experiment.
 - The token lives in `GameUserSettings.ini` and in any backup ZIP, so treat exported
   INIs and backups as sensitive. Because the listener is loopback-only, a leaked token
-  is only usable from that machine; still, revoke the resource or change the port if a
+  is only usable from that machine; still, disable the resource or change the port if a
   secret-bearing URL was shared.
 
 ## Surviving YARK quit (deferred)
@@ -135,10 +139,11 @@ host-only YARK relaunch or a bundled minimal Node runtime. Fuse rationale:
   paths, and arbitrary files, symlinks, backups, and credentials are never served.
 - Fixed MIME types with `X-Content-Type-Options: nosniff`, no CORS, no cookies, no
   directory listings, and no URL-proxy / import-from-URL path.
+- Each **Save** appends an immutable version and makes it the served body atomically.
 - Resource bodies are never rendered as HTML or executed: YARK stores them as text,
   serves fixed non-HTML MIME types with `nosniff`, and the UI only shows a body in an
-  editable text field. A published `.html`/`.js`/shell text cannot run on this path, so
-  there is no script sniffing — content validation is shape (JSON/INI) and size only.
+  editable text field. A script-like body cannot run on this path, so there is no script
+  sniffing — content validation is shape (JSON/INI) and size only.
 - Request/header timeouts and a connection cap bound slow or abusive clients.
 - Bodies, full tokens, admin IDs, and secret-bearing URLs are never logged.
 
@@ -152,7 +157,7 @@ policy.
 | --- | --- |
 | Settings, limits, URL shape | `src/shared/settings/hosted-resources.ts` |
 | Persistence (`hosted_resources`, `hosted_resource_revisions`) | `src/backend/infra/db/hosted-resources-repository.ts` |
-| Loopback listener, publish/revoke, diagnostics | `src/backend/domains/hosted-resources/hosted-resources-service.ts` |
+| Loopback listener, publish/enable/disable, diagnostics | `src/backend/domains/hosted-resources/hosted-resources-service.ts` |
 | IPC handlers | `src/main/ipc-handlers.ts` (`hosted-resources:*`) |
 | UI | `src/renderer/src/features/hosted-resources/` |
 | Tests | `tests/unit/hosted-resources.test.ts`, `HostedResourcesPage.test.tsx` |

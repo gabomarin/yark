@@ -248,7 +248,7 @@ export const IPC = {
   hostedResourcesPublishRevision: "hosted-resources:publish-revision",
   hostedResourcesRenameResource: "hosted-resources:rename-resource",
   hostedResourcesListRevisions: "hosted-resources:list-revisions",
-  hostedResourcesRevokeResource: "hosted-resources:revoke-resource",
+  hostedResourcesSetResourceEnabled: "hosted-resources:set-resource-enabled",
   hostedResourcesDeleteResource: "hosted-resources:delete-resource",
   hostedResourcesDiagnostics: "hosted-resources:diagnostics",
 } as const;
@@ -351,7 +351,8 @@ export interface HostedResourceDto {
   format: HostedResourceFormat;
   /** Canonical URL for the current port. Unavailable while YARK is closed. */
   url: string;
-  revoked: boolean;
+  /** Disabled resources keep their data but are never served. */
+  enabled: boolean;
   createdAt: string;
   updatedAt: string;
   revisionCount: number;
@@ -384,6 +385,7 @@ export interface HostedResourceDiagnosticDto {
   resourceId: string;
   displayName: string;
   url: string;
+  enabled: boolean;
   published: boolean;
   declaredSha256: string | null;
   /** SHA-256 of the bytes served over loopback, or null when unreachable. */
@@ -846,7 +848,10 @@ export interface RendererApi {
   listHostedResourceRevisions(
     resourceId: string,
   ): Promise<IpcResult<HostedResourceRevisionDto[]>>;
-  revokeHostedResource(resourceId: string): Promise<IpcResult<HostedResourceDto>>;
+  setHostedResourceEnabled(
+    resourceId: string,
+    enabled: boolean,
+  ): Promise<IpcResult<HostedResourceDto>>;
   deleteHostedResource(resourceId: string): Promise<IpcResult<void>>;
   getHostedResourcesDiagnostics(): Promise<IpcResult<HostedResourcesDiagnosticsDto>>;
   onServerStatus(

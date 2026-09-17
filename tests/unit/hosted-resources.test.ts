@@ -171,7 +171,7 @@ describe("hosted resources repository", () => {
     expect(repo.listResourceSummaries()).toEqual([]);
   });
 
-  it("swaps the published revision atomically and never serves drafts", () => {
+  it("swaps the published revision atomically and never serves unpublished ones", () => {
     const db = openDatabase(":memory:");
     openDbs.push(db);
     const repo = new HostedResourcesRepository(db);
@@ -183,7 +183,7 @@ describe("hosted resources repository", () => {
       format: "text",
       createdAt: now,
       updatedAt: now,
-      revokedAt: null,
+      disabledAt: null,
     });
     repo.insertRevision({
       id: "rev1",
@@ -295,8 +295,11 @@ describe("hosted resources HTTP host", () => {
     const path = `/r/${resource.url.split("/r/")[1]}`;
     expect((await send(port, path)).status).toBe(200);
 
-    harness.service.revokeResource(resource.id);
+    harness.service.setResourceEnabled(resource.id, false);
     expect((await send(port, path)).status).toBe(404);
+
+    harness.service.setResourceEnabled(resource.id, true);
+    expect((await send(port, path)).status).toBe(200);
   });
 
   it("swaps served bytes atomically on publish", async () => {

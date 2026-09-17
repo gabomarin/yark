@@ -441,7 +441,7 @@ export function createRendererApiMock(
     publishHostedResourceRevision: vi.fn(),
     renameHostedResource: vi.fn(),
     listHostedResourceRevisions: vi.fn().mockResolvedValue({ ok: true, data: [] }),
-    revokeHostedResource: vi.fn(),
+    setHostedResourceEnabled: vi.fn(),
     deleteHostedResource: vi.fn(),
     getHostedResourcesDiagnostics: vi.fn(),
     onServerStatus: vi.fn(() => () => undefined),

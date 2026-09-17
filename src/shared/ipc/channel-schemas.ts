@@ -233,7 +233,7 @@ export const VALIDATED_IPC_CHANNELS = [
   IPC.hostedResourcesPublishRevision,
   IPC.hostedResourcesRenameResource,
   IPC.hostedResourcesListRevisions,
-  IPC.hostedResourcesRevokeResource,
+  IPC.hostedResourcesSetResourceEnabled,
   IPC.hostedResourcesDeleteResource,
   IPC.hostedResourcesDiagnostics,
 ] as const;
@@ -585,8 +585,9 @@ export const ipcArgSchemas = {
   [IPC.hostedResourcesListRevisions]: z.tuple([
     nonEmptyStringSchema("Resource id", 128),
   ]),
-  [IPC.hostedResourcesRevokeResource]: z.tuple([
+  [IPC.hostedResourcesSetResourceEnabled]: z.tuple([
     nonEmptyStringSchema("Resource id", 128),
+    z.boolean(),
   ]),
   [IPC.hostedResourcesDeleteResource]: z.tuple([
     nonEmptyStringSchema("Resource id", 128),

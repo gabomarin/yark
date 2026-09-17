@@ -70,9 +70,10 @@ be installed.
   omitted from logs and delivery errors, and used for outbound notifications only
   while YARK is running. Messages disable mentions and expose no control commands.
 - The experimental **Hosted Resources** host is off until you enable it, binds
-  `127.0.0.1` only, serves just the revisions you publish (never arbitrary files),
-  fails closed if the port is busy or owned by another process, and stops serving
-  when YARK exits.
+  `127.0.0.1` only, serves just the published bodies of resources you enable (never
+  arbitrary files), fails closed if the port is busy or owned by another process, and
+  stops serving when YARK exits. **Disable** stops serving immediately and is
+  reversible; **Delete** removes the resource and its versions.
 - YARK should be locked or closed before letting an untrusted person use the same
   Windows session.
 - The written threat model (SQLite vs INI vs diagnostics) lives in the

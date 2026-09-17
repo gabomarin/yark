@@ -76,7 +76,7 @@ export function HostedResourcesDiagnosticsPanel(props: Props): ReactElement {
                     <Badge
                       variant="light"
                       color={
-                        !resource.published
+                        !resource.enabled || !resource.published
                           ? "gray"
                           : resource.servedOk
                             ? "teal"
@@ -84,11 +84,13 @@ export function HostedResourcesDiagnosticsPanel(props: Props): ReactElement {
                       }
                       size="sm"
                     >
-                      {!resource.published
-                        ? "Nothing published"
-                        : resource.servedOk
-                          ? "Bytes match"
-                          : "Bytes mismatch / unreachable"}
+                      {!resource.enabled
+                        ? "Disabled"
+                        : !resource.published
+                          ? "Nothing published"
+                          : resource.servedOk
+                            ? "Bytes match"
+                            : "Bytes mismatch / unreachable"}
                     </Badge>
                     <Text size="xs" c="dimmed">
                       declared {shortSha(resource.declaredSha256)} · served{" "}

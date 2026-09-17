@@ -69,13 +69,13 @@ export function summarizeReferences(
   return new Set(references.map((reference) => reference.serverId)).size;
 }
 export function resourcePublishedLabel(resource: HostedResourceDto): string {
-  if (resource.revoked) {
-    return "Revoked — no longer served";
+  if (!resource.enabled) {
+    return "Disabled — not served";
   }
   if (resource.publishedRevisionId === null) {
-    return "No published revision";
+    return "Nothing published yet";
   }
-  return `Revision ${resource.publishedSequence ?? "?"} · ${shortSha(resource.publishedSha256)}`;
+  return `Serving version ${resource.publishedSequence ?? "?"} · ${shortSha(resource.publishedSha256)}`;
 }
 
 export function revisionLabel(revision: HostedResourceRevisionDto): string {
@@ -83,5 +83,5 @@ export function revisionLabel(revision: HostedResourceRevisionDto): string {
   const stamp = Number.isNaN(when.getTime())
     ? revision.createdAt
     : when.toLocaleString();
-  return `Revision ${revision.sequence} · ${stamp}`;
+  return `Version ${revision.sequence} · ${stamp}`;
 }

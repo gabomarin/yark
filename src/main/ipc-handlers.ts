@@ -1371,9 +1371,10 @@ export function registerIpcHandlers(
   );
 
   handleValidated(
-    IPC.hostedResourcesRevokeResource,
-    ipcArgSchemas[IPC.hostedResourcesRevokeResource],
-    ([resourceId]) => hostedResources.revokeResource(resourceId),
+    IPC.hostedResourcesSetResourceEnabled,
+    ipcArgSchemas[IPC.hostedResourcesSetResourceEnabled],
+    ([resourceId, enabled]) =>
+      hostedResources.setResourceEnabled(resourceId, enabled),
   );
 
   handleValidated(

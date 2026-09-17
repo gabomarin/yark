@@ -98,5 +98,9 @@
   {
     "version": 25,
     "sql": "\n      CREATE TABLE hosted_resources (\n        id TEXT PRIMARY KEY,\n        token TEXT NOT NULL UNIQUE,\n        display_name TEXT NOT NULL,\n        format TEXT NOT NULL,\n        created_at TEXT NOT NULL,\n        updated_at TEXT NOT NULL,\n        revoked_at TEXT\n      );\n      CREATE TABLE hosted_resource_revisions (\n        id TEXT PRIMARY KEY,\n        resource_id TEXT NOT NULL REFERENCES hosted_resources(id) ON DELETE CASCADE,\n        sequence INTEGER NOT NULL,\n        content TEXT NOT NULL,\n        sha256 TEXT NOT NULL,\n        validation TEXT NOT NULL,\n        created_at TEXT NOT NULL,\n        published_at TEXT\n      );\n      CREATE UNIQUE INDEX idx_hosted_revisions_published\n        ON hosted_resource_revisions(resource_id) WHERE published_at IS NOT NULL;\n    "
+  },
+  {
+    "version": 26,
+    "sql": "ALTER TABLE hosted_resources RENAME COLUMN revoked_at TO disabled_at;"
   }
 ]

@@ -352,8 +352,8 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.hostedResourcesRenameResource, resourceId, displayName),
   listHostedResourceRevisions: (resourceId) =>
     ipcRenderer.invoke(IPC.hostedResourcesListRevisions, resourceId),
-  revokeHostedResource: (resourceId) =>
-    ipcRenderer.invoke(IPC.hostedResourcesRevokeResource, resourceId),
+  setHostedResourceEnabled: (resourceId, enabled) =>
+    ipcRenderer.invoke(IPC.hostedResourcesSetResourceEnabled, resourceId, enabled),
   deleteHostedResource: (resourceId) =>
     ipcRenderer.invoke(IPC.hostedResourcesDeleteResource, resourceId),
   getHostedResourcesDiagnostics: () =>

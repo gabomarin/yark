@@ -56,14 +56,14 @@ export interface HostedResourcesController {
   setPortDraft: (value: number | string) => void;
   applyPort: () => Promise<void>;
   openCreate: () => void;
-  openPublish: (resource: HostedResourceDto) => void;
+  openEdit: (resource: HostedResourceDto) => void;
   closeEditor: () => void;
   updateEditor: (patch: Partial<HostedResourceEditorDraft>) => void;
   submitEditor: () => Promise<void>;
   openRevisions: (resource: HostedResourceDto) => Promise<void>;
   closeRevisions: () => void;
   publishRevision: (revisionId: string) => Promise<void>;
-  confirmRevoke: (resource: HostedResourceDto) => void;
+  toggleResourceEnabled: (resource: HostedResourceDto, enabled: boolean) => void;
   confirmDelete: (resource: HostedResourceDto) => void;
   runDiagnostics: () => Promise<void>;
 }
@@ -160,7 +160,7 @@ export function useHostedResourcesPage(): HostedResourcesController {
     });
   }, []);
 
-  const openPublish = useCallback((resource: HostedResourceDto) => {
+  const openEdit = useCallback((resource: HostedResourceDto) => {
     setEditor({
       mode: "publish",
       resourceId: resource.id,
@@ -276,17 +276,23 @@ export function useHostedResourcesPage(): HostedResourcesController {
     [reload, revisionsFor],
   );
 
-  const confirmRevoke = useCallback(
-    (resource: HostedResourceDto) => {
+  const toggleResourceEnabled = useCallback(
+    (resource: HostedResourceDto, enabled: boolean) => {
+      if (enabled) {
+        void applyState("enable", () =>
+          window.api.setHostedResourceEnabled(resource.id, true),
+        );
+        return;
+      }
       openDangerConfirmModal({
-        title: "Revoke resource?",
-        confirmLabel: "Revoke",
+        title: "Disable resource?",
+        confirmLabel: "Disable",
         children: dangerConfirmBody(
-          `"${resource.displayName}" stops serving immediately, including after a restart. Revisions stay listed.`,
+          `"${resource.displayName}" stops serving immediately, including after a restart. Revisions stay listed and you can re-enable it anytime.`,
         ),
         onConfirm: () => {
-          void applyState("revoke", () =>
-            window.api.revokeHostedResource(resource.id),
+          void applyState("disable", () =>
+            window.api.setHostedResourceEnabled(resource.id, false),
           );
         },
       });
@@ -347,14 +353,14 @@ export function useHostedResourcesPage(): HostedResourcesController {
     setPortDraft,
     applyPort,
     openCreate,
-    openPublish,
+    openEdit,
     closeEditor,
     updateEditor,
     submitEditor,
     openRevisions,
     closeRevisions,
     publishRevision,
-    confirmRevoke,
+    toggleResourceEnabled,
     confirmDelete,
     runDiagnostics,
   };
