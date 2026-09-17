@@ -34,7 +34,7 @@ export interface ServerCardMenuActionInput {
   updateAction: ServerCardUpdateAction;
   serverEnabled: boolean;
   /** Manual restart warning opt-in (#573). */
-  manualRestartWarnings?: boolean;
+  manualRestartWarningsEnabled?: boolean;
   /** A manual restart countdown owns the normal stop flow until cancelled. */
   manualRestartPending?: boolean;
   onRestartWithWarning?: () => void;
@@ -147,7 +147,7 @@ export function buildServerCardMenuActions(
       },
     );
     if (
-      input.manualRestartWarnings === true
+      input.manualRestartWarningsEnabled === true
       && input.onRestartWithWarning !== undefined
     ) {
       entries.push({
@@ -191,7 +191,7 @@ export function buildServerCardMenuActions(
   );
 
   if (
-    input.manualRestartWarnings !== true
+    input.manualRestartWarningsEnabled !== true
     && input.onConfigureRestartWarnings !== undefined
   ) {
     entries.push({

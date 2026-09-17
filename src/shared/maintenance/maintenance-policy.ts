@@ -56,6 +56,21 @@ export const MANUAL_RESTART_WARNING_DEFAULT_WARNINGS: MaintenanceJobWarnings = {
   lastMinuteChat: true,
 };
 
+/**
+ * Manual warnings never expose a custom cadence. Normalize legacy rows so the
+ * armed window, messages, and Maintenance UI all use the same Standard preset.
+ */
+export function normalizeManualRestartWarnings(
+  warnings: MaintenanceJobWarnings,
+): MaintenanceJobWarnings {
+  if (warnings.preset !== "custom") return warnings;
+  return {
+    ...warnings,
+    preset: "standard",
+    customOffsets: [...MAINTENANCE_MANUAL_RESTART_PRESET_OFFSETS.standard],
+  };
+}
+
 export function defaultMaintenancePolicy(serverId: string, updatedAt: string): MaintenancePolicy {
   return {
     serverId,

@@ -4,6 +4,7 @@ import {
   DEFAULT_UPDATE_WARNINGS,
   MANUAL_RESTART_WARNING_DEFAULT_WARNINGS,
   defaultMaintenancePolicy,
+  normalizeManualRestartWarnings,
 } from "@shared/maintenance/maintenance-policy";
 import { normalizeRestartDaysOfWeek } from "@shared/maintenance/maintenance-restart-days";
 import type {
@@ -87,9 +88,11 @@ function rowToPolicy(row: PolicyRow): MaintenancePolicy {
     wipeEnabled: row.wipe_enabled === 1,
     updateEnabled: row.update_enabled === 1,
     manualRestartWarningsEnabled: row.manual_restart_warnings === 1,
-    manualRestartWarnings: parseWarnings(
-      row.manual_restart_warning_json ?? "",
-      MANUAL_RESTART_WARNING_DEFAULT_WARNINGS,
+    manualRestartWarnings: normalizeManualRestartWarnings(
+      parseWarnings(
+        row.manual_restart_warning_json ?? "",
+        MANUAL_RESTART_WARNING_DEFAULT_WARNINGS,
+      ),
     ),
     restartDaysOfWeek: parseRestartDaysOfWeek(row),
     restartTimeLocal:

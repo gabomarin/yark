@@ -17,6 +17,8 @@ interface Props {
   canRestartWithWarning: boolean;
   /** Optimistic restart in flight (before runtime status updates). */
   restartBusy?: boolean;
+  /** Disabled-state explanation supplied by the action owner. */
+  title?: string;
   onRestartNow: () => void;
   onRestartWithWarning: () => void;
   onCancel: () => void;
@@ -81,7 +83,8 @@ function RestartNowButton({
   canRestartNow,
   restartBusy,
   onRestartNow,
-}: Pick<Props, "canRestartNow" | "onRestartNow"> & {
+  title,
+}: Pick<Props, "canRestartNow" | "onRestartNow" | "title"> & {
   size: NonNullable<Props["size"]>;
   restartBusy: boolean;
 }): ReactElement {
@@ -94,6 +97,7 @@ function RestartNowButton({
       onClick={onRestartNow}
       disabled={!canRestartNow}
       loading={restartBusy}
+      title={title}
       data-restart-action
     >
       {restartBusy ? "Restarting…" : "Restart now"}
@@ -107,7 +111,8 @@ function RestartWarningMenu({
   canRestartNow,
   canRestartWithWarning,
   onRestartWithWarning,
-}: Pick<Props, "canRestartNow" | "canRestartWithWarning" | "onRestartWithWarning"> & {
+  title,
+}: Pick<Props, "canRestartNow" | "canRestartWithWarning" | "onRestartWithWarning" | "title"> & {
   size: NonNullable<Props["size"]>;
   restartBusy: boolean;
 }): ReactElement {
@@ -123,6 +128,7 @@ function RestartWarningMenu({
           px="xs"
           aria-label="More restart options"
           disabled={restartBusy || !canRestartNow}
+          title={title ?? (warningDisabled ? "Server must be running and not busy" : undefined)}
           data-restart-menu-target
         >
           <CaretDown size={14} weight="bold" />

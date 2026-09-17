@@ -217,7 +217,7 @@ export interface ServerMaintenanceRuntime {
   manualRestartWarningsEnabled: boolean;
   /** Active maintenance countdown, or null when idle. */
   countdown: {
-    kind: "restart" | "update" | "manual";
+    kind: "restart" | "manual";
     phase: MaintenanceCountdownPhase;
     /** Epoch ms when the countdown fires (T0). Renderer derives remaining locally. */
     targetAtMs: number;

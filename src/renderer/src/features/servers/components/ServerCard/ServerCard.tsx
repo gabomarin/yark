@@ -173,7 +173,7 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
     checkingUpdates,
     updateAction: view.updateAction,
     serverEnabled: server.enabled,
-    manualRestartWarnings: runtime?.maintenance?.manualRestartWarningsEnabled ?? false,
+    manualRestartWarningsEnabled: runtime?.maintenance?.manualRestartWarningsEnabled ?? false,
     onRestartWithWarning,
     onConfigureRestartWarnings,
     onOpenWorkspace,

@@ -135,7 +135,7 @@ export function ServerCardActions(props: Props): ReactElement {
     checkingUpdates: props.checkingUpdates,
     updateAction: props.updateAction,
     serverEnabled: props.serverEnabled ?? true,
-    manualRestartWarnings: props.maintenance?.manualRestartWarningsEnabled ?? false,
+    manualRestartWarningsEnabled: props.maintenance?.manualRestartWarningsEnabled ?? false,
     manualRestartPending: stopBlockedByManualRestart,
     onRestartWithWarning: props.onRestartWithWarning,
     onConfigureRestartWarnings: props.onConfigureRestartWarnings,

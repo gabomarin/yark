@@ -8,6 +8,7 @@ import {
 import type { ReactElement } from "react";
 import {
   CUSTOM_OFFSET_OPTIONS,
+  formatMaintenancePresetHint,
   PRESET_LABELS,
   WARNING_PRESET_ORDER,
   previewWarningMessage,
@@ -111,7 +112,7 @@ export function MaintenancePlayerWarnings(props: Props): ReactElement {
         <>
       {props.kind === "manual" && (
         <Text size="xs" c="dimmed">
-          Short, fixed warning times keep manual restarts easy to scan. Standard sends notices at 5 minutes and 1 minute.
+          Short, fixed warning times keep manual restarts easy to scan. Regular sends notices at {formatMaintenancePresetHint("manual", "standard")}.
         </Text>
       )}
       {props.kind !== "manual" && props.warnings.preset === "custom" ? (

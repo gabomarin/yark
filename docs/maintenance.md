@@ -38,6 +38,7 @@ No push channel — the Maintenance tab polls `getPolicy` while mounted.
 | `maintenanceSetPolicy` | `maintenance:set-policy` | `setMaintenancePolicy` | zod `maintenancePolicyWriteSchema` |
 | `maintenanceClearSchedulePause` | `maintenance:clear-schedule-pause` | `clearMaintenanceSchedulePause` | Clears **both** runtimes’ pauses + fail streaks |
 | `maintenanceRunRestartNow` | `maintenance:run-restart-now` | `runMaintenanceRestartNow` | Short lead → countdown |
+| `maintenanceRunRestartWarning` | `maintenance:run-manual-restart-warning` | `runMaintenanceRestartWarning` | Opt-in manual warning window → graceful restart |
 | `maintenanceRunUpdateNow` | `maintenance:run-update-now` | `runMaintenanceUpdateNow` | Requires running + Steam newer |
 | `maintenanceCancelUpcoming` | `maintenance:cancel-upcoming` | `cancelMaintenanceUpcoming` | Cancels both runtimes’ active windows |
 
@@ -64,6 +65,7 @@ From `maintenance-policy.ts` (labels in UI: Off / Minimal / Regular / Frequent /
 | --- | --- | --- | --- |
 | Restart | `5m` | `30m,15m,5m,1m` | `30m,15m,10m,5m,1m` |
 | Update | `5m` | `15m,5m,1m` | `15m,10m,5m,1m` |
+| Manual restart | `5m` | `5m,1m` | `10m,5m,1m` |
 
 Defaults: Sunday **04:00**, templates `Server restart/update in {time}`, `lastMinuteChat: true`.
 Last-minute lines are **fixed** (not editable): `Restart in {n}s` / `Update in {n}s`.
@@ -79,8 +81,8 @@ warnings use three short fixed presets so the action stays easy to scan:
 
 | Preset | Messages before restart |
 | --- | --- |
-| Quiet | `5m` |
-| Standard (default) | `5m`, `1m` |
+| Minimal | `5m` |
+| Regular (default) | `5m`, `1m` |
 | Frequent | `10m`, `5m`, `1m` |
 
 The optional last-minute chat countdown uses the fixed `Restart in {n}s` copy.

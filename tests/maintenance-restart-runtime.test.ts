@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import { defaultMaintenancePolicy } from "../src/shared/maintenance/maintenance-policy";
+import {
+  defaultMaintenancePolicy,
+  normalizeManualRestartWarnings,
+} from "../src/shared/maintenance/maintenance-policy";
 import { MAINTENANCE_RCON_SOFT_FAIL_LIMIT } from "../src/shared/maintenance/maintenance-schedule";
 import { MaintenanceRestartRuntime } from "../src/backend/domains/maintenance/maintenance-restart-runtime";
 import type { MaintenancePolicy } from "../src/shared/types";
@@ -57,20 +60,32 @@ describe("MaintenanceRestartRuntime", () => {
     expect(Date.parse(armed.nextRestartAt!) - Date.now()).toBeLessThan(6 * 60_000);
   });
 
-  it("does not reuse legacy long custom offsets for manual warnings", async () => {
+  it("normalizes legacy custom manual warnings to the Standard cadence", async () => {
     const policy = {
       ...defaultMaintenancePolicy("s1", "2026-01-01T00:00:00.000Z"),
       manualRestartWarningsEnabled: true,
       manualRestartWarnings: {
         ...defaultMaintenancePolicy("s1", "t").manualRestartWarnings,
         preset: "custom" as const,
-        customOffsets: ["30m", "15m", "5m", "1m"],
+        customOffsets: ["30m"],
+        lastMinuteChat: false,
       },
     };
-    const { runtime } = makeRuntime(policy);
+    const { runtime, instances } = makeRuntime(policy);
     const armed = await runtime.runManualRestartWarning("s1");
     expect(Date.parse(armed.nextRestartAt!) - Date.now()).toBeGreaterThan(4 * 60_000);
     expect(Date.parse(armed.nextRestartAt!) - Date.now()).toBeLessThan(6 * 60_000);
+    expect(normalizeManualRestartWarnings(policy.manualRestartWarnings)).toMatchObject({
+      preset: "standard",
+      customOffsets: ["5m", "1m"],
+      lastMinuteChat: false,
+    });
+    expect(instances.execRcon).toHaveBeenCalledWith(
+      "s1",
+      "ServerChat Server restart in 5 minutes",
+      { recordEvent: false },
+    );
+    runtime.cancelUpcoming("s1");
   });
 
   it("cancels a queued manual restart before it reaches the target", async () => {

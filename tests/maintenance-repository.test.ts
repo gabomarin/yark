@@ -12,6 +12,8 @@ describe("MaintenanceRepository", () => {
       expect(initial.restartEnabled).toBe(false);
       expect(initial.wipeEnabled).toBe(false);
       expect(initial.updateEnabled).toBe(false);
+      expect(initial.manualRestartWarningsEnabled).toBe(false);
+      expect(initial.manualRestartWarnings.preset).toBe("standard");
       expect(initial.restartWarnings.preset).toBe("standard");
       expect(repo.listPolicies()).toHaveLength(0);
 
@@ -28,6 +30,33 @@ describe("MaintenanceRepository", () => {
       expect(saved.restartEnabled).toBe(true);
       expect(saved.wipeEnabled).toBe(true);
       expect(repo.listPolicies()).toHaveLength(1);
+    } finally {
+      db.close();
+    }
+  });
+
+  it("round-trips manual warnings and normalizes legacy custom cadence", () => {
+    const db = openDatabase(":memory:");
+    try {
+      const repo = new MaintenanceRepository(db);
+      const initial = repo.getPolicy("srv-1");
+      const saved = repo.setPolicy({
+        ...initial,
+        manualRestartWarningsEnabled: true,
+        manualRestartWarnings: {
+          ...initial.manualRestartWarnings,
+          preset: "custom" as const,
+          customOffsets: ["30m"],
+          lastMinuteChat: false,
+        },
+      });
+
+      expect(saved.manualRestartWarningsEnabled).toBe(true);
+      expect(saved.manualRestartWarnings).toMatchObject({
+        preset: "standard",
+        customOffsets: ["5m", "1m"],
+        lastMinuteChat: false,
+      });
     } finally {
       db.close();
     }

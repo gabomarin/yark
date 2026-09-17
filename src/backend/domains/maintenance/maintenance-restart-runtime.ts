@@ -6,6 +6,7 @@
 import {
   MAINTENANCE_MANUAL_RESTART_PRESET_OFFSETS,
   MAINTENANCE_RESTART_PRESET_OFFSETS,
+  normalizeManualRestartWarnings,
 } from "@shared/maintenance/maintenance-policy";
 import {
   MAINTENANCE_FAIL_LIMIT,
@@ -129,7 +130,7 @@ export class MaintenanceRestartRuntime {
     source: ActiveCountdown["source"],
   ): MaintenanceJobWarnings {
     return source === "manual"
-      ? policy.manualRestartWarnings
+      ? normalizeManualRestartWarnings(policy.manualRestartWarnings)
       : policy.restartWarnings;
   }
 
@@ -214,12 +215,16 @@ export class MaintenanceRestartRuntime {
   annotateStatus(info: ServerRuntimeInfo): ServerRuntimeInfo {
     const policy = this.repo.getPolicy(info.serverId);
     const status = this.enrichStatus(policy);
+    const countdownKind =
+      status.countdownKind === "restart" || status.countdownKind === "manual"
+        ? status.countdownKind
+        : null;
     const maintenance: ServerMaintenanceRuntime = {
       manualRestartWarningsEnabled: policy.manualRestartWarningsEnabled,
       countdown:
-        status.countdownKind !== null && status.nextRestartAt !== null
+        countdownKind !== null && status.nextRestartAt !== null
           ? {
-              kind: status.countdownKind,
+              kind: countdownKind,
               phase: status.countdownPhase,
               targetAtMs: Date.parse(status.nextRestartAt),
             }
@@ -282,13 +287,7 @@ export class MaintenanceRestartRuntime {
     // policy written by an earlier build still says `custom`, keep the manual
     // action safe and predictable by using the Standard cadence rather than a
     // legacy 30-minute custom window.
-    const manualWarnings =
-      policy.manualRestartWarnings.preset === "custom"
-        ? {
-            ...policy.manualRestartWarnings,
-            preset: "standard" as const,
-          }
-        : policy.manualRestartWarnings;
+    const manualWarnings = this.warningsForSource(policy, "manual");
     const offsets = resolveWarningOffsetLabels(
       manualWarnings,
       MAINTENANCE_MANUAL_RESTART_PRESET_OFFSETS,

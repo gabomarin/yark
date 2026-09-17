@@ -149,6 +149,7 @@ export function WorkspaceHeader(props: Props): ReactElement {
             canRestartNow={canRestart}
             canRestartWithWarning={canRestart}
             restartBusy={restartLoading}
+            title={props.filesJobActive === true ? lockTitle : undefined}
             onRestartNow={props.onRestart}
             onRestartWithWarning={() => props.onRestartWithWarning?.()}
             onCancel={() => props.onCancelRestartWarning?.()}
