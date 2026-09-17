@@ -295,13 +295,16 @@ export class HostedResourcesService {
   }
 
   async runDiagnostics(): Promise<HostedResourcesDiagnosticsDto> {
+    const ownership = await this.probeOwnership(this.getState());
+    // Re-read: a failed ownership probe stops the listener, so the stale state
+    // could otherwise report bytes served by the foreign process.
     const state = this.getState();
-    const ownership = await this.probeOwnership(state);
+    const serving = ownership.ok && state.listening;
     const resources: HostedResourceDiagnosticDto[] = [];
     for (const summary of this.deps.repo.listResourceSummaries()) {
       const url = formatHostedResourceUrl(state.port, summary.token);
       let servedSha256: string | null = null;
-      if (state.listening && summary.disabledAt === null && summary.publishedRevisionId !== null) {
+      if (serving && summary.disabledAt === null && summary.publishedRevisionId !== null) {
         servedSha256 = await this.fetchServedSha256(url);
       }
       resources.push({
