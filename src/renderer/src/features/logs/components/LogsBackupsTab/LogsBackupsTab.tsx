@@ -4,6 +4,7 @@ import type { ServerOperationalLogs } from "@shared/types";
 import { formatLogDateTime } from "@shared/format-log-datetime";
 import type { ReactElement } from "react";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
+import { LoadingState } from "@ui/LoadingState/LoadingState";
 import classes from "../../LogsPage.module.css";
 import {
   LogsClearAction,
@@ -56,7 +57,7 @@ export function LogsBackupsTab(props: LogsBackupsTabProps): ReactElement {
           }
         />
         {loading ? (
-          <Text c="dimmed">Loading backups…</Text>
+          <LoadingState label="backups" />
         ) : logs === null || logs.backups.length === 0 ? (
           <LogsEmptyState
             icon={<HardDrives size={24} />}

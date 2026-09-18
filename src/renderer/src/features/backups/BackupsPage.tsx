@@ -1,9 +1,10 @@
 import type { ReactElement } from "react";
 import { HardDrives } from "@phosphor-icons/react";
-import { Button, Stack, Text } from "@mantine/core";
+import { Button, Stack } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { AppPageHeader } from "@ui/AppPageHeader/AppPageHeader";
+import { LoadingState } from "@ui/LoadingState/LoadingState";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import type { ServerProfile } from "@shared/types";
 import {
@@ -68,7 +69,7 @@ export function BackupsPage(props: Props): ReactElement {
             </AppSurfaceCard>
           ) : fleet.loading && fleet.summary === null ? (
             <AppSurfaceCard radius={0}>
-              <Text c="dimmed">Loading backup health…</Text>
+              <LoadingState label="backup health" />
             </AppSurfaceCard>
           ) : fleet.summary !== null ? (
             <>

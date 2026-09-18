@@ -274,7 +274,7 @@ export function ServerFormMapsSearchModal(props: Props): ReactElement {
               label="Search Maps"
               value={query}
               onChange={setQuery}
-              placeholder="Filter by map name or author…"
+              placeholder="Search by map name or author…"
               onSubmit={() => {
                 setPage(1);
                 setCommittedQuery(query.trim());

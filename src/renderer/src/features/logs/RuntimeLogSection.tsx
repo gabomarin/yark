@@ -1,7 +1,8 @@
 import { FileText } from "@phosphor-icons/react";
-import { Alert, Group, Select, Stack, Text } from "@mantine/core";
+import { Alert, Group, Select, Stack } from "@mantine/core";
 import type { ReactNode, ReactElement } from "react";
 import { ConsoleSurface } from "@ui/ConsoleSurface/ConsoleSurface";
+import { LoadingState } from "@ui/LoadingState/LoadingState";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import classes from "./LogsPage.module.css";
 import {
@@ -60,7 +61,7 @@ export function RuntimeLogSection(props: Props): ReactElement {
           {props.clearAction}
         </Group>
         {props.loading ? (
-          <Text c="dimmed">Loading runtime log…</Text>
+          <LoadingState label="runtime log" />
         ) : props.runtimeLogLines === null || lines.length === 0 ? (
           <EmptyState
             layout="stacked"

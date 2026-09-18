@@ -17,6 +17,7 @@ import type { ServerOperationalLogs, ServerUpdateLogFile } from "@shared/types";
 import { formatLogDateTime } from "@shared/format-log-datetime";
 import type { ReactElement } from "react";
 import { ConsoleSurface } from "@ui/ConsoleSurface/ConsoleSurface";
+import { LoadingState } from "@ui/LoadingState/LoadingState";
 import { SelectableListRow } from "@ui/SelectableListRow/SelectableListRow";
 import classes from "../../LogsPage.module.css";
 import {
@@ -91,7 +92,7 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
               Job history
             </Title>
             {loading ? (
-              <Text c="dimmed">Loading history…</Text>
+              <LoadingState label="history" />
             ) : logs === null || logs.updateFiles.length === 0 ? (
               <LogsEmptyState
                 icon={<ClockCounterClockwise size={24} />}

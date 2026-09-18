@@ -5,6 +5,7 @@ import { formatWhenLabel } from "@shared/format-log-datetime";
 import { collapseConsecutiveEvents, formatEventMessageForDisplay } from "@shared/event-details";
 import type { ReactElement } from "react";
 import { EventDetailsBody } from "../../EventDetailsBody";
+import { LoadingState } from "@ui/LoadingState/LoadingState";
 import { EventSeverityMark } from "../EventSeverityMark/EventSeverityMark";
 import classes from "../../LogsPage.module.css";
 import {
@@ -55,7 +56,7 @@ export function LogsEventsTab(props: LogsEventsTabProps): ReactElement {
           }
         />
         {loading ? (
-          <Text c="dimmed">Loading events…</Text>
+          <LoadingState label="events" />
         ) : logs === null || logs.events.length === 0 ? (
           <LogsEmptyState
             icon={<ClockCounterClockwise size={24} />}

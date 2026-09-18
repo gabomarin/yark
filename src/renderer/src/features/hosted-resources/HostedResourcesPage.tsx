@@ -12,6 +12,7 @@ import {
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { AppPageHeader } from "@ui/AppPageHeader/AppPageHeader";
+import { LoadingState } from "@ui/LoadingState/LoadingState";
 import { DismissibleHint } from "@ui/DismissibleHint/DismissibleHint";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { summarizeReferences } from "./model/hostedResourcesPageModel";
@@ -146,7 +147,7 @@ export function HostedResourcesPage(): ReactElement {
             </AppSurfaceCard>
           ) : (
             <AppSurfaceCard radius={0}>
-              <Text c="dimmed">Loading hosted resources…</Text>
+              <LoadingState label="hosted resources" />
             </AppSurfaceCard>
           )
         ) : overview.resources.length === 0 ? (

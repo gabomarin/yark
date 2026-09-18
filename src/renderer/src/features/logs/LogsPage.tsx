@@ -19,6 +19,7 @@ import { formatWhenLabel } from "@shared/format-log-datetime";
 import { collapseConsecutiveEvents, formatEventMessageForDisplay } from "@shared/event-details";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
+import { LoadingState } from "@ui/LoadingState/LoadingState";
 import { AppPageHeader } from "@ui/AppPageHeader/AppPageHeader";
 import { SearchField } from "@ui/SearchField/SearchField";
 import { EventDetailsBody } from "./EventDetailsBody";
@@ -189,7 +190,7 @@ export function LogsPage(props: Props): ReactElement {
                   value={search}
                   onChange={setSearch}
                   label="Search events across servers"
-                  placeholder="Search…"
+                  placeholder="Search messages…"
                   className={classes.fleetSearch}
                 />
               </Group>
@@ -203,7 +204,7 @@ export function LogsPage(props: Props): ReactElement {
                 description="Create a server first to see fleet activity here."
               />
             ) : loading ? (
-              <Text c="dimmed">Loading events…</Text>
+              <LoadingState label="events" />
             ) : filteredFleetEvents.length === 0 ? (
               <EmptyState
                 layout="stacked"
