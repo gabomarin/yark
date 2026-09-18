@@ -48,7 +48,9 @@ async function run() {
       }
     }
     if (succeeded) {
-      await removeFixtureDir(profileDir);
+      await removeFixtureDir(profileDir).catch((error) => {
+        console.warn(`E2E_PERF_CLEANUP_WARN ${error?.message ?? String(error)}`);
+      });
     } else {
       console.error(`E2E_PERF_PROFILE_PRESERVED ${profileDir}`);
       console.error(`E2E_PERF_FIXTURE ${fixtureName}`);
