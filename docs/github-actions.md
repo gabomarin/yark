@@ -52,7 +52,8 @@ The preflight reports the HTTP status and sanitized response body without printi
 the API key. OCR's default `thinking` body is explicitly overridden with `{}` for
 providers that reject that optional field. OpenCode Go requests also include a
 stable `x-opencode-session` value for the repository, PR, and head SHA, plus a
-YARK-specific `User-Agent`, for efficient provider routing.
+preflight-only `User-Agent` for efficient provider routing. OCR's reserved
+`User-Agent` header is left to the action's dedicated HTTP client.
 | [`.github/workflows/discord-release-notify.yml`](../.github/workflows/discord-release-notify.yml) | Manual Discord re-announce for an existing tag (`workflow_dispatch`) | `contents: read` |
 
 Release runs only when `github.repository == 'gabomarin/yark'` (tag push or
