@@ -170,6 +170,17 @@ const sharedColors = {
 
 const sharedShadows = {
   panel: "0 1px 0 rgba(255, 255, 255, 0.06)",
+  /*
+   * Fluent 2 elevation scale: two layers per level (an ambient spread plus a key
+   * offset shadow). The number is Fluent's depth in px, so the ladder stays
+   * traceable to the spec. Alphas are tuned for the dark app surface - a light
+   * theme (Track B) must retune them rather than reuse these.
+   */
+  elevation2: "0 0 2px rgba(0, 0, 0, 0.28), 0 1px 2px rgba(0, 0, 0, 0.32)",
+  elevation4: "0 0 2px rgba(0, 0, 0, 0.28), 0 2px 4px rgba(0, 0, 0, 0.34)",
+  elevation8: "0 0 2px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.38)",
+  elevation16: "0 0 4px rgba(0, 0, 0, 0.3), 0 8px 16px rgba(0, 0, 0, 0.42)",
+  elevation28: "0 0 8px rgba(0, 0, 0, 0.3), 0 14px 28px rgba(0, 0, 0, 0.46)",
 } as const;
 
 /** Mantine `color="red"` — `--app-color-bad` (filled) + `--app-color-danger-bright` (text/icons). */

@@ -26,6 +26,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Depth uses one Fluent 2 elevation ladder: five two-layer levels (`--app-elevation-2/4/8/16/28`) replace the per-surface dock, overlay, drawer and map-picker shadows, and Mantine's `shadow` scale resolves onto the same tokens.
 - Every dialog renders through one dialog atom (`AppPanelModal`): shared title/meta header, size scale, pinned footer bar, and one close affordance, replacing the per-dialog Mantine `Modal` chrome.
 - Settings and Clusters use a fused master-detail slab (no gutter, fills the viewport): **chrome** surface for contrast vs the page canvas, raised panel SettingsCards/rows inside. Settings is flush to the app sidebar; **Desktop alerts** nests event toggles in one group. List selection uses a Fluent short left notch (no status notch on the Clusters detail pane). Workspace server rail uses the same short notch as the sidebar.
 - Settings, Clusters, Logs, Backups, and Downloads use flush chrome tool panes (`PageScaffold edgeToEdge`): title and actions live inside the chrome shell against the app sidebar; raised panel cards/rows stay on top. Settings and Clusters keep fused master-detail splits; **Desktop alerts** nests event toggles in one group. List selection uses a Fluent short left notch (no status notch on the Clusters detail pane). Workspace server rail uses the same short notch as the sidebar.

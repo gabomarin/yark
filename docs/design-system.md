@@ -315,8 +315,25 @@ Native (non–ScrollArea) surfaces still use the thin global scrollbar without e
 
 ### 10. Elevation / motion
 
-- Panels: `--app-shadow-panel` (hairline).
-- Floating / dock: `--app-shadow-elevated` (Downloads footer teaser — keep feature-local behavior).
+Elevation is the Fluent 2 ladder: five two-layer levels (ambient spread + key
+offset), each named after Fluent's depth in px. Depth communicates layering, so
+pick the level by "how far the surface floats", never by taste.
+
+| Level | Use | Token |
+| --- | --- | --- |
+| 2 | Chip / badge / inline control lift | `--app-elevation-2` |
+| 4 | Card inside the flow, thumbnail selected mark | `--app-elevation-4` |
+| 8 | Menu, dropdown, in-dialog floating card | `--app-elevation-8` |
+| 16 | Flyout, popover, tooltip-sized surface | `--app-elevation-16` |
+| 28 | Dock, drawer, dialog over content | `--app-elevation-28` |
+
+- Panels: `--app-shadow-panel` (hairline top highlight, not an elevation level).
+- `shadow="xs|sm|md|lg|xl"` on Mantine components resolves onto the same ladder
+  (`theme.ts`), so a Menu and a hand-rolled dock agree.
+- Alphas are tuned for the dark surface; a light theme (Track B) retunes them.
+- No raw `box-shadow` for depth. Rings, focus outlines, selection insets and
+  status accents are not elevation — keep those on their own tokens
+  (`--app-color-focus-ring`, `--app-list-selected-inset`, `statusTone`).
 - Motion: short transitions on selection/hover only; no decorative ambient animation in tool chrome.
 
 ### 11. Interaction density

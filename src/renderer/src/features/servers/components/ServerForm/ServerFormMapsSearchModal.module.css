@@ -113,7 +113,7 @@
   border: 1px solid var(--app-color-border-subtle);
   background: var(--app-color-panel);
   color: var(--app-color-text);
-  box-shadow: 0 2px 8px rgb(0 0 0 / 35%);
+  box-shadow: var(--app-elevation-8);
 }
 
 .infoBtn:hover {

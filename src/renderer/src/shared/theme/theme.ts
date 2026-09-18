@@ -113,7 +113,13 @@ function createAppCssVariablesResolver(
       "--app-font-display": '"Segoe UI Variable Display", "Segoe UI Semibold", "Segoe UI", Arial, sans-serif',
       "--app-font-mono": '"Cascadia Mono", Consolas, monospace',
       "--app-shadow-panel": tokens.shadows.panel,
-      "--app-shadow-elevated": "0 18px 36px rgba(0, 0, 0, 0.32)",
+      /* Fluent 2 elevation ladder: 2 (chip/badge) - 4 (card in flow) - 8 (menu) -
+       * 16 (flyout/popover) - 28 (dock/dialog over content). Two layers each. */
+      "--app-elevation-2": tokens.shadows.elevation2,
+      "--app-elevation-4": tokens.shadows.elevation4,
+      "--app-elevation-8": tokens.shadows.elevation8,
+      "--app-elevation-16": tokens.shadows.elevation16,
+      "--app-elevation-28": tokens.shadows.elevation28,
       /* Shared surface recipes — prefer AppSurfaceCard / these vars over copy-pasted gradients */
       "--app-surface-border": "var(--app-color-border)",
       "--app-surface-cool": "none",
@@ -273,6 +279,14 @@ function createAppTheme(
       md: `${tokens.fontSizes.md}px`,
       lg: `${tokens.fontSizes.lg}px`,
       xl: `${tokens.fontSizes.xl}px`,
+    },
+    /** Fluent 2 elevation scale: `shadow="xs"|…|"xl"` resolves onto the same ladder. */
+    shadows: {
+      xs: tokens.shadows.elevation2,
+      sm: tokens.shadows.elevation4,
+      md: tokens.shadows.elevation8,
+      lg: tokens.shadows.elevation16,
+      xl: tokens.shadows.elevation28,
     },
     headings: {
       sizes: {
