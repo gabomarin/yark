@@ -18,7 +18,10 @@ interface Props {
   onClose: () => void;
   /** String for plain text, or a node for the rare custom title row. */
   title: ReactNode;
-  meta?: string;
+  /** One-line context under the title (version, path, counts). */
+  meta?: ReactNode;
+  /** Extra header row under the title/meta (e.g. the What's new tab switcher). */
+  headerExtra?: ReactNode;
   /** Named scale, or a raw value for the rare percent/full-height case. */
   size?: AppModalSize | number | string;
   /** Actions rendered in a bordered bar at the bottom (secondary first). */
@@ -50,6 +53,7 @@ export function AppPanelModal(props: Props): ReactElement {
     onClose,
     title,
     meta,
+    headerExtra,
     size: sizeProp,
     footer,
     footerAlign,
@@ -95,17 +99,20 @@ export function AppPanelModal(props: Props): ReactElement {
           <div className={classes.headerTop}>
             <div>
               <Modal.Title>{title}</Modal.Title>
-              {meta !== undefined && meta.length > 0 ? (
+              {meta === undefined || meta === null || meta === "" ? null : (
                 <Text size="xs" className={classes.meta}>
                   {meta}
                 </Text>
-              ) : null}
+              )}
             </div>
             {withCloseButton === false ? null : (
               /* Not "Close": several dialogs have their own "Close" action button. */
               <Modal.CloseButton aria-label="Close dialog" />
             )}
           </div>
+          {headerExtra !== undefined && (
+            <div className={classes.headerExtra}>{headerExtra}</div>
+          )}
         </Modal.Header>
         <Modal.Body>
           <div className={classes.bodyContent}>{children}</div>

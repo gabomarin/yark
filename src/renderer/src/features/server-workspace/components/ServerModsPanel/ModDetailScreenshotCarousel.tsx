@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactElement } from "react";
 import { Carousel } from "@mantine/carousel";
-import { Button, Group, Image, Modal, Stack, Text, UnstyledButton } from "@mantine/core";
+import { Button, Group, Image, Stack, Text, UnstyledButton } from "@mantine/core";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import { useUiDensity } from "@app/AppProviders";
 import classes from "./ServerModsPanel.module.css";
 
@@ -105,7 +106,7 @@ export function ModDetailScreenshotCarousel(props: Props): ReactElement | null {
       </Carousel>
 
       {allowExpand ? (
-      <Modal
+      <AppPanelModal
         opened={lightboxSrc !== null}
         onClose={() => setLightboxIndex(null)}
         title={
@@ -113,9 +114,7 @@ export function ModDetailScreenshotCarousel(props: Props): ReactElement | null {
             ? `Screenshot ${lightboxIndex + 1} of ${visible.length}`
             : "Screenshot"
         }
-        centered
         size="lg"
-        radius="md"
         zIndex={props.lightboxZIndex}
       >
         {lightboxSrc !== null && lightboxLoadError ? (
@@ -154,7 +153,7 @@ export function ModDetailScreenshotCarousel(props: Props): ReactElement | null {
             onError={() => setLightboxLoadError(true)}
           />
         ) : null}
-      </Modal>
+      </AppPanelModal>
       ) : null}
     </div>
   );

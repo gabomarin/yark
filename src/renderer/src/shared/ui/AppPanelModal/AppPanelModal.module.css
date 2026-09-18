@@ -39,6 +39,10 @@
   color: var(--app-color-muted);
 }
 
+.headerExtra {
+  margin-top: var(--app-space-sm);
+}
+
 .body {
   display: flex;
   flex: 1;

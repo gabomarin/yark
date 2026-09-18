@@ -1,14 +1,7 @@
 import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
-import {
-  Alert,
-  Badge,
-  Button,
-  Group,
-  Modal,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Alert, Badge, Button, Group, Stack, Text } from "@mantine/core";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import {
   clusterIniFileSelectionHasWork,
   defaultClusterIniFileSelection,
@@ -171,7 +164,7 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
   const changeCount = preview?.preview.changedCount ?? 0;
 
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={() => {
         if (!committing) props.onClose();
@@ -185,10 +178,28 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
         </Group>
       }
       size="xl"
-      centered
       closeOnClickOutside={!committing}
       closeOnEscape={!committing}
       withCloseButton={!committing}
+      footerAlign="between"
+      footer={
+        <>
+          <Button
+            variant="default"
+            disabled={committing}
+            onClick={props.onClose}
+          >
+            Cancel
+          </Button>
+          <Button
+            loading={committing}
+            disabled={!canCommit}
+            onClick={() => void handleCommit()}
+          >
+            {copy.confirmLabel}
+          </Button>
+        </>
+      }
     >
       <Stack gap="md">
         <Text size="sm" c="dimmed">
@@ -258,23 +269,7 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
           />
         )}
 
-        <Group justify="space-between">
-          <Button
-            variant="default"
-            disabled={committing}
-            onClick={props.onClose}
-          >
-            Cancel
-          </Button>
-          <Button
-            loading={committing}
-            disabled={!canCommit}
-            onClick={() => void handleCommit()}
-          >
-            {copy.confirmLabel}
-          </Button>
-        </Group>
       </Stack>
-    </Modal>
+    </AppPanelModal>
   );
 }
