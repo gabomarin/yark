@@ -61,3 +61,7 @@
   padding: var(--app-space-sm) var(--app-space-lg) var(--app-space-md);
   border-top: 1px solid var(--app-color-border-subtle);
 }
+
+.footer[data-align="between"] {
+  justify-content: space-between;
+}

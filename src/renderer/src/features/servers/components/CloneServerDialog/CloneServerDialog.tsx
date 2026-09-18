@@ -4,13 +4,12 @@ import {
   Alert,
   Button,
   Checkbox,
-  Group,
-  Modal,
   NumberInput,
   SimpleGrid,
   Stack,
   TextInput,
 } from "@mantine/core";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import type { CloneInstallProgress, InstallationHealthStatus, ServerProfile } from "@shared/types";
 import {
   getServerFolderNameError,
@@ -167,15 +166,26 @@ export function CloneServerDialog(props: Props): ReactElement {
   const allowChromeClose = !copying;
 
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={handleClose}
       title="Clone server"
       size="md"
-      centered
       closeOnClickOutside={allowChromeClose}
       closeOnEscape={allowChromeClose}
       withCloseButton={allowChromeClose}
+      footer={
+        copying ? undefined : (
+          <>
+            <Button variant="default" onClick={handleClose} disabled={loading}>
+              Cancel
+            </Button>
+            <Button onClick={handleClone} loading={loading} disabled={!canSubmit}>
+              Clone server
+            </Button>
+          </>
+        )
+      }
     >
       <Stack gap="md">
         {copying ? (
@@ -300,17 +310,10 @@ export function CloneServerDialog(props: Props): ReactElement {
               )}
             </Stack>
 
-            <Group justify="flex-end" gap="sm">
-              <Button variant="default" onClick={handleClose} disabled={loading}>
-                Cancel
-              </Button>
-              <Button onClick={handleClone} loading={loading} disabled={!canSubmit}>
-                Clone server
-              </Button>
-            </Group>
+
           </>
         )}
       </Stack>
-    </Modal>
+    </AppPanelModal>
   );
 }

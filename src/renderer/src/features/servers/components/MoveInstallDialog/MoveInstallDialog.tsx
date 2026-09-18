@@ -1,15 +1,7 @@
 import type { ReactElement } from "react";
 import { useEffect, useMemo, useState } from "react";
-import {
-  Alert,
-  Button,
-  Group,
-  Loader,
-  Modal,
-  Progress,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Alert, Button, Group, Loader, Progress, Stack, Text } from "@mantine/core";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import type { FleetInstallRef } from "@shared/server/server-install-path";
 import type { MoveInstallProgress, ServerProfile } from "@shared/types";
 import { normalizeMoveInstallProgress } from "@shared/types";
@@ -219,7 +211,7 @@ export function MoveInstallDialog(props: Props): ReactElement {
   const allowChromeClose = phase === "form" || phase === "error";
 
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={handleClose}
       title="Move installation"
@@ -227,7 +219,43 @@ export function MoveInstallDialog(props: Props): ReactElement {
       closeOnClickOutside={allowChromeClose}
       closeOnEscape={allowChromeClose}
       withCloseButton={allowChromeClose}
-      centered
+      footer={
+        <>
+          {(phase === "form" || phase === "error") && (
+            <>
+              <Button variant="default" onClick={() => props.onClose()}>
+                Cancel
+              </Button>
+              <Button onClick={() => void handleStart()} disabled={!canStart}>
+                Start move
+              </Button>
+            </>
+          )}
+          {phase === "running" && (
+            <Button color="red" variant="filled" onClick={() => void handleCancelCopy()}>
+              Cancel
+            </Button>
+          )}
+          {phase === "success" && oldSourceRemoved && (
+            <Button onClick={() => void finishSuccess()}>Close</Button>
+          )}
+          {phase === "success" && !oldSourceRemoved && (
+            <>
+              <Button variant="default" onClick={() => void finishSuccess()}>
+                Leave previous folder
+              </Button>
+              <Button
+                color="red"
+                variant="filled"
+                loading={cleanupBusy}
+                onClick={() => void handleRetryCleanup()}
+              >
+                Retry delete
+              </Button>
+            </>
+          )}
+        </>
+      }
     >
       <Stack gap="md">
         {props.server !== null && (
@@ -294,46 +322,7 @@ export function MoveInstallDialog(props: Props): ReactElement {
             {error}
           </Alert>
         )}
-
-        <Group justify="flex-end" gap="sm">
-          {(phase === "form" || phase === "error") && (
-            <>
-              <Button variant="default" onClick={() => props.onClose()}>
-                Cancel
-              </Button>
-              <Button
-                onClick={() => void handleStart()}
-                disabled={!canStart}
-              >
-                Start move
-              </Button>
-            </>
-          )}
-          {phase === "running" && (
-            <Button color="red" variant="filled" onClick={() => void handleCancelCopy()}>
-              Cancel
-            </Button>
-          )}
-          {phase === "success" && oldSourceRemoved && (
-            <Button onClick={() => void finishSuccess()}>Close</Button>
-          )}
-          {phase === "success" && !oldSourceRemoved && (
-            <>
-              <Button variant="default" onClick={() => void finishSuccess()}>
-                Leave previous folder
-              </Button>
-              <Button
-                color="red"
-                variant="filled"
-                loading={cleanupBusy}
-                onClick={() => void handleRetryCleanup()}
-              >
-                Retry delete
-              </Button>
-            </>
-          )}
-        </Group>
       </Stack>
-    </Modal>
+    </AppPanelModal>
   );
 }

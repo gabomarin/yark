@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
-import { Alert, Modal, Stack, Text } from "@mantine/core";
+import { Alert, Stack, Text } from "@mantine/core";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import type { wizardChanges } from "../../configuration-wizard/configurationWizardModel";
 import { ChangeRow } from "./ConfigurationWizardParts";
 
@@ -16,7 +17,7 @@ export function WizardChangesModal(props: Props): ReactElement {
   const { opened, onClose, changes, clusterPathSelected, clusterId, useClusterSeed } = props;
 
   return (
-    <Modal opened={opened} onClose={onClose} title="Draft changes" size="lg" centered>
+    <AppPanelModal opened={opened} onClose={onClose} title="Draft changes" size="lg">
       <Text c="dimmed" size="sm" mb="md">
         These values have not been applied yet. You can confirm them on the last step.
       </Text>
@@ -35,6 +36,6 @@ export function WizardChangesModal(props: Props): ReactElement {
           ))}
         </Stack>
       )}
-    </Modal>
+    </AppPanelModal>
   );
 }

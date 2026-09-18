@@ -16,12 +16,22 @@ const SIZE_PX: Record<AppModalSize, number> = {
 interface Props {
   opened: boolean;
   onClose: () => void;
-  title: string;
+  /** String for plain text, or a node for the rare custom title row. */
+  title: ReactNode;
   meta?: string;
-  /** Named scale, or a raw value for the rare full-screen/percent case. */
+  /** Named scale, or a raw value for the rare percent/full-height case. */
   size?: AppModalSize | number | string;
   /** Actions rendered in a bordered bar at the bottom (secondary first). */
   footer?: ReactNode;
+  /** `end` (default) for confirmations, `between` for destructive dialogs. */
+  footerAlign?: "end" | "between";
+  centered?: boolean;
+  overlayOpacity?: number;
+  withCloseButton?: boolean;
+  closeOnClickOutside?: boolean;
+  closeOnEscape?: boolean;
+  /** Appended to the content class (e.g. a full-height dialog). */
+  contentClassName?: string;
   children: ReactNode;
 }
 
@@ -40,17 +50,19 @@ export function AppPanelModal(props: Props): ReactElement {
     <Modal.Root
       opened={props.opened}
       onClose={props.onClose}
-      centered
+      centered={props.centered ?? true}
       size={size}
       radius="md"
+      closeOnClickOutside={props.closeOnClickOutside ?? true}
+      closeOnEscape={props.closeOnEscape ?? true}
       classNames={{
-        content: classes.content,
+        content: [classes.content, props.contentClassName].filter(Boolean).join(" "),
         header: classes.header,
         body: classes.body,
         title: classes.title,
       }}
     >
-      <Modal.Overlay backgroundOpacity={0.5} color="#000" />
+      <Modal.Overlay backgroundOpacity={props.overlayOpacity ?? 0.5} color="#000" />
       <Modal.Content radius="md">
         <Modal.Header>
           <div className={classes.headerTop}>
@@ -62,13 +74,20 @@ export function AppPanelModal(props: Props): ReactElement {
                 </Text>
               ) : null}
             </div>
-            <Modal.CloseButton aria-label="Close" />
+            {props.withCloseButton === false ? null : (
+              <Modal.CloseButton aria-label="Close" />
+            )}
           </div>
         </Modal.Header>
         <Modal.Body>
           <div className={classes.bodyContent}>{props.children}</div>
           {props.footer !== undefined && (
-            <div className={classes.footer}>{props.footer}</div>
+            <div
+              className={classes.footer}
+              data-align={props.footerAlign ?? "end"}
+            >
+              {props.footer}
+            </div>
           )}
         </Modal.Body>
       </Modal.Content>

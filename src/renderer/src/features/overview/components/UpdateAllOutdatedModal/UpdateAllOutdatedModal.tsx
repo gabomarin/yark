@@ -1,13 +1,6 @@
 import type { ReactElement } from "react";
-import {
-  Alert,
-  Badge,
-  Button,
-  Group,
-  Modal,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Alert, Badge, Button, Group, Stack, Text } from "@mantine/core";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { DownloadSimple } from "@phosphor-icons/react";
 import type { UpdateAllOutdatedPlan } from "../../updateAllOutdatedModel";
@@ -33,7 +26,7 @@ export function UpdateAllOutdatedModal(props: Props): ReactElement {
   const skippedCount = plan?.skipped.length ?? 0;
 
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={props.onClose}
       withCloseButton={!queueing}
@@ -41,7 +34,22 @@ export function UpdateAllOutdatedModal(props: Props): ReactElement {
       closeOnEscape={!queueing}
       title="Update All"
       size="lg"
-      centered
+      footer={
+        <>
+          <Button variant="default" onClick={props.onClose} disabled={props.queueing}>
+            Cancel
+          </Button>
+          <Button
+            onClick={props.onConfirm}
+            loading={props.queueing}
+            disabled={
+              props.loading || plan === null || eligibleCount === 0 || props.queueing
+            }
+          >
+            Accept
+          </Button>
+        </>
+      }
     >
       <Stack gap="md">
         {props.loading ? (
@@ -127,22 +135,7 @@ export function UpdateAllOutdatedModal(props: Props): ReactElement {
             ) : null}
           </>
         )}
-
-        <Group justify="flex-end">
-          <Button variant="default" onClick={props.onClose} disabled={props.queueing}>
-            Cancel
-          </Button>
-          <Button
-            onClick={props.onConfirm}
-            loading={props.queueing}
-            disabled={
-              props.loading || plan === null || eligibleCount === 0 || props.queueing
-            }
-          >
-            Accept
-          </Button>
-        </Group>
       </Stack>
-    </Modal>
+    </AppPanelModal>
   );
 }

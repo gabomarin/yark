@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { useMemo, useState } from "react";
-import { Alert, Button, Checkbox, Group, Modal, Stack, Text } from "@mantine/core";
+import { Alert, Button, Checkbox, Stack, Text } from "@mantine/core";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { SelectableListRow } from "@ui/SelectableListRow/SelectableListRow";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
@@ -114,17 +115,33 @@ export function RemoveServersModal(props: Props): ReactElement {
   };
 
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={() => {
         if (!saving) props.onClose();
       }}
       title={`Remove from ${props.clusterId}`}
       size="lg"
-      centered
       closeOnClickOutside={!saving}
       closeOnEscape={!saving}
       withCloseButton={!saving}
+      footerAlign="between"
+      footer={
+        <>
+          <Button variant="default" disabled={saving} onClick={props.onClose}>
+            Cancel
+          </Button>
+          <Button
+            color="red"
+            variant="filled"
+            loading={saving}
+            disabled={selected.length === 0}
+            onClick={() => void handleRemove()}
+          >
+            Remove from cluster
+          </Button>
+        </>
+      }
     >
       <Stack gap="md">
         <Text size="sm" c="dimmed">
@@ -193,22 +210,7 @@ export function RemoveServersModal(props: Props): ReactElement {
             One server will remain. Transfers need at least two servers.
           </Alert>
         ) : null}
-
-        <Group justify="space-between">
-          <Button variant="default" disabled={saving} onClick={props.onClose}>
-            Cancel
-          </Button>
-          <Button
-            color="red"
-            variant="filled"
-            loading={saving}
-            disabled={selected.length === 0}
-            onClick={() => void handleRemove()}
-          >
-            Remove from cluster
-          </Button>
-        </Group>
       </Stack>
-    </Modal>
+    </AppPanelModal>
   );
 }
