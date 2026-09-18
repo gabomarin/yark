@@ -46,18 +46,36 @@ export function HostedResourcesPage(): ReactElement {
   return (
     <PageScaffold
       title="Hosted Resources"
-      subtitle="Publish text, JSON, or INI content over a URL that ASA can load from this PC."
-      actions={
-        <Button
-          variant="default"
-          onClick={() => void controller.reload()}
-          loading={controller.loading}
-        >
-          Refresh
-        </Button>
-      }
+      fillViewport
+      edgeToEdge
+      showHeader={false}
     >
-      <Stack gap="md" className={classes.content} data-hosted-resources-page>
+      <div className={classes.pageShell} data-hosted-resources-page>
+        <Group
+          justify="space-between"
+          align="flex-start"
+          wrap="wrap"
+          gap="sm"
+          className={classes.pageHeader}
+        >
+          <div>
+            <h1 className={classes.pageTitle}>Hosted Resources</h1>
+            <Text size="sm" c="dimmed" className={classes.pageSubtitle}>
+              Publish text, JSON, or INI content over a URL that ASA can load from this PC.
+            </Text>
+          </div>
+          <Group gap="sm">
+            <Button
+              variant="default"
+              onClick={() => void controller.reload()}
+              loading={controller.loading}
+            >
+              Refresh
+            </Button>
+          </Group>
+        </Group>
+
+        <Stack gap="md" className={classes.content}>
         <DismissibleHint
           storageKey={EXPERIMENTAL_HINT_STORAGE_KEY}
           title="Experimental"
@@ -186,23 +204,24 @@ export function HostedResourcesPage(): ReactElement {
           busy={controller.diagnosticsBusy}
           onRun={() => void controller.runDiagnostics()}
         />
-      </Stack>
+        </Stack>
 
-      <HostedResourceEditorModal
-        draft={controller.editor}
-        busy={controller.busy === "editor"}
-        onChange={controller.updateEditor}
-        onClose={controller.closeEditor}
-        onSubmit={() => void controller.submitEditor()}
-      />
+        <HostedResourceEditorModal
+          draft={controller.editor}
+          busy={controller.busy === "editor"}
+          onChange={controller.updateEditor}
+          onClose={controller.closeEditor}
+          onSubmit={() => void controller.submitEditor()}
+        />
 
-      <HostedResourceRevisionsModal
-        opened={controller.revisionsFor !== null}
-        revisions={controller.revisions}
-        busy={controller.busy !== null}
-        onClose={controller.closeRevisions}
-        onPublish={(revisionId) => void controller.publishRevision(revisionId)}
-      />
+        <HostedResourceRevisionsModal
+          opened={controller.revisionsFor !== null}
+          revisions={controller.revisions}
+          busy={controller.busy !== null}
+          onClose={controller.closeRevisions}
+          onPublish={(revisionId) => void controller.publishRevision(revisionId)}
+        />
+      </div>
     </PageScaffold>
   );
 }
