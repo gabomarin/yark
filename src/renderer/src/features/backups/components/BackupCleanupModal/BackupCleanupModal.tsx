@@ -3,12 +3,12 @@ import {
   Button,
   Checkbox,
   Group,
-  Modal,
   NumberInput,
   Stack,
   Text,
 } from "@mantine/core";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import type { BackupCleanupOptions, BackupCleanupPreview } from "@shared/types";
 import { formatBackupBytes } from "../../model/backupsPageModel";
 import classes from "../../BackupsPage.module.css";
@@ -37,12 +37,41 @@ interface Props {
 
 export function BackupCleanupModal(props: Props): ReactElement {
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={() => !props.busy && props.onClose()}
       title="Cleanup backups"
       size="lg"
-      centered
+      footerAlign="between"
+      footer={
+        <>
+          <Button
+            variant="default"
+            disabled={props.busy}
+            onClick={props.onClose}
+          >
+            Cancel
+          </Button>
+          {props.cleanupPreview !== null && props.cleanupPreview.items.length > 0 ? (
+            <Button
+              color="red"
+              variant="filled"
+              loading={props.busy}
+              onClick={props.onConfirm}
+            >
+              Remove {props.cleanupPreview.items.length}
+            </Button>
+          ) : (
+            <Button
+              variant="light"
+              loading={props.busy}
+              onClick={props.onPreview}
+            >
+              Scan
+            </Button>
+          )}
+        </>
+      }
     >
       <Stack gap="md">
         <Text size="sm" c="dimmed">
@@ -160,34 +189,7 @@ export function BackupCleanupModal(props: Props): ReactElement {
           </AppSurfaceCard>
         )}
 
-        <Group justify="flex-end">
-          <Button
-            variant="default"
-            disabled={props.busy}
-            onClick={props.onClose}
-          >
-            Cancel
-          </Button>
-          {props.cleanupPreview !== null && props.cleanupPreview.items.length > 0 ? (
-            <Button
-              color="red"
-              variant="filled"
-              loading={props.busy}
-              onClick={props.onConfirm}
-            >
-              Remove {props.cleanupPreview.items.length}
-            </Button>
-          ) : (
-            <Button
-              variant="light"
-              loading={props.busy}
-              onClick={props.onPreview}
-            >
-              Scan
-            </Button>
-          )}
-        </Group>
-      </Stack>
-    </Modal>
+        </Stack>
+    </AppPanelModal>
   );
 }

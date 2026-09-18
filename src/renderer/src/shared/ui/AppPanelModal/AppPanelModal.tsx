@@ -30,6 +30,8 @@ interface Props {
   withCloseButton?: boolean;
   closeOnClickOutside?: boolean;
   closeOnEscape?: boolean;
+  /** Stacking for dialogs opened from another dialog (lightboxes). */
+  zIndex?: number;
   /** Appended to the content class (e.g. a full-height dialog). */
   contentClassName?: string;
   /** Extra data-* hooks forwarded to the dialog content. */
@@ -56,6 +58,7 @@ export function AppPanelModal(props: Props): ReactElement {
     withCloseButton,
     closeOnClickOutside,
     closeOnEscape,
+    zIndex,
     contentClassName,
     children,
     ...dataAttributes
@@ -74,6 +77,7 @@ export function AppPanelModal(props: Props): ReactElement {
       radius="md"
       closeOnClickOutside={closeOnClickOutside ?? true}
       closeOnEscape={closeOnEscape ?? true}
+      zIndex={zIndex}
       classNames={{
         content: [classes.content, contentClassName].filter(Boolean).join(" "),
         header: classes.header,

@@ -1,18 +1,10 @@
 import type { ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
-import {
-  Alert,
-  Badge,
-  Button,
-  Group,
-  Modal,
-  Radio,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Alert, Badge, Button, Radio, Stack, Text } from "@mantine/core";
 import type { DeleteServerOptions, InstallationHealthStatus } from "@shared/types";
 import { EMPTY_WIPE_STALE_MESSAGE } from "@shared/types";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import classes from "./DeleteServerModal.module.css";
 
@@ -97,17 +89,33 @@ export function DeleteServerModal(props: Props): ReactElement {
   };
 
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={() => {
         if (!loading) props.onClose();
       }}
       title={`Remove server "${props.serverName}"`}
-      centered
       size="md"
       closeOnClickOutside={!loading}
       closeOnEscape={!loading}
       withCloseButton={!loading}
+      footer={
+        <>
+          <Button variant="default" onClick={props.onClose} disabled={loading}>
+            Cancel
+          </Button>
+          <Button
+            color={wipe ? "red" : undefined}
+            variant={wipe ? "filled" : undefined}
+            loading={loading}
+            onClick={() => {
+              void handleConfirm();
+            }}
+          >
+            {wipe ? "Delete everything" : "Remove from YARK"}
+          </Button>
+        </>
+      }
     >
       <Stack gap="sm">
         {forcedWipe ? (
@@ -224,22 +232,7 @@ export function DeleteServerModal(props: Props): ReactElement {
           <ReadonlyPath value={props.installDir} compact />
         </div>
 
-        <Group justify="flex-end" gap="sm" mt="xs">
-          <Button variant="default" onClick={props.onClose} disabled={loading}>
-            Cancel
-          </Button>
-          <Button
-            color={wipe ? "red" : undefined}
-            variant={wipe ? "filled" : undefined}
-            loading={loading}
-            onClick={() => {
-              void handleConfirm();
-            }}
-          >
-            {wipe ? "Delete everything" : "Remove from YARK"}
-          </Button>
-        </Group>
       </Stack>
-    </Modal>
+    </AppPanelModal>
   );
 }
