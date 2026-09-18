@@ -50,7 +50,9 @@ request to the selected provider. The configured URL must be the provider's exac
 OpenAI-compatible chat-completions endpoint; the workflow does not append a path.
 The preflight reports the HTTP status and sanitized response body without printing
 the API key. OCR's default `thinking` body is explicitly overridden with `{}` for
-providers that reject that optional field.
+providers that reject that optional field. OpenCode Go requests also include a
+stable `x-opencode-session` value for the repository, PR, and head SHA, plus a
+YARK-specific `User-Agent`, for efficient provider routing.
 | [`.github/workflows/discord-release-notify.yml`](../.github/workflows/discord-release-notify.yml) | Manual Discord re-announce for an existing tag (`workflow_dispatch`) | `contents: read` |
 
 Release runs only when `github.repository == 'gabomarin/yark'` (tag push or
