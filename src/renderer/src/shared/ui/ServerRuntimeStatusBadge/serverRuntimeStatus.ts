@@ -28,9 +28,9 @@ export function serverRuntimeStatusLabel(
 /** Compact list-thumb tone for runtime status (word + dot). */
 export function serverRuntimeStatusTone(
   status: ServerStatus | string,
-): "ok" | "warn" | "bad" | "info" | "muted" {
+): "ok" | "warn" | "danger" | "info" | "neutral" {
   if (status === "running") return "ok";
   if (status === "starting" || status === "stopping") return "info";
-  if (status === "error") return "bad";
-  return "muted";
+  if (status === "error") return "danger";
+  return "neutral";
 }

@@ -1,11 +1,10 @@
 import type { ReactElement } from "react";
-import { Group, Text, Tooltip, type BadgeProps } from "@mantine/core";
 import type { ServerStatus } from "@shared/types";
+import { StatusWord, type StatusWordTone } from "@ui/StatusWord/StatusWord";
 import {
   serverRuntimeStatusLabel,
   serverRuntimeStatusTone,
 } from "./serverRuntimeStatus";
-import classes from "./ServerRuntimeStatusBadge.module.css";
 
 interface Props {
   status: ServerStatus | string;
@@ -13,12 +12,11 @@ interface Props {
   label?: string;
   /** Overrides badge color (e.g. busy → blue). */
   color?: string;
-  size?: BadgeProps["size"];
-  variant?: BadgeProps["variant"];
+  size?: "xs" | "sm" | "md" | "lg";
   className?: string;
   /**
    * `label` = word + dot (default). `dot` = color-only status like the
-   * workspace server rail — frees horizontal space on narrow Overview cards.
+   * workspace server rail - frees horizontal space on narrow Overview cards.
    */
   appearance?: "label" | "dot";
 }
@@ -27,16 +25,15 @@ function statusIsProcessing(status: ServerStatus | string): boolean {
   return status === "starting" || status === "stopping";
 }
 
-function toneFromColorOverride(
-  color: string | undefined,
-): ReturnType<typeof serverRuntimeStatusTone> | null {
+function toneFromColorOverride(color: string | undefined): StatusWordTone | null {
   if (color === "blue") return "info";
   if (color === "green") return "ok";
-  if (color === "red") return "bad";
-  if (color === "gray") return "muted";
+  if (color === "red") return "danger";
+  if (color === "gray") return "neutral";
   return null;
 }
 
+/** Maps the server process lifecycle onto the shared status atom. */
 export function ServerRuntimeStatusBadge({
   status,
   label,
@@ -47,48 +44,19 @@ export function ServerRuntimeStatusBadge({
 }: Props): ReactElement {
   const text = label ?? serverRuntimeStatusLabel(status);
   const tone = toneFromColorOverride(color) ?? serverRuntimeStatusTone(status);
-  const processing = statusIsProcessing(status) || undefined;
-  const textSize = size === "sm" || size === "md" || size === "lg" ? "sm" : "xs";
-
-  const dot = (
-    <span
-      className={classes.statusDot}
-      data-tone={tone}
-      data-processing={processing}
-    />
-  );
-
-  if (appearance === "dot") {
-    return (
-      <Tooltip label={text} withArrow>
-        <span
-          className={className}
-          role="status"
-          aria-label={text}
-          data-runtime-status-dot
-          data-tone={tone}
-          data-processing={processing}
-        >
-          {dot}
-        </span>
-      </Tooltip>
-    );
-  }
 
   return (
-    <Group
-      gap="xxs"
-      wrap="nowrap"
-      align="center"
-      className={`${classes.statusWord}${className ? ` ${className}` : ""}`}
-      role="status"
-      aria-label={text}
-      data-runtime-status
+    <StatusWord
+      tone={tone}
+      appearance={appearance}
+      processing={statusIsProcessing(status)}
+      label={text}
+      size={size === "sm" || size === "md" || size === "lg" ? "sm" : "xs"}
+      className={className}
+      data-runtime-status={appearance === "label" ? "" : undefined}
+      data-runtime-status-dot={appearance === "dot" ? "" : undefined}
     >
-      {dot}
-      <Text size={textSize} fw={600} span data-tone={tone} className={classes.statusLabel}>
-        {text}
-      </Text>
-    </Group>
+      {text}
+    </StatusWord>
   );
 }

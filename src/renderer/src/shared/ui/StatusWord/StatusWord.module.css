@@ -9,6 +9,19 @@
   text-transform: capitalize;
 }
 
+.root[data-size="sm"] {
+  font-size: var(--mantine-font-size-sm);
+}
+
+.root[data-tone="neutral"] {
+  font-weight: 500;
+  color: var(--app-color-muted);
+}
+
+.dotOnly {
+  display: inline-flex;
+}
+
 .dot {
   width: 7px;
   height: 7px;
@@ -17,19 +30,57 @@
   flex-shrink: 0;
 }
 
+.root[data-size="sm"] .dot {
+  width: 8px;
+  height: 8px;
+}
+
 .root[data-tone="ok"] .dot {
   background: var(--app-color-ok);
+}
+
+/* The word carries the tone too — status words are colour-coded (design-system §4). */
+.root[data-tone="ok"] .label {
+  color: var(--app-color-ok);
+}
+
+.root[data-tone="info"] .dot {
+  background: var(--app-color-info);
+}
+
+.root[data-tone="info"] .label {
+  color: var(--app-color-info);
 }
 
 .root[data-tone="warn"] .dot {
   background: var(--app-color-warn);
 }
 
+.root[data-tone="warn"] .label {
+  color: var(--app-color-warn);
+}
+
 .root[data-tone="danger"] .dot {
   background: var(--app-color-danger-bright);
 }
 
-.root[data-tone="neutral"] {
-  font-weight: 500;
-  color: var(--app-color-muted);
+.root[data-tone="danger"] .label {
+  color: var(--app-color-danger-bright);
+}
+
+.dot[data-processing="true"] {
+  animation: statusWordPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes statusWordPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.55;
+    transform: scale(0.85);
+  }
 }
