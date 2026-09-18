@@ -222,7 +222,7 @@
 }
 
 .sourceRadio :global(.mantine-Radio-radio) {
-  --radio-color: var(--ark-blue-9);
+  --radio-color: var(--app-color-accent);
 }
 
 .playersTabs {

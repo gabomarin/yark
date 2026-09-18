@@ -53,7 +53,7 @@
 }
 
 .change[data-change="removed"] {
-  color: var(--app-color-danger);
+  color: var(--app-color-danger-bright);
 }
 
 .change[data-change="changed"] {

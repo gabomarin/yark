@@ -1,19 +1,29 @@
+/*
+ * Shared table surface. Keep it on the same row recipe the rest of the app uses
+ * for row lists (Overview ServerCard, Logs event rows, Settings rows):
+ * solid `--app-color-panel`, square, hairline separators — never a translucent
+ * wash over whatever is behind, and never Mantine's `--mantine-color-body`
+ * default (which painted the page canvas inside a chrome pane).
+ *
+ * Set the library's own variables; the wrapper `background` does not reach the
+ * <table>, which repaints from `--mantine-datatable-background-color`.
+ */
 .root {
   min-height: 0;
   width: 100%;
 }
 
 .root :global(.mantine-datatable) {
-  --mantine-datatable-row-border-color: color-mix(
-    in srgb,
-    var(--app-color-border) 55%,
-    transparent
-  );
-  background: color-mix(in srgb, var(--app-color-panel) 40%, transparent);
+  --mantine-datatable-background-color: var(--app-color-panel);
+  --mantine-datatable-row-border-color: var(--app-color-border-subtle);
+  --mantine-datatable-highlight-on-hover-color: var(--app-color-surface-control);
+  --mantine-datatable-selection-color: var(--app-list-selected-bg);
 }
 
-.root :global(.mantine-datatable-header) {
-  background: color-mix(in srgb, var(--app-color-panel) 70%, transparent);
+/* Header sits one step above the rows: solid, not a wash. */
+.root :global(.mantine-datatable-header),
+.root :global(.mantine-datatable-header th) {
+  background: var(--app-color-panel-raised);
 }
 
 .root :global(.mantine-datatable-empty-state) {

@@ -86,7 +86,7 @@ export function HostedResourcesPage(): ReactElement {
         </DismissibleHint>
 
         {state !== null && (
-          <AppSurfaceCard data-hosted-resources-status>
+          <AppSurfaceCard radius={0} data-hosted-resources-status>
             <Stack gap="sm">
               <Group justify="space-between" align="flex-start">
                 <div>
@@ -143,7 +143,7 @@ export function HostedResourcesPage(): ReactElement {
 
         {overview === null ? (
           controller.loadError !== null ? (
-            <AppSurfaceCard>
+            <AppSurfaceCard radius={0}>
               <EmptyState
                 icon={<WarningCircle size={22} />}
                 title="Could not load Hosted Resources"
@@ -154,12 +154,12 @@ export function HostedResourcesPage(): ReactElement {
               />
             </AppSurfaceCard>
           ) : (
-            <AppSurfaceCard>
+            <AppSurfaceCard radius={0}>
               <Text c="dimmed">Loading hosted resources…</Text>
             </AppSurfaceCard>
           )
         ) : overview.resources.length === 0 ? (
-          <AppSurfaceCard>
+          <AppSurfaceCard radius={0}>
             <EmptyState
               icon={<Broadcast size={22} />}
               title="No resources yet"

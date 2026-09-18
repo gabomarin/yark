@@ -2,14 +2,16 @@ import type { UiDensity } from "@shared/settings/ui-density";
 
 export type { UiDensity } from "@shared/settings/ui-density";
 
-export const radixPalette = {
-  background: "#0c1427",
-  /**
-   * INI category header fill — deep blue (not gray-slate) between hull
-   * (`#0c1427`) and ark-blue-2. Base for the subtle ~90% blue header lift.
-   */
-  iniCategory: "#0d1836",
-  blue: [
+/**
+ * The single accent source (#PUX-004). Everything accent-shaped derives from it:
+ * the `--ark-blue-*` Radix-style steps + alphas, Mantine's `blue` scale, and the
+ * `--app-color-accent*` role tokens. Swap these two arrays and every interactive,
+ * selected, focus, and "YARK-owned" surface follows — no feature CSS changes.
+ *
+ * Step 9 is the solid accent, 10 the hover, 11 the text/icon tone.
+ */
+export const accentPalette = {
+  steps: [
     "#061232",
     "#06143c",
     "#081f61",
@@ -23,7 +25,7 @@ export const radixPalette = {
     "#90b5ff",
     "#cde2ff",
   ],
-  blueAlpha: [
+  alpha: [
     "#0000ff0d",
     "#0014fe19",
     "#003cfe45",
@@ -37,6 +39,17 @@ export const radixPalette = {
     "#90b5ff",
     "#cde2ff",
   ],
+} as const;
+
+export const radixPalette = {
+  background: "#0c1427",
+  /**
+   * INI category header fill — deep blue (not gray-slate) between hull
+   * (`#0c1427`) and ark-blue-2. Base for the subtle ~90% blue header lift.
+   */
+  iniCategory: "#0d1836",
+  blue: accentPalette.steps,
+  blueAlpha: accentPalette.alpha,
   gray: [
     "#000000",
     "#121213",
@@ -136,18 +149,18 @@ const sharedColors = {
   /** Hairline between page / panel / control — solid, not mixed with blue. */
   border: radixPalette.gray[6],
   text: radixPalette.gray[11],
-  /** Helper / Mantine `c="dimmed"` — slightly above gray-10 for dark UI. */
-  muted: "#c0c0c1",
+  /** Helper / Mantine `c="dimmed"` — Radix step 11 of the active neutral ramp. */
+  muted: radixPalette.gray[10],
   /** Selected chrome / filled primary — family accent `#3b8cff` (`--ark-blue-9`). */
   accent: radixPalette.blue[8],
   ok: "#58c89a",
   warn: "#d9a85f",
   /** Needs-attention UI (update pending, card rail) — fossil/amber, not lime (#470). */
   attention: "#d9a85f",
-  /** Alerts, rails, destructive filled buttons. */
-  bad: "#BE3636",
-  /** Menu danger rows + Stop icon on dark surfaces (readable, matches card Stop light). */
-  dangerBright: "#D65555",
+  /** Alerts, rails, destructive filled buttons. Clears 3:1 on panel and keeps white labels. */
+  bad: "#C94040",
+  /** Menu danger rows + Stop icon on dark surfaces. Meets AA text on panel (5.0:1). */
+  dangerBright: "#DE6A6A",
   cryo: radixPalette.blue[10],
   biomass: "#58c89a",
   fossil: "#d9a85f",

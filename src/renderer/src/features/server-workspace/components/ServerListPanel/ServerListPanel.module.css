@@ -134,7 +134,7 @@
 
 .item[data-selected] {
   background: var(--app-list-selected-bg);
-  border-color: var(--ark-blue-a3);
+  border-color: var(--app-color-accent-subtle);
   box-shadow: none;
 }
 
@@ -147,7 +147,7 @@
   height: 16px;
   transform: translateY(-50%);
   border-radius: 999px;
-  background: var(--ark-blue-9);
+  background: var(--app-color-accent);
   content: "";
   pointer-events: none;
 }

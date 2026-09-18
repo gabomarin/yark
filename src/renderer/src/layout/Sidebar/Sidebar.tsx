@@ -30,6 +30,7 @@ import { navSelectedClassName } from "@ui/NavSelected/navSelectedClassName";
 import { Fragment } from "react";
 import yarkLogo from "../../assets/brand/yark-logo.png";
 import { QuitYarkModal } from "./QuitYarkModal";
+import { PalettePreviewSwitcher } from "./PalettePreviewSwitcher";
 import classes from "./Sidebar.module.css";
 
 export type Route =
@@ -226,6 +227,9 @@ export function Sidebar(props: Props): ReactElement {
           );
         })}
       </MantineStack>
+
+      {/* TEMP (PUX-004): palette preview. Remove with PalettePreviewSwitcher. */}
+      {!iconMode && <PalettePreviewSwitcher />}
 
       <Divider className={classes.rule} />
 

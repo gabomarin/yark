@@ -3,9 +3,9 @@
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: var(--app-space-sm) var(--app-space-md);
   padding: var(--app-space-sm) var(--app-space-md);
-  border: 1px solid color-mix(in srgb, var(--app-color-border) 70%, transparent);
+  border: 1px solid var(--app-color-border-subtle);
   border-radius: 0;
-  background: color-mix(in srgb, var(--app-color-panel) 55%, transparent);
+  background: var(--app-color-panel);
 }
 
 .item {

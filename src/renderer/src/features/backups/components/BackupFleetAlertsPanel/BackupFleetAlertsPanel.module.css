@@ -22,9 +22,9 @@
   align-items: flex-start;
   flex-shrink: 0;
   padding: 8px 10px;
-  border-radius: var(--app-radius-control, 8px);
+  border-radius: 0;
   border: 1px solid color-mix(in srgb, var(--app-color-border) 50%, transparent);
-  background: color-mix(in srgb, var(--app-color-panel) 40%, transparent);
+  background: var(--app-color-panel);
 }
 
 .row[data-severity="error"] {
@@ -44,7 +44,7 @@
 }
 
 .row[data-severity="error"] .icon {
-  color: var(--app-color-danger);
+  color: var(--app-color-danger-bright);
 }
 
 .message {

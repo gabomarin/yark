@@ -215,7 +215,7 @@
 }
 
 .github {
-  color: var(--ark-blue-11);
+  color: var(--app-color-accent-text);
 }
 
 .github:hover {

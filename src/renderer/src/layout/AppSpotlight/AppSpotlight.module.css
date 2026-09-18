@@ -5,6 +5,6 @@
 }
 
 .recentMark {
-  color: var(--app-color-text-muted, var(--mantine-color-dimmed));
+  color: var(--app-color-muted);
   opacity: 0.85;
 }

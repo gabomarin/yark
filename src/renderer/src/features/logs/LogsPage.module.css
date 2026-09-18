@@ -352,7 +352,7 @@
 }
 
 .updateRowActive {
-  border-color: var(--ark-blue-a3);
+  border-color: var(--app-color-accent-subtle);
   background: var(--app-list-selected-bg);
   box-shadow: var(--app-list-selected-inset);
 }

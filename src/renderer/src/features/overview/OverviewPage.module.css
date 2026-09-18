@@ -214,7 +214,7 @@
 }
 
 .event-error {
-  color: var(--app-color-bad);
+  color: var(--app-color-danger-bright);
 }
 
 /* Wide desktop: servers + Recent activity side-by-side (hidden below this width). */

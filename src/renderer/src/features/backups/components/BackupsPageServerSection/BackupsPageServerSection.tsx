@@ -48,10 +48,10 @@ export function BackupsPageServerSection(props: Props): ReactElement {
 
       <Stack gap="sm">
         {props.filteredServers.length === 0 ? (
-          <AppSurfaceCard>
-            <EmptyState
-              icon={<HardDrives size={22} />}
-              title="No matches"
+        <AppSurfaceCard radius={0}>
+          <EmptyState
+            icon={<HardDrives size={22} />}
+            title="No matches"
               description="No servers match this filter."
             />
           </AppSurfaceCard>

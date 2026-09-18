@@ -153,9 +153,9 @@
   justify-content: space-between;
   gap: var(--app-space-sm);
   padding: var(--app-space-xs) var(--app-space-sm);
-  border-radius: var(--app-radius-control);
-  border: 1px solid color-mix(in srgb, var(--app-color-border) 50%, transparent);
-  background: color-mix(in srgb, var(--app-color-panel) 45%, transparent);
+  border-radius: 0;
+  border: 1px solid var(--app-color-border-subtle);
+  background: var(--app-color-panel);
 }
 
 .memberRow[data-clickable="true"] {
@@ -163,12 +163,12 @@
 }
 
 .memberRow[data-clickable="true"]:hover {
-  background: color-mix(in srgb, var(--app-color-panel) 70%, transparent);
-  border-color: color-mix(in srgb, var(--app-color-border) 80%, transparent);
+  background: var(--app-color-surface-control);
+  border-color: var(--app-color-border-control);
 }
 
 .memberRow[data-clickable="true"]:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--mantine-color-blue-6) 70%, transparent);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: 2px;
 }
 
@@ -202,9 +202,9 @@
   gap: var(--app-space-xs);
   align-items: flex-start;
   padding: var(--app-space-xs) var(--app-space-sm);
-  border-radius: var(--app-radius-control);
-  border: 1px solid color-mix(in srgb, var(--app-color-border) 50%, transparent);
-  background: color-mix(in srgb, var(--app-color-panel) 45%, transparent);
+  border-radius: 0;
+  border: 1px solid var(--app-color-border-subtle);
+  background: var(--app-color-panel);
 }
 
 .issueRow[data-severity="error"] {
@@ -224,7 +224,7 @@
 }
 
 .issueRow[data-severity="error"] .issueIcon {
-  color: var(--app-color-danger);
+  color: var(--app-color-danger-bright);
 }
 
 .issueCopy {

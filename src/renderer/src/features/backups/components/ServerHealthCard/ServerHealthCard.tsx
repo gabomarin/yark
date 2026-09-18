@@ -60,7 +60,7 @@ function healthTone(
 export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
   const { row, draft } = props;
   return (
-    <AppSurfaceCard>
+    <AppSurfaceCard radius={0}>
       <Stack gap="sm">
         <Group justify="space-between" align="flex-start" wrap="wrap" className={classes.healthCardHeader}>
           <div>

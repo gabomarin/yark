@@ -209,7 +209,7 @@
 }
 
 .cacheToggle:hover {
-  color: var(--app-color-cryo);
+  color: var(--app-color-accent-text);
 }
 
 .cacheList {

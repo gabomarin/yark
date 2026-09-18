@@ -36,6 +36,7 @@ export function BackupFleetAlertsPanel(props: Props): ReactElement | null {
     <AppSurfaceCard
       tone="flat"
       padding="sm"
+      radius={0}
       className={classes.panel}
       data-backup-alerts-panel
       aria-label="Backup alerts"

@@ -41,7 +41,7 @@ export function HostedResourceCard(props: Props): ReactElement {
   const { resource } = props;
   const disabled = !resource.enabled;
   return (
-    <AppSurfaceCard data-hosted-resource-card={resource.id}>
+    <AppSurfaceCard radius={0} data-hosted-resource-card={resource.id}>
       <Stack gap="xs">
         <Group justify="space-between" wrap="nowrap" align="flex-start">
           <Group gap="xs" wrap="nowrap">

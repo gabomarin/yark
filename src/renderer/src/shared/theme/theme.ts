@@ -48,7 +48,7 @@ function createAppCssVariablesResolver(
       "--app-color-border-subtle": "var(--ark-gray-7)",
       "--app-color-border-control": "var(--ark-gray-9)",
       "--app-color-text-soft": "var(--ark-gray-12)",
-      "--app-color-muted-soft": tokens.colors.muted,
+      "--app-color-muted-soft": "var(--ark-gray-11)",
       "--app-color-bg-accent": "var(--app-color-surface-chrome)",
       "--app-color-panel": "var(--app-color-surface-panel)",
       "--app-color-panel-alt": "var(--app-color-surface-control)",
@@ -58,6 +58,16 @@ function createAppCssVariablesResolver(
       "--app-color-text": "var(--app-color-text-soft)",
       "--app-color-muted": "var(--app-color-muted-soft)",
       "--app-color-accent": "var(--ark-blue-9)",
+      /* Accent role set — one hue, its states. See `accentPalette` for the source. */
+      "--app-color-accent-hover": "var(--ark-blue-10)",
+      "--app-color-accent-text": "var(--ark-blue-11)",
+      "--app-color-accent-subtle": "var(--ark-blue-a3)",
+      "--app-color-accent-subtle-hover": "var(--ark-blue-a4)",
+      "--app-color-accent-contrast": "#ffffff",
+      /* One brand-coloured focus ring for the whole app (alpha so it reads on any surface). */
+      "--app-color-focus-ring": "var(--ark-blue-a8)",
+      /* Informational state reported by the server — deliberately NOT the accent. */
+      "--app-color-info": "var(--app-color-cryo)",
       /* Aliases so Downloads / feature CSS color-mix can paint (Slice 1). */
       "--app-color-primary": "var(--app-color-accent)",
       "--app-color-accent-deep": "var(--ark-blue-3)",
@@ -116,6 +126,15 @@ function createAppCssVariablesResolver(
       "--mantine-color-dark-7": "var(--app-color-surface-panel)",
       "--mantine-color-dark-8": "var(--app-color-surface-chrome)",
       "--mantine-color-dark-9": "var(--app-color-bg)",
+      /*
+       * Mantine's `default` variant (outlined buttons, badges, popovers) otherwise
+       * keeps Mantine's own mapping — including a hardcoded `white` label. Derive
+       * the whole set from the palette so it stays correct if surfaces lighten.
+       */
+      "--mantine-color-default": "var(--app-color-surface-control)",
+      "--mantine-color-default-hover": "var(--app-color-surface-control-hover)",
+      "--mantine-color-default-border": "var(--app-color-border-control)",
+      "--mantine-color-default-color": "var(--app-color-text)",
       "--mantine-color-blue-0": "var(--ark-blue-12)",
       "--mantine-color-blue-1": "var(--ark-blue-11)",
       "--mantine-color-blue-2": "var(--ark-blue-8)",

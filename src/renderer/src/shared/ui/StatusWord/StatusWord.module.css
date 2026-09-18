@@ -26,7 +26,7 @@
 }
 
 .root[data-tone="danger"] .dot {
-  background: var(--app-color-danger);
+  background: var(--app-color-danger-bright);
 }
 
 .root[data-tone="neutral"] {

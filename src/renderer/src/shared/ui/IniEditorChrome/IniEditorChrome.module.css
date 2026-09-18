@@ -24,7 +24,7 @@
     180deg,
     color-mix(in srgb, var(--app-color-ini-category) 90%, var(--ark-blue-5)) 0%,
     var(--app-color-ini-category) 55%,
-    color-mix(in srgb, var(--app-color-ini-category) 90%, #000) 100%
+    color-mix(in srgb, var(--app-color-ini-category) 90%, var(--ark-gray-1)) 100%
   );
 }
 
@@ -45,19 +45,19 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
-  box-shadow: inset 3px 0 0 0 var(--ark-blue-9);
+  box-shadow: inset 3px 0 0 0 var(--app-color-accent);
 }
 
 .sectionHeader:hover {
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--app-color-ini-category) 82%, var(--ark-blue-5)) 0%,
-    color-mix(in srgb, var(--app-color-ini-category) 88%, #000) 100%
+    color-mix(in srgb, var(--app-color-ini-category) 88%, var(--ark-gray-1)) 100%
   );
 }
 
 .sectionHeader:focus-visible {
-  outline: 2px solid var(--ark-blue-9);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: -2px;
 }
 
@@ -69,7 +69,7 @@
 .sectionCount {
   border: 1px solid color-mix(in srgb, var(--ark-blue-8) 40%, var(--app-color-border-subtle)) !important;
   background: color-mix(in srgb, var(--app-color-ini-category) 70%, var(--ark-blue-2)) !important;
-  color: var(--ark-blue-11) !important;
+  color: var(--app-color-accent-text) !important;
 }
 
 /* Other category: not collapsible; expand/collapse icons target section subgroups */
@@ -87,7 +87,7 @@
   color: inherit;
   font: inherit;
   text-align: left;
-  box-shadow: inset 3px 0 0 0 var(--ark-blue-9);
+  box-shadow: inset 3px 0 0 0 var(--app-color-accent);
 }
 
 /* Nested under Other — control gray with a soft ~80%/20% darken (quieter than categories). */
@@ -105,7 +105,7 @@
   background: linear-gradient(
     180deg,
     var(--app-color-surface-control) 0%,
-    color-mix(in srgb, var(--app-color-surface-control) 80%, #000) 100%
+    color-mix(in srgb, var(--app-color-surface-control) 80%, var(--ark-gray-1)) 100%
   );
   color: inherit;
   font: inherit;
@@ -117,12 +117,12 @@
   background: linear-gradient(
     180deg,
     var(--app-color-surface-control-hover) 0%,
-    color-mix(in srgb, var(--app-color-surface-control-hover) 78%, #000) 100%
+    color-mix(in srgb, var(--app-color-surface-control-hover) 78%, var(--ark-gray-1)) 100%
   );
 }
 
 .subsectionHeader:focus-visible {
-  outline: 2px solid var(--ark-blue-9);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: -2px;
 }
 

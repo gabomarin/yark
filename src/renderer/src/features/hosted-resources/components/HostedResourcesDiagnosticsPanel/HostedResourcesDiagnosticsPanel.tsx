@@ -14,7 +14,7 @@ interface Props {
 export function HostedResourcesDiagnosticsPanel(props: Props): ReactElement {
   const diagnostics = props.diagnostics;
   return (
-    <AppSurfaceCard data-hosted-resources-diagnostics>
+    <AppSurfaceCard radius={0} data-hosted-resources-diagnostics>
       <Stack gap="sm">
         <Group justify="space-between">
           <Text fw={600}>Diagnostics</Text>

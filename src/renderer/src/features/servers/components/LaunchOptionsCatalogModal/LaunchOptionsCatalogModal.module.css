@@ -22,7 +22,7 @@
     180deg,
     color-mix(in srgb, var(--ark-blue-2) 55%, var(--ark-background)) 0%,
     var(--ark-background) 52%,
-    color-mix(in srgb, var(--ark-background) 92%, #000) 100%
+    color-mix(in srgb, var(--ark-background) 92%, var(--ark-gray-1)) 100%
   );
 }
 
@@ -108,7 +108,7 @@
 }
 
 .filterActive {
-  color: var(--app-color-cryo);
+  color: var(--app-color-accent-text);
   border-color: color-mix(in srgb, var(--app-color-accent) 65%, transparent);
   background: color-mix(in srgb, var(--app-color-accent) 22%, transparent);
 }
@@ -119,7 +119,7 @@
   opacity: 0.9;
   padding: 0.05rem 0.35rem;
   border-radius: 999px;
-  background: rgb(0 0 0 / 28%);
+  background: color-mix(in srgb, var(--ark-gray-1) 28%, transparent);
 }
 
 .split {
@@ -183,7 +183,7 @@
   min-height: 0;
   height: 100%;
   overflow: hidden;
-  background: rgb(0 0 0 / 14%);
+  background: color-mix(in srgb, var(--ark-gray-1) 14%, transparent);
 }
 
 .detailHeader {
@@ -204,7 +204,7 @@
   border-radius: var(--app-radius-control);
   border: 1px solid transparent;
   padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
-  background: color-mix(in srgb, #fff 2.5%, transparent);
+  background: color-mix(in srgb, var(--ark-gray-12) 2.5%, transparent);
   color: inherit;
   transition:
     background 120ms ease,
@@ -218,7 +218,7 @@
 
 .row:hover {
   border-color: var(--app-color-border-subtle);
-  background: color-mix(in srgb, #fff 4.5%, transparent);
+  background: color-mix(in srgb, var(--ark-gray-12) 4.5%, transparent);
 }
 
 .rowActive {

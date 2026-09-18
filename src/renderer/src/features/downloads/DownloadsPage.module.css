@@ -240,7 +240,7 @@
 }
 
 .rowButton[data-kind="active"] .rowTitleText {
-  font-size: var(--app-font-body-md);
+  font-size: var(--mantine-font-size-md);
 }
 
 .rowTitle {
@@ -262,7 +262,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: var(--app-font-body-sm);
+  font-size: var(--mantine-font-size-sm);
   font-weight: 600;
 }
 
@@ -271,14 +271,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: var(--app-font-caption);
+  font-size: var(--mantine-font-size-xs);
   color: var(--app-color-muted);
 }
 
 .rowPercent {
   text-align: right;
   font-family: var(--app-font-mono);
-  font-size: var(--app-font-caption);
+  font-size: var(--mantine-font-size-xs);
   color: var(--app-color-cryo);
 }
 

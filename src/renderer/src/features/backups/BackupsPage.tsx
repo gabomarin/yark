@@ -62,7 +62,7 @@ export function BackupsPage(props: Props): ReactElement {
 
         <Stack gap="md" className={classes.content}>
           {props.servers.length === 0 ? (
-            <AppSurfaceCard>
+            <AppSurfaceCard radius={0}>
               <EmptyState
                 icon={<HardDrives size={22} />}
                 title="No servers yet"
@@ -70,7 +70,7 @@ export function BackupsPage(props: Props): ReactElement {
               />
             </AppSurfaceCard>
           ) : fleet.loading && fleet.summary === null ? (
-            <AppSurfaceCard>
+            <AppSurfaceCard radius={0}>
               <Text c="dimmed">Loading backup health…</Text>
             </AppSurfaceCard>
           ) : fleet.summary !== null ? (

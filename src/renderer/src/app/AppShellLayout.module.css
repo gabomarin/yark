@@ -116,6 +116,17 @@
   width: 100%;
 }
 
+/* TEMP (PUX-004): sidebar toggle to compare the shell with and without the brand
+   art. Delete with `PalettePreviewSwitcher` / `palettePreviewModel`. */
+[data-shell-art="off"] .shell::before,
+[data-shell-art="off"] .shell::after {
+  display: none;
+}
+
+[data-shell-art="off"] .main {
+  background-image: var(--app-shell-atmosphere);
+}
+
 .mainBody {
   flex: 1;
   min-height: 0;

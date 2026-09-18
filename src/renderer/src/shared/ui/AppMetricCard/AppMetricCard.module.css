@@ -90,7 +90,7 @@
 }
 
 .root[data-clickable]:focus-visible {
-  outline: 2px solid var(--ark-blue-a8);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: 2px;
 }
 

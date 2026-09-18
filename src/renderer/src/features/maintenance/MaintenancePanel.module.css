@@ -53,7 +53,7 @@
 }
 
 .slabHeaderToggle:focus-visible {
-  outline: 2px solid var(--ark-blue-9);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: 2px;
 }
 
@@ -105,7 +105,7 @@
   padding: 6px 12px;
   border-radius: 5px;
   border: 1px solid var(--app-color-border);
-  background: var(--app-color-control, #303030);
+  background: var(--app-color-surface-control);
   color: inherit;
   text-align: left;
   cursor: pointer;
@@ -117,13 +117,13 @@
 }
 
 .presetChip:focus-visible {
-  outline: 2px solid var(--ark-blue-9);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: 2px;
 }
 
 .presetChipActive {
-  border-color: var(--ark-blue-9);
-  background: color-mix(in srgb, var(--ark-blue-9) 22%, var(--app-color-panel));
+  border-color: var(--app-color-accent);
+  background: color-mix(in srgb, var(--app-color-accent) 22%, var(--app-color-panel));
 }
 
 .presetTitle {
@@ -134,7 +134,7 @@
 }
 
 .presetChipActive .presetTitle {
-  color: var(--ark-blue-11);
+  color: var(--app-color-accent-text);
 }
 
 .sendsAtBlock {
@@ -158,7 +158,7 @@
   padding: 0 8px;
   border-radius: 5px;
   border: 1px solid var(--app-color-border);
-  background: var(--app-color-control, #303030);
+  background: var(--app-color-surface-control);
   color: var(--app-color-muted);
   font-size: 11px;
   font-weight: 600;
@@ -171,13 +171,13 @@
 }
 
 .offsetChipOn {
-  border-color: var(--ark-blue-9);
-  background: color-mix(in srgb, var(--ark-blue-9) 28%, var(--app-color-panel));
-  color: var(--ark-blue-11);
+  border-color: var(--app-color-accent);
+  background: color-mix(in srgb, var(--app-color-accent) 28%, var(--app-color-panel));
+  color: var(--app-color-accent-text);
 }
 
 .offsetChip:focus-visible {
-  outline: 2px solid var(--ark-blue-9);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: 2px;
 }
 
@@ -188,7 +188,7 @@
 .preview {
   margin: 0;
   padding-left: 8px;
-  border-left: 2px solid var(--ark-blue-9);
+  border-left: 2px solid var(--app-color-accent);
 }
 
 .nestedRow {
@@ -198,5 +198,5 @@
   gap: var(--app-space-sm);
   padding: 8px 10px;
   border: 1px solid var(--app-color-border);
-  background: var(--app-color-chrome, #121213);
+  background: var(--app-color-surface-chrome);
 }

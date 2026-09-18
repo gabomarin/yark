@@ -39,8 +39,8 @@
 }
 
 .volumeCard {
-  border-radius: var(--app-radius-sm);
-  background: color-mix(in srgb, var(--app-color-panel) 50%, transparent);
+  border-radius: 0;
+  background: var(--app-color-panel);
 }
 
 .statWarning {
@@ -89,9 +89,9 @@
 
 .kindSettings {
   padding: var(--app-space-xs) var(--app-space-xs);
-  border-radius: var(--app-radius-sm);
-  border: 1px solid color-mix(in srgb, var(--app-color-border) 55%, transparent);
-  background: color-mix(in srgb, var(--app-color-panel) 42%, transparent);
+  border-radius: 0;
+  border: 1px solid var(--app-color-border-subtle);
+  background: var(--app-color-panel);
 }
 
 .kindSettings :global(.mantine-InputWrapper-root) {
@@ -222,9 +222,9 @@
   align-items: center;
   justify-content: center;
   padding: var(--app-space-md) var(--app-space-sm);
-  border-radius: var(--app-radius-sm);
-  border: 1px dashed color-mix(in srgb, var(--app-color-border) 70%, transparent);
-  background: color-mix(in srgb, var(--app-color-panel) 35%, transparent);
+  border-radius: 0;
+  border: 1px dashed var(--app-color-border);
+  background: var(--app-color-panel);
 }
 
 .historyTable {

@@ -96,12 +96,12 @@
 }
 
 .profileCard[data-selected][data-accent="blue"] .profileCardIcon:global(.mantine-ThemeIcon-root) {
-  background: color-mix(in srgb, var(--ark-blue-9) 28%, transparent);
-  color: var(--ark-blue-11);
+  background: color-mix(in srgb, var(--app-color-accent) 28%, transparent);
+  color: var(--app-color-accent-text);
 }
 
 .profileCard[data-selected][data-accent="blue"] .profileCardGlyph {
-  color: var(--ark-blue-11);
+  color: var(--app-color-accent-text);
 }
 
 .profileCard[data-selected][data-accent="fossil"] .profileCardIcon:global(.mantine-ThemeIcon-root) {
@@ -115,11 +115,11 @@
 
 .profileCard[data-selected][data-accent="danger"] .profileCardIcon:global(.mantine-ThemeIcon-root) {
   background: color-mix(in srgb, var(--app-color-bad) 28%, transparent);
-  color: var(--app-color-bad);
+  color: var(--app-color-danger-bright);
 }
 
 .profileCard[data-selected][data-accent="danger"] .profileCardGlyph {
-  color: var(--app-color-bad);
+  color: var(--app-color-danger-bright);
 }
 
 .profileCard:hover {
@@ -137,7 +137,7 @@
 }
 
 .profileCard:focus-visible {
-  outline: 2px solid var(--ark-blue-a8);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: 2px;
 }
 

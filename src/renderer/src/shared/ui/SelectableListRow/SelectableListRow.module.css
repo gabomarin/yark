@@ -53,13 +53,13 @@
   height: 16px;
   transform: translateY(-50%);
   border-radius: 999px;
-  background: var(--ark-blue-9);
+  background: var(--app-color-accent);
   content: "";
   pointer-events: none;
 }
 
 .row:focus-visible {
-  outline: 2px solid var(--ark-blue-a8);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: 2px;
 }
 

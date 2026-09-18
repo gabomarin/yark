@@ -78,7 +78,7 @@
   border-radius: var(--app-radius-md);
   overflow: auto;
   /* ~90% deep blue, soft black deepen — see design-system INI exception */
-  background: color-mix(in srgb, var(--app-color-ini-category) 90%, #000);
+  background: color-mix(in srgb, var(--app-color-ini-category) 90%, var(--ark-gray-1));
 }
 
 .tableHead,

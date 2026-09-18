@@ -146,6 +146,8 @@
   overflow: visible !important;
   border: none !important;
   border-radius: 0 !important;
+  /* Transparent: `.tableViewport` owns the surface here. */
+  --mantine-datatable-background-color: transparent;
   background: transparent;
   box-shadow: none !important;
 }
@@ -165,7 +167,8 @@
 .modsTable :global(.mantine-datatable-header),
 .modsTable :global(.mantine-Table-th) {
   border-radius: 0 !important;
-  /* Solid header — YarkDataTable default uses a translucent mix that shows through. */
+  /* Solid header - YarkDataTable default is solid too, but keep this explicit
+     for the sticky thead which paints over scrolled rows. */
   background: var(--app-color-surface-control) !important;
   opacity: 1;
 }
@@ -190,7 +193,7 @@
 }
 
 .clickableRow:focus-visible {
-  outline: 2px solid var(--app-color-primary);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: -2px;
 }
 
@@ -462,7 +465,7 @@
 }
 
 .detailDrawerCarouselSlideBtn:focus-visible {
-  outline: 2px solid var(--mantine-primary-color-filled);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: 2px;
 }
 

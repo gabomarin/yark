@@ -31,11 +31,11 @@ export function BackupVolumeStrip(props: Props): ReactElement {
               (disk.freeBytes != null &&
                 disk.freeBytes < props.diskSettings.warnFreeBytes));
           return (
-            <AppSurfaceCard
-              key={disk.volumePath}
-              tone="flat"
-              padding="sm"
-              radius="md"
+          <AppSurfaceCard
+            key={disk.volumePath}
+            tone="flat"
+            padding="sm"
+            radius={0}
               className={[
                 classes.volumeCard,
                 critical ? classes.statDanger : "",

@@ -66,7 +66,7 @@
 }
 
 .card:focus-visible {
-  outline: 2px solid var(--ark-blue-a8);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: -2px;
 }
 
@@ -163,7 +163,7 @@
 
 .identityOpen:focus-visible,
 .metaOpen:focus-visible {
-  outline: 2px solid var(--ark-blue-a8);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: 2px;
 }
 
@@ -337,7 +337,7 @@
 }
 
 .progressCta:focus-visible {
-  outline: 2px solid var(--ark-blue-a8);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: 2px;
   border-radius: var(--app-radius-sm);
 }
@@ -349,7 +349,7 @@
   padding-bottom: calc(var(--app-space-xs) + 2px);
   overflow: visible;
   border-radius: var(--app-radius-sm);
-  border: 1px solid var(--ark-blue-a4);
+  border: 1px solid var(--app-color-accent-subtle-hover);
   background: var(--ark-blue-a2);
 }
 
