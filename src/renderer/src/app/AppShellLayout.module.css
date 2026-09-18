@@ -63,7 +63,7 @@
   background-color: transparent;
   --app-shell-border-color: color-mix(in srgb, var(--app-color-border) 35%, transparent);
   border-right: 1px solid color-mix(in srgb, var(--app-color-border) 28%, transparent);
-  transition: width 180ms ease;
+  transition: width var(--app-motion-base) var(--app-ease-standard);
 }
 
 .sidebarEdgeToggle {

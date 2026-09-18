@@ -4,8 +4,8 @@
   background: color-mix(in srgb, var(--app-color-surface-chrome) 72%, transparent);
   padding: 14px 16px;
   transition:
-    border-color 120ms ease,
-    background-color 120ms ease;
+    border-color var(--app-motion-fast) var(--app-ease-standard),
+    background-color var(--app-motion-fast) var(--app-ease-standard);
 }
 
 .root[data-active] {

@@ -446,7 +446,7 @@
 .detailDrawerCarouselIndicator {
   width: 0.375rem;
   height: 0.375rem;
-  transition: width 120ms ease;
+  transition: width var(--app-motion-fast) var(--app-ease-standard);
 }
 
 .detailDrawerCarouselIndicator[data-active] {

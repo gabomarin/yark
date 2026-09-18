@@ -16,9 +16,9 @@
   border: 1px solid var(--app-color-border);
   background: color-mix(in srgb, var(--app-color-surface-control) 88%, transparent);
   transition:
-    border-color 120ms ease,
-    background-color 120ms ease,
-    box-shadow 120ms ease;
+    border-color var(--app-motion-fast) var(--app-ease-standard),
+    background-color var(--app-motion-fast) var(--app-ease-standard),
+    box-shadow var(--app-motion-fast) var(--app-ease-standard);
 }
 
 .card:hover {

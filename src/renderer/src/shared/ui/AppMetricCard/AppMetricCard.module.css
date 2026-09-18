@@ -13,9 +13,9 @@
   color: inherit;
   text-align: left;
   transition:
-    border-color 120ms ease,
-    background 120ms ease,
-    box-shadow 120ms ease;
+    border-color var(--app-motion-fast) var(--app-ease-standard),
+    background var(--app-motion-fast) var(--app-ease-standard),
+    box-shadow var(--app-motion-fast) var(--app-ease-standard);
 }
 
 .root[data-tone="warning"] {

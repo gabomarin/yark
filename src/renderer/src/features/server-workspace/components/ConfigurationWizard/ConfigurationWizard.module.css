@@ -61,10 +61,10 @@
   text-align: left;
   background: var(--app-color-surface-chrome);
   transition:
-    border-color 140ms ease,
-    background-color 140ms ease,
-    box-shadow 140ms ease,
-    opacity 140ms ease;
+    border-color var(--app-motion-fast) var(--app-ease-standard),
+    background-color var(--app-motion-fast) var(--app-ease-standard),
+    box-shadow var(--app-motion-fast) var(--app-ease-standard),
+    opacity var(--app-motion-fast) var(--app-ease-standard);
 }
 
 .profileCardIcon {
@@ -72,14 +72,14 @@
   align-self: center;
   margin-inline-start: 2px;
   transition:
-    background-color 140ms ease,
-    color 140ms ease,
-    border-color 140ms ease;
+    background-color var(--app-motion-fast) var(--app-ease-standard),
+    color var(--app-motion-fast) var(--app-ease-standard),
+    border-color var(--app-motion-fast) var(--app-ease-standard);
 }
 
 .profileCardGlyph {
   color: var(--app-color-muted);
-  transition: color 140ms ease;
+  transition: color var(--app-motion-fast) var(--app-ease-standard);
 }
 
 .profileCard[data-selected] .profileCardIcon:global(.mantine-ThemeIcon-root) {

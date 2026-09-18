@@ -93,6 +93,16 @@ function createAppCssVariablesResolver(
       "--app-space-md": `${tokens.spacing.md}px`,
       "--app-space-lg": `${tokens.spacing.lg}px`,
       "--app-space-xl": `${tokens.spacing.xl}px`,
+      /*
+       * Fluent 2 motion (#PUX-004): use these instead of ad-hoc durations and
+       * `ease`. `fast` for hover/press feedback, `base` for reveals, `slow` for
+       * layout changes. Ease is the Fluent standard curve.
+       */
+      "--app-motion-fast": "150ms",
+      "--app-motion-base": "200ms",
+      "--app-motion-slow": "300ms",
+      "--app-ease-standard": "cubic-bezier(0.33, 0, 0.67, 1)",
+      "--app-ease-decelerate": "cubic-bezier(0.1, 0.9, 0.2, 1)",
       "--app-form-description-size": `${tokens.formDescription}px`,
       "--app-form-label-size": `${tokens.formLabel}px`,
       "--app-font-page": `${tokens.pageTitle}px`,

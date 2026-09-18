@@ -87,9 +87,9 @@
   font-size: var(--mantine-font-size-xs);
   font-weight: 650;
   transition:
-    background 120ms ease,
-    border-color 120ms ease,
-    color 120ms ease;
+    background var(--app-motion-fast) var(--app-ease-standard),
+    border-color var(--app-motion-fast) var(--app-ease-standard),
+    color var(--app-motion-fast) var(--app-ease-standard);
 }
 
 .root[data-density="compact"] .filter,
@@ -202,8 +202,8 @@
   background: transparent;
   color: inherit;
   transition:
-    background 120ms ease,
-    border-color 120ms ease;
+    background var(--app-motion-fast) var(--app-ease-standard),
+    border-color var(--app-motion-fast) var(--app-ease-standard);
 }
 
 .root[data-density="compact"] .row,

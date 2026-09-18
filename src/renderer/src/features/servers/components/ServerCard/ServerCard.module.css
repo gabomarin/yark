@@ -11,8 +11,8 @@
   container-type: inline-size;
   container-name: server-card;
   transition:
-    border-color 140ms ease,
-    background-color 140ms ease;
+    border-color var(--app-motion-fast) var(--app-ease-standard),
+    background-color var(--app-motion-fast) var(--app-ease-standard);
 }
 
 .card[data-ui-density="compact"] {

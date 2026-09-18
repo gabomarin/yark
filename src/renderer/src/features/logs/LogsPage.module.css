@@ -311,8 +311,8 @@
   cursor: pointer;
   overflow: hidden;
   transition:
-    border-color 140ms ease,
-    background-color 140ms ease;
+    border-color var(--app-motion-fast) var(--app-ease-standard),
+    background-color var(--app-motion-fast) var(--app-ease-standard);
 }
 
 .updateRow:hover {

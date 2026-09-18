@@ -199,8 +199,8 @@
 .sourceCard {
   min-width: 0;
   transition:
-    border-color 120ms ease,
-    background-color 120ms ease;
+    border-color var(--app-motion-fast) var(--app-ease-standard),
+    background-color var(--app-motion-fast) var(--app-ease-standard);
 }
 
 .sourceCard[data-selected] {

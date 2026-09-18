@@ -83,7 +83,7 @@
 
 .chevron {
   display: inline-block;
-  transition: transform 120ms ease;
+  transition: transform var(--app-motion-fast) var(--app-ease-standard);
   color: var(--app-color-muted);
 }
 

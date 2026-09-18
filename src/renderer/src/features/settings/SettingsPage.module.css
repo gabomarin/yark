@@ -304,7 +304,7 @@
 .discordEventRow {
   padding: var(--app-space-sm) var(--app-space-md);
   border-bottom: 1px solid var(--app-color-border-subtle);
-  transition: background-color 120ms ease;
+  transition: background-color var(--app-motion-fast) var(--app-ease-standard);
 }
 
 .discordEventRow:last-child {
