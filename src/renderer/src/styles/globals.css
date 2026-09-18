@@ -102,3 +102,8 @@ body {
   color: var(--app-color-text);
   background: color-mix(in srgb, var(--app-color-cryo) 32%, transparent);
 }
+
+/* Fluent 2 is square: toasts use the same square surface grammar as the panels. */
+.mantine-Notification-root {
+  border-radius: 0;
+}

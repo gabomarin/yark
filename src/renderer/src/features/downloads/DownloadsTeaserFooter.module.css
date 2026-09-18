@@ -6,9 +6,9 @@
   justify-content: center;
   min-height: 44px;
   padding: 8px 16px;
-  border-top: 1px solid color-mix(in srgb, var(--app-color-border) 55%, transparent);
+  border-top: 1px solid var(--app-color-border-subtle);
   border-radius: 0;
-  background: color-mix(in srgb, var(--app-color-bg) 94%, var(--ark-gray-2));
+  background: var(--app-color-surface-control);
   overflow-x: auto;
 }
 
