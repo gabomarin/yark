@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { useCallback, useMemo, useState } from "react";
-import { Alert, Modal, Stack, Stepper, Text } from "@mantine/core";
+import { Alert, Stack, Stepper, Text } from "@mantine/core";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import type { ConfigTransferSelection } from "@shared/ini/config-transfer";
 import { emptyConfigTransferSelection } from "@shared/ini/config-transfer";
 import type {
@@ -227,7 +228,7 @@ export function CopyConfigurationWizard(props: Props): ReactElement {
     !committing;
 
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={() => {
         if (!committing) props.onClose();
@@ -237,12 +238,6 @@ export function CopyConfigurationWizard(props: Props): ReactElement {
       title="Copy configuration"
       size="xl"
       data-copy-configuration-wizard
-      styles={{
-        body: {
-          maxHeight: "min(78vh, 820px)",
-          overflowY: "auto",
-        },
-      }}
     >
       <Stack gap="md">
         <Text size="sm" c="dimmed">
@@ -326,6 +321,6 @@ export function CopyConfigurationWizard(props: Props): ReactElement {
           />
         )}
       </Stack>
-    </Modal>
+    </AppPanelModal>
   );
 }

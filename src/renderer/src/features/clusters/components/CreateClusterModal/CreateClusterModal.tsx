@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { useMemo, useState } from "react";
-import { Alert, Button, Group, Modal, Stack, Stepper, Text } from "@mantine/core";
+import { Alert, Button, Stack, Stepper, Text } from "@mantine/core";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import {
   buildCreateClusterInput,
@@ -183,17 +184,50 @@ export function CreateClusterModal(props: Props): ReactElement {
   };
 
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={() => {
         if (!saving) props.onClose();
       }}
       title="Create cluster"
       size="lg"
-      centered
       closeOnClickOutside={!saving}
       closeOnEscape={!saving}
       withCloseButton={!saving}
+      footerAlign="between"
+      footer={
+        <>
+          <Button
+            variant="default"
+            disabled={saving}
+            onClick={() => {
+              if (step === 1) {
+                props.onClose();
+                return;
+              }
+              setStep((current) => (current - 1) as CreateClusterStep);
+            }}
+          >
+            {step === 1 ? "Cancel" : "Back"}
+          </Button>
+          {step < 3 ? (
+            <Button
+              disabled={step === 1 ? !canContinueStep1 : !canContinueStep2}
+              onClick={goNext}
+            >
+              Continue
+            </Button>
+          ) : (
+            <Button
+              loading={saving}
+              disabled={!identityValid || selected.length === 0 || portError !== null}
+              onClick={() => void handleCreate()}
+            >
+              Create cluster
+            </Button>
+          )}
+        </>
+      }
     >
       <Stack gap="md">
         <Text size="sm" c="dimmed">
@@ -269,38 +303,7 @@ export function CreateClusterModal(props: Props): ReactElement {
           />
         )}
 
-        <Group justify="space-between">
-          <Button
-            variant="default"
-            disabled={saving}
-            onClick={() => {
-              if (step === 1) {
-                props.onClose();
-                return;
-              }
-              setStep((current) => (current - 1) as CreateClusterStep);
-            }}
-          >
-            {step === 1 ? "Cancel" : "Back"}
-          </Button>
-          {step < 3 ? (
-            <Button
-              disabled={step === 1 ? !canContinueStep1 : !canContinueStep2}
-              onClick={goNext}
-            >
-              Continue
-            </Button>
-          ) : (
-            <Button
-              loading={saving}
-              disabled={!identityValid || selected.length === 0 || portError !== null}
-              onClick={() => void handleCreate()}
-            >
-              Create cluster
-            </Button>
-          )}
-        </Group>
       </Stack>
-    </Modal>
+    </AppPanelModal>
   );
 }

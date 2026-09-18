@@ -5,11 +5,11 @@ import {
   Button,
   Checkbox,
   Group,
-  Modal,
   Stack,
   Stepper,
   Text,
 } from "@mantine/core";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import {
   clusterIniFileSelectionHasWork,
 } from "@shared/ini/cluster-ini-file-selection";
@@ -168,17 +168,48 @@ export function AddServersModal(props: Props): ReactElement {
   };
 
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={() => {
         if (!saving) props.onClose();
       }}
       title={`Add servers to ${props.clusterId}`}
       size="lg"
-      centered
       closeOnClickOutside={!saving}
       closeOnEscape={!saving}
       withCloseButton={!saving}
+      footerAlign="between"
+      footer={
+        <>
+          <Group justify="space-between">
+          <Button
+          variant="default"
+          disabled={saving}
+          onClick={() => {
+          if (step === 1) {
+          props.onClose();
+          return;
+          }
+          setStep(1);
+          }}
+          >
+          {step === 1 ? "Cancel" : "Back"}
+          </Button>
+          {step === 1 ? (
+          <Button disabled={!canContinue} onClick={() => setStep(2)}>
+          Continue
+          </Button>
+          ) : (
+          <Button
+          loading={saving}
+          disabled={!canAdd}
+          onClick={() => void handleAdd()}
+          >
+          Add to cluster
+          </Button>
+          )}
+          </Group>        </>
+      }
     >
       <Stack gap="md">
         <Text size="sm" c="dimmed">
@@ -303,35 +334,7 @@ export function AddServersModal(props: Props): ReactElement {
           </Stack>
         )}
 
-        <Group justify="space-between">
-          <Button
-            variant="default"
-            disabled={saving}
-            onClick={() => {
-              if (step === 1) {
-                props.onClose();
-                return;
-              }
-              setStep(1);
-            }}
-          >
-            {step === 1 ? "Cancel" : "Back"}
-          </Button>
-          {step === 1 ? (
-            <Button disabled={!canContinue} onClick={() => setStep(2)}>
-              Continue
-            </Button>
-          ) : (
-            <Button
-              loading={saving}
-              disabled={!canAdd}
-              onClick={() => void handleAdd()}
-            >
-              Add to cluster
-            </Button>
-          )}
-        </Group>
       </Stack>
-    </Modal>
+    </AppPanelModal>
   );
 }

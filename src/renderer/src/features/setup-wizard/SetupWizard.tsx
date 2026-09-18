@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { Button, Group, Modal, Stack, Stepper, Text } from "@mantine/core";
+import { Button, Group, Stack, Stepper, Text } from "@mantine/core";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import type { ServerProfile, SteamCmdStatus } from "@shared/types";
 import type { UiDensity } from "@features/settings/settingsModel";
@@ -162,7 +163,7 @@ export function SetupWizard(props: Props): ReactElement {
   };
 
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={handleDismiss}
       title={
@@ -171,11 +172,26 @@ export function SetupWizard(props: Props): ReactElement {
           : "Setup assistant – paths and Windows"
       }
       size="lg"
-      centered
       closeOnClickOutside={false}
       closeOnEscape={false}
       withCloseButton={!props.busy}
-      overlayProps={{ mod: { "setup-wizard-overlay": true } }}
+      footerAlign="between"
+      footer={
+        <>
+          <Button
+            variant="default"
+            disabled={props.busy || stepIndex === 0}
+            onClick={() => setStepIndex((index) => Math.max(index - 1, 0))}
+          >
+            Back
+          </Button>
+          {current !== "action" && (
+            <Button disabled={props.busy || !canContinue} onClick={goNext}>
+              {isLast && props.mode === "paths-shell" ? "Finish" : "Continue"}
+            </Button>
+          )}
+        </>
+      }
     >
       <Stack gap="md" data-setup-wizard data-setup-wizard-step={current}>
         <Group justify="flex-end">
@@ -282,21 +298,7 @@ export function SetupWizard(props: Props): ReactElement {
           />
         )}
 
-        <Group justify="space-between">
-          <Button
-            variant="default"
-            disabled={props.busy || stepIndex === 0}
-            onClick={() => setStepIndex((index) => Math.max(index - 1, 0))}
-          >
-            Back
-          </Button>
-          {current !== "action" && (
-            <Button disabled={props.busy || !canContinue} onClick={goNext}>
-              {isLast && props.mode === "paths-shell" ? "Finish" : "Continue"}
-            </Button>
-          )}
-        </Group>
       </Stack>
-    </Modal>
+    </AppPanelModal>
   );
 }

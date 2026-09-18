@@ -49,12 +49,17 @@
   overflow: hidden;
 }
 
+/* Only the content scrolls: header and footer stay pinned. */
 .bodyContent {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
   padding: var(--app-space-lg);
 }
 
 .footer {
   display: flex;
+  flex-shrink: 0;
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: var(--app-space-sm);

@@ -161,7 +161,7 @@ describe("SetupWizard", () => {
       </AppProviders>,
     );
 
-    const overlay = document.querySelector("[data-setup-wizard-overlay]");
+    const overlay = document.querySelector("[data-app-modal-overlay]");
     expect(overlay).toBeTruthy();
     await user.click(overlay!);
     expect(onSkip).not.toHaveBeenCalled();

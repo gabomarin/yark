@@ -32,6 +32,8 @@ interface Props {
   closeOnEscape?: boolean;
   /** Appended to the content class (e.g. a full-height dialog). */
   contentClassName?: string;
+  /** Extra data-* hooks forwarded to the dialog content. */
+  [key: `data-${string}`]: unknown;
   children: ReactNode;
 }
 
@@ -41,52 +43,71 @@ interface Props {
  * dialogs stop inventing their own chrome — see #PUX-004.
  */
 export function AppPanelModal(props: Props): ReactElement {
+  const {
+    opened,
+    onClose,
+    title,
+    meta,
+    size: sizeProp,
+    footer,
+    footerAlign,
+    centered,
+    overlayOpacity,
+    withCloseButton,
+    closeOnClickOutside,
+    closeOnEscape,
+    contentClassName,
+    children,
+    ...dataAttributes
+  } = props;
   const size =
-    typeof props.size === "string" && props.size in SIZE_PX
-      ? SIZE_PX[props.size as AppModalSize]
-      : (props.size ?? SIZE_PX.lg);
+    typeof sizeProp === "string" && sizeProp in SIZE_PX
+      ? SIZE_PX[sizeProp as AppModalSize]
+      : (sizeProp ?? SIZE_PX.lg);
 
   return (
     <Modal.Root
-      opened={props.opened}
-      onClose={props.onClose}
-      centered={props.centered ?? true}
+      opened={opened}
+      onClose={onClose}
+      centered={centered ?? true}
       size={size}
       radius="md"
-      closeOnClickOutside={props.closeOnClickOutside ?? true}
-      closeOnEscape={props.closeOnEscape ?? true}
+      closeOnClickOutside={closeOnClickOutside ?? true}
+      closeOnEscape={closeOnEscape ?? true}
       classNames={{
-        content: [classes.content, props.contentClassName].filter(Boolean).join(" "),
+        content: [classes.content, contentClassName].filter(Boolean).join(" "),
         header: classes.header,
         body: classes.body,
         title: classes.title,
       }}
     >
-      <Modal.Overlay backgroundOpacity={props.overlayOpacity ?? 0.5} color="#000" />
-      <Modal.Content radius="md">
+      <Modal.Overlay
+        backgroundOpacity={overlayOpacity ?? 0.5}
+        color="#000"
+        data-app-modal-overlay
+      />
+      <Modal.Content radius="md" {...dataAttributes}>
         <Modal.Header>
           <div className={classes.headerTop}>
             <div>
-              <Modal.Title>{props.title}</Modal.Title>
-              {props.meta !== undefined && props.meta.length > 0 ? (
+              <Modal.Title>{title}</Modal.Title>
+              {meta !== undefined && meta.length > 0 ? (
                 <Text size="xs" className={classes.meta}>
-                  {props.meta}
+                  {meta}
                 </Text>
               ) : null}
             </div>
-            {props.withCloseButton === false ? null : (
-              <Modal.CloseButton aria-label="Close" />
+            {withCloseButton === false ? null : (
+              /* Not "Close": several dialogs have their own "Close" action button. */
+              <Modal.CloseButton aria-label="Close dialog" />
             )}
           </div>
         </Modal.Header>
         <Modal.Body>
-          <div className={classes.bodyContent}>{props.children}</div>
-          {props.footer !== undefined && (
-            <div
-              className={classes.footer}
-              data-align={props.footerAlign ?? "end"}
-            >
-              {props.footer}
+          <div className={classes.bodyContent}>{children}</div>
+          {footer !== undefined && (
+            <div className={classes.footer} data-align={footerAlign ?? "end"}>
+              {footer}
             </div>
           )}
         </Modal.Body>

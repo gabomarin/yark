@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { useCallback, useMemo, useState } from "react";
-import { Alert, Button, Group, Modal, Stack, Stepper } from "@mantine/core";
+import { Alert, Button, Group, Stack, Stepper } from "@mantine/core";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import {
   getServerFolderNameError,
   isValidServerFolderName,
@@ -228,15 +229,51 @@ export function ImportInstallWizard(props: Props): ReactElement {
   };
 
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={props.onClose}
       title="Import install"
       size="lg"
-      centered
       closeOnClickOutside={!saving && !probing}
       closeOnEscape={!saving && !probing}
       withCloseButton={!saving && !probing}
+      footerAlign="between"
+      footer={
+        <>
+          <Button
+            variant="subtle"
+            color="gray"
+            disabled={saving || probing}
+            onClick={() => {
+              if (step === 1) {
+                props.onClose();
+                return;
+              }
+              setStep((step - 1) as ImportInstallStep);
+              setError(null);
+            }}
+          >
+            {step === 1 ? "Cancel" : "Back"}
+          </Button>
+          <Group gap="xs">
+            {step === 1 && (
+              <Button
+                loading={probing}
+                disabled={!canContinueStep1 || browsing}
+                onClick={() => void handleContinueFromStep1()}
+              >
+                Continue
+              </Button>
+            )}
+            {step === 2 && <Button onClick={() => setStep(3)}>Continue</Button>}
+            {step === 3 && (
+              <Button loading={saving} onClick={() => void handleImport()}>
+                Import profile
+              </Button>
+            )}
+          </Group>
+        </>
+      }
     >
       <Stack gap="md">
         <Stepper active={step - 1} allowNextStepsSelect={false} size="sm">
@@ -301,43 +338,7 @@ export function ImportInstallWizard(props: Props): ReactElement {
           />
         )}
 
-        <Group justify="space-between">
-          <Button
-            variant="subtle"
-            color="gray"
-            disabled={saving || probing}
-            onClick={() => {
-              if (step === 1) {
-                props.onClose();
-                return;
-              }
-              setStep((step - 1) as ImportInstallStep);
-              setError(null);
-            }}
-          >
-            {step === 1 ? "Cancel" : "Back"}
-          </Button>
-          <Group gap="xs">
-            {step === 1 && (
-              <Button
-                loading={probing}
-                disabled={!canContinueStep1 || browsing}
-                onClick={() => void handleContinueFromStep1()}
-              >
-                Continue
-              </Button>
-            )}
-            {step === 2 && (
-              <Button onClick={() => setStep(3)}>Continue</Button>
-            )}
-            {step === 3 && (
-              <Button loading={saving} onClick={() => void handleImport()}>
-                Import profile
-              </Button>
-            )}
-          </Group>
-        </Group>
       </Stack>
-    </Modal>
+    </AppPanelModal>
   );
 }
