@@ -225,6 +225,15 @@ jobs:
 
           echo "LLM provider preflight succeeded for model $LLM_MODEL"
 
+      - name: Prepare OpenCodeReview CLI path
+        shell: bash
+        run: |
+          ocr_npm_prefix="${RUNNER_TEMP}/ocr-npm-global"
+          npm config set prefix "$ocr_npm_prefix"
+          echo "NPM_CONFIG_PREFIX=$ocr_npm_prefix" >> "$GITHUB_ENV"
+          echo "$ocr_npm_prefix/bin" >> "$GITHUB_PATH"
+          echo "OpenCodeReview npm prefix: $(npm prefix -g)"
+
       - name: Run OpenCodeReview
         id: ocr-review
         uses: alibaba/open-code-review@f1101fd7f51304c82e4a4f292bbee88aea0823cf # v1.12.4
