@@ -12,6 +12,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Added
 
 - On-demand OpenCodeReview GitHub Action supports `/open-code-review` commands and manual primary/fallback provider selection without reviewing every PR push.
+- OpenCodeReview now preflights the selected LLM provider and reports configuration errors before starting a review.
 - Manual restart warnings can use compact Quiet, Standard, or Frequent player-notification presets before the graceful restart (#573).
 - Optional per-server **crash recovery**: after a real unexpected exit, YARK can restart the dedicated automatically within a bounded attempt budget — configurable max attempts, linear backoff, and a stability window that resets the budget. Default off; intentional stops, disabled profiles, active Maintenance windows, held locks, and exhausted budgets never restart. Attempt/pause state persists across relaunch, the Maintenance tab shows attempt N of M, paused, exhausted, and the last failure reason, and the server card shows a live auto-restart countdown when a retry is scheduled (#563).
 - Experimental, default-off **Hosted Resources** now supports operator notes and normalized tags for quickly identifying resources, with clearer ASA dynamic-config examples and a guided “next step” for connecting a copied URL to a server setting (#564).
