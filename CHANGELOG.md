@@ -15,6 +15,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - OpenCodeReview now preflights the selected LLM provider and reports configuration errors before starting a review.
 - OpenCodeReview requests now include OpenCode Go session routing metadata for reliable provider handling.
 - OpenCodeReview no longer passes its reserved `User-Agent` header through custom provider headers.
+- OpenCodeReview summaries now include the result, finding counts, review range, and provider metadata.
+- OpenCodeReview now acknowledges slash-command requests and selects low/medium effort from PR size, with explicit high-effort reviews available on demand.
 - OpenCodeReview now uses a runner-local npm prefix so the installed CLI is available to the action on hosted runners.
 - Manual restart warnings can use compact Quiet, Standard, or Frequent player-notification presets before the graceful restart (#573).
 - Optional per-server **crash recovery**: after a real unexpected exit, YARK can restart the dedicated automatically within a bounded attempt budget — configurable max attempts, linear backoff, and a stability window that resets the budget. Default off; intentional stops, disabled profiles, active Maintenance windows, held locks, and exhausted budgets never restart. Attempt/pause state persists across relaunch, the Maintenance tab shows attempt N of M, paused, exhausted, and the last failure reason, and the server card shows a live auto-restart countdown when a retry is scheduled (#563).

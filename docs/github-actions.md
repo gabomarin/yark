@@ -15,6 +15,11 @@ human-readable version comment on the line above each `uses:` entry. Mutable tag
 | [`.github/workflows/pages.yml`](../.github/workflows/pages.yml) | Deploy site to Cloudflare Pages (`getyark`) | `contents: read` |
 | [`.github/workflows/release.yml`](../.github/workflows/release.yml) | Windows NSIS → GitHub Release; Discord `#releases` notify after assets upload | workflow `contents: read`; job elevates `contents: write` only to publish |
 | [`.github/workflows/open-code-review.yml`](../.github/workflows/open-code-review.yml) | On-demand AI review for a PR with primary/fallback model selection; no automatic run on pushes | `contents: read`, `pull-requests: write` |
+| [`.github/workflows/discord-release-notify.yml`](../.github/workflows/discord-release-notify.yml) | Manual Discord re-announce for an existing tag (`workflow_dispatch`) | `contents: read` |
+
+Release runs only when `github.repository == 'gabomarin/yark'` (tag push or
+`workflow_dispatch`). It does not run on pull requests, so fork PRs cannot publish
+releases or consume release write tokens.
 
 ### OpenCodeReview
 
@@ -40,6 +45,7 @@ Use these exact PR comments:
 - `/open-code-review primary` — review with the primary provider.
 - `/open-code-review retry` — force a full review with the primary provider.
 - `/open-code-review fallback` — review with the fallback provider.
+- `/open-code-review high` — force high-effort review with the primary provider.
 
 Repeated reviews use sticky summaries, incremental comments, and checkpoint ranges
 to avoid repeating already reviewed changes. The explicit `retry` command bypasses
@@ -54,14 +60,20 @@ prefix differences when the action invokes the installed `ocr` executable.
 The preflight reports the HTTP status and sanitized response body without printing
 the API key. OCR's default `thinking` body is explicitly overridden with `{}` for
 providers that reject that optional field. OpenCode Go requests also include a
-stable `x-opencode-session` value for the repository, PR, and head SHA, plus a
+stable `x-opencode-session` value for the repository and PR, plus a
 preflight-only `User-Agent` for efficient provider routing. OCR's reserved
 `User-Agent` header is left to the action's dedicated HTTP client.
-| [`.github/workflows/discord-release-notify.yml`](../.github/workflows/discord-release-notify.yml) | Manual Discord re-announce for an existing tag (`workflow_dispatch`) | `contents: read` |
 
-Release runs only when `github.repository == 'gabomarin/yark'` (tag push or
-`workflow_dispatch`). It does not run on pull requests, so fork PRs cannot publish
-releases or consume release write tokens.
+After a successful review, a follow-up step enriches the sticky OCR summary with
+the result, finding counts, reviewed range, and selected provider/model. Findings
+remain inline review comments; the extra summary is presentation metadata and
+does not replace those comments.
+
+Normal reviews automatically select `low` effort for PRs with up to 5 changed
+files and 120 changed lines; larger PRs use `medium`. High effort is never
+selected automatically and must be requested with `/open-code-review high` or
+the manual workflow's effort input. Effort is measured from the whole PR, so an
+incremental re-review of a small follow-up push on a large PR still uses `medium`.
 
 ### Discord release notify
 
