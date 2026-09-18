@@ -73,7 +73,7 @@ describe("ServerModDetailDrawer #342", () => {
     await user.click(
       screen.getByRole("button", { name: /screenshot 1, enlarge/i }),
     );
-    expect(screen.getByText(/screenshot 1 of 2/i)).toBeInTheDocument();
+    expect(await screen.findByText(/screenshot 1 of 2/i)).toBeInTheDocument();
   });
 
   it("hides screenshot chrome when the list is empty", () => {

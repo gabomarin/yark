@@ -1071,6 +1071,13 @@ describe("ServerWorkspacePage", () => {
       within(changesDialog).getByText("Enable single-player settings"),
     ).toBeInTheDocument();
     await user.keyboard("{Escape}");
+    // Escape closes the dialog, but Mantine keeps it mounted (and focus-trapped)
+    // until the exit transition ends; clicking Continue before that is swallowed.
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("dialog", { name: "Draft changes" }),
+      ).not.toBeInTheDocument(),
+    );
     await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("3× → 7.5×")).toBeVisible();
     expect(screen.getByText("Max wild level 150")).toBeVisible();

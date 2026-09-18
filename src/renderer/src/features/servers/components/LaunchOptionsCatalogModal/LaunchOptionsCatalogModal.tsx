@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
-import { Anchor, Modal } from "@mantine/core";
+import { Anchor } from "@mantine/core";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import { useUiDensity } from "@app/AppProviders";
 import { asaLaunchOptionsCatalog } from "@shared/asa/asa-launch-options-catalog";
 import { LaunchOptionsCatalogEntriesTab } from "./LaunchOptionsCatalogEntriesTab";
@@ -15,22 +16,13 @@ export function LaunchOptionsCatalogModal(props: Props): ReactElement {
   const inputSize: "xs" | "sm" = density === "compact" ? "xs" : "sm";
 
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={props.onClose}
       title="ASA launch-options catalog"
       size={1200}
-      classNames={{
-        content: classes.modalContent,
-        header: classes.modalHeader,
-        body: classes.modalBody,
-      }}
-      styles={{
-        content: {
-          height: "min(84vh, 820px)",
-          maxHeight: "min(84vh, 820px)",
-        },
-      }}
+      centered={false}
+      maxHeight="min(84vh, 820px)"
     >
       <div className={classes.root} data-density={density}>
         <header className={classes.header}>
@@ -56,6 +48,6 @@ export function LaunchOptionsCatalogModal(props: Props): ReactElement {
 
         <LaunchOptionsCatalogEntriesTab inputSize={inputSize} />
       </div>
-    </Modal>
+    </AppPanelModal>
   );
 }

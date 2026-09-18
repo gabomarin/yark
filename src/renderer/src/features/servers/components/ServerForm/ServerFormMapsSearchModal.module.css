@@ -1,21 +1,3 @@
-.modalContent {
-  display: flex !important;
-  flex-direction: column !important;
-  min-height: min(84vh, 850px) !important;
-  max-height: min(84vh, 850px) !important;
-  overflow: hidden !important;
-}
-
-.modalContentConfirm {
-  min-height: auto !important;
-  max-height: min(84vh, 850px) !important;
-  height: auto !important;
-}
-
-.modalHeader {
-  flex-shrink: 0;
-}
-
 .modalTitleRow {
   flex: 1;
   min-width: 0;
@@ -28,20 +10,6 @@
   font-size: var(--mantine-font-size-lg);
   font-weight: 650;
   line-height: 1.35;
-}
-
-.modalBody {
-  flex: 1 1 0 !important;
-  min-height: 0 !important;
-  overflow: hidden !important;
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-.modalBodyConfirm {
-  flex: 0 0 auto !important;
-  min-height: auto !important;
-  overflow: visible !important;
 }
 
 .modalStep {
@@ -72,7 +40,7 @@
   padding: var(--mantine-spacing-sm);
   border: 1px solid var(--app-color-border-subtle);
   border-radius: 0;
-  background: color-mix(in srgb, var(--app-color-panel) 88%, var(--app-color-surface-chrome));
+  background: var(--app-color-panel);
 }
 
 .confirmThumb {
@@ -142,14 +110,14 @@
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
-  border: 1px solid color-mix(in srgb, var(--app-color-border-subtle) 70%, var(--ark-gray-12));
-  background: color-mix(in srgb, var(--app-color-panel) 82%, #000);
+  border: 1px solid var(--app-color-border-subtle);
+  background: var(--app-color-panel);
   color: var(--app-color-text);
   box-shadow: 0 2px 8px rgb(0 0 0 / 35%);
 }
 
 .infoBtn:hover {
-  background: color-mix(in srgb, var(--app-color-accent) 28%, var(--app-color-panel));
+  background: var(--app-color-accent-subtle);
   color: var(--app-color-cryo);
 }
 
@@ -241,7 +209,7 @@
   border: 1px solid var(--app-color-border-subtle);
   border-left: none;
   border-radius: 0;
-  background: color-mix(in srgb, var(--app-color-surface-chrome) 55%, transparent);
+  background: var(--app-color-panel-raised);
 }
 
 .detailDescriptionScroll {

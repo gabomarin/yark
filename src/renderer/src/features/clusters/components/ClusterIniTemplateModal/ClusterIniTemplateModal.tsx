@@ -1,13 +1,6 @@
 import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
-import {
-  Alert,
-  Badge,
-  Group,
-  Modal,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Alert, Badge, Group, Text, Title } from "@mantine/core";
 import type {
   IniFileKey,
   IniPreview,
@@ -21,6 +14,7 @@ import {
   openDangerConfirmModal,
 } from "@ui/DangerConfirmModal/openDangerConfirmModal";
 import { openUnsavedLeaveModal } from "@features/server-workspace/openUnsavedLeaveModal";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import { IniEditorNav } from "@ui/IniEditorNav/IniEditorNav";
 import { ClusterIniTemplateVisualPanel } from "./ClusterIniTemplateVisualPanel";
 import { ClusterIniTemplateModalFooter } from "./ClusterIniTemplateModalFooter";
@@ -198,7 +192,7 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
   };
 
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={() => {
         if (!saving) requestClose();
@@ -226,34 +220,10 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
         </Group>
       }
       size="90%"
-      centered
       closeOnClickOutside={!saving && !dirty}
       closeOnEscape={!saving}
       withCloseButton={!saving}
-      classNames={{
-        content: classes.modalContent,
-        header: classes.modalHeader,
-        body: classes.modalBody,
-      }}
-      styles={{
-        content: {
-          display: "flex",
-          flexDirection: "column",
-          height: "min(92vh, 860px)",
-          maxHeight: "min(92vh, 860px)",
-          overflow: "hidden",
-        },
-        header: {
-          flexShrink: 0,
-        },
-        body: {
-          flex: "1 1 0",
-          minHeight: 0,
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-        },
-      }}
+      maxHeight="min(92vh, 860px)"
     >
       <div className={classes.shell} data-cluster-ini-shell>
         <div className={classes.top}>
@@ -318,6 +288,6 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
           onSave={() => void handleSave()}
         />
       </div>
-    </Modal>
+    </AppPanelModal>
   );
 }

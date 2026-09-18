@@ -5,11 +5,11 @@ import {
   Button,
   Group,
   Loader,
-  Modal,
   Pagination,
   Stack,
   Text,
 } from "@mantine/core";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import { ArrowLeft } from "@phosphor-icons/react";
 import type { ModCategory, ModMetadata, ModSearchPage } from "@shared/types";
 import { SearchField } from "@ui/SearchField/SearchField";
@@ -234,7 +234,7 @@ export function ServerFormMapsSearchModal(props: Props): ReactElement {
   };
 
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={props.onClose}
       closeOnEscape={false}
@@ -257,15 +257,6 @@ export function ServerFormMapsSearchModal(props: Props): ReactElement {
         </Group>
       }
       size={step === "confirm" ? 560 : 960}
-      centered
-      classNames={{
-        content:
-          step === "confirm"
-            ? `${classes.modalContent} ${classes.modalContentConfirm}`
-            : classes.modalContent,
-        header: classes.modalHeader,
-        body: step === "confirm" ? `${classes.modalBody} ${classes.modalBodyConfirm}` : classes.modalBody,
-      }}
     >
       {step === "search" ? (
         <div className={classes.modalStep}>
@@ -343,6 +334,6 @@ export function ServerFormMapsSearchModal(props: Props): ReactElement {
             onApply={apply}
           />
         ) : null}
-    </Modal>
+    </AppPanelModal>
   );
 }

@@ -37,6 +37,8 @@ interface Props {
   zIndex?: number;
   /** Appended to the content class (e.g. a full-height dialog). */
   contentClassName?: string;
+  /** Dialog cap; defaults to `min(720px, 90vh)`. Tall pickers pass `min(92vh, 860px)`. */
+  maxHeight?: string;
   /** Extra data-* hooks forwarded to the dialog content. */
   [key: `data-${string}`]: unknown;
   children: ReactNode;
@@ -64,6 +66,7 @@ export function AppPanelModal(props: Props): ReactElement {
     closeOnEscape,
     zIndex,
     contentClassName,
+    maxHeight,
     children,
     ...dataAttributes
   } = props;
@@ -94,7 +97,7 @@ export function AppPanelModal(props: Props): ReactElement {
         color="#000"
         data-app-modal-overlay
       />
-      <Modal.Content radius="md" {...dataAttributes}>
+      <Modal.Content radius="md" style={maxHeight === undefined ? undefined : { maxHeight }} {...dataAttributes}>
         <Modal.Header>
           <div className={classes.headerTop}>
             <div>

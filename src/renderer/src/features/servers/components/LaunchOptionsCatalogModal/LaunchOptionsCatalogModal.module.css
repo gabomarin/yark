@@ -12,28 +12,6 @@
   gap: var(--mantine-spacing-sm);
 }
 
-.modalContent {
-  display: flex !important;
-  flex-direction: column !important;
-  height: min(84vh, 820px) !important;
-  max-height: min(84vh, 820px) !important;
-  overflow: hidden !important;
-  background: var(--app-color-panel);
-}
-
-.modalHeader {
-  flex-shrink: 0;
-}
-
-.modalBody {
-  flex: 1 1 0 !important;
-  min-height: 0 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  overflow: hidden !important;
-  padding-top: var(--mantine-spacing-xs);
-}
-
 .header {
   display: flex;
   flex-wrap: wrap;
