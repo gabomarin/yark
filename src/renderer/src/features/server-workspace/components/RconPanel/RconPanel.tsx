@@ -150,7 +150,6 @@ export function RconPanel(props: Props): ReactElement {
                 <Button
                   key={item.label}
                   size="xs"
-                  radius="xl"
                   variant={item.danger ? "light" : "default"}
                   color={item.danger ? "red" : "gray"}
                   disabled={!isRunning}

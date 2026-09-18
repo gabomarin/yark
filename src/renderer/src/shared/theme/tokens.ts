@@ -93,11 +93,11 @@ const comfortableSpacing = {
 } as const;
 
 const comfortableRadius = {
-  sm: 6,
+  sm: 4,
   md: 8,
   lg: 10,
-  /** Inputs, list rows, search — same as `sm` so controls are not squircles. */
-  control: 6,
+  /** Inputs, list rows, search, chips - Fluent's 4px component radius. */
+  control: 4,
 } as const;
 
 /** Mantine default fontSizes; Compact scales these the same as spacing. */

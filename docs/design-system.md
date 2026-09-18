@@ -163,10 +163,16 @@ gap: var(--app-space-sm);            // preferred in CSS modules
 
 | Token | Comfortable (px) | Compact (px) | Use |
 | --- | ---: | ---: | --- |
-| `--app-radius-sm` | 6 | 5 | Default chrome, Badge, NavLink, Card/Paper/Alert |
-| `--app-radius-control` | 6 | 5 | Inputs, list rows, search (same step as `sm`) |
-| `--app-radius-md` | 8 | 7 | Content `AppSurfaceCard` default, nested panels |
+| `--app-radius-sm` | 4 | 3 | Default chrome: Button, Badge, NavLink, Card/Paper/Alert (Mantine `defaultRadius`) |
+| `--app-radius-control` | 4 | 3 | Inputs, list rows, search, chips — Fluent's 4px component radius |
+| `--app-radius-md` | 8 | 7 | Content `AppSurfaceCard` default, nested panels, dialog content |
 | `--app-radius-lg` | 10 | 8 | Rare oversized / hero cards |
+
+Fluent 2 gives most **components** 4px (button, field, badge, checkbox, card) and saves
+8px+ for surfaces above the base (flyout, dialog). So controls carry the 4px step and
+`radius="md"` on a Button/ActionIcon/Badge is the inconsistency to remove, not a style.
+Progress **tracks** and Skeleton bars keep `radius="xl"` on purpose (a pill indicator,
+not a control); `999px` stays reserved for true circles (status dots, timeline dots).
 
 Theme `defaultRadius` is **`sm`**. Avoid raw `border-radius` when a token fits. Tek icon tiles keep asymmetric radius by design (`AccentIconTile shape="tek"`). Create/edit **Identity** map art uses `MapArtThumb shape="rounded"` so the thumb matches flush square form sections; default `tek` remains for brand-like thumbs elsewhere.
 

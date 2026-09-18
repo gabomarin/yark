@@ -24,16 +24,16 @@ const SOLID_SURFACE_VARS = [
 describe("surface and radius tokens (#468)", () => {
   it("uses tool-chrome radius on comfortable and compact", () => {
     expect(getAppTokens("comfortable").radius).toEqual({
-      sm: 6,
+      sm: 4,
       md: 8,
       lg: 10,
-      control: 6,
+      control: 4,
     });
     expect(getAppTokens("compact").radius).toEqual({
-      sm: 5,
+      sm: 3,
       md: 7,
       lg: 8,
-      control: 5,
+      control: 3,
     });
   });
 

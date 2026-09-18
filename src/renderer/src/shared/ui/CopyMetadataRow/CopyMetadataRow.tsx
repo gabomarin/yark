@@ -42,7 +42,6 @@ export function CopyMetadataRow(props: Props): ReactElement {
             variant="subtle"
             color="gray"
             size="sm"
-            radius="md"
             aria-label={`Copy ${copyLabel}`}
             className={classes.copyIcon}
             onClick={() => void copyTextToClipboard({

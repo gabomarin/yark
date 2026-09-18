@@ -76,7 +76,6 @@ export function AppPanelConfirmModal(
             <Button
               size="compact-xs"
               variant="subtle"
-              radius="md"
               onClick={props.onClose}
               disabled={props.confirmLoading === true}
             >
@@ -84,7 +83,6 @@ export function AppPanelConfirmModal(
             </Button>
             <Button
               size="compact-xs"
-              radius="md"
               color={confirmColor}
               loading={props.confirmLoading === true}
               onClick={props.onConfirm}

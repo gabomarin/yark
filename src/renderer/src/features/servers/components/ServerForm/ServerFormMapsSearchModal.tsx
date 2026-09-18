@@ -242,10 +242,9 @@ export function ServerFormMapsSearchModal(props: Props): ReactElement {
         <Group gap="xs" wrap="nowrap" className={classes.modalTitleRow}>
           {step !== "search" ? (
             <ActionIcon
-              variant="subtle"
-              size="lg"
-              radius="md"
-              aria-label="Back"
+                  variant="subtle"
+                  size="lg"
+                  aria-label="Back"
               onClick={backFromNestedStep}
             >
               <ArrowLeft size={18} weight="bold" />

@@ -145,7 +145,6 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                   <Badge
                     variant="light"
                     color="blue"
-                    radius="xl"
                     tt="none"
                     className={classes.detailDrawerProjectBadge}
                   >
@@ -154,7 +153,6 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                   <Button
                     size={copyButtonSize}
                     variant="default"
-                    radius="md"
                     leftSection={<Copy size={14} />}
                     onClick={() => void copyTextToClipboard({
                       text: detail.id,
@@ -189,7 +187,6 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                       <Badge
                         key={category}
                         size="sm"
-                        radius="xl"
                         color={isMapCategoryLabel(category) ? "attention" : "gray"}
                         variant="light"
                         tt="none"
@@ -207,7 +204,6 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                 className={classes.detailDrawerPrimaryAction}
                 size={footerButtonSize}
                 variant="default"
-                radius="md"
                 leftSection={<ArrowSquareOut size={16} />}
                 onClick={() => props.onOpenExternal(detail.curseforgeUrl)}
               >
@@ -219,7 +215,6 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                   size={footerButtonSize}
                   color="red"
                   variant="filled"
-                  radius="md"
                   leftSection={<X size={16} />}
                   disabled={drawerLocked}
                   onClick={() =>
@@ -237,7 +232,6 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                   size={footerButtonSize}
                   color="teal"
                   variant="light"
-                  radius="md"
                   leftSection={<Plus size={16} />}
                   loading={props.busy}
                   disabled={drawerLocked}
