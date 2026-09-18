@@ -69,23 +69,6 @@ jobs:
         )
       }}
     steps:
-      - name: Acknowledge review request
-        if: ${{ github.event_name == 'issue_comment' }}
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-        with:
-          github-token: ${{ github.token }}
-          script: |
-            try {
-              await github.rest.reactions.createForIssueComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: context.payload.comment.id,
-                content: 'eyes',
-              });
-            } catch (error) {
-              core.warning(`Could not acknowledge the review request: ${error.message}`);
-            }
-
       - name: Resolve provider and validate command
         id: provider
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
@@ -135,6 +118,25 @@ jobs:
 
             core.setOutput('provider', provider);
 
+      # Runs after validation so an unparseable command or an unconfigured
+      # provider never leaves a "working on it" reaction behind.
+      - name: Acknowledge review request
+        if: ${{ github.event_name == 'issue_comment' }}
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            try {
+              await github.rest.reactions.createForIssueComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: context.payload.comment.id,
+                content: 'eyes',
+              });
+            } catch (error) {
+              core.warning(`Could not acknowledge the review request: ${error.message}`);
+            }
+
       - name: Resolve pull request refs
         id: pr-context
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
@@ -165,6 +167,7 @@ jobs:
 
       - name: Select review effort
         id: effort
+        if: ${{ !steps.provider.outputs.effort_override }}
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         env:
           PR_NUMBER: ${{ github.event.issue.number || inputs.pr_number }}
@@ -172,23 +175,28 @@ jobs:
           github-token: ${{ github.token }}
           script: |
             const pullNumber = Number(process.env.PR_NUMBER);
-            const files = await github.paginate(github.rest.pulls.listFiles, {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: pullNumber,
-              per_page: 100,
-            });
-            const changedLines = files.reduce((total, file) => total + file.additions + file.deletions, 0);
-            const effort = files.length <= 5 && changedLines <= 120 ? 'low' : 'medium';
+            let effort = 'medium';
+            try {
+              const files = await github.paginate(github.rest.pulls.listFiles, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pullNumber,
+                per_page: 100,
+              });
+              const changedLines = files.reduce((total, file) => total + file.additions + file.deletions, 0);
+              effort = files.length <= 5 && changedLines <= 120 ? 'low' : 'medium';
+              core.info(`Selected ${effort} effort for ${files.length} files and ${changedLines} changed lines.`);
+            } catch (error) {
+              core.warning(`Could not measure the pull request size (${error.message}); using ${effort} effort.`);
+            }
             core.setOutput('effort', effort);
-            core.info(`Selected ${effort} effort for ${files.length} files and ${changedLines} changed lines.`);
 
       - name: Check LLM provider
         env:
           LLM_URL: ${{ steps.provider.outputs.provider == 'fallback' && vars.OCR_FALLBACK_URL || vars.OCR_PRIMARY_URL }}
           LLM_MODEL: ${{ steps.provider.outputs.provider == 'fallback' && vars.OCR_FALLBACK_MODEL || vars.OCR_PRIMARY_MODEL }}
           LLM_TOKEN: ${{ steps.provider.outputs.provider == 'fallback' && secrets.OCR_FALLBACK_API_KEY || secrets.OCR_PRIMARY_API_KEY }}
-          LLM_SESSION: ${{ github.repository }}-pr-${{ github.event.issue.number || inputs.pr_number }}-head-${{ steps.pr-context.outputs.head_sha }}
+          LLM_SESSION: ${{ github.repository }}-pr-${{ github.event.issue.number || inputs.pr_number }}
         shell: bash
         run: |
           set -euo pipefail
@@ -242,7 +250,10 @@ jobs:
           llm_auth_token: ${{ steps.provider.outputs.provider == 'fallback' && secrets.OCR_FALLBACK_API_KEY || secrets.OCR_PRIMARY_API_KEY }}
           llm_model: ${{ steps.provider.outputs.provider == 'fallback' && vars.OCR_FALLBACK_MODEL || vars.OCR_PRIMARY_MODEL }}
           llm_use_anthropic: false
-          llm_extra_headers: x-opencode-session=${{ github.repository }}-pr-${{ github.event.issue.number || inputs.pr_number }}-head-${{ steps.pr-context.outputs.head_sha }}
+          # Session id stays stable for the life of the PR: this value is part of
+          # the checkpoint fingerprint, so a per-head value would fail closed to a
+          # full review on every push and make checkpoint_range a no-op.
+          llm_extra_headers: x-opencode-session=${{ github.repository }}-pr-${{ github.event.issue.number || inputs.pr_number }}
           llm_extra_body: '{}'
           language: English
           ocr_version: "1.12.4"
@@ -260,6 +271,7 @@ jobs:
         if: ${{ steps.ocr-review.outcome == 'success' }}
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         env:
+          PR_NUMBER: ${{ github.event.issue.number || inputs.pr_number }}
           OCR_SUMMARY_URL: ${{ steps.ocr-review.outputs.summary_comment_url }}
           OCR_COMMENTS_TOTAL: ${{ steps.ocr-review.outputs.comments_total }}
           OCR_COMMENTS_INLINE: ${{ steps.ocr-review.outputs.comments_inline }}
@@ -272,56 +284,67 @@ jobs:
           github-token: ${{ github.token }}
           script: |
             const marker = '<!-- yark-ocr-enriched-summary -->';
-            const prNumber = Number('${{ github.event.issue.number || inputs.pr_number }}');
-            const summaryUrl = process.env.OCR_SUMMARY_URL || '';
-            const commentIdMatch = summaryUrl.match(/issuecomment-(\d+)/);
-
-            let commentId = commentIdMatch ? Number(commentIdMatch[1]) : 0;
-            if (!commentId) {
-              const comments = await github.paginate(github.rest.issues.listComments, {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: prNumber,
-                per_page: 100,
-              });
-              const existing = comments.reverse().find((comment) =>
-                comment.user?.type === 'Bot' &&
-                /OpenCodeReview/i.test(comment.body || '') &&
-                /Review complete/i.test(comment.body || '')
-              );
-              commentId = existing?.id || 0;
-            }
-
-            if (!commentId) {
-              core.warning('Could not locate the OpenCodeReview summary comment to enrich.');
+            const prNumber = Number(process.env.PR_NUMBER);
+            if (!Number.isInteger(prNumber) || prNumber < 1) {
+              core.warning(`Invalid pull request number: ${process.env.PR_NUMBER}`);
               return;
             }
 
-            const current = await github.rest.issues.getComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              comment_id: commentId,
-            });
-            const withoutPreviousDetails = (current.data.body || '')
-              .replace(new RegExp(`\\n*${marker}[\\s\\S]*$`), '')
-              .trimEnd();
-            const total = Number(process.env.OCR_COMMENTS_TOTAL || 0);
-            const inline = Number(process.env.OCR_COMMENTS_INLINE || 0);
-            const routed = Number(process.env.OCR_COMMENTS_ROUTED || 0);
-            const result = total === 0 ? '✅ No findings requiring action.' : '⚠️ Findings were posted as inline review comments.';
-            const details = [
-              marker,
-              '### Review details',
-              `- **Result:** ${result}`,
-              `- **Findings:** ${total} (${inline} inline, ${routed} in summary)`,
-              `- **Review range:** ${process.env.OCR_RANGE_SUMMARY || 'full PR range'}`,
-              `- **Provider:** ${process.env.OCR_PROVIDER || 'primary'} (${process.env.OCR_MODEL || 'configured model'})`,
-              `- **Effort:** ${process.env.OCR_EFFORT || 'medium'}`,
-            ].join('\n');
+            const summaryUrl = process.env.OCR_SUMMARY_URL || '';
+            const commentIdMatch = summaryUrl.match(/issuecomment-(\d+)/);
 
-            await github.rest.issues.updateComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              comment_id: commentId,
-              body: `${withoutPreviousDetails}\n\n${details}`,
-            });
+            // A transient API error must not red-X a run whose review already
+            // posted its findings.
+            try {
+              let commentId = commentIdMatch ? Number(commentIdMatch[1]) : 0;
+              if (!commentId) {
+                const comments = await github.paginate(github.rest.issues.listComments, {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: prNumber,
+                  per_page: 100,
+                });
+                const existing = comments.reverse().find((comment) =>
+                  comment.user?.login === 'github-actions[bot]' &&
+                  /OpenCodeReview/i.test(comment.body || '') &&
+                  /Review complete/i.test(comment.body || '')
+                );
+                commentId = existing?.id || 0;
+              }
+
+              if (!commentId) {
+                core.warning('Could not locate the OpenCodeReview summary comment to enrich.');
+                return;
+              }
+
+              const current = await github.rest.issues.getComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: commentId,
+              });
+              const withoutPreviousDetails = (current.data.body || '')
+                .replace(new RegExp(`\\n*${marker}[\\s\\S]*$`), '')
+                .trimEnd();
+              const total = Number(process.env.OCR_COMMENTS_TOTAL || 0);
+              const inline = Number(process.env.OCR_COMMENTS_INLINE || 0);
+              const routed = Number(process.env.OCR_COMMENTS_ROUTED || 0);
+              const result = total === 0 ? '✅ No findings requiring action.' : '⚠️ Findings were posted as inline review comments.';
+              const details = [
+                marker,
+                '### Review details',
+                `- **Result:** ${result}`,
+                `- **Findings:** ${total} (${inline} inline, ${routed} in summary)`,
+                `- **Review range:** ${process.env.OCR_RANGE_SUMMARY || 'full PR range'}`,
+                `- **Provider:** ${process.env.OCR_PROVIDER || 'primary'} (${process.env.OCR_MODEL || 'configured model'})`,
+                `- **Effort:** ${process.env.OCR_EFFORT || 'medium'}`,
+              ].join('\n');
+
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: commentId,
+                body: `${withoutPreviousDetails}\n\n${details}`,
+              });
+            } catch (error) {
+              core.warning(`Could not enrich the OpenCodeReview summary: ${error.message}`);
+            }
