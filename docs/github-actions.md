@@ -54,6 +54,11 @@ providers that reject that optional field. OpenCode Go requests also include a
 stable `x-opencode-session` value for the repository, PR, and head SHA, plus a
 preflight-only `User-Agent` for efficient provider routing. OCR's reserved
 `User-Agent` header is left to the action's dedicated HTTP client.
+
+After a successful review, a follow-up step enriches the sticky OCR summary with
+the result, finding counts, reviewed range, and selected provider/model. Findings
+remain inline review comments; the extra summary is presentation metadata and
+does not replace those comments.
 | [`.github/workflows/discord-release-notify.yml`](../.github/workflows/discord-release-notify.yml) | Manual Discord re-announce for an existing tag (`workflow_dispatch`) | `contents: read` |
 
 Release runs only when `github.repository == 'gabomarin/yark'` (tag push or
