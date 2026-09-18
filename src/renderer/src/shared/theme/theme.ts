@@ -464,6 +464,14 @@ function createAppTheme(
       TagsInput: {
         defaultProps: comboboxScrollDefaults,
       },
+      /* Fluent 2 order: the label reads before the control, so a Switch label sits
+       * to the left of the track. Rows that already have their own title only pass
+       * `aria-label`, which this does not affect. */
+      Switch: {
+        defaultProps: {
+          labelPosition: "left",
+        },
+      },
       InputWrapper: {
         styles: {
           label: {

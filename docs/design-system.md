@@ -275,6 +275,18 @@ Primary destructive **Button**s use **`color="red" variant="filled"`** — **Sto
 
 Reference: `ServerModDetailDrawer` Remove footer (#344); quiet row icons (#397).
 
+### 5e. Switch / control label order
+
+Fluent 2 reads the label **before** the control, so a `Switch` label sits left of the
+track. That order is set once in the theme (`Switch.defaultProps.labelPosition =
+"left"`) - do not pass `labelPosition` per call site, and do not fake it with `row-reverse`.
+
+- A switch inside a row that already owns the title (Settings rows, INI setting rows,
+  table cells) passes **`aria-label` only** - never a second visible label next to the
+  track. Every switch needs one or the other; an unnamed switch is the bug, not the style.
+- `label="…"` is for a standalone switch (a boolean field in a form or dialog), where
+  the label is the field name and reads before the toggle.
+
 ### 6. Dense operational tables
 
 Prefer shared `YarkDataTable` (`shared/ui/YarkDataTable`, wraps `mantine-datatable`) for dense

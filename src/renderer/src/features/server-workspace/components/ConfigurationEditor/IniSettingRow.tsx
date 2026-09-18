@@ -81,9 +81,10 @@ export function IniSettingRow(props: Props): ReactElement {
           >
             {row.value.trim().length > 0 ? row.value : "Not set"}
           </Text>
-        ) : kind === "boolean" ? (
-          <Switch
-            checked={row.value.toLowerCase() === "true"}
+          ) : kind === "boolean" ? (
+            <Switch
+              aria-label={label}
+              checked={row.value.toLowerCase() === "true"}
             onChange={(event) =>
               onUpdateValue(
                 row.fileKey,

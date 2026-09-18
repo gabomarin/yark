@@ -45,8 +45,9 @@ export function ClusterIniTemplateSettingRow(props: Props): ReactElement {
       </div>
       <div>
         {kind === "boolean" ? (
-          <Switch
-            checked={row.value.toLowerCase() === "true"}
+            <Switch
+              aria-label={label}
+              checked={row.value.toLowerCase() === "true"}
             onChange={(event) =>
               onChange(
                 row.section,

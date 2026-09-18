@@ -26,6 +26,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Switch labels read before the control (Fluent order): `Switch` defaults to `labelPosition="left"` in the theme, so a visible label sits left of the toggle instead of after it, and the two unnamed switches in the INI setting rows now expose their setting name to assistive tech.
 - Control corners follow Fluent 2 at 4px: the control chrome radius drops from 6px to 4px (Compact 3px) for buttons, fields, badges, chips, search and list rows, and the Button/ActionIcon/Badge call sites that had overridden it for a surface radius now inherit it.
 - Depth uses one Fluent 2 elevation ladder: five two-layer levels (`--app-elevation-2/4/8/16/28`) replace the per-surface dock, overlay, drawer and map-picker shadows, and Mantine's `shadow` scale resolves onto the same tokens.
 - Every dialog renders through one dialog atom (`AppPanelModal`): shared title/meta header, size scale, pinned footer bar, and one close affordance, replacing the per-dialog Mantine `Modal` chrome.
