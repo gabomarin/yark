@@ -8,9 +8,9 @@
 }
 
 .previewCard {
-  border: 1px solid color-mix(in srgb, var(--app-color-border) 55%, transparent);
-  border-radius: var(--app-radius-md);
-  background: color-mix(in srgb, var(--app-color-panel) 55%, transparent);
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: 0;
+  background: var(--app-color-panel);
   padding: var(--app-space-md);
 }
 

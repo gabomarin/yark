@@ -317,7 +317,7 @@
   min-width: 0;
   text-align: left;
   padding: var(--app-space-xs) var(--app-space-sm);
-  border-radius: var(--app-radius-md);
+  border-radius: 0;
   border: 1px solid var(--ark-gray-a3);
   background: var(--app-color-surface-control);
   color: var(--app-color-text);

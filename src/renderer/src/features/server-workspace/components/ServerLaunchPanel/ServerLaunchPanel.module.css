@@ -66,7 +66,7 @@
 }
 
 .optionRowCaution {
-  border-color: color-mix(in srgb, var(--app-color-fossil) 45%, transparent);
+  border-color: var(--app-color-fossil);
   background: color-mix(in srgb, var(--app-color-fossil) 10%, transparent);
 }
 

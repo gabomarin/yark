@@ -222,7 +222,7 @@ export function SettingsDiscordSection(): ReactElement {
         </Text>
       </div>
 
-      <AppSurfaceCard tone="flat" padding="sm" className={classes.discordConnectionCard}>
+      <AppSurfaceCard tone="flat" padding="sm" radius={0} className={classes.discordConnectionCard}>
         <Group justify="space-between" align="flex-start" wrap="nowrap">
           <div>
             <Text size="sm" fw={600}>Connection</Text>
@@ -314,7 +314,7 @@ export function SettingsDiscordSection(): ReactElement {
       <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md" data-discord-events-grid>
         <AppSurfaceCard
           tone="flat"
-          padding={0}
+          padding={0} radius={0}
           className={classes.discordEventCard}
           data-discord-server-events
         >
@@ -326,7 +326,7 @@ export function SettingsDiscordSection(): ReactElement {
         </AppSurfaceCard>
         <AppSurfaceCard
           tone="flat"
-          padding={0}
+          padding={0} radius={0}
           className={classes.discordEventCard}
           data-discord-steamcmd-jobs
         >

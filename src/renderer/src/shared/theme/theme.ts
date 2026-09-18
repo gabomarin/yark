@@ -113,7 +113,14 @@ function createAppCssVariablesResolver(
     },
     light: {},
     dark: {
-      "--mantine-color-body": "var(--app-color-bg)",
+      /*
+       * Mantine's own dark default for `--mantine-color-body` is `dark-7` (a panel),
+       * and Paper / Modal content / Popover / datatable all inherit from it. Keep it
+       * on the panel surface, not the page canvas: the document and AppShell canvas
+       * are set explicitly in `globals.css` / `AppShellLayout`, so pointing this at
+       * `--app-color-bg` only made every dialog surface render darker than the app.
+       */
+      "--mantine-color-body": "var(--app-color-surface-panel)",
       "--mantine-color-text": "var(--app-color-text)",
       "--mantine-color-dimmed": "var(--app-color-muted)",
       "--mantine-color-dark-0": "var(--app-color-text)",

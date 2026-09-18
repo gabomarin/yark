@@ -339,7 +339,7 @@
 .progressCta:focus-visible {
   outline: 2px solid var(--app-color-focus-ring);
   outline-offset: 2px;
-  border-radius: var(--app-radius-sm);
+  border-radius: 0;
 }
 
 .progressBlock {
@@ -348,7 +348,7 @@
   padding: var(--app-space-xs) var(--app-space-sm);
   padding-bottom: calc(var(--app-space-xs) + 2px);
   overflow: visible;
-  border-radius: var(--app-radius-sm);
+  border-radius: 0;
   border: 1px solid var(--app-color-accent-subtle-hover);
   background: var(--ark-blue-a2);
 }
@@ -360,7 +360,7 @@
   display: block;
   width: 100%;
   text-align: left;
-  border-radius: var(--app-radius-sm);
+  border-radius: 0;
 }
 
 .runtimeError:hover .runtimeErrorText,

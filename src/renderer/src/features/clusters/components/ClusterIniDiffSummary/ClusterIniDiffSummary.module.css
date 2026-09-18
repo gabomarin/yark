@@ -1,8 +1,8 @@
 .table {
   overflow: hidden;
-  border-radius: var(--app-radius-md);
+  border-radius: 0;
   border: 1px solid var(--app-color-border);
-  background: color-mix(in srgb, var(--app-color-panel) 55%, transparent);
+  background: var(--app-color-panel);
 }
 
 .header,
@@ -30,7 +30,7 @@
 }
 
 .row {
-  border-top: 1px solid color-mix(in srgb, var(--app-color-border) 45%, transparent);
+  border-top: 1px solid var(--app-color-border-subtle);
   font-size: var(--mantine-font-size-sm);
 }
 
@@ -39,7 +39,7 @@
 }
 
 .row:hover {
-  background: color-mix(in srgb, var(--app-color-panel) 80%, transparent);
+  background: var(--app-color-panel);
 }
 
 .change {
@@ -109,8 +109,8 @@
 .secretNote {
   margin: 0;
   padding: 8px 12px;
-  border-radius: var(--app-radius-control);
-  border: 1px solid color-mix(in srgb, var(--app-color-fossil) 35%, transparent);
+  border-radius: 0;
+  border: 1px solid var(--app-color-fossil);
   background: color-mix(in srgb, var(--app-color-fossil) 12%, transparent);
   color: var(--app-color-fossil);
   font-size: 12px;

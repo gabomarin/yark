@@ -6,7 +6,7 @@
   margin: 0;
   padding: var(--app-space-xs) var(--app-space-sm);
   border: 1px solid transparent;
-  border-radius: var(--app-radius-control);
+  border-radius: 0;
   background: transparent;
   color: inherit;
   text-align: left;
@@ -19,22 +19,22 @@
 
 /* Default: always-visible control surface (Clusters members / list cards). */
 .row[data-variant="surface"] {
-  border-color: var(--ark-gray-a3);
+  border-color: var(--app-color-border-subtle);
   background: var(--app-color-surface-control);
 }
 
 .row:hover {
-  border-color: color-mix(in srgb, var(--app-color-border) 70%, transparent);
-  background: color-mix(in srgb, var(--app-color-panel) 55%, transparent);
+  border-color: var(--app-color-border-subtle);
+  background: var(--app-color-panel);
 }
 
 .row[data-variant="surface"]:hover {
-  border-color: var(--app-color-border);
-  background: var(--ark-gray-a3);
+  border-color: var(--app-color-border-control);
+  background: var(--app-color-surface-control-hover);
 }
 
 .row[data-selected] {
-  border-color: color-mix(in srgb, var(--ark-blue-8) 45%, transparent);
+  border-color: var(--app-color-accent);
   background: var(--app-list-selected-bg);
   box-shadow: var(--app-list-selected-inset);
 }

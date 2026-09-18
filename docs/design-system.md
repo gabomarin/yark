@@ -119,6 +119,9 @@ Solid **bg / raised / control** come from `tokens.ts` + `theme.ts`. Do **not** i
 | Discrete entities | `AppSurfaceCard tone="flat"` (cluster row, backup row) | Cool wash as a page shell |
 | Accent heroes | `tone="coolEmphasis"` (rare) | Using cool wash as the default page shell |
 | Nested widgets | `tone="flat"` / panel on chrome parent | Mixing Card + ad-hoc panel bg |
+| Decorative gradients | Solid fills; layering via the shadow scale | Gradients on buttons, rows, panels, or dialog surfaces — Fluent 2 is flat. Only the INI editor header keeps its documented gradient (#516) |
+| Borders / separators | Solid token hairlines (`--app-color-border-subtle`), or a solid semantic for state rows | `color-mix(…, transparent)` borders — a translucent hairline shifts with whatever is behind it |
+| Chips / tags / filter pills | `--app-radius-control` (Fluent uses 4px; this is our smallest token) | Fully-rounded `999px` pills. `999px` is only for true circles (status dots, timeline dots) |
 | Shell rails / fused panes | `tone="chrome"` or chrome slab + panel children | Cool gradients in sidebars |
 | Status accent | `statusTone` on `AppSurfaceCard` | One-off `box-shadow: inset 3px…` |
 | **Exception — INI editor chrome** (#516) | Category headers: deep blue `--app-color-ini-category` (`#0d1836`) + **subtle** blue lift (~90% token) + 3px ark-blue rail. **Other** subgroups: `surface-control` gray + soft ~80%/20% black deepen (no blue wash). Table body tint + opaque setting rows. Hairline `border-bottom` only | Cool **gradients** on page shells / filter bar / `tableWrap`; gray-slate category slabs; strong blue→black washes; translucent setting rows; stacked thick borders when collapsed |

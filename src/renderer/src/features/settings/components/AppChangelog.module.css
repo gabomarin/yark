@@ -3,7 +3,7 @@
   --paper-background: var(--app-color-panel);
   --paper-radius: var(--app-radius-md);
   background: var(--app-color-panel);
-  border-radius: var(--app-radius-md);
+  border-radius: 0;
   border: 1px solid var(--app-color-border);
   display: flex;
   flex-direction: column;
@@ -47,12 +47,13 @@
 
 .tabs {
   width: 100%;
-  background: var(--app-color-surface-chrome);
-  border: 1px solid var(--app-color-border);
+  background: var(--app-color-surface-control);
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: 0;
 }
 
 .tabs :global(.mantine-SegmentedControl-indicator) {
-  background: var(--ark-blue-6);
+  background: var(--app-color-accent);
 }
 
 .tabs :global(.mantine-SegmentedControl-label) {
@@ -60,7 +61,7 @@
 }
 
 .tabs :global(.mantine-SegmentedControl-label[data-active]) {
-  color: var(--mantine-color-blue-1);
+  color: var(--app-color-accent-contrast);
 }
 
 .body {
@@ -186,7 +187,7 @@
 }
 
 .accordionControl:hover {
-  background: color-mix(in srgb, var(--app-color-surface-control) 55%, transparent);
+  background: var(--app-color-surface-control);
 }
 
 .accordionPanel {

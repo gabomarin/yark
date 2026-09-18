@@ -18,12 +18,7 @@
   height: min(84vh, 820px) !important;
   max-height: min(84vh, 820px) !important;
   overflow: hidden !important;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--ark-blue-2) 55%, var(--ark-background)) 0%,
-    var(--ark-background) 52%,
-    color-mix(in srgb, var(--ark-background) 92%, var(--ark-gray-1)) 100%
-  );
+  background: var(--app-color-panel);
 }
 
 .modalHeader {
@@ -57,7 +52,7 @@
 
 .versionCard {
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-md);
+  border-radius: 0;
   background: color-mix(in srgb, var(--ark-blue-ini-category) 72%, transparent);
   padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
   text-align: right;
@@ -84,9 +79,9 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  border-radius: 999px;
+  border-radius: var(--app-radius-control);
   border: 1px solid var(--app-color-border-subtle);
-  background: color-mix(in srgb, var(--app-color-surface-panel) 70%, transparent);
+  background: var(--app-color-surface-panel);
   color: var(--app-color-muted);
   padding: 0.3rem 0.7rem;
   font-size: var(--mantine-font-size-xs);
@@ -104,13 +99,13 @@
 
 .filter:hover {
   color: var(--app-color-text);
-  border-color: color-mix(in srgb, var(--app-color-accent) 45%, transparent);
+  background: var(--app-color-surface-control);
 }
 
 .filterActive {
   color: var(--app-color-accent-text);
-  border-color: color-mix(in srgb, var(--app-color-accent) 65%, transparent);
-  background: color-mix(in srgb, var(--app-color-accent) 22%, transparent);
+  border-color: var(--app-color-accent);
+  background: var(--app-color-accent-subtle);
 }
 
 .filterCount {
@@ -118,8 +113,8 @@
   font-size: 0.65rem;
   opacity: 0.9;
   padding: 0.05rem 0.35rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--ark-gray-1) 28%, transparent);
+  border-radius: var(--app-radius-control);
+  background: var(--app-color-surface-control);
 }
 
 .split {
@@ -128,9 +123,9 @@
   min-height: 0;
   flex: 1 1 0;
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-md);
+  border-radius: 0;
   overflow: hidden;
-  background: color-mix(in srgb, var(--app-color-surface-panel) 55%, transparent);
+  background: var(--app-color-surface-panel);
 }
 
 @media (max-width: 56rem) {
@@ -201,10 +196,10 @@
   display: block;
   width: 100%;
   text-align: left;
-  border-radius: var(--app-radius-control);
+  border-radius: 0;
   border: 1px solid transparent;
   padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
-  background: color-mix(in srgb, var(--ark-gray-12) 2.5%, transparent);
+  background: transparent;
   color: inherit;
   transition:
     background 120ms ease,
@@ -218,13 +213,13 @@
 
 .row:hover {
   border-color: var(--app-color-border-subtle);
-  background: color-mix(in srgb, var(--ark-gray-12) 4.5%, transparent);
+  background: var(--app-color-surface-control);
 }
 
 .rowActive {
-  border-color: color-mix(in srgb, var(--app-color-accent) 55%, transparent);
-  background: color-mix(in srgb, var(--app-color-accent) 15%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app-color-cryo) 12%, transparent);
+  border-color: var(--app-color-accent);
+  background: var(--app-color-accent-subtle);
+  box-shadow: inset 3px 0 0 var(--app-color-accent);
 }
 
 .token {
@@ -283,7 +278,7 @@
 .toneCryo {
   display: inline-flex;
   align-items: center;
-  border-radius: 999px;
+  border-radius: var(--app-radius-control);
   border: 1px solid transparent;
   padding: 0.12rem 0.55rem;
   font-size: var(--mantine-font-size-xs);
@@ -301,7 +296,7 @@
 .chipMono {
   display: inline-flex;
   align-items: center;
-  border-radius: 999px;
+  border-radius: var(--app-radius-control);
   border: 1px solid var(--app-color-border-subtle);
   padding: 0.12rem 0.55rem;
   font-size: var(--mantine-font-size-xs);
@@ -315,19 +310,19 @@
 
 .toneOk {
   color: var(--app-color-ok);
-  border-color: color-mix(in srgb, var(--app-color-ok) 35%, transparent);
+  border-color: var(--app-color-ok);
   background: color-mix(in srgb, var(--app-color-ok) 14%, transparent);
 }
 
 .toneWarn {
   color: var(--app-color-warn);
-  border-color: color-mix(in srgb, var(--app-color-warn) 35%, transparent);
+  border-color: var(--app-color-warn);
   background: color-mix(in srgb, var(--app-color-warn) 14%, transparent);
 }
 
 .toneCryo {
   color: var(--app-color-cryo);
-  border-color: color-mix(in srgb, var(--app-color-cryo) 32%, transparent);
+  border-color: var(--app-color-cryo);
   background: color-mix(in srgb, var(--app-color-cryo) 12%, transparent);
 }
 
@@ -340,7 +335,7 @@
   grid-template-columns: 6.75rem minmax(0, 1fr);
   gap: var(--mantine-spacing-sm);
   padding: var(--mantine-spacing-sm) 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--app-color-border-subtle) 70%, transparent);
+  border-bottom: 1px solid var(--app-color-border-subtle);
 }
 
 .root[data-density="compact"] .metaRow {

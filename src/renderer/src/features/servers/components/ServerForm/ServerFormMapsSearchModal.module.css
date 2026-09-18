@@ -71,7 +71,7 @@
   gap: var(--mantine-spacing-sm);
   padding: var(--mantine-spacing-sm);
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-md);
+  border-radius: 0;
   background: color-mix(in srgb, var(--app-color-panel) 88%, var(--app-color-surface-chrome));
 }
 
@@ -85,7 +85,7 @@
   overflow: hidden;
   color: var(--app-color-muted);
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-md);
+  border-radius: 0;
   background: var(--app-color-surface-chrome);
 }
 
@@ -110,7 +110,7 @@
 
 .emptySearch {
   border: 1px dashed var(--app-color-border-subtle);
-  border-radius: var(--app-radius-md);
+  border-radius: 0;
   padding: 1.5rem;
   text-align: center;
   color: var(--app-color-muted);
@@ -123,7 +123,7 @@
   min-width: 0;
   overflow: hidden;
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-md);
+  border-radius: 0;
   background: var(--app-color-panel);
 }
 
@@ -275,7 +275,7 @@
   overflow: hidden;
   color: var(--app-color-muted);
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-md);
+  border-radius: 0;
   background: var(--app-color-surface-chrome);
 }
 

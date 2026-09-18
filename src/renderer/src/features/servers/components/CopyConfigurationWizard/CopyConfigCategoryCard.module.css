@@ -1,5 +1,5 @@
 .root {
-  border-radius: 14px;
+  border-radius: 0;
   border: 1px solid var(--app-color-border);
   background: color-mix(in srgb, var(--app-color-surface-chrome) 72%, transparent);
   padding: 14px 16px;

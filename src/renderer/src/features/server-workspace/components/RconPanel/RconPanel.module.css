@@ -92,7 +92,7 @@
   gap: var(--app-space-sm);
   padding: var(--app-space-xs) var(--app-space-sm);
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-control);
+  border-radius: 0;
   background: var(--app-color-surface-control);
 }
 
@@ -121,7 +121,7 @@
   gap: var(--app-space-xs);
   padding: var(--app-space-xs) var(--app-space-sm);
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-control);
+  border-radius: 0;
   background: var(--app-color-surface-control);
 }
 
@@ -152,7 +152,7 @@
   gap: var(--app-space-sm);
   padding: var(--app-space-xs) var(--app-space-sm);
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-control);
+  border-radius: 0;
   background: var(--app-color-surface-control);
 }
 

@@ -215,8 +215,8 @@
 .cacheList {
   padding: var(--app-space-sm);
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-control);
-  background: color-mix(in srgb, var(--ark-gray-2) 40%, transparent);
+  border-radius: 0;
+  background: var(--app-color-panel);
 }
 
 .cacheRow {
@@ -266,8 +266,8 @@
 .autoStartList {
   padding: var(--app-space-sm);
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-control);
-  background: color-mix(in srgb, var(--ark-gray-2) 40%, transparent);
+  border-radius: 0;
+  background: var(--app-color-panel);
 }
 
 .autoStartRow {
@@ -298,7 +298,7 @@
   padding: var(--app-space-sm) var(--app-space-md);
   border-bottom: 1px solid var(--app-color-border-subtle);
   color: var(--app-color-text);
-  background: color-mix(in srgb, var(--app-color-accent) 6%, transparent);
+  background: var(--app-color-surface-control);
 }
 
 .discordEventRow {
@@ -312,7 +312,7 @@
 }
 
 .discordEventRow:hover {
-  background: color-mix(in srgb, var(--app-color-accent) 4%, transparent);
+  background: var(--app-color-surface-control);
 }
 
 .discordEventIdentity {
@@ -327,8 +327,8 @@
 
 .discordPrivacyNote {
   padding: var(--app-space-xs) var(--app-space-sm);
-  border-radius: var(--app-radius-sm);
-  background: color-mix(in srgb, var(--app-color-panel-cool) 46%, transparent);
+  border-radius: 0;
+  background: var(--app-color-panel);
 }
 
 @media (max-width: 720px) {

@@ -26,7 +26,7 @@ export function SetupWizardFirstActionStep(props: Props): ReactElement {
         onClick={props.onCreateServer}
         aria-label="New server"
       >
-        <AppSurfaceCard tone="coolEmphasis" padding="sm">
+        <AppSurfaceCard tone="coolEmphasis" radius={0} padding="sm">
           <Stack gap={4}>
             <Text fw={600} size="sm">
               <Plus size={14} /> New server
@@ -44,7 +44,7 @@ export function SetupWizardFirstActionStep(props: Props): ReactElement {
         onClick={props.onImport}
         aria-label="Import install"
       >
-        <AppSurfaceCard tone="cool" padding="sm">
+        <AppSurfaceCard tone="cool" radius={0} padding="sm">
           <Stack gap={4}>
             <Text fw={600} size="sm">
               <FolderOpen size={14} /> Import install
@@ -61,7 +61,7 @@ export function SetupWizardFirstActionStep(props: Props): ReactElement {
         onClick={props.onExplore}
         aria-label="I'll explore"
       >
-        <AppSurfaceCard tone="flat" padding="sm">
+        <AppSurfaceCard tone="flat" radius={0} padding="sm">
           <Stack gap={4}>
             <Text fw={600} size="sm">
               <Compass size={14} /> I'll explore

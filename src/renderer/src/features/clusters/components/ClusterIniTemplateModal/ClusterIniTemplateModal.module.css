@@ -75,7 +75,7 @@
   min-height: 0;
   min-width: 0;
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-md);
+  border-radius: 0;
   overflow: auto;
   /* ~90% deep blue, soft black deepen — see design-system INI exception */
   background: color-mix(in srgb, var(--app-color-ini-category) 90%, var(--ark-gray-1));
@@ -118,7 +118,7 @@
 /* Separators come from category header border-bottom only (avoids double lines when collapsed). */
 
 .row + .row {
-  border-top: 1px solid color-mix(in srgb, var(--app-color-border-subtle) 68%, transparent);
+  border-top: 1px solid var(--app-color-border-subtle);
 }
 
 .row > :nth-child(3) {
@@ -154,8 +154,8 @@
 }
 
 .notice {
-  border-radius: var(--app-radius-control);
-  border: 1px solid color-mix(in srgb, var(--app-color-accent) 35%, transparent);
+  border-radius: 0;
+  border: 1px solid var(--app-color-accent);
   background: color-mix(in srgb, var(--app-color-accent) 12%, transparent);
   color: color-mix(in srgb, var(--app-color-accent) 40%, var(--app-color-text));
   padding: var(--app-space-sm) var(--app-space-md);
