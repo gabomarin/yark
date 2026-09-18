@@ -71,7 +71,6 @@
   min-height: 0;
   height: 100%;
   overflow: hidden;
-  background: var(--app-color-surface-chrome);
   padding: var(--app-space-md);
   gap: var(--app-space-sm);
 }

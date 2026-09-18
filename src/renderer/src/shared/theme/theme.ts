@@ -33,6 +33,15 @@ function createAppCssVariablesResolver(
       ...radixCssVariables,
       "--app-color-bg": "var(--ark-background)",
       "--app-color-surface-chrome": "var(--ark-gray-2)",
+      /*
+       * Shell atmosphere shared by the AppShell canvas and the app main surface.
+       * Hidden for now (reads yellowish over chrome). To restore, replace `none`
+       * with the two radial gradients:
+       *   radial-gradient(ellipse 58% 48% at 92% -10%, var(--app-shell-glow), transparent 70%),
+       *   radial-gradient(ellipse 40% 32% at 52% 110%, color-mix(in srgb, var(--app-color-fossil) 6%, transparent), transparent 74%)
+       */
+      "--app-shell-glow": "rgba(255, 255, 255, 0.055)",
+      "--app-shell-atmosphere": "none",
       "--app-color-surface-panel": "var(--ark-gray-3)",
       "--app-color-surface-control": "var(--ark-gray-5)",
       "--app-color-surface-control-hover": "var(--ark-gray-6)",

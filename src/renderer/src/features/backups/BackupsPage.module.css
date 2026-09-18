@@ -18,7 +18,7 @@
   letter-spacing: -0.02em;
 }
 
-/* Fused chrome tool pane flush to the app sidebar. */
+/* Fused chrome tool pane flush to the app sidebar; the AppShell main paints the surface. */
 .toolShell {
   display: flex;
   flex-direction: column;
@@ -26,7 +26,6 @@
   min-height: 0;
   height: 100%;
   overflow: hidden;
-  background: var(--app-color-surface-chrome);
   padding: var(--app-space-md);
   gap: var(--app-space-sm);
 }

@@ -1,12 +1,11 @@
-.page {
+/* Fused shell pane, same grammar as the other sidebar pages (PUX-004). */
+.pageShell {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 2200px;
   height: 100%;
   min-height: 0;
-  margin: 0 auto;
-  padding: var(--app-space-lg) var(--app-space-xl) var(--app-space-xl);
+  padding: var(--app-space-lg) var(--app-space-md) var(--app-space-md);
   overflow: auto;
 }
 
@@ -220,10 +219,6 @@
 
 /* Wide desktop: servers + Recent activity side-by-side (hidden below this width). */
 @media (min-width: 1600px) {
-  .page {
-    padding: var(--app-space-xl) 32px 32px;
-  }
-
   .content {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
@@ -241,17 +236,12 @@
     top: var(--app-space-lg);
     padding: var(--app-space-md) var(--app-space-md) var(--app-space-sm);
     border: 1px solid var(--app-color-border-subtle);
-    border-radius: var(--app-radius-md);
-    background: color-mix(in srgb, var(--app-color-surface-panel) 88%, transparent);
+    border-radius: 0;
+    background: var(--app-color-panel);
   }
 }
 
 @media (min-width: 2200px) {
-  .page {
-    max-width: 2400px;
-    padding-inline: 40px;
-  }
-
   .content {
     grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
     gap: 36px;

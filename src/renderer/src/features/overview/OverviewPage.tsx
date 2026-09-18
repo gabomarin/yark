@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import { useMemo } from "react";
 import { ArrowRight } from "@phosphor-icons/react";
 import { Button } from "@mantine/core";
+import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
 import type {
   AppEvent,
@@ -143,8 +144,14 @@ export function OverviewPage(props: Props): ReactElement {
   const steamCmdStatus = props.steamCmdStatus;
 
   return (
-    <div className={classes.page} data-overview-page>
-      <OverviewHeader
+    <PageScaffold
+      title="Servers"
+      fillViewport
+      edgeToEdge
+      showHeader={false}
+    >
+      <div className={classes.pageShell} data-overview-page>
+        <OverviewHeader
         onCreateServer={props.onCreateServer}
         onImportServer={props.onImportServer}
         onCheckUpdates={() => void checkForUpdates()}
@@ -247,6 +254,7 @@ export function OverviewPage(props: Props): ReactElement {
 
       {/* One-time community CTA — in-flow bottom-right, dismissible (#567). */}
       <DiscordInviteCard />
-    </div>
+      </div>
+    </PageScaffold>
   );
 }

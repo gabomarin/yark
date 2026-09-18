@@ -1,9 +1,9 @@
+/* Transparent: the workspace body paints the shared chrome surface. */
 .panel {
   display: flex;
   flex-direction: column;
   width: 100%;
   min-width: 0;
-  background: var(--app-color-surface-chrome);
   min-height: 0;
   overflow: hidden;
 }

@@ -5,12 +5,7 @@
   overflow: visible;
   background-color: var(--app-color-bg);
   background-image:
-    radial-gradient(ellipse 58% 48% at 92% -10%, var(--ark-blue-a3), transparent 70%),
-    radial-gradient(
-      ellipse 40% 32% at 52% 110%,
-      color-mix(in srgb, var(--app-color-fossil) 6%, transparent),
-      transparent 74%
-    ),
+    var(--app-shell-atmosphere),
     linear-gradient(
       145deg,
       color-mix(in srgb, var(--ark-background) 88%, var(--ark-gray-3)) 0%,
@@ -28,7 +23,7 @@
   background-repeat: no-repeat;
   background-position: left -12% top -4%;
   background-size: min(920px, 78vw) auto;
-  opacity: 0.55;
+  opacity: 0.85;
   content: "";
 }
 
@@ -41,7 +36,7 @@
   background-repeat: repeat;
   background-position: 12px 18px;
   background-size: 720px 720px;
-  opacity: 0.9;
+  opacity: 1;
   -webkit-mask-image: linear-gradient(
     to bottom,
     rgba(0, 0, 0, 0.16),
@@ -87,11 +82,32 @@
   transform: translate(-100%, -50%);
 }
 
+/*
+ * App-wide shell surface: chrome base + brand atmosphere + the brand art,
+ * painted once here so every page pane can stay transparent. Knobs: the SVG
+ * path opacities in src/renderer/src/assets/*.svg, `--app-shell-glow`, and
+ * `--app-shell-atmosphere` in shared/theme/theme.ts.
+ */
 .main {
   position: relative;
   z-index: 1;
   min-height: 100vh;
-  background: transparent;
+  background-color: var(--app-color-surface-chrome);
+  background-image:
+    url("../assets/topography.svg?no-inline"),
+    url("../assets/tek-topology.svg?no-inline"),
+    var(--app-shell-atmosphere);
+  background-repeat: no-repeat, repeat, no-repeat, no-repeat;
+  background-position:
+    left -12% top -4%,
+    12px 18px,
+    center,
+    center;
+  background-size:
+    min(920px, 78vw) auto,
+    720px 720px,
+    auto,
+    auto;
 }
 
 .content {

@@ -13,7 +13,6 @@
   overflow: hidden;
   border: 1px solid var(--app-color-border-subtle);
   border-radius: 0;
-  background: var(--app-color-surface-chrome);
 }
 
 .navCard,

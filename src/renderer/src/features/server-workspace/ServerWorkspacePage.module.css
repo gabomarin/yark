@@ -8,6 +8,8 @@
   margin: 0;
 }
 
+/* One transparent surface for the whole workspace body: list rail | main | side rail.
+   The AppShell main paints the shared shell surface underneath. */
 .body {
   display: flex;
   flex: 1;
@@ -21,7 +23,7 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
-/* Fused chrome shell: same surface as the list/side rails (no page-canvas gutter). */
+/* Fused chrome shell: no page-canvas gutter (the body paints the surface). */
 .main {
   display: flex;
   flex-direction: column;
@@ -30,7 +32,6 @@
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  background: var(--app-color-surface-chrome);
 }
 
 .tabs {

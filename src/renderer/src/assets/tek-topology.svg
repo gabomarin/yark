@@ -5,7 +5,7 @@
   viewBox="0 0 640 640"
   fill="none"
 >
-  <g stroke="#90b5ff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" opacity=".025">
+  <g stroke="#ffffff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" opacity=".10">
     <!-- Fragmentos que continúan de forma exacta en los bordes horizontales -->
     <path d="M-40 118 58 184 142 148 206 216" />
     <path d="M600 118 698 184 782 148 846 216" />
@@ -38,14 +38,14 @@
     <path d="M174 378c44-24 92-22 136 2 34 18 70 20 104 8" />
   </g>
 
-  <g fill="#90b5ff" opacity=".030">
+  <g fill="#ffffff" opacity=".11">
     <circle cx="142" cy="148" r="2.4" />
     <circle cx="206" cy="216" r="2.4" />
     <circle cx="374" cy="258" r="2.4" />
     <circle cx="286" cy="500" r="2.4" />
   </g>
 
-  <g stroke="#d9a85f" stroke-width="1" stroke-linecap="round" opacity=".018">
+  <g stroke="#d9a85f" stroke-width="1" stroke-linecap="round" opacity=".05">
     <path d="M430 548 474 518 526 542" />
     <circle cx="474" cy="518" r="2.5" fill="#d9a85f" stroke="none" />
   </g>
