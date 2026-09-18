@@ -19,6 +19,15 @@
   flex-shrink: 0;
 }
 
+/*
+ * Mantine's contained Accordion only fills the *active* item, so collapsed
+ * rendered transparent while expanded got surface-control. Both states are the
+ * card surface here; the control keeps its own hover fill.
+ */
+.guidanceCard :global(.mantine-Accordion-item) {
+  background: var(--app-color-panel);
+}
+
 .guidanceCopy {
   min-width: 0;
 }
