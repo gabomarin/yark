@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import { Button, Group, Text, VisuallyHidden } from "@mantine/core";
+import { AppPageHeader } from "@ui/AppPageHeader/AppPageHeader";
 import { AddServerSplitButton } from "@features/servers/components/AddServerSplitButton/AddServerSplitButton";
 import {
   formatCpuPercent,
@@ -61,9 +62,11 @@ export function OverviewHeader({
     fleetCpuPercent == null ? "CPU –" : `CPU ${formatCpuPercent(fleetCpuPercent)}`;
 
   return (
-    <header className={classes.header}>
-      <h1 className={classes.title}>Servers</h1>
-      <Group gap="md" wrap="wrap" justify="flex-end" className={classes.headerActions}>
+    <AppPageHeader
+      title="Servers"
+      className={classes.header}
+      actions={
+        <Group gap="md" wrap="wrap" justify="flex-end" className={classes.headerActions}>
         {showProcessFleetMetrics ? (
           <Group gap="sm" wrap="wrap" className={classes.fleetReadouts}>
             <Text
@@ -155,7 +158,8 @@ export function OverviewHeader({
           demoted={emptyFleet}
           menuAriaLabel="More new-server options"
         />
-      </Group>
-    </header>
+        </Group>
+      }
+    />
   );
 }

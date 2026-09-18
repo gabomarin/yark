@@ -11,6 +11,7 @@ import {
 } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { AppPageHeader } from "@ui/AppPageHeader/AppPageHeader";
 import { DismissibleHint } from "@ui/DismissibleHint/DismissibleHint";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { summarizeReferences } from "./model/hostedResourcesPageModel";
@@ -51,20 +52,10 @@ export function HostedResourcesPage(): ReactElement {
       showHeader={false}
     >
       <div className={classes.pageShell} data-hosted-resources-page>
-        <Group
-          justify="space-between"
-          align="flex-start"
-          wrap="wrap"
-          gap="sm"
-          className={classes.pageHeader}
-        >
-          <div>
-            <h1 className={classes.pageTitle}>Hosted Resources</h1>
-            <Text size="sm" c="dimmed" className={classes.pageSubtitle}>
-              Publish text, JSON, or INI content over a URL that ASA can load from this PC.
-            </Text>
-          </div>
-          <Group gap="sm">
+        <AppPageHeader
+          title="Hosted Resources"
+          subtitle="Publish text, JSON, or INI content over a URL that ASA can load from this PC."
+          actions={
             <Button
               variant="default"
               onClick={() => void controller.reload()}
@@ -72,8 +63,8 @@ export function HostedResourcesPage(): ReactElement {
             >
               Refresh
             </Button>
-          </Group>
-        </Group>
+          }
+        />
 
         <Stack gap="md" className={classes.content}>
         <DismissibleHint

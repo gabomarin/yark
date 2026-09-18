@@ -5,18 +5,7 @@
   overflow: auto;
 }
 
-.pageHeader {
-  flex-shrink: 0;
-}
-
-.pageTitle {
-  margin: 0;
-  font-family: var(--app-font-display);
-  font-size: var(--app-font-page);
-  font-weight: 600;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-}
+/* Page chrome lives in `AppPageHeader`; keep only layout helpers here. */
 
 /* Fused chrome tool pane flush to the app sidebar; the AppShell main paints the surface. */
 .toolShell {

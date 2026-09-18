@@ -19,6 +19,7 @@ import { formatWhenLabel } from "@shared/format-log-datetime";
 import { collapseConsecutiveEvents, formatEventMessageForDisplay } from "@shared/event-details";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
+import { AppPageHeader } from "@ui/AppPageHeader/AppPageHeader";
 import { SearchField } from "@ui/SearchField/SearchField";
 import { EventDetailsBody } from "./EventDetailsBody";
 import { EventSeverityMark } from "./components/EventSeverityMark/EventSeverityMark";
@@ -135,22 +136,18 @@ export function LogsPage(props: Props): ReactElement {
       showHeader={false}
     >
       <div className={classes.pageShell} data-logs-page>
-        <Group
-          justify="space-between"
-          align="center"
-          wrap="wrap"
-          gap="sm"
-          className={classes.pageHeader}
-        >
-          <h1 className={classes.pageTitle}>Logs</h1>
-          <Button
-            variant="default"
-            onClick={() => void loadFleet()}
-            disabled={loading}
-          >
-            Reload
-          </Button>
-        </Group>
+        <AppPageHeader
+          title="Logs"
+          actions={
+            <Button
+              variant="default"
+              onClick={() => void loadFleet()}
+              disabled={loading}
+            >
+              Reload
+            </Button>
+          }
+        />
 
         <Stack gap="sm" className={classes.logsContent}>
           {error !== null && <Alert color="red">{error}</Alert>}

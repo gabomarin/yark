@@ -5,6 +5,7 @@ import { Alert, Button, Group, Splitter, Stack, Text } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
+import { AppPageHeader } from "@ui/AppPageHeader/AppPageHeader";
 import type { ServerProfile, SteamCmdConsoleSnapshot, SteamCmdStatus } from "@shared/types";
 import {
   buildDownloadRows,
@@ -250,9 +251,7 @@ export function DownloadsPage(props: Props): ReactElement {
         data-downloads-page
         data-advanced-log-expanded={logExpanded || undefined}
       >
-        <div className={classes.pageHeader}>
-          <h1 className={classes.pageTitle}>Downloads</h1>
-        </div>
+        <AppPageHeader title="Downloads" />
         {rows.length === 0 ? (
           <div className={classes.upperPane}>
             {queuePane}

@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
-import { Button, Group, Stack } from "@mantine/core";
+import { Button, Stack } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
+import { AppPageHeader } from "@ui/AppPageHeader/AppPageHeader";
 import type {
   ClusterComplianceReport,
   ServerProfile,
@@ -70,16 +71,10 @@ export function ClustersPage(props: Props): ReactElement {
       showHeader={false}
     >
       <div className={classes.pageShell} data-clusters-page>
-        <Group
-          justify="space-between"
-          align="center"
-          wrap="wrap"
-          gap="sm"
-          className={classes.pageHeader}
-        >
-          <h1 className={classes.pageTitle}>Clusters</h1>
-          <Button onClick={() => setCreateOpen(true)}>Create cluster</Button>
-        </Group>
+        <AppPageHeader
+          title="Clusters"
+          actions={<Button onClick={() => setCreateOpen(true)}>Create cluster</Button>}
+        />
 
         <Stack gap="sm" className={classes.content}>
           <ClusterGuidanceCard defaultOpen={sortedReports.length === 0} />

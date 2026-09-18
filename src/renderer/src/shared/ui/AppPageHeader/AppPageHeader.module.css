@@ -1,0 +1,16 @@
+.header {
+  flex-shrink: 0;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--app-font-display);
+  font-size: var(--app-font-page);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  margin: var(--app-space-xs) 0 0;
+}

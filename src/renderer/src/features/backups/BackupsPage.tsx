@@ -1,8 +1,9 @@
 import type { ReactElement } from "react";
 import { HardDrives } from "@phosphor-icons/react";
-import { Button, Group, Stack, Text } from "@mantine/core";
+import { Button, Stack, Text } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { AppPageHeader } from "@ui/AppPageHeader/AppPageHeader";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import type { ServerProfile } from "@shared/types";
 import {
@@ -34,31 +35,27 @@ export function BackupsPage(props: Props): ReactElement {
       showHeader={false}
     >
       <div className={classes.toolShell} data-backups-page>
-        <Group
-          justify="space-between"
-          align="center"
-          wrap="wrap"
-          gap="sm"
-          className={classes.pageHeader}
-        >
-          <h1 className={classes.pageTitle}>Backups</h1>
-          <Group gap="sm">
-            <Button
-              variant="default"
-              onClick={() => void fleet.load({ forceDraftSync: true })}
-              loading={fleet.loading}
-            >
-              Refresh
-            </Button>
-            <Button
-              variant="light"
-              disabled={props.servers.length === 0}
-              onClick={fleet.openCleanupModalFromToolbar}
-            >
-              Cleanup…
-            </Button>
-          </Group>
-        </Group>
+        <AppPageHeader
+          title="Backups"
+          actions={
+            <>
+              <Button
+                variant="default"
+                onClick={() => void fleet.load({ forceDraftSync: true })}
+                loading={fleet.loading}
+              >
+                Refresh
+              </Button>
+              <Button
+                variant="light"
+                disabled={props.servers.length === 0}
+                onClick={fleet.openCleanupModalFromToolbar}
+              >
+                Cleanup…
+              </Button>
+            </>
+          }
+        />
 
         <Stack gap="md" className={classes.content}>
           {props.servers.length === 0 ? (

@@ -18,12 +18,6 @@
   margin-bottom: var(--app-space-lg);
 }
 
-.title {
-  margin: 0;
-  font-size: var(--app-font-page);
-  line-height: 1.1;
-}
-
 .headerActions {
   flex-shrink: 0;
 }
