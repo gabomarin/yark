@@ -747,7 +747,8 @@ describe("SettingsPage", () => {
     expect(screen.getByLabelText("Keep everyday activity history for days")).toHaveValue("90");
 
     await user.click(screen.getByRole("button", { name: /Clean up now/i }));
-    expect(screen.getByText("Clean up old logs")).toBeInTheDocument();
+    /* Shared dialog atom mounts through a transition — await it. */
+    expect(await screen.findByText("Clean up old logs")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /^Scan$/i }));
     await waitFor(() => {
       expect(previewLogCleanup).toHaveBeenCalled();
