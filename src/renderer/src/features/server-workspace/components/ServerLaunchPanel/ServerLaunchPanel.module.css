@@ -32,12 +32,14 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--app-space-xs);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .groupTitle {
   color: var(--app-color-accent-text);
-  font-size: var(--mantine-font-size-xs);
-  font-weight: 600;
+  font-size: var(--app-font-eyebrow);
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }

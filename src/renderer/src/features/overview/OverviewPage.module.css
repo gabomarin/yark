@@ -109,7 +109,7 @@
   align-items: center;
   gap: var(--app-space-xs);
   padding: var(--app-space-sm) var(--app-space-sm) var(--app-space-xs);
-  font-size: 11px;
+  font-size: var(--app-font-eyebrow);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;

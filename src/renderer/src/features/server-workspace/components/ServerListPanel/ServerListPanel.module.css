@@ -33,7 +33,7 @@
 }
 
 .title {
-  font-size: 12px;
+  font-size: var(--app-font-eyebrow);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -92,7 +92,7 @@
 .clusterLabel {
   flex: 1;
   min-width: 0;
-  font-size: 11px;
+  font-size: var(--app-font-eyebrow);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;

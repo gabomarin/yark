@@ -18,8 +18,8 @@
   border-bottom: 1px solid var(--app-color-border);
   background: color-mix(in srgb, var(--app-color-panel) 25%, var(--ark-gray-1));
   color: var(--app-color-muted);
-  font-size: 11px;
-  font-weight: 600;
+  font-size: var(--app-font-eyebrow);
+  font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }

@@ -106,6 +106,10 @@ function createAppCssVariablesResolver(
       "--app-form-description-size": `${tokens.formDescription}px`,
       "--app-form-label-size": `${tokens.formLabel}px`,
       "--app-font-page": `${tokens.pageTitle}px`,
+      "--app-font-title-lg": `${tokens.titleLg}px`,
+      "--app-font-title-md": `${tokens.titleMd}px`,
+      "--app-font-title-sm": `${tokens.titleSm}px`,
+      "--app-font-eyebrow": `${tokens.eyebrowSize}px`,
       "--app-font-display": '"Segoe UI Variable Display", "Segoe UI Semibold", "Segoe UI", Arial, sans-serif',
       "--app-font-mono": '"Cascadia Mono", Consolas, monospace',
       "--app-shadow-panel": tokens.shadows.panel,
@@ -274,10 +278,11 @@ function createAppTheme(
       sizes: {
         /** Line-heights match Mantine DEFAULT_THEME (Comfortable = prior look). */
         h1: { fontSize: `${tokens.headings.h1}px`, lineHeight: "1.3" },
-        h2: { fontSize: `${tokens.headings.h2}px`, lineHeight: "1.35" },
-        h3: { fontSize: `${tokens.headings.h3}px`, lineHeight: "1.4" },
-        h4: { fontSize: `${tokens.headings.h4}px`, lineHeight: "1.45" },
-        h5: { fontSize: `${tokens.headings.h5}px`, lineHeight: "1.5" },
+        /* h2-h6 are the section-title ramp so `Title order` and the atoms agree. */
+        h2: { fontSize: `${tokens.titleLg}px`, lineHeight: "1.35" },
+        h3: { fontSize: `${tokens.titleLg}px`, lineHeight: "1.4" },
+        h4: { fontSize: `${tokens.titleMd}px`, lineHeight: "1.45" },
+        h5: { fontSize: `${tokens.titleSm}px`, lineHeight: "1.5" },
         h6: { fontSize: `${tokens.headings.h6}px`, lineHeight: "1.5" },
       },
     },

@@ -210,6 +210,15 @@ export type AppTokens = {
   headings: { h1: number; h2: number; h3: number; h4: number; h5: number; h6: number };
   /** PageScaffold `h1` size (prior product used 28px, not Mantine h1 34). */
   pageTitle: number;
+  /*
+   * Section-title ramp (#PUX-004). Four levels, no ad-hoc font-size in features:
+   * lg = page-level section, md = panel/card section, sm = dense sub-header,
+   * eyebrow = uppercase label. Mantine's `Title` orders map onto lg/md/sm.
+   */
+  titleLg: number;
+  titleMd: number;
+  titleSm: number;
+  eyebrowSize: number;
   /** Input/Select helper under labels — readable in Compact, slightly below label size. */
   formDescription: number;
   /** Input/Select field labels — always at or above description size. */
@@ -224,6 +233,10 @@ const comfortableTokens: AppTokens = {
   fontSizes: { ...comfortableFontSizes },
   headings: { ...comfortableHeadings },
   pageTitle: comfortablePageTitle,
+  titleLg: 22,
+  titleMd: 18,
+  titleSm: 16,
+  eyebrowSize: 11,
   formLabel: comfortableFontSizes.sm,
   formDescription: comfortableFontSizes.xs,
   shadows: sharedShadows,
@@ -236,6 +249,10 @@ const compactTokens: AppTokens = {
   fontSizes: scaleRecord(comfortableFontSizes, UI_DENSITY_COMPACT_SCALE),
   headings: scaleRecord(comfortableHeadings, UI_DENSITY_COMPACT_SCALE),
   pageTitle: scalePx(comfortablePageTitle, UI_DENSITY_COMPACT_SCALE),
+  titleLg: scalePx(22, UI_DENSITY_COMPACT_SCALE),
+  titleMd: scalePx(18, UI_DENSITY_COMPACT_SCALE),
+  titleSm: scalePx(16, UI_DENSITY_COMPACT_SCALE),
+  eyebrowSize: scalePx(11, UI_DENSITY_COMPACT_SCALE),
   formLabel: 13,
   formDescription: scalePx(comfortableFontSizes.xs, UI_DENSITY_COMPACT_SCALE),
   shadows: sharedShadows,
