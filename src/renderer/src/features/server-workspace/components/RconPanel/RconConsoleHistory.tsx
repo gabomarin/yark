@@ -51,7 +51,7 @@ export function RconConsoleHistory(props: Props): ReactElement {
   );
 
   return (
-    <AppSurfaceCard tone="flat" padding="sm" radius="md" className={classes.responsesPanel}>
+    <AppSurfaceCard tone="flat" padding="sm" radius={0} className={classes.responsesPanel}>
       <Stack gap={4}>
         <div className={classes.header}>
           <Text className={classes.title}>Console history</Text>

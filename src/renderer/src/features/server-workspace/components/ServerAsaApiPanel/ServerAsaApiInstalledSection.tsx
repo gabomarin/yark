@@ -49,7 +49,7 @@ export function ServerAsaApiInstalledSection(props: Props): ReactElement {
   return (
     <>
       <div className={classes.statusGrid}>
-        <AppSurfaceCard tone="flat" padding="sm">
+        <AppSurfaceCard tone="flat" padding="sm" radius={0}>
           <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
             On Start
           </Text>
@@ -64,7 +64,7 @@ export function ServerAsaApiInstalledSection(props: Props): ReactElement {
                 : "Version.dll missing"}
           </Text>
         </AppSurfaceCard>
-        <AppSurfaceCard tone="flat" padding="sm">
+        <AppSurfaceCard tone="flat" padding="sm" radius={0}>
           <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
             API version
           </Text>
@@ -75,7 +75,7 @@ export function ServerAsaApiInstalledSection(props: Props): ReactElement {
             Update after game patches
           </Text>
         </AppSurfaceCard>
-        <AppSurfaceCard tone="flat" padding="sm">
+        <AppSurfaceCard tone="flat" padding="sm" radius={0}>
           <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
             Plugins
           </Text>
@@ -197,7 +197,7 @@ export function ServerAsaApiInstalledSection(props: Props): ReactElement {
             description="Add a plugin zip, or place each plugin in its own folder under ArkApi\Plugins (folder name = .dll name)."
           />
         ) : (
-          <AppSurfaceCard tone="flat" padding={0}>
+          <AppSurfaceCard tone="flat" padding={0} radius={0}>
             <ul className={classes.pluginList}>
               {props.status.plugins.map((plugin) => (
                 <li key={plugin.folderName} className={classes.pluginRow}>

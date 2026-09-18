@@ -34,7 +34,7 @@ export function WizardShell({ children }: { children: ReactNode }): ReactElement
       tone="flat"
       fill
       padding={0}
-      radius="md"
+      radius={0}
       className={classes.root}
       data-configuration-wizard
     >
@@ -236,7 +236,7 @@ export function PresetSelector({
         ]}
         aria-label={ariaLabel}
       />
-      <AppSurfaceCard tone="flat" padding="sm" radius="md" className={classes.presetSummary}>
+      <AppSurfaceCard tone="flat" padding="sm" radius={0} className={classes.presetSummary}>
         <Stack gap={4}>
           <Group gap="xs" wrap="wrap" align="center">
             <Text fw={700} size="sm">

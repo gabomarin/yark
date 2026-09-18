@@ -160,7 +160,7 @@ export function PlayerListSection(props: Props): ReactElement {
   })();
 
   return (
-    <AppSurfaceCard tone="flat" padding="sm" radius="md" className={classes.playersPanel}>
+    <AppSurfaceCard tone="flat" padding="sm" radius={0} className={classes.playersPanel}>
       <Stack gap="sm">
         <div className={classes.header}>
           <Text className={classes.title}>Players</Text>

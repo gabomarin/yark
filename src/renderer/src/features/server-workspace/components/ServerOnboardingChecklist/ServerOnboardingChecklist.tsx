@@ -28,7 +28,7 @@ export function ServerOnboardingChecklist(props: Props): ReactElement {
       tone="flat"
       fill
       padding={0}
-      radius="md"
+      radius={0}
       className={classes.root}
       data-server-onboarding-checklist
     >
@@ -55,7 +55,7 @@ export function ServerOnboardingChecklist(props: Props): ReactElement {
 
       <div className={classes.content}>
         <Stack gap="md" className={classes.steps}>
-          <AppSurfaceCard tone="flat" padding="md" radius="md" className={classes.step}>
+          <AppSurfaceCard tone="flat" padding="md" radius={0} className={classes.step}>
             <Group gap="sm" mb="xs">
               <Title order={4}>Play experience</Title>
               {experienceDone && (
@@ -88,7 +88,7 @@ export function ServerOnboardingChecklist(props: Props): ReactElement {
             </Group>
           </AppSurfaceCard>
 
-          <AppSurfaceCard tone="flat" padding="md" radius="md" className={classes.step}>
+          <AppSurfaceCard tone="flat" padding="md" radius={0} className={classes.step}>
             <Group gap="sm" mb="xs">
               <HardDrives size={18} />
               <Title order={4}>Server files</Title>

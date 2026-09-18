@@ -24,6 +24,13 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Experimental, default-off **Hosted Resources** now supports operator notes and normalized tags for quickly identifying resources, with clearer ASA dynamic-config examples and a guided “next step” for connecting a copied URL to a server setting (#564).
 - Hosted Resource edits now publish content and operator metadata atomically; listener settings and diagnostics are serialized to keep reported state consistent with the requested operation (#564).
 
+### Changed
+
+- Settings and Clusters use a fused master-detail slab (no gutter, fills the viewport): **chrome** surface for contrast vs the page canvas, raised panel SettingsCards/rows inside. Settings is flush to the app sidebar; **Desktop alerts** nests event toggles in one group. List selection uses a Fluent short left notch (no status notch on the Clusters detail pane). Workspace server rail uses the same short notch as the sidebar.
+- Settings, Clusters, Logs, Backups, and Downloads use flush chrome tool panes (`PageScaffold edgeToEdge`): title and actions live inside the chrome shell against the app sidebar; raised panel cards/rows stay on top. Settings and Clusters keep fused master-detail splits; **Desktop alerts** nests event toggles in one group. List selection uses a Fluent short left notch (no status notch on the Clusters detail pane). Workspace server rail uses the same short notch as the sidebar.
+- Operator gotchas (`DismissibleHint`) render as an InfoBar (solid panel + left accent) instead of a translucent Alert wash.
+- Server workspace body is one chrome surface: the list rail, main tab host, and side rail share `--app-color-surface-chrome`, the page-canvas gutter is gone, and every full-pane tab shell (form, Mods, Launch, INI, Backups, RCON, Maintenance, ASA API, wizard, onboarding) is square so tabs read as the pane instead of a rounded card floating on canvas.
+
 ### Fixed
 
 - A loopback `AdminListURL` (for example a **Hosted Resources** URL) is now kept verbatim in `GameUserSettings.ini` instead of being rewritten to a `file://` pointer, so the Admins field keeps showing the URL and **Current ids** reads the served list (#564).
@@ -39,9 +46,6 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Changed
 
 - First-steps onboarding checklist uses shared **AppSurfaceCard** chrome and spacing tokens instead of a one-off panel recipe (#237).
-- Settings and Clusters use a fused master-detail slab (no gutter, fills the viewport): **chrome** surface for contrast vs the page canvas, raised panel SettingsCards/rows inside. Settings is flush to the app sidebar; **Desktop alerts** nests event toggles in one group. List selection uses a Fluent short left notch (no status notch on the Clusters detail pane). Workspace server rail uses the same short notch as the sidebar.
-- Settings, Clusters, Logs, Backups, and Downloads use flush chrome tool panes (`PageScaffold edgeToEdge`): title and actions live inside the chrome shell against the app sidebar; raised panel cards/rows stay on top. Settings and Clusters keep fused master-detail splits; **Desktop alerts** nests event toggles in one group. List selection uses a Fluent short left notch (no status notch on the Clusters detail pane). Workspace server rail uses the same short notch as the sidebar.
-- Operator gotchas (`DismissibleHint`) render as an InfoBar (solid panel + left accent) instead of a translucent Alert wash.
 - Overview search clears after create, clone, or import so a leftover filter cannot hide the new server; cluster members show map art without repeating the shared folder; header **Remove** actions are quiet red; consoles and path chips share Cascadia Mono / Consolas. Settings remembers the last category (SteamCMD / About deep links still win; the setup assistant lands on **General**).
 - Downloads keeps a one-line job status and hides the SteamCMD log until **Advanced log** (opens on failed/interrupted jobs); Logs keeps severity badges, with INFO in quiet gray; backup status is a word plus a dot; Mods/Backups gotchas can be dismissed.
 - Workspace tabs stay in one row as a desktop tab strip (**Backups** after Launch, **Ark Server API** last); Launch flags keep the CLI token first with a human summary underneath; maps and backup rows use human names (zip secondary); Overview Open is the identity block with a visible chevron.

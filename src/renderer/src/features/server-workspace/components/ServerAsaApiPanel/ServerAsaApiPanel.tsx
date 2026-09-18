@@ -43,7 +43,7 @@ export function ServerAsaApiPanel(props: Props): ReactElement {
         tone="flat"
         fill
         padding={0}
-        radius="md"
+        radius={0}
         className={classes.panel}
         data-testid="server-asaapi-panel"
         data-asa-api-panel
@@ -89,7 +89,7 @@ export function ServerAsaApiPanel(props: Props): ReactElement {
             ) : null}
 
             {panel.installProgress !== null ? (
-              <AppSurfaceCard tone="flat" padding="sm">
+              <AppSurfaceCard tone="flat" padding="sm" radius={0}>
                 <Stack gap="xs">
                   <Group gap="sm" wrap="nowrap" align="center">
                     <Loader

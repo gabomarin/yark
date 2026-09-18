@@ -27,7 +27,7 @@ export function AdminsRemoteConfig(props: AdminsRemoteConfigProps): ReactElement
     <AppSurfaceCard
       tone="flat"
       padding="sm"
-      radius="md"
+      radius={0}
       className={classes.sourceCard}
     >
       <Stack gap="sm">

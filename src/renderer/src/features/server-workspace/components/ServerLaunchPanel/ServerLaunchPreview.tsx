@@ -28,7 +28,7 @@ export function ServerLaunchPreview(props: Props): ReactElement {
         {props.open ? "Hide" : "Show"} effective command preview
       </Button>
       {props.open ? (
-        <AppSurfaceCard tone="flat">
+        <AppSurfaceCard tone="flat" radius={0}>
           <Text size="xs" c="dimmed" mb={6} data-testid="launch-preview-legend">
             <span className={classes.previewYark}>YARK-owned</span>
             {" · "}

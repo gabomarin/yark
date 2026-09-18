@@ -119,7 +119,7 @@ export function ServerLaunchPanel(props: Props): ReactElement {
       tone="flat"
       fill
       padding={0}
-      radius="md"
+      radius={0}
       className={classes.panel}
       data-testid="server-launch-panel"
     >
@@ -225,7 +225,7 @@ export function ServerLaunchPanel(props: Props): ReactElement {
             })}
           </div>
 
-          <AppSurfaceCard tone="flat">
+          <AppSurfaceCard tone="flat" radius={0}>
             <Stack gap="xs">
               <Textarea
                 label="Extra arguments"

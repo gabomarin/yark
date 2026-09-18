@@ -132,7 +132,7 @@ export function RconPanel(props: Props): ReactElement {
   return (
     <div className={classes.root}>
       <div className={classes.mainColumn}>
-        <AppSurfaceCard tone="flat" padding="sm" radius="md" className={classes.mainPanel}>
+        <AppSurfaceCard tone="flat" padding="sm" radius={0} className={classes.mainPanel}>
           <Stack gap="sm">
             <div className={classes.header}>
               <div>

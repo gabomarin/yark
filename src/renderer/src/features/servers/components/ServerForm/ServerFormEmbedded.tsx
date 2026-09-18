@@ -27,7 +27,7 @@ export function ServerFormEmbedded(props: Props): ReactElement {
       tone="flat"
       fill
       padding={0}
-      radius="md"
+      radius={0}
       className={classes.embedded}
       data-server-form="embedded"
     >

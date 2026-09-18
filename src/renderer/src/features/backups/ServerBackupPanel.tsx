@@ -105,7 +105,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
         </Alert>
       )}
 
-      <AppSurfaceCard className={classes.listPanel}>
+      <AppSurfaceCard className={classes.listPanel} radius={0}>
         <Tabs
           value={panel.activeKind}
           onChange={(value) => {

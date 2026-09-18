@@ -26,7 +26,7 @@ export function WizardReviewStep(props: Props): ReactElement {
     >
       {clusterPathSelected ? (
         <Stack gap="md">
-          <AppSurfaceCard tone="flat" padding="md" radius="md">
+          <AppSurfaceCard tone="flat" padding="md" radius={0}>
             <Stack gap="sm">
               <Group gap="xs">
                 <Badge variant="light" color="blue" tt="none">

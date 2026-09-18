@@ -72,7 +72,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
       tone="flat"
       fill
       padding={0}
-      radius="md"
+      radius={0}
       className={classes.root}
       data-configuration-editor
     >
