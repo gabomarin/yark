@@ -133,6 +133,7 @@ jobs:
           LLM_URL: ${{ steps.provider.outputs.provider == 'fallback' && vars.OCR_FALLBACK_URL || vars.OCR_PRIMARY_URL }}
           LLM_MODEL: ${{ steps.provider.outputs.provider == 'fallback' && vars.OCR_FALLBACK_MODEL || vars.OCR_PRIMARY_MODEL }}
           LLM_TOKEN: ${{ steps.provider.outputs.provider == 'fallback' && secrets.OCR_FALLBACK_API_KEY || secrets.OCR_PRIMARY_API_KEY }}
+          LLM_SESSION: ${{ github.repository }}-pr-${{ github.event.issue.number || inputs.pr_number }}-head-${{ steps.pr-context.outputs.head_sha }}
         shell: bash
         run: |
           set -euo pipefail
@@ -145,6 +146,8 @@ jobs:
             --max-time 30 \
             -X POST "$LLM_URL" \
             -H "Authorization: Bearer $LLM_TOKEN" \
+            -H "x-opencode-session: $LLM_SESSION" \
+            -H 'User-Agent: YARK-OpenCodeReview/1.0' \
             -H 'Content-Type: application/json' \
             --data "$(jq -cn \
               --arg model "$LLM_MODEL" \
@@ -174,6 +177,7 @@ jobs:
           llm_auth_token: ${{ steps.provider.outputs.provider == 'fallback' && secrets.OCR_FALLBACK_API_KEY || secrets.OCR_PRIMARY_API_KEY }}
           llm_model: ${{ steps.provider.outputs.provider == 'fallback' && vars.OCR_FALLBACK_MODEL || vars.OCR_PRIMARY_MODEL }}
           llm_use_anthropic: false
+          llm_extra_headers: x-opencode-session=${{ github.repository }}-pr-${{ github.event.issue.number || inputs.pr_number }}-head-${{ steps.pr-context.outputs.head_sha }},User-Agent=YARK-OpenCodeReview/1.0
           llm_extra_body: '{}'
           language: English
           ocr_version: "1.12.4"
