@@ -236,7 +236,7 @@ function createAppTheme(
     primaryShade: 5,
     /** Dark text on light filled colors (fossil Restart, attention); white on red/teal filled. */
     autoContrast: true,
-    fontFamily: '"Segoe UI", Arial, sans-serif',
+    fontFamily: '"Segoe UI Variable Text", "Segoe UI", Arial, sans-serif',
     fontFamilyMonospace: '"Cascadia Mono", Consolas, monospace',
     defaultRadius: "sm",
     /** Aligns `gap="xs"|…` / `p="md"` with `--app-space-*` (overrides Mantine defaults). */
@@ -447,8 +447,29 @@ function createAppTheme(
           },
         },
       },
-      Anchor: {
+      /*
+       * Fluent 2 tooltip: 4px corners, 12px text, tight padding, no arrow, and a
+       * hairline so the surface separates on any shell.
+       */
+      Tooltip: {
         defaultProps: {
+          radius: 4,
+          fz: "xs",
+          px: "xs",
+          py: 4,
+          withArrow: false,
+        },
+        styles: {
+          tooltip: { border: "1px solid var(--app-color-border-subtle)" },
+        },
+      },
+      /** Fluent ProgressBar is a thin 4px bar; call sites may still pass `size`. */
+      Progress: {
+        defaultProps: {
+          size: 4,
+        },
+      },
+      Anchor: {        defaultProps: {
           underline: "always",
         },
         styles: {

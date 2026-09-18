@@ -59,7 +59,7 @@ body,
 body {
   background: var(--app-color-bg);
   color: var(--app-color-text);
-  font-family: "Segoe UI", Arial, sans-serif;
+  font-family: "Segoe UI Variable Text", "Segoe UI", Arial, sans-serif;
 }
 
 /* Compact: tighter TextInput height + horizontal padding than Mantine `sm` alone. */
