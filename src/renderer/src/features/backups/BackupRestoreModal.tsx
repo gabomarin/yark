@@ -1,8 +1,9 @@
 import type { ReactElement } from "react";
-import { Button, Checkbox, Group, Modal, Stack, Text } from "@mantine/core";
+import { Button, Checkbox, Stack, Text } from "@mantine/core";
 import { backupFinishedAt } from "@shared/backups/backup-player-meta";
 import { formatLogDateTime } from "@shared/format-log-datetime";
 import type { BackupRecord } from "@shared/types";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 
 function formatWhen(iso: string): string {
   return formatLogDateTime(iso, { fallback: iso });
@@ -29,11 +30,21 @@ interface Props {
 export function BackupRestoreModal(props: Props): ReactElement {
   const backup = props.backup;
   return (
-    <Modal
+    <AppPanelModal
       opened={backup !== null}
       onClose={props.onClose}
+      size="sm"
       title="Restore backup?"
-      centered
+      footer={
+        <>
+          <Button variant="default" onClick={props.onClose} disabled={props.busy}>
+            Cancel
+          </Button>
+          <Button color="orange" onClick={props.onConfirm} loading={props.busy}>
+            Restore
+          </Button>
+        </>
+      }
     >
       {backup !== null ? (
         <Stack gap="md">
@@ -64,16 +75,8 @@ export function BackupRestoreModal(props: Props): ReactElement {
               server must stay stopped.
             </Text>
           )}
-          <Group justify="flex-end" gap="sm">
-            <Button variant="default" onClick={props.onClose} disabled={props.busy}>
-              Cancel
-            </Button>
-            <Button color="orange" onClick={props.onConfirm} loading={props.busy}>
-              Restore
-            </Button>
-          </Group>
         </Stack>
       ) : null}
-    </Modal>
+    </AppPanelModal>
   );
 }

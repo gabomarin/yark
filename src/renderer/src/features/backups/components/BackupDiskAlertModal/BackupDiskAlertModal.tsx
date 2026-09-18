@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
-import { Button, Group, Modal, NumberInput, Stack, Text } from "@mantine/core";
+import { Button, NumberInput, Stack, Text } from "@mantine/core";
 import type { BackupDiskAlertSettings } from "@shared/types";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 
 interface Props {
   opened: boolean;
@@ -13,11 +14,21 @@ interface Props {
 
 export function BackupDiskAlertModal(props: Props): ReactElement {
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={props.onClose}
+      size="sm"
       title="Warn me when the backup drive fills up"
-      centered
+      footer={
+        <>
+          <Button variant="default" onClick={props.onClose}>
+            Cancel
+          </Button>
+          <Button loading={props.busy} onClick={props.onSave}>
+            Save thresholds
+          </Button>
+        </>
+      }
     >
       {props.diskDraft !== null && (
         <Stack gap="md">
@@ -61,16 +72,8 @@ export function BackupDiskAlertModal(props: Props): ReactElement {
               })
             }
           />
-          <Group justify="flex-end">
-            <Button variant="default" onClick={props.onClose}>
-              Cancel
-            </Button>
-            <Button loading={props.busy} onClick={props.onSave}>
-              Save thresholds
-            </Button>
-          </Group>
         </Stack>
       )}
-    </Modal>
+    </AppPanelModal>
   );
 }

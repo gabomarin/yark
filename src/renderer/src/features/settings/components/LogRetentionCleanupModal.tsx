@@ -1,7 +1,8 @@
 import type { ReactElement } from "react";
-import { Button, Group, Modal, Stack, Text } from "@mantine/core";
+import { Button, Stack, Text } from "@mantine/core";
 import type { LogCleanupPreview } from "@shared/types";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -24,12 +25,27 @@ export function LogRetentionCleanupModal(props: Props): ReactElement {
     props.preview !== null && props.preview.items.length > 0;
 
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={() => !props.busy && props.onClose()}
       title="Clean up old logs"
       size="lg"
-      centered
+      footer={
+        <>
+          <Button variant="default" disabled={props.busy} onClick={props.onClose}>
+            Cancel
+          </Button>
+          {canRemove ? (
+            <Button color="red" variant="filled" loading={props.busy} onClick={props.onConfirm}>
+              Remove {props.preview!.items.length}
+            </Button>
+          ) : (
+            <Button variant="light" loading={props.busy} onClick={props.onScan}>
+              Scan
+            </Button>
+          )}
+        </>
+      }
     >
       <Stack gap="md">
         <Text size="sm" c="dimmed">
@@ -71,35 +87,7 @@ export function LogRetentionCleanupModal(props: Props): ReactElement {
             )}
           </AppSurfaceCard>
         )}
-
-        <Group justify="flex-end" gap="sm">
-          <Button
-            variant="default"
-            disabled={props.busy}
-            onClick={props.onClose}
-          >
-            Cancel
-          </Button>
-          {canRemove ? (
-            <Button
-              color="red"
-              variant="filled"
-              loading={props.busy}
-              onClick={props.onConfirm}
-            >
-              Remove {props.preview!.items.length}
-            </Button>
-          ) : (
-            <Button
-              variant="light"
-              loading={props.busy}
-              onClick={props.onScan}
-            >
-              Scan
-            </Button>
-          )}
-        </Group>
       </Stack>
-    </Modal>
+    </AppPanelModal>
   );
 }
