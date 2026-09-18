@@ -9,6 +9,7 @@ binaries, SteamCMD, backups, rollback).
 | Scenario | Command | Gate | Notes |
 | --- | --- | --- | --- |
 | Electron launch + empty Overview | `npm run build && npm run e2e:smoke` | Local | Isolated `YARK_E2E_USER_DATA`; CRUD already covers launch + shell nav in CI |
+| Cold start → Overview timing snapshot | `npm run build && npm run e2e:perf` | Local | Informational timing only; no CI budget gate or real ASA files (#219) |
 | Renderer production bundle inventory | `npm run build:report` | CI artifact / local | Raw + gzip chunk/module report; not a RAM gate |
 | Keyboard smoke (Spotlight, card menu, Escape) | `npm run build && npm run e2e:keyboard` | Local | Ctrl+K, Shift+F10, Escape on Delete; search Escape; **Open settings** identity control; workspace arrows; Settings category Enter (#476, #477) |
 | Create / clone / delete UI | `npm run build && npm run e2e` | **PR CI** | Disposable dirs under `C:\asa-e2e\…` |
