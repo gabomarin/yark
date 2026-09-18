@@ -257,6 +257,7 @@ export function ServerFormMapsSearchModal(props: Props): ReactElement {
         </Group>
       }
       size={step === "confirm" ? 560 : 960}
+      height={step === "confirm" ? undefined : "min(84vh, 850px)"}
     >
       {step === "search" ? (
         <div className={classes.modalStep}>

@@ -223,7 +223,7 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
       closeOnClickOutside={!saving && !dirty}
       closeOnEscape={!saving}
       withCloseButton={!saving}
-      maxHeight="min(92vh, 860px)"
+      height="96vh"
     >
       <div className={classes.shell} data-cluster-ini-shell>
         <div className={classes.top}>

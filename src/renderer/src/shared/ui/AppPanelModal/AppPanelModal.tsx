@@ -37,7 +37,13 @@ interface Props {
   zIndex?: number;
   /** Appended to the content class (e.g. a full-height dialog). */
   contentClassName?: string;
-  /** Dialog cap; defaults to `min(720px, 90vh)`. Tall pickers pass `min(92vh, 860px)`. */
+  /**
+   * Definite dialog height. Full-height dialogs (INI editors, catalog pickers)
+   * need it: their inner shell is `flex: 1 1 0; height: 100%`, which collapses to
+   * zero under a bare `max-height`. Also caps the default `min(720px, 90vh)`.
+   */
+  height?: string;
+  /** Dialog cap when a definite `height` is not wanted. Defaults to `min(720px, 90vh)`. */
   maxHeight?: string;
   /** Extra data-* hooks forwarded to the dialog content. */
   [key: `data-${string}`]: unknown;
@@ -66,6 +72,7 @@ export function AppPanelModal(props: Props): ReactElement {
     closeOnEscape,
     zIndex,
     contentClassName,
+    height,
     maxHeight,
     children,
     ...dataAttributes
@@ -97,7 +104,16 @@ export function AppPanelModal(props: Props): ReactElement {
         color="#000"
         data-app-modal-overlay
       />
-      <Modal.Content radius="md" style={maxHeight === undefined ? undefined : { maxHeight }} {...dataAttributes}>
+      <Modal.Content
+        radius="md"
+        style={
+          height === undefined && maxHeight === undefined
+            ? undefined
+            : /* A definite height must also lift the class cap, or it gets cut to 720px. */
+              { height, maxHeight: maxHeight ?? height }
+        }
+        {...dataAttributes}
+      >
         <Modal.Header>
           <div className={classes.headerTop}>
             <div>

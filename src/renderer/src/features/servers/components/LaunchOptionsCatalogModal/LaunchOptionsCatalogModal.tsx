@@ -22,7 +22,7 @@ export function LaunchOptionsCatalogModal(props: Props): ReactElement {
       title="ASA launch-options catalog"
       size={1200}
       centered={false}
-      maxHeight="min(84vh, 820px)"
+      height="min(84vh, 820px)"
     >
       <div className={classes.root} data-density={density}>
         <header className={classes.header}>

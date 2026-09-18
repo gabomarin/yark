@@ -237,6 +237,7 @@ export function CopyConfigurationWizard(props: Props): ReactElement {
       closeOnEscape={!committing}
       title="Copy configuration"
       size="xl"
+      maxHeight="min(78vh, 820px)"
       data-copy-configuration-wizard
     >
       <Stack gap="md">
