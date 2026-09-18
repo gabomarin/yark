@@ -18,9 +18,20 @@ on:
           - primary
           - fallback
           - retry
+      effort:
+        description: Review effort; auto selects low or medium from PR size
+        required: true
+        default: auto
+        type: choice
+        options:
+          - auto
+          - low
+          - medium
+          - high
 
 permissions:
   contents: read
+  issues: write
   pull-requests: write
 
 concurrency:
@@ -58,11 +69,29 @@ jobs:
         )
       }}
     steps:
+      - name: Acknowledge review request
+        if: ${{ github.event_name == 'issue_comment' }}
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            try {
+              await github.rest.reactions.createForIssueComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: context.payload.comment.id,
+                content: 'eyes',
+              });
+            } catch (error) {
+              core.warning(`Could not acknowledge the review request: ${error.message}`);
+            }
+
       - name: Resolve provider and validate command
         id: provider
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         env:
           REQUESTED_PROVIDER: ${{ inputs.provider || '' }}
+          REQUESTED_EFFORT: ${{ inputs.effort || '' }}
           PRIMARY_CONFIGURED: ${{ vars.OCR_PRIMARY_URL != '' && vars.OCR_PRIMARY_MODEL != '' && secrets.OCR_PRIMARY_API_KEY != '' }}
           FALLBACK_CONFIGURED: ${{ vars.OCR_FALLBACK_URL != '' && vars.OCR_FALLBACK_MODEL != '' && secrets.OCR_FALLBACK_API_KEY != '' }}
         with:
@@ -72,15 +101,21 @@ jobs:
 
             if (context.eventName === 'issue_comment') {
               const command = context.payload.comment.body.trim();
-              const match = command.match(/^\/open-code-review(?:\s+(primary|fallback|retry))?$/i);
+              const match = command.match(/^\/open-code-review(?:\s+(primary|fallback|retry|high))?$/i);
 
               if (!match) {
-                core.setFailed('Use exactly /open-code-review, /open-code-review primary, /open-code-review retry, or /open-code-review fallback.');
+                core.setFailed('Use exactly /open-code-review, /open-code-review primary, /open-code-review retry, /open-code-review fallback, or /open-code-review high.');
                 return;
               }
 
               const commandProvider = match[1]?.toLowerCase();
               provider = commandProvider === 'fallback' ? 'fallback' : commandProvider === 'retry' ? 'retry' : 'primary';
+              core.setOutput('effort_override', commandProvider === 'high' ? 'high' : '');
+            } else if (['auto', 'low', 'medium', 'high'].includes(process.env.REQUESTED_EFFORT)) {
+              core.setOutput('effort_override', process.env.REQUESTED_EFFORT === 'auto' ? '' : process.env.REQUESTED_EFFORT);
+            } else if (process.env.REQUESTED_EFFORT) {
+              core.setFailed(`Unsupported effort: ${process.env.REQUESTED_EFFORT}`);
+              return;
             }
 
             if (!['primary', 'fallback'].includes(provider)) {
@@ -127,6 +162,26 @@ jobs:
 
             core.setOutput('base_ref', pullRequest.base.ref);
             core.setOutput('head_sha', pullRequest.head.sha);
+
+      - name: Select review effort
+        id: effort
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          PR_NUMBER: ${{ github.event.issue.number || inputs.pr_number }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const pullNumber = Number(process.env.PR_NUMBER);
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pullNumber,
+              per_page: 100,
+            });
+            const changedLines = files.reduce((total, file) => total + file.additions + file.deletions, 0);
+            const effort = files.length <= 5 && changedLines <= 120 ? 'low' : 'medium';
+            core.setOutput('effort', effort);
+            core.info(`Selected ${effort} effort for ${files.length} files and ${changedLines} changed lines.`);
 
       - name: Check LLM provider
         env:
@@ -182,6 +237,7 @@ jobs:
           llm_extra_body: '{}'
           language: English
           ocr_version: "1.12.4"
+          effort: ${{ steps.provider.outputs.effort_override || steps.effort.outputs.effort }}
           sticky_summary: true
           incremental: true
           checkpoint_range: true
@@ -202,6 +258,7 @@ jobs:
           OCR_RANGE_SUMMARY: ${{ steps.ocr-review.outputs.range_summary }}
           OCR_PROVIDER: ${{ steps.provider.outputs.provider }}
           OCR_MODEL: ${{ steps.provider.outputs.provider == 'fallback' && vars.OCR_FALLBACK_MODEL || vars.OCR_PRIMARY_MODEL }}
+          OCR_EFFORT: ${{ steps.provider.outputs.effort_override || steps.effort.outputs.effort }}
         with:
           github-token: ${{ github.token }}
           script: |
@@ -250,6 +307,7 @@ jobs:
               `- **Findings:** ${total} (${inline} inline, ${routed} in summary)`,
               `- **Review range:** ${process.env.OCR_RANGE_SUMMARY || 'full PR range'}`,
               `- **Provider:** ${process.env.OCR_PROVIDER || 'primary'} (${process.env.OCR_MODEL || 'configured model'})`,
+              `- **Effort:** ${process.env.OCR_EFFORT || 'medium'}`,
             ].join('\n');
 
             await github.rest.issues.updateComment({

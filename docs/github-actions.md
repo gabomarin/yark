@@ -40,6 +40,7 @@ Use these exact PR comments:
 - `/open-code-review primary` — review with the primary provider.
 - `/open-code-review retry` — force a full review with the primary provider.
 - `/open-code-review fallback` — review with the fallback provider.
+- `/open-code-review high` — force high-effort review with the primary provider.
 
 Repeated reviews use sticky summaries, incremental comments, and checkpoint ranges
 to avoid repeating already reviewed changes. The explicit `retry` command bypasses
@@ -59,6 +60,11 @@ After a successful review, a follow-up step enriches the sticky OCR summary with
 the result, finding counts, reviewed range, and selected provider/model. Findings
 remain inline review comments; the extra summary is presentation metadata and
 does not replace those comments.
+
+Normal reviews automatically select `low` effort for PRs with up to 5 changed
+files and 120 changed lines; larger PRs use `medium`. High effort is never
+selected automatically and must be requested with `/open-code-review high` or
+the manual workflow's effort input.
 | [`.github/workflows/discord-release-notify.yml`](../.github/workflows/discord-release-notify.yml) | Manual Discord re-announce for an existing tag (`workflow_dispatch`) | `contents: read` |
 
 Release runs only when `github.repository == 'gabomarin/yark'` (tag push or
