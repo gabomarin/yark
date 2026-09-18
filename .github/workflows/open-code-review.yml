@@ -177,7 +177,7 @@ jobs:
           llm_auth_token: ${{ steps.provider.outputs.provider == 'fallback' && secrets.OCR_FALLBACK_API_KEY || secrets.OCR_PRIMARY_API_KEY }}
           llm_model: ${{ steps.provider.outputs.provider == 'fallback' && vars.OCR_FALLBACK_MODEL || vars.OCR_PRIMARY_MODEL }}
           llm_use_anthropic: false
-          llm_extra_headers: x-opencode-session=${{ github.repository }}-pr-${{ github.event.issue.number || inputs.pr_number }}-head-${{ steps.pr-context.outputs.head_sha }},User-Agent=YARK-OpenCodeReview/1.0
+          llm_extra_headers: x-opencode-session=${{ github.repository }}-pr-${{ github.event.issue.number || inputs.pr_number }}-head-${{ steps.pr-context.outputs.head_sha }}
           llm_extra_body: '{}'
           language: English
           ocr_version: "1.12.4"
