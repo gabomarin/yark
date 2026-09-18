@@ -128,6 +128,48 @@ jobs:
             core.setOutput('base_ref', pullRequest.base.ref);
             core.setOutput('head_sha', pullRequest.head.sha);
 
+      - name: Check LLM provider
+        env:
+          LLM_URL: ${{ steps.provider.outputs.provider == 'fallback' && vars.OCR_FALLBACK_URL || vars.OCR_PRIMARY_URL }}
+          LLM_MODEL: ${{ steps.provider.outputs.provider == 'fallback' && vars.OCR_FALLBACK_MODEL || vars.OCR_PRIMARY_MODEL }}
+          LLM_TOKEN: ${{ steps.provider.outputs.provider == 'fallback' && secrets.OCR_FALLBACK_API_KEY || secrets.OCR_PRIMARY_API_KEY }}
+          LLM_SESSION: ${{ github.repository }}-pr-${{ github.event.issue.number || inputs.pr_number }}-head-${{ steps.pr-context.outputs.head_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          response_code=000
+          curl_exit=0
+          curl --silent --show-error \
+            --output /tmp/ocr-llm-preflight-response.json \
+            --write-out '%{http_code}' \
+            --max-time 30 \
+            -X POST "$LLM_URL" \
+            -H "Authorization: Bearer $LLM_TOKEN" \
+            -H "x-opencode-session: $LLM_SESSION" \
+            -H 'User-Agent: YARK-OpenCodeReview/1.0' \
+            -H 'Content-Type: application/json' \
+            --data "$(jq -cn \
+              --arg model "$LLM_MODEL" \
+              '{model: $model, messages: [{role: "user", content: "Reply with OK"}], max_tokens: 4}')" \
+            > /tmp/ocr-llm-preflight-status.txt || curl_exit=$?
+
+          if [[ "$curl_exit" -ne 0 ]]; then
+            echo "::error::LLM provider preflight could not connect (curl exit $curl_exit)"
+            cat /tmp/ocr-llm-preflight-response.json 2>/dev/null || true
+            exit 1
+          fi
+
+          response_code="$(cat /tmp/ocr-llm-preflight-status.txt)"
+          if [[ ! "$response_code" =~ ^2 ]]; then
+            echo "::error::LLM provider preflight failed with HTTP $response_code"
+            jq 'del(.choices, .usage)' /tmp/ocr-llm-preflight-response.json 2>/dev/null \
+              || cat /tmp/ocr-llm-preflight-response.json
+            exit 1
+          fi
+
+          echo "LLM provider preflight succeeded for model $LLM_MODEL"
+
       - name: Run OpenCodeReview
         uses: alibaba/open-code-review@f1101fd7f51304c82e4a4f292bbee88aea0823cf # v1.12.4
         with:
@@ -135,6 +177,8 @@ jobs:
           llm_auth_token: ${{ steps.provider.outputs.provider == 'fallback' && secrets.OCR_FALLBACK_API_KEY || secrets.OCR_PRIMARY_API_KEY }}
           llm_model: ${{ steps.provider.outputs.provider == 'fallback' && vars.OCR_FALLBACK_MODEL || vars.OCR_PRIMARY_MODEL }}
           llm_use_anthropic: false
+          llm_extra_headers: x-opencode-session=${{ github.repository }}-pr-${{ github.event.issue.number || inputs.pr_number }}-head-${{ steps.pr-context.outputs.head_sha }},User-Agent=YARK-OpenCodeReview/1.0
+          llm_extra_body: '{}'
           language: English
           ocr_version: "1.12.4"
           sticky_summary: true
