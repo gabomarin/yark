@@ -233,11 +233,49 @@ function createAppTheme(
           PasswordInput: { defaultProps: { size: "xs" } },
           Textarea: { defaultProps: { size: "xs" } },
           NativeSelect: { defaultProps: { size: "xs" } },
-          SegmentedControl: { defaultProps: { size: "xs" } },
           Button: { defaultProps: { size: "xs" } },
           ActionIcon: { defaultProps: { size: "xs" } },
         } as const)
       : {};
+
+  /*
+   * Fluent TabList shape: pill track, raised pill indicator, no item borders. `xl`
+   * (32px) is larger than any control height, so the pill holds at every size. The
+   * indicator stays *lighter* than the track - never a darker well.
+   * Kept out of `compactControlDefaults`: that object is spread last, so a
+   * SegmentedControl entry there would replace this whole recipe (shallow spread).
+   */
+  const segmentedControlDefaults = {
+    defaultProps: {
+      radius: "xl" as const,
+      withItemsBorders: false,
+      ...(density === "compact" ? { size: "xs" as const } : {}),
+    },
+    vars: (_theme: unknown, props: { color?: string | undefined }) => ({
+      root: {
+        /* Neutral selected pill, three steps above the track, unless the caller
+         * encodes meaning with `color` (the wizard passes the preset / difficulty
+         * colour). The check is on the prop rather than a `defaultProps.color` so a
+         * call site that computes `color` and gets `undefined` still gets the fill.
+         * `--sc-label-color` is deliberately NOT set: Mantine then paints the active
+         * label with the fill's contrast colour instead of text grey. */
+        ...(props.color === undefined
+          ? { "--sc-color": "var(--app-color-surface-control-hover)" }
+          : {}),
+        "--sc-shadow": "var(--app-elevation-2)",
+      },
+    }),
+    styles: {
+      root: {
+        backgroundColor: "var(--app-color-panel-raised)",
+      },
+      /* Mantine hardcodes `box-shadow: none` on the indicator in dark scheme and
+       * only reads `--sc-shadow` in light, so set it inline to get the lift. */
+      indicator: {
+        boxShadow: "var(--app-elevation-2)",
+      },
+    },
+  };
 
   /** Hide ScrollArea chrome until content overflows (#395). */
   const dropdownScrollAreaProps = {
@@ -452,6 +490,7 @@ function createAppTheme(
           type: "auto",
         },
       },
+      SegmentedControl: segmentedControlDefaults,
       Select: {
         defaultProps: comboboxScrollDefaults,
       },

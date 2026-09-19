@@ -26,6 +26,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Segmented pickers use the Fluent TabList shape: a pill track with a raised pill indicator (elevation 2), no separators between segments, and a filled pill for the selected segment - neutral `surface-control-hover` (three steps above the track) with a contrast-coloured label, so it is unmistakable next to the unselected ones without competing with the accent. Applied once in the theme for the wizard, INI Visual/Text, mods filters, list controls, changelog tabs and setup wizard; the wizard's progression and difficulty pickers keep their preset colour.
 - Switch labels read before the control (Fluent order): `Switch` defaults to `labelPosition="left"` in the theme, so a visible label sits left of the toggle instead of after it, and the two unnamed switches in the INI setting rows now expose their setting name to assistive tech.
 - Control corners follow Fluent 2 at 4px: the control chrome radius drops from 6px to 4px (Compact 3px) for buttons, fields, badges, chips, search and list rows, and the Button/ActionIcon/Badge call sites that had overridden it for a surface radius now inherit it.
 - Depth uses one Fluent 2 elevation ladder: five two-layer levels (`--app-elevation-2/4/8/16/28`) replace the per-surface dock, overlay, drawer and map-picker shadows, and Mantine's `shadow` scale resolves onto the same tokens.

@@ -172,7 +172,20 @@ Fluent 2 gives most **components** 4px (button, field, badge, checkbox, card) an
 8px+ for surfaces above the base (flyout, dialog). So controls carry the 4px step and
 `radius="md"` on a Button/ActionIcon/Badge is the inconsistency to remove, not a style.
 Progress **tracks** and Skeleton bars keep `radius="xl"` on purpose (a pill indicator,
-not a control); `999px` stays reserved for true circles (status dots, timeline dots).
+not a control), and `999px` stays reserved for true circles (status dots, timeline dots).
+
+**SegmentedControl** is the other pill exception, and it is themed once: Fluent TabList
+shape = pill track (`radius="xl"`, larger than any control height so it holds at every
+size), a raised pill indicator (`--app-elevation-2`) on a track of
+`--app-color-panel-raised`, and `withItemsBorders: false` (Fluent has no separators
+between segments). The **selected** segment is filled, not nudged: neutral
+`--app-color-surface-control-hover` (three steps above the track) with the label in the
+fill's contrast colour, so selected vs unselected reads at a glance without burning the
+accent — the accent stays for primary actions, rails and focus. A caller that encodes
+meaning passes `color` and keeps its own fill: the wizard's progression and difficulty
+selectors paint the preset colour, which is why the theme only sets the neutral fill when
+`color` is absent. The indicator must stay *lighter/stronger* than the track — never a
+darker well.
 
 Theme `defaultRadius` is **`sm`**. Avoid raw `border-radius` when a token fits. Tek icon tiles keep asymmetric radius by design (`AccentIconTile shape="tek"`). Create/edit **Identity** map art uses `MapArtThumb shape="rounded"` so the thumb matches flush square form sections; default `tek` remains for brand-like thumbs elsewhere.
 

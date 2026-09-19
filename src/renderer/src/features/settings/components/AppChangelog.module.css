@@ -3,25 +3,6 @@
   color: var(--ark-gray-8);
 }
 
-.tabs {
-  width: 100%;
-  background: var(--app-color-surface-control);
-  border: 1px solid var(--app-color-border-subtle);
-  border-radius: 0;
-}
-
-.tabs :global(.mantine-SegmentedControl-indicator) {
-  background: var(--app-color-accent);
-}
-
-.tabs :global(.mantine-SegmentedControl-label) {
-  color: var(--app-color-muted);
-}
-
-.tabs :global(.mantine-SegmentedControl-label[data-active]) {
-  color: var(--app-color-accent-contrast);
-}
-
 .body {
   display: flex;
   flex: 1;

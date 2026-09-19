@@ -89,7 +89,6 @@ export function AppChangelogModal(props: Props): ReactElement {
       headerExtra={
         <SegmentedControl
           size="xs"
-          radius="sm"
           fullWidth
           value={tab}
           onChange={(value) => setTab(value as AppChangelogTab)}
@@ -97,7 +96,6 @@ export function AppChangelogModal(props: Props): ReactElement {
             { label: "This version", value: "current" },
             { label: "Earlier releases", value: "recent" },
           ]}
-          className={classes.tabs}
           data-changelog-tab
         />
       }
