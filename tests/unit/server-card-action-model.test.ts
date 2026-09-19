@@ -170,7 +170,8 @@ describe("serverCardActionModel combos", () => {
       expect(runtime.color).toBe("red");
     }
     if (combo.status === "running" && !combo.steamCmdBusy) {
-      expect(restart.color).toBe("fossil");
+      // Restart is a secondary flow control: neutral, no colour (#PUX-004).
+      expect(restart.variant).toBe("default");
     }
   });
 

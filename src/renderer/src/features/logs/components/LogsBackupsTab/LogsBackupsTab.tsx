@@ -65,7 +65,7 @@ export function LogsBackupsTab(props: LogsBackupsTabProps): ReactElement {
             description="Manual, scheduled, and automatic archives will list here after the first backup runs."
             action={
               onOpenBackupsTab !== undefined ? (
-                <Button variant="light" size="sm" onClick={onOpenBackupsTab}>
+                <Button variant="default" size="sm" onClick={onOpenBackupsTab}>
                   Open Backups tab
                 </Button>
               ) : undefined

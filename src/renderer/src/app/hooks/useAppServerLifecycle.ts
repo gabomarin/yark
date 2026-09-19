@@ -217,7 +217,7 @@ export function useAppServerLifecycle(options: {
         title: `Force close "${label}"`,
         children: createElement(
           Alert,
-          { color: "red", title: "No save", variant: "light" },
+          { color: "red", title: "No save" },
           "Closes the server immediately without saving. This can corrupt the world if it was not saved first. Prefer Stop when possible.",
         ),
         confirmLabel: "Force close",

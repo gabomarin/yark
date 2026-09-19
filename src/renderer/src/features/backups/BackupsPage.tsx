@@ -48,7 +48,7 @@ export function BackupsPage(props: Props): ReactElement {
                 Refresh
               </Button>
               <Button
-                variant="light"
+                variant="default"
                 disabled={props.servers.length === 0}
                 onClick={fleet.openCleanupModalFromToolbar}
               >

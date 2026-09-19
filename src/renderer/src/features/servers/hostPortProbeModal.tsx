@@ -64,7 +64,7 @@ export function openHostPortProbeModal(args: {
         </Button>
         {canStartAnyway ? (
           <Button
-            variant="light"
+            variant="default"
             color="attention"
             data-host-port-probe-start-anyway
             onClick={() => {

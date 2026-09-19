@@ -130,7 +130,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
             </Text>
           </div>
           <Group gap="xs" wrap="wrap">
-            <Button variant="light" onClick={() => setTemplateOpen(true)}>
+            <Button variant="default" onClick={() => setTemplateOpen(true)}>
               {hasTemplate ? "Edit INI template" : "Create INI template"}
             </Button>
             <Tooltip

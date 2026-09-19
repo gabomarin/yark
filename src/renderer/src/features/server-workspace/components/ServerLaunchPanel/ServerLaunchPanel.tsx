@@ -135,7 +135,7 @@ export function ServerLaunchPanel(props: Props): ReactElement {
             </div>
             <Button
               size={inputSize}
-              variant="light"
+              variant="default"
               onClick={() => setCatalogOpen(true)}
             >
               Browse ASA catalog

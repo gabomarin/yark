@@ -89,14 +89,8 @@ export function ServerLaunchOptionRow(props: Props): ReactElement {
             </Tooltip>
             {caution ? (
               <Badge
-                variant="outline"
-                styles={{
-                  root: {
-                    color: "var(--app-color-fossil)",
-                    borderColor:
-                      "color-mix(in srgb, var(--app-color-fossil) 55%, transparent)",
-                  },
-                }}
+                variant="light"
+                color="attention"
               >
                 Caution
               </Badge>

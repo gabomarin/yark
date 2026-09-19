@@ -24,7 +24,7 @@ export function openUnsavedLeaveModal(input: {
           </Button>
           <Button
             color="fossil"
-            variant="light"
+            variant="default"
             onClick={() => {
               modals.close(id);
               input.onDiscard();

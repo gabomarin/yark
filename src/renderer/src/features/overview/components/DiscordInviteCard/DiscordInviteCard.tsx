@@ -47,7 +47,7 @@ export function DiscordInviteCard(): ReactElement | null {
               href={YARK_DISCORD_INVITE_URL}
               target="_blank"
               rel="noreferrer"
-              variant="light"
+              variant="filled"
               onClick={() => setDismissed(true)}
               data-discord-invite-join
             >

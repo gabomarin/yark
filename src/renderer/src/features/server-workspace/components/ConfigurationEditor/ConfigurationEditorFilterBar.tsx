@@ -56,7 +56,7 @@ export function ConfigurationEditorFilterBar(props: Props): ReactElement {
       />
       <Button
         size="xs"
-        variant="light"
+        variant="default"
         color="gray"
         leftSection={<ArrowsInLineVertical size={14} />}
         onClick={onCollapseAll}
@@ -65,7 +65,7 @@ export function ConfigurationEditorFilterBar(props: Props): ReactElement {
       </Button>
       <Button
         size="xs"
-        variant="light"
+        variant="default"
         color="gray"
         leftSection={<ArrowsOutLineVertical size={14} />}
         onClick={onExpandAll}

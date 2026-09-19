@@ -47,7 +47,7 @@ export class WorkspacePanelErrorBoundary extends Component<Props, State> {
             <Text size="xs" c="dimmed" style={{ wordBreak: "break-word" }}>
               {this.state.error.message || "Unknown error"}
             </Text>
-            <Button size="xs" variant="light" onClick={this.handleRetry} w="fit-content">
+            <Button size="xs" variant="default" onClick={this.handleRetry} w="fit-content">
               Retry panel
             </Button>
           </Stack>

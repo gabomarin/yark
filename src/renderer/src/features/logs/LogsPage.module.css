@@ -7,9 +7,14 @@
   width: 220px;
 }
 
+/*
+ * Every row is its own grid (Accordion.Control), so any content-sized track makes
+ * the columns drift row to row - visible the moment the severity badge became a
+ * word + dot of a different width per row. Fixed/fluid tracks only.
+ */
 .fleetRow {
   display: grid;
-  grid-template-columns: max-content auto minmax(7rem, max-content) minmax(0, 1fr);
+  grid-template-columns: 7.5rem 6.5rem minmax(6rem, 0.9fr) minmax(0, 1.6fr);
   column-gap: var(--app-space-sm);
   align-items: center;
   text-align: left;
@@ -41,6 +46,8 @@
 .fleetSeverity,
 .fleetServer {
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 

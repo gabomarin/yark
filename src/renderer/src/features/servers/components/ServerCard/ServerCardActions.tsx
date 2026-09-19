@@ -22,6 +22,7 @@ import type {
   ServerCardRuntimeAction,
   ServerCardUpdateAction,
 } from "./serverCardModel";
+import { actionGlyphColor } from "./serverCardModel";
 import { buildServerCardMenuActions } from "./serverCardMenuActions";
 import classes from "./ServerCard.module.css";
 
@@ -179,7 +180,7 @@ export function ServerCardActions(props: Props): ReactElement {
         <span className={classes.tooltipTarget} aria-hidden>
           <ActionIcon
             size={actionSize}
-            variant="light"
+            variant="filled"
             className={`${classes.iconAction} ${classes.iconActionReserved}`}
             tabIndex={-1}
             data-primary-action
@@ -196,7 +197,7 @@ export function ServerCardActions(props: Props): ReactElement {
             <span className={classes.tooltipTarget}>
               <ActionIcon
                 size={actionSize}
-                variant="light"
+                variant="default"
                 color="red"
                 aria-label={cancelRestartLabel}
                 onClick={props.onCancelRestartWarning}
@@ -204,7 +205,7 @@ export function ServerCardActions(props: Props): ReactElement {
                 data-restart-action
                 data-restart-warning-cancel
               >
-                <XCircle size={iconSize} weight="bold" />
+                <XCircle size={iconSize} weight="bold" color="var(--app-color-danger-bright)" />
               </ActionIcon>
             </span>
           </Tooltip>
@@ -214,7 +215,6 @@ export function ServerCardActions(props: Props): ReactElement {
               <ActionIcon
                 size={actionSize}
                 variant={restartAction.variant}
-                color={restartAction.color}
                 aria-label="Restart options"
                 title="Restart options"
                 disabled={restartAction.disabled}
@@ -248,7 +248,6 @@ export function ServerCardActions(props: Props): ReactElement {
               <ActionIcon
                 size={actionSize}
                 variant={restartAction.variant}
-                color={restartAction.color}
                 aria-label={restartAction.label}
                 disabled={restartAction.disabled}
                 loading={restartAction.label === "Restarting…"}
@@ -265,7 +264,7 @@ export function ServerCardActions(props: Props): ReactElement {
         <span className={classes.tooltipTarget} aria-hidden>
           <ActionIcon
             size={actionSize}
-            variant="light"
+            variant="default"
             className={`${classes.iconAction} ${classes.iconActionReserved}`}
             tabIndex={-1}
             data-restart-action
@@ -297,7 +296,7 @@ export function ServerCardActions(props: Props): ReactElement {
               data-update-action
               data-files-action={updateAction.kind}
             >
-              <CloudArrowDown size={iconSize} />
+              <CloudArrowDown size={iconSize} color={actionGlyphColor(updateAction.color)} />
             </ActionIcon>
           </span>
         </Tooltip>
@@ -305,7 +304,7 @@ export function ServerCardActions(props: Props): ReactElement {
         <span className={classes.tooltipTarget} aria-hidden>
           <ActionIcon
             size={actionSize}
-            variant="light"
+            variant="default"
             className={`${classes.iconAction} ${classes.iconActionReserved}`}
             tabIndex={-1}
             data-update-action

@@ -215,7 +215,7 @@ export function useAppSteamCmdActions(options: {
         title: `Clear ${label}?`,
         children: createElement(
           Alert,
-          { color: "attention", variant: "light", title: "Cannot be undone" },
+          { color: "attention", title: "Cannot be undone" },
           detail,
         ),
         confirmLabel: "Clear cache",

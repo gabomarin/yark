@@ -42,7 +42,7 @@ export function ServerFormEmbedded(props: Props): ReactElement {
           {props.onOpenConfigurationAssistant !== undefined && (
             <Button
               size={props.inputSize}
-              variant="light"
+              variant="default"
               onClick={props.onOpenConfigurationAssistant}
               disabled={props.configurationAssistantDisabled}
               title={

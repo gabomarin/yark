@@ -108,7 +108,7 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
           </div>
           <Group gap="xs">
             <Button
-              variant="light"
+              variant="default"
               leftSection={<ArrowSquareOut size={16} />}
               onClick={props.onOpenServer}
             >

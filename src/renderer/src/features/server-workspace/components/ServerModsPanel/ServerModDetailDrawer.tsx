@@ -227,7 +227,7 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                   className={classes.detailDrawerRemoveAction}
                   size={footerButtonSize}
                   color="ok"
-                  variant="light"
+                  variant="default"
                   leftSection={<Plus size={16} />}
                   loading={props.busy}
                   disabled={drawerLocked}

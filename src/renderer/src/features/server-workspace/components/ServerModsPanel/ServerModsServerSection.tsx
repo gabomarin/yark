@@ -43,7 +43,7 @@ export function ServerModsServerSection(props: Props): ReactElement {
             title="No mods configured for this server"
             description="Paste a CurseForge ASA mod URL or Project ID, or use Discover mods."
             action={
-              <Button variant="light" onClick={props.onDiscover}>
+              <Button variant="default" onClick={props.onDiscover}>
                 Discover mods
               </Button>
             }

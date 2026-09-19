@@ -63,7 +63,7 @@ export function BackupCleanupModal(props: Props): ReactElement {
             </Button>
           ) : (
             <Button
-              variant="light"
+              variant="default"
               loading={props.busy}
               onClick={props.onPreview}
             >

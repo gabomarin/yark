@@ -68,7 +68,9 @@ describe("default theme contrast", () => {
         failures.push(`accent-text on ${name} = ${textRatio.toFixed(2)} (min ${TEXT_MIN})`);
       }
     }
-    // Known gap (open): a white label on the solid accent is 3.29:1, below AA text.
+    // Known gap (open): a white label on the solid accent is 3.29:1, below AA text. It is the
+    // label every filled primary shares (New server, Continue, Apply, and now the lifecycle
+    // Start/Resume), so closing it is one global decision about the accent, not a per-button fix.
     // Reaching 4.5 needs a darker solid or black labels — a brand decision, not a
     // token bug, so this only fails if it gets *worse* than the 3:1 control bar.
     const labelRatio = contrast("#ffffff", solid);

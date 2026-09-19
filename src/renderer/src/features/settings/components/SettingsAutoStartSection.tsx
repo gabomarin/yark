@@ -112,7 +112,7 @@ export function SettingsAutoStartSection(props: Props): ReactElement {
               </div>
               <Button
                 size="xs"
-                variant="light"
+                variant="default"
                 onClick={() => props.onOpenServer(row.server.id)}
               >
                 Open server

@@ -224,8 +224,7 @@ export function PlayerListSection(props: Props): ReactElement {
                           <>
                             <Button
                               size="xs"
-                              variant="light"
-                              color="attention"
+                              variant="default"
                               disabled={rconDisabled || busy}
                               loading={busy}
                               onClick={() =>
@@ -238,7 +237,7 @@ export function PlayerListSection(props: Props): ReactElement {
                             </Button>
                             <Button
                               size="xs"
-                              variant="filled"
+                              variant="subtle"
                               color="red"
                               disabled={rconDisabled || busy}
                               onClick={() => confirmBan(player)}

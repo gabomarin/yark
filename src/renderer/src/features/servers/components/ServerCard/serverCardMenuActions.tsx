@@ -141,7 +141,6 @@ export function buildServerCardMenuActions(
         kind: "item",
         key: "restart",
         label: "Restart",
-        color: "fossil",
         icon: <ArrowsClockwise size={ICON} weight="bold" />,
         onClick: input.onRestart,
       },
@@ -154,7 +153,6 @@ export function buildServerCardMenuActions(
         kind: "item",
         key: "restart-with-warning",
         label: "Restart with player warning",
-        color: "fossil",
         icon: <Warning size={ICON} />,
         onClick: () => input.onRestartWithWarning?.(),
       });

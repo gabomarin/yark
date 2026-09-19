@@ -144,7 +144,7 @@ export function ServerFormInstallPath(props: Props): ReactElement {
       <Group>
         <Button
           size={props.inputSize}
-          variant="light"
+          variant="default"
           leftSection={<ArrowsLeftRight size={16} />}
           disabled={props.moveDisabled}
           onClick={props.onOpenMove}

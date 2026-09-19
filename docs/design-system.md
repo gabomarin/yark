@@ -306,11 +306,12 @@ Manual **Check Servers Health** ends with a toast (attention count or “all hea
 
 ### 5d. Destructive actions (inline controls)
 
-Primary destructive **Button**s use **`color="red" variant="filled"`** — **Stop**, **Force close**, labeled Remove/Delete, Ban, cancel in-flight jobs (expanded SteamCMD dock Cancel). Header **Delete** / **Clear failed** on Backups history use **`variant="subtle"`**; filled red stays on the confirm modal. Dense **icon-only** row/list **ActionIcon**s prefer **`variant="subtle"`** (keep `color` for meaning: red delete, orange restore, teal resume, yellow pause) so a column of fills does not dominate the row — backups history, cluster members, logs clear/delete, Downloads queue, minimized SteamCMD Cancel (#397). Workspace **server list** (full or icon rail) is switch-and-select among enabled profiles only — disabled profiles stay on Overview (no Show disabled in the rail) (#526). **Add server** / **Import** live on Overview (#397). **Restart** uses **`color="fossil" variant="filled"`** in the workspace lifecycle row and Overview card (warm amber, same weight as Stop). Theme **`autoContrast: true`** uses dark label/icon on light filled colors (fossil, attention). Kebab **Stop safely** / **Force close** / **Delete** use `Menu.Item color="red"`; **Restart** uses `color="fossil"`.
+Primary destructive **Button**s use **`color="red" variant="filled"`** — **Stop**, **Force close**, labeled Remove/Delete, Ban, cancel in-flight jobs (expanded SteamCMD dock Cancel). Header **Delete** / **Clear failed** on Backups history use **`variant="subtle"`**; filled red stays on the confirm modal. Dense **icon-only** row/list **ActionIcon**s prefer **`variant="subtle"`** (keep `color` for meaning: red delete, orange restore, teal resume, yellow pause) so a column of fills does not dominate the row — backups history, cluster members, logs clear/delete, Downloads queue, minimized SteamCMD Cancel (#397). Workspace **server list** (full or icon rail) is switch-and-select among enabled profiles only — disabled profiles stay on Overview (no Show disabled in the rail) (#526). **Add server** / **Import** live on Overview (#397). **Start / Resume** is the lifecycle primary (`variant="filled" color="ok"`); **Restart** is a **secondary** flow control (`variant="default"`, no colour) - amber-for-restart was a third semantic hue with no Fluent meaning, and a flow control is not a warning. Only the destructive action keeps colour in that row. Theme **`autoContrast: true`** uses dark label/icon on light filled colors (fossil, attention). Kebab **Stop safely** / **Force close** / **Delete** use `Menu.Item color="red"`; **Restart** stays a neutral `Menu.Item`.
 
 | Surface | Recipe |
 | --- | --- |
-| Lifecycle **Restart** | `color="fossil" variant="filled"` |
+| Lifecycle **Start / Resume** | `variant="filled" color="ok"` (the row's primary) |
+| Lifecycle **Restart** | `variant="default"` - secondary flow control, no colour |
 | Inline destructive **Button** (Stop, Force close, delete/remove) | `color="red" variant="filled"` |
 | Kebab danger **Menu.Item** | `color="red"` (inherits `--app-color-danger-bright`) |
 | Dense **ActionIcon** (delete/remove and secondary row icons) | Prefer `variant="subtle"` with semantic `color` (#397); use **`filled`** only for labeled destructive **Button**s |
@@ -357,6 +358,24 @@ otherwise hardcodes its own divider colour). Row hover is
 `--app-color-surface-control-hover`; an item that carries a semantic `color` keeps
 Mantine's tinted hover. Depth comes from the shared ladder — `shadow="md"` =
 `--app-elevation-8`.
+
+### 5g. Buttons: the Fluent appearance hierarchy
+
+Four appearances, and **one primary per surface**:
+
+| Role | Appearance | Use |
+| --- | --- | --- |
+| Primary | `variant="filled"` (the accent) | the single most important action of the surface (Continue, Apply, Import, Create, **Start/Resume**) |
+| Secondary | `variant="default"` | everything else: Cancel, Back, **Browse ASA catalog**, Open folder, Cleanup…, Edit INI template, Leave previous folder, Retry |
+| Tertiary | `variant="subtle"` | in-row / quiet actions (INI details, quiet row icons) |
+| Destructive | `variant="filled" color="red"` for the confirm; `variant="subtle" color="red"` when it is not the primary | Stop, Force close, Delete/Remove, Retry delete |
+
+- **`variant="light"` is not one of them.** A tinted button reads *semi-primary* and competes with the real primary; 37 call sites were moved to `default`. Tint is for **Badges and Alerts**, never for a Button.
+- **Colour encodes only destruction** (red). Warnings and success belong in `Alert` / `Badge` / `StatusWord`; a floating "Resume" in red or an amber "Restart" is a signal without meaning. The one coloured non-destructive button is the lifecycle **Start/Resume** primary, because that row (`Start` / `Restart` / `Stop`) needs exactly one filled button.
+- **One size per bar.** Let the density default size the buttons in a footer or toolbar; pass `size` only for genuinely dense in-row controls. A footer that mixes `xs` and default reads as an accident.
+- **Dense icon rows** (`ActionIcon` in a server card, list row, dock row): `default` (bordered) for the row's actions so each one reads as a control, `subtle` for the overflow/transient one, and `filled` for the row's **one** primary (Start / Enable / Stop). **A bordered icon action keeps its meaning in the glyph**: `variant="default"` ignores the `ActionIcon` `color`, so pass the semantic token to the icon itself (`actionGlyphColor()` in the server-card model: amber update, red cancel, accent install). Ghost placeholders that reserve a slot mirror the real button's appearance (`data-reserved`), so the layout does not shift when the action appears. `ServerCard` is the reference: Start `filled` + Restart `default` + Update `default` with an amber glyph + kebab `default`.
+- **The lifecycle primary uses the accent, like every other primary.** Start/Resume is `variant="filled"` with no colour, so it follows whatever accent the theme ships (a green CTA would be the only primary outside the accent and would not follow an accent swap). **Green is a state colour** — `ok` in `StatusWord`, badges, dots — never a button fill. The consequence is shared, not new: a white label on the solid accent is the documented 3.29:1 gap (`theme.contrast.test.ts`) that New server / Continue / Apply already have; closing it is one global accent decision.
+- **Menu items are neutral**; only danger (`Stop safely`, `Force close`, delete) takes `color="red"`. A restore/pause/resume item is a word, not a hue. `confirmProps` on a confirm modal keeps the **filled** primary (never `variant="light"`).
 
 ### 6. Dense operational tables
 

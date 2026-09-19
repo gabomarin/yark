@@ -85,8 +85,7 @@ export function ImportInstallPathStep(props: Props): ReactElement {
             props.onUseSuggestedDir !== undefined &&
             activeProbe.nestedSubfolder && (
               <Button
-                size="xs"
-                variant="light"
+                variant="default"
                 disabled={props.probing || props.browsing}
                 onClick={() => props.onUseSuggestedDir?.(suggested)}
               >

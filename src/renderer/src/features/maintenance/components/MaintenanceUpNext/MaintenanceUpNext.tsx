@@ -214,7 +214,7 @@ export function MaintenanceUpNext(props: Props): ReactElement {
             {policy.cancelable && (
               <Button
                 color="red"
-                variant="light"
+                variant="default"
                 loading={props.busy}
                 onClick={props.onCancelUpcoming}
               >
@@ -249,7 +249,7 @@ export function MaintenanceUpNext(props: Props): ReactElement {
               >
                 <span>
                   <Button
-                    variant="light"
+                    variant="default"
                     loading={props.busy}
                     disabled={!policy.steamUpdateAvailable}
                     onClick={props.onRunUpdateNow}

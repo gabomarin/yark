@@ -124,8 +124,7 @@ export function WorkspaceHeader(props: Props): ReactElement {
           ) : (
             <Button
               size="sm"
-              variant="light"
-              color="ok"
+              variant="filled"
               leftSection={startLoading ? undefined : <Play size={14} weight="fill" />}
               onClick={props.onStart}
               disabled={!canStart}

@@ -32,7 +32,6 @@ export function WizardFooter(props: Props): ReactElement {
   const {
     activeStep,
     saving,
-    draftDirty,
     changes,
     clusterPathSelected,
     clusterTemplate,
@@ -57,7 +56,6 @@ export function WizardFooter(props: Props): ReactElement {
       {activeStep !== STEP_COUNT - 1 ? (
         <Button
           variant="subtle"
-          color={draftDirty ? "blue" : "gray"}
           leftSection={<Eye size={15} />}
           onClick={onViewChanges}
           aria-label={

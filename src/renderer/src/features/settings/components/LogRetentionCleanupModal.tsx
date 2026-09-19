@@ -40,7 +40,7 @@ export function LogRetentionCleanupModal(props: Props): ReactElement {
               Remove {props.preview!.items.length}
             </Button>
           ) : (
-            <Button variant="light" loading={props.busy} onClick={props.onScan}>
+            <Button variant="default" loading={props.busy} onClick={props.onScan}>
               Scan
             </Button>
           )}

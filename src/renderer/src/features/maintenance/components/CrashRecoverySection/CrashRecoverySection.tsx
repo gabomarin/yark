@@ -57,7 +57,7 @@ function recoveryState(policy: CrashRecoveryPolicy): {
   }
   return {
     label: "Armed",
-    color: "gray",
+    color: "ok",
     summary: `Armed · up to ${policy.maxAttempts} automatic restarts`,
   };
 }
@@ -199,7 +199,7 @@ export function CrashRecoverySection({
                 <Group gap="xs">
                   <Button
                     size="xs"
-                    variant="light"
+                    variant="default"
                     disabled={panel.busy || policy.attempts === 0 || policy.paused}
                     onClick={() => void panel.resetAttempts()}
                   >
@@ -207,7 +207,7 @@ export function CrashRecoverySection({
                   </Button>
                   <Button
                     size="xs"
-                    variant="light"
+                    variant="default"
                     color={policy.paused ? "blue" : "attention"}
                     disabled={panel.busy || !policy.enabled}
                     onClick={() => void panel.patch({ paused: !policy.paused })}

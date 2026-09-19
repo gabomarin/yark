@@ -67,8 +67,7 @@ export function MaintenancePanel(props: Props): ReactElement {
             </Text>
             <Button
               size="xs"
-              variant="light"
-              color="red"
+              variant="default"
               loading={panel.busy}
               onClick={() => void panel.resumeSchedules()}
             >

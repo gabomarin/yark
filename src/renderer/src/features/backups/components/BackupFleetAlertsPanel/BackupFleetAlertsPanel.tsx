@@ -72,7 +72,7 @@ export function BackupFleetAlertsPanel(props: Props): ReactElement | null {
               <Group gap={4} className={classes.actions} wrap="nowrap">
                 {showLogs && (
                   <Button
-                    variant="light"
+                    variant="default"
                     color={severityBadgeColor(alert.severity)}
                     onClick={() =>
                       props.onOpenFailedBackupLogs?.({
@@ -95,7 +95,7 @@ export function BackupFleetAlertsPanel(props: Props): ReactElement | null {
                 {(alert.kind === "disk_warning" || alert.kind === "disk_critical") &&
                   props.onOpenCleanup !== undefined && (
                     <Button
-                      variant="light"
+                      variant="default"
                       leftSection={<Broom size={12} />}
                       onClick={props.onOpenCleanup}
                     >

@@ -124,7 +124,7 @@ export function ModDetailScreenshotCarousel(props: Props): ReactElement | null {
             </Text>
             <Group gap="xs" justify="center">
               <Button
-                variant="light"
+                variant="default"
                 size="xs"
                 onClick={() => {
                   setLightboxLoadError(false);
