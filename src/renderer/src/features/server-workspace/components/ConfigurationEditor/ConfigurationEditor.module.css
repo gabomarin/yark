@@ -94,14 +94,6 @@
   width: 100%;
 }
 
-.headerActions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--app-space-xs);
-  margin-left: auto;
-}
-
 .tableBody {
   min-width: 720px;
   width: max(100%, 720px);

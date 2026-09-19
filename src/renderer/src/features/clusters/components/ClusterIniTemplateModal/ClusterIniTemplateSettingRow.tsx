@@ -90,7 +90,6 @@ export function ClusterIniTemplateSettingRow(props: Props): ReactElement {
       </Text>
       <Button
         variant="subtle"
-        size="compact-xs"
         aria-label={`Reset ${row.key} to default`}
         disabled={!canReset}
         onClick={() => {

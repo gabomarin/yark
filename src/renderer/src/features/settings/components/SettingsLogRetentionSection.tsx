@@ -313,7 +313,6 @@ export function SettingsLogRetentionSection(): ReactElement {
       </div>
 
       <Button
-        size="compact-sm"
         variant="light"
         leftSection={<Broom size={14} />}
         disabled={!ready || busy}

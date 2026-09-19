@@ -226,7 +226,6 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
 
         <Group gap="xs" wrap="wrap">
           <Button
-            size="compact-xs"
             variant="default"
             leftSection={<ArrowClockwise size={14} />}
             loading={status.phase === "checking"}
@@ -238,7 +237,6 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
           </Button>
           {showDownload && (
             <Button
-              size="compact-xs"
               color="fossil"
               leftSection={<CloudArrowDown size={14} />}
               disabled={!canDownload && status.phase !== "downloading"}
@@ -251,7 +249,6 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
           )}
           {status.isPackaged && status.phase === "ready" && (
             <Button
-              size="compact-xs"
               color="fossil"
               disabled={!canInstall}
               loading={actionBusy}
@@ -262,7 +259,6 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
             </Button>
           )}
           <Button
-            size="compact-xs"
             leftSection={<Newspaper size={14} />}
             onClick={() => setChangelogOpen(true)}
             data-yark-update-whats-new
@@ -270,7 +266,6 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
             What&apos;s new
           </Button>
           <Button
-            size="compact-xs"
             variant="subtle"
             leftSection={<ArrowSquareOut size={14} />}
             onClick={() => void openNotes()}

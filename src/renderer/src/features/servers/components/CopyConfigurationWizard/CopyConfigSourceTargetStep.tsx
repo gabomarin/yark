@@ -168,7 +168,6 @@ export function CopyConfigSourceTargetStep(props: Props): ReactElement {
       <div>
         <Button
           variant="subtle"
-          size="compact-xs"
           onClick={props.onToggleNeverOpen}
         >
           {props.neverOpen ? "Hide" : "What stays on the target?"}

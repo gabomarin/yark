@@ -58,7 +58,6 @@ export function WizardFooter(props: Props): ReactElement {
         <Button
           variant="subtle"
           color={draftDirty ? "blue" : "gray"}
-          size="compact-sm"
           leftSection={<Eye size={15} />}
           onClick={onViewChanges}
           aria-label={

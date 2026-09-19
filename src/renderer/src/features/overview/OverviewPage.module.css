@@ -18,10 +18,6 @@
   margin-bottom: var(--app-space-lg);
 }
 
-.headerActions {
-  flex-shrink: 0;
-}
-
 .fleetReadouts {
   flex-shrink: 0;
 }

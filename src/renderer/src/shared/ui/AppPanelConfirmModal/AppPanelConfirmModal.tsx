@@ -74,7 +74,6 @@ export function AppPanelConfirmModal(
 
           <div className={classes.footer}>
             <Button
-              size="compact-xs"
               variant="subtle"
               onClick={props.onClose}
               disabled={props.confirmLoading === true}
@@ -82,7 +81,6 @@ export function AppPanelConfirmModal(
               {cancelLabel}
             </Button>
             <Button
-              size="compact-xs"
               color={confirmColor}
               loading={props.confirmLoading === true}
               onClick={props.onConfirm}

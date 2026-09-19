@@ -51,7 +51,7 @@ export function ConfigurationEditorHeader(props: Props): ReactElement {
       </div>
       <div className={classes.headerToolbar}>
         {iniNavigation}
-        <Group gap="xs" className={classes.headerActions} wrap="wrap">
+        <Group gap="xs" wrap="wrap" ml="auto">
           {showRestoreFile && onRestoreFile !== undefined && (
             <Button
               size="xs"

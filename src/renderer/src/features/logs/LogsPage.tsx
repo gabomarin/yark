@@ -295,7 +295,6 @@ export function LogsPage(props: Props): ReactElement {
                           {event.serverId !== null && (
                             <Group justify="flex-end" mt="sm">
                               <Button
-                                size="compact-sm"
                                 variant="light"
                                 onClick={() =>
                                   props.onOpenServerLogs(

@@ -108,16 +108,14 @@
 }
 
 /* Outside the scroll viewport so sticky thead cannot cover Clear sort (#297). */
+/* Flush toolbar row above the table: no box, no wash - the table's own surface
+ * and hairline carry the separation. */
 .viewSortBar {
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding: var(--app-space-xs) var(--app-space-sm);
-  margin-bottom: var(--app-space-xxs);
-  border-radius: var(--app-radius-sm);
-  border: 1px solid var(--app-color-border-subtle);
-  background: color-mix(in srgb, var(--app-color-panel) 88%, var(--app-color-muted));
+  padding-bottom: var(--app-space-xs);
 }
 
 .paginationFooter {

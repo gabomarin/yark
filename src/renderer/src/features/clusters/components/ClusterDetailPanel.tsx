@@ -184,7 +184,6 @@ export function ClusterDetailPanel(props: Props): ReactElement {
               Servers in this cluster
             </Text>
             <Button
-              size="compact-xs"
               color="red"
               variant="subtle"
               disabled={

@@ -169,22 +169,6 @@
   background: var(--app-color-surface-panel);
 }
 
-.pathActionsRow {
-  display: flex;
-  gap: var(--app-space-sm);
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-}
-
-.pathChip {
-  flex: 1 1 280px;
-}
-
-.pathActions {
-  flex: 0 0 auto;
-}
-
 .statusReady {
   color: var(--app-color-ok);
 }
@@ -221,42 +205,14 @@
 
 .cacheRow {
   display: flex;
-  gap: var(--app-space-sm);
-  align-items: flex-start;
-  justify-content: space-between;
-}
-
-.cacheCopy {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.cachePath {
-  margin-top: var(--app-space-xxs);
-}
-
-.cacheActions {
-  flex: 0 0 auto;
-  padding-top: 2px;
+  flex-direction: column;
+  gap: var(--app-space-xxs);
 }
 
 .dataFolderRow {
   display: flex;
   flex-direction: column;
   gap: var(--app-space-xxs);
-}
-
-.dataFolderPathRow {
-  display: flex;
-  gap: var(--app-space-sm);
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-}
-
-.dataFolderPath {
-  flex: 1 1 280px;
-  min-width: 0;
 }
 
 .about {

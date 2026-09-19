@@ -47,7 +47,6 @@ export function ModDetailDescription(props: Props): ReactElement {
       {canExpand && (
         <Button
           variant="transparent"
-          size="compact-xs"
           px={0}
           justify="flex-start"
           onClick={() => setExpanded((value) => !value)}

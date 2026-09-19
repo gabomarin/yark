@@ -213,7 +213,6 @@ export function MaintenanceUpNext(props: Props): ReactElement {
           <Group gap="xs" wrap="wrap">
             {policy.cancelable && (
               <Button
-                size="compact-sm"
                 color="red"
                 variant="light"
                 loading={props.busy}
@@ -228,7 +227,6 @@ export function MaintenanceUpNext(props: Props): ReactElement {
               <Tooltip label={props.runRestartNowTooltip} withArrow>
                 <span>
                   <Button
-                    size="compact-sm"
                     loading={props.busy}
                     disabled={props.runRestartNowDisabled}
                     onClick={props.onRunRestartNow}
@@ -251,7 +249,6 @@ export function MaintenanceUpNext(props: Props): ReactElement {
               >
                 <span>
                   <Button
-                    size="compact-sm"
                     variant="light"
                     loading={props.busy}
                     disabled={!policy.steamUpdateAvailable}

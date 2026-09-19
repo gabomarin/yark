@@ -99,7 +99,7 @@ export function WizardDifficultyControl({
             </Text>
           </Stack>
           <Tooltip label={iniDifficultyLabel(draft)} multiline maw={360} withArrow>
-            <Button variant="subtle" color="gray" size="compact-xs">
+            <Button variant="subtle" color="gray">
               INI details
             </Button>
           </Tooltip>

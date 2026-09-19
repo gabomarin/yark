@@ -6,23 +6,6 @@
   color: var(--app-color-warn);
 }
 
-.pathRow {
-  display: flex;
-  gap: var(--app-space-sm);
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-}
-
-.pathChip {
-  flex: 1 1 280px;
-  min-width: 0;
-}
-
-.pathActions {
-  flex: 0 0 auto;
-}
-
 .settingRow {
   display: flex;
   gap: var(--app-space-md);

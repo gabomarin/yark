@@ -103,6 +103,19 @@ body {
   background: color-mix(in srgb, var(--app-color-cryo) 32%, transparent);
 }
 
+/*
+ * Disabled chrome is the enabled chrome, dimmed - not repainted. Mantine's
+ * disabled rule fills *every* variant with `--mantine-color-disabled`, so a
+ * subtle/text button turned into a filled one the moment it was disabled: the
+ * workspace Backups Delete looked like a real button while nothing was selected
+ * and went text-only as soon as a row selection enabled it.
+ */
+.mantine-Button-root[data-variant="subtle"]:where(:disabled, [data-disabled]):not([data-loading]),
+.mantine-Button-root[data-variant="transparent"]:where(:disabled, [data-disabled]):not([data-loading]) {
+  background: transparent;
+}
+
+
 /* Fluent 2 is square: toasts use the same square surface grammar as the panels. */
 .mantine-Notification-root {
   border-radius: 0;

@@ -175,7 +175,6 @@ export function WorkspaceHeader(props: Props): ReactElement {
           props.onOpenServerActions !== undefined && (
             <Group gap={6} wrap="nowrap" className={classes.compactTools}>
               <Button
-                size="compact-sm"
                 variant="default"
                 leftSection={<HardDrives size={14} />}
                 onClick={props.onOpenServerSwitcher}
@@ -183,7 +182,6 @@ export function WorkspaceHeader(props: Props): ReactElement {
                 Switch server
               </Button>
               <Button
-                size="compact-sm"
                 variant="default"
                 leftSection={<Wrench size={14} />}
                 onClick={props.onOpenServerActions}

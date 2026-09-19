@@ -120,7 +120,6 @@ export function DownloadsPage(props: Props): ReactElement {
           Install SteamCMD in Settings before installs, updates, or verify can
           run.
           <Button
-            size="compact-sm"
             variant="light"
             color="red"
             onClick={props.onOpenSettings}
@@ -147,7 +146,7 @@ export function DownloadsPage(props: Props): ReactElement {
               : "Install SteamCMD in Settings first. Installs, updates, and verify jobs will appear here."
           }
           action={
-            <Button size="compact-sm" variant="light" onClick={props.onOpenSettings}>
+            <Button variant="light" onClick={props.onOpenSettings}>
               {props.status.detected ? "Open SteamCMD settings" : "Install SteamCMD"}
             </Button>
           }
@@ -227,7 +226,6 @@ export function DownloadsPage(props: Props): ReactElement {
         {statusLine}
       </Text>
       <Button
-        size="compact-xs"
         variant="subtle"
         aria-label={logExpanded ? "Hide advanced log" : "Advanced log"}
         aria-expanded={logExpanded}

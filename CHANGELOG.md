@@ -26,6 +26,9 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- One **AppPathRow** now owns the "path chip with its actions" row, replacing three hand-rolled copies of the same flex CSS in Settings and the setup wizard, plus the SteamCMD shared-cache rows whose Open/Clear buttons used to sit beside the heading (top-aligned against the label, not the path). The row stretches, so a `compact` path box no longer renders shorter than the Open/Choose button beside it (Settings → About app data folders), and those Open buttons use the same default variant as the other path rows.
+- Buttons use two sizes again: the `compact-xs` / `compact-sm` middle scale is gone from all 54 action call sites, so dialog footers and toolbars match the inputs beside them instead of inventing a third height.
+- Toolbars are flush rows: the mods sort bar drops its rounded translucent box, the INI/Overview header action groups use Mantine `Group` + `ml="auto"` instead of local CSS, and dead toolbar CSS is removed.
 - Menus and popovers share one Fluent flyout shell: 8px corners (7px in Compact) with 4px rows on a 32px row height, a hairline separator instead of Mantine's darker divider, and the app's row hover colour - so a context menu and a settings popover finally agree.
 - Segmented pickers use the Fluent TabList shape: a pill track with a raised pill indicator (elevation 2), no separators between segments, and a filled pill for the selected segment - neutral `surface-control-hover` (three steps above the track) with a contrast-coloured label, so it is unmistakable next to the unselected ones without competing with the accent. Applied once in the theme for the wizard, INI Visual/Text, mods filters, list controls, changelog tabs and setup wizard; the wizard's progression and difficulty pickers keep their preset colour.
 - Switch labels read before the control (Fluent order): `Switch` defaults to `labelPosition="left"` in the theme, so a visible label sits left of the toggle instead of after it, and the two unnamed switches in the INI setting rows now expose their setting name to assistive tech.
@@ -48,6 +51,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- SteamCMD settings say why an action is locked: an info banner ("SteamCMD is busy" / "Installing SteamCMD", naming the activity and any queued jobs, and what stays locked) plus a one-line tooltip on the disabled control ("SteamCMD is busy", "Set up SteamCMD first") - no more dead-looking buttons that read like a broken path.
+- Disabled buttons keep the shape they have when enabled: Mantine painted every disabled variant with a solid fill, so the workspace Backups **Delete** looked like a filled button with nothing selected and turned text-only once a row selection enabled it. Subtle/transparent buttons now dim instead of gaining a fill.
 - A loopback `AdminListURL` (for example a **Hosted Resources** URL) is now kept verbatim in `GameUserSettings.ini` instead of being rewritten to a `file://` pointer, so the Admins field keeps showing the URL and **Current ids** reads the served list (#564).
 - Launch **Show effective command preview** legend uses the same colors as the command tokens (YARK-owned, Structured, Caution, Raw) (#510).
 

@@ -38,7 +38,6 @@ export function RecentActivityPanel({ events, loading, onViewAll }: Props): Reac
         </div>
         <Button
           variant="subtle"
-          size="compact-sm"
           rightSection={<ArrowRight size={14} />}
           onClick={onViewAll}
         >

@@ -310,7 +310,6 @@ export function ServerModsTable(props: Props): ReactElement {
       {viewSorted ? (
         <div className={classes.viewSortBar}>
           <Button
-            size="compact-xs"
             variant="default"
             leftSection={<ArrowCounterClockwise size={14} />}
             onClick={() => setSortStatus(LOAD_ORDER_SORT)}

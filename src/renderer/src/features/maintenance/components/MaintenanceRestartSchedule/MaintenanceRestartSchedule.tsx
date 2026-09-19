@@ -49,7 +49,6 @@ export function MaintenanceRestartSchedule({
       </div>
       <Group gap={6} wrap="wrap">
         <Button
-          size="compact-xs"
           variant={everyDay ? "light" : "default"}
           disabled={disabled}
           onClick={() => onPatchDays([...ALL_RESTART_DAYS_OF_WEEK])}

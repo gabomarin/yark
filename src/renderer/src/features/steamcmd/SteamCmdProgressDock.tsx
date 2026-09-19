@@ -226,17 +226,17 @@ export function SteamCmdProgressDock(props: Props): ReactElement {
                 </div>
                 <Group gap={4} wrap="nowrap">
                   {job.nextActions.includes("retry") && (
-                    <Button size="compact-xs" variant="light" onClick={() => props.onRetryJob(job.id)}>
+                    <Button variant="light" onClick={() => props.onRetryJob(job.id)}>
                       Retry
                     </Button>
                   )}
                   {job.nextActions.includes("cancel") && (
-                    <Button size="compact-xs" color="red" variant="filled" onClick={() => props.onCancelJob(job.id)}>
+                    <Button color="red" variant="filled" onClick={() => props.onCancelJob(job.id)}>
                       Cancel
                     </Button>
                   )}
                   {job.nextActions.includes("dismiss") && (
-                    <Button size="compact-xs" variant="subtle" onClick={() => props.onDismissJob(job.id)}>
+                    <Button variant="subtle" onClick={() => props.onDismissJob(job.id)}>
                       Dismiss
                     </Button>
                   )}

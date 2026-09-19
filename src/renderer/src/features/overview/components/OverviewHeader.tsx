@@ -66,7 +66,7 @@ export function OverviewHeader({
       title="Servers"
       className={classes.header}
       actions={
-        <Group gap="md" wrap="wrap" justify="flex-end" className={classes.headerActions}>
+        <Group gap="md" wrap="wrap" justify="flex-end">
         {showProcessFleetMetrics ? (
           <Group gap="sm" wrap="wrap" className={classes.fleetReadouts}>
             <Text

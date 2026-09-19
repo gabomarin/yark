@@ -284,6 +284,20 @@ Primary destructive **Button**s use **`color="red" variant="filled"`** — **Sto
 
 | Confirm modals (delete / clear / ban / remove / force-close) | `openDangerConfirmModal` + optional `dangerConfirmBody` (`shared/ui/DangerConfirmModal/`) — red confirm, Cancel default (#235) |
 
+**Disabled chrome is the enabled chrome, dimmed.** Mantine’s disabled rule paints *every*
+Button variant with `--mantine-color-disabled`, so a `subtle` / `transparent` button gained
+a solid fill the moment it was disabled: the workspace **Backups** Delete looked like a real
+filled button while nothing was selected and went text-only as soon as a selection enabled
+it. `styles/globals.css` pins those two variants back to `background: transparent`, so
+disabled means "dimmed text" and the affordance never flips. Keep new disabled states on
+that rule instead of swapping `variant` with the disabled flag. **A disabled action must
+also say why.** Two channels, one idea each: an inline **`Alert`** (info tone, not
+dismissible) for a state that blocks a whole section — Settings → SteamCMD shows
+"SteamCMD is busy / Installing SteamCMD" with what is locked and, when there are more jobs,
+how many are queued — and a one-line **`Tooltip`** on the control itself ("SteamCMD is
+busy", "Set up SteamCMD first") for the contextual reminder. Don't paste the banner
+sentence into the tooltip.
+
 **Exceptions (not red filled):** red **Alert** / **Badge** (error state, not actions); backup history toolbar **Delete** / **Clear failed** (`variant="subtle"`); **menu** row actions (`serverCardMenuActions`, backup/mods context menus — separate pass); **Remove from YARK** (profile-only delete) keeps default primary styling; multi-button unsaved-leave (`openUnsavedLeaveModal`) uses **fossil** / default buttons.
 
 Reference: `ServerModDetailDrawer` Remove footer (#344); quiet row icons (#397).
@@ -388,6 +402,17 @@ pick the level by "how far the surface floats", never by taste.
 
 Don’t mix comfortable Overview padding into dense INI/backup toolbars without intent.
 
+**Actions are two sizes, not three.** `Button` uses the density pair only — Comfortable
+`sm` (~36px) and Compact `xs` (~30px) — so buttons stay aligned with the inputs and
+selects in the same row. The older `compact-xs` / `compact-sm` middle scale is retired for
+actions: it made dialog footers and toolbar actions a third size that matched nothing.
+Where a row looked tight, that was the row’s problem, not the button’s.
+
+**Toolbars are flush rows.** A toolbar (list controls, sort bar, section actions) is a
+flex row on the pane surface — no rounded box, no translucent wash, hairlines only where
+the pane needs one. Reach for Mantine `Group` + `ml="auto"` before a bespoke
+`.listToolbar` / `.headerActions` CSS rule.
+
 **Servers layout:** **Recent activity** is a wide-only side panel (`min-width: 1600px`). Below that breakpoint, hide the stacked panel so the server list keeps the viewport; keep a compact **View logs** link (Logs nav remains available).
 
 ---
@@ -425,6 +450,7 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 | `DismissibleHint` | `shared/ui/DismissibleHint/` | Operator gotcha as Fluent-style InfoBar (solid panel + left accent + dismiss); stable localStorage key |
 | `ReadonlyPath` | `shared/ui/ReadonlyPath/` | Bordered monospace chip for configured filesystem paths |
 | `PathField` | `shared/ui/PathField/` | Read-only path chip + Browse/Clear actions |
+| `AppPathRow` | `shared/ui/AppPathRow/` | Path chip + its actions as one row. The row stretches, so the chip matches the buttons' height even when the chip is the `compact` variant (a 23px chip next to a 30px button was the bug) — never re-declare `.pathRow` / `.pathChip` / `.pathActions` locally. When the row needs a heading, stack label + description **above** it (Settings SteamCMD shared caches) - never put the buttons beside the heading, which top-aligns them against the label instead of the path |
 | `ConsoleSurface` | `shared/ui/ConsoleSurface/` | ScrollArea monospace console for SteamCMD / Logs (plain text, stick-to-bottom) |
 | `AppMetricCard` | `shared/ui/AppMetricCard/` | Compact scalar metric tile (fleet strips; optional RingProgress) |
 | `AppPanelConfirmModal` | `shared/ui/AppPanelConfirmModal/` | What's-new-style confirm (panel chrome; Quit YARK / Ark Server API) |

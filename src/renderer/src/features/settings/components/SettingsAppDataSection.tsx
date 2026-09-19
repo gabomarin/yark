@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { FolderOpen } from "@phosphor-icons/react";
 import { Button, Stack, Text, Title } from "@mantine/core";
 import type { AppDataFolderInfo, AppDataFolderKind } from "@shared/ipc";
+import { AppPathRow } from "@ui/AppPathRow/AppPathRow";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import { bundledSteamCmdUnusedNote } from "../settingsModel";
 import classes from "../SettingsPage.module.css";
@@ -71,21 +72,19 @@ export function SettingsAppDataSection(props: Props): ReactElement {
           return (
             <div key={folder.kind} className={classes.dataFolderRow}>
               <Text size="sm" fw={600}>{folder.label}</Text>
-              <div className={classes.dataFolderPathRow}>
-                <ReadonlyPath
-                  className={classes.dataFolderPath}
-                  value={folder.path}
-                  compact
-                />
-                <Button
-                  size="compact-xs"
-                  variant="subtle"
-                  leftSection={<FolderOpen size={14} />}
-                  onClick={() => void openDataFolder(folder.kind)}
-                >
-                  Open
-                </Button>
-              </div>
+              <AppPathRow
+                actions={
+                  <Button
+                    variant="default"
+                    leftSection={<FolderOpen size={14} />}
+                    onClick={() => void openDataFolder(folder.kind)}
+                  >
+                    Open
+                  </Button>
+                }
+              >
+                <ReadonlyPath value={folder.path} compact />
+              </AppPathRow>
               {unusedNote !== null && (
                 <Text size="xs" c="dimmed" data-bundled-steamcmd-note>
                   {unusedNote}

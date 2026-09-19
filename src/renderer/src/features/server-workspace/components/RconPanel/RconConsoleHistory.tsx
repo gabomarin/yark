@@ -113,7 +113,6 @@ export function RconConsoleHistory(props: Props): ReactElement {
                   </Text>
                   <Group gap={4} wrap="wrap">
                     <Button
-                      size="compact-xs"
                       variant="subtle"
                       leftSection={<Copy size={12} />}
                       onClick={() => void copyText("Command", entry.command)}
@@ -121,7 +120,6 @@ export function RconConsoleHistory(props: Props): ReactElement {
                       Copy command
                     </Button>
                     <Button
-                      size="compact-xs"
                       variant="subtle"
                       leftSection={<Copy size={12} />}
                       disabled={responseText === null}
@@ -134,7 +132,6 @@ export function RconConsoleHistory(props: Props): ReactElement {
                       Copy response
                     </Button>
                     <Button
-                      size="compact-xs"
                       variant="subtle"
                       leftSection={<ArrowClockwise size={12} />}
                       disabled={rerunBlocked}

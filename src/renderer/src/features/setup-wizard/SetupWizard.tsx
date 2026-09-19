@@ -197,7 +197,6 @@ export function SetupWizard(props: Props): ReactElement {
         <Group justify="flex-end">
           <Button
             variant="subtle"
-            size="compact-xs"
             disabled={props.busy}
             loading={props.busy}
             onClick={handleDismiss}

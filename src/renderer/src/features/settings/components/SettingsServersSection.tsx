@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { FolderOpen } from "@phosphor-icons/react";
-import { Button, Group, Switch, Text, Title } from "@mantine/core";
+import { Button, Switch, Text, Title } from "@mantine/core";
+import { AppPathRow } from "@ui/AppPathRow/AppPathRow";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import { DEFAULT_BASE_FOLDER_ATTR } from "../settingsTestIds";
 import classes from "../SettingsPage.module.css";
@@ -47,31 +48,34 @@ export function SettingsServersSection(props: Props): ReactElement {
             New servers are created here, each in its own named subfolder.
           </Text>
         </div>
-        <div className={classes.pathActionsRow} {...{ [DEFAULT_BASE_FOLDER_ATTR]: true }}>
+        <AppPathRow
+          {...{ [DEFAULT_BASE_FOLDER_ATTR]: true }}
+          actions={
+            <>
+              <Button
+                size="xs"
+                variant="default"
+                leftSection={<FolderOpen size={14} />}
+                onClick={props.onPickDefaultBaseFolder}
+              >
+                Choose…
+              </Button>
+              <Button
+                size="xs"
+                variant="subtle"
+                disabled={props.defaultBaseFolder === null}
+                onClick={() => props.onDefaultBaseFolderChange(null)}
+              >
+                Clear
+              </Button>
+            </>
+          }
+        >
           <ReadonlyPath
-            className={classes.pathChip}
             value={props.defaultBaseFolder}
-            emptyLabel="Not set – choose a folder when creating a server"
+            emptyLabel="Not set - choose a folder when creating a server"
           />
-          <Group gap="xs" wrap="wrap" className={classes.pathActions}>
-            <Button
-              size="xs"
-              variant="default"
-              leftSection={<FolderOpen size={14} />}
-              onClick={props.onPickDefaultBaseFolder}
-            >
-              Choose…
-            </Button>
-            <Button
-              size="xs"
-              variant="subtle"
-              disabled={props.defaultBaseFolder === null}
-              onClick={() => props.onDefaultBaseFolderChange(null)}
-            >
-              Clear
-            </Button>
-          </Group>
-        </div>
+        </AppPathRow>
       </div>
       </div>
     </section>

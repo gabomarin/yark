@@ -130,7 +130,6 @@ export function BackupListToolbar(props: Props): ReactElement {
         {showManualCreate && (
           <Tooltip label={createTooltip}>
             <Button
-              size="compact-sm"
               leftSection={<HardDrives size={14} />}
               onClick={onCreate}
               loading={busyOp === "create"}
@@ -145,7 +144,6 @@ export function BackupListToolbar(props: Props): ReactElement {
           <Tooltip label={`Import a YARK ${activeKindLabel.toLowerCase()} ZIP into this catalog`}>
             <Button
               variant="default"
-              size="compact-sm"
               leftSection={<UploadSimple size={14} />}
               onClick={onImport}
               loading={busyOp === "import"}
@@ -160,7 +158,6 @@ export function BackupListToolbar(props: Props): ReactElement {
             <Button
               color="red"
               variant="subtle"
-              size="compact-sm"
               leftSection={<Trash size={14} />}
               disabled={busy || createLocked === true || actionableSelectedCount === 0}
               onClick={onDeleteSelected}
@@ -174,7 +171,6 @@ export function BackupListToolbar(props: Props): ReactElement {
           <Button
             color="red"
             variant="subtle"
-            size="compact-sm"
             disabled={busy || createLocked === true}
             onClick={onClearFailed}
             data-backup-clear-failed

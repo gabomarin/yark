@@ -1,7 +1,9 @@
 import type { ReactElement } from "react";
 import { Broom, CloudArrowDown, FolderOpen } from "@phosphor-icons/react";
-import { Button, Group, Stack, Text, Title } from "@mantine/core";
+import { Alert, Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
 import type { SteamCmdCacheKind, SteamCmdStatus } from "@shared/types";
+import { steamCmdProgressFallbackLabel } from "@shared/server/steamcmd-progress";
+import { AppPathRow } from "@ui/AppPathRow/AppPathRow";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import { STEAMCMD_PATH_ATTR } from "../settingsTestIds";
 import classes from "../SettingsPage.module.css";
@@ -23,7 +25,19 @@ export function SettingsSteamCmdSection(props: Props): ReactElement {
   const steamCmdBusy = props.steamCmdBusy === true;
   const installingSteamCmd =
     steamCmdBusy && props.steamCmdStatus?.operation === "install-steamcmd";
-  const cacheActionsDisabled = !detected || steamCmdBusy;
+  /* A paused job still counts as busy (update-service: busy = live || queued,
+   * where queued includes `paused`), so say why instead of leaving a dead button. */
+  const busyHoverHint = "SteamCMD is busy";
+  const cacheDisabledHint = !detected
+    ? "Set up SteamCMD first"
+    : steamCmdBusy
+      ? busyHoverHint
+      : null;
+  const activity = (
+    props.steamCmdStatus?.progressLabel ??
+    steamCmdProgressFallbackLabel(props.steamCmdStatus?.operation ?? null)
+  ).replace(/\.$/, "");
+  const queuedCount = props.steamCmdStatus?.queuedCount ?? 0;
 
   return (
     <section className={classes.section} aria-labelledby="settings-steamcmd">
@@ -40,36 +54,63 @@ export function SettingsSteamCmdSection(props: Props): ReactElement {
         </Text>
       </Group>
 
-      <div className={classes.pathActionsRow}>
+      {steamCmdBusy && (
+        <Alert
+          variant="light"
+          color="blue"
+          title={installingSteamCmd ? "Installing SteamCMD" : "SteamCMD is busy"}
+          data-steamcmd-busy
+        >
+          {installingSteamCmd ? (
+            "The executable path and the shared caches unlock when it finishes."
+          ) : (
+            <>
+              {activity}. The executable path and the shared caches are locked until the
+              job finishes or is cancelled.
+              {queuedCount > 0
+                ? ` ${queuedCount} more ${queuedCount === 1 ? "job" : "jobs"} queued behind it.`
+                : ""}
+            </>
+          )}
+        </Alert>
+      )}
+
+      <AppPathRow
+        actions={
+          <>
+            <Tooltip label={busyHoverHint} disabled={!steamCmdBusy}>
+              <span>
+                <Button
+                  size="xs"
+                  variant="default"
+                  leftSection={<FolderOpen size={14} />}
+                  disabled={steamCmdBusy}
+                  onClick={props.onPickSteamCmdPath}
+                >
+                  Choose…
+                </Button>
+              </span>
+            </Tooltip>
+            {!detected && (
+              <Button
+                size="xs"
+                leftSection={<CloudArrowDown size={14} />}
+                disabled={steamCmdBusy}
+                loading={installingSteamCmd}
+                onClick={props.onInstallSteamCmd}
+              >
+                Install SteamCMD
+              </Button>
+            )}
+          </>
+        }
+      >
         <ReadonlyPath
-          className={classes.pathChip}
           value={executablePath}
           emptyLabel="No steamcmd.exe selected yet"
           {...{ [STEAMCMD_PATH_ATTR]: true }}
         />
-        <Group gap="xs" wrap="wrap" className={classes.pathActions}>
-          <Button
-            size="xs"
-            variant="default"
-            leftSection={<FolderOpen size={14} />}
-            disabled={steamCmdBusy}
-            onClick={props.onPickSteamCmdPath}
-          >
-            Choose…
-          </Button>
-          {!detected && (
-            <Button
-              size="xs"
-              leftSection={<CloudArrowDown size={14} />}
-              disabled={steamCmdBusy}
-              loading={installingSteamCmd}
-              onClick={props.onInstallSteamCmd}
-            >
-              Install SteamCMD
-            </Button>
-          )}
-        </Group>
-      </div>
+      </AppPathRow>
 
       <div className={classes.cacheSection} data-steamcmd-caches>
         <Text size="sm" fw={600}>Shared caches</Text>
@@ -81,7 +122,7 @@ export function SettingsSteamCmdSection(props: Props): ReactElement {
             label="Download cache"
             description="Temporary files Steam already downloaded. Clear this to free disk space – the next install or update will download them again."
             path={depotCacheDir}
-            disabled={cacheActionsDisabled}
+            disabledHint={cacheDisabledHint}
             onOpen={() => props.onOpenSteamCmdCache("depot")}
             onClear={() => props.onClearSteamCmdCache("depot")}
           />
@@ -89,7 +130,7 @@ export function SettingsSteamCmdSection(props: Props): ReactElement {
             label="Shared server files"
             description="A ready-made copy of the ARK server used to set up new servers faster. Clearing it means the next install rebuilds that copy first."
             path={contentCacheDir}
-            disabled={cacheActionsDisabled}
+            disabledHint={cacheDisabledHint}
             onOpen={() => props.onOpenSteamCmdCache("content")}
             onClear={() => props.onClearSteamCmdCache("content")}
           />
@@ -103,7 +144,8 @@ interface CacheRowProps {
   label: string;
   description: string;
   path: string | null;
-  disabled: boolean;
+  /** Why the row is locked, or null when the actions are live. */
+  disabledHint: string | null;
   onOpen: () => void;
   onClear: () => void;
 }
@@ -111,37 +153,39 @@ interface CacheRowProps {
 function CacheRow(props: CacheRowProps): ReactElement {
   return (
     <div className={classes.cacheRow}>
-      <div className={classes.cacheCopy}>
-        <Text size="sm" fw={600}>{props.label}</Text>
-        <Text size="xs" c="dimmed">{props.description}</Text>
+      <Text size="sm" fw={600}>{props.label}</Text>
+      <Text size="xs" c="dimmed">{props.description}</Text>
+      <AppPathRow
+        actions={
+          <Tooltip label={props.disabledHint ?? ""} disabled={props.disabledHint === null}>
+            <Group gap="xs" wrap="nowrap">
+              <Button
+                variant="subtle"
+                leftSection={<FolderOpen size={14} />}
+                disabled={props.disabledHint !== null || props.path === null}
+                onClick={props.onOpen}
+              >
+                Open
+              </Button>
+              <Button
+                variant="subtle"
+                color="red"
+                leftSection={<Broom size={14} />}
+                disabled={props.disabledHint !== null || props.path === null}
+                onClick={props.onClear}
+              >
+                Clear
+              </Button>
+            </Group>
+          </Tooltip>
+        }
+      >
         <ReadonlyPath
-          className={classes.cachePath}
           value={props.path}
           emptyLabel="Available after SteamCMD is set up"
           compact
         />
-      </div>
-      <Group gap="xs" wrap="nowrap" className={classes.cacheActions}>
-        <Button
-          size="compact-xs"
-          variant="subtle"
-          leftSection={<FolderOpen size={14} />}
-          disabled={props.disabled || props.path === null}
-          onClick={props.onOpen}
-        >
-          Open
-        </Button>
-        <Button
-          size="compact-xs"
-          variant="subtle"
-          color="red"
-          leftSection={<Broom size={14} />}
-          disabled={props.disabled || props.path === null}
-          onClick={props.onClear}
-        >
-          Clear
-        </Button>
-      </Group>
+      </AppPathRow>
     </div>
   );
 }

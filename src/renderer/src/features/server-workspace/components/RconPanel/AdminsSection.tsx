@@ -56,7 +56,6 @@ export function AdminsSection(props: Props): ReactElement {
         {!readOnly ? (
           <Group gap="xs">
             <Button
-              size="compact-xs"
               variant="default"
               disabled={!admins.draftDirty}
               onClick={admins.discardDraft}

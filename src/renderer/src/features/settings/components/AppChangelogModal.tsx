@@ -102,7 +102,6 @@ export function AppChangelogModal(props: Props): ReactElement {
       footer={
         <>
           <Button
-            size="compact-xs"
             variant="subtle"
             className={classes.github}
             rightSection={<ArrowSquareOut size={12} />}
@@ -113,7 +112,7 @@ export function AppChangelogModal(props: Props): ReactElement {
           >
             Full notes on GitHub
           </Button>
-          <Button size="compact-xs" onClick={handleClose} data-changelog-got-it>
+          <Button onClick={handleClose} data-changelog-got-it>
             Got it
           </Button>
         </>

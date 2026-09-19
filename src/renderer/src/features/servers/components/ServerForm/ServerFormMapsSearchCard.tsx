@@ -56,7 +56,7 @@ export function ServerFormMapsSearchCard(props: Props): ReactElement {
             No Map Name inferred — you&apos;ll type it next
           </Text>
         )}
-        <Button className={classes.useMapBtn} size="compact-sm" onClick={props.onUse}>
+        <Button className={classes.useMapBtn} onClick={props.onUse}>
           Use map
         </Button>
       </div>

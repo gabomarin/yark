@@ -235,7 +235,6 @@ export function OverviewPage(props: Props): ReactElement {
             <div className={classes.narrowLogsLink}>
               <Button
                 variant="subtle"
-                size="compact-sm"
                 rightSection={<ArrowRight size={14} />}
                 onClick={props.onViewAllActivity}
               >

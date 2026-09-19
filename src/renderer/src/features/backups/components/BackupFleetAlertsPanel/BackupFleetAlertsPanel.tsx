@@ -72,7 +72,6 @@ export function BackupFleetAlertsPanel(props: Props): ReactElement | null {
               <Group gap={4} className={classes.actions} wrap="nowrap">
                 {showLogs && (
                   <Button
-                    size="compact-xs"
                     variant="light"
                     color={severityBadgeColor(alert.severity)}
                     onClick={() =>
@@ -87,7 +86,6 @@ export function BackupFleetAlertsPanel(props: Props): ReactElement | null {
                 )}
                 {showOpen && (
                   <Button
-                    size="compact-xs"
                     variant="default"
                     onClick={() => props.onOpenServerBackups(alert.serverId!)}
                   >
@@ -97,7 +95,6 @@ export function BackupFleetAlertsPanel(props: Props): ReactElement | null {
                 {(alert.kind === "disk_warning" || alert.kind === "disk_critical") &&
                   props.onOpenCleanup !== undefined && (
                     <Button
-                      size="compact-xs"
                       variant="light"
                       leftSection={<Broom size={12} />}
                       onClick={props.onOpenCleanup}
@@ -108,7 +105,6 @@ export function BackupFleetAlertsPanel(props: Props): ReactElement | null {
                 {props.onDismissAlert !== undefined && (
                   <Tooltip label="Hide until this condition changes again">
                     <Button
-                      size="compact-xs"
                       variant="subtle"
                       color="gray"
                       onClick={() => props.onDismissAlert?.(alert)}

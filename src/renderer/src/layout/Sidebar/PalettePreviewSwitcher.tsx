@@ -68,7 +68,6 @@ export function PalettePreviewSwitcher(): ReactElement {
           style={{ flex: 1, minWidth: 0 }}
         />
         <Button
-          size="compact-xs"
           variant="subtle"
           color="gray"
           disabled={color === null}

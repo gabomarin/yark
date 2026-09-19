@@ -288,7 +288,7 @@ export function SettingsDiscordSection(): ReactElement {
         </div>
         <Popover width={360} position="bottom-end" withArrow shadow="md">
           <Popover.Target>
-            <Button variant="subtle" size="compact-sm" leftSection={<Info size={14} />}>
+            <Button variant="subtle" leftSection={<Info size={14} />}>
               Message variables
             </Button>
           </Popover.Target>
