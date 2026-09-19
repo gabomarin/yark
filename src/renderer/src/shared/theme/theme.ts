@@ -539,9 +539,37 @@ function createAppTheme(
           tooltip: { border: "1px solid var(--app-color-border-subtle)" },
         },
       },
-      /** Fluent ProgressBar is a thin 4px bar; call sites may still pass `size`. */
-      Progress: {
+      /*
+       * Fluent flyout chrome: 8px shell, 4px rows on a 32px row height, 1px
+       * hairline separator (Mantine hardcodes its own divider colour). Row hover
+       * uses the app control-hover so menu rows match every other hover, and
+       * `--sc`-style colour props on an item still win over this inherited value.
+       */
+      Menu: {
         defaultProps: {
+          radius: "md",
+        },
+        styles: {
+          dropdown: {
+            "--menu-item-hover": "var(--app-color-surface-control-hover)",
+          },
+          item: {
+            borderRadius: "var(--app-radius-control)",
+            minHeight: 32,
+          },
+          divider: {
+            borderColor: "var(--app-color-border-subtle)",
+          },
+        },
+      },
+      /** Flyouts / popovers share the menu shell: 8px, still 4px on their rows. */
+      Popover: {
+        defaultProps: {
+          radius: "md",
+        },
+      },
+      /** Fluent ProgressBar is a thin 4px bar; call sites may still pass `size`. */
+      Progress: {        defaultProps: {
           size: 4,
         },
       },

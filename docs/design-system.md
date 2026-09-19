@@ -300,6 +300,17 @@ track. That order is set once in the theme (`Switch.defaultProps.labelPosition =
 - `label="…"` is for a standalone switch (a boolean field in a form or dialog), where
   the label is the field name and reads before the toggle.
 
+### 5f. Flyouts (Menu / Popover)
+
+The menu and popover shell is themed once, so a context menu and a settings popover
+agree: **8px shell** (`radius="md"`, 7px in Compact), **4px rows** inside it, **32px row
+height** (Fluent's row, and a comfortable hit target even in Compact), a 4px padding gap
+so the row radius shows, and a 1px `--app-color-border-subtle` separator (Mantine
+otherwise hardcodes its own divider colour). Row hover is
+`--app-color-surface-control-hover`; an item that carries a semantic `color` keeps
+Mantine's tinted hover. Depth comes from the shared ladder — `shadow="md"` =
+`--app-elevation-8`.
+
 ### 6. Dense operational tables
 
 Prefer shared `YarkDataTable` (`shared/ui/YarkDataTable`, wraps `mantine-datatable`) for dense
