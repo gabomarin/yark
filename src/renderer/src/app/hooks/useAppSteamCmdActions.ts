@@ -45,7 +45,7 @@ export function useAppSteamCmdActions(options: {
         showOperatorToast({
           title: "Pause unavailable",
           message,
-          color: "yellow",
+          color: "attention",
         });
       } else {
         showOperatorError(message);
@@ -153,7 +153,7 @@ export function useAppSteamCmdActions(options: {
             showOperatorToast({
               title: "Paused",
               message: copy.pauseMessage,
-              color: "yellow",
+              color: "attention",
             });
           } else if (/cancell?ed|cancelad/i.test(message)) {
             showOperatorToast({
@@ -215,7 +215,7 @@ export function useAppSteamCmdActions(options: {
         title: `Clear ${label}?`,
         children: createElement(
           Alert,
-          { color: "orange", variant: "light", title: "Cannot be undone" },
+          { color: "attention", variant: "light", title: "Cannot be undone" },
           detail,
         ),
         confirmLabel: "Clear cache",

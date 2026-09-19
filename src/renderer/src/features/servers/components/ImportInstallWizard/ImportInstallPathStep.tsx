@@ -51,7 +51,7 @@ export function ImportInstallPathStep(props: Props): ReactElement {
         <Stack gap="xs">
           <Group gap="xs" align="flex-start">
             <Badge
-              color={tone === "ready" ? "green" : "red"}
+                color={tone === "ready" ? "ok" : "red"}
               variant="light"
             >
               {importHealthBadgeLabel(activeProbe)}

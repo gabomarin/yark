@@ -208,7 +208,7 @@ export function Sidebar(props: Props): ReactElement {
                     {props.downloadCount}
                   </Text>
                 ) : item.experimental === true ? (
-                  <Badge variant="light" color="gray" size="xs" radius="sm">
+                  <Badge variant="light" color="gray" radius="sm">
                     Experimental
                   </Badge>
                 ) : undefined

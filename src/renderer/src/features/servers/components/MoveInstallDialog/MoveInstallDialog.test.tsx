@@ -361,7 +361,7 @@ describe("MoveInstallDialog completion feedback (#240)", () => {
       expect(notifySpy).toHaveBeenCalledWith(
         expect.objectContaining({
           title: "Move completed",
-          color: "teal",
+          color: "ok",
         }),
       );
     });

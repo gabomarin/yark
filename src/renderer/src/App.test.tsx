@@ -43,7 +43,7 @@ describe("App empty installation snapshot", () => {
       expect.objectContaining({
         title: "You're up to date",
         message: "All installed servers are on the latest version.",
-        color: "teal",
+        color: "ok",
       }),
     );
   });

@@ -150,7 +150,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
         </Group>
 
         {templateStatusError !== null && (
-          <Text size="xs" c="orange">
+          <Text size="xs" c="attention">
             {templateStatusError}
           </Text>
         )}

@@ -298,13 +298,13 @@ export function CloneServerDialog(props: Props): ReactElement {
               />
 
               {copyBlocked && props.sourceServer && (
-                <Alert color="yellow" variant="light">
+                <Alert color="attention" variant="light">
                   Stop <strong>{props.sourceServer.name}</strong> before copying
                   the entire folder. You can still clone the profile only.
                 </Alert>
               )}
               {copyWarn !== null && (
-                <Alert color="yellow" variant="light">
+                <Alert color="attention" variant="light">
                   {copyWarn}
                 </Alert>
               )}

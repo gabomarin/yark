@@ -97,7 +97,7 @@ export function BannedPlayersSection(props: Props): ReactElement {
                 showOperatorToast({
                   title: "Unban",
                   message: result.data.warning,
-                  color: "orange",
+                  color: "attention",
                   autoClose: 8000,
                 });
               }

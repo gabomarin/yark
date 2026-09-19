@@ -132,7 +132,7 @@ export function DeleteServerModal(props: Props): ReactElement {
         ) : (
           <>
             {staleEmptyNotice ? (
-              <Alert color="orange" title="Folder is no longer empty" variant="light">
+              <Alert color="attention" title="Folder is no longer empty" variant="light">
                 {EMPTY_WIPE_STALE_MESSAGE}
               </Alert>
             ) : null}
@@ -189,10 +189,8 @@ export function DeleteServerModal(props: Props): ReactElement {
                           Delete everything
                         </Text>
                         <Badge
-                          size="xs"
-                          variant="outline"
-                          tt="uppercase"
-                          className={classes.dangerBadge}
+                          variant="light"
+                          color="red"
                         >
                           Danger
                         </Badge>

@@ -27,7 +27,7 @@ export function CopyConfigCategoriesStep(props: Props): ReactElement {
   return (
     <Stack gap="sm">
       <Group gap="xs">
-        <Badge variant="light" color="blue">
+        <Badge variant="light">
           {props.sourceName} → {props.targetLabel}
         </Badge>
         <Text size="xs" c="dimmed">

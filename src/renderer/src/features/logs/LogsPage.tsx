@@ -279,7 +279,7 @@ export function LogsPage(props: Props): ReactElement {
                                 {serverName}
                               </Text>
                               {server?.enabled === false && (
-                                <Badge size="xs" color="gray" variant="light">
+                                <Badge color="gray" variant="light">
                                   Inactive
                                 </Badge>
                               )}

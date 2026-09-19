@@ -92,7 +92,7 @@ export function ServerGridEmptyStates(props: Props): ReactElement | null {
         }
       >
         {steamCmdSetup ? (
-          <Alert color="yellow" variant="light" title="SteamCMD needs setup">
+          <Alert color="attention" variant="light" title="SteamCMD needs setup">
             Open Settings to install or point at SteamCMD, or run the setup assistant
             again from Settings.
           </Alert>

@@ -28,11 +28,11 @@ export function ServerFormMapsSearchConfirmStep(props: Props): ReactElement {
           {MAP_NAME_COPY.applyConfirmIntro}
         </Text>
         {picked.token === null ? (
-          <Alert color="yellow" variant="light" title={MAP_NAME_COPY.notInferredTitle}>
+          <Alert color="attention" variant="light" title={MAP_NAME_COPY.notInferredTitle}>
             {MAP_NAME_COPY.notInferredBody} {MAP_NAME_COPY.applyConfirmNeedsMapName}
           </Alert>
         ) : picked.token.source === "bare" ? (
-          <Alert color="yellow" variant="light" title={MAP_NAME_COPY.confirmTitle}>
+          <Alert color="attention" variant="light" title={MAP_NAME_COPY.confirmTitle}>
             {MAP_NAME_COPY.confirmBareWp}
           </Alert>
         ) : null}

@@ -148,8 +148,7 @@
 }
 
 .offsetBadge {
-  font-size: var(--mantine-font-size-sm);
-  font-weight: 600;
+  /* Type comes from the Badge theme (12px/600); only the numerals are local. */
   font-variant-numeric: tabular-nums;
 }
 

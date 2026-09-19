@@ -31,7 +31,7 @@ export function CopyMetadataRow(props: Props): ReactElement {
           ff="monospace"
           fw={600}
           size="sm"
-          c={props.warn ? "yellow" : undefined}
+          c={props.warn ? "attention" : undefined}
           className={classes.value}
         >
           {props.value}

@@ -45,7 +45,7 @@ export function ImportInstallEditStep(props: Props): ReactElement {
         rconPort={props.form.rconPort}
       />
       {customMapNeedsLink && (
-        <Alert color="yellow" title="Custom map">
+        <Alert color="attention" title="Custom map">
           Link a Maps-category Project ID below (or on the Mods tab after import)
           before the first Start, or Start will block until map identity is set.
         </Alert>

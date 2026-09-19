@@ -130,7 +130,7 @@ export function AdminsSection(props: Props): ReactElement {
         ) : null}
         {admins.state?.listError !== null &&
         admins.state?.listError !== undefined ? (
-          <Text size="sm" c="orange">
+          <Text size="sm" c="attention">
             {admins.state.listError}
           </Text>
         ) : null}

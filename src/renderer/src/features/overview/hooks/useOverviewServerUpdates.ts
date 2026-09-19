@@ -88,7 +88,7 @@ export function useOverviewServerUpdates(options: {
               notifications.show({
                 title: "Not installed yet",
                 message: `Install files for "${name}" before checking for updates.`,
-                color: "yellow",
+                color: "attention",
               });
               return;
             }
@@ -104,7 +104,7 @@ export function useOverviewServerUpdates(options: {
               notifications.show({
                 title: "Couldn't check",
                 message: `Couldn't read the installed version for "${name}". Try Install or Verify files first.`,
-                color: "yellow",
+                color: "attention",
               });
               return;
             }
@@ -112,14 +112,14 @@ export function useOverviewServerUpdates(options: {
               notifications.show({
                 title: "Update available",
                 message: `"${name}" has a newer version. Use Update on the server card when you're ready.`,
-                color: "orange",
+                color: "attention",
                 autoClose: 8000,
               });
             } else {
               notifications.show({
                 title: "Up to date",
                 message: `"${name}" is already on the latest version.`,
-                color: "teal",
+                color: "ok",
               });
             }
             return;
@@ -139,13 +139,13 @@ export function useOverviewServerUpdates(options: {
               notifications.show({
                 title: "Couldn't check every server",
                 message: `${unverified.length} server${unverified.length === 1 ? "" : "s"} don't have a version to compare. Try Install or Verify on ${unverified.length === 1 ? "that server" : "those servers"}.`,
-                color: "yellow",
+                color: "attention",
               });
             } else {
               notifications.show({
                 title: "You're up to date",
                 message: "All installed servers are on the latest version.",
-                color: "teal",
+                color: "ok",
               });
             }
           } else {
@@ -166,7 +166,7 @@ export function useOverviewServerUpdates(options: {
                 outdated.length === 1
                   ? `${names} has a newer version. Use Update on the server card when you're ready.`
                   : `${names} have newer versions. Use Update on each server card when you're ready.`,
-              color: "orange",
+              color: "attention",
               autoClose: 10000,
             });
           }
@@ -207,7 +207,7 @@ export function useOverviewServerUpdates(options: {
           showOperatorToast({
             title: "No outdated servers",
             message: "Every installed server is already on the latest Steam build.",
-            color: "teal",
+            color: "ok",
           });
           return;
         }

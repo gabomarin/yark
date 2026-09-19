@@ -6,7 +6,6 @@ import {
 } from "@phosphor-icons/react";
 import {
   ActionIcon,
-  Badge,
   Group,
   Stack,
   Text,
@@ -19,13 +18,14 @@ import type { ReactElement } from "react";
 import { ConsoleSurface } from "@ui/ConsoleSurface/ConsoleSurface";
 import { LoadingState } from "@ui/LoadingState/LoadingState";
 import { SelectableListRow } from "@ui/SelectableListRow/SelectableListRow";
+import { StatusWord } from "@ui/StatusWord/StatusWord";
 import classes from "../../LogsPage.module.css";
 import {
   formatDuration,
   formatSize,
   formatUpdateJobLabel,
-  statusColor,
   statusLabel,
+  statusTone,
 } from "../../model/serverLogsFormat";
 import {
   LogsClearAction,
@@ -114,13 +114,9 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
                       title={file.fileName}
                       className={classes.updateHistoryRow}
                       trailing={
-                        <Badge
-                          color={statusColor(file.status)}
-                          variant="light"
-                          className={classes.updateStatus}
-                        >
+                        <StatusWord tone={statusTone(file.status)} className={classes.updateStatus}>
                           {statusLabel(file.status)}
-                        </Badge>
+                        </StatusWord>
                       }
                     >
                       <Text size="sm" fw={600} className={classes.updateTitle}>
@@ -151,12 +147,9 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
                   Update details
                 </Title>
                 {selectedUpdateInfo !== null && (
-                  <Badge
-                    color={statusColor(selectedUpdateInfo.status)}
-                    variant="light"
-                  >
-                    {selectedUpdateInfo.status}
-                  </Badge>
+                  <StatusWord tone={statusTone(selectedUpdateInfo.status)}>
+                    {statusLabel(selectedUpdateInfo.status)}
+                  </StatusWord>
                 )}
               </Group>
               {selectedUpdateInfo !== null && (

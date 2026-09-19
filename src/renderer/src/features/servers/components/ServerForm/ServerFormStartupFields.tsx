@@ -28,7 +28,7 @@ export function ServerFormStartupFields(props: Props): ReactElement {
         />
       </div>
       {props.showInactiveWarning && (
-        <Alert color="yellow" variant="light">
+        <Alert color="attention" variant="light">
           Preference is saved, but Inactive servers never auto-start. Enable the
           server first.
         </Alert>

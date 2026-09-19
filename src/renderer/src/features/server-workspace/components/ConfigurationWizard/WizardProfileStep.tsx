@@ -103,7 +103,7 @@ export function WizardProfileStep(props: Props): ReactElement {
                 <Text component="span" fw={700} size="sm">
                   Enable single-player settings
                 </Text>
-                <Badge size="xs" color="fossil" variant="light" tt="none">
+                <Badge color="attention" variant="light">
                   High impact
                 </Badge>
               </Group>

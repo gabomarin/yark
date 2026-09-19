@@ -34,9 +34,7 @@ function CategoryBadges(props: {
   const badges = (
     <div className={classes.categoryRow}>
       <Badge
-        size="xs"
         variant="light"
-        tt="none"
         color={props.isMap ? "attention" : "gray"}
         className={classes.categoryBadge}
         title={extras.length === 0 ? props.label : undefined}
@@ -45,10 +43,8 @@ function CategoryBadges(props: {
       </Badge>
       {props.extraLabels.length > 0 && (
         <Badge
-          size="xs"
           variant="light"
           color="gray"
-          tt="none"
           className={classes.categoryExtra}
         >
           +{props.extraLabels.length}

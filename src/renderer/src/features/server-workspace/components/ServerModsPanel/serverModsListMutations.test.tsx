@@ -102,7 +102,7 @@ describe("createServerModsListMutations", () => {
       expect.objectContaining({
         title: "Mod Added",
         message: expect.stringContaining("will not load until you enable it"),
-        color: "yellow",
+        color: "attention",
       }),
     );
   });

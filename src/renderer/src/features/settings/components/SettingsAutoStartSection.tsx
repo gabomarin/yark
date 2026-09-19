@@ -54,20 +54,20 @@ function buildAutoStartSummaryRows(
 function stateBadge(state: AutoStartSummaryState): ReactElement {
   if (state === "armed") {
     return (
-      <Badge size="sm" color="teal" variant="light">
+      <Badge color="ok" variant="light">
         Will start
       </Badge>
     );
   }
   if (state === "ignored") {
     return (
-      <Badge size="sm" color="gray" variant="light">
+      <Badge color="gray" variant="light">
         Ignored (inactive)
       </Badge>
     );
   }
   return (
-    <Badge size="sm" color="yellow" variant="light">
+    <Badge color="attention" variant="light">
       Blocked
     </Badge>
   );

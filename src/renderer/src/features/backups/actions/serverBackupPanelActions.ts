@@ -28,7 +28,7 @@ export function showBackupToast(
   showOperatorToast({
     title: options?.title ?? "Backups",
     message,
-    color: options?.color ?? "teal",
+    color: options?.color ?? "ok",
     autoClose: options?.autoClose ?? 5000,
   });
 }

@@ -192,7 +192,7 @@ export function summarizeUpdateAllOutdatedQueue(input: {
   replacedCount: number;
   failedCount: number;
   skippedCount: number;
-}): { title: string; message: string; color: "teal" | "blue" | "orange" | "red" } {
+}): { title: string; message: string; color: "ok" | "blue" | "attention" | "red" } {
   if (input.queuedCount === 0 && input.replacedCount === 0) {
     return {
       title: "No updates queued",
@@ -200,7 +200,7 @@ export function summarizeUpdateAllOutdatedQueue(input: {
         input.failedCount > 0
           ? "Every eligible server failed to queue. Open Downloads for details."
           : "No eligible servers were ready to queue.",
-      color: "orange",
+      color: "attention",
     };
   }
 
@@ -228,6 +228,6 @@ export function summarizeUpdateAllOutdatedQueue(input: {
         ? "Update queued"
         : "Updates queued",
     message: `${parts.join(". ")}. Jobs run one at a time through Downloads. Jobs that cannot start yet (for example missing SteamCMD) show as blocked with Retry.`,
-    color: input.failedCount > 0 ? "orange" : "blue",
+    color: input.failedCount > 0 ? "attention" : "blue",
   };
 }

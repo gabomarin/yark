@@ -117,7 +117,7 @@ export function resolveRuntimeAction(input: {
     return {
       kind: "start",
       label: "Start server",
-      color: "teal",
+      color: "ok",
       variant: "light",
       disabled: true,
       hint: filesLockHint,
@@ -129,7 +129,7 @@ export function resolveRuntimeAction(input: {
     return {
       kind: "start",
       label: "Start server",
-      color: "teal",
+      color: "ok",
       variant: "light",
       disabled: true,
       visible: false,
@@ -170,7 +170,7 @@ export function resolveRuntimeAction(input: {
     return {
       kind: "starting",
       label: "Starting…",
-      color: "teal",
+      color: "ok",
       variant: "light",
       disabled: true,
       visible: true,
@@ -180,7 +180,7 @@ export function resolveRuntimeAction(input: {
   return {
     kind: "start",
     label: "Start server",
-    color: "teal",
+    color: "ok",
     variant: "light",
     disabled: false,
     visible: true,

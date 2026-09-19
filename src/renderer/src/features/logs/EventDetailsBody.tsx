@@ -32,7 +32,7 @@ export function EventDetailsBody({ event }: Props): ReactElement {
       {details.context.length > 0 && (
         <div className={classes.eventContext}>
           {details.context.map((item) => (
-            <Badge key={item.label} variant="light" size="sm" radius="sm">
+            <Badge key={item.label} variant="light" radius="sm">
               {item.label}: {item.value}
             </Badge>
           ))}

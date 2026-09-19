@@ -34,7 +34,6 @@ function CrashRecoveryHeaderBadgeInner({
       label={crashRecoveryAttemptTooltip(recovery.attempt, recovery.maxAttempts)}
     >
       <Badge
-        size="sm"
         variant="light"
         color={CRASH_RECOVERY_NOTICE_COLOR}
         data-crash-recovery-badge

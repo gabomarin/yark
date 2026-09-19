@@ -107,7 +107,7 @@ export function DownloadRowButton(props: {
           <Tooltip label="Resume">
             <ActionIcon
               size="sm"
-              color="teal"
+              color="ok"
               variant="subtle"
               aria-label="Resume download"
               onClick={() => props.onResume()}
@@ -121,7 +121,7 @@ export function DownloadRowButton(props: {
           <Tooltip label="Retry">
             <ActionIcon
               size="sm"
-              color="teal"
+              color="ok"
               variant="subtle"
               aria-label="Retry download"
               onClick={() => props.onRetry()}
@@ -148,7 +148,7 @@ export function DownloadRowButton(props: {
             <Tooltip label={row.canPause ? "Pause" : "Cancel"}>
               <ActionIcon
                 size="sm"
-                color={row.canPause ? "yellow" : "red"}
+                color={row.canPause ? "attention" : "red"}
                 variant="subtle"
                 aria-label={row.canPause ? "Pause download" : "Cancel download"}
                 onClick={() => props.onCancel()}
@@ -166,7 +166,7 @@ export function DownloadRowButton(props: {
           <Tooltip label={row.canPause ? "Pause" : "Cancel"}>
             <ActionIcon
               size="sm"
-              color={row.canPause ? "yellow" : "red"}
+              color={row.canPause ? "attention" : "red"}
               variant="subtle"
               aria-label={row.canPause ? "Pause download" : "Cancel download"}
               onClick={() => props.onCancel()}

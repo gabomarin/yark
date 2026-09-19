@@ -82,7 +82,7 @@ export function ClusterMemberRow(props: Props): ReactElement {
           </div>
         </Group>
         {showRemove && props.canRemove === false && props.removeReason != null && (
-          <Text size="xs" c="orange">
+          <Text size="xs" c="attention">
             {props.removeReason}
           </Text>
         )}

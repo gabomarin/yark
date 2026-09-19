@@ -283,7 +283,7 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
       {status.phase === "ready"
         && status.installBlockedReason !== null
         && status.installBlockedMessage !== null && (
-        <Text size="xs" c="orange" data-yark-update-blocked>
+        <Text size="xs" c="attention" data-yark-update-blocked>
           {status.installBlockedMessage}
         </Text>
       )}

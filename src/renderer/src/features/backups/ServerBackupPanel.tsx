@@ -82,7 +82,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
 
       {!panel.installReady && (
         <Alert
-          color="yellow"
+          color="attention"
           variant="light"
           title="Install files required"
           data-backup-install-lock

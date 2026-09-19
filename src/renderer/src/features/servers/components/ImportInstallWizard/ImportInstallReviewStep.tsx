@@ -86,13 +86,13 @@ export function ImportInstallReviewStep(props: Props): ReactElement {
 
   return (
     <Stack gap="sm">
-      <Alert color="yellow" title="Profile only">
+      <Alert color="attention" title="Profile only">
         Schedules, clusters, and other managers&apos; databases are not imported.
         Game.ini / GameUserSettings.ini on disk are left unchanged until you Start
         (or edit and save) this profile.
       </Alert>
       {probe.installation.health === "incomplete" ? (
-        <Alert color="orange" title="Incomplete install" variant="light">
+        <Alert color="attention" title="Incomplete install" variant="light">
           Start stays blocked until Install or Verify finishes this ASA tree.
         </Alert>
       ) : null}

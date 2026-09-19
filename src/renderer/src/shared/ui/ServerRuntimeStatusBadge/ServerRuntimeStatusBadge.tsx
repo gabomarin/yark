@@ -27,7 +27,7 @@ function statusIsProcessing(status: ServerStatus | string): boolean {
 
 function toneFromColorOverride(color: string | undefined): StatusWordTone | null {
   if (color === "blue") return "info";
-  if (color === "green") return "ok";
+  if (color === "ok") return "ok";
   if (color === "red") return "danger";
   if (color === "gray") return "neutral";
   return null;

@@ -203,11 +203,44 @@ Theme `defaultRadius` is **`sm`**. Avoid raw `border-radius` when a token fits. 
   (`variant="light"`), and icons on dark chrome — not Mantine’s default coral.
   Status words use `--app-color-ok|fossil|danger-bright|muted` (CSS `data-tone`),
   not Mantine shade refs like `c="ok.5"`.
+- **One colour language: the semantic palette.** Call sites pass `ok` (healthy,
+  success, ready), `attention` (warning, unsaved, blocked, queued), `red` (error,
+  destructive — the theme maps it to `--app-color-bad`), `gray` (neutral, not
+  applicable), `fossil` (the Restart/amber brand action) or `blue` (the accent:
+  brand, selection, info). Mantine's own names are **not** part of the vocabulary —
+  `green`/`teal` meant "good" and `yellow`/`orange` meant "careful" at 98 call sites
+  before the sweep, three different ambers on one screen. The only exception is the
+  wizard's progression/difficulty ramps, where distinct hues encode tiers (categorical
+  data, not status).
+- **Alerts take the tone from the colour** (`alertToneForColor`): blue/cyan/indigo/violet
+  → message (`cryo` hairline), `ok`/green/teal → success (`ok`), yellow/orange/fossil/
+  `attention`/warn → warn (`fossil`), red/pink → error (`bad`), everything else →
+  Mantine's default. So pass the semantic colour and the surface follows;
+  never style an Alert's border by hand.
 - **Status grammar:** runtime, cluster, and backup health/status are a **word + dot**
   (`ServerRuntimeStatusBadge` / `StatusWord`), not a light Badge.
   Counts are a sentence (or MetaStrip). **Badge** is reserved for rare attention (Needs setup,
   blocking lock copy, Logs ERROR/WARNING). Routine Logs **INFO** stays a gray chip, not an
   attention color. At most one attention-colored chip per page.
+- **Chips, badges and counters — pick by role, not by looks.** A **state** is a
+  `StatusWord` (word + dot) inside tool chrome, or a tinted Badge in a dense list where a
+  dot does not fit. A **fact or tag** (version, port, format, cluster/project id, category,
+  user tag, `Inactive`, `Disabled`, `Skip`) is a **neutral** Badge — `variant="light"`
+  with no `color`, or `variant="outline"`. A **count** is a Badge (`outline`, neutral),
+  never a sentence with a colour. Every badge is **neutral unless the value is a state**;
+  the theme sets the defaults (`variant="light"`, `color="gray"`, sentence case, 12px
+  semibold on a 20px pill, 4px corners) so call sites pass **no** `size` / `tt` / colour
+  to a fact badge. Semantic colours only when earned: `ok` (healthy, current, "will
+  start"), `attention` (unsaved, paused, blocked, queued), `red` (failed, invalid), and
+  `gray` for "not applicable". **Never** `blue` on a fact or a tag (the accent is brand
+  and selection, not a label) and never a Mantine name (`teal`, `yellow`, `orange`,
+  `green`) — one colour language, the semantic palette, so a palette change leaves no
+  strays. Danger stays a **tint + `--app-color-danger-bright` text**, never a filled red
+  pill: our `bad` fill is 3:1 (fine for a rail, not for 12px label text).
+- **Status colour, compactly:** a badge tint carries meaning, so a screen should not show
+  two different attention hues. The colour constants live in the models
+  (`serverLogsFormat.statusColor`, `EventSeverityMark.severityColor`, the crash-recovery
+  state, the SteamCMD job status), not inline in the component.
 - **Inline Alert surfaces** (theme `Alert` `--alert-bg` / `--alert-bd`): solid `--app-color-panel` fill plus a 1px semantic border (`cryo` / `fossil` / `bad`). Do not use translucent MagicPath washes.
 - Text: `--app-color-text` / `--app-color-muted`.
 - Borders: `--app-color-border` / `--app-color-border-subtle`.

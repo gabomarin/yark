@@ -417,7 +417,7 @@ describe("ServerBackupPanel", () => {
         expect.objectContaining({
           title: "Backups",
           message: "World save backup completed.",
-          color: "teal",
+          color: "ok",
         }),
       );
     });

@@ -192,7 +192,7 @@ export function RemoveServersModal(props: Props): ReactElement {
                 {candidate.server.map}
               </Text>
               {candidate.reason !== null && (
-                <Text size="xs" c="orange">
+                <Text size="xs" c="attention">
                   {candidate.reason}
                 </Text>
               )}
@@ -201,12 +201,12 @@ export function RemoveServersModal(props: Props): ReactElement {
         </div>
 
         {remaining === 0 ? (
-          <Alert color="yellow" variant="light">
+          <Alert color="attention" variant="light">
             Removing every server clears this cluster from the list until another
             profile uses the ID again.
           </Alert>
         ) : remaining === 1 ? (
-          <Alert color="yellow" variant="light">
+          <Alert color="attention" variant="light">
             One server will remain. Transfers need at least two servers.
           </Alert>
         ) : null}

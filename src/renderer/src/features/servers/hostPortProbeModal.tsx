@@ -32,7 +32,7 @@ export function openHostPortProbeModal(args: {
         data-host-port-probe-suggested={suggested != null ? "true" : "false"}
       >
         <Alert
-          color="orange"
+          color="attention"
           variant="light"
           title={busy ? "Host port busy" : "Probe inconclusive"}
         >
@@ -65,7 +65,7 @@ export function openHostPortProbeModal(args: {
         {canStartAnyway ? (
           <Button
             variant="light"
-            color="orange"
+            color="attention"
             data-host-port-probe-start-anyway
             onClick={() => {
               modals.closeAll();
@@ -84,7 +84,7 @@ export function openHostPortProbeModal(args: {
           : "Close",
       cancel: "Cancel",
     },
-    confirmProps: suggested != null ? { color: "orange" } : undefined,
+    confirmProps: suggested != null ? { color: "attention" } : undefined,
     onConfirm: () => {
       if (suggested != null) {
         args.onStartThisSession(suggested);

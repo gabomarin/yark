@@ -31,20 +31,20 @@ export function ConfigurationEditorStatusAlerts(props: Props): ReactElement | nu
         </Alert>
       )}
       {pendingQueued && (
-        <Alert color="yellow" mb="sm" title="INI queued">
+        <Alert color="attention" mb="sm" title="INI queued">
           Your saved draft is waiting. YARK will write it to the install when
           the server stops (or before the next start). Open in editor shows the
           live files, which may still be outdated.
         </Alert>
       )}
       {serverActive && !filesJobActive && !pendingQueued && (
-        <Alert color="yellow" mb="sm" title="Server is running">
+        <Alert color="attention" mb="sm" title="Server is running">
           Saving queues your changes until the server stops — ASA may overwrite
           live INI files while it is running.
         </Alert>
       )}
       {filesJobActive && (
-        <Alert color="yellow" mb="sm" title="Updating server files">
+        <Alert color="attention" mb="sm" title="Updating server files">
           You can edit INI now. Prefer saving after the file update finishes.
         </Alert>
       )}

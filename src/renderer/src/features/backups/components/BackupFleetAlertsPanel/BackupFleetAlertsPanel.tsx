@@ -20,7 +20,7 @@ interface Props {
 }
 
 function severityBadgeColor(severity: BackupFleetAlert["severity"]): string {
-  return severity === "error" ? "red" : "yellow";
+  return severity === "error" ? "red" : "attention";
 }
 
 /**

@@ -15,7 +15,7 @@ export function showOperatorToast(input: {
     id: input.id,
     title: input.title,
     message: input.message,
-    color: input.color ?? "teal",
+    color: input.color ?? "ok",
     autoClose: input.autoClose ?? 5000,
     withCloseButton: true,
     onClick: input.onClick,

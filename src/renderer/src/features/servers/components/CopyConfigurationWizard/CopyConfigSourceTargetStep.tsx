@@ -125,14 +125,13 @@ export function CopyConfigSourceTargetStep(props: Props): ReactElement {
                           <Group gap={8} wrap="nowrap">
                             <Text size="sm">{server.name}</Text>
                             <Badge
-                              size="xs"
                               variant="light"
                               color={eligible ? undefined : "red"}
                             >
                               {statusLabel(status)}
                             </Badge>
                             {!server.enabled && (
-                              <Badge size="xs" color="gray" variant="outline">
+                              <Badge color="gray" variant="outline">
                                 Disabled
                               </Badge>
                             )}

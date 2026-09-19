@@ -118,7 +118,7 @@ export function ProfileCard(props: ProfileCardProps): ReactElement {
         {props.chips !== undefined && props.chips.length > 0 && (
           <Group gap={6}>
             {props.chips.map((chip) => (
-              <Badge key={chip} size="xs" variant="outline" color="gray" tt="none" radius="sm">
+              <Badge key={chip} variant="outline" color="gray" radius="sm">
                 {chip}
               </Badge>
             ))}
@@ -131,7 +131,7 @@ export function ProfileCard(props: ProfileCardProps): ReactElement {
 
 export function OfficialMatchBadge(): ReactElement {
   return (
-    <Badge size="xs" variant="light" color="blue" tt="none" radius="sm">
+    <Badge variant="light" radius="sm">
       WildCard official
     </Badge>
   );

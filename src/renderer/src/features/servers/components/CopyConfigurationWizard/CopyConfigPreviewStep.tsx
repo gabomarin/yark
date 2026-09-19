@@ -29,10 +29,10 @@ function PreviewBody(props: {
     <Stack gap="sm">
       {props.showTargetHeading && (
         <Group gap="xs">
-          <Badge variant="light" color="blue">
+          <Badge variant="light">
             {preview.sourceName} → {preview.targetName}
           </Badge>
-          <Badge variant="light" color="teal">
+          <Badge variant="light" color="ok">
             {preview.iniPreview.changedCount} INI changes
           </Badge>
         </Group>
@@ -96,11 +96,11 @@ export function CopyConfigPreviewStep(props: Props): ReactElement {
   return (
     <Stack gap="sm">
       <Group gap="xs">
-        <Badge variant="light" color="blue">
+        <Badge variant="light">
           {previews[0]?.sourceName ?? "…"} →{" "}
           {multi ? `${previews.length} targets` : (previews[0]?.targetName ?? "…")}
         </Badge>
-        <Badge variant="light" color="teal">
+        <Badge variant="light" color="ok">
           {totalIniChanges} INI changes
           {multi ? " total" : ""}
         </Badge>
@@ -122,7 +122,7 @@ export function CopyConfigPreviewStep(props: Props): ReactElement {
                   <Text size="sm" fw={500}>
                     {preview.targetName}
                   </Text>
-                  <Badge size="xs" variant="light" color="teal">
+                  <Badge variant="light" color="ok">
                     {preview.iniPreview.changedCount} changes
                   </Badge>
                 </Group>

@@ -39,8 +39,7 @@ export function HostedResourcesDiagnosticsPanel(props: Props): ReactElement {
             <Group gap="xs">
               <Badge
                 variant="light"
-                color={diagnostics.ownership.ok ? "teal" : "red"}
-                size="sm"
+                  color={diagnostics.ownership.ok ? "ok" : "red"}
               >
                 {diagnostics.ownership.ok ? "Loopback ownership verified" : "Ownership failed"}
               </Badge>
@@ -79,10 +78,9 @@ export function HostedResourcesDiagnosticsPanel(props: Props): ReactElement {
                         !resource.enabled || !resource.published
                           ? "gray"
                           : resource.servedOk
-                            ? "teal"
+                            ? "ok"
                             : "red"
                       }
-                      size="sm"
                     >
                       {!resource.enabled
                         ? "Disabled"

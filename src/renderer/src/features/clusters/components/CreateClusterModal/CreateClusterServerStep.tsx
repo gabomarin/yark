@@ -39,7 +39,7 @@ function ServerCandidateRow(props: {
         {props.map}
       </Text>
       {props.reason !== null && (
-        <Text size="xs" c="orange">
+        <Text size="xs" c="attention">
           {props.reason}
         </Text>
       )}

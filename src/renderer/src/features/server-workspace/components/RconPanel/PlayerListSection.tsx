@@ -225,7 +225,7 @@ export function PlayerListSection(props: Props): ReactElement {
                             <Button
                               size="xs"
                               variant="light"
-                              color="orange"
+                              color="attention"
                               disabled={rconDisabled || busy}
                               loading={busy}
                               onClick={() =>

@@ -309,7 +309,7 @@ export function MoveInstallDialog(props: Props): ReactElement {
 
         {phase === "success" && !oldSourceRemoved && oldSourceDir !== null && (
           <Stack gap="sm">
-            <Alert color="yellow" title="Move completed with a leftover folder">
+            <Alert color="attention" title="Move completed with a leftover folder">
               The profile uses the new path, but the previous folder could not be
               deleted:
             </Alert>

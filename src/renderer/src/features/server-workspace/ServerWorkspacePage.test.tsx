@@ -546,7 +546,7 @@ describe("ServerWorkspacePage", () => {
     ).not.toBeInTheDocument();
     expect(screen.getAllByText("No response")).toHaveLength(2);
     expect(screen.getByText("RCON not connected")).toBeInTheDocument();
-    expect(screen.getByText("failed")).toBeInTheDocument();
+    expect(screen.getByText("Failed")).toBeInTheDocument();
     expect(screen.queryByText(/may not be allowed via RCON/i)).not.toBeInTheDocument();
   });
 

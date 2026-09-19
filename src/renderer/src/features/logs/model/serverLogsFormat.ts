@@ -1,5 +1,6 @@
 import type { ServerOperationalLogs, ServerUpdateLogFile } from "@shared/types";
 import { formatLogDateTime } from "@shared/format-log-datetime";
+import type { StatusWordTone } from "@ui/StatusWord/StatusWord";
 
 /** Runtime buffer filter: lines are tagged `[iso] [source] …`. */
 export type RuntimeLogSourceFilter = "all" | "system" | "asa" | "process";
@@ -126,10 +127,11 @@ export function formatDuration(durationMs: number | null): string {
   return `${rest}s`;
 }
 
-export function statusColor(status: ServerUpdateLogFile["status"]): string {
-  if (status === "success") return "green";
-  if (status === "failed") return "red";
-  return "gray";
+/** Update-file state as a status tone, not a badge colour (#PUX-004, design-system 4). */
+export function statusTone(status: ServerUpdateLogFile["status"]): StatusWordTone {
+  if (status === "success") return "ok";
+  if (status === "failed") return "danger";
+  return "neutral";
 }
 
 export function statusLabel(status: ServerUpdateLogFile["status"]): string {

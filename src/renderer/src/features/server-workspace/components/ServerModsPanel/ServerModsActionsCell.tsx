@@ -62,7 +62,7 @@ export function ServerModsActionsCell(props: Props): ReactElement {
           <ActionIcon
             variant={row.configured ? "transparent" : "subtle"}
             size="sm"
-            color="teal"
+            color="ok"
             aria-label={row.configured ? `Already added ${row.name}` : `Add ${row.name}`}
             loading={props.busy}
             disabled={row.configured || props.busy}

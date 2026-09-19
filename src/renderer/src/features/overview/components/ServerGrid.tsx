@@ -238,7 +238,7 @@ export function ServerGrid(props: Props): ReactElement {
           </Text>
           {props.disabledServers.length > 0 && (
             <>
-              <Badge size="sm" color="gray" variant="light" data-disabled-count={props.disabledServers.length}>
+              <Badge color="gray" variant="light" data-disabled-count={props.disabledServers.length}>
                 {disabledLabel}
               </Badge>
               <Checkbox

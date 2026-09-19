@@ -139,7 +139,7 @@ export function useAdminsSection(args: UseAdminsSectionArgs) {
       showOperatorToast({
         title: "Validate",
         message: "Enter an http(s) URL first.",
-        color: "orange",
+        color: "attention",
       });
       return;
     }
@@ -151,7 +151,7 @@ export function useAdminsSection(args: UseAdminsSectionArgs) {
           showOperatorToast({
             title: "Admin list",
             message: `${result.data.count} id${result.data.count === 1 ? "" : "s"} found (not saved).`,
-            color: "teal",
+            color: "ok",
           });
         } else {
           showOperatorError(result.error ?? "Could not validate URL");
@@ -168,7 +168,7 @@ export function useAdminsSection(args: UseAdminsSectionArgs) {
       showOperatorToast({
         title: "Admin list",
         message: "Save or discard INI Files changes first.",
-        color: "orange",
+        color: "attention",
         autoClose: 8000,
       });
       return;
@@ -179,7 +179,7 @@ export function useAdminsSection(args: UseAdminsSectionArgs) {
       showOperatorToast({
         title: "Admin list",
         message: "Use an http(s) URL, or leave the field empty.",
-        color: "orange",
+        color: "attention",
       });
       return;
     }
@@ -200,7 +200,7 @@ export function useAdminsSection(args: UseAdminsSectionArgs) {
               effectiveUrl.length > 0
                 ? "Saved. Restart the server once so ASA reloads the URL."
                 : "AdminListURL cleared. Restart if the old list is still active.",
-            color: "teal",
+            color: "ok",
             autoClose: 7000,
           });
         } else {

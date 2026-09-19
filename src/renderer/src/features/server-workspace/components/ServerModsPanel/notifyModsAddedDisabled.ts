@@ -35,7 +35,7 @@ export function notifyModsAddedDisabled(input: { name?: string } = {}): void {
     id,
     title: "Mod Added",
     message: `${input.name ?? "This Project ID"} is on the list but will not load until you enable it.`,
-    color: "yellow",
+    color: "attention",
     onClose: () => {
       const index = visibleIds.indexOf(id);
       if (index >= 0) visibleIds.splice(index, 1);

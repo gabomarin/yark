@@ -63,7 +63,7 @@ export function ServerFormMapsSearchDetailStep(props: Props): ReactElement {
           ) : (
             <Stack gap="xs">
               {props.error !== null ? (
-                <Alert color="yellow" variant="light">
+                <Alert color="attention" variant="light">
                   Could not refresh from CurseForge. Showing cached summary.
                 </Alert>
               ) : null}

@@ -200,20 +200,20 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
       title={
         <Group gap="xs" wrap="wrap">
           <Title order={4}>Cluster INI template</Title>
-          <Badge variant="light" color="blue" tt="none">
+          <Badge variant="light">
             {props.clusterId}
           </Badge>
           {exists ? (
-            <Badge variant="light" color="ok" tt="none">
+            <Badge variant="light" color="ok">
               Saved
             </Badge>
           ) : (
-            <Badge variant="light" color="gray" tt="none">
+            <Badge variant="light" color="gray">
               None
             </Badge>
           )}
           {dirty && (
-            <Badge variant="light" color="attention" tt="none">
+            <Badge variant="light" color="attention">
               Unsaved
             </Badge>
           )}

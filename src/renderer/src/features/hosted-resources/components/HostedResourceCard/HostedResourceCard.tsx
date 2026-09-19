@@ -46,11 +46,11 @@ export function HostedResourceCard(props: Props): ReactElement {
         <Group justify="space-between" wrap="nowrap" align="flex-start">
           <Group gap="xs" wrap="nowrap">
             <Text fw={600}>{resource.displayName}</Text>
-            <Badge variant="light" color="gray" size="sm">
+            <Badge variant="light" color="gray">
               {formatLabel(resource.format)}
             </Badge>
             {disabled && (
-              <Badge variant="light" color="gray" size="sm">
+              <Badge variant="light" color="gray">
                 Disabled
               </Badge>
             )}
@@ -99,7 +99,7 @@ export function HostedResourceCard(props: Props): ReactElement {
                 </Menu.Item>
                 <Menu.Item
                   leftSection={<Power size={16} />}
-                  color={disabled ? "teal" : "orange"}
+                  color={disabled ? "ok" : "attention"}
                   onClick={() => props.onToggleEnabled(disabled)}
                 >
                   {disabled ? "Enable resource" : "Disable resource"}
@@ -129,7 +129,7 @@ export function HostedResourceCard(props: Props): ReactElement {
         {resource.tags.length > 0 && (
           <Group gap="xs">
             {resource.tags.map((tag) => (
-              <Badge key={tag} variant="light" color="blue" size="sm">
+              <Badge key={tag} variant="light">
                 {tag}
               </Badge>
             ))}

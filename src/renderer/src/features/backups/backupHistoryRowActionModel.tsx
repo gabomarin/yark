@@ -63,7 +63,7 @@ export function buildBackupHistoryRowActions(
       kind: "item",
       key: "restore",
       label: "Restore",
-      color: "orange",
+      color: "attention",
       icon: <ArrowCounterClockwise size={ICON} />,
       disabled: input.busy || !completed || input.opsLocked,
       onClick: () => {

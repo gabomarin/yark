@@ -1,8 +1,9 @@
-import { ActionIcon, Badge, Button, Group, Stack, Text, Tooltip } from "@mantine/core";
+import { ActionIcon, Button, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { ArrowClockwise, Copy, Trash } from "@phosphor-icons/react";
 import type { ReactElement } from "react";
 import type { RconHistoryEntry } from "../../serverWorkspaceTypes";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { StatusWord } from "@ui/StatusWord/StatusWord";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
 import classes from "./RconPanel.module.css";
 
@@ -73,16 +74,16 @@ export function RconConsoleHistory(props: Props): ReactElement {
             {props.history.map((entry) => {
               const statusLabel =
                 entry.status === "pending"
-                  ? "sending"
+                  ? "Sending"
                   : entry.status === "error"
-                    ? "failed"
-                    : "ok";
-              const statusColor =
+                    ? "Failed"
+                    : "Sent";
+              const statusTone =
                 entry.status === "pending"
-                  ? "gray"
+                  ? "neutral"
                   : entry.status === "error"
-                    ? "red"
-                    : "teal";
+                    ? "danger"
+                    : "ok";
               const body = formatResponseBody(entry);
               const responseText =
                 entry.status === "pending" ? null : body;
@@ -104,9 +105,7 @@ export function RconConsoleHistory(props: Props): ReactElement {
                         {formatRconTime(entry.createdAt)}
                       </Text>
                     </div>
-                    <Badge size="sm" variant="light" color={statusColor}>
-                      {statusLabel}
-                    </Badge>
+                    <StatusWord tone={statusTone}>{statusLabel}</StatusWord>
                   </div>
                   <Text size="sm" className={classes.responseBody}>
                     {body}

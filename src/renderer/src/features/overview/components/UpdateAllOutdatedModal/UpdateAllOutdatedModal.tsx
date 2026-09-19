@@ -88,7 +88,7 @@ export function UpdateAllOutdatedModal(props: Props): ReactElement {
                 jobs one at a time with the usual safe backup/rollback.
               </Alert>
             ) : (
-              <Alert color="yellow" title="Nothing ready to queue">
+              <Alert color="attention" title="Nothing ready to queue">
                 All outdated servers are currently skipped. Stop running
                 servers or clear Downloads jobs, then try again.
               </Alert>
@@ -119,7 +119,7 @@ export function UpdateAllOutdatedModal(props: Props): ReactElement {
                         ) : null}
                       </Stack>
                       {!row.eligible ? (
-                        <Badge size="sm" variant="light" color="gray">
+                        <Badge variant="light" color="gray">
                           Skip
                         </Badge>
                       ) : null}

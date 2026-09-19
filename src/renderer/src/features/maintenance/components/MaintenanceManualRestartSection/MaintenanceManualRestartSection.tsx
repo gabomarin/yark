@@ -89,7 +89,7 @@ export function MaintenanceManualRestartSection(props: Props): ReactElement {
         <div className={classes.slabBody}>
           <Stack gap="sm">
             {restartPending && (
-              <Text size="xs" c="orange">
+              <Text size="xs" c="attention">
                 Manual restart is queued. Finish or cancel it before changing
                 these warning settings.
               </Text>

@@ -152,7 +152,7 @@ export function ServerLaunchPanel(props: Props): ReactElement {
 
           {error !== null ? <Alert color="red">{error}</Alert> : null}
           {mapIdentityWarnings.length > 0 ? (
-            <Alert color="yellow" title="Custom map mod inconsistent">
+            <Alert color="attention" title="Custom map mod inconsistent">
               <Stack gap={4}>
                 {mapIdentityWarnings.map((issue) => (
                   <Text key={`${issue.field}:${issue.message}`} size="sm">

@@ -84,7 +84,7 @@ function renderSectionGroups(
             <Text fw={600} size="xs" className={chrome.subsectionHeaderLabel}>
               {sectionGroup.label}
             </Text>
-            <Badge size="xs" variant="outline" className={chrome.subsectionCount}>
+            <Badge variant="outline" className={chrome.subsectionCount}>
               {sectionGroup.rows.length}
             </Badge>
           </Group>
@@ -114,7 +114,7 @@ function OtherCategoryHeader(props: {
         <Text fw={700} size="sm" className={chrome.sectionHeaderLabel}>
           {props.label}
         </Text>
-        <Badge size="xs" variant="outline" className={chrome.sectionCount}>
+        <Badge variant="outline" className={chrome.sectionCount}>
           {props.rowCount}
         </Badge>
       </Group>
@@ -226,7 +226,7 @@ export function ConfigurationEditorSettingsTable(props: Props): ReactElement {
                     <Text fw={700} size="sm" className={chrome.sectionHeaderLabel}>
                       {group.label}
                     </Text>
-                    <Badge size="xs" variant="outline" className={chrome.sectionCount}>
+                    <Badge variant="outline" className={chrome.sectionCount}>
                       {group.rows.length}
                     </Badge>
                   </Group>

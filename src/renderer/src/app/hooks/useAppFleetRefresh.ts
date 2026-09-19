@@ -262,7 +262,7 @@ export function useAppFleetRefresh(options: {
                   ? "1 server needs attention"
                   : `${issues.length} servers need attention`,
               message: "Open the attention badge above the server list for details.",
-              color: "orange",
+              color: "attention",
               autoClose: 8000,
             });
             return;
@@ -277,7 +277,7 @@ export function useAppFleetRefresh(options: {
               title: "Installs look OK; updates unverified",
               message:
                 "Couldn't confirm Steam update status for every server. Try Check server updates.",
-              color: "yellow",
+              color: "attention",
             });
             return;
           }

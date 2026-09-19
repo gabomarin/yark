@@ -199,7 +199,7 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                         <Text fw={700} size="sm" className={chrome.sectionHeaderLabel}>
                           {group.label}
                         </Text>
-                        <Badge size="xs" variant="outline" className={chrome.sectionCount}>
+                        <Badge variant="outline" className={chrome.sectionCount}>
                           {group.rows.length}
                         </Badge>
                       </Group>
@@ -283,7 +283,6 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                               {sectionGroup.label}
                             </Text>
                             <Badge
-                              size="xs"
                               variant="outline"
                               className={chrome.subsectionCount}
                             >
@@ -323,7 +322,7 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                     <Text fw={700} size="sm" className={chrome.sectionHeaderLabel}>
                       {group.label}
                     </Text>
-                    <Badge size="xs" variant="outline" className={chrome.sectionCount}>
+                    <Badge variant="outline" className={chrome.sectionCount}>
                       {group.rows.length}
                     </Badge>
                   </button>

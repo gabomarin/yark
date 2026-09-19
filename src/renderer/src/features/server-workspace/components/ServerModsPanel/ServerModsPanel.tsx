@@ -274,7 +274,7 @@ export function ServerModsPanel(props: Props): ReactElement {
             <Alert
               className={classes.statusAlert}
               classNames={{ wrapper: classes.statusAlertWrapper }}
-              color={isMetadataServiceNotConfiguredMessage(error) ? "yellow" : "red"}
+              color={isMetadataServiceNotConfiguredMessage(error) ? "attention" : "red"}
               withCloseButton
               onClose={() => setError(null)}
             >
@@ -285,7 +285,7 @@ export function ServerModsPanel(props: Props): ReactElement {
             <Alert
               className={classes.statusAlert}
               classNames={{ wrapper: classes.statusAlertWrapper }}
-              color="yellow"
+              color="attention"
               withCloseButton
               onClose={() => setWarning(null)}
             >

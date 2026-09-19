@@ -439,6 +439,15 @@ function createAppTheme(
               },
             };
           }
+          if (tone === "success") {
+            return {
+              root: {
+                "--alert-bg": "var(--app-color-panel)",
+                "--alert-bd": "1px solid var(--app-color-ok)",
+                "--alert-color": "var(--app-color-text)",
+              },
+            };
+          }
           if (tone === "error") {
             return {
               root: {
@@ -451,9 +460,47 @@ function createAppTheme(
           return { root: {} };
         },
       },
+      /*
+       * Fluent 2 badge: 4px corners, 12px semibold, sentence case (Mantine uppercases
+       * and fills by default), and neutral unless a semantic colour is passed - a badge
+       * has to earn its colour, and `blue` is the accent (brand/selection), not a fact.
+       */
       Badge: {
         defaultProps: {
           radius: "sm",
+          size: "sm",
+          variant: "light",
+          color: "gray",
+          tt: "none",
+          fw: 600,
+        },
+        styles: {
+          root: {
+            /* Mantine's badge type is micro-text (9-11px at every size) with
+             * letter-spacing; Fluent 2 badges read 12px on a 20px pill, flush, which
+             * is what the rest of the app is sized against. One badge size, so no
+             * per-call-site size props. */
+            fontSize: "12px",
+            height: "20px",
+            paddingInline: "8px",
+            letterSpacing: "normal",
+          },
+        },
+        /* A *neutral* badge has to read on any surface: Mantine's gray tint sits
+         * darker than our chrome, so it vanished until hover. Give the uncoloured
+         * badge the control fill plus a hairline - a real chip - and leave semantic
+         * colours on Mantine's tint. */
+        vars: (_theme: unknown, props: { color?: string | undefined }) => {
+          const neutral = props.color === undefined || props.color === "gray";
+          return neutral
+            ? {
+                root: {
+                  "--badge-bg": "var(--app-color-surface-control)",
+                  "--badge-bd": "1px solid var(--app-color-border-subtle)",
+                  "--badge-color": "var(--app-color-text)",
+                },
+              }
+            : { root: {} };
         },
       },
       NavLink: {
@@ -599,7 +646,7 @@ function createAppTheme(
 /** Inline Alert surface recipes: message (blue), warn (fossil), error (red). */
 function alertToneForColor(
   color: string,
-): "message" | "warn" | "error" | "default" {
+): "message" | "success" | "warn" | "error" | "default" {
   if (
     color === "blue" ||
     color === "cyan" ||
@@ -607,6 +654,11 @@ function alertToneForColor(
     color === "violet"
   ) {
     return "message";
+  }
+  /* `ok` is the app's success role; green/teal are accepted aliases so an Alert
+   * keeps its meaning whether the call site still says one or the other. */
+  if (color === "ok" || color === "green" || color === "teal") {
+    return "success";
   }
   if (
     color === "yellow" ||

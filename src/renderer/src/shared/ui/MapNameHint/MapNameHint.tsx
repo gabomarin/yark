@@ -31,7 +31,7 @@ export function MapNameHint(props: Props): ReactElement {
           <Text c="dimmed" tt="uppercase" fw={500} {...mapFieldHelperTextProps}>
             {MAP_NAME_COPY.label}
           </Text>
-          <Text {...mapFieldHelperTextProps} c="yellow">
+          <Text {...mapFieldHelperTextProps} c="attention">
             {MAP_NAME_COPY.notInferredFromCf}
           </Text>
         </Stack>
@@ -41,7 +41,7 @@ export function MapNameHint(props: Props): ReactElement {
       return missing;
     }
     return (
-      <Alert variant="light" color="yellow" title={MAP_NAME_COPY.notInferredTitle} radius="md">
+      <Alert variant="light" color="attention" title={MAP_NAME_COPY.notInferredTitle} radius="md">
         {missing}
       </Alert>
     );
@@ -66,7 +66,7 @@ export function MapNameHint(props: Props): ReactElement {
       <Stack gap={2} className={classes.inlineRoot}>
         {copyControl}
         {props.suggestion.source === "bare" ? (
-          <Text {...mapFieldHelperTextProps} c="yellow">
+          <Text {...mapFieldHelperTextProps} c="attention">
             {MAP_NAME_COPY.verifyOnCurseForge}
           </Text>
         ) : null}

@@ -29,7 +29,7 @@ export function WizardReviewStep(props: Props): ReactElement {
           <AppSurfaceCard tone="flat" padding="md" radius={0}>
             <Stack gap="sm">
               <Group gap="xs">
-                <Badge variant="light" color="blue" tt="none">
+                <Badge variant="light">
                   Cluster template
                 </Badge>
                 <Text fw={700}>{clusterId}</Text>

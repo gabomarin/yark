@@ -161,7 +161,7 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
     <section className={classes.main} data-workspace-scroll>
       {stopProgress !== null && <StopProgressAlert progress={stopProgress} />}
       {filesJobActive && (
-        <Alert color="yellow" title={filesLockReason} mb="sm">
+        <Alert color="attention" title={filesLockReason} mb="sm">
           Start, restore, and other file actions stay locked until this finishes.
         </Alert>
       )}

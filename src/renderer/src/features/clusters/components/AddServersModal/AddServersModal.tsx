@@ -291,7 +291,7 @@ export function AddServersModal(props: Props): ReactElement {
               </dl>
             </div>
             {modWarning && (
-              <Alert color="yellow" variant="light">
+              <Alert color="attention" variant="light">
                 Mod lists differ from current cluster servers; mod items may be lost
                 on transfer.
               </Alert>
@@ -320,7 +320,7 @@ export function AddServersModal(props: Props): ReactElement {
                   description="Choose which INI files to seed. Unchecked files stay as they are on disk."
                   onChange={setSeedFiles}
                 />
-                <Alert color="teal" variant="light">
+                <Alert color="ok" variant="light">
                   Each selected stopped server will receive a restore-style write
                   of the selected files from the saved cluster template after joining.
                 </Alert>

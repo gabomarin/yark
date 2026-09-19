@@ -39,7 +39,7 @@ export function SettingsDiscordSection(): ReactElement {
   );
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState<"save" | "test" | null>(null);
-  const [message, setMessage] = useState<{ color: "red" | "green"; text: string } | null>(null);
+  const [message, setMessage] = useState<{ color: "red" | "ok"; text: string } | null>(null);
   const [focusedEvent, setFocusedEvent] = useState<DiscordWebhookEvent>("serverStarted");
   const [editingEvent, setEditingEvent] = useState<DiscordWebhookEvent | null>(null);
   const [lastTestPassed, setLastTestPassed] = useState(false);
@@ -120,7 +120,7 @@ export function SettingsDiscordSection(): ReactElement {
     setLastTestPassed(result.ok);
     setMessage(
       result.ok
-        ? { color: "green", text: "Test notification sent." }
+        ? { color: "ok", text: "Test notification sent." }
         : { color: "red", text: result.error },
     );
   };
@@ -160,7 +160,7 @@ export function SettingsDiscordSection(): ReactElement {
           </Group>
           <Group gap={4} wrap="nowrap">
             {template.trim().length > 0 && (
-              <Badge size="xs" variant="light" color="blue">Customized</Badge>
+              <Badge variant="light">Customized</Badge>
             )}
             <ActionIcon
               variant={isEditing ? "light" : "subtle"}
@@ -204,7 +204,7 @@ export function SettingsDiscordSection(): ReactElement {
   };
 
   const connectionStatus = lastTestPassed
-    ? { label: "Test passed", color: "green" }
+    ? { label: "Test passed", color: "ok" }
     : draft.webhookUrl.length === 0
       ? { label: "Not configured", color: "gray" }
       : !validUrl
@@ -231,7 +231,7 @@ export function SettingsDiscordSection(): ReactElement {
             </Text>
           </div>
           <Group gap="xs" wrap="nowrap">
-            <Badge size="sm" variant="light" color={connectionStatus.color}>
+            <Badge variant="light" color={connectionStatus.color}>
               {connectionStatus.label}
             </Badge>
             <Switch

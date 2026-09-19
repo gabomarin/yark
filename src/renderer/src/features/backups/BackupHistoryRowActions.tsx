@@ -66,7 +66,7 @@ export function BackupHistoryRowActions(props: Props): ReactElement {
       <Tooltip label="Restore" withArrow>
         <ActionIcon
           variant="subtle"
-          color="orange"
+          color="attention"
           size="sm"
           aria-label={`Restore backup ${props.backup.id}`}
           disabled={itemDisabled(menuEntries, "restore")}

@@ -121,7 +121,7 @@ describe("LogsPage", () => {
     expect(row?.children).toHaveLength(4);
     expect(row?.querySelector("[data-fleet-severity]")).toBeTruthy();
     expect(row?.querySelector("[data-fleet-severity]")?.textContent?.trim()).toBe(
-      "info",
+      "Info",
     );
   });
 

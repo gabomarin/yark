@@ -172,7 +172,7 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
       title={
         <Group gap="xs" wrap="wrap">
           <Text fw={600}>{copy.title}</Text>
-          <Badge variant="light" color="blue" tt="none">
+          <Badge variant="light">
             {props.clusterId}
           </Badge>
         </Group>
@@ -216,34 +216,23 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
         {preview !== null && preview.preview.valid && (
           <Group gap="xs" wrap="wrap">
             {props.operation === "restore" ? (
-              <Badge size="sm" variant="light" color="teal" tt="none">
+              <Badge variant="light" color="ok">
                 Backup before write
               </Badge>
             ) : (
-              <Badge
-                size="sm"
-                variant="light"
-                tt="none"
-                styles={{
-                  root: {
-                    color: "var(--app-color-fossil)",
-                    background:
-                      "color-mix(in srgb, var(--app-color-fossil) 22%, transparent)",
-                  },
-                }}
-              >
+              <Badge variant="light" color="attention">
                 Replaces saved template
               </Badge>
             )}
-            <Badge size="sm" variant="light" color="blue" tt="none">
+            <Badge variant="light">
               {changeCount} preview change{changeCount === 1 ? "" : "s"}
             </Badge>
             {props.operation === "restore" ? (
-              <Badge size="sm" variant="default" tt="none">
+              <Badge variant="default">
                 Server must not be running
               </Badge>
             ) : (
-              <Badge size="sm" variant="default" tt="none">
+              <Badge variant="default">
                 Member files unchanged
               </Badge>
             )}

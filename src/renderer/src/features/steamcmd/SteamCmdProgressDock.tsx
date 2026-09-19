@@ -208,10 +208,15 @@ export function SteamCmdProgressDock(props: Props): ReactElement {
                 <div style={{ minWidth: 0 }}>
                   <Group gap="xs">
                     <Text size="sm" fw={600}>{job.operation}</Text>
-                    <Badge
-                      size="xs"
-                      color={job.status === "failed" ? "red" : job.status === "blocked" ? "orange" : "blue"}
-                    >
+                      <Badge
+                        color={
+                          job.status === "failed"
+                            ? "red"
+                            : job.status === "blocked"
+                              ? "attention"
+                              : "gray"
+                        }
+                      >
                       {job.status}
                     </Badge>
                   </Group>

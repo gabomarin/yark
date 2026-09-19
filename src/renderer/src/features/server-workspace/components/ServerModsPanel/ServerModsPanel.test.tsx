@@ -422,7 +422,7 @@ describe("ServerModsPanel", () => {
     expect(notifySpy).toHaveBeenCalledWith(
       expect.objectContaining({
         title: "Mod Added",
-        color: "yellow",
+        color: "attention",
       }),
     );
     expect(
@@ -485,7 +485,7 @@ describe("ServerModsPanel", () => {
     expect(notifySpy).toHaveBeenCalledWith(
       expect.objectContaining({
         title: "Mod Added",
-        color: "yellow",
+        color: "attention",
       }),
     );
     expect(
@@ -690,7 +690,7 @@ describe("ServerModsPanel", () => {
     expect(notifySpy).toHaveBeenCalledWith(
       expect.objectContaining({
         title: "Mod Added",
-        color: "yellow",
+        color: "attention",
       }),
     );
   });

@@ -52,7 +52,7 @@ export function DownloadsTeaserFooter(props: Props): ReactElement | null {
               </>
             )}
             {props.model.attention && (
-              <Badge size="xs" color="yellow" variant="light">
+              <Badge color="attention" variant="light">
                 Review
               </Badge>
             )}

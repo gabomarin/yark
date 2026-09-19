@@ -216,7 +216,6 @@ export function RconPanel(props: Props): ReactElement {
                         </Text>
                       </div>
                       <Badge
-                        size="sm"
                         variant="light"
                         color={event.severity === "error" ? "red" : "blue"}
                       >

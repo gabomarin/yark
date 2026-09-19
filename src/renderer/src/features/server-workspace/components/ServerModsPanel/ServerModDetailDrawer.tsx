@@ -144,9 +144,6 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                 <Group gap="xs" wrap="wrap" className={classes.detailDrawerProjectRow}>
                   <Badge
                     variant="light"
-                    color="blue"
-                    tt="none"
-                    className={classes.detailDrawerProjectBadge}
                   >
                     Project ID {detail.id}
                   </Badge>
@@ -186,10 +183,9 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                     {(detail.categories ?? []).map((category) => (
                       <Badge
                         key={category}
-                        size="sm"
+
                         color={isMapCategoryLabel(category) ? "attention" : "gray"}
                         variant="light"
-                        tt="none"
                       >
                         {category}
                       </Badge>
@@ -230,7 +226,7 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                 <Button
                   className={classes.detailDrawerRemoveAction}
                   size={footerButtonSize}
-                  color="teal"
+                  color="ok"
                   variant="light"
                   leftSection={<Plus size={16} />}
                   loading={props.busy}

@@ -46,12 +46,12 @@ function recoveryState(policy: CrashRecoveryPolicy): {
     };
   }
   if (policy.paused) {
-    return { label: "Paused", color: "yellow", summary: "Paused by you" };
+    return { label: "Paused", color: "attention", summary: "Paused by you" };
   }
   if (policy.attempts > 0) {
     return {
       label: `${policy.attempts} of ${policy.maxAttempts}`,
-      color: "orange",
+      color: "attention",
       summary: `${policy.attempts} of ${policy.maxAttempts} attempts used`,
     };
   }
@@ -208,7 +208,7 @@ export function CrashRecoverySection({
                   <Button
                     size="xs"
                     variant="light"
-                    color={policy.paused ? "blue" : "yellow"}
+                    color={policy.paused ? "blue" : "attention"}
                     disabled={panel.busy || !policy.enabled}
                     onClick={() => void panel.patch({ paused: !policy.paused })}
                   >

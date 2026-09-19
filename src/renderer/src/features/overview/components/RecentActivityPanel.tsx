@@ -12,7 +12,7 @@ interface Props {
 
 function severityTimelineColor(severity: AppEvent["severity"]): string {
   if (severity === "error") return "red";
-  if (severity === "warning") return "yellow";
+  if (severity === "warning") return "attention";
   return "blue";
 }
 

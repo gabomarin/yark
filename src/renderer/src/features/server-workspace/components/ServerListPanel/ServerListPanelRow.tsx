@@ -76,7 +76,7 @@ export function ServerListPanelRow(props: {
                 {formatMapDisplayName(props.server.map)}
               </Text>
               {!props.server.enabled && (
-                <Badge size="xs" variant="light" color="gray" mt={4} tt="none">
+                <Badge variant="light" color="gray" mt={4}>
                   Inactive
                 </Badge>
               )}

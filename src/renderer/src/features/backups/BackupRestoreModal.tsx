@@ -40,7 +40,7 @@ export function BackupRestoreModal(props: Props): ReactElement {
           <Button variant="default" onClick={props.onClose} disabled={props.busy}>
             Cancel
           </Button>
-          <Button color="orange" onClick={props.onConfirm} loading={props.busy}>
+          <Button color="attention" onClick={props.onConfirm} loading={props.busy}>
             Restore
           </Button>
         </>

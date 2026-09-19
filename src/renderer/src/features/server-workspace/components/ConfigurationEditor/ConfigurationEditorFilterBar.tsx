@@ -73,7 +73,7 @@ export function ConfigurationEditorFilterBar(props: Props): ReactElement {
         Expand
       </Button>
       {dirty && (
-        <Badge color="yellow" variant="light">
+        <Badge color="attention" variant="light">
           Unsaved
         </Badge>
       )}

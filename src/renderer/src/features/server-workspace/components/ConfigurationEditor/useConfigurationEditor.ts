@@ -257,7 +257,7 @@ export function useConfigurationEditor(options: {
       children:
         "Project defaults for this file will be restored. Changes are not written to disk until you click Save.",
       labels: { confirm: "Reset", cancel: "Cancel" },
-      confirmProps: { color: "yellow" },
+      confirmProps: { color: "attention" },
       onConfirm: () => {
         const nextPayload = withFileText(
           payload,

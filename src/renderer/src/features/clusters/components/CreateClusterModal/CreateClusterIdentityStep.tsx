@@ -56,7 +56,7 @@ export function CreateClusterIdentityStep(props: Props): ReactElement {
       )}
       {props.incompleteGroups.length > 0 && (
         <Alert
-          color="yellow"
+          color="attention"
           variant="light"
           title="Incomplete setups (not ready as a cluster yet)"
         >

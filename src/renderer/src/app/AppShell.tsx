@@ -313,7 +313,7 @@ export function AppShell({
       id: "yark-update-operator",
       title: copy.title,
       message: copy.message,
-      color: "orange",
+      color: "attention",
       autoClose: 12_000,
       onClick: openYarkUpdateSettings,
     });

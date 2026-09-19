@@ -83,12 +83,12 @@ export function RconStatusIcon({ serverId }: Props): ReactElement {
       canRetry: true,
     },
     connecting: {
-      color: "yellow",
+      color: "attention",
       label: "RCON: connecting…",
       canRetry: false,
     },
     connected: {
-      color: "green",
+      color: "ok",
       label: "RCON: connected",
       canRetry: false,
     },
@@ -122,7 +122,6 @@ export function RconStatusIcon({ serverId }: Props): ReactElement {
       <Badge
         component="button"
         type="button"
-        size="sm"
         variant="dot"
         color={statusConfig.color}
         disabled={!canRetry}

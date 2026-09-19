@@ -107,7 +107,7 @@ export function BackupListToolbar(props: Props): ReactElement {
       </Group>
       <Group gap={6} wrap="wrap" align="center">
         {opsLocked && (
-          <Badge color="yellow" variant="light" size="sm">
+          <Badge color="attention" variant="light">
             {!installReady
               ? "Install files before create/restore"
               : opsLockReason != null

@@ -38,10 +38,8 @@ function OffsetBadges({
         {offsetLabels.map((offset) => (
           <Badge
             key={offset}
-            size="md"
             variant="light"
             color="gray"
-            tt="none"
             className={classes.offsetBadge}
           >
             {offset}

@@ -89,7 +89,6 @@ export function ServerLaunchOptionRow(props: Props): ReactElement {
             </Tooltip>
             {caution ? (
               <Badge
-                size="xs"
                 variant="outline"
                 styles={{
                   root: {

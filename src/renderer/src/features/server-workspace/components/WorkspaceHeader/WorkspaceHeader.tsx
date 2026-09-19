@@ -96,7 +96,7 @@ export function WorkspaceHeader(props: Props): ReactElement {
             <CrashRecoveryHeaderBadge recovery={props.runtime?.crashRecovery} />
             {status === "running" && <RconStatusIcon serverId={props.server.id} />}
             {!props.server.enabled && (
-              <Badge size="sm" variant="light" color="gray">
+              <Badge variant="light" color="gray">
                 Inactive
               </Badge>
             )}
@@ -125,7 +125,7 @@ export function WorkspaceHeader(props: Props): ReactElement {
             <Button
               size="sm"
               variant="light"
-              color="teal"
+              color="ok"
               leftSection={startLoading ? undefined : <Play size={14} weight="fill" />}
               onClick={props.onStart}
               disabled={!canStart}
