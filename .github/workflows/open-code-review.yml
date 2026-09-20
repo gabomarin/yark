@@ -53,6 +53,9 @@ jobs:
     name: Review pull request
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      # Single source for the CLI version: our pre-install and the action input.
+      OCR_VERSION: "1.12.4"
     if: >-
       ${{
         github.event_name == 'workflow_dispatch'
@@ -233,20 +236,51 @@ jobs:
 
           echo "LLM provider preflight succeeded for model $LLM_MODEL"
 
-      - name: Prepare OpenCodeReview CLI path
+      - name: Prepare OpenCodeReview CLI
         shell: bash
         run: |
+          set -euo pipefail
+
           ocr_npm_prefix="${RUNNER_TEMP}/ocr-npm-global"
           npm config set prefix "$ocr_npm_prefix"
           echo "NPM_CONFIG_PREFIX=$ocr_npm_prefix" >> "$GITHUB_ENV"
-          echo "$ocr_npm_prefix/bin" >> "$GITHUB_PATH"
-          echo "OpenCodeReview npm prefix: $(npm prefix -g)"
-          echo "--- diagnostics: before the action ---"
-          command -v ocr || echo "ocr is not on PATH yet"
-          npm prefix -g
-          npm root -g
-          ls -la "$ocr_npm_prefix" 2>&1 | head -20 || true
-          cat "$HOME/.npmrc" 2>/dev/null || echo "no user npmrc"
+
+          # Install here instead of leaving it to the action. The package's
+          # postinstall fetches the platform binary with a nested npm run that
+          # outlives its parent, and npm relinks `bin/ocr` as `.ocr-<random>` while
+          # it does - the action's next step execs that bin path inside the window
+          # where the final name is not in place yet, which fails the job with
+          # "No such file or directory".
+          npm install -g "@alibaba-group/open-code-review@${OCR_VERSION}"
+
+          ocr_entry="${ocr_npm_prefix}/lib/node_modules/@alibaba-group/open-code-review/bin/ocr.js"
+          ocr_ready=false
+          for _ in $(seq 1 60); do
+            if [ -x "$ocr_entry" ] && "$ocr_entry" version >/dev/null 2>&1; then
+              ocr_ready=true
+              break
+            fi
+            sleep 1
+          done
+          if [ "$ocr_ready" != "true" ]; then
+            echo "::error::OpenCodeReview CLI did not become runnable at ${ocr_entry}"
+            ls -la "${ocr_npm_prefix}/bin" 2>&1 || true
+            ls -la "${ocr_npm_prefix}/lib/node_modules/@alibaba-group" 2>&1 || true
+            exit 1
+          fi
+
+          # Expose the CLI through a wrapper in a directory npm never rewrites, so
+          # a later relink of `<prefix>/bin` cannot hide it from the action.
+          ocr_shim_dir="${RUNNER_TEMP}/ocr-cli"
+          mkdir -p "$ocr_shim_dir"
+          {
+            echo '#!/usr/bin/env bash'
+            printf 'exec node %q "$@"\n' "$ocr_entry"
+          } > "${ocr_shim_dir}/ocr"
+          chmod +x "${ocr_shim_dir}/ocr"
+          echo "$ocr_shim_dir" >> "$GITHUB_PATH"
+
+          "${ocr_shim_dir}/ocr" version
 
       - name: Run OpenCodeReview
         id: ocr-review
@@ -262,7 +296,7 @@ jobs:
           llm_extra_headers: x-opencode-session=${{ github.repository }}-pr-${{ github.event.issue.number || inputs.pr_number }}
           llm_extra_body: "{}"
           language: English
-          ocr_version: "1.12.4"
+          ocr_version: ${{ env.OCR_VERSION }}
           effort: ${{ steps.provider.outputs.effort_override || steps.effort.outputs.effort }}
           sticky_summary: true
           incremental: true
@@ -272,35 +306,6 @@ jobs:
           pr_number: ${{ github.event.issue.number || inputs.pr_number }}
           base_ref: ${{ steps.pr-context.outputs.base_ref }}
           head_sha: ${{ steps.pr-context.outputs.head_sha }}
-
-      - name: Diagnose OpenCodeReview CLI path
-        if: ${{ always() }}
-        shell: bash
-        run: |
-          set +e
-          echo "NPM_CONFIG_PREFIX=${NPM_CONFIG_PREFIX:-unset}"
-          echo "--- command -v ocr ---"
-          command -v ocr
-          which -a ocr
-          echo "--- npm prefix/root ---"
-          npm prefix -g
-          npm root -g
-          echo "--- prefix tree ---"
-          ls -la "${NPM_CONFIG_PREFIX:-/nonexistent}" 2>&1 | head -20
-          echo "--- prefix bin ---"
-          ls -la "${NPM_CONFIG_PREFIX:-/nonexistent}/bin" 2>&1 | head -20
-          echo "--- user npmrc ---"
-          cat "$HOME/.npmrc" 2>/dev/null || echo "no user npmrc"
-          echo "--- ocr under RUNNER_TEMP ---"
-          find "$RUNNER_TEMP" -maxdepth 5 \( -name 'ocr' -o -name 'ocr-*' \) 2>/dev/null | head -20 || true
-          echo "--- ocr elsewhere ---"
-          find /usr/local /home/runner /opt -maxdepth 5 -name 'ocr' 2>/dev/null | head -20 || true
-          echo "--- installed package ---"
-          ls -la "$(npm root -g)/@alibaba-group" 2>&1 | head -20 || true
-          echo "--- ocr symlink ---"
-          readlink -f "${NPM_CONFIG_PREFIX:-/nonexistent}/bin/ocr" 2>&1 || true
-          echo "--- ocr version ---"
-          ocr version 2>&1 | head -5 || true
 
       - name: Enrich OpenCodeReview summary
         if: ${{ steps.ocr-review.outcome == 'success' }}
