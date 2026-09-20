@@ -87,7 +87,8 @@ export function createServerModsListMutations(input: Input) {
   const reorder = async (orderedIds: string[]) => {
     const configuredIds = input.configuredIdsRef.current;
     const disabledIds = input.disabledIdsRef.current;
-    if (orderedIds.length !== configuredIds.length || orderedIds.some((id) => !configuredIds.includes(id))) {
+    const configuredIdSet = new Set(configuredIds);
+    if (orderedIds.length !== configuredIds.length || orderedIds.some((id) => !configuredIdSet.has(id))) {
       return;
     }
     if (orderedIds.every((id, index) => id === configuredIds[index])) {

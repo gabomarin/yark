@@ -161,7 +161,8 @@ export function createServerBackupPanelActions(options: BackupPanelActionOptions
         showBackupError(result.error ?? "Could not delete backups");
         return;
       }
-      setSelectedIds((previous) => previous.filter((id) => !backupIds.includes(id)));
+      const deletedIds = new Set(backupIds);
+      setSelectedIds((previous) => previous.filter((id) => !deletedIds.has(id)));
       await load(server.id);
       showBackupToast(`Deleted ${result.data} backup${result.data === 1 ? "" : "s"}.`);
     });
