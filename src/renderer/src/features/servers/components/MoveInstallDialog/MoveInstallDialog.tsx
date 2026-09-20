@@ -10,10 +10,7 @@ import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { showOperatorToast } from "@ui/operatorToast";
 import { MoveInstallDestFields } from "./MoveInstallDestFields";
-import {
-  moveDestFolderName,
-  resolveMoveDestDir,
-} from "./moveInstallPathWarning";
+import { moveDestFolderName, resolveMoveDestDir } from "./moveInstallPathWarning";
 import { useMoveDestPreview } from "./useMoveDestPreview";
 
 interface Props {
@@ -48,10 +45,7 @@ export function MoveInstallDialog(props: Props): ReactElement {
       })),
     [props.servers],
   );
-  const folderName = moveDestFolderName(
-    props.server?.installDir ?? "",
-    props.server?.name ?? "server",
-  );
+  const folderName = moveDestFolderName(props.server?.installDir ?? "", props.server?.name ?? "server");
   const resolvedDest = resolveMoveDestDir(destinationDir, folderName, createFolder);
   const { previewIssue, probePending, destVacant } = useMoveDestPreview({
     opened: props.opened,
@@ -96,12 +90,8 @@ export function MoveInstallDialog(props: Props): ReactElement {
       async () => {
         const result = await window.api.pickPath(
           "directory",
-          destinationDir.trim().length > 0
-            ? destinationDir
-            : props.server?.installDir,
-          createFolder
-            ? "Choose destination base folder"
-            : "Choose destination install folder",
+          destinationDir.trim().length > 0 ? destinationDir : props.server?.installDir,
+          createFolder ? "Choose destination base folder" : "Choose destination install folder",
         );
         if (result.ok && result.data !== null) {
           setDestinationDir(result.data);
@@ -149,8 +139,7 @@ export function MoveInstallDialog(props: Props): ReactElement {
     if (result.data.oldSourceRemoved) {
       showOperatorToast({
         title: "Move completed",
-        message:
-          "The server now uses the new folder and the previous installation was removed.",
+        message: "The server now uses the new folder and the previous installation was removed.",
       });
     }
   };
@@ -163,9 +152,7 @@ export function MoveInstallDialog(props: Props): ReactElement {
       return;
     }
     if (!result.data) {
-      setError(
-        "No active move to cancel. Close this dialog and try again if it looks stuck.",
-      );
+      setError("No active move to cancel. Close this dialog and try again if it looks stuck.");
       setPhase("error");
     }
   };
@@ -177,10 +164,7 @@ export function MoveInstallDialog(props: Props): ReactElement {
     setError(null);
     await runWithFinally(
       async () => {
-        const result = await window.api.cleanupMovedServerInstall(
-          server.id,
-          oldSourceDir,
-        );
+        const result = await window.api.cleanupMovedServerInstall(server.id, oldSourceDir);
         if (!result.ok) {
           setError(result.error);
           return;
@@ -204,10 +188,7 @@ export function MoveInstallDialog(props: Props): ReactElement {
   const percent = progress?.percent ?? null;
   const canStart =
     phase === "form" || phase === "error"
-      ? resolvedDest.trim().length > 0 &&
-        previewIssue === null &&
-        !probePending &&
-        destVacant
+      ? resolvedDest.trim().length > 0 && previewIssue === null && !probePending && destVacant
       : false;
   const allowChromeClose = phase === "form" || phase === "error";
 
@@ -238,20 +219,13 @@ export function MoveInstallDialog(props: Props): ReactElement {
               Cancel
             </Button>
           )}
-          {phase === "success" && oldSourceRemoved && (
-            <Button onClick={() => void finishSuccess()}>Close</Button>
-          )}
+          {phase === "success" && oldSourceRemoved && <Button onClick={() => void finishSuccess()}>Close</Button>}
           {phase === "success" && !oldSourceRemoved && (
             <>
               <Button variant="default" onClick={() => void finishSuccess()}>
                 Leave previous folder
               </Button>
-              <Button
-                color="red"
-                variant="subtle"
-                loading={cleanupBusy}
-                onClick={() => void handleRetryCleanup()}
-              >
+              <Button color="red" variant="subtle" loading={cleanupBusy} onClick={() => void handleRetryCleanup()}>
                 Retry delete
               </Button>
             </>
@@ -290,11 +264,7 @@ export function MoveInstallDialog(props: Props): ReactElement {
                 {progress?.label || "Moving installation…"}
               </Text>
             </Group>
-            <Progress
-              value={percent ?? 12}
-              animated
-              striped
-            />
+            <Progress value={percent ?? 12} animated striped />
             {progress?.destinationDir != null && (
               <Text size="xs" c="dimmed">
                 New location: {progress.destinationDir}
@@ -312,8 +282,7 @@ export function MoveInstallDialog(props: Props): ReactElement {
         {phase === "success" && !oldSourceRemoved && oldSourceDir !== null && (
           <Stack gap="sm">
             <AppAlert color="attention" title="Move completed with a leftover folder">
-              The profile uses the new path, but the previous folder could not be
-              deleted:
+              The profile uses the new path, but the previous folder could not be deleted:
             </AppAlert>
             <ReadonlyPath value={oldSourceDir} compact />
           </Stack>

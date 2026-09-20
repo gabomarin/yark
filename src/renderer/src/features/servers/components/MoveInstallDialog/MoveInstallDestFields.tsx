@@ -19,14 +19,8 @@ export function MoveInstallDestFields(props: Props): ReactElement {
   return (
     <>
       <PathField
-        label={
-          props.createFolder
-            ? "Destination base folder"
-            : "Destination install directory"
-        }
-        placeholder={
-          props.createFolder ? "C:\\ark_servers" : "C:\\ark_servers\\my_server_new"
-        }
+        label={props.createFolder ? "Destination base folder" : "Destination install directory"}
+        placeholder={props.createFolder ? "C:\\ark_servers" : "C:\\ark_servers\\my_server_new"}
         description={
           props.createFolder
             ? "The new folder must be empty. The previous install is removed after a successful move."
@@ -41,9 +35,7 @@ export function MoveInstallDestFields(props: Props): ReactElement {
       <Checkbox
         label={`Create folder "${props.folderName}"`}
         checked={props.createFolder}
-        onChange={(event) =>
-          props.onCreateFolderChange(event.currentTarget.checked)
-        }
+        onChange={(event) => props.onCreateFolderChange(event.currentTarget.checked)}
       />
       {props.createFolder && (
         <Stack gap={4}>

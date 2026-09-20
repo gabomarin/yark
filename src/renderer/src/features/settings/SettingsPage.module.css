@@ -156,8 +156,7 @@
   gap: var(--app-space-md);
   align-items: center;
   justify-content: space-between;
-  padding: var(--app-space-sm) var(--app-space-md) var(--app-space-sm)
-    calc(var(--app-space-md) + var(--app-space-md));
+  padding: var(--app-space-sm) var(--app-space-md) var(--app-space-sm) calc(var(--app-space-md) + var(--app-space-md));
   border-top: 1px solid var(--app-color-border-subtle);
   background: transparent;
 }

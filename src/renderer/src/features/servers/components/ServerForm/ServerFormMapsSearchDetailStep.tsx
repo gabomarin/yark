@@ -1,12 +1,5 @@
 import { useEffect, useState, type ReactElement } from "react";
-import {
-  Button,
-  Group,
-  Image,
-  Skeleton,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Button, Group, Image, Skeleton, Stack, Text } from "@mantine/core";
 import { ArrowSquareOut, MapTrifold, PuzzlePiece } from "@phosphor-icons/react";
 import { decodeHtmlEntities } from "@shared/mods/decode-html-entities";
 import { suggestMapTokenFromMetadata } from "@shared/asa/map-token-suggest";
@@ -38,9 +31,7 @@ export function ServerFormMapsSearchDetailStep(props: Props): ReactElement {
   };
 
   const updatedLabel =
-    detail.dateModified === new Date(0).toISOString()
-      ? "Unknown"
-      : new Date(detail.dateModified).toLocaleDateString();
+    detail.dateModified === new Date(0).toISOString() ? "Unknown" : new Date(detail.dateModified).toLocaleDateString();
 
   return (
     <div className={classes.modalStep}>
@@ -69,11 +60,7 @@ export function ServerFormMapsSearchDetailStep(props: Props): ReactElement {
               ) : null}
               <Stack gap="xs" className={classes.detailMetaRow}>
                 <MapNameHint suggestion={mapName} variant="inline" />
-                <CopyMetadataRow
-                  label="Project ID"
-                  value={detail.id}
-                  failureMessage="Could not copy Project ID"
-                />
+                <CopyMetadataRow label="Project ID" value={detail.id} failureMessage="Could not copy Project ID" />
               </Stack>
               <Text size="xs" c="dimmed">
                 {detail.downloadCount.toLocaleString()} downloads · Updated {updatedLabel}
@@ -103,11 +90,7 @@ export function ServerFormMapsSearchDetailStep(props: Props): ReactElement {
         {props.loading ? (
           <DetailMediaSkeleton />
         ) : (
-          <ModDetailScreenshotCarousel
-            urls={detail.screenshots ?? []}
-            allowExpand={false}
-            frame="map"
-          />
+          <ModDetailScreenshotCarousel urls={detail.screenshots ?? []} allowExpand={false} frame="map" />
         )}
       </div>
 
@@ -158,15 +141,7 @@ function DetailMediaSkeleton(): ReactElement {
   const density = useUiDensity();
   const mapHeight = density === "compact" ? 460 : 560;
 
-  return (
-    <Skeleton
-      height={mapHeight}
-      width="100%"
-      radius="md"
-      aria-busy="true"
-      aria-label="Loading map screenshots"
-    />
-  );
+  return <Skeleton height={mapHeight} width="100%" radius="md" aria-busy="true" aria-label="Loading map screenshots" />;
 }
 
 function DetailThumbnail(props: { src: string | null }): ReactElement {

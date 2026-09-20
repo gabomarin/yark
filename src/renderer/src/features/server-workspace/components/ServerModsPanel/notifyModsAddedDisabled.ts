@@ -13,9 +13,7 @@ export function resetModAddedToastQueue(): void {
   toastSeq = 0;
 }
 
-const viteHot = (
-  import.meta as ImportMeta & { hot?: { dispose: (cb: () => void) => void } }
-).hot;
+const viteHot = (import.meta as ImportMeta & { hot?: { dispose: (cb: () => void) => void } }).hot;
 if (viteHot !== undefined) {
   viteHot.dispose(() => {
     for (const id of [...visibleIds]) notifications.hide(id);

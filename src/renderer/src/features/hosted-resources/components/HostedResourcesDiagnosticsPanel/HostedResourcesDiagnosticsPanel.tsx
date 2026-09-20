@@ -4,10 +4,7 @@ import { ArrowClockwise } from "@phosphor-icons/react";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import type { HostedResourcesDiagnosticsDto } from "@shared/ipc";
-import {
-  servedBadgeColor,
-  shortSha,
-} from "../../model/hostedResourcesPageModel";
+import { servedBadgeColor, shortSha } from "../../model/hostedResourcesPageModel";
 
 interface Props {
   diagnostics: HostedResourcesDiagnosticsDto | null;
@@ -35,16 +32,13 @@ export function HostedResourcesDiagnosticsPanel(props: Props): ReactElement {
 
         {diagnostics === null ? (
           <Text size="sm" c="dimmed">
-            Probes loopback ownership, re-reads each served resource and compares
-            SHA-256, and scans managed server INIs for exact YARK URLs.
+            Probes loopback ownership, re-reads each served resource and compares SHA-256, and scans managed server INIs
+            for exact YARK URLs.
           </Text>
         ) : (
           <>
             <Group gap="xs">
-              <Badge
-                variant="light"
-                color={diagnostics.ownership.ok ? "ok" : "red"}
-              >
+              <Badge variant="light" color={diagnostics.ownership.ok ? "ok" : "red"}>
                 {diagnostics.ownership.ok ? "Loopback ownership verified" : "Ownership failed"}
               </Badge>
               <Text size="sm" c="dimmed">
@@ -54,8 +48,7 @@ export function HostedResourcesDiagnosticsPanel(props: Props): ReactElement {
 
             {!diagnostics.ownership.ok && (
               <AppAlert color="red" variant="light" title="Host is not serving">
-                A stale URL must not be trusted while the port is unavailable or owned
-                by another process.
+                A stale URL must not be trusted while the port is unavailable or owned by another process.
               </AppAlert>
             )}
 
@@ -86,8 +79,8 @@ export function HostedResourcesDiagnosticsPanel(props: Props): ReactElement {
                             : "Bytes mismatch / unreachable"}
                     </Badge>
                     <Text size="xs" c="dimmed">
-                      declared {shortSha(resource.declaredSha256)} · served{" "}
-                      {shortSha(resource.servedSha256)} · {resource.requestCount} requests
+                      declared {shortSha(resource.declaredSha256)} · served {shortSha(resource.servedSha256)} ·{" "}
+                      {resource.requestCount} requests
                     </Text>
                   </Stack>
                 </Group>
@@ -100,17 +93,13 @@ export function HostedResourcesDiagnosticsPanel(props: Props): ReactElement {
               </Text>
               {diagnostics.references.length === 0 ? (
                 <Text size="sm" c="dimmed">
-                  No managed server INI contains one of these exact URLs yet. Paste one
-                  into a URL setting (for example `AdminListURL`) to wire it up.
+                  No managed server INI contains one of these exact URLs yet. Paste one into a URL setting (for example
+                  `AdminListURL`) to wire it up.
                 </Text>
               ) : (
                 <Stack gap={2}>
                   {diagnostics.references.map((reference) => (
-                    <Text
-                      key={`${reference.serverId}:${reference.key}:${reference.url}`}
-                      size="sm"
-                      ff="monospace"
-                    >
+                    <Text key={`${reference.serverId}:${reference.key}:${reference.url}`} size="sm" ff="monospace">
                       {reference.serverName} · {reference.key} · {reference.url}
                     </Text>
                   ))}
@@ -119,8 +108,8 @@ export function HostedResourcesDiagnosticsPanel(props: Props): ReactElement {
             </div>
 
             <Text size="xs" c="dimmed">
-              A served match only proves YARK returned those bytes over loopback; it does
-              not prove the game accepted them.
+              A served match only proves YARK returned those bytes over loopback; it does not prove the game accepted
+              them.
             </Text>
           </>
         )}

@@ -1,10 +1,4 @@
-import {
-  ArrowCounterClockwise,
-  ClipboardText,
-  Export,
-  FolderOpen,
-  Trash,
-} from "@phosphor-icons/react";
+import { ArrowCounterClockwise, ClipboardText, Export, FolderOpen, Trash } from "@phosphor-icons/react";
 import type { BackupRecord } from "@shared/types";
 import type { RowActionEntry } from "@ui/RowActionMenu/rowActionModel";
 
@@ -21,9 +15,7 @@ export interface BackupHistoryRowActionInput {
   onDelete: (backup: BackupRecord) => void;
 }
 
-export function buildBackupHistoryRowActions(
-  input: BackupHistoryRowActionInput,
-): RowActionEntry[] {
+export function buildBackupHistoryRowActions(input: BackupHistoryRowActionInput): RowActionEntry[] {
   const canMutate = input.backup.status !== "running";
   const completed = input.backup.status === "completed";
 

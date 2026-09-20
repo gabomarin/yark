@@ -1,0 +1,21 @@
+# Build output, dependencies and generated assets never get formatted.
+node_modules/
+out/
+dist/
+build/
+coverage/
+.venv/
+.kilo/
+artifacts/
+
+# Separate packages with their own tooling.
+website/node_modules/
+website/dist/
+website/public/media/
+workers/curseforge-proxy/node_modules/
+electron-mcp-server/
+
+# Vendored / generated content.
+src/main/splash/splash.html
+docs/**/*.html
+*.min.*

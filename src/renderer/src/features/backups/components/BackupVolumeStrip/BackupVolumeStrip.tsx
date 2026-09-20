@@ -21,26 +21,18 @@ export function BackupVolumeStrip(props: Props): ReactElement {
       </Group>
       <div className={classes.volumeStrip}>
         {props.disks.map((disk) => {
-          const critical =
-            disk.usedPercent != null &&
-            disk.usedPercent >= props.diskSettings.criticalUsedPercent;
+          const critical = disk.usedPercent != null && disk.usedPercent >= props.diskSettings.criticalUsedPercent;
           const warning =
             !critical &&
-            ((disk.usedPercent != null &&
-              disk.usedPercent >= props.diskSettings.warnUsedPercent) ||
-              (disk.freeBytes != null &&
-                disk.freeBytes < props.diskSettings.warnFreeBytes));
+            ((disk.usedPercent != null && disk.usedPercent >= props.diskSettings.warnUsedPercent) ||
+              (disk.freeBytes != null && disk.freeBytes < props.diskSettings.warnFreeBytes));
           return (
-          <AppSurfaceCard
-            key={disk.volumePath}
-            tone="flat"
-            padding="sm"
-            radius={0}
-              className={[
-                classes.volumeCard,
-                critical ? classes.statDanger : "",
-                warning ? classes.statWarning : "",
-              ]
+            <AppSurfaceCard
+              key={disk.volumePath}
+              tone="flat"
+              padding="sm"
+              radius={0}
+              className={[classes.volumeCard, critical ? classes.statDanger : "", warning ? classes.statWarning : ""]
                 .filter(Boolean)
                 .join(" ")}
             >
@@ -49,15 +41,11 @@ export function BackupVolumeStrip(props: Props): ReactElement {
               </Text>
               <Text size="xs" c="dimmed">
                 Free {formatBackupBytes(disk.freeBytes)}
-                {disk.usedPercent != null
-                  ? ` · ${disk.usedPercent.toFixed(0)}% used`
-                  : ""}
+                {disk.usedPercent != null ? ` · ${disk.usedPercent.toFixed(0)}% used` : ""}
               </Text>
               <Text size="xs" c="dimmed">
                 Backups on this volume: {formatBackupBytes(disk.backupBytes)}
-                {disk.roots.length > 1
-                  ? ` · ${disk.roots.length} destinations`
-                  : ""}
+                {disk.roots.length > 1 ? ` · ${disk.roots.length} destinations` : ""}
               </Text>
             </AppSurfaceCard>
           );

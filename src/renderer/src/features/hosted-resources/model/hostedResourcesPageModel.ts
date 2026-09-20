@@ -26,10 +26,7 @@ export const HOSTED_RESOURCE_FORMAT_OPTIONS: FormatOption[] = [
 ];
 
 export function formatLabel(format: HostedResourceFormat): string {
-  return (
-    HOSTED_RESOURCE_FORMAT_OPTIONS.find((option) => option.value === format)
-      ?.label ?? format
-  );
+  return HOSTED_RESOURCE_FORMAT_OPTIONS.find((option) => option.value === format)?.label ?? format;
 }
 
 export function contentPlaceholder(format: HostedResourceFormat): string {
@@ -63,9 +60,7 @@ export function formatByteSize(bytes: number): string {
 }
 
 /** Reference counts are per server; wording avoids implying the game loaded it. */
-export function summarizeReferences(
-  references: { serverId: string }[],
-): number {
+export function summarizeReferences(references: { serverId: string }[]): number {
   return new Set(references.map((reference) => reference.serverId)).size;
 }
 export function resourcePublishedLabel(resource: HostedResourceDto): string {
@@ -80,9 +75,7 @@ export function resourcePublishedLabel(resource: HostedResourceDto): string {
 
 export function revisionLabel(revision: HostedResourceRevisionDto): string {
   const when = new Date(revision.publishedAt ?? revision.createdAt);
-  const stamp = Number.isNaN(when.getTime())
-    ? revision.createdAt
-    : when.toLocaleString();
+  const stamp = Number.isNaN(when.getTime()) ? revision.createdAt : when.toLocaleString();
   return `Version ${revision.sequence} · ${stamp}`;
 }
 

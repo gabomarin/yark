@@ -16,17 +16,11 @@ export const SPLASH_MAX_DATA_URL_CHARS = 2 * 1024 * 1024;
 export const FALLBACK_SPLASH_TEMPLATE = `<!DOCTYPE html><html lang="en" data-yark-splash="1"><head><meta charset="utf-8"/><title>YARK</title><style>html,body{margin:0;height:100%;background:${BOOTSTRAP_BACKGROUND};color:#aabedb;font:600 13px "Segoe UI",sans-serif;display:grid;place-items:center}</style></head><body><p>__YARK_VERSION__</p></body></html>`;
 
 /** Ms to keep the splash after main is ready (0 = hand off now). */
-export function remainingSplashHoldMs(
-  shownAtMs: number,
-  nowMs: number,
-  minMs: number = SPLASH_MIN_MS,
-): number {
+export function remainingSplashHoldMs(shownAtMs: number, nowMs: number, minMs: number = SPLASH_MIN_MS): number {
   return Math.max(0, minMs - (nowMs - shownAtMs));
 }
 
-export function shouldShowSplash(
-  env: Record<string, string | undefined> = process.env,
-): boolean {
+export function shouldShowSplash(env: Record<string, string | undefined> = process.env): boolean {
   if (env["YARK_SKIP_SPLASH"] === "1") {
     return false;
   }
@@ -59,9 +53,7 @@ export function stripSvgProlog(svg: string): string {
 
 /** Drop SMIL so splash HTML CSS can honor prefers-reduced-motion instead. */
 export function stripSvgSmiAnimations(svg: string): string {
-  return svg
-    .replace(/<animate\b[^>]*\/>/gi, "")
-    .replace(/<animate\b[^>]*>[\s\S]*?<\/animate>/gi, "");
+  return svg.replace(/<animate\b[^>]*\/>/gi, "").replace(/<animate\b[^>]*>[\s\S]*?<\/animate>/gi, "");
 }
 
 export function buildSplashDocument(html: string, svg: string, version: string): string {

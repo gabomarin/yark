@@ -26,9 +26,8 @@ export function WizardChangesModal(props: Props): ReactElement {
         <AppAlert color="blue">The draft matches the current configuration.</AppAlert>
       ) : clusterPathSelected ? (
         <AppAlert color="blue" title="Cluster defaults">
-          Apply will copy the full “{clusterId}” INI template onto this server (
-          {useClusterSeed ? "Seed" : "Restore"}). Ports, passwords, and session name stay on this
-          profile.
+          Apply will copy the full “{clusterId}” INI template onto this server ({useClusterSeed ? "Seed" : "Restore"}).
+          Ports, passwords, and session name stay on this profile.
         </AppAlert>
       ) : (
         <Stack gap="xs">

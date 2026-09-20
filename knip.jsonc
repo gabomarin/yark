@@ -15,23 +15,23 @@
     // note in src/renderer/src/layout/Sidebar/Sidebar.tsx). Kept so it can be re-attached
     // rather than rebuilt; not dead code.
     "src/renderer/src/layout/Sidebar/PalettePreviewSwitcher.tsx",
-    "src/shared/debug-flags.ts"
+    "src/shared/debug-flags.ts",
   ],
   "ignore": [
     "website/**",
     "workers/**",
     "electron-mcp-server/**",
     // One-shot icon rebuild (brand/README.md); optional sharp / png-to-ico.
-    "brand/_build-icons.cjs"
+    "brand/_build-icons.cjs",
   ],
   "ignoreBinaries": [
     // Windows host tools spawned from updates / ProcessManager tests — not npm.
     "robocopy.exe",
-    "tasklist"
+    "tasklist",
   ],
   "ignoreDependencies": [
     // String-referenced in electron.vite.config.ts babel.plugins when YARK_REACT_COMPILER=1 (#404).
-    "babel-plugin-react-compiler"
+    "babel-plugin-react-compiler",
   ],
   "rules": {
     "files": "error",
@@ -46,8 +46,8 @@
     "types": "error",
     "nsTypes": "error",
     // Unused enum members are noisy in shared catalogs; leave for a later pass.
-    "enumMembers": "off"
+    "enumMembers": "off",
   },
   // @lintignore: website/src/data/changelog.ts re-exports src/shared/changelog.
-  "tags": ["-lintignore"]
+  "tags": ["-lintignore"],
 }

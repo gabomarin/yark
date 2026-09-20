@@ -32,14 +32,7 @@ import yarkLogo from "../../assets/brand/yark-logo.png";
 import { QuitYarkModal } from "./QuitYarkModal";
 import classes from "./Sidebar.module.css";
 
-export type Route =
-  | "overview"
-  | "downloads"
-  | "clusters"
-  | "backups"
-  | "logs"
-  | "hostedResources"
-  | "settings";
+export type Route = "overview" | "downloads" | "clusters" | "backups" | "logs" | "hostedResources" | "settings";
 
 interface NavItem {
   id: Route;
@@ -87,10 +80,7 @@ interface Props {
   downloadCount?: number;
 }
 
-function officialVersionTooltip(
-  version: string | null,
-  networkStatus: OfficialNetworkStatus,
-): string {
+function officialVersionTooltip(version: string | null, networkStatus: OfficialNetworkStatus): string {
   if (networkStatus === "deploying" && version !== null) {
     return `Wildcard is deploying version ${version}.`;
   }
@@ -119,11 +109,7 @@ export function Sidebar(props: Props): ReactElement {
     : offline
       ? classes.versionValueOffline
       : classes.versionValue;
-  const statusDotClass = deploying
-    ? classes.deployingDot
-    : offline
-      ? classes.badDot
-      : classes.okDot;
+  const statusDotClass = deploying ? classes.deployingDot : offline ? classes.badDot : classes.okDot;
 
   const steamCmdLabel = !props.steamCmdDetected
     ? "SteamCMD missing"
@@ -134,13 +120,8 @@ export function Sidebar(props: Props): ReactElement {
   const steamCmdIconSize = compact ? "md" : "lg";
   const steamCmdButtonSize = compact ? "sm" : "md";
 
-  const versionTooltip = officialVersionTooltip(
-    props.officialVersion,
-    props.officialNetworkStatus,
-  );
-  const updateAvailable =
-    props.yarkUpdateAvailableVersion != null
-    && props.yarkUpdateAvailableVersion !== "";
+  const versionTooltip = officialVersionTooltip(props.officialVersion, props.officialNetworkStatus);
+  const updateAvailable = props.yarkUpdateAvailableVersion != null && props.yarkUpdateAvailableVersion !== "";
   const versionLabel = (
     <Text
       size={metadataTextSize}
@@ -160,28 +141,14 @@ export function Sidebar(props: Props): ReactElement {
       data-icon-mode={iconMode || undefined}
     >
       <div className={classes.brandRow}>
-        <Tooltip
-          label="Quick jump · Ctrl+K"
-          position="right"
-          withArrow
-          openDelay={200}
-        >
+        <Tooltip label="Quick jump · Ctrl+K" position="right" withArrow openDelay={200}>
           <div className={classes.brand}>
-            <img
-              src={yarkLogo}
-              alt="YARK server manager"
-              className={classes.brandLockup}
-              draggable={false}
-            />
+            <img src={yarkLogo} alt="YARK server manager" className={classes.brandLockup} draggable={false} />
           </div>
         </Tooltip>
       </div>
 
-      <MantineStack
-        gap={compact ? "xxs" : "xs"}
-        align={iconMode ? "center" : undefined}
-        className={classes.nav}
-      >
+      <MantineStack gap={compact ? "xxs" : "xs"} align={iconMode ? "center" : undefined} className={classes.nav}>
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const active = item.id === props.route;
@@ -189,13 +156,7 @@ export function Sidebar(props: Props): ReactElement {
           /* Icon-only mode has no room for a right section: the Experimental badge pushed
            * the icon off-centre, and the tooltip already carries the label. */
           const rightSection = iconMode ? undefined : downloads > 0 ? (
-            <Text
-              component="span"
-              size="xs"
-              fw={600}
-              c="blue"
-              aria-label={`${downloads} downloads`}
-            >
+            <Text component="span" size="xs" fw={600} c="blue" aria-label={`${downloads} downloads`}>
               {downloads}
             </Text>
           ) : item.experimental === true ? (
@@ -210,9 +171,7 @@ export function Sidebar(props: Props): ReactElement {
               active={active}
               label={iconMode ? undefined : item.label}
               aria-label={item.label}
-              leftSection={
-                <Icon size={navIconSize} weight={active ? "fill" : "regular"} />
-              }
+              leftSection={<Icon size={navIconSize} weight={active ? "fill" : "regular"} />}
               rightSection={rightSection}
               className={navSelectedClassName(classes.navLink)}
               onClick={() => props.onNavigate(item.id)}
@@ -296,9 +255,7 @@ export function Sidebar(props: Props): ReactElement {
                     size={compact ? 8 : 9}
                     weight="fill"
                     className={statusDotClass}
-                    aria-label={
-                      deploying ? "Official network deploying" : "Official network offline"
-                    }
+                    aria-label={deploying ? "Official network deploying" : "Official network offline"}
                   />
                 )}
                 <Text size={versionTextSize} ta="center" className={versionToneClass}>
@@ -337,9 +294,7 @@ export function Sidebar(props: Props): ReactElement {
             {props.onWhatsNewClick !== undefined ? (
               <Tooltip label={`YARK v${props.appVersion} – What's new`} position="right" withArrow>
                 <UnstyledButton
-                  className={
-                    updateAvailable ? classes.appVersionLabelUpdate : classes.appVersionLabelRail
-                  }
+                  className={updateAvailable ? classes.appVersionLabelUpdate : classes.appVersionLabelRail}
                   onClick={props.onWhatsNewClick}
                   aria-label={`What's new in YARK v${props.appVersion}`}
                   data-yark-app-version
@@ -348,12 +303,7 @@ export function Sidebar(props: Props): ReactElement {
                 </UnstyledButton>
               </Tooltip>
             ) : (
-              <Text
-                size={metadataTextSize}
-                c="dimmed"
-                data-yark-app-version
-                className={classes.appVersionLabelRail}
-              >
+              <Text size={metadataTextSize} c="dimmed" data-yark-app-version className={classes.appVersionLabelRail}>
                 v{props.appVersion}
               </Text>
             )}
@@ -385,9 +335,7 @@ export function Sidebar(props: Props): ReactElement {
             {props.onWhatsNewClick !== undefined ? (
               <Tooltip label="What's new in this version" position="right">
                 <UnstyledButton
-                  className={
-                    updateAvailable ? classes.appVersionLabelUpdate : classes.appVersionLabel
-                  }
+                  className={updateAvailable ? classes.appVersionLabelUpdate : classes.appVersionLabel}
                   onClick={props.onWhatsNewClick}
                   aria-label={`What's new in YARK v${props.appVersion}`}
                   data-yark-app-version
@@ -396,12 +344,7 @@ export function Sidebar(props: Props): ReactElement {
                 </UnstyledButton>
               </Tooltip>
             ) : (
-              <Text
-                size={metadataTextSize}
-                c="dimmed"
-                data-yark-app-version
-                className={classes.appVersionLabel}
-              >
+              <Text size={metadataTextSize} c="dimmed" data-yark-app-version className={classes.appVersionLabel}>
                 v{props.appVersion}
               </Text>
             )}
@@ -409,14 +352,7 @@ export function Sidebar(props: Props): ReactElement {
         )}
 
         <div className={classes.quitControl}>
-          <Tooltip
-            label={QUIT_YARK_TOOLTIP}
-            multiline
-            w={260}
-            position="right"
-            withArrow
-            openDelay={200}
-          >
+          <Tooltip label={QUIT_YARK_TOOLTIP} multiline w={260} position="right" withArrow openDelay={200}>
             {iconMode ? (
               <ActionIcon
                 variant="subtle"

@@ -1,13 +1,5 @@
 import type { ReactElement } from "react";
-import {
-  ArrowDown,
-  ArrowUp,
-  ArrowCounterClockwise,
-  Pause,
-  Play,
-  ProhibitInset,
-  X,
-} from "@phosphor-icons/react";
+import { ArrowDown, ArrowUp, ArrowCounterClockwise, Pause, Play, ProhibitInset, X } from "@phosphor-icons/react";
 import { ActionIcon, Progress, Tooltip, UnstyledButton } from "@mantine/core";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import { downloadRowMeta } from "./downloadsCopy";
@@ -70,9 +62,7 @@ export function DownloadRowButton(props: {
             />
           ) : null}
         </span>
-        <span className={classes.rowPercent}>
-          {row.percent !== null ? `${row.percent.toFixed(0)}%` : ""}
-        </span>
+        <span className={classes.rowPercent}>{row.percent !== null ? `${row.percent.toFixed(0)}%` : ""}</span>
       </UnstyledButton>
       <span className={classes.rowActions}>
         {(row.canMoveUp || row.canMoveDown) && (
@@ -116,33 +106,28 @@ export function DownloadRowButton(props: {
             </ActionIcon>
           </Tooltip>
         )}
-        {(row.kind === "attention" || row.kind === "cancelled" || row.kind === "interrupted")
-          && row.job?.nextActions.includes("retry") === true && (
-          <Tooltip label="Retry">
-            <ActionIcon
-              size="sm"
-              color="ok"
-              variant="subtle"
-              aria-label="Retry download"
-              onClick={() => props.onRetry()}
-            >
-              <ArrowCounterClockwise size={14} />
-            </ActionIcon>
-          </Tooltip>
-        )}
-        {(row.kind === "attention" || row.kind === "cancelled" || row.kind === "interrupted")
-          && row.job?.nextActions.includes("dismiss") === true && (
-          <Tooltip label="Dismiss">
-            <ActionIcon
-              size="sm"
-              variant="subtle"
-              aria-label="Dismiss download"
-              onClick={() => props.onDismiss()}
-            >
-              <X size={14} />
-            </ActionIcon>
-          </Tooltip>
-        )}
+        {(row.kind === "attention" || row.kind === "cancelled" || row.kind === "interrupted") &&
+          row.job?.nextActions.includes("retry") === true && (
+            <Tooltip label="Retry">
+              <ActionIcon
+                size="sm"
+                color="ok"
+                variant="subtle"
+                aria-label="Retry download"
+                onClick={() => props.onRetry()}
+              >
+                <ArrowCounterClockwise size={14} />
+              </ActionIcon>
+            </Tooltip>
+          )}
+        {(row.kind === "attention" || row.kind === "cancelled" || row.kind === "interrupted") &&
+          row.job?.nextActions.includes("dismiss") === true && (
+            <Tooltip label="Dismiss">
+              <ActionIcon size="sm" variant="subtle" aria-label="Dismiss download" onClick={() => props.onDismiss()}>
+                <X size={14} />
+              </ActionIcon>
+            </Tooltip>
+          )}
         {row.kind === "active" && row.usesLiveCancel && (
           <span data-download-live-action>
             <Tooltip label={row.canPause ? "Pause" : "Cancel"}>
@@ -153,11 +138,7 @@ export function DownloadRowButton(props: {
                 aria-label={row.canPause ? "Pause download" : "Cancel download"}
                 onClick={() => props.onCancel()}
               >
-                {row.canPause ? (
-                  <Pause size={14} weight="fill" />
-                ) : (
-                  <ProhibitInset size={14} />
-                )}
+                {row.canPause ? <Pause size={14} weight="fill" /> : <ProhibitInset size={14} />}
               </ActionIcon>
             </Tooltip>
           </span>
@@ -171,11 +152,7 @@ export function DownloadRowButton(props: {
               aria-label={row.canPause ? "Pause download" : "Cancel download"}
               onClick={() => props.onCancel()}
             >
-              {row.canPause ? (
-                <Pause size={14} weight="fill" />
-              ) : (
-                <ProhibitInset size={14} />
-              )}
+              {row.canPause ? <Pause size={14} weight="fill" /> : <ProhibitInset size={14} />}
             </ActionIcon>
           </Tooltip>
         )}

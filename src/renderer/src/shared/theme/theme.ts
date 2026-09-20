@@ -24,9 +24,7 @@ const radixCssVariables = Object.fromEntries([
   ["--ark-background", radixPalette.background],
 ]);
 
-function createAppCssVariablesResolver(
-  tokens: AppTokens = defaultAppTokens,
-): CSSVariablesResolver {
+function createAppCssVariablesResolver(tokens: AppTokens = defaultAppTokens): CSSVariablesResolver {
   return () => ({
     variables: {
       ...radixCssVariables,
@@ -51,8 +49,7 @@ function createAppCssVariablesResolver(
        * actually lands on. Fluent keeps an info bar quiet: the tone belongs on the border
        * and icon, never on the fill.
        */
-      "--app-color-surface-alert":
-        "color-mix(in srgb, var(--ark-gray-2) 82%, var(--ark-gray-12))",
+      "--app-color-surface-alert": "color-mix(in srgb, var(--ark-gray-2) 82%, var(--ark-gray-12))",
       "--app-color-border-subtle": "var(--ark-gray-7)",
       "--app-color-border-control": "var(--ark-gray-9)",
       "--app-color-text-soft": "var(--ark-gray-12)",
@@ -192,30 +189,21 @@ function createAppCssVariablesResolver(
       "--mantine-color-blue-light-hover": "var(--ark-blue-a4)",
       "--mantine-color-blue-light-color": "var(--ark-blue-11)",
       "--mantine-color-red-filled": "var(--app-color-bad)",
-      "--mantine-color-red-filled-hover":
-        "color-mix(in srgb, var(--app-color-bad) 88%, white)",
-      "--mantine-color-red-light":
-        "color-mix(in srgb, var(--app-color-danger-bright) 22%, transparent)",
-      "--mantine-color-red-light-hover":
-        "color-mix(in srgb, var(--app-color-danger-bright) 32%, transparent)",
+      "--mantine-color-red-filled-hover": "color-mix(in srgb, var(--app-color-bad) 88%, white)",
+      "--mantine-color-red-light": "color-mix(in srgb, var(--app-color-danger-bright) 22%, transparent)",
+      "--mantine-color-red-light-hover": "color-mix(in srgb, var(--app-color-danger-bright) 32%, transparent)",
       "--mantine-color-red-light-color": "var(--app-color-danger-bright)",
       "--mantine-color-red-text": "var(--app-color-danger-bright)",
       "--mantine-color-red-6": "var(--app-color-danger-bright)",
       "--mantine-color-attention-filled": "var(--app-color-attention)",
-      "--mantine-color-attention-filled-hover":
-        "color-mix(in srgb, var(--app-color-attention) 82%, white)",
-      "--mantine-color-attention-light":
-        "color-mix(in srgb, var(--app-color-attention) 22%, transparent)",
-      "--mantine-color-attention-light-hover":
-        "color-mix(in srgb, var(--app-color-attention) 32%, transparent)",
+      "--mantine-color-attention-filled-hover": "color-mix(in srgb, var(--app-color-attention) 82%, white)",
+      "--mantine-color-attention-light": "color-mix(in srgb, var(--app-color-attention) 22%, transparent)",
+      "--mantine-color-attention-light-hover": "color-mix(in srgb, var(--app-color-attention) 32%, transparent)",
       "--mantine-color-attention-light-color": "var(--app-color-attention)",
       "--mantine-color-fossil-filled": "var(--app-color-fossil-filled)",
-      "--mantine-color-fossil-filled-hover":
-        "color-mix(in srgb, var(--app-color-fossil-filled) 82%, white)",
-      "--mantine-color-fossil-light":
-        "color-mix(in srgb, var(--app-color-fossil) 22%, transparent)",
-      "--mantine-color-fossil-light-hover":
-        "color-mix(in srgb, var(--app-color-fossil) 32%, transparent)",
+      "--mantine-color-fossil-filled-hover": "color-mix(in srgb, var(--app-color-fossil-filled) 82%, white)",
+      "--mantine-color-fossil-light": "color-mix(in srgb, var(--app-color-fossil) 22%, transparent)",
+      "--mantine-color-fossil-light-hover": "color-mix(in srgb, var(--app-color-fossil) 32%, transparent)",
       "--mantine-color-fossil-light-color": "var(--app-color-fossil)",
     },
   });
@@ -266,9 +254,7 @@ function createAppTheme(
          * call site that computes `color` and gets `undefined` still gets the fill.
          * `--sc-label-color` is deliberately NOT set: Mantine then paints the active
          * label with the fill's contrast colour instead of text grey. */
-        ...(props.color === undefined
-          ? { "--sc-color": "var(--app-color-surface-control-hover)" }
-          : {}),
+        ...(props.color === undefined ? { "--sc-color": "var(--app-color-surface-control-hover)" } : {}),
         "--sc-shadow": "var(--app-elevation-2)",
       },
     }),
@@ -432,8 +418,7 @@ function createAppTheme(
         },
         // Mantine paints via --alert-bg / --alert-bd; styles.backgroundColor does not win.
         vars: (_theme: unknown, props: { color?: string | undefined }) => {
-          const color =
-            typeof props.color === "string" ? props.color : "blue";
+          const color = typeof props.color === "string" ? props.color : "blue";
           const toneToken = ALERT_TONE_TOKENS[alertToneForColor(color)];
           if (toneToken === undefined) {
             return { root: {} };
@@ -621,12 +606,10 @@ function createAppTheme(
             "--anchor-color": "var(--app-anchor-color)",
             "--anchor-hover-color": "var(--app-anchor-hover-color)",
             color: "var(--anchor-color)",
-            textDecorationColor:
-              "color-mix(in srgb, var(--anchor-color) 55%, transparent)",
+            textDecorationColor: "color-mix(in srgb, var(--anchor-color) 55%, transparent)",
             "&:hover": {
               color: "var(--anchor-hover-color)",
-              textDecorationColor:
-                "color-mix(in srgb, var(--anchor-hover-color) 70%, transparent)",
+              textDecorationColor: "color-mix(in srgb, var(--anchor-hover-color) 70%, transparent)",
             },
           },
         },
@@ -637,15 +620,8 @@ function createAppTheme(
 }
 
 /** Inline Alert surface recipes: message (blue), warn (fossil), error (red). */
-export function alertToneForColor(
-  color: string,
-): "message" | "success" | "warn" | "error" | "default" {
-  if (
-    color === "blue" ||
-    color === "cyan" ||
-    color === "indigo" ||
-    color === "violet"
-  ) {
+export function alertToneForColor(color: string): "message" | "success" | "warn" | "error" | "default" {
+  if (color === "blue" || color === "cyan" || color === "indigo" || color === "violet") {
     return "message";
   }
   /* `ok` is the app's success role; green/teal are accepted aliases so an Alert
@@ -653,13 +629,7 @@ export function alertToneForColor(
   if (color === "ok" || color === "green" || color === "teal") {
     return "success";
   }
-  if (
-    color === "yellow" ||
-    color === "orange" ||
-    color === "fossil" ||
-    color === "attention" ||
-    color === "warn"
-  ) {
+  if (color === "yellow" || color === "orange" || color === "fossil" || color === "attention" || color === "warn") {
     return "warn";
   }
   if (color === "red" || color === "pink") {
@@ -683,8 +653,6 @@ export function createAppThemeForDensity(density: UiDensity): MantineThemeOverri
   return createAppTheme(getAppTokens(density), density);
 }
 
-export function createAppCssVariablesResolverForDensity(
-  density: UiDensity,
-): CSSVariablesResolver {
+export function createAppCssVariablesResolverForDensity(density: UiDensity): CSSVariablesResolver {
   return createAppCssVariablesResolver(getAppTokens(density));
 }

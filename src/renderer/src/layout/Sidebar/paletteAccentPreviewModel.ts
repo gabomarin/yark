@@ -15,29 +15,16 @@ import { hexToOklch, rgbToOklch } from "./palettePreviewModel";
 const ACCENT_STORAGE_KEY = "yark.appearance.palettePreviewAccent.v1";
 
 /** Candidate accents (current blue first). Any hex works through the picker. */
-export const ACCENT_SWATCHES = [
-  "#3b8cff",
-  "#5b7cfa",
-  "#7c5cff",
-  "#22b8cf",
-  "#2dd4bf",
-  "#f5a524",
-] as const;
+export const ACCENT_SWATCHES = ["#3b8cff", "#5b7cfa", "#7c5cff", "#22b8cf", "#2dd4bf", "#f5a524"] as const;
 
 /** Steps 1..12 lightness ladder for a dark accent scale; step 9 is the pick. */
-const ACCENT_LIGHTNESS_PROFILE = [
-  0.18, 0.24, 0.32, 0.4, 0.46, 0.52, 0.6, 0.68, 1, 1, 1, 1,
-] as const;
+const ACCENT_LIGHTNESS_PROFILE = [0.18, 0.24, 0.32, 0.4, 0.46, 0.52, 0.6, 0.68, 1, 1, 1, 1] as const;
 
 /** Chroma profile per step, relative to the picked colour's own chroma. */
-const ACCENT_CHROMA_PROFILE = [
-  0.14, 0.2, 0.36, 0.52, 0.66, 0.78, 0.88, 0.96, 1, 1, 0.86, 0.34,
-] as const;
+const ACCENT_CHROMA_PROFILE = [0.14, 0.2, 0.36, 0.52, 0.66, 0.78, 0.88, 0.96, 1, 1, 0.86, 0.34] as const;
 
 /** Radix-style alpha ladder for the accent ramp. */
-const ACCENT_ALPHA_PROFILE = [
-  0.06, 0.11, 0.2, 0.26, 0.32, 0.39, 0.47, 0.55, 0.63, 0.71, 0.85, 0.96,
-] as const;
+const ACCENT_ALPHA_PROFILE = [0.06, 0.11, 0.2, 0.26, 0.32, 0.39, 0.47, 0.55, 0.63, 0.71, 0.85, 0.96] as const;
 
 interface AccentPreview {
   /** 12 steps, 1..12. */
@@ -62,16 +49,13 @@ function buildAccentFromColor(hex: string): AccentPreview | null {
   const steps = ACCENT_LIGHTNESS_PROFILE.map((profileLightness, index) => {
     if (index === 8) return hex;
     const lightness =
-      index < 8
-        ? Math.max(0.05, baseLightness * profileLightness)
-        : Math.min(0.98, baseLightness + (index - 8) * 0.12);
+      index < 8 ? Math.max(0.05, baseLightness * profileLightness) : Math.min(0.98, baseLightness + (index - 8) * 0.12);
     const stepChroma = chroma * (ACCENT_CHROMA_PROFILE[index] as number);
     return `oklch(${lightness.toFixed(3)} ${stepChroma.toFixed(4)} ${hue})`;
   });
 
   const alphas = ACCENT_ALPHA_PROFILE.map(
-    (alpha) =>
-      `color-mix(in srgb, ${hex} ${Math.round(alpha * 100)}%, transparent)`,
+    (alpha) => `color-mix(in srgb, ${hex} ${Math.round(alpha * 100)}%, transparent)`,
   );
 
   return { steps, alphas };
@@ -108,8 +92,7 @@ function accentCssVariables(preview: AccentPreview, hex: string): Record<string,
   });
   variables["--ark-blue-indicator"] = hex;
   MANTINE_BLUE_ORDER.forEach((step, index) => {
-    variables[`--mantine-color-blue-${index}`] =
-      (preview.steps[step - 1] as string);
+    variables[`--mantine-color-blue-${index}`] = preview.steps[step - 1] as string;
   });
   const oklch = hexToOklch(hex);
   const hoverLightness = Math.min(0.98, (oklch?.lightness ?? 0.6) + 0.07);
@@ -120,9 +103,8 @@ function accentCssVariables(preview: AccentPreview, hex: string): Record<string,
     `oklch(${hoverLightness.toFixed(3)} ${hoverChroma.toFixed(4)} ${hoverHue})`;
   variables["--mantine-color-blue-light"] = `color-mix(in srgb, ${hex} 22%, transparent)`;
   variables["--mantine-color-blue-light-hover"] = `color-mix(in srgb, ${hex} 32%, transparent)`;
-  variables["--mantine-color-blue-light-color"] =
-    (preview.steps[10] as string);
-  variables["--mantine-color-blue-text"] = (preview.steps[10] as string);
+  variables["--mantine-color-blue-light-color"] = preview.steps[10] as string;
+  variables["--mantine-color-blue-text"] = preview.steps[10] as string;
   variables["--mantine-color-blue-contrast"] = "#ffffff";
   return variables;
 }
@@ -244,7 +226,12 @@ export function readContrastRows(): { rows: ContrastRow[]; tint: SurfaceTint } {
     { label: "Text / panel", ratio: round(ratio(text, panel)), min: 4.5 },
     { label: "Muted / panel", ratio: round(ratio(muted, panel)), min: 4.5 },
     { label: "Accent text / panel", ratio: round(ratio(accentText, panel)), min: 4.5 },
-    { label: "White / accent fill", ratio: round(ratio("rgb(255, 255, 255)", accent)), min: 3, knownGap: true },
+    {
+      label: "White / accent fill",
+      ratio: round(ratio("rgb(255, 255, 255)", accent)),
+      min: 3,
+      knownGap: true,
+    },
     { label: "Panel / chrome", ratio: round(ratio(panel, chrome)), min: 1.1, knownGap: true },
     { label: "Panel / canvas", ratio: round(ratio(panel, canvas)), min: 1.1, knownGap: true },
     { label: "Hairline / panel", ratio: round(ratio(border, panel)), min: 1.7, knownGap: true },

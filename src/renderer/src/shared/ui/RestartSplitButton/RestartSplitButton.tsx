@@ -33,8 +33,7 @@ interface Props {
 export function RestartSplitButton(props: Props): ReactElement {
   const size = props.size ?? "sm";
   const restartBusy = props.restartBusy === true;
-  const manualCountdown =
-    props.countdown?.kind === "manual" ? props.countdown : null;
+  const manualCountdown = props.countdown?.kind === "manual" ? props.countdown : null;
   const remaining = useCountdownRemaining(manualCountdown?.targetAtMs ?? null);
 
   if (manualCountdown !== null) {

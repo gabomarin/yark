@@ -2,11 +2,7 @@ import type { ReactElement } from "react";
 import { Button, Stack } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import { AppPageHeader } from "@ui/AppPageHeader/AppPageHeader";
-import type {
-  ClusterComplianceReport,
-  ServerProfile,
-  ServerRuntimeInfo,
-} from "@shared/types";
+import type { ClusterComplianceReport, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { useEffect, useMemo, useState } from "react";
 import {
   buildServerById,
@@ -46,37 +42,22 @@ export function ClustersPage(props: Props): ReactElement {
     () => props.servers.filter((server) => server.clusterId === null).length,
     [props.servers],
   );
-  const dirWithoutIdServers = useMemo(
-    () => listDirWithoutIdServers(props.servers),
-    [props.servers],
-  );
+  const dirWithoutIdServers = useMemo(() => listDirWithoutIdServers(props.servers), [props.servers]);
   const sortedReports = useMemo(() => sortClusterReports(props.reports), [props.reports]);
-  const { errorCount, warningOnlyCount } = useMemo(
-    () => summarizeClusterReports(sortedReports),
-    [sortedReports],
-  );
+  const { errorCount, warningOnlyCount } = useMemo(() => summarizeClusterReports(sortedReports), [sortedReports]);
 
   const activeClusterId = resolveActiveClusterId(sortedReports, selectedClusterId);
   const activeReport =
-    activeClusterId === null
-      ? null
-      : (sortedReports.find((report) => report.clusterId === activeClusterId) ?? null);
+    activeClusterId === null ? null : (sortedReports.find((report) => report.clusterId === activeClusterId) ?? null);
   const activeMembers = resolveMembers(activeReport, serverById);
 
   return (
-    <PageScaffold
-      title="Clusters"
-      fillViewport
-      edgeToEdge
-      showHeader={false}
-    >
+    <PageScaffold title="Clusters" fillViewport edgeToEdge showHeader={false}>
       <div className={classes.pageShell} data-clusters-page>
         <AppPageHeader
           title="Clusters"
           actions={
-            sortedReports.length > 0 ? (
-              <Button onClick={() => setCreateOpen(true)}>Create cluster</Button>
-            ) : undefined
+            sortedReports.length > 0 ? <Button onClick={() => setCreateOpen(true)}>Create cluster</Button> : undefined
           }
         />
 

@@ -19,8 +19,7 @@ export function ConfigurationEditorTextPanel(props: Props): ReactElement {
     key: INI_GUS_OVERRIDE_HINT_STORAGE_KEY,
     defaultValue: false,
   });
-  const fileLabel =
-    iniFile === "gameUserSettings" ? "GameUserSettings.ini" : "Game.ini";
+  const fileLabel = iniFile === "gameUserSettings" ? "GameUserSettings.ini" : "Game.ini";
 
   return (
     <Stack gap="sm" className={classes.textPanel}>
@@ -33,11 +32,9 @@ export function ConfigurationEditorTextPanel(props: Props): ReactElement {
           closeButtonLabel="Dismiss"
           onClose={() => setHintDismissed(true)}
         >
-          Session name, ports, and passwords come from the{" "}
-          <strong>Server</strong> tab and are rewritten on start. ASA ignores INI{" "}
-          <code>MaxPlayers</code> – set <strong>Max players</strong> there for{" "}
-          <code>-WinLiveMaxPlayers</code> (empty or <code>0</code> omits the flag;
-          ASA then defaults to 70).
+          Session name, ports, and passwords come from the <strong>Server</strong> tab and are rewritten on start. ASA
+          ignores INI <code>MaxPlayers</code> – set <strong>Max players</strong> there for{" "}
+          <code>-WinLiveMaxPlayers</code> (empty or <code>0</code> omits the flag; ASA then defaults to 70).
         </AppAlert>
       )}
       <Textarea
@@ -47,9 +44,7 @@ export function ConfigurationEditorTextPanel(props: Props): ReactElement {
         autosize={false}
         value={textForFile(payload, iniFile)}
         onChange={(event) => {
-          onPayloadChange(
-            withFileText(payload, iniFile, event.currentTarget.value),
-          );
+          onPayloadChange(withFileText(payload, iniFile, event.currentTarget.value));
         }}
       />
     </Stack>

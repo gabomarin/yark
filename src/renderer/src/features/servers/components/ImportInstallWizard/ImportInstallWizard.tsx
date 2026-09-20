@@ -3,10 +3,7 @@ import { useCallback, useMemo, useState } from "react";
 import { Button, Group, Stack, Stepper } from "@mantine/core";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
-import {
-  getServerFolderNameError,
-  isValidServerFolderName,
-} from "@shared/server/server-install-path";
+import { getServerFolderNameError, isValidServerFolderName } from "@shared/server/server-install-path";
 import { isOfficialMap, normalizeMapToken } from "@shared/asa/map-identity";
 import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
 import { hasMapTokenWpSuffix } from "@shared/asa/map-token-suggest";
@@ -59,15 +56,11 @@ export function ImportInstallWizard(props: Props): ReactElement {
       }),
     [props.extraClusterOptions, props.servers],
   );
-  const preferredCluster =
-    props.extraClusterOptions?.length === 1 ? props.extraClusterOptions[0] : undefined;
+  const preferredCluster = props.extraClusterOptions?.length === 1 ? props.extraClusterOptions[0] : undefined;
 
-  const handleModMetadataChange = useCallback(
-    (patch: Record<string, ModMetadata>) => {
-      setModMetadata((previous) => ({ ...previous, ...patch }));
-    },
-    [],
-  );
+  const handleModMetadataChange = useCallback((patch: Record<string, ModMetadata>) => {
+    setModMetadata((previous) => ({ ...previous, ...patch }));
+  }, []);
 
   // Parent remounts this wizard on each open (`key={importWizardKey}`) so form
   // state starts fresh without an adjust-on-prop-change close effect.
@@ -77,20 +70,13 @@ export function ImportInstallWizard(props: Props): ReactElement {
     setInstallDir(next.installDir);
     setProbe(next);
     setAllowIncompleteInstall(false);
-    setForm(
-      applyPreferredCluster(suggestionsToForm(next.suggestions), preferredCluster),
-    );
+    setForm(applyPreferredCluster(suggestionsToForm(next.suggestions), preferredCluster));
     setModMetadata({});
-    setModsOpen(
-      next.suggestions.mods.length > 0 &&
-        next.suggestions.mods.length < MODS_LIST_AUTO_COLLAPSE_AT,
-    );
+    setModsOpen(next.suggestions.mods.length > 0 && next.suggestions.mods.length < MODS_LIST_AUTO_COLLAPSE_AT);
   };
 
   const nameError =
-    form.name.trim().length > 0 && !isValidServerFolderName(form.name)
-      ? getServerFolderNameError(form.name)
-      : null;
+    form.name.trim().length > 0 && !isValidServerFolderName(form.name) ? getServerFolderNameError(form.name) : null;
 
   const canContinueStep1 =
     installDir.trim().length > 0 &&
@@ -212,10 +198,7 @@ export function ImportInstallWizard(props: Props): ReactElement {
     await runWithFinally(
       async () => {
         const result = await window.api.importExistingServer(inputOrError, {
-          allowIncompleteInstall:
-            probe.installation.health === "incomplete"
-              ? allowIncompleteInstall
-              : undefined,
+          allowIncompleteInstall: probe.installation.health === "incomplete" ? allowIncompleteInstall : undefined,
         });
         if (!result.ok) {
           setError(result.error ?? "Could not import install");
@@ -338,7 +321,6 @@ export function ImportInstallWizard(props: Props): ReactElement {
             onChange={setForm}
           />
         )}
-
       </Stack>
     </AppPanelModal>
   );

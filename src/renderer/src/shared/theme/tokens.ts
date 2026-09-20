@@ -131,10 +131,7 @@ function scalePx(value: number, factor: number): number {
   return Math.max(1, Math.round(value * factor));
 }
 
-function scaleRecord<T extends Record<string, number>>(
-  source: T,
-  factor: number,
-): { [K in keyof T]: number } {
+function scaleRecord<T extends Record<string, number>>(source: T, factor: number): { [K in keyof T]: number } {
   const out = {} as { [K in keyof T]: number };
   for (const key of Object.keys(source) as Array<keyof T>) {
     const value = source[key];
@@ -189,30 +186,8 @@ const sharedShadows = {
 export function createDangerRedPalette(
   bad: string,
   bright: string,
-): [
-  string,
-  string,
-  string,
-  string,
-  string,
-  string,
-  string,
-  string,
-  string,
-  string,
-] {
-  return [
-    "#fdecec",
-    "#f5c8c8",
-    "#eb9898",
-    bright,
-    "#c94444",
-    bad,
-    bright,
-    "#9e2a2a",
-    "#7a2020",
-    "#561616",
-  ];
+): [string, string, string, string, string, string, string, string, string, string] {
+  return ["#fdecec", "#f5c8c8", "#eb9898", bright, "#c94444", bad, bright, "#9e2a2a", "#7a2020", "#561616"];
 }
 
 export type AppTokens = {

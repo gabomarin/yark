@@ -25,12 +25,7 @@ export function DismissibleHint(props: Props): ReactElement | null {
   });
   if (dismissed) return null;
   return (
-    <div
-      className={classes.root}
-      data-tone={tone}
-      role="status"
-      aria-label={props.title}
-    >
+    <div className={classes.root} data-tone={tone} role="status" aria-label={props.title}>
       <div className={classes.body}>
         <Text size="sm" className={classes.title}>
           {props.title}
@@ -39,12 +34,7 @@ export function DismissibleHint(props: Props): ReactElement | null {
           {props.children}
         </Text>
       </div>
-      <CloseButton
-        className={classes.dismiss}
-        size="sm"
-        aria-label="Dismiss"
-        onClick={() => setDismissed(true)}
-      />
+      <CloseButton className={classes.dismiss} size="sm" aria-label="Dismiss" onClick={() => setDismissed(true)} />
     </div>
   );
 }

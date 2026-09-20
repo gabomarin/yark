@@ -5,9 +5,7 @@ import { MaintenancePlayerWarnings } from "../MaintenancePlayerWarnings/Maintena
 import classes from "../../MaintenancePanel.module.css";
 
 type PatchFn = (
-  partial: Partial<
-    Omit<MaintenancePolicyStatus, "serverId" | "updatedAt" | "schedulePaused">
-  >,
+  partial: Partial<Omit<MaintenancePolicyStatus, "serverId" | "updatedAt" | "schedulePaused">>,
 ) => Promise<boolean>;
 
 interface Props {
@@ -27,8 +25,7 @@ interface Props {
  */
 export function MaintenanceManualRestartSection(props: Props): ReactElement {
   const { policy } = props;
-  const restartPending =
-    props.manualRestartPending === true || policy.countdownKind === "manual";
+  const restartPending = props.manualRestartPending === true || policy.countdownKind === "manual";
   const controlsDisabled = props.busy || restartPending;
 
   return (
@@ -76,11 +73,9 @@ export function MaintenanceManualRestartSection(props: Props): ReactElement {
             aria-label="Enable manual restart warnings"
             onChange={(e) => {
               const on = e.currentTarget.checked;
-              void props
-                .patch({ manualRestartWarningsEnabled: on })
-                .then((ok) => {
-                  if (ok && on) props.onOpen();
-                });
+              void props.patch({ manualRestartWarningsEnabled: on }).then((ok) => {
+                if (ok && on) props.onOpen();
+              });
             }}
           />
         </Group>
@@ -90,22 +85,19 @@ export function MaintenanceManualRestartSection(props: Props): ReactElement {
           <Stack gap="sm">
             {restartPending && (
               <Text size="xs" c="attention">
-                Manual restart is queued. Finish or cancel it before changing
-                these warning settings.
+                Manual restart is queued. Finish or cancel it before changing these warning settings.
               </Text>
             )}
             {!policy.manualRestartWarningsEnabled && (
               <Text size="xs" c="dimmed">
-                Turn On to add “Restart with player warning” to the Restart button
-                on Overview and the workspace. Choose a short warning cadence below.
+                Turn On to add “Restart with player warning” to the Restart button on Overview and the workspace. Choose
+                a short warning cadence below.
               </Text>
             )}
             <MaintenancePlayerWarnings
               kind="manual"
               warnings={policy.manualRestartWarnings}
-              disabled={
-                controlsDisabled || !policy.manualRestartWarningsEnabled
-              }
+              disabled={controlsDisabled || !policy.manualRestartWarningsEnabled}
               onChange={(manualRestartWarnings) => {
                 void props.patch({ manualRestartWarnings });
               }}

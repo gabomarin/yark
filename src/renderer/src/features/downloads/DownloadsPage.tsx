@@ -49,10 +49,7 @@ export function DownloadsPage(props: Props): ReactElement {
     }
     return map;
   }, [props.servers]);
-  const activeServer =
-    props.status.serverId !== null
-      ? (serversById.get(props.status.serverId) ?? null)
-      : null;
+  const activeServer = props.status.serverId !== null ? (serversById.get(props.status.serverId) ?? null) : null;
   const rows = useMemo(
     () =>
       buildDownloadRows(props.status, {
@@ -61,9 +58,7 @@ export function DownloadsPage(props: Props): ReactElement {
       }),
     [activeServer, props.status, serversById],
   );
-  const [selectedId, setSelectedId] = useState<string | null>(() =>
-    defaultSelectedRowId(rows),
-  );
+  const [selectedId, setSelectedId] = useState<string | null>(() => defaultSelectedRowId(rows));
   const [splitSizes, setSplitSizes] = useLocalStorage<[number, number]>({
     key: DOWNLOADS_SPLIT_SIZES_STORAGE_KEY,
     defaultValue: DEFAULT_SPLIT_SIZES,
@@ -85,10 +80,7 @@ export function DownloadsPage(props: Props): ReactElement {
   const selected = findDownloadRow(rows, selectedId);
   const groups: DownloadRowKind[] = ["active", "interrupted", "paused", "queued", "cancelled", "attention"];
   const consoleBody = downloadConsoleBody(rows, props.console?.lines ?? []);
-  const statusLine = downloadStatusLine(
-    selected,
-    consoleBody === DOWNLOAD_CONSOLE_WAITING,
-  );
+  const statusLine = downloadStatusLine(selected, consoleBody === DOWNLOAD_CONSOLE_WAITING);
 
   const cancelRow = (row: DownloadRow) => {
     if (row.kind === "queued" && row.job !== null) {
@@ -118,12 +110,8 @@ export function DownloadsPage(props: Props): ReactElement {
         data-steamcmd-missing-banner
       >
         <Stack gap="xs">
-          Install SteamCMD in Settings before installs, updates, or verify can
-          run.
-          <Button
-            variant="default"
-            onClick={props.onOpenSettings}
-          >
+          Install SteamCMD in Settings before installs, updates, or verify can run.
+          <Button variant="default" onClick={props.onOpenSettings}>
             Install SteamCMD
           </Button>
         </Stack>
@@ -131,11 +119,7 @@ export function DownloadsPage(props: Props): ReactElement {
     ) : null;
 
   const queuePane = (
-    <section
-      ref={queueRef}
-      className={classes.queueSection}
-      aria-label="Download queue"
-    >
+    <section ref={queueRef} className={classes.queueSection} aria-label="Download queue">
       {rows.length === 0 ? (
         <EmptyState
           icon={<DownloadSimple size={28} weight="duotone" />}
@@ -160,13 +144,7 @@ export function DownloadsPage(props: Props): ReactElement {
           return (
             <Stack key={kind} gap="xs" className={classes.queueGroup} data-kind={kind} data-queue-group={kind}>
               <div className={classes.sectionLabel}>{sectionTitle(kind)}</div>
-              <div
-                className={
-                  kind === "queued" || kind === "cancelled"
-                    ? classes.queueRowList
-                    : classes.queueRowStack
-                }
-              >
+              <div className={kind === "queued" || kind === "cancelled" ? classes.queueRowList : classes.queueRowStack}>
                 {sectionRows.map((row) => (
                   <DownloadRowButton
                     key={row.id}
@@ -216,12 +194,7 @@ export function DownloadsPage(props: Props): ReactElement {
   );
 
   const logToggle = (
-    <Group
-      justify="space-between"
-      wrap="nowrap"
-      gap="sm"
-      className={classes.logDockBar}
-    >
+    <Group justify="space-between" wrap="nowrap" gap="sm" className={classes.logDockBar}>
       <Text size="sm" className={classes.logStatus} lineClamp={1} data-downloads-status>
         {statusLine}
       </Text>
@@ -238,12 +211,7 @@ export function DownloadsPage(props: Props): ReactElement {
   );
 
   return (
-    <PageScaffold
-      title="Downloads"
-      fillViewport
-      edgeToEdge
-      showHeader={false}
-    >
+    <PageScaffold title="Downloads" fillViewport edgeToEdge showHeader={false}>
       <div
         className={classes.downloadsLayout}
         data-downloads-page
@@ -251,18 +219,14 @@ export function DownloadsPage(props: Props): ReactElement {
       >
         <AppPageHeader title="Downloads" />
         {rows.length === 0 ? (
-          <div className={classes.upperPane}>
-            {queuePane}
-          </div>
+          <div className={classes.upperPane}>{queuePane}</div>
         ) : logExpanded ? (
           <div className={classes.splitHost}>
             <Splitter
               orientation="vertical"
               h="100%"
               sizes={splitSizes}
-              onSizeChange={(sizes) =>
-                setSplitSizes([Math.round(Number(sizes[0])), Math.round(Number(sizes[1]))])
-              }
+              onSizeChange={(sizes) => setSplitSizes([Math.round(Number(sizes[0])), Math.round(Number(sizes[1]))])}
             >
               <Splitter.Pane defaultSize={DEFAULT_SPLIT_SIZES[0]} min={30}>
                 <div className={`${classes.upperPane} ${classes.upperPaneInPane}`}>

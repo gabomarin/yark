@@ -32,8 +32,7 @@ export function SetupWizardFirstActionStep(props: Props): ReactElement {
               <Plus size={14} /> New server
             </Text>
             <Text size="xs" c="dimmed">
-              Create a server profile and its dedicated folder, then choose Install
-              files when you are ready.
+              Create a server profile and its dedicated folder, then choose Install files when you are ready.
             </Text>
           </Stack>
         </AppSurfaceCard>

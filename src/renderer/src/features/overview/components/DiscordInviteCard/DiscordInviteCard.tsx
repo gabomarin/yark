@@ -21,11 +21,7 @@ export function DiscordInviteCard(): ReactElement | null {
   });
   if (dismissed) return null;
   return (
-    <aside
-      className={classes.positioner}
-      aria-labelledby="discord-invite-title"
-      data-discord-invite-card
-    >
+    <aside className={classes.positioner} aria-labelledby="discord-invite-title" data-discord-invite-card>
       <AppSurfaceCard tone="cool" radius={0} className={classes.card} padding="sm">
         <div className={classes.layout}>
           <Group gap="sm" wrap="nowrap" align="center" className={classes.identity}>

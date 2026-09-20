@@ -2,19 +2,8 @@ import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 import { ArrowSquareOut } from "@phosphor-icons/react";
 import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
-import {
-  Accordion,
-  Button,
-  Group,
-  ScrollArea,
-  SegmentedControl,
-  Text,
-} from "@mantine/core";
-import {
-  getChangelogForVersion,
-  getRecentChangelog,
-  type ChangelogEntry,
-} from "@shared/settings/changelog";
+import { Accordion, Button, Group, ScrollArea, SegmentedControl, Text } from "@mantine/core";
+import { getChangelogForVersion, getRecentChangelog, type ChangelogEntry } from "@shared/settings/changelog";
 import {
   changelogNoteCount,
   changelogNoteCountLabel,
@@ -48,8 +37,7 @@ export function AppChangelogModal(props: Props): ReactElement {
   const current = getChangelogForVersion(props.appVersion, source);
   const recent = getRecentChangelog(undefined, source);
   const newestVersion = recent[0]?.version ?? null;
-  const headerDate =
-    current !== null ? formatChangelogDate(current.date) : null;
+  const headerDate = current !== null ? formatChangelogDate(current.date) : null;
 
   useEffect(() => {
     if (!props.opened) {
@@ -125,51 +113,51 @@ export function AppChangelogModal(props: Props): ReactElement {
         className={classes.scroll}
         classNames={{ viewport: classes.scrollViewport }}
       >
-            {tab === "current" ? (
-              current !== null ? (
-                <AppChangelogList entries={[current]} />
-              ) : (
-                <Text size="sm" className={classes.empty}>
-                  No curated notes for v{versionLabel} yet.
-                </Text>
-              )
-            ) : recent.length > 0 ? (
-              <Accordion
-                chevronPosition="right"
-                chevronSize={12}
-                transitionDuration={0}
-                value={openVersion}
-                onChange={setOpenVersion}
-                className={classes.accordion}
-                classNames={{
-                  item: classes.accordionItem,
-                  control: classes.accordionControl,
-                  panel: classes.accordionPanel,
-                }}
-              >
-                {recent.map((entry) => (
-                  <Accordion.Item key={entry.version} value={entry.version}>
-                    <Accordion.Control>
-                      <Group justify="space-between" gap="sm" wrap="nowrap">
-                        <Text size="sm" fw={openVersion === entry.version ? 600 : 500} span>
-                          v{entry.version}
-                        </Text>
-                        <Text size="xs" className={classes.accordionMeta} span>
-                          {`${formatChangelogDate(entry.date)} · ${changelogNoteCountLabel(changelogNoteCount(entry))}`}
-                        </Text>
-                      </Group>
-                    </Accordion.Control>
-                    <Accordion.Panel>
-                      <AppChangelogList entries={[entry]} />
-                    </Accordion.Panel>
-                  </Accordion.Item>
-                ))}
-              </Accordion>
-            ) : (
-              <Text size="sm" className={classes.empty}>
-                No curated release notes available.
-              </Text>
-            )}
+        {tab === "current" ? (
+          current !== null ? (
+            <AppChangelogList entries={[current]} />
+          ) : (
+            <Text size="sm" className={classes.empty}>
+              No curated notes for v{versionLabel} yet.
+            </Text>
+          )
+        ) : recent.length > 0 ? (
+          <Accordion
+            chevronPosition="right"
+            chevronSize={12}
+            transitionDuration={0}
+            value={openVersion}
+            onChange={setOpenVersion}
+            className={classes.accordion}
+            classNames={{
+              item: classes.accordionItem,
+              control: classes.accordionControl,
+              panel: classes.accordionPanel,
+            }}
+          >
+            {recent.map((entry) => (
+              <Accordion.Item key={entry.version} value={entry.version}>
+                <Accordion.Control>
+                  <Group justify="space-between" gap="sm" wrap="nowrap">
+                    <Text size="sm" fw={openVersion === entry.version ? 600 : 500} span>
+                      v{entry.version}
+                    </Text>
+                    <Text size="xs" className={classes.accordionMeta} span>
+                      {`${formatChangelogDate(entry.date)} · ${changelogNoteCountLabel(changelogNoteCount(entry))}`}
+                    </Text>
+                  </Group>
+                </Accordion.Control>
+                <Accordion.Panel>
+                  <AppChangelogList entries={[entry]} />
+                </Accordion.Panel>
+              </Accordion.Item>
+            ))}
+          </Accordion>
+        ) : (
+          <Text size="sm" className={classes.empty}>
+            No curated release notes available.
+          </Text>
+        )}
       </ScrollArea.Autosize>
     </AppPanelModal>
   );

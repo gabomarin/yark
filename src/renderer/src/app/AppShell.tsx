@@ -4,10 +4,7 @@ import type { AppUpdateStatus } from "@shared/settings/app-update";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { notifications } from "@mantine/notifications";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
-import {
-  yarkUpdateToastCopy,
-  yarkUpdateToastDedupeKey,
-} from "@ui/yarkUpdateOperatorToast";
+import { yarkUpdateToastCopy, yarkUpdateToastDedupeKey } from "@ui/yarkUpdateOperatorToast";
 import { EMPTY_WIPE_STALE_MESSAGE } from "@shared/types";
 import { AppProviders } from "@app/AppProviders";
 import { AppMainRouter } from "@app/AppMainRouter";
@@ -34,9 +31,7 @@ import {
 } from "@features/downloads/downloadsModel";
 import { AppChangelogModal } from "@features/settings/components/AppChangelogModal";
 import { SetupWizard } from "@features/setup-wizard/SetupWizard";
-import {
-  toSyntheticClusterOption,
-} from "@features/setup-wizard/setupWizardModel";
+import { toSyntheticClusterOption } from "@features/setup-wizard/setupWizardModel";
 import {
   readDefaultBaseFolderPref,
   writeDefaultBaseFolderPref,
@@ -118,13 +113,9 @@ export function AppShell({
     action();
   }, []);
   const [copyConfig, setCopyConfig] = useState<CopyConfigSession | null>(null);
-  const [openNativeTerminalOnStart, setOpenNativeTerminalOnStart] = useState(
-    initialOpenNativeConsole,
-  );
+  const [openNativeTerminalOnStart, setOpenNativeTerminalOnStart] = useState(initialOpenNativeConsole);
   const [uiDensity, setUiDensity] = useState<UiDensity>(initialUiDensity);
-  const [defaultBaseFolder, setDefaultBaseFolder] = useState<string | null>(
-    readDefaultBaseFolderPref,
-  );
+  const [defaultBaseFolder, setDefaultBaseFolder] = useState<string | null>(readDefaultBaseFolderPref);
   const [appUpdateStatus, setAppUpdateStatus] = useState<AppUpdateStatus | null>(null);
   const [focusYarkUpdates, setFocusYarkUpdates] = useState(false);
   const [focusSteamCmd, setFocusSteamCmd] = useState(false);
@@ -180,10 +171,7 @@ export function AppShell({
   }, []);
 
   const extraClusterOptions = useMemo(
-    () =>
-      pendingSetupCluster === null
-        ? undefined
-        : [toSyntheticClusterOption(pendingSetupCluster)],
+    () => (pendingSetupCluster === null ? undefined : [toSyntheticClusterOption(pendingSetupCluster)]),
     [pendingSetupCluster],
   );
 
@@ -196,24 +184,17 @@ export function AppShell({
     }
     if (active.length === 1) {
       const progress = active[0]!;
-      const name =
-        servers.find((server) => server.id === progress.serverId)?.name ??
-        "Server";
+      const name = servers.find((server) => server.id === progress.serverId)?.name ?? "Server";
       return {
         title: "Stopping server",
         message: `${name}: ${progress.label.trim() || "Stopping…"}`,
         percent: progress.percent,
       };
     }
-    const percentValues = active
-      .map((progress) => progress.percent)
-      .filter((value): value is number => value != null);
+    const percentValues = active.map((progress) => progress.percent).filter((value): value is number => value != null);
     const percent =
       percentValues.length > 0
-        ? Math.round(
-            percentValues.reduce((sum, value) => sum + value, 0) /
-              percentValues.length,
-          )
+        ? Math.round(percentValues.reduce((sum, value) => sum + value, 0) / percentValues.length)
         : null;
     return {
       title: "Stopping servers",
@@ -239,12 +220,12 @@ export function AppShell({
   }, []);
 
   const yarkUpdateAvailableVersion =
-    appUpdateStatus !== null
-    && (appUpdateStatus.phase === "available"
-      || appUpdateStatus.phase === "downloading"
-      || appUpdateStatus.phase === "ready")
-    && appUpdateStatus.availableVersion !== null
-    && appUpdateStatus.availableVersion.length > 0
+    appUpdateStatus !== null &&
+    (appUpdateStatus.phase === "available" ||
+      appUpdateStatus.phase === "downloading" ||
+      appUpdateStatus.phase === "ready") &&
+    appUpdateStatus.availableVersion !== null &&
+    appUpdateStatus.availableVersion.length > 0
       ? appUpdateStatus.availableVersion
       : null;
 
@@ -264,21 +245,15 @@ export function AppShell({
     });
   }, [runWithOverlayLeaveGuard]);
 
-  const {
-    runAction,
-    runPauseSteamCmd,
-    startSteamFilesJob,
-    pickSteamCmdPath,
-    openSteamCmdCache,
-    clearSteamCmdCache,
-  } = useAppSteamCmdActions({
-    servers,
-    steamCmdStatus,
-    steamCmdBusy,
-    refresh,
-    setOverlay,
-    setRoute,
-  });
+  const { runAction, runPauseSteamCmd, startSteamFilesJob, pickSteamCmdPath, openSteamCmdCache, clearSteamCmdCache } =
+    useAppSteamCmdActions({
+      servers,
+      steamCmdStatus,
+      steamCmdBusy,
+      refresh,
+      setOverlay,
+      setRoute,
+    });
   const {
     startBusyByServerId,
     startServer,
@@ -352,10 +327,7 @@ export function AppShell({
     [downloadRows, steamCmdStatus],
   );
   const downloadCount = downloadsBadgeCount(downloadRows);
-  const filesQueueByServerId = useMemo(
-    () => filesQueueStateByServerId(steamCmdStatus?.criticalJobs),
-    [steamCmdStatus],
-  );
+  const filesQueueByServerId = useMemo(() => filesQueueStateByServerId(steamCmdStatus?.criticalJobs), [steamCmdStatus]);
   const steamCmdPausedByServerId = useMemo(
     () => steamCmdCardJobsByKind(filesQueueByServerId, "paused"),
     [filesQueueByServerId],
@@ -364,8 +336,7 @@ export function AppShell({
     () => steamCmdCardJobsByKind(filesQueueByServerId, "queued"),
     [filesQueueByServerId],
   );
-  const showDownloadsTeaserFooter =
-    route !== "downloads" && shouldShowDownloadsChrome(steamCmdStatus);
+  const showDownloadsTeaserFooter = route !== "downloads" && shouldShowDownloadsChrome(steamCmdStatus);
 
   const confirmDeleteServer = useCallback((id: string) => {
     setDeleteServerId(id);
@@ -387,12 +358,7 @@ export function AppShell({
     if (!showDownloadsTeaserFooter) {
       return null;
     }
-    return (
-      <DownloadsTeaserFooter
-        model={downloadTeaser}
-        onOpenDownloads={() => navigate("downloads")}
-      />
-    );
+    return <DownloadsTeaserFooter model={downloadTeaser} onOpenDownloads={() => navigate("downloads")} />;
   }, [downloadTeaser, navigate, showDownloadsTeaserFooter]);
 
   const openServerFromSpotlight = useCallback(
@@ -406,8 +372,7 @@ export function AppShell({
   );
 
   // Feed Spotlight "Recent" from normal workspace opens (not only palette picks).
-  const workspaceServerId =
-    overlay?.kind === "workspace" ? overlay.serverId : null;
+  const workspaceServerId = overlay?.kind === "workspace" ? overlay.serverId : null;
   useEffect(() => {
     if (workspaceServerId === null) {
       return;
@@ -415,12 +380,9 @@ export function AppShell({
     pushSpotlightRecent({ kind: "server", serverId: workspaceServerId });
   }, [workspaceServerId]);
 
-  const registerOverlayLeaveGuard = useCallback(
-    (guard: ((action: () => void) => void) | null) => {
-      overlayLeaveGuardRef.current = guard;
-    },
-    [],
-  );
+  const registerOverlayLeaveGuard = useCallback((guard: ((action: () => void) => void) | null) => {
+    overlayLeaveGuardRef.current = guard;
+  }, []);
 
   return (
     <AppProviders density={uiDensity}>
@@ -452,9 +414,7 @@ export function AppShell({
         onInstallSteamCmd={() => void runAction(() => window.api.installSteamCmd())}
         onDefaultBaseFolderChange={setDefaultBaseFolder}
         onUiDensityChange={(density) => void handleUiDensityChange(density)}
-        onOpenNativeTerminalOnStartChange={(enabled) =>
-          void handleOpenNativeConsoleChange(enabled)
-        }
+        onOpenNativeTerminalOnStartChange={(enabled) => void handleOpenNativeConsoleChange(enabled)}
         onSkip={async () => {
           await finishSetupWizard("skipped", null);
           landSettingsOnGeneral();
@@ -588,29 +548,14 @@ export function AppShell({
       />
       <CloneServerDialog
         opened={overlay?.kind === "clone"}
-        sourceServer={
-          overlay?.kind === "clone"
-            ? servers.find((s) => s.id === overlay.sourceServerId) ?? null
-            : null
-        }
+        sourceServer={overlay?.kind === "clone" ? (servers.find((s) => s.id === overlay.sourceServerId) ?? null) : null}
         fleetServers={servers}
-        sourceBusy={
-          overlay?.kind === "clone"
-            ? statuses.get(overlay.sourceServerId)?.processLive === true
-            : false
-        }
-        sourceHealth={
-          overlay?.kind === "clone"
-            ? (installationInfo.get(overlay.sourceServerId)?.health ?? null)
-            : null
-        }
+        sourceBusy={overlay?.kind === "clone" ? statuses.get(overlay.sourceServerId)?.processLive === true : false}
+        sourceHealth={overlay?.kind === "clone" ? (installationInfo.get(overlay.sourceServerId)?.health ?? null) : null}
         onClose={() => setOverlay(null)}
         onClone={async (params) => {
           const ok = await runAction(() =>
-            window.api.cloneServerWithParams(
-              overlay?.kind === "clone" ? overlay.sourceServerId : "",
-              params,
-            ),
+            window.api.cloneServerWithParams(overlay?.kind === "clone" ? overlay.sourceServerId : "", params),
           );
           if (ok) setOverviewSearch("");
           return ok;
@@ -621,20 +566,12 @@ export function AppShell({
         opened={deleteServerId !== null}
         serverId={deleteServerId ?? ""}
         serverName={
-          deleteServerId !== null
-            ? (servers.find((s) => s.id === deleteServerId)?.name ?? deleteServerId)
-            : ""
+          deleteServerId !== null ? (servers.find((s) => s.id === deleteServerId)?.name ?? deleteServerId) : ""
         }
         installDir={
-          deleteServerId !== null
-            ? (servers.find((s) => s.id === deleteServerId)?.installDir ?? "(unknown path)")
-            : ""
+          deleteServerId !== null ? (servers.find((s) => s.id === deleteServerId)?.installDir ?? "(unknown path)") : ""
         }
-        installHealth={
-          deleteServerId !== null
-            ? (installationInfo.get(deleteServerId)?.health ?? null)
-            : null
-        }
+        installHealth={deleteServerId !== null ? (installationInfo.get(deleteServerId)?.health ?? null) : null}
         onClose={() => setDeleteServerId(null)}
         onConfirm={async (options) => {
           if (deleteServerId === null) return { ok: false };

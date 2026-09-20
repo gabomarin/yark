@@ -1,13 +1,6 @@
 import type { ReactElement } from "react";
 import { useCallback, useEffect, useState } from "react";
-import {
-  Button,
-  Checkbox,
-  NumberInput,
-  SimpleGrid,
-  Stack,
-  TextInput,
-} from "@mantine/core";
+import { Button, Checkbox, NumberInput, SimpleGrid, Stack, TextInput } from "@mantine/core";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import type { CloneInstallProgress, InstallationHealthStatus, ServerProfile } from "@shared/types";
@@ -19,16 +12,8 @@ import {
 import { PathField } from "@ui/PathField/PathField";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { CloneCopyProgress } from "./CloneCopyProgress";
-import {
-  cloneCopyCheckboxDescription,
-  cloneCopyWarning,
-  isCloneCopyUnavailable,
-} from "./cloneCopyAvailability";
-import {
-  cloneDialogFormState,
-  isValidClonePort,
-  type CloneFormState,
-} from "./cloneServerDialogModel";
+import { cloneCopyCheckboxDescription, cloneCopyWarning, isCloneCopyUnavailable } from "./cloneCopyAvailability";
+import { cloneDialogFormState, isValidClonePort, type CloneFormState } from "./cloneServerDialogModel";
 
 interface Props {
   opened: boolean;
@@ -56,9 +41,7 @@ interface CloneParams {
 
 export function CloneServerDialog(props: Props): ReactElement {
   const fleet = props.fleetServers ?? [];
-  const [state, setState] = useState<CloneFormState>(() =>
-    cloneDialogFormState(props.sourceServer, fleet),
-  );
+  const [state, setState] = useState<CloneFormState>(() => cloneDialogFormState(props.sourceServer, fleet));
   const [loading, setLoading] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [progress, setProgress] = useState<CloneInstallProgress | null>(null);
@@ -85,14 +68,10 @@ export function CloneServerDialog(props: Props): ReactElement {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- progress listener uses sourceServer id only; opened covers lifecycle
   }, [props.opened, props.sourceServer?.id]);
 
-  const nameError = !isValidServerFolderName(state.name.trim())
-    ? getServerFolderNameError(state.name.trim())
-    : null;
+  const nameError = !isValidServerFolderName(state.name.trim()) ? getServerFolderNameError(state.name.trim()) : null;
 
   const portsValid =
-    isValidClonePort(state.gamePort) &&
-    isValidClonePort(state.queryPort) &&
-    isValidClonePort(state.rconPort);
+    isValidClonePort(state.gamePort) && isValidClonePort(state.queryPort) && isValidClonePort(state.rconPort);
 
   const copyUnavailable = isCloneCopyUnavailable(props.sourceHealth);
   const wantsCopy = state.copyInstallFolder && !copyUnavailable;
@@ -189,18 +168,13 @@ export function CloneServerDialog(props: Props): ReactElement {
     >
       <Stack gap="md">
         {copying ? (
-          <CloneCopyProgress
-            progress={progress}
-            onCancel={() => void handleCancelCopy()}
-            cancelling={cancelling}
-          />
+          <CloneCopyProgress progress={progress} onCancel={() => void handleCancelCopy()} cancelling={cancelling} />
         ) : (
           <>
             {props.sourceServer && (
               <AppAlert color="blue" variant="light">
-                Cloning from <strong>{props.sourceServer.name}</strong>.
-                Game.ini and GameUserSettings.ini come with the clone; ports and
-                session name on this form replace the source values.
+                Cloning from <strong>{props.sourceServer.name}</strong>. Game.ini and GameUserSettings.ini come with the
+                clone; ports and session name on this form replace the source values.
               </AppAlert>
             )}
 
@@ -214,9 +188,7 @@ export function CloneServerDialog(props: Props): ReactElement {
                   setState((previous) => {
                     const source = props.sourceServer;
                     const currentSuggestion =
-                      source === null
-                        ? null
-                        : suggestCloneInstallDir(source.installDir, previous.name);
+                      source === null ? null : suggestCloneInstallDir(source.installDir, previous.name);
                     return {
                       ...previous,
                       name,
@@ -246,9 +218,7 @@ export function CloneServerDialog(props: Props): ReactElement {
                 <NumberInput
                   label="Game port"
                   value={Number(state.gamePort) || ""}
-                  onChange={(val) =>
-                    setState((prev) => ({ ...prev, gamePort: String(val) }))
-                  }
+                  onChange={(val) => setState((prev) => ({ ...prev, gamePort: String(val) }))}
                   min={1024}
                   max={65535}
                   required
@@ -256,9 +226,7 @@ export function CloneServerDialog(props: Props): ReactElement {
                 <NumberInput
                   label="Query port"
                   value={Number(state.queryPort) || ""}
-                  onChange={(val) =>
-                    setState((prev) => ({ ...prev, queryPort: String(val) }))
-                  }
+                  onChange={(val) => setState((prev) => ({ ...prev, queryPort: String(val) }))}
                   min={1024}
                   max={65535}
                   required
@@ -266,9 +234,7 @@ export function CloneServerDialog(props: Props): ReactElement {
                 <NumberInput
                   label="RCON port"
                   value={Number(state.rconPort) || ""}
-                  onChange={(val) =>
-                    setState((prev) => ({ ...prev, rconPort: String(val) }))
-                  }
+                  onChange={(val) => setState((prev) => ({ ...prev, rconPort: String(val) }))}
                   min={1024}
                   max={65535}
                   required
@@ -299,8 +265,8 @@ export function CloneServerDialog(props: Props): ReactElement {
 
               {copyBlocked && props.sourceServer && (
                 <AppAlert color="attention" variant="light">
-                  Stop <strong>{props.sourceServer.name}</strong> before copying
-                  the entire folder. You can still clone the profile only.
+                  Stop <strong>{props.sourceServer.name}</strong> before copying the entire folder. You can still clone
+                  the profile only.
                 </AppAlert>
               )}
               {copyWarn !== null && (

@@ -11,25 +11,21 @@ export function ModIdentityCell(props: { row: ModRow }): ReactElement {
     <Group wrap="nowrap" gap="sm" miw={0} className={classes.identityGroup}>
       <ModThumbnail src={row.thumbnailUrl} />
       <div className={classes.identity}>
-        <Text fw={600} size="sm" lineClamp={1}>{row.name}</Text>
-        <Text size="xs" c="dimmed" lineClamp={1}>{row.author}</Text>
+        <Text fw={600} size="sm" lineClamp={1}>
+          {row.name}
+        </Text>
+        <Text size="xs" c="dimmed" lineClamp={1}>
+          {row.author}
+        </Text>
         {category.label !== null && (
-          <CategoryBadges
-            label={category.label}
-            extraLabels={category.extraLabels}
-            isMap={category.isMap}
-          />
+          <CategoryBadges label={category.label} extraLabels={category.extraLabels} isMap={category.isMap} />
         )}
       </div>
     </Group>
   );
 }
 
-function CategoryBadges(props: {
-  label: string;
-  extraLabels: string[];
-  isMap: boolean;
-}): ReactElement {
+function CategoryBadges(props: { label: string; extraLabels: string[]; isMap: boolean }): ReactElement {
   const extras = props.extraLabels.join(", ");
   const badges = (
     <div className={classes.categoryRow}>
@@ -42,11 +38,7 @@ function CategoryBadges(props: {
         {props.label}
       </Badge>
       {props.extraLabels.length > 0 && (
-        <Badge
-          variant="light"
-          color="gray"
-          className={classes.categoryExtra}
-        >
+        <Badge variant="light" color="gray" className={classes.categoryExtra}>
           +{props.extraLabels.length}
         </Badge>
       )}

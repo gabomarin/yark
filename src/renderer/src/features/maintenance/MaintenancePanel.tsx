@@ -1,10 +1,6 @@
 import { Button, Group, Stack, Text } from "@mantine/core";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
-import type {
-  ServerInstallationInfo,
-  ServerProfile,
-  ServerRuntimeInfo,
-} from "@shared/types";
+import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import type { ReactElement } from "react";
 import {
   MaintenanceRestartSection,
@@ -14,10 +10,7 @@ import { MaintenanceManualRestartSection } from "./components/MaintenanceManualR
 import { MaintenanceUpNext } from "./components/MaintenanceUpNext/MaintenanceUpNext";
 import { CrashRecoverySection } from "./components/CrashRecoverySection/CrashRecoverySection";
 import { useMaintenancePanel } from "./hooks/useMaintenancePanel";
-import {
-  MAINTENANCE_RUN_RESTART_NOW_HINT,
-  maintenanceRunRestartNowGate,
-} from "./model/maintenancePanelModel";
+import { MAINTENANCE_RUN_RESTART_NOW_HINT, maintenanceRunRestartNowGate } from "./model/maintenancePanelModel";
 import classes from "./MaintenancePanel.module.css";
 
 interface Props {
@@ -56,22 +49,12 @@ export function MaintenancePanel(props: Props): ReactElement {
       )}
 
       {policy?.schedulePaused === true && (
-        <AppAlert
-          className={classes.alert}
-          color="red"
-          title="Paused after repeated failures"
-        >
+        <AppAlert className={classes.alert} color="red" title="Paused after repeated failures">
           <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
             <Text size="sm" c="dimmed">
-              Automatic runs are paused for this YARK session. Policy stays
-              enabled — resume when ready.
+              Automatic runs are paused for this YARK session. Policy stays enabled — resume when ready.
             </Text>
-            <Button
-              size="xs"
-              variant="default"
-              loading={panel.busy}
-              onClick={() => void panel.resumeSchedules()}
-            >
+            <Button size="xs" variant="default" loading={panel.busy} onClick={() => void panel.resumeSchedules()}>
               Resume schedules
             </Button>
           </Group>
@@ -83,11 +66,7 @@ export function MaintenancePanel(props: Props): ReactElement {
           policy={policy}
           busy={panel.busy}
           runRestartNowDisabled={!runRestartGate.allowed}
-          runRestartNowTooltip={
-            runRestartGate.allowed
-              ? MAINTENANCE_RUN_RESTART_NOW_HINT
-              : runRestartGate.reason
-          }
+          runRestartNowTooltip={runRestartGate.allowed ? MAINTENANCE_RUN_RESTART_NOW_HINT : runRestartGate.reason}
           onRunRestartNow={panel.runRestartNow}
           onRunUpdateNow={panel.runUpdateNow}
           onCancelUpcoming={() => void panel.cancelUpcoming()}
@@ -118,9 +97,7 @@ export function MaintenancePanel(props: Props): ReactElement {
             policy={policy}
             busy={panel.busy}
             open={panel.manualOpen}
-            manualRestartPending={
-              props.runtime?.maintenance?.countdown?.kind === "manual"
-            }
+            manualRestartPending={props.runtime?.maintenance?.countdown?.kind === "manual"}
             onToggleOpen={() => panel.setManualOpen((v) => !v)}
             onOpen={() => panel.setManualOpen(true)}
             patch={panel.patch}

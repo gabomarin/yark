@@ -21,8 +21,7 @@ interface Props {
 }
 
 export function LogRetentionCleanupModal(props: Props): ReactElement {
-  const canRemove =
-    props.preview !== null && props.preview.items.length > 0;
+  const canRemove = props.preview !== null && props.preview.items.length > 0;
 
   return (
     <AppPanelModal
@@ -49,8 +48,8 @@ export function LogRetentionCleanupModal(props: Props): ReactElement {
     >
       <Stack gap="md">
         <Text size="sm" c="dimmed">
-          Finds outdated YARK events and update logs based on your retention
-          limits. ASA server console logs are not touched.
+          Finds outdated YARK events and update logs based on your retention limits. ASA server console logs are not
+          touched.
         </Text>
 
         {props.preview !== null && (
@@ -64,16 +63,13 @@ export function LogRetentionCleanupModal(props: Props): ReactElement {
                 <Text size="sm" fw={600}>
                   Will remove {props.preview.items.length} item
                   {props.preview.items.length === 1 ? "" : "s"}
-                  {props.preview.totalBytes > 0
-                    ? ` · ${formatBytes(props.preview.totalBytes)}`
-                    : ""}
+                  {props.preview.totalBytes > 0 ? ` · ${formatBytes(props.preview.totalBytes)}` : ""}
                 </Text>
                 {props.preview.byCategory
                   .filter((row) => row.count > 0)
                   .map((row) => (
                     <Text key={row.category} size="xs" c="dimmed">
-                      {row.category === "events" ? "Events" : "Update logs"}:{" "}
-                      {row.count}
+                      {row.category === "events" ? "Events" : "Update logs"}: {row.count}
                       {row.bytes > 0 ? ` · ${formatBytes(row.bytes)}` : ""}
                     </Text>
                   ))}

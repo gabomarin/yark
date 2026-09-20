@@ -1,11 +1,6 @@
 import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
-import {
-  ArrowSquareOut,
-  ArrowClockwise,
-  CloudArrowDown,
-  Newspaper,
-} from "@phosphor-icons/react";
+import { ArrowSquareOut, ArrowClockwise, CloudArrowDown, Newspaper } from "@phosphor-icons/react";
 import { Button, Group, Progress, Text, Title } from "@mantine/core";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import type { AppUpdateStatus } from "@shared/settings/app-update";
@@ -31,9 +26,7 @@ function statusLabel(status: AppUpdateStatus): string {
         ? `Update available · v${status.availableVersion}`
         : "Update available";
     case "downloading":
-      return status.percent !== null
-        ? `Downloading… ${status.percent}%`
-        : "Downloading…";
+      return status.percent !== null ? `Downloading… ${status.percent}%` : "Downloading…";
     case "ready":
       return status.availableVersion !== null && status.availableVersion.length > 0
         ? `Ready to install · v${status.availableVersion}`
@@ -46,16 +39,12 @@ function statusLabel(status: AppUpdateStatus): string {
 }
 
 function actionFailureMessage(cause: unknown, fallback: string): string {
-  return cause instanceof Error && cause.message.trim().length > 0
-    ? cause.message
-    : fallback;
+  return cause instanceof Error && cause.message.trim().length > 0 ? cause.message : fallback;
 }
 
 export function SettingsYarkUpdateSection(props: Props): ReactElement {
   const { appVersion, focusSection, onFocused } = props;
-  const [status, setStatus] = useState<AppUpdateStatus>(() =>
-    createIdleAppUpdateStatus(appVersion, true),
-  );
+  const [status, setStatus] = useState<AppUpdateStatus>(() => createIdleAppUpdateStatus(appVersion, true));
   const [actionBusy, setActionBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [changelogOpen, setChangelogOpen] = useState(false);
@@ -118,10 +107,7 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
           }
           setStatus(result.data);
         } catch (cause) {
-          const message = actionFailureMessage(
-            cause,
-            "Could not check for YARK updates",
-          );
+          const message = actionFailureMessage(cause, "Could not check for YARK updates");
           setActionError(message);
           setStatus((prev) => {
             if (prev.phase === "downloading" || prev.phase === "ready") {
@@ -155,9 +141,7 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
           }
           setStatus(result.data);
         } catch (cause) {
-          setActionError(
-            actionFailureMessage(cause, "Could not download the YARK update"),
-          );
+          setActionError(actionFailureMessage(cause, "Could not download the YARK update"));
         }
       },
       () => {
@@ -177,9 +161,7 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
             setActionError(result.error ?? "Could not install the YARK update");
           }
         } catch (cause) {
-          setActionError(
-            actionFailureMessage(cause, "Could not install the YARK update"),
-          );
+          setActionError(actionFailureMessage(cause, "Could not install the YARK update"));
         }
       },
       () => {
@@ -197,23 +179,14 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
   };
 
   const checking = status.phase === "checking" || actionBusy;
-  const showDownload =
-    status.isPackaged
-    && (status.phase === "available" || status.phase === "downloading");
+  const showDownload = status.isPackaged && (status.phase === "available" || status.phase === "downloading");
   const canDownload = status.phase === "available" && !actionBusy;
   const canInstall =
-    status.isPackaged
-    && status.phase === "ready"
-    && status.installBlockedReason === null
-    && !actionBusy;
+    status.isPackaged && status.phase === "ready" && status.installBlockedReason === null && !actionBusy;
   const showProgress = status.phase === "downloading" && status.percent !== null;
 
   return (
-    <section
-      className={classes.section}
-      aria-labelledby="settings-yark-updates"
-      data-settings-yark-updates
-    >
+    <section className={classes.section} aria-labelledby="settings-yark-updates" data-settings-yark-updates>
       <Group justify="space-between" align="center" gap="sm" wrap="wrap">
         <Group gap="xs" align="baseline" wrap="wrap" className={classes.settingCopy}>
           <Title order={3} size="h4" id="settings-yark-updates">
@@ -276,20 +249,15 @@ export function SettingsYarkUpdateSection(props: Props): ReactElement {
         </Group>
       </Group>
 
-      {showProgress && (
-        <Progress value={status.percent ?? 0} size="sm" aria-label="Download progress" />
-      )}
+      {showProgress && <Progress value={status.percent ?? 0} size="sm" aria-label="Download progress" />}
 
-      {status.phase === "ready"
-        && status.installBlockedReason !== null
-        && status.installBlockedMessage !== null && (
+      {status.phase === "ready" && status.installBlockedReason !== null && status.installBlockedMessage !== null && (
         <Text size="xs" c="attention" data-yark-update-blocked>
           {status.installBlockedMessage}
         </Text>
       )}
 
-      {(actionError !== null
-        || (status.phase === "error" && status.error !== null)) && (
+      {(actionError !== null || (status.phase === "error" && status.error !== null)) && (
         <Text size="xs" c="red" data-yark-update-error>
           {actionError ?? status.error}
         </Text>

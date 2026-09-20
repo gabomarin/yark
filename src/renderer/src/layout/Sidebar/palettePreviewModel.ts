@@ -54,14 +54,10 @@ export interface PalettePreview {
  * The app maps chrome = step 2, panel = step 3, control = step 5, control hover
  * = step 6, borders = steps 7 / 9, text = step 11.
  */
-const NEUTRAL_LIGHTNESS = [
-  0.17, 0.21, 0.26, 0.3, 0.34, 0.38, 0.45, 0.57, 0.63, 0.68, 0.8, 0.95,
-] as const;
+const NEUTRAL_LIGHTNESS = [0.17, 0.21, 0.26, 0.3, 0.34, 0.38, 0.45, 0.57, 0.63, 0.68, 0.8, 0.95] as const;
 
 /** Chroma per step: enough to carry the picked hue, never enough to read as a colour. */
-const NEUTRAL_CHROMA = [
-  0.004, 0.006, 0.009, 0.011, 0.013, 0.014, 0.016, 0.018, 0.018, 0.017, 0.013, 0.006,
-] as const;
+const NEUTRAL_CHROMA = [0.004, 0.006, 0.009, 0.011, 0.013, 0.014, 0.016, 0.018, 0.018, 0.017, 0.013, 0.006] as const;
 
 /**
  * The chroma ladder as a 0..1 profile (peak at the control/border steps). The
@@ -69,33 +65,17 @@ const NEUTRAL_CHROMA = [
  * puts the picked chroma on the mid steps instead of stopping at the neutral
  * ladder's ~0.018 ceiling.
  */
-const CHROMA_PROFILE: readonly number[] = NEUTRAL_CHROMA.map(
-  (value) => value / Math.max(...NEUTRAL_CHROMA),
-);
+const CHROMA_PROFILE: readonly number[] = NEUTRAL_CHROMA.map((value) => value / Math.max(...NEUTRAL_CHROMA));
 
 /** Quick swatches for the picker; any other colour works too. */
-export const PALETTE_SWATCHES = [
-  "#0c1427",
-  "#101113",
-  "#121113",
-  "#101211",
-  "#111110",
-  "#111111",
-] as const;
+export const PALETTE_SWATCHES = ["#0c1427", "#101113", "#121113", "#101211", "#111110", "#111111"] as const;
 
 /**
  * Plate hues to try: only hue and chroma are read (the ladder owns lightness), so these
  * are deliberately unremarkable colours that carry a direction - stone, moss, teal,
  * violet, rose, amber.
  */
-export const PLATE_SWATCHES = [
-  "#8f7f63",
-  "#6f8a6a",
-  "#5f8a93",
-  "#8578b0",
-  "#9c6f7d",
-  "#a3814f",
-] as const;
+export const PLATE_SWATCHES = ["#8f7f63", "#6f8a6a", "#5f8a93", "#8578b0", "#9c6f7d", "#a3814f"] as const;
 
 function srgbChannelToLinear(value: number): number {
   const channel = value / 255;
@@ -110,9 +90,7 @@ function parseHex(hex: string): [number, number, number] | null {
 }
 
 /** sRGB hex → OKLCH. Returns null for anything that is not a 6-digit hex. */
-export function hexToOklch(
-  hex: string,
-): { lightness: number; chroma: number; hue: number } | null {
+export function hexToOklch(hex: string): { lightness: number; chroma: number; hue: number } | null {
   const rgb = parseHex(hex);
   if (rgb === null) return null;
   const [r, g, b] = rgb.map(srgbChannelToLinear) as [number, number, number];
@@ -142,8 +120,7 @@ function toScale12(values: readonly string[]): RadixDarkScale {
  * muted copy stay readable at any darkness.
  */
 function lightnessForStep(index: number, darkness: number): number {
-  const shift =
-    (DEFAULT_PALETTE_DARKNESS - darkness) * 2 * DARKNESS_SWING;
+  const shift = (DEFAULT_PALETTE_DARKNESS - darkness) * 2 * DARKNESS_SWING;
   const taper = 1 - index / (NEUTRAL_LIGHTNESS.length - 1);
   const base = NEUTRAL_LIGHTNESS[index] as number;
   return Math.min(0.99, Math.max(0.05, base + shift * taper));
@@ -173,11 +150,9 @@ export function buildPaletteFromColor(
   const gray = toScale12(
     NEUTRAL_LIGHTNESS.map(
       (_unused, index) =>
-        `oklch(${lightnessForStep(index, darkness).toFixed(3)} ${chromaForStep(
-          index,
-          pickedChroma,
-          intensity,
-        ).toFixed(4)} ${hue})`,
+        `oklch(${lightnessForStep(index, darkness).toFixed(3)} ${chromaForStep(index, pickedChroma, intensity).toFixed(
+          4,
+        )} ${hue})`,
     ),
   );
   return {
@@ -318,9 +293,7 @@ export function applyShellArt(option: ShellArtOption): void {
 
 export function readStoredShellArt(): ShellArtOption {
   const stored = window.localStorage.getItem(ART_STORAGE_KEY);
-  return stored !== null && SHELL_ART_VALUES.includes(stored)
-    ? (stored as ShellArtOption)
-    : "grain";
+  return stored !== null && SHELL_ART_VALUES.includes(stored) ? (stored as ShellArtOption) : "grain";
 }
 
 export function writeStoredShellArt(option: ShellArtOption): void {
@@ -353,9 +326,7 @@ export function applyIniChrome(option: IniChromeOption): void {
 
 export function readStoredIniChrome(): IniChromeOption {
   const stored = window.localStorage.getItem(INI_CHROME_STORAGE_KEY);
-  return stored !== null && INI_CHROME_VALUES.includes(stored)
-    ? (stored as IniChromeOption)
-    : "b";
+  return stored !== null && INI_CHROME_VALUES.includes(stored) ? (stored as IniChromeOption) : "b";
 }
 
 export function writeStoredIniChrome(option: IniChromeOption): void {
@@ -410,9 +381,7 @@ export function applySurfacePreview(
     return;
   }
   const mix = (base: string, lift: number): string =>
-    lift <= 0
-      ? base
-      : `color-mix(in srgb, ${base} ${Math.round((1 - lift) * 100)}%, white)`;
+    lift <= 0 ? base : `color-mix(in srgb, ${base} ${Math.round((1 - lift) * 100)}%, white)`;
   root.style.setProperty("--ark-gray-3", mix(bases.panel, panelLift));
   root.style.setProperty("--ark-gray-7", mix(bases.hairline, hairlineLift));
 }
@@ -434,11 +403,7 @@ export function writeStoredHairlineLift(value: number): void {
 }
 
 /** Inverse of `hexToOklch` for a sampled sRGB triple - used by the tint readout. */
-export function rgbToOklch(
-  r: number,
-  g: number,
-  b: number,
-): { lightness: number; chroma: number; hue: number } {
+export function rgbToOklch(r: number, g: number, b: number): { lightness: number; chroma: number; hue: number } {
   const [lr, lg, lb] = [r, g, b].map(srgbChannelToLinear) as [number, number, number];
   const l = Math.cbrt(0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb);
   const m = Math.cbrt(0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb);
@@ -518,13 +483,7 @@ function plateStep(
   if (picked === null) {
     return plateStepValue(index, platePaletteContext(color), darkness, intensity, warmth);
   }
-  return plateStepValue(
-    index,
-    { hue: picked.hue, chroma: Math.min(picked.chroma, MAX_PICKED_CHROMA) },
-    darkness,
-    1,
-    0,
-  );
+  return plateStepValue(index, { hue: picked.hue, chroma: Math.min(picked.chroma, MAX_PICKED_CHROMA) }, darkness, 1, 0);
 }
 
 export function applyPlateWarmth(
@@ -545,10 +504,7 @@ export function applyPlateWarmth(
     return;
   }
   for (const index of PLATE_STEP_INDEXES) {
-    root.style.setProperty(
-      `--ark-gray-${index + 1}`,
-      plateStep(index, color, plateColor, darkness, intensity, warmth),
-    );
+    root.style.setProperty(`--ark-gray-${index + 1}`, plateStep(index, color, plateColor, darkness, intensity, warmth));
   }
 }
 

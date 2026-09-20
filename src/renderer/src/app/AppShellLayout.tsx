@@ -3,10 +3,7 @@ import { CloseButton, Group, Stack } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
 import { Sidebar, type Route } from "@layout/Sidebar/Sidebar";
 import { useSidebarRail } from "@layout/useSidebarRail";
-import {
-  AppBusyOverlay,
-  type AppBusyOverlayContent,
-} from "@ui/AppBusyOverlay/AppBusyOverlay";
+import { AppBusyOverlay, type AppBusyOverlayContent } from "@ui/AppBusyOverlay/AppBusyOverlay";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { ChromeRailEdgeToggle } from "@ui/ChromeRailEdgeToggle/ChromeRailEdgeToggle";
 import type { OfficialNetworkStatus } from "@shared/types";
@@ -34,14 +31,7 @@ interface Props extends PropsWithChildren {
 }
 
 export function AppShellLayout({ children, ...props }: Props): ReactElement {
-  const {
-    error = null,
-    onDismissError,
-    busyOverlay = null,
-    workspaceFooter,
-    downloadCount,
-    ...shellProps
-  } = props;
+  const { error = null, onDismissError, busyOverlay = null, workspaceFooter, downloadCount, ...shellProps } = props;
   const density = useUiDensity();
   const fullNavbarWidth = density === "compact" ? 212 : 248;
   const sidebarRail = useSidebarRail(fullNavbarWidth);
@@ -57,11 +47,7 @@ export function AppShellLayout({ children, ...props }: Props): ReactElement {
       }}
     >
       <AppShell.Navbar>
-        <Sidebar
-          {...shellProps}
-          iconMode={sidebarRail.iconMode}
-          downloadCount={downloadCount}
-        />
+        <Sidebar {...shellProps} iconMode={sidebarRail.iconMode} downloadCount={downloadCount} />
         <ChromeRailEdgeToggle
           className={classes.sidebarEdgeToggle}
           style={{ left: sidebarRail.railWidthPx }}
@@ -74,19 +60,10 @@ export function AppShellLayout({ children, ...props }: Props): ReactElement {
       <AppShell.Main>
         <Stack gap={0} className={classes.content}>
           {error !== null && (
-            <AppAlert
-              color="red"
-              radius={0}
-              variant="light"
-              title="Error"
-              role="alert"
-              withCloseButton={false}
-            >
+            <AppAlert color="red" radius={0} variant="light" title="Error" role="alert" withCloseButton={false}>
               <Group justify="space-between" align="center" wrap="nowrap" gap="sm">
                 <span>{error}</span>
-                {onDismissError !== undefined && (
-                  <CloseButton aria-label="Dismiss error" onClick={onDismissError} />
-                )}
+                {onDismissError !== undefined && <CloseButton aria-label="Dismiss error" onClick={onDismissError} />}
               </Group>
             </AppAlert>
           )}

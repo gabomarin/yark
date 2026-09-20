@@ -91,12 +91,9 @@ export function ServerGrid(props: Props): ReactElement {
       onStopServer: (serverId) => propsRef.current.onStopServer(serverId),
       onKillServer: (serverId) => propsRef.current.onKillServer(serverId),
       onRestartServer: (serverId) => propsRef.current.onRestartServer(serverId),
-      onRestartWithWarning: (serverId) =>
-        propsRef.current.onRestartWithWarning(serverId),
-      onCancelRestartWarning: (serverId) =>
-        propsRef.current.onCancelRestartWarning(serverId),
-      onConfigureRestartWarnings: (serverId) =>
-        propsRef.current.onConfigureRestartWarnings(serverId),
+      onRestartWithWarning: (serverId) => propsRef.current.onRestartWithWarning(serverId),
+      onCancelRestartWarning: (serverId) => propsRef.current.onCancelRestartWarning(serverId),
+      onConfigureRestartWarnings: (serverId) => propsRef.current.onConfigureRestartWarnings(serverId),
       onOpenWorkspace: (server) => propsRef.current.onOpenWorkspace(server),
       onOpenLogs: (serverId) => propsRef.current.onOpenLogs(serverId),
       onReviewError: (serverId) => propsRef.current.onReviewError(serverId),
@@ -104,27 +101,20 @@ export function ServerGrid(props: Props): ReactElement {
       onInstallFiles: (serverId) => propsRef.current.onInstallFiles(serverId),
       onUpdateNow: (serverId) => propsRef.current.onUpdateNow(serverId),
       onVerifyFiles: (serverId) => propsRef.current.onVerifyFiles(serverId),
-      onCheckUpdatesForServer: (serverId) =>
-        propsRef.current.onCheckUpdatesForServer(serverId),
+      onCheckUpdatesForServer: (serverId) => propsRef.current.onCheckUpdatesForServer(serverId),
       onCloneServer: (serverId) => propsRef.current.onCloneServer(serverId),
-      onCopyConfiguration: (serverId) =>
-        propsRef.current.onCopyConfiguration(serverId),
+      onCopyConfiguration: (serverId) => propsRef.current.onCopyConfiguration(serverId),
       onDeleteServer: (serverId) => propsRef.current.onDeleteServer(serverId),
       onOpenDownloads: (serverId) => propsRef.current.onOpenDownloads?.(serverId),
-      onToggleServerEnabled: (serverId, enabled) =>
-        propsRef.current.onToggleServerEnabled?.(serverId, enabled),
+      onToggleServerEnabled: (serverId, enabled) => propsRef.current.onToggleServerEnabled?.(serverId, enabled),
     }),
     [],
   );
 
-  const enabledServers = useMemo(
-    () => props.servers.filter((server) => server.enabled),
-    [props.servers],
-  );
+  const enabledServers = useMemo(() => props.servers.filter((server) => server.enabled), [props.servers]);
   const enabledServerCount = enabledServers.length;
   const hasEnabledServers = enabledServerCount > 0;
-  const showingDisabledServers =
-    showDisabled && props.disabledServers.length > 0;
+  const showingDisabledServers = showDisabled && props.disabledServers.length > 0;
   const showFleetMetrics = !props.loading && props.servers.length > 0;
 
   const fleetComputed = useMemo(
@@ -136,55 +126,27 @@ export function ServerGrid(props: Props): ReactElement {
         officialSteamBuild: props.officialSteamBuild,
         playerListsByServer: props.playerListsByServer,
       }),
-    [
-      enabledServers,
-      props.statuses,
-      props.installationInfo,
-      props.officialSteamBuild,
-      props.playerListsByServer,
-    ],
+    [enabledServers, props.statuses, props.installationInfo, props.officialSteamBuild, props.playerListsByServer],
   );
   const fleetStats = fleetComputed.stats;
   const fleetAttentionIssues = fleetComputed.attentionIssues;
 
   const fleetFilteredServers = useMemo(
-    () =>
-      filterOverviewServersByFleet(
-        props.filteredServers,
-        fleetFilter,
-        fleetStats,
-        props.statuses,
-      ),
+    () => filterOverviewServersByFleet(props.filteredServers, fleetFilter, fleetStats, props.statuses),
     [props.filteredServers, fleetFilter, fleetStats, props.statuses],
   );
 
-  const enabledLabel =
-    enabledServerCount === 1
-      ? "1 enabled server"
-      : `${enabledServerCount} enabled servers`;
+  const enabledLabel = enabledServerCount === 1 ? "1 enabled server" : `${enabledServerCount} enabled servers`;
   const disabledLabel =
-    props.disabledServers.length === 1
-      ? "1 disabled server"
-      : `${props.disabledServers.length} disabled servers`;
+    props.disabledServers.length === 1 ? "1 disabled server" : `${props.disabledServers.length} disabled servers`;
   const filteredLabel =
     fleetFilteredServers.length !== enabledServerCount
-      ? ` · ${fleetFilteredServers.length} ${
-          fleetFilteredServers.length === 1 ? "result" : "results"
-        }`
+      ? ` · ${fleetFilteredServers.length} ${fleetFilteredServers.length === 1 ? "result" : "results"}`
       : "";
 
-  const sortedEnabled = useMemo(
-    () => sortServers(fleetFilteredServers, sort),
-    [fleetFilteredServers, sort],
-  );
-  const sortedDisabled = useMemo(
-    () => sortServers(props.disabledServers, sort),
-    [props.disabledServers, sort],
-  );
-  const enabledGroups = useMemo(
-    () => groupServersByCluster(sortedEnabled),
-    [sortedEnabled],
-  );
+  const sortedEnabled = useMemo(() => sortServers(fleetFilteredServers, sort), [fleetFilteredServers, sort]);
+  const sortedDisabled = useMemo(() => sortServers(props.disabledServers, sort), [props.disabledServers, sort]);
+  const enabledGroups = useMemo(() => groupServersByCluster(sortedEnabled), [sortedEnabled]);
 
   const renderServerCard = (server: ServerProfile): ReactElement => (
     <OverviewServerCard
@@ -214,11 +176,7 @@ export function ServerGrid(props: Props): ReactElement {
   );
 
   return (
-    <section
-      className={classes.serverSection}
-      aria-label="Server list"
-      data-server-list
-    >
+    <section className={classes.serverSection} aria-label="Server list" data-server-list>
       {showFleetMetrics ? (
         <div className={classes.fleetMetrics}>
           <OverviewFleetMetrics
@@ -253,12 +211,7 @@ export function ServerGrid(props: Props): ReactElement {
 
         {!props.loading && props.servers.length > 0 && (
           <div className={classes.serverToolbar}>
-            <ServerListControls
-              sort={sort}
-              onSortChange={setSort}
-              view={view}
-              onViewChange={setView}
-            />
+            <ServerListControls sort={sort} onSortChange={setSort} view={view} onViewChange={setView} />
             <div className={classes.serverSearch}>
               <SearchField
                 value={props.search}
@@ -287,9 +240,7 @@ export function ServerGrid(props: Props): ReactElement {
           onOpenSteamCmdSettings={props.onOpenSteamCmdSettings}
         />
 
-        {!props.loading &&
-          (fleetFilteredServers.length > 0 ||
-            (showDisabled && props.disabledServers.length > 0)) && (
+        {!props.loading && (fleetFilteredServers.length > 0 || (showDisabled && props.disabledServers.length > 0)) && (
           <ServerGridList
             view={view}
             enabledGroups={enabledGroups}

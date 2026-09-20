@@ -15,9 +15,7 @@ export function stopProgressForServer(
   progress: ServerStopProgress | null | undefined,
   serverId: string,
 ): ServerStopProgress | null {
-  return progress?.active === true && progress.serverId === serverId
-    ? progress
-    : null;
+  return progress?.active === true && progress.serverId === serverId ? progress : null;
 }
 
 export function StopProgressAlert({ progress }: Props): ReactElement {
@@ -32,14 +30,7 @@ export function StopProgressAlert({ progress }: Props): ReactElement {
     <AppAlert color="blue" title={title} mb="sm" {...{ [STOP_PROGRESS_ATTR]: true }}>
       <Stack gap="xs">
         <Text size="sm">{label}</Text>
-        <Progress
-          value={progress.percent ?? 12}
-          animated
-          striped
-          size="sm"
-          radius="xl"
-          aria-label={label}
-        />
+        <Progress value={progress.percent ?? 12} animated striped size="sm" radius="xl" aria-label={label} />
       </Stack>
     </AppAlert>
   );

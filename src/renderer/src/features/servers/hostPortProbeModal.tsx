@@ -21,9 +21,7 @@ export function openHostPortProbeModal(args: {
   const canStartAnyway = !busy && args.onStartAnyway != null;
 
   modals.openConfirmModal({
-    title: busy
-      ? `Ports in use – ${args.serverName}`
-      : `Could not verify ports – ${args.serverName}`,
+    title: busy ? `Ports in use – ${args.serverName}` : `Could not verify ports – ${args.serverName}`,
     centered: true,
     children: (
       <Stack
@@ -32,17 +30,13 @@ export function openHostPortProbeModal(args: {
         data-host-port-probe-kind={busy ? "busy" : "inconclusive"}
         data-host-port-probe-suggested={suggested != null ? "true" : "false"}
       >
-        <AppAlert
-          color="attention"
-          variant="light"
-          title={busy ? "Host port busy" : "Probe inconclusive"}
-        >
+        <AppAlert color="attention" variant="light" title={busy ? "Host port busy" : "Probe inconclusive"}>
           {detail}
         </AppAlert>
         {suggested != null ? (
           <Text size="sm" data-host-port-probe-suggestion>
-            Suggested free set for this session only: game {suggested.gamePort}, query{" "}
-            {suggested.queryPort}, RCON {suggested.rconPort}. Saved profile ports stay unchanged.
+            Suggested free set for this session only: game {suggested.gamePort}, query {suggested.queryPort}, RCON{" "}
+            {suggested.rconPort}. Saved profile ports stay unchanged.
           </Text>
         ) : (
           <Text size="sm" c="dimmed">

@@ -4,9 +4,7 @@ import {
   type FilesJobEnqueueDecision,
 } from "@shared/server/files-job-priority";
 import { isInstallationReady } from "@shared/server/installation-health";
-import {
-  getServerUpdateState,
-} from "@shared/server/server-update-status";
+import { getServerUpdateState } from "@shared/server/server-update-status";
 import type {
   CriticalJobSummary,
   ServerInstallationInfo,
@@ -49,11 +47,7 @@ export type UpdateAllOutdatedQueueResult =
   | { action: "replaced-verify"; message: string }
   | { action: "failed"; message: string };
 
-const ACTIVE_SERVER_STATUSES = new Set<ServerStatus>([
-  "running",
-  "starting",
-  "stopping",
-]);
+const ACTIVE_SERVER_STATUSES = new Set<ServerStatus>(["running", "starting", "stopping"]);
 
 function skipCopy(reason: UpdateAllOutdatedSkipReason): string {
   switch (reason) {
@@ -76,9 +70,7 @@ function skipCopy(reason: UpdateAllOutdatedSkipReason): string {
   }
 }
 
-function filesJobSkipReason(
-  decision: FilesJobEnqueueDecision,
-): UpdateAllOutdatedSkipReason | null {
+function filesJobSkipReason(decision: FilesJobEnqueueDecision): UpdateAllOutdatedSkipReason | null {
   switch (decision.action) {
     case "enqueue":
     case "replace":
@@ -129,10 +121,7 @@ export function buildUpdateAllOutdatedPlan(input: {
     } else if (status !== null && ACTIVE_SERVER_STATUSES.has(status)) {
       skipReason = "server-running";
     } else {
-      const occupant = occupyingFilesJobForServer(
-        input.criticalJobs ?? [],
-        server.id,
-      );
+      const occupant = occupyingFilesJobForServer(input.criticalJobs ?? [], server.id);
       skipReason = filesJobSkipReason(decideFilesJobEnqueue("update", occupant));
     }
 
@@ -206,14 +195,10 @@ export function summarizeUpdateAllOutdatedQueue(input: {
 
   const parts: string[] = [];
   if (input.queuedCount > 0) {
-    parts.push(
-      `${input.queuedCount} update${input.queuedCount === 1 ? "" : "s"} queued in Downloads`,
-    );
+    parts.push(`${input.queuedCount} update${input.queuedCount === 1 ? "" : "s"} queued in Downloads`);
   }
   if (input.replacedCount > 0) {
-    parts.push(
-      `${input.replacedCount} queued Verify job${input.replacedCount === 1 ? "" : "s"} replaced`,
-    );
+    parts.push(`${input.replacedCount} queued Verify job${input.replacedCount === 1 ? "" : "s"} replaced`);
   }
   if (input.skippedCount > 0) {
     parts.push(`${input.skippedCount} skipped`);
@@ -223,10 +208,7 @@ export function summarizeUpdateAllOutdatedQueue(input: {
   }
 
   return {
-    title:
-      input.queuedCount + input.replacedCount === 1
-        ? "Update queued"
-        : "Updates queued",
+    title: input.queuedCount + input.replacedCount === 1 ? "Update queued" : "Updates queued",
     message: `${parts.join(". ")}. Jobs run one at a time through Downloads. Jobs that cannot start yet (for example missing SteamCMD) show as blocked with Retry.`,
     color: input.failedCount > 0 ? "attention" : "blue",
   };

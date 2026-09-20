@@ -1,15 +1,6 @@
 import type { ReactElement } from "react";
 import { Check } from "@phosphor-icons/react";
-import {
-  Button,
-  Group,
-  Progress,
-  Skeleton,
-  Stack,
-  Stepper,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Button, Group, Progress, Skeleton, Stack, Stepper, Text, Title } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import type { ServerProfile } from "@shared/types";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
@@ -175,9 +166,7 @@ export function ConfigurationWizard(props: Props): ReactElement {
             profile={form.values.profile}
             singlePlayerSettings={form.values.singlePlayerSettings}
             onSelectProfile={chooseProfile}
-            onSinglePlayerSettingsChange={(checked) =>
-              form.setFieldValue("singlePlayerSettings", checked)
-            }
+            onSinglePlayerSettingsChange={(checked) => form.setFieldValue("singlePlayerSettings", checked)}
           />
         )}
 
@@ -201,11 +190,7 @@ export function ConfigurationWizard(props: Props): ReactElement {
         )}
 
         {activeStep === 3 && (
-          <WizardWorldStep
-            draft={form.values}
-            worldPreset={worldPreset}
-            onWorldPresetChange={chooseWorldPreset}
-          />
+          <WizardWorldStep draft={form.values} worldPreset={worldPreset} onWorldPresetChange={chooseWorldPreset} />
         )}
 
         {activeStep === 4 && <WizardQolStep form={form} />}

@@ -3,8 +3,7 @@
   display: flex;
   gap: var(--app-space-sm);
   align-items: flex-start;
-  padding: var(--app-space-sm) var(--app-space-md) var(--app-space-sm)
-    calc(var(--app-space-md) + 3px);
+  padding: var(--app-space-sm) var(--app-space-md) var(--app-space-sm) calc(var(--app-space-md) + 3px);
   border: 1px solid var(--app-color-border-subtle);
   border-radius: var(--app-radius-sm);
   background: var(--app-color-surface-control);

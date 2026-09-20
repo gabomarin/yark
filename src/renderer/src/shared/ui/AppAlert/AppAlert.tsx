@@ -1,11 +1,6 @@
 import type { ReactElement } from "react";
 import { Alert as MantineAlert, type AlertProps } from "@mantine/core";
-import {
-  CheckCircle,
-  Info,
-  Warning,
-  WarningCircle,
-} from "@phosphor-icons/react";
+import { CheckCircle, Info, Warning, WarningCircle } from "@phosphor-icons/react";
 import { alertToneForColor } from "@theme/theme";
 
 /** Severity glyph per tone, mirroring the theme's `alertToneForColor`. */

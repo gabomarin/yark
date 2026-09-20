@@ -17,7 +17,9 @@
   min-height: 0;
   height: 100%;
   overflow: hidden;
-  transition: flex-basis var(--app-motion-base) var(--app-ease-standard), width var(--app-motion-base) var(--app-ease-standard);
+  transition:
+    flex-basis var(--app-motion-base) var(--app-ease-standard),
+    width var(--app-motion-base) var(--app-ease-standard);
   border-right: 1px solid var(--app-color-border-subtle);
 }
 

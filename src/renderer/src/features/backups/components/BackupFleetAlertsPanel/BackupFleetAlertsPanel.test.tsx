@@ -85,9 +85,7 @@ describe("BackupFleetAlertsPanel", () => {
     expect(onOpenCleanup).toHaveBeenCalled();
 
     await user.click(screen.getAllByRole("button", { name: "Dismiss" })[1]!);
-    expect(onDismissAlert).toHaveBeenCalledWith(
-      expect.objectContaining({ id: "a2", fingerprint: "bak-failed-1" }),
-    );
+    expect(onDismissAlert).toHaveBeenCalledWith(expect.objectContaining({ id: "a2", fingerprint: "bak-failed-1" }));
   });
 
   it("returns null when there are no alerts", () => {

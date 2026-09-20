@@ -13,9 +13,9 @@ const server: ServerProfile = {
   map: "TheIsland_WP",
   installDir: "C:/ARK/srv-1",
   enabled: true,
-    autoStart: false,
-    useAsaApi: false,
-    useAsaApiLoader: false,
+  autoStart: false,
+  useAsaApi: false,
+  useAsaApiLoader: false,
   sessionName: "Island",
   maxPlayers: 70,
   gamePort: 7777,
@@ -173,21 +173,26 @@ describe("ServerBackupPanel", () => {
         deleteBackups: vi.fn().mockResolvedValue({ ok: true, data: 1 }),
         deleteFailedBackups: vi.fn().mockResolvedValue({ ok: true, data: 0 }),
         restoreBackup: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
-        setBackupPolicy: vi.fn().mockImplementation(async (_id: string, draft: {
-          enabled: boolean;
-          intervalMinutes: number;
-          retainCountWorld: number;
-          retainCountPlayers: number;
-          retainCountIni: number;
-          backupDir: string | null;
-        }) => ({
-          ok: true,
-          data: {
-            serverId: "srv-1",
-            ...draft,
-            updatedAt: "2026-07-24T12:00:00.000Z",
-          },
-        })),
+        setBackupPolicy: vi.fn().mockImplementation(
+          async (
+            _id: string,
+            draft: {
+              enabled: boolean;
+              intervalMinutes: number;
+              retainCountWorld: number;
+              retainCountPlayers: number;
+              retainCountIni: number;
+              backupDir: string | null;
+            },
+          ) => ({
+            ok: true,
+            data: {
+              serverId: "srv-1",
+              ...draft,
+              updatedAt: "2026-07-24T12:00:00.000Z",
+            },
+          }),
+        ),
         resolveBackupRoot: vi.fn().mockResolvedValue({
           ok: true,
           data: "C:/ARK/srv-1/Backups",
@@ -261,9 +266,7 @@ describe("ServerBackupPanel", () => {
     expect(await screen.findByText(/Install files required/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Backup now" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Import" })).toBeEnabled();
-    expect(
-      screen.getByRole("button", { name: `Restore backup ${worldBackup.id}` }),
-    ).toBeDisabled();
+    expect(screen.getByRole("button", { name: `Restore backup ${worldBackup.id}` })).toBeDisabled();
 
     await user.click(screen.getByRole("tab", { name: "Player profiles" }));
     expect(screen.queryByRole("button", { name: "Backup now" })).not.toBeInTheDocument();
@@ -348,17 +351,12 @@ describe("ServerBackupPanel", () => {
     const user = setupUser();
     renderPanel();
 
-    expect(await screen.findByRole("tab", { name: "World save" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    expect(await screen.findByRole("tab", { name: "World save" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tab", { name: "Player profiles" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "INI" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^Backup now$/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Open folder C:\/backups\/world/i })).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Copy details bk-world/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Copy details bk-world/i })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Open folder C:\/backups\/players/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Open folder C:\/backups\/ini/i })).not.toBeInTheDocument();
     expect(screen.queryByText("C:/backups/world")).not.toBeInTheDocument();
@@ -386,17 +384,11 @@ describe("ServerBackupPanel", () => {
     const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
     renderPanel();
 
-    await user.click(
-      await screen.findByRole("button", { name: /Copy details bk-world/i }),
-    );
+    await user.click(await screen.findByRole("button", { name: /Copy details bk-world/i }));
     await waitFor(() => {
-      expect(writeText).toHaveBeenCalledWith(
-        expect.stringContaining("Backup ID: bk-world"),
-      );
+      expect(writeText).toHaveBeenCalledWith(expect.stringContaining("Backup ID: bk-world"));
     });
-    expect(writeText).toHaveBeenCalledWith(
-      expect.stringContaining("Server: The Island (srv-1)"),
-    );
+    expect(writeText).toHaveBeenCalledWith(expect.stringContaining("Server: The Island (srv-1)"));
     expect(notifySpy).toHaveBeenCalled();
     notifySpy.mockRestore();
   });
@@ -421,9 +413,7 @@ describe("ServerBackupPanel", () => {
         }),
       );
     });
-    expect(
-      screen.getByRole("status", { name: "World vs players vs INI" }),
-    ).toBeVisible();
+    expect(screen.getByRole("status", { name: "World vs players vs INI" })).toBeVisible();
 
     await user.click(screen.getByRole("tab", { name: "INI" }));
     await user.click(screen.getByRole("button", { name: /^Backup now$/i }));
@@ -479,9 +469,7 @@ describe("ServerBackupPanel", () => {
     renderPanel();
 
     await user.click(await screen.findByRole("button", { name: "Clear failed" }));
-    await user.click(
-      within(screen.getByRole("dialog")).getByRole("button", { name: "Clear failed" }),
-    );
+    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Clear failed" }));
 
     await waitFor(() => {
       expect(window.api.deleteFailedBackups).toHaveBeenCalledWith("srv-1", "world");
@@ -499,10 +487,7 @@ describe("ServerBackupPanel", () => {
 
     const list = document.querySelector("[data-backup-list]") as HTMLElement;
     expect(list).not.toBeNull();
-    const titles = () =>
-      Array.from(list.querySelectorAll("[data-backup-title]")).map(
-        (node) => node.textContent,
-      );
+    const titles = () => Array.from(list.querySelectorAll("[data-backup-title]")).map((node) => node.textContent);
     expect(titles()[0]).toBe("Alice");
 
     await user.type(screen.getByLabelText(/Search players/i), "bob");
@@ -527,21 +512,11 @@ describe("ServerBackupPanel", () => {
       mapToken: null,
     };
 
-    renderPanel([
-      worldBackup,
-      playersBackup,
-      aliceBackup,
-      bobBackup,
-      startedFirstFinishedLast,
-      iniBackup,
-    ]);
+    renderPanel([worldBackup, playersBackup, aliceBackup, bobBackup, startedFirstFinishedLast, iniBackup]);
     await user.click(await screen.findByRole("tab", { name: "Player profiles" }));
 
     const list = document.querySelector("[data-backup-list]") as HTMLElement;
-    const titles = () =>
-      Array.from(list.querySelectorAll("[data-backup-title]")).map(
-        (node) => node.textContent,
-      );
+    const titles = () => Array.from(list.querySelectorAll("[data-backup-title]")).map((node) => node.textContent);
     // Newest-by-finish: Carol (14:00), Alice (13:00:01), Bob, All players
     expect(titles()[0]).toBe("Carol");
     expect(titles()[1]).toBe("Alice");
@@ -605,4 +580,3 @@ describe("ServerBackupPanel", () => {
     expect(screen.queryByText("C:/backups/world")).not.toBeInTheDocument();
   });
 });
-

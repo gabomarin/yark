@@ -1,9 +1,4 @@
-import {
-  ArrowsInLineVertical,
-  ArrowsOutLineVertical,
-  CaretDown,
-  CaretRight,
-} from "@phosphor-icons/react";
+import { ArrowsInLineVertical, ArrowsOutLineVertical, CaretDown, CaretRight } from "@phosphor-icons/react";
 import { ActionIcon, Badge, Group, Text, Tooltip } from "@mantine/core";
 import type { IniFileKey } from "@shared/types";
 import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
@@ -24,13 +19,7 @@ interface Props {
   busy: boolean;
   onToggleSection: (sectionName: string) => void;
   onSetSectionGroupsCollapsed: (category: string, collapsed: boolean) => void;
-  onUpdateValue: (
-    fileKey: IniFileKey,
-    rowSection: string,
-    key: string,
-    value: string,
-    occurrence?: number,
-  ) => void;
+  onUpdateValue: (fileKey: IniFileKey, rowSection: string, key: string, value: string, occurrence?: number) => void;
   onResetRowToDefault: (row: IniSettingReference) => void;
   onOpenAdminList?: () => void;
 }
@@ -178,10 +167,7 @@ export function ConfigurationEditorSettingsTable(props: Props): ReactElement {
         {!loading &&
           groupedRows.map((group) => {
             const sectionGroups = group.sectionGroups;
-            const nestedOther =
-              group.category === "other" &&
-              sectionGroups !== undefined &&
-              sectionGroups.length > 0;
+            const nestedOther = group.category === "other" && sectionGroups !== undefined && sectionGroups.length > 0;
 
             if (nestedOther) {
               return (
@@ -189,12 +175,8 @@ export function ConfigurationEditorSettingsTable(props: Props): ReactElement {
                   <OtherCategoryHeader
                     label={group.label}
                     rowCount={group.rows.length}
-                    onCollapseSubgroups={() =>
-                      onSetSectionGroupsCollapsed(group.category, true)
-                    }
-                    onExpandSubgroups={() =>
-                      onSetSectionGroupsCollapsed(group.category, false)
-                    }
+                    onCollapseSubgroups={() => onSetSectionGroupsCollapsed(group.category, true)}
+                    onExpandSubgroups={() => onSetSectionGroupsCollapsed(group.category, false)}
                   />
                   {renderSectionGroups(
                     sectionGroups,

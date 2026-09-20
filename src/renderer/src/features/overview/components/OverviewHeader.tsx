@@ -2,10 +2,7 @@ import type { ReactElement } from "react";
 import { Button, Group, Text, VisuallyHidden } from "@mantine/core";
 import { AppPageHeader } from "@ui/AppPageHeader/AppPageHeader";
 import { AddServerSplitButton } from "@features/servers/components/AddServerSplitButton/AddServerSplitButton";
-import {
-  formatCpuPercent,
-  formatWorkingSet,
-} from "@features/servers/model/serverCardProcessMeta";
+import { formatCpuPercent, formatWorkingSet } from "@features/servers/model/serverCardProcessMeta";
 import classes from "../OverviewPage.module.css";
 
 interface Props {
@@ -56,10 +53,8 @@ export function OverviewHeader({
       : survivorsOnlineTotal === 1
         ? "1 survivor online"
         : `${survivorsOnlineTotal} survivors online`;
-  const ramLabel =
-    fleetRamBytes == null ? "RAM –" : `RAM ${formatWorkingSet(fleetRamBytes)}`;
-  const cpuLabel =
-    fleetCpuPercent == null ? "CPU –" : `CPU ${formatCpuPercent(fleetCpuPercent)}`;
+  const ramLabel = fleetRamBytes == null ? "RAM –" : `RAM ${formatWorkingSet(fleetRamBytes)}`;
+  const cpuLabel = fleetCpuPercent == null ? "CPU –" : `CPU ${formatCpuPercent(fleetCpuPercent)}`;
 
   return (
     <AppPageHeader
@@ -67,76 +62,36 @@ export function OverviewHeader({
       className={classes.header}
       actions={
         <Group gap="md" wrap="wrap" justify="flex-end">
-        {showProcessFleetMetrics ? (
-          <Group gap="sm" wrap="wrap" className={classes.fleetReadouts}>
-            <Text
-              size="sm"
-              c="dimmed"
-              className={classes.fleetReadout}
-              data-survivors-online={
-                survivorsOnlineTotal == null ? undefined : survivorsOnlineTotal
-              }
-            >
-              {survivorsLabel}
-            </Text>
-            <Text
-              size="sm"
-              c="dimmed"
-              className={classes.fleetReadout}
-              data-fleet-ram={fleetRamBytes == null ? undefined : fleetRamBytes}
-              title="Sum of dedicated-process working set on starting/running servers"
-            >
-              {ramLabel}
-            </Text>
-            <Text
-              size="sm"
-              c="dimmed"
-              className={classes.fleetReadout}
-              data-fleet-cpu={
-                fleetCpuPercent == null ? undefined : fleetCpuPercent
-              }
-              title="Sum of dedicated-process CPU % (each % of one logical processor)"
-            >
-              {cpuLabel}
-            </Text>
-          </Group>
-        ) : null}
-        <Button
-          variant="transparent"
-          color="gray"
-          classNames={{
-            root: classes.headerActionButton,
-            label: classes.headerActionButtonLabel,
-          }}
-          onClick={onCheckInstalls}
-          loading={checkingInstalls}
-          data-install-health-scan={checkingInstalls || undefined}
-          aria-busy={checkingInstalls || undefined}
-        >
-          {checkingInstalls ? "Checking servers health…" : "Check Servers Health"}
-        </Button>
-        {checkingInstalls ? (
-          <VisuallyHidden
-            component="span"
-            role="status"
-            aria-live="polite"
-          >
-            Checking servers health…
-          </VisuallyHidden>
-        ) : null}
-        <Button
-          variant="transparent"
-          color="gray"
-          classNames={{
-            root: classes.headerActionButton,
-            label: classes.headerActionButtonLabel,
-          }}
-          onClick={onCheckUpdates}
-          loading={checkingUpdates}
-        >
-          Check server updates
-        </Button>
-        {onUpdateAllOutdated !== undefined && canUpdateAllOutdated ? (
+          {showProcessFleetMetrics ? (
+            <Group gap="sm" wrap="wrap" className={classes.fleetReadouts}>
+              <Text
+                size="sm"
+                c="dimmed"
+                className={classes.fleetReadout}
+                data-survivors-online={survivorsOnlineTotal == null ? undefined : survivorsOnlineTotal}
+              >
+                {survivorsLabel}
+              </Text>
+              <Text
+                size="sm"
+                c="dimmed"
+                className={classes.fleetReadout}
+                data-fleet-ram={fleetRamBytes == null ? undefined : fleetRamBytes}
+                title="Sum of dedicated-process working set on starting/running servers"
+              >
+                {ramLabel}
+              </Text>
+              <Text
+                size="sm"
+                c="dimmed"
+                className={classes.fleetReadout}
+                data-fleet-cpu={fleetCpuPercent == null ? undefined : fleetCpuPercent}
+                title="Sum of dedicated-process CPU % (each % of one logical processor)"
+              >
+                {cpuLabel}
+              </Text>
+            </Group>
+          ) : null}
           <Button
             variant="transparent"
             color="gray"
@@ -144,21 +99,53 @@ export function OverviewHeader({
               root: classes.headerActionButton,
               label: classes.headerActionButtonLabel,
             }}
-            onClick={onUpdateAllOutdated}
-            disabled={openingUpdateAllOutdated}
-            loading={openingUpdateAllOutdated}
+            onClick={onCheckInstalls}
+            loading={checkingInstalls}
+            data-install-health-scan={checkingInstalls || undefined}
+            aria-busy={checkingInstalls || undefined}
           >
-            Update All
+            {checkingInstalls ? "Checking servers health…" : "Check Servers Health"}
           </Button>
-        ) : null}
-        {!emptyFleet ? (
-          <AddServerSplitButton
-            primaryLabel="New server"
-            onCreate={onCreateServer}
-            onImport={onImportServer}
-            menuAriaLabel="More new-server options"
-          />
-        ) : null}
+          {checkingInstalls ? (
+            <VisuallyHidden component="span" role="status" aria-live="polite">
+              Checking servers health…
+            </VisuallyHidden>
+          ) : null}
+          <Button
+            variant="transparent"
+            color="gray"
+            classNames={{
+              root: classes.headerActionButton,
+              label: classes.headerActionButtonLabel,
+            }}
+            onClick={onCheckUpdates}
+            loading={checkingUpdates}
+          >
+            Check server updates
+          </Button>
+          {onUpdateAllOutdated !== undefined && canUpdateAllOutdated ? (
+            <Button
+              variant="transparent"
+              color="gray"
+              classNames={{
+                root: classes.headerActionButton,
+                label: classes.headerActionButtonLabel,
+              }}
+              onClick={onUpdateAllOutdated}
+              disabled={openingUpdateAllOutdated}
+              loading={openingUpdateAllOutdated}
+            >
+              Update All
+            </Button>
+          ) : null}
+          {!emptyFleet ? (
+            <AddServerSplitButton
+              primaryLabel="New server"
+              onCreate={onCreateServer}
+              onImport={onImportServer}
+              menuAriaLabel="More new-server options"
+            />
+          ) : null}
         </Group>
       }
     />

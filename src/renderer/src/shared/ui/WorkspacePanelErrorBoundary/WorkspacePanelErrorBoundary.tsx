@@ -41,10 +41,7 @@ export class WorkspacePanelErrorBoundary extends Component<Props, State> {
       return (
         <AppAlert color="red" variant="light" title="This panel hit an error">
           <Stack gap="sm">
-            <Text size="sm">
-              The rest of YARK is still running. Retry this panel, or switch tabs
-              and come back.
-            </Text>
+            <Text size="sm">The rest of YARK is still running. Retry this panel, or switch tabs and come back.</Text>
             <Text size="xs" c="dimmed" style={{ wordBreak: "break-word" }}>
               {this.state.error.message || "Unknown error"}
             </Text>

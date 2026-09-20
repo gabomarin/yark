@@ -110,11 +110,7 @@ export function SettingsAutoStartSection(props: Props): ReactElement {
                   {row.server.map} · {row.detail}
                 </Text>
               </div>
-              <Button
-                size="xs"
-                variant="default"
-                onClick={() => props.onOpenServer(row.server.id)}
-              >
+              <Button size="xs" variant="default" onClick={() => props.onOpenServer(row.server.id)}>
                 Open server
               </Button>
             </Group>

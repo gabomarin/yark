@@ -17,17 +17,9 @@ interface Props {
  * wizard had three copies of the same row CSS under three names). The chip grows
  * and truncates, the actions keep their intrinsic width (#PUX-004).
  */
-export function AppPathRow({
-  children,
-  actions,
-  className,
-  ...dataAttributes
-}: Props): ReactElement {
+export function AppPathRow({ children, actions, className, ...dataAttributes }: Props): ReactElement {
   return (
-    <div
-      className={[classes.row, className].filter(Boolean).join(" ")}
-      {...dataAttributes}
-    >
+    <div className={[classes.row, className].filter(Boolean).join(" ")} {...dataAttributes}>
       <div className={classes.chip}>{children}</div>
       {actions === undefined ? null : (
         <Group gap="xs" wrap="wrap" className={classes.actions}>

@@ -30,15 +30,12 @@ export function WizardReviewStep(props: Props): ReactElement {
           <AppSurfaceCard tone="flat" padding="md" radius={0}>
             <Stack gap="sm">
               <Group gap="xs">
-                <Badge variant="light">
-                  Cluster template
-                </Badge>
+                <Badge variant="light">Cluster template</Badge>
                 <Text fw={700}>{clusterId}</Text>
               </Group>
               <Text size="sm" c="dimmed">
-                Files: GameUserSettings.ini and Game.ini. This uses the same composition as Clusters
-                ({useClusterSeed ? "Seed" : "Restore"}): template content with this server’s
-                identity keys reapplied.
+                Files: GameUserSettings.ini and Game.ini. This uses the same composition as Clusters (
+                {useClusterSeed ? "Seed" : "Restore"}): template content with this server’s identity keys reapplied.
               </Text>
               <Text size="sm" c="dimmed">
                 A local pre-template snapshot is taken before writing.

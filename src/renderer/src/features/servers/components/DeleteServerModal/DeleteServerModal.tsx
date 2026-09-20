@@ -11,17 +11,13 @@ import classes from "./DeleteServerModal.module.css";
 
 type DeleteServerMode = "profileOnly" | "wipe";
 
-type DeleteServerConfirmResult =
-  | { ok: true }
-  | { ok: false; emptyWipeStale?: boolean };
+type DeleteServerConfirmResult = { ok: true } | { ok: false; emptyWipeStale?: boolean };
 
 /**
  * Empty install folders have nothing worth keeping, and Import (#254) rejects
  * them — skip the mode picker and always wipe (backend revalidates emptiness).
  */
-function isForcedWipeInstallHealth(
-  health: InstallationHealthStatus | null | undefined,
-): boolean {
+function isForcedWipeInstallHealth(health: InstallationHealthStatus | null | undefined): boolean {
   return health === "empty";
 }
 
@@ -66,9 +62,7 @@ export function DeleteServerModal(props: Props): ReactElement {
     await runWithFinally(
       async () => {
         const result = await props.onConfirm(
-          forcedWipe
-            ? { deleteInstallFiles: true, requireEmptyInstall: true }
-            : { deleteInstallFiles: wipe },
+          forcedWipe ? { deleteInstallFiles: true, requireEmptyInstall: true } : { deleteInstallFiles: wipe },
         );
         if (activeServerIdRef.current !== requestServerId) return;
         if (result.ok) {
@@ -121,15 +115,9 @@ export function DeleteServerModal(props: Props): ReactElement {
     >
       <Stack gap="sm">
         {forcedWipe ? (
-          <AppAlert
-            title="Empty install folder"
-            variant="light"
-            className={classes.dangerAlert}
-            color="gray"
-          >
-            This profile never received ASA files (empty folder). YARK will remove the server
-            and delete the empty install path. Import cannot adopt an empty folder later. The
-            folder is rechecked before wipe.
+          <AppAlert title="Empty install folder" variant="light" className={classes.dangerAlert} color="gray">
+            This profile never received ASA files (empty folder). YARK will remove the server and delete the empty
+            install path. Import cannot adopt an empty folder later. The folder is rechecked before wipe.
           </AppAlert>
         ) : (
           <>
@@ -150,12 +138,7 @@ export function DeleteServerModal(props: Props): ReactElement {
               aria-label="Removal mode"
             >
               <div className={classes.options}>
-                <Radio.Card
-                  className={classes.card}
-                  value="profileOnly"
-                  radius="md"
-                  withBorder={false}
-                >
+                <Radio.Card className={classes.card} value="profileOnly" radius="md" withBorder={false}>
                   <div className={classes.cardInner}>
                     <div className={classes.titleRow}>
                       <Radio.Indicator className={classes.indicator} />
@@ -171,29 +154,15 @@ export function DeleteServerModal(props: Props): ReactElement {
                   </div>
                 </Radio.Card>
 
-                <Radio.Card
-                  className={classes.card}
-                  value="wipe"
-                  radius="md"
-                  withBorder={false}
-                  mod={{ danger: true }}
-                >
+                <Radio.Card className={classes.card} value="wipe" radius="md" withBorder={false} mod={{ danger: true }}>
                   <div className={classes.cardInner}>
                     <div className={classes.titleRow}>
                       <Radio.Indicator className={classes.indicator} />
                       <div className={classes.titleText}>
-                        <Text
-                          size="sm"
-                          fw={600}
-                          lh={1.35}
-                          className={wipe ? classes.dangerTitle : undefined}
-                        >
+                        <Text size="sm" fw={600} lh={1.35} className={wipe ? classes.dangerTitle : undefined}>
                           Delete everything
                         </Text>
-                        <Badge
-                          variant="light"
-                          color="red"
-                        >
+                        <Badge variant="light" color="red">
                           Danger
                         </Badge>
                       </div>
@@ -207,19 +176,14 @@ export function DeleteServerModal(props: Props): ReactElement {
             </Radio.Group>
 
             {wipe ? (
-              <AppAlert
-                title="Everything will be deleted"
-                variant="light"
-                className={classes.dangerAlert}
-                color="gray"
-              >
-                This server in YARK and all on-disk content (world, configs, mods, and binaries)
-                will be deleted. This cannot be undone.
+              <AppAlert title="Everything will be deleted" variant="light" className={classes.dangerAlert} color="gray">
+                This server in YARK and all on-disk content (world, configs, mods, and binaries) will be deleted. This
+                cannot be undone.
               </AppAlert>
             ) : (
               <AppAlert color="blue" title="Install folder will be kept" variant="light">
-                YARK stops managing this server. The ASA folder stays on disk for manual launch
-                or a later Import (ready trees, or incomplete with opt-in).
+                YARK stops managing this server. The ASA folder stays on disk for manual launch or a later Import (ready
+                trees, or incomplete with opt-in).
               </AppAlert>
             )}
           </>
@@ -231,7 +195,6 @@ export function DeleteServerModal(props: Props): ReactElement {
           </Text>
           <ReadonlyPath value={props.installDir} compact />
         </div>
-
       </Stack>
     </AppPanelModal>
   );

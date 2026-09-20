@@ -1,4 +1,3 @@
-
 import { HardDrives } from "@phosphor-icons/react";
 import { useMediaQuery } from "@mantine/hooks";
 import type { ServerRuntimeInfo } from "@shared/types";
@@ -29,9 +28,7 @@ function isServerActive(runtime: ServerRuntimeInfo | null): boolean {
 }
 
 export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactElement {
-  const [workspaceTab, setWorkspaceTab] = useState<WorkspaceTab>(
-    props.initialTab ?? "server",
-  );
+  const [workspaceTab, setWorkspaceTab] = useState<WorkspaceTab>(props.initialTab ?? "server");
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(props.onboarding === true);
   const [iniEditorVersion, setIniEditorVersion] = useState(0);
@@ -52,15 +49,14 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
     setServerSwitcherOpen(false);
   });
 
-  const onAssistantDraftChange = useCallback((dirty: boolean) => {
-    assistantDirtyRef.current = dirty;
-  }, [assistantDirtyRef]);
-
-  useWorkspaceStatusPanelVisible(
-    compactWorkspace,
-    serverActionsOpen,
-    props.onStatusPanelVisibleChange,
+  const onAssistantDraftChange = useCallback(
+    (dirty: boolean) => {
+      assistantDirtyRef.current = dirty;
+    },
+    [assistantDirtyRef],
   );
+
+  useWorkspaceStatusPanelVisible(compactWorkspace, serverActionsOpen, props.onStatusPanelVisibleChange);
 
   useEffect(() => {
     if (props.onboarding === true) {
@@ -75,11 +71,7 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
   }, [props.initialTab]);
 
   const selectedServer = useMemo(() => {
-    return (
-      props.servers.find((server) => server.id === props.selectedServerId) ??
-      props.servers[0] ??
-      null
-    );
+    return props.servers.find((server) => server.id === props.selectedServerId) ?? props.servers[0] ?? null;
   }, [props.selectedServerId, props.servers]);
 
   const handleSelectServer = (serverId: string) => {
@@ -114,9 +106,7 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
   const opsLocked = serverActive || filesJobActive || stopJobActive;
   const filesLockReason = props.filesJobLabel?.trim() || "Updating server files";
   const stopLockReason = stopProgress?.label.trim() || "Stopping this server…";
-  const renderServerList = (
-    options: { iconMode?: boolean; onToggleRail?: () => void } = {},
-  ) => (
+  const renderServerList = (options: { iconMode?: boolean; onToggleRail?: () => void } = {}) => (
     <ServerListPanel
       servers={props.servers}
       selectedServerId={selectedServer.id}
@@ -134,13 +124,7 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
       playerList={props.playerList}
       processMetrics={props.processMetrics}
       opsLocked={filesJobActive || stopJobActive}
-      opsLockReason={
-        stopJobActive
-          ? stopLockReason
-          : filesJobActive
-            ? filesLockReason
-            : undefined
-      }
+      opsLockReason={stopJobActive ? stopLockReason : filesJobActive ? filesLockReason : undefined}
       filesJobOperation={props.filesJobOperation}
       filesJobQueueKind={props.filesJobQueueKind}
       onOpenFolder={() => props.onOpenFolder(selectedServer.id)}
@@ -152,9 +136,7 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
       }}
       onCopyConfiguration={() => props.onCopyConfiguration(selectedServer.id)}
       onKill={() => props.onKillServer(selectedServer.id)}
-      onToggleEnabled={() =>
-        props.onToggleServerEnabled?.(selectedServer.id, !selectedServer.enabled)
-      }
+      onToggleEnabled={() => props.onToggleServerEnabled?.(selectedServer.id, !selectedServer.enabled)}
     />
   );
 
@@ -263,24 +245,16 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
         onStop={() => props.onStopServer(selectedServer.id)}
         onRestart={() => props.onRestartServer(selectedServer.id)}
         onRestartWithWarning={
-          props.onRestartWithWarning === undefined
-            ? undefined
-            : () => props.onRestartWithWarning?.(selectedServer.id)
+          props.onRestartWithWarning === undefined ? undefined : () => props.onRestartWithWarning?.(selectedServer.id)
         }
         onCancelRestartWarning={
           props.onCancelRestartWarning === undefined
             ? undefined
             : () => props.onCancelRestartWarning?.(selectedServer.id)
         }
-        onToggleEnabled={() =>
-          props.onToggleServerEnabled?.(selectedServer.id, !selectedServer.enabled)
-        }
-        onOpenServerSwitcher={
-          compactWorkspace ? () => setServerSwitcherOpen(true) : undefined
-        }
-        onOpenServerActions={
-          compactWorkspace ? () => setServerActionsOpen(true) : undefined
-        }
+        onToggleEnabled={() => props.onToggleServerEnabled?.(selectedServer.id, !selectedServer.enabled)}
+        onOpenServerSwitcher={compactWorkspace ? () => setServerSwitcherOpen(true) : undefined}
+        onOpenServerActions={compactWorkspace ? () => setServerActionsOpen(true) : undefined}
       />
 
       <div className={classes.body} data-compact={compactWorkspace || undefined}>

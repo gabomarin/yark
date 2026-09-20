@@ -57,28 +57,21 @@ export function BackupRestoreModal(props: Props): ReactElement {
           {backup.kind === "world" ? (
             <>
               <Text size="sm">
-                Overlay map{" "}
-                <strong>{backup.mapToken ?? props.serverMap}</strong> from{" "}
-                {formatWhen(backupFinishedAt(backup))} onto{" "}
-                <strong>{props.serverName}</strong>. Other map folders under
-                SavedArks stay untouched. A safety world backup is created first.
-                The server must stay stopped.
+                Overlay map <strong>{backup.mapToken ?? props.serverMap}</strong> from{" "}
+                {formatWhen(backupFinishedAt(backup))} onto <strong>{props.serverName}</strong>. Other map folders under
+                SavedArks stay untouched. A safety world backup is created first. The server must stay stopped.
               </Text>
               <Checkbox
                 label="Restore player profiles / tribes"
                 checked={props.restoreProfilesTribes}
-                onChange={(event) =>
-                  props.onRestoreProfilesTribesChange(event.currentTarget.checked)
-                }
+                onChange={(event) => props.onRestoreProfilesTribesChange(event.currentTarget.checked)}
               />
             </>
           ) : (
             <Text size="sm">
-              Restore <strong>{kindLabel(backup.kind)}</strong> from{" "}
-              {formatWhen(backupFinishedAt(backup))} onto{" "}
-              <strong>{props.serverName}</strong>? Only that kind of data is
-              replaced. A safety backup of the same kind is created first. The
-              server must stay stopped.
+              Restore <strong>{kindLabel(backup.kind)}</strong> from {formatWhen(backupFinishedAt(backup))} onto{" "}
+              <strong>{props.serverName}</strong>? Only that kind of data is replaced. A safety backup of the same kind
+              is created first. The server must stay stopped.
             </Text>
           )}
         </Stack>

@@ -1,17 +1,5 @@
-import {
-  ArrowSquareOut,
-  ClockCounterClockwise,
-  FileText,
-  Trash,
-} from "@phosphor-icons/react";
-import {
-  ActionIcon,
-  Group,
-  Stack,
-  Text,
-  Title,
-  Tooltip,
-} from "@mantine/core";
+import { ArrowSquareOut, ClockCounterClockwise, FileText, Trash } from "@phosphor-icons/react";
+import { ActionIcon, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
 import type { ServerOperationalLogs, ServerUpdateLogFile } from "@shared/types";
 import { formatLogDateTime } from "@shared/format-log-datetime";
 import type { ReactElement } from "react";
@@ -27,12 +15,7 @@ import {
   statusLabel,
   statusTone,
 } from "../../model/serverLogsFormat";
-import {
-  LogsClearAction,
-  LogsDetailItem,
-  LogsEmptyState,
-  LogsTabIntro,
-} from "../LogsPanelChrome/LogsPanelChrome";
+import { LogsClearAction, LogsDetailItem, LogsEmptyState, LogsTabIntro } from "../LogsPanelChrome/LogsPanelChrome";
 
 export interface LogsUpdatesTabProps {
   embedded?: boolean;
@@ -76,12 +59,7 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
           <LogsClearAction
             label="Clear all update logs for this server"
             onClick={onClearUpdateLogs}
-            disabled={
-              loading ||
-              busy ||
-              logs === null ||
-              logs.updateFiles.length === 0
-            }
+            disabled={loading || busy || logs === null || logs.updateFiles.length === 0}
           />
         }
       />
@@ -100,10 +78,7 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
                 description="Install, update, or verify files to create a SteamCMD job log."
               />
             ) : (
-              <div
-                className={classes.updateList}
-                data-logs-scroll-region="updates-list"
-              >
+              <div className={classes.updateList} data-logs-scroll-region="updates-list">
                 {logs.updateFiles.map((file) => {
                   const label = formatUpdateJobLabel(file.fileName, file.modifiedAt);
                   return (
@@ -135,13 +110,7 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
 
         <div className={`${classes.detailPanel} ${classes.fillPanel}`}>
           <Stack gap="sm" className={classes.panelStack}>
-            <Group
-              justify="space-between"
-              align="center"
-              wrap="wrap"
-              gap="sm"
-              className={classes.detailHeader}
-            >
+            <Group justify="space-between" align="center" wrap="wrap" gap="sm" className={classes.detailHeader}>
               <Group gap="sm" wrap="nowrap">
                 <Title order={4} className={classes.panelTitle}>
                   Update details
@@ -203,9 +172,7 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
                 <ConsoleSurface
                   fill
                   className={classes.squareConsole}
-                  text={
-                    updateContent.length > 0 ? updateContent : "Loading log content…"
-                  }
+                  text={updateContent.length > 0 ? updateContent : "Loading log content…"}
                   data-logs-scroll-region="update-content"
                 />
               </>

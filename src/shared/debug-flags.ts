@@ -11,5 +11,4 @@
 declare const __YARK_DEBUG_THEME__: boolean;
 
 /** True only when the build was made with `YARK_DEBUG_THEME=1`. */
-export const DEBUG_THEME_CONTROLS: boolean =
-  typeof __YARK_DEBUG_THEME__ === "boolean" && __YARK_DEBUG_THEME__;
+export const DEBUG_THEME_CONTROLS: boolean = typeof __YARK_DEBUG_THEME__ === "boolean" && __YARK_DEBUG_THEME__;

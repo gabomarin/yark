@@ -46,9 +46,7 @@ export function CopyConfigCategoriesStep(props: Props): ReactElement {
         description="Server rates, world, and session settings (owned keys stay locked)"
         file={selection.gameUserSettings}
         categories={describe?.gameUserSettings ?? []}
-        onChange={(gameUserSettings) =>
-          onChange((prev) => ({ ...prev, gameUserSettings }))
-        }
+        onChange={(gameUserSettings) => onChange((prev) => ({ ...prev, gameUserSettings }))}
       />
 
       <CopyConfigIniFilePicker
@@ -125,9 +123,7 @@ export function CopyConfigCategoriesStep(props: Props): ReactElement {
               }))
             }
           />
-          {describe !== null &&
-          (describe.extraArgs.length > 0 ||
-            describe.structuredLaunchArgs.length > 0) ? (
+          {describe !== null && (describe.extraArgs.length > 0 || describe.structuredLaunchArgs.length > 0) ? (
             <Stack gap={4}>
               {describe.structuredLaunchArgs.length > 0 ? (
                 <Text size="xs" c="dimmed" ff="monospace" lineClamp={2}>
@@ -152,9 +148,7 @@ export function CopyConfigCategoriesStep(props: Props): ReactElement {
         title="Backup schedule"
         description="How often backups run and how many to keep (backup folder stays on the target)"
         checked={selection.backupPolicy}
-        onChange={(backupPolicy) =>
-          onChange((prev) => ({ ...prev, backupPolicy }))
-        }
+        onChange={(backupPolicy) => onChange((prev) => ({ ...prev, backupPolicy }))}
       />
 
       <CopyConfigCategoryCard

@@ -38,10 +38,7 @@ export function BackupFleetAlertsPanel(props: Props): ReactElement | null {
     >
       {props.alerts.map((alert) => {
         const isFailed = alert.kind === "failed";
-        const showLogs =
-          isFailed &&
-          alert.serverId !== null &&
-          props.onOpenFailedBackupLogs !== undefined;
+        const showLogs = isFailed && alert.serverId !== null && props.onOpenFailedBackupLogs !== undefined;
         // Failed alerts deep-link to Logs → Backups; other server alerts open the workspace.
         const showOpen = alert.serverId !== null && !isFailed;
 
@@ -54,11 +51,7 @@ export function BackupFleetAlertsPanel(props: Props): ReactElement | null {
             data-alert-kind={alert.kind}
           >
             <span className={classes.icon} aria-hidden>
-              {alert.severity === "error" ? (
-                <WarningCircle size={14} />
-              ) : (
-                <Warning size={14} />
-              )}
+              {alert.severity === "error" ? <WarningCircle size={14} /> : <Warning size={14} />}
             </span>
             <Text size="sm" className={classes.message}>
               {alert.message}
@@ -78,30 +71,19 @@ export function BackupFleetAlertsPanel(props: Props): ReactElement | null {
                 </Button>
               )}
               {showOpen && (
-                <Button
-                  variant="default"
-                  onClick={() => props.onOpenServerBackups(alert.serverId!)}
-                >
+                <Button variant="default" onClick={() => props.onOpenServerBackups(alert.serverId!)}>
                   Open
                 </Button>
               )}
               {(alert.kind === "disk_warning" || alert.kind === "disk_critical") &&
                 props.onOpenCleanup !== undefined && (
-                  <Button
-                    variant="default"
-                    leftSection={<Broom size={12} />}
-                    onClick={props.onOpenCleanup}
-                  >
+                  <Button variant="default" leftSection={<Broom size={12} />} onClick={props.onOpenCleanup}>
                     Cleanup
                   </Button>
                 )}
               {props.onDismissAlert !== undefined && (
                 <Tooltip label="Hide until this condition changes again">
-                  <Button
-                    variant="subtle"
-                    color="gray"
-                    onClick={() => props.onDismissAlert?.(alert)}
-                  >
+                  <Button variant="subtle" color="gray" onClick={() => props.onDismissAlert?.(alert)}>
                     Dismiss
                   </Button>
                 </Tooltip>

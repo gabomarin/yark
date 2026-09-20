@@ -68,15 +68,15 @@ export function resolveRuntimeAction(input: {
   startBusy?: boolean;
 }): ServerCardRuntimeAction {
   const serverEnabled = input.serverEnabled ?? true;
-  const filesLocked =
-    input.steamCmdBusy || input.steamCmdPaused === true || input.steamCmdQueued === true;
-  const filesLockHint = input.steamCmdQueued === true
-    ? "A Downloads job is queued for this server"
-    : input.steamCmdPaused === true
-      ? "Resume the download before starting this server"
-      : input.steamCmdBusy
-        ? "Wait until SteamCMD finishes this server"
-        : undefined;
+  const filesLocked = input.steamCmdBusy || input.steamCmdPaused === true || input.steamCmdQueued === true;
+  const filesLockHint =
+    input.steamCmdQueued === true
+      ? "A Downloads job is queued for this server"
+      : input.steamCmdPaused === true
+        ? "Resume the download before starting this server"
+        : input.steamCmdBusy
+          ? "Wait until SteamCMD finishes this server"
+          : undefined;
 
   // Enable matches the kebab: never require install files (#132). Check before
   // filesLocked so a disabled profile does not show a locked Start instead.
@@ -87,9 +87,7 @@ export function resolveRuntimeAction(input: {
       color: "blue",
       variant: "filled",
       disabled: input.steamCmdBusy,
-      hint: input.steamCmdBusy
-        ? "Another server operation is in progress"
-        : undefined,
+      hint: input.steamCmdBusy ? "Another server operation is in progress" : undefined,
       visible: true,
     };
   }
@@ -216,11 +214,7 @@ export function resolveRestartAction(input: {
   return {
     label: "Restart server",
     variant: "default",
-    disabled:
-      input.steamCmdBusy ||
-      transitioning ||
-      input.status !== "running" ||
-      input.startBusy === true,
+    disabled: input.steamCmdBusy || transitioning || input.status !== "running" || input.startBusy === true,
     visible: true,
   };
 }

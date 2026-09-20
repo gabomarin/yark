@@ -48,11 +48,7 @@ export function SettingsAppDataSection(props: Props): ReactElement {
   };
 
   return (
-    <section
-      className={classes.section}
-      aria-labelledby="settings-data"
-      data-app-data-folders
-    >
+    <section className={classes.section} aria-labelledby="settings-data" data-app-data-folders>
       <Title order={3} size="h4" id="settings-data">
         App data folders
       </Title>
@@ -66,12 +62,12 @@ export function SettingsAppDataSection(props: Props): ReactElement {
       <Stack gap="sm" className={classes.cacheList}>
         {dataFolders.map((folder) => {
           const unusedNote =
-            folder.kind === "steamcmd"
-              ? bundledSteamCmdUnusedNote(folder.path, props.steamCmdExecutablePath)
-              : null;
+            folder.kind === "steamcmd" ? bundledSteamCmdUnusedNote(folder.path, props.steamCmdExecutablePath) : null;
           return (
             <div key={folder.kind} className={classes.dataFolderRow}>
-              <Text size="sm" fw={600}>{folder.label}</Text>
+              <Text size="sm" fw={600}>
+                {folder.label}
+              </Text>
               <AppPathRow
                 actions={
                   <Button

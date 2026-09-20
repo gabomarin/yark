@@ -1,18 +1,11 @@
 import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 import { Badge, Group, Text, Title } from "@mantine/core";
-import type {
-  IniFileKey,
-  IniPreview,
-  ServerIniPayload,
-} from "@shared/types";
+import type { IniFileKey, IniPreview, ServerIniPayload } from "@shared/types";
 import { stripYarkOwnedFromPayload } from "@shared/asa/yark-owned-ini-keys";
 import { sanitizeServerIniPayload } from "@features/server-workspace/iniModel";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
-import {
-  dangerConfirmBody,
-  openDangerConfirmModal,
-} from "@ui/DangerConfirmModal/openDangerConfirmModal";
+import { dangerConfirmBody, openDangerConfirmModal } from "@ui/DangerConfirmModal/openDangerConfirmModal";
 import { openUnsavedLeaveModal } from "@features/server-workspace/openUnsavedLeaveModal";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
@@ -44,8 +37,7 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<IniPreview | null>(null);
 
-  const dirty =
-    payload !== null && baseline !== null && !payloadsEqual(payload, baseline);
+  const dirty = payload !== null && baseline !== null && !payloadsEqual(payload, baseline);
 
   const applyLoadedTemplate = (
     stored: Awaited<ReturnType<typeof window.api.getClusterIniTemplate>>,
@@ -60,9 +52,7 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
       return;
     }
     setExists(stored.data !== null);
-    const next = stripYarkOwnedFromPayload(
-      sanitizeServerIniPayload(draft.data.payload),
-    );
+    const next = stripYarkOwnedFromPayload(sanitizeServerIniPayload(draft.data.payload));
     setPayload(next);
     setBaseline(next);
   };
@@ -120,17 +110,12 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
     setError(null);
     await runWithFinally(
       async () => {
-        const result = await window.api.saveClusterIniTemplate(
-          props.clusterId,
-          payload,
-        );
+        const result = await window.api.saveClusterIniTemplate(props.clusterId, payload);
         if (!result.ok) {
           setError(result.error ?? "Could not save cluster INI template");
           return;
         }
-        const saved = stripYarkOwnedFromPayload(
-          sanitizeServerIniPayload(result.data.template.payload),
-        );
+        const saved = stripYarkOwnedFromPayload(sanitizeServerIniPayload(result.data.template.payload));
         setPayload(saved);
         setBaseline(saved);
         setExists(true);
@@ -147,10 +132,7 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
     openDangerConfirmModal({
       title: "Delete INI template?",
       children: dangerConfirmBody(
-        <>
-          Removes the saved template for “{props.clusterId}”. Member server INI
-          files on disk are not deleted.
-        </>,
+        <>Removes the saved template for “{props.clusterId}”. Member server INI files on disk are not deleted.</>,
       ),
       confirmLabel: "Delete template",
       onConfirm: () => {
@@ -158,9 +140,7 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
         setError(null);
         void runWithFinally(
           async () => {
-            const result = await window.api.deleteClusterIniTemplate(
-              props.clusterId,
-            );
+            const result = await window.api.deleteClusterIniTemplate(props.clusterId);
             if (!result.ok) {
               setError(result.error ?? "Could not delete template");
               return;
@@ -201,9 +181,7 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
       title={
         <Group gap="xs" wrap="wrap">
           <Title order={4}>Cluster INI template</Title>
-          <Badge variant="light">
-            {props.clusterId}
-          </Badge>
+          <Badge variant="light">{props.clusterId}</Badge>
           {exists ? (
             <Badge variant="light" color="ok">
               Saved
@@ -229,8 +207,8 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
       <div className={classes.shell} data-cluster-ini-shell>
         <div className={classes.top}>
           <Text size="sm" c="dimmed">
-            Shared Game.ini / GameUserSettings.ini for this cluster ID. Session
-            name, ports, and passwords stay per-server.
+            Shared Game.ini / GameUserSettings.ini for this cluster ID. Session name, ports, and passwords stay
+            per-server.
           </Text>
 
           {error !== null && (

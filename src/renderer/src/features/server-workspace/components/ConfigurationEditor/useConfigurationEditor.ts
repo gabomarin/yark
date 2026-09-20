@@ -1,11 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { modals } from "@mantine/modals";
-import type {
-  IniFileKey,
-  IniPreview,
-  ServerIniPayload,
-  ServerIniSnapshot,
-} from "@shared/types";
+import type { IniFileKey, IniPreview, ServerIniPayload, ServerIniSnapshot } from "@shared/types";
 import { showOperatorToast } from "@ui/operatorToast";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import {
@@ -111,9 +106,7 @@ export function useConfigurationEditor(options: {
   ): void => {
     const sanitized = sanitizeServerIniPayload(data.payload);
     const keepDirty =
-      options?.preserveDirty === true
-      && dirtyRef.current
-      && payloadRef.current !== null;
+      options?.preserveDirty === true && dirtyRef.current && payloadRef.current !== null;
     if (keepDirty && payloadRef.current !== null) {
       // Keep in-editor edits; refresh pending chrome from the push source.
       setSnapshot({ ...data, payload: payloadRef.current });
@@ -188,10 +181,7 @@ export function useConfigurationEditor(options: {
       })),
     [activeFileKey, activeText],
   );
-  const availableRows = useMemo(
-    () => filterIniSettingReferences(rows, "", "all"),
-    [rows],
-  );
+  const availableRows = useMemo(() => filterIniSettingReferences(rows, "", "all"), [rows]);
   const categoryOptions = useMemo(
     () => [
       {
@@ -209,10 +199,7 @@ export function useConfigurationEditor(options: {
     () => filterIniSettingReferences(rows, search, filter),
     [rows, search, filter],
   );
-  const groupedRows = useMemo(
-    () => groupSettingReferencesByUiCategory(visibleRows),
-    [visibleRows],
-  );
+  const groupedRows = useMemo(() => groupSettingReferencesByUiCategory(visibleRows), [visibleRows]);
 
   useEffect(() => {
     if (!categoryOptions.some((option) => option.value === filter)) {
@@ -250,8 +237,7 @@ export function useConfigurationEditor(options: {
 
   const resetActiveFileToDefaults = () => {
     if (payload === null) return;
-    const label =
-      activeFileKey === "game" ? "Game.ini" : "GameUserSettings.ini";
+    const label = activeFileKey === "game" ? "Game.ini" : "GameUserSettings.ini";
     modals.openConfirmModal({
       title: `Reset ${label}`,
       children:
@@ -259,11 +245,7 @@ export function useConfigurationEditor(options: {
       labels: { confirm: "Reset", cancel: "Cancel" },
       confirmProps: { color: "attention" },
       onConfirm: () => {
-        const nextPayload = withFileText(
-          payload,
-          activeFileKey,
-          defaultTextForFile(activeFileKey),
-        );
+        const nextPayload = withFileText(payload, activeFileKey, defaultTextForFile(activeFileKey));
         setPayload(nextPayload);
         publishDirty(nextPayload, baseline);
         setPreview(null);
@@ -404,8 +386,7 @@ export function useConfigurationEditor(options: {
       : activeFileKey === "game"
         ? snapshot.gameIniPath
         : snapshot.gameUserSettingsPath;
-  const fileLabel =
-    activeFileKey === "game" ? "Game.ini" : "GameUserSettings.ini";
+  const fileLabel = activeFileKey === "game" ? "Game.ini" : "GameUserSettings.ini";
 
   const publishPayloadChange = (nextPayload: ServerIniPayload) => {
     setPayload(nextPayload);

@@ -37,12 +37,7 @@
     rgba(0, 0, 0, 0.72) 46%,
     rgba(0, 0, 0, 0.24) 100%
   );
-  mask-image: radial-gradient(
-    120% 100% at 32% -14%,
-    #000 0%,
-    rgba(0, 0, 0, 0.72) 46%,
-    rgba(0, 0, 0, 0.24) 100%
-  );
+  mask-image: radial-gradient(120% 100% at 32% -14%, #000 0%, rgba(0, 0, 0, 0.72) 46%, rgba(0, 0, 0, 0.24) 100%);
 }
 
 /* TEMP (PUX-004) — brand-art candidates. Each swaps only the tile: inset, the fade

@@ -1,10 +1,7 @@
 import type { ReactElement } from "react";
 import type { ServerStatus } from "@shared/types";
 import { StatusWord, type StatusWordTone } from "@ui/StatusWord/StatusWord";
-import {
-  serverRuntimeStatusLabel,
-  serverRuntimeStatusTone,
-} from "./serverRuntimeStatus";
+import { serverRuntimeStatusLabel, serverRuntimeStatusTone } from "./serverRuntimeStatus";
 
 interface Props {
   status: ServerStatus | string;

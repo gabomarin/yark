@@ -23,10 +23,7 @@ export function showOperatorToast(input: {
   });
 }
 
-export function showOperatorError(
-  message: string,
-  title = "Something went wrong",
-): void {
+export function showOperatorError(message: string, title = "Something went wrong"): void {
   showOperatorToast({
     title,
     message,

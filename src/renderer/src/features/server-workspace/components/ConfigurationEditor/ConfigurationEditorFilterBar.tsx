@@ -22,16 +22,7 @@ interface Props {
 }
 
 export function ConfigurationEditorFilterBar(props: Props): ReactElement {
-  const {
-    search,
-    onSearchChange,
-    filter,
-    onFilterChange,
-    categoryOptions,
-    dirty,
-    onCollapseAll,
-    onExpandAll,
-  } = props;
+  const { search, onSearchChange, filter, onFilterChange, categoryOptions, dirty, onCollapseAll, onExpandAll } = props;
 
   return (
     <Group gap="sm" align="center" className={classes.filterBar}>

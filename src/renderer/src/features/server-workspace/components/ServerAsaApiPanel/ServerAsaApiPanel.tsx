@@ -1,18 +1,8 @@
 import type { ReactElement } from "react";
-import {
-  Button,
-  Group,
-  Loader,
-  Progress,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Button, Group, Loader, Progress, Stack, Text } from "@mantine/core";
 import { DownloadSimple, FolderOpen, Trash } from "@phosphor-icons/react";
 import type { ServerProfile } from "@shared/types";
-import {
-  formatSteamCmdByteProgress,
-  hasMeaningfulSteamCmdByteProgress,
-} from "@shared/server/steamcmd-progress";
+import { formatSteamCmdByteProgress, hasMeaningfulSteamCmdByteProgress } from "@shared/server/steamcmd-progress";
 import { useUiDensity } from "@app/AppProviders";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppPanelConfirmModal } from "@ui/AppPanelConfirmModal/AppPanelConfirmModal";
@@ -84,27 +74,18 @@ export function ServerAsaApiPanel(props: Props): ReactElement {
               ) : null}
             </Group>
 
-            {panel.error !== null ? (
-              <AppAlert color="red">{panel.error}</AppAlert>
-            ) : null}
+            {panel.error !== null ? <AppAlert color="red">{panel.error}</AppAlert> : null}
 
             {panel.installProgress !== null ? (
               <AppSurfaceCard tone="flat" padding="sm" radius={0}>
                 <Stack gap="xs">
                   <Group gap="sm" wrap="nowrap" align="center">
-                    <Loader
-                      size="sm"
-                      aria-label="Ark Server API install in progress"
-                    />
+                    <Loader size="sm" aria-label="Ark Server API install in progress" />
                     <Text size="sm" style={{ flex: 1, minWidth: 0 }}>
                       {panel.installProgress.label || "Working…"}
                     </Text>
                   </Group>
-                  <Progress
-                    value={panel.installProgress.percent ?? 12}
-                    animated
-                    striped
-                  />
+                  <Progress value={panel.installProgress.percent ?? 12} animated striped />
                   {hasMeaningfulSteamCmdByteProgress(
                     panel.installProgress.bytesDownloaded,
                     panel.installProgress.bytesTotal,
@@ -114,14 +95,11 @@ export function ServerAsaApiPanel(props: Props): ReactElement {
                         panel.installProgress.bytesDownloaded!,
                         panel.installProgress.bytesTotal!,
                       )}
-                      {panel.installProgress.assetLabel
-                        ? ` · ${panel.installProgress.assetLabel}`
-                        : ""}
+                      {panel.installProgress.assetLabel ? ` · ${panel.installProgress.assetLabel}` : ""}
                     </Text>
                   ) : (
                     <Text size="xs" c="dimmed">
-                      Usually about 25–30 MB. This can take a minute on slower
-                      connections.
+                      Usually about 25–30 MB. This can take a minute on slower connections.
                     </Text>
                   )}
                 </Stack>
@@ -155,9 +133,7 @@ export function ServerAsaApiPanel(props: Props): ReactElement {
                       size={inputSize}
                       variant="default"
                       leftSection={<FolderOpen size={14} />}
-                      onClick={() =>
-                        void window.api.openAsaApiWin64(props.server.id)
-                      }
+                      onClick={() => void window.api.openAsaApiWin64(props.server.id)}
                     >
                       Open server folder
                     </Button>
@@ -194,23 +170,19 @@ export function ServerAsaApiPanel(props: Props): ReactElement {
         title={confirmCopy.title}
         meta={confirmCopy.meta}
         confirmLabel={confirmCopy.confirmLabel}
-        confirmLoading={
-          confirmCopy.busyKind !== null
-            ? panel.isBusy(confirmCopy.busyKind)
-            : false
-        }
+        confirmLoading={confirmCopy.busyKind !== null ? panel.isBusy(confirmCopy.busyKind) : false}
         contentProps={{ "data-asaapi-confirm-modal": "" }}
       >
         {panel.confirm?.kind === "uninstall" ? (
           <Text size="sm">
-            Deletes the API, loader, and plugins from this server folder. Your
-            game files stay so you can Start as usual. Stop the server first.
+            Deletes the API, loader, and plugins from this server folder. Your game files stay so you can Start as
+            usual. Stop the server first.
           </Text>
         ) : null}
         {panel.confirm?.kind === "clearCache" ? (
           <Text size="sm">
-            Deletes cached Ark Server API zip downloads from YARK’s app data. The
-            next Install will download again. Files already on this server stay.
+            Deletes cached Ark Server API zip downloads from YARK’s app data. The next Install will download again.
+            Files already on this server stay.
           </Text>
         ) : null}
         {panel.confirm?.kind === "deletePlugin" ? (
@@ -219,8 +191,8 @@ export function ServerAsaApiPanel(props: Props): ReactElement {
             <Text span fw={600} inherit>
               {panel.confirm.plugin.name}
             </Text>{" "}
-            folder from this server (Plugins or Disabled_Plugins). Stop the
-            server first. This cannot be undone from YARK.
+            folder from this server (Plugins or Disabled_Plugins). Stop the server first. This cannot be undone from
+            YARK.
           </Text>
         ) : null}
       </AppPanelConfirmModal>

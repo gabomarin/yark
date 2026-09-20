@@ -17,16 +17,10 @@ function severityTimelineColor(severity: AppEvent["severity"]): string {
 }
 
 export function RecentActivityPanel({ events, loading, onViewAll }: Props): ReactElement {
-  const relevantEvents = events
-    .filter((event) => event.type !== "rcon_command")
-    .slice(0, 5);
+  const relevantEvents = events.filter((event) => event.type !== "rcon_command").slice(0, 5);
 
   return (
-    <section
-      className={classes.recentSection}
-      aria-labelledby="recent-activity-title"
-      data-recent-activity
-    >
+    <section className={classes.recentSection} aria-labelledby="recent-activity-title" data-recent-activity>
       <Group justify="space-between" align="center" gap="sm">
         <div>
           <Title order={3} id="recent-activity-title" className={classes.recentTitle}>
@@ -36,11 +30,7 @@ export function RecentActivityPanel({ events, loading, onViewAll }: Props): Reac
             Relevant manager changes and operations.
           </Text>
         </div>
-        <Button
-          variant="subtle"
-          rightSection={<ArrowRight size={14} />}
-          onClick={onViewAll}
-        >
+        <Button variant="subtle" rightSection={<ArrowRight size={14} />} onClick={onViewAll}>
           View logs
         </Button>
       </Group>
@@ -48,12 +38,7 @@ export function RecentActivityPanel({ events, loading, onViewAll }: Props): Reac
       {loading ? (
         <div role="status" aria-live="polite">
           <VisuallyHidden>Loading recent activity</VisuallyHidden>
-          <Timeline
-            active={-1}
-            bulletSize={8}
-            lineWidth={2}
-            className={classes.recentTimeline}
-          >
+          <Timeline active={-1} bulletSize={8} lineWidth={2} className={classes.recentTimeline}>
             {[0, 1, 2].map((item) => (
               <Timeline.Item
                 key={item}
@@ -71,12 +56,7 @@ export function RecentActivityPanel({ events, loading, onViewAll }: Props): Reac
           No relevant operational activity yet.
         </Text>
       ) : (
-        <Timeline
-          active={relevantEvents.length}
-          bulletSize={8}
-          lineWidth={2}
-          className={classes.recentTimeline}
-        >
+        <Timeline active={relevantEvents.length} bulletSize={8} lineWidth={2} className={classes.recentTimeline}>
           {relevantEvents.map((event) => (
             <Timeline.Item
               key={event.id}
@@ -90,12 +70,7 @@ export function RecentActivityPanel({ events, loading, onViewAll }: Props): Reac
                 </Text>
               }
             >
-              <Text
-                size="sm"
-                lineClamp={1}
-                title={event.message}
-                className={classes[`event-${event.severity}`]}
-              >
+              <Text size="sm" lineClamp={1} title={event.message} className={classes[`event-${event.severity}`]}>
                 {event.message}
               </Text>
             </Timeline.Item>

@@ -1,9 +1,5 @@
 import { Group, Stack, Tabs, Title } from "@mantine/core";
-import type {
-  ServerInstallationInfo,
-  ServerProfile,
-  ServerRuntimeInfo,
-} from "@shared/types";
+import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { DismissibleHint } from "@ui/DismissibleHint/DismissibleHint";
@@ -15,11 +11,7 @@ import { BackupKindSettings } from "./components/BackupKindSettings/BackupKindSe
 import { BackupListToolbar } from "./components/BackupListToolbar/BackupListToolbar";
 import { ServerBackupDestination } from "./components/ServerBackupDestination/ServerBackupDestination";
 import { ServerBackupHeader } from "./components/ServerBackupHeader/ServerBackupHeader";
-import {
-  formatSize,
-  KIND_TABS,
-  BACKUPS_KINDS_HINT_STORAGE_KEY,
-} from "./model/serverBackupPanelModel";
+import { formatSize, KIND_TABS, BACKUPS_KINDS_HINT_STORAGE_KEY } from "./model/serverBackupPanelModel";
 import { useServerBackupPanel } from "./hooks/useServerBackupPanel";
 
 interface Props {
@@ -58,10 +50,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
         <Group justify="space-between" wrap="wrap" gap="sm" align="flex-end">
           <div>
             <Title order={3}>Backups for {props.server.name}</Title>
-            <DismissibleHint
-              storageKey={BACKUPS_KINDS_HINT_STORAGE_KEY}
-              title="World vs players vs INI"
-            >
+            <DismissibleHint storageKey={BACKUPS_KINDS_HINT_STORAGE_KEY} title="World vs players vs INI">
               World schedule is separate from player join/leave and INI-on-save backups.
             </DismissibleHint>
           </div>
@@ -82,27 +71,15 @@ export function ServerBackupPanel(props: Props): ReactElement {
       )}
 
       {!panel.installReady && (
-        <AppAlert
-          color="attention"
-          variant="light"
-          title="Install files required"
-          data-backup-install-lock
-        >
-          {panel.installLockReason} You can still browse, export, import, and delete
-          archived backups.
+        <AppAlert color="attention" variant="light" title="Install files required" data-backup-install-lock>
+          {panel.installLockReason} You can still browse, export, import, and delete archived backups.
         </AppAlert>
       )}
 
       {panel.policy?.schedulePaused === true && (
-        <AppAlert
-          color="red"
-          variant="light"
-          title="World schedule paused"
-          data-backup-schedule-paused
-        >
-          Scheduled world backups are paused for this YARK session after repeated
-          failures. Policy stays enabled; restart YARK to resume after fixing the
-          cause (destination, map folder, or disk space).
+        <AppAlert color="red" variant="light" title="World schedule paused" data-backup-schedule-paused>
+          Scheduled world backups are paused for this YARK session after repeated failures. Policy stays enabled;
+          restart YARK to resume after fixing the cause (destination, map folder, or disk space).
         </AppAlert>
       )}
 

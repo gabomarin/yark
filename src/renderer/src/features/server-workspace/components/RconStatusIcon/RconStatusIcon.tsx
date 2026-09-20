@@ -114,11 +114,7 @@ export function RconStatusIcon({ serverId }: Props): ReactElement {
   };
 
   return (
-    <Tooltip
-      label={status.lastError ?? statusConfig.label}
-      withArrow
-      position="bottom"
-    >
+    <Tooltip label={status.lastError ?? statusConfig.label} withArrow position="bottom">
       <Badge
         component="button"
         type="button"

@@ -9,17 +9,7 @@ import {
   Sword,
   Skull,
 } from "@phosphor-icons/react";
-import {
-  Badge,
-  Group,
-  SegmentedControl,
-  Stack,
-  Switch,
-  Text,
-  ThemeIcon,
-  Title,
-  UnstyledButton,
-} from "@mantine/core";
+import { Badge, Group, SegmentedControl, Stack, Switch, Text, ThemeIcon, Title, UnstyledButton } from "@mantine/core";
 import {
   formatWizardNumber,
   type ExperienceProfileId,
@@ -30,14 +20,7 @@ import classes from "./ConfigurationWizard.module.css";
 
 export function WizardShell({ children }: { children: ReactNode }): ReactElement {
   return (
-    <AppSurfaceCard
-      tone="flat"
-      fill
-      padding={0}
-      radius={0}
-      className={classes.root}
-      data-configuration-wizard
-    >
+    <AppSurfaceCard tone="flat" fill padding={0} radius={0} className={classes.root} data-configuration-wizard>
       {children}
     </AppSurfaceCard>
   );
@@ -102,12 +85,7 @@ export function ProfileCard(props: ProfileCardProps): ReactElement {
       onClick={() => props.onSelect(props.id)}
       aria-pressed={props.selected}
     >
-      <ThemeIcon
-        variant="default"
-        size={32}
-        radius="sm"
-        className={classes.profileCardIcon}
-      >
+      <ThemeIcon variant="default" size={32} radius="sm" className={classes.profileCardIcon}>
         <Icon size={18} weight="duotone" className={classes.profileCardGlyph} />
       </ThemeIcon>
       <Stack gap={6} className={classes.profileCardBody}>
@@ -198,11 +176,7 @@ function pacedPresetLabel(preset: { id: string; name: string }): ReactNode {
   );
 }
 
-function presetControlColor(
-  value: string,
-  paced: boolean,
-  worldFeel: boolean,
-): string | undefined {
+function presetControlColor(value: string, paced: boolean, worldFeel: boolean): string | undefined {
   if (paced) return pacePresetColor(value);
   if (worldFeel) return worldFeelPresetColor(value);
   return undefined;
@@ -276,11 +250,7 @@ export function effectiveRateLabel(
   return `${formatWizardNumber(configured)}× → ${formatWizardNumber(configured * singlePlayerFactor)}×`;
 }
 
-export function ChangeRow({
-  change,
-}: {
-  change: ReturnType<typeof wizardChanges>[number];
-}): ReactElement {
+export function ChangeRow({ change }: { change: ReturnType<typeof wizardChanges>[number] }): ReactElement {
   return (
     <Group className={classes.changeRow} justify="space-between" align="flex-start" wrap="nowrap" gap="lg">
       <Stack gap={2} style={{ minWidth: 0 }}>
@@ -292,9 +262,13 @@ export function ChangeRow({
         </Text>
       </Stack>
       <Group gap="xs" wrap="nowrap">
-        <Text c="dimmed" size="sm">{change.before}</Text>
+        <Text c="dimmed" size="sm">
+          {change.before}
+        </Text>
         <ArrowRight size={14} />
-        <Text size="sm" fw={600}>{change.after}</Text>
+        <Text size="sm" fw={600}>
+          {change.after}
+        </Text>
       </Group>
     </Group>
   );
@@ -307,17 +281,16 @@ interface SettingSwitchProps {
   onChange?: ChangeEventHandler<HTMLInputElement>;
 }
 
-export function SettingSwitch({
-  label,
-  description,
-  checked,
-  onChange,
-}: SettingSwitchProps): ReactElement {
+export function SettingSwitch({ label, description, checked, onChange }: SettingSwitchProps): ReactElement {
   return (
     <Group className={classes.switchRow} justify="space-between" align="center" wrap="nowrap" gap="lg">
       <Stack gap={2} style={{ minWidth: 0 }}>
-        <Text fw={600} size="sm">{label}</Text>
-        <Text c="dimmed" size="xs">{description}</Text>
+        <Text fw={600} size="sm">
+          {label}
+        </Text>
+        <Text c="dimmed" size="xs">
+          {description}
+        </Text>
       </Stack>
       <Switch checked={checked} onChange={onChange} aria-label={label} />
     </Group>

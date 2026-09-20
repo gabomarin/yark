@@ -45,18 +45,14 @@ export function ServerModsPanel(props: Props): ReactElement {
   const cacheRef = useRef(props.server.modMetadataCache ?? {});
   /** In-flight inspect target (`id` or `slug`); cleared on close / newer inspect. */
   const inspectTargetRef = useRef<string | null>(null);
-  const [metadata, setMetadata] = useState<Map<string, ModMetadata>>(
-    () => metadataMap(props.server.modMetadataCache),
-  );
+  const [metadata, setMetadata] = useState<Map<string, ModMetadata>>(() => metadataMap(props.server.modMetadataCache));
   const [url, setUrl] = useState("");
   const [catalog, setCatalog] = useState<ModSearchPage | null>(null);
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [detail, setDetail] = useState<ModMetadata | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
-  const [importProgress, setImportProgress] = useState<ModAddImportProgress | null>(
-    null,
-  );
+  const [importProgress, setImportProgress] = useState<ModAddImportProgress | null>(null);
 
   useEffect(() => {
     const nextCache = props.server.modMetadataCache ?? {};
@@ -79,12 +75,8 @@ export function ServerModsPanel(props: Props): ReactElement {
     const nextMods = props.server.mods;
     const nextDisabled = props.server.disabledMods ?? [];
     const nextCache = props.server.modMetadataCache ?? {};
-    setConfiguredIds((previous) =>
-      sameIdList(previous, nextMods) ? previous : nextMods,
-    );
-    setDisabledIds((previous) =>
-      sameIdList(previous, nextDisabled) ? previous : nextDisabled,
-    );
+    setConfiguredIds((previous) => (sameIdList(previous, nextMods) ? previous : nextMods));
+    setDisabledIds((previous) => (sameIdList(previous, nextDisabled) ? previous : nextDisabled));
     cacheRef.current = nextCache;
     setMetadata((previous) => mergeMetadata(previous, nextCache));
     // Content keys — App polls listServers with new object identities even when
@@ -109,7 +101,9 @@ export function ServerModsPanel(props: Props): ReactElement {
       }
       setMetadata((previous) => mergeMissingMetadata(previous, result.data));
     });
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- metadata is read at execution time, not as a reactive trigger
   }, [configuredIds, props.server.id]);
 
@@ -121,11 +115,7 @@ export function ServerModsPanel(props: Props): ReactElement {
     [configuredIds, disabledSet, metadata],
   );
 
-  const persist = async (
-    nextIds: string[],
-    nextDisabled: string[],
-    nextCache: Record<string, ModMetadata>,
-  ) => {
+  const persist = async (nextIds: string[], nextDisabled: string[], nextCache: Record<string, ModMetadata>) => {
     // Snapshot the server id so a workspace switch mid-await does not apply this write.
     const server = serverRef.current;
     const targetServerId = server.id;
@@ -181,11 +171,7 @@ export function ServerModsPanel(props: Props): ReactElement {
             {
               onProgress: setImportProgress,
               onBatchComplete: async (next) => {
-                await persist(
-                  next.configuredIds,
-                  next.disabledIds,
-                  next.cache,
-                );
+                await persist(next.configuredIds, next.disabledIds, next.cache);
               },
             },
           );
@@ -336,7 +322,11 @@ export function ServerModsPanel(props: Props): ReactElement {
         onOpenExternal={(target) => void openExternal(target)}
         onToggle={(id, enabled) => void toggle(id, enabled)}
         onAdd={(mod) => void add(mod)}
-        onRemove={(id) => void remove(id).then((ok) => { if (ok) setDetail(null); })}
+        onRemove={(id) =>
+          void remove(id).then((ok) => {
+            if (ok) setDetail(null);
+          })
+        }
       />
     </AppSurfaceCard>
   );

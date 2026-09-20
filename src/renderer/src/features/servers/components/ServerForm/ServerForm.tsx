@@ -111,14 +111,11 @@ export function ServerForm(props: Props): ReactElement {
       onBrowseClusterDir={() => void form.browseDirectory("clusterDir")}
       onClusterIdChange={setField("clusterId")}
       onClusterDirChange={setField("clusterDir")}
-      onAutoStartChange={(autoStart) =>
-        setState((previous) => ({ ...previous, autoStart }))
-      }
+      onAutoStartChange={(autoStart) => setState((previous) => ({ ...previous, autoStart }))}
     />
   );
 
-  const errorAlert =
-    form.error !== null ? <AppAlert color="red">{form.error}</AppAlert> : null;
+  const errorAlert = form.error !== null ? <AppAlert color="red">{form.error}</AppAlert> : null;
 
   const moveDialog =
     props.initial !== null && props.onOpenMoveInstall === undefined ? (

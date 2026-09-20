@@ -44,8 +44,7 @@ export class AppErrorBoundary extends Component<Props, State> {
       >
         <h1 style={{ fontSize: 22, margin: "0 0 12px" }}>YARK hit an error</h1>
         <p style={{ color: "#9aa3b5", maxWidth: 560, lineHeight: 1.45 }}>
-          The window stayed open so you can reload. Your servers are not stopped
-          from this screen.
+          The window stayed open so you can reload. Your servers are not stopped from this screen.
         </p>
         <p
           style={{

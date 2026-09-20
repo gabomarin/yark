@@ -18,8 +18,7 @@ export function ServerFormStartupFields(props: Props): ReactElement {
             Auto-start with YARK
           </Text>
           <Text size="xs" c="dimmed" mt={2}>
-            Start this server automatically after YARK launches and startup
-            checks finish. Default off.
+            Start this server automatically after YARK launches and startup checks finish. Default off.
           </Text>
         </div>
         <Switch
@@ -30,8 +29,7 @@ export function ServerFormStartupFields(props: Props): ReactElement {
       </div>
       {props.showInactiveWarning && (
         <AppAlert color="attention" variant="light">
-          Preference is saved, but Inactive servers never auto-start. Enable the
-          server first.
+          Preference is saved, but Inactive servers never auto-start. Enable the server first.
         </AppAlert>
       )}
     </>

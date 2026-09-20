@@ -80,7 +80,8 @@ describe("default theme contrast", () => {
     expect(failures, failures.join(" | ")).toEqual([]);
   });
 
-  it("keeps every semantic status colour readable as text", () => {    const semantic = {
+  it("keeps every semantic status colour readable as text", () => {
+    const semantic = {
       ok: appTokens.colors.ok,
       warn: appTokens.colors.warn,
       attention: appTokens.colors.attention,

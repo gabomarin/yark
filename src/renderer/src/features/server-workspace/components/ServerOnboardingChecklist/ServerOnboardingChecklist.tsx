@@ -1,9 +1,5 @@
 import type { ReactElement } from "react";
-import {
-  CheckCircle,
-  HardDrives,
-  SkipForward,
-} from "@phosphor-icons/react";
+import { CheckCircle, HardDrives, SkipForward } from "@phosphor-icons/react";
 import { Button, Group, Stack, Text, Title } from "@mantine/core";
 import { isInstallationReady } from "@shared/server/installation-health";
 import type { ServerInstallationInfo, ServerProfile } from "@shared/types";
@@ -24,14 +20,7 @@ export function ServerOnboardingChecklist(props: Props): ReactElement {
   const filesInstalled = isInstallationReady(props.installation);
 
   return (
-    <AppSurfaceCard
-      tone="flat"
-      fill
-      padding={0}
-      radius={0}
-      className={classes.root}
-      data-server-onboarding-checklist
-    >
+    <AppSurfaceCard tone="flat" fill padding={0} radius={0} className={classes.root} data-server-onboarding-checklist>
       <header className={classes.header}>
         <div>
           <Text c="dimmed" size="xs" fw={600}>
@@ -39,16 +28,11 @@ export function ServerOnboardingChecklist(props: Props): ReactElement {
           </Text>
           <Title order={2}>Set up launch</Title>
           <Text c="dimmed" size="sm">
-            Ports and cluster are set on Create server. Here: play experience and
-            files. You can skip and return to the workspace anytime.
+            Ports and cluster are set on Create server. Here: play experience and files. You can skip and return to the
+            workspace anytime.
           </Text>
         </div>
-        <Button
-          variant="subtle"
-          color="gray"
-          leftSection={<SkipForward size={16} />}
-          onClick={props.onDismiss}
-        >
+        <Button variant="subtle" color="gray" leftSection={<SkipForward size={16} />} onClick={props.onDismiss}>
           Later
         </Button>
       </header>
@@ -58,9 +42,7 @@ export function ServerOnboardingChecklist(props: Props): ReactElement {
           <AppSurfaceCard tone="flat" padding="md" radius={0} className={classes.step}>
             <Group gap="sm" mb="xs">
               <Title order={4}>Play experience</Title>
-              {experienceDone && (
-                <CheckCircle size={18} color="var(--mantine-color-green-6)" />
-              )}
+              {experienceDone && <CheckCircle size={18} color="var(--mantine-color-green-6)" />}
             </Group>
             <Text c="dimmed" size="sm" mb="sm">
               Tune rates and comfort with the wizard, or leave the INI defaults.
@@ -92,9 +74,7 @@ export function ServerOnboardingChecklist(props: Props): ReactElement {
             <Group gap="sm" mb="xs">
               <HardDrives size={18} />
               <Title order={4}>Server files</Title>
-              {filesInstalled && (
-                <CheckCircle size={18} color="var(--mantine-color-green-6)" />
-              )}
+              {filesInstalled && <CheckCircle size={18} color="var(--mantine-color-green-6)" />}
             </Group>
             <Text c="dimmed" size="sm" mb="sm">
               {filesInstalled
@@ -103,12 +83,7 @@ export function ServerOnboardingChecklist(props: Props): ReactElement {
             </Text>
             <Group gap="xs">
               {!filesInstalled && (
-                <Button
-                  size="sm"
-                  variant="filled"
-                  data-cta-prominence="primary"
-                  onClick={props.onInstallFiles}
-                >
+                <Button size="sm" variant="filled" data-cta-prominence="primary" onClick={props.onInstallFiles}>
                   Install files
                 </Button>
               )}

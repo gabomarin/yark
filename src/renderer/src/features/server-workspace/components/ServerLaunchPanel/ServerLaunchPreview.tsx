@@ -20,11 +20,7 @@ interface Props {
 export function ServerLaunchPreview(props: Props): ReactElement {
   return (
     <div>
-      <Button
-        variant="subtle"
-        size={props.inputSize}
-        onClick={props.onToggle}
-      >
+      <Button variant="subtle" size={props.inputSize} onClick={props.onToggle}>
         {props.open ? "Hide" : "Show"} effective command preview
       </Button>
       {props.open ? (
@@ -40,10 +36,12 @@ export function ServerLaunchPreview(props: Props): ReactElement {
           </Text>
           <code className={classes.previewCode}>
             <span className={classes.previewRaw}>
-              &quot;{previewBinaryPath(props.installDir, {
+              &quot;
+              {previewBinaryPath(props.installDir, {
                 useAsaApi: props.useAsaApi,
                 useAsaApiLoader: props.useAsaApiLoader,
-              })}&quot;{" "}
+              })}
+              &quot;{" "}
             </span>
             {props.yark.map((t) => (
               <span key={`y-${t}`} className={classes.previewYark}>
@@ -53,11 +51,7 @@ export function ServerLaunchPreview(props: Props): ReactElement {
             {props.structured.map((t, i) => (
               <span
                 key={`s-${t}-${i}`}
-                className={
-                  props.cautionTokens.has(t)
-                    ? classes.previewCaution
-                    : classes.previewStructured
-                }
+                className={props.cautionTokens.has(t) ? classes.previewCaution : classes.previewStructured}
               >
                 {t}{" "}
               </span>

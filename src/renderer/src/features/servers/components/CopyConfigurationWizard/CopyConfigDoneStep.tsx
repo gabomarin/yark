@@ -14,17 +14,14 @@ interface Props {
 }
 
 export function CopyConfigDoneStep(props: Props): ReactElement {
-  const successIds = props.outcomes
-    .filter((o) => o.ok)
-    .map((o) => o.targetId);
+  const successIds = props.outcomes.filter((o) => o.ok).map((o) => o.targetId);
   const failureOutcomes = props.outcomes.filter((o) => !o.ok);
 
   return (
     <Stack gap="sm">
       {successIds.length > 0 && (
         <Text size="sm">
-          Copied settings to {formatTargetNames(props.servers, successIds)}.
-          Nothing changed on {props.sourceName}.
+          Copied settings to {formatTargetNames(props.servers, successIds)}. Nothing changed on {props.sourceName}.
         </Text>
       )}
       {failureOutcomes.length > 0 && (

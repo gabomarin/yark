@@ -39,8 +39,7 @@ describe("palette preview (temp PUX-004)", () => {
   });
 
   it("keeps a near-grey pick close to neutral", () => {
-    const chromaOf = (step: string | undefined) =>
-      Number.parseFloat((step ?? "").split(" ")[1] ?? "0");
+    const chromaOf = (step: string | undefined) => Number.parseFloat((step ?? "").split(" ")[1] ?? "0");
     const muted = buildPaletteFromColor("#1c1c1c");
     const vivid = buildPaletteFromColor("#7f1d1d");
     expect(chromaOf(muted?.gray[10])).toBeLessThan(chromaOf(vivid?.gray[10]));
@@ -48,8 +47,7 @@ describe("palette preview (temp PUX-004)", () => {
   });
 
   it("can reach the picked colour's own chroma at full intensity", () => {
-    const chromaOf = (step: string | undefined) =>
-      Number.parseFloat((step ?? "").split(" ")[1] ?? "0");
+    const chromaOf = (step: string | undefined) => Number.parseFloat((step ?? "").split(" ")[1] ?? "0");
     const picked = hexToOklch("#3b8cff");
     const ramp = buildPaletteFromColor("#3b8cff", undefined, 1);
     // The ladder peaks at the control/border steps, so the peak carries the pick.
@@ -61,8 +59,7 @@ describe("palette preview (temp PUX-004)", () => {
   });
 
   it("scales the tint with the intensity knob", () => {
-    const chromaOf = (step: string | undefined) =>
-      Number.parseFloat((step ?? "").split(" ")[1] ?? "0");
+    const chromaOf = (step: string | undefined) => Number.parseFloat((step ?? "").split(" ")[1] ?? "0");
     const neutral = buildPaletteFromColor("#7f1d1d", undefined, 0);
     const picked = buildPaletteFromColor("#7f1d1d");
     const boosted = buildPaletteFromColor("#7f1d1d", undefined, 1);
@@ -71,9 +68,7 @@ describe("palette preview (temp PUX-004)", () => {
     expect(chromaOf(picked?.gray[7])).toBeGreaterThan(0);
     expect(chromaOf(boosted?.gray[7])).toBeCloseTo(chromaOf(picked?.gray[7]) * 2, 3);
     // A muted pick stays less tinted than a vivid one at the same intensity.
-    expect(chromaOf(buildPaletteFromColor("#111111", undefined, 1)?.gray[7])).toBeLessThan(
-      chromaOf(boosted?.gray[7]),
-    );
+    expect(chromaOf(buildPaletteFromColor("#111111", undefined, 1)?.gray[7])).toBeLessThan(chromaOf(boosted?.gray[7]));
   });
 
   it("darkens the ramp with the darkness knob but keeps step 12 readable", () => {

@@ -2,11 +2,7 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
-import type {
-  ClusterComplianceReport,
-  ServerProfile,
-  ServerRuntimeInfo,
-} from "@shared/types";
+import type { ClusterComplianceReport, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { ClustersPage } from "./ClustersPage";
 
 function makeServer(overrides: Partial<ServerProfile> & Pick<ServerProfile, "id" | "name">): ServerProfile {
@@ -26,9 +22,9 @@ function makeServer(overrides: Partial<ServerProfile> & Pick<ServerProfile, "id"
     extraArgs: [],
     mods: [],
     enabled: enabled ?? true,
-    
+
     autoStart: false,
-    
+
     useAsaApi: false,
     useAsaApiLoader: false,
     createdAt: "2026-07-23T00:00:00.000Z",
@@ -37,18 +33,29 @@ function makeServer(overrides: Partial<ServerProfile> & Pick<ServerProfile, "id"
   };
 }
 
-function makeStatuses(
-  entries: Array<[string, ServerRuntimeInfo["status"]]> = [],
-): Map<string, ServerRuntimeInfo> {
+function makeStatuses(entries: Array<[string, ServerRuntimeInfo["status"]]> = []): Map<string, ServerRuntimeInfo> {
   return new Map(
     entries.map(([serverId, status]) => [
       serverId,
-      { serverId, status, processLive: status !== "stopped" && status !== "error", pid: null, startedAt: null, lastError: null },
+      {
+        serverId,
+        status,
+        processLive: status !== "stopped" && status !== "error",
+        pid: null,
+        startedAt: null,
+        lastError: null,
+      },
     ]),
   );
 }
 
-const island = makeServer({ id: "srv-a", name: "The Island", gamePort: 7777, queryPort: 27015, rconPort: 27020 });
+const island = makeServer({
+  id: "srv-a",
+  name: "The Island",
+  gamePort: 7777,
+  queryPort: 27015,
+  rconPort: 27020,
+});
 const scorched = makeServer({
   id: "srv-b",
   name: "Scorched",
@@ -336,9 +343,7 @@ describe("ClustersPage", () => {
     );
 
     expect(screen.getAllByText(/directory but no Cluster ID/i).length).toBeGreaterThan(0);
-    expect(
-      screen.getByRole("textbox", { name: /incomplete cluster directory/i }),
-    ).toHaveTextContent("C:/ARK/cluster");
+    expect(screen.getByRole("textbox", { name: /incomplete cluster directory/i })).toHaveTextContent("C:/ARK/cluster");
     expect(screen.getByText("Dir Only")).toBeInTheDocument();
     expect(screen.getByLabelText(/^open /i)).toBeInTheDocument();
     expect(screen.getByText(/missing Cluster ID/i)).toBeInTheDocument();
@@ -378,9 +383,9 @@ describe("ClustersPage", () => {
     const dialog = await screen.findByRole("dialog", { name: /create cluster/i });
     await user.click(within(dialog).getByRole("button", { name: /continue/i }));
     expect(within(dialog).getByText(/Incomplete setups/i)).toBeInTheDocument();
-    expect(
-      within(dialog).getByRole("textbox", { name: /incomplete cluster directory/i }),
-    ).toHaveTextContent("C:/ARK/cluster");
+    expect(within(dialog).getByRole("textbox", { name: /incomplete cluster directory/i })).toHaveTextContent(
+      "C:/ARK/cluster",
+    );
   });
 
   it("creates a cluster from multiple eligible stopped servers", async () => {
@@ -451,9 +456,9 @@ describe("ClustersPage", () => {
     await user.click(within(dialog).getByRole("button", { name: /continue/i }));
     expect(within(dialog).getByText("Island Map")).toBeInTheDocument();
     expect(within(dialog).getByText("Scorched Map")).toBeInTheDocument();
-    expect(
-      within(dialog).getByRole("textbox", { name: /shared cluster directory/i }),
-    ).toHaveTextContent("D:\\ASA\\Clusters\\Ember");
+    expect(within(dialog).getByRole("textbox", { name: /shared cluster directory/i })).toHaveTextContent(
+      "D:\\ASA\\Clusters\\Ember",
+    );
     await user.click(within(dialog).getByRole("button", { name: /^create cluster$/i }));
 
     expect(updateServer).toHaveBeenCalledTimes(2);
@@ -606,9 +611,9 @@ describe("ClustersPage", () => {
     await user.click(within(dialog).getByRole("button", { name: /Free Map/i }));
     expect(within(dialog).getByText(/1 selected/i)).toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: /continue/i }));
-    expect(
-      within(dialog).getByRole("textbox", { name: /shared cluster directory/i }),
-    ).toHaveTextContent(/C:[\\/]ARK[\\/]cluster/i);
+    expect(within(dialog).getByRole("textbox", { name: /shared cluster directory/i })).toHaveTextContent(
+      /C:[\\/]ARK[\\/]cluster/i,
+    );
     await user.click(within(dialog).getByRole("button", { name: /add to cluster/i }));
 
     expect(updateServer).toHaveBeenCalledWith(
@@ -684,9 +689,7 @@ describe("ClustersPage", () => {
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByText(/cluster ini template/i)).toBeInTheDocument();
     expect(within(dialog).getByText(/^alpha$/i)).toBeInTheDocument();
-    expect(
-      within(dialog).getByText(/session name, ports, and passwords stay per-server/i),
-    ).toBeInTheDocument();
+    expect(within(dialog).getByText(/session name, ports, and passwords stay per-server/i)).toBeInTheDocument();
     expect(within(dialog).getByRole("radiogroup", { name: /ini file/i })).toBeInTheDocument();
     expect(window.api.getClusterIniTemplateOrDraft).toHaveBeenCalledWith("alpha");
   });
@@ -742,21 +745,16 @@ describe("ClustersPage", () => {
       </AppProviders>,
     );
 
-    await user.click(
-      await screen.findByRole("button", { name: /promote the island to template/i }),
-    );
+    await user.click(await screen.findByRole("button", { name: /promote the island to template/i }));
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByText(/promote member to template/i)).toBeInTheDocument();
     expect(await within(dialog).findByText(/MaxPlayers/i)).toBeInTheDocument();
 
-    await user.click(
-      within(dialog).getByRole("button", { name: /promote to template/i }),
-    );
-    expect(window.api.promoteClusterIniToTemplate).toHaveBeenCalledWith(
-      "alpha",
-      "srv-a",
-      { gameUserSettings: true, game: true },
-    );
+    await user.click(within(dialog).getByRole("button", { name: /promote to template/i }));
+    expect(window.api.promoteClusterIniToTemplate).toHaveBeenCalledWith("alpha", "srv-a", {
+      gameUserSettings: true,
+      game: true,
+    });
   });
 
   it("restores a stopped member from the cluster template after confirmation", async () => {
@@ -788,21 +786,16 @@ describe("ClustersPage", () => {
       </AppProviders>,
     );
 
-    await user.click(
-      await screen.findByRole("button", { name: /restore the island from template/i }),
-    );
+    await user.click(await screen.findByRole("button", { name: /restore the island from template/i }));
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByText(/restore member from template/i)).toBeInTheDocument();
     expect(await within(dialog).findByText(/XPMultiplier/i)).toBeInTheDocument();
 
-    await user.click(
-      within(dialog).getByRole("button", { name: /restore & backup/i }),
-    );
-    expect(window.api.restoreClusterIniFromTemplate).toHaveBeenCalledWith(
-      "alpha",
-      "srv-a",
-      { gameUserSettings: true, game: true },
-    );
+    await user.click(within(dialog).getByRole("button", { name: /restore & backup/i }));
+    expect(window.api.restoreClusterIniFromTemplate).toHaveBeenCalledWith("alpha", "srv-a", {
+      gameUserSettings: true,
+      game: true,
+    });
   });
 
   it("seeds INI from the template only after explicit Seed INI opt-in", async () => {
@@ -878,11 +871,10 @@ describe("ClustersPage", () => {
     await user.click(within(dialog).getByRole("button", { name: /add to cluster/i }));
 
     expect(updateServer).toHaveBeenCalled();
-    expect(window.api.seedClusterIniFromTemplate).toHaveBeenCalledWith(
-      "alpha",
-      "free",
-      { gameUserSettings: true, game: true },
-    );
+    expect(window.api.seedClusterIniFromTemplate).toHaveBeenCalledWith("alpha", "free", {
+      gameUserSettings: true,
+      game: true,
+    });
     expect(onRefresh).toHaveBeenCalled();
   });
 

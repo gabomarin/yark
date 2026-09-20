@@ -56,11 +56,7 @@ export function CreateClusterIdentityStep(props: Props): ReactElement {
         </Text>
       )}
       {props.incompleteGroups.length > 0 && (
-        <AppAlert
-          color="attention"
-          variant="light"
-          title="Incomplete setups (not ready as a cluster yet)"
-        >
+        <AppAlert color="attention" variant="light" title="Incomplete setups (not ready as a cluster yet)">
           <Stack gap="xs">
             {props.incompleteGroups.map((group) => (
               <div key={group.dir}>
@@ -71,8 +67,7 @@ export function CreateClusterIdentityStep(props: Props): ReactElement {
                   aria-label="Incomplete cluster directory"
                 />
                 <Text size="sm">
-                  {group.members.map((server) => server.name).join(", ")} ·
-                  Directory set, missing Cluster ID
+                  {group.members.map((server) => server.name).join(", ")} · Directory set, missing Cluster ID
                 </Text>
               </div>
             ))}

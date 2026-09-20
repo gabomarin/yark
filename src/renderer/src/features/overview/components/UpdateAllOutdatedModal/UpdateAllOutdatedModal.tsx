@@ -69,9 +69,8 @@ export function UpdateAllOutdatedModal(props: Props): ReactElement {
         ) : (
           <>
             <Text size="sm" c="dimmed">
-              One Update job per eligible server is added to Downloads.
-              Running servers and active Downloads stay skipped until they
-              are stopped or the queue is cleared.
+              One Update job per eligible server is added to Downloads. Running servers and active Downloads stay
+              skipped until they are stopped or the queue is cleared.
             </Text>
             {plan.officialBuild !== null ? (
               <Text size="xs" c="dimmed">
@@ -79,27 +78,20 @@ export function UpdateAllOutdatedModal(props: Props): ReactElement {
               </Text>
             ) : null}
             {eligibleCount > 0 ? (
-              <AppAlert
-                color="blue"
-                title={`${eligibleCount} server${eligibleCount === 1 ? "" : "s"} ready to queue`}
-              >
-                Confirm queues one Update job per server. Downloads runs
-                jobs one at a time with the usual safe backup/rollback.
+              <AppAlert color="blue" title={`${eligibleCount} server${eligibleCount === 1 ? "" : "s"} ready to queue`}>
+                Confirm queues one Update job per server. Downloads runs jobs one at a time with the usual safe
+                backup/rollback.
               </AppAlert>
             ) : (
               <AppAlert color="attention" title="Nothing ready to queue">
-                All outdated servers are currently skipped. Stop running
-                servers or clear Downloads jobs, then try again.
+                All outdated servers are currently skipped. Stop running servers or clear Downloads jobs, then try
+                again.
               </AppAlert>
             )}
             <div className={classes.listScroll}>
               <Stack gap="xs" className={classes.list}>
                 {plan.rows.map((row) => (
-                  <div
-                    key={row.serverId}
-                    className={classes.row}
-                    aria-label={buildLabel(row.serverName)}
-                  >
+                  <div key={row.serverId} className={classes.row} aria-label={buildLabel(row.serverName)}>
                     <Group justify="space-between" align="flex-start" wrap="nowrap">
                       <Stack gap={2} className={classes.copy}>
                         <Text size="sm" fw={600}>
@@ -107,9 +99,7 @@ export function UpdateAllOutdatedModal(props: Props): ReactElement {
                         </Text>
                         <Text size="xs" c="dimmed">
                           {row.installBuild ?? "Unknown install build"}
-                          {row.officialBuild !== null
-                            ? ` → ${row.officialBuild}`
-                            : ""}
+                          {row.officialBuild !== null ? ` → ${row.officialBuild}` : ""}
                         </Text>
                         {row.skipLabel !== null ? (
                           <Text size="xs" c="dimmed">

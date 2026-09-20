@@ -1,30 +1,14 @@
-import {
-  ActionIcon,
-  Button,
-  Group,
-  Loader,
-  Stack,
-  Tabs,
-  Text,
-  Tooltip,
-} from "@mantine/core";
+import { ActionIcon, Button, Group, Loader, Stack, Tabs, Text, Tooltip } from "@mantine/core";
 import { ArrowClockwise } from "@phosphor-icons/react";
 import type { OnlinePlayerInfo } from "@shared/ipc";
 import type { ReactElement } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
-import {
-  dangerConfirmBody,
-  openDangerConfirmModal,
-} from "@ui/DangerConfirmModal/openDangerConfirmModal";
+import { dangerConfirmBody, openDangerConfirmModal } from "@ui/DangerConfirmModal/openDangerConfirmModal";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { BannedPlayersSection } from "./BannedPlayersSection";
 import { AdminsSection } from "./AdminsSection";
-import {
-  PlayerIdentityRow,
-  mergeNameHints,
-  resolvePlayerDisplayName,
-} from "./PlayerIdentityRow";
+import { PlayerIdentityRow, mergeNameHints, resolvePlayerDisplayName } from "./PlayerIdentityRow";
 import classes from "./RconPanel.module.css";
 
 export interface PlayerListState {
@@ -50,23 +34,17 @@ interface Props {
 }
 
 export function PlayerListSection(props: Props): ReactElement {
-  const {
-    playersPanelFocus,
-    onPlayersPanelFocusConsumed,
-  } = props;
+  const { playersPanelFocus, onPlayersPanelFocusConsumed } = props;
   const [panelTab, setPanelTab] = useState<"survivors" | "admins">("survivors");
   const [actionKey, setActionKey] = useState<string | null>(null);
   const [panelRefreshing, setPanelRefreshing] = useState(false);
   const [nameById, setNameById] = useState(() => new Map<string, string>());
   const reloadBannedRef = useRef<(() => Promise<void>) | null>(null);
   const reloadAdminsRef = useRef<(() => Promise<void>) | null>(null);
-  const rconDisabled =
-    !props.serverRunning || !props.rconConnected || props.playerList.loading;
+  const rconDisabled = !props.serverRunning || !props.rconConnected || props.playerList.loading;
 
   useEffect(() => {
-    setNameById((previous) =>
-      mergeNameHints(previous, props.playerList.players),
-    );
+    setNameById((previous) => mergeNameHints(previous, props.playerList.players));
   }, [props.playerList.players]);
 
   useEffect(() => {
@@ -95,10 +73,7 @@ export function PlayerListSection(props: Props): ReactElement {
     );
   };
 
-  const runAction = async (
-    playerKey: string,
-    action: () => Promise<boolean>,
-  ): Promise<void> => {
+  const runAction = async (playerKey: string, action: () => Promise<boolean>): Promise<void> => {
     setActionKey(playerKey);
     await runWithFinally(
       async () => {
@@ -125,9 +100,7 @@ export function PlayerListSection(props: Props): ReactElement {
           const ok = await props.onBanPlayer(props.serverId, player.key);
           if (ok) {
             if (player.name) {
-              setNameById((previous) =>
-                mergeNameHints(previous, [player]),
-              );
+              setNameById((previous) => mergeNameHints(previous, [player]));
             }
             await reloadBannedRef.current?.();
           }
@@ -210,11 +183,7 @@ export function PlayerListSection(props: Props): ReactElement {
                 <div className={classes.playerList}>
                   {props.playerList.players.map((player) => {
                     const busy = actionKey === player.key;
-                    const name = resolvePlayerDisplayName(
-                      player.key,
-                      player.name,
-                      nameById,
-                    );
+                    const name = resolvePlayerDisplayName(player.key, player.name, nameById);
                     return (
                       <PlayerIdentityRow
                         key={player.key}
@@ -228,9 +197,7 @@ export function PlayerListSection(props: Props): ReactElement {
                               disabled={rconDisabled || busy}
                               loading={busy}
                               onClick={() =>
-                                void runAction(player.key, () =>
-                                  props.onKickPlayer(props.serverId, player.key),
-                                )
+                                void runAction(player.key, () => props.onKickPlayer(props.serverId, player.key))
                               }
                             >
                               Kick

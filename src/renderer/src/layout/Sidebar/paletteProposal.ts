@@ -95,37 +95,18 @@ export const SHIPPED_PROPOSAL: PaletteProposal = {
 };
 
 /** Every preset the panel can apply; `SHIPPED_PROPOSAL` is the one applied on load. */
-export const PROPOSALS: readonly PaletteProposal[] = [
-  SHIPPED_PROPOSAL,
-  PALEO_TECH_PROPOSAL,
-  DARCULA_PROPOSAL,
-];
+export const PROPOSALS: readonly PaletteProposal[] = [SHIPPED_PROPOSAL, PALEO_TECH_PROPOSAL, DARCULA_PROPOSAL];
 
 /** True when the operator has already touched any preview control. */
 export function hasStoredProposal(): boolean {
-  return Object.keys(window.localStorage).some((key) =>
-    key.includes("palettePreview"),
-  );
+  return Object.keys(window.localStorage).some((key) => key.includes("palettePreview"));
 }
 
 export function applyProposal(proposal: PaletteProposal): void {
-  const {
-    surface,
-    darkness,
-    intensity,
-    panelLift,
-    hairlineLift,
-    plateWarmth,
-    plateColor,
-    accent,
-  } = proposal;
+  const { surface, darkness, intensity, panelLift, hairlineLift, plateWarmth, plateColor, accent } = proposal;
   applyPalettePreview(surface, darkness, intensity);
   applyPlateWarmth(plateWarmth, surface, darkness, intensity, plateColor);
-  applySurfacePreview(
-    panelLift,
-    hairlineLift,
-    surfaceLiftBases(surface, darkness, intensity, plateWarmth, plateColor),
-  );
+  applySurfacePreview(panelLift, hairlineLift, surfaceLiftBases(surface, darkness, intensity, plateWarmth, plateColor));
   applyAccentPreview(accent);
   writeStoredPaletteColor(surface);
   writeStoredPaletteDarkness(darkness);

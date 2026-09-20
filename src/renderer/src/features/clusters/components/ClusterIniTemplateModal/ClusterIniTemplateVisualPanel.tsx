@@ -47,17 +47,10 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
     if (props.iniFile !== "gameUserSettings") {
       return parsed;
     }
-    return parsed.filter(
-      (row) =>
-        !isYarkOwnedIniKey(row.section, row.key) &&
-        !isAsaIgnoredIniMaxPlayers(row.key),
-    );
+    return parsed.filter((row) => !isYarkOwnedIniKey(row.section, row.key) && !isAsaIgnoredIniMaxPlayers(row.key));
   }, [activeText, props.iniFile]);
 
-  const availableRows = useMemo(
-    () => filterIniSettingReferences(rows, "", "all"),
-    [rows],
-  );
+  const availableRows = useMemo(() => filterIniSettingReferences(rows, "", "all"), [rows]);
   const categoryOptions = useMemo(
     () => [
       { value: "all", label: `All settings (${availableRows.length})` },
@@ -68,33 +61,19 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
     ],
     [availableRows],
   );
-  const activeFilter = categoryOptions.some((option) => option.value === filter)
-    ? filter
-    : "all";
+  const activeFilter = categoryOptions.some((option) => option.value === filter) ? filter : "all";
   const visibleRows = useMemo(
     () => filterIniSettingReferences(rows, search, activeFilter),
     [rows, search, activeFilter],
   );
-  const groupedRows = useMemo(
-    () => groupSettingReferencesByUiCategory(visibleRows),
-    [visibleRows],
-  );
+  const groupedRows = useMemo(() => groupSettingReferencesByUiCategory(visibleRows), [visibleRows]);
 
-  const updateValue = (
-    section: string,
-    key: string,
-    value: string,
-    occurrence = 0,
-  ): void => {
+  const updateValue = (section: string, key: string, value: string, occurrence = 0): void => {
     if (props.iniFile === "gameUserSettings" && isYarkOwnedIniKey(section, key)) {
       return;
     }
     props.onPayloadChange(
-      withFileText(
-        props.payload,
-        props.iniFile,
-        setIniValue(activeText, section, key, value, occurrence),
-      ),
+      withFileText(props.payload, props.iniFile, setIniValue(activeText, section, key, value, occurrence)),
     );
   };
 
@@ -107,9 +86,7 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
           value={activeText}
           autosize={false}
           onChange={(event) =>
-            props.onPayloadChange(
-              withFileText(props.payload, props.iniFile, event.currentTarget.value),
-            )
+            props.onPayloadChange(withFileText(props.payload, props.iniFile, event.currentTarget.value))
           }
         />
       </div>
@@ -180,16 +157,12 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
         <div className={classes.tableBody}>
           {groupedRows.length === 0 ? (
             <Text c="dimmed" p="md" size="sm">
-              No editable keys match this filter. Switch to Text to paste
-              content, or save defaults first.
+              No editable keys match this filter. Switch to Text to paste content, or save defaults first.
             </Text>
           ) : (
             groupedRows.map((group) => {
               const sectionGroups = group.sectionGroups;
-              const nestedOther =
-                group.category === "other" &&
-                sectionGroups !== undefined &&
-                sectionGroups.length > 0;
+              const nestedOther = group.category === "other" && sectionGroups !== undefined && sectionGroups.length > 0;
 
               if (nestedOther) {
                 return (
@@ -214,12 +187,7 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                               setCollapsed((prev) => {
                                 const next = { ...prev };
                                 for (const sectionGroup of sectionGroups) {
-                                  next[
-                                    iniUiSectionCollapseKey(
-                                      group.category,
-                                      sectionGroup.section,
-                                    )
-                                  ] = true;
+                                  next[iniUiSectionCollapseKey(group.category, sectionGroup.section)] = true;
                                 }
                                 return next;
                               });
@@ -238,12 +206,7 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                               setCollapsed((prev) => {
                                 const next = { ...prev };
                                 for (const sectionGroup of sectionGroups) {
-                                  next[
-                                    iniUiSectionCollapseKey(
-                                      group.category,
-                                      sectionGroup.section,
-                                    )
-                                  ] = false;
+                                  next[iniUiSectionCollapseKey(group.category, sectionGroup.section)] = false;
                                 }
                                 return next;
                               });
@@ -255,10 +218,7 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                       </Group>
                     </div>
                     {sectionGroups.map((sectionGroup) => {
-                      const collapseKey = iniUiSectionCollapseKey(
-                        group.category,
-                        sectionGroup.section,
-                      );
+                      const collapseKey = iniUiSectionCollapseKey(group.category, sectionGroup.section);
                       const sectionCollapsed = collapsed[collapseKey] === true;
                       return (
                         <div key={collapseKey}>
@@ -274,17 +234,11 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                               }))
                             }
                           >
-                            {sectionCollapsed ? (
-                              <CaretRight size={13} />
-                            ) : (
-                              <CaretDown size={13} />
-                            )}
+                            {sectionCollapsed ? <CaretRight size={13} /> : <CaretDown size={13} />}
                             <Text fw={600} size="xs" className={chrome.subsectionHeaderLabel}>
                               {sectionGroup.label}
                             </Text>
-                            <Badge variant="outline">
-                              {sectionGroup.rows.length}
-                            </Badge>
+                            <Badge variant="outline">{sectionGroup.rows.length}</Badge>
                           </button>
                           {!sectionCollapsed &&
                             sectionGroup.rows.map((row) => (

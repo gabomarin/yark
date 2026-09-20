@@ -16,8 +16,7 @@ const awesomeDetail: ModMetadata = {
   authors: ["ChrisMods"],
   downloadCount: 9_449_769,
   dateModified: "2025-09-01T00:00:00.000Z",
-  curseforgeUrl:
-    "https://www.curseforge.com/ark-survival-ascended/mods/awesomespyglass",
+  curseforgeUrl: "https://www.curseforge.com/ark-survival-ascended/mods/awesomespyglass",
   slug: "awesomespyglass",
   categories: ["Visuals and Sounds"],
 };
@@ -31,8 +30,7 @@ const superDetail: ModMetadata = {
   authors: ["kavan87"],
   downloadCount: 13_500_000,
   dateModified: "2026-05-28T00:00:00.000Z",
-  curseforgeUrl:
-    "https://www.curseforge.com/ark-survival-ascended/mods/super-spyglass-plus",
+  curseforgeUrl: "https://www.curseforge.com/ark-survival-ascended/mods/super-spyglass-plus",
   slug: "super-spyglass-plus",
   categories: ["General"],
 };
@@ -46,8 +44,7 @@ const mapModDetail: ModMetadata = {
   authors: ["Author"],
   downloadCount: 1000,
   dateModified: "2026-06-01T00:00:00.000Z",
-  curseforgeUrl:
-    "https://www.curseforge.com/ark-survival-ascended/mods/svartalfheim-premium",
+  curseforgeUrl: "https://www.curseforge.com/ark-survival-ascended/mods/svartalfheim-premium",
   slug: "svartalfheim-premium",
   categories: ["Maps"],
 };
@@ -58,9 +55,9 @@ const server: ServerProfile = {
   map: "TheIsland_WP",
   installDir: "C:\\ARK\\TheIsland",
   enabled: true,
-    autoStart: false,
-    useAsaApi: false,
-    useAsaApiLoader: false,
+  autoStart: false,
+  useAsaApi: false,
+  useAsaApiLoader: false,
   sessionName: "YARK",
   maxPlayers: 70,
   gamePort: 7777,
@@ -110,10 +107,7 @@ function installApi(): RendererApi {
     getModByReference: vi.fn().mockImplementation(async (ref: string) => {
       const known = [awesomeDetail, superDetail, mapModDetail];
       const match = known.find(
-        (item) =>
-          item.id === ref
-          || item.slug === ref
-          || item.curseforgeUrl === ref,
+        (item) => item.id === ref || item.slug === ref || item.curseforgeUrl === ref,
       );
       return { ok: true, data: match ?? superDetail };
     }),
@@ -172,9 +166,7 @@ describe("ServerModsPanel", () => {
     expect(screen.getByText("1 disabled")).toBeInTheDocument();
     expect(document.querySelector('[data-mod-enabled="false"]')).not.toBeNull();
 
-    await user.click(
-      screen.getByRole("switch", { name: "Enable Svartalfheim Premium" }),
-    );
+    await user.click(screen.getByRole("switch", { name: "Enable Svartalfheim Premium" }));
     await waitFor(() => {
       expect(api.updateServerPatch).toHaveBeenCalledWith(
         "server-1",
@@ -222,9 +214,7 @@ describe("ServerModsPanel", () => {
       </AppProviders>,
     );
 
-    await user.click(
-      screen.getByRole("switch", { name: "Enable Svartalfheim Premium" }),
-    );
+    await user.click(screen.getByRole("switch", { name: "Enable Svartalfheim Premium" }));
     await waitFor(() => {
       expect(notifySpy).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -272,9 +262,7 @@ describe("ServerModsPanel", () => {
       </AppProviders>,
     );
 
-    await user.click(
-      screen.getByRole("switch", { name: "Enable Svartalfheim Premium" }),
-    );
+    await user.click(screen.getByRole("switch", { name: "Enable Svartalfheim Premium" }));
     await waitFor(() => {
       expect(api.updateServerPatch).toHaveBeenCalledWith(
         "server-1",
@@ -286,9 +274,7 @@ describe("ServerModsPanel", () => {
       );
     });
 
-    await user.click(
-      screen.getByRole("switch", { name: /^Disable Awesome Spyglass!$/ }),
-    );
+    await user.click(screen.getByRole("switch", { name: /^Disable Awesome Spyglass!$/ }));
     await waitFor(() => {
       expect(api.updateServerPatch).toHaveBeenCalledWith(
         "server-1",
@@ -488,9 +474,7 @@ describe("ServerModsPanel", () => {
         color: "attention",
       }),
     );
-    expect(
-      screen.getByText("New mods start disabled", { exact: false }),
-    ).toBeInTheDocument();
+    expect(screen.getByText("New mods start disabled", { exact: false })).toBeInTheDocument();
   });
 
   it("shows import progress while resolving multiple refs", async () => {
@@ -572,9 +556,11 @@ describe("ServerModsPanel", () => {
     const user = userEvent.setup();
     renderPanel();
 
-    await user.click(await screen.findByRole("button", {
-      name: "Remove Awesome Spyglass!",
-    }));
+    await user.click(
+      await screen.findByRole("button", {
+        name: "Remove Awesome Spyglass!",
+      }),
+    );
     await user.click(await screen.findByRole("button", { name: "Remove mod" }));
 
     await waitFor(() => {
@@ -599,9 +585,7 @@ describe("ServerModsPanel", () => {
     expect(row).not.toBeNull();
     fireEvent.contextMenu(row!);
 
-    await user.click(
-      await screen.findByRole("menuitem", { name: /Remove Awesome Spyglass/i }),
-    );
+    await user.click(await screen.findByRole("menuitem", { name: /Remove Awesome Spyglass/i }));
     expect(api.updateServerPatch).not.toHaveBeenCalled();
 
     await user.click(await screen.findByRole("button", { name: "Remove mod" }));
@@ -645,23 +629,15 @@ describe("ServerModsPanel", () => {
     await user.type(search, "spyglass");
     await user.click(screen.getByRole("button", { name: "Search mods" }));
     await waitFor(() => {
-      expect(api.searchMods).toHaveBeenCalledWith(
-        "spyglass",
-        expect.any(Object),
-      );
+      expect(api.searchMods).toHaveBeenCalledWith("spyglass", expect.any(Object));
     });
     const afterFirstSubmit = vi.mocked(api.searchMods).mock.calls.length;
 
     await user.click(screen.getByRole("button", { name: "Search mods" }));
     await waitFor(() => {
-      expect(vi.mocked(api.searchMods).mock.calls.length).toBe(
-        afterFirstSubmit + 1,
-      );
+      expect(vi.mocked(api.searchMods).mock.calls.length).toBe(afterFirstSubmit + 1);
     });
-    expect(api.searchMods).toHaveBeenLastCalledWith(
-      "spyglass",
-      expect.any(Object),
-    );
+    expect(api.searchMods).toHaveBeenLastCalledWith("spyglass", expect.any(Object));
   });
 
   it("keeps discovery results separate and adds a result", async () => {
@@ -697,9 +673,7 @@ describe("ServerModsPanel", () => {
 
   it("shows row loading while uncached metadata is fetched", async () => {
     const api = installApi();
-    vi.mocked(api.getModByReference).mockImplementation(
-      () => new Promise(() => undefined),
-    );
+    vi.mocked(api.getModByReference).mockImplementation(() => new Promise(() => undefined));
     const user = userEvent.setup();
     renderPanel();
 

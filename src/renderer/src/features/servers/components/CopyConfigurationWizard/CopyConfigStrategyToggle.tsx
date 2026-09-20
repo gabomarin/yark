@@ -13,18 +13,12 @@ export function CopyConfigStrategyToggle(props: Props): ReactElement {
   return (
     <Group gap="xs">
       <Tooltip label={props.mergeTooltip} multiline w={260}>
-        <Button
-          variant={props.strategy === "merge" ? "filled" : "default"}
-          onClick={() => props.onChange("merge")}
-        >
+        <Button variant={props.strategy === "merge" ? "filled" : "default"} onClick={() => props.onChange("merge")}>
           Merge
         </Button>
       </Tooltip>
       <Tooltip label={props.replaceTooltip} multiline w={260}>
-        <Button
-          variant={props.strategy === "replace" ? "filled" : "default"}
-          onClick={() => props.onChange("replace")}
-        >
+        <Button variant={props.strategy === "replace" ? "filled" : "default"} onClick={() => props.onChange("replace")}>
           Replace
         </Button>
       </Tooltip>

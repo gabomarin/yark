@@ -1,9 +1,5 @@
 import type { ReactElement } from "react";
-import {
-  Group,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Group, Stack, Text } from "@mantine/core";
 import type { ServerProfile } from "@shared/types";
 import { IniEditorNav } from "@ui/IniEditorNav/IniEditorNav";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
@@ -68,14 +64,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
     );
 
   return (
-    <AppSurfaceCard
-      tone="flat"
-      fill
-      padding={0}
-      radius={0}
-      className={classes.root}
-      data-configuration-editor
-    >
+    <AppSurfaceCard tone="flat" fill padding={0} radius={0} className={classes.root} data-configuration-editor>
       <div className={classes.content}>
         <ConfigurationEditorStatusAlerts
           error={editor.error}
@@ -137,9 +126,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
           </Stack>
         )}
 
-        {props.section === "iniFiles" &&
-          editor.iniMode === "text" &&
-          editor.payload !== null && (
+        {props.section === "iniFiles" && editor.iniMode === "text" && editor.payload !== null && (
           <Stack gap="md" className={classes.editor}>
             <ConfigurationEditorHeader
               fileLabel={editor.fileLabel}

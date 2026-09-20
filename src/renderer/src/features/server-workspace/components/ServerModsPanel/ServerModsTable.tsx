@@ -1,37 +1,16 @@
 import type { MouseEvent as ReactMouseEvent, ReactElement } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  Button,
-  Center,
-  TableTd,
-  Tooltip,
-} from "@mantine/core";
-import {
-  DragDropContext,
-  Draggable,
-  Droppable,
-  type DropResult,
-} from "@hello-pangea/dnd";
-import {
-  ArrowCounterClockwise,
-  DotsSixVertical,
-} from "@phosphor-icons/react";
+import { Button, Center, TableTd, Tooltip } from "@mantine/core";
+import { DragDropContext, Draggable, Droppable, type DropResult } from "@hello-pangea/dnd";
+import { ArrowCounterClockwise, DotsSixVertical } from "@phosphor-icons/react";
 import type { DataTableSortStatus } from "mantine-datatable";
 import { DataTableDraggableRow } from "mantine-datatable";
 import { useRowActionMenuApi } from "@ui/RowActionMenu/RowActionMenuProvider";
 import { YarkDataTable } from "@ui/YarkDataTable/YarkDataTable";
 import { confirmRemoveServerMod } from "./confirmRemoveServerMod";
-import {
-  buildServerModsTableColumns,
-  isModRowBusy,
-} from "./serverModsTableColumns";
+import { buildServerModsTableColumns, isModRowBusy } from "./serverModsTableColumns";
 import { buildServerModsRowActions } from "./serverModsRowActions";
-import {
-  sortModRows,
-  type ModRow,
-  type ModRowSortAccessor,
-  type ModRowSortStatus,
-} from "./serverModsModel";
+import { sortModRows, type ModRow, type ModRowSortAccessor, type ModRowSortStatus } from "./serverModsModel";
 import classes from "./ServerModsPanel.module.css";
 
 const CONTEXT_SOURCE_ID = "server-mods-table";
@@ -63,15 +42,9 @@ interface Props {
   remoteSorted?: boolean;
 }
 
-function toSortStatus(
-  status: DataTableSortStatus<ModRow>,
-): ModRowSortStatus | null {
+function toSortStatus(status: DataTableSortStatus<ModRow>): ModRowSortStatus | null {
   const accessor = String(status.columnAccessor);
-  if (
-    accessor !== "name"
-    && accessor !== "downloadCount"
-    && accessor !== "updatedAt"
-  ) {
+  if (accessor !== "name" && accessor !== "downloadCount" && accessor !== "updatedAt") {
     return null;
   }
   return {
@@ -87,16 +60,10 @@ function toSortStatus(
  */
 export function ServerModsTable(props: Props): ReactElement {
   const { openAt } = useRowActionMenuApi();
-  const [internalSortStatus, setInternalSortStatus] = useState<
-    DataTableSortStatus<ModRow>
-  >(LOAD_ORDER_SORT);
+  const [internalSortStatus, setInternalSortStatus] = useState<DataTableSortStatus<ModRow>>(LOAD_ORDER_SORT);
   const controlled = props.onSortStatusChange !== undefined;
-  const sortStatus = controlled
-    ? (props.sortStatus ?? LOAD_ORDER_SORT)
-    : internalSortStatus;
-  const setSortStatus = controlled
-    ? props.onSortStatusChange!
-    : setInternalSortStatus;
+  const sortStatus = controlled ? (props.sortStatus ?? LOAD_ORDER_SORT) : internalSortStatus;
+  const setSortStatus = controlled ? props.onSortStatusChange! : setInternalSortStatus;
 
   const viewSorted = String(sortStatus.columnAccessor) !== "loadIndex";
   const useDnD = props.mode === "server" && props.onReorder !== undefined;
@@ -148,9 +115,7 @@ export function ServerModsTable(props: Props): ReactElement {
     (result: DropResult) => {
       if (!dragEnabled || !result.destination) return;
       if (result.source.index === result.destination.index) return;
-      const orderedIds = records
-        .map((row) => row.id)
-        .filter((id): id is string => id !== null);
+      const orderedIds = records.map((row) => row.id).filter((id): id is string => id !== null);
       const next = [...orderedIds];
       const [moved] = next.splice(result.source.index, 1);
       if (moved === undefined) return;
@@ -171,21 +136,15 @@ export function ServerModsTable(props: Props): ReactElement {
 
   const rowClassName = useCallback(
     (row: ModRow) =>
-      [
-        classes.clickableRow,
-        props.mode === "server" && !row.enabled ? classes.disabledRow : undefined,
-      ]
+      [classes.clickableRow, props.mode === "server" && !row.enabled ? classes.disabledRow : undefined]
         .filter(Boolean)
         .join(" "),
     [props.mode],
   );
 
-  const onRowClick = useCallback(
-    ({ record }: { record: ModRow }) => {
-      handlersRef.current.onInspect(record);
-    },
-    [],
-  );
+  const onRowClick = useCallback(({ record }: { record: ModRow }) => {
+    handlersRef.current.onInspect(record);
+  }, []);
 
   const onRowContextMenu = useCallback(
     ({ record, event }: { record: ModRow; event: ReactMouseEvent }) => {
@@ -212,9 +171,7 @@ export function ServerModsTable(props: Props): ReactElement {
 
   const table = (
     <YarkDataTable
-      className={`${classes.modsTable} ${
-        props.mode === "server" ? classes.serverTable : classes.discoveryTable
-      }`}
+      className={`${classes.modsTable} ${props.mode === "server" ? classes.serverTable : classes.discoveryTable}`}
       idAccessor="key"
       records={records}
       columns={columns}
@@ -234,72 +191,57 @@ export function ServerModsTable(props: Props): ReactElement {
       tableWrapper={
         useDnD
           ? ({ children }) => (
-            <Droppable droppableId="server-mods">
-              {(provided) => (
-                <div {...provided.droppableProps} ref={provided.innerRef}>
-                  {children}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          )
+              <Droppable droppableId="server-mods">
+                {(provided) => (
+                  <div {...provided.droppableProps} ref={provided.innerRef}>
+                    {children}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            )
           : undefined
       }
       rowFactory={
         useDnD
           ? ({ record, index, rowProps, children }) => (
-            <Draggable
-              key={record.key}
-              draggableId={record.key}
-              index={index}
-              isDragDisabled={!dragEnabled}
-            >
-              {(provided, snapshot) => (
-                <DataTableDraggableRow
-                  ref={provided.innerRef}
-                  isDragging={snapshot.isDragging}
-                  {...rowProps}
-                  {...provided.draggableProps}
-                  className={[rowProps.className, classes.clickableRow]
-                    .filter(Boolean)
-                    .join(" ")}
-                >
-                  <TableTd>
-                    <Tooltip
-                      label={
-                        dragEnabled
-                          ? "Drag to change load order"
-                          : viewSorted
-                            ? "Clear column sort to reorder"
-                            : "Reorder unavailable while busy"
-                      }
-                      withArrow
-                    >
-                      <Center
-                        {...(dragEnabled ? provided.dragHandleProps : {})}
-                        role="button"
-                        tabIndex={dragEnabled ? 0 : -1}
-                        aria-disabled={!dragEnabled}
-                        className={
+              <Draggable key={record.key} draggableId={record.key} index={index} isDragDisabled={!dragEnabled}>
+                {(provided, snapshot) => (
+                  <DataTableDraggableRow
+                    ref={provided.innerRef}
+                    isDragging={snapshot.isDragging}
+                    {...rowProps}
+                    {...provided.draggableProps}
+                    className={[rowProps.className, classes.clickableRow].filter(Boolean).join(" ")}
+                  >
+                    <TableTd>
+                      <Tooltip
+                        label={
                           dragEnabled
-                            ? classes.dragHandle
-                            : classes.dragHandleDisabled
+                            ? "Drag to change load order"
+                            : viewSorted
+                              ? "Clear column sort to reorder"
+                              : "Reorder unavailable while busy"
                         }
-                        aria-label={
-                          dragEnabled
-                            ? `Reorder ${record.name}`
-                            : `Reorder unavailable for ${record.name}`
-                        }
+                        withArrow
                       >
-                        <DotsSixVertical size={16} />
-                      </Center>
-                    </Tooltip>
-                  </TableTd>
-                  {children}
-                </DataTableDraggableRow>
-              )}
-            </Draggable>
-          )
+                        <Center
+                          {...(dragEnabled ? provided.dragHandleProps : {})}
+                          role="button"
+                          tabIndex={dragEnabled ? 0 : -1}
+                          aria-disabled={!dragEnabled}
+                          className={dragEnabled ? classes.dragHandle : classes.dragHandleDisabled}
+                          aria-label={dragEnabled ? `Reorder ${record.name}` : `Reorder unavailable for ${record.name}`}
+                        >
+                          <DotsSixVertical size={16} />
+                        </Center>
+                      </Tooltip>
+                    </TableTd>
+                    {children}
+                  </DataTableDraggableRow>
+                )}
+              </Draggable>
+            )
           : undefined
       }
     />
@@ -319,11 +261,7 @@ export function ServerModsTable(props: Props): ReactElement {
         </div>
       ) : null}
       <div className={classes.tableViewport}>
-        {useDnD ? (
-          <DragDropContext onDragEnd={handleDragEnd}>{table}</DragDropContext>
-        ) : (
-          table
-        )}
+        {useDnD ? <DragDropContext onDragEnd={handleDragEnd}>{table}</DragDropContext> : table}
       </div>
     </div>
   );

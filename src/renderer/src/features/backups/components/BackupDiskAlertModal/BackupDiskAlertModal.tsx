@@ -38,8 +38,8 @@ export function BackupDiskAlertModal(props: Props): ReactElement {
       {props.diskDraft !== null && (
         <Stack gap="md">
           <Text size="sm" c="dimmed">
-            Based on the whole drive, not just the backup folder. Warning and
-            critical percentages apply to total used space.
+            Based on the whole drive, not just the backup folder. Warning and critical percentages apply to total used
+            space.
           </Text>
           <NumberInput
             label="Warning at used %"
@@ -47,8 +47,7 @@ export function BackupDiskAlertModal(props: Props): ReactElement {
             max={99}
             value={props.diskDraft.warnUsedPercent}
             onChange={(value) =>
-              typeof value === "number" &&
-              props.onDiskDraftChange({ ...props.diskDraft!, warnUsedPercent: value })
+              typeof value === "number" && props.onDiskDraftChange({ ...props.diskDraft!, warnUsedPercent: value })
             }
           />
           <NumberInput

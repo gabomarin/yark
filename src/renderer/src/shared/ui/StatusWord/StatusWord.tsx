@@ -25,50 +25,40 @@ interface Props {
  * (`ServerRuntimeStatusBadge`) map their state onto a `tone`; do not build another
  * dot + label pair.
  */
-export const StatusWord = forwardRef<HTMLSpanElement, Props>(
-  function StatusWord(props, ref) {
-    const {
-      tone,
-      appearance = "label",
-      processing = false,
-      size = "xs",
-      className,
-      children,
-      label,
-      ...dataAttributes
-    } = props;
-    const text = label ?? (typeof children === "string" ? children : undefined);
-    const shared = {
-      "data-tone": tone,
-      "data-size": size,
-      "data-processing": processing || undefined,
-      ...dataAttributes,
-    };
-    const dot = <span className={classes.dot} data-tone={tone} data-processing={processing || undefined} />;
-    const classNames = [classes.root, appearance === "dot" ? classes.dotOnly : null, className]
-      .filter(Boolean)
-      .join(" ");
+export const StatusWord = forwardRef<HTMLSpanElement, Props>(function StatusWord(props, ref) {
+  const {
+    tone,
+    appearance = "label",
+    processing = false,
+    size = "xs",
+    className,
+    children,
+    label,
+    ...dataAttributes
+  } = props;
+  const text = label ?? (typeof children === "string" ? children : undefined);
+  const shared = {
+    "data-tone": tone,
+    "data-size": size,
+    "data-processing": processing || undefined,
+    ...dataAttributes,
+  };
+  const dot = <span className={classes.dot} data-tone={tone} data-processing={processing || undefined} />;
+  const classNames = [classes.root, appearance === "dot" ? classes.dotOnly : null, className].filter(Boolean).join(" ");
 
-    const marker = (
-      <span
-        ref={ref}
-        className={classNames}
-        role="status"
-        aria-label={text}
-        {...shared}
-      >
-        {dot}
-        {appearance === "label" && <span className={classes.label}>{children ?? text}</span>}
-      </span>
-    );
+  const marker = (
+    <span ref={ref} className={classNames} role="status" aria-label={text} {...shared}>
+      {dot}
+      {appearance === "label" && <span className={classes.label}>{children ?? text}</span>}
+    </span>
+  );
 
-    return appearance === "dot" && text !== undefined ? (
-      <Tooltip label={text} withArrow>
-        {marker}
-      </Tooltip>
-    ) : (
-      marker
-    );
-  },
-);
+  return appearance === "dot" && text !== undefined ? (
+    <Tooltip label={text} withArrow>
+      {marker}
+    </Tooltip>
+  ) : (
+    marker
+  );
+});
 StatusWord.displayName = "StatusWord";

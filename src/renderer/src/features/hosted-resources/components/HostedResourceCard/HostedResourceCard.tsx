@@ -1,29 +1,9 @@
 import type { ReactElement } from "react";
-import {
-  ClockCounterClockwise,
-  Copy,
-  DotsThreeVertical,
-  PencilSimple,
-  Power,
-  Trash,
-} from "@phosphor-icons/react";
-import {
-  ActionIcon,
-  Badge,
-  CopyButton,
-  Group,
-  Menu,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
+import { ClockCounterClockwise, Copy, DotsThreeVertical, PencilSimple, Power, Trash } from "@phosphor-icons/react";
+import { ActionIcon, Badge, CopyButton, Group, Menu, Stack, Text, Tooltip } from "@mantine/core";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import type { HostedResourceDto } from "@shared/ipc";
-import {
-  formatByteSize,
-  formatLabel,
-  resourcePublishedLabel,
-} from "../../model/hostedResourcesPageModel";
+import { formatByteSize, formatLabel, resourcePublishedLabel } from "../../model/hostedResourcesPageModel";
 
 interface Props {
   resource: HostedResourceDto;
@@ -59,42 +39,25 @@ export function HostedResourceCard(props: Props): ReactElement {
             <CopyButton value={resource.url} timeout={1500}>
               {({ copied, copy }) => (
                 <Tooltip label={copied ? "Copied" : "Copy URL"}>
-                  <ActionIcon
-                    variant="subtle"
-                    aria-label="Copy URL"
-                    onClick={copy}
-                    disabled={disabled}
-                  >
+                  <ActionIcon variant="subtle" aria-label="Copy URL" onClick={copy} disabled={disabled}>
                     <Copy size={16} />
                   </ActionIcon>
                 </Tooltip>
               )}
             </CopyButton>
             <Tooltip label="Edit">
-              <ActionIcon
-                variant="subtle"
-                aria-label="Edit"
-                onClick={props.onEdit}
-                disabled={props.busy}
-              >
+              <ActionIcon variant="subtle" aria-label="Edit" onClick={props.onEdit} disabled={props.busy}>
                 <PencilSimple size={16} />
               </ActionIcon>
             </Tooltip>
             <Menu shadow="md" withinPortal position="bottom-end">
               <Menu.Target>
-                <ActionIcon
-                  variant="subtle"
-                  aria-label="More resource actions"
-                  disabled={props.busy}
-                >
+                <ActionIcon variant="subtle" aria-label="More resource actions" disabled={props.busy}>
                   <DotsThreeVertical size={16} />
                 </ActionIcon>
               </Menu.Target>
               <Menu.Dropdown>
-                <Menu.Item
-                  leftSection={<ClockCounterClockwise size={16} />}
-                  onClick={props.onRevisions}
-                >
+                <Menu.Item leftSection={<ClockCounterClockwise size={16} />} onClick={props.onRevisions}>
                   Revisions
                 </Menu.Item>
                 <Menu.Item
@@ -105,11 +68,7 @@ export function HostedResourceCard(props: Props): ReactElement {
                   {disabled ? "Enable resource" : "Disable resource"}
                 </Menu.Item>
                 <Menu.Divider />
-                <Menu.Item
-                  leftSection={<Trash size={16} />}
-                  color="red"
-                  onClick={props.onDelete}
-                >
+                <Menu.Item leftSection={<Trash size={16} />} color="red" onClick={props.onDelete}>
                   Delete resource
                 </Menu.Item>
               </Menu.Dropdown>

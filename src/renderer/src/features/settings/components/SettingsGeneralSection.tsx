@@ -34,7 +34,9 @@ export function SettingsGeneralSection(props: Props): ReactElement {
       <div className={classes.settingStack}>
         <div className={classes.settingRow}>
           <div className={classes.settingCopy}>
-            <Text size="sm" fw={600}>Close window to tray</Text>
+            <Text size="sm" fw={600}>
+              Close window to tray
+            </Text>
             <Text size="xs" c="dimmed" mt={2}>
               Closing the window hides YARK in the tray. Use the tray icon or Quit to show it again or exit.
             </Text>
@@ -43,9 +45,7 @@ export function SettingsGeneralSection(props: Props): ReactElement {
             <Switch
               checked={props.closeWindowToTray}
               disabled={!props.desktopShellReady}
-              onChange={(event) =>
-                props.onCloseWindowToTrayChange(event.currentTarget.checked)
-              }
+              onChange={(event) => props.onCloseWindowToTrayChange(event.currentTarget.checked)}
               aria-label="Close window to system tray"
             />
           </div>
@@ -54,7 +54,9 @@ export function SettingsGeneralSection(props: Props): ReactElement {
         <div className={classes.settingGroup}>
           <div className={classes.settingRow}>
             <div className={classes.settingCopy}>
-              <Text size="sm" fw={600}>Desktop alerts</Text>
+              <Text size="sm" fw={600}>
+                Desktop alerts
+              </Text>
               <Text size="xs" c="dimmed" mt={2}>
                 Windows notifications for the events below. Turn off to stay quiet.
               </Text>
@@ -63,9 +65,7 @@ export function SettingsGeneralSection(props: Props): ReactElement {
               <Switch
                 checked={props.osNotifyEnabled}
                 disabled={!props.desktopShellReady}
-                onChange={(event) =>
-                  props.onOsNotifyEnabledChange(event.currentTarget.checked)
-                }
+                onChange={(event) => props.onOsNotifyEnabledChange(event.currentTarget.checked)}
                 aria-label="Desktop alerts"
               />
             </div>
@@ -73,7 +73,9 @@ export function SettingsGeneralSection(props: Props): ReactElement {
 
           <div className={classes.settingGroupChild}>
             <div className={classes.settingCopy}>
-              <Text size="sm" fw={600}>Server crash</Text>
+              <Text size="sm" fw={600}>
+                Server crash
+              </Text>
               <Text size="xs" c="dimmed" mt={2}>
                 When a dedicated server stops unexpectedly.
               </Text>
@@ -82,9 +84,7 @@ export function SettingsGeneralSection(props: Props): ReactElement {
               <Switch
                 checked={props.osNotifyCrash}
                 disabled={!props.desktopShellReady || !props.osNotifyEnabled}
-                onChange={(event) =>
-                  props.onOsNotifyCrashChange(event.currentTarget.checked)
-                }
+                onChange={(event) => props.onOsNotifyCrashChange(event.currentTarget.checked)}
                 aria-label="Alert on server crash"
               />
             </div>
@@ -92,7 +92,9 @@ export function SettingsGeneralSection(props: Props): ReactElement {
 
           <div className={classes.settingGroupChild}>
             <div className={classes.settingCopy}>
-              <Text size="sm" fw={600}>Installs and updates</Text>
+              <Text size="sm" fw={600}>
+                Installs and updates
+              </Text>
               <Text size="xs" c="dimmed" mt={2}>
                 When installing, updating, or checking server files finishes or fails.
               </Text>
@@ -101,9 +103,7 @@ export function SettingsGeneralSection(props: Props): ReactElement {
               <Switch
                 checked={props.osNotifySteamCmd}
                 disabled={!props.desktopShellReady || !props.osNotifyEnabled}
-                onChange={(event) =>
-                  props.onOsNotifySteamCmdChange(event.currentTarget.checked)
-                }
+                onChange={(event) => props.onOsNotifySteamCmdChange(event.currentTarget.checked)}
                 aria-label="Alert on installs and updates"
               />
             </div>
@@ -111,7 +111,9 @@ export function SettingsGeneralSection(props: Props): ReactElement {
 
           <div className={classes.settingGroupChild}>
             <div className={classes.settingCopy}>
-              <Text size="sm" fw={600}>YARK updates</Text>
+              <Text size="sm" fw={600}>
+                YARK updates
+              </Text>
               <Text size="xs" c="dimmed" mt={2}>
                 When a new YARK version is available or ready to install.
               </Text>
@@ -120,9 +122,7 @@ export function SettingsGeneralSection(props: Props): ReactElement {
               <Switch
                 checked={props.osNotifyYarkUpdate}
                 disabled={!props.desktopShellReady || !props.osNotifyEnabled}
-                onChange={(event) =>
-                  props.onOsNotifyYarkUpdateChange(event.currentTarget.checked)
-                }
+                onChange={(event) => props.onOsNotifyYarkUpdateChange(event.currentTarget.checked)}
                 aria-label="Alert on YARK updates"
               />
             </div>
@@ -131,7 +131,9 @@ export function SettingsGeneralSection(props: Props): ReactElement {
           {props.closeWindowToTray ? (
             <div className={classes.settingGroupChild}>
               <div className={classes.settingCopy}>
-                <Text size="sm" fw={600}>Hide to tray</Text>
+                <Text size="sm" fw={600}>
+                  Hide to tray
+                </Text>
                 <Text size="xs" c="dimmed" mt={2}>
                   Reminder that YARK is still running after you close the window.
                 </Text>
@@ -140,9 +142,7 @@ export function SettingsGeneralSection(props: Props): ReactElement {
                 <Switch
                   checked={!props.trayCloseHintDismissed}
                   disabled={!props.desktopShellReady || !props.osNotifyEnabled}
-                  onChange={(event) =>
-                    props.onTrayCloseHintDismissedChange(!event.currentTarget.checked)
-                  }
+                  onChange={(event) => props.onTrayCloseHintDismissedChange(!event.currentTarget.checked)}
                   aria-label="Alert when hiding to tray"
                 />
               </div>
@@ -152,7 +152,9 @@ export function SettingsGeneralSection(props: Props): ReactElement {
 
         <div className={classes.settingRow}>
           <div className={classes.settingCopy}>
-            <Text size="sm" fw={600}>Start with Windows</Text>
+            <Text size="sm" fw={600}>
+              Start with Windows
+            </Text>
             <Text size="xs" c="dimmed" mt={2}>
               Open YARK at Windows sign-in. Does not start dedicated servers.
             </Text>
@@ -161,9 +163,7 @@ export function SettingsGeneralSection(props: Props): ReactElement {
             <Switch
               checked={props.startWithWindows}
               disabled={!props.desktopShellReady}
-              onChange={(event) =>
-                props.onStartWithWindowsChange(event.currentTarget.checked)
-              }
+              onChange={(event) => props.onStartWithWindowsChange(event.currentTarget.checked)}
               aria-label="Start YARK with Windows"
             />
           </div>
@@ -171,7 +171,9 @@ export function SettingsGeneralSection(props: Props): ReactElement {
 
         <div className={classes.settingRow}>
           <div className={classes.settingCopy}>
-            <Text size="sm" fw={600}>Quick jump</Text>
+            <Text size="sm" fw={600}>
+              Quick jump
+            </Text>
             <Text size="xs" c="dimmed" mt={2}>
               Press Ctrl+K to jump to a page or open a server by name.
             </Text>
@@ -180,7 +182,9 @@ export function SettingsGeneralSection(props: Props): ReactElement {
 
         <div className={classes.settingRow}>
           <div className={classes.settingCopy}>
-            <Text size="sm" fw={600}>Display size</Text>
+            <Text size="sm" fw={600}>
+              Display size
+            </Text>
             <Text size="xs" c="dimmed" mt={2}>
               Compact fits more on screen. Comfortable uses larger type and spacing.
             </Text>
@@ -206,7 +210,9 @@ export function SettingsGeneralSection(props: Props): ReactElement {
         {props.onRunSetupAgain !== undefined && (
           <div className={classes.settingRow}>
             <div className={classes.settingCopy}>
-              <Text size="sm" fw={600}>Setup assistant</Text>
+              <Text size="sm" fw={600}>
+                Setup assistant
+              </Text>
               <Text size="xs" c="dimmed" mt={2}>
                 Review SteamCMD, folder, and Windows options. Empty fleet also offers a first map.
               </Text>

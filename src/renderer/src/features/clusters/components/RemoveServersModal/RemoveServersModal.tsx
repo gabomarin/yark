@@ -64,10 +64,7 @@ export function RemoveServersModal(props: Props): ReactElement {
     () => resolveSelectedCandidates(candidates, activeSelectedIds),
     [candidates, activeSelectedIds],
   );
-  const remaining = remainingMemberCountAfterRemove(
-    props.members.length,
-    selected.length,
-  );
+  const remaining = remainingMemberCountAfterRemove(props.members.length, selected.length);
 
   const handleRemove = async (): Promise<void> => {
     if (selected.length === 0) return;
@@ -80,8 +77,7 @@ export function RemoveServersModal(props: Props): ReactElement {
           const input = buildLeaveClusterInput(candidate.server);
           const result = await window.api.updateServer(candidate.server.id, input);
           if (!result.ok) {
-            const failMessage =
-              result.error ?? "Could not remove servers from the cluster";
+            const failMessage = result.error ?? "Could not remove servers from the cluster";
             const rollbackFailures: string[] = [];
             for (const previous of [...applied].reverse()) {
               const rollback = await window.api.updateServer(
@@ -146,8 +142,8 @@ export function RemoveServersModal(props: Props): ReactElement {
     >
       <Stack gap="md">
         <Text size="sm" c="dimmed">
-          Clears Cluster ID and shared directory on the selected profiles. Transfer
-          files in the shared folder are not deleted.
+          Clears Cluster ID and shared directory on the selected profiles. Transfer files in the
+          shared folder are not deleted.
         </Text>
 
         {error !== null && (
@@ -182,9 +178,7 @@ export function RemoveServersModal(props: Props): ReactElement {
                   aria-hidden
                 />
               }
-              trailing={
-                <ServerRuntimeStatusBadge status={candidate.status} size="xs" />
-              }
+              trailing={<ServerRuntimeStatusBadge status={candidate.status} size="xs" />}
             >
               <Text fw={600} size="sm">
                 {candidate.server.name}
@@ -203,8 +197,8 @@ export function RemoveServersModal(props: Props): ReactElement {
 
         {remaining === 0 ? (
           <AppAlert color="attention" variant="light">
-            Removing every server clears this cluster from the list until another
-            profile uses the ID again.
+            Removing every server clears this cluster from the list until another profile uses the
+            ID again.
           </AppAlert>
         ) : remaining === 1 ? (
           <AppAlert color="attention" variant="light">

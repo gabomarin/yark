@@ -20,11 +20,7 @@ export function MapNameHint(props: Props): ReactElement {
 
   if (props.suggestion === null) {
     const missing = (
-      <Text size="sm">
-        {variant === "embedded"
-          ? MAP_NAME_COPY.setUnderCustom
-          : MAP_NAME_COPY.notInferredFromCf}
-      </Text>
+      <Text size="sm">{variant === "embedded" ? MAP_NAME_COPY.setUnderCustom : MAP_NAME_COPY.notInferredFromCf}</Text>
     );
     if (variant === "inline") {
       return (
@@ -48,10 +44,7 @@ export function MapNameHint(props: Props): ReactElement {
     );
   }
 
-  const title =
-    props.suggestion.source === "labeled"
-      ? MAP_NAME_COPY.inferred
-      : MAP_NAME_COPY.possible;
+  const title = props.suggestion.source === "labeled" ? MAP_NAME_COPY.inferred : MAP_NAME_COPY.possible;
 
   const copyControl = (
     <CopyMetadataRow
@@ -89,9 +82,7 @@ export function MapNameHint(props: Props): ReactElement {
       <Stack gap="xs">
         {copyControl}
         <Text size="sm">
-          {props.suggestion.source === "bare"
-            ? MAP_NAME_COPY.verifyOnCurseForge
-            : MAP_NAME_COPY.chooseWhenReady}
+          {props.suggestion.source === "bare" ? MAP_NAME_COPY.verifyOnCurseForge : MAP_NAME_COPY.chooseWhenReady}
         </Text>
       </Stack>
     </AppAlert>

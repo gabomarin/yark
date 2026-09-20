@@ -58,13 +58,7 @@ interface Props {
 }
 
 export function SettingsPage(props: Props): ReactElement {
-  const {
-    focusYarkUpdates,
-    onYarkUpdatesFocused,
-    focusSteamCmd,
-    onSteamCmdFocused,
-    landOnGeneralToken = 0,
-  } = props;
+  const { focusYarkUpdates, onYarkUpdatesFocused, focusSteamCmd, onSteamCmdFocused, landOnGeneralToken = 0 } = props;
   const desktopShell = props.desktopShell;
   const [category, setCategory] = useState<SettingsCategory>(() =>
     props.focusYarkUpdates === true
@@ -115,11 +109,7 @@ export function SettingsPage(props: Props): ReactElement {
 
   const pickDefaultBaseFolder = async (): Promise<void> => {
     const current = props.defaultBaseFolder ?? undefined;
-    const result = await window.api.pickPath(
-      "directory",
-      current,
-      "Select default base folder for new servers",
-    );
+    const result = await window.api.pickPath("directory", current, "Select default base folder for new servers");
     if (!result.ok || result.data === null) {
       return;
     }
@@ -127,35 +117,17 @@ export function SettingsPage(props: Props): ReactElement {
   };
 
   return (
-    <PageScaffold
-      title="Settings"
-      fillViewport
-      edgeToEdge
-      showHeader={false}
-    >
+    <PageScaffold title="Settings" fillViewport edgeToEdge showHeader={false}>
       <div className={classes.layout} data-settings-page>
-        <AppSurfaceCard
-          tone="chrome"
-          fill
-          radius={0}
-          padding="sm"
-          className={classes.navCard}
-        >
+        <AppSurfaceCard tone="chrome" fill radius={0} padding="sm" className={classes.navCard}>
           <div className={classes.navPane}>
             <h1 className={classes.navTitle}>Settings</h1>
-            <SettingsNav
-              active={category}
-              onChange={setCategory}
-            />
+            <SettingsNav active={category} onChange={setCategory} />
           </div>
         </AppSurfaceCard>
 
         <div className={classes.panel}>
-          <div
-            ref={panelScrollRef}
-            className={classes.panelScroll}
-            {...{ [SETTINGS_PANEL_SCROLL_ATTR]: true }}
-          >
+          <div ref={panelScrollRef} className={classes.panelScroll} {...{ [SETTINGS_PANEL_SCROLL_ATTR]: true }}>
             {category === "general" && (
               <SettingsGeneralSection
                 uiDensity={props.uiDensity}

@@ -24,19 +24,13 @@ export function SettingsSteamCmdSection(props: Props): ReactElement {
   const depotCacheDir = props.steamCmdStatus?.depotCacheDir ?? null;
   const contentCacheDir = props.steamCmdStatus?.contentCacheDir ?? null;
   const steamCmdBusy = props.steamCmdBusy === true;
-  const installingSteamCmd =
-    steamCmdBusy && props.steamCmdStatus?.operation === "install-steamcmd";
+  const installingSteamCmd = steamCmdBusy && props.steamCmdStatus?.operation === "install-steamcmd";
   /* A paused job still counts as busy (update-service: busy = live || queued,
    * where queued includes `paused`), so say why instead of leaving a dead button. */
   const busyHoverHint = "SteamCMD is busy";
-  const cacheDisabledHint = !detected
-    ? "Set up SteamCMD first"
-    : steamCmdBusy
-      ? busyHoverHint
-      : null;
+  const cacheDisabledHint = !detected ? "Set up SteamCMD first" : steamCmdBusy ? busyHoverHint : null;
   const activity = (
-    props.steamCmdStatus?.progressLabel ??
-    steamCmdProgressFallbackLabel(props.steamCmdStatus?.operation ?? null)
+    props.steamCmdStatus?.progressLabel ?? steamCmdProgressFallbackLabel(props.steamCmdStatus?.operation ?? null)
   ).replace(/\.$/, "");
   const queuedCount = props.steamCmdStatus?.queuedCount ?? 0;
 
@@ -46,11 +40,7 @@ export function SettingsSteamCmdSection(props: Props): ReactElement {
         <Title order={3} size="h4" id="settings-steamcmd">
           SteamCMD
         </Title>
-        <Text
-          size="xs"
-          fw={600}
-          className={detected ? classes.statusReady : classes.statusNeedsSetup}
-        >
+        <Text size="xs" fw={600} className={detected ? classes.statusReady : classes.statusNeedsSetup}>
           {detected ? "Ready" : installingSteamCmd ? "Installing…" : "Needs setup"}
         </Text>
       </Group>
@@ -66,11 +56,8 @@ export function SettingsSteamCmdSection(props: Props): ReactElement {
             "The executable path and the shared caches unlock when it finishes."
           ) : (
             <>
-              {activity}. The executable path and the shared caches are locked until the
-              job finishes or is cancelled.
-              {queuedCount > 0
-                ? ` ${queuedCount} more ${queuedCount === 1 ? "job" : "jobs"} queued behind it.`
-                : ""}
+              {activity}. The executable path and the shared caches are locked until the job finishes or is cancelled.
+              {queuedCount > 0 ? ` ${queuedCount} more ${queuedCount === 1 ? "job" : "jobs"} queued behind it.` : ""}
             </>
           )}
         </AppAlert>
@@ -114,7 +101,9 @@ export function SettingsSteamCmdSection(props: Props): ReactElement {
       </AppPathRow>
 
       <div className={classes.cacheSection} data-steamcmd-caches>
-        <Text size="sm" fw={600}>Shared caches</Text>
+        <Text size="sm" fw={600}>
+          Shared caches
+        </Text>
         <Text size="xs" c="dimmed">
           Free disk space or inspect folders
         </Text>
@@ -154,8 +143,12 @@ interface CacheRowProps {
 function CacheRow(props: CacheRowProps): ReactElement {
   return (
     <div className={classes.cacheRow}>
-      <Text size="sm" fw={600}>{props.label}</Text>
-      <Text size="xs" c="dimmed">{props.description}</Text>
+      <Text size="sm" fw={600}>
+        {props.label}
+      </Text>
+      <Text size="xs" c="dimmed">
+        {props.description}
+      </Text>
       <AppPathRow
         actions={
           <Tooltip label={props.disabledHint ?? ""} disabled={props.disabledHint === null}>
@@ -181,11 +174,7 @@ function CacheRow(props: CacheRowProps): ReactElement {
           </Tooltip>
         }
       >
-        <ReadonlyPath
-          value={props.path}
-          emptyLabel="Available after SteamCMD is set up"
-          compact
-        />
+        <ReadonlyPath value={props.path} emptyLabel="Available after SteamCMD is set up" compact />
       </AppPathRow>
     </div>
   );

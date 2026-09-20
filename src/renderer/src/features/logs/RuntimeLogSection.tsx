@@ -25,9 +25,7 @@ interface Props {
 
 export function RuntimeLogSection(props: Props): ReactElement {
   const lines = props.runtimeLogLines ?? [];
-  const filtered = formatRuntimeLogLinesForDisplay(
-    filterRuntimeLogLines(lines, props.sourceFilter),
-  );
+  const filtered = formatRuntimeLogLinesForDisplay(filterRuntimeLogLines(lines, props.sourceFilter));
   const showAsaApiLoading = props.asaApiLoading === true;
 
   return (
@@ -35,8 +33,8 @@ export function RuntimeLogSection(props: Props): ReactElement {
       <Stack gap="sm" className={classes.panelStack}>
         {showAsaApiLoading ? (
           <AppAlert color="blue" variant="light" title="Loading Ark Server API">
-            Version.dll and plugins are loading. The server window can take a
-            minute; Runtime stays quiet until ShooterGame.log starts writing.
+            Version.dll and plugins are loading. The server window can take a minute; Runtime stays quiet until
+            ShooterGame.log starts writing.
           </AppAlert>
         ) : null}
         <Group justify="space-between" align="center" gap="sm" wrap="wrap">
@@ -45,12 +43,7 @@ export function RuntimeLogSection(props: Props): ReactElement {
             data={RUNTIME_SOURCE_FILTER_OPTIONS}
             value={props.sourceFilter}
             onChange={(value) => {
-              if (
-                value === "all" ||
-                value === "system" ||
-                value === "asa" ||
-                value === "process"
-              ) {
+              if (value === "all" || value === "system" || value === "asa" || value === "process") {
                 props.onSourceFilterChange(value);
               }
             }}
@@ -67,9 +60,7 @@ export function RuntimeLogSection(props: Props): ReactElement {
           <EmptyState
             layout="stacked"
             icon={<FileText size={24} />}
-            title={
-              showAsaApiLoading ? "Waiting for server log" : "No runtime output"
-            }
+            title={showAsaApiLoading ? "Waiting for server log" : "No runtime output"}
             description={
               showAsaApiLoading
                 ? "System messages appear under All sources / System. Server log lines start when the game finishes loading the API."

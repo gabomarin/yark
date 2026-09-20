@@ -3,14 +3,10 @@ import type { MutableRefObject } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
-import {
-  ADMIN_LIST_DEFAULT_INTERVAL_SEC,
-  ADMIN_LIST_MIN_INTERVAL_SEC,
-} from "./adminListFormConstants";
+import { ADMIN_LIST_DEFAULT_INTERVAL_SEC, ADMIN_LIST_MIN_INTERVAL_SEC } from "./adminListFormConstants";
 
 function normalizeInterval(value: number | string): number {
-  const raw =
-    typeof value === "number" ? value : Number.parseFloat(String(value));
+  const raw = typeof value === "number" ? value : Number.parseFloat(String(value));
   if (!Number.isFinite(raw)) return ADMIN_LIST_DEFAULT_INTERVAL_SEC;
   return Math.max(ADMIN_LIST_MIN_INTERVAL_SEC, raw);
 }
@@ -30,13 +26,9 @@ export function useAdminsSection(args: UseAdminsSectionArgs) {
   const { serverId, iniDirty } = args;
   const [state, setState] = useState<AdminListStateDto | null>(null);
   const [urlDraft, setUrlDraft] = useState("");
-  const [intervalDraft, setIntervalDraft] = useState<number | string>(
-    ADMIN_LIST_DEFAULT_INTERVAL_SEC,
-  );
+  const [intervalDraft, setIntervalDraft] = useState<number | string>(ADMIN_LIST_DEFAULT_INTERVAL_SEC);
   const [savedUrl, setSavedUrl] = useState("");
-  const [savedInterval, setSavedInterval] = useState(
-    ADMIN_LIST_DEFAULT_INTERVAL_SEC,
-  );
+  const [savedInterval, setSavedInterval] = useState(ADMIN_LIST_DEFAULT_INTERVAL_SEC);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [validating, setValidating] = useState(false);
@@ -44,8 +36,7 @@ export function useAdminsSection(args: UseAdminsSectionArgs) {
 
   const applyStateToDrafts = useCallback((next: AdminListStateDto): void => {
     setState(next);
-    const url =
-      next.mode === "remote" || next.mode === "loopback" ? next.adminListUrl : "";
+    const url = next.mode === "remote" || next.mode === "loopback" ? next.adminListUrl : "";
     setUrlDraft(url);
     setIntervalDraft(next.updateAllowedCheatersInterval);
     setSavedUrl(url);
@@ -101,9 +92,7 @@ export function useAdminsSection(args: UseAdminsSectionArgs) {
       if (cancelled || !result.ok || result.data.updated === 0) return;
       setState((previous) => {
         if (!previous) return previous;
-        const byId = new Map(
-          hints.map((hint) => [hint.id.toLowerCase(), hint.name]),
-        );
+        const byId = new Map(hints.map((hint) => [hint.id.toLowerCase(), hint.name]));
         return {
           ...previous,
           entries: previous.entries.map((entry) => ({

@@ -1,12 +1,4 @@
-import {
-  Badge,
-  Button,
-  Group,
-  NumberInput,
-  Stack,
-  Switch,
-  Text,
-} from "@mantine/core";
+import { Badge, Button, Group, NumberInput, Stack, Switch, Text } from "@mantine/core";
 import { CRASH_RECOVERY_LIMITS } from "@shared/crash-recovery/crash-recovery-policy";
 import type { CrashRecoveryPolicy } from "@shared/types";
 import { useCrashRecoveryPanel } from "@features/crash-recovery/hooks/useCrashRecoveryPanel";
@@ -66,11 +58,7 @@ function recoveryState(policy: CrashRecoveryPolicy): {
  * Crash recovery policy block (#563) rendered with the other Maintenance slabs.
  * Default off; only restarts after a real unexpected exit.
  */
-export function CrashRecoverySection({
-  serverId,
-}: {
-  serverId: string;
-}): ReactElement {
+export function CrashRecoverySection({ serverId }: { serverId: string }): ReactElement {
   const panel = useCrashRecoveryPanel(serverId);
   const policy = panel.policy;
   const [open, setOpen] = useState(false);
@@ -138,10 +126,9 @@ export function CrashRecoverySection({
                 </Group>
 
                 <Text size="xs" c="dimmed">
-                  After an unexpected crash, YARK retries the server up to the
-                  configured limit. The counter resets after a stable run. Normal
-                  stops, manual restarts, maintenance windows, and disabled
-                  servers are excluded.
+                  After an unexpected crash, YARK retries the server up to the configured limit. The counter resets
+                  after a stable run. Normal stops, manual restarts, maintenance windows, and disabled servers are
+                  excluded.
                 </Text>
 
                 <NumberInput

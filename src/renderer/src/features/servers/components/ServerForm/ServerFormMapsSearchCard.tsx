@@ -52,9 +52,7 @@ export function ServerFormMapsSearchCard(props: Props): ReactElement {
         ) : token?.source === "bare" ? (
           <Text className={classes.tokenWarn}>Weak *_WP: {token.token}</Text>
         ) : (
-          <Text className={classes.tokenWarn}>
-            No Map Name inferred — you&apos;ll type it next
-          </Text>
+          <Text className={classes.tokenWarn}>No Map Name inferred — you&apos;ll type it next</Text>
         )}
         <Button className={classes.useMapBtn} onClick={props.onUse}>
           Use map

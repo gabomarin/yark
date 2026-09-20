@@ -21,8 +21,7 @@
 
 .downloadsLayout :global(.mantine-Splitter-handle[data-orientation="vertical"]) {
   background: transparent;
-  border-top: 1px solid
-    color-mix(in srgb, var(--app-color-border) 82%, var(--app-color-accent));
+  border-top: 1px solid color-mix(in srgb, var(--app-color-border) 82%, var(--app-color-accent));
 }
 
 .downloadsLayout :global(.mantine-Splitter-handle[data-orientation="vertical"] .mantine-Splitter-thumb) {
@@ -114,8 +113,7 @@
 }
 
 .queueRowList .rowButton + .rowButton {
-  border-top: 1px solid
-    color-mix(in srgb, var(--app-color-border) 82%, var(--app-color-accent));
+  border-top: 1px solid color-mix(in srgb, var(--app-color-border) 82%, var(--app-color-accent));
 }
 
 .queueRowList .rowButton[data-selected] {
@@ -130,8 +128,7 @@
 .queueGroup + .queueGroup {
   margin-top: var(--app-space-xs);
   padding-top: var(--app-space-sm);
-  border-top: 1px solid
-    color-mix(in srgb, var(--app-color-border) 58%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--app-color-border) 58%, transparent);
 }
 
 .rowButton {

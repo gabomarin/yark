@@ -1,12 +1,5 @@
 import type { ReactElement } from "react";
-import {
-  Accordion,
-  Badge,
-  Checkbox,
-  Group,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Accordion, Badge, Checkbox, Group, Stack, Text } from "@mantine/core";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
 import type { ConfigTransferPreview } from "@shared/types";
 import { ClusterIniDiffSummary } from "@features/clusters/components/ClusterIniDiffSummary/ClusterIniDiffSummary";
@@ -20,10 +13,7 @@ interface Props {
   onPasswordConfirmedChange: (value: boolean) => void;
 }
 
-function PreviewBody(props: {
-  preview: ConfigTransferPreview;
-  showTargetHeading: boolean;
-}): ReactElement {
+function PreviewBody(props: { preview: ConfigTransferPreview; showTargetHeading: boolean }): ReactElement {
   const { preview } = props;
   return (
     <Stack gap="sm">
@@ -51,26 +41,21 @@ function PreviewBody(props: {
 
       {preview.profileDiff.mods !== null && (
         <Text size="sm">
-          Mods: {preview.profileDiff.mods.before.length} →{" "}
-          {preview.profileDiff.mods.after.length}
+          Mods: {preview.profileDiff.mods.before.length} → {preview.profileDiff.mods.after.length}
         </Text>
       )}
       {preview.profileDiff.extraArgs !== null && (
         <Text size="sm">
-          Extra args: {preview.profileDiff.extraArgs.before.length} →{" "}
-          {preview.profileDiff.extraArgs.after.length}
+          Extra args: {preview.profileDiff.extraArgs.before.length} → {preview.profileDiff.extraArgs.after.length}
         </Text>
       )}
       {preview.profileDiff.structuredLaunchArgs !== null && (
         <Text size="sm">
-          Structured launch:{" "}
-          {preview.profileDiff.structuredLaunchArgs.before.length} →{" "}
+          Structured launch: {preview.profileDiff.structuredLaunchArgs.before.length} →{" "}
           {preview.profileDiff.structuredLaunchArgs.after.length}
         </Text>
       )}
-      {preview.profileDiff.backupPolicy !== null && (
-        <Text size="sm">Backup schedule will be updated.</Text>
-      )}
+      {preview.profileDiff.backupPolicy !== null && <Text size="sm">Backup schedule will be updated.</Text>}
       {preview.profileDiff.passwords !== null && (
         <Text size="sm" style={{ color: "var(--app-color-fossil)" }}>
           Passwords will be copied (hidden here).
@@ -83,22 +68,15 @@ function PreviewBody(props: {
 export function CopyConfigPreviewStep(props: Props): ReactElement {
   const { previews } = props;
   const multi = previews.length > 1;
-  const totalIniChanges = previews.reduce(
-    (sum, p) => sum + p.iniPreview.changedCount,
-    0,
-  );
+  const totalIniChanges = previews.reduce((sum, p) => sum + p.iniPreview.changedCount, 0);
   const allValid = previews.every((p) => p.iniPreview.valid);
-  const targetLabel =
-    previews.length === 1
-      ? `“${previews[0]!.targetName}”`
-      : `${previews.length} servers`;
+  const targetLabel = previews.length === 1 ? `“${previews[0]!.targetName}”` : `${previews.length} servers`;
 
   return (
     <Stack gap="sm">
       <Group gap="xs">
         <Badge variant="light">
-          {previews[0]?.sourceName ?? "…"} →{" "}
-          {multi ? `${previews.length} targets` : (previews[0]?.targetName ?? "…")}
+          {previews[0]?.sourceName ?? "…"} → {multi ? `${previews.length} targets` : (previews[0]?.targetName ?? "…")}
         </Badge>
         <Badge variant="light" color="ok">
           {totalIniChanges} INI changes
@@ -108,8 +86,7 @@ export function CopyConfigPreviewStep(props: Props): ReactElement {
 
       {!allValid && (
         <AppAlert color="red">
-          One or more targets have an invalid INI preview. Fix the source
-          selection or regenerate the preview.
+          One or more targets have an invalid INI preview. Fix the source selection or regenerate the preview.
         </AppAlert>
       )}
 
@@ -145,9 +122,7 @@ export function CopyConfigPreviewStep(props: Props): ReactElement {
       {props.passwordsSelected && (
         <Checkbox
           checked={props.passwordConfirmed}
-          onChange={(e) =>
-            props.onPasswordConfirmedChange(e.currentTarget.checked)
-          }
+          onChange={(e) => props.onPasswordConfirmedChange(e.currentTarget.checked)}
           label="Also copy passwords from the source."
           styles={{
             label: { color: "var(--app-color-fossil)" },

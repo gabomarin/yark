@@ -23,9 +23,7 @@ describe("App empty installation snapshot", () => {
     const user = userEvent.setup();
     const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
 
-    render(
-      <App />,
-    );
+    render(<App />);
 
     expect(await screen.findByText("Create your first server")).toBeInTheDocument();
     expect(screen.getByText("358.12")).toBeInTheDocument();
@@ -58,9 +56,7 @@ describe("App empty installation snapshot", () => {
     expect(await screen.findByRole("dialog", { name: /set up yark/i })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /skip setup/i }));
     await waitFor(() => {
-      expect(api.setOnboarding).toHaveBeenCalledWith(
-        expect.objectContaining({ status: "skipped" }),
-      );
+      expect(api.setOnboarding).toHaveBeenCalledWith(expect.objectContaining({ status: "skipped" }));
     });
     expect(await screen.findByText("Create your first server")).toBeInTheDocument();
   });
@@ -120,15 +116,11 @@ describe("App empty installation snapshot", () => {
 
     expect(await screen.findByText("Create your first server")).toBeInTheDocument();
     await waitFor(() => {
-      expect(notifySpy).toHaveBeenCalledWith(
-        expect.objectContaining({ id: "onboarding-load-failed" }),
-      );
+      expect(notifySpy).toHaveBeenCalledWith(expect.objectContaining({ id: "onboarding-load-failed" }));
     });
 
     vi.mocked(api.getOnboarding).mockResolvedValue({ ok: true, data: null });
-    const toast = notifySpy.mock.calls.find(
-      (call) => call[0]?.id === "onboarding-load-failed",
-    )?.[0];
+    const toast = notifySpy.mock.calls.find((call) => call[0]?.id === "onboarding-load-failed")?.[0];
     expect(toast?.onClick).toEqual(expect.any(Function));
     toast?.onClick?.({} as never);
 
@@ -153,9 +145,7 @@ describe("App empty installation snapshot", () => {
     render(<App />);
 
     await user.click(await screen.findByRole("button", { name: "New server" }));
-    expect(await screen.findByRole("combobox", { name: /^cluster$/i })).toHaveValue(
-      "ember · from setup",
-    );
+    expect(await screen.findByRole("combobox", { name: /^cluster$/i })).toHaveValue("ember · from setup");
     expect(screen.getByLabelText(/^cluster id$/i)).toHaveValue("ember");
   });
 });
@@ -191,11 +181,8 @@ describe("App SteamCMD sync-files UX (#48)", () => {
     };
     let currentStatus: Record<string, unknown> = { ...idleStatus };
     let progressListener:
-      | ((payload: {
-          status: Record<string, unknown>;
-          console: { lines: string[]; updatedAt: string };
-        }) => void)
-      | null = null;
+      ((payload: { status: Record<string, unknown>; console: { lines: string[]; updatedAt: string } }) => void) | null =
+      null;
 
     const api = createRendererApiMock();
     api.getSteamCmdStatus = vi.fn().mockImplementation(async () => ({
@@ -216,9 +203,7 @@ describe("App SteamCMD sync-files UX (#48)", () => {
       value: api,
     });
 
-    render(
-      <App />,
-    );
+    render(<App />);
 
     expect(await screen.findByText("Create your first server")).toBeInTheDocument();
     expect(progressListener).not.toBeNull();
@@ -291,9 +276,9 @@ describe("App Start busy guard (#390)", () => {
       map: "TheIsland_WP",
       installDir: "C:/ARK/TheIsland",
       enabled: true,
-    autoStart: false,
-    useAsaApi: false,
-    useAsaApiLoader: false,
+      autoStart: false,
+      useAsaApi: false,
+      useAsaApiLoader: false,
       sessionName: "The Island Cluster",
       maxPlayers: 70,
       gamePort: 7777,
@@ -377,4 +362,3 @@ describe("App Start busy guard (#390)", () => {
     });
   });
 });
-

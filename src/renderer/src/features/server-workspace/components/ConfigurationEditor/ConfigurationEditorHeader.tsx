@@ -1,9 +1,5 @@
 import type { ReactElement, ReactNode } from "react";
-import {
-  ArrowCounterClockwise,
-  ArrowUUpLeft,
-  FloppyDisk,
-} from "@phosphor-icons/react";
+import { ArrowCounterClockwise, ArrowUUpLeft, FloppyDisk } from "@phosphor-icons/react";
 import { Button, Group, Stack, Text, Title } from "@mantine/core";
 import classes from "./ConfigurationEditor.module.css";
 

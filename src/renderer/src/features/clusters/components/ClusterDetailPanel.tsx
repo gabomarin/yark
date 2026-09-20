@@ -1,21 +1,14 @@
 import type { ReactElement } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
-import type {
-  ClusterComplianceReport,
-  ServerProfile,
-  ServerRuntimeInfo,
-} from "@shared/types";
+import type { ClusterComplianceReport, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import { formatMapDisplayName } from "@shared/asa/map-identity";
 import { MetaStrip } from "./MetaStrip/MetaStrip";
 import { formatCheckedAt, sharedClusterDir } from "../clusterModel";
 import { resolveServerRuntime } from "../createClusterModel";
-import {
-  canAddServersToCluster,
-  removeIneligibilityReason,
-} from "../membershipModel";
+import { canAddServersToCluster, removeIneligibilityReason } from "../membershipModel";
 import { templateApplyIneligibilityReason } from "../templateApplyModel";
 import classes from "../clusters.module.css";
 import { ClusterIssueRow } from "./ClusterIssueRow";
@@ -43,9 +36,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
   const [removeInitialIds, setRemoveInitialIds] = useState<string[]>([]);
   const [templateOpen, setTemplateOpen] = useState(false);
   const [hasTemplate, setHasTemplate] = useState(false);
-  const [templateStatusError, setTemplateStatusError] = useState<string | null>(
-    null,
-  );
+  const [templateStatusError, setTemplateStatusError] = useState<string | null>(null);
   const [applyTarget, setApplyTarget] = useState<{
     serverId: string;
     serverName: string;
@@ -79,9 +70,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
       setTemplateStatusError(null);
       setHasTemplate(result.data !== null);
     } catch (error) {
-      setTemplateStatusError(
-        error instanceof Error ? error.message : String(error),
-      );
+      setTemplateStatusError(error instanceof Error ? error.message : String(error));
       setHasTemplate(false);
     }
   };
@@ -101,9 +90,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
         setHasTemplate(result.data !== null);
       } catch (error) {
         if (cancelled) return;
-        setTemplateStatusError(
-          error instanceof Error ? error.message : String(error),
-        );
+        setTemplateStatusError(error instanceof Error ? error.message : String(error));
         setHasTemplate(false);
       }
     })();
@@ -113,11 +100,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
   }, [props.report.clusterId, templateOpen]);
 
   return (
-    <AppSurfaceCard
-      fill
-      className={classes.detailPanel}
-      data-cluster-detail={props.report.clusterId}
-    >
+    <AppSurfaceCard fill className={classes.detailPanel} data-cluster-detail={props.report.clusterId}>
       <Stack gap="md" className={classes.panelStack}>
         <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
           <div>
@@ -160,12 +143,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
             {
               label: "Shared cluster directory",
               value: (
-                <ReadonlyPath
-                  value={sharedDir}
-                  emptyLabel="Not the same on every server"
-                  compact
-                  truncate="start"
-                />
+                <ReadonlyPath value={sharedDir} emptyLabel="Not the same on every server" compact truncate="start" />
               ),
             },
             { label: "Servers", value: String(props.members.length) },
@@ -185,9 +163,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
             <Button
               color="red"
               variant="subtle"
-              disabled={
-                !memberStatuses.some((entry) => entry.canRemove)
-              }
+              disabled={!memberStatuses.some((entry) => entry.canRemove)}
               onClick={() => {
                 setRemoveInitialIds([]);
                 setRemoveOpen(true);
@@ -203,14 +179,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
           ) : (
             <div className={classes.memberList}>
               {memberStatuses.map(
-                ({
-                  server,
-                  status,
-                  canRemove,
-                  removeReason,
-                  canTemplateApply,
-                  templateApplyReason,
-                }) => (
+                ({ server, status, canRemove, removeReason, canTemplateApply, templateApplyReason }) => (
                   <ClusterMemberRow
                     key={server.id}
                     server={server}
@@ -266,9 +235,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
                   key={`${issue.severity}-${issue.serverId ?? "fleet"}-${issue.message}`}
                   issue={issue}
                   relatedServerName={
-                    issue.serverId !== null
-                      ? (props.serverById.get(issue.serverId)?.name ?? issue.serverId)
-                      : null
+                    issue.serverId !== null ? (props.serverById.get(issue.serverId)?.name ?? issue.serverId) : null
                   }
                 />
               ))}

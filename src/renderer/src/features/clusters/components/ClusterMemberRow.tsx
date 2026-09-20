@@ -29,9 +29,7 @@ export function ClusterMemberRow(props: Props): ReactElement {
   const hasTemplate = props.hasTemplate === true;
   const applyReason = props.templateApplyReason ?? "Unavailable";
   const restoreDisabled = !canApply || !hasTemplate;
-  const restoreReason = !hasTemplate
-    ? "Create an INI template first"
-    : applyReason;
+  const restoreReason = !hasTemplate ? "Create an INI template first" : applyReason;
 
   const stopRowOpen = (event: { stopPropagation: () => void }): void => {
     event.stopPropagation();
@@ -87,24 +85,12 @@ export function ClusterMemberRow(props: Props): ReactElement {
           </Text>
         )}
       </div>
-      <Group
-        gap="xs"
-        wrap="nowrap"
-        className={classes.memberActions}
-        onClick={stopRowOpen}
-        onKeyDown={stopRowOpen}
-      >
-        {props.status !== undefined && (
-          <ServerRuntimeStatusBadge status={props.status} size="xs" />
-        )}
+      <Group gap="xs" wrap="nowrap" className={classes.memberActions} onClick={stopRowOpen} onKeyDown={stopRowOpen}>
+        {props.status !== undefined && <ServerRuntimeStatusBadge status={props.status} size="xs" />}
         {showPromote && (
           <Tooltip
             withArrow
-            label={
-              canApply
-                ? "Promote to template: copy this member’s INI into the cluster template"
-                : applyReason
-            }
+            label={canApply ? "Promote to template: copy this member’s INI into the cluster template" : applyReason}
           >
             <span>
               <ActionIcon

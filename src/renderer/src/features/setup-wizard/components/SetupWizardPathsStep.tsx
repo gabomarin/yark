@@ -18,8 +18,7 @@ interface Props {
 export function SetupWizardPathsStep(props: Props): ReactElement {
   const detected = props.steamCmdStatus?.detected === true;
   const executablePath = props.steamCmdStatus?.executablePath ?? null;
-  const installingSteamCmd =
-    props.steamCmdBusy && props.steamCmdStatus?.operation === "install-steamcmd";
+  const installingSteamCmd = props.steamCmdBusy && props.steamCmdStatus?.operation === "install-steamcmd";
   const statusLabel = detected
     ? "Ready"
     : installingSteamCmd
@@ -46,15 +45,10 @@ export function SetupWizardPathsStep(props: Props): ReactElement {
         <div>
           <Title order={4}>SteamCMD</Title>
           <Text size="xs" c="dimmed" mt={2}>
-            Installs and updates dedicated server files. Set it up before Install
-            files, or continue and do it later.
+            Installs and updates dedicated server files. Set it up before Install files, or continue and do it later.
           </Text>
         </div>
-        <Text
-          size="xs"
-          fw={600}
-          className={detected ? classes.statusReady : classes.statusNeedsSetup}
-        >
+        <Text size="xs" fw={600} className={detected ? classes.statusReady : classes.statusNeedsSetup}>
           {statusLabel}
         </Text>
       </Group>
@@ -85,11 +79,7 @@ export function SetupWizardPathsStep(props: Props): ReactElement {
           </>
         }
       >
-        <ReadonlyPath
-          value={executablePath}
-          emptyLabel="No steamcmd.exe selected yet"
-          data-setup-steamcmd-path
-        />
+        <ReadonlyPath value={executablePath} emptyLabel="No steamcmd.exe selected yet" data-setup-steamcmd-path />
       </AppPathRow>
 
       <div>

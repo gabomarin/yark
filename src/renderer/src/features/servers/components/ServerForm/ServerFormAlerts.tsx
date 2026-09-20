@@ -18,8 +18,7 @@ export function ServerFormAlerts(props: Props): ReactElement | null {
     <Stack gap="sm">
       {props.filesJobActive && (
         <AppAlert color="attention" title="Updating server files">
-          You can save profile settings now. Wait until the file update finishes
-          before starting Move installation.
+          You can save profile settings now. Wait until the file update finishes before starting Move installation.
         </AppAlert>
       )}
       {props.moveJobActive && (

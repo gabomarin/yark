@@ -1,19 +1,6 @@
 import type { ReactElement } from "react";
-import {
-  Eye,
-  HardDrives,
-  Play,
-  Stop,
-  Wrench,
-} from "@phosphor-icons/react";
-import {
-  Badge,
-  Button,
-  Group,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Eye, HardDrives, Play, Stop, Wrench } from "@phosphor-icons/react";
+import { Badge, Button, Group, Stack, Text, Title } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { isInstallationReady } from "@shared/server/installation-health";
 import { resolveDisplayedServerVersion } from "@shared/server/server-version-display";
@@ -52,8 +39,7 @@ export function WorkspaceHeader(props: Props): ReactElement {
   const isServerDisabled = !props.server.enabled;
   const filesReady = isInstallationReady(props.installation);
   const startBusy = props.startBusy === true;
-  const displayStatus =
-    startBusy && (status === "stopped" || status === "error") ? "starting" : status;
+  const displayStatus = startBusy && (status === "stopped" || status === "error") ? "starting" : status;
   const { canStart, canEnable, canStop, canRestart } = workspaceHeaderControls({
     status,
     enabled: props.server.enabled,
@@ -63,13 +49,11 @@ export function WorkspaceHeader(props: Props): ReactElement {
     startBusy,
   });
   const lockTitle = props.filesJobReason ?? "Wait for the file update to finish";
-  const installBlockedTitle =
-    props.installation?.guidance ?? "Install files first";
+  const installBlockedTitle = props.installation?.guidance ?? "Install files first";
   const startLoading = startBusy && (status === "stopped" || status === "error");
   // Only a true Restart (clicked while running) loads; Start must keep Restart static.
   const restartLoading = startBusy && status === "running";
-  const manualRestartPending =
-    props.runtime?.maintenance?.countdown?.kind === "manual";
+  const manualRestartPending = props.runtime?.maintenance?.countdown?.kind === "manual";
 
   return (
     <header className={classes.header}>
@@ -78,9 +62,7 @@ export function WorkspaceHeader(props: Props): ReactElement {
           mapId={props.server.map}
           mapModId={props.server.mapModId}
           modThumbnailUrl={
-            props.server.mapModId
-              ? props.server.modMetadataCache?.[props.server.mapModId]?.thumbnailUrl
-              : null
+            props.server.mapModId ? props.server.modMetadataCache?.[props.server.mapModId]?.thumbnailUrl : null
           }
           size="lg"
         />
@@ -115,9 +97,7 @@ export function WorkspaceHeader(props: Props): ReactElement {
               leftSection={<Eye size={14} weight="fill" color="var(--mantine-color-blue-6)" />}
               onClick={() => props.onToggleEnabled?.()}
               disabled={!canEnable}
-              title={
-                props.filesJobActive === true ? lockTitle : undefined
-              }
+              title={props.filesJobActive === true ? lockTitle : undefined}
             >
               Enable
             </Button>
@@ -129,22 +109,14 @@ export function WorkspaceHeader(props: Props): ReactElement {
               onClick={props.onStart}
               disabled={!canStart}
               loading={startLoading}
-              title={
-                props.filesJobActive === true
-                  ? lockTitle
-                  : !filesReady
-                    ? installBlockedTitle
-                    : undefined
-              }
+              title={props.filesJobActive === true ? lockTitle : !filesReady ? installBlockedTitle : undefined}
             >
               {startLoading ? "Starting…" : "Start"}
             </Button>
           )}
           <RestartSplitButton
             countdown={props.runtime?.maintenance?.countdown ?? null}
-            manualRestartWarningsEnabled={
-              props.runtime?.maintenance?.manualRestartWarningsEnabled ?? false
-            }
+            manualRestartWarningsEnabled={props.runtime?.maintenance?.manualRestartWarningsEnabled ?? false}
             canRestartNow={canRestart}
             canRestartWithWarning={canRestart}
             restartBusy={restartLoading}
@@ -160,35 +132,22 @@ export function WorkspaceHeader(props: Props): ReactElement {
             leftSection={<Stop size={14} weight="fill" />}
             onClick={props.onStop}
             disabled={!canStop || manualRestartPending}
-            title={
-              manualRestartPending
-                ? "Cancel the queued restart first"
-                : undefined
-            }
+            title={manualRestartPending ? "Cancel the queued restart first" : undefined}
           >
             Stop
           </Button>
         </Group>
 
-        {props.onOpenServerSwitcher !== undefined &&
-          props.onOpenServerActions !== undefined && (
-            <Group gap={6} wrap="nowrap" className={classes.compactTools}>
-              <Button
-                variant="default"
-                leftSection={<HardDrives size={14} />}
-                onClick={props.onOpenServerSwitcher}
-              >
-                Switch server
-              </Button>
-              <Button
-                variant="default"
-                leftSection={<Wrench size={14} />}
-                onClick={props.onOpenServerActions}
-              >
-                Status and actions
-              </Button>
-            </Group>
-          )}
+        {props.onOpenServerSwitcher !== undefined && props.onOpenServerActions !== undefined && (
+          <Group gap={6} wrap="nowrap" className={classes.compactTools}>
+            <Button variant="default" leftSection={<HardDrives size={14} />} onClick={props.onOpenServerSwitcher}>
+              Switch server
+            </Button>
+            <Button variant="default" leftSection={<Wrench size={14} />} onClick={props.onOpenServerActions}>
+              Status and actions
+            </Button>
+          </Group>
+        )}
       </Stack>
     </header>
   );

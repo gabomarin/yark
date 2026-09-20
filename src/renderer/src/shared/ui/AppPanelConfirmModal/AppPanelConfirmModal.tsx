@@ -27,9 +27,7 @@ export interface AppPanelConfirmModalProps {
  * Prefer this over Mantine `openConfirmModal` when the surface should match
  * the panel-style product modals.
  */
-export function AppPanelConfirmModal(
-  props: AppPanelConfirmModalProps,
-): ReactElement {
+export function AppPanelConfirmModal(props: AppPanelConfirmModalProps): ReactElement {
   const cancelLabel = props.cancelLabel ?? "Cancel";
   const confirmColor = props.confirmColor ?? "red";
 
@@ -65,19 +63,11 @@ export function AppPanelConfirmModal(
 
         <Modal.Body>
           <div className={classes.copy}>
-            {typeof props.children === "string" ? (
-              <Text size="sm">{props.children}</Text>
-            ) : (
-              props.children
-            )}
+            {typeof props.children === "string" ? <Text size="sm">{props.children}</Text> : props.children}
           </div>
 
           <div className={classes.footer}>
-            <Button
-              variant="subtle"
-              onClick={props.onClose}
-              disabled={props.confirmLoading === true}
-            >
+            <Button variant="subtle" onClick={props.onClose} disabled={props.confirmLoading === true}>
               {cancelLabel}
             </Button>
             <Button

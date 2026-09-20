@@ -84,11 +84,7 @@ body {
 }
 
 .mantine-Input-input[data-variant="default"]:disabled {
-  --input-bg: color-mix(
-    in srgb,
-    var(--app-color-surface-control) 42%,
-    var(--app-color-surface-panel)
-  );
+  --input-bg: color-mix(in srgb, var(--app-color-surface-control) 42%, var(--app-color-surface-panel));
   --input-bd: var(--app-color-border-subtle);
 }
 
@@ -114,7 +110,6 @@ body {
 .mantine-Button-root[data-variant="transparent"]:where(:disabled, [data-disabled]):not([data-loading]) {
   background: transparent;
 }
-
 
 /* Fluent 2 is square: toasts use the same square surface grammar as the panels. */
 .mantine-Notification-root {

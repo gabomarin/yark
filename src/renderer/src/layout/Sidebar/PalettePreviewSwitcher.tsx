@@ -44,13 +44,7 @@ import {
   type ContrastRow,
   type SurfaceTint,
 } from "./paletteAccentPreviewModel";
-import {
-  PROPOSALS,
-  SHIPPED_PROPOSAL,
-  applyProposal,
-  hasStoredProposal,
-  type PaletteProposal,
-} from "./paletteProposal";
+import { PROPOSALS, SHIPPED_PROPOSAL, applyProposal, hasStoredProposal, type PaletteProposal } from "./paletteProposal";
 
 /**
  * TEMP (PUX-004) — palette preview control.
@@ -92,13 +86,23 @@ export function PalettePreviewSwitcher(): ReactElement {
     setPlateColor(proposal.plateColor);
     setAccent(proposal.accent);
   };
-  const [color, setColor] = useState<string | null>(() => readStoredPaletteColor() ?? (USE_PROPOSAL_ON_LOAD ? PROPOSAL.surface : null));
-  const [accent, setAccent] = useState<string | null>(() => readStoredAccentColor() ?? (USE_PROPOSAL_ON_LOAD ? PROPOSAL.accent : null));
-  const [darkness, setDarkness] = useState<number>(() => (USE_PROPOSAL_ON_LOAD ? PROPOSAL.darkness : readStoredPaletteDarkness()));
-  const [intensity, setIntensity] = useState<number>(() => (USE_PROPOSAL_ON_LOAD ? PROPOSAL.intensity : readStoredPaletteIntensity()));
+  const [color, setColor] = useState<string | null>(
+    () => readStoredPaletteColor() ?? (USE_PROPOSAL_ON_LOAD ? PROPOSAL.surface : null),
+  );
+  const [accent, setAccent] = useState<string | null>(
+    () => readStoredAccentColor() ?? (USE_PROPOSAL_ON_LOAD ? PROPOSAL.accent : null),
+  );
+  const [darkness, setDarkness] = useState<number>(() =>
+    USE_PROPOSAL_ON_LOAD ? PROPOSAL.darkness : readStoredPaletteDarkness(),
+  );
+  const [intensity, setIntensity] = useState<number>(() =>
+    USE_PROPOSAL_ON_LOAD ? PROPOSAL.intensity : readStoredPaletteIntensity(),
+  );
   const [shellArt, setShellArt] = useState<ShellArtOption>(() => readStoredShellArt());
   const [iniChrome, setIniChrome] = useState<IniChromeOption>(() => readStoredIniChrome());
-  const [panelLift, setPanelLift] = useState<number>(() => (USE_PROPOSAL_ON_LOAD ? PROPOSAL.panelLift : readStoredPanelLift()));
+  const [panelLift, setPanelLift] = useState<number>(() =>
+    USE_PROPOSAL_ON_LOAD ? PROPOSAL.panelLift : readStoredPanelLift(),
+  );
   const [hairlineLift, setHairlineLift] = useState<number>(() =>
     USE_PROPOSAL_ON_LOAD ? PROPOSAL.hairlineLift : readStoredHairlineLift(),
   );
@@ -359,11 +363,7 @@ export function PalettePreviewSwitcher(): ReactElement {
         <Text size="10px" c="dimmed">
           Surface tint
         </Text>
-        <Text
-          size="10px"
-          ff="monospace"
-          c={tintColor(tint)}
-        >
+        <Text size="10px" ff="monospace" c={tintColor(tint)}>
           {tint === null ? "-" : `${tint.chroma.toFixed(3)} · ${tint.hue}°`}
         </Text>
       </Group>
@@ -392,11 +392,7 @@ export function PalettePreviewSwitcher(): ReactElement {
               <Text size="10px" c="dimmed" lineClamp={1}>
                 {row.label}
               </Text>
-              <Text
-                size="10px"
-                ff="monospace"
-                c={contrastColor(pass, row.knownGap)}
-              >
+              <Text size="10px" ff="monospace" c={contrastColor(pass, row.knownGap)}>
                 {row.ratio.toFixed(2)}
                 <Text span size="9px" c="dimmed">
                   /{row.min}

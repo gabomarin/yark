@@ -29,12 +29,7 @@ export function BackupsPage(props: Props): ReactElement {
   const fleet = useBackupsPageFleet(props.servers);
 
   return (
-    <PageScaffold
-      title="Backups"
-      fillViewport
-      edgeToEdge
-      showHeader={false}
-    >
+    <PageScaffold title="Backups" fillViewport edgeToEdge showHeader={false}>
       <div className={classes.toolShell} data-backups-page>
         <AppPageHeader
           title="Backups"
@@ -96,10 +91,7 @@ export function BackupsPage(props: Props): ReactElement {
               />
 
               {fleet.summary.disks.length > 0 && !fleet.backupFleetQuiet && (
-                <BackupVolumeStrip
-                  disks={fleet.summary.disks}
-                  diskSettings={fleet.summary.diskSettings}
-                />
+                <BackupVolumeStrip disks={fleet.summary.disks} diskSettings={fleet.summary.diskSettings} />
               )}
 
               <BackupsPageServerSection
@@ -111,11 +103,7 @@ export function BackupsPage(props: Props): ReactElement {
                 healthFilter={fleet.healthFilter}
                 onHealthFilter={fleet.setHealthFilter}
                 serverById={fleet.serverById}
-                onToggleExpand={(serverId) =>
-                  fleet.setExpandedId(
-                    fleet.expandedId === serverId ? null : serverId,
-                  )
-                }
+                onToggleExpand={(serverId) => fleet.setExpandedId(fleet.expandedId === serverId ? null : serverId)}
                 onOpenDestination={(serverId) => void fleet.openDestination(serverId)}
                 onOpenServer={props.onOpenServerBackups}
                 onBrowse={(server) => void fleet.browseBackupDir(server)}

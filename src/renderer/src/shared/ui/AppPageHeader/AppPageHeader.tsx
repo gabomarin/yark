@@ -28,9 +28,7 @@ export function AppPageHeader(props: Props): ReactElement {
     >
       <div>
         <h1 className={classes.title}>{props.title}</h1>
-        {props.subtitle !== undefined && (
-          <p className={classes.subtitle}>{props.subtitle}</p>
-        )}
+        {props.subtitle !== undefined && <p className={classes.subtitle}>{props.subtitle}</p>}
       </div>
       {props.actions !== undefined && <Group gap="sm">{props.actions}</Group>}
     </Group>

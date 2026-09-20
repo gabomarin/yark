@@ -6,9 +6,7 @@ import { AppProviders } from "@app/AppProviders";
 import type { ImportInstallProbe, ServerInstallationInfo, ServerProfile } from "@shared/types";
 import { MoveInstallDialog } from "./MoveInstallDialog";
 
-function installation(
-  health: ServerInstallationInfo["health"],
-): ServerInstallationInfo {
+function installation(health: ServerInstallationInfo["health"]): ServerInstallationInfo {
   return {
     serverId: "probe",
     installed: health === "ready",
@@ -24,10 +22,7 @@ function installation(
   };
 }
 
-function probeResult(
-  installDir: string,
-  health: ServerInstallationInfo["health"],
-): ImportInstallProbe {
+function probeResult(installDir: string, health: ServerInstallationInfo["health"]): ImportInstallProbe {
   return {
     installDir,
     installation: installation(health),
@@ -68,9 +63,9 @@ function profile(partial: Partial<ServerProfile> & Pick<ServerProfile, "id" | "n
     mods: [],
     disabledMods: [],
     modMetadataCache: {},
-    
+
     autoStart: false,
-    
+
     useAsaApi: false,
     useAsaApiLoader: false,
     enabled: true,
@@ -142,13 +137,7 @@ describe("MoveInstallDialog dest preview (#294)", () => {
 
     render(
       <AppProviders>
-        <MoveInstallDialog
-          opened
-          server={island}
-          servers={[island, ragnarok]}
-          onClose={vi.fn()}
-          onMoved={vi.fn()}
-        />
+        <MoveInstallDialog opened server={island} servers={[island, ragnarok]} onClose={vi.fn()} onMoved={vi.fn()} />
       </AppProviders>,
     );
 
@@ -163,13 +152,7 @@ describe("MoveInstallDialog dest preview (#294)", () => {
 
     render(
       <AppProviders>
-        <MoveInstallDialog
-          opened
-          server={island}
-          servers={[island, ragnarok]}
-          onClose={vi.fn()}
-          onMoved={vi.fn()}
-        />
+        <MoveInstallDialog opened server={island} servers={[island, ragnarok]} onClose={vi.fn()} onMoved={vi.fn()} />
       </AppProviders>,
     );
 
@@ -184,13 +167,7 @@ describe("MoveInstallDialog dest preview (#294)", () => {
 
     render(
       <AppProviders>
-        <MoveInstallDialog
-          opened
-          server={island}
-          servers={[island, ragnarok]}
-          onClose={vi.fn()}
-          onMoved={vi.fn()}
-        />
+        <MoveInstallDialog opened server={island} servers={[island, ragnarok]} onClose={vi.fn()} onMoved={vi.fn()} />
       </AppProviders>,
     );
 
@@ -212,13 +189,7 @@ describe("MoveInstallDialog dest preview (#294)", () => {
 
     render(
       <AppProviders>
-        <MoveInstallDialog
-          opened
-          server={island}
-          servers={[island, ragnarok]}
-          onClose={vi.fn()}
-          onMoved={vi.fn()}
-        />
+        <MoveInstallDialog opened server={island} servers={[island, ragnarok]} onClose={vi.fn()} onMoved={vi.fn()} />
       </AppProviders>,
     );
 
@@ -233,13 +204,7 @@ describe("MoveInstallDialog dest preview (#294)", () => {
 
     render(
       <AppProviders>
-        <MoveInstallDialog
-          opened
-          server={island}
-          servers={[island, ragnarok]}
-          onClose={vi.fn()}
-          onMoved={vi.fn()}
-        />
+        <MoveInstallDialog opened server={island} servers={[island, ragnarok]} onClose={vi.fn()} onMoved={vi.fn()} />
       </AppProviders>,
     );
 
@@ -261,13 +226,7 @@ describe("MoveInstallDialog dest preview (#294)", () => {
 
     render(
       <AppProviders>
-        <MoveInstallDialog
-          opened
-          server={island}
-          servers={[island, ragnarok]}
-          onClose={vi.fn()}
-          onMoved={vi.fn()}
-        />
+        <MoveInstallDialog opened server={island} servers={[island, ragnarok]} onClose={vi.fn()} onMoved={vi.fn()} />
       </AppProviders>,
     );
 
@@ -287,13 +246,7 @@ describe("MoveInstallDialog dest preview (#294)", () => {
 
     render(
       <AppProviders>
-        <MoveInstallDialog
-          opened
-          server={island}
-          servers={[island, ragnarok]}
-          onClose={vi.fn()}
-          onMoved={vi.fn()}
-        />
+        <MoveInstallDialog opened server={island} servers={[island, ragnarok]} onClose={vi.fn()} onMoved={vi.fn()} />
       </AppProviders>,
     );
 
@@ -309,13 +262,7 @@ describe("MoveInstallDialog dest preview (#294)", () => {
 
     render(
       <AppProviders>
-        <MoveInstallDialog
-          opened
-          server={island}
-          servers={[island, ragnarok]}
-          onClose={vi.fn()}
-          onMoved={vi.fn()}
-        />
+        <MoveInstallDialog opened server={island} servers={[island, ragnarok]} onClose={vi.fn()} onMoved={vi.fn()} />
       </AppProviders>,
     );
 
@@ -341,13 +288,7 @@ describe("MoveInstallDialog completion feedback (#240)", () => {
 
     render(
       <AppProviders>
-        <MoveInstallDialog
-          opened
-          server={island}
-          servers={[island, ragnarok]}
-          onClose={vi.fn()}
-          onMoved={vi.fn()}
-        />
+        <MoveInstallDialog opened server={island} servers={[island, ragnarok]} onClose={vi.fn()} onMoved={vi.fn()} />
       </AppProviders>,
     );
 
@@ -385,13 +326,7 @@ describe("MoveInstallDialog completion feedback (#240)", () => {
 
     render(
       <AppProviders>
-        <MoveInstallDialog
-          opened
-          server={island}
-          servers={[island, ragnarok]}
-          onClose={vi.fn()}
-          onMoved={vi.fn()}
-        />
+        <MoveInstallDialog opened server={island} servers={[island, ragnarok]} onClose={vi.fn()} onMoved={vi.fn()} />
       </AppProviders>,
     );
 
@@ -401,11 +336,8 @@ describe("MoveInstallDialog completion feedback (#240)", () => {
     });
     await user.click(screen.getByRole("button", { name: /start move/i }));
 
-    expect(
-      await screen.findByRole("alert", { name: /leftover folder/i }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("alert", { name: /leftover folder/i })).toBeInTheDocument();
     expect(notifySpy).not.toHaveBeenCalled();
     notifySpy.mockRestore();
   });
 });
-

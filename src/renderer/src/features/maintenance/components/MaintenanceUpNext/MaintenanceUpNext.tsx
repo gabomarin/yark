@@ -1,13 +1,17 @@
 import { Button, Group, Stack, Switch, Text, Tooltip } from "@mantine/core";
 import type { MaintenancePolicyStatus } from "@shared/types";
 import type { ReactElement } from "react";
-import { formatRestartDaysSummary, formatMaintenanceLocalDateTime, PRESET_LABELS, AUTO_UPDATE_TRIGGER_COPY, formatRestartUpNextSubtitle } from "../../model/maintenancePanelModel";
+import {
+  formatRestartDaysSummary,
+  formatMaintenanceLocalDateTime,
+  PRESET_LABELS,
+  AUTO_UPDATE_TRIGGER_COPY,
+  formatRestartUpNextSubtitle,
+} from "../../model/maintenancePanelModel";
 import classes from "../../MaintenancePanel.module.css";
 
 type PatchFn = (
-  partial: Partial<
-    Omit<MaintenancePolicyStatus, "serverId" | "updatedAt" | "schedulePaused">
-  >,
+  partial: Partial<Omit<MaintenancePolicyStatus, "serverId" | "updatedAt" | "schedulePaused">>,
 ) => Promise<boolean>;
 
 interface Props {
@@ -29,9 +33,7 @@ function MaintenanceWipeToggle(props: {
   onWipeEnable: () => void;
 }): ReactElement {
   const { policy } = props;
-  const subtitle = policy.wipeEnabled
-    ? "After scheduled restart"
-    : "Does not remove tames or structures";
+  const subtitle = policy.wipeEnabled ? "After scheduled restart" : "Does not remove tames or structures";
 
   return (
     <div className={classes.nestedRow}>
@@ -79,25 +81,19 @@ function formatCountdown(ms: number): string {
 /** Up next hero — empty, armed, or live countdown (#487 / #489). */
 export function MaintenanceUpNext(props: Props): ReactElement {
   const policy = props.policy;
-  const armed =
-    policy.restartEnabled || policy.wipeEnabled || policy.updateEnabled;
+  const armed = policy.restartEnabled || policy.wipeEnabled || policy.updateEnabled;
   const live =
-    policy.countdownPhase === "warning"
-    || policy.countdownPhase === "last_minute"
-    || policy.countdownPhase === "restarting"
-    || policy.countdownPhase === "updating"
-    || policy.countdownPhase === "wiping";
+    policy.countdownPhase === "warning" ||
+    policy.countdownPhase === "last_minute" ||
+    policy.countdownPhase === "restarting" ||
+    policy.countdownPhase === "updating" ||
+    policy.countdownPhase === "wiping";
   const isUpdateWindow = policy.countdownKind === "update";
 
   const daysLabel = formatRestartDaysSummary(policy.restartDaysOfWeek);
 
   const wipeToggle = (
-    <MaintenanceWipeToggle
-      policy={policy}
-      busy={props.busy}
-      patch={props.patch}
-      onWipeEnable={props.onWipeEnable}
-    />
+    <MaintenanceWipeToggle policy={policy} busy={props.busy} patch={props.patch} onWipeEnable={props.onWipeEnable} />
   );
 
   if (!armed && !live) {
@@ -108,8 +104,8 @@ export function MaintenanceUpNext(props: Props): ReactElement {
             <Text className={classes.upNextLabel}>Up next</Text>
             <h2 className={classes.upNextTitle}>Nothing scheduled</h2>
             <Text size="sm" c="dimmed" mt={4} maw={480}>
-              Turn on a job below. Restart and wipe share one weekly window;
-              auto-update runs on its own when a new Ark server update is out.
+              Turn on a job below. Restart and wipe share one weekly window; auto-update runs on its own when a new Ark
+              server update is out.
             </Text>
           </div>
           {wipeToggle}
@@ -199,45 +195,27 @@ export function MaintenanceUpNext(props: Props): ReactElement {
               </Text>
             )}
             {lastWipeLine !== null && (
-              <Text
-                size="xs"
-                c="dimmed"
-                mt={
-                  lastRestartLine === null && lastUpdateLine === null ? 4 : 2
-                }
-              >
+              <Text size="xs" c="dimmed" mt={lastRestartLine === null && lastUpdateLine === null ? 4 : 2}>
                 {lastWipeLine}
               </Text>
             )}
           </div>
           <Group gap="xs" wrap="wrap">
             {policy.cancelable && (
-              <Button
-                variant="default"
-                loading={props.busy}
-                onClick={props.onCancelUpcoming}
-              >
+              <Button variant="default" loading={props.busy} onClick={props.onCancelUpcoming}>
                 Cancel window
               </Button>
             )}
-            {policy.restartEnabled
-              && !live
-              && policy.countdownPhase === "idle" && (
+            {policy.restartEnabled && !live && policy.countdownPhase === "idle" && (
               <Tooltip label={props.runRestartNowTooltip} withArrow>
                 <span>
-                  <Button
-                    loading={props.busy}
-                    disabled={props.runRestartNowDisabled}
-                    onClick={props.onRunRestartNow}
-                  >
+                  <Button loading={props.busy} disabled={props.runRestartNowDisabled} onClick={props.onRunRestartNow}>
                     Run scheduled restart now
                   </Button>
                 </span>
               </Tooltip>
             )}
-            {policy.updateEnabled
-              && !live
-              && policy.countdownPhase === "idle" && (
+            {policy.updateEnabled && !live && policy.countdownPhase === "idle" && (
               <Tooltip
                 label={
                   policy.steamUpdateAvailable

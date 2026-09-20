@@ -1,15 +1,6 @@
 import type { ReactElement } from "react";
 import { useEffect, useMemo, useState } from "react";
-import {
-  Button,
-  Collapse,
-  Group,
-  Loader,
-  ScrollArea,
-  SimpleGrid,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Button, Collapse, Group, Loader, ScrollArea, SimpleGrid, Stack, Text } from "@mantine/core";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { isMetadataServiceNotConfiguredMessage } from "@shared/mods/curseforge-proxy-url";
 import type { ImportInstallProbe, ModMetadata } from "@shared/types";
@@ -71,13 +62,9 @@ export function ImportInstallReviewStep(props: Props): ReactElement {
       }
       const unresolved = ids.length - result.data.length;
       if (unresolved > 0) {
-        setMetaWarning(
-          `Named ${result.data.length}/${ids.length} mods; ${unresolved} still show Project ID only.`,
-        );
+        setMetaWarning(`Named ${result.data.length}/${ids.length} mods; ${unresolved} still show Project ID only.`);
       }
-      onModMetadataChange(
-        Object.fromEntries(result.data.map((row) => [row.id, row])),
-      );
+      onModMetadataChange(Object.fromEntries(result.data.map((row) => [row.id, row])));
     });
     return () => {
       alive = false;
@@ -87,9 +74,8 @@ export function ImportInstallReviewStep(props: Props): ReactElement {
   return (
     <Stack gap="sm">
       <AppAlert color="attention" title="Profile only">
-        Schedules, clusters, and other managers&apos; databases are not imported.
-        Game.ini / GameUserSettings.ini on disk are left unchanged until you Start
-        (or edit and save) this profile.
+        Schedules, clusters, and other managers&apos; databases are not imported. Game.ini / GameUserSettings.ini on
+        disk are left unchanged until you Start (or edit and save) this profile.
       </AppAlert>
       {probe.installation.health === "incomplete" ? (
         <AppAlert color="attention" title="Incomplete install" variant="light">
@@ -101,10 +87,7 @@ export function ImportInstallReviewStep(props: Props): ReactElement {
           ["Profile name", probe.suggestions.name],
           ["Session name", probe.suggestions.sessionName],
           ["Map", probe.suggestions.map],
-          [
-            "Ports",
-            `${probe.suggestions.gamePort} / ${probe.suggestions.queryPort} / ${probe.suggestions.rconPort}`,
-          ],
+          ["Ports", `${probe.suggestions.gamePort} / ${probe.suggestions.queryPort} / ${probe.suggestions.rconPort}`],
         ].map(([label, value]) => (
           <div key={label}>
             <Text size="xs" c="dimmed" tt="uppercase" fw={600}>

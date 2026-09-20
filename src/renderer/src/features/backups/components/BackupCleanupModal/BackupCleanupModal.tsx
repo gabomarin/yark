@@ -1,12 +1,5 @@
 import type { ReactElement } from "react";
-import {
-  Button,
-  Checkbox,
-  Group,
-  NumberInput,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Button, Checkbox, Group, NumberInput, Stack, Text } from "@mantine/core";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import type { BackupCleanupOptions, BackupCleanupPreview } from "@shared/types";
@@ -18,9 +11,7 @@ interface Props {
   busy: boolean;
   onClose: () => void;
   cleanupOptions: BackupCleanupOptions;
-  onCleanupOptionsChange: (
-    updater: (prev: BackupCleanupOptions) => BackupCleanupOptions,
-  ) => void;
+  onCleanupOptionsChange: (updater: (prev: BackupCleanupOptions) => BackupCleanupOptions) => void;
   olderThanEnabled: boolean;
   onOlderThanEnabledChange: (enabled: boolean) => void;
   olderThanDays: number;
@@ -45,28 +36,15 @@ export function BackupCleanupModal(props: Props): ReactElement {
       footerAlign="between"
       footer={
         <>
-          <Button
-            variant="default"
-            disabled={props.busy}
-            onClick={props.onClose}
-          >
+          <Button variant="default" disabled={props.busy} onClick={props.onClose}>
             Cancel
           </Button>
           {props.cleanupPreview !== null && props.cleanupPreview.items.length > 0 ? (
-            <Button
-              color="red"
-              variant="filled"
-              loading={props.busy}
-              onClick={props.onConfirm}
-            >
+            <Button color="red" variant="filled" loading={props.busy} onClick={props.onConfirm}>
               Remove {props.cleanupPreview.items.length}
             </Button>
           ) : (
-            <Button
-              variant="default"
-              loading={props.busy}
-              onClick={props.onPreview}
-            >
+            <Button variant="default" loading={props.busy} onClick={props.onPreview}>
               Scan
             </Button>
           )}
@@ -75,8 +53,7 @@ export function BackupCleanupModal(props: Props): ReactElement {
     >
       <Stack gap="md">
         <Text size="sm" c="dimmed">
-          Finds backups that match your rules. The newest successful world
-          backup per server is kept by default.
+          Finds backups that match your rules. The newest successful world backup per server is kept by default.
         </Text>
         <Checkbox
           label="Delete failed backups"
@@ -162,12 +139,7 @@ export function BackupCleanupModal(props: Props): ReactElement {
         />
 
         {props.cleanupPreview !== null && (
-          <AppSurfaceCard
-            tone="flat"
-            padding="sm"
-            radius="md"
-            className={classes.cleanupPreview}
-          >
+          <AppSurfaceCard tone="flat" padding="sm" radius="md" className={classes.cleanupPreview}>
             {props.cleanupPreview.items.length === 0 ? (
               <Text size="sm" c="dimmed">
                 Nothing matches these rules.
@@ -188,8 +160,7 @@ export function BackupCleanupModal(props: Props): ReactElement {
             )}
           </AppSurfaceCard>
         )}
-
-        </Stack>
+      </Stack>
     </AppPanelModal>
   );
 }

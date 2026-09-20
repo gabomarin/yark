@@ -1,18 +1,8 @@
 import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 import { Broom } from "@phosphor-icons/react";
-import {
-  Button,
-  NumberInput,
-  Switch,
-  Text,
-  Title,
-} from "@mantine/core";
-import type {
-  LogCleanupPreview,
-  LogCleanupTargetRef,
-  LogRetentionSettings,
-} from "@shared/types";
+import { Button, NumberInput, Switch, Text, Title } from "@mantine/core";
+import type { LogCleanupPreview, LogCleanupTargetRef, LogRetentionSettings } from "@shared/types";
 import {
   DEFAULT_LOG_RETENTION_SETTINGS,
   MAX_LOG_RETENTION_DAYS,
@@ -26,17 +16,12 @@ import classes from "../SettingsPage.module.css";
 function withValidFailureDays(settings: LogRetentionSettings): LogRetentionSettings {
   return {
     ...settings,
-    eventsFailureRetainDays: Math.max(
-      settings.eventsRetainDays,
-      settings.eventsFailureRetainDays,
-    ),
+    eventsFailureRetainDays: Math.max(settings.eventsRetainDays, settings.eventsFailureRetainDays),
   };
 }
 
 function cleanupFailureMessage(cause: unknown, fallback: string): string {
-  return cause instanceof Error && cause.message.trim().length > 0
-    ? cause.message
-    : fallback;
+  return cause instanceof Error && cause.message.trim().length > 0 ? cause.message : fallback;
 }
 
 export function SettingsLogRetentionSection(): ReactElement {
@@ -86,12 +71,7 @@ export function SettingsLogRetentionSection(): ReactElement {
           setSettings(result.data);
         } catch (cause) {
           setSettings(previous);
-          setError(
-            cleanupFailureMessage(
-              cause,
-              "Could not update log retention settings",
-            ),
-          );
+          setError(cleanupFailureMessage(cause, "Could not update log retention settings"));
         }
       },
       () => {
@@ -177,147 +157,137 @@ export function SettingsLogRetentionSection(): ReactElement {
         Log retention
       </Title>
 
-      {(error !== null) && (
+      {error !== null && (
         <Text size="xs" c="red">
           {error}
         </Text>
       )}
 
       <div className={classes.settingStack}>
-      <div className={classes.settingRow}>
-        <div className={classes.settingCopy}>
-          <Text size="sm" fw={600}>Everyday activity history</Text>
-          <Text size="xs" c="dimmed" mt={2}>
-            Days to keep normal “all went fine” events.
-          </Text>
+        <div className={classes.settingRow}>
+          <div className={classes.settingCopy}>
+            <Text size="sm" fw={600}>
+              Everyday activity history
+            </Text>
+            <Text size="xs" c="dimmed" mt={2}>
+              Days to keep normal “all went fine” events.
+            </Text>
+          </div>
+          <div className={classes.settingControl}>
+            <NumberInput
+              min={MIN_LOG_RETENTION_DAYS}
+              max={MAX_LOG_RETENTION_DAYS}
+              value={settings.eventsRetainDays}
+              disabled={!ready || busy}
+              onChange={(value) => {
+                if (typeof value !== "number") return;
+                persist({ ...settings, eventsRetainDays: value }, settings);
+              }}
+              w={100}
+              aria-label="Keep everyday activity history for days"
+            />
+          </div>
         </div>
-        <div className={classes.settingControl}>
-          <NumberInput
-            min={MIN_LOG_RETENTION_DAYS}
-            max={MAX_LOG_RETENTION_DAYS}
-            value={settings.eventsRetainDays}
-            disabled={!ready || busy}
-            onChange={(value) => {
-              if (typeof value !== "number") return;
-              persist(
-                { ...settings, eventsRetainDays: value },
-                settings,
-              );
-            }}
-            w={100}
-            aria-label="Keep everyday activity history for days"
-          />
+
+        <div className={classes.settingRow}>
+          <div className={classes.settingCopy}>
+            <Text size="sm" fw={600}>
+              Problem history
+            </Text>
+            <Text size="xs" c="dimmed" mt={2}>
+              Days to keep warnings, crashes, and failed updates.
+            </Text>
+          </div>
+          <div className={classes.settingControl}>
+            <NumberInput
+              min={MIN_LOG_RETENTION_DAYS}
+              max={MAX_LOG_RETENTION_DAYS}
+              value={settings.eventsFailureRetainDays}
+              disabled={!ready || busy}
+              onChange={(value) => {
+                if (typeof value !== "number") return;
+                persist({ ...settings, eventsFailureRetainDays: value }, settings);
+              }}
+              w={100}
+              aria-label="Keep problem history for days"
+            />
+          </div>
+        </div>
+
+        <div className={classes.settingRow}>
+          <div className={classes.settingCopy}>
+            <Text size="sm" fw={600}>
+              Successful update logs
+            </Text>
+            <Text size="xs" c="dimmed" mt={2}>
+              How many recent successful update logs to keep per server.
+            </Text>
+          </div>
+          <div className={classes.settingControl}>
+            <NumberInput
+              min={1}
+              max={200}
+              value={settings.updateLogsRetainCount}
+              disabled={!ready || busy}
+              onChange={(value) => {
+                if (typeof value !== "number") return;
+                persist({ ...settings, updateLogsRetainCount: value }, settings);
+              }}
+              w={100}
+              aria-label="Keep successful update logs count"
+            />
+          </div>
+        </div>
+
+        <div className={classes.settingRow}>
+          <div className={classes.settingCopy}>
+            <Text size="sm" fw={600}>
+              Failed update logs
+            </Text>
+            <Text size="xs" c="dimmed" mt={2}>
+              Days to keep failed update logs.
+            </Text>
+          </div>
+          <div className={classes.settingControl}>
+            <NumberInput
+              min={MIN_LOG_RETENTION_DAYS}
+              max={MAX_LOG_RETENTION_DAYS}
+              value={settings.updateLogsFailureRetainDays}
+              disabled={!ready || busy}
+              onChange={(value) => {
+                if (typeof value !== "number") return;
+                persist({ ...settings, updateLogsFailureRetainDays: value }, settings);
+              }}
+              w={100}
+              aria-label="Keep failed update logs for days"
+            />
+          </div>
+        </div>
+
+        <div className={classes.settingRow}>
+          <div className={classes.settingCopy}>
+            <Text size="sm" fw={600}>
+              Clean up automatically
+            </Text>
+            <Text size="xs" c="dimmed" mt={2}>
+              Remove outdated history after launch and about once a day.
+            </Text>
+          </div>
+          <div className={classes.settingControl}>
+            <Switch
+              checked={settings.autoCleanupEnabled}
+              disabled={!ready || busy}
+              onChange={(event) => {
+                const enabled = event.currentTarget.checked;
+                persist({ ...settings, autoCleanupEnabled: enabled }, settings);
+              }}
+              aria-label="Clean up logs automatically"
+            />
+          </div>
         </div>
       </div>
 
-      <div className={classes.settingRow}>
-        <div className={classes.settingCopy}>
-          <Text size="sm" fw={600}>Problem history</Text>
-          <Text size="xs" c="dimmed" mt={2}>
-            Days to keep warnings, crashes, and failed updates.
-          </Text>
-        </div>
-        <div className={classes.settingControl}>
-          <NumberInput
-            min={MIN_LOG_RETENTION_DAYS}
-            max={MAX_LOG_RETENTION_DAYS}
-            value={settings.eventsFailureRetainDays}
-            disabled={!ready || busy}
-            onChange={(value) => {
-              if (typeof value !== "number") return;
-              persist(
-                { ...settings, eventsFailureRetainDays: value },
-                settings,
-              );
-            }}
-            w={100}
-            aria-label="Keep problem history for days"
-          />
-        </div>
-      </div>
-
-      <div className={classes.settingRow}>
-        <div className={classes.settingCopy}>
-          <Text size="sm" fw={600}>Successful update logs</Text>
-          <Text size="xs" c="dimmed" mt={2}>
-            How many recent successful update logs to keep per server.
-          </Text>
-        </div>
-        <div className={classes.settingControl}>
-          <NumberInput
-            min={1}
-            max={200}
-            value={settings.updateLogsRetainCount}
-            disabled={!ready || busy}
-            onChange={(value) => {
-              if (typeof value !== "number") return;
-              persist(
-                { ...settings, updateLogsRetainCount: value },
-                settings,
-              );
-            }}
-            w={100}
-            aria-label="Keep successful update logs count"
-          />
-        </div>
-      </div>
-
-      <div className={classes.settingRow}>
-        <div className={classes.settingCopy}>
-          <Text size="sm" fw={600}>Failed update logs</Text>
-          <Text size="xs" c="dimmed" mt={2}>
-            Days to keep failed update logs.
-          </Text>
-        </div>
-        <div className={classes.settingControl}>
-          <NumberInput
-            min={MIN_LOG_RETENTION_DAYS}
-            max={MAX_LOG_RETENTION_DAYS}
-            value={settings.updateLogsFailureRetainDays}
-            disabled={!ready || busy}
-            onChange={(value) => {
-              if (typeof value !== "number") return;
-              persist(
-                { ...settings, updateLogsFailureRetainDays: value },
-                settings,
-              );
-            }}
-            w={100}
-            aria-label="Keep failed update logs for days"
-          />
-        </div>
-      </div>
-
-      <div className={classes.settingRow}>
-        <div className={classes.settingCopy}>
-          <Text size="sm" fw={600}>Clean up automatically</Text>
-          <Text size="xs" c="dimmed" mt={2}>
-            Remove outdated history after launch and about once a day.
-          </Text>
-        </div>
-        <div className={classes.settingControl}>
-          <Switch
-            checked={settings.autoCleanupEnabled}
-            disabled={!ready || busy}
-            onChange={(event) => {
-              const enabled = event.currentTarget.checked;
-              persist(
-                { ...settings, autoCleanupEnabled: enabled },
-                settings,
-              );
-            }}
-            aria-label="Clean up logs automatically"
-          />
-        </div>
-      </div>
-      </div>
-
-      <Button
-        variant="default"
-        leftSection={<Broom size={14} />}
-        disabled={!ready || busy}
-        onClick={openCleanup}
-      >
+      <Button variant="default" leftSection={<Broom size={14} />} disabled={!ready || busy} onClick={openCleanup}>
         Clean up now…
       </Button>
 

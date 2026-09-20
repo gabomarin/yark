@@ -13,15 +13,8 @@ import { ActionIcon, Group, Menu, Tooltip } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
 import type { ServerMaintenanceRuntime, ServerStatus } from "@shared/types";
 import { RowActionMenuItems } from "@ui/RowActionMenu/RowActionMenuItems";
-import {
-  formatRestartCountdown,
-  useCountdownRemaining,
-} from "@ui/RestartSplitButton/useCountdownRemaining";
-import type {
-  ServerCardRestartAction,
-  ServerCardRuntimeAction,
-  ServerCardUpdateAction,
-} from "./serverCardModel";
+import { formatRestartCountdown, useCountdownRemaining } from "@ui/RestartSplitButton/useCountdownRemaining";
+import type { ServerCardRestartAction, ServerCardRuntimeAction, ServerCardUpdateAction } from "./serverCardModel";
 import { actionGlyphColor } from "./serverCardModel";
 import { buildServerCardMenuActions } from "./serverCardMenuActions";
 import classes from "./ServerCard.module.css";
@@ -66,10 +59,7 @@ interface Props {
   onToggleEnabled?: () => void;
 }
 
-function runtimeActionIcon(
-  kind: ServerCardRuntimeAction["kind"],
-  iconSize: number,
-): ReactElement {
+function runtimeActionIcon(kind: ServerCardRuntimeAction["kind"], iconSize: number): ReactElement {
   switch (kind) {
     case "starting":
     case "stopping":
@@ -102,27 +92,18 @@ export function ServerCardActions(props: Props): ReactElement {
   // Only model.disabled blocks icons. Do not blanket-disable Cancel/Stop during
   // starting/stopping — Overview needs escape hatches when a transition sticks.
   const menuDisabled = props.steamCmdBusy || props.stopBusy || props.startBusy === true;
-  const manualCountdown =
-    props.maintenance?.countdown?.kind === "manual"
-      ? props.maintenance.countdown
-      : null;
+  const manualCountdown = props.maintenance?.countdown?.kind === "manual" ? props.maintenance.countdown : null;
   const hasManualRestartOptions =
-    props.maintenance?.manualRestartWarningsEnabled === true
-    && props.onRestartWithWarning !== undefined;
-  const countdownRemaining = useCountdownRemaining(
-    manualCountdown?.targetAtMs ?? null,
-  );
+    props.maintenance?.manualRestartWarningsEnabled === true && props.onRestartWithWarning !== undefined;
+  const countdownRemaining = useCountdownRemaining(manualCountdown?.targetAtMs ?? null);
   const cancelRestartLabel =
-    countdownRemaining === null
-      ? "Cancel restart"
-      : `Cancel restart · ${formatRestartCountdown(countdownRemaining)}`;
+    countdownRemaining === null ? "Cancel restart" : `Cancel restart · ${formatRestartCountdown(countdownRemaining)}`;
   const stopBlockedByManualRestart = manualCountdown !== null;
-  const runtimeActionDisabled =
-    runtimeAction.disabled
-    || (stopBlockedByManualRestart && runtimeAction.kind === "stop");
-  const runtimeActionHint = stopBlockedByManualRestart && runtimeAction.kind === "stop"
-    ? "Cancel the queued restart first"
-    : runtimeAction.hint ?? runtimeAction.label;
+  const runtimeActionDisabled = runtimeAction.disabled || (stopBlockedByManualRestart && runtimeAction.kind === "stop");
+  const runtimeActionHint =
+    stopBlockedByManualRestart && runtimeAction.kind === "stop"
+      ? "Cancel the queued restart first"
+      : (runtimeAction.hint ?? runtimeAction.label);
   const menuEntries = buildServerCardMenuActions({
     status: props.status,
     isActive: props.isActive,
@@ -227,10 +208,7 @@ export function ServerCardActions(props: Props): ReactElement {
               </ActionIcon>
             </Menu.Target>
             <Menu.Dropdown>
-              <Menu.Item
-                leftSection={<ArrowsClockwise size={16} weight="bold" />}
-                onClick={props.onRestart}
-              >
+              <Menu.Item leftSection={<ArrowsClockwise size={16} weight="bold" />} onClick={props.onRestart}>
                 Restart now
               </Menu.Item>
               <Menu.Item
@@ -319,12 +297,7 @@ export function ServerCardActions(props: Props): ReactElement {
         <Tooltip label="More options" withArrow>
           <span className={classes.tooltipTarget}>
             <Menu.Target>
-              <ActionIcon
-                variant="default"
-                size={actionSize}
-                aria-label="More options"
-                disabled={menuDisabled}
-              >
+              <ActionIcon variant="default" size={actionSize} aria-label="More options" disabled={menuDisabled}>
                 <DotsThreeVertical size={iconSize} />
               </ActionIcon>
             </Menu.Target>

@@ -78,9 +78,7 @@ export function AppPanelModal(props: Props): ReactElement {
     ...dataAttributes
   } = props;
   const size =
-    typeof sizeProp === "string" && sizeProp in SIZE_PX
-      ? SIZE_PX[sizeProp as AppModalSize]
-      : (sizeProp ?? SIZE_PX.lg);
+    typeof sizeProp === "string" && sizeProp in SIZE_PX ? SIZE_PX[sizeProp as AppModalSize] : (sizeProp ?? SIZE_PX.lg);
 
   return (
     <Modal.Root
@@ -99,11 +97,7 @@ export function AppPanelModal(props: Props): ReactElement {
         title: classes.title,
       }}
     >
-      <Modal.Overlay
-        backgroundOpacity={overlayOpacity ?? 0.5}
-        color="#000"
-        data-app-modal-overlay
-      />
+      <Modal.Overlay backgroundOpacity={overlayOpacity ?? 0.5} color="#000" data-app-modal-overlay />
       <Modal.Content
         radius="md"
         style={
@@ -129,9 +123,7 @@ export function AppPanelModal(props: Props): ReactElement {
               <Modal.CloseButton aria-label="Close dialog" />
             )}
           </div>
-          {headerExtra !== undefined && (
-            <div className={classes.headerExtra}>{headerExtra}</div>
-          )}
+          {headerExtra !== undefined && <div className={classes.headerExtra}>{headerExtra}</div>}
         </Modal.Header>
         <Modal.Body>
           <div className={classes.bodyContent}>{children}</div>

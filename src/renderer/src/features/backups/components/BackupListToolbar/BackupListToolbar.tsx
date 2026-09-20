@@ -1,13 +1,6 @@
 import type { ReactElement } from "react";
 import { ArrowClockwise, HardDrives, Trash, UploadSimple } from "@phosphor-icons/react";
-import {
-  ActionIcon,
-  Badge,
-  Button,
-  Checkbox,
-  Group,
-  Tooltip,
-} from "@mantine/core";
+import { ActionIcon, Badge, Button, Checkbox, Group, Tooltip } from "@mantine/core";
 import type { BackupKind, BackupRecord } from "@shared/types";
 import { SearchField } from "@ui/SearchField/SearchField";
 import classes from "../../BackupsPage.module.css";
@@ -78,13 +71,7 @@ export function BackupListToolbar(props: Props): ReactElement {
   } = props;
 
   return (
-    <Group
-      justify="space-between"
-      wrap="wrap"
-      align="center"
-      gap="xs"
-      className={classes.listToolbar}
-    >
+    <Group justify="space-between" wrap="wrap" align="center" gap="xs" className={classes.listToolbar}>
       <Group gap="xs" wrap="wrap" align="center">
         {activeKind === "world" && kindBackups.length > 0 && (
           <Checkbox

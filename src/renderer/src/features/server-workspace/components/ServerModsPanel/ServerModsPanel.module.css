@@ -196,11 +196,7 @@
 }
 
 .clickableRow:hover {
-  background-color: color-mix(
-    in srgb,
-    var(--app-color-accent) 18%,
-    var(--app-color-panel)
-  );
+  background-color: color-mix(in srgb, var(--app-color-accent) 18%, var(--app-color-panel));
 }
 
 .disabledRow {
@@ -228,11 +224,7 @@
 }
 
 .disabledRow:hover {
-  background-color: color-mix(
-    in srgb,
-    var(--app-color-accent) 14%,
-    var(--app-color-panel)
-  );
+  background-color: color-mix(in srgb, var(--app-color-accent) 14%, var(--app-color-panel));
 }
 
 .disabledRow:hover :global(td).enableCell,
@@ -470,7 +462,6 @@
 .detailDrawerProjectRow {
   margin-top: var(--app-space-xs);
 }
-
 
 .detailDrawerMeta {
   margin-top: var(--app-space-xs);

@@ -14,8 +14,7 @@ export function ConfigurationEditorPreviewAlert(props: Props): ReactElement {
     <AppAlert color="blue" title="Last saved diff">
       {preview.diff.slice(0, 8).map((entry) => (
         <Text key={`${entry.fileKey}.${entry.section}.${entry.key}`} size="sm">
-          [{entry.fileKey}] {entry.section}.{entry.key}: {entry.before ?? "∅"} →{" "}
-          {entry.after ?? "∅"}
+          [{entry.fileKey}] {entry.section}.{entry.key}: {entry.before ?? "∅"} → {entry.after ?? "∅"}
         </Text>
       ))}
       {preview.diff.length > 8 && (

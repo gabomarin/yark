@@ -1,12 +1,6 @@
 import type { ReactElement } from "react";
 import { useMemo, useState } from "react";
-import {
-  Button,
-  Group,
-  Stack,
-  Text,
-  Textarea,
-} from "@mantine/core";
+import { Button, Group, Stack, Text, Textarea } from "@mantine/core";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import { validateMapIdentity } from "@shared/asa/map-identity";
 import type { ServerProfile } from "@shared/types";
@@ -45,17 +39,8 @@ export function ServerLaunchPanel(props: Props): ReactElement {
   const [previewOpen, setPreviewOpen] = useState(true);
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const {
-    structured,
-    rawText,
-    setRawText,
-    extraArgs,
-    saving,
-    error,
-    setEnabled,
-    setValue,
-    persistExtraArgsFromRaw,
-  } = useServerLaunchPersist(props.server, props.onServerUpdated);
+  const { structured, rawText, setRawText, extraArgs, saving, error, setEnabled, setValue, persistExtraArgsFromRaw } =
+    useServerLaunchPersist(props.server, props.onServerUpdated);
 
   const mapIdentityWarnings = useMemo(
     () =>
@@ -65,41 +50,23 @@ export function ServerLaunchPanel(props: Props): ReactElement {
         mods: props.server.mods,
         disabledMods: props.server.disabledMods,
       }).filter((issue) => issue.severity === "warning"),
-    [
-      props.server.disabledMods,
-      props.server.map,
-      props.server.mapModId,
-      props.server.mods,
-    ],
+    [props.server.disabledMods, props.server.map, props.server.mapModId, props.server.mods],
   );
-  const conflicts = useMemo(
-    () => findLaunchArgConflicts({ structured, extraArgs }),
-    [structured, extraArgs],
-  );
+  const conflicts = useMemo(() => findLaunchArgConflicts({ structured, extraArgs }), [structured, extraArgs]);
   const grouped = useMemo(() => groupStructuredOptions(), []);
-  const filteredGrouped = useMemo(
-    () => filterGroupedStructuredOptions(grouped, searchQuery),
-    [grouped, searchQuery],
-  );
+  const filteredGrouped = useMemo(() => filterGroupedStructuredOptions(grouped, searchQuery), [grouped, searchQuery]);
   const hasSearchQuery = searchQuery.trim().length > 0;
   const hasSearchMatches = filteredGrouped.size > 0;
   // Preview cautions stay fleet-wide: filtering hides rows but argv still emits every enabled flag.
   const activeWarnings = useMemo(() => {
     return [...grouped.values()]
       .flat()
-      .filter(
-        (o) =>
-          o.curation.operatorWarning &&
-          isStructuredOptionEffectivelyEnabled(o.curation.id, structured),
-      );
+      .filter((o) => o.curation.operatorWarning && isStructuredOptionEffectivelyEnabled(o.curation.id, structured));
   }, [grouped, structured]);
   const cautionTokens = useMemo(() => {
     const set = new Set<string>();
     for (const o of activeWarnings) {
-      const token = buildStructuredLaunchToken(
-        o.entry,
-        structured[o.curation.id]?.value,
-      );
+      const token = buildStructuredLaunchToken(o.entry, structured[o.curation.id]?.value);
       if (token !== null) set.add(token);
     }
     return set;
@@ -115,29 +82,18 @@ export function ServerLaunchPanel(props: Props): ReactElement {
   );
 
   return (
-    <AppSurfaceCard
-      tone="flat"
-      fill
-      padding={0}
-      radius={0}
-      className={classes.panel}
-      data-testid="server-launch-panel"
-    >
+    <AppSurfaceCard tone="flat" fill padding={0} radius={0} className={classes.panel} data-testid="server-launch-panel">
       <div className={classes.scroll}>
         <Stack gap="sm">
           <Group justify="space-between" align="flex-start" wrap="wrap">
             <div>
               <Text fw={600}>Launch options</Text>
               <Text size="xs" c="dimmed">
-                Hover a flag for its description. Map, port, and cluster stay
-                YARK-owned. Platform defaults to ALL unless set here.
+                Hover a flag for its description. Map, port, and cluster stay YARK-owned. Platform defaults to ALL
+                unless set here.
               </Text>
             </div>
-            <Button
-              size={inputSize}
-              variant="default"
-              onClick={() => setCatalogOpen(true)}
-            >
+            <Button size={inputSize} variant="default" onClick={() => setCatalogOpen(true)}>
               Browse ASA catalog
             </Button>
           </Group>
@@ -160,8 +116,7 @@ export function ServerLaunchPanel(props: Props): ReactElement {
                   </Text>
                 ))}
                 <Text size="xs" c="dimmed">
-                  Fix Map / Mods before Start. YARK blocks launch until the map
-                  mod is linked and enabled.
+                  Fix Map / Mods before Start. YARK blocks launch until the map mod is linked and enabled.
                 </Text>
               </Stack>
             </AppAlert>
@@ -186,19 +141,14 @@ export function ServerLaunchPanel(props: Props): ReactElement {
               return (
                 <section key={groupId} className={classes.groupSection}>
                   <div className={classes.groupHeader}>
-                    <span className={classes.groupTitle}>
-                      {structuredLaunchGroupLabel(groupId)}
-                    </span>
+                    <span className={classes.groupTitle}>{structuredLaunchGroupLabel(groupId)}</span>
                     <Text size="xs" c="dimmed">
                       {onCount}/{allInGroup.length}
                     </Text>
                   </div>
                   <div className={classes.optionGrid}>
                     {options.map((option) => {
-                      const dependencyMet = isStructuredDependencyMet(
-                        option.curation.id,
-                        structured,
-                      );
+                      const dependencyMet = isStructuredDependencyMet(option.curation.id, structured);
                       return (
                         <ServerLaunchOptionRow
                           key={option.curation.id}
@@ -207,15 +157,9 @@ export function ServerLaunchPanel(props: Props): ReactElement {
                           inputSize={inputSize}
                           dependencyMet={dependencyMet}
                           onEnabledChange={(enabled) =>
-                            void setEnabled(
-                              option.curation.id,
-                              enabled,
-                              option.curation.defaultValue,
-                            )
+                            void setEnabled(option.curation.id, enabled, option.curation.defaultValue)
                           }
-                          onValueChange={(value) =>
-                            setValue(option.curation.id, value)
-                          }
+                          onValueChange={(value) => setValue(option.curation.id, value)}
                         />
                       );
                     })}
@@ -273,10 +217,7 @@ export function ServerLaunchPanel(props: Props): ReactElement {
         </Stack>
       </div>
 
-      <LaunchOptionsCatalogModal
-        opened={catalogOpen}
-        onClose={() => setCatalogOpen(false)}
-      />
+      <LaunchOptionsCatalogModal opened={catalogOpen} onClose={() => setCatalogOpen(false)} />
     </AppSurfaceCard>
   );
 }

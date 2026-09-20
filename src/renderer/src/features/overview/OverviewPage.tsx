@@ -19,10 +19,7 @@ import {
   computeOverviewProcessFleetReadouts,
   sumSurvivorsOnlineTotal,
 } from "@features/overview/model/overviewFleetMetrics";
-import {
-  filterOverviewServers,
-  partitionOverviewServers,
-} from "@features/overview/model/overviewServerFilter";
+import { filterOverviewServers, partitionOverviewServers } from "@features/overview/model/overviewServerFilter";
 import { DiscordInviteCard } from "./components/DiscordInviteCard/DiscordInviteCard";
 import { OverviewHeader } from "./components/OverviewHeader";
 import { RecentActivityPanel } from "./components/RecentActivityPanel";
@@ -83,18 +80,9 @@ interface Props {
 
 export function OverviewPage(props: Props): ReactElement {
   const search = props.search;
-  const { enabled, disabled } = useMemo(
-    () => partitionOverviewServers(props.servers),
-    [props.servers],
-  );
-  const filteredServers = useMemo(
-    () => filterOverviewServers(enabled, search),
-    [enabled, search],
-  );
-  const filteredDisabledServers = useMemo(
-    () => filterOverviewServers(disabled, search),
-    [disabled, search],
-  );
+  const { enabled, disabled } = useMemo(() => partitionOverviewServers(props.servers), [props.servers]);
+  const filteredServers = useMemo(() => filterOverviewServers(enabled, search), [enabled, search]);
+  const filteredDisabledServers = useMemo(() => filterOverviewServers(disabled, search), [disabled, search]);
 
   const survivorsOnlineTotal = useMemo(
     () =>
@@ -105,11 +93,7 @@ export function OverviewPage(props: Props): ReactElement {
       }),
     [enabled, props.statuses, props.playerListsByServer],
   );
-  const {
-    showProcessFleetMetrics,
-    fleetRamBytes,
-    fleetCpuPercent,
-  } = useMemo(
+  const { showProcessFleetMetrics, fleetRamBytes, fleetCpuPercent } = useMemo(
     () =>
       computeOverviewProcessFleetReadouts({
         enabledServers: enabled,
@@ -144,115 +128,106 @@ export function OverviewPage(props: Props): ReactElement {
   const steamCmdStatus = props.steamCmdStatus;
 
   return (
-    <PageScaffold
-      title="Servers"
-      fillViewport
-      edgeToEdge
-      showHeader={false}
-    >
+    <PageScaffold title="Servers" fillViewport edgeToEdge showHeader={false}>
       <div className={classes.pageShell} data-overview-page>
         <OverviewHeader
-        onCreateServer={props.onCreateServer}
-        onImportServer={props.onImportServer}
-        onCheckUpdates={() => void checkForUpdates()}
-        onCheckInstalls={props.onCheckInstalls}
-        onUpdateAllOutdated={() => void openUpdateAllOutdated()}
-        canUpdateAllOutdated={canUpdateAllOutdated}
-        openingUpdateAllOutdated={updateAllOutdatedLoading}
-        checkingUpdates={checkingUpdates}
-        checkingInstalls={props.checkingInstalls}
-        emptyFleet={props.servers.length === 0}
-        survivorsOnlineTotal={survivorsOnlineTotal}
-        showProcessFleetMetrics={showProcessFleetMetrics}
-        fleetRamBytes={fleetRamBytes}
-        fleetCpuPercent={fleetCpuPercent}
-      />
-
-      <UpdateAllOutdatedModal
-        opened={updateAllOutdatedOpen}
-        loading={updateAllOutdatedLoading}
-        queueing={updateAllOutdatedQueueing}
-        plan={updateAllOutdatedModalPlan}
-        onClose={closeUpdateAllOutdated}
-        onConfirm={() => void confirmUpdateAllOutdated()}
-      />
-
-      <div className={classes.content} data-overview-content>
-        <ServerGrid
-          search={search}
-          onSearchChange={props.onSearchChange}
-          loading={props.loading ?? false}
           onCreateServer={props.onCreateServer}
           onImportServer={props.onImportServer}
-          servers={props.servers}
-          filteredServers={filteredServers}
-          disabledServers={filteredDisabledServers}
-          statuses={props.statuses}
-          installationInfo={props.installationInfo}
-          playerListsByServer={props.playerListsByServer}
-          processMetricsByServer={props.processMetricsByServer}
-          officialSteamBuild={props.officialSteamBuild}
-          officialVersion={props.officialVersion ?? null}
-          steamCmdServerId={steamCmdStatus?.serverId ?? null}
-          steamCmdRunning={steamCmdStatus?.running === true}
-          steamCmdBusy={steamCmdBusy}
-          steamCmdPausedByServerId={props.steamCmdPausedByServerId}
-          steamCmdQueuedByServerId={props.steamCmdQueuedByServerId}
-          steamCmdProgressPercent={steamCmdStatus?.progressPercent ?? null}
-          steamCmdProgressLabel={steamCmdStatus?.progressLabel ?? null}
-          steamCmdProgressBytesDownloaded={steamCmdStatus?.progressBytesDownloaded ?? null}
-          steamCmdProgressBytesTotal={steamCmdStatus?.progressBytesTotal ?? null}
-          steamCmdOperation={steamCmdStatus?.operation ?? null}
-          stopProgressByServerId={props.stopProgressByServerId}
-          startBusyByServerId={props.startBusyByServerId}
-          onOpenWorkspace={props.onOpenWorkspace}
-          onOpenLogs={props.onOpenLogs}
-          onReviewError={props.onReviewError}
-          onStartServer={props.onStartServer}
-          onStopServer={props.onStopServer}
-          onRestartServer={props.onRestartServer}
-          onRestartWithWarning={props.onRestartWithWarning}
-          onCancelRestartWarning={props.onCancelRestartWarning}
-          onConfigureRestartWarnings={props.onConfigureRestartWarnings}
-          onKillServer={props.onKillServer}
-          onOpenFolder={props.onOpenFolder}
-          onInstallFiles={props.onInstallFiles}
-          onUpdateNow={props.onUpdateNow}
-          onVerifyFiles={props.onVerifyFiles}
-          onCheckUpdatesForServer={(id) => void checkForUpdates(id)}
+          onCheckUpdates={() => void checkForUpdates()}
+          onCheckInstalls={props.onCheckInstalls}
+          onUpdateAllOutdated={() => void openUpdateAllOutdated()}
+          canUpdateAllOutdated={canUpdateAllOutdated}
+          openingUpdateAllOutdated={updateAllOutdatedLoading}
           checkingUpdates={checkingUpdates}
-          onCloneServer={props.onCloneServer}
-          onCopyConfiguration={props.onCopyConfiguration}
-          onDeleteServer={props.onDeleteServer}
-          onToggleServerEnabled={props.onToggleServerEnabled}
-          onOpenDownloads={props.onOpenDownloads}
-          steamCmdNeedsSetup={steamCmdStatus?.detected === false}
-          onOpenSteamCmdSettings={props.onOpenSteamCmdSettings}
+          checkingInstalls={props.checkingInstalls}
+          emptyFleet={props.servers.length === 0}
+          survivorsOnlineTotal={survivorsOnlineTotal}
+          showProcessFleetMetrics={showProcessFleetMetrics}
+          fleetRamBytes={fleetRamBytes}
+          fleetCpuPercent={fleetCpuPercent}
         />
 
-        {props.servers.length > 0 ? (
-          <>
-            <div className={classes.narrowLogsLink}>
-              <Button
-                variant="subtle"
-                rightSection={<ArrowRight size={14} />}
-                onClick={props.onViewAllActivity}
-              >
-                View logs
-              </Button>
-            </div>
+        <UpdateAllOutdatedModal
+          opened={updateAllOutdatedOpen}
+          loading={updateAllOutdatedLoading}
+          queueing={updateAllOutdatedQueueing}
+          plan={updateAllOutdatedModalPlan}
+          onClose={closeUpdateAllOutdated}
+          onConfirm={() => void confirmUpdateAllOutdated()}
+        />
 
-            <RecentActivityPanel
-              events={props.events}
-              loading={props.loading ?? false}
-              onViewAll={props.onViewAllActivity}
-            />
-          </>
-        ) : null}
-      </div>
+        <div className={classes.content} data-overview-content>
+          <ServerGrid
+            search={search}
+            onSearchChange={props.onSearchChange}
+            loading={props.loading ?? false}
+            onCreateServer={props.onCreateServer}
+            onImportServer={props.onImportServer}
+            servers={props.servers}
+            filteredServers={filteredServers}
+            disabledServers={filteredDisabledServers}
+            statuses={props.statuses}
+            installationInfo={props.installationInfo}
+            playerListsByServer={props.playerListsByServer}
+            processMetricsByServer={props.processMetricsByServer}
+            officialSteamBuild={props.officialSteamBuild}
+            officialVersion={props.officialVersion ?? null}
+            steamCmdServerId={steamCmdStatus?.serverId ?? null}
+            steamCmdRunning={steamCmdStatus?.running === true}
+            steamCmdBusy={steamCmdBusy}
+            steamCmdPausedByServerId={props.steamCmdPausedByServerId}
+            steamCmdQueuedByServerId={props.steamCmdQueuedByServerId}
+            steamCmdProgressPercent={steamCmdStatus?.progressPercent ?? null}
+            steamCmdProgressLabel={steamCmdStatus?.progressLabel ?? null}
+            steamCmdProgressBytesDownloaded={steamCmdStatus?.progressBytesDownloaded ?? null}
+            steamCmdProgressBytesTotal={steamCmdStatus?.progressBytesTotal ?? null}
+            steamCmdOperation={steamCmdStatus?.operation ?? null}
+            stopProgressByServerId={props.stopProgressByServerId}
+            startBusyByServerId={props.startBusyByServerId}
+            onOpenWorkspace={props.onOpenWorkspace}
+            onOpenLogs={props.onOpenLogs}
+            onReviewError={props.onReviewError}
+            onStartServer={props.onStartServer}
+            onStopServer={props.onStopServer}
+            onRestartServer={props.onRestartServer}
+            onRestartWithWarning={props.onRestartWithWarning}
+            onCancelRestartWarning={props.onCancelRestartWarning}
+            onConfigureRestartWarnings={props.onConfigureRestartWarnings}
+            onKillServer={props.onKillServer}
+            onOpenFolder={props.onOpenFolder}
+            onInstallFiles={props.onInstallFiles}
+            onUpdateNow={props.onUpdateNow}
+            onVerifyFiles={props.onVerifyFiles}
+            onCheckUpdatesForServer={(id) => void checkForUpdates(id)}
+            checkingUpdates={checkingUpdates}
+            onCloneServer={props.onCloneServer}
+            onCopyConfiguration={props.onCopyConfiguration}
+            onDeleteServer={props.onDeleteServer}
+            onToggleServerEnabled={props.onToggleServerEnabled}
+            onOpenDownloads={props.onOpenDownloads}
+            steamCmdNeedsSetup={steamCmdStatus?.detected === false}
+            onOpenSteamCmdSettings={props.onOpenSteamCmdSettings}
+          />
 
-      {/* One-time community CTA — in-flow bottom-right, dismissible (#567). */}
-      <DiscordInviteCard />
+          {props.servers.length > 0 ? (
+            <>
+              <div className={classes.narrowLogsLink}>
+                <Button variant="subtle" rightSection={<ArrowRight size={14} />} onClick={props.onViewAllActivity}>
+                  View logs
+                </Button>
+              </div>
+
+              <RecentActivityPanel
+                events={props.events}
+                loading={props.loading ?? false}
+                onViewAll={props.onViewAllActivity}
+              />
+            </>
+          ) : null}
+        </div>
+
+        {/* One-time community CTA — in-flow bottom-right, dismissible (#567). */}
+        <DiscordInviteCard />
       </div>
     </PageScaffold>
   );

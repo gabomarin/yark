@@ -47,9 +47,7 @@ interface Props {
 }
 
 export function RconConsoleHistory(props: Props): ReactElement {
-  const hasClearable = props.history.some(
-    (entry) => entry.status !== "pending",
-  );
+  const hasClearable = props.history.some((entry) => entry.status !== "pending");
 
   return (
     <AppSurfaceCard tone="flat" padding="sm" radius={0} className={classes.responsesPanel}>
@@ -72,27 +70,14 @@ export function RconConsoleHistory(props: Props): ReactElement {
         {props.history.length > 0 ? (
           <div className={classes.responseList}>
             {props.history.map((entry) => {
-              const statusLabel =
-                entry.status === "pending"
-                  ? "Sending"
-                  : entry.status === "error"
-                    ? "Failed"
-                    : "Sent";
-              const statusTone =
-                entry.status === "pending"
-                  ? "neutral"
-                  : entry.status === "error"
-                    ? "danger"
-                    : "ok";
+              const statusLabel = entry.status === "pending" ? "Sending" : entry.status === "error" ? "Failed" : "Sent";
+              const statusTone = entry.status === "pending" ? "neutral" : entry.status === "error" ? "danger" : "ok";
               const body = formatResponseBody(entry);
-              const responseText =
-                entry.status === "pending" ? null : body;
+              const responseText = entry.status === "pending" ? null : body;
               const rerunBlocked =
                 !props.serverRunning ||
                 props.history.some(
-                  (candidate) =>
-                    candidate.status === "pending" &&
-                    candidate.command === entry.command,
+                  (candidate) => candidate.status === "pending" && candidate.command === entry.command,
                 );
               return (
                 <div key={entry.id} className={classes.responseItem}>
@@ -101,9 +86,7 @@ export function RconConsoleHistory(props: Props): ReactElement {
                       <Text size="sm" className={classes.historyCommand}>
                         {entry.command}
                       </Text>
-                      <Text className={classes.historyMeta}>
-                        {formatRconTime(entry.createdAt)}
-                      </Text>
+                      <Text className={classes.historyMeta}>{formatRconTime(entry.createdAt)}</Text>
                     </div>
                     <StatusWord tone={statusTone}>{statusLabel}</StatusWord>
                   </div>
