@@ -332,6 +332,5 @@ export function actionGlyphColor(color: string | undefined): string | undefined 
   if (color === "red") return "var(--app-color-danger-bright)";
   if (color === "attention") return "var(--app-color-attention)";
   if (color === "blue") return "var(--app-color-accent-text)";
-  if (color === "ok") return "var(--app-color-ok)";
   return undefined;
 }

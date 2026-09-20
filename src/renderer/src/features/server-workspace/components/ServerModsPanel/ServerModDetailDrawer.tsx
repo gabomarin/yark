@@ -183,7 +183,6 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                     {(detail.categories ?? []).map((category) => (
                       <Badge
                         key={category}
-
                         color={isMapCategoryLabel(category) ? "attention" : "gray"}
                         variant="light"
                       >

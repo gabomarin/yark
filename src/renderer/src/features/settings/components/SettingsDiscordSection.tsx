@@ -314,7 +314,8 @@ export function SettingsDiscordSection(): ReactElement {
       <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md" data-discord-events-grid>
         <AppSurfaceCard
           tone="flat"
-          padding={0} radius={0}
+          padding={0}
+          radius={0}
           className={classes.discordEventCard}
           data-discord-server-events
         >

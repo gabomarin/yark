@@ -148,7 +148,7 @@ const sharedColors = {
   bgAccent: radixPalette.gray[1],
   panel: radixPalette.gray[2],
   panelAlt: radixPalette.gray[3],
-  /** Hairline between page / panel / control — solid, not mixed with blue. */
+  /** Hairline between page / panel / control — a solid step of the active ramp. */
   border: radixPalette.gray[6],
   text: radixPalette.gray[11],
   /** Helper / Mantine `c="dimmed"` — Radix step 11 of the active neutral ramp. */

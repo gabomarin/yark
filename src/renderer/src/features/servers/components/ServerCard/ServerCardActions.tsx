@@ -205,7 +205,7 @@ export function ServerCardActions(props: Props): ReactElement {
                 data-restart-action
                 data-restart-warning-cancel
               >
-                <XCircle size={iconSize} weight="bold" color="var(--app-color-danger-bright)" />
+                <XCircle size={iconSize} weight="bold" color={actionGlyphColor("red")} />
               </ActionIcon>
             </span>
           </Tooltip>
