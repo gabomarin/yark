@@ -7,14 +7,7 @@ import { applyProfileOwnedKeysToGameUserSettings } from "../config/ini-compose";
 
 /** GameUserSettings.ini path under a server install. */
 export function gameUserSettingsIniPath(installDir: string): string {
-  return join(
-    installDir,
-    "ShooterGame",
-    "Saved",
-    "Config",
-    "WindowsServer",
-    "GameUserSettings.ini",
-  );
+  return join(installDir, "ShooterGame", "Saved", "Config", "WindowsServer", "GameUserSettings.ini");
 }
 
 /**
@@ -34,13 +27,9 @@ export function gameUserSettingsIniPath(installDir: string): string {
  * (CurseForge). ASE-era INI keys such as ActiveMods stay out of templates
  * (`aseLegacy` in `@shared/asa/yark-owned-ini-keys`).
  */
-export async function syncProfileSettingsToIni(
-  profile: ServerProfile,
-): Promise<void> {
+export async function syncProfileSettingsToIni(profile: ServerProfile): Promise<void> {
   const path = gameUserSettingsIniPath(profile.installDir);
-  const existing = existsSync(path)
-    ? await readFile(path, "utf8")
-    : defaultGameUserSettingsIni;
+  const existing = existsSync(path) ? await readFile(path, "utf8") : defaultGameUserSettingsIni;
   const text = applyProfileOwnedKeysToGameUserSettings(existing, profile);
 
   await mkdir(dirname(path), { recursive: true });
@@ -54,10 +43,7 @@ export async function syncProfileSettingsToIni(
  */
 export async function applyProfileOwnedIni(
   profile: ServerProfile,
-  syncViaIniService?: (
-    serverId: string,
-    profile?: ServerProfile,
-  ) => Promise<void>,
+  syncViaIniService?: (serverId: string, profile?: ServerProfile) => Promise<void>,
 ): Promise<void> {
   if (syncViaIniService !== undefined) {
     await syncViaIniService(profile.id, profile);

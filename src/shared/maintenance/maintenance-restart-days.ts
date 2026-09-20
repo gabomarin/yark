@@ -1,23 +1,7 @@
 /** 0 = Sunday … 6 = Saturday (local Windows clock). */
-const RESTART_DAY_LABELS = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-] as const;
+const RESTART_DAY_LABELS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
 
-export const RESTART_DAY_SHORT = [
-  "Sun",
-  "Mon",
-  "Tue",
-  "Wed",
-  "Thu",
-  "Fri",
-  "Sat",
-] as const;
+export const RESTART_DAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
 export const ALL_RESTART_DAYS_OF_WEEK: readonly number[] = [0, 1, 2, 3, 4, 5, 6];
 
@@ -39,9 +23,7 @@ export function formatRestartDaysSummary(days: readonly number[]): string {
     const dow = normalized[0] ?? 0;
     return RESTART_DAY_LABELS[dow] ?? "Sunday";
   }
-  const labels = normalized.map(
-    (d) => RESTART_DAY_SHORT[d] ?? RESTART_DAY_LABELS[d] ?? "?",
-  );
+  const labels = normalized.map((d) => RESTART_DAY_SHORT[d] ?? RESTART_DAY_LABELS[d] ?? "?");
   if (labels.length === 2) {
     return `${labels[0]} & ${labels[1]}`;
   }

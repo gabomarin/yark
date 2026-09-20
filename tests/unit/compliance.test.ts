@@ -48,20 +48,16 @@ describe("checkClusterCompliance", () => {
   });
 
   it("ignores servers without a cluster", () => {
-    const reports = checkClusterCompliance([
-      profile({ id: "a", clusterId: null, clusterDir: null }),
-    ]);
+    const reports = checkClusterCompliance([profile({ id: "a", clusterId: null, clusterDir: null })]);
     expect(reports).toEqual([]);
   });
 
   it("warns when the cluster has a single member", () => {
     const reports = checkClusterCompliance([profile({ id: "a" })]);
     expect(reports[0]!.ok).toBe(true);
-    expect(
-      reports[0]!.issues.some(
-        (i) => i.severity === "warning" && i.message.includes("only one server"),
-      ),
-    ).toBe(true);
+    expect(reports[0]!.issues.some((i) => i.severity === "warning" && i.message.includes("only one server"))).toBe(
+      true,
+    );
   });
 
   it("errors when cluster directories differ", () => {
@@ -77,9 +73,7 @@ describe("checkClusterCompliance", () => {
       }),
     ]);
     expect(reports[0]!.ok).toBe(false);
-    expect(
-      reports[0]!.issues.some((i) => i.message.includes("different cluster directories")),
-    ).toBe(true);
+    expect(reports[0]!.issues.some((i) => i.message.includes("different cluster directories"))).toBe(true);
   });
 
   it("errors on port conflicts within the cluster", () => {
@@ -88,9 +82,7 @@ describe("checkClusterCompliance", () => {
       profile({ id: "b", name: "B", map: "ScorchedEarth_WP" }),
     ]);
     expect(reports[0]!.ok).toBe(false);
-    expect(
-      reports[0]!.issues.some((i) => i.message.includes("port conflict")),
-    ).toBe(true);
+    expect(reports[0]!.issues.some((i) => i.message.includes("port conflict"))).toBe(true);
   });
 
   it("allows multiple members on the same map without a warning", () => {
@@ -107,7 +99,9 @@ describe("checkClusterCompliance", () => {
     ]);
     expect(reports[0]!.ok).toBe(true);
     expect(
-      reports[0]!.issues.some((i) => i.message.toLowerCase().includes("same map") || i.message.includes("servers with map")),
+      reports[0]!.issues.some(
+        (i) => i.message.toLowerCase().includes("same map") || i.message.includes("servers with map"),
+      ),
     ).toBe(false);
   });
 
@@ -124,11 +118,8 @@ describe("checkClusterCompliance", () => {
         rconPort: 27030,
       }),
     ]);
-    expect(
-      reports[0]!.issues.some(
-        (i) => i.severity === "warning" && i.message.includes("different mod lists"),
-      ),
-    ).toBe(true);
+    expect(reports[0]!.issues.some((i) => i.severity === "warning" && i.message.includes("different mod lists"))).toBe(
+      true,
+    );
   });
 });
-

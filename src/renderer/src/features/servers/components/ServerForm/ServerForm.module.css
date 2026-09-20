@@ -1,4 +1,6 @@
 .formShell {
+  --server-form-content-max: 1520px;
+
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -11,6 +13,10 @@
 
 .formHeader {
   flex-shrink: 0;
+  width: 100%;
+  max-width: calc(var(--server-form-content-max) + 64px);
+  box-sizing: border-box;
+  margin-inline: auto;
   padding: var(--app-space-lg) var(--app-space-xl) var(--app-space-md);
 }
 
@@ -30,6 +36,8 @@
 
 .formInner {
   width: 100%;
+  max-width: var(--server-form-content-max);
+  margin-inline: auto;
 }
 
 .formFooter {
@@ -39,6 +47,12 @@
   border-top: 1px solid var(--app-color-border);
   padding: var(--app-space-lg) var(--app-space-xl);
   background: color-mix(in srgb, var(--app-color-panel) 88%, transparent);
+}
+
+.formFooter > * {
+  width: 100%;
+  max-width: var(--server-form-content-max);
+  margin-inline: auto;
 }
 
 .fieldsGrid {

@@ -188,9 +188,7 @@ describe("MaintenanceUpdateRuntime T0 stop-before-queue (#489)", () => {
     };
     const { runtime, updates } = makeRuntime(policy);
     updates.isQueueHeldForOperator.mockReturnValue(true);
-    await expect(runtime.runUpdateNow("s1")).rejects.toThrow(
-      /on hold for the operator.*before triggering an update/i,
-    );
+    await expect(runtime.runUpdateNow("s1")).rejects.toThrow(/on hold for the operator.*before triggering an update/i);
   });
 
   it("skips runScheduledCycle while Downloads is held for the operator", async () => {

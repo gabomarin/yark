@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
-import { Alert, Badge, Button, Checkbox, Group, Stack, Text } from "@mantine/core";
+import { Badge, Button, Checkbox, Group, Stack, Text } from "@mantine/core";
 import type { ImportInstallProbe } from "@shared/types";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { PathField } from "@ui/PathField/PathField";
 import { healthTone, importHealthBadgeLabel } from "../../importInstallModel";
 
@@ -19,12 +20,8 @@ interface Props {
 }
 
 export function ImportInstallPathStep(props: Props): ReactElement {
-  const activeProbe =
-    props.probe !== null && props.probe.installDir === props.installDir.trim()
-      ? props.probe
-      : null;
-  const tone =
-    activeProbe !== null ? healthTone(activeProbe) : null;
+  const activeProbe = props.probe !== null && props.probe.installDir === props.installDir.trim() ? props.probe : null;
+  const tone = activeProbe !== null ? healthTone(activeProbe) : null;
   const suggested = activeProbe?.suggestedInstallDir ?? null;
   const showIncompleteOptIn =
     activeProbe !== null &&
@@ -34,11 +31,14 @@ export function ImportInstallPathStep(props: Props): ReactElement {
 
   return (
     <Stack gap="sm">
-      <Alert color="blue" title="ASA install folder">
-        Select the root that contains <Text span fw={600}>ShooterGame</Text>.
-        YARK only creates a profile. ASA files on disk are not modified until Start
-        (or Install/Verify for incomplete trees).
-      </Alert>
+      <AppAlert color="blue" title="ASA install folder">
+        Select the root that contains{" "}
+        <Text span fw={600}>
+          ShooterGame
+        </Text>
+        . YARK only creates a profile. ASA files on disk are not modified until Start (or Install/Verify for incomplete
+        trees).
+      </AppAlert>
       <PathField
         label="Install folder"
         value={props.installDir}
@@ -50,10 +50,7 @@ export function ImportInstallPathStep(props: Props): ReactElement {
       {activeProbe !== null && (
         <Stack gap="xs">
           <Group gap="xs" align="flex-start">
-            <Badge
-              color={tone === "ready" ? "green" : "red"}
-              variant="light"
-            >
+            <Badge color={tone === "ready" ? "ok" : "red"} variant="light">
               {importHealthBadgeLabel(activeProbe)}
             </Badge>
             <Text size="sm" c={tone === "ready" ? "dimmed" : "red"}>
@@ -70,29 +67,24 @@ export function ImportInstallPathStep(props: Props): ReactElement {
                 description="Adopt this partial ASA tree as a YARK profile. Start stays blocked until Install or Verify makes the install ready."
                 checked={props.allowIncompleteInstall}
                 disabled={props.probing || props.browsing}
-                onChange={(event) =>
-                  props.onAllowIncompleteInstallChange(event.currentTarget.checked)
-                }
+                onChange={(event) => props.onAllowIncompleteInstallChange(event.currentTarget.checked)}
               />
             </Stack>
           ) : null}
           {activeProbe.installation.health === "empty" ? (
-            <Alert color="gray" variant="light" title="Empty folder">
+            <AppAlert color="gray" variant="light" title="Empty folder">
               Import needs an ASA tree on disk. Use New server on this path, then Install.
-            </Alert>
+            </AppAlert>
           ) : null}
-          {suggested !== null &&
-            props.onUseSuggestedDir !== undefined &&
-            activeProbe.nestedSubfolder && (
-              <Button
-                size="xs"
-                variant="light"
-                disabled={props.probing || props.browsing}
-                onClick={() => props.onUseSuggestedDir?.(suggested)}
-              >
-                Use suggested folder
-              </Button>
-            )}
+          {suggested !== null && props.onUseSuggestedDir !== undefined && activeProbe.nestedSubfolder && (
+            <Button
+              variant="default"
+              disabled={props.probing || props.browsing}
+              onClick={() => props.onUseSuggestedDir?.(suggested)}
+            >
+              Use suggested folder
+            </Button>
+          )}
         </Stack>
       )}
     </Stack>

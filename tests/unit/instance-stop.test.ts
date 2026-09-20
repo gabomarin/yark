@@ -41,10 +41,7 @@ function makeRepo(profile: ServerProfile): ServerRepository {
   } as unknown as ServerRepository;
 }
 
-function makeProcesses(
-  profile: ServerProfile,
-  overrides: Record<string, unknown> = {},
-): ProcessManager {
+function makeProcesses(profile: ServerProfile, overrides: Record<string, unknown> = {}): ProcessManager {
   return {
     on: vi.fn(),
     isActive: vi.fn(() => true),
@@ -74,11 +71,7 @@ describe("InstanceService.stop", () => {
         async (
           _id: string,
           options?: {
-            onKindProgress?: (
-              kind: "world" | "players" | "ini",
-              index: number,
-              total: number,
-            ) => void;
+            onKindProgress?: (kind: "world" | "players" | "ini", index: number, total: number) => void;
           },
         ) => {
           options?.onKindProgress?.("world", 0, 1);
@@ -95,17 +88,12 @@ describe("InstanceService.stop", () => {
     await service.stop(profile.id);
 
     expect(processes.beginGracefulStop).toHaveBeenCalledWith(profile);
-    expect(backups.createPreStopBackup).toHaveBeenCalledWith(
-      profile.id,
-      expect.objectContaining({ skipFlush: true }),
-    );
+    expect(backups.createPreStopBackup).toHaveBeenCalledWith(profile.id, expect.objectContaining({ skipFlush: true }));
     expect(processes.finishGracefulStop).toHaveBeenCalledWith(
       profile,
       expect.objectContaining({ serverId: profile.id }),
     );
-    expect(
-      vi.mocked(processes.finishGracefulStop).mock.invocationCallOrder[0],
-    ).toBeLessThan(
+    expect(vi.mocked(processes.finishGracefulStop).mock.invocationCallOrder[0]).toBeLessThan(
       vi.mocked(backups.createPreStopBackup).mock.invocationCallOrder[0]!,
     );
     expect(repo.addEvent).toHaveBeenCalledWith(
@@ -119,11 +107,7 @@ describe("InstanceService.stop", () => {
     expect(progress.some((p) => p.active && p.reason === "user")).toBe(true);
     expect(progress.some((p) => p.active && p.phase === "backing_up")).toBe(true);
     expect(progress.some((p) => p.active && p.phase === "stopping")).toBe(true);
-    expect(
-      progress
-        .filter((p) => p.phase === "backing_up")
-        .map((p) => p.percent),
-    ).toEqual([85]);
+    expect(progress.filter((p) => p.phase === "backing_up").map((p) => p.percent)).toEqual([85]);
     expect(progress.at(-1)).toMatchObject({
       serverId: profile.id,
       active: false,
@@ -152,9 +136,7 @@ describe("InstanceService.stop", () => {
     await service.stop(profile.id);
 
     expect(processes.waitWhileStarting).toHaveBeenCalledWith(profile.id);
-    expect(
-      vi.mocked(processes.waitWhileStarting).mock.invocationCallOrder[0],
-    ).toBeLessThan(
+    expect(vi.mocked(processes.waitWhileStarting).mock.invocationCallOrder[0]).toBeLessThan(
       vi.mocked(processes.beginGracefulStop).mock.invocationCallOrder[0]!,
     );
     expect(progress.some((p) => p.active && p.phase === "waiting")).toBe(true);
@@ -207,9 +189,7 @@ describe("InstanceService.stop", () => {
       "warning",
       expect.stringContaining("Pre-stop backup failed"),
     );
-    expect(
-      progress.some((p) => p.label.includes("Backup failed — server remains stopped")),
-    ).toBe(true);
+    expect(progress.some((p) => p.label.includes("Backup failed — server remains stopped"))).toBe(true);
   });
 
   it("does not backup when RCON kill path already terminated the process", async () => {
@@ -322,4 +302,3 @@ describe("InstanceService.stop", () => {
     });
   });
 });
-

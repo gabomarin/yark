@@ -65,9 +65,7 @@ const upToDateAppUpdateStatus: AppUpdateStatus = {
  * resolve to `undefined` if awaited — matching the historical App/Logs mocks.
  * Override when a test asserts a real `IpcResult` shape.
  */
-export function createRendererApiMock(
-  overrides: Partial<RendererApi> = {},
-): RendererApi {
+export function createRendererApiMock(overrides: Partial<RendererApi> = {}): RendererApi {
   return {
     listServers: vi.fn().mockResolvedValue({ ok: true, data: [] }),
     createServer: vi.fn(),

@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { formatBackupFileStamp } from "@shared/backups/backup-file-stamp";
-import {
-  slugFilePart,
-  suggestedExportFileName,
-} from "@features/backups/backupPortability";
+import { slugFilePart, suggestedExportFileName } from "@features/backups/backupPortability";
 import type { BackupRecord } from "@shared/types";
 
 function makeBackup(overrides: Partial<BackupRecord> = {}): BackupRecord {
@@ -25,9 +22,7 @@ function makeBackup(overrides: Partial<BackupRecord> = {}): BackupRecord {
 
 describe("formatBackupFileStamp", () => {
   it("formats a compact local YYYYMMDD-HHmmss stamp", () => {
-    expect(formatBackupFileStamp("2026-01-02T15:04:05.678Z")).toMatch(
-      /^\d{8}-\d{6}$/,
-    );
+    expect(formatBackupFileStamp("2026-01-02T15:04:05.678Z")).toMatch(/^\d{8}-\d{6}$/);
   });
 });
 

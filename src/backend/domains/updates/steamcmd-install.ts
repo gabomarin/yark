@@ -14,21 +14,14 @@ import {
   updateJobNeedsSteamCmdExecutable,
 } from "./steamcmd-path";
 import { isYarkE2eShortcutsActive } from "@shared/settings/os-notification-events";
-import {
-  STEAMCMD_ENGLISH_ARGS,
-  steamCmdSpawnEnv,
-  resolveSteamCmdHome,
-} from "./steamcmd-content-cache";
+import { STEAMCMD_ENGLISH_ARGS, steamCmdSpawnEnv, resolveSteamCmdHome } from "./steamcmd-content-cache";
 import type { UpdateCriticalJob } from "./update-critical-jobs";
 import { STEAMCMD_PATH_SETTING_KEY } from "@shared/settings/steamcmd-path-setting";
 
 export interface SteamCmdInstallHost {
   readonly settings: AppSettingsRepository;
   readonly steamcmdDir: string;
-  appendSteamCmdConsole(
-    line: string,
-    options?: { forceProgressPush?: boolean },
-  ): void;
+  appendSteamCmdConsole(line: string, options?: { forceProgressPush?: boolean }): void;
   captureSteamCmdOutput(chunk: string, source: string): void;
   beginSteamCmdProcess(
     child: ChildProcess,
@@ -68,264 +61,249 @@ export class SteamCmdInstall {
     this.steamCmdConfirmedMissing = true;
   }
 
-async installSteamCmd(): Promise<string> {
-  this.host.appendSteamCmdConsole("Starting SteamCMD verification/installation...");
-  const existing = await this.findSteamCmdExecutable();
-  if (existing !== null) {
-    this.host.appendSteamCmdConsole(`SteamCMD detected at: ${existing}`);
-    await this.verifySteamCmdExecutable(existing);
-    this.persistSteamCmdPath(existing);
-    this.host.appendSteamCmdConsole("SteamCMD validated successfully.");
-    return existing;
-  }
+  async installSteamCmd(): Promise<string> {
+    this.host.appendSteamCmdConsole("Starting SteamCMD verification/installation...");
+    const existing = await this.findSteamCmdExecutable();
+    if (existing !== null) {
+      this.host.appendSteamCmdConsole(`SteamCMD detected at: ${existing}`);
+      await this.verifySteamCmdExecutable(existing);
+      this.persistSteamCmdPath(existing);
+      this.host.appendSteamCmdConsole("SteamCMD validated successfully.");
+      return existing;
+    }
 
-  await mkdir(this.host.steamcmdDir, { recursive: true });
-  const exePath = join(this.host.steamcmdDir, "steamcmd.exe");
-  const command = buildSteamCmdInstallPowerShell(this.host.steamcmdDir);
+    await mkdir(this.host.steamcmdDir, { recursive: true });
+    const exePath = join(this.host.steamcmdDir, "steamcmd.exe");
+    const command = buildSteamCmdInstallPowerShell(this.host.steamcmdDir);
 
-  let installChild: ChildProcess | null = null;
-  try {
-    await new Promise<void>((resolve, reject) => {
-      const child = spawn(
-        "powershell.exe",
-        ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", command],
-        {
+    let installChild: ChildProcess | null = null;
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const child = spawn("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", command], {
           windowsHide: true,
           shell: false,
-        },
-      );
-      installChild = child;
-      this.host.beginSteamCmdProcess(child, "install-steamcmd", null);
+        });
+        installChild = child;
+        this.host.beginSteamCmdProcess(child, "install-steamcmd", null);
 
-      let stderr = "";
-      child.stderr.on("data", (chunk) => {
-        const text = String(chunk);
-        stderr += text;
-        this.host.captureSteamCmdOutput(text, "install/stderr");
-      });
-      child.stdout.on("data", (chunk) => {
-        this.host.captureSteamCmdOutput(String(chunk), "install/stdout");
+        let stderr = "";
+        child.stderr.on("data", (chunk) => {
+          const text = String(chunk);
+          stderr += text;
+          this.host.captureSteamCmdOutput(text, "install/stderr");
+        });
+        child.stdout.on("data", (chunk) => {
+          this.host.captureSteamCmdOutput(String(chunk), "install/stdout");
+        });
+
+        child.once("error", (error) => {
+          reject(new Error(`Could not run PowerShell: ${error.message}`));
+        });
+
+        child.once("exit", (code) => {
+          if ((code ?? 1) !== 0) {
+            reject(new Error(`SteamCMD installation failed (exit ${code ?? 1}): ${stderr}`));
+            return;
+          }
+          resolve();
+        });
       });
 
-      child.once("error", (error) => {
-        reject(new Error(`Could not run PowerShell: ${error.message}`));
-      });
+      if (!existsSync(exePath)) {
+        throw new Error(`SteamCMD was not installed at ${exePath}`);
+      }
 
-      child.once("exit", (code) => {
-        if ((code ?? 1) !== 0) {
-          reject(new Error(`SteamCMD installation failed (exit ${code ?? 1}): ${stderr}`));
-          return;
-        }
-        resolve();
-      });
-    });
+      await this.verifySteamCmdExecutable(exePath);
+      this.persistSteamCmdPath(exePath);
+      this.host.appendSteamCmdConsole(`SteamCMD installed and validated at: ${exePath}`);
+      return exePath;
+    } finally {
+      if (installChild !== null) {
+        this.host.endSteamCmdProcess(installChild);
+      }
+    }
+  }
 
-    if (!existsSync(exePath)) {
-      throw new Error(`SteamCMD was not installed at ${exePath}`);
+  async setSteamCmdExecutablePath(exePath: string): Promise<string> {
+    const normalized = normalizeSteamCmdExecutablePath(exePath);
+    if (!existsSync(normalized)) {
+      throw new Error(`steamcmd.exe not found at: ${normalized}`);
+    }
+    await this.verifySteamCmdExecutable(normalized);
+    this.persistSteamCmdPath(normalized);
+    this.host.resetContentCache();
+    this.host.appendSteamCmdConsole(`Manual SteamCMD path configured: ${normalized}`);
+    return normalized;
+  }
+
+  async resolveSteamCmdExecutable(): Promise<string> {
+    const discovered = await this.findSteamCmdExecutable();
+    if (discovered !== null) {
+      this.persistSteamCmdPath(discovered);
+      return discovered;
     }
 
-    await this.verifySteamCmdExecutable(exePath);
-    this.persistSteamCmdPath(exePath);
-    this.host.appendSteamCmdConsole(`SteamCMD installed and validated at: ${exePath}`);
-    return exePath;
-  } finally {
-    if (installChild !== null) {
-      this.host.endSteamCmdProcess(installChild);
-    }
-  }
-}
-
-async setSteamCmdExecutablePath(exePath: string): Promise<string> {
-  const normalized = normalizeSteamCmdExecutablePath(exePath);
-  if (!existsSync(normalized)) {
-    throw new Error(`steamcmd.exe not found at: ${normalized}`);
-  }
-  await this.verifySteamCmdExecutable(normalized);
-  this.persistSteamCmdPath(normalized);
-  this.host.resetContentCache();
-  this.host.appendSteamCmdConsole(`Manual SteamCMD path configured: ${normalized}`);
-  return normalized;
-}
-
-async resolveSteamCmdExecutable(): Promise<string> {
-  const discovered = await this.findSteamCmdExecutable();
-  if (discovered !== null) {
-    this.persistSteamCmdPath(discovered);
-    return discovered;
+    return "steamcmd.exe";
   }
 
-  return "steamcmd.exe";
-}
-
-steamCmdMissingError(): Error {
-  return new Error(STEAMCMD_MISSING_MESSAGE);
-}
-
-async ensureSteamCmdReadyForOperator(job?: UpdateCriticalJob): Promise<void> {
-  if (job !== undefined && !updateJobNeedsSteamCmdExecutable(job)) {
-    return;
+  steamCmdMissingError(): Error {
+    return new Error(STEAMCMD_MISSING_MESSAGE);
   }
-  if (this.steamCmdConfirmedMissing) {
-    const exe = await this.host.findSteamCmdExecutable();
-    if (exe !== null) {
-      this.persistSteamCmdPath(exe);
+
+  async ensureSteamCmdReadyForOperator(job?: UpdateCriticalJob): Promise<void> {
+    if (job !== undefined && !updateJobNeedsSteamCmdExecutable(job)) {
       return;
     }
-    throw this.steamCmdMissingError();
-  }
-  if (this.host.findSteamCmdExecutableCached() === null) {
-    throw this.steamCmdMissingError();
-  }
-}
-
-findSteamCmdExecutableCached(): string | null {
-  const configured = this.host.settings.get(STEAMCMD_PATH_SETTING_KEY);
-  const resolved = resolveSteamCmdExecutableCached({
-    confirmedMissing: this.steamCmdConfirmedMissing,
-    lastKnownPath: this.lastKnownSteamCmdPath,
-    configured,
-    envPath: process.env["STEAMCMD_PATH"],
-  });
-  if (
-    resolved !== null
-    && configured != null
-    && configured.trim() === resolved
-    && (
-      this.lastKnownSteamCmdPath == null
-      || this.lastKnownSteamCmdPath.trim().length === 0
-    )
-  ) {
-    this.lastKnownSteamCmdPath = resolved;
-  }
-  return resolved;
-}
-
-steamCmdCandidatePaths(): string[] {
-  return buildSteamCmdCandidatePaths({
-    configured: this.host.settings.get(STEAMCMD_PATH_SETTING_KEY),
-    envPath: process.env["STEAMCMD_PATH"],
-    steamcmdDir: this.host.steamcmdDir,
-    isolated: isYarkE2eShortcutsActive(),
-    programFilesX86: process.env["ProgramFiles(x86)"],
-    programFiles: process.env["ProgramFiles"],
-    localAppData: process.env["LOCALAPPDATA"],
-  });
-}
-
-async findSteamCmdExecutable(): Promise<string | null> {
-  for (const candidate of this.steamCmdCandidatePaths()) {
-    try {
-      await access(candidate);
-      this.lastKnownSteamCmdPath = candidate;
-      return candidate;
-    } catch {
-      // try next candidate
+    if (this.steamCmdConfirmedMissing) {
+      const exe = await this.host.findSteamCmdExecutable();
+      if (exe !== null) {
+        this.persistSteamCmdPath(exe);
+        return;
+      }
+      throw this.steamCmdMissingError();
+    }
+    if (this.host.findSteamCmdExecutableCached() === null) {
+      throw this.steamCmdMissingError();
     }
   }
 
-  if (isYarkE2eShortcutsActive()) {
-    return null;
+  findSteamCmdExecutableCached(): string | null {
+    const configured = this.host.settings.get(STEAMCMD_PATH_SETTING_KEY);
+    const resolved = resolveSteamCmdExecutableCached({
+      confirmedMissing: this.steamCmdConfirmedMissing,
+      lastKnownPath: this.lastKnownSteamCmdPath,
+      configured,
+      envPath: process.env["STEAMCMD_PATH"],
+    });
+    if (
+      resolved !== null &&
+      configured != null &&
+      configured.trim() === resolved &&
+      (this.lastKnownSteamCmdPath == null || this.lastKnownSteamCmdPath.trim().length === 0)
+    ) {
+      this.lastKnownSteamCmdPath = resolved;
+    }
+    return resolved;
   }
 
-  try {
-    const { stdout } = await execFileBounded(
-      "where.exe",
-      ["steamcmd.exe"],
-      {
+  steamCmdCandidatePaths(): string[] {
+    return buildSteamCmdCandidatePaths({
+      configured: this.host.settings.get(STEAMCMD_PATH_SETTING_KEY),
+      envPath: process.env["STEAMCMD_PATH"],
+      steamcmdDir: this.host.steamcmdDir,
+      isolated: isYarkE2eShortcutsActive(),
+      programFilesX86: process.env["ProgramFiles(x86)"],
+      programFiles: process.env["ProgramFiles"],
+      localAppData: process.env["LOCALAPPDATA"],
+    });
+  }
+
+  async findSteamCmdExecutable(): Promise<string | null> {
+    for (const candidate of this.steamCmdCandidatePaths()) {
+      try {
+        await access(candidate);
+        this.lastKnownSteamCmdPath = candidate;
+        return candidate;
+      } catch {
+        // try next candidate
+      }
+    }
+
+    if (isYarkE2eShortcutsActive()) {
+      return null;
+    }
+
+    try {
+      const { stdout } = await execFileBounded("where.exe", ["steamcmd.exe"], {
         timeoutMs: 2_000,
         maxBuffer: 64 * 1024,
         windowsHide: true,
-      },
-    );
-    const lines = stdout
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0);
-    for (const line of lines) {
-      try {
-        await access(line);
-        this.lastKnownSteamCmdPath = line;
-        return line;
-      } catch {
-        // try next PATH hit
+      });
+      const lines = stdout
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
+      for (const line of lines) {
+        try {
+          await access(line);
+          this.lastKnownSteamCmdPath = line;
+          return line;
+        } catch {
+          // try next PATH hit
+        }
       }
+    } catch {
+      // Best effort: if where.exe does not find steamcmd, continue without a detected path.
     }
-  } catch {
-    // Best effort: if where.exe does not find steamcmd, continue without a detected path.
+
+    return null;
   }
 
-  return null;
-}
+  persistSteamCmdPath(exePath: string): void {
+    this.steamCmdConfirmedMissing = false;
+    this.lastKnownSteamCmdPath = exePath;
+    this.host.settings.set(STEAMCMD_PATH_SETTING_KEY, exePath);
+    process.env["STEAMCMD_PATH"] = exePath;
+    process.env["ARK_STEAMCMD_DIR"] = dirname(exePath);
+  }
 
-persistSteamCmdPath(exePath: string): void {
-  this.steamCmdConfirmedMissing = false;
-  this.lastKnownSteamCmdPath = exePath;
-  this.host.settings.set(STEAMCMD_PATH_SETTING_KEY, exePath);
-  process.env["STEAMCMD_PATH"] = exePath;
-  process.env["ARK_STEAMCMD_DIR"] = dirname(exePath);
-}
+  async verifySteamCmdExecutable(exePath: string): Promise<void> {
+    await new Promise<void>((resolve, reject) => {
+      this.host.appendSteamCmdConsole(`Validating SteamCMD: ${exePath}`);
+      const child = spawn(exePath, [...STEAMCMD_ENGLISH_ARGS, "+quit"], {
+        cwd: resolveSteamCmdHome(exePath),
+        windowsHide: true,
+        shell: false,
+        env: steamCmdSpawnEnv(),
+      });
 
-async verifySteamCmdExecutable(exePath: string): Promise<void> {
-  await new Promise<void>((resolve, reject) => {
-    this.host.appendSteamCmdConsole(`Validating SteamCMD: ${exePath}`);
-    const child = spawn(exePath, [...STEAMCMD_ENGLISH_ARGS, "+quit"], {
-      cwd: resolveSteamCmdHome(exePath),
-      windowsHide: true,
-      shell: false,
-      env: steamCmdSpawnEnv(),
-    });
-
-    let finished = false;
-    let sawOutput = false;
-    let stderr = "";
-    const timer = setTimeout(() => {
-      if (finished) {
-        return;
-      }
-      finished = true;
-      child.kill();
-      resolve();
-    }, 20_000);
-
-    child.stdout.on("data", (chunk) => {
-      sawOutput = true;
-      this.host.captureSteamCmdOutput(String(chunk), "verify/stdout");
-    });
-    child.stderr.on("data", (chunk) => {
-      sawOutput = true;
-      const text = String(chunk);
-      stderr += text;
-      this.host.captureSteamCmdOutput(text, "verify/stderr");
-    });
-
-    child.once("error", (error) => {
-      if (finished) {
-        return;
-      }
-      finished = true;
-      clearTimeout(timer);
-      reject(new Error(`SteamCMD exists but cannot be executed: ${error.message}`));
-    });
-
-    child.once("exit", (code) => {
-      if (finished) {
-        return;
-      }
-      finished = true;
-      clearTimeout(timer);
-      if (isSteamCmdVerifyExitAcceptable(code, sawOutput)) {
+      let finished = false;
+      let sawOutput = false;
+      let stderr = "";
+      const timer = setTimeout(() => {
+        if (finished) {
+          return;
+        }
+        finished = true;
+        child.kill();
         resolve();
-        return;
-      }
+      }, 20_000);
 
-      reject(
-        new Error(
-          `SteamCMD did not respond correctly (exit ${code ?? 1})${
-            stderr.length > 0 ? `: ${stderr}` : ""
-          }`,
-        ),
-      );
+      child.stdout.on("data", (chunk) => {
+        sawOutput = true;
+        this.host.captureSteamCmdOutput(String(chunk), "verify/stdout");
+      });
+      child.stderr.on("data", (chunk) => {
+        sawOutput = true;
+        const text = String(chunk);
+        stderr += text;
+        this.host.captureSteamCmdOutput(text, "verify/stderr");
+      });
+
+      child.once("error", (error) => {
+        if (finished) {
+          return;
+        }
+        finished = true;
+        clearTimeout(timer);
+        reject(new Error(`SteamCMD exists but cannot be executed: ${error.message}`));
+      });
+
+      child.once("exit", (code) => {
+        if (finished) {
+          return;
+        }
+        finished = true;
+        clearTimeout(timer);
+        if (isSteamCmdVerifyExitAcceptable(code, sawOutput)) {
+          resolve();
+          return;
+        }
+
+        reject(
+          new Error(`SteamCMD did not respond correctly (exit ${code ?? 1})${stderr.length > 0 ? `: ${stderr}` : ""}`),
+        );
+      });
     });
-  });
-}
+  }
 }

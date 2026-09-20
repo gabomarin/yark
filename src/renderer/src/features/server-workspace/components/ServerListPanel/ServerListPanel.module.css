@@ -1,9 +1,9 @@
+/* Transparent: the workspace body paints the shared chrome surface. */
 .panel {
   display: flex;
   flex-direction: column;
   width: 100%;
   min-width: 0;
-  background: var(--app-color-surface-chrome);
   min-height: 0;
   overflow: hidden;
 }
@@ -33,7 +33,7 @@
 }
 
 .title {
-  font-size: 12px;
+  font-size: var(--app-font-eyebrow);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -92,7 +92,7 @@
 .clusterLabel {
   flex: 1;
   min-width: 0;
-  font-size: 11px;
+  font-size: var(--app-font-eyebrow);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -112,6 +112,7 @@
 }
 
 .item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--app-space-xs);
@@ -122,9 +123,9 @@
   text-align: left;
   color: inherit;
   transition:
-    background-color 140ms ease,
-    border-color 140ms ease,
-    box-shadow 140ms ease;
+    background-color var(--app-motion-fast) var(--app-ease-standard),
+    border-color var(--app-motion-fast) var(--app-ease-standard),
+    box-shadow var(--app-motion-fast) var(--app-ease-standard);
 }
 
 .item:hover {
@@ -133,8 +134,22 @@
 
 .item[data-selected] {
   background: var(--app-list-selected-bg);
-  border-color: var(--ark-blue-a3);
-  box-shadow: var(--app-list-selected-inset);
+  border-color: var(--app-color-accent-subtle);
+  box-shadow: none;
+}
+
+/* Same Fluent short notch as sidebar / Settings nav (not full-height inset). */
+.item[data-selected]::before {
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  width: 3px;
+  height: 16px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: var(--app-color-accent);
+  content: "";
+  pointer-events: none;
 }
 
 .item[data-selected] .thumb {

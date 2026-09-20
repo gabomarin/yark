@@ -6,7 +6,11 @@ import type { ChildProcess } from "node:child_process";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProcessManager } from "@backend/infra/process/process-manager";
 import { reattachLeftRunningProcesses } from "@backend/infra/process/left-running-reattach";
-import { writeLeftRunningProcesses, upsertLeftRunningProcess, removeLeftRunningProcess } from "@backend/infra/process/left-running-store";
+import {
+  writeLeftRunningProcesses,
+  upsertLeftRunningProcess,
+  removeLeftRunningProcess,
+} from "@backend/infra/process/left-running-store";
 import type { AppSettingsRepository } from "@backend/infra/db/app-settings-repository";
 import type { ServerRepository } from "@backend/infra/db/server-repository";
 import {
@@ -83,12 +87,7 @@ describe("reattachLeftRunningProcesses", () => {
 
   it("reattaches a matching leave record and clears metadata", async () => {
     cleanupRoot = await mkdtemp(join(tmpdir(), "yark-reattach-"));
-    const binaryDir = join(
-      cleanupRoot,
-      "ShooterGame",
-      "Binaries",
-      "Win64",
-    );
+    const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
     await mkdir(binaryDir, { recursive: true });
     const binary = join(binaryDir, "ArkAscendedServer.exe");
     await writeFile(binary, "");
@@ -143,9 +142,7 @@ describe("reattachLeftRunningProcesses", () => {
       }),
     });
 
-    expect(outcomes).toEqual([
-      { serverId: profile.id, classification: "match", reattached: true },
-    ]);
+    expect(outcomes).toEqual([{ serverId: profile.id, classification: "match", reattached: true }]);
     expect(manager.isActive(profile.id)).toBe(true);
     expect(manager.getStatus(profile.id).status).toBe("starting");
     expect(manager.getStatus(profile.id).pid).toBe(4242);
@@ -166,12 +163,7 @@ describe("reattachLeftRunningProcesses", () => {
 
   it("restores checkpoint runtimePorts on reattach instead of saved profile ports", async () => {
     cleanupRoot = await mkdtemp(join(tmpdir(), "yark-reattach-ports-"));
-    const binaryDir = join(
-      cleanupRoot,
-      "ShooterGame",
-      "Binaries",
-      "Win64",
-    );
+    const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
     await mkdir(binaryDir, { recursive: true });
     const binary = join(binaryDir, "ArkAscendedServer.exe");
     await writeFile(binary, "");
@@ -259,9 +251,7 @@ describe("reattachLeftRunningProcesses", () => {
       reattached: false,
       classification: "inaccessible",
     });
-    expect(settings.get(LEFT_RUNNING_PROCESSES_SETTING_KEY)).toBe(
-      JSON.stringify([record]),
-    );
+    expect(settings.get(LEFT_RUNNING_PROCESSES_SETTING_KEY)).toBe(JSON.stringify([record]));
   });
 
   it("clears stale leave metadata without adopting", async () => {
@@ -294,4 +284,3 @@ describe("reattachLeftRunningProcesses", () => {
     expect(settings.get(LEFT_RUNNING_PROCESSES_SETTING_KEY)).toBeNull();
   });
 });
-

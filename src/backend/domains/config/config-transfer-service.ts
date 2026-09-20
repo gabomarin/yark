@@ -25,10 +25,7 @@ import type { InstanceService } from "../instances/instance-service";
 import { finalizeClusterIniApplyPreview } from "./ini-compose";
 import { buildIniPreview } from "./ini-preview";
 import type { IniService } from "./ini-service";
-import {
-  composeIniPayloadFromSelection,
-  profileToIniIdentity,
-} from "./ini-selection-compose";
+import { composeIniPayloadFromSelection, profileToIniIdentity } from "./ini-selection-compose";
 import { listIniUiCategoryTree } from "@shared/ini/ini-ui-category-tree";
 import { buildStructuredLaunchArgList } from "@shared/asa/structured-launch-options";
 
@@ -38,9 +35,7 @@ export interface ServerRuntimeStatusReader {
 
 function assertStopped(status: ServerStatus, serverName: string): void {
   if (status !== "stopped") {
-    throw new Error(
-      `Server “${serverName}” must be stopped before configuration copy (status: ${status})`,
-    );
+    throw new Error(`Server “${serverName}” must be stopped before configuration copy (status: ${status})`);
   }
 }
 
@@ -93,30 +88,21 @@ export class ConfigTransferService {
       sourceId,
       sourceName: source.name,
       sourceStatus: this.runtime.getStatus(sourceId).status,
-      gameUserSettings: listIniUiCategoryTree(
-        snapshot.payload.gameUserSettings,
-        "gameUserSettings",
-        { excludeOwnedGusKeys: true },
-      ),
+      gameUserSettings: listIniUiCategoryTree(snapshot.payload.gameUserSettings, "gameUserSettings", {
+        excludeOwnedGusKeys: true,
+      }),
       game: listIniUiCategoryTree(snapshot.payload.game, "game"),
       mods: source.mods,
       disabledMods: source.disabledMods ?? [],
       extraArgs: source.extraArgs,
-      structuredLaunchArgs: buildStructuredLaunchArgList(
-        source.structuredLaunchArgs,
-      ),
+      structuredLaunchArgs: buildStructuredLaunchArgList(source.structuredLaunchArgs),
       hasPasswords: Boolean(
-        (source.adminPassword?.trim().length ?? 0) > 0 ||
-          (source.serverPassword?.trim().length ?? 0) > 0,
+        (source.adminPassword?.trim().length ?? 0) > 0 || (source.serverPassword?.trim().length ?? 0) > 0,
       ),
     };
   }
 
-  async preview(
-    sourceId: string,
-    targetId: string,
-    rawSelection: unknown,
-  ): Promise<ConfigTransferPreview> {
+  async preview(sourceId: string, targetId: string, rawSelection: unknown): Promise<ConfigTransferPreview> {
     const selection = assertConfigTransferSelection(rawSelection);
     if (!configTransferSelectionHasWork(selection)) {
       throw new Error("Select at least one configuration category to copy");
@@ -134,17 +120,9 @@ export class ConfigTransferService {
     const targetPolicy = this.backups.getPolicy(targetId);
     const sourcePolicy = this.backups.getPolicy(sourceId);
 
-    const composed = this.composePayload(
-      source,
-      target,
-      sourceIni.payload,
-      targetIni.payload,
-      selection,
-    );
+    const composed = this.composePayload(source, target, sourceIni.payload, targetIni.payload, selection);
 
-    const iniPreview = finalizeClusterIniApplyPreview(
-      buildIniPreview(targetIni.payload, composed.ini),
-    );
+    const iniPreview = finalizeClusterIniApplyPreview(buildIniPreview(targetIni.payload, composed.ini));
 
     const profileDiff = this.buildProfileDiff(source, target, selection, sourcePolicy, targetPolicy);
     const fingerprint = this.buildFingerprint(
@@ -210,50 +188,28 @@ export class ConfigTransferService {
         selection,
       );
       if (freshFingerprint !== fingerprint.trim()) {
-        throw new Error(
-          "Configuration changed since preview — regenerate the preview and try again",
-        );
+        throw new Error("Configuration changed since preview — regenerate the preview and try again");
       }
 
-      const composed = this.composePayload(
-        source,
-        target,
-        sourceIni.payload,
-        targetIni.payload,
-        selection,
-      );
-      const iniPreview = finalizeClusterIniApplyPreview(
-        buildIniPreview(targetIni.payload, composed.ini),
-      );
+      const composed = this.composePayload(source, target, sourceIni.payload, targetIni.payload, selection);
+      const iniPreview = finalizeClusterIniApplyPreview(buildIniPreview(targetIni.payload, composed.ini));
       if (!iniPreview.valid) {
-        throw new Error(
-          `Invalid INI: ${iniPreview.issues.map((i) => `${i.fileKey}: ${i.message}`).join(" | ")}`,
-        );
+        throw new Error(`Invalid INI: ${iniPreview.issues.map((i) => `${i.fileKey}: ${i.message}`).join(" | ")}`);
       }
 
       const profileSnapshot = { ...target };
       const policySnapshot = { ...targetPolicy };
-      const { backupId, snapshotDir } = await this.createPreCopySnapshot(
-        targetId,
-        targetIni,
-      );
+      const { backupId, snapshotDir } = await this.createPreCopySnapshot(targetId, targetIni);
 
       try {
         // INI first: instances.update syncs owned keys to GUS asynchronously and
         // must not race-clobber rates written by this transfer.
-        if (
-          selection.gameUserSettings.enabled ||
-          selection.game.enabled
-        ) {
+        if (selection.gameUserSettings.enabled || selection.game.enabled) {
           await this.writeIniPayload(targetIni, composed.ini, selection);
         }
 
         // Profile fields (mods / extraArgs / passwords)
-        if (
-          selection.mods.enabled ||
-          selection.extraArgs.enabled ||
-          selection.passwords
-        ) {
+        if (selection.mods.enabled || selection.extraArgs.enabled || selection.passwords) {
           const composedMods = selection.mods.enabled
             ? composeModLists(
                 {
@@ -283,20 +239,12 @@ export class ConfigTransferService {
             gamePort: target.gamePort,
             queryPort: target.queryPort,
             rconPort: target.rconPort,
-            serverPassword: selection.passwords
-              ? source.serverPassword
-              : target.serverPassword,
-            adminPassword: selection.passwords
-              ? source.adminPassword
-              : target.adminPassword,
+            serverPassword: selection.passwords ? source.serverPassword : target.serverPassword,
+            adminPassword: selection.passwords ? source.adminPassword : target.adminPassword,
             clusterId: target.clusterId,
             clusterDir: target.clusterDir,
             extraArgs: selection.extraArgs.enabled
-              ? composeStringList(
-                  source.extraArgs,
-                  target.extraArgs,
-                  selection.extraArgs.strategy,
-                )
+              ? composeStringList(source.extraArgs, target.extraArgs, selection.extraArgs.strategy)
               : [...target.extraArgs],
             structuredLaunchArgs: selection.extraArgs.enabled
               ? selection.extraArgs.strategy === "replace"
@@ -307,14 +255,9 @@ export class ConfigTransferService {
                   }
               : { ...(target.structuredLaunchArgs ?? {}) },
             mods: composedMods !== null ? composedMods.mods : [...target.mods],
-            disabledMods:
-              composedMods !== null
-                ? composedMods.disabledMods
-                : [...(target.disabledMods ?? [])],
+            disabledMods: composedMods !== null ? composedMods.disabledMods : [...(target.disabledMods ?? [])],
             modMetadataCache:
-              composedMods !== null
-                ? composedMods.modMetadataCache
-                : { ...(target.modMetadataCache ?? {}) },
+              composedMods !== null ? composedMods.modMetadataCache : { ...(target.modMetadataCache ?? {}) },
           });
         }
 
@@ -330,14 +273,7 @@ export class ConfigTransferService {
           });
         }
       } catch (error) {
-        await this.rollbackTarget(
-          targetId,
-          profileSnapshot,
-          policySnapshot,
-          targetIni,
-          snapshotDir,
-          selection,
-        );
+        await this.rollbackTarget(targetId, profileSnapshot, policySnapshot, targetIni, snapshotDir, selection);
         throw new Error(
           `Configuration copy failed; previous target settings restored${
             backupId !== null ? ` (backup ${backupId})` : ""
@@ -361,13 +297,7 @@ export class ConfigTransferService {
         targetName: target.name,
         fingerprint: freshFingerprint,
         iniPreview,
-        profileDiff: this.buildProfileDiff(
-          source,
-          target,
-          selection,
-          sourcePolicy,
-          targetPolicy,
-        ),
+        profileDiff: this.buildProfileDiff(source, target, selection, sourcePolicy, targetPolicy),
         backupId,
         snapshotDir,
       };
@@ -390,13 +320,9 @@ export class ConfigTransferService {
       : undefined;
 
     return {
-      ini: composeIniPayloadFromSelection(
-        sourceIni,
-        targetIni,
-        selection,
-        profileToIniIdentity(target),
-        { passwordsFromSource },
-      ),
+      ini: composeIniPayloadFromSelection(sourceIni, targetIni, selection, profileToIniIdentity(target), {
+        passwordsFromSource,
+      }),
     };
   }
 
@@ -459,11 +385,7 @@ export class ConfigTransferService {
       extraArgs: selection.extraArgs.enabled
         ? {
             before: [...target.extraArgs],
-            after: composeStringList(
-              source.extraArgs,
-              target.extraArgs,
-              selection.extraArgs.strategy,
-            ),
+            after: composeStringList(source.extraArgs, target.extraArgs, selection.extraArgs.strategy),
           }
         : null,
       structuredLaunchArgs: selection.extraArgs.enabled
@@ -499,21 +421,14 @@ export class ConfigTransferService {
             },
           }
         : null,
-      passwords: selection.passwords
-        ? { changed: true, redacted: true }
-        : null,
+      passwords: selection.passwords ? { changed: true, redacted: true } : null,
     };
   }
 
-  private buildWarnings(
-    source: ServerProfile,
-    selection: ConfigTransferSelection,
-  ): string[] {
+  private buildWarnings(source: ServerProfile, selection: ConfigTransferSelection): string[] {
     const warnings: string[] = [];
     if (this.runtime.getStatus(source.id).status !== "stopped") {
-      warnings.push(
-        "Source is running — we copy saved settings, not live game memory.",
-      );
+      warnings.push("Source is running — we copy saved settings, not live game memory.");
     }
     if (selection.passwords) {
       warnings.push("Passwords will be copied (hidden in this preview).");
@@ -526,22 +441,14 @@ export class ConfigTransferService {
     current: Awaited<ReturnType<IniService["readServerIni"]>>,
   ): Promise<{ backupId: string | null; snapshotDir: string }> {
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const snapshotDir = join(
-      dirname(current.gameUserSettingsPath),
-      ".yark-pre-copy",
-      stamp,
-    );
+    const snapshotDir = join(dirname(current.gameUserSettingsPath), ".yark-pre-copy", stamp);
     await mkdir(snapshotDir, { recursive: true });
     await this.copyOrWrite(
       current.gameUserSettingsPath,
       join(snapshotDir, "GameUserSettings.ini"),
       current.payload.gameUserSettings,
     );
-    await this.copyOrWrite(
-      current.gameIniPath,
-      join(snapshotDir, "Game.ini"),
-      current.payload.game,
-    );
+    await this.copyOrWrite(current.gameIniPath, join(snapshotDir, "Game.ini"), current.payload.game);
 
     // Persist a JSON snapshot of profile+policy for rollback.
     const target = this.requireServer(serverId);
@@ -563,11 +470,7 @@ export class ConfigTransferService {
     return { backupId, snapshotDir };
   }
 
-  private async copyOrWrite(
-    sourcePath: string,
-    destPath: string,
-    fallbackText: string,
-  ): Promise<void> {
+  private async copyOrWrite(sourcePath: string, destPath: string, fallbackText: string): Promise<void> {
     try {
       await copyFile(sourcePath, destPath);
     } catch {
@@ -588,11 +491,7 @@ export class ConfigTransferService {
     // non-selected file from that draft — both files must hit disk before we
     // drop the queue or Game.ini / GUS edits are lost (#530).
     if (writeGus) {
-      await writeFile(
-        current.gameUserSettingsPath,
-        payload.gameUserSettings,
-        "utf8",
-      );
+      await writeFile(current.gameUserSettingsPath, payload.gameUserSettings, "utf8");
     }
     if (writeGame) {
       await writeFile(current.gameIniPath, payload.game, "utf8");
@@ -648,13 +547,10 @@ export class ConfigTransferService {
         });
       }
       if (selection.gameUserSettings.enabled || selection.game.enabled) {
-        const gus = await readFile(
-          join(snapshotDir, "GameUserSettings.ini"),
-          "utf8",
-        ).catch(() => targetIni.payload.gameUserSettings);
-        const game = await readFile(join(snapshotDir, "Game.ini"), "utf8").catch(
-          () => targetIni.payload.game,
+        const gus = await readFile(join(snapshotDir, "GameUserSettings.ini"), "utf8").catch(
+          () => targetIni.payload.gameUserSettings,
         );
+        const game = await readFile(join(snapshotDir, "Game.ini"), "utf8").catch(() => targetIni.payload.game);
         await this.writeIniPayload(
           targetIni,
           {
@@ -667,9 +563,7 @@ export class ConfigTransferService {
     } catch (rollbackError) {
       throw new Error(
         `Configuration copy failed and rollback also failed (snapshot ${snapshotDir}): ${
-          rollbackError instanceof Error
-            ? rollbackError.message
-            : String(rollbackError)
+          rollbackError instanceof Error ? rollbackError.message : String(rollbackError)
         }`,
       );
     }

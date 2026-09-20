@@ -94,11 +94,7 @@ export function hostedResourceSha256(content: string): string {
 }
 
 export function isLoopbackAddress(address: string | undefined): boolean {
-  return (
-    address === "127.0.0.1" ||
-    address === "::1" ||
-    address === "::ffff:127.0.0.1"
-  );
+  return address === "127.0.0.1" || address === "::1" || address === "::ffff:127.0.0.1";
 }
 
 function probeUrl(url: string): Promise<HttpProbeResult> {
@@ -143,12 +139,8 @@ export class HostedResourcesService {
   }
 
   getState(): HostedResourcesStateDto {
-    const enabled = parseHostedResourcesEnabled(
-      this.deps.settings.get(HOSTED_RESOURCES_ENABLED_SETTING_KEY),
-    );
-    const configuredPort = parseHostedResourcesPort(
-      this.deps.settings.get(HOSTED_RESOURCES_PORT_SETTING_KEY),
-    );
+    const enabled = parseHostedResourcesEnabled(this.deps.settings.get(HOSTED_RESOURCES_ENABLED_SETTING_KEY));
+    const configuredPort = parseHostedResourcesPort(this.deps.settings.get(HOSTED_RESOURCES_PORT_SETTING_KEY));
     return {
       enabled,
       port: this.server !== null ? this.boundPort : configuredPort,
@@ -162,9 +154,7 @@ export class HostedResourcesService {
     const state = this.getState();
     return {
       state,
-      resources: this.deps.repo
-        .listResourceSummaries()
-        .map((row) => this.toResourceDto(row, state.port)),
+      resources: this.deps.repo.listResourceSummaries().map((row) => this.toResourceDto(row, state.port)),
     };
   }
 
@@ -173,12 +163,8 @@ export class HostedResourcesService {
   }
 
   private async applySettingsInternal(): Promise<HostedResourcesStateDto> {
-    const enabled = parseHostedResourcesEnabled(
-      this.deps.settings.get(HOSTED_RESOURCES_ENABLED_SETTING_KEY),
-    );
-    const port = parseHostedResourcesPort(
-      this.deps.settings.get(HOSTED_RESOURCES_PORT_SETTING_KEY),
-    );
+    const enabled = parseHostedResourcesEnabled(this.deps.settings.get(HOSTED_RESOURCES_ENABLED_SETTING_KEY));
+    const port = parseHostedResourcesPort(this.deps.settings.get(HOSTED_RESOURCES_PORT_SETTING_KEY));
     if (!enabled) {
       await this.stop();
       this.lastError = null;
@@ -194,10 +180,7 @@ export class HostedResourcesService {
 
   async setEnabled(enabled: boolean): Promise<HostedResourcesStateDto> {
     return this.enqueue(async () => {
-      this.deps.settings.set(
-        HOSTED_RESOURCES_ENABLED_SETTING_KEY,
-        serializeHostedResourcesEnabled(enabled),
-      );
+      this.deps.settings.set(HOSTED_RESOURCES_ENABLED_SETTING_KEY, serializeHostedResourcesEnabled(enabled));
       return this.applySettingsInternal();
     });
   }
@@ -307,24 +290,11 @@ export class HostedResourcesService {
     return this.toResourceDto(this.mustGetSummary(resourceId), this.getState().port);
   }
 
-  updateMetadata(
-    resourceId: string,
-    input: { displayName: string; notes: string; tags: string[] },
-  ): HostedResourceDto {
+  updateMetadata(resourceId: string, input: { displayName: string; notes: string; tags: string[] }): HostedResourceDto {
     this.mustGetResource(resourceId);
-    const metadata = this.normalizeMetadata(
-      input.displayName,
-      input.notes,
-      input.tags,
-    );
+    const metadata = this.normalizeMetadata(input.displayName, input.notes, input.tags);
     const now = new Date().toISOString();
-    this.deps.repo.updateMetadata(
-      resourceId,
-      metadata.displayName,
-      metadata.notes,
-      metadata.tags,
-      now,
-    );
+    this.deps.repo.updateMetadata(resourceId, metadata.displayName, metadata.notes, metadata.tags, now);
     return this.toResourceDto(this.mustGetSummary(resourceId), this.getState().port);
   }
 
@@ -379,8 +349,7 @@ export class HostedResourcesService {
         published: summary.publishedRevisionId !== null,
         declaredSha256: summary.publishedSha256,
         servedSha256,
-        servedOk:
-          servedSha256 !== null && servedSha256 === summary.publishedSha256,
+        servedOk: servedSha256 !== null && servedSha256 === summary.publishedSha256,
         requestCount: this.requestCounts.get(summary.id) ?? 0,
       });
     }
@@ -435,18 +404,14 @@ export class HostedResourcesService {
         resolve();
       });
 
-      server.listen(
-        { host: HOSTED_RESOURCES_BIND_HOST, port, exclusive: true },
-        () => {
-          const address = server.address();
-          this.boundPort =
-            address !== null && typeof address !== "string" ? address.port : port;
-          this.server = server;
-          this.lastError = null;
-          bound = true;
-          resolve();
-        },
-      );
+      server.listen({ host: HOSTED_RESOURCES_BIND_HOST, port, exclusive: true }, () => {
+        const address = server.address();
+        this.boundPort = address !== null && typeof address !== "string" ? address.port : port;
+        this.server = server;
+        this.lastError = null;
+        bound = true;
+        resolve();
+      });
     });
   }
 
@@ -480,9 +445,7 @@ export class HostedResourcesService {
 
     const rawUrl = req.url ?? "";
     const path = rawUrl.split("?")[0] ?? "";
-    const token = path.startsWith(HOSTED_RESOURCES_PATH_PREFIX)
-      ? path.slice(HOSTED_RESOURCES_PATH_PREFIX.length)
-      : "";
+    const token = path.startsWith(HOSTED_RESOURCES_PATH_PREFIX) ? path.slice(HOSTED_RESOURCES_PATH_PREFIX.length) : "";
     if (!HOSTED_RESOURCES_TOKEN_PATTERN.test(token)) {
       this.sendStatus(res, 404);
       return;
@@ -517,16 +480,12 @@ export class HostedResourcesService {
     res.end();
   }
 
-  private async probeOwnership(
-    state: HostedResourcesStateDto,
-  ): Promise<{ ok: boolean; message: string }> {
+  private async probeOwnership(state: HostedResourcesStateDto): Promise<{ ok: boolean; message: string }> {
     if (!state.listening) {
       return { ok: false, message: state.error ?? "The host is not listening." };
     }
     try {
-      const result = await probeUrl(
-        `http://${HOSTED_RESOURCES_BIND_HOST}:${state.port}/`,
-      );
+      const result = await probeUrl(`http://${HOSTED_RESOURCES_BIND_HOST}:${state.port}/`);
       if (!result.marker) {
         await this.stop();
         this.lastError = "Another process owns the port; serving stopped.";
@@ -557,9 +516,7 @@ export class HostedResourcesService {
     } catch {
       return [];
     }
-    const resources = this.deps.repo
-      .listResourceSummaries()
-      .filter((row) => row.disabledAt === null);
+    const resources = this.deps.repo.listResourceSummaries().filter((row) => row.disabledAt === null);
     const references: HostedResourceReferenceDto[] = [];
     for (const source of sources) {
       const rows = parseIniTextRows(source.text);
@@ -597,19 +554,14 @@ export class HostedResourcesService {
   }
 
   private mustGetSummary(id: string): HostedResourceSummaryRow {
-    const summary = this.deps.repo
-      .listResourceSummaries()
-      .find((row) => row.id === id);
+    const summary = this.deps.repo.listResourceSummaries().find((row) => row.id === id);
     if (summary === undefined) {
       throw new Error("Resource not found.");
     }
     return summary;
   }
 
-  private toResourceDto(
-    row: HostedResourceSummaryRow,
-    port: number,
-  ): HostedResourceDto {
+  private toResourceDto(row: HostedResourceSummaryRow, port: number): HostedResourceDto {
     return {
       id: row.id,
       displayName: row.displayName,
@@ -636,9 +588,7 @@ export class HostedResourcesService {
     const normalizedName = displayName.trim();
     if (normalizedName.length === 0) throw new Error("Display name is required.");
     if (normalizedName.length > HOSTED_RESOURCES_MAX_DISPLAY_NAME_LENGTH) {
-      throw new Error(
-        `Display name must be ${HOSTED_RESOURCES_MAX_DISPLAY_NAME_LENGTH} characters or fewer.`,
-      );
+      throw new Error(`Display name must be ${HOSTED_RESOURCES_MAX_DISPLAY_NAME_LENGTH} characters or fewer.`);
     }
     const normalizedNotes = (notes ?? "").trim();
     if (normalizedNotes.length > HOSTED_RESOURCES_MAX_NOTES_LENGTH) {

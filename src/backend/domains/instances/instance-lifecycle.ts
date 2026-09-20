@@ -1,19 +1,10 @@
-import type {
-  BackupKind,
-  ServerStopProgress,
-  ServerStopProgressReason,
-} from "@shared/types";
+import type { BackupKind, ServerStopProgress, ServerStopProgressReason } from "@shared/types";
 import type { ServerInstallationInfo } from "@shared/types";
 
 /** Max concurrent async FS classify probes during a fleet scan. */
 export const FLEET_INSPECT_CONCURRENCY = 3;
 
-export type StopJobOutcome =
-  | "stopped"
-  | "already_exited"
-  | "killed"
-  | "absent"
-  | "noop";
+export type StopJobOutcome = "stopped" | "already_exited" | "killed" | "absent" | "noop";
 
 export async function mapPool<T, R>(
   items: ReadonlyArray<T>,

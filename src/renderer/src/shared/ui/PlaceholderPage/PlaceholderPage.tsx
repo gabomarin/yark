@@ -15,8 +15,8 @@ export function PlaceholderPage({ title, subtitle }: Props): ReactElement {
         <Stack gap="xs">
           <Title order={3}>Migration in progress</Title>
           <Text c="dimmed">
-            This screen has not been reimplemented in the new frontend yet. Its layout already uses
-            the shared shell and will be completed when its dedicated design arrives.
+            This screen has not been reimplemented in the new frontend yet. Its layout already uses the shared shell and
+            will be completed when its dedicated design arrives.
           </Text>
         </Stack>
       </Card>

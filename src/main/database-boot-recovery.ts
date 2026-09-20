@@ -1,10 +1,6 @@
 import type { DatabaseSync } from "node:sqlite";
 import type { MessageBoxOptions } from "electron";
-import {
-  DatabaseBootError,
-  openDatabase,
-  type OpenDatabaseOptions,
-} from "../backend/infra/db/database";
+import { DatabaseBootError, openDatabase, type OpenDatabaseOptions } from "../backend/infra/db/database";
 import { quarantineProfileDatabase } from "../backend/infra/db/database-recovery";
 import {
   describeProfileDatabaseSnapshot,
@@ -32,10 +28,7 @@ export interface DatabaseRecoveryUi {
 export type OpenDatabaseWithRecoveryDeps = {
   open?: (path: string, options?: OpenDatabaseOptions) => DatabaseSync;
   quarantine?: typeof quarantineProfileDatabase;
-  pickSnapshot?: (
-    dbPath: string,
-    kind: DatabaseBootError["kind"],
-  ) => ProfileDatabaseSnapshotInfo | null;
+  pickSnapshot?: (dbPath: string, kind: DatabaseBootError["kind"]) => ProfileDatabaseSnapshotInfo | null;
   restoreSnapshot?: typeof restoreProfileDatabaseFromSnapshot;
 };
 
@@ -57,9 +50,7 @@ export async function openDatabaseWithOperatorRecovery(
     return open(dbPath);
   } catch (firstError) {
     let error =
-      firstError instanceof DatabaseBootError
-        ? firstError
-        : new DatabaseBootError("open", dbPath, firstError);
+      firstError instanceof DatabaseBootError ? firstError : new DatabaseBootError("open", dbPath, firstError);
 
     for (;;) {
       const choice = await ui.promptRecovery(error);
@@ -87,9 +78,7 @@ export async function openDatabaseWithOperatorRecovery(
           return open(dbPath);
         } catch (retryError) {
           error =
-            retryError instanceof DatabaseBootError
-              ? retryError
-              : new DatabaseBootError("open", dbPath, retryError);
+            retryError instanceof DatabaseBootError ? retryError : new DatabaseBootError("open", dbPath, retryError);
           continue;
         }
       }
@@ -99,9 +88,7 @@ export async function openDatabaseWithOperatorRecovery(
         return open(dbPath);
       } catch (retryError) {
         error =
-          retryError instanceof DatabaseBootError
-            ? retryError
-            : new DatabaseBootError("open", dbPath, retryError);
+          retryError instanceof DatabaseBootError ? retryError : new DatabaseBootError("open", dbPath, retryError);
       }
     }
   }
@@ -112,11 +99,7 @@ type DialogShowMessageBox = (options: MessageBoxOptions) => Promise<{ response: 
 /** Short reason for native dialogs (avoids multi-KB quick_check dumps). */
 export function operatorFacingDatabaseBootReason(error: DatabaseBootError): string {
   const raw =
-    error.cause instanceof Error
-      ? error.cause.message
-      : error.cause != null
-        ? String(error.cause)
-        : error.message;
+    error.cause instanceof Error ? error.cause.message : error.cause != null ? String(error.cause) : error.message;
   const compact = raw.replace(/\s+/g, " ").trim();
   if (/empty/i.test(compact)) {
     return "The database file is empty.";
@@ -141,10 +124,7 @@ export function createElectronDatabaseRecoveryUi(deps: {
   showMessageBox: DialogShowMessageBox;
   showItemInFolder: (fullPath: string) => void;
   quitApp: () => void;
-  pickSnapshot?: (
-    dbPath: string,
-    kind: DatabaseBootError["kind"],
-  ) => ProfileDatabaseSnapshotInfo | null;
+  pickSnapshot?: (dbPath: string, kind: DatabaseBootError["kind"]) => ProfileDatabaseSnapshotInfo | null;
 }): DatabaseRecoveryUi {
   const pickSnapshot = deps.pickSnapshot ?? pickPreferredProfileDatabaseSnapshot;
 
@@ -153,9 +133,7 @@ export function createElectronDatabaseRecoveryUi(deps: {
       const preferred = pickSnapshot(error.dbPath, error.kind);
       const reason = operatorFacingDatabaseBootReason(error);
       const headline =
-        error.kind === "migrate"
-          ? "YARK couldn't update its save file."
-          : "YARK can't open its save file.";
+        error.kind === "migrate" ? "YARK couldn't update its save file." : "YARK can't open its save file.";
 
       if (preferred) {
         const result = await deps.showMessageBox({

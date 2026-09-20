@@ -1,8 +1,13 @@
 /**
  * Shared INI editor chrome (nav row + visual category / Other subgroup headers).
- * Categories: deep blue + subtle ~90% lift + 3px rail.
- * Other subgroups: surface-control gray + ~80%/20% shade (no blue wash).
- * See docs/design-system.md (INI editor chrome exception).
+ *
+ * Shipped (B): flat. A category is a solid band, an "Other" mod subgroup is a quieter
+ * indented row, and count chips are neutral outlines - hierarchy comes from elevation,
+ * indentation and weight, because a hue cannot separate sections once the whole ramp is
+ * navy-tinted (a blue band just read as a muddy patch and fought the accent rail).
+ *
+ * TEMP (PUX-004): `html[data-ini-chrome="a"]` restores the older soft wash - without the
+ * accent rail - on the neutral ramp, so the A/B differs in structure only (flat vs wash).
  */
 
 .nav {
@@ -17,18 +22,13 @@
   padding-bottom: 1px;
 }
 
-/* Shared category-band fill — mostly blue; soft deepen only (~10% toward black). */
+/* Category band: one step above the rows, so the section reads without a hue. */
 .sectionHeader,
 .sectionHeaderStatic {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--app-color-ini-category) 90%, var(--ark-blue-5)) 0%,
-    var(--app-color-ini-category) 55%,
-    color-mix(in srgb, var(--app-color-ini-category) 90%, #000) 100%
-  );
+  background: var(--app-color-surface-control);
 }
 
-/* Native <button> — avoid Mantine UnstyledButton resetting background/padding. */
+/* Native <button> - avoid Mantine UnstyledButton resetting background/padding. */
 .sectionHeader {
   display: flex;
   align-items: center;
@@ -38,26 +38,21 @@
   margin: 0;
   padding: 14px;
   border: none;
-  /* Bottom only — border-block stacks into thick lines when collapsed */
-  border-bottom: 1px solid color-mix(in srgb, var(--ark-blue-8) 18%, var(--app-color-border-subtle));
+  /* Bottom only - border-block stacks into thick lines when collapsed */
+  border-bottom: 1px solid var(--app-color-border-subtle);
   border-radius: 0;
   color: inherit;
   font: inherit;
   text-align: left;
   cursor: pointer;
-  box-shadow: inset 3px 0 0 0 var(--ark-blue-9);
 }
 
 .sectionHeader:hover {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--app-color-ini-category) 82%, var(--ark-blue-5)) 0%,
-    color-mix(in srgb, var(--app-color-ini-category) 88%, #000) 100%
-  );
+  background: var(--app-color-surface-control-hover);
 }
 
 .sectionHeader:focus-visible {
-  outline: 2px solid var(--ark-blue-9);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: -2px;
 }
 
@@ -66,10 +61,13 @@
   letter-spacing: 0.01em;
 }
 
+/* Count chips ride the neutral Badge recipe (`--badge-bg/bd/color` in `theme.ts`), so an
+ * INI count and the sidebar's Experimental chip are the same object: control fill, hairline,
+ * text colour - not the transparent/muted override they used to carry. */
 .sectionCount {
-  border: 1px solid color-mix(in srgb, var(--ark-blue-8) 40%, var(--app-color-border-subtle)) !important;
-  background: color-mix(in srgb, var(--app-color-ini-category) 70%, var(--ark-blue-2)) !important;
-  color: var(--ark-blue-11) !important;
+  /* A category band is already the control fill, so the chip sits one step up to stay a
+   * chip; its hairline and text come from the theme like any other neutral badge. */
+  background: var(--app-color-surface-control-hover) !important;
 }
 
 /* Other category: not collapsible; expand/collapse icons target section subgroups */
@@ -82,15 +80,14 @@
   margin: 0;
   padding: 14px;
   border: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--ark-blue-8) 18%, var(--app-color-border-subtle));
+  border-bottom: 1px solid var(--app-color-border-subtle);
   border-radius: 0;
   color: inherit;
   font: inherit;
   text-align: left;
-  box-shadow: inset 3px 0 0 0 var(--ark-blue-9);
 }
 
-/* Nested under Other — control gray with a soft ~80%/20% darken (quieter than categories). */
+/* Nested under Other (mod configs): flat and indented, quieter than a category. */
 .subsectionHeader {
   display: flex;
   align-items: center;
@@ -102,11 +99,7 @@
   border: none;
   border-bottom: 1px solid var(--app-color-border-subtle);
   border-radius: 0;
-  background: linear-gradient(
-    180deg,
-    var(--app-color-surface-control) 0%,
-    color-mix(in srgb, var(--app-color-surface-control) 80%, #000) 100%
-  );
+  background: transparent;
   color: inherit;
   font: inherit;
   text-align: left;
@@ -114,25 +107,55 @@
 }
 
 .subsectionHeader:hover {
-  background: linear-gradient(
-    180deg,
-    var(--app-color-surface-control-hover) 0%,
-    color-mix(in srgb, var(--app-color-surface-control-hover) 78%, #000) 100%
-  );
+  background: var(--app-color-surface-control-hover);
 }
 
 .subsectionHeader:focus-visible {
-  outline: 2px solid var(--ark-blue-9);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: -2px;
 }
 
 .subsectionHeaderLabel {
-  color: var(--app-color-text);
+  color: var(--app-color-muted);
   letter-spacing: 0.01em;
 }
 
-.subsectionCount {
-  border: 1px solid var(--app-color-border-subtle) !important;
-  background: transparent !important;
-  color: var(--app-color-muted) !important;
+/* The mod-subgroup count rides the table body, so the neutral badge needs no override. */
+
+/* ------------------------------------------------------------------ variant A */
+
+/* Older structure: the soft wash, on the same neutral ramp, but without the rail - a
+ * 3px rail on every band dilutes the app's selection notch, and the wash alone already
+ * separates the section. */
+[data-ini-chrome="a"] .sectionHeader,
+[data-ini-chrome="a"] .sectionHeaderStatic {
+  background: linear-gradient(
+    180deg,
+    var(--app-color-surface-control) 0%,
+    color-mix(in srgb, var(--app-color-surface-control) 82%, var(--ark-gray-1)) 100%
+  );
+}
+
+[data-ini-chrome="a"] .sectionHeader:hover {
+  background: linear-gradient(
+    180deg,
+    var(--app-color-surface-control-hover) 0%,
+    color-mix(in srgb, var(--app-color-surface-control-hover) 82%, var(--ark-gray-1)) 100%
+  );
+}
+
+[data-ini-chrome="a"] .subsectionHeader {
+  background: linear-gradient(
+    180deg,
+    var(--app-color-surface-control) 0%,
+    color-mix(in srgb, var(--app-color-surface-control) 80%, var(--ark-gray-1)) 100%
+  );
+}
+
+[data-ini-chrome="a"] .subsectionHeader:hover {
+  background: linear-gradient(
+    180deg,
+    var(--app-color-surface-control-hover) 0%,
+    color-mix(in srgb, var(--app-color-surface-control-hover) 78%, var(--ark-gray-1)) 100%
+  );
 }

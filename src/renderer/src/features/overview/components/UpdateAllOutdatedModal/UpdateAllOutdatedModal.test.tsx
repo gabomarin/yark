@@ -62,21 +62,14 @@ describe("UpdateAllOutdatedModal", () => {
 
     render(
       <AppProviders>
-        <UpdateAllOutdatedModal
-          opened
-          plan={plan}
-          onClose={vi.fn()}
-          onConfirm={onConfirm}
-        />
+        <UpdateAllOutdatedModal opened plan={plan} onClose={vi.fn()} onConfirm={onConfirm} />
       </AppProviders>,
     );
 
     expect(screen.getByText(/1 server ready to queue/i)).toBeInTheDocument();
     expect(screen.getByLabelText("Alpha build row")).toBeInTheDocument();
     expect(screen.getByLabelText("Beta build row")).toBeInTheDocument();
-    expect(
-      screen.getByText(/Server is running – stop it before a safe update/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Server is running – stop it before a safe update/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /^accept$/i }));
     expect(onConfirm).toHaveBeenCalledTimes(1);

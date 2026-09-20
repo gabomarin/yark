@@ -5,13 +5,10 @@ import { formatWhenLabel } from "@shared/format-log-datetime";
 import { collapseConsecutiveEvents, formatEventMessageForDisplay } from "@shared/event-details";
 import type { ReactElement } from "react";
 import { EventDetailsBody } from "../../EventDetailsBody";
+import { LoadingState } from "@ui/LoadingState/LoadingState";
 import { EventSeverityMark } from "../EventSeverityMark/EventSeverityMark";
 import classes from "../../LogsPage.module.css";
-import {
-  LogsClearAction,
-  LogsEmptyState,
-  LogsTabIntro,
-} from "../LogsPanelChrome/LogsPanelChrome";
+import { LogsClearAction, LogsEmptyState, LogsTabIntro } from "../LogsPanelChrome/LogsPanelChrome";
 
 export interface LogsEventsTabProps {
   embedded?: boolean;
@@ -25,16 +22,8 @@ export interface LogsEventsTabProps {
 }
 
 export function LogsEventsTab(props: LogsEventsTabProps): ReactElement {
-  const {
-    embedded,
-    loading,
-    busy,
-    logs,
-    highlightedEventId,
-    expandedEventId,
-    onExpandedEventIdChange,
-    onClearEvents,
-  } = props;
+  const { embedded, loading, busy, logs, highlightedEventId, expandedEventId, onExpandedEventIdChange, onClearEvents } =
+    props;
 
   return (
     <div className={classes.fillPanel}>
@@ -48,14 +37,12 @@ export function LogsEventsTab(props: LogsEventsTabProps): ReactElement {
             <LogsClearAction
               label="Clear all events for this server"
               onClick={onClearEvents}
-              disabled={
-                loading || busy || logs === null || logs.events.length === 0
-              }
+              disabled={loading || busy || logs === null || logs.events.length === 0}
             />
           }
         />
         {loading ? (
-          <Text c="dimmed">Loading events…</Text>
+          <LoadingState label="events" />
         ) : logs === null || logs.events.length === 0 ? (
           <LogsEmptyState
             icon={<ClockCounterClockwise size={24} />}
@@ -91,17 +78,10 @@ export function LogsEventsTab(props: LogsEventsTabProps): ReactElement {
                   <Accordion.Item
                     key={event.id}
                     value={String(event.id)}
-                    className={
-                      focused || expanded ? classes.eventRowFocused : undefined
-                    }
+                    className={focused || expanded ? classes.eventRowFocused : undefined}
                   >
                     <Accordion.Control data-log-event-id={event.id}>
-                      <Group
-                        justify="space-between"
-                        align="center"
-                        gap="sm"
-                        wrap="nowrap"
-                      >
+                      <Group justify="space-between" align="center" gap="sm" wrap="nowrap">
                         <div className={classes.eventRowMain}>
                           <Tooltip label={formatWhenLabel(event.createdAt).tooltip}>
                             <Text size="sm" c="dimmed">

@@ -7,8 +7,7 @@ import {
 
 describe("CurseForge ASA mod URLs", () => {
   it("accepts and canonicalizes a mod detail URL", () => {
-    const input =
-      "https://curseforge.com/ark-survival-ascended/mods/awesomespyglass/";
+    const input = "https://curseforge.com/ark-survival-ascended/mods/awesomespyglass/";
     expect(getCurseForgeAsaModUrlError(input)).toBeNull();
     expect(curseForgeAsaSlugFromUrl(input)).toBe("awesomespyglass");
     expect(canonicalCurseForgeAsaModUrl(input)).toBe(

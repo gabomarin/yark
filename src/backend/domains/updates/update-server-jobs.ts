@@ -1,10 +1,7 @@
 import { join } from "node:path";
 import type { CriticalJobStatus } from "@shared/types";
 import type { BackupKind } from "@shared/types";
-import type {
-  UpdateCriticalJobContext,
-  UpdateCriticalJobType,
-} from "./update-critical-jobs";
+import type { UpdateCriticalJobContext, UpdateCriticalJobType } from "./update-critical-jobs";
 
 const PRE_UPDATE_BACKUP_PROGRESS_BASE_PERCENT = 5;
 const PRE_UPDATE_BACKUP_PROGRESS_SPAN_PERCENT = 20;
@@ -14,16 +11,10 @@ export function shouldBlockUpdateWhileServerRunning(input: {
   hasDurableJob: boolean;
   jobWasRunning: boolean | undefined;
 }): boolean {
-  return (
-    input.isCurrentlyRunning
-    && input.hasDurableJob
-    && input.jobWasRunning !== true
-  );
+  return input.isCurrentlyRunning && input.hasDurableJob && input.jobWasRunning !== true;
 }
 
-export function shouldResumeFromPreUpdateBackup(
-  preUpdateBackupIds: readonly string[] | undefined,
-): boolean {
+export function shouldResumeFromPreUpdateBackup(preUpdateBackupIds: readonly string[] | undefined): boolean {
   return (preUpdateBackupIds?.length ?? 0) > 0;
 }
 
@@ -35,17 +26,11 @@ export function isPreUpdateBackupEvidenceComplete(
   return persistedIds.length > 0 && completedBackupsCount === requiredKindCount;
 }
 
-export function resolveUpdateWasRunning(
-  jobWasRunning: boolean | undefined,
-  isCurrentlyRunning: boolean,
-): boolean {
+export function resolveUpdateWasRunning(jobWasRunning: boolean | undefined, isCurrentlyRunning: boolean): boolean {
   return jobWasRunning ?? isCurrentlyRunning;
 }
 
-export function captureWasRunningOnJob(
-  context: UpdateCriticalJobContext,
-  isCurrentlyRunning: boolean,
-): void {
+export function captureWasRunningOnJob(context: UpdateCriticalJobContext, isCurrentlyRunning: boolean): void {
   if (context.wasRunning === undefined) {
     context.wasRunning = isCurrentlyRunning;
   }
@@ -57,11 +42,11 @@ export function updateInstallMayHaveChanged(input: {
   appliedBuildId?: string | null;
 }): boolean {
   return (
-    input.phase === "applying-files"
-    || input.phase === "files-applied"
-    || input.phase === "restarting-server"
-    || typeof input.steamCmdExitCode === "number"
-    || input.appliedBuildId != null
+    input.phase === "applying-files" ||
+    input.phase === "files-applied" ||
+    input.phase === "restarting-server" ||
+    typeof input.steamCmdExitCode === "number" ||
+    input.appliedBuildId != null
   );
 }
 
@@ -70,11 +55,7 @@ export function shouldRestartServerAfterPreSteamCmdAbort(input: {
   installMayHaveChanged: boolean;
   serverIsActive: boolean;
 }): boolean {
-  return (
-    input.wasRunning
-    && !input.installMayHaveChanged
-    && !input.serverIsActive
-  );
+  return input.wasRunning && !input.installMayHaveChanged && !input.serverIsActive;
 }
 
 export function formatPreUpdateBackupKindLabel(kind: BackupKind | string): string {
@@ -83,21 +64,14 @@ export function formatPreUpdateBackupKindLabel(kind: BackupKind | string): strin
   return "player profiles";
 }
 
-export function computePreUpdateBackupProgressPercent(
-  index: number,
-  total: number,
-): number {
+export function computePreUpdateBackupProgressPercent(index: number, total: number): number {
   return Math.round(
-    PRE_UPDATE_BACKUP_PROGRESS_BASE_PERCENT
-      + ((index + 0.5) / Math.max(total, 1)) * PRE_UPDATE_BACKUP_PROGRESS_SPAN_PERCENT,
+    PRE_UPDATE_BACKUP_PROGRESS_BASE_PERCENT +
+      ((index + 0.5) / Math.max(total, 1)) * PRE_UPDATE_BACKUP_PROGRESS_SPAN_PERCENT,
   );
 }
 
-export function buildUpdateLogPath(
-  updatesLogDir: string,
-  serverId: string,
-  startedAt: Date,
-): string {
+export function buildUpdateLogPath(updatesLogDir: string, serverId: string, startedAt: Date): string {
   const timestamp = startedAt.toISOString().replace(/[:.]/g, "-");
   return join(updatesLogDir, `${serverId}-${timestamp}.log`);
 }
@@ -183,7 +157,6 @@ export function planDuplicateRecoveredUpdateJob(
   return {
     status: "blocked",
     operatorRetryAllowed: true,
-    recoveryReason:
-      "Duplicate durable job records were recovered. Review the preserved phase before retrying.",
+    recoveryReason: "Duplicate durable job records were recovered. Review the preserved phase before retrying.",
   };
 }

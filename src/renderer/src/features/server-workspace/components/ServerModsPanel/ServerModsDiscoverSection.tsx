@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-  type ReactElement,
-} from "react";
+import { useEffect, useMemo, useState, type ReactElement } from "react";
 import { Loader, Pagination, Text } from "@mantine/core";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import type {
@@ -17,10 +12,7 @@ import type { DataTableSortStatus } from "mantine-datatable";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { ServerModsDiscoverToolbar } from "./ServerModsDiscoverToolbar";
-import {
-  LOAD_ORDER_SORT,
-  ServerModsTable,
-} from "./ServerModsTable";
+import { LOAD_ORDER_SORT, ServerModsTable } from "./ServerModsTable";
 import {
   DISCOVER_DEFAULT_SORT_FIELD,
   DISCOVER_DEFAULT_SORT_ORDER,
@@ -29,10 +21,7 @@ import {
   discoverSortFromColumn,
   isDiscoverDefaultSort,
 } from "./modsDiscoverConstants";
-import {
-  buildDiscoveryRows,
-  type ModRow,
-} from "./serverModsModel";
+import { buildDiscoveryRows, type ModRow } from "./serverModsModel";
 import classes from "./ServerModsPanel.module.css";
 
 interface Props {
@@ -55,12 +44,8 @@ export function ServerModsDiscoverSection(props: Props): ReactElement {
   const [catalog, setCatalog] = useState<ModSearchPage | null>(null);
   const [categories, setCategories] = useState<ModCategory[]>([]);
   const [categoryValue, setCategoryValue] = useState("all");
-  const [sortField, setSortField] = useState<ModsSearchSortField>(
-    DISCOVER_DEFAULT_SORT_FIELD,
-  );
-  const [sortOrder, setSortOrder] = useState<ModsSearchSortOrder>(
-    DISCOVER_DEFAULT_SORT_ORDER,
-  );
+  const [sortField, setSortField] = useState<ModsSearchSortField>(DISCOVER_DEFAULT_SORT_FIELD);
+  const [sortOrder, setSortOrder] = useState<ModsSearchSortOrder>(DISCOVER_DEFAULT_SORT_ORDER);
   const [page, setPage] = useState(1);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   /** Bumps on every Search submit so the same query can be retried after errors. */
@@ -78,28 +63,15 @@ export function ServerModsDiscoverSection(props: Props): ReactElement {
     };
   }, [sortField, sortOrder]);
 
-  const disabledSet = useMemo(
-    () => new Set(props.disabledIds),
-    [props.disabledIds],
-  );
+  const disabledSet = useMemo(() => new Set(props.disabledIds), [props.disabledIds]);
   const rows = useMemo(
-    () =>
-      buildDiscoveryRows(
-        props.configuredIds,
-        disabledSet,
-        props.metadata,
-        catalog,
-      ),
+    () => buildDiscoveryRows(props.configuredIds, disabledSet, props.metadata, catalog),
     [catalog, props.configuredIds, disabledSet, props.metadata],
   );
 
   const categoryOptions = useMemo(() => {
-    const classEntries = categories
-      .filter((entry) => entry.isClass)
-      .sort(byDisplayIndex);
-    const leaves = categories
-      .filter((entry) => !entry.isClass)
-      .sort(byDisplayIndex);
+    const classEntries = categories.filter((entry) => entry.isClass).sort(byDisplayIndex);
+    const leaves = categories.filter((entry) => !entry.isClass).sort(byDisplayIndex);
     return [
       { value: "all", label: "All categories" },
       ...classEntries.map((entry) => ({
@@ -137,12 +109,7 @@ export function ServerModsDiscoverSection(props: Props): ReactElement {
       props.onError(null);
       await runWithFinally(
         async () => {
-          const options = buildSearchOptions(
-            categoryValue,
-            sortField,
-            sortOrder,
-            page,
-          );
+          const options = buildSearchOptions(categoryValue, sortField, sortOrder, page);
           const result = await window.api.searchMods(committedQuery, options);
           if (!alive) return;
           if (!result.ok) {
@@ -204,11 +171,7 @@ export function ServerModsDiscoverSection(props: Props): ReactElement {
           <EmptyState
             layout="stacked"
             icon={<MagnifyingGlass size={24} />}
-            title={
-              hasLoadedOnce
-                ? "No mods match these filters"
-                : "Browse the CurseForge catalog"
-            }
+            title={hasLoadedOnce ? "No mods match these filters" : "Browse the CurseForge catalog"}
             description={
               hasLoadedOnce
                 ? "Try another search or category."
@@ -246,12 +209,7 @@ export function ServerModsDiscoverSection(props: Props): ReactElement {
       </div>
       {showPagination ? (
         <div className={classes.paginationFooter}>
-          <Pagination
-            value={page}
-            total={pageCount}
-            onChange={setPage}
-            size="sm"
-          />
+          <Pagination value={page} total={pageCount} onChange={setPage} size="sm" />
         </div>
       ) : null}
     </div>

@@ -33,9 +33,7 @@ describe("structured-launch-options", () => {
       structured: { nobattleye: { enabled: true } },
       extraArgs: ["-NoBattlEye", "-mods=1", "-port=7777"],
     });
-    expect(issues.some((i) => /duplicates a structured/i.test(i.message))).toBe(
-      true,
-    );
+    expect(issues.some((i) => /duplicates a structured/i.test(i.message))).toBe(true);
     expect(issues.some((i) => /YARK-owned/i.test(i.message))).toBe(true);
   });
 
@@ -50,33 +48,20 @@ describe("structured-launch-options", () => {
       },
       extraArgs: ['?CustomDynamicConfigUrl="http://other.example/x.ini"'],
     });
-    expect(issues.some((i) => /duplicates a structured/i.test(i.message))).toBe(
-      true,
-    );
+    expect(issues.some((i) => /duplicates a structured/i.test(i.message))).toBe(true);
   });
 
   it("only treats real ServerPlatform tokens as platform overrides", () => {
-    expect(
-      argsIncludeServerPlatform([
-        '-CustomNotificationURL="http://example.com/ServerPlatform.html"',
-      ]),
-    ).toBe(false);
+    expect(argsIncludeServerPlatform(['-CustomNotificationURL="http://example.com/ServerPlatform.html"'])).toBe(false);
     expect(argsIncludeServerPlatform(["-ServerPlatform=PC"])).toBe(true);
     expect(argsIncludeServerPlatform(["?ServerPlatform=ALL"])).toBe(true);
   });
 
   it("encodes ServerPlatform multi-select as ALL when every code is selected", () => {
-    expect(encodeServerPlatformSelection(["PC", "PS5", "XSX", "WINGDK"])).toBe(
-      "ALL",
-    );
+    expect(encodeServerPlatformSelection(["PC", "PS5", "XSX", "WINGDK"])).toBe("ALL");
     expect(encodeServerPlatformSelection(["PC", "XSX"])).toBe("PC+XSX");
     expect(encodeServerPlatformSelection([])).toBe("");
-    expect(decodeServerPlatformSelection("ALL")).toEqual([
-      "PC",
-      "PS5",
-      "XSX",
-      "WINGDK",
-    ]);
+    expect(decodeServerPlatformSelection("ALL")).toEqual(["PC", "PS5", "XSX", "WINGDK"]);
     expect(decodeServerPlatformSelection("")).toEqual([]);
     expect(decodeServerPlatformSelection("PC+PS5")).toEqual(["PC", "PS5"]);
     expect(
@@ -118,10 +103,7 @@ describe("structured-launch-options", () => {
           value: "http://example.com/dynamicconfig.ini",
         },
       }),
-    ).toEqual([
-      "-UseDynamicConfig",
-      '-CustomDynamicConfigUrl="http://example.com/dynamicconfig.ini"',
-    ]);
+    ).toEqual(["-UseDynamicConfig", '-CustomDynamicConfigUrl="http://example.com/dynamicconfig.ini"']);
     expect(
       buildStructuredLaunchArgList({
         usedynamicconfig: { enabled: false },
@@ -149,11 +131,7 @@ describe("structured-launch-options", () => {
         servergamelogincludetribelogs: { enabled: true },
         serverrconoutputtribelogs: { enabled: true },
       }),
-    ).toEqual([
-      "-servergamelog",
-      "-servergamelogincludetribelogs",
-      "-ServerRCONOutputTribeLogs",
-    ]);
+    ).toEqual(["-servergamelog", "-servergamelogincludetribelogs", "-ServerRCONOutputTribeLogs"]);
     expect(
       buildStructuredLaunchArgList({
         servergamelog: { enabled: false },
@@ -172,9 +150,7 @@ describe("structured-launch-options", () => {
 
   it("has no Cluster edge group; passivemods is curated under world", () => {
     expect(STRUCTURED_LAUNCH_GROUP_ORDER).not.toContain("cluster");
-    const passive = listStructuredLaunchUiOptions().find(
-      (o) => o.curation.id === "passivemods-modid1-[-modid2-[...]]",
-    );
+    const passive = listStructuredLaunchUiOptions().find((o) => o.curation.id === "passivemods-modid1-[-modid2-[...]]");
     expect(passive?.curation.group).toBe("world");
   });
 

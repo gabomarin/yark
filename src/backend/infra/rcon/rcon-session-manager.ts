@@ -46,12 +46,7 @@ export class RconSessionManager extends EventEmitter {
    * A new call supersedes any in-flight `connecting` attempt (generation bump)
    * so a hung TCP/auth handshake cannot block reconnects forever.
    */
-  async connect(
-    serverId: string,
-    host: string,
-    port: number,
-    password: string,
-  ): Promise<void> {
+  async connect(serverId: string, host: string, port: number, password: string): Promise<void> {
     let session = this.sessions.get(serverId);
     if (!session) {
       session = {
@@ -97,10 +92,7 @@ export class RconSessionManager extends EventEmitter {
 
       // disconnect() / a newer connect may have superseded this attempt.
       const current = this.sessions.get(serverId);
-      if (
-        current !== session ||
-        current.connectGeneration !== generation
-      ) {
+      if (current !== session || current.connectGeneration !== generation) {
         client.close();
         return;
       }
@@ -123,10 +115,7 @@ export class RconSessionManager extends EventEmitter {
       console.error(`[RconSessionManager] Failed to connect ${serverId}: ${errorMsg}`);
 
       const current = this.sessions.get(serverId);
-      if (
-        current !== session ||
-        current.connectGeneration !== generation
-      ) {
+      if (current !== session || current.connectGeneration !== generation) {
         return;
       }
 
@@ -202,9 +191,7 @@ export class RconSessionManager extends EventEmitter {
         return response;
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : String(err);
-        console.error(
-          `[RconSessionManager] Command failed for ${serverId}: ${errorMsg}`,
-        );
+        console.error(`[RconSessionManager] Command failed for ${serverId}: ${errorMsg}`);
         throw err;
       }
     };
@@ -243,11 +230,7 @@ export class RconSessionManager extends EventEmitter {
     }));
   }
 
-  private handleConnectionLost(
-    serverId: string,
-    client: RconClient,
-    reason: string,
-  ): void {
+  private handleConnectionLost(serverId: string, client: RconClient, reason: string): void {
     const session = this.sessions.get(serverId);
     if (!session || session.client !== client) return;
 
@@ -256,12 +239,7 @@ export class RconSessionManager extends EventEmitter {
     this.scheduleReconnect(serverId, session.host, session.port, session.password);
   }
 
-  private scheduleReconnect(
-    serverId: string,
-    host: string,
-    port: number,
-    password: string,
-  ): void {
+  private scheduleReconnect(serverId: string, host: string, port: number, password: string): void {
     const session = this.sessions.get(serverId);
     if (!session || !session.autoReconnect) return;
 
@@ -271,10 +249,7 @@ export class RconSessionManager extends EventEmitter {
       return;
     }
 
-    const delay = Math.min(
-      RECONNECT_BASE_DELAY_MS * 2 ** session.reconnectAttempts,
-      RECONNECT_MAX_DELAY_MS,
-    );
+    const delay = Math.min(RECONNECT_BASE_DELAY_MS * 2 ** session.reconnectAttempts, RECONNECT_MAX_DELAY_MS);
     session.reconnectAttempts++;
 
     console.log(
@@ -289,11 +264,7 @@ export class RconSessionManager extends EventEmitter {
     }, delay);
   }
 
-  private updateStatus(
-    serverId: string,
-    status: RconConnectionStatus,
-    lastError: string | null,
-  ): void {
+  private updateStatus(serverId: string, status: RconConnectionStatus, lastError: string | null): void {
     const session = this.sessions.get(serverId);
     if (session) {
       session.status = status;

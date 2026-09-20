@@ -25,8 +25,6 @@ describe("formatClusterSummaryLine (#470)", () => {
         unclusteredCount: 1,
         dirWithoutIdCount: 2,
       }),
-    ).toBe(
-      "1 cluster · 1 ready · 1 with warnings · 1 server not in a cluster · 2 with directory but no Cluster ID",
-    );
+    ).toBe("1 cluster · 1 ready · 1 with warnings · 1 server not in a cluster · 2 with directory but no Cluster ID");
   });
 });

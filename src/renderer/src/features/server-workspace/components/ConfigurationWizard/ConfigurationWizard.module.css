@@ -56,15 +56,15 @@
   padding: var(--app-space-sm);
   border: 1px solid var(--app-color-border-subtle);
 
-  border-radius: var(--app-radius-control);
+  border-radius: 0;
   color: inherit;
   text-align: left;
   background: var(--app-color-surface-chrome);
   transition:
-    border-color 140ms ease,
-    background-color 140ms ease,
-    box-shadow 140ms ease,
-    opacity 140ms ease;
+    border-color var(--app-motion-fast) var(--app-ease-standard),
+    background-color var(--app-motion-fast) var(--app-ease-standard),
+    box-shadow var(--app-motion-fast) var(--app-ease-standard),
+    opacity var(--app-motion-fast) var(--app-ease-standard);
 }
 
 .profileCardIcon {
@@ -72,14 +72,14 @@
   align-self: center;
   margin-inline-start: 2px;
   transition:
-    background-color 140ms ease,
-    color 140ms ease,
-    border-color 140ms ease;
+    background-color var(--app-motion-fast) var(--app-ease-standard),
+    color var(--app-motion-fast) var(--app-ease-standard),
+    border-color var(--app-motion-fast) var(--app-ease-standard);
 }
 
 .profileCardGlyph {
   color: var(--app-color-muted);
-  transition: color 140ms ease;
+  transition: color var(--app-motion-fast) var(--app-ease-standard);
 }
 
 .profileCard[data-selected] .profileCardIcon:global(.mantine-ThemeIcon-root) {
@@ -96,12 +96,12 @@
 }
 
 .profileCard[data-selected][data-accent="blue"] .profileCardIcon:global(.mantine-ThemeIcon-root) {
-  background: color-mix(in srgb, var(--ark-blue-9) 28%, transparent);
-  color: var(--ark-blue-11);
+  background: color-mix(in srgb, var(--app-color-accent) 28%, transparent);
+  color: var(--app-color-accent-text);
 }
 
 .profileCard[data-selected][data-accent="blue"] .profileCardGlyph {
-  color: var(--ark-blue-11);
+  color: var(--app-color-accent-text);
 }
 
 .profileCard[data-selected][data-accent="fossil"] .profileCardIcon:global(.mantine-ThemeIcon-root) {
@@ -115,11 +115,11 @@
 
 .profileCard[data-selected][data-accent="danger"] .profileCardIcon:global(.mantine-ThemeIcon-root) {
   background: color-mix(in srgb, var(--app-color-bad) 28%, transparent);
-  color: var(--app-color-bad);
+  color: var(--app-color-danger-bright);
 }
 
 .profileCard[data-selected][data-accent="danger"] .profileCardGlyph {
-  color: var(--app-color-bad);
+  color: var(--app-color-danger-bright);
 }
 
 .profileCard:hover {
@@ -137,7 +137,7 @@
 }
 
 .profileCard:focus-visible {
-  outline: 2px solid var(--ark-blue-a8);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: 2px;
 }
 
@@ -175,7 +175,7 @@
   min-width: 0;
   padding: var(--app-space-xs) var(--app-space-sm);
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-sm);
+  border-radius: 0;
   background: color-mix(in srgb, var(--app-color-panel) 78%, transparent);
 }
 
@@ -184,7 +184,7 @@
   gap: var(--app-space-sm);
   padding: var(--app-space-sm);
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-sm);
+  border-radius: 0;
   background: var(--app-color-surface-chrome);
 }
 

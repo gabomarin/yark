@@ -1,19 +1,8 @@
-import {
-  existsSync,
-  mkdtempSync,
-  readFileSync,
-  readdirSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import {
-  DatabaseBootError,
-  openDatabase,
-  openDatabaseApplyingMigrations,
-} from "@backend/infra/db/database";
+import { DatabaseBootError, openDatabase, openDatabaseApplyingMigrations } from "@backend/infra/db/database";
 import {
   PROFILE_DB_SNAPSHOT_DIR_NAME,
   PROFILE_DB_SNAPSHOT_RETAIN_PER_KIND,
@@ -44,10 +33,7 @@ afterEach(() => {
 
 describe("profile database snapshots (#252)", () => {
   it("formats snapshot names with kind + quarantine-style stamp", () => {
-    const name = formatProfileDatabaseSnapshotFileName(
-      "pre-migrate",
-      new Date("2026-08-10T19:30:00.000Z"),
-    );
+    const name = formatProfileDatabaseSnapshotFileName("pre-migrate", new Date("2026-08-10T19:30:00.000Z"));
     expect(name).toBe("yark-profile.pre-migrate.2026-08-10T19-30-00-000Z.db");
     expect(isProfileDatabaseSnapshotFileName(name)).toBe(true);
   });
@@ -57,9 +43,11 @@ describe("profile database snapshots (#252)", () => {
     const dbPath = join(dir, "yark-server-manager.db");
     const db = openDatabase(dbPath, { takeSnapshots: false });
     try {
-      db.prepare(
-        "INSERT INTO app_settings (key, value, updated_at) VALUES (?, ?, ?)",
-      ).run("snap_probe", "1", new Date().toISOString());
+      db.prepare("INSERT INTO app_settings (key, value, updated_at) VALUES (?, ?, ?)").run(
+        "snap_probe",
+        "1",
+        new Date().toISOString(),
+      );
 
       const { snapshotPath } = writeProfileDatabaseSnapshot(db, dbPath, "healthy-boot", {
         now: new Date("2026-08-10T12:00:00.000Z"),
@@ -76,9 +64,9 @@ describe("profile database snapshots (#252)", () => {
 
     const restored = openDatabase(join(snapDir, snaps[0]!), { takeSnapshots: false });
     try {
-      const row = restored
-        .prepare("SELECT value FROM app_settings WHERE key = ?")
-        .get("snap_probe") as { value: string };
+      const row = restored.prepare("SELECT value FROM app_settings WHERE key = ?").get("snap_probe") as {
+        value: string;
+      };
       expect(row.value).toBe("1");
     } finally {
       restored.close();
@@ -143,9 +131,7 @@ describe("profile database snapshots (#252)", () => {
       { takeSnapshots: false },
     );
     try {
-      const version = (
-        preDb.prepare("PRAGMA user_version").get() as { user_version: number }
-      ).user_version;
+      const version = (preDb.prepare("PRAGMA user_version").get() as { user_version: number }).user_version;
       expect(version).toBe(1);
       const cols = preDb.prepare("PRAGMA table_info(ok)").all() as Array<{ name: string }>;
       expect(cols.map((col) => col.name)).toEqual(["id"]);
@@ -187,10 +173,7 @@ describe("profile database snapshots (#252)", () => {
     const db = openDatabase(dbPath);
     try {
       expect(db.prepare("PRAGMA quick_check").get()).toEqual({ quick_check: "ok" });
-      expect(warn).toHaveBeenCalledWith(
-        "[yark] Failed to write healthy profile database snapshot:",
-        expect.anything(),
-      );
+      expect(warn).toHaveBeenCalledWith("[yark] Failed to write healthy profile database snapshot:", expect.anything());
     } finally {
       db.close();
       warn.mockRestore();
@@ -200,11 +183,9 @@ describe("profile database snapshots (#252)", () => {
   it("rejects corruption before taking a required pre-migrate snapshot", () => {
     const dir = tempDir("yark-db-snap-corrupt-migrate-");
     const dbPath = join(dir, "corrupt.db");
-    openDatabaseApplyingMigrations(
-      dbPath,
-      [{ version: 1, sql: "CREATE TABLE ok (id INTEGER PRIMARY KEY);" }],
-      { takeSnapshots: false },
-    ).close();
+    openDatabaseApplyingMigrations(dbPath, [{ version: 1, sql: "CREATE TABLE ok (id INTEGER PRIMARY KEY);" }], {
+      takeSnapshots: false,
+    }).close();
 
     const bytes = Buffer.from(readFileSync(dbPath));
     for (let index = 100; index < Math.min(200, bytes.length); index += 1) {
@@ -262,9 +243,11 @@ describe("profile database snapshots (#252)", () => {
     const db = openDatabase(dbPath, { takeSnapshots: false });
     let snapshotPath = "";
     try {
-      db.prepare(
-        "INSERT INTO app_settings (key, value, updated_at) VALUES (?, ?, ?)",
-      ).run("restored", "yes", new Date().toISOString());
+      db.prepare("INSERT INTO app_settings (key, value, updated_at) VALUES (?, ?, ?)").run(
+        "restored",
+        "yes",
+        new Date().toISOString(),
+      );
       snapshotPath = writeProfileDatabaseSnapshot(db, dbPath, "healthy-boot", {
         now: new Date("2026-08-10T13:00:00.000Z"),
       }).snapshotPath;
@@ -281,9 +264,7 @@ describe("profile database snapshots (#252)", () => {
 
     const restored = openDatabase(dbPath, { takeSnapshots: false });
     try {
-      const row = restored
-        .prepare("SELECT value FROM app_settings WHERE key = ?")
-        .get("restored") as { value: string };
+      const row = restored.prepare("SELECT value FROM app_settings WHERE key = ?").get("restored") as { value: string };
       expect(row.value).toBe("yes");
     } finally {
       restored.close();
@@ -293,11 +274,9 @@ describe("profile database snapshots (#252)", () => {
   it("fails migration when a required pre-migrate snapshot cannot be written", () => {
     const dir = tempDir("yark-db-snap-fail-");
     const dbPath = join(dir, "migrate.db");
-    openDatabaseApplyingMigrations(
-      dbPath,
-      [{ version: 1, sql: "CREATE TABLE ok (id INTEGER);" }],
-      { takeSnapshots: false },
-    ).close();
+    openDatabaseApplyingMigrations(dbPath, [{ version: 1, sql: "CREATE TABLE ok (id INTEGER);" }], {
+      takeSnapshots: false,
+    }).close();
 
     // Occupy the snapshot path as a file so mkdir for the directory fails.
     writeFileSync(resolveProfileDatabaseSnapshotDir(dbPath), "not-a-directory");
@@ -321,14 +300,11 @@ describe("profile database snapshots (#252)", () => {
     }
 
     // Schema must remain at v1 — migrations did not run without a snapshot.
-    const db = openDatabaseApplyingMigrations(
-      dbPath,
-      [{ version: 1, sql: "CREATE TABLE ok (id INTEGER);" }],
-      { takeSnapshots: false },
-    );
+    const db = openDatabaseApplyingMigrations(dbPath, [{ version: 1, sql: "CREATE TABLE ok (id INTEGER);" }], {
+      takeSnapshots: false,
+    });
     try {
-      const version = (db.prepare("PRAGMA user_version").get() as { user_version: number })
-        .user_version;
+      const version = (db.prepare("PRAGMA user_version").get() as { user_version: number }).user_version;
       expect(version).toBe(1);
     } finally {
       db.close();

@@ -19,11 +19,7 @@ describe("buildSteamCmdCandidatePaths", () => {
         steamcmdDir: "E:\\managed",
         isolated: true,
       }),
-    ).toEqual([
-      "C:\\tools\\steamcmd.exe",
-      "D:\\env\\steamcmd.exe",
-      join("E:\\managed", "steamcmd.exe"),
-    ]);
+    ).toEqual(["C:\\tools\\steamcmd.exe", "D:\\env\\steamcmd.exe", join("E:\\managed", "steamcmd.exe")]);
   });
 
   it("skips host defaults when isolated", () => {
@@ -47,9 +43,7 @@ describe("buildSteamCmdCandidatePaths", () => {
     });
     expect(paths).toContain("C:\\steamcmd\\steamcmd.exe");
     expect(paths).toContain(join("C:\\Program Files", "SteamCMD", "steamcmd.exe"));
-    expect(paths).toContain(
-      join("C:\\Users\\x\\AppData\\Local", "Programs", "steamcmd", "steamcmd.exe"),
-    );
+    expect(paths).toContain(join("C:\\Users\\x\\AppData\\Local", "Programs", "steamcmd", "steamcmd.exe"));
   });
 });
 
@@ -95,9 +89,7 @@ describe("resolveSteamCmdExecutableCached", () => {
 
 describe("normalizeSteamCmdExecutablePath", () => {
   it("trims and rejects empty paths", () => {
-    expect(normalizeSteamCmdExecutablePath("  C:\\steamcmd.exe  ")).toBe(
-      "C:\\steamcmd.exe",
-    );
+    expect(normalizeSteamCmdExecutablePath("  C:\\steamcmd.exe  ")).toBe("C:\\steamcmd.exe");
     expect(() => normalizeSteamCmdExecutablePath("   ")).toThrow(/SteamCMD path is empty/);
   });
 });
@@ -124,20 +116,14 @@ describe("isSteamCmdVerifyExitAcceptable", () => {
 
 describe("updateJobNeedsSteamCmdExecutable", () => {
   it("skips post-SteamCMD recovery phases", () => {
-    expect(
-      updateJobNeedsSteamCmdExecutable({ type: "update", phase: "files-applied" }),
-    ).toBe(false);
+    expect(updateJobNeedsSteamCmdExecutable({ type: "update", phase: "files-applied" })).toBe(false);
     expect(
       updateJobNeedsSteamCmdExecutable({
         type: "update",
         phase: "rollback-restoring-backups",
       }),
     ).toBe(false);
-    expect(
-      updateJobNeedsSteamCmdExecutable({ type: "update", phase: "applying-files" }),
-    ).toBe(true);
-    expect(
-      updateJobNeedsSteamCmdExecutable({ type: "verify-files", phase: "queued" }),
-    ).toBe(true);
+    expect(updateJobNeedsSteamCmdExecutable({ type: "update", phase: "applying-files" })).toBe(true);
+    expect(updateJobNeedsSteamCmdExecutable({ type: "verify-files", phase: "queued" })).toBe(true);
   });
 });

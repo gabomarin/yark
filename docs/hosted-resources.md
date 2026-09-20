@@ -44,10 +44,10 @@ expect an HTTP URL body (for example `AdminListURL`, `BanListURL`). The experime
 **Run diagnostics** performs three independent checks. They are intentionally
 separate — none of them proves the game accepted the resource:
 
-| Check | What it proves |
-| --- | --- |
-| Loopback ownership | A loopback request answered with YARK's marker header, so the port is ours |
-| Served bytes | A loopback GET of each resource hashes to the declared SHA-256 |
+| Check                 | What it proves                                                                   |
+| --------------------- | -------------------------------------------------------------------------------- |
+| Loopback ownership    | A loopback request answered with YARK's marker header, so the port is ours       |
+| Served bytes          | A loopback GET of each resource hashes to the declared SHA-256                   |
 | Discovered references | A managed server INI contains the exact YARK URL (no guesswork on setting names) |
 
 The panel also shows observed request counts since YARK started. A served match only
@@ -55,13 +55,13 @@ means YARK returned those bytes; it does not mean ASA loaded them.
 
 ## Known consumers (ASA)
 
-| Consumer | Expected body | Where it is set |
-| --- | --- | --- |
-| `AdminListURL` | Plain text, one EOS / Ark id per line | `GameUserSettings.ini` (RCON → Admins) |
-| `BanListURL` | Plain text ban entries | `GameUserSettings.ini` |
-| `BadWordListURL` / `BadWordWhiteListURL` | Plain text word list | `GameUserSettings.ini` |
-| `CustomDynamicConfigUrl` (+ `-UseDynamicConfig`) | **INI** — flat `Key=Value` lines | Launch arg or `GameUserSettings.ini` |
-| `CustomLiveTuningUrl` | **JSON** | Launch arg or `GameUserSettings.ini` |
+| Consumer                                         | Expected body                         | Where it is set                        |
+| ------------------------------------------------ | ------------------------------------- | -------------------------------------- |
+| `AdminListURL`                                   | Plain text, one EOS / Ark id per line | `GameUserSettings.ini` (RCON → Admins) |
+| `BanListURL`                                     | Plain text ban entries                | `GameUserSettings.ini`                 |
+| `BadWordListURL` / `BadWordWhiteListURL`         | Plain text word list                  | `GameUserSettings.ini`                 |
+| `CustomDynamicConfigUrl` (+ `-UseDynamicConfig`) | **INI** — flat `Key=Value` lines      | Launch arg or `GameUserSettings.ini`   |
+| `CustomLiveTuningUrl`                            | **JSON**                              | Launch arg or `GameUserSettings.ini`   |
 
 `CustomDynamicConfigUrl` only accepts **HTTP** (HTTPS is unsupported), which is exactly
 what the loopback host provides. ASA re-reads the dynamic config on world (auto)save or
@@ -94,12 +94,12 @@ There is **no in-game signal for `AdminListURL`** by itself. Use the strongest s
 can get, and do not treat "I am admin in game" as proof — that can come from
 `ServerAdminPassword` instead of the whitelist.
 
-| Signal | Where | Strength |
-| --- | --- | --- |
-| `ForceUpdateDynamicConfig` changes a rate in game (taming/harvest) | In game, admin/RCON | **Unambiguous** — the INI body was applied |
-| RCON cheat-id query returns your EOS id | RCON console | Strong — ASA parsed the fetched body |
-| Admins tab shows the URL + `Current ids` | YARK UI | Shows YARK read the served body |
-| Diagnostics request count rising | YARK UI | ASA is polling your host (not that it applied the list) |
+| Signal                                                             | Where               | Strength                                                |
+| ------------------------------------------------------------------ | ------------------- | ------------------------------------------------------- |
+| `ForceUpdateDynamicConfig` changes a rate in game (taming/harvest) | In game, admin/RCON | **Unambiguous** — the INI body was applied              |
+| RCON cheat-id query returns your EOS id                            | RCON console        | Strong — ASA parsed the fetched body                    |
+| Admins tab shows the URL + `Current ids`                           | YARK UI             | Shows YARK read the served body                         |
+| Diagnostics request count rising                                   | YARK UI             | ASA is polling your host (not that it applied the list) |
 
 Recommended smoke test:
 
@@ -210,11 +210,11 @@ policy.
 
 ## Module map
 
-| Concern | File |
-| --- | --- |
-| Settings, limits, URL shape | `src/shared/settings/hosted-resources.ts` |
-| Persistence (`hosted_resources`, `hosted_resource_revisions`) | `src/backend/infra/db/hosted-resources-repository.ts` |
-| Loopback listener, publish/enable/disable, diagnostics | `src/backend/domains/hosted-resources/hosted-resources-service.ts` |
-| IPC handlers | `src/main/ipc-handlers.ts` (`hosted-resources:*`) |
-| UI | `src/renderer/src/features/hosted-resources/` |
-| Tests | `tests/unit/hosted-resources.test.ts`, `HostedResourcesPage.test.tsx` |
+| Concern                                                       | File                                                                  |
+| ------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Settings, limits, URL shape                                   | `src/shared/settings/hosted-resources.ts`                             |
+| Persistence (`hosted_resources`, `hosted_resource_revisions`) | `src/backend/infra/db/hosted-resources-repository.ts`                 |
+| Loopback listener, publish/enable/disable, diagnostics        | `src/backend/domains/hosted-resources/hosted-resources-service.ts`    |
+| IPC handlers                                                  | `src/main/ipc-handlers.ts` (`hosted-resources:*`)                     |
+| UI                                                            | `src/renderer/src/features/hosted-resources/`                         |
+| Tests                                                         | `tests/unit/hosted-resources.test.ts`, `HostedResourcesPage.test.tsx` |

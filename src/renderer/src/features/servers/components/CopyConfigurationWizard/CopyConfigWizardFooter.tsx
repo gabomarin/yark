@@ -25,19 +25,11 @@ export function CopyConfigWizardFooter(props: Props): ReactElement {
       </Text>
       <Group>
         {props.step === 1 ? (
-          <Button
-            variant="default"
-            disabled={props.committing}
-            onClick={props.onClose}
-          >
+          <Button variant="default" disabled={props.committing} onClick={props.onClose}>
             Cancel
           </Button>
         ) : (
-          <Button
-            variant="default"
-            disabled={props.committing}
-            onClick={props.onBack}
-          >
+          <Button variant="default" disabled={props.committing} onClick={props.onBack}>
             Back
           </Button>
         )}
@@ -47,20 +39,12 @@ export function CopyConfigWizardFooter(props: Props): ReactElement {
           </Button>
         )}
         {props.step === 2 && (
-          <Button
-            loading={props.loadingPreview}
-            disabled={!props.canPreview}
-            onClick={props.onPreview}
-          >
+          <Button loading={props.loadingPreview} disabled={!props.canPreview} onClick={props.onPreview}>
             Preview
           </Button>
         )}
         {props.step === 3 && (
-          <Button
-            loading={props.committing}
-            disabled={!props.canApply}
-            onClick={props.onApply}
-          >
+          <Button loading={props.committing} disabled={!props.canApply} onClick={props.onApply}>
             Apply
             {props.previewCount > 1 ? ` (${props.previewCount})` : ""}
           </Button>

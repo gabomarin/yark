@@ -1,18 +1,9 @@
 import catalogJson from "./asa-launch-options-catalog.json";
 
 /** Support classification for ASA CLI catalog entries (#92). */
-export type AsaLaunchOptionStatus =
-  | "supported"
-  | "unsupported"
-  | "uncertain"
-  | "yarkOwned";
+export type AsaLaunchOptionStatus = "supported" | "unsupported" | "uncertain" | "yarkOwned";
 
-type AsaLaunchOptionValueType =
-  | "flag"
-  | "string"
-  | "number"
-  | "enum"
-  | "csv";
+type AsaLaunchOptionValueType = "flag" | "string" | "number" | "enum" | "csv";
 
 interface AsaLaunchOptionSource {
   label: string;
@@ -68,12 +59,9 @@ const catalog = catalogJson as AsaLaunchOptionsCatalog;
 
 export const asaLaunchOptionsCatalog: AsaLaunchOptionsCatalog = catalog;
 
-export const asaLaunchOptionEntries: readonly AsaLaunchOptionEntry[] =
-  catalog.entries;
+export const asaLaunchOptionEntries: readonly AsaLaunchOptionEntry[] = catalog.entries;
 
-const byId = new Map(
-  asaLaunchOptionEntries.map((entry) => [entry.id, entry] as const),
-);
+const byId = new Map(asaLaunchOptionEntries.map((entry) => [entry.id, entry] as const));
 
 /** Entries eligible for future structured UI (#93). */
 export function isSelectableLaunchOption(entry: AsaLaunchOptionEntry): boolean {
@@ -84,9 +72,7 @@ export function listSelectableLaunchOptions(): AsaLaunchOptionEntry[] {
   return asaLaunchOptionEntries.filter(isSelectableLaunchOption);
 }
 
-export function lookupLaunchOptionById(
-  id: string,
-): AsaLaunchOptionEntry | undefined {
+export function lookupLaunchOptionById(id: string): AsaLaunchOptionEntry | undefined {
   return byId.get(id);
 }
 
@@ -117,10 +103,7 @@ export function filterLaunchOptions(args: {
 }
 
 /** Counts for the ASA browse modal (excludes unsupported / ASE-only). */
-export function countAsaBrowseLaunchOptions(): Record<
-  "all" | "supported" | "uncertain" | "yarkOwned",
-  number
-> {
+export function countAsaBrowseLaunchOptions(): Record<"all" | "supported" | "uncertain" | "yarkOwned", number> {
   const counts = { all: 0, supported: 0, uncertain: 0, yarkOwned: 0 };
   for (const entry of asaLaunchOptionEntries) {
     if (entry.status === "unsupported") continue;

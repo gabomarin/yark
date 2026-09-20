@@ -1,20 +1,8 @@
 import type { ReactElement, ReactNode } from "react";
 import { Menu } from "@mantine/core";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { RowActionMenuItems } from "./RowActionMenuItems";
-import {
-  normalizeRowActionEntries,
-  visibleRowActionItems,
-  type RowActionEntry,
-} from "./rowActionModel";
+import { normalizeRowActionEntries, visibleRowActionItems, type RowActionEntry } from "./rowActionModel";
 
 interface RowActionMenuState {
   sourceId: string;
@@ -24,21 +12,14 @@ interface RowActionMenuState {
 }
 
 interface RowActionMenuContextValue {
-  openAt: (
-    sourceId: string,
-    entries: readonly RowActionEntry[],
-    x: number,
-    y: number,
-  ) => void;
+  openAt: (sourceId: string, entries: readonly RowActionEntry[], x: number, y: number) => void;
   /** Keep an already-open menu in sync with live row/card actions. */
   sync: (sourceId: string, entries: readonly RowActionEntry[]) => void;
   closeSource: (sourceId: string) => void;
   close: () => void;
 }
 
-const RowActionMenuContext = createContext<RowActionMenuContextValue | null>(
-  null,
-);
+const RowActionMenuContext = createContext<RowActionMenuContextValue | null>(null);
 
 export function useRowActionMenuApi(): RowActionMenuContextValue {
   const value = useContext(RowActionMenuContext);
@@ -72,19 +53,11 @@ export function RowActionMenuProvider(props: Props): ReactElement {
     setState(null);
   }, []);
 
-  const openAt = useCallback(
-    (
-      sourceId: string,
-      entries: readonly RowActionEntry[],
-      x: number,
-      y: number,
-    ) => {
-      const normalized = normalizeRowActionEntries(entries);
-      if (visibleRowActionItems(normalized).length === 0) return;
-      setState({ sourceId, entries: normalized, x, y });
-    },
-    [],
-  );
+  const openAt = useCallback((sourceId: string, entries: readonly RowActionEntry[], x: number, y: number) => {
+    const normalized = normalizeRowActionEntries(entries);
+    if (visibleRowActionItems(normalized).length === 0) return;
+    setState({ sourceId, entries: normalized, x, y });
+  }, []);
 
   const sync = useCallback((sourceId: string, entries: readonly RowActionEntry[]) => {
     const current = stateRef.current;
@@ -98,10 +71,7 @@ export function RowActionMenuProvider(props: Props): ReactElement {
     setState({ ...current, entries: normalized });
   }, []);
 
-  const api = useMemo(
-    () => ({ openAt, sync, closeSource, close }),
-    [openAt, sync, closeSource, close],
-  );
+  const api = useMemo(() => ({ openAt, sync, closeSource, close }), [openAt, sync, closeSource, close]);
   const opened = state !== null;
 
   return (
@@ -138,9 +108,7 @@ export function RowActionMenuProvider(props: Props): ReactElement {
           />
         </Menu.Target>
         <Menu.Dropdown data-row-action-context-menu>
-          {state !== null ? (
-            <RowActionMenuItems entries={state.entries} />
-          ) : null}
+          {state !== null ? <RowActionMenuItems entries={state.entries} /> : null}
         </Menu.Dropdown>
       </Menu>
     </RowActionMenuContext.Provider>

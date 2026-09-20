@@ -29,31 +29,20 @@ const MAP_CATEGORY_PATTERN = /\bmaps?\b/i;
  * Patterns omit the `i` flag so `(?![a-z0-9_])` still allows an uppercase continuation.
  */
 const LABELED_TOKEN_PATTERNS: RegExp[] = [
-  new RegExp(
-    `[Mm][Aa][Pp]\\s*[Nn][Aa][Mm][Ee]\\s*:\\s*([A-Za-z][A-Za-z0-9_]*${ASA_MAP_TOKEN_SUFFIX})(?![a-z0-9_])`,
-  ),
+  new RegExp(`[Mm][Aa][Pp]\\s*[Nn][Aa][Mm][Ee]\\s*:\\s*([A-Za-z][A-Za-z0-9_]*${ASA_MAP_TOKEN_SUFFIX})(?![a-z0-9_])`),
   new RegExp(
     `[Ss][Ee][Rr][Vv][Ee][Rr]\\s*[Nn][Aa][Mm][Ee]\\s*:\\s*([A-Za-z][A-Za-z0-9_]*${ASA_MAP_TOKEN_SUFFIX})(?![a-z0-9_])`,
   ),
-  new RegExp(
-    `\\b[Mm][Aa][Pp]\\s*:\\s*([A-Za-z][A-Za-z0-9_]*${ASA_MAP_TOKEN_SUFFIX})(?![a-z0-9_])`,
-  ),
+  new RegExp(`\\b[Mm][Aa][Pp]\\s*:\\s*([A-Za-z][A-Za-z0-9_]*${ASA_MAP_TOKEN_SUFFIX})(?![a-z0-9_])`),
 ];
 
-const BARE_TOKEN_PATTERN = new RegExp(
-  `\\b([A-Za-z][A-Za-z0-9_]*${ASA_MAP_TOKEN_SUFFIX})(?![a-z0-9_])`,
-  "g",
-);
+const BARE_TOKEN_PATTERN = new RegExp(`\\b([A-Za-z][A-Za-z0-9_]*${ASA_MAP_TOKEN_SUFFIX})(?![a-z0-9_])`, "g");
 
 /** Bare `*_WP` token in free text (import leftovers / filenames). */
-export const IMPORT_BARE_MAP_TOKEN_WP_RE = new RegExp(
-  `\\b([A-Za-z][A-Za-z0-9]*${ASA_MAP_TOKEN_SUFFIX})\\b`,
-);
+export const IMPORT_BARE_MAP_TOKEN_WP_RE = new RegExp(`\\b([A-Za-z][A-Za-z0-9]*${ASA_MAP_TOKEN_SUFFIX})\\b`);
 
 /** Save-file stem: `TheIsland_WP` or `TheIsland_WP_24.07.2025_…`. */
-export const SAVE_STEM_MAP_TOKEN_WP_RE = new RegExp(
-  `^([A-Za-z][A-Za-z0-9]*${ASA_MAP_TOKEN_SUFFIX})(?:_|$)`,
-);
+export const SAVE_STEM_MAP_TOKEN_WP_RE = new RegExp(`^([A-Za-z][A-Za-z0-9]*${ASA_MAP_TOKEN_SUFFIX})(?:_|$)`);
 
 export interface MapTokenSuggestion {
   token: string;
@@ -129,7 +118,5 @@ export function suggestMapTokenFromMetadata(
   meta: Pick<ModMetadata, "name" | "summary" | "slug" | "categories" | "description">,
   descriptionOverride?: string | null,
 ): MapTokenSuggestion | null {
-  return suggestMapTokenFromModText(
-    buildModMapSuggestHaystack(meta, descriptionOverride),
-  );
+  return suggestMapTokenFromModText(buildModMapSuggestHaystack(meta, descriptionOverride));
 }

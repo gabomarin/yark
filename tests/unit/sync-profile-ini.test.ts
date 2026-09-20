@@ -2,10 +2,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import {
-  gameUserSettingsIniPath,
-  syncProfileSettingsToIni,
-} from "@backend/domains/instances/sync-profile-ini";
+import { gameUserSettingsIniPath, syncProfileSettingsToIni } from "@backend/domains/instances/sync-profile-ini";
 import { flattenIniText, INI_FLAT_SEP } from "@shared/ini/ini-text";
 import type { ServerProfile } from "@shared/types";
 
@@ -85,15 +82,10 @@ describe("syncProfileSettingsToIni", () => {
     const installDir = mkdtempSync(join(tmpdir(), "ark-sync-ini-"));
     tmpDirs.push(installDir);
 
-    await syncProfileSettingsToIni(
-      profile(installDir, { serverPassword: null }),
-    );
+    await syncProfileSettingsToIni(profile(installDir, { serverPassword: null }));
 
-    const flat = flattenIniText(
-      readFileSync(gameUserSettingsIniPath(installDir), "utf8"),
-    );
+    const flat = flattenIniText(readFileSync(gameUserSettingsIniPath(installDir), "utf8"));
     expect(flat[flatKey("ServerSettings", "ServerPassword")]).toBe("");
     expect(flat[flatKey("ServerSettings", "RCONEnabled")]).toBe("True");
   });
 });
-

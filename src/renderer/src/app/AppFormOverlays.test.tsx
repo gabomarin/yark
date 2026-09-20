@@ -12,22 +12,10 @@ vi.mock("@app/appShellChrome", () => ({
 }));
 
 vi.mock("@features/servers/components/ServerForm/ServerForm", () => ({
-  ServerForm: ({
-    initial,
-    onSaved,
-  }: {
-    initial: ServerProfile | null;
-    onSaved: (created?: ServerProfile) => void;
-  }) => (
+  ServerForm: ({ initial, onSaved }: { initial: ServerProfile | null; onSaved: (created?: ServerProfile) => void }) => (
     <button
       type="button"
-      onClick={() =>
-        onSaved(
-          initial === null
-            ? ({ id: "srv-new", name: "Alpha" } as ServerProfile)
-            : undefined,
-        )
-      }
+      onClick={() => onSaved(initial === null ? ({ id: "srv-new", name: "Alpha" } as ServerProfile) : undefined)}
     >
       save-form
     </button>
@@ -66,9 +54,7 @@ function renderOverlay(
       setOverlay={extras.setOverlay}
       navigate={vi.fn()}
       fleet={{ servers: [], refresh: vi.fn() } as unknown as AppFleetSlice}
-      settings={
-        { defaultBaseFolder: "C:\\ark", extraClusterOptions: [] } as unknown as AppSettingsSlice
-      }
+      settings={{ defaultBaseFolder: "C:\\ark", extraClusterOptions: [] } as unknown as AppSettingsSlice}
       registerOverlayLeaveGuard={vi.fn()}
       runWithOverlayLeaveGuard={(action) => action()}
       consumePendingSetupCluster={vi.fn()}
@@ -97,10 +83,7 @@ describe("AppFormOverlays overview search", () => {
     const user = userEvent.setup();
     const clearOverviewSearch = vi.fn();
     const setOverlay = vi.fn();
-    renderOverlay(
-      { kind: "edit", profile: existing },
-      { clearOverviewSearch, setOverlay },
-    );
+    renderOverlay({ kind: "edit", profile: existing }, { clearOverviewSearch, setOverlay });
 
     await user.click(screen.getByRole("button", { name: "save-form" }));
     expect(clearOverviewSearch).not.toHaveBeenCalled();

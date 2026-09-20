@@ -1,14 +1,8 @@
 import { collectKnownSecrets } from "@shared/credential-redaction";
 import type { ServerRepository } from "../../infra/db/server-repository";
-import type {
-  OperatorClosedExit,
-  UnexpectedManagedExit,
-} from "../../infra/process/process-manager";
+import type { OperatorClosedExit, UnexpectedManagedExit } from "../../infra/process/process-manager";
 import { OPERATOR_CLOSED_NOTICE } from "../../infra/process/process-stop";
-import {
-  planOperatorClosedServerEvent,
-  planUnexpectedServerCrashEvent,
-} from "./instance-crash";
+import { planOperatorClosedServerEvent, planUnexpectedServerCrashEvent } from "./instance-crash";
 import type { ServerCrashedNotifyPayload } from "@shared/settings/os-notification-events";
 import type { DiscordClosedByUserPayload } from "@shared/settings/discord-webhook";
 

@@ -1,27 +1,27 @@
 import type { ReactElement } from "react";
-import { Badge } from "@mantine/core";
 import type { AppEvent } from "@shared/types";
+import { StatusWord, type StatusWordTone } from "@ui/StatusWord/StatusWord";
 import classes from "../../LogsPage.module.css";
 
 interface Props {
   severity: AppEvent["severity"];
 }
 
-function severityColor(severity: AppEvent["severity"]): string {
-  if (severity === "error") return "red";
-  if (severity === "warning") return "yellow";
-  return "gray";
+function severityTone(severity: AppEvent["severity"]): StatusWordTone {
+  if (severity === "error") return "danger";
+  if (severity === "warning") return "warn";
+  return "neutral";
 }
 
-/** Every event keeps a badge; only ERROR/WARNING use attention color. */
+function severityLabel(severity: AppEvent["severity"]): string {
+  return severity.charAt(0).toUpperCase() + severity.slice(1);
+}
+
+/** Severity reads as a word + dot: only ERROR/WARNING carry colour (§4). */
 export function EventSeverityMark(props: Props): ReactElement {
   return (
-    <Badge
-      className={classes.eventSeverityBadge}
-      color={severityColor(props.severity)}
-      variant="light"
-    >
-      {props.severity}
-    </Badge>
+    <StatusWord tone={severityTone(props.severity)} className={classes.eventSeverityBadge}>
+      {severityLabel(props.severity)}
+    </StatusWord>
   );
 }

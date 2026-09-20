@@ -36,22 +36,11 @@ export function ModDetailDescription(props: Props): ReactElement {
       <Text size="xs" c="dimmed" tt="uppercase" fw={500}>
         Description
       </Text>
-      <Text
-        ref={textRef}
-        size="sm"
-        style={{ whiteSpace: "pre-wrap" }}
-        lineClamp={expanded ? undefined : clamp}
-      >
+      <Text ref={textRef} size="sm" style={{ whiteSpace: "pre-wrap" }} lineClamp={expanded ? undefined : clamp}>
         {decoded}
       </Text>
       {canExpand && (
-        <Button
-          variant="transparent"
-          size="compact-xs"
-          px={0}
-          justify="flex-start"
-          onClick={() => setExpanded((value) => !value)}
-        >
+        <Button variant="transparent" px={0} justify="flex-start" onClick={() => setExpanded((value) => !value)}>
           {expanded ? "Show less" : "Show more"}
         </Button>
       )}

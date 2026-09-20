@@ -39,8 +39,7 @@ async function measureLayout(page) {
     const settingsOpen = settingsBox?.getAttribute("data-settings-open") === "true";
     return {
       viewport: { width: window.innerWidth, height: window.innerHeight },
-      hasHorizontalOverflow:
-        Math.max(root.scrollWidth, body.scrollWidth) > root.clientWidth + 1,
+      hasHorizontalOverflow: Math.max(root.scrollWidth, body.scrollWidth) > root.clientWidth + 1,
       listHeight: listRect?.height ?? null,
       listMinHeight: list ? getComputedStyle(list).minHeight : null,
       settingsHeight: settingsRect?.height ?? null,
@@ -164,11 +163,7 @@ async function run() {
 
         // Default open policy (#231) — collapse for height checks
         const metrics = await measureLayout(page);
-        assert.equal(
-          metrics.hasHorizontalOverflow,
-          false,
-          `Horizontal overflow on ${tab.file} @ ${size.name}`,
-        );
+        assert.equal(metrics.hasHorizontalOverflow, false, `Horizontal overflow on ${tab.file} @ ${size.name}`);
         assert.ok(
           metrics.listHeight !== null && metrics.listHeight >= 240,
           `list min-height not applied on ${tab.file} @ ${size.name}: height=${metrics.listHeight}`,
@@ -189,11 +184,7 @@ async function run() {
 
         if (tab.file === "world") {
           assert.ok(metrics.hasWorldSettings, `World settings missing @ ${size.name}`);
-          assert.equal(
-            metrics.settingsOpen,
-            true,
-            `World settings should start open @ ${size.name}`,
-          );
+          assert.equal(metrics.settingsOpen, true, `World settings should start open @ ${size.name}`);
           assert.ok(
             metrics.settingsHeight !== null && metrics.settingsHeight < 140,
             `Open world settings still tall @ ${size.name}: ${metrics.settingsHeight}px`,
@@ -212,17 +203,12 @@ async function run() {
           if (size.name === "hd") {
             const openAgain = await measureLayout(page);
             assert.ok(
-              openAgain.listHeight !== null
-                && openAgain.listHeight > BASELINE_HD_WORLD_LIST,
+              openAgain.listHeight !== null && openAgain.listHeight > BASELINE_HD_WORLD_LIST,
               `HD world listHeight should improve vs baseline ${BASELINE_HD_WORLD_LIST}: got ${openAgain.listHeight}`,
             );
           }
         } else {
-          assert.equal(
-            metrics.hasWorldSettings,
-            false,
-            `World settings should hide on ${tab.file} @ ${size.name}`,
-          );
+          assert.equal(metrics.hasWorldSettings, false, `World settings should hide on ${tab.file} @ ${size.name}`);
         }
 
         // Backup now lives in the history toolbar (world/INI only)

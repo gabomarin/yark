@@ -87,4 +87,3 @@ describe("workspaceLayoutModel", () => {
     expect(groups.map((g) => g.label)).toEqual(["__unclustered__", "Unclustered"]);
   });
 });
-

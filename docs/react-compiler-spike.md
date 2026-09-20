@@ -12,13 +12,13 @@ Confirm Electron + Vite (`electron-vite` + `@vitejs/plugin-react` 4.x) can run
 
 ## What we wired
 
-| Piece | Detail |
-| --- | --- |
-| Dependency | `babel-plugin-react-compiler@1.0.0` (dev) |
-| Config | `electron.vite.config.ts` → renderer `@vitejs/plugin-react` `babel.plugins` when env is set |
-| Target | `{ target: "19" }` (matches app React 19.2.x) |
-| Scripts | `npm run build:compiler` / `npm run dev:compiler` (`scripts/with-react-compiler.cjs`) |
-| Verbose log | `YARK_REACT_COMPILER_VERBOSE=1` prints CompileSuccess / CompileError lines |
+| Piece       | Detail                                                                                      |
+| ----------- | ------------------------------------------------------------------------------------------- |
+| Dependency  | `babel-plugin-react-compiler@1.0.0` (dev)                                                   |
+| Config      | `electron.vite.config.ts` → renderer `@vitejs/plugin-react` `babel.plugins` when env is set |
+| Target      | `{ target: "19" }` (matches app React 19.2.x)                                               |
+| Scripts     | `npm run build:compiler` / `npm run dev:compiler` (`scripts/with-react-compiler.cjs`)       |
+| Verbose log | `YARK_REACT_COMPILER_VERBOSE=1` prints CompileSuccess / CompileError lines                  |
 
 Default `npm run build` / `npm run dev` stay **off** (no compiler).
 
@@ -32,20 +32,20 @@ and renderer Vitest (333) still pass with the wiring present.
 
 **Bail-outs are common.** One verbose build (2026-08-22, this machine):
 
-| Event | Count |
-| --- | --- |
-| `CompileSuccess` | 165 |
-| `CompileError` (skip optimize) | 74 |
+| Event                          | Count |
+| ------------------------------ | ----- |
+| `CompileSuccess`               | 165   |
+| `CompileError` (skip optimize) | 74    |
 
 Top skip reasons:
 
-| Count | Reason |
-| --- | --- |
-| 42 | `TryStatement without a catch clause` (`try` / `finally` without `catch`) |
-| 19 | ESLint react-hooks rule disabled in that file/region |
-| 11 | `TryStatement` with a `finally` clause |
-| 1 | Cannot access refs during render |
-| 1 | Value blocks inside try/catch |
+| Count | Reason                                                                    |
+| ----- | ------------------------------------------------------------------------- |
+| 42    | `TryStatement without a catch clause` (`try` / `finally` without `catch`) |
+| 19    | ESLint react-hooks rule disabled in that file/region                      |
+| 11    | `TryStatement` with a `finally` clause                                    |
+| 1     | Cannot access refs during render                                          |
+| 1     | Value blocks inside try/catch                                             |
 
 `App.tsx` and other large orchestration surfaces hit try/finally skips repeatedly.
 That overlaps React Doctor noise (`no-adjust-state-on-prop-change`, giant
@@ -60,10 +60,10 @@ Doctor’s impure-updater rule ([react-doctor.md](react-doctor.md)).
 
 Same machine, cold-ish consecutive builds (variance ± a few seconds):
 
-| Mode | Approx. `electron-vite` wall time | Renderer JS asset |
-| --- | --- | --- |
-| Baseline | ~9–12 s | ~3.71 MB |
-| Compiler on | ~15–18 s | ~3.89 MB (~+180 KB) |
+| Mode        | Approx. `electron-vite` wall time | Renderer JS asset   |
+| ----------- | --------------------------------- | ------------------- |
+| Baseline    | ~9–12 s                           | ~3.71 MB            |
+| Compiler on | ~15–18 s                          | ~3.89 MB (~+180 KB) |
 
 Expect slower CI `build` jobs if the compiler is always on. No reliable FPS /
 Overview scroll deltas were collected in this spike (would need a scripted
@@ -90,8 +90,8 @@ Keep the opt-in path for experiments (`npm run build:compiler`,
 `YARK_REACT_COMPILER=1`). Revisit when:
 
 1. [#146](https://github.com/gabomarin/yark/issues/146) splits giant pages so more
-   leaves are compiler-friendly, and/or  
-2. Compiler support for `try`/`finally` improves, and/or  
+   leaves are compiler-friendly, and/or
+2. Compiler support for `try`/`finally` improves, and/or
 3. A measured Overview / Mods Discover / Downloads scroll profile shows a clear
    win on a compiler-on build.
 
@@ -123,18 +123,18 @@ addressed by moving async cleanup into a module-level helper so
 
 **First batch refactored** (busy flags / generation guards unchanged):
 
-| Surface | Files |
-| --- | --- |
-| App shell | `App.tsx` |
-| Fleet logs / backups | `LogsPage.tsx`, `BackupsPage.tsx` |
-| Workspace logs / backups | `ServerLogsPanel.tsx`, `ServerBackupPanel.tsx` |
+| Surface                     | Files                                                                         |
+| --------------------------- | ----------------------------------------------------------------------------- |
+| App shell                   | `App.tsx`                                                                     |
+| Fleet logs / backups        | `LogsPage.tsx`, `BackupsPage.tsx`                                             |
+| Workspace logs / backups    | `ServerLogsPanel.tsx`, `ServerBackupPanel.tsx`                                |
 | Remaining renderer handlers | Settings, modals, RCON, setup wizard, clusters, mods, server forms (20 files) |
 
 Re-measure (2026-08-22, same machine, after full migration):
 
-| Event | Spike baseline | After `runWithFinally` |
-| --- | --- | --- |
-| `CompileSuccess` | 165 | 167 |
-| `CompileError` (skip) | 74 | 55 |
+| Event                 | Spike baseline | After `runWithFinally` |
+| --------------------- | -------------- | ---------------------- |
+| `CompileSuccess`      | 165            | 167                    |
+| `CompileError` (skip) | 74             | 55                     |
 
 Remaining skips are mostly ESLint react-hooks disables and a few structural bail-outs; component-body `try`/`finally` is no longer a top skip reason.

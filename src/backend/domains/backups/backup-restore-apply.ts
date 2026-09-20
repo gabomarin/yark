@@ -15,10 +15,7 @@ import {
   resolveWorldRestoreMapToken as resolveWorldRestoreMapTokenPlan,
   shouldCopyWorldRestoreFile,
 } from "./backup-restore";
-import {
-  resolveWorldMapSaveDir,
-  worldMapDirNameCandidates,
-} from "./world-snapshot";
+import { resolveWorldMapSaveDir, worldMapDirNameCandidates } from "./world-snapshot";
 
 function savedRootDir(server: ServerProfile): string {
   return join(server.installDir, "ShooterGame", "Saved");
@@ -51,10 +48,7 @@ export async function applyRestore(
 }
 
 /** Run `fn` against a folder snapshot (legacy) or an extracted ZIP staging dir. */
-async function withBackupContents(
-  backupPath: string,
-  fn: (contentRoot: string) => Promise<void>,
-): Promise<void> {
+async function withBackupContents(backupPath: string, fn: (contentRoot: string) => Promise<void>): Promise<void> {
   if (!isZipBackupPath(backupPath)) {
     await fn(backupPath);
     return;
@@ -87,11 +81,7 @@ async function restoreWorld(
 
   const restoreProfilesTribes = options?.restoreProfilesTribes !== false;
   const liveSavedArks = savedArksDir(server);
-  const liveResolved = await resolveWorldMapSaveDir(
-    liveSavedArks,
-    mapToken,
-    server.mapSaveFolder,
-  );
+  const liveResolved = await resolveWorldMapSaveDir(liveSavedArks, mapToken, server.mapSaveFolder);
   // After a wipe the live folder is gone; prefer manifest mapFolderName (mod
   // maps often live under SavedArks/Svartalfheim/ while the ZIP uses the
   // launch token) over blindly mkdir'ing SavedArks/{mapToken}.
@@ -103,8 +93,8 @@ async function restoreWorld(
     manifestFolder = null;
   }
   const restoreFolder =
-    liveResolved?.folderName
-    ?? preferredWorldMapRestoreFolderName({
+    liveResolved?.folderName ??
+    preferredWorldMapRestoreFolderName({
       mapToken,
       mapSaveFolder: server.mapSaveFolder,
       mapFolderName: manifestFolder,
@@ -146,13 +136,10 @@ async function resolveWorldRestoreMapToken(
   server: ServerProfile,
 ): Promise<string> {
   const serverMap = server.map.trim();
-  const serverMapPathExists =
-    isSafeMapToken(serverMap) && existsSync(join(backupSaved, serverMap));
+  const serverMapPathExists = isSafeMapToken(serverMap) && existsSync(join(backupSaved, serverMap));
 
   let dirs: string[] = [];
-  const needsListing =
-    (backup.mapToken === null || !isSafeMapToken(backup.mapToken))
-    && !serverMapPathExists;
+  const needsListing = (backup.mapToken === null || !isSafeMapToken(backup.mapToken)) && !serverMapPathExists;
   if (needsListing) {
     let entries;
     try {
@@ -160,9 +147,7 @@ async function resolveWorldRestoreMapToken(
     } catch {
       throw new Error("World backup SavedArks folder is unreadable");
     }
-    dirs = entries
-      .filter((entry) => isTraversableDirectoryDirent(entry))
-      .map((entry) => entry.name);
+    dirs = entries.filter((entry) => isTraversableDirectoryDirent(entry)).map((entry) => entry.name);
   }
 
   return resolveWorldRestoreMapTokenPlan({
@@ -173,10 +158,7 @@ async function resolveWorldRestoreMapToken(
   });
 }
 
-async function restorePlayers(
-  server: ServerProfile,
-  backupPath: string,
-): Promise<void> {
+async function restorePlayers(server: ServerProfile, backupPath: string): Promise<void> {
   const profilesRoot = join(backupPath, "PlayerProfiles");
   const hasPlayerProfilesRoot = existsSync(profilesRoot);
   const files = hasPlayerProfilesRoot ? await listFilesRecursive(profilesRoot) : [];
@@ -209,11 +191,7 @@ async function resolveLivePlayerProfileDir(server: ServerProfile): Promise<strin
     throw new Error(MAP_NAME_COPY.mustBeSafeFolder);
   }
   const savedArks = savedArksDir(server);
-  const resolved = await resolveWorldMapSaveDir(
-    savedArks,
-    mapToken,
-    server.mapSaveFolder,
-  );
+  const resolved = await resolveWorldMapSaveDir(savedArks, mapToken, server.mapSaveFolder);
   if (resolved !== null) {
     return resolved.dir;
   }
@@ -221,10 +199,7 @@ async function resolveLivePlayerProfileDir(server: ServerProfile): Promise<strin
   return join(savedArks, folderName);
 }
 
-async function restoreIni(
-  server: ServerProfile,
-  backupPath: string,
-): Promise<void> {
+async function restoreIni(server: ServerProfile, backupPath: string): Promise<void> {
   const backupConfig = join(backupPath, "ConfigWindowsServer");
   const live = configDir(server);
   if (!existsSync(backupConfig)) {

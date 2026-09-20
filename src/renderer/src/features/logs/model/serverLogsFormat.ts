@@ -1,5 +1,6 @@
 import type { ServerOperationalLogs, ServerUpdateLogFile } from "@shared/types";
 import { formatLogDateTime } from "@shared/format-log-datetime";
+import type { StatusWordTone } from "@ui/StatusWord/StatusWord";
 
 /** Runtime buffer filter: lines are tagged `[iso] [source] …`. */
 export type RuntimeLogSourceFilter = "all" | "system" | "asa" | "process";
@@ -17,18 +18,14 @@ export const RUNTIME_SOURCE_FILTER_OPTIONS: {
 const RUNTIME_LINE_SOURCE_RE = /^\[[^\]]+\] \[([a-z]+)\] /i;
 const WRAPPED_RUNTIME_LINE_RE = /^\[([^\]]+)\] \[([a-z]+)\] (.*)$/is;
 /** Unreal / ASA: `[2026.07.29-21.42.52:443][  5]Message` */
-const UNREAL_LOG_STAMP_RE =
-  /^\[(\d{4})\.(\d{2})\.(\d{2})-(\d{2})\.(\d{2})\.(\d{2}):(\d{3})\](\[\s*\d+\])?(.*)$/s;
+const UNREAL_LOG_STAMP_RE = /^\[(\d{4})\.(\d{2})\.(\d{2})-(\d{2})\.(\d{2})\.(\d{2}):(\d{3})\](\[\s*\d+\])?(.*)$/s;
 
 export function parseRuntimeLogSource(line: string): string | null {
   const match = RUNTIME_LINE_SOURCE_RE.exec(line);
   return match?.[1]?.toLowerCase() ?? null;
 }
 
-export function filterRuntimeLogLines(
-  lines: string[],
-  filter: RuntimeLogSourceFilter,
-): string[] {
+export function filterRuntimeLogLines(lines: string[], filter: RuntimeLogSourceFilter): string[] {
   if (filter === "all") return lines;
   return lines.filter((line) => {
     const source = parseRuntimeLogSource(line);
@@ -79,10 +76,7 @@ export function formatUnrealLogBody(body: string): string | null {
   );
   const stamp = formatLogDateTime(utcDate, { includeMs: true });
   const frameRaw = match[8];
-  const frame =
-    frameRaw !== undefined && frameRaw.length > 0
-      ? frameRaw.replace(/\[\s*(\d+)\s*\]/, "[$1]")
-      : "";
+  const frame = frameRaw !== undefined && frameRaw.length > 0 ? frameRaw.replace(/\[\s*(\d+)\s*\]/, "[$1]") : "";
   const rest = (match[9] ?? "").replace(/^\s+/, "");
   return [stamp, frame, rest].filter((part) => part.length > 0).join(" ");
 }
@@ -126,10 +120,11 @@ export function formatDuration(durationMs: number | null): string {
   return `${rest}s`;
 }
 
-export function statusColor(status: ServerUpdateLogFile["status"]): string {
-  if (status === "success") return "green";
-  if (status === "failed") return "red";
-  return "gray";
+/** Update-file state as a status tone, not a badge colour (#PUX-004, design-system 4). */
+export function statusTone(status: ServerUpdateLogFile["status"]): StatusWordTone {
+  if (status === "success") return "ok";
+  if (status === "failed") return "danger";
+  return "neutral";
 }
 
 export function statusLabel(status: ServerUpdateLogFile["status"]): string {
@@ -151,10 +146,7 @@ export function formatUpdateJobLabel(
   const rawStamp = stampMatch?.[1];
   const subtitle =
     rawStamp !== undefined
-      ? rawStamp.replace(
-          /^(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})$/,
-          "$1 $2:$3:$4",
-        )
+      ? rawStamp.replace(/^(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})$/, "$1 $2:$3:$4")
       : withoutExt.slice(-24);
   return {
     title: formatLogDateTime(modifiedAt, { fallback: modifiedAt }),

@@ -27,7 +27,7 @@
 }
 
 .title {
-  font-size: 12px;
+  font-size: var(--app-font-eyebrow);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -36,7 +36,7 @@
 }
 
 .sectionTitle {
-  font-size: 11px;
+  font-size: var(--app-font-eyebrow);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -92,7 +92,7 @@
   gap: var(--app-space-sm);
   padding: var(--app-space-xs) var(--app-space-sm);
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-control);
+  border-radius: 0;
   background: var(--app-color-surface-control);
 }
 
@@ -121,7 +121,7 @@
   gap: var(--app-space-xs);
   padding: var(--app-space-xs) var(--app-space-sm);
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-control);
+  border-radius: 0;
   background: var(--app-color-surface-control);
 }
 
@@ -152,7 +152,7 @@
   gap: var(--app-space-sm);
   padding: var(--app-space-xs) var(--app-space-sm);
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-control);
+  border-radius: 0;
   background: var(--app-color-surface-control);
 }
 
@@ -199,8 +199,8 @@
 .sourceCard {
   min-width: 0;
   transition:
-    border-color 120ms ease,
-    background-color 120ms ease;
+    border-color var(--app-motion-fast) var(--app-ease-standard),
+    background-color var(--app-motion-fast) var(--app-ease-standard);
 }
 
 .sourceCard[data-selected] {
@@ -222,7 +222,7 @@
 }
 
 .sourceRadio :global(.mantine-Radio-radio) {
-  --radio-color: var(--ark-blue-9);
+  --radio-color: var(--app-color-accent);
 }
 
 .playersTabs {

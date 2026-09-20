@@ -17,23 +17,11 @@ export function CopyMetadataRow(props: Props): ReactElement {
   const copyLabel = props.label.replace(/:$/, "");
   return (
     <Stack gap={2} className={classes.root}>
-      <Text
-        c="dimmed"
-        tt="uppercase"
-        fw={500}
-        className={classes.label}
-      >
+      <Text c="dimmed" tt="uppercase" fw={500} className={classes.label}>
         {props.label}
       </Text>
       <div className={classes.valueLine}>
-        <Text
-          span
-          ff="monospace"
-          fw={600}
-          size="sm"
-          c={props.warn ? "yellow" : undefined}
-          className={classes.value}
-        >
+        <Text span ff="monospace" fw={600} size="sm" c={props.warn ? "attention" : undefined} className={classes.value}>
           {props.value}
         </Text>
         <Tooltip label={`Copy ${copyLabel}`}>
@@ -42,13 +30,14 @@ export function CopyMetadataRow(props: Props): ReactElement {
             variant="subtle"
             color="gray"
             size="sm"
-            radius="md"
             aria-label={`Copy ${copyLabel}`}
             className={classes.copyIcon}
-            onClick={() => void copyTextToClipboard({
-              text: props.value,
-              failureMessage: props.failureMessage,
-            })}
+            onClick={() =>
+              void copyTextToClipboard({
+                text: props.value,
+                failureMessage: props.failureMessage,
+              })
+            }
           >
             <Copy size={14} />
           </ActionIcon>

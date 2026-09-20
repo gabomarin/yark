@@ -27,9 +27,9 @@ function profile(partial: Partial<ServerProfile> = {}): ServerProfile {
     mods: [],
     disabledMods: [],
     modMetadataCache: {},
-    
+
     autoStart: false,
-    
+
     useAsaApi: false,
     useAsaApiLoader: false,
     enabled: true,
@@ -41,16 +41,14 @@ function profile(partial: Partial<ServerProfile> = {}): ServerProfile {
 
 describe("parseRawExtraArgs", () => {
   it("keeps double-quoted values with spaces as one token", () => {
-    expect(
-      parseRawExtraArgs('-CustomNotificationURL="hello world" -NoBattlEye'),
-    ).toEqual(["-CustomNotificationURL=\"hello world\"", "-NoBattlEye"]);
+    expect(parseRawExtraArgs('-CustomNotificationURL="hello world" -NoBattlEye')).toEqual([
+      '-CustomNotificationURL="hello world"',
+      "-NoBattlEye",
+    ]);
   });
 
   it("preserves escaped quotes inside a quoted span", () => {
-    expect(parseRawExtraArgs('-Name="say \\"hi\\"" -x')).toEqual([
-      '-Name="say \\"hi\\""',
-      "-x",
-    ]);
+    expect(parseRawExtraArgs('-Name="say \\"hi\\"" -x')).toEqual(['-Name="say \\"hi\\""', "-x"]);
   });
 
   it("round-trips through joinRawExtraArgs for quoted tokens", () => {
@@ -64,9 +62,7 @@ describe("yarkOwnedPreviewTokens", () => {
     const server = profile({ sessionName: 'Gabo "server"\\path' });
     const tokens = yarkOwnedPreviewTokens(server);
     expect(tokens[0]).toBe(buildMapUrlArg(server.map, server.sessionName));
-    expect(tokens[0]).toBe(
-      '"TheIsland_WP"?SessionName="Gabo \\"server\\"\\\\path"',
-    );
+    expect(tokens[0]).toBe('"TheIsland_WP"?SessionName="Gabo \\"server\\"\\\\path"');
   });
 
   it("omits -WinLiveMaxPlayers when maxPlayers is 0", () => {
@@ -74,4 +70,3 @@ describe("yarkOwnedPreviewTokens", () => {
     expect(tokens.some((token) => /WinLiveMaxPlayers/i.test(token))).toBe(false);
   });
 });
-

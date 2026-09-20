@@ -8,11 +8,7 @@ import {
 /** Schema version that owns the one-time Launch → `max_players` backfill. */
 export const MAX_PLAYERS_LAUNCH_BACKFILL_SCHEMA_VERSION = 16;
 
-function parseJsonColumn<T>(
-  raw: string | null | undefined,
-  fallback: T,
-  label: string,
-): T {
+function parseJsonColumn<T>(raw: string | null | undefined, fallback: T, label: string): T {
   if (raw == null || raw.trim().length === 0) {
     return fallback;
   }
@@ -45,9 +41,9 @@ function tableHasColumn(db: DatabaseSync, table: string, column: string): boolea
  */
 export function backfillMaxPlayersFromLegacyLaunchArgs(db: DatabaseSync): void {
   if (
-    !tableHasColumn(db, "servers", "max_players")
-    || !tableHasColumn(db, "servers", "extra_args")
-    || !tableHasColumn(db, "servers", "structured_launch_args")
+    !tableHasColumn(db, "servers", "max_players") ||
+    !tableHasColumn(db, "servers", "extra_args") ||
+    !tableHasColumn(db, "servers", "structured_launch_args")
   ) {
     return;
   }
@@ -74,11 +70,7 @@ export function backfillMaxPlayersFromLegacyLaunchArgs(db: DatabaseSync): void {
   );
 
   for (const row of rows) {
-    const extraArgs = parseJsonColumn<string[]>(
-      row.extra_args,
-      [],
-      `servers.extra_args id=${row.id}`,
-    );
+    const extraArgs = parseJsonColumn<string[]>(row.extra_args, [], `servers.extra_args id=${row.id}`);
     const structured = parseJsonColumn<StructuredLaunchArgs>(
       row.structured_launch_args,
       {},
@@ -88,16 +80,11 @@ export function backfillMaxPlayersFromLegacyLaunchArgs(db: DatabaseSync): void {
       structuredLaunchArgs: structured,
       extraArgs,
     });
-    const nextMax =
-      taken.maxPlayers !== null ? taken.maxPlayers : row.max_players;
+    const nextMax = taken.maxPlayers !== null ? taken.maxPlayers : row.max_players;
     const nextExtra = JSON.stringify(taken.extraArgs);
     const nextStructured = JSON.stringify(taken.structuredLaunchArgs);
     const prevStructured = JSON.stringify(normalizeStructuredLaunchArgs(structured));
-    if (
-      nextMax === row.max_players
-      && nextExtra === JSON.stringify(extraArgs)
-      && nextStructured === prevStructured
-    ) {
+    if (nextMax === row.max_players && nextExtra === JSON.stringify(extraArgs) && nextStructured === prevStructured) {
       continue;
     }
     update.run(nextMax, nextExtra, nextStructured, row.id);

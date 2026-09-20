@@ -21,24 +21,12 @@ export function CrashRecoveryHeaderBadge({
   return <CrashRecoveryHeaderBadgeInner recovery={recovery} />;
 }
 
-function CrashRecoveryHeaderBadgeInner({
-  recovery,
-}: {
-  recovery: CrashRecoveryRuntime;
-}): ReactElement {
+function CrashRecoveryHeaderBadgeInner({ recovery }: { recovery: CrashRecoveryRuntime }): ReactElement {
   const remaining = useCrashRecoveryCountdown(recovery.restartAt);
 
   return (
-    <Tooltip
-      withArrow
-      label={crashRecoveryAttemptTooltip(recovery.attempt, recovery.maxAttempts)}
-    >
-      <Badge
-        size="sm"
-        variant="light"
-        color={CRASH_RECOVERY_NOTICE_COLOR}
-        data-crash-recovery-badge
-      >
+    <Tooltip withArrow label={crashRecoveryAttemptTooltip(recovery.attempt, recovery.maxAttempts)}>
+      <Badge variant="light" color={CRASH_RECOVERY_NOTICE_COLOR} data-crash-recovery-badge>
         {crashRecoveryBadgeLabel(remaining)}
       </Badge>
     </Tooltip>

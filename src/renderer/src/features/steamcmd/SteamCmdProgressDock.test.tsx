@@ -121,20 +121,22 @@ describe("SteamCmdProgressDock (#48 sync UX)", () => {
             busy: false,
             running: false,
             operation: null,
-            criticalJobs: [{
-              id: "job-restore",
-              operation: "restore",
-              serverId: "srv-1",
-              status: "blocked",
-              phase: "applying-restore",
-              attempts: 1,
-              maxAttempts: 3,
-              createdAt: "2026-07-27T00:00:00.000Z",
-              updatedAt: "2026-07-27T00:01:00.000Z",
-              lastError: null,
-              recoveryReason: "The outcome is ambiguous and requires operator review.",
-              nextActions: ["retry", "dismiss"],
-            }],
+            criticalJobs: [
+              {
+                id: "job-restore",
+                operation: "restore",
+                serverId: "srv-1",
+                status: "blocked",
+                phase: "applying-restore",
+                attempts: 1,
+                maxAttempts: 3,
+                createdAt: "2026-07-27T00:00:00.000Z",
+                updatedAt: "2026-07-27T00:01:00.000Z",
+                lastError: null,
+                recoveryReason: "The outcome is ambiguous and requires operator review.",
+                nextActions: ["retry", "dismiss"],
+              },
+            ],
           })}
           console={null}
           onCancel={vi.fn()}

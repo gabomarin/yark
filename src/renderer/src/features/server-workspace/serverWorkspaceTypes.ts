@@ -1,13 +1,5 @@
 export type WorkspaceTab =
-  | "server"
-  | "mods"
-  | "launch"
-  | "iniFiles"
-  | "backups"
-  | "logs"
-  | "rcon"
-  | "maintenance"
-  | "asaApi";
+  "server" | "mods" | "launch" | "iniFiles" | "backups" | "logs" | "rcon" | "maintenance" | "asaApi";
 
 export interface RconHistoryEntry {
   id: string;

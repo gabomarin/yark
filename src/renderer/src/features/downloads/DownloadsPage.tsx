@@ -1,10 +1,12 @@
 import type { ReactElement } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DownloadSimple } from "@phosphor-icons/react";
-import { Alert, Button, Group, Splitter, Stack, Text } from "@mantine/core";
+import { Button, Group, Splitter, Stack, Text } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
+import { AppPageHeader } from "@ui/AppPageHeader/AppPageHeader";
 import type { ServerProfile, SteamCmdConsoleSnapshot, SteamCmdStatus } from "@shared/types";
 import {
   buildDownloadRows,
@@ -47,10 +49,7 @@ export function DownloadsPage(props: Props): ReactElement {
     }
     return map;
   }, [props.servers]);
-  const activeServer =
-    props.status.serverId !== null
-      ? (serversById.get(props.status.serverId) ?? null)
-      : null;
+  const activeServer = props.status.serverId !== null ? (serversById.get(props.status.serverId) ?? null) : null;
   const rows = useMemo(
     () =>
       buildDownloadRows(props.status, {
@@ -59,9 +58,7 @@ export function DownloadsPage(props: Props): ReactElement {
       }),
     [activeServer, props.status, serversById],
   );
-  const [selectedId, setSelectedId] = useState<string | null>(() =>
-    defaultSelectedRowId(rows),
-  );
+  const [selectedId, setSelectedId] = useState<string | null>(() => defaultSelectedRowId(rows));
   const [splitSizes, setSplitSizes] = useLocalStorage<[number, number]>({
     key: DOWNLOADS_SPLIT_SIZES_STORAGE_KEY,
     defaultValue: DEFAULT_SPLIT_SIZES,
@@ -83,10 +80,7 @@ export function DownloadsPage(props: Props): ReactElement {
   const selected = findDownloadRow(rows, selectedId);
   const groups: DownloadRowKind[] = ["active", "interrupted", "paused", "queued", "cancelled", "attention"];
   const consoleBody = downloadConsoleBody(rows, props.console?.lines ?? []);
-  const statusLine = downloadStatusLine(
-    selected,
-    consoleBody === DOWNLOAD_CONSOLE_WAITING,
-  );
+  const statusLine = downloadStatusLine(selected, consoleBody === DOWNLOAD_CONSOLE_WAITING);
 
   const cancelRow = (row: DownloadRow) => {
     if (row.kind === "queued" && row.job !== null) {
@@ -108,7 +102,7 @@ export function DownloadsPage(props: Props): ReactElement {
 
   const steamcmdMissingBanner =
     !props.status.detected && rows.length > 0 ? (
-      <Alert
+      <AppAlert
         color="red"
         variant="light"
         title="SteamCMD is not installed"
@@ -116,26 +110,16 @@ export function DownloadsPage(props: Props): ReactElement {
         data-steamcmd-missing-banner
       >
         <Stack gap="xs">
-          Install SteamCMD in Settings before installs, updates, or verify can
-          run.
-          <Button
-            size="compact-sm"
-            variant="light"
-            color="red"
-            onClick={props.onOpenSettings}
-          >
+          Install SteamCMD in Settings before installs, updates, or verify can run.
+          <Button variant="default" onClick={props.onOpenSettings}>
             Install SteamCMD
           </Button>
         </Stack>
-      </Alert>
+      </AppAlert>
     ) : null;
 
   const queuePane = (
-    <section
-      ref={queueRef}
-      className={classes.queueSection}
-      aria-label="Download queue"
-    >
+    <section ref={queueRef} className={classes.queueSection} aria-label="Download queue">
       {rows.length === 0 ? (
         <EmptyState
           icon={<DownloadSimple size={28} weight="duotone" />}
@@ -146,7 +130,7 @@ export function DownloadsPage(props: Props): ReactElement {
               : "Install SteamCMD in Settings first. Installs, updates, and verify jobs will appear here."
           }
           action={
-            <Button size="compact-sm" variant="light" onClick={props.onOpenSettings}>
+            <Button variant="default" onClick={props.onOpenSettings}>
               {props.status.detected ? "Open SteamCMD settings" : "Install SteamCMD"}
             </Button>
           }
@@ -160,13 +144,7 @@ export function DownloadsPage(props: Props): ReactElement {
           return (
             <Stack key={kind} gap="xs" className={classes.queueGroup} data-kind={kind} data-queue-group={kind}>
               <div className={classes.sectionLabel}>{sectionTitle(kind)}</div>
-              <div
-                className={
-                  kind === "queued" || kind === "cancelled"
-                    ? classes.queueRowList
-                    : classes.queueRowStack
-                }
-              >
+              <div className={kind === "queued" || kind === "cancelled" ? classes.queueRowList : classes.queueRowStack}>
                 {sectionRows.map((row) => (
                   <DownloadRowButton
                     key={row.id}
@@ -216,17 +194,11 @@ export function DownloadsPage(props: Props): ReactElement {
   );
 
   const logToggle = (
-    <Group
-      justify="space-between"
-      wrap="nowrap"
-      gap="sm"
-      className={classes.logDockBar}
-    >
+    <Group justify="space-between" wrap="nowrap" gap="sm" className={classes.logDockBar}>
       <Text size="sm" className={classes.logStatus} lineClamp={1} data-downloads-status>
         {statusLine}
       </Text>
       <Button
-        size="compact-xs"
         variant="subtle"
         aria-label={logExpanded ? "Hide advanced log" : "Advanced log"}
         aria-expanded={logExpanded}
@@ -239,41 +211,37 @@ export function DownloadsPage(props: Props): ReactElement {
   );
 
   return (
-    <PageScaffold
-      title="Downloads"
-      fillViewport
-    >
+    <PageScaffold title="Downloads" fillViewport edgeToEdge showHeader={false}>
       <div
         className={classes.downloadsLayout}
         data-downloads-page
         data-advanced-log-expanded={logExpanded || undefined}
       >
+        <AppPageHeader title="Downloads" />
         {rows.length === 0 ? (
-          <div className={classes.upperPane}>
-            {queuePane}
-          </div>
+          <div className={classes.upperPane}>{queuePane}</div>
         ) : logExpanded ? (
-          <Splitter
-            orientation="vertical"
-            h="100%"
-            sizes={splitSizes}
-            onSizeChange={(sizes) =>
-              setSplitSizes([Math.round(Number(sizes[0])), Math.round(Number(sizes[1]))])
-            }
-          >
-            <Splitter.Pane defaultSize={DEFAULT_SPLIT_SIZES[0]} min={30}>
-              <div className={classes.upperPane}>
-                {steamcmdMissingBanner}
-                {queuePane}
-              </div>
-            </Splitter.Pane>
-            <Splitter.Pane defaultSize={DEFAULT_SPLIT_SIZES[1]} min={20}>
-              <div className={classes.consoleStack} id="downloads-advanced-log">
-                {logToggle}
-                {consolePane}
-              </div>
-            </Splitter.Pane>
-          </Splitter>
+          <div className={classes.splitHost}>
+            <Splitter
+              orientation="vertical"
+              h="100%"
+              sizes={splitSizes}
+              onSizeChange={(sizes) => setSplitSizes([Math.round(Number(sizes[0])), Math.round(Number(sizes[1]))])}
+            >
+              <Splitter.Pane defaultSize={DEFAULT_SPLIT_SIZES[0]} min={30}>
+                <div className={`${classes.upperPane} ${classes.upperPaneInPane}`}>
+                  {steamcmdMissingBanner}
+                  {queuePane}
+                </div>
+              </Splitter.Pane>
+              <Splitter.Pane defaultSize={DEFAULT_SPLIT_SIZES[1]} min={20}>
+                <div className={classes.consoleStack} id="downloads-advanced-log">
+                  {logToggle}
+                  {consolePane}
+                </div>
+              </Splitter.Pane>
+            </Splitter>
+          </div>
         ) : (
           <div className={classes.upperPane}>
             {steamcmdMissingBanner}

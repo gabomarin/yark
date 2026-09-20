@@ -1,8 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import worker, {
-  MAX_POST_BODY_BYTES,
-  type Env,
-} from "../../workers/curseforge-proxy/src/index";
+import worker, { MAX_POST_BODY_BYTES, type Env } from "../../workers/curseforge-proxy/src/index";
 import type { RateLimiter } from "../../workers/curseforge-proxy/src/config";
 
 function allowLimiter(): RateLimiter {
@@ -78,10 +75,7 @@ describe("CurseForge proxy input bounds", () => {
     ["index=1.5", "invalid_index"],
   ])("rejects invalid search pagination (%s)", async (query, code) => {
     const upstream = vi.spyOn(globalThis, "fetch");
-    const response = await worker.fetch(
-      new Request(`https://proxy.test/v1/mods/search?${query}`),
-      baseEnv,
-    );
+    const response = await worker.fetch(new Request(`https://proxy.test/v1/mods/search?${query}`), baseEnv);
 
     expect(response.status).toBe(400);
     expect(await errorCode(response)).toBe(code);
@@ -91,10 +85,7 @@ describe("CurseForge proxy input bounds", () => {
   it("rejects oversized search text before calling CurseForge", async () => {
     const upstream = vi.spyOn(globalThis, "fetch");
     const query = new URLSearchParams({ searchFilter: "x".repeat(201) });
-    const response = await worker.fetch(
-      new Request(`https://proxy.test/v1/mods/search?${query}`),
-      baseEnv,
-    );
+    const response = await worker.fetch(new Request(`https://proxy.test/v1/mods/search?${query}`), baseEnv);
 
     expect(response.status).toBe(400);
     expect(await errorCode(response)).toBe("invalid_search_filter");
@@ -137,10 +128,7 @@ describe("CurseForge proxy abuse controls (#70)", () => {
       }),
     );
 
-    const response = await worker.fetch(
-      new Request("https://proxy.test/v1/mods/12345"),
-      baseEnv,
-    );
+    const response = await worker.fetch(new Request("https://proxy.test/v1/mods/12345"), baseEnv);
 
     expect(response.status).toBe(504);
     expect(await errorCode(response)).toBe("upstream_timeout");
@@ -154,10 +142,7 @@ describe("CurseForge proxy abuse controls (#70)", () => {
       RATE_LIMIT_SEARCH: denyLimiter(),
     };
 
-    const response = await worker.fetch(
-      new Request("https://proxy.test/v1/mods/search?pageSize=10"),
-      env,
-    );
+    const response = await worker.fetch(new Request("https://proxy.test/v1/mods/search?pageSize=10"), env);
 
     expect(response.status).toBe(429);
     expect(await errorCode(response)).toBe("rate_limited");
@@ -175,10 +160,7 @@ describe("CurseForge proxy abuse controls (#70)", () => {
     expect(searchPost.headers.get("Allow")).toBe("GET");
     expect(await errorCode(searchPost)).toBe("method_not_allowed");
 
-    const batchGet = await worker.fetch(
-      new Request("https://proxy.test/v1/mods", { method: "GET" }),
-      baseEnv,
-    );
+    const batchGet = await worker.fetch(new Request("https://proxy.test/v1/mods", { method: "GET" }), baseEnv);
     expect(batchGet.status).toBe(405);
     expect(batchGet.headers.get("Allow")).toBe("POST");
 
@@ -206,35 +188,27 @@ describe("CurseForge proxy abuse controls (#70)", () => {
     });
 
     // MISS path: Get Mod + /description for every inspect (#342).
-    const upstream = vi.spyOn(globalThis, "fetch").mockImplementation(
-      async (input: RequestInfo | URL) => {
-        const url = String(input);
-        if (url.includes("/description")) {
-          return new Response(JSON.stringify({ data: "Author notes" }), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-        return new Response(JSON.stringify({ data: asaModPayload(99) }), {
+    const upstream = vi.spyOn(globalThis, "fetch").mockImplementation(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/description")) {
+        return new Response(JSON.stringify({ data: "Author notes" }), {
           status: 200,
           headers: { "Content-Type": "application/json" },
         });
-      },
-    );
+      }
+      return new Response(JSON.stringify({ data: asaModPayload(99) }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
 
-    const first = await worker.fetch(
-      new Request("https://proxy.test/v1/mods/99"),
-      baseEnv,
-    );
+    const first = await worker.fetch(new Request("https://proxy.test/v1/mods/99"), baseEnv);
     expect(first.status).toBe(200);
     expect(first.headers.get("X-Yark-Cache")).toBe("MISS");
     expect(first.headers.get("Cache-Control")).toBe("no-store");
     expect(upstream).toHaveBeenCalledTimes(2);
 
-    const second = await worker.fetch(
-      new Request("https://proxy.test/v1/mods/99"),
-      baseEnv,
-    );
+    const second = await worker.fetch(new Request("https://proxy.test/v1/mods/99"), baseEnv);
     expect(second.status).toBe(200);
     expect(second.headers.get("X-Yark-Cache")).toBe("HIT");
     expect(second.headers.get("Cache-Control")).toBe("no-store");
@@ -287,10 +261,7 @@ describe("CurseForge proxy abuse controls (#70)", () => {
       ),
     );
 
-    const first = await worker.fetch(
-      new Request("https://proxy.test/v1/mods/search?pageSize=10&noise=1"),
-      baseEnv,
-    );
+    const first = await worker.fetch(new Request("https://proxy.test/v1/mods/search?pageSize=10&noise=1"), baseEnv);
     expect(first.status).toBe(200);
     expect(first.headers.get("X-Yark-Cache")).toBe("MISS");
     expect(upstream).toHaveBeenCalledTimes(1);
@@ -345,9 +316,7 @@ describe("CurseForge proxy abuse controls (#70)", () => {
       data: { categories: Array<{ id: number; name: string }> };
     };
     expect(body.ok).toBe(true);
-    expect(body.data.categories).toEqual([
-      expect.objectContaining({ id: 12_345, name: "Mods" }),
-    ]);
+    expect(body.data.categories).toEqual([expect.objectContaining({ id: 12_345, name: "Mods" })]);
     const upstreamUrl = String(upstream.mock.calls[0]?.[0]);
     expect(upstreamUrl).toContain("gameId=83374");
     expect(upstreamUrl).toContain("classesOnly=true");

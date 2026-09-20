@@ -24,16 +24,16 @@ const SOLID_SURFACE_VARS = [
 describe("surface and radius tokens (#468)", () => {
   it("uses tool-chrome radius on comfortable and compact", () => {
     expect(getAppTokens("comfortable").radius).toEqual({
-      sm: 6,
+      sm: 4,
       md: 8,
       lg: 10,
-      control: 6,
+      control: 4,
     });
     expect(getAppTokens("compact").radius).toEqual({
-      sm: 5,
+      sm: 3,
       md: 7,
       lg: 8,
-      control: 5,
+      control: 3,
     });
   });
 
@@ -62,7 +62,9 @@ describe("surface and radius tokens (#468)", () => {
     expect(resolved.variables["--app-color-panel-raised"]).toBe("var(--ark-gray-4)");
     expect(resolved.variables["--app-font-display"]).toMatch(/Segoe UI Variable Display/);
     expect(resolved.variables["--app-font-mono"]).toMatch(/Cascadia Mono/);
-    expect(resolved.dark["--mantine-color-body"]).toBe("var(--app-color-bg)");
+    // Mantine uses `body` for Paper / Modal / Popover surfaces, so it must be the
+    // panel. The document canvas is set explicitly in globals.css / AppShellLayout.
+    expect(resolved.dark["--mantine-color-body"]).toBe("var(--app-color-surface-panel)");
     expect(resolved.dark["--mantine-color-dark-7"]).toBe("var(--app-color-surface-panel)");
     expect(resolved.dark["--mantine-color-dark-6"]).toBe("var(--app-color-surface-control)");
     expect(resolved.dark["--mantine-color-dark-8"]).toBe("var(--app-color-surface-chrome)");

@@ -22,16 +22,7 @@ interface Props {
 }
 
 export function ConfigurationEditorFilterBar(props: Props): ReactElement {
-  const {
-    search,
-    onSearchChange,
-    filter,
-    onFilterChange,
-    categoryOptions,
-    dirty,
-    onCollapseAll,
-    onExpandAll,
-  } = props;
+  const { search, onSearchChange, filter, onFilterChange, categoryOptions, dirty, onCollapseAll, onExpandAll } = props;
 
   return (
     <Group gap="sm" align="center" className={classes.filterBar}>
@@ -56,7 +47,7 @@ export function ConfigurationEditorFilterBar(props: Props): ReactElement {
       />
       <Button
         size="xs"
-        variant="light"
+        variant="default"
         color="gray"
         leftSection={<ArrowsInLineVertical size={14} />}
         onClick={onCollapseAll}
@@ -65,7 +56,7 @@ export function ConfigurationEditorFilterBar(props: Props): ReactElement {
       </Button>
       <Button
         size="xs"
-        variant="light"
+        variant="default"
         color="gray"
         leftSection={<ArrowsOutLineVertical size={14} />}
         onClick={onExpandAll}
@@ -73,7 +64,7 @@ export function ConfigurationEditorFilterBar(props: Props): ReactElement {
         Expand
       </Button>
       {dirty && (
-        <Badge color="yellow" variant="light">
+        <Badge color="attention" variant="light">
           Unsaved
         </Badge>
       )}

@@ -1,9 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
 import { openUnsavedLeaveModal } from "./openUnsavedLeaveModal";
-import {
-  describeWorkspaceLeave,
-  type WorkspaceLeaveMode,
-} from "./workspaceLeaveGuard";
+import { describeWorkspaceLeave, type WorkspaceLeaveMode } from "./workspaceLeaveGuard";
 
 export type LeaveGuard = (action: () => void) => void;
 export type SaveHandler = () => Promise<boolean>;
@@ -61,65 +58,62 @@ export function useWorkspaceLeaveGuard(
     iniSaveRef.current = save;
   }, []);
 
-  const confirmLeaveIfDirty = useCallback(
-    (action: () => void, mode: WorkspaceLeaveMode = "workspace") => {
-      const run = () => {
-        onAfterContinueRef.current();
-        action();
-      };
-      const profileDirty = profileDirtyRef.current;
-      const iniDirtyNow = iniDirtyRef.current;
-      const assistantDirtyNow = mode === "workspace" ? assistantDirtyRef.current : false;
-      const iniOrAssistant = iniDirtyNow || assistantDirtyNow;
+  const confirmLeaveIfDirty = useCallback((action: () => void, mode: WorkspaceLeaveMode = "workspace") => {
+    const run = () => {
+      onAfterContinueRef.current();
+      action();
+    };
+    const profileDirty = profileDirtyRef.current;
+    const iniDirtyNow = iniDirtyRef.current;
+    const assistantDirtyNow = mode === "workspace" ? assistantDirtyRef.current : false;
+    const iniOrAssistant = iniDirtyNow || assistantDirtyNow;
 
-      if (!profileDirty && !iniOrAssistant) {
-        run();
-        return;
+    if (!profileDirty && !iniOrAssistant) {
+      run();
+      return;
+    }
+
+    if (profileDirty && !iniOrAssistant && profileLeaveGuardRef.current !== null) {
+      profileLeaveGuardRef.current(run);
+      return;
+    }
+
+    const copy = describeWorkspaceLeave({
+      profileDirty,
+      iniDirty: iniDirtyNow,
+      assistantDirty: assistantDirtyNow,
+      mode,
+    });
+    if (copy.kind === "clean") {
+      run();
+      return;
+    }
+
+    const saveThenRun = async (): Promise<boolean> => {
+      if (profileDirty && profileSaveRef.current !== null) {
+        const ok = await profileSaveRef.current();
+        if (!ok) return false;
       }
-
-      if (profileDirty && !iniOrAssistant && profileLeaveGuardRef.current !== null) {
-        profileLeaveGuardRef.current(run);
-        return;
+      if (iniDirtyNow && iniSaveRef.current !== null) {
+        const ok = await iniSaveRef.current();
+        if (!ok) return false;
       }
+      run();
+      return true;
+    };
 
-      const copy = describeWorkspaceLeave({
-        profileDirty,
-        iniDirty: iniDirtyNow,
-        assistantDirty: assistantDirtyNow,
-        mode,
-      });
-      if (copy.kind === "clean") {
+    openUnsavedLeaveModal({
+      copy,
+      onDiscard: () => {
+        iniDirtyRef.current = false;
+        assistantDirtyRef.current = false;
+        profileDirtyRef.current = false;
+        setIniDirtyState(false);
         run();
-        return;
-      }
-
-      const saveThenRun = async (): Promise<boolean> => {
-        if (profileDirty && profileSaveRef.current !== null) {
-          const ok = await profileSaveRef.current();
-          if (!ok) return false;
-        }
-        if (iniDirtyNow && iniSaveRef.current !== null) {
-          const ok = await iniSaveRef.current();
-          if (!ok) return false;
-        }
-        run();
-        return true;
-      };
-
-      openUnsavedLeaveModal({
-        copy,
-        onDiscard: () => {
-          iniDirtyRef.current = false;
-          assistantDirtyRef.current = false;
-          profileDirtyRef.current = false;
-          setIniDirtyState(false);
-          run();
-        },
-        onSave: saveThenRun,
-      });
-    },
-    [],
-  );
+      },
+      onSave: saveThenRun,
+    });
+  }, []);
 
   useEffect(() => {
     onRegisterLeaveGuard?.(confirmLeaveIfDirty);

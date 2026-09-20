@@ -109,9 +109,7 @@ function main() {
     }
     const actual = found.get(name);
     if (actual !== expected) {
-      failures.push(
-        `${name}: expected ${expected ? "Enabled" : "Disabled"}, got ${actual ? "Enabled" : "Disabled"}`,
-      );
+      failures.push(`${name}: expected ${expected ? "Enabled" : "Disabled"}, got ${actual ? "Enabled" : "Disabled"}`);
     }
   }
 

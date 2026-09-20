@@ -69,22 +69,13 @@ export interface ServerFormProfileFieldsProps {
 }
 
 /** Identity | Reachability | Cluster | Startup grid (#292). */
-export function ServerFormProfileFields(
-  props: ServerFormProfileFieldsProps,
-): ReactElement {
+export function ServerFormProfileFields(props: ServerFormProfileFieldsProps): ReactElement {
   const embedded = props.embedded === true;
   const cardPadding = embedded ? "sm" : "md";
-  const mapMod =
-    props.mapModId === null
-      ? null
-      : props.mapMods.find((mod) => mod.id === props.mapModId) ?? null;
+  const mapMod = props.mapModId === null ? null : (props.mapMods.find((mod) => mod.id === props.mapModId) ?? null);
 
   return (
-    <SimpleGrid
-      cols={{ base: 1, md: 2 }}
-      spacing={0}
-      className={classes.fieldsGrid}
-    >
+    <SimpleGrid cols={{ base: 1, md: 2 }} spacing={0} className={classes.fieldsGrid}>
       <ServerFormSection padding={cardPadding}>
         <ServerFormIdentityHero
           name={props.name}
@@ -104,9 +95,7 @@ export function ServerFormProfileFields(
           required
           error={props.nameFolderError ?? undefined}
           description={
-            props.isCreate
-              ? 'YARK profile and install subfolder. Do not use < > : " / \\ | ? *'
-              : "YARK profile name"
+            props.isCreate ? 'YARK profile and install subfolder. Do not use < > : " / \\ | ? *' : "YARK profile name"
           }
         />
         <TextInput
@@ -191,9 +180,7 @@ export function ServerFormProfileFields(
           <ServerFormStartupFields
             autoStart={props.autoStart === true}
             showInactiveWarning={props.showInactiveWarning === true}
-            onAutoStartChange={(autoStart) =>
-              props.onAutoStartChange?.(autoStart)
-            }
+            onAutoStartChange={(autoStart) => props.onAutoStartChange?.(autoStart)}
           />
         </ServerFormSection>
       )}

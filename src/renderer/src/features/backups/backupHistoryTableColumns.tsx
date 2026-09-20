@@ -6,16 +6,10 @@ import { formatMapDisplayName } from "@shared/asa/map-identity";
 import type { BackupKind, BackupRecord } from "@shared/types";
 import { BackupHistoryRowActions } from "./BackupHistoryRowActions";
 import { archiveFileName } from "./backupHistorySort";
-import {
-  formatBackupHistoryTitle,
-  formatBackupTypeLabel,
-  formatBackupWhenLabel,
-} from "./model/serverBackupPanelModel";
+import { formatBackupHistoryTitle, formatBackupTypeLabel, formatBackupWhenLabel } from "./model/serverBackupPanelModel";
 import classes from "./BackupsPage.module.css";
 
-function statusTone(
-  status: BackupRecord["status"],
-): "ok" | "warn" | "danger" {
+function statusTone(status: BackupRecord["status"]): "ok" | "warn" | "danger" {
   if (status === "completed") return "ok";
   if (status === "failed") return "danger";
   return "warn";
@@ -38,9 +32,7 @@ export interface BackupHistoryColumnInput {
  * Content-sized columns use `width: "0%"` (+ noWrap) so cells hug content.
  * Actions uses `width: "100%"` to absorb leftover space (icons stay right).
  */
-export function buildBackupHistoryTableColumns(
-  input: BackupHistoryColumnInput,
-): DataTableColumn<BackupRecord>[] {
+export function buildBackupHistoryTableColumns(input: BackupHistoryColumnInput): DataTableColumn<BackupRecord>[] {
   const isPlayersTab = input.kind === "players";
   const shrink = { width: "0%" as const, noWrap: true as const };
 
@@ -107,22 +99,10 @@ export function buildBackupHistoryTableColumns(
         }
         return (
           <Stack gap={2}>
-            <Text
-              fw={600}
-              size="sm"
-              className={classes.backupTitle}
-              title={backup.path}
-              data-backup-title
-            >
+            <Text fw={600} size="sm" className={classes.backupTitle} title={backup.path} data-backup-title>
               {formatBackupHistoryTitle(backup)}
             </Text>
-            <Text
-              size="xs"
-              c="dimmed"
-              className={classes.backupFileName}
-              title={backup.path}
-              data-backup-filename
-            >
+            <Text size="xs" c="dimmed" className={classes.backupFileName} title={backup.path} data-backup-filename>
               {archiveFileName(backup.path)}
             </Text>
           </Stack>
@@ -141,12 +121,7 @@ export function buildBackupHistoryTableColumns(
         const { primary, tooltip } = formatBackupWhenLabel(finishedAt);
         return (
           <Tooltip label={tooltip} withArrow>
-            <Text
-              fw={600}
-              size="sm"
-              data-backup-date
-              className={classes.backupTitle}
-            >
+            <Text fw={600} size="sm" data-backup-date className={classes.backupTitle}>
               {primary}
             </Text>
           </Tooltip>
@@ -172,11 +147,7 @@ export function buildBackupHistoryTableColumns(
       noWrap: true,
       sortable: true,
       resizable: true,
-      render: (backup) => (
-        <StatusWord tone={statusTone(backup.status)}>
-          {backup.status}
-        </StatusWord>
-      ),
+      render: (backup) => <StatusWord tone={statusTone(backup.status)}>{backup.status}</StatusWord>,
     },
     {
       accessor: "type",

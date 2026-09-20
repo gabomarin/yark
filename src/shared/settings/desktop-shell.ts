@@ -26,10 +26,7 @@ export const DEFAULT_OS_NOTIFY_CRASH = true;
 export const DEFAULT_OS_NOTIFY_STEAMCMD = true;
 export const DEFAULT_OS_NOTIFY_YARK_UPDATE = true;
 
-export function parseStoredBoolean(
-  raw: string | null | undefined,
-  defaultValue: boolean,
-): boolean {
+export function parseStoredBoolean(raw: string | null | undefined, defaultValue: boolean): boolean {
   if (raw === null || raw === undefined || raw.trim() === "") {
     return defaultValue;
   }

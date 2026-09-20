@@ -39,12 +39,12 @@ CI (`.github/workflows/ci.yml`) already runs `npm ci` → `typecheck` → `lint`
 
 Do **not** comment on: pure `tsc` errors; size-lint failures; tests/build CI will fail; missing local `npm install`/`npx`; formatting; Linux-only path semantics (Windows-primary); “file unchanged” changelog when Changelog CI is enough; speculative nits.
 
-**Still review:** security, logic with weak/missing tests, IPC/Mantine drift, domain regressions, wrong changelog *content*, misleading copy that still typechecks.
+**Still review:** security, logic with weak/missing tests, IPC/Mantine drift, domain regressions, wrong changelog _content_, misleading copy that still typechecks.
 
 ## Response format
 
-1. Problem (1 sentence)  
-2. Why it matters (1 sentence, only if needed)  
+1. Problem (1 sentence)
+2. Why it matters (1 sentence, only if needed)
 3. Suggested fix (snippet or concrete action)
 
 ### Examples

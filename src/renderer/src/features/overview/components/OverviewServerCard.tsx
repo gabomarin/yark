@@ -1,11 +1,6 @@
 import type { ReactElement } from "react";
 import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
-import type {
-  ServerInstallationInfo,
-  ServerProfile,
-  ServerRuntimeInfo,
-  ServerStopProgress,
-} from "@shared/types";
+import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo, ServerStopProgress } from "@shared/types";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 import { ServerCard } from "@features/servers/components/ServerCard/ServerCard";
 import type { ServerCardHandlers } from "@features/servers/components/ServerCard/serverCardHandlers";
@@ -26,13 +21,7 @@ interface Props {
   steamCmdProgressLabel?: string | null;
   steamCmdProgressBytesDownloaded?: number | null;
   steamCmdProgressBytesTotal?: number | null;
-  steamCmdOperation?:
-    | "install-steamcmd"
-    | "install-files"
-    | "update"
-    | "sync-files"
-    | "verify-files"
-    | null;
+  steamCmdOperation?: "install-steamcmd" | "install-files" | "update" | "sync-files" | "verify-files" | null;
   stopProgressByServerId?: Map<string, ServerStopProgress>;
   startBusyByServerId?: ReadonlySet<string>;
   checkingUpdates?: boolean;
@@ -47,8 +36,7 @@ export function OverviewServerCard(props: Props): ReactElement {
   const startBusy = props.startBusyByServerId?.has(props.server.id) === true;
   const pausedJob = props.steamCmdPausedByServerId?.get(props.server.id);
   const queuedJob = props.steamCmdQueuedByServerId?.get(props.server.id);
-  const liveSteamCmd =
-    props.steamCmdRunning === true && props.steamCmdServerId === props.server.id;
+  const liveSteamCmd = props.steamCmdRunning === true && props.steamCmdServerId === props.server.id;
   const overlayJob = pausedJob ?? queuedJob;
 
   return (
@@ -64,17 +52,9 @@ export function OverviewServerCard(props: Props): ReactElement {
       steamCmdQueueLabel={overlayJob?.label ?? null}
       steamCmdProgressPercent={liveSteamCmd ? (props.steamCmdProgressPercent ?? null) : null}
       steamCmdProgressLabel={liveSteamCmd ? (props.steamCmdProgressLabel ?? null) : null}
-      steamCmdProgressBytesDownloaded={
-        liveSteamCmd ? (props.steamCmdProgressBytesDownloaded ?? null) : null
-      }
-      steamCmdProgressBytesTotal={
-        liveSteamCmd ? (props.steamCmdProgressBytesTotal ?? null) : null
-      }
-      steamCmdOperation={
-        liveSteamCmd
-          ? (props.steamCmdOperation ?? null)
-          : (overlayJob?.operation ?? null)
-      }
+      steamCmdProgressBytesDownloaded={liveSteamCmd ? (props.steamCmdProgressBytesDownloaded ?? null) : null}
+      steamCmdProgressBytesTotal={liveSteamCmd ? (props.steamCmdProgressBytesTotal ?? null) : null}
+      steamCmdOperation={liveSteamCmd ? (props.steamCmdOperation ?? null) : (overlayJob?.operation ?? null)}
       stopBusy={stopBusy}
       startBusy={startBusy}
       stopProgressPercent={stopBusy ? (stopProgress?.percent ?? null) : null}

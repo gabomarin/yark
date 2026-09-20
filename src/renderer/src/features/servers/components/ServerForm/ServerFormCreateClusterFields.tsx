@@ -19,8 +19,7 @@ export function ServerFormCreateClusterFields(props: Props): ReactElement {
   const selected =
     props.selectedClusterId === null
       ? null
-      : props.options.find((option) => option.clusterId === props.selectedClusterId) ??
-        null;
+      : (props.options.find((option) => option.clusterId === props.selectedClusterId) ?? null);
 
   return (
     <Stack gap="sm">
@@ -54,19 +53,13 @@ export function ServerFormCreateClusterFields(props: Props): ReactElement {
         (props.onOpenClusters !== undefined ? (
           <Text size="sm" c="dimmed">
             {/* Theme default is underline="always" for doc links; button actions stay hover-only. */}
-            <Anchor
-              component="button"
-              type="button"
-              underline="hover"
-              onClick={props.onOpenClusters}
-            >
+            <Anchor component="button" type="button" underline="hover" onClick={props.onOpenClusters}>
               Create a cluster first…
             </Anchor>
           </Text>
         ) : (
           <Text size="sm" c="dimmed">
-            Create a cluster from the Clusters page, then come back to join it
-            here.
+            Create a cluster from the Clusters page, then come back to join it here.
           </Text>
         ))}
       {selected !== null && (

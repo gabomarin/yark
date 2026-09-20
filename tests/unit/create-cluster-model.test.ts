@@ -14,9 +14,7 @@ import {
   toggleSelectedServerId,
 } from "@features/clusters/createClusterModel";
 
-function makeServer(
-  overrides: Partial<ServerProfile> & Pick<ServerProfile, "id" | "name">,
-): ServerProfile {
+function makeServer(overrides: Partial<ServerProfile> & Pick<ServerProfile, "id" | "name">): ServerProfile {
   return {
     map: "TheIsland_WP",
     installDir: `C:\\ARK\\${overrides.id}`,
@@ -58,12 +56,8 @@ describe("createClusterModel", () => {
       ["c", { status: "stopped" as const, processLive: false }],
     ]);
 
-    expect(ineligibilityReason(running, { status: "running", processLive: true })).toBe(
-      "Server must not be running",
-    );
-    expect(ineligibilityReason(member, { status: "stopped", processLive: false })).toMatch(
-      /Already in cluster/,
-    );
+    expect(ineligibilityReason(running, { status: "running", processLive: true })).toBe("Server must not be running");
+    expect(ineligibilityReason(member, { status: "stopped", processLive: false })).toMatch(/Already in cluster/);
     expect(ineligibilityReason(running, { status: "error", processLive: false })).toBeNull();
     expect(
       ineligibilityReason(makeServer({ id: "d", name: "D" }), {
@@ -71,17 +65,10 @@ describe("createClusterModel", () => {
         processLive: false,
       }),
     ).toBeNull();
-    expect(
-      ineligibilityReason(running, { status: "error", processLive: true }),
-    ).toBe("Server must not be running");
-    expect(ineligibilityReason(running, { status: "starting", processLive: true })).toBe(
-      "Server must not be running",
-    );
+    expect(ineligibilityReason(running, { status: "error", processLive: true })).toBe("Server must not be running");
+    expect(ineligibilityReason(running, { status: "starting", processLive: true })).toBe("Server must not be running");
 
-    const candidates = listCreateClusterCandidates(
-      [running, member, eligible],
-      statuses,
-    );
+    const candidates = listCreateClusterCandidates([running, member, eligible], statuses);
     expect(candidates.find((c) => c.server.id === "c")?.eligible).toBe(true);
     expect(candidates.find((c) => c.server.id === "a")?.eligible).toBe(false);
     expect(candidates.find((c) => c.server.id === "b")?.eligible).toBe(false);
@@ -165,18 +152,10 @@ describe("createClusterModel", () => {
       }),
     ];
 
-    expect(getClusterIdFormError("", "D:\\ASA\\Clusters\\New", servers)).toMatch(
-      /required/i,
-    );
-    expect(
-      getClusterIdFormError("ark-pve", "D:\\ASA\\Clusters\\Other", servers),
-    ).toMatch(/different directory/i);
-    expect(
-      getClusterIdFormError("ark-pve", "D:\\ASA\\Clusters\\PVE", servers),
-    ).toMatch(/already exists/i);
-    expect(
-      getClusterIdFormError("fresh-id", "D:\\ASA\\Clusters\\New", servers),
-    ).toBeNull();
+    expect(getClusterIdFormError("", "D:\\ASA\\Clusters\\New", servers)).toMatch(/required/i);
+    expect(getClusterIdFormError("ark-pve", "D:\\ASA\\Clusters\\Other", servers)).toMatch(/different directory/i);
+    expect(getClusterIdFormError("ark-pve", "D:\\ASA\\Clusters\\PVE", servers)).toMatch(/already exists/i);
+    expect(getClusterIdFormError("fresh-id", "D:\\ASA\\Clusters\\New", servers)).toBeNull();
   });
 
   it("validates Windows absolute cluster directories", () => {
@@ -187,11 +166,7 @@ describe("createClusterModel", () => {
 
   it("builds a normalized create-cluster profile input", () => {
     const server = makeServer({ id: "a", name: "Island", mods: ["123"] });
-    const input = buildCreateClusterInput(
-      server,
-      "  ember-nexus  ",
-      "D:/ASA/Clusters/Ember/",
-    );
+    const input = buildCreateClusterInput(server, "  ember-nexus  ", "D:/ASA/Clusters/Ember/");
     expect(input.clusterId).toBe("ember-nexus");
     expect(input.clusterDir).toBe("D:\\ASA\\Clusters\\Ember");
     expect(input.mods).toEqual(["123"]);
@@ -202,10 +177,11 @@ describe("createClusterModel", () => {
     expect(suggestClusterId()).toBe("yark-cluster-1");
     expect(suggestClusterId(["yark-cluster-1"])).toBe("yark-cluster-2");
     expect(suggestClusterId(["YARK-CLUSTER-1", "yark-cluster-2"])).toBe("yark-cluster-3");
-    expect(listKnownClusterIds([
-      makeServer({ id: "a", name: "A", clusterId: "ember" }),
-      makeServer({ id: "b", name: "B", clusterId: null }),
-    ])).toEqual(["ember"]);
+    expect(
+      listKnownClusterIds([
+        makeServer({ id: "a", name: "A", clusterId: "ember" }),
+        makeServer({ id: "b", name: "B", clusterId: null }),
+      ]),
+    ).toEqual(["ember"]);
   });
 });
-

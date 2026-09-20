@@ -15,23 +15,23 @@ ASA Steam app id: **`2430930`**.
 
 ## Module map
 
-| Role | Path |
-| --- | --- |
-| Orchestration / queue / progress | `src/backend/domains/updates/update-service.ts` |
-| Cache paths, freshness, robocopy sync | `src/backend/domains/updates/steamcmd-content-cache.ts` |
-| Disk-based download estimate | `src/backend/domains/updates/steamcmd-disk-progress.ts` |
-| Local install snapshot + official build/version | `src/backend/domains/instances/server-installation.ts` |
-| Availability compare (`buildid` only) | `src/shared/server/server-update-status.ts` |
-| Contracts | `src/shared/ipc.ts`, `src/shared/types.ts`, `src/shared/steamcmd-progress.ts` |
-| IPC | `src/main/ipc-handlers.ts`, `src/preload/index.ts` |
-| UI | `src/renderer/src/features/settings/*` (path/install), Downloads page, Overview cards, workspace SidePanel |
+| Role                                            | Path                                                                                                       |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Orchestration / queue / progress                | `src/backend/domains/updates/update-service.ts`                                                            |
+| Cache paths, freshness, robocopy sync           | `src/backend/domains/updates/steamcmd-content-cache.ts`                                                    |
+| Disk-based download estimate                    | `src/backend/domains/updates/steamcmd-disk-progress.ts`                                                    |
+| Local install snapshot + official build/version | `src/backend/domains/instances/server-installation.ts`                                                     |
+| Availability compare (`buildid` only)           | `src/shared/server/server-update-status.ts`                                                                |
+| Contracts                                       | `src/shared/ipc.ts`, `src/shared/types.ts`, `src/shared/steamcmd-progress.ts`                              |
+| IPC                                             | `src/main/ipc-handlers.ts`, `src/preload/index.ts`                                                         |
+| UI                                              | `src/renderer/src/features/settings/*` (path/install), Downloads page, Overview cards, workspace SidePanel |
 
 ## Two caches (next to SteamCMD)
 
-| Cache | Path (under SteamCMD home) | Purpose |
-| --- | --- | --- |
-| Depot cache | `steamapps/depotcache` | Compressed Steam downloads (network reuse) |
-| ASA content cache | `asa_content_cache` | Shared expanded install copied to each server |
+| Cache             | Path (under SteamCMD home) | Purpose                                       |
+| ----------------- | -------------------------- | --------------------------------------------- |
+| Depot cache       | `steamapps/depotcache`     | Compressed Steam downloads (network reuse)    |
+| ASA content cache | `asa_content_cache`        | Shared expanded install copied to each server |
 
 SteamCMD home is the directory containing `steamcmd.exe` (or `process.cwd()` if only the bare name is configured).
 
@@ -47,11 +47,11 @@ SteamCMD args always use this order (required by modern SteamCMD):
 
 Constant: `CONTENT_CACHE_FRESH_MS` = **15 minutes** (in-session timestamp + existing `appmanifest_2430930.acf`).
 
-| Operation | Reuses fresh cache? |
-| --- | --- |
+| Operation       | Reuses fresh cache?                                         |
+| --------------- | ----------------------------------------------------------- |
 | `install-files` | Yes, if cache was updated in this session within 15 minutes |
-| `update` | **No** — always queries SteamCMD |
-| `verify-files` | **No** — always queries SteamCMD |
+| `update`        | **No** — always queries SteamCMD                            |
+| `verify-files`  | **No** — always queries SteamCMD                            |
 
 Changing the SteamCMD path via `steamcmd:set-path` resets the freshness timestamp.
 
@@ -63,11 +63,11 @@ Pipeline for each files job:
 2. **Robocopy** cache → server `installDir`, excluding `ShooterGame\Saved` (worlds, INI, players). Shared helper uses `/E` + `/XJ` (no junction traversal) and refuses destination trees that already contain links (#322). Win64 community AsaApi files (`Version.dll`, `AsaApiLoader.exe`, `ArkApi\`) are **not** excluded — see [asa-api.md](asa-api.md#pitfalls).
 3. If robocopy fails → fallback: SteamCMD `app_update` **directly** on the server install dir.
 
-| Action | Public constraint | After success |
-| --- | --- | --- |
-| Install files | Prefer a stopped server (UI blocks while active) | Leaves process state alone |
-| Update | Requires the server to be stopped before queueing and again when execution begins | Leaves the server stopped |
-| Verify | May run while active; manager coordinates stop (no pre-update backup / rollback) | Restarts only if it had been running when the job ran |
+| Action        | Public constraint                                                                 | After success                                         |
+| ------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| Install files | Prefer a stopped server (UI blocks while active)                                  | Leaves process state alone                            |
+| Update        | Requires the server to be stopped before queueing and again when execution begins | Leaves the server stopped                             |
+| Verify        | May run while active; manager coordinates stop (no pre-update backup / rollback)  | Restarts only if it had been running when the job ran |
 
 Jobs are queued (`criticalJobsQueue.v1` in app settings): up to **3** attempts,
 **5s** between transient retries. Pending and replay-safe jobs resume after an
@@ -110,11 +110,11 @@ Pre-update archives use backup type `pre_update` and kind `world`
 
 ## Update availability (not SteamCMD)
 
-| Signal | Source | Used for |
-| --- | --- | --- |
-| Local Steam build | `{installDir}/steamapps/appmanifest_2430930.acf` → `build N` only (never shared SteamCMD / content-cache manifests) | Compare |
-| Public Steam build | `https://api.steamcmd.net/v1/info/2430930` (public branch `buildid`) | Compare |
-| Official ARK Version | Wildcard `https://cdn2.arkdedicated.com/asa/officialserverstatus.ini` | **UI only** |
+| Signal               | Source                                                                                                              | Used for    |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------- |
+| Local Steam build    | `{installDir}/steamapps/appmanifest_2430930.acf` → `build N` only (never shared SteamCMD / content-cache manifests) | Compare     |
+| Public Steam build   | `https://api.steamcmd.net/v1/info/2430930` (public branch `buildid`)                                                | Compare     |
+| Official ARK Version | Wildcard `https://cdn2.arkdedicated.com/asa/officialserverstatus.ini`                                               | **UI only** |
 
 `isServerUpdateAvailable` / `getServerUpdateState` compare **Steam builds only**. Local build **≥** official counts as current (SteamCMD can finish before the public probe catches up — #490). Never treat runtime `ARK Version` vs an official/live server version as an update decision — staggered ASA rollouts make those non-equivalent.
 
@@ -130,15 +130,15 @@ Overview **Update All** (next to **Check server updates**) opens only when at le
 
 `inspectServerInstallation` classifies each profile’s install root (lightweight FS only — no hashing / SteamCMD verify):
 
-| `health` | Meaning |
-| --- | --- |
-| `ready` | Required layout + non-empty `ArkAscendedServer.exe` |
-| `missing` | Configured path does not exist |
-| `empty` | Directory exists and is empty (valid install target) |
-| `incomplete` | Partial ASA tree without the executable |
-| `inaccessible` | Permissions/I/O block inspection |
-| `suspicious` | Contradictory or unsafe evidence (empty exe, foreign non-ASA contents) |
-| `unknown` | Unclassified I/O failure (final result — not “still scanning”) |
+| `health`       | Meaning                                                                |
+| -------------- | ---------------------------------------------------------------------- |
+| `ready`        | Required layout + non-empty `ArkAscendedServer.exe`                    |
+| `missing`      | Configured path does not exist                                         |
+| `empty`        | Directory exists and is empty (valid install target)                   |
+| `incomplete`   | Partial ASA tree without the executable                                |
+| `inaccessible` | Permissions/I/O block inspection                                       |
+| `suspicious`   | Contradictory or unsafe evidence (empty exe, foreign non-ASA contents) |
+| `unknown`      | Unclassified I/O failure (final result — not “still scanning”)         |
 
 `installed` remains `health === "ready"`. Results include `reasonCodes`, `guidance`, and `checkedAt` (shown in attention details when an install needs attention; workspace Status shows health/version only). Cadence: **one-shot background scan after Overview first paint**, plus on-demand **Check installs** (and post-SteamCMD refresh). Fleet scans use async FS classification **and** async version/manifest probes with bounded concurrency (no PowerShell / log tails by default). Manual refresh may enrich a ready install that still lacks a cheap version file/manifest. Start/enable gates use the enriched single-server path (async PowerShell VersionInfo when opted in). Heartbeats still skip deep local inspect; the 5‑minute official poll only re-reads locals when official metadata or the server set changes. Main-thread I/O contract: [server-lifecycle.md](server-lifecycle.md#main-process-io-145) (#145).
 
@@ -152,23 +152,23 @@ Requires a display and `ELECTRON_RUN_AS_NODE` unset. Fixtures under `C:\asa-e2e`
 
 ## Public IPC
 
-| Channel | Purpose |
-| --- | --- |
-| `servers:install-files` | Queue base-file install for a server |
-| `servers:update-now` | Queue safe update for a stopped server; rejects an active process at request or execution time |
-| `enqueueUpdateForMaintenance` (internal) | Maintenance-only; after T0 stop, queue the same safe-update pipeline with `{ wasRunning: true }` so the map restarts |
-| `servers:verify-files` | Queue integrity verify (same auto-stop/restart contract; no pre_update) |
-| `servers:installation` | Installation snapshot + official build/version |
-| `steamcmd:status` | Path, caches, busy/progress/queue |
-| `steamcmd:console` | In-memory console lines (`limit`, default 200) |
-| `steamcmd:install` | Download/extract/validate SteamCMD (PowerShell + steamcdn zip) |
-| `steamcmd:cancel` | Kill the active SteamCMD/sync process; queued Downloads jobs stay queued and run next |
-| `steamcmd:pause` | Stop the active install/update/sync and keep the job checkpointed for Resume. Verify and SteamCMD self-install cannot pause (see below). |
-| `steamcmd:set-path` | Validate + persist `steamcmd.exe`; resets content-cache freshness |
-| `steamcmd:open-cache` | Open depot or ASA content cache folder in Explorer |
-| `steamcmd:clear-cache` | Empty depot or ASA content cache (blocked while busy) |
-| `logs:read-update` / `logs:open-update-file` / `logs:delete-update` / `logs:clear-updates` | Per-server update log files |
-| **Push** `push:steamcmd-progress` | Live `{ status, console }` while ops run |
+| Channel                                                                                    | Purpose                                                                                                                                  |
+| ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `servers:install-files`                                                                    | Queue base-file install for a server                                                                                                     |
+| `servers:update-now`                                                                       | Queue safe update for a stopped server; rejects an active process at request or execution time                                           |
+| `enqueueUpdateForMaintenance` (internal)                                                   | Maintenance-only; after T0 stop, queue the same safe-update pipeline with `{ wasRunning: true }` so the map restarts                     |
+| `servers:verify-files`                                                                     | Queue integrity verify (same auto-stop/restart contract; no pre_update)                                                                  |
+| `servers:installation`                                                                     | Installation snapshot + official build/version                                                                                           |
+| `steamcmd:status`                                                                          | Path, caches, busy/progress/queue                                                                                                        |
+| `steamcmd:console`                                                                         | In-memory console lines (`limit`, default 200)                                                                                           |
+| `steamcmd:install`                                                                         | Download/extract/validate SteamCMD (PowerShell + steamcdn zip)                                                                           |
+| `steamcmd:cancel`                                                                          | Kill the active SteamCMD/sync process; queued Downloads jobs stay queued and run next                                                    |
+| `steamcmd:pause`                                                                           | Stop the active install/update/sync and keep the job checkpointed for Resume. Verify and SteamCMD self-install cannot pause (see below). |
+| `steamcmd:set-path`                                                                        | Validate + persist `steamcmd.exe`; resets content-cache freshness                                                                        |
+| `steamcmd:open-cache`                                                                      | Open depot or ASA content cache folder in Explorer                                                                                       |
+| `steamcmd:clear-cache`                                                                     | Empty depot or ASA content cache (blocked while busy)                                                                                    |
+| `logs:read-update` / `logs:open-update-file` / `logs:delete-update` / `logs:clear-updates` | Per-server update log files                                                                                                              |
+| **Push** `push:steamcmd-progress`                                                          | Live `{ status, console }` while ops run                                                                                                 |
 
 UI entry points: **Downloads** page (queue + one-line status; **Advanced log** for the live SteamCMD console) + Overview / workspace install/update/verify; onboarding “Install files”. Card / Overview **Update** requires a stopped server. Workspace **Maintenance** auto-update stops at countdown T0 then queues via `enqueueUpdateForMaintenance({ wasRunning: true })` — see above. Verify stays enabled while running (tooltip explains auto-stop). Start stays locked while a files job is queued or active. **Update** / **Install** can replace a queued **Verify** for the same server (toast: replaced in the queue — no Needs attention leftover). A running Verify is not cancelled; the operator must cancel it first or wait. Verify on top of Update/Install is refused (“already in Downloads”). Duplicate clicks of the same operation toast “Already in Downloads”. The Overview card shows a queued or busy progress strip.
 
@@ -220,20 +220,20 @@ operator continue while SteamCMD is still installing.
 
 ## Troubleshooting
 
-| Symptom | Likely cause / next step |
-| --- | --- |
-| `Server stop and backup are still in progress` | Wait for the stop+backup job to finish, then retry update/verify |
-| Update while the server is running | Stop the server first; UI and API reject the request, and queued jobs recheck before execution |
-| Verify while the server is running | Expected — manager auto-stops, runs SteamCMD, and restarts if it was running |
-| Update “available” looks wrong vs ARK Version string | Compare Steam `buildid` only; ARK Version is informational |
-| Version green but number behind Wildcard | Steam is current; label may be from last boot — tooltip on Version explains it refreshes on next start. If local ARK Version is **ahead** of officials (common staggered rollout), that hint is suppressed (#442). |
-| Repeated downloads when installing another server | Cache older than 15 minutes, missing manifest, or SteamCMD path changed |
-| Console in Spanish / stuck `0.0%` while `[ N%]` lines scroll | SteamCMD bootstrapper follows Windows UI language. We force `-language english`; percent still reads from `[ N%]`. Restart the update after this build. |
-| World/INI wiped after update | Should not happen via robocopy path (`ShooterGame\Saved` excluded); check whether fallback direct `app_update` on install dir was used (console mentions cache sync failure) |
-| Ark Server API / plugins gone after Update | Expected: robocopy sync overwrites Win64 from the content cache (only `ShooterGame\Saved` is excluded). Re-Install from the Ark Server API tab ([asa-api.md](asa-api.md)) |
-| Console stuck on “Waiting for progress…” during Update | Older builds were silent while zipping pre-update backups (large imported worlds take minutes). Current builds log backup kinds; Cancel aborts that phase without a fake rollback |
-| Job stuck after crash | Queue persisted in settings `criticalJobsQueue.v1`; pending jobs resume on next launch when SteamCMD is ready |
-| Install failed: *Could not run SteamCMD* | `steamcmd.exe` not found — Choose a path or **Install SteamCMD** in Settings, then retry. Creating the profile itself does not need SteamCMD. |
+| Symptom                                                      | Likely cause / next step                                                                                                                                                                                           |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Server stop and backup are still in progress`               | Wait for the stop+backup job to finish, then retry update/verify                                                                                                                                                   |
+| Update while the server is running                           | Stop the server first; UI and API reject the request, and queued jobs recheck before execution                                                                                                                     |
+| Verify while the server is running                           | Expected — manager auto-stops, runs SteamCMD, and restarts if it was running                                                                                                                                       |
+| Update “available” looks wrong vs ARK Version string         | Compare Steam `buildid` only; ARK Version is informational                                                                                                                                                         |
+| Version green but number behind Wildcard                     | Steam is current; label may be from last boot — tooltip on Version explains it refreshes on next start. If local ARK Version is **ahead** of officials (common staggered rollout), that hint is suppressed (#442). |
+| Repeated downloads when installing another server            | Cache older than 15 minutes, missing manifest, or SteamCMD path changed                                                                                                                                            |
+| Console in Spanish / stuck `0.0%` while `[ N%]` lines scroll | SteamCMD bootstrapper follows Windows UI language. We force `-language english`; percent still reads from `[ N%]`. Restart the update after this build.                                                            |
+| World/INI wiped after update                                 | Should not happen via robocopy path (`ShooterGame\Saved` excluded); check whether fallback direct `app_update` on install dir was used (console mentions cache sync failure)                                       |
+| Ark Server API / plugins gone after Update                   | Expected: robocopy sync overwrites Win64 from the content cache (only `ShooterGame\Saved` is excluded). Re-Install from the Ark Server API tab ([asa-api.md](asa-api.md))                                          |
+| Console stuck on “Waiting for progress…” during Update       | Older builds were silent while zipping pre-update backups (large imported worlds take minutes). Current builds log backup kinds; Cancel aborts that phase without a fake rollback                                  |
+| Job stuck after crash                                        | Queue persisted in settings `criticalJobsQueue.v1`; pending jobs resume on next launch when SteamCMD is ready                                                                                                      |
+| Install failed: _Could not run SteamCMD_                     | `steamcmd.exe` not found — Choose a path or **Install SteamCMD** in Settings, then retry. Creating the profile itself does not need SteamCMD.                                                                      |
 
 ## Real-host validation (Windows)
 
@@ -266,15 +266,15 @@ Requires: Node 22.12+ (`node:sqlite` and the current Electron toolchain), Playwr
 
 ### Scenarios
 
-| # | Scenario | Pass criteria |
-| --- | --- | --- |
-| A | Active-server update rejection | API rejects before queueing; no SteamCMD job or update backups; server remains running |
-| B | Stopped-server update | Completes; server left stopped |
-| C | Forced failure after backup | Points Settings at a **temporary** failing SteamCMD stub under `os.tmpdir()` (does **not** rename AppData `steamcmd.exe`). Job may retry up to **3** times with rollback each attempt; final user-visible signal is update **failure** (events include `update_failed` / `update_rolled_back`), never success. If rollback itself fails: logs/backups preserved + clear manual-recovery events |
-| D | Cancel mid SteamCMD or sync | Reported cancelled (not success) |
-| D2 | Cancel during pre-update backup (before SteamCMD) | Console shows backup progress; cancel stops without restore/safeguard unwind |
-| E | Crash/reopen mid queue | Job recovers as pending; previous error context not silently lost (present queue behavior; checkpoints belong to **#19**) |
-| F | Verify while running | Auto-stop/restart; **no** `pre_update` |
+| #   | Scenario                                          | Pass criteria                                                                                                                                                                                                                                                                                                                                                                                  |
+| --- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A   | Active-server update rejection                    | API rejects before queueing; no SteamCMD job or update backups; server remains running                                                                                                                                                                                                                                                                                                         |
+| B   | Stopped-server update                             | Completes; server left stopped                                                                                                                                                                                                                                                                                                                                                                 |
+| C   | Forced failure after backup                       | Points Settings at a **temporary** failing SteamCMD stub under `os.tmpdir()` (does **not** rename AppData `steamcmd.exe`). Job may retry up to **3** times with rollback each attempt; final user-visible signal is update **failure** (events include `update_failed` / `update_rolled_back`), never success. If rollback itself fails: logs/backups preserved + clear manual-recovery events |
+| D   | Cancel mid SteamCMD or sync                       | Reported cancelled (not success)                                                                                                                                                                                                                                                                                                                                                               |
+| D2  | Cancel during pre-update backup (before SteamCMD) | Console shows backup progress; cancel stops without restore/safeguard unwind                                                                                                                                                                                                                                                                                                                   |
+| E   | Crash/reopen mid queue                            | Job recovers as pending; previous error context not silently lost (present queue behavior; checkpoints belong to **#19**)                                                                                                                                                                                                                                                                      |
+| F   | Verify while running                              | Auto-stop/restart; **no** `pre_update`                                                                                                                                                                                                                                                                                                                                                         |
 
 ### Evidence and closure
 
@@ -296,12 +296,12 @@ Link the filled evidence from GitHub **#12** when used as part of 1.0 readiness.
 [`scripts/validation/validate-safe-update.cjs`](../scripts/validation/validate-safe-update.cjs)
 is an **interactive manual** runner (Windows + display). It is not part of CI.
 
-| Flag / env | Purpose |
-| --- | --- |
-| `--confirm` / `--force` | Required for a real run (refuses otherwise) |
-| `--dry-run` | Prereq checks only; no Electron launch |
-| `YARK_VALIDATE_SERVER_ID` | Override target server id |
-| `YARK_VALIDATE_SCENARIOS` | e.g. `C,E,B,A,F,D` |
+| Flag / env                | Purpose                                     |
+| ------------------------- | ------------------------------------------- |
+| `--confirm` / `--force`   | Required for a real run (refuses otherwise) |
+| `--dry-run`               | Prereq checks only; no Electron launch      |
+| `YARK_VALIDATE_SERVER_ID` | Override target server id                   |
+| `YARK_VALIDATE_SCENARIOS` | e.g. `C,E,B,A,F,D`                          |
 
 **Safety:** the script never renames the operator’s real `steamcmd.exe`. Scenario C
 compiles a failing stub under `os.tmpdir()`, temporarily sets `steamcmdPath` to that

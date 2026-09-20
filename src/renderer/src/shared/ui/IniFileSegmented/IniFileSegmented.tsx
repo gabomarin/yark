@@ -2,25 +2,16 @@ import type { ReactElement } from "react";
 import { GearSix, SlidersHorizontal } from "@phosphor-icons/react";
 import { SegmentedControl, type SegmentedControlProps } from "@mantine/core";
 import type { IniFileKey } from "@shared/types";
-import {
-  compactLabeledSegmentLabel,
-  compactLabeledSegmentedRootClass,
-} from "@ui/CompactSegmented/CompactSegmented";
+import { compactLabeledSegmentLabel, compactLabeledSegmentedRootClass } from "@ui/CompactSegmented/CompactSegmented";
 
 const INI_FILE_OPTIONS: Array<{ label: ReactElement; value: IniFileKey }> = [
   {
     value: "gameUserSettings",
-    label: compactLabeledSegmentLabel(
-      "GameUserSettings.ini",
-      <SlidersHorizontal size={14} aria-hidden="true" />,
-    ),
+    label: compactLabeledSegmentLabel("GameUserSettings.ini", <SlidersHorizontal size={14} aria-hidden="true" />),
   },
   {
     value: "game",
-    label: compactLabeledSegmentLabel(
-      "Game.ini",
-      <GearSix size={14} aria-hidden="true" />,
-    ),
+    label: compactLabeledSegmentLabel("Game.ini", <GearSix size={14} aria-hidden="true" />),
   },
 ];
 

@@ -30,10 +30,7 @@ interface BackupReconcilerDeps {
   emitChanged: (serverId: string) => void;
 }
 
-function resolveServerBackupRoot(
-  installDir: string,
-  backupDir: string | null | undefined,
-): string {
+function resolveServerBackupRoot(installDir: string, backupDir: string | null | undefined): string {
   if (typeof backupDir === "string" && backupDir.trim().length > 0) {
     return backupDir.trim();
   }
@@ -52,10 +49,7 @@ export class BackupReconciler {
   constructor(private readonly deps: BackupReconcilerDeps) {}
 
   hasWork(serverId: string): boolean {
-    return (
-      this.reconcileInFlight.has(serverId)
-      || this.interruptedReconcileInFlight.has(serverId)
-    );
+    return this.reconcileInFlight.has(serverId) || this.interruptedReconcileInFlight.has(serverId);
   }
 
   /**
@@ -94,11 +88,7 @@ export class BackupReconciler {
     changed += this.pruneMissingDiskBackups(serverId);
 
     if (existsSync(rootDir)) {
-      const known = new Set(
-        this.deps.backups
-          .listBackupPaths(serverId)
-          .map((path) => resolve(path).toLowerCase()),
-      );
+      const known = new Set(this.deps.backups.listBackupPaths(serverId).map((path) => resolve(path).toLowerCase()));
 
       for (const kind of ALL_BACKUP_KINDS) {
         const kindDir = join(rootDir, backupKindSubdir(kind));
@@ -126,20 +116,16 @@ export class BackupReconciler {
     if (existing !== undefined) {
       return existing;
     }
-    const run = this.reconcileInterruptedRunningBackupsUnlocked(serverId).finally(
-      () => {
-        if (this.interruptedReconcileInFlight.get(serverId) === run) {
-          this.interruptedReconcileInFlight.delete(serverId);
-        }
-      },
-    );
+    const run = this.reconcileInterruptedRunningBackupsUnlocked(serverId).finally(() => {
+      if (this.interruptedReconcileInFlight.get(serverId) === run) {
+        this.interruptedReconcileInFlight.delete(serverId);
+      }
+    });
     this.interruptedReconcileInFlight.set(serverId, run);
     return run;
   }
 
-  private async reconcileInterruptedRunningBackupsUnlocked(
-    serverId: string,
-  ): Promise<number> {
+  private async reconcileInterruptedRunningBackupsUnlocked(serverId: string): Promise<number> {
     const records = this.deps.backups.listBackups(serverId, 10_000);
     let changed = 0;
     for (const backup of records) {
@@ -169,11 +155,7 @@ export class BackupReconciler {
             const info = await stat(backup.path);
             // Use zip mtime — not wall clock — so recovery does not reorder
             // ahead of newer completed archives and break keep-last retention.
-            const completed = this.deps.backups.completeBackup(
-              backup.id,
-              info.size,
-              info.mtime.toISOString(),
-            );
+            const completed = this.deps.backups.completeBackup(backup.id, info.size, info.mtime.toISOString());
             if (completed === null) continue;
             changed += 1;
             this.deps.servers.addEvent(

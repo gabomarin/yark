@@ -2,10 +2,7 @@ import type { ServerStatus } from "@shared/types";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 
 /** Snapshot of the ListPlayers cache used for survivor counts (#301). */
-export type SurvivorListSnapshot = Pick<
-  PlayerListState,
-  "players" | "error" | "loading"
-> | null;
+export type SurvivorListSnapshot = Pick<PlayerListState, "players" | "error" | "loading"> | null;
 
 /**
  * Known online survivor count for a running server, or `null` when the UI must

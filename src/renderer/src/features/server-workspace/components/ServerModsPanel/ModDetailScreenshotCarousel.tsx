@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactElement } from "react";
 import { Carousel } from "@mantine/carousel";
-import { Button, Group, Image, Modal, Stack, Text, UnstyledButton } from "@mantine/core";
+import { Button, Group, Image, Stack, Text, UnstyledButton } from "@mantine/core";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import { useUiDensity } from "@app/AppProviders";
 import classes from "./ServerModsPanel.module.css";
 
@@ -43,8 +44,7 @@ export function ModDetailScreenshotCarousel(props: Props): ReactElement | null {
   const height = isMapFrame ? mapHeight : density === "compact" ? 168 : 220;
   const imageFit: "cover" | "contain" = isMapFrame ? "cover" : "cover";
   const allowExpand = props.allowExpand !== false;
-  const lightboxSrc =
-    allowExpand && lightboxIndex !== null ? (visible[lightboxIndex] ?? null) : null;
+  const lightboxSrc = allowExpand && lightboxIndex !== null ? (visible[lightboxIndex] ?? null) : null;
 
   return (
     <div className={classes.detailDrawerScreenshots}>
@@ -105,56 +105,46 @@ export function ModDetailScreenshotCarousel(props: Props): ReactElement | null {
       </Carousel>
 
       {allowExpand ? (
-      <Modal
-        opened={lightboxSrc !== null}
-        onClose={() => setLightboxIndex(null)}
-        title={
-          lightboxIndex !== null
-            ? `Screenshot ${lightboxIndex + 1} of ${visible.length}`
-            : "Screenshot"
-        }
-        centered
-        size="lg"
-        radius="md"
-        zIndex={props.lightboxZIndex}
-      >
-        {lightboxSrc !== null && lightboxLoadError ? (
-          <Stack align="center" gap="sm" py="md">
-            <Text size="sm" c="dimmed" ta="center">
-              Could not load this screenshot.
-            </Text>
-            <Group gap="xs" justify="center">
-              <Button
-                variant="light"
-                size="xs"
-                onClick={() => {
-                  setLightboxLoadError(false);
-                  setLightboxRetryKey((key) => key + 1);
-                }}
-              >
-                Retry
-              </Button>
-              <Button
-                variant="subtle"
-                size="xs"
-                onClick={() => setLightboxIndex(null)}
-              >
-                Close
-              </Button>
-            </Group>
-          </Stack>
-        ) : lightboxSrc !== null ? (
-          <Image
-            key={`${lightboxSrc}:${lightboxRetryKey}`}
-            src={lightboxSrc}
-            alt=""
-            fit="contain"
-            mah="70vh"
-            radius="md"
-            onError={() => setLightboxLoadError(true)}
-          />
-        ) : null}
-      </Modal>
+        <AppPanelModal
+          opened={lightboxSrc !== null}
+          onClose={() => setLightboxIndex(null)}
+          title={lightboxIndex !== null ? `Screenshot ${lightboxIndex + 1} of ${visible.length}` : "Screenshot"}
+          size="lg"
+          zIndex={props.lightboxZIndex}
+        >
+          {lightboxSrc !== null && lightboxLoadError ? (
+            <Stack align="center" gap="sm" py="md">
+              <Text size="sm" c="dimmed" ta="center">
+                Could not load this screenshot.
+              </Text>
+              <Group gap="xs" justify="center">
+                <Button
+                  variant="default"
+                  size="xs"
+                  onClick={() => {
+                    setLightboxLoadError(false);
+                    setLightboxRetryKey((key) => key + 1);
+                  }}
+                >
+                  Retry
+                </Button>
+                <Button variant="subtle" size="xs" onClick={() => setLightboxIndex(null)}>
+                  Close
+                </Button>
+              </Group>
+            </Stack>
+          ) : lightboxSrc !== null ? (
+            <Image
+              key={`${lightboxSrc}:${lightboxRetryKey}`}
+              src={lightboxSrc}
+              alt=""
+              fit="contain"
+              mah="70vh"
+              radius="md"
+              onError={() => setLightboxLoadError(true)}
+            />
+          ) : null}
+        </AppPanelModal>
       ) : null}
     </div>
   );

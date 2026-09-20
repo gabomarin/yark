@@ -113,22 +113,20 @@ async function launchApp() {
 async function quitApp(app) {
   const proc = app.process();
   const exited =
-    proc == null || proc.exitCode != null
-      ? Promise.resolve()
-      : new Promise((resolve) => proc.once("exit", resolve));
+    proc == null || proc.exitCode != null ? Promise.resolve() : new Promise((resolve) => proc.once("exit", resolve));
   await app.evaluate(({ app: electronApp }) => electronApp.quit());
   await Promise.race([
     exited,
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000),
-    ),
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000)),
   ]);
 }
 
 function cardFor(page, name) {
-  return page.locator(SERVER_CARD, {
-    has: page.getByText(name, { exact: true }),
-  }).first();
+  return page
+    .locator(SERVER_CARD, {
+      has: page.getByText(name, { exact: true }),
+    })
+    .first();
 }
 
 async function run() {
@@ -159,9 +157,7 @@ async function run() {
 
     const card = cardFor(page, serverName);
     await card.waitFor({ state: "visible", timeout: 15_000 });
-    await card
-      .getByRole("button", { name: new RegExp(`Open settings for ${serverName}`, "i") })
-      .click();
+    await card.getByRole("button", { name: new RegExp(`Open settings for ${serverName}`, "i") }).click();
     await page.getByRole("tab", { name: "Server", exact: true }).waitFor({
       state: "visible",
       timeout: 15_000,
@@ -192,28 +188,20 @@ async function run() {
 
     // Profile + disk evidence.
     const committedDir = readInstallDirFromDb();
-    assert.equal(
-      path.resolve(committedDir).toLowerCase(),
-      path.resolve(finalDest).toLowerCase(),
-    );
+    assert.equal(path.resolve(committedDir).toLowerCase(), path.resolve(finalDest).toLowerCase());
     assert.equal(fs.existsSync(sourceDir), false, "previous install folder should be removed");
     assert.ok(
       fs.existsSync(path.join(finalDest, "ShooterGame", "Binaries", "Win64", "ArkAscendedServer.exe")),
       "destination should contain the ASA binary",
     );
-    const movedSave = fs.readFileSync(
-      path.join(finalDest, "ShooterGame", "Saved", "save.ark"),
-      "utf8",
-    );
+    const movedSave = fs.readFileSync(path.join(finalDest, "ShooterGame", "Saved", "save.ark"), "utf8");
     assert.match(movedSave, new RegExp(saveMarker));
 
     // UI shows the new install path on the Server tab after Close refresh.
     await page.getByRole("tab", { name: "Server", exact: true }).click();
     await expectText(page.locator("[data-server-form-scroll]"), finalDest);
 
-    const actionableErrors = errors.filter(
-      (message) => !/Failed to load resource|net::ERR_/i.test(message),
-    );
+    const actionableErrors = errors.filter((message) => !/Failed to load resource|net::ERR_/i.test(message));
     assert.deepEqual(actionableErrors, []);
     succeeded = true;
     console.log(`E2E_MOVE_INSTALL_OK profile=${profileDir}`);

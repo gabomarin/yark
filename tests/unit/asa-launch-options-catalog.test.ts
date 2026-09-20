@@ -11,22 +11,15 @@ import {
 describe("asa-launch-options-catalog (#92)", () => {
   it("exposes summary, details, and a concrete example per entry", () => {
     expect(asaLaunchOptionsCatalog.version).toMatch(/^0\.2\./);
-    expect(asaLaunchOptionsCatalog.source.url).toContain(
-      "Server_configuration#Command_line_options",
-    );
+    expect(asaLaunchOptionsCatalog.source.url).toContain("Server_configuration#Command_line_options");
     expect(asaLaunchOptionEntries.length).toBeGreaterThan(50);
     for (const entry of asaLaunchOptionEntries) {
       expect(entry.summary.trim().length).toBeGreaterThan(0);
       expect(typeof entry.details).toBe("string");
       expect(entry.example.trim().length).toBeGreaterThan(0);
-      expect(
-        entry.description.includes(entry.summary.replace(/…$/, "")) ||
-          entry.summary.endsWith("…"),
-      ).toBe(true);
+      expect(entry.description.includes(entry.summary.replace(/…$/, "")) || entry.summary.endsWith("…")).toBe(true);
     }
-    const active = lookupLaunchOptionById(
-      asaLaunchOptionEntries.find((e) => /ActiveEvent/i.test(e.token))?.id ?? "",
-    );
+    const active = lookupLaunchOptionById(asaLaunchOptionEntries.find((e) => /ActiveEvent/i.test(e.token))?.id ?? "");
     expect(active?.example).toBe("-ActiveEvent=None");
     expect(active?.summary.toLowerCase()).toContain("mods");
     expect(active?.details.length ?? 0).toBeLessThan(500);
@@ -41,9 +34,7 @@ describe("asa-launch-options-catalog (#92)", () => {
     expect(counts.yarkOwned).toBeGreaterThanOrEqual(6);
 
     for (const entry of asaLaunchOptionEntries) {
-      expect(["supported", "unsupported", "uncertain", "yarkOwned"]).toContain(
-        entry.status,
-      );
+      expect(["supported", "unsupported", "uncertain", "yarkOwned"]).toContain(entry.status);
       expect(entry.token.length).toBeGreaterThan(0);
       expect(entry.sources.length).toBeGreaterThan(0);
       expect(entry.reviewedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
@@ -82,12 +73,8 @@ describe("asa-launch-options-catalog (#92)", () => {
 
   it("rejects empty tokens and unknown statuses in committed data", () => {
     const statuses = new Set(asaLaunchOptionEntries.map((e) => e.status));
-    expect([...statuses].sort()).toEqual(
-      ["supported", "uncertain", "unsupported", "yarkOwned"].sort(),
-    );
-    expect(asaLaunchOptionEntries.every((e) => e.token.trim().length > 0)).toBe(
-      true,
-    );
+    expect([...statuses].sort()).toEqual(["supported", "uncertain", "unsupported", "yarkOwned"].sort());
+    expect(asaLaunchOptionEntries.every((e) => e.token.trim().length > 0)).toBe(true);
   });
 
   it("filters by status and query (ASA browse omits unsupported)", () => {
@@ -103,17 +90,13 @@ describe("asa-launch-options-catalog (#92)", () => {
   });
 
   it("uses realistic sample values in examples (not bare value)", () => {
-    const clusterDir = asaLaunchOptionEntries.find((e) =>
-      /ClusterDirOverride/i.test(e.token),
-    );
+    const clusterDir = asaLaunchOptionEntries.find((e) => /ClusterDirOverride/i.test(e.token));
     expect(clusterDir?.example).toMatch(/ClusterDirOverride=C:\\ARK\\Cluster$/i);
 
     const clusterId = asaLaunchOptionEntries.find((e) => /^-clusterid=/i.test(e.token));
     expect(clusterId?.example).toMatch(/^-clusterid=my-cluster$/i);
 
-    const altSave = asaLaunchOptionEntries.find((e) =>
-      /AltSaveDirectoryName/i.test(e.token),
-    );
+    const altSave = asaLaunchOptionEntries.find((e) => /AltSaveDirectoryName/i.test(e.token));
     expect(altSave?.example).toMatch(/AltSaveDirectoryName=ClusterSave$/);
 
     const port = lookupLaunchOptionById("port");
@@ -127,21 +110,13 @@ describe("asa-launch-options-catalog (#92)", () => {
     expect(mapSession?.example).toContain("TheIsland_WP");
     expect(mapSession?.example).toContain("MyASAServer");
 
-    expect(
-      asaLaunchOptionEntries.filter((e) => /=value$/i.test(e.example)).length,
-    ).toBe(0);
+    expect(asaLaunchOptionEntries.filter((e) => /=value$/i.test(e.example)).length).toBe(0);
 
     // Flag alternatives stay as one token; optional wiki markers leave no brackets.
-    const d3d10 = asaLaunchOptionEntries.find((e) =>
-      /^-d3d10\b/i.test(e.token),
-    );
+    const d3d10 = asaLaunchOptionEntries.find((e) => /^-d3d10\b/i.test(e.token));
     expect(d3d10?.example).toBe("-d3d10");
-    const passivemods = asaLaunchOptionEntries.find((e) =>
-      /^-passivemods=/i.test(e.token),
-    );
+    const passivemods = asaLaunchOptionEntries.find((e) => /^-passivemods=/i.test(e.token));
     expect(passivemods?.example).toBe("-passivemods=928988");
-    expect(
-      asaLaunchOptionEntries.filter((e) => /[\[\]]/.test(e.example)).length,
-    ).toBe(0);
+    expect(asaLaunchOptionEntries.filter((e) => /[\[\]]/.test(e.example)).length).toBe(0);
   });
 });

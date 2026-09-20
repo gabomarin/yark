@@ -22,22 +22,13 @@ import {
 
 export const DAY_SHORT = RESTART_DAY_SHORT;
 
-export const CUSTOM_OFFSET_OPTIONS = [
-  "30m",
-  "15m",
-  "10m",
-  "5m",
-  "1m",
-] as const;
+export const CUSTOM_OFFSET_OPTIONS = ["30m", "15m", "10m", "5m", "1m"] as const;
 
 function defaultCustomWarningOffsets(): string[] {
   return [...CUSTOM_OFFSET_OPTIONS];
 }
 
-export const PRESET_LABELS: Record<
-  MaintenanceBroadcastPreset,
-  { title: string; hint: string }
-> = {
+export const PRESET_LABELS: Record<MaintenanceBroadcastPreset, { title: string; hint: string }> = {
   none: { title: "Off", hint: "No in-game warnings" },
   quiet: { title: "Minimal", hint: "5 minutes only" },
   standard: { title: "Regular", hint: "" },
@@ -45,17 +36,10 @@ export const PRESET_LABELS: Record<
   custom: { title: "Custom", hint: "Pick your own times" },
 };
 
-export const WARNING_PRESET_ORDER: MaintenanceBroadcastPreset[] = [
-  "none",
-  "quiet",
-  "standard",
-  "strict",
-  "custom",
-];
+export const WARNING_PRESET_ORDER: MaintenanceBroadcastPreset[] = ["none", "quiet", "standard", "strict", "custom"];
 
 /** Operator-facing trigger line for auto-update summaries (#489). */
-export const AUTO_UPDATE_TRIGGER_COPY =
-  "when a new Ark server version is available";
+export const AUTO_UPDATE_TRIGGER_COPY = "when a new Ark server version is available";
 
 /** Chip hint for a built-in warning preset (offset list in plain language). */
 export function formatMaintenancePresetHint(
@@ -178,9 +162,7 @@ function formatJobWarningsLabel(warnings: MaintenanceJobWarnings): string {
   return `${PRESET_LABELS[warnings.preset].title} warnings`;
 }
 
-export function formatRestartUpNextSubtitle(
-  policy: MaintenancePolicyStatus,
-): string {
+export function formatRestartUpNextSubtitle(policy: MaintenancePolicyStatus): string {
   const parts: string[] = [];
   if (policy.nextRestartAt !== null) {
     parts.push(`Next ${formatMaintenanceLocalDateTime(policy.nextRestartAt)}`);
@@ -190,9 +172,7 @@ export function formatRestartUpNextSubtitle(
     parts.push(warningsHint);
   }
   if (parts.length > 0) return parts.join(" · ");
-  return policy.restartWarnings.preset === "none"
-    ? "No player warnings before stop"
-    : "Players warned before stop";
+  return policy.restartWarnings.preset === "none" ? "No player warnings before stop" : "Players warned before stop";
 }
 
 function formatJobWarningsHint(warnings: MaintenanceJobWarnings): string | null {
@@ -253,14 +233,9 @@ export function warningsForPreset(
 }
 
 /** Custom chip toggle — empty selection falls back to Off. */
-export function toggleCustomWarningOffset(
-  warnings: MaintenanceJobWarnings,
-  offset: string,
-): MaintenanceJobWarnings {
+export function toggleCustomWarningOffset(warnings: MaintenanceJobWarnings, offset: string): MaintenanceJobWarnings {
   const on = warnings.customOffsets.includes(offset);
-  const customOffsets = on
-    ? warnings.customOffsets.filter((x) => x !== offset)
-    : [...warnings.customOffsets, offset];
+  const customOffsets = on ? warnings.customOffsets.filter((x) => x !== offset) : [...warnings.customOffsets, offset];
   if (customOffsets.length === 0) {
     return {
       ...warnings,
@@ -276,15 +251,8 @@ export function toggleCustomWarningOffset(
   };
 }
 
-export function previewWarningMessage(
-  template: string,
-  previewTime: string,
-): string {
+export function previewWarningMessage(template: string, previewTime: string): string {
   return template.replaceAll("{time}", previewTime);
 }
 
-export {
-  ALL_RESTART_DAYS_OF_WEEK,
-  formatRestartDaysSummary,
-  normalizeRestartDaysOfWeek,
-};
+export { ALL_RESTART_DAYS_OF_WEEK, formatRestartDaysSummary, normalizeRestartDaysOfWeek };

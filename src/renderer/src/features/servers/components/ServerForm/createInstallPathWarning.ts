@@ -26,10 +26,7 @@ export function diskCreateInstallWarning(
     return `A server already uses folder "${probe.installDir}" ("${probe.alreadyManagedBy}")`;
   }
   if (probe.nestedSubfolder) {
-    return (
-      probe.installation.guidance ??
-      "This path is inside an ASA install. Nested servers are not supported."
-    );
+    return probe.installation.guidance ?? "This path is inside an ASA install. Nested servers are not supported.";
   }
   const health = probe.installation.health;
   if (health === "missing" || health === "empty") {

@@ -6,16 +6,10 @@ import type {
   HostedResourcesOverviewDto,
   IpcResult,
 } from "@shared/ipc";
-import {
-  DEFAULT_HOSTED_RESOURCES_PORT,
-  type HostedResourceFormat,
-} from "@shared/settings/hosted-resources";
+import { DEFAULT_HOSTED_RESOURCES_PORT, type HostedResourceFormat } from "@shared/settings/hosted-resources";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
-import {
-  openDangerConfirmModal,
-  dangerConfirmBody,
-} from "@ui/DangerConfirmModal/openDangerConfirmModal";
+import { openDangerConfirmModal, dangerConfirmBody } from "@ui/DangerConfirmModal/openDangerConfirmModal";
 
 /**
  * A missing / crashed IPC handler rejects instead of returning `IpcResult`,
@@ -75,14 +69,11 @@ export function useHostedResourcesPage(): HostedResourcesController {
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
-  const [portDraft, setPortDraft] = useState<number | string>(
-    DEFAULT_HOSTED_RESOURCES_PORT,
-  );
+  const [portDraft, setPortDraft] = useState<number | string>(DEFAULT_HOSTED_RESOURCES_PORT);
   const [editor, setEditor] = useState<HostedResourceEditorDraft | null>(null);
   const [revisionsFor, setRevisionsFor] = useState<string | null>(null);
   const [revisions, setRevisions] = useState<HostedResourceRevisionDto[]>([]);
-  const [diagnostics, setDiagnostics] =
-    useState<HostedResourcesDiagnosticsDto | null>(null);
+  const [diagnostics, setDiagnostics] = useState<HostedResourcesDiagnosticsDto | null>(null);
   const [diagnosticsBusy, setDiagnosticsBusy] = useState(false);
 
   const reload = useCallback(async (opts?: { quiet?: boolean }) => {
@@ -136,9 +127,7 @@ export function useHostedResourcesPage(): HostedResourcesController {
 
   const toggleEnabled = useCallback(
     async (enabled: boolean) => {
-      await applyState("toggle", () =>
-        window.api.setHostedResourcesEnabled(enabled),
-      );
+      await applyState("toggle", () => window.api.setHostedResourcesEnabled(enabled));
     },
     [applyState],
   );
@@ -202,7 +191,10 @@ export function useHostedResourcesPage(): HostedResourcesController {
       showOperatorError("Add the new content before saving.");
       return;
     }
-    const tags = editor.tagsText.split(",").map((tag) => tag.trim()).filter(Boolean);
+    const tags = editor.tagsText
+      .split(",")
+      .map((tag) => tag.trim())
+      .filter(Boolean);
     setBusy("editor");
     await runWithFinally(
       async () => {
@@ -215,11 +207,11 @@ export function useHostedResourcesPage(): HostedResourcesController {
                 notes: editor.notes,
                 tags,
               })
-            : window.api.publishHostedResourceContent(
-                editor.resourceId ?? "",
-                editor.content,
-                { displayName, notes: editor.notes, tags },
-              ),
+            : window.api.publishHostedResourceContent(editor.resourceId ?? "", editor.content, {
+                displayName,
+                notes: editor.notes,
+                tags,
+              }),
         );
         if (!result.ok) {
           showOperatorError(result.error, "Could not publish the resource");
@@ -241,9 +233,7 @@ export function useHostedResourcesPage(): HostedResourcesController {
   const openRevisions = useCallback(async (resource: HostedResourceDto) => {
     setRevisionsFor(resource.id);
     setRevisions([]);
-    const result = await attempt(() =>
-      window.api.listHostedResourceRevisions(resource.id),
-    );
+    const result = await attempt(() => window.api.listHostedResourceRevisions(resource.id));
     if (!result.ok) {
       showOperatorError(result.error, "Could not load revisions");
       return;
@@ -264,9 +254,7 @@ export function useHostedResourcesPage(): HostedResourcesController {
       setBusy("revision");
       await runWithFinally(
         async () => {
-          const result = await attempt(() =>
-            window.api.publishHostedResourceRevision(revisionsFor, revisionId),
-          );
+          const result = await attempt(() => window.api.publishHostedResourceRevision(revisionsFor, revisionId));
           if (!result.ok) {
             showOperatorError(result.error, "Could not publish that revision");
             return;
@@ -276,9 +264,7 @@ export function useHostedResourcesPage(): HostedResourcesController {
             message: "The URL now serves the selected revision.",
           });
           await reload({ quiet: true });
-          const refreshed = await attempt(() =>
-            window.api.listHostedResourceRevisions(revisionsFor),
-          );
+          const refreshed = await attempt(() => window.api.listHostedResourceRevisions(revisionsFor));
           if (refreshed.ok) {
             setRevisions(refreshed.data);
           }
@@ -294,9 +280,7 @@ export function useHostedResourcesPage(): HostedResourcesController {
   const toggleResourceEnabled = useCallback(
     (resource: HostedResourceDto, enabled: boolean) => {
       if (enabled) {
-        void applyState("enable", () =>
-          window.api.setHostedResourceEnabled(resource.id, true),
-        );
+        void applyState("enable", () => window.api.setHostedResourceEnabled(resource.id, true));
         return;
       }
       openDangerConfirmModal({
@@ -306,9 +290,7 @@ export function useHostedResourcesPage(): HostedResourcesController {
           `"${resource.displayName}" stops serving immediately, including after a restart. Revisions stay listed and you can re-enable it anytime.`,
         ),
         onConfirm: () => {
-          void applyState("disable", () =>
-            window.api.setHostedResourceEnabled(resource.id, false),
-          );
+          void applyState("disable", () => window.api.setHostedResourceEnabled(resource.id, false));
         },
       });
     },
@@ -324,9 +306,7 @@ export function useHostedResourcesPage(): HostedResourcesController {
           `"${resource.displayName}" and all of its revisions are removed. Any server INI pointing at its URL will fail to load.`,
         ),
         onConfirm: () => {
-          void applyState("delete", () =>
-            window.api.deleteHostedResource(resource.id),
-          );
+          void applyState("delete", () => window.api.deleteHostedResource(resource.id));
         },
       });
     },
@@ -337,9 +317,7 @@ export function useHostedResourcesPage(): HostedResourcesController {
     setDiagnosticsBusy(true);
     await runWithFinally(
       async () => {
-        const result = await attempt(() =>
-          window.api.getHostedResourcesDiagnostics(),
-        );
+        const result = await attempt(() => window.api.getHostedResourcesDiagnostics());
         if (!result.ok) {
           showOperatorError(result.error, "Diagnostics failed");
           return;

@@ -28,9 +28,7 @@ const prefsOn = {
 
 describe("os-notification policy (#331)", () => {
   it("skips native toasts when E2E shortcuts are active", () => {
-    expect(isYarkE2eUserDataEnv({ YARK_E2E_USER_DATA: "C:\\tmp\\e2e" })).toBe(
-      true,
-    );
+    expect(isYarkE2eUserDataEnv({ YARK_E2E_USER_DATA: "C:\\tmp\\e2e" })).toBe(true);
     expect(isYarkE2eUserDataEnv({ YARK_E2E_USER_DATA: "  " })).toBe(false);
     expect(
       isYarkE2eFullUiEnv({
@@ -46,24 +44,16 @@ describe("os-notification policy (#331)", () => {
     expect(isYarkE2eFullUiEnv({ YARK_E2E_FULL_UI: "" })).toBe(false);
     expect(isYarkE2eFullUiEnv({ YARK_E2E_FULL_UI: "2" })).toBe(false);
     expect(isYarkE2eFullUiEnv({ YARK_E2E_FULL_UI: "truee" })).toBe(false);
-    expect(
-      isYarkE2eShortcutsActive({ YARK_E2E_USER_DATA: "C:\\tmp\\e2e" }),
-    ).toBe(true);
+    expect(isYarkE2eShortcutsActive({ YARK_E2E_USER_DATA: "C:\\tmp\\e2e" })).toBe(true);
     expect(
       isYarkE2eShortcutsActive({
         YARK_E2E_USER_DATA: "C:\\tmp\\e2e",
         YARK_E2E_FULL_UI: "true",
       }),
     ).toBe(false);
-    expect(shouldSkipNativeNotification({ isSupported: true, isE2e: true })).toBe(
-      true,
-    );
-    expect(
-      shouldSkipNativeNotification({ isSupported: false, isE2e: false }),
-    ).toBe(true);
-    expect(
-      shouldSkipNativeNotification({ isSupported: true, isE2e: false }),
-    ).toBe(false);
+    expect(shouldSkipNativeNotification({ isSupported: true, isE2e: true })).toBe(true);
+    expect(shouldSkipNativeNotification({ isSupported: false, isE2e: false })).toBe(true);
+    expect(shouldSkipNativeNotification({ isSupported: true, isE2e: false })).toBe(false);
   });
 
   it("skips when the master switch or category is off", () => {
@@ -211,34 +201,20 @@ describe("os-notification policy (#331)", () => {
 
   it("notifies completed, failed, and rolled-back jobs but not retries or start", () => {
     expect(OS_NOTIFY_CRASH_EVENT_TYPE).toBe("server_crashed");
-    expect([...OS_NOTIFY_STEAMCMD_EVENT_TYPES]).toEqual([
-      "update_completed",
-      "update_failed",
-      "update_rolled_back",
-    ]);
+    expect([...OS_NOTIFY_STEAMCMD_EVENT_TYPES]).toEqual(["update_completed", "update_failed", "update_rolled_back"]);
     expect(shouldNotifySteamCmdJobEvent("update_started", "info")).toBe(false);
     expect(shouldNotifySteamCmdJobEvent("update_completed", "info")).toBe(true);
     expect(shouldNotifySteamCmdJobEvent("update_failed", "error")).toBe(true);
     expect(shouldNotifySteamCmdJobEvent("update_failed", "warning")).toBe(false);
-    expect(shouldNotifySteamCmdJobEvent("update_rolled_back", "warning")).toBe(
-      true,
-    );
+    expect(shouldNotifySteamCmdJobEvent("update_rolled_back", "warning")).toBe(true);
     expect(shouldNotifySteamCmdJobEvent("server_crashed", "error")).toBe(false);
   });
 
   it("uses Action Center-safe bodies without paths or excerpts", () => {
-    expect(formatCrashOsToastBody("Island")).toBe(
-      '"Island" exited unexpectedly.',
-    );
-    expect(formatSteamCmdOsToastBody("update_completed", "Island")).toBe(
-      '"Island" SteamCMD job finished.',
-    );
-    expect(formatSteamCmdOsToastBody("update_failed", "Island")).toBe(
-      '"Island" SteamCMD job failed.',
-    );
-    expect(formatSteamCmdOsToastBody("update_rolled_back", null)).toBe(
-      '"Server" update was rolled back.',
-    );
+    expect(formatCrashOsToastBody("Island")).toBe('"Island" exited unexpectedly.');
+    expect(formatSteamCmdOsToastBody("update_completed", "Island")).toBe('"Island" SteamCMD job finished.');
+    expect(formatSteamCmdOsToastBody("update_failed", "Island")).toBe('"Island" SteamCMD job failed.');
+    expect(formatSteamCmdOsToastBody("update_rolled_back", null)).toBe('"Server" update was rolled back.');
     expect(steamCmdOsToastSilent("update_completed")).toBe(true);
     expect(steamCmdOsToastSilent("update_failed")).toBe(false);
     expect(steamCmdOsToastSilent("update_rolled_back")).toBe(false);
@@ -246,9 +222,7 @@ describe("os-notification policy (#331)", () => {
     expect(formatYarkUpdateOsToastBody("ready", "0.15.0")).toContain("downloaded");
     expect(yarkUpdateOsToastSilent("available")).toBe(true);
     expect(yarkUpdateOsToastSilent("ready")).toBe(false);
-    expect(yarkUpdateOsToastDedupeKey("available", "0.15.0")).toBe(
-      "available:0.15.0",
-    );
+    expect(yarkUpdateOsToastDedupeKey("available", "0.15.0")).toBe("available:0.15.0");
   });
 
   it("truncates long toast bodies", () => {

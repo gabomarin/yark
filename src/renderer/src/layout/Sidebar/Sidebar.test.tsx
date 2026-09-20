@@ -54,12 +54,8 @@ describe("Sidebar YARK version update affordance", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByRole("button", { name: "Servers" })).toHaveAttribute(
-      "data-active",
-    );
-    expect(screen.getByRole("button", { name: "Clusters" })).not.toHaveAttribute(
-      "data-active",
-    );
+    expect(screen.getByRole("button", { name: "Servers" })).toHaveAttribute("data-active");
+    expect(screen.getByRole("button", { name: "Clusters" })).not.toHaveAttribute("data-active");
 
     await user.click(screen.getByRole("button", { name: "Logs" }));
     expect(onNavigate).toHaveBeenCalledWith("logs");
@@ -96,9 +92,7 @@ describe("Sidebar YARK version update affordance", () => {
     expect(onYarkUpdateClick).toHaveBeenCalledTimes(1);
     expect(onWhatsNewClick).not.toHaveBeenCalled();
 
-    await user.click(
-      screen.getByRole("button", { name: /what's new in yark v0\.5\.2/i }),
-    );
+    await user.click(screen.getByRole("button", { name: /what's new in yark v0\.5\.2/i }));
     expect(onWhatsNewClick).toHaveBeenCalledTimes(1);
     expect(onYarkUpdateClick).toHaveBeenCalledTimes(1);
   });
@@ -119,10 +113,7 @@ describe("Sidebar YARK version update affordance", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByRole("button", { name: "SteamCMD ready" })).toHaveAttribute(
-      "data-size",
-      "md",
-    );
+    expect(screen.getByRole("button", { name: "SteamCMD ready" })).toHaveAttribute("data-size", "md");
 
     rerender(
       <AppProviders density="comfortable">
@@ -139,10 +130,7 @@ describe("Sidebar YARK version update affordance", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByRole("button", { name: "SteamCMD ready" })).toHaveAttribute(
-      "data-size",
-      "lg",
-    );
+    expect(screen.getByRole("button", { name: "SteamCMD ready" })).toHaveAttribute("data-size", "lg");
 
     rerender(
       <AppProviders density="compact">
@@ -158,10 +146,7 @@ describe("Sidebar YARK version update affordance", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByRole("button", { name: "SteamCMD ready" })).toHaveAttribute(
-      "data-size",
-      "sm",
-    );
+    expect(screen.getByRole("button", { name: "SteamCMD ready" })).toHaveAttribute("data-size", "sm");
   });
 
   it("shows icon-only nav with tooltips in rail mode (#107)", () => {
@@ -202,9 +187,7 @@ describe("Sidebar YARK version update affordance", () => {
     );
 
     await user.hover(screen.getByAltText("YARK server manager"));
-    expect(
-      await screen.findByRole("tooltip", { name: /Quick jump · Ctrl\+K/i }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("tooltip", { name: /Quick jump · Ctrl\+K/i })).toBeInTheDocument();
   });
 });
 

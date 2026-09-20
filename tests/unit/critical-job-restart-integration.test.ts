@@ -59,10 +59,7 @@ function persistedJob(overrides: Record<string, unknown> = {}): Record<string, u
   };
 }
 
-function createRestartedService(
-  jobs: unknown,
-  options: { serverExists?: boolean; active?: boolean } = {},
-) {
+function createRestartedService(jobs: unknown, options: { serverExists?: boolean; active?: boolean } = {}) {
   const values = new Map<string, string>([
     [QUEUE_KEY, JSON.stringify(jobs)],
     [STEAMCMD_PATH_SETTING_KEY, "C:\\steamcmd\\steamcmd.exe"],
@@ -74,8 +71,7 @@ function createRestartedService(
   const server = profile();
   let active = options.active ?? false;
   const servers = {
-    get: vi.fn((id: string) =>
-      options.serverExists === false || id !== server.id ? null : server),
+    get: vi.fn((id: string) => (options.serverExists === false || id !== server.id ? null : server)),
     list: vi.fn(() => (options.serverExists === false ? [] : [server])),
     addEvent: vi.fn(),
   } as unknown as ServerRepository;
@@ -177,20 +173,13 @@ describe("UpdateService restart simulation at durable phase boundaries", () => {
     await (service as unknown as { processQueue: () => Promise<void> }).processQueue();
 
     expect(instances.startForMaintenance).toHaveBeenCalledWith("server-1");
-    expect(withLock).toHaveBeenCalledWith(
-      "server-1",
-      "verify-files-recovery",
-      expect.any(Function),
-    );
+    expect(withLock).toHaveBeenCalledWith("server-1", "verify-files-recovery", expect.any(Function));
     expect(runSteamUpdate).not.toHaveBeenCalled();
     expect(service.getSteamCmdStatus().criticalJobs).toEqual([]);
   });
 
   it("reconciles a completed side effect when the requested runtime is already active", () => {
-    const { service } = createRestartedService(
-      [persistedJob({ phase: "restarting-server" })],
-      { active: true },
-    );
+    const { service } = createRestartedService([persistedJob({ phase: "restarting-server" })], { active: true });
 
     expect(service.getSteamCmdStatus().criticalJobs).toEqual([]);
   });
@@ -217,9 +206,7 @@ describe("UpdateService restart simulation at durable phase boundaries", () => {
     });
     Object.assign(service as object, { performUpdateServer });
 
-    const processing = (
-      service as unknown as { processQueue: () => Promise<void> }
-    ).processQueue();
+    const processing = (service as unknown as { processQueue: () => Promise<void> }).processQueue();
     await vi.advanceTimersByTimeAsync(5_000);
     await processing;
 
@@ -328,9 +315,7 @@ describe("UpdateService restart simulation at durable phase boundaries", () => {
   });
 
   it("starts the next queued job after the running job is cancelled", async () => {
-    const { OperationCancelledError } = await import(
-      "@backend/domains/updates/robocopy-tree"
-    );
+    const { OperationCancelledError } = await import("@backend/domains/updates/robocopy-tree");
     const { service } = createRestartedService([
       persistedJob({ id: "job-update", status: "pending", phase: "queued" }),
       persistedJob({
@@ -369,9 +354,7 @@ describe("UpdateService restart simulation at durable phase boundaries", () => {
   });
 
   it("preserves cancellation and offers Retry plus Dismiss", async () => {
-    const { service } = createRestartedService([
-      persistedJob({ status: "cancelled", phase: "cancelled" }),
-    ]);
+    const { service } = createRestartedService([persistedJob({ status: "cancelled", phase: "cancelled" })]);
 
     expect(service.getSteamCmdStatus().criticalJobs[0]).toMatchObject({
       status: "cancelled",
@@ -527,15 +510,9 @@ describe("UpdateService restart simulation at durable phase boundaries", () => {
       }),
     ]);
 
-    expect(service.getSteamCmdStatus().criticalJobs.map((job) => job.id)).toEqual([
-      "older",
-      "newer",
-    ]);
+    expect(service.getSteamCmdStatus().criticalJobs.map((job) => job.id)).toEqual(["older", "newer"]);
     expect(service.reorderCriticalJob("newer", "up")).toBe(true);
-    expect(service.getSteamCmdStatus().criticalJobs.map((job) => job.id)).toEqual([
-      "newer",
-      "older",
-    ]);
+    expect(service.getSteamCmdStatus().criticalJobs.map((job) => job.id)).toEqual(["newer", "older"]);
   });
 
   it("blocks pending file jobs when SteamCMD is not installed", async () => {
@@ -678,10 +655,7 @@ describe("UpdateService restart simulation at durable phase boundaries", () => {
 
     expect(performUpdateServer).not.toHaveBeenCalled();
     expect(performVerifyServerFiles).not.toHaveBeenCalled();
-    expect(service.getSteamCmdStatus().criticalJobs.map((job) => job.status)).toEqual([
-      "failed",
-      "pending",
-    ]);
+    expect(service.getSteamCmdStatus().criticalJobs.map((job) => job.status)).toEqual(["failed", "pending"]);
   });
 
   it("does not auto-resume pending Downloads on launch while a job is paused", async () => {
@@ -723,11 +697,7 @@ describe("UpdateService restart simulation at durable phase boundaries", () => {
 
     expect(performUpdateServer).not.toHaveBeenCalled();
     expect(service.getSteamCmdConsole().lines).toEqual([]);
-    expect(service.getSteamCmdStatus().criticalJobs.map((job) => job.status)).toEqual([
-      "paused",
-      "pending",
-      "pending",
-    ]);
+    expect(service.getSteamCmdStatus().criticalJobs.map((job) => job.status)).toEqual(["paused", "pending", "pending"]);
   });
 
   it("blocks pending Downloads on launch when SteamCMD is not on disk", async () => {
@@ -774,9 +744,7 @@ describe("UpdateService restart simulation at durable phase boundaries", () => {
   });
 
   it("pauses an install and does not start the next queued job until Resume", async () => {
-    const { OperationPausedError } = await import(
-      "@backend/domains/updates/robocopy-tree"
-    );
+    const { OperationPausedError } = await import("@backend/domains/updates/robocopy-tree");
     const { service } = createRestartedService([
       persistedJob({
         id: "job-install",
@@ -804,10 +772,7 @@ describe("UpdateService restart simulation at durable phase boundaries", () => {
 
     await (service as unknown as { processQueue: () => Promise<void> }).processQueue();
 
-    expect(service.getSteamCmdStatus().criticalJobs.map((job) => job.id)).toEqual([
-      "job-install",
-      "job-update",
-    ]);
+    expect(service.getSteamCmdStatus().criticalJobs.map((job) => job.id)).toEqual(["job-install", "job-update"]);
     expect(service.getSteamCmdStatus().criticalJobs[0]).toMatchObject({
       id: "job-install",
       status: "paused",
@@ -833,9 +798,9 @@ describe("UpdateService restart simulation at durable phase boundaries", () => {
         idempotencyKey: "install-files:server-1:",
       }),
     ]);
-    const append = (
-      service as unknown as { appendSteamCmdConsole: (line: string) => void }
-    ).appendSteamCmdConsole.bind(service);
+    const append = (service as unknown as { appendSteamCmdConsole: (line: string) => void }).appendSteamCmdConsole.bind(
+      service,
+    );
     append("seed line before resume");
     expect(service.getSteamCmdConsole().lines.length).toBeGreaterThan(0);
 
@@ -865,4 +830,3 @@ describe("UpdateService restart simulation at durable phase boundaries", () => {
     expect(service.getSteamCmdStatus().criticalJobs).toEqual([]);
   });
 });
-

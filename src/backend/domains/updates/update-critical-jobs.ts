@@ -129,24 +129,14 @@ export function sanitizeUpdateJobContext(raw: unknown): UpdateCriticalJobContext
   return context;
 }
 
-export function mergeUpdateCriticalJobs(
-  existing: UpdateCriticalJob,
-  incoming: UpdateCriticalJob,
-): UpdateCriticalJob {
+export function mergeUpdateCriticalJobs(existing: UpdateCriticalJob, incoming: UpdateCriticalJob): UpdateCriticalJob {
   const incomingPhaseRank = updateCriticalJobPhaseRank(incoming.phase);
   const existingPhaseRank = updateCriticalJobPhaseRank(existing.phase);
   const preferIncoming =
-    incomingPhaseRank > existingPhaseRank
-    || (
-      incomingPhaseRank === existingPhaseRank
-      && (
-        incoming.attempts > existing.attempts
-        || (
-          incoming.attempts === existing.attempts
-          && incoming.updatedAt > existing.updatedAt
-        )
-      )
-    );
+    incomingPhaseRank > existingPhaseRank ||
+    (incomingPhaseRank === existingPhaseRank &&
+      (incoming.attempts > existing.attempts ||
+        (incoming.attempts === existing.attempts && incoming.updatedAt > existing.updatedAt)));
   const preferred = preferIncoming ? incoming : existing;
   const secondary = preferIncoming ? existing : incoming;
   return {
@@ -155,14 +145,9 @@ export function mergeUpdateCriticalJobs(
     maxAttempts: Math.max(existing.maxAttempts, incoming.maxAttempts),
     operatorRetryAllowed: existing.operatorRetryAllowed || incoming.operatorRetryAllowed,
     context: {
-      wasRunning:
-        preferred.context.wasRunning
-        ?? secondary.context.wasRunning,
+      wasRunning: preferred.context.wasRunning ?? secondary.context.wasRunning,
       preUpdateBackupIds: [
-        ...new Set([
-          ...(preferred.context.preUpdateBackupIds ?? []),
-          ...(secondary.context.preUpdateBackupIds ?? []),
-        ]),
+        ...new Set([...(preferred.context.preUpdateBackupIds ?? []), ...(secondary.context.preUpdateBackupIds ?? [])]),
       ],
       rollbackRestoredBackupIds: [
         ...new Set([
@@ -170,37 +155,24 @@ export function mergeUpdateCriticalJobs(
           ...(secondary.context.rollbackRestoredBackupIds ?? []),
         ]),
       ],
-      appliedBuildId:
-        preferred.context.appliedBuildId
-        ?? secondary.context.appliedBuildId
-        ?? null,
-      updateLogPath:
-        preferred.context.updateLogPath
-        ?? secondary.context.updateLogPath,
-      steamCmdExitCode:
-        preferred.context.steamCmdExitCode
-        ?? secondary.context.steamCmdExitCode,
-      ...(preferred.context.restartInterrupted === true
-        || secondary.context.restartInterrupted === true
+      appliedBuildId: preferred.context.appliedBuildId ?? secondary.context.appliedBuildId ?? null,
+      updateLogPath: preferred.context.updateLogPath ?? secondary.context.updateLogPath,
+      steamCmdExitCode: preferred.context.steamCmdExitCode ?? secondary.context.steamCmdExitCode,
+      ...(preferred.context.restartInterrupted === true || secondary.context.restartInterrupted === true
         ? { restartInterrupted: true as const }
         : {}),
-      ...(preferred.context.operatorAwaited === true
-        || secondary.context.operatorAwaited === true
+      ...(preferred.context.operatorAwaited === true || secondary.context.operatorAwaited === true
         ? { operatorAwaited: true as const }
         : {}),
     },
   };
 }
 
-export function isUpdateJobInterruptedAmbiguous(
-  type: UpdateCriticalJobType,
-  phase: string,
-): boolean {
+export function isUpdateJobInterruptedAmbiguous(type: UpdateCriticalJobType, phase: string): boolean {
   return (
-    (type === "update" && phase !== "validating" && phase !== "validated"
-      && phase !== "files-applied")
-    || ((type === "verify-files" || type === "install-files")
-      && (phase === "stopping-server" || phase === "restarting-server"))
+    (type === "update" && phase !== "validating" && phase !== "validated" && phase !== "files-applied") ||
+    ((type === "verify-files" || type === "install-files") &&
+      (phase === "stopping-server" || phase === "restarting-server"))
   );
 }
 
@@ -212,9 +184,9 @@ export function shouldOmitInterruptedUpdateJobOnLoad(input: {
 }): boolean {
   if (!input.wasInterrupted) return false;
   if (
-    (input.phase === "files-applied" || input.phase === "restarting-server")
-    && input.wasRunning === true
-    && input.serverIsActive
+    (input.phase === "files-applied" || input.phase === "restarting-server") &&
+    input.wasRunning === true &&
+    input.serverIsActive
   ) {
     return true;
   }
@@ -224,21 +196,12 @@ export function shouldOmitInterruptedUpdateJobOnLoad(input: {
   return false;
 }
 
-export function resumePhaseForUpdateRetry(
-  job: Pick<UpdateCriticalJob, "type" | "phase" | "context">,
-): string {
+export function resumePhaseForUpdateRetry(job: Pick<UpdateCriticalJob, "type" | "phase" | "context">): string {
   if (job.phase === "restarting-server") return job.phase;
-  if (
-    job.type === "update"
-    && job.phase.startsWith("rollback-")
-    && job.phase !== "rollback-complete"
-  ) {
+  if (job.type === "update" && job.phase.startsWith("rollback-") && job.phase !== "rollback-complete") {
     return job.phase;
   }
-  if (
-    job.type === "update"
-    && (job.context.preUpdateBackupIds?.length ?? 0) > 0
-  ) {
+  if (job.type === "update" && (job.context.preUpdateBackupIds?.length ?? 0) > 0) {
     return "pre-update-backup-complete";
   }
   return "queued";
@@ -247,9 +210,7 @@ export function resumePhaseForUpdateRetry(
 export function isUpdateQueueHeldForOperator(
   queue: ReadonlyArray<Pick<UpdateCriticalJob, "status" | "context">>,
 ): boolean {
-  return queue.some(
-    (job) => job.status === "paused" || job.context.restartInterrupted === true,
-  );
+  return queue.some((job) => job.status === "paused" || job.context.restartInterrupted === true);
 }
 
 export function reorderPendingUpdateJobs(
@@ -296,10 +257,7 @@ export interface UpdateCriticalJobCancelPlan {
   updatedAt: string;
 }
 
-export function planCancelUpdateCriticalJob(
-  wasPaused: boolean,
-  nowIso?: string,
-): UpdateCriticalJobCancelPlan {
+export function planCancelUpdateCriticalJob(wasPaused: boolean, nowIso?: string): UpdateCriticalJobCancelPlan {
   return {
     status: "cancelled",
     phase: "cancelled",
@@ -315,13 +273,7 @@ export function isUpdatePauseBlockedByRollback(phase: string): boolean {
 }
 
 export function isUnpausableSteamCmdOperation(
-  operation:
-    | "install-steamcmd"
-    | "install-files"
-    | "update"
-    | "verify-files"
-    | "sync-files"
-    | null,
+  operation: "install-steamcmd" | "install-files" | "update" | "verify-files" | "sync-files" | null,
 ): boolean {
   return operation === "verify-files" || operation === "install-steamcmd";
 }

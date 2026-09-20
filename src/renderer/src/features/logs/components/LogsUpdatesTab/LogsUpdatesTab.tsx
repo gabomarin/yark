@@ -1,37 +1,21 @@
-import {
-  ArrowSquareOut,
-  ClockCounterClockwise,
-  FileText,
-  Trash,
-} from "@phosphor-icons/react";
-import {
-  ActionIcon,
-  Badge,
-  Group,
-  Stack,
-  Text,
-  Title,
-  Tooltip,
-} from "@mantine/core";
+import { ArrowSquareOut, ClockCounterClockwise, FileText, Trash } from "@phosphor-icons/react";
+import { ActionIcon, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
 import type { ServerOperationalLogs, ServerUpdateLogFile } from "@shared/types";
 import { formatLogDateTime } from "@shared/format-log-datetime";
 import type { ReactElement } from "react";
 import { ConsoleSurface } from "@ui/ConsoleSurface/ConsoleSurface";
+import { LoadingState } from "@ui/LoadingState/LoadingState";
 import { SelectableListRow } from "@ui/SelectableListRow/SelectableListRow";
+import { StatusWord } from "@ui/StatusWord/StatusWord";
 import classes from "../../LogsPage.module.css";
 import {
   formatDuration,
   formatSize,
   formatUpdateJobLabel,
-  statusColor,
   statusLabel,
+  statusTone,
 } from "../../model/serverLogsFormat";
-import {
-  LogsClearAction,
-  LogsDetailItem,
-  LogsEmptyState,
-  LogsTabIntro,
-} from "../LogsPanelChrome/LogsPanelChrome";
+import { LogsClearAction, LogsDetailItem, LogsEmptyState, LogsTabIntro } from "../LogsPanelChrome/LogsPanelChrome";
 
 export interface LogsUpdatesTabProps {
   embedded?: boolean;
@@ -75,12 +59,7 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
           <LogsClearAction
             label="Clear all update logs for this server"
             onClick={onClearUpdateLogs}
-            disabled={
-              loading ||
-              busy ||
-              logs === null ||
-              logs.updateFiles.length === 0
-            }
+            disabled={loading || busy || logs === null || logs.updateFiles.length === 0}
           />
         }
       />
@@ -91,7 +70,7 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
               Job history
             </Title>
             {loading ? (
-              <Text c="dimmed">Loading history…</Text>
+              <LoadingState label="history" />
             ) : logs === null || logs.updateFiles.length === 0 ? (
               <LogsEmptyState
                 icon={<ClockCounterClockwise size={24} />}
@@ -99,10 +78,7 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
                 description="Install, update, or verify files to create a SteamCMD job log."
               />
             ) : (
-              <div
-                className={classes.updateList}
-                data-logs-scroll-region="updates-list"
-              >
+              <div className={classes.updateList} data-logs-scroll-region="updates-list">
                 {logs.updateFiles.map((file) => {
                   const label = formatUpdateJobLabel(file.fileName, file.modifiedAt);
                   return (
@@ -113,13 +89,9 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
                       title={file.fileName}
                       className={classes.updateHistoryRow}
                       trailing={
-                        <Badge
-                          color={statusColor(file.status)}
-                          variant="light"
-                          className={classes.updateStatus}
-                        >
+                        <StatusWord tone={statusTone(file.status)} className={classes.updateStatus}>
                           {statusLabel(file.status)}
-                        </Badge>
+                        </StatusWord>
                       }
                     >
                       <Text size="sm" fw={600} className={classes.updateTitle}>
@@ -138,24 +110,15 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
 
         <div className={`${classes.detailPanel} ${classes.fillPanel}`}>
           <Stack gap="sm" className={classes.panelStack}>
-            <Group
-              justify="space-between"
-              align="center"
-              wrap="wrap"
-              gap="sm"
-              className={classes.detailHeader}
-            >
+            <Group justify="space-between" align="center" wrap="wrap" gap="sm" className={classes.detailHeader}>
               <Group gap="sm" wrap="nowrap">
                 <Title order={4} className={classes.panelTitle}>
                   Update details
                 </Title>
                 {selectedUpdateInfo !== null && (
-                  <Badge
-                    color={statusColor(selectedUpdateInfo.status)}
-                    variant="light"
-                  >
-                    {selectedUpdateInfo.status}
-                  </Badge>
+                  <StatusWord tone={statusTone(selectedUpdateInfo.status)}>
+                    {statusLabel(selectedUpdateInfo.status)}
+                  </StatusWord>
                 )}
               </Group>
               {selectedUpdateInfo !== null && (
@@ -209,9 +172,7 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
                 <ConsoleSurface
                   fill
                   className={classes.squareConsole}
-                  text={
-                    updateContent.length > 0 ? updateContent : "Loading log content…"
-                  }
+                  text={updateContent.length > 0 ? updateContent : "Loading log content…"}
                   data-logs-scroll-region="update-content"
                 />
               </>

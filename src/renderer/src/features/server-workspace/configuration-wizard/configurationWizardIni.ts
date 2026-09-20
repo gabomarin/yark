@@ -61,19 +61,12 @@ export function draftFromIniPayload(payload: ServerIniPayload): ConfigurationWiz
   };
 
   for (const setting of SETTINGS) {
-    const raw = findIniValueFromIndex(
-      indexesByFile[setting.fileKey],
-      setting.section,
-      setting.key,
-    );
+    const raw = findIniValueFromIndex(indexesByFile[setting.fileKey], setting.section, setting.key);
     if (typeof setting.fallback === "boolean") {
-      draft[setting.field] =
-        (raw === null ? setting.fallback : raw.toLowerCase() === "true") as never;
+      draft[setting.field] = (raw === null ? setting.fallback : raw.toLowerCase() === "true") as never;
     } else {
       const parsed = raw === null ? Number.NaN : Number(raw);
-      draft[setting.field] = (
-        Number.isFinite(parsed) ? parsed : setting.fallback
-      ) as never;
+      draft[setting.field] = (Number.isFinite(parsed) ? parsed : setting.fallback) as never;
     }
   }
 
@@ -92,24 +85,14 @@ export function applyDifficultyLevel(
   };
 }
 
-export function applyWizardDraftToIni(
-  payload: ServerIniPayload,
-  draft: ConfigurationWizardDraft,
-): ServerIniPayload {
+export function applyWizardDraftToIni(payload: ServerIniPayload, draft: ConfigurationWizardDraft): ServerIniPayload {
   let next = payload;
   for (const setting of SETTINGS) {
-    if (
-      setting.field === "structurePickupSeconds"
-      && draft.alwaysAllowStructurePickup
-    ) {
+    if (setting.field === "structurePickupSeconds" && draft.alwaysAllowStructurePickup) {
       continue;
     }
     const value = draft[setting.field];
-    const currentMatch = findLastIniValueMatch(
-      textForFile(next, setting.fileKey),
-      setting.section,
-      setting.key,
-    );
+    const currentMatch = findLastIniValueMatch(textForFile(next, setting.fileKey), setting.section, setting.key);
     const currentRaw = currentMatch?.value ?? null;
     if (!hasSemanticDifference(setting, currentRaw, value)) {
       continue;
@@ -128,11 +111,7 @@ export function applyWizardDraftToIni(
   return next;
 }
 
-function hasSemanticDifference(
-  setting: WizardSetting,
-  raw: string | null,
-  value: boolean | number,
-): boolean {
+function hasSemanticDifference(setting: WizardSetting, raw: string | null, value: boolean | number): boolean {
   if (typeof setting.fallback === "boolean") {
     const current = raw === null ? setting.fallback : raw.toLowerCase() === "true";
     return current !== value;
@@ -143,19 +122,16 @@ function hasSemanticDifference(
   return current !== value;
 }
 
-export function wizardChanges(
-  initial: ConfigurationWizardDraft,
-  current: ConfigurationWizardDraft,
-): WizardChange[] {
+export function wizardChanges(initial: ConfigurationWizardDraft, current: ConfigurationWizardDraft): WizardChange[] {
   const changes: WizardChange[] = [];
   for (const field of Object.keys(FIELD_LABELS) as Array<keyof ConfigurationWizardDraft>) {
     if (
-      field === "profile"
-      || field === "maxWildDinoLevel"
-      || field === "difficultyOffset"
-      || field === "overrideOfficialDifficulty"
-      || (field === "structurePickupSeconds" && current.alwaysAllowStructurePickup)
-      || initial[field] === current[field]
+      field === "profile" ||
+      field === "maxWildDinoLevel" ||
+      field === "difficultyOffset" ||
+      field === "overrideOfficialDifficulty" ||
+      (field === "structurePickupSeconds" && current.alwaysAllowStructurePickup) ||
+      initial[field] === current[field]
     ) {
       continue;
     }
@@ -169,9 +145,9 @@ export function wizardChanges(
   }
 
   if (
-    initial.maxWildDinoLevel !== current.maxWildDinoLevel
-    || initial.difficultyOffset !== current.difficultyOffset
-    || initial.overrideOfficialDifficulty !== current.overrideOfficialDifficulty
+    initial.maxWildDinoLevel !== current.maxWildDinoLevel ||
+    initial.difficultyOffset !== current.difficultyOffset ||
+    initial.overrideOfficialDifficulty !== current.overrideOfficialDifficulty
   ) {
     changes.push({
       field: "maxWildDinoLevel",
@@ -186,13 +162,7 @@ export function wizardChanges(
 }
 
 function resolveMaxWildDinoLevel(payload: ServerIniPayload): number {
-  const override = Number(
-    findIniValue(
-      payload.gameUserSettings,
-      "ServerSettings",
-      "OverrideOfficialDifficulty",
-    ),
-  );
+  const override = Number(findIniValue(payload.gameUserSettings, "ServerSettings", "OverrideOfficialDifficulty"));
   return Number.isFinite(override) && override > 0 ? Math.round(override * 30) : 150;
 }
 
@@ -206,11 +176,7 @@ function buildIniValueIndex(text: string): IniValueIndex {
   return index;
 }
 
-function findIniValueFromIndex(
-  index: IniValueIndex,
-  section: string,
-  key: string,
-): string | null {
+function findIniValueFromIndex(index: IniValueIndex, section: string, key: string): string | null {
   return index.get(indexKey(section, key)) ?? null;
 }
 
@@ -227,20 +193,13 @@ interface IniValueMatch {
   occurrence: number;
 }
 
-function findLastIniValueMatch(
-  text: string,
-  section: string,
-  key: string,
-): IniValueMatch | null {
+function findLastIniValueMatch(text: string, section: string, key: string): IniValueMatch | null {
   const sectionLower = section.toLowerCase();
   const keyLower = key.toLowerCase();
   let occurrence = 0;
   let match: IniValueMatch | null = null;
   for (const row of parseIniTextRows(text)) {
-    if (
-      row.section.toLowerCase() === sectionLower
-      && row.key.toLowerCase() === keyLower
-    ) {
+    if (row.section.toLowerCase() === sectionLower && row.key.toLowerCase() === keyLower) {
       match = { value: row.value, occurrence };
       occurrence += 1;
     }
@@ -260,16 +219,8 @@ function updateFile(
   value: string,
   occurrence = 0,
 ): ServerIniPayload {
-  const nextText = setIniTextValue(
-    textForFile(payload, fileKey),
-    section,
-    key,
-    value,
-    occurrence,
-  );
-  return fileKey === "game"
-    ? { ...payload, game: nextText }
-    : { ...payload, gameUserSettings: nextText };
+  const nextText = setIniTextValue(textForFile(payload, fileKey), section, key, value, occurrence);
+  return fileKey === "game" ? { ...payload, game: nextText } : { ...payload, gameUserSettings: nextText };
 }
 
 function formatNumber(value: number): string {

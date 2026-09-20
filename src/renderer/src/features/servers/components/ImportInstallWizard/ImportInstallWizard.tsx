@@ -1,10 +1,9 @@
 import type { ReactElement } from "react";
 import { useCallback, useMemo, useState } from "react";
-import { Alert, Button, Group, Modal, Stack, Stepper } from "@mantine/core";
-import {
-  getServerFolderNameError,
-  isValidServerFolderName,
-} from "@shared/server/server-install-path";
+import { Button, Group, Stack, Stepper } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
+import { getServerFolderNameError, isValidServerFolderName } from "@shared/server/server-install-path";
 import { isOfficialMap, normalizeMapToken } from "@shared/asa/map-identity";
 import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
 import { hasMapTokenWpSuffix } from "@shared/asa/map-token-suggest";
@@ -57,15 +56,11 @@ export function ImportInstallWizard(props: Props): ReactElement {
       }),
     [props.extraClusterOptions, props.servers],
   );
-  const preferredCluster =
-    props.extraClusterOptions?.length === 1 ? props.extraClusterOptions[0] : undefined;
+  const preferredCluster = props.extraClusterOptions?.length === 1 ? props.extraClusterOptions[0] : undefined;
 
-  const handleModMetadataChange = useCallback(
-    (patch: Record<string, ModMetadata>) => {
-      setModMetadata((previous) => ({ ...previous, ...patch }));
-    },
-    [],
-  );
+  const handleModMetadataChange = useCallback((patch: Record<string, ModMetadata>) => {
+    setModMetadata((previous) => ({ ...previous, ...patch }));
+  }, []);
 
   // Parent remounts this wizard on each open (`key={importWizardKey}`) so form
   // state starts fresh without an adjust-on-prop-change close effect.
@@ -75,20 +70,13 @@ export function ImportInstallWizard(props: Props): ReactElement {
     setInstallDir(next.installDir);
     setProbe(next);
     setAllowIncompleteInstall(false);
-    setForm(
-      applyPreferredCluster(suggestionsToForm(next.suggestions), preferredCluster),
-    );
+    setForm(applyPreferredCluster(suggestionsToForm(next.suggestions), preferredCluster));
     setModMetadata({});
-    setModsOpen(
-      next.suggestions.mods.length > 0 &&
-        next.suggestions.mods.length < MODS_LIST_AUTO_COLLAPSE_AT,
-    );
+    setModsOpen(next.suggestions.mods.length > 0 && next.suggestions.mods.length < MODS_LIST_AUTO_COLLAPSE_AT);
   };
 
   const nameError =
-    form.name.trim().length > 0 && !isValidServerFolderName(form.name)
-      ? getServerFolderNameError(form.name)
-      : null;
+    form.name.trim().length > 0 && !isValidServerFolderName(form.name) ? getServerFolderNameError(form.name) : null;
 
   const canContinueStep1 =
     installDir.trim().length > 0 &&
@@ -210,10 +198,7 @@ export function ImportInstallWizard(props: Props): ReactElement {
     await runWithFinally(
       async () => {
         const result = await window.api.importExistingServer(inputOrError, {
-          allowIncompleteInstall:
-            probe.installation.health === "incomplete"
-              ? allowIncompleteInstall
-              : undefined,
+          allowIncompleteInstall: probe.installation.health === "incomplete" ? allowIncompleteInstall : undefined,
         });
         if (!result.ok) {
           setError(result.error ?? "Could not import install");
@@ -228,15 +213,51 @@ export function ImportInstallWizard(props: Props): ReactElement {
   };
 
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={props.onClose}
       title="Import install"
       size="lg"
-      centered
       closeOnClickOutside={!saving && !probing}
       closeOnEscape={!saving && !probing}
       withCloseButton={!saving && !probing}
+      footerAlign="between"
+      footer={
+        <>
+          <Button
+            variant="subtle"
+            color="gray"
+            disabled={saving || probing}
+            onClick={() => {
+              if (step === 1) {
+                props.onClose();
+                return;
+              }
+              setStep((step - 1) as ImportInstallStep);
+              setError(null);
+            }}
+          >
+            {step === 1 ? "Cancel" : "Back"}
+          </Button>
+          <Group gap="xs">
+            {step === 1 && (
+              <Button
+                loading={probing}
+                disabled={!canContinueStep1 || browsing}
+                onClick={() => void handleContinueFromStep1()}
+              >
+                Continue
+              </Button>
+            )}
+            {step === 2 && <Button onClick={() => setStep(3)}>Continue</Button>}
+            {step === 3 && (
+              <Button loading={saving} onClick={() => void handleImport()}>
+                Import profile
+              </Button>
+            )}
+          </Group>
+        </>
+      }
     >
       <Stack gap="md">
         <Stepper active={step - 1} allowNextStepsSelect={false} size="sm">
@@ -246,9 +267,9 @@ export function ImportInstallWizard(props: Props): ReactElement {
         </Stepper>
 
         {error !== null && (step !== 1 || probe === null) && (
-          <Alert color="red" title="Could not continue">
+          <AppAlert color="red" title="Could not continue">
             {error}
-          </Alert>
+          </AppAlert>
         )}
 
         {step === 1 && (
@@ -300,44 +321,7 @@ export function ImportInstallWizard(props: Props): ReactElement {
             onChange={setForm}
           />
         )}
-
-        <Group justify="space-between">
-          <Button
-            variant="subtle"
-            color="gray"
-            disabled={saving || probing}
-            onClick={() => {
-              if (step === 1) {
-                props.onClose();
-                return;
-              }
-              setStep((step - 1) as ImportInstallStep);
-              setError(null);
-            }}
-          >
-            {step === 1 ? "Cancel" : "Back"}
-          </Button>
-          <Group gap="xs">
-            {step === 1 && (
-              <Button
-                loading={probing}
-                disabled={!canContinueStep1 || browsing}
-                onClick={() => void handleContinueFromStep1()}
-              >
-                Continue
-              </Button>
-            )}
-            {step === 2 && (
-              <Button onClick={() => setStep(3)}>Continue</Button>
-            )}
-            {step === 3 && (
-              <Button loading={saving} onClick={() => void handleImport()}>
-                Import profile
-              </Button>
-            )}
-          </Group>
-        </Group>
       </Stack>
-    </Modal>
+    </AppPanelModal>
   );
 }

@@ -1,8 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  defaultMaintenancePolicy,
-  normalizeManualRestartWarnings,
-} from "../src/shared/maintenance/maintenance-policy";
+import { defaultMaintenancePolicy, normalizeManualRestartWarnings } from "../src/shared/maintenance/maintenance-policy";
 import { MAINTENANCE_RCON_SOFT_FAIL_LIMIT } from "../src/shared/maintenance/maintenance-schedule";
 import { MaintenanceRestartRuntime } from "../src/backend/domains/maintenance/maintenance-restart-runtime";
 import type { MaintenancePolicy } from "../src/shared/types";
@@ -75,11 +72,9 @@ describe("MaintenanceRestartRuntime", () => {
       const armed = await runtime.runManualRestartWarning("s1");
       expect(armed.countdownKind).toBe("manual");
       await vi.waitFor(() => {
-        expect(instances.execRcon).toHaveBeenCalledWith(
-          "s1",
-          "ServerChat Server restart in 5 minutes",
-          { recordEvent: false },
-        );
+        expect(instances.execRcon).toHaveBeenCalledWith("s1", "ServerChat Server restart in 5 minutes", {
+          recordEvent: false,
+        });
       });
       expect(errorSpy).toHaveBeenCalled();
       runtime.cancelUpcoming("s1");
@@ -108,11 +103,9 @@ describe("MaintenanceRestartRuntime", () => {
       customOffsets: ["5m", "1m"],
       lastMinuteChat: false,
     });
-    expect(instances.execRcon).toHaveBeenCalledWith(
-      "s1",
-      "ServerChat Server restart in 5 minutes",
-      { recordEvent: false },
-    );
+    expect(instances.execRcon).toHaveBeenCalledWith("s1", "ServerChat Server restart in 5 minutes", {
+      recordEvent: false,
+    });
     runtime.cancelUpcoming("s1");
   });
 
@@ -125,11 +118,9 @@ describe("MaintenanceRestartRuntime", () => {
     const armed = await runtime.runManualRestartWarning("s1");
     expect(armed.countdownKind).toBe("manual");
     await vi.waitFor(() => {
-      expect(instances.execRcon).toHaveBeenCalledWith(
-        "s1",
-        "ServerChat Server restart in 5 minutes",
-        { recordEvent: false },
-      );
+      expect(instances.execRcon).toHaveBeenCalledWith("s1", "ServerChat Server restart in 5 minutes", {
+        recordEvent: false,
+      });
     });
     const cancelled = runtime.cancelUpcoming("s1");
     expect(cancelled.countdownKind).toBeNull();
@@ -167,9 +158,7 @@ describe("MaintenanceRestartRuntime", () => {
     const policy = defaultMaintenancePolicy("s1", "t");
     const { runtime, processes } = makeRuntime(policy);
     processes.isActive.mockReturnValue(false);
-    await expect(runtime.runRestartNow("s1")).rejects.toThrow(
-      /not running/i,
-    );
+    await expect(runtime.runRestartNow("s1")).rejects.toThrow(/not running/i);
   });
 
   it("does not fail-streak when the operator stops during countdown", async () => {
@@ -242,9 +231,7 @@ describe("MaintenanceRestartRuntime", () => {
 
       expect(runtime.enrichStatus(policy).countdownPhase).toBe("idle");
       expect(servers.addEvent).toHaveBeenCalled();
-      expect(String(servers.addEvent.mock.calls[0]?.[3] ?? "")).toMatch(
-        /Maintenance restart failed/,
-      );
+      expect(String(servers.addEvent.mock.calls[0]?.[3] ?? "")).toMatch(/Maintenance restart failed/);
     } finally {
       vi.useRealTimers();
     }
@@ -277,9 +264,7 @@ describe("MaintenanceRestartRuntime", () => {
       await vi.advanceTimersByTimeAsync(25_000);
 
       expect(instances.restart).toHaveBeenCalled();
-      const cmds = instances.execRcon.mock.calls.map(
-        (c: unknown[]) => String(c[1] ?? ""),
-      );
+      const cmds = instances.execRcon.mock.calls.map((c: unknown[]) => String(c[1] ?? ""));
       expect(cmds.some((c: string) => c === "SaveWorld")).toBe(true);
       expect(cmds.some((c: string) => c === "DestroyWildDinos")).toBe(true);
       const status = runtime.enrichStatus(policy);

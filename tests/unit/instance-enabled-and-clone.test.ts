@@ -15,9 +15,7 @@ import {
 } from "@backend/domains/instances/clone-install-copy";
 
 vi.mock("@backend/domains/instances/server-installation", async (importOriginal) => {
-  const actual = await importOriginal<
-    typeof import("@backend/domains/instances/server-installation")
-  >();
+  const actual = await importOriginal<typeof import("@backend/domains/instances/server-installation")>();
   const inspectServerInstallation = vi.fn();
   return {
     ...actual,
@@ -37,10 +35,7 @@ vi.mock("@backend/domains/instances/sync-profile-ini", () => {
   return {
     syncProfileSettingsToIni,
     applyProfileOwnedIni: vi.fn(
-      async (
-        profile: { id: string },
-        syncVia?: (serverId: string, profile?: unknown) => Promise<void>,
-      ) => {
+      async (profile: { id: string }, syncVia?: (serverId: string, profile?: unknown) => Promise<void>) => {
         if (syncVia !== undefined) {
           await syncVia(profile.id, profile);
           return;
@@ -168,9 +163,7 @@ describe("InstanceService enabled state", () => {
     const { service, repo, processes } = harness([source]);
     vi.mocked(processes.isActive).mockReturnValue(true);
 
-    await expect(service.setServerEnabled(source.id, false)).rejects.toThrow(
-      /while it is running/,
-    );
+    await expect(service.setServerEnabled(source.id, false)).rejects.toThrow(/while it is running/);
     expect(repo.setEnabled).not.toHaveBeenCalled();
   });
 
@@ -205,12 +198,7 @@ describe("InstanceService enabled state", () => {
     const updated = await service.setServerEnabled(source.id, true);
     expect(updated.enabled).toBe(true);
     expect(repo.setEnabled).toHaveBeenCalledWith(source.id, true);
-    expect(repo.addEvent).toHaveBeenCalledWith(
-      source.id,
-      "server_enabled",
-      "info",
-      expect.stringContaining("enabled"),
-    );
+    expect(repo.addEvent).toHaveBeenCalledWith(source.id, "server_enabled", "info", expect.stringContaining("enabled"));
   });
 
   it("still rejects Start when installation is not ready", async () => {
@@ -246,9 +234,7 @@ describe("InstanceService enabled state", () => {
     });
     const { service, repo } = harness([source, other]);
 
-    await expect(service.setServerEnabled(source.id, true)).rejects.toThrow(
-      /port conflict/,
-    );
+    await expect(service.setServerEnabled(source.id, true)).rejects.toThrow(/port conflict/);
     expect(repo.setEnabled).not.toHaveBeenCalled();
   });
 
@@ -271,9 +257,7 @@ describe("InstanceService enabled state", () => {
 
     const startPromise = service.start(source.id);
     await vi.waitFor(() => expect(applyProfileOwnedIni).toHaveBeenCalled());
-    await expect(service.setServerEnabled(source.id, false)).rejects.toThrow(
-      /running job \(start\)/,
-    );
+    await expect(service.setServerEnabled(source.id, false)).rejects.toThrow(/running job \(start\)/);
     expect(repo.setEnabled).not.toHaveBeenCalled();
 
     releaseSync();
@@ -289,9 +273,7 @@ describe("InstanceService enabled state", () => {
     });
     const updatePromise = locks.withLock(source.id, "update", () => updateGate);
 
-    await expect(service.start(source.id)).rejects.toThrow(
-      /running job \(update\); cannot start start/,
-    );
+    await expect(service.start(source.id)).rejects.toThrow(/running job \(update\); cannot start start/);
 
     releaseUpdate();
     await updatePromise;
@@ -506,9 +488,7 @@ describe("InstanceService cloning", () => {
   it("removes the incomplete clone when the folder copy fails", async () => {
     const source = profile();
     const { service, repo } = harness([source]);
-    vi.mocked(copyInstallTreeWithProgress).mockRejectedValue(
-      new Error("robocopy blew up"),
-    );
+    vi.mocked(copyInstallTreeWithProgress).mockRejectedValue(new Error("robocopy blew up"));
 
     await expect(
       service.cloneWithParams(source.id, {
@@ -524,4 +504,3 @@ describe("InstanceService cloning", () => {
     expect(repo.delete).toHaveBeenCalled();
   });
 });
-

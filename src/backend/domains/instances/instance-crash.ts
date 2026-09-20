@@ -1,7 +1,4 @@
-import {
-  OS_NOTIFY_CRASH_EVENT_TYPE,
-  type ServerCrashedNotifyPayload,
-} from "@shared/settings/os-notification-events";
+import { OS_NOTIFY_CRASH_EVENT_TYPE, type ServerCrashedNotifyPayload } from "@shared/settings/os-notification-events";
 import type { AsaStartupFailure } from "@shared/asa/asa-startup-failure";
 import { sanitizeDiagnosticText } from "@shared/credential-redaction";
 
@@ -37,15 +34,9 @@ export function planUnexpectedServerCrashEvent(input: {
   notify: ServerCrashedNotifyPayload;
 } {
   const diagnosis: AsaStartupFailure | null = input.payload.diagnosis;
-  const summary =
-    diagnosis?.summary
-    ?? input.payload.lastError
-    ?? `Server "${input.serverName}" exited unexpectedly`;
+  const summary = diagnosis?.summary ?? input.payload.lastError ?? `Server "${input.serverName}" exited unexpectedly`;
   const secrets = input.knownSecrets ?? [];
-  const excerpt = sanitizeDiagnosticText(
-    diagnosis?.excerpt?.trim() ?? "",
-    secrets,
-  ).trim();
+  const excerpt = sanitizeDiagnosticText(diagnosis?.excerpt?.trim() ?? "", secrets).trim();
   const safeSummary = sanitizeDiagnosticText(summary, secrets);
   return {
     eventType: OS_NOTIFY_CRASH_EVENT_TYPE,
@@ -62,9 +53,7 @@ export function planUnexpectedServerCrashEvent(input: {
         phase: input.payload.phase,
         exitCode: input.payload.exitCode,
         missingModIds:
-          diagnosis !== null && diagnosis.missingModIds.length > 0
-            ? diagnosis.missingModIds.join(",")
-            : null,
+          diagnosis !== null && diagnosis.missingModIds.length > 0 ? diagnosis.missingModIds.join(",") : null,
       },
     },
     notify: {
@@ -102,8 +91,7 @@ export function planOperatorClosedServerEvent(input: {
     summary: `Server "${input.serverName}" ${input.notice.toLowerCase()}`,
     details: {
       what: "The server console window was closed by the operator.",
-      cause:
-        "Console close, Ctrl+C/Break, or Task Manager End task while YARK still managed the process.",
+      cause: "Console close, Ctrl+C/Break, or Task Manager End task while YARK still managed the process.",
       suggestion: "Start the server again from Overview when you are ready.",
       context: {
         phase: input.phase,

@@ -1,15 +1,13 @@
 import type { ReactElement } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowsLeftRight } from "@phosphor-icons/react";
-import { Alert, Button, Group, Stack, Text } from "@mantine/core";
+import { Button, Group, Stack, Text } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import type { FleetInstallRef } from "@shared/server/server-install-path";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { PathField } from "@ui/PathField/PathField";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
-import {
-  diskCreateInstallWarning,
-  fleetCreateInstallWarning,
-} from "./createInstallPathWarning";
+import { diskCreateInstallWarning, fleetCreateInstallWarning } from "./createInstallPathWarning";
 
 interface Props {
   isCreate: boolean;
@@ -34,10 +32,7 @@ export function ServerFormInstallPath(props: Props): ReactElement {
     if (!props.isCreate || props.resolvedInstallPreview.length === 0) {
       return null;
     }
-    return fleetCreateInstallWarning(
-      props.resolvedInstallPreview,
-      props.fleetInstalls ?? [],
-    );
+    return fleetCreateInstallWarning(props.resolvedInstallPreview, props.fleetInstalls ?? []);
   }, [props.fleetInstalls, props.isCreate, props.resolvedInstallPreview]);
 
   const [diskWarning, setDiskWarning] = useState<{
@@ -84,18 +79,13 @@ export function ServerFormInstallPath(props: Props): ReactElement {
   }, [debouncedPreview, fleetWarning, props.isCreate]);
 
   const diskIssue =
-    props.resolvedInstallPreview === debouncedPreview &&
-    diskWarning?.path === debouncedPreview
+    props.resolvedInstallPreview === debouncedPreview && diskWarning?.path === debouncedPreview
       ? diskWarning.message
       : null;
   const createPathIssue = fleetWarning ?? diskIssue;
 
   useEffect(() => {
-    onCreatePathIssueChange?.(
-      isCreate && resolvedInstallPreview.length > 0
-        ? createPathIssue
-        : null,
-    );
+    onCreatePathIssueChange?.(isCreate && resolvedInstallPreview.length > 0 ? createPathIssue : null);
   }, [createPathIssue, isCreate, onCreatePathIssueChange, resolvedInstallPreview]);
 
   if (props.isCreate) {
@@ -117,19 +107,15 @@ export function ServerFormInstallPath(props: Props): ReactElement {
             Final install path
           </Text>
           <ReadonlyPath
-            value={
-              props.resolvedInstallPreview.length > 0
-                ? props.resolvedInstallPreview
-                : null
-            }
+            value={props.resolvedInstallPreview.length > 0 ? props.resolvedInstallPreview : null}
             emptyLabel="pick a base folder and name"
             compact={pathCompact}
           />
         </Stack>
         {createPathIssue !== null && (
-          <Alert color="red" title="Install path" mt="xs">
+          <AppAlert color="red" title="Install path" mt="xs">
             <Text size="sm">{createPathIssue}</Text>
-          </Alert>
+          </AppAlert>
         )}
       </>
     );
@@ -144,7 +130,7 @@ export function ServerFormInstallPath(props: Props): ReactElement {
       <Group>
         <Button
           size={props.inputSize}
-          variant="light"
+          variant="default"
           leftSection={<ArrowsLeftRight size={16} />}
           disabled={props.moveDisabled}
           onClick={props.onOpenMove}

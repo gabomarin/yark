@@ -1,22 +1,12 @@
 import type { ReactElement } from "react";
 import { Button, Group, Text, Title } from "@mantine/core";
-import {
-  YARK_DISCORD_INVITE_URL,
-  YARK_GITHUB_URL,
-} from "@shared/yark-community";
-import {
-  DiscordMarkIcon,
-  GithubMarkIcon,
-} from "@ui/BrandMarkIcons/BrandMarkIcons";
+import { YARK_DISCORD_INVITE_URL, YARK_GITHUB_URL } from "@shared/yark-community";
+import { DiscordMarkIcon, GithubMarkIcon } from "@ui/BrandMarkIcons/BrandMarkIcons";
 import classes from "../SettingsPage.module.css";
 
 export function SettingsAboutCommunitySection(): ReactElement {
   return (
-    <section
-      className={classes.section}
-      aria-labelledby="settings-community"
-      data-settings-community
-    >
+    <section className={classes.section} aria-labelledby="settings-community" data-settings-community>
       <Title order={3} size="h4" id="settings-community">
         Community
       </Title>

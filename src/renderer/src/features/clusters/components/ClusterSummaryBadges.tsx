@@ -20,18 +20,10 @@ export function ClusterSummaryBadges(props: Props): ReactElement {
     unclusteredCount: onUnclusteredClick !== undefined ? 0 : unclusteredCount,
   });
   const unclusteredLabel =
-    unclusteredCount === 1
-      ? "1 server not in a cluster"
-      : `${unclusteredCount} servers not in a cluster`;
+    unclusteredCount === 1 ? "1 server not in a cluster" : `${unclusteredCount} servers not in a cluster`;
 
   return (
-    <Text
-      size="sm"
-      c="dimmed"
-      component="div"
-      className={classes.summaryRow}
-      data-cluster-summary
-    >
+    <Text size="sm" c="dimmed" component="div" className={classes.summaryRow} data-cluster-summary>
       {prefix}
       {onUnclusteredClick !== undefined && unclusteredCount > 0 ? (
         <>

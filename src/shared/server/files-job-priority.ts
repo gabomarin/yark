@@ -37,9 +37,7 @@ export class FilesJobSupersededError extends Error {
   readonly replacedBy: FilesJobOperation;
 
   constructor(replacedBy: FilesJobOperation) {
-    super(
-      `Replaced by ${FILES_JOB_ACTION_LABEL[replacedBy]} in the Downloads queue.`,
-    );
+    super(`Replaced by ${FILES_JOB_ACTION_LABEL[replacedBy]} in the Downloads queue.`);
     this.name = "FilesJobSupersededError";
     this.replacedBy = replacedBy;
   }
@@ -53,15 +51,11 @@ export function isOccupyingFilesJobStatus(status: string): boolean {
   return OCCUPYING_STATUSES.has(status);
 }
 
-export function pickOccupyingFilesJob(
-  jobs: readonly FilesJobOccupant[],
-): FilesJobOccupant | null {
+export function pickOccupyingFilesJob(jobs: readonly FilesJobOccupant[]): FilesJobOccupant | null {
   if (jobs.length === 0) return null;
   const running = jobs.find((job) => job.status === "running");
   if (running !== undefined) return running;
-  return jobs.reduce((best, job) =>
-    FILES_JOB_WEIGHT[job.operation] > FILES_JOB_WEIGHT[best.operation] ? job : best,
-  );
+  return jobs.reduce((best, job) => (FILES_JOB_WEIGHT[job.operation] > FILES_JOB_WEIGHT[best.operation] ? job : best));
 }
 
 export function occupyingFilesJobForServer(
@@ -117,9 +111,7 @@ export function filesJobOccupantFromUi(input: {
   return null;
 }
 
-export function filesQueueKindToStatus(
-  kind: "active" | "paused" | "queued",
-): string {
+export function filesQueueKindToStatus(kind: "active" | "paused" | "queued"): string {
   if (kind === "active") return "running";
   if (kind === "paused") return "paused";
   return "pending";
@@ -145,10 +137,7 @@ export function decideFilesJobEnqueue(
   return { action: "reject-occupied", occupant };
 }
 
-export function canEnqueueFilesJobFromMenu(
-  incoming: FilesJobOperation,
-  occupant: FilesJobOccupant | null,
-): boolean {
+export function canEnqueueFilesJobFromMenu(incoming: FilesJobOperation, occupant: FilesJobOccupant | null): boolean {
   const action = decideFilesJobEnqueue(incoming, occupant).action;
   return action === "enqueue" || action === "replace";
 }

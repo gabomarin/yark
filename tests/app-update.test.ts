@@ -108,14 +108,10 @@ describe("app-update helpers", () => {
 
   it("preserves download progress when a later check reports the same version", () => {
     expect(shouldPreserveAppUpdateProgress("ready", "0.9.1", "0.9.1")).toBe(true);
-    expect(shouldPreserveAppUpdateProgress("downloading", "0.9.1", "0.9.1")).toBe(
-      true,
-    );
+    expect(shouldPreserveAppUpdateProgress("downloading", "0.9.1", "0.9.1")).toBe(true);
     expect(shouldPreserveAppUpdateProgress("ready", "0.9.1", "0.9.0")).toBe(true);
     expect(shouldPreserveAppUpdateProgress("ready", "0.9.1", "0.9.2")).toBe(false);
-    expect(shouldPreserveAppUpdateProgress("available", "0.9.1", "0.9.1")).toBe(
-      false,
-    );
+    expect(shouldPreserveAppUpdateProgress("available", "0.9.1", "0.9.1")).toBe(false);
   });
 
   it("classifies missing latest.yml and network blips as transient feed errors", () => {
@@ -126,11 +122,7 @@ describe("app-update helpers", () => {
         ),
       ),
     ).toBe(true);
-    expect(
-      isTransientAppUpdateFeedError(
-        new Error('HttpError: 404 "Not Found"\n  at ...\nlatest.yml'),
-      ),
-    ).toBe(true);
+    expect(isTransientAppUpdateFeedError(new Error('HttpError: 404 "Not Found"\n  at ...\nlatest.yml'))).toBe(true);
     expect(
       isTransientAppUpdateFeedError(
         Object.assign(new Error("getaddrinfo ENOTFOUND github.com"), {
@@ -138,25 +130,17 @@ describe("app-update helpers", () => {
         }),
       ),
     ).toBe(true);
-    expect(
-      isTransientAppUpdateFeedError(new Error("Downloaded update had an invalid version.")),
-    ).toBe(false);
-    expect(
-      isTransientAppUpdateFeedError(new Error("Check for a YARK update before downloading.")),
-    ).toBe(false);
+    expect(isTransientAppUpdateFeedError(new Error("Downloaded update had an invalid version."))).toBe(false);
+    expect(isTransientAppUpdateFeedError(new Error("Check for a YARK update before downloading."))).toBe(false);
   });
 
   it("maps transient feed errors to short operator copy and trims hard errors", () => {
     expect(
       operatorFacingAppUpdateError(
-        new Error(
-          "Cannot find latest.yml in the latest release artifacts (.../latest.yml): HttpError: 404",
-        ),
+        new Error("Cannot find latest.yml in the latest release artifacts (.../latest.yml): HttpError: 404"),
       ),
     ).toBe(APP_UPDATE_FEED_NOT_READY_MESSAGE);
-    expect(
-      operatorFacingAppUpdateError(new Error("Line one\nAuthorization: Bearer secret")),
-    ).toBe("Line one");
+    expect(operatorFacingAppUpdateError(new Error("Line one\nAuthorization: Bearer secret"))).toBe("Line one");
   });
 
   it("restores a non-error phase after a quiet transient feed failure", () => {

@@ -16,10 +16,7 @@ export function isOperatorClosedExit(exitCode: number | null): boolean {
   return OPERATOR_CLOSED_EXIT_CODES.has(exitCode >>> 0);
 }
 
-export function isOperatorClosedManagedPhase(
-  wasStarting: boolean,
-  wasRunning: boolean,
-): boolean {
+export function isOperatorClosedManagedPhase(wasStarting: boolean, wasRunning: boolean): boolean {
   return wasStarting || wasRunning;
 }
 

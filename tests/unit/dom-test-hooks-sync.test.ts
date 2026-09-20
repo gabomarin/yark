@@ -1,8 +1,6 @@
 import { createRequire } from "node:module";
 import { describe, expect, it } from "vitest";
-import {
-  SERVER_CARD_SELECTOR,
-} from "../../src/renderer/src/features/servers/components/ServerCard/serverCardTestIds";
+import { SERVER_CARD_SELECTOR } from "../../src/renderer/src/features/servers/components/ServerCard/serverCardTestIds";
 import { STEAMCMD_PATH_SELECTOR } from "../../src/renderer/src/features/settings/settingsTestIds";
 
 const require = createRequire(import.meta.url);

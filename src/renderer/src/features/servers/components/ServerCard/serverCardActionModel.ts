@@ -7,7 +7,7 @@ export type ServerCardRuntimeAction = {
   kind: "enable" | "start" | "stop" | "starting" | "stopping";
   label: string;
   color: string;
-  variant: "filled" | "light";
+  variant: "filled" | "default";
   disabled: boolean;
   /** Tooltip when it differs from the button label (e.g. why Start is locked). */
   hint?: string;
@@ -18,8 +18,8 @@ export type ServerCardRuntimeAction = {
 /** Restart icon beside Start/Stop (enabled only while running). */
 export type ServerCardRestartAction = {
   label: string;
-  color: string;
-  variant: "filled" | "light";
+  /** Fluent appearance: Restart is a secondary flow control, so no colour. */
+  variant: "default" | "filled";
   disabled: boolean;
   visible: boolean;
 };
@@ -31,7 +31,7 @@ export type ServerCardUpdateAction = {
   updateState: ServerUpdateState | null;
   label: string;
   color: string;
-  variant: "filled" | "light";
+  variant: "filled" | "default";
   disabled: boolean;
   visible: boolean;
 };
@@ -52,7 +52,7 @@ export type ServerCardPrimaryAction = {
     | "stop";
   label: string;
   color: string;
-  variant: "filled" | "light";
+  variant: "filled" | "default";
   disabled: boolean;
 };
 
@@ -68,15 +68,15 @@ export function resolveRuntimeAction(input: {
   startBusy?: boolean;
 }): ServerCardRuntimeAction {
   const serverEnabled = input.serverEnabled ?? true;
-  const filesLocked =
-    input.steamCmdBusy || input.steamCmdPaused === true || input.steamCmdQueued === true;
-  const filesLockHint = input.steamCmdQueued === true
-    ? "A Downloads job is queued for this server"
-    : input.steamCmdPaused === true
-      ? "Resume the download before starting this server"
-      : input.steamCmdBusy
-        ? "Wait until SteamCMD finishes this server"
-        : undefined;
+  const filesLocked = input.steamCmdBusy || input.steamCmdPaused === true || input.steamCmdQueued === true;
+  const filesLockHint =
+    input.steamCmdQueued === true
+      ? "A Downloads job is queued for this server"
+      : input.steamCmdPaused === true
+        ? "Resume the download before starting this server"
+        : input.steamCmdBusy
+          ? "Wait until SteamCMD finishes this server"
+          : undefined;
 
   // Enable matches the kebab: never require install files (#132). Check before
   // filesLocked so a disabled profile does not show a locked Start instead.
@@ -87,9 +87,7 @@ export function resolveRuntimeAction(input: {
       color: "blue",
       variant: "filled",
       disabled: input.steamCmdBusy,
-      hint: input.steamCmdBusy
-        ? "Another server operation is in progress"
-        : undefined,
+      hint: input.steamCmdBusy ? "Another server operation is in progress" : undefined,
       visible: true,
     };
   }
@@ -117,8 +115,8 @@ export function resolveRuntimeAction(input: {
     return {
       kind: "start",
       label: "Start server",
-      color: "teal",
-      variant: "light",
+      color: "blue",
+      variant: "filled",
       disabled: true,
       hint: filesLockHint,
       visible: true,
@@ -129,8 +127,8 @@ export function resolveRuntimeAction(input: {
     return {
       kind: "start",
       label: "Start server",
-      color: "teal",
-      variant: "light",
+      color: "blue",
+      variant: "filled",
       disabled: true,
       visible: false,
     };
@@ -170,8 +168,8 @@ export function resolveRuntimeAction(input: {
     return {
       kind: "starting",
       label: "Starting…",
-      color: "teal",
-      variant: "light",
+      color: "blue",
+      variant: "filled",
       disabled: true,
       visible: true,
     };
@@ -180,8 +178,8 @@ export function resolveRuntimeAction(input: {
   return {
     kind: "start",
     label: "Start server",
-    color: "teal",
-    variant: "light",
+    color: "blue",
+    variant: "filled",
     disabled: false,
     visible: true,
   };
@@ -199,8 +197,7 @@ export function resolveRestartAction(input: {
   if (!serverEnabled || !input.isInstallationReady) {
     return {
       label: "Restart server",
-      color: "gray",
-      variant: "light",
+      variant: "default",
       disabled: true,
       visible: false,
     };
@@ -209,21 +206,15 @@ export function resolveRestartAction(input: {
   if (input.startBusy === true && input.status === "running") {
     return {
       label: "Restarting…",
-      color: "fossil",
-      variant: "filled",
+      variant: "default",
       disabled: true,
       visible: true,
     };
   }
   return {
     label: "Restart server",
-    color: "fossil",
-    variant: "filled",
-    disabled:
-      input.steamCmdBusy ||
-      transitioning ||
-      input.status !== "running" ||
-      input.startBusy === true,
+    variant: "default",
+    disabled: input.steamCmdBusy || transitioning || input.status !== "running" || input.startBusy === true,
     visible: true,
   };
 }
@@ -246,7 +237,7 @@ export function resolveUpdateAction(input: {
       updateState: null,
       label: "Install server files",
       color: "blue",
-      variant: "light",
+      variant: "default",
       disabled: input.steamCmdBusy || transitioning || !canOfferInstall,
       visible: canOfferInstall,
     };
@@ -258,7 +249,7 @@ export function resolveUpdateAction(input: {
       updateState: "available",
       label: "Update server",
       color: "attention",
-      variant: "light",
+      variant: "default",
       disabled: input.steamCmdBusy || active,
       visible: true,
     };
@@ -270,7 +261,7 @@ export function resolveUpdateAction(input: {
       updateState: "current",
       label: "Server is up to date",
       color: "gray",
-      variant: "light",
+      variant: "default",
       disabled: true,
       visible: true,
     };
@@ -282,7 +273,7 @@ export function resolveUpdateAction(input: {
     updateState: "unknown",
     label: "Update (couldn't check version)",
     color: "gray",
-    variant: "light",
+    variant: "default",
     disabled: input.steamCmdBusy || active,
     visible: true,
   };
@@ -324,4 +315,16 @@ export function resolvePrimaryAction(input: {
     variant: runtime.variant,
     disabled: runtime.disabled,
   };
+}
+
+/**
+ * `variant="default"` (bordered) ignores the ActionIcon `color`, so a neutral bordered row
+ * action carries its meaning in the glyph: amber update, red cancel, accent install.
+ */
+export function actionGlyphColor(color: string | undefined): string | undefined {
+  if (color === undefined || color === "gray") return undefined;
+  if (color === "red") return "var(--app-color-danger-bright)";
+  if (color === "attention") return "var(--app-color-attention)";
+  if (color === "blue") return "var(--app-color-accent-text)";
+  return undefined;
 }

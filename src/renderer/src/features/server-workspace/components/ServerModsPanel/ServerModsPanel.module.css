@@ -108,16 +108,14 @@
 }
 
 /* Outside the scroll viewport so sticky thead cannot cover Clear sort (#297). */
+/* Flush toolbar row above the table: no box, no wash - the table's own surface
+ * and hairline carry the separation. */
 .viewSortBar {
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding: var(--app-space-xs) var(--app-space-sm);
-  margin-bottom: var(--app-space-xxs);
-  border-radius: var(--app-radius-sm);
-  border: 1px solid var(--app-color-border-subtle);
-  background: color-mix(in srgb, var(--app-color-panel) 88%, var(--app-color-muted));
+  padding-bottom: var(--app-space-xs);
 }
 
 .paginationFooter {
@@ -146,6 +144,8 @@
   overflow: visible !important;
   border: none !important;
   border-radius: 0 !important;
+  /* Transparent: `.tableViewport` owns the surface here. */
+  --mantine-datatable-background-color: transparent;
   background: transparent;
   box-shadow: none !important;
 }
@@ -165,7 +165,8 @@
 .modsTable :global(.mantine-datatable-header),
 .modsTable :global(.mantine-Table-th) {
   border-radius: 0 !important;
-  /* Solid header — YarkDataTable default uses a translucent mix that shows through. */
+  /* Solid header - YarkDataTable default is solid too, but keep this explicit
+     for the sticky thead which paints over scrolled rows. */
   background: var(--app-color-surface-control) !important;
   opacity: 1;
 }
@@ -190,16 +191,12 @@
 }
 
 .clickableRow:focus-visible {
-  outline: 2px solid var(--app-color-primary);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: -2px;
 }
 
 .clickableRow:hover {
-  background-color: color-mix(
-    in srgb,
-    var(--app-color-accent) 18%,
-    var(--app-color-panel)
-  );
+  background-color: color-mix(in srgb, var(--app-color-accent) 18%, var(--app-color-panel));
 }
 
 .disabledRow {
@@ -227,11 +224,7 @@
 }
 
 .disabledRow:hover {
-  background-color: color-mix(
-    in srgb,
-    var(--app-color-accent) 14%,
-    var(--app-color-panel)
-  );
+  background-color: color-mix(in srgb, var(--app-color-accent) 14%, var(--app-color-panel));
 }
 
 .disabledRow:hover :global(td).enableCell,
@@ -443,7 +436,7 @@
 .detailDrawerCarouselIndicator {
   width: 0.375rem;
   height: 0.375rem;
-  transition: width 120ms ease;
+  transition: width var(--app-motion-fast) var(--app-ease-standard);
 }
 
 .detailDrawerCarouselIndicator[data-active] {
@@ -462,18 +455,12 @@
 }
 
 .detailDrawerCarouselSlideBtn:focus-visible {
-  outline: 2px solid var(--mantine-primary-color-filled);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: 2px;
 }
 
 .detailDrawerProjectRow {
   margin-top: var(--app-space-xs);
-}
-
-.detailDrawerProjectBadge {
-  padding-inline: 0.625rem;
-  padding-block: 0.25rem;
-  height: auto;
 }
 
 .detailDrawerMeta {

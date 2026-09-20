@@ -130,7 +130,7 @@
 }
 
 .badDot {
-  color: var(--app-color-bad);
+  color: var(--app-color-danger-bright);
 }
 
 .versionChip {
@@ -165,7 +165,7 @@
 }
 
 .versionValueOffline {
-  color: var(--app-color-bad);
+  color: var(--app-color-danger-bright);
   font-family: var(--app-font-mono);
 }
 
@@ -289,7 +289,7 @@
 .appVersionLabel:focus-visible,
 .appVersionLabelUpdate:focus-visible,
 .appVersionLabelRail:focus-visible {
-  outline: 2px solid var(--app-color-cryo);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: 2px;
 }
 
@@ -309,7 +309,7 @@
 }
 
 .appVersionUpdateIconBtn:focus-visible {
-  outline: 2px solid var(--app-color-cryo);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: 2px;
 }
 
@@ -345,7 +345,7 @@
 }
 
 .quitButton:focus-visible {
-  outline: 2px solid var(--app-color-cryo);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: 2px;
 }
 
@@ -359,7 +359,7 @@
 }
 
 .quitIcon:focus-visible {
-  outline: 2px solid var(--app-color-cryo);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: 2px;
 }
 

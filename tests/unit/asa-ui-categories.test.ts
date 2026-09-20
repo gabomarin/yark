@@ -5,20 +5,12 @@ import {
   lookupAsaUiCategory,
   resolveAsaUiCategory,
 } from "@shared/asa/asa-setting-ui-categories";
-import {
-  filterIniRows,
-  groupRowsByUiCategory,
-  parseIniRows,
-} from "@features/server-workspace/iniModel";
+import { filterIniRows, groupRowsByUiCategory, parseIniRows } from "@features/server-workspace/iniModel";
 
 describe("asa UI categories", () => {
   it("maps known catalog keys from the pregenerated JSON", () => {
-    expect(
-      lookupAsaUiCategory("gameUserSettings", "SessionSettings", "SessionName"),
-    ).toBe("general");
-    expect(
-      lookupAsaUiCategory("gameUserSettings", "ServerSettings", "ActiveMods"),
-    ).toBe("mods");
+    expect(lookupAsaUiCategory("gameUserSettings", "SessionSettings", "SessionName")).toBe("general");
+    expect(lookupAsaUiCategory("gameUserSettings", "ServerSettings", "ActiveMods")).toBe("mods");
     expect(asaUiCategoryLabel("breeding")).toBe("Breeding");
   });
 
@@ -34,14 +26,10 @@ describe("asa UI categories", () => {
       /breeding|rates|dinos/,
     );
     // Vanilla section, no heuristic match → Other
-    expect(
-      resolveAsaUiCategory("gameUserSettings", "ServerSettings", "TotallyUnknownVanillaMiscXYZ"),
-    ).toBe("other");
+    expect(resolveAsaUiCategory("gameUserSettings", "ServerSettings", "TotallyUnknownVanillaMiscXYZ")).toBe("other");
     // Custom mod section → Other (last category; nested by section in UI)
     expect(resolveAsaUiCategory("game", "Custom", "TotallyUnknownSettingXYZ")).toBe("other");
-    expect(
-      resolveAsaUiCategory("gameUserSettings", "SuperStructures", "SomeModToggle"),
-    ).toBe("other");
+    expect(resolveAsaUiCategory("gameUserSettings", "SuperStructures", "SomeModToggle")).toBe("other");
   });
 
   it("filters and groups editor rows by UI category", () => {
@@ -80,11 +68,7 @@ CoolFeature=1
     expect(other?.rows.map((row) => row.key).sort()).toEqual(
       ["CoolFeature", "EnableSomething", "MaxSlots", "ObscureVanillaLeftoverFlag"].sort(),
     );
-    expect(other?.sectionGroups?.map((g) => g.section)).toEqual([
-      "MyAwesomeMod",
-      "ServerSettings",
-      "SuperStructures",
-    ]);
+    expect(other?.sectionGroups?.map((g) => g.section)).toEqual(["MyAwesomeMod", "ServerSettings", "SuperStructures"]);
     const mods = groups.find((group) => group.category === "mods");
     expect(mods?.rows.map((row) => row.key)).toEqual(["ActiveMods"]);
     expect(mods?.sectionGroups).toBeUndefined();

@@ -5,17 +5,9 @@
     "launchOptions": {
       "executablePath": "./node_modules/electron/dist/electron.exe",
       "cwd": "./",
-      "args": [
-        "."
-      ]
+      "args": ["."]
     }
   },
-  "capabilities": [
-    "core",
-    "tabs",
-    "wait",
-    "files",
-    "testing"
-  ],
+  "capabilities": ["core", "tabs", "wait", "files", "testing"],
   "outputDir": ".mcp-output"
 }

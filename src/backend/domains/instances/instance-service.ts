@@ -9,9 +9,7 @@ import type {
   ServerRuntimeInfo,
   StartServerOptions,
 } from "@shared/types";
-import {
-  EMPTY_WIPE_STALE_MESSAGE,
-} from "@shared/types";
+import { EMPTY_WIPE_STALE_MESSAGE } from "@shared/types";
 import { applyServerProfilePatch } from "@shared/server/server-profile";
 import { syncAsaApiVersionDllForProfile } from "../asa-api/asa-api-inject";
 import { EventEmitter } from "node:events";
@@ -22,51 +20,27 @@ import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini/ini-defa
 import type { BackupService } from "../backups/backup-service";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
 import type { ServerRepository } from "../../infra/db/server-repository";
-import type {
-  OperatorClosedExit,
-  ProcessManager,
-  UnexpectedManagedExit,
-} from "../../infra/process/process-manager";
+import type { OperatorClosedExit, ProcessManager, UnexpectedManagedExit } from "../../infra/process/process-manager";
 import type { RconSessionManager } from "../../infra/rcon/rcon-session-manager";
 import { mapIdentityStartBlockers } from "@shared/asa/map-identity";
 import { findPortConflicts, validateProfileInput } from "./validation";
 import { checkClusterCompliance } from "../cluster/compliance";
 import type { ListedPlayer } from "../backups/list-players";
 import type { BanListEntry } from "./ban-list";
-import {
-  assertSafeInstallDirForWipe,
-  installDirKey,
-} from "./install-dir-safety";
+import { assertSafeInstallDirForWipe, installDirKey } from "./install-dir-safety";
 import { assertNotInsideAsaInstall } from "./import-existing-install";
 import { ProfileWriteQueue } from "./profile-write-queue";
-import {
-  invalidateInstallInspectCache,
-  inspectServerInstallationAsync,
-} from "./server-installation";
+import { invalidateInstallInspectCache, inspectServerInstallationAsync } from "./server-installation";
 import { applyProfileOwnedIni } from "./sync-profile-ini";
-import {
-  isInstallationReady,
-} from "@shared/server/installation-health";
+import { isInstallationReady } from "@shared/server/installation-health";
 import { assertHostPortsAvailable } from "../../infra/process/host-port-probe";
-import {
-  recordOperatorClosedExit,
-  recordUnexpectedProcessExit,
-} from "./instance-process-exit";
-import {
-  applySessionPortsToProfile,
-  validateSessionPorts,
-} from "./instance-profile";
+import { recordOperatorClosedExit, recordUnexpectedProcessExit } from "./instance-process-exit";
+import { applySessionPortsToProfile, validateSessionPorts } from "./instance-profile";
 import { InstanceCreate } from "./instance-create";
 import { InstanceRcon } from "./instance-rcon";
 import { InstanceClone, type CloneParams } from "./instance-clone";
-import {
-  InstanceStop,
-  type StopServerOptions,
-} from "./instance-stop";
-import {
-  ENRICHED_INSTALL_INSPECT,
-  InstanceFleetInstall,
-} from "./instance-fleet-install";
+import { InstanceStop, type StopServerOptions } from "./instance-stop";
+import { ENRICHED_INSTALL_INSPECT, InstanceFleetInstall } from "./instance-fleet-install";
 import {
   defaultResolveOpenNativeConsole,
   withOpenNativeConsolePref,
@@ -103,8 +77,7 @@ export class InstanceService extends EventEmitter {
     options?: InstanceServiceOptions,
   ) {
     super();
-    this.resolveOpenNativeConsole =
-      options?.resolveOpenNativeConsole ?? defaultResolveOpenNativeConsole;
+    this.resolveOpenNativeConsole = options?.resolveOpenNativeConsole ?? defaultResolveOpenNativeConsole;
     this.syncProfileOwnedKeys = options?.syncProfileOwnedKeys;
     this.fleetInstall = new InstanceFleetInstall({ repo });
     this.creates = new InstanceCreate({
@@ -130,8 +103,7 @@ export class InstanceService extends EventEmitter {
       locks,
       withFleetCreateLock: (work) => this.withFleetCreateLock(work),
       assertValidInput: (input) => this.creates.assertValidInput(input),
-      assertCreateInstallTarget: (installDir) =>
-        this.creates.assertCreateInstallTarget(installDir),
+      assertCreateInstallTarget: (installDir) => this.creates.assertCreateInstallTarget(installDir),
       assertNoPortConflicts: (input) => this.creates.assertNoPortConflicts(input),
       assertUniqueName: (name) => this.creates.assertUniqueName(name),
       deleteProfile: (id, options) => this.delete(id, options),
@@ -158,7 +130,10 @@ export class InstanceService extends EventEmitter {
    * Queue create/import/clone so overlapping uniqueness checks see a consistent fleet.
    */
   private async withFleetCreateLock<T>(work: () => Promise<T> | T): Promise<T> {
-    const run = this.fleetCreateChain.then(() => work(), () => work());
+    const run = this.fleetCreateChain.then(
+      () => work(),
+      () => work(),
+    );
     this.fleetCreateChain = run.then(
       () => undefined,
       () => undefined,
@@ -186,13 +161,7 @@ export class InstanceService extends EventEmitter {
   }
 
   private async ensureDefaultIniFiles(installDir: string): Promise<void> {
-    const configDir = join(
-      installDir,
-      "ShooterGame",
-      "Saved",
-      "Config",
-      "WindowsServer",
-    );
+    const configDir = join(installDir, "ShooterGame", "Saved", "Config", "WindowsServer");
     await mkdir(configDir, { recursive: true });
     const gameUserSettingsPath = join(configDir, "GameUserSettings.ini");
     const gameIniPath = join(configDir, "Game.ini");
@@ -228,12 +197,7 @@ export class InstanceService extends EventEmitter {
     void applyProfileOwnedIni(updated, this.syncProfileOwnedKeys).catch(() => {
       // INI may be missing until install; start() syncs again before launch.
     });
-    this.repo.addEvent(
-      id,
-      "server_updated",
-      "info",
-      `Server "${updated.name}" updated`,
-    );
+    this.repo.addEvent(id, "server_updated", "info", `Server "${updated.name}" updated`);
     return updated;
   }
 
@@ -244,7 +208,10 @@ export class InstanceService extends EventEmitter {
   async updatePatch(
     id: string,
     patch: ServerProfilePatch,
-    prepare: (merged: ServerProfileInput, existing: ServerProfile) => Promise<ServerProfileInput> | ServerProfileInput = (merged) => merged,
+    prepare: (
+      merged: ServerProfileInput,
+      existing: ServerProfile,
+    ) => Promise<ServerProfileInput> | ServerProfileInput = (merged) => merged,
   ): Promise<ServerProfile> {
     return this.withProfileWrite(id, async () => {
       const existing = this.repo.get(id);
@@ -291,19 +258,13 @@ export class InstanceService extends EventEmitter {
   }
 
   /** Exposed for Move installation uniqueness and nesting checks. */
-  async assertInstallDirAvailable(
-    installDir: string,
-    excludeId?: string,
-  ): Promise<void> {
+  async assertInstallDirAvailable(installDir: string, excludeId?: string): Promise<void> {
     this.creates.assertUniqueInstallDir(installDir, excludeId);
     this.creates.assertInstallDirNotNestedWithFleet(installDir, excludeId);
     await assertNotInsideAsaInstall(installDir);
   }
 
-  async delete(
-    id: string,
-    options: { deleteInstallFiles: boolean; requireEmptyInstall?: boolean },
-  ): Promise<void> {
+  async delete(id: string, options: { deleteInstallFiles: boolean; requireEmptyInstall?: boolean }): Promise<void> {
     if (this.processes.isActive(id)) {
       throw new Error("Cannot delete a server while it is running");
     }
@@ -322,20 +283,14 @@ export class InstanceService extends EventEmitter {
     }
 
     if (options.requireEmptyInstall === true) {
-      const installation = await inspectServerInstallationAsync(
-        id,
-        profile.installDir,
-        { bypassCache: true },
-      );
+      const installation = await inspectServerInstallationAsync(id, profile.installDir, { bypassCache: true });
       if (installation.health !== "empty") {
         throw new Error(EMPTY_WIPE_STALE_MESSAGE);
       }
     }
 
     const installDir = assertSafeInstallDirForWipe(profile.installDir);
-    const shared = this.repo
-      .list()
-      .filter((item) => item.id !== id && resolve(item.installDir) === installDir);
+    const shared = this.repo.list().filter((item) => item.id !== id && resolve(item.installDir) === installDir);
     if (shared.length > 0) {
       const names = shared.map((item) => item.name).join(", ");
       throw new Error(
@@ -397,9 +352,7 @@ export class InstanceService extends EventEmitter {
       await this.stops.withCriticalJob(id, async () => {
         const outcome = await this.stops.enqueue(id, false);
         if (outcome === "killed") {
-          throw new Error(
-            "Restart aborted: SaveWorld failed and the process was force-killed",
-          );
+          throw new Error("Restart aborted: SaveWorld failed and the process was force-killed");
         }
         if (outcome === "absent" || outcome === "noop") {
           throw new Error("Restart aborted: server is not running");
@@ -414,31 +367,19 @@ export class InstanceService extends EventEmitter {
   }
 
   /** Start from a job that already owns the per-server operational lock. */
-  async startForMaintenance(
-    id: string,
-    options?: StartServerOptions,
-  ): Promise<void> {
+  async startForMaintenance(id: string, options?: StartServerOptions): Promise<void> {
     await this.startInternal(id, options);
   }
 
-  private async startInternal(
-    id: string,
-    options?: StartServerOptions,
-  ): Promise<void> {
+  private async startInternal(id: string, options?: StartServerOptions): Promise<void> {
     const profile = this.mustGet(id);
     if (!profile.enabled) {
       throw new Error(`Server "${profile.name}" is disabled`);
     }
-    const installation = await inspectServerInstallationAsync(
-      profile.id,
-      profile.installDir,
-      ENRICHED_INSTALL_INSPECT,
-    );
+    const installation = await inspectServerInstallationAsync(profile.id, profile.installDir, ENRICHED_INSTALL_INSPECT);
     this.fleetInstall.recordInstallHealth(installation);
     if (!isInstallationReady(installation)) {
-      throw new Error(
-        `Server files are not ready (${installation.health}): ${installation.guidance}`,
-      );
+      throw new Error(`Server files are not ready (${installation.health}): ${installation.guidance}`);
     }
     const effective = this.effectiveStartProfile(profile, options);
     this.creates.assertValidInput(effective);
@@ -460,10 +401,7 @@ export class InstanceService extends EventEmitter {
     });
     await this.stops.flushPendingIni(id);
     await applyProfileOwnedIni(effective, this.syncProfileOwnedKeys);
-    const startOptions = withOpenNativeConsolePref(
-      options,
-      this.resolveOpenNativeConsole,
-    );
+    const startOptions = withOpenNativeConsolePref(options, this.resolveOpenNativeConsole);
     this.processes.start(effective, startOptions);
     const sessionNote =
       startOptions.sessionPorts != null
@@ -478,10 +416,7 @@ export class InstanceService extends EventEmitter {
   }
 
   /** Applies session-only port overrides without mutating the saved profile. */
-  private effectiveStartProfile(
-    profile: ServerProfile,
-    options?: StartServerOptions,
-  ): ServerProfile {
+  private effectiveStartProfile(profile: ServerProfile, options?: StartServerOptions): ServerProfile {
     const session = options?.sessionPorts;
     if (session == null) {
       return profile;
@@ -489,11 +424,7 @@ export class InstanceService extends EventEmitter {
     return applySessionPortsToProfile(profile, session);
   }
 
-  private assertValidSessionPorts(ports: {
-    gamePort: number;
-    queryPort: number;
-    rconPort: number;
-  }): void {
+  private assertValidSessionPorts(ports: { gamePort: number; queryPort: number; rconPort: number }): void {
     validateSessionPorts(ports);
   }
 
@@ -518,20 +449,13 @@ export class InstanceService extends EventEmitter {
         if (updated === null) {
           throw new Error("Server does not exist");
         }
-        this.repo.addEvent(
-          id,
-          "server_disabled",
-          "info",
-          `Server "${updated.name}" disabled`,
-        );
+        this.repo.addEvent(id, "server_disabled", "info", `Server "${updated.name}" disabled`);
         return updated;
       }
 
       const issues = validateProfileInput(profile);
       if (issues.length > 0) {
-        throw new Error(
-          issues.map((issue) => `${issue.field}: ${issue.message}`).join(" | "),
-        );
+        throw new Error(issues.map((issue) => `${issue.field}: ${issue.message}`).join(" | "));
       }
 
       // Refresh install health for UI, but do not block Enable — Start/spawn
@@ -557,12 +481,7 @@ export class InstanceService extends EventEmitter {
       if (updated === null) {
         throw new Error("Server does not exist");
       }
-      this.repo.addEvent(
-        id,
-        "server_enabled",
-        "info",
-        `Server "${updated.name}" enabled`,
-      );
+      this.repo.addEvent(id, "server_enabled", "info", `Server "${updated.name}" enabled`);
       return updated;
     });
   }
@@ -580,11 +499,7 @@ export class InstanceService extends EventEmitter {
    * lock still held across the post-backup → start window.
    */
   shouldBlockAppQuit(): boolean {
-    return (
-      this.isStopInProgress()
-      || this.locks.hasPurpose("restart")
-      || this.clones.isCopyBusy()
-    );
+    return this.isStopInProgress() || this.locks.hasPurpose("restart") || this.clones.isCopyBusy();
   }
 
   async waitForStopJobs(): Promise<void> {
@@ -623,19 +538,12 @@ export class InstanceService extends EventEmitter {
 
   async kill(id: string): Promise<void> {
     if (this.isStopInProgress(id)) {
-      throw new Error(
-        "Force close is disabled while stop or restart backup is in progress",
-      );
+      throw new Error("Force close is disabled while stop or restart backup is in progress");
     }
     const profile = this.mustGet(id);
     await this.processes.kill(id);
     await this.stops.flushPendingIni(id);
-    this.repo.addEvent(
-      id,
-      "server_stopped",
-      "warning",
-      `Server "${profile.name}" force-killed (without save)`,
-    );
+    this.repo.addEvent(id, "server_stopped", "warning", `Server "${profile.name}" force-killed (without save)`);
   }
 
   statuses(): ServerRuntimeInfo[] {
@@ -687,11 +595,7 @@ export class InstanceService extends EventEmitter {
    * Sends an RCON command through the persistent session.
    * When `recordEvent` is false (polling / stop / backups), skips the audit event.
    */
-  async execRcon(
-    id: string,
-    command: string,
-    options?: { recordEvent?: boolean },
-  ): Promise<string> {
+  async execRcon(id: string, command: string, options?: { recordEvent?: boolean }): Promise<string> {
     return this.rcon.exec(id, command, options);
   }
 
@@ -722,7 +626,10 @@ export class InstanceService extends EventEmitter {
    * Unbans via RCON `Unban <id>` when the server is active, then scrubs
    * BanList.txt on disk (ASA may keep an in-memory ban if RCON fails).
    */
-  async unbanPlayer(id: string, playerKey: string): Promise<{
+  async unbanPlayer(
+    id: string,
+    playerKey: string,
+  ): Promise<{
     banned: BanListEntry[];
     warning: string | null;
   }> {
@@ -750,17 +657,10 @@ export class InstanceService extends EventEmitter {
   }
 
   private autoConnectRcon(profile: ServerProfile): Promise<void> {
-    return this.rcon.autoConnect(
-      profile,
-      (host, port, timeoutMs) => this.waitForPortReady(host, port, timeoutMs),
-    );
+    return this.rcon.autoConnect(profile, (host, port, timeoutMs) => this.waitForPortReady(host, port, timeoutMs));
   }
 
-  private waitForPortReady(
-    host: string,
-    port: number,
-    timeoutMs?: number,
-  ): Promise<boolean> {
+  private waitForPortReady(host: string, port: number, timeoutMs?: number): Promise<boolean> {
     return this.rcon.waitForPortReady(host, port, timeoutMs);
   }
 
@@ -776,9 +676,7 @@ export class InstanceService extends EventEmitter {
   private assertMapIdentityReadyForStart(input: ServerProfile): void {
     const blockers = mapIdentityStartBlockers(input);
     if (blockers.length > 0) {
-      throw new Error(
-        blockers.map((i) => `${i.field}: ${i.message}`).join(" | "),
-      );
+      throw new Error(blockers.map((i) => `${i.field}: ${i.message}`).join(" | "));
     }
   }
 }

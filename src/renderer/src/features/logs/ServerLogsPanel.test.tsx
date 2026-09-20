@@ -20,9 +20,9 @@ const server = {
   map: "TheIsland_WP",
   installDir: "C:/ARK/TheIsland",
   enabled: true,
-    autoStart: false,
-    useAsaApi: false,
-    useAsaApiLoader: false,
+  autoStart: false,
+  useAsaApi: false,
+  useAsaApiLoader: false,
   sessionName: "The Island Cluster",
   maxPlayers: 70,
   gamePort: 7777,
@@ -202,8 +202,8 @@ describe("ServerLogsPanel", () => {
     );
 
     expect(await screen.findByText("Something broke")).toBeInTheDocument();
-    expect(screen.getByText("error")).toBeInTheDocument();
-    expect(screen.getByText("info")).toBeInTheDocument();
+    expect(screen.getByText("Error")).toBeInTheDocument();
+    expect(screen.getByText("Info")).toBeInTheDocument();
     const control = document.querySelector('[data-log-event-id="42"]');
     expect(control).toBeTruthy();
     expect(control?.closest("[class*='eventRowFocused']")).toBeTruthy();
@@ -264,10 +264,7 @@ describe("ServerLogsPanel", () => {
     );
 
     expect(await screen.findByText("C:/ARK/backups/fail.zip")).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: BACKUP_HISTORY_TAB_LABEL })).toHaveAttribute(
-      "data-active",
-      "true",
-    );
+    expect(screen.getByRole("tab", { name: BACKUP_HISTORY_TAB_LABEL })).toHaveAttribute("data-active", "true");
     const row = document.querySelector('[data-backup-id="bak-fail"]');
     expect(row).toBeTruthy();
     expect(row?.className).toMatch(/eventRowFocused/);
@@ -278,9 +275,7 @@ describe("ServerLogsPanel", () => {
 
   it("ignores stale backup focus after a newer focus wins the race", async () => {
     const onFocusConsumed = vi.fn();
-    const resolvers: Array<
-      (value: Awaited<ReturnType<typeof window.api.listServerLogs>>) => void
-    > = [];
+    const resolvers: Array<(value: Awaited<ReturnType<typeof window.api.listServerLogs>>) => void> = [];
     vi.mocked(window.api.listServerLogs).mockImplementation(
       () =>
         new Promise((resolve) => {
@@ -364,10 +359,7 @@ describe("ServerLogsPanel", () => {
     });
 
     expect(await screen.findByText("Something broke")).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Events" })).toHaveAttribute(
-      "data-active",
-      "true",
-    );
+    expect(screen.getByRole("tab", { name: "Events" })).toHaveAttribute("data-active", "true");
     expect(document.querySelector('[data-backup-id="bak-fail"]')).toBeNull();
     const eventControl = document.querySelector('[data-log-event-id="42"]');
     expect(eventControl?.closest("[class*='eventRowFocused']")).toBeTruthy();
@@ -379,19 +371,12 @@ describe("ServerLogsPanel", () => {
   it("forces Events tab when focus includes an eventId even if section is updates", async () => {
     render(
       <AppProviders>
-        <ServerLogsPanel
-          server={server}
-          embedded
-          focus={{ section: "updates", eventId: 42 }}
-        />
+        <ServerLogsPanel server={server} embedded focus={{ section: "updates", eventId: 42 }} />
       </AppProviders>,
     );
 
     expect(await screen.findByText("Something broke")).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Events" })).toHaveAttribute(
-      "data-active",
-      "true",
-    );
+    expect(screen.getByRole("tab", { name: "Events" })).toHaveAttribute("data-active", "true");
     const control = document.querySelector('[data-log-event-id="42"]');
     expect(control).toBeTruthy();
     expect(control?.closest("[class*='eventRowFocused']")).toBeTruthy();
@@ -404,11 +389,7 @@ describe("ServerLogsPanel", () => {
 
     render(
       <AppProviders>
-        <ServerLogsPanel
-          server={server}
-          embedded
-          focus={{ section: "events", eventId: 42 }}
-        />
+        <ServerLogsPanel server={server} embedded focus={{ section: "events", eventId: 42 }} />
       </AppProviders>,
     );
 
@@ -433,17 +414,11 @@ describe("ServerLogsPanel", () => {
     const onOpenBackupsTab = vi.fn();
     render(
       <AppProviders>
-        <ServerLogsPanel
-          server={server}
-          embedded
-          onOpenBackupsTab={onOpenBackupsTab}
-        />
+        <ServerLogsPanel server={server} embedded onOpenBackupsTab={onOpenBackupsTab} />
       </AppProviders>,
     );
 
-    await userEvent.setup().click(
-      await screen.findByRole("tab", { name: BACKUP_HISTORY_TAB_LABEL }),
-    );
+    await userEvent.setup().click(await screen.findByRole("tab", { name: BACKUP_HISTORY_TAB_LABEL }));
     const openBackups = await screen.findByRole("button", { name: "Open Backups tab" });
     await userEvent.setup().click(openBackups);
     expect(onOpenBackupsTab).toHaveBeenCalledTimes(1);
@@ -487,15 +462,9 @@ describe("ServerLogsPanel", () => {
 
     // One row button contains title + subtitle. On UTC CI both are
     // "2026-07-23 10:00:00", so findByText is ambiguous; role+name is not.
-    await user.click(
-      await screen.findByRole("button", { name: /2026-07-23 10:00:00/ }),
-    );
+    await user.click(await screen.findByRole("button", { name: /2026-07-23 10:00:00/ }));
     await waitFor(() => {
-      expect(window.api.readServerUpdateLog).toHaveBeenCalledWith(
-        server.id,
-        "job-2026-07-23T10-00-00.log",
-        150_000,
-      );
+      expect(window.api.readServerUpdateLog).toHaveBeenCalledWith(server.id, "job-2026-07-23T10-00-00.log", 150_000);
     });
     expect(await screen.findByText("SteamCMD output line")).toBeInTheDocument();
 
@@ -563,4 +532,3 @@ describe("ServerLogsPanel", () => {
     }
   });
 });
-

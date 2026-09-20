@@ -19,10 +19,10 @@ export function safeExtractTarget(destDir: string, entryName: string): string {
   // Normalize zip separators; reject absolute / drive-rooted names before join.
   const normalized = entryName.replace(/\\/g, "/");
   if (
-    normalized.length === 0
-    || isAbsolute(normalized)
-    || /^[a-zA-Z]:/.test(normalized)
-    || normalized.split("/").includes("..")
+    normalized.length === 0 ||
+    isAbsolute(normalized) ||
+    /^[a-zA-Z]:/.test(normalized) ||
+    normalized.split("/").includes("..")
   ) {
     throw new Error(`Unsafe zip entry path: ${entryName}`);
   }
@@ -66,13 +66,13 @@ const ASA_SAVE_ZIP_COMPRESSION_LEVEL = 4;
 export function isAsaSaveBlobZipEntry(entryName: string): boolean {
   const lower = basename(entryName).toLowerCase();
   return (
-    lower.endsWith(".ark")
-    || lower.endsWith(".ark.bak")
-    || lower.endsWith(".arktribe")
-    || lower.endsWith(".tribebak")
-    || lower.endsWith(".arkprofile")
-    || lower.endsWith(".arkprofile.bak")
-    || lower.endsWith(".profilebak")
+    lower.endsWith(".ark") ||
+    lower.endsWith(".ark.bak") ||
+    lower.endsWith(".arktribe") ||
+    lower.endsWith(".tribebak") ||
+    lower.endsWith(".arkprofile") ||
+    lower.endsWith(".arkprofile.bak") ||
+    lower.endsWith(".profilebak")
   );
 }
 
@@ -178,10 +178,7 @@ export async function extractZip(zipPath: string, destDir: string): Promise<void
 }
 
 /** Read a UTF-8 text file from inside a zip without full extract. */
-export async function readZipTextEntry(
-  zipPath: string,
-  entryName: string,
-): Promise<string | null> {
+export async function readZipTextEntry(zipPath: string, entryName: string): Promise<string | null> {
   const normalizedWanted = entryName.split(sep).join("/");
 
   return await new Promise<string | null>((resolvePromise, reject) => {
@@ -341,10 +338,7 @@ export interface PortableZipValidation {
  * Validate a portable YARK ZIP before cataloging.
  * Rejects corrupt archives, zip-slip / absolute paths, symlinks, and kind mismatch.
  */
-export async function validatePortableZip(
-  zipPath: string,
-  expectedKind: BackupKind,
-): Promise<PortableZipValidation> {
+export async function validatePortableZip(zipPath: string, expectedKind: BackupKind): Promise<PortableZipValidation> {
   if (!isZipBackupPath(zipPath)) {
     throw new Error("Import requires a .zip archive");
   }
@@ -443,11 +437,7 @@ export async function validatePortableZip(
         }
 
         if (manifestKind !== null && manifestKind !== expectedKind) {
-          fail(
-            new Error(
-              `Archive kind is ${manifestKind}, but import target is ${expectedKind}`,
-            ),
-          );
+          fail(new Error(`Archive kind is ${manifestKind}, but import target is ${expectedKind}`));
           return;
         }
 
@@ -518,16 +508,9 @@ export function parseBackupManifest(raw: string | null): ParsedBackupManifest | 
         : typeof data.server?.map === "string" && data.server.map.trim().length > 0
           ? data.server.map.trim()
           : null;
-    const mapTokenRaw =
-      mapTokenCandidate !== null && isSafeMapToken(mapTokenCandidate)
-        ? mapTokenCandidate
-        : null;
-    const mapFolderRaw =
-      typeof backup.mapFolderName === "string" ? backup.mapFolderName.trim() : "";
-    const mapFolderName =
-      mapFolderRaw.length > 0 && isSafeWindowsFolderName(mapFolderRaw)
-        ? mapFolderRaw
-        : null;
+    const mapTokenRaw = mapTokenCandidate !== null && isSafeMapToken(mapTokenCandidate) ? mapTokenCandidate : null;
+    const mapFolderRaw = typeof backup.mapFolderName === "string" ? backup.mapFolderName.trim() : "";
+    const mapFolderName = mapFolderRaw.length > 0 && isSafeWindowsFolderName(mapFolderRaw) ? mapFolderRaw : null;
     return {
       id: typeof backup.id === "string" ? backup.id : undefined,
       type,

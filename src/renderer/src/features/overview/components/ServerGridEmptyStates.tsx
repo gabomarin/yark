@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { HardDrives, MagnifyingGlass, Plus } from "@phosphor-icons/react";
-import { Alert, Button, Group, Skeleton, VisuallyHidden } from "@mantine/core";
+import { Button, Group, Skeleton, VisuallyHidden } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import type { OverviewFleetFilter } from "@features/overview/model/overviewFleetMetrics";
 import classes from "../OverviewPage.module.css";
@@ -23,12 +24,7 @@ interface Props {
 export function ServerGridEmptyStates(props: Props): ReactElement | null {
   if (props.loading) {
     return (
-      <div
-        className={classes.serverSkeletons}
-        role="status"
-        aria-live="polite"
-        data-server-skeletons
-      >
+      <div className={classes.serverSkeletons} role="status" aria-live="polite" data-server-skeletons>
         <VisuallyHidden>Loading servers</VisuallyHidden>
         {[0, 1].map((item) => (
           <div className={classes.serverSkeleton} key={item} aria-hidden="true">
@@ -50,8 +46,7 @@ export function ServerGridEmptyStates(props: Props): ReactElement | null {
   }
 
   if (props.serverCount === 0) {
-    const steamCmdSetup =
-      props.steamCmdNeedsSetup === true && props.onOpenSteamCmdSettings !== undefined;
+    const steamCmdSetup = props.steamCmdNeedsSetup === true && props.onOpenSteamCmdSettings !== undefined;
     return (
       <EmptyState
         icon={<HardDrives size={24} weight="duotone" />}
@@ -65,26 +60,14 @@ export function ServerGridEmptyStates(props: Props): ReactElement | null {
         layout="stacked"
         action={
           <Group gap="xs" justify="center">
-            <Button
-              leftSection={<Plus size={16} />}
-              onClick={props.onCreateServer}
-              data-cta-prominence="primary"
-            >
+            <Button leftSection={<Plus size={16} />} onClick={props.onCreateServer} data-cta-prominence="primary">
               New server
             </Button>
-            <Button
-              variant="default"
-              onClick={props.onImportServer}
-              data-cta-prominence="secondary"
-            >
+            <Button variant="default" onClick={props.onImportServer} data-cta-prominence="secondary">
               Import existing install
             </Button>
             {steamCmdSetup ? (
-              <Button
-                variant="default"
-                onClick={props.onOpenSteamCmdSettings}
-                data-cta-prominence="secondary"
-              >
+              <Button variant="default" onClick={props.onOpenSteamCmdSettings} data-cta-prominence="secondary">
                 Set up SteamCMD
               </Button>
             ) : null}
@@ -92,10 +75,9 @@ export function ServerGridEmptyStates(props: Props): ReactElement | null {
         }
       >
         {steamCmdSetup ? (
-          <Alert color="yellow" variant="light" title="SteamCMD needs setup">
-            Open Settings to install or point at SteamCMD, or run the setup assistant
-            again from Settings.
-          </Alert>
+          <AppAlert color="attention" variant="light" title="SteamCMD needs setup">
+            Open Settings to install or point at SteamCMD, or run the setup assistant again from Settings.
+          </AppAlert>
         ) : null}
       </EmptyState>
     );
@@ -104,13 +86,7 @@ export function ServerGridEmptyStates(props: Props): ReactElement | null {
   if (props.fleetFilteredCount === 0 && !props.showingDisabledServers) {
     return (
       <EmptyState
-        icon={
-          props.hasEnabledServers ? (
-            <MagnifyingGlass size={20} />
-          ) : (
-            <HardDrives size={20} />
-          )
-        }
+        icon={props.hasEnabledServers ? <MagnifyingGlass size={20} /> : <HardDrives size={20} />}
         title={
           props.hasEnabledServers
             ? props.fleetFilter !== "all"

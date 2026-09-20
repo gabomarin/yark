@@ -1,10 +1,6 @@
 import { useForm, type UseFormReturnType } from "@mantine/form";
 import { defaultClusterIniFileSelection } from "@shared/ini/cluster-ini-file-selection";
-import type {
-  ClusterIniTemplate,
-  ServerIniSnapshot,
-  ServerProfile,
-} from "@shared/types";
+import type { ClusterIniTemplate, ServerIniSnapshot, ServerProfile } from "@shared/types";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { openUnsavedLeaveModal } from "@features/server-workspace/openUnsavedLeaveModal";
 import {
@@ -78,27 +74,17 @@ export function useConfigurationWizard(options: UseConfigurationWizardOptions): 
   const { onDraftChange } = options;
   const [activeStep, setActiveStep] = useState(0);
   const snapshotRef = useRef<ServerIniSnapshot | null>(null);
-  const [initialDraft, setInitialDraft] =
-    useState<ConfigurationWizardDraft>(EMPTY_WIZARD_DRAFT);
+  const [initialDraft, setInitialDraft] = useState<ConfigurationWizardDraft>(EMPTY_WIZARD_DRAFT);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [changesOpen, setChangesOpen] = useState(false);
-  const [progressionPreset, setProgressionPreset] = useState<
-    ProgressionPresetId | "current"
-  >("current");
-  const [breedingPreset, setBreedingPreset] = useState<
-    BreedingPresetId | "current"
-  >("current");
-  const [worldPreset, setWorldPreset] = useState<WorldPresetId | "current">(
-    "current",
-  );
-  const [difficultyChoice, setDifficultyChoice] =
-    useState<DifficultyChoice>("current");
+  const [progressionPreset, setProgressionPreset] = useState<ProgressionPresetId | "current">("current");
+  const [breedingPreset, setBreedingPreset] = useState<BreedingPresetId | "current">("current");
+  const [worldPreset, setWorldPreset] = useState<WorldPresetId | "current">("current");
+  const [difficultyChoice, setDifficultyChoice] = useState<DifficultyChoice>("current");
   const [error, setError] = useState<string | null>(null);
-  const [clusterTemplate, setClusterTemplate] = useState<
-    ClusterIniTemplate | null
-  >(null);
+  const [clusterTemplate, setClusterTemplate] = useState<ClusterIniTemplate | null>(null);
   const [clusterTemplateReady, setClusterTemplateReady] = useState(false);
   const form = useForm<ConfigurationWizardDraft>({
     mode: "controlled",
@@ -173,10 +159,7 @@ export function useConfigurationWizard(options: UseConfigurationWizardOptions): 
     };
   }, [clusterId]);
 
-  const changes = useMemo(
-    () => wizardChanges(initialDraft, form.values),
-    [form.values, initialDraft],
-  );
+  const changes = useMemo(() => wizardChanges(initialDraft, form.values), [form.values, initialDraft]);
 
   const draftDirty = changes.length > 0 || clusterPathSelected;
 
@@ -185,11 +168,7 @@ export function useConfigurationWizard(options: UseConfigurationWizardOptions): 
   }, [draftDirty, onDraftChange]);
 
   const chooseProfile = (profile: ExperienceProfileId) => {
-    const { draft, presets } = draftForProfileChoice(
-      profile,
-      form.values,
-      initialDraft,
-    );
+    const { draft, presets } = draftForProfileChoice(profile, form.values, initialDraft);
     form.setValues(draft);
     setProgressionPreset(presets.progressionPreset);
     setBreedingPreset(presets.breedingPreset);
@@ -236,8 +215,7 @@ export function useConfigurationWizard(options: UseConfigurationWizardOptions): 
         kind: "confirm",
         title: "Leave the wizard",
         alertTitle: "Draft not applied",
-        message:
-          "The draft has changes that have not been applied yet. The server INI files will remain untouched.",
+        message: "The draft has changes that have not been applied yet. The server INI files will remain untouched.",
       },
       onDiscard: options.onCancel,
     });
@@ -260,15 +238,11 @@ export function useConfigurationWizard(options: UseConfigurationWizardOptions): 
 
   const draftLooksLikeDefaults = useMemo(() => {
     return (
-      wizardChanges(
-        { ...EMPTY_WIZARD_DRAFT, profile: "current" },
-        { ...initialDraft, profile: "current" },
-      ).length === 0
+      wizardChanges({ ...EMPTY_WIZARD_DRAFT, profile: "current" }, { ...initialDraft, profile: "current" }).length === 0
     );
   }, [initialDraft]);
 
-  const useClusterSeed =
-    options.onboarding === true || draftLooksLikeDefaults;
+  const useClusterSeed = options.onboarding === true || draftLooksLikeDefaults;
 
   const applyClusterDefaults = async () => {
     if (clusterId === null || clusterTemplate === null) return;
@@ -282,38 +256,19 @@ export function useConfigurationWizard(options: UseConfigurationWizardOptions): 
     await runWithFinally(
       async () => {
         const previewResult = useClusterSeed
-          ? await window.api.previewClusterIniSeed(
-              clusterId,
-              options.server.id,
-              files,
-            )
-          : await window.api.previewClusterIniRestore(
-              clusterId,
-              options.server.id,
-              files,
-            );
+          ? await window.api.previewClusterIniSeed(clusterId, options.server.id, files)
+          : await window.api.previewClusterIniRestore(clusterId, options.server.id, files);
         if (!previewResult.ok) {
           setError(previewResult.error ?? "Could not preview cluster defaults");
           return;
         }
         if (!previewResult.data.preview.valid) {
-          setError(
-            previewResult.data.preview.issues[0]?.message ??
-              "Cluster template preview is not valid",
-          );
+          setError(previewResult.data.preview.issues[0]?.message ?? "Cluster template preview is not valid");
           return;
         }
         const applyResult = useClusterSeed
-          ? await window.api.seedClusterIniFromTemplate(
-              clusterId,
-              options.server.id,
-              files,
-            )
-          : await window.api.restoreClusterIniFromTemplate(
-              clusterId,
-              options.server.id,
-              files,
-            );
+          ? await window.api.seedClusterIniFromTemplate(clusterId, options.server.id, files)
+          : await window.api.restoreClusterIniFromTemplate(clusterId, options.server.id, files);
         if (!applyResult.ok) {
           setError(applyResult.error ?? "Could not apply cluster defaults");
           return;
@@ -350,24 +305,18 @@ export function useConfigurationWizard(options: UseConfigurationWizardOptions): 
       async () => {
         const latestResult = await window.api.readServerIni(options.server.id);
         if (!latestResult.ok) {
-          setError(
-            latestResult.error ??
-              "Could not re-read the configuration before applying",
-          );
+          setError(latestResult.error ?? "Could not re-read the configuration before applying");
           return;
         }
         // Overlay only curated settings onto the latest version so
         // external changes made while the wizard was open are not wiped.
         const payload = applyWizardDraftToIni(latestResult.data.payload, parsed.data);
-        const previewResult = await window.api.previewServerIni(
-          options.server.id,
-          payload,
-        );
+        const previewResult = await window.api.previewServerIni(options.server.id, payload);
         if (!previewResult.ok || !previewResult.data.valid) {
           setError(
             previewResult.ok
-              ? previewResult.data.issues[0]?.message ?? "Configuration is not valid"
-              : previewResult.error ?? "Could not validate the configuration",
+              ? (previewResult.data.issues[0]?.message ?? "Configuration is not valid")
+              : (previewResult.error ?? "Could not validate the configuration"),
           );
           return;
         }

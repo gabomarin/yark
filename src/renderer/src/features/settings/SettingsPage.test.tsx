@@ -34,9 +34,7 @@ const readyStatus: SteamCmdStatus = {
   checkedAt: "2026-07-23T00:00:00.000Z",
 };
 
-function stubSettingsApi(
-  overrides: Record<string, unknown> = {},
-): void {
+function stubSettingsApi(overrides: Record<string, unknown> = {}): void {
   vi.stubGlobal("api", {
     listAppDataFolders: vi.fn().mockResolvedValue({ ok: true, data: [] }),
     openAppDataFolder: vi.fn(),
@@ -168,10 +166,7 @@ function stubSettingsApi(
   });
 }
 
-async function openCategory(
-  user: ReturnType<typeof userEvent.setup>,
-  label: string,
-): Promise<void> {
+async function openCategory(user: ReturnType<typeof userEvent.setup>, label: string): Promise<void> {
   const nav = screen.getByRole("navigation", { name: "Settings categories" });
   await user.click(within(nav).getByRole("button", { name: label }));
 }
@@ -218,9 +213,7 @@ function defaultSettingsProps(
   };
 }
 
-function renderSettings(
-  overrides: Partial<ComponentProps<typeof SettingsPage>> = {},
-) {
+function renderSettings(overrides: Partial<ComponentProps<typeof SettingsPage>> = {}) {
   return render(
     <AppProviders>
       <SettingsPage {...defaultSettingsProps(overrides)} />
@@ -240,9 +233,7 @@ describe("SettingsPage", () => {
     stubSettingsApi({
       listAppDataFolders: vi.fn().mockResolvedValue({
         ok: true,
-        data: [
-          { kind: "app", label: "App data", path: "C:/Users/me/AppData/Roaming/yark" },
-        ],
+        data: [{ kind: "app", label: "App data", path: "C:/Users/me/AppData/Roaming/yark" }],
       }),
     });
 
@@ -269,9 +260,7 @@ describe("SettingsPage", () => {
 
     const user = userEvent.setup();
     await openCategory(user, "SteamCMD");
-    expect(document.querySelector(STEAMCMD_PATH_SELECTOR)).toHaveTextContent(
-      "C:/steamcmd/steamcmd.exe",
-    );
+    expect(document.querySelector(STEAMCMD_PATH_SELECTOR)).toHaveTextContent("C:/steamcmd/steamcmd.exe");
     expect(screen.getByText("Ready")).toBeInTheDocument();
     expect(screen.getByText("Download cache")).toBeInTheDocument();
   });
@@ -475,15 +464,9 @@ describe("SettingsPage", () => {
 
     expect(screen.getByRole("switch", { name: "Desktop alerts" })).not.toBeChecked();
     expect(screen.getByRole("switch", { name: "Alert on server crash" })).toBeDisabled();
-    expect(
-      screen.getByRole("switch", { name: "Alert on installs and updates" }),
-    ).toBeDisabled();
-    expect(
-      screen.getByRole("switch", { name: "Alert on YARK updates" }),
-    ).toBeDisabled();
-    expect(
-      screen.getByRole("switch", { name: "Alert when hiding to tray" }),
-    ).toBeDisabled();
+    expect(screen.getByRole("switch", { name: "Alert on installs and updates" })).toBeDisabled();
+    expect(screen.getByRole("switch", { name: "Alert on YARK updates" })).toBeDisabled();
+    expect(screen.getByRole("switch", { name: "Alert when hiding to tray" })).toBeDisabled();
   });
 
   it("hides the hide-to-tray category when Close window to tray is off", () => {
@@ -530,9 +513,7 @@ describe("SettingsPage", () => {
     await openCategory(user, "SteamCMD");
     expect(screen.getByText("Download cache")).toBeInTheDocument();
     expect(screen.getByText("Shared server files")).toBeInTheDocument();
-    expect(
-      screen.getByText(/Temporary files Steam already downloaded/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Temporary files Steam already downloaded/i)).toBeInTheDocument();
     expect(screen.getByText(/set up new servers faster/i)).toBeInTheDocument();
 
     await user.click(screen.getAllByRole("button", { name: /^Open$/i })[0]!);
@@ -567,9 +548,7 @@ describe("SettingsPage", () => {
     const baseRow = document.querySelector(DEFAULT_BASE_FOLDER_SELECTOR);
     expect(baseRow).not.toBeNull();
     await user.click(
-      Array.from(baseRow!.querySelectorAll("button")).find((el) =>
-        /Choose/i.test(el.textContent ?? ""),
-      )!,
+      Array.from(baseRow!.querySelectorAll("button")).find((el) => /Choose/i.test(el.textContent ?? ""))!,
     );
     expect(onDefaultBaseFolderChange).toHaveBeenCalledWith("D:/ARK");
 
@@ -581,9 +560,7 @@ describe("SettingsPage", () => {
     await openCategory(user, "Profiles");
     const baseRowFilled = document.querySelector(DEFAULT_BASE_FOLDER_SELECTOR);
     await user.click(
-      Array.from(baseRowFilled!.querySelectorAll("button")).find((el) =>
-        /^Clear$/i.test(el.textContent ?? ""),
-      )!,
+      Array.from(baseRowFilled!.querySelectorAll("button")).find((el) => /^Clear$/i.test(el.textContent ?? ""))!,
     );
     expect(onDefaultBaseFolderChange).toHaveBeenCalledWith(null);
 
@@ -593,9 +570,7 @@ describe("SettingsPage", () => {
     });
     const dataSection = document.querySelector("[data-app-data-folders]");
     await user.click(
-      Array.from(dataSection!.querySelectorAll("button")).find((el) =>
-        /^Open$/i.test(el.textContent ?? ""),
-      )!,
+      Array.from(dataSection!.querySelectorAll("button")).find((el) => /^Open$/i.test(el.textContent ?? ""))!,
     );
     expect(openAppDataFolder).toHaveBeenCalledWith("app");
   });
@@ -627,9 +602,7 @@ describe("SettingsPage", () => {
       expect(screen.getByText("Bundled SteamCMD")).toBeInTheDocument();
     });
     expect(screen.getByText(/Not in use/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/using the SteamCMD you chose in Settings → SteamCMD/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/using the SteamCMD you chose in Settings → SteamCMD/i)).toBeInTheDocument();
   });
 
   it("omits the unused note when SteamCMD is the bundled copy", async () => {
@@ -638,9 +611,7 @@ describe("SettingsPage", () => {
     stubSettingsApi({
       listAppDataFolders: vi.fn().mockResolvedValue({
         ok: true,
-        data: [
-          { kind: "steamcmd", label: "Bundled SteamCMD", path: bundledDir },
-        ],
+        data: [{ kind: "steamcmd", label: "Bundled SteamCMD", path: bundledDir }],
       }),
     });
 
@@ -747,7 +718,8 @@ describe("SettingsPage", () => {
     expect(screen.getByLabelText("Keep everyday activity history for days")).toHaveValue("90");
 
     await user.click(screen.getByRole("button", { name: /Clean up now/i }));
-    expect(screen.getByText("Clean up old logs")).toBeInTheDocument();
+    /* Shared dialog atom mounts through a transition — await it. */
+    expect(await screen.findByText("Clean up old logs")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /^Scan$/i }));
     await waitFor(() => {
       expect(previewLogCleanup).toHaveBeenCalled();
@@ -759,9 +731,7 @@ describe("SettingsPage", () => {
 
   it("rolls back log retention when the IPC call rejects", async () => {
     const user = userEvent.setup();
-    const setLogRetentionSettings = vi
-      .fn()
-      .mockRejectedValue(new Error("Settings transport unavailable"));
+    const setLogRetentionSettings = vi.fn().mockRejectedValue(new Error("Settings transport unavailable"));
     stubSettingsApi({ setLogRetentionSettings });
 
     renderSettings();
@@ -830,9 +800,7 @@ describe("SettingsPage", () => {
 
   it("leaves checking state when the update IPC call rejects", async () => {
     const user = userEvent.setup();
-    const checkForAppUpdate = vi
-      .fn()
-      .mockRejectedValue(new Error("Update transport unavailable"));
+    const checkForAppUpdate = vi.fn().mockRejectedValue(new Error("Update transport unavailable"));
     stubSettingsApi({ checkForAppUpdate });
 
     renderSettings();
@@ -873,10 +841,7 @@ describe("SettingsPage", () => {
     await openCategory(user, "About");
 
     const link = screen.getByRole("link", { name: /View on GitHub/i });
-    expect(link).toHaveAttribute(
-      "href",
-      "https://github.com/gabomarin/yark/blob/main/THIRD_PARTY_NOTICES.md",
-    );
+    expect(link).toHaveAttribute("href", "https://github.com/gabomarin/yark/blob/main/THIRD_PARTY_NOTICES.md");
     expect(link).toHaveAttribute("target", "_blank");
   });
 });

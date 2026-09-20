@@ -44,12 +44,7 @@ export function ServerListPanelBody(props: Props): ReactElement {
         <>
           {props.groups.map((group, index) => (
             <Fragment key={group.key}>
-              {index > 0 && (
-                <Divider
-                  className={classes.clusterDivider}
-                  aria-label={`${group.label} cluster`}
-                />
-              )}
+              {index > 0 && <Divider className={classes.clusterDivider} aria-label={`${group.label} cluster`} />}
               <Stack gap={4} className={classes.clusterRail} role="group" aria-label={group.label}>
                 {group.servers.map((server) => renderRow(server))}
               </Stack>

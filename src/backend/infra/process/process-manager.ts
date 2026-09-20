@@ -1,11 +1,6 @@
 import { type ChildProcess } from "node:child_process";
 import { EventEmitter } from "node:events";
-import type {
-  ServerProfile,
-  ServerRuntimeInfo,
-  SessionPortSet,
-  StartServerOptions,
-} from "@shared/types";
+import type { ServerProfile, ServerRuntimeInfo, SessionPortSet, StartServerOptions } from "@shared/types";
 import {
   LEFT_RUNNING_SCHEMA_VERSION,
   type LeftRunningProcessIdentity,
@@ -18,20 +13,9 @@ import { killWinProcessTreeAsync } from "./kill-win-process-tree";
 import { queryWindowsProcessIdentity } from "./windows-process-identity";
 import { windowsProcessHasMainWindow } from "./windows-process-main-window";
 import { spawnAsaProcess } from "./process-spawn";
-import {
-  DEFAULT_READY_PROBE_MIN_WAIT_MS,
-  DEFAULT_READY_SETTLE_MS,
-  type RuntimeLogSource,
-} from "./process-readiness";
-import {
-  waitUntilReady as waitUntilManagedReady,
-  type ReadyWaitHost,
-} from "./process-ready-wait";
-import {
-  startManagedProcess,
-  type ProcessStartHost,
-  type ProcessStartManaged,
-} from "./process-start";
+import { DEFAULT_READY_PROBE_MIN_WAIT_MS, DEFAULT_READY_SETTLE_MS, type RuntimeLogSource } from "./process-readiness";
+import { waitUntilReady as waitUntilManagedReady, type ReadyWaitHost } from "./process-ready-wait";
+import { startManagedProcess, type ProcessStartHost, type ProcessStartManaged } from "./process-start";
 import {
   collectLeaveIdentities as collectLeaveIdentitiesForHost,
   detachAfterLeavePersist as detachAfterLeavePersistForHost,
@@ -47,9 +31,7 @@ import {
   type GracefulStopHandle,
   type ProcessGracefulStopHost,
 } from "./process-graceful-stop";
-import {
-  type OperatorClosedExit,
-} from "./process-stop";
+import { type OperatorClosedExit } from "./process-stop";
 import { handleManagedProcessExit } from "./process-managed-exit";
 import { AsaApiWindowPoller } from "./process-asa-api-loading";
 import {
@@ -60,11 +42,7 @@ import {
 } from "./process-runtime-logs";
 
 export type { OperatorClosedExit };
-export type {
-  BeginGracefulStopResult,
-  FinishGracefulStopResult,
-  GracefulStopHandle,
-};
+export type { BeginGracefulStopResult, FinishGracefulStopResult, GracefulStopHandle };
 
 /** Ports used for this live process (including session-only overrides). */
 type ManagedProcess = ProcessStartManaged;
@@ -79,10 +57,7 @@ export interface UnexpectedManagedExit {
 }
 
 /** Optional persistent-session RCON path (falls back to one-shot `rconExec`). */
-export type ManagedRconExecutor = (
-  serverId: string,
-  command: string,
-) => Promise<string>;
+export type ManagedRconExecutor = (serverId: string, command: string) => Promise<string>;
 
 export interface ProcessManagerOptions {
   /** Timeout waiting for readiness (RCON / log). Default 10 minutes. */
@@ -146,13 +121,9 @@ export class ProcessManager extends EventEmitter {
   private readonly readySettleMs: number;
   private readonly spawnProcess: typeof spawnAsaProcess;
   private readonly createAdoptedChild: (pid: number) => ChildProcess;
-  private readonly queryOsIdentity: (
-    pid: number,
-  ) => Promise<LiveProcessIdentity | null>;
+  private readonly queryOsIdentity: (pid: number) => Promise<LiveProcessIdentity | null>;
   private readonly hasMainWindow: (pid: number) => Promise<boolean>;
-  private readonly onProcessCheckpoint:
-    | ((record: LeftRunningProcessIdentity) => void)
-    | null;
+  private readonly onProcessCheckpoint: ((record: LeftRunningProcessIdentity) => void) | null;
   private readonly onProcessCheckpointCleared: ((serverId: string) => void) | null;
   private readonly knownSecrets: () => readonly string[];
   /** Prefer persistent session when wired from InstanceService. */
@@ -163,26 +134,20 @@ export class ProcessManager extends EventEmitter {
     super();
     this.readyTimeoutMs = options?.readyTimeoutMs ?? DEFAULT_READY_TIMEOUT_MS;
     this.readyPollMs = options?.readyPollMs ?? DEFAULT_READY_POLL_MS;
-    this.readyProbeMinWaitMs =
-      options?.readyProbeMinWaitMs ?? DEFAULT_READY_PROBE_MIN_WAIT_MS;
+    this.readyProbeMinWaitMs = options?.readyProbeMinWaitMs ?? DEFAULT_READY_PROBE_MIN_WAIT_MS;
     this.readySettleMs = options?.readySettleMs ?? DEFAULT_READY_SETTLE_MS;
     this.spawnProcess = options?.spawnProcess ?? spawnAsaProcess;
     this.createAdoptedChild = options?.createAdoptedChild ?? createAdoptedChildHandle;
-    this.queryOsIdentity =
-      options?.queryOsIdentity ?? ((pid) => queryWindowsProcessIdentity(pid));
-    this.hasMainWindow =
-      options?.hasMainWindow ?? ((pid) => windowsProcessHasMainWindow(pid));
+    this.queryOsIdentity = options?.queryOsIdentity ?? ((pid) => queryWindowsProcessIdentity(pid));
+    this.hasMainWindow = options?.hasMainWindow ?? ((pid) => windowsProcessHasMainWindow(pid));
     this.onProcessCheckpoint = options?.onProcessCheckpoint ?? null;
     this.onProcessCheckpointCleared = options?.onProcessCheckpointCleared ?? null;
     this.knownSecrets = options?.knownSecrets ?? (() => []);
-    this.asaApiWindowPoller = new AsaApiWindowPoller(
-      options?.asaApiWindowPollMs ?? 2_000,
-      {
-        processes: this.processes,
-        hasMainWindow: (pid) => this.hasMainWindow(pid),
-        clearAsaApiLoading: (id, msg) => this.clearAsaApiLoading(id, msg),
-      },
-    );
+    this.asaApiWindowPoller = new AsaApiWindowPoller(options?.asaApiWindowPollMs ?? 2_000, {
+      processes: this.processes,
+      hasMainWindow: (pid) => this.hasMainWindow(pid),
+      clearAsaApiLoading: (id, msg) => this.clearAsaApiLoading(id, msg),
+    });
   }
 
   /**
@@ -193,19 +158,11 @@ export class ProcessManager extends EventEmitter {
     this.rconExecutor = executor;
   }
 
-  private async executeRcon(
-    profile: ServerProfile,
-    command: string,
-  ): Promise<string> {
+  private async executeRcon(profile: ServerProfile, command: string): Promise<string> {
     if (this.rconExecutor !== null) {
       return this.rconExecutor(profile.id, command);
     }
-    return rconExec(
-      RCON_HOST,
-      profile.rconPort,
-      profile.adminPassword,
-      command,
-    );
+    return rconExec(RCON_HOST, profile.rconPort, profile.adminPassword, command);
   }
 
   /**
@@ -280,12 +237,7 @@ export class ProcessManager extends EventEmitter {
   isActive(serverId: string): boolean {
     if (!this.hasLiveProcess(serverId)) return false;
     const status = this.processes.get(serverId)?.status;
-    return (
-      status === "starting"
-      || status === "running"
-      || status === "stopping"
-      || status === "error"
-    );
+    return status === "starting" || status === "running" || status === "stopping" || status === "error";
   }
 
   getRuntimeLogSnapshot(serverId: string, limit = 300): string[] {
@@ -308,9 +260,7 @@ export class ProcessManager extends EventEmitter {
    * succeeded and the process is still managed; `killed` means RCON failed
    * and the process was terminated; `absent` means nothing was running.
    */
-  async beginGracefulStop(
-    profile: ServerProfile,
-  ): Promise<BeginGracefulStopResult> {
+  async beginGracefulStop(profile: ServerProfile): Promise<BeginGracefulStopResult> {
     return beginGracefulStopForHost(this.gracefulStopHost(), profile);
   }
 
@@ -318,10 +268,7 @@ export class ProcessManager extends EventEmitter {
    * After a successful {@link beginGracefulStop} (`saved`), send DoExit and
    * wait / force-kill. No-op if the process is already gone.
    */
-  async finishGracefulStop(
-    profile: ServerProfile,
-    handle: GracefulStopHandle,
-  ): Promise<FinishGracefulStopResult> {
+  async finishGracefulStop(profile: ServerProfile, handle: GracefulStopHandle): Promise<FinishGracefulStopResult> {
     return finishGracefulStopForHost(this.gracefulStopHost(), profile, handle);
   }
 
@@ -446,19 +393,16 @@ export class ProcessManager extends EventEmitter {
   private gracefulStopHost(): ProcessGracefulStopHost {
     return {
       getManaged: (serverId) => this.processes.get(serverId),
-      appendRuntimeLog: (serverId, source, message) =>
-        this.appendRuntimeLog(serverId, source, message),
+      appendRuntimeLog: (serverId, source, message) => this.appendRuntimeLog(serverId, source, message),
       emitStatus: (serverId) => this.emitStatus(serverId),
       executeRcon: (profile, command) => this.executeRcon(profile, command),
       waitForExit: (child, timeoutMs) => this.waitForExit(child, timeoutMs),
-      stopManagedCapture: (serverId, managed) =>
-        this.stopManagedCapture(serverId, managed),
+      stopManagedCapture: (serverId, managed) => this.stopManagedCapture(serverId, managed),
       deleteManaged: (serverId) => {
         this.processes.delete(serverId);
       },
       clearProcessCheckpoint: (serverId) => this.clearProcessCheckpoint(serverId),
-      terminateManaged: (serverId, managed) =>
-        this.terminateManaged(serverId, managed),
+      terminateManaged: (serverId, managed) => this.terminateManaged(serverId, managed),
     };
   }
 
@@ -467,10 +411,8 @@ export class ProcessManager extends EventEmitter {
       isActive: (serverId) => this.isActive(serverId),
       getManaged: (serverId) => this.processes.get(serverId),
       queryOsIdentity: (pid) => this.queryOsIdentity(pid),
-      appendRuntimeLog: (serverId, source, message) =>
-        this.appendRuntimeLog(serverId, source, message),
-      stopManagedCapture: (serverId, managed) =>
-        this.stopManagedCapture(serverId, managed),
+      appendRuntimeLog: (serverId, source, message) => this.appendRuntimeLog(serverId, source, message),
+      stopManagedCapture: (serverId, managed) => this.stopManagedCapture(serverId, managed),
       deleteManaged: (serverId) => {
         this.processes.delete(serverId);
       },
@@ -479,12 +421,9 @@ export class ProcessManager extends EventEmitter {
       setManaged: (serverId, managed) => {
         this.processes.set(serverId, managed);
       },
-      writeProcessCheckpoint: (serverId, managed, live) =>
-        this.writeProcessCheckpoint(serverId, managed, live),
-      captureRuntimeChunk: (serverId, source, text) =>
-        this.captureRuntimeChunk(serverId, source, text),
-      onManagedExit: (serverId, managed, code) =>
-        this.onManagedExit(serverId, managed, code),
+      writeProcessCheckpoint: (serverId, managed, live) => this.writeProcessCheckpoint(serverId, managed, live),
+      captureRuntimeChunk: (serverId, source, text) => this.captureRuntimeChunk(serverId, source, text),
+      onManagedExit: (serverId, managed, code) => this.onManagedExit(serverId, managed, code),
       waitUntilReady: (profile, managed, generation, options) =>
         this.waitUntilReady(profile, managed, generation, options),
     };
@@ -495,8 +434,7 @@ export class ProcessManager extends EventEmitter {
       isActive: (serverId) => this.isActive(serverId),
       clearRuntimeLog: (serverId) => this.clearRuntimeLog(serverId),
       spawnProcess: this.spawnProcess,
-      appendRuntimeLog: (serverId, source, message) =>
-        this.appendRuntimeLog(serverId, source, message),
+      appendRuntimeLog: (serverId, source, message) => this.appendRuntimeLog(serverId, source, message),
       registerManaged: (serverId, managed) => {
         this.processes.set(serverId, managed);
         if (managed.asaApiLoading === true) {
@@ -504,17 +442,13 @@ export class ProcessManager extends EventEmitter {
         }
       },
       getManaged: (serverId) => this.processes.get(serverId),
-      captureRuntimeChunk: (serverId, source, chunk) =>
-        this.captureRuntimeChunk(serverId, source, chunk),
+      captureRuntimeChunk: (serverId, source, chunk) => this.captureRuntimeChunk(serverId, source, chunk),
       emitStatus: (serverId) => this.emitStatus(serverId),
-      writeProcessCheckpoint: (serverId, managed) =>
-        this.writeProcessCheckpoint(serverId, managed),
-      waitUntilReady: (profile, managed, generation) =>
-        this.waitUntilReady(profile, managed, generation),
+      writeProcessCheckpoint: (serverId, managed) => this.writeProcessCheckpoint(serverId, managed),
+      waitUntilReady: (profile, managed, generation) => this.waitUntilReady(profile, managed, generation),
       flushRuntimePartials: (serverId) => this.flushRuntimePartials(serverId),
       clearProcessCheckpoint: (serverId) => this.clearProcessCheckpoint(serverId),
-      onManagedExit: (serverId, managed, code) =>
-        this.onManagedExit(serverId, managed, code),
+      onManagedExit: (serverId, managed, code) => this.onManagedExit(serverId, managed, code),
     };
   }
 
@@ -522,8 +456,7 @@ export class ProcessManager extends EventEmitter {
     return {
       getManaged: (serverId) => this.processes.get(serverId),
       getRuntimeLogLines: (serverId) => this.runtimeLogs.get(serverId) ?? [],
-      appendRuntimeLog: (serverId, source, message) =>
-        this.appendRuntimeLog(serverId, source, message),
+      appendRuntimeLog: (serverId, source, message) => this.appendRuntimeLog(serverId, source, message),
       emitStatus: (serverId) => this.emitStatus(serverId),
       clearProcessCheckpoint: (serverId) => this.clearProcessCheckpoint(serverId),
       terminateManaged: async (serverId) => {
@@ -568,10 +501,7 @@ export class ProcessManager extends EventEmitter {
       }
       // Reuse a just-fetched identity when provided (reattach) to avoid a second
       // PowerShell round-trip during startup (#145 review).
-      const live =
-        liveIdentity !== undefined
-          ? liveIdentity
-          : await this.queryOsIdentity(pid);
+      const live = liveIdentity !== undefined ? liveIdentity : await this.queryOsIdentity(pid);
       const osCreationTime = live?.osCreationTime?.trim() || null;
       if (osCreationTime === null) {
         this.appendRuntimeLog(
@@ -597,11 +527,7 @@ export class ProcessManager extends EventEmitter {
       });
     } catch (error: unknown) {
       const detail = error instanceof Error ? error.message : String(error);
-      this.appendRuntimeLog(
-        serverId,
-        "warning",
-        `Process checkpoint write failed: ${detail}`,
-      );
+      this.appendRuntimeLog(serverId, "warning", `Process checkpoint write failed: ${detail}`);
     }
   }
 
@@ -610,18 +536,11 @@ export class ProcessManager extends EventEmitter {
       this.onProcessCheckpointCleared?.(serverId);
     } catch (error: unknown) {
       const detail = error instanceof Error ? error.message : String(error);
-      this.appendRuntimeLog(
-        serverId,
-        "warning",
-        `Process checkpoint clear failed: ${detail}`,
-      );
+      this.appendRuntimeLog(serverId, "warning", `Process checkpoint clear failed: ${detail}`);
     }
   }
 
-  private async terminateManaged(
-    serverId: string,
-    managed: ManagedProcess,
-  ): Promise<void> {
+  private async terminateManaged(serverId: string, managed: ManagedProcess): Promise<void> {
     this.stopManagedCapture(serverId, managed);
     const loaderPid = managed.loaderPid;
     if (
@@ -633,11 +552,7 @@ export class ProcessManager extends EventEmitter {
       return;
     }
     const pid = managed.child.pid;
-    if (
-      process.platform === "win32"
-      && pid !== undefined
-      && (await killWinProcessTreeAsync(pid))
-    ) {
+    if (process.platform === "win32" && pid !== undefined && (await killWinProcessTreeAsync(pid))) {
       return;
     }
     try {
@@ -670,20 +585,14 @@ export class ProcessManager extends EventEmitter {
     });
   }
 
-  private onManagedExit(
-    serverId: string,
-    managed: ManagedProcess,
-    code: number | null,
-  ): void {
+  private onManagedExit(serverId: string, managed: ManagedProcess, code: number | null): void {
     handleManagedProcessExit(
       {
         getManaged: (id) => this.processes.get(id),
         flushRuntimePartials: (id) => this.flushRuntimePartials(id),
-        appendRuntimeLog: (id, source, message) =>
-          this.appendRuntimeLog(id, source, message),
+        appendRuntimeLog: (id, source, message) => this.appendRuntimeLog(id, source, message),
         clearProcessCheckpoint: (id) => this.clearProcessCheckpoint(id),
-        getRuntimeLogSnapshot: (id, limit) =>
-          this.getRuntimeLogSnapshot(id, limit),
+        getRuntimeLogSnapshot: (id, limit) => this.getRuntimeLogSnapshot(id, limit),
         deleteManagedUnlessError: (id, entry) => {
           if (entry.status !== "error") {
             this.processes.delete(id);
@@ -707,22 +616,14 @@ export class ProcessManager extends EventEmitter {
     this.emit("status", this.getStatus(serverId));
   }
 
-  private captureRuntimeChunk(
-    serverId: string,
-    source: RuntimeLogSource,
-    chunk: string,
-  ): void {
+  private captureRuntimeChunk(serverId: string, source: RuntimeLogSource, chunk: string): void {
     captureProcessRuntimeChunk(
       this.runtimePartials,
       (id, src, message) => this.appendRuntimeLog(id, src, message),
       serverId,
       source,
       chunk,
-      () =>
-        this.clearAsaApiLoading(
-          serverId,
-          "Ark Server API finished loading; following normal server startup.",
-        ),
+      () => this.clearAsaApiLoading(serverId, "Ark Server API finished loading; following normal server startup."),
     );
   }
 
@@ -749,12 +650,6 @@ export class ProcessManager extends EventEmitter {
   }
 
   private appendRuntimeLog(serverId: string, source: string, message: string): void {
-    appendProcessRuntimeLog(
-      this.runtimeLogs,
-      this.knownSecrets,
-      serverId,
-      source,
-      message,
-    );
+    appendProcessRuntimeLog(this.runtimeLogs, this.knownSecrets, serverId, source, message);
   }
 }

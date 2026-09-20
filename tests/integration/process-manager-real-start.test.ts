@@ -9,11 +9,7 @@ import type { ServerProfile } from "@shared/types";
 
 const IS_WINDOWS = process.platform === "win32";
 
-async function waitFor(
-  condition: () => boolean,
-  timeoutMs: number,
-  stepMs = 250,
-): Promise<boolean> {
+async function waitFor(condition: () => boolean, timeoutMs: number, stepMs = 250): Promise<boolean> {
   const started = Date.now();
   while (Date.now() - started < timeoutMs) {
     if (condition()) return true;
@@ -77,10 +73,7 @@ describe("ProcessManager real start (Windows)", () => {
     }
   });
 
-  async function runStartProof(
-    serverInstallDir: string,
-    cleanupRoot: string,
-  ): Promise<void> {
+  async function runStartProof(serverInstallDir: string, cleanupRoot: string): Promise<void> {
     const systemRoot = process.env["SystemRoot"] ?? "C:\\Windows";
     const pingExe = join(systemRoot, "System32", "PING.EXE");
 
@@ -101,44 +94,42 @@ describe("ProcessManager real start (Windows)", () => {
       skipReadinessCheck: true,
     });
 
-    const reachedRunning = await waitFor(
-      () => manager.getStatus(profile.id).status === "running",
-      25_000,
-      500,
-    );
+    const reachedRunning = await waitFor(() => manager.getStatus(profile.id).status === "running", 25_000, 500);
     expect(reachedRunning).toBe(true);
 
     const pid = manager.getStatus(profile.id).pid;
     expect(pid).not.toBeNull();
     // Direct spawn: tracked pid must be the fake ASA binary, not cmd.exe.
-    const tasklist = spawnSync(
-      "tasklist",
-      ["/FI", `PID eq ${pid}`, "/FO", "CSV", "/NH"],
-      { encoding: "utf8", windowsHide: true },
-    );
+    const tasklist = spawnSync("tasklist", ["/FI", `PID eq ${pid}`, "/FO", "CSV", "/NH"], {
+      encoding: "utf8",
+      windowsHide: true,
+    });
     expect(String(tasklist.stdout)).toMatch(/ArkAscendedServer\.exe/i);
     expect(String(tasklist.stdout)).not.toMatch(/cmd\.exe/i);
 
     await manager.kill(profile.id);
 
-    const reachedStopped = await waitFor(
-      () => manager.getStatus(profile.id).status === "stopped",
-      5_000,
-      200,
-    );
+    const reachedStopped = await waitFor(() => manager.getStatus(profile.id).status === "stopped", 5_000, 200);
     expect(reachedStopped).toBe(true);
   }
 
-  it.skipIf(!IS_WINDOWS)("starts a real process using ASA binary path and reaches running status", async () => {
-    const root = await mkdtemp(join(tmpdir(), "ark-start-proof-"));
-    await runStartProof(root, root);
-  }, 40_000);
+  it.skipIf(!IS_WINDOWS)(
+    "starts a real process using ASA binary path and reaches running status",
+    async () => {
+      const root = await mkdtemp(join(tmpdir(), "ark-start-proof-"));
+      await runStartProof(root, root);
+    },
+    40_000,
+  );
 
-  it.skipIf(!IS_WINDOWS)("starts when install path contains spaces (no cmd wrapper)", async () => {
-    const parent = await mkdtemp(join(tmpdir(), "ark-start-spaced-"));
-    const spaced = join(parent, "path with spaces");
-    await mkdir(spaced, { recursive: true });
-    await runStartProof(spaced, parent);
-  }, 40_000);
+  it.skipIf(!IS_WINDOWS)(
+    "starts when install path contains spaces (no cmd wrapper)",
+    async () => {
+      const parent = await mkdtemp(join(tmpdir(), "ark-start-spaced-"));
+      const spaced = join(parent, "path with spaces");
+      await mkdir(spaced, { recursive: true });
+      await runStartProof(spaced, parent);
+    },
+    40_000,
+  );
 });
-

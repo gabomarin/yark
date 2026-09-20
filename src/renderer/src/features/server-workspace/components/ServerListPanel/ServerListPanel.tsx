@@ -1,11 +1,6 @@
 import type { ReactElement } from "react";
 import { CaretRight } from "@phosphor-icons/react";
-import {
-  ActionIcon,
-  Group,
-  Text,
-  Tooltip,
-} from "@mantine/core";
+import { ActionIcon, Group, Text, Tooltip } from "@mantine/core";
 import { formatMapDisplayName } from "@shared/asa/map-identity";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { useMemo, useState } from "react";
@@ -39,22 +34,16 @@ export function ServerListPanel(props: Props): ReactElement {
   /** Expand control size: compact sm, else md (#233). */
   const expandSize = compact ? "sm" : "md";
 
-  const listed = useMemo(
-    () => enabledWorkspaceRailServers(props.servers),
-    [props.servers],
-  );
+  const listed = useMemo(() => enabledWorkspaceRailServers(props.servers), [props.servers]);
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     const base =
       query.length === 0
         ? listed
         : listed.filter((server) =>
-            [
-              server.name,
-              server.map,
-              formatMapDisplayName(server.map),
-              server.clusterId ?? "",
-            ].some((field) => field.toLowerCase().includes(query)),
+            [server.name, server.map, formatMapDisplayName(server.map), server.clusterId ?? ""].some((field) =>
+              field.toLowerCase().includes(query),
+            ),
           );
     return sortServers(base, sort);
   }, [listed, search, sort]);
@@ -100,12 +89,7 @@ export function ServerListPanel(props: Props): ReactElement {
               <Text className={classes.title}>All servers</Text>
               {props.onToggleRail !== undefined && (
                 <Tooltip label="Collapse server list">
-                  <ActionIcon
-                    variant="subtle"
-                    size="sm"
-                    aria-label="Collapse server list"
-                    onClick={props.onToggleRail}
-                  >
+                  <ActionIcon variant="subtle" size="sm" aria-label="Collapse server list" onClick={props.onToggleRail}>
                     <CaretRight size={14} style={{ transform: "rotate(180deg)" }} />
                   </ActionIcon>
                 </Tooltip>
@@ -119,12 +103,7 @@ export function ServerListPanel(props: Props): ReactElement {
               size="xs"
             />
             <div className={classes.listControls}>
-              <ServerListControls
-                sort={sort}
-                onSortChange={setSort}
-                view={view}
-                onViewChange={setView}
-              />
+              <ServerListControls sort={sort} onSortChange={setSort} view={view} onViewChange={setView} />
             </div>
           </>
         )}

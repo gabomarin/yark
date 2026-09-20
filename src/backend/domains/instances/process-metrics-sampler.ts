@@ -2,10 +2,7 @@ import { EventEmitter } from "node:events";
 import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
 import type { ServerRuntimeInfo } from "@shared/types";
 import type { ProcessManager } from "../../infra/process/process-manager";
-import {
-  cpuPercentFromDeltas,
-  queryWindowsProcessResources,
-} from "../../infra/process/windows-process-sample";
+import { cpuPercentFromDeltas, queryWindowsProcessResources } from "../../infra/process/windows-process-sample";
 
 const DEFAULT_POLL_MS = 4_000;
 
@@ -131,9 +128,7 @@ export class ProcessMetricsSampler extends EventEmitter {
       return;
     }
     const live: Array<{ serverId: string; pid: number }> = [];
-    for (const info of this.processes.listStatuses(
-      this.processes.listManagedServerIds(),
-    )) {
+    for (const info of this.processes.listStatuses(this.processes.listManagedServerIds())) {
       if (info.processLive && info.pid != null && info.pid > 0) {
         live.push({ serverId: info.serverId, pid: info.pid });
       }
@@ -202,16 +197,8 @@ export class ProcessMetricsSampler extends EventEmitter {
   }
 
   private emitIfChanged(sample: ProcessMetricsSample): void {
-    const ramMb =
-      sample.workingSetBytes == null
-        ? "n"
-        : Math.round(sample.workingSetBytes / (1024 * 1024));
-    const fingerprint = [
-      sample.pid,
-      ramMb,
-      sample.cpuPercent ?? "n",
-      sample.error ?? "",
-    ].join("|");
+    const ramMb = sample.workingSetBytes == null ? "n" : Math.round(sample.workingSetBytes / (1024 * 1024));
+    const fingerprint = [sample.pid, ramMb, sample.cpuPercent ?? "n", sample.error ?? ""].join("|");
     if (this.lastPush.get(sample.serverId) === fingerprint) {
       return;
     }

@@ -7,9 +7,14 @@
   width: 220px;
 }
 
+/*
+ * Every row is its own grid (Accordion.Control), so any content-sized track makes
+ * the columns drift row to row - visible the moment the severity badge became a
+ * word + dot of a different width per row. Fixed/fluid tracks only.
+ */
 .fleetRow {
   display: grid;
-  grid-template-columns: max-content auto minmax(7rem, max-content) minmax(0, 1fr);
+  grid-template-columns: 7.5rem 6.5rem minmax(6rem, 0.9fr) minmax(0, 1.6fr);
   column-gap: var(--app-space-sm);
   align-items: center;
   text-align: left;
@@ -41,6 +46,8 @@
 .fleetSeverity,
 .fleetServer {
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -62,6 +69,17 @@
   flex: 1;
   min-height: 0;
   overflow: hidden;
+}
+
+.pageShell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  padding: var(--app-space-md);
+  gap: var(--app-space-sm);
 }
 
 .tabs {
@@ -104,7 +122,7 @@
 
 .historyPanel,
 .detailPanel {
-  /* Layout hooks for Updates split panes; sit on the page canvas (#469). */
+  /* Updates split panes sit inside the chrome fillPanel slab. */
   min-height: 0;
 }
 
@@ -114,6 +132,11 @@
   height: 100%;
   min-height: 0;
   overflow: hidden;
+  /* No border: the shared chrome surface already frames the page, and a bordered panel here put
+   * every Logs card inside a box inside a box. The sibling tool pages use the same wrapper
+   * borderless (Backups' `.toolShell` keeps the padding and nothing else). */
+  background: transparent;
+  padding: var(--app-space-md);
 }
 
 .fillPanel > * {
@@ -289,15 +312,15 @@
   min-width: 0;
   text-align: left;
   padding: var(--app-space-xs) var(--app-space-sm);
-  border-radius: var(--app-radius-md);
+  border-radius: 0;
   border: 1px solid var(--ark-gray-a3);
   background: var(--app-color-surface-control);
   color: var(--app-color-text);
   cursor: pointer;
   overflow: hidden;
   transition:
-    border-color 140ms ease,
-    background-color 140ms ease;
+    border-color var(--app-motion-fast) var(--app-ease-standard),
+    background-color var(--app-motion-fast) var(--app-ease-standard);
 }
 
 .updateRow:hover {
@@ -324,7 +347,7 @@
 }
 
 .updateRowActive {
-  border-color: var(--ark-blue-a3);
+  border-color: var(--app-color-accent-subtle);
   background: var(--app-list-selected-bg);
   box-shadow: var(--app-list-selected-inset);
 }

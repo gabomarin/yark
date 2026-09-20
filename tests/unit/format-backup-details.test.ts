@@ -14,8 +14,7 @@ describe("formatBackupDetails", () => {
       status: "failed",
       createdAt: "2026-07-28T12:00:00.000Z",
       completedAt: "2026-07-28T12:01:00.000Z",
-      notes:
-        "ENOENT: no such file or directory, lstat 'C:\\SavedArks\\x.arkrbf'",
+      notes: "ENOENT: no such file or directory, lstat 'C:\\SavedArks\\x.arkrbf'",
       mapToken: "TheIsland_WP",
     };
     const text = formatBackupDetails({ id: "srv-a", name: "Island" }, backup);

@@ -25,13 +25,7 @@ export function appendProcessRuntimeLog(
   }
 
   const list = runtimeLogs.get(serverId) ?? [];
-  runtimeLogs.set(
-    serverId,
-    appendRuntimeLogRing(
-      list,
-      formatRuntimeLogLine(new Date().toISOString(), source, line),
-    ),
-  );
+  runtimeLogs.set(serverId, appendRuntimeLogRing(list, formatRuntimeLogLine(new Date().toISOString(), source, line)));
 }
 
 export function flushProcessRuntimePartials(
@@ -49,10 +43,7 @@ export function flushProcessRuntimePartials(
   }
 }
 
-export function clearProcessRuntimePartials(
-  runtimePartials: Map<string, string>,
-  serverId: string,
-): void {
+export function clearProcessRuntimePartials(runtimePartials: Map<string, string>, serverId: string): void {
   for (const source of RUNTIME_LOG_SOURCES) {
     runtimePartials.delete(runtimeLogPartialKey(serverId, source));
   }

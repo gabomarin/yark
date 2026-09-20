@@ -43,12 +43,7 @@ const PORTS = {
 
 const installName = `ImportReady${runId}`;
 const installDir = path.join(serversDir, installName);
-const nestedWin64 = path.join(
-  installDir,
-  "ShooterGame",
-  "Binaries",
-  "Win64",
-);
+const nestedWin64 = path.join(installDir, "ShooterGame", "Binaries", "Win64");
 const gusMarker = `YARK_E2E_IMPORT_GUS_${runId}`;
 const gameMarker = `YARK_E2E_IMPORT_GAME_${runId}`;
 const MOD_ID = "928837";
@@ -64,13 +59,7 @@ function sha256File(filePath) {
 }
 
 function iniPaths(root) {
-  const dir = path.join(
-    root,
-    "ShooterGame",
-    "Saved",
-    "Config",
-    "WindowsServer",
-  );
+  const dir = path.join(root, "ShooterGame", "Saved", "Config", "WindowsServer");
   return {
     dir,
     gus: path.join(dir, "GameUserSettings.ini"),
@@ -111,12 +100,7 @@ function writeReadyInstall(root) {
   );
   fs.writeFileSync(
     game,
-    [
-      "[/Script/ShooterGame.ShooterGameMode]",
-      "XPMultiplier=1",
-      `${gameMarker}=1`,
-      "",
-    ].join("\n"),
+    ["[/Script/ShooterGame.ShooterGameMode]", "XPMultiplier=1", `${gameMarker}=1`, ""].join("\n"),
     "utf8",
   );
 }
@@ -132,15 +116,11 @@ async function launchApp() {
 async function quitApp(app) {
   const proc = app.process();
   const exited =
-    proc == null || proc.exitCode != null
-      ? Promise.resolve()
-      : new Promise((resolve) => proc.once("exit", resolve));
+    proc == null || proc.exitCode != null ? Promise.resolve() : new Promise((resolve) => proc.once("exit", resolve));
   await app.evaluate(({ app: electronApp }) => electronApp.quit());
   await Promise.race([
     exited,
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000),
-    ),
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000)),
   ]);
 }
 
@@ -271,17 +251,11 @@ async function run() {
     await dialog.waitFor({ state: "hidden", timeout: 30_000 });
 
     // Workspace should open for the new profile (no create overlay).
-    await page
-      .getByText(profileName, { exact: false })
-      .first()
-      .waitFor({ state: "visible", timeout: 20_000 });
+    await page.getByText(profileName, { exact: false }).first().waitFor({ state: "visible", timeout: 20_000 });
 
     const row = readImportedServer();
     assert.ok(row, "imported server row missing from SQLite");
-    assert.equal(
-      path.resolve(String(row.install_dir)).toLowerCase(),
-      path.resolve(installDir).toLowerCase(),
-    );
+    assert.equal(path.resolve(String(row.install_dir)).toLowerCase(), path.resolve(installDir).toLowerCase());
     assert.equal(Number(row.game_port), PORTS.game);
     assert.equal(Number(row.query_port), PORTS.query);
     assert.equal(Number(row.rcon_port), PORTS.rcon);
@@ -290,16 +264,8 @@ async function run() {
     assert.deepEqual(mods, [MOD_ID]);
     assert.deepEqual(disabled, [MOD_ID]);
 
-    assert.equal(
-      sha256File(iniPaths(installDir).gus),
-      gusBefore,
-      "Import must not rewrite GameUserSettings.ini",
-    );
-    assert.equal(
-      sha256File(iniPaths(installDir).game),
-      gameBefore,
-      "Import must not rewrite Game.ini",
-    );
+    assert.equal(sha256File(iniPaths(installDir).gus), gusBefore, "Import must not rewrite GameUserSettings.ini");
+    assert.equal(sha256File(iniPaths(installDir).game), gameBefore, "Import must not rewrite Game.ini");
     const gusAfter = fs.readFileSync(iniPaths(installDir).gus, "utf8");
     assert.match(gusAfter, /RCONEnabled=False/);
     assert.match(gusAfter, new RegExp(gusMarker));
@@ -320,9 +286,7 @@ async function run() {
     await dialog.getByRole("button", { name: /^Cancel$/i }).click();
     await dialog.waitFor({ state: "hidden", timeout: 10_000 });
 
-    const actionableErrors = errors.filter(
-      (message) => !/Failed to load resource|net::ERR_/i.test(message),
-    );
+    const actionableErrors = errors.filter((message) => !/Failed to load resource|net::ERR_/i.test(message));
     assert.deepEqual(actionableErrors, []);
     succeeded = true;
     console.log(`E2E_IMPORT_INSTALL_OK profile=${profileDir}`);

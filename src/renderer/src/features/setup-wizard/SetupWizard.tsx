@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { Button, Group, Modal, Stack, Stepper, Text } from "@mantine/core";
+import { Button, Group, Stack, Stepper, Text } from "@mantine/core";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import type { ServerProfile, SteamCmdStatus } from "@shared/types";
 import type { UiDensity } from "@features/settings/settingsModel";
@@ -54,9 +55,7 @@ export function SetupWizard(props: Props): ReactElement {
   const steps = stepsForMode(props.mode);
   const [stepIndex, setStepIndex] = useState(0);
   const [shareCluster, setShareCluster] = useState(false);
-  const [clusterId, setClusterId] = useState(() =>
-    suggestClusterId(listKnownClusterIds(props.servers)),
-  );
+  const [clusterId, setClusterId] = useState(() => suggestClusterId(listKnownClusterIds(props.servers)));
   const [clusterDir, setClusterDir] = useState("");
   const [idTouched, setIdTouched] = useState(false);
   const [dirTouched, setDirTouched] = useState(false);
@@ -103,10 +102,7 @@ export function SetupWizard(props: Props): ReactElement {
     () => getClusterIdFormError(clusterId, clusterDir, props.servers),
     [clusterDir, clusterId, props.servers],
   );
-  const dirError = useMemo(
-    () => getClusterDirFormError(clusterDir),
-    [clusterDir],
-  );
+  const dirError = useMemo(() => getClusterDirFormError(clusterDir), [clusterDir]);
   const clusterContinue = canContinueClusterStep({
     shareCluster,
     clusterId,
@@ -162,50 +158,48 @@ export function SetupWizard(props: Props): ReactElement {
   };
 
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={handleDismiss}
-      title={
-        props.mode === "first-run"
-          ? "Set up YARK"
-          : "Setup assistant – paths and Windows"
-      }
+      title={props.mode === "first-run" ? "Set up YARK" : "Setup assistant – paths and Windows"}
       size="lg"
-      centered
       closeOnClickOutside={false}
       closeOnEscape={false}
       withCloseButton={!props.busy}
-      overlayProps={{ mod: { "setup-wizard-overlay": true } }}
+      footerAlign="between"
+      footer={
+        <>
+          <Button
+            variant="default"
+            disabled={props.busy || stepIndex === 0}
+            onClick={() => setStepIndex((index) => Math.max(index - 1, 0))}
+          >
+            Back
+          </Button>
+          {current !== "action" && (
+            <Button disabled={props.busy || !canContinue} onClick={goNext}>
+              {isLast && props.mode === "paths-shell" ? "Finish" : "Continue"}
+            </Button>
+          )}
+        </>
+      }
     >
       <Stack gap="md" data-setup-wizard data-setup-wizard-step={current}>
         <Group justify="flex-end">
-          <Button
-            variant="subtle"
-            size="compact-xs"
-            disabled={props.busy}
-            loading={props.busy}
-            onClick={handleDismiss}
-          >
+          <Button variant="subtle" disabled={props.busy} loading={props.busy} onClick={handleDismiss}>
             {props.mode === "first-run" ? "Skip setup" : "Close"}
           </Button>
         </Group>
 
-        <Stepper
-          active={stepIndex}
-          allowNextStepsSelect={false}
-          size="sm"
-        >
+        <Stepper active={stepIndex} allowNextStepsSelect={false} size="sm">
           {steps.map((stepId) => (
-            <Stepper.Step
-              key={stepId}
-              label={SETUP_WIZARD_STEP_LABELS[stepId]}
-            />
+            <Stepper.Step key={stepId} label={SETUP_WIZARD_STEP_LABELS[stepId]} />
           ))}
         </Stepper>
 
         <Text size="xs" c="dimmed">
-          Changes to paths and Windows options save as you go. Closing or skipping
-          the assistant does not undo saved changes.
+          Changes to paths and Windows options save as you go. Closing or skipping the assistant does not undo saved
+          changes.
         </Text>
 
         {current === "welcome" && <SetupWizardWelcomeStep />}
@@ -256,9 +250,7 @@ export function SetupWizard(props: Props): ReactElement {
               setIdTouched(true);
             }}
             onGenerateId={() => {
-              setClusterId(
-                suggestClusterId([...listKnownClusterIds(props.servers), clusterId]),
-              );
+              setClusterId(suggestClusterId([...listKnownClusterIds(props.servers), clusterId]));
               setIdTouched(true);
               if (dirAutoSuggested || clusterDir.trim().length === 0) {
                 setDirAutoSuggested(true);
@@ -281,22 +273,7 @@ export function SetupWizard(props: Props): ReactElement {
             onExplore={() => void props.onExplore(pendingCluster())}
           />
         )}
-
-        <Group justify="space-between">
-          <Button
-            variant="default"
-            disabled={props.busy || stepIndex === 0}
-            onClick={() => setStepIndex((index) => Math.max(index - 1, 0))}
-          >
-            Back
-          </Button>
-          {current !== "action" && (
-            <Button disabled={props.busy || !canContinue} onClick={goNext}>
-              {isLast && props.mode === "paths-shell" ? "Finish" : "Continue"}
-            </Button>
-          )}
-        </Group>
       </Stack>
-    </Modal>
+    </AppPanelModal>
   );
 }

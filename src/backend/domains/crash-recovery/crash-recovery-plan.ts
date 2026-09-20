@@ -3,12 +3,7 @@ import { crashRecoveryBackoffMs } from "@shared/crash-recovery/crash-recovery-po
 
 /** Why a crash was not auto-restarted (kept quiet — no event noise). */
 export type CrashRecoverySkipReason =
-  | "disabled"
-  | "profile_disabled"
-  | "paused"
-  | "stop_in_progress"
-  | "locked"
-  | "maintenance";
+  "disabled" | "profile_disabled" | "paused" | "stop_in_progress" | "locked" | "maintenance";
 
 export interface CrashRecoveryEligibilityInput {
   policy: CrashRecoveryPolicy;
@@ -22,9 +17,7 @@ export interface CrashRecoveryEligibilityInput {
  * Shared eligibility gate used both when a crash is observed and again when a
  * scheduled retry fires (state may have changed in the backoff window).
  */
-export function crashRecoveryBlockReason(
-  input: CrashRecoveryEligibilityInput,
-): CrashRecoverySkipReason | null {
+export function crashRecoveryBlockReason(input: CrashRecoveryEligibilityInput): CrashRecoverySkipReason | null {
   if (!input.policy.enabled) return "disabled";
   if (!input.serverEnabled) return "profile_disabled";
   if (input.policy.paused) return "paused";
@@ -60,9 +53,7 @@ export function planCrashRecovery(
   const blocked = crashRecoveryBlockReason(input);
   if (blocked !== null) return { kind: "skip", reason: blocked };
 
-  const stabilized =
-    input.uptimeMs !== null
-    && input.uptimeMs >= input.policy.stabilitySeconds * 1000;
+  const stabilized = input.uptimeMs !== null && input.uptimeMs >= input.policy.stabilitySeconds * 1000;
   const attempts = (stabilized ? 0 : input.policy.attempts) + 1;
   if (attempts > input.policy.maxAttempts) {
     return {

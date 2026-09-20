@@ -3,10 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import type { AppEvent, LogRetentionSettings, ServerProfile } from "@shared/types";
-import {
-  DEFAULT_LOG_RETENTION_SETTINGS,
-  LOG_RETENTION_SETTINGS_KEY,
-} from "@shared/settings/log-retention";
+import { DEFAULT_LOG_RETENTION_SETTINGS, LOG_RETENTION_SETTINGS_KEY } from "@shared/settings/log-retention";
 import { LogsService, type BackupLogSource } from "@backend/domains/logs/logs-service";
 import type { AppSettingsRepository } from "@backend/infra/db/app-settings-repository";
 import type { ServerRepository } from "@backend/infra/db/server-repository";
@@ -95,13 +92,7 @@ describe("LogsService runtime logs", () => {
       ],
     } as unknown as ProcessManager;
 
-    const service = new LogsService(
-      repo,
-      emptyBackupSource(),
-      updatesDir,
-      processes,
-      memorySettings(),
-    );
+    const service = new LogsService(repo, emptyBackupSource(), updatesDir, processes, memorySettings());
     const logs = await service.listServerLogs(profile.id);
 
     expect(logs.updateFiles.length).toBe(1);
@@ -149,13 +140,7 @@ describe("LogsService runtime logs", () => {
       ],
     } as unknown as ProcessManager;
 
-    const service = new LogsService(
-      repo,
-      emptyBackupSource(),
-      updatesDir,
-      processes,
-      memorySettings(),
-    );
+    const service = new LogsService(repo, emptyBackupSource(), updatesDir, processes, memorySettings());
     const outFile = join(root, "logs-export.txt");
     const resultPath = await service.exportServerLogs(profile.id, outFile);
 
@@ -205,13 +190,7 @@ describe("LogsService runtime logs", () => {
       },
     } as unknown as ProcessManager;
 
-    const service = new LogsService(
-      repo,
-      emptyBackupSource(),
-      updatesDir,
-      processes,
-      memorySettings(),
-    );
+    const service = new LogsService(repo, emptyBackupSource(), updatesDir, processes, memorySettings());
     expect(service.clearEvents(profile.id)).toBe(3);
     expect(deletedEvents).toBe(3);
 
@@ -297,10 +276,7 @@ describe("LogsService retention (#84)", () => {
         deletedIds.push(...ids);
         return ids.length;
       },
-      addEvent: (
-        _serverId: string | null,
-        type: AppEvent["type"],
-      ) => {
+      addEvent: (_serverId: string | null, type: AppEvent["type"]) => {
         recorded.push(type);
       },
     } as unknown as ServerRepository;
@@ -342,11 +318,7 @@ describe("LogsService retention (#84)", () => {
     const profile = makeProfile(root);
 
     // Newest first by mtime after touchAge — create 3 success + 1 recent failure.
-    const successNames = [
-      "srv-logs-1-success-a.log",
-      "srv-logs-1-success-b.log",
-      "srv-logs-1-success-c.log",
-    ];
+    const successNames = ["srv-logs-1-success-a.log", "srv-logs-1-success-b.log", "srv-logs-1-success-c.log"];
     for (const [index, name] of successNames.entries()) {
       const path = join(updatesDir, name);
       writeFileSync(path, `exitCode=0\ndurationMs=1\n--- stdout ---\nok\n`, "utf8");
@@ -447,11 +419,7 @@ describe("LogsService retention (#84)", () => {
     mkdirSync(updatesDir, { recursive: true });
     const profile = makeProfile(root);
 
-    for (const [index, name] of [
-      "srv-logs-1-a.log",
-      "srv-logs-1-b.log",
-      "srv-logs-1-c.log",
-    ].entries()) {
+    for (const [index, name] of ["srv-logs-1-a.log", "srv-logs-1-b.log", "srv-logs-1-c.log"].entries()) {
       const path = join(updatesDir, name);
       writeFileSync(path, "exitCode=0\ndurationMs=1\n--- stdout ---\nok\n", "utf8");
       touchAge(path, 3 + index);
@@ -496,4 +464,3 @@ describe("LogsService retention (#84)", () => {
     }
   });
 });
-

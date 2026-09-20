@@ -11,9 +11,7 @@ import { assertHostPortsAvailable } from "@backend/infra/process/host-port-probe
 import { formatHostPortBusyError } from "@shared/server/host-port-probe-errors";
 
 vi.mock("@backend/domains/instances/server-installation", async (importOriginal) => {
-  const actual = await importOriginal<
-    typeof import("@backend/domains/instances/server-installation")
-  >();
+  const actual = await importOriginal<typeof import("@backend/domains/instances/server-installation")>();
   const inspectServerInstallation = vi.fn();
   return {
     ...actual,
@@ -33,10 +31,7 @@ vi.mock("@backend/domains/instances/sync-profile-ini", () => {
   return {
     syncProfileSettingsToIni,
     applyProfileOwnedIni: vi.fn(
-      async (
-        profile: { id: string },
-        syncVia?: (serverId: string, profile?: unknown) => Promise<void>,
-      ) => {
+      async (profile: { id: string }, syncVia?: (serverId: string, profile?: unknown) => Promise<void>) => {
         if (syncVia !== undefined) {
           await syncVia(profile.id, profile);
           return;
@@ -45,8 +40,7 @@ vi.mock("@backend/domains/instances/sync-profile-ini", () => {
       },
     ),
     gameUserSettingsIniPath: vi.fn(
-      (installDir: string) =>
-        `${installDir}\\ShooterGame\\Saved\\Config\\WindowsServer\\GameUserSettings.ini`,
+      (installDir: string) => `${installDir}\\ShooterGame\\Saved\\Config\\WindowsServer\\GameUserSettings.ini`,
     ),
   };
 });
@@ -140,9 +134,7 @@ describe("InstanceService host port start gate", () => {
     });
     const { service, processes } = harness([source]);
 
-    await expect(service.start(source.id)).rejects.toThrow(
-      /Map mod Project ID is disabled/,
-    );
+    await expect(service.start(source.id)).rejects.toThrow(/Map mod Project ID is disabled/);
     expect(processes.start).not.toHaveBeenCalled();
   });
 
@@ -171,9 +163,7 @@ describe("InstanceService host port start gate", () => {
       new Error("HOST_PORT_PROBE_INCONCLUSIVE: Could not confirm whether UDP game port 7777 is free."),
     );
 
-    await expect(service.start(source.id)).rejects.toThrow(
-      /HOST_PORT_PROBE_INCONCLUSIVE:/,
-    );
+    await expect(service.start(source.id)).rejects.toThrow(/HOST_PORT_PROBE_INCONCLUSIVE:/);
     expect(processes.start).not.toHaveBeenCalled();
   });
 
@@ -183,11 +173,9 @@ describe("InstanceService host port start gate", () => {
 
     await service.start(source.id, { skipPortValidation: true });
 
-    expect(assertHostPortsAvailable).toHaveBeenCalledWith(
-      expect.objectContaining({ id: source.id }),
-      [],
-      { allowInconclusive: true },
-    );
+    expect(assertHostPortsAvailable).toHaveBeenCalledWith(expect.objectContaining({ id: source.id }), [], {
+      allowInconclusive: true,
+    });
     expect(processes.start).toHaveBeenCalled();
   });
 
@@ -202,11 +190,9 @@ describe("InstanceService host port start gate", () => {
 
     await service.start(source.id, { sessionPorts });
 
-    expect(assertHostPortsAvailable).toHaveBeenCalledWith(
-      expect.objectContaining(sessionPorts),
-      [],
-      { allowInconclusive: false },
-    );
+    expect(assertHostPortsAvailable).toHaveBeenCalledWith(expect.objectContaining(sessionPorts), [], {
+      allowInconclusive: false,
+    });
     expect(applyProfileOwnedIni).toHaveBeenCalledWith(
       expect.objectContaining({
         id: source.id,
@@ -319,12 +305,7 @@ describe("InstanceService host port start gate", () => {
 
     await expect(service.start(source.id)).rejects.toThrow(/spawn failed/);
     expect(assertHostPortsAvailable).toHaveBeenCalled();
-    expect(repo.addEvent).not.toHaveBeenCalledWith(
-      source.id,
-      "server_started",
-      expect.anything(),
-      expect.anything(),
-    );
+    expect(repo.addEvent).not.toHaveBeenCalledWith(source.id, "server_started", expect.anything(), expect.anything());
   });
 
   it("stops using runtime ports for RCON SaveWorld", async () => {
@@ -345,4 +326,3 @@ describe("InstanceService host port start gate", () => {
     );
   });
 });
-

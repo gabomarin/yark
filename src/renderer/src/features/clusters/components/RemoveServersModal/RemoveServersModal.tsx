@@ -1,6 +1,8 @@
 import type { ReactElement } from "react";
 import { useMemo, useState } from "react";
-import { Alert, Button, Checkbox, Group, Modal, Stack, Text } from "@mantine/core";
+import { Button, Checkbox, Stack, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { SelectableListRow } from "@ui/SelectableListRow/SelectableListRow";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
@@ -33,9 +35,7 @@ function initialSelectedIds(
   preferredIds: string[] | undefined,
 ): string[] {
   const candidates = listRemoveCandidates(members, statuses);
-  const eligibleIds = candidates
-    .filter((candidate) => candidate.eligible)
-    .map((candidate) => candidate.server.id);
+  const eligibleIds = candidates.filter((candidate) => candidate.eligible).map((candidate) => candidate.server.id);
   const eligible = new Set(eligibleIds);
   const preselected = (preferredIds ?? []).filter((id) => eligible.has(id));
   if (preselected.length > 0) return preselected;
@@ -54,18 +54,12 @@ export function RemoveServersModal(props: Props): ReactElement {
     () => listRemoveCandidates(props.members, props.statuses),
     [props.members, props.statuses],
   );
-  const activeSelectedIds = useMemo(
-    () => pruneSelectedServerIds(selectedIds, candidates),
-    [selectedIds, candidates],
-  );
+  const activeSelectedIds = useMemo(() => pruneSelectedServerIds(selectedIds, candidates), [selectedIds, candidates]);
   const selected = useMemo(
     () => resolveSelectedCandidates(candidates, activeSelectedIds),
     [candidates, activeSelectedIds],
   );
-  const remaining = remainingMemberCountAfterRemove(
-    props.members.length,
-    selected.length,
-  );
+  const remaining = remainingMemberCountAfterRemove(props.members.length, selected.length);
 
   const handleRemove = async (): Promise<void> => {
     if (selected.length === 0) return;
@@ -78,14 +72,10 @@ export function RemoveServersModal(props: Props): ReactElement {
           const input = buildLeaveClusterInput(candidate.server);
           const result = await window.api.updateServer(candidate.server.id, input);
           if (!result.ok) {
-            const failMessage =
-              result.error ?? "Could not remove servers from the cluster";
+            const failMessage = result.error ?? "Could not remove servers from the cluster";
             const rollbackFailures: string[] = [];
             for (const previous of [...applied].reverse()) {
-              const rollback = await window.api.updateServer(
-                previous.id,
-                serverProfileToInput(previous),
-              );
+              const rollback = await window.api.updateServer(previous.id, serverProfileToInput(previous));
               if (!rollback.ok) rollbackFailures.push(previous.name);
             }
             if (rollbackFailures.length > 0) {
@@ -94,9 +84,7 @@ export function RemoveServersModal(props: Props): ReactElement {
               );
               props.onChanged();
             } else if (applied.length > 0) {
-              setError(
-                `Failed on “${candidate.server.name}”: ${failMessage}. Previous profiles were restored.`,
-              );
+              setError(`Failed on “${candidate.server.name}”: ${failMessage}. Previous profiles were restored.`);
             } else {
               setError(failMessage);
             }
@@ -114,28 +102,44 @@ export function RemoveServersModal(props: Props): ReactElement {
   };
 
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={() => {
         if (!saving) props.onClose();
       }}
       title={`Remove from ${props.clusterId}`}
       size="lg"
-      centered
       closeOnClickOutside={!saving}
       closeOnEscape={!saving}
       withCloseButton={!saving}
+      footerAlign="between"
+      footer={
+        <>
+          <Button variant="default" disabled={saving} onClick={props.onClose}>
+            Cancel
+          </Button>
+          <Button
+            color="red"
+            variant="filled"
+            loading={saving}
+            disabled={selected.length === 0}
+            onClick={() => void handleRemove()}
+          >
+            Remove from cluster
+          </Button>
+        </>
+      }
     >
       <Stack gap="md">
         <Text size="sm" c="dimmed">
-          Clears Cluster ID and shared directory on the selected profiles. Transfer
-          files in the shared folder are not deleted.
+          Clears Cluster ID and shared directory on the selected profiles. Transfer files in the shared folder are not
+          deleted.
         </Text>
 
         {error !== null && (
-          <Alert color="red" variant="light">
+          <AppAlert color="red" variant="light">
             {error}
-          </Alert>
+          </AppAlert>
         )}
 
         <div className={classes.candidateList} data-remove-cluster-servers>
@@ -147,10 +151,7 @@ export function RemoveServersModal(props: Props): ReactElement {
               onClick={() => {
                 if (candidate.eligible) {
                   setSelectedIds((current) =>
-                    toggleSelectedServerId(
-                      pruneSelectedServerIds(current, candidates),
-                      candidate.server.id,
-                    ),
+                    toggleSelectedServerId(pruneSelectedServerIds(current, candidates), candidate.server.id),
                   );
                 }
               }}
@@ -164,9 +165,7 @@ export function RemoveServersModal(props: Props): ReactElement {
                   aria-hidden
                 />
               }
-              trailing={
-                <ServerRuntimeStatusBadge status={candidate.status} size="xs" />
-              }
+              trailing={<ServerRuntimeStatusBadge status={candidate.status} size="xs" />}
             >
               <Text fw={600} size="sm">
                 {candidate.server.name}
@@ -175,7 +174,7 @@ export function RemoveServersModal(props: Props): ReactElement {
                 {candidate.server.map}
               </Text>
               {candidate.reason !== null && (
-                <Text size="xs" c="orange">
+                <Text size="xs" c="attention">
                   {candidate.reason}
                 </Text>
               )}
@@ -184,31 +183,15 @@ export function RemoveServersModal(props: Props): ReactElement {
         </div>
 
         {remaining === 0 ? (
-          <Alert color="yellow" variant="light">
-            Removing every server clears this cluster from the list until another
-            profile uses the ID again.
-          </Alert>
+          <AppAlert color="attention" variant="light">
+            Removing every server clears this cluster from the list until another profile uses the ID again.
+          </AppAlert>
         ) : remaining === 1 ? (
-          <Alert color="yellow" variant="light">
+          <AppAlert color="attention" variant="light">
             One server will remain. Transfers need at least two servers.
-          </Alert>
+          </AppAlert>
         ) : null}
-
-        <Group justify="space-between">
-          <Button variant="default" disabled={saving} onClick={props.onClose}>
-            Cancel
-          </Button>
-          <Button
-            color="red"
-            variant="filled"
-            loading={saving}
-            disabled={selected.length === 0}
-            onClick={() => void handleRemove()}
-          >
-            Remove from cluster
-          </Button>
-        </Group>
       </Stack>
-    </Modal>
+    </AppPanelModal>
   );
 }

@@ -133,8 +133,7 @@ async function run() {
   process.chdir(projectRoot);
   assert.equal(process.platform, "win32", "CRUD E2E suite requires Windows paths");
 
-  const { profileDir, serversDir, runId, fixtureName, root } =
-    createE2eFixtureRoots("suite");
+  const { profileDir, serversDir, runId, fixtureName, root } = createE2eFixtureRoots("suite");
   assertUnderFixtureRoot(path.join(root, "profiles"), profileDir);
   assertUnderFixtureRoot(path.join(root, "servers"), serversDir);
 
@@ -166,47 +165,32 @@ async function run() {
     // Shell navigation: titles stay, restating subtitles stay gone.
     await page.getByRole("button", { name: "Clusters", exact: true }).first().click();
     await page.locator("[data-clusters-page]").waitFor({ state: "visible", timeout: 10000 });
-    assert.equal(
-      await page.getByText("Compatibility checks and guidance for Cluster ID").count(),
-      0,
-    );
+    assert.equal(await page.getByText("Compatibility checks and guidance for Cluster ID").count(), 0);
 
     await page.getByRole("button", { name: "Backups", exact: true }).first().click();
     await page.getByRole("heading", { name: "Backups", level: 1 }).waitFor({
       state: "visible",
       timeout: 10000,
     });
-    assert.equal(
-      await page.getByText(/Backup health, disk usage, and shared destination settings/i).count(),
-      0,
-    );
+    assert.equal(await page.getByText(/Backup health, disk usage, and shared destination settings/i).count(), 0);
 
     await page.getByRole("button", { name: "Logs", exact: true }).first().click();
     await page.getByRole("heading", { name: "Logs", level: 1 }).waitFor({
       state: "visible",
       timeout: 10000,
     });
-    assert.equal(
-      await page.getByText(/Recent problems and activity across servers/i).count(),
-      0,
-    );
+    assert.equal(await page.getByText(/Recent problems and activity across servers/i).count(), 0);
 
     await page.getByRole("button", { name: "Settings", exact: true }).first().click();
     await page.getByRole("heading", { name: "Settings", level: 1 }).waitFor({
       state: "visible",
       timeout: 10000,
     });
-    assert.equal(
-      await page.getByText("Preferences that apply to the whole app").count(),
-      0,
-    );
+    assert.equal(await page.getByText("Preferences that apply to the whole app").count(), 0);
 
     await page.getByRole("button", { name: "Servers", exact: true }).first().click();
     await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 10000 });
-    assert.equal(
-      await page.getByText("Monitor and manage all your ARK servers").count(),
-      0,
-    );
+    assert.equal(await page.getByText("Monitor and manage all your ARK servers").count(), 0);
 
     await removeServerIfPresent(page, serverName);
     if (cloneName !== null) {

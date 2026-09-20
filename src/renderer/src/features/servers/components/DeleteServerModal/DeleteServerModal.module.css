@@ -12,18 +12,18 @@
   box-sizing: border-box;
   /* Padding lives on .cardInner — UnstyledButton resets padding: 0 on the card. */
   padding: 0;
-  border-radius: var(--app-radius-control, 12px);
-  border: 1px solid var(--app-color-border, var(--mantine-color-dark-4));
-  background: color-mix(in srgb, var(--app-color-surface-control, var(--mantine-color-dark-6)) 88%, transparent);
+  border-radius: 0;
+  border: 1px solid var(--app-color-border);
+  background: color-mix(in srgb, var(--app-color-surface-control) 88%, transparent);
   transition:
-    border-color 120ms ease,
-    background-color 120ms ease,
-    box-shadow 120ms ease;
+    border-color var(--app-motion-fast) var(--app-ease-standard),
+    background-color var(--app-motion-fast) var(--app-ease-standard),
+    box-shadow var(--app-motion-fast) var(--app-ease-standard);
 }
 
 .card:hover {
-  border-color: color-mix(in srgb, var(--app-color-border, var(--mantine-color-dark-3)) 80%, var(--mantine-color-gray-5));
-  background: color-mix(in srgb, var(--app-color-panel, var(--mantine-color-dark-5)) 55%, transparent);
+  border-color: color-mix(in srgb, var(--app-color-border) 80%, var(--mantine-color-gray-5));
+  background: color-mix(in srgb, var(--app-color-panel) 55%, transparent);
 }
 
 .card[data-checked]:not([data-danger]) {
@@ -81,7 +81,7 @@
 }
 
 .card[data-danger] .indicator {
-  --radio-color: var(--app-color-danger);
+  --radio-color: var(--app-color-danger-bright);
 }
 
 .card[data-danger] .indicator:not([data-checked]) {
@@ -89,21 +89,15 @@
 }
 
 .dangerTitle {
-  color: var(--app-color-danger);
-}
-
-.dangerBadge {
-  color: var(--app-color-danger) !important;
-  background: color-mix(in srgb, var(--app-color-danger) 14%, transparent) !important;
-  border: 1px solid color-mix(in srgb, var(--app-color-danger) 32%, transparent) !important;
+  color: var(--app-color-danger-bright);
 }
 
 .dangerAlert {
-  color: var(--app-color-text, var(--mantine-color-gray-0));
+  color: var(--app-color-text);
   background: color-mix(in srgb, var(--app-color-danger) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--app-color-danger) 32%, transparent);
 }
 
 .dangerAlert :global([data-title]) {
-  color: var(--app-color-danger);
+  color: var(--app-color-danger-bright);
 }

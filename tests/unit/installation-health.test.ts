@@ -11,14 +11,10 @@ import { stubInstallationInfo } from "../helpers/installation-info";
 
 describe("installation-health helpers", () => {
   it("treats ready health as installation ready", () => {
-    expect(
-      isInstallationReady(stubInstallationInfo({ serverId: "a", health: "ready" })),
-    ).toBe(true);
-    expect(
-      isInstallationReady(
-        stubInstallationInfo({ serverId: "b", health: "incomplete", installed: false }),
-      ),
-    ).toBe(false);
+    expect(isInstallationReady(stubInstallationInfo({ serverId: "a", health: "ready" }))).toBe(true);
+    expect(isInstallationReady(stubInstallationInfo({ serverId: "b", health: "incomplete", installed: false }))).toBe(
+      false,
+    );
   });
 
   it("maps health to short labels", () => {

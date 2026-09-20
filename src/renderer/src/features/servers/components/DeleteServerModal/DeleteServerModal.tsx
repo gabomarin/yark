@@ -1,34 +1,23 @@
 import type { ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
-import {
-  Alert,
-  Badge,
-  Button,
-  Group,
-  Modal,
-  Radio,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Badge, Button, Radio, Stack, Text } from "@mantine/core";
 import type { DeleteServerOptions, InstallationHealthStatus } from "@shared/types";
 import { EMPTY_WIPE_STALE_MESSAGE } from "@shared/types";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import classes from "./DeleteServerModal.module.css";
 
 type DeleteServerMode = "profileOnly" | "wipe";
 
-type DeleteServerConfirmResult =
-  | { ok: true }
-  | { ok: false; emptyWipeStale?: boolean };
+type DeleteServerConfirmResult = { ok: true } | { ok: false; emptyWipeStale?: boolean };
 
 /**
  * Empty install folders have nothing worth keeping, and Import (#254) rejects
  * them — skip the mode picker and always wipe (backend revalidates emptiness).
  */
-function isForcedWipeInstallHealth(
-  health: InstallationHealthStatus | null | undefined,
-): boolean {
+function isForcedWipeInstallHealth(health: InstallationHealthStatus | null | undefined): boolean {
   return health === "empty";
 }
 
@@ -73,9 +62,7 @@ export function DeleteServerModal(props: Props): ReactElement {
     await runWithFinally(
       async () => {
         const result = await props.onConfirm(
-          forcedWipe
-            ? { deleteInstallFiles: true, requireEmptyInstall: true }
-            : { deleteInstallFiles: wipe },
+          forcedWipe ? { deleteInstallFiles: true, requireEmptyInstall: true } : { deleteInstallFiles: wipe },
         );
         if (activeServerIdRef.current !== requestServerId) return;
         if (result.ok) {
@@ -97,36 +84,47 @@ export function DeleteServerModal(props: Props): ReactElement {
   };
 
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={() => {
         if (!loading) props.onClose();
       }}
       title={`Remove server "${props.serverName}"`}
-      centered
       size="md"
+      footerAlign="between"
       closeOnClickOutside={!loading}
       closeOnEscape={!loading}
       withCloseButton={!loading}
+      footer={
+        <>
+          <Button variant="default" onClick={props.onClose} disabled={loading}>
+            Cancel
+          </Button>
+          <Button
+            color={wipe ? "red" : undefined}
+            variant={wipe ? "filled" : undefined}
+            loading={loading}
+            onClick={() => {
+              void handleConfirm();
+            }}
+          >
+            {wipe ? "Delete everything" : "Remove from YARK"}
+          </Button>
+        </>
+      }
     >
       <Stack gap="sm">
         {forcedWipe ? (
-          <Alert
-            title="Empty install folder"
-            variant="light"
-            className={classes.dangerAlert}
-            color="gray"
-          >
-            This profile never received ASA files (empty folder). YARK will remove the server
-            and delete the empty install path. Import cannot adopt an empty folder later. The
-            folder is rechecked before wipe.
-          </Alert>
+          <AppAlert title="Empty install folder" variant="light" className={classes.dangerAlert} color="gray">
+            This profile never received ASA files (empty folder). YARK will remove the server and delete the empty
+            install path. Import cannot adopt an empty folder later. The folder is rechecked before wipe.
+          </AppAlert>
         ) : (
           <>
             {staleEmptyNotice ? (
-              <Alert color="orange" title="Folder is no longer empty" variant="light">
+              <AppAlert color="attention" title="Folder is no longer empty" variant="light">
                 {EMPTY_WIPE_STALE_MESSAGE}
-              </Alert>
+              </AppAlert>
             ) : null}
 
             <Radio.Group
@@ -140,12 +138,7 @@ export function DeleteServerModal(props: Props): ReactElement {
               aria-label="Removal mode"
             >
               <div className={classes.options}>
-                <Radio.Card
-                  className={classes.card}
-                  value="profileOnly"
-                  radius="md"
-                  withBorder={false}
-                >
+                <Radio.Card className={classes.card} value="profileOnly" radius="md" withBorder={false}>
                   <div className={classes.cardInner}>
                     <div className={classes.titleRow}>
                       <Radio.Indicator className={classes.indicator} />
@@ -161,31 +154,15 @@ export function DeleteServerModal(props: Props): ReactElement {
                   </div>
                 </Radio.Card>
 
-                <Radio.Card
-                  className={classes.card}
-                  value="wipe"
-                  radius="md"
-                  withBorder={false}
-                  mod={{ danger: true }}
-                >
+                <Radio.Card className={classes.card} value="wipe" radius="md" withBorder={false} mod={{ danger: true }}>
                   <div className={classes.cardInner}>
                     <div className={classes.titleRow}>
                       <Radio.Indicator className={classes.indicator} />
                       <div className={classes.titleText}>
-                        <Text
-                          size="sm"
-                          fw={600}
-                          lh={1.35}
-                          className={wipe ? classes.dangerTitle : undefined}
-                        >
+                        <Text size="sm" fw={600} lh={1.35} className={wipe ? classes.dangerTitle : undefined}>
                           Delete everything
                         </Text>
-                        <Badge
-                          size="xs"
-                          variant="outline"
-                          tt="uppercase"
-                          className={classes.dangerBadge}
-                        >
+                        <Badge variant="light" color="red">
                           Danger
                         </Badge>
                       </div>
@@ -199,20 +176,15 @@ export function DeleteServerModal(props: Props): ReactElement {
             </Radio.Group>
 
             {wipe ? (
-              <Alert
-                title="Everything will be deleted"
-                variant="light"
-                className={classes.dangerAlert}
-                color="gray"
-              >
-                This server in YARK and all on-disk content (world, configs, mods, and binaries)
-                will be deleted. This cannot be undone.
-              </Alert>
+              <AppAlert title="Everything will be deleted" variant="light" className={classes.dangerAlert} color="gray">
+                This server in YARK and all on-disk content (world, configs, mods, and binaries) will be deleted. This
+                cannot be undone.
+              </AppAlert>
             ) : (
-              <Alert color="blue" title="Install folder will be kept" variant="light">
-                YARK stops managing this server. The ASA folder stays on disk for manual launch
-                or a later Import (ready trees, or incomplete with opt-in).
-              </Alert>
+              <AppAlert color="blue" title="Install folder will be kept" variant="light">
+                YARK stops managing this server. The ASA folder stays on disk for manual launch or a later Import (ready
+                trees, or incomplete with opt-in).
+              </AppAlert>
             )}
           </>
         )}
@@ -223,23 +195,7 @@ export function DeleteServerModal(props: Props): ReactElement {
           </Text>
           <ReadonlyPath value={props.installDir} compact />
         </div>
-
-        <Group justify="flex-end" gap="sm" mt="xs">
-          <Button variant="default" onClick={props.onClose} disabled={loading}>
-            Cancel
-          </Button>
-          <Button
-            color={wipe ? "red" : undefined}
-            variant={wipe ? "filled" : undefined}
-            loading={loading}
-            onClick={() => {
-              void handleConfirm();
-            }}
-          >
-            {wipe ? "Delete everything" : "Remove from YARK"}
-          </Button>
-        </Group>
       </Stack>
-    </Modal>
+    </AppPanelModal>
   );
 }

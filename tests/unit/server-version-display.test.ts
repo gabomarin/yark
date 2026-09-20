@@ -120,9 +120,7 @@ describe("shouldHintVersionRefreshesOnStart", () => {
         officialVersion: "92.28",
       }),
     ).toBe(true);
-    expect(VERSION_REFRESHES_ON_START_HINT).toMatch(
-      /Version refreshes after you start the server/i,
-    );
+    expect(VERSION_REFRESHES_ON_START_HINT).toMatch(/Version refreshes after you start the server/i);
   });
 
   it("does not hint when dedicated ARK Version is ahead of officials", () => {

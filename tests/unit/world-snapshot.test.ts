@@ -20,53 +20,30 @@ import {
 
 describe("world-snapshot helpers", () => {
   it("classifies transient, primary, dated, companions, and essentials", () => {
-    expect(isTransientWorldSaveName("Genesis_WP_28.07.2026_06.53.34.arkrbf")).toBe(
-      true,
-    );
+    expect(isTransientWorldSaveName("Genesis_WP_28.07.2026_06.53.34.arkrbf")).toBe(true);
     expect(isTransientWorldSaveName("scratch.tmp")).toBe(true);
     expect(isTransientWorldSaveName("Genesis_WP.ark")).toBe(false);
     expect(isPrimaryWorldSaveName("Genesis_WP.ark")).toBe(true);
     expect(isDatedWorldAutosaveName("Genesis_WP.ark")).toBe(false);
-    expect(
-      isDatedWorldAutosaveName("Genesis_WP_28.07.2026_06.53.34.ark"),
-    ).toBe(true);
+    expect(isDatedWorldAutosaveName("Genesis_WP_28.07.2026_06.53.34.ark")).toBe(true);
     expect(isEssentialWorldSaveName("Genesis_WP.ark")).toBe(true);
-    expect(
-      isEssentialWorldSaveName("Genesis_WP_28.07.2026_06.53.34.ark"),
-    ).toBe(false);
+    expect(isEssentialWorldSaveName("Genesis_WP_28.07.2026_06.53.34.ark")).toBe(false);
     expect(isWorldProfileOrTribeName("Tribe.arktribe")).toBe(true);
     expect(isWorldProfileOrTribeName("765.arkprofile")).toBe(true);
     expect(isWorldProfileOrTribeName("Tribe.tribebak")).toBe(true);
-    expect(isAntiCorruptionWorldSaveName("Genesis_WP.ark.bak", "Genesis_WP")).toBe(
-      true,
-    );
-    expect(
-      isAntiCorruptionWorldSaveName("Genesis_WP_AntiCorruptionBackup.bak", "Genesis_WP"),
-    ).toBe(true);
+    expect(isAntiCorruptionWorldSaveName("Genesis_WP.ark.bak", "Genesis_WP")).toBe(true);
+    expect(isAntiCorruptionWorldSaveName("Genesis_WP_AntiCorruptionBackup.bak", "Genesis_WP")).toBe(true);
     expect(isEssentialWorldSaveName("Genesis_WP.arkrbf")).toBe(false);
     expect(isSelectableWorldBackupFileName("Genesis_WP.ark", "Genesis_WP")).toBe(true);
-    expect(
-      isSelectableWorldBackupFileName("Genesis_WP_28.07.2026_06.53.34.ark", "Genesis_WP"),
-    ).toBe(false);
-    expect(isSelectableWorldBackupFileName("TheIsland_WP.ark", "Genesis_WP")).toBe(
-      false,
-    );
+    expect(isSelectableWorldBackupFileName("Genesis_WP_28.07.2026_06.53.34.ark", "Genesis_WP")).toBe(false);
+    expect(isSelectableWorldBackupFileName("TheIsland_WP.ark", "Genesis_WP")).toBe(false);
   });
 
   it("lists map folder name candidates without scanning sibling .ark files", () => {
-    expect(worldMapDirNameCandidates("TheIsland_WP")).toEqual([
-      "TheIsland_WP",
-      "TheIsland",
-    ]);
-    expect(worldMapDirNameCandidates("Svartalfheim_WP")).toEqual([
-      "Svartalfheim_WP",
-      "Svartalfheim",
-    ]);
+    expect(worldMapDirNameCandidates("TheIsland_WP")).toEqual(["TheIsland_WP", "TheIsland"]);
+    expect(worldMapDirNameCandidates("Svartalfheim_WP")).toEqual(["Svartalfheim_WP", "Svartalfheim"]);
     expect(worldMapDirNameCandidates("Ragnarok")).toEqual(["Ragnarok"]);
-    expect(worldMapDirNameCandidates("Svartalfheim_WP", "Svartalfheim")).toEqual([
-      "Svartalfheim",
-      "Svartalfheim_WP",
-    ]);
+    expect(worldMapDirNameCandidates("Svartalfheim_WP", "Svartalfheim")).toEqual(["Svartalfheim", "Svartalfheim_WP"]);
   });
 
   it("prefers mapSaveFolder override when resolving SavedArks dirs", async () => {
@@ -75,11 +52,7 @@ describe("world-snapshot helpers", () => {
       const custom = join(root, "CustomSave");
       await mkdir(custom, { recursive: true });
       await writeFile(join(custom, "Svartalfheim_WP.ark"), "S", "utf8");
-      const resolved = await resolveWorldMapSaveDir(
-        root,
-        "Svartalfheim_WP",
-        "CustomSave",
-      );
+      const resolved = await resolveWorldMapSaveDir(root, "Svartalfheim_WP", "CustomSave");
       expect(resolved).toEqual({ dir: custom, folderName: "CustomSave" });
     } finally {
       await rm(root, { recursive: true, force: true });
@@ -95,9 +68,10 @@ describe("world-snapshot helpers", () => {
       await mkdir(automatic, { recursive: true });
       await writeFile(join(automatic, "Svartalfheim_WP.ark"), "STALE", "utf8");
 
-      await expect(
-        resolveWorldMapSaveDir(root, "Svartalfheim_WP", "CustomSave"),
-      ).resolves.toEqual({ dir: custom, folderName: "CustomSave" });
+      await expect(resolveWorldMapSaveDir(root, "Svartalfheim_WP", "CustomSave")).resolves.toEqual({
+        dir: custom,
+        folderName: "CustomSave",
+      });
     } finally {
       await rm(root, { recursive: true, force: true });
     }
@@ -166,12 +140,7 @@ describe("world-snapshot helpers", () => {
     );
 
     const names = selection.selected.map((row) => row.name).sort();
-    expect(names).toEqual([
-      "Genesis_WP.ark",
-      "Genesis_WP.ark.bak",
-      "player.arkprofile",
-      "tribe.arktribe",
-    ]);
+    expect(names).toEqual(["Genesis_WP.ark", "Genesis_WP.ark.bak", "player.arkprofile", "tribe.arktribe"]);
     expect(selection.skippedTransientCount).toBe(1);
     expect(selection.retainedDatedCount).toBe(0);
     expect(selection.skippedOlderDatedCount).toBe(2);
@@ -203,19 +172,14 @@ describe("world-snapshot helpers", () => {
   });
 
   it("skips transient files that vanish between enumerate and stat", async () => {
-    const candidates = await collectWorldBackupCandidates(
-      ["C:\\a\\ok.ark", "C:\\a\\gone.arkrbf"],
-      async (path) => {
-        if (path.endsWith(".arkrbf")) {
-          const error = Object.assign(new Error("missing"), { code: "ENOENT" });
-          throw error;
-        }
-        return { mtimeMs: 1 };
-      },
-    );
-    expect(candidates).toEqual([
-      { path: "C:\\a\\ok.ark", name: "ok.ark", mtimeMs: 1 },
-    ]);
+    const candidates = await collectWorldBackupCandidates(["C:\\a\\ok.ark", "C:\\a\\gone.arkrbf"], async (path) => {
+      if (path.endsWith(".arkrbf")) {
+        const error = Object.assign(new Error("missing"), { code: "ENOENT" });
+        throw error;
+      }
+      return { mtimeMs: 1 };
+    });
+    expect(candidates).toEqual([{ path: "C:\\a\\ok.ark", name: "ok.ark", mtimeMs: 1 }]);
   });
 
   it("copySavedArksFiles skips mid-copy transient ENOENT and fails essentials", async () => {
@@ -228,23 +192,12 @@ describe("world-snapshot helpers", () => {
       }
     });
 
-    const soft = await copySavedArksFiles(
-      "C:\\src",
-      "C:\\dest",
-      ["C:\\src\\noise.arkrbf"],
-      copyFile,
-    );
+    const soft = await copySavedArksFiles("C:\\src", "C:\\dest", ["C:\\src\\noise.arkrbf"], copyFile);
     expect(soft.copiedFileCount).toBe(0);
     expect(soft.skippedTransientCount).toBe(1);
 
     await expect(
-      copySavedArksFiles(
-        "C:\\src",
-        "C:\\dest",
-        ["C:\\src\\Genesis_WP.ark"],
-        copyFile,
-        { mapToken: "Genesis_WP" },
-      ),
+      copySavedArksFiles("C:\\src", "C:\\dest", ["C:\\src\\Genesis_WP.ark"], copyFile, { mapToken: "Genesis_WP" }),
     ).rejects.toThrow(/Essential world save disappeared/);
   });
 

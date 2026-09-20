@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  isModRowBusy,
-  isModsListBusy,
-  MODS_REORDER_BUSY_KEY,
-} from "./serverModsTableColumns";
+import { isModRowBusy, isModsListBusy, MODS_REORDER_BUSY_KEY } from "./serverModsTableColumns";
 import type { ModRow } from "./serverModsModel";
 
 const row: ModRow = {

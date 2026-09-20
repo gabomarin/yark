@@ -172,9 +172,7 @@ describe("BackupHistoryTable", () => {
     );
 
     const filenames = () =>
-      Array.from(document.querySelectorAll("[data-backup-filename]")).map(
-        (node) => node.textContent,
-      );
+      Array.from(document.querySelectorAll("[data-backup-filename]")).map((node) => node.textContent);
     expect(filenames()[0]).toBe("bk-newer.zip");
 
     await user.click(screen.getByRole("button", { name: /Date/i }));

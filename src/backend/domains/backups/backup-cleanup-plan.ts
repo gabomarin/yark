@@ -1,11 +1,5 @@
 import { backupFinishedAt, playersRetentionKey } from "@shared/backups/backup-player-meta";
-import type {
-  BackupCleanupOptions,
-  BackupCleanupPreview,
-  BackupKind,
-  BackupPolicy,
-  BackupRecord,
-} from "@shared/types";
+import type { BackupCleanupOptions, BackupCleanupPreview, BackupKind, BackupPolicy, BackupRecord } from "@shared/types";
 import { ALL_BACKUP_KINDS, retainCountForKind, worldRetentionKey } from "./backup-policy-helpers";
 
 export interface BackupCleanupPlanItem {
@@ -41,36 +35,22 @@ export function planBackupCleanup(input: PlanBackupCleanupInput): BackupCleanupP
   const enforceRetention = options.enforceRetention === true;
   const protectNewestWorld = options.protectNewestWorld !== false;
   const olderThanDays =
-    typeof options.olderThanDays === "number" && options.olderThanDays > 0
-      ? Math.floor(options.olderThanDays)
-      : null;
+    typeof options.olderThanDays === "number" && options.olderThanDays > 0 ? Math.floor(options.olderThanDays) : null;
   const keepLastPerKind =
     typeof options.keepLastPerKind === "number" && options.keepLastPerKind > 0
       ? Math.floor(options.keepLastPerKind)
       : null;
 
-  if (
-    !includeFailed &&
-    !enforceRetention &&
-    olderThanDays === null &&
-    keepLastPerKind === null
-  ) {
+  if (!includeFailed && !enforceRetention && olderThanDays === null && keepLastPerKind === null) {
     throw new Error("Select at least one cleanup rule");
   }
 
   const nowMs = input.nowMs ?? Date.now();
-  const cutoffIso =
-    olderThanDays !== null
-      ? new Date(nowMs - olderThanDays * 24 * 60 * 60 * 1000).toISOString()
-      : null;
+  const cutoffIso = olderThanDays !== null ? new Date(nowMs - olderThanDays * 24 * 60 * 60 * 1000).toISOString() : null;
 
   const selected = new Map<string, BackupCleanupPlanItem>();
 
-  const mark = (
-    backup: BackupRecord,
-    serverName: string,
-    reason: string,
-  ): void => {
+  const mark = (backup: BackupRecord, serverName: string, reason: string): void => {
     if (backup.status === "running") return;
     const existing = selected.get(backup.id);
     if (existing === undefined) {
@@ -157,11 +137,7 @@ export function planBackupCleanup(input: PlanBackupCleanupInput): BackupCleanupP
           }
           for (const [, list] of byPlayer) {
             for (const backup of list.slice(keepLastPerKind)) {
-              mark(
-                backup,
-                server.name,
-                `keep last ${keepLastPerKind}/players`,
-              );
+              mark(backup, server.name, `keep last ${keepLastPerKind}/players`);
             }
           }
           continue;
@@ -177,11 +153,7 @@ export function planBackupCleanup(input: PlanBackupCleanupInput): BackupCleanupP
           }
           for (const [, list] of byMap) {
             for (const backup of list.slice(keepLastPerKind)) {
-              mark(
-                backup,
-                server.name,
-                `keep last ${keepLastPerKind}/world`,
-              );
+              mark(backup, server.name, `keep last ${keepLastPerKind}/world`);
             }
           }
           continue;
@@ -197,18 +169,13 @@ export function planBackupCleanup(input: PlanBackupCleanupInput): BackupCleanupP
     }
   }
 
-  return [...selected.values()].sort((a, b) =>
-    backupFinishedAt(b.backup).localeCompare(backupFinishedAt(a.backup)),
-  );
+  return [...selected.values()].sort((a, b) => backupFinishedAt(b.backup).localeCompare(backupFinishedAt(a.backup)));
 }
 
 export function summarizeCleanupPlan(
   plan: BackupCleanupPlanItem[],
 ): Pick<BackupCleanupPreview, "items" | "totalBytes" | "byServer"> {
-  const byServerMap = new Map<
-    string,
-    { serverId: string; serverName: string; count: number; bytes: number }
-  >();
+  const byServerMap = new Map<string, { serverId: string; serverName: string; count: number; bytes: number }>();
   let totalBytes = 0;
   for (const item of plan) {
     const serverId = item.backup.serverId;

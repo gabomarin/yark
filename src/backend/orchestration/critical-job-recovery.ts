@@ -38,10 +38,7 @@ export function isTransientCriticalJobError(error: unknown): boolean {
   return TRANSIENT_ERROR.test(message);
 }
 
-export function nextActionsForStatus(
-  status: CriticalJobStatus,
-  operatorRetryAllowed = true,
-): CriticalJobNextAction[] {
+export function nextActionsForStatus(status: CriticalJobStatus, operatorRetryAllowed = true): CriticalJobNextAction[] {
   if (status === "blocked" || status === "failed") {
     return operatorRetryAllowed ? ["retry", "dismiss"] : ["dismiss"];
   }
@@ -51,10 +48,7 @@ export function nextActionsForStatus(
   return [];
 }
 
-export function toCriticalJobSummary(
-  job: DurableCriticalJob,
-  serverName?: string | null,
-): CriticalJobSummary {
+export function toCriticalJobSummary(job: DurableCriticalJob, serverName?: string | null): CriticalJobSummary {
   return {
     id: job.id,
     operation: job.type,
@@ -96,12 +90,12 @@ export function migrateCriticalJob<T extends DurableCriticalJob>(
   const priorStatus = raw.status;
   const wasInterrupted = priorStatus === "running";
   let status: CriticalJobStatus =
-    priorStatus === "pending"
-    || priorStatus === "retrying"
-    || priorStatus === "paused"
-    || priorStatus === "blocked"
-    || priorStatus === "failed"
-    || priorStatus === "cancelled"
+    priorStatus === "pending" ||
+    priorStatus === "retrying" ||
+    priorStatus === "paused" ||
+    priorStatus === "blocked" ||
+    priorStatus === "failed" ||
+    priorStatus === "cancelled"
       ? priorStatus
       : "pending";
   let recoveryReason = typeof raw.recoveryReason === "string" ? raw.recoveryReason : null;
@@ -123,13 +117,9 @@ export function migrateCriticalJob<T extends DurableCriticalJob>(
     type: options.type,
     serverId: options.serverId,
     latestEventId:
-      typeof raw.latestEventId === "number" && Number.isFinite(raw.latestEventId)
-        ? raw.latestEventId
-        : null,
+      typeof raw.latestEventId === "number" && Number.isFinite(raw.latestEventId) ? raw.latestEventId : null,
     attempts: Number.isFinite(raw.attempts) ? Math.max(0, Math.floor(raw.attempts!)) : 0,
-    maxAttempts: Number.isFinite(raw.maxAttempts)
-      ? Math.max(1, Math.floor(raw.maxAttempts!))
-      : 3,
+    maxAttempts: Number.isFinite(raw.maxAttempts) ? Math.max(1, Math.floor(raw.maxAttempts!)) : 3,
     status,
     phase: typeof raw.phase === "string" ? raw.phase : options.defaultPhase,
     createdAt: typeof raw.createdAt === "string" ? raw.createdAt : now,
@@ -139,16 +129,11 @@ export function migrateCriticalJob<T extends DurableCriticalJob>(
     idempotencyKey:
       typeof raw.idempotencyKey === "string"
         ? raw.idempotencyKey
-        : makeIdempotencyKey(
-            options.type,
-            options.serverId,
-            options.idempotencyDiscriminator,
-          ),
-    operatorRetryAllowed:
-      !options.serverExists
-        ? false
-        : status === "blocked"
-          ? true
+        : makeIdempotencyKey(options.type, options.serverId, options.idempotencyDiscriminator),
+    operatorRetryAllowed: !options.serverExists
+      ? false
+      : status === "blocked"
+        ? true
         : typeof raw.operatorRetryAllowed === "boolean"
           ? raw.operatorRetryAllowed
           : status === "failed",

@@ -39,6 +39,10 @@
   color: var(--app-color-muted);
 }
 
+.headerExtra {
+  margin-top: var(--app-space-sm);
+}
+
 .body {
   display: flex;
   flex: 1;
@@ -49,6 +53,28 @@
   overflow: hidden;
 }
 
+/* Only the content scrolls: header and footer stay pinned. A flex column, like the in-dialog
+ * body the atom replaced: several dialogs (maps search, catalog pickers) size their inner
+ * panes with `flex: 1; min-height: 0`, which does nothing inside a plain block. */
 .bodyContent {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
   padding: var(--app-space-lg);
+}
+
+.footer {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--app-space-sm);
+  padding: var(--app-space-sm) var(--app-space-lg) var(--app-space-md);
+  border-top: 1px solid var(--app-color-border-subtle);
+}
+
+.footer[data-align="between"] {
+  justify-content: space-between;
 }

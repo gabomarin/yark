@@ -192,9 +192,10 @@ describe("BackupRepository", () => {
 
     repo.completeRestoreHistory(restoreId, "completed", "ok");
 
-    const row = db
-      .prepare("SELECT status, notes FROM restore_history WHERE id = ?")
-      .get(restoreId) as unknown as { status: string; notes: string };
+    const row = db.prepare("SELECT status, notes FROM restore_history WHERE id = ?").get(restoreId) as unknown as {
+      status: string;
+      notes: string;
+    };
     expect(row.status).toBe("completed");
     expect(row.notes).toBe("ok");
   });

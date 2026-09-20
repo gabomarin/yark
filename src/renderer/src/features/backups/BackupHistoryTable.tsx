@@ -7,10 +7,7 @@ import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { useRowActionMenuApi } from "@ui/RowActionMenu/RowActionMenuProvider";
 import { YarkDataTable } from "@ui/YarkDataTable/YarkDataTable";
 import { buildBackupHistoryRowActions } from "./backupHistoryRowActionModel";
-import {
-  DEFAULT_BACKUP_HISTORY_SORT,
-  sortBackupRecords,
-} from "./backupHistorySort";
+import { DEFAULT_BACKUP_HISTORY_SORT, sortBackupRecords } from "./backupHistorySort";
 import { buildBackupHistoryTableColumns } from "./backupHistoryTableColumns";
 import classes from "./BackupsPage.module.css";
 
@@ -43,16 +40,13 @@ const CONTEXT_SOURCE_ID = "backup-history-table";
  */
 export function BackupHistoryTable(props: Props): ReactElement {
   const { openAt } = useRowActionMenuApi();
-  const [sortStatus, setSortStatus] =
-    useState<DataTableSortStatus<BackupRecord>>(DEFAULT_BACKUP_HISTORY_SORT);
+  const [sortStatus, setSortStatus] = useState<DataTableSortStatus<BackupRecord>>(DEFAULT_BACKUP_HISTORY_SORT);
   const showMapColumn = props.kind === "world";
 
   const sortedRecords = useMemo(() => {
     // Drop map sort when leaving the world tab so we do not sort on a hidden column.
     const status =
-      !showMapColumn && String(sortStatus.columnAccessor) === "mapToken"
-        ? DEFAULT_BACKUP_HISTORY_SORT
-        : sortStatus;
+      !showMapColumn && String(sortStatus.columnAccessor) === "mapToken" ? DEFAULT_BACKUP_HISTORY_SORT : sortStatus;
     return sortBackupRecords(props.records, status);
   }, [props.records, sortStatus, showMapColumn]);
 
@@ -98,9 +92,7 @@ export function BackupHistoryTable(props: Props): ReactElement {
       minHeight={180}
       storeColumnsKey={`yark-backup-history-v6-${props.kind}`}
       sortStatus={
-        !showMapColumn && String(sortStatus.columnAccessor) === "mapToken"
-          ? DEFAULT_BACKUP_HISTORY_SORT
-          : sortStatus
+        !showMapColumn && String(sortStatus.columnAccessor) === "mapToken" ? DEFAULT_BACKUP_HISTORY_SORT : sortStatus
       }
       onSortStatusChange={setSortStatus}
       selectedRecords={selectedRecords}
@@ -139,11 +131,7 @@ export function BackupHistoryTable(props: Props): ReactElement {
       }}
       emptyState={
         <div className={classes.listEmpty} data-backup-list-empty>
-          <EmptyState
-            icon={<HardDrives size={22} />}
-            title="No backups"
-            description={props.emptyHint}
-          />
+          <EmptyState icon={<HardDrives size={22} />} title="No backups" description={props.emptyHint} />
         </div>
       }
       columns={columns}

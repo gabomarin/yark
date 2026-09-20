@@ -26,9 +26,7 @@ export function parseListPlayersResponse(raw: string): ListedPlayer[] {
     if (trimmed.length === 0) continue;
     if (/^no players/i.test(trimmed)) continue;
 
-    const indexed = trimmed.match(
-      /^\d+\.\s*(.+?)\s*,\s*(?:UniqueNetId:|EOS:)?([A-Za-z0-9_-]+)\s*$/i,
-    );
+    const indexed = trimmed.match(/^\d+\.\s*(.+?)\s*,\s*(?:UniqueNetId:|EOS:)?([A-Za-z0-9_-]+)\s*$/i);
     if (indexed !== null) {
       const name = indexed[1]?.trim() ?? "";
       const key = (indexed[2] ?? "").trim();
@@ -43,9 +41,7 @@ export function parseListPlayersResponse(raw: string): ListedPlayer[] {
       continue;
     }
 
-    const eosOnly = trimmed.match(
-      /(?:UniqueNetId:|EOS:)([A-Za-z0-9_-]+)/i,
-    );
+    const eosOnly = trimmed.match(/(?:UniqueNetId:|EOS:)([A-Za-z0-9_-]+)/i);
     const steamOnly = trimmed.match(/\b(7656\d{13})\b/);
     const key = (eosOnly?.[1] ?? steamOnly?.[1] ?? "").trim().toLowerCase();
     if (key.length === 0) continue;

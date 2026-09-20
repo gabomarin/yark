@@ -175,9 +175,7 @@ describe("reconcilePollSnapshots", () => {
 
   it("reuses events when ids match", () => {
     const previous = [{ id: 1 }, { id: 2 }] as never[];
-    expect(reconcileEvents(previous, [{ id: 1 }, { id: 2 }] as never[])).toBe(
-      previous,
-    );
+    expect(reconcileEvents(previous, [{ id: 1 }, { id: 2 }] as never[])).toBe(previous);
   });
 
   it("detects a crash-recovery notice change on a runtime row (#563)", () => {
@@ -198,15 +196,11 @@ describe("reconcilePollSnapshots", () => {
         reason: "boom",
       },
     };
-    expect(reconcileStatusMap(new Map([["a", base]]), [{ ...base }])).toEqual(
-      new Map([["a", base]]),
-    );
+    expect(reconcileStatusMap(new Map([["a", base]]), [{ ...base }])).toEqual(new Map([["a", base]]));
     const withNotice = reconcileStatusMap(new Map([["a", base]]), [pending]);
     expect(withNotice.get("a")?.crashRecovery?.attempt).toBe(1);
 
-    const cleared = reconcileStatusMap(new Map([["a", pending]]), [
-      { ...base, crashRecovery: null },
-    ]);
+    const cleared = reconcileStatusMap(new Map([["a", pending]]), [{ ...base, crashRecovery: null }]);
     expect(cleared.get("a")?.crashRecovery ?? null).toBeNull();
   });
 
@@ -260,10 +254,7 @@ describe("reconcilePollSnapshots", () => {
 
   it("prunes leave-running empty lists so the next start is not a false 0 (#301)", () => {
     const previous = new Map([
-      [
-        "a",
-        { players: [], error: null, loading: false },
-      ],
+      ["a", { players: [], error: null, loading: false }],
       [
         "b",
         {

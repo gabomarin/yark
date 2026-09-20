@@ -1,13 +1,5 @@
-import {
-  ActionIcon,
-  Alert,
-  Button,
-  Group,
-  Loader,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
+import { ActionIcon, Button, Group, Loader, Stack, Text, Tooltip } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { FloppyDisk } from "@phosphor-icons/react";
 import type { MutableRefObject, ReactElement } from "react";
 import { AdminsRemoteConfig } from "./AdminsRemoteConfig";
@@ -39,12 +31,8 @@ export function AdminsSection(props: Props): ReactElement {
   });
 
   const saveDisabled = readOnly || !admins.draftDirty || iniDirty;
-  const saveTooltip = readOnly
-    ? "Stop the server to edit"
-    : admins.saveTooltip;
-  const displayUrl = readOnly
-    ? (admins.state?.adminListUrl ?? "")
-    : admins.urlDraft;
+  const saveTooltip = readOnly ? "Stop the server to edit" : admins.saveTooltip;
+  const displayUrl = readOnly ? (admins.state?.adminListUrl ?? "") : admins.urlDraft;
   const displayInterval = readOnly
     ? (admins.state?.updateAllowedCheatersInterval ?? admins.intervalDraft)
     : admins.intervalDraft;
@@ -55,12 +43,7 @@ export function AdminsSection(props: Props): ReactElement {
         <Text className={classes.sectionTitle}>Whitelist</Text>
         {!readOnly ? (
           <Group gap="xs">
-            <Button
-              size="compact-xs"
-              variant="default"
-              disabled={!admins.draftDirty}
-              onClick={admins.discardDraft}
-            >
+            <Button variant="default" disabled={!admins.draftDirty} onClick={admins.discardDraft}>
               Discard
             </Button>
             <Tooltip label={saveTooltip}>
@@ -81,9 +64,9 @@ export function AdminsSection(props: Props): ReactElement {
 
       <Stack gap="sm">
         {readOnly ? (
-          <Alert color="fossil" variant="light" p="xs">
+          <AppAlert color="fossil" variant="light" p="xs">
             <Text size="xs">Stop the server to edit the whitelist.</Text>
-          </Alert>
+          </AppAlert>
         ) : (
           <Text size="xs" c="dimmed" className={classes.helper}>
             Public http(s) list of EOS admin ids. Optional.
@@ -91,25 +74,21 @@ export function AdminsSection(props: Props): ReactElement {
         )}
 
         {admins.saveBlockedByIni && !readOnly ? (
-          <Alert color="fossil" variant="light" p="xs">
-            <Text size="xs">
-              Save or discard INI Files changes before editing here.
-            </Text>
-          </Alert>
+          <AppAlert color="fossil" variant="light" p="xs">
+            <Text size="xs">Save or discard INI Files changes before editing here.</Text>
+          </AppAlert>
         ) : null}
 
         {admins.state?.mode === "misconfigured" && !readOnly ? (
-          <Alert color="attention" variant="light" p="xs">
-            <Text size="xs">
-              AdminListURL must be http(s) or empty. Fix and Save.
-            </Text>
-          </Alert>
+          <AppAlert color="attention" variant="light" p="xs">
+            <Text size="xs">AdminListURL must be http(s) or empty. Fix and Save.</Text>
+          </AppAlert>
         ) : null}
 
         {admins.draftDirty && !readOnly ? (
-          <Alert color="fossil" variant="light" p="xs">
+          <AppAlert color="fossil" variant="light" p="xs">
             <Text size="xs">Unsaved changes.</Text>
-          </Alert>
+          </AppAlert>
         ) : null}
 
         <AdminsRemoteConfig
@@ -129,9 +108,8 @@ export function AdminsSection(props: Props): ReactElement {
             {admins.error}
           </Text>
         ) : null}
-        {admins.state?.listError !== null &&
-        admins.state?.listError !== undefined ? (
-          <Text size="sm" c="orange">
+        {admins.state?.listError !== null && admins.state?.listError !== undefined ? (
+          <Text size="sm" c="attention">
             {admins.state.listError}
           </Text>
         ) : null}
@@ -143,9 +121,7 @@ export function AdminsSection(props: Props): ReactElement {
               Loading…
             </Text>
           </Group>
-        ) : admins.state !== null &&
-          admins.state.entries.length === 0 &&
-          !admins.state.listError ? (
+        ) : admins.state !== null && admins.state.entries.length === 0 && !admins.state.listError ? (
           <Text size="sm" c="dimmed">
             {admins.state.mode === "remote" || admins.state.mode === "loopback"
               ? "No ids in the list."
@@ -156,11 +132,7 @@ export function AdminsSection(props: Props): ReactElement {
             {admins.state.entries.map((entry) => (
               <PlayerIdentityRow
                 key={entry.id}
-                name={resolvePlayerDisplayName(
-                  entry.id,
-                  entry.name,
-                  props.nameById ?? EMPTY_NAME_BY_ID,
-                )}
+                name={resolvePlayerDisplayName(entry.id, entry.name, props.nameById ?? EMPTY_NAME_BY_ID)}
                 playerKey={entry.id}
               />
             ))}

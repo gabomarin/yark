@@ -62,47 +62,19 @@ export function AppRouter(props: Props): ReactElement {
   const content = (() => {
     switch (props.route) {
       case "overview":
-        return props.overview?.page ?? (
-          <PlaceholderPage
-            title="Servers"
-          />
-        );
+        return props.overview?.page ?? <PlaceholderPage title="Servers" />;
       case "downloads":
-        return props.downloads?.page ?? (
-          <PlaceholderPage
-            title="Downloads"
-          />
-        );
+        return props.downloads?.page ?? <PlaceholderPage title="Downloads" />;
       case "clusters":
-        return props.clusters?.page ?? (
-          <PlaceholderPage
-            title="Clusters"
-          />
-        );
+        return props.clusters?.page ?? <PlaceholderPage title="Clusters" />;
       case "backups":
-        return props.backups?.page ?? (
-          <PlaceholderPage
-            title="Backups"
-          />
-        );
+        return props.backups?.page ?? <PlaceholderPage title="Backups" />;
       case "logs":
-        return props.logs?.page ?? (
-          <PlaceholderPage
-            title="Logs"
-          />
-        );
+        return props.logs?.page ?? <PlaceholderPage title="Logs" />;
       case "settings":
-        return props.settings?.page ?? (
-          <PlaceholderPage
-            title="Settings"
-          />
-        );
+        return props.settings?.page ?? <PlaceholderPage title="Settings" />;
       case "hostedResources":
-        return props.hostedResources?.page ?? (
-          <PlaceholderPage
-            title="Hosted Resources"
-          />
-        );
+        return props.hostedResources?.page ?? <PlaceholderPage title="Hosted Resources" />;
       default:
         return null;
     }

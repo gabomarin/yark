@@ -1,18 +1,9 @@
 import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
-import {
-  Alert,
-  Badge,
-  Button,
-  Group,
-  Modal,
-  Stack,
-  Text,
-} from "@mantine/core";
-import {
-  clusterIniFileSelectionHasWork,
-  defaultClusterIniFileSelection,
-} from "@shared/ini/cluster-ini-file-selection";
+import { Badge, Button, Group, Stack, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
+import { clusterIniFileSelectionHasWork, defaultClusterIniFileSelection } from "@shared/ini/cluster-ini-file-selection";
 import type {
   ClusterIniTemplateApplyOperation,
   ClusterIniTemplateFileSelection,
@@ -48,18 +39,15 @@ function operationCopy(
       body: `Copy selected INI files from “${serverName}” into the cluster template. Session name, ports, and passwords are stripped – they stay per-server. Member install files are not changed.`,
       confirmLabel: "Promote to template",
       secretNote: "Owned keys never enter the template",
-      filesDescription:
-        "Choose which template files to update. Unchecked files keep the current template text.",
+      filesDescription: "Choose which template files to update. Unchecked files keep the current template text.",
     };
   }
   return {
     title: "Restore member from template",
     body: `Replace selected INI files on “${serverName}” with the cluster template. Ports, passwords, and session name stay owned by this profile after composition.`,
     confirmLabel: "Restore & backup",
-    secretNote:
-      "Ports, passwords, and session stay on this profile and are omitted from the preview",
-    filesDescription:
-      "Choose which member files to overwrite. Unchecked files stay as they are on disk.",
+    secretNote: "Ports, passwords, and session stay on this profile and are omitted from the preview",
+    filesDescription: "Choose which member files to overwrite. Unchecked files stay as they are on disk.",
   };
 }
 
@@ -68,12 +56,8 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
   const [loading, setLoading] = useState(false);
   const [committing, setCommitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [files, setFiles] = useState<ClusterIniTemplateFileSelection>(
-    () => defaultClusterIniFileSelection(),
-  );
-  const [preview, setPreview] = useState<ClusterIniTemplateMemberPreview | null>(
-    null,
-  );
+  const [files, setFiles] = useState<ClusterIniTemplateFileSelection>(() => defaultClusterIniFileSelection());
+  const [preview, setPreview] = useState<ClusterIniTemplateMemberPreview | null>(null);
 
   useEffect(() => {
     if (!props.opened) return;
@@ -95,16 +79,8 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
         try {
           const result =
             props.operation === "promote"
-              ? await window.api.previewClusterIniPromote(
-                  props.clusterId,
-                  props.serverId,
-                  files,
-                )
-              : await window.api.previewClusterIniRestore(
-                  props.clusterId,
-                  props.serverId,
-                  files,
-                );
+              ? await window.api.previewClusterIniPromote(props.clusterId, props.serverId, files)
+              : await window.api.previewClusterIniRestore(props.clusterId, props.serverId, files);
           if (cancelled) return;
           if (!result.ok) {
             setError(result.error ?? "Could not build template preview");
@@ -127,11 +103,7 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
   }, [props.opened, props.clusterId, props.serverId, props.operation, files]);
 
   const canCommit =
-    preview !== null &&
-    preview.preview.valid &&
-    clusterIniFileSelectionHasWork(files) &&
-    !loading &&
-    !committing;
+    preview !== null && preview.preview.valid && clusterIniFileSelectionHasWork(files) && !loading && !committing;
 
   const handleCommit = async (): Promise<void> => {
     if (!canCommit) return;
@@ -142,16 +114,8 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
         try {
           const result =
             props.operation === "promote"
-              ? await window.api.promoteClusterIniToTemplate(
-                  props.clusterId,
-                  props.serverId,
-                  files,
-                )
-              : await window.api.restoreClusterIniFromTemplate(
-                  props.clusterId,
-                  props.serverId,
-                  files,
-                );
+              ? await window.api.promoteClusterIniToTemplate(props.clusterId, props.serverId, files)
+              : await window.api.restoreClusterIniFromTemplate(props.clusterId, props.serverId, files);
           if (!result.ok) {
             setError(result.error ?? "Template operation failed");
             return;
@@ -171,7 +135,7 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
   const changeCount = preview?.preview.changedCount ?? 0;
 
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={() => {
         if (!committing) props.onClose();
@@ -179,16 +143,24 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
       title={
         <Group gap="xs" wrap="wrap">
           <Text fw={600}>{copy.title}</Text>
-          <Badge variant="light" color="blue" tt="none">
-            {props.clusterId}
-          </Badge>
+          <Badge variant="light">{props.clusterId}</Badge>
         </Group>
       }
       size="xl"
-      centered
       closeOnClickOutside={!committing}
       closeOnEscape={!committing}
       withCloseButton={!committing}
+      footerAlign="between"
+      footer={
+        <>
+          <Button variant="default" disabled={committing} onClick={props.onClose}>
+            Cancel
+          </Button>
+          <Button loading={committing} disabled={!canCommit} onClick={() => void handleCommit()}>
+            {copy.confirmLabel}
+          </Button>
+        </>
+      }
     >
       <Stack gap="md">
         <Text size="sm" c="dimmed">
@@ -205,44 +177,29 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
         {preview !== null && preview.preview.valid && (
           <Group gap="xs" wrap="wrap">
             {props.operation === "restore" ? (
-              <Badge size="sm" variant="light" color="teal" tt="none">
+              <Badge variant="light" color="ok">
                 Backup before write
               </Badge>
             ) : (
-              <Badge
-                size="sm"
-                variant="light"
-                tt="none"
-                styles={{
-                  root: {
-                    color: "var(--app-color-fossil)",
-                    background:
-                      "color-mix(in srgb, var(--app-color-fossil) 22%, transparent)",
-                  },
-                }}
-              >
+              <Badge variant="light" color="attention">
                 Replaces saved template
               </Badge>
             )}
-            <Badge size="sm" variant="light" color="blue" tt="none">
+            <Badge variant="light">
               {changeCount} preview change{changeCount === 1 ? "" : "s"}
             </Badge>
             {props.operation === "restore" ? (
-              <Badge size="sm" variant="default" tt="none">
-                Server must not be running
-              </Badge>
+              <Badge variant="default">Server must not be running</Badge>
             ) : (
-              <Badge size="sm" variant="default" tt="none">
-                Member files unchanged
-              </Badge>
+              <Badge variant="default">Member files unchanged</Badge>
             )}
           </Group>
         )}
 
         {error !== null && (
-          <Alert color="red" variant="light">
+          <AppAlert color="red" variant="light">
             {error}
-          </Alert>
+          </AppAlert>
         )}
 
         {loading && (
@@ -251,30 +208,8 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
           </Text>
         )}
 
-        {preview !== null && (
-          <ClusterIniDiffSummary
-            preview={preview.preview}
-            secretNote={copy.secretNote}
-          />
-        )}
-
-        <Group justify="space-between">
-          <Button
-            variant="default"
-            disabled={committing}
-            onClick={props.onClose}
-          >
-            Cancel
-          </Button>
-          <Button
-            loading={committing}
-            disabled={!canCommit}
-            onClick={() => void handleCommit()}
-          >
-            {copy.confirmLabel}
-          </Button>
-        </Group>
+        {preview !== null && <ClusterIniDiffSummary preview={preview.preview} secretNote={copy.secretNote} />}
       </Stack>
-    </Modal>
+    </AppPanelModal>
   );
 }

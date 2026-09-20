@@ -26,8 +26,7 @@ export function SetupWizardClusterStep(props: Props): ReactElement {
       <div>
         <Title order={4}>First cluster</Title>
         <Text size="xs" c="dimmed" mt={2}>
-          Let survivors, items, and dinos move between maps. We keep the ID and
-          folder for your first create or import.
+          Let survivors, items, and dinos move between maps. We keep the ID and folder for your first create or import.
         </Text>
       </div>
       <Radio.Group
@@ -59,8 +58,7 @@ export function SetupWizardClusterStep(props: Props): ReactElement {
           />
           {props.dirAutoSuggested && (
             <Text size="xs" c="dimmed">
-              Suggested from your default base folder. Choose another folder if
-              transfers should live elsewhere.
+              Suggested from your default base folder. Choose another folder if transfers should live elsewhere.
             </Text>
           )}
         </Stack>

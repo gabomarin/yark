@@ -23,8 +23,7 @@ export class OperationCancelledError extends Error {
 
 export function isOperationCancelledError(error: unknown): boolean {
   return (
-    error instanceof OperationCancelledError
-    || (error instanceof Error && error.name === "OperationCancelledError")
+    error instanceof OperationCancelledError || (error instanceof Error && error.name === "OperationCancelledError")
   );
 }
 
@@ -36,10 +35,7 @@ export class OperationPausedError extends Error {
 }
 
 export function isOperationPausedError(error: unknown): boolean {
-  return (
-    error instanceof OperationPausedError
-    || (error instanceof Error && error.name === "OperationPausedError")
-  );
+  return error instanceof OperationPausedError || (error instanceof Error && error.name === "OperationPausedError");
 }
 
 export class OperationPauseUnavailableError extends Error {
@@ -157,11 +153,7 @@ export async function robocopyTree(
     });
 
     child.once("error", (error) => {
-      reject(
-        new Error(
-          `Could not run robocopy to ${label}: ${error.message}`,
-        ),
-      );
+      reject(new Error(`Could not run robocopy to ${label}: ${error.message}`));
     });
 
     child.once("exit", (code) => {
@@ -173,9 +165,7 @@ export async function robocopyTree(
       if (!isRobocopySuccess(exitCode)) {
         reject(
           new Error(
-            `${label} failed (robocopy exit ${exitCode})${
-              stderr.trim().length > 0 ? `: ${stderr.trim()}` : ""
-            }`,
+            `${label} failed (robocopy exit ${exitCode})${stderr.trim().length > 0 ? `: ${stderr.trim()}` : ""}`,
           ),
         );
         return;

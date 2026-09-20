@@ -5,14 +5,7 @@ import { OfficialMatchBadge } from "./ConfigurationWizardParts";
 import classes from "./ConfigurationWizard.module.css";
 
 /** Named tiers → max wild level 30–150, plus keep-current / custom. */
-export type DifficultyChoice =
-  | "current"
-  | "30"
-  | "60"
-  | "90"
-  | "120"
-  | "150"
-  | "custom";
+export type DifficultyChoice = "current" | "30" | "60" | "90" | "120" | "150" | "custom";
 
 interface Props {
   choice: DifficultyChoice;
@@ -57,12 +50,7 @@ const DIFFICULTY_TIERS: readonly { value: DifficultyChoice; label: string }[] = 
   { value: "150", label: "Very hard" },
 ];
 
-export function WizardDifficultyControl({
-  choice,
-  draft,
-  onChoiceChange,
-  onCustomLevelChange,
-}: Props): ReactElement {
+export function WizardDifficultyControl({ choice, draft, onChoiceChange, onCustomLevelChange }: Props): ReactElement {
   return (
     <Stack gap="sm">
       <div>
@@ -76,11 +64,7 @@ export function WizardDifficultyControl({
         onChange={onChoiceChange}
         fullWidth
         color={worldDifficultyColor(choice)}
-        data={[
-          { value: "current", label: "Current" },
-          ...DIFFICULTY_TIERS,
-          { value: "custom", label: "Custom" },
-        ]}
+        data={[{ value: "current", label: "Current" }, ...DIFFICULTY_TIERS, { value: "custom", label: "Custom" }]}
         aria-label="World difficulty"
       />
       <div className={classes.difficultySummary}>
@@ -99,7 +83,7 @@ export function WizardDifficultyControl({
             </Text>
           </Stack>
           <Tooltip label={iniDifficultyLabel(draft)} multiline maw={360} withArrow>
-            <Button variant="subtle" color="gray" size="compact-xs">
+            <Button variant="subtle" color="gray">
               INI details
             </Button>
           </Tooltip>

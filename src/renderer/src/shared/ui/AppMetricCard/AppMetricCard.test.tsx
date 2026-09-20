@@ -70,4 +70,3 @@ describe("AppMetricCard", () => {
     expect(document.querySelector("[data-zero]")).toBeNull();
   });
 });
-

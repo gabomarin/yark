@@ -23,32 +23,20 @@ export function isWindowsDriveRoot(pathValue: string): boolean {
 export function assertSafeInstallDirForWipe(installDir: string): string {
   const resolved = resolve(installDir);
   if (isWindowsDriveRoot(resolved)) {
-    throw new Error(
-      `Install path is not safe to delete from disk: "${installDir}"`,
-    );
+    throw new Error(`Install path is not safe to delete from disk: "${installDir}"`);
   }
   // Avoid deleting roots like C:\Users or C:\Windows by accident.
   const normalized = resolved.replace(/[/\\]+$/, "").toLowerCase();
-  const forbidden = [
-    "c:\\windows",
-    "c:\\users",
-    "c:\\program files",
-    "c:\\program files (x86)",
-  ];
+  const forbidden = ["c:\\windows", "c:\\users", "c:\\program files", "c:\\program files (x86)"];
   if (forbidden.some((item) => normalized === item)) {
-    throw new Error(
-      `Install path is too generic to delete from disk: "${resolved}"`,
-    );
+    throw new Error(`Install path is too generic to delete from disk: "${resolved}"`);
   }
   return resolved;
 }
 
 function isNotFoundErrno(error: unknown): boolean {
   return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    (error as NodeJS.ErrnoException).code === "ENOENT"
+    typeof error === "object" && error !== null && "code" in error && (error as NodeJS.ErrnoException).code === "ENOENT"
   );
 }
 
@@ -57,9 +45,7 @@ function isNotFoundErrno(error: unknown): boolean {
  * Non-empty trees (including ASA installs) must use Import instead.
  * Async so UNC/network stalls do not freeze the Electron main process.
  */
-export async function assertInstallDirVacantForCreate(
-  installDir: string,
-): Promise<void> {
+export async function assertInstallDirVacantForCreate(installDir: string): Promise<void> {
   let st;
   try {
     st = await stat(installDir);

@@ -73,15 +73,9 @@ function makeProfile(installDir: string): ServerProfile {
   };
 }
 
-async function waitForRuntimeLine(
-  manager: ProcessManager,
-  serverId: string,
-  expected: string,
-): Promise<void> {
+async function waitForRuntimeLine(manager: ProcessManager, serverId: string, expected: string): Promise<void> {
   const deadline = Date.now() + 1_000;
-  while (
-    !manager.getRuntimeLogSnapshot(serverId).join("\n").includes(expected)
-  ) {
+  while (!manager.getRuntimeLogSnapshot(serverId).join("\n").includes(expected)) {
     if (Date.now() >= deadline) {
       throw new Error(`Timed out waiting for Runtime line: ${expected}`);
     }
@@ -102,12 +96,7 @@ describe("ProcessManager lifecycle ownership", () => {
 
   it("stops capture and ignores late events when a killed server restarts quickly", async () => {
     cleanupRoot = await mkdtemp(join(tmpdir(), "yark-process-lifecycle-"));
-    const binaryDir = join(
-      cleanupRoot,
-      "ShooterGame",
-      "Binaries",
-      "Win64",
-    );
+    const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
     await mkdir(binaryDir, { recursive: true });
     await writeFile(join(binaryDir, "ArkAscendedServer.exe"), "");
 
@@ -137,9 +126,7 @@ describe("ProcessManager lifecycle ownership", () => {
 
     expect(manager.getStatus(profile.id).status).toBe("running");
     expect(manager.getRuntimeLogSnapshot(profile.id)).not.toEqual(
-      expect.arrayContaining([
-        expect.stringContaining("late output from old process"),
-      ]),
+      expect.arrayContaining([expect.stringContaining("late output from old process")]),
     );
 
     await manager.kill(profile.id);
@@ -182,14 +169,10 @@ describe("ProcessManager lifecycle ownership", () => {
     expect(manager.getStatus(profile.id).status).toBe("error");
     expect(manager.getStatus(profile.id).processLive).toBe(false);
     expect(manager.getStatus(profile.id).lastError).toContain("1039450");
-    expect(manager.getRuntimeLogSnapshot(profile.id).join("\n")).toContain(
-      "Not all mods were installed",
-    );
+    expect(manager.getRuntimeLogSnapshot(profile.id).join("\n")).toContain("Not all mods were installed");
 
     manager.start(profile, { openNativeConsole: true });
-    expect(
-      manager.getRuntimeLogSnapshot(profile.id).join("\n"),
-    ).not.toContain("Not all mods were installed");
+    expect(manager.getRuntimeLogSnapshot(profile.id).join("\n")).not.toContain("Not all mods were installed");
     second.emit("spawn");
     await manager.kill(profile.id);
   });
@@ -325,9 +308,7 @@ describe("ProcessManager lifecycle ownership", () => {
       processLive: false,
       lastError: "Closed by user",
     });
-    expect(manager.getRuntimeLogSnapshot(profile.id).join("\n")).toContain(
-      "Closed by user",
-    );
+    expect(manager.getRuntimeLogSnapshot(profile.id).join("\n")).toContain("Closed by user");
   });
 
   it("treats operator-closed exit while starting as stopped with Closed by user notice", async () => {
@@ -363,9 +344,7 @@ describe("ProcessManager lifecycle ownership", () => {
       processLive: false,
       lastError: "Closed by user",
     });
-    expect(manager.getRuntimeLogSnapshot(profile.id).join("\n")).toContain(
-      "Closed by user",
-    );
+    expect(manager.getRuntimeLogSnapshot(profile.id).join("\n")).toContain("Closed by user");
   });
 
   it("reports asaApiLoading until ShooterGame.log produces new lines", async () => {
@@ -388,9 +367,7 @@ describe("ProcessManager lifecycle ownership", () => {
 
     manager.start(profile);
     expect(manager.getStatus(profile.id).asaApiLoading).toBe(true);
-    expect(manager.getRuntimeLogSnapshot(profile.id).join("\n")).toContain(
-      "Loading Ark Server API",
-    );
+    expect(manager.getRuntimeLogSnapshot(profile.id).join("\n")).toContain("Loading Ark Server API");
 
     child.emit("spawn");
     expect(manager.getStatus(profile.id).asaApiLoading).toBe(true);
@@ -399,9 +376,7 @@ describe("ProcessManager lifecycle ownership", () => {
     await vi.waitFor(() => {
       expect(manager.getStatus(profile.id).asaApiLoading).toBe(false);
     });
-    expect(manager.getRuntimeLogSnapshot(profile.id).join("\n")).toContain(
-      "Ark Server API finished loading",
-    );
+    expect(manager.getRuntimeLogSnapshot(profile.id).join("\n")).toContain("Ark Server API finished loading");
 
     await manager.kill(profile.id);
   });
@@ -432,11 +407,8 @@ describe("ProcessManager lifecycle ownership", () => {
     await vi.waitFor(() => {
       expect(manager.getStatus(profile.id).asaApiLoading).toBe(false);
     });
-    expect(manager.getRuntimeLogSnapshot(profile.id).join("\n")).toContain(
-      "server console is up",
-    );
+    expect(manager.getRuntimeLogSnapshot(profile.id).join("\n")).toContain("server console is up");
 
     await manager.kill(profile.id);
   });
 });
-

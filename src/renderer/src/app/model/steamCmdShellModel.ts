@@ -13,11 +13,7 @@ export function steamCmdCardJobsByKind(
   const map = new Map<string, SteamCmdCardJobRef>();
   for (const [serverId, state] of queue) {
     if (state.kind !== kind) continue;
-    if (
-      state.operation !== "install-files"
-      && state.operation !== "update"
-      && state.operation !== "verify-files"
-    ) {
+    if (state.operation !== "install-files" && state.operation !== "update" && state.operation !== "verify-files") {
       continue;
     }
     map.set(serverId, {

@@ -13,9 +13,7 @@ export function resetModAddedToastQueue(): void {
   toastSeq = 0;
 }
 
-const viteHot = (
-  import.meta as ImportMeta & { hot?: { dispose: (cb: () => void) => void } }
-).hot;
+const viteHot = (import.meta as ImportMeta & { hot?: { dispose: (cb: () => void) => void } }).hot;
 if (viteHot !== undefined) {
   viteHot.dispose(() => {
     for (const id of [...visibleIds]) notifications.hide(id);
@@ -35,7 +33,7 @@ export function notifyModsAddedDisabled(input: { name?: string } = {}): void {
     id,
     title: "Mod Added",
     message: `${input.name ?? "This Project ID"} is on the list but will not load until you enable it.`,
-    color: "yellow",
+    color: "attention",
     onClose: () => {
       const index = visibleIds.indexOf(id);
       if (index >= 0) visibleIds.splice(index, 1);

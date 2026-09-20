@@ -1,31 +1,13 @@
 import type { ReactElement } from "react";
-import {
-  ArrowSquareOut,
-  FloppyDisk,
-  FolderOpen,
-  HardDrives,
-} from "@phosphor-icons/react";
-import {
-  Button,
-  Group,
-  NumberInput,
-  Stack,
-  Switch,
-  Text,
-  Title,
-  Tooltip,
-} from "@mantine/core";
+import { ArrowSquareOut, FloppyDisk, FolderOpen, HardDrives } from "@phosphor-icons/react";
+import { Button, Group, NumberInput, Stack, Switch, Text, Title, Tooltip } from "@mantine/core";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { PathField } from "@ui/PathField/PathField";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import { StatusWord } from "@ui/StatusWord/StatusWord";
 import type { BackupServerHealth, ServerProfile } from "@shared/types";
 import type { BackupPolicyDraft } from "../../backupPolicyDraft";
-import {
-  backupHealthLabel,
-  backupHealthTooltip,
-  formatBackupBytes,
-} from "../../model/backupsPageModel";
+import { backupHealthLabel, backupHealthTooltip, formatBackupBytes } from "../../model/backupsPageModel";
 import {
   formatBackupKindLabel,
   formatBackupTypeLabel,
@@ -48,9 +30,7 @@ export interface ServerHealthCardProps {
   onSave: () => void;
 }
 
-function healthTone(
-  health: BackupServerHealth["health"],
-): "ok" | "warn" | "danger" | "neutral" {
+function healthTone(health: BackupServerHealth["health"]): "ok" | "warn" | "danger" | "neutral" {
   if (health === "ok") return "ok";
   if (health === "warning") return "warn";
   if (health === "critical") return "danger";
@@ -60,7 +40,7 @@ function healthTone(
 export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
   const { row, draft } = props;
   return (
-    <AppSurfaceCard>
+    <AppSurfaceCard radius={0}>
       <Stack gap="sm">
         <Group justify="space-between" align="flex-start" wrap="wrap" className={classes.healthCardHeader}>
           <div>
@@ -73,15 +53,8 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
                 </Text>
               )}
               {row.health !== "ok" ? (
-                <Tooltip
-                  label={backupHealthTooltip(row.health)}
-                  multiline
-                  maw={320}
-                  withArrow
-                >
-                  <StatusWord tone={healthTone(row.health)}>
-                    {backupHealthLabel(row.health)}
-                  </StatusWord>
+                <Tooltip label={backupHealthTooltip(row.health)} multiline maw={320} withArrow>
+                  <StatusWord tone={healthTone(row.health)}>{backupHealthLabel(row.health)}</StatusWord>
                 </Tooltip>
               ) : null}
             </Group>
@@ -94,24 +67,17 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
               {row.latest === null
                 ? "none"
                 : `${formatBackupWhenLabel(row.latest.createdAt).primary} (${formatBackupKindLabel(row.latest.kind)} · ${formatBackupTypeLabel(row.latest.type)} · ${row.latest.status})`}
-              {row.policy.enabled
-                ? ` · Schedule ${row.policy.intervalMinutes}m`
-                : " · Schedule off"}
+              {row.policy.enabled ? ` · Schedule ${row.policy.intervalMinutes}m` : " · Schedule off"}
             </Text>
             <Text size="xs" c="dimmed">
-              Counts – world {row.counts.world} · players {row.counts.players} · ini{" "}
-              {row.counts.ini}
+              Counts – world {row.counts.world} · players {row.counts.players} · ini {row.counts.ini}
               {row.counts.failed24h > 0 ? ` · failed 24h ${row.counts.failed24h}` : ""}
               {" · "}
               used {formatBackupBytes(row.usedBytes)}
             </Text>
           </div>
           <Group gap="xs">
-            <Button
-              variant="light"
-              leftSection={<ArrowSquareOut size={16} />}
-              onClick={props.onOpenServer}
-            >
+            <Button variant="default" leftSection={<ArrowSquareOut size={16} />} onClick={props.onOpenServer}>
               Open in server
             </Button>
             <Button
@@ -122,19 +88,11 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
             >
               Open destination
             </Button>
-            <Button
-              variant="subtle"
-              color="gray"
-              onClick={props.onToggleExpand}
-            >
+            <Button variant="subtle" color="gray" onClick={props.onToggleExpand}>
               {props.expanded ? "Hide settings" : "Edit settings"}
             </Button>
             {props.expanded && draft !== undefined ? (
-              <Button
-                leftSection={<FloppyDisk size={16} />}
-                loading={props.busy}
-                onClick={props.onSave}
-              >
+              <Button leftSection={<FloppyDisk size={16} />} loading={props.busy} onClick={props.onSave}>
                 Save
               </Button>
             ) : null}
@@ -144,9 +102,8 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
         {props.expanded && draft !== undefined && (
           <Stack gap="sm">
             <Text size="sm" c="dimmed">
-              Destination is the shared archive root for world, player, and INI
-              backups. Schedule applies to world only; Players and INI use their
-              own triggers and retain counts.
+              Destination is the shared archive root for world, player, and INI backups. Schedule applies to world only;
+              Players and INI use their own triggers and retain counts.
             </Text>
             <PathField
               className={classes.dirField}
@@ -188,8 +145,7 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
                 onChange={(value) =>
                   props.onDraftChange({
                     ...draft,
-                    intervalMinutes:
-                      typeof value === "number" ? value : draft.intervalMinutes,
+                    intervalMinutes: typeof value === "number" ? value : draft.intervalMinutes,
                   })
                 }
                 className={classes.policyField}
@@ -203,8 +159,7 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
                 onChange={(value) =>
                   props.onDraftChange({
                     ...draft,
-                    retainCountWorld:
-                      typeof value === "number" ? value : draft.retainCountWorld,
+                    retainCountWorld: typeof value === "number" ? value : draft.retainCountWorld,
                   })
                 }
                 className={classes.policyField}
@@ -218,8 +173,7 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
                 onChange={(value) =>
                   props.onDraftChange({
                     ...draft,
-                    retainCountPlayers:
-                      typeof value === "number" ? value : draft.retainCountPlayers,
+                    retainCountPlayers: typeof value === "number" ? value : draft.retainCountPlayers,
                   })
                 }
                 className={classes.policyField}
@@ -232,8 +186,7 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
                 onChange={(value) =>
                   props.onDraftChange({
                     ...draft,
-                    retainCountIni:
-                      typeof value === "number" ? value : draft.retainCountIni,
+                    retainCountIni: typeof value === "number" ? value : draft.retainCountIni,
                   })
                 }
                 className={classes.policyField}

@@ -12,9 +12,9 @@ const server: ServerProfile = {
   map: "TheIsland_WP",
   installDir: "C:/ARK/srv-1",
   enabled: true,
-    autoStart: false,
-    useAsaApi: false,
-    useAsaApiLoader: false,
+  autoStart: false,
+  useAsaApi: false,
+  useAsaApiLoader: false,
   sessionName: "Island",
   maxPlayers: 70,
   gamePort: 7777,
@@ -162,15 +162,14 @@ describe("BackupsPage", () => {
     const onOpenServerBackups = vi.fn();
     render(
       <AppProviders>
-        <BackupsPage
-          servers={[server]}
-          onOpenServerBackups={onOpenServerBackups}
-        />
+        <BackupsPage servers={[server]} onOpenServerBackups={onOpenServerBackups} />
       </AppProviders>,
     );
 
     expect(await screen.findByRole("heading", { name: "Backups" })).toBeInTheDocument();
-    expect(screen.queryByText(/Backup health, disk usage, and shared destination settings across all servers/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Backup health, disk usage, and shared destination settings across all servers/i),
+    ).not.toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "The Island" })).toBeInTheDocument();
     expect(screen.getByText("0/1")).toBeInTheDocument();
     expect(screen.getByText(/Schedule off/i)).toBeInTheDocument();
@@ -197,10 +196,7 @@ describe("BackupsPage", () => {
 
     const { rerender } = render(
       <AppProviders>
-        <BackupsPage
-          servers={[server]}
-          onOpenServerBackups={vi.fn()}
-        />
+        <BackupsPage servers={[server]} onOpenServerBackups={vi.fn()} />
       </AppProviders>,
     );
 
@@ -224,16 +220,11 @@ describe("BackupsPage", () => {
     // App refresh replaces the servers array every few seconds with the same ids.
     rerender(
       <AppProviders>
-        <BackupsPage
-          servers={[{ ...server }]}
-          onOpenServerBackups={vi.fn()}
-        />
+        <BackupsPage servers={[{ ...server }]} onOpenServerBackups={vi.fn()} />
       </AppProviders>,
     );
     await waitFor(() => {
-      expect(
-        screen.getByRole("switch", { name: /enable scheduled world backups/i }),
-      ).toBeChecked();
+      expect(screen.getByRole("switch", { name: /enable scheduled world backups/i })).toBeChecked();
     });
     // Same id set must not trigger another non-quiet fleet load.
     expect(window.api.getBackupFleetSummary).toHaveBeenCalledTimes(2);
@@ -243,10 +234,7 @@ describe("BackupsPage", () => {
     const user = userEvent.setup();
     render(
       <AppProviders>
-        <BackupsPage
-          servers={[server]}
-          onOpenServerBackups={vi.fn()}
-        />
+        <BackupsPage servers={[server]} onOpenServerBackups={vi.fn()} />
       </AppProviders>,
     );
 
@@ -256,10 +244,7 @@ describe("BackupsPage", () => {
     await user.click(screen.getByRole("button", { name: /^save$/i }));
 
     await waitFor(() => {
-      expect(window.api.setBackupPolicy).toHaveBeenCalledWith(
-        "srv-1",
-        expect.objectContaining({ enabled: true }),
-      );
+      expect(window.api.setBackupPolicy).toHaveBeenCalledWith("srv-1", expect.objectContaining({ enabled: true }));
     });
     expect(await screen.findByText(/Saved backup settings/i)).toBeInTheDocument();
   });
@@ -267,10 +252,7 @@ describe("BackupsPage", () => {
   it("labels disabled servers as inactive", async () => {
     render(
       <AppProviders>
-        <BackupsPage
-          servers={[{ ...server, enabled: false }]}
-          onOpenServerBackups={vi.fn()}
-        />
+        <BackupsPage servers={[{ ...server, enabled: false }]} onOpenServerBackups={vi.fn()} />
       </AppProviders>,
     );
 
@@ -416,4 +398,3 @@ describe("BackupsPage", () => {
     expect(screen.queryByText(/No backups yet/i)).not.toBeInTheDocument();
   });
 });
-

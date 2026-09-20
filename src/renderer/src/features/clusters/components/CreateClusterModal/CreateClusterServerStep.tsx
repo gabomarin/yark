@@ -21,15 +21,7 @@ function ServerCandidateRow(props: {
       disabled={!props.eligible}
       onClick={props.onToggle}
       aria-pressed={props.selected}
-      leading={
-        <Checkbox
-          checked={props.selected}
-          disabled={!props.eligible}
-          readOnly
-          tabIndex={-1}
-          aria-hidden
-        />
-      }
+      leading={<Checkbox checked={props.selected} disabled={!props.eligible} readOnly tabIndex={-1} aria-hidden />}
       trailing={<ServerRuntimeStatusBadge status={props.status} size="xs" />}
     >
       <Text fw={600} size="sm">
@@ -39,7 +31,7 @@ function ServerCandidateRow(props: {
         {props.map}
       </Text>
       {props.reason !== null && (
-        <Text size="xs" c="orange">
+        <Text size="xs" c="attention">
           {props.reason}
         </Text>
       )}
@@ -67,8 +59,7 @@ export function CreateClusterServerStep(props: Props): ReactElement {
       <div className={classes.candidateList} data-create-cluster-servers>
         {props.candidates.length === 0 ? (
           <Text size="sm" c="dimmed">
-            {props.emptyHint ??
-              "Create a server first, then start a cluster from stopped servers."}
+            {props.emptyHint ?? "Create a server first, then start a cluster from stopped servers."}
           </Text>
         ) : (
           props.candidates.map((candidate) => (
@@ -88,8 +79,7 @@ export function CreateClusterServerStep(props: Props): ReactElement {
         )}
       </div>
       <Text size="xs" c="dimmed">
-        {props.selectionHint ??
-          "Select one or more stopped servers that are not already in a cluster"}
+        {props.selectionHint ?? "Select one or more stopped servers that are not already in a cluster"}
         {selectedCount > 0 ? ` (${selectedCount} selected)` : ""}.
       </Text>
       {props.portError !== null && (

@@ -22,12 +22,10 @@ describe("resolveWorkspaceFilesJobState", () => {
         }),
       ],
     ]);
-    const result = resolveWorkspaceFilesJobState(
-      "srv-1",
-      filesQueue,
-      true,
-      { serverId: "srv-1", operation: "verify-files" } as SteamCmdStatus,
-    );
+    const result = resolveWorkspaceFilesJobState("srv-1", filesQueue, true, {
+      serverId: "srv-1",
+      operation: "verify-files",
+    } as SteamCmdStatus);
     expect(result.filesJobActive).toBe(true);
     expect(result.filesJobOperation).toBe("update");
     expect(result.filesJobQueueKind).toBe("queued");
@@ -35,15 +33,10 @@ describe("resolveWorkspaceFilesJobState", () => {
   });
 
   it("uses live SteamCMD status when no queue row exists", () => {
-    const result = resolveWorkspaceFilesJobState(
-      "srv-1",
-      new Map(),
-      true,
-      {
-        serverId: "srv-1",
-        operation: "install-files",
-      } as SteamCmdStatus,
-    );
+    const result = resolveWorkspaceFilesJobState("srv-1", new Map(), true, {
+      serverId: "srv-1",
+      operation: "install-files",
+    } as SteamCmdStatus);
     expect(result.filesJobActive).toBe(true);
     expect(result.filesJobOperation).toBe("install-files");
     expect(result.filesJobQueueKind).toBe("active");

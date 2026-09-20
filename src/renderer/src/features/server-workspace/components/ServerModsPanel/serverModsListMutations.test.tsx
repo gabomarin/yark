@@ -12,8 +12,7 @@ const sampleMod = {
   authors: ["kavan87"],
   downloadCount: 1,
   dateModified: "2026-05-28T00:00:00.000Z",
-  curseforgeUrl:
-    "https://www.curseforge.com/ark-survival-ascended/mods/super-spyglass-plus",
+  curseforgeUrl: "https://www.curseforge.com/ark-survival-ascended/mods/super-spyglass-plus",
   slug: "super-spyglass-plus",
   categories: ["General"],
 };
@@ -93,16 +92,12 @@ describe("createServerModsListMutations", () => {
     await add(sampleMod);
     expect(setBusyKey).toHaveBeenCalledWith("929420");
     expect(setBusyKey).toHaveBeenLastCalledWith(null);
-    expect(persist).toHaveBeenCalledWith(
-      ["947033", "929420"],
-      ["929420"],
-      { "929420": sampleMod },
-    );
+    expect(persist).toHaveBeenCalledWith(["947033", "929420"], ["929420"], { "929420": sampleMod });
     expect(notifySpy).toHaveBeenCalledWith(
       expect.objectContaining({
         title: "Mod Added",
         message: expect.stringContaining("will not load until you enable it"),
-        color: "yellow",
+        color: "attention",
       }),
     );
   });

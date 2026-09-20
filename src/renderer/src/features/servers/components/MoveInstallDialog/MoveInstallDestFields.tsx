@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
-import { Alert, Checkbox, Stack, Text } from "@mantine/core";
+import { Checkbox, Stack, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { PathField } from "@ui/PathField/PathField";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 
@@ -18,14 +19,8 @@ export function MoveInstallDestFields(props: Props): ReactElement {
   return (
     <>
       <PathField
-        label={
-          props.createFolder
-            ? "Destination base folder"
-            : "Destination install directory"
-        }
-        placeholder={
-          props.createFolder ? "C:\\ark_servers" : "C:\\ark_servers\\my_server_new"
-        }
+        label={props.createFolder ? "Destination base folder" : "Destination install directory"}
+        placeholder={props.createFolder ? "C:\\ark_servers" : "C:\\ark_servers\\my_server_new"}
         description={
           props.createFolder
             ? "The new folder must be empty. The previous install is removed after a successful move."
@@ -40,9 +35,7 @@ export function MoveInstallDestFields(props: Props): ReactElement {
       <Checkbox
         label={`Create folder "${props.folderName}"`}
         checked={props.createFolder}
-        onChange={(event) =>
-          props.onCreateFolderChange(event.currentTarget.checked)
-        }
+        onChange={(event) => props.onCreateFolderChange(event.currentTarget.checked)}
       />
       {props.createFolder && (
         <Stack gap={4}>
@@ -57,9 +50,9 @@ export function MoveInstallDestFields(props: Props): ReactElement {
         </Stack>
       )}
       {props.previewIssue !== null && (
-        <Alert color="red" title="Destination path">
+        <AppAlert color="red" title="Destination path">
           <Text size="sm">{props.previewIssue}</Text>
-        </Alert>
+        </AppAlert>
       )}
     </>
   );

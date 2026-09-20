@@ -58,9 +58,7 @@ export class BackupScheduleRuntime {
     const policy = this.host.backups.getPolicy(server.id);
     // Start interrupted-row reconcile as soon as the schedule will need it so a
     // concurrent list()/reconcileDiskBackups shares the same in-flight Promise.
-    const interruptedPromise = policy.enabled
-      ? this.host.reconcileInterruptedRunningBackups(server.id)
-      : null;
+    const interruptedPromise = policy.enabled ? this.host.reconcileInterruptedRunningBackups(server.id) : null;
     await this.host.applyRetention(server.id, policy);
     if (!policy.enabled) return;
 
@@ -72,21 +70,14 @@ export class BackupScheduleRuntime {
     }
     if (this.host.scheduledWorldPaused.has(server.id)) return;
 
-    if (
-      this.host.scheduledWorldInFlight.has(server.id)
-      || this.host.backups.hasRunning(server.id, "world")
-    ) {
+    if (this.host.scheduledWorldInFlight.has(server.id) || this.host.backups.hasRunning(server.id, "world")) {
       return;
     }
 
     const requiredMs = policy.intervalMinutes * 60 * 1000;
     // Gate on last finished scheduled world (completed or failed) so failures
     // do not retry every ~60s scheduler tick.
-    const latestScheduledWorld = this.host.backups.latestFinished(
-      server.id,
-      "world",
-      "scheduled",
-    );
+    const latestScheduledWorld = this.host.backups.latestFinished(server.id, "world", "scheduled");
     if (latestScheduledWorld !== null) {
       const finishedAt = backupFinishedAt(latestScheduledWorld);
       const elapsedMs = Date.now() - Date.parse(finishedAt);
@@ -97,10 +88,7 @@ export class BackupScheduleRuntime {
     // Wait a full interval after the process became active so a fresh start
     // does not package on the first scheduler tick.
     const startedAtRaw = this.host.processes.getStatus(server.id).startedAt;
-    const startedAtMs =
-      startedAtRaw !== null && startedAtRaw.length > 0
-        ? Date.parse(startedAtRaw)
-        : Number.NaN;
+    const startedAtMs = startedAtRaw !== null && startedAtRaw.length > 0 ? Date.parse(startedAtRaw) : Number.NaN;
     if (!Number.isFinite(startedAtMs)) return;
     if (Date.now() - startedAtMs < requiredMs) return;
     if (!(await this.host.isInstallReady(server))) return;
@@ -136,9 +124,7 @@ export class BackupScheduleRuntime {
         server.id,
         "error",
         "error",
-        `Scheduled backup failed for \"${server.name}\": ${
-          err instanceof Error ? err.message : String(err)
-        }`,
+        `Scheduled backup failed for \"${server.name}\": ${err instanceof Error ? err.message : String(err)}`,
         {
           what: "A scheduled world backup did not complete.",
           cause: err instanceof Error ? err.message : String(err),
@@ -155,10 +141,7 @@ export class BackupScheduleRuntime {
     }
   }
 
-  recordScheduledCycleError(
-    server: ServerProfile,
-    error: unknown,
-  ): void {
+  recordScheduledCycleError(server: ServerProfile, error: unknown): void {
     const message = error instanceof Error ? error.message : String(error);
     try {
       this.host.servers.addEvent(
@@ -169,8 +152,7 @@ export class BackupScheduleRuntime {
         {
           what: "The scheduler could not evaluate or maintain this server's backup policy.",
           cause: message,
-          suggestion:
-            "Check the backup destination and app logs. Other servers will continue to be evaluated.",
+          suggestion: "Check the backup destination and app logs. Other servers will continue to be evaluated.",
           context: {
             trigger: "scheduled",
             phase: "policy-retention-or-reconciliation",
@@ -178,11 +160,7 @@ export class BackupScheduleRuntime {
         },
       );
     } catch (eventError) {
-      console.error(
-        `Scheduled backup cycle failed for "${server.name}"`,
-        error,
-        eventError,
-      );
+      console.error(`Scheduled backup cycle failed for "${server.name}"`, error, eventError);
     }
   }
 }

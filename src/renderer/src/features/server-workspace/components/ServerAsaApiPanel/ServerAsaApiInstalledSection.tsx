@@ -1,13 +1,5 @@
 import type { ReactElement } from "react";
-import {
-  ActionIcon,
-  Button,
-  Group,
-  Stack,
-  Switch,
-  Text,
-  Tooltip,
-} from "@mantine/core";
+import { ActionIcon, Button, Group, Stack, Switch, Text, Tooltip } from "@mantine/core";
 import { FolderOpen, Plus, Trash } from "@phosphor-icons/react";
 import type { AsaApiPluginInfo, AsaApiStatus } from "@shared/types";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
@@ -30,15 +22,9 @@ interface Props {
   inputSize: "xs" | "sm";
   locked: boolean;
   isBusy: (kind: AsaApiBusyKind) => boolean;
-  persistAsaApiFlags: (next: {
-    useAsaApi: boolean;
-    useAsaApiLoader: boolean;
-  }) => Promise<void>;
+  persistAsaApiFlags: (next: { useAsaApi: boolean; useAsaApiLoader: boolean }) => Promise<void>;
   onAddPluginZip: () => Promise<void>;
-  onPluginEnabled: (
-    plugin: AsaApiPluginInfo,
-    enabled: boolean,
-  ) => Promise<void>;
+  onPluginEnabled: (plugin: AsaApiPluginInfo, enabled: boolean) => Promise<void>;
   onDeletePlugin: (plugin: AsaApiPluginInfo) => void;
   onClearCache: () => void;
 }
@@ -49,7 +35,7 @@ export function ServerAsaApiInstalledSection(props: Props): ReactElement {
   return (
     <>
       <div className={classes.statusGrid}>
-        <AppSurfaceCard tone="flat" padding="sm">
+        <AppSurfaceCard tone="flat" padding="sm" radius={0}>
           <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
             On Start
           </Text>
@@ -64,7 +50,7 @@ export function ServerAsaApiInstalledSection(props: Props): ReactElement {
                 : "Version.dll missing"}
           </Text>
         </AppSurfaceCard>
-        <AppSurfaceCard tone="flat" padding="sm">
+        <AppSurfaceCard tone="flat" padding="sm" radius={0}>
           <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
             API version
           </Text>
@@ -75,14 +61,12 @@ export function ServerAsaApiInstalledSection(props: Props): ReactElement {
             Update after game patches
           </Text>
         </AppSurfaceCard>
-        <AppSurfaceCard tone="flat" padding="sm">
+        <AppSurfaceCard tone="flat" padding="sm" radius={0}>
           <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
             Plugins
           </Text>
           <Text size="sm" fw={600}>
-            {props.status.plugins.length === 0
-              ? "None yet"
-              : `${props.status.plugins.length} found`}
+            {props.status.plugins.length === 0 ? "None yet" : `${props.status.plugins.length} found`}
           </Text>
           <Text size="xs" c="dimmed">
             {pluginCountLabel(props.status.plugins)}
@@ -92,11 +76,7 @@ export function ServerAsaApiInstalledSection(props: Props): ReactElement {
 
       <section>
         <Text className={classes.groupTitle}>When you Start</Text>
-        <div
-          className={`${classes.optionRow} ${
-            props.asaOn ? "" : classes.optionRowDisabled
-          }`}
-        >
+        <div className={`${classes.optionRow} ${props.asaOn ? "" : classes.optionRowDisabled}`}>
           <Group align="flex-start" gap="sm" wrap="nowrap">
             <Switch
               checked={props.asaOn}
@@ -129,11 +109,7 @@ export function ServerAsaApiInstalledSection(props: Props): ReactElement {
           </Group>
         </div>
 
-        <div
-          className={`${classes.optionRow} ${
-            props.asaOn ? "" : classes.optionRowDisabled
-          }`}
-        >
+        <div className={`${classes.optionRow} ${props.asaOn ? "" : classes.optionRowDisabled}`}>
           <Group align="flex-start" gap="sm" wrap="nowrap">
             <Switch
               checked={props.loaderOn}
@@ -197,7 +173,7 @@ export function ServerAsaApiInstalledSection(props: Props): ReactElement {
             description="Add a plugin zip, or place each plugin in its own folder under ArkApi\Plugins (folder name = .dll name)."
           />
         ) : (
-          <AppSurfaceCard tone="flat" padding={0}>
+          <AppSurfaceCard tone="flat" padding={0} radius={0}>
             <ul className={classes.pluginList}>
               {props.status.plugins.map((plugin) => (
                 <li key={plugin.folderName} className={classes.pluginRow}>
@@ -208,10 +184,7 @@ export function ServerAsaApiInstalledSection(props: Props): ReactElement {
                       disabled={props.locked}
                       aria-label={`Enable ${plugin.name}`}
                       onChange={(e) => {
-                        void props.onPluginEnabled(
-                          plugin,
-                          e.currentTarget.checked,
-                        );
+                        void props.onPluginEnabled(plugin, e.currentTarget.checked);
                       }}
                     />
                     <div style={{ minWidth: 0 }}>
@@ -219,12 +192,8 @@ export function ServerAsaApiInstalledSection(props: Props): ReactElement {
                         {plugin.name}
                       </Text>
                       <Text size="xs" c="dimmed" ff="monospace">
-                        {plugin.dllPresent
-                          ? `${plugin.name}.dll`
-                          : "DLL missing"}
-                        {plugin.configFile
-                          ? ` · ${plugin.configFile}`
-                          : ""}
+                        {plugin.dllPresent ? `${plugin.name}.dll` : "DLL missing"}
+                        {plugin.configFile ? ` · ${plugin.configFile}` : ""}
                       </Text>
                     </div>
                   </Group>
@@ -235,9 +204,7 @@ export function ServerAsaApiInstalledSection(props: Props): ReactElement {
                       size="sm"
                       aria-label={`Delete ${plugin.name}`}
                       loading={props.isBusy("deletePlugin")}
-                      disabled={
-                        props.locked && !props.isBusy("deletePlugin")
-                      }
+                      disabled={props.locked && !props.isBusy("deletePlugin")}
                       onClick={() => props.onDeletePlugin(plugin)}
                     >
                       <Trash size={16} />
@@ -249,15 +216,12 @@ export function ServerAsaApiInstalledSection(props: Props): ReactElement {
           </AppSurfaceCard>
         )}
         <Text size="xs" c="dimmed" mt={6}>
-          Add plugin zip installs into ArkApi\Plugins. Off moves a plugin to
-          Disabled_Plugins; trash deletes it. Stop the server first.
+          Add plugin zip installs into ArkApi\Plugins. Off moves a plugin to Disabled_Plugins; trash deletes it. Stop
+          the server first.
         </Text>
       </section>
 
-      <DismissibleHint
-        storageKey={ASA_API_EXPERIMENTAL_HINT_STORAGE_KEY}
-        title="Experimental integration"
-      >
+      <DismissibleHint storageKey={ASA_API_EXPERIMENTAL_HINT_STORAGE_KEY} title="Experimental integration">
         Behavior and UI may change.
       </DismissibleHint>
 

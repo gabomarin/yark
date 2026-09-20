@@ -23,9 +23,9 @@ function profile(partial: Partial<ServerProfile> & Pick<ServerProfile, "id" | "n
     mods: [],
     disabledMods: [],
     modMetadataCache: {},
-    
+
     autoStart: false,
-    
+
     useAsaApi: false,
     useAsaApiLoader: false,
     enabled: true,
@@ -35,10 +35,7 @@ function profile(partial: Partial<ServerProfile> & Pick<ServerProfile, "id" | "n
   };
 }
 
-function probeResult(
-  installDir: string,
-  health: ServerInstallationInfo["health"],
-): ImportInstallProbe {
+function probeResult(installDir: string, health: ServerInstallationInfo["health"]): ImportInstallProbe {
   return {
     installDir,
     installation: {
@@ -116,10 +113,7 @@ describe("ServerForm", () => {
     expect(screen.getByText(/untitled profile/i)).toBeInTheDocument();
     expect(screen.getByText(/the island · 7777\/27015\/27020/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^browse$/i })).toBeInTheDocument();
-    expect(screen.getByRole("textbox", { name: /base folder/i })).toHaveAttribute(
-      "aria-readonly",
-      "true",
-    );
+    expect(screen.getByRole("textbox", { name: /base folder/i })).toHaveAttribute("aria-readonly", "true");
   });
 
   it("enables Create server after a vacant install-path probe", async () => {
@@ -129,12 +123,7 @@ describe("ServerForm", () => {
 
     render(
       <AppProviders>
-        <ServerForm
-          initial={null}
-          defaultBaseFolder={"C:\\ark"}
-          onCancel={vi.fn()}
-          onSaved={vi.fn()}
-        />
+        <ServerForm initial={null} defaultBaseFolder={"C:\\ark"} onCancel={vi.fn()} onSaved={vi.fn()} />
       </AppProviders>,
     );
 
@@ -156,12 +145,7 @@ describe("ServerForm", () => {
 
     render(
       <AppProviders>
-        <ServerForm
-          initial={null}
-          defaultBaseFolder={"C:\\ark"}
-          onCancel={vi.fn()}
-          onSaved={vi.fn()}
-        />
+        <ServerForm initial={null} defaultBaseFolder={"C:\\ark"} onCancel={vi.fn()} onSaved={vi.fn()} />
       </AppProviders>,
     );
 
@@ -303,9 +287,7 @@ describe("ServerForm", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByRole("combobox", { name: /^cluster$/i })).toHaveValue(
-      "ember · from setup",
-    );
+    expect(screen.getByRole("combobox", { name: /^cluster$/i })).toHaveValue("ember · from setup");
     expect(screen.getByLabelText(/^cluster id$/i)).toHaveValue("ember");
     expect(screen.getByText("D:\\ASA\\Clusters\\Ember")).toBeInTheDocument();
   });
@@ -352,9 +334,7 @@ describe("ServerForm", () => {
     expect(screen.getByLabelText(/cluster id/i)).toHaveValue("alpha");
     expect(screen.getByText("C:\\ark_servers\\cluster\\alpha")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^browse$/i })).toBeInTheDocument();
-    expect(
-      screen.getByRole("textbox", { name: /shared cluster directory/i }),
-    ).toHaveAttribute("aria-readonly", "true");
+    expect(screen.getByRole("textbox", { name: /shared cluster directory/i })).toHaveAttribute("aria-readonly", "true");
     expect(screen.getByRole("button", { name: /^save changes$/i })).toBeInTheDocument();
     expect(screen.getByText(/the island · 7777\/27015\/27020/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/game port/i)).toBeInTheDocument();
@@ -383,9 +363,7 @@ describe("ServerForm", () => {
     expect(screen.getByLabelText(/game port/i)).toHaveValue("7787");
     expect(screen.getByLabelText(/query port/i)).toHaveValue("27025");
     expect(screen.getByLabelText(/rcon port/i)).toHaveValue("27030");
-    expect(
-      screen.getByText(/suggested to avoid other yark servers/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/suggested to avoid other yark servers/i)).toBeInTheDocument();
     expect(screen.queryByText(/port conflicts/i)).not.toBeInTheDocument();
   });
 
@@ -414,9 +392,7 @@ describe("ServerForm", () => {
     await user.clear(gamePort);
     await user.type(gamePort, "9000");
     expect(gamePort).toHaveValue("9000");
-    expect(
-      screen.getByText(/suggested to avoid other yark servers/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/suggested to avoid other yark servers/i)).toBeInTheDocument();
   });
 
   it("does not show Mods or Extra arguments on create/edit (#93)", () => {
@@ -428,9 +404,7 @@ describe("ServerForm", () => {
 
     expect(screen.queryByLabelText(/^mods$/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/extra arguments/i)).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /browse asa catalog/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /browse asa catalog/i })).not.toBeInTheDocument();
     expect(screen.queryByTestId("server-form-launch-summary")).not.toBeInTheDocument();
   });
 
@@ -512,9 +486,7 @@ describe("ServerForm", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByRole("combobox", { name: /^map$/i })).toHaveTextContent(
-      /Svartalfheim_WP/,
-    );
+    expect(screen.getByRole("combobox", { name: /^map$/i })).toHaveTextContent(/Svartalfheim_WP/);
     expect(screen.getByRole("combobox", { name: /^map$/i })).toHaveTextContent(/Custom/);
     expect(screen.getByLabelText(/custom map name/i)).toHaveValue("Svartalfheim_WP");
     expect(screen.getByLabelText(/world save folder/i)).toHaveValue("Svartalfheim");
@@ -555,8 +527,7 @@ describe("ServerForm", () => {
                 authors: ["Author"],
                 downloadCount: 1,
                 dateModified: "2026-01-01T00:00:00.000Z",
-                curseforgeUrl:
-                  "https://www.curseforge.com/ark-survival-ascended/mods/svartalfheim-premium",
+                curseforgeUrl: "https://www.curseforge.com/ark-survival-ascended/mods/svartalfheim-premium",
                 slug: "svartalfheim-premium",
                 categories: ["Maps"],
               },
@@ -570,9 +541,7 @@ describe("ServerForm", () => {
 
     await user.click(screen.getByRole("combobox", { name: /^map$/i }));
     expect(await screen.findByText("Mod Maps")).toBeInTheDocument();
-    await user.click(
-      screen.getByRole("option", { name: /^Svartalfheim Premium$/i }),
-    );
+    await user.click(screen.getByRole("option", { name: /^Svartalfheim Premium$/i }));
     await user.click(screen.getByRole("button", { name: /^save changes$/i }));
     await waitFor(() => {
       expect(window.api.updateServer).toHaveBeenCalledWith(
@@ -585,4 +554,3 @@ describe("ServerForm", () => {
     });
   });
 });
-

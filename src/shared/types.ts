@@ -2,12 +2,7 @@ import type { ConfigTransferSelection } from "./ini/config-transfer";
 import type { StructuredLaunchArgs } from "./asa/structured-launch-options";
 
 /** Lifecycle status of a server instance. */
-export type ServerStatus =
-  | "stopped"
-  | "starting"
-  | "running"
-  | "stopping"
-  | "error";
+export type ServerStatus = "stopped" | "starting" | "running" | "stopping" | "error";
 
 /** Persisted profile for an ASA dedicated server. */
 export interface ServerProfile {
@@ -75,10 +70,7 @@ export interface ServerProfile {
 }
 
 /** Input data to create/edit a profile (without generated fields). */
-export type ServerProfileInput = Omit<
-  ServerProfile,
-  "id" | "enabled" | "createdAt" | "updatedAt"
->;
+export type ServerProfileInput = Omit<ServerProfile, "id" | "enabled" | "createdAt" | "updatedAt">;
 
 /**
  * Narrow profile write for Launch / Mods panels (#209).
@@ -103,10 +95,7 @@ type ServerProfileAsaApiPatch = {
   useAsaApiLoader: boolean;
 };
 
-export type ServerProfilePatch =
-  | ServerProfileLaunchPatch
-  | ServerProfileModsPatch
-  | ServerProfileAsaApiPatch;
+export type ServerProfilePatch = ServerProfileLaunchPatch | ServerProfileModsPatch | ServerProfileAsaApiPatch;
 
 /** One native AsaApi plugin folder under Win64\\ArkApi\\Plugins (#243). */
 export interface AsaApiPluginInfo {
@@ -136,11 +125,7 @@ export interface AsaApiStatus {
 }
 
 /** Phases for AsaApi GitHub download + extract (#243). */
-type AsaApiInstallProgressPhase =
-  | "resolving"
-  | "downloading"
-  | "extracting"
-  | "finishing";
+type AsaApiInstallProgressPhase = "resolving" | "downloading" | "extracting" | "finishing";
 
 /** Live progress while Install / Check for API update runs. */
 export interface AsaApiInstallProgress {
@@ -157,14 +142,13 @@ export interface AsaApiInstallProgress {
 
 /** Normalize AsaApi install push payloads so partial emitters stay UI-safe. */
 export function normalizeAsaApiInstallProgress(
-  payload: Partial<AsaApiInstallProgress> &
-    Pick<AsaApiInstallProgress, "serverId" | "active">,
+  payload: Partial<AsaApiInstallProgress> & Pick<AsaApiInstallProgress, "serverId" | "active">,
 ): AsaApiInstallProgress {
   const phase =
-    payload.phase === "resolving"
-    || payload.phase === "downloading"
-    || payload.phase === "extracting"
-    || payload.phase === "finishing"
+    payload.phase === "resolving" ||
+    payload.phase === "downloading" ||
+    payload.phase === "extracting" ||
+    payload.phase === "finishing"
       ? payload.phase
       : null;
   const percent =
@@ -177,8 +161,7 @@ export function normalizeAsaApiInstallProgress(
     phase,
     label: typeof payload.label === "string" ? payload.label : "",
     percent,
-    bytesDownloaded:
-      typeof payload.bytesDownloaded === "number" ? payload.bytesDownloaded : null,
+    bytesDownloaded: typeof payload.bytesDownloaded === "number" ? payload.bytesDownloaded : null,
     bytesTotal: typeof payload.bytesTotal === "number" ? payload.bytesTotal : null,
     assetLabel: typeof payload.assetLabel === "string" ? payload.assetLabel : null,
     error: typeof payload.error === "string" ? payload.error : null,
@@ -240,13 +223,7 @@ export interface CrashRecoveryRuntime {
  * Distinct from runtime/process health.
  */
 export type InstallationHealthStatus =
-  | "ready"
-  | "missing"
-  | "empty"
-  | "incomplete"
-  | "inaccessible"
-  | "suspicious"
-  | "unknown";
+  "ready" | "missing" | "empty" | "incomplete" | "inaccessible" | "suspicious" | "unknown";
 
 export interface ServerInstallationInfo {
   serverId: string;
@@ -381,21 +358,9 @@ export interface SteamCmdStatus {
   checkedAt: string;
 }
 
-export type CriticalJobOperation =
-  | "install-files"
-  | "update"
-  | "verify-files"
-  | "pre-update-backup"
-  | "restore";
+export type CriticalJobOperation = "install-files" | "update" | "verify-files" | "pre-update-backup" | "restore";
 
-export type CriticalJobStatus =
-  | "pending"
-  | "running"
-  | "retrying"
-  | "paused"
-  | "blocked"
-  | "failed"
-  | "cancelled";
+export type CriticalJobStatus = "pending" | "running" | "retrying" | "paused" | "blocked" | "failed" | "cancelled";
 
 export type CriticalJobNextAction = "retry" | "dismiss" | "cancel" | "resume";
 
@@ -448,7 +413,6 @@ export interface DeleteServerOptions {
 /** Backend error when an empty-only wipe finds the folder is no longer empty. */
 export const EMPTY_WIPE_STALE_MESSAGE =
   "Install folder is no longer empty. Choose Remove from YARK only or Delete everything explicitly.";
-
 
 export interface StartServerOptions {
   /**
@@ -640,11 +604,7 @@ export type BackupType =
   | "ini_save";
 
 /** Phases pushed while a stop runs (optional wait → SaveWorld → DoExit → backup). */
-type ServerStopProgressPhase =
-  | "waiting"
-  | "saving"
-  | "backing_up"
-  | "stopping";
+type ServerStopProgressPhase = "waiting" | "saving" | "backing_up" | "stopping";
 
 /** Why a stop job is running — quit overlay only for `"quit"`. */
 export type ServerStopProgressReason = "user" | "quit";
@@ -660,12 +620,7 @@ export interface ServerStopProgress {
 }
 
 /** Phases for Move installation (copy → verify → commit). */
-type MoveInstallProgressPhase =
-  | "validating"
-  | "copying"
-  | "verifying"
-  | "committing"
-  | "cleanup";
+type MoveInstallProgressPhase = "validating" | "copying" | "verifying" | "committing" | "cleanup";
 
 export interface MoveInstallProgress {
   serverId: string;
@@ -683,11 +638,7 @@ export interface MoveInstallProgress {
 }
 
 /** Phases for optional clone install-folder copy (#160). */
-type CloneInstallProgressPhase =
-  | "validating"
-  | "copying"
-  | "applying"
-  | "cleanup";
+type CloneInstallProgressPhase = "validating" | "copying" | "applying" | "cleanup";
 
 export interface CloneInstallProgress {
   /** Source server id (dialog is bound to the clone source). */
@@ -703,14 +654,13 @@ export interface CloneInstallProgress {
 
 /** Normalize clone-copy push payloads so partial emitters stay UI-safe. */
 export function normalizeCloneInstallProgress(
-  payload: Partial<CloneInstallProgress> &
-    Pick<CloneInstallProgress, "serverId" | "active">,
+  payload: Partial<CloneInstallProgress> & Pick<CloneInstallProgress, "serverId" | "active">,
 ): CloneInstallProgress {
   const phase =
-    payload.phase === "validating"
-    || payload.phase === "copying"
-    || payload.phase === "applying"
-    || payload.phase === "cleanup"
+    payload.phase === "validating" ||
+    payload.phase === "copying" ||
+    payload.phase === "applying" ||
+    payload.phase === "cleanup"
       ? payload.phase
       : null;
   return {
@@ -718,28 +668,23 @@ export function normalizeCloneInstallProgress(
     active: payload.active === true,
     phase,
     label: typeof payload.label === "string" ? payload.label : "",
-    percent:
-      typeof payload.percent === "number" && Number.isFinite(payload.percent)
-        ? payload.percent
-        : null,
+    percent: typeof payload.percent === "number" && Number.isFinite(payload.percent) ? payload.percent : null,
     sourceDir: typeof payload.sourceDir === "string" ? payload.sourceDir : null,
-    destinationDir:
-      typeof payload.destinationDir === "string" ? payload.destinationDir : null,
+    destinationDir: typeof payload.destinationDir === "string" ? payload.destinationDir : null,
     error: typeof payload.error === "string" ? payload.error : null,
   };
 }
 
 /** Normalize push payloads so partial emitters stay UI-safe. */
 export function normalizeMoveInstallProgress(
-  payload: Partial<MoveInstallProgress> &
-    Pick<MoveInstallProgress, "serverId" | "active">,
+  payload: Partial<MoveInstallProgress> & Pick<MoveInstallProgress, "serverId" | "active">,
 ): MoveInstallProgress {
   const phase =
-    payload.phase === "validating"
-    || payload.phase === "copying"
-    || payload.phase === "verifying"
-    || payload.phase === "committing"
-    || payload.phase === "cleanup"
+    payload.phase === "validating" ||
+    payload.phase === "copying" ||
+    payload.phase === "verifying" ||
+    payload.phase === "committing" ||
+    payload.phase === "cleanup"
       ? payload.phase
       : null;
   return {
@@ -747,17 +692,11 @@ export function normalizeMoveInstallProgress(
     active: payload.active === true,
     phase,
     label: typeof payload.label === "string" ? payload.label : "",
-    percent:
-      typeof payload.percent === "number" && Number.isFinite(payload.percent)
-        ? payload.percent
-        : null,
+    percent: typeof payload.percent === "number" && Number.isFinite(payload.percent) ? payload.percent : null,
     sourceDir: typeof payload.sourceDir === "string" ? payload.sourceDir : null,
-    stagingDir:
-      typeof payload.stagingDir === "string" ? payload.stagingDir : null,
-    destinationDir:
-      typeof payload.destinationDir === "string" ? payload.destinationDir : null,
-    oldSourceDir:
-      typeof payload.oldSourceDir === "string" ? payload.oldSourceDir : null,
+    stagingDir: typeof payload.stagingDir === "string" ? payload.stagingDir : null,
+    destinationDir: typeof payload.destinationDir === "string" ? payload.destinationDir : null,
+    oldSourceDir: typeof payload.oldSourceDir === "string" ? payload.oldSourceDir : null,
     error: typeof payload.error === "string" ? payload.error : null,
     awaitingCleanup: payload.awaitingCleanup === true,
   };
@@ -765,13 +704,10 @@ export function normalizeMoveInstallProgress(
 
 /** Normalize push payloads so older emitters without `reason` stay UI-safe. */
 export function normalizeServerStopProgress(
-  payload: Partial<ServerStopProgress> &
-    Pick<ServerStopProgress, "serverId" | "active">,
+  payload: Partial<ServerStopProgress> & Pick<ServerStopProgress, "serverId" | "active">,
 ): ServerStopProgress {
   const reason: ServerStopProgressReason =
-    payload.reason === "quit" || payload.reason === "user"
-      ? payload.reason
-      : "user";
+    payload.reason === "quit" || payload.reason === "user" ? payload.reason : "user";
   return {
     serverId: payload.serverId,
     active: payload.active === true,
@@ -783,10 +719,7 @@ export function normalizeServerStopProgress(
         ? payload.phase
         : null,
     label: typeof payload.label === "string" ? payload.label : "",
-    percent:
-      typeof payload.percent === "number" && Number.isFinite(payload.percent)
-        ? payload.percent
-        : null,
+    percent: typeof payload.percent === "number" && Number.isFinite(payload.percent) ? payload.percent : null,
     reason,
   };
 }
@@ -898,13 +831,7 @@ export interface MaintenancePolicyStatus extends MaintenancePolicy {
   cancelable: boolean;
 }
 
-export type MaintenanceCountdownPhase =
-  | "idle"
-  | "warning"
-  | "last_minute"
-  | "restarting"
-  | "updating"
-  | "wiping";
+export type MaintenanceCountdownPhase = "idle" | "warning" | "last_minute" | "restarting" | "updating" | "wiping";
 
 /**
  * Optional, default-off per-server crash recovery (#563).
@@ -969,13 +896,7 @@ export interface BackupPolicyStatus extends BackupPolicy {
 export type BackupHealthStatus = "ok" | "warning" | "critical" | "unknown";
 
 type BackupFleetAlertKind =
-  | "stale"
-  | "failed"
-  | "missing_destination"
-  | "disk_warning"
-  | "disk_critical"
-  | "never_backed_up"
-  | "schedule_paused";
+  "stale" | "failed" | "missing_destination" | "disk_warning" | "disk_critical" | "never_backed_up" | "schedule_paused";
 
 export interface BackupDiskAlertSettings {
   /** Warn when volume used percent is at or above this value. Default 85. */

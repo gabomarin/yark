@@ -9,10 +9,7 @@ import {
   type FleetInstallRef,
 } from "@shared/server/server-install-path";
 import type { ImportInstallProbe } from "@shared/types";
-import {
-  diskMoveInstallWarning,
-  fleetCreateInstallWarning,
-} from "../ServerForm/createInstallPathWarning";
+import { diskMoveInstallWarning, fleetCreateInstallWarning } from "../ServerForm/createInstallPathWarning";
 
 /** Current install folder leaf (fallback: profile name). */
 export function moveDestFolderName(sourceInstallDir: string, serverName: string): string {
@@ -24,11 +21,7 @@ export function moveDestFolderName(sourceInstallDir: string, serverName: string)
 }
 
 /** Exact dest, or `base\<folder>` when Create folder is on (same as create). */
-export function resolveMoveDestDir(
-  pickedDir: string,
-  folderName: string,
-  createFolder: boolean,
-): string {
+export function resolveMoveDestDir(pickedDir: string, folderName: string, createFolder: boolean): string {
   const picked = pickedDir.trim();
   if (picked.length === 0) {
     return "";
@@ -39,10 +32,7 @@ export function resolveMoveDestDir(
   return resolveServerInstallDir(picked, folderName);
 }
 
-function moveDestSameAsSourceWarning(
-  sourceDir: string,
-  destDir: string,
-): string | null {
+function moveDestSameAsSourceWarning(sourceDir: string, destDir: string): string | null {
   if (isWindowsPathEqual(sourceDir, destDir)) {
     return "Destination must differ from the current install path";
   }

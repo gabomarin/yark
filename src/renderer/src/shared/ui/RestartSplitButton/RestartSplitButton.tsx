@@ -33,8 +33,7 @@ interface Props {
 export function RestartSplitButton(props: Props): ReactElement {
   const size = props.size ?? "sm";
   const restartBusy = props.restartBusy === true;
-  const manualCountdown =
-    props.countdown?.kind === "manual" ? props.countdown : null;
+  const manualCountdown = props.countdown?.kind === "manual" ? props.countdown : null;
   const remaining = useCountdownRemaining(manualCountdown?.targetAtMs ?? null);
 
   if (manualCountdown !== null) {
@@ -68,7 +67,7 @@ function ManualRestartCancelButton({
     <Button
       size={size}
       color="red"
-      variant="light"
+      variant="default"
       leftSection={<X size={14} weight="bold" />}
       onClick={onCancel}
       data-restart-warning-cancel
@@ -91,8 +90,7 @@ function RestartNowButton({
   return (
     <Button
       size={size}
-      variant="filled"
-      color="fossil"
+      variant="default"
       leftSection={restartBusy ? undefined : <ArrowsClockwise size={14} weight="bold" />}
       onClick={onRestartNow}
       disabled={!canRestartNow}
@@ -123,8 +121,7 @@ function RestartWarningMenu({
       <Menu.Target>
         <Button
           size={size}
-          variant="filled"
-          color="fossil"
+          variant="default"
           px="xs"
           aria-label="More restart options"
           disabled={restartBusy || !canRestartNow}

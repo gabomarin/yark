@@ -22,20 +22,11 @@ export function ServerCardIdentity(props: Props): ReactElement {
       aria-label={openLabel}
       data-open-settings
     >
-      <Group
-        gap={compact ? "xs" : "sm"}
-        align="center"
-        wrap="nowrap"
-        className={classes.identity}
-      >
+      <Group gap={compact ? "xs" : "sm"} align="center" wrap="nowrap" className={classes.identity}>
         <MapArtThumb
           mapId={server.map}
           mapModId={server.mapModId}
-          modThumbnailUrl={
-            server.mapModId
-              ? server.modMetadataCache?.[server.mapModId]?.thumbnailUrl
-              : null
-          }
+          modThumbnailUrl={server.mapModId ? server.modMetadataCache?.[server.mapModId]?.thumbnailUrl : null}
           size={compact ? "md" : "lg"}
           shape="rounded"
           className={classes.thumb}
@@ -48,11 +39,7 @@ export function ServerCardIdentity(props: Props): ReactElement {
             {server.sessionName}
           </Text>
         </div>
-        <CaretRight
-          className={classes.openChevron}
-          size={compact ? 16 : 18}
-          aria-hidden
-        />
+        <CaretRight className={classes.openChevron} size={compact ? 16 : 18} aria-hidden />
       </Group>
     </UnstyledButton>
   );

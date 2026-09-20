@@ -54,9 +54,7 @@ Mod ID: 1460513
 `,
 } as const;
 
-function meta(
-  overrides: Partial<ModMetadata> & Pick<ModMetadata, "id" | "name" | "slug">,
-): ModMetadata {
+function meta(overrides: Partial<ModMetadata> & Pick<ModMetadata, "id" | "name" | "slug">): ModMetadata {
   return {
     summary: "",
     thumbnailUrl: null,
@@ -82,13 +80,9 @@ describe("isMapModCandidate", () => {
 
 describe("suggestMapTokenFromModText", () => {
   it("extracts labeled Map Name tokens from catalog fixtures", () => {
-    expect(suggestMapTokenFromModText(FIXTURES.svartalfheimPremium)?.token).toBe(
-      "Svartalfheim_WP",
-    );
+    expect(suggestMapTokenFromModText(FIXTURES.svartalfheimPremium)?.token).toBe("Svartalfheim_WP");
     expect(suggestMapTokenFromModText(FIXTURES.amissa)?.token).toBe("Amissa_WP");
-    expect(suggestMapTokenFromModText(FIXTURES.forglarPremium)?.token).toBe(
-      "Forglar_WP",
-    );
+    expect(suggestMapTokenFromModText(FIXTURES.forglarPremium)?.token).toBe("Forglar_WP");
     expect(suggestMapTokenFromModText(FIXTURES.lostCity)?.token).toBe("LostCity_WP");
     expect(suggestMapTokenFromModText(FIXTURES.mythica)?.token).toBe("Mythica_WP");
   });
@@ -119,9 +113,7 @@ describe("suggestMapTokenFromModText", () => {
   });
 
   it("still ignores bare official KNOWN_MAPS tokens", () => {
-    expect(
-      suggestMapTokenFromModText("Uses TheIsland_WP as the world."),
-    ).toBeNull();
+    expect(suggestMapTokenFromModText("Uses TheIsland_WP as the world.")).toBeNull();
   });
 });
 

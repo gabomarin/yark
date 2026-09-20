@@ -1,14 +1,6 @@
 import type { ReactElement } from "react";
-import {
-  Alert,
-  Badge,
-  Button,
-  Checkbox,
-  Group,
-  ScrollArea,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Badge, Button, Checkbox, Group, ScrollArea, Stack, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import type { ServerProfile, ServerRuntimeInfo, ServerStatus } from "@shared/types";
 import {
   isTargetEligible,
@@ -35,9 +27,7 @@ interface Props {
 
 export function CopyConfigSourceTargetStep(props: Props): ReactElement {
   const eligibleIds = props.targetOptions
-    .filter((server) =>
-      isTargetEligible(runtimeStatus(props.statuses, server.id)),
-    )
+    .filter((server) => isTargetEligible(runtimeStatus(props.statuses, server.id)))
     .map((server) => server.id);
   const listState = targetListSelectionState(props.targetIds, eligibleIds);
   const ineligibleSelected = props.targetIds.filter((id) => {
@@ -58,15 +48,10 @@ export function CopyConfigSourceTargetStep(props: Props): ReactElement {
         </Text>
       </Group>
       {props.sourceStatus !== "stopped" && (
-        <Alert color="attention">
-          Source is running. We copy saved settings, not live game memory.
-        </Alert>
+        <AppAlert color="attention">Source is running. We copy saved settings, not live game memory.</AppAlert>
       )}
 
-      <div
-        className={classes.root}
-        data-enabled={listState.selectedCount > 0 || undefined}
-      >
+      <div className={classes.root} data-enabled={listState.selectedCount > 0 || undefined}>
         <Checkbox
           label="Copy to (targets)"
           description="Select one or more stopped servers"
@@ -74,13 +59,7 @@ export function CopyConfigSourceTargetStep(props: Props): ReactElement {
           indeterminate={listState.indeterminate}
           disabled={eligibleIds.length === 0}
           onChange={(e) =>
-            props.onTargetIdsChange(
-              toggleAllTargetIds(
-                props.targetIds,
-                eligibleIds,
-                e.currentTarget.checked,
-              ),
-            )
+            props.onTargetIdsChange(toggleAllTargetIds(props.targetIds, eligibleIds, e.currentTarget.checked))
           }
         />
 
@@ -96,12 +75,7 @@ export function CopyConfigSourceTargetStep(props: Props): ReactElement {
               No other servers available as targets.
             </Text>
           ) : (
-            <ScrollArea.Autosize
-              mah={280}
-              type="auto"
-              offsetScrollbars
-              className={classes.listScroll}
-            >
+            <ScrollArea.Autosize mah={280} type="auto" offsetScrollbars className={classes.listScroll}>
               <ul className={classes.list}>
                 {props.targetOptions.map((server) => {
                   const status = runtimeStatus(props.statuses, server.id);
@@ -113,26 +87,16 @@ export function CopyConfigSourceTargetStep(props: Props): ReactElement {
                         checked={checked}
                         disabled={!eligible && !checked}
                         onChange={(e) =>
-                          props.onTargetIdsChange(
-                            toggleTargetId(
-                              props.targetIds,
-                              server.id,
-                              e.currentTarget.checked,
-                            ),
-                          )
+                          props.onTargetIdsChange(toggleTargetId(props.targetIds, server.id, e.currentTarget.checked))
                         }
                         label={
                           <Group gap={8} wrap="nowrap">
                             <Text size="sm">{server.name}</Text>
-                            <Badge
-                              size="xs"
-                              variant="light"
-                              color={eligible ? undefined : "red"}
-                            >
+                            <Badge variant="light" color={eligible ? undefined : "red"}>
                               {statusLabel(status)}
                             </Badge>
                             {!server.enabled && (
-                              <Badge size="xs" color="gray" variant="outline">
+                              <Badge color="gray" variant="outline">
                                 Disabled
                               </Badge>
                             )}
@@ -153,24 +117,14 @@ export function CopyConfigSourceTargetStep(props: Props): ReactElement {
       </div>
 
       {ineligibleSelected.length > 0 && (
-        <Alert color="red">
-          Stop{" "}
-          {ineligibleSelected
-            .map(
-              (id) =>
-                props.targetOptions.find((s) => s.id === id)?.name ?? id,
-            )
-            .join(", ")}{" "}
+        <AppAlert color="red">
+          Stop {ineligibleSelected.map((id) => props.targetOptions.find((s) => s.id === id)?.name ?? id).join(", ")}{" "}
           before continuing.
-        </Alert>
+        </AppAlert>
       )}
 
       <div>
-        <Button
-          variant="subtle"
-          size="compact-xs"
-          onClick={props.onToggleNeverOpen}
-        >
+        <Button variant="subtle" onClick={props.onToggleNeverOpen}>
           {props.neverOpen ? "Hide" : "What stays on the target?"}
         </Button>
         {props.neverOpen && (

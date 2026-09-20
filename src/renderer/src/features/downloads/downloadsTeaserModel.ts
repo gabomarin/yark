@@ -16,25 +16,15 @@ export type DownloadsTeaser = {
   selectedJobId: string | null;
 };
 
-export function buildDownloadsTeaser(
-  status: SteamCmdStatus,
-  rows: DownloadRow[],
-): DownloadsTeaser {
+export function buildDownloadsTeaser(status: SteamCmdStatus, rows: DownloadRow[]): DownloadsTeaser {
   const attentionRows = rows.filter((row) => row.kind === "attention");
-  const attentionHint =
-    attentionRows.length > 0
-      ? `${attentionRows.length} need review`
-      : null;
+  const attentionHint = attentionRows.length > 0 ? `${attentionRows.length} need review` : null;
 
   const active = rows.find((row) => row.kind === "active");
   if (active !== undefined) {
     const queued = rows.filter((row) => row.kind === "queued").length;
-    const byteNoun =
-      status.operation !== null ? steamCmdByteProgressNoun(status.operation) : "Files";
-    const title =
-      active.title === active.serverName
-        ? active.title
-        : `${active.title} · ${active.serverName}`;
+    const byteNoun = status.operation !== null ? steamCmdByteProgressNoun(status.operation) : "Files";
+    const title = active.title === active.serverName ? active.title : `${active.title} · ${active.serverName}`;
     return {
       visible: true,
       title,

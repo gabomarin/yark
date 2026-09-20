@@ -68,35 +68,35 @@ cloud hosting service, an ARK game launcher, or an official Studio Wildcard prod
 
 ## Capabilities
 
-| Area | What YARK provides |
-| --- | --- |
-| Server profiles | Create, clone, enable, disable, and manage multiple servers with independent paths, maps, ports, access settings, mods, and cluster fields. **Import install** adopts an existing ASA folder (ready by default; incomplete with opt-in). Overview sort/view toggles and **Update All** queue safe fleet updates into Downloads. **Create/Clone** suggest the next free game/query/RCON ports across the fleet. |
-| Lifecycle | Start, stop, restart, and force-close exact managed processes; readiness waits for RCON instead of assuming a spawned process is healthy. **Remove from YARK only** keeps the install folder, or wipe everything on delete. |
-| SteamCMD | Install, update, and verify ASA server files using a shared content cache; **Downloads** queues those jobs with Pause/Resume and a live console. |
-| Safe maintenance | Coordinate stop, recovery backups, update/verify work, conditional restart, and rollback through locked backend operations. |
-| Backups | Create, restore, export, and import world / INI archives; player join/leave archives; schedule world backups and inspect fleet health. |
-| Configuration | Edit `GameUserSettings.ini` and `Game.ini` through visual and raw editors, with a guided configuration wizard. Visual **Map** popover with **Search Maps…**; Launch tab search filters curated ASA flags. |
-| RCON | Persistent workspace console for commands, survivors, ban list, and remote **AdminListURL** admin whitelist while a server is running. |
-| Mods | Manage CurseForge Project IDs, metadata, enable/disable state, detail screenshots/description, and launch-time `-mods=` composition without embedding the CurseForge API key. **Maps** packs: **Search Maps…** or enable on Mods, then pick under Server Information → Map. |
-| Diagnostics | Review events, runtime output, SteamCMD history, Backup history, installation health, host-port conflicts, and log retention. |
-| Windows integration | System tray, close-to-tray, Start with Windows, Auto-start with YARK, in-app YARK updates, and Windows-aware process/file operations. |
+| Area                | What YARK provides                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Server profiles     | Create, clone, enable, disable, and manage multiple servers with independent paths, maps, ports, access settings, mods, and cluster fields. **Import install** adopts an existing ASA folder (ready by default; incomplete with opt-in). Overview sort/view toggles and **Update All** queue safe fleet updates into Downloads. **Create/Clone** suggest the next free game/query/RCON ports across the fleet. |
+| Lifecycle           | Start, stop, restart, and force-close exact managed processes; readiness waits for RCON instead of assuming a spawned process is healthy. **Remove from YARK only** keeps the install folder, or wipe everything on delete.                                                                                                                                                                                    |
+| SteamCMD            | Install, update, and verify ASA server files using a shared content cache; **Downloads** queues those jobs with Pause/Resume and a live console.                                                                                                                                                                                                                                                               |
+| Safe maintenance    | Coordinate stop, recovery backups, update/verify work, conditional restart, and rollback through locked backend operations.                                                                                                                                                                                                                                                                                    |
+| Backups             | Create, restore, export, and import world / INI archives; player join/leave archives; schedule world backups and inspect fleet health.                                                                                                                                                                                                                                                                         |
+| Configuration       | Edit `GameUserSettings.ini` and `Game.ini` through visual and raw editors, with a guided configuration wizard. Visual **Map** popover with **Search Maps…**; Launch tab search filters curated ASA flags.                                                                                                                                                                                                      |
+| RCON                | Persistent workspace console for commands, survivors, ban list, and remote **AdminListURL** admin whitelist while a server is running.                                                                                                                                                                                                                                                                         |
+| Mods                | Manage CurseForge Project IDs, metadata, enable/disable state, detail screenshots/description, and launch-time `-mods=` composition without embedding the CurseForge API key. **Maps** packs: **Search Maps…** or enable on Mods, then pick under Server Information → Map.                                                                                                                                    |
+| Diagnostics         | Review events, runtime output, SteamCMD history, Backup history, installation health, host-port conflicts, and log retention.                                                                                                                                                                                                                                                                                  |
+| Windows integration | System tray, close-to-tray, Start with Windows, Auto-start with YARK, in-app YARK updates, and Windows-aware process/file operations.                                                                                                                                                                                                                                                                          |
 
 ## Screenshots
 
-| Server configuration | Visual INI editor |
-| --- | --- |
+| Server configuration                                                               | Visual INI editor                                                  |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
 | ![Server configuration workspace](website/public/screenshots/workspace-server.png) | ![Visual INI editor](website/public/screenshots/workspace-ini.png) |
-| Identity, visual Map picker, networking, Auto-start, and cluster. | Searchable settings with descriptions and visual controls. |
+| Identity, visual Map picker, networking, Auto-start, and cluster.                  | Searchable settings with descriptions and visual controls.         |
 
-| CurseForge mods | Backup operations |
-| --- | --- |
-| ![CurseForge mods workspace](website/public/screenshots/workspace-mods.png) | ![Backup operations](website/public/screenshots/backups.png) |
-| Per-server Project IDs, Discover, and detail screenshots. | Fleet health, destinations, schedules, and export/import across servers. |
+| CurseForge mods                                                             | Backup operations                                                        |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| ![CurseForge mods workspace](website/public/screenshots/workspace-mods.png) | ![Backup operations](website/public/screenshots/backups.png)             |
+| Per-server Project IDs, Discover, and detail screenshots.                   | Fleet health, destinations, schedules, and export/import across servers. |
 
-| Downloads queue | Clusters |
-| --- | --- |
-| ![SteamCMD Downloads queue](website/public/screenshots/downloads.png) | ![Clusters page](website/public/screenshots/clusters.png) |
-| Active, queued, and paused SteamCMD jobs with Pause/Resume. | Cluster membership, INI templates, and shared directory compliance. |
+| Downloads queue                                                       | Clusters                                                            |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| ![SteamCMD Downloads queue](website/public/screenshots/downloads.png) | ![Clusters page](website/public/screenshots/clusters.png)           |
+| Active, queued, and paused SteamCMD jobs with Pause/Resume.           | Cluster membership, INI templates, and shared directory compliance. |
 
 More screenshots are available on the [project website](https://getyark.com/#screenshots).
 
@@ -178,24 +178,24 @@ on that isolated profile (see `.env.example`).
 
 Common validation commands:
 
-| Command | Purpose |
-| --- | --- |
-| `npm run typecheck` | Validate TypeScript without emitting files. |
-| `npm run lint` | Feature file-size caps, Actions pin check, and ESLint. |
-| `npm run knip` | Unused files, exports, dependencies, and unused CSS files. |
-| `npm test` | Run the Vitest unit and integration suite. |
-| `npm run build` | Build the Electron application. |
-| `npm run package` | Build the Windows NSIS installer. |
-| `npm run e2e:smoke` | Launch the compiled Electron shell and run the smoke flow. |
-| `npm run website:dev` | Run the Astro/Starlight website locally. |
-| `npm run website:build` | Build the public website and operator documentation. |
+| Command                 | Purpose                                                    |
+| ----------------------- | ---------------------------------------------------------- |
+| `npm run typecheck`     | Validate TypeScript without emitting files.                |
+| `npm run lint`          | Feature file-size caps, Actions pin check, and ESLint.     |
+| `npm run knip`          | Unused files, exports, dependencies, and unused CSS files. |
+| `npm test`              | Run the Vitest unit and integration suite.                 |
+| `npm run build`         | Build the Electron application.                            |
+| `npm run package`       | Build the Windows NSIS installer.                          |
+| `npm run e2e:smoke`     | Launch the compiled Electron shell and run the smoke flow. |
+| `npm run website:dev`   | Run the Astro/Starlight website locally.                   |
+| `npm run website:build` | Build the public website and operator documentation.       |
 
 `npm install` enables Husky hooks:
 
-| Hook | Validation |
-| --- | --- |
-| Pre-commit | Typecheck and lint |
-| Pre-push | Typecheck, tests, and lint |
+| Hook       | Validation                 |
+| ---------- | -------------------------- |
+| Pre-commit | Typecheck and lint         |
+| Pre-push   | Typecheck, tests, and lint |
 
 Knip (`npm run knip`) runs in CI but **not** in Husky hooks. Run it locally before
 commit or push when you change exports, files, or dependencies — see
@@ -239,22 +239,22 @@ Persistence uses Node's built-in `node:sqlite`; there is no separate backend ser
 
 ## Documentation
 
-| Guide | Scope |
-| --- | --- |
-| [Server lifecycle](docs/server-lifecycle.md) | Launch composition, process identity, readiness, stop/restart, and recovery. |
-| [RCON console](docs/rcon.md) | Persistent workspace RCON session, players, ban list, and IPC. |
-| [Settings](docs/settings.md) | App-wide preferences, desktop shell, SteamCMD path, and density. |
-| [Clusters](docs/clusters.md) | Transfer-compliance reports, cluster fields, and launch-arg trio. |
-| [Mods](docs/mods.md) | Workspace CurseForge inventory, load order, metadata proxy, and `-mods=` launch. |
-| [Updates and SteamCMD](docs/updates-steamcmd.md) | Caches, install/update/verify, safe-update flow, rollback, and Windows validation. |
-| [Backups](docs/backups.md) | Archive types, schedules, restore policy, retention, and recovery behavior. |
-| [Logs](docs/logs.md) | Events, runtime logs, update history, storage, and troubleshooting. |
-| [Component structure](docs/component-structure.md) | Renderer composition and feature-file policy. |
-| [Design system](docs/design-system.md) | Theme tokens, shared surfaces, interaction patterns, and visual conventions. |
-| [Visual testing](docs/visual-testing.md) | Required evidence and helpers for visible UI changes. |
-| [Website](docs/website.md) | Astro/Starlight development, screenshots, CI, and Cloudflare Pages deployment. |
-| [Versioning](docs/versioning.md) | SemVer, changelog policy, packaging, signing state, and release checklist. |
-| [Agent context](docs/agent-context.md) | Repository orientation for AI-assisted development. |
+| Guide                                              | Scope                                                                              |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| [Server lifecycle](docs/server-lifecycle.md)       | Launch composition, process identity, readiness, stop/restart, and recovery.       |
+| [RCON console](docs/rcon.md)                       | Persistent workspace RCON session, players, ban list, and IPC.                     |
+| [Settings](docs/settings.md)                       | App-wide preferences, desktop shell, SteamCMD path, and density.                   |
+| [Clusters](docs/clusters.md)                       | Transfer-compliance reports, cluster fields, and launch-arg trio.                  |
+| [Mods](docs/mods.md)                               | Workspace CurseForge inventory, load order, metadata proxy, and `-mods=` launch.   |
+| [Updates and SteamCMD](docs/updates-steamcmd.md)   | Caches, install/update/verify, safe-update flow, rollback, and Windows validation. |
+| [Backups](docs/backups.md)                         | Archive types, schedules, restore policy, retention, and recovery behavior.        |
+| [Logs](docs/logs.md)                               | Events, runtime logs, update history, storage, and troubleshooting.                |
+| [Component structure](docs/component-structure.md) | Renderer composition and feature-file policy.                                      |
+| [Design system](docs/design-system.md)             | Theme tokens, shared surfaces, interaction patterns, and visual conventions.       |
+| [Visual testing](docs/visual-testing.md)           | Required evidence and helpers for visible UI changes.                              |
+| [Website](docs/website.md)                         | Astro/Starlight development, screenshots, CI, and Cloudflare Pages deployment.     |
+| [Versioning](docs/versioning.md)                   | SemVer, changelog policy, packaging, signing state, and release checklist.         |
+| [Agent context](docs/agent-context.md)             | Repository orientation for AI-assisted development.                                |
 
 Public operator documentation lives at
 [getyark.com/docs](https://getyark.com/docs/).

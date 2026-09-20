@@ -1,0 +1,24 @@
+# Build output, dependencies and generated assets never get formatted.
+node_modules/
+out/
+dist/
+build/
+coverage/
+.venv/
+.kilo/
+artifacts/
+
+# Local-only working notes and agent tooling are not source.
+.cursor/
+.agents/
+skills-lock.json
+
+# Separate packages with their own tooling and formatters.
+website/
+workers/
+electron-mcp-server/
+
+# Vendored / generated content.
+src/main/splash/splash.html
+docs/**/*.html
+*.min.*

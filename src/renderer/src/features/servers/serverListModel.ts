@@ -49,10 +49,7 @@ export function writeStoredViewMode(mode: ServerListViewMode): void {
   window.localStorage.setItem(SERVER_LIST_VIEW_STORAGE_KEY, mode);
 }
 
-export function sortServers(
-  servers: ServerProfile[],
-  sort: ServerListSortMode,
-): ServerProfile[] {
+export function sortServers(servers: ServerProfile[], sort: ServerListSortMode): ServerProfile[] {
   return [...servers].sort((a, b) => {
     if (sort === "name") {
       const byName = a.name.localeCompare(b.name, undefined, { sensitivity: "base" });

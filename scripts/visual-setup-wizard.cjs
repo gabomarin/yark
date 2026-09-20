@@ -32,13 +32,9 @@ async function capture(page, outDir, size, step, fileStep = step) {
     const dialog = document.querySelector('[role="dialog"]');
     const rect = dialog?.getBoundingClientRect();
     return {
-      step: document.querySelector("[data-setup-wizard]")?.getAttribute(
-        "data-setup-wizard-step",
-      ),
-      documentOverflow:
-        Math.max(root.scrollWidth, body.scrollWidth) > root.clientWidth + 1,
-      dialogOverflow:
-        dialog !== null && dialog.scrollWidth > dialog.clientWidth + 1,
+      step: document.querySelector("[data-setup-wizard]")?.getAttribute("data-setup-wizard-step"),
+      documentOverflow: Math.max(root.scrollWidth, body.scrollWidth) > root.clientWidth + 1,
+      dialogOverflow: dialog !== null && dialog.scrollWidth > dialog.clientWidth + 1,
       dialogInsideViewport:
         rect !== undefined &&
         rect.left >= -1 &&
@@ -83,10 +79,7 @@ async function run() {
     page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
 
     await page.evaluate(() => {
-      window.localStorage.setItem(
-        "settings.defaultServerBaseFolder",
-        "D:\\ASA\\Servers",
-      );
+      window.localStorage.setItem("settings.defaultServerBaseFolder", "D:\\ASA\\Servers");
     });
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.locator("[data-overview-page]").waitFor();

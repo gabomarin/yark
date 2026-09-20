@@ -1,9 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { RendererApi } from "@shared/ipc";
-import {
-  createRendererApiMock,
-  TEST_OFFICIAL_VERSION,
-} from "./createRendererApiMock";
+import { createRendererApiMock, TEST_OFFICIAL_VERSION } from "./createRendererApiMock";
 
 describe("createRendererApiMock", () => {
   it("returns a function for every own key (complete RendererApi surface)", () => {

@@ -36,10 +36,7 @@ export function formatCpuPercent(pct: number | null | undefined): string {
  * Merged meta cell for Overview cards. Unknown / not running → `–`.
  * CPU is % of one logical processor (#302).
  */
-export function formatServerRamCpuMeta(input: {
-  status: ServerStatus;
-  metrics: ProcessMetricsSnapshot;
-}): string {
+export function formatServerRamCpuMeta(input: { status: ServerStatus; metrics: ProcessMetricsSnapshot }): string {
   if (input.status !== "running" && input.status !== "starting") {
     return "–";
   }

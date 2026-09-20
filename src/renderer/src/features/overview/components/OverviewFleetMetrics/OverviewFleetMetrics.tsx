@@ -3,10 +3,7 @@ import { Info } from "@phosphor-icons/react";
 import { ActionIcon } from "@mantine/core";
 import { AppMetricCard } from "@ui/AppMetricCard/AppMetricCard";
 import type { AttentionIssue } from "../../model/attentionIssues";
-import type {
-  OverviewFleetFilter,
-  OverviewFleetStats,
-} from "../../model/overviewFleetMetrics";
+import type { OverviewFleetFilter, OverviewFleetStats } from "../../model/overviewFleetMetrics";
 import { toggleOverviewFleetFilter } from "../../model/overviewFleetMetrics";
 import { AttentionIssuesPopover } from "../AttentionIssuesPopover/AttentionIssuesPopover";
 import classes from "./OverviewFleetMetrics.module.css";

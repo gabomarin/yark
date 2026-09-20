@@ -77,23 +77,23 @@ export function execFileBounded(
       const errorCode = errno.code ?? "";
       const errorMessage = error.message ?? "";
       const maxBufferExceeded =
-        errorCode === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER"
-        || /maxBuffer/i.test(errorMessage)
-        || /ERR_CHILD_PROCESS_STDIO_MAXBUFFER/i.test(errorCode);
+        errorCode === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER" ||
+        /maxBuffer/i.test(errorMessage) ||
+        /ERR_CHILD_PROCESS_STDIO_MAXBUFFER/i.test(errorCode);
       // Timeout: Node sets ETIMEDOUT and/or kills with SIGTERM. maxBuffer also kills
       // the child, so exclude that code before treating killed/SIGTERM as timeout.
       const timedOut =
-        !maxBufferExceeded
-        && (
-          errorCode === "ETIMEDOUT"
-          || /ETIMEDOUT/i.test(errorCode)
-          || /timed?\s*out/i.test(errorMessage)
-          || errno.killed === true
-          || errno.signal === "SIGTERM"
-        );
+        !maxBufferExceeded &&
+        (errorCode === "ETIMEDOUT" ||
+          /ETIMEDOUT/i.test(errorCode) ||
+          /timed?\s*out/i.test(errorMessage) ||
+          errno.killed === true ||
+          errno.signal === "SIGTERM");
       const code = timedOut
         ? "ETIMEDOUT"
-        : (maxBufferExceeded ? "ERR_CHILD_PROCESS_STDIO_MAXBUFFER" : (errorCode || "EEXEC"));
+        : maxBufferExceeded
+          ? "ERR_CHILD_PROCESS_STDIO_MAXBUFFER"
+          : errorCode || "EEXEC";
       const detail = timedOut
         ? `Command timed out after ${timeoutMs}ms: ${file}`
         : maxBufferExceeded

@@ -25,9 +25,9 @@ function profile(partial: Partial<ServerProfile> = {}): ServerProfile {
     mods: [],
     disabledMods: [],
     modMetadataCache: {},
-    
+
     autoStart: false,
-    
+
     useAsaApi: false,
     useAsaApiLoader: false,
     enabled: true,
@@ -62,9 +62,7 @@ describe("ServerLaunchPanel", () => {
     expect(screen.getByText(/passivemods/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /browse asa catalog/i }));
-    expect(
-      await screen.findByRole("dialog", { name: /asa launch-options catalog/i }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: /asa launch-options catalog/i })).toBeInTheDocument();
   });
 
   it("shows managed-in copy for YARK-owned catalog rows (#381)", async () => {
@@ -81,9 +79,7 @@ describe("ServerLaunchPanel", () => {
     await user.click(screen.getByRole("button", { name: /yark-owned filter/i }));
 
     expect(
-      await screen.findAllByText(
-        /YARK already sets this from Server settings\. Do not add it in Extra arguments\./,
-      ),
+      await screen.findAllByText(/YARK already sets this from Server settings\. Do not add it in Extra arguments\./),
     ).not.toHaveLength(0);
     expect(
       screen.getByText(/YARK already sets this from Mods\. Do not add it in Extra arguments\./),
@@ -100,12 +96,8 @@ describe("ServerLaunchPanel", () => {
       </AppProviders>,
     );
 
-    expect(
-      screen.getByLabelText(/enable -servergamelogincludetribelogs/i),
-    ).toBeDisabled();
-    expect(
-      screen.getByLabelText(/enable -serverrconoutputtribelogs/i),
-    ).toBeDisabled();
+    expect(screen.getByLabelText(/enable -servergamelogincludetribelogs/i)).toBeDisabled();
+    expect(screen.getByLabelText(/enable -serverrconoutputtribelogs/i)).toBeDisabled();
   });
 
   it("warns when custom map mod is disabled (#194)", () => {
@@ -124,9 +116,7 @@ describe("ServerLaunchPanel", () => {
     );
 
     expect(screen.getByText(/custom map mod inconsistent/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/disabled and will be omitted from -mods=/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/disabled and will be omitted from -mods=/i)).toBeInTheDocument();
   });
 
   it("shows inline caution on ForceRespawnDinos when enabled (#93)", () => {
@@ -144,9 +134,7 @@ describe("ServerLaunchPanel", () => {
     );
 
     expect(screen.queryByText(/sticky launch flags enabled/i)).not.toBeInTheDocument();
-    expect(
-      screen.getByText(/wipes wild dinos on every start/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/wipes wild dinos on every start/i)).toBeInTheDocument();
   });
 
   it("exposes option descriptions on a keyboard-focusable label (#93)", () => {
@@ -224,18 +212,14 @@ describe("ServerLaunchPanel", () => {
       </AppProviders>,
     );
 
-    const securitySection = screen
-      .getByText(/security & integrity/i)
-      .closest("section");
+    const securitySection = screen.getByText(/security & integrity/i).closest("section");
     expect(securitySection).not.toBeNull();
     const countBefore = securitySection!.textContent?.match(/\d+\/\d+/)?.[0];
     expect(countBefore).toBeTruthy();
 
     await user.type(screen.getByLabelText(/filter launch flags/i), "battleye");
 
-    const securitySectionAfter = screen
-      .getByText(/security & integrity/i)
-      .closest("section");
+    const securitySectionAfter = screen.getByText(/security & integrity/i).closest("section");
     expect(securitySectionAfter).not.toBeNull();
     const countAfter = securitySectionAfter!.textContent?.match(/\d+\/\d+/)?.[0];
     expect(countAfter).toBe(countBefore);
@@ -249,17 +233,10 @@ describe("ServerLaunchPanel", () => {
     );
 
     const legend = screen.getByTestId("launch-preview-legend");
-    expect(within(legend).getByText("YARK-owned").className).toMatch(
-      /previewYark/,
-    );
-    expect(within(legend).getByText("Structured").className).toMatch(
-      /previewStructured/,
-    );
-    expect(within(legend).getByText("Caution").className).toMatch(
-      /previewCaution/,
-    );
+    expect(within(legend).getByText("YARK-owned").className).toMatch(/previewYark/);
+    expect(within(legend).getByText("Structured").className).toMatch(/previewStructured/);
+    expect(within(legend).getByText("Caution").className).toMatch(/previewCaution/);
     expect(within(legend).getByText("Raw").className).toMatch(/previewRaw/);
     expect(legend).not.toHaveTextContent(/secrets redacted/i);
   });
 });
-

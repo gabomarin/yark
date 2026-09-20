@@ -36,13 +36,8 @@ function job(
 
 describe("queue flow helpers", () => {
   it("stops on paused or restart-interrupted jobs", () => {
-    expect(shouldStopQueueProcessing([job({ id: "a", status: "pending", phase: "queued" })]))
-      .toBe(false);
-    expect(
-      shouldStopQueueProcessing([
-        job({ id: "a", status: "paused", phase: "applying-files" }),
-      ]),
-    ).toBe(true);
+    expect(shouldStopQueueProcessing([job({ id: "a", status: "pending", phase: "queued" })])).toBe(false);
+    expect(shouldStopQueueProcessing([job({ id: "a", status: "paused", phase: "applying-files" })])).toBe(true);
     expect(
       shouldStopQueueProcessing([
         job({
@@ -64,15 +59,11 @@ describe("queue flow helpers", () => {
   });
 
   it("resolves handlers from type and phase", () => {
-    expect(
-      resolveUpdateQueueJobHandler({ type: "install-files", phase: "queued" }),
-    ).toBe("install");
-    expect(
-      resolveUpdateQueueJobHandler({ type: "update", phase: "files-applied" }),
-    ).toBe("recover-file-job");
-    expect(
-      resolveUpdateQueueJobHandler({ type: "update", phase: "rollback-restoring-backups" }),
-    ).toBe("recover-rollback");
+    expect(resolveUpdateQueueJobHandler({ type: "install-files", phase: "queued" })).toBe("install");
+    expect(resolveUpdateQueueJobHandler({ type: "update", phase: "files-applied" })).toBe("recover-file-job");
+    expect(resolveUpdateQueueJobHandler({ type: "update", phase: "rollback-restoring-backups" })).toBe(
+      "recover-rollback",
+    );
   });
 
   it("clears idle progress only when nothing is active", () => {

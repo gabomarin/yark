@@ -32,25 +32,15 @@ export function WizardWorldStep(props: Props): ReactElement {
         <SimpleGrid cols={{ base: 1, xs: 2, sm: 4 }} spacing="xs">
           <PresetValue label="Dinosaur density" value={`${draft.dinoCountMultiplier}×`} />
           <PresetValue label="Node health" value={`${draft.harvestHealthMultiplier}×`} />
-          <PresetValue
-            label="Structure resistance"
-            value={`${draft.structureResistanceMultiplier}×`}
-          />
+          <PresetValue label="Structure resistance" value={`${draft.structureResistanceMultiplier}×`} />
           <PresetValue label="Day speed" value={`${draft.dayCycleSpeedScale}×`} />
           <PresetValue label="Night speed" value={`${draft.nightTimeSpeedScale}×`} />
-          <PresetValue
-            label="Food drain"
-            value={`${draft.playerCharacterFoodDrainMultiplier}×`}
-          />
-          <PresetValue
-            label="Water drain"
-            value={`${draft.playerCharacterWaterDrainMultiplier}×`}
-          />
+          <PresetValue label="Food drain" value={`${draft.playerCharacterFoodDrainMultiplier}×`} />
+          <PresetValue label="Water drain" value={`${draft.playerCharacterWaterDrainMultiplier}×`} />
         </SimpleGrid>
       </PresetSelector>
       <Text c="dimmed" size="xs">
-        For food and water, a lower value means less hunger and thirst. For night, a higher value
-        shortens darkness.
+        For food and water, a lower value means less hunger and thirst. For night, a higher value shortens darkness.
       </Text>
     </WizardStep>
   );

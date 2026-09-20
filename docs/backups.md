@@ -8,11 +8,11 @@ loose-folder archives still restore and can be imported from disk.
 
 Protect three content scopes independently:
 
-| Kind | Live source | Paths inside the archive |
-| --- | --- | --- |
-| `world` | `{installDir}/ShooterGame/Saved/SavedArks/{MapToken}/` (or mod folder without `_WP`, e.g. `Svartalfheim/` for launch token `Svartalfheim_WP`) | `SavedArks/{MapToken}/` (primary `.ark`, anti-corruption bak, profiles/tribes; no dated autosaves) |
-| `players` | `.arkprofile` / `.arkprofile.bak` / `.profilebak` under `SavedArks` and `SaveGames` (join/leave only) | `PlayerProfiles/{id}.arkprofile` (flat; no map subfolder) |
-| `ini` | `Game.ini` + `GameUserSettings.ini` in `Config/WindowsServer` (plaintext GUS passwords) | `ConfigWindowsServer/` |
+| Kind      | Live source                                                                                                                                   | Paths inside the archive                                                                           |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `world`   | `{installDir}/ShooterGame/Saved/SavedArks/{MapToken}/` (or mod folder without `_WP`, e.g. `Svartalfheim/` for launch token `Svartalfheim_WP`) | `SavedArks/{MapToken}/` (primary `.ark`, anti-corruption bak, profiles/tribes; no dated autosaves) |
+| `players` | `.arkprofile` / `.arkprofile.bak` / `.profilebak` under `SavedArks` and `SaveGames` (join/leave only)                                         | `PlayerProfiles/{id}.arkprofile` (flat; no map subfolder)                                          |
+| `ini`     | `Game.ini` + `GameUserSettings.ini` in `Config/WindowsServer` (plaintext GUS passwords)                                                       | `ConfigWindowsServer/`                                                                             |
 
 **Breaking (0.10):** world archives are **per-map**, not a full `SavedArks` tree. Older full-folder world ZIPs are not restored by the current path.
 
@@ -25,27 +25,27 @@ Triggers are separated on purpose:
 
 ## Module map
 
-| Role | Path |
-| --- | --- |
-| Service | `src/backend/domains/backups/backup-service.ts` |
-| Cleanup planner | `src/backend/domains/backups/backup-cleanup-plan.ts` |
-| Fleet health helpers | `src/backend/domains/backups/backup-fleet.ts` |
-| Restore planning helpers | `src/backend/domains/backups/backup-restore.ts` |
-| Import/export naming helpers | `src/backend/domains/backups/backup-portability.ts` |
-| Critical-job helpers | `src/backend/domains/backups/backup-critical-jobs.ts` |
-| ZIP helpers | `src/backend/domains/backups/backup-archive.ts` |
-| Portable UI helpers | `src/renderer/src/features/backups/backupPortability.ts` |
-| Disk / volume helpers | `src/backend/domains/backups/backup-disk.ts` |
-| Scheduler (60s tick) | `src/backend/domains/backups/backup-scheduler.ts` |
-| Player sessions | `src/backend/domains/backups/player-session-watcher.ts` |
-| `ListPlayers` parse | `src/backend/domains/backups/list-players.ts` |
-| Persistence | `src/backend/infra/db/backup-repository.ts` |
-| Player note helpers | `src/shared/backups/backup-player-meta.ts` |
-| Contracts | `src/shared/types.ts`, `src/shared/ipc.ts` |
-| IPC | `src/main/ipc-handlers.ts`, `src/preload/index.ts` |
-| UI (all servers / sidebar) | `src/renderer/src/features/backups/BackupsPage.tsx` |
-| UI (per-server) | `src/renderer/src/features/backups/ServerBackupPanel.tsx` |
-| UI (history table) | `src/renderer/src/features/backups/BackupHistoryTable.tsx` (`YarkDataTable`) |
+| Role                         | Path                                                                         |
+| ---------------------------- | ---------------------------------------------------------------------------- |
+| Service                      | `src/backend/domains/backups/backup-service.ts`                              |
+| Cleanup planner              | `src/backend/domains/backups/backup-cleanup-plan.ts`                         |
+| Fleet health helpers         | `src/backend/domains/backups/backup-fleet.ts`                                |
+| Restore planning helpers     | `src/backend/domains/backups/backup-restore.ts`                              |
+| Import/export naming helpers | `src/backend/domains/backups/backup-portability.ts`                          |
+| Critical-job helpers         | `src/backend/domains/backups/backup-critical-jobs.ts`                        |
+| ZIP helpers                  | `src/backend/domains/backups/backup-archive.ts`                              |
+| Portable UI helpers          | `src/renderer/src/features/backups/backupPortability.ts`                     |
+| Disk / volume helpers        | `src/backend/domains/backups/backup-disk.ts`                                 |
+| Scheduler (60s tick)         | `src/backend/domains/backups/backup-scheduler.ts`                            |
+| Player sessions              | `src/backend/domains/backups/player-session-watcher.ts`                      |
+| `ListPlayers` parse          | `src/backend/domains/backups/list-players.ts`                                |
+| Persistence                  | `src/backend/infra/db/backup-repository.ts`                                  |
+| Player note helpers          | `src/shared/backups/backup-player-meta.ts`                                   |
+| Contracts                    | `src/shared/types.ts`, `src/shared/ipc.ts`                                   |
+| IPC                          | `src/main/ipc-handlers.ts`, `src/preload/index.ts`                           |
+| UI (all servers / sidebar)   | `src/renderer/src/features/backups/BackupsPage.tsx`                          |
+| UI (per-server)              | `src/renderer/src/features/backups/ServerBackupPanel.tsx`                    |
+| UI (history table)           | `src/renderer/src/features/backups/BackupHistoryTable.tsx` (`YarkDataTable`) |
 
 Bootstrap wires the scheduler and watcher in `src/main/index.ts`.
 
@@ -53,14 +53,14 @@ Bootstrap wires the scheduler and watcher in `src/main/index.ts`.
 
 `BackupPolicy` (`src/shared/types.ts`):
 
-| Field | Default | Constraint |
-| --- | ---: | --- |
-| `enabled` | `false` | Schedule creates **world** backups only |
-| `intervalMinutes` | `60` | Minimum **5** |
-| `retainCountWorld` | `20` | 1–500; **per map token** |
-| `retainCountPlayers` | `20` | 1–500; **per-player** pools |
-| `retainCountIni` | `10` | 1–500 |
-| `backupDir` | `null` | `null` → `{installDir}\Backups` |
+| Field                | Default | Constraint                              |
+| -------------------- | ------: | --------------------------------------- |
+| `enabled`            | `false` | Schedule creates **world** backups only |
+| `intervalMinutes`    |    `60` | Minimum **5**                           |
+| `retainCountWorld`   |    `20` | 1–500; **per map token**                |
+| `retainCountPlayers` |    `20` | 1–500; **per-player** pools             |
+| `retainCountIni`     |    `10` | 1–500                                   |
+| `backupDir`          |  `null` | `null` → `{installDir}\Backups`         |
 
 Schema column `retain_days` is legacy and unused (always written as `14`).
 
@@ -114,20 +114,20 @@ Zip extract rejects zip-slip paths. Listeners are registered **before**
 
 Channels in `src/shared/ipc.ts` (preload wrappers return `IpcResult<T>`):
 
-| Channel | Args | Returns |
-| --- | --- | --- |
-| `backups:list` | `serverId`, `limit?` (service clamps 1–200) | `BackupRecord[]` |
-| `backups:create` | `serverId`, `kinds?: BackupKind[]` | `BackupRecord[]` |
-| `backups:delete` | `serverId`, `backupIds` | `number` deleted |
-| `backups:restore` | `serverId`, `backupId`, `options?` (`restoreProfilesTribes?`, default true) | `void` |
-| `backups:get-policy` / `backups:set-policy` | policy fields | `BackupPolicy` |
-| `backups:resolve-root` | `serverId` | `string` |
-| `backups:open-folder` / `backups:open-root` | ids | `void` |
-| `backups:export` | `serverId`, `backupId`, `destinationPath` | exported ZIP path |
-| `backups:import` | `serverId`, `kind`, `sourcePath` | `BackupRecord` (catalog only) |
-| `backups:fleet-summary` | — | `BackupFleetSummary` |
-| `backups:get-disk-alert-settings` / `backups:set-disk-alert-settings` | thresholds | settings |
-| `backups:preview-cleanup` / `backups:run-cleanup` | cleanup options | preview / result |
+| Channel                                                               | Args                                                                        | Returns                       |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------------- | ----------------------------- |
+| `backups:list`                                                        | `serverId`, `limit?` (service clamps 1–200)                                 | `BackupRecord[]`              |
+| `backups:create`                                                      | `serverId`, `kinds?: BackupKind[]`                                          | `BackupRecord[]`              |
+| `backups:delete`                                                      | `serverId`, `backupIds`                                                     | `number` deleted              |
+| `backups:restore`                                                     | `serverId`, `backupId`, `options?` (`restoreProfilesTribes?`, default true) | `void`                        |
+| `backups:get-policy` / `backups:set-policy`                           | policy fields                                                               | `BackupPolicy`                |
+| `backups:resolve-root`                                                | `serverId`                                                                  | `string`                      |
+| `backups:open-folder` / `backups:open-root`                           | ids                                                                         | `void`                        |
+| `backups:export`                                                      | `serverId`, `backupId`, `destinationPath`                                   | exported ZIP path             |
+| `backups:import`                                                      | `serverId`, `kind`, `sourcePath`                                            | `BackupRecord` (catalog only) |
+| `backups:fleet-summary`                                               | —                                                                           | `BackupFleetSummary`          |
+| `backups:get-disk-alert-settings` / `backups:set-disk-alert-settings` | thresholds                                                                  | settings                      |
+| `backups:preview-cleanup` / `backups:run-cleanup`                     | cleanup options                                                             | preview / result              |
 
 Related (not under `backups:*`):
 
@@ -267,10 +267,10 @@ UI restore uses a confirm modal (world: profiles/tribes checkbox). Update rollba
     flat INI).
   - **Keep only last N per kind** (`keepLastPerKind`) — same per-map / per-player
     pools for world and players; flat INI (#497).
-  Failed rows are not pruned by retain counts.
-  Cannot delete `running` backups. Operators can **Clear failed** on the server
-  Backups history tab to remove every failed row for that server and kind
-  (catalog cleanup when the ZIP is already gone).
+    Failed rows are not pruned by retain counts.
+    Cannot delete `running` backups. Operators can **Clear failed** on the server
+    Backups history tab to remove every failed row for that server and kind
+    (catalog cleanup when the ZIP is already gone).
 - History UI: **Current map only** checkbox (default on) filters world rows to
   `server.map`. World/INI columns: **File**, **Map** (world only), **Date**, Size,
   Status, Type, Actions. Players tab: **Player** (name + player id metadata),
@@ -358,18 +358,18 @@ After a successful `ini:save`, `createIniSaveBackup` debounces **2s** per server
 
 ## Troubleshooting
 
-| Symptom | Likely cause | What to check |
-| --- | --- | --- |
-| Hot backup looks stale | `SaveWorld` failed or RCON unreachable | Profile `rconPort` / `adminPassword`; process must be active for flush |
-| No scheduled backups | Policy off, interval not elapsed, or server not running | `enabled`, `intervalMinutes`, runtime status |
-| Stopped server shows “never backed up” / stale | Bug if still present — health should ignore inactive processes | Confirm build includes process-active gating in `getFleetSummary` |
-| Missing player session archive | Short session + RCON miss, or profile not flushed | Watcher mtime safety net; disconnect wait; exact player-key stem |
-| Restore rejected | Server still active or backup not `completed` | Stop the server; only completed backups restore |
-| Empty ZIP restore hangs | Listeners must be registered before `readEntry` | `extractZip` in `backup-archive.ts` |
-| Copied archive missing / wrong id | Manifest id already in DB | Reconcile mints a new id when the manifest id is taken |
-| Retention not shrinking | Failed / running rows | Only **completed** backups count toward retain N |
-| Empty player session backup missing from history | By design | Empty per-player archives are deleted so they do not consume retention |
-| Sidebar draft fields reset while editing | Non-quiet reload from App poll | Reload keyed by server ids; dirty drafts kept unless Refresh forces sync |
+| Symptom                                          | Likely cause                                                   | What to check                                                            |
+| ------------------------------------------------ | -------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Hot backup looks stale                           | `SaveWorld` failed or RCON unreachable                         | Profile `rconPort` / `adminPassword`; process must be active for flush   |
+| No scheduled backups                             | Policy off, interval not elapsed, or server not running        | `enabled`, `intervalMinutes`, runtime status                             |
+| Stopped server shows “never backed up” / stale   | Bug if still present — health should ignore inactive processes | Confirm build includes process-active gating in `getFleetSummary`        |
+| Missing player session archive                   | Short session + RCON miss, or profile not flushed              | Watcher mtime safety net; disconnect wait; exact player-key stem         |
+| Restore rejected                                 | Server still active or backup not `completed`                  | Stop the server; only completed backups restore                          |
+| Empty ZIP restore hangs                          | Listeners must be registered before `readEntry`                | `extractZip` in `backup-archive.ts`                                      |
+| Copied archive missing / wrong id                | Manifest id already in DB                                      | Reconcile mints a new id when the manifest id is taken                   |
+| Retention not shrinking                          | Failed / running rows                                          | Only **completed** backups count toward retain N                         |
+| Empty player session backup missing from history | By design                                                      | Empty per-player archives are deleted so they do not consume retention   |
+| Sidebar draft fields reset while editing         | Non-quiet reload from App poll                                 | Reload keyed by server ids; dirty drafts kept unless Refresh forces sync |
 
 ## Common pitfalls
 

@@ -8,12 +8,7 @@
  * Requires: prior npm run build
  */
 const assert = require("node:assert/strict");
-const {
-  createE2eFixtureRoots,
-  launchElectronApp,
-  waitForOverview,
-  removeFixtureDir,
-} = require("./e2e-launch.cjs");
+const { createE2eFixtureRoots, launchElectronApp, waitForOverview, removeFixtureDir } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -48,13 +43,7 @@ async function closeAppGracefully(app) {
   await Promise.race([
     exited,
     new Promise((_, reject) => {
-      setTimeout(
-        () =>
-          reject(
-            new Error(`app.quit() timed out after ${timeoutMs}ms (process still alive)`),
-          ),
-        timeoutMs,
-      );
+      setTimeout(() => reject(new Error(`app.quit() timed out after ${timeoutMs}ms (process still alive)`)), timeoutMs);
     }),
   ]);
 }
@@ -108,13 +97,8 @@ async function run() {
     );
     assert.equal(await page.getByRole("radio", { name: "Leave" }).count(), 0);
 
-    const trayHelp = page.getByText(
-      /Closing the window hides YARK in the tray/i,
-    );
-    assert.ok(
-      (await trayHelp.count()) > 0,
-      "Close-to-tray help should describe hiding YARK in the tray",
-    );
+    const trayHelp = page.getByText(/Closing the window hides YARK in the tray/i);
+    assert.ok((await trayHelp.count()) > 0, "Close-to-tray help should describe hiding YARK in the tray");
 
     const traySwitch = page.getByRole("switch", {
       name: "Close window to system tray",
@@ -139,19 +123,12 @@ async function run() {
     const notifySwitch = page.getByRole("switch", {
       name: "Alert when hiding to tray",
     });
-    assert.ok(
-      (await notifySwitch.count()) > 0,
-      "Tray alert switch should show when Close window to tray is on",
-    );
+    assert.ok((await notifySwitch.count()) > 0, "Tray alert switch should show when Close window to tray is on");
 
     await traySwitch.click({ force: true });
     await page.waitForTimeout(400);
     assert.equal(await traySwitch.isChecked(), false);
-    assert.equal(
-      await notifySwitch.count(),
-      0,
-      "Tray alert switch should hide when Close window to tray is off",
-    );
+    assert.equal(await notifySwitch.count(), 0, "Tray alert switch should hide when Close window to tray is off");
 
     await traySwitch.click({ force: true });
     await page.waitForTimeout(300);
@@ -173,9 +150,7 @@ async function run() {
     if (pageErrors.length > 0) {
       throw new Error(`pageerror: ${pageErrors.join(" | ")}`);
     }
-    const actionableConsole = consoleErrors.filter(
-      (text) => !/Failed to load resource|net::ERR_/i.test(text),
-    );
+    const actionableConsole = consoleErrors.filter((text) => !/Failed to load resource|net::ERR_/i.test(text));
     if (actionableConsole.length > 0) {
       console.warn("E2E_QUIT_CONSOLE_WARN", actionableConsole.join(" | "));
     }
@@ -185,17 +160,14 @@ async function run() {
     try {
       await closeAppGracefully(app);
     } catch (error) {
-      console.warn(
-        `E2E_QUIT_CLOSE_WARN ${error instanceof Error ? error.message : String(error)}`,
-      );
+      console.warn(`E2E_QUIT_CLOSE_WARN ${error instanceof Error ? error.message : String(error)}`);
       try {
         const pid = app.process()?.pid;
         if (pid) {
-          require("node:child_process").spawnSync(
-            "taskkill",
-            ["/PID", String(pid), "/T", "/F"],
-            { windowsHide: true, stdio: "ignore" },
-          );
+          require("node:child_process").spawnSync("taskkill", ["/PID", String(pid), "/T", "/F"], {
+            windowsHide: true,
+            stdio: "ignore",
+          });
         }
       } catch {
         // ignore

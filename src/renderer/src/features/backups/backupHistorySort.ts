@@ -19,10 +19,7 @@ function compareFinishedAt(a: BackupRecord, b: BackupRecord): number {
 }
 
 /** Client-side column sort for backup history (newest Date first by default). */
-export function sortBackupRecords(
-  records: BackupRecord[],
-  status: DataTableSortStatus<BackupRecord>,
-): BackupRecord[] {
+export function sortBackupRecords(records: BackupRecord[], status: DataTableSortStatus<BackupRecord>): BackupRecord[] {
   const dir = status.direction === "asc" ? 1 : -1;
   const accessor = String(status.columnAccessor);
   const next = [...records];
@@ -32,11 +29,9 @@ export function sortBackupRecords(
       case "path":
         // Players tab: first column is Player (name), not archive filename.
         if (a.kind === "players" || b.kind === "players") {
-          cmp = playerBackupDisplayName(a).localeCompare(
-            playerBackupDisplayName(b),
-            undefined,
-            { sensitivity: "base" },
-          );
+          cmp = playerBackupDisplayName(a).localeCompare(playerBackupDisplayName(b), undefined, {
+            sensitivity: "base",
+          });
         } else {
           cmp = archiveFileName(a.path).localeCompare(archiveFileName(b.path));
         }

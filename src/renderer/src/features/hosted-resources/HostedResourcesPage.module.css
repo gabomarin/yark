@@ -1,3 +1,15 @@
+/* Flush tool pane; the AppShell main paints the shared shell surface. */
+.pageShell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  padding: var(--app-space-md);
+  gap: var(--app-space-sm);
+}
+
 .content {
   flex: 1;
   min-height: 0;

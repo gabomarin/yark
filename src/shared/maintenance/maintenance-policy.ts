@@ -1,8 +1,4 @@
-import type {
-  MaintenanceBroadcastPreset,
-  MaintenanceJobWarnings,
-  MaintenancePolicy,
-} from "../types";
+import type { MaintenanceBroadcastPreset, MaintenanceJobWarnings, MaintenancePolicy } from "../types";
 
 /** Minimal / Regular / Frequent offset lists (long window; last minute optional via `lastMinuteChat`). */
 export const MAINTENANCE_RESTART_PRESET_OFFSETS: Record<
@@ -60,9 +56,7 @@ export const MANUAL_RESTART_WARNING_DEFAULT_WARNINGS: MaintenanceJobWarnings = {
  * Manual warnings never expose a custom cadence. Normalize legacy rows so the
  * armed window, messages, and Maintenance UI all use the same Standard preset.
  */
-export function normalizeManualRestartWarnings(
-  warnings: MaintenanceJobWarnings,
-): MaintenanceJobWarnings {
+export function normalizeManualRestartWarnings(warnings: MaintenanceJobWarnings): MaintenanceJobWarnings {
   if (warnings.preset !== "custom" && warnings.preset !== "none") {
     return warnings;
   }

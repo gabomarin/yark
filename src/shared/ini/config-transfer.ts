@@ -42,9 +42,7 @@ export interface ConfigTransferSelection {
   passwords: boolean;
 }
 
-export function emptyIniFileSelection(
-  strategy: ConfigTransferIniStrategy = "merge",
-): ConfigTransferIniFileSelection {
+export function emptyIniFileSelection(strategy: ConfigTransferIniStrategy = "merge"): ConfigTransferIniFileSelection {
   return {
     enabled: false,
     strategy,
@@ -54,9 +52,7 @@ export function emptyIniFileSelection(
   };
 }
 
-function emptyListSelection(
-  strategy: ConfigTransferIniStrategy = "merge",
-): ConfigTransferListSelection {
+function emptyListSelection(strategy: ConfigTransferIniStrategy = "merge"): ConfigTransferListSelection {
   return { enabled: false, strategy };
 }
 
@@ -71,9 +67,7 @@ export function emptyConfigTransferSelection(): ConfigTransferSelection {
   };
 }
 
-export function configTransferSelectionHasWork(
-  selection: ConfigTransferSelection,
-): boolean {
+export function configTransferSelectionHasWork(selection: ConfigTransferSelection): boolean {
   return (
     iniFileSelectionHasWork(selection.gameUserSettings) ||
     iniFileSelectionHasWork(selection.game) ||
@@ -84,22 +78,13 @@ export function configTransferSelectionHasWork(
   );
 }
 
-function iniFileSelectionHasWork(
-  file: ConfigTransferIniFileSelection,
-): boolean {
+function iniFileSelectionHasWork(file: ConfigTransferIniFileSelection): boolean {
   if (!file.enabled) return false;
-  return (
-    file.entireFile ||
-    file.sections.length > 0 ||
-    file.keys.length > 0
-  );
+  return file.entireFile || file.sections.length > 0 || file.keys.length > 0;
 }
 
 /** True when this GUS key must never be selected via the INI category. */
-export function isConfigTransferBlockedGusKey(
-  section: string,
-  key: string,
-): boolean {
+export function isConfigTransferBlockedGusKey(section: string, key: string): boolean {
   return isYarkOwnedIniKey(section, key);
 }
 
@@ -165,9 +150,7 @@ export function composeModLists<TCache>(
   };
 }
 
-export function assertConfigTransferSelection(
-  selection: unknown,
-): ConfigTransferSelection {
+export function assertConfigTransferSelection(selection: unknown): ConfigTransferSelection {
   if (selection === null || typeof selection !== "object") {
     throw new Error("Config transfer selection must be an object");
   }
@@ -182,10 +165,7 @@ export function assertConfigTransferSelection(
   };
 }
 
-function assertListSelection(
-  value: unknown,
-  label: string,
-): ConfigTransferListSelection {
+function assertListSelection(value: unknown, label: string): ConfigTransferListSelection {
   // Legacy boolean payloads (pre–merge/replace for lists).
   if (typeof value === "boolean") {
     return { enabled: value, strategy: "replace" };
@@ -200,10 +180,7 @@ function assertListSelection(
   };
 }
 
-function assertIniFileSelection(
-  value: unknown,
-  label: string,
-): ConfigTransferIniFileSelection {
+function assertIniFileSelection(value: unknown, label: string): ConfigTransferIniFileSelection {
   if (value === null || typeof value !== "object") {
     throw new Error(`Config transfer ${label} selection must be an object`);
   }

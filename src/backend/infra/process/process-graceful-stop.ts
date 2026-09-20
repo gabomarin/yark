@@ -14,10 +14,7 @@ export type BeginGracefulStopResult =
   | { phase: "killed"; handle: null }
   | { phase: "absent"; handle: null };
 
-export type FinishGracefulStopResult =
-  | "stopped"
-  | "already_exited"
-  | "replaced";
+export type FinishGracefulStopResult = "stopped" | "already_exited" | "replaced";
 
 export interface ProcessGracefulStopHost {
   getManaged(serverId: string): ProcessStartManaged | undefined;
@@ -56,11 +53,7 @@ export async function beginGracefulStop(
   } catch {
     // Prefer DoExit before force-kill when SaveWorld is unavailable (e.g. still
     // bootstrapping after a readiness wait timeout on quit Stop).
-    host.appendRuntimeLog(
-      profile.id,
-      "warning",
-      "RCON SaveWorld unavailable; attempting DoExit before kill",
-    );
+    host.appendRuntimeLog(profile.id, "warning", "RCON SaveWorld unavailable; attempting DoExit before kill");
     try {
       await host.executeRcon(profile, "DoExit");
       const exitedAfterDoExit = await host.waitForExit(managed.child, EXIT_WAIT_MS);
@@ -74,11 +67,7 @@ export async function beginGracefulStop(
         return { phase: "killed", handle: null };
       }
     } catch {
-      host.appendRuntimeLog(
-        profile.id,
-        "warning",
-        "RCON DoExit unavailable; applying kill",
-      );
+      host.appendRuntimeLog(profile.id, "warning", "RCON DoExit unavailable; applying kill");
     }
 
     await host.terminateManaged(profile.id, managed);

@@ -71,19 +71,11 @@ function writeInstallFixture() {
   fs.mkdirSync(win64Dir, { recursive: true });
   fs.writeFileSync(path.join(win64Dir, "ArkAscendedServer.exe"), "fake-asa-binary\n");
   fs.writeFileSync(path.join(win64Dir, "version.txt"), "e2e-rcon-1.0\n");
-  fs.writeFileSync(
-    banListPath,
-    `${KEEP_ID},${KEEP_NAME},0\n${REMOVE_ID},${REMOVE_NAME},0\n`,
-    "utf8",
-  );
+  fs.writeFileSync(banListPath, `${KEEP_ID},${KEEP_NAME},0\n${REMOVE_ID},${REMOVE_NAME},0\n`, "utf8");
   // Stale alternate BanList must NOT be merged into Win64 on unban.
   const altDir = path.join(installDir, "ShooterGame", "Saved");
   fs.mkdirSync(altDir, { recursive: true });
-  fs.writeFileSync(
-    path.join(altDir, "BanList.txt"),
-    "11111111111111111,StaleAlt,0\n",
-    "utf8",
-  );
+  fs.writeFileSync(path.join(altDir, "BanList.txt"), "11111111111111111,StaleAlt,0\n", "utf8");
 }
 
 function seedDatabase() {
@@ -136,30 +128,26 @@ async function launchApp() {
 async function quitApp(app) {
   const proc = app.process();
   const exited =
-    proc == null || proc.exitCode != null
-      ? Promise.resolve()
-      : new Promise((resolve) => proc.once("exit", resolve));
+    proc == null || proc.exitCode != null ? Promise.resolve() : new Promise((resolve) => proc.once("exit", resolve));
   await app.evaluate(({ app: electronApp }) => electronApp.quit());
   await Promise.race([
     exited,
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000),
-    ),
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000)),
   ]);
 }
 
 function cardFor(page, name) {
-  return page.locator(SERVER_CARD, {
-    has: page.getByText(name, { exact: true }),
-  }).first();
+  return page
+    .locator(SERVER_CARD, {
+      has: page.getByText(name, { exact: true }),
+    })
+    .first();
 }
 
 async function openRconTab(page) {
   const card = cardFor(page, serverName);
   await card.waitFor({ state: "visible", timeout: 15_000 });
-  await card
-    .getByRole("button", { name: new RegExp(`Open settings for ${serverName}`, "i") })
-    .click();
+  await card.getByRole("button", { name: new RegExp(`Open settings for ${serverName}`, "i") }).click();
   await openWorkspaceTab(page, "RCON");
   await page.getByText(/Admin commands for the active server/i).waitFor({
     state: "visible",
@@ -280,11 +268,7 @@ async function run() {
     await page.getByRole("button", { name: "ServerChat" }).click();
     const chatInput = page.getByLabel(/rcon command/i);
     await chatInput.waitFor({ state: "visible" });
-    assert.equal(
-      await chatInput.inputValue(),
-      "ServerChat ",
-      "ServerChat chip should prefill the command input",
-    );
+    assert.equal(await chatInput.inputValue(), "ServerChat ", "ServerChat chip should prefill the command input");
     await chatInput.fill("ServerChat E2E hello");
     await page.getByRole("button", { name: /^Send$/i }).click();
     await page.getByText("E2E:ServerChat E2E hello", { exact: true }).waitFor({
@@ -307,7 +291,10 @@ async function run() {
 
     await page.getByRole("button", { name: `Unban ${REMOVE_NAME}` }).click();
     await page.getByRole("dialog").waitFor({ state: "visible", timeout: 5_000 });
-    await page.getByRole("dialog").getByRole("button", { name: /^Unban$/i }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: /^Unban$/i })
+      .click();
     await page.getByRole("dialog").waitFor({ state: "hidden", timeout: 10_000 });
     await page.getByText(REMOVE_NAME, { exact: true }).waitFor({
       state: "detached",
@@ -318,10 +305,7 @@ async function run() {
     const banListText = fs.readFileSync(banListPath, "utf8");
     assert.match(banListText, new RegExp(`${KEEP_ID},${KEEP_NAME},0`));
     assert.doesNotMatch(banListText, new RegExp(REMOVE_ID));
-    const altText = fs.readFileSync(
-      path.join(installDir, "ShooterGame", "Saved", "BanList.txt"),
-      "utf8",
-    );
+    const altText = fs.readFileSync(path.join(installDir, "ShooterGame", "Saved", "BanList.txt"), "utf8");
     assert.match(altText, /11111111111111111,StaleAlt,0/);
     assert.doesNotMatch(banListText, /11111111111111111/);
 
@@ -337,9 +321,7 @@ async function run() {
       console.log(`E2E_RCON_SHOT ${shot}`);
     }
 
-    const actionableErrors = errors.filter(
-      (message) => !/Failed to load resource|net::ERR_/i.test(message),
-    );
+    const actionableErrors = errors.filter((message) => !/Failed to load resource|net::ERR_/i.test(message));
     assert.deepEqual(actionableErrors, []);
     succeeded = true;
     console.log(`E2E_RCON_OK profile=${profileDir} shots=${shotsDir}`);

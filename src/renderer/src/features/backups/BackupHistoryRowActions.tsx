@@ -1,23 +1,11 @@
 import type { ReactElement } from "react";
-import {
-  ArrowCounterClockwise,
-  ClipboardText,
-  Export,
-  FolderOpen,
-  Trash,
-} from "@phosphor-icons/react";
+import { ArrowCounterClockwise, ClipboardText, Export, FolderOpen, Trash } from "@phosphor-icons/react";
 import { ActionIcon, Group, Tooltip } from "@mantine/core";
-import {
-  buildBackupHistoryRowActions,
-  type BackupHistoryRowActionInput,
-} from "./backupHistoryRowActionModel";
+import { buildBackupHistoryRowActions, type BackupHistoryRowActionInput } from "./backupHistoryRowActionModel";
 
 type Props = BackupHistoryRowActionInput;
 
-function itemDisabled(
-  entries: ReturnType<typeof buildBackupHistoryRowActions>,
-  key: string,
-): boolean {
+function itemDisabled(entries: ReturnType<typeof buildBackupHistoryRowActions>, key: string): boolean {
   const item = entries.find((entry) => entry.kind === "item" && entry.key === key);
   return item?.kind === "item" ? item.disabled === true : true;
 }
@@ -66,7 +54,7 @@ export function BackupHistoryRowActions(props: Props): ReactElement {
       <Tooltip label="Restore" withArrow>
         <ActionIcon
           variant="subtle"
-          color="orange"
+          color="attention"
           size="sm"
           aria-label={`Restore backup ${props.backup.id}`}
           disabled={itemDisabled(menuEntries, "restore")}

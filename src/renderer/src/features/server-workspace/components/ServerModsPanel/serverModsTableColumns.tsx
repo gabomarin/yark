@@ -1,10 +1,5 @@
 import type { ReactElement } from "react";
-import {
-  Group,
-  Loader,
-  Switch,
-  Text,
-} from "@mantine/core";
+import { Group, Loader, Switch, Text } from "@mantine/core";
 import type { DataTableColumn } from "mantine-datatable";
 import { ModIdentityCell } from "./ModIdentityCell";
 import { ServerModsActionsCell } from "./ServerModsActionsCell";
@@ -15,12 +10,7 @@ import classes from "./ServerModsPanel.module.css";
 export { MODS_REORDER_BUSY_KEY, isModsListBusy } from "./serverModsBusy";
 
 export function isModRowBusy(busyKey: string | null, row: ModRow): boolean {
-  return (
-    isModsListBusy(busyKey)
-    || busyKey === row.id
-    || busyKey === row.slug
-    || busyKey === `detail:${row.slug}`
-  );
+  return isModsListBusy(busyKey) || busyKey === row.id || busyKey === row.slug || busyKey === `detail:${row.slug}`;
 }
 
 export function buildServerModsTableColumns(input: {
@@ -62,10 +52,7 @@ export function buildServerModsTableColumns(input: {
       cellsClassName: classes.enableCell,
       render: (row) =>
         row.id === null ? null : (
-          <div
-            className={classes.enableControl}
-            onClick={(event) => event.stopPropagation()}
-          >
+          <div className={classes.enableControl} onClick={(event) => event.stopPropagation()}>
             <Switch
               checked={row.enabled}
               disabled={isModRowBusy(input.busyKey, row)}
@@ -73,8 +60,7 @@ export function buildServerModsTableColumns(input: {
               // Mantine trackLabel is aria-hidden but still intercepts hits; keep
               // the input as the real click target for mouse + Playwright.
               styles={{ trackLabel: { pointerEvents: "none" } }}
-              onChange={(event) =>
-                input.onToggle(row.id!, event.currentTarget.checked)}
+              onChange={(event) => input.onToggle(row.id!, event.currentTarget.checked)}
             />
           </div>
         ),
@@ -93,7 +79,9 @@ export function buildServerModsTableColumns(input: {
       title: "Project ID",
       width: 110,
       render: (row) => (
-        <Text ff="monospace" size="sm">{row.id ?? "On add"}</Text>
+        <Text ff="monospace" size="sm">
+          {row.id ?? "On add"}
+        </Text>
       ),
     },
     {
@@ -105,7 +93,9 @@ export function buildServerModsTableColumns(input: {
         input.busyKey === `detail:${row.slug}` ? (
           <Group gap="xs" wrap="nowrap">
             <Loader size="xs" />
-            <Text size="xs" c="dimmed">Loading…</Text>
+            <Text size="xs" c="dimmed">
+              Loading…
+            </Text>
           </Group>
         ) : (
           <Text size="sm" c="dimmed">
@@ -119,7 +109,9 @@ export function buildServerModsTableColumns(input: {
       width: 100,
       sortable: true,
       render: (row) => (
-        <Text size="xs" c="dimmed">{row.updated}</Text>
+        <Text size="xs" c="dimmed">
+          {row.updated}
+        </Text>
       ),
     },
     {

@@ -1,15 +1,8 @@
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import type { ServerOperationalLogs } from "@shared/types";
-import {
-  dangerConfirmBody,
-  openDangerConfirmModal,
-} from "@ui/DangerConfirmModal/openDangerConfirmModal";
+import { dangerConfirmBody, openDangerConfirmModal } from "@ui/DangerConfirmModal/openDangerConfirmModal";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
-import {
-  createElement,
-  type Dispatch,
-  type SetStateAction,
-} from "react";
+import { createElement, type Dispatch, type SetStateAction } from "react";
 import { formatUpdateJobLabel, replaceRuntimeLogs } from "../model/serverLogsFormat";
 
 interface ServerLogsPanelActionOptions {
@@ -27,9 +20,7 @@ interface ServerLogsPanelActionOptions {
   load: (serverId: string) => Promise<ServerOperationalLogs | void>;
 }
 
-export function createServerLogsPanelActions(
-  options: ServerLogsPanelActionOptions,
-) {
+export function createServerLogsPanelActions(options: ServerLogsPanelActionOptions) {
   const {
     serverId,
     logs,
@@ -71,15 +62,9 @@ export function createServerLogsPanelActions(
     setBusy(true);
     await runWithFinally(
       async () => {
-        const result = await window.api.openServerUpdateLogFile(
-          serverId,
-          selectedUpdateFile,
-        );
+        const result = await window.api.openServerUpdateLogFile(serverId, selectedUpdateFile);
         if (!result.ok) {
-          showOperatorError(
-            result.error ?? "Could not open the log externally",
-            "Logs",
-          );
+          showOperatorError(result.error ?? "Could not open the log externally", "Logs");
         }
       },
       () => setBusy(false),
@@ -134,10 +119,7 @@ export function createServerLogsPanelActions(
           async () => {
             const result = await window.api.clearServerRuntimeLog(serverId);
             if (!result.ok) {
-              showOperatorError(
-                result.error ?? "Could not clear runtime log",
-                "Logs",
-              );
+              showOperatorError(result.error ?? "Could not clear runtime log", "Logs");
               return;
             }
             runtimeRevisionRef.current += 1;
@@ -168,10 +150,7 @@ export function createServerLogsPanelActions(
           async () => {
             const result = await window.api.clearServerUpdateLogs(serverId);
             if (!result.ok) {
-              showOperatorError(
-                result.error ?? "Could not clear update logs",
-                "Logs",
-              );
+              showOperatorError(result.error ?? "Could not clear update logs", "Logs");
               return;
             }
             setSelectedUpdateFile(null);
@@ -196,11 +175,7 @@ export function createServerLogsPanelActions(
       title: "Delete this update log?",
       children: dangerConfirmBody([
         "Permanently delete the job log ",
-        createElement(
-          "strong",
-          { key: "name" },
-          formatUpdateJobLabel(fileName, stamp).title,
-        ),
+        createElement("strong", { key: "name" }, formatUpdateJobLabel(fileName, stamp).title),
         "? This cannot be undone.",
       ]),
       confirmLabel: "Delete log",
@@ -210,10 +185,7 @@ export function createServerLogsPanelActions(
           async () => {
             const result = await window.api.deleteServerUpdateLog(serverId, fileName);
             if (!result.ok) {
-              showOperatorError(
-                result.error ?? "Could not delete update log",
-                "Logs",
-              );
+              showOperatorError(result.error ?? "Could not delete update log", "Logs");
               return;
             }
             setSelectedUpdateFile(null);
@@ -236,10 +208,7 @@ export function createServerLogsPanelActions(
     if (count === 0) {
       showOperatorToast({
         title: "Logs",
-        message:
-          skippedRunning > 0
-            ? "Cannot delete backups while one is still running."
-            : "No backups to delete.",
+        message: skippedRunning > 0 ? "Cannot delete backups while one is still running." : "No backups to delete.",
       });
       return;
     }

@@ -52,11 +52,7 @@ export function formatRelativeTime(iso: string, nowMs = Date.now()): string {
 /**
  * Relative within 24h, local timestamp older. Tooltip shows the other form.
  */
-export function formatWhenLabel(
-  iso: string,
-  nowMs = Date.now(),
-  options?: { recentThresholdMs?: number },
-): WhenLabel {
+export function formatWhenLabel(iso: string, nowMs = Date.now(), options?: { recentThresholdMs?: number }): WhenLabel {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) {
     return { primary: iso, tooltip: iso };

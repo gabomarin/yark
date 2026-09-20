@@ -23,9 +23,7 @@ export function ServerFormClusterFields(props: Props): ReactElement {
     return (
       <ServerFormCreateClusterFields
         options={props.knownClusters}
-        selectedClusterId={
-          props.clusterId.trim().length > 0 ? props.clusterId.trim() : null
-        }
+        selectedClusterId={props.clusterId.trim().length > 0 ? props.clusterId.trim() : null}
         inputSize={props.inputSize}
         onSelectCluster={props.onSelectCreateCluster}
         onOpenClusters={props.onOpenClusters}

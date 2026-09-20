@@ -13,8 +13,7 @@ const scraped: ModMetadata = {
   authors: ["kavan87"],
   downloadCount: 100,
   dateModified: "2026-05-28T00:00:00.000Z",
-  curseforgeUrl:
-    "https://www.curseforge.com/ark-survival-ascended/mods/super-spyglass-plus",
+  curseforgeUrl: "https://www.curseforge.com/ark-survival-ascended/mods/super-spyglass-plus",
   slug: "super-spyglass-plus",
   categories: ["General"],
 };
@@ -27,10 +26,7 @@ describe("mergeMissingMetadata", () => {
       thumbnailUrl: null,
       categories: [],
     };
-    const result = mergeMissingMetadata(
-      new Map([[scraped.id, scraped]]),
-      [fallback],
-    );
+    const result = mergeMissingMetadata(new Map([[scraped.id, scraped]]), [fallback]);
     expect(result.get(scraped.id)).toEqual(scraped);
   });
 });

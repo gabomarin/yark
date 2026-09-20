@@ -6,12 +6,7 @@ const { STEAMCMD_PATH } = require("./e2e-dom-hooks.cjs");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
-const {
-  launchElectronApp,
-  waitForOverview,
-  quitElectronApp,
-  removeFixtureDir,
-} = require("./e2e-launch.cjs");
+const { launchElectronApp, waitForOverview, quitElectronApp, removeFixtureDir } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -50,8 +45,7 @@ async function measureSettings(page) {
 
     return {
       viewport: { width: window.innerWidth, height: window.innerHeight },
-      hasHorizontalOverflow:
-        Math.max(root.scrollWidth, body.scrollWidth) > root.clientWidth + 1,
+      hasHorizontalOverflow: Math.max(root.scrollWidth, body.scrollWidth) > root.clientWidth + 1,
       pageVisible: pageRoot !== null && (pageRect?.width ?? 0) > 0,
       hasSteamCmdPath: document.querySelector(steamCmdSel) !== null,
       mainScrollHeight: main?.scrollHeight ?? null,
@@ -67,11 +61,7 @@ async function run() {
   const outDir = path.join(projectRoot, "artifacts", "visual-settings");
   fs.mkdirSync(outDir, { recursive: true });
 
-  const profileDir = path.join(
-    projectRoot,
-    "artifacts",
-    `visual-settings-profile-${Date.now()}-${process.pid}`,
-  );
+  const profileDir = path.join(projectRoot, "artifacts", `visual-settings-profile-${Date.now()}-${process.pid}`);
   fs.mkdirSync(profileDir, { recursive: true });
   const app = await launchElectronApp({ profileDir });
   const errors = [];
@@ -107,22 +97,14 @@ async function run() {
       await openSettingsCategory(page, "SteamCMD");
       const steamCmd = await measureSettings(page);
       assert.equal(steamCmd.hasSteamCmdPath, true, `${size.name}: missing steamcmd path`);
-      assert.equal(
-        steamCmd.hasHorizontalOverflow,
-        false,
-        `${size.name}: horizontal overflow on SteamCMD`,
-      );
+      assert.equal(steamCmd.hasHorizontalOverflow, false, `${size.name}: horizontal overflow on SteamCMD`);
 
       await openSettingsCategory(page, "Discord");
       await page.getByRole("heading", { name: "Discord", level: 3 }).waitFor({
         timeout: 10000,
       });
       const discord = await measureSettings(page);
-      assert.equal(
-        discord.hasHorizontalOverflow,
-        false,
-        `${size.name}: horizontal overflow on Discord`,
-      );
+      assert.equal(discord.hasHorizontalOverflow, false, `${size.name}: horizontal overflow on Discord`);
       const eventColumns = await page.evaluate(() => {
         const server = document.querySelector("[data-discord-server-events]")?.getBoundingClientRect();
         const steamCmd = document.querySelector("[data-discord-steamcmd-jobs]")?.getBoundingClientRect();

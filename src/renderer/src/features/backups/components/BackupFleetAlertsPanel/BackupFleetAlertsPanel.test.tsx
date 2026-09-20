@@ -43,7 +43,7 @@ const alerts: BackupFleetAlert[] = [
 ];
 
 describe("BackupFleetAlertsPanel", () => {
-  it("renders a compact scrollable panel without duplicate Open/Logs on failed alerts", async () => {
+  it("stacks one alert bar per alert without duplicate Open/Logs on failed alerts", async () => {
     const user = userEvent.setup();
     const onOpenServerBackups = vi.fn();
     const onOpenFailedBackupLogs = vi.fn();
@@ -85,9 +85,7 @@ describe("BackupFleetAlertsPanel", () => {
     expect(onOpenCleanup).toHaveBeenCalled();
 
     await user.click(screen.getAllByRole("button", { name: "Dismiss" })[1]!);
-    expect(onDismissAlert).toHaveBeenCalledWith(
-      expect.objectContaining({ id: "a2", fingerprint: "bak-failed-1" }),
-    );
+    expect(onDismissAlert).toHaveBeenCalledWith(expect.objectContaining({ id: "a2", fingerprint: "bak-failed-1" }));
   });
 
   it("returns null when there are no alerts", () => {

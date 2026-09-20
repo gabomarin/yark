@@ -1,3 +1,4 @@
+/* Transparent: the workspace body paints the shared chrome surface. */
 .panel {
   width: 100%;
   min-width: 0;
@@ -6,7 +7,6 @@
   gap: var(--app-space-xs);
   padding: var(--app-space-sm);
   border-left: 1px solid var(--app-color-border-subtle);
-  background: var(--app-color-surface-chrome);
   overflow: auto;
   min-height: 0;
 }
@@ -17,7 +17,7 @@
 }
 
 .widgetTitle {
-  font-size: 12px;
+  font-size: var(--app-font-eyebrow);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;

@@ -1,66 +1,6 @@
-.content {
-  --paper-bg: var(--app-color-panel);
-  --paper-background: var(--app-color-panel);
-  --paper-radius: var(--app-radius-md);
-  background: var(--app-color-panel);
-  border-radius: var(--app-radius-md);
-  border: 1px solid var(--app-color-border);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  max-height: min(720px, 90vh);
-}
-
-.header {
-  flex-shrink: 0;
-  flex-direction: column;
-  align-items: stretch;
-  background: var(--app-color-panel);
-  border-bottom: 1px solid var(--app-color-border);
-  padding: var(--app-space-md) var(--app-space-lg) var(--app-space-sm);
-}
-
-.headerTop {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--app-space-sm);
-  margin-bottom: var(--app-space-sm);
-}
-
-.title {
-  font-size: var(--mantine-font-size-md);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--app-color-text);
-}
-
-.meta {
-  margin-top: var(--app-space-xxs);
-  color: var(--app-color-muted);
-}
-
 .metaSep {
   margin-inline: var(--app-space-xxs);
   color: var(--ark-gray-8);
-}
-
-.tabs {
-  width: 100%;
-  background: var(--app-color-surface-chrome);
-  border: 1px solid var(--app-color-border);
-}
-
-.tabs :global(.mantine-SegmentedControl-indicator) {
-  background: var(--ark-blue-6);
-}
-
-.tabs :global(.mantine-SegmentedControl-label) {
-  color: var(--app-color-muted);
-}
-
-.tabs :global(.mantine-SegmentedControl-label[data-active]) {
-  color: var(--mantine-color-blue-1);
 }
 
 .body {
@@ -186,7 +126,7 @@
 }
 
 .accordionControl:hover {
-  background: color-mix(in srgb, var(--app-color-surface-control) 55%, transparent);
+  background: var(--app-color-surface-control);
 }
 
 .accordionPanel {
@@ -215,7 +155,7 @@
 }
 
 .github {
-  color: var(--ark-blue-11);
+  color: var(--app-color-accent-text);
 }
 
 .github:hover {

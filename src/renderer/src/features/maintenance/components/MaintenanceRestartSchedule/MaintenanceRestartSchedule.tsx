@@ -3,11 +3,7 @@ import { TimePicker } from "@mantine/dates";
 import { Clock } from "@phosphor-icons/react";
 import type { MaintenancePolicyStatus } from "@shared/types";
 import { type ReactElement, useCallback, useEffect, useState } from "react";
-import {
-  ALL_RESTART_DAYS_OF_WEEK,
-  DAY_SHORT,
-  normalizeRestartDaysOfWeek,
-} from "../../model/maintenancePanelModel";
+import { ALL_RESTART_DAYS_OF_WEEK, DAY_SHORT, normalizeRestartDaysOfWeek } from "../../model/maintenancePanelModel";
 import classes from "../../MaintenancePanel.module.css";
 
 interface Props {
@@ -18,12 +14,7 @@ interface Props {
 }
 
 /** Restart schedule: multi-day + Mantine TimePicker (#315). */
-export function MaintenanceRestartSchedule({
-  policy,
-  disabled,
-  onPatchDays,
-  onPatchTime,
-}: Props): ReactElement {
+export function MaintenanceRestartSchedule({ policy, disabled, onPatchDays, onPatchTime }: Props): ReactElement {
   const [timeDropdownOpened, setTimeDropdownOpened] = useState(false);
   const [timeLocal, setTimeLocal] = useState(policy.restartTimeLocal);
   const days = normalizeRestartDaysOfWeek(policy.restartDaysOfWeek);
@@ -49,7 +40,6 @@ export function MaintenanceRestartSchedule({
       </div>
       <Group gap={6} wrap="wrap">
         <Button
-          size="compact-xs"
           variant={everyDay ? "light" : "default"}
           disabled={disabled}
           onClick={() => onPatchDays([...ALL_RESTART_DAYS_OF_WEEK])}
@@ -65,9 +55,7 @@ export function MaintenanceRestartSchedule({
               disabled={disabled}
               className={`${classes.offsetChip}${on ? ` ${classes.offsetChipOn}` : ""}`}
               onClick={() => {
-                const next = on
-                  ? days.filter((d) => d !== dow)
-                  : [...days, dow];
+                const next = on ? days.filter((d) => d !== dow) : [...days, dow];
                 if (next.length === 0) return;
                 onPatchDays(normalizeRestartDaysOfWeek(next));
               }}

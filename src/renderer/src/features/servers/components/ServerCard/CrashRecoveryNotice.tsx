@@ -28,15 +28,9 @@ export function CrashRecoveryNotice({
       onClick={onOpenLogs}
       aria-label="Crash detected; auto-restart scheduled – open runtime logs"
     >
-      <WarningCircle
-        size={18}
-        weight="fill"
-        className={classes.crashRecoveryIcon}
-        aria-hidden
-      />
+      <WarningCircle size={18} weight="fill" className={classes.crashRecoveryIcon} aria-hidden />
       <Text c={CRASH_RECOVERY_NOTICE_COLOR} size="sm" className={classes.runtimeErrorText}>
-        Crash detected – {crashRecoveryWhenLabel(remaining)} (attempt{" "}
-        {recovery.attempt} of {recovery.maxAttempts})
+        Crash detected – {crashRecoveryWhenLabel(remaining)} (attempt {recovery.attempt} of {recovery.maxAttempts})
       </Text>
     </UnstyledButton>
   );

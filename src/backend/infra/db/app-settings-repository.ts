@@ -13,9 +13,8 @@ export class AppSettingsRepository {
   constructor(private readonly db: DatabaseSync) {}
 
   get(key: string): string | null {
-    const row = this.db
-      .prepare("SELECT key, value, updated_at FROM app_settings WHERE key = ?")
-      .get(key) as unknown as SettingRow | undefined;
+    const row = this.db.prepare("SELECT key, value, updated_at FROM app_settings WHERE key = ?").get(key) as unknown as
+      SettingRow | undefined;
     return row?.value ?? null;
   }
 

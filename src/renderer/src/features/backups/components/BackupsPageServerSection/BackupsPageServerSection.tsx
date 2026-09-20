@@ -33,9 +33,7 @@ export function BackupsPageServerSection(props: Props): ReactElement {
         <Select
           aria-label="Filter servers by health"
           value={props.healthFilter}
-          onChange={(value) =>
-            props.onHealthFilter((value as BackupHealthFilter) ?? "all")
-          }
+          onChange={(value) => props.onHealthFilter((value as BackupHealthFilter) ?? "all")}
           data={[
             { value: "all", label: "All" },
             { value: "protected", label: "Protected" },
@@ -48,7 +46,7 @@ export function BackupsPageServerSection(props: Props): ReactElement {
 
       <Stack gap="sm">
         {props.filteredServers.length === 0 ? (
-          <AppSurfaceCard>
+          <AppSurfaceCard radius={0}>
             <EmptyState
               icon={<HardDrives size={22} />}
               title="No matches"

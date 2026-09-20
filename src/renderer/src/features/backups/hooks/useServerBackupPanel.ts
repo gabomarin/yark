@@ -43,13 +43,7 @@ export interface UseServerBackupPanelOptions {
 }
 
 export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
-  const {
-    server,
-    runtime,
-    installation,
-    createLocked,
-    createLockReason,
-  } = options;
+  const { server, runtime, installation, createLocked, createLockReason } = options;
   const [backups, setBackups] = useState<BackupRecord[]>([]);
   const [policy, setPolicy] = useState<BackupPolicyStatus | null>(null);
   const [draftPolicy, setDraftPolicy] = useState<DraftPolicy | null>(null);
@@ -69,91 +63,73 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
   const loadGenRef = useRef(0);
   const saveGenRef = useRef(0);
 
-  const installReady =
-    installation === undefined ? true : isInstallationReady(installation);
+  const installReady = installation === undefined ? true : isInstallationReady(installation);
   const installLockReason =
-    installation?.guidance?.trim()
-    || "Install server files before creating or restoring backups.";
+    installation?.guidance?.trim() || "Install server files before creating or restoring backups.";
   const serverActive = isServerActive(runtime);
   const createBlocked = createLocked === true || !installReady;
   const createBlockReason = !installReady
     ? installLockReason
     : (createLockReason ?? "Wait for the active backup to finish");
-  const restoreLocked =
-    options.opsLocked === true || serverActive || !installReady;
+  const restoreLocked = options.opsLocked === true || serverActive || !installReady;
   const restoreLockReason = !installReady
     ? installLockReason
-    : options.opsLockReason
-      ?? (serverActive ? "Stop the server before restoring a backup." : undefined);
+    : (options.opsLockReason ?? (serverActive ? "Stop the server before restoring a backup." : undefined));
 
-  const load = useCallback(
-    async (serverId: string, loadOptions?: { quiet?: boolean }) => {
-      const quiet = loadOptions?.quiet === true;
-      const gen = ++loadGenRef.current;
-      if (!quiet) setLoading(true);
-      await runWithFinally(
-        async () => {
-          const [listRes, policyRes, rootRes] = await Promise.all([
-            window.api.listBackups(serverId, 100),
-            window.api.getBackupPolicy(serverId),
-            window.api.resolveBackupRoot(serverId),
-          ]);
-          if (gen !== loadGenRef.current) return;
-          if (!listRes.ok) {
-            if (!quiet) {
-              setBackups([]);
-              setPolicy(null);
-              setDraftPolicy(null);
-              setResolvedRoot(null);
-              setSelectedIds([]);
-            }
-            showBackupError(listRes.error ?? "Could not load backups");
-            return;
+  const load = useCallback(async (serverId: string, loadOptions?: { quiet?: boolean }) => {
+    const quiet = loadOptions?.quiet === true;
+    const gen = ++loadGenRef.current;
+    if (!quiet) setLoading(true);
+    await runWithFinally(
+      async () => {
+        const [listRes, policyRes, rootRes] = await Promise.all([
+          window.api.listBackups(serverId, 100),
+          window.api.getBackupPolicy(serverId),
+          window.api.resolveBackupRoot(serverId),
+        ]);
+        if (gen !== loadGenRef.current) return;
+        if (!listRes.ok) {
+          if (!quiet) {
+            setBackups([]);
+            setPolicy(null);
+            setDraftPolicy(null);
+            setResolvedRoot(null);
+            setSelectedIds([]);
           }
-          setBackups((previous) =>
-            backupsListKey(previous) === backupsListKey(listRes.data)
-              ? previous
-              : listRes.data,
-          );
-          if (!policyRes.ok) {
-            if (!quiet) {
-              setPolicy(null);
-              setDraftPolicy(null);
-              setResolvedRoot(null);
-              setSelectedIds([]);
-            }
-            showBackupError(policyRes.error ?? "Could not load backup policy");
-            return;
+          showBackupError(listRes.error ?? "Could not load backups");
+          return;
+        }
+        setBackups((previous) => (backupsListKey(previous) === backupsListKey(listRes.data) ? previous : listRes.data));
+        if (!policyRes.ok) {
+          if (!quiet) {
+            setPolicy(null);
+            setDraftPolicy(null);
+            setResolvedRoot(null);
+            setSelectedIds([]);
           }
-          setSelectedIds((previous) => {
-            const next = previous.filter((id) =>
-              listRes.data.some(
-                (backup) => backup.id === id && backup.status !== "running",
-              ),
-            );
-            return next.length === previous.length
-              && next.every((id, index) => id === previous[index])
-              ? previous
-              : next;
-          });
-          setPolicy((previous) =>
-            previous !== null && draftEqualsPolicy(toDraft(previous), policyRes.data)
-              ? previous
-              : policyRes.data,
+          showBackupError(policyRes.error ?? "Could not load backup policy");
+          return;
+        }
+        setSelectedIds((previous) => {
+          const next = previous.filter((id) =>
+            listRes.data.some((backup) => backup.id === id && backup.status !== "running"),
           );
-          if (!quiet) setDraftPolicy(toDraft(policyRes.data));
-          setResolvedRoot((previous) => {
-            const next = rootRes.ok ? rootRes.data : null;
-            return previous === next ? previous : next;
-          });
-        },
-        () => {
-          if (gen === loadGenRef.current) setLoading(false);
-        },
-      );
-    },
-    [],
-  );
+          return next.length === previous.length && next.every((id, index) => id === previous[index]) ? previous : next;
+        });
+        setPolicy((previous) =>
+          previous !== null && draftEqualsPolicy(toDraft(previous), policyRes.data) ? previous : policyRes.data,
+        );
+        if (!quiet) setDraftPolicy(toDraft(policyRes.data));
+        setResolvedRoot((previous) => {
+          const next = rootRes.ok ? rootRes.data : null;
+          return previous === next ? previous : next;
+        });
+      },
+      () => {
+        if (gen === loadGenRef.current) setLoading(false);
+      },
+    );
+  }, []);
 
   useEffect(() => {
     void load(server.id);
@@ -202,33 +178,16 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
     return () => window.clearTimeout(timer);
   }, [draftPolicy, policy, server.id]);
 
-  const kindBackups = useMemo(
-    () => backups.filter((backup) => backup.kind === activeKind),
-    [backups, activeKind],
-  );
+  const kindBackups = useMemo(() => backups.filter((backup) => backup.kind === activeKind), [backups, activeKind]);
   const displayedBackups = useMemo(
-    () => filterBackups(
-      backups,
-      activeKind,
-      playerSearch,
-      currentMapOnly,
-      server.map,
-    ),
+    () => filterBackups(backups, activeKind, playerSearch, currentMapOnly, server.map),
     [backups, activeKind, playerSearch, currentMapOnly, server.map],
   );
   const hiddenOtherMapWorldCount = useMemo(
-    () => countHiddenOtherMapWorldBackups(
-      backups,
-      activeKind,
-      currentMapOnly,
-      server.map,
-    ),
+    () => countHiddenOtherMapWorldBackups(backups, activeKind, currentMapOnly, server.map),
     [backups, activeKind, currentMapOnly, server.map],
   );
-  const displayedBackupIds = useMemo(
-    () => new Set(displayedBackups.map((backup) => backup.id)),
-    [displayedBackups],
-  );
+  const displayedBackupIds = useMemo(() => new Set(displayedBackups.map((backup) => backup.id)), [displayedBackups]);
   const actionableSelectedIds = useMemo(
     () => selectedIds.filter((id) => displayedBackupIds.has(id)),
     [selectedIds, displayedBackupIds],
@@ -266,13 +225,14 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
       : activeKind === "players"
         ? "Player retention"
         : "INI retention";
-  const settingsSummary = draftPolicy === null
-    ? null
-    : activeKind === "world"
-      ? worldPolicySummary(draftPolicy)
-      : activeKind === "players"
-        ? playersPolicySummary(draftPolicy)
-        : iniPolicySummary(draftPolicy);
+  const settingsSummary =
+    draftPolicy === null
+      ? null
+      : activeKind === "world"
+        ? worldPolicySummary(draftPolicy)
+        : activeKind === "players"
+          ? playersPolicySummary(draftPolicy)
+          : iniPolicySummary(draftPolicy);
   const emptyHint =
     activeKind === "world"
       ? currentMapOnly && hiddenOtherMapWorldCount > 0

@@ -2,9 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ServerProfile } from "@shared/types";
 import { listKnownClusterOptions } from "@features/clusters/knownClusterOptions";
 
-function profile(
-  partial: Partial<ServerProfile> & Pick<ServerProfile, "id" | "name">,
-): ServerProfile {
+function profile(partial: Partial<ServerProfile> & Pick<ServerProfile, "id" | "name">): ServerProfile {
   return {
     map: "TheIsland_WP",
     installDir: "C:\\ark\\a",
@@ -21,9 +19,9 @@ function profile(
     mods: [],
     disabledMods: [],
     modMetadataCache: {},
-    
+
     autoStart: false,
-    
+
     useAsaApi: false,
     useAsaApiLoader: false,
     enabled: true,
@@ -123,4 +121,3 @@ describe("listKnownClusterOptions", () => {
     ]);
   });
 });
-

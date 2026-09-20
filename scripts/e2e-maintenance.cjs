@@ -214,14 +214,8 @@ async function run() {
     await leaveWorkspaceToServers(page);
     await removeServerIfPresent(page, serverName);
 
-    const relevantPageErrors = pageErrors.filter(
-      (msg) => !/ResizeObserver|Non-Error promise rejection/i.test(msg),
-    );
-    assert.equal(
-      relevantPageErrors.length,
-      0,
-      `Unexpected page errors: ${relevantPageErrors.join(" | ")}`,
-    );
+    const relevantPageErrors = pageErrors.filter((msg) => !/ResizeObserver|Non-Error promise rejection/i.test(msg));
+    assert.equal(relevantPageErrors.length, 0, `Unexpected page errors: ${relevantPageErrors.join(" | ")}`);
 
     succeeded = true;
     console.log("E2E_MAINTENANCE_OK");

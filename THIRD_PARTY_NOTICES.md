@@ -19,12 +19,12 @@ apply to the listed portions only.
 
 **Used in YARK:**
 
-| Path | Role |
-| --- | --- |
-| `src/shared/defaults/Game.ini` | Default ASA dedicated `Game.ini` body |
-| `src/shared/defaults/GameUserSettings.ini` | Default ASA dedicated `GameUserSettings.ini` body |
-| `src/shared/ini/ini-setting-meta.json` | Editor metadata (`description`, `valueType`, defaults) generated from the files above (`npm run catalog:ini-meta`) |
-| `src/shared/asa/asa-setting-ui-categories-data.json` | INI editor category groupings derived from `ini-setting-meta.json` |
+| Path                                                 | Role                                                                                                               |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `src/shared/defaults/Game.ini`                       | Default ASA dedicated `Game.ini` body                                                                              |
+| `src/shared/defaults/GameUserSettings.ini`           | Default ASA dedicated `GameUserSettings.ini` body                                                                  |
+| `src/shared/ini/ini-setting-meta.json`               | Editor metadata (`description`, `valueType`, defaults) generated from the files above (`npm run catalog:ini-meta`) |
+| `src/shared/asa/asa-setting-ui-categories-data.json` | INI editor category groupings derived from `ini-setting-meta.json`                                                 |
 
 YARK may reorder sections, normalize placeholder values (e.g. empty `ActiveMods=`),
 or edit comments. Game setting names and factual defaults originate from ARK /
@@ -43,17 +43,17 @@ the YARK distribution).
 
 **License:** [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
-Confirmed via the ark.wiki.gg site footer (August 2026): *“Page content is under
+Confirmed via the ark.wiki.gg site footer (August 2026): _“Page content is under
 Creative Commons Attribution-Non-Commercial-ShareAlike 4.0 License unless
-otherwise noted.”* Older pages may incorporate material adapted from ARK Fandom
+otherwise noted.”_ Older pages may incorporate material adapted from ARK Fandom
 under the same license family.
 
 **Used in YARK:**
 
-| Path | Role |
-| --- | --- |
+| Path                                             | Role                                                                         |
+| ------------------------------------------------ | ---------------------------------------------------------------------------- |
 | `src/shared/asa/asa-launch-options-catalog.json` | Versioned ASA launch-flag metadata (descriptions, ASA/ASE columns, examples) |
-| `scripts/build-asa-launch-options-catalog.cjs` | Offline regeneration script (`npm run catalog:launch-options`) |
+| `scripts/build-asa-launch-options-catalog.cjs`   | Offline regeneration script (`npm run catalog:launch-options`)               |
 
 The wiki is **not** fetched at runtime. Operator-facing copy in the Launch tab
 and browse catalog is cleaned YARK prose derived from wiki rows; each entry
@@ -92,18 +92,18 @@ for official ASA maps (`KNOWN_MAPS`). Shown in the server list, workspace header
 server form identity strip, Downloads queue, and app spotlight — not as standalone
 merchandise or marketing for YARK itself.
 
-| File | Map (ASA) |
-| --- | --- |
-| `TheIsland_WP.webp` | The Island |
+| File                    | Map (ASA)      |
+| ----------------------- | -------------- |
+| `TheIsland_WP.webp`     | The Island     |
 | `ScorchedEarth_WP.webp` | Scorched Earth |
-| `TheCenter_WP.webp` | The Center |
-| `Aberration_WP.webp` | Aberration |
-| `Extinction_WP.webp` | Extinction |
-| `Ragnarok_WP.webp` | Ragnarok |
-| `Astraeos_WP.webp` | Astraeos |
-| `Genesis_WP.webp` | Genesis |
-| `LostColony_WP.webp` | Lost Colony |
-| `Valguero_WP.webp` | Valguero |
+| `TheCenter_WP.webp`     | The Center     |
+| `Aberration_WP.webp`    | Aberration     |
+| `Extinction_WP.webp`    | Extinction     |
+| `Ragnarok_WP.webp`      | Ragnarok       |
+| `Astraeos_WP.webp`      | Astraeos       |
+| `Genesis_WP.webp`       | Genesis        |
+| `LostColony_WP.webp`    | Lost Colony    |
+| `Valguero_WP.webp`      | Valguero       |
 
 Each asset is derived from Studio Wildcard’s promotional / key art for the
 corresponding ARK: Survival Ascended map, resized for in-app map identification

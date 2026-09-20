@@ -1,4 +1,5 @@
-import { Alert, Button, Stack, Text } from "@mantine/core";
+import { Button, Stack, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
 interface Props {
@@ -38,20 +39,17 @@ export class WorkspacePanelErrorBoundary extends Component<Props, State> {
   override render(): ReactNode {
     if (this.state.error !== null) {
       return (
-        <Alert color="red" variant="light" title="This panel hit an error">
+        <AppAlert color="red" variant="light" title="This panel hit an error">
           <Stack gap="sm">
-            <Text size="sm">
-              The rest of YARK is still running. Retry this panel, or switch tabs
-              and come back.
-            </Text>
+            <Text size="sm">The rest of YARK is still running. Retry this panel, or switch tabs and come back.</Text>
             <Text size="xs" c="dimmed" style={{ wordBreak: "break-word" }}>
               {this.state.error.message || "Unknown error"}
             </Text>
-            <Button size="xs" variant="light" onClick={this.handleRetry} w="fit-content">
+            <Button size="xs" variant="default" onClick={this.handleRetry} w="fit-content">
               Retry panel
             </Button>
           </Stack>
-        </Alert>
+        </AppAlert>
       );
     }
     return this.props.children;

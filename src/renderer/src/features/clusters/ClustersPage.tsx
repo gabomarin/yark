@@ -1,11 +1,8 @@
 import type { ReactElement } from "react";
 import { Button, Stack } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
-import type {
-  ClusterComplianceReport,
-  ServerProfile,
-  ServerRuntimeInfo,
-} from "@shared/types";
+import { AppPageHeader } from "@ui/AppPageHeader/AppPageHeader";
+import type { ClusterComplianceReport, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { useEffect, useMemo, useState } from "react";
 import {
   buildServerById,
@@ -45,78 +42,73 @@ export function ClustersPage(props: Props): ReactElement {
     () => props.servers.filter((server) => server.clusterId === null).length,
     [props.servers],
   );
-  const dirWithoutIdServers = useMemo(
-    () => listDirWithoutIdServers(props.servers),
-    [props.servers],
-  );
+  const dirWithoutIdServers = useMemo(() => listDirWithoutIdServers(props.servers), [props.servers]);
   const sortedReports = useMemo(() => sortClusterReports(props.reports), [props.reports]);
-  const { errorCount, warningOnlyCount } = useMemo(
-    () => summarizeClusterReports(sortedReports),
-    [sortedReports],
-  );
+  const { errorCount, warningOnlyCount } = useMemo(() => summarizeClusterReports(sortedReports), [sortedReports]);
 
   const activeClusterId = resolveActiveClusterId(sortedReports, selectedClusterId);
   const activeReport =
-    activeClusterId === null
-      ? null
-      : (sortedReports.find((report) => report.clusterId === activeClusterId) ?? null);
+    activeClusterId === null ? null : (sortedReports.find((report) => report.clusterId === activeClusterId) ?? null);
   const activeMembers = resolveMembers(activeReport, serverById);
 
   return (
-    <PageScaffold
-      title="Clusters"
-      fillViewport
-      actions={
-        <Button onClick={() => setCreateOpen(true)}>Create cluster</Button>
-      }
-    >
-      <Stack gap="md" className={classes.content} data-clusters-page>
-        <ClusterGuidanceCard />
-        <ClusterSummaryBadges
-          clusterCount={sortedReports.length}
-          readyCount={sortedReports.length - errorCount}
-          errorCount={errorCount}
-          warningOnlyCount={warningOnlyCount}
-          unclusteredCount={unclusteredCount}
-          dirWithoutIdCount={dirWithoutIdServers.length}
-          onUnclusteredClick={() => {
-            if (sortedReports.length > 0) {
-              setSelectedClusterId(sortedReports[0]!.clusterId);
-              return;
-            }
-            setCreateOpen(true);
-          }}
+    <PageScaffold title="Clusters" fillViewport edgeToEdge showHeader={false}>
+      <div className={classes.pageShell} data-clusters-page>
+        <AppPageHeader
+          title="Clusters"
+          actions={
+            sortedReports.length > 0 ? <Button onClick={() => setCreateOpen(true)}>Create cluster</Button> : undefined
+          }
         />
 
-        {sortedReports.length === 0 ? (
-          <ClusterEmptyState
-            serverCount={props.servers.length}
-            dirWithoutIdServers={dirWithoutIdServers}
-            onOpenServer={props.onOpenServer}
-            onCreateCluster={() => setCreateOpen(true)}
+        <Stack gap="sm" className={classes.content}>
+          <ClusterGuidanceCard defaultOpen={sortedReports.length === 0} />
+          <ClusterSummaryBadges
+            clusterCount={sortedReports.length}
+            readyCount={sortedReports.length - errorCount}
+            errorCount={errorCount}
+            warningOnlyCount={warningOnlyCount}
+            unclusteredCount={unclusteredCount}
+            dirWithoutIdCount={dirWithoutIdServers.length}
+            onUnclusteredClick={() => {
+              if (sortedReports.length > 0) {
+                setSelectedClusterId(sortedReports[0]!.clusterId);
+                return;
+              }
+              setCreateOpen(true);
+            }}
           />
-        ) : (
-          <div className={classes.layout}>
-            <ClusterListPanel
-              reports={sortedReports}
-              serverById={serverById}
-              activeClusterId={activeClusterId}
-              onSelect={setSelectedClusterId}
+
+          {sortedReports.length === 0 ? (
+            <ClusterEmptyState
+              serverCount={props.servers.length}
+              dirWithoutIdServers={dirWithoutIdServers}
+              onOpenServer={props.onOpenServer}
+              onCreateCluster={() => setCreateOpen(true)}
             />
-            {activeReport !== null && (
-              <ClusterDetailPanel
-                report={activeReport}
-                members={activeMembers}
-                servers={props.servers}
-                statuses={props.statuses}
+          ) : (
+            <div className={classes.layout}>
+              <ClusterListPanel
+                reports={sortedReports}
                 serverById={serverById}
-                onOpenServer={props.onOpenServer}
-                onMembershipChanged={props.onRefresh}
+                activeClusterId={activeClusterId}
+                onSelect={setSelectedClusterId}
               />
-            )}
-          </div>
-        )}
-      </Stack>
+              {activeReport !== null && (
+                <ClusterDetailPanel
+                  report={activeReport}
+                  members={activeMembers}
+                  servers={props.servers}
+                  statuses={props.statuses}
+                  serverById={serverById}
+                  onOpenServer={props.onOpenServer}
+                  onMembershipChanged={props.onRefresh}
+                />
+              )}
+            </div>
+          )}
+        </Stack>
+      </div>
 
       {createOpen && (
         <CreateClusterModal

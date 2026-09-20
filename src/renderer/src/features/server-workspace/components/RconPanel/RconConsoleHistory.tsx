@@ -1,8 +1,9 @@
-import { ActionIcon, Badge, Button, Group, Stack, Text, Tooltip } from "@mantine/core";
+import { ActionIcon, Button, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { ArrowClockwise, Copy, Trash } from "@phosphor-icons/react";
 import type { ReactElement } from "react";
 import type { RconHistoryEntry } from "../../serverWorkspaceTypes";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { StatusWord } from "@ui/StatusWord/StatusWord";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
 import classes from "./RconPanel.module.css";
 
@@ -46,12 +47,10 @@ interface Props {
 }
 
 export function RconConsoleHistory(props: Props): ReactElement {
-  const hasClearable = props.history.some(
-    (entry) => entry.status !== "pending",
-  );
+  const hasClearable = props.history.some((entry) => entry.status !== "pending");
 
   return (
-    <AppSurfaceCard tone="flat" padding="sm" radius="md" className={classes.responsesPanel}>
+    <AppSurfaceCard tone="flat" padding="sm" radius={0} className={classes.responsesPanel}>
       <Stack gap={4}>
         <div className={classes.header}>
           <Text className={classes.title}>Console history</Text>
@@ -71,27 +70,14 @@ export function RconConsoleHistory(props: Props): ReactElement {
         {props.history.length > 0 ? (
           <div className={classes.responseList}>
             {props.history.map((entry) => {
-              const statusLabel =
-                entry.status === "pending"
-                  ? "sending"
-                  : entry.status === "error"
-                    ? "failed"
-                    : "ok";
-              const statusColor =
-                entry.status === "pending"
-                  ? "gray"
-                  : entry.status === "error"
-                    ? "red"
-                    : "teal";
+              const statusLabel = entry.status === "pending" ? "Sending" : entry.status === "error" ? "Failed" : "Sent";
+              const statusTone = entry.status === "pending" ? "neutral" : entry.status === "error" ? "danger" : "ok";
               const body = formatResponseBody(entry);
-              const responseText =
-                entry.status === "pending" ? null : body;
+              const responseText = entry.status === "pending" ? null : body;
               const rerunBlocked =
                 !props.serverRunning ||
                 props.history.some(
-                  (candidate) =>
-                    candidate.status === "pending" &&
-                    candidate.command === entry.command,
+                  (candidate) => candidate.status === "pending" && candidate.command === entry.command,
                 );
               return (
                 <div key={entry.id} className={classes.responseItem}>
@@ -100,20 +86,15 @@ export function RconConsoleHistory(props: Props): ReactElement {
                       <Text size="sm" className={classes.historyCommand}>
                         {entry.command}
                       </Text>
-                      <Text className={classes.historyMeta}>
-                        {formatRconTime(entry.createdAt)}
-                      </Text>
+                      <Text className={classes.historyMeta}>{formatRconTime(entry.createdAt)}</Text>
                     </div>
-                    <Badge size="sm" variant="light" color={statusColor}>
-                      {statusLabel}
-                    </Badge>
+                    <StatusWord tone={statusTone}>{statusLabel}</StatusWord>
                   </div>
                   <Text size="sm" className={classes.responseBody}>
                     {body}
                   </Text>
                   <Group gap={4} wrap="wrap">
                     <Button
-                      size="compact-xs"
                       variant="subtle"
                       leftSection={<Copy size={12} />}
                       onClick={() => void copyText("Command", entry.command)}
@@ -121,7 +102,6 @@ export function RconConsoleHistory(props: Props): ReactElement {
                       Copy command
                     </Button>
                     <Button
-                      size="compact-xs"
                       variant="subtle"
                       leftSection={<Copy size={12} />}
                       disabled={responseText === null}
@@ -134,7 +114,6 @@ export function RconConsoleHistory(props: Props): ReactElement {
                       Copy response
                     </Button>
                     <Button
-                      size="compact-xs"
                       variant="subtle"
                       leftSection={<ArrowClockwise size={12} />}
                       disabled={rerunBlocked}

@@ -1,12 +1,5 @@
 import { ArrowUUpLeft, ArrowSquareOut } from "@phosphor-icons/react";
-import {
-  ActionIcon,
-  NumberInput,
-  Switch,
-  Text,
-  TextInput,
-  Tooltip,
-} from "@mantine/core";
+import { ActionIcon, NumberInput, Switch, Text, TextInput, Tooltip } from "@mantine/core";
 import type { IniFileKey } from "@shared/types";
 import type { ReactElement } from "react";
 import {
@@ -23,13 +16,7 @@ import classes from "./ConfigurationEditor.module.css";
 interface Props {
   row: IniSettingReference;
   busy: boolean;
-  onUpdateValue: (
-    fileKey: IniFileKey,
-    rowSection: string,
-    key: string,
-    value: string,
-    occurrence?: number,
-  ) => void;
+  onUpdateValue: (fileKey: IniFileKey, rowSection: string, key: string, value: string, occurrence?: number) => void;
   onResetRowToDefault: (row: IniSettingReference) => void;
   /** Jump to RCON → Admins for AdminListURL (not edited in INI Files). */
   onOpenAdminList?: () => void;
@@ -53,8 +40,7 @@ export function IniSettingRow(props: Props): ReactElement {
   });
   const defaultValue = lookupDefaultValue(row.fileKey, row.section, row.key);
   const canResetDefault = defaultValue !== null && defaultValue !== row.value;
-  const keyLabel =
-    row.duplicateCount > 1 ? `${row.key} #${row.occurrence + 1}` : row.key;
+  const keyLabel = row.duplicateCount > 1 ? `${row.key} #${row.occurrence + 1}` : row.key;
   const humanLabel = humanizeIniKey(row.key);
   const label = humanLabel.length > 0 && humanLabel !== row.key ? humanLabel : keyLabel;
   const adminListUrl = isAdminListUrlRow(row);
@@ -67,22 +53,17 @@ export function IniSettingRow(props: Props): ReactElement {
         </Text>
         <Text c="dimmed" size="xs">
           {keyLabel === label ? sectionShortName(row.section) : `${keyLabel} · ${sectionShortName(row.section)}`}
-          {row.duplicateCount > 1
-            ? ` · ${row.occurrence + 1}/${row.duplicateCount}`
-            : ""}
+          {row.duplicateCount > 1 ? ` · ${row.occurrence + 1}/${row.duplicateCount}` : ""}
         </Text>
       </div>
       <div>
         {adminListUrl ? (
-          <Text
-            size="sm"
-            style={{ wordBreak: "break-all" }}
-            c={row.value.trim().length > 0 ? undefined : "dimmed"}
-          >
+          <Text size="sm" style={{ wordBreak: "break-all" }} c={row.value.trim().length > 0 ? undefined : "dimmed"}>
             {row.value.trim().length > 0 ? row.value : "Not set"}
           </Text>
         ) : kind === "boolean" ? (
           <Switch
+            aria-label={label}
             checked={row.value.toLowerCase() === "true"}
             onChange={(event) =>
               onUpdateValue(
@@ -113,13 +94,7 @@ export function IniSettingRow(props: Props): ReactElement {
           <TextInput
             value={row.value}
             onChange={(event) =>
-              onUpdateValue(
-                row.fileKey,
-                row.section,
-                row.key,
-                event.currentTarget.value,
-                row.occurrence,
-              )
+              onUpdateValue(row.fileKey, row.section, row.key, event.currentTarget.value, row.occurrence)
             }
           />
         )}
@@ -134,23 +109,12 @@ export function IniSettingRow(props: Props): ReactElement {
       <div className={classes.rowActions}>
         {adminListUrl && props.onOpenAdminList ? (
           <Tooltip label="Open RCON → Admins">
-            <ActionIcon
-              variant="subtle"
-              color="gray"
-              aria-label="Open RCON → Admins"
-              onClick={props.onOpenAdminList}
-            >
+            <ActionIcon variant="subtle" color="gray" aria-label="Open RCON → Admins" onClick={props.onOpenAdminList}>
               <ArrowSquareOut size={14} />
             </ActionIcon>
           </Tooltip>
         ) : (
-          <Tooltip
-            label={
-              canResetDefault
-                ? `Default: ${defaultValue}`
-                : "No known default for this key/section"
-            }
-          >
+          <Tooltip label={canResetDefault ? `Default: ${defaultValue}` : "No known default for this key/section"}>
             <ActionIcon
               variant="subtle"
               color="gray"

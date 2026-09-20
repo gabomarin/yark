@@ -22,9 +22,7 @@ export function QuitYarkModal(props: Props): ReactElement {
       titleProps={{ "data-yark-quit-modal-title": "" }}
       confirmProps={{ "data-yark-quit-confirm": "" }}
     >
-      <Text size="sm">
-        Any servers that are still running will be stopped safely first.
-      </Text>
+      <Text size="sm">Any servers that are still running will be stopped safely first.</Text>
     </AppPanelConfirmModal>
   );
 }

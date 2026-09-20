@@ -1,12 +1,6 @@
-import {
-  curseForgeAsaSlugFromUrl,
-  getCurseForgeAsaModUrlError,
-} from "@shared/mods/curseforge-url";
+import { curseForgeAsaSlugFromUrl, getCurseForgeAsaModUrlError } from "@shared/mods/curseforge-url";
 import { BUILD_CURSEFORGE_PROXY_URL } from "@shared/mods/curseforge-proxy-build-url";
-import {
-  MetadataServiceNotConfiguredError,
-  normalizeCurseforgeProxyUrl,
-} from "@shared/mods/curseforge-proxy-url";
+import { MetadataServiceNotConfiguredError, normalizeCurseforgeProxyUrl } from "@shared/mods/curseforge-proxy-url";
 import { normalizeModScreenshotUrls } from "@shared/mods/mod-screenshot-urls";
 import type {
   ModCategory,
@@ -16,11 +10,7 @@ import type {
   ModsSearchSortField,
   ServerProfileInput,
 } from "@shared/types";
-import {
-  MOCK_MOD_CATALOG,
-  MOCK_MOD_CATEGORIES,
-  buildPlaceholderMetadata,
-} from "./mock-mod-catalog";
+import { MOCK_MOD_CATALOG, MOCK_MOD_CATEGORIES, buildPlaceholderMetadata } from "./mock-mod-catalog";
 
 export interface ModsServiceOptions {
   /**
@@ -65,9 +55,7 @@ export class ModsService {
     this.fetchImpl = options.fetchImpl ?? fetch;
     this.useMockCatalog = options.useMockCatalog === true;
     this.buildDefaultUrl =
-      options.buildDefaultUrl !== undefined
-        ? options.buildDefaultUrl.trim()
-        : BUILD_CURSEFORGE_PROXY_URL;
+      options.buildDefaultUrl !== undefined ? options.buildDefaultUrl.trim() : BUILD_CURSEFORGE_PROXY_URL;
   }
 
   /**
@@ -104,10 +92,7 @@ export class ModsService {
    * order). Skipped / missing IDs are omitted — callers that require every ID
    * must check the result length themselves.
    */
-  async getMods(
-    modIds: string[],
-    options?: { forceRefresh?: boolean },
-  ): Promise<ModMetadata[]> {
+  async getMods(modIds: string[], options?: { forceRefresh?: boolean }): Promise<ModMetadata[]> {
     const unique = [...new Set(modIds.map(normalizeModId))];
     if (unique.length === 0) return [];
     if (this.useMockCatalog) {
@@ -139,10 +124,7 @@ export class ModsService {
     });
   }
 
-  async search(
-    query: string,
-    options?: ModSearchOptions,
-  ): Promise<ModSearchPage> {
+  async search(query: string, options?: ModSearchOptions): Promise<ModSearchPage> {
     const searchFilter = query.trim();
     if (this.useMockCatalog) {
       return searchMockCatalog(searchFilter, options);
@@ -167,9 +149,7 @@ export class ModsService {
       params.set("sortOrder", options.sortOrder);
     }
     const qs = params.toString();
-    const data = await this.fetchJson<ModSearchPage>(
-      `/v1/mods/search${qs.length > 0 ? `?${qs}` : ""}`,
-    );
+    const data = await this.fetchJson<ModSearchPage>(`/v1/mods/search${qs.length > 0 ? `?${qs}` : ""}`);
     return {
       items: data.items.map(normalizeMetadata),
       pagination: data.pagination,
@@ -184,9 +164,7 @@ export class ModsService {
     if (this.useMockCatalog) {
       return [...MOCK_MOD_CATEGORIES];
     }
-    const data = await this.fetchJson<{ categories: ModCategory[] }>(
-      "/v1/categories",
-    );
+    const data = await this.fetchJson<{ categories: ModCategory[] }>("/v1/categories");
     return data.categories.map(normalizeCategory);
   }
 
@@ -264,9 +242,7 @@ export class ModsService {
       for (const id of toVerify) {
         const item = byId.get(id);
         if (item === undefined) {
-          throw new Error(
-            `Project ID ${id} was not added: metadata could not be resolved via CurseForge proxy`,
-          );
+          throw new Error(`Project ID ${id} was not added: metadata could not be resolved via CurseForge proxy`);
         }
         const detailError = getCachedMetadataError(item, id);
         if (detailError !== null) {
@@ -290,9 +266,7 @@ export class ModsService {
     return {
       ...input,
       mods: input.mods.map((id) => normalizeModId(id)),
-      disabledMods: (input.disabledMods ?? existing.disabledMods ?? []).filter(
-        (id) => configured.has(id.trim()),
-      ),
+      disabledMods: (input.disabledMods ?? existing.disabledMods ?? []).filter((id) => configured.has(id.trim())),
       modMetadataCache: cache,
     };
   }
@@ -319,9 +293,7 @@ export class ModsService {
       });
     } catch (cause) {
       throw new Error(
-        `Could not reach CurseForge proxy at ${base}: ${
-          cause instanceof Error ? cause.message : String(cause)
-        }`,
+        `Could not reach CurseForge proxy at ${base}: ${cause instanceof Error ? cause.message : String(cause)}`,
       );
     }
 
@@ -329,9 +301,7 @@ export class ModsService {
     try {
       body = (await response.json()) as WorkerEnvelope<T>;
     } catch {
-      throw new Error(
-        `CurseForge proxy returned a non-JSON response (HTTP ${response.status})`,
-      );
+      throw new Error(`CurseForge proxy returned a non-JSON response (HTTP ${response.status})`);
     }
 
     if (!body.ok) {
@@ -347,14 +317,10 @@ export class ModsService {
 export function normalizeModId(raw: string): string {
   const id = raw.trim();
   if (!/^\d+$/.test(id)) {
-    throw new Error(
-      `Invalid mod ID: "${raw}". Use the numeric CurseForge Project ID.`,
-    );
+    throw new Error(`Invalid mod ID: "${raw}". Use the numeric CurseForge Project ID.`);
   }
   if (/^0\d/.test(id)) {
-    throw new Error(
-      `Invalid mod ID: "${raw}". CurseForge Project IDs must not have leading zeros.`,
-    );
+    throw new Error(`Invalid mod ID: "${raw}". CurseForge Project IDs must not have leading zeros.`);
   }
   if (!Number.isSafeInteger(Number(id))) {
     throw new Error(`Invalid mod ID: "${raw}". Project ID is out of range.`);
@@ -391,10 +357,7 @@ function normalizeCategory(item: ModCategory): ModCategory {
   };
 }
 
-function searchMockCatalog(
-  searchFilter: string,
-  options?: ModSearchOptions,
-): ModSearchPage {
+function searchMockCatalog(searchFilter: string, options?: ModSearchOptions): ModSearchPage {
   const needle = searchFilter.toLowerCase();
   let items = Object.values(MOCK_MOD_CATALOG).filter((item) => {
     if (needle.length === 0) return true;
@@ -403,14 +366,10 @@ function searchMockCatalog(
   });
 
   if (options?.categoryId !== undefined) {
-    const category = MOCK_MOD_CATEGORIES.find(
-      (entry) => entry.id === options.categoryId && !entry.isClass,
-    );
+    const category = MOCK_MOD_CATEGORIES.find((entry) => entry.id === options.categoryId && !entry.isClass);
     if (category !== undefined) {
       items = items.filter((item) =>
-        (item.categories ?? []).some(
-          (name) => name.toLowerCase() === category.name.toLowerCase(),
-        ),
+        (item.categories ?? []).some((name) => name.toLowerCase() === category.name.toLowerCase()),
       );
     }
   }
@@ -447,10 +406,7 @@ function searchMockCatalog(
   };
 }
 
-function getCachedMetadataError(
-  detail: ModMetadata,
-  expectedId: string,
-): string | null {
+function getCachedMetadataError(detail: ModMetadata, expectedId: string): string | null {
   if (detail.id !== expectedId) {
     return `CurseForge returned Project ID ${detail.id} instead`;
   }

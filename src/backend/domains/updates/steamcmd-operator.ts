@@ -12,9 +12,7 @@ export interface SteamCmdProgressStart {
 
 const OFFICIAL_PROGRESS_WINDOW_MS = 5_000;
 
-export function planSteamCmdProcessProgressStart(
-  operation: SteamCmdActiveOperation,
-): SteamCmdProgressStart {
+export function planSteamCmdProcessProgressStart(operation: SteamCmdActiveOperation): SteamCmdProgressStart {
   if (operation === "install-files") {
     return {
       percent: 0,
@@ -43,10 +41,7 @@ export function planSteamCmdProcessProgressStart(
   };
 }
 
-export function formatSteamCmdCachePathsLine(
-  depotCacheDir: string,
-  contentCacheDir: string,
-): string {
+export function formatSteamCmdCachePathsLine(depotCacheDir: string, contentCacheDir: string): string {
   return `SteamCMD cache: depot=${depotCacheDir} | ASA content=${contentCacheDir}`;
 }
 
@@ -54,10 +49,7 @@ export function formatAsaCacheReuseLine(ageSec: number): string {
   return `Reusing ASA content cache (updated ${ageSec}s ago; no re-download)`;
 }
 
-export function formatAsaCacheUpdateConsoleLine(
-  operation: SteamCmdFilesOperation,
-  steamCmdHome: string,
-): string {
+export function formatAsaCacheUpdateConsoleLine(operation: SteamCmdFilesOperation, steamCmdHome: string): string {
   if (operation === "verify-files") {
     return `Verifying ASA cache integrity via SteamCMD validate (depotcache at ${steamCmdHome})`;
   }
@@ -78,9 +70,7 @@ export function resolveAsaCacheSyncLabel(operation: SteamCmdFilesOperation): str
   return "Copying update to server…";
 }
 
-export function resolveAsaCacheSyncSkippedProgress(
-  operation: SteamCmdFilesOperation,
-): SteamCmdProgressStart {
+export function resolveAsaCacheSyncSkippedProgress(operation: SteamCmdFilesOperation): SteamCmdProgressStart {
   return {
     percent: 100,
     label: operation === "verify-files" ? "Integrity OK" : "Files already in sync",
@@ -88,9 +78,7 @@ export function resolveAsaCacheSyncSkippedProgress(
   };
 }
 
-export function resolveAsaCacheSyncCompleteProgress(
-  operation: SteamCmdFilesOperation,
-): SteamCmdProgressStart {
+export function resolveAsaCacheSyncCompleteProgress(operation: SteamCmdFilesOperation): SteamCmdProgressStart {
   if (operation === "verify-files") {
     return {
       percent: 100,
@@ -139,10 +127,7 @@ export function shouldPreferOfficialProgressOverDiskEstimate(
   nowMs: number,
   windowMs: number = OFFICIAL_PROGRESS_WINDOW_MS,
 ): boolean {
-  return (
-    lastOfficialProgressAtMs > 0
-    && nowMs - lastOfficialProgressAtMs < windowMs
-  );
+  return lastOfficialProgressAtMs > 0 && nowMs - lastOfficialProgressAtMs < windowMs;
 }
 
 export function deriveSteamCmdStatusOperation(input: {
@@ -161,12 +146,7 @@ export function deriveSteamCmdStatusServerId(input: {
   activeServerId: string | null;
   runningJobServerId: string | null;
 }): string | null {
-  return (
-    input.syncingServerId
-    ?? input.activeServerId
-    ?? input.runningJobServerId
-    ?? null
-  );
+  return input.syncingServerId ?? input.activeServerId ?? input.runningJobServerId ?? null;
 }
 
 export function deriveSteamCmdStatusStartedAt(input: {
@@ -174,10 +154,5 @@ export function deriveSteamCmdStatusStartedAt(input: {
   activeStartedAt: string | null;
   runningJobUpdatedAt: string | null;
 }): string | null {
-  return (
-    input.syncingStartedAt
-    ?? input.activeStartedAt
-    ?? input.runningJobUpdatedAt
-    ?? null
-  );
+  return input.syncingStartedAt ?? input.activeStartedAt ?? input.runningJobUpdatedAt ?? null;
 }

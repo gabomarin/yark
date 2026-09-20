@@ -7,10 +7,7 @@ function escapeRegExp(value: string): string {
 }
 
 /** Skip the byte subline when the phase label already carries the same numbers. */
-export function byteProgressLineIsRedundant(
-  shortProgressLabel: string,
-  byteProgressLabel: string | null,
-): boolean {
+export function byteProgressLineIsRedundant(shortProgressLabel: string, byteProgressLabel: string | null): boolean {
   if (byteProgressLabel === null) {
     return true;
   }

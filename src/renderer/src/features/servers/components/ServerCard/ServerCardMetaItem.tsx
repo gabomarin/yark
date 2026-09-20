@@ -3,13 +3,7 @@ import { WarningCircle } from "@phosphor-icons/react";
 import { Text, Tooltip, type MantineColor } from "@mantine/core";
 import classes from "./ServerCard.module.css";
 
-type ServerCardMetaTone =
-  | "default"
-  | "muted"
-  | "ok"
-  | "attention"
-  | "busy"
-  | "warn";
+type ServerCardMetaTone = "default" | "muted" | "ok" | "attention" | "busy" | "warn";
 
 interface Props {
   label: string;
@@ -76,12 +70,7 @@ export function ServerCardMetaItem({
   const valueRow = hasHint ? (
     <span className={classes.metaValueHint}>
       {valueText}
-      <WarningCircle
-        className={classes.metaHintIcon}
-        size={12}
-        weight="fill"
-        aria-hidden
-      />
+      <WarningCircle className={classes.metaHintIcon} size={12} weight="fill" aria-hidden />
     </span>
   ) : (
     valueText
@@ -99,13 +88,7 @@ export function ServerCardMetaItem({
         {label}
       </Text>
       {hasHint ? (
-        <Tooltip
-          label={hint}
-          multiline
-          maw={260}
-          withArrow
-          events={{ hover: true, focus: false, touch: true }}
-        >
+        <Tooltip label={hint} multiline maw={260} withArrow events={{ hover: true, focus: false, touch: true }}>
           {valueRow}
         </Tooltip>
       ) : tooltip != null && tooltip.length > 0 ? (

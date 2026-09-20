@@ -1,22 +1,13 @@
 import type { AsaApiPluginInfo } from "@shared/types";
 
 /** localStorage: operator dismissed the ASA API experimental hint (#456). */
-export const ASA_API_EXPERIMENTAL_HINT_STORAGE_KEY =
-  "yark.asaApi.experimentalHint.dismissed.v1";
+export const ASA_API_EXPERIMENTAL_HINT_STORAGE_KEY = "yark.asaApi.experimentalHint.dismissed.v1";
 
 export type AsaApiBusyKind =
-  | "install"
-  | "uninstall"
-  | "addPlugin"
-  | "deletePlugin"
-  | "pluginToggle"
-  | "flags"
-  | "clearCache";
+  "install" | "uninstall" | "addPlugin" | "deletePlugin" | "pluginToggle" | "flags" | "clearCache";
 
 export type AsaApiConfirm =
-  | { kind: "uninstall" }
-  | { kind: "clearCache" }
-  | { kind: "deletePlugin"; plugin: AsaApiPluginInfo };
+  { kind: "uninstall" } | { kind: "clearCache" } | { kind: "deletePlugin"; plugin: AsaApiPluginInfo };
 
 export function pluginCountLabel(plugins: AsaApiPluginInfo[]): string {
   const enabled = plugins.filter((p) => p.enabled).length;

@@ -1,18 +1,9 @@
 import type { ReactElement } from "react";
 import { Check } from "@phosphor-icons/react";
-import {
-  Alert,
-  Button,
-  Group,
-  Progress,
-  Skeleton,
-  Stack,
-  Stepper,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Button, Group, Progress, Skeleton, Stack, Stepper, Text, Title } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import type { ServerProfile } from "@shared/types";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { WizardShell } from "./ConfigurationWizardParts";
 import { WizardBreedingStep } from "./WizardBreedingStep";
@@ -98,9 +89,9 @@ export function ConfigurationWizard(props: Props): ReactElement {
             action={<Button onClick={props.onCancel}>Back to server</Button>}
           >
             {props.serverActive && (
-              <Alert color="fossil" title="Restart pending" maw={520}>
+              <AppAlert color="fossil" title="Restart pending" maw={520}>
                 The new values will take effect when you restart the server.
-              </Alert>
+              </AppAlert>
             )}
           </EmptyState>
         </div>
@@ -160,9 +151,9 @@ export function ConfigurationWizard(props: Props): ReactElement {
 
       <main className={classes.content}>
         {error !== null && (
-          <Alert color="red" withCloseButton onClose={() => setError(null)}>
+          <AppAlert color="red" withCloseButton onClose={() => setError(null)}>
             {error}
-          </Alert>
+          </AppAlert>
         )}
 
         {activeStep === 0 && (
@@ -175,9 +166,7 @@ export function ConfigurationWizard(props: Props): ReactElement {
             profile={form.values.profile}
             singlePlayerSettings={form.values.singlePlayerSettings}
             onSelectProfile={chooseProfile}
-            onSinglePlayerSettingsChange={(checked) =>
-              form.setFieldValue("singlePlayerSettings", checked)
-            }
+            onSinglePlayerSettingsChange={(checked) => form.setFieldValue("singlePlayerSettings", checked)}
           />
         )}
 
@@ -201,11 +190,7 @@ export function ConfigurationWizard(props: Props): ReactElement {
         )}
 
         {activeStep === 3 && (
-          <WizardWorldStep
-            draft={form.values}
-            worldPreset={worldPreset}
-            onWorldPresetChange={chooseWorldPreset}
-          />
+          <WizardWorldStep draft={form.values} worldPreset={worldPreset} onWorldPresetChange={chooseWorldPreset} />
         )}
 
         {activeStep === 4 && <WizardQolStep form={form} />}

@@ -18,11 +18,7 @@ export function shouldPreventCloseDuringQuit(flags: QuitGateFlags): boolean {
   if (flags.allowQuit) {
     return false;
   }
-  return (
-    flags.hasPendingQuitWork ||
-    flags.quitPolicyPromptInFlight ||
-    flags.isQuitting
-  );
+  return flags.hasPendingQuitWork || flags.quitPolicyPromptInFlight || flags.isQuitting;
 }
 
 /** Reset transient quit flags after cancel or a failed stop-before-quit. */
@@ -39,10 +35,7 @@ export function quitFlagsAfterCancel(): Pick<
 }
 
 /** Flags while Ask dialog is open (window must stay alive). */
-export function quitFlagsWhileAskPrompt(): Pick<
-  QuitGateFlags,
-  "isQuitting" | "quitPolicyPromptInFlight"
-> {
+export function quitFlagsWhileAskPrompt(): Pick<QuitGateFlags, "isQuitting" | "quitPolicyPromptInFlight"> {
   return {
     isQuitting: true,
     quitPolicyPromptInFlight: true,

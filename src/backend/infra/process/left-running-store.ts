@@ -5,9 +5,7 @@ import {
   type LeftRunningProcessIdentity,
 } from "@shared/settings/left-running";
 
-export function readLeftRunningProcesses(
-  settings: AppSettingsRepository,
-): LeftRunningProcessIdentity[] {
+export function readLeftRunningProcesses(settings: AppSettingsRepository): LeftRunningProcessIdentity[] {
   return parseLeftRunningProcesses(settings.get(LEFT_RUNNING_PROCESSES_SETTING_KEY));
 }
 
@@ -22,23 +20,13 @@ export function writeLeftRunningProcesses(
   settings.set(LEFT_RUNNING_PROCESSES_SETTING_KEY, JSON.stringify(records));
 }
 
-export function upsertLeftRunningProcess(
-  settings: AppSettingsRepository,
-  record: LeftRunningProcessIdentity,
-): void {
-  const next = readLeftRunningProcesses(settings).filter(
-    (existing) => existing.serverId !== record.serverId,
-  );
+export function upsertLeftRunningProcess(settings: AppSettingsRepository, record: LeftRunningProcessIdentity): void {
+  const next = readLeftRunningProcesses(settings).filter((existing) => existing.serverId !== record.serverId);
   next.push(record);
   writeLeftRunningProcesses(settings, next);
 }
 
-export function removeLeftRunningProcess(
-  settings: AppSettingsRepository,
-  serverId: string,
-): void {
-  const next = readLeftRunningProcesses(settings).filter(
-    (existing) => existing.serverId !== serverId,
-  );
+export function removeLeftRunningProcess(settings: AppSettingsRepository, serverId: string): void {
+  const next = readLeftRunningProcesses(settings).filter((existing) => existing.serverId !== serverId);
   writeLeftRunningProcesses(settings, next);
 }

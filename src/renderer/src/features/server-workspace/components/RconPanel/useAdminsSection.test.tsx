@@ -23,9 +23,7 @@ const emptyState = (): AdminListStateDto => ({
   fileByteLength: 0,
 });
 
-const remoteState = (
-  overrides: Partial<AdminListStateDto> = {},
-): AdminListStateDto => ({
+const remoteState = (overrides: Partial<AdminListStateDto> = {}): AdminListStateDto => ({
   mode: "remote",
   adminListUrl: "https://example.com/admins.txt",
   updateAllowedCheatersInterval: 600,
@@ -66,9 +64,7 @@ describe("useAdminsSection", () => {
   });
 
   it("marks draft dirty when URL or interval change and clears dirty after discard", async () => {
-    const { result } = renderHook(() =>
-      useAdminsSection({ serverId: "srv-1", iniDirty: false }),
-    );
+    const { result } = renderHook(() => useAdminsSection({ serverId: "srv-1", iniDirty: false }));
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -99,9 +95,7 @@ describe("useAdminsSection", () => {
   });
 
   it("saveConfig no-ops when iniDirty is true", async () => {
-    const { result } = renderHook(() =>
-      useAdminsSection({ serverId: "srv-1", iniDirty: true }),
-    );
+    const { result } = renderHook(() => useAdminsSection({ serverId: "srv-1", iniDirty: true }));
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -129,9 +123,7 @@ describe("useAdminsSection", () => {
       data: remoteState(),
     });
 
-    const nameById = new Map([
-      ["0002e03af5f4487985e94c6ba4080369", "Alpha"],
-    ]);
+    const nameById = new Map([["0002e03af5f4487985e94c6ba4080369", "Alpha"]]);
 
     const { result } = renderHook(() =>
       useAdminsSection({
@@ -153,16 +145,13 @@ describe("useAdminsSection", () => {
   });
 
   it("shows a loopback AdminListURL in the field and keeps it after save (#564)", async () => {
-    const loopbackUrl =
-      "http://127.0.0.1:8935/r/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    const loopbackUrl = "http://127.0.0.1:8935/r/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
     vi.mocked(window.api.getAdminList).mockResolvedValue({
       ok: true,
       data: remoteState({ mode: "loopback", adminListUrl: loopbackUrl }),
     });
 
-    const { result } = renderHook(() =>
-      useAdminsSection({ serverId: "srv-1", iniDirty: false }),
-    );
+    const { result } = renderHook(() => useAdminsSection({ serverId: "srv-1", iniDirty: false }));
 
     await waitFor(() => {
       expect(result.current.urlDraft).toBe(loopbackUrl);

@@ -1,9 +1,4 @@
-import {
-  Button,
-  NumberInput,
-  Stack,
-  TextInput,
-} from "@mantine/core";
+import { Button, NumberInput, Stack, TextInput } from "@mantine/core";
 import type { ReactElement } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { ADMIN_LIST_MIN_INTERVAL_SEC } from "./adminListFormConstants";
@@ -24,12 +19,7 @@ export function AdminsRemoteConfig(props: AdminsRemoteConfigProps): ReactElement
   const readOnly = props.readOnly === true;
 
   return (
-    <AppSurfaceCard
-      tone="flat"
-      padding="sm"
-      radius="md"
-      className={classes.sourceCard}
-    >
+    <AppSurfaceCard tone="flat" padding="sm" radius={0} className={classes.sourceCard}>
       <Stack gap="sm">
         <TextInput
           label="AdminListURL"
@@ -52,12 +42,7 @@ export function AdminsRemoteConfig(props: AdminsRemoteConfigProps): ReactElement
           onChange={props.onIntervalChange}
         />
         {!readOnly ? (
-          <Button
-            size="xs"
-            variant="default"
-            loading={props.validating}
-            onClick={props.onValidateUrl}
-          >
+          <Button size="xs" variant="default" loading={props.validating} onClick={props.onValidateUrl}>
             Validate
           </Button>
         ) : null}

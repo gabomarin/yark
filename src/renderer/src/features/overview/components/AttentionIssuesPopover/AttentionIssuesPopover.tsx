@@ -11,10 +11,7 @@ interface Props {
 }
 
 /** Attention issue details popover — trigger is owned by the caller (#314). */
-export function AttentionIssuesPopover({
-  issues,
-  target,
-}: Props): ReactElement | null {
+export function AttentionIssuesPopover({ issues, target }: Props): ReactElement | null {
   if (issues.length === 0) {
     return null;
   }
@@ -25,11 +22,7 @@ export function AttentionIssuesPopover({
       <Popover.Dropdown className={classes.dropdown} data-attention-issues>
         <Stack gap="xs" className={classes.issueList}>
           {issues.map((issue) => (
-            <div
-              key={issue.serverId}
-              className={classes.issueRow}
-              data-attention-issue={issue.serverId}
-            >
+            <div key={issue.serverId} className={classes.issueRow} data-attention-issue={issue.serverId}>
               <Text size="sm" fw={600} className={classes.issueName}>
                 {issue.serverName}
               </Text>

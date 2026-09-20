@@ -47,15 +47,16 @@ export function EmptyState({
             {title}
           </Text>
         )}
-        {description !== undefined && description !== null && description !== "" && (
-          typeof description === "string" ? (
+        {description !== undefined &&
+          description !== null &&
+          description !== "" &&
+          (typeof description === "string" ? (
             <Text c="dimmed" size="sm">
               {description}
             </Text>
           ) : (
             description
-          )
-        )}
+          ))}
         {children}
       </Stack>
       {action !== undefined && <div className={classes.action}>{action}</div>}

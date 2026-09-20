@@ -71,9 +71,7 @@ function stubWizardApi(): void {
   });
 }
 
-async function continueToFirstServer(
-  user: ReturnType<typeof userEvent.setup>,
-): Promise<void> {
+async function continueToFirstServer(user: ReturnType<typeof userEvent.setup>): Promise<void> {
   await user.click(screen.getByRole("button", { name: /^continue$/i }));
   await user.click(screen.getByRole("button", { name: /^continue$/i }));
   await user.click(screen.getByRole("button", { name: /^continue$/i }));
@@ -120,9 +118,7 @@ describe("SetupWizard", () => {
     );
 
     expect(screen.getByText("Welcome to YARK")).toBeInTheDocument();
-    expect(
-      screen.getByText(/server manager for ARK: Survival Ascended/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/server manager for ARK: Survival Ascended/i)).toBeInTheDocument();
     expect(screen.getByText(/save as you go/i)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /skip setup/i }));
     expect(onSkip).toHaveBeenCalledTimes(1);
@@ -161,7 +157,7 @@ describe("SetupWizard", () => {
       </AppProviders>,
     );
 
-    const overlay = document.querySelector("[data-setup-wizard-overlay]");
+    const overlay = document.querySelector("[data-app-modal-overlay]");
     expect(overlay).toBeTruthy();
     await user.click(overlay!);
     expect(onSkip).not.toHaveBeenCalled();
@@ -381,19 +377,13 @@ describe("SetupWizard", () => {
       name: /shared cluster directory/i,
     });
     const initialId = (clusterId as HTMLInputElement).value;
-    expect(clusterDir).toHaveAttribute(
-      "title",
-      `D:\\ASA\\Servers\\Clusters\\${initialId}`,
-    );
+    expect(clusterDir).toHaveAttribute("title", `D:\\ASA\\Servers\\Clusters\\${initialId}`);
     expect(screen.getByText(/suggested from your default base folder/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /generate/i }));
     const generatedId = (clusterId as HTMLInputElement).value;
     expect(generatedId).not.toBe(initialId);
-    expect(clusterDir).toHaveAttribute(
-      "title",
-      `D:\\ASA\\Servers\\Clusters\\${generatedId}`,
-    );
+    expect(clusterDir).toHaveAttribute("title", `D:\\ASA\\Servers\\Clusters\\${generatedId}`);
   });
 
   it("hands off first-action New server", async () => {
@@ -508,9 +498,7 @@ describe("SetupWizard", () => {
       </AppProviders>,
     );
 
-    expect(
-      screen.getByText("Setup assistant – paths and Windows"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Setup assistant – paths and Windows")).toBeInTheDocument();
     expect(screen.queryByText("Welcome to YARK")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /^continue$/i }));
     await user.click(screen.getByRole("button", { name: /^finish$/i }));

@@ -1,16 +1,10 @@
 import { existsSync, renameSync, rmSync } from "node:fs";
-import {
-  asaApiVersionDllDisabledPath,
-  asaApiVersionDllPath,
-} from "./asa-api-paths";
+import { asaApiVersionDllDisabledPath, asaApiVersionDllPath } from "./asa-api-paths";
 
 export type AsaApiInjectMode = "off" | "versionDll" | "loader";
 
 /** Resolve on-disk inject mode from profile flags (#243). */
-export function resolveAsaApiInjectMode(profile: {
-  useAsaApi?: boolean;
-  useAsaApiLoader?: boolean;
-}): AsaApiInjectMode {
+export function resolveAsaApiInjectMode(profile: { useAsaApi?: boolean; useAsaApiLoader?: boolean }): AsaApiInjectMode {
   if (profile.useAsaApi !== true) return "off";
   if (profile.useAsaApiLoader === true) return "loader";
   return "versionDll";
@@ -25,10 +19,7 @@ export function resolveAsaApiInjectMode(profile: {
  * Version.dll while a parked copy remained), prefer the active file — never
  * delete the fresh DLL in favor of a stale park.
  */
-export function syncAsaApiVersionDll(
-  installDir: string,
-  mode: AsaApiInjectMode,
-): void {
+export function syncAsaApiVersionDll(installDir: string, mode: AsaApiInjectMode): void {
   const active = asaApiVersionDllPath(installDir);
   const disabled = asaApiVersionDllDisabledPath(installDir);
 

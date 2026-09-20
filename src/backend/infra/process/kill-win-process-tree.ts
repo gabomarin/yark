@@ -12,15 +12,11 @@ export async function killWinProcessTreeAsync(pid: number): Promise<boolean> {
     return false;
   }
   try {
-    await execFileBounded(
-      "taskkill.exe",
-      ["/PID", String(pid), "/T", "/F"],
-      {
-        timeoutMs: TASKKILL_TIMEOUT_MS,
-        maxBuffer: 64 * 1024,
-        windowsHide: true,
-      },
-    );
+    await execFileBounded("taskkill.exe", ["/PID", String(pid), "/T", "/F"], {
+      timeoutMs: TASKKILL_TIMEOUT_MS,
+      maxBuffer: 64 * 1024,
+      windowsHide: true,
+    });
     return true;
   } catch {
     return false;
@@ -28,9 +24,7 @@ export async function killWinProcessTreeAsync(pid: number): Promise<boolean> {
 }
 
 /** Best-effort tree kill, then fall back to `child.kill()`. */
-export async function killChildProcessTreeAsync(
-  child: ChildProcess | null | undefined,
-): Promise<void> {
+export async function killChildProcessTreeAsync(child: ChildProcess | null | undefined): Promise<void> {
   if (child == null) return;
   const pid = child.pid;
   if (pid !== undefined && (await killWinProcessTreeAsync(pid))) {

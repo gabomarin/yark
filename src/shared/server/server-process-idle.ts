@@ -11,23 +11,15 @@ export interface ServerProcessRuntime {
  */
 export function isServerProcessLive(runtime: ServerProcessRuntime): boolean {
   if (runtime.processLive) return true;
-  return (
-    runtime.status === "starting"
-    || runtime.status === "running"
-    || runtime.status === "stopping"
-  );
+  return runtime.status === "starting" || runtime.status === "running" || runtime.status === "stopping";
 }
 
 /** Block cluster membership / INI template writes while ASA may still be running. */
-function isServerProcessBusyForClusterOps(
-  runtime: ServerProcessRuntime,
-): boolean {
+function isServerProcessBusyForClusterOps(runtime: ServerProcessRuntime): boolean {
   return isServerProcessLive(runtime);
 }
 
-export function clusterProcessBusyReason(
-  runtime: ServerProcessRuntime,
-): string | null {
+export function clusterProcessBusyReason(runtime: ServerProcessRuntime): string | null {
   if (isServerProcessBusyForClusterOps(runtime)) {
     return "Server must not be running";
   }

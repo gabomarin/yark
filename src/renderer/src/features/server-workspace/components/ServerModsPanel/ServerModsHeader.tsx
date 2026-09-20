@@ -14,12 +14,9 @@ export function ServerModsHeader(props: Props): ReactElement {
     <header className={classes.header}>
       <div>
         <Title order={3}>Mods</Title>
-        <DismissibleHint
-          storageKey={MODS_PROJECT_ID_HINT_STORAGE_KEY}
-          title="Project ID vs Discover"
-        >
-          Add a known CurseForge Project ID or mod URL on this tab. Discover
-          searches the ASA catalog — it is not the same as pasting an ID.
+        <DismissibleHint storageKey={MODS_PROJECT_ID_HINT_STORAGE_KEY} title="Project ID vs Discover">
+          Add a known CurseForge Project ID or mod URL on this tab. Discover searches the ASA catalog — it is not the
+          same as pasting an ID.
         </DismissibleHint>
       </div>
       <Group gap="xs" wrap="nowrap">

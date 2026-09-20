@@ -1,6 +1,8 @@
 import type { ReactElement } from "react";
 import { useCallback, useMemo, useState } from "react";
-import { Alert, Modal, Stack, Stepper, Text } from "@mantine/core";
+import { Stack, Stepper, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import type { ConfigTransferSelection } from "@shared/ini/config-transfer";
 import { emptyConfigTransferSelection } from "@shared/ini/config-transfer";
 import type {
@@ -40,16 +42,10 @@ export function CopyConfigurationWizard(props: Props): ReactElement {
   const [step, setStep] = useState<CopyConfigurationStep>(1);
   const [sourceId] = useState<string | null>(() => props.initialSourceId);
   const [targetIds, setTargetIds] = useState<string[]>(() =>
-    props.initialTargetId !== null && props.initialTargetId !== undefined
-      ? [props.initialTargetId]
-      : [],
+    props.initialTargetId !== null && props.initialTargetId !== undefined ? [props.initialTargetId] : [],
   );
-  const [selection, setSelection] = useState<ConfigTransferSelection>(
-    emptyConfigTransferSelection,
-  );
-  const [describe, setDescribe] = useState<ConfigTransferDescribeResult | null>(
-    null,
-  );
+  const [selection, setSelection] = useState<ConfigTransferSelection>(emptyConfigTransferSelection);
+  const [describe, setDescribe] = useState<ConfigTransferDescribeResult | null>(null);
   const [previews, setPreviews] = useState<ConfigTransferPreview[]>([]);
   const [outcomes, setOutcomes] = useState<CopyConfigTargetOutcome[]>([]);
   const [neverOpen, setNeverOpen] = useState(false);
@@ -60,15 +56,10 @@ export function CopyConfigurationWizard(props: Props): ReactElement {
   const [committing, setCommitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const targetOptions = useMemo(
-    () => listCopyTargets(props.servers, sourceId ?? ""),
-    [props.servers, sourceId],
-  );
+  const targetOptions = useMemo(() => listCopyTargets(props.servers, sourceId ?? ""), [props.servers, sourceId]);
 
   const source = props.servers.find((s) => s.id === sourceId) ?? null;
-  const sourceStatus = sourceId
-    ? runtimeStatus(props.statuses, sourceId)
-    : "stopped";
+  const sourceStatus = sourceId ? runtimeStatus(props.statuses, sourceId) : "stopped";
   const targetsOk = allTargetsEligible(targetIds, props.statuses);
   const targetLabel = formatTargetNames(props.servers, targetIds);
 
@@ -105,11 +96,7 @@ export function CopyConfigurationWizard(props: Props): ReactElement {
   };
 
   const buildPreview = async (): Promise<void> => {
-    if (
-      sourceId === null ||
-      targetIds.length === 0 ||
-      !selectionHasWork(selection)
-    ) {
+    if (sourceId === null || targetIds.length === 0 || !selectionHasWork(selection)) {
       return;
     }
     setLoadingPreview(true);
@@ -121,14 +108,9 @@ export function CopyConfigurationWizard(props: Props): ReactElement {
         try {
           const next: ConfigTransferPreview[] = [];
           for (const targetId of targetIds) {
-            const res = await window.api.previewConfigTransfer(
-              sourceId,
-              targetId,
-              selection,
-            );
+            const res = await window.api.previewConfigTransfer(sourceId, targetId, selection);
             if (!res.ok) {
-              const name =
-                props.servers.find((s) => s.id === targetId)?.name ?? targetId;
+              const name = props.servers.find((s) => s.id === targetId)?.name ?? targetId;
               setError(res.error ?? `Could not build preview for “${name}”`);
               setPreviews([]);
               return;
@@ -149,12 +131,7 @@ export function CopyConfigurationWizard(props: Props): ReactElement {
   };
 
   const applyCopy = async (): Promise<void> => {
-    if (
-      sourceId === null ||
-      previews.length === 0 ||
-      !confirmed ||
-      (selection.passwords && !passwordConfirmed)
-    ) {
+    if (sourceId === null || previews.length === 0 || !confirmed || (selection.passwords && !passwordConfirmed)) {
       return;
     }
     setCommitting(true);
@@ -213,11 +190,7 @@ export function CopyConfigurationWizard(props: Props): ReactElement {
     );
   };
 
-  const canLeaveStep1 =
-    sourceId !== null &&
-    targetIds.length > 0 &&
-    !targetIds.includes(sourceId) &&
-    targetsOk;
+  const canLeaveStep1 = sourceId !== null && targetIds.length > 0 && !targetIds.includes(sourceId) && targetsOk;
 
   const canApply =
     confirmed &&
@@ -227,7 +200,7 @@ export function CopyConfigurationWizard(props: Props): ReactElement {
     !committing;
 
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={() => {
         if (!committing) props.onClose();
@@ -236,13 +209,8 @@ export function CopyConfigurationWizard(props: Props): ReactElement {
       closeOnEscape={!committing}
       title="Copy configuration"
       size="xl"
+      maxHeight="min(78vh, 820px)"
       data-copy-configuration-wizard
-      styles={{
-        body: {
-          maxHeight: "min(78vh, 820px)",
-          overflowY: "auto",
-        },
-      }}
     >
       <Stack gap="md">
         <Text size="sm" c="dimmed">
@@ -257,9 +225,9 @@ export function CopyConfigurationWizard(props: Props): ReactElement {
         </Stepper>
 
         {error !== null && step < 4 && (
-          <Alert color="red" title="Could not continue">
+          <AppAlert color="red" title="Could not continue">
             {error}
-          </Alert>
+          </AppAlert>
         )}
 
         {step === 1 && sourceId !== null && (
@@ -326,6 +294,6 @@ export function CopyConfigurationWizard(props: Props): ReactElement {
           />
         )}
       </Stack>
-    </Modal>
+    </AppPanelModal>
   );
 }

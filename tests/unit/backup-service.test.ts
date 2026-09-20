@@ -19,9 +19,7 @@ import type { ServerRepository } from "@backend/infra/db/server-repository";
 import type { AppSettingsRepository } from "@backend/infra/db/app-settings-repository";
 import type { ServerProfile } from "@shared/types";
 import type { DatabaseSync } from "node:sqlite";
-import {
-  BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY,
-} from "@backend/domains/backups/backup-critical-queue";
+import { BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY } from "@backend/domains/backups/backup-critical-queue";
 import {
   BACKUP_DISK_ALERTS_SETTING_KEY,
   BACKUP_FLEET_ALERTS_DISMISSED_SETTING_KEY,
@@ -33,10 +31,7 @@ vi.mock("@backend/infra/rcon/rcon-client", () => ({
 
 const tmpDirs: string[] = [];
 
-async function withExtractedZip(
-  zipPath: string,
-  fn: (root: string) => Promise<void>,
-): Promise<void> {
+async function withExtractedZip(zipPath: string, fn: (root: string) => Promise<void>): Promise<void> {
   const root = await mkdtemp(join(tmpdir(), "ark-bak-extract-"));
   tmpDirs.push(root);
   await extractZip(zipPath, root);
@@ -79,9 +74,7 @@ function makeProfile(installDir: string): ServerProfile {
 }
 
 /** Active process mock with startedAt old enough for schedule grace by default. */
-function mockActiveProcesses(
-  startedAgoMs = 60 * 60 * 1000,
-): ProcessManager {
+function mockActiveProcesses(startedAgoMs = 60 * 60 * 1000): ProcessManager {
   const startedAt = new Date(Date.now() - startedAgoMs).toISOString();
   return {
     applyRuntimePorts: vi.fn((p: ServerProfile) => p),
@@ -101,13 +94,7 @@ function mockActiveProcesses(
 async function seedInstall(installDir: string): Promise<void> {
   const savedArks = join(installDir, "ShooterGame", "Saved", "SavedArks");
   const mapDir = join(savedArks, "TheIsland_WP");
-  const config = join(
-    installDir,
-    "ShooterGame",
-    "Saved",
-    "Config",
-    "WindowsServer",
-  );
+  const config = join(installDir, "ShooterGame", "Saved", "Config", "WindowsServer");
   const binaries = join(installDir, "ShooterGame", "Binaries", "Win64");
   await mkdir(mapDir, { recursive: true });
   await mkdir(config, { recursive: true });
@@ -120,11 +107,7 @@ async function seedInstall(installDir: string): Promise<void> {
   await writeFile(join(mapDir, "76561198000000000.arkprofile"), "PLAYER", "utf8");
   await writeFile(join(mapDir, "76561198000000001.arkprofile"), "PLAYER2", "utf8");
   await writeFile(join(config, "Game.ini"), "[/Script/Engine]\nx=1\n", "utf8");
-  await writeFile(
-    join(config, "GameUserSettings.ini"),
-    "[ServerSettings]\nServerName=Test\n",
-    "utf8",
-  );
+  await writeFile(join(config, "GameUserSettings.ini"), "[ServerSettings]\nServerName=Test\n", "utf8");
   await writeFile(join(config, "Engine.ini"), "noise=1\n", "utf8");
 }
 
@@ -228,8 +211,7 @@ describe("BackupService kinds and retention", () => {
     const restarted = new BackupService(servers, repo, processes, settings);
     const resumed = await restarted.createPreUpdateBackupForJob(profile.id);
     expect(resumed).toHaveLength(1);
-    expect(repo.listBackups(profile.id, 100).filter((row) => row.type === "pre_update"))
-      .toHaveLength(1);
+    expect(repo.listBackups(profile.id, 100).filter((row) => row.type === "pre_update")).toHaveLength(1);
     expect(settingsStore.get(BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY)).toBe("[]");
   });
 
@@ -263,14 +245,15 @@ describe("BackupService kinds and retention", () => {
     const restarted = new BackupService(servers, repo, processes, settings);
     const recovered = await restarted.createPreUpdateBackupForJob(profile.id);
 
-    expect(recovered.map((backup) => backup.kind)).toEqual([
-      "world",
-    ]);
-    expect(recovered.every((backup) =>
-      backup.type === "pre_update"
-      && backup.serverId === profile.id
-      && backup.notes?.includes(`[critical-job:${job.id}]`) === true,
-    )).toBe(true);
+    expect(recovered.map((backup) => backup.kind)).toEqual(["world"]);
+    expect(
+      recovered.every(
+        (backup) =>
+          backup.type === "pre_update" &&
+          backup.serverId === profile.id &&
+          backup.notes?.includes(`[critical-job:${job.id}]`) === true,
+      ),
+    ).toBe(true);
     expect(settingsStore.get(BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY)).toBe("[]");
   });
 
@@ -308,9 +291,7 @@ describe("BackupService kinds and retention", () => {
     expect(historyId).toBeTypeOf("number");
     expect(repo.getRestoreHistory(historyId!)).toMatchObject({ status: "completed" });
     expect(
-      repo.listBackups(profile.id, 100).filter(
-        (row) => row.type === "pre_restore" && row.notes?.includes(job.id),
-      ),
+      repo.listBackups(profile.id, 100).filter((row) => row.type === "pre_restore" && row.notes?.includes(job.id)),
     ).toHaveLength(1);
 
     // A restart can observe completed durable history before the queue row is
@@ -322,9 +303,7 @@ describe("BackupService kinds and retention", () => {
     const restarted = new BackupService(servers, repo, processes, settings);
     expect(restarted.getCriticalJobs()).toEqual([]);
     expect(
-      repo.listBackups(profile.id, 100).filter(
-        (row) => row.type === "pre_restore" && row.notes?.includes(job.id),
-      ),
+      repo.listBackups(profile.id, 100).filter((row) => row.type === "pre_restore" && row.notes?.includes(job.id)),
     ).toHaveLength(1);
   });
 
@@ -371,15 +350,9 @@ describe("BackupService kinds and retention", () => {
     });
     repo.completeBackup(ini.id, 5);
 
-    const completed = service.getCompletedBackupsForCriticalJob(profile.id, [
-      critical[0]!.id,
-      players.id,
-      ini.id,
-    ]);
+    const completed = service.getCompletedBackupsForCriticalJob(profile.id, [critical[0]!.id, players.id, ini.id]);
     expect(completed.map((backup) => backup.kind)).toEqual(["world"]);
-    expect(completed.map((backup) => backup.id)).toEqual([
-      critical[0]!.id,
-    ]);
+    expect(completed.map((backup) => backup.id)).toEqual([critical[0]!.id]);
   });
 
   it("quarantines a recovered restore job when restoreHistory points to unrelated evidence", async () => {
@@ -433,20 +406,12 @@ describe("BackupService kinds and retention", () => {
       stop: vi.fn(),
     } as unknown as ProcessManager;
 
-    const recovered = new BackupService(
-      servers,
-      repo,
-      processes,
-      settings,
-      join(installDir, "_root"),
-    );
+    const recovered = new BackupService(servers, repo, processes, settings, join(installDir, "_root"));
 
     expect(recovered.getCriticalJobs()).toEqual([]);
     expect(settings.set).toHaveBeenCalledWith(
       expect.stringMatching(
-        new RegExp(
-          `^${BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY.replaceAll(".", "\\.")}\\.quarantine\\.`,
-        ),
+        new RegExp(`^${BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY.replaceAll(".", "\\.")}\\.quarantine\\.`),
       ),
       rawQueue,
     );
@@ -484,8 +449,7 @@ describe("BackupService kinds and retention", () => {
     ];
     const rawQueue = JSON.stringify(duplicateRows);
     const settings = {
-      get: vi.fn((key: string) =>
-        key === BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY ? rawQueue : null),
+      get: vi.fn((key: string) => (key === BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY ? rawQueue : null)),
       set: vi.fn(),
     } as unknown as AppSettingsRepository;
     const servers = {
@@ -498,13 +462,7 @@ describe("BackupService kinds and retention", () => {
       isActive: vi.fn(() => false),
     } as unknown as ProcessManager;
 
-    const recovered = new BackupService(
-      servers,
-      repo,
-      processes,
-      settings,
-      join(installDir, "_root"),
-    );
+    const recovered = new BackupService(servers, repo, processes, settings, join(installDir, "_root"));
 
     expect(recovered.getCriticalJobs()).toHaveLength(1);
     expect(recovered.getCriticalJobs()[0]).toMatchObject({
@@ -514,9 +472,7 @@ describe("BackupService kinds and retention", () => {
     });
     expect(settings.set).toHaveBeenCalledWith(
       expect.stringMatching(
-        new RegExp(
-          `^${BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY.replaceAll(".", "\\.")}\\.quarantine\\.`,
-        ),
+        new RegExp(`^${BACKUP_CRITICAL_JOBS_QUEUE_SETTING_KEY.replaceAll(".", "\\.")}\\.quarantine\\.`),
       ),
       rawQueue,
     );
@@ -545,17 +501,9 @@ describe("BackupService kinds and retention", () => {
       get: vi.fn(() => null),
       set: vi.fn(),
     } as unknown as AppSettingsRepository;
-    const gated = new BackupService(
-      servers,
-      repo,
-      processes,
-      settings,
-      join(emptyDir, "_root"),
-    );
+    const gated = new BackupService(servers, repo, processes, settings, join(emptyDir, "_root"));
 
-    await expect(gated.createManualBackup(emptyProfile.id, ["world"])).rejects.toThrow(
-      /Install server files/i,
-    );
+    await expect(gated.createManualBackup(emptyProfile.id, ["world"])).rejects.toThrow(/Install server files/i);
 
     const [ok] = await service.createManualBackup(profile.id, ["world"]);
     expect(ok).toBeDefined();
@@ -566,15 +514,9 @@ describe("BackupService kinds and retention", () => {
     // restore on empty profile with a catalogued archive copied in.
     const exportDir = await mkdtemp(join(tmpdir(), "ark-export-empty-"));
     tmpDirs.push(exportDir);
-    const portable = await service.exportBackup(
-      profile.id,
-      ok.id,
-      join(exportDir, "world.zip"),
-    );
+    const portable = await service.exportBackup(profile.id, ok.id, join(exportDir, "world.zip"));
     const imported = await gated.importBackup(emptyProfile.id, "world", portable);
-    await expect(gated.restoreBackup(emptyProfile.id, imported.id)).rejects.toThrow(
-      /Install server files/i,
-    );
+    await expect(gated.restoreBackup(emptyProfile.id, imported.id)).rejects.toThrow(/Install server files/i);
   });
 
   it("packages world for the active map folder as a zip under World/", async () => {
@@ -586,25 +528,17 @@ describe("BackupService kinds and retention", () => {
     expect(record.mapToken).toBe("TheIsland_WP");
     expect(record.path.toLowerCase().endsWith(".zip")).toBe(true);
     expect(record.path).toMatch(/[\\/]World[\\/]/i);
-    expect(basename(record.path)).toMatch(
-      /^island-world-manual-TheIsland_WP-\d{8}-\d{6}\.zip$/i,
-    );
+    expect(basename(record.path)).toMatch(/^island-world-manual-TheIsland_WP-\d{8}-\d{6}\.zip$/i);
     await withExtractedZip(record.path, async (root) => {
       await expect(
-        access(
-          join(root, "SavedArks", "TheIsland_WP", "TheIsland_WP.ark"),
-          fsConstants.F_OK,
-        ),
+        access(join(root, "SavedArks", "TheIsland_WP", "TheIsland_WP.ark"), fsConstants.F_OK),
       ).resolves.toBeUndefined();
       await expect(
-        access(
-          join(root, "SavedArks", "TheIsland_WP", "76561198000000000.arkprofile"),
-          fsConstants.F_OK,
-        ),
+        access(join(root, "SavedArks", "TheIsland_WP", "76561198000000000.arkprofile"), fsConstants.F_OK),
       ).resolves.toBeUndefined();
-      const manifest = JSON.parse(
-        await readFile(join(root, "manifest.json"), "utf8"),
-      ) as { backup: { kind: string; mapToken?: string } };
+      const manifest = JSON.parse(await readFile(join(root, "manifest.json"), "utf8")) as {
+        backup: { kind: string; mapToken?: string };
+      };
       expect(manifest.backup.kind).toBe("world");
       expect(manifest.backup.mapToken).toBe("TheIsland_WP");
     });
@@ -615,11 +549,7 @@ describe("BackupService kinds and retention", () => {
     const svartDir = join(savedArks, "Svartalfheim");
     await mkdir(svartDir, { recursive: true });
     await writeFile(join(svartDir, "Svartalfheim_WP.ark"), "SVART", "utf8");
-    await writeFile(
-      join(svartDir, "Svartalfheim_WP_AntiCorruptionBackup.bak"),
-      "BAK",
-      "utf8",
-    );
+    await writeFile(join(svartDir, "Svartalfheim_WP_AntiCorruptionBackup.bak"), "BAK", "utf8");
     await writeFile(join(svartDir, "Extinction_WP.ark"), "LEFTOVER", "utf8");
 
     const svartProfile = { ...profile, map: "Svartalfheim_WP", name: "Svart" };
@@ -641,38 +571,24 @@ describe("BackupService kinds and retention", () => {
         settingsStore.set(key, value);
       }),
     } as unknown as AppSettingsRepository;
-    const svartService = new BackupService(
-      servers,
-      repo,
-      processes,
-      settings,
-      join(installDir, "_root"),
-    );
+    const svartService = new BackupService(servers, repo, processes, settings, join(installDir, "_root"));
 
     const created = await svartService.createManualBackup(svartProfile.id, ["world"]);
     const record = created[0];
     expect(record).toBeDefined();
     if (record === undefined) return;
     expect(record.mapToken).toBe("Svartalfheim_WP");
-    expect(basename(record.path)).toMatch(
-      /^svart-world-manual-Svartalfheim_WP-\d{8}-\d{6}\.zip$/i,
-    );
+    expect(basename(record.path)).toMatch(/^svart-world-manual-Svartalfheim_WP-\d{8}-\d{6}\.zip$/i);
     await withExtractedZip(record.path, async (root) => {
       await expect(
-        access(
-          join(root, "SavedArks", "Svartalfheim_WP", "Svartalfheim_WP.ark"),
-          fsConstants.F_OK,
-        ),
+        access(join(root, "SavedArks", "Svartalfheim_WP", "Svartalfheim_WP.ark"), fsConstants.F_OK),
       ).resolves.toBeUndefined();
       await expect(
-        access(
-          join(root, "SavedArks", "Svartalfheim_WP", "Extinction_WP.ark"),
-          fsConstants.F_OK,
-        ),
+        access(join(root, "SavedArks", "Svartalfheim_WP", "Extinction_WP.ark"), fsConstants.F_OK),
       ).rejects.toThrow();
-      const manifest = JSON.parse(
-        await readFile(join(root, "manifest.json"), "utf8"),
-      ) as { backup: { mapFolderName?: string; mapToken?: string } };
+      const manifest = JSON.parse(await readFile(join(root, "manifest.json"), "utf8")) as {
+        backup: { mapFolderName?: string; mapToken?: string };
+      };
       expect(manifest.backup.mapToken).toBe("Svartalfheim_WP");
       expect(manifest.backup.mapFolderName).toBe("Svartalfheim");
     });
@@ -683,11 +599,7 @@ describe("BackupService kinds and retention", () => {
     const svartDir = join(savedArks, "Svartalfheim");
     await mkdir(svartDir, { recursive: true });
     await writeFile(join(svartDir, "Svartalfheim_WP.ark"), "SVART", "utf8");
-    await writeFile(
-      join(svartDir, "Svartalfheim_WP_AntiCorruptionBackup.bak"),
-      "BAK",
-      "utf8",
-    );
+    await writeFile(join(svartDir, "Svartalfheim_WP_AntiCorruptionBackup.bak"), "BAK", "utf8");
     await writeFile(join(svartDir, "Extinction_WP.ark"), "LEFTOVER", "utf8");
 
     const svartProfile = { ...profile, map: "Svartalfheim_WP", name: "Svart" };
@@ -709,13 +621,7 @@ describe("BackupService kinds and retention", () => {
         settingsStore.set(key, value);
       }),
     } as unknown as AppSettingsRepository;
-    const svartService = new BackupService(
-      servers,
-      repo,
-      processes,
-      settings,
-      join(installDir, "_root"),
-    );
+    const svartService = new BackupService(servers, repo, processes, settings, join(installDir, "_root"));
 
     const created = await svartService.createManualBackup(svartProfile.id, ["world"]);
     const record = created[0];
@@ -725,34 +631,21 @@ describe("BackupService kinds and retention", () => {
     await rm(svartDir, { recursive: true, force: true });
     await mkdir(svartDir, { recursive: true });
     await svartService.restoreBackup(svartProfile.id, record.id);
-    expect(await readFile(join(svartDir, "Svartalfheim_WP.ark"), "utf8")).toBe(
-      "SVART",
-    );
-    await expect(
-      access(join(savedArks, "Svartalfheim_WP", "Svartalfheim_WP.ark"), fsConstants.F_OK),
-    ).rejects.toThrow();
+    expect(await readFile(join(svartDir, "Svartalfheim_WP.ark"), "utf8")).toBe("SVART");
+    await expect(access(join(savedArks, "Svartalfheim_WP", "Svartalfheim_WP.ark"), fsConstants.F_OK)).rejects.toThrow();
 
     await rm(savedArks, { recursive: true, force: true });
     await mkdir(savedArks, { recursive: true });
     await svartService.restoreBackup(svartProfile.id, record.id);
-    expect(await readFile(join(svartDir, "Svartalfheim_WP.ark"), "utf8")).toBe(
-      "SVART",
-    );
+    expect(await readFile(join(svartDir, "Svartalfheim_WP.ark"), "utf8")).toBe("SVART");
   });
 
   it("rejects manual full player-profile snapshots", async () => {
-    await expect(service.createManualBackup(profile.id, ["players"])).rejects.toThrow(
-      /no longer supported/i,
-    );
+    await expect(service.createManualBackup(profile.id, ["players"])).rejects.toThrow(/no longer supported/i);
   });
 
   it("packages a single player session backup as flat profile files", async () => {
-    const record = await service.createPlayerSessionBackup(
-      profile.id,
-      "connect",
-      "76561198000000000",
-      "Alice",
-    );
+    const record = await service.createPlayerSessionBackup(profile.id, "connect", "76561198000000000", "Alice");
     expect(record).not.toBeNull();
     if (record === null) return;
     expect(record.type).toBe("player_connect");
@@ -762,10 +655,7 @@ describe("BackupService kinds and retention", () => {
     expect(rconExec).not.toHaveBeenCalled();
     await withExtractedZip(record.path, async (root) => {
       await expect(
-        access(
-          join(root, "PlayerProfiles", "76561198000000000.arkprofile"),
-          fsConstants.F_OK,
-        ),
+        access(join(root, "PlayerProfiles", "76561198000000000.arkprofile"), fsConstants.F_OK),
       ).resolves.toBeUndefined();
       await expect(
         access(
@@ -774,10 +664,7 @@ describe("BackupService kinds and retention", () => {
         ),
       ).rejects.toThrow();
       await expect(
-        access(
-          join(root, "PlayerProfiles", "76561198000000001.arkprofile"),
-          fsConstants.F_OK,
-        ),
+        access(join(root, "PlayerProfiles", "76561198000000001.arkprofile"), fsConstants.F_OK),
       ).rejects.toThrow();
     });
   });
@@ -791,28 +678,18 @@ describe("BackupService kinds and retention", () => {
     await writeFile(join(islandDir, "76561198000000000.arkprofile"), "ISLAND_PLAYER", "utf8");
 
     profile.map = "ScorchedEarth_WP";
-    const record = await service.createPlayerSessionBackup(
-      profile.id,
-      "connect",
-      "76561198000000000",
-      "Alice",
-    );
+    const record = await service.createPlayerSessionBackup(profile.id, "connect", "76561198000000000", "Alice");
     expect(record).not.toBeNull();
     if (record === null) return;
     await withExtractedZip(record.path, async (root) => {
-      expect(
-        await readFile(join(root, "PlayerProfiles", "76561198000000000.arkprofile"), "utf8"),
-      ).toBe("SCORCHED_PLAYER");
+      expect(await readFile(join(root, "PlayerProfiles", "76561198000000000.arkprofile"), "utf8")).toBe(
+        "SCORCHED_PLAYER",
+      );
     });
   });
 
   it("restores flat player profiles into the current map folder", async () => {
-    const record = await service.createPlayerSessionBackup(
-      profile.id,
-      "connect",
-      "76561198000000000",
-      "Alice",
-    );
+    const record = await service.createPlayerSessionBackup(profile.id, "connect", "76561198000000000", "Alice");
     expect(record).not.toBeNull();
     if (record === null) return;
 
@@ -825,12 +702,8 @@ describe("BackupService kinds and retention", () => {
     profile.map = "ScorchedEarth_WP";
 
     await service.restoreBackup(profile.id, record.id);
-    expect(await readFile(join(scorchedDir, "76561198000000000.arkprofile"), "utf8")).toBe(
-      "PLAYER",
-    );
-    await expect(
-      access(join(islandDir, "76561198000000000.arkprofile"), fsConstants.F_OK),
-    ).rejects.toThrow();
+    expect(await readFile(join(scorchedDir, "76561198000000000.arkprofile"), "utf8")).toBe("PLAYER");
+    await expect(access(join(islandDir, "76561198000000000.arkprofile"), fsConstants.F_OK)).rejects.toThrow();
   });
 
   it("rejects nested legacy player archive layouts on restore", async () => {
@@ -857,52 +730,29 @@ describe("BackupService kinds and retention", () => {
     });
     repo.completeBackup(started.id, 100);
 
-    await expect(service.restoreBackup(profile.id, started.id)).rejects.toThrow(
-      /legacy layout/i,
-    );
+    await expect(service.restoreBackup(profile.id, started.id)).rejects.toThrow(/legacy layout/i);
   });
 
   it("flushes SaveWorld before player session backup when server is running", async () => {
     isActive.mockReturnValue(true);
-    const record = await service.createPlayerSessionBackup(
-      profile.id,
-      "disconnect",
-      "76561198000000000",
-      "Alice",
-    );
+    const record = await service.createPlayerSessionBackup(profile.id, "disconnect", "76561198000000000", "Alice");
     expect(record).not.toBeNull();
-    expect(rconExec).toHaveBeenCalledWith(
-      "127.0.0.1",
-      profile.rconPort,
-      profile.adminPassword,
-      "SaveWorld",
-    );
+    expect(rconExec).toHaveBeenCalledWith("127.0.0.1", profile.rconPort, profile.adminPassword, "SaveWorld");
   });
 
   it("does not match other player profiles that share an id prefix", async () => {
     const mapDir = join(installDir, "ShooterGame", "Saved", "SavedArks", "TheIsland_WP");
     await writeFile(join(mapDir, "765611980000000001.arkprofile"), "PREFIXED", "utf8");
 
-    const record = await service.createPlayerSessionBackup(
-      profile.id,
-      "connect",
-      "76561198000000000",
-      "Alice",
-    );
+    const record = await service.createPlayerSessionBackup(profile.id, "connect", "76561198000000000", "Alice");
     expect(record).not.toBeNull();
     if (record === null) return;
     await withExtractedZip(record.path, async (root) => {
       await expect(
-        access(
-          join(root, "PlayerProfiles", "76561198000000000.arkprofile"),
-          fsConstants.F_OK,
-        ),
+        access(join(root, "PlayerProfiles", "76561198000000000.arkprofile"), fsConstants.F_OK),
       ).resolves.toBeUndefined();
       await expect(
-        access(
-          join(root, "PlayerProfiles", "765611980000000001.arkprofile"),
-          fsConstants.F_OK,
-        ),
+        access(join(root, "PlayerProfiles", "765611980000000001.arkprofile"), fsConstants.F_OK),
       ).rejects.toThrow();
     });
   });
@@ -918,27 +768,12 @@ describe("BackupService kinds and retention", () => {
       backupDir: null,
     });
 
-    const empty = await service.createPlayerSessionBackup(
-      profile.id,
-      "connect",
-      "76561198001111111",
-      "Ghost",
-    );
+    const empty = await service.createPlayerSessionBackup(profile.id, "connect", "76561198001111111", "Ghost");
     expect(empty).toBeNull();
     expect(repo.listCompleted(profile.id, "players")).toHaveLength(0);
-    expect(addEvent).not.toHaveBeenCalledWith(
-      profile.id,
-      "backup_created",
-      expect.anything(),
-      expect.anything(),
-    );
+    expect(addEvent).not.toHaveBeenCalledWith(profile.id, "backup_created", expect.anything(), expect.anything());
 
-    const kept = await service.createPlayerSessionBackup(
-      profile.id,
-      "connect",
-      "76561198000000000",
-      "Alice",
-    );
+    const kept = await service.createPlayerSessionBackup(profile.id, "connect", "76561198000000000", "Alice");
     expect(kept).not.toBeNull();
     expect(repo.listCompleted(profile.id, "players")).toHaveLength(1);
   });
@@ -952,12 +787,7 @@ describe("BackupService kinds and retention", () => {
       await writeFile(latePath, "LATE_FLUSH", "utf8");
     })();
 
-    const pending = service.createPlayerSessionBackup(
-      profile.id,
-      "disconnect",
-      "76561198009999999",
-      "Late",
-    );
+    const pending = service.createPlayerSessionBackup(profile.id, "disconnect", "76561198009999999", "Late");
     const record = await pending;
     await writeLater;
 
@@ -967,17 +797,9 @@ describe("BackupService kinds and retention", () => {
     expect(record.kind).toBe("players");
     await withExtractedZip(record.path, async (root) => {
       await expect(
-        access(
-          join(root, "PlayerProfiles", "76561198009999999.arkprofile"),
-          fsConstants.F_OK,
-        ),
+        access(join(root, "PlayerProfiles", "76561198009999999.arkprofile"), fsConstants.F_OK),
       ).resolves.toBeUndefined();
-      expect(
-        await readFile(
-          join(root, "PlayerProfiles", "76561198009999999.arkprofile"),
-          "utf8",
-        ),
-      ).toBe("LATE_FLUSH");
+      expect(await readFile(join(root, "PlayerProfiles", "76561198009999999.arkprofile"), "utf8")).toBe("LATE_FLUSH");
     });
   });
 
@@ -990,18 +812,11 @@ describe("BackupService kinds and retention", () => {
     expect(record.path).toMatch(/[\\/]INI[\\/]/);
     expect(record.path.toLowerCase().endsWith(".zip")).toBe(true);
     await withExtractedZip(record.path, async (root) => {
+      await expect(access(join(root, "ConfigWindowsServer", "Game.ini"), fsConstants.F_OK)).resolves.toBeUndefined();
       await expect(
-        access(join(root, "ConfigWindowsServer", "Game.ini"), fsConstants.F_OK),
+        access(join(root, "ConfigWindowsServer", "GameUserSettings.ini"), fsConstants.F_OK),
       ).resolves.toBeUndefined();
-      await expect(
-        access(
-          join(root, "ConfigWindowsServer", "GameUserSettings.ini"),
-          fsConstants.F_OK,
-        ),
-      ).resolves.toBeUndefined();
-      await expect(
-        access(join(root, "ConfigWindowsServer", "Engine.ini"), fsConstants.F_OK),
-      ).rejects.toThrow();
+      await expect(access(join(root, "ConfigWindowsServer", "Engine.ini"), fsConstants.F_OK)).rejects.toThrow();
     });
   });
 
@@ -1017,13 +832,9 @@ describe("BackupService kinds and retention", () => {
 
   it("clears pending Configuration draft after INI restore so Start cannot overwrite it", async () => {
     const restoreApply = await import("@backend/domains/backups/backup-restore-apply");
-    const applySpy = vi
-      .spyOn(restoreApply, "applyRestore")
-      .mockResolvedValue(undefined);
+    const applySpy = vi.spyOn(restoreApply, "applyRestore").mockResolvedValue(undefined);
 
-    const { PendingServerIniRepository } = await import(
-      "@backend/infra/db/pending-server-ini-repository"
-    );
+    const { PendingServerIniRepository } = await import("@backend/infra/db/pending-server-ini-repository");
     const pendingDb = openDatabase(":memory:");
     const pendingRepo = new PendingServerIniRepository(pendingDb);
     pendingRepo.upsert(profile.id, {
@@ -1031,16 +842,9 @@ describe("BackupService kinds and retention", () => {
       game: "[/Script/Engine]\nx=queued\n",
     });
 
-    const withClear = new BackupService(
-      servers,
-      repo,
-      processes,
-      settings,
-      join(installDir, "_root"),
-      (serverId) => {
-        pendingRepo.delete(serverId);
-      },
-    );
+    const withClear = new BackupService(servers, repo, processes, settings, join(installDir, "_root"), (serverId) => {
+      pendingRepo.delete(serverId);
+    });
 
     const iniPath = join(installDir, "Backups", "INI", "pending-clear-ini.zip");
     await mkdir(dirname(iniPath), { recursive: true });
@@ -1086,14 +890,7 @@ describe("BackupService kinds and retention", () => {
     const worldBackup = created[0];
     expect(worldBackup).toBeDefined();
     if (worldBackup === undefined) return;
-    const liveWorld = join(
-      installDir,
-      "ShooterGame",
-      "Saved",
-      "SavedArks",
-      "TheIsland_WP",
-      "TheIsland_WP.ark",
-    );
+    const liveWorld = join(installDir, "ShooterGame", "Saved", "SavedArks", "TheIsland_WP", "TheIsland_WP.ark");
     const liveProfile = join(
       installDir,
       "ShooterGame",
@@ -1102,14 +899,7 @@ describe("BackupService kinds and retention", () => {
       "TheIsland_WP",
       "76561198000000000.arkprofile",
     );
-    const liveIni = join(
-      installDir,
-      "ShooterGame",
-      "Saved",
-      "Config",
-      "WindowsServer",
-      "Game.ini",
-    );
+    const liveIni = join(installDir, "ShooterGame", "Saved", "Config", "WindowsServer", "Game.ini");
 
     await writeFile(liveWorld, "CHANGED_WORLD", "utf8");
     await writeFile(liveProfile, "CHANGED_PLAYER", "utf8");
@@ -1128,14 +918,7 @@ describe("BackupService kinds and retention", () => {
     const worldBackup = created[0];
     expect(worldBackup).toBeDefined();
     if (worldBackup === undefined) return;
-    const liveWorld = join(
-      installDir,
-      "ShooterGame",
-      "Saved",
-      "SavedArks",
-      "TheIsland_WP",
-      "TheIsland_WP.ark",
-    );
+    const liveWorld = join(installDir, "ShooterGame", "Saved", "SavedArks", "TheIsland_WP", "TheIsland_WP.ark");
     const liveProfile = join(
       installDir,
       "ShooterGame",
@@ -1219,13 +1002,7 @@ describe("BackupService kinds and retention", () => {
       get: vi.fn(() => null),
       set: vi.fn(),
     } as unknown as AppSettingsRepository;
-    const scheduled = new BackupService(
-      servers,
-      repo,
-      processes,
-      settings,
-      join(installDir, "_root"),
-    );
+    const scheduled = new BackupService(servers, repo, processes, settings, join(installDir, "_root"));
 
     await scheduled.runScheduledCycle();
     const list = repo.listBackups(profile.id, 20);
@@ -1253,13 +1030,7 @@ describe("BackupService kinds and retention", () => {
       get: vi.fn(() => null),
       set: vi.fn(),
     } as unknown as AppSettingsRepository;
-    const scheduled = new BackupService(
-      servers,
-      repo,
-      processes,
-      settings,
-      join(installDir, "_root"),
-    );
+    const scheduled = new BackupService(servers, repo, processes, settings, join(installDir, "_root"));
 
     await scheduled.runScheduledCycle();
     expect(repo.listBackups(profile.id, 20)).toHaveLength(0);
@@ -1294,13 +1065,7 @@ describe("BackupService kinds and retention", () => {
       get: vi.fn(() => null),
       set: vi.fn(),
     } as unknown as AppSettingsRepository;
-    const scheduled = new BackupService(
-      servers,
-      repo,
-      processes,
-      settings,
-      join(installDir, "_root"),
-    );
+    const scheduled = new BackupService(servers, repo, processes, settings, join(installDir, "_root"));
 
     await scheduled.runScheduledCycle();
     expect(repo.listCompleted(profile.id, "world")).toHaveLength(1);
@@ -1340,13 +1105,7 @@ describe("BackupService kinds and retention", () => {
       get: vi.fn(() => null),
       set: vi.fn(),
     } as unknown as AppSettingsRepository;
-    const scheduled = new BackupService(
-      servers,
-      repo,
-      processes,
-      settings,
-      join(installDir, "_root"),
-    );
+    const scheduled = new BackupService(servers, repo, processes, settings, join(installDir, "_root"));
 
     await scheduled.runScheduledCycle();
     expect(repo.listBackups(profile.id, 20)).toHaveLength(1);
@@ -1372,16 +1131,8 @@ describe("BackupService kinds and retention", () => {
       get: vi.fn(() => null),
       set: vi.fn(),
     } as unknown as AppSettingsRepository;
-    const scheduled = new BackupService(
-      servers,
-      repo,
-      processes,
-      settings,
-      join(installDir, "_root"),
-    );
-    const createSpy = vi
-      .spyOn(scheduled, "createScheduledBackup")
-      .mockRejectedValue(new Error("disk full"));
+    const scheduled = new BackupService(servers, repo, processes, settings, join(installDir, "_root"));
+    const createSpy = vi.spyOn(scheduled, "createScheduledBackup").mockRejectedValue(new Error("disk full"));
 
     await scheduled.runScheduledCycle();
     await scheduled.runScheduledCycle();
@@ -1395,12 +1146,9 @@ describe("BackupService kinds and retention", () => {
     expect(createSpy).not.toHaveBeenCalled();
 
     const summary = await scheduled.getFleetSummary();
-    expect(
-      summary.alerts.some(
-        (alert) =>
-          alert.kind === "schedule_paused" && alert.serverId === profile.id,
-      ),
-    ).toBe(true);
+    expect(summary.alerts.some((alert) => alert.kind === "schedule_paused" && alert.serverId === profile.id)).toBe(
+      true,
+    );
     expect(summary.servers[0]?.schedulePaused).toBe(true);
   });
 
@@ -1433,16 +1181,8 @@ describe("BackupService kinds and retention", () => {
       get: vi.fn(() => null),
       set: vi.fn(),
     } as unknown as AppSettingsRepository;
-    const scheduled = new BackupService(
-      servers,
-      repo,
-      processes,
-      settings,
-      join(installDir, "_root"),
-    );
-    (
-      scheduled as unknown as { creatingBackupIds: Set<string> }
-    ).creatingBackupIds.add(running.id);
+    const scheduled = new BackupService(servers, repo, processes, settings, join(installDir, "_root"));
+    (scheduled as unknown as { creatingBackupIds: Set<string> }).creatingBackupIds.add(running.id);
 
     await scheduled.runScheduledCycle();
     const worlds = repo.listBackups(profile.id, 20).filter((b) => b.kind === "world");
@@ -1477,13 +1217,7 @@ describe("BackupService kinds and retention", () => {
       get: vi.fn(() => null),
       set: vi.fn(),
     } as unknown as AppSettingsRepository;
-    const scheduled = new BackupService(
-      servers,
-      repo,
-      processes,
-      settings,
-      join(installDir, "_root"),
-    );
+    const scheduled = new BackupService(servers, repo, processes, settings, join(installDir, "_root"));
 
     await scheduled.runScheduledCycle();
 
@@ -1491,9 +1225,7 @@ describe("BackupService kinds and retention", () => {
     // Reconcile finishes the interrupted attempt now — interval must elapse
     // before another scheduled create (same as any failed scheduled finish).
     expect(
-      repo
-        .listBackups(profile.id, 20)
-        .filter((backup) => backup.type === "scheduled" && backup.kind === "world"),
+      repo.listBackups(profile.id, 20).filter((backup) => backup.type === "scheduled" && backup.kind === "world"),
     ).toHaveLength(1);
 
     db.prepare(`UPDATE backups SET completed_at = ? WHERE id = ?`).run(
@@ -1506,9 +1238,7 @@ describe("BackupService kinds and retention", () => {
       .listBackups(profile.id, 20)
       .filter((backup) => backup.type === "scheduled" && backup.kind === "world");
     expect(scheduledWorlds).toHaveLength(2);
-    expect(scheduledWorlds.some((backup) => backup.status === "completed")).toBe(
-      true,
-    );
+    expect(scheduledWorlds.some((backup) => backup.status === "completed")).toBe(true);
   });
 
   it("coalesces overlapping scheduled cycles for the same server", async () => {
@@ -1531,13 +1261,7 @@ describe("BackupService kinds and retention", () => {
       get: vi.fn(() => null),
       set: vi.fn(),
     } as unknown as AppSettingsRepository;
-    const scheduled = new BackupService(
-      servers,
-      repo,
-      processes,
-      settings,
-      join(installDir, "_root"),
-    );
+    const scheduled = new BackupService(servers, repo, processes, settings, join(installDir, "_root"));
 
     const first = scheduled.runScheduledCycle();
     const second = scheduled.runScheduledCycle();
@@ -1585,13 +1309,7 @@ describe("BackupService kinds and retention", () => {
       get: vi.fn(() => null),
       set: vi.fn(),
     } as unknown as AppSettingsRepository;
-    const scheduled = new BackupService(
-      servers,
-      repo,
-      processes,
-      settings,
-      join(installDir, "_root"),
-    );
+    const scheduled = new BackupService(servers, repo, processes, settings, join(installDir, "_root"));
     vi.spyOn(
       scheduled as unknown as {
         applyRetention: (serverId: string, policy: unknown) => Promise<void>;
@@ -1619,12 +1337,7 @@ describe("BackupService kinds and retention", () => {
   });
 
   it("imports orphan zip archives from disk on list/refresh", async () => {
-    const record = await service.createPlayerSessionBackup(
-      profile.id,
-      "connect",
-      "76561198000000000",
-      "Alice",
-    );
+    const record = await service.createPlayerSessionBackup(profile.id, "connect", "76561198000000000", "Alice");
     expect(record).not.toBeNull();
     if (record === null) return;
 
@@ -1686,29 +1399,19 @@ describe("BackupService kinds and retention", () => {
   });
 
   it("does not double-import the same orphan zip under concurrent list calls", async () => {
-    const record = await service.createPlayerSessionBackup(
-      profile.id,
-      "connect",
-      "76561198000000000",
-      "Alice",
-    );
+    const record = await service.createPlayerSessionBackup(profile.id, "connect", "76561198000000000", "Alice");
     expect(record).not.toBeNull();
     if (record === null) return;
 
     repo.deleteBackupRecord(record.id);
     expect(repo.listBackups(profile.id, 50)).toHaveLength(0);
 
-    const [a, b] = await Promise.all([
-      service.list(profile.id, 50),
-      service.list(profile.id, 50),
-    ]);
+    const [a, b] = await Promise.all([service.list(profile.id, 50), service.list(profile.id, 50)]);
     const matchesA = a.filter((row) => row.path === record.path);
     const matchesB = b.filter((row) => row.path === record.path);
     expect(matchesA).toHaveLength(1);
     expect(matchesB).toHaveLength(1);
-    expect(repo.listBackups(profile.id, 50).filter((row) => row.path === record.path)).toHaveLength(
-      1,
-    );
+    expect(repo.listBackups(profile.id, 50).filter((row) => row.path === record.path)).toHaveLength(1);
   });
 
   it("coalesces interrupted-row reconciliation across scheduler and list", async () => {
@@ -1726,9 +1429,7 @@ describe("BackupService kinds and retention", () => {
       releaseReconcile = resolve;
     });
     const internal = BackupReconciler.prototype as unknown as {
-      reconcileInterruptedRunningBackupsUnlocked: (
-        serverId: string,
-      ) => Promise<number>;
+      reconcileInterruptedRunningBackupsUnlocked: (serverId: string) => Promise<number>;
     };
     const reconcileSpy = vi
       .spyOn(internal, "reconcileInterruptedRunningBackupsUnlocked")
@@ -1753,9 +1454,9 @@ describe("BackupService kinds and retention", () => {
     expect(existsSync(record.path)).toBe(true);
 
     // Crash after zip write, before completeBackup — row stays running.
-    db.prepare(
-      `UPDATE backups SET status = 'running', completed_at = NULL, size_bytes = 0 WHERE id = ?`,
-    ).run(record.id);
+    db.prepare(`UPDATE backups SET status = 'running', completed_at = NULL, size_bytes = 0 WHERE id = ?`).run(
+      record.id,
+    );
     expect(repo.getBackup(record.id)?.status).toBe("running");
 
     const listed = await service.list(profile.id, 50);
@@ -1773,9 +1474,7 @@ describe("BackupService kinds and retention", () => {
     if (older === undefined) return;
 
     // Crash after zip write — leave row running.
-    db.prepare(
-      `UPDATE backups SET status = 'running', completed_at = NULL, size_bytes = 0 WHERE id = ?`,
-    ).run(older.id);
+    db.prepare(`UPDATE backups SET status = 'running', completed_at = NULL, size_bytes = 0 WHERE id = ?`).run(older.id);
 
     // Archive finished in the past (before a newer completed backup).
     const finishedAt = new Date("2026-07-20T12:00:00.000Z");
@@ -1786,10 +1485,7 @@ describe("BackupService kinds and retention", () => {
     expect(newerRecord).toBeDefined();
     if (newerRecord === undefined) return;
     // Force a finish time after the recovered archive but before "now".
-    db.prepare(`UPDATE backups SET completed_at = ? WHERE id = ?`).run(
-      "2026-07-24T12:00:00.000Z",
-      newerRecord.id,
-    );
+    db.prepare(`UPDATE backups SET completed_at = ? WHERE id = ?`).run("2026-07-24T12:00:00.000Z", newerRecord.id);
 
     const listed = await service.list(profile.id, 50);
     const recovered = listed.find((row) => row.id === older.id);
@@ -1797,10 +1493,7 @@ describe("BackupService kinds and retention", () => {
     const info = await stat(older.path);
     expect(recovered?.completedAt).toBe(info.mtime.toISOString());
     // Recovered older archive must sort after the newer completed one.
-    expect(listed.map((row) => row.id).slice(0, 2)).toEqual([
-      newerRecord.id,
-      older.id,
-    ]);
+    expect(listed.map((row) => row.id).slice(0, 2)).toEqual([newerRecord.id, older.id]);
   });
 
   it("fails stuck running backups with no zip on reconcile", async () => {
@@ -1883,9 +1576,7 @@ describe("BackupService kinds and retention", () => {
       notes: "layout scan boom",
     });
 
-    const layoutSpy = vi
-      .spyOn(archive, "zipHasBackupLayout")
-      .mockRejectedValue(new Error("corrupt central directory"));
+    const layoutSpy = vi.spyOn(archive, "zipHasBackupLayout").mockRejectedValue(new Error("corrupt central directory"));
 
     const listed = await service.list(profile.id, 50);
     expect(listed.find((item) => item.id === stuck.id)?.status).toBe("failed");
@@ -1945,12 +1636,7 @@ describe("BackupService kinds and retention", () => {
 
   it("deletes multiple selected backups", async () => {
     const created = await service.createManualBackup(profile.id, ["world", "ini"]);
-    const player = await service.createPlayerSessionBackup(
-      profile.id,
-      "connect",
-      "76561198000000000",
-      "Alice",
-    );
+    const player = await service.createPlayerSessionBackup(profile.id, "connect", "76561198000000000", "Alice");
     expect(player).not.toBeNull();
     if (player === null) return;
     expect(created).toHaveLength(2);
@@ -2005,9 +1691,7 @@ describe("BackupService kinds and retention", () => {
     await service.createManualBackup(profile.id, ["ini"]);
     const deleteEvents = addEvent.mock.calls.filter((call) => call[1] === "backup_deleted");
     expect(deleteEvents.length).toBeGreaterThanOrEqual(1);
-    expect(deleteEvents[0]?.[3]).toEqual(
-      expect.stringContaining("removed by retention"),
-    );
+    expect(deleteEvents[0]?.[3]).toEqual(expect.stringContaining("removed by retention"));
   });
 
   it("rejects deleting a running backup", async () => {
@@ -2018,9 +1702,7 @@ describe("BackupService kinds and retention", () => {
       path: join(installDir, "Backups", "running"),
       notes: null,
     });
-    await expect(service.deleteBackups(profile.id, [running.id])).rejects.toThrow(
-      /running/i,
-    );
+    await expect(service.deleteBackups(profile.id, [running.id])).rejects.toThrow(/running/i);
   });
 
   it("builds a fleet summary with health and disk settings", async () => {
@@ -2106,9 +1788,7 @@ describe("BackupService kinds and retention", () => {
       notes: null,
     });
     repo.failBackup(ancient.id, "old failure");
-    db.prepare(
-      `UPDATE backups SET created_at = ?, completed_at = ? WHERE id = ?`,
-    ).run(
+    db.prepare(`UPDATE backups SET created_at = ?, completed_at = ? WHERE id = ?`).run(
       new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
       new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
       ancient.id,
@@ -2294,11 +1974,9 @@ describe("BackupService kinds and retention", () => {
     });
     expect(repo.listCompleted(profile.id, "world").length).toBeGreaterThanOrEqual(2);
     expect(preview.items).toHaveLength(1);
-    expect(
-      preview.items.every(
-        (item) => item.backup.path === first.path || item.backup.path === second.path,
-      ),
-    ).toBe(true);
+    expect(preview.items.every((item) => item.backup.path === first.path || item.backup.path === second.path)).toBe(
+      true,
+    );
   });
 
   it("runCleanup re-applies protectNewestWorld when confirming preview ids", async () => {
@@ -2308,11 +1986,7 @@ describe("BackupService kinds and retention", () => {
 
     const ageDays = (id: string, days: number) => {
       const iso = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-      db.prepare(`UPDATE backups SET created_at = ?, completed_at = ? WHERE id = ?`).run(
-        iso,
-        iso,
-        id,
-      );
+      db.prepare(`UPDATE backups SET created_at = ?, completed_at = ? WHERE id = ?`).run(iso, iso, id);
     };
     ageDays(older.id, 5);
     ageDays(middle.id, 3);
@@ -2378,11 +2052,7 @@ describe("BackupService kinds and retention", () => {
     for (let i = 0; i < ordered.length; i += 1) {
       const backup = ordered[i]!;
       const iso = new Date(Date.now() - i * 60_000).toISOString();
-      db.prepare(`UPDATE backups SET created_at = ?, completed_at = ? WHERE id = ?`).run(
-        iso,
-        iso,
-        backup.id,
-      );
+      db.prepare(`UPDATE backups SET created_at = ?, completed_at = ? WHERE id = ?`).run(iso, iso, backup.id);
     }
 
     const preview = await service.previewCleanup({
@@ -2400,9 +2070,7 @@ describe("BackupService kinds and retention", () => {
     expect(markedIds.has(a3.id)).toBe(false);
     expect(markedIds.has(b1.id)).toBe(false);
     expect(markedIds.has(b2.id)).toBe(false);
-    expect(
-      preview.items.every((item) => item.reason.includes("keep last 2/players")),
-    ).toBe(true);
+    expect(preview.items.every((item) => item.reason.includes("keep last 2/players"))).toBe(true);
   });
 
   it("round-trips export then import without restoring live files", async () => {
@@ -2417,13 +2085,7 @@ describe("BackupService kinds and retention", () => {
     expect(existsSync(written)).toBe(true);
     expect(existsSync(created.path)).toBe(true);
 
-    const livePath = join(
-      installDir,
-      "ShooterGame",
-      "Saved",
-      "SavedArks",
-      "TheIsland_WP.ark",
-    );
+    const livePath = join(installDir, "ShooterGame", "Saved", "SavedArks", "TheIsland_WP.ark");
     const beforeLive = existsSync(livePath) ? await readFile(livePath, "utf8") : null;
 
     const imported = await service.importBackup(profile.id, "world", written);
@@ -2439,9 +2101,7 @@ describe("BackupService kinds and retention", () => {
     if (beforeLive !== null) {
       expect(await readFile(livePath, "utf8")).toBe(beforeLive);
     }
-    expect(
-      repo.listBackups(profile.id, 100).filter((row) => row.type === "pre_restore"),
-    ).toHaveLength(0);
+    expect(repo.listBackups(profile.id, 100).filter((row) => row.type === "pre_restore")).toHaveLength(0);
   });
 
   it("imports the same portable zip twice with distinct managed paths", async () => {
@@ -2451,11 +2111,7 @@ describe("BackupService kinds and retention", () => {
 
     const exportDir = await mkdtemp(join(tmpdir(), "ark-export-clash-"));
     tmpDirs.push(exportDir);
-    const exportPath = await service.exportBackup(
-      profile.id,
-      created.id,
-      join(exportDir, "ini-portable.zip"),
-    );
+    const exportPath = await service.exportBackup(profile.id, created.id, join(exportDir, "ini-portable.zip"));
 
     const first = await service.importBackup(profile.id, "ini", exportPath);
     const second = await service.importBackup(profile.id, "ini", exportPath);
@@ -2477,9 +2133,7 @@ describe("BackupService kinds and retention", () => {
     if (process.platform === "win32") {
       const flipped = created.path
         .split("")
-        .map((ch, index) =>
-          /[a-z]/i.test(ch) && index % 2 === 0 ? ch.toUpperCase() : ch.toLowerCase(),
-        )
+        .map((ch, index) => (/[a-z]/i.test(ch) && index % 2 === 0 ? ch.toUpperCase() : ch.toLowerCase()))
         .join("");
       await expect(service.importBackup(profile.id, "world", flipped)).rejects.toThrow(
         /already in this server's backup catalog/i,
@@ -2496,9 +2150,7 @@ describe("BackupService kinds and retention", () => {
     const evilZip = join(evilDir, "evil.zip");
     await writeFile(evilZip, "not-a-real-zip", "utf8");
 
-    await expect(service.importBackup(profile.id, "world", evilZip)).rejects.toThrow(
-      /corrupt|unreadable/i,
-    );
+    await expect(service.importBackup(profile.id, "world", evilZip)).rejects.toThrow(/corrupt|unreadable/i);
 
     const after = existsSync(root) ? await readdir(root) : [];
     expect(after).toEqual(before);
@@ -2572,4 +2224,3 @@ describe("computeBackupServerHealth", () => {
     ).toBe("warning");
   });
 });
-

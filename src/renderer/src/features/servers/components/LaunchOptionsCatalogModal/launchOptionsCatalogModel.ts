@@ -1,14 +1,7 @@
-import type {
-  AsaLaunchOptionEntry,
-  AsaLaunchOptionStatus,
-} from "@shared/asa/asa-launch-options-catalog";
+import type { AsaLaunchOptionEntry, AsaLaunchOptionStatus } from "@shared/asa/asa-launch-options-catalog";
 
 /** Filters shown in the browse modal (`unsupported` rows omitted). */
-export type CatalogStatusFilter =
-  | "all"
-  | "supported"
-  | "uncertain"
-  | "yarkOwned";
+export type CatalogStatusFilter = "all" | "supported" | "uncertain" | "yarkOwned";
 
 export const CATALOG_STATUS_FILTERS: readonly CatalogStatusFilter[] = [
   "all",
@@ -32,9 +25,7 @@ export function catalogStatusLabel(status: CatalogStatusFilter | "unsupported"):
   }
 }
 
-export function catalogStatusToneClass(
-  status: Exclude<AsaLaunchOptionStatus, "unsupported">,
-): string {
+export function catalogStatusToneClass(status: Exclude<AsaLaunchOptionStatus, "unsupported">): string {
   switch (status) {
     case "supported":
       return "toneOk";
@@ -59,12 +50,7 @@ export function catalogStatusFilterTooltip(filter: CatalogStatusFilter): string 
 }
 
 /** Operator-facing surface that already owns a YARK-composed launch token. */
-export type YarkManagedSurface =
-  | "Server settings"
-  | "Mods"
-  | "GameUserSettings (GUS) INI"
-  | "Game INI"
-  | "Launch";
+export type YarkManagedSurface = "Server settings" | "Mods" | "GameUserSettings (GUS) INI" | "Game INI" | "Launch";
 
 export const YARK_OWNED_CATALOG_IDS = [
   "map-session",
@@ -106,8 +92,7 @@ export function yarkManagedLaunchCopy(id: string): string {
 }
 
 export type CatalogBrowseSecondary =
-  | { kind: "managed"; text: string }
-  | { kind: "conflicts"; items: readonly string[] };
+  { kind: "managed"; text: string } | { kind: "conflicts"; items: readonly string[] };
 
 /** List/detail secondary line: hide extraArgs audit tokens on YARK-owned rows. */
 export function catalogBrowseSecondary(
@@ -123,9 +108,7 @@ export function catalogBrowseSecondary(
 }
 
 /** Internal YARK-owned notes stay out of the browse UI; Managed copy covers them. */
-export function shouldShowCatalogNotes(
-  entry: Pick<AsaLaunchOptionEntry, "status" | "notes">,
-): boolean {
+export function shouldShowCatalogNotes(entry: Pick<AsaLaunchOptionEntry, "status" | "notes">): boolean {
   if (entry.status === "yarkOwned") return false;
   return Boolean(entry.notes?.trim());
 }

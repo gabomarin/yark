@@ -1,24 +1,11 @@
 import { describe, expect, it } from "vitest";
-import {
-  isAllowedExternalUrl,
-  requireAllowedExternalUrl,
-} from "@shared/external-url-policy";
+import { isAllowedExternalUrl, requireAllowedExternalUrl } from "@shared/external-url-policy";
 
 describe("isAllowedExternalUrl", () => {
   it("allows wiki, CurseForge, GitHub, and Discord invite https links", () => {
-    expect(
-      isAllowedExternalUrl(
-        "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options",
-      ),
-    ).toBe(true);
-    expect(
-      isAllowedExternalUrl(
-        "https://www.curseforge.com/ark-survival-ascended/mods/awesomespyglass",
-      ),
-    ).toBe(true);
-    expect(
-      isAllowedExternalUrl("https://github.com/gabomarin/yark/releases"),
-    ).toBe(true);
+    expect(isAllowedExternalUrl("https://ark.wiki.gg/wiki/Server_configuration#Command_line_options")).toBe(true);
+    expect(isAllowedExternalUrl("https://www.curseforge.com/ark-survival-ascended/mods/awesomespyglass")).toBe(true);
+    expect(isAllowedExternalUrl("https://github.com/gabomarin/yark/releases")).toBe(true);
     expect(isAllowedExternalUrl("https://discord.gg/DQ8nes63w7")).toBe(true);
   });
 
@@ -51,13 +38,11 @@ describe("requireAllowedExternalUrl", () => {
 
   it("rejects empty, missing, and malformed URLs without echoing them", () => {
     for (const bad of [null, undefined, "", "   ", "not a url"] as const) {
-      expect(() => requireAllowedExternalUrl(bad)).toThrow(
-        /No external URL is available|allowed external hosts/,
-      );
+      expect(() => requireAllowedExternalUrl(bad)).toThrow(/No external URL is available|allowed external hosts/);
     }
-    expect(() =>
-      requireAllowedExternalUrl("https://evil.example/phish"),
-    ).toThrow("That link is not on the allowed external hosts list.");
+    expect(() => requireAllowedExternalUrl("https://evil.example/phish")).toThrow(
+      "That link is not on the allowed external hosts list.",
+    );
     try {
       requireAllowedExternalUrl("https://evil.example/secret-token");
       expect.unreachable();

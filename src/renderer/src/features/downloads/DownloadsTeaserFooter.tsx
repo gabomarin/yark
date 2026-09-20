@@ -39,9 +39,7 @@ export function DownloadsTeaserFooter(props: Props): ReactElement | null {
           <span className={classes.footerMetrics}>
             {props.model.percent !== null && (
               <>
-                <span className={classes.footerPercent}>
-                  {props.model.percent.toFixed(0)}%
-                </span>
+                <span className={classes.footerPercent}>{props.model.percent.toFixed(0)}%</span>
                 <Progress
                   value={props.model.percent}
                   size="sm"
@@ -52,7 +50,7 @@ export function DownloadsTeaserFooter(props: Props): ReactElement | null {
               </>
             )}
             {props.model.attention && (
-              <Badge size="xs" color="yellow" variant="light">
+              <Badge color="attention" variant="light">
                 Review
               </Badge>
             )}

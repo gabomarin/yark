@@ -1,0 +1,27 @@
+.row {
+  display: flex;
+  gap: var(--app-space-sm);
+  /* Stretch (not center): the row height is the tallest sibling, so the chip can
+   * never sit shorter than the buttons beside it. */
+  align-items: stretch;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.chip {
+  flex: 1 1 280px;
+  min-width: 0;
+  display: flex;
+}
+
+/* Fill the row height and centre the path text inside it, even for the compact
+ * chip variant (dense rows used to render a 23px box next to a 30px button). */
+.chip > * {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+}
+
+.actions {
+  flex: 0 0 auto;
+}

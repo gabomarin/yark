@@ -52,11 +52,7 @@ export function WorkspaceSplitBody(props: Props): ReactElement {
         className={classes.side}
         data-hidden={compact || undefined}
         aria-hidden={compact || undefined}
-        style={
-          compact
-            ? undefined
-            : { width: SIDE_PANEL_PX, flex: `0 0 ${SIDE_PANEL_PX}px` }
-        }
+        style={compact ? undefined : { width: SIDE_PANEL_PX, flex: `0 0 ${SIDE_PANEL_PX}px` }}
       >
         {!compact && props.side}
       </div>

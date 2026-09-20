@@ -2,21 +2,12 @@ import { closeSync, existsSync, openSync, readFileSync, readdirSync, readSync, s
 import { access, open, readFile, readdir, stat } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
-import {
-  buildInstallationHealthFields,
-  type InstallationHealthReasonCode,
-} from "@shared/server/installation-health";
+import { buildInstallationHealthFields, type InstallationHealthReasonCode } from "@shared/server/installation-health";
 import { isArkStyleVersion } from "@shared/server/server-version-display";
-import type {
-  InstallationHealthStatus,
-  ServerInstallationInfo,
-} from "@shared/types";
+import type { InstallationHealthStatus, ServerInstallationInfo } from "@shared/types";
 import { execFileBounded } from "../../infra/process/exec-file-bounded";
 import { serverBinaryPath } from "./launch-args";
-import {
-  classifyInstallHealth,
-  classifyInstallHealthAsync,
-} from "./install-health";
+import { classifyInstallHealth, classifyInstallHealthAsync } from "./install-health";
 import {
   normalizePath,
   readLocalSteamManifestMtimeMs,
@@ -97,9 +88,7 @@ function readVersionFromKnownFiles(installDir: string): string | null {
   return null;
 }
 
-async function readVersionFromKnownFilesAsync(
-  installDir: string,
-): Promise<string | null> {
+async function readVersionFromKnownFilesAsync(installDir: string): Promise<string | null> {
   for (const filePath of versionCandidatePaths(installDir)) {
     try {
       const parsed = parseVersionFileContent(await readFile(filePath, "utf8"));
@@ -140,9 +129,7 @@ function readVersionFromExecutable(binaryPath: string): string | null {
   }
 }
 
-async function readVersionFromExecutableAsync(
-  binaryPath: string,
-): Promise<string | null> {
+async function readVersionFromExecutableAsync(binaryPath: string): Promise<string | null> {
   try {
     await access(binaryPath);
   } catch {
@@ -179,8 +166,7 @@ function readArkVersionFromLogs(installDir: string): string | null {
 
   let logNames: string[];
   try {
-    logNames = readdirSync(logsDir)
-      .filter((name) => /\.(log|txt)$/i.test(name));
+    logNames = readdirSync(logsDir).filter((name) => /\.(log|txt)$/i.test(name));
   } catch {
     return null;
   }
@@ -216,15 +202,11 @@ function readArkVersionFromLogs(installDir: string): string | null {
   return null;
 }
 
-async function readArkVersionFromLogsAsync(
-  installDir: string,
-): Promise<string | null> {
+async function readArkVersionFromLogsAsync(installDir: string): Promise<string | null> {
   const logsDir = join(installDir, "ShooterGame", "Saved", "Logs");
   let logNames: string[];
   try {
-    logNames = (await readdir(logsDir)).filter((name) =>
-      /\.(log|txt)$/i.test(name),
-    );
+    logNames = (await readdir(logsDir)).filter((name) => /\.(log|txt)$/i.test(name));
   } catch {
     return null;
   }
@@ -283,10 +265,7 @@ function readFileTailSync(filePath: string, maxBytes: number): string {
   }
 }
 
-async function readFileTailAsync(
-  filePath: string,
-  maxBytes: number,
-): Promise<string> {
+async function readFileTailAsync(filePath: string, maxBytes: number): Promise<string> {
   const { size } = await stat(filePath);
   if (size <= maxBytes) {
     return readFile(filePath, "utf8");
@@ -324,8 +303,8 @@ function versionRefreshPendingFromSources(input: {
 }): boolean {
   if (input.manifestMtimeMs == null) return false;
   const hasDisplay =
-    (input.build !== null && isArkStyleVersion(input.build))
-    || (input.arkVersion !== null && isArkStyleVersion(input.arkVersion));
+    (input.build !== null && isArkStyleVersion(input.build)) ||
+    (input.arkVersion !== null && isArkStyleVersion(input.arkVersion));
   if (!hasDisplay) return false;
 
   const sourceMtimes: number[] = [];
@@ -400,10 +379,7 @@ async function newestLogMtimeMsAsync(installDir: string): Promise<number | null>
 
 const INSTALL_INSPECT_TTL_MS = 20_000;
 
-const installInspectCache = new Map<
-  string,
-  { checkedAt: number; info: ServerInstallationInfo }
->();
+const installInspectCache = new Map<string, { checkedAt: number; info: ServerInstallationInfo }>();
 
 export type InspectServerInstallationOptions = {
   bypassCache?: boolean;
@@ -428,10 +404,7 @@ function buildInspectedInstallation(
   },
   options?: InspectServerInstallationOptions,
 ): ServerInstallationInfo {
-  const healthFields = buildInstallationHealthFields(
-    classified.health,
-    classified.reasonCodes,
-  );
+  const healthFields = buildInstallationHealthFields(classified.health, classified.reasonCodes);
   const ready = healthFields.installed;
   const binaryPath = serverBinaryPath(installDir);
 
@@ -440,21 +413,12 @@ function buildInspectedInstallation(
   // Steam buildids stay on `steamBuild` only — never in display `build`/`version`
   // (those are ARK-style product versions like 92.28).
   // Update compare uses install-dir appmanifest only (#490) — never shared SteamCMD.
-  const steamBuild = ready
-    ? readSteamBuildFromLocalManifest(installDir)
-    : null;
+  const steamBuild = ready ? readSteamBuildFromLocalManifest(installDir) : null;
   const build = ready
-    ? (
-        readVersionFromKnownFiles(installDir) ??
-        (options?.allowExecutableVersionProbe === true
-          ? readVersionFromExecutable(binaryPath)
-          : null)
-      )
+    ? (readVersionFromKnownFiles(installDir) ??
+      (options?.allowExecutableVersionProbe === true ? readVersionFromExecutable(binaryPath) : null))
     : null;
-  const arkVersion =
-    ready && options?.allowLogVersionProbe === true
-      ? readArkVersionFromLogs(installDir)
-      : null;
+  const arkVersion = ready && options?.allowLogVersionProbe === true ? readArkVersionFromLogs(installDir) : null;
   const versionRefreshPending = ready
     ? versionRefreshPendingFromSources({
         manifestMtimeMs: readLocalSteamManifestMtimeMs(installDir),
@@ -462,8 +426,7 @@ function buildInspectedInstallation(
         arkVersion,
         versionFileMtimeMs: maxExistingMtimeMs(versionCandidatePaths(installDir)),
         // Skip Logs readdir unless we actually have a log-derived arkVersion.
-        newestLogMtimeMs:
-          arkVersion !== null ? newestLogMtimeMsSync(installDir) : null,
+        newestLogMtimeMs: arkVersion !== null ? newestLogMtimeMsSync(installDir) : null,
       })
     : false;
 
@@ -489,10 +452,7 @@ async function buildInspectedInstallationAsync(
   },
   options?: InspectServerInstallationOptions,
 ): Promise<ServerInstallationInfo> {
-  const healthFields = buildInstallationHealthFields(
-    classified.health,
-    classified.reasonCodes,
-  );
+  const healthFields = buildInstallationHealthFields(classified.health, classified.reasonCodes);
   const ready = healthFields.installed;
   const binaryPath = serverBinaryPath(installDir);
 
@@ -503,12 +463,8 @@ async function buildInspectedInstallationAsync(
   if (ready) {
     steamBuild = await readSteamBuildFromLocalManifestAsync(installDir);
     build =
-      (await readVersionFromKnownFilesAsync(installDir))
-      ?? (
-        options?.allowExecutableVersionProbe === true
-          ? await readVersionFromExecutableAsync(binaryPath)
-          : null
-      );
+      (await readVersionFromKnownFilesAsync(installDir)) ??
+      (options?.allowExecutableVersionProbe === true ? await readVersionFromExecutableAsync(binaryPath) : null);
     if (options?.allowLogVersionProbe === true) {
       arkVersion = await readArkVersionFromLogsAsync(installDir);
     }
@@ -519,12 +475,9 @@ async function buildInspectedInstallationAsync(
         manifestMtimeMs: await readLocalSteamManifestMtimeMsAsync(installDir),
         build,
         arkVersion,
-        versionFileMtimeMs: await maxExistingMtimeMsAsync(
-          versionCandidatePaths(installDir),
-        ),
+        versionFileMtimeMs: await maxExistingMtimeMsAsync(versionCandidatePaths(installDir)),
         // Skip Logs readdir unless we actually have a log-derived arkVersion.
-        newestLogMtimeMs:
-          arkVersion !== null ? await newestLogMtimeMsAsync(installDir) : null,
+        newestLogMtimeMs: arkVersion !== null ? await newestLogMtimeMsAsync(installDir) : null,
       })
     : false;
 
@@ -558,11 +511,7 @@ function readInstallInspectCache(
   return null;
 }
 
-function writeInstallInspectCache(
-  serverId: string,
-  installDir: string,
-  info: ServerInstallationInfo,
-): void {
+function writeInstallInspectCache(serverId: string, installDir: string, info: ServerInstallationInfo): void {
   const cacheKey = `${serverId}\0${normalizePath(installDir)}`;
   installInspectCache.set(cacheKey, { checkedAt: Date.now(), info });
 }
@@ -611,12 +560,7 @@ export async function inspectServerInstallationAsync(
 
   const binaryPath = serverBinaryPath(installDir);
   const classified = await classifyInstallHealthAsync(installDir, binaryPath);
-  const info = await buildInspectedInstallationAsync(
-    serverId,
-    installDir,
-    classified,
-    options,
-  );
+  const info = await buildInspectedInstallationAsync(serverId, installDir, classified, options);
   writeInstallInspectCache(serverId, installDir, info);
   return info;
 }

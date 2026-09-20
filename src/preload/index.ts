@@ -12,36 +12,54 @@ import type {
   StartServerOptions,
   SteamCmdCacheKind,
 } from "../shared/types";
-import type { SteamCmdProgressPush, BackupsChangedPush, ServerIniChangedPush, ServerStopProgressPush, MoveInstallProgressPush, CloneInstallProgressPush, AsaApiInstallProgressPush, RconStatusChangedPush, PlayerListUpdatedPush, ProcessMetricsUpdatedPush, OsNotificationOpenPush } from "../shared/ipc";
-import { normalizeAsaApiInstallProgress, normalizeCloneInstallProgress, normalizeMoveInstallProgress, normalizeServerStopProgress } from "../shared/types";
+import type {
+  SteamCmdProgressPush,
+  BackupsChangedPush,
+  ServerIniChangedPush,
+  ServerStopProgressPush,
+  MoveInstallProgressPush,
+  CloneInstallProgressPush,
+  AsaApiInstallProgressPush,
+  RconStatusChangedPush,
+  PlayerListUpdatedPush,
+  ProcessMetricsUpdatedPush,
+  OsNotificationOpenPush,
+} from "../shared/ipc";
+import {
+  normalizeAsaApiInstallProgress,
+  normalizeCloneInstallProgress,
+  normalizeMoveInstallProgress,
+  normalizeServerStopProgress,
+} from "../shared/types";
 
 const api: RendererApi = {
   listServers: () => ipcRenderer.invoke(IPC.serversList),
-  createServer: (input: ServerProfileInput) =>
-    ipcRenderer.invoke(IPC.serversCreate, input),
-  probeImportInstall: (installDir: string) =>
-    ipcRenderer.invoke(IPC.serversProbeImport, installDir),
-  importExistingServer: (
-    input: ServerProfileInput,
-    options?: { allowIncompleteInstall?: boolean },
-  ) => ipcRenderer.invoke(IPC.serversImportExisting, input, options),
-  updateServer: (id: string, input: ServerProfileInput) =>
-    ipcRenderer.invoke(IPC.serversUpdate, id, input),
-  updateServerPatch: (id: string, patch: ServerProfilePatch) =>
-    ipcRenderer.invoke(IPC.serversUpdatePatch, id, patch),
-  setServerEnabled: (id: string, enabled: boolean) =>
-    ipcRenderer.invoke(IPC.serversSetEnabled, id, enabled),
+  createServer: (input: ServerProfileInput) => ipcRenderer.invoke(IPC.serversCreate, input),
+  probeImportInstall: (installDir: string) => ipcRenderer.invoke(IPC.serversProbeImport, installDir),
+  importExistingServer: (input: ServerProfileInput, options?: { allowIncompleteInstall?: boolean }) =>
+    ipcRenderer.invoke(IPC.serversImportExisting, input, options),
+  updateServer: (id: string, input: ServerProfileInput) => ipcRenderer.invoke(IPC.serversUpdate, id, input),
+  updateServerPatch: (id: string, patch: ServerProfilePatch) => ipcRenderer.invoke(IPC.serversUpdatePatch, id, patch),
+  setServerEnabled: (id: string, enabled: boolean) => ipcRenderer.invoke(IPC.serversSetEnabled, id, enabled),
   deleteServer: (id: string, options: { deleteInstallFiles: boolean }) =>
     ipcRenderer.invoke(IPC.serversDelete, id, options),
   cloneServer: (id: string) => ipcRenderer.invoke(IPC.serversClone, id),
-  cloneServerWithParams: (id: string, params: { name: string; sessionName: string; gamePort: number; queryPort: number; rconPort: number; installDir: string; copyInstallFolder?: boolean }) =>
-    ipcRenderer.invoke(IPC.serversCloneWithParams, id, params),
+  cloneServerWithParams: (
+    id: string,
+    params: {
+      name: string;
+      sessionName: string;
+      gamePort: number;
+      queryPort: number;
+      rconPort: number;
+      installDir: string;
+      copyInstallFolder?: boolean;
+    },
+  ) => ipcRenderer.invoke(IPC.serversCloneWithParams, id, params),
   cancelCloneServerCopy: () => ipcRenderer.invoke(IPC.serversCloneCopyCancel),
-  startServer: (id: string, options?: StartServerOptions) =>
-    ipcRenderer.invoke(IPC.serversStart, id, options),
+  startServer: (id: string, options?: StartServerOptions) => ipcRenderer.invoke(IPC.serversStart, id, options),
   stopServer: (id: string) => ipcRenderer.invoke(IPC.serversStop, id),
-  restartServer: (id: string, options?: StartServerOptions) =>
-    ipcRenderer.invoke(IPC.serversRestart, id, options),
+  restartServer: (id: string, options?: StartServerOptions) => ipcRenderer.invoke(IPC.serversRestart, id, options),
   killServer: (id: string) => ipcRenderer.invoke(IPC.serversKill, id),
   installServerFiles: (id: string) => ipcRenderer.invoke(IPC.serversInstallFiles, id),
   updateServerNow: (id: string) => ipcRenderer.invoke(IPC.serversUpdateNow, id),
@@ -52,8 +70,7 @@ const api: RendererApi = {
   cancelMoveServerInstall: () => ipcRenderer.invoke(IPC.serversMoveInstallCancel),
   cleanupMovedServerInstall: (id: string, oldSourceDir: string) =>
     ipcRenderer.invoke(IPC.serversMoveInstallCleanup, id, oldSourceDir),
-  dismissMoveServerInstallCleanup: (id: string) =>
-    ipcRenderer.invoke(IPC.serversMoveInstallDismissCleanup, id),
+  dismissMoveServerInstallCleanup: (id: string) => ipcRenderer.invoke(IPC.serversMoveInstallDismissCleanup, id),
   openServerFolder: (id: string) => ipcRenderer.invoke(IPC.serversOpenFolder, id),
   openServerNativeTerminal: (id: string) => ipcRenderer.invoke(IPC.serversOpenNativeTerminal, id),
   getAsaApiStatus: (id: string) => ipcRenderer.invoke(IPC.serversAsaApiStatus, id),
@@ -63,8 +80,7 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.serversAsaApiSetPluginEnabled, id, pluginName, enabled),
   deleteAsaApiPlugin: (id: string, pluginName: string) =>
     ipcRenderer.invoke(IPC.serversAsaApiDeletePlugin, id, pluginName),
-  addAsaApiPluginZip: (id: string) =>
-    ipcRenderer.invoke(IPC.serversAsaApiAddPluginZip, id),
+  addAsaApiPluginZip: (id: string) => ipcRenderer.invoke(IPC.serversAsaApiAddPluginZip, id),
   openAsaApiWin64: (id: string) => ipcRenderer.invoke(IPC.serversAsaApiOpenWin64, id),
   openAsaApiPlugins: (id: string) => ipcRenderer.invoke(IPC.serversAsaApiOpenPlugins, id),
   clearAsaApiCache: () => ipcRenderer.invoke(IPC.serversAsaApiClearCache),
@@ -83,54 +99,30 @@ const api: RendererApi = {
   openSteamCmdCache: (kind: SteamCmdCacheKind) => ipcRenderer.invoke(IPC.steamcmdOpenCache, kind),
   clearSteamCmdCache: (kind: SteamCmdCacheKind) => ipcRenderer.invoke(IPC.steamcmdClearCache, kind),
   getStatuses: () => ipcRenderer.invoke(IPC.serversStatuses),
-  getInstallationInfo: (
-    forceOfficialCheck?: boolean,
-    serversMode?: InstallationServersMode,
-  ) => ipcRenderer.invoke(IPC.serversInstallation, forceOfficialCheck, serversMode),
+  getInstallationInfo: (forceOfficialCheck?: boolean, serversMode?: InstallationServersMode) =>
+    ipcRenderer.invoke(IPC.serversInstallation, forceOfficialCheck, serversMode),
   checkCluster: () => ipcRenderer.invoke(IPC.clusterCheck),
-  sendRconCommand: (id: string, command: string) =>
-    ipcRenderer.invoke(IPC.rconCommand, id, command),
-  retryRconConnection: (id: string) =>
-    ipcRenderer.invoke(IPC.rconRetryConnection, id),
-  getRconStatus: (id: string) =>
-    ipcRenderer.invoke(IPC.rconGetStatus, id),
-  getAllRconStatus: () =>
-    ipcRenderer.invoke(IPC.rconGetAllStatus),
+  sendRconCommand: (id: string, command: string) => ipcRenderer.invoke(IPC.rconCommand, id, command),
+  retryRconConnection: (id: string) => ipcRenderer.invoke(IPC.rconRetryConnection, id),
+  getRconStatus: (id: string) => ipcRenderer.invoke(IPC.rconGetStatus, id),
+  getAllRconStatus: () => ipcRenderer.invoke(IPC.rconGetAllStatus),
   notifyRconTabFocus: (serverId: string, isFocused: boolean) =>
     ipcRenderer.invoke(IPC.rconTabFocusChanged, serverId, isFocused),
-  setProcessMetricsSampling: (enabled: boolean) =>
-    ipcRenderer.invoke(IPC.processMetricsSetSampling, enabled),
-  refreshPlayerList: (serverId: string) =>
-    ipcRenderer.invoke(IPC.refreshPlayerList, serverId),
-  kickPlayer: (serverId: string, playerKey: string) =>
-    ipcRenderer.invoke(IPC.kickPlayer, serverId, playerKey),
-  banPlayer: (serverId: string, playerKey: string) =>
-    ipcRenderer.invoke(IPC.banPlayer, serverId, playerKey),
-  listBannedPlayers: (serverId: string) =>
-    ipcRenderer.invoke(IPC.listBannedPlayers, serverId),
-  unbanPlayer: (serverId: string, playerKey: string) =>
-    ipcRenderer.invoke(IPC.unbanPlayer, serverId, playerKey),
-  openBanListFile: (serverId: string) =>
-    ipcRenderer.invoke(IPC.openBanListFile, serverId),
-  getAdminList: (serverId: string) =>
-    ipcRenderer.invoke(IPC.getAdminList, serverId),
-  setAdminList: (serverId: string, config) =>
-    ipcRenderer.invoke(IPC.setAdminList, serverId, config),
-  validateAdminListUrl: (serverId: string, url: string) =>
-    ipcRenderer.invoke(IPC.validateAdminListUrl, serverId, url),
-  learnAdminListNames: (serverId: string, hints) =>
-    ipcRenderer.invoke(IPC.learnAdminListNames, serverId, hints),
-  recentEvents: (limit: number) =>
-    ipcRenderer.invoke(IPC.eventsRecent, limit),
-  pickPath: (kind, defaultPath, title) =>
-    ipcRenderer.invoke(IPC.pickPath, kind, defaultPath, title),
+  setProcessMetricsSampling: (enabled: boolean) => ipcRenderer.invoke(IPC.processMetricsSetSampling, enabled),
+  refreshPlayerList: (serverId: string) => ipcRenderer.invoke(IPC.refreshPlayerList, serverId),
+  kickPlayer: (serverId: string, playerKey: string) => ipcRenderer.invoke(IPC.kickPlayer, serverId, playerKey),
+  banPlayer: (serverId: string, playerKey: string) => ipcRenderer.invoke(IPC.banPlayer, serverId, playerKey),
+  listBannedPlayers: (serverId: string) => ipcRenderer.invoke(IPC.listBannedPlayers, serverId),
+  unbanPlayer: (serverId: string, playerKey: string) => ipcRenderer.invoke(IPC.unbanPlayer, serverId, playerKey),
+  openBanListFile: (serverId: string) => ipcRenderer.invoke(IPC.openBanListFile, serverId),
+  getAdminList: (serverId: string) => ipcRenderer.invoke(IPC.getAdminList, serverId),
+  setAdminList: (serverId: string, config) => ipcRenderer.invoke(IPC.setAdminList, serverId, config),
+  validateAdminListUrl: (serverId: string, url: string) => ipcRenderer.invoke(IPC.validateAdminListUrl, serverId, url),
+  learnAdminListNames: (serverId: string, hints) => ipcRenderer.invoke(IPC.learnAdminListNames, serverId, hints),
+  recentEvents: (limit: number) => ipcRenderer.invoke(IPC.eventsRecent, limit),
+  pickPath: (kind, defaultPath, title) => ipcRenderer.invoke(IPC.pickPath, kind, defaultPath, title),
   pickFolder: async (defaultPath) => {
-    const result = await ipcRenderer.invoke(
-      IPC.pickPath,
-      "directory",
-      defaultPath,
-      undefined,
-    );
+    const result = await ipcRenderer.invoke(IPC.pickPath, "directory", defaultPath, undefined);
     return result.ok ? result.data : null;
   },
   listAppDataFolders: () => ipcRenderer.invoke(IPC.appListDataFolders),
@@ -138,33 +130,21 @@ const api: RendererApi = {
   getUiDensity: () => ipcRenderer.invoke(IPC.appGetUiDensity),
   setUiDensity: (density) => ipcRenderer.invoke(IPC.appSetUiDensity, density),
   getOpenNativeConsole: () => ipcRenderer.invoke(IPC.appGetOpenNativeConsole),
-  setOpenNativeConsole: (enabled) =>
-    ipcRenderer.invoke(IPC.appSetOpenNativeConsole, enabled),
-  getLastSeenChangelogVersion: () =>
-    ipcRenderer.invoke(IPC.appGetLastSeenChangelogVersion),
-  setLastSeenChangelogVersion: (version) =>
-    ipcRenderer.invoke(IPC.appSetLastSeenChangelogVersion, version),
+  setOpenNativeConsole: (enabled) => ipcRenderer.invoke(IPC.appSetOpenNativeConsole, enabled),
+  getLastSeenChangelogVersion: () => ipcRenderer.invoke(IPC.appGetLastSeenChangelogVersion),
+  setLastSeenChangelogVersion: (version) => ipcRenderer.invoke(IPC.appSetLastSeenChangelogVersion, version),
   getOnboarding: () => ipcRenderer.invoke(IPC.appGetOnboarding),
   setOnboarding: (record) => ipcRenderer.invoke(IPC.appSetOnboarding, record),
-  getDesktopShellPreferences: () =>
-    ipcRenderer.invoke(IPC.appGetDesktopShellPreferences),
-  setCloseWindowToTray: (enabled) =>
-    ipcRenderer.invoke(IPC.appSetCloseWindowToTray, enabled),
-  setStartWithWindows: (enabled) =>
-    ipcRenderer.invoke(IPC.appSetStartWithWindows, enabled),
-  setTrayCloseHintDismissed: (dismissed) =>
-    ipcRenderer.invoke(IPC.appSetTrayCloseHintDismissed, dismissed),
-  setOsNotifyEnabled: (enabled) =>
-    ipcRenderer.invoke(IPC.appSetOsNotifyEnabled, enabled),
-  setOsNotifyCrash: (enabled) =>
-    ipcRenderer.invoke(IPC.appSetOsNotifyCrash, enabled),
-  setOsNotifySteamCmd: (enabled) =>
-    ipcRenderer.invoke(IPC.appSetOsNotifySteamCmd, enabled),
-  setOsNotifyYarkUpdate: (enabled) =>
-    ipcRenderer.invoke(IPC.appSetOsNotifyYarkUpdate, enabled),
+  getDesktopShellPreferences: () => ipcRenderer.invoke(IPC.appGetDesktopShellPreferences),
+  setCloseWindowToTray: (enabled) => ipcRenderer.invoke(IPC.appSetCloseWindowToTray, enabled),
+  setStartWithWindows: (enabled) => ipcRenderer.invoke(IPC.appSetStartWithWindows, enabled),
+  setTrayCloseHintDismissed: (dismissed) => ipcRenderer.invoke(IPC.appSetTrayCloseHintDismissed, dismissed),
+  setOsNotifyEnabled: (enabled) => ipcRenderer.invoke(IPC.appSetOsNotifyEnabled, enabled),
+  setOsNotifyCrash: (enabled) => ipcRenderer.invoke(IPC.appSetOsNotifyCrash, enabled),
+  setOsNotifySteamCmd: (enabled) => ipcRenderer.invoke(IPC.appSetOsNotifySteamCmd, enabled),
+  setOsNotifyYarkUpdate: (enabled) => ipcRenderer.invoke(IPC.appSetOsNotifyYarkUpdate, enabled),
   getDiscordWebhook: () => ipcRenderer.invoke(IPC.appGetDiscordWebhook),
-  setDiscordWebhook: (preferences) =>
-    ipcRenderer.invoke(IPC.appSetDiscordWebhook, preferences),
+  setDiscordWebhook: (preferences) => ipcRenderer.invoke(IPC.appSetDiscordWebhook, preferences),
   testDiscordWebhook: (webhookUrl, description) =>
     ipcRenderer.invoke(IPC.appTestDiscordWebhook, webhookUrl, description),
   getAppUpdateStatus: () => ipcRenderer.invoke(IPC.appGetUpdateStatus),
@@ -173,143 +153,73 @@ const api: RendererApi = {
   installAppUpdate: () => ipcRenderer.invoke(IPC.appInstallUpdate),
   openYarkReleaseNotes: () => ipcRenderer.invoke(IPC.appOpenYarkReleaseNotes),
   quitApp: () => ipcRenderer.invoke(IPC.appQuit),
-  readServerIni: (serverId: string) =>
-    ipcRenderer.invoke(IPC.iniRead, serverId),
+  readServerIni: (serverId: string) => ipcRenderer.invoke(IPC.iniRead, serverId),
   openServerIniInEditor: (serverId: string, fileKey: "gameUserSettings" | "game") =>
     ipcRenderer.invoke(IPC.iniOpenInEditor, serverId, fileKey),
   previewServerIni: (serverId: string, payload: ServerIniPayload) =>
     ipcRenderer.invoke(IPC.iniPreview, serverId, payload),
-  saveServerIni: (serverId: string, payload: ServerIniPayload) =>
-    ipcRenderer.invoke(IPC.iniSave, serverId, payload),
-  getClusterIniTemplate: (clusterId: string) =>
-    ipcRenderer.invoke(IPC.clusterIniGet, clusterId),
-  getClusterIniTemplateOrDraft: (clusterId: string) =>
-    ipcRenderer.invoke(IPC.clusterIniGetOrDraft, clusterId),
+  saveServerIni: (serverId: string, payload: ServerIniPayload) => ipcRenderer.invoke(IPC.iniSave, serverId, payload),
+  getClusterIniTemplate: (clusterId: string) => ipcRenderer.invoke(IPC.clusterIniGet, clusterId),
+  getClusterIniTemplateOrDraft: (clusterId: string) => ipcRenderer.invoke(IPC.clusterIniGetOrDraft, clusterId),
   previewClusterIniTemplate: (clusterId: string, payload: ServerIniPayload) =>
     ipcRenderer.invoke(IPC.clusterIniPreview, clusterId, payload),
   saveClusterIniTemplate: (clusterId: string, payload: ServerIniPayload) =>
     ipcRenderer.invoke(IPC.clusterIniSave, clusterId, payload),
-  deleteClusterIniTemplate: (clusterId: string) =>
-    ipcRenderer.invoke(IPC.clusterIniDelete, clusterId),
-  previewClusterIniRestore: (
-    clusterId: string,
-    serverId: string,
-    files?: ClusterIniTemplateFileSelection,
-  ) =>
+  deleteClusterIniTemplate: (clusterId: string) => ipcRenderer.invoke(IPC.clusterIniDelete, clusterId),
+  previewClusterIniRestore: (clusterId: string, serverId: string, files?: ClusterIniTemplateFileSelection) =>
     ipcRenderer.invoke(IPC.clusterIniPreviewRestore, clusterId, serverId, files),
-  previewClusterIniPromote: (
-    clusterId: string,
-    serverId: string,
-    files?: ClusterIniTemplateFileSelection,
-  ) =>
+  previewClusterIniPromote: (clusterId: string, serverId: string, files?: ClusterIniTemplateFileSelection) =>
     ipcRenderer.invoke(IPC.clusterIniPreviewPromote, clusterId, serverId, files),
-  previewClusterIniSeed: (
-    clusterId: string,
-    serverId: string,
-    files?: ClusterIniTemplateFileSelection,
-  ) =>
+  previewClusterIniSeed: (clusterId: string, serverId: string, files?: ClusterIniTemplateFileSelection) =>
     ipcRenderer.invoke(IPC.clusterIniPreviewSeed, clusterId, serverId, files),
-  restoreClusterIniFromTemplate: (
-    clusterId: string,
-    serverId: string,
-    files?: ClusterIniTemplateFileSelection,
-  ) => ipcRenderer.invoke(IPC.clusterIniRestore, clusterId, serverId, files),
-  promoteClusterIniToTemplate: (
-    clusterId: string,
-    serverId: string,
-    files?: ClusterIniTemplateFileSelection,
-  ) => ipcRenderer.invoke(IPC.clusterIniPromote, clusterId, serverId, files),
-  seedClusterIniFromTemplate: (
-    clusterId: string,
-    serverId: string,
-    files?: ClusterIniTemplateFileSelection,
-  ) => ipcRenderer.invoke(IPC.clusterIniSeed, clusterId, serverId, files),
-  describeConfigTransferSource: (sourceId: string) =>
-    ipcRenderer.invoke(IPC.configTransferDescribe, sourceId),
-  previewConfigTransfer: (
-    sourceId: string,
-    targetId: string,
-    selection: unknown,
-  ) => ipcRenderer.invoke(IPC.configTransferPreview, sourceId, targetId, selection),
-  commitConfigTransfer: (
-    sourceId: string,
-    targetId: string,
-    selection: unknown,
-    fingerprint: string,
-  ) =>
-    ipcRenderer.invoke(
-      IPC.configTransferCommit,
-      sourceId,
-      targetId,
-      selection,
-      fingerprint,
-    ),
-  listServerLogs: (serverId: string) =>
-    ipcRenderer.invoke(IPC.logsList, serverId),
-  getServerRuntimeLog: (serverId: string, limit?: number) =>
-    ipcRenderer.invoke(IPC.logsRuntime, serverId, limit),
+  restoreClusterIniFromTemplate: (clusterId: string, serverId: string, files?: ClusterIniTemplateFileSelection) =>
+    ipcRenderer.invoke(IPC.clusterIniRestore, clusterId, serverId, files),
+  promoteClusterIniToTemplate: (clusterId: string, serverId: string, files?: ClusterIniTemplateFileSelection) =>
+    ipcRenderer.invoke(IPC.clusterIniPromote, clusterId, serverId, files),
+  seedClusterIniFromTemplate: (clusterId: string, serverId: string, files?: ClusterIniTemplateFileSelection) =>
+    ipcRenderer.invoke(IPC.clusterIniSeed, clusterId, serverId, files),
+  describeConfigTransferSource: (sourceId: string) => ipcRenderer.invoke(IPC.configTransferDescribe, sourceId),
+  previewConfigTransfer: (sourceId: string, targetId: string, selection: unknown) =>
+    ipcRenderer.invoke(IPC.configTransferPreview, sourceId, targetId, selection),
+  commitConfigTransfer: (sourceId: string, targetId: string, selection: unknown, fingerprint: string) =>
+    ipcRenderer.invoke(IPC.configTransferCommit, sourceId, targetId, selection, fingerprint),
+  listServerLogs: (serverId: string) => ipcRenderer.invoke(IPC.logsList, serverId),
+  getServerRuntimeLog: (serverId: string, limit?: number) => ipcRenderer.invoke(IPC.logsRuntime, serverId, limit),
   readServerUpdateLog: (serverId: string, fileName: string, maxBytes?: number) =>
     ipcRenderer.invoke(IPC.logsReadUpdate, serverId, fileName, maxBytes),
-  exportServerLogs: (serverId: string) =>
-    ipcRenderer.invoke(IPC.logsExport, serverId),
+  exportServerLogs: (serverId: string) => ipcRenderer.invoke(IPC.logsExport, serverId),
   openServerUpdateLogFile: (serverId: string, fileName: string) =>
     ipcRenderer.invoke(IPC.logsOpenUpdateFile, serverId, fileName),
-  clearServerEvents: (serverId: string) =>
-    ipcRenderer.invoke(IPC.logsClearEvents, serverId),
-  clearServerRuntimeLog: (serverId: string) =>
-    ipcRenderer.invoke(IPC.logsClearRuntime, serverId),
+  clearServerEvents: (serverId: string) => ipcRenderer.invoke(IPC.logsClearEvents, serverId),
+  clearServerRuntimeLog: (serverId: string) => ipcRenderer.invoke(IPC.logsClearRuntime, serverId),
   deleteServerUpdateLog: (serverId: string, fileName: string) =>
     ipcRenderer.invoke(IPC.logsDeleteUpdate, serverId, fileName),
-  clearServerUpdateLogs: (serverId: string) =>
-    ipcRenderer.invoke(IPC.logsClearUpdates, serverId),
-  getLogRetentionSettings: () =>
-    ipcRenderer.invoke(IPC.logsGetRetentionSettings),
-  setLogRetentionSettings: (settings) =>
-    ipcRenderer.invoke(IPC.logsSetRetentionSettings, settings),
-  previewLogCleanup: (options) =>
-    ipcRenderer.invoke(IPC.logsPreviewCleanup, options),
-  runLogCleanup: (options) =>
-    ipcRenderer.invoke(IPC.logsRunCleanup, options),
-  listBackups: (serverId: string, limit?: number) =>
-    ipcRenderer.invoke(IPC.backupsList, serverId, limit),
-  createManualBackup: (serverId, kinds) =>
-    ipcRenderer.invoke(IPC.backupsCreate, serverId, kinds),
-  deleteBackups: (serverId, backupIds) =>
-    ipcRenderer.invoke(IPC.backupsDelete, serverId, backupIds),
-  deleteFailedBackups: (serverId, kind) =>
-    ipcRenderer.invoke(IPC.backupsDeleteFailed, serverId, kind),
-  restoreBackup: (serverId, backupId, options) =>
-    ipcRenderer.invoke(IPC.backupsRestore, serverId, backupId, options),
-  getBackupPolicy: (serverId: string) =>
-    ipcRenderer.invoke(IPC.backupsGetPolicy, serverId),
-  setBackupPolicy: (serverId, policy) =>
-    ipcRenderer.invoke(IPC.backupsSetPolicy, serverId, policy),
-  getMaintenancePolicy: (serverId: string) =>
-    ipcRenderer.invoke(IPC.maintenanceGetPolicy, serverId),
-  setMaintenancePolicy: (serverId, policy) =>
-    ipcRenderer.invoke(IPC.maintenanceSetPolicy, serverId, policy),
-  clearMaintenanceSchedulePause: (serverId: string) =>
-    ipcRenderer.invoke(IPC.maintenanceClearSchedulePause, serverId),
-  runMaintenanceRestartNow: (serverId: string) =>
-    ipcRenderer.invoke(IPC.maintenanceRunRestartNow, serverId),
-  runMaintenanceRestartWarning: (serverId: string) =>
-    ipcRenderer.invoke(IPC.maintenanceRunRestartWarning, serverId),
-  runMaintenanceUpdateNow: (serverId: string) =>
-    ipcRenderer.invoke(IPC.maintenanceRunUpdateNow, serverId),
-  cancelMaintenanceUpcoming: (serverId: string) =>
-    ipcRenderer.invoke(IPC.maintenanceCancelUpcoming, serverId),
-  getCrashRecoveryPolicy: (serverId: string) =>
-    ipcRenderer.invoke(IPC.crashRecoveryGetPolicy, serverId),
-  setCrashRecoveryPolicy: (serverId, policy) =>
-    ipcRenderer.invoke(IPC.crashRecoverySetPolicy, serverId, policy),
-  resetCrashRecoveryAttempts: (serverId: string) =>
-    ipcRenderer.invoke(IPC.crashRecoveryResetAttempts, serverId),
-  resolveBackupRoot: (serverId: string) =>
-    ipcRenderer.invoke(IPC.backupsResolveRoot, serverId),
+  clearServerUpdateLogs: (serverId: string) => ipcRenderer.invoke(IPC.logsClearUpdates, serverId),
+  getLogRetentionSettings: () => ipcRenderer.invoke(IPC.logsGetRetentionSettings),
+  setLogRetentionSettings: (settings) => ipcRenderer.invoke(IPC.logsSetRetentionSettings, settings),
+  previewLogCleanup: (options) => ipcRenderer.invoke(IPC.logsPreviewCleanup, options),
+  runLogCleanup: (options) => ipcRenderer.invoke(IPC.logsRunCleanup, options),
+  listBackups: (serverId: string, limit?: number) => ipcRenderer.invoke(IPC.backupsList, serverId, limit),
+  createManualBackup: (serverId, kinds) => ipcRenderer.invoke(IPC.backupsCreate, serverId, kinds),
+  deleteBackups: (serverId, backupIds) => ipcRenderer.invoke(IPC.backupsDelete, serverId, backupIds),
+  deleteFailedBackups: (serverId, kind) => ipcRenderer.invoke(IPC.backupsDeleteFailed, serverId, kind),
+  restoreBackup: (serverId, backupId, options) => ipcRenderer.invoke(IPC.backupsRestore, serverId, backupId, options),
+  getBackupPolicy: (serverId: string) => ipcRenderer.invoke(IPC.backupsGetPolicy, serverId),
+  setBackupPolicy: (serverId, policy) => ipcRenderer.invoke(IPC.backupsSetPolicy, serverId, policy),
+  getMaintenancePolicy: (serverId: string) => ipcRenderer.invoke(IPC.maintenanceGetPolicy, serverId),
+  setMaintenancePolicy: (serverId, policy) => ipcRenderer.invoke(IPC.maintenanceSetPolicy, serverId, policy),
+  clearMaintenanceSchedulePause: (serverId: string) => ipcRenderer.invoke(IPC.maintenanceClearSchedulePause, serverId),
+  runMaintenanceRestartNow: (serverId: string) => ipcRenderer.invoke(IPC.maintenanceRunRestartNow, serverId),
+  runMaintenanceRestartWarning: (serverId: string) => ipcRenderer.invoke(IPC.maintenanceRunRestartWarning, serverId),
+  runMaintenanceUpdateNow: (serverId: string) => ipcRenderer.invoke(IPC.maintenanceRunUpdateNow, serverId),
+  cancelMaintenanceUpcoming: (serverId: string) => ipcRenderer.invoke(IPC.maintenanceCancelUpcoming, serverId),
+  getCrashRecoveryPolicy: (serverId: string) => ipcRenderer.invoke(IPC.crashRecoveryGetPolicy, serverId),
+  setCrashRecoveryPolicy: (serverId, policy) => ipcRenderer.invoke(IPC.crashRecoverySetPolicy, serverId, policy),
+  resetCrashRecoveryAttempts: (serverId: string) => ipcRenderer.invoke(IPC.crashRecoveryResetAttempts, serverId),
+  resolveBackupRoot: (serverId: string) => ipcRenderer.invoke(IPC.backupsResolveRoot, serverId),
   openBackupFolder: (serverId: string, backupId: string) =>
     ipcRenderer.invoke(IPC.backupsOpenFolder, serverId, backupId),
-  openBackupRoot: (serverId: string) =>
-    ipcRenderer.invoke(IPC.backupsOpenRoot, serverId),
+  openBackupRoot: (serverId: string) => ipcRenderer.invoke(IPC.backupsOpenRoot, serverId),
   exportBackup: (serverId: string, backupId: string, destinationPath: string) =>
     ipcRenderer.invoke(IPC.backupsExport, serverId, backupId, destinationPath),
   importBackup: (serverId: string, kind: BackupKind, sourcePath: string) =>
@@ -317,51 +227,35 @@ const api: RendererApi = {
   getBackupFleetSummary: () => ipcRenderer.invoke(IPC.backupsFleetSummary),
   dismissBackupFleetAlert: (alertId: string, fingerprint: string) =>
     ipcRenderer.invoke(IPC.backupsDismissFleetAlert, alertId, fingerprint),
-  getBackupDiskAlertSettings: () =>
-    ipcRenderer.invoke(IPC.backupsGetDiskAlertSettings),
-  setBackupDiskAlertSettings: (settings) =>
-    ipcRenderer.invoke(IPC.backupsSetDiskAlertSettings, settings),
-  previewBackupCleanup: (options) =>
-    ipcRenderer.invoke(IPC.backupsPreviewCleanup, options),
-  runBackupCleanup: (options) =>
-    ipcRenderer.invoke(IPC.backupsRunCleanup, options),
-  getModMetadata: (modId: string, forceRefresh?: boolean) =>
-    ipcRenderer.invoke(IPC.modsGet, modId, forceRefresh),
+  getBackupDiskAlertSettings: () => ipcRenderer.invoke(IPC.backupsGetDiskAlertSettings),
+  setBackupDiskAlertSettings: (settings) => ipcRenderer.invoke(IPC.backupsSetDiskAlertSettings, settings),
+  previewBackupCleanup: (options) => ipcRenderer.invoke(IPC.backupsPreviewCleanup, options),
+  runBackupCleanup: (options) => ipcRenderer.invoke(IPC.backupsRunCleanup, options),
+  getModMetadata: (modId: string, forceRefresh?: boolean) => ipcRenderer.invoke(IPC.modsGet, modId, forceRefresh),
   getModsMetadata: (modIds: string[], forceRefresh?: boolean) =>
     ipcRenderer.invoke(IPC.modsGetMany, modIds, forceRefresh),
-  searchMods: (query, options) =>
-    ipcRenderer.invoke(IPC.modsSearch, query, options),
+  searchMods: (query, options) => ipcRenderer.invoke(IPC.modsSearch, query, options),
   listModCategories: () => ipcRenderer.invoke(IPC.modsListCategories),
-  getModByReference: (ref) =>
-    ipcRenderer.invoke(IPC.modsGetByReference, ref),
-  openCurseForgeMod: (url) =>
-    ipcRenderer.invoke(IPC.modsOpenCurseForge, url),
-  getHostedResourcesOverview: () =>
-    ipcRenderer.invoke(IPC.hostedResourcesGetOverview),
-  setHostedResourcesEnabled: (enabled) =>
-    ipcRenderer.invoke(IPC.hostedResourcesSetEnabled, enabled),
-  setHostedResourcesPort: (port) =>
-    ipcRenderer.invoke(IPC.hostedResourcesSetPort, port),
-  createHostedResource: (input) =>
-    ipcRenderer.invoke(IPC.hostedResourcesCreateResource, input),
+  getModByReference: (ref) => ipcRenderer.invoke(IPC.modsGetByReference, ref),
+  openCurseForgeMod: (url) => ipcRenderer.invoke(IPC.modsOpenCurseForge, url),
+  getHostedResourcesOverview: () => ipcRenderer.invoke(IPC.hostedResourcesGetOverview),
+  setHostedResourcesEnabled: (enabled) => ipcRenderer.invoke(IPC.hostedResourcesSetEnabled, enabled),
+  setHostedResourcesPort: (port) => ipcRenderer.invoke(IPC.hostedResourcesSetPort, port),
+  createHostedResource: (input) => ipcRenderer.invoke(IPC.hostedResourcesCreateResource, input),
   publishHostedResourceContent: (resourceId, content, metadata) =>
     ipcRenderer.invoke(IPC.hostedResourcesPublishContent, resourceId, content, metadata),
-  getHostedResourceContent: (resourceId) =>
-    ipcRenderer.invoke(IPC.hostedResourcesGetContent, resourceId),
+  getHostedResourceContent: (resourceId) => ipcRenderer.invoke(IPC.hostedResourcesGetContent, resourceId),
   publishHostedResourceRevision: (resourceId, revisionId) =>
     ipcRenderer.invoke(IPC.hostedResourcesPublishRevision, resourceId, revisionId),
   renameHostedResource: (resourceId, displayName) =>
     ipcRenderer.invoke(IPC.hostedResourcesRenameResource, resourceId, displayName),
   updateHostedResourceMetadata: (resourceId, input) =>
     ipcRenderer.invoke(IPC.hostedResourcesUpdateMetadata, resourceId, input),
-  listHostedResourceRevisions: (resourceId) =>
-    ipcRenderer.invoke(IPC.hostedResourcesListRevisions, resourceId),
+  listHostedResourceRevisions: (resourceId) => ipcRenderer.invoke(IPC.hostedResourcesListRevisions, resourceId),
   setHostedResourceEnabled: (resourceId, enabled) =>
     ipcRenderer.invoke(IPC.hostedResourcesSetResourceEnabled, resourceId, enabled),
-  deleteHostedResource: (resourceId) =>
-    ipcRenderer.invoke(IPC.hostedResourcesDeleteResource, resourceId),
-  getHostedResourcesDiagnostics: () =>
-    ipcRenderer.invoke(IPC.hostedResourcesDiagnostics),
+  deleteHostedResource: (resourceId) => ipcRenderer.invoke(IPC.hostedResourcesDeleteResource, resourceId),
+  getHostedResourcesDiagnostics: () => ipcRenderer.invoke(IPC.hostedResourcesDiagnostics),
   onServerStatus: (listener) => {
     const handler = (_e: unknown, info: ServerRuntimeInfo) => listener(info);
     ipcRenderer.on(IPC_PUSH.serverStatus, handler);
@@ -420,8 +314,7 @@ const api: RendererApi = {
     };
   },
   onServerIniChanged: (listener) => {
-    const handler = (_e: unknown, payload: ServerIniChangedPush) =>
-      listener(payload);
+    const handler = (_e: unknown, payload: ServerIniChangedPush) => listener(payload);
     ipcRenderer.on(IPC_PUSH.serverIniChanged, handler);
     return () => {
       ipcRenderer.removeListener(IPC_PUSH.serverIniChanged, handler);
@@ -442,24 +335,21 @@ const api: RendererApi = {
     };
   },
   onProcessMetricsUpdated: (listener) => {
-    const handler = (_e: unknown, payload: ProcessMetricsUpdatedPush) =>
-      listener(payload);
+    const handler = (_e: unknown, payload: ProcessMetricsUpdatedPush) => listener(payload);
     ipcRenderer.on(IPC_PUSH.processMetricsUpdated, handler);
     return () => {
       ipcRenderer.removeListener(IPC_PUSH.processMetricsUpdated, handler);
     };
   },
   onAppUpdate: (listener) => {
-    const handler = (_e: unknown, status: AppUpdateStatus) =>
-      listener(status);
+    const handler = (_e: unknown, status: AppUpdateStatus) => listener(status);
     ipcRenderer.on(IPC_PUSH.appUpdate, handler);
     return () => {
       ipcRenderer.removeListener(IPC_PUSH.appUpdate, handler);
     };
   },
   onOsNotificationOpen: (listener) => {
-    const handler = (_e: unknown, payload: OsNotificationOpenPush) =>
-      listener(payload);
+    const handler = (_e: unknown, payload: OsNotificationOpenPush) => listener(payload);
     ipcRenderer.on(IPC_PUSH.osNotificationOpen, handler);
     return () => {
       ipcRenderer.removeListener(IPC_PUSH.osNotificationOpen, handler);

@@ -1,15 +1,5 @@
 import type { ReactElement } from "react";
-import {
-  Badge,
-  Group,
-  MultiSelect,
-  Select,
-  Stack,
-  Switch,
-  Text,
-  TextInput,
-  Tooltip,
-} from "@mantine/core";
+import { Badge, Group, MultiSelect, Select, Stack, Switch, Text, TextInput, Tooltip } from "@mantine/core";
 import {
   decodeServerPlatformSelection,
   encodeServerPlatformSelection,
@@ -17,10 +7,7 @@ import {
   type StructuredLaunchUiOption,
 } from "@shared/asa/structured-launch-options";
 import classes from "./ServerLaunchPanel.module.css";
-import {
-  launchOptionDisplayTitle,
-  launchOptionTokenLabel,
-} from "./serverLaunchModel";
+import { launchOptionDisplayTitle, launchOptionTokenLabel } from "./serverLaunchModel";
 
 interface Props {
   option: StructuredLaunchUiOption;
@@ -46,23 +33,15 @@ export function ServerLaunchOptionRow(props: Props): ReactElement {
   const caution = Boolean(props.option.curation.operatorWarning) && enabled;
   const summary = launchOptionDisplayTitle(props.option);
   const tokenLabel = launchOptionTokenLabel(props.option);
-  const isMulti =
-    props.option.curation.multiSelect === true &&
-    (props.option.curation.enumOptions?.length ?? 0) > 0;
+  const isMulti = props.option.curation.multiSelect === true && (props.option.curation.enumOptions?.length ?? 0) > 0;
   const isEnum =
-    !isMulti &&
-    (props.option.entry.valueType === "enum" ||
-      (props.option.curation.enumOptions?.length ?? 0) > 0);
+    !isMulti && (props.option.entry.valueType === "enum" || (props.option.curation.enumOptions?.length ?? 0) > 0);
   const showValue = enabled && props.option.entry.valueType !== "flag";
 
   return (
     <div
       className={`${classes.optionRow} ${
-        caution
-          ? classes.optionRowCaution
-          : enabled
-            ? ""
-            : classes.optionRowDisabled
+        caution ? classes.optionRowCaution : enabled ? "" : classes.optionRowDisabled
       }`}
     >
       <Group align="center" gap="sm" wrap="nowrap">
@@ -88,17 +67,7 @@ export function ServerLaunchOptionRow(props: Props): ReactElement {
               </span>
             </Tooltip>
             {caution ? (
-              <Badge
-                size="xs"
-                variant="outline"
-                styles={{
-                  root: {
-                    color: "var(--app-color-fossil)",
-                    borderColor:
-                      "color-mix(in srgb, var(--app-color-fossil) 55%, transparent)",
-                  },
-                }}
-              >
+              <Badge variant="light" color="attention">
                 Caution
               </Badge>
             ) : null}
@@ -107,11 +76,7 @@ export function ServerLaunchOptionRow(props: Props): ReactElement {
             {summary}
           </Text>
           {caution ? (
-            <Text
-              size="xs"
-              fw={500}
-              style={{ color: "var(--app-color-fossil)" }}
-            >
+            <Text size="xs" fw={500} style={{ color: "var(--app-color-fossil)" }}>
               {props.option.curation.operatorWarning}
             </Text>
           ) : null}
@@ -121,9 +86,7 @@ export function ServerLaunchOptionRow(props: Props): ReactElement {
                 size={props.inputSize}
                 data={[...(props.option.curation.enumOptions ?? [])]}
                 value={decodeServerPlatformSelection(props.selection?.value)}
-                onChange={(codes) =>
-                  props.onValueChange(encodeServerPlatformSelection(codes))
-                }
+                onChange={(codes) => props.onValueChange(encodeServerPlatformSelection(codes))}
                 placeholder="Select platforms"
                 searchable={false}
               />
@@ -131,11 +94,7 @@ export function ServerLaunchOptionRow(props: Props): ReactElement {
               <Select
                 size={props.inputSize}
                 data={[...(props.option.curation.enumOptions ?? [])]}
-                value={
-                  props.selection?.value ??
-                  props.option.curation.defaultValue ??
-                  null
-                }
+                value={props.selection?.value ?? props.option.curation.defaultValue ?? null}
                 onChange={(value) => {
                   if (value !== null) props.onValueChange(value);
                 }}

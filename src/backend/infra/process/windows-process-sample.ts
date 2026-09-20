@@ -11,9 +11,7 @@ export interface WindowsProcessResourceRow {
 const QUERY_TIMEOUT_MS = 8_000;
 
 /** Build the -Command body for a batch WorkingSet/CPU sample (#302). */
-export function buildWindowsProcessResourcesCommand(
-  safePids: ReadonlyArray<number>,
-): string {
+export function buildWindowsProcessResourcesCommand(safePids: ReadonlyArray<number>): string {
   const idList = safePids.join(",");
   // Newlines (not `;`) so script-block braces stay valid PowerShell.
   return [
@@ -40,11 +38,7 @@ export async function queryWindowsProcessResources(
   if (process.platform !== "win32") {
     return out;
   }
-  const safePids = [
-    ...new Set(
-      pids.filter((pid) => Number.isInteger(pid) && pid > 0),
-    ),
-  ];
+  const safePids = [...new Set(pids.filter((pid) => Number.isInteger(pid) && pid > 0))];
   if (safePids.length === 0) {
     return out;
   }
@@ -74,15 +68,15 @@ export async function queryWindowsProcessResources(
       const workingSetBytes = row.WorkingSet64;
       const cpuSeconds = row.CpuSeconds;
       if (
-        typeof pid !== "number"
-        || !Number.isInteger(pid)
-        || pid <= 0
-        || typeof workingSetBytes !== "number"
-        || !Number.isFinite(workingSetBytes)
-        || workingSetBytes < 0
-        || typeof cpuSeconds !== "number"
-        || !Number.isFinite(cpuSeconds)
-        || cpuSeconds < 0
+        typeof pid !== "number" ||
+        !Number.isInteger(pid) ||
+        pid <= 0 ||
+        typeof workingSetBytes !== "number" ||
+        !Number.isFinite(workingSetBytes) ||
+        workingSetBytes < 0 ||
+        typeof cpuSeconds !== "number" ||
+        !Number.isFinite(cpuSeconds) ||
+        cpuSeconds < 0
       ) {
         continue;
       }

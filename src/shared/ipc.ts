@@ -64,12 +64,7 @@ import type { HostedResourceFormat } from "./settings/hosted-resources";
 type PickPathKind = "directory" | "file" | "save";
 
 /** App-managed folders under Electron userData (Settings diagnostics). */
-export type AppDataFolderKind =
-  | "app"
-  | "backups"
-  | "updateLogs"
-  | "steamcmd"
-  | "asaApiCache";
+export type AppDataFolderKind = "app" | "backups" | "updateLogs" | "steamcmd" | "asaApiCache";
 
 export interface AppDataFolderInfo {
   kind: AppDataFolderKind;
@@ -440,32 +435,18 @@ export type OsNotificationOpenPush =
   | { kind: "yarkUpdate" };
 
 /** Normalized result of IPC operations. */
-export type IpcResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; error: string };
+export type IpcResult<T> = { ok: true; data: T } | { ok: false; error: string };
 
 /** API exposed to the renderer via contextBridge. */
 export interface RendererApi {
   listServers(): Promise<IpcResult<ServerProfile[]>>;
   createServer(input: ServerProfileInput): Promise<IpcResult<ServerProfile>>;
   probeImportInstall(installDir: string): Promise<IpcResult<ImportInstallProbe>>;
-  importExistingServer(
-    input: ServerProfileInput,
-    options?: ImportExistingOptions,
-  ): Promise<IpcResult<ServerProfile>>;
-  updateServer(
-    id: string,
-    input: ServerProfileInput,
-  ): Promise<IpcResult<ServerProfile>>;
-  updateServerPatch(
-    id: string,
-    patch: ServerProfilePatch,
-  ): Promise<IpcResult<ServerProfile>>;
+  importExistingServer(input: ServerProfileInput, options?: ImportExistingOptions): Promise<IpcResult<ServerProfile>>;
+  updateServer(id: string, input: ServerProfileInput): Promise<IpcResult<ServerProfile>>;
+  updateServerPatch(id: string, patch: ServerProfilePatch): Promise<IpcResult<ServerProfile>>;
   setServerEnabled(id: string, enabled: boolean): Promise<IpcResult<ServerProfile>>;
-  deleteServer(
-    id: string,
-    options: DeleteServerOptions,
-  ): Promise<IpcResult<void>>;
+  deleteServer(id: string, options: DeleteServerOptions): Promise<IpcResult<void>>;
   cloneServer(id: string): Promise<IpcResult<ServerProfile>>;
   cloneServerWithParams(
     id: string,
@@ -491,33 +472,25 @@ export interface RendererApi {
   moveServerInstall(
     id: string,
     destinationDir: string,
-  ): Promise<IpcResult<{
-    sourceDir: string;
-    destinationDir: string;
-    oldSourceDir: string;
-    oldSourceRemoved: boolean;
-    cleanupError: string | null;
-  }>>;
+  ): Promise<
+    IpcResult<{
+      sourceDir: string;
+      destinationDir: string;
+      oldSourceDir: string;
+      oldSourceRemoved: boolean;
+      cleanupError: string | null;
+    }>
+  >;
   cancelMoveServerInstall(): Promise<IpcResult<boolean>>;
-  cleanupMovedServerInstall(
-    id: string,
-    oldSourceDir: string,
-  ): Promise<IpcResult<void>>;
+  cleanupMovedServerInstall(id: string, oldSourceDir: string): Promise<IpcResult<void>>;
   dismissMoveServerInstallCleanup(id: string): Promise<IpcResult<void>>;
   openServerFolder(id: string): Promise<IpcResult<void>>;
   openServerNativeTerminal(id: string): Promise<IpcResult<void>>;
   getAsaApiStatus(id: string): Promise<IpcResult<AsaApiStatus>>;
   installAsaApi(id: string): Promise<IpcResult<AsaApiStatus>>;
   uninstallAsaApi(id: string): Promise<IpcResult<AsaApiStatus>>;
-  setAsaApiPluginEnabled(
-    id: string,
-    pluginName: string,
-    enabled: boolean,
-  ): Promise<IpcResult<AsaApiStatus>>;
-  deleteAsaApiPlugin(
-    id: string,
-    pluginName: string,
-  ): Promise<IpcResult<AsaApiStatus>>;
+  setAsaApiPluginEnabled(id: string, pluginName: string, enabled: boolean): Promise<IpcResult<AsaApiStatus>>;
+  deleteAsaApiPlugin(id: string, pluginName: string): Promise<IpcResult<AsaApiStatus>>;
   /** Opens a zip picker; null when canceled. */
   addAsaApiPluginZip(id: string): Promise<IpcResult<AsaApiStatus | null>>;
   openAsaApiWin64(id: string): Promise<IpcResult<void>>;
@@ -530,10 +503,7 @@ export interface RendererApi {
   dismissCriticalJob(id: string): Promise<IpcResult<boolean>>;
   cancelCriticalJob(id: string): Promise<IpcResult<boolean>>;
   resumeCriticalJob(id: string): Promise<IpcResult<boolean>>;
-  reorderCriticalJob(
-    id: string,
-    direction: "up" | "down",
-  ): Promise<IpcResult<boolean>>;
+  reorderCriticalJob(id: string, direction: "up" | "down"): Promise<IpcResult<boolean>>;
   setSteamCmdPath(path: string): Promise<IpcResult<string>>;
   getSteamCmdStatus(): Promise<IpcResult<SteamCmdStatus>>;
   getSteamCmdConsole(limit?: number): Promise<IpcResult<SteamCmdConsoleSnapshot>>;
@@ -545,48 +515,31 @@ export interface RendererApi {
     serversMode?: InstallationServersMode,
   ): Promise<IpcResult<ServerInstallationSnapshot>>;
   checkCluster(): Promise<IpcResult<ClusterComplianceReport[]>>;
-  sendRconCommand(
-    id: string,
-    command: string,
-  ): Promise<IpcResult<string>>;
+  sendRconCommand(id: string, command: string): Promise<IpcResult<string>>;
   retryRconConnection(id: string): Promise<IpcResult<void>>;
-  getRconStatus(
-    id: string,
-  ): Promise<IpcResult<RconStatusChangedPush>>;
+  getRconStatus(id: string): Promise<IpcResult<RconStatusChangedPush>>;
   getAllRconStatus(): Promise<IpcResult<RconStatusChangedPush[]>>;
-  notifyRconTabFocus(
-    serverId: string,
-    isFocused: boolean,
-  ): Promise<IpcResult<OnlinePlayerInfo[]>>;
+  notifyRconTabFocus(serverId: string, isFocused: boolean): Promise<IpcResult<OnlinePlayerInfo[]>>;
   /** Enable/disable dedicated-process RAM/CPU sampling (#302). */
   setProcessMetricsSampling(enabled: boolean): Promise<IpcResult<void>>;
   refreshPlayerList(serverId: string): Promise<IpcResult<OnlinePlayerInfo[]>>;
   kickPlayer(serverId: string, playerKey: string): Promise<IpcResult<string>>;
   banPlayer(serverId: string, playerKey: string): Promise<IpcResult<string>>;
   listBannedPlayers(serverId: string): Promise<IpcResult<OnlinePlayerInfo[]>>;
-  unbanPlayer(serverId: string, playerKey: string): Promise<
-    IpcResult<{ banned: OnlinePlayerInfo[]; warning: string | null }>
-  >;
+  unbanPlayer(
+    serverId: string,
+    playerKey: string,
+  ): Promise<IpcResult<{ banned: OnlinePlayerInfo[]; warning: string | null }>>;
   openBanListFile(serverId: string): Promise<IpcResult<void>>;
   getAdminList(serverId: string): Promise<IpcResult<AdminListStateDto>>;
-  setAdminList(
-    serverId: string,
-    config: AdminListConfigDto,
-  ): Promise<IpcResult<AdminListStateDto>>;
-  validateAdminListUrl(
-    serverId: string,
-    url: string,
-  ): Promise<IpcResult<AdminListValidateDto>>;
+  setAdminList(serverId: string, config: AdminListConfigDto): Promise<IpcResult<AdminListStateDto>>;
+  validateAdminListUrl(serverId: string, url: string): Promise<IpcResult<AdminListValidateDto>>;
   learnAdminListNames(
     serverId: string,
     hints: Array<{ id: string; name: string }>,
   ): Promise<IpcResult<AdminListLearnNamesDto>>;
   recentEvents(limit: number): Promise<IpcResult<AppEvent[]>>;
-  pickPath(
-    kind: PickPathKind,
-    defaultPath?: string,
-    title?: string,
-  ): Promise<IpcResult<string | null>>;
+  pickPath(kind: PickPathKind, defaultPath?: string, title?: string): Promise<IpcResult<string | null>>;
   pickFolder(defaultPath?: string): Promise<string | null>;
   listAppDataFolders(): Promise<IpcResult<AppDataFolderInfo[]>>;
   openAppDataFolder(kind: AppDataFolderKind): Promise<IpcResult<void>>;
@@ -601,9 +554,7 @@ export interface RendererApi {
   setLastSeenChangelogVersion(version: string): Promise<IpcResult<string>>;
   /** `null` when first-run setup has not been completed or skipped. */
   getOnboarding(): Promise<IpcResult<OnboardingRecord | null>>;
-  setOnboarding(
-    record: OnboardingRecord | null,
-  ): Promise<IpcResult<OnboardingRecord | null>>;
+  setOnboarding(record: OnboardingRecord | null): Promise<IpcResult<OnboardingRecord | null>>;
   getDesktopShellPreferences(): Promise<IpcResult<DesktopShellPreferences>>;
   setCloseWindowToTray(enabled: boolean): Promise<IpcResult<boolean>>;
   setStartWithWindows(enabled: boolean): Promise<IpcResult<boolean>>;
@@ -613,13 +564,8 @@ export interface RendererApi {
   setOsNotifySteamCmd(enabled: boolean): Promise<IpcResult<boolean>>;
   setOsNotifyYarkUpdate(enabled: boolean): Promise<IpcResult<boolean>>;
   getDiscordWebhook(): Promise<IpcResult<DiscordWebhookPreferences>>;
-  setDiscordWebhook(
-    preferences: DiscordWebhookPreferences,
-  ): Promise<IpcResult<DiscordWebhookPreferences>>;
-  testDiscordWebhook(
-    webhookUrl: string,
-    description?: string,
-  ): Promise<IpcResult<void>>;
+  setDiscordWebhook(preferences: DiscordWebhookPreferences): Promise<IpcResult<DiscordWebhookPreferences>>;
+  testDiscordWebhook(webhookUrl: string, description?: string): Promise<IpcResult<void>>;
   getAppUpdateStatus(): Promise<IpcResult<AppUpdateStatus>>;
   checkForAppUpdate(): Promise<IpcResult<AppUpdateStatus>>;
   downloadAppUpdate(): Promise<IpcResult<AppUpdateStatus>>;
@@ -628,28 +574,12 @@ export interface RendererApi {
   /** Same path as tray Quit YARK (confirm + graceful stop when servers are active). */
   quitApp(): Promise<IpcResult<void>>;
   readServerIni(serverId: string): Promise<IpcResult<ServerIniSnapshot>>;
-  openServerIniInEditor(
-    serverId: string,
-    fileKey: "gameUserSettings" | "game",
-  ): Promise<IpcResult<void>>;
-  previewServerIni(
-    serverId: string,
-    payload: ServerIniPayload,
-  ): Promise<IpcResult<IniPreview>>;
-  saveServerIni(
-    serverId: string,
-    payload: ServerIniPayload,
-  ): Promise<IpcResult<ServerIniSaveResult>>;
-  getClusterIniTemplate(
-    clusterId: string,
-  ): Promise<IpcResult<ClusterIniTemplate | null>>;
-  getClusterIniTemplateOrDraft(
-    clusterId: string,
-  ): Promise<IpcResult<ClusterIniTemplate>>;
-  previewClusterIniTemplate(
-    clusterId: string,
-    payload: ServerIniPayload,
-  ): Promise<IpcResult<IniPreview>>;
+  openServerIniInEditor(serverId: string, fileKey: "gameUserSettings" | "game"): Promise<IpcResult<void>>;
+  previewServerIni(serverId: string, payload: ServerIniPayload): Promise<IpcResult<IniPreview>>;
+  saveServerIni(serverId: string, payload: ServerIniPayload): Promise<IpcResult<ServerIniSaveResult>>;
+  getClusterIniTemplate(clusterId: string): Promise<IpcResult<ClusterIniTemplate | null>>;
+  getClusterIniTemplateOrDraft(clusterId: string): Promise<IpcResult<ClusterIniTemplate>>;
+  previewClusterIniTemplate(clusterId: string, payload: ServerIniPayload): Promise<IpcResult<IniPreview>>;
   saveClusterIniTemplate(
     clusterId: string,
     payload: ServerIniPayload,
@@ -685,9 +615,7 @@ export interface RendererApi {
     serverId: string,
     files?: ClusterIniTemplateFileSelection,
   ): Promise<IpcResult<ClusterIniTemplateApplyResult>>;
-  describeConfigTransferSource(
-    sourceId: string,
-  ): Promise<IpcResult<ConfigTransferDescribeResult>>;
+  describeConfigTransferSource(sourceId: string): Promise<IpcResult<ConfigTransferDescribeResult>>;
   previewConfigTransfer(
     sourceId: string,
     targetId: string,
@@ -700,55 +628,23 @@ export interface RendererApi {
     fingerprint: string,
   ): Promise<IpcResult<ConfigTransferCommitResult>>;
   listServerLogs(serverId: string): Promise<IpcResult<ServerOperationalLogs>>;
-  getServerRuntimeLog(
-    serverId: string,
-    limit?: number,
-  ): Promise<IpcResult<ServerRuntimeLogSnapshot>>;
-  readServerUpdateLog(
-    serverId: string,
-    fileName: string,
-    maxBytes?: number,
-  ): Promise<IpcResult<string>>;
+  getServerRuntimeLog(serverId: string, limit?: number): Promise<IpcResult<ServerRuntimeLogSnapshot>>;
+  readServerUpdateLog(serverId: string, fileName: string, maxBytes?: number): Promise<IpcResult<string>>;
   exportServerLogs(serverId: string): Promise<IpcResult<string | null>>;
-  openServerUpdateLogFile(
-    serverId: string,
-    fileName: string,
-  ): Promise<IpcResult<void>>;
+  openServerUpdateLogFile(serverId: string, fileName: string): Promise<IpcResult<void>>;
   clearServerEvents(serverId: string): Promise<IpcResult<number>>;
   clearServerRuntimeLog(serverId: string): Promise<IpcResult<void>>;
-  deleteServerUpdateLog(
-    serverId: string,
-    fileName: string,
-  ): Promise<IpcResult<void>>;
+  deleteServerUpdateLog(serverId: string, fileName: string): Promise<IpcResult<void>>;
   clearServerUpdateLogs(serverId: string): Promise<IpcResult<number>>;
   getLogRetentionSettings(): Promise<IpcResult<LogRetentionSettings>>;
-  setLogRetentionSettings(
-    settings: LogRetentionSettings,
-  ): Promise<IpcResult<LogRetentionSettings>>;
-  previewLogCleanup(
-    options?: LogCleanupOptions,
-  ): Promise<IpcResult<LogCleanupPreview>>;
-  runLogCleanup(
-    options?: LogCleanupOptions,
-  ): Promise<IpcResult<LogCleanupResult>>;
+  setLogRetentionSettings(settings: LogRetentionSettings): Promise<IpcResult<LogRetentionSettings>>;
+  previewLogCleanup(options?: LogCleanupOptions): Promise<IpcResult<LogCleanupPreview>>;
+  runLogCleanup(options?: LogCleanupOptions): Promise<IpcResult<LogCleanupResult>>;
   listBackups(serverId: string, limit?: number): Promise<IpcResult<BackupRecord[]>>;
-  createManualBackup(
-    serverId: string,
-    kinds?: BackupKind[],
-  ): Promise<IpcResult<BackupRecord[]>>;
-  deleteBackups(
-    serverId: string,
-    backupIds: string[],
-  ): Promise<IpcResult<number>>;
-  deleteFailedBackups(
-    serverId: string,
-    kind: BackupKind,
-  ): Promise<IpcResult<number>>;
-  restoreBackup(
-    serverId: string,
-    backupId: string,
-    options?: RestoreBackupOptions,
-  ): Promise<IpcResult<void>>;
+  createManualBackup(serverId: string, kinds?: BackupKind[]): Promise<IpcResult<BackupRecord[]>>;
+  deleteBackups(serverId: string, backupIds: string[]): Promise<IpcResult<number>>;
+  deleteFailedBackups(serverId: string, kind: BackupKind): Promise<IpcResult<number>>;
+  restoreBackup(serverId: string, backupId: string, options?: RestoreBackupOptions): Promise<IpcResult<void>>;
   getBackupPolicy(serverId: string): Promise<IpcResult<BackupPolicyStatus>>;
   setBackupPolicy(
     serverId: string,
@@ -759,78 +655,38 @@ export interface RendererApi {
     serverId: string,
     policy: Omit<MaintenancePolicy, "serverId" | "updatedAt">,
   ): Promise<IpcResult<MaintenancePolicyStatus>>;
-  clearMaintenanceSchedulePause(
-    serverId: string,
-  ): Promise<IpcResult<MaintenancePolicyStatus>>;
-  runMaintenanceRestartNow(
-    serverId: string,
-  ): Promise<IpcResult<MaintenancePolicyStatus>>;
-  runMaintenanceRestartWarning(
-    serverId: string,
-  ): Promise<IpcResult<MaintenancePolicyStatus>>;
-  runMaintenanceUpdateNow(
-    serverId: string,
-  ): Promise<IpcResult<MaintenancePolicyStatus>>;
-  cancelMaintenanceUpcoming(
-    serverId: string,
-  ): Promise<IpcResult<MaintenancePolicyStatus>>;
+  clearMaintenanceSchedulePause(serverId: string): Promise<IpcResult<MaintenancePolicyStatus>>;
+  runMaintenanceRestartNow(serverId: string): Promise<IpcResult<MaintenancePolicyStatus>>;
+  runMaintenanceRestartWarning(serverId: string): Promise<IpcResult<MaintenancePolicyStatus>>;
+  runMaintenanceUpdateNow(serverId: string): Promise<IpcResult<MaintenancePolicyStatus>>;
+  cancelMaintenanceUpcoming(serverId: string): Promise<IpcResult<MaintenancePolicyStatus>>;
   getCrashRecoveryPolicy(serverId: string): Promise<IpcResult<CrashRecoveryPolicy>>;
   setCrashRecoveryPolicy(
     serverId: string,
-    policy: Omit<
-      CrashRecoveryPolicy,
-      "serverId" | "updatedAt" | "attempts" | "exhausted" | "lastFailureReason"
-    >,
+    policy: Omit<CrashRecoveryPolicy, "serverId" | "updatedAt" | "attempts" | "exhausted" | "lastFailureReason">,
   ): Promise<IpcResult<CrashRecoveryPolicy>>;
-  resetCrashRecoveryAttempts(
-    serverId: string,
-  ): Promise<IpcResult<CrashRecoveryPolicy>>;
+  resetCrashRecoveryAttempts(serverId: string): Promise<IpcResult<CrashRecoveryPolicy>>;
   resolveBackupRoot(serverId: string): Promise<IpcResult<string>>;
   openBackupFolder(serverId: string, backupId: string): Promise<IpcResult<void>>;
   openBackupRoot(serverId: string): Promise<IpcResult<void>>;
   /** Copy a completed managed archive to a user-chosen path (ZIP). */
-  exportBackup(
-    serverId: string,
-    backupId: string,
-    destinationPath: string,
-  ): Promise<IpcResult<string>>;
+  exportBackup(serverId: string, backupId: string, destinationPath: string): Promise<IpcResult<string>>;
   /** Validate and catalog a YARK ZIP under the server backup root (no restore). */
-  importBackup(
-    serverId: string,
-    kind: BackupKind,
-    sourcePath: string,
-  ): Promise<IpcResult<BackupRecord>>;
+  importBackup(serverId: string, kind: BackupKind, sourcePath: string): Promise<IpcResult<BackupRecord>>;
   getBackupFleetSummary(): Promise<IpcResult<BackupFleetSummary>>;
-  dismissBackupFleetAlert(
-    alertId: string,
-    fingerprint: string,
-  ): Promise<IpcResult<void>>;
+  dismissBackupFleetAlert(alertId: string, fingerprint: string): Promise<IpcResult<void>>;
   getBackupDiskAlertSettings(): Promise<IpcResult<BackupDiskAlertSettings>>;
-  setBackupDiskAlertSettings(
-    settings: BackupDiskAlertSettings,
-  ): Promise<IpcResult<BackupDiskAlertSettings>>;
-  previewBackupCleanup(
-    options: BackupCleanupOptions,
-  ): Promise<IpcResult<BackupCleanupPreview>>;
-  runBackupCleanup(
-    options: BackupCleanupOptions,
-  ): Promise<IpcResult<BackupCleanupResult>>;
+  setBackupDiskAlertSettings(settings: BackupDiskAlertSettings): Promise<IpcResult<BackupDiskAlertSettings>>;
+  previewBackupCleanup(options: BackupCleanupOptions): Promise<IpcResult<BackupCleanupPreview>>;
+  runBackupCleanup(options: BackupCleanupOptions): Promise<IpcResult<BackupCleanupResult>>;
   getModMetadata(modId: string, forceRefresh?: boolean): Promise<IpcResult<ModMetadata>>;
-  getModsMetadata(
-    modIds: string[],
-    forceRefresh?: boolean,
-  ): Promise<IpcResult<ModMetadata[]>>;
-  searchMods(
-    query: string,
-    options?: ModSearchOptions,
-  ): Promise<IpcResult<ModSearchPage>>;
+  getModsMetadata(modIds: string[], forceRefresh?: boolean): Promise<IpcResult<ModMetadata[]>>;
+  searchMods(query: string, options?: ModSearchOptions): Promise<IpcResult<ModSearchPage>>;
   listModCategories(): Promise<IpcResult<ModCategory[]>>;
   getModByReference(ref: string): Promise<IpcResult<ModMetadata>>;
   openCurseForgeMod(url: string): Promise<IpcResult<void>>;
   getHostedResourcesOverview(): Promise<IpcResult<HostedResourcesOverviewDto>>;
-  setHostedResourcesEnabled(
-    enabled: boolean,
-  ): Promise<IpcResult<HostedResourcesStateDto>>;
+  setHostedResourcesEnabled(enabled: boolean): Promise<IpcResult<HostedResourcesStateDto>>;
   setHostedResourcesPort(port: number): Promise<IpcResult<HostedResourcesStateDto>>;
   createHostedResource(input: {
     displayName: string;
@@ -845,62 +701,27 @@ export interface RendererApi {
     metadata?: { displayName: string; notes: string; tags: string[] },
   ): Promise<IpcResult<HostedResourceDto>>;
   getHostedResourceContent(resourceId: string): Promise<IpcResult<string>>;
-  publishHostedResourceRevision(
-    resourceId: string,
-    revisionId: string,
-  ): Promise<IpcResult<HostedResourceDto>>;
-  renameHostedResource(
-    resourceId: string,
-    displayName: string,
-  ): Promise<IpcResult<HostedResourceDto>>;
+  publishHostedResourceRevision(resourceId: string, revisionId: string): Promise<IpcResult<HostedResourceDto>>;
+  renameHostedResource(resourceId: string, displayName: string): Promise<IpcResult<HostedResourceDto>>;
   updateHostedResourceMetadata(
     resourceId: string,
     input: { displayName: string; notes: string; tags: string[] },
   ): Promise<IpcResult<HostedResourceDto>>;
-  listHostedResourceRevisions(
-    resourceId: string,
-  ): Promise<IpcResult<HostedResourceRevisionDto[]>>;
-  setHostedResourceEnabled(
-    resourceId: string,
-    enabled: boolean,
-  ): Promise<IpcResult<HostedResourceDto>>;
+  listHostedResourceRevisions(resourceId: string): Promise<IpcResult<HostedResourceRevisionDto[]>>;
+  setHostedResourceEnabled(resourceId: string, enabled: boolean): Promise<IpcResult<HostedResourceDto>>;
   deleteHostedResource(resourceId: string): Promise<IpcResult<void>>;
   getHostedResourcesDiagnostics(): Promise<IpcResult<HostedResourcesDiagnosticsDto>>;
-  onServerStatus(
-    listener: (info: ServerRuntimeInfo) => void,
-  ): () => void;
-  onSteamCmdProgress(
-    listener: (payload: SteamCmdProgressPush) => void,
-  ): () => void;
-  onServerStopProgress(
-    listener: (payload: ServerStopProgressPush) => void,
-  ): () => void;
-  onMoveInstallProgress(
-    listener: (payload: MoveInstallProgressPush) => void,
-  ): () => void;
-  onCloneInstallProgress(
-    listener: (payload: CloneInstallProgressPush) => void,
-  ): () => void;
-  onAsaApiInstallProgress(
-    listener: (payload: AsaApiInstallProgressPush) => void,
-  ): () => void;
-  onBackupsChanged(
-    listener: (payload: BackupsChangedPush) => void,
-  ): () => void;
-  onServerIniChanged(
-    listener: (payload: ServerIniChangedPush) => void,
-  ): () => void;
-  onRconStatusChanged(
-    listener: (payload: RconStatusChangedPush) => void,
-  ): () => void;
-  onPlayerListUpdated(
-    listener: (payload: PlayerListUpdatedPush) => void,
-  ): () => void;
-  onProcessMetricsUpdated(
-    listener: (payload: ProcessMetricsUpdatedPush) => void,
-  ): () => void;
+  onServerStatus(listener: (info: ServerRuntimeInfo) => void): () => void;
+  onSteamCmdProgress(listener: (payload: SteamCmdProgressPush) => void): () => void;
+  onServerStopProgress(listener: (payload: ServerStopProgressPush) => void): () => void;
+  onMoveInstallProgress(listener: (payload: MoveInstallProgressPush) => void): () => void;
+  onCloneInstallProgress(listener: (payload: CloneInstallProgressPush) => void): () => void;
+  onAsaApiInstallProgress(listener: (payload: AsaApiInstallProgressPush) => void): () => void;
+  onBackupsChanged(listener: (payload: BackupsChangedPush) => void): () => void;
+  onServerIniChanged(listener: (payload: ServerIniChangedPush) => void): () => void;
+  onRconStatusChanged(listener: (payload: RconStatusChangedPush) => void): () => void;
+  onPlayerListUpdated(listener: (payload: PlayerListUpdatedPush) => void): () => void;
+  onProcessMetricsUpdated(listener: (payload: ProcessMetricsUpdatedPush) => void): () => void;
   onAppUpdate(listener: (status: AppUpdateStatus) => void): () => void;
-  onOsNotificationOpen(
-    listener: (payload: OsNotificationOpenPush) => void,
-  ): () => void;
+  onOsNotificationOpen(listener: (payload: OsNotificationOpenPush) => void): () => void;
 }

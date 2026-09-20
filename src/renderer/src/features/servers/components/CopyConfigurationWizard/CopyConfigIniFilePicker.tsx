@@ -1,12 +1,6 @@
 import type { ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
-import {
-  Checkbox,
-  Group,
-  ScrollArea,
-  Text,
-  UnstyledButton,
-} from "@mantine/core";
+import { Checkbox, Group, ScrollArea, Text, UnstyledButton } from "@mantine/core";
 import { CaretDown, CaretRight } from "@phosphor-icons/react";
 import type { ConfigTransferIniFileSelection } from "@shared/ini/config-transfer";
 import type { ConfigTransferIniCategoryInfo } from "@shared/types";
@@ -78,9 +72,7 @@ export function CopyConfigIniFilePicker(props: Props): ReactElement {
       }
       checked={fileState.checked}
       indeterminate={fileState.indeterminate}
-      onChange={(enabled) =>
-        onChange(toggleIniEntireFile(file, enabled, categories))
-      }
+      onChange={(enabled) => onChange(toggleIniEntireFile(file, enabled, categories))}
     >
       {active ? (
         <>
@@ -89,9 +81,7 @@ export function CopyConfigIniFilePicker(props: Props): ReactElement {
               strategy={file.strategy}
               mergeTooltip={MERGE_STRATEGY_TOOLTIP}
               replaceTooltip={REPLACE_STRATEGY_TOOLTIP}
-              onChange={(strategy) =>
-                onChange(setIniStrategy(file, strategy))
-              }
+              onChange={(strategy) => onChange(setIniStrategy(file, strategy))}
             />
             <Text size="xs" c="dimmed">
               {selected.size} selected
@@ -103,20 +93,11 @@ export function CopyConfigIniFilePicker(props: Props): ReactElement {
               No settings found in the source file.
             </Text>
           ) : (
-            <ScrollArea.Autosize
-              mah={280}
-              type="auto"
-              offsetScrollbars
-              className={classes.sectionsScroll}
-            >
+            <ScrollArea.Autosize mah={280} type="auto" offsetScrollbars className={classes.sectionsScroll}>
               <div className={classes.sections}>
                 {categories.map((category) => {
                   const open = expanded.has(category.id);
-                  const state = categorySelectionState(
-                    file,
-                    categories,
-                    category.id,
-                  );
+                  const state = categorySelectionState(file, categories, category.id);
                   return (
                     <div key={category.id} className={classes.section}>
                       <div className={classes.sectionHeader}>
@@ -126,14 +107,7 @@ export function CopyConfigIniFilePicker(props: Props): ReactElement {
                           indeterminate={state.indeterminate}
                           onClick={(e) => e.stopPropagation()}
                           onChange={(e) =>
-                            onChange(
-                              toggleIniCategoryKeys(
-                                file,
-                                categories,
-                                category.id,
-                                e.currentTarget.checked,
-                              ),
-                            )
+                            onChange(toggleIniCategoryKeys(file, categories, category.id, e.currentTarget.checked))
                           }
                         />
                         <UnstyledButton
@@ -143,17 +117,8 @@ export function CopyConfigIniFilePicker(props: Props): ReactElement {
                           aria-expanded={open}
                         >
                           <Group gap={6} wrap="nowrap">
-                            {open ? (
-                              <CaretDown size={14} />
-                            ) : (
-                              <CaretRight size={14} />
-                            )}
-                            <Text
-                              size="xs"
-                              fw={500}
-                              className={classes.sectionTitle}
-                              title={category.label}
-                            >
+                            {open ? <CaretDown size={14} /> : <CaretRight size={14} />}
+                            <Text size="xs" fw={500} className={classes.sectionTitle} title={category.label}>
                               {category.label}
                             </Text>
                             <Text size="xs" c="dimmed">
@@ -173,13 +138,7 @@ export function CopyConfigIniFilePicker(props: Props): ReactElement {
                                   checked={selected.has(id)}
                                   onChange={(e) =>
                                     onChange(
-                                      toggleIniKey(
-                                        file,
-                                        categories,
-                                        row.section,
-                                        row.key,
-                                        e.currentTarget.checked,
-                                      ),
+                                      toggleIniKey(file, categories, row.section, row.key, e.currentTarget.checked),
                                     )
                                   }
                                   label={

@@ -79,39 +79,25 @@ export class IniService extends EventEmitter {
     }
     return {
       ...disk,
-      payload: this.withProfileOwnedKeys(
-        serverId,
-        sanitizeServerIniPayload(pending.payload),
-      ),
+      payload: this.withProfileOwnedKeys(serverId, sanitizeServerIniPayload(pending.payload)),
       pending: true,
       pendingUpdatedAt: pending.updatedAt,
     };
   }
 
-  async previewServerIni(
-    serverId: string,
-    payload: ServerIniPayload,
-  ): Promise<IniPreview> {
+  async previewServerIni(serverId: string, payload: ServerIniPayload): Promise<IniPreview> {
     const current = await this.readServerIni(serverId);
-    return this.previewWithCurrent(
-      current.payload,
-      sanitizeServerIniPayload(payload),
-    );
+    return this.previewWithCurrent(current.payload, sanitizeServerIniPayload(payload));
   }
 
-  async saveServerIni(
-    serverId: string,
-    payload: ServerIniPayload,
-  ): Promise<ServerIniSaveResult> {
+  async saveServerIni(serverId: string, payload: ServerIniPayload): Promise<ServerIniSaveResult> {
     return this.locks.withLock(serverId, "ini-save", () =>
       this.withIniMutation(serverId, async () => {
         const current = await this.readServerIni(serverId);
         const sanitized = sanitizeServerIniPayload(payload);
         const preview = this.previewWithCurrent(current.payload, sanitized);
         if (!preview.valid) {
-          throw new Error(
-            `Invalid INI: ${preview.issues.map((i) => `${i.fileKey}: ${i.message}`).join(" | ")}`,
-          );
+          throw new Error(`Invalid INI: ${preview.issues.map((i) => `${i.fileKey}: ${i.message}`).join(" | ")}`);
         }
 
         const active = this.options?.isServerActive(serverId) === true;
@@ -133,10 +119,7 @@ export class IniService extends EventEmitter {
           return { ...preview, pending: true };
         }
 
-        await this.writePayloadToDisk(
-          current,
-          this.withProfileOwnedKeys(serverId, sanitized),
-        );
+        await this.writePayloadToDisk(current, this.withProfileOwnedKeys(serverId, sanitized));
         this.options?.pending.delete(serverId);
         this.repo.addEvent(
           serverId,
@@ -156,14 +139,9 @@ export class IniService extends EventEmitter {
    * if needed) — never write live install files. While idle: write disk and clear
    * pending. Optional `profile` covers Start session-port overlays.
    */
-  async syncProfileOwnedKeys(
-    serverId: string,
-    profile?: ServerProfile,
-  ): Promise<void> {
+  async syncProfileOwnedKeys(serverId: string, profile?: ServerProfile): Promise<void> {
     const run = (): Promise<void> =>
-      this.withIniMutation(serverId, () =>
-        this.syncProfileOwnedKeysBody(serverId, profile),
-      );
+      this.withIniMutation(serverId, () => this.syncProfileOwnedKeysBody(serverId, profile));
     // Reentrant for stop/start/restart that already hold the instance lock, but
     // still serialize with save/flush via withIniMutation.
     if (this.locks.isLocked(serverId)) {
@@ -173,10 +151,7 @@ export class IniService extends EventEmitter {
     await this.locks.withLock(serverId, "ini-save", run);
   }
 
-  private async syncProfileOwnedKeysBody(
-    serverId: string,
-    profileOverride?: ServerProfile,
-  ): Promise<void> {
+  private async syncProfileOwnedKeysBody(serverId: string, profileOverride?: ServerProfile): Promise<void> {
     const server = profileOverride ?? this.repo.get(serverId);
     if (server === null) {
       throw new Error("Server does not exist");
@@ -184,15 +159,9 @@ export class IniService extends EventEmitter {
 
     const disk = await this.readDiskSnapshot(serverId);
     const pending = this.options?.pending.get(serverId) ?? null;
-    const base =
-      pending !== null
-        ? sanitizeServerIniPayload(pending.payload)
-        : disk.payload;
+    const base = pending !== null ? sanitizeServerIniPayload(pending.payload) : disk.payload;
     const next: ServerIniPayload = {
-      gameUserSettings: applyProfileOwnedKeysToGameUserSettings(
-        base.gameUserSettings,
-        server,
-      ),
+      gameUserSettings: applyProfileOwnedKeysToGameUserSettings(base.gameUserSettings, server),
       game: base.game,
     };
 
@@ -218,8 +187,7 @@ export class IniService extends EventEmitter {
    * (stop / restart / start).
    */
   async flushPendingServerIni(serverId: string): Promise<boolean> {
-    const run = (): Promise<boolean> =>
-      this.withIniMutation(serverId, () => this.flushPendingServerIniBody(serverId));
+    const run = (): Promise<boolean> => this.withIniMutation(serverId, () => this.flushPendingServerIniBody(serverId));
     if (this.locks.isLocked(serverId)) {
       return run();
     }
@@ -236,15 +204,10 @@ export class IniService extends EventEmitter {
     }
 
     const disk = await this.readDiskSnapshot(serverId);
-    const sanitized = this.withProfileOwnedKeys(
-      serverId,
-      sanitizeServerIniPayload(pending.payload),
-    );
+    const sanitized = this.withProfileOwnedKeys(serverId, sanitizeServerIniPayload(pending.payload));
     const preview = this.previewWithCurrent(disk.payload, sanitized);
     if (!preview.valid) {
-      throw new Error(
-        `Invalid pending INI: ${preview.issues.map((i) => `${i.fileKey}: ${i.message}`).join(" | ")}`,
-      );
+      throw new Error(`Invalid pending INI: ${preview.issues.map((i) => `${i.fileKey}: ${i.message}`).join(" | ")}`);
     }
 
     await this.writePayloadToDisk(disk, sanitized);
@@ -268,19 +231,13 @@ export class IniService extends EventEmitter {
     return cleared;
   }
 
-  private withProfileOwnedKeys(
-    serverId: string,
-    payload: ServerIniPayload,
-  ): ServerIniPayload {
+  private withProfileOwnedKeys(serverId: string, payload: ServerIniPayload): ServerIniPayload {
     const server = this.repo.get(serverId);
     if (server === null) {
       return payload;
     }
     return {
-      gameUserSettings: applyProfileOwnedKeysToGameUserSettings(
-        payload.gameUserSettings,
-        server,
-      ),
+      gameUserSettings: applyProfileOwnedKeysToGameUserSettings(payload.gameUserSettings, server),
       game: payload.game,
     };
   }
@@ -290,9 +247,7 @@ export class IniService extends EventEmitter {
     this.emit("changed", payload);
   }
 
-  private async readDiskSnapshot(serverId: string): Promise<
-    Omit<ServerIniSnapshot, "pending" | "pendingUpdatedAt">
-  > {
+  private async readDiskSnapshot(serverId: string): Promise<Omit<ServerIniSnapshot, "pending" | "pendingUpdatedAt">> {
     const server = this.repo.get(serverId);
     if (server === null) {
       throw new Error("Server does not exist");
@@ -331,10 +286,7 @@ export class IniService extends EventEmitter {
     ]);
   }
 
-  private previewWithCurrent(
-    current: ServerIniPayload,
-    next: ServerIniPayload,
-  ): IniPreview {
+  private previewWithCurrent(current: ServerIniPayload, next: ServerIniPayload): IniPreview {
     return buildIniPreview(current, next);
   }
 
@@ -354,24 +306,10 @@ export class IniService extends EventEmitter {
   }
 
   private gameUserSettingsPath(installDir: string): string {
-    return join(
-      installDir,
-      "ShooterGame",
-      "Saved",
-      "Config",
-      "WindowsServer",
-      "GameUserSettings.ini",
-    );
+    return join(installDir, "ShooterGame", "Saved", "Config", "WindowsServer", "GameUserSettings.ini");
   }
 
   private gameIniPath(installDir: string): string {
-    return join(
-      installDir,
-      "ShooterGame",
-      "Saved",
-      "Config",
-      "WindowsServer",
-      "Game.ini",
-    );
+    return join(installDir, "ShooterGame", "Saved", "Config", "WindowsServer", "Game.ini");
   }
 }

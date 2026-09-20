@@ -45,7 +45,7 @@ export function useAppSteamCmdActions(options: {
         showOperatorToast({
           title: "Pause unavailable",
           message,
-          color: "yellow",
+          color: "attention",
         });
       } else {
         showOperatorError(message);
@@ -63,14 +63,9 @@ export function useAppSteamCmdActions(options: {
   const startSteamFilesJob = useCallback(
     (serverId: string, kind: "install" | "update" | "verify") => {
       const serverName = servers.find((server) => server.id === serverId)?.name ?? serverId;
-      const operation =
-        kind === "install" ? "install-files" : kind === "verify" ? "verify-files" : "update";
-      const actionLabel =
-        kind === "install" ? "Install" : kind === "verify" ? "Verify" : "Update";
-      const occupant = occupyingFilesJobForServer(
-        steamCmdStatus?.criticalJobs ?? [],
-        serverId,
-      );
+      const operation = kind === "install" ? "install-files" : kind === "verify" ? "verify-files" : "update";
+      const actionLabel = kind === "install" ? "Install" : kind === "verify" ? "Verify" : "Update";
+      const occupant = occupyingFilesJobForServer(steamCmdStatus?.criticalJobs ?? [], serverId);
       const decision = decideFilesJobEnqueue(operation, occupant);
       if (decision.action !== "enqueue" && decision.action !== "replace") {
         const copy = filesJobEnqueueCopy(operation, decision, serverName);
@@ -153,7 +148,7 @@ export function useAppSteamCmdActions(options: {
             showOperatorToast({
               title: "Paused",
               message: copy.pauseMessage,
-              color: "yellow",
+              color: "attention",
             });
           } else if (/cancell?ed|cancelad/i.test(message)) {
             showOperatorToast({
@@ -177,11 +172,7 @@ export function useAppSteamCmdActions(options: {
   );
 
   const pickSteamCmdPath = useCallback(async () => {
-    const pick = await window.api.pickPath(
-      "file",
-      steamCmdStatus?.executablePath ?? undefined,
-      "Select steamcmd.exe",
-    );
+    const pick = await window.api.pickPath("file", steamCmdStatus?.executablePath ?? undefined, "Select steamcmd.exe");
     if (!pick.ok) {
       showOperatorError(pick.error ?? "Could not open file picker");
       return;
@@ -213,11 +204,7 @@ export function useAppSteamCmdActions(options: {
           : "Removes the ready-made ARK server copy used to set up new servers faster. The next install will rebuild it first.";
       openDangerConfirmModal({
         title: `Clear ${label}?`,
-        children: createElement(
-          Alert,
-          { color: "orange", variant: "light", title: "Cannot be undone" },
-          detail,
-        ),
+        children: createElement(Alert, { color: "attention", title: "Cannot be undone" }, detail),
         confirmLabel: "Clear cache",
         onConfirm: () => {
           void (async () => {
@@ -228,8 +215,7 @@ export function useAppSteamCmdActions(options: {
             }
             showOperatorToast({
               title: `${label.charAt(0).toUpperCase()}${label.slice(1)} cleared`,
-              message:
-                "Removed. The next install or update will download what it needs.",
+              message: "Removed. The next install or update will download what it needs.",
             });
             await refresh();
           })();

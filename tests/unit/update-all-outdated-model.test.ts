@@ -28,9 +28,9 @@ function server(partial: Partial<ServerProfile> = {}): ServerProfile {
     mods: [],
     disabledMods: [],
     modMetadataCache: {},
-    
+
     autoStart: false,
-    
+
     useAsaApi: false,
     useAsaApiLoader: false,
     enabled: true,
@@ -40,10 +40,7 @@ function server(partial: Partial<ServerProfile> = {}): ServerProfile {
   };
 }
 
-function status(
-  serverId: string,
-  statusValue: ServerRuntimeInfo["status"],
-): ServerRuntimeInfo {
+function status(serverId: string, statusValue: ServerRuntimeInfo["status"]): ServerRuntimeInfo {
   return {
     serverId,
     status: statusValue,
@@ -123,14 +120,8 @@ describe("buildUpdateAllOutdatedPlan", () => {
             health: "ready",
           }),
         ],
-        [
-          "unknown",
-          stubInstallationInfo({ serverId: "unknown", steamBuild: null, health: "ready" }),
-        ],
-        [
-          "queued",
-          stubInstallationInfo({ serverId: "queued", steamBuild: "build 2", health: "ready" }),
-        ],
+        ["unknown", stubInstallationInfo({ serverId: "unknown", steamBuild: null, health: "ready" })],
+        ["queued", stubInstallationInfo({ serverId: "queued", steamBuild: "build 2", health: "ready" })],
       ]),
       statuses: new Map([
         ["disabled", status("disabled", "stopped")],
@@ -157,11 +148,7 @@ describe("buildUpdateAllOutdatedPlan", () => {
     });
 
     expect(plan.eligible).toHaveLength(0);
-    expect(plan.skipped.map((row) => row.skipReason)).toEqual([
-      "disabled",
-      "files-job-occupied",
-      "update-unknown",
-    ]);
+    expect(plan.skipped.map((row) => row.skipReason)).toEqual(["disabled", "files-job-occupied", "update-unknown"]);
     expect(canOpenUpdateAllOutdated(plan)).toBe(false);
   });
 });
@@ -198,4 +185,3 @@ describe("summarizeUpdateAllOutdatedQueue", () => {
     ).toContain("2 updates queued in Downloads");
   });
 });
-

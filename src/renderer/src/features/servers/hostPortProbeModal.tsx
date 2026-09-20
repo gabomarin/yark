@@ -1,4 +1,5 @@
-import { Alert, Button, Stack, Text } from "@mantine/core";
+import { Button, Stack, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { modals } from "@mantine/modals";
 import {
   humanizeHostPortProbeError,
@@ -20,9 +21,7 @@ export function openHostPortProbeModal(args: {
   const canStartAnyway = !busy && args.onStartAnyway != null;
 
   modals.openConfirmModal({
-    title: busy
-      ? `Ports in use – ${args.serverName}`
-      : `Could not verify ports – ${args.serverName}`,
+    title: busy ? `Ports in use – ${args.serverName}` : `Could not verify ports – ${args.serverName}`,
     centered: true,
     children: (
       <Stack
@@ -31,17 +30,13 @@ export function openHostPortProbeModal(args: {
         data-host-port-probe-kind={busy ? "busy" : "inconclusive"}
         data-host-port-probe-suggested={suggested != null ? "true" : "false"}
       >
-        <Alert
-          color="orange"
-          variant="light"
-          title={busy ? "Host port busy" : "Probe inconclusive"}
-        >
+        <AppAlert color="attention" variant="light" title={busy ? "Host port busy" : "Probe inconclusive"}>
           {detail}
-        </Alert>
+        </AppAlert>
         {suggested != null ? (
           <Text size="sm" data-host-port-probe-suggestion>
-            Suggested free set for this session only: game {suggested.gamePort}, query{" "}
-            {suggested.queryPort}, RCON {suggested.rconPort}. Saved profile ports stay unchanged.
+            Suggested free set for this session only: game {suggested.gamePort}, query {suggested.queryPort}, RCON{" "}
+            {suggested.rconPort}. Saved profile ports stay unchanged.
           </Text>
         ) : (
           <Text size="sm" c="dimmed">
@@ -64,8 +59,8 @@ export function openHostPortProbeModal(args: {
         </Button>
         {canStartAnyway ? (
           <Button
-            variant="light"
-            color="orange"
+            variant="default"
+            color="attention"
             data-host-port-probe-start-anyway
             onClick={() => {
               modals.closeAll();
@@ -84,7 +79,7 @@ export function openHostPortProbeModal(args: {
           : "Close",
       cancel: "Cancel",
     },
-    confirmProps: suggested != null ? { color: "orange" } : undefined,
+    confirmProps: suggested != null ? { color: "attention" } : undefined,
     onConfirm: () => {
       if (suggested != null) {
         args.onStartThisSession(suggested);

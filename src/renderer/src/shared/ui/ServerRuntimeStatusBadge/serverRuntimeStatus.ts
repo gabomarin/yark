@@ -9,14 +9,8 @@ const SERVER_RUNTIME_STATUS_LABEL: Record<ServerStatus, string> = {
   error: "Error",
 };
 
-export function serverRuntimeStatusLabel(
-  status: ServerStatus | string,
-  options?: { asaApiLoading?: boolean },
-): string {
-  if (
-    options?.asaApiLoading === true
-    && (status === "starting" || status === "stopped" || status === "error")
-  ) {
+export function serverRuntimeStatusLabel(status: ServerStatus | string, options?: { asaApiLoading?: boolean }): string {
+  if (options?.asaApiLoading === true && (status === "starting" || status === "stopped" || status === "error")) {
     return "Loading Ark Server API…";
   }
   if (status in SERVER_RUNTIME_STATUS_LABEL) {
@@ -26,11 +20,9 @@ export function serverRuntimeStatusLabel(
 }
 
 /** Compact list-thumb tone for runtime status (word + dot). */
-export function serverRuntimeStatusTone(
-  status: ServerStatus | string,
-): "ok" | "warn" | "bad" | "info" | "muted" {
+export function serverRuntimeStatusTone(status: ServerStatus | string): "ok" | "warn" | "danger" | "info" | "neutral" {
   if (status === "running") return "ok";
   if (status === "starting" || status === "stopping") return "info";
-  if (status === "error") return "bad";
-  return "muted";
+  if (status === "error") return "danger";
+  return "neutral";
 }

@@ -34,13 +34,7 @@ function windowsConfigDir(installDir) {
 }
 
 function exePath(installDir) {
-  return path.join(
-    installDir,
-    "ShooterGame",
-    "Binaries",
-    "Win64",
-    "ArkAscendedServer.exe",
-  );
+  return path.join(installDir, "ShooterGame", "Binaries", "Win64", "ArkAscendedServer.exe");
 }
 
 function worldMarkerPath(installDir) {
@@ -168,9 +162,7 @@ async function waitForHealthSettled(page, expectedAttention, timeout = 30_000) {
     }
     await page.waitForTimeout(250);
   }
-  throw new Error(
-    `Install health did not settle (expected attention=${expectedAttention})`,
-  );
+  throw new Error(`Install health did not settle (expected attention=${expectedAttention})`);
 }
 
 async function fillNumber(dialog, label, value) {
@@ -184,25 +176,18 @@ function readUtf8(filePath) {
 }
 
 function assertContains(haystack, needle, label) {
-  assert.ok(
-    haystack.includes(needle),
-    `${label} missing ${JSON.stringify(needle)}`,
-  );
+  assert.ok(haystack.includes(needle), `${label} missing ${JSON.stringify(needle)}`);
 }
 
 function assertNotContains(haystack, needle, label) {
-  assert.ok(
-    !haystack.includes(needle),
-    `${label} unexpectedly contains ${JSON.stringify(needle)}`,
-  );
+  assert.ok(!haystack.includes(needle), `${label} unexpectedly contains ${JSON.stringify(needle)}`);
 }
 
 async function run() {
   process.chdir(projectRoot);
   assert.equal(process.platform, "win32", "Clone-copy E2E requires Windows paths");
 
-  const { profileDir, serversDir, runId, fixtureName, root } =
-    createE2eFixtureRoots("clone-copy");
+  const { profileDir, serversDir, runId, fixtureName, root } = createE2eFixtureRoots("clone-copy");
   assertUnderFixtureRoot(path.join(root, "profiles"), profileDir);
   assertUnderFixtureRoot(path.join(root, "servers"), serversDir);
 
@@ -280,10 +265,7 @@ async function run() {
     });
     await emptyCopy.waitFor({ state: "visible", timeout: 5000 });
     assert.equal(await emptyCopy.isDisabled(), true);
-    assert.match(
-      await emptyDialog.innerText(),
-      /no install files yet/i,
-    );
+    assert.match(await emptyDialog.innerText(), /no install files yet/i);
     await emptyDialog.getByRole("button", { name: "Cancel" }).click();
     await emptyDialog.waitFor({ state: "hidden", timeout: 10000 });
     await dismissOpenMenus(page);
@@ -301,9 +283,7 @@ async function run() {
     await dismissOpenMenus(page);
 
     const profileGame = readUtf8(path.join(windowsConfigDir(profileCloneDir), "Game.ini"));
-    const profileGus = readUtf8(
-      path.join(windowsConfigDir(profileCloneDir), "GameUserSettings.ini"),
-    );
+    const profileGus = readUtf8(path.join(windowsConfigDir(profileCloneDir), "GameUserSettings.ini"));
     assertContains(profileGame, GAME_MARKER, "profile-only Game.ini");
     assertContains(profileGus, GUS_RATE_MARKER, "profile-only GUS rates");
     assertContains(profileGus, `SessionName=${SOURCE_SESSION}-copy`, "profile-only session");
@@ -321,9 +301,7 @@ async function run() {
       "profile-only clone must not copy world marker",
     );
 
-    const sourceGusAfterProfile = readUtf8(
-      path.join(windowsConfigDir(readyInstall), "GameUserSettings.ini"),
-    );
+    const sourceGusAfterProfile = readUtf8(path.join(windowsConfigDir(readyInstall), "GameUserSettings.ini"));
     assertContains(sourceGusAfterProfile, SOURCE_SESSION, "source session after profile clone");
     assertContains(sourceGusAfterProfile, `Port=${readyPorts.game}`, "source port after profile clone");
 
@@ -343,11 +321,7 @@ async function run() {
     await waitForCardByName(page, fullCloneName, 15000);
 
     assert.equal(fs.existsSync(exePath(fullCloneDir)), true, "folder copy missing exe");
-    assert.equal(
-      readUtf8(worldMarkerPath(fullCloneDir)).trim(),
-      worldMarker,
-      "folder copy missing world marker",
-    );
+    assert.equal(readUtf8(worldMarkerPath(fullCloneDir)).trim(), worldMarker, "folder copy missing world marker");
     const fullGame = readUtf8(path.join(windowsConfigDir(fullCloneDir), "Game.ini"));
     const fullGus = readUtf8(path.join(windowsConfigDir(fullCloneDir), "GameUserSettings.ini"));
     assertContains(fullGame, GAME_MARKER, "folder-copy Game.ini");
@@ -358,9 +332,7 @@ async function run() {
     assertContains(fullGus, `RCONPort=${fullClonePorts.rcon}`, "folder-copy RCON port");
     assertNotContains(fullGus, SOURCE_SESSION, "folder-copy GUS session");
 
-    const sourceGusFinal = readUtf8(
-      path.join(windowsConfigDir(readyInstall), "GameUserSettings.ini"),
-    );
+    const sourceGusFinal = readUtf8(path.join(windowsConfigDir(readyInstall), "GameUserSettings.ini"));
     const sourceGameFinal = readUtf8(path.join(windowsConfigDir(readyInstall), "Game.ini"));
     assertContains(sourceGameFinal, GAME_MARKER, "source Game.ini after folder copy");
     assertContains(sourceGusFinal, SOURCE_SESSION, "source session after folder copy");

@@ -1,9 +1,5 @@
 import type { ReactElement, ReactNode } from "react";
-import {
-  ArrowCounterClockwise,
-  ArrowUUpLeft,
-  FloppyDisk,
-} from "@phosphor-icons/react";
+import { ArrowCounterClockwise, ArrowUUpLeft, FloppyDisk } from "@phosphor-icons/react";
 import { Button, Group, Stack, Text, Title } from "@mantine/core";
 import classes from "./ConfigurationEditor.module.css";
 
@@ -51,7 +47,7 @@ export function ConfigurationEditorHeader(props: Props): ReactElement {
       </div>
       <div className={classes.headerToolbar}>
         {iniNavigation}
-        <Group gap="xs" className={classes.headerActions} wrap="wrap">
+        <Group gap="xs" wrap="wrap" ml="auto">
           {showRestoreFile && onRestoreFile !== undefined && (
             <Button
               size="xs"

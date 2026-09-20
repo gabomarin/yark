@@ -3,10 +3,7 @@ import { existsSync, statSync } from "node:fs";
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { dirname, join, normalize, parse, resolve, basename } from "node:path";
 import { removeIniTextValue, setIniTextValue } from "@shared/ini/ini-text";
-import {
-  isBlankOrNaUrl,
-  readIniServerSetting,
-} from "./ban-list";
+import { isBlankOrNaUrl, readIniServerSetting } from "./ban-list";
 import { serverBinaryPath } from "./launch-args";
 import { gameUserSettingsIniPath } from "./sync-profile-ini";
 
@@ -57,12 +54,7 @@ export interface AdminListValidateResult {
 
 /** Wiki path: ShooterGame/Saved/AllowedCheaterAccountIDs.txt */
 export function adminListPath(installDir: string): string {
-  return join(
-    installDir,
-    "ShooterGame",
-    "Saved",
-    "AllowedCheaterAccountIDs.txt",
-  );
+  return join(installDir, "ShooterGame", "Saved", "AllowedCheaterAccountIDs.txt");
 }
 
 /**
@@ -70,12 +62,7 @@ export function adminListPath(installDir: string): string {
  * Same folder as the wiki file: AllowedCheaterAccountIDs.names.json
  */
 export function adminListNamesPath(installDir: string): string {
-  return join(
-    installDir,
-    "ShooterGame",
-    "Saved",
-    "AllowedCheaterAccountIDs.names.json",
-  );
+  return join(installDir, "ShooterGame", "Saved", "AllowedCheaterAccountIDs.names.json");
 }
 
 /** Legacy YARK spike path — never treat as source of truth. */
@@ -102,11 +89,7 @@ function isLoopbackAdminListUrl(value: string | null | undefined): boolean {
   if (!/^https?:\/\//i.test(url)) return false;
   try {
     const parsed = new URL(url);
-    return (
-      parsed.hostname === "127.0.0.1" ||
-      parsed.hostname === "localhost" ||
-      parsed.hostname === "[::1]"
-    );
+    return parsed.hostname === "127.0.0.1" || parsed.hostname === "localhost" || parsed.hostname === "[::1]";
   } catch {
     return false;
   }
@@ -120,9 +103,7 @@ function isLoopbackAdminListUrl(value: string | null | undefined): boolean {
  * - other http(s) → remote
  * - anything else → misconfigured
  */
-export function classifyAdminListUrl(
-  value: string | null | undefined,
-): AdminListMode {
+export function classifyAdminListUrl(value: string | null | undefined): AdminListMode {
   const url = unwrapIniUrl(value);
   if (isBlankOrNaUrl(url)) return "local";
   if (/^file:\/\//i.test(url)) return "local";
@@ -145,10 +126,7 @@ function adminListInstallHash(installDir: string): string {
  * `asaMirrorRoot` (YARK userData `admin-lists/`). Falls back to
  * `<drive>:\yark-admin-lists` only if no mirror root is configured.
  */
-export function adminListAsaPointerPath(
-  installDir: string,
-  asaMirrorRoot?: string | null,
-): string {
+export function adminListAsaPointerPath(installDir: string, asaMirrorRoot?: string | null): string {
   const wiki = adminListPath(installDir);
   if (!/\s/.test(wiki)) return wiki;
 
@@ -161,10 +139,7 @@ export function adminListAsaPointerPath(
 }
 
 /** UserData (or configured) mirror path used for loopback HTTP + space-free file://. */
-function adminListMirrorFilePath(
-  installDir: string,
-  asaMirrorRoot?: string | null,
-): string | null {
+function adminListMirrorFilePath(installDir: string, asaMirrorRoot?: string | null): string | null {
   const configured = asaMirrorRoot?.trim() ?? "";
   if (configured.length === 0) return null;
   return join(resolve(configured), `${adminListInstallHash(installDir)}.txt`);
@@ -209,10 +184,7 @@ function formatAdminListIdsBody(ids: string[]): string {
 }
 
 /** Write whitelist body as raw UTF-8 bytes (never injects a UTF-8 BOM). */
-async function writeAdminListBodyFile(
-  filePath: string,
-  ids: string[],
-): Promise<void> {
+async function writeAdminListBodyFile(filePath: string, ids: string[]): Promise<void> {
   await mkdir(dirname(filePath), { recursive: true });
   const body = formatAdminListIdsBody(ids);
   await writeFile(filePath, Buffer.from(body, "utf8"));
@@ -222,9 +194,7 @@ async function writeAdminListBodyFile(
  * Parse wiki body to unique ids and rewrite the file when whitespace / blank
  * lines / comments would leave junk for ASA (or for the space-free mirror).
  */
-async function sanitizeAdminListWikiFile(
-  installDir: string,
-): Promise<string[]> {
+async function sanitizeAdminListWikiFile(installDir: string): Promise<string[]> {
   await ensureAdminListFile(installDir);
   const wiki = adminListPath(installDir);
   const raw = existsSync(wiki) ? await readFile(wiki, "utf8") : "";
@@ -244,10 +214,7 @@ async function sanitizeAdminListWikiFile(
  * Sanitize wiki AllowedCheaterAccountIDs.txt, refresh userData mirror (HTTP),
  * and copy cleaned ids → ASA file:// pointer when that path differs.
  */
-export async function syncAdminListAsaPointer(
-  installDir: string,
-  asaMirrorRoot?: string | null,
-): Promise<string> {
+export async function syncAdminListAsaPointer(installDir: string, asaMirrorRoot?: string | null): Promise<string> {
   const ids = await sanitizeAdminListWikiFile(installDir);
   const wiki = adminListPath(installDir);
   const pointer = adminListAsaPointerPath(installDir, asaMirrorRoot);
@@ -274,11 +241,7 @@ export async function refreshAdminListBeforeStart(
   loopbackBaseUrl?: string | null,
 ): Promise<void> {
   try {
-    await ensureLocalAdminListFileUrlPointer(
-      installDir,
-      asaMirrorRoot,
-      loopbackBaseUrl,
-    );
+    await ensureLocalAdminListFileUrlPointer(installDir, asaMirrorRoot, loopbackBaseUrl);
   } catch {
     // Start must not fail on whitelist hygiene.
   }
@@ -339,9 +302,7 @@ function formatAdminListNamesJson(names: Map<string, string>): string {
   return `${JSON.stringify(obj, null, 2)}\n`;
 }
 
-async function readAdminListNames(
-  installDir: string,
-): Promise<Map<string, string>> {
+async function readAdminListNames(installDir: string): Promise<Map<string, string>> {
   const path = adminListNamesPath(installDir);
   if (!existsSync(path)) return new Map();
   try {
@@ -378,10 +339,7 @@ export async function learnAdminListNames(
   return { updated, namesPath };
 }
 
-function entriesWithNames(
-  ids: string[],
-  names: Map<string, string>,
-): AdminListEntry[] {
+function entriesWithNames(ids: string[], names: Map<string, string>): AdminListEntry[] {
   return ids.map((id) => ({
     id,
     name: names.get(id.toLowerCase()) ?? null,
@@ -403,9 +361,7 @@ export function formatAdminListUrlForIni(url: string): string {
   return unwrapped;
 }
 
-function parseUpdateAllowedCheatersInterval(
-  raw: string | null | undefined,
-): number {
+function parseUpdateAllowedCheatersInterval(raw: string | null | undefined): number {
   if (raw === null || raw === undefined) {
     return DEFAULT_UPDATE_ALLOWED_CHEATERS_INTERVAL;
   }
@@ -424,9 +380,7 @@ export async function ensureAdminListFile(installDir: string): Promise<string> {
   return path;
 }
 
-async function clearLegacyAdminListFile(
-  installDir: string,
-): Promise<void> {
+async function clearLegacyAdminListFile(installDir: string): Promise<void> {
   const legacy = legacyAdminListPath(installDir);
   if (!existsSync(legacy)) return;
   try {
@@ -436,9 +390,7 @@ async function clearLegacyAdminListFile(
   }
 }
 
-async function readAdminListIdsFromFile(
-  installDir: string,
-): Promise<string[]> {
+async function readAdminListIdsFromFile(installDir: string): Promise<string[]> {
   const path = adminListPath(installDir);
   if (!existsSync(path)) return [];
   return parseAdminListIds(await readFile(path, "utf8"));
@@ -520,9 +472,7 @@ async function fetchAdminListUrlText(url: string): Promise<string> {
   }
 }
 
-export async function validateAdminListUrl(
-  url: string,
-): Promise<AdminListValidateResult> {
+export async function validateAdminListUrl(url: string): Promise<AdminListValidateResult> {
   const text = await fetchAdminListUrlText(url);
   const ids = parseAdminListIds(text);
   return { count: ids.length, ids };
@@ -545,10 +495,7 @@ async function readGusIntervalAndUrl(installDir: string): Promise<{
   const unwrapped = unwrapIniUrl(rawUrl);
   return {
     // UI shows http(s) for remote/loopback; `local` (blank / file://) has no URL to show.
-    adminListUrl:
-      (mode === "remote" || mode === "loopback") && !isBlankOrNaUrl(unwrapped)
-        ? unwrapped
-        : "",
+    adminListUrl: (mode === "remote" || mode === "loopback") && !isBlankOrNaUrl(unwrapped) ? unwrapped : "",
     updateAllowedCheatersInterval: parseUpdateAllowedCheatersInterval(rawInterval),
     mode,
   };
@@ -598,10 +545,7 @@ async function ensureLocalAdminListFileUrlPointer(
 }
 
 /** When the wiki list is empty, seed ids from the YARK names sidecar keys. */
-async function seedLocalIdsFromNamesSidecar(
-  installDir: string,
-  asaMirrorRoot?: string | null,
-): Promise<boolean> {
+async function seedLocalIdsFromNamesSidecar(installDir: string, asaMirrorRoot?: string | null): Promise<boolean> {
   const existing = await readAdminListIdsFromFile(installDir);
   if (existing.length > 0) return false;
   const names = await readAdminListNames(installDir);
@@ -619,8 +563,7 @@ export async function getAdminListState(
   // Do not rewrite GUS or the wiki file on read — product UI is remote-URL-only.
   // Seeding from the names sidecar belongs only on explicit local-mode writes.
 
-  const { adminListUrl, updateAllowedCheatersInterval, mode } =
-    await readGusIntervalAndUrl(installDir);
+  const { adminListUrl, updateAllowedCheatersInterval, mode } = await readGusIntervalAndUrl(installDir);
   const names = await readAdminListNames(installDir);
 
   let ids: string[] = [];
@@ -633,28 +576,20 @@ export async function getAdminListState(
       const text = await fetchAdminListUrlText(adminListUrl);
       ids = parseAdminListIds(text);
     } catch (error) {
-      listError =
-        error instanceof Error ? error.message : "Could not fetch admin list";
+      listError = error instanceof Error ? error.message : "Could not fetch admin list";
     }
   } else if (mode === "local") {
     try {
       ids = await readAdminListIdsFromFile(installDir);
       // Empty local file is fine when AdminListURL is blank (no remote list).
-      if (
-        ids.length === 0 &&
-        adminListUrl.length > 0 &&
-        /^file:\/\//i.test(adminListUrl)
-      ) {
-        listError =
-          "Whitelist file is empty – add at least one EOS id, then restart.";
+      if (ids.length === 0 && adminListUrl.length > 0 && /^file:\/\//i.test(adminListUrl)) {
+        listError = "Whitelist file is empty – add at least one EOS id, then restart.";
       }
     } catch (error) {
-      listError =
-        error instanceof Error ? error.message : "Could not read admin list";
+      listError = error instanceof Error ? error.message : "Could not read admin list";
     }
   } else {
-    listError =
-      "AdminListURL must be blank/file:// for local mode or an http(s) URL for remote.";
+    listError = "AdminListURL must be blank/file:// for local mode or an http(s) URL for remote.";
   }
 
   return {
@@ -681,15 +616,11 @@ export async function setAdminListConfig(
 ): Promise<AdminListState> {
   const mode = classifyAdminListUrl(input.adminListUrl);
   if (mode === "misconfigured") {
-    throw new Error(
-      "AdminListURL must be empty (local file) or an http(s) URL.",
-    );
+    throw new Error("AdminListURL must be empty (local file) or an http(s) URL.");
   }
 
   const previous = await readGusIntervalAndUrl(installDir);
-  const interval = clampUpdateAllowedCheatersInterval(
-    input.updateAllowedCheatersInterval,
-  );
+  const interval = clampUpdateAllowedCheatersInterval(input.updateAllowedCheatersInterval);
   const gusPath = gameUserSettingsIniPath(installDir);
   await mkdir(dirname(gusPath), { recursive: true });
 
@@ -719,19 +650,9 @@ export async function setAdminListConfig(
     }
   } else {
     // remote + loopback: keep the operator's http(s) URL verbatim.
-    text = setIniTextValue(
-      text,
-      "ServerSettings",
-      "AdminListURL",
-      formatAdminListUrlForIni(input.adminListUrl),
-    );
+    text = setIniTextValue(text, "ServerSettings", "AdminListURL", formatAdminListUrlForIni(input.adminListUrl));
   }
-  text = setIniTextValue(
-    text,
-    "ServerSettings",
-    "UpdateAllowedCheatersInterval",
-    String(interval),
-  );
+  text = setIniTextValue(text, "ServerSettings", "UpdateAllowedCheatersInterval", String(interval));
   await writeFile(gusPath, text.endsWith("\n") ? text : `${text}\n`, "utf8");
 
   if (
@@ -740,11 +661,7 @@ export async function setAdminListConfig(
     /^file:\/\//i.test(unwrapIniUrl(input.adminListUrl))
   ) {
     let existing = await readAdminListIdsFromFile(installDir);
-    if (
-      existing.length === 0 &&
-      previous.mode === "remote" &&
-      previous.adminListUrl.length > 0
-    ) {
+    if (existing.length === 0 && previous.mode === "remote" && previous.adminListUrl.length > 0) {
       try {
         const remoteText = await fetchAdminListUrlText(previous.adminListUrl);
         const remoteIds = parseAdminListIds(remoteText);

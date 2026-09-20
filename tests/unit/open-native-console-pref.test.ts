@@ -8,10 +8,7 @@ import {
   parseOpenNativeConsolePref,
   parseStoredOpenNativeConsole,
 } from "@shared/settings/open-native-console";
-import {
-  loadOpenNativeConsolePref,
-  writeOpenNativeConsolePref,
-} from "@features/settings/settingsModel";
+import { loadOpenNativeConsolePref, writeOpenNativeConsolePref } from "@features/settings/settingsModel";
 
 describe("open native console shared helpers", () => {
   it("parses stored values and falls back to off", () => {
@@ -81,9 +78,7 @@ describe("open native console preference (IPC + legacy migration)", () => {
     });
 
     await expect(loadOpenNativeConsolePref()).resolves.toBe(true);
-    expect(window.localStorage.getItem(OPEN_NATIVE_CONSOLE_LEGACY_LOCAL_STORAGE_KEY)).toBe(
-      "1",
-    );
+    expect(window.localStorage.getItem(OPEN_NATIVE_CONSOLE_LEGACY_LOCAL_STORAGE_KEY)).toBe("1");
   });
 
   it("falls back when getOpenNativeConsole returns ok:false", async () => {

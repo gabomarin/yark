@@ -1,16 +1,8 @@
 import { useCallback, useMemo, useState } from "react";
 import { notifications } from "@mantine/notifications";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
-import type {
-  ServerInstallationInfo,
-  ServerProfile,
-  ServerRuntimeInfo,
-  SteamCmdStatus,
-} from "@shared/types";
-import {
-  getServerUpdateState,
-  isServerUpdateAvailable,
-} from "@shared/server/server-update-status";
+import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo, SteamCmdStatus } from "@shared/types";
+import { getServerUpdateState, isServerUpdateAvailable } from "@shared/server/server-update-status";
 import {
   buildUpdateAllOutdatedPlan,
   canOpenUpdateAllOutdated,
@@ -32,19 +24,10 @@ export function useOverviewServerUpdates(options: {
   refresh: Refresh;
   onOpenDownloads: () => void;
 }) {
-  const {
-    servers,
-    installationInfo,
-    statuses,
-    officialSteamBuild,
-    steamCmdStatus,
-    refresh,
-    onOpenDownloads,
-  } = options;
+  const { servers, installationInfo, statuses, officialSteamBuild, steamCmdStatus, refresh, onOpenDownloads } = options;
   const [checkingUpdates, setCheckingUpdates] = useState(false);
   const [updateAllOutdatedOpen, setUpdateAllOutdatedOpen] = useState(false);
-  const [updateAllOutdatedModalPlan, setUpdateAllOutdatedModalPlan] =
-    useState<UpdateAllOutdatedPlan | null>(null);
+  const [updateAllOutdatedModalPlan, setUpdateAllOutdatedModalPlan] = useState<UpdateAllOutdatedPlan | null>(null);
   const [updateAllOutdatedLoading, setUpdateAllOutdatedLoading] = useState(false);
   const [updateAllOutdatedQueueing, setUpdateAllOutdatedQueueing] = useState(false);
 
@@ -72,10 +55,7 @@ export function useOverviewServerUpdates(options: {
             includeServerList: false,
           });
           if (snapshot.installationInfo === null) {
-            showOperatorError(
-              "Could not check for updates",
-              "Could not check for updates",
-            );
+            showOperatorError("Could not check for updates", "Could not check for updates");
             return;
           }
           const next = snapshot.installationInfo;
@@ -88,7 +68,7 @@ export function useOverviewServerUpdates(options: {
               notifications.show({
                 title: "Not installed yet",
                 message: `Install files for "${name}" before checking for updates.`,
-                color: "yellow",
+                color: "attention",
               });
               return;
             }
@@ -104,7 +84,7 @@ export function useOverviewServerUpdates(options: {
               notifications.show({
                 title: "Couldn't check",
                 message: `Couldn't read the installed version for "${name}". Try Install or Verify files first.`,
-                color: "yellow",
+                color: "attention",
               });
               return;
             }
@@ -112,61 +92,52 @@ export function useOverviewServerUpdates(options: {
               notifications.show({
                 title: "Update available",
                 message: `"${name}" has a newer version. Use Update on the server card when you're ready.`,
-                color: "orange",
+                color: "attention",
                 autoClose: 8000,
               });
             } else {
               notifications.show({
                 title: "Up to date",
                 message: `"${name}" is already on the latest version.`,
-                color: "teal",
+                color: "ok",
               });
             }
             return;
           }
 
           const serversInfo = [...next.values()];
-          const outdated = serversInfo.filter((info) =>
-            isServerUpdateAvailable(info, officialBuild),
-          );
+          const outdated = serversInfo.filter((info) => isServerUpdateAvailable(info, officialBuild));
           const unverified = serversInfo.filter(
-            (info) =>
-              info.installed
-              && getServerUpdateState(info, officialBuild) === "unknown",
+            (info) => info.installed && getServerUpdateState(info, officialBuild) === "unknown",
           );
           if (outdated.length === 0) {
             if (unverified.length > 0) {
               notifications.show({
                 title: "Couldn't check every server",
                 message: `${unverified.length} server${unverified.length === 1 ? "" : "s"} don't have a version to compare. Try Install or Verify on ${unverified.length === 1 ? "that server" : "those servers"}.`,
-                color: "yellow",
+                color: "attention",
               });
             } else {
               notifications.show({
                 title: "You're up to date",
                 message: "All installed servers are on the latest version.",
-                color: "teal",
+                color: "ok",
               });
             }
           } else {
             const names = outdated
               .map((info) => {
-                const name =
-                  servers.find((server) => server.id === info.serverId)?.name
-                  ?? info.serverId;
+                const name = servers.find((server) => server.id === info.serverId)?.name ?? info.serverId;
                 return `"${name}"`;
               })
               .join(", ");
             notifications.show({
-              title:
-                outdated.length === 1
-                  ? "Update available"
-                  : `${outdated.length} updates available`,
+              title: outdated.length === 1 ? "Update available" : `${outdated.length} updates available`,
               message:
                 outdated.length === 1
                   ? `${names} has a newer version. Use Update on the server card when you're ready.`
                   : `${names} have newer versions. Use Update on each server card when you're ready.`,
-              color: "orange",
+              color: "attention",
               autoClose: 10000,
             });
           }
@@ -190,10 +161,7 @@ export function useOverviewServerUpdates(options: {
           includeServerList: false,
         });
         if (snapshot.installationInfo === null) {
-          showOperatorError(
-            "Could not refresh update status",
-            "Could not refresh update status",
-          );
+          showOperatorError("Could not refresh update status", "Could not refresh update status");
           return;
         }
         const nextPlan = buildUpdateAllOutdatedPlan({
@@ -207,7 +175,7 @@ export function useOverviewServerUpdates(options: {
           showOperatorToast({
             title: "No outdated servers",
             message: "Every installed server is already on the latest Steam build.",
-            color: "teal",
+            color: "ok",
           });
           return;
         }
@@ -280,9 +248,7 @@ export function useOverviewServerUpdates(options: {
           });
         } catch (error) {
           showOperatorError(
-            error instanceof Error
-              ? error.message
-              : "Something went wrong queueing updates.",
+            error instanceof Error ? error.message : "Something went wrong queueing updates.",
             "Could not queue updates",
           );
         }
@@ -293,15 +259,7 @@ export function useOverviewServerUpdates(options: {
         setUpdateAllOutdatedModalPlan(null);
       },
     );
-  }, [
-    installationInfo,
-    officialSteamBuild,
-    onOpenDownloads,
-    refresh,
-    servers,
-    statuses,
-    steamCmdStatus?.criticalJobs,
-  ]);
+  }, [installationInfo, officialSteamBuild, onOpenDownloads, refresh, servers, statuses, steamCmdStatus?.criticalJobs]);
 
   return {
     checkingUpdates,

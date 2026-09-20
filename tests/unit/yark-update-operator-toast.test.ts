@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createIdleAppUpdateStatus } from "@shared/settings/app-update";
-import {
-  yarkUpdateToastCopy,
-  yarkUpdateToastDedupeKey,
-} from "@ui/yarkUpdateOperatorToast";
+import { yarkUpdateToastCopy, yarkUpdateToastDedupeKey } from "@ui/yarkUpdateOperatorToast";
 
 describe("yarkUpdateOperatorToast", () => {
   it("toasts once available with a version", () => {
@@ -23,9 +20,7 @@ describe("yarkUpdateOperatorToast", () => {
       availableVersion: "0.8.1",
     };
     expect(yarkUpdateToastDedupeKey(status)).toBe("ready:0.8.1");
-    expect(yarkUpdateToastCopy(status)?.title).toBe(
-      "YARK update ready to install",
-    );
+    expect(yarkUpdateToastCopy(status)?.title).toBe("YARK update ready to install");
   });
 
   it("skips idle, checking, up-to-date, and errors", () => {

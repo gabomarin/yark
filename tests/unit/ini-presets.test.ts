@@ -22,12 +22,7 @@ describe("ini-presets", () => {
 
   it("applies basic PvE preset without losing existing keys", () => {
     const payload: ServerIniPayload = {
-      gameUserSettings: [
-        "[ServerSettings]",
-        "RCONPort=27020",
-        "SessionName=Server Test",
-        "",
-      ].join("\n"),
+      gameUserSettings: ["[ServerSettings]", "RCONPort=27020", "SessionName=Server Test", ""].join("\n"),
       game: "",
     };
 

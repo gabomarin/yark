@@ -92,10 +92,8 @@ export function isWindowStateVisibleOnDisplays(
   }
   const margin = 40;
   for (const area of displays) {
-    const overlapX =
-      Math.min(state.x + state.width, area.x + area.width) - Math.max(state.x, area.x);
-    const overlapY =
-      Math.min(state.y + state.height, area.y + area.height) - Math.max(state.y, area.y);
+    const overlapX = Math.min(state.x + state.width, area.x + area.width) - Math.max(state.x, area.x);
+    const overlapY = Math.min(state.y + state.height, area.y + area.height) - Math.max(state.y, area.y);
     if (overlapX >= margin && overlapY >= margin) {
       return true;
     }
@@ -103,29 +101,16 @@ export function isWindowStateVisibleOnDisplays(
   return false;
 }
 
-function findWorkAreaContainingPoint(
-  x: number,
-  y: number,
-  displays: DisplayWorkArea[],
-): DisplayWorkArea | null {
+function findWorkAreaContainingPoint(x: number, y: number, displays: DisplayWorkArea[]): DisplayWorkArea | null {
   for (const area of displays) {
-    if (
-      x >= area.x &&
-      x < area.x + area.width &&
-      y >= area.y &&
-      y < area.y + area.height
-    ) {
+    if (x >= area.x && x < area.x + area.width && y >= area.y && y < area.y + area.height) {
       return area;
     }
   }
   return null;
 }
 
-function nearestWorkArea(
-  x: number,
-  y: number,
-  displays: DisplayWorkArea[],
-): DisplayWorkArea | null {
+function nearestWorkArea(x: number, y: number, displays: DisplayWorkArea[]): DisplayWorkArea | null {
   const hit = findWorkAreaContainingPoint(x, y, displays);
   if (hit !== null) {
     return hit;
@@ -148,11 +133,7 @@ function nearestWorkArea(
   return best;
 }
 
-function centerSizeInWorkArea(
-  width: number,
-  height: number,
-  area: DisplayWorkArea,
-): { x: number; y: number } {
+function centerSizeInWorkArea(width: number, height: number, area: DisplayWorkArea): { x: number; y: number } {
   return {
     x: Math.round(area.x + (area.width - width) / 2),
     y: Math.round(area.y + (area.height - height) / 2),
@@ -169,10 +150,8 @@ export function resolveSplashPlacement(
   displays: DisplayWorkArea[],
   fallbackPoint: { x: number; y: number },
 ): { x: number; y: number } {
-  const anchorX =
-    creation.x !== undefined ? creation.x + creation.width / 2 : fallbackPoint.x;
-  const anchorY =
-    creation.y !== undefined ? creation.y + creation.height / 2 : fallbackPoint.y;
+  const anchorX = creation.x !== undefined ? creation.x + creation.width / 2 : fallbackPoint.x;
+  const anchorY = creation.y !== undefined ? creation.y + creation.height / 2 : fallbackPoint.y;
   const area = nearestWorkArea(anchorX, anchorY, displays);
   if (area === null) {
     return {
@@ -209,16 +188,11 @@ export function resolveWindowCreationOptions(
   };
 }
 
-export function readStoredWindowState(
-  settings: AppSettingsRepository,
-): PersistedWindowState | null {
+export function readStoredWindowState(settings: AppSettingsRepository): PersistedWindowState | null {
   return parseWindowState(settings.get(WINDOW_STATE_SETTING_KEY));
 }
 
-function writeStoredWindowState(
-  settings: AppSettingsRepository,
-  state: PersistedWindowState,
-): void {
+function writeStoredWindowState(settings: AppSettingsRepository, state: PersistedWindowState): void {
   settings.set(WINDOW_STATE_SETTING_KEY, serializeWindowState(state));
 }
 
@@ -238,10 +212,7 @@ function captureWindowState(win: BrowserWindow): PersistedWindowState | null {
 }
 
 /** Persist bounds (and maximized flag) across move/resize/maximize and on close. */
-export function attachWindowStatePersistence(
-  win: BrowserWindow,
-  settings: AppSettingsRepository,
-): void {
+export function attachWindowStatePersistence(win: BrowserWindow, settings: AppSettingsRepository): void {
   let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
   const persist = (): void => {

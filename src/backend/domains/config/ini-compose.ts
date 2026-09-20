@@ -6,23 +6,13 @@ import { prepareClusterIniTemplatePayload } from "./cluster-ini-template-service
 /** Profile fields written into GameUserSettings after template composition. */
 export type ProfileIniIdentity = Pick<
   ServerProfile,
-  | "rconPort"
-  | "adminPassword"
-  | "serverPassword"
-  | "sessionName"
-  | "maxPlayers"
-  | "gamePort"
-  | "queryPort"
+  "rconPort" | "adminPassword" | "serverPassword" | "sessionName" | "maxPlayers" | "gamePort" | "queryPort"
 >;
 
 const REDACTED = "••••••••";
 const SECRET_KEYS = new Set(["serveradminpassword", "serverpassword"]);
 
-function flatLookup(
-  flat: Record<string, string>,
-  section: string,
-  key: string,
-): string | undefined {
+function flatLookup(flat: Record<string, string>, section: string, key: string): string | undefined {
   const exact = flat[`${section}${INI_FLAT_SEP}${key}`];
   if (exact !== undefined) {
     return exact;
@@ -62,27 +52,13 @@ export function resolveMemberIdentity(
   }
   const flat = flattenIniText(currentGameUserSettings);
   return {
-    rconPort: parseInteger(
-      flatLookup(flat, "ServerSettings", "RCONPort"),
-      profile.rconPort,
-    ),
-    adminPassword:
-      flatLookup(flat, "ServerSettings", "ServerAdminPassword") ??
-      profile.adminPassword,
-    serverPassword:
-      flatLookup(flat, "ServerSettings", "ServerPassword") ??
-      profile.serverPassword,
-    sessionName:
-      flatLookup(flat, "SessionSettings", "SessionName") ?? profile.sessionName,
+    rconPort: parseInteger(flatLookup(flat, "ServerSettings", "RCONPort"), profile.rconPort),
+    adminPassword: flatLookup(flat, "ServerSettings", "ServerAdminPassword") ?? profile.adminPassword,
+    serverPassword: flatLookup(flat, "ServerSettings", "ServerPassword") ?? profile.serverPassword,
+    sessionName: flatLookup(flat, "SessionSettings", "SessionName") ?? profile.sessionName,
     maxPlayers: profile.maxPlayers,
-    gamePort: parseInteger(
-      flatLookup(flat, "SessionSettings", "Port"),
-      profile.gamePort,
-    ),
-    queryPort: parseInteger(
-      flatLookup(flat, "SessionSettings", "QueryPort"),
-      profile.queryPort,
-    ),
+    gamePort: parseInteger(flatLookup(flat, "SessionSettings", "Port"), profile.gamePort),
+    queryPort: parseInteger(flatLookup(flat, "SessionSettings", "QueryPort"), profile.queryPort),
   };
 }
 
@@ -90,48 +66,15 @@ export function resolveMemberIdentity(
  * Applies YARK profileSync keys into GameUserSettings text (in memory).
  * Must stay aligned with `syncProfileSettingsToIni` / `yark-owned-ini-keys`.
  */
-export function applyProfileOwnedKeysToGameUserSettings(
-  gameUserSettings: string,
-  profile: ProfileIniIdentity,
-): string {
+export function applyProfileOwnedKeysToGameUserSettings(gameUserSettings: string, profile: ProfileIniIdentity): string {
   let text = gameUserSettings;
   text = setIniTextValue(text, "ServerSettings", "RCONEnabled", "True");
-  text = setIniTextValue(
-    text,
-    "ServerSettings",
-    "RCONPort",
-    String(profile.rconPort),
-  );
-  text = setIniTextValue(
-    text,
-    "ServerSettings",
-    "ServerAdminPassword",
-    profile.adminPassword,
-  );
-  text = setIniTextValue(
-    text,
-    "ServerSettings",
-    "ServerPassword",
-    profile.serverPassword ?? "",
-  );
-  text = setIniTextValue(
-    text,
-    "SessionSettings",
-    "SessionName",
-    profile.sessionName,
-  );
-  text = setIniTextValue(
-    text,
-    "SessionSettings",
-    "Port",
-    String(profile.gamePort),
-  );
-  text = setIniTextValue(
-    text,
-    "SessionSettings",
-    "QueryPort",
-    String(profile.queryPort),
-  );
+  text = setIniTextValue(text, "ServerSettings", "RCONPort", String(profile.rconPort));
+  text = setIniTextValue(text, "ServerSettings", "ServerAdminPassword", profile.adminPassword);
+  text = setIniTextValue(text, "ServerSettings", "ServerPassword", profile.serverPassword ?? "");
+  text = setIniTextValue(text, "SessionSettings", "SessionName", profile.sessionName);
+  text = setIniTextValue(text, "SessionSettings", "Port", String(profile.gamePort));
+  text = setIniTextValue(text, "SessionSettings", "QueryPort", String(profile.queryPort));
   return text;
 }
 
@@ -145,23 +88,15 @@ export function composeMemberPayloadFromTemplate(
   currentMember?: ServerIniPayload,
 ): ServerIniPayload {
   const prepared = prepareClusterIniTemplatePayload(template);
-  const identity = resolveMemberIdentity(
-    profile,
-    currentMember?.gameUserSettings,
-  );
+  const identity = resolveMemberIdentity(profile, currentMember?.gameUserSettings);
   return {
-    gameUserSettings: applyProfileOwnedKeysToGameUserSettings(
-      prepared.gameUserSettings,
-      identity,
-    ),
+    gameUserSettings: applyProfileOwnedKeysToGameUserSettings(prepared.gameUserSettings, identity),
     game: prepared.game,
   };
 }
 
 /** Member → template: sanitize and strip YARK-owned keys. */
-export function composeTemplatePayloadFromMember(
-  member: ServerIniPayload,
-): ServerIniPayload {
+export function composeTemplatePayloadFromMember(member: ServerIniPayload): ServerIniPayload {
   return prepareClusterIniTemplatePayload(member);
 }
 
@@ -181,8 +116,7 @@ export function omitYarkOwnedFromIniPreview(preview: IniPreview): IniPreview {
   const diff = preview.diff.filter(
     (entry) =>
       entry.fileKey !== "gameUserSettings" ||
-      (!isYarkOwnedIniKey(entry.section, entry.key) &&
-        !isAsaIgnoredIniMaxPlayers(entry.key)),
+      (!isYarkOwnedIniKey(entry.section, entry.key) && !isAsaIgnoredIniMaxPlayers(entry.key)),
   );
   return {
     ...preview,

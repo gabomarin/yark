@@ -2,15 +2,11 @@ import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-const script = join(process.cwd(), "scripts/ci/discord-release-notify.py").replace(
-  /\\/g,
-  "/",
-);
+const script = join(process.cwd(), "scripts/ci/discord-release-notify.py").replace(/\\/g, "/");
 
 function runPython(code: string, input: string): string {
   const cmd = process.platform === "win32" ? "py" : "python3";
-  const args =
-    process.platform === "win32" ? ["-3", "-c", code] : ["-c", code];
+  const args = process.platform === "win32" ? ["-3", "-c", code] : ["-c", code];
   const result = spawnSync(cmd, args, {
     input,
     encoding: "utf8",
@@ -27,10 +23,7 @@ function runPython(code: string, input: string): string {
     });
     if (fallback.status !== 0) {
       throw new Error(
-        fallback.stderr ||
-          result.stderr ||
-          String(result.error ?? fallback.error) ||
-          "python filter failed",
+        fallback.stderr || result.stderr || String(result.error ?? fallback.error) || "python filter failed",
       );
     }
     return fallback.stdout;

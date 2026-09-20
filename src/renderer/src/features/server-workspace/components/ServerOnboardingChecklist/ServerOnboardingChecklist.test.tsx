@@ -76,9 +76,7 @@ describe("ServerOnboardingChecklist", () => {
     expect(configure).toHaveAttribute("data-cta-prominence", "secondary");
     expect(useDefaults).toHaveAttribute("data-cta-prominence", "secondary");
     expect(
-      screen.getAllByRole("button").filter(
-        (button) => button.getAttribute("data-cta-prominence") === "primary",
-      ),
+      screen.getAllByRole("button").filter((button) => button.getAttribute("data-cta-prominence") === "primary"),
     ).toHaveLength(1);
   });
 

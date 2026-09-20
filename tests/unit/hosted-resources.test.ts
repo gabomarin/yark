@@ -89,26 +89,18 @@ interface HttpResponse {
   body: string;
 }
 
-function send(
-  port: number,
-  path: string,
-  method = "GET",
-): Promise<HttpResponse> {
+function send(port: number, path: string, method = "GET"): Promise<HttpResponse> {
   return new Promise((resolve, reject) => {
-    const req = httpRequest(
-      `http://127.0.0.1:${port}${path}`,
-      { method },
-      (res) => {
-        let body = "";
-        res.setEncoding("utf8");
-        res.on("data", (chunk: string) => {
-          body += chunk;
-        });
-        res.on("end", () => {
-          resolve({ status: res.statusCode ?? 0, headers: res.headers, body });
-        });
-      },
-    );
+    const req = httpRequest(`http://127.0.0.1:${port}${path}`, { method }, (res) => {
+      let body = "";
+      res.setEncoding("utf8");
+      res.on("data", (chunk: string) => {
+        body += chunk;
+      });
+      res.on("end", () => {
+        resolve({ status: res.statusCode ?? 0, headers: res.headers, body });
+      });
+    });
     req.on("error", reject);
     req.end();
   });
@@ -154,22 +146,13 @@ describe("hosted resources settings", () => {
     expect(validateHostedResourceContent("ini", "[ServerSettings]\nA=B").ok).toBe(true);
     expect(validateHostedResourceContent("ini", "not ini at all").ok).toBe(false);
     // The official dynamicconfig.ini is flat and section-less; do not require [Section].
-    expect(
-      validateHostedResourceContent("ini", "TamingSpeedMultiplier=2.0\nXPMultiplier=2.0").ok,
-    ).toBe(true);
-    expect(
-      validateHostedResourceContent("text", "x".repeat(HOSTED_RESOURCES_MAX_CONTENT_BYTES)).ok,
-    ).toBe(true);
-    expect(
-      validateHostedResourceContent("text", "x".repeat(HOSTED_RESOURCES_MAX_CONTENT_BYTES + 1)).ok,
-    ).toBe(false);
+    expect(validateHostedResourceContent("ini", "TamingSpeedMultiplier=2.0\nXPMultiplier=2.0").ok).toBe(true);
+    expect(validateHostedResourceContent("text", "x".repeat(HOSTED_RESOURCES_MAX_CONTENT_BYTES)).ok).toBe(true);
+    expect(validateHostedResourceContent("text", "x".repeat(HOSTED_RESOURCES_MAX_CONTENT_BYTES + 1)).ok).toBe(false);
   });
 
   it("normalizes tags for stable operator categorisation", () => {
-    expect(normalizeHostedResourceTags([" Admins ", "PVE", "admins", ""])).toEqual([
-      "admins",
-      "pve",
-    ]);
+    expect(normalizeHostedResourceTags([" Admins ", "PVE", "admins", ""])).toEqual(["admins", "pve"]);
     expect(() => normalizeHostedResourceTags(["x".repeat(33)])).toThrow(/32/);
     expect(() => normalizeHostedResourceTags(Array.from({ length: 13 }, (_, i) => `tag-${i}`))).toThrow(/12/);
   });
@@ -406,9 +389,7 @@ describe("hosted resources HTTP host", () => {
     expect(diagnostics.ownership.ok).toBe(true);
     expect(diagnostics.resources).toHaveLength(1);
     expect(diagnostics.resources[0]?.servedOk).toBe(true);
-    expect(diagnostics.resources[0]?.declaredSha256).toBe(
-      hostedResourceSha256("EOSID1"),
-    );
+    expect(diagnostics.resources[0]?.declaredSha256).toBe(hostedResourceSha256("EOSID1"));
     expect(resource.url).toBe(formatHostedResourceUrl(port, resource.url.split("/r/")[1]!));
   });
 

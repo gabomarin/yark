@@ -13,8 +13,7 @@ export const MOCK_MOD_CATALOG: Readonly<Record<string, ModMetadata>> = {
     authors: ["Pelayori"],
     downloadCount: 1_250_000,
     dateModified: "2026-06-01T12:00:00.000Z",
-    curseforgeUrl:
-      "https://www.curseforge.com/ark-survival-ascended/mods/cryopods",
+    curseforgeUrl: "https://www.curseforge.com/ark-survival-ascended/mods/cryopods",
     slug: "cryopods",
     categories: ["Structures"],
   },
@@ -26,8 +25,7 @@ export const MOCK_MOD_CATALOG: Readonly<Record<string, ModMetadata>> = {
     authors: ["kavan87"],
     downloadCount: 890_000,
     dateModified: "2026-05-20T12:00:00.000Z",
-    curseforgeUrl:
-      "https://www.curseforge.com/ark-survival-ascended/mods/super-spyglass-plus",
+    curseforgeUrl: "https://www.curseforge.com/ark-survival-ascended/mods/super-spyglass-plus",
     slug: "super-spyglass-plus",
     categories: ["Visuals"],
   },
@@ -39,8 +37,7 @@ export const MOCK_MOD_CATALOG: Readonly<Record<string, ModMetadata>> = {
     authors: ["CyberAngel"],
     downloadCount: 420_000,
     dateModified: "2026-04-10T12:00:00.000Z",
-    curseforgeUrl:
-      "https://www.curseforge.com/ark-survival-ascended/mods/cybers-structures",
+    curseforgeUrl: "https://www.curseforge.com/ark-survival-ascended/mods/cybers-structures",
     slug: "cybers-structures",
     categories: ["Structures"],
   },
@@ -52,8 +49,7 @@ export const MOCK_MOD_CATALOG: Readonly<Record<string, ModMetadata>> = {
     authors: ["ChrisMods"],
     downloadCount: 610_000,
     dateModified: "2026-03-15T12:00:00.000Z",
-    curseforgeUrl:
-      "https://www.curseforge.com/ark-survival-ascended/mods/awesomespyglass",
+    curseforgeUrl: "https://www.curseforge.com/ark-survival-ascended/mods/awesomespyglass",
     slug: "awesomespyglass",
     categories: ["Visuals"],
   },
@@ -65,8 +61,7 @@ export const MOCK_MOD_CATALOG: Readonly<Record<string, ModMetadata>> = {
     authors: ["DemoAuthor"],
     downloadCount: 150_000,
     dateModified: "2026-02-01T12:00:00.000Z",
-    curseforgeUrl:
-      "https://www.curseforge.com/ark-survival-ascended/mods/ultra-stacks",
+    curseforgeUrl: "https://www.curseforge.com/ark-survival-ascended/mods/ultra-stacks",
     slug: "ultra-stacks",
     categories: ["General"],
   },

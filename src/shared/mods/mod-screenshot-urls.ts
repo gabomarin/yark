@@ -5,9 +5,7 @@ export const MAX_MOD_SCREENSHOT_URLS = 8;
  * Keep a bounded list of absolute https screenshot URLs (no blobs).
  * Drops non-strings, non-https, empties, and duplicates (first wins).
  */
-export function normalizeModScreenshotUrls(
-  input: readonly unknown[] | null | undefined,
-): string[] {
+export function normalizeModScreenshotUrls(input: readonly unknown[] | null | undefined): string[] {
   if (input == null || input.length === 0) {
     return [];
   }

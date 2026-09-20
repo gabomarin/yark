@@ -5,7 +5,12 @@ import type { CriticalJobSummary } from "../../../shared/types";
 import type { AppSettingsRepository } from "../../infra/db/app-settings-repository";
 import type { BackupRepository } from "../../infra/db/backup-repository";
 import type { ServerRepository } from "../../infra/db/server-repository";
-import { isTransientCriticalJobError, makeIdempotencyKey, migrateCriticalJob, toCriticalJobSummary } from "../../orchestration/critical-job-recovery";
+import {
+  isTransientCriticalJobError,
+  makeIdempotencyKey,
+  migrateCriticalJob,
+  toCriticalJobSummary,
+} from "../../orchestration/critical-job-recovery";
 import { isOperationCancelledError, OperationCancelledError } from "../updates/robocopy-tree";
 import {
   CRITICAL_BACKUP_KINDS,
@@ -13,10 +18,16 @@ import {
   type BackupCriticalJobProgressHandlers,
 } from "./backup-critical-job-executor";
 import {
-  isBackupJobInterruptedAmbiguous, isKnownBackupJobPhase, isKnownBackupJobStatus,
-  mergeBackupCriticalJobs, planBackupCriticalJobRetry, restoreJobLoadDisposition,
-  sanitizeBackupJobContext, shouldDropTerminalPreUpdateOnLoad,
-  type BackupCriticalJob, type BackupCriticalJobType,
+  isBackupJobInterruptedAmbiguous,
+  isKnownBackupJobPhase,
+  isKnownBackupJobStatus,
+  mergeBackupCriticalJobs,
+  planBackupCriticalJobRetry,
+  restoreJobLoadDisposition,
+  sanitizeBackupJobContext,
+  shouldDropTerminalPreUpdateOnLoad,
+  type BackupCriticalJob,
+  type BackupCriticalJobType,
 } from "./backup-critical-jobs";
 
 /** SQLite `app_settings.key` for the durable backup critical-job queue (#455). */
@@ -27,10 +38,7 @@ export type { BackupCriticalJobProgressHandlers } from "./backup-critical-job-ex
 
 export interface BackupCriticalQueueDependencies {
   servers: Pick<ServerRepository, "addEvent" | "get">;
-  backups: Pick<
-    BackupRepository,
-    "completeRestoreHistory" | "getBackup" | "getRestoreHistory"
-  >;
+  backups: Pick<BackupRepository, "completeRestoreHistory" | "getBackup" | "getRestoreHistory">;
   settings: Pick<AppSettingsRepository, "get" | "set">;
   executor: BackupCriticalJobExecutor;
   scheduleProcess: () => void;
@@ -39,8 +47,7 @@ interface JobWaiter {
   resolve: (value: unknown) => void;
   reject: (error: Error) => void;
 }
-const delay = (ms: number): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 export class BackupCriticalQueue {
   private queue: BackupCriticalJob[];
@@ -59,13 +66,8 @@ export class BackupCriticalQueue {
     if (this.waiters.has(serverId)) return true;
     return this.queue.some(
       (job) =>
-        job.serverId === serverId
-        && (
-          job.status === "pending"
-          || job.status === "running"
-          || job.status === "retrying"
-          || job.status === "blocked"
-        ),
+        job.serverId === serverId &&
+        (job.status === "pending" || job.status === "running" || job.status === "retrying" || job.status === "blocked"),
     );
   }
   async enqueueAndWait<T>(
@@ -79,22 +81,19 @@ export class BackupCriticalQueue {
   ): Promise<T> {
     const progress = options?.progress;
     const existingPending = this.queue.find(
-      (job) =>
-        job.serverId === serverId
-        && job.type === type
-        && job.backupId === backupId,
+      (job) => job.serverId === serverId && job.type === type && job.backupId === backupId,
     );
     if (existingPending !== undefined) {
       if (
-        existingPending.status === "blocked"
-        || existingPending.status === "failed"
-        || existingPending.status === "cancelled"
+        existingPending.status === "blocked" ||
+        existingPending.status === "failed" ||
+        existingPending.status === "cancelled"
       ) {
         if (
-          options?.adoptRetryableRestore === true
-          && existingPending.type === "restore"
-          && (existingPending.status === "blocked" || existingPending.status === "failed")
-          && existingPending.operatorRetryAllowed
+          options?.adoptRetryableRestore === true &&
+          existingPending.type === "restore" &&
+          (existingPending.status === "blocked" || existingPending.status === "failed") &&
+          existingPending.operatorRetryAllowed
         ) {
           if (progress !== undefined) {
             this.jobProgressHandlers.set(existingPending.id, progress);
@@ -112,9 +111,7 @@ export class BackupCriticalQueue {
           this.deps.scheduleProcess();
           return await completion;
         }
-        throw new Error(
-          `A previous ${type} job requires Retry or Dismiss before another can be queued`,
-        );
+        throw new Error(`A previous ${type} job requires Retry or Dismiss before another can be queued`);
       }
       if (progress !== undefined) {
         this.jobProgressHandlers.set(existingPending.id, progress);
@@ -151,12 +148,7 @@ export class BackupCriticalQueue {
       this.jobProgressHandlers.set(job.id, progress);
     }
     this.persistQueue();
-    this.deps.servers.addEvent(
-      serverId,
-      "backup_created",
-      "info",
-      `Job queued: ${type} (${job.id.slice(0, 8)})`,
-    );
+    this.deps.servers.addEvent(serverId, "backup_created", "info", `Job queued: ${type} (${job.id.slice(0, 8)})`);
 
     const completion = new Promise<T>((resolve, reject) => {
       this.addWaiter(job.id, {
@@ -170,9 +162,9 @@ export class BackupCriticalQueue {
   requestCancel(): boolean {
     const actionable = this.queue.filter(
       (job) =>
-        job.status === "pending"
-        || job.status === "retrying"
-        || (job.status === "running" && job.phase !== "applying-restore"),
+        job.status === "pending" ||
+        job.status === "retrying" ||
+        (job.status === "running" && job.phase !== "applying-restore"),
     );
     if (actionable.length === 0 && !this.cancelRequested) {
       return false;
@@ -200,8 +192,7 @@ export class BackupCriticalQueue {
   }
 
   getCriticalJobs(): CriticalJobSummary[] {
-    return this.queue.map((job) =>
-      toCriticalJobSummary(job, this.deps.servers.get(job.serverId)?.name ?? null));
+    return this.queue.map((job) => toCriticalJobSummary(job, this.deps.servers.get(job.serverId)?.name ?? null));
   }
 
   getCompletedBackups(serverId: string, backupIds: readonly string[]): BackupRecord[] {
@@ -210,49 +201,35 @@ export class BackupCriticalQueue {
     for (const backupId of orderedUniqueIds) {
       const backup = this.deps.backups.getBackup(backupId);
       if (
-        backup === null
-        || backup.serverId !== serverId
-        || backup.status !== "completed"
-        || backup.type !== "pre_update"
-        || !existsSync(backup.path)
-        || byKind.has(backup.kind)
+        backup === null ||
+        backup.serverId !== serverId ||
+        backup.status !== "completed" ||
+        backup.type !== "pre_update" ||
+        !existsSync(backup.path) ||
+        byKind.has(backup.kind)
       ) {
         continue;
       }
       byKind.set(backup.kind, backup);
     }
-    return CRITICAL_BACKUP_KINDS
-      .map((kind) => byKind.get(kind))
-      .filter((backup): backup is BackupRecord => backup !== undefined);
+    return CRITICAL_BACKUP_KINDS.map((kind) => byKind.get(kind)).filter(
+      (backup): backup is BackupRecord => backup !== undefined,
+    );
   }
 
   retryCriticalJob(jobId: string): boolean {
     const job = this.queue.find((candidate) => candidate.id === jobId);
-    if (
-      job === undefined
-      || (job.status !== "blocked" && job.status !== "failed")
-      || !job.operatorRetryAllowed
-    ) {
+    if (job === undefined || (job.status !== "blocked" && job.status !== "failed") || !job.operatorRetryAllowed) {
       return false;
     }
-    this.prepareCriticalJobRetry(
-      job,
-      "Retry requested by the operator after reviewing recovery state.",
-    );
+    this.prepareCriticalJobRetry(job, "Retry requested by the operator after reviewing recovery state.");
     this.deps.scheduleProcess();
     return true;
   }
 
   dismissCriticalJob(jobId: string): boolean {
     const job = this.queue.find((candidate) => candidate.id === jobId);
-    if (
-      job === undefined
-      || (
-        job.status !== "blocked"
-        && job.status !== "failed"
-        && job.status !== "cancelled"
-      )
-    ) {
+    if (job === undefined || (job.status !== "blocked" && job.status !== "failed" && job.status !== "cancelled")) {
       return false;
     }
     this.removeJob(jobId);
@@ -292,9 +269,7 @@ export class BackupCriticalQueue {
 
     try {
       for (;;) {
-        const job = this.queue.find(
-          (candidate) => candidate.status === "pending" || candidate.status === "retrying",
-        );
+        const job = this.queue.find((candidate) => candidate.status === "pending" || candidate.status === "retrying");
         if (job === undefined) {
           break;
         }
@@ -312,10 +287,7 @@ export class BackupCriticalQueue {
             throwIfCancelled: () => this.throwIfCancelled(),
           };
           if (job.type === "pre-update-backup") {
-            result = await this.deps.executor.resumePreUpdateBackupJob(
-              job,
-              executionControl,
-            );
+            result = await this.deps.executor.resumePreUpdateBackupJob(job, executionControl);
           } else {
             if (job.backupId === null || job.backupId.trim().length === 0) {
               throw new Error("backupId required for restore job");
@@ -334,12 +306,7 @@ export class BackupCriticalQueue {
           job.updatedAt = new Date().toISOString();
 
           if (isOperationCancelledError(error) || this.cancelRequested) {
-            this.rejectJob(
-              job.id,
-              isOperationCancelledError(error)
-                ? (error as Error)
-                : new OperationCancelledError(),
-            );
+            this.rejectJob(job.id, isOperationCancelledError(error) ? (error as Error) : new OperationCancelledError());
             this.jobProgressHandlers.delete(job.id);
             job.status = "cancelled";
             if (job.phase !== "applying-restore") {
@@ -352,12 +319,7 @@ export class BackupCriticalQueue {
               this.removeJob(job.id);
             }
             this.persistQueue();
-            this.deps.servers.addEvent(
-              job.serverId,
-              "error",
-              "warning",
-              `Job ${job.type} cancelled by the operator`,
-            );
+            this.deps.servers.addEvent(job.serverId, "error", "warning", `Job ${job.type} cancelled by the operator`);
             continue;
           }
 
@@ -366,8 +328,7 @@ export class BackupCriticalQueue {
             this.jobProgressHandlers.delete(job.id);
             job.status = "blocked";
             job.operatorRetryAllowed = true;
-            job.recoveryReason =
-              `Failure during phase "${job.phase}" may have completed a side effect. Inspect backup and restore evidence before retrying.`;
+            job.recoveryReason = `Failure during phase "${job.phase}" may have completed a side effect. Inspect backup and restore evidence before retrying.`;
             if (job.type === "pre-update-backup") {
               this.removeJob(job.id);
             }
@@ -423,8 +384,7 @@ export class BackupCriticalQueue {
           }
 
           job.status = "retrying";
-          job.recoveryReason =
-            `Transient failure; retry ${job.attempts + 1} of ${job.maxAttempts} is scheduled.`;
+          job.recoveryReason = `Transient failure; retry ${job.attempts + 1} of ${job.maxAttempts} is scheduled.`;
           this.persistQueue();
           this.deps.servers.addEvent(
             job.serverId,
@@ -461,24 +421,18 @@ export class BackupCriticalQueue {
       let invalidEntryFound = false;
       for (const job of parsed) {
         if (
-          typeof job.id !== "string"
-          || (job.type !== "pre-update-backup" && job.type !== "restore")
-          || typeof job.serverId !== "string"
+          typeof job.id !== "string" ||
+          (job.type !== "pre-update-backup" && job.type !== "restore") ||
+          typeof job.serverId !== "string"
         ) {
           invalidEntryFound = true;
           continue;
         }
-        if (
-          typeof job.status === "string"
-          && !isKnownBackupJobStatus(job.status)
-        ) {
+        if (typeof job.status === "string" && !isKnownBackupJobStatus(job.status)) {
           invalidEntryFound = true;
           continue;
         }
-        if (
-          typeof job.phase === "string"
-          && !isKnownBackupJobPhase(job.type, job.phase)
-        ) {
+        if (typeof job.phase === "string" && !isKnownBackupJobPhase(job.type, job.phase)) {
           invalidEntryFound = true;
           continue;
         }
@@ -486,10 +440,7 @@ export class BackupCriticalQueue {
         const context = sanitizeBackupJobContext(job.context);
         if (job.type === "restore") {
           const historyId = context.restoreHistoryId;
-          const history =
-            typeof historyId === "number"
-              ? this.deps.backups.getRestoreHistory(historyId)
-              : null;
+          const history = typeof historyId === "number" ? this.deps.backups.getRestoreHistory(historyId) : null;
           const disposition = restoreJobLoadDisposition({
             phase: job.phase,
             jobId: job.id,
@@ -513,9 +464,7 @@ export class BackupCriticalQueue {
         });
         migrated.backupId = backupId;
         migrated.context = context;
-        const duplicateIndex = jobs.findIndex(
-          (candidate) => candidate.idempotencyKey === migrated.idempotencyKey,
-        );
+        const duplicateIndex = jobs.findIndex((candidate) => candidate.idempotencyKey === migrated.idempotencyKey);
         if (duplicateIndex >= 0) {
           const merged = mergeBackupCriticalJobs(jobs[duplicateIndex]!, migrated);
           if (this.deps.servers.get(job.serverId) !== null) {
@@ -528,10 +477,7 @@ export class BackupCriticalQueue {
           invalidEntryFound = true;
           continue;
         }
-        if (
-          migrated.type === "pre-update-backup"
-          && shouldDropTerminalPreUpdateOnLoad(migrated.status)
-        ) {
+        if (migrated.type === "pre-update-backup" && shouldDropTerminalPreUpdateOnLoad(migrated.status)) {
           invalidEntryFound = true;
           continue;
         }
@@ -566,8 +512,7 @@ export class BackupCriticalQueue {
   private prepareCriticalJobRetry(job: BackupCriticalJob, reason: string): void {
     const plan = planBackupCriticalJobRetry(job, reason);
     if (plan.restoreHistoryIdToSupersede !== null) {
-      const history =
-        this.deps.backups.getRestoreHistory(plan.restoreHistoryIdToSupersede);
+      const history = this.deps.backups.getRestoreHistory(plan.restoreHistoryIdToSupersede);
       if (history?.status === "started") {
         this.deps.backups.completeRestoreHistory(
           plan.restoreHistoryIdToSupersede,

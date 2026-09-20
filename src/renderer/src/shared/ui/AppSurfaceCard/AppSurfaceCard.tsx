@@ -21,7 +21,7 @@ interface Props extends InheritedCardProps {
 /**
  * Card for a discrete entity or chrome rail — not the whole page pane (#469).
  * Default `tone="flat"` + `radius="md"`. Use `cool` / `coolEmphasis` only for
- * rare accent cards; `chrome` for shell rails (Settings nav).
+ * rare accent cards; `chrome` for shell rails (app sidebar, Settings category pane).
  */
 export function AppSurfaceCard({
   children,

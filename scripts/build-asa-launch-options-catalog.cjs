@@ -14,8 +14,7 @@ const https = require("node:https");
 
 const ROOT = path.resolve(__dirname, "..");
 const OUT_PATH = path.join(ROOT, "src/shared/asa/asa-launch-options-catalog.json");
-const SOURCE_URL =
-  "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options";
+const SOURCE_URL = "https://ark.wiki.gg/wiki/Server_configuration#Command_line_options";
 const API_URL =
   "https://ark.wiki.gg/api.php?action=parse&page=Server_configuration&prop=wikitext&format=json&formatversion=2";
 const CATALOG_VERSION = "0.2.0";
@@ -133,9 +132,7 @@ function extractTemplates(section) {
 }
 
 function parseTemplateFields(body) {
-  const inner = body
-    .replace(/^\{\{Server config variable\n/, "")
-    .replace(/\}\}$/, "");
+  const inner = body.replace(/^\{\{Server config variable\n/, "").replace(/\}\}$/, "");
   const fields = {};
   let cur = null;
   const buf = [];
@@ -185,9 +182,7 @@ function htmlTablesToProse(html) {
     const trRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
     let tr;
     while ((tr = trRe.exec(match[0]))) {
-      const cells = [...tr[1].matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi)].map((c) =>
-        stripInline(c[1]),
-      );
+      const cells = [...tr[1].matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi)].map((c) => stripInline(c[1]));
       if (cells.length < 2) continue;
       const key = cells[0];
       const desc = cells.slice(1).join(" — ");
@@ -248,9 +243,7 @@ function firstTableOptionCode(rawInfo) {
   const trRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
   let tr;
   while ((tr = trRe.exec(html))) {
-    const cells = [...tr[1].matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi)].map((c) =>
-      stripInline(c[1]),
-    );
+    const cells = [...tr[1].matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi)].map((c) => stripInline(c[1]));
     if (cells.length < 1) continue;
     const key = cells[0];
     if (!key || /^(eventname|argument|option|name|value|description)$/i.test(key)) {
@@ -267,7 +260,9 @@ function firstTableOptionCode(rawInfo) {
 }
 
 function sampleForPlaceholder(placeholder, token, numericDefault, tableFirstValue) {
-  const raw = String(placeholder || "").replace(/^<|>$/g, "").trim();
+  const raw = String(placeholder || "")
+    .replace(/^<|>$/g, "")
+    .trim();
   const key = raw.toLowerCase().replace(/\s+/g, "_");
   const tokenLower = String(token || "").toLowerCase();
 
@@ -286,11 +281,7 @@ function sampleForPlaceholder(placeholder, token, numericDefault, tableFirstValu
   if (/cluster/i.test(key) || /clusterid=/i.test(tokenLower)) {
     return "my-cluster";
   }
-  if (
-    /ipv4|ip_?address|^ip$/i.test(key) ||
-    /-ip=/i.test(tokenLower) ||
-    /serverip|publicip/i.test(tokenLower)
-  ) {
+  if (/ipv4|ip_?address|^ip$/i.test(key) || /-ip=/i.test(tokenLower) || /serverip|publicip/i.test(tokenLower)) {
     return "203.0.113.10";
   }
   if (/port/i.test(key) || /-port=/i.test(tokenLower)) {
@@ -359,9 +350,7 @@ function buildExample(token, valueType, fields, tableFirstValue) {
     // Nested optional markers (e.g. `[,<ModId2>[...]]`) can leave stray brackets.
     .replace(/[\[\]]/g, "");
 
-  example = example.replace(/<[^>]+>/g, (ph) =>
-    sampleForPlaceholder(ph, compact, numericDefault, tableFirstValue),
-  );
+  example = example.replace(/<[^>]+>/g, (ph) => sampleForPlaceholder(ph, compact, numericDefault, tableFirstValue));
 
   if (example.endsWith("=")) {
     example += sampleForPlaceholder("value", compact, numericDefault, tableFirstValue);
@@ -422,8 +411,7 @@ function defaultSemantics(fields, valueType) {
 /** Curated operator copy for noisy / misleading wiki rows (ASA-first). */
 const OPERATOR_COPY_OVERRIDES = {
   "-ActiveEvent=<eventname>": {
-    summary:
-      "Legacy event switch — leave it off; use CurseForge event mods with -mods instead.",
+    summary: "Legacy event switch — leave it off; use CurseForge event mods with -mods instead.",
     details:
       "ASA treats this as obsolete: prefer event mods on the Mods panel / -mods=. Only one name can be set, and most historic events no longer work (WinterWonderland was the last with partial support). Putting ActiveEvent in GameUserSettings.ini has no effect.",
     example: "-ActiveEvent=None",
@@ -446,9 +434,7 @@ function buildCopyFields(token, valueType, fields, owned) {
   }
 
   const rawInfo = fields.info || "";
-  const full = owned?.notes
-    ? owned.notes
-    : normalizeWikiInfo(rawInfo) || "No description on the wiki row.";
+  const full = owned?.notes ? owned.notes : normalizeWikiInfo(rawInfo) || "No description on the wiki row.";
   const { summary, details } = splitSummaryDetails(full);
   const tableFirst = firstTableOptionCode(rawInfo);
   const example = buildExample(token, valueType, fields, tableFirst);
@@ -468,9 +454,7 @@ function buildEntries(rows, reviewedAt) {
     const token = String(fields.name || "").trim();
     if (!token) continue;
     const owned = findYarkOwned(token);
-    const valueType = /^-ServerPlatform=/i.test(token)
-      ? "enum"
-      : inferValueType(token);
+    const valueType = /^-ServerPlatform=/i.test(token) ? "enum" : inferValueType(token);
     const status = classifyStatus(fields, owned);
     const id = owned?.id ?? findStableId(token) ?? tokenId(token);
     const copy = buildCopyFields(token, valueType, fields, owned);
@@ -484,9 +468,7 @@ function buildEntries(rows, reviewedAt) {
       details: copy.details,
       description: copy.description,
       example: copy.example,
-      defaultSemantics: owned?.notes
-        ? owned.notes
-        : copy.defaultSemantics ?? defaultSemantics(fields, valueType),
+      defaultSemantics: owned?.notes ? owned.notes : (copy.defaultSemantics ?? defaultSemantics(fields, valueType)),
       status,
       conflicts: owned ? [`extraArgs:${token.split("=")[0]}`] : [],
       wikiAsa: String(fields.inASA || "Unknown"),
@@ -509,10 +491,7 @@ function buildEntries(rows, reviewedAt) {
             : undefined,
     };
     const prev = byId.get(id);
-    if (
-      !prev ||
-      (entry.description.length > prev.description.length && prev.status === entry.status)
-    ) {
+    if (!prev || (entry.description.length > prev.description.length && prev.status === entry.status)) {
       byId.set(id, entry);
     }
   }
@@ -608,9 +587,7 @@ async function main() {
   };
 
   fs.writeFileSync(OUT_PATH, `${JSON.stringify(catalog, null, 2)}\n`, "utf8");
-  console.log(
-    `Wrote ${entries.length} entries → ${path.relative(ROOT, OUT_PATH)} (${JSON.stringify(counts)})`,
-  );
+  console.log(`Wrote ${entries.length} entries → ${path.relative(ROOT, OUT_PATH)} (${JSON.stringify(counts)})`);
 }
 
 main().catch((err) => {

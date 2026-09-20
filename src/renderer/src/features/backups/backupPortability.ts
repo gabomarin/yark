@@ -13,10 +13,7 @@ export function slugFilePart(value: string): string {
   return slug.length > 0 ? slug : "server";
 }
 
-export function suggestedExportFileName(
-  backup: BackupRecord,
-  serverName: string,
-): string {
+export function suggestedExportFileName(backup: BackupRecord, serverName: string): string {
   const finished = backupFinishedAt(backup) ?? backup.id;
   const stamp = formatBackupFileStamp(finished);
   const server = slugFilePart(serverName);
@@ -41,11 +38,7 @@ export async function runBackupExport(input: {
     return;
   }
   if (pick.data === null) return;
-  const result = await window.api.exportBackup(
-    input.serverId,
-    input.backup.id,
-    pick.data,
-  );
+  const result = await window.api.exportBackup(input.serverId, input.backup.id, pick.data);
   if (!result.ok) {
     input.onError(result.error ?? "Could not export backup");
     return;
@@ -60,21 +53,13 @@ export async function runBackupImport(input: {
   onError: (message: string) => void;
   onSuccess: () => Promise<void> | void;
 }): Promise<void> {
-  const pick = await window.api.pickPath(
-    "file",
-    undefined,
-    `Import ${input.kindLabel} backup ZIP`,
-  );
+  const pick = await window.api.pickPath("file", undefined, `Import ${input.kindLabel} backup ZIP`);
   if (!pick.ok) {
     input.onError(pick.error ?? "Could not open file picker");
     return;
   }
   if (pick.data === null) return;
-  const result = await window.api.importBackup(
-    input.serverId,
-    input.kind,
-    pick.data,
-  );
+  const result = await window.api.importBackup(input.serverId, input.kind, pick.data);
   if (!result.ok) {
     input.onError(result.error ?? "Could not import backup");
     return;

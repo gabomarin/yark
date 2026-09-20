@@ -139,12 +139,8 @@ function createHarness(options?: {
       return makePreUpdateBackups(profile.id);
     }),
     createPreStopBackup: vi.fn(),
-    getCompletedBackupsForCriticalJob: vi.fn(
-      (_serverId: string, backupIds: readonly string[]) =>
-        makePreUpdateBackups(profile.id).filter(
-          (backup) =>
-            backupIds.includes(backup.id) && backup.kind === "world",
-        ),
+    getCompletedBackupsForCriticalJob: vi.fn((_serverId: string, backupIds: readonly string[]) =>
+      makePreUpdateBackups(profile.id).filter((backup) => backupIds.includes(backup.id) && backup.kind === "world"),
     ),
     restoreBackupForJob: vi.fn(async () => {
       order.push("restore");
@@ -176,9 +172,7 @@ function createHarness(options?: {
   };
 
   const steamCmdPath =
-    options !== undefined && "steamCmdPath" in options
-      ? options.steamCmdPath
-      : "C:\\steamcmd\\steamcmd.exe";
+    options !== undefined && "steamCmdPath" in options ? options.steamCmdPath : "C:\\steamcmd\\steamcmd.exe";
   const settings = {
     get: vi.fn((key: string) => (key === STEAMCMD_PATH_SETTING_KEY ? steamCmdPath : null)),
     set: vi.fn(),
@@ -196,14 +190,11 @@ function createHarness(options?: {
     join(logDir, "steamcmd"),
   );
 
-  const steamFactory =
-    options?.steam ??
-    ((): SteamStub => ({ code: 0, stdout: "ok", stderr: "" }));
+  const steamFactory = options?.steam ?? ((): SteamStub => ({ code: 0, stdout: "ok", stderr: "" }));
 
   const runSteamUpdate = vi.fn(async () => {
     order.push("steam");
-    const result =
-      typeof steamFactory === "function" ? await steamFactory() : steamFactory;
+    const result = typeof steamFactory === "function" ? await steamFactory() : steamFactory;
     return {
       code: result.code,
       stdout: result.stdout ?? "",
@@ -232,8 +223,7 @@ function createHarness(options?: {
     runSteamUpdate,
     waitForHealthy,
     performUpdate: () =>
-      (service as unknown as { performUpdateServer: (id: string) => Promise<void> })
-        .performUpdateServer(profile.id),
+      (service as unknown as { performUpdateServer: (id: string) => Promise<void> }).performUpdateServer(profile.id),
     performVerify: () =>
       (
         service as unknown as {
@@ -286,9 +276,7 @@ describe("UpdateService safe update orchestration", () => {
     const h = createHarness({ wasRunning: true });
     dirs.push(h.logDir);
 
-    await expect(h.service.updateServer(h.profile.id)).rejects.toThrow(
-      /stop the server before updating files/i,
-    );
+    await expect(h.service.updateServer(h.profile.id)).rejects.toThrow(/stop the server before updating files/i);
     expect(h.runSteamUpdate).not.toHaveBeenCalled();
   });
 
@@ -306,9 +294,7 @@ describe("UpdateService safe update orchestration", () => {
     const h = createHarness({ wasRunning: false, steamCmdPath: null });
     dirs.push(h.logDir);
 
-    await expect(h.service.updateServer(h.profile.id)).rejects.toThrow(
-      /SteamCMD is not installed/i,
-    );
+    await expect(h.service.updateServer(h.profile.id)).rejects.toThrow(/SteamCMD is not installed/i);
     expect(h.service.getSteamCmdStatus().criticalJobs).toEqual([]);
     expect(h.runSteamUpdate).not.toHaveBeenCalled();
     expect(h.backups.createPreUpdateBackupForJob).not.toHaveBeenCalled();
@@ -373,9 +359,7 @@ describe("UpdateService safe update orchestration", () => {
     };
     (h.service as unknown as { queue: Array<typeof job> }).queue = [job];
 
-    await (
-      h.service as unknown as { processQueue: () => Promise<void> }
-    ).processQueue();
+    await (h.service as unknown as { processQueue: () => Promise<void> }).processQueue();
 
     expect(job.status).toBe("blocked");
     expect(job.operatorRetryAllowed).toBe(true);
@@ -565,10 +549,7 @@ describe("UpdateService safe update orchestration", () => {
       }
     ).performUpdateServer(h.profile.id, job);
 
-    expect(h.backups.getCompletedBackupsForCriticalJob).toHaveBeenCalledWith(
-      h.profile.id,
-      legacy.ids,
-    );
+    expect(h.backups.getCompletedBackupsForCriticalJob).toHaveBeenCalledWith(h.profile.id, legacy.ids);
     expect(h.backups.createPreUpdateBackupForJob).not.toHaveBeenCalled();
     expect(h.runSteamUpdate).toHaveBeenCalled();
     expect(job.context.rollbackRestoredBackupIds).toEqual([]);
@@ -611,11 +592,7 @@ describe("UpdateService safe update orchestration", () => {
     ).rejects.toThrow(/recovered rollback completed/i);
 
     expect(h.runSteamUpdate).not.toHaveBeenCalled();
-    expect(withLock).toHaveBeenCalledWith(
-      h.profile.id,
-      "update-rollback-recovery",
-      expect.any(Function),
-    );
+    expect(withLock).toHaveBeenCalledWith(h.profile.id, "update-rollback-recovery", expect.any(Function));
     expect(h.backups.restoreBackupForRollbackRecovery).toHaveBeenCalledTimes(1);
     expect(h.instances.startForMaintenance).toHaveBeenCalledWith(h.profile.id);
     expect(job.phase).toBe("rollback-complete");
@@ -644,9 +621,7 @@ describe("UpdateService safe update orchestration", () => {
     };
     (h.service as unknown as { queue: Array<typeof retryingJob> }).queue = [retryingJob];
 
-    await expect(h.service.clearSteamCmdCache("content")).rejects.toThrow(
-      /stop the current SteamCMD operation/i,
-    );
+    await expect(h.service.clearSteamCmdCache("content")).rejects.toThrow(/stop the current SteamCMD operation/i);
   });
 
   it("aborts healthy wait when the operation was cancelled", async () => {
@@ -662,12 +637,8 @@ describe("UpdateService safe update orchestration", () => {
     };
     internal.cancelRequested = true;
 
-    await expect(internal.waitForHealthy(h.profile.id, 5_000)).rejects.toThrow(
-      /operation cancelled/i,
-    );
-    await expect(
-      internal.waitForHealthy(h.profile.id, 5_000, { ignoreCancellation: true }),
-    ).resolves.toBe(true);
+    await expect(internal.waitForHealthy(h.profile.id, 5_000)).rejects.toThrow(/operation cancelled/i);
+    await expect(internal.waitForHealthy(h.profile.id, 5_000, { ignoreCancellation: true })).resolves.toBe(true);
   });
 
   it("keeps a running update recoverable while cancellation unwinds", async () => {
@@ -734,10 +705,7 @@ describe("UpdateService safe update orchestration", () => {
       attempts: 0,
       idempotencyKey: `update:${h.profile.id}:`,
     };
-    (h.service as unknown as { queue: Array<typeof running | typeof pending> }).queue = [
-      running,
-      pending,
-    ];
+    (h.service as unknown as { queue: Array<typeof running | typeof pending> }).queue = [running, pending];
 
     expect(await h.service.cancelSteamCmd()).toBe(true);
     expect(running.status).toBe("running");
@@ -776,9 +744,7 @@ describe("UpdateService safe update orchestration", () => {
   it("skips rollback restore when cancelled during pre-update backup", async () => {
     const h = createHarness({ wasRunning: true });
     dirs.push(h.logDir);
-    const { OperationCancelledError } = await import(
-      "@backend/domains/updates/robocopy-tree"
-    );
+    const { OperationCancelledError } = await import("@backend/domains/updates/robocopy-tree");
     h.backups.createPreUpdateBackupForJob.mockImplementation(async () => {
       h.order.push("pre_update");
       (h.service as unknown as { cancelRequested: boolean }).cancelRequested = true;
@@ -806,13 +772,7 @@ describe("UpdateService safe update orchestration", () => {
       "bu-world",
       expect.objectContaining({ onProgressMessage: expect.any(Function) }),
     );
-    expect(h.order).toEqual([
-      "stop",
-      "pre_update",
-      "steam",
-      "restore",
-      "start",
-    ]);
+    expect(h.order).toEqual(["stop", "pre_update", "steam", "restore", "start"]);
   });
 
   it("verify stops and restarts when running, without pre_update or rollback", async () => {
@@ -834,9 +794,7 @@ describe("UpdateService safe update orchestration", () => {
     dirs.push(h.logDir);
     h.instances.isStopInProgress.mockReturnValue(true);
 
-    await expect(h.service.updateServer(h.profile.id)).rejects.toThrow(
-      /still in progress/i,
-    );
+    await expect(h.service.updateServer(h.profile.id)).rejects.toThrow(/still in progress/i);
     expect(h.runSteamUpdate).not.toHaveBeenCalled();
     expect(h.backups.createPreUpdateBackupForJob).not.toHaveBeenCalled();
   });
@@ -866,9 +824,7 @@ describe("UpdateService safe update orchestration", () => {
     await h.service.verifyServerFiles(h.profile.id);
 
     expect(h.runSteamUpdate).toHaveBeenCalled();
-    expect(
-      h.service.getSteamCmdStatus().criticalJobs.find((job) => job.id === "cancelled-verify"),
-    ).toBeUndefined();
+    expect(h.service.getSteamCmdStatus().criticalJobs.find((job) => job.id === "cancelled-verify")).toBeUndefined();
   });
 
   it("still requires Retry or Dismiss for a failed leftover", async () => {
@@ -893,9 +849,7 @@ describe("UpdateService safe update orchestration", () => {
     };
     (h.service as unknown as { queue: Array<typeof failed> }).queue = [failed];
 
-    await expect(h.service.verifyServerFiles(h.profile.id)).rejects.toThrow(
-      /Retry or Dismiss/i,
-    );
+    await expect(h.service.verifyServerFiles(h.profile.id)).rejects.toThrow(/Retry or Dismiss/i);
     expect(h.runSteamUpdate).not.toHaveBeenCalled();
     expect(h.service.getSteamCmdStatus().criticalJobs[0]).toMatchObject({
       id: "failed-verify",
@@ -923,16 +877,12 @@ describe("UpdateService safe update orchestration", () => {
       operatorRetryAllowed: false,
       context: {},
     };
-    (h.service as unknown as { queue: Array<typeof pendingVerify> }).queue = [
-      pendingVerify,
-    ];
+    (h.service as unknown as { queue: Array<typeof pendingVerify> }).queue = [pendingVerify];
 
     await h.service.updateServer(h.profile.id);
 
     expect(h.runSteamUpdate).toHaveBeenCalled();
-    const leftover = h.service
-      .getSteamCmdStatus()
-      .criticalJobs.find((job) => job.id === "pending-verify");
+    const leftover = h.service.getSteamCmdStatus().criticalJobs.find((job) => job.id === "pending-verify");
     expect(leftover).toBeUndefined();
   });
 
@@ -956,13 +906,9 @@ describe("UpdateService safe update orchestration", () => {
       operatorRetryAllowed: false,
       context: {},
     };
-    (h.service as unknown as { queue: Array<typeof pendingUpdate> }).queue = [
-      pendingUpdate,
-    ];
+    (h.service as unknown as { queue: Array<typeof pendingUpdate> }).queue = [pendingUpdate];
 
-    await expect(h.service.verifyServerFiles(h.profile.id)).rejects.toThrow(
-      /already in Downloads/i,
-    );
+    await expect(h.service.verifyServerFiles(h.profile.id)).rejects.toThrow(/already in Downloads/i);
     expect(h.runSteamUpdate).not.toHaveBeenCalled();
     expect(h.service.getSteamCmdStatus().criticalJobs[0]).toMatchObject({
       id: "pending-update",
@@ -986,11 +932,8 @@ describe("UpdateService safe update orchestration", () => {
       expect(releaseSteam).toEqual(expect.any(Function));
     });
 
-    await expect(h.service.updateServer(h.profile.id)).rejects.toThrow(
-      /running/i,
-    );
+    await expect(h.service.updateServer(h.profile.id)).rejects.toThrow(/running/i);
     releaseSteam!({ code: 0, stdout: "ok" });
     await verifyPromise;
   });
 });
-

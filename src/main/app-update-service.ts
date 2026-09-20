@@ -21,11 +21,7 @@ import {
 import { APP_VERSION } from "../shared/app-version";
 import { requireAllowedExternalUrl } from "../shared/external-url-policy";
 
-type AppUpdateSafetyReason =
-  | "servers-running"
-  | "critical-job"
-  | "operation-in-progress"
-  | null;
+type AppUpdateSafetyReason = "servers-running" | "critical-job" | "operation-in-progress" | null;
 
 export interface AppUpdateSafetyGate {
   /** Returns a block reason when install must not quit the app. */
@@ -165,17 +161,11 @@ export class AppUpdateService {
           await this.checkViaGitHubApi();
           return this.getStatus();
         } catch (fallbackError: unknown) {
-          console.warn(
-            "YARK update feed missing; GitHub API fallback also failed",
-            fallbackError,
-          );
+          console.warn("YARK update feed missing; GitHub API fallback also failed", fallbackError);
         }
       }
 
-      console.warn(
-        "YARK update feed not ready; showing short operator copy",
-        error,
-      );
+      console.warn("YARK update feed not ready; showing short operator copy", error);
       this.emit({
         ...this.status,
         phase: "error",
@@ -263,9 +253,7 @@ export class AppUpdateService {
   }
 
   async openReleaseNotes(): Promise<void> {
-    const url = requireAllowedExternalUrl(
-      this.status.releaseNotesUrl ?? this.status.releasePageUrl,
-    );
+    const url = requireAllowedExternalUrl(this.status.releaseNotesUrl ?? this.status.releasePageUrl);
     await shell.openExternal(url);
   }
 
@@ -338,10 +326,7 @@ export class AppUpdateService {
       if (this.activeCheckKind !== null) {
         return;
       }
-      if (
-        !isAppUpdateInFlight(this.status.phase)
-        && isTransientAppUpdateFeedError(error)
-      ) {
+      if (!isAppUpdateInFlight(this.status.phase) && isTransientAppUpdateFeedError(error)) {
         console.warn("YARK updater: transient feed error ignored", error);
         return;
       }
@@ -369,13 +354,7 @@ export class AppUpdateService {
       });
       return;
     }
-    if (
-      shouldPreserveAppUpdateProgress(
-        this.status.phase,
-        this.status.availableVersion,
-        version,
-      )
-    ) {
+    if (shouldPreserveAppUpdateProgress(this.status.phase, this.status.availableVersion, version)) {
       this.emit({
         ...this.status,
         availableVersion: version,
@@ -417,13 +396,7 @@ export class AppUpdateService {
       throw new Error("GitHub Releases response had no usable version tag.");
     }
     if (compareSemver(remote, this.currentVersion) > 0) {
-      if (
-        shouldPreserveAppUpdateProgress(
-          this.status.phase,
-          this.status.availableVersion,
-          remote,
-        )
-      ) {
+      if (shouldPreserveAppUpdateProgress(this.status.phase, this.status.availableVersion, remote)) {
         this.emit({
           ...this.status,
           availableVersion: remote,

@@ -19,72 +19,72 @@ the Server tab / workspace.
 
 ## Module map
 
-| Role | Path |
-| --- | --- |
-| Page shell | `src/renderer/src/features/settings/SettingsPage.tsx` |
-| Category rail | `…/components/SettingsNav.tsx` (`SETTINGS_CATEGORIES`) |
-| General | `…/components/SettingsGeneralSection.tsx` |
-| Profiles (console, base folder) | `…/components/SettingsServersSection.tsx` |
-| Auto-start summary | `…/components/SettingsAutoStartSection.tsx` |
-| SteamCMD | `…/components/SettingsSteamCmdSection.tsx` |
-| Discord webhooks | `…/components/SettingsDiscordSection.tsx` |
-| Log retention | `…/components/SettingsLogRetentionSection.tsx` |
-| About (YARK updates, app data folders, community links, third-party notices) | `…/components/SettingsYarkUpdateSection.tsx`, `…/components/SettingsAppDataSection.tsx`, `…/components/SettingsAboutCommunitySection.tsx`, `…/components/SettingsAboutLegalSection.tsx` |
-| Density / console-on-start load/migrate | `…/settingsModel.ts` |
-| First-run setup wizard | `src/renderer/src/features/setup-wizard/` (`onboarding.v1`) |
-| Tray / Windows startup hook | `…/hooks/useDesktopShellPreferences.ts` |
-| Desktop-shell persist | `src/main/desktop-shell-settings.ts` |
-| Window bounds / maximized | `src/main/window-state.ts` (`app_settings.windowState`) |
-| Windows login item | `src/main/windows-login-item.ts` |
-| Tray icon / menu | `src/main/app-tray.ts` |
-| Sidebar Quit YARK | `Sidebar.tsx` footer → `app:quit` (#532) |
-| Shared keys / defaults | `src/shared/settings/desktop-shell.ts`, `src/shared/settings/ui-density.ts`, `src/shared/settings/open-native-console.ts`, `src/shared/settings/log-retention.ts`, `src/shared/settings/app-update.ts` |
-| Density theme apply | `src/renderer/src/app/AppProviders.tsx`, `src/renderer/src/main.tsx` |
-| SteamCMD service | `src/backend/domains/updates/*` (path/install/caches) |
-| YARK self-update | `src/main/app-update-service.ts` |
-| IPC | `src/shared/ipc.ts`, `src/preload/index.ts`, `src/main/ipc-handlers.ts` |
+| Role                                                                         | Path                                                                                                                                                                                                   |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Page shell                                                                   | `src/renderer/src/features/settings/SettingsPage.tsx`                                                                                                                                                  |
+| Category rail                                                                | `…/components/SettingsNav.tsx` (`SETTINGS_CATEGORIES`)                                                                                                                                                 |
+| General                                                                      | `…/components/SettingsGeneralSection.tsx`                                                                                                                                                              |
+| Profiles (console, base folder)                                              | `…/components/SettingsServersSection.tsx`                                                                                                                                                              |
+| Auto-start summary                                                           | `…/components/SettingsAutoStartSection.tsx`                                                                                                                                                            |
+| SteamCMD                                                                     | `…/components/SettingsSteamCmdSection.tsx`                                                                                                                                                             |
+| Discord webhooks                                                             | `…/components/SettingsDiscordSection.tsx`                                                                                                                                                              |
+| Log retention                                                                | `…/components/SettingsLogRetentionSection.tsx`                                                                                                                                                         |
+| About (YARK updates, app data folders, community links, third-party notices) | `…/components/SettingsYarkUpdateSection.tsx`, `…/components/SettingsAppDataSection.tsx`, `…/components/SettingsAboutCommunitySection.tsx`, `…/components/SettingsAboutLegalSection.tsx`                |
+| Density / console-on-start load/migrate                                      | `…/settingsModel.ts`                                                                                                                                                                                   |
+| First-run setup wizard                                                       | `src/renderer/src/features/setup-wizard/` (`onboarding.v1`)                                                                                                                                            |
+| Tray / Windows startup hook                                                  | `…/hooks/useDesktopShellPreferences.ts`                                                                                                                                                                |
+| Desktop-shell persist                                                        | `src/main/desktop-shell-settings.ts`                                                                                                                                                                   |
+| Window bounds / maximized                                                    | `src/main/window-state.ts` (`app_settings.windowState`)                                                                                                                                                |
+| Windows login item                                                           | `src/main/windows-login-item.ts`                                                                                                                                                                       |
+| Tray icon / menu                                                             | `src/main/app-tray.ts`                                                                                                                                                                                 |
+| Sidebar Quit YARK                                                            | `Sidebar.tsx` footer → `app:quit` (#532)                                                                                                                                                               |
+| Shared keys / defaults                                                       | `src/shared/settings/desktop-shell.ts`, `src/shared/settings/ui-density.ts`, `src/shared/settings/open-native-console.ts`, `src/shared/settings/log-retention.ts`, `src/shared/settings/app-update.ts` |
+| Density theme apply                                                          | `src/renderer/src/app/AppProviders.tsx`, `src/renderer/src/main.tsx`                                                                                                                                   |
+| SteamCMD service                                                             | `src/backend/domains/updates/*` (path/install/caches)                                                                                                                                                  |
+| YARK self-update                                                             | `src/main/app-update-service.ts`                                                                                                                                                                       |
+| IPC                                                                          | `src/shared/ipc.ts`, `src/preload/index.ts`, `src/main/ipc-handlers.ts`                                                                                                                                |
 
 ## What lives where
 
-| On Settings | Elsewhere |
-| --- | --- |
-| Close-to-tray, tray toast, Start with Windows | Per-server `autoStart` toggle (Server tab → Startup) |
-| UI density (compact / comfortable) | Theme is **hardcoded dark** (`AppProviders`) — no light/dark control |
-| SteamCMD path + shared caches | Live progress: **Downloads** page + footer teaser + Logs → Updates |
-| Discord webhook + event filters | One-way notifications only; Discord cannot control YARK |
-| Default create base folder (`localStorage`) | Profile `installDir` (absolute, per server) |
-| App data folder shortcuts | Backup disk-alert thresholds (Backups page modal) |
-| Opted-in auto-start **summary** | Quit-with-servers Stop/Cancel dialog (hardcoded in main; not a Setting) |
-| **Log retention** limits + Clean up now | Per-section clear on Logs workspace; ASA Saved/Logs never touched — [logs.md](logs.md) |
-| **YARK updates** check / download / restart | Overview **Check server updates** is ASA/SteamCMD only; sidebar `vX.Y.Z` accents when a YARK update is available — [versioning.md](versioning.md) |
-| **What's new** (curated notes, one-shot after upgrade) | Sidebar version label; Settings → About → What's new. This version vs Earlier releases accordion (#290) |
+| On Settings                                                                              | Elsewhere                                                                                                                                                             |
+| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Close-to-tray, tray toast, Start with Windows                                            | Per-server `autoStart` toggle (Server tab → Startup)                                                                                                                  |
+| UI density (compact / comfortable)                                                       | Theme is **hardcoded dark** (`AppProviders`) — no light/dark control                                                                                                  |
+| SteamCMD path + shared caches                                                            | Live progress: **Downloads** page + footer teaser + Logs → Updates                                                                                                    |
+| Discord webhook + event filters                                                          | One-way notifications only; Discord cannot control YARK                                                                                                               |
+| Default create base folder (`localStorage`)                                              | Profile `installDir` (absolute, per server)                                                                                                                           |
+| App data folder shortcuts                                                                | Backup disk-alert thresholds (Backups page modal)                                                                                                                     |
+| Opted-in auto-start **summary**                                                          | Quit-with-servers Stop/Cancel dialog (hardcoded in main; not a Setting)                                                                                               |
+| **Log retention** limits + Clean up now                                                  | Per-section clear on Logs workspace; ASA Saved/Logs never touched — [logs.md](logs.md)                                                                                |
+| **YARK updates** check / download / restart                                              | Overview **Check server updates** is ASA/SteamCMD only; sidebar `vX.Y.Z` accents when a YARK update is available — [versioning.md](versioning.md)                     |
+| **What's new** (curated notes, one-shot after upgrade)                                   | Sidebar version label; Settings → About → What's new. This version vs Earlier releases accordion (#290)                                                               |
 | **Open setup assistant** (SteamCMD + Windows shell; full wizard when the fleet is empty) | First-run auto-show after a **successful** read when `onboarding.v1` is unset and there are no profiles; a read error keeps Overview usable and can be retried (#298) |
 
 ## Controls and defaults
 
 ### General
 
-| Control | Storage | Default | Notes |
-| --- | --- | --- | --- |
-| Close window to tray | SQLite `closeWindowToTray` | **on** | Hide on close; minimize still uses the taskbar |
-| Desktop alerts | SQLite `osNotifyEnabled` | **on** | Master switch for Windows notifications (#331) |
-| Server crash | SQLite `osNotifyCrash` | **on** | Nested under Desktop alerts; click opens that server's log |
-| Installs and updates | SQLite `osNotifySteamCmd` | **on** | Nested; one banner when install/update/verify finishes or fails. Click opens Downloads |
-| YARK updates | SQLite `osNotifyYarkUpdate` | **on** | Nested; when a new YARK version is available or ready to install. Click opens Settings → About |
-| Hide to tray | SQLite `trayCloseHintDismissed` (UI inverted) | toast **on** | Nested; visible only when close-to-tray is on. Also gated by Desktop alerts |
-| Start with Windows | SQLite `startWithWindows` + `setLoginItemSettings` | **off** | App only — does **not** start ASA (#54 vs #53) |
-| Display size | SQLite `uiDensity` | **compact** | `compact` \| `comfortable`; see [design-system.md](design-system.md) |
-| Quick jump | localStorage `yark.spotlightRecent.v1` (MRU) | Ctrl+K | Jump to pages/servers; Recent group; Settings → General + logo tooltip (#104) |
-| Window size / position | SQLite `windowState` | **maximized** | Remembers last bounds + maximized; off-screen → maximize again |
-| Open setup assistant | SQLite `onboarding.v1` | unset until skip/complete | Empty fleet reopens the full wizard; otherwise Paths + Windows only. Does not reset SteamCMD (#298) |
+| Control                | Storage                                            | Default                   | Notes                                                                                               |
+| ---------------------- | -------------------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------- |
+| Close window to tray   | SQLite `closeWindowToTray`                         | **on**                    | Hide on close; minimize still uses the taskbar                                                      |
+| Desktop alerts         | SQLite `osNotifyEnabled`                           | **on**                    | Master switch for Windows notifications (#331)                                                      |
+| Server crash           | SQLite `osNotifyCrash`                             | **on**                    | Nested under Desktop alerts; click opens that server's log                                          |
+| Installs and updates   | SQLite `osNotifySteamCmd`                          | **on**                    | Nested; one banner when install/update/verify finishes or fails. Click opens Downloads              |
+| YARK updates           | SQLite `osNotifyYarkUpdate`                        | **on**                    | Nested; when a new YARK version is available or ready to install. Click opens Settings → About      |
+| Hide to tray           | SQLite `trayCloseHintDismissed` (UI inverted)      | toast **on**              | Nested; visible only when close-to-tray is on. Also gated by Desktop alerts                         |
+| Start with Windows     | SQLite `startWithWindows` + `setLoginItemSettings` | **off**                   | App only — does **not** start ASA (#54 vs #53)                                                      |
+| Display size           | SQLite `uiDensity`                                 | **compact**               | `compact` \| `comfortable`; see [design-system.md](design-system.md)                                |
+| Quick jump             | localStorage `yark.spotlightRecent.v1` (MRU)       | Ctrl+K                    | Jump to pages/servers; Recent group; Settings → General + logo tooltip (#104)                       |
+| Window size / position | SQLite `windowState`                               | **maximized**             | Remembers last bounds + maximized; off-screen → maximize again                                      |
+| Open setup assistant   | SQLite `onboarding.v1`                             | unset until skip/complete | Empty fleet reopens the full wizard; otherwise Paths + Windows only. Does not reset SteamCMD (#298) |
 
 ### Profiles
 
-| Control | Storage | Default | Notes |
-| --- | --- | --- | --- |
-| Show server console on start | SQLite `openNativeConsoleOnStart` (`"1"`/`"0"`) | off | Applied on Start / Restart / Auto-start IPC and on backend starts that omit the flag (maintenance restart, post-update resume). Also on first-run Windows step. Legacy `localStorage` `overview.openNativeTerminalOnStart` migrates once. |
-| Default base folder | `localStorage` `settings.defaultServerBaseFolder` | unset | Prefills create-server base path only |
-| Server auto-start summary | Profile `autoStart` | off | Lists opted-in servers; edit on the Server tab |
+| Control                      | Storage                                           | Default | Notes                                                                                                                                                                                                                                     |
+| ---------------------------- | ------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Show server console on start | SQLite `openNativeConsoleOnStart` (`"1"`/`"0"`)   | off     | Applied on Start / Restart / Auto-start IPC and on backend starts that omit the flag (maintenance restart, post-update resume). Also on first-run Windows step. Legacy `localStorage` `overview.openNativeTerminalOnStart` migrates once. |
+| Default base folder          | `localStorage` `settings.defaultServerBaseFolder` | unset   | Prefills create-server base path only                                                                                                                                                                                                     |
+| Server auto-start summary    | Profile `autoStart`                               | off     | Lists opted-in servers; edit on the Server tab                                                                                                                                                                                            |
 
 ### Discord (#241)
 
@@ -113,19 +113,19 @@ IPC: `app:get-discord-webhook`, `app:set-discord-webhook`, and
 
 IPC for shell / density / console:
 
-| Channel | API |
-| --- | --- |
-| `app:get-ui-density` / `app:set-ui-density` | `getUiDensity` / `setUiDensity` |
-| `app:get-open-native-console` / `app:set-open-native-console` | `getOpenNativeConsole` / `setOpenNativeConsole` |
-| `app:get-desktop-shell-preferences` | `getDesktopShellPreferences` |
-| `app:get-last-seen-changelog-version` / `app:set-last-seen-changelog-version` | What's new dismiss |
-| `app:get-onboarding` / `app:set-onboarding` | First-run wizard `onboarding.v1` (`completed` \| `skipped`, or `null` to clear) |
-| `app:set-close-window-to-tray` | `setCloseWindowToTray` |
-| `app:set-start-with-windows` | `setStartWithWindows` |
-| `app:set-tray-close-hint-dismissed` | `setTrayCloseHintDismissed` |
-| `app:quit` | `quitApp` — same real-quit path as tray **Quit YARK** (#532); not hide-to-tray |
+| Channel                                                                                                                  | API                                                                              |
+| ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| `app:get-ui-density` / `app:set-ui-density`                                                                              | `getUiDensity` / `setUiDensity`                                                  |
+| `app:get-open-native-console` / `app:set-open-native-console`                                                            | `getOpenNativeConsole` / `setOpenNativeConsole`                                  |
+| `app:get-desktop-shell-preferences`                                                                                      | `getDesktopShellPreferences`                                                     |
+| `app:get-last-seen-changelog-version` / `app:set-last-seen-changelog-version`                                            | What's new dismiss                                                               |
+| `app:get-onboarding` / `app:set-onboarding`                                                                              | First-run wizard `onboarding.v1` (`completed` \| `skipped`, or `null` to clear)  |
+| `app:set-close-window-to-tray`                                                                                           | `setCloseWindowToTray`                                                           |
+| `app:set-start-with-windows`                                                                                             | `setStartWithWindows`                                                            |
+| `app:set-tray-close-hint-dismissed`                                                                                      | `setTrayCloseHintDismissed`                                                      |
+| `app:quit`                                                                                                               | `quitApp` — same real-quit path as tray **Quit YARK** (#532); not hide-to-tray   |
 | `app:set-os-notify-enabled` / `app:set-os-notify-crash` / `app:set-os-notify-steamcmd` / `app:set-os-notify-yark-update` | Desktop alerts master + crash + installs/updates + YARK update categories (#331) |
-| `app:list-data-folders` / `app:open-data-folder` | App / backups / update-logs / steamcmd roots under `userData` |
+| `app:list-data-folders` / `app:open-data-folder`                                                                         | App / backups / update-logs / steamcmd roots under `userData`                    |
 
 Density load: `main.tsx` calls `loadUiDensityPref()` before the first theme mount.
 `getUiDensity` returns `null` when unset (caller applies default; read does not
@@ -147,11 +147,11 @@ preference on the Server tab. Launch order and skip rules:
 
 ### SteamCMD
 
-| Control | IPC / storage | Notes |
-| --- | --- | --- |
-| Path + Choose… | SQLite `steamcmdPath` via `steamcmd:set-path` | Validates file exists + `steamcmd +quit`; resets content-cache freshness. Chip is shared `ReadonlyPath` with Choose… and **Install SteamCMD** on the same row (not `PathField`) so the install CTA stays beside the path (#234). |
-| Install SteamCMD | `steamcmd:install` | Shown when `detected === false` |
-| Shared caches | `steamcmd:open-cache` / `steamcmd:clear-cache` (`depot` \| `content`) | Clear blocked while jobs run |
+| Control          | IPC / storage                                                         | Notes                                                                                                                                                                                                                            |
+| ---------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Path + Choose…   | SQLite `steamcmdPath` via `steamcmd:set-path`                         | Validates file exists + `steamcmd +quit`; resets content-cache freshness. Chip is shared `ReadonlyPath` with Choose… and **Install SteamCMD** on the same row (not `PathField`) so the install CTA stays beside the path (#234). |
+| Install SteamCMD | `steamcmd:install`                                                    | Shown when `detected === false`                                                                                                                                                                                                  |
+| Shared caches    | `steamcmd:open-cache` / `steamcmd:clear-cache` (`depot` \| `content`) | Clear blocked while jobs run                                                                                                                                                                                                     |
 
 Create/import a profile does **not** wait for SteamCMD. **Install files** /
 Update / Verify fail until a `steamcmd.exe` is found — see
@@ -182,14 +182,14 @@ disk are not deleted. See [profile-database.md](profile-database.md) (#218, #252
 
 ### Log retention (#84)
 
-| Control | Storage | Default | Notes |
-| --- | --- | --- | --- |
-| Keep routine events (days) | `logRetention.v1` | 90 | Non-failure SQLite events; min 1 day |
-| Keep failure events (days) | same | 180 | Must be ≥ routine days; min 1 day |
-| Keep successful update logs | same | 20 | Per-server count |
-| Keep failed update logs (days) | same | 180 | Failed/unknown SteamCMD files; min 1 day |
-| Automatic cleanup | same | on | Startup + ~daily; changes save immediately |
-| Clean up now… | IPC preview/run | — | Scan → Remove; reports skipped/failed |
+| Control                        | Storage           | Default | Notes                                      |
+| ------------------------------ | ----------------- | ------- | ------------------------------------------ |
+| Keep routine events (days)     | `logRetention.v1` | 90      | Non-failure SQLite events; min 1 day       |
+| Keep failure events (days)     | same              | 180     | Must be ≥ routine days; min 1 day          |
+| Keep successful update logs    | same              | 20      | Per-server count                           |
+| Keep failed update logs (days) | same              | 180     | Failed/unknown SteamCMD files; min 1 day   |
+| Automatic cleanup              | same              | on      | Startup + ~daily; changes save immediately |
+| Clean up now…                  | IPC preview/run   | —       | Scan → Remove; reports skipped/failed      |
 
 Full ownership table and recovery limits: [logs.md](logs.md#ownership-and-retention-84).
 
@@ -206,13 +206,13 @@ mid-publish (tag before assets finish uploading), the quiet check stays silent
 and **Check now** falls back to the GitHub Releases API or shows a short “try
 again in a few minutes” line instead of the raw `HttpError` (#521).
 
-| Control | IPC | Notes |
-| --- | --- | --- |
-| Status | `app:get-update-status` + `push:app-update` | Quiet check ~60s after launch |
-| Check now | `app:check-for-update` | Packaged: updater feed; unpackaged: GitHub API compare |
-| Download | `app:download-update` | Packaged only |
-| Restart and install | `app:install-update` | Only rendered once a download is ready; blocked if servers running, SteamCMD/critical jobs busy, or settle in progress |
-| Release notes | `app:open-yark-release-notes` | Opens GitHub in the browser |
+| Control             | IPC                                         | Notes                                                                                                                  |
+| ------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Status              | `app:get-update-status` + `push:app-update` | Quiet check ~60s after launch                                                                                          |
+| Check now           | `app:check-for-update`                      | Packaged: updater feed; unpackaged: GitHub API compare                                                                 |
+| Download            | `app:download-update`                       | Packaged only                                                                                                          |
+| Restart and install | `app:install-update`                        | Only rendered once a download is ready; blocked if servers running, SteamCMD/critical jobs busy, or settle in progress |
+| Release notes       | `app:open-yark-release-notes`               | Opens GitHub in the browser                                                                                            |
 
 The section is a single compact row: heading, then `v{APP_VERSION} · <status>`,
 with the actions right-aligned. Progress, install-block, and error lines only
@@ -255,19 +255,19 @@ silent outside Settings status text.
 
 ## Tests
 
-| File | Focus |
-| --- | --- |
+| File                                                       | Focus                                                                                    |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | `src/renderer/src/features/settings/SettingsPage.test.tsx` | Page controls, density, caches, base folder, SteamCMD setup, log retention, YARK updates |
-| `tests/unit/log-retention.test.ts` | Defaults / normalize / failure classification |
-| `tests/unit/logs-service.test.ts` | Retention preview/run path guards |
-| `tests/unit/ui-density-pref.test.ts` | Load / write / legacy migration |
-| `tests/unit/open-native-console-pref.test.ts` | Console-on-start load / write / legacy migration |
-| `tests/unit/app-settings-ui-density.test.ts` | SQLite round-trip |
-| `tests/unit/app-settings-open-native-console.test.ts` | SQLite console-on-start round-trip |
-| `tests/unit/desktop-shell-settings.test.ts` | Tray / Windows prefs persist |
-| `tests/unit/database-boot-recovery.test.ts` | Corrupt DB open/migrate errors, quarantine, recovery loop |
-| `tests/unit/auto-start.test.ts` | Launch skip/start behavior |
-| `scripts/visual-settings.cjs` | Packaged Settings visual review |
+| `tests/unit/log-retention.test.ts`                         | Defaults / normalize / failure classification                                            |
+| `tests/unit/logs-service.test.ts`                          | Retention preview/run path guards                                                        |
+| `tests/unit/ui-density-pref.test.ts`                       | Load / write / legacy migration                                                          |
+| `tests/unit/open-native-console-pref.test.ts`              | Console-on-start load / write / legacy migration                                         |
+| `tests/unit/app-settings-ui-density.test.ts`               | SQLite round-trip                                                                        |
+| `tests/unit/app-settings-open-native-console.test.ts`      | SQLite console-on-start round-trip                                                       |
+| `tests/unit/desktop-shell-settings.test.ts`                | Tray / Windows prefs persist                                                             |
+| `tests/unit/database-boot-recovery.test.ts`                | Corrupt DB open/migrate errors, quarantine, recovery loop                                |
+| `tests/unit/auto-start.test.ts`                            | Launch skip/start behavior                                                               |
+| `scripts/visual-settings.cjs`                              | Packaged Settings visual review                                                          |
 
 See also [server-lifecycle.md](server-lifecycle.md) (tray, auto-start, quit),
 [design-system.md](design-system.md) (density tokens), and

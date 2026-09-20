@@ -4,8 +4,7 @@ const YARK_GITHUB_OWNER = "gabomarin";
 const YARK_GITHUB_REPO = "yark";
 export const YARK_RELEASES_URL = `https://github.com/${YARK_GITHUB_OWNER}/${YARK_GITHUB_REPO}/releases`;
 /** List endpoint — `/releases/latest` 404s while every published tag is a GitHub prerelease (0.x). */
-export const YARK_RELEASES_API =
-  `https://api.github.com/repos/${YARK_GITHUB_OWNER}/${YARK_GITHUB_REPO}/releases`;
+export const YARK_RELEASES_API = `https://api.github.com/repos/${YARK_GITHUB_OWNER}/${YARK_GITHUB_REPO}/releases`;
 
 export interface GithubReleaseRef {
   tag_name?: string;
@@ -50,25 +49,14 @@ export function pickNewestAllowedRelease(
   return best;
 }
 
-export type AppUpdatePhase =
-  | "idle"
-  | "checking"
-  | "up-to-date"
-  | "available"
-  | "downloading"
-  | "ready"
-  | "error";
+export type AppUpdatePhase = "idle" | "checking" | "up-to-date" | "available" | "downloading" | "ready" | "error";
 
 /**
  * Why Restart and install is disabled.
  * `null` means install is allowed (packaged + downloaded + safety gates clear).
  */
 export type AppUpdateInstallBlockReason =
-  | "dev"
-  | "not-ready"
-  | "servers-running"
-  | "critical-job"
-  | "operation-in-progress";
+  "dev" | "not-ready" | "servers-running" | "critical-job" | "operation-in-progress";
 
 export interface AppUpdateStatus {
   phase: AppUpdatePhase;
@@ -87,9 +75,7 @@ export interface AppUpdateStatus {
 
 export function stripVersionPrefix(version: string): string {
   const trimmed = version.trim();
-  return trimmed.startsWith("v") || trimmed.startsWith("V")
-    ? trimmed.slice(1)
-    : trimmed;
+  return trimmed.startsWith("v") || trimmed.startsWith("V") ? trimmed.slice(1) : trimmed;
 }
 
 /**
@@ -171,9 +157,7 @@ export function shouldPreserveAppUpdateProgress(
   return compareSemver(remoteVersion, availableVersion) <= 0;
 }
 
-export function installBlockMessage(
-  reason: AppUpdateInstallBlockReason | null,
-): string | null {
+export function installBlockMessage(reason: AppUpdateInstallBlockReason | null): string | null {
   switch (reason) {
     case "dev":
       return "Install is only available in the packaged Windows app. Use a GitHub Release build.";
@@ -190,10 +174,7 @@ export function installBlockMessage(
   }
 }
 
-export function createIdleAppUpdateStatus(
-  currentVersion: string,
-  isPackaged: boolean,
-): AppUpdateStatus {
+export function createIdleAppUpdateStatus(currentVersion: string, isPackaged: boolean): AppUpdateStatus {
   return {
     phase: "idle",
     currentVersion,
@@ -209,8 +190,7 @@ export function createIdleAppUpdateStatus(
 }
 
 /** Operator copy when the GitHub update feed is incomplete mid-publish (#521). */
-export const APP_UPDATE_FEED_NOT_READY_MESSAGE =
-  "Update feed not ready yet — try again in a few minutes.";
+export const APP_UPDATE_FEED_NOT_READY_MESSAGE = "Update feed not ready yet — try again in a few minutes.";
 
 /**
  * True for mid-publish / network blips on the packaged update feed (missing
@@ -228,19 +208,16 @@ export function isTransientAppUpdateFeedError(error: unknown): boolean {
   const code = errorCodeLower(error);
 
   if (
-    message.includes("latest.yml")
-    && (message.includes("404")
-      || message.includes("cannot find")
-      || message.includes("httperror")
-      || message.includes("not found"))
+    message.includes("latest.yml") &&
+    (message.includes("404") ||
+      message.includes("cannot find") ||
+      message.includes("httperror") ||
+      message.includes("not found"))
   ) {
     return true;
   }
   // Incomplete release assets while the tag exists but the workflow is still uploading.
-  if (
-    message.includes("cannot find")
-    && message.includes("latest release artifacts")
-  ) {
+  if (message.includes("cannot find") && message.includes("latest release artifacts")) {
     return true;
   }
 
@@ -286,9 +263,7 @@ export function operatorFacingAppUpdateError(error: unknown): string {
  * Phase to keep after a quiet check hits a transient feed failure — never
  * `error` or `checking` (#521).
  */
-export function restorePhaseAfterQuietFeedFailure(
-  phaseBeforeCheck: AppUpdatePhase,
-): AppUpdatePhase {
+export function restorePhaseAfterQuietFeedFailure(phaseBeforeCheck: AppUpdatePhase): AppUpdatePhase {
   if (phaseBeforeCheck === "downloading" || phaseBeforeCheck === "ready") {
     return phaseBeforeCheck;
   }

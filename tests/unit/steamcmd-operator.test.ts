@@ -21,26 +21,21 @@ import {
 
 describe("planSteamCmdProcessProgressStart", () => {
   it("maps each operation to initial progress copy", () => {
-    expect(planSteamCmdProcessProgressStart("install-files").label)
-      .toContain("Downloading");
-    expect(planSteamCmdProcessProgressStart("verify-files").line)
-      .toContain("validate");
+    expect(planSteamCmdProcessProgressStart("install-files").label).toContain("Downloading");
+    expect(planSteamCmdProcessProgressStart("verify-files").line).toContain("validate");
     expect(planSteamCmdProcessProgressStart("install-steamcmd").percent).toBeNull();
   });
 });
 
 describe("ASA cache console helpers", () => {
   it("formats cache and sync copy", () => {
-    expect(formatSteamCmdCachePathsLine("D:/depot", "D:/content"))
-      .toContain("depot=D:/depot");
+    expect(formatSteamCmdCachePathsLine("D:/depot", "D:/content")).toContain("depot=D:/depot");
     expect(formatAsaCacheReuseLine(12)).toContain("12s");
-    expect(formatAsaCacheUpdateConsoleLine("verify-files", "D:/steam"))
-      .toContain("validate");
+    expect(formatAsaCacheUpdateConsoleLine("verify-files", "D:/steam")).toContain("validate");
     expect(formatAsaCacheSyncTargetLine("C:/ARK")).toContain("ShooterGame");
     expect(resolveAsaCacheSyncLabel("install-files")).toContain("Copying");
     expect(resolveAsaCacheSyncSkippedProgress("update").percent).toBe(100);
-    expect(resolveAsaCacheSyncCompleteProgress("verify-files").label)
-      .toBe("Integrity OK");
+    expect(resolveAsaCacheSyncCompleteProgress("verify-files").label).toBe("Integrity OK");
     expect(formatSyncHeartbeatLine(5)).toContain("5s");
     expect(formatSyncCompletedLine(1)).toContain("robocopy=1");
     expect(formatSyncFailureFallbackLine("busy")).toContain("directly");
@@ -58,8 +53,7 @@ describe("invoke and disk progress helpers", () => {
     });
     expect(lines[0]).toContain("op=update");
     expect(lines[1]).toContain("console_log.txt");
-    expect(formatDiskProgressLogPathLine("D:/steam/logs/console_log.txt"))
-      .toContain("Following live log");
+    expect(formatDiskProgressLogPathLine("D:/steam/logs/console_log.txt")).toContain("Following live log");
   });
 
   it("prefers recent official progress over disk estimates", () => {

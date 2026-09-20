@@ -6,10 +6,7 @@ import {
   type LeftRunningProcessIdentity,
   type LiveProcessIdentity,
 } from "@shared/settings/left-running";
-import {
-  AsaSavedLogsTailer,
-  captureAsaLogSessionAnchor,
-} from "./asa-log-tail";
+import { AsaSavedLogsTailer, captureAsaLogSessionAnchor } from "./asa-log-tail";
 import { disconnectChildStdio } from "./process-spawn";
 import type { ProcessStartManaged } from "./process-start";
 
@@ -31,11 +28,7 @@ export interface ProcessLeaveHost {
     live?: LiveProcessIdentity | null,
   ): Promise<void>;
   captureRuntimeChunk(serverId: string, source: "log", text: string): void;
-  onManagedExit(
-    serverId: string,
-    managed: LeaveManagedProcess,
-    code: number | null,
-  ): void;
+  onManagedExit(serverId: string, managed: LeaveManagedProcess, code: number | null): void;
   waitUntilReady(
     profile: ServerProfile,
     managed: LeaveManagedProcess,
@@ -56,9 +49,7 @@ export async function collectLeaveIdentities(
     leftAt?: string;
   },
 ): Promise<LeftRunningProcessIdentity[]> {
-  const queryOs =
-    options?.queryOsIdentity ??
-    ((pid: number) => host.queryOsIdentity(pid));
+  const queryOs = options?.queryOsIdentity ?? ((pid: number) => host.queryOsIdentity(pid));
   const leftAt = options?.leftAt ?? new Date().toISOString();
   const records: LeftRunningProcessIdentity[] = [];
 
@@ -69,9 +60,7 @@ export async function collectLeaveIdentities(
     }
     const pid = managed.child.pid;
     if (pid === undefined || !Number.isInteger(pid) || pid <= 0) {
-      throw new Error(
-        `Cannot leave "${profile.name}" running: process id is unavailable`,
-      );
+      throw new Error(`Cannot leave "${profile.name}" running: process id is unavailable`);
     }
 
     const live = await queryOs(pid);
@@ -104,19 +93,14 @@ export async function collectLeaveIdentities(
 /**
  * Detach previously snapshotted Leave processes (after durable metadata write).
  */
-export function detachAfterLeavePersist(
-  host: ProcessLeaveHost,
-  records: LeftRunningProcessIdentity[],
-): void {
+export function detachAfterLeavePersist(host: ProcessLeaveHost, records: LeftRunningProcessIdentity[]): void {
   for (const record of records) {
     const managed = host.getManaged(record.serverId);
     if (managed === undefined || !host.isActive(record.serverId)) {
       continue;
     }
     if (managed.child.pid !== record.pid) {
-      throw new Error(
-        `Cannot detach "${record.serverId}": process id changed since Leave snapshot`,
-      );
+      throw new Error(`Cannot detach "${record.serverId}": process id changed since Leave snapshot`);
     }
 
     host.appendRuntimeLog(
@@ -181,9 +165,7 @@ export async function reattachManagedProcess(
   const live = await queryOs(record.pid);
   const classification = classifyLeaveCandidate(record, live);
   if (classification !== "match") {
-    throw new Error(
-      `Leave identity for "${profile.name}" failed re-validation (${classification})`,
-    );
+    throw new Error(`Leave identity for "${profile.name}" failed re-validation (${classification})`);
   }
 
   const child = host.createAdoptedChild(record.pid);
@@ -209,11 +191,7 @@ export async function reattachManagedProcess(
     asaApiLoading: false,
   };
   host.setManaged(profile.id, managed);
-  host.appendRuntimeLog(
-    profile.id,
-    "system",
-    `Reattached to left-running process (pid ${record.pid})`,
-  );
+  host.appendRuntimeLog(profile.id, "system", `Reattached to left-running process (pid ${record.pid})`);
   void host.writeProcessCheckpoint(profile.id, managed, live);
 
   managed.logTailer = new AsaSavedLogsTailer(profile.installDir, (text) => {
@@ -221,11 +199,7 @@ export async function reattachManagedProcess(
     host.captureRuntimeChunk(profile.id, "log", text);
   });
   managed.logTailer.start(managed.logSessionAnchor);
-  host.appendRuntimeLog(
-    profile.id,
-    "system",
-    "Waiting for RCON readiness after crash-recovery reattach…",
-  );
+  host.appendRuntimeLog(profile.id, "system", "Waiting for RCON readiness after crash-recovery reattach…");
   host.emitStatus(profile.id);
 
   child.once("exit", (code) => {
@@ -234,11 +208,7 @@ export async function reattachManagedProcess(
 
   if (options?.skipReadinessCheck === true) {
     managed.status = "running";
-    host.appendRuntimeLog(
-      profile.id,
-      "system",
-      "Readiness skipped after reattach; status running",
-    );
+    host.appendRuntimeLog(profile.id, "system", "Readiness skipped after reattach; status running");
     host.emitStatus(profile.id);
     return;
   }

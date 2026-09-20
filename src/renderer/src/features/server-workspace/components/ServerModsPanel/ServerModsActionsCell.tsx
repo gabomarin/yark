@@ -1,11 +1,6 @@
 import type { ReactElement } from "react";
 import { ActionIcon, Group, Tooltip } from "@mantine/core";
-import {
-  ArrowSquareOut,
-  MagnifyingGlass,
-  Plus,
-  Trash,
-} from "@phosphor-icons/react";
+import { ArrowSquareOut, MagnifyingGlass, Plus, Trash } from "@phosphor-icons/react";
 import { confirmRemoveServerMod } from "./confirmRemoveServerMod";
 import type { ModRow } from "./serverModsModel";
 
@@ -55,22 +50,15 @@ export function ServerModsActionsCell(props: Props): ReactElement {
         </ActionIcon>
       </Tooltip>
       {props.mode === "discover" ? (
-        <Tooltip
-          label={row.configured ? "Already added" : `Add ${row.name}`}
-          withArrow
-        >
+        <Tooltip label={row.configured ? "Already added" : `Add ${row.name}`} withArrow>
           <ActionIcon
             variant={row.configured ? "transparent" : "subtle"}
             size="sm"
-            color="teal"
+            color="ok"
             aria-label={row.configured ? `Already added ${row.name}` : `Add ${row.name}`}
             loading={props.busy}
             disabled={row.configured || props.busy}
-            styles={
-              row.configured
-                ? { root: { backgroundColor: "transparent" } }
-                : undefined
-            }
+            styles={row.configured ? { root: { backgroundColor: "transparent" } } : undefined}
             onClick={() => props.onAdd(row)}
           >
             <Plus size={16} />

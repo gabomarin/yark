@@ -1,7 +1,4 @@
-import {
-  dangerConfirmBody,
-  openDangerConfirmModal,
-} from "@ui/DangerConfirmModal/openDangerConfirmModal";
+import { dangerConfirmBody, openDangerConfirmModal } from "@ui/DangerConfirmModal/openDangerConfirmModal";
 import type { ModRow } from "./serverModsModel";
 
 /** Confirm before removing a configured mod (table, context menu, drawer). */
@@ -20,8 +17,7 @@ export function confirmRemoveServerMod(
     title: "Remove mod?",
     children: dangerConfirmBody(
       <>
-        Remove <strong>{row.name}</strong> from this server and discard its
-        cached metadata?
+        Remove <strong>{row.name}</strong> from this server and discard its cached metadata?
       </>,
     ),
     confirmLabel: "Remove mod",

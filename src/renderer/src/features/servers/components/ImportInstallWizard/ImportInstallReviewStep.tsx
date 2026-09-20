@@ -1,16 +1,7 @@
 import type { ReactElement } from "react";
 import { useEffect, useMemo, useState } from "react";
-import {
-  Alert,
-  Button,
-  Collapse,
-  Group,
-  Loader,
-  ScrollArea,
-  SimpleGrid,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Button, Collapse, Group, Loader, ScrollArea, SimpleGrid, Stack, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { isMetadataServiceNotConfiguredMessage } from "@shared/mods/curseforge-proxy-url";
 import type { ImportInstallProbe, ModMetadata } from "@shared/types";
 
@@ -71,13 +62,9 @@ export function ImportInstallReviewStep(props: Props): ReactElement {
       }
       const unresolved = ids.length - result.data.length;
       if (unresolved > 0) {
-        setMetaWarning(
-          `Named ${result.data.length}/${ids.length} mods; ${unresolved} still show Project ID only.`,
-        );
+        setMetaWarning(`Named ${result.data.length}/${ids.length} mods; ${unresolved} still show Project ID only.`);
       }
-      onModMetadataChange(
-        Object.fromEntries(result.data.map((row) => [row.id, row])),
-      );
+      onModMetadataChange(Object.fromEntries(result.data.map((row) => [row.id, row])));
     });
     return () => {
       alive = false;
@@ -86,25 +73,21 @@ export function ImportInstallReviewStep(props: Props): ReactElement {
 
   return (
     <Stack gap="sm">
-      <Alert color="yellow" title="Profile only">
-        Schedules, clusters, and other managers&apos; databases are not imported.
-        Game.ini / GameUserSettings.ini on disk are left unchanged until you Start
-        (or edit and save) this profile.
-      </Alert>
+      <AppAlert color="attention" title="Profile only">
+        Schedules, clusters, and other managers&apos; databases are not imported. Game.ini / GameUserSettings.ini on
+        disk are left unchanged until you Start (or edit and save) this profile.
+      </AppAlert>
       {probe.installation.health === "incomplete" ? (
-        <Alert color="orange" title="Incomplete install" variant="light">
+        <AppAlert color="attention" title="Incomplete install" variant="light">
           Start stays blocked until Install or Verify finishes this ASA tree.
-        </Alert>
+        </AppAlert>
       ) : null}
       <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
         {[
           ["Profile name", probe.suggestions.name],
           ["Session name", probe.suggestions.sessionName],
           ["Map", probe.suggestions.map],
-          [
-            "Ports",
-            `${probe.suggestions.gamePort} / ${probe.suggestions.queryPort} / ${probe.suggestions.rconPort}`,
-          ],
+          ["Ports", `${probe.suggestions.gamePort} / ${probe.suggestions.queryPort} / ${probe.suggestions.rconPort}`],
         ].map(([label, value]) => (
           <div key={label}>
             <Text size="xs" c="dimmed" tt="uppercase" fw={600}>

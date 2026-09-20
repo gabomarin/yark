@@ -65,10 +65,7 @@ export function listIniUiCategoryTree(
   for (const def of ASA_UI_CATEGORIES) {
     const list = buckets.get(def.id);
     if (list === undefined || list.length === 0) continue;
-    list.sort(
-      (a, b) =>
-        a.section.localeCompare(b.section) || a.key.localeCompare(b.key),
-    );
+    list.sort((a, b) => a.section.localeCompare(b.section) || a.key.localeCompare(b.key));
     groups.push({
       id: def.id,
       label: asaUiCategoryLabel(def.id),

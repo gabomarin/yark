@@ -1,25 +1,12 @@
 import { useEffect, useState } from "react";
 import type { ReactElement } from "react";
-import {
-  Alert,
-  Badge,
-  Button,
-  Drawer,
-  Group,
-  Image,
-  Stack,
-  Switch,
-  Text,
-} from "@mantine/core";
+import { Badge, Button, Drawer, Group, Image, Stack, Switch, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { ArrowSquareOut, Copy, Plus, PuzzlePiece, X } from "@phosphor-icons/react";
-import {
-  isMapCategoryLabel,
-  isMapModCandidate,
-  suggestMapTokenFromMetadata,
-} from "@shared/asa/map-token-suggest";
+import { isMapCategoryLabel, isMapModCandidate, suggestMapTokenFromMetadata } from "@shared/asa/map-token-suggest";
 import type { ModMetadata } from "@shared/types";
 import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { copyTextToClipboard } from "@ui/copyToClipboard";
 import { MapNameHint } from "@ui/MapNameHint/MapNameHint";
 import { MetaRow } from "@ui/MetaRow/MetaRow";
@@ -79,24 +66,11 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
           <div className={classes.detailDrawerShell}>
             <Drawer.Header className={classes.detailDrawerHeader}>
               <div className={classes.detailDrawerHeaderInner}>
-                <Drawer.Title className={classes.detailDrawerEyebrow}>
-                  Mod details
-                </Drawer.Title>
-                <Group
-                  align="flex-start"
-                  wrap="nowrap"
-                  gap="sm"
-                  className={classes.detailDrawerIdentity}
-                >
+                <Drawer.Title className={classes.detailDrawerEyebrow}>Mod details</Drawer.Title>
+                <Group align="flex-start" wrap="nowrap" gap="sm" className={classes.detailDrawerIdentity}>
                   <DetailModThumbnail src={detail.thumbnailUrl} />
                   <div className={classes.detailDrawerIdentityText}>
-                    <Text
-                      component="h2"
-                      fw={600}
-                      size="lg"
-                      lh={1.35}
-                      lineClamp={3}
-                    >
+                    <Text component="h2" fw={600} size="lg" lh={1.35} lineClamp={3}>
                       {detail.name}
                     </Text>
                     <Text size="sm" c="dimmed" lineClamp={1} mt={4}>
@@ -111,19 +85,20 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
             {props.configured && (
               <div className={classes.detailDrawerLoadBand}>
                 <div>
-                  <Text size="sm" fw={500}>Enabled</Text>
+                  <Text size="sm" fw={500}>
+                    Enabled
+                  </Text>
                   {!props.enabled && (
-                    <Text size="xs" c="dimmed">Stays on the list</Text>
+                    <Text size="xs" c="dimmed">
+                      Stays on the list
+                    </Text>
                   )}
                 </div>
                 <Switch
                   checked={props.enabled}
                   disabled={props.busy}
-                  aria-label={
-                    `${props.enabled ? "Disable" : "Enable"} ${detail.name} from details`
-                  }
-                  onChange={(event) =>
-                    props.onToggle(detail.id, event.currentTarget.checked)}
+                  aria-label={`${props.enabled ? "Disable" : "Enable"} ${detail.name} from details`}
+                  onChange={(event) => props.onToggle(detail.id, event.currentTarget.checked)}
                 />
               </div>
             )}
@@ -133,42 +108,29 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                 <Text size="sm" className={classes.detailDrawerSummary}>
                   {detail.summary}
                 </Text>
-                <ModDetailScreenshotCarousel
-                  urls={detail.screenshots ?? []}
-                />
-                {typeof detail.description === "string" &&
-                  detail.description.trim().length > 0 && (
-                    <ModDetailDescription text={detail.description} />
-                  )}
+                <ModDetailScreenshotCarousel urls={detail.screenshots ?? []} />
+                {typeof detail.description === "string" && detail.description.trim().length > 0 && (
+                  <ModDetailDescription text={detail.description} />
+                )}
                 <MapPackHint detail={detail} />
                 <Group gap="xs" wrap="wrap" className={classes.detailDrawerProjectRow}>
-                  <Badge
-                    variant="light"
-                    color="blue"
-                    radius="xl"
-                    tt="none"
-                    className={classes.detailDrawerProjectBadge}
-                  >
-                    Project ID {detail.id}
-                  </Badge>
+                  <Badge variant="light">Project ID {detail.id}</Badge>
                   <Button
                     size={copyButtonSize}
                     variant="default"
-                    radius="md"
                     leftSection={<Copy size={14} />}
-                    onClick={() => void copyTextToClipboard({
-                      text: detail.id,
-                      failureMessage: "Could not copy Project ID",
-                    })}
+                    onClick={() =>
+                      void copyTextToClipboard({
+                        text: detail.id,
+                        failureMessage: "Could not copy Project ID",
+                      })
+                    }
                   >
                     Copy Project ID
                   </Button>
                 </Group>
                 <Stack gap="xs" className={classes.detailDrawerMeta}>
-                  <MetaRow
-                    label="Downloads"
-                    value={detail.downloadCount.toLocaleString()}
-                  />
+                  <MetaRow label="Downloads" value={detail.downloadCount.toLocaleString()} />
                   <MetaRow
                     label="Updated"
                     value={
@@ -177,23 +139,12 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                         : new Date(detail.dateModified).toLocaleString()
                     }
                   />
-                  <MetaRow
-                    label="Slug"
-                    value={detail.slug}
-                    mono
-                  />
+                  <MetaRow label="Slug" value={detail.slug} mono />
                 </Stack>
                 {(detail.categories ?? []).length > 0 && (
                   <Group gap="xs" className={classes.detailDrawerCategories}>
                     {(detail.categories ?? []).map((category) => (
-                      <Badge
-                        key={category}
-                        size="sm"
-                        radius="xl"
-                        color={isMapCategoryLabel(category) ? "attention" : "gray"}
-                        variant="light"
-                        tt="none"
-                      >
+                      <Badge key={category} color={isMapCategoryLabel(category) ? "attention" : "gray"} variant="light">
                         {category}
                       </Badge>
                     ))}
@@ -207,7 +158,6 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                 className={classes.detailDrawerPrimaryAction}
                 size={footerButtonSize}
                 variant="default"
-                radius="md"
                 leftSection={<ArrowSquareOut size={16} />}
                 onClick={() => props.onOpenExternal(detail.curseforgeUrl)}
               >
@@ -219,15 +169,13 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                   size={footerButtonSize}
                   color="red"
                   variant="filled"
-                  radius="md"
                   leftSection={<X size={16} />}
                   disabled={drawerLocked}
                   onClick={() =>
-                    confirmRemoveServerMod(
-                      { id: detail.id, name: detail.name },
-                      props.onRemove,
-                      { onPendingChange: setRemoveConfirmPending },
-                    )}
+                    confirmRemoveServerMod({ id: detail.id, name: detail.name }, props.onRemove, {
+                      onPendingChange: setRemoveConfirmPending,
+                    })
+                  }
                 >
                   Remove
                 </Button>
@@ -235,9 +183,8 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                 <Button
                   className={classes.detailDrawerRemoveAction}
                   size={footerButtonSize}
-                  color="teal"
-                  variant="light"
-                  radius="md"
+                  color="ok"
+                  variant="default"
                   leftSection={<Plus size={16} />}
                   loading={props.busy}
                   disabled={drawerLocked}
@@ -284,8 +231,8 @@ function MapPackHint(props: { detail: ModMetadata }): ReactElement | null {
   if (!isMapModCandidate(props.detail)) return null;
   const suggestion = suggestMapTokenFromMetadata(props.detail);
   return (
-    <Alert variant="light" color="blue" title={MAP_NAME_COPY.mapPackAlertTitle} radius="md">
+    <AppAlert variant="light" color="blue" title={MAP_NAME_COPY.mapPackAlertTitle}>
       <MapNameHint suggestion={suggestion} variant="embedded" />
-    </Alert>
+    </AppAlert>
   );
 }

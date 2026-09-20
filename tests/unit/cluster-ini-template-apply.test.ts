@@ -1,10 +1,4 @@
-import {
-  mkdtempSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -30,10 +24,7 @@ afterEach(() => {
   }
 });
 
-function makeProfile(
-  installDir: string,
-  overrides: Partial<ServerProfile> = {},
-): ServerProfile {
+function makeProfile(installDir: string, overrides: Partial<ServerProfile> = {}): ServerProfile {
   const now = new Date().toISOString();
   return {
     id: "srv-1",
@@ -62,13 +53,7 @@ function makeProfile(
 }
 
 function prepareIniFiles(installDir: string, gus: string, game: string): void {
-  const dir = join(
-    installDir,
-    "ShooterGame",
-    "Saved",
-    "Config",
-    "WindowsServer",
-  );
+  const dir = join(installDir, "ShooterGame", "Saved", "Config", "WindowsServer");
   mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, "GameUserSettings.ini"), gus, "utf8");
   writeFileSync(join(dir, "Game.ini"), game, "utf8");
@@ -95,22 +80,13 @@ function makeHarness(
 ) {
   const installDir = mkdtempSync(join(tmpdir(), "ark-cluster-ini-apply-"));
   tmpDirs.push(installDir);
-  prepareIniFiles(
-    installDir,
-    MEMBER_GUS,
-    "[/Script/ShooterGame.ShooterGameMode]\nHarvestAmountMultiplier=1\n",
-  );
+  prepareIniFiles(installDir, MEMBER_GUS, "[/Script/ShooterGame.ShooterGameMode]\nHarvestAmountMultiplier=1\n");
 
   const profile = makeProfile(installDir);
   const events: Array<{ message: string }> = [];
   const repo = {
     get: (id: string) => (id === profile.id ? profile : null),
-    addEvent: (
-      _serverId: string,
-      _type: string,
-      _severity: string,
-      message: string,
-    ) => {
+    addEvent: (_serverId: string, _type: string, _severity: string, message: string) => {
       events.push({ message });
     },
   } as unknown as ServerRepository;
@@ -134,14 +110,7 @@ function makeHarness(
     getStatus: () => ({ status, processLive }),
   };
 
-  const service = new ClusterIniTemplateApplyService(
-    templates,
-    repo,
-    ini,
-    locks,
-    backups,
-    runtime,
-  );
+  const service = new ClusterIniTemplateApplyService(templates, repo, ini, locks, backups, runtime);
 
   return { service, profile, templates, installDir, events, backups };
 }
@@ -151,12 +120,8 @@ describe("ClusterIniTemplateApplyService", () => {
     const { service, profile, installDir, events } = makeHarness("stopped");
     const preview = await service.previewRestore("alpha", profile.id);
     expect(preview.preview.valid).toBe(true);
-    expect(preview.preview.diff.some((row) => row.key === "RCONPort")).toBe(
-      false,
-    );
-    expect(preview.preview.diff.some((row) => row.key === "SessionName")).toBe(
-      false,
-    );
+    expect(preview.preview.diff.some((row) => row.key === "RCONPort")).toBe(false);
+    expect(preview.preview.diff.some((row) => row.key === "SessionName")).toBe(false);
     expect(preview.preview.changedCount).toBeGreaterThan(0);
 
     const result = await service.restore("alpha", profile.id);
@@ -164,27 +129,16 @@ describe("ClusterIniTemplateApplyService", () => {
     expect(result.snapshotDir).not.toBeNull();
 
     const gus = readFileSync(
-      join(
-        installDir,
-        "ShooterGame",
-        "Saved",
-        "Config",
-        "WindowsServer",
-        "GameUserSettings.ini",
-      ),
+      join(installDir, "ShooterGame", "Saved", "Config", "WindowsServer", "GameUserSettings.ini"),
       "utf8",
     );
     expect(gus).not.toMatch(/MaxPlayers=55/i);
-    expect(gus).not.toMatch(
-      /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=70/i,
-    );
+    expect(gus).not.toMatch(/\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=70/i);
     expect(gus).toContain("XPMultiplier=3");
     expect(gus).toContain("RCONPort=27020");
     expect(gus).toContain("ServerAdminPassword=admin1234");
     expect(gus).toContain("SessionName=Ragnarok PvE");
-    expect(events.some((row) => /Restored INI from cluster template/i.test(row.message))).toBe(
-      true,
-    );
+    expect(events.some((row) => /Restored INI from cluster template/i.test(row.message))).toBe(true);
   });
 
   it("does not rewrite Server Information when restoring a template from another member", async () => {
@@ -257,20 +211,11 @@ describe("ClusterIniTemplateApplyService", () => {
 
     await service.restore("alpha", target.profile.id);
     const gus = readFileSync(
-      join(
-        target.installDir,
-        "ShooterGame",
-        "Saved",
-        "Config",
-        "WindowsServer",
-        "GameUserSettings.ini",
-      ),
+      join(target.installDir, "ShooterGame", "Saved", "Config", "WindowsServer", "GameUserSettings.ini"),
       "utf8",
     );
     expect(gus).not.toMatch(/MaxPlayers=55/i);
-    expect(gus).not.toMatch(
-      /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=70/i,
-    );
+    expect(gus).not.toMatch(/\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=70/i);
     expect(gus).toContain("XPMultiplier=3");
     expect(gus).toContain("RCONPort=27020");
     expect(gus).toContain("Port=7777");
@@ -287,19 +232,10 @@ describe("ClusterIniTemplateApplyService", () => {
       game: "",
     });
 
-    await expect(service.restore("alpha", profile.id)).rejects.toThrow(
-      /DifficultyOffset/i,
-    );
+    await expect(service.restore("alpha", profile.id)).rejects.toThrow(/DifficultyOffset/i);
 
     const gus = readFileSync(
-      join(
-        installDir,
-        "ShooterGame",
-        "Saved",
-        "Config",
-        "WindowsServer",
-        "GameUserSettings.ini",
-      ),
+      join(installDir, "ShooterGame", "Saved", "Config", "WindowsServer", "GameUserSettings.ini"),
       "utf8",
     );
     expect(gus).toContain("MaxPlayers=20");
@@ -308,20 +244,11 @@ describe("ClusterIniTemplateApplyService", () => {
 
   it("rejects restore while the server is running and leaves files unchanged", async () => {
     const { service, profile, installDir } = makeHarness("running");
-    await expect(service.previewRestore("alpha", profile.id)).rejects.toThrow(
-      /must not be running/i,
-    );
+    await expect(service.previewRestore("alpha", profile.id)).rejects.toThrow(/must not be running/i);
     await expect(service.restore("alpha", profile.id)).rejects.toThrow(/must not be running/i);
 
     const gus = readFileSync(
-      join(
-        installDir,
-        "ShooterGame",
-        "Saved",
-        "Config",
-        "WindowsServer",
-        "GameUserSettings.ini",
-      ),
+      join(installDir, "ShooterGame", "Saved", "Config", "WindowsServer", "GameUserSettings.ini"),
       "utf8",
     );
     expect(gus).toContain("MaxPlayers=20");
@@ -340,23 +267,14 @@ describe("ClusterIniTemplateApplyService", () => {
 
   it("rejects restore when error status still has a live child process", async () => {
     const { service, profile } = makeHarness("error", true);
-    await expect(service.previewRestore("alpha", profile.id)).rejects.toThrow(
-      /must not be running/i,
-    );
+    await expect(service.previewRestore("alpha", profile.id)).rejects.toThrow(/must not be running/i);
     await expect(service.restore("alpha", profile.id)).rejects.toThrow(/must not be running/i);
   });
 
   it("promotes a member into the template without changing install INI files", async () => {
     const { service, profile, templates, installDir } = makeHarness("stopped");
     const before = readFileSync(
-      join(
-        installDir,
-        "ShooterGame",
-        "Saved",
-        "Config",
-        "WindowsServer",
-        "GameUserSettings.ini",
-      ),
+      join(installDir, "ShooterGame", "Saved", "Config", "WindowsServer", "GameUserSettings.ini"),
       "utf8",
     );
 
@@ -370,14 +288,7 @@ describe("ClusterIniTemplateApplyService", () => {
     expect(stored?.payload.gameUserSettings).not.toMatch(/ServerAdminPassword=/i);
 
     const after = readFileSync(
-      join(
-        installDir,
-        "ShooterGame",
-        "Saved",
-        "Config",
-        "WindowsServer",
-        "GameUserSettings.ini",
-      ),
+      join(installDir, "ShooterGame", "Saved", "Config", "WindowsServer", "GameUserSettings.ini"),
       "utf8",
     );
     expect(after).toBe(before);
@@ -386,12 +297,8 @@ describe("ClusterIniTemplateApplyService", () => {
   it("seeds only after the server already belongs to the cluster", async () => {
     const { service, profile } = makeHarness("stopped");
     profile.clusterId = null;
-    await expect(service.previewSeed("alpha", profile.id)).rejects.toThrow(
-      /must join the cluster/i,
-    );
-    await expect(service.seed("alpha", profile.id)).rejects.toThrow(
-      /must join the cluster/i,
-    );
+    await expect(service.previewSeed("alpha", profile.id)).rejects.toThrow(/must join the cluster/i);
+    await expect(service.seed("alpha", profile.id)).rejects.toThrow(/must join the cluster/i);
   });
 
   it("seeds a stopped member from the template and preserves profile-owned keys", async () => {
@@ -399,9 +306,7 @@ describe("ClusterIniTemplateApplyService", () => {
     const preview = await service.previewSeed("alpha", profile.id);
     expect(preview.operation).toBe("seed");
     expect(preview.preview.valid).toBe(true);
-    expect(preview.preview.diff.some((row) => row.key === "RCONPort")).toBe(
-      false,
-    );
+    expect(preview.preview.diff.some((row) => row.key === "RCONPort")).toBe(false);
     expect(preview.preview.changedCount).toBeGreaterThan(0);
 
     const result = await service.seed("alpha", profile.id);
@@ -409,37 +314,22 @@ describe("ClusterIniTemplateApplyService", () => {
     expect(result.snapshotDir).not.toBeNull();
 
     const gus = readFileSync(
-      join(
-        installDir,
-        "ShooterGame",
-        "Saved",
-        "Config",
-        "WindowsServer",
-        "GameUserSettings.ini",
-      ),
+      join(installDir, "ShooterGame", "Saved", "Config", "WindowsServer", "GameUserSettings.ini"),
       "utf8",
     );
     expect(gus).not.toMatch(/MaxPlayers=55/i);
-    expect(gus).not.toMatch(
-      /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=70/i,
-    );
+    expect(gus).not.toMatch(/\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=70/i);
     expect(gus).toContain("XPMultiplier=3");
     expect(gus).toContain("RCONPort=27020");
     expect(gus).toContain("ServerAdminPassword=admin1234");
     expect(gus).toContain("SessionName=Ragnarok PvE");
-    expect(
-      events.some((row) => /Seeded INI from cluster template/i.test(row.message)),
-    ).toBe(true);
+    expect(events.some((row) => /Seeded INI from cluster template/i.test(row.message))).toBe(true);
   });
 
   it("keeps the previous template when promote validation fails", async () => {
     const installDir = mkdtempSync(join(tmpdir(), "ark-cluster-ini-promote-fail-"));
     tmpDirs.push(installDir);
-    prepareIniFiles(
-      installDir,
-      "[ServerSettings]\nDifficultyOffset=2\n",
-      "",
-    );
+    prepareIniFiles(installDir, "[ServerSettings]\nDifficultyOffset=2\n", "");
     const profile = makeProfile(installDir);
     const repo = {
       get: (id: string) => (id === profile.id ? profile : null),
@@ -470,14 +360,7 @@ describe("ClusterIniTemplateApplyService", () => {
   it("restores Game.ini only and leaves GameUserSettings.ini unchanged", async () => {
     const { service, profile, installDir } = makeHarness("stopped");
     const gusBefore = readFileSync(
-      join(
-        installDir,
-        "ShooterGame",
-        "Saved",
-        "Config",
-        "WindowsServer",
-        "GameUserSettings.ini",
-      ),
+      join(installDir, "ShooterGame", "Saved", "Config", "WindowsServer", "GameUserSettings.ini"),
       "utf8",
     );
 
@@ -486,9 +369,7 @@ describe("ClusterIniTemplateApplyService", () => {
       game: true,
     });
     expect(preview.files).toEqual({ gameUserSettings: false, game: true });
-    expect(preview.preview.diff.every((row) => row.fileKey === "game")).toBe(
-      true,
-    );
+    expect(preview.preview.diff.every((row) => row.fileKey === "game")).toBe(true);
 
     const result = await service.restore("alpha", profile.id, {
       gameUserSettings: false,
@@ -497,27 +378,10 @@ describe("ClusterIniTemplateApplyService", () => {
     expect(result.files).toEqual({ gameUserSettings: false, game: true });
 
     const gusAfter = readFileSync(
-      join(
-        installDir,
-        "ShooterGame",
-        "Saved",
-        "Config",
-        "WindowsServer",
-        "GameUserSettings.ini",
-      ),
+      join(installDir, "ShooterGame", "Saved", "Config", "WindowsServer", "GameUserSettings.ini"),
       "utf8",
     );
-    const game = readFileSync(
-      join(
-        installDir,
-        "ShooterGame",
-        "Saved",
-        "Config",
-        "WindowsServer",
-        "Game.ini",
-      ),
-      "utf8",
-    );
+    const game = readFileSync(join(installDir, "ShooterGame", "Saved", "Config", "WindowsServer", "Game.ini"), "utf8");
     expect(gusAfter).toBe(gusBefore);
     expect(game).toContain("HarvestAmountMultiplier=5");
   });
@@ -546,4 +410,3 @@ describe("ClusterIniTemplateApplyService", () => {
     ).rejects.toThrow(/at least one INI file/i);
   });
 });
-

@@ -55,11 +55,7 @@ import { CriticalJobRecoveryBlockedError } from "./update-perform";
 export const UPDATE_CRITICAL_JOBS_QUEUE_SETTING_KEY = "criticalJobsQueue.v1";
 const JOB_RETRY_DELAY_MS = 5000;
 
-type JobEventType =
-  | "update_started"
-  | "update_completed"
-  | "update_failed"
-  | "update_rolled_back";
+type JobEventType = "update_started" | "update_completed" | "update_failed" | "update_rolled_back";
 
 interface UpdateQueueRuntimeDependencies {
   settings: AppSettingsRepository;
@@ -101,8 +97,7 @@ interface JobWaiter {
   reject: (error: Error) => void;
 }
 
-const delay = (ms: number): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 export class UpdateQueueRuntime {
   private queue: UpdateCriticalJob[];
@@ -126,12 +121,7 @@ export class UpdateQueueRuntime {
   }
 
   hasPendingWork(): boolean {
-    return this.queue.some(
-      (job) =>
-        job.status === "running"
-        || job.status === "pending"
-        || job.status === "retrying",
-    );
+    return this.queue.some((job) => job.status === "running" || job.status === "pending" || job.status === "retrying");
   }
 
   isHeldForOperator(): boolean {
@@ -154,8 +144,7 @@ export class UpdateQueueRuntime {
     const job = this.queue.find((candidate) => candidate.id === jobId);
     if (job === undefined) return undefined;
     const cancelled = job.status === "cancelled";
-    const retryableFailure =
-      (job.status === "blocked" || job.status === "failed") && job.operatorRetryAllowed;
+    const retryableFailure = (job.status === "blocked" || job.status === "failed") && job.operatorRetryAllowed;
     if (!cancelled && !retryableFailure) return false;
     await this.deps.ensureSteamCmdReadyForOperator(job);
     if (job.context.restartInterrupted === true) {
@@ -288,10 +277,7 @@ export class UpdateQueueRuntime {
         const job = findNextRunnableQueueJob(this.queue);
         if (job === undefined) break;
 
-        if (
-          updateJobNeedsSteamCmdExecutable(job)
-          && this.deps.findSteamCmdExecutableCached() === null
-        ) {
+        if (updateJobNeedsSteamCmdExecutable(job) && this.deps.findSteamCmdExecutableCached() === null) {
           const error = this.deps.steamCmdMissingError();
           this.rejectJob(job.id, error);
           const blocked = planSteamCmdMissingQueueBlock(error.message);
@@ -343,19 +329,13 @@ export class UpdateQueueRuntime {
     initialContext?: UpdateCriticalJobContext,
   ): Promise<string> {
     await this.deps.ensureSteamCmdReadyForOperator();
-    const existing = this.queue.find(
-      (job) => job.serverId === serverId && job.type === type,
-    );
+    const existing = this.queue.find((job) => job.serverId === serverId && job.type === type);
     if (existing !== undefined) {
       if (existing.status === "cancelled") {
-        this.deps.appendSteamCmdConsole(
-          `Replacing cancelled ${type} job; queueing a new run.`,
-        );
+        this.deps.appendSteamCmdConsole(`Replacing cancelled ${type} job; queueing a new run.`);
         this.removeJob(existing.id);
       } else if (existing.status === "blocked" || existing.status === "failed") {
-        throw new Error(
-          `A previous ${type} job requires Retry or Dismiss before another can be queued`,
-        );
+        throw new Error(`A previous ${type} job requires Retry or Dismiss before another can be queued`);
       }
     }
 
@@ -375,11 +355,11 @@ export class UpdateQueueRuntime {
     if (decision.action === "replace") {
       const toDrop = this.queue.filter(
         (job) =>
-          job.serverId === serverId
-          && isFilesJobOperation(job.type)
-          && isOccupyingFilesJobStatus(job.status)
-          && job.status !== "running"
-          && FILES_JOB_WEIGHT[type] > FILES_JOB_WEIGHT[job.type],
+          job.serverId === serverId &&
+          isFilesJobOperation(job.type) &&
+          isOccupyingFilesJobStatus(job.status) &&
+          job.status !== "running" &&
+          FILES_JOB_WEIGHT[type] > FILES_JOB_WEIGHT[job.type],
       );
       for (const job of toDrop) {
         this.rejectJob(job.id, new FilesJobSupersededError(type));
@@ -413,12 +393,7 @@ export class UpdateQueueRuntime {
     this.persist();
     this.deps.setQueuedProgress(queuedFilesJobProgressLabel(type), `Job queued: ${type}`);
     this.deps.emitProgress(true);
-    this.deps.addJobEvent(
-      job,
-      "update_started",
-      "info",
-      `Job queued: ${type} (${job.id.slice(0, 8)})`,
-    );
+    this.deps.addJobEvent(job, "update_started", "info", `Job queued: ${type} (${job.id.slice(0, 8)})`);
     return job.id;
   }
 
@@ -445,10 +420,7 @@ export class UpdateQueueRuntime {
   private async handleJobError(job: UpdateCriticalJob, error: unknown): Promise<boolean> {
     if (this.deps.isPauseRequested() || isOperationPausedError(error)) {
       this.deps.appendSteamCmdConsole(`Job ${job.type} paused`);
-      this.rejectJob(
-        job.id,
-        isOperationPausedError(error) ? (error as Error) : new OperationPausedError(),
-      );
+      this.rejectJob(job.id, isOperationPausedError(error) ? (error as Error) : new OperationPausedError());
       const paused = planQueueJobPauseDisposition();
       job.status = paused.status;
       job.recoveryReason = paused.recoveryReason;
@@ -466,10 +438,7 @@ export class UpdateQueueRuntime {
         jobType: job.type,
         phase: job.phase,
       });
-      this.rejectJob(
-        job.id,
-        isOperationCancelledError(error) ? (error as Error) : new OperationCancelledError(),
-      );
+      this.rejectJob(job.id, isOperationCancelledError(error) ? (error as Error) : new OperationCancelledError());
       job.status = cancelled.status;
       job.operatorRetryAllowed = cancelled.operatorRetryAllowed;
       if (cancelled.phase !== undefined) job.phase = cancelled.phase;
@@ -586,9 +555,7 @@ export class UpdateQueueRuntime {
             migrated.context = { ...migrated.context, restartInterrupted: true };
           }
         }
-        const duplicateIndex = jobs.findIndex(
-          (candidate) => candidate.idempotencyKey === migrated.idempotencyKey,
-        );
+        const duplicateIndex = jobs.findIndex((candidate) => candidate.idempotencyKey === migrated.idempotencyKey);
         if (duplicateIndex >= 0) {
           const merged = mergeUpdateCriticalJobs(jobs[duplicateIndex]!, migrated);
           const duplicateRecovery = planDuplicateRecoveredUpdateJob(serverExists);

@@ -1,27 +1,13 @@
 import type { ServerProfile } from "@shared/types";
 import type { KnownClusterOption } from "@features/clusters/knownClusterOptions";
 import { normalizeWindowsPath } from "@shared/server/server-install-path";
-import {
-  getClusterDirFormError,
-  getClusterIdFormError,
-} from "@features/clusters/createClusterModel";
+import { getClusterDirFormError, getClusterIdFormError } from "@features/clusters/createClusterModel";
 
 export type SetupWizardMode = "first-run" | "paths-shell";
 
-export type SetupWizardStepId =
-  | "welcome"
-  | "paths"
-  | "shell"
-  | "cluster"
-  | "action";
+export type SetupWizardStepId = "welcome" | "paths" | "shell" | "cluster" | "action";
 
-const FIRST_RUN_STEPS: SetupWizardStepId[] = [
-  "welcome",
-  "paths",
-  "shell",
-  "cluster",
-  "action",
-];
+const FIRST_RUN_STEPS: SetupWizardStepId[] = ["welcome", "paths", "shell", "cluster", "action"];
 
 const PATHS_SHELL_STEPS: SetupWizardStepId[] = ["paths", "shell"];
 
@@ -42,10 +28,7 @@ export function stepsForMode(mode: SetupWizardMode): SetupWizardStepId[] {
   return mode === "first-run" ? FIRST_RUN_STEPS : PATHS_SHELL_STEPS;
 }
 
-export function suggestSetupClusterDir(
-  defaultBaseFolder: string | null,
-  clusterId: string,
-): string {
+export function suggestSetupClusterDir(defaultBaseFolder: string | null, clusterId: string): string {
   const base = normalizeWindowsPath(defaultBaseFolder ?? "");
   const id = clusterId.trim();
   if (base.length === 0 || id.length === 0) {
@@ -78,9 +61,7 @@ export function syncAutoSuggestedClusterDir(input: {
   };
 }
 
-export function toSyntheticClusterOption(
-  pending: PendingSetupCluster,
-): KnownClusterOption {
+export function toSyntheticClusterOption(pending: PendingSetupCluster): KnownClusterOption {
   return {
     clusterId: pending.clusterId,
     clusterDir: pending.clusterDir,
@@ -98,8 +79,8 @@ export function canContinueClusterStep(input: {
     return true;
   }
   return (
-    getClusterIdFormError(input.clusterId, input.clusterDir, input.servers) ===
-      null && getClusterDirFormError(input.clusterDir) === null
+    getClusterIdFormError(input.clusterId, input.clusterDir, input.servers) === null &&
+    getClusterDirFormError(input.clusterDir) === null
   );
 }
 

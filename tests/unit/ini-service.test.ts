@@ -79,25 +79,11 @@ function makeService(
 }
 
 function gameUserSettingsPath(installDir: string): string {
-  return join(
-    installDir,
-    "ShooterGame",
-    "Saved",
-    "Config",
-    "WindowsServer",
-    "GameUserSettings.ini",
-  );
+  return join(installDir, "ShooterGame", "Saved", "Config", "WindowsServer", "GameUserSettings.ini");
 }
 
 function gameIniPath(installDir: string): string {
-  return join(
-    installDir,
-    "ShooterGame",
-    "Saved",
-    "Config",
-    "WindowsServer",
-    "Game.ini",
-  );
+  return join(installDir, "ShooterGame", "Saved", "Config", "WindowsServer", "Game.ini");
 }
 
 function prepareIniFiles(installDir: string): void {
@@ -194,9 +180,7 @@ describe("IniService semantic validation", () => {
       game: "",
     });
 
-    expect(preview.issues.some((i) => i.message.includes("MaxPlayers"))).toBe(
-      false,
-    );
+    expect(preview.issues.some((i) => i.message.includes("MaxPlayers"))).toBe(false);
   });
 
   it("rejects saving INI with invalid semantic validation", async () => {
@@ -286,12 +270,8 @@ describe("IniService semantic validation", () => {
 
     expect(snapshot.pending).toBe(false);
     expect(snapshot.payload.gameUserSettings).toContain("MaxPlayers=70");
-    expect(snapshot.payload.gameUserSettings).not.toContain(
-      "ShooterGameUserSettings",
-    );
-    expect(snapshot.payload.gameUserSettings).not.toContain(
-      "LastJoinedSessionPerCategory",
-    );
+    expect(snapshot.payload.gameUserSettings).not.toContain("ShooterGameUserSettings");
+    expect(snapshot.payload.gameUserSettings).not.toContain("LastJoinedSessionPerCategory");
     expect(snapshot.payload.gameUserSettings).not.toContain("ResolutionSizeX");
     expect(readFileSync(settingsPath, "utf8")).toBe(rawSettings);
   });
@@ -302,11 +282,7 @@ describe("IniService pending queue (#530)", () => {
     const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
     tmpDirs.push(installDir);
     prepareIniFiles(installDir);
-    writeFileSync(
-      gameUserSettingsPath(installDir),
-      "[ServerSettings]\nRCONPort=27020\n",
-      "utf8",
-    );
+    writeFileSync(gameUserSettingsPath(installDir), "[ServerSettings]\nRCONPort=27020\n", "utf8");
     writeFileSync(gameIniPath(installDir), "[Game]\nFoo=1\n", "utf8");
 
     const { service, profile, pending, db } = makeService(installDir, {
@@ -324,13 +300,9 @@ describe("IniService pending queue (#530)", () => {
 
     expect(result.pending).toBe(true);
     expect(result.valid).toBe(true);
-    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).toBe(
-      "[ServerSettings]\nRCONPort=27020\n",
-    );
+    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).toBe("[ServerSettings]\nRCONPort=27020\n");
     expect(readFileSync(gameIniPath(installDir), "utf8")).toBe("[Game]\nFoo=1\n");
-    expect(pending?.get(profile.id)?.payload.gameUserSettings).toContain(
-      "XPMultiplier=2.0",
-    );
+    expect(pending?.get(profile.id)?.payload.gameUserSettings).toContain("XPMultiplier=2.0");
     expect(pending?.get(profile.id)?.payload.game).toContain("Bar=2");
     expect(changed).toEqual([{ serverId: profile.id, pending: true }]);
 
@@ -361,9 +333,7 @@ describe("IniService pending queue (#530)", () => {
       game: "[Game]\nA=2\n",
     });
 
-    expect(pending?.get(profile.id)?.payload.gameUserSettings).toContain(
-      "XPMultiplier=3.0",
-    );
+    expect(pending?.get(profile.id)?.payload.gameUserSettings).toContain("XPMultiplier=3.0");
     expect(pending?.get(profile.id)?.payload.game).toContain("A=2");
     db?.close();
   });
@@ -372,11 +342,7 @@ describe("IniService pending queue (#530)", () => {
     const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
     tmpDirs.push(installDir);
     prepareIniFiles(installDir);
-    writeFileSync(
-      gameUserSettingsPath(installDir),
-      "[ServerSettings]\nRCONPort=27020\n",
-      "utf8",
-    );
+    writeFileSync(gameUserSettingsPath(installDir), "[ServerSettings]\nRCONPort=27020\n", "utf8");
 
     let active = true;
     const { service, profile, pending, locks, db } = makeService(installDir, {
@@ -400,9 +366,7 @@ describe("IniService pending queue (#530)", () => {
     });
 
     expect(pending?.get(profile.id)).toBeNull();
-    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).toContain(
-      "XPMultiplier=2.5",
-    );
+    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).toContain("XPMultiplier=2.5");
     expect(readFileSync(gameIniPath(installDir), "utf8")).toContain("Queued=1");
     expect(changed.at(-1)).toEqual({ pending: false });
 
@@ -466,12 +430,8 @@ describe("IniService pending queue (#530)", () => {
 
     await service.syncProfileOwnedKeys(profile.id, profile);
 
-    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).toContain(
-      "DiskSession",
-    );
-    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).not.toContain(
-      "QueuedFromServerTab",
-    );
+    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).toContain("DiskSession");
+    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).not.toContain("QueuedFromServerTab");
     const pending = pendingRepo.get(profile.id);
     expect(pending?.payload.gameUserSettings).toContain("QueuedFromServerTab");
     expect(pending?.payload.gameUserSettings).toContain("XPMultiplier=1.0");
@@ -497,8 +457,7 @@ describe("IniService pending queue (#530)", () => {
     });
 
     await service.saveServerIni(profile.id, {
-      gameUserSettings:
-        "[ServerSettings]\nRCONPort=27020\nXPMultiplier=3.0\n\n[SessionSettings]\nSessionName=First\n",
+      gameUserSettings: "[ServerSettings]\nRCONPort=27020\nXPMultiplier=3.0\n\n[SessionSettings]\nSessionName=First\n",
       game: "[Game]\nKeep=1\n",
     });
     profile.sessionName = "AfterServerTab";
@@ -508,9 +467,7 @@ describe("IniService pending queue (#530)", () => {
     expect(pending?.payload.gameUserSettings).toContain("AfterServerTab");
     expect(pending?.payload.gameUserSettings).toContain("XPMultiplier=3.0");
     expect(pending?.payload.game).toContain("Keep=1");
-    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).not.toContain(
-      "AfterServerTab",
-    );
+    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).not.toContain("AfterServerTab");
     db.close();
   });
 
@@ -612,10 +569,7 @@ describe("IniService pending queue (#530)", () => {
     expect(pending?.payload.gameUserSettings).toContain("XPMultiplier=9.0");
     expect(pending?.payload.gameUserSettings).toContain("FromServerTab");
     expect(pending?.payload.game).toContain("QueuedGameplay=1");
-    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).toContain(
-      "XPMultiplier=1.0",
-    );
+    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).toContain("XPMultiplier=1.0");
     db.close();
   });
 });
-

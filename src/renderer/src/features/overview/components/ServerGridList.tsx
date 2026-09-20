@@ -23,9 +23,7 @@ export function ServerGridList(props: Props): ReactElement | null {
 
   const enabledList =
     props.view === "ungrouped" ? (
-      <div className={classes.serverGrid}>
-        {props.sortedEnabled.map((server) => props.renderServerCard(server))}
-      </div>
+      <div className={classes.serverGrid}>{props.sortedEnabled.map((server) => props.renderServerCard(server))}</div>
     ) : (
       <Stack gap="xs">
         {props.enabledGroups.map((group) => (
@@ -33,9 +31,7 @@ export function ServerGridList(props: Props): ReactElement | null {
             <div className={classes.clusterGroupHead}>
               <Text component="span">{group.label}</Text>
             </div>
-            <div className={classes.serverGrid}>
-              {group.servers.map((server) => props.renderServerCard(server))}
-            </div>
+            <div className={classes.serverGrid}>{group.servers.map((server) => props.renderServerCard(server))}</div>
           </section>
         ))}
       </Stack>

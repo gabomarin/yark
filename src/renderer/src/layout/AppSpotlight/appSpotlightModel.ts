@@ -73,10 +73,6 @@ export const SPOTLIGHT_NAV_ITEMS: SpotlightNavItem[] = [
 ];
 
 /** Stable A→Z order for the Servers group. */
-export function sortServersForSpotlight(
-  servers: ServerProfile[],
-): ServerProfile[] {
-  return [...servers].sort((a, b) =>
-    a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
-  );
+export function sortServersForSpotlight(servers: ServerProfile[]): ServerProfile[] {
+  return [...servers].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
 }

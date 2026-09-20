@@ -53,15 +53,9 @@ describe("log-retention helpers", () => {
   });
 
   it("classifies failure evidence", () => {
-    expect(
-      isFailureEvent({ type: "server_started", severity: "info" }),
-    ).toBe(false);
-    expect(
-      isFailureEvent({ type: "server_started", severity: "warning" }),
-    ).toBe(true);
-    expect(
-      isFailureEvent({ type: "update_failed", severity: "info" }),
-    ).toBe(true);
+    expect(isFailureEvent({ type: "server_started", severity: "info" })).toBe(false);
+    expect(isFailureEvent({ type: "server_started", severity: "warning" })).toBe(true);
+    expect(isFailureEvent({ type: "update_failed", severity: "info" })).toBe(true);
     expect(isFailureUpdateLogStatus("success")).toBe(false);
     expect(isFailureUpdateLogStatus("failed")).toBe(true);
     expect(isFailureUpdateLogStatus("unknown")).toBe(true);

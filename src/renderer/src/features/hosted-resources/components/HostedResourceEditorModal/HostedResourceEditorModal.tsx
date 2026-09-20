@@ -1,14 +1,5 @@
 import type { ReactElement } from "react";
-import {
-  Button,
-  Group,
-  Select,
-  Stack,
-  TagsInput,
-  Text,
-  Textarea,
-  TextInput,
-} from "@mantine/core";
+import { Button, Group, Select, Stack, TagsInput, Text, Textarea, TextInput } from "@mantine/core";
 import {
   HOSTED_RESOURCES_MAX_CONTENT_BYTES,
   HOSTED_RESOURCES_MAX_DISPLAY_NAME_LENGTH,
@@ -62,9 +53,7 @@ export function HostedResourceEditorModal(props: Props): ReactElement {
               <Select
                 label="Format"
                 description={
-                  HOSTED_RESOURCE_FORMAT_OPTIONS.find(
-                    (option) => option.value === draft.format,
-                  )?.description
+                  HOSTED_RESOURCE_FORMAT_OPTIONS.find((option) => option.value === draft.format)?.description
                 }
                 data={HOSTED_RESOURCE_FORMAT_OPTIONS.map((option) => ({
                   value: option.value,
@@ -82,8 +71,7 @@ export function HostedResourceEditorModal(props: Props): ReactElement {
             </>
           ) : (
             <Text size="sm" c="dimmed">
-              Save publishes a new version immediately. The previous version is kept and
-              can be restored from Revisions.
+              Save publishes a new version immediately. The previous version is kept and can be restored from Revisions.
             </Text>
           )}
           <Textarea
@@ -102,10 +90,11 @@ export function HostedResourceEditorModal(props: Props): ReactElement {
             placeholder="Select or create tags"
             description="Choose an ASA use or create a custom tag for mods and local conventions."
             data={HOSTED_RESOURCE_TAG_OPTIONS}
-            value={draft.tagsText.split(",").map((tag) => tag.trim()).filter(Boolean)}
-            onChange={(tags) =>
-              props.onChange({ tagsText: tags.map((tag) => tag.trim().toLowerCase()).join(", ") })
-            }
+            value={draft.tagsText
+              .split(",")
+              .map((tag) => tag.trim())
+              .filter(Boolean)}
+            onChange={(tags) => props.onChange({ tagsText: tags.map((tag) => tag.trim().toLowerCase()).join(", ") })}
             splitChars={[","]}
             maxTags={HOSTED_RESOURCES_MAX_TAGS}
             clearable
@@ -114,9 +103,7 @@ export function HostedResourceEditorModal(props: Props): ReactElement {
           <Textarea
             label="Content"
             placeholder={contentPlaceholder(draft.format)}
-            description={`Validated as UTF-8 before saving. Max ${formatByteSize(
-              HOSTED_RESOURCES_MAX_CONTENT_BYTES,
-            )}.`}
+            description={`Validated as UTF-8 before saving. Max ${formatByteSize(HOSTED_RESOURCES_MAX_CONTENT_BYTES)}.`}
             value={draft.content}
             onChange={(event) => props.onChange({ content: event.currentTarget.value })}
             autosize

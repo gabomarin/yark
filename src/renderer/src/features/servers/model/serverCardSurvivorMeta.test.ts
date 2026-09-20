@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  formatServerSurvivorMeta,
-  resolveServerSurvivorCount,
-} from "./serverCardSurvivorMeta";
+import { formatServerSurvivorMeta, resolveServerSurvivorCount } from "./serverCardSurvivorMeta";
 
 describe("serverCardSurvivorMeta", () => {
   it("returns a count only for running servers with a successful list", () => {
@@ -56,7 +53,10 @@ describe("serverCardSurvivorMeta", () => {
       formatServerSurvivorMeta({
         status: "running",
         survivorList: {
-          players: [{ key: "1", name: "A" }, { key: "2", name: "B" }],
+          players: [
+            { key: "1", name: "A" },
+            { key: "2", name: "B" },
+          ],
           error: null,
           loading: false,
         },

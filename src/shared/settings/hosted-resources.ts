@@ -74,11 +74,7 @@ export function normalizeHostedResourceTags(tags: readonly string[]): string[] {
 }
 
 export function isHostedResourcesPort(value: number): boolean {
-  return (
-    Number.isInteger(value) &&
-    value >= HOSTED_RESOURCES_MIN_PORT &&
-    value <= HOSTED_RESOURCES_MAX_PORT
-  );
+  return Number.isInteger(value) && value >= HOSTED_RESOURCES_MIN_PORT && value <= HOSTED_RESOURCES_MAX_PORT;
 }
 
 /** Invalid / missing stored values fall back to the default port. */
@@ -115,10 +111,7 @@ export interface HostedResourceValidation {
  * Validate a revision body at the IPC boundary before publishing. UTF-8 is
  * guaranteed by the string type; we enforce size and format shape.
  */
-export function validateHostedResourceContent(
-  format: HostedResourceFormat,
-  content: string,
-): HostedResourceValidation {
+export function validateHostedResourceContent(format: HostedResourceFormat, content: string): HostedResourceValidation {
   const bytes = new TextEncoder().encode(content).length;
   if (bytes === 0) {
     return { ok: false, message: "Content is empty." };

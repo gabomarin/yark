@@ -26,18 +26,18 @@ export function SetupWizardShellStep(props: Props): ReactElement {
 
       <div className={classes.settingRow}>
         <div className={classes.settingCopy}>
-          <Text size="sm" fw={600}>Show server console on start</Text>
+          <Text size="sm" fw={600}>
+            Show server console on start
+          </Text>
           <Text size="xs" c="dimmed" mt={2}>
-            Opens the ARK dedicated-server console window when a server starts,
-            including Start, Restart, and Auto-start with YARK.
+            Opens the ARK dedicated-server console window when a server starts, including Start, Restart, and Auto-start
+            with YARK.
           </Text>
         </div>
         <div className={classes.settingControl}>
           <Switch
             checked={props.openNativeTerminalOnStart}
-            onChange={(event) =>
-              props.onOpenNativeTerminalOnStartChange(event.currentTarget.checked)
-            }
+            onChange={(event) => props.onOpenNativeTerminalOnStartChange(event.currentTarget.checked)}
             aria-label="Show native console when a server starts"
           />
         </div>
@@ -45,19 +45,18 @@ export function SetupWizardShellStep(props: Props): ReactElement {
 
       <div className={classes.settingRow}>
         <div className={classes.settingCopy}>
-          <Text size="sm" fw={600}>Start with Windows</Text>
+          <Text size="sm" fw={600}>
+            Start with Windows
+          </Text>
           <Text size="xs" c="dimmed" mt={2}>
-            Open YARK when you sign in. Dedicated servers start only if you enable
-            auto-start on each one.
+            Open YARK when you sign in. Dedicated servers start only if you enable auto-start on each one.
           </Text>
         </div>
         <div className={classes.settingControl}>
           <Switch
             checked={desktopShell.startWithWindows}
             disabled={!desktopShell.desktopShellReady}
-            onChange={(event) =>
-              desktopShell.onStartWithWindowsChange(event.currentTarget.checked)
-            }
+            onChange={(event) => desktopShell.onStartWithWindowsChange(event.currentTarget.checked)}
             aria-label="Start YARK with Windows"
           />
         </div>
@@ -65,19 +64,19 @@ export function SetupWizardShellStep(props: Props): ReactElement {
 
       <div className={classes.settingRow}>
         <div className={classes.settingCopy}>
-          <Text size="sm" fw={600}>Close window to tray</Text>
+          <Text size="sm" fw={600}>
+            Close window to tray
+          </Text>
           <Text size="xs" c="dimmed" mt={2}>
-            The close button hides YARK in the tray. Servers keep running until you
-            quit from the tray menu or the sidebar Quit control.
+            The close button hides YARK in the tray. Servers keep running until you quit from the tray menu or the
+            sidebar Quit control.
           </Text>
         </div>
         <div className={classes.settingControl}>
           <Switch
             checked={desktopShell.closeWindowToTray}
             disabled={!desktopShell.desktopShellReady}
-            onChange={(event) =>
-              desktopShell.onCloseWindowToTrayChange(event.currentTarget.checked)
-            }
+            onChange={(event) => desktopShell.onCloseWindowToTrayChange(event.currentTarget.checked)}
             aria-label="Close window to system tray"
           />
         </div>
@@ -85,7 +84,9 @@ export function SetupWizardShellStep(props: Props): ReactElement {
 
       <div className={classes.settingRow}>
         <div className={classes.settingCopy}>
-          <Text size="sm" fw={600}>Display size</Text>
+          <Text size="sm" fw={600}>
+            Display size
+          </Text>
           <Text size="xs" c="dimmed" mt={2}>
             Compact fits more on screen. Comfortable uses larger type and spacing.
           </Text>

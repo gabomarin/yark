@@ -22,9 +22,9 @@ const server = {
   extraArgs: [],
   mods: [],
   enabled: true,
-    autoStart: false,
-    useAsaApi: false,
-    useAsaApiLoader: false,
+  autoStart: false,
+  useAsaApi: false,
+  useAsaApiLoader: false,
   createdAt: "2026-07-23T00:00:00.000Z",
   updatedAt: "2026-07-23T00:00:00.000Z",
 };
@@ -68,14 +68,10 @@ describe("LogsPage", () => {
     );
 
     expect(await screen.findByText("Activity across servers")).toBeInTheDocument();
-    expect(screen.getByRole("combobox", { name: "Severity filter" })).toHaveValue(
-      "All severity",
-    );
+    expect(screen.getByRole("combobox", { name: "Severity filter" })).toHaveValue("All severity");
     expect(await screen.findByText(/Update failed on Island/i)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /Update failed on Island/i }));
-    expect(
-      await screen.findByText(/A SteamCMD install, update, or verify job failed/i),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/A SteamCMD install, update, or verify job failed/i)).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /Update failed on Island/i }).closest("[class*='eventRowFocused']"),
     ).toBeTruthy();
@@ -98,8 +94,7 @@ describe("LogsPage", () => {
           serverId: server.id,
           type: "server_started",
           severity: "info",
-          message:
-            "Server started after a long SteamCMD verify and file copy finished",
+          message: "Server started after a long SteamCMD verify and file copy finished",
           createdAt: new Date().toISOString(),
           details: null,
         },
@@ -113,25 +108,18 @@ describe("LogsPage", () => {
     );
 
     expect(
-      await screen.findByText(
-        /Server started after a long SteamCMD verify and file copy finished/i,
-      ),
+      await screen.findByText(/Server started after a long SteamCMD verify and file copy finished/i),
     ).toBeInTheDocument();
     const row = document.querySelector("[data-fleet-row]");
     expect(row?.children).toHaveLength(4);
     expect(row?.querySelector("[data-fleet-severity]")).toBeTruthy();
-    expect(row?.querySelector("[data-fleet-severity]")?.textContent?.trim()).toBe(
-      "info",
-    );
+    expect(row?.querySelector("[data-fleet-severity]")?.textContent?.trim()).toBe("Info");
   });
 
   it("labels activity from a disabled server as inactive", async () => {
     render(
       <AppProviders>
-        <LogsPage
-          servers={[{ ...server, enabled: false }]}
-          onOpenServerLogs={vi.fn()}
-        />
+        <LogsPage servers={[{ ...server, enabled: false }]} onOpenServerLogs={vi.fn()} />
       </AppProviders>,
     );
 
@@ -151,10 +139,7 @@ describe("LogsPage", () => {
 
     rerender(
       <AppProviders>
-        <LogsPage
-          servers={[{ ...server }]}
-          onOpenServerLogs={vi.fn()}
-        />
+        <LogsPage servers={[{ ...server }]} onOpenServerLogs={vi.fn()} />
       </AppProviders>,
     );
 
@@ -162,4 +147,3 @@ describe("LogsPage", () => {
     expect(recentEvents).toHaveBeenCalledTimes(1);
   });
 });
-

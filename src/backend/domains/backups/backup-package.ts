@@ -64,21 +64,14 @@ export async function packageKind(
   return packageIni(server, targetDir);
 }
 
-async function packageWorld(
-  server: ServerProfile,
-  targetDir: string,
-): Promise<{ meta: Record<string, unknown> }> {
+async function packageWorld(server: ServerProfile, targetDir: string): Promise<{ meta: Record<string, unknown> }> {
   const mapToken = server.map.trim();
   if (!isSafeMapToken(mapToken)) {
     throw new Error(MAP_NAME_COPY.mustBeSafeFolder);
   }
 
   const savedArks = savedArksDir(server);
-  const resolved = await resolveWorldMapSaveDir(
-    savedArks,
-    mapToken,
-    server.mapSaveFolder,
-  );
+  const resolved = await resolveWorldMapSaveDir(savedArks, mapToken, server.mapSaveFolder);
   const dest = join(targetDir, "SavedArks", mapToken);
 
   if (resolved === null) {
@@ -114,31 +107,18 @@ async function packageWorld(
   const sourceFiles = selection.selected.map((candidate) => candidate.path);
   const hasPrimary = sourceFiles.some((file) => isPrimaryWorldSaveName(basename(file)));
   if (!hasPrimary) {
-    throw new Error(
-      `No primary world save found for map ${mapToken} (${mapToken}.ark in ${resolved.folderName})`,
-    );
+    throw new Error(`No primary world save found for map ${mapToken} (${mapToken}.ark in ${resolved.folderName})`);
   }
 
-  const copyResult = await copySavedArksFiles(
-    mapSourceDir,
-    dest,
-    sourceFiles,
-    copyFileTo,
-    { mapToken },
-  );
+  const copyResult = await copySavedArksFiles(mapSourceDir, dest, sourceFiles, copyFileTo, { mapToken });
   const destFiles = await listFilesRecursive(dest);
-  const missing = missingEssentialWorldRels(
-    mapSourceDir,
-    dest,
-    sourceFiles,
-    destFiles,
-    { mapToken },
-  );
+  const missing = missingEssentialWorldRels(mapSourceDir, dest, sourceFiles, destFiles, { mapToken });
   if (missing.length > 0) {
     throw new Error(
-      `World backup incomplete; missing essential save data: ${
-        missing.map((rel) => basename(rel)).slice(0, 5).join(", ")
-      }`,
+      `World backup incomplete; missing essential save data: ${missing
+        .map((rel) => basename(rel))
+        .slice(0, 5)
+        .join(", ")}`,
     );
   }
 
@@ -150,8 +130,7 @@ async function packageWorld(
       mapToken,
       mapFolderName: resolved.folderName,
       copiedFileCount: copyResult.copiedFileCount,
-      skippedTransientCount:
-        selection.skippedTransientCount + copyResult.skippedTransientCount,
+      skippedTransientCount: selection.skippedTransientCount + copyResult.skippedTransientCount,
       skippedTransient: copyResult.skippedTransient,
       skippedOlderDatedCount: selection.skippedOlderDatedCount,
       retainedDatedCount: selection.retainedDatedCount,
@@ -163,10 +142,7 @@ async function packageWorld(
  * Flat profile snapshot used only as a same-kind `pre_restore` safeguard.
  * Manual / critical-path “all players” archives are not created (#275).
  */
-async function packagePlayers(
-  server: ServerProfile,
-  targetDir: string,
-): Promise<{ meta: Record<string, unknown> }> {
+async function packagePlayers(server: ServerProfile, targetDir: string): Promise<{ meta: Record<string, unknown> }> {
   const profilesRoot = join(targetDir, "PlayerProfiles");
   await mkdir(profilesRoot, { recursive: true });
   const sources = await collectFlatPlayerProfileSources(server);
@@ -193,9 +169,7 @@ export async function packageSinglePlayer(
     const sources = await collectFlatPlayerProfileSources(server);
     for (const file of sources) {
       const name = basename(file);
-      const stem = name
-        .replace(/\.(arkprofile)(\.bak)?$/i, "")
-        .replace(/\.profilebak$/i, "");
+      const stem = name.replace(/\.(arkprofile)(\.bak)?$/i, "").replace(/\.profilebak$/i, "");
       if (normalizePlayerKey(stem) !== needle) continue;
       await copyFileTo(file, join(profilesRoot, name));
       matched.push(name);
@@ -235,11 +209,7 @@ async function collectFlatPlayerProfileSources(server: ServerProfile): Promise<s
 
   const mapToken = server.map.trim();
   if (isSafeMapToken(mapToken)) {
-    const resolved = await resolveWorldMapSaveDir(
-      savedArksDir(server),
-      mapToken,
-      server.mapSaveFolder,
-    );
+    const resolved = await resolveWorldMapSaveDir(savedArksDir(server), mapToken, server.mapSaveFolder);
     if (resolved !== null) {
       await takeFrom(resolved.dir);
     }
@@ -260,10 +230,7 @@ function playerSearchRoots(server: ServerProfile): Array<{ label: string; path: 
   ];
 }
 
-async function packageIni(
-  server: ServerProfile,
-  targetDir: string,
-): Promise<{ meta: Record<string, unknown> }> {
+async function packageIni(server: ServerProfile, targetDir: string): Promise<{ meta: Record<string, unknown> }> {
   const config = configDir(server);
   const dest = join(targetDir, "ConfigWindowsServer");
   await mkdir(dest, { recursive: true });

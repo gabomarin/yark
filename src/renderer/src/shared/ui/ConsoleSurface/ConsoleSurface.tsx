@@ -73,10 +73,7 @@ export function ConsoleSurface(props: Props): ReactElement {
     .filter((part): part is string => typeof part === "string" && part.length > 0)
     .join(" ");
 
-  const regionProps =
-    logsScrollRegion !== undefined
-      ? ({ "data-logs-scroll-region": logsScrollRegion } as const)
-      : {};
+  const regionProps = logsScrollRegion !== undefined ? ({ "data-logs-scroll-region": logsScrollRegion } as const) : {};
 
   const sharedScrollProps = {
     type,
@@ -102,12 +99,7 @@ export function ConsoleSurface(props: Props): ReactElement {
 
   if (useAutosize) {
     return (
-      <ScrollArea.Autosize
-        className={rootClassName}
-        mah={mah}
-        {...sharedScrollProps}
-        {...regionProps}
-      >
+      <ScrollArea.Autosize className={rootClassName} mah={mah} {...sharedScrollProps} {...regionProps}>
         {content}
       </ScrollArea.Autosize>
     );

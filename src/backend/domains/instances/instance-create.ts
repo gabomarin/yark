@@ -7,10 +7,7 @@ import {
 } from "@shared/server/server-install-path";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import { findPortConflicts, validateProfileInput } from "./validation";
-import {
-  assertInstallDirVacantForCreate,
-  installDirKey,
-} from "./install-dir-safety";
+import { assertInstallDirVacantForCreate, installDirKey } from "./install-dir-safety";
 import { assertImportHealthAllowed, assertNotInsideAsaInstall } from "./import-existing-install";
 import { inspectServerInstallationAsync } from "./server-installation";
 
@@ -80,16 +77,10 @@ export class InstanceCreate {
     // parents never become profiles, even if IPC sends allowIncompleteInstall (#283).
     await assertNotInsideAsaInstall(installDir);
 
-    const installation = await inspectServerInstallationAsync(
-      `import:${normalized.name}`,
-      installDir,
-      { bypassCache: true },
-    );
-    assertImportHealthAllowed(
-      installation.health,
-      options,
-      installation.guidance,
-    );
+    const installation = await inspectServerInstallationAsync(`import:${normalized.name}`, installDir, {
+      bypassCache: true,
+    });
+    assertImportHealthAllowed(installation.health, options, installation.guidance);
 
     // Re-check uniqueness under the fleet create lock after the async probe so a
     // concurrent create/import cannot claim the same name, ports, or installDir.
@@ -101,10 +92,7 @@ export class InstanceCreate {
       await assertNotInsideAsaInstall(installDir);
 
       const profile = this.host.repo.create(normalized);
-      const incompleteNote =
-        installation.health === "incomplete"
-          ? " (incomplete — Install/Verify before Start)"
-          : "";
+      const incompleteNote = installation.health === "incomplete" ? " (incomplete — Install/Verify before Start)" : "";
       this.host.repo.addEvent(
         profile.id,
         "server_created",
@@ -115,34 +103,22 @@ export class InstanceCreate {
     });
   }
 
-  assertValidInput(
-    input: ServerProfileInput,
-    options?: { create?: boolean },
-  ): void {
+  assertValidInput(input: ServerProfileInput, options?: { create?: boolean }): void {
     const issues = validateProfileInput(input, options);
     if (issues.length > 0) {
-      throw new Error(
-        issues.map((i) => `${i.field}: ${i.message}`).join(" | "),
-      );
+      throw new Error(issues.map((i) => `${i.field}: ${i.message}`).join(" | "));
     }
   }
 
-  assertNoPortConflicts(
-    input: ServerProfileInput,
-    excludeId?: string,
-  ): void {
-    const others = this.host.repo
-      .list()
-      .filter((p) => p.id !== excludeId);
+  assertNoPortConflicts(input: ServerProfileInput, excludeId?: string): void {
+    const others = this.host.repo.list().filter((p) => p.id !== excludeId);
     const conflicts = findPortConflicts(others, {
       ...input,
       id: excludeId,
     });
     if (conflicts.length > 0) {
       const c = conflicts[0]!;
-      throw new Error(
-        `${c.kind} port conflict ${c.port} between "${c.serverA}" and "${c.serverB}"`,
-      );
+      throw new Error(`${c.kind} port conflict ${c.port} between "${c.serverA}" and "${c.serverB}"`);
     }
   }
 
@@ -150,11 +126,7 @@ export class InstanceCreate {
     const normalized = name.trim().toLowerCase();
     const clash = this.host.repo
       .list()
-      .find(
-        (profile) =>
-          profile.id !== excludeId &&
-          profile.name.trim().toLowerCase() === normalized,
-      );
+      .find((profile) => profile.id !== excludeId && profile.name.trim().toLowerCase() === normalized);
     if (clash !== undefined) {
       throw new Error(`A server named "${name}" already exists`);
     }
@@ -165,21 +137,14 @@ export class InstanceCreate {
     const clash = this.host.repo
       .list()
       .find(
-        (profile) =>
-          profile.id !== excludeId &&
-          installDirKey(normalizeWindowsPath(profile.installDir)) === target,
+        (profile) => profile.id !== excludeId && installDirKey(normalizeWindowsPath(profile.installDir)) === target,
       );
     if (clash !== undefined) {
-      throw new Error(
-        `A server already uses folder "${installDir}" ("${clash.name}")`,
-      );
+      throw new Error(`A server already uses folder "${installDir}" ("${clash.name}")`);
     }
   }
 
-  assertInstallDirNotNestedWithFleet(
-    installDir: string,
-    excludeId?: string,
-  ): void {
+  assertInstallDirNotNestedWithFleet(installDir: string, excludeId?: string): void {
     const conflict = findInstallDirConflict(
       installDir,
       this.host.repo.list().map((profile) => ({

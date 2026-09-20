@@ -12,12 +12,7 @@ describe("ServerEnabledMenuItem", () => {
       <AppProviders>
         <Menu opened>
           <Menu.Dropdown>
-            <ServerEnabledMenuItem
-              enabled
-              active={false}
-              steamCmdBusy
-              onToggle={onToggle}
-            />
+            <ServerEnabledMenuItem enabled active={false} steamCmdBusy onToggle={onToggle} />
           </Menu.Dropdown>
         </Menu>
       </AppProviders>,
@@ -25,10 +20,7 @@ describe("ServerEnabledMenuItem", () => {
 
     const item = screen.getByRole("menuitem", { name: "Disable server" });
     expect(item).toBeDisabled();
-    expect(item).toHaveAttribute(
-      "title",
-      "Another server operation is in progress",
-    );
+    expect(item).toHaveAttribute("title", "Another server operation is in progress");
   });
 
   it("allows Enable even when installation files are not ready", () => {
@@ -38,12 +30,7 @@ describe("ServerEnabledMenuItem", () => {
       <AppProviders>
         <Menu opened>
           <Menu.Dropdown>
-            <ServerEnabledMenuItem
-              enabled={false}
-              active={false}
-              steamCmdBusy={false}
-              onToggle={onToggle}
-            />
+            <ServerEnabledMenuItem enabled={false} active={false} steamCmdBusy={false} onToggle={onToggle} />
           </Menu.Dropdown>
         </Menu>
       </AppProviders>,

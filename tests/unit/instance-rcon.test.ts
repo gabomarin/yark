@@ -12,9 +12,9 @@ const profile: ServerProfile = {
   map: "TheIsland_WP",
   installDir: "C:\\ARK\\Island",
   enabled: true,
-    autoStart: false,
-    useAsaApi: false,
-    useAsaApiLoader: false,
+  autoStart: false,
+  useAsaApi: false,
+  useAsaApiLoader: false,
   sessionName: "Island",
   maxPlayers: 70,
   gamePort: 7777,
@@ -52,12 +52,7 @@ function makeService(sessions: {
     })),
     applyRuntimePorts: vi.fn(() => profile),
   } as unknown as ProcessManager;
-  const service = new InstanceService(
-    repo,
-    processes,
-    {} as BackupService,
-    new InstanceLockManager(),
-  );
+  const service = new InstanceService(repo, processes, {} as BackupService, new InstanceLockManager());
   (
     service as unknown as {
       rconSessions: typeof sessions;
@@ -103,12 +98,7 @@ describe("InstanceService.retryRconConnection", () => {
       getStatus: vi.fn(() => ({ status: "starting" as const })),
       applyRuntimePorts: vi.fn(() => profile),
     } as unknown as ProcessManager;
-    const service = new InstanceService(
-      repo,
-      processes,
-      {} as BackupService,
-      new InstanceLockManager(),
-    );
+    const service = new InstanceService(repo, processes, {} as BackupService, new InstanceLockManager());
     const sessions = {
       disconnect: vi.fn(),
       connect: vi.fn(async () => undefined),
@@ -119,9 +109,7 @@ describe("InstanceService.retryRconConnection", () => {
       }
     ).rconSessions = sessions;
 
-    await expect(service.retryRconConnection(profile.id)).rejects.toThrow(
-      /not running/i,
-    );
+    await expect(service.retryRconConnection(profile.id)).rejects.toThrow(/not running/i);
     expect(sessions.connect).not.toHaveBeenCalled();
   });
 
@@ -136,12 +124,7 @@ describe("InstanceService.retryRconConnection", () => {
       getStatus: vi.fn(() => ({ status: "running" as const })),
       applyRuntimePorts: vi.fn(() => runtimeProfile),
     } as unknown as ProcessManager;
-    const service = new InstanceService(
-      repo,
-      processes,
-      {} as BackupService,
-      new InstanceLockManager(),
-    );
+    const service = new InstanceService(repo, processes, {} as BackupService, new InstanceLockManager());
     const sessions = {
       disconnect: vi.fn(),
       connect: vi.fn(async () => undefined),
@@ -176,9 +159,7 @@ describe("InstanceService.execRcon", () => {
       send: vi.fn(async () => "ok"),
     };
     const service = makeService(sessions);
-    const repo = (
-      service as unknown as { repo: { addEvent: ReturnType<typeof vi.fn> } }
-    ).repo;
+    const repo = (service as unknown as { repo: { addEvent: ReturnType<typeof vi.fn> } }).repo;
 
     await service.sendRcon(profile.id, "SaveWorld");
 
@@ -197,17 +178,13 @@ describe("InstanceService.execRcon", () => {
       send: vi.fn(async () => "0. Alice, 76561198000000000"),
     };
     const service = makeService(sessions);
-    const repo = (
-      service as unknown as { repo: { addEvent: ReturnType<typeof vi.fn> } }
-    ).repo;
+    const repo = (service as unknown as { repo: { addEvent: ReturnType<typeof vi.fn> } }).repo;
 
     const players = await service.listPlayers(profile.id);
 
     expect(sessions.send).toHaveBeenCalledWith(profile.id, "ListPlayers");
     expect(repo.addEvent).not.toHaveBeenCalled();
-    expect(players).toEqual([
-      { key: "76561198000000000", name: "Alice" },
-    ]);
+    expect(players).toEqual([{ key: "76561198000000000", name: "Alice" }]);
   });
 
   it("sends KickPlayer, BanPlayer, and Unban with the player key", async () => {
@@ -225,16 +202,8 @@ describe("InstanceService.execRcon", () => {
     await service.kickPlayer(profile.id, "76561198000000000");
     await service.banPlayer(profile.id, "0002e03af5f4487985e94c6ba4080369");
 
-    expect(sessions.send).toHaveBeenNthCalledWith(
-      1,
-      profile.id,
-      "KickPlayer 76561198000000000",
-    );
-    expect(sessions.send).toHaveBeenNthCalledWith(
-      2,
-      profile.id,
-      "BanPlayer 0002e03af5f4487985e94c6ba4080369",
-    );
+    expect(sessions.send).toHaveBeenNthCalledWith(1, profile.id, "KickPlayer 76561198000000000");
+    expect(sessions.send).toHaveBeenNthCalledWith(2, profile.id, "BanPlayer 0002e03af5f4487985e94c6ba4080369");
   });
 
   it("sends Unban (not UnbanPlayer) when unbanning", async () => {
@@ -254,12 +223,8 @@ describe("InstanceService.execRcon", () => {
 
     const result = await service.unbanPlayer(profile.id, "76561198000000000");
 
-    expect(sessions.send).toHaveBeenCalledWith(
-      profile.id,
-      "Unban 76561198000000000",
-    );
+    expect(sessions.send).toHaveBeenCalledWith(profile.id, "Unban 76561198000000000");
     expect(result.banned).toEqual([]);
     expect(result.warning).toBeNull();
   });
 });
-

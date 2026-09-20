@@ -2,6 +2,7 @@ import { app, BrowserWindow } from "electron";
 import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { BOOTSTRAP_BACKGROUND } from "../shared/app-chrome";
 import {
   FALLBACK_SPLASH_TEMPLATE,
   SPLASH_HEIGHT,
@@ -13,14 +14,7 @@ import {
   writePrivateSplashDocument,
 } from "./splash-policy";
 
-export {
-  SPLASH_HEIGHT,
-  SPLASH_MAX_MS,
-  
-  SPLASH_WIDTH,
-  remainingSplashHoldMs,
-  shouldShowSplash,
-} from "./splash-policy";
+export { SPLASH_HEIGHT, SPLASH_MAX_MS, SPLASH_WIDTH, remainingSplashHoldMs, shouldShowSplash } from "./splash-policy";
 
 const splashTempDirs = new WeakMap<BrowserWindow, string>();
 
@@ -29,17 +23,11 @@ function firstExisting(paths: string[]): string | undefined {
 }
 
 function resolveSplashHtmlPath(): string | undefined {
-  return firstExisting([
-    join(__dirname, "splash/splash.html"),
-    join(__dirname, "../../src/main/splash/splash.html"),
-  ]);
+  return firstExisting([join(__dirname, "splash/splash.html"), join(__dirname, "../../src/main/splash/splash.html")]);
 }
 
 function resolveSplashSvgPath(): string | undefined {
-  return firstExisting([
-    join(__dirname, "splash/splashscreen.svg"),
-    join(__dirname, "../../brand/splashscreen.svg"),
-  ]);
+  return firstExisting([join(__dirname, "splash/splashscreen.svg"), join(__dirname, "../../brand/splashscreen.svg")]);
 }
 
 function cleanupSplashTempDir(win: BrowserWindow): void {
@@ -90,12 +78,7 @@ function loadSplashHtml(win: BrowserWindow, html: string, fallbackHtml: string):
   }
 }
 
-export function createSplashWindow(options: {
-  version: string;
-  icon?: string;
-  x?: number;
-  y?: number;
-}): BrowserWindow {
+export function createSplashWindow(options: { version: string; icon?: string; x?: number; y?: number }): BrowserWindow {
   const win = new BrowserWindow({
     width: SPLASH_WIDTH,
     height: SPLASH_HEIGHT,
@@ -105,12 +88,10 @@ export function createSplashWindow(options: {
     minimizable: false,
     fullscreenable: false,
     skipTaskbar: true,
-    ...(options.x !== undefined && options.y !== undefined
-      ? { x: options.x, y: options.y }
-      : { center: true }),
+    ...(options.x !== undefined && options.y !== undefined ? { x: options.x, y: options.y } : { center: true }),
     show: false,
     title: "YARK server manager",
-    backgroundColor: "#0c1427",
+    backgroundColor: BOOTSTRAP_BACKGROUND,
     ...(options.icon !== undefined ? { icon: options.icon } : {}),
     webPreferences: {
       contextIsolation: true,

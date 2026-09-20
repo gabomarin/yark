@@ -57,9 +57,7 @@ export async function promoteStaging(
     await rename(stagingDir, destResolved);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(
-      `Could not promote staging to destination: ${message}. Profile still uses the original path.`,
-    );
+    throw new Error(`Could not promote staging to destination: ${message}. Profile still uses the original path.`);
   }
 }
 
@@ -68,10 +66,7 @@ export async function promoteStaging(
  * cancel/fail happens before profile commit. Returns false when dest is gone
  * or source already exists (nothing safe to do).
  */
-export async function rollbackSameVolumeRename(
-  sourceDir: string,
-  destResolved: string,
-): Promise<boolean> {
+export async function rollbackSameVolumeRename(sourceDir: string, destResolved: string): Promise<boolean> {
   if (!(await pathExists(destResolved))) {
     return false;
   }
@@ -115,9 +110,7 @@ export async function copyToStagingWithProgress(
       }
       const copied = Math.max(0, freeBaseline - space.freeBytes);
       const ratio = Math.min(1, copied / sourceBytes);
-      const percent = Math.round(
-        COPY_PROGRESS_START + ratio * (COPY_PROGRESS_END - COPY_PROGRESS_START),
-      );
+      const percent = Math.round(COPY_PROGRESS_START + ratio * (COPY_PROGRESS_END - COPY_PROGRESS_START));
       host.emitProgress({
         serverId,
         active: true,

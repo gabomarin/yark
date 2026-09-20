@@ -55,13 +55,7 @@ describe("maintenance-schedule", () => {
     const standard = defaultMaintenancePolicy("s1", "t").restartWarnings;
     const off = { ...standard, preset: "none" as const, customOffsets: [] };
     expect(shouldUseLastMinuteChat(30_000, off, "schedule")).toBe(false);
-    expect(
-      shouldUseLastMinuteChat(
-        30_000,
-        { ...standard, lastMinuteChat: false },
-        "schedule",
-      ),
-    ).toBe(false);
+    expect(shouldUseLastMinuteChat(30_000, { ...standard, lastMinuteChat: false }, "schedule")).toBe(false);
     expect(shouldUseLastMinuteChat(30_000, standard, "schedule")).toBe(true);
     expect(shouldUseLastMinuteChat(30_000, off, "run_now")).toBe(true);
   });
@@ -72,9 +66,7 @@ describe("maintenance-schedule", () => {
       preset: "none" as const,
       customOffsets: [],
     };
-    expect(
-      resolveWarningOffsetLabels(warnings, MAINTENANCE_RESTART_PRESET_OFFSETS),
-    ).toEqual([]);
+    expect(resolveWarningOffsetLabels(warnings, MAINTENANCE_RESTART_PRESET_OFFSETS)).toEqual([]);
     expect(maxWarningLeadMs([])).toBe(0);
   });
 
@@ -90,9 +82,7 @@ describe("maintenance-schedule", () => {
 
   it("formats template phrases and last-minute copy", () => {
     expect(formatWarningTimePhrase(15 * 60_000)).toBe("15 minutes");
-    expect(renderWarningTemplate("Server restart in {time}", 60_000)).toBe(
-      "Server restart in 1 minute",
-    );
+    expect(renderWarningTemplate("Server restart in {time}", 60_000)).toBe("Server restart in 1 minute");
     expect(renderLastMinuteRestart(9.2)).toBe("Restart in 10s");
     expect(renderLastMinuteUpdate(9.2)).toBe("Update in 10s");
     expect(maxWarningLeadMs(["5m", "30m"])).toBe(30 * 60_000);

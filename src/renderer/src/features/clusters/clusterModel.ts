@@ -9,9 +9,7 @@ export function formatCheckedAt(iso: string): string {
 export function sharedClusterDir(members: ServerProfile[]): string | null {
   const dirs = [
     ...new Set(
-      members
-        .map((member) => member.clusterDir)
-        .filter((dir): dir is string => dir !== null && dir.length > 0),
+      members.map((member) => member.clusterDir).filter((dir): dir is string => dir !== null && dir.length > 0),
     ),
   ];
   if (dirs.length === 1) return dirs[0] ?? null;
@@ -28,16 +26,11 @@ export function buildServerById(servers: ServerProfile[]): Map<string, ServerPro
 
 export function listDirWithoutIdServers(servers: ServerProfile[]): ServerProfile[] {
   return servers.filter(
-    (server) =>
-      server.clusterId === null &&
-      server.clusterDir !== null &&
-      server.clusterDir.length > 0,
+    (server) => server.clusterId === null && server.clusterDir !== null && server.clusterDir.length > 0,
   );
 }
 
-export function groupServersByClusterDir(
-  servers: ServerProfile[],
-): Array<{ dir: string; members: ServerProfile[] }> {
+export function groupServersByClusterDir(servers: ServerProfile[]): Array<{ dir: string; members: ServerProfile[] }> {
   const groups = new Map<string, ServerProfile[]>();
   for (const server of servers) {
     const dir = server.clusterDir ?? "";
@@ -48,9 +41,7 @@ export function groupServersByClusterDir(
   return [...groups.entries()].map(([dir, members]) => ({ dir, members }));
 }
 
-export function sortClusterReports(
-  reports: ClusterComplianceReport[],
-): ClusterComplianceReport[] {
+export function sortClusterReports(reports: ClusterComplianceReport[]): ClusterComplianceReport[] {
   return [...reports].sort((a, b) => {
     if (a.ok !== b.ok) return a.ok ? 1 : -1;
     return a.clusterId.localeCompare(b.clusterId);
@@ -61,10 +52,7 @@ export function resolveActiveClusterId(
   sortedReports: ClusterComplianceReport[],
   selectedClusterId: string | null,
 ): string | null {
-  if (
-    selectedClusterId !== null &&
-    sortedReports.some((report) => report.clusterId === selectedClusterId)
-  ) {
+  if (selectedClusterId !== null && sortedReports.some((report) => report.clusterId === selectedClusterId)) {
     return selectedClusterId;
   }
   return sortedReports[0]?.clusterId ?? null;
@@ -77,8 +65,7 @@ export function summarizeClusterReports(reports: ClusterComplianceReport[]): {
   return {
     errorCount: reports.filter((report) => !report.ok).length,
     warningOnlyCount: reports.filter(
-      (report) =>
-        report.ok && report.issues.some((issue) => issue.severity === "warning"),
+      (report) => report.ok && report.issues.some((issue) => issue.severity === "warning"),
     ).length,
   };
 }
@@ -92,10 +79,7 @@ export function formatClusterSummaryLine(input: {
   unclusteredCount: number;
   dirWithoutIdCount: number;
 }): string {
-  const parts = [
-    `${input.clusterCount} cluster${input.clusterCount === 1 ? "" : "s"}`,
-    `${input.readyCount} ready`,
-  ];
+  const parts = [`${input.clusterCount} cluster${input.clusterCount === 1 ? "" : "s"}`, `${input.readyCount} ready`];
   if (input.errorCount > 0) {
     parts.push(`${input.errorCount} with errors`);
   }
@@ -103,14 +87,10 @@ export function formatClusterSummaryLine(input: {
     parts.push(`${input.warningOnlyCount} with warnings`);
   }
   if (input.unclusteredCount > 0) {
-    parts.push(
-      `${input.unclusteredCount} server${input.unclusteredCount === 1 ? "" : "s"} not in a cluster`,
-    );
+    parts.push(`${input.unclusteredCount} server${input.unclusteredCount === 1 ? "" : "s"} not in a cluster`);
   }
   if (input.dirWithoutIdCount > 0) {
-    parts.push(
-      `${input.dirWithoutIdCount} with directory but no Cluster ID`,
-    );
+    parts.push(`${input.dirWithoutIdCount} with directory but no Cluster ID`);
   }
   return parts.join(" · ");
 }

@@ -1,8 +1,9 @@
 import type { ReactElement } from "react";
-import { Button, Checkbox, Group, Modal, Stack, Text } from "@mantine/core";
+import { Button, Checkbox, Stack, Text } from "@mantine/core";
 import { backupFinishedAt } from "@shared/backups/backup-player-meta";
 import { formatLogDateTime } from "@shared/format-log-datetime";
 import type { BackupRecord } from "@shared/types";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 
 function formatWhen(iso: string): string {
   return formatLogDateTime(iso, { fallback: iso });
@@ -29,51 +30,52 @@ interface Props {
 export function BackupRestoreModal(props: Props): ReactElement {
   const backup = props.backup;
   return (
-    <Modal
+    <AppPanelModal
       opened={backup !== null}
-      onClose={props.onClose}
+      onClose={() => {
+        if (!props.busy) props.onClose();
+      }}
+      size="sm"
       title="Restore backup?"
-      centered
+      footerAlign="between"
+      closeOnClickOutside={!props.busy}
+      closeOnEscape={!props.busy}
+      withCloseButton={!props.busy}
+      footer={
+        <>
+          <Button variant="default" onClick={props.onClose} disabled={props.busy}>
+            Cancel
+          </Button>
+          <Button color="attention" onClick={props.onConfirm} loading={props.busy}>
+            Restore
+          </Button>
+        </>
+      }
     >
       {backup !== null ? (
         <Stack gap="md">
           {backup.kind === "world" ? (
             <>
               <Text size="sm">
-                Overlay map{" "}
-                <strong>{backup.mapToken ?? props.serverMap}</strong> from{" "}
-                {formatWhen(backupFinishedAt(backup))} onto{" "}
-                <strong>{props.serverName}</strong>. Other map folders under
-                SavedArks stay untouched. A safety world backup is created first.
-                The server must stay stopped.
+                Overlay map <strong>{backup.mapToken ?? props.serverMap}</strong> from{" "}
+                {formatWhen(backupFinishedAt(backup))} onto <strong>{props.serverName}</strong>. Other map folders under
+                SavedArks stay untouched. A safety world backup is created first. The server must stay stopped.
               </Text>
               <Checkbox
                 label="Restore player profiles / tribes"
                 checked={props.restoreProfilesTribes}
-                onChange={(event) =>
-                  props.onRestoreProfilesTribesChange(event.currentTarget.checked)
-                }
+                onChange={(event) => props.onRestoreProfilesTribesChange(event.currentTarget.checked)}
               />
             </>
           ) : (
             <Text size="sm">
-              Restore <strong>{kindLabel(backup.kind)}</strong> from{" "}
-              {formatWhen(backupFinishedAt(backup))} onto{" "}
-              <strong>{props.serverName}</strong>? Only that kind of data is
-              replaced. A safety backup of the same kind is created first. The
-              server must stay stopped.
+              Restore <strong>{kindLabel(backup.kind)}</strong> from {formatWhen(backupFinishedAt(backup))} onto{" "}
+              <strong>{props.serverName}</strong>? Only that kind of data is replaced. A safety backup of the same kind
+              is created first. The server must stay stopped.
             </Text>
           )}
-          <Group justify="flex-end" gap="sm">
-            <Button variant="default" onClick={props.onClose} disabled={props.busy}>
-              Cancel
-            </Button>
-            <Button color="orange" onClick={props.onConfirm} loading={props.busy}>
-              Restore
-            </Button>
-          </Group>
         </Stack>
       ) : null}
-    </Modal>
+    </AppPanelModal>
   );
 }

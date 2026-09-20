@@ -1,18 +1,10 @@
-import {
-  getWindowsPathError,
-  normalizeWindowsPath,
-} from "@shared/server/server-install-path";
+import { getWindowsPathError, normalizeWindowsPath } from "@shared/server/server-install-path";
 import { findPortConflicts } from "@shared/server/port-conflicts";
 import {
   clusterProcessBusyReason as sharedClusterProcessBusyReason,
   type ServerProcessRuntime,
 } from "@shared/server/server-process-idle";
-import type {
-  ServerProfile,
-  ServerProfileInput,
-  ServerRuntimeInfo,
-  ServerStatus,
-} from "@shared/types";
+import type { ServerProfile, ServerProfileInput, ServerRuntimeInfo, ServerStatus } from "@shared/types";
 import { listDirWithoutIdServers, groupServersByClusterDir } from "./clusterModel";
 
 /** Absolute Windows path (drive letter or UNC) — mirrors backend validation. */
@@ -35,11 +27,7 @@ export function listKnownClusterIds(servers: ServerProfile[]): string[] {
  * Pass current IDs so Generate bumps instead of repeating the slug.
  */
 export function suggestClusterId(taken: Iterable<string> = []): string {
-  const takenSet = new Set(
-    [...taken]
-      .map((id) => id.trim().toLowerCase())
-      .filter((id) => id.length > 0),
-  );
+  const takenSet = new Set([...taken].map((id) => id.trim().toLowerCase()).filter((id) => id.length > 0));
   const prefix = "yark-cluster-";
   let n = 1;
   while (takenSet.has(`${prefix}${n}`)) {
@@ -75,16 +63,11 @@ export function resolveServerRuntime(
  * Cluster membership / template apply is safe when the ASA child is not live.
  * Idle `error` (process exited) is allowed (#276).
  */
-export function clusterProcessBusyReason(
-  runtime: ServerProcessRuntime,
-): string | null {
+export function clusterProcessBusyReason(runtime: ServerProcessRuntime): string | null {
   return sharedClusterProcessBusyReason(runtime);
 }
 
-export function ineligibilityReason(
-  server: ServerProfile,
-  runtime: ServerProcessRuntime,
-): string | null {
+export function ineligibilityReason(server: ServerProfile, runtime: ServerProcessRuntime): string | null {
   if (server.clusterId !== null) {
     return `Already in cluster “${server.clusterId}”`;
   }
@@ -109,24 +92,14 @@ export function listCreateClusterCandidates(
     });
 }
 
-export function toggleSelectedServerId(
-  selectedIds: string[],
-  serverId: string,
-): string[] {
-  return selectedIds.includes(serverId)
-    ? selectedIds.filter((id) => id !== serverId)
-    : [...selectedIds, serverId];
+export function toggleSelectedServerId(selectedIds: string[], serverId: string): string[] {
+  return selectedIds.includes(serverId) ? selectedIds.filter((id) => id !== serverId) : [...selectedIds, serverId];
 }
 
 /** Drop ids that are no longer eligible (e.g. server started while the modal is open). */
-export function pruneSelectedServerIds(
-  selectedIds: string[],
-  candidates: CreateClusterCandidate[],
-): string[] {
+export function pruneSelectedServerIds(selectedIds: string[], candidates: CreateClusterCandidate[]): string[] {
   const eligibleIds = new Set(
-    candidates
-      .filter((candidate) => candidate.eligible)
-      .map((candidate) => candidate.server.id),
+    candidates.filter((candidate) => candidate.eligible).map((candidate) => candidate.server.id),
   );
   return selectedIds.filter((id) => eligibleIds.has(id));
 }
@@ -136,26 +109,20 @@ export function resolveSelectedCandidates(
   selectedIds: string[],
 ): CreateClusterCandidate[] {
   const selected = new Set(selectedIds);
-  return candidates.filter(
-    (candidate) => selected.has(candidate.server.id) && candidate.eligible,
-  );
+  return candidates.filter((candidate) => selected.has(candidate.server.id) && candidate.eligible);
 }
 
 /** Prefill when every selected member already shares one cluster directory. */
 export function sharedPrefillClusterDir(servers: ServerProfile[]): string | null {
   const dirs = [
     ...new Set(
-      servers
-        .map((server) => server.clusterDir)
-        .filter((dir): dir is string => dir !== null && dir.length > 0),
+      servers.map((server) => server.clusterDir).filter((dir): dir is string => dir !== null && dir.length > 0),
     ),
   ];
   return dirs.length === 1 ? (dirs[0] ?? null) : null;
 }
 
-export function getSelectedMembersPortError(
-  servers: ServerProfile[],
-): string | null {
+export function getSelectedMembersPortError(servers: ServerProfile[]): string | null {
   if (servers.length < 2) return null;
   const conflicts = findPortConflicts(servers);
   if (conflicts.length === 0) return null;
@@ -163,20 +130,14 @@ export function getSelectedMembersPortError(
   return `${first.serverA} and ${first.serverB} both use ${first.kind} port ${first.port}. Change ports before creating the cluster.`;
 }
 
-export function getClusterIdFormError(
-  clusterId: string,
-  clusterDir: string,
-  servers: ServerProfile[],
-): string | null {
+export function getClusterIdFormError(clusterId: string, clusterDir: string, servers: ServerProfile[]): string | null {
   const value = clusterId.trim();
   if (value.length === 0) {
     return "Cluster ID is required.";
   }
 
   const members = servers.filter(
-    (server) =>
-      server.clusterId !== null &&
-      server.clusterId.toLowerCase() === value.toLowerCase(),
+    (server) => server.clusterId !== null && server.clusterId.toLowerCase() === value.toLowerCase(),
   );
   if (members.length === 0) {
     return null;
@@ -191,9 +152,7 @@ export function getClusterIdFormError(
     ),
   ];
   const proposed = normalizeWindowsPath(clusterDir);
-  const mismatch = existingDirs.find(
-    (dir) => dir.toLowerCase() !== proposed.toLowerCase(),
-  );
+  const mismatch = existingDirs.find((dir) => dir.toLowerCase() !== proposed.toLowerCase());
   if (mismatch !== undefined) {
     return `ID already used with a different directory (${mismatch}).`;
   }
@@ -256,4 +215,3 @@ export function buildCreateClusterInput(
     clusterDir: normalizeWindowsPath(clusterDir),
   };
 }
-

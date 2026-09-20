@@ -71,14 +71,14 @@ Known-good copies are taken **before** corruption or a bad migration — not aft
 #218 detects failure. Snapshots use SQLite `VACUUM INTO` so WAL state is included
 without a naive mid-write copy of `.db` alone.
 
-| Item | Value |
-| --- | --- |
-| Directory | `<userData>/profile-db-snapshots/` (beside `yark-server-manager.db`) |
-| Names | `yark-profile.pre-migrate.<stamp>.db`, `yark-profile.healthy-boot.<stamp>.db` |
-| Retention | Last **3** files per kind (oldest deleted after each write) |
-| Triggers | Pre-migrate when pending migrations + existing file; healthy-boot after every successful open of an existing file |
+| Item           | Value                                                                                                                                                                                                          |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Directory      | `<userData>/profile-db-snapshots/` (beside `yark-server-manager.db`)                                                                                                                                           |
+| Names          | `yark-profile.pre-migrate.<stamp>.db`, `yark-profile.healthy-boot.<stamp>.db`                                                                                                                                  |
+| Retention      | Last **3** files per kind (oldest deleted after each write)                                                                                                                                                    |
+| Triggers       | Pre-migrate when pending migrations + existing file; healthy-boot after every successful open of an existing file                                                                                              |
 | In-app restore | Boot recovery dialog offers **Restore snapshot** when copies exist (default). Prefer `pre-migrate` after migrate failures, else newest `healthy-boot`. Broken live file is quarantined as `*.corrupt.*` first. |
-| Manual restore | Still possible: copy a snapshot over `yark-server-manager.db` (remove stale `-wal`/`-shm`) while YARK is quit. |
+| Manual restore | Still possible: copy a snapshot over `yark-server-manager.db` (remove stale `-wal`/`-shm`) while YARK is quit.                                                                                                 |
 
 #218 **Start empty** remains available when no snapshot exists or the operator declines restore.
 
@@ -87,12 +87,12 @@ without a naive mid-write copy of `.db` alone.
 `src/main/database-boot-recovery.ts` wraps boot open. On failure, a native dialog
 offers:
 
-| Action | Behavior |
-| --- | --- |
+| Action           | Behavior                                                                                                                                                                    |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Restore snapshot | When `profile-db-snapshots/` has a usable copy: quarantine the broken DB, copy the preferred snapshot onto `yark-server-manager.db`, reopen (default button when available) |
-| Quit | Exit without changing files (`app.exit(1)`) |
-| Open folder | `shell.showItemInFolder` on the DB path (copy for support; not a repair) |
-| Start empty… | Move the broken file aside + reopen a blank DB (no second confirm) |
+| Quit             | Exit without changing files (`app.exit(1)`)                                                                                                                                 |
+| Open folder      | `shell.showItemInFolder` on the DB path (copy for support; not a repair)                                                                                                    |
+| Start empty…     | Move the broken file aside + reopen a blank DB (no second confirm)                                                                                                          |
 
 Start empty renames the main DB and `-wal` / `-shm` sidecars to
 `*.corrupt.<timestamp>` next to the original path (no silent delete), then
@@ -105,23 +105,23 @@ profile DB — see [server-lifecycle.md](server-lifecycle.md#import-existing-asa
 
 ## Module map
 
-| Role | Path |
-| --- | --- |
-| Open + migrate + busy_timeout + snapshot hooks | `src/backend/infra/db/database.ts` |
-| SQL migration list (app + E2E `initProfileDatabase`) | `src/backend/infra/db/schema-migrations.json` |
-| E2E schema seed (no Electron boot) | `scripts/e2e-init-profile-db.cjs` |
-| Pending live INI drafts (`pending_server_ini`) | `src/backend/infra/db/pending-server-ini-repository.ts` |
-| Snapshot write + rotation | `src/backend/infra/db/database-snapshots.ts` |
-| Quarantine rename helpers | `src/backend/infra/db/database-recovery.ts` |
-| Recovery dialog loop | `src/main/database-boot-recovery.ts` |
-| Boot wiring | `src/main/index.ts` (`whenReady`) |
+| Role                                                 | Path                                                    |
+| ---------------------------------------------------- | ------------------------------------------------------- |
+| Open + migrate + busy_timeout + snapshot hooks       | `src/backend/infra/db/database.ts`                      |
+| SQL migration list (app + E2E `initProfileDatabase`) | `src/backend/infra/db/schema-migrations.json`           |
+| E2E schema seed (no Electron boot)                   | `scripts/e2e-init-profile-db.cjs`                       |
+| Pending live INI drafts (`pending_server_ini`)       | `src/backend/infra/db/pending-server-ini-repository.ts` |
+| Snapshot write + rotation                            | `src/backend/infra/db/database-snapshots.ts`            |
+| Quarantine rename helpers                            | `src/backend/infra/db/database-recovery.ts`             |
+| Recovery dialog loop                                 | `src/main/database-boot-recovery.ts`                    |
+| Boot wiring                                          | `src/main/index.ts` (`whenReady`)                       |
 
 ## Tests
 
-| File | Focus |
-| --- | --- |
-| `tests/unit/database-boot-recovery.test.ts` | busy_timeout, typed errors, quarantine, recovery choices |
-| `tests/unit/database-snapshots.test.ts` | VACUUM INTO snapshot, rotation, pre-migrate / healthy-boot triggers |
+| File                                        | Focus                                                               |
+| ------------------------------------------- | ------------------------------------------------------------------- |
+| `tests/unit/database-boot-recovery.test.ts` | busy_timeout, typed errors, quarantine, recovery choices            |
+| `tests/unit/database-snapshots.test.ts`     | VACUUM INTO snapshot, rotation, pre-migrate / healthy-boot triggers |
 
 Related: [settings.md](settings.md#app-data-folders),
 [critical-job-recovery.md](critical-job-recovery.md) (queue quarantine pattern).

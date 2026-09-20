@@ -31,11 +31,7 @@ describe("filterRuntimeLogLines", () => {
   });
 
   it("filters system including warning and error", () => {
-    expect(filterRuntimeLogLines(sample, "system")).toEqual([
-      sample[0],
-      sample[4],
-      sample[5],
-    ]);
+    expect(filterRuntimeLogLines(sample, "system")).toEqual([sample[0], sample[4], sample[5]]);
   });
 
   it("filters ASA disk log source as Server log", () => {
@@ -43,10 +39,7 @@ describe("filterRuntimeLogLines", () => {
   });
 
   it("filters process pipes", () => {
-    expect(filterRuntimeLogLines(sample, "process")).toEqual([
-      sample[2],
-      sample[3],
-    ]);
+    expect(filterRuntimeLogLines(sample, "process")).toEqual([sample[2], sample[3]]);
   });
 });
 
@@ -67,9 +60,7 @@ describe("preserveNewerRuntimeLogs", () => {
       runtimeLogLines: ["fresh"],
     };
 
-    expect(
-      preserveNewerRuntimeLogs(incoming, previous, true).runtimeLogLines,
-    ).toEqual(["fresh"]);
+    expect(preserveNewerRuntimeLogs(incoming, previous, true).runtimeLogLines).toEqual(["fresh"]);
   });
 });
 
@@ -77,19 +68,15 @@ describe("formatUnrealLogBody", () => {
   it("treats Unreal stamps as UTC and formats local wall-clock", () => {
     const utc = new Date(Date.UTC(2026, 6, 29, 21, 42, 52, 443));
     const expected = formatLogDateTime(utc, { includeMs: true });
-    expect(
-      formatUnrealLogBody(
-        "[2026.07.29-21.42.52:443][  5]Server has successfully started!",
-      ),
-    ).toBe(`${expected} [5] Server has successfully started!`);
+    expect(formatUnrealLogBody("[2026.07.29-21.42.52:443][  5]Server has successfully started!")).toBe(
+      `${expected} [5] Server has successfully started!`,
+    );
   });
 
   it("handles stamp-only lines", () => {
     const utc = new Date(Date.UTC(2026, 6, 29, 21, 42, 52, 443));
     const expected = formatLogDateTime(utc, { includeMs: true });
-    expect(formatUnrealLogBody("[2026.07.29-21.42.52:443][  5]")).toBe(
-      `${expected} [5]`,
-    );
+    expect(formatUnrealLogBody("[2026.07.29-21.42.52:443][  5]")).toBe(`${expected} [5]`);
   });
 });
 
@@ -105,10 +92,8 @@ describe("formatRuntimeLogLineForDisplay", () => {
   });
 
   it("drops capture ISO for system lines", () => {
-    expect(
-      formatRuntimeLogLineForDisplay(
-        "[2026-07-29T21:42:52.820Z] [system] Starting process",
-      ),
-    ).toBe("[system] Starting process");
+    expect(formatRuntimeLogLineForDisplay("[2026-07-29T21:42:52.820Z] [system] Starting process")).toBe(
+      "[system] Starting process",
+    );
   });
 });

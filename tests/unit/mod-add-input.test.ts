@@ -15,8 +15,7 @@ const sampleDetail: ModMetadata = {
   authors: ["kavan87"],
   downloadCount: 1,
   dateModified: "2026-05-28T00:00:00.000Z",
-  curseforgeUrl:
-    "https://www.curseforge.com/ark-survival-ascended/mods/super-spyglass-plus",
+  curseforgeUrl: "https://www.curseforge.com/ark-survival-ascended/mods/super-spyglass-plus",
   slug: "super-spyglass-plus",
   categories: ["General"],
 };
@@ -31,8 +30,7 @@ describe("parseModAddInput", () => {
   });
 
   it("accepts an ASA CurseForge mod URL", () => {
-    const url =
-      "https://www.curseforge.com/ark-survival-ascended/mods/awesomespyglass";
+    const url = "https://www.curseforge.com/ark-survival-ascended/mods/awesomespyglass";
     expect(parseModAddInput(url)).toEqual({
       ids: [],
       urls: [url],
@@ -41,8 +39,7 @@ describe("parseModAddInput", () => {
   });
 
   it("mixes IDs and a URL and reports invalid tokens", () => {
-    const url =
-      "https://www.curseforge.com/ark-survival-ascended/mods/cryopods";
+    const url = "https://www.curseforge.com/ark-survival-ascended/mods/cryopods";
     const parsed = parseModAddInput(`928793, not-a-mod, ${url}, abc`);
     expect(parsed.ids).toEqual(["928793"]);
     expect(parsed.urls).toEqual([url]);
@@ -59,11 +56,7 @@ describe("parseModAddInput", () => {
   });
 
   it("formats invalid tokens for UI errors", () => {
-    expect(
-      formatInvalidModAddTokens([
-        { raw: "x", reason: "bad" },
-      ]),
-    ).toBe('"x" (bad)');
+    expect(formatInvalidModAddTokens([{ raw: "x", reason: "bad" }])).toBe('"x" (bad)');
   });
 
   it("detects numeric project IDs", () => {
@@ -74,11 +67,10 @@ describe("parseModAddInput", () => {
 
 describe("prepareModAddApply", () => {
   it("resolves IDs and URLs then persists", async () => {
-    const outcome = await prepareModAddApply(
-      "929420",
-      { configuredIds: [], disabledIds: [], cache: {} },
-      async () => ({ ok: true, data: sampleDetail }),
-    );
+    const outcome = await prepareModAddApply("929420", { configuredIds: [], disabledIds: [], cache: {} }, async () => ({
+      ok: true,
+      data: sampleDetail,
+    }));
     expect(outcome.status).toBe("ready");
     if (outcome.status !== "ready") return;
     expect(outcome.next.configuredIds).toEqual(["929420"]);
@@ -88,11 +80,10 @@ describe("prepareModAddApply", () => {
   });
 
   it("reports validation error when nothing is valid", async () => {
-    const outcome = await prepareModAddApply(
-      "nope",
-      { configuredIds: [], disabledIds: [], cache: {} },
-      async () => ({ ok: false, error: "fail" }),
-    );
+    const outcome = await prepareModAddApply("nope", { configuredIds: [], disabledIds: [], cache: {} }, async () => ({
+      ok: false,
+      error: "fail",
+    }));
     expect(outcome.status).toBe("validation-error");
   });
 

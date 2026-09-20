@@ -1,17 +1,7 @@
 import { playerBackupDisplayName } from "@shared/backups/backup-player-meta";
-import {
-  WHEN_RECENT_MS,
-  formatRelativeTime,
-  formatWhenLabel,
-} from "@shared/format-log-datetime";
+import { WHEN_RECENT_MS, formatRelativeTime, formatWhenLabel } from "@shared/format-log-datetime";
 import { formatMapDisplayName } from "@shared/asa/map-identity";
-import type {
-  BackupKind,
-  BackupPolicy,
-  BackupRecord,
-  BackupType,
-  ServerRuntimeInfo,
-} from "@shared/types";
+import type { BackupKind, BackupPolicy, BackupRecord, BackupType, ServerRuntimeInfo } from "@shared/types";
 
 export type DraftPolicy = Omit<BackupPolicy, "serverId" | "updatedAt">;
 
@@ -22,8 +12,7 @@ export const KIND_TABS: Array<{ kind: BackupKind; label: string }> = [
 ];
 
 /** localStorage: operator dismissed the World/players/INI kinds hint (#456). */
-export const BACKUPS_KINDS_HINT_STORAGE_KEY =
-  "yark.backups.kindsHint.dismissed.v1";
+export const BACKUPS_KINDS_HINT_STORAGE_KEY = "yark.backups.kindsHint.dismissed.v1";
 
 const BACKUP_TYPE_LABELS: Record<BackupType, string> = {
   manual: "Manual",
@@ -88,35 +77,29 @@ export function toDraft(policy: BackupPolicy): DraftPolicy {
   };
 }
 
-export function draftEqualsPolicy(
-  draft: DraftPolicy,
-  policy: BackupPolicy,
-): boolean {
+export function draftEqualsPolicy(draft: DraftPolicy, policy: BackupPolicy): boolean {
   return (
-    draft.enabled === policy.enabled
-    && draft.intervalMinutes === policy.intervalMinutes
-    && draft.retainCountWorld === policy.retainCountWorld
-    && draft.retainCountPlayers === policy.retainCountPlayers
-    && draft.retainCountIni === policy.retainCountIni
-    && draft.backupDir === policy.backupDir
+    draft.enabled === policy.enabled &&
+    draft.intervalMinutes === policy.intervalMinutes &&
+    draft.retainCountWorld === policy.retainCountWorld &&
+    draft.retainCountPlayers === policy.retainCountPlayers &&
+    draft.retainCountIni === policy.retainCountIni &&
+    draft.backupDir === policy.backupDir
   );
 }
 
 export function draftEqualsDraft(a: DraftPolicy, b: DraftPolicy): boolean {
   return (
-    a.enabled === b.enabled
-    && a.intervalMinutes === b.intervalMinutes
-    && a.retainCountWorld === b.retainCountWorld
-    && a.retainCountPlayers === b.retainCountPlayers
-    && a.retainCountIni === b.retainCountIni
-    && a.backupDir === b.backupDir
+    a.enabled === b.enabled &&
+    a.intervalMinutes === b.intervalMinutes &&
+    a.retainCountWorld === b.retainCountWorld &&
+    a.retainCountPlayers === b.retainCountPlayers &&
+    a.retainCountIni === b.retainCountIni &&
+    a.backupDir === b.backupDir
   );
 }
 
-function sameMapToken(
-  a: string | null | undefined,
-  b: string | null | undefined,
-): boolean {
+function sameMapToken(a: string | null | undefined, b: string | null | undefined): boolean {
   const left = (a ?? "").trim().toLowerCase();
   const right = (b ?? "").trim().toLowerCase();
   return left.length > 0 && right.length > 0 && left === right;
@@ -152,14 +135,10 @@ export function filterBackups(
   if (kind === "players") {
     const query = playerSearch.trim().toLocaleLowerCase();
     if (query.length === 0) return kindBackups;
-    return kindBackups.filter((backup) =>
-      playerBackupDisplayName(backup).toLocaleLowerCase().includes(query),
-    );
+    return kindBackups.filter((backup) => playerBackupDisplayName(backup).toLocaleLowerCase().includes(query));
   }
   if (kind === "world" && currentMapOnly) {
-    return kindBackups.filter((backup) =>
-      sameMapToken(backup.mapToken, serverMap),
-    );
+    return kindBackups.filter((backup) => sameMapToken(backup.mapToken, serverMap));
   }
   return kindBackups;
 }
@@ -171,16 +150,11 @@ export function countHiddenOtherMapWorldBackups(
   serverMap: string,
 ): number {
   if (kind !== "world" || !currentMapOnly) return 0;
-  return backups.filter(
-    (backup) =>
-      backup.kind === "world" && !sameMapToken(backup.mapToken, serverMap),
-  ).length;
+  return backups.filter((backup) => backup.kind === "world" && !sameMapToken(backup.mapToken, serverMap)).length;
 }
 
 export function worldPolicySummary(draft: DraftPolicy): string {
-  const schedule = draft.enabled
-    ? `Schedule on · ${draft.intervalMinutes}m`
-    : "Schedule off";
+  const schedule = draft.enabled ? `Schedule on · ${draft.intervalMinutes}m` : "Schedule off";
   return `${schedule} · keep ${draft.retainCountWorld}`;
 }
 

@@ -15,12 +15,8 @@ export function EventDetailsBody({ event }: Props): ReactElement {
     <div className={classes.eventDetails}>
       <DetailLine label="What" value={details.what} />
       {details.cause !== null && <DetailLine label="Cause" value={details.cause} />}
-      {details.location !== null && (
-        <DetailLine label="Where" value={details.location} />
-      )}
-      {details.suggestion !== null && (
-        <DetailLine label="Try next" value={details.suggestion} />
-      )}
+      {details.location !== null && <DetailLine label="Where" value={details.location} />}
+      {details.suggestion !== null && <DetailLine label="Try next" value={details.suggestion} />}
       {details.excerpt !== null && details.excerpt.length > 0 && (
         <div className={classes.eventDetailLine}>
           <Text size="xs" c="dimmed" className={classes.eventDetailLabel}>
@@ -32,7 +28,7 @@ export function EventDetailsBody({ event }: Props): ReactElement {
       {details.context.length > 0 && (
         <div className={classes.eventContext}>
           {details.context.map((item) => (
-            <Badge key={item.label} variant="light" size="sm" radius="sm">
+            <Badge key={item.label} variant="light" radius="sm">
               {item.label}: {item.value}
             </Badge>
           ))}

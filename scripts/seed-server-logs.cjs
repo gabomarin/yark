@@ -38,9 +38,7 @@ const wantedName = process.argv[2] ?? null;
 
 if (!fs.existsSync(dbPath)) {
   console.error("DB not found:", dbPath);
-  console.error(
-    "Tip: set YARK_USER_DATA to the Electron userData folder if the app uses a custom path.",
-  );
+  console.error("Tip: set YARK_USER_DATA to the Electron userData folder if the app uses a custom path.");
   process.exit(1);
 }
 
@@ -54,9 +52,7 @@ if (servers.length === 0) {
 }
 
 const server =
-  wantedName !== null
-    ? servers.find((s) => s.name.toLowerCase() === wantedName.toLowerCase())
-    : servers[0];
+  wantedName !== null ? servers.find((s) => s.name.toLowerCase() === wantedName.toLowerCase()) : servers[0];
 if (server === undefined) {
   console.error("Server not found:", wantedName);
   process.exit(1);
@@ -69,9 +65,7 @@ console.log(`Target server: ${server.name} (${serverId})`);
 const deletedEvents = db.prepare("DELETE FROM events WHERE server_id = ?").run(serverId);
 console.log(`Cleared events: ${deletedEvents.changes}`);
 
-const existingLogs = fs
-  .readdirSync(updateLogsDir)
-  .filter((name) => name.startsWith(`${serverId}-`));
+const existingLogs = fs.readdirSync(updateLogsDir).filter((name) => name.startsWith(`${serverId}-`));
 for (const name of existingLogs) {
   fs.unlinkSync(path.join(updateLogsDir, name));
 }
@@ -82,14 +76,7 @@ function insertEvent(type, severity, message, details, minutesAgo) {
   db.prepare(
     `INSERT INTO events (server_id, type, severity, message, created_at, details)
      VALUES (?, ?, ?, ?, ?, ?)`,
-  ).run(
-    serverId,
-    type,
-    severity,
-    message,
-    createdAt,
-    details === null ? null : JSON.stringify(details),
-  );
+  ).run(serverId, type, severity, message, createdAt, details === null ? null : JSON.stringify(details));
 }
 
 const installDir = server.install_dir;
@@ -188,8 +175,7 @@ insertEvent(
     what: "A scheduled world backup failed before the archive was completed.",
     cause: "ENOSPC: no space left on device",
     location: path.join(backupRoot, "World", "scheduled-world.zip"),
-    suggestion:
-      "Free disk space on the backup volume, run Cleanup from the Backups page, then retry.",
+    suggestion: "Free disk space on the backup volume, run Cleanup from the Backups page, then retry.",
     context: { type: "scheduled", kind: "world", code: "ENOSPC" },
   },
   120,
@@ -217,8 +203,7 @@ insertEvent(
     what: "Safe update failed after the pre-update backup step.",
     cause: "SteamCMD exited with code 8",
     location: installDir,
-    suggestion:
-      "Open the Updates tab for the SteamCMD log. Confirm disk space is OK, then retry.",
+    suggestion: "Open the Updates tab for the SteamCMD log. Confirm disk space is OK, then retry.",
     context: { operation: "update", exitCode: 8 },
   },
   85,
@@ -231,8 +216,7 @@ insertEvent(
   {
     what: "The failed update was rolled back using pre-update backups.",
     cause: "Update failed; manager restored the pre-update archives and restarted the server.",
-    suggestion:
-      "Confirm world/players look correct, inspect the update log, then retry the update when ready.",
+    suggestion: "Confirm world/players look correct, inspect the update log, then retry the update when ready.",
     context: { backupIds: "bk-world-1, bk-players-1, bk-ini-1" },
   },
   80,
@@ -301,9 +285,7 @@ insertEvent(
   5,
 );
 
-const eventCount = db
-  .prepare("SELECT COUNT(*) AS c FROM events WHERE server_id = ?")
-  .get(serverId).c;
+const eventCount = db.prepare("SELECT COUNT(*) AS c FROM events WHERE server_id = ?").get(serverId).c;
 console.log(`Seeded events: ${eventCount}`);
 
 // --- seed update log files ---
@@ -370,9 +352,7 @@ const verifyLog = writeUpdateLog(
 console.log("Seeded update logs:", successLog, failedLog, verifyLog);
 
 // Note: runtime logs are in-memory only while the process runs.
-console.log(
-  "NOTE: Runtime tab needs a live/recent process capture; Events/Updates/Backups are seeded.",
-);
+console.log("NOTE: Runtime tab needs a live/recent process capture; Events/Updates/Backups are seeded.");
 
 db.close();
 console.log("DONE");

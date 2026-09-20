@@ -1,9 +1,6 @@
 import type { CriticalJobStatus } from "@shared/types";
 import type { DurableCriticalJob } from "../../orchestration/critical-job-recovery";
-import {
-  isRestoreHistoryOwnedByJob,
-  type RestoreHistoryOwnershipEvidence,
-} from "./backup-restore";
+import { isRestoreHistoryOwnedByJob, type RestoreHistoryOwnershipEvidence } from "./backup-restore";
 
 export type BackupCriticalJobType = "pre-update-backup" | "restore";
 
@@ -57,10 +54,7 @@ export function backupCriticalJobPhaseRank(phase: string): number {
   return index >= 0 ? index : -1;
 }
 
-export function isKnownBackupJobPhase(
-  type: BackupCriticalJobType,
-  phase: string,
-): boolean {
+export function isKnownBackupJobPhase(type: BackupCriticalJobType, phase: string): boolean {
   const knownStatic = new Set([
     "queued",
     "failed",
@@ -106,24 +100,14 @@ export function sanitizeBackupJobContext(raw: unknown): BackupCriticalJobContext
   return context;
 }
 
-export function mergeBackupCriticalJobs(
-  existing: BackupCriticalJob,
-  incoming: BackupCriticalJob,
-): BackupCriticalJob {
+export function mergeBackupCriticalJobs(existing: BackupCriticalJob, incoming: BackupCriticalJob): BackupCriticalJob {
   const incomingPhaseRank = backupCriticalJobPhaseRank(incoming.phase);
   const existingPhaseRank = backupCriticalJobPhaseRank(existing.phase);
   const preferIncoming =
-    incomingPhaseRank > existingPhaseRank
-    || (
-      incomingPhaseRank === existingPhaseRank
-      && (
-        incoming.attempts > existing.attempts
-        || (
-          incoming.attempts === existing.attempts
-          && incoming.updatedAt > existing.updatedAt
-        )
-      )
-    );
+    incomingPhaseRank > existingPhaseRank ||
+    (incomingPhaseRank === existingPhaseRank &&
+      (incoming.attempts > existing.attempts ||
+        (incoming.attempts === existing.attempts && incoming.updatedAt > existing.updatedAt)));
   const preferred = preferIncoming ? incoming : existing;
   const secondary = preferIncoming ? existing : incoming;
   const mergedCompleted = [
@@ -141,25 +125,16 @@ export function mergeBackupCriticalJobs(
     operatorRetryAllowed: existing.operatorRetryAllowed || incoming.operatorRetryAllowed,
     context: {
       completedBackupIds: [...new Set(mergedCompleted)],
-      nextKindIndex: Math.max(
-        preferred.context.nextKindIndex ?? 0,
-        secondary.context.nextKindIndex ?? 0,
-      ),
-      restoreHistoryId:
-        preferred.context.restoreHistoryId
-        ?? secondary.context.restoreHistoryId,
+      nextKindIndex: Math.max(preferred.context.nextKindIndex ?? 0, secondary.context.nextKindIndex ?? 0),
+      restoreHistoryId: preferred.context.restoreHistoryId ?? secondary.context.restoreHistoryId,
       safeguardBackupIds: [...new Set(mergedSafeguards)],
     },
   };
 }
 
-export function isBackupJobInterruptedAmbiguous(
-  type: BackupCriticalJobType,
-  phase: string | undefined,
-): boolean {
+export function isBackupJobInterruptedAmbiguous(type: BackupCriticalJobType, phase: string | undefined): boolean {
   return (
-    (type === "restore" && phase === "applying-restore")
-    || (type === "pre-update-backup" && typeof phase !== "string")
+    (type === "restore" && phase === "applying-restore") || (type === "pre-update-backup" && typeof phase !== "string")
   );
 }
 
@@ -177,16 +152,9 @@ export function restoreJobLoadDisposition(input: {
   history: (RestoreHistoryOwnershipEvidence & { status: string }) | null;
 }): RestoreJobLoadDisposition {
   if (
-    input.phase === "restore-complete"
-    || (
-      input.history?.status === "completed"
-      && isRestoreHistoryOwnedByJob(
-        input.jobId,
-        input.serverId,
-        input.backupId,
-        input.history,
-      )
-    )
+    input.phase === "restore-complete" ||
+    (input.history?.status === "completed" &&
+      isRestoreHistoryOwnedByJob(input.jobId, input.serverId, input.backupId, input.history))
   ) {
     return "omit";
   }
@@ -219,8 +187,6 @@ export function planBackupCriticalJobRetry(
     updatedAt: nowIso ?? new Date().toISOString(),
     clearContext: job.type === "restore",
     restoreHistoryIdToSupersede:
-      job.type === "restore" && typeof job.context.restoreHistoryId === "number"
-        ? job.context.restoreHistoryId
-        : null,
+      job.type === "restore" && typeof job.context.restoreHistoryId === "number" ? job.context.restoreHistoryId : null,
   };
 }

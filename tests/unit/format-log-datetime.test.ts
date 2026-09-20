@@ -1,21 +1,13 @@
 import { describe, expect, it } from "vitest";
-import {
-  formatLogDateTime,
-  formatLogDateTimeParts,
-  formatWhenLabel,
-} from "@shared/format-log-datetime";
+import { formatLogDateTime, formatLogDateTimeParts, formatWhenLabel } from "@shared/format-log-datetime";
 
 describe("formatLogDateTimeParts", () => {
   it("formats without ms", () => {
-    expect(formatLogDateTimeParts(2026, 7, 29, 15, 42, 52)).toBe(
-      "2026-07-29 15:42:52",
-    );
+    expect(formatLogDateTimeParts(2026, 7, 29, 15, 42, 52)).toBe("2026-07-29 15:42:52");
   });
 
   it("formats with ms", () => {
-    expect(formatLogDateTimeParts(2026, 7, 29, 15, 42, 52, 443)).toBe(
-      "2026-07-29 15:42:52.443",
-    );
+    expect(formatLogDateTimeParts(2026, 7, 29, 15, 42, 52, 443)).toBe("2026-07-29 15:42:52.443");
   });
 });
 

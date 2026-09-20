@@ -25,10 +25,7 @@ export interface BackupCriticalJobExecutor {
     job: BackupCriticalJob,
     control: BackupCriticalJobExecutionControl,
   ) => Promise<BackupRecord[]>;
-  resumeRestoreJob: (
-    job: BackupCriticalJob,
-    control: BackupCriticalJobExecutionControl,
-  ) => Promise<void>;
+  resumeRestoreJob: (job: BackupCriticalJob, control: BackupCriticalJobExecutionControl) => Promise<void>;
 }
 
 interface CriticalBackupCreateOptions {
@@ -40,11 +37,7 @@ export interface DefaultBackupCriticalJobExecutorDependencies {
   servers: Pick<ServerRepository, "addEvent">;
   backups: Pick<
     BackupRepository,
-    | "completeRestoreHistory"
-    | "getBackup"
-    | "getRestoreHistory"
-    | "insertRestoreHistory"
-    | "listBackups"
+    "completeRestoreHistory" | "getBackup" | "getRestoreHistory" | "insertRestoreHistory" | "listBackups"
   >;
   processes: Pick<ProcessManager, "isActive">;
   createBackups: (
@@ -68,9 +61,7 @@ export class DefaultBackupCriticalJobExecutor implements BackupCriticalJobExecut
     control: BackupCriticalJobExecutionControl,
   ): Promise<BackupRecord[]> {
     control.throwIfCancelled();
-    control.progress?.onProgressMessage?.(
-      "Creating pre-update backup (world) before SteamCMD…",
-    );
+    control.progress?.onProgressMessage?.("Creating pre-update backup (world) before SteamCMD…");
     control.checkpoint("reconciling-backups");
     await this.deps.reconcileDiskBackups(job.serverId);
     control.throwIfCancelled();
@@ -79,10 +70,10 @@ export class DefaultBackupCriticalJobExecutor implements BackupCriticalJobExecut
       .listBackups(job.serverId, 10_000)
       .filter(
         (backup) =>
-          backup.type === "pre_update"
-          && backup.status === "completed"
-          && existsSync(backup.path)
-          && backup.notes?.includes(marker) === true,
+          backup.type === "pre_update" &&
+          backup.status === "completed" &&
+          existsSync(backup.path) &&
+          backup.notes?.includes(marker) === true,
       );
     const existing: BackupRecord[] = [];
     for (const backup of candidates) {
@@ -122,12 +113,12 @@ export class DefaultBackupCriticalJobExecutor implements BackupCriticalJobExecut
         );
         const completed = created.find(
           (backup) =>
-            backup.serverId === job.serverId
-            && backup.type === "pre_update"
-            && backup.kind === kind
-            && backup.status === "completed"
-            && existsSync(backup.path)
-            && backup.notes?.includes(marker) === true,
+            backup.serverId === job.serverId &&
+            backup.type === "pre_update" &&
+            backup.kind === kind &&
+            backup.status === "completed" &&
+            existsSync(backup.path) &&
+            backup.notes?.includes(marker) === true,
         );
         if (completed === undefined) {
           throw new Error(
@@ -137,9 +128,9 @@ export class DefaultBackupCriticalJobExecutor implements BackupCriticalJobExecut
         completedByKind.set(kind, completed);
       }
       nextKindIndex += 1;
-      job.context.completedBackupIds = CRITICAL_BACKUP_KINDS
-        .map((completedKind) => completedByKind.get(completedKind)?.id)
-        .filter((backupId): backupId is string => backupId !== undefined);
+      job.context.completedBackupIds = CRITICAL_BACKUP_KINDS.map(
+        (completedKind) => completedByKind.get(completedKind)?.id,
+      ).filter((backupId): backupId is string => backupId !== undefined);
       job.context.nextKindIndex = nextKindIndex;
       control.checkpoint(`backup-complete:${kind}`);
     }
@@ -148,30 +139,21 @@ export class DefaultBackupCriticalJobExecutor implements BackupCriticalJobExecut
     return CRITICAL_BACKUP_KINDS.map((kind) => completedByKind.get(kind)!);
   }
 
-  async resumeRestoreJob(
-    job: BackupCriticalJob,
-    control: BackupCriticalJobExecutionControl,
-  ): Promise<void> {
+  async resumeRestoreJob(job: BackupCriticalJob, control: BackupCriticalJobExecutionControl): Promise<void> {
     const server = this.deps.mustServer(job.serverId);
     if (this.deps.processes.isActive(job.serverId)) {
       throw new Error("Stop the server before restoring a backup");
     }
     if (job.backupId === null) throw new Error("backupId required for restore job");
     const backup = this.deps.backups.getBackup(job.backupId);
-    if (
-      backup === null
-      || backup.serverId !== job.serverId
-      || backup.status !== "completed"
-    ) {
+    if (backup === null || backup.serverId !== job.serverId || backup.status !== "completed") {
       throw new Error("Invalid backup for restore");
     }
 
     const marker = `[critical-job:${job.id}]`;
     let restoreHistoryId = job.context.restoreHistoryId;
     const existingHistory =
-      typeof restoreHistoryId === "number"
-        ? this.deps.backups.getRestoreHistory(restoreHistoryId)
-        : null;
+      typeof restoreHistoryId === "number" ? this.deps.backups.getRestoreHistory(restoreHistoryId) : null;
     if (existingHistory?.status === "completed") {
       if (!restoreHistoryOwnedByJob(job.id, job.serverId, backup.id, existingHistory)) {
         throw new Error("Restore history evidence does not belong to this recovery job");
@@ -179,10 +161,7 @@ export class DefaultBackupCriticalJobExecutor implements BackupCriticalJobExecut
       control.checkpoint("restore-complete");
       return;
     }
-    if (
-      existingHistory !== null
-      && !restoreHistoryOwnedByJob(job.id, job.serverId, backup.id, existingHistory)
-    ) {
+    if (existingHistory !== null && !restoreHistoryOwnedByJob(job.id, job.serverId, backup.id, existingHistory)) {
       throw new Error("Restore history evidence does not belong to this recovery job");
     }
     if (existingHistory === null || existingHistory.status === "failed") {
@@ -208,10 +187,10 @@ export class DefaultBackupCriticalJobExecutor implements BackupCriticalJobExecut
       .listBackups(job.serverId, 10_000)
       .filter(
         (candidate) =>
-          candidate.type === "pre_restore"
-          && candidate.kind === backup.kind
-          && candidate.status === "completed"
-          && candidate.notes?.includes(marker) === true,
+          candidate.type === "pre_restore" &&
+          candidate.kind === backup.kind &&
+          candidate.status === "completed" &&
+          candidate.notes?.includes(marker) === true,
       );
     if (safeguards.length === 0) {
       control.progress?.onKindProgress?.(backup.kind, 0, 1);

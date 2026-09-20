@@ -32,12 +32,14 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--app-space-xs);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .groupTitle {
-  color: var(--app-color-cryo);
-  font-size: var(--mantine-font-size-xs);
-  font-weight: 600;
+  color: var(--app-color-accent-text);
+  font-size: var(--app-font-eyebrow);
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -66,7 +68,7 @@
 }
 
 .optionRowCaution {
-  border-color: color-mix(in srgb, var(--app-color-fossil) 45%, transparent);
+  border-color: var(--app-color-fossil);
   background: color-mix(in srgb, var(--app-color-fossil) 10%, transparent);
 }
 
@@ -80,7 +82,7 @@
 }
 
 .optionLabel:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--app-color-cryo) 65%, transparent);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: 2px;
 }
 
@@ -94,7 +96,8 @@
 }
 
 .previewYark {
-  color: var(--app-color-cryo);
+  /* "YARK-owned" = ours, so it follows the accent. */
+  color: var(--app-color-accent-text);
 }
 
 .previewStructured {

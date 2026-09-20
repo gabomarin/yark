@@ -31,10 +31,7 @@ function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
 
 describe("runAutoStartOnLaunch", () => {
   it("starts opted-in enabled servers sequentially and isolates failures", async () => {
-    const start = vi
-      .fn()
-      .mockRejectedValueOnce(new Error("Port conflict"))
-      .mockResolvedValueOnce(undefined);
+    const start = vi.fn().mockRejectedValueOnce(new Error("Port conflict")).mockResolvedValueOnce(undefined);
     const addEvent = vi.fn();
     const a = profile({ id: "a", name: "A" });
     const b = profile({ id: "b", name: "B" });
@@ -94,15 +91,9 @@ describe("runAutoStartOnLaunch", () => {
     });
 
     expect(start).not.toHaveBeenCalled();
-    expect(results.map((row) => row.outcome)).toEqual([
-      "skipped",
-      "skipped",
-      "skipped",
-    ]);
+    expect(results.map((row) => row.outcome)).toEqual(["skipped", "skipped", "skipped"]);
     expect(addEvent).toHaveBeenCalledTimes(3);
-    expect(addEvent.mock.calls.every((call) => call[1] === "auto_start_skipped")).toBe(
-      true,
-    );
+    expect(addEvent.mock.calls.every((call) => call[1] === "auto_start_skipped")).toBe(true);
   });
 
   it("forwards openNativeConsole true to start (#350)", async () => {
@@ -140,4 +131,3 @@ describe("runAutoStartOnLaunch", () => {
     expect(addEvent).not.toHaveBeenCalled();
   });
 });
-

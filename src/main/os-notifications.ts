@@ -17,9 +17,7 @@ import {
 import type { DesktopShellPreferences } from "../shared/settings/desktop-shell";
 import { IPC_PUSH, type OsNotificationOpenPush } from "../shared/ipc";
 
-function isBrowserWindowFocusedVisible(
-  win: BrowserWindow | null,
-): boolean {
+function isBrowserWindowFocusedVisible(win: BrowserWindow | null): boolean {
   if (win === null || win.isDestroyed()) {
     return false;
   }
@@ -77,9 +75,7 @@ export class FleetOsNotifier {
       !shouldShowFleetOsNotification({
         category: "crash",
         prefs: this.deps.readPrefs(),
-        windowFocusedVisible: isBrowserWindowFocusedVisible(
-          this.deps.getMainWindow(),
-        ),
+        windowFocusedVisible: isBrowserWindowFocusedVisible(this.deps.getMainWindow()),
         nowMs,
         lastShownAtMs: this.lastCrashShownAtMs.get(payload.serverId),
         cooldownMs: OS_NOTIFY_CRASH_COOLDOWN_MS,
@@ -114,9 +110,7 @@ export class FleetOsNotifier {
       !shouldShowFleetOsNotification({
         category: "steamcmd",
         prefs: this.deps.readPrefs(),
-        windowFocusedVisible: isBrowserWindowFocusedVisible(
-          this.deps.getMainWindow(),
-        ),
+        windowFocusedVisible: isBrowserWindowFocusedVisible(this.deps.getMainWindow()),
         operatorAwaited: payload.operatorAwaited,
         nowMs: this.now(),
         lastShownAtMs: undefined,
@@ -154,9 +148,7 @@ export class FleetOsNotifier {
       !shouldShowFleetOsNotification({
         category: "yarkUpdate",
         prefs: this.deps.readPrefs(),
-        windowFocusedVisible: isBrowserWindowFocusedVisible(
-          this.deps.getMainWindow(),
-        ),
+        windowFocusedVisible: isBrowserWindowFocusedVisible(this.deps.getMainWindow()),
         nowMs: this.now(),
         lastShownAtMs: undefined,
         cooldownMs: 0,
@@ -166,10 +158,7 @@ export class FleetOsNotifier {
       return false;
     }
     const shown = showNativeOsNotification({
-      title:
-        payload.phase === "ready"
-          ? "YARK update ready to install"
-          : "YARK update available",
+      title: payload.phase === "ready" ? "YARK update ready to install" : "YARK update available",
       body: formatYarkUpdateOsToastBody(payload.phase, payload.version),
       silent: yarkUpdateOsToastSilent(payload.phase),
       onClick: () => {

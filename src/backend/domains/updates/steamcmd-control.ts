@@ -17,10 +17,7 @@ export interface SteamCmdControlHost {
   getQueue(): readonly UpdateCriticalJob[];
   setCancelRequested(value: boolean): void;
   setPauseRequested(value: boolean): void;
-  appendSteamCmdConsole(
-    line: string,
-    options?: { forceProgressPush?: boolean },
-  ): void;
+  appendSteamCmdConsole(line: string, options?: { forceProgressPush?: boolean }): void;
   stopDiskProgressMonitor(): void;
   setProgress(percent: number | null, label: string | null, line?: string): void;
   setPausedProgress(): void;
@@ -29,18 +26,15 @@ export interface SteamCmdControlHost {
 
 export async function cancelSteamCmd(host: SteamCmdControlHost): Promise<boolean> {
   const runningJob = host.getQueue().find((job) => job.status === "running");
-  const backupBusy = host.backups.getCriticalJobs().some(
-    (job) =>
-      job.status === "pending"
-      || job.status === "retrying"
-      || job.status === "running",
-  );
+  const backupBusy = host.backups
+    .getCriticalJobs()
+    .some((job) => job.status === "pending" || job.status === "retrying" || job.status === "running");
   const hadWork =
-    host.progressRuntime.getActiveSteamCmd() !== null
-    || host.progressRuntime.getActiveSyncChild() !== null
-    || host.progressRuntime.getSyncingServerId() !== null
-    || backupBusy
-    || runningJob !== undefined;
+    host.progressRuntime.getActiveSteamCmd() !== null ||
+    host.progressRuntime.getActiveSyncChild() !== null ||
+    host.progressRuntime.getSyncingServerId() !== null ||
+    backupBusy ||
+    runningJob !== undefined;
 
   if (!hadWork) {
     host.appendSteamCmdConsole("Cancel: no active operation");
@@ -83,15 +77,13 @@ export async function cancelSteamCmd(host: SteamCmdControlHost): Promise<boolean
 
 export async function pauseSteamCmd(host: SteamCmdControlHost): Promise<boolean> {
   const runningJob = host.getQueue().find((job) => job.status === "running");
-  const backupBusy = host.backups.getCriticalJobs().some(
-    (job) => job.status === "running",
-  );
+  const backupBusy = host.backups.getCriticalJobs().some((job) => job.status === "running");
   const hadWork =
-    host.progressRuntime.getActiveSteamCmd() !== null
-    || host.progressRuntime.getActiveSyncChild() !== null
-    || host.progressRuntime.getSyncingServerId() !== null
-    || backupBusy
-    || runningJob !== undefined;
+    host.progressRuntime.getActiveSteamCmd() !== null ||
+    host.progressRuntime.getActiveSyncChild() !== null ||
+    host.progressRuntime.getSyncingServerId() !== null ||
+    backupBusy ||
+    runningJob !== undefined;
 
   if (!hadWork) {
     host.appendSteamCmdConsole("Pause: no active operation");
@@ -99,10 +91,7 @@ export async function pauseSteamCmd(host: SteamCmdControlHost): Promise<boolean>
     return false;
   }
 
-  if (
-    runningJob !== undefined
-    && isUpdatePauseBlockedByRollback(runningJob.phase)
-  ) {
+  if (runningJob !== undefined && isUpdatePauseBlockedByRollback(runningJob.phase)) {
     throw new OperationPauseUnavailableError(
       "Pause is not available during rollback. Wait for it to finish, or Cancel if you need to stop.",
     );

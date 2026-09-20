@@ -16,9 +16,7 @@ import {
 } from "./model/maintenancePanelModel";
 import type { MaintenancePolicyStatus } from "@shared/types";
 
-function status(
-  partial: Partial<MaintenancePolicyStatus> = {},
-): MaintenancePolicyStatus {
+function status(partial: Partial<MaintenancePolicyStatus> = {}): MaintenancePolicyStatus {
   return {
     ...defaultMaintenancePolicy("s1", "2026-01-01T00:00:00.000Z"),
     schedulePaused: false,
@@ -40,9 +38,7 @@ function status(
 
 describe("maintenancePanelModel", () => {
   it("formats weekly restart summary", () => {
-    expect(formatRestartSummary(status({ restartEnabled: true }))).toBe(
-      "Sunday 04:00 · Regular warnings",
-    );
+    expect(formatRestartSummary(status({ restartEnabled: true }))).toBe("Sunday 04:00 · Regular warnings");
     expect(
       formatRestartSummary(
         status({
@@ -139,9 +135,7 @@ describe("maintenancePanelModel", () => {
   });
 
   it("previews warning template", () => {
-    expect(previewWarningMessage("Server restart in {time}", "15 minutes")).toBe(
-      "Server restart in 15 minutes",
-    );
+    expect(previewWarningMessage("Server restart in {time}", "15 minutes")).toBe("Server restart in 15 minutes");
   });
 
   it("formats update summary when enabled", () => {
@@ -172,12 +166,8 @@ describe("maintenancePanelModel", () => {
 
   it("formats maintenance preset hints from offset tables", () => {
     expect(formatMaintenancePresetHint("restart", "quiet")).toBe("5 minutes only");
-    expect(formatMaintenancePresetHint("restart", "standard")).toBe(
-      "30 minutes · 15 minutes · 5 minutes · 1 minute",
-    );
-    expect(formatMaintenancePresetHint("update", "standard")).toBe(
-      "15 minutes · 5 minutes · 1 minute",
-    );
+    expect(formatMaintenancePresetHint("restart", "standard")).toBe("30 minutes · 15 minutes · 5 minutes · 1 minute");
+    expect(formatMaintenancePresetHint("update", "standard")).toBe("15 minutes · 5 minutes · 1 minute");
   });
 
   it("formats maintenance timestamps in 24-hour clock", () => {

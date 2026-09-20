@@ -1,10 +1,8 @@
 import type { ReactElement } from "react";
-import { Alert, Badge, Divider, Group, SimpleGrid, Stack, Switch, Text } from "@mantine/core";
+import { Badge, Divider, Group, SimpleGrid, Stack, Switch, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import type { ClusterIniTemplate } from "@shared/types";
-import {
-  EXPERIENCE_PROFILES,
-  type ExperienceProfileId,
-} from "../../configuration-wizard/configurationWizardModel";
+import { EXPERIENCE_PROFILES, type ExperienceProfileId } from "../../configuration-wizard/configurationWizardModel";
 import { ProfileCard, WizardStep } from "./ConfigurationWizardParts";
 import classes from "./ConfigurationWizard.module.css";
 
@@ -50,17 +48,12 @@ export function WizardProfileStep(props: Props): ReactElement {
               onSelect={onSelectProfile}
             />
           ) : (
-            <Alert color="blue" title="No cluster INI template yet">
-              This server is in “{clusterId}”, but that cluster has no saved INI template. Create
-              one on the Clusters page, then reopen this wizard to match fleet defaults in one
-              step.
-            </Alert>
+            <AppAlert color="blue" title="No cluster INI template yet">
+              This server is in “{clusterId}”, but that cluster has no saved INI template. Create one on the Clusters
+              page, then reopen this wizard to match fleet defaults in one step.
+            </AppAlert>
           )}
-          <Divider
-            label="Or use a different preset"
-            labelPosition="center"
-            className={classes.profilePresetDivider}
-          />
+          <Divider label="Or use a different preset" labelPosition="center" className={classes.profilePresetDivider} />
         </Stack>
       )}
 
@@ -91,27 +84,26 @@ export function WizardProfileStep(props: Props): ReactElement {
       </SimpleGrid>
 
       {clusterPathSelected ? (
-        <Alert color="blue" title="Cluster path">
-          Continue goes straight to review. Apply copies the full cluster INI template onto this
-          server (same as Seed / Restore on Clusters).
-        </Alert>
+        <AppAlert color="blue" title="Cluster path">
+          Continue goes straight to review. Apply copies the full cluster INI template onto this server (same as Seed /
+          Restore on Clusters).
+        </AppAlert>
       ) : (
-        <Alert color="fossil" className={classes.impactAlert}>
+        <AppAlert color="fossil" className={classes.impactAlert}>
           <Group justify="space-between" align="center" gap="md" wrap="nowrap">
             <Stack gap={6} style={{ minWidth: 0 }}>
               <Group gap="xs" wrap="nowrap">
                 <Text component="span" fw={700} size="sm">
                   Enable single-player settings
                 </Text>
-                <Badge size="xs" color="fossil" variant="light" tt="none">
+                <Badge color="attention" variant="light">
                   High impact
                 </Badge>
               </Group>
               <Text size="sm" c="dimmed">
-                Meant for small tribes. When this is on, the rates you pick in Pace and Breeding
-                are only the starting point. ARK multiplies them again, and those steps show the
-                combined result. You also level and unlock engrams faster, and your tames gain extra
-                health and damage.
+                Meant for small tribes. When this is on, the rates you pick in Pace and Breeding are only the starting
+                point. ARK multiplies them again, and those steps show the combined result. You also level and unlock
+                engrams faster, and your tames gain extra health and damage.
               </Text>
             </Stack>
             <Switch
@@ -120,7 +112,7 @@ export function WizardProfileStep(props: Props): ReactElement {
               aria-label="Enable single-player settings"
             />
           </Group>
-        </Alert>
+        </AppAlert>
       )}
     </WizardStep>
   );

@@ -6,10 +6,7 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import searchFieldClasses from "@ui/SearchField/SearchField.module.css";
 import type { RconHistoryEntry } from "../../serverWorkspaceTypes";
 import { RconConsoleHistory } from "./RconConsoleHistory";
-import {
-  PlayerListSection,
-  type PlayerListState,
-} from "./PlayerListSection";
+import { PlayerListSection, type PlayerListState } from "./PlayerListSection";
 import classes from "./RconPanel.module.css";
 
 interface Props {
@@ -69,8 +66,7 @@ export function RconPanel(props: Props): ReactElement {
   const commandTrimmed = command.trim();
   // App-level history survives tab unmount; only block an identical pending command.
   const identicalPending = props.rconHistory.some(
-    (entry) =>
-      entry.status === "pending" && entry.command === commandTrimmed,
+    (entry) => entry.status === "pending" && entry.command === commandTrimmed,
   );
 
   useEffect(() => {
@@ -103,12 +99,7 @@ export function RconPanel(props: Props): ReactElement {
 
   const auditHistory = useMemo(
     () =>
-      props.events
-        .filter(
-          (event) =>
-            event.serverId === props.server.id && event.type === "rcon_command",
-        )
-        .slice(0, 5),
+      props.events.filter((event) => event.serverId === props.server.id && event.type === "rcon_command").slice(0, 5),
     [props.events, props.server.id],
   );
 
@@ -117,9 +108,7 @@ export function RconPanel(props: Props): ReactElement {
     if (trimmed.length === 0 || !isRunning) {
       return;
     }
-    const pendingSame = props.rconHistory.some(
-      (entry) => entry.status === "pending" && entry.command === trimmed,
-    );
+    const pendingSame = props.rconHistory.some((entry) => entry.status === "pending" && entry.command === trimmed);
     if (pendingSame) {
       return;
     }
@@ -132,7 +121,7 @@ export function RconPanel(props: Props): ReactElement {
   return (
     <div className={classes.root}>
       <div className={classes.mainColumn}>
-        <AppSurfaceCard tone="flat" padding="sm" radius="md" className={classes.mainPanel}>
+        <AppSurfaceCard tone="flat" padding="sm" radius={0} className={classes.mainPanel}>
           <Stack gap="sm">
             <div className={classes.header}>
               <div>
@@ -150,7 +139,6 @@ export function RconPanel(props: Props): ReactElement {
                 <Button
                   key={item.label}
                   size="xs"
-                  radius="xl"
                   variant={item.danger ? "light" : "default"}
                   color={item.danger ? "red" : "gray"}
                   disabled={!isRunning}
@@ -191,11 +179,7 @@ export function RconPanel(props: Props): ReactElement {
                 <Button
                   size="xs"
                   onClick={() => void sendCommand(command)}
-                  disabled={
-                    !isRunning ||
-                    identicalPending ||
-                    commandTrimmed.length === 0
-                  }
+                  disabled={!isRunning || identicalPending || commandTrimmed.length === 0}
                 >
                   Send
                 </Button>
@@ -212,15 +196,9 @@ export function RconPanel(props: Props): ReactElement {
                         <Text size="sm" className={classes.historyCommand}>
                           {extractCommand(event.message)}
                         </Text>
-                        <Text className={classes.historyMeta}>
-                          {formatRconTime(event.createdAt)}
-                        </Text>
+                        <Text className={classes.historyMeta}>{formatRconTime(event.createdAt)}</Text>
                       </div>
-                      <Badge
-                        size="sm"
-                        variant="light"
-                        color={event.severity === "error" ? "red" : "blue"}
-                      >
+                      <Badge variant="light" color={event.severity === "error" ? "red" : "blue"}>
                         sent
                       </Badge>
                     </div>

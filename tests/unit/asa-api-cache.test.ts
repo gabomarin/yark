@@ -26,7 +26,7 @@ afterEach(() => {
 describe("asa-api cache", () => {
   it("sanitizes path segments", () => {
     expect(sanitizeAsaApiCacheSegment("2.03")).toBe("2.03");
-    expect(sanitizeAsaApiCacheSegment('a/b\\c:d*e?')).toBe("a_b_c_d_e_");
+    expect(sanitizeAsaApiCacheSegment("a/b\\c:d*e?")).toBe("a_b_c_d_e_");
   });
 
   it("hits cache when size matches and misses when size differs", async () => {
@@ -35,22 +35,13 @@ describe("asa-api cache", () => {
     await mkdir(join(path, ".."), { recursive: true });
     await writeFile(path, "abcdefghij");
 
-    expect(
-      await resolveAsaApiCachedZip(root, "AsaApi", "2.03", "AsaApi_2.03.zip", 10),
-    ).toBe(path);
-    expect(
-      await resolveAsaApiCachedZip(root, "AsaApi", "2.03", "AsaApi_2.03.zip", 99),
-    ).toBeNull();
+    expect(await resolveAsaApiCachedZip(root, "AsaApi", "2.03", "AsaApi_2.03.zip", 10)).toBe(path);
+    expect(await resolveAsaApiCachedZip(root, "AsaApi", "2.03", "AsaApi_2.03.zip", 99)).toBeNull();
   });
 
   it("finalizes partial downloads into the cache path", async () => {
     root = await mkdtemp(join(tmpdir(), "yark-asa-cache-fin-"));
-    const finalPath = asaApiCachedZipPath(
-      root,
-      "AsaApiLoader",
-      "v1.0",
-      "VersionLoader.zip",
-    );
+    const finalPath = asaApiCachedZipPath(root, "AsaApiLoader", "v1.0", "VersionLoader.zip");
     const partial = `${finalPath}.partial`;
     await mkdir(join(finalPath, ".."), { recursive: true });
     await writeFile(partial, "zip-bytes");

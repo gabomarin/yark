@@ -59,13 +59,13 @@ const WINDOWS_RESERVED_FOLDER_RE = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|
 export function isSafeWindowsFolderName(value: string): boolean {
   const trimmed = value.trim();
   return (
-    trimmed.length > 0
-    && trimmed.length <= 128
-    && trimmed !== "."
-    && trimmed !== ".."
-    && !/[\\/<>:"|?*\u0000-\u001f]/.test(trimmed)
-    && !/[. ]$/.test(trimmed)
-    && !WINDOWS_RESERVED_FOLDER_RE.test(trimmed)
+    trimmed.length > 0 &&
+    trimmed.length <= 128 &&
+    trimmed !== "." &&
+    trimmed !== ".." &&
+    !/[\\/<>:"|?*\u0000-\u001f]/.test(trimmed) &&
+    !/[. ]$/.test(trimmed) &&
+    !WINDOWS_RESERVED_FOLDER_RE.test(trimmed)
   );
 }
 
@@ -85,16 +85,12 @@ function isValidMapModId(id: string | null | undefined): boolean {
 }
 
 /** Official map with no linked Maps pack (vanilla official world). */
-export function isBareOfficialMap(
-  fields: Pick<MapIdentityFields, "map" | "mapModId">,
-): boolean {
+export function isBareOfficialMap(fields: Pick<MapIdentityFields, "map" | "mapModId">): boolean {
   return isOfficialMap(fields.map) && !isValidMapModId(fields.mapModId);
 }
 
 /** `-MapModID=` value when an official token uses a remaster Maps pack. */
-export function linkedOfficialMapModLaunchId(
-  fields: Pick<MapIdentityFields, "map" | "mapModId">,
-): string | null {
+export function linkedOfficialMapModLaunchId(fields: Pick<MapIdentityFields, "map" | "mapModId">): string | null {
   const map = normalizeMapToken(fields.map);
   if (!isOfficialMap(map)) {
     return null;
@@ -211,8 +207,7 @@ export function validateMapIdentity(fields: MapIdentityFields): MapIdentityIssue
   if (rawModId.length === 0) {
     issues.push({
       field: "mapModId",
-      message:
-        "Custom map needs a linked map mod Project ID enabled on Mods (required for -mods=)",
+      message: "Custom map needs a linked map mod Project ID enabled on Mods (required for -mods=)",
       severity: "warning",
     });
     return issues;
@@ -248,9 +243,7 @@ export function validateMapIdentity(fields: MapIdentityFields): MapIdentityIssue
 }
 
 /** Warnings that should block dedicated start until the operator fixes Mods / map link (#194). */
-export function mapIdentityStartBlockers(
-  fields: MapIdentityFields,
-): MapIdentityIssue[] {
+export function mapIdentityStartBlockers(fields: MapIdentityFields): MapIdentityIssue[] {
   return validateMapIdentity(fields).filter((issue) => issue.severity === "warning");
 }
 

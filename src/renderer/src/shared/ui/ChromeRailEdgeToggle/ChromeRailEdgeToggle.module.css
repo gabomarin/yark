@@ -18,13 +18,13 @@
   min-height: 40px;
   padding: 0;
   line-height: 0;
-  color: color-mix(in srgb, var(--app-color-text) 88%, var(--ark-blue-9));
+  color: color-mix(in srgb, var(--app-color-text) 88%, var(--app-color-accent));
   /* Soft blue close to shell atmosphere — readable but not a loud accent. */
   background: color-mix(in srgb, var(--ark-blue-4) 48%, var(--ark-gray-3));
   border: 1px solid color-mix(in srgb, var(--ark-blue-7) 40%, transparent);
   box-shadow:
-    0 1px 2px color-mix(in srgb, black 28%, transparent),
-    0 0 0 1px color-mix(in srgb, var(--ark-blue-a4) 55%, transparent);
+    var(--app-elevation-2),
+    0 0 0 1px color-mix(in srgb, var(--app-color-accent-subtle-hover) 55%, transparent);
 }
 
 /* Rail: semicircle opens into the main content (expand). */

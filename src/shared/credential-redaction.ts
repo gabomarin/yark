@@ -54,7 +54,10 @@ function isPasswordConfigField(name: string): boolean {
 
 /** Strip a single pair of surrounding JSON/INI quotes; not embedded quotes. */
 function normalizeFieldName(name: string): string {
-  return name.trim().replace(/^["']|["']$/g, "").toLowerCase();
+  return name
+    .trim()
+    .replace(/^["']|["']$/g, "")
+    .toLowerCase();
 }
 
 function isPasswordSettingLine(trimmed: string): boolean {
@@ -134,10 +137,7 @@ function redactKnownValues(text: string, secrets: readonly string[]): string {
   unique.sort((a, b) => b.length - a.length);
   let next = text;
   for (const secret of unique) {
-    next = next.replace(
-      new RegExp(`(?<!\\w)${escapeRegExp(secret)}(?!\\w)`, "g"),
-      REDACTED_SECRET,
-    );
+    next = next.replace(new RegExp(`(?<!\\w)${escapeRegExp(secret)}(?!\\w)`, "g"), REDACTED_SECRET);
   }
   return next;
 }
@@ -154,10 +154,7 @@ function redactAssignmentForms(text: string, knownSecrets: readonly string[]): s
  * Prepare text for logs / IPC errors / exports: omit GUS password lines, then
  * redact remaining assignment forms and optional known live secrets.
  */
-export function sanitizeDiagnosticText(
-  text: string,
-  knownSecrets: readonly string[] = [],
-): string {
+export function sanitizeDiagnosticText(text: string, knownSecrets: readonly string[] = []): string {
   return redactAssignmentForms(omitIniPasswordSettings(text), knownSecrets);
 }
 
@@ -184,10 +181,7 @@ export function collectKnownSecrets(
  * Omit password fields from a diagnostic config object and sanitize nested
  * strings. Not for persisting profiles.
  */
-export function sanitizeDiagnosticValue(
-  value: unknown,
-  knownSecrets: readonly string[] = [],
-): unknown {
+export function sanitizeDiagnosticValue(value: unknown, knownSecrets: readonly string[] = []): unknown {
   if (typeof value === "string") {
     return sanitizeDiagnosticText(value, knownSecrets);
   }

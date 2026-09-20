@@ -33,12 +33,10 @@ export interface AppRouterPagesProps {
 }
 
 export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
-  const { shell, route, setOverlay, fleet, lifecycle, steamCmd, overview, rcon, settings } =
-    props;
+  const { shell, route, setOverlay, fleet, lifecycle, steamCmd, overview, rcon, settings } = props;
   /** Survives Overview unmount when switching sidebar routes (#438). */
   const { search: overviewSearch, setSearch: setOverviewSearch } = overview;
-  const { servers, statuses, installationInfo, processMetricsByServer, events, reports, refresh } =
-    fleet;
+  const { servers, statuses, installationInfo, processMetricsByServer, events, reports, refresh } = fleet;
   const { stopProgressByServerId, startBusyByServerId, actions } = lifecycle;
   const {
     steamCmdStatus,
@@ -54,13 +52,7 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
     openSteamCmdCache,
     clearSteamCmdCache,
   } = steamCmd;
-  const {
-    overviewLoading,
-    setImportWizardKey,
-    setImportInstallOpen,
-    installScan,
-    runInstallHealthScan,
-  } = overview;
+  const { overviewLoading, setImportWizardKey, setImportInstallOpen, installScan, runInstallHealthScan } = overview;
   const {
     focusYarkUpdates,
     setFocusYarkUpdates,
@@ -126,8 +118,7 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
               shell.navigate("downloads");
             }}
             onOpenWorkspace={(server) => {
-              const updatingThisServer =
-                steamCmdBusy && steamCmdStatus?.serverId === server.id;
+              const updatingThisServer = steamCmdBusy && steamCmdStatus?.serverId === server.id;
               setOverlay({
                 kind: "workspace",
                 serverId: server.id,
@@ -140,9 +131,7 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
               });
             }}
             onOpenLogs={(serverId) => actions.openServerLogs(serverId, { section: "events" })}
-            onReviewError={(serverId) =>
-              actions.openServerLogs(serverId, { section: "runtime" })
-            }
+            onReviewError={(serverId) => actions.openServerLogs(serverId, { section: "runtime" })}
             onStartServer={(id) => void actions.startServer(id)}
             onStopServer={(id) => void actions.runAction(() => window.api.stopServer(id))}
             onRestartServer={(id) => void actions.restartServer(id)}
@@ -189,19 +178,12 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
             reports={reports}
             statuses={statuses}
             onRefresh={() => void refresh()}
-            onOpenServer={(serverId) =>
-              setOverlay({ kind: "workspace", serverId })
-            }
+            onOpenServer={(serverId) => setOverlay({ kind: "workspace", serverId })}
           />
         ),
       }}
       logs={{
-        page: (
-          <LogsPage
-            servers={servers}
-            onOpenServerLogs={actions.openServerLogs}
-          />
-        ),
+        page: <LogsPage servers={servers} onOpenServerLogs={actions.openServerLogs} />,
       }}
       backups={{
         page: (
@@ -232,13 +214,9 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
             steamCmdBusy={steamCmdBusy}
             servers={servers}
             installationInfo={installationInfo}
-            onOpenServer={(serverId) =>
-              setOverlay({ kind: "workspace", serverId, initialTab: "server" })
-            }
+            onOpenServer={(serverId) => setOverlay({ kind: "workspace", serverId, initialTab: "server" })}
             openNativeTerminalOnStart={openNativeTerminalOnStart}
-            onOpenNativeTerminalOnStartChange={(enabled) =>
-              void handleOpenNativeConsoleChange(enabled)
-            }
+            onOpenNativeTerminalOnStartChange={(enabled) => void handleOpenNativeConsoleChange(enabled)}
             uiDensity={uiDensity}
             onUiDensityChange={(density) => void handleUiDensityChange(density)}
             defaultBaseFolder={defaultBaseFolder}

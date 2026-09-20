@@ -22,9 +22,7 @@ describe("steamcmd-disk-progress scoping", () => {
   });
 
   it("resolves the console_log.txt path next to SteamCMD", () => {
-    expect(steamCmdConsoleLogPath("C:\\tools\\steamcmd")).toBe(
-      "C:\\tools\\steamcmd\\logs\\console_log.txt",
-    );
+    expect(steamCmdConsoleLogPath("C:\\tools\\steamcmd")).toBe("C:\\tools\\steamcmd\\logs\\console_log.txt");
   });
 
   it("parses BytesDownloaded from the appmanifest", () => {

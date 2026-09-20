@@ -67,10 +67,7 @@ export function getServerEnabledMenuState(input: {
   steamCmdBusy: boolean;
   onToggle?: () => void;
 }): ServerEnabledMenuState {
-  const disabled =
-    input.onToggle === undefined
-    || input.steamCmdBusy
-    || (input.enabled && input.active);
+  const disabled = input.onToggle === undefined || input.steamCmdBusy || (input.enabled && input.active);
   const title =
     input.onToggle === undefined
       ? undefined
@@ -86,9 +83,7 @@ export function getServerEnabledMenuState(input: {
   };
 }
 
-export function buildServerCardMenuActions(
-  input: ServerCardMenuActionInput,
-): RowActionEntry[] {
+export function buildServerCardMenuActions(input: ServerCardMenuActionInput): RowActionEntry[] {
   const enabledState = getServerEnabledMenuState({
     enabled: input.serverEnabled,
     active: input.isActive,
@@ -131,30 +126,22 @@ export function buildServerCardMenuActions(
         color: "red",
         icon: <Stop size={ICON} weight="fill" />,
         disabled: input.manualRestartPending === true,
-        title:
-          input.manualRestartPending === true
-            ? "Cancel the queued restart first"
-            : undefined,
+        title: input.manualRestartPending === true ? "Cancel the queued restart first" : undefined,
         onClick: input.onStop,
       },
       {
         kind: "item",
         key: "restart",
         label: "Restart",
-        color: "fossil",
         icon: <ArrowsClockwise size={ICON} weight="bold" />,
         onClick: input.onRestart,
       },
     );
-    if (
-      input.manualRestartWarningsEnabled === true
-      && input.onRestartWithWarning !== undefined
-    ) {
+    if (input.manualRestartWarningsEnabled === true && input.onRestartWithWarning !== undefined) {
       entries.push({
         kind: "item",
         key: "restart-with-warning",
         label: "Restart with player warning",
-        color: "fossil",
         icon: <Warning size={ICON} />,
         onClick: () => input.onRestartWithWarning?.(),
       });
@@ -190,10 +177,7 @@ export function buildServerCardMenuActions(
     { kind: "label", key: "label-maintenance", label: "Maintenance" },
   );
 
-  if (
-    input.manualRestartWarningsEnabled !== true
-    && input.onConfigureRestartWarnings !== undefined
-  ) {
+  if (input.manualRestartWarningsEnabled !== true && input.onConfigureRestartWarnings !== undefined) {
     entries.push({
       kind: "item",
       key: "configure-manual-restart-warnings",
@@ -217,24 +201,16 @@ export function buildServerCardMenuActions(
         kind: "item",
         key: "update-server",
         label:
-          input.updateAction.kind === "update"
-          && input.updateAction.updateState === "unknown"
+          input.updateAction.kind === "update" && input.updateAction.updateState === "unknown"
             ? "Update (couldn't check version)"
             : "Update server",
         icon: (
           <CloudArrowDown
             size={ICON}
-            color={
-              input.updateAvailable
-                ? "var(--mantine-color-attention-6)"
-                : "var(--mantine-color-gray-6)"
-            }
+            color={input.updateAvailable ? "var(--mantine-color-attention-6)" : "var(--mantine-color-gray-6)"}
           />
         ),
-        disabled:
-          input.updateAction.kind === "update"
-            ? input.updateAction.disabled
-            : !input.updateAvailable,
+        disabled: input.updateAction.kind === "update" ? input.updateAction.disabled : !input.updateAvailable,
         title:
           input.updateAction.disabled && input.isActive
             ? "Stop the server before updating files"
@@ -249,10 +225,7 @@ export function buildServerCardMenuActions(
         label: "Verify integrity",
         icon: <ShieldCheck size={ICON} color="var(--mantine-color-teal-6)" />,
         disabled: input.verifyFilesLocked === true,
-        title:
-          input.verifyFilesLocked === true
-            ? "A Downloads job is already queued for this server"
-            : undefined,
+        title: input.verifyFilesLocked === true ? "A Downloads job is already queued for this server" : undefined,
         onClick: input.onVerifyFiles,
       },
     );
@@ -263,10 +236,7 @@ export function buildServerCardMenuActions(
       label: "Install files",
       icon: <CloudArrowDown size={ICON} color="var(--mantine-color-blue-6)" />,
       disabled: input.installFilesLocked === true,
-      title:
-        input.installFilesLocked === true
-          ? "A Downloads job is already queued for this server"
-          : undefined,
+      title: input.installFilesLocked === true ? "A Downloads job is already queued for this server" : undefined,
       onClick: input.onInstallFiles,
     });
   }

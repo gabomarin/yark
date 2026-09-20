@@ -42,7 +42,7 @@ export function HostedResourceRevisionsModal(props: Props): ReactElement {
                         {revisionLabel(revision)}
                       </Text>
                       {revision.published && (
-                        <Badge variant="light" color="teal" size="sm">
+                        <Badge variant="light" color="ok">
                           Current
                         </Badge>
                       )}

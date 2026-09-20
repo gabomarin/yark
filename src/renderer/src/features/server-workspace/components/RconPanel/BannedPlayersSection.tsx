@@ -3,16 +3,10 @@ import { FileText } from "@phosphor-icons/react";
 import type { OnlinePlayerInfo } from "@shared/ipc";
 import type { MutableRefObject, ReactElement } from "react";
 import { useCallback, useEffect, useState } from "react";
-import {
-  dangerConfirmBody,
-  openDangerConfirmModal,
-} from "@ui/DangerConfirmModal/openDangerConfirmModal";
+import { dangerConfirmBody, openDangerConfirmModal } from "@ui/DangerConfirmModal/openDangerConfirmModal";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
-import {
-  PlayerIdentityRow,
-  resolvePlayerDisplayName,
-} from "./PlayerIdentityRow";
+import { PlayerIdentityRow, resolvePlayerDisplayName } from "./PlayerIdentityRow";
 import classes from "./RconPanel.module.css";
 
 interface Props {
@@ -70,11 +64,7 @@ export function BannedPlayersSection(props: Props): ReactElement {
   };
 
   const confirmUnban = (player: OnlinePlayerInfo): void => {
-    const label = resolvePlayerDisplayName(
-      player.key,
-      player.name,
-      props.nameById,
-    );
+    const label = resolvePlayerDisplayName(player.key, player.name, props.nameById);
     openDangerConfirmModal({
       title: "Unban survivor?",
       children: dangerConfirmBody(
@@ -87,17 +77,14 @@ export function BannedPlayersSection(props: Props): ReactElement {
         setActionKey(player.key);
         void runWithFinally(
           async () => {
-            const result = await window.api.unbanPlayer(
-              props.serverId,
-              player.key,
-            );
+            const result = await window.api.unbanPlayer(props.serverId, player.key);
             if (result.ok) {
               setBanned(result.data.banned);
               if (result.data.warning) {
                 showOperatorToast({
                   title: "Unban",
                   message: result.data.warning,
-                  color: "orange",
+                  color: "attention",
                   autoClose: 8000,
                 });
               }
@@ -118,12 +105,7 @@ export function BannedPlayersSection(props: Props): ReactElement {
       <div className={classes.header}>
         <Text className={classes.title}>Banned</Text>
         <Tooltip label="Open BanList.txt">
-          <ActionIcon
-            size="sm"
-            variant="default"
-            aria-label="Open BanList.txt"
-            onClick={() => void openBanList()}
-          >
+          <ActionIcon size="sm" variant="default" aria-label="Open BanList.txt" onClick={() => void openBanList()}>
             <FileText size={14} />
           </ActionIcon>
         </Tooltip>
@@ -148,11 +130,7 @@ export function BannedPlayersSection(props: Props): ReactElement {
         <div className={classes.playerList}>
           {banned.map((player) => {
             const busy = actionKey === player.key;
-            const name = resolvePlayerDisplayName(
-              player.key,
-              player.name,
-              props.nameById,
-            );
+            const name = resolvePlayerDisplayName(player.key, player.name, props.nameById);
             return (
               <PlayerIdentityRow
                 key={player.key}

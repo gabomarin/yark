@@ -39,12 +39,12 @@ processes; do not treat the aggregate as renderer memory.
 
 Use this small matrix after the app has settled on Overview:
 
-| Scenario | Purpose |
-| --- | --- |
+| Scenario                           | Purpose                                   |
+| ---------------------------------- | ----------------------------------------- |
 | `electron-fluent-ui` template idle | Electron/UI reference on the same machine |
-| YARK, zero profiles | Shell and startup graph baseline |
-| YARK, representative profile fleet | Retained fleet-state increment |
-| YARK, INI Files tab open | Editor/catalog increment |
+| YARK, zero profiles                | Shell and startup graph baseline          |
+| YARK, representative profile fleet | Retained fleet-state increment            |
+| YARK, INI Files tab open           | Editor/catalog increment                  |
 
 Keep all four runs comparable: packaged production builds, identical GPU
 acceleration setting, same window size, and the same post-start delay. The
@@ -99,11 +99,11 @@ scenario, ≥60 s settle, CIM collection via
 `scripts/validation/snapshot-app-memory.ps1`. Medians of **renderer** working
 set / private working set:
 
-| Scenario | Renderer WS (median) | Renderer private WS (median) |
-| --- | --- | --- |
-| Empty Overview (0 profiles) | ~113 MiB | ~43 MiB |
-| Six-profile fleet Overview | ~133 MiB | ~60 MiB |
-| INI Files tab open (fleet) | ~190 MiB | ~113 MiB |
+| Scenario                    | Renderer WS (median) | Renderer private WS (median) |
+| --------------------------- | -------------------- | ---------------------------- |
+| Empty Overview (0 profiles) | ~113 MiB             | ~43 MiB                      |
+| Six-profile fleet Overview  | ~133 MiB             | ~60 MiB                      |
+| INI Files tab open (fleet)  | ~190 MiB             | ~113 MiB                     |
 
 Main stayed ~137–141 MiB WS across scenarios. Ticket baseline for idle was
 ~**250 MiB** (aggregate / earlier builds); post-split idle renderer is

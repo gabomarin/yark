@@ -14,8 +14,7 @@ export const OS_NOTIFY_STEAMCMD_EVENT_TYPES = [
   "update_rolled_back",
 ] as const satisfies ReadonlyArray<AppEvent["type"]>;
 
-export type OsNotifySteamCmdEventType =
-  (typeof OS_NOTIFY_STEAMCMD_EVENT_TYPES)[number];
+export type OsNotifySteamCmdEventType = (typeof OS_NOTIFY_STEAMCMD_EVENT_TYPES)[number];
 
 export type OsNotifyYarkUpdatePhase = "available" | "ready";
 
@@ -68,9 +67,7 @@ export function isYarkE2eUserDataEnv(
  * True when `YARK_E2E_FULL_UI` is a stored-boolean true (`true` / `1` / `yes`).
  * Invalid or unset values are false (E2E shortcuts stay on — safe default).
  */
-export function isYarkE2eFullUiEnv(
-  env: NodeJS.ProcessEnv | Record<string, string | undefined> = process.env,
-): boolean {
+export function isYarkE2eFullUiEnv(env: NodeJS.ProcessEnv | Record<string, string | undefined> = process.env): boolean {
   return parseStoredBoolean(env["YARK_E2E_FULL_UI"], false);
 }
 
@@ -89,10 +86,7 @@ export function isYarkE2eShortcutsActive(
   return !isYarkE2eFullUiEnv(env);
 }
 
-export function shouldSkipNativeNotification(input: {
-  isSupported: boolean;
-  isE2e: boolean;
-}): boolean {
+export function shouldSkipNativeNotification(input: { isSupported: boolean; isE2e: boolean }): boolean {
   return input.isE2e || !input.isSupported;
 }
 
@@ -105,9 +99,7 @@ export function shouldNotifySteamCmdJobEvent(
   type: AppEvent["type"],
   severity: AppEvent["severity"],
 ): type is OsNotifySteamCmdEventType {
-  if (
-    !(OS_NOTIFY_STEAMCMD_EVENT_TYPES as readonly AppEvent["type"][]).includes(type)
-  ) {
+  if (!(OS_NOTIFY_STEAMCMD_EVENT_TYPES as readonly AppEvent["type"][]).includes(type)) {
     return false;
   }
   if (type === "update_failed") {
@@ -116,10 +108,7 @@ export function shouldNotifySteamCmdJobEvent(
   return true;
 }
 
-export function yarkUpdateOsToastDedupeKey(
-  phase: OsNotifyYarkUpdatePhase,
-  version: string,
-): string | null {
+export function yarkUpdateOsToastDedupeKey(phase: OsNotifyYarkUpdatePhase, version: string): string | null {
   const trimmed = version.trim();
   if (trimmed.length === 0) return null;
   return `${phase}:${trimmed}`;
@@ -178,10 +167,7 @@ export function shouldShowFleetOsNotification(input: {
   ) {
     return false;
   }
-  if (
-    input.lastShownAtMs !== undefined
-    && input.nowMs - input.lastShownAtMs < input.cooldownMs
-  ) {
+  if (input.lastShownAtMs !== undefined && input.nowMs - input.lastShownAtMs < input.cooldownMs) {
     return false;
   }
   return true;
@@ -193,14 +179,8 @@ export function formatCrashOsToastBody(serverName: string): string {
   return `"${name}" exited unexpectedly.`;
 }
 
-export function formatSteamCmdOsToastBody(
-  type: OsNotifySteamCmdEventType,
-  serverName: string | null,
-): string {
-  const name =
-    serverName !== null && serverName.trim().length > 0
-      ? serverName.trim()
-      : "Server";
+export function formatSteamCmdOsToastBody(type: OsNotifySteamCmdEventType, serverName: string | null): string {
+  const name = serverName !== null && serverName.trim().length > 0 ? serverName.trim() : "Server";
   if (type === "update_completed") {
     return `"${name}" SteamCMD job finished.`;
   }
@@ -210,10 +190,7 @@ export function formatSteamCmdOsToastBody(
   return `"${name}" SteamCMD job failed.`;
 }
 
-export function formatYarkUpdateOsToastBody(
-  phase: OsNotifyYarkUpdatePhase,
-  version: string,
-): string {
+export function formatYarkUpdateOsToastBody(phase: OsNotifyYarkUpdatePhase, version: string): string {
   const v = version.trim().length > 0 ? version.trim() : "new";
   if (phase === "ready") {
     return `v${v} is downloaded. Open Settings to restart and install.`;

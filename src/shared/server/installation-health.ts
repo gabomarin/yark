@@ -28,8 +28,7 @@ const GUIDANCE_BY_REASON: Record<InstallationHealthReasonCode, string> = {
   asa_markers_absent: "Point the profile at a real ASA server install.",
   exe_absent: "Run Install or Verify — ArkAscendedServer.exe is missing.",
   exe_empty: "Reinstall or Verify — the server executable is empty or corrupt.",
-  exe_not_file:
-    "ArkAscendedServer.exe is not a normal file. Clear or repair that path, then Install or Verify.",
+  exe_not_file: "ArkAscendedServer.exe is not a normal file. Clear or repair that path, then Install or Verify.",
   partial_tree: "Run Install or Verify to finish the incomplete ASA installation.",
   io_error: "Retry the install check. If it keeps failing, inspect disk and path access.",
   ready: "Installation looks ready to start.",
@@ -56,9 +55,7 @@ const HEALTH_RANK: Record<InstallationHealthStatus, number> = {
   unknown: 3,
 };
 
-export function isInstallationReady(
-  info: ServerInstallationInfo | null | undefined,
-): boolean {
+export function isInstallationReady(info: ServerInstallationInfo | null | undefined): boolean {
   if (info == null) {
     return false;
   }
@@ -69,15 +66,11 @@ export function isInstallationReady(
 }
 
 /** Healths where Install/SteamCMD into the path is a reasonable CTA. */
-export function isInstallOfferHealth(
-  health: InstallationHealthStatus | null | undefined,
-): boolean {
+export function isInstallOfferHealth(health: InstallationHealthStatus | null | undefined): boolean {
   return health === "missing" || health === "empty" || health === "incomplete";
 }
 
-export function installationHealthLabel(
-  health: InstallationHealthStatus | null | undefined,
-): string {
+export function installationHealthLabel(health: InstallationHealthStatus | null | undefined): string {
   if (health == null) {
     return "Checking…";
   }
@@ -85,9 +78,7 @@ export function installationHealthLabel(
 }
 
 /** Compact local timestamp for last install-health check. */
-export function formatInstallationCheckedAt(
-  checkedAt: string | null | undefined,
-): string {
+export function formatInstallationCheckedAt(checkedAt: string | null | undefined): string {
   if (checkedAt == null || checkedAt.trim() === "") {
     return "—";
   }
@@ -98,9 +89,7 @@ export function formatInstallationCheckedAt(
   return date.toLocaleString();
 }
 
-export function guidanceForReasonCodes(
-  reasonCodes: ReadonlyArray<string>,
-): string {
+export function guidanceForReasonCodes(reasonCodes: ReadonlyArray<string>): string {
   for (const code of reasonCodes) {
     if (Object.prototype.hasOwnProperty.call(GUIDANCE_BY_REASON, code)) {
       return GUIDANCE_BY_REASON[code as InstallationHealthReasonCode];
@@ -109,9 +98,7 @@ export function guidanceForReasonCodes(
   return GUIDANCE_BY_REASON.io_error;
 }
 
-function isActionableInstallHealth(
-  health: InstallationHealthStatus,
-): boolean {
+function isActionableInstallHealth(health: InstallationHealthStatus): boolean {
   return health !== "ready";
 }
 

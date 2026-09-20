@@ -225,18 +225,10 @@ describe("downloadsModel", () => {
       serverName: "Genesis",
       job: { ...firstQueued.job!, id: "q2", serverId: "s2", serverName: "Genesis" },
     };
-    const rows: DownloadRow[] = [
-      active as DownloadRow,
-      firstQueued as DownloadRow,
-      secondQueued as DownloadRow,
-    ];
+    const rows: DownloadRow[] = [active as DownloadRow, firstQueued as DownloadRow, secondQueued as DownloadRow];
 
-    expect(queuedJobDetailHint(firstQueued as DownloadRow, rows)).toMatch(
-      /after extinction finishes/i,
-    );
-    expect(queuedJobDetailHint(secondQueued as DownloadRow, rows)).toMatch(
-      /after LostColony finishes/i,
-    );
+    expect(queuedJobDetailHint(firstQueued as DownloadRow, rows)).toMatch(/after extinction finishes/i);
+    expect(queuedJobDetailHint(secondQueued as DownloadRow, rows)).toMatch(/after LostColony finishes/i);
   });
 
   it("mentions Retry when a restart-interrupted job blocks later queued work", () => {
@@ -257,15 +249,9 @@ describe("downloadsModel", () => {
       serverName: "Extinction",
       reorderable: true,
     };
-    const rows = [
-      interrupted,
-      firstQueued,
-      secondQueued,
-    ] as DownloadRow[];
+    const rows = [interrupted, firstQueued, secondQueued] as DownloadRow[];
 
-    expect(queuedJobDetailHint(firstQueued as DownloadRow, rows)).toMatch(
-      /Genesis is retried/i,
-    );
+    expect(queuedJobDetailHint(firstQueued as DownloadRow, rows)).toMatch(/Genesis is retried/i);
     expect(queuedJobDetailHint(secondQueued as DownloadRow, rows)).toMatch(
       /Genesis is retried and LostColony finishes/i,
     );
@@ -279,34 +265,15 @@ describe("downloadsModel", () => {
     expect(downloadConsoleBody([], ["line 1"])).toBe("");
     expect(downloadConsoleBody([queued as DownloadRow], ["line 1"])).toBe("");
     expect(downloadConsoleBody([active as DownloadRow], [])).toBe("Waiting for progress…");
-    expect(downloadConsoleBody([active as DownloadRow], ["line 1", "line 2"])).toBe(
-      "line 1\nline 2",
-    );
+    expect(downloadConsoleBody([active as DownloadRow], ["line 1", "line 2"])).toBe("line 1\nline 2");
+    expect(downloadConsoleBody([paused as DownloadRow], ["paused output"])).toBe("paused output");
     expect(
-      downloadConsoleBody([paused as DownloadRow], ["paused output"]),
-    ).toBe("paused output");
-    expect(
-      downloadConsoleBody(
-        [{ id: "i1", kind: "interrupted" as const } as DownloadRow],
-        ["last steamcmd line"],
-      ),
+      downloadConsoleBody([{ id: "i1", kind: "interrupted" as const } as DownloadRow], ["last steamcmd line"]),
     ).toBe("last steamcmd line");
-    expect(
-      downloadConsoleBody(
-        [active as DownloadRow, queued as DownloadRow],
-        ["live output"],
-      ),
-    ).toBe("live output");
+    expect(downloadConsoleBody([active as DownloadRow, queued as DownloadRow], ["live output"])).toBe("live output");
     expect(shouldAutoExpandAdvancedLog([queued as DownloadRow])).toBe(false);
-    expect(
-      shouldAutoExpandAdvancedLog([{ id: "i1", kind: "interrupted" } as DownloadRow]),
-    ).toBe(true);
-    expect(
-      shouldAutoExpandAdvancedLog(
-        [{ id: "i1", kind: "interrupted" } as DownloadRow],
-        ["i1"],
-      ),
-    ).toBe(false);
+    expect(shouldAutoExpandAdvancedLog([{ id: "i1", kind: "interrupted" } as DownloadRow])).toBe(true);
+    expect(shouldAutoExpandAdvancedLog([{ id: "i1", kind: "interrupted" } as DownloadRow], ["i1"])).toBe(false);
     expect(
       downloadStatusLine(
         {
@@ -792,4 +759,3 @@ describe("downloadsModel", () => {
     expect(missing.attention).toBe(false);
   });
 });
-

@@ -1,24 +1,11 @@
 import type { ReactElement } from "react";
-import {
-  CloudArrowDown,
-  DiscordLogo,
-  FileText,
-  GearSix,
-  HardDrives,
-  Info,
-} from "@phosphor-icons/react";
+import { CloudArrowDown, DiscordLogo, FileText, GearSix, HardDrives, Info } from "@phosphor-icons/react";
 import { NavLink, Stack } from "@mantine/core";
 import { navSelectedClassName } from "@ui/NavSelected/navSelectedClassName";
-import {
-  SETTINGS_CATEGORIES,
-  type SettingsCategory,
-} from "../settingsModel";
+import { SETTINGS_CATEGORIES, type SettingsCategory } from "../settingsModel";
 import classes from "../SettingsPage.module.css";
 
-const CATEGORY_ICONS: Record<
-  SettingsCategory,
-  typeof GearSix
-> = {
+const CATEGORY_ICONS: Record<SettingsCategory, typeof GearSix> = {
   general: GearSix,
   servers: HardDrives,
   steamcmd: CloudArrowDown,
@@ -34,8 +21,8 @@ interface Props {
 
 export function SettingsNav(props: Props): ReactElement {
   return (
-    <nav aria-label="Settings categories">
-      <Stack gap={4}>
+    <nav aria-label="Settings categories" className={classes.navList}>
+      <Stack gap={4} className={classes.navRow}>
         {SETTINGS_CATEGORIES.map((item) => {
           const Icon = CATEGORY_ICONS[item.id];
           const active = item.id === props.active;

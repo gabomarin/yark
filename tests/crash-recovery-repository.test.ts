@@ -1,9 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { openDatabase } from "@backend/infra/db/database";
 import { CrashRecoveryRepository } from "@backend/infra/db/crash-recovery-repository";
-import {
-  DEFAULT_CRASH_RECOVERY,
-} from "@shared/crash-recovery/crash-recovery-policy";
+import { DEFAULT_CRASH_RECOVERY } from "@shared/crash-recovery/crash-recovery-policy";
 
 describe("CrashRecoveryRepository", () => {
   it("returns default-off policy without inserting a row", () => {

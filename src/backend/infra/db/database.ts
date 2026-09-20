@@ -1,10 +1,10 @@
 import { DatabaseSync } from "node:sqlite";
 import { existsSync, statSync } from "node:fs";
-import { backfillMaxPlayersFromLegacyLaunchArgs, MAX_PLAYERS_LAUNCH_BACKFILL_SCHEMA_VERSION } from "./backfill-max-players";
 import {
-  isOnDiskProfileDatabasePath,
-  writeProfileDatabaseSnapshot,
-} from "./database-snapshots";
+  backfillMaxPlayersFromLegacyLaunchArgs,
+  MAX_PLAYERS_LAUNCH_BACKFILL_SCHEMA_VERSION,
+} from "./backfill-max-players";
+import { isOnDiskProfileDatabasePath, writeProfileDatabaseSnapshot } from "./database-snapshots";
 import schemaMigrations from "./schema-migrations.json";
 
 interface Migration {
@@ -37,8 +37,7 @@ export class DatabaseBootError extends Error {
   override readonly cause?: unknown;
 
   constructor(kind: DatabaseBootFailureKind, dbPath: string, cause?: unknown) {
-    const detail =
-      cause instanceof Error ? cause.message : cause != null ? String(cause) : "unknown error";
+    const detail = cause instanceof Error ? cause.message : cause != null ? String(cause) : "unknown error";
     super(
       kind === "migrate"
         ? `Failed to migrate profile database at ${dbPath}: ${detail}`
@@ -88,8 +87,7 @@ export function openDatabaseApplyingMigrations(
 ): DatabaseSync {
   const busyTimeoutMs = resolveBusyTimeoutMs(options?.busyTimeoutMs);
   const takeSnapshots = options?.takeSnapshots !== false;
-  const hadExistingOnDiskDb =
-    takeSnapshots && isOnDiskProfileDatabasePath(path) && existsSync(path);
+  const hadExistingOnDiskDb = takeSnapshots && isOnDiskProfileDatabasePath(path) && existsSync(path);
   assertOnDiskDatabaseFilePlausible(path);
 
   let db: DatabaseSync;
@@ -189,11 +187,7 @@ function assertOnDiskDatabaseFilePlausible(path: string): void {
     throw new DatabaseBootError("open", path, new Error("The database file is empty."));
   }
   if (size < MIN_SQLITE_DATABASE_FILE_BYTES) {
-    throw new DatabaseBootError(
-      "open",
-      path,
-      new Error("The database file is truncated or incomplete."),
-    );
+    throw new DatabaseBootError("open", path, new Error("The database file is truncated or incomplete."));
   }
 }
 
@@ -218,9 +212,7 @@ function assertProfileDatabaseUsable(db: DatabaseSync, path: string): void {
 
     // Smoke-read a core table when present so boot fails before services start.
     const hasAppSettings = db
-      .prepare(
-        "SELECT 1 AS present FROM sqlite_master WHERE type = 'table' AND name = 'app_settings' LIMIT 1",
-      )
+      .prepare("SELECT 1 AS present FROM sqlite_master WHERE type = 'table' AND name = 'app_settings' LIMIT 1")
       .get() as { present: number } | undefined;
     if (hasAppSettings) {
       db.prepare("SELECT COUNT(*) AS n FROM app_settings").get();

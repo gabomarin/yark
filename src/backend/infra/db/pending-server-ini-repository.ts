@@ -75,9 +75,7 @@ export class PendingServerIniRepository {
     if (id.length === 0) {
       return false;
     }
-    const result = this.db
-      .prepare(`DELETE FROM pending_server_ini WHERE server_id = ?`)
-      .run(id);
+    const result = this.db.prepare(`DELETE FROM pending_server_ini WHERE server_id = ?`).run(id);
     return Number(result.changes) > 0;
   }
 }

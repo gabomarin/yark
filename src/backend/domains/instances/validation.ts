@@ -1,22 +1,13 @@
 import { z } from "zod";
 import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
-import {
-  isOfficialMap,
-  isValidMapSaveFolder,
-  validateMapIdentity,
-} from "@shared/asa/map-identity";
+import { isOfficialMap, isValidMapSaveFolder, validateMapIdentity } from "@shared/asa/map-identity";
 import {
   getServerFolderNameError,
   getWindowsPathError,
   MAX_WINDOWS_PATH_LENGTH,
 } from "@shared/server/server-install-path";
 import { findLaunchArgConflicts } from "@shared/asa/structured-launch-options";
-import {
-  PORT_MAX,
-  PORT_MIN,
-  type ServerProfileInput,
-  type ValidationIssue,
-} from "@shared/types";
+import { PORT_MAX, PORT_MIN, type ServerProfileInput, type ValidationIssue } from "@shared/types";
 
 export { findPortConflicts } from "@shared/server/port-conflicts";
 
@@ -50,11 +41,7 @@ const serverProfileInputSchema = z.object({
   map: z.string().trim().min(1, "Map required"),
   installDir: windowsPathSchema,
   sessionName: z.string().trim().min(1, "Session name required").max(96),
-  maxPlayers: z
-    .number()
-    .int()
-    .min(0, "Max players must be >= 0")
-    .max(255, "Max players must be <= 255"),
+  maxPlayers: z.number().int().min(0, "Max players must be >= 0").max(255, "Max players must be <= 255"),
   gamePort: portSchema,
   queryPort: portSchema,
   rconPort: portSchema,
@@ -99,8 +86,7 @@ export function validateProfileInput(
     return issues;
   }
 
-  const { gamePort, queryPort, rconPort, clusterId, clusterDir, installDir } =
-    parsed.data;
+  const { gamePort, queryPort, rconPort, clusterId, clusterDir, installDir } = parsed.data;
 
   if (options?.create === true) {
     const mapModId = input.mapModId?.trim() ?? "";
@@ -179,8 +165,7 @@ export function validateProfileInput(
   if (!isValidMapSaveFolder(input.mapSaveFolder)) {
     issues.push({
       field: "mapSaveFolder",
-      message:
-        "World save folder must be a single folder name under SavedArks (no path separators)",
+      message: "World save folder must be a single folder name under SavedArks (no path separators)",
     });
   }
 

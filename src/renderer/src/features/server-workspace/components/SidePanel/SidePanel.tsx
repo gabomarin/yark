@@ -14,18 +14,11 @@ import {
 import { Button, Stack, Text } from "@mantine/core";
 import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
-import {
-  installationHealthLabel,
-  isInstallOfferHealth,
-  isInstallationReady,
-} from "@shared/server/installation-health";
+import { installationHealthLabel, isInstallOfferHealth, isInstallationReady } from "@shared/server/installation-health";
 import { formatServerUptime } from "@shared/server/server-uptime";
 import { resolveDisplayedServerVersion } from "@shared/server/server-version-display";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
-import {
-  formatCpuPercent,
-  formatWorkingSet,
-} from "@features/servers/model/serverCardProcessMeta";
+import { formatCpuPercent, formatWorkingSet } from "@features/servers/model/serverCardProcessMeta";
 import { formatServerSurvivorMeta } from "@features/servers/model/serverCardSurvivorMeta";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { MetaRow } from "@ui/MetaRow/MetaRow";
@@ -63,8 +56,7 @@ export function SidePanel(props: Props): ReactElement {
   const isActive = status === "starting" || status === "running" || status === "stopping";
   const steamCmdBusy = props.opsLocked === true;
   const filesOccupant =
-    isFilesJobOperation(props.filesJobOperation)
-    && props.filesJobQueueKind != null
+    isFilesJobOperation(props.filesJobOperation) && props.filesJobQueueKind != null
       ? {
           id: "workspace",
           operation: props.filesJobOperation,
@@ -72,55 +64,42 @@ export function SidePanel(props: Props): ReactElement {
         }
       : null;
   const lockAllFileOps = steamCmdBusy && filesOccupant === null;
-  const installLocked =
-    isActive
-    || lockAllFileOps
-    || !canEnqueueFilesJobFromMenu("install-files", filesOccupant);
-  const updateLocked =
-    isActive
-    || lockAllFileOps
-    || !canEnqueueFilesJobFromMenu("update", filesOccupant);
-  const verifyLocked =
-    lockAllFileOps || !canEnqueueFilesJobFromMenu("verify-files", filesOccupant);
+  const installLocked = isActive || lockAllFileOps || !canEnqueueFilesJobFromMenu("install-files", filesOccupant);
+  const updateLocked = isActive || lockAllFileOps || !canEnqueueFilesJobFromMenu("update", filesOccupant);
+  const verifyLocked = lockAllFileOps || !canEnqueueFilesJobFromMenu("verify-files", filesOccupant);
   const steamCmdLockTitle = props.opsLockReason;
   const installLockTitle = installLocked
-    ? steamCmdLockTitle ?? (isActive ? "Stop the server before installing files" : undefined)
+    ? (steamCmdLockTitle ?? (isActive ? "Stop the server before installing files" : undefined))
     : isActive
       ? "Stop the server before installing files"
       : undefined;
   const updateLockTitle = updateLocked
-    ? steamCmdLockTitle ?? (isActive ? "Stop the server before updating files" : undefined)
+    ? (steamCmdLockTitle ?? (isActive ? "Stop the server before updating files" : undefined))
     : isActive
       ? "Stop the server before updating files"
       : undefined;
   const verifyLockTitle = verifyLocked
-    ? steamCmdLockTitle ?? undefined
+    ? (steamCmdLockTitle ?? undefined)
     : isActive
       ? "The server will stop for this check, then restart if it succeeds"
       : undefined;
   const filesReady = isInstallationReady(props.installation);
   const canOfferInstall = isInstallOfferHealth(props.installation?.health);
-  const toggleDisabled =
-    props.onToggleEnabled === undefined ||
-    steamCmdBusy ||
-    (props.server.enabled && isActive);
+  const toggleDisabled = props.onToggleEnabled === undefined || steamCmdBusy || (props.server.enabled && isActive);
   const toggleTitle =
     props.onToggleEnabled === undefined
       ? undefined
       : steamCmdBusy
-        ? steamCmdLockTitle ?? "Another server operation is in progress"
+        ? (steamCmdLockTitle ?? "Another server operation is in progress")
         : props.server.enabled && isActive
           ? "Stop the server first"
           : undefined;
   const installHiddenTitle =
     !canOfferInstall && !filesReady
-      ? props.installation?.guidance ??
-        "Install is unavailable until the install path looks safe to use."
+      ? (props.installation?.guidance ?? "Install is unavailable until the install path looks safe to use.")
       : undefined;
   const version = resolveDisplayedServerVersion(props.installation) ?? "–";
-  const installHealthLabel = props.installation
-    ? installationHealthLabel(props.installation.health)
-    : "Checking…";
+  const installHealthLabel = props.installation ? installationHealthLabel(props.installation.health) : "Checking…";
   const [nowMs, setNowMs] = useState(() => Date.now());
   useEffect(() => {
     if (status !== "running" || props.runtime?.startedAt == null) {
@@ -129,10 +108,7 @@ export function SidePanel(props: Props): ReactElement {
     const id = window.setInterval(() => setNowMs(Date.now()), 30_000);
     return () => window.clearInterval(id);
   }, [status, props.runtime?.startedAt]);
-  const uptime =
-    status === "running"
-      ? formatServerUptime(props.runtime?.startedAt, nowMs)
-      : "–";
+  const uptime = status === "running" ? formatServerUptime(props.runtime?.startedAt, nowMs) : "–";
   const survivors = formatServerSurvivorMeta({
     status,
     survivorList: props.playerList ?? null,
@@ -140,14 +116,8 @@ export function SidePanel(props: Props): ReactElement {
   });
   const processLive = status === "running" || status === "starting";
   const metrics = props.processMetrics;
-  const ram =
-    processLive && metrics != null && metrics.error == null
-      ? formatWorkingSet(metrics.workingSetBytes)
-      : "–";
-  const cpu =
-    processLive && metrics != null && metrics.error == null
-      ? formatCpuPercent(metrics.cpuPercent)
-      : "–";
+  const ram = processLive && metrics != null && metrics.error == null ? formatWorkingSet(metrics.workingSetBytes) : "–";
+  const cpu = processLive && metrics != null && metrics.error == null ? formatCpuPercent(metrics.cpuPercent) : "–";
 
   return (
     <aside className={classes.panel}>

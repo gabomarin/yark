@@ -1,6 +1,8 @@
 import type { ReactElement } from "react";
 import { useMemo, useState } from "react";
-import { Alert, Button, Group, Modal, Stack, Stepper, Text } from "@mantine/core";
+import { Button, Stack, Stepper, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import {
   buildCreateClusterInput,
@@ -31,24 +33,16 @@ interface Props {
   onCreated: () => void;
 }
 
-function initialSelectedIds(
-  servers: ServerProfile[],
-  statuses: Map<string, ServerRuntimeInfo>,
-): string[] {
-  const firstEligible = listCreateClusterCandidates(servers, statuses).find(
-    (candidate) => candidate.eligible,
-  )?.server.id;
+function initialSelectedIds(servers: ServerProfile[], statuses: Map<string, ServerRuntimeInfo>): string[] {
+  const firstEligible = listCreateClusterCandidates(servers, statuses).find((candidate) => candidate.eligible)?.server
+    .id;
   return firstEligible !== undefined ? [firstEligible] : [];
 }
 
 export function CreateClusterModal(props: Props): ReactElement {
   const [step, setStep] = useState<CreateClusterStep>(1);
-  const [selectedIds, setSelectedIds] = useState(() =>
-    initialSelectedIds(props.servers, props.statuses),
-  );
-  const [clusterId, setClusterId] = useState(() =>
-    suggestClusterId(listKnownClusterIds(props.servers)),
-  );
+  const [selectedIds, setSelectedIds] = useState(() => initialSelectedIds(props.servers, props.statuses));
+  const [clusterId, setClusterId] = useState(() => suggestClusterId(listKnownClusterIds(props.servers)));
   const [clusterDir, setClusterDir] = useState("");
   const [idTouched, setIdTouched] = useState(false);
   const [dirTouched, setDirTouched] = useState(false);
@@ -60,35 +54,20 @@ export function CreateClusterModal(props: Props): ReactElement {
     () => listCreateClusterCandidates(props.servers, props.statuses),
     [props.servers, props.statuses],
   );
-  const incompleteGroups = useMemo(
-    () => listIncompleteClusterGroups(props.servers),
-    [props.servers],
-  );
-  const activeSelectedIds = useMemo(
-    () => pruneSelectedServerIds(selectedIds, candidates),
-    [selectedIds, candidates],
-  );
+  const incompleteGroups = useMemo(() => listIncompleteClusterGroups(props.servers), [props.servers]);
+  const activeSelectedIds = useMemo(() => pruneSelectedServerIds(selectedIds, candidates), [selectedIds, candidates]);
   const selected = useMemo(
     () => resolveSelectedCandidates(candidates, activeSelectedIds),
     [candidates, activeSelectedIds],
   );
-  const selectedServers = useMemo(
-    () => selected.map((candidate) => candidate.server),
-    [selected],
-  );
-  const portError = useMemo(
-    () => getSelectedMembersPortError(selectedServers),
-    [selectedServers],
-  );
+  const selectedServers = useMemo(() => selected.map((candidate) => candidate.server), [selected]);
+  const portError = useMemo(() => getSelectedMembersPortError(selectedServers), [selectedServers]);
 
   const idError = useMemo(
     () => getClusterIdFormError(clusterId, clusterDir, props.servers),
     [clusterDir, clusterId, props.servers],
   );
-  const dirError = useMemo(
-    () => getClusterDirFormError(clusterDir),
-    [clusterDir],
-  );
+  const dirError = useMemo(() => getClusterDirFormError(clusterDir), [clusterDir]);
   const identityValid = idError === null && dirError === null;
   const canContinueStep1 = selected.length > 0 && portError === null;
   const canContinueStep2 = identityValid;
@@ -99,9 +78,7 @@ export function CreateClusterModal(props: Props): ReactElement {
       async () => {
         const result = await window.api.pickPath(
           "directory",
-          clusterDir.trim().length > 0
-            ? clusterDir
-            : selectedServers[0]?.installDir,
+          clusterDir.trim().length > 0 ? clusterDir : selectedServers[0]?.installDir,
           "Select shared cluster folder",
         );
         if (result.ok && result.data !== null) {
@@ -123,21 +100,13 @@ export function CreateClusterModal(props: Props): ReactElement {
       async () => {
         const applied: ServerProfile[] = [];
         for (const candidate of selected) {
-          const input = buildCreateClusterInput(
-            candidate.server,
-            clusterId,
-            clusterDir,
-          );
+          const input = buildCreateClusterInput(candidate.server, clusterId, clusterDir);
           const result = await window.api.updateServer(candidate.server.id, input);
           if (!result.ok) {
-            const failMessage =
-              result.error ?? "Could not create the cluster";
+            const failMessage = result.error ?? "Could not create the cluster";
             const rollbackFailures: string[] = [];
             for (const previous of [...applied].reverse()) {
-              const rollback = await window.api.updateServer(
-                previous.id,
-                serverProfileToInput(previous),
-              );
+              const rollback = await window.api.updateServer(previous.id, serverProfileToInput(previous));
               if (!rollback.ok) {
                 rollbackFailures.push(previous.name);
               }
@@ -148,9 +117,7 @@ export function CreateClusterModal(props: Props): ReactElement {
               );
               props.onCreated();
             } else if (applied.length > 0) {
-              setError(
-                `Failed on “${candidate.server.name}”: ${failMessage}. Previous profiles were restored.`,
-              );
+              setError(`Failed on “${candidate.server.name}”: ${failMessage}. Previous profiles were restored.`);
             } else {
               setError(failMessage);
             }
@@ -183,17 +150,47 @@ export function CreateClusterModal(props: Props): ReactElement {
   };
 
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={() => {
         if (!saving) props.onClose();
       }}
       title="Create cluster"
       size="lg"
-      centered
       closeOnClickOutside={!saving}
       closeOnEscape={!saving}
       withCloseButton={!saving}
+      footerAlign="between"
+      footer={
+        <>
+          <Button
+            variant="default"
+            disabled={saving}
+            onClick={() => {
+              if (step === 1) {
+                props.onClose();
+                return;
+              }
+              setStep((current) => (current - 1) as CreateClusterStep);
+            }}
+          >
+            {step === 1 ? "Cancel" : "Back"}
+          </Button>
+          {step < 3 ? (
+            <Button disabled={step === 1 ? !canContinueStep1 : !canContinueStep2} onClick={goNext}>
+              Continue
+            </Button>
+          ) : (
+            <Button
+              loading={saving}
+              disabled={!identityValid || selected.length === 0 || portError !== null}
+              onClick={() => void handleCreate()}
+            >
+              Create cluster
+            </Button>
+          )}
+        </>
+      }
     >
       <Stack gap="md">
         <Text size="sm" c="dimmed">
@@ -207,9 +204,9 @@ export function CreateClusterModal(props: Props): ReactElement {
         </Stepper>
 
         {error !== null && (
-          <Alert color="red" variant="light">
+          <AppAlert color="red" variant="light">
             {error}
-          </Alert>
+          </AppAlert>
         )}
 
         {step === 1 && (
@@ -218,12 +215,7 @@ export function CreateClusterModal(props: Props): ReactElement {
             selectedIds={activeSelectedIds}
             portError={portError}
             onToggle={(serverId) =>
-              setSelectedIds((current) =>
-                toggleSelectedServerId(
-                  pruneSelectedServerIds(current, candidates),
-                  serverId,
-                ),
-              )
+              setSelectedIds((current) => toggleSelectedServerId(pruneSelectedServerIds(current, candidates), serverId))
             }
           />
         )}
@@ -243,9 +235,7 @@ export function CreateClusterModal(props: Props): ReactElement {
               setIdTouched(true);
             }}
             onGenerateId={() => {
-              setClusterId(
-                suggestClusterId([...listKnownClusterIds(props.servers), clusterId]),
-              );
+              setClusterId(suggestClusterId([...listKnownClusterIds(props.servers), clusterId]));
               setIdTouched(true);
             }}
             onClusterDirChange={(value) => {
@@ -268,39 +258,7 @@ export function CreateClusterModal(props: Props): ReactElement {
             clusterDir={clusterDir.trim()}
           />
         )}
-
-        <Group justify="space-between">
-          <Button
-            variant="default"
-            disabled={saving}
-            onClick={() => {
-              if (step === 1) {
-                props.onClose();
-                return;
-              }
-              setStep((current) => (current - 1) as CreateClusterStep);
-            }}
-          >
-            {step === 1 ? "Cancel" : "Back"}
-          </Button>
-          {step < 3 ? (
-            <Button
-              disabled={step === 1 ? !canContinueStep1 : !canContinueStep2}
-              onClick={goNext}
-            >
-              Continue
-            </Button>
-          ) : (
-            <Button
-              loading={saving}
-              disabled={!identityValid || selected.length === 0 || portError !== null}
-              onClick={() => void handleCreate()}
-            >
-              Create cluster
-            </Button>
-          )}
-        </Group>
       </Stack>
-    </Modal>
+    </AppPanelModal>
   );
 }

@@ -4,12 +4,9 @@ import type { ServerOperationalLogs } from "@shared/types";
 import { formatLogDateTime } from "@shared/format-log-datetime";
 import type { ReactElement } from "react";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
+import { LoadingState } from "@ui/LoadingState/LoadingState";
 import classes from "../../LogsPage.module.css";
-import {
-  LogsClearAction,
-  LogsEmptyState,
-  LogsTabIntro,
-} from "../LogsPanelChrome/LogsPanelChrome";
+import { LogsClearAction, LogsEmptyState, LogsTabIntro } from "../LogsPanelChrome/LogsPanelChrome";
 
 export interface LogsBackupsTabProps {
   embedded?: boolean;
@@ -23,16 +20,8 @@ export interface LogsBackupsTabProps {
 }
 
 export function LogsBackupsTab(props: LogsBackupsTabProps): ReactElement {
-  const {
-    embedded,
-    loading,
-    busy,
-    logs,
-    highlightedBackupId,
-    onClearBackups,
-    onDeleteBackup,
-    onOpenBackupsTab,
-  } = props;
+  const { embedded, loading, busy, logs, highlightedBackupId, onClearBackups, onDeleteBackup, onOpenBackupsTab } =
+    props;
 
   return (
     <div className={classes.fillPanel}>
@@ -46,17 +35,12 @@ export function LogsBackupsTab(props: LogsBackupsTabProps): ReactElement {
             <LogsClearAction
               label="Delete all listed backup archives"
               onClick={onClearBackups}
-              disabled={
-                loading ||
-                busy ||
-                logs === null ||
-                logs.backups.length === 0
-              }
+              disabled={loading || busy || logs === null || logs.backups.length === 0}
             />
           }
         />
         {loading ? (
-          <Text c="dimmed">Loading backups…</Text>
+          <LoadingState label="backups" />
         ) : logs === null || logs.backups.length === 0 ? (
           <LogsEmptyState
             icon={<HardDrives size={24} />}
@@ -64,7 +48,7 @@ export function LogsBackupsTab(props: LogsBackupsTabProps): ReactElement {
             description="Manual, scheduled, and automatic archives will list here after the first backup runs."
             action={
               onOpenBackupsTab !== undefined ? (
-                <Button variant="light" size="sm" onClick={onOpenBackupsTab}>
+                <Button variant="default" size="sm" onClick={onOpenBackupsTab}>
                   Open Backups tab
                 </Button>
               ) : undefined
@@ -77,12 +61,7 @@ export function LogsBackupsTab(props: LogsBackupsTabProps): ReactElement {
               return (
                 <div
                   key={backup.id}
-                  className={[
-                    classes.eventRow,
-                    focused ? classes.eventRowFocused : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
+                  className={[classes.eventRow, focused ? classes.eventRowFocused : ""].filter(Boolean).join(" ")}
                   data-backup-id={backup.id}
                 >
                   <Stack gap={4}>
@@ -92,17 +71,8 @@ export function LogsBackupsTab(props: LogsBackupsTabProps): ReactElement {
                     <Text size="sm" c="dimmed">
                       {formatLogDateTime(backup.createdAt)} | {backup.status}
                     </Text>
-                    <Group
-                      align="center"
-                      gap="sm"
-                      wrap="nowrap"
-                      className={classes.backupPathRow}
-                    >
-                      <ReadonlyPath
-                        value={backup.path}
-                        compact
-                        className={classes.backupPath}
-                      />
+                    <Group align="center" gap="sm" wrap="nowrap" className={classes.backupPathRow}>
+                      <ReadonlyPath value={backup.path} compact className={classes.backupPath} />
                       <Tooltip label={`Delete ${backup.kind} · ${backup.type} backup`}>
                         <ActionIcon
                           variant="subtle"
@@ -110,12 +80,7 @@ export function LogsBackupsTab(props: LogsBackupsTabProps): ReactElement {
                           aria-label={`Delete ${backup.kind} ${backup.type} backup`}
                           disabled={busy}
                           className={classes.backupDeleteAction}
-                          onClick={() =>
-                            onDeleteBackup(
-                              backup.id,
-                              `${backup.kind} · ${backup.type}`,
-                            )
-                          }
+                          onClick={() => onDeleteBackup(backup.id, `${backup.kind} · ${backup.type}`)}
                         >
                           <Trash size={16} />
                         </ActionIcon>

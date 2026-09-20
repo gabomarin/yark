@@ -1,10 +1,6 @@
 import { useLayoutEffect, useState } from "react";
 import { useLocalStorage } from "@mantine/hooks";
-import {
-  advancedLogAttentionIds,
-  shouldAutoExpandAdvancedLog,
-  type DownloadRow,
-} from "./downloadsModel";
+import { advancedLogAttentionIds, shouldAutoExpandAdvancedLog, type DownloadRow } from "./downloadsModel";
 
 export const ADVANCED_LOG_STORAGE_KEY = "yark.downloads.advancedLog.expanded.v1";
 export const ADVANCED_LOG_SEEN_IDS_KEY = "yark.downloads.advancedLog.autoOpenedIds.v1";

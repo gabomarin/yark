@@ -21,9 +21,7 @@ describe("parseOnboardingRecord", () => {
     };
     expect(parseOnboardingRecord(JSON.stringify(completed))).toEqual(completed);
     expect(
-      parseOnboardingRecord(
-        JSON.stringify({ status: "skipped", completedAt: "2026-08-14T12:00:00.000Z" }),
-      ),
+      parseOnboardingRecord(JSON.stringify({ status: "skipped", completedAt: "2026-08-14T12:00:00.000Z" })),
     ).toEqual({
       status: "skipped",
       completedAt: "2026-08-14T12:00:00.000Z",
@@ -33,32 +31,24 @@ describe("parseOnboardingRecord", () => {
   it("rejects garbage JSON and unknown status", () => {
     expect(parseOnboardingRecord("{not json")).toBeNull();
     expect(
-      parseOnboardingRecord(
-        JSON.stringify({ status: "pending", completedAt: "2026-08-14T12:00:00.000Z" }),
-      ),
+      parseOnboardingRecord(JSON.stringify({ status: "pending", completedAt: "2026-08-14T12:00:00.000Z" })),
     ).toBeNull();
   });
 });
 
 describe("serializeOnboardingRecord", () => {
   it("round-trips through parse", () => {
-    const record = createOnboardingRecord(
-      "completed",
-      new Date("2026-08-14T12:00:00.000Z"),
-      {
-        clusterId: "ember",
-        clusterDir: "D:\\ASA\\Clusters\\Ember",
-      },
-    );
+    const record = createOnboardingRecord("completed", new Date("2026-08-14T12:00:00.000Z"), {
+      clusterId: "ember",
+      clusterDir: "D:\\ASA\\Clusters\\Ember",
+    });
     expect(parseOnboardingRecord(serializeOnboardingRecord(record))).toEqual(record);
   });
 });
 
 describe("shouldAutoShowSetupWizard", () => {
   it("shows only when the flag is unset and the fleet is empty", () => {
-    expect(
-      shouldAutoShowSetupWizard({ record: null, serverCount: 0, readOk: true }),
-    ).toBe(true);
+    expect(shouldAutoShowSetupWizard({ record: null, serverCount: 0, readOk: true })).toBe(true);
     expect(
       shouldAutoShowSetupWizard({
         record: createOnboardingRecord("skipped"),
@@ -66,9 +56,7 @@ describe("shouldAutoShowSetupWizard", () => {
         readOk: true,
       }),
     ).toBe(false);
-    expect(
-      shouldAutoShowSetupWizard({ record: null, serverCount: 1, readOk: true }),
-    ).toBe(false);
+    expect(shouldAutoShowSetupWizard({ record: null, serverCount: 1, readOk: true })).toBe(false);
   });
 
   it("never auto-shows when the onboarding read failed", () => {

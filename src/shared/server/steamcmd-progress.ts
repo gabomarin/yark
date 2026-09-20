@@ -55,21 +55,10 @@ export function hasMeaningfulSteamCmdByteProgress(
   downloaded: number | null | undefined,
   total: number | null | undefined,
 ): boolean {
-  return (
-    downloaded != null
-    && total != null
-    && Number.isFinite(downloaded)
-    && Number.isFinite(total)
-    && total > 0
-  );
+  return downloaded != null && total != null && Number.isFinite(downloaded) && Number.isFinite(total) && total > 0;
 }
 
-export type SteamCmdProgressOperation =
-  | "install-steamcmd"
-  | "install-files"
-  | "update"
-  | "sync-files"
-  | "verify-files";
+export type SteamCmdProgressOperation = "install-steamcmd" | "install-files" | "update" | "sync-files" | "verify-files";
 
 /**
  * Pause keeps a useful checkpoint for install/update/sync.
@@ -82,11 +71,7 @@ export function canPauseSteamCmdOperation(
 }
 
 function isRollbackInProgressPhase(phase: string | null | undefined): boolean {
-  return (
-    typeof phase === "string"
-    && phase.startsWith("rollback-")
-    && phase !== "rollback-complete"
-  );
+  return typeof phase === "string" && phase.startsWith("rollback-") && phase !== "rollback-complete";
 }
 
 /** Pause is install/update/sync only, and never during an in-progress rollback. */
@@ -101,9 +86,7 @@ export function canPauseSteamCmdJob(
  * UI noun prefix for byte progress by operation.
  * SteamCMD also reports BytesDownloaded when verifying.
  */
-export function steamCmdByteProgressNoun(
-  operation: SteamCmdProgressOperation | null | undefined,
-): string {
+export function steamCmdByteProgressNoun(operation: SteamCmdProgressOperation | null | undefined): string {
   if (operation === "verify-files") {
     return "Checked";
   }
@@ -191,12 +174,7 @@ export function parseSteamCmdProgressLine(line: string): SteamCmdProgressParse {
     else if (lower.includes("install")) label = "Installing SteamCMD update";
     else if (lower.includes("download")) label = "Updating SteamCMD";
 
-    if (
-      label !== null
-      && bytesDownloaded !== null
-      && bytesTotal !== null
-      && bytesTotal > 0
-    ) {
+    if (label !== null && bytesDownloaded !== null && bytesTotal !== null && bytesTotal > 0) {
       label = `${label} · ${formatSteamCmdByteProgress(bytesDownloaded, bytesTotal)}`;
     }
 

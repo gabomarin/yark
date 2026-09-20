@@ -18,7 +18,7 @@
   border-radius: var(--app-radius-lg);
   border: 1px solid color-mix(in srgb, var(--app-color-border) 55%, transparent);
   background: color-mix(in srgb, var(--ark-gray-2) 92%, var(--ark-background));
-  box-shadow: 0 12px 40px color-mix(in srgb, #000 45%, transparent);
+  box-shadow: var(--app-elevation-28);
 }
 
 .progress {

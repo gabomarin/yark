@@ -1,12 +1,5 @@
 import type { ReactElement } from "react";
-import {
-  ArrowLeft,
-  ArrowRight,
-  CirclesThreePlus,
-  Eye,
-  FloppyDisk,
-  X,
-} from "@phosphor-icons/react";
+import { ArrowLeft, ArrowRight, CirclesThreePlus, Eye, FloppyDisk, X } from "@phosphor-icons/react";
 import { Button, Group } from "@mantine/core";
 import type { ClusterIniTemplate } from "@shared/types";
 import type { wizardChanges } from "../../configuration-wizard/configurationWizardModel";
@@ -32,7 +25,6 @@ export function WizardFooter(props: Props): ReactElement {
   const {
     activeStep,
     saving,
-    draftDirty,
     changes,
     clusterPathSelected,
     clusterTemplate,
@@ -46,19 +38,12 @@ export function WizardFooter(props: Props): ReactElement {
 
   return (
     <footer className={classes.footer}>
-      <Button
-        variant="default"
-        leftSection={<X size={16} weight="bold" />}
-        onClick={onCancel}
-        disabled={saving}
-      >
+      <Button variant="default" leftSection={<X size={16} weight="bold" />} onClick={onCancel} disabled={saving}>
         Cancel
       </Button>
       {activeStep !== STEP_COUNT - 1 ? (
         <Button
           variant="subtle"
-          color={draftDirty ? "blue" : "gray"}
-          size="compact-sm"
           leftSection={<Eye size={15} />}
           onClick={onViewChanges}
           aria-label={
@@ -67,9 +52,7 @@ export function WizardFooter(props: Props): ReactElement {
               : `View ${changes.length} ${changes.length === 1 ? "change" : "changes"}`
           }
         >
-          {clusterPathSelected
-            ? "Cluster copy"
-            : `${changes.length} ${changes.length === 1 ? "change" : "changes"}`}
+          {clusterPathSelected ? "Cluster copy" : `${changes.length} ${changes.length === 1 ? "change" : "changes"}`}
         </Button>
       ) : (
         <span className={classes.footerCenterSlot} aria-hidden />
@@ -98,11 +81,7 @@ export function WizardFooter(props: Props): ReactElement {
             }
             onClick={onApply}
             loading={saving}
-            disabled={
-              clusterPathSelected
-                ? serverActive || clusterTemplate === null
-                : changes.length === 0
-            }
+            disabled={clusterPathSelected ? serverActive || clusterTemplate === null : changes.length === 0}
           >
             {clusterPathSelected ? "Apply cluster defaults" : "Apply changes"}
           </Button>

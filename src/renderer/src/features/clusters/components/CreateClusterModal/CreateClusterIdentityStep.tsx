@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
-import { Alert, Button, Group, Stack, Text, TextInput } from "@mantine/core";
+import { Button, Group, Stack, Text, TextInput } from "@mantine/core";
 import type { ServerProfile } from "@shared/types";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { PathField } from "@ui/PathField/PathField";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 
@@ -55,11 +56,7 @@ export function CreateClusterIdentityStep(props: Props): ReactElement {
         </Text>
       )}
       {props.incompleteGroups.length > 0 && (
-        <Alert
-          color="yellow"
-          variant="light"
-          title="Incomplete setups (not ready as a cluster yet)"
-        >
+        <AppAlert color="attention" variant="light" title="Incomplete setups (not ready as a cluster yet)">
           <Stack gap="xs">
             {props.incompleteGroups.map((group) => (
               <div key={group.dir}>
@@ -70,13 +67,12 @@ export function CreateClusterIdentityStep(props: Props): ReactElement {
                   aria-label="Incomplete cluster directory"
                 />
                 <Text size="sm">
-                  {group.members.map((server) => server.name).join(", ")} ·
-                  Directory set, missing Cluster ID
+                  {group.members.map((server) => server.name).join(", ")} · Directory set, missing Cluster ID
                 </Text>
               </div>
             ))}
           </Stack>
-        </Alert>
+        </AppAlert>
       )}
     </Stack>
   );

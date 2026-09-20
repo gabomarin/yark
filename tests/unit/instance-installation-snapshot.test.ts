@@ -30,12 +30,7 @@ describe("InstanceService.installationInfo", () => {
 
     const processes = { on: vi.fn() } as unknown as ProcessManager;
     const backups = {} as import("@backend/domains/backups/backup-service").BackupService;
-    const service = new InstanceService(
-      repo,
-      processes,
-      backups,
-      new InstanceLockManager(),
-    );
+    const service = new InstanceService(repo, processes, backups, new InstanceLockManager());
 
     const snapshot = await service.installationInfo(false);
 
@@ -71,9 +66,7 @@ describe("InstanceService.installationInfo", () => {
     });
 
     const repo = {
-      list: vi.fn(() => [
-        { id: "srv-1", installDir: "C:\\srv" },
-      ]),
+      list: vi.fn(() => [{ id: "srv-1", installDir: "C:\\srv" }]),
     } as unknown as ServerRepository;
 
     const service = new InstanceService(

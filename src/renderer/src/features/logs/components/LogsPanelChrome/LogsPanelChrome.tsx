@@ -4,11 +4,7 @@ import { EmptyState } from "@ui/EmptyState/EmptyState";
 import type { ReactElement, ReactNode } from "react";
 import classes from "../../LogsPage.module.css";
 
-export function LogsClearAction(props: {
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-}): ReactElement {
+export function LogsClearAction(props: { label: string; onClick: () => void; disabled?: boolean }): ReactElement {
   return (
     <Tooltip label={props.label}>
       <span>
@@ -63,11 +59,7 @@ export function LogsTabIntro(props: {
   );
 }
 
-export function LogsDetailItem(props: {
-  label: string;
-  value: string;
-  icon: ReactNode;
-}): ReactElement {
+export function LogsDetailItem(props: { label: string; value: string; icon: ReactNode }): ReactElement {
   return (
     <div className={classes.detailItem}>
       <Text className={classes.detailLabel}>

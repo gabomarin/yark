@@ -22,12 +22,9 @@ describe("clampSteamCmdConsoleLimit", () => {
 
 describe("ring buffer helpers", () => {
   it("formats timestamped lines and trims to max", () => {
-    expect(formatTimestampedSteamCmdLine("2026-01-01T00:00:00.000Z", "hello"))
-      .toBe("[2026-01-01T00:00:00.000Z] hello");
+    expect(formatTimestampedSteamCmdLine("2026-01-01T00:00:00.000Z", "hello")).toBe("[2026-01-01T00:00:00.000Z] hello");
     const lines = Array.from({ length: STEAMCMD_CONSOLE_MAX_LINES + 2 }, (_, i) => `line-${i}`);
-    expect(trimSteamCmdConsoleRing(lines, STEAMCMD_CONSOLE_MAX_LINES)).toHaveLength(
-      STEAMCMD_CONSOLE_MAX_LINES,
-    );
+    expect(trimSteamCmdConsoleRing(lines, STEAMCMD_CONSOLE_MAX_LINES)).toHaveLength(STEAMCMD_CONSOLE_MAX_LINES);
     expect(trimSteamCmdConsoleRing(lines, STEAMCMD_CONSOLE_MAX_LINES)[0]).toBe("line-2");
     expect(appendSteamCmdConsoleRing(["a"], "b", 2)).toEqual(["a", "b"]);
     expect(appendSteamCmdConsoleRing(["a", "b"], "c", 2)).toEqual(["b", "c"]);

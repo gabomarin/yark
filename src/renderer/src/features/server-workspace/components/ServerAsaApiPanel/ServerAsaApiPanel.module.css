@@ -16,9 +16,9 @@
 }
 
 .groupTitle {
-  color: var(--app-color-cryo);
-  font-size: var(--mantine-font-size-xs);
-  font-weight: 600;
+  color: var(--app-color-accent-text);
+  font-size: var(--app-font-eyebrow);
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   margin-bottom: var(--app-space-xs);
@@ -58,7 +58,7 @@
 }
 
 .optionLabel:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--app-color-cryo) 65%, transparent);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: 2px;
 }
 

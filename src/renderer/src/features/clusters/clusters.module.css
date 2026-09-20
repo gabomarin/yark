@@ -1,3 +1,14 @@
+.pageShell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  padding: var(--app-space-md);
+  gap: var(--app-space-sm);
+}
+
 .content {
   flex: 1;
   min-height: 0;
@@ -6,6 +17,15 @@
 
 .guidanceCard {
   flex-shrink: 0;
+}
+
+/*
+ * Mantine's contained Accordion only fills the *active* item, so collapsed
+ * rendered transparent while expanded got surface-control. Both states are the
+ * card surface here; the control keeps its own hover fill.
+ */
+.guidanceCard :global(.mantine-Accordion-item) {
+  background: var(--app-color-panel);
 }
 
 .guidanceCopy {
@@ -17,12 +37,15 @@
 }
 
 .emptyCard {
-  /* Parent Clusters split pane already fills the viewport (#469). */
   display: flex;
-  flex: 1;
+  flex: 0 0 auto;
   flex-direction: column;
-  min-height: 0;
-  height: 100%;
+  width: min(100%, 960px);
+  min-height: clamp(240px, 42vh, 360px);
+  align-self: center;
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: 0;
+  background: transparent;
 }
 
 .incompleteBlock {
@@ -44,18 +67,55 @@
   gap: var(--app-space-xs);
 }
 
+/* Master-detail split inside the chrome page shell. */
 .layout {
   display: grid;
   grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
-  gap: var(--app-space-sm);
+  gap: 0;
   flex: 1 1 0;
   min-height: 0;
   overflow: hidden;
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: 0;
+  background: transparent;
 }
 
 .layout > * {
   min-height: 0;
   overflow: hidden;
+}
+
+.listPanel,
+.detailPanel {
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.listPanel {
+  border-right: 1px solid var(--app-color-border-subtle) !important;
+}
+
+/* Path-first meta: long directory gets the leftover width; counts stay tight. */
+.detailMeta {
+  grid-template-columns: minmax(0, 1fr) 3.25rem 3.25rem 4.75rem;
+  column-gap: var(--app-space-sm);
+  align-items: start;
+}
+
+.detailMeta > *:first-child {
+  min-width: 0;
+}
+
+.detailMeta > *:not(:first-child) {
+  max-width: 4.75rem;
+}
+
+@media (max-width: 1100px) {
+  .detailMeta {
+    grid-template-columns: minmax(0, 1fr) 3rem 3rem 4.25rem;
+  }
 }
 
 .panelStack {
@@ -90,9 +150,9 @@
   justify-content: space-between;
   gap: var(--app-space-sm);
   padding: var(--app-space-xs) var(--app-space-sm);
-  border-radius: var(--app-radius-control);
-  border: 1px solid color-mix(in srgb, var(--app-color-border) 50%, transparent);
-  background: color-mix(in srgb, var(--app-color-panel) 45%, transparent);
+  border-radius: 0;
+  border: 1px solid var(--app-color-border-subtle);
+  background: var(--app-color-panel);
 }
 
 .memberRow[data-clickable="true"] {
@@ -100,12 +160,12 @@
 }
 
 .memberRow[data-clickable="true"]:hover {
-  background: color-mix(in srgb, var(--app-color-panel) 70%, transparent);
-  border-color: color-mix(in srgb, var(--app-color-border) 80%, transparent);
+  background: var(--app-color-surface-control);
+  border-color: var(--app-color-border-control);
 }
 
 .memberRow[data-clickable="true"]:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--mantine-color-blue-6) 70%, transparent);
+  outline: 2px solid var(--app-color-focus-ring);
   outline-offset: 2px;
 }
 
@@ -139,9 +199,9 @@
   gap: var(--app-space-xs);
   align-items: flex-start;
   padding: var(--app-space-xs) var(--app-space-sm);
-  border-radius: var(--app-radius-control);
-  border: 1px solid color-mix(in srgb, var(--app-color-border) 50%, transparent);
-  background: color-mix(in srgb, var(--app-color-panel) 45%, transparent);
+  border-radius: 0;
+  border: 1px solid var(--app-color-border-subtle);
+  background: var(--app-color-panel);
 }
 
 .issueRow[data-severity="error"] {
@@ -161,7 +221,7 @@
 }
 
 .issueRow[data-severity="error"] .issueIcon {
-  color: var(--app-color-danger);
+  color: var(--app-color-danger-bright);
 }
 
 .issueCopy {
@@ -172,5 +232,10 @@
   .layout {
     grid-template-columns: 1fr;
     grid-template-rows: minmax(160px, 0.7fr) minmax(240px, 1.3fr);
+  }
+
+  .listPanel {
+    border-right: none !important;
+    border-bottom: 1px solid var(--app-color-border-subtle) !important;
   }
 }

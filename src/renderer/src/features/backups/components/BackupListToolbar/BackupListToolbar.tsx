@@ -1,13 +1,6 @@
 import type { ReactElement } from "react";
 import { ArrowClockwise, HardDrives, Trash, UploadSimple } from "@phosphor-icons/react";
-import {
-  ActionIcon,
-  Badge,
-  Button,
-  Checkbox,
-  Group,
-  Tooltip,
-} from "@mantine/core";
+import { ActionIcon, Badge, Button, Checkbox, Group, Tooltip } from "@mantine/core";
 import type { BackupKind, BackupRecord } from "@shared/types";
 import { SearchField } from "@ui/SearchField/SearchField";
 import classes from "../../BackupsPage.module.css";
@@ -78,13 +71,7 @@ export function BackupListToolbar(props: Props): ReactElement {
   } = props;
 
   return (
-    <Group
-      justify="space-between"
-      wrap="wrap"
-      align="center"
-      gap="xs"
-      className={classes.listToolbar}
-    >
+    <Group justify="space-between" wrap="wrap" align="center" gap="xs" className={classes.listToolbar}>
       <Group gap="xs" wrap="wrap" align="center">
         {activeKind === "world" && kindBackups.length > 0 && (
           <Checkbox
@@ -107,7 +94,7 @@ export function BackupListToolbar(props: Props): ReactElement {
       </Group>
       <Group gap={6} wrap="wrap" align="center">
         {opsLocked && (
-          <Badge color="yellow" variant="light" size="sm">
+          <Badge color="attention" variant="light">
             {!installReady
               ? "Install files before create/restore"
               : opsLockReason != null
@@ -130,7 +117,6 @@ export function BackupListToolbar(props: Props): ReactElement {
         {showManualCreate && (
           <Tooltip label={createTooltip}>
             <Button
-              size="compact-sm"
               leftSection={<HardDrives size={14} />}
               onClick={onCreate}
               loading={busyOp === "create"}
@@ -145,7 +131,6 @@ export function BackupListToolbar(props: Props): ReactElement {
           <Tooltip label={`Import a YARK ${activeKindLabel.toLowerCase()} ZIP into this catalog`}>
             <Button
               variant="default"
-              size="compact-sm"
               leftSection={<UploadSimple size={14} />}
               onClick={onImport}
               loading={busyOp === "import"}
@@ -160,7 +145,6 @@ export function BackupListToolbar(props: Props): ReactElement {
             <Button
               color="red"
               variant="subtle"
-              size="compact-sm"
               leftSection={<Trash size={14} />}
               disabled={busy || createLocked === true || actionableSelectedCount === 0}
               onClick={onDeleteSelected}
@@ -174,7 +158,6 @@ export function BackupListToolbar(props: Props): ReactElement {
           <Button
             color="red"
             variant="subtle"
-            size="compact-sm"
             disabled={busy || createLocked === true}
             onClick={onClearFailed}
             data-backup-clear-failed

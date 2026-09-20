@@ -11,6 +11,7 @@ import {
 import { BackupRepository } from "../backend/infra/db/backup-repository";
 import { ServerRepository } from "../backend/infra/db/server-repository";
 import { ProcessManager } from "../backend/infra/process/process-manager";
+import { BOOTSTRAP_BACKGROUND } from "../shared/app-chrome";
 import { BackupService } from "../backend/domains/backups/backup-service";
 import { BackupScheduler } from "../backend/domains/backups/backup-scheduler";
 import { MaintenanceScheduler } from "../backend/domains/maintenance/maintenance-scheduler";
@@ -28,14 +29,8 @@ import { ClusterIniTemplateRepository } from "../backend/infra/db/cluster-ini-te
 import { PendingServerIniRepository } from "../backend/infra/db/pending-server-ini-repository";
 import { InstanceService } from "../backend/domains/instances/instance-service";
 import { runAutoStartOnLaunch } from "../backend/domains/instances/auto-start";
-import {
-  isFilesJobOperation,
-  isOccupyingFilesJobStatus,
-} from "../shared/server/files-job-priority";
-import {
-  OPEN_NATIVE_CONSOLE_SETTING_KEY,
-  parseOpenNativeConsolePref,
-} from "../shared/settings/open-native-console";
+import { isFilesJobOperation, isOccupyingFilesJobStatus } from "../shared/server/files-job-priority";
+import { OPEN_NATIVE_CONSOLE_SETTING_KEY, parseOpenNativeConsolePref } from "../shared/settings/open-native-console";
 import { LogsService } from "../backend/domains/logs/logs-service";
 import { LogRetentionScheduler } from "../backend/domains/logs/log-retention-scheduler";
 import { UpdateService } from "../backend/domains/updates/update-service";
@@ -71,14 +66,8 @@ import {
   type PersistedWindowState,
 } from "./window-state";
 import { peekStoredWindowState } from "./window-state-peek";
-import {
-  quitFlagsAfterCancel,
-  shouldPreventCloseDuringQuit,
-} from "./quit-gate";
-import {
-  removeLeftRunningProcess,
-  upsertLeftRunningProcess,
-} from "../backend/infra/process/left-running-store";
+import { quitFlagsAfterCancel, shouldPreventCloseDuringQuit } from "./quit-gate";
+import { removeLeftRunningProcess, upsertLeftRunningProcess } from "../backend/infra/process/left-running-store";
 import { reattachLeftRunningProcesses } from "../backend/infra/process/left-running-reattach";
 import { applyWindowsLoginItem } from "./windows-login-item";
 import { APP_VERSION } from "../shared/app-version";
@@ -91,11 +80,18 @@ import {
   remainingSplashHoldMs,
   shouldShowSplash,
 } from "./splash-window";
-import type {
-  ServerCrashedNotifyPayload,
-  SteamCmdJobTerminalPayload,
-} from "../shared/settings/os-notification-events";
-import { IPC_PUSH, type SteamCmdProgressPush, type ServerStopProgressPush, type MoveInstallProgressPush, type CloneInstallProgressPush, type RconStatusChangedPush, type PlayerListUpdatedPush, type ProcessMetricsUpdatedPush, type ServerIniChangedPush } from "../shared/ipc";
+import type { ServerCrashedNotifyPayload, SteamCmdJobTerminalPayload } from "../shared/settings/os-notification-events";
+import {
+  IPC_PUSH,
+  type SteamCmdProgressPush,
+  type ServerStopProgressPush,
+  type MoveInstallProgressPush,
+  type CloneInstallProgressPush,
+  type RconStatusChangedPush,
+  type PlayerListUpdatedPush,
+  type ProcessMetricsUpdatedPush,
+  type ServerIniChangedPush,
+} from "../shared/ipc";
 import type { AppUpdateStatus } from "../shared/settings/app-update";
 import { normalizeCloneInstallProgress, normalizeServerStopProgress } from "../shared/types";
 import type { BackupChangedPush } from "../backend/domains/backups/backup-service";
@@ -190,16 +186,14 @@ function createWindow(
   const win = new BrowserWindow({
     width: creation.width,
     height: creation.height,
-    ...(creation.x !== undefined && creation.y !== undefined
-      ? { x: creation.x, y: creation.y }
-      : {}),
+    ...(creation.x !== undefined && creation.y !== undefined ? { x: creation.x, y: creation.y } : {}),
     minWidth: MIN_WINDOW_WIDTH,
     minHeight: MIN_WINDOW_HEIGHT,
     show: false,
     skipTaskbar: hiddenUntilReveal,
     focusable: !hiddenUntilReveal,
     title: "YARK server manager",
-    backgroundColor: "#0c1427",
+    backgroundColor: BOOTSTRAP_BACKGROUND,
     ...(icon !== undefined ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
@@ -339,9 +333,7 @@ if (isPrimaryInstance) {
         y: area.y + Math.floor(area.height / 2),
       };
     };
-    const splashPositionForStored = (
-      stored: PersistedWindowState | null,
-    ): { x: number; y: number } => {
+    const splashPositionForStored = (stored: PersistedWindowState | null): { x: number; y: number } => {
       const displays = displayWorkAreas();
       return resolveSplashPlacement(
         { width: SPLASH_WIDTH, height: SPLASH_HEIGHT },
@@ -431,8 +423,7 @@ if (isPrimaryInstance) {
     const crashRecoveryRepo = new CrashRecoveryRepository(db);
     const processManager = new ProcessManager({
       onProcessCheckpoint: (record) => upsertLeftRunningProcess(settings, record),
-      onProcessCheckpointCleared: (serverId) =>
-        removeLeftRunningProcess(settings, serverId),
+      onProcessCheckpointCleared: (serverId) => removeLeftRunningProcess(settings, serverId),
       knownSecrets: () => collectKnownSecrets(repo.list()),
     });
     const locks = new InstanceLockManager();
@@ -451,37 +442,19 @@ if (isPrimaryInstance) {
         iniService.clearPendingServerIni(serverId);
       },
     );
-    const instances = new InstanceService(
-      repo,
-      processManager,
-      backupService,
-      locks,
-      {
-        resolveOpenNativeConsole: () =>
-          parseOpenNativeConsolePref(
-            settings.get(OPEN_NATIVE_CONSOLE_SETTING_KEY),
-          ),
-        flushPendingServerIni: async (serverId) => {
-          const flushed = await iniService.flushPendingServerIni(serverId);
-          if (flushed) {
-            void backupService
-              .createIniSaveBackup(serverId)
-              .catch(() => undefined);
-          }
-          return flushed;
-        },
-        syncProfileOwnedKeys: (serverId, profile) =>
-          iniService.syncProfileOwnedKeys(serverId, profile),
+    const instances = new InstanceService(repo, processManager, backupService, locks, {
+      resolveOpenNativeConsole: () => parseOpenNativeConsolePref(settings.get(OPEN_NATIVE_CONSOLE_SETTING_KEY)),
+      flushPendingServerIni: async (serverId) => {
+        const flushed = await iniService.flushPendingServerIni(serverId);
+        if (flushed) {
+          void backupService.createIniSaveBackup(serverId).catch(() => undefined);
+        }
+        return flushed;
       },
-    );
+      syncProfileOwnedKeys: (serverId, profile) => iniService.syncProfileOwnedKeys(serverId, profile),
+    });
     const backupScheduler = new BackupScheduler(backupService);
-    const logsService = new LogsService(
-      repo,
-      backupService,
-      join(userData, "update-logs"),
-      processManager,
-      settings,
-    );
+    const logsService = new LogsService(repo, backupService, join(userData, "update-logs"), processManager, settings);
     const updateService = new UpdateService(
       repo,
       backupService,
@@ -492,43 +465,20 @@ if (isPrimaryInstance) {
       join(userData, "update-logs"),
       join(userData, "steamcmd"),
     );
-    const maintenanceService = new MaintenanceService(
-      maintenanceRepo,
-      repo,
-      processManager,
-      instances,
-      updateService,
-    );
+    const maintenanceService = new MaintenanceService(maintenanceRepo, repo, processManager, instances, updateService);
     const maintenanceScheduler = new MaintenanceScheduler(maintenanceService);
-    const crashRecoveryService = new CrashRecoveryService(
-      crashRecoveryRepo,
-      repo,
-      processManager,
-      instances,
-      locks,
-    );
-    crashRecoveryService.setMaintenanceActiveCheck((serverId) =>
-      maintenanceService.isMaintenanceActive(serverId),
-    );
+    const crashRecoveryService = new CrashRecoveryService(crashRecoveryRepo, repo, processManager, instances, locks);
+    crashRecoveryService.setMaintenanceActiveCheck((serverId) => maintenanceService.isMaintenanceActive(serverId));
     crashRecoveryService.setRuntimeChangeNotify((serverId) => {
-      sendToRenderer(
-        IPC_PUSH.serverStatus,
-        crashRecoveryService.annotateStatus(processManager.getStatus(serverId)),
-      );
+      sendToRenderer(IPC_PUSH.serverStatus, crashRecoveryService.annotateStatus(processManager.getStatus(serverId)));
     });
     maintenanceService.setRuntimeChangeNotify((serverId) => {
       sendToRenderer(
         IPC_PUSH.serverStatus,
-        maintenanceService.annotateStatus(
-          crashRecoveryService.annotateStatus(processManager.getStatus(serverId)),
-        ),
+        maintenanceService.annotateStatus(crashRecoveryService.annotateStatus(processManager.getStatus(serverId))),
       );
     });
-    const playerSessionWatcher = new PlayerSessionWatcher(
-      backupService,
-      repo,
-      processManager,
-    );
+    const playerSessionWatcher = new PlayerSessionWatcher(backupService, repo, processManager);
     const processMetricsSampler = new ProcessMetricsSampler(processManager);
     const clusterIniRepo = new ClusterIniTemplateRepository(db);
     const clusterIniService = new ClusterIniTemplateService(clusterIniRepo);
@@ -583,11 +533,7 @@ if (isPrimaryInstance) {
     });
 
     // Before UI / auto-start: reclaim ASA left after crash / unexpected exit (#59).
-    const reattachOutcomes = await reattachLeftRunningProcesses(
-      settings,
-      repo,
-      processManager,
-    );
+    const reattachOutcomes = await reattachLeftRunningProcesses(settings, repo, processManager);
 
     // Auto-start after the main window is shown (splash dismissed). Native
     // consoles must not open over the splash (#350). Re-read the console pref
@@ -610,12 +556,9 @@ if (isPrimaryInstance) {
         const occupyingServerIds = new Set(
           updateService
             .getSteamCmdStatus()
-            .criticalJobs
-            .filter(
+            .criticalJobs.filter(
               (job) =>
-                isFilesJobOperation(job.operation)
-                && isOccupyingFilesJobStatus(job.status)
-                && job.serverId.length > 0,
+                isFilesJobOperation(job.operation) && isOccupyingFilesJobStatus(job.status) && job.serverId.length > 0,
             )
             .map((job) => job.serverId),
         );
@@ -626,9 +569,7 @@ if (isPrimaryInstance) {
             processes: processManager,
             repo,
             start: (serverId, options) => instances.start(serverId, options),
-            openNativeConsole: parseOpenNativeConsolePref(
-              settings.get(OPEN_NATIVE_CONSOLE_SETTING_KEY),
-            ),
+            openNativeConsole: parseOpenNativeConsolePref(settings.get(OPEN_NATIVE_CONSOLE_SETTING_KEY)),
           });
         } catch (error: unknown) {
           console.error("Auto-start on launch failed", error);
@@ -636,11 +577,7 @@ if (isPrimaryInstance) {
       })();
     };
 
-    const evaluateAppUpdateSafety = ():
-      | "servers-running"
-      | "critical-job"
-      | "operation-in-progress"
-      | null => {
+    const evaluateAppUpdateSafety = (): "servers-running" | "critical-job" | "operation-in-progress" | null => {
       if (instances.shouldBlockAppQuit()) {
         return "operation-in-progress";
       }
@@ -652,10 +589,7 @@ if (isPrimaryInstance) {
         return "critical-job";
       }
       const activeCritical = steam.criticalJobs.some(
-        (job) =>
-          job.status === "pending"
-          || job.status === "retrying"
-          || job.status === "running",
+        (job) => job.status === "pending" || job.status === "retrying" || job.status === "running",
       );
       if (activeCritical) {
         return "critical-job";
@@ -774,8 +708,7 @@ if (isPrimaryInstance) {
             type: "info",
             title: "Server operation in progress",
             message: "YARK will close after the active server operation finishes.",
-            detail:
-              "Keep the application open so stop/restart backup work can complete safely.",
+            detail: "Keep the application open so stop/restart backup work can complete safely.",
             buttons: ["OK"],
           });
           quitAfter(instances.settleForAppQuit());
@@ -836,9 +769,7 @@ if (isPrimaryInstance) {
 
     const previousServerStatuses = new Map<string, ServerRuntimeInfo["status"]>();
     processManager.on("status", (statusInfo: ServerRuntimeInfo) => {
-      const info = maintenanceService.annotateStatus(
-        crashRecoveryService.annotateStatus(statusInfo),
-      );
+      const info = maintenanceService.annotateStatus(crashRecoveryService.annotateStatus(statusInfo));
       sendToRenderer(IPC_PUSH.serverStatus, info);
       scheduleTrayMenuRefresh();
       const previous = previousServerStatuses.get(info.serverId);
@@ -886,17 +817,11 @@ if (isPrimaryInstance) {
     });
 
     instances.on("clone-progress", (payload: CloneInstallProgressPush) => {
-      sendToRenderer(
-        IPC_PUSH.cloneInstallProgress,
-        normalizeCloneInstallProgress(payload),
-      );
+      sendToRenderer(IPC_PUSH.cloneInstallProgress, normalizeCloneInstallProgress(payload));
     });
 
     instances.on("stop-progress", (payload: ServerStopProgressPush) => {
-      sendToRenderer(
-        IPC_PUSH.serverStopProgress,
-        normalizeServerStopProgress(payload),
-      );
+      sendToRenderer(IPC_PUSH.serverStopProgress, normalizeServerStopProgress(payload));
     });
 
     backupService.on("changed", (payload: BackupChangedPush) => {
@@ -915,19 +840,16 @@ if (isPrimaryInstance) {
       sendToRenderer(IPC_PUSH.playerListUpdated, payload);
     });
 
-    processMetricsSampler.on(
-      "metrics-updated",
-      (payload: ProcessMetricsUpdatedPush) => {
-        sendToRenderer(IPC_PUSH.processMetricsUpdated, payload);
-      },
-    );
+    processMetricsSampler.on("metrics-updated", (payload: ProcessMetricsUpdatedPush) => {
+      sendToRenderer(IPC_PUSH.processMetricsUpdated, payload);
+    });
 
     appUpdateService.onStatus((status: AppUpdateStatus) => {
       sendToRenderer(IPC_PUSH.appUpdate, status);
       if (
-        (status.phase === "available" || status.phase === "ready")
-        && status.availableVersion !== null
-        && status.availableVersion.trim().length > 0
+        (status.phase === "available" || status.phase === "ready") &&
+        status.availableVersion !== null &&
+        status.availableVersion.trim().length > 0
       ) {
         fleetOsNotifier.notifyYarkUpdate({
           phase: status.phase,
@@ -1077,10 +999,7 @@ if (isPrimaryInstance) {
           cancelId: 1,
           noLink: true,
           title: "Quit YARK?",
-          message:
-            count === 1
-              ? "1 server is still running."
-              : `${count} servers are still running.`,
+          message: count === 1 ? "1 server is still running." : `${count} servers are still running.`,
           detail:
             "Stop them before quitting. To keep servers and backups running, enable Close window to tray in Settings, then close the window instead of quitting.",
         })

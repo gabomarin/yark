@@ -15,24 +15,11 @@ const { initProfileDatabase } = require("../e2e-init-profile-db.cjs");
 const projectRoot = path.resolve(__dirname, "..", "..");
 const defaultUserData = path.join(projectRoot, "artifacts", "mem-bench", "fleet");
 
-const MAPS = [
-  "TheIsland_WP",
-  "ScorchedEarth_WP",
-  "Aberration_WP",
-  "Extinction_WP",
-  "Ragnarok_WP",
-  "TheCenter_WP",
-];
+const MAPS = ["TheIsland_WP", "ScorchedEarth_WP", "Aberration_WP", "Extinction_WP", "Ragnarok_WP", "TheCenter_WP"];
 
 function seedReadyInstall(installDir) {
   const win64 = path.join(installDir, "ShooterGame", "Binaries", "Win64");
-  const config = path.join(
-    installDir,
-    "ShooterGame",
-    "Saved",
-    "Config",
-    "WindowsServer",
-  );
+  const config = path.join(installDir, "ShooterGame", "Saved", "Config", "WindowsServer");
   fs.mkdirSync(win64, { recursive: true });
   fs.mkdirSync(config, { recursive: true });
   fs.writeFileSync(path.join(win64, "ArkAscendedServer.exe"), "fake-asa-binary\n");
@@ -101,12 +88,7 @@ function seedFleet(userData) {
     );
   }
 
-  upsertSetting(
-    db,
-    "onboarding.v1",
-    JSON.stringify({ status: "completed", completedAt: now }),
-    now,
-  );
+  upsertSetting(db, "onboarding.v1", JSON.stringify({ status: "completed", completedAt: now }), now);
   db.close();
 
   return { dbPath, serversRoot, count: 6 };
@@ -115,19 +97,12 @@ function seedFleet(userData) {
 function main() {
   const userData = path.resolve(process.argv[2] ?? defaultUserData);
   const result = seedFleet(userData);
-  const exe = path.join(
-    projectRoot,
-    "dist",
-    "win-unpacked",
-    "YARK server manager.exe",
-  );
+  const exe = path.join(projectRoot, "dist", "win-unpacked", "YARK server manager.exe");
   console.log(`Seeded ${result.count} profiles at ${userData}`);
   console.log(`DB: ${result.dbPath}`);
   console.log("");
   console.log("Launch packaged app (isolated userData):");
-  console.log(
-    `  Start-Process "${exe}" -ArgumentList '--user-data-dir=${userData}'`,
-  );
+  console.log(`  Start-Process "${exe}" -ArgumentList '--user-data-dir=${userData}'`);
 }
 
 main();

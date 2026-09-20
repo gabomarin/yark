@@ -5,27 +5,21 @@
 
 import type { ClusterIniTemplateFileSelection, ServerIniPayload } from "../types";
 
-const DEFAULT_CLUSTER_INI_FILE_SELECTION: ClusterIniTemplateFileSelection =
-  {
-    gameUserSettings: true,
-    game: true,
-  };
+const DEFAULT_CLUSTER_INI_FILE_SELECTION: ClusterIniTemplateFileSelection = {
+  gameUserSettings: true,
+  game: true,
+};
 
 /** Clone of the default both-files selection for UI / IPC defaults. */
 export function defaultClusterIniFileSelection(): ClusterIniTemplateFileSelection {
   return { ...DEFAULT_CLUSTER_INI_FILE_SELECTION };
 }
 
-export function clusterIniFileSelectionHasWork(
-  files: ClusterIniTemplateFileSelection,
-): boolean {
+export function clusterIniFileSelectionHasWork(files: ClusterIniTemplateFileSelection): boolean {
   return files.gameUserSettings || files.game;
 }
 
-function requireBooleanField(
-  record: Record<string, unknown>,
-  key: keyof ClusterIniTemplateFileSelection,
-): boolean {
+function requireBooleanField(record: Record<string, unknown>, key: keyof ClusterIniTemplateFileSelection): boolean {
   const value = record[key];
   if (typeof value !== "boolean") {
     throw new Error(`INI file selection.${key} must be a boolean`);
@@ -37,9 +31,7 @@ function requireBooleanField(
  * Normalize IPC/UI payloads. Omitting the arg (or null/undefined) means both files.
  * Rejects empty selections and non-boolean field values.
  */
-export function assertClusterIniTemplateFileSelection(
-  raw?: unknown,
-): ClusterIniTemplateFileSelection {
+export function assertClusterIniTemplateFileSelection(raw?: unknown): ClusterIniTemplateFileSelection {
   if (raw === undefined || raw === null) {
     return defaultClusterIniFileSelection();
   }
@@ -64,9 +56,7 @@ export function mergeClusterIniPayloadByFileSelection(
   files: ClusterIniTemplateFileSelection,
 ): ServerIniPayload {
   return {
-    gameUserSettings: files.gameUserSettings
-      ? composed.gameUserSettings
-      : baseline.gameUserSettings,
+    gameUserSettings: files.gameUserSettings ? composed.gameUserSettings : baseline.gameUserSettings,
     game: files.game ? composed.game : baseline.game,
   };
 }

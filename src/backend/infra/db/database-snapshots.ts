@@ -1,19 +1,8 @@
-import {
-  copyFileSync,
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  renameSync,
-  statSync,
-  unlinkSync,
-} from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, renameSync, statSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
 import type { DatabaseSync } from "node:sqlite";
 import type { DatabaseBootFailureKind } from "./database";
-import {
-  formatDatabaseQuarantineStamp,
-  quarantineProfileDatabase,
-} from "./database-recovery";
+import { formatDatabaseQuarantineStamp, quarantineProfileDatabase } from "./database-recovery";
 
 /** Subfolder under the profile DB directory for rotating snapshots (#252). */
 export const PROFILE_DB_SNAPSHOT_DIR_NAME = "profile-db-snapshots";
@@ -29,10 +18,7 @@ export type ProfileDatabaseSnapshotInfo = {
   kind: ProfileDatabaseSnapshotKind;
 };
 
-const SNAPSHOT_KIND_VALUES: readonly ProfileDatabaseSnapshotKind[] = [
-  "pre-migrate",
-  "healthy-boot",
-];
+const SNAPSHOT_KIND_VALUES: readonly ProfileDatabaseSnapshotKind[] = ["pre-migrate", "healthy-boot"];
 
 /**
  * Directory that holds profile-DB snapshots for `dbPath`
@@ -62,9 +48,7 @@ export function isProfileDatabaseSnapshotFileName(name: string): boolean {
   return /^yark-profile\.(pre-migrate|healthy-boot)\..+\.db$/u.test(name);
 }
 
-function profileDatabaseSnapshotKindFromFileName(
-  name: string,
-): ProfileDatabaseSnapshotKind | null {
+function profileDatabaseSnapshotKindFromFileName(name: string): ProfileDatabaseSnapshotKind | null {
   const match = /^yark-profile\.(pre-migrate|healthy-boot)\./u.exec(name);
   if (!match) {
     return null;
@@ -111,8 +95,7 @@ export function pickPreferredProfileDatabaseSnapshot(
   if (snapshots.length === 0) {
     return null;
   }
-  const preferredKind: ProfileDatabaseSnapshotKind =
-    failureKind === "migrate" ? "pre-migrate" : "healthy-boot";
+  const preferredKind: ProfileDatabaseSnapshotKind = failureKind === "migrate" ? "pre-migrate" : "healthy-boot";
   return snapshots.find((snapshot) => snapshot.kind === preferredKind) ?? snapshots[0]!;
 }
 
@@ -212,14 +195,8 @@ function escapeSqliteStringLiteral(value: string): string {
  * Deletes oldest snapshot files per kind until each kind has at most `retainPerKind`.
  * Newest-first ordering uses the lexicographic ISO stamp in each filename.
  */
-export function rotateProfileDatabaseSnapshots(
-  snapshotDir: string,
-  options?: { retainPerKind?: number },
-): string[] {
-  const retainPerKind = Math.max(
-    0,
-    Math.trunc(options?.retainPerKind ?? PROFILE_DB_SNAPSHOT_RETAIN_PER_KIND),
-  );
+export function rotateProfileDatabaseSnapshots(snapshotDir: string, options?: { retainPerKind?: number }): string[] {
+  const retainPerKind = Math.max(0, Math.trunc(options?.retainPerKind ?? PROFILE_DB_SNAPSHOT_RETAIN_PER_KIND));
   if (!existsSync(snapshotDir)) {
     return [];
   }

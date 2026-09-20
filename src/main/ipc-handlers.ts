@@ -4,11 +4,7 @@ import { mkdir } from "node:fs/promises";
 import { IPC, IPC_PUSH } from "../shared/ipc";
 import { ipcArgSchemas } from "../shared/ipc/channel-schemas";
 import { canonicalCurseForgeAsaModUrl } from "../shared/mods/curseforge-url";
-import type {
-  AsaApiInstallProgress,
-  ServerProfileInput,
-  ServerProfilePatch,
-} from "../shared/types";
+import type { AsaApiInstallProgress, ServerProfileInput, ServerProfilePatch } from "../shared/types";
 import { normalizeAsaApiInstallProgress } from "../shared/types";
 import type { BackupService } from "../backend/domains/backups/backup-service";
 import type { MaintenanceService } from "../backend/domains/maintenance/maintenance-service";
@@ -138,48 +134,36 @@ export function registerIpcHandlers(
     }),
   );
 
-  handleValidated(
-    IPC.serversUpdatePatch,
-    ipcArgSchemas[IPC.serversUpdatePatch],
-    async ([id, patch]) => {
-      const typedPatch = patch as ServerProfilePatch;
-      return instances.updatePatch(id, typedPatch, async (merged, existing) => {
-        if (typedPatch.group !== "mods") {
-          return merged;
-        }
-        return mods.enrichNewServerMods(merged, {
-          mods: existing.mods,
-          disabledMods: existing.disabledMods,
-          modMetadataCache: existing.modMetadataCache,
-        });
+  handleValidated(IPC.serversUpdatePatch, ipcArgSchemas[IPC.serversUpdatePatch], async ([id, patch]) => {
+    const typedPatch = patch as ServerProfilePatch;
+    return instances.updatePatch(id, typedPatch, async (merged, existing) => {
+      if (typedPatch.group !== "mods") {
+        return merged;
+      }
+      return mods.enrichNewServerMods(merged, {
+        mods: existing.mods,
+        disabledMods: existing.disabledMods,
+        modMetadataCache: existing.modMetadataCache,
       });
-    },
-  );
+    });
+  });
 
   handleValidated(IPC.serversSetEnabled, ipcArgSchemas[IPC.serversSetEnabled], ([id, enabled]) =>
     instances.setServerEnabled(id, enabled),
   );
 
-  handleValidated(
-    IPC.serversDelete,
-    ipcArgSchemas[IPC.serversDelete],
-    ([id, options]) => instances.delete(id, options),
+  handleValidated(IPC.serversDelete, ipcArgSchemas[IPC.serversDelete], ([id, options]) =>
+    instances.delete(id, options),
   );
 
-  handleValidated(IPC.serversClone, ipcArgSchemas[IPC.serversClone], ([id]) =>
-    instances.clone(id),
+  handleValidated(IPC.serversClone, ipcArgSchemas[IPC.serversClone], ([id]) => instances.clone(id));
+
+  handleValidated(IPC.serversCloneWithParams, ipcArgSchemas[IPC.serversCloneWithParams], ([id, params]) =>
+    instances.cloneWithParams(id, params),
   );
 
-  handleValidated(
-    IPC.serversCloneWithParams,
-    ipcArgSchemas[IPC.serversCloneWithParams],
-    ([id, params]) => instances.cloneWithParams(id, params),
-  );
-
-  handleValidated(
-    IPC.serversCloneCopyCancel,
-    ipcArgSchemas[IPC.serversCloneCopyCancel],
-    () => instances.cancelCloneCopy(),
+  handleValidated(IPC.serversCloneCopyCancel, ipcArgSchemas[IPC.serversCloneCopyCancel], () =>
+    instances.cancelCloneCopy(),
   );
 
   handleValidated(IPC.serversProbeImport, ipcArgSchemas[IPC.serversProbeImport], ([installDir]) =>
@@ -192,65 +176,55 @@ export function registerIpcHandlers(
     ),
   );
 
-  handleValidated(
-    IPC.serversImportExisting,
-    ipcArgSchemas[IPC.serversImportExisting],
-    async ([input, options]) => {
-      const profileInput = input as ServerProfileInput;
-      const modsList = profileInput.mods ?? [];
-      // Soft CurseForge resolve: keep all disk-discovered IDs even when some
-      // names are missing; do not fail import on proxy gaps (#254).
-      // Product rule: import always leaves discovered mods disabled (service enforces too).
-      const disabled = [...modsList];
-      const cache = { ...(profileInput.modMetadataCache ?? {}) };
-      try {
-        const fetched = await mods.getMods(modsList);
-        for (const row of fetched) {
-          cache[row.id] = row;
-        }
-      } catch {
-        // Keep client-side cache / empty names; import still proceeds.
+  handleValidated(IPC.serversImportExisting, ipcArgSchemas[IPC.serversImportExisting], async ([input, options]) => {
+    const profileInput = input as ServerProfileInput;
+    const modsList = profileInput.mods ?? [];
+    // Soft CurseForge resolve: keep all disk-discovered IDs even when some
+    // names are missing; do not fail import on proxy gaps (#254).
+    // Product rule: import always leaves discovered mods disabled (service enforces too).
+    const disabled = [...modsList];
+    const cache = { ...(profileInput.modMetadataCache ?? {}) };
+    try {
+      const fetched = await mods.getMods(modsList);
+      for (const row of fetched) {
+        cache[row.id] = row;
       }
-      const enriched = await mods.enrichNewServerMods(
-        {
-          ...profileInput,
-          mods: modsList,
-          disabledMods: disabled,
-          modMetadataCache: cache,
-        },
-        {
-          mods: modsList,
-          disabledMods: disabled,
-          modMetadataCache: cache,
-        },
-      );
-      return instances.importExisting(enriched, options ?? undefined);
-    },
-  );
+    } catch {
+      // Keep client-side cache / empty names; import still proceeds.
+    }
+    const enriched = await mods.enrichNewServerMods(
+      {
+        ...profileInput,
+        mods: modsList,
+        disabledMods: disabled,
+        modMetadataCache: cache,
+      },
+      {
+        mods: modsList,
+        disabledMods: disabled,
+        modMetadataCache: cache,
+      },
+    );
+    return instances.importExisting(enriched, options ?? undefined);
+  });
 
   handleValidated(IPC.serversStart, ipcArgSchemas[IPC.serversStart], ([id, options]) =>
     instances.start(id, options ?? undefined),
   );
 
-  handleValidated(IPC.serversStop, ipcArgSchemas[IPC.serversStop], ([id]) =>
-    instances.stop(id),
-  );
+  handleValidated(IPC.serversStop, ipcArgSchemas[IPC.serversStop], ([id]) => instances.stop(id));
 
   handleValidated(IPC.serversRestart, ipcArgSchemas[IPC.serversRestart], ([id, options]) =>
     instances.restart(id, options ?? undefined),
   );
 
-  handleValidated(IPC.serversKill, ipcArgSchemas[IPC.serversKill], ([id]) =>
-    instances.kill(id),
-  );
+  handleValidated(IPC.serversKill, ipcArgSchemas[IPC.serversKill], ([id]) => instances.kill(id));
 
   handleValidated(IPC.serversInstallFiles, ipcArgSchemas[IPC.serversInstallFiles], ([id]) =>
     updates.installServerFiles(id),
   );
 
-  handleValidated(IPC.serversUpdateNow, ipcArgSchemas[IPC.serversUpdateNow], ([id]) =>
-    updates.updateServer(id),
-  );
+  handleValidated(IPC.serversUpdateNow, ipcArgSchemas[IPC.serversUpdateNow], ([id]) => updates.updateServer(id));
 
   handleValidated(IPC.serversEnqueueUpdate, ipcArgSchemas[IPC.serversEnqueueUpdate], ([id]) =>
     updates.enqueueUpdate(id),
@@ -260,20 +234,16 @@ export function registerIpcHandlers(
     updates.verifyServerFiles(id),
   );
 
-  handleValidated(
-    IPC.serversMoveInstall,
-    ipcArgSchemas[IPC.serversMoveInstall],
-    async ([id, destinationDir]) => {
-      const result = await moveInstall.moveInstall(id, destinationDir);
-      return {
-        sourceDir: result.sourceDir,
-        destinationDir: result.destinationDir,
-        oldSourceDir: result.oldSourceDir,
-        oldSourceRemoved: result.oldSourceRemoved,
-        cleanupError: result.cleanupError,
-      };
-    },
-  );
+  handleValidated(IPC.serversMoveInstall, ipcArgSchemas[IPC.serversMoveInstall], async ([id, destinationDir]) => {
+    const result = await moveInstall.moveInstall(id, destinationDir);
+    return {
+      sourceDir: result.sourceDir,
+      destinationDir: result.destinationDir,
+      oldSourceDir: result.oldSourceDir,
+      oldSourceRemoved: result.oldSourceRemoved,
+      cleanupError: result.cleanupError,
+    };
+  });
 
   handleValidated(IPC.serversMoveInstallCancel, ipcArgSchemas[IPC.serversMoveInstallCancel], () =>
     moveInstall.cancel(),
@@ -303,98 +273,83 @@ export function registerIpcHandlers(
     }
   });
 
-  handleValidated(
-    IPC.serversOpenNativeTerminal,
-    ipcArgSchemas[IPC.serversOpenNativeTerminal],
-    ([id]) => {
-      const folderPath = instances.installDirFor(id);
-      // Windows `start`: first quoted token is ALWAYS the window title — use "".
-      // Pass one /c string + windowsVerbatimArguments so Node does not re-quote
-      // paths with spaces (that produced "sintaxis de la etiqueta del volumen...").
-      const windowTitle = `ARK-${id.slice(0, 8)}`;
-      const quotedDir = `"${folderPath.replace(/"/g, "")}"`;
-      const keepAlive =
-        `title ${windowTitle}` +
-        " && echo Server started from ARK Manager." +
-        " && echo Live output is available under Logs / Runtime.";
-      const payload = `start "" /D ${quotedDir} cmd.exe /k "${keepAlive}"`;
-      const child = spawn("cmd.exe", ["/c", payload], {
-        detached: true,
-        windowsHide: false,
-        stdio: "ignore",
-        windowsVerbatimArguments: true,
-      });
-      child.unref();
-    },
-  );
+  handleValidated(IPC.serversOpenNativeTerminal, ipcArgSchemas[IPC.serversOpenNativeTerminal], ([id]) => {
+    const folderPath = instances.installDirFor(id);
+    // Windows `start`: first quoted token is ALWAYS the window title — use "".
+    // Pass one /c string + windowsVerbatimArguments so Node does not re-quote
+    // paths with spaces (that produced "sintaxis de la etiqueta del volumen...").
+    const windowTitle = `ARK-${id.slice(0, 8)}`;
+    const quotedDir = `"${folderPath.replace(/"/g, "")}"`;
+    const keepAlive =
+      `title ${windowTitle}` +
+      " && echo Server started from ARK Manager." +
+      " && echo Live output is available under Logs / Runtime.";
+    const payload = `start "" /D ${quotedDir} cmd.exe /k "${keepAlive}"`;
+    const child = spawn("cmd.exe", ["/c", payload], {
+      detached: true,
+      windowsHide: false,
+      stdio: "ignore",
+      windowsVerbatimArguments: true,
+    });
+    child.unref();
+  });
 
   handleValidated(IPC.serversAsaApiStatus, ipcArgSchemas[IPC.serversAsaApiStatus], async ([id]) => {
     const installDir = instances.installDirFor(id);
     return asaApi.getStatus(installDir);
   });
 
-  handleValidated(
-    IPC.serversAsaApiInstall,
-    ipcArgSchemas[IPC.serversAsaApiInstall],
-    async ([id]) => {
-      if (instances.statuses().some((s) => s.serverId === id && s.processLive)) {
-        throw new Error("Stop the server before installing AsaApi");
-      }
-      const installDir = instances.installDirFor(id);
-      const sendProgress = (payload: AsaApiInstallProgress): void => {
-        const normalized = normalizeAsaApiInstallProgress(payload);
-        for (const win of BrowserWindow.getAllWindows()) {
-          if (!win.isDestroyed()) {
-            win.webContents.send(IPC_PUSH.asaApiInstallProgress, normalized);
-          }
+  handleValidated(IPC.serversAsaApiInstall, ipcArgSchemas[IPC.serversAsaApiInstall], async ([id]) => {
+    if (instances.statuses().some((s) => s.serverId === id && s.processLive)) {
+      throw new Error("Stop the server before installing AsaApi");
+    }
+    const installDir = instances.installDirFor(id);
+    const sendProgress = (payload: AsaApiInstallProgress): void => {
+      const normalized = normalizeAsaApiInstallProgress(payload);
+      for (const win of BrowserWindow.getAllWindows()) {
+        if (!win.isDestroyed()) {
+          win.webContents.send(IPC_PUSH.asaApiInstallProgress, normalized);
         }
-      };
-      try {
-        return await asaApi.install(installDir, {
-          serverId: id,
-          onProgress: sendProgress,
-        });
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        sendProgress({
-          serverId: id,
-          active: false,
-          phase: null,
-          label: message,
-          percent: null,
-          bytesDownloaded: null,
-          bytesTotal: null,
-          assetLabel: null,
-          error: message,
-        });
-        throw error;
       }
-    },
-  );
+    };
+    try {
+      return await asaApi.install(installDir, {
+        serverId: id,
+        onProgress: sendProgress,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      sendProgress({
+        serverId: id,
+        active: false,
+        phase: null,
+        label: message,
+        percent: null,
+        bytesDownloaded: null,
+        bytesTotal: null,
+        assetLabel: null,
+        error: message,
+      });
+      throw error;
+    }
+  });
 
-  handleValidated(
-    IPC.serversAsaApiUninstall,
-    ipcArgSchemas[IPC.serversAsaApiUninstall],
-    async ([id]) => {
-      if (instances.statuses().some((s) => s.serverId === id && s.processLive)) {
-        throw new Error("Stop the server before uninstalling AsaApi");
-      }
-      const installDir = instances.installDirFor(id);
-      const status = await asaApi.uninstall(installDir);
-      const existing = repo.get(id);
-      if (
-        existing !== null &&
-        (existing.useAsaApi === true || existing.useAsaApiLoader === true)
-      ) {
-        await instances.updatePatch(id, {
-          group: "asaApi",
-          useAsaApi: false,
-          useAsaApiLoader: false,
-        });
-      }
-      return status;
-    },
-  );
+  handleValidated(IPC.serversAsaApiUninstall, ipcArgSchemas[IPC.serversAsaApiUninstall], async ([id]) => {
+    if (instances.statuses().some((s) => s.serverId === id && s.processLive)) {
+      throw new Error("Stop the server before uninstalling AsaApi");
+    }
+    const installDir = instances.installDirFor(id);
+    const status = await asaApi.uninstall(installDir);
+    const existing = repo.get(id);
+    if (existing !== null && (existing.useAsaApi === true || existing.useAsaApiLoader === true)) {
+      await instances.updatePatch(id, {
+        group: "asaApi",
+        useAsaApi: false,
+        useAsaApiLoader: false,
+      });
+    }
+    return status;
+  });
 
   handleValidated(
     IPC.serversAsaApiSetPluginEnabled,
@@ -420,98 +375,68 @@ export function registerIpcHandlers(
     },
   );
 
-  handleValidated(
-    IPC.serversAsaApiAddPluginZip,
-    ipcArgSchemas[IPC.serversAsaApiAddPluginZip],
-    async ([id]) => {
-      if (instances.statuses().some((s) => s.serverId === id && s.processLive)) {
-        throw new Error("Stop the server before adding AsaApi plugins");
-      }
-      const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
-      const openOptions: OpenDialogOptions = {
-        title: "Add AsaApi plugin zip",
-        properties: ["openFile"],
-        filters: [{ name: "ZIP archives", extensions: ["zip"] }],
-      };
-      const picked =
-        win !== undefined
-          ? await dialog.showOpenDialog(win, openOptions)
-          : await dialog.showOpenDialog(openOptions);
-      if (picked.canceled || picked.filePaths.length === 0) {
-        return null;
-      }
-      const zipPath = picked.filePaths[0];
-      if (zipPath === undefined || zipPath.length === 0) {
-        return null;
-      }
-      const installDir = instances.installDirFor(id);
-      return asaApi.installPluginFromZip(installDir, zipPath);
-    },
-  );
+  handleValidated(IPC.serversAsaApiAddPluginZip, ipcArgSchemas[IPC.serversAsaApiAddPluginZip], async ([id]) => {
+    if (instances.statuses().some((s) => s.serverId === id && s.processLive)) {
+      throw new Error("Stop the server before adding AsaApi plugins");
+    }
+    const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
+    const openOptions: OpenDialogOptions = {
+      title: "Add AsaApi plugin zip",
+      properties: ["openFile"],
+      filters: [{ name: "ZIP archives", extensions: ["zip"] }],
+    };
+    const picked =
+      win !== undefined ? await dialog.showOpenDialog(win, openOptions) : await dialog.showOpenDialog(openOptions);
+    if (picked.canceled || picked.filePaths.length === 0) {
+      return null;
+    }
+    const zipPath = picked.filePaths[0];
+    if (zipPath === undefined || zipPath.length === 0) {
+      return null;
+    }
+    const installDir = instances.installDirFor(id);
+    return asaApi.installPluginFromZip(installDir, zipPath);
+  });
 
-  handleValidated(
-    IPC.serversAsaApiOpenWin64,
-    ipcArgSchemas[IPC.serversAsaApiOpenWin64],
-    async ([id]) => {
-      const installDir = instances.installDirFor(id);
-      const targetPath = asaApi.win64Path(installDir);
-      await mkdir(targetPath, { recursive: true });
-      const error = await shell.openPath(targetPath);
-      if (error.length > 0) {
-        throw new Error(`Could not open Win64 folder: ${error}`);
-      }
-    },
-  );
+  handleValidated(IPC.serversAsaApiOpenWin64, ipcArgSchemas[IPC.serversAsaApiOpenWin64], async ([id]) => {
+    const installDir = instances.installDirFor(id);
+    const targetPath = asaApi.win64Path(installDir);
+    await mkdir(targetPath, { recursive: true });
+    const error = await shell.openPath(targetPath);
+    if (error.length > 0) {
+      throw new Error(`Could not open Win64 folder: ${error}`);
+    }
+  });
 
-  handleValidated(
-    IPC.serversAsaApiOpenPlugins,
-    ipcArgSchemas[IPC.serversAsaApiOpenPlugins],
-    async ([id]) => {
-      const installDir = instances.installDirFor(id);
-      const targetPath = asaApi.pluginsPath(installDir);
-      await mkdir(targetPath, { recursive: true });
-      const error = await shell.openPath(targetPath);
-      if (error.length > 0) {
-        throw new Error(`Could not open Plugins folder: ${error}`);
-      }
-    },
-  );
+  handleValidated(IPC.serversAsaApiOpenPlugins, ipcArgSchemas[IPC.serversAsaApiOpenPlugins], async ([id]) => {
+    const installDir = instances.installDirFor(id);
+    const targetPath = asaApi.pluginsPath(installDir);
+    await mkdir(targetPath, { recursive: true });
+    const error = await shell.openPath(targetPath);
+    if (error.length > 0) {
+      throw new Error(`Could not open Plugins folder: ${error}`);
+    }
+  });
 
-  handleValidated(
-    IPC.serversAsaApiClearCache,
-    ipcArgSchemas[IPC.serversAsaApiClearCache],
-    async () => {
-      await asaApi.clearDownloadCache();
-    },
-  );
+  handleValidated(IPC.serversAsaApiClearCache, ipcArgSchemas[IPC.serversAsaApiClearCache], async () => {
+    await asaApi.clearDownloadCache();
+  });
 
-  handleValidated(IPC.steamcmdInstall, ipcArgSchemas[IPC.steamcmdInstall], () =>
-    updates.installSteamCmd(),
-  );
+  handleValidated(IPC.steamcmdInstall, ipcArgSchemas[IPC.steamcmdInstall], () => updates.installSteamCmd());
 
-  handleValidated(IPC.steamcmdCancel, ipcArgSchemas[IPC.steamcmdCancel], () =>
-    updates.cancelSteamCmd(),
-  );
+  handleValidated(IPC.steamcmdCancel, ipcArgSchemas[IPC.steamcmdCancel], () => updates.cancelSteamCmd());
 
-  handleValidated(IPC.steamcmdPause, ipcArgSchemas[IPC.steamcmdPause], () =>
-    updates.pauseSteamCmd(),
-  );
+  handleValidated(IPC.steamcmdPause, ipcArgSchemas[IPC.steamcmdPause], () => updates.pauseSteamCmd());
 
-  handleValidated(IPC.criticalJobRetry, ipcArgSchemas[IPC.criticalJobRetry], ([id]) =>
-    updates.retryCriticalJob(id),
-  );
+  handleValidated(IPC.criticalJobRetry, ipcArgSchemas[IPC.criticalJobRetry], ([id]) => updates.retryCriticalJob(id));
 
   handleValidated(IPC.criticalJobDismiss, ipcArgSchemas[IPC.criticalJobDismiss], ([id]) =>
     updates.dismissCriticalJob(id),
   );
 
-  handleValidated(IPC.criticalJobCancel, ipcArgSchemas[IPC.criticalJobCancel], ([id]) =>
-    updates.cancelCriticalJob(id),
-  );
+  handleValidated(IPC.criticalJobCancel, ipcArgSchemas[IPC.criticalJobCancel], ([id]) => updates.cancelCriticalJob(id));
 
-  handleValidated(IPC.criticalJobResume, ipcArgSchemas[IPC.criticalJobResume], ([id]) =>
-    updates.resumeCriticalJob(id),
-  );
+  handleValidated(IPC.criticalJobResume, ipcArgSchemas[IPC.criticalJobResume], ([id]) => updates.resumeCriticalJob(id));
 
   handleValidated(IPC.criticalJobReorder, ipcArgSchemas[IPC.criticalJobReorder], ([id, direction]) =>
     updates.reorderCriticalJob(id, direction),
@@ -521,9 +446,7 @@ export function registerIpcHandlers(
     updates.setSteamCmdExecutablePath(path),
   );
 
-  handleValidated(IPC.steamcmdStatus, ipcArgSchemas[IPC.steamcmdStatus], () =>
-    updates.getSteamCmdStatus(),
-  );
+  handleValidated(IPC.steamcmdStatus, ipcArgSchemas[IPC.steamcmdStatus], () => updates.getSteamCmdStatus());
 
   handleValidated(IPC.steamcmdConsole, ipcArgSchemas[IPC.steamcmdConsole], ([limit]) =>
     updates.getSteamCmdConsole(limit ?? undefined),
@@ -543,58 +466,37 @@ export function registerIpcHandlers(
   );
 
   handleValidated(IPC.serversStatuses, ipcArgSchemas[IPC.serversStatuses], () =>
-    instances
-      .statuses()
-      .map((status) =>
-        maintenance.annotateStatus(crashRecovery.annotateStatus(status)),
-      ),
+    instances.statuses().map((status) => maintenance.annotateStatus(crashRecovery.annotateStatus(status))),
   );
 
   handleValidated(
     IPC.serversInstallation,
     ipcArgSchemas[IPC.serversInstallation],
-    ([forceOfficialCheck, serversMode]) =>
-      instances.installationInfo(forceOfficialCheck === true, serversMode ?? true),
+    ([forceOfficialCheck, serversMode]) => instances.installationInfo(forceOfficialCheck === true, serversMode ?? true),
   );
 
-  handleValidated(IPC.clusterCheck, ipcArgSchemas[IPC.clusterCheck], () =>
-    instances.checkClusters(),
-  );
+  handleValidated(IPC.clusterCheck, ipcArgSchemas[IPC.clusterCheck], () => instances.checkClusters());
 
-  handleValidated(IPC.rconCommand, ipcArgSchemas[IPC.rconCommand], ([id, command]) =>
-    instances.sendRcon(id, command),
-  );
+  handleValidated(IPC.rconCommand, ipcArgSchemas[IPC.rconCommand], ([id, command]) => instances.sendRcon(id, command));
 
   handleValidated(IPC.rconRetryConnection, ipcArgSchemas[IPC.rconRetryConnection], ([id]) =>
     instances.retryRconConnection(id),
   );
 
-  handleValidated(IPC.rconGetStatus, ipcArgSchemas[IPC.rconGetStatus], ([id]) =>
-    instances.getRconStatus(id),
-  );
+  handleValidated(IPC.rconGetStatus, ipcArgSchemas[IPC.rconGetStatus], ([id]) => instances.getRconStatus(id));
 
-  handleValidated(IPC.rconGetAllStatus, ipcArgSchemas[IPC.rconGetAllStatus], () =>
-    instances.getAllRconStatus(),
-  );
+  handleValidated(IPC.rconGetAllStatus, ipcArgSchemas[IPC.rconGetAllStatus], () => instances.getAllRconStatus());
 
-  handleValidated(
-    IPC.rconTabFocusChanged,
-    ipcArgSchemas[IPC.rconTabFocusChanged],
-    async ([serverId, isFocused]) => {
-      if (!isFocused) {
-        return playerSessionWatcher.getOnlinePlayers(serverId);
-      }
-      return playerSessionWatcher.refreshServer(serverId);
-    },
-  );
+  handleValidated(IPC.rconTabFocusChanged, ipcArgSchemas[IPC.rconTabFocusChanged], async ([serverId, isFocused]) => {
+    if (!isFocused) {
+      return playerSessionWatcher.getOnlinePlayers(serverId);
+    }
+    return playerSessionWatcher.refreshServer(serverId);
+  });
 
-  handleValidated(
-    IPC.processMetricsSetSampling,
-    ipcArgSchemas[IPC.processMetricsSetSampling],
-    ([enabled]) => {
-      processMetricsSampler.setSamplingEnabled(enabled);
-    },
-  );
+  handleValidated(IPC.processMetricsSetSampling, ipcArgSchemas[IPC.processMetricsSetSampling], ([enabled]) => {
+    processMetricsSampler.setSamplingEnabled(enabled);
+  });
 
   handleValidated(IPC.refreshPlayerList, ipcArgSchemas[IPC.refreshPlayerList], ([serverId]) =>
     playerSessionWatcher.refreshServer(serverId),
@@ -644,64 +546,46 @@ export function registerIpcHandlers(
     setAdminListConfig(instances.installDirFor(serverId), config),
   );
 
-  handleValidated(
-    IPC.validateAdminListUrl,
-    ipcArgSchemas[IPC.validateAdminListUrl],
-    async ([serverId, url]) => {
-      // Ensure the profile exists; fetch does not need installDir.
-      instances.installDirFor(serverId);
-      return validateAdminListUrl(url);
-    },
+  handleValidated(IPC.validateAdminListUrl, ipcArgSchemas[IPC.validateAdminListUrl], async ([serverId, url]) => {
+    // Ensure the profile exists; fetch does not need installDir.
+    instances.installDirFor(serverId);
+    return validateAdminListUrl(url);
+  });
+
+  handleValidated(IPC.learnAdminListNames, ipcArgSchemas[IPC.learnAdminListNames], async ([serverId, hints]) =>
+    learnAdminListNames(instances.installDirFor(serverId), hints),
   );
 
-  handleValidated(
-    IPC.learnAdminListNames,
-    ipcArgSchemas[IPC.learnAdminListNames],
-    async ([serverId, hints]) =>
-      learnAdminListNames(instances.installDirFor(serverId), hints),
-  );
+  handleValidated(IPC.eventsRecent, ipcArgSchemas[IPC.eventsRecent], ([limit]) => repo.recentEvents(limit));
 
-  handleValidated(IPC.eventsRecent, ipcArgSchemas[IPC.eventsRecent], ([limit]) =>
-    repo.recentEvents(limit),
-  );
-
-  handleValidated(
-    IPC.pickPath,
-    ipcArgSchemas[IPC.pickPath],
-    async ([kind, defaultPath, title]) => {
-      const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
-      const defaultPathArg = defaultPath ?? undefined;
-      const titleArg = title ?? undefined;
-      if (kind === "save") {
-        const saveOptions: SaveDialogOptions = {
-          title: titleArg,
-          defaultPath: defaultPathArg,
-          filters: [{ name: "ZIP archives", extensions: ["zip"] }],
-        };
-        const result =
-          win !== undefined
-            ? await dialog.showSaveDialog(win, saveOptions)
-            : await dialog.showSaveDialog(saveOptions);
-        if (result.canceled || result.filePath === undefined || result.filePath.length === 0) {
-          return null;
-        }
-        return result.filePath;
-      }
-      const options: OpenDialogOptions = {
+  handleValidated(IPC.pickPath, ipcArgSchemas[IPC.pickPath], async ([kind, defaultPath, title]) => {
+    const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
+    const defaultPathArg = defaultPath ?? undefined;
+    const titleArg = title ?? undefined;
+    if (kind === "save") {
+      const saveOptions: SaveDialogOptions = {
         title: titleArg,
         defaultPath: defaultPathArg,
-        properties: [kind === "directory" ? "openDirectory" : "openFile"],
+        filters: [{ name: "ZIP archives", extensions: ["zip"] }],
       };
       const result =
-        win !== undefined
-          ? await dialog.showOpenDialog(win, options)
-          : await dialog.showOpenDialog(options);
-      if (result.canceled || result.filePaths.length === 0) {
+        win !== undefined ? await dialog.showSaveDialog(win, saveOptions) : await dialog.showSaveDialog(saveOptions);
+      if (result.canceled || result.filePath === undefined || result.filePath.length === 0) {
         return null;
       }
-      return result.filePaths[0] ?? null;
-    },
-  );
+      return result.filePath;
+    }
+    const options: OpenDialogOptions = {
+      title: titleArg,
+      defaultPath: defaultPathArg,
+      properties: [kind === "directory" ? "openDirectory" : "openFile"],
+    };
+    const result = win !== undefined ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options);
+    if (result.canceled || result.filePaths.length === 0) {
+      return null;
+    }
+    return result.filePaths[0] ?? null;
+  });
 
   handleValidated(IPC.appListDataFolders, ipcArgSchemas[IPC.appListDataFolders], () => [
     { kind: "app" as const, label: "App data", path: appDataFolders.app },
@@ -745,22 +629,14 @@ export function registerIpcHandlers(
     return density;
   });
 
-  handleValidated(
-    IPC.appGetOpenNativeConsole,
-    ipcArgSchemas[IPC.appGetOpenNativeConsole],
-    (): boolean | null => {
-      return parseStoredOpenNativeConsole(settings.get(OPEN_NATIVE_CONSOLE_SETTING_KEY));
-    },
-  );
+  handleValidated(IPC.appGetOpenNativeConsole, ipcArgSchemas[IPC.appGetOpenNativeConsole], (): boolean | null => {
+    return parseStoredOpenNativeConsole(settings.get(OPEN_NATIVE_CONSOLE_SETTING_KEY));
+  });
 
-  handleValidated(
-    IPC.appSetOpenNativeConsole,
-    ipcArgSchemas[IPC.appSetOpenNativeConsole],
-    ([enabled]): boolean => {
-      settings.set(OPEN_NATIVE_CONSOLE_SETTING_KEY, encodeOpenNativeConsolePref(enabled));
-      return enabled;
-    },
-  );
+  handleValidated(IPC.appSetOpenNativeConsole, ipcArgSchemas[IPC.appSetOpenNativeConsole], ([enabled]): boolean => {
+    settings.set(OPEN_NATIVE_CONSOLE_SETTING_KEY, encodeOpenNativeConsolePref(enabled));
+    return enabled;
+  });
 
   handleValidated(
     IPC.appGetLastSeenChangelogVersion,
@@ -789,34 +665,26 @@ export function registerIpcHandlers(
     },
   );
 
-  handleValidated(
-    IPC.appGetOnboarding,
-    ipcArgSchemas[IPC.appGetOnboarding],
-    (): OnboardingRecord | null => {
-      // Fresh E2E profiles must not block smoke on the first-run setup wizard.
-      // YARK_E2E_FULL_UI=true keeps normal operator UI on an isolated profile.
-      if (isYarkE2eShortcutsActive()) {
-        return {
-          status: "completed",
-          completedAt: "1970-01-01T00:00:00.000Z",
-        };
-      }
-      return parseOnboardingRecord(settings.get(ONBOARDING_SETTING_KEY));
-    },
-  );
+  handleValidated(IPC.appGetOnboarding, ipcArgSchemas[IPC.appGetOnboarding], (): OnboardingRecord | null => {
+    // Fresh E2E profiles must not block smoke on the first-run setup wizard.
+    // YARK_E2E_FULL_UI=true keeps normal operator UI on an isolated profile.
+    if (isYarkE2eShortcutsActive()) {
+      return {
+        status: "completed",
+        completedAt: "1970-01-01T00:00:00.000Z",
+      };
+    }
+    return parseOnboardingRecord(settings.get(ONBOARDING_SETTING_KEY));
+  });
 
-  handleValidated(
-    IPC.appSetOnboarding,
-    ipcArgSchemas[IPC.appSetOnboarding],
-    ([record]): OnboardingRecord | null => {
-      if (record === null) {
-        settings.set(ONBOARDING_SETTING_KEY, null);
-        return null;
-      }
-      settings.set(ONBOARDING_SETTING_KEY, serializeOnboardingRecord(record));
-      return record;
-    },
-  );
+  handleValidated(IPC.appSetOnboarding, ipcArgSchemas[IPC.appSetOnboarding], ([record]): OnboardingRecord | null => {
+    if (record === null) {
+      settings.set(ONBOARDING_SETTING_KEY, null);
+      return null;
+    }
+    settings.set(ONBOARDING_SETTING_KEY, serializeOnboardingRecord(record));
+    return record;
+  });
 
   handleValidated(
     IPC.appGetDesktopShellPreferences,
@@ -824,26 +692,20 @@ export function registerIpcHandlers(
     (): DesktopShellPreferences => readDesktopShellPreferences(settings),
   );
 
-  handleValidated(
-    IPC.appSetCloseWindowToTray,
-    ipcArgSchemas[IPC.appSetCloseWindowToTray],
-    ([enabled]): boolean => setCloseWindowToTray(settings, enabled),
+  handleValidated(IPC.appSetCloseWindowToTray, ipcArgSchemas[IPC.appSetCloseWindowToTray], ([enabled]): boolean =>
+    setCloseWindowToTray(settings, enabled),
   );
 
-  handleValidated(
-    IPC.appSetStartWithWindows,
-    ipcArgSchemas[IPC.appSetStartWithWindows],
-    ([enabled]): boolean => {
-      const next = setStartWithWindowsPreference(settings, enabled);
-      try {
-        applyWindowsLoginItem(next);
-      } catch (error: unknown) {
-        const detail = error instanceof Error ? error.message : String(error);
-        throw new Error(`Could not update Windows startup registration: ${detail}`);
-      }
-      return next;
-    },
-  );
+  handleValidated(IPC.appSetStartWithWindows, ipcArgSchemas[IPC.appSetStartWithWindows], ([enabled]): boolean => {
+    const next = setStartWithWindowsPreference(settings, enabled);
+    try {
+      applyWindowsLoginItem(next);
+    } catch (error: unknown) {
+      const detail = error instanceof Error ? error.message : String(error);
+      throw new Error(`Could not update Windows startup registration: ${detail}`);
+    }
+    return next;
+  });
 
   handleValidated(
     IPC.appSetTrayCloseHintDismissed,
@@ -851,28 +713,20 @@ export function registerIpcHandlers(
     ([dismissed]): boolean => setTrayCloseHintDismissed(settings, dismissed),
   );
 
-  handleValidated(
-    IPC.appSetOsNotifyEnabled,
-    ipcArgSchemas[IPC.appSetOsNotifyEnabled],
-    ([enabled]): boolean => setOsNotifyEnabled(settings, enabled),
+  handleValidated(IPC.appSetOsNotifyEnabled, ipcArgSchemas[IPC.appSetOsNotifyEnabled], ([enabled]): boolean =>
+    setOsNotifyEnabled(settings, enabled),
   );
 
-  handleValidated(
-    IPC.appSetOsNotifyCrash,
-    ipcArgSchemas[IPC.appSetOsNotifyCrash],
-    ([enabled]): boolean => setOsNotifyCrash(settings, enabled),
+  handleValidated(IPC.appSetOsNotifyCrash, ipcArgSchemas[IPC.appSetOsNotifyCrash], ([enabled]): boolean =>
+    setOsNotifyCrash(settings, enabled),
   );
 
-  handleValidated(
-    IPC.appSetOsNotifySteamCmd,
-    ipcArgSchemas[IPC.appSetOsNotifySteamCmd],
-    ([enabled]): boolean => setOsNotifySteamCmd(settings, enabled),
+  handleValidated(IPC.appSetOsNotifySteamCmd, ipcArgSchemas[IPC.appSetOsNotifySteamCmd], ([enabled]): boolean =>
+    setOsNotifySteamCmd(settings, enabled),
   );
 
-  handleValidated(
-    IPC.appSetOsNotifyYarkUpdate,
-    ipcArgSchemas[IPC.appSetOsNotifyYarkUpdate],
-    ([enabled]): boolean => setOsNotifyYarkUpdate(settings, enabled),
+  handleValidated(IPC.appSetOsNotifyYarkUpdate, ipcArgSchemas[IPC.appSetOsNotifyYarkUpdate], ([enabled]): boolean =>
+    setOsNotifyYarkUpdate(settings, enabled),
   );
 
   handleValidated(IPC.appGetDiscordWebhook, ipcArgSchemas[IPC.appGetDiscordWebhook], () =>
@@ -898,16 +752,11 @@ export function registerIpcHandlers(
     async ([webhookUrl, description]) => discordWebhook.test(webhookUrl, description),
   );
 
-  handleValidated(IPC.iniRead, ipcArgSchemas[IPC.iniRead], ([serverId]) =>
-    ini.readServerIni(serverId),
-  );
+  handleValidated(IPC.iniRead, ipcArgSchemas[IPC.iniRead], ([serverId]) => ini.readServerIni(serverId));
 
   handleValidated(IPC.iniOpenInEditor, ipcArgSchemas[IPC.iniOpenInEditor], async ([serverId, fileKey]) => {
     const snapshot = await ini.readServerIni(serverId);
-    const targetPath =
-      fileKey === "gameUserSettings"
-        ? snapshot.gameUserSettingsPath
-        : snapshot.gameIniPath;
+    const targetPath = fileKey === "gameUserSettings" ? snapshot.gameUserSettingsPath : snapshot.gameIniPath;
     const error = await shell.openPath(targetPath);
     if (error.length > 0) {
       throw new Error(`Could not open INI file: ${error}`);
@@ -927,9 +776,7 @@ export function registerIpcHandlers(
     return result;
   });
 
-  handleValidated(IPC.clusterIniGet, ipcArgSchemas[IPC.clusterIniGet], ([clusterId]) =>
-    clusterIni.get(clusterId),
-  );
+  handleValidated(IPC.clusterIniGet, ipcArgSchemas[IPC.clusterIniGet], ([clusterId]) => clusterIni.get(clusterId));
 
   handleValidated(IPC.clusterIniGetOrDraft, ipcArgSchemas[IPC.clusterIniGetOrDraft], ([clusterId]) =>
     clusterIni.getOrDraft(clusterId),
@@ -950,43 +797,29 @@ export function registerIpcHandlers(
   handleValidated(
     IPC.clusterIniPreviewRestore,
     ipcArgSchemas[IPC.clusterIniPreviewRestore],
-    ([clusterId, serverId, files]) =>
-      clusterIniApply.previewRestore(clusterId, serverId, files ?? undefined),
+    ([clusterId, serverId, files]) => clusterIniApply.previewRestore(clusterId, serverId, files ?? undefined),
   );
 
   handleValidated(
     IPC.clusterIniPreviewPromote,
     ipcArgSchemas[IPC.clusterIniPreviewPromote],
-    ([clusterId, serverId, files]) =>
-      clusterIniApply.previewPromote(clusterId, serverId, files ?? undefined),
+    ([clusterId, serverId, files]) => clusterIniApply.previewPromote(clusterId, serverId, files ?? undefined),
   );
 
-  handleValidated(
-    IPC.clusterIniPreviewSeed,
-    ipcArgSchemas[IPC.clusterIniPreviewSeed],
-    ([clusterId, serverId, files]) =>
-      clusterIniApply.previewSeed(clusterId, serverId, files ?? undefined),
+  handleValidated(IPC.clusterIniPreviewSeed, ipcArgSchemas[IPC.clusterIniPreviewSeed], ([clusterId, serverId, files]) =>
+    clusterIniApply.previewSeed(clusterId, serverId, files ?? undefined),
   );
 
-  handleValidated(
-    IPC.clusterIniRestore,
-    ipcArgSchemas[IPC.clusterIniRestore],
-    ([clusterId, serverId, files]) =>
-      clusterIniApply.restore(clusterId, serverId, files ?? undefined),
+  handleValidated(IPC.clusterIniRestore, ipcArgSchemas[IPC.clusterIniRestore], ([clusterId, serverId, files]) =>
+    clusterIniApply.restore(clusterId, serverId, files ?? undefined),
   );
 
-  handleValidated(
-    IPC.clusterIniPromote,
-    ipcArgSchemas[IPC.clusterIniPromote],
-    ([clusterId, serverId, files]) =>
-      clusterIniApply.promote(clusterId, serverId, files ?? undefined),
+  handleValidated(IPC.clusterIniPromote, ipcArgSchemas[IPC.clusterIniPromote], ([clusterId, serverId, files]) =>
+    clusterIniApply.promote(clusterId, serverId, files ?? undefined),
   );
 
-  handleValidated(
-    IPC.clusterIniSeed,
-    ipcArgSchemas[IPC.clusterIniSeed],
-    ([clusterId, serverId, files]) =>
-      clusterIniApply.seed(clusterId, serverId, files ?? undefined),
+  handleValidated(IPC.clusterIniSeed, ipcArgSchemas[IPC.clusterIniSeed], ([clusterId, serverId, files]) =>
+    clusterIniApply.seed(clusterId, serverId, files ?? undefined),
   );
 
   handleValidated(IPC.configTransferDescribe, ipcArgSchemas[IPC.configTransferDescribe], ([sourceId]) =>
@@ -996,30 +829,23 @@ export function registerIpcHandlers(
   handleValidated(
     IPC.configTransferPreview,
     ipcArgSchemas[IPC.configTransferPreview],
-    ([sourceId, targetId, selection]) =>
-      configTransfer.preview(sourceId, targetId, selection),
+    ([sourceId, targetId, selection]) => configTransfer.preview(sourceId, targetId, selection),
   );
 
   handleValidated(
     IPC.configTransferCommit,
     ipcArgSchemas[IPC.configTransferCommit],
-    ([sourceId, targetId, selection, fingerprint]) =>
-      configTransfer.commit(sourceId, targetId, selection, fingerprint),
+    ([sourceId, targetId, selection, fingerprint]) => configTransfer.commit(sourceId, targetId, selection, fingerprint),
   );
 
-  handleValidated(IPC.logsList, ipcArgSchemas[IPC.logsList], ([serverId]) =>
-    logs.listServerLogs(serverId),
-  );
+  handleValidated(IPC.logsList, ipcArgSchemas[IPC.logsList], ([serverId]) => logs.listServerLogs(serverId));
 
   handleValidated(IPC.logsRuntime, ipcArgSchemas[IPC.logsRuntime], ([serverId, limit]) =>
     logs.getRuntimeLogSnapshot(serverId, limit ?? undefined),
   );
 
-  handleValidated(
-    IPC.logsReadUpdate,
-    ipcArgSchemas[IPC.logsReadUpdate],
-    ([serverId, fileName, maxBytes]) =>
-      logs.readUpdateLog(serverId, fileName, maxBytes ?? undefined),
+  handleValidated(IPC.logsReadUpdate, ipcArgSchemas[IPC.logsReadUpdate], ([serverId, fileName, maxBytes]) =>
+    logs.readUpdateLog(serverId, fileName, maxBytes ?? undefined),
   );
 
   handleValidated(IPC.logsExport, ipcArgSchemas[IPC.logsExport], async ([serverId]) => {
@@ -1029,31 +855,22 @@ export function registerIpcHandlers(
       defaultPath: `${serverId}-logs-${fileStamp()}.txt`,
       filters: [{ name: "Text", extensions: ["txt", "log"] }],
     };
-    const result =
-      win !== undefined
-        ? await dialog.showSaveDialog(win, options)
-        : await dialog.showSaveDialog(options);
+    const result = win !== undefined ? await dialog.showSaveDialog(win, options) : await dialog.showSaveDialog(options);
     if (result.canceled || result.filePath === undefined) {
       return null;
     }
     return logs.exportServerLogs(serverId, result.filePath);
   });
 
-  handleValidated(
-    IPC.logsOpenUpdateFile,
-    ipcArgSchemas[IPC.logsOpenUpdateFile],
-    async ([serverId, fileName]) => {
-      const path = logs.resolveUpdateLogPath(serverId, fileName);
-      const error = await shell.openPath(path);
-      if (error.length > 0) {
-        throw new Error(`Could not open log: ${error}`);
-      }
-    },
-  );
+  handleValidated(IPC.logsOpenUpdateFile, ipcArgSchemas[IPC.logsOpenUpdateFile], async ([serverId, fileName]) => {
+    const path = logs.resolveUpdateLogPath(serverId, fileName);
+    const error = await shell.openPath(path);
+    if (error.length > 0) {
+      throw new Error(`Could not open log: ${error}`);
+    }
+  });
 
-  handleValidated(IPC.logsClearEvents, ipcArgSchemas[IPC.logsClearEvents], ([serverId]) =>
-    logs.clearEvents(serverId),
-  );
+  handleValidated(IPC.logsClearEvents, ipcArgSchemas[IPC.logsClearEvents], ([serverId]) => logs.clearEvents(serverId));
 
   handleValidated(IPC.logsClearRuntime, ipcArgSchemas[IPC.logsClearRuntime], ([serverId]) =>
     logs.clearRuntimeLog(serverId),
@@ -1071,19 +888,15 @@ export function registerIpcHandlers(
     logs.getRetentionSettings(),
   );
 
-  handleValidated(
-    IPC.logsSetRetentionSettings,
-    ipcArgSchemas[IPC.logsSetRetentionSettings],
-    ([nextSettings]) => logs.setRetentionSettings(nextSettings),
+  handleValidated(IPC.logsSetRetentionSettings, ipcArgSchemas[IPC.logsSetRetentionSettings], ([nextSettings]) =>
+    logs.setRetentionSettings(nextSettings),
   );
 
   handleValidated(IPC.logsPreviewCleanup, ipcArgSchemas[IPC.logsPreviewCleanup], ([options]) =>
     logs.previewCleanup(options ?? {}),
   );
 
-  handleValidated(IPC.logsRunCleanup, ipcArgSchemas[IPC.logsRunCleanup], ([options]) =>
-    logs.runCleanup(options ?? {}),
-  );
+  handleValidated(IPC.logsRunCleanup, ipcArgSchemas[IPC.logsRunCleanup], ([options]) => logs.runCleanup(options ?? {}));
 
   handleValidated(IPC.modsGet, ipcArgSchemas[IPC.modsGet], ([modId, forceRefresh]) =>
     mods.getMod(modId, { forceRefresh: forceRefresh === true }),
@@ -1097,13 +910,9 @@ export function registerIpcHandlers(
     mods.search(query, options ?? undefined),
   );
 
-  handleValidated(IPC.modsListCategories, ipcArgSchemas[IPC.modsListCategories], () =>
-    mods.listCategories(),
-  );
+  handleValidated(IPC.modsListCategories, ipcArgSchemas[IPC.modsListCategories], () => mods.listCategories());
 
-  handleValidated(IPC.modsGetByReference, ipcArgSchemas[IPC.modsGetByReference], ([ref]) =>
-    mods.getByReference(ref),
-  );
+  handleValidated(IPC.modsGetByReference, ipcArgSchemas[IPC.modsGetByReference], ([ref]) => mods.getByReference(ref));
 
   handleValidated(IPC.modsOpenCurseForge, ipcArgSchemas[IPC.modsOpenCurseForge], async ([url]) => {
     // Fail closed: only open a validated ASA CurseForge mod detail URL.
@@ -1128,27 +937,19 @@ export function registerIpcHandlers(
     return backups.deleteBackups(serverId, backupIds);
   });
 
-  handleValidated(
-    IPC.backupsDeleteFailed,
-    ipcArgSchemas[IPC.backupsDeleteFailed],
-    ([serverId, kind]) => {
-      if (instances.isStopInProgress(serverId)) {
-        throw new Error("Cannot delete backups while stop backup is in progress");
-      }
-      return backups.deleteFailedBackups(serverId, kind);
-    },
-  );
+  handleValidated(IPC.backupsDeleteFailed, ipcArgSchemas[IPC.backupsDeleteFailed], ([serverId, kind]) => {
+    if (instances.isStopInProgress(serverId)) {
+      throw new Error("Cannot delete backups while stop backup is in progress");
+    }
+    return backups.deleteFailedBackups(serverId, kind);
+  });
 
-  handleValidated(
-    IPC.backupsRestore,
-    ipcArgSchemas[IPC.backupsRestore],
-    ([serverId, backupId, options]) => {
-      if (instances.isStopInProgress(serverId)) {
-        throw new Error("Cannot restore while stop backup is in progress");
-      }
-      return backups.restoreBackup(serverId, backupId, options ?? undefined);
-    },
-  );
+  handleValidated(IPC.backupsRestore, ipcArgSchemas[IPC.backupsRestore], ([serverId, backupId, options]) => {
+    if (instances.isStopInProgress(serverId)) {
+      throw new Error("Cannot restore while stop backup is in progress");
+    }
+    return backups.restoreBackup(serverId, backupId, options ?? undefined);
+  });
 
   handleValidated(IPC.backupsGetPolicy, ipcArgSchemas[IPC.backupsGetPolicy], ([serverId]) =>
     backups.getPolicy(serverId),
@@ -1158,81 +959,57 @@ export function registerIpcHandlers(
     backups.setPolicy(serverId, policy),
   );
 
-  handleValidated(
-    IPC.maintenanceGetPolicy,
-    ipcArgSchemas[IPC.maintenanceGetPolicy],
-    ([serverId]) => maintenance.getPolicy(serverId),
+  handleValidated(IPC.maintenanceGetPolicy, ipcArgSchemas[IPC.maintenanceGetPolicy], ([serverId]) =>
+    maintenance.getPolicy(serverId),
   );
 
-  handleValidated(
-    IPC.maintenanceSetPolicy,
-    ipcArgSchemas[IPC.maintenanceSetPolicy],
-    ([serverId, policy]) => maintenance.setPolicy(serverId, policy),
+  handleValidated(IPC.maintenanceSetPolicy, ipcArgSchemas[IPC.maintenanceSetPolicy], ([serverId, policy]) =>
+    maintenance.setPolicy(serverId, policy),
   );
 
-  handleValidated(
-    IPC.maintenanceClearSchedulePause,
-    ipcArgSchemas[IPC.maintenanceClearSchedulePause],
-    ([serverId]) => maintenance.clearSchedulePause(serverId),
+  handleValidated(IPC.maintenanceClearSchedulePause, ipcArgSchemas[IPC.maintenanceClearSchedulePause], ([serverId]) =>
+    maintenance.clearSchedulePause(serverId),
   );
 
-  handleValidated(
-    IPC.maintenanceRunRestartNow,
-    ipcArgSchemas[IPC.maintenanceRunRestartNow],
-    ([serverId]) => maintenance.runRestartNow(serverId),
+  handleValidated(IPC.maintenanceRunRestartNow, ipcArgSchemas[IPC.maintenanceRunRestartNow], ([serverId]) =>
+    maintenance.runRestartNow(serverId),
   );
 
-  handleValidated(
-    IPC.maintenanceRunRestartWarning,
-    ipcArgSchemas[IPC.maintenanceRunRestartWarning],
-    ([serverId]) => maintenance.runManualRestartWarning(serverId),
+  handleValidated(IPC.maintenanceRunRestartWarning, ipcArgSchemas[IPC.maintenanceRunRestartWarning], ([serverId]) =>
+    maintenance.runManualRestartWarning(serverId),
   );
 
-  handleValidated(
-    IPC.maintenanceRunUpdateNow,
-    ipcArgSchemas[IPC.maintenanceRunUpdateNow],
-    ([serverId]) => maintenance.runUpdateNow(serverId),
+  handleValidated(IPC.maintenanceRunUpdateNow, ipcArgSchemas[IPC.maintenanceRunUpdateNow], ([serverId]) =>
+    maintenance.runUpdateNow(serverId),
   );
 
-  handleValidated(
-    IPC.maintenanceCancelUpcoming,
-    ipcArgSchemas[IPC.maintenanceCancelUpcoming],
-    ([serverId]) => maintenance.cancelUpcoming(serverId),
+  handleValidated(IPC.maintenanceCancelUpcoming, ipcArgSchemas[IPC.maintenanceCancelUpcoming], ([serverId]) =>
+    maintenance.cancelUpcoming(serverId),
   );
 
-  handleValidated(
-    IPC.crashRecoveryGetPolicy,
-    ipcArgSchemas[IPC.crashRecoveryGetPolicy],
-    ([serverId]) => crashRecovery.getPolicy(serverId),
+  handleValidated(IPC.crashRecoveryGetPolicy, ipcArgSchemas[IPC.crashRecoveryGetPolicy], ([serverId]) =>
+    crashRecovery.getPolicy(serverId),
   );
 
-  handleValidated(
-    IPC.crashRecoverySetPolicy,
-    ipcArgSchemas[IPC.crashRecoverySetPolicy],
-    ([serverId, policy]) => crashRecovery.setPolicy(serverId, policy),
+  handleValidated(IPC.crashRecoverySetPolicy, ipcArgSchemas[IPC.crashRecoverySetPolicy], ([serverId, policy]) =>
+    crashRecovery.setPolicy(serverId, policy),
   );
 
-  handleValidated(
-    IPC.crashRecoveryResetAttempts,
-    ipcArgSchemas[IPC.crashRecoveryResetAttempts],
-    ([serverId]) => crashRecovery.resetAttempts(serverId),
+  handleValidated(IPC.crashRecoveryResetAttempts, ipcArgSchemas[IPC.crashRecoveryResetAttempts], ([serverId]) =>
+    crashRecovery.resetAttempts(serverId),
   );
 
   handleValidated(IPC.backupsResolveRoot, ipcArgSchemas[IPC.backupsResolveRoot], ([serverId]) =>
     backups.resolveBackupRootDir(serverId),
   );
 
-  handleValidated(
-    IPC.backupsOpenFolder,
-    ipcArgSchemas[IPC.backupsOpenFolder],
-    async ([serverId, backupId]) => {
-      const targetPath = backups.resolveBackupPath(serverId, backupId);
-      const error = await shell.openPath(targetPath);
-      if (error.length > 0) {
-        throw new Error(`Could not open backup folder: ${error}`);
-      }
-    },
-  );
+  handleValidated(IPC.backupsOpenFolder, ipcArgSchemas[IPC.backupsOpenFolder], async ([serverId, backupId]) => {
+    const targetPath = backups.resolveBackupPath(serverId, backupId);
+    const error = await shell.openPath(targetPath);
+    if (error.length > 0) {
+      throw new Error(`Could not open backup folder: ${error}`);
+    }
+  });
 
   handleValidated(IPC.backupsOpenRoot, ipcArgSchemas[IPC.backupsOpenRoot], async ([serverId]) => {
     const root = backups.resolveBackupRootDir(serverId);
@@ -1243,27 +1020,18 @@ export function registerIpcHandlers(
     }
   });
 
-  handleValidated(
-    IPC.backupsExport,
-    ipcArgSchemas[IPC.backupsExport],
-    ([serverId, backupId, destinationPath]) =>
-      backups.exportBackup(serverId, backupId, destinationPath),
+  handleValidated(IPC.backupsExport, ipcArgSchemas[IPC.backupsExport], ([serverId, backupId, destinationPath]) =>
+    backups.exportBackup(serverId, backupId, destinationPath),
   );
 
-  handleValidated(
-    IPC.backupsImport,
-    ipcArgSchemas[IPC.backupsImport],
-    ([serverId, kind, sourcePath]) => {
-      if (instances.isStopInProgress(serverId)) {
-        throw new Error("Cannot import backups while stop backup is in progress");
-      }
-      return backups.importBackup(serverId, kind, sourcePath);
-    },
-  );
+  handleValidated(IPC.backupsImport, ipcArgSchemas[IPC.backupsImport], ([serverId, kind, sourcePath]) => {
+    if (instances.isStopInProgress(serverId)) {
+      throw new Error("Cannot import backups while stop backup is in progress");
+    }
+    return backups.importBackup(serverId, kind, sourcePath);
+  });
 
-  handleValidated(IPC.backupsFleetSummary, ipcArgSchemas[IPC.backupsFleetSummary], () =>
-    backups.getFleetSummary(),
-  );
+  handleValidated(IPC.backupsFleetSummary, ipcArgSchemas[IPC.backupsFleetSummary], () => backups.getFleetSummary());
 
   handleValidated(
     IPC.backupsDismissFleetAlert,
@@ -1273,43 +1041,29 @@ export function registerIpcHandlers(
     },
   );
 
-  handleValidated(
-    IPC.backupsGetDiskAlertSettings,
-    ipcArgSchemas[IPC.backupsGetDiskAlertSettings],
-    () => backups.getDiskAlertSettings(),
+  handleValidated(IPC.backupsGetDiskAlertSettings, ipcArgSchemas[IPC.backupsGetDiskAlertSettings], () =>
+    backups.getDiskAlertSettings(),
   );
 
-  handleValidated(
-    IPC.backupsSetDiskAlertSettings,
-    ipcArgSchemas[IPC.backupsSetDiskAlertSettings],
-    ([nextSettings]) => backups.setDiskAlertSettings(nextSettings),
+  handleValidated(IPC.backupsSetDiskAlertSettings, ipcArgSchemas[IPC.backupsSetDiskAlertSettings], ([nextSettings]) =>
+    backups.setDiskAlertSettings(nextSettings),
   );
 
-  handleValidated(
-    IPC.backupsPreviewCleanup,
-    ipcArgSchemas[IPC.backupsPreviewCleanup],
-    ([options]) => backups.previewCleanup(options),
+  handleValidated(IPC.backupsPreviewCleanup, ipcArgSchemas[IPC.backupsPreviewCleanup], ([options]) =>
+    backups.previewCleanup(options),
   );
 
   handleValidated(IPC.backupsRunCleanup, ipcArgSchemas[IPC.backupsRunCleanup], ([options]) =>
     backups.runCleanup(options),
   );
 
-  handleValidated(IPC.appGetUpdateStatus, ipcArgSchemas[IPC.appGetUpdateStatus], () =>
-    appUpdate.getStatus(),
-  );
+  handleValidated(IPC.appGetUpdateStatus, ipcArgSchemas[IPC.appGetUpdateStatus], () => appUpdate.getStatus());
 
-  handleValidated(IPC.appCheckForUpdate, ipcArgSchemas[IPC.appCheckForUpdate], () =>
-    appUpdate.checkForUpdate(),
-  );
+  handleValidated(IPC.appCheckForUpdate, ipcArgSchemas[IPC.appCheckForUpdate], () => appUpdate.checkForUpdate());
 
-  handleValidated(IPC.appDownloadUpdate, ipcArgSchemas[IPC.appDownloadUpdate], () =>
-    appUpdate.downloadUpdate(),
-  );
+  handleValidated(IPC.appDownloadUpdate, ipcArgSchemas[IPC.appDownloadUpdate], () => appUpdate.downloadUpdate());
 
-  handleValidated(IPC.appInstallUpdate, ipcArgSchemas[IPC.appInstallUpdate], () =>
-    appUpdate.installUpdate(),
-  );
+  handleValidated(IPC.appInstallUpdate, ipcArgSchemas[IPC.appInstallUpdate], () => appUpdate.installUpdate());
 
   handleValidated(IPC.appOpenYarkReleaseNotes, ipcArgSchemas[IPC.appOpenYarkReleaseNotes], () =>
     appUpdate.openReleaseNotes(),
@@ -1319,55 +1073,42 @@ export function registerIpcHandlers(
     requestAppQuit();
   });
 
-  handleValidated(
-    IPC.hostedResourcesGetOverview,
-    ipcArgSchemas[IPC.hostedResourcesGetOverview],
-    () => hostedResources.getOverview(),
+  handleValidated(IPC.hostedResourcesGetOverview, ipcArgSchemas[IPC.hostedResourcesGetOverview], () =>
+    hostedResources.getOverview(),
   );
 
-  handleValidated(
-    IPC.hostedResourcesSetEnabled,
-    ipcArgSchemas[IPC.hostedResourcesSetEnabled],
-    ([enabled]) => hostedResources.setEnabled(enabled),
+  handleValidated(IPC.hostedResourcesSetEnabled, ipcArgSchemas[IPC.hostedResourcesSetEnabled], ([enabled]) =>
+    hostedResources.setEnabled(enabled),
   );
 
-  handleValidated(
-    IPC.hostedResourcesSetPort,
-    ipcArgSchemas[IPC.hostedResourcesSetPort],
-    ([port]) => hostedResources.setPort(port),
+  handleValidated(IPC.hostedResourcesSetPort, ipcArgSchemas[IPC.hostedResourcesSetPort], ([port]) =>
+    hostedResources.setPort(port),
   );
 
-  handleValidated(
-    IPC.hostedResourcesCreateResource,
-    ipcArgSchemas[IPC.hostedResourcesCreateResource],
-    ([input]) => hostedResources.createResource(input),
+  handleValidated(IPC.hostedResourcesCreateResource, ipcArgSchemas[IPC.hostedResourcesCreateResource], ([input]) =>
+    hostedResources.createResource(input),
   );
 
   handleValidated(
     IPC.hostedResourcesPublishContent,
     ipcArgSchemas[IPC.hostedResourcesPublishContent],
-    ([resourceId, content, metadata]) =>
-      hostedResources.publishContent(resourceId, content, metadata),
+    ([resourceId, content, metadata]) => hostedResources.publishContent(resourceId, content, metadata),
   );
 
-  handleValidated(
-    IPC.hostedResourcesGetContent,
-    ipcArgSchemas[IPC.hostedResourcesGetContent],
-    ([resourceId]) => hostedResources.getPublishedContent(resourceId),
+  handleValidated(IPC.hostedResourcesGetContent, ipcArgSchemas[IPC.hostedResourcesGetContent], ([resourceId]) =>
+    hostedResources.getPublishedContent(resourceId),
   );
 
   handleValidated(
     IPC.hostedResourcesPublishRevision,
     ipcArgSchemas[IPC.hostedResourcesPublishRevision],
-    ([resourceId, revisionId]) =>
-      hostedResources.publishRevision(resourceId, revisionId),
+    ([resourceId, revisionId]) => hostedResources.publishRevision(resourceId, revisionId),
   );
 
   handleValidated(
     IPC.hostedResourcesRenameResource,
     ipcArgSchemas[IPC.hostedResourcesRenameResource],
-    ([resourceId, displayName]) =>
-      hostedResources.renameResource(resourceId, displayName),
+    ([resourceId, displayName]) => hostedResources.renameResource(resourceId, displayName),
   );
 
   handleValidated(
@@ -1376,28 +1117,21 @@ export function registerIpcHandlers(
     ([resourceId, input]) => hostedResources.updateMetadata(resourceId, input),
   );
 
-  handleValidated(
-    IPC.hostedResourcesListRevisions,
-    ipcArgSchemas[IPC.hostedResourcesListRevisions],
-    ([resourceId]) => hostedResources.listRevisions(resourceId),
+  handleValidated(IPC.hostedResourcesListRevisions, ipcArgSchemas[IPC.hostedResourcesListRevisions], ([resourceId]) =>
+    hostedResources.listRevisions(resourceId),
   );
 
   handleValidated(
     IPC.hostedResourcesSetResourceEnabled,
     ipcArgSchemas[IPC.hostedResourcesSetResourceEnabled],
-    ([resourceId, enabled]) =>
-      hostedResources.setResourceEnabled(resourceId, enabled),
+    ([resourceId, enabled]) => hostedResources.setResourceEnabled(resourceId, enabled),
   );
 
-  handleValidated(
-    IPC.hostedResourcesDeleteResource,
-    ipcArgSchemas[IPC.hostedResourcesDeleteResource],
-    ([resourceId]) => hostedResources.deleteResource(resourceId),
+  handleValidated(IPC.hostedResourcesDeleteResource, ipcArgSchemas[IPC.hostedResourcesDeleteResource], ([resourceId]) =>
+    hostedResources.deleteResource(resourceId),
   );
 
-  handleValidated(
-    IPC.hostedResourcesDiagnostics,
-    ipcArgSchemas[IPC.hostedResourcesDiagnostics],
-    () => hostedResources.runDiagnostics(),
+  handleValidated(IPC.hostedResourcesDiagnostics, ipcArgSchemas[IPC.hostedResourcesDiagnostics], () =>
+    hostedResources.runDiagnostics(),
   );
 }

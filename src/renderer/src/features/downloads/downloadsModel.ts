@@ -4,17 +4,9 @@ import {
   hasMeaningfulSteamCmdByteProgress,
   steamCmdByteProgressNoun,
 } from "@shared/server/steamcmd-progress";
-import type {
-  CriticalJobSummary,
-  ServerProfile,
-  SteamCmdStatus,
-} from "@shared/types";
+import type { CriticalJobSummary, ServerProfile, SteamCmdStatus } from "@shared/types";
 import { downloadRowMeta, formatDownloadPhase } from "./downloadsCopy";
-import {
-  FILES_QUEUE_OPERATIONS,
-  isOperatorVisibleCriticalJob,
-  operationTitle,
-} from "./downloadsOperationCopy";
+import { FILES_QUEUE_OPERATIONS, isOperatorVisibleCriticalJob, operationTitle } from "./downloadsOperationCopy";
 
 export { buildDownloadsTeaser } from "./downloadsTeaserModel";
 export type { ServerFilesQueueState } from "./downloadsFilesQueueModel";
@@ -55,9 +47,11 @@ function statusLabelForJob(job: CriticalJobSummary): string {
 }
 
 function isRestartInterruptedJob(job: CriticalJobSummary): boolean {
-  return job.status === "failed"
-    && job.nextActions.includes("retry")
-    && (job.recoveryReason?.startsWith("YARK closed during phase") ?? false);
+  return (
+    job.status === "failed" &&
+    job.nextActions.includes("retry") &&
+    (job.recoveryReason?.startsWith("YARK closed during phase") ?? false)
+  );
 }
 
 function classifyJobKind(job: CriticalJobSummary): DownloadRowKind {
@@ -69,11 +63,7 @@ function classifyJobKind(job: CriticalJobSummary): DownloadRowKind {
   return "attention";
 }
 
-function serverLabel(
-  status: SteamCmdStatus,
-  serverId: string | null,
-  serverName?: string | null,
-): string {
+function serverLabel(status: SteamCmdStatus, serverId: string | null, serverName?: string | null): string {
   if (serverName !== null && serverName !== undefined && serverName.length > 0) {
     return serverName;
   }
@@ -86,10 +76,7 @@ function serverLabel(
   return "Unknown server";
 }
 
-function liveRowFromStatus(
-  status: SteamCmdStatus,
-  activeServer?: ServerProfile | null,
-): DownloadRow | null {
+function liveRowFromStatus(status: SteamCmdStatus, activeServer?: ServerProfile | null): DownloadRow | null {
   if (!status.busy || status.operation === null) {
     return null;
   }
@@ -97,9 +84,7 @@ function liveRowFromStatus(
   const downloaded = status.progressBytesDownloaded;
   const total = status.progressBytesTotal;
   const byteProgress =
-    downloaded !== null
-    && total !== null
-    && hasMeaningfulSteamCmdByteProgress(downloaded, total)
+    downloaded !== null && total !== null && hasMeaningfulSteamCmdByteProgress(downloaded, total)
       ? formatSteamCmdByteProgress(downloaded, total)
       : null;
   const serverName = serverLabel(status, status.serverId, activeServer?.name ?? null);
@@ -137,21 +122,16 @@ function jobRowFromSummary(
   status?: SteamCmdStatus,
 ): DownloadRow {
   const kind = classifyJobKind(job);
-  const reorderable =
-    kind === "queued" && FILES_QUEUE_OPERATIONS.has(job.operation);
+  const reorderable = kind === "queued" && FILES_QUEUE_OPERATIONS.has(job.operation);
   const matchesLiveProgress =
-    kind === "active"
-    && status !== undefined
-    && status.serverId === job.serverId
-    && (status.operation === job.operation
-      || (status.operation === "sync-files" && job.operation === "install-files"));
+    kind === "active" &&
+    status !== undefined &&
+    status.serverId === job.serverId &&
+    (status.operation === job.operation || (status.operation === "sync-files" && job.operation === "install-files"));
   const downloaded = status?.progressBytesDownloaded ?? null;
   const total = status?.progressBytesTotal ?? null;
   const byteProgress =
-    matchesLiveProgress
-    && downloaded !== null
-    && total !== null
-    && hasMeaningfulSteamCmdByteProgress(downloaded, total)
+    matchesLiveProgress && downloaded !== null && total !== null && hasMeaningfulSteamCmdByteProgress(downloaded, total)
       ? formatSteamCmdByteProgress(downloaded, total)
       : null;
   return {
@@ -165,32 +145,30 @@ function jobRowFromSummary(
     mapId: server?.map ?? null,
     mapModId: server?.mapModId ?? null,
     modThumbnailUrl:
-      server?.mapModId != null
-        ? (server.modMetadataCache?.[server.mapModId]?.thumbnailUrl ?? null)
-        : null,
+      server?.mapModId != null ? (server.modMetadataCache?.[server.mapModId]?.thumbnailUrl ?? null) : null,
     statusLabel: statusLabelForJob(job),
     phase:
       kind === "interrupted"
         ? "Interrupted"
         : kind === "paused"
-        ? "Paused"
-        : kind === "queued"
-          ? "Queued"
-          : job.status === "cancelled"
-            ? "Cancelled"
-            : matchesLiveProgress && status?.progressLabel !== null
-              ? status.progressLabel
-              : formatDownloadPhase(job.phase),
-    percent: matchesLiveProgress ? status?.progressPercent ?? null : null,
+          ? "Paused"
+          : kind === "queued"
+            ? "Queued"
+            : job.status === "cancelled"
+              ? "Cancelled"
+              : matchesLiveProgress && status?.progressLabel !== null
+                ? status.progressLabel
+                : formatDownloadPhase(job.phase),
+    percent: matchesLiveProgress ? (status?.progressPercent ?? null) : null,
     byteProgress,
     byteProgressNoun:
-      matchesLiveProgress
-      && byteProgress !== null
-      && (status?.operation === "install-steamcmd"
-        || status?.operation === "install-files"
-        || status?.operation === "update"
-        || status?.operation === "sync-files"
-        || status?.operation === "verify-files")
+      matchesLiveProgress &&
+      byteProgress !== null &&
+      (status?.operation === "install-steamcmd" ||
+        status?.operation === "install-files" ||
+        status?.operation === "update" ||
+        status?.operation === "sync-files" ||
+        status?.operation === "verify-files")
         ? steamCmdByteProgressNoun(status.operation)
         : null,
     job,
@@ -209,9 +187,9 @@ export function buildDownloadRows(
   const jobs = status.criticalJobs ?? [];
   const runningJob = jobs.find((job) => job.status === "running");
   const liveRow =
-    status.operation === "install-steamcmd"
-    || status.operation === "sync-files"
-    || (status.running && runningJob === undefined)
+    status.operation === "install-steamcmd" ||
+    status.operation === "sync-files" ||
+    (status.running && runningJob === undefined)
       ? liveRowFromStatus(status, options?.activeServer)
       : null;
 
@@ -256,10 +234,7 @@ export function defaultSelectedRowId(rows: DownloadRow[]): string | null {
   return rows[0]?.id ?? null;
 }
 
-export function findDownloadRow(
-  rows: DownloadRow[],
-  selectedId: string | null,
-): DownloadRow | null {
+export function findDownloadRow(rows: DownloadRow[], selectedId: string | null): DownloadRow | null {
   if (selectedId === null) return null;
   return rows.find((row) => row.id === selectedId) ?? null;
 }
@@ -267,16 +242,8 @@ export function findDownloadRow(
 export const DOWNLOAD_CONSOLE_WAITING = "Waiting for progress…";
 
 /** SteamCMD console text for the Downloads lower pane — active or paused job output; cleared on resume. */
-export function downloadConsoleBody(
-  rows: DownloadRow[],
-  lines: string[],
-): string {
-  const showConsole = rows.some(
-    (row) =>
-      row.kind === "active"
-      || row.kind === "paused"
-      || row.kind === "interrupted",
-  );
+export function downloadConsoleBody(rows: DownloadRow[], lines: string[]): string {
+  const showConsole = rows.some((row) => row.kind === "active" || row.kind === "paused" || row.kind === "interrupted");
   if (!showConsole) {
     return "";
   }
@@ -286,10 +253,7 @@ export function downloadConsoleBody(
   return lines.slice(-120).join("\n");
 }
 
-export function downloadStatusLine(
-  row: DownloadRow | null,
-  waitingForProgress = false,
-): string {
+export function downloadStatusLine(row: DownloadRow | null, waitingForProgress = false): string {
   if (row === null) return "SteamCMD log";
   const parts = [downloadRowMeta(row)];
   if (row.percent !== null) {
@@ -303,9 +267,7 @@ export function downloadStatusLine(
 }
 
 export function advancedLogAttentionIds(rows: readonly DownloadRow[]): string[] {
-  return rows
-    .filter((row) => row.kind === "attention" || row.kind === "interrupted")
-    .map((row) => row.id);
+  return rows.filter((row) => row.kind === "attention" || row.kind === "interrupted").map((row) => row.id);
 }
 
 /** True when an attention/interrupted job has not been auto-opened yet this session. */
@@ -314,17 +276,11 @@ export function shouldAutoExpandAdvancedLog(
   alreadyOpenedFor: readonly string[] = [],
 ): boolean {
   const seen = new Set(alreadyOpenedFor);
-  return rows.some(
-    (row) =>
-      (row.kind === "attention" || row.kind === "interrupted") && !seen.has(row.id),
-  );
+  return rows.some((row) => (row.kind === "attention" || row.kind === "interrupted") && !seen.has(row.id));
 }
 
 /** Detail hint for a queued files job — reflects queue order, not only the live row. */
-export function queuedJobDetailHint(
-  selected: DownloadRow,
-  rows: DownloadRow[],
-): string {
+export function queuedJobDetailHint(selected: DownloadRow, rows: DownloadRow[]): string {
   const queued = rows.filter((row) => row.kind === "queued" && row.reorderable);
   const index = queued.findIndex((row) => row.id === selected.id);
   if (index < 0) {

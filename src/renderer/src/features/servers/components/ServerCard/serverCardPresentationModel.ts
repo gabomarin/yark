@@ -1,14 +1,11 @@
 import type { ServerInstallationInfo, ServerStatus } from "@shared/types";
+import { installationHealthLabel, isInstallOfferHealth, isInstallationReady } from "@shared/server/installation-health";
+import { getServerUpdateState, type ServerUpdateState } from "@shared/server/server-update-status";
 import {
-  installationHealthLabel,
-  isInstallOfferHealth,
-  isInstallationReady,
-} from "@shared/server/installation-health";
-import {
-  getServerUpdateState,
-  type ServerUpdateState,
-} from "@shared/server/server-update-status";
-import { resolveDisplayedServerVersion, shouldHintVersionRefreshesOnStart, VERSION_REFRESHES_ON_START_HINT } from "@shared/server/server-version-display";
+  resolveDisplayedServerVersion,
+  shouldHintVersionRefreshesOnStart,
+  VERSION_REFRESHES_ON_START_HINT,
+} from "@shared/server/server-version-display";
 import {
   formatSteamCmdByteProgress,
   hasMeaningfulSteamCmdByteProgress,
@@ -21,18 +18,9 @@ import {
   resolveRuntimeAction,
   resolveUpdateAction,
 } from "./serverCardActionModel";
-import {
-  canEnqueueFilesJobFromMenu,
-  filesJobOccupantFromUi,
-} from "@shared/server/files-job-priority";
+import { canEnqueueFilesJobFromMenu, filesJobOccupantFromUi } from "@shared/server/files-job-priority";
 
-export type SteamCmdOperation =
-  | "install-steamcmd"
-  | "install-files"
-  | "update"
-  | "sync-files"
-  | "verify-files"
-  | null;
+export type SteamCmdOperation = "install-steamcmd" | "install-files" | "update" | "sync-files" | "verify-files" | null;
 
 export type ServerCardRowTone = "busy" | "queued" | "running" | "error" | "attention" | "stopped";
 
@@ -83,10 +71,10 @@ function resolveRowTone(input: {
   if (input.status === "running") return "running";
   if (input.status === "error") return "error";
   if (
-    input.status === "stopped"
-    && input.lastError !== null
-    && input.lastError !== undefined
-    && input.lastError.length > 0
+    input.status === "stopped" &&
+    input.lastError !== null &&
+    input.lastError !== undefined &&
+    input.lastError.length > 0
   ) {
     return "attention";
   }
@@ -156,10 +144,7 @@ export function deriveServerCardView(input: {
   const canOfferInstall = isInstallOfferHealth(input.installation?.health);
   const serverEnabled = input.serverEnabled ?? true;
   const localVersion = resolveDisplayedServerVersion(input.installation);
-  const updateState = getServerUpdateState(
-    input.installation,
-    input.officialSteamBuild,
-  );
+  const updateState = getServerUpdateState(input.installation, input.officialSteamBuild);
   const updateAvailable = updateState === "available";
   const versionRefreshHint = shouldHintVersionRefreshesOnStart({
     updateState,
@@ -180,10 +165,7 @@ export function deriveServerCardView(input: {
     queued: steamCmdQueued,
     operation: input.steamCmdOperation,
   });
-  const updateSlotBusy = !canEnqueueFilesJobFromMenu(
-    ready ? "update" : "install-files",
-    filesOccupant,
-  );
+  const updateSlotBusy = !canEnqueueFilesJobFromMenu(ready ? "update" : "install-files", filesOccupant);
   const installStateLabel = resolveInstallStateLabel({
     steamCmdBusy: input.steamCmdBusy,
     steamCmdPaused,
@@ -230,10 +212,7 @@ export function deriveServerCardView(input: {
   return {
     isInstallationReady: ready,
     canOfferInstall,
-    isActive:
-      input.status === "starting" ||
-      input.status === "running" ||
-      input.status === "stopping",
+    isActive: input.status === "starting" || input.status === "running" || input.status === "stopping",
     localVersion,
     versionRefreshHint,
     updateState,

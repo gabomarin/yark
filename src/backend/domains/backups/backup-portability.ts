@@ -3,7 +3,10 @@ import { isZipBackupPath, kindFromSubdirName } from "./backup-archive";
 
 /** Filename slug for server names in create/import ZIP names (#146). */
 export function slugBackupFilePart(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 export function guessBackupKindFromName(name: string): BackupKind | null {
@@ -32,11 +35,7 @@ export function resolveExportZipDestination(destinationPath: string): string {
   return isZipBackupPath(destinationPath) ? destinationPath : `${destinationPath}.zip`;
 }
 
-export function buildImportedZipFileName(input: {
-  serverName: string;
-  kind: BackupKind;
-  stamp: string;
-}): string {
+export function buildImportedZipFileName(input: { serverName: string; kind: BackupKind; stamp: string }): string {
   return `${slugBackupFilePart(input.serverName)}-${input.kind}-imported-${input.stamp}.zip`;
 }
 
@@ -46,18 +45,10 @@ export function folderLooksLikeBackupArchive(flags: {
   hasPlayerProfiles: boolean;
   hasConfigWindowsServer: boolean;
 }): boolean {
-  return (
-    flags.hasManifest
-    || flags.hasSavedArks
-    || flags.hasPlayerProfiles
-    || flags.hasConfigWindowsServer
-  );
+  return flags.hasManifest || flags.hasSavedArks || flags.hasPlayerProfiles || flags.hasConfigWindowsServer;
 }
 
-export function resolveImportEntryKind(
-  defaultKind: BackupKind | null,
-  entryName: string,
-): BackupKind {
+export function resolveImportEntryKind(defaultKind: BackupKind | null, entryName: string): BackupKind {
   return defaultKind ?? guessBackupKindFromName(entryName) ?? "world";
 }
 
@@ -73,10 +64,7 @@ export function shouldSkipKindSubdirOnRootScan(
 /**
  * Keep the manifest id when free; mint a new one (undefined) when already taken.
  */
-export function resolveImportedBackupId(
-  manifestId: string | undefined,
-  idAlreadyTaken: boolean,
-): string | undefined {
+export function resolveImportedBackupId(manifestId: string | undefined, idAlreadyTaken: boolean): string | undefined {
   if (manifestId === undefined) return undefined;
   return idAlreadyTaken ? undefined : manifestId;
 }

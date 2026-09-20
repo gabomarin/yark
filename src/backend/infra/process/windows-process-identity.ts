@@ -20,9 +20,7 @@ const QUERY_TIMEOUT_MS = 5_000;
  *
  * Uses async exec so the Electron main process is not blocked (#145).
  */
-export async function queryWindowsProcessIdentity(
-  pid: number,
-): Promise<LiveProcessIdentity | null> {
+export async function queryWindowsProcessIdentity(pid: number): Promise<LiveProcessIdentity | null> {
   if (process.platform !== "win32" || !Number.isInteger(pid) || pid <= 0) {
     return null;
   }
@@ -56,23 +54,15 @@ export async function queryWindowsProcessIdentity(
     return {
       pid: safePid,
       executablePath:
-        typeof parsed.ExecutablePath === "string" && parsed.ExecutablePath.trim() !== ""
-          ? parsed.ExecutablePath
-          : null,
+        typeof parsed.ExecutablePath === "string" && parsed.ExecutablePath.trim() !== "" ? parsed.ExecutablePath : null,
       commandLine:
-        typeof parsed.CommandLine === "string" && parsed.CommandLine.trim() !== ""
-          ? parsed.CommandLine
-          : null,
+        typeof parsed.CommandLine === "string" && parsed.CommandLine.trim() !== "" ? parsed.CommandLine : null,
       osCreationTime:
-        typeof parsed.CreationDate === "string" && parsed.CreationDate.trim() !== ""
-          ? parsed.CreationDate
-          : null,
+        typeof parsed.CreationDate === "string" && parsed.CreationDate.trim() !== "" ? parsed.CreationDate : null,
     };
   } catch (error: unknown) {
     const detail = error instanceof Error ? error.message : String(error);
-    console.warn(
-      `[yark] queryWindowsProcessIdentity failed for pid ${safePid}: ${detail}`,
-    );
+    console.warn(`[yark] queryWindowsProcessIdentity failed for pid ${safePid}: ${detail}`);
     return null;
   }
 }

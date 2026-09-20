@@ -10,6 +10,11 @@ interface Props extends ButtonProps {
    * `ghost` — transparent until hover (dense nested lists).
    */
   variant?: "surface" | "ghost";
+  /**
+   * Selected accent: full-height inset rail (default) or Fluent short notch
+   * (Clusters All-clusters list).
+   */
+  selectedChrome?: "inset" | "notch";
   leading?: ReactNode;
   trailing?: ReactNode;
   children: ReactNode;
@@ -19,6 +24,7 @@ interface Props extends ButtonProps {
 export function SelectableListRow({
   selected = false,
   variant = "surface",
+  selectedChrome = "inset",
   leading,
   trailing,
   children,
@@ -33,6 +39,7 @@ export function SelectableListRow({
       className={[classes.row, className].filter(Boolean).join(" ")}
       data-variant={variant}
       data-selected={selected || undefined}
+      data-selected-chrome={selected ? selectedChrome : undefined}
       aria-pressed={selected}
     >
       {leading !== undefined && <span className={classes.leading}>{leading}</span>}

@@ -1,12 +1,4 @@
-import {
-  act,
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-  within,
-} from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import { setupUser } from "@renderer/test/setupUser";
@@ -32,9 +24,9 @@ const serverA = {
   extraArgs: [],
   mods: ["111"],
   enabled: true,
-    autoStart: false,
-    useAsaApi: false,
-    useAsaApiLoader: false,
+  autoStart: false,
+  useAsaApi: false,
+  useAsaApiLoader: false,
   createdAt: "2026-07-23T00:00:00.000Z",
   updatedAt: "2026-07-23T00:00:00.000Z",
 };
@@ -60,10 +52,7 @@ const playerListHandlers = {
   onClearRconHistory: vi.fn(),
 };
 
-async function openWorkspaceTab(
-  user: ReturnType<typeof setupUser>,
-  name: string,
-): Promise<void> {
+async function openWorkspaceTab(user: ReturnType<typeof setupUser>, name: string): Promise<void> {
   await user.click(screen.getByRole("tab", { name }));
 }
 
@@ -384,16 +373,11 @@ describe("ServerWorkspacePage", () => {
 
     expect(screen.getByText("All servers")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "The Island" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Server" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    expect(screen.getByRole("tab", { name: "Server" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tab", { name: "INI Files" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Backups" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Mods" })).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Configuration wizard" }),
-    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "Configuration wizard" })).toBeVisible();
 
     // List item title (Map select also shows official label "Scorched Earth").
     await user.click(screen.getByTitle("Scorched Earth"));
@@ -408,10 +392,7 @@ describe("ServerWorkspacePage", () => {
     expect(serverTab).toHaveAttribute("aria-selected", "true");
     serverTab.focus();
     await user.keyboard("{ArrowRight}");
-    expect(screen.getByRole("tab", { name: "INI Files" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    expect(screen.getByRole("tab", { name: "INI Files" })).toHaveAttribute("aria-selected", "true");
   });
 
   it("opens the Backups tab with create and history UI", async () => {
@@ -466,16 +447,14 @@ describe("ServerWorkspacePage", () => {
           onSendRcon={onSendRcon}
           {...playerListHandlers}
           onCopyConfiguration={vi.fn()}
-        onServerUpdated={vi.fn()}
+          onServerUpdated={vi.fn()}
         />
       </AppProviders>,
     );
 
     await openWorkspaceTab(user, "RCON");
 
-    expect(
-      screen.getByText(/Admin commands for the active server/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Admin commands for the active server/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/rcon command/i)).toBeInTheDocument();
     expect(screen.getByText("Online")).toBeInTheDocument();
     expect(screen.getByText("Banned")).toBeInTheDocument();
@@ -541,12 +520,10 @@ describe("ServerWorkspacePage", () => {
     expect(screen.getAllByText("ListPlayers")).toHaveLength(2);
     expect(screen.getAllByText(/Player1/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Player2/).length).toBeGreaterThan(0);
-    expect(
-      screen.queryByText("Server received, But no response!!"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Server received, But no response!!")).not.toBeInTheDocument();
     expect(screen.getAllByText("No response")).toHaveLength(2);
     expect(screen.getByText("RCON not connected")).toBeInTheDocument();
-    expect(screen.getByText("failed")).toBeInTheDocument();
+    expect(screen.getByText("Failed")).toBeInTheDocument();
     expect(screen.queryByText(/may not be allowed via RCON/i)).not.toBeInTheDocument();
   });
 
@@ -608,7 +585,7 @@ describe("ServerWorkspacePage", () => {
           {...playerListHandlers}
           onClearRconHistory={onClearRconHistory}
           onCopyConfiguration={vi.fn()}
-        onServerUpdated={vi.fn()}
+          onServerUpdated={vi.fn()}
         />
       </AppProviders>,
     );
@@ -677,10 +654,7 @@ describe("ServerWorkspacePage", () => {
 
     const forceUpdate = screen.getByRole("button", { name: "Force update" });
     expect(forceUpdate).toBeDisabled();
-    expect(forceUpdate).toHaveAttribute(
-      "title",
-      "Stop the server before updating files",
-    );
+    expect(forceUpdate).toHaveAttribute("title", "Stop the server before updating files");
     await user.click(forceUpdate);
     expect(onUpdateNow).not.toHaveBeenCalled();
 
@@ -693,8 +667,7 @@ describe("ServerWorkspacePage", () => {
 
   it("moves secondary panels into drawers in compact workspaces", async () => {
     vi.stubGlobal("matchMedia", (query: string) => ({
-      matches:
-        query === "(max-width: 1599px)" || /prefers-reduced-motion:\s*reduce/i.test(query),
+      matches: query === "(max-width: 1599px)" || /prefers-reduced-motion:\s*reduce/i.test(query),
       media: query,
       onchange: null,
       addListener: () => undefined,
@@ -708,9 +681,7 @@ describe("ServerWorkspacePage", () => {
 
     renderWorkspace(onSelectServer);
 
-    expect(
-      await screen.findByRole("button", { name: "Switch server" }),
-    ).toBeVisible();
+    expect(await screen.findByRole("button", { name: "Switch server" })).toBeVisible();
 
     await user.click(screen.getByRole("button", { name: "Switch server" }));
     const serverDialog = await screen.findByRole("dialog", { name: "Switch server" });
@@ -783,10 +754,7 @@ describe("ServerWorkspacePage", () => {
 
     await openWorkspaceTab(user, "Backups");
     await user.click(await screen.findByRole("tab", { name: "INI" }));
-    expect(screen.getByRole("tab", { name: "INI" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    expect(screen.getByRole("tab", { name: "INI" })).toHaveAttribute("aria-selected", "true");
 
     compactMatches = true;
     for (const listener of [...listeners]) {
@@ -796,10 +764,7 @@ describe("ServerWorkspacePage", () => {
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "Switch server" })).toBeVisible();
     });
-    expect(screen.getByRole("tab", { name: "INI" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    expect(screen.getByRole("tab", { name: "INI" })).toHaveAttribute("aria-selected", "true");
 
     compactMatches = false;
     for (const listener of [...listeners]) {
@@ -809,10 +774,7 @@ describe("ServerWorkspacePage", () => {
     await waitFor(() => {
       expect(screen.queryByRole("button", { name: "Switch server" })).not.toBeInTheDocument();
     });
-    expect(screen.getByRole("tab", { name: "INI" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    expect(screen.getByRole("tab", { name: "INI" })).toHaveAttribute("aria-selected", "true");
   });
 
   it("shows only available category filters and resets an invalid filter between INI files", async () => {
@@ -897,9 +859,7 @@ describe("ServerWorkspacePage", () => {
       expect(screen.getByLabelText("Reset XPMultiplier to default")).toBeInTheDocument();
     });
 
-    expect(
-      screen.queryByText(/Client keys or history were detected/),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/Client keys or history were detected/)).not.toBeInTheDocument();
     expect(screen.queryByText("LastJoinedSessionPerCategory")).not.toBeInTheDocument();
     expect(screen.queryByText("ResolutionSizeX")).not.toBeInTheDocument();
     expect(screen.queryByText("Unsaved")).not.toBeInTheDocument();
@@ -910,22 +870,14 @@ describe("ServerWorkspacePage", () => {
     const user = setupUser();
     renderWorkspace();
 
-    await user.click(
-      screen.getByRole("button", { name: "Configuration wizard" }),
-    );
-    expect(
-      await screen.findByRole("heading", { name: "Set up the play experience" }),
-    ).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Configuration wizard" }));
+    expect(await screen.findByRole("heading", { name: "Set up the play experience" })).toBeVisible();
     await user.click(screen.getByRole("button", { name: /Play with friends/ }));
     await user.click(screen.getByRole("button", { name: "Cancel" }));
     const dialog = await screen.findByRole("dialog", { name: "Leave the wizard" });
-    await user.click(
-      within(dialog).getByRole("button", { name: "Discard and continue" }),
-    );
+    await user.click(within(dialog).getByRole("button", { name: "Discard and continue" }));
 
-    expect(
-      await screen.findByRole("heading", { name: "Server information" }),
-    ).toBeVisible();
+    expect(await screen.findByRole("heading", { name: "Server information" })).toBeVisible();
     expect(window.api.saveServerIni).not.toHaveBeenCalled();
   });
 
@@ -940,26 +892,15 @@ describe("ServerWorkspacePage", () => {
 
     expect(screen.getByText(/^ini modified$/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /save and continue/i })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "INI Files" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    expect(screen.getByRole("tab", { name: "INI Files" })).toHaveAttribute("aria-selected", "true");
 
     await user.click(screen.getByRole("button", { name: /keep editing/i }));
-    expect(screen.getByRole("tab", { name: "INI Files" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    expect(screen.getByRole("tab", { name: "INI Files" })).toHaveAttribute("aria-selected", "true");
 
     await user.click(screen.getByRole("tab", { name: "Server" }));
     await user.click(screen.getByRole("button", { name: /discard and continue/i }));
-    expect(screen.getByRole("tab", { name: "Server" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
-    expect(
-      screen.getByRole("button", { name: "Configuration wizard" }),
-    ).toBeEnabled();
+    expect(screen.getByRole("tab", { name: "Server" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("button", { name: "Configuration wizard" })).toBeEnabled();
   });
 
   it("does not load INI until the INI Files tab is opened", async () => {
@@ -984,16 +925,10 @@ describe("ServerWorkspacePage", () => {
     await screen.findByLabelText("Reset XPMultiplier to default");
     await user.click(screen.getByRole("radio", { name: "Text" }));
 
-    expect(
-      screen.getByRole("alert", { name: "Server settings override" }),
-    ).toHaveTextContent(/-WinLiveMaxPlayers/i);
-    expect(
-      screen.getByRole("alert", { name: "Server settings override" }),
-    ).toHaveTextContent(/empty or 0/i);
+    expect(screen.getByRole("alert", { name: "Server settings override" })).toHaveTextContent(/-WinLiveMaxPlayers/i);
+    expect(screen.getByRole("alert", { name: "Server settings override" })).toHaveTextContent(/empty or 0/i);
     expect(screen.getByRole("button", { name: "Dismiss" })).toBeVisible();
-    expect(
-      screen.getByRole("textbox", { name: "GameUserSettings.ini raw editor" }),
-    ).toBeVisible();
+    expect(screen.getByRole("textbox", { name: "GameUserSettings.ini raw editor" })).toBeVisible();
   });
 
   it("dismisses the GameUserSettings Server override hint and keeps it dismissed", async () => {
@@ -1005,9 +940,7 @@ describe("ServerWorkspacePage", () => {
     await user.click(screen.getByRole("radio", { name: "Text" }));
     await user.click(screen.getByRole("button", { name: "Dismiss" }));
 
-    expect(
-      screen.queryByRole("alert", { name: "Server settings override" }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("alert", { name: "Server settings override" })).not.toBeInTheDocument();
 
     cleanup();
     renderWorkspace();
@@ -1015,12 +948,8 @@ describe("ServerWorkspacePage", () => {
     await screen.findByLabelText("Reset XPMultiplier to default");
     await user.click(screen.getByRole("radio", { name: "Text" }));
 
-    expect(
-      screen.queryByRole("alert", { name: "Server settings override" }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("textbox", { name: "GameUserSettings.ini raw editor" }),
-    ).toBeVisible();
+    expect(screen.queryByRole("alert", { name: "Server settings override" })).not.toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "GameUserSettings.ini raw editor" })).toBeVisible();
   });
 
   it("does not show the Server override hint in raw Game.ini", async () => {
@@ -1032,9 +961,7 @@ describe("ServerWorkspacePage", () => {
     await user.click(screen.getByRole("radio", { name: "Text" }));
     await user.click(screen.getByRole("radio", { name: "Game.ini" }));
 
-    expect(
-      screen.queryByRole("alert", { name: "Server settings override" }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("alert", { name: "Server settings override" })).not.toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "Game.ini raw editor" })).toBeVisible();
   });
 
@@ -1042,14 +969,9 @@ describe("ServerWorkspacePage", () => {
     const user = setupUser();
     renderWorkspace();
 
-    await user.click(
-      screen.getByRole("button", { name: "Configuration wizard" }),
-    );
+    await user.click(screen.getByRole("button", { name: "Configuration wizard" }));
     await user.click(await screen.findByRole("button", { name: /Play with friends/ }));
-    expect(screen.getByRole("button", { name: /Play with friends/ })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    expect(screen.getByRole("button", { name: /Play with friends/ })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByText("High impact")).toBeVisible();
     expect(screen.getByText("Fast taming")).toBeVisible();
     expect(screen.getByRole("button", { name: "Cancel" })).toBeVisible();
@@ -1067,10 +989,11 @@ describe("ServerWorkspacePage", () => {
     expect(within(changesDialog).getByText("Taming")).toBeInTheDocument();
     expect(within(changesDialog).getByText("TamingSpeedMultiplier")).toBeInTheDocument();
     expect(within(changesDialog).getByText("3×")).toBeInTheDocument();
-    expect(
-      within(changesDialog).getByText("Enable single-player settings"),
-    ).toBeInTheDocument();
+    expect(within(changesDialog).getByText("Enable single-player settings")).toBeInTheDocument();
     await user.keyboard("{Escape}");
+    // Escape closes the dialog, but Mantine keeps it mounted (and focus-trapped)
+    // until the exit transition ends; clicking Continue before that is swallowed.
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Draft changes" })).not.toBeInTheDocument());
     await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("3× → 7.5×")).toBeVisible();
     expect(screen.getByText("Max wild level 150")).toBeVisible();
@@ -1082,34 +1005,22 @@ describe("ServerWorkspacePage", () => {
     expect(screen.getByText("5× → 45×")).toBeVisible();
     expect(screen.getByText("0.5× → 0.075×")).toBeVisible();
     await user.click(screen.getByRole("button", { name: "Continue" }));
-    expect(
-      screen.getByRole("heading", { name: "Define how the world feels" }),
-    ).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Define how the world feels" })).toBeVisible();
     expect(screen.getByRole("radio", { name: "Very easy" })).toBeChecked();
     await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
-    expect(
-      screen.getByRole("heading", { name: "Review before applying" }),
-    ).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Review before applying" })).toBeVisible();
     expect(screen.getByText("TamingSpeedMultiplier")).toBeVisible();
-    expect(
-      screen.queryByRole("button", { name: /View \d+ changes/ }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /View \d+ changes/ })).not.toBeInTheDocument();
     vi.mocked(window.api.previewServerIni).mockResolvedValue({
       ok: true,
       data: { valid: true, issues: [], diff: [], changedCount: 24 },
     });
     await user.click(screen.getByRole("button", { name: "Apply changes" }));
 
-    expect(
-      await screen.findByRole("heading", { name: "Configuration applied" }),
-    ).toBeVisible();
-    expect(
-      screen.getByText(/Only the settings in this wizard were changed/i),
-    ).toBeVisible();
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      /24 settings were updated on The Island/i,
-    );
+    expect(await screen.findByRole("heading", { name: "Configuration applied" })).toBeVisible();
+    expect(screen.getByText(/Only the settings in this wizard were changed/i)).toBeVisible();
+    expect(await screen.findByRole("alert")).toHaveTextContent(/24 settings were updated on The Island/i);
     expect(window.api.previewServerIni).toHaveBeenCalledTimes(1);
     expect(window.api.saveServerIni).toHaveBeenCalledTimes(1);
     // Wizard initial load + re-read before save (INI editor is not pre-mounted).
@@ -1135,12 +1046,8 @@ describe("ServerWorkspacePage", () => {
     });
     renderWorkspace();
 
-    await user.click(
-      screen.getByRole("button", { name: "Configuration wizard" }),
-    );
-    expect(
-      await screen.findByRole("button", { name: /Match cluster defaults/ }),
-    ).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Configuration wizard" }));
+    expect(await screen.findByRole("button", { name: /Match cluster defaults/ })).toBeVisible();
     expect(screen.queryByText(/No cluster INI template yet/i)).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /Match cluster defaults/ }));
     expect(
@@ -1149,25 +1056,19 @@ describe("ServerWorkspacePage", () => {
       }),
     ).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Continue" }));
-    expect(
-      await screen.findByRole("heading", { name: "Review cluster defaults" }),
-    ).toBeVisible();
+    expect(await screen.findByRole("heading", { name: "Review cluster defaults" })).toBeVisible();
     expect(screen.queryByRole("heading", { name: "Set the progression pace" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Apply cluster defaults" }));
 
-    expect(
-      await screen.findByRole("heading", { name: "Configuration applied" }),
-    ).toBeVisible();
-    expect(window.api.previewClusterIniRestore).toHaveBeenCalledWith(
-      "cluster-1",
-      "srv-a",
-      { gameUserSettings: true, game: true },
-    );
-    expect(window.api.restoreClusterIniFromTemplate).toHaveBeenCalledWith(
-      "cluster-1",
-      "srv-a",
-      { gameUserSettings: true, game: true },
-    );
+    expect(await screen.findByRole("heading", { name: "Configuration applied" })).toBeVisible();
+    expect(window.api.previewClusterIniRestore).toHaveBeenCalledWith("cluster-1", "srv-a", {
+      gameUserSettings: true,
+      game: true,
+    });
+    expect(window.api.restoreClusterIniFromTemplate).toHaveBeenCalledWith("cluster-1", "srv-a", {
+      gameUserSettings: true,
+      game: true,
+    });
     expect(window.api.saveServerIni).not.toHaveBeenCalled();
   });
 
@@ -1175,15 +1076,9 @@ describe("ServerWorkspacePage", () => {
     const user = setupUser();
     renderWorkspace();
 
-    await user.click(
-      screen.getByRole("button", { name: "Configuration wizard" }),
-    );
-    expect(
-      await screen.findByText(/No cluster INI template yet/i),
-    ).toBeVisible();
-    expect(
-      screen.queryByRole("button", { name: /Match cluster defaults/ }),
-    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Configuration wizard" }));
+    expect(await screen.findByText(/No cluster INI template yet/i)).toBeVisible();
+    expect(screen.queryByRole("button", { name: /Match cluster defaults/ })).not.toBeInTheDocument();
   });
 
   it("shows stop progress alert with label and progress bar", () => {
@@ -1232,7 +1127,7 @@ describe("ServerWorkspacePage", () => {
           onSendRcon={vi.fn(async () => true)}
           {...playerListHandlers}
           onCopyConfiguration={vi.fn()}
-        onServerUpdated={vi.fn()}
+          onServerUpdated={vi.fn()}
         />
       </AppProviders>,
     );
@@ -1240,9 +1135,7 @@ describe("ServerWorkspacePage", () => {
     expect(document.querySelector(STOP_PROGRESS_SELECTOR)).not.toBeNull();
     expect(screen.getByText("Backing up")).toBeInTheDocument();
     expect(screen.getByText("Backing up player profiles…")).toBeInTheDocument();
-    expect(
-      screen.getByRole("progressbar", { name: "Backing up player profiles…" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("progressbar", { name: "Backing up player profiles…" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Force close" })).toBeDisabled();
   });
 
@@ -1293,7 +1186,7 @@ describe("ServerWorkspacePage", () => {
           onSendRcon={vi.fn(async () => true)}
           {...playerListHandlers}
           onCopyConfiguration={vi.fn()}
-        onServerUpdated={vi.fn()}
+          onServerUpdated={vi.fn()}
         />
       </AppProviders>,
     );
@@ -1302,9 +1195,7 @@ describe("ServerWorkspacePage", () => {
     expect(
       screen.queryByRole("button", { name: /The Island · The Island · Stopped · Inactive/i }),
     ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Scorched Earth · Scorched Earth · Stopped/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Scorched Earth · Scorched Earth · Stopped/i })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /^Enable$/i }));
     expect(onToggleServerEnabled).toHaveBeenCalledWith(serverA.id, true);
   });
@@ -1314,11 +1205,16 @@ describe("ServerWorkspacePage", () => {
     const onLeave = vi.fn();
     let leaveGuard: ((action: () => void) => void) | null = null;
 
-    renderWorkspace(vi.fn(), vi.fn(async () => true), [], {
-      onRegisterLeaveGuard: (guard) => {
-        leaveGuard = guard;
+    renderWorkspace(
+      vi.fn(),
+      vi.fn(async () => true),
+      [],
+      {
+        onRegisterLeaveGuard: (guard) => {
+          leaveGuard = guard;
+        },
       },
-    });
+    );
 
     await user.type(await screen.findByRole("textbox", { name: /^name$/i }), " X");
     expect(leaveGuard).not.toBeNull();
@@ -1332,10 +1228,7 @@ describe("ServerWorkspacePage", () => {
 
     await user.click(screen.getByRole("button", { name: /keep editing/i }));
     expect(onLeave).not.toHaveBeenCalled();
-    expect(screen.getByRole("tab", { name: "Server" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    expect(screen.getByRole("tab", { name: "Server" })).toHaveAttribute("aria-selected", "true");
 
     act(() => leaveGuard?.(onLeave));
     await user.click(screen.getByRole("button", { name: /discard and continue/i }));
@@ -1346,11 +1239,16 @@ describe("ServerWorkspacePage", () => {
     const onLeave = vi.fn();
     let leaveGuard: ((action: () => void) => void) | null = null;
 
-    renderWorkspace(vi.fn(), vi.fn(async () => true), [], {
-      onRegisterLeaveGuard: (guard) => {
-        leaveGuard = guard;
+    renderWorkspace(
+      vi.fn(),
+      vi.fn(async () => true),
+      [],
+      {
+        onRegisterLeaveGuard: (guard) => {
+          leaveGuard = guard;
+        },
       },
-    });
+    );
 
     await screen.findByRole("heading", { name: "Server information" });
     act(() => leaveGuard?.(onLeave));
@@ -1387,23 +1285,14 @@ describe("ServerWorkspacePage", () => {
     await user.click(screen.getByRole("tab", { name: "INI Files" }));
 
     expect(screen.getByText(/unsaved server profile changes/i)).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Server" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    expect(screen.getByRole("tab", { name: "Server" })).toHaveAttribute("aria-selected", "true");
 
     await user.click(screen.getByRole("button", { name: /keep editing/i }));
-    expect(screen.getByRole("tab", { name: "Server" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    expect(screen.getByRole("tab", { name: "Server" })).toHaveAttribute("aria-selected", "true");
 
     await user.click(screen.getByRole("tab", { name: "INI Files" }));
     await user.click(screen.getByRole("button", { name: /discard and continue/i }));
-    expect(screen.getByRole("tab", { name: "INI Files" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    expect(screen.getByRole("tab", { name: "INI Files" })).toHaveAttribute("aria-selected", "true");
   });
 
   it("does not confirm leave after saving Server-tab profile changes (#299)", async () => {
@@ -1412,12 +1301,17 @@ describe("ServerWorkspacePage", () => {
     const onServerUpdated = vi.fn();
     let leaveGuard: ((action: () => void) => void) | null = null;
 
-    renderWorkspace(vi.fn(), vi.fn(async () => true), [], {
-      onRegisterLeaveGuard: (guard) => {
-        leaveGuard = guard;
+    renderWorkspace(
+      vi.fn(),
+      vi.fn(async () => true),
+      [],
+      {
+        onRegisterLeaveGuard: (guard) => {
+          leaveGuard = guard;
+        },
+        onServerUpdated,
       },
-      onServerUpdated,
-    });
+    );
 
     await user.type(await screen.findByRole("textbox", { name: /^name$/i }), " X");
     await user.click(screen.getByRole("button", { name: /^save changes$/i }));
@@ -1435,11 +1329,16 @@ describe("ServerWorkspacePage", () => {
     const onLeave = vi.fn();
     let leaveGuard: ((action: () => void) => void) | null = null;
 
-    renderWorkspace(vi.fn(), vi.fn(async () => true), [], {
-      onRegisterLeaveGuard: (guard) => {
-        leaveGuard = guard;
+    renderWorkspace(
+      vi.fn(),
+      vi.fn(async () => true),
+      [],
+      {
+        onRegisterLeaveGuard: (guard) => {
+          leaveGuard = guard;
+        },
       },
-    });
+    );
 
     await user.click(screen.getByRole("tab", { name: "INI Files" }));
     const xp = await screen.findByDisplayValue("1.5");
@@ -1477,12 +1376,17 @@ describe("ServerWorkspacePage", () => {
     const onServerUpdated = vi.fn();
     let leaveGuard: ((action: () => void) => void) | null = null;
 
-    renderWorkspace(vi.fn(), vi.fn(async () => true), [], {
-      onRegisterLeaveGuard: (guard) => {
-        leaveGuard = guard;
+    renderWorkspace(
+      vi.fn(),
+      vi.fn(async () => true),
+      [],
+      {
+        onRegisterLeaveGuard: (guard) => {
+          leaveGuard = guard;
+        },
+        onServerUpdated,
       },
-      onServerUpdated,
-    });
+    );
 
     await user.type(await screen.findByRole("textbox", { name: /^name$/i }), " X");
     act(() => leaveGuard?.(onLeave));
@@ -1495,4 +1399,3 @@ describe("ServerWorkspacePage", () => {
     expect(window.api.updateServer).toHaveBeenCalled();
   });
 });
-

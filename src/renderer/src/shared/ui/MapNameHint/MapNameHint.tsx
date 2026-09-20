@@ -1,7 +1,8 @@
 import type { ReactElement } from "react";
-import { Alert, Stack, Text } from "@mantine/core";
+import { Stack, Text } from "@mantine/core";
 import type { suggestMapTokenFromMetadata } from "@shared/asa/map-token-suggest";
 import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { CopyMetadataRow } from "@ui/CopyMetadataRow/CopyMetadataRow";
 import { mapFieldHelperTextProps } from "@ui/mapFieldStyles";
 import classes from "./MapNameHint.module.css";
@@ -19,11 +20,7 @@ export function MapNameHint(props: Props): ReactElement {
 
   if (props.suggestion === null) {
     const missing = (
-      <Text size="sm">
-        {variant === "embedded"
-          ? MAP_NAME_COPY.setUnderCustom
-          : MAP_NAME_COPY.notInferredFromCf}
-      </Text>
+      <Text size="sm">{variant === "embedded" ? MAP_NAME_COPY.setUnderCustom : MAP_NAME_COPY.notInferredFromCf}</Text>
     );
     if (variant === "inline") {
       return (
@@ -31,7 +28,7 @@ export function MapNameHint(props: Props): ReactElement {
           <Text c="dimmed" tt="uppercase" fw={500} {...mapFieldHelperTextProps}>
             {MAP_NAME_COPY.label}
           </Text>
-          <Text {...mapFieldHelperTextProps} c="yellow">
+          <Text {...mapFieldHelperTextProps} c="attention">
             {MAP_NAME_COPY.notInferredFromCf}
           </Text>
         </Stack>
@@ -41,16 +38,13 @@ export function MapNameHint(props: Props): ReactElement {
       return missing;
     }
     return (
-      <Alert variant="light" color="yellow" title={MAP_NAME_COPY.notInferredTitle} radius="md">
+      <AppAlert variant="light" color="attention" title={MAP_NAME_COPY.notInferredTitle} radius="md">
         {missing}
-      </Alert>
+      </AppAlert>
     );
   }
 
-  const title =
-    props.suggestion.source === "labeled"
-      ? MAP_NAME_COPY.inferred
-      : MAP_NAME_COPY.possible;
+  const title = props.suggestion.source === "labeled" ? MAP_NAME_COPY.inferred : MAP_NAME_COPY.possible;
 
   const copyControl = (
     <CopyMetadataRow
@@ -66,7 +60,7 @@ export function MapNameHint(props: Props): ReactElement {
       <Stack gap={2} className={classes.inlineRoot}>
         {copyControl}
         {props.suggestion.source === "bare" ? (
-          <Text {...mapFieldHelperTextProps} c="yellow">
+          <Text {...mapFieldHelperTextProps} c="attention">
             {MAP_NAME_COPY.verifyOnCurseForge}
           </Text>
         ) : null}
@@ -84,15 +78,13 @@ export function MapNameHint(props: Props): ReactElement {
   }
 
   return (
-    <Alert variant="light" color="blue" title={title} radius="md">
+    <AppAlert variant="light" color="blue" title={title} radius="md">
       <Stack gap="xs">
         {copyControl}
         <Text size="sm">
-          {props.suggestion.source === "bare"
-            ? MAP_NAME_COPY.verifyOnCurseForge
-            : MAP_NAME_COPY.chooseWhenReady}
+          {props.suggestion.source === "bare" ? MAP_NAME_COPY.verifyOnCurseForge : MAP_NAME_COPY.chooseWhenReady}
         </Text>
       </Stack>
-    </Alert>
+    </AppAlert>
   );
 }

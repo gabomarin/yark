@@ -1,4 +1,5 @@
-import { Alert, Button, Group, Stack } from "@mantine/core";
+import { Button, Group, Stack } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { modals } from "@mantine/modals";
 import type { WorkspaceLeaveCopy } from "./workspaceLeaveGuard";
 
@@ -15,16 +16,16 @@ export function openUnsavedLeaveModal(input: {
     title: input.copy.title,
     children: (
       <Stack gap="md">
-        <Alert color="fossil" title={input.copy.alertTitle} variant="light">
+        <AppAlert color="fossil" title={input.copy.alertTitle} variant="light">
           {input.copy.message}
-        </Alert>
+        </AppAlert>
         <Group justify="flex-end" gap="xs" wrap="wrap">
           <Button variant="default" onClick={() => modals.close(id)}>
             Keep editing
           </Button>
           <Button
-            color="fossil"
-            variant="light"
+            color="red"
+            variant="subtle"
             onClick={() => {
               modals.close(id);
               input.onDiscard();

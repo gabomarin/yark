@@ -44,31 +44,23 @@ function assertIdleForTemplateApply(
   serverName: string,
 ): void {
   if (isServerProcessLive(runtime)) {
-    throw new Error(
-      `Server “${serverName}” must not be running before template apply (status: ${runtime.status})`,
-    );
+    throw new Error(`Server “${serverName}” must not be running before template apply (status: ${runtime.status})`);
   }
 }
 
 function assertMemberOfCluster(server: ServerProfile, clusterId: string): void {
   if (server.clusterId === null || server.clusterId !== clusterId) {
-    throw new Error(
-      `Server “${server.name}” is not a member of cluster “${clusterId}”`,
-    );
+    throw new Error(`Server “${server.name}” is not a member of cluster “${clusterId}”`);
   }
 }
 
 /** Seed requires the server to already belong to this cluster (same as apply). */
 function assertSeedTarget(server: ServerProfile, clusterId: string): void {
   if (server.clusterId === null) {
-    throw new Error(
-      `Server “${server.name}” must join the cluster before seeding INI`,
-    );
+    throw new Error(`Server “${server.name}” must join the cluster before seeding INI`);
   }
   if (server.clusterId !== clusterId) {
-    throw new Error(
-      `Server “${server.name}” belongs to a different cluster`,
-    );
+    throw new Error(`Server “${server.name}” belongs to a different cluster`);
   }
 }
 
@@ -86,51 +78,27 @@ export class ClusterIniTemplateApplyService {
     private readonly runtime: ServerRuntimeStatusReader,
   ) {}
 
-  previewRestore(
-    clusterId: string,
-    serverId: string,
-    files?: unknown,
-  ): Promise<ClusterIniTemplateMemberPreview> {
+  previewRestore(clusterId: string, serverId: string, files?: unknown): Promise<ClusterIniTemplateMemberPreview> {
     return this.buildMemberPreview(clusterId, serverId, "restore", files);
   }
 
-  previewPromote(
-    clusterId: string,
-    serverId: string,
-    files?: unknown,
-  ): Promise<ClusterIniTemplateMemberPreview> {
+  previewPromote(clusterId: string, serverId: string, files?: unknown): Promise<ClusterIniTemplateMemberPreview> {
     return this.buildMemberPreview(clusterId, serverId, "promote", files);
   }
 
-  previewSeed(
-    clusterId: string,
-    serverId: string,
-    files?: unknown,
-  ): Promise<ClusterIniTemplateMemberPreview> {
+  previewSeed(clusterId: string, serverId: string, files?: unknown): Promise<ClusterIniTemplateMemberPreview> {
     return this.buildMemberPreview(clusterId, serverId, "seed", files);
   }
 
-  async restore(
-    clusterId: string,
-    serverId: string,
-    files?: unknown,
-  ): Promise<ClusterIniTemplateApplyResult> {
+  async restore(clusterId: string, serverId: string, files?: unknown): Promise<ClusterIniTemplateApplyResult> {
     return this.applyToMember(clusterId, serverId, "restore", files);
   }
 
-  async seed(
-    clusterId: string,
-    serverId: string,
-    files?: unknown,
-  ): Promise<ClusterIniTemplateApplyResult> {
+  async seed(clusterId: string, serverId: string, files?: unknown): Promise<ClusterIniTemplateApplyResult> {
     return this.applyToMember(clusterId, serverId, "seed", files);
   }
 
-  async promote(
-    clusterId: string,
-    serverId: string,
-    files?: unknown,
-  ): Promise<ClusterIniTemplateApplyResult> {
+  async promote(clusterId: string, serverId: string, files?: unknown): Promise<ClusterIniTemplateApplyResult> {
     const id = normalizeClusterId(clusterId);
     const server = this.requireServer(serverId);
     assertMemberOfCluster(server, id);
@@ -145,18 +113,10 @@ export class ClusterIniTemplateApplyService {
         gameUserSettings: "",
         game: "",
       };
-      const next = mergeClusterIniPayloadByFileSelection(
-        composed,
-        current,
-        selection,
-      );
-      const preview = finalizeClusterIniApplyPreview(
-        buildIniPreview(current, next),
-      );
+      const next = mergeClusterIniPayloadByFileSelection(composed, current, selection);
+      const preview = finalizeClusterIniApplyPreview(buildIniPreview(current, next));
       if (!preview.valid) {
-        throw new Error(
-          `Invalid INI: ${preview.issues.map((i) => `${i.fileKey}: ${i.message}`).join(" | ")}`,
-        );
+        throw new Error(`Invalid INI: ${preview.issues.map((i) => `${i.fileKey}: ${i.message}`).join(" | ")}`);
       }
 
       // Validate fully before mutating the persisted template.
@@ -205,11 +165,7 @@ export class ClusterIniTemplateApplyService {
         gameUserSettings: "",
         game: "",
       };
-      const next = mergeClusterIniPayloadByFileSelection(
-        composed,
-        current,
-        selection,
-      );
+      const next = mergeClusterIniPayloadByFileSelection(composed, current, selection);
       return {
         operation,
         clusterId: id,
@@ -221,24 +177,14 @@ export class ClusterIniTemplateApplyService {
     }
 
     const template = this.requireTemplate(id);
-    const composed = composeMemberPayloadFromTemplate(
-      template.payload,
-      server,
-      snapshot.payload,
-    );
-    const next = mergeClusterIniPayloadByFileSelection(
-      composed,
-      snapshot.payload,
-      selection,
-    );
+    const composed = composeMemberPayloadFromTemplate(template.payload, server, snapshot.payload);
+    const next = mergeClusterIniPayloadByFileSelection(composed, snapshot.payload, selection);
     return {
       operation,
       clusterId: id,
       serverId,
       serverName: server.name,
-      preview: finalizeClusterIniApplyPreview(
-        buildIniPreview(snapshot.payload, next),
-      ),
+      preview: finalizeClusterIniApplyPreview(buildIniPreview(snapshot.payload, next)),
       files: selection,
     };
   }
@@ -263,30 +209,15 @@ export class ClusterIniTemplateApplyService {
 
       const template = this.requireTemplate(id);
       const current = await this.ini.readServerIni(serverId);
-      const composed = composeMemberPayloadFromTemplate(
-        template.payload,
-        server,
-        current.payload,
-      );
-      const next = mergeClusterIniPayloadByFileSelection(
-        composed,
-        current.payload,
-        selection,
-      );
-      const preview = finalizeClusterIniApplyPreview(
-        buildIniPreview(current.payload, next),
-      );
+      const composed = composeMemberPayloadFromTemplate(template.payload, server, current.payload);
+      const next = mergeClusterIniPayloadByFileSelection(composed, current.payload, selection);
+      const preview = finalizeClusterIniApplyPreview(buildIniPreview(current.payload, next));
       if (!preview.valid) {
-        throw new Error(
-          `Invalid INI: ${preview.issues.map((i) => `${i.fileKey}: ${i.message}`).join(" | ")}`,
-        );
+        throw new Error(`Invalid INI: ${preview.issues.map((i) => `${i.fileKey}: ${i.message}`).join(" | ")}`);
       }
 
       // Recoverable backup before any overwrite.
-      const { backupId, snapshotDir } = await this.createPreWriteBackup(
-        serverId,
-        current,
-      );
+      const { backupId, snapshotDir } = await this.createPreWriteBackup(serverId, current);
 
       try {
         await this.writeIniPayload(current, next, selection);
@@ -330,10 +261,7 @@ export class ClusterIniTemplateApplyService {
 
     let backupId: string | null = null;
     try {
-      const records: BackupRecord[] = await this.backups.createManualBackup(
-        serverId,
-        ["ini"],
-      );
+      const records: BackupRecord[] = await this.backups.createManualBackup(serverId, ["ini"]);
       backupId = records.find((row) => row.kind === "ini")?.id ?? null;
     } catch {
       // Local snapshot already written — Ready install is not required for #89.
@@ -342,39 +270,21 @@ export class ClusterIniTemplateApplyService {
     return { backupId, snapshotDir };
   }
 
-  private async writeLocalIniSnapshot(
-    current: Awaited<ReturnType<IniService["readServerIni"]>>,
-  ): Promise<string> {
+  private async writeLocalIniSnapshot(current: Awaited<ReturnType<IniService["readServerIni"]>>): Promise<string> {
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const snapshotDir = join(
-      dirname(current.gameUserSettingsPath),
-      ".yark-pre-template",
-      stamp,
-    );
+    const snapshotDir = join(dirname(current.gameUserSettingsPath), ".yark-pre-template", stamp);
     await mkdir(snapshotDir, { recursive: true });
 
     const gusDest = join(snapshotDir, "GameUserSettings.ini");
     const gameDest = join(snapshotDir, "Game.ini");
 
-    await this.copyOrWriteIniSnapshot(
-      current.gameUserSettingsPath,
-      gusDest,
-      current.payload.gameUserSettings,
-    );
-    await this.copyOrWriteIniSnapshot(
-      current.gameIniPath,
-      gameDest,
-      current.payload.game,
-    );
+    await this.copyOrWriteIniSnapshot(current.gameUserSettingsPath, gusDest, current.payload.gameUserSettings);
+    await this.copyOrWriteIniSnapshot(current.gameIniPath, gameDest, current.payload.game);
 
     return snapshotDir;
   }
 
-  private async copyOrWriteIniSnapshot(
-    sourcePath: string,
-    destPath: string,
-    fallbackText: string,
-  ): Promise<void> {
+  private async copyOrWriteIniSnapshot(sourcePath: string, destPath: string, fallbackText: string): Promise<void> {
     try {
       await copyFile(sourcePath, destPath);
     } catch {
@@ -395,11 +305,7 @@ export class ClusterIniTemplateApplyService {
     // Pending drafts hold both files; a partial template write must still
     // materialize the non-selected file before clearPending (#530).
     if (writeGus) {
-      await writeFile(
-        current.gameUserSettingsPath,
-        payload.gameUserSettings,
-        "utf8",
-      );
+      await writeFile(current.gameUserSettingsPath, payload.gameUserSettings, "utf8");
     }
     if (writeGame) {
       await writeFile(current.gameIniPath, payload.game, "utf8");

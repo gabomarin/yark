@@ -63,10 +63,7 @@ export function safeText(value: string, max = DISCORD_MESSAGE_MAX_LENGTH): strin
 export function sanitizeDiscordMessageTemplate(value: string): string {
   const trimmed = value.trim();
   if (trimmed.length === 0) return "";
-  const withoutMentions = trimmed.replace(
-    /@(?!\u200b)/g,
-    "@\u200b",
-  );
+  const withoutMentions = trimmed.replace(/@(?!\u200b)/g, "@\u200b");
   const withoutUnknown = withoutMentions.replace(/\{([^{}]+)\}/g, (token, name) =>
     (DISCORD_MESSAGE_PLACEHOLDERS as readonly string[]).includes(name) ? token : "",
   );
@@ -74,10 +71,7 @@ export function sanitizeDiscordMessageTemplate(value: string): string {
 }
 
 /** Interpolate the whitelisted tokens of a sanitized template. */
-export function renderDiscordMessage(
-  template: string,
-  context: DiscordMessageContext,
-): string {
+export function renderDiscordMessage(template: string, context: DiscordMessageContext): string {
   let rendered = sanitizeDiscordMessageTemplate(template);
   for (const placeholder of DISCORD_MESSAGE_PLACEHOLDERS) {
     const value = placeholder === "detail" ? (context.detail ?? "") : context.server;
@@ -91,10 +85,7 @@ export function renderDiscordMessage(
 }
 
 export interface DiscordUpdateEventPayload {
-  type: Extract<
-    AppEvent["type"],
-    "update_started" | "update_completed" | "update_failed" | "update_rolled_back"
-  >;
+  type: Extract<AppEvent["type"], "update_started" | "update_completed" | "update_failed" | "update_rolled_back">;
   severity: AppEvent["severity"];
   serverId: string | null;
   serverName: string | null;
@@ -109,15 +100,12 @@ export interface DiscordClosedByUserPayload {
   eventId: number;
 }
 
-export function parseDiscordWebhookPreferences(
-  raw: string | null,
-): DiscordWebhookPreferences {
+export function parseDiscordWebhookPreferences(raw: string | null): DiscordWebhookPreferences {
   if (raw === null) return structuredClone(DEFAULT_DISCORD_WEBHOOK_PREFERENCES);
   try {
     const value = JSON.parse(raw) as Partial<DiscordWebhookPreferences>;
     const events: Partial<Record<DiscordWebhookEvent, boolean>> = value.events ?? {};
-    const rawMessages: Partial<Record<DiscordWebhookEvent, unknown>> =
-      value.customMessages ?? {};
+    const rawMessages: Partial<Record<DiscordWebhookEvent, unknown>> = value.customMessages ?? {};
     const customMessages: Partial<Record<DiscordWebhookEvent, string>> = {};
     const EVENT_KEYS = [
       "serverStarted",
@@ -153,9 +141,7 @@ export function parseDiscordWebhookPreferences(
   }
 }
 
-export function serializeDiscordWebhookPreferences(
-  preferences: DiscordWebhookPreferences,
-): string {
+export function serializeDiscordWebhookPreferences(preferences: DiscordWebhookPreferences): string {
   return JSON.stringify({
     ...preferences,
     webhookUrl: preferences.webhookUrl.trim(),
@@ -167,12 +153,12 @@ export function isDiscordWebhookUrl(value: string): boolean {
   try {
     const url = new URL(value.trim());
     return (
-      url.protocol === "https:"
-      && url.hostname === "discord.com"
-      && url.username === ""
-      && url.password === ""
-      && url.hash === ""
-      && /^\/api\/webhooks\/\d+\/[^/]+\/?$/.test(url.pathname)
+      url.protocol === "https:" &&
+      url.hostname === "discord.com" &&
+      url.username === "" &&
+      url.password === "" &&
+      url.hash === "" &&
+      /^\/api\/webhooks\/\d+\/[^/]+\/?$/.test(url.pathname)
     );
   } catch {
     return false;

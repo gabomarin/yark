@@ -7,9 +7,7 @@ import {
 } from "@backend/domains/backups/backup-cleanup-plan";
 import type { BackupPolicy, BackupRecord } from "@shared/types";
 
-function backup(
-  partial: Partial<BackupRecord> & Pick<BackupRecord, "id" | "kind" | "status">,
-): BackupRecord {
+function backup(partial: Partial<BackupRecord> & Pick<BackupRecord, "id" | "kind" | "status">): BackupRecord {
   return {
     serverId: "srv-1",
     type: "manual",
@@ -47,9 +45,8 @@ function catalog(input: {
   return {
     getPolicy: () => input.policy ?? policy(),
     listBackups: () => all,
-    listCompleted: (_serverId, kind) => input.completedByKind?.[kind] ?? all.filter(
-      (row) => row.kind === kind && row.status === "completed",
-    ),
+    listCompleted: (_serverId, kind) =>
+      input.completedByKind?.[kind] ?? all.filter((row) => row.kind === kind && row.status === "completed"),
     latestCompleted: (_serverId, kind) => {
       if (kind === "world") return input.latestWorld ?? null;
       return null;
@@ -178,14 +175,7 @@ describe("planBackupCleanup", () => {
     const aberrNew = mkWorld("a-new", "Aberration_WP", "2026-03-15T00:00:00.000Z");
     const aberrMid = mkWorld("a-mid", "Aberration_WP", "2026-02-15T00:00:00.000Z");
     const aberrOld = mkWorld("a-old", "Aberration_WP", "2026-01-15T00:00:00.000Z");
-    const newestFirst = [
-      aberrNew,
-      islandNew,
-      aberrMid,
-      islandMid,
-      aberrOld,
-      islandOld,
-    ];
+    const newestFirst = [aberrNew, islandNew, aberrMid, islandMid, aberrOld, islandOld];
 
     const plan = planBackupCleanup({
       options: {
@@ -225,14 +215,7 @@ describe("planBackupCleanup", () => {
     const aberrOld = mkWorld("a-old", "Aberration_WP", "2026-01-15T00:00:00.000Z");
     // Newest-first interleaved across maps — a flat slice(2) would delete
     // mid/old from both maps; per-map pools should only mark the oldest each.
-    const newestFirst = [
-      aberrNew,
-      islandNew,
-      aberrMid,
-      islandMid,
-      aberrOld,
-      islandOld,
-    ];
+    const newestFirst = [aberrNew, islandNew, aberrMid, islandMid, aberrOld, islandOld];
 
     const plan = planBackupCleanup({
       options: {
@@ -271,8 +254,6 @@ describe("summarizeCleanupPlan", () => {
     ];
     const summary = summarizeCleanupPlan(plan);
     expect(summary.totalBytes).toBe(125);
-    expect(summary.byServer).toEqual([
-      { serverId: "srv-1", serverName: "Island", count: 2, bytes: 125 },
-    ]);
+    expect(summary.byServer).toEqual([{ serverId: "srv-1", serverName: "Island", count: 2, bytes: 125 }]);
   });
 });

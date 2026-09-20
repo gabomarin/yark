@@ -93,17 +93,12 @@ export const YARK_OWNED_INI_KEYS: readonly YarkOwnedIniKey[] = [
 ] as const;
 
 const OWNED_KEY_SET: ReadonlySet<string> = new Set(
-  YARK_OWNED_INI_KEYS.map(
-    (entry) =>
-      `${entry.section.toLowerCase()}\u001f${entry.key.toLowerCase()}`,
-  ),
+  YARK_OWNED_INI_KEYS.map((entry) => `${entry.section.toLowerCase()}\u001f${entry.key.toLowerCase()}`),
 );
 
 /** True when this GameUserSettings section/key is YARK-owned (case-insensitive). */
 export function isYarkOwnedIniKey(section: string, key: string): boolean {
-  return OWNED_KEY_SET.has(
-    `${section.trim().toLowerCase()}\u001f${key.trim().toLowerCase()}`,
-  );
+  return OWNED_KEY_SET.has(`${section.trim().toLowerCase()}\u001f${key.trim().toLowerCase()}`);
 }
 
 /** ASA ignores INI MaxPlayers; the live cap is `-WinLiveMaxPlayers`. */
@@ -150,8 +145,7 @@ export function stripYarkOwnedIniKeys(text: string): string {
     }
 
     const eq = trimmed.indexOf("=");
-    const isAssignment =
-      eq > 0 && !trimmed.startsWith(";") && !trimmed.startsWith("#");
+    const isAssignment = eq > 0 && !trimmed.startsWith(";") && !trimmed.startsWith("#");
 
     if (isAssignment) {
       const key = trimmed.slice(0, eq).trim();
@@ -185,9 +179,7 @@ export function stripYarkOwnedIniKeys(text: string): string {
 }
 
 /** Strip owned keys from both template INI files (Game.ini is a no-op today). */
-export function stripYarkOwnedFromPayload(
-  payload: ServerIniPayload,
-): ServerIniPayload {
+export function stripYarkOwnedFromPayload(payload: ServerIniPayload): ServerIniPayload {
   return {
     gameUserSettings: stripYarkOwnedIniKeys(payload.gameUserSettings),
     game: payload.game,

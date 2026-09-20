@@ -12,33 +12,6 @@
   gap: var(--mantine-spacing-sm);
 }
 
-.modalContent {
-  display: flex !important;
-  flex-direction: column !important;
-  height: min(84vh, 820px) !important;
-  max-height: min(84vh, 820px) !important;
-  overflow: hidden !important;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--ark-blue-2) 55%, var(--ark-background)) 0%,
-    var(--ark-background) 52%,
-    color-mix(in srgb, var(--ark-background) 92%, #000) 100%
-  );
-}
-
-.modalHeader {
-  flex-shrink: 0;
-}
-
-.modalBody {
-  flex: 1 1 0 !important;
-  min-height: 0 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  overflow: hidden !important;
-  padding-top: var(--mantine-spacing-xs);
-}
-
 .header {
   display: flex;
   flex-wrap: wrap;
@@ -57,8 +30,8 @@
 
 .versionCard {
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-md);
-  background: color-mix(in srgb, var(--ark-blue-ini-category) 72%, transparent);
+  border-radius: 0;
+  background: var(--app-color-panel);
   padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
   text-align: right;
   min-width: 9.5rem;
@@ -74,7 +47,7 @@
 
 .versionValue {
   margin-top: 0.15rem;
-  color: var(--app-color-cryo);
+  /* No colour: like `Sidebar .versionValue`, a version is a mono value, not a label. */
   font-family: var(--app-font-mono);
   font-size: var(--mantine-font-size-sm);
 }
@@ -84,17 +57,17 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  border-radius: 999px;
+  border-radius: var(--app-radius-control);
   border: 1px solid var(--app-color-border-subtle);
-  background: color-mix(in srgb, var(--app-color-surface-panel) 70%, transparent);
+  background: var(--app-color-surface-panel);
   color: var(--app-color-muted);
   padding: 0.3rem 0.7rem;
   font-size: var(--mantine-font-size-xs);
   font-weight: 650;
   transition:
-    background 120ms ease,
-    border-color 120ms ease,
-    color 120ms ease;
+    background var(--app-motion-fast) var(--app-ease-standard),
+    border-color var(--app-motion-fast) var(--app-ease-standard),
+    color var(--app-motion-fast) var(--app-ease-standard);
 }
 
 .root[data-density="compact"] .filter,
@@ -104,13 +77,15 @@
 
 .filter:hover {
   color: var(--app-color-text);
-  border-color: color-mix(in srgb, var(--app-color-accent) 45%, transparent);
+  background: var(--app-color-surface-control);
 }
 
+/* An active category filter is the same chip with an accent outline and label, not a
+ * tinted fill: the palette stays neutral and the accent marks the state. */
 .filterActive {
-  color: var(--app-color-cryo);
-  border-color: color-mix(in srgb, var(--app-color-accent) 65%, transparent);
-  background: color-mix(in srgb, var(--app-color-accent) 22%, transparent);
+  color: var(--app-color-accent-text);
+  border-color: var(--app-color-accent);
+  background: var(--app-color-surface-control);
 }
 
 .filterCount {
@@ -118,8 +93,8 @@
   font-size: 0.65rem;
   opacity: 0.9;
   padding: 0.05rem 0.35rem;
-  border-radius: 999px;
-  background: rgb(0 0 0 / 28%);
+  border-radius: var(--app-radius-control);
+  background: var(--app-color-surface-control);
 }
 
 .split {
@@ -128,9 +103,9 @@
   min-height: 0;
   flex: 1 1 0;
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-md);
+  border-radius: 0;
   overflow: hidden;
-  background: color-mix(in srgb, var(--app-color-surface-panel) 55%, transparent);
+  background: var(--app-color-surface-panel);
 }
 
 @media (max-width: 56rem) {
@@ -183,7 +158,7 @@
   min-height: 0;
   height: 100%;
   overflow: hidden;
-  background: rgb(0 0 0 / 14%);
+  background: color-mix(in srgb, var(--ark-gray-1) 14%, transparent);
 }
 
 .detailHeader {
@@ -201,14 +176,14 @@
   display: block;
   width: 100%;
   text-align: left;
-  border-radius: var(--app-radius-control);
+  border-radius: 0;
   border: 1px solid transparent;
   padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
-  background: color-mix(in srgb, #fff 2.5%, transparent);
+  background: transparent;
   color: inherit;
   transition:
-    background 120ms ease,
-    border-color 120ms ease;
+    background var(--app-motion-fast) var(--app-ease-standard),
+    border-color var(--app-motion-fast) var(--app-ease-standard);
 }
 
 .root[data-density="compact"] .row,
@@ -218,18 +193,23 @@
 
 .row:hover {
   border-color: var(--app-color-border-subtle);
-  background: color-mix(in srgb, #fff 4.5%, transparent);
+  background: var(--app-color-surface-control);
 }
 
+/* Same selection language as the sidebar, Settings nav and the Logs / Server-list rows: a
+ * neutral fill plus an accent marker. The tinted `accent-subtle` fill this used to carry
+ * read as a saturated blue block next to the muted navy palette. */
 .rowActive {
-  border-color: color-mix(in srgb, var(--app-color-accent) 55%, transparent);
-  background: color-mix(in srgb, var(--app-color-accent) 15%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app-color-cryo) 12%, transparent);
+  border-color: var(--app-color-accent-subtle);
+  background: var(--app-list-selected-bg);
+  box-shadow: var(--app-list-selected-inset);
 }
 
 .token {
   font-family: var(--app-font-mono);
   font-size: var(--mantine-font-size-sm);
+  /* Cryo is the app's tone for an ASA option identifier: `ServerAsaApiPanel .optionLabel`
+   * and `ServerLaunchPanel .optionLabel` colour the same tokens the same way. */
   color: var(--app-color-cryo);
 }
 
@@ -283,7 +263,7 @@
 .toneCryo {
   display: inline-flex;
   align-items: center;
-  border-radius: 999px;
+  border-radius: var(--app-radius-control);
   border: 1px solid transparent;
   padding: 0.12rem 0.55rem;
   font-size: var(--mantine-font-size-xs);
@@ -301,7 +281,7 @@
 .chipMono {
   display: inline-flex;
   align-items: center;
-  border-radius: 999px;
+  border-radius: var(--app-radius-control);
   border: 1px solid var(--app-color-border-subtle);
   padding: 0.12rem 0.55rem;
   font-size: var(--mantine-font-size-xs);
@@ -315,19 +295,19 @@
 
 .toneOk {
   color: var(--app-color-ok);
-  border-color: color-mix(in srgb, var(--app-color-ok) 35%, transparent);
+  border-color: var(--app-color-ok);
   background: color-mix(in srgb, var(--app-color-ok) 14%, transparent);
 }
 
 .toneWarn {
   color: var(--app-color-warn);
-  border-color: color-mix(in srgb, var(--app-color-warn) 35%, transparent);
+  border-color: var(--app-color-warn);
   background: color-mix(in srgb, var(--app-color-warn) 14%, transparent);
 }
 
 .toneCryo {
   color: var(--app-color-cryo);
-  border-color: color-mix(in srgb, var(--app-color-cryo) 32%, transparent);
+  border-color: var(--app-color-cryo);
   background: color-mix(in srgb, var(--app-color-cryo) 12%, transparent);
 }
 
@@ -340,7 +320,7 @@
   grid-template-columns: 6.75rem minmax(0, 1fr);
   gap: var(--mantine-spacing-sm);
   padding: var(--mantine-spacing-sm) 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--app-color-border-subtle) 70%, transparent);
+  border-bottom: 1px solid var(--app-color-border-subtle);
 }
 
 .root[data-density="compact"] .metaRow {
@@ -359,6 +339,7 @@
 }
 
 .mono {
+  /* No colour: the app renders mono example values in the text tone
+   * (`ServerLaunchPanel .previewCode`, `RconPanel .playerId`). */
   font-family: var(--app-font-mono);
-  color: var(--app-color-cryo);
 }

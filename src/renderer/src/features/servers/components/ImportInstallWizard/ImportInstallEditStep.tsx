@@ -1,12 +1,6 @@
 import type { ReactElement } from "react";
-import {
-  Alert,
-  NumberInput,
-  PasswordInput,
-  SimpleGrid,
-  Stack,
-  TextInput,
-} from "@mantine/core";
+import { NumberInput, PasswordInput, SimpleGrid, Stack, TextInput } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { isOfficialMap, normalizeMapToken } from "@shared/asa/map-identity";
 import type { KnownClusterOption } from "@features/clusters/knownClusterOptions";
 import type { ModMetadata, ServerProfile } from "@shared/types";
@@ -32,8 +26,7 @@ export function ImportInstallEditStep(props: Props): ReactElement {
     props.onChange({ ...props.form, ...patch });
   };
   const mapToken = normalizeMapToken(props.form.map);
-  const customMapNeedsLink =
-    mapToken.length > 0 && !isOfficialMap(mapToken) && props.form.mapModId === null;
+  const customMapNeedsLink = mapToken.length > 0 && !isOfficialMap(mapToken) && props.form.mapModId === null;
 
   return (
     <Stack gap="sm">
@@ -45,10 +38,10 @@ export function ImportInstallEditStep(props: Props): ReactElement {
         rconPort={props.form.rconPort}
       />
       {customMapNeedsLink && (
-        <Alert color="yellow" title="Custom map">
-          Link a Maps-category Project ID below (or on the Mods tab after import)
-          before the first Start, or Start will block until map identity is set.
-        </Alert>
+        <AppAlert color="attention" title="Custom map">
+          Link a Maps-category Project ID below (or on the Mods tab after import) before the first Start, or Start will
+          block until map identity is set.
+        </AppAlert>
       )}
       <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
         <TextInput
@@ -140,9 +133,7 @@ export function ImportInstallEditStep(props: Props): ReactElement {
       />
       <ServerFormCreateClusterFields
         options={props.knownClusters}
-        selectedClusterId={
-          props.form.clusterId.trim().length > 0 ? props.form.clusterId : null
-        }
+        selectedClusterId={props.form.clusterId.trim().length > 0 ? props.form.clusterId : null}
         inputSize="sm"
         onOpenClusters={props.onOpenClusters}
         onSelectCluster={(clusterId) => {
@@ -150,9 +141,7 @@ export function ImportInstallEditStep(props: Props): ReactElement {
             set({ clusterId: "", clusterDir: "" });
             return;
           }
-          const selected = props.knownClusters.find(
-            (option) => option.clusterId === clusterId,
-          );
+          const selected = props.knownClusters.find((option) => option.clusterId === clusterId);
           if (selected === undefined) return;
           set({
             clusterId: selected.clusterId,

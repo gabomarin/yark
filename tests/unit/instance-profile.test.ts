@@ -16,9 +16,7 @@ const profile = {
 
 describe("validateSessionPorts", () => {
   it("rejects invalid or duplicate ports", () => {
-    expect(() =>
-      validateSessionPorts({ gamePort: 7777, queryPort: 7777, rconPort: 27020 }),
-    ).toThrow(/distinct/);
+    expect(() => validateSessionPorts({ gamePort: 7777, queryPort: 7777, rconPort: 27020 })).toThrow(/distinct/);
   });
 });
 

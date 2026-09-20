@@ -24,9 +24,7 @@ describe("RconStatusIcon", () => {
       </AppProviders>,
     );
 
-    expect(
-      screen.getByText("RCON: disconnected - click to retry"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("RCON: disconnected - click to retry")).toBeInTheDocument();
   });
 
   it("lets the user retry a disconnected RCON session", async () => {
@@ -51,9 +49,7 @@ describe("RconStatusIcon", () => {
       </AppProviders>,
     );
 
-    await user.click(
-      await screen.findByText("RCON: disconnected - click to retry"),
-    );
+    await user.click(await screen.findByText("RCON: disconnected - click to retry"));
 
     expect(retryRconConnection).toHaveBeenCalledWith("srv-retry");
   });

@@ -13,12 +13,7 @@ import classes from "./ClusterIniTemplateModal.module.css";
 
 interface Props {
   row: IniSettingReference;
-  onChange: (
-    section: string,
-    key: string,
-    value: string,
-    occurrence?: number,
-  ) => void;
+  onChange: (section: string, key: string, value: string, occurrence?: number) => void;
 }
 
 export function ClusterIniTemplateSettingRow(props: Props): ReactElement {
@@ -30,8 +25,7 @@ export function ClusterIniTemplateSettingRow(props: Props): ReactElement {
   });
   const defaultValue = lookupDefaultValue(row.fileKey, row.section, row.key);
   const canReset = defaultValue !== null && defaultValue !== row.value;
-  const label =
-    row.duplicateCount > 1 ? `${row.key} #${row.occurrence + 1}` : row.key;
+  const label = row.duplicateCount > 1 ? `${row.key} #${row.occurrence + 1}` : row.key;
 
   return (
     <div className={classes.row}>
@@ -46,26 +40,17 @@ export function ClusterIniTemplateSettingRow(props: Props): ReactElement {
       <div>
         {kind === "boolean" ? (
           <Switch
+            aria-label={label}
             checked={row.value.toLowerCase() === "true"}
             onChange={(event) =>
-              onChange(
-                row.section,
-                row.key,
-                event.currentTarget.checked ? "True" : "False",
-                row.occurrence,
-              )
+              onChange(row.section, row.key, event.currentTarget.checked ? "True" : "False", row.occurrence)
             }
           />
         ) : kind === "number" ? (
           <NumberInput
             value={numberInputValueFromIni(row.value)}
             onChange={(value) =>
-              onChange(
-                row.section,
-                row.key,
-                value === "" || value === undefined ? "" : String(value),
-                row.occurrence,
-              )
+              onChange(row.section, row.key, value === "" || value === undefined ? "" : String(value), row.occurrence)
             }
             decimalScale={4}
             hideControls={false}
@@ -73,14 +58,7 @@ export function ClusterIniTemplateSettingRow(props: Props): ReactElement {
         ) : (
           <TextInput
             value={row.value}
-            onChange={(event) =>
-              onChange(
-                row.section,
-                row.key,
-                event.currentTarget.value,
-                row.occurrence,
-              )
-            }
+            onChange={(event) => onChange(row.section, row.key, event.currentTarget.value, row.occurrence)}
           />
         )}
       </div>
@@ -89,7 +67,6 @@ export function ClusterIniTemplateSettingRow(props: Props): ReactElement {
       </Text>
       <Button
         variant="subtle"
-        size="compact-xs"
         aria-label={`Reset ${row.key} to default`}
         disabled={!canReset}
         onClick={() => {

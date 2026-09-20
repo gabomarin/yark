@@ -1,15 +1,7 @@
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini/ini-defaults";
-import {
-  lookupAsaDefaultValue,
-  lookupAsaDescription,
-  lookupAsaSetting,
-} from "@shared/asa/asa-server-settings";
+import { lookupAsaDefaultValue, lookupAsaDescription, lookupAsaSetting } from "@shared/asa/asa-server-settings";
 import { lookupIniSettingInput } from "@shared/ini/ini-setting-meta";
-import {
-  asaUiCategoryLabel,
-  resolveAsaUiCategory,
-  type AsaUiCategoryId,
-} from "@shared/asa/asa-setting-ui-categories";
+import { asaUiCategoryLabel, resolveAsaUiCategory, type AsaUiCategoryId } from "@shared/asa/asa-setting-ui-categories";
 import type { IniFileKey, ServerIniPayload } from "@shared/types";
 import {
   isClientIniKey,
@@ -22,10 +14,7 @@ import {
 } from "@shared/ini/ini-text";
 import { isAsaIgnoredIniMaxPlayers, isYarkOwnedIniKey } from "@shared/asa/yark-owned-ini-keys";
 
-export type {
-  IniUiCategoryGroup,
-  IniUiSectionGroup,
-} from "./iniUiCategoryGrouping";
+export type { IniUiCategoryGroup, IniUiSectionGroup } from "./iniUiCategoryGrouping";
 export {
   groupRowsByUiCategory,
   groupSettingReferencesByUiCategory,
@@ -54,14 +43,8 @@ export function textForFile(payload: ServerIniPayload, fileKey: IniFileKey): str
   return fileKey === "gameUserSettings" ? payload.gameUserSettings : payload.game;
 }
 
-export function withFileText(
-  payload: ServerIniPayload,
-  fileKey: IniFileKey,
-  next: string,
-): ServerIniPayload {
-  return fileKey === "gameUserSettings"
-    ? { ...payload, gameUserSettings: next }
-    : { ...payload, game: next };
+export function withFileText(payload: ServerIniPayload, fileKey: IniFileKey, next: string): ServerIniPayload {
+  return fileKey === "gameUserSettings" ? { ...payload, gameUserSettings: next } : { ...payload, game: next };
 }
 
 export function defaultTextForFile(fileKey: IniFileKey): string {
@@ -75,17 +58,12 @@ export function isClientNoiseKey(key: string, section?: string): boolean {
   return isClientIniKey(key);
 }
 
-export function lookupDefaultValue(
-  fileKey: IniFileKey,
-  section: string,
-  key: string,
-): string | null {
+export function lookupDefaultValue(fileKey: IniFileKey, section: string, key: string): string | null {
   // Prefer shared/defaults/*.ini as source of truth; catalog is metadata only.
   const sectionLower = section.toLowerCase();
   const keyLower = key.toLowerCase();
   const match = parseIniTextRows(defaultTextForFile(fileKey)).find(
-    (row) =>
-      row.section.toLowerCase() === sectionLower && row.key.toLowerCase() === keyLower,
+    (row) => row.section.toLowerCase() === sectionLower && row.key.toLowerCase() === keyLower,
   );
   if (match !== undefined) {
     return match.value;
@@ -93,11 +71,7 @@ export function lookupDefaultValue(
   return lookupAsaDefaultValue(fileKey, section, key);
 }
 
-export function lookupSettingDescription(
-  fileKey: IniFileKey,
-  section: string,
-  key: string,
-): string {
+export function lookupSettingDescription(fileKey: IniFileKey, section: string, key: string): string {
   return lookupAsaDescription(fileKey, section, key) ?? humanizeIniKey(key);
 }
 
@@ -126,13 +100,7 @@ export function parseIniRows(text: string): IniSettingRow[] {
   });
 }
 
-export function setIniValue(
-  text: string,
-  section: string,
-  key: string,
-  value: string,
-  occurrence = 0,
-): string {
+export function setIniValue(text: string, section: string, key: string, value: string, occurrence = 0): string {
   return setIniTextValue(text, section, key, value, occurrence);
 }
 
@@ -156,20 +124,12 @@ export function resolveControlKind(
   options?: { valueType?: string | null; key?: string; fileKey?: IniFileKey; section?: string },
 ): IniControlKind {
   const valueType =
-    options?.valueType
-    ?? (options?.fileKey !== undefined && options.section !== undefined && options.key !== undefined
+    options?.valueType ??
+    (options?.fileKey !== undefined && options.section !== undefined && options.key !== undefined
       ? lookupAsaSetting(options.fileKey, options.section, options.key)?.valueType
       : undefined);
-  if (
-    options?.fileKey !== undefined &&
-    options.section !== undefined &&
-    options.key !== undefined
-  ) {
-    const input = lookupIniSettingInput(
-      options.fileKey,
-      options.section,
-      options.key,
-    );
+  if (options?.fileKey !== undefined && options.section !== undefined && options.key !== undefined) {
+    const input = lookupIniSettingInput(options.fileKey, options.section, options.key);
     if (input?.type === "boolean") return "boolean";
     if (input?.type === "text") return "text";
     if (input?.type === "number" || input?.type === "range") return "number";
@@ -204,22 +164,16 @@ function controlKindFromValueType(valueType: string | null | undefined): IniCont
     return "boolean";
   }
   if (
-    vt.startsWith("string")
-    || vt.includes("url")
-    || vt.includes("list of")
-    || vt.includes("mod id")
-    || vt.includes("ip_address")
-    || vt.includes("<string>")
+    vt.startsWith("string") ||
+    vt.includes("url") ||
+    vt.includes("list of") ||
+    vt.includes("mod id") ||
+    vt.includes("ip_address") ||
+    vt.includes("<string>")
   ) {
     return "text";
   }
-  if (
-    vt.startsWith("float")
-    || vt.startsWith("integer")
-    || vt === "seconds"
-    || vt === "multiplier"
-    || vt === "value"
-  ) {
+  if (vt.startsWith("float") || vt.startsWith("integer") || vt === "seconds" || vt === "multiplier" || vt === "value") {
     return "number";
   }
   return null;
@@ -230,13 +184,11 @@ function isLikelyStringSettingKey(keyLower: string): boolean {
     return false;
   }
   return (
-    /password|sessionname|message|url|whitelist|banlist|token|hostname|ipaddress/.test(
-      keyLower,
-    )
-    || keyLower === "activemods"
-    || keyLower === "activemapmod"
-    || keyLower === "totalconversionmod"
-    || keyLower.endsWith("name")
+    /password|sessionname|message|url|whitelist|banlist|token|hostname|ipaddress/.test(keyLower) ||
+    keyLower === "activemods" ||
+    keyLower === "activemapmod" ||
+    keyLower === "totalconversionmod" ||
+    keyLower.endsWith("name")
   );
 }
 
@@ -262,8 +214,7 @@ export function filterIniRows(
     }
     if (
       resolvedFile === "gameUserSettings" &&
-      (isYarkOwnedIniKey(row.section, row.key) ||
-        isAsaIgnoredIniMaxPlayers(row.key))
+      (isYarkOwnedIniKey(row.section, row.key) || isAsaIgnoredIniMaxPlayers(row.key))
     ) {
       return false;
     }
@@ -299,16 +250,11 @@ export function filterIniSettingReferences(
   search: string,
   filter: IniFilterId,
 ): IniSettingReference[] {
-  return rows.filter(
-    (row) => filterIniRows([row], search, filter, row.fileKey).length === 1,
-  );
+  return rows.filter((row) => filterIniRows([row], search, filter, row.fileKey).length === 1);
 }
 
 function rowIdentity(row: Pick<IniTextRow, "section" | "key">): string {
   return `${row.section.toLowerCase()}\0${row.key.toLowerCase()}`;
 }
 
-export {
-  sanitizeServerIniPayload,
-  sectionShortName,
-};
+export { sanitizeServerIniPayload, sectionShortName };

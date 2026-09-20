@@ -24,16 +24,11 @@ describe("MapArtThumb", () => {
         label="Svartalfheim"
       />,
     );
-    expect(screen.getByRole("img", { name: "Svartalfheim" })).toHaveAttribute(
-      "src",
-      "https://cdn.example/svart.png",
-    );
+    expect(screen.getByRole("img", { name: "Svartalfheim" })).toHaveAttribute("src", "https://cdn.example/svart.png");
   });
 
   it("falls back to icon when custom map has no mod logo", () => {
-    const { container } = render(
-      <MapArtThumb mapId="Svartalfheim_WP" mapModId="962796" modThumbnailUrl={null} />,
-    );
+    const { container } = render(<MapArtThumb mapId="Svartalfheim_WP" mapModId="962796" modThumbnailUrl={null} />);
     expect(container.querySelector("img")).toBeNull();
     expect(container.querySelector("svg")).not.toBeNull();
   });

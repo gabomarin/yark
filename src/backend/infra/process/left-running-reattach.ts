@@ -7,10 +7,7 @@ import {
   type LeftRunningProcessIdentity,
   type LiveProcessIdentity,
 } from "@shared/settings/left-running";
-import {
-  readLeftRunningProcesses,
-  removeLeftRunningProcess,
-} from "./left-running-store";
+import { readLeftRunningProcesses, removeLeftRunningProcess } from "./left-running-store";
 import { queryWindowsProcessIdentity } from "./windows-process-identity";
 
 export interface LeaveReattachOutcome {
@@ -43,9 +40,7 @@ export async function reattachLeftRunningProcesses(
     return [];
   }
 
-  const queryOs =
-    options?.queryOsIdentity ??
-    ((pid: number) => queryWindowsProcessIdentity(pid));
+  const queryOs = options?.queryOsIdentity ?? ((pid: number) => queryWindowsProcessIdentity(pid));
   const outcomes: LeaveReattachOutcome[] = [];
 
   for (const record of records) {
@@ -110,20 +105,12 @@ async function processLeaveRecord(
     return { serverId: profile.id, classification, reattached: true };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
-    repo.addEvent(
-      profile.id,
-      "error",
-      "warning",
-      `Could not reattach left-running pid ${record.pid}: ${message}`,
-    );
+    repo.addEvent(profile.id, "error", "warning", `Could not reattach left-running pid ${record.pid}: ${message}`);
     return { serverId: profile.id, classification: "inaccessible", reattached: false };
   }
 }
 
-function leaveClassificationMessage(
-  classification: LeaveIdentityMatch,
-  pid: number,
-): string {
+function leaveClassificationMessage(classification: LeaveIdentityMatch, pid: number): string {
   switch (classification) {
     case "missing":
       return `Left-running process pid ${pid} is no longer running`;

@@ -13,26 +13,16 @@ import {
   type SteamCmdJobTerminalPayload,
 } from "../../../shared/settings/os-notification-events";
 import type { DiscordUpdateEventPayload } from "../../../shared/settings/discord-webhook";
-import {
-  CRITICAL_BACKUP_KINDS,
-  type BackupService,
-} from "../backups/backup-service";
+import { CRITICAL_BACKUP_KINDS, type BackupService } from "../backups/backup-service";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { InstanceService } from "../instances/instance-service";
 import { killChildProcessTreeAsync } from "../../infra/process/kill-win-process-tree";
 import type { ProcessManager } from "../../infra/process/process-manager";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
 import type { AppSettingsRepository } from "../../infra/db/app-settings-repository";
-import {
-  toCriticalJobSummary,
-} from "../../orchestration/critical-job-recovery";
-import {
-  type UpdateCriticalJob,
-  type UpdateCriticalJobContext,
-} from "./update-critical-jobs";
-import {
-  isPreUpdateBackupEvidenceComplete,
-} from "./update-server-jobs";
+import { toCriticalJobSummary } from "../../orchestration/critical-job-recovery";
+import { type UpdateCriticalJob, type UpdateCriticalJobContext } from "./update-critical-jobs";
+import { isPreUpdateBackupEvidenceComplete } from "./update-server-jobs";
 import {
   deriveSteamCmdStatusOperation,
   deriveSteamCmdStatusServerId,
@@ -46,22 +36,12 @@ import {
   resolveSteamCmdCacheDir,
   resolveSteamCmdHome,
 } from "./steamcmd-content-cache";
-import {
-  CriticalJobRecoveryBlockedError,
-  UpdatePerformer,
-} from "./update-perform";
-import {
-  SteamCmdRunner,
-  type CommandResult,
-  type SteamCmdFilesOperation,
-} from "./steamcmd-run";
+import { CriticalJobRecoveryBlockedError, UpdatePerformer } from "./update-perform";
+import { SteamCmdRunner, type CommandResult, type SteamCmdFilesOperation } from "./steamcmd-run";
 import { SteamCmdProgressRuntime } from "./steamcmd-progress-runtime";
 import { UpdateQueueRuntime } from "./update-queue-runtime";
 import { SteamCmdInstall } from "./steamcmd-install";
-import {
-  cancelSteamCmd as runCancelSteamCmd,
-  pauseSteamCmd as runPauseSteamCmd,
-} from "./steamcmd-control";
+import { cancelSteamCmd as runCancelSteamCmd, pauseSteamCmd as runPauseSteamCmd } from "./steamcmd-control";
 
 type CriticalJob = UpdateCriticalJob;
 
@@ -99,8 +79,7 @@ export class UpdateService extends EventEmitter {
       steamcmdDir: this.steamcmdDir,
       appendSteamCmdConsole: (line, options) => this.appendSteamCmdConsole(line, options),
       captureSteamCmdOutput: (chunk, source) => this.captureSteamCmdOutput(chunk, source),
-      beginSteamCmdProcess: (child, operation, serverId) =>
-        this.beginSteamCmdProcess(child, operation, serverId),
+      beginSteamCmdProcess: (child, operation, serverId) => this.beginSteamCmdProcess(child, operation, serverId),
       endSteamCmdProcess: (child) => this.endSteamCmdProcess(child),
       resetContentCache: () => this.steamCmdRunner.resetContentCache(),
       findSteamCmdExecutableCached: () => this.findSteamCmdExecutableCached(),
@@ -148,15 +127,13 @@ export class UpdateService extends EventEmitter {
       checkpointJob: (job, phase) => this.checkpointJob(job, phase),
       addJobEvent: (job, type, severity, message, details, options) =>
         this.addJobEvent(job, type, severity, message, details, options),
-      runSteamUpdate: (installDir, operation, serverId) =>
-        this.runSteamUpdate(installDir, operation, serverId),
+      runSteamUpdate: (installDir, operation, serverId) => this.runSteamUpdate(installDir, operation, serverId),
       appendSteamCmdConsole: (line) => this.appendSteamCmdConsole(line),
       setProgress: (percent, label, line) => this.setProgress(percent, label, line),
       setPausedProgress: () => this.setPausedProgress(),
       isPauseRequested: () => this.pauseRequested,
       isCancelRequested: () => this.cancelRequested,
-      waitForHealthy: (serverId, timeoutMs, options) =>
-        this.waitForHealthy(serverId, timeoutMs, options),
+      waitForHealthy: (serverId, timeoutMs, options) => this.waitForHealthy(serverId, timeoutMs, options),
     });
     this.queueRuntime = new UpdateQueueRuntime({
       settings: this.settings,
@@ -170,11 +147,9 @@ export class UpdateService extends EventEmitter {
       setProgress: (percent, label, line) => this.setProgress(percent, label, line),
       setQueuedProgress: (label, line) => this.progressRuntime.setQueuedProgress(label, line),
       emitProgress: (force) => this.emitProgress(force),
-      performInstallServerFiles: (serverId, job) =>
-        this.performInstallServerFiles(serverId, job),
+      performInstallServerFiles: (serverId, job) => this.performInstallServerFiles(serverId, job),
       performUpdateServer: (serverId, job) => this.performUpdateServer(serverId, job),
-      performVerifyServerFiles: (serverId, job) =>
-        this.performVerifyServerFiles(serverId, job),
+      performVerifyServerFiles: (serverId, job) => this.performVerifyServerFiles(serverId, job),
       finishRecoveredFileJob: (job) => this.finishRecoveredFileJob(job),
       finishRecoveredRollback: (job) => this.finishRecoveredRollback(job),
       findSteamCmdExecutableCached: () => this.findSteamCmdExecutableCached(),
@@ -193,8 +168,7 @@ export class UpdateService extends EventEmitter {
       scheduleProcess: () => {
         void this.processQueue();
       },
-      addJobEvent: (job, type, severity, message) =>
-        this.addJobEvent(job, type, severity, message),
+      addJobEvent: (job, type, severity, message) => this.addJobEvent(job, type, severity, message),
     });
   }
 
@@ -216,21 +190,15 @@ export class UpdateService extends EventEmitter {
       return;
     }
 
-    const resumable = this.queue.filter(
-      (job) => job.status === "pending" || job.status === "retrying",
-    );
+    const resumable = this.queue.filter((job) => job.status === "pending" || job.status === "retrying");
     if (resumable.length === 0) {
       return;
     }
-    this.appendSteamCmdConsole(
-      `Checking SteamCMD before resuming ${resumable.length} pending Downloads job(s)…`,
-    );
+    this.appendSteamCmdConsole(`Checking SteamCMD before resuming ${resumable.length} pending Downloads job(s)…`);
     const exe = await this.findSteamCmdExecutable();
     if (exe === null) {
       this.steamCmdInstall.markConfirmedMissing();
-      this.appendSteamCmdConsole(
-        "SteamCMD is not ready; pending Downloads will wait for Retry.",
-      );
+      this.appendSteamCmdConsole("SteamCMD is not ready; pending Downloads will wait for Retry.");
       await this.processQueue();
       return;
     }
@@ -276,16 +244,11 @@ export class UpdateService extends EventEmitter {
   getSteamCmdStatus(): SteamCmdStatus {
     const executablePath = this.findSteamCmdExecutableCached();
     const active = this.progressRuntime.getActiveSteamCmd();
-    const queuedPending = this.queue.filter(
-      (job) => job.status === "pending" || job.status === "retrying",
-    );
+    const queuedPending = this.queue.filter((job) => job.status === "pending" || job.status === "retrying");
     const runningJob = this.queue.find((job) => job.status === "running");
     const hasQueueWork = this.queue.some(
       (job) =>
-        job.status === "pending"
-        || job.status === "retrying"
-        || job.status === "running"
-        || job.status === "paused",
+        job.status === "pending" || job.status === "retrying" || job.status === "running" || job.status === "paused",
     );
     const steamCmdHome =
       executablePath !== null
@@ -294,8 +257,7 @@ export class UpdateService extends EventEmitter {
     const syncingServerId = this.progressRuntime.getSyncingServerId();
     const liveWork = active !== null || syncingServerId !== null || runningJob !== undefined;
     const hasPausedJob = this.queue.some((job) => job.status === "paused");
-    const pausedProgress =
-      !liveWork && hasPausedJob ? this.progressRuntime.getPausedProgressSnapshot() : null;
+    const pausedProgress = !liveWork && hasPausedJob ? this.progressRuntime.getPausedProgressSnapshot() : null;
     const progress = this.progressRuntime.getProgressSnapshot();
     const busy = liveWork || hasQueueWork;
     const operation = deriveSteamCmdStatusOperation({
@@ -324,22 +286,17 @@ export class UpdateService extends EventEmitter {
         runningJobUpdatedAt: runningJob?.updatedAt ?? null,
       }),
       pid: active?.child.pid ?? null,
-      progressPercent: liveWork ? progress.percent : pausedProgress?.percent ?? null,
-      progressLabel: liveWork ? progress.label : pausedProgress?.label ?? null,
-      progressBytesDownloaded:
-        liveWork ? progress.bytesDownloaded : pausedProgress?.bytesDownloaded ?? null,
-      progressBytesTotal:
-        liveWork ? progress.bytesTotal : pausedProgress?.bytesTotal ?? null,
+      progressPercent: liveWork ? progress.percent : (pausedProgress?.percent ?? null),
+      progressLabel: liveWork ? progress.label : (pausedProgress?.label ?? null),
+      progressBytesDownloaded: liveWork ? progress.bytesDownloaded : (pausedProgress?.bytesDownloaded ?? null),
+      progressBytesTotal: liveWork ? progress.bytesTotal : (pausedProgress?.bytesTotal ?? null),
       lastLine: this.progressRuntime.getLastProgressLine(),
       queuedCount: queuedPending.length,
       // Keep this.queue order so Downloads Move up/down matches execution order.
       // Backup leftovers append after file jobs (they are not reorderable).
       criticalJobs: [
-        ...this.queue.map((job) =>
-          toCriticalJobSummary(job, this.servers.get(job.serverId)?.name ?? null)),
-        ...(this.backups.getCriticalJobs?.() ?? []).filter(
-          (job) => job.operation !== "pre-update-backup",
-        ),
+        ...this.queue.map((job) => toCriticalJobSummary(job, this.servers.get(job.serverId)?.name ?? null)),
+        ...(this.backups.getCriticalJobs?.() ?? []).filter((job) => job.operation !== "pre-update-backup"),
       ],
       checkedAt: new Date().toISOString(),
     };
@@ -353,13 +310,7 @@ export class UpdateService extends EventEmitter {
     details?: AppEventDetails | null,
     options?: { osNotify?: boolean },
   ): number {
-    const eventId = this.servers.addEvent(
-      job?.serverId ?? null,
-      type,
-      severity,
-      message,
-      details,
-    );
+    const eventId = this.servers.addEvent(job?.serverId ?? null, type, severity, message, details);
     if (job !== undefined) {
       job.latestEventId = eventId;
     }
@@ -397,13 +348,11 @@ export class UpdateService extends EventEmitter {
   }
 
   dismissCriticalJob(jobId: string): boolean {
-    return this.queueRuntime.dismissCriticalJob(jobId)
-      ?? this.backups.dismissCriticalJob(jobId);
+    return this.queueRuntime.dismissCriticalJob(jobId) ?? this.backups.dismissCriticalJob(jobId);
   }
 
   cancelCriticalJob(jobId: string): boolean {
-    return this.queueRuntime.cancelCriticalJob(jobId)
-      ?? this.backups.cancelCriticalJob(jobId);
+    return this.queueRuntime.cancelCriticalJob(jobId) ?? this.backups.cancelCriticalJob(jobId);
   }
 
   async resumeCriticalJob(jobId: string): Promise<boolean> {
@@ -434,14 +383,9 @@ export class UpdateService extends EventEmitter {
    */
   async clearSteamCmdCache(kind: SteamCmdCacheKind): Promise<string> {
     if (
-      this.progressRuntime.getActiveSteamCmd() !== null
-      || this.progressRuntime.getActiveSyncChild() !== null
-      || this.queue.some(
-        (job) =>
-          job.status === "running"
-          || job.status === "pending"
-          || job.status === "retrying",
-      )
+      this.progressRuntime.getActiveSteamCmd() !== null ||
+      this.progressRuntime.getActiveSyncChild() !== null ||
+      this.queue.some((job) => job.status === "running" || job.status === "pending" || job.status === "retrying")
     ) {
       throw new Error("Stop the current SteamCMD operation before clearing a cache");
     }
@@ -489,10 +433,7 @@ export class UpdateService extends EventEmitter {
    * Callers that already stopped the process for player-aligned T0 must pass
    * `wasRunning: true` so performUpdate restarts after SteamCMD.
    */
-  async enqueueUpdateForMaintenance(
-    serverId: string,
-    options?: { wasRunning?: boolean },
-  ): Promise<void> {
+  async enqueueUpdateForMaintenance(serverId: string, options?: { wasRunning?: boolean }): Promise<void> {
     this.assertStopBackupIdle(serverId);
     const wasRunning = options?.wasRunning ?? this.processes.isActive(serverId);
     await this.enqueueAndWait("update", serverId, { wasRunning });
@@ -694,11 +635,7 @@ export class UpdateService extends EventEmitter {
   }
 
   private async finishRecoveredFileJob(job: CriticalJob): Promise<void> {
-    await this.locks.withLock(
-      job.serverId,
-      `${job.type}-recovery`,
-      () => this.finishRecoveredFileJobLocked(job),
-    );
+    await this.locks.withLock(job.serverId, `${job.type}-recovery`, () => this.finishRecoveredFileJobLocked(job));
   }
 
   private async finishRecoveredFileJobLocked(job: CriticalJob): Promise<void> {
@@ -723,32 +660,17 @@ export class UpdateService extends EventEmitter {
   }
 
   private async finishRecoveredRollback(job: CriticalJob): Promise<void> {
-    await this.locks.withLock(
-      job.serverId,
-      "update-rollback-recovery",
-      () => this.finishRecoveredRollbackLocked(job),
-    );
+    await this.locks.withLock(job.serverId, "update-rollback-recovery", () => this.finishRecoveredRollbackLocked(job));
   }
 
   private async finishRecoveredRollbackLocked(job: CriticalJob): Promise<void> {
     const server = this.servers.get(job.serverId);
     if (server === null) throw new Error("Server does not exist");
     const backupIds = job.context.preUpdateBackupIds ?? [];
-    const backups = this.backups.getCompletedBackupsForCriticalJob(
-      job.serverId,
-      backupIds,
-    );
+    const backups = this.backups.getCompletedBackupsForCriticalJob(job.serverId, backupIds);
     // Legacy jobs may persist `players` / `ini` ids; evidence is complete when world exists.
-    if (
-      !isPreUpdateBackupEvidenceComplete(
-        backupIds,
-        backups.length,
-        CRITICAL_BACKUP_KINDS.length,
-      )
-    ) {
-      throw new CriticalJobRecoveryBlockedError(
-        "Rollback backup evidence is incomplete; operator review is required",
-      );
+    if (!isPreUpdateBackupEvidenceComplete(backupIds, backups.length, CRITICAL_BACKUP_KINDS.length)) {
+      throw new CriticalJobRecoveryBlockedError("Rollback backup evidence is incomplete; operator review is required");
     }
 
     const resumeFromRestart = job.phase === "rollback-restarting-server";
@@ -771,11 +693,7 @@ export class UpdateService extends EventEmitter {
     if (job.context.wasRunning === true && !this.processes.isActive(job.serverId)) {
       this.checkpointJob(job, "rollback-restarting-server");
       await this.instances.startForMaintenance(job.serverId);
-      const healthy = await this.waitForHealthy(
-        job.serverId,
-        90_000,
-        { ignoreCancellation: true },
-      );
+      const healthy = await this.waitForHealthy(job.serverId, 90_000, { ignoreCancellation: true });
       if (!healthy) {
         throw new Error("Rollback completed but the server did not return to running");
       }
@@ -786,5 +704,4 @@ export class UpdateService extends EventEmitter {
       `Recovered rollback completed for "${server.name}"; review the original update failure before retrying`,
     );
   }
-
 }

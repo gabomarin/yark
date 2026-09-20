@@ -46,8 +46,7 @@ function buildShellChrome(
 }
 
 export function AppMainRouter(props: AppMainRouterProps): ReactElement {
-  const { navigation, fleet, lifecycle, rcon, steamCmd, overview, settings, chrome } =
-    props;
+  const { navigation, fleet, lifecycle, rcon, steamCmd, overview, settings, chrome } = props;
   const shell = buildShellChrome(navigation, steamCmd, chrome);
 
   if (navigation.overlay?.kind === "workspace") {

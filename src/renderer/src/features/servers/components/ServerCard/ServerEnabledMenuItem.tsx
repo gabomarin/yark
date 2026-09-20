@@ -17,9 +17,9 @@ export function ServerEnabledMenuItem(props: Props): ReactElement {
     <Menu.Item
       leftSection={
         props.enabled ? (
-          <EyeSlash size={16} color="var(--mantine-color-red-6)" />
+          <EyeSlash size={16} color="var(--app-color-danger-bright)" />
         ) : (
-          <Eye size={16} color="var(--mantine-color-blue-6)" />
+          <Eye size={16} color="var(--app-color-accent-text)" />
         )
       }
       onClick={props.onToggle}

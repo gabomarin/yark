@@ -1,8 +1,4 @@
-import type {
-  ServerProfile,
-  ServerProfileInput,
-  ServerProfilePatch,
-} from "../types";
+import type { ServerProfile, ServerProfileInput, ServerProfilePatch } from "../types";
 
 /** Convert a persisted profile to create/update input (drops generated fields). */
 export function serverProfileToInput(server: ServerProfile): ServerProfileInput {
@@ -36,10 +32,7 @@ export function serverProfileToInput(server: ServerProfile): ServerProfileInput 
  * Apply a field-group patch on top of the latest persisted profile.
  * Untouched groups are preserved from `existing` (server-side merge for #209).
  */
-export function applyServerProfilePatch(
-  existing: ServerProfile,
-  patch: ServerProfilePatch,
-): ServerProfileInput {
+export function applyServerProfilePatch(existing: ServerProfile, patch: ServerProfilePatch): ServerProfileInput {
   const base = serverProfileToInput(existing);
   if (patch.group === "launch") {
     return {
@@ -88,10 +81,7 @@ export function isServerProfilePatch(value: unknown): value is ServerProfilePatc
     );
   }
   if (body.group === "asaApi") {
-    return (
-      typeof body.useAsaApi === "boolean" &&
-      typeof body.useAsaApiLoader === "boolean"
-    );
+    return typeof body.useAsaApi === "boolean" && typeof body.useAsaApiLoader === "boolean";
   }
   return false;
 }

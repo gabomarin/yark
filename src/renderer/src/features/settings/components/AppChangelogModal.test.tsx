@@ -71,20 +71,12 @@ describe("AppChangelogModal", () => {
 
     render(
       <AppProviders>
-        <AppChangelogModal
-          opened
-          onClose={vi.fn()}
-          appVersion="0.12.0"
-          initialTab="current"
-          entries={entries}
-        />
+        <AppChangelogModal opened onClose={vi.fn()} appVersion="0.12.0" initialTab="current" entries={entries} />
       </AppProviders>,
     );
 
     expect(screen.getByText("What's new")).toBeInTheDocument();
-    expect(
-      screen.getByText(/No curated notes for v0\.12\.0 yet/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/No curated notes for v0\.12\.0 yet/i)).toBeInTheDocument();
     expect(screen.queryByText("In-app changelog notes.")).not.toBeInTheDocument();
   });
 });

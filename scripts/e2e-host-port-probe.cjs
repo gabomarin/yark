@@ -138,22 +138,20 @@ async function launchApp() {
 async function quitApp(app) {
   const proc = app.process();
   const exited =
-    proc == null || proc.exitCode != null
-      ? Promise.resolve()
-      : new Promise((resolve) => proc.once("exit", resolve));
+    proc == null || proc.exitCode != null ? Promise.resolve() : new Promise((resolve) => proc.once("exit", resolve));
   await app.evaluate(({ app: electronApp }) => electronApp.quit());
   await Promise.race([
     exited,
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000),
-    ),
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000)),
   ]);
 }
 
 function cardFor(page) {
-  return page.locator(SERVER_CARD, {
-    has: page.getByText(serverName, { exact: true }),
-  }).first();
+  return page
+    .locator(SERVER_CARD, {
+      has: page.getByText(serverName, { exact: true }),
+    })
+    .first();
 }
 
 async function clickStart(page) {
@@ -208,10 +206,7 @@ async function run() {
     const suggestionText = await suggestion.innerText();
     assert.match(
       suggestionText,
-      new RegExp(
-        `game ${SUGGESTED.game}.*query ${SUGGESTED.query}.*RCON ${SUGGESTED.rcon}`,
-        "i",
-      ),
+      new RegExp(`game ${SUGGESTED.game}.*query ${SUGGESTED.query}.*RCON ${SUGGESTED.rcon}`, "i"),
     );
     await page
       .getByRole("button", {
@@ -265,14 +260,10 @@ async function run() {
       "session start left the app usable after the host-port gate",
     );
 
-    const actionableErrors = errors.filter(
-      (message) => !/Failed to load resource|net::ERR_/i.test(message),
-    );
+    const actionableErrors = errors.filter((message) => !/Failed to load resource|net::ERR_/i.test(message));
     assert.deepEqual(actionableErrors, []);
     succeeded = true;
-    console.log(
-      `E2E_HOST_PORT_PROBE_OK profile=${profileDir} ports=${PORTS.game}/${PORTS.query}/${PORTS.rcon}`,
-    );
+    console.log(`E2E_HOST_PORT_PROBE_OK profile=${profileDir} ports=${PORTS.game}/${PORTS.query}/${PORTS.rcon}`);
   } finally {
     await releaseGamePort();
     if (app !== null) {

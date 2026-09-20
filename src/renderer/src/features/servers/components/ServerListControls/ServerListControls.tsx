@@ -1,18 +1,8 @@
 import type { ReactElement } from "react";
-import {
-  CaretDown,
-  Check,
-  List,
-  ListNumbers,
-  SortAscending,
-  TreeStructure,
-} from "@phosphor-icons/react";
+import { CaretDown, Check, List, ListNumbers, SortAscending, TreeStructure } from "@phosphor-icons/react";
 import { Button, Menu, SegmentedControl, Text } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
-import {
-  compactIconSegmentLabel,
-  compactSegmentedRootClass,
-} from "@ui/CompactSegmented/CompactSegmented";
+import { compactIconSegmentLabel, compactSegmentedRootClass } from "@ui/CompactSegmented/CompactSegmented";
 import {
   sortControlLabel,
   sortMenuOptionLabel,
@@ -31,19 +21,11 @@ interface Props {
 const viewData = [
   {
     value: "ungrouped",
-    label: compactIconSegmentLabel(
-      "All servers",
-      "All servers",
-      <List size={14} aria-hidden="true" />,
-    ),
+    label: compactIconSegmentLabel("All servers", "All servers", <List size={14} aria-hidden="true" />),
   },
   {
     value: "grouped",
-    label: compactIconSegmentLabel(
-      "By cluster",
-      "By cluster",
-      <TreeStructure size={14} aria-hidden="true" />,
-    ),
+    label: compactIconSegmentLabel("By cluster", "By cluster", <TreeStructure size={14} aria-hidden="true" />),
   },
 ];
 

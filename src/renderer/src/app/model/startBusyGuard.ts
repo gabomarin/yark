@@ -3,10 +3,7 @@
  * Updates `busyRef` immediately so a second click in the same tick is rejected
  * before React re-renders.
  */
-export function claimStartBusy(
-  busyRef: { current: Set<string> },
-  id: string,
-): boolean {
+export function claimStartBusy(busyRef: { current: Set<string> }, id: string): boolean {
   if (busyRef.current.has(id)) {
     return false;
   }
@@ -16,10 +13,7 @@ export function claimStartBusy(
   return true;
 }
 
-export function releaseStartBusy(
-  busyRef: { current: Set<string> },
-  id: string,
-): void {
+export function releaseStartBusy(busyRef: { current: Set<string> }, id: string): void {
   if (!busyRef.current.has(id)) {
     return;
   }

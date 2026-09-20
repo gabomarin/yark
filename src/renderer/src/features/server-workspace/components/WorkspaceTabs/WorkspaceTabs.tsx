@@ -6,10 +6,7 @@ import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
 import { RconPanel } from "../RconPanel/RconPanel";
 import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
 import { MoveInstallDialog } from "@features/servers/components/MoveInstallDialog/MoveInstallDialog";
-import type {
-  RconHistoryEntry,
-  WorkspaceTab,
-} from "../../serverWorkspaceTypes";
+import type { RconHistoryEntry, WorkspaceTab } from "../../serverWorkspaceTypes";
 import { ConfigurationEditor } from "../ConfigurationEditor/ConfigurationEditor";
 import type { PlayerListState } from "../RconPanel/PlayerListSection";
 import { WorkspaceTabList } from "../WorkspaceTabList/WorkspaceTabList";
@@ -83,9 +80,7 @@ export function WorkspaceTabs(props: Props): ReactElement {
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   /** Snapshot at open so refresh remounts do not rewrite the dialog mid-move. */
   const [moveServer, setMoveServer] = useState<ServerProfile | null>(null);
-  const [rconPlayersFocus, setRconPlayersFocus] = useState<
-    "survivors" | "admins" | null
-  >(null);
+  const [rconPlayersFocus, setRconPlayersFocus] = useState<"survivors" | "admins" | null>(null);
 
   return (
     <>
@@ -128,11 +123,7 @@ export function WorkspaceTabs(props: Props): ReactElement {
               )}
 
               {props.value === "mods" && (
-                <ServerModsPanel
-                  key={props.server.id}
-                  server={props.server}
-                  onServerUpdated={props.onServerUpdated}
-                />
+                <ServerModsPanel key={props.server.id} server={props.server} onServerUpdated={props.onServerUpdated} />
               )}
 
               {props.value === "launch" && (

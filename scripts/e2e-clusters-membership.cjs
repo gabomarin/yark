@@ -50,15 +50,11 @@ async function launchApp() {
 async function quitApp(app) {
   const proc = app.process();
   const exited =
-    proc == null || proc.exitCode != null
-      ? Promise.resolve()
-      : new Promise((resolve) => proc.once("exit", resolve));
+    proc == null || proc.exitCode != null ? Promise.resolve() : new Promise((resolve) => proc.once("exit", resolve));
   await app.evaluate(({ app: electronApp }) => electronApp.quit());
   await Promise.race([
     exited,
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000),
-    ),
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000)),
   ]);
 }
 
@@ -150,7 +146,10 @@ async function run() {
       0,
       "Clusters guidance is a collapsed control, not a always-on explainer card",
     );
-    await page.getByRole("button", { name: /create cluster/i }).first().click();
+    await page
+      .getByRole("button", { name: /create cluster/i })
+      .first()
+      .click();
     const createDialog = page.getByRole("dialog", { name: /create cluster/i });
     await createDialog.waitFor({ state: "visible", timeout: 10000 });
 
@@ -188,14 +187,8 @@ async function run() {
       state: "visible",
       timeout: 15000,
     });
-    assert.ok(
-      await page.getByText(nameA, { exact: true }).first().isVisible(),
-      "Cluster detail lists server A",
-    );
-    assert.ok(
-      await page.getByText(nameB, { exact: true }).first().isVisible(),
-      "Cluster detail lists server B",
-    );
+    assert.ok(await page.getByText(nameA, { exact: true }).first().isVisible(), "Cluster detail lists server A");
+    assert.ok(await page.getByText(nameB, { exact: true }).first().isVisible(), "Cluster detail lists server B");
 
     // --- Add C (#41) ---
     await page.getByRole("button", { name: /add servers/i }).click();
@@ -207,11 +200,7 @@ async function run() {
     if (cPressed !== "true") {
       await cRow.first().click();
     }
-    assert.match(
-      (await addDialog.textContent()) ?? "",
-      /1 selected/i,
-      "Add servers should have C selected",
-    );
+    assert.match((await addDialog.textContent()) ?? "", /1 selected/i, "Add servers should have C selected");
     await addDialog.getByRole("button", { name: /continue/i }).click();
     await addDialog.getByRole("button", { name: /add to cluster/i }).click();
     await addDialog.waitFor({ state: "hidden", timeout: 20000 });
@@ -240,10 +229,7 @@ async function run() {
       0,
       "Removed server should leave the cluster detail list",
     );
-    assert.ok(
-      await detail.getByText(nameA, { exact: true }).first().isVisible(),
-      "Server A remains in the cluster",
-    );
+    assert.ok(await detail.getByText(nameA, { exact: true }).first().isVisible(), "Server A remains in the cluster");
 
     const actionableErrors = errors.filter(
       (message) => !/Failed to load resource|net::ERR_|dbus|GPU process/i.test(message),

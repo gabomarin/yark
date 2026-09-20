@@ -9,10 +9,8 @@ function settingsWith(raw: string | null): AppSettingsRepository {
 describe("DiscordWebhookService", () => {
   it("sends a safe test embed and requests delivery confirmation", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
-    const service = new DiscordWebhookService(
-      settingsWith(null),
-      fetchImpl as typeof fetch,
-      () => Date.parse("2026-09-15T12:00:00.000Z"),
+    const service = new DiscordWebhookService(settingsWith(null), fetchImpl as typeof fetch, () =>
+      Date.parse("2026-09-15T12:00:00.000Z"),
     );
 
     await service.test("https://discord.com/api/webhooks/123/secret-token");
@@ -31,16 +29,11 @@ describe("DiscordWebhookService", () => {
 
   it("uses the provided description when the operator tests with a template", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
-    const service = new DiscordWebhookService(
-      settingsWith(null),
-      fetchImpl as typeof fetch,
-      () => Date.parse("2026-09-15T12:00:00.000Z"),
+    const service = new DiscordWebhookService(settingsWith(null), fetchImpl as typeof fetch, () =>
+      Date.parse("2026-09-15T12:00:00.000Z"),
     );
 
-    await service.test(
-      "https://discord.com/api/webhooks/123/secret-token",
-      "Island is welcoming survivors!",
-    );
+    await service.test("https://discord.com/api/webhooks/123/secret-token", "Island is welcoming survivors!");
 
     const [endpoint, options] = fetchImpl.mock.calls[0] as [URL, RequestInit];
     const body = JSON.parse(String(options.body)) as {
@@ -75,11 +68,7 @@ describe("DiscordWebhookService", () => {
       },
       customMessages: {},
     });
-    const service = new DiscordWebhookService(
-      settingsWith(raw),
-      fetchImpl as typeof fetch,
-      () => 1_000_000,
-    );
+    const service = new DiscordWebhookService(settingsWith(raw), fetchImpl as typeof fetch, () => 1_000_000);
 
     service.notifyLifecycle({ serverId: "island", serverName: "Island", status: "started" });
     service.notifyLifecycle({ serverId: "island", serverName: "Island", status: "started" });
@@ -105,22 +94,18 @@ describe("DiscordWebhookService", () => {
         serverStarted: "{server} is welcoming survivors!",
       },
     });
-    const service = new DiscordWebhookService(
-      settingsWith(raw),
-      fetchImpl as typeof fetch,
-      () => 1_000_000,
-    );
+    const service = new DiscordWebhookService(settingsWith(raw), fetchImpl as typeof fetch, () => 1_000_000);
 
     service.notifyLifecycle({ serverId: "island", serverName: "Island", status: "started" });
     service.notifyLifecycle({ serverId: "island", serverName: "Island", status: "stopped" });
 
     await vi.waitFor(() => expect(fetchImpl).toHaveBeenCalledTimes(2));
-    const startedBody = JSON.parse(
-      String((fetchImpl.mock.calls[0]?.[1] as RequestInit).body),
-    ) as { embeds: Array<{ description: string }> };
-    const stoppedBody = JSON.parse(
-      String((fetchImpl.mock.calls[1]?.[1] as RequestInit).body),
-    ) as { embeds: Array<{ description: string }> };
+    const startedBody = JSON.parse(String((fetchImpl.mock.calls[0]?.[1] as RequestInit).body)) as {
+      embeds: Array<{ description: string }>;
+    };
+    const stoppedBody = JSON.parse(String((fetchImpl.mock.calls[1]?.[1] as RequestInit).body)) as {
+      embeds: Array<{ description: string }>;
+    };
     expect(startedBody.embeds[0]?.description).toBe("Island is welcoming survivors!");
     expect(stoppedBody.embeds[0]?.description).toBe("**Island** stopped cleanly.");
   });

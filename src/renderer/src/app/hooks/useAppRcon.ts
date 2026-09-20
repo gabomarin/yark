@@ -33,9 +33,7 @@ export function useAppRcon(options: {
 } {
   const { refresh, statuses } = options;
 
-  const [rconHistoryByServer, setRconHistoryByServer] = useState<
-    Map<string, RconHistoryEntry[]>
-  >(new Map());
+  const [rconHistoryByServer, setRconHistoryByServer] = useState<Map<string, RconHistoryEntry[]>>(new Map());
   const rconHistoryByServerRef = useRef(rconHistoryByServer);
   useEffect(() => {
     rconHistoryByServerRef.current = rconHistoryByServer;
@@ -44,14 +42,10 @@ export function useAppRcon(options: {
   useEffect(() => {
     statusesRef.current = statuses;
   }, [statuses]);
-  const [playerListsByServer, setPlayerListsByServer] = useState<
-    Map<string, PlayerListState>
-  >(new Map());
+  const [playerListsByServer, setPlayerListsByServer] = useState<Map<string, PlayerListState>>(new Map());
 
   useEffect(() => {
-    setPlayerListsByServer((prev) =>
-      prunePlayerListsForNonRunning(prev, statuses),
-    );
+    setPlayerListsByServer((prev) => prunePlayerListsForNonRunning(prev, statuses));
   }, [statuses]);
 
   const appendRconHistory = useCallback((serverId: string, entry: RconHistoryEntry) => {
@@ -64,11 +58,7 @@ export function useAppRcon(options: {
   }, []);
 
   const patchRconHistory = useCallback(
-    (
-      serverId: string,
-      entryId: string,
-      patch: Partial<Pick<RconHistoryEntry, "status" | "response" | "error">>,
-    ) => {
+    (serverId: string, entryId: string, patch: Partial<Pick<RconHistoryEntry, "status" | "response" | "error">>) => {
       setRconHistoryByServer((prev) => {
         const next = new Map(prev);
         const current = next.get(serverId) ?? [];
@@ -98,19 +88,12 @@ export function useAppRcon(options: {
       // Survive RCON tab remounts: pending lives in App-level history.
       // Ticket: only block an identical command that is already pending.
       const existing = rconHistoryByServerRef.current.get(serverId) ?? [];
-      if (
-        existing.some(
-          (entry) =>
-            entry.status === "pending" && entry.command === trimmed,
-        )
-      ) {
+      if (existing.some((entry) => entry.status === "pending" && entry.command === trimmed)) {
         return false;
       }
 
       const createdAt = new Date().toISOString();
-      const entryId =
-        globalThis.crypto?.randomUUID?.() ??
-        `${createdAt}-${Math.random().toString(36).slice(2, 10)}`;
+      const entryId = globalThis.crypto?.randomUUID?.() ?? `${createdAt}-${Math.random().toString(36).slice(2, 10)}`;
       appendRconHistory(serverId, {
         id: entryId,
         command: trimmed,
@@ -124,11 +107,7 @@ export function useAppRcon(options: {
       await refresh();
       patchRconHistory(serverId, entryId, {
         status: result.ok ? "success" : "error",
-        response: result.ok
-          ? result.data.trim().length > 0
-            ? result.data
-            : null
-          : null,
+        response: result.ok ? (result.data.trim().length > 0 ? result.data : null) : null,
         error: result.ok ? null : (result.error ?? "Unknown error"),
       });
 
@@ -154,14 +133,9 @@ export function useAppRcon(options: {
     });
   }, []);
 
-  const applyPlayerList = useCallback(
-    (serverId: string, players: OnlinePlayerInfo[], error: string | null = null) => {
-      setPlayerListsByServer((prev) =>
-        upsertPlayerListState(prev, serverId, { players, error, loading: false }),
-      );
-    },
-    [],
-  );
+  const applyPlayerList = useCallback((serverId: string, players: OnlinePlayerInfo[], error: string | null = null) => {
+    setPlayerListsByServer((prev) => upsertPlayerListState(prev, serverId, { players, error, loading: false }));
+  }, []);
 
   const setPlayerListLoading = useCallback((serverId: string, loading: boolean) => {
     setPlayerListsByServer((prev) => {
@@ -231,8 +205,7 @@ export function useAppRcon(options: {
     async (serverId: string, playerKey: string): Promise<boolean> => {
       const command = `KickPlayer ${playerKey}`;
       const createdAt = new Date().toISOString();
-      const entryId =
-        globalThis.crypto?.randomUUID?.() ?? `${createdAt}-${Math.random().toString(36).slice(2, 10)}`;
+      const entryId = globalThis.crypto?.randomUUID?.() ?? `${createdAt}-${Math.random().toString(36).slice(2, 10)}`;
       appendRconHistory(serverId, {
         id: entryId,
         command,
@@ -245,12 +218,8 @@ export function useAppRcon(options: {
       await refresh();
       patchRconHistory(serverId, entryId, {
         status: result.ok ? "success" : "error",
-        response: result.ok
-          ? result.data.trim().length > 0
-            ? result.data
-            : null
-          : null,
-        error: result.ok ? null : result.error ?? "Kick failed",
+        response: result.ok ? (result.data.trim().length > 0 ? result.data : null) : null,
+        error: result.ok ? null : (result.error ?? "Kick failed"),
       });
       if (!result.ok) {
         showOperatorError(result.error ?? "Kick failed", "Kick failed");
@@ -265,8 +234,7 @@ export function useAppRcon(options: {
     async (serverId: string, playerKey: string): Promise<boolean> => {
       const command = `BanPlayer ${playerKey}`;
       const createdAt = new Date().toISOString();
-      const entryId =
-        globalThis.crypto?.randomUUID?.() ?? `${createdAt}-${Math.random().toString(36).slice(2, 10)}`;
+      const entryId = globalThis.crypto?.randomUUID?.() ?? `${createdAt}-${Math.random().toString(36).slice(2, 10)}`;
       appendRconHistory(serverId, {
         id: entryId,
         command,
@@ -279,12 +247,8 @@ export function useAppRcon(options: {
       await refresh();
       patchRconHistory(serverId, entryId, {
         status: result.ok ? "success" : "error",
-        response: result.ok
-          ? result.data.trim().length > 0
-            ? result.data
-            : null
-          : null,
-        error: result.ok ? null : result.error ?? "Ban failed",
+        response: result.ok ? (result.data.trim().length > 0 ? result.data : null) : null,
+        error: result.ok ? null : (result.error ?? "Ban failed"),
       });
       if (!result.ok) {
         showOperatorError(result.error ?? "Ban failed", "Ban failed");
@@ -300,15 +264,10 @@ export function useAppRcon(options: {
       typeof window.api.onPlayerListUpdated === "function"
         ? window.api.onPlayerListUpdated((payload: PlayerListUpdatedPush) => {
             setPlayerListsByServer((prev) => {
-              const status =
-                statusesRef.current.get(payload.serverId)?.status ?? "stopped";
+              const status = statusesRef.current.get(payload.serverId)?.status ?? "stopped";
               // Leave-running flush is an empty success list — drop it so the
               // next start does not show a false survivor 0 (#301).
-              if (
-                payload.players.length === 0
-                && payload.error == null
-                && status !== "running"
-              ) {
+              if (payload.players.length === 0 && payload.error == null && status !== "running") {
                 return removePlayerListState(prev, payload.serverId);
               }
               return upsertPlayerListState(prev, payload.serverId, {

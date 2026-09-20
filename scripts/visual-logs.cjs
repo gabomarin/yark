@@ -67,7 +67,11 @@ async function captureLogsSurface(page, outDir, size) {
 
   await goNav(page, "Servers");
   await page.locator(SERVER_CARD).first().waitFor({ state: "visible", timeout: 10000 });
-  await page.locator(SERVER_CARD).first().getByRole("button", { name: /Open settings/i }).click();
+  await page
+    .locator(SERVER_CARD)
+    .first()
+    .getByRole("button", { name: /Open settings/i })
+    .click();
   await openWorkspaceTab(page, "Logs");
   await page.locator("[data-server-logs-panel]").waitFor({ state: "visible", timeout: 10000 });
   await page.waitForTimeout(300);

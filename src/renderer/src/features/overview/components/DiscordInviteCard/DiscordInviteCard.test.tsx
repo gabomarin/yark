@@ -23,15 +23,9 @@ describe("DiscordInviteCard (#567)", () => {
 
     expect(screen.getByText("Join the YARK Discord")).toBeInTheDocument();
     expect(screen.getByText("Get help, share ARK server tips, and stay up to date.")).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: "Open Discord" }),
-    ).toHaveAttribute("href", "https://discord.gg/DQ8nes63w7");
-    expect(
-      screen.getByRole("button", { name: "Dismiss Discord invite" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("complementary")).toHaveAccessibleName(
-      "Join the YARK Discord",
-    );
+    expect(screen.getByRole("link", { name: "Open Discord" })).toHaveAttribute("href", "https://discord.gg/DQ8nes63w7");
+    expect(screen.getByRole("button", { name: "Dismiss Discord invite" })).toBeInTheDocument();
+    expect(screen.getByRole("complementary")).toHaveAccessibleName("Join the YARK Discord");
   });
 
   it("hides the card and persists the dismissal on close", async () => {
@@ -41,9 +35,7 @@ describe("DiscordInviteCard (#567)", () => {
     await user.click(screen.getByRole("button", { name: "Dismiss Discord invite" }));
 
     expect(screen.queryByText("Join the YARK Discord")).not.toBeInTheDocument();
-    expect(window.localStorage.getItem(DISCORD_INVITE_DISMISSED_STORAGE_KEY)).toBe(
-      JSON.stringify(true),
-    );
+    expect(window.localStorage.getItem(DISCORD_INVITE_DISMISSED_STORAGE_KEY)).toBe(JSON.stringify(true));
   });
 
   it("treats opening the invite as completing the one-time prompt", async () => {
@@ -53,9 +45,7 @@ describe("DiscordInviteCard (#567)", () => {
     await user.click(screen.getByRole("link", { name: "Open Discord" }));
 
     expect(screen.queryByText("Join the YARK Discord")).not.toBeInTheDocument();
-    expect(window.localStorage.getItem(DISCORD_INVITE_DISMISSED_STORAGE_KEY)).toBe(
-      JSON.stringify(true),
-    );
+    expect(window.localStorage.getItem(DISCORD_INVITE_DISMISSED_STORAGE_KEY)).toBe(JSON.stringify(true));
   });
 
   it("does not re-prompt once the operator has dismissed it", () => {

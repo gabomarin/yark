@@ -14,9 +14,7 @@ export interface ServerModsRowActionInput {
   onOpenExternal: (url: string) => void;
 }
 
-export function buildServerModsRowActions(
-  input: ServerModsRowActionInput,
-): RowActionEntry[] {
+export function buildServerModsRowActions(input: ServerModsRowActionInput): RowActionEntry[] {
   const entries: RowActionEntry[] = [
     {
       kind: "item",

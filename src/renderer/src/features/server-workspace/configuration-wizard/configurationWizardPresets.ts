@@ -27,10 +27,7 @@ export interface WizardPreset<TId extends string> {
 }
 
 export const PROGRESSION_PRESETS: readonly (WizardPreset<ProgressionPresetId> & {
-  values: Pick<
-    ConfigurationWizardDraft,
-    "xpRate" | "harvestRate" | "tamingRate" | "resourcesRespawnPeriodMultiplier"
-  >;
+  values: Pick<ConfigurationWizardDraft, "xpRate" | "harvestRate" | "tamingRate" | "resourcesRespawnPeriodMultiplier">;
 })[] = [
   {
     id: "base",
@@ -279,8 +276,7 @@ export const EXPERIENCE_PROFILES: readonly ExperienceProfile[] = [
   {
     id: "friends",
     name: "Play with friends",
-    description:
-      "Small PvE group: quicker tames and breeding so you spend more time playing than waiting.",
+    description: "Small PvE group: quicker tames and breeding so you spend more time playing than waiting.",
     chips: ["PvE", "Fast taming", "Small group"],
     progressionPreset: "balanced",
     breedingPreset: "balanced",
@@ -300,8 +296,7 @@ export const EXPERIENCE_PROFILES: readonly ExperienceProfile[] = [
   {
     id: "communityPve",
     name: "PvE community",
-    description:
-      "Long-running PvE. A bit faster than official so regulars keep progressing without a slog.",
+    description: "Long-running PvE. A bit faster than official so regulars keep progressing without a slog.",
     chips: ["PvE", "Balanced", "Community"],
     progressionPreset: "fast",
     breedingPreset: "fast",
@@ -348,8 +343,7 @@ export const EXPERIENCE_PROFILES: readonly ExperienceProfile[] = [
   {
     id: "hardcore",
     name: "Hardcore",
-    description:
-      "Death sends you back to level 1. Rates stay near official so every life counts.",
+    description: "Death sends you back to level 1. Rates stay near official so every life counts.",
     chips: ["Hardcore", "Near official"],
     progressionPreset: "base",
     breedingPreset: "base",
@@ -380,9 +374,7 @@ export function applyExperienceProfile(
   profileId: ExperienceProfile["id"],
 ): ConfigurationWizardDraft {
   const profile = EXPERIENCE_PROFILES.find((candidate) => candidate.id === profileId);
-  return profile === undefined
-    ? current
-    : { ...current, ...profile.values, profile: profile.id };
+  return profile === undefined ? current : { ...current, ...profile.values, profile: profile.id };
 }
 
 export function applyProgressionPreset(
@@ -401,10 +393,7 @@ export function applyBreedingPreset(
   return preset === undefined ? current : { ...current, ...preset.values };
 }
 
-export function applyWorldPreset(
-  current: ConfigurationWizardDraft,
-  presetId: WorldPresetId,
-): ConfigurationWizardDraft {
+export function applyWorldPreset(current: ConfigurationWizardDraft, presetId: WorldPresetId): ConfigurationWizardDraft {
   const preset = WORLD_PRESETS.find((candidate) => candidate.id === presetId);
   return preset === undefined ? current : { ...current, ...preset.values };
 }

@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
-import { Button, Group, Modal, NumberInput, Stack, Text } from "@mantine/core";
+import { Button, NumberInput, Stack, Text } from "@mantine/core";
 import type { BackupDiskAlertSettings } from "@shared/types";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 
 interface Props {
   opened: boolean;
@@ -13,17 +14,32 @@ interface Props {
 
 export function BackupDiskAlertModal(props: Props): ReactElement {
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
-      onClose={props.onClose}
+      onClose={() => {
+        if (!props.busy) props.onClose();
+      }}
+      size="sm"
       title="Warn me when the backup drive fills up"
-      centered
+      closeOnClickOutside={!props.busy}
+      closeOnEscape={!props.busy}
+      withCloseButton={!props.busy}
+      footer={
+        <>
+          <Button variant="default" onClick={props.onClose} disabled={props.busy}>
+            Cancel
+          </Button>
+          <Button loading={props.busy} onClick={props.onSave}>
+            Save thresholds
+          </Button>
+        </>
+      }
     >
       {props.diskDraft !== null && (
         <Stack gap="md">
           <Text size="sm" c="dimmed">
-            Based on the whole drive, not just the backup folder. Warning and
-            critical percentages apply to total used space.
+            Based on the whole drive, not just the backup folder. Warning and critical percentages apply to total used
+            space.
           </Text>
           <NumberInput
             label="Warning at used %"
@@ -31,8 +47,7 @@ export function BackupDiskAlertModal(props: Props): ReactElement {
             max={99}
             value={props.diskDraft.warnUsedPercent}
             onChange={(value) =>
-              typeof value === "number" &&
-              props.onDiskDraftChange({ ...props.diskDraft!, warnUsedPercent: value })
+              typeof value === "number" && props.onDiskDraftChange({ ...props.diskDraft!, warnUsedPercent: value })
             }
           />
           <NumberInput
@@ -61,16 +76,8 @@ export function BackupDiskAlertModal(props: Props): ReactElement {
               })
             }
           />
-          <Group justify="flex-end">
-            <Button variant="default" onClick={props.onClose}>
-              Cancel
-            </Button>
-            <Button loading={props.busy} onClick={props.onSave}>
-              Save thresholds
-            </Button>
-          </Group>
         </Stack>
       )}
-    </Modal>
+    </AppPanelModal>
   );
 }

@@ -1,11 +1,7 @@
 import { isInstallationReady } from "@shared/server/installation-health";
 import { getServerUpdateState } from "@shared/server/server-update-status";
 import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
-import type {
-  ServerInstallationInfo,
-  ServerProfile,
-  ServerRuntimeInfo,
-} from "@shared/types";
+import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 import {
   hasLiveProcessFleet,
@@ -16,12 +12,7 @@ import { resolveServerSurvivorCount } from "@features/servers/model/serverCardSu
 import { collectAttentionIssues, type AttentionIssue } from "./attentionIssues";
 
 /** Clickable Overview fleet strip filters (#314). Toggle again → `all`. */
-export type OverviewFleetFilter =
-  | "all"
-  | "running"
-  | "stopped"
-  | "attention"
-  | "updates";
+export type OverviewFleetFilter = "all" | "running" | "stopped" | "attention" | "updates";
 
 export interface OverviewFleetStats {
   enabledCount: number;
@@ -40,10 +31,7 @@ export interface OverviewFleetComputed {
   attentionIssues: AttentionIssue[];
 }
 
-function runtimeStatus(
-  statuses: Map<string, ServerRuntimeInfo>,
-  serverId: string,
-): ServerRuntimeInfo["status"] {
+function runtimeStatus(statuses: Map<string, ServerRuntimeInfo>, serverId: string): ServerRuntimeInfo["status"] {
   return statuses.get(serverId)?.status ?? "stopped";
 }
 
@@ -52,14 +40,8 @@ function runtimeStatus(
  * `error` stays out of Running and Stopped so operators see it under attention
  * when applicable, not in an empty Running filter mid-reboot.
  */
-function isOverviewFleetRunningStatus(
-  status: ServerRuntimeInfo["status"],
-): boolean {
-  return (
-    status === "running"
-    || status === "starting"
-    || status === "stopping"
-  );
+function isOverviewFleetRunningStatus(status: ServerRuntimeInfo["status"]): boolean {
+  return status === "running" || status === "starting" || status === "stopping";
 }
 
 /**
@@ -192,14 +174,10 @@ export function filterOverviewServersByFleet(
     return [...servers];
   }
   if (filter === "running") {
-    return servers.filter((server) =>
-      isOverviewFleetRunningStatus(runtimeStatus(statuses, server.id)),
-    );
+    return servers.filter((server) => isOverviewFleetRunningStatus(runtimeStatus(statuses, server.id)));
   }
   if (filter === "stopped") {
-    return servers.filter(
-      (server) => runtimeStatus(statuses, server.id) === "stopped",
-    );
+    return servers.filter((server) => runtimeStatus(statuses, server.id) === "stopped");
   }
   if (filter === "attention") {
     return servers.filter((server) => stats.attentionServerIds.has(server.id));

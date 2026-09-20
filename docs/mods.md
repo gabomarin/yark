@@ -25,29 +25,29 @@ Research archive: [spikes/65-modded-asa-maps.md](spikes/65-modded-asa-maps.md).
 
 ## Module map
 
-| Role | Path |
-| --- | --- |
-| Metadata client | `src/backend/domains/mods/mods-service.ts` |
-| Offline / unit mock catalog | `src/backend/domains/mods/mock-mod-catalog.ts` |
-| Add-input parse / batched URL resolve | `src/shared/mod-add-input.ts` |
-| Proxy URL normalize + not-configured error | `src/shared/mods/curseforge-proxy-url.ts` |
-| Build-time official URL inject | `src/shared/mods/curseforge-proxy-build-url.ts` |
-| Launch `-mods=` | `src/backend/domains/instances/launch-args.ts` |
-| Map-mod category / token heuristics | `src/shared/asa/map-token-suggest.ts`, `src/shared/asa/map-identity.ts` |
-| Profile patch merge | `src/shared/server/server-profile.ts` |
-| Workspace UI | `…/ServerModsPanel/*` (`AppSurfaceCard` shell, Discover `SearchField`, `serverModsModel.ts`, `serverModsListMutations.ts`) |
-| Load-order table | `ServerModsTable.tsx` via [YarkDataTable](datatable.md) |
-| Enrich on create / full update / patch | `src/main/ipc-handlers.ts` → `ModsService.enrichNewServerMods` |
-| IPC | `mods:*` channels in `src/shared/ipc.ts` (+ Zod in `channel-schemas.ts`) |
+| Role                                       | Path                                                                                                                       |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| Metadata client                            | `src/backend/domains/mods/mods-service.ts`                                                                                 |
+| Offline / unit mock catalog                | `src/backend/domains/mods/mock-mod-catalog.ts`                                                                             |
+| Add-input parse / batched URL resolve      | `src/shared/mod-add-input.ts`                                                                                              |
+| Proxy URL normalize + not-configured error | `src/shared/mods/curseforge-proxy-url.ts`                                                                                  |
+| Build-time official URL inject             | `src/shared/mods/curseforge-proxy-build-url.ts`                                                                            |
+| Launch `-mods=`                            | `src/backend/domains/instances/launch-args.ts`                                                                             |
+| Map-mod category / token heuristics        | `src/shared/asa/map-token-suggest.ts`, `src/shared/asa/map-identity.ts`                                                    |
+| Profile patch merge                        | `src/shared/server/server-profile.ts`                                                                                      |
+| Workspace UI                               | `…/ServerModsPanel/*` (`AppSurfaceCard` shell, Discover `SearchField`, `serverModsModel.ts`, `serverModsListMutations.ts`) |
+| Load-order table                           | `ServerModsTable.tsx` via [YarkDataTable](datatable.md)                                                                    |
+| Enrich on create / full update / patch     | `src/main/ipc-handlers.ts` → `ModsService.enrichNewServerMods`                                                             |
+| IPC                                        | `mods:*` channels in `src/shared/ipc.ts` (+ Zod in `channel-schemas.ts`)                                                   |
 
 ## Profile fields
 
-| Field | Storage | Meaning |
-| --- | --- | --- |
-| `mods` | SQLite JSON array | Configured Project IDs in **load order** |
-| `disabledMods` | SQLite JSON array | Subset of `mods` omitted from `-mods=` |
+| Field              | Storage            | Meaning                                                                                                        |
+| ------------------ | ------------------ | -------------------------------------------------------------------------------------------------------------- |
+| `mods`             | SQLite JSON array  | Configured Project IDs in **load order**                                                                       |
+| `disabledMods`     | SQLite JSON array  | Subset of `mods` omitted from `-mods=`                                                                         |
 | `modMetadataCache` | SQLite JSON object | Last known `ModMetadata` per ID (name, thumb, capped screenshot URLs, description when fetched, categories, …) |
-| `mapModId` | column (nullable) | Linked Maps pack for custom `map` — **not** managed on the Mods tab; set under Server Information → Map |
+| `mapModId`         | column (nullable)  | Linked Maps pack for custom `map` — **not** managed on the Mods tab; set under Server Information → Map        |
 
 `disabledMods` entries that are not in `mods` are stripped on enrich/persist.
 
@@ -167,13 +167,13 @@ Malformed non-empty values throw. Missing endpoint →
 `MetadataServiceNotConfiguredError` (`METADATA_SERVICE_NOT_CONFIGURED`). Existing
 configured IDs still launch; search / refresh / new-ID enrich need an endpoint.
 
-| Method | Worker route | Notes |
-| --- | --- | --- |
-| `getMod` | `GET /v1/mods/:id` | |
-| `getMods` | `POST /v1/mods` | Returns only resolved items; skipped IDs omitted |
-| `search` | `GET /v1/mods/search` | Forwards classId/categoryId/sort/index/pageSize |
-| `listCategories` | `GET /v1/categories` | ASA classes/categories (#297) |
-| `getByReference` | ID → get; ASA URL/slug → search | Rejects non-ASA CurseForge URLs |
+| Method           | Worker route                    | Notes                                            |
+| ---------------- | ------------------------------- | ------------------------------------------------ |
+| `getMod`         | `GET /v1/mods/:id`              |                                                  |
+| `getMods`        | `POST /v1/mods`                 | Returns only resolved items; skipped IDs omitted |
+| `search`         | `GET /v1/mods/search`           | Forwards classId/categoryId/sort/index/pageSize  |
+| `listCategories` | `GET /v1/categories`            | ASA classes/categories (#297)                    |
+| `getByReference` | ID → get; ASA URL/slug → search | Rejects non-ASA CurseForge URLs                  |
 
 `useMockCatalog: true` serves `MOCK_MOD_CATALOG` (unit tests). Production main
 leaves this false.
@@ -211,28 +211,28 @@ other.
 
 ## IPC surface
 
-| Channel | Preload API |
-| --- | --- |
-| `mods:get` | `getModMetadata(modId, forceRefresh?)` |
-| `mods:get-many` | `getModsMetadata(modIds, forceRefresh?)` |
-| `mods:search` | `searchMods(query, options?)` |
-| `mods:list-categories` | `listModCategories()` |
-| `mods:get-by-reference` | `getModByReference(ref)` |
-| `mods:open-curseforge` | `openCurseForgeMod(url)` |
-| `servers:update-patch` | `updateServerPatch(id, patch)` (mods group) |
+| Channel                 | Preload API                                 |
+| ----------------------- | ------------------------------------------- |
+| `mods:get`              | `getModMetadata(modId, forceRefresh?)`      |
+| `mods:get-many`         | `getModsMetadata(modIds, forceRefresh?)`    |
+| `mods:search`           | `searchMods(query, options?)`               |
+| `mods:list-categories`  | `listModCategories()`                       |
+| `mods:get-by-reference` | `getModByReference(ref)`                    |
+| `mods:open-curseforge`  | `openCurseForgeMod(url)`                    |
+| `servers:update-patch`  | `updateServerPatch(id, patch)` (mods group) |
 
 Args are Zod-validated — [ipc-validation.md](ipc-validation.md).
 
 ## Related surfaces
 
-| Topic | Doc / location |
-| --- | --- |
-| Proxy rate limits, cache, secret rotation | [curseforge-proxy.md](curseforge-proxy.md) |
-| Custom map Start blockers / `mapModId` | [server-lifecycle.md](server-lifecycle.md) |
-| Copy mods between profiles | [config-transfer.md](config-transfer.md) (mods category; map identity never copied) |
-| Cluster compliance hint on mod lists | [clusters.md](clusters.md) |
-| Table UX contract | [datatable.md](datatable.md) |
-| Public operator guide | website `docs/mods.mdx` |
+| Topic                                     | Doc / location                                                                      |
+| ----------------------------------------- | ----------------------------------------------------------------------------------- |
+| Proxy rate limits, cache, secret rotation | [curseforge-proxy.md](curseforge-proxy.md)                                          |
+| Custom map Start blockers / `mapModId`    | [server-lifecycle.md](server-lifecycle.md)                                          |
+| Copy mods between profiles                | [config-transfer.md](config-transfer.md) (mods category; map identity never copied) |
+| Cluster compliance hint on mod lists      | [clusters.md](clusters.md)                                                          |
+| Table UX contract                         | [datatable.md](datatable.md)                                                        |
+| Public operator guide                     | website `docs/mods.mdx`                                                             |
 
 ## Pitfalls
 

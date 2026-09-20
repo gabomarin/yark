@@ -1,23 +1,10 @@
 import type { ReactElement } from "react";
 import { useMemo, useState } from "react";
-import {
-  Alert,
-  Button,
-  Checkbox,
-  Group,
-  Modal,
-  Stack,
-  Stepper,
-  Text,
-} from "@mantine/core";
-import {
-  clusterIniFileSelectionHasWork,
-} from "@shared/ini/cluster-ini-file-selection";
-import type {
-  ClusterIniTemplateFileSelection,
-  ServerProfile,
-  ServerRuntimeInfo,
-} from "@shared/types";
+import { Button, Checkbox, Stack, Stepper, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
+import { clusterIniFileSelectionHasWork } from "@shared/ini/cluster-ini-file-selection";
+import type { ClusterIniTemplateFileSelection, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { sharedClusterDir } from "../../clusterModel";
@@ -58,40 +45,22 @@ export function AddServersModal(props: Props): ReactElement {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const sharedDir = useMemo(
-    () => sharedClusterDir(props.members),
-    [props.members],
-  );
+  const sharedDir = useMemo(() => sharedClusterDir(props.members), [props.members]);
   const candidates = useMemo(
     () => listAddCandidates(props.clusterId, props.servers, props.statuses),
     [props.clusterId, props.servers, props.statuses],
   );
-  const activeSelectedIds = useMemo(
-    () => pruneSelectedServerIds(selectedIds, candidates),
-    [selectedIds, candidates],
-  );
+  const activeSelectedIds = useMemo(() => pruneSelectedServerIds(selectedIds, candidates), [selectedIds, candidates]);
   const selected = useMemo(
     () => resolveSelectedCandidates(candidates, activeSelectedIds),
     [candidates, activeSelectedIds],
   );
-  const selectedServers = useMemo(
-    () => selected.map((candidate) => candidate.server),
-    [selected],
-  );
-  const portError = useMemo(
-    () => getJoinPortError(props.members, selectedServers),
-    [props.members, selectedServers],
-  );
-  const modWarning = useMemo(
-    () => modsMayDiverge(props.members, selectedServers),
-    [props.members, selectedServers],
-  );
+  const selectedServers = useMemo(() => selected.map((candidate) => candidate.server), [selected]);
+  const portError = useMemo(() => getJoinPortError(props.members, selectedServers), [props.members, selectedServers]);
+  const modWarning = useMemo(() => modsMayDiverge(props.members, selectedServers), [props.members, selectedServers]);
   const canContinue = selected.length > 0 && portError === null && sharedDir !== null;
 
-  const seedSelectionOk =
-    !seedFromTemplate ||
-    !hasTemplate ||
-    clusterIniFileSelectionHasWork(seedFiles);
+  const seedSelectionOk = !seedFromTemplate || !hasTemplate || clusterIniFileSelectionHasWork(seedFiles);
   const canAdd = canContinue && seedSelectionOk;
 
   const handleAdd = async (): Promise<void> => {
@@ -102,20 +71,13 @@ export function AddServersModal(props: Props): ReactElement {
       async () => {
         const applied: ServerProfile[] = [];
         for (const candidate of selected) {
-          const input = buildCreateClusterInput(
-            candidate.server,
-            props.clusterId,
-            sharedDir,
-          );
+          const input = buildCreateClusterInput(candidate.server, props.clusterId, sharedDir);
           const result = await window.api.updateServer(candidate.server.id, input);
           if (!result.ok) {
             const failMessage = result.error ?? "Could not add servers to the cluster";
             const rollbackFailures: string[] = [];
             for (const previous of [...applied].reverse()) {
-              const rollback = await window.api.updateServer(
-                previous.id,
-                serverProfileToInput(previous),
-              );
+              const rollback = await window.api.updateServer(previous.id, serverProfileToInput(previous));
               if (!rollback.ok) rollbackFailures.push(previous.name);
             }
             if (rollbackFailures.length > 0) {
@@ -124,9 +86,7 @@ export function AddServersModal(props: Props): ReactElement {
               );
               props.onChanged();
             } else if (applied.length > 0) {
-              setError(
-                `Failed on “${candidate.server.name}”: ${failMessage}. Previous profiles were restored.`,
-              );
+              setError(`Failed on “${candidate.server.name}”: ${failMessage}. Previous profiles were restored.`);
             } else {
               setError(failMessage);
             }
@@ -138,15 +98,9 @@ export function AddServersModal(props: Props): ReactElement {
         if (seedFromTemplate && hasTemplate) {
           const seedFailures: string[] = [];
           for (const member of applied) {
-            const seed = await window.api.seedClusterIniFromTemplate(
-              props.clusterId,
-              member.id,
-              seedFiles,
-            );
+            const seed = await window.api.seedClusterIniFromTemplate(props.clusterId, member.id, seedFiles);
             if (!seed.ok) {
-              seedFailures.push(
-                `${member.name}: ${seed.error ?? "seed failed"}`,
-              );
+              seedFailures.push(`${member.name}: ${seed.error ?? "seed failed"}`);
             }
           }
           if (seedFailures.length > 0) {
@@ -168,22 +122,48 @@ export function AddServersModal(props: Props): ReactElement {
   };
 
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={() => {
         if (!saving) props.onClose();
       }}
       title={`Add servers to ${props.clusterId}`}
       size="lg"
-      centered
       closeOnClickOutside={!saving}
       closeOnEscape={!saving}
       withCloseButton={!saving}
+      footerAlign="between"
+      footer={
+        <>
+          <Button
+            variant="default"
+            disabled={saving}
+            onClick={() => {
+              if (step === 1) {
+                props.onClose();
+                return;
+              }
+              setStep(1);
+            }}
+          >
+            {step === 1 ? "Cancel" : "Back"}
+          </Button>
+          {step === 1 ? (
+            <Button disabled={!canContinue} onClick={() => setStep(2)}>
+              Continue
+            </Button>
+          ) : (
+            <Button loading={saving} disabled={!canAdd} onClick={() => void handleAdd()}>
+              Add to cluster
+            </Button>
+          )}
+        </>
+      }
     >
       <Stack gap="md">
         <Text size="sm" c="dimmed">
-          Choose enabled servers that are not running and not already in a cluster. They will receive
-          this cluster’s ID and shared directory.
+          Choose enabled servers that are not running and not already in a cluster. They will receive this cluster’s ID
+          and shared directory.
         </Text>
 
         <Stepper active={step - 1} allowNextStepsSelect={false} size="sm">
@@ -192,16 +172,15 @@ export function AddServersModal(props: Props): ReactElement {
         </Stepper>
 
         {error !== null && (
-          <Alert color="red" variant="light">
+          <AppAlert color="red" variant="light">
             {error}
-          </Alert>
+          </AppAlert>
         )}
 
         {sharedDir === null && (
-          <Alert color="red" variant="light">
-            This cluster does not have one shared directory yet. Align directories on
-            every server before adding more.
-          </Alert>
+          <AppAlert color="red" variant="light">
+            This cluster does not have one shared directory yet. Align directories on every server before adding more.
+          </AppAlert>
         )}
 
         {step === 1 && (
@@ -212,12 +191,7 @@ export function AddServersModal(props: Props): ReactElement {
             emptyHint="No servers available to add. Create an enabled server that is not running and not already in a cluster."
             selectionHint="Select one or more enabled servers that are not running and not already in a cluster"
             onToggle={(serverId) =>
-              setSelectedIds((current) =>
-                toggleSelectedServerId(
-                  pruneSelectedServerIds(current, candidates),
-                  serverId,
-                ),
-              )
+              setSelectedIds((current) => toggleSelectedServerId(pruneSelectedServerIds(current, candidates), serverId))
             }
           />
         )}
@@ -260,26 +234,23 @@ export function AddServersModal(props: Props): ReactElement {
               </dl>
             </div>
             {modWarning && (
-              <Alert color="yellow" variant="light">
-                Mod lists differ from current cluster servers; mod items may be lost
-                on transfer.
-              </Alert>
+              <AppAlert color="attention" variant="light">
+                Mod lists differ from current cluster servers; mod items may be lost on transfer.
+              </AppAlert>
             )}
             {hasTemplate ? (
               <Checkbox
                 checked={seedFromTemplate}
                 disabled={saving}
-                onChange={(event) =>
-                  setSeedFromTemplate(event.currentTarget.checked)
-                }
+                onChange={(event) => setSeedFromTemplate(event.currentTarget.checked)}
                 label="Seed INI from cluster template"
                 description="After membership is saved, write selected template files onto each new member, reapply profile-owned ports/passwords/session name, and take an INI snapshot first. Leave unchecked to only set cluster ID and directory."
               />
             ) : (
-              <Alert color="blue" variant="light">
-                Saves this Cluster ID and shared folder on the selected servers.
-                Create an INI template first if you want to seed settings on join.
-              </Alert>
+              <AppAlert color="blue" variant="light">
+                Saves this Cluster ID and shared folder on the selected servers. Create an INI template first if you
+                want to seed settings on join.
+              </AppAlert>
             )}
             {hasTemplate && seedFromTemplate && (
               <Stack gap="sm">
@@ -289,49 +260,20 @@ export function AddServersModal(props: Props): ReactElement {
                   description="Choose which INI files to seed. Unchecked files stay as they are on disk."
                   onChange={setSeedFiles}
                 />
-                <Alert color="teal" variant="light">
-                  Each selected stopped server will receive a restore-style write
-                  of the selected files from the saved cluster template after joining.
-                </Alert>
+                <AppAlert color="ok" variant="light">
+                  Each selected stopped server will receive a restore-style write of the selected files from the saved
+                  cluster template after joining.
+                </AppAlert>
               </Stack>
             )}
             {hasTemplate && !seedFromTemplate && (
-              <Alert color="blue" variant="light">
+              <AppAlert color="blue" variant="light">
                 Membership only: existing INI files stay unchanged.
-              </Alert>
+              </AppAlert>
             )}
           </Stack>
         )}
-
-        <Group justify="space-between">
-          <Button
-            variant="default"
-            disabled={saving}
-            onClick={() => {
-              if (step === 1) {
-                props.onClose();
-                return;
-              }
-              setStep(1);
-            }}
-          >
-            {step === 1 ? "Cancel" : "Back"}
-          </Button>
-          {step === 1 ? (
-            <Button disabled={!canContinue} onClick={() => setStep(2)}>
-              Continue
-            </Button>
-          ) : (
-            <Button
-              loading={saving}
-              disabled={!canAdd}
-              onClick={() => void handleAdd()}
-            >
-              Add to cluster
-            </Button>
-          )}
-        </Group>
       </Stack>
-    </Modal>
+    </AppPanelModal>
   );
 }

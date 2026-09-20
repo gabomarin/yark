@@ -21,15 +21,10 @@ interface Props {
 /** Full-main create/edit chrome: title, scroll body, modal-style footer (#292). */
 export function ServerFormShellPage(props: Props): ReactElement {
   return (
-    <div
-      className={classes.formShell}
-      data-server-form={props.formKind ?? "create"}
-    >
+    <div className={classes.formShell} data-server-form={props.formKind ?? "create"}>
       <header className={classes.formHeader}>
         <h1 className={classes.formTitle}>{props.title}</h1>
-        {props.subtitle !== undefined && props.subtitle !== "" && (
-          <Text c="dimmed">{props.subtitle}</Text>
-        )}
+        {props.subtitle !== undefined && props.subtitle !== "" && <Text c="dimmed">{props.subtitle}</Text>}
       </header>
       <div className={classes.formBodyScroll} data-server-form-scroll>
         <div className={classes.formInner}>
@@ -38,19 +33,12 @@ export function ServerFormShellPage(props: Props): ReactElement {
       </div>
       <footer className={classes.formFooter}>
         <Group justify="space-between" align="center" wrap="nowrap">
-          <Button
-            variant="default"
-            leftSection={<ArrowLeft size={16} />}
-            onClick={props.onCancel}
-          >
+          <Button variant="default" leftSection={<ArrowLeft size={16} />} onClick={props.onCancel}>
             Back
           </Button>
           <Tooltip
             label={props.submitDisabledReason}
-            disabled={
-              props.submitDisabled !== true ||
-              props.submitDisabledReason === undefined
-            }
+            disabled={props.submitDisabled !== true || props.submitDisabledReason === undefined}
           >
             <span>
               <Button

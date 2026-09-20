@@ -7,20 +7,9 @@ import { isOfficialMap, normalizeMapToken } from "@shared/asa/map-identity";
 import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
 import { hasMapTokenWpSuffix } from "@shared/asa/map-token-suggest";
 import type { ServerProfile } from "@shared/types";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type Dispatch,
-  type SetStateAction,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { useUiDensity } from "@app/AppProviders";
-import {
-  listKnownClusterOptions,
-  type KnownClusterOption,
-} from "@features/clusters/knownClusterOptions";
+import { listKnownClusterOptions, type KnownClusterOption } from "@features/clusters/knownClusterOptions";
 import { showOperatorToast } from "@ui/operatorToast";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { openUnsavedLeaveModal } from "@features/server-workspace/openUnsavedLeaveModal";
@@ -70,9 +59,7 @@ export function useServerForm(options: UseServerFormOptions): {
   resolvedInstallPreview: string;
   canSubmit: boolean;
   submitDisabledReason: string | undefined;
-  setField: (
-    field: Exclude<keyof ServerFormState, "mapModId" | "autoStart">,
-  ) => (value: string) => void;
+  setField: (field: Exclude<keyof ServerFormState, "mapModId" | "autoStart">) => (value: string) => void;
   mapMods: ReturnType<typeof listEnabledMapMods>;
   mapFieldKey: string;
   browseDirectory: (field: "installDir" | "clusterDir") => Promise<void>;
@@ -95,27 +82,15 @@ export function useServerForm(options: UseServerFormOptions): {
   const moveJobActive = options.moveJobActive === true;
   const density = useUiDensity();
   const inputSize: "xs" | "sm" = density === "compact" ? "xs" : "sm";
-  const preferredCluster =
-    options.extraClusterOptions?.length === 1
-      ? options.extraClusterOptions[0]
-      : undefined;
+  const preferredCluster = options.extraClusterOptions?.length === 1 ? options.extraClusterOptions[0] : undefined;
   const fleetProfiles = options.servers ?? [];
   // Single-instance app: fleet cannot change under an open create form. Freeze
   // suggestion + initial ports on mount so typing never re-suggests (#55).
-  const initialCreatePorts = isCreate
-    ? resolveCreatePortFields(fleetProfiles)
-    : null;
+  const initialCreatePorts = isCreate ? resolveCreatePortFields(fleetProfiles) : null;
   const [state, setState] = useState<ServerFormState>(() =>
-    toServerFormState(
-      options.initial,
-      options.defaultBaseFolder,
-      preferredCluster,
-      initialCreatePorts ?? undefined,
-    ),
+    toServerFormState(options.initial, options.defaultBaseFolder, preferredCluster, initialCreatePorts ?? undefined),
   );
-  const [createPortSuggestion] = useState<CreatePortSuggestion | null>(
-    () => initialCreatePorts?.suggestion ?? null,
-  );
+  const [createPortSuggestion] = useState<CreatePortSuggestion | null>(() => initialCreatePorts?.suggestion ?? null);
   const initialStateRef = useRef(state);
   const dirtyRef = useRef(false);
   const isDirty = Object.keys(state).some((key) => {
@@ -125,9 +100,7 @@ export function useServerForm(options: UseServerFormOptions): {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [createPathIssue, setCreatePathIssue] = useState<string | null>(null);
-  const [browsingField, setBrowsingField] = useState<"installDir" | "clusterDir" | null>(
-    null,
-  );
+  const [browsingField, setBrowsingField] = useState<"installDir" | "clusterDir" | null>(null);
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   const submitRef = useRef<() => Promise<boolean>>(async () => false);
 
@@ -141,8 +114,7 @@ export function useServerForm(options: UseServerFormOptions): {
         kind: "confirm",
         title: "Unsaved server changes",
         alertTitle: "Server form modified",
-        message:
-          "There are unsaved server profile changes. If you continue, they will be discarded.",
+        message: "There are unsaved server profile changes. If you continue, they will be discarded.",
       },
       onDiscard: () => {
         dirtyRef.current = false;
@@ -184,10 +156,7 @@ export function useServerForm(options: UseServerFormOptions): {
     [options.extraClusterOptions, options.servers],
   );
 
-  const nameFolderError = useMemo(
-    () => getServerFolderNameError(state.name),
-    [state.name],
-  );
+  const nameFolderError = useMemo(() => getServerFolderNameError(state.name), [state.name]);
 
   const resolvedInstallPreview = useMemo(() => {
     if (!isCreate) {
@@ -209,13 +178,7 @@ export function useServerForm(options: UseServerFormOptions): {
       return resolvedInstallPreview.length > 0 && createPathIssue === null;
     }
     return isDirty;
-  }, [
-    createPathIssue,
-    isCreate,
-    isDirty,
-    nameFolderError,
-    resolvedInstallPreview,
-  ]);
+  }, [createPathIssue, isCreate, isDirty, nameFolderError, resolvedInstallPreview]);
 
   const submitDisabledReason = useMemo(() => {
     if (!isCreate && !isDirty) return "No unsaved changes";
@@ -225,19 +188,11 @@ export function useServerForm(options: UseServerFormOptions): {
     }
     if (isCreate && createPathIssue !== null) return createPathIssue;
     return undefined;
-  }, [
-    createPathIssue,
-    isCreate,
-    isDirty,
-    nameFolderError,
-    resolvedInstallPreview,
-  ]);
+  }, [createPathIssue, isCreate, isDirty, nameFolderError, resolvedInstallPreview]);
 
-  const setField =
-    (field: Exclude<keyof ServerFormState, "mapModId" | "autoStart">) =>
-    (value: string) => {
-      setState((previous) => ({ ...previous, [field]: value }));
-    };
+  const setField = (field: Exclude<keyof ServerFormState, "mapModId" | "autoStart">) => (value: string) => {
+    setState((previous) => ({ ...previous, [field]: value }));
+  };
 
   const mapMods = useMemo(
     () =>
@@ -331,11 +286,7 @@ export function useServerForm(options: UseServerFormOptions): {
     }
     if (isCreate && !isOfficialMap(mapToken)) {
       const mapModId = state.mapModId?.trim() ?? "";
-      if (
-        mapModId.length === 0
-        || !state.mods.includes(mapModId)
-        || state.disabledMods.includes(mapModId)
-      ) {
+      if (mapModId.length === 0 || !state.mods.includes(mapModId) || state.disabledMods.includes(mapModId)) {
         setError(MAP_NAME_COPY.createNeedsSearchMaps);
         return false;
       }

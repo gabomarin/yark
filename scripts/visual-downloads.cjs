@@ -52,15 +52,11 @@ async function launchApp(userData, extraEnv = {}) {
 async function quitApp(app) {
   const proc = app.process();
   const exited =
-    proc == null || proc.exitCode != null
-      ? Promise.resolve()
-      : new Promise((resolve) => proc.once("exit", resolve));
+    proc == null || proc.exitCode != null ? Promise.resolve() : new Promise((resolve) => proc.once("exit", resolve));
   await app.evaluate(({ app: electronApp }) => electronApp.quit());
   await Promise.race([
     exited,
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000),
-    ),
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000)),
   ]);
 }
 
@@ -83,9 +79,7 @@ function job(id, type, serverId, status, phase, extra = {}) {
     phase,
     createdAt: now,
     updatedAt: now,
-    lastError:
-      extra.lastError
-      ?? (status === "failed" || status === "blocked" ? "Visual fixture interruption" : null),
+    lastError: extra.lastError ?? (status === "failed" || status === "blocked" ? "Visual fixture interruption" : null),
     recoveryReason: extra.recoveryReason ?? null,
     idempotencyKey: extra.idempotencyKey ?? `${type}:${serverId}:`,
     operatorRetryAllowed: extra.operatorRetryAllowed === true,
@@ -174,7 +168,8 @@ function seedAttentionJobs(userData) {
     job("job-failed-dismiss", "update", "visual-dl-5", "failed", "failed", {
       operatorRetryAllowed: false,
       lastError: "This validation failure is not safe to retry automatically.",
-      recoveryReason: "This validation, security, cancellation, or missing-resource failure is not safe to retry automatically.",
+      recoveryReason:
+        "This validation, security, cancellation, or missing-resource failure is not safe to retry automatically.",
     }),
     job("job-missing-profile", "install-files", "deleted-server", "running", "validating"),
     job("job-crash-ambiguous", "verify-files", "visual-dl-3", "running", "stopping-server", {
@@ -217,10 +212,10 @@ function compileHangingSteamCmdStub(dir) {
       "using System.Linq;",
       "static class P {",
       "  static int Main(string[] args) {",
-      "    Console.WriteLine(\"Loading Steam API...\");",
-      "    var quitOnly = args.Any(a => a == \"+quit\") && !args.Any(a => a == \"+app_update\");",
+      '    Console.WriteLine("Loading Steam API...");',
+      '    var quitOnly = args.Any(a => a == "+quit") && !args.Any(a => a == "+app_update");',
       "    if (!quitOnly) {",
-      "      Console.WriteLine(\"Update state (0x0) 0/1, 0 -- [ 12%]\");",
+      '      Console.WriteLine("Update state (0x0) 0/1, 0 -- [ 12%]");',
       "      System.Threading.Thread.Sleep(180000);",
       "    }",
       "    return 0;",
@@ -233,11 +228,10 @@ function compileHangingSteamCmdStub(dir) {
     ].join("\n"),
     "utf8",
   );
-  execFileSync(
-    "powershell.exe",
-    ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", stubPs1],
-    { stdio: ["ignore", "pipe", "pipe"], windowsHide: true },
-  );
+  execFileSync("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", stubPs1], {
+    stdio: ["ignore", "pipe", "pipe"],
+    windowsHide: true,
+  });
   assert.ok(fs.existsSync(stubExe), `SteamCMD stub missing at ${stubExe}`);
   return stubExe;
 }
@@ -305,11 +299,7 @@ async function replaceQueuedVerifyFromOverview(page, serverName) {
   await card.scrollIntoViewIfNeeded();
   const installBtn = card.getByRole("button", { name: "Install server files" });
   await installBtn.waitFor({ state: "visible", timeout: 20_000 });
-  assert.equal(
-    await installBtn.isEnabled(),
-    true,
-    `${serverName}: Install should replace a queued Verify`,
-  );
+  assert.equal(await installBtn.isEnabled(), true, `${serverName}: Install should replace a queued Verify`);
   await installBtn.click();
   await page
     .locator(".mantine-Notification-root")
@@ -419,8 +409,16 @@ async function runAttentionScenario(outDir, findings, errors) {
       await page.waitForTimeout(200);
       const metrics = await measureDownloads(page);
       assert.equal(metrics.liveAction, false, `${item.id} must not show live progress action`);
-      assert.equal(await page.getByRole("button", { name: /^Retry$/i }).count(), item.retry ? 1 : 0, `${item.id} Retry`);
-      assert.equal(await page.getByRole("button", { name: /^Dismiss$/i }).count(), item.dismiss ? 1 : 0, `${item.id} Dismiss`);
+      assert.equal(
+        await page.getByRole("button", { name: /^Retry$/i }).count(),
+        item.retry ? 1 : 0,
+        `${item.id} Retry`,
+      );
+      assert.equal(
+        await page.getByRole("button", { name: /^Dismiss$/i }).count(),
+        item.dismiss ? 1 : 0,
+        `${item.id} Dismiss`,
+      );
       await screenshot(page, outDir, item.file);
     }
 
@@ -554,7 +552,7 @@ async function runHappyPathScenario(outDir, findings, errors, stubExe) {
       "Replaced Verify must not land in Needs attention",
     );
     assert.equal(
-      await page.locator('[data-queue-group="queued"] [data-download-row]').count() >= 1,
+      (await page.locator('[data-queue-group="queued"] [data-download-row]').count()) >= 1,
       true,
       "Install that replaced Verify stays Queued (Island still holds SteamCMD)",
     );

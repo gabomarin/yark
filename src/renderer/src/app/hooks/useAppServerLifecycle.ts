@@ -1,11 +1,7 @@
 import { createElement, useCallback, useEffect, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { Alert } from "@mantine/core";
-import type {
-  ServerProfile,
-  SessionPortSet,
-  StartServerOptions,
-} from "@shared/types";
+import type { ServerProfile, SessionPortSet, StartServerOptions } from "@shared/types";
 import type { OsNotificationOpenPush } from "@shared/ipc";
 import { isHostPortBusyError, isHostPortProbeError } from "@shared/server/host-port-probe-errors";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
@@ -19,9 +15,7 @@ import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
 import type { useAppFleetRefresh } from "@app/hooks/useAppFleetRefresh";
 
 type Refresh = ReturnType<typeof useAppFleetRefresh>["refresh"];
-type RunAction = (
-  action: () => Promise<{ ok: boolean; error?: string }>,
-) => Promise<boolean>;
+type RunAction = (action: () => Promise<{ ok: boolean; error?: string }>) => Promise<boolean>;
 
 export function useAppServerLifecycle(options: {
   servers: ServerProfile[];
@@ -32,18 +26,9 @@ export function useAppServerLifecycle(options: {
   setRoute: Dispatch<SetStateAction<Route>>;
   openYarkUpdateSettings: () => void;
 }) {
-  const {
-    servers,
-    openNativeTerminalOnStart,
-    refresh,
-    runAction,
-    setOverlay,
-    setRoute,
-    openYarkUpdateSettings,
-  } = options;
-  const [startBusyByServerId, setStartBusyByServerId] = useState<Set<string>>(
-    () => new Set(),
-  );
+  const { servers, openNativeTerminalOnStart, refresh, runAction, setOverlay, setRoute, openYarkUpdateSettings } =
+    options;
+  const [startBusyByServerId, setStartBusyByServerId] = useState<Set<string>>(() => new Set());
   const startBusyByServerIdRef = useRef<Set<string>>(new Set());
 
   const startServer = useCallback(
@@ -149,14 +134,7 @@ export function useAppServerLifecycle(options: {
         },
       );
     },
-    [
-      openNativeTerminalOnStart,
-      refresh,
-      servers,
-      setOverlay,
-      setRoute,
-      startServer,
-    ],
+    [openNativeTerminalOnStart, refresh, servers, setOverlay, setRoute, startServer],
   );
 
   /** Manual restart with a player warning window (#573). */
@@ -170,10 +148,7 @@ export function useAppServerLifecycle(options: {
         async () => {
           const result = await window.api.runMaintenanceRestartWarning(id);
           if (!result.ok) {
-            showOperatorError(
-              result.error ?? "Could not start the restart warning",
-              "Could not restart server",
-            );
+            showOperatorError(result.error ?? "Could not start the restart warning", "Could not restart server");
           }
           await refresh();
         },
@@ -190,10 +165,7 @@ export function useAppServerLifecycle(options: {
     async (id: string) => {
       const result = await window.api.cancelMaintenanceUpcoming(id);
       if (!result.ok) {
-        showOperatorError(
-          result.error ?? "Could not cancel the restart warning",
-          "Could not cancel restart",
-        );
+        showOperatorError(result.error ?? "Could not cancel the restart warning", "Could not cancel restart");
       }
       await refresh();
     },
@@ -217,7 +189,7 @@ export function useAppServerLifecycle(options: {
         title: `Force close "${label}"`,
         children: createElement(
           Alert,
-          { color: "red", title: "No save", variant: "light" },
+          { color: "red", title: "No save" },
           "Closes the server immediately without saving. This can corrupt the world if it was not saved first. Prefer Stop when possible.",
         ),
         confirmLabel: "Force close",
@@ -272,8 +244,7 @@ export function useAppServerLifecycle(options: {
   );
 
   const setServerEnabled = useCallback(
-    (id: string, enabled: boolean) =>
-      runAction(() => window.api.setServerEnabled(id, enabled)),
+    (id: string, enabled: boolean) => runAction(() => window.api.setServerEnabled(id, enabled)),
     [runAction],
   );
 

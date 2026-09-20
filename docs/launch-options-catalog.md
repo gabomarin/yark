@@ -24,13 +24,13 @@ field `inASA` (`Yes` / `No` / `Unknown`).
 
 ## Status rules
 
-| Wiki `inASA` | Catalog `status` | Selectable later (#93) |
-| --- | --- | --- |
-| Yes (Check) | `supported` | Yes (unless YARK-owned) |
-| No (Missing) | `unsupported` (ASE-only / rejected) | No — omitted from the browse modal |
-| Unknown | `uncertain` | No |
-| `status=deprecated` | `unsupported` | No — omitted from the browse modal |
-| YARK composer token | `yarkOwned` | No |
+| Wiki `inASA`        | Catalog `status`                    | Selectable later (#93)             |
+| ------------------- | ----------------------------------- | ---------------------------------- |
+| Yes (Check)         | `supported`                         | Yes (unless YARK-owned)            |
+| No (Missing)        | `unsupported` (ASE-only / rejected) | No — omitted from the browse modal |
+| Unknown             | `uncertain`                         | No                                 |
+| `status=deprecated` | `unsupported`                       | No — omitted from the browse modal |
+| YARK composer token | `yarkOwned`                         | No                                 |
 
 The create/edit **Browse ASA catalog** modal lists ASA-relevant rows only
 (`supported`, `uncertain`, `yarkOwned`). ASE-only `unsupported` entries remain in
@@ -85,12 +85,12 @@ Internal popularity (`common`) is docs/audit metadata only.
 
 ### Curated groups
 
-| Group | Options |
-| --- | --- |
-| World & gameplay | `-ForceAllowCaveFlyers`, `-AutoDestroyStructures`, `-EnableIdlePlayerKick`, `-ForceRespawnDinos` (caution), `-UseDynamicConfig` (+ optional CustomDynamicConfigUrl), `-passivemods=` (Mods tab still owns `-mods=`), `-NoWildBabies` |
-| Security & integrity | `-NoBattlEye`, `-exclusivejoin` (caution), dupe-log / cosmetics family (adjacent pairs) |
-| Logging & messaging | game log → tribe logs → RCON tribe logs, `-culture=`, `-CustomNotificationURL=` |
-| Performance & network | `-ServerPlatform=` (multi-select → `ALL`), `-GBUsageToForceRestart=`, `-nosound`, thread/net knobs |
+| Group                 | Options                                                                                                                                                                                                                              |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| World & gameplay      | `-ForceAllowCaveFlyers`, `-AutoDestroyStructures`, `-EnableIdlePlayerKick`, `-ForceRespawnDinos` (caution), `-UseDynamicConfig` (+ optional CustomDynamicConfigUrl), `-passivemods=` (Mods tab still owns `-mods=`), `-NoWildBabies` |
+| Security & integrity  | `-NoBattlEye`, `-exclusivejoin` (caution), dupe-log / cosmetics family (adjacent pairs)                                                                                                                                              |
+| Logging & messaging   | game log → tribe logs → RCON tribe logs, `-culture=`, `-CustomNotificationURL=`                                                                                                                                                      |
+| Performance & network | `-ServerPlatform=` (multi-select → `ALL`), `-GBUsageToForceRestart=`, `-nosound`, thread/net knobs                                                                                                                                   |
 
 ### Not on Launch cards (Extra arguments / catalog)
 

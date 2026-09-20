@@ -3,11 +3,7 @@ import type { ServerOperationalLogs, ServerProfile } from "@shared/types";
 import { showOperatorError } from "@ui/operatorToast";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createServerLogsPanelActions } from "../actions/serverLogsPanelActions";
-import {
-  preserveNewerRuntimeLogs,
-  replaceRuntimeLogs,
-  type RuntimeLogSourceFilter,
-} from "../model/serverLogsFormat";
+import { preserveNewerRuntimeLogs, replaceRuntimeLogs, type RuntimeLogSourceFilter } from "../model/serverLogsFormat";
 
 export type LogsSection = "events" | "runtime" | "updates" | "backups";
 
@@ -27,9 +23,7 @@ interface UseServerLogsPanelOptions {
 
 export function useServerLogsPanel(options: UseServerLogsPanelOptions) {
   const { server, focus, onFocusConsumed } = options;
-  const [activeSection, setActiveSection] = useState<LogsSection>(
-    focus?.section ?? "events",
-  );
+  const [activeSection, setActiveSection] = useState<LogsSection>(focus?.section ?? "events");
   const [logs, setLogs] = useState<ServerOperationalLogs | null>(null);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -38,8 +32,7 @@ export function useServerLogsPanel(options: UseServerLogsPanelOptions) {
   const [highlightedEventId, setHighlightedEventId] = useState<number | null>(null);
   const [highlightedBackupId, setHighlightedBackupId] = useState<string | null>(null);
   const [expandedEventId, setExpandedEventId] = useState<number | null>(null);
-  const [runtimeSourceFilter, setRuntimeSourceFilter] =
-    useState<RuntimeLogSourceFilter>("all");
+  const [runtimeSourceFilter, setRuntimeSourceFilter] = useState<RuntimeLogSourceFilter>("all");
   const focusKeyRef = useRef<string | null>(null);
   const autoScrollDoneRef = useRef(false);
   const updateLoadGenRef = useRef(0);
@@ -49,13 +42,7 @@ export function useServerLogsPanel(options: UseServerLogsPanelOptions) {
 
   const applyLoadedLogs = useCallback(
     (data: ServerOperationalLogs, revision: number) =>
-      setLogs((prev) =>
-        preserveNewerRuntimeLogs(
-          data,
-          prev,
-          runtimeRevisionRef.current !== revision,
-        ),
-      ),
+      setLogs((prev) => preserveNewerRuntimeLogs(data, prev, runtimeRevisionRef.current !== revision)),
     [],
   );
 
@@ -129,9 +116,7 @@ export function useServerLogsPanel(options: UseServerLogsPanelOptions) {
       if (gen !== runtimePollGenRef.current) return;
       if (!result.ok || result.data.serverId !== serverId) return;
       runtimeRevisionRef.current += 1;
-      setLogs((prev) =>
-        replaceRuntimeLogs(prev, serverId, result.data.runtimeLogLines),
-      );
+      setLogs((prev) => replaceRuntimeLogs(prev, serverId, result.data.runtimeLogLines));
     },
     [load],
   );
@@ -209,10 +194,7 @@ export function useServerLogsPanel(options: UseServerLogsPanelOptions) {
     focusKeyRef.current = key;
     autoScrollDoneRef.current = false;
 
-    const section: LogsSection =
-      typeof focus.eventId === "number"
-        ? "events"
-        : (focus.section ?? "events");
+    const section: LogsSection = typeof focus.eventId === "number" ? "events" : (focus.section ?? "events");
     setActiveSection(section);
     if (typeof focus.eventId === "number") {
       setHighlightedEventId(focus.eventId);
@@ -242,10 +224,7 @@ export function useServerLogsPanel(options: UseServerLogsPanelOptions) {
         }
       }
       if (section === "backups") {
-        const preferred =
-          focus.backupId ??
-          data.backups.find((backup) => backup.status === "failed")?.id ??
-          null;
+        const preferred = focus.backupId ?? data.backups.find((backup) => backup.status === "failed")?.id ?? null;
         setHighlightedBackupId(preferred);
       } else if (typeof focus.eventId !== "number") {
         setHighlightedBackupId(null);
@@ -259,9 +238,7 @@ export function useServerLogsPanel(options: UseServerLogsPanelOptions) {
     if (highlightedEventId === null || activeSection !== "events") return;
     if (autoScrollDoneRef.current) return;
     const frame = window.requestAnimationFrame(() => {
-      const node = document.querySelector(
-        `[data-log-event-id="${highlightedEventId}"]`,
-      ) as HTMLElement | null;
+      const node = document.querySelector(`[data-log-event-id="${highlightedEventId}"]`) as HTMLElement | null;
       if (node === null) return;
       node.scrollIntoView({ block: "center", behavior: "smooth" });
       autoScrollDoneRef.current = true;
@@ -283,8 +260,7 @@ export function useServerLogsPanel(options: UseServerLogsPanelOptions) {
     return () => window.cancelAnimationFrame(frame);
   }, [highlightedBackupId, logs, activeSection]);
 
-  const selectedUpdateInfo =
-    logs?.updateFiles.find((file) => file.fileName === selectedUpdateFile) ?? null;
+  const selectedUpdateInfo = logs?.updateFiles.find((file) => file.fileName === selectedUpdateFile) ?? null;
   const actions = createServerLogsPanelActions({
     serverId: server.id,
     logs,

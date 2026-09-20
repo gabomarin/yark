@@ -55,8 +55,7 @@ async function measureWizard(page) {
 
     return {
       density: root.getAttribute("data-ui-density"),
-      hasHorizontalOverflow:
-        Math.max(root.scrollWidth, body.scrollWidth) > root.clientWidth + 1,
+      hasHorizontalOverflow: Math.max(root.scrollWidth, body.scrollWidth) > root.clientWidth + 1,
       wizardVisible: wizard !== null && (wizardRect?.width ?? 0) > 0,
       wizardHeight: wizardRect ? Math.round(wizardRect.height) : null,
       continueInView: inView(continueBtn?.getBoundingClientRect() ?? null),
@@ -128,11 +127,9 @@ async function setDensity(page, density) {
   await page.getByRole("heading", { name: "Settings", level: 1 }).waitFor({ timeout: 10000 });
   const label = density === "compact" ? "Compact" : "Comfortable";
   await page.locator("[aria-label='Display size']").getByText(label, { exact: true }).click();
-  await page.waitForFunction(
-    (wanted) => document.documentElement.getAttribute("data-ui-density") === wanted,
-    density,
-    { timeout: 5000 },
-  );
+  await page.waitForFunction((wanted) => document.documentElement.getAttribute("data-ui-density") === wanted, density, {
+    timeout: 5000,
+  });
 }
 
 async function returnToWizard(page) {
@@ -145,7 +142,11 @@ async function returnToWizard(page) {
   if (await wizardBtn.isVisible().catch(() => false)) {
     await wizardBtn.click();
   } else {
-    await page.locator(SERVER_CARD).first().getByRole("button", { name: /Open settings/i }).click();
+    await page
+      .locator(SERVER_CARD)
+      .first()
+      .getByRole("button", { name: /Open settings/i })
+      .click();
     await page.getByRole("button", { name: "Configuration wizard" }).click();
   }
   await page.locator("[data-configuration-wizard]").waitFor({ state: "visible", timeout: 15000 });

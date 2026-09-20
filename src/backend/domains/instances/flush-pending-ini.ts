@@ -17,11 +17,6 @@ export async function flushPendingIniBestEffort(
     await flush(serverId);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    repo.addEvent(
-      serverId,
-      "error",
-      "warning",
-      `Pending INI flush failed for "${serverName}": ${message}`,
-    );
+    repo.addEvent(serverId, "error", "warning", `Pending INI flush failed for "${serverName}": ${message}`);
   }
 }

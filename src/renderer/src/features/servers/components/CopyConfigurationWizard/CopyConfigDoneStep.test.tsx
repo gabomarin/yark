@@ -21,9 +21,9 @@ function profile(partial: Partial<ServerProfile> & Pick<ServerProfile, "id" | "n
     mods: [],
     disabledMods: [],
     modMetadataCache: {},
-    
+
     autoStart: false,
-    
+
     useAsaApi: false,
     useAsaApiLoader: false,
     enabled: true,
@@ -124,4 +124,3 @@ describe("CopyConfigDoneStep (#240)", () => {
     expect(screen.getByRole("button", { name: /open target/i })).toBeInTheDocument();
   });
 });
-

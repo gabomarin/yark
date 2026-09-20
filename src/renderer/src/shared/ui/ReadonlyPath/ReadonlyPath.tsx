@@ -47,11 +47,7 @@ export function ReadonlyPath({
         .join(" ")}
       title={title ?? (empty ? undefined : trimmed)}
     >
-      {truncateStart ? (
-        <span className={classes.truncateStartInner}>{display}</span>
-      ) : (
-        display
-      )}
+      {truncateStart ? <span className={classes.truncateStartInner}>{display}</span> : display}
     </div>
   );
 }

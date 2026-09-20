@@ -2,7 +2,11 @@ import type { ReactElement } from "react";
 import { useState } from "react";
 import { CaretDown, CaretUp, ProhibitInset, TerminalWindow } from "@phosphor-icons/react";
 import { ActionIcon, Badge, Button, Divider, Group, Progress, Stack, Text, Title, Tooltip } from "@mantine/core";
-import { formatSteamCmdByteProgress, steamCmdByteProgressNoun, hasMeaningfulSteamCmdByteProgress } from "@shared/server/steamcmd-progress";
+import {
+  formatSteamCmdByteProgress,
+  steamCmdByteProgressNoun,
+  hasMeaningfulSteamCmdByteProgress,
+} from "@shared/server/steamcmd-progress";
 import type { SteamCmdConsoleSnapshot, SteamCmdStatus } from "@shared/types";
 import { ConsoleSurface } from "@ui/ConsoleSurface/ConsoleSurface";
 import classes from "./SteamCmdProgressDock.module.css";
@@ -28,10 +32,7 @@ const OPERATION_LABEL: Record<NonNullable<SteamCmdStatus["operation"]>, string> 
 export function SteamCmdProgressDock(props: Props): ReactElement {
   const { status } = props;
   const [minimized, setMinimized] = useState(false);
-  const title =
-    status.operation !== null
-      ? OPERATION_LABEL[status.operation]
-      : "Critical jobs";
+  const title = status.operation !== null ? OPERATION_LABEL[status.operation] : "Critical jobs";
   const percent = status.progressPercent;
   /** Unknown % while busy (e.g. robocopy sync) — full striped bar with loop animation. */
   const indeterminate = percent === null && status.busy;
@@ -53,10 +54,7 @@ export function SteamCmdProgressDock(props: Props): ReactElement {
     }
     return raw;
   })();
-  const queueHint =
-    status.queuedCount > 0
-      ? ` · ${status.queuedCount} queued`
-      : "";
+  const queueHint = status.queuedCount > 0 ? ` · ${status.queuedCount} queued` : "";
   const jobs = status.criticalJobs ?? [];
 
   if (minimized) {
@@ -71,9 +69,7 @@ export function SteamCmdProgressDock(props: Props): ReactElement {
                 {queueHint}
               </Text>
               <Text size="xs" c="dimmed" truncate>
-                {props.serverName != null && props.serverName.length > 0
-                  ? `${props.serverName} · `
-                  : ""}
+                {props.serverName != null && props.serverName.length > 0 ? `${props.serverName} · ` : ""}
                 {byteProgress !== null ? `${byteNoun}: ${byteProgress}` : stateLabel}
                 {percent !== null ? ` · ${percent.toFixed(0)}%` : ""}
               </Text>
@@ -133,8 +129,7 @@ export function SteamCmdProgressDock(props: Props): ReactElement {
             )}
             {status.queuedCount > 0 && (
               <Text size="xs" c="dimmed" mt={2}>
-                {status.queuedCount} operation{status.queuedCount === 1 ? "" : "s"} queued
-                (run one at a time)
+                {status.queuedCount} operation{status.queuedCount === 1 ? "" : "s"} queued (run one at a time)
               </Text>
             )}
             <Text size="sm" mt={4}>
@@ -186,14 +181,7 @@ export function SteamCmdProgressDock(props: Props): ReactElement {
           </Text>
         )}
 
-        <ConsoleSurface
-          h={180}
-          text={
-            lines.length === 0
-              ? "Waiting for progress…"
-              : lines.slice(-60).join("\n")
-          }
-        />
+        <ConsoleSurface h={180} text={lines.length === 0 ? "Waiting for progress…" : lines.slice(-60).join("\n")} />
         {jobs.length > 0 && (
           <Stack gap="xs">
             <Divider label="Durable job recovery" labelPosition="left" />
@@ -207,16 +195,16 @@ export function SteamCmdProgressDock(props: Props): ReactElement {
               >
                 <div style={{ minWidth: 0 }}>
                   <Group gap="xs">
-                    <Text size="sm" fw={600}>{job.operation}</Text>
-                    <Badge
-                      size="xs"
-                      color={job.status === "failed" ? "red" : job.status === "blocked" ? "orange" : "blue"}
-                    >
+                    <Text size="sm" fw={600}>
+                      {job.operation}
+                    </Text>
+                    <Badge color={job.status === "failed" ? "red" : job.status === "blocked" ? "attention" : "gray"}>
                       {job.status}
                     </Badge>
                   </Group>
                   <Text size="xs" c="dimmed">
-                    Server: {job.serverName ?? job.serverId} · Phase: {job.phase} · attempts {job.attempts}/{job.maxAttempts}
+                    Server: {job.serverName ?? job.serverId} · Phase: {job.phase} · attempts {job.attempts}/
+                    {job.maxAttempts}
                   </Text>
                   {(job.recoveryReason ?? job.lastError) !== null && (
                     <Text size="xs" c={job.status === "failed" ? "red" : "dimmed"}>
@@ -224,19 +212,19 @@ export function SteamCmdProgressDock(props: Props): ReactElement {
                     </Text>
                   )}
                 </div>
-                <Group gap={4} wrap="nowrap">
+                <Group gap={4} wrap="wrap">
                   {job.nextActions.includes("retry") && (
-                    <Button size="compact-xs" variant="light" onClick={() => props.onRetryJob(job.id)}>
+                    <Button variant="default" onClick={() => props.onRetryJob(job.id)}>
                       Retry
                     </Button>
                   )}
                   {job.nextActions.includes("cancel") && (
-                    <Button size="compact-xs" color="red" variant="filled" onClick={() => props.onCancelJob(job.id)}>
+                    <Button color="red" variant="filled" onClick={() => props.onCancelJob(job.id)}>
                       Cancel
                     </Button>
                   )}
                   {job.nextActions.includes("dismiss") && (
-                    <Button size="compact-xs" variant="subtle" onClick={() => props.onDismissJob(job.id)}>
+                    <Button variant="subtle" onClick={() => props.onDismissJob(job.id)}>
                       Dismiss
                     </Button>
                   )}

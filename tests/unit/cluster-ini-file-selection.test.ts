@@ -31,9 +31,7 @@ describe("cluster-ini-file-selection", () => {
   });
 
   it("rejects arrays", () => {
-    expect(() => assertClusterIniTemplateFileSelection([])).toThrow(
-      /must be an object/i,
-    );
+    expect(() => assertClusterIniTemplateFileSelection([])).toThrow(/must be an object/i);
   });
 
   it("keeps baseline text for unselected files", () => {

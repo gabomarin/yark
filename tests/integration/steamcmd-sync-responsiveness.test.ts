@@ -63,12 +63,8 @@ describe("steamcmd sync responsiveness (#48)", () => {
 
       expect(code).toBeGreaterThanOrEqual(0);
       expect(code).toBeLessThan(8);
-      expect(existsSync(join(install, "ShooterGame", "Content", "Paks", "chunk-0.bin"))).toBe(
-        true,
-      );
-      expect(existsSync(join(install, "ShooterGame", "Content", "Paks", "chunk-79.bin"))).toBe(
-        true,
-      );
+      expect(existsSync(join(install, "ShooterGame", "Content", "Paks", "chunk-0.bin"))).toBe(true);
+      expect(existsSync(join(install, "ShooterGame", "Content", "Paks", "chunk-79.bin"))).toBe(true);
 
       // If the main thread were fully blocked for the whole copy, ticks ≈ 0.
       // Fast copies may only see one 50ms tick; longer ones should see more.

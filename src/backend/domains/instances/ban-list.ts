@@ -112,9 +112,7 @@ async function readBanList(installDir: string): Promise<string[]> {
   return (await readBanListEntries(installDir)).map((entry) => entry.id);
 }
 
-export async function readBanListEntries(
-  installDir: string,
-): Promise<BanListEntry[]> {
+export async function readBanListEntries(installDir: string): Promise<BanListEntry[]> {
   // Ticket #17: only the Win64 BanList next to the dedicated binary.
   const path = banListPath(installDir);
   if (!existsSync(path)) return [];
@@ -135,10 +133,7 @@ export async function ensureBanListFile(installDir: string): Promise<string> {
  * rewrite that preserves remaining lines (including comments / blanks and
  * `id,name,flags` metadata). Does not merge alternate BanList locations.
  */
-export async function removeFromBanList(
-  installDir: string,
-  playerKey: string,
-): Promise<string[]> {
+export async function removeFromBanList(installDir: string, playerKey: string): Promise<string[]> {
   const key = extractBanListId(playerKey).toLowerCase();
   if (key.length === 0) {
     return readBanList(installDir);
@@ -171,10 +166,7 @@ export async function removeFromBanList(
 }
 
 /** Resolve the id to send over RCON (never id,name,flags). */
-export async function resolveBanListId(
-  installDir: string,
-  playerKey: string,
-): Promise<string> {
+export async function resolveBanListId(installDir: string, playerKey: string): Promise<string> {
   const extracted = extractBanListId(playerKey);
   const key = extracted.toLowerCase();
   const listed = await readBanList(installDir);
@@ -191,14 +183,9 @@ export function isBlankOrNaUrl(value: string | null | undefined): boolean {
 }
 
 /** Reads a key from [ServerSettings] in GameUserSettings.ini text. */
-export function readIniServerSetting(
-  text: string,
-  key: string,
-): string | null {
+export function readIniServerSetting(text: string, key: string): string | null {
   const hit = parseIniTextRows(text).find(
-    (row) =>
-      row.section.toLowerCase() === "serversettings" &&
-      row.key.toLowerCase() === key.toLowerCase(),
+    (row) => row.section.toLowerCase() === "serversettings" && row.key.toLowerCase() === key.toLowerCase(),
   );
   return hit?.value ?? null;
 }

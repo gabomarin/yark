@@ -8,25 +8,19 @@ import { readdir, readFile, stat } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 import { flattenIniText, INI_FLAT_SEP } from "@shared/ini/ini-text";
 import { isOfficialMap, normalizeMapToken } from "@shared/asa/map-identity";
+import { IMPORT_BARE_MAP_TOKEN_WP_RE, SAVE_STEM_MAP_TOKEN_WP_RE } from "@shared/asa/map-token-suggest";
+import { normalizeWindowsPath, serverFolderName } from "@shared/server/server-install-path";
 import {
-  IMPORT_BARE_MAP_TOKEN_WP_RE,
-  SAVE_STEM_MAP_TOKEN_WP_RE,
-} from "@shared/asa/map-token-suggest";
-import {
-  normalizeWindowsPath,
-  serverFolderName,
-} from "@shared/server/server-install-path";
-import { KNOWN_MAPS, type ImportInstallProbe, type ImportInstallSuggestions, type ServerInstallationInfo } from "@shared/types";
+  KNOWN_MAPS,
+  type ImportInstallProbe,
+  type ImportInstallSuggestions,
+  type ServerInstallationInfo,
+} from "@shared/types";
 import { resolveMemberIdentity } from "../config/ini-compose";
 import { installDirKey } from "./install-dir-safety";
 import { gameUserSettingsIniPath } from "./sync-profile-ini";
-import {
-  inspectServerInstallationAsync,
-} from "./server-installation";
-import {
-  isRegularFileDirent,
-  isTraversableDirectoryDirent,
-} from "../../infra/fs/reparse-points";
+import { inspectServerInstallationAsync } from "./server-installation";
+import { isRegularFileDirent, isTraversableDirectoryDirent } from "../../infra/fs/reparse-points";
 
 /** Profile folder already tracked by YARK (for import probe uniqueness). */
 export type ManagedInstallRef = {
@@ -52,11 +46,7 @@ const DEFAULT_IDENTITY = {
   serverPassword: null as string | null,
 } as const;
 
-function flatLookup(
-  flat: Record<string, string>,
-  section: string,
-  key: string,
-): string | undefined {
+function flatLookup(flat: Record<string, string>, section: string, key: string): string | undefined {
   const exact = flat[`${section}${INI_FLAT_SEP}${key}`];
   if (exact !== undefined) {
     return exact;
@@ -102,12 +92,13 @@ export function resolveNestedAsaInstallRoot(selected: string): {
 
   const unc = normalized.startsWith("\\\\");
   const parts = unc
-    ? normalized.slice(2).split("\\").filter((p) => p.length > 0)
+    ? normalized
+        .slice(2)
+        .split("\\")
+        .filter((p) => p.length > 0)
     : normalized.split("\\").filter((p) => p.length > 0);
 
-  const shooterIdx = parts.findIndex(
-    (part) => part.toLowerCase() === "shootergame",
-  );
+  const shooterIdx = parts.findIndex((part) => part.toLowerCase() === "shootergame");
   if (shooterIdx < 0) {
     return { nestedSubfolder: false, suggestedInstallDir: null };
   }
@@ -152,7 +143,10 @@ function isUncShareRoot(dir: string): boolean {
   if (!win.startsWith("\\\\")) {
     return false;
   }
-  const parts = win.slice(2).split("\\").filter((part) => part.length > 0);
+  const parts = win
+    .slice(2)
+    .split("\\")
+    .filter((part) => part.length > 0);
   return parts.length === 2;
 }
 
@@ -171,9 +165,7 @@ async function hasShooterGameChild(dir: string): Promise<boolean> {
  * segments — covers `C:\ExistingASA\NewServer` when NewServer does not exist yet.
  * Stops at drive roots; still checks a UNC share root (`\\nas\ark`).
  */
-export async function findAsaInstallAncestorOnDisk(
-  installDir: string,
-): Promise<string | null> {
+export async function findAsaInstallAncestorOnDisk(installDir: string): Promise<string | null> {
   const start = installDir.trim();
   if (start.length === 0) {
     return null;
@@ -249,9 +241,7 @@ function suggestProfileName(installDir: string, sessionName: string): string {
 }
 
 /** Collect unique Project IDs from an ASA Mods/83374 tree. */
-export async function collectModProjectIdsFromTree(
-  mods83374Dir: string,
-): Promise<string[]> {
+export async function collectModProjectIdsFromTree(mods83374Dir: string): Promise<string[]> {
   if (!existsSync(mods83374Dir)) {
     return [];
   }
@@ -275,26 +265,14 @@ export async function collectModProjectIdsFromTree(
  * Primary: `{installDir}/ShooterGame/Binaries/Win64/ShooterGame/Mods/83374/`
  * Secondary: `{installDir}/ShooterGame/Mods/83374/`
  */
-export async function discoverAsaModProjectIds(
-  installDir: string,
-): Promise<string[]> {
+export async function discoverAsaModProjectIds(installDir: string): Promise<string[]> {
   const root = normalizeWindowsPath(installDir);
-  const primary = join(
-    root,
-    "ShooterGame",
-    "Binaries",
-    "Win64",
-    "ShooterGame",
-    "Mods",
-    "83374",
-  );
+  const primary = join(root, "ShooterGame", "Binaries", "Win64", "ShooterGame", "Mods", "83374");
   const secondary = join(root, "ShooterGame", "Mods", "83374");
   const fromPrimary = await collectModProjectIdsFromTree(primary);
   const fromSecondary = await collectModProjectIdsFromTree(secondary);
   const merged = new Set([...fromPrimary, ...fromSecondary]);
-  return [...merged].sort((a, b) =>
-    a.localeCompare(b, undefined, { numeric: true }),
-  );
+  return [...merged].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 }
 
 export function extractModIdsFromText(text: string): string[] {
@@ -365,9 +343,7 @@ type WorldSaveCandidate = {
   mtimeMs: number;
 };
 
-async function collectWorldSaveCandidates(
-  dir: string,
-): Promise<WorldSaveCandidate[]> {
+async function collectWorldSaveCandidates(dir: string): Promise<WorldSaveCandidate[]> {
   let entries;
   try {
     entries = await readdir(dir, { withFileTypes: true });
@@ -418,15 +394,8 @@ async function collectWorldSaveCandidates(
  * Prefer the map of the newest world `.ark` under SavedArks (mtime).
  * Falls back to any map token found in filenames when stats fail.
  */
-export async function suggestMapFromSavedArks(
-  installDir: string,
-): Promise<string | null> {
-  const savedArks = join(
-    normalizeWindowsPath(installDir),
-    "ShooterGame",
-    "Saved",
-    "SavedArks",
-  );
+export async function suggestMapFromSavedArks(installDir: string): Promise<string | null> {
+  const savedArks = join(normalizeWindowsPath(installDir), "ShooterGame", "Saved", "SavedArks");
   if (!existsSync(savedArks)) {
     return null;
   }
@@ -438,9 +407,7 @@ export async function suggestMapFromSavedArks(
   return candidates[0]!.map;
 }
 
-export async function buildImportSuggestions(
-  installDir: string,
-): Promise<ImportInstallSuggestions> {
+export async function buildImportSuggestions(installDir: string): Promise<ImportInstallSuggestions> {
   const normalized = normalizeWindowsPath(installDir);
   const gusPath = gameUserSettingsIniPath(normalized);
   let gusText = "";
@@ -468,9 +435,8 @@ export async function buildImportSuggestions(
   const flat = gusText.length > 0 ? flattenIniText(gusText) : {};
   const sessionFromIni = flatLookup(flat, "SessionSettings", "SessionName");
   const sessionName =
-    (sessionFromIni !== undefined && sessionFromIni.trim().length > 0
-      ? sessionFromIni.trim()
-      : identity.sessionName) || leafFolderName(normalized);
+    (sessionFromIni !== undefined && sessionFromIni.trim().length > 0 ? sessionFromIni.trim() : identity.sessionName) ||
+    leafFolderName(normalized);
 
   const fromTree = await discoverAsaModProjectIds(normalized);
   const fromText = extractModIdsFromText(gusText);
@@ -494,23 +460,17 @@ export async function buildImportSuggestions(
     rconPort: identity.rconPort,
     adminPassword: identity.adminPassword,
     serverPassword:
-      identity.serverPassword !== null && identity.serverPassword.length > 0
-        ? identity.serverPassword
-        : null,
+      identity.serverPassword !== null && identity.serverPassword.length > 0 ? identity.serverPassword : null,
     mods,
   };
 }
 
-export function classifyImportContinue(
-  health: ServerInstallationInfo["health"],
-): { canContinue: boolean } {
+export function classifyImportContinue(health: ServerInstallationInfo["health"]): { canContinue: boolean } {
   return { canContinue: health === "ready" };
 }
 
 /** Incomplete ASA trees may be imported only with an explicit opt-in (#283). */
-export function isImportIncompleteEligible(
-  health: ServerInstallationInfo["health"],
-): boolean {
+export function isImportIncompleteEligible(health: ServerInstallationInfo["health"]): boolean {
   return health === "incomplete";
 }
 
@@ -518,9 +478,7 @@ export function isImportIncompleteEligible(
  * Whether probe suggestions should be built for this health.
  * Ready and incomplete both carry GUS/mods/SavedArks hints for the wizard (#283).
  */
-export function shouldBuildImportSuggestions(
-  health: ServerInstallationInfo["health"],
-): boolean {
+export function shouldBuildImportSuggestions(health: ServerInstallationInfo["health"]): boolean {
   return health === "ready" || health === "incomplete";
 }
 
@@ -534,10 +492,7 @@ export function assertImportHealthAllowed(
   guidance?: string | null,
 ): void {
   if (health === "ready") return;
-  if (
-    health === "incomplete" &&
-    options?.allowIncompleteInstall === true
-  ) {
+  if (health === "incomplete" && options?.allowIncompleteInstall === true) {
     return;
   }
   throw new Error(
@@ -598,30 +553,20 @@ export async function probeImportInstall(
 
   const clash = findManagedInstallClash(normalized, managed);
   if (clash !== null) {
-    const installation = await inspectServerInstallationAsync(
-      `import:${basename(normalized)}`,
-      normalized,
-      { bypassCache: true },
-    );
+    const installation = await inspectServerInstallationAsync(`import:${basename(normalized)}`, normalized, {
+      bypassCache: true,
+    });
     return managedImportProbe(normalized, clash, installation);
   }
 
   const nested = resolveNestedAsaInstallRoot(normalized);
-  const ancestor =
-    nested.nestedSubfolder
-      ? null
-      : await findAsaInstallAncestorOnDisk(normalized);
-  const suggested =
-    nested.nestedSubfolder
-      ? nested.suggestedInstallDir
-      : ancestor;
+  const ancestor = nested.nestedSubfolder ? null : await findAsaInstallAncestorOnDisk(normalized);
+  const suggested = nested.nestedSubfolder ? nested.suggestedInstallDir : ancestor;
   if (nested.nestedSubfolder || ancestor !== null) {
     const guidance = asaNestedGuidance(suggested);
-    const installation = await inspectServerInstallationAsync(
-      `import:${basename(normalized)}`,
-      normalized,
-      { bypassCache: true },
-    );
+    const installation = await inspectServerInstallationAsync(`import:${basename(normalized)}`, normalized, {
+      bypassCache: true,
+    });
     return {
       installDir: normalized,
       installation: {
@@ -639,11 +584,9 @@ export async function probeImportInstall(
     };
   }
 
-  const installation = await inspectServerInstallationAsync(
-    `import:${basename(normalized)}`,
-    normalized,
-    { bypassCache: true },
-  );
+  const installation = await inspectServerInstallationAsync(`import:${basename(normalized)}`, normalized, {
+    bypassCache: true,
+  });
   const gate = classifyImportContinue(installation.health);
   const suggestions = shouldBuildImportSuggestions(installation.health)
     ? await buildImportSuggestions(normalized)

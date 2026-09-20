@@ -20,10 +20,7 @@ export const DEFAULT_CRASH_RECOVERY = {
   stabilitySeconds: 600,
 } as const;
 
-export function defaultCrashRecoveryPolicy(
-  serverId: string,
-  updatedAt: string,
-): CrashRecoveryPolicy {
+export function defaultCrashRecoveryPolicy(serverId: string, updatedAt: string): CrashRecoveryPolicy {
   return {
     serverId,
     enabled: false,
@@ -38,20 +35,12 @@ export function defaultCrashRecoveryPolicy(
   };
 }
 
-export function clampCrashRecoveryInt(
-  value: number,
-  min: number,
-  max: number,
-  fallback: number,
-): number {
+export function clampCrashRecoveryInt(value: number, min: number, max: number, fallback: number): number {
   if (!Number.isFinite(value)) return fallback;
   return Math.min(max, Math.max(min, Math.round(value)));
 }
 
 /** Backoff before restart attempt N: linear, `N × backoffSeconds`. */
-export function crashRecoveryBackoffMs(
-  backoffSeconds: number,
-  attempt: number,
-): number {
+export function crashRecoveryBackoffMs(backoffSeconds: number, attempt: number): number {
   return Math.max(1, attempt) * backoffSeconds * 1000;
 }

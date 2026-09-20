@@ -13,9 +13,9 @@ const server = {
   map: "TheIsland_WP",
   installDir: "C:/ARK/TheIsland",
   enabled: true,
-    autoStart: false,
-    useAsaApi: false,
-    useAsaApiLoader: false,
+  autoStart: false,
+  useAsaApi: false,
+  useAsaApiLoader: false,
   sessionName: "The Island Cluster",
   maxPlayers: 70,
   gamePort: 7777,
@@ -46,9 +46,7 @@ const readyInstall = (overrides: Partial<ServerInstallationInfo> = {}): ServerIn
   ...overrides,
 });
 
-function renderOverview(
-  overrides: Partial<ComponentProps<typeof OverviewPage>> = {},
-) {
+function renderOverview(overrides: Partial<ComponentProps<typeof OverviewPage>> = {}) {
   const props: ComponentProps<typeof OverviewPage> = {
     search: "",
     onSearchChange: vi.fn(),
@@ -133,9 +131,7 @@ describe("OverviewPage", () => {
 
     const nextSection = header?.nextElementSibling as HTMLElement | null;
     expect(nextSection).not.toBeNull();
-    expect(
-      within(nextSection as HTMLElement).getByRole("region", { name: "Server list" }),
-    ).toBeInTheDocument();
+    expect(within(nextSection as HTMLElement).getByRole("region", { name: "Server list" })).toBeInTheDocument();
   });
 
   it("turns Check Servers Health into a loading control while scanning", () => {
@@ -148,9 +144,7 @@ describe("OverviewPage", () => {
     });
     expect(scanning).toHaveAttribute("data-install-health-scan");
     expect(scanning).toHaveAttribute("data-loading", "true");
-    expect(within(header as HTMLElement).getByRole("status")).toHaveTextContent(
-      "Checking servers health…",
-    );
+    expect(within(header as HTMLElement).getByRole("status")).toHaveTextContent("Checking servers health…");
     expect(screen.queryByText("Checking install folders…")).not.toBeInTheDocument();
 
     rerender(
@@ -199,9 +193,7 @@ describe("OverviewPage", () => {
       </AppProviders>,
     );
 
-    expect(
-      screen.getByRole("button", { name: "Check Servers Health" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Check Servers Health" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Checking servers health/i })).not.toBeInTheDocument();
   });
 
@@ -216,8 +208,7 @@ describe("OverviewPage", () => {
             installed: false,
             health: "missing",
             reasonCodes: ["path_missing"],
-            guidance:
-              "Create the folder or correct the install path, then install server files.",
+            guidance: "Create the folder or correct the install path, then install server files.",
             build: null,
             steamBuild: null,
             arkVersion: null,
@@ -231,20 +222,12 @@ describe("OverviewPage", () => {
 
     const metrics = document.querySelector("[data-overview-fleet-metrics]");
     expect(metrics).not.toBeNull();
-    expect(
-      within(metrics as HTMLElement).getByRole("button", { name: /^Needs attention/i }),
-    ).toHaveTextContent("1");
-    expect(
-      screen.getAllByRole("button", { name: /Install server files/i }).length,
-    ).toBeGreaterThan(0);
+    expect(within(metrics as HTMLElement).getByRole("button", { name: /^Needs attention/i })).toHaveTextContent("1");
+    expect(screen.getAllByRole("button", { name: /Install server files/i }).length).toBeGreaterThan(0);
 
-    await user.click(
-      screen.getByRole("button", { name: "Show servers that need attention" }),
-    );
+    await user.click(screen.getByRole("button", { name: "Show servers that need attention" }));
     expect(screen.getByText("Missing path")).toBeInTheDocument();
-    expect(
-      screen.getByText(/Create the folder or correct the install path/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Create the folder or correct the install path/i)).toBeInTheDocument();
   });
 
   it("hides the fleet metric strip when there are no profiles (#314)", () => {
@@ -356,9 +339,7 @@ describe("OverviewPage", () => {
     });
 
     expect(screen.getByText("Loading servers")).toBeInTheDocument();
-    expect(container.querySelectorAll("[data-server-skeletons] > [aria-hidden='true']")).toHaveLength(
-      2,
-    );
+    expect(container.querySelectorAll("[data-server-skeletons] > [aria-hidden='true']")).toHaveLength(2);
     expect(screen.queryByText("Create your first server")).not.toBeInTheDocument();
 
     rerender(
@@ -410,22 +391,20 @@ describe("OverviewPage", () => {
     expect(screen.getByText("Create your first server")).toBeInTheDocument();
     const serverList = container.querySelector("[data-server-list]");
     expect(serverList).not.toBeNull();
-    within(serverList as HTMLElement).getByRole("button", { name: "New server" }).click();
+    within(serverList as HTMLElement)
+      .getByRole("button", { name: "New server" })
+      .click();
     expect(onCreateServer).toHaveBeenCalledOnce();
 
-    // Empty fleet: EmptyState owns the filled primary; header New server is demoted (#236).
-    // Assert YARK data-cta-prominence (not Mantine data-variant).
+    // Empty fleet: EmptyState owns the only New server action.
     const header = container.querySelector("header");
     expect(header).not.toBeNull();
-    const headerNewServer = within(header as HTMLElement).getByRole("button", {
+    expect(within(header as HTMLElement).queryByRole("button", { name: "New server" })).not.toBeInTheDocument();
+    const emptyStateNewServer = within(serverList as HTMLElement).getByRole("button", {
       name: "New server",
     });
-    expect(headerNewServer).toHaveAttribute("data-cta-prominence", "secondary");
-    const emptyStateNewServer = within(serverList as HTMLElement).getByRole(
-      "button",
-      { name: "New server" },
-    );
     expect(emptyStateNewServer).toHaveAttribute("data-cta-prominence", "primary");
+    expect(screen.getAllByRole("button", { name: "New server" })).toHaveLength(1);
   });
 
   it("shows disabled servers in a separate section without putting them in the enabled fleet", async () => {
@@ -447,9 +426,7 @@ describe("OverviewPage", () => {
 
     expect(screen.queryByText("The Island")).not.toBeInTheDocument();
     expect(screen.getByText("No enabled servers")).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "Clear search" }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Clear search" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("checkbox", { name: "Show disabled" }));
     expect(screen.getByLabelText("Server The Island")).toBeInTheDocument();
     expect(screen.getByText("Inactive")).toBeInTheDocument();
@@ -603,9 +580,9 @@ describe("OverviewPage", () => {
               onStartServer={vi.fn()}
               onStopServer={vi.fn()}
               onRestartServer={vi.fn()}
-          onRestartWithWarning={vi.fn()}
-          onCancelRestartWarning={vi.fn()}
-          onConfigureRestartWarnings={vi.fn()}
+              onRestartWithWarning={vi.fn()}
+              onCancelRestartWarning={vi.fn()}
+              onConfigureRestartWarnings={vi.fn()}
               onKillServer={vi.fn()}
               onOpenFolder={vi.fn()}
               onInstallFiles={vi.fn()}
@@ -638,4 +615,3 @@ describe("OverviewPage", () => {
     expect(screen.getByRole("textbox", { name: "Search servers" })).toHaveValue("Island");
   });
 });
-

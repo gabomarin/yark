@@ -53,16 +53,16 @@ Prefer “server manager” / “on this PC” over “local host” (reads as l
 
 ### What each thing is (use this in descriptions)
 
-| Thing | Operator meaning |
-| --- | --- |
-| **YARK** | The manager app. Profiles, Start/Stop, INI, backups, RCON live here. |
-| **SteamCMD** | Valve’s tool that downloads/updates **dedicated server files**. One SteamCMD home is shared across profiles. Settings shows **Needs setup** until `steamcmd.exe` is chosen or installed; the skippable assistant uses **Recommended** when the operator may continue. |
-| **Default base folder** | Where **New server** creates a named subfolder. Not the SteamCMD home. |
-| **Server / profile** | YARK’s record (map, ports, install path, cluster). **Create** does not download ASA files. |
-| **Install files** | SteamCMD fills the shared ASA cache, then copies into that profile’s folder. Requires SteamCMD Ready. |
-| **Start** | Spawns `ArkAscendedServer.exe`. Needs a **Ready** install. Enable does not. |
-| **Cluster** | Shared folder + Cluster ID so survivors/items transfer between maps on this PC. |
-| **Import install** | Point YARK at an ASA tree already on disk (folder that contains `ShooterGame`). |
+| Thing                   | Operator meaning                                                                                                                                                                                                                                                      |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **YARK**                | The manager app. Profiles, Start/Stop, INI, backups, RCON live here.                                                                                                                                                                                                  |
+| **SteamCMD**            | Valve’s tool that downloads/updates **dedicated server files**. One SteamCMD home is shared across profiles. Settings shows **Needs setup** until `steamcmd.exe` is chosen or installed; the skippable assistant uses **Recommended** when the operator may continue. |
+| **Default base folder** | Where **New server** creates a named subfolder. Not the SteamCMD home.                                                                                                                                                                                                |
+| **Server / profile**    | YARK’s record (map, ports, install path, cluster). **Create** does not download ASA files.                                                                                                                                                                            |
+| **Install files**       | SteamCMD fills the shared ASA cache, then copies into that profile’s folder. Requires SteamCMD Ready.                                                                                                                                                                 |
+| **Start**               | Spawns `ArkAscendedServer.exe`. Needs a **Ready** install. Enable does not.                                                                                                                                                                                           |
+| **Cluster**             | Shared folder + Cluster ID so survivors/items transfer between maps on this PC.                                                                                                                                                                                       |
+| **Import install**      | Point YARK at an ASA tree already on disk (folder that contains `ShooterGame`).                                                                                                                                                                                       |
 
 Domain runbooks: [updates-steamcmd.md](updates-steamcmd.md),
 [server-lifecycle.md](server-lifecycle.md), [clusters.md](clusters.md),
@@ -71,15 +71,15 @@ Domain runbooks: [updates-steamcmd.md](updates-steamcmd.md),
 
 ### How to write helper text
 
-| Do | Don’t |
-| --- | --- |
-| One or two sentences: what it does for the operator | List every step the wizard or IPC will take |
-| Match Settings when the same control exists in first-run | Invent first-run-only jargon Settings does not use |
-| Name the product **server manager** when you need an identity line | “A local host for…” / localhost / “this Electron app” |
-| Status words operators already see (`Ready`, `Needs setup`, `Recommended`, `Installing…`) | Internal keys (`onboarding.v1`, `detected === false`) |
-| Page chrome: title + live status (`3 profiles · none running`) | A subtitle that restates the nav item (“Monitor and manage…”) |
-| Sentence punctuation or an **en dash** (`–`) for asides | Em dash (`—`) in operator-visible JSX (#402) |
-| Ellipsis character (`…`) in loading / truncated copy | Three ASCII periods (`...`) |
+| Do                                                                                        | Don’t                                                         |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| One or two sentences: what it does for the operator                                       | List every step the wizard or IPC will take                   |
+| Match Settings when the same control exists in first-run                                  | Invent first-run-only jargon Settings does not use            |
+| Name the product **server manager** when you need an identity line                        | “A local host for…” / localhost / “this Electron app”         |
+| Status words operators already see (`Ready`, `Needs setup`, `Recommended`, `Installing…`) | Internal keys (`onboarding.v1`, `detected === false`)         |
+| Page chrome: title + live status (`3 profiles · none running`)                            | A subtitle that restates the nav item (“Monitor and manage…”) |
+| Sentence punctuation or an **en dash** (`–`) for asides                                   | Em dash (`—`) in operator-visible JSX (#402)                  |
+| Ellipsis character (`…`) in loading / truncated copy                                      | Three ASCII periods (`...`)                                   |
 
 Examples:
 
@@ -109,41 +109,44 @@ Use this checklist when reviewing a screen or introducing a pattern. Each catego
 
 Solid **bg / raised / control** come from `tokens.ts` + `theme.ts`. Do **not** introduce `color-mix` in those token definitions; mix only on hover/focus, lightly. `--app-*` and `--mantine-color-dark-*` alias the same hexes (#468).
 
-| Rule | Do | Don’t |
-| --- | --- | --- |
-| Page canvas | Sit on `--app-color-bg` (`#0c1427`) | Wrapping the viewport in a mixed navy card |
-| Chrome | `--app-color-surface-chrome` (`#121213`) | `color-mix` of gray + blue for sidebars |
-| Raised / panels | `--app-color-panel` (`#1f1f1f`) | Translucent panel washes |
-| Controls | `--app-color-surface-control` (`#303030`) | Mixing control fill with `--ark-blue-*` |
-| Page / tool panes | Sit on `--app-color-bg`; form sections = flush square cards | Wrapping Logs, Settings, or the whole form in one rounded Card |
-| Discrete entities | `AppSurfaceCard tone="flat"` (cluster, backup row, chrome rail) | Cool wash as a page shell |
-| Accent heroes | `tone="coolEmphasis"` (rare) | Using cool wash as the default page shell |
-| Nested widgets | `tone="flat"` (or nested inside a flat shell) | Mixing Card + ad-hoc panel bg |
-| Shell rails | `tone="chrome"` or chrome parent + flat children | Cool gradients in sidebars |
-| Status accent | `statusTone` on `AppSurfaceCard` | One-off `box-shadow: inset 3px…` |
-| **Exception — INI editor chrome** (#516) | Category headers: deep blue `--app-color-ini-category` (`#0d1836`) + **subtle** blue lift (~90% token) + 3px ark-blue rail. **Other** subgroups: `surface-control` gray + soft ~80%/20% black deepen (no blue wash). Table body tint + opaque setting rows. Hairline `border-bottom` only | Cool **gradients** on page shells / filter bar / `tableWrap`; gray-slate category slabs; strong blue→black washes; translucent setting rows; stacked thick borders when collapsed |
+| Rule                        | Do                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Don’t                                                                                                                                                                                                                                                 |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Page canvas                 | Sit on `--app-color-bg` (`#010306`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Wrapping the viewport in a mixed navy card                                                                                                                                                                                                            |
+| Chrome                      | `--app-color-surface-chrome` (`#0b111a`); the AppShell main paints the brand texture (film grain, inline in `AppShellLayout.module.css`) over it. `--app-shell-atmosphere` (radial glow) is **`none` for now** — it read yellowish over chrome; restore the two gradients noted in `theme.ts` when it is reworked                                                                                                                                                                                                                                  | `color-mix` of gray + blue for sidebars                                                                                                                                                                                                               |
+| Raised / panels             | `--app-color-panel` (`#131e2c`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Translucent panel washes                                                                                                                                                                                                                              |
+| Controls                    | `--app-color-surface-control` (`#233349`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Mixing control fill with `--ark-blue-*`                                                                                                                                                                                                               |
+| Page / tool panes           | Transparent panes on the shared AppShell main surface (chrome + atmosphere + brand texture), painted once                                                                                                                                                                                                                                                                                                                                                                                                                                          | Wrapping Logs or the whole form in one rounded Card                                                                                                                                                                                                   |
+| Discrete entities           | `AppSurfaceCard tone="flat"` (cluster row, backup row)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Cool wash as a page shell                                                                                                                                                                                                                             |
+| Accent heroes               | `tone="coolEmphasis"` (rare)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Using cool wash as the default page shell                                                                                                                                                                                                             |
+| Nested widgets              | `tone="flat"` / panel on chrome parent                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Mixing Card + ad-hoc panel bg                                                                                                                                                                                                                         |
+| Decorative gradients        | Solid fills; layering via the shadow scale                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Gradients on buttons, rows, panels, or dialog surfaces — Fluent 2 is flat                                                                                                                                                                             |
+| Borders / separators        | Solid token hairlines (`--app-color-border-subtle`), or a solid semantic for state rows                                                                                                                                                                                                                                                                                                                                                                                                                                                            | `color-mix(…, transparent)` borders — a translucent hairline shifts with whatever is behind it                                                                                                                                                        |
+| Chips / tags / filter pills | `--app-radius-control` (Fluent uses 4px; this is our smallest token)                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Fully-rounded `999px` pills. `999px` is only for true circles (status dots, timeline dots)                                                                                                                                                            |
+| Shell rails / fused panes   | `tone="chrome"` or chrome slab + panel children                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Cool gradients in sidebars                                                                                                                                                                                                                            |
+| Status accent               | `statusTone` on `AppSurfaceCard`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | One-off `box-shadow: inset 3px…`                                                                                                                                                                                                                      |
+| **INI editor chrome**       | Category = a solid `--app-color-surface-control` band (hover one step up) at `14px`, label 600; **Other** mod subgroups = flat, indented (`28px`) and quieter (muted label); count chips ride the neutral Badge recipe (`control` fill + hairline + text colour, one step up when they sit on a category band); the sticky column header is `--app-color-panel-raised` with a hairline `border-bottom`, so it stays quieter than a category band; the `tableWrap` body and its rows are both `--app-color-panel` (no darker well beneath the rows) | A separate hue for sections (once the ramp is navy-tinted a blue band reads as a mud patch and competes with the accent), `box-shadow` rails on every band, blue count chips (`!important`), translucent setting rows, or a body darker than its rows |
 
-Solid surfaces stay the default. Category bands stay louder (blue) than **Other** subgroups (gray shade only). Category lifts stay **subtle** (~90%); subgroup shade is a bit stronger (~80%/20%). Setting rows stay fully opaque chrome. Do **not** paint cool gradients on `tableWrap`, the filter bar, or the workspace shell.
+Solid surfaces stay the default. Section hierarchy comes from **elevation, indentation and weight** — never from a second hue. Setting rows and the table body stay fully opaque. Do **not** paint cool gradients on `tableWrap`, the filter bar, or the workspace shell.
 
 ### 2. Spacing / density
 
 Mantine **does** have spacing tokens (`theme.spacing` → `gap="xs"` / `p="md"` / `--mantine-spacing-sm`). YARK overrides them so they match `--app-space-*`.
 
-| Token | Comfortable (px) | Compact ≈0.82× (px) | Typical use |
-| --- | ---: | ---: | --- |
-| `xxs` | 4 | 3 | Label↔value, micro stacks (`gap="xxs"`) |
-| `xs` | 8 | 7 | Compact Group, action button rows |
-| `sm` | 12 | 10 | Default Stack inside panels, control padding |
-| `md` | 16 | 13 | Section gaps, card body rhythm |
-| `lg` | 20 | 16 | PageScaffold section gap / page padding-y |
-| `xl` | 28 | 23 | Large empty / hero padding |
+| Token | Comfortable (px) | Compact ≈0.82× (px) | Typical use                                  |
+| ----- | ---------------: | ------------------: | -------------------------------------------- |
+| `xxs` |                4 |                   3 | Label↔value, micro stacks (`gap="xxs"`)      |
+| `xs`  |                8 |                   7 | Compact Group, action button rows            |
+| `sm`  |               12 |                  10 | Default Stack inside panels, control padding |
+| `md`  |               16 |                  13 | Section gaps, card body rhythm               |
+| `lg`  |               20 |                  16 | PageScaffold section gap / page padding-y    |
+| `xl`  |               28 |                  23 | Large empty / hero padding                   |
 
 **UI density preference** (Settings → General → Display size):
 
-| Mode | Pref key | Effect |
-| --- | --- | --- |
-| Compact (default) | `compact` | Spacing, radius, `fontSizes` / headings / `--app-font-page` × **0.82** from Comfortable baselines; TextInput / Select / Button / ActionIcon default to Mantine `size="xs"`; Switch / Checkbox / Radio stay at `sm` for hit targets; TextInput height/padding tightened via `[data-ui-density="compact"]` on `<html>` (covers portals) |
-| Comfortable | `comfortable` | Pre-density baselines (spacing/radius as before; headings = Mantine defaults **34/26/22** + line-heights **1.3/1.35/1.4/…**; PageScaffold title **28px**); form controls keep Mantine’s prior default (`sm`) — no `size="md"` uplift |
+| Mode              | Pref key      | Effect                                                                                                                                                                                                                                                                                                                                |
+| ----------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Compact (default) | `compact`     | Spacing, radius, `fontSizes` / headings / `--app-font-page` × **0.82** from Comfortable baselines; TextInput / Select / Button / ActionIcon default to Mantine `size="xs"`; Switch / Checkbox / Radio stay at `sm` for hit targets; TextInput height/padding tightened via `[data-ui-density="compact"]` on `<html>` (covers portals) |
+| Comfortable       | `comfortable` | Pre-density baselines (spacing/radius as before; headings = Mantine defaults **34/26/22** + line-heights **1.3/1.35/1.4/…**; PageScaffold title **28px**); form controls keep Mantine’s prior default (`sm`) — no `size="md"` uplift                                                                                                  |
 
 Preference key: SQLite `app_settings.uiDensity` (IPC `app:get-ui-density` / `app:set-ui-density`). Loaded in `main.tsx` **before** the first `AppProviders` theme mount (falls back to Compact if IPC fails). Persisted only from the Settings change handler (not a mount effect — Safe under `StrictMode`). Failed saves keep the previous density and show an error notification. A legacy `localStorage` value (`settings.uiDensity`) is migrated once when the SQLite row is missing — and only cleared after a successful write.
 
@@ -158,16 +161,37 @@ gap: var(--app-space-sm);            // preferred in CSS modules
 
 ### 3. Radius
 
-| Token | Comfortable (px) | Compact (px) | Use |
-| --- | ---: | ---: | --- |
-| `--app-radius-sm` | 6 | 5 | Default chrome, Badge, NavLink, Card/Paper/Alert |
-| `--app-radius-control` | 6 | 5 | Inputs, list rows, search (same step as `sm`) |
-| `--app-radius-md` | 8 | 7 | Content `AppSurfaceCard` default, nested panels |
-| `--app-radius-lg` | 10 | 8 | Rare oversized / hero cards |
+| Token                  | Comfortable (px) | Compact (px) | Use                                                                                |
+| ---------------------- | ---------------: | -----------: | ---------------------------------------------------------------------------------- |
+| `--app-radius-sm`      |                4 |            3 | Default chrome: Button, Badge, NavLink, Card/Paper/Alert (Mantine `defaultRadius`) |
+| `--app-radius-control` |                4 |            3 | Inputs, list rows, search, chips — Fluent's 4px component radius                   |
+| `--app-radius-md`      |                8 |            7 | Content `AppSurfaceCard` default, nested panels, dialog content                    |
+| `--app-radius-lg`      |               10 |            8 | Rare oversized / hero cards                                                        |
+
+Fluent 2 gives most **components** 4px (button, field, badge, checkbox, card) and saves
+8px+ for surfaces above the base (flyout, dialog). So controls carry the 4px step and
+`radius="md"` on a Button/ActionIcon/Badge is the inconsistency to remove, not a style.
+Progress **tracks** and Skeleton bars keep `radius="xl"` on purpose (a pill indicator,
+not a control), and `999px` stays reserved for true circles (status dots, timeline dots).
+
+**SegmentedControl** is the other pill exception, and it is themed once: Fluent TabList
+shape = pill track (`radius="xl"`, larger than any control height so it holds at every
+size), a raised pill indicator (`--app-elevation-2`) on a track of
+`--app-color-panel-raised`, and `withItemsBorders: false` (Fluent has no separators
+between segments). The **selected** segment is filled, not nudged: neutral
+`--app-color-surface-control-hover` (three steps above the track) with the label in the
+fill's contrast colour, so selected vs unselected reads at a glance without burning the
+accent — the accent stays for primary actions, rails and focus. A caller that encodes
+meaning passes `color` and keeps its own fill: the wizard's progression and difficulty
+selectors paint the preset colour, which is why the theme only sets the neutral fill when
+`color` is absent. The indicator must stay _lighter/stronger_ than the track — never a
+darker well.
 
 Theme `defaultRadius` is **`sm`**. Avoid raw `border-radius` when a token fits. Tek icon tiles keep asymmetric radius by design (`AccentIconTile shape="tek"`). Create/edit **Identity** map art uses `MapArtThumb shape="rounded"` so the thumb matches flush square form sections; default `tek` remains for brand-like thumbs elsewhere.
 
-**Square vs rounded:** Overview server **list rows** (`ServerCard`), create/edit **form sections**, Logs event/backup/update lists, and the Clusters **How transfers work** Accordion are square (`radius={0}`) so stacked chrome reads as one slab. Discrete entity cards use `AppSurfaceCard` default **`md`** (8px Comfortable); do not wrap the whole Logs/Settings pane in a Card (#469).
+**Square vs rounded:** Overview server **list rows** (`ServerCard`), create/edit **form sections**, Logs event/backup/update lists, and the Clusters **How transfers work** Accordion are square (`radius={0}`) so stacked chrome reads as one slab. **Row surfaces.** Every list that shows rows uses one recipe: solid `--app-color-panel`, square corners, hairline `--app-color-border-subtle`, contiguous rows (shared rule, not a gap), hover `--app-color-surface-control`, selection `--app-list-selected-bg`. **Rows share the card surface — do not add a darker "well" level beneath it.** Fluent 2 layers go base → card → flyout/dialog (surfaces _above_ the base), so a body darker than its card reads as a hole in the pane and leaves hover nowhere to go. Definition comes from the hairline and the `--app-color-panel-raised` header row, not from the body fill. Collapsed and expanded states of an item must share the same surface. `YarkDataTable` sets this through the library's own `--mantine-datatable-*` variables — never a translucent wash over whatever is behind, and never the library default (`--mantine-color-body`, which painted the page canvas inside a chrome pane). A table header is `--app-color-panel-raised`, solid. **Shell surface.** One surface is painted app-wide on `AppShell.Main` (`src/renderer/src/app/AppShellLayout.module.css`): `--app-color-surface-chrome` + the brand art (`--app-shell-atmosphere` is `none` for now; the radial glow read yellowish over chrome). Every page pane (Settings, Clusters, Logs, Backups, Downloads, Hosted Resources, Overview, and the whole server workspace body) is **transparent** on top of it and only owns padding and dividers, so panes never repaint or double the atmosphere. **Tool panes** use `PageScaffold edgeToEdge` with the page title/actions **inside** the pane (not a floating header above a card). **Server workspace body** uses the same grammar without `PageScaffold`: list rail | main | side rail, dividers only, and every full-pane tab shell (server form, mods, launch, INI, backups, logs, RCON, maintenance, ASA API, wizard, onboarding) is square (`radius={0}`) so the tabs read as the pane. Fused splits (Settings categories, Clusters list+detail) use `gap: 0` and a 1px divider. Raised **panel** cards/rows sit on the shell and are square (`radius={0}`) — every page-level card on Settings, Clusters, Logs, Backups, Downloads, Hosted Resources, and Overview. Only **modal interiors** keep the dialog radius (`md`). Never use a translucent `color-mix(…, transparent)` panel wash for a card or row surface: the result then depends on the brand art behind it instead of being a palette step. The canvas is only visible behind the app sidebar. Do not wrap the whole page canvas in an extra Card (#469).
+
+**Settings preference rows:** consecutive `.settingRow` cells live in `.settingStack` — a square contiguous slab (`radius: 0`, shared hairlines, no gap). Title + one-line description, control on the right. Master toggles with child options use `.settingGroup` (one outer card; children are internal hairline rows, not indented mini-cards).
 
 ### 4. Color / status
 
@@ -179,15 +203,54 @@ Theme `defaultRadius` is **`sm`**. Avoid raw `border-radius` when a token fits. 
   (`variant="light"`), and icons on dark chrome — not Mantine’s default coral.
   Status words use `--app-color-ok|fossil|danger-bright|muted` (CSS `data-tone`),
   not Mantine shade refs like `c="ok.5"`.
+- **One colour language: the semantic palette.** Call sites pass `ok` (healthy,
+  success, ready), `attention` (warning, unsaved, blocked, queued), `red` (error,
+  destructive — the theme maps it to `--app-color-bad`), `gray` (neutral, not
+  applicable), `fossil` (the Restart/amber brand action) or `blue` (the accent:
+  brand, selection, info). Mantine's own names are **not** part of the vocabulary —
+  `green`/`teal` meant "good" and `yellow`/`orange` meant "careful" at 98 call sites
+  before the sweep, three different ambers on one screen. The only exception is the
+  wizard's progression/difficulty ramps, where distinct hues encode tiers (categorical
+  data, not status).
+- **Alerts take the tone from the colour** (`alertToneForColor`): blue/cyan/indigo/violet
+  → message (`cryo` hairline), `ok`/green/teal → success (`ok`), yellow/orange/fossil/
+  `attention`/warn → warn (`fossil`), red/pink → error (`bad`), everything else →
+  Mantine's default. So pass the semantic colour and the surface follows;
+  never style an Alert's border by hand.
 - **Status grammar:** runtime, cluster, and backup health/status are a **word + dot**
   (`ServerRuntimeStatusBadge` / `StatusWord`), not a light Badge.
   Counts are a sentence (or MetaStrip). **Badge** is reserved for rare attention (Needs setup,
   blocking lock copy, Logs ERROR/WARNING). Routine Logs **INFO** stays a gray chip, not an
   attention color. At most one attention-colored chip per page.
-- **Inline Alert surfaces** (theme `Alert` `--alert-bg` / `--alert-bd`): solid `--app-color-panel` fill plus a 1px semantic border (`cryo` / `fossil` / `bad`). Do not use translucent MagicPath washes.
+- **Chips, badges and counters — pick by role, not by looks.** A **state** is a
+  `StatusWord` (word + dot) inside tool chrome, or a tinted Badge in a dense list where a
+  dot does not fit. A **fact or tag** (version, port, format, cluster/project id, category,
+  user tag, `Inactive`, `Disabled`, `Skip`) is a **neutral** Badge — `variant="light"`
+  with no `color`, or `variant="outline"`. A **count** is a Badge (`outline`, neutral),
+  never a sentence with a colour. Every badge is **neutral unless the value is a state**;
+  the theme sets the defaults (`variant="light"`, `color="gray"`, sentence case, 12px
+  semibold on a 20px pill, 4px corners) so call sites pass **no** `size` / `tt` / colour
+  to a fact badge. Semantic colours only when earned: `ok` (healthy, current, "will
+  start"), `attention` (unsaved, paused, blocked, queued), `red` (failed, invalid), and
+  `gray` for "not applicable". **Never** `blue` on a fact or a tag (the accent is brand
+  and selection, not a label) and never a Mantine name (`teal`, `yellow`, `orange`,
+  `green`) — one colour language, the semantic palette, so a palette change leaves no
+  strays. Danger stays a **tint + `--app-color-danger-bright` text**, never a filled red
+  pill: our `bad` fill is 3:1 (fine for a rail, not for 12px label text).
+- **Status colour, compactly:** a badge tint carries meaning, so a screen should not show
+  two different attention hues. The colour constants live in the models
+  (`serverLogsFormat.statusColor`, `EventSeverityMark.severityColor`, the crash-recovery
+  state, the SteamCMD job status), not inline in the component.
+- **Inline Alert surfaces** (theme `Alert` `--alert-bg` / `--alert-bd`): the neutral `--app-color-surface-alert` base - built from the hull steps, so a warm or tinted plate ramp cannot turn the bar into a slab - **plus 12% of the severity tone**, enough to type the alert without painting a saturated fill. The same tone rides the 1px border and the icon; the icon is a call-site node (`icon={...}`) that the theme colours through `--app-color-alert-icon`, and the title stays in `--app-color-text` (Mantine would tint it with `--alert-color`, which is why the icon does not use that variable). Fluent keeps an info bar quiet: tone on the border and icon, never a filled slab. Do not use translucent MagicPath washes.
 - Text: `--app-color-text` / `--app-color-muted`.
 - Borders: `--app-color-border` / `--app-color-border-subtle`.
 - Never hardcode status hex (`#e5484d`, `#58c89a`, …) in feature CSS.
+- **Accent = one hue and its states.** `--app-color-accent` (solid fill), `-accent-hover`, `-accent-text` (text + icons), `-accent-subtle` / `-accent-subtle-hover` (tinted fills), `-accent-contrast` (label on a solid). Source of truth: `accentPalette` in `shared/theme/tokens.ts` — that one declaration feeds `--ark-blue-*`, Mantine's `blue` scale, and these roles, so changing the accent is one edit and no feature CSS. Use the roles; never a raw `--ark-blue-N`.
+- **What is accent:** interactive + selected UI (primary buttons, switches, checkboxes, radios, sliders, selected rows/menus, links, hover on an interactive control), section eyebrows, and the Launch preview's **YARK-owned** category. **What is not:** status/state (`ok`, `warn`, `attention`, `bad`, `--app-color-info`), destructive actions, and disabled/neutral controls. Categories are different hues, not variants of the accent.
+- **Focus ring:** one token, `--app-color-focus-ring`, on every `:focus-visible`. Do not invent per-feature rings and do not reuse `--app-color-cryo` there — that reads as _info_, not focus.
+- **`--app-color-info`** carries server-reported informational state. It is deliberately separate from the accent even though both resolve to the same blue today: an accent change must not restyle "info".
+- **Contrast contract** (`shared/theme/theme.contrast.test.ts`): `text` and `muted` clear 4.5:1 on chrome / panel / control; `ok`, `warn`, `attention`, `cryo`, `fossil`, and `danger-bright` clear 4.5:1 as text on panel; `bad` clears 3:1 as a fill. `bad` is the **filled** destructive tone — for text/icons use `--app-color-danger-bright`. A palette change that breaks these numbers fails the test instead of shipping.
+- **Known gap (open):** raised cards separate from the shell by a ~1.15:1 fill difference and a ~1.80:1 hairline, below WCAG 1.4.11's 3:1 for component boundaries. Cards currently rely on the border plus the `--app-shadow-panel` top highlight. Raising the hairline contrast is a deliberate design decision, not a token bug — see PUX-004.
 
 ### 5. Selection / focus
 
@@ -198,20 +261,23 @@ Theme `defaultRadius` is **`sm`**. Avoid raw `border-radius` when a token fits. 
   (`shared/ui/NavSelected`) onto Mantine `NavLink` — rounded fill
   (`--app-list-selected-bg`) plus a short left accent notch (`--ark-blue-9`).
   Do not wrap a second NavLink; do not use the full-height list inset on those rails.
+- **Clusters All-clusters list** and the **workspace server rail** use the same short
+  notch (not the full-height inset). Pass `selectedChrome="notch"` on
+  `SelectableListRow`, or mirror the NavSelected `::before` recipe on custom rows.
 - Focus rings: reuse existing `:focus-visible` patterns (ark-blue outline), don’t invent per-page rings.
 
 ### 5a. Keyboard contract (#475)
 
 YARK is a Windows desktop **tool**, not a vim mode. Keyboard covers fleet triage and lifecycle. Prefer Mantine (`Modal` trap, `Tabs`, `Menu`, `Spotlight`, `:focus-visible`) over custom handlers.
 
-| Key | Contract |
-| --- | --- |
-| **Tab** | Natural order: sidebar → page chrome → controls. Overview: Tab to the server card, then to Start/Stop/Restart/Enable/Update/kebab. |
-| **Enter / Space** | Activate the focused button or NavLink. Do **not** treat Enter on the card chrome as Open workspace (use the identity open control) so Tab-to-card + Shift+F10 cannot accidental-open. |
-| **Escape** | Closes Spotlight, menus, and dismissible modals; restores focus to the opener. **SearchField** filter (Overview, etc.): clears the query when the field is focused and non-empty. Does **not** skip the first-run setup wizard (Skip / Close / Back stay explicit). Does not cancel in-flight SteamCMD/stop without the existing confirm. |
-| **Ctrl+K** (Cmd+K) | Spotlight: jump to a route or open a server workspace. |
-| **Shift+F10** / ContextMenu | Opens the same kebab actions on a focused **server card**. DataTable body rows stay mouse-context; use the row kebab. |
-| **Arrow / Home / End** | Workspace **tablist** (`Workspace tabs`): Mantine activates the next tab on arrow (keep `activateTabWithKeyboard` default). |
+| Key                         | Contract                                                                                                                                                                                                                                                                                                                                  |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Tab**                     | Natural order: sidebar → page chrome → controls. Overview: Tab to the server card, then to Start/Stop/Restart/Enable/Update/kebab.                                                                                                                                                                                                        |
+| **Enter / Space**           | Activate the focused button or NavLink. Do **not** treat Enter on the card chrome as Open workspace (use the identity open control) so Tab-to-card + Shift+F10 cannot accidental-open.                                                                                                                                                    |
+| **Escape**                  | Closes Spotlight, menus, and dismissible modals; restores focus to the opener. **SearchField** filter (Overview, etc.): clears the query when the field is focused and non-empty. Does **not** skip the first-run setup wizard (Skip / Close / Back stay explicit). Does not cancel in-flight SteamCMD/stop without the existing confirm. |
+| **Ctrl+K** (Cmd+K)          | Spotlight: jump to a route or open a server workspace.                                                                                                                                                                                                                                                                                    |
+| **Shift+F10** / ContextMenu | Opens the same kebab actions on a focused **server card**. DataTable body rows stay mouse-context; use the row kebab.                                                                                                                                                                                                                     |
+| **Arrow / Home / End**      | Workspace **tablist** (`Workspace tabs`): Mantine activates the next tab on arrow (keep `activateTabWithKeyboard` default).                                                                                                                                                                                                               |
 
 **Mouse-only (documented):** Overview card **meta grid** (map / version / survivors) is `aria-hidden` + `tabIndex={-1}` so it does not steal Tab. Open the server with the identity control. Version-refresh hints stay hover/tooltip.
 
@@ -229,31 +295,87 @@ Secondary badges (attention counts, etc.) stay for outcomes — not a second
 
 ### 5c. Operator feedback channels
 
-| Channel | Use for |
-| --- | --- |
+| Channel                                            | Use for                                                                                                                                                                                                                                                                                                                                                                                   |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Toast** (`notifications.show`, **bottom-right**) | Completed / failed / cancelled **operator actions** that do not need to stay on screen (Check Servers Health summary, Check server updates, SteamCMD install/update/verify, backup CRUD, prefs save fail, move-install success, copy-configuration success, INI save/discard, Logs export/clear/delete, log-retention cleanup). Bottom-right avoids covering Overview/workspace toolbars. |
-| **Inline Alert** | **State that remains true** (files locked while updating, server running, wizard warnings, port conflicts, move leftover-folder decision, INI last-saved diff) or confirm-modal decision context |
-| **Panel / dock** | Long-running or multi-item work (Downloads queue / footer teaser, stop progress, fleet backup alerts, Overview attention list) |
-| **Global AppShell banner** | Optional shell prop kept for rare app-wide hard failures; **App does not use it** for per-action IPC — prefer `showOperatorToast` / `showOperatorError` (`shared/ui/operatorToast.ts`) |
+| **Inline Alert**                                   | **State that remains true** (files locked while updating, server running, wizard warnings, port conflicts, move leftover-folder decision, INI last-saved diff) or confirm-modal decision context                                                                                                                                                                                          |
+| **Panel / dock**                                   | Long-running or multi-item work (Downloads queue / footer teaser, stop progress, fleet backup alerts, Overview attention list)                                                                                                                                                                                                                                                            |
+| **Global AppShell banner**                         | Optional shell prop kept for rare app-wide hard failures; **App does not use it** for per-action IPC — prefer `showOperatorToast` / `showOperatorError` (`shared/ui/operatorToast.ts`)                                                                                                                                                                                                    |
 
 Manual **Check Servers Health** ends with a toast (attention count or “all healthy”); startup **server** health scan stays silent. Quiet **YARK app** update check (~60s) toasts only when an update is available or ready to install (sidebar accent remains). SteamCMD job outcomes, `runAction` failures, and Backups page save/cleanup results use toasts, not page or AppShell banners.
 
 ### 5d. Destructive actions (inline controls)
 
-Primary destructive **Button**s use **`color="red" variant="filled"`** — **Stop**, **Force close**, labeled Remove/Delete, Ban, cancel in-flight jobs (expanded SteamCMD dock Cancel). Header **Delete** / **Clear failed** on Backups history use **`variant="subtle"`**; filled red stays on the confirm modal. Dense **icon-only** row/list **ActionIcon**s prefer **`variant="subtle"`** (keep `color` for meaning: red delete, orange restore, teal resume, yellow pause) so a column of fills does not dominate the row — backups history, cluster members, logs clear/delete, Downloads queue, minimized SteamCMD Cancel (#397). Workspace **server list** (full or icon rail) is switch-and-select among enabled profiles only — disabled profiles stay on Overview (no Show disabled in the rail) (#526). **Add server** / **Import** live on Overview (#397). **Restart** uses **`color="fossil" variant="filled"`** in the workspace lifecycle row and Overview card (warm amber, same weight as Stop). Theme **`autoContrast: true`** uses dark label/icon on light filled colors (fossil, attention). Kebab **Stop safely** / **Force close** / **Delete** use `Menu.Item color="red"`; **Restart** uses `color="fossil"`.
+Primary destructive **Button**s use **`color="red" variant="filled"`** — **Stop**, **Force close**, labeled Remove/Delete, Ban, cancel in-flight jobs (expanded SteamCMD dock Cancel). Header **Delete** / **Clear failed** on Backups history use **`variant="subtle"`**; filled red stays on the confirm modal. Dense **icon-only** row/list **ActionIcon**s prefer **`variant="subtle"`** (keep `color` for meaning: red delete, orange restore, teal resume, yellow pause) so a column of fills does not dominate the row — backups history, cluster members, logs clear/delete, Downloads queue, minimized SteamCMD Cancel (#397). Workspace **server list** (full or icon rail) is switch-and-select among enabled profiles only — disabled profiles stay on Overview (no Show disabled in the rail) (#526). **Add server** / **Import** live on Overview (#397). **Start / Resume** is the lifecycle primary (`variant="filled" color="ok"`); **Restart** is a **secondary** flow control (`variant="default"`, no colour) - amber-for-restart was a third semantic hue with no Fluent meaning, and a flow control is not a warning. Only the destructive action keeps colour in that row. Theme **`autoContrast: true`** uses dark label/icon on light filled colors (fossil, attention). Kebab **Stop safely** / **Force close** / **Delete** use `Menu.Item color="red"`; **Restart** stays a neutral `Menu.Item`.
 
-| Surface | Recipe |
-| --- | --- |
-| Lifecycle **Restart** | `color="fossil" variant="filled"` |
-| Inline destructive **Button** (Stop, Force close, delete/remove) | `color="red" variant="filled"` |
-| Kebab danger **Menu.Item** | `color="red"` (inherits `--app-color-danger-bright`) |
-| Dense **ActionIcon** (delete/remove and secondary row icons) | Prefer `variant="subtle"` with semantic `color` (#397); use **`filled`** only for labeled destructive **Button**s |
+| Surface                                                          | Recipe                                                                                                            |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Lifecycle **Start / Resume**                                     | `variant="filled" color="ok"` (the row's primary)                                                                 |
+| Lifecycle **Restart**                                            | `variant="default"` - secondary flow control, no colour                                                           |
+| Inline destructive **Button** (Stop, Force close, delete/remove) | `color="red" variant="filled"`                                                                                    |
+| Kebab danger **Menu.Item**                                       | `color="red"` (inherits `--app-color-danger-bright`)                                                              |
+| Dense **ActionIcon** (delete/remove and secondary row icons)     | Prefer `variant="subtle"` with semantic `color` (#397); use **`filled`** only for labeled destructive **Button**s |
 
 | Confirm modals (delete / clear / ban / remove / force-close) | `openDangerConfirmModal` + optional `dangerConfirmBody` (`shared/ui/DangerConfirmModal/`) — red confirm, Cancel default (#235) |
+
+**Disabled chrome is the enabled chrome, dimmed.** Mantine’s disabled rule paints _every_
+Button variant with `--mantine-color-disabled`, so a `subtle` / `transparent` button gained
+a solid fill the moment it was disabled: the workspace **Backups** Delete looked like a real
+filled button while nothing was selected and went text-only as soon as a selection enabled
+it. `styles/globals.css` pins those two variants back to `background: transparent`, so
+disabled means "dimmed text" and the affordance never flips. Keep new disabled states on
+that rule instead of swapping `variant` with the disabled flag. **A disabled action must
+also say why.** Two channels, one idea each: an inline **`Alert`** (info tone, not
+dismissible) for a state that blocks a whole section — Settings → SteamCMD shows
+"SteamCMD is busy / Installing SteamCMD" with what is locked and, when there are more jobs,
+how many are queued — and a one-line **`Tooltip`** on the control itself ("SteamCMD is
+busy", "Set up SteamCMD first") for the contextual reminder. Don't paste the banner
+sentence into the tooltip.
 
 **Exceptions (not red filled):** red **Alert** / **Badge** (error state, not actions); backup history toolbar **Delete** / **Clear failed** (`variant="subtle"`); **menu** row actions (`serverCardMenuActions`, backup/mods context menus — separate pass); **Remove from YARK** (profile-only delete) keeps default primary styling; multi-button unsaved-leave (`openUnsavedLeaveModal`) uses **fossil** / default buttons.
 
 Reference: `ServerModDetailDrawer` Remove footer (#344); quiet row icons (#397).
+
+### 5e. Switch / control label order
+
+Fluent 2 reads the label **before** the control, so a `Switch` label sits left of the
+track. That order is set once in the theme (`Switch.defaultProps.labelPosition =
+"left"`) - do not pass `labelPosition` per call site, and do not fake it with `row-reverse`.
+
+- A switch inside a row that already owns the title (Settings rows, INI setting rows,
+  table cells) passes **`aria-label` only** - never a second visible label next to the
+  track. Every switch needs one or the other; an unnamed switch is the bug, not the style.
+- `label="…"` is for a standalone switch (a boolean field in a form or dialog), where
+  the label is the field name and reads before the toggle.
+
+### 5f. Flyouts (Menu / Popover)
+
+The menu and popover shell is themed once, so a context menu and a settings popover
+agree: **8px shell** (`radius="md"`, 7px in Compact), **4px rows** inside it, **32px row
+height** (Fluent's row, and a comfortable hit target even in Compact), a 4px padding gap
+so the row radius shows, and a 1px `--app-color-border-subtle` separator (Mantine
+otherwise hardcodes its own divider colour). Row hover is
+`--app-color-surface-control-hover`; an item that carries a semantic `color` keeps
+Mantine's tinted hover. Depth comes from the shared ladder — `shadow="md"` =
+`--app-elevation-8`.
+
+### 5g. Buttons: the Fluent appearance hierarchy
+
+Four appearances, and **one primary per surface**:
+
+| Role        | Appearance                                                                                                | Use                                                                                                                           |
+| ----------- | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Primary     | `variant="filled"` (the accent)                                                                           | the single most important action of the surface (Continue, Apply, Import, Create, **Start/Resume**)                           |
+| Secondary   | `variant="default"`                                                                                       | everything else: Cancel, Back, **Browse ASA catalog**, Open folder, Cleanup…, Edit INI template, Leave previous folder, Retry |
+| Tertiary    | `variant="subtle"`                                                                                        | in-row / quiet actions (INI details, quiet row icons)                                                                         |
+| Destructive | `variant="filled" color="red"` for the confirm; `variant="subtle" color="red"` when it is not the primary | Stop, Force close, Delete/Remove, Retry delete                                                                                |
+
+- **`variant="light"` is not one of them.** A tinted button reads _semi-primary_ and competes with the real primary; 37 call sites were moved to `default`. Tint is for **Badges and Alerts**, never for a Button.
+- **Colour encodes only destruction** (red). Warnings and success belong in `Alert` / `Badge` / `StatusWord`; a floating "Resume" in red or an amber "Restart" is a signal without meaning. The one coloured non-destructive button is the lifecycle **Start/Resume** primary, because that row (`Start` / `Restart` / `Stop`) needs exactly one filled button.
+- **One size per bar.** Let the density default size the buttons in a footer or toolbar; pass `size` only for genuinely dense in-row controls. A footer that mixes `xs` and default reads as an accident.
+- **Dense icon rows** (`ActionIcon` in a server card, list row, dock row): `default` (bordered) for the row's actions so each one reads as a control, `subtle` for the overflow/transient one, and `filled` for the row's **one** primary (Start / Enable / Stop). **A bordered icon action keeps its meaning in the glyph**: `variant="default"` ignores the `ActionIcon` `color`, so pass the semantic token to the icon itself (`actionGlyphColor()` in the server-card model: amber update, red cancel, accent install). Ghost placeholders that reserve a slot mirror the real button's appearance (`data-reserved`), so the layout does not shift when the action appears. `ServerCard` is the reference: Start `filled` + Restart `default` + Update `default` with an amber glyph + kebab `default`.
+- **The lifecycle primary uses the accent, like every other primary.** Start/Resume is `variant="filled"` with no colour, so it follows whatever accent the theme ships (a green CTA would be the only primary outside the accent and would not follow an accent swap). **Green is a state colour** — `ok` in `StatusWord`, badges, dots — never a button fill. The consequence is shared, not new: a white label on the solid accent is the documented 3.29:1 gap (`theme.contrast.test.ts`) that New server / Continue / Apply already have; closing it is one global accent decision.
+- **Menu items are neutral**; only danger (`Stop safely`, `Force close`, delete) takes `color="red"`. A restore/pause/resume item is a word, not a hue. `confirmProps` on a confirm modal keeps the **filled** primary (never `variant="light"`).
 
 ### 6. Dense operational tables
 
@@ -283,14 +405,14 @@ Native (non–ScrollArea) surfaces still use the thin global scrollbar without e
 
 ### 8. Typography (still light)
 
-| Role | Current convention |
-| --- | --- |
-| Page title | PageScaffold `h1` via `--app-font-page` + `--app-font-display` (Segoe UI Variable Display / Semibold; Comfortable **28px** / Compact ≈23px). Body stays Segoe UI. |
-| Metric labels | `AppMetricCard` `.label` uses `--app-font-display` |
-| Panel title | Mantine `Title order={3|4}` |
-| Meta labels | Clusters `MetaStrip` (uppercase + tracking); server-card meta is sentence case |
-| Body / muted | Mantine `Text` + `c="dimmed"` |
-| Monospace | `--app-font-mono` / Mantine `fontFamilyMonospace`: Cascadia Mono, Consolas, monospace (PathField, consoles, flags, Cluster IDs). `ReadonlyPath` can `truncate="start"` so the leaf folder stays visible. |
+| Role          | Current convention                                                                                                                                                                                       |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Page title    | PageScaffold `h1` via `--app-font-page` + `--app-font-display` (Segoe UI Variable Display / Semibold; Comfortable **28px** / Compact ≈23px). Body stays Segoe UI.                                        |
+| Metric labels | `AppMetricCard` `.label` uses `--app-font-display`                                                                                                                                                       |
+| Panel title   | Mantine `Title order={3                                                                                                                                                                                  | 4}` |
+| Meta labels   | Clusters `MetaStrip` (uppercase + tracking); server-card meta is sentence case                                                                                                                           |
+| Body / muted  | Mantine `Text` + `c="dimmed"`                                                                                                                                                                            |
+| Monospace     | `--app-font-mono` / Mantine `fontFamilyMonospace`: Cascadia Mono, Consolas, monospace (PathField, consoles, flags, Cluster IDs). `ReadonlyPath` can `truncate="start"` so the leaf folder stays visible. |
 
 **Follow-up candidate:** `--app-font-meta|title` if more screens invent competing sizes (12 vs 11 meta, 18 vs 16 panel titles).
 
@@ -301,19 +423,47 @@ Native (non–ScrollArea) surfaces still use the thin global scrollbar without e
 
 ### 10. Elevation / motion
 
-- Panels: `--app-shadow-panel` (hairline).
-- Floating / dock: `--app-shadow-elevated` (Downloads footer teaser — keep feature-local behavior).
+Elevation is the Fluent 2 ladder: five two-layer levels (ambient spread + key
+offset), each named after Fluent's depth in px. Depth communicates layering, so
+pick the level by "how far the surface floats", never by taste.
+
+| Level | Use                                           | Token                |
+| ----- | --------------------------------------------- | -------------------- |
+| 2     | Chip / badge / inline control lift            | `--app-elevation-2`  |
+| 4     | Card inside the flow, thumbnail selected mark | `--app-elevation-4`  |
+| 8     | Menu, dropdown, in-dialog floating card       | `--app-elevation-8`  |
+| 16    | Flyout, popover, tooltip-sized surface        | `--app-elevation-16` |
+| 28    | Dock, drawer, dialog over content             | `--app-elevation-28` |
+
+- Panels: `--app-shadow-panel` (hairline top highlight, not an elevation level).
+- `shadow="xs|sm|md|lg|xl"` on Mantine components resolves onto the same ladder
+  (`theme.ts`), so a Menu and a hand-rolled dock agree.
+- Alphas are tuned for the dark surface; a light theme (Track B) retunes them.
+- No raw `box-shadow` for depth. Rings, focus outlines, selection insets and
+  status accents are not elevation — keep those on their own tokens
+  (`--app-color-focus-ring`, `--app-list-selected-inset`, `statusTone`).
 - Motion: short transitions on selection/hover only; no decorative ambient animation in tool chrome.
 
 ### 11. Interaction density
 
-| Context | Density |
-| --- | --- |
-| Overview / marketing-ish empties | Comfortable (`EmptyState` inline/page) |
-| Workspace tools / backup rows | Compact (`xs`/`sm`, smaller ActionIcons) |
-| Page tool panels (Logs/Clusters) | Medium (`sm` stacks on the page canvas) |
+| Context                          | Density                                  |
+| -------------------------------- | ---------------------------------------- |
+| Overview / marketing-ish empties | Comfortable (`EmptyState` inline/page)   |
+| Workspace tools / backup rows    | Compact (`xs`/`sm`, smaller ActionIcons) |
+| Page tool panels (Logs/Clusters) | Medium (`sm` stacks on the page canvas)  |
 
 Don’t mix comfortable Overview padding into dense INI/backup toolbars without intent.
+
+**Actions are two sizes, not three.** `Button` uses the density pair only — Comfortable
+`sm` (~36px) and Compact `xs` (~30px) — so buttons stay aligned with the inputs and
+selects in the same row. The older `compact-xs` / `compact-sm` middle scale is retired for
+actions: it made dialog footers and toolbar actions a third size that matched nothing.
+Where a row looked tight, that was the row’s problem, not the button’s.
+
+**Toolbars are flush rows.** A toolbar (list controls, sort bar, section actions) is a
+flex row on the pane surface — no rounded box, no translucent wash, hairlines only where
+the pane needs one. Reach for Mantine `Group` + `ml="auto"` before a bespoke
+`.listToolbar` / `.headerActions` CSS rule.
 
 **Servers layout:** **Recent activity** is a wide-only side panel (`min-width: 1600px`). Below that breakpoint, hide the stacked panel so the server list keeps the viewport; keep a compact **View logs** link (Logs nav remains available).
 
@@ -321,41 +471,42 @@ Don’t mix comfortable Overview padding into dense INI/backup toolbars without 
 
 ## Surface recipes
 
-| Tone | CSS / component | Use for |
-| --- | --- | --- |
-| `flat` (default) | `tone="flat"` / `--app-surface-flat` | **Content panels** — sidebar pages and workspace tabs (#346) |
-| `chrome` | `tone="chrome"` | Shell-adjacent asides (Settings nav, workspace rails) |
-| `coolEmphasis` | `tone="coolEmphasis"` | Rare hero / primary-operation accent cards |
-| `cool` | `--app-surface-cool` | Rare accent tiles only (not page shells); Overview **ServerCard** is a square row, not this tone |
+| Tone             | CSS / component                      | Use for                                                                                          |
+| ---------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `flat` (default) | `tone="flat"` / `--app-surface-flat` | **Content panels** — sidebar pages and workspace tabs (#346)                                     |
+| `chrome`         | `tone="chrome"`                      | Shell rails, Settings category pane, **fused master-detail slabs** (contrast vs page canvas)     |
+| `coolEmphasis`   | `tone="coolEmphasis"`                | Rare hero / primary-operation accent cards                                                       |
+| `cool`           | `--app-surface-cool`                 | Rare accent tiles only (not page shells); Overview **ServerCard** is a square row, not this tone |
 
 ```tsx
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 
 <AppSurfaceCard fill statusTone="error">
   …
-</AppSurfaceCard>
+</AppSurfaceCard>;
 ```
 
 ## Shared atoms (start here)
 
-| Atom | Path | Role |
-| --- | --- | --- |
-| `AppSurfaceCard` | `shared/ui/AppSurfaceCard/` | Homogeneous Card container |
-| `EmptyState` | `shared/ui/EmptyState/` | Inline or stacked empties (`layout`) |
-| `RowActionMenu` | `shared/ui/RowActionMenu/` | Shared kebab + context-menu action model (`RowActionEntry`) |
-| `SelectableListRow` | `shared/ui/SelectableListRow/` | Selected list/row chrome |
-| `AccentIconTile` | `shared/ui/AccentIconTile/` | Tek / rounded icon tiles |
-| `MapArtThumb` | `shared/ui/MapArtThumb/` | ASA map artwork thumb (list + header). Default `tek`; form Identity is `rounded` (#469) |
-| `SearchField` | `shared/ui/SearchField/` | Search inputs — see **SearchField variants** below |
-| `ServerRuntimeStatusBadge` | `shared/ui/ServerRuntimeStatusBadge/` | Process status word + dot |
-| `StatusWord` | `shared/ui/StatusWord/` | Generic status word + dot (backup health/history; quieter than Badge) |
-| `DismissibleHint` | `shared/ui/DismissibleHint/` | Operator gotcha Alert with a stable localStorage dismiss key |
-| `ReadonlyPath` | `shared/ui/ReadonlyPath/` | Bordered monospace chip for configured filesystem paths |
-| `PathField` | `shared/ui/PathField/` | Read-only path chip + Browse/Clear actions |
-| `ConsoleSurface` | `shared/ui/ConsoleSurface/` | ScrollArea monospace console for SteamCMD / Logs (plain text, stick-to-bottom) |
-| `AppMetricCard` | `shared/ui/AppMetricCard/` | Compact scalar metric tile (fleet strips; optional RingProgress) |
-| `AppPanelConfirmModal` | `shared/ui/AppPanelConfirmModal/` | What's-new-style confirm (panel chrome; Quit YARK / Ark Server API) |
-| `openDangerConfirmModal` | `shared/ui/DangerConfirmModal/` | Destructive confirm helper (`modals.openConfirmModal` + red confirm) |
+| Atom                       | Path                                  | Role                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| -------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AppSurfaceCard`           | `shared/ui/AppSurfaceCard/`           | Homogeneous Card container                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `EmptyState`               | `shared/ui/EmptyState/`               | Inline or stacked empties (`layout`)                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `RowActionMenu`            | `shared/ui/RowActionMenu/`            | Shared kebab + context-menu action model (`RowActionEntry`)                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `SelectableListRow`        | `shared/ui/SelectableListRow/`        | Selected list/row chrome                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `AccentIconTile`           | `shared/ui/AccentIconTile/`           | Tek / rounded icon tiles                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `MapArtThumb`              | `shared/ui/MapArtThumb/`              | ASA map artwork thumb (list + header). Default `tek`; form Identity is `rounded` (#469)                                                                                                                                                                                                                                                                                                                                                                                         |
+| `SearchField`              | `shared/ui/SearchField/`              | Search inputs — see **SearchField variants** below                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `ServerRuntimeStatusBadge` | `shared/ui/ServerRuntimeStatusBadge/` | Process status word + dot                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `StatusWord`               | `shared/ui/StatusWord/`               | Generic status word + dot (backup health/history; quieter than Badge)                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `DismissibleHint`          | `shared/ui/DismissibleHint/`          | Operator gotcha as Fluent-style InfoBar (solid panel + left accent + dismiss); stable localStorage key                                                                                                                                                                                                                                                                                                                                                                          |
+| `ReadonlyPath`             | `shared/ui/ReadonlyPath/`             | Bordered monospace chip for configured filesystem paths                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `PathField`                | `shared/ui/PathField/`                | Read-only path chip + Browse/Clear actions                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `AppPathRow`               | `shared/ui/AppPathRow/`               | Path chip + its actions as one row. The row stretches, so the chip matches the buttons' height even when the chip is the `compact` variant (a 23px chip next to a 30px button was the bug) — never re-declare `.pathRow` / `.pathChip` / `.pathActions` locally. When the row needs a heading, stack label + description **above** it (Settings SteamCMD shared caches) - never put the buttons beside the heading, which top-aligns them against the label instead of the path |
+| `ConsoleSurface`           | `shared/ui/ConsoleSurface/`           | ScrollArea monospace console for SteamCMD / Logs (plain text, stick-to-bottom)                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `AppMetricCard`            | `shared/ui/AppMetricCard/`            | Compact scalar metric tile (fleet strips; optional RingProgress)                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `AppPanelConfirmModal`     | `shared/ui/AppPanelConfirmModal/`     | What's-new-style confirm (panel chrome; Quit YARK / Ark Server API)                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `openDangerConfirmModal`   | `shared/ui/DangerConfirmModal/`       | Destructive confirm helper (`modals.openConfirmModal` + red confirm)                                                                                                                                                                                                                                                                                                                                                                                                            |
 
 ### Danger confirm modals (#235)
 
@@ -364,10 +515,7 @@ remove mod, ban/unban, clear SteamCMD cache, force-close). Do **not** invent a s
 `confirmProps: { color: "red" }` paste.
 
 ```tsx
-import {
-  dangerConfirmBody,
-  openDangerConfirmModal,
-} from "@ui/DangerConfirmModal/openDangerConfirmModal";
+import { dangerConfirmBody, openDangerConfirmModal } from "@ui/DangerConfirmModal/openDangerConfirmModal";
 
 openDangerConfirmModal({
   title: "Delete backup?",
@@ -397,10 +545,10 @@ openDangerConfirmModal({
 One visual control for “find something in this list.” Do **not** wire a raw
 `TextInput` + `MagnifyingGlass` for search.
 
-| Variant | When | How |
-| --- | --- | --- |
-| **Filter** (default) | Instant local list filter (Overview, Launch, Logs, INI, backups, catalog) | `SearchField` alone; decorative left magnifier; in-field Mantine `CloseButton` when non-empty (`clearable`, default on); `label` for aria-only name; `size` `xs` (rail / Compact) or `sm` (Comfortable). Never `md`. |
-| **Submit** | Remote or explicit search (Mods Discover CurseForge) | `SearchField` with `onSubmit` — flush end-cap ActionIcon in `rightSection` (+ Enter), same panel/border/text chrome as Select. Do **not** add a separate trailing Button, and do not turn Mods into instant-as-you-type filter. No in-field clear (magnifier owns `rightSection`). |
+| Variant              | When                                                                      | How                                                                                                                                                                                                                                                                                |
+| -------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Filter** (default) | Instant local list filter (Overview, Launch, Logs, INI, backups, catalog) | `SearchField` alone; decorative left magnifier; in-field Mantine `CloseButton` when non-empty (`clearable`, default on); `label` for aria-only name; `size` `xs` (rail / Compact) or `sm` (Comfortable). Never `md`.                                                               |
+| **Submit**           | Remote or explicit search (Mods Discover CurseForge)                      | `SearchField` with `onSubmit` — flush end-cap ActionIcon in `rightSection` (+ Enter), same panel/border/text chrome as Select. Do **not** add a separate trailing Button, and do not turn Mods into instant-as-you-type filter. No in-field clear (magnifier owns `rightSection`). |
 
 `label` vs `fieldLabel`: use `label` when the placeholder / context already names
 the control (Overview, INI filter bar, Mods Discover). Use `fieldLabel` when a visible Mantine
@@ -410,11 +558,11 @@ caption is required.
 
 Canonical sources live under [`brand/`](../brand/) — see [`brand/README.md`](../brand/README.md).
 
-| Asset | Role |
-| --- | --- |
+| Asset                 | Role                                                         |
+| --------------------- | ------------------------------------------------------------ |
 | `brand/yark-logo.png` | Full lockup → website hero; sidebar uses a 336px-wide export |
-| `brand/yark-icon.png` | Mark → `build/icon.ico`, web favicons, app tab favicon |
-| `brand/yark-logo.svg` | Optional local design source only (gitignored; not runtime) |
+| `brand/yark-icon.png` | Mark → `build/icon.ico`, web favicons, app tab favicon       |
+| `brand/yark-logo.svg` | Optional local design source only (gitignored; not runtime)  |
 
 Rebuild wired copies after editing sources:
 
@@ -440,10 +588,10 @@ in `src/main/index.ts`.
 
 Operators should recognize filesystem paths the same way everywhere:
 
-| Need | Use |
-| --- | --- |
-| Configured / known path (Settings, confirm dialogs, resolved previews) | `ReadonlyPath` — bordered monospace chip; pass `emptyLabel` for unset |
-| Editable path + folder picker | `PathField` — Settings-style `ReadonlyPath` chip + Browse (+ optional Clear); no keyboard editing |
+| Need                                                                   | Use                                                                                               |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Configured / known path (Settings, confirm dialogs, resolved previews) | `ReadonlyPath` — bordered monospace chip; pass `emptyLabel` for unset                             |
+| Editable path + folder picker                                          | `PathField` — Settings-style `ReadonlyPath` chip + Browse (+ optional Clear); no keyboard editing |
 
 Do **not** use Mantine `Code`, ad-hoc `ff="monospace"`, or a private Browse row for
 filesystem paths. `PathField` matches Settings (chip + Browse/Clear); values never
@@ -460,37 +608,37 @@ line (#234).
 - `ServerCard` product chrome (square list rows, solid `--app-color-panel` fill, 3px status rail; no cool gradient)
 - Downloads queue / footer teaser elevation
 - Settings SteamCMD path row (`ReadonlyPath` + Choose… + Install CTA; not `PathField`)
-- Server workspace 3-column shell / INI editor tables (category headers + solid body tint exception — § Surfaces)
+- Server workspace 3-column shell / INI editor tables (category headers + table body — § Surfaces)
 - Domain empty **content** — wrap with shared EmptyState shell
 - Clusters `MetaStrip` (feature-local until a second screen needs the same strip)
 - Backup volume detail cards (multi-line destination/disk copy; scalar strip uses `AppMetricCard`)
 
 ### Log / activity expand patterns (#102)
 
-| Surface | Decision |
-| --- | --- |
+| Surface                         | Decision                                                                                       |
+| ------------------------------- | ---------------------------------------------------------------------------------------------- |
 | Server Logs events / Fleet Logs | Mantine **Accordion** (`variant="contained"`, `radius={0}`, controlled, `keepMounted={false}`) |
-| Overview recent activity | Mantine **Timeline** (chronological; no expand) |
-| Event detail body | Shared `EventDetailsBody` inside Accordion.Panel |
+| Overview recent activity        | Mantine **Timeline** (chronological; no expand)                                                |
+| Event detail body               | Shared `EventDetailsBody` inside Accordion.Panel                                               |
 
 ### Row context menus (#105)
 
-| Choice | Decision |
-| --- | --- |
-| Shell | Same Mantine **`Menu` / `Menu.Dropdown`** as kebabs (cursor-anchored via `RowActionMenuProvider`) |
-| Why | One chrome for the same actions; avoids a second popup theme |
-| Sync model | Shared `RowActionEntry[]` + `RowActionMenuItems` for kebab and right-click |
-| Surfaces | Server cards, backup history rows, mods table rows |
-| A11y | Server cards: kebab + **Shift+F10** / ContextMenu key on the focused card (`aria-haspopup="menu"`). Backup/mods table rows: row kebab / action icons remain the keyboard path (DataTable rows stay mouse-context only) |
+| Choice     | Decision                                                                                                                                                                                                               |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Shell      | Same Mantine **`Menu` / `Menu.Dropdown`** as kebabs (cursor-anchored via `RowActionMenuProvider`)                                                                                                                      |
+| Why        | One chrome for the same actions; avoids a second popup theme                                                                                                                                                           |
+| Sync model | Shared `RowActionEntry[]` + `RowActionMenuItems` for kebab and right-click                                                                                                                                             |
+| Surfaces   | Server cards, backup history rows, mods table rows                                                                                                                                                                     |
+| A11y       | Server cards: kebab + **Shift+F10** / ContextMenu key on the focused card (`aria-haspopup="menu"`). Backup/mods table rows: row kebab / action icons remain the keyboard path (DataTable rows stay mouse-context only) |
 
 ## Candidates for a later slice
 
-| Candidate | Why | Trigger |
-| --- | --- | --- |
-| Feature CSS spacing sweep | Hundreds of hardcoded px remain | Touch file → snap to tokens |
-| Type scale tokens | Meta/title sizes still ad-hoc | Third conflicting title size |
-| `PageSectionHeader` | Title + filter/actions repeats | Third identical header |
-| React Compiler | **Postpone** default enable (#404). Opt-in: `YARK_REACT_COMPILER=1` / `npm run build:compiler`. Many skips on try/finally + eslint-disable; see [react-compiler-spike.md](react-compiler-spike.md). Current memo/`handlersRef` still cover Overview fan-out | Explicit compile-time memo budget / regression |
+| Candidate                 | Why                                                                                                                                                                                                                                                         | Trigger                                        |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Feature CSS spacing sweep | Hundreds of hardcoded px remain                                                                                                                                                                                                                             | Touch file → snap to tokens                    |
+| Type scale tokens         | Meta/title sizes still ad-hoc                                                                                                                                                                                                                               | Third conflicting title size                   |
+| `PageSectionHeader`       | Title + filter/actions repeats                                                                                                                                                                                                                              | Third identical header                         |
+| React Compiler            | **Postpone** default enable (#404). Opt-in: `YARK_REACT_COMPILER=1` / `npm run build:compiler`. Many skips on try/finally + eslint-disable; see [react-compiler-spike.md](react-compiler-spike.md). Current memo/`handlersRef` still cover Overview fan-out | Explicit compile-time memo budget / regression |
 
 ## Related
 

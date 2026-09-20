@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
-import { Alert, Stack, Text } from "@mantine/core";
+import { Stack, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { findPortConflicts } from "@shared/server/port-conflicts";
 import { PORT_MAX, PORT_MIN, type ServerProfile } from "@shared/types";
 import { useMemo } from "react";
@@ -25,11 +26,7 @@ function parsePreviewPort(raw: string): number | null {
     return null;
   }
   const port = Number(trimmed);
-  if (
-    !Number.isInteger(port) ||
-    port < PORT_MIN ||
-    port > PORT_MAX
-  ) {
+  if (!Number.isInteger(port) || port < PORT_MIN || port > PORT_MAX) {
     return null;
   }
   return port;
@@ -54,21 +51,14 @@ export function ServerFormPortConflictAlert(props: Props): ReactElement | null {
       queryPort,
       rconPort,
     });
-  }, [
-    props.excludeServerId,
-    props.gamePort,
-    props.name,
-    props.queryPort,
-    props.rconPort,
-    props.servers,
-  ]);
+  }, [props.excludeServerId, props.gamePort, props.name, props.queryPort, props.rconPort, props.servers]);
 
   if (conflicts.length === 0) {
     return null;
   }
 
   return (
-    <Alert
+    <AppAlert
       color="red"
       title="Port conflicts"
       mt={props.slot === true ? 0 : "xs"}
@@ -76,15 +66,11 @@ export function ServerFormPortConflictAlert(props: Props): ReactElement | null {
     >
       <Stack gap={4}>
         {conflicts.map((conflict) => (
-          <Text
-            key={`${conflict.port}-${conflict.kind}-${conflict.serverA}-${conflict.serverB}`}
-            size="sm"
-          >
-            Port {conflict.port} ({conflict.kind}) between {conflict.serverA} and{" "}
-            {conflict.serverB}
+          <Text key={`${conflict.port}-${conflict.kind}-${conflict.serverA}-${conflict.serverB}`} size="sm">
+            Port {conflict.port} ({conflict.kind}) between {conflict.serverA} and {conflict.serverB}
           </Text>
         ))}
       </Stack>
-    </Alert>
+    </AppAlert>
   );
 }

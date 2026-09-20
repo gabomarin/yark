@@ -16,13 +16,13 @@ Public product site and operator docs for YARK server manager.
 
 ## Layout
 
-| Path | Role |
-| --- | --- |
-| `website/src/pages/` | Marketing routes (`/`, `/faq/`, `/changelog/`) plus canonical `404.astro` → `dist/404.html` for Cloudflare Pages |
-| `website/src/content/docs/docs/` | Starlight docs under `/docs/` |
-| `website/public/` | Favicons, logo, screenshots |
-| `website/astro.config.mjs` | `base: "/"`, Starlight sidebar, dark-only theme, `disable404Route: true` (avoid duplicate `/404` with docs catch-all); remark plugin prefixes content `/docs/…` links with that base |
-| `.github/workflows/pages.yml` | Build Astro → deploy `website/dist` to Cloudflare Pages project `getyark` |
+| Path                             | Role                                                                                                                                                                                 |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `website/src/pages/`             | Marketing routes (`/`, `/faq/`, `/changelog/`) plus canonical `404.astro` → `dist/404.html` for Cloudflare Pages                                                                     |
+| `website/src/content/docs/docs/` | Starlight docs under `/docs/`                                                                                                                                                        |
+| `website/public/`                | Favicons, logo, screenshots                                                                                                                                                          |
+| `website/astro.config.mjs`       | `base: "/"`, Starlight sidebar, dark-only theme, `disable404Route: true` (avoid duplicate `/404` with docs catch-all); remark plugin prefixes content `/docs/…` links with that base |
+| `.github/workflows/pages.yml`    | Build Astro → deploy `website/dist` to Cloudflare Pages project `getyark`                                                                                                            |
 
 ## 404 page
 

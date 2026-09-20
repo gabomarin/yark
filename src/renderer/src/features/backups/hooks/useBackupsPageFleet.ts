@@ -14,10 +14,7 @@ import {
   toBackupPolicyDraft,
   type BackupPolicyDraft,
 } from "../backupPolicyDraft";
-import {
-  type BackupHealthFilter,
-  formatBackupBytes,
-} from "../model/backupsPageModel";
+import { type BackupHealthFilter, formatBackupBytes } from "../model/backupsPageModel";
 
 const DEFAULT_CLEANUP: BackupCleanupOptions = {
   serverIds: null,
@@ -61,11 +58,7 @@ export function useBackupsPageFleet(servers: ServerProfile[]): {
   filteredServers: BackupFleetSummary["servers"];
   backupFleetQuiet: boolean;
   serverById: Map<string, ServerProfile>;
-  load: (opts?: {
-    quiet?: boolean;
-    forceDraftSync?: boolean;
-    cancelled?: () => boolean;
-  }) => Promise<void>;
+  load: (opts?: { quiet?: boolean; forceDraftSync?: boolean; cancelled?: () => boolean }) => Promise<void>;
   savePolicy: (serverId: string) => Promise<void>;
   browseBackupDir: (server: ServerProfile) => Promise<void>;
   openDestination: (serverId: string) => Promise<void>;
@@ -97,17 +90,11 @@ export function useBackupsPageFleet(servers: ServerProfile[]): {
   const [keepLastPerKind, setKeepLastPerKind] = useState(5);
 
   const loadGenerationRef = useRef(0);
-  const load = async (opts?: {
-    quiet?: boolean;
-    forceDraftSync?: boolean;
-    cancelled?: () => boolean;
-  }) => {
+  const load = async (opts?: { quiet?: boolean; forceDraftSync?: boolean; cancelled?: () => boolean }) => {
     const quiet = opts?.quiet === true;
     const forceDraftSync = opts?.forceDraftSync === true;
     const cancelled = opts?.cancelled;
-    const generation = quiet
-      ? loadGenerationRef.current
-      : ++loadGenerationRef.current;
+    const generation = quiet ? loadGenerationRef.current : ++loadGenerationRef.current;
     if (!quiet) {
       setLoading(true);
     }
@@ -126,10 +113,7 @@ export function useBackupsPageFleet(servers: ServerProfile[]): {
         if (generation !== loadGenerationRef.current) return;
         if (!result.ok) {
           setSummary(null);
-          showOperatorError(
-            result.error ?? "Could not load backup summary",
-            "Could not load backups",
-          );
+          showOperatorError(result.error ?? "Could not load backup summary", "Could not load backups");
           return;
         }
 
@@ -139,11 +123,7 @@ export function useBackupsPageFleet(servers: ServerProfile[]): {
             const nextDrafts: Record<string, BackupPolicyDraft> = {};
             for (const row of result.data.servers) {
               const existing = previous[row.serverId];
-              if (
-                !forceDraftSync &&
-                existing !== undefined &&
-                isBackupPolicyDraftDirty(existing, row.policy)
-              ) {
+              if (!forceDraftSync && existing !== undefined && isBackupPolicyDraftDirty(existing, row.policy)) {
                 nextDrafts[row.serverId] = existing;
               } else {
                 nextDrafts[row.serverId] = toBackupPolicyDraft(row.policy);
@@ -152,11 +132,7 @@ export function useBackupsPageFleet(servers: ServerProfile[]): {
             return nextDrafts;
           });
           setDiskDraft((previous) => {
-            if (
-              !forceDraftSync &&
-              previous !== null &&
-              isBackupDiskDraftDirty(previous, result.data.diskSettings)
-            ) {
+            if (!forceDraftSync && previous !== null && isBackupDiskDraftDirty(previous, result.data.diskSettings)) {
               return previous;
             }
             return result.data.diskSettings;
@@ -171,10 +147,7 @@ export function useBackupsPageFleet(servers: ServerProfile[]): {
     );
   };
 
-  const serverIdsKey = useMemo(
-    () => servers.map((server) => server.id).join("\0"),
-    [servers],
-  );
+  const serverIdsKey = useMemo(() => servers.map((server) => server.id).join("\0"), [servers]);
 
   useEffect(() => {
     let cancelled = false;
@@ -223,10 +196,7 @@ export function useBackupsPageFleet(servers: ServerProfile[]): {
       async () => {
         const result = await window.api.setBackupPolicy(serverId, draft);
         if (!result.ok) {
-          showOperatorError(
-            result.error ?? "Could not save backup policy",
-            "Could not save backup settings",
-          );
+          showOperatorError(result.error ?? "Could not save backup policy", "Could not save backup settings");
           return;
         }
         showOperatorToast({
@@ -291,10 +261,7 @@ export function useBackupsPageFleet(servers: ServerProfile[]): {
       async () => {
         const result = await window.api.setBackupDiskAlertSettings(diskDraft);
         if (!result.ok) {
-          showOperatorError(
-            result.error ?? "Could not save disk alert settings",
-            "Could not save drive alerts",
-          );
+          showOperatorError(result.error ?? "Could not save disk alert settings", "Could not save drive alerts");
           return;
         }
         setDiskModalOpen(false);
@@ -311,10 +278,7 @@ export function useBackupsPageFleet(servers: ServerProfile[]): {
   };
 
   const dismissFleetAlert = async (alert: { id: string; fingerprint: string }) => {
-    const result = await window.api.dismissBackupFleetAlert(
-      alert.id,
-      alert.fingerprint,
-    );
+    const result = await window.api.dismissBackupFleetAlert(alert.id, alert.fingerprint);
     if (!result.ok) {
       showOperatorError(result.error ?? "Could not dismiss alert");
       return;

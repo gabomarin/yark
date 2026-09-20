@@ -83,4 +83,3 @@ describe("serverListModel", () => {
     expect(sorted.map((row) => row.id)).toEqual(["a-id", "m-id", "z-id"]);
   });
 });
-

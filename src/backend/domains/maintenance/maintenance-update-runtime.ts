@@ -4,9 +4,7 @@
  * UpdateService.enqueueUpdateForMaintenance (wasRunning → queue → SteamCMD → start).
  */
 
-import {
-  MAINTENANCE_UPDATE_PRESET_OFFSETS,
-} from "@shared/maintenance/maintenance-policy";
+import { MAINTENANCE_UPDATE_PRESET_OFFSETS } from "@shared/maintenance/maintenance-policy";
 import {
   MAINTENANCE_FAIL_LIMIT,
   MAINTENANCE_RCON_SOFT_FAIL_LIMIT,
@@ -19,11 +17,7 @@ import {
   shouldUseLastMinuteChat,
 } from "@shared/maintenance/maintenance-schedule";
 import { isServerUpdateAvailable } from "@shared/server/server-update-status";
-import type {
-  MaintenanceCountdownPhase,
-  MaintenancePolicy,
-  MaintenancePolicyStatus,
-} from "@shared/types";
+import type { MaintenanceCountdownPhase, MaintenancePolicy, MaintenancePolicyStatus } from "@shared/types";
 import type { InstanceService } from "../instances/instance-service";
 import type { UpdateService } from "../updates/update-service";
 import type { ProcessManager } from "../../infra/process/process-manager";
@@ -46,9 +40,7 @@ interface ActiveUpdateCountdown {
   source: "schedule" | "run_now";
 }
 
-function isUpdateCountdownBroadcastPhase(
-  phase: MaintenanceCountdownPhase,
-): boolean {
+function isUpdateCountdownBroadcastPhase(phase: MaintenanceCountdownPhase): boolean {
   return phase === "warning" || phase === "last_minute";
 }
 
@@ -118,10 +110,7 @@ export class MaintenanceUpdateRuntime {
   }
 
   /** Overlay update session fields onto restart-enriched status. */
-  mergeStatus(
-    status: MaintenancePolicyStatus,
-    steamUpdateAvailable: boolean,
-  ): MaintenancePolicyStatus {
+  mergeStatus(status: MaintenancePolicyStatus, steamUpdateAvailable: boolean): MaintenancePolicyStatus {
     const active = this.active.get(status.serverId);
     const last = this.lastUpdate.get(status.serverId);
     const now = Date.now();
@@ -138,18 +127,13 @@ export class MaintenanceUpdateRuntime {
     return {
       ...status,
       schedulePaused: status.schedulePaused || updatePaused,
-      countdownRemainingMs:
-        isUpdateCountdownBroadcastPhase(active.phase)
-          ? Math.max(0, active.targetAtMs - now)
-          : 0,
+      countdownRemainingMs: isUpdateCountdownBroadcastPhase(active.phase) ? Math.max(0, active.targetAtMs - now) : 0,
       countdownPhase: active.phase,
       countdownKind: "update",
       lastUpdateAt: last?.atIso ?? null,
       lastUpdateOk: last?.ok ?? null,
       steamUpdateAvailable,
-      cancelable:
-        isUpdateCountdownBroadcastPhase(active.phase)
-        && !active.cancelRequested,
+      cancelable: isUpdateCountdownBroadcastPhase(active.phase) && !active.cancelRequested,
     };
   }
 
@@ -157,10 +141,7 @@ export class MaintenanceUpdateRuntime {
   async isSteamUpdateAvailable(serverId: string): Promise<boolean> {
     const cached = this.steamAvailabilityCache;
     const now = Date.now();
-    if (
-      cached !== null
-      && now - cached.atMs < STEAM_AVAILABILITY_CACHE_MS
-    ) {
+    if (cached !== null && now - cached.atMs < STEAM_AVAILABILITY_CACHE_MS) {
       const hit = cached.byServerId.get(serverId);
       if (hit !== undefined) return hit;
     }
@@ -168,10 +149,7 @@ export class MaintenanceUpdateRuntime {
     const snapshot = await this.instances.installationInfo(false);
     const byServerId = new Map<string, boolean>();
     for (const row of snapshot.servers) {
-      byServerId.set(
-        row.serverId,
-        isServerUpdateAvailable(row, snapshot.officialSteamBuild),
-      );
+      byServerId.set(row.serverId, isServerUpdateAvailable(row, snapshot.officialSteamBuild));
     }
     this.steamAvailabilityCache = {
       atMs: now,
@@ -191,9 +169,7 @@ export class MaintenanceUpdateRuntime {
     if (this.updates.isQueueHeldForOperator()) return;
 
     const policies = this.repo.listPolicies();
-    let installSnapshot: Awaited<
-      ReturnType<InstanceService["installationInfo"]>
-    > | null = null;
+    let installSnapshot: Awaited<ReturnType<InstanceService["installationInfo"]>> | null = null;
 
     for (const policy of policies) {
       try {
@@ -210,15 +186,8 @@ export class MaintenanceUpdateRuntime {
           installSnapshot = await this.instances.installationInfo(false);
           this.invalidateSteamAvailabilityCache();
         }
-        const installation = installSnapshot.servers.find(
-          (row) => row.serverId === policy.serverId,
-        );
-        if (
-          !isServerUpdateAvailable(
-            installation,
-            installSnapshot.officialSteamBuild,
-          )
-        ) {
+        const installation = installSnapshot.servers.find((row) => row.serverId === policy.serverId);
+        if (!isServerUpdateAvailable(installation, installSnapshot.officialSteamBuild)) {
           continue;
         }
         const official = installSnapshot.officialSteamBuild ?? "unknown";
@@ -235,28 +204,19 @@ export class MaintenanceUpdateRuntime {
 
         if (this.isIntentionalStop(policy.serverId)) continue;
 
-        const offsets = resolveWarningOffsetLabels(
-          policy.updateWarnings,
-          MAINTENANCE_UPDATE_PRESET_OFFSETS,
-        );
+        const offsets = resolveWarningOffsetLabels(policy.updateWarnings, MAINTENANCE_UPDATE_PRESET_OFFSETS);
         const lead = maxWarningLeadMs(offsets);
         const targetAtMs = Date.now() + lead;
         this.markAvailabilityHandled(availabilityKey);
         this.startCountdown(policy, targetAtMs, "schedule", availabilityKey);
       } catch (error) {
-        console.error(
-          `Maintenance update tick failed for ${policy.serverId}`,
-          error,
-        );
+        console.error(`Maintenance update tick failed for ${policy.serverId}`, error);
       }
     }
   }
 
   /** Wait for safe update completion without blocking `runScheduledCycle`. */
-  private async runStoppedServerUpdate(
-    serverId: string,
-    availabilityKey: string,
-  ): Promise<void> {
+  private async runStoppedServerUpdate(serverId: string, availabilityKey: string): Promise<void> {
     try {
       await this.updates.updateServer(serverId);
       this.lastUpdate.set(serverId, {
@@ -267,11 +227,7 @@ export class MaintenanceUpdateRuntime {
       this.invalidateSteamAvailabilityCache();
     } catch (error) {
       this.scheduleAvailabilityRetry(availabilityKey);
-      this.recordFail(
-        serverId,
-        error instanceof Error ? error.message : String(error),
-        error,
-      );
+      this.recordFail(serverId, error instanceof Error ? error.message : String(error), error);
     }
   }
 
@@ -290,9 +246,7 @@ export class MaintenanceUpdateRuntime {
       if (this.active.has(serverId)) {
         return this.mergeStatus(this.restarts.enrichStatus(policy), true);
       }
-      throw new Error(
-        "A restart countdown is already active — Cancel it first, or wait",
-      );
+      throw new Error("A restart countdown is already active — Cancel it first, or wait");
     }
     if (this.updates.hasOccupyingFilesJob(serverId)) {
       throw new Error("A files job is already queued for this server");
@@ -316,12 +270,7 @@ export class MaintenanceUpdateRuntime {
     const official = snapshot.officialSteamBuild ?? "unknown";
     const availabilityKey = `${serverId}:${official}`;
     this.markAvailabilityHandled(availabilityKey);
-    this.startCountdown(
-      policy,
-      Date.now() + MAINTENANCE_RUN_NOW_LEAD_MS,
-      "run_now",
-      availabilityKey,
-    );
+    this.startCountdown(policy, Date.now() + MAINTENANCE_RUN_NOW_LEAD_MS, "run_now", availabilityKey);
     return this.mergeStatus(this.restarts.enrichStatus(policy), true);
   }
 
@@ -348,13 +297,7 @@ export class MaintenanceUpdateRuntime {
       firedOffsets: new Set(),
       rconFailStreak: 0,
       cancelRequested: false,
-      phase: shouldUseLastMinuteChat(
-        remaining,
-        policy.updateWarnings,
-        source,
-      )
-        ? "last_minute"
-        : "warning",
+      phase: shouldUseLastMinuteChat(remaining, policy.updateWarnings, source) ? "last_minute" : "warning",
       timer: null,
       timerGeneration: 0,
       runPromise: null,
@@ -372,10 +315,7 @@ export class MaintenanceUpdateRuntime {
     state.timerGeneration += 1;
   }
 
-  private isCurrentTick(
-    serverId: string,
-    expectedTargetAtMs: number,
-  ): ActiveUpdateCountdown | null {
+  private isCurrentTick(serverId: string, expectedTargetAtMs: number): ActiveUpdateCountdown | null {
     const state = this.active.get(serverId);
     if (state === undefined) return null;
     if (state.cancelRequested) return null;
@@ -383,11 +323,7 @@ export class MaintenanceUpdateRuntime {
     return state;
   }
 
-  private scheduleNextTick(
-    serverId: string,
-    expectedTargetAtMs: number,
-    delayMs: number,
-  ): void {
+  private scheduleNextTick(serverId: string, expectedTargetAtMs: number, delayMs: number): void {
     const state = this.isCurrentTick(serverId, expectedTargetAtMs);
     if (state === null) return;
     this.clearTimer(state);
@@ -419,11 +355,7 @@ export class MaintenanceUpdateRuntime {
     this.recordFail(state.serverId, message);
   }
 
-  private noteRconOutcome(
-    state: ActiveUpdateCountdown,
-    ok: boolean,
-    errorMessage: string,
-  ): "continue" | "abort" {
+  private noteRconOutcome(state: ActiveUpdateCountdown, ok: boolean, errorMessage: string): "continue" | "abort" {
     if (ok) {
       state.rconFailStreak = 0;
       return "continue";
@@ -431,19 +363,13 @@ export class MaintenanceUpdateRuntime {
     state.rconFailStreak += 1;
     if (state.rconFailStreak >= MAINTENANCE_RCON_SOFT_FAIL_LIMIT) {
       this.releaseAvailability(state.availabilityKey);
-      this.abortHard(
-        state,
-        `RCON ServerChat failed ${state.rconFailStreak} times: ${errorMessage}`,
-      );
+      this.abortHard(state, `RCON ServerChat failed ${state.rconFailStreak} times: ${errorMessage}`);
       return "abort";
     }
     return "continue";
   }
 
-  private async tickCountdown(
-    serverId: string,
-    expectedTargetAtMs: number,
-  ): Promise<void> {
+  private async tickCountdown(serverId: string, expectedTargetAtMs: number): Promise<void> {
     const state = this.isCurrentTick(serverId, expectedTargetAtMs);
     if (state === null) {
       const orphan = this.active.get(serverId);
@@ -471,22 +397,14 @@ export class MaintenanceUpdateRuntime {
       return;
     }
 
-    if (
-      shouldUseLastMinuteChat(
-        remainingMs,
-        policy.updateWarnings,
-        state.source,
-      )
-    ) {
+    if (shouldUseLastMinuteChat(remainingMs, policy.updateWarnings, state.source)) {
       state.phase = "last_minute";
       let broadcastOk = true;
       let broadcastError = "";
       try {
-        await this.instances.execRcon(
-          serverId,
-          `ServerChat ${renderLastMinuteUpdate(remainingMs / 1_000)}`,
-          { recordEvent: false },
-        );
+        await this.instances.execRcon(serverId, `ServerChat ${renderLastMinuteUpdate(remainingMs / 1_000)}`, {
+          recordEvent: false,
+        });
       } catch (error) {
         broadcastOk = false;
         broadcastError = error instanceof Error ? error.message : String(error);
@@ -502,19 +420,12 @@ export class MaintenanceUpdateRuntime {
 
     if (remainingMs <= 60_000) {
       state.phase = "warning";
-      this.scheduleNextTick(
-        serverId,
-        expectedTargetAtMs,
-        Math.max(250, remainingMs),
-      );
+      this.scheduleNextTick(serverId, expectedTargetAtMs, Math.max(250, remainingMs));
       return;
     }
 
     state.phase = "warning";
-    const offsets = resolveWarningOffsetLabels(
-      policy.updateWarnings,
-      MAINTENANCE_UPDATE_PRESET_OFFSETS,
-    );
+    const offsets = resolveWarningOffsetLabels(policy.updateWarnings, MAINTENANCE_UPDATE_PRESET_OFFSETS);
     for (const label of offsets) {
       const offsetMs = parseMaintenanceOffsetToMs(label);
       if (offsetMs === null) continue;
@@ -552,10 +463,7 @@ export class MaintenanceUpdateRuntime {
     this.scheduleNextTick(serverId, expectedTargetAtMs, Math.max(250, wakeIn));
   }
 
-  private async executeUpdate(
-    policy: MaintenancePolicy,
-    state: ActiveUpdateCountdown,
-  ): Promise<void> {
+  private async executeUpdate(policy: MaintenancePolicy, state: ActiveUpdateCountdown): Promise<void> {
     if (state.runPromise !== null) return;
     const serverId = policy.serverId;
     const expectedTargetAtMs = state.targetAtMs;
@@ -636,10 +544,7 @@ export class MaintenanceUpdateRuntime {
 
   private scheduleAvailabilityRetry(availabilityKey: string): void {
     this.handledAvailability.add(availabilityKey);
-    this.availabilityRetryAfterMs.set(
-      availabilityKey,
-      Date.now() + MAINTENANCE_UPDATE_RETRY_COOLDOWN_MS,
-    );
+    this.availabilityRetryAfterMs.set(availabilityKey, Date.now() + MAINTENANCE_UPDATE_RETRY_COOLDOWN_MS);
   }
 
   private releaseAvailability(availabilityKey: string): void {

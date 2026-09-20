@@ -1,15 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
-import {
-  ActionIcon,
-  Alert,
-  Button,
-  Group,
-  Loader,
-  Modal,
-  Pagination,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { ActionIcon, Button, Group, Loader, Pagination, Stack, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
+import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import { ArrowLeft } from "@phosphor-icons/react";
 import type { ModCategory, ModMetadata, ModSearchPage } from "@shared/types";
 import { SearchField } from "@ui/SearchField/SearchField";
@@ -70,10 +62,7 @@ export function ServerFormMapsSearchModal(props: Props): ReactElement {
   const [confirmOrigin, setConfirmOrigin] = useState<"search" | "detail">("search");
   const inspectTargetRef = useRef<string | null>(null);
 
-  const categoryFilter = useMemo(
-    () => resolveMapsCategoryFilter(categories),
-    [categories],
-  );
+  const categoryFilter = useMemo(() => resolveMapsCategoryFilter(categories), [categories]);
   const mapsCategoryReady = hasMapsCategoryFilter(categoryFilter);
 
   useEffect(() => {
@@ -136,10 +125,7 @@ export function ServerFormMapsSearchModal(props: Props): ReactElement {
       setError(null);
       await runWithFinally(
         async () => {
-          const result = await window.api.searchMods(
-            committedQuery,
-            buildMapsSearchOptions(categoryFilter, page),
-          );
+          const result = await window.api.searchMods(committedQuery, buildMapsSearchOptions(categoryFilter, page));
           if (!alive) return;
           if (!result.ok) {
             setError(result.error);
@@ -161,15 +147,7 @@ export function ServerFormMapsSearchModal(props: Props): ReactElement {
     return () => {
       alive = false;
     };
-  }, [
-    props.opened,
-    categoriesLoading,
-    categoriesResolved,
-    mapsCategoryReady,
-    committedQuery,
-    categoryFilter,
-    page,
-  ]);
+  }, [props.opened, categoriesLoading, categoriesResolved, mapsCategoryReady, committedQuery, categoryFilter, page]);
 
   const totalCount = catalog?.pagination.totalCount ?? 0;
   const pageCount = Math.max(1, Math.ceil(totalCount / MAPS_SEARCH_PAGE_SIZE));
@@ -234,20 +212,14 @@ export function ServerFormMapsSearchModal(props: Props): ReactElement {
   };
 
   return (
-    <Modal
+    <AppPanelModal
       opened={props.opened}
       onClose={props.onClose}
       closeOnEscape={false}
       title={
         <Group gap="xs" wrap="nowrap" className={classes.modalTitleRow}>
           {step !== "search" ? (
-            <ActionIcon
-              variant="subtle"
-              size="lg"
-              radius="md"
-              aria-label="Back"
-              onClick={backFromNestedStep}
-            >
+            <ActionIcon variant="subtle" size="lg" aria-label="Back" onClick={backFromNestedStep}>
               <ArrowLeft size={18} weight="bold" />
             </ActionIcon>
           ) : null}
@@ -257,15 +229,7 @@ export function ServerFormMapsSearchModal(props: Props): ReactElement {
         </Group>
       }
       size={step === "confirm" ? 560 : 960}
-      centered
-      classNames={{
-        content:
-          step === "confirm"
-            ? `${classes.modalContent} ${classes.modalContentConfirm}`
-            : classes.modalContent,
-        header: classes.modalHeader,
-        body: step === "confirm" ? `${classes.modalBody} ${classes.modalBodyConfirm}` : classes.modalBody,
-      }}
+      height={step === "confirm" ? undefined : "min(84vh, 850px)"}
     >
       {step === "search" ? (
         <div className={classes.modalStep}>
@@ -274,7 +238,7 @@ export function ServerFormMapsSearchModal(props: Props): ReactElement {
               label="Search Maps"
               value={query}
               onChange={setQuery}
-              placeholder="Filter by map name or author…"
+              placeholder="Search by map name or author…"
               onSubmit={() => {
                 setPage(1);
                 setCommittedQuery(query.trim());
@@ -282,15 +246,13 @@ export function ServerFormMapsSearchModal(props: Props): ReactElement {
               submitting={searching}
             />
             {error !== null && categoriesResolved && !categoriesLoading ? (
-              <Alert color="red" variant="light">
+              <AppAlert color="red" variant="light">
                 {error}
-              </Alert>
+              </AppAlert>
             ) : null}
           </Stack>
           <div className={classes.modalStepScroll}>
-            {categoriesLoading
-            || !categoriesResolved
-            || (searching && rows.length === 0 && mapsCategoryReady) ? (
+            {categoriesLoading || !categoriesResolved || (searching && rows.length === 0 && mapsCategoryReady) ? (
               <Group justify="center" py="lg">
                 <Loader size="sm" />
               </Group>
@@ -323,26 +285,26 @@ export function ServerFormMapsSearchModal(props: Props): ReactElement {
           </div>
         </div>
       ) : step === "detail" && detail !== null ? (
-          <ServerFormMapsSearchDetailStep
-            detail={detail}
-            loading={detailLoading}
-            error={detailError}
-            onUseMap={() => {
-              if (detailRow === null) return;
-              startConfirm(detailRow);
-            }}
-          />
-        ) : picked !== null ? (
-          <ServerFormMapsSearchConfirmStep
-            picked={picked}
-            confirmToken={confirmToken}
-            saveFolder={saveFolder}
-            ready={ready}
-            onConfirmTokenChange={setConfirmToken}
-            onSaveFolderChange={setSaveFolder}
-            onApply={apply}
-          />
-        ) : null}
-    </Modal>
+        <ServerFormMapsSearchDetailStep
+          detail={detail}
+          loading={detailLoading}
+          error={detailError}
+          onUseMap={() => {
+            if (detailRow === null) return;
+            startConfirm(detailRow);
+          }}
+        />
+      ) : picked !== null ? (
+        <ServerFormMapsSearchConfirmStep
+          picked={picked}
+          confirmToken={confirmToken}
+          saveFolder={saveFolder}
+          ready={ready}
+          onConfirmTokenChange={setConfirmToken}
+          onSaveFolderChange={setSaveFolder}
+          onApply={apply}
+        />
+      ) : null}
+    </AppPanelModal>
   );
 }

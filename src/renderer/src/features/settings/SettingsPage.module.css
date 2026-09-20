@@ -1,11 +1,25 @@
+/*
+ * Fused NavigationView slab (same grammar as Clusters): chrome fill, no gutter,
+ * square outer border. Category pane + content share one surface; SettingsCards
+ * stay raised panel on top of chrome for contrast.
+ */
 .layout {
   display: grid;
   grid-template-columns: minmax(176px, 208px) minmax(0, 1fr);
-  gap: var(--app-space-sm);
+  gap: 0;
   flex: 1 1 0;
   min-height: 0;
   height: 100%;
+  width: 100%;
+  /* No width cap here: the fused slab carries the rail, so capping and centring it opens an
+   * empty band between the sidebar and the rail on wide monitors. The readable-width cap
+   * belongs to the content column (`.panel`). */
   overflow: hidden;
+  /* No outer border: the shared chrome surface already frames the pane, and every other tool
+   * page is borderless too (Clusters' fused slab draws only the rail divider). Settings was the
+   * only page with top/right/bottom lines, which is why the edge next to the sidebar looked
+   * doubled and thicker. */
+  border-radius: 0;
 }
 
 .navCard,
@@ -14,10 +28,46 @@
   overflow: hidden;
 }
 
+.navCard {
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-right: 1px solid var(--app-color-border-subtle) !important;
+}
+
+.navPane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-sm);
+  height: 100%;
+  min-height: 0;
+}
+
+.navList,
+.navRow {
+  min-width: 0;
+}
+
+.navTitle {
+  margin: 0;
+  padding: var(--app-space-xxs) var(--app-space-xxs) 0;
+  font-family: var(--app-font-display);
+  font-size: var(--app-font-page);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
 .panel {
   display: flex;
   flex-direction: column;
   height: 100%;
+  /* Keep Settings rows at a readable line length on wide monitors without moving the rail. */
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  background: transparent;
 }
 
 .navStack {
@@ -33,6 +83,80 @@
   overflow: auto;
   min-height: 0;
   height: 100%;
+  padding: var(--app-space-md) var(--app-space-lg);
+}
+
+@media (max-width: 960px) {
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  /* Same header treatment as every other tool page: a title row with no underline at all
+   * (`AppPageHeader` measures 0 borders on all four sides and a ~43px row), with the category
+   * strip sitting in that row the way other pages keep their actions there. */
+  .navCard {
+    padding: var(--app-space-xs) var(--app-space-sm) !important;
+    border-right: none !important;
+    border-bottom: none !important;
+  }
+
+  /* The view name keeps its own row and the categories sit in a scrollable strip below it. */
+  .navPane {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--app-space-xs);
+    height: auto;
+  }
+
+  /* The scaffold header is hidden by prop, so the title stays, at the page-title size the other
+   * pages' headers use. */
+  .navTitle {
+    padding: 0;
+    font-size: var(--app-font-page);
+    white-space: nowrap;
+  }
+
+  .navList {
+    flex: 1 1 auto;
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .navRow {
+    flex-direction: row;
+    gap: var(--app-space-xs);
+  }
+
+  /* The category strip already names the section, so a section's own heading is redundant here.
+   * Hidden visually only: each section is `aria-labelledby` its heading, so it stays in the
+   * accessibility tree. */
+  [data-settings-page] :is(h1, h2, h3)[id^="settings-"],
+  .sectionTitle {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    clip-path: inset(50%);
+  }
+
+  .navRow :global(.mantine-NavLink-root) {
+    white-space: nowrap;
+  }
+
+  /* In a horizontal strip the marker reads as a tab indicator: bottom-centred rather than the
+   * short left notch, which pointed at nothing once the items sit in a row. */
+  .navList .navLink[data-active]::before {
+    top: auto;
+    bottom: 3px;
+    left: 50%;
+    width: 16px;
+    height: 3px;
+    transform: translateX(-50%);
+  }
 }
 
 .section {
@@ -41,11 +165,37 @@
   gap: var(--app-space-sm);
 }
 
+/* Contiguous square SettingsCard stack (no flex gap between rows). */
+.settingStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/*
+ * WinUI SettingsCard cell: square corners, shared hairlines, title + lede,
+ * control on the right.
+ */
 .settingRow {
   display: flex;
   gap: var(--app-space-md);
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
+  padding: var(--app-space-sm) var(--app-space-md);
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: 0;
+  background: var(--app-color-surface-panel);
+}
+
+.settingStack > .settingRow + .settingRow,
+.settingStack > .settingRow + .settingBlock,
+.settingStack > .settingBlock + .settingRow,
+.settingStack > .settingRow + .settingGroup,
+.settingStack > .settingGroup + .settingRow,
+.settingStack > .settingGroup + .settingGroup,
+.settingStack > .settingBlock + .settingGroup,
+.settingStack > .settingGroup + .settingBlock {
+  margin-top: -1px;
 }
 
 .settingCopy {
@@ -55,33 +205,44 @@
 
 .settingControl {
   flex: 0 0 auto;
-  padding-top: 2px;
+  display: flex;
+  align-items: center;
+  padding-top: 0;
 }
 
-.settingRowNested {
-  padding-left: var(--app-space-lg);
+/*
+ * Nested SettingsExpander-style group: one outer card, master row on top,
+ * children as internal hairline rows (no separate bordered cards).
+ */
+.settingGroup {
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: 0;
+  background: var(--app-color-surface-panel);
+}
+
+.settingGroup > .settingRow {
+  border: none;
+  background: transparent;
+}
+
+.settingGroupChild {
+  display: flex;
+  gap: var(--app-space-md);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--app-space-sm) var(--app-space-md) var(--app-space-sm) calc(var(--app-space-md) + var(--app-space-md));
+  border-top: 1px solid var(--app-color-border-subtle);
+  background: transparent;
 }
 
 .settingBlock {
   display: flex;
   flex-direction: column;
   gap: var(--app-space-sm);
-}
-
-.pathActionsRow {
-  display: flex;
-  gap: var(--app-space-sm);
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-}
-
-.pathChip {
-  flex: 1 1 280px;
-}
-
-.pathActions {
-  flex: 0 0 auto;
+  padding: var(--app-space-sm) var(--app-space-md);
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: 0;
+  background: var(--app-color-surface-panel);
 }
 
 .statusReady {
@@ -108,54 +269,26 @@
 }
 
 .cacheToggle:hover {
-  color: var(--app-color-cryo);
+  color: var(--app-color-accent-text);
 }
 
 .cacheList {
   padding: var(--app-space-sm);
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-control);
-  background: color-mix(in srgb, var(--ark-gray-2) 40%, transparent);
+  border-radius: 0;
+  background: var(--app-color-panel);
 }
 
 .cacheRow {
   display: flex;
-  gap: var(--app-space-sm);
-  align-items: flex-start;
-  justify-content: space-between;
-}
-
-.cacheCopy {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.cachePath {
-  margin-top: var(--app-space-xxs);
-}
-
-.cacheActions {
-  flex: 0 0 auto;
-  padding-top: 2px;
+  flex-direction: column;
+  gap: var(--app-space-xxs);
 }
 
 .dataFolderRow {
   display: flex;
   flex-direction: column;
   gap: var(--app-space-xxs);
-}
-
-.dataFolderPathRow {
-  display: flex;
-  gap: var(--app-space-sm);
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-}
-
-.dataFolderPath {
-  flex: 1 1 280px;
-  min-width: 0;
 }
 
 .about {
@@ -165,8 +298,8 @@
 .autoStartList {
   padding: var(--app-space-sm);
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: var(--app-radius-control);
-  background: color-mix(in srgb, var(--ark-gray-2) 40%, transparent);
+  border-radius: 0;
+  background: var(--app-color-panel);
 }
 
 .autoStartRow {
@@ -197,13 +330,13 @@
   padding: var(--app-space-sm) var(--app-space-md);
   border-bottom: 1px solid var(--app-color-border-subtle);
   color: var(--app-color-text);
-  background: color-mix(in srgb, var(--app-color-accent) 6%, transparent);
+  background: var(--app-color-surface-control);
 }
 
 .discordEventRow {
   padding: var(--app-space-sm) var(--app-space-md);
   border-bottom: 1px solid var(--app-color-border-subtle);
-  transition: background-color 120ms ease;
+  transition: background-color var(--app-motion-fast) var(--app-ease-standard);
 }
 
 .discordEventRow:last-child {
@@ -211,7 +344,7 @@
 }
 
 .discordEventRow:hover {
-  background: color-mix(in srgb, var(--app-color-accent) 4%, transparent);
+  background: var(--app-color-surface-control);
 }
 
 .discordEventIdentity {
@@ -226,8 +359,8 @@
 
 .discordPrivacyNote {
   padding: var(--app-space-xs) var(--app-space-sm);
-  border-radius: var(--app-radius-sm);
-  background: color-mix(in srgb, var(--app-color-panel-cool) 46%, transparent);
+  border-radius: 0;
+  background: var(--app-color-panel);
 }
 
 @media (max-width: 720px) {

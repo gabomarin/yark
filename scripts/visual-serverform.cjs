@@ -44,18 +44,13 @@ async function measureCreateForm(page) {
     const back = Array.from(document.querySelectorAll("button")).find((el) =>
       /^Back$/i.test((el.textContent ?? "").trim()),
     );
-    const sections = Array.from(document.querySelectorAll("h4")).map((el) =>
-      (el.textContent ?? "").trim(),
-    );
-    const grid = heading?.closest("div")?.querySelector("[class*='mantine-SimpleGrid']")
-      ?? document.querySelector("[class*='mantine-SimpleGrid']");
+    const sections = Array.from(document.querySelectorAll("h4")).map((el) => (el.textContent ?? "").trim());
+    const grid =
+      heading?.closest("div")?.querySelector("[class*='mantine-SimpleGrid']") ??
+      document.querySelector("[class*='mantine-SimpleGrid']");
     const gridStyle = grid ? getComputedStyle(grid) : null;
-    const main =
-      document.querySelector(".mantine-AppShell-main") ?? document.querySelector("main");
-    const formScroll =
-      document.querySelector("[data-server-form-scroll]") ??
-      heading?.closest("[class]") ??
-      null;
+    const main = document.querySelector(".mantine-AppShell-main") ?? document.querySelector("main");
+    const formScroll = document.querySelector("[data-server-form-scroll]") ?? heading?.closest("[class]") ?? null;
     const saveRect = save?.getBoundingClientRect();
     const headingRect = heading?.getBoundingClientRect();
     const clusterTitle = Array.from(document.querySelectorAll("h4")).find((el) =>
@@ -63,10 +58,8 @@ async function measureCreateForm(page) {
     );
     const clusterRect = clusterTitle?.getBoundingClientRect();
     const identityTitle =
-      document.querySelector("[data-identity-hero]")
-      ?? Array.from(document.querySelectorAll("h4")).find((el) =>
-        /^Identity$/i.test((el.textContent ?? "").trim()),
-      );
+      document.querySelector("[data-identity-hero]") ??
+      Array.from(document.querySelectorAll("h4")).find((el) => /^Identity$/i.test((el.textContent ?? "").trim()));
     const networkingTitle = Array.from(document.querySelectorAll("h4")).find((el) =>
       /^Reachability$/i.test((el.textContent ?? "").trim()),
     );
@@ -81,8 +74,7 @@ async function measureCreateForm(page) {
 
     return {
       viewport: { width: window.innerWidth, height: window.innerHeight },
-      hasHorizontalOverflow:
-        Math.max(root.scrollWidth, body.scrollWidth) > root.clientWidth + 1,
+      hasHorizontalOverflow: Math.max(root.scrollWidth, body.scrollWidth) > root.clientWidth + 1,
       documentScrollHeight: Math.max(root.scrollHeight, body.scrollHeight),
       mainScrollHeight: main?.scrollHeight ?? null,
       mainClientHeight: main?.clientHeight ?? null,

@@ -133,13 +133,9 @@ async function clickModSwitch(page, ariaPrefix) {
 async function waitForModSwitchChecked(page, ariaPrefix, checked) {
   await page.waitForFunction(
     ({ prefix, wantChecked }) => {
-      const nodes = [
-        ...document.querySelectorAll('input[role="switch"][aria-label]'),
-      ];
+      const nodes = [...document.querySelectorAll('input[role="switch"][aria-label]')];
       const match = nodes.find((el) =>
-        (el.getAttribute("aria-label") ?? "")
-          .toLowerCase()
-          .startsWith(prefix.toLowerCase()),
+        (el.getAttribute("aria-label") ?? "").toLowerCase().startsWith(prefix.toLowerCase()),
       );
       return match instanceof HTMLInputElement && match.checked === wantChecked;
     },
@@ -191,9 +187,7 @@ async function run() {
         timeout: 30000,
       });
     } catch (error) {
-      throw new Error(
-        `Mod ${DEMO_MOD_ID} did not appear after Add mod (Worker/network?). ${error?.message ?? error}`,
-      );
+      throw new Error(`Mod ${DEMO_MOD_ID} did not appear after Add mod (Worker/network?). ${error?.message ?? error}`);
     }
 
     // Enable/disable: assert the control exists, toggle both ways, assert final states.
@@ -206,26 +200,38 @@ async function run() {
       await clickModSwitch(page, "Disable");
       await waitForModSwitchChecked(page, "Enable", false);
       assert.equal(
-        await page.getByRole("switch", { name: /^Enable /i }).first().isChecked(),
+        await page
+          .getByRole("switch", { name: /^Enable /i })
+          .first()
+          .isChecked(),
         false,
       );
       await clickModSwitch(page, "Enable");
       await waitForModSwitchChecked(page, "Disable", true);
       assert.equal(
-        await page.getByRole("switch", { name: /^Disable /i }).first().isChecked(),
+        await page
+          .getByRole("switch", { name: /^Disable /i })
+          .first()
+          .isChecked(),
         true,
       );
     } else {
       await clickModSwitch(page, "Enable");
       await waitForModSwitchChecked(page, "Disable", true);
       assert.equal(
-        await page.getByRole("switch", { name: /^Disable /i }).first().isChecked(),
+        await page
+          .getByRole("switch", { name: /^Disable /i })
+          .first()
+          .isChecked(),
         true,
       );
       await clickModSwitch(page, "Disable");
       await waitForModSwitchChecked(page, "Enable", false);
       assert.equal(
-        await page.getByRole("switch", { name: /^Enable /i }).first().isChecked(),
+        await page
+          .getByRole("switch", { name: /^Enable /i })
+          .first()
+          .isChecked(),
         false,
       );
     }

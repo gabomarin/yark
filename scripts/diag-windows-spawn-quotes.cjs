@@ -70,13 +70,7 @@ class ShowCmd {
 `,
 );
 
-const csc = path.join(
-  process.env.WINDIR || "C:\\Windows",
-  "Microsoft.NET",
-  "Framework64",
-  "v4.0.30319",
-  "csc.exe",
-);
+const csc = path.join(process.env.WINDIR || "C:\\Windows", "Microsoft.NET", "Framework64", "v4.0.30319", "csc.exe");
 const exeSpace = path.join(spaceDir, "ShowCmd.exe");
 const exeNoSpace = path.join(nospaceDir, "ShowCmd.exe");
 for (const out of [exeSpace, exeNoSpace]) {
@@ -131,12 +125,10 @@ if (
 
 // Verbatim + \" still OK without spaces (legacy)
 {
-  const spawnArgs = logicalArgs.map((a) =>
-    a.includes("SessionName=") ? mapUrlToWindowsVerbatimArg(a) : a,
-  );
+  const spawnArgs = logicalArgs.map((a) => (a.includes("SessionName=") ? mapUrlToWindowsVerbatimArg(a) : a));
   if (
     !check(
-      "verbatim \\\" map no-space (legacy OK)",
+      'verbatim \\" map no-space (legacy OK)',
       spawnSync(exeNoSpace, spawnArgs, {
         encoding: "utf8",
         windowsVerbatimArguments: true,
@@ -191,4 +183,4 @@ if (failed) {
   console.error("\nFAIL: ProcessManager strategies did not preserve argv quotes");
   process.exit(1);
 }
-console.log("\nOK: child ARGV0 contains \"TheIsland_WP\"?SessionName=\"gabo\"");
+console.log('\nOK: child ARGV0 contains "TheIsland_WP"?SessionName="gabo"');

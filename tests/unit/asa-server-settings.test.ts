@@ -7,11 +7,7 @@ import {
   lookupAsaDescription,
   lookupAsaSetting,
 } from "@shared/asa/asa-server-settings";
-import {
-  iniSettingMetaStats,
-  lookupIniSettingInput,
-  lookupIniSettingMeta,
-} from "@shared/ini/ini-setting-meta";
+import { iniSettingMetaStats, lookupIniSettingInput, lookupIniSettingMeta } from "@shared/ini/ini-setting-meta";
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini/ini-defaults";
 import { isClientIniKey } from "@shared/ini/ini-text";
 
@@ -26,38 +22,20 @@ describe("ini-setting-meta (defaults-derived)", () => {
   });
 
   it("looks up AdminLogging case-insensitively by section and key", () => {
-    const setting = lookupAsaSetting(
-      "gameUserSettings",
-      "serversettings",
-      "adminlogging",
-    );
+    const setting = lookupAsaSetting("gameUserSettings", "serversettings", "adminlogging");
     expect(setting?.key).toBe("AdminLogging");
-    const value = lookupAsaDefaultValue(
-      "gameUserSettings",
-      "serversettings",
-      "adminlogging",
-    );
+    const value = lookupAsaDefaultValue("gameUserSettings", "serversettings", "adminlogging");
     expect(value?.toLowerCase()).toBe("false");
   });
 
   it("returns a non-empty AdminLogging description from defaults comments", () => {
-    const description = lookupAsaDescription(
-      "gameUserSettings",
-      "ServerSettings",
-      "AdminLogging",
-    );
+    const description = lookupAsaDescription("gameUserSettings", "ServerSettings", "AdminLogging");
     expect(description && description.length > 0).toBe(true);
   });
 
   it("infers boolean / range inputs from comments", () => {
-    expect(
-      lookupIniSettingInput("gameUserSettings", "ServerSettings", "AdminLogging"),
-    ).toEqual({ type: "boolean" });
-    const fishing = lookupIniSettingMeta(
-      "game",
-      "/script/shootergame.shootergamemode",
-      "FishingLootQualityMultiplier",
-    );
+    expect(lookupIniSettingInput("gameUserSettings", "ServerSettings", "AdminLogging")).toEqual({ type: "boolean" });
+    const fishing = lookupIniSettingMeta("game", "/script/shootergame.shootergamemode", "FishingLootQualityMultiplier");
     expect(fishing?.input.type).toBe("range");
     if (fishing?.input.type === "range") {
       expect(fishing.input.min).toBe(1);
@@ -66,20 +44,12 @@ describe("ini-setting-meta (defaults-derived)", () => {
   });
 
   it("does not clamp integers with non-negative defaults to min 0", () => {
-    const chatLogAge = lookupIniSettingInput(
-      "gameUserSettings",
-      "ServerSettings",
-      "ChatLogMaxAgeInDays",
-    );
+    const chatLogAge = lookupIniSettingInput("gameUserSettings", "ServerSettings", "ChatLogMaxAgeInDays");
     expect(chatLogAge).toEqual({ type: "number", integer: true, step: 1 });
   });
 
   it("keeps KillXPMultiplier description unpolluted by neighboring templates", () => {
-    const description = lookupAsaDescription(
-      "game",
-      "/script/shootergame.shootergamemode",
-      "KillXPMultiplier",
-    );
+    const description = lookupAsaDescription("game", "/script/shootergame.shootergamemode", "KillXPMultiplier");
     expect(description).toMatch(/XP earned for a kill/i);
     expect(description).not.toMatch(/ItemStatClamps/i);
   });

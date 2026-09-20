@@ -3,15 +3,8 @@ import { existsSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import {
-  resolveAsaApiInjectMode,
-  syncAsaApiVersionDll,
-} from "@backend/domains/asa-api/asa-api-inject";
-import {
-  deleteAsaApiPlugin,
-  readAsaApiStatus,
-  setAsaApiPluginEnabled,
-} from "@backend/domains/asa-api/asa-api-status";
+import { resolveAsaApiInjectMode, syncAsaApiVersionDll } from "@backend/domains/asa-api/asa-api-inject";
+import { deleteAsaApiPlugin, readAsaApiStatus, setAsaApiPluginEnabled } from "@backend/domains/asa-api/asa-api-status";
 import { uninstallAsaApiFromInstall } from "@backend/domains/asa-api/asa-api-uninstall";
 import { resolveLaunchBinaryPath } from "@backend/domains/instances/launch-args";
 import type { ServerProfile } from "@shared/types";
@@ -84,9 +77,7 @@ describe("asa-api status", () => {
     expect(status.plugins[0]?.name).toBe("ArkShop");
     expect(status.plugins[0]?.enabled).toBe(false);
     expect(existsSync(join(plugins, "ArkShop.disabled"))).toBe(false);
-    expect(existsSync(join(win64, "ArkApi", "Disabled_Plugins", "ArkShop"))).toBe(
-      true,
-    );
+    expect(existsSync(join(win64, "ArkApi", "Disabled_Plugins", "ArkShop"))).toBe(true);
   });
 
   it("migrates Win64\\Disabled_Plugins into ArkApi\\Disabled_Plugins", async () => {
@@ -99,9 +90,7 @@ describe("asa-api status", () => {
     const status = await readAsaApiStatus(root);
     expect(status.plugins[0]?.enabled).toBe(false);
     expect(existsSync(join(win64, "Disabled_Plugins"))).toBe(false);
-    expect(existsSync(join(win64, "ArkApi", "Disabled_Plugins", "ArkShop"))).toBe(
-      true,
-    );
+    expect(existsSync(join(win64, "ArkApi", "Disabled_Plugins", "ArkShop"))).toBe(true);
   });
 
   it("deletes plugin folders from Plugins or Disabled_Plugins", async () => {
@@ -126,15 +115,9 @@ describe("asa-api status", () => {
 
 describe("asa-api inject mode", () => {
   it("defaults to versionDll when AsaApi is on without loader flag", () => {
-    expect(
-      resolveAsaApiInjectMode({ useAsaApi: true, useAsaApiLoader: false }),
-    ).toBe("versionDll");
-    expect(
-      resolveAsaApiInjectMode({ useAsaApi: true, useAsaApiLoader: true }),
-    ).toBe("loader");
-    expect(
-      resolveAsaApiInjectMode({ useAsaApi: false, useAsaApiLoader: true }),
-    ).toBe("off");
+    expect(resolveAsaApiInjectMode({ useAsaApi: true, useAsaApiLoader: false })).toBe("versionDll");
+    expect(resolveAsaApiInjectMode({ useAsaApi: true, useAsaApiLoader: true })).toBe("loader");
+    expect(resolveAsaApiInjectMode({ useAsaApi: false, useAsaApiLoader: true })).toBe("off");
   });
 
   it("parks and restores Version.dll across modes", async () => {
@@ -243,9 +226,7 @@ describe("resolveLaunchBinaryPath", () => {
       useAsaApi: true,
       useAsaApiLoader: true,
     } as ServerProfile;
-    expect(resolveLaunchBinaryPath(profile).replace(/\//g, "\\")).toMatch(
-      /AsaApiLoader\.exe$/i,
-    );
+    expect(resolveLaunchBinaryPath(profile).replace(/\//g, "\\")).toMatch(/AsaApiLoader\.exe$/i);
   });
 
   it("keeps ArkAscendedServer.exe for Version.dll mode", () => {
@@ -254,8 +235,6 @@ describe("resolveLaunchBinaryPath", () => {
       useAsaApi: true,
       useAsaApiLoader: false,
     } as ServerProfile;
-    expect(resolveLaunchBinaryPath(profile).replace(/\//g, "\\")).toMatch(
-      /ArkAscendedServer\.exe$/i,
-    );
+    expect(resolveLaunchBinaryPath(profile).replace(/\//g, "\\")).toMatch(/ArkAscendedServer\.exe$/i);
   });
 });

@@ -23,14 +23,7 @@ interface Props {
 /** Workspace-tab chrome: header, scroll body, cancel/save footer. */
 export function ServerFormEmbedded(props: Props): ReactElement {
   return (
-    <AppSurfaceCard
-      tone="flat"
-      fill
-      padding={0}
-      radius="md"
-      className={classes.embedded}
-      data-server-form="embedded"
-    >
+    <AppSurfaceCard tone="flat" fill padding={0} radius={0} className={classes.embedded} data-server-form="embedded">
       <header className={classes.embeddedHeader}>
         <Group justify="space-between" align="flex-start" wrap="nowrap" gap="sm">
           <div>
@@ -42,7 +35,7 @@ export function ServerFormEmbedded(props: Props): ReactElement {
           {props.onOpenConfigurationAssistant !== undefined && (
             <Button
               size={props.inputSize}
-              variant="light"
+              variant="default"
               onClick={props.onOpenConfigurationAssistant}
               disabled={props.configurationAssistantDisabled}
               title={
@@ -70,12 +63,7 @@ export function ServerFormEmbedded(props: Props): ReactElement {
       <footer className={classes.embeddedFooter}>
         <Group justify="flex-end">
           {props.isDirty && (
-            <Button
-              size={props.inputSize}
-              variant="default"
-              onClick={props.onRevert}
-              disabled={props.saving}
-            >
+            <Button size={props.inputSize} variant="default" onClick={props.onRevert} disabled={props.saving}>
               Cancel
             </Button>
           )}

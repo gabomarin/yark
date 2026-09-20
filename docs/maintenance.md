@@ -6,66 +6,66 @@ same honesty as [backups.md](backups.md) world schedule.
 
 ## Status
 
-| Slice | Issue | State |
-| --- | --- | --- |
-| Tab + job model | #486 | Done |
-| Restart + warnings | #487 | Done |
-| Wipe after restart | #488 | Done |
-| Auto-update (Steam newer) | #489 | Done |
+| Slice                     | Issue | State |
+| ------------------------- | ----- | ----- |
+| Tab + job model           | #486  | Done  |
+| Restart + warnings        | #487  | Done  |
+| Wipe after restart        | #488  | Done  |
+| Auto-update (Steam newer) | #489  | Done  |
 
 MagicPath UX mock: https://magicpath.ai/files/444694713119952896
 
 ## Building blocks
 
-| Role | Path |
-| --- | --- |
-| Policies (SQLite) | `maintenance_policies` (migration 18+), `MaintenanceRepository` |
-| Orchestration | `MaintenanceService` |
-| Restart + wipe | `MaintenanceRestartRuntime` |
-| Steam-newer update | `MaintenanceUpdateRuntime` |
-| Scheduler | `MaintenanceScheduler` (~60s; fires once on start; overlapping ticks coalesce; `.unref()`) |
-| Shared helpers | `src/shared/maintenance/maintenance-schedule.ts`, `maintenance-policy.ts`, `maintenance-restart-days.ts` (same folder) |
-| Crash recovery | `crash_recovery_policies` (migration 23), `CrashRecoveryRepository`, `CrashRecoveryService` (#563) |
-| UI | `src/renderer/src/features/maintenance/`, `src/renderer/src/features/crash-recovery/` |
+| Role               | Path                                                                                                                   |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| Policies (SQLite)  | `maintenance_policies` (migration 18+), `MaintenanceRepository`                                                        |
+| Orchestration      | `MaintenanceService`                                                                                                   |
+| Restart + wipe     | `MaintenanceRestartRuntime`                                                                                            |
+| Steam-newer update | `MaintenanceUpdateRuntime`                                                                                             |
+| Scheduler          | `MaintenanceScheduler` (~60s; fires once on start; overlapping ticks coalesce; `.unref()`)                             |
+| Shared helpers     | `src/shared/maintenance/maintenance-schedule.ts`, `maintenance-policy.ts`, `maintenance-restart-days.ts` (same folder) |
+| Crash recovery     | `crash_recovery_policies` (migration 23), `CrashRecoveryRepository`, `CrashRecoveryService` (#563)                     |
+| UI                 | `src/renderer/src/features/maintenance/`, `src/renderer/src/features/crash-recovery/`                                  |
 
 ## IPC
 
 No push channel — the Maintenance tab polls `getPolicy` while mounted.
 
-| Shared key | Channel | Preload | Behavior |
-| --- | --- | --- | --- |
-| `maintenanceGetPolicy` | `maintenance:get-policy` | `getMaintenancePolicy` | `ensurePolicy` then status |
-| `maintenanceSetPolicy` | `maintenance:set-policy` | `setMaintenancePolicy` | zod `maintenancePolicyWriteSchema` |
-| `maintenanceClearSchedulePause` | `maintenance:clear-schedule-pause` | `clearMaintenanceSchedulePause` | Clears **both** runtimes’ pauses + fail streaks |
-| `maintenanceRunRestartNow` | `maintenance:run-restart-now` | `runMaintenanceRestartNow` | Short lead → countdown |
-| `maintenanceRunRestartWarning` | `maintenance:run-manual-restart-warning` | `runMaintenanceRestartWarning` | Opt-in manual warning window → graceful restart |
-| `maintenanceRunUpdateNow` | `maintenance:run-update-now` | `runMaintenanceUpdateNow` | Requires running + Steam newer |
-| `maintenanceCancelUpcoming` | `maintenance:cancel-upcoming` | `cancelMaintenanceUpcoming` | Cancels both runtimes’ active windows |
+| Shared key                      | Channel                                  | Preload                         | Behavior                                        |
+| ------------------------------- | ---------------------------------------- | ------------------------------- | ----------------------------------------------- |
+| `maintenanceGetPolicy`          | `maintenance:get-policy`                 | `getMaintenancePolicy`          | `ensurePolicy` then status                      |
+| `maintenanceSetPolicy`          | `maintenance:set-policy`                 | `setMaintenancePolicy`          | zod `maintenancePolicyWriteSchema`              |
+| `maintenanceClearSchedulePause` | `maintenance:clear-schedule-pause`       | `clearMaintenanceSchedulePause` | Clears **both** runtimes’ pauses + fail streaks |
+| `maintenanceRunRestartNow`      | `maintenance:run-restart-now`            | `runMaintenanceRestartNow`      | Short lead → countdown                          |
+| `maintenanceRunRestartWarning`  | `maintenance:run-manual-restart-warning` | `runMaintenanceRestartWarning`  | Opt-in manual warning window → graceful restart |
+| `maintenanceRunUpdateNow`       | `maintenance:run-update-now`             | `runMaintenanceUpdateNow`       | Requires running + Steam newer                  |
+| `maintenanceCancelUpcoming`     | `maintenance:cancel-upcoming`            | `cancelMaintenanceUpcoming`     | Cancels both runtimes’ active windows           |
 
 ## Constants
 
-| Constant | Value | Notes |
-| --- | --- | --- |
-| `MAINTENANCE_RUN_NOW_LEAD_MS` | 10s | Run now confirm → warning window |
-| `MAINTENANCE_FAIL_LIMIT` | 3 | Hard failures before session pause (per runtime) |
-| `MAINTENANCE_RCON_SOFT_FAIL_LIMIT` | 3 | Consecutive ServerChat fails in one window → hard-fail that window |
-| `MAINTENANCE_WIPE_POST_READY_MS` | 20s | Extra wait after `running` before wipe |
-| `MAINTENANCE_WIPE_READY_TIMEOUT_MS` | 10 min | Cap waiting for post-restart ready + RCON |
-| Update retry cooldown | 5 min | Private in update-runtime; failed Steam build key |
-| Steam availability UI cache | 30s | Update-runtime snapshot reuse |
-| Official Steam build cache | 15 min | Same as [updates-steamcmd.md](updates-steamcmd.md) |
-| Scheduler tick | 60s | Immediate first cycle on start |
-| UI poll | idle 10s / warning 3s / last_minute+execute 1s | Paused while `document.hidden` |
+| Constant                            | Value                                          | Notes                                                              |
+| ----------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------ |
+| `MAINTENANCE_RUN_NOW_LEAD_MS`       | 10s                                            | Run now confirm → warning window                                   |
+| `MAINTENANCE_FAIL_LIMIT`            | 3                                              | Hard failures before session pause (per runtime)                   |
+| `MAINTENANCE_RCON_SOFT_FAIL_LIMIT`  | 3                                              | Consecutive ServerChat fails in one window → hard-fail that window |
+| `MAINTENANCE_WIPE_POST_READY_MS`    | 20s                                            | Extra wait after `running` before wipe                             |
+| `MAINTENANCE_WIPE_READY_TIMEOUT_MS` | 10 min                                         | Cap waiting for post-restart ready + RCON                          |
+| Update retry cooldown               | 5 min                                          | Private in update-runtime; failed Steam build key                  |
+| Steam availability UI cache         | 30s                                            | Update-runtime snapshot reuse                                      |
+| Official Steam build cache          | 15 min                                         | Same as [updates-steamcmd.md](updates-steamcmd.md)                 |
+| Scheduler tick                      | 60s                                            | Immediate first cycle on start                                     |
+| UI poll                             | idle 10s / warning 3s / last_minute+execute 1s | Paused while `document.hidden`                                     |
 
 ## Warning presets
 
 From `maintenance-policy.ts` (labels in UI: Off / Minimal / Regular / Frequent / Custom):
 
-| Job | quiet | standard | strict |
-| --- | --- | --- | --- |
-| Restart | `5m` | `30m,15m,5m,1m` | `30m,15m,10m,5m,1m` |
-| Update | `5m` | `15m,5m,1m` | `15m,10m,5m,1m` |
-| Manual restart | `5m` | `5m,1m` | `10m,5m,1m` |
+| Job            | quiet | standard        | strict              |
+| -------------- | ----- | --------------- | ------------------- |
+| Restart        | `5m`  | `30m,15m,5m,1m` | `30m,15m,10m,5m,1m` |
+| Update         | `5m`  | `15m,5m,1m`     | `15m,10m,5m,1m`     |
+| Manual restart | `5m`  | `5m,1m`         | `10m,5m,1m`         |
 
 Defaults: Sunday **04:00**, templates `Server restart/update in {time}`, `lastMinuteChat: true`.
 Last-minute lines are **fixed** (not editable): `Restart in {n}s` / `Update in {n}s`.
@@ -79,11 +79,11 @@ off by default. When enabled, the Restart split button offers **Restart with
 player warning** without changing the immediate **Restart now** action. Manual
 warnings use three short fixed presets so the action stays easy to scan:
 
-| Preset | Messages before restart |
-| --- | --- |
-| Minimal | `5m` |
-| Regular (default) | `5m`, `1m` |
-| Frequent | `10m`, `5m`, `1m` |
+| Preset            | Messages before restart |
+| ----------------- | ----------------------- |
+| Minimal           | `5m`                    |
+| Regular (default) | `5m`, `1m`              |
+| Frequent          | `10m`, `5m`, `1m`       |
 
 The optional last-minute chat countdown uses the fixed `Restart in {n}s` copy.
 The operator can cancel while the warning window is active; if players already
@@ -117,12 +117,12 @@ Persisting pause across launches is intentionally out of scope for #315.
 
 `cancelable` only while phase is `warning` | `last_minute` (not restarting / updating / wiping).
 
-| Job | Cancel effect |
-| --- | --- |
-| Restart | Mark schedule target in `completedTargets` → no re-arm this session |
-| Update | `releaseAvailability(key)` → may re-arm later |
-| Intentional stop mid-window | Quiet abort (same mark/release rules) |
-| Unexpected process death mid-countdown | Hard-fail (counts toward fail-streak) |
+| Job                                    | Cancel effect                                                       |
+| -------------------------------------- | ------------------------------------------------------------------- |
+| Restart                                | Mark schedule target in `completedTargets` → no re-arm this session |
+| Update                                 | `releaseAvailability(key)` → may re-arm later                       |
+| Intentional stop mid-window            | Quiet abort (same mark/release rules)                               |
+| Unexpected process death mid-countdown | Hard-fail (counts toward fail-streak)                               |
 
 ## Restart schedule (#487)
 
@@ -189,12 +189,12 @@ exhausted budget never restart. Reattach (#59) and assisted restore (#525) stay
 separate. Operator-closed console exits are classified as clean stops (#524) and
 never reach this path.
 
-| Setting | Default | Meaning |
-| --- | --- | --- |
-| Enable | Off | Opt in per server |
-| Restart attempts | 3 | Automatic restarts allowed before it stops |
-| Delay before retry | 30s | Attempt N waits `N × base` (linear: 30/60/90s) so short-lived causes have time to clear |
-| Reset attempts after | 10 min | Measured from the live process uptime: once it has been up this long the attempts start over (a later crash counts as attempt 1). Time spent stopped is not counted |
+| Setting              | Default | Meaning                                                                                                                                                             |
+| -------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Enable               | Off     | Opt in per server                                                                                                                                                   |
+| Restart attempts     | 3       | Automatic restarts allowed before it stops                                                                                                                          |
+| Delay before retry   | 30s     | Attempt N waits `N × base` (linear: 30/60/90s) so short-lived causes have time to clear                                                                             |
+| Reset attempts after | 10 min  | Measured from the live process uptime: once it has been up this long the attempts start over (a later crash counts as attempt 1). Time spent stopped is not counted |
 
 - Reset semantics: a run past the window clears the counter to 0, so the next crash
   is attempt 1. The reset is applied both while the run is live (when the policy is
@@ -238,19 +238,19 @@ never reach this path.
 
 ## Pitfalls
 
-| Symptom | Likely cause |
-| --- | --- |
-| Jobs never fire | YARK quit (tray-hidden is OK); jobs need the app process |
-| Schedule paused banner | 3 hard failures this session — use Resume (clears both jobs) |
-| Cancelled restart comes back after relaunch | `completedTargets` is in-memory only |
-| Cancelled update returns | Availability was released; cooldown may still apply after a fail |
-| Run update now disabled / errors | Need running + Steam newer; stopped → Downloads |
-| Update countdown never arms | Downloads is paused or held for the operator |
-| Players still online at update T0 | T0 stop failed or was skipped; check stop errors / cancel race |
-| Wipe ran but animals returned | `-ForceRespawnDinos` on Launch is separate; wipe is one-shot after restart |
-| Console missing after maintenance start | Settings **Show server console on start** was off |
-| Crash recovery not restarting | Policy off/paused, profile Inactive, budget exhausted, or a Maintenance window/lock held |
-| Crash recovery restarts twice quickly | Expected: attempt N waits `N × backoff`; a run shorter than the stability window does not reset the budget |
+| Symptom                                     | Likely cause                                                                                               |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Jobs never fire                             | YARK quit (tray-hidden is OK); jobs need the app process                                                   |
+| Schedule paused banner                      | 3 hard failures this session — use Resume (clears both jobs)                                               |
+| Cancelled restart comes back after relaunch | `completedTargets` is in-memory only                                                                       |
+| Cancelled update returns                    | Availability was released; cooldown may still apply after a fail                                           |
+| Run update now disabled / errors            | Need running + Steam newer; stopped → Downloads                                                            |
+| Update countdown never arms                 | Downloads is paused or held for the operator                                                               |
+| Players still online at update T0           | T0 stop failed or was skipped; check stop errors / cancel race                                             |
+| Wipe ran but animals returned               | `-ForceRespawnDinos` on Launch is separate; wipe is one-shot after restart                                 |
+| Console missing after maintenance start     | Settings **Show server console on start** was off                                                          |
+| Crash recovery not restarting               | Policy off/paused, profile Inactive, budget exhausted, or a Maintenance window/lock held                   |
+| Crash recovery restarts twice quickly       | Expected: attempt N waits `N × backoff`; a run shorter than the stability window does not reset the budget |
 
 ## Tests / e2e
 

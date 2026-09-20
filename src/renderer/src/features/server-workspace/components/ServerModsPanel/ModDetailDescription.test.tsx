@@ -32,22 +32,16 @@ describe("ModDetailDescription", () => {
     scrollHeight.mockReturnValue(80);
     clientHeight.mockReturnValue(80);
     renderDescription("Short line.");
-    expect(
-      screen.queryByRole("button", { name: /show more/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /show more/i })).not.toBeInTheDocument();
 
     scrollHeight.mockReturnValue(240);
     clientHeight.mockReturnValue(80);
     const user = userEvent.setup();
-    renderDescription(
-      Array.from({ length: 30 }, (_, index) => `Line ${index + 1}.`).join("\n"),
-    );
+    renderDescription(Array.from({ length: 30 }, (_, index) => `Line ${index + 1}.`).join("\n"));
 
     const showMore = screen.getByRole("button", { name: /show more/i });
     expect(showMore).toBeInTheDocument();
     await user.click(showMore);
-    expect(
-      screen.getByRole("button", { name: /show less/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /show less/i })).toBeInTheDocument();
   });
 });

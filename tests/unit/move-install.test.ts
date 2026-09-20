@@ -16,9 +16,7 @@ import * as backupDisk from "@backend/domains/backups/backup-disk";
 import { cp } from "node:fs/promises";
 
 vi.mock("@backend/domains/instances/server-installation", async (importOriginal) => {
-  const actual = await importOriginal<
-    typeof import("@backend/domains/instances/server-installation")
-  >();
+  const actual = await importOriginal<typeof import("@backend/domains/instances/server-installation")>();
   const inspectServerInstallation = vi.fn();
   return {
     ...actual,
@@ -30,9 +28,8 @@ vi.mock("@backend/domains/instances/server-installation", async (importOriginal)
         options?: Parameters<typeof actual.inspectServerInstallationAsync>[2],
       ) => inspectServerInstallation(serverId, installDir, options),
     ),
-    classifyInstallHealthAsync: vi.fn(
-      async (installDir: string, binaryPath: string) =>
-        actual.classifyInstallHealthAsync(installDir, binaryPath),
+    classifyInstallHealthAsync: vi.fn(async (installDir: string, binaryPath: string) =>
+      actual.classifyInstallHealthAsync(installDir, binaryPath),
     ),
   };
 });
@@ -42,10 +39,7 @@ vi.mock("@backend/domains/instances/sync-profile-ini", () => {
   return {
     syncProfileSettingsToIni,
     applyProfileOwnedIni: vi.fn(
-      async (
-        profile: { id: string },
-        syncVia?: (serverId: string, profile?: unknown) => Promise<void>,
-      ) => {
+      async (profile: { id: string }, syncVia?: (serverId: string, profile?: unknown) => Promise<void>) => {
         if (syncVia !== undefined) {
           await syncVia(profile.id, profile);
           return;
@@ -214,9 +208,7 @@ describe("MoveInstallService", () => {
     const source = profile({ installDir: sourceDir });
     const { move } = harness([source]);
 
-    await expect(move.moveInstall(source.id, destDir)).rejects.toThrow(
-      /inside the current install/i,
-    );
+    await expect(move.moveInstall(source.id, destDir)).rejects.toThrow(/inside the current install/i);
 
     await rm(root, { recursive: true, force: true });
   });
@@ -229,9 +221,7 @@ describe("MoveInstallService", () => {
     const source = profile({ installDir: sourceDir });
     const { move } = harness([source]);
 
-    await expect(move.moveInstall(source.id, root)).rejects.toThrow(
-      /would contain the current install/i,
-    );
+    await expect(move.moveInstall(source.id, root)).rejects.toThrow(/would contain the current install/i);
 
     await rm(root, { recursive: true, force: true });
   });
@@ -284,12 +274,10 @@ describe("MoveInstallService", () => {
       return "C:\\";
     });
 
-    vi.spyOn(robocopyTreeModule, "robocopyTree").mockImplementation(
-      async (from, to) => {
-        await cp(from, to, { recursive: true });
-        return 1;
-      },
-    );
+    vi.spyOn(robocopyTreeModule, "robocopyTree").mockImplementation(async (from, to) => {
+      await cp(from, to, { recursive: true });
+      return 1;
+    });
 
     const source = profile({ installDir: sourceDir });
     const { move, getProfiles } = harness([source]);
@@ -328,13 +316,7 @@ describe("MoveInstallService", () => {
         steamBuild: null,
         arkVersion: null,
         version: null,
-        binaryPath: join(
-          installDir,
-          "ShooterGame",
-          "Binaries",
-          "Win64",
-          "ArkAscendedServer.exe",
-        ),
+        binaryPath: join(installDir, "ShooterGame", "Binaries", "Win64", "ArkAscendedServer.exe"),
         checkedAt: new Date().toISOString(),
       };
     });
@@ -390,9 +372,7 @@ describe("MoveInstallService", () => {
       return 1;
     });
 
-    await expect(move.moveInstall(source.id, destDir)).rejects.toThrow(
-      /sqlite event write failed/,
-    );
+    await expect(move.moveInstall(source.id, destDir)).rejects.toThrow(/sqlite event write failed/);
     expect(getProfiles()[0]?.installDir).toBe(destDir);
     await expect(access(sourceDir)).rejects.toThrow();
     await access(join(destDir, "ShooterGame", "Binaries", "Win64", "ArkAscendedServer.exe"));
@@ -422,9 +402,7 @@ describe("MoveInstallService", () => {
       return "D:\\";
     });
 
-    vi.spyOn(robocopyTreeModule, "robocopyTree").mockRejectedValue(
-      new Error("robocopy blew up"),
-    );
+    vi.spyOn(robocopyTreeModule, "robocopyTree").mockRejectedValue(new Error("robocopy blew up"));
 
     const source = profile({ installDir: sourceDir });
     const { move, getProfiles, repo } = harness([source]);
@@ -448,17 +426,11 @@ describe("MoveInstallService", () => {
     const pendingPath = join(root, "pending-cleanup.json");
     const oldDir = join(root, "Island");
     await mkdir(oldDir, { recursive: true });
-    await writeFile(
-      pendingPath,
-      `${JSON.stringify({ byServerId: { "srv-1": oldDir } }, null, 2)}\n`,
-      "utf8",
-    );
+    await writeFile(pendingPath, `${JSON.stringify({ byServerId: { "srv-1": oldDir } }, null, 2)}\n`, "utf8");
     const source = profile({ installDir: oldDir });
     const { move } = harness([source], null, pendingPath);
 
-    await expect(move.cleanupOldSource(source.id, oldDir)).rejects.toThrow(
-      /still points at it/,
-    );
+    await expect(move.cleanupOldSource(source.id, oldDir)).rejects.toThrow(/still points at it/);
 
     await rm(root, { recursive: true, force: true });
   });
@@ -473,11 +445,7 @@ describe("MoveInstallService", () => {
     await writeFile(join(oldDir, "keep-me.txt"), "data", "utf8");
     await mkdir(otherDir, { recursive: true });
     await writeFile(join(otherDir, "do-not-delete.txt"), "safe", "utf8");
-    await writeFile(
-      pendingPath,
-      `${JSON.stringify({ byServerId: { "srv-1": oldDir } }, null, 2)}\n`,
-      "utf8",
-    );
+    await writeFile(pendingPath, `${JSON.stringify({ byServerId: { "srv-1": oldDir } }, null, 2)}\n`, "utf8");
 
     const source = profile({ installDir: newDir });
     const { move } = harness([source], null, pendingPath);
@@ -494,9 +462,7 @@ describe("MoveInstallService", () => {
     const pendingRaw = await readFile(pendingPath, "utf8");
     expect(JSON.parse(pendingRaw)).toEqual({ byServerId: {} });
 
-    await expect(move.cleanupOldSource(source.id, oldDir)).rejects.toThrow(
-      /No pending install cleanup/,
-    );
+    await expect(move.cleanupOldSource(source.id, oldDir)).rejects.toThrow(/No pending install cleanup/);
 
     await rm(root, { recursive: true, force: true });
   });
@@ -507,20 +473,14 @@ describe("MoveInstallService", () => {
     const oldDir = join(root, "old-Island");
     await mkdir(oldDir, { recursive: true });
     await writeFile(join(oldDir, "keep-me.txt"), "data", "utf8");
-    await writeFile(
-      pendingPath,
-      `${JSON.stringify({ byServerId: { "srv-1": oldDir } }, null, 2)}\n`,
-      "utf8",
-    );
+    await writeFile(pendingPath, `${JSON.stringify({ byServerId: { "srv-1": oldDir } }, null, 2)}\n`, "utf8");
 
     const source = profile({ installDir: join(root, "new-Island") });
     const { move } = harness([source], null, pendingPath);
 
     await move.dismissCleanupPrompt(source.id);
     await access(join(oldDir, "keep-me.txt"));
-    await expect(move.cleanupOldSource(source.id, oldDir)).rejects.toThrow(
-      /No pending install cleanup/,
-    );
+    await expect(move.cleanupOldSource(source.id, oldDir)).rejects.toThrow(/No pending install cleanup/);
 
     await rm(root, { recursive: true, force: true });
   });
@@ -534,11 +494,7 @@ describe("MoveInstallService", () => {
     await mkdir(leftoverA, { recursive: true });
     await writeFile(join(leftoverA, "keep-me.txt"), "old", "utf8");
     await makeReadyInstall(sourceB);
-    await writeFile(
-      pendingPath,
-      `${JSON.stringify({ byServerId: { "srv-1": leftoverA } }, null, 2)}\n`,
-      "utf8",
-    );
+    await writeFile(pendingPath, `${JSON.stringify({ byServerId: { "srv-1": leftoverA } }, null, 2)}\n`, "utf8");
 
     const source = profile({ installDir: sourceB });
     const { move, getProfiles } = harness([source], null, pendingPath);
@@ -586,11 +542,7 @@ describe("MoveInstallService", () => {
     await mkdir(installDir, { recursive: true });
     await mkdir(staging, { recursive: true });
     await writeFile(join(staging, MOVE_STAGING_MARKER), "serverId=srv-1\n", "utf8");
-    await writeFile(
-      registryPath,
-      `${JSON.stringify({ paths: [staging] }, null, 2)}\n`,
-      "utf8",
-    );
+    await writeFile(registryPath, `${JSON.stringify({ paths: [staging] }, null, 2)}\n`, "utf8");
 
     const source = profile({ installDir });
     const { move } = harness([source], registryPath);
@@ -608,24 +560,17 @@ describe("MoveInstallService", () => {
 
 describe("same-volume rename helpers", () => {
   it("detects nested paths as unsafe for rename", async () => {
-    const { canUseSameVolumeRename, isPathInside } = await import(
-      "@backend/domains/instances/move-install-service"
-    );
+    const { canUseSameVolumeRename, isPathInside } = await import("@backend/domains/instances/move-install-service");
     expect(isPathInside("C:\\ARK\\Server", "C:\\ARK\\Server\\nested")).toBe(true);
-    expect(canUseSameVolumeRename("C:\\ARK\\Server", "C:\\ARK\\Server\\nested")).toBe(
-      false,
-    );
+    expect(canUseSameVolumeRename("C:\\ARK\\Server", "C:\\ARK\\Server\\nested")).toBe(false);
   });
 });
 
 describe("isWindowsDriveRoot", () => {
   it("recognizes drive roots", async () => {
-    const { isWindowsDriveRoot } = await import(
-      "@backend/domains/instances/install-dir-safety"
-    );
+    const { isWindowsDriveRoot } = await import("@backend/domains/instances/install-dir-safety");
     expect(isWindowsDriveRoot("H:\\")).toBe(true);
     expect(isWindowsDriveRoot("H:")).toBe(true);
     expect(isWindowsDriveRoot("H:\\ARK\\Server")).toBe(false);
   });
 });
-

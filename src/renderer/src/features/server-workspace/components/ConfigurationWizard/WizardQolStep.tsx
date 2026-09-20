@@ -10,10 +10,7 @@ interface Props {
 
 export function WizardQolStep({ form }: Props): ReactElement {
   return (
-    <WizardStep
-      title="Choose comfort rules"
-      description="Common comfort settings, not performance tuning."
-    >
+    <WizardStep title="Choose comfort rules" description="Common comfort settings, not performance tuning.">
       <Stack gap="xs">
         <SettingSwitch
           label="PvE server"

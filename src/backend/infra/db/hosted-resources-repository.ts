@@ -142,16 +142,14 @@ export class HostedResourcesRepository {
   }
 
   getResource(id: string): HostedResourceRow | null {
-    const row = this.db
-      .prepare("SELECT * FROM hosted_resources WHERE id = ?")
-      .get(id) as unknown as ResourceDbRow | undefined;
+    const row = this.db.prepare("SELECT * FROM hosted_resources WHERE id = ?").get(id) as unknown as
+      ResourceDbRow | undefined;
     return row ? toResource(row) : null;
   }
 
   getResourceByToken(token: string): HostedResourceRow | null {
-    const row = this.db
-      .prepare("SELECT * FROM hosted_resources WHERE token = ?")
-      .get(token) as unknown as ResourceDbRow | undefined;
+    const row = this.db.prepare("SELECT * FROM hosted_resources WHERE token = ?").get(token) as unknown as
+      ResourceDbRow | undefined;
     return row ? toResource(row) : null;
   }
 
@@ -181,17 +179,9 @@ export class HostedResourcesRepository {
       .run(displayName, updatedAt, id);
   }
 
-  updateMetadata(
-    id: string,
-    displayName: string,
-    notes: string,
-    tags: string[],
-    updatedAt: string,
-  ): void {
+  updateMetadata(id: string, displayName: string, notes: string, tags: string[], updatedAt: string): void {
     this.db
-      .prepare(
-        "UPDATE hosted_resources SET display_name = ?, notes = ?, tags_json = ?, updated_at = ? WHERE id = ?",
-      )
+      .prepare("UPDATE hosted_resources SET display_name = ?, notes = ?, tags_json = ?, updated_at = ? WHERE id = ?")
       .run(displayName, notes, JSON.stringify(tags), updatedAt, id);
   }
 
@@ -208,9 +198,7 @@ export class HostedResourcesRepository {
 
   listRevisions(resourceId: string): HostedResourceRevisionRow[] {
     const rows = this.db
-      .prepare(
-        "SELECT * FROM hosted_resource_revisions WHERE resource_id = ? ORDER BY sequence DESC",
-      )
+      .prepare("SELECT * FROM hosted_resource_revisions WHERE resource_id = ? ORDER BY sequence DESC")
       .all(resourceId) as unknown as RevisionDbRow[];
     return rows.map(toRevision);
   }
@@ -226,17 +214,14 @@ export class HostedResourcesRepository {
   }
 
   getRevision(id: string): HostedResourceRevisionRow | null {
-    const row = this.db
-      .prepare("SELECT * FROM hosted_resource_revisions WHERE id = ?")
-      .get(id) as unknown as RevisionDbRow | undefined;
+    const row = this.db.prepare("SELECT * FROM hosted_resource_revisions WHERE id = ?").get(id) as unknown as
+      RevisionDbRow | undefined;
     return row ? toRevision(row) : null;
   }
 
   nextSequence(resourceId: string): number {
     const row = this.db
-      .prepare(
-        "SELECT COALESCE(MAX(sequence), 0) AS maxSequence FROM hosted_resource_revisions WHERE resource_id = ?",
-      )
+      .prepare("SELECT COALESCE(MAX(sequence), 0) AS maxSequence FROM hosted_resource_revisions WHERE resource_id = ?")
       .get(resourceId) as unknown as { maxSequence: number };
     return row.maxSequence + 1;
   }
@@ -279,9 +264,7 @@ export class HostedResourcesRepository {
            WHERE id = ? AND resource_id = ?`,
         )
         .run(publishedAt, revisionId, resourceId);
-      this.db
-        .prepare("UPDATE hosted_resources SET updated_at = ? WHERE id = ?")
-        .run(publishedAt, resourceId);
+      this.db.prepare("UPDATE hosted_resources SET updated_at = ? WHERE id = ?").run(publishedAt, resourceId);
       this.db.exec("COMMIT;");
     } catch (error) {
       try {
@@ -338,13 +321,7 @@ export class HostedResourcesRepository {
            SET display_name = ?, notes = ?, tags_json = ?, updated_at = ?
            WHERE id = ?`,
         )
-        .run(
-          input.displayName,
-          input.notes,
-          JSON.stringify(input.tags),
-          input.publishedAt,
-          input.resourceId,
-        );
+        .run(input.displayName, input.notes, JSON.stringify(input.tags), input.publishedAt, input.resourceId);
       this.db.exec("COMMIT;");
     } catch (error) {
       try {

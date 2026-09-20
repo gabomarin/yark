@@ -1,7 +1,8 @@
 import type { ReactElement } from "react";
-import { Alert } from "@mantine/core";
+
 import type { ServerProfile } from "@shared/types";
 import type { KnownClusterOption } from "@features/clusters/knownClusterOptions";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { ServerFormAlerts } from "./ServerFormAlerts";
 import { ServerFormEmbedded } from "./ServerFormEmbedded";
 import { ServerFormProfileFields } from "./ServerFormProfileFields";
@@ -110,14 +111,11 @@ export function ServerForm(props: Props): ReactElement {
       onBrowseClusterDir={() => void form.browseDirectory("clusterDir")}
       onClusterIdChange={setField("clusterId")}
       onClusterDirChange={setField("clusterDir")}
-      onAutoStartChange={(autoStart) =>
-        setState((previous) => ({ ...previous, autoStart }))
-      }
+      onAutoStartChange={(autoStart) => setState((previous) => ({ ...previous, autoStart }))}
     />
   );
 
-  const errorAlert =
-    form.error !== null ? <Alert color="red">{form.error}</Alert> : null;
+  const errorAlert = form.error !== null ? <AppAlert color="red">{form.error}</AppAlert> : null;
 
   const moveDialog =
     props.initial !== null && props.onOpenMoveInstall === undefined ? (
