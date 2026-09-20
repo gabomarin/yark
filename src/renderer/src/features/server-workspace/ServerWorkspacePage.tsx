@@ -3,8 +3,8 @@ import { useMediaQuery } from "@mantine/hooks";
 import type { ServerRuntimeInfo } from "@shared/types";
 import type { ReactElement } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useLayoutProfile } from "@app/AppProviders";
-import { drawersMediaQuery } from "@shared/layout/layoutProfiles";
+import { useWorkspacePanels } from "@app/AppProviders";
+import { drawersMediaQuery } from "@shared/workspace/workspacePanels";
 import { ConfigurationWizard } from "./components/ConfigurationWizard/ConfigurationWizard";
 import { ServerListPanel } from "./components/ServerListPanel/ServerListPanel";
 import { ServerOnboardingChecklist } from "./components/ServerOnboardingChecklist/ServerOnboardingChecklist";
@@ -36,9 +36,9 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
   const [iniEditorVersion, setIniEditorVersion] = useState(0);
   const [serverSwitcherOpen, setServerSwitcherOpen] = useState(false);
   const [serverActionsOpen, setServerActionsOpen] = useState(false);
-  const layoutProfile = useLayoutProfile();
-  // `null` = this profile never uses three columns, so it stays compact at any width.
-  const drawersQuery = drawersMediaQuery(layoutProfile);
+  const panels = useWorkspacePanels();
+  // `null` = this option never uses columns, so the workspace stays compact at any width.
+  const drawersQuery = drawersMediaQuery(panels);
   const drawersBelowBreakpoint = useMediaQuery(drawersQuery ?? "(max-width: 0px)", drawersQuery === null);
   const compactWorkspace = drawersQuery === null || drawersBelowBreakpoint;
   const {

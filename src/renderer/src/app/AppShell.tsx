@@ -40,9 +40,9 @@ import {
   writeSettingsCategoryPref,
   writeUiDensityPref,
   type AppearanceSettings,
-  type LayoutProfileId,
   type ThemeId,
   type UiDensity,
+  type WorkspacePanelsId,
 } from "@features/settings/settingsModel";
 import { DEFAULT_APPEARANCE_SETTINGS } from "@shared/settings/appearance";
 import { DEFAULT_OPEN_NATIVE_CONSOLE } from "@shared/settings/open-native-console";
@@ -198,8 +198,9 @@ export function AppShell({
     [appearance, persistAppearance],
   );
 
-  const handleLayoutProfileChange = useCallback(
-    (layout: LayoutProfileId) => void persistAppearance({ ...appearance, layout }, "Could not save layout"),
+  const handleWorkspacePanelsChange = useCallback(
+    (panels: WorkspacePanelsId) =>
+      void persistAppearance({ ...appearance, panels }, "Could not save server panel settings"),
     [appearance, persistAppearance],
   );
 
@@ -418,7 +419,7 @@ export function AppShell({
   }, []);
 
   return (
-    <AppProviders density={uiDensity} themeId={appearance.theme} layoutProfile={appearance.layout}>
+    <AppProviders density={uiDensity} themeId={appearance.theme} workspacePanels={appearance.panels}>
       <AppSpotlight
         servers={servers}
         currentRoute={route}
@@ -563,8 +564,8 @@ export function AppShell({
           handleUiDensityChange,
           themeId: appearance.theme,
           handleThemeChange,
-          layoutProfile: appearance.layout,
-          handleLayoutProfileChange,
+          workspacePanels: appearance.panels,
+          handleWorkspacePanelsChange,
           defaultBaseFolder,
           setDefaultBaseFolder,
           extraClusterOptions,

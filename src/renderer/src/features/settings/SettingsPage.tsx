@@ -19,10 +19,10 @@ import { SettingsYarkUpdateSection } from "./components/SettingsYarkUpdateSectio
 import {
   readSettingsCategoryPref,
   writeSettingsCategoryPref,
-  type LayoutProfileId,
   type SettingsCategory,
   type ThemeId,
   type UiDensity,
+  type WorkspacePanelsId,
 } from "./settingsModel";
 import type { DesktopShellPreferencesController } from "./hooks/useDesktopShellPreferences";
 import { SETTINGS_PANEL_SCROLL_ATTR } from "./settingsTestIds";
@@ -46,8 +46,8 @@ interface Props {
   onUiDensityChange: (density: UiDensity) => void;
   themeId: ThemeId;
   onThemeChange: (theme: ThemeId) => void;
-  layoutProfile: LayoutProfileId;
-  onLayoutProfileChange: (layout: LayoutProfileId) => void;
+  workspacePanels: WorkspacePanelsId;
+  onWorkspacePanelsChange: (panels: WorkspacePanelsId) => void;
   defaultBaseFolder: string | null;
   onDefaultBaseFolderChange: (path: string | null) => void;
   onPickSteamCmdPath: () => void;
@@ -161,8 +161,8 @@ export function SettingsPage(props: Props): ReactElement {
                 onUiDensityChange={props.onUiDensityChange}
                 themeId={props.themeId}
                 onThemeChange={props.onThemeChange}
-                layoutProfile={props.layoutProfile}
-                onLayoutProfileChange={props.onLayoutProfileChange}
+                workspacePanels={props.workspacePanels}
+                onWorkspacePanelsChange={props.onWorkspacePanelsChange}
               />
             )}
             {category === "servers" && (

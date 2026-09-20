@@ -1,8 +1,8 @@
 import type { ReactElement } from "react";
 import { SegmentedControl, Text, Title } from "@mantine/core";
 import { APP_THEME_LIST } from "@theme/themes";
-import { LAYOUT_PROFILE_LIST, resolveLayoutProfile } from "@shared/layout/layoutProfiles";
-import type { LayoutProfileId, ThemeId, UiDensity } from "../settingsModel";
+import { WORKSPACE_PANELS_OPTION_LIST, resolveWorkspacePanelsOption } from "@shared/workspace/workspacePanels";
+import type { ThemeId, UiDensity, WorkspacePanelsId } from "../settingsModel";
 import classes from "../SettingsPage.module.css";
 
 interface Props {
@@ -10,15 +10,15 @@ interface Props {
   onUiDensityChange: (density: UiDensity) => void;
   themeId: ThemeId;
   onThemeChange: (theme: ThemeId) => void;
-  layoutProfile: LayoutProfileId;
-  onLayoutProfileChange: (layout: LayoutProfileId) => void;
+  workspacePanels: WorkspacePanelsId;
+  onWorkspacePanelsChange: (panels: WorkspacePanelsId) => void;
 }
 
 /**
- * Appearance (#PUX-004 Track B). Density and theme are the same kind of choice -
- * how the shell reads on this PC - so they live together instead of splitting
- * density into General. The theme control renders the registry, so a new theme
- * is a registry entry, not a UI change.
+ * Appearance (#PUX-004 Track B). Display size, theme and where the server
+ * workspace puts its panels - the three "how it looks on this PC" choices, so
+ * density lives here instead of in General. Both id controls render their
+ * registry, so shipping another theme or option is data, not a UI change.
  */
 export function SettingsAppearanceSection(props: Props): ReactElement {
   return (
@@ -27,7 +27,7 @@ export function SettingsAppearanceSection(props: Props): ReactElement {
         Appearance
       </Title>
       <Text size="sm" c="dimmed">
-        How YARK reads on this PC. Every choice applies immediately and is remembered across restarts.
+        Theme, size and how the server workspace arranges its panels.
       </Text>
 
       <div className={classes.settingStack}>
@@ -64,7 +64,7 @@ export function SettingsAppearanceSection(props: Props): ReactElement {
               Theme
             </Text>
             <Text size="xs" c="dimmed" mt={2}>
-              The shell palette. Themes that ship later appear here; the default stays the dark Paleo-Tech shell.
+              The shell colours. Dark is the only one so far.
             </Text>
           </div>
           <div className={classes.settingControl}>
@@ -85,23 +85,23 @@ export function SettingsAppearanceSection(props: Props): ReactElement {
         <div className={classes.settingRow}>
           <div className={classes.settingCopy}>
             <Text size="sm" fw={600}>
-              Layout
+              Server panels
             </Text>
             <Text size="xs" c="dimmed" mt={2}>
-              {resolveLayoutProfile(props.layoutProfile).description}
+              {resolveWorkspacePanelsOption(props.workspacePanels).description}
             </Text>
           </div>
           <div className={classes.settingControl}>
             <SegmentedControl
               size="xs"
-              value={props.layoutProfile}
+              value={props.workspacePanels}
               onChange={(value) => {
-                if (value !== props.layoutProfile) {
-                  props.onLayoutProfileChange(value as LayoutProfileId);
+                if (value !== props.workspacePanels) {
+                  props.onWorkspacePanelsChange(value as WorkspacePanelsId);
                 }
               }}
-              data={LAYOUT_PROFILE_LIST.map((profile) => ({ label: profile.label, value: profile.id }))}
-              aria-label="Layout"
+              data={WORKSPACE_PANELS_OPTION_LIST.map((option) => ({ label: option.label, value: option.id }))}
+              aria-label="Server panels"
             />
           </div>
         </div>

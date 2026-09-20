@@ -15,27 +15,31 @@ export type ThemeId = (typeof THEME_IDS)[number];
 export const DEFAULT_THEME_ID: ThemeId = "dark";
 
 /**
- * Layout profiles (`shared/layout/layoutProfiles.ts`). `adaptive` is the shipped
- * behaviour: three workspace columns when the window is wide enough, drawers when
- * it is not. `drawers` keeps the panes in drawers at any width.
+ * Server-workspace panels (`shared/workspace/workspacePanels.ts`). `auto` is the
+ * shipped behaviour: the server list and the status panel take their own columns
+ * when the window is wide enough, drawers when it is not. `drawers` never uses
+ * columns.
+ *
+ * Note: an app-level *layout* (how the whole app is structured, not how the
+ * server workspace arranges its panels) is a separate ticket.
  */
-export const LAYOUT_PROFILE_IDS = ["adaptive", "drawers"] as const;
+export const WORKSPACE_PANELS_IDS = ["auto", "drawers"] as const;
 
-export type LayoutProfileId = (typeof LAYOUT_PROFILE_IDS)[number];
+export type WorkspacePanelsId = (typeof WORKSPACE_PANELS_IDS)[number];
 
-export const DEFAULT_LAYOUT_PROFILE_ID: LayoutProfileId = "adaptive";
+export const DEFAULT_WORKSPACE_PANELS_ID: WorkspacePanelsId = "auto";
 
 /** SQLite `app_settings.key` for the appearance preference JSON. */
 export const APPEARANCE_SETTINGS_KEY = "appearance.v1";
 
 export interface AppearanceSettings {
   theme: ThemeId;
-  layout: LayoutProfileId;
+  panels: WorkspacePanelsId;
 }
 
 export const DEFAULT_APPEARANCE_SETTINGS: AppearanceSettings = {
   theme: DEFAULT_THEME_ID,
-  layout: DEFAULT_LAYOUT_PROFILE_ID,
+  panels: DEFAULT_WORKSPACE_PANELS_ID,
 };
 
 export function isThemeId(value: unknown): value is ThemeId {
@@ -46,16 +50,16 @@ export function parseThemeId(value: unknown): ThemeId {
   return isThemeId(value) ? value : DEFAULT_THEME_ID;
 }
 
-export function isLayoutProfileId(value: unknown): value is LayoutProfileId {
-  return typeof value === "string" && (LAYOUT_PROFILE_IDS as readonly string[]).includes(value);
+export function isWorkspacePanelsId(value: unknown): value is WorkspacePanelsId {
+  return typeof value === "string" && (WORKSPACE_PANELS_IDS as readonly string[]).includes(value);
 }
 
-export function parseLayoutProfileId(value: unknown): LayoutProfileId {
-  return isLayoutProfileId(value) ? value : DEFAULT_LAYOUT_PROFILE_ID;
+export function parseWorkspacePanelsId(value: unknown): WorkspacePanelsId {
+  return isWorkspacePanelsId(value) ? value : DEFAULT_WORKSPACE_PANELS_ID;
 }
 
 export function normalizeAppearanceSettings(input: Partial<AppearanceSettings>): AppearanceSettings {
-  return { theme: parseThemeId(input.theme), layout: parseLayoutProfileId(input.layout) };
+  return { theme: parseThemeId(input.theme), panels: parseWorkspacePanelsId(input.panels) };
 }
 
 export function parseAppearanceSettings(raw: string | null): AppearanceSettings {

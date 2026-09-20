@@ -7,8 +7,12 @@ import { createContext, useContext, useLayoutEffect, useMemo, type PropsWithChil
 import { createAppCssVariablesResolverForAppearance, createAppThemeForAppearance } from "@theme/theme";
 import { resolveAppTheme } from "@theme/themes";
 import type { UiDensity } from "@theme/tokens";
-import { DEFAULT_LAYOUT_PROFILE, resolveLayoutProfile, type LayoutProfile } from "@shared/layout/layoutProfiles";
-import type { LayoutProfileId, ThemeId } from "@shared/settings/appearance";
+import {
+  DEFAULT_WORKSPACE_PANELS_OPTION,
+  resolveWorkspacePanelsOption,
+  type WorkspacePanelsOption,
+} from "@shared/workspace/workspacePanels";
+import type { ThemeId, WorkspacePanelsId } from "@shared/settings/appearance";
 import { RowActionMenuProvider } from "@ui/RowActionMenu/RowActionMenuProvider";
 import { isRendererTest } from "@renderer/shared/isRendererTest";
 
@@ -18,11 +22,11 @@ export function useUiDensity(): UiDensity {
   return useContext(UiDensityContext);
 }
 
-const LayoutProfileContext = createContext<LayoutProfile>(DEFAULT_LAYOUT_PROFILE);
+const WorkspacePanelsContext = createContext<WorkspacePanelsOption>(DEFAULT_WORKSPACE_PANELS_OPTION);
 
-/** Active layout profile (Settings → Appearance). Unknown ids resolve to the default. */
-export function useLayoutProfile(): LayoutProfile {
-  return useContext(LayoutProfileContext);
+/** How the server workspace arranges its panels (Settings → Appearance). */
+export function useWorkspacePanels(): WorkspacePanelsOption {
+  return useContext(WorkspacePanelsContext);
 }
 
 interface Props extends PropsWithChildren {
@@ -30,18 +34,18 @@ interface Props extends PropsWithChildren {
   density?: UiDensity;
   /** Appearance theme id (Settings → Appearance). Unknown ids fall back to dark. */
   themeId?: ThemeId | string | null;
-  /** Appearance layout profile id. Unknown ids fall back to Adaptive. */
-  layoutProfile?: LayoutProfileId | string | null;
+  /** Server-workspace panels option. Unknown ids fall back to Auto. */
+  workspacePanels?: WorkspacePanelsId | string | null;
 }
 
 export function AppProviders({
   children,
   density = "compact",
   themeId = null,
-  layoutProfile = null,
+  workspacePanels = null,
 }: Props): ReactElement {
   const appearance = useMemo(() => resolveAppTheme(themeId), [themeId]);
-  const layout = useMemo(() => resolveLayoutProfile(layoutProfile), [layoutProfile]);
+  const panels = useMemo(() => resolveWorkspacePanelsOption(workspacePanels), [workspacePanels]);
   const theme = useMemo(() => {
     const base = createAppThemeForAppearance(appearance, density);
     if (!isRendererTest()) {
@@ -116,7 +120,7 @@ export function AppProviders({
 
   return (
     <UiDensityContext.Provider value={density}>
-      <LayoutProfileContext.Provider value={layout}>
+      <WorkspacePanelsContext.Provider value={panels}>
         {/*
           The scheme is the theme's, but it stays a *default* on purpose: B3 (a light
           theme) has to switch schemes at runtime, and that needs `forceColorScheme`
@@ -143,7 +147,7 @@ export function AppProviders({
             </ModalsProvider>
           </DatesProvider>
         </MantineProvider>
-      </LayoutProfileContext.Provider>
+      </WorkspacePanelsContext.Provider>
     </UiDensityContext.Provider>
   );
 }

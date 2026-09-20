@@ -64,11 +64,11 @@ function renderWorkspace(
     onBack?: () => void;
     onRegisterLeaveGuard?: (guard: ((action: () => void) => void) | null) => void;
     onServerUpdated?: () => void;
-    layoutProfile?: "adaptive" | "drawers";
+    workspacePanels?: "auto" | "drawers";
   } = {},
 ): void {
   render(
-    <AppProviders layoutProfile={extra.layoutProfile ?? null}>
+    <AppProviders workspacePanels={extra.workspacePanels ?? null}>
       <ServerWorkspacePage
         servers={[serverA, serverB]}
         selectedServerId={serverA.id}
@@ -709,9 +709,9 @@ describe("ServerWorkspacePage", () => {
     });
   });
 
-  it("keeps drawers at a wide viewport when the layout profile says so (#PUX-004)", async () => {
-    // Wide window: the Adaptive query does not match, so only the profile can
-    // keep the panes in drawers.
+  it("keeps drawers at a wide viewport when the panels option says so (#PUX-004)", async () => {
+    // Wide window: the Auto query does not match, so only the option can keep
+    // the panels in drawers.
     vi.stubGlobal("matchMedia", (query: string) => ({
       matches: /prefers-reduced-motion:\s*reduce/i.test(query),
       media: query,
@@ -727,13 +727,13 @@ describe("ServerWorkspacePage", () => {
       vi.fn(),
       vi.fn(async () => true),
       [],
-      { layoutProfile: "drawers" },
+      { workspacePanels: "drawers" },
     );
 
     expect(await screen.findByRole("button", { name: "Switch server" })).toBeVisible();
   });
 
-  it("keeps three columns at a wide viewport with the Adaptive profile", async () => {
+  it("keeps columns at a wide viewport with the Auto option", async () => {
     vi.stubGlobal("matchMedia", (query: string) => ({
       matches: /prefers-reduced-motion:\s*reduce/i.test(query),
       media: query,

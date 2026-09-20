@@ -2,8 +2,8 @@ import {
   DEFAULT_APPEARANCE_SETTINGS,
   normalizeAppearanceSettings,
   type AppearanceSettings,
-  type LayoutProfileId,
   type ThemeId,
+  type WorkspacePanelsId,
 } from "@shared/settings/appearance";
 import {
   DEFAULT_OPEN_NATIVE_CONSOLE,
@@ -19,7 +19,7 @@ import {
   type UiDensity,
 } from "@shared/settings/ui-density";
 
-export type { UiDensity, ThemeId, LayoutProfileId, AppearanceSettings };
+export type { UiDensity, ThemeId, WorkspacePanelsId, AppearanceSettings };
 
 export type SettingsCategory = "general" | "appearance" | "servers" | "steamcmd" | "discord" | "logs" | "about";
 
