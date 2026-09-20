@@ -186,6 +186,8 @@ function defaultSettingsProps(
     onUiDensityChange: vi.fn(),
     themeId: "dark",
     onThemeChange: vi.fn(),
+    layoutProfile: "adaptive",
+    onLayoutProfileChange: vi.fn(),
     defaultBaseFolder: null,
     onDefaultBaseFolderChange: vi.fn(),
     onPickSteamCmdPath: vi.fn(),
@@ -367,21 +369,26 @@ describe("SettingsPage", () => {
     expect(onUiDensityChange).toHaveBeenCalledWith("comfortable");
   });
 
-  it("keeps display size and theme together in Appearance (#PUX-004)", async () => {
+  it("keeps display size, theme and layout together in Appearance (#PUX-004)", async () => {
     const user = userEvent.setup();
     const onThemeChange = vi.fn();
+    const onLayoutProfileChange = vi.fn();
     stubSettingsApi();
 
-    renderSettings({ themeId: "dark", onThemeChange });
+    renderSettings({ themeId: "dark", onThemeChange, layoutProfile: "adaptive", onLayoutProfileChange });
 
     await openCategory(user, "Appearance");
     expect(document.querySelector("[data-settings-appearance]")).not.toBeNull();
     expect(screen.getByLabelText("Display size")).toBeInTheDocument();
 
-    // The registry drives the control: Dark is the only shipped theme today.
+    // Both registries drive their control: Dark is the only theme, Adaptive the default layout.
     expect(screen.getByLabelText("Theme")).toBeInTheDocument();
     await user.click(screen.getByRole("radio", { name: "Dark" }));
     expect(onThemeChange).not.toHaveBeenCalled();
+
+    expect(screen.getByLabelText("Layout")).toBeInTheDocument();
+    await user.click(screen.getByRole("radio", { name: "Drawers" }));
+    expect(onLayoutProfileChange).toHaveBeenCalledWith("drawers");
   });
 
   it("persists dismissing the tray-hide notification", async () => {

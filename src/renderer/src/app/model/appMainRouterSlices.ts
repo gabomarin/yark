@@ -21,7 +21,7 @@ import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 import type { RconHistoryEntry } from "@features/server-workspace/ServerWorkspacePage";
 import type { DesktopShellPreferencesController } from "@features/settings/hooks/useDesktopShellPreferences";
-import type { ThemeId, UiDensity } from "@features/settings/settingsModel";
+import type { LayoutProfileId, ThemeId, UiDensity } from "@features/settings/settingsModel";
 import type { Route } from "@layout/Sidebar/Sidebar";
 import type { AppBusyOverlayContent } from "@ui/AppBusyOverlay/AppBusyOverlay";
 
@@ -122,6 +122,8 @@ export interface AppSettingsSlice {
   handleUiDensityChange: (density: UiDensity) => void;
   themeId: ThemeId;
   handleThemeChange: (theme: ThemeId) => void;
+  layoutProfile: LayoutProfileId;
+  handleLayoutProfileChange: (layout: LayoutProfileId) => void;
   defaultBaseFolder: string | null;
   setDefaultBaseFolder: Dispatch<SetStateAction<string | null>>;
   extraClusterOptions: KnownClusterOption[] | undefined;

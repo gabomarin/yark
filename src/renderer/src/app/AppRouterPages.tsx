@@ -64,6 +64,8 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
     handleUiDensityChange,
     themeId,
     handleThemeChange,
+    layoutProfile,
+    handleLayoutProfileChange,
     defaultBaseFolder,
     setDefaultBaseFolder,
     desktopShell,
@@ -223,6 +225,8 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
             onUiDensityChange={(density) => void handleUiDensityChange(density)}
             themeId={themeId}
             onThemeChange={(theme) => void handleThemeChange(theme)}
+            layoutProfile={layoutProfile}
+            onLayoutProfileChange={(layout) => void handleLayoutProfileChange(layout)}
             defaultBaseFolder={defaultBaseFolder}
             onDefaultBaseFolderChange={setDefaultBaseFolder}
             onPickSteamCmdPath={() => void pickSteamCmdPath()}

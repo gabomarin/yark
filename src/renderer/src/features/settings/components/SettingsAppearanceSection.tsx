@@ -1,7 +1,8 @@
 import type { ReactElement } from "react";
 import { SegmentedControl, Text, Title } from "@mantine/core";
 import { APP_THEME_LIST } from "@theme/themes";
-import type { ThemeId, UiDensity } from "../settingsModel";
+import { LAYOUT_PROFILE_LIST, resolveLayoutProfile } from "@shared/layout/layoutProfiles";
+import type { LayoutProfileId, ThemeId, UiDensity } from "../settingsModel";
 import classes from "../SettingsPage.module.css";
 
 interface Props {
@@ -9,6 +10,8 @@ interface Props {
   onUiDensityChange: (density: UiDensity) => void;
   themeId: ThemeId;
   onThemeChange: (theme: ThemeId) => void;
+  layoutProfile: LayoutProfileId;
+  onLayoutProfileChange: (layout: LayoutProfileId) => void;
 }
 
 /**
@@ -24,7 +27,7 @@ export function SettingsAppearanceSection(props: Props): ReactElement {
         Appearance
       </Title>
       <Text size="sm" c="dimmed">
-        How YARK reads on this PC. Both choices apply immediately and are remembered across restarts.
+        How YARK reads on this PC. Every choice applies immediately and is remembered across restarts.
       </Text>
 
       <div className={classes.settingStack}>
@@ -75,6 +78,30 @@ export function SettingsAppearanceSection(props: Props): ReactElement {
               }}
               data={APP_THEME_LIST.map((theme) => ({ label: theme.label, value: theme.id }))}
               aria-label="Theme"
+            />
+          </div>
+        </div>
+
+        <div className={classes.settingRow}>
+          <div className={classes.settingCopy}>
+            <Text size="sm" fw={600}>
+              Layout
+            </Text>
+            <Text size="xs" c="dimmed" mt={2}>
+              {resolveLayoutProfile(props.layoutProfile).description}
+            </Text>
+          </div>
+          <div className={classes.settingControl}>
+            <SegmentedControl
+              size="xs"
+              value={props.layoutProfile}
+              onChange={(value) => {
+                if (value !== props.layoutProfile) {
+                  props.onLayoutProfileChange(value as LayoutProfileId);
+                }
+              }}
+              data={LAYOUT_PROFILE_LIST.map((profile) => ({ label: profile.label, value: profile.id }))}
+              aria-label="Layout"
             />
           </div>
         </div>

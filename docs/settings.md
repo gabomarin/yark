@@ -24,7 +24,7 @@ the Server tab / workspace.
 | Page shell                                                                   | `src/renderer/src/features/settings/SettingsPage.tsx`                                                                                                                                                                                       |
 | Category rail                                                                | `…/components/SettingsNav.tsx` (`SETTINGS_CATEGORIES`)                                                                                                                                                                                      |
 | General                                                                      | `…/components/SettingsGeneralSection.tsx`                                                                                                                                                                                                   |
-| Appearance (display size, theme)                                             | `…/components/SettingsAppearanceSection.tsx` + `src/renderer/src/shared/theme/themes.ts`                                                                                                                                                    |
+| Appearance (display size, theme, layout)                                     | `…/components/SettingsAppearanceSection.tsx` + `src/renderer/src/shared/theme/themes.ts`, `src/shared/layout/layoutProfiles.ts`                                                                                                             |
 | Profiles (console, base folder)                                              | `…/components/SettingsServersSection.tsx`                                                                                                                                                                                                   |
 | Auto-start summary                                                           | `…/components/SettingsAutoStartSection.tsx`                                                                                                                                                                                                 |
 | SteamCMD                                                                     | `…/components/SettingsSteamCmdSection.tsx`                                                                                                                                                                                                  |
@@ -80,12 +80,13 @@ the Server tab / workspace.
 
 ### Appearance (#PUX-004 Track B)
 
-| Control      | Storage                | Default     | Notes                                                                                                                           |
-| ------------ | ---------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Display size | SQLite `uiDensity`     | **compact** | `compact` \| `comfortable`; scales the active theme's spacing / radius / font tokens — see [design-system.md](design-system.md) |
-| Theme        | SQLite `appearance.v1` | **dark**    | Registry id (`shared/theme/themes.ts`). Dark is the only shipped theme; an unknown or missing id falls back to it               |
+| Control      | Storage                | Default      | Notes                                                                                                                                                                  |
+| ------------ | ---------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Display size | SQLite `uiDensity`     | **compact**  | `compact` \| `comfortable`; scales the active theme's spacing / radius / font tokens — see [design-system.md](design-system.md)                                        |
+| Theme        | SQLite `appearance.v1` | **dark**     | Registry id (`shared/theme/themes.ts`). Dark is the only shipped theme; an unknown or missing id falls back to it                                                      |
+| Layout       | SQLite `appearance.v1` | **adaptive** | `adaptive` \| `drawers`; how the server workspace arranges its panes (`shared/layout/layoutProfiles.ts`). Adaptive shows three columns from 1600px, Drawers never does |
 
-Theme and density are independent: density scales the tokens of whichever theme is active.
+Theme, layout and density are independent: density scales the tokens of whichever theme is active, and the layout profile only decides how the workspace arranges its panes.
 
 ### Profiles
 

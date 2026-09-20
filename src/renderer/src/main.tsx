@@ -22,7 +22,7 @@ if (container === null) {
 void (async () => {
   let initialUiDensity = DEFAULT_UI_DENSITY;
   let initialOpenNativeConsole = DEFAULT_OPEN_NATIVE_CONSOLE;
-  let initialThemeId = DEFAULT_APPEARANCE_SETTINGS.theme;
+  let initialAppearance = DEFAULT_APPEARANCE_SETTINGS;
   try {
     initialUiDensity = await loadUiDensityPref();
   } catch {
@@ -34,9 +34,9 @@ void (async () => {
     initialOpenNativeConsole = DEFAULT_OPEN_NATIVE_CONSOLE;
   }
   try {
-    initialThemeId = (await loadAppearancePref()).theme;
+    initialAppearance = await loadAppearancePref();
   } catch {
-    initialThemeId = DEFAULT_APPEARANCE_SETTINGS.theme;
+    initialAppearance = DEFAULT_APPEARANCE_SETTINGS;
   }
 
   createRoot(container).render(
@@ -46,7 +46,7 @@ void (async () => {
         <App
           initialUiDensity={initialUiDensity}
           initialOpenNativeConsole={initialOpenNativeConsole}
-          initialThemeId={initialThemeId}
+          initialAppearance={initialAppearance}
         />
       </AppErrorBoundary>
     </React.StrictMode>,

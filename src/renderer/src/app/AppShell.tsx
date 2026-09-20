@@ -39,10 +39,12 @@ import {
   writeOpenNativeConsolePref,
   writeSettingsCategoryPref,
   writeUiDensityPref,
+  type AppearanceSettings,
+  type LayoutProfileId,
   type ThemeId,
   type UiDensity,
 } from "@features/settings/settingsModel";
-import { DEFAULT_THEME_ID } from "@shared/settings/appearance";
+import { DEFAULT_APPEARANCE_SETTINGS } from "@shared/settings/appearance";
 import { DEFAULT_OPEN_NATIVE_CONSOLE } from "@shared/settings/open-native-console";
 import { useDesktopShellPreferences } from "@features/settings/hooks/useDesktopShellPreferences";
 import type { Route } from "@layout/Sidebar/Sidebar";
@@ -54,8 +56,8 @@ export interface AppShellProps {
   initialUiDensity?: UiDensity;
   /** Resolved from `app_settings` (via IPC) before first paint. */
   initialOpenNativeConsole?: boolean;
-  /** Resolved from `app_settings` (via IPC) before first paint. */
-  initialThemeId?: ThemeId;
+  /** Theme + layout profile from `app_settings` (via IPC) before first paint. */
+  initialAppearance?: AppearanceSettings;
 }
 
 /**
@@ -65,7 +67,7 @@ export interface AppShellProps {
 export function AppShell({
   initialUiDensity = "compact",
   initialOpenNativeConsole = DEFAULT_OPEN_NATIVE_CONSOLE,
-  initialThemeId = DEFAULT_THEME_ID,
+  initialAppearance = DEFAULT_APPEARANCE_SETTINGS,
 }: AppShellProps): ReactElement {
   const [route, setRoute] = useState<Route>("overview");
   const [overlay, setOverlay] = useState<Overlay>(null);
@@ -121,7 +123,7 @@ export function AppShell({
   const [copyConfig, setCopyConfig] = useState<CopyConfigSession | null>(null);
   const [openNativeTerminalOnStart, setOpenNativeTerminalOnStart] = useState(initialOpenNativeConsole);
   const [uiDensity, setUiDensity] = useState<UiDensity>(initialUiDensity);
-  const [themeId, setThemeId] = useState<ThemeId>(initialThemeId);
+  const [appearance, setAppearance] = useState<AppearanceSettings>(initialAppearance);
   const [defaultBaseFolder, setDefaultBaseFolder] = useState<string | null>(readDefaultBaseFolderPref);
   const [appUpdateStatus, setAppUpdateStatus] = useState<AppUpdateStatus | null>(null);
   const [focusYarkUpdates, setFocusYarkUpdates] = useState(false);
@@ -177,18 +179,29 @@ export function AppShell({
     setUiDensity(density);
   }, []);
 
-  const handleThemeChange = useCallback(async (theme: ThemeId) => {
-    const saved = await writeAppearancePref({ theme });
+  /** Theme and layout are one stored row, so every change writes the whole object. */
+  const persistAppearance = useCallback(async (next: AppearanceSettings, failureTitle: string) => {
+    const saved = await writeAppearancePref(next);
     if (!saved) {
       notifications.show({
         color: "red",
-        title: "Could not save theme",
+        title: failureTitle,
         message: "Your selection was not stored. Try again.",
       });
       return;
     }
-    setThemeId(theme);
+    setAppearance(next);
   }, []);
+
+  const handleThemeChange = useCallback(
+    (theme: ThemeId) => void persistAppearance({ ...appearance, theme }, "Could not save theme"),
+    [appearance, persistAppearance],
+  );
+
+  const handleLayoutProfileChange = useCallback(
+    (layout: LayoutProfileId) => void persistAppearance({ ...appearance, layout }, "Could not save layout"),
+    [appearance, persistAppearance],
+  );
 
   const extraClusterOptions = useMemo(
     () => (pendingSetupCluster === null ? undefined : [toSyntheticClusterOption(pendingSetupCluster)]),
@@ -405,7 +418,7 @@ export function AppShell({
   }, []);
 
   return (
-    <AppProviders density={uiDensity} themeId={themeId}>
+    <AppProviders density={uiDensity} themeId={appearance.theme} layoutProfile={appearance.layout}>
       <AppSpotlight
         servers={servers}
         currentRoute={route}
@@ -548,8 +561,10 @@ export function AppShell({
           handleOpenNativeConsoleChange,
           uiDensity,
           handleUiDensityChange,
-          themeId,
+          themeId: appearance.theme,
           handleThemeChange,
+          layoutProfile: appearance.layout,
+          handleLayoutProfileChange,
           defaultBaseFolder,
           setDefaultBaseFolder,
           extraClusterOptions,

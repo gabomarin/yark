@@ -2,6 +2,7 @@ import {
   DEFAULT_APPEARANCE_SETTINGS,
   normalizeAppearanceSettings,
   type AppearanceSettings,
+  type LayoutProfileId,
   type ThemeId,
 } from "@shared/settings/appearance";
 import {
@@ -18,7 +19,7 @@ import {
   type UiDensity,
 } from "@shared/settings/ui-density";
 
-export type { UiDensity, ThemeId };
+export type { UiDensity, ThemeId, LayoutProfileId, AppearanceSettings };
 
 export type SettingsCategory = "general" | "appearance" | "servers" | "steamcmd" | "discord" | "logs" | "about";
 
