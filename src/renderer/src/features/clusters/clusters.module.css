@@ -38,10 +38,11 @@
 
 .emptyCard {
   display: flex;
-  flex: 1;
+  flex: 0 0 auto;
   flex-direction: column;
-  min-height: 0;
-  height: 100%;
+  width: min(100%, 960px);
+  min-height: clamp(240px, 42vh, 360px);
+  align-self: center;
   border: 1px solid var(--app-color-border-subtle);
   border-radius: 0;
   background: transparent;

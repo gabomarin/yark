@@ -413,19 +413,18 @@ describe("OverviewPage", () => {
     within(serverList as HTMLElement).getByRole("button", { name: "New server" }).click();
     expect(onCreateServer).toHaveBeenCalledOnce();
 
-    // Empty fleet: EmptyState owns the filled primary; header New server is demoted (#236).
-    // Assert YARK data-cta-prominence (not Mantine data-variant).
+    // Empty fleet: EmptyState owns the only New server action.
     const header = container.querySelector("header");
     expect(header).not.toBeNull();
-    const headerNewServer = within(header as HTMLElement).getByRole("button", {
-      name: "New server",
-    });
-    expect(headerNewServer).toHaveAttribute("data-cta-prominence", "secondary");
+    expect(
+      within(header as HTMLElement).queryByRole("button", { name: "New server" }),
+    ).not.toBeInTheDocument();
     const emptyStateNewServer = within(serverList as HTMLElement).getByRole(
       "button",
       { name: "New server" },
     );
     expect(emptyStateNewServer).toHaveAttribute("data-cta-prominence", "primary");
+    expect(screen.getAllByRole("button", { name: "New server" })).toHaveLength(1);
   });
 
   it("shows disabled servers in a separate section without putting them in the enabled fleet", async () => {
@@ -638,4 +637,3 @@ describe("OverviewPage", () => {
     expect(screen.getByRole("textbox", { name: "Search servers" })).toHaveValue("Island");
   });
 });
-

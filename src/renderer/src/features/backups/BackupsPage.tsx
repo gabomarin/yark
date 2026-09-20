@@ -60,8 +60,9 @@ export function BackupsPage(props: Props): ReactElement {
 
         <Stack gap="md" className={classes.content}>
           {props.servers.length === 0 ? (
-            <AppSurfaceCard radius={0}>
+            <AppSurfaceCard radius={0} className={classes.emptyFleetCard}>
               <EmptyState
+                layout="stacked"
                 icon={<HardDrives size={22} />}
                 title="No servers yet"
                 description="Create a server first to configure backups."
@@ -87,7 +88,9 @@ export function BackupsPage(props: Props): ReactElement {
                 healthFilter={fleet.healthFilter}
                 onHealthFilter={fleet.setHealthFilter}
                 onOpenDiskSettings={() => {
-                  fleet.setDiskDraft(fleet.summary!.diskSettings);
+                  const settings = fleet.summary?.diskSettings;
+                  if (settings == null) return;
+                  fleet.setDiskDraft(settings);
                   fleet.setDiskModalOpen(true);
                 }}
               />

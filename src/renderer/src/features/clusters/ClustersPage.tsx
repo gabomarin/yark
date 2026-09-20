@@ -73,7 +73,11 @@ export function ClustersPage(props: Props): ReactElement {
       <div className={classes.pageShell} data-clusters-page>
         <AppPageHeader
           title="Clusters"
-          actions={<Button onClick={() => setCreateOpen(true)}>Create cluster</Button>}
+          actions={
+            sortedReports.length > 0 ? (
+              <Button onClick={() => setCreateOpen(true)}>Create cluster</Button>
+            ) : undefined
+          }
         />
 
         <Stack gap="sm" className={classes.content}>

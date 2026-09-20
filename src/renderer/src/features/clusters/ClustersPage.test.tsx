@@ -242,6 +242,7 @@ describe("ClustersPage", () => {
     expect(screen.getByText("Clusters")).toBeInTheDocument();
     expect(screen.getByText("No clusters configured")).toBeInTheDocument();
     expect(screen.getByText("How transfers work")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Create cluster" })).toHaveLength(1);
     expect(document.querySelector("[data-clusters-page]")).toBeInTheDocument();
   });
 
@@ -943,4 +944,3 @@ describe("ClustersPage", () => {
     expect(onRefresh).toHaveBeenCalled();
   });
 });
-

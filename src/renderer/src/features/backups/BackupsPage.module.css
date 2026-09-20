@@ -19,6 +19,12 @@
   gap: var(--app-space-sm);
 }
 
+.emptyFleetCard {
+  width: min(100%, 960px);
+  min-height: clamp(240px, 42vh, 360px);
+  align-self: center;
+}
+
 /* Prefer AppSurfaceCard; keep transitional layout helpers only. */
 
 .volumeStrip {

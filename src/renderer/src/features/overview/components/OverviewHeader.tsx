@@ -19,7 +19,7 @@ interface Props {
   canUpdateAllOutdated?: boolean;
   openingUpdateAllOutdated?: boolean;
   /**
-   * Empty fleet: demote header New server so EmptyState keeps the single filled CTA (#236).
+   * Empty fleet: let the EmptyState own the single New server action.
    */
   emptyFleet?: boolean;
   /** Known online survivors across running servers; `null` until a real RCON sample exists. */
@@ -151,13 +151,14 @@ export function OverviewHeader({
             Update All
           </Button>
         ) : null}
-        <AddServerSplitButton
-          primaryLabel="New server"
-          onCreate={onCreateServer}
-          onImport={onImportServer}
-          demoted={emptyFleet}
-          menuAriaLabel="More new-server options"
-        />
+        {!emptyFleet ? (
+          <AddServerSplitButton
+            primaryLabel="New server"
+            onCreate={onCreateServer}
+            onImport={onImportServer}
+            menuAriaLabel="More new-server options"
+          />
+        ) : null}
         </Group>
       }
     />
