@@ -124,6 +124,12 @@ export function AppShell({
   const [openNativeTerminalOnStart, setOpenNativeTerminalOnStart] = useState(initialOpenNativeConsole);
   const [uiDensity, setUiDensity] = useState<UiDensity>(initialUiDensity);
   const [appearance, setAppearance] = useState<AppearanceSettings>(initialAppearance);
+  /**
+   * Theme and layout are one stored row, so every change writes the whole object.
+   * The ref is what makes two rapid changes compose: reading the captured state
+   * would let the second write drop the first one.
+   */
+  const appearanceRef = useRef(initialAppearance);
   const [defaultBaseFolder, setDefaultBaseFolder] = useState<string | null>(readDefaultBaseFolderPref);
   const [appUpdateStatus, setAppUpdateStatus] = useState<AppUpdateStatus | null>(null);
   const [focusYarkUpdates, setFocusYarkUpdates] = useState(false);
@@ -180,9 +186,18 @@ export function AppShell({
   }, []);
 
   /** Theme and layout are one stored row, so every change writes the whole object. */
-  const persistAppearance = useCallback(async (next: AppearanceSettings, failureTitle: string) => {
+  const persistAppearance = useCallback(async (patch: Partial<AppearanceSettings>, failureTitle: string) => {
+    // The ref is updated before the write so a second change made while this one
+    // is in flight composes with it instead of clobbering it.
+    const previous = appearanceRef.current;
+    const next = { ...previous, ...patch };
+    appearanceRef.current = next;
+
     const saved = await writeAppearancePref(next);
     if (!saved) {
+      if (appearanceRef.current === next) {
+        appearanceRef.current = previous;
+      }
       notifications.show({
         color: "red",
         title: failureTitle,
@@ -194,14 +209,13 @@ export function AppShell({
   }, []);
 
   const handleThemeChange = useCallback(
-    (theme: ThemeId) => void persistAppearance({ ...appearance, theme }, "Could not save theme"),
-    [appearance, persistAppearance],
+    (theme: ThemeId) => void persistAppearance({ theme }, "Could not save theme"),
+    [persistAppearance],
   );
 
   const handleWorkspacePanelsChange = useCallback(
-    (panels: WorkspacePanelsId) =>
-      void persistAppearance({ ...appearance, panels }, "Could not save server panel settings"),
-    [appearance, persistAppearance],
+    (panels: WorkspacePanelsId) => void persistAppearance({ panels }, "Could not save server panel settings"),
+    [persistAppearance],
   );
 
   const extraClusterOptions = useMemo(

@@ -32,6 +32,30 @@ describe("theme registry (#PUX-004 Track B)", () => {
     expect(vars["--app-color-bg"]).toBe("var(--ark-background)");
   });
 
+  it("derives every --ark-* value from the palette, so a theme stays data", () => {
+    // Guards the claim in themes.ts: if a value is hardcoded in the builder, a
+    // second theme would silently inherit dark-oriented steps.
+    const vars = createAppCssVariablesResolverForAppearance(DEFAULT_APP_THEME, "compact")(DEFAULT_THEME).variables;
+    const paletteValues = new Set<string>([
+      ...radixPalette.blue,
+      ...radixPalette.blueAlpha,
+      ...radixPalette.gray,
+      ...radixPalette.grayAlpha,
+      radixPalette.background,
+      radixPalette.blueContrast,
+      radixPalette.blueSurface,
+      radixPalette.grayContrast,
+      radixPalette.graySurface,
+    ]);
+
+    const hardcoded = Object.entries(vars)
+      .filter(([key]) => key.startsWith("--ark-"))
+      .filter(([, value]) => !paletteValues.has(value))
+      .map(([key]) => key);
+
+    expect(hardcoded).toEqual([]);
+  });
+
   it("feeds the entry palette into the Mantine colour scales", () => {
     const theme = createAppThemeForAppearance(DEFAULT_APP_THEME, "compact");
 

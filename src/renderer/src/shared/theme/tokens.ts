@@ -80,6 +80,15 @@ export const radixPalette = {
     "#fefeffb5",
     "#fdfdfff0",
   ],
+  /*
+   * Contrast and surface steps that are not part of the ramps. They live on the
+   * palette so a theme really is "one entry plus its palette": a light theme
+   * needs its own values here instead of inheriting dark-oriented ones.
+   */
+  blueContrast: "#ffffff",
+  blueSurface: "#01145180",
+  grayContrast: "#ffffff",
+  graySurface: "rgba(0, 0, 0, 0.05)",
 } as const;
 
 /** Palette shape a theme registry entry carries (`shared/theme/themes.ts`). */

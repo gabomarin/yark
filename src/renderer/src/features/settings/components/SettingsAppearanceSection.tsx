@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { SegmentedControl, Text, Title } from "@mantine/core";
 import { APP_THEME_LIST } from "@theme/themes";
+import { isThemeId, isWorkspacePanelsId } from "@shared/settings/appearance";
 import { WORKSPACE_PANELS_OPTION_LIST, resolveWorkspacePanelsOption } from "@shared/workspace/workspacePanels";
 import type { ThemeId, UiDensity, WorkspacePanelsId } from "../settingsModel";
 import classes from "../SettingsPage.module.css";
@@ -64,7 +65,7 @@ export function SettingsAppearanceSection(props: Props): ReactElement {
               Theme
             </Text>
             <Text size="xs" c="dimmed" mt={2}>
-              The shell colours. Dark is the only one so far.
+              The shell colours.
             </Text>
           </div>
           <div className={classes.settingControl}>
@@ -72,8 +73,8 @@ export function SettingsAppearanceSection(props: Props): ReactElement {
               size="xs"
               value={props.themeId}
               onChange={(value) => {
-                if (value !== props.themeId) {
-                  props.onThemeChange(value as ThemeId);
+                if (isThemeId(value) && value !== props.themeId) {
+                  props.onThemeChange(value);
                 }
               }}
               data={APP_THEME_LIST.map((theme) => ({ label: theme.label, value: theme.id }))}
@@ -96,8 +97,8 @@ export function SettingsAppearanceSection(props: Props): ReactElement {
               size="xs"
               value={props.workspacePanels}
               onChange={(value) => {
-                if (value !== props.workspacePanels) {
-                  props.onWorkspacePanelsChange(value as WorkspacePanelsId);
+                if (isWorkspacePanelsId(value) && value !== props.workspacePanels) {
+                  props.onWorkspacePanelsChange(value);
                 }
               }}
               data={WORKSPACE_PANELS_OPTION_LIST.map((option) => ({ label: option.label, value: option.id }))}

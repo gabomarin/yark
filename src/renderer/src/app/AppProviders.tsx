@@ -122,14 +122,16 @@ export function AppProviders({
     <UiDensityContext.Provider value={density}>
       <WorkspacePanelsContext.Provider value={panels}>
         {/*
-          The scheme is the theme's, but it stays a *default* on purpose: B3 (a light
-          theme) has to switch schemes at runtime, and that needs `forceColorScheme`
-          or a remount - `defaultColorScheme` only seeds the first mount.
+          `forceColorScheme`, not `defaultColorScheme`: the latter only seeds the
+          first mount, so a theme whose scheme differs from the mounted one would
+          swap the palette and keep the old scheme (and a stale Mantine-stored
+          scheme could override the stored preference). If a later slice lets the
+          operator follow the OS scheme, this moves to the scheme manager.
         */}
         <MantineProvider
           theme={theme}
           cssVariablesResolver={cssVariablesResolver}
-          defaultColorScheme={appearance.colorScheme}
+          forceColorScheme={appearance.colorScheme}
         >
           <DatesProvider settings={{ consistentWeeks: true }}>
             <ModalsProvider
