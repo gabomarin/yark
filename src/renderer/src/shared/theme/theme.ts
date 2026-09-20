@@ -2,32 +2,42 @@ import { createTheme, type CSSVariablesResolver, type MantineThemeOverride } fro
 import {
   appTokens as defaultAppTokens,
   createDangerRedPalette,
-  radixPalette,
+  type AppThemePalette,
   type AppTokens,
   type UiDensity,
   getAppTokens,
 } from "./tokens";
+import { DEFAULT_APP_THEME, type AppTheme } from "./themes";
 
-const radixCssVariables = Object.fromEntries([
-  ...radixPalette.blue.map((value, index) => [`--ark-blue-${index + 1}`, value]),
-  ...radixPalette.blueAlpha.map((value, index) => [`--ark-blue-a${index + 1}`, value]),
-  ...radixPalette.gray.map((value, index) => [`--ark-gray-${index + 1}`, value]),
-  ...radixPalette.grayAlpha.map((value, index) => [`--ark-gray-a${index + 1}`, value]),
-  ["--ark-blue-contrast", "#ffffff"],
-  ["--ark-blue-surface", "#01145180"],
-  ["--ark-blue-indicator", radixPalette.blue[8]],
-  ["--ark-blue-track", radixPalette.blue[8]],
-  ["--ark-gray-contrast", "#ffffff"],
-  ["--ark-gray-surface", "rgba(0, 0, 0, 0.05)"],
-  ["--ark-gray-indicator", radixPalette.gray[8]],
-  ["--ark-gray-track", radixPalette.gray[8]],
-  ["--ark-background", radixPalette.background],
-]);
+/**
+ * Palette steps for one theme (#PUX-004 Track B). The `--app-*` role map below
+ * stays shared: only the palette it points at changes per theme.
+ */
+function buildRadixCssVariables(palette: AppThemePalette): Record<string, string> {
+  return Object.fromEntries([
+    ...palette.blue.map((value, index) => [`--ark-blue-${index + 1}`, value]),
+    ...palette.blueAlpha.map((value, index) => [`--ark-blue-a${index + 1}`, value]),
+    ...palette.gray.map((value, index) => [`--ark-gray-${index + 1}`, value]),
+    ...palette.grayAlpha.map((value, index) => [`--ark-gray-a${index + 1}`, value]),
+    ["--ark-blue-contrast", palette.blueContrast],
+    ["--ark-blue-surface", palette.blueSurface],
+    ["--ark-blue-indicator", palette.blue[8]],
+    ["--ark-blue-track", palette.blue[8]],
+    ["--ark-gray-contrast", palette.grayContrast],
+    ["--ark-gray-surface", palette.graySurface],
+    ["--ark-gray-indicator", palette.gray[8]],
+    ["--ark-gray-track", palette.gray[8]],
+    ["--ark-background", palette.background],
+  ]);
+}
 
-function createAppCssVariablesResolver(tokens: AppTokens = defaultAppTokens): CSSVariablesResolver {
+function createAppCssVariablesResolver(
+  tokens: AppTokens = defaultAppTokens,
+  palette: AppThemePalette = DEFAULT_APP_THEME.palette,
+): CSSVariablesResolver {
   return () => ({
     variables: {
-      ...radixCssVariables,
+      ...buildRadixCssVariables(palette),
       "--app-color-bg": "var(--ark-background)",
       "--app-color-surface-chrome": "var(--ark-gray-2)",
       /*
@@ -212,6 +222,7 @@ function createAppCssVariablesResolver(tokens: AppTokens = defaultAppTokens): CS
 function createAppTheme(
   tokens: AppTokens = defaultAppTokens,
   density: UiDensity = "comfortable",
+  palette: AppThemePalette = DEFAULT_APP_THEME.palette,
 ): MantineThemeOverride {
   /**
    * Prior product used Mantine’s default control size (`sm`). Comfortable must not
@@ -333,16 +344,16 @@ function createAppTheme(
     },
     colors: {
       blue: [
-        radixPalette.blue[11],
-        radixPalette.blue[10],
-        radixPalette.blue[7],
-        radixPalette.blue[6],
-        radixPalette.blue[5],
-        radixPalette.blue[8],
-        radixPalette.blue[9],
-        radixPalette.blue[4],
-        radixPalette.blue[2],
-        radixPalette.blue[0],
+        palette.blue[11],
+        palette.blue[10],
+        palette.blue[7],
+        palette.blue[6],
+        palette.blue[5],
+        palette.blue[8],
+        palette.blue[9],
+        palette.blue[4],
+        palette.blue[2],
+        palette.blue[0],
       ],
       /** Same ladder as fossil — needs-attention is amber, not lime (#470). */
       attention: [
@@ -386,16 +397,16 @@ function createAppTheme(
       /** Matches `--app-color-bad` / danger (destructive filled buttons). */
       red: createDangerRedPalette(tokens.colors.bad, tokens.colors.dangerBright),
       dark: [
-        radixPalette.gray[11],
-        radixPalette.gray[10],
-        radixPalette.gray[9],
-        radixPalette.gray[7],
-        radixPalette.gray[6],
-        radixPalette.gray[5],
-        radixPalette.gray[3],
-        radixPalette.gray[2],
-        radixPalette.gray[1],
-        radixPalette.gray[0],
+        palette.gray[11],
+        palette.gray[10],
+        palette.gray[9],
+        palette.gray[7],
+        palette.gray[6],
+        palette.gray[5],
+        palette.gray[3],
+        palette.gray[2],
+        palette.gray[1],
+        palette.gray[0],
       ],
     },
     components: {
@@ -649,10 +660,22 @@ const ALERT_TONE_TOKENS: Partial<Record<ReturnType<typeof alertToneForColor>, st
   error: "var(--app-color-bad)",
 };
 
+export function createAppThemeForAppearance(appearance: AppTheme, density: UiDensity): MantineThemeOverride {
+  return createAppTheme(getAppTokens(density), density, appearance.palette);
+}
+
+export function createAppCssVariablesResolverForAppearance(
+  appearance: AppTheme,
+  density: UiDensity,
+): CSSVariablesResolver {
+  return createAppCssVariablesResolver(getAppTokens(density), appearance.palette);
+}
+
+/** Default theme + density: the shipped dark shell. */
 export function createAppThemeForDensity(density: UiDensity): MantineThemeOverride {
-  return createAppTheme(getAppTokens(density), density);
+  return createAppThemeForAppearance(DEFAULT_APP_THEME, density);
 }
 
 export function createAppCssVariablesResolverForDensity(density: UiDensity): CSSVariablesResolver {
-  return createAppCssVariablesResolver(getAppTokens(density));
+  return createAppCssVariablesResolverForAppearance(DEFAULT_APP_THEME, density);
 }

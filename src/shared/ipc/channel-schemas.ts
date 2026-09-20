@@ -19,6 +19,7 @@ import {
 import { isServerProfilePatch } from "../server/server-profile";
 import {
   appDataFolderKindSchema,
+  appearanceSettingsSchema,
   backupCleanupOptionsSchema,
   backupDiskAlertSettingsSchema,
   backupKindSchema,
@@ -135,6 +136,7 @@ export const VALIDATED_IPC_CHANNELS = [
   IPC.learnAdminListNames,
   IPC.eventsRecent,
   IPC.appSetUiDensity,
+  IPC.appSetAppearance,
   IPC.appSetOpenNativeConsole,
   IPC.appSetLastSeenChangelogVersion,
   IPC.appSetOnboarding,
@@ -218,6 +220,7 @@ export const VALIDATED_IPC_CHANNELS = [
   IPC.rconGetAllStatus,
   IPC.appListDataFolders,
   IPC.appGetUiDensity,
+  IPC.appGetAppearance,
   IPC.appGetOpenNativeConsole,
   IPC.appGetLastSeenChangelogVersion,
   IPC.appGetOnboarding,
@@ -350,6 +353,8 @@ export const ipcArgSchemas = {
   [IPC.appOpenDataFolder]: z.tuple([appDataFolderKindSchema]),
   [IPC.appGetUiDensity]: z.tuple([]),
   [IPC.appSetUiDensity]: z.tuple([uiDensitySchema]),
+  [IPC.appGetAppearance]: z.tuple([]),
+  [IPC.appSetAppearance]: z.tuple([appearanceSettingsSchema]),
   [IPC.appGetOpenNativeConsole]: z.tuple([]),
   [IPC.appSetOpenNativeConsole]: z.tuple([z.boolean()]),
   [IPC.appGetLastSeenChangelogVersion]: z.tuple([]),

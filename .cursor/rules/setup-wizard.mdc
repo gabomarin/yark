@@ -15,6 +15,7 @@ Trigger surfaces:
 - SteamCMD path / install / status copy
 - Default base folder
 - Desktop shell (tray, Start with Windows, density)
+- Appearance (display size, theme — the wizard's Windows step mirrors Settings → Appearance)
 - Show server console on start
 - Create server / Import cluster join (`listKnownClusterOptions`, `ServerForm`,
   `ImportInstallWizard`)

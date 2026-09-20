@@ -11,6 +11,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- **Settings → Appearance** groups the shell's look in one place: display size (Compact / Comfortable), theme and where the server workspace puts its panels (Auto / Drawers), with a registry behind each. Dark is the only shipped theme and Auto the default; an unknown or missing stored id falls back to the default, and the choice persists across restarts.
+
 - On-demand OpenCodeReview GitHub Action supports `/open-code-review` commands and manual primary/fallback provider selection without reviewing every PR push.
 - Local `npm run e2e:perf` prints a repeatable cold-start-to-Overview timing snapshot for performance investigations (#219).
 - OpenCodeReview now preflights the selected LLM provider and reports configuration errors before starting a review.
@@ -18,7 +20,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - OpenCodeReview no longer passes its reserved `User-Agent` header through custom provider headers.
 - OpenCodeReview summaries now include the result, finding counts, review range, and provider metadata.
 - OpenCodeReview now acknowledges slash-command requests and selects low/medium effort from PR size, with explicit high-effort reviews available on demand.
-- OpenCodeReview now uses a runner-local npm prefix so the installed CLI is available to the action on hosted runners.
+- OpenCodeReview installs its CLI into a runner-local npm prefix, waits for it to answer, and exposes it through a stable wrapper, so the review job no longer fails on a raced global bin link.
 - Manual restart warnings can use compact Quiet, Standard, or Frequent player-notification presets before the graceful restart (#573).
 - Optional per-server **crash recovery**: after a real unexpected exit, YARK can restart the dedicated automatically within a bounded attempt budget — configurable max attempts, linear backoff, and a stability window that resets the budget. Default off; intentional stops, disabled profiles, active Maintenance windows, held locks, and exhausted budgets never restart. Attempt/pause state persists across relaunch, the Maintenance tab shows attempt N of M, paused, exhausted, and the last failure reason, and the server card shows a live auto-restart countdown when a retry is scheduled (#563).
 - Experimental, default-off **Hosted Resources** now supports operator notes and normalized tags for quickly identifying resources, with clearer ASA dynamic-config examples and a guided “next step” for connecting a copied URL to a server setting (#564).

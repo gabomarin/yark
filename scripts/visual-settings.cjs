@@ -94,6 +94,18 @@ async function run() {
       );
       await shot(page, outDir, `settings-${size.name}`);
 
+      await openSettingsCategory(page, "Appearance");
+      await page.getByRole("heading", { name: "Appearance", level: 3 }).waitFor({
+        timeout: 10000,
+      });
+      const appearance = await measureSettings(page);
+      assert.equal(appearance.hasHorizontalOverflow, false, `${size.name}: horizontal overflow on Appearance`);
+      assert.ok(
+        await page.locator("[data-settings-appearance]").isVisible(),
+        `${size.name}: Appearance section missing`,
+      );
+      await shot(page, outDir, `settings-appearance-${size.name}`);
+
       await openSettingsCategory(page, "SteamCMD");
       const steamCmd = await measureSettings(page);
       assert.equal(steamCmd.hasSteamCmdPath, true, `${size.name}: missing steamcmd path`);

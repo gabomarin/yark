@@ -64,10 +64,11 @@ function renderWorkspace(
     onBack?: () => void;
     onRegisterLeaveGuard?: (guard: ((action: () => void) => void) | null) => void;
     onServerUpdated?: () => void;
+    workspacePanels?: "auto" | "drawers";
   } = {},
 ): void {
   render(
-    <AppProviders>
+    <AppProviders workspacePanels={extra.workspacePanels ?? null}>
       <ServerWorkspacePage
         servers={[serverA, serverB]}
         selectedServerId={serverA.id}
@@ -706,6 +707,48 @@ describe("ServerWorkspacePage", () => {
     await waitFor(() => {
       expect(screen.queryByRole("dialog", { name: "Status and actions" })).not.toBeInTheDocument();
     });
+  });
+
+  it("keeps drawers at a wide viewport when the panels option says so (#PUX-004)", async () => {
+    // Wide window: the Auto query does not match, so only the option can keep
+    // the panels in drawers.
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: /prefers-reduced-motion:\s*reduce/i.test(query),
+      media: query,
+      onchange: null,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      dispatchEvent: () => false,
+    }));
+
+    renderWorkspace(
+      vi.fn(),
+      vi.fn(async () => true),
+      [],
+      { workspacePanels: "drawers" },
+    );
+
+    expect(await screen.findByRole("button", { name: "Switch server" })).toBeVisible();
+  });
+
+  it("keeps columns at a wide viewport with the Auto option", async () => {
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: /prefers-reduced-motion:\s*reduce/i.test(query),
+      media: query,
+      onchange: null,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      dispatchEvent: () => false,
+    }));
+
+    renderWorkspace();
+
+    expect(await screen.findByRole("button", { name: /The Island/ })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Switch server" })).not.toBeInTheDocument();
   });
 
   it("keeps the Backups kind tab when the workspace crosses the compact breakpoint", async () => {

@@ -34,12 +34,17 @@ import { SetupWizard } from "@features/setup-wizard/SetupWizard";
 import { toSyntheticClusterOption } from "@features/setup-wizard/setupWizardModel";
 import {
   readDefaultBaseFolderPref,
+  writeAppearancePref,
   writeDefaultBaseFolderPref,
   writeOpenNativeConsolePref,
   writeSettingsCategoryPref,
   writeUiDensityPref,
+  type AppearanceSettings,
+  type ThemeId,
   type UiDensity,
+  type WorkspacePanelsId,
 } from "@features/settings/settingsModel";
+import { DEFAULT_APPEARANCE_SETTINGS } from "@shared/settings/appearance";
 import { DEFAULT_OPEN_NATIVE_CONSOLE } from "@shared/settings/open-native-console";
 import { useDesktopShellPreferences } from "@features/settings/hooks/useDesktopShellPreferences";
 import type { Route } from "@layout/Sidebar/Sidebar";
@@ -51,6 +56,8 @@ export interface AppShellProps {
   initialUiDensity?: UiDensity;
   /** Resolved from `app_settings` (via IPC) before first paint. */
   initialOpenNativeConsole?: boolean;
+  /** Theme + layout profile from `app_settings` (via IPC) before first paint. */
+  initialAppearance?: AppearanceSettings;
 }
 
 /**
@@ -60,6 +67,7 @@ export interface AppShellProps {
 export function AppShell({
   initialUiDensity = "compact",
   initialOpenNativeConsole = DEFAULT_OPEN_NATIVE_CONSOLE,
+  initialAppearance = DEFAULT_APPEARANCE_SETTINGS,
 }: AppShellProps): ReactElement {
   const [route, setRoute] = useState<Route>("overview");
   const [overlay, setOverlay] = useState<Overlay>(null);
@@ -115,6 +123,13 @@ export function AppShell({
   const [copyConfig, setCopyConfig] = useState<CopyConfigSession | null>(null);
   const [openNativeTerminalOnStart, setOpenNativeTerminalOnStart] = useState(initialOpenNativeConsole);
   const [uiDensity, setUiDensity] = useState<UiDensity>(initialUiDensity);
+  const [appearance, setAppearance] = useState<AppearanceSettings>(initialAppearance);
+  /**
+   * Theme and layout are one stored row, so every change writes the whole object.
+   * The ref is what makes two rapid changes compose: reading the captured state
+   * would let the second write drop the first one.
+   */
+  const appearanceRef = useRef(initialAppearance);
   const [defaultBaseFolder, setDefaultBaseFolder] = useState<string | null>(readDefaultBaseFolderPref);
   const [appUpdateStatus, setAppUpdateStatus] = useState<AppUpdateStatus | null>(null);
   const [focusYarkUpdates, setFocusYarkUpdates] = useState(false);
@@ -169,6 +184,39 @@ export function AppShell({
     }
     setUiDensity(density);
   }, []);
+
+  /** Theme and layout are one stored row, so every change writes the whole object. */
+  const persistAppearance = useCallback(async (patch: Partial<AppearanceSettings>, failureTitle: string) => {
+    // The ref is updated before the write so a second change made while this one
+    // is in flight composes with it instead of clobbering it.
+    const previous = appearanceRef.current;
+    const next = { ...previous, ...patch };
+    appearanceRef.current = next;
+
+    const saved = await writeAppearancePref(next);
+    if (!saved) {
+      if (appearanceRef.current === next) {
+        appearanceRef.current = previous;
+      }
+      notifications.show({
+        color: "red",
+        title: failureTitle,
+        message: "Your selection was not stored. Try again.",
+      });
+      return;
+    }
+    setAppearance(next);
+  }, []);
+
+  const handleThemeChange = useCallback(
+    (theme: ThemeId) => void persistAppearance({ theme }, "Could not save theme"),
+    [persistAppearance],
+  );
+
+  const handleWorkspacePanelsChange = useCallback(
+    (panels: WorkspacePanelsId) => void persistAppearance({ panels }, "Could not save server panel settings"),
+    [persistAppearance],
+  );
 
   const extraClusterOptions = useMemo(
     () => (pendingSetupCluster === null ? undefined : [toSyntheticClusterOption(pendingSetupCluster)]),
@@ -385,7 +433,7 @@ export function AppShell({
   }, []);
 
   return (
-    <AppProviders density={uiDensity}>
+    <AppProviders density={uiDensity} themeId={appearance.theme} workspacePanels={appearance.panels}>
       <AppSpotlight
         servers={servers}
         currentRoute={route}
@@ -528,6 +576,10 @@ export function AppShell({
           handleOpenNativeConsoleChange,
           uiDensity,
           handleUiDensityChange,
+          themeId: appearance.theme,
+          handleThemeChange,
+          workspacePanels: appearance.panels,
+          handleWorkspacePanelsChange,
           defaultBaseFolder,
           setDefaultBaseFolder,
           extraClusterOptions,

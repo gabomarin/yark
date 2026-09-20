@@ -11,7 +11,7 @@ the Server tab / workspace.
   the profile that owns them; Settings only summarizes where helpful.
 - Persist durable prefs in SQLite `app_settings`; keep a few create-flow
   conveniences in renderer `localStorage`.
-- Category rail (General, Profiles, SteamCMD, Discord, Log files, About) — one pane at a
+- Category rail (General, Appearance, Profiles, SteamCMD, Discord, Log files, About) — one pane at a
   time, like a native desktop settings window. The last category is remembered
   on this PC. The selected category uses the same rounded pill + left accent
   notch as the app sidebar (`navSelectedClassName`). Sidebar YARK-update icon opens **About**; Downloads missing-SteamCMD
@@ -19,37 +19,38 @@ the Server tab / workspace.
 
 ## Module map
 
-| Role                                                                         | Path                                                                                                                                                                                                   |
-| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Page shell                                                                   | `src/renderer/src/features/settings/SettingsPage.tsx`                                                                                                                                                  |
-| Category rail                                                                | `…/components/SettingsNav.tsx` (`SETTINGS_CATEGORIES`)                                                                                                                                                 |
-| General                                                                      | `…/components/SettingsGeneralSection.tsx`                                                                                                                                                              |
-| Profiles (console, base folder)                                              | `…/components/SettingsServersSection.tsx`                                                                                                                                                              |
-| Auto-start summary                                                           | `…/components/SettingsAutoStartSection.tsx`                                                                                                                                                            |
-| SteamCMD                                                                     | `…/components/SettingsSteamCmdSection.tsx`                                                                                                                                                             |
-| Discord webhooks                                                             | `…/components/SettingsDiscordSection.tsx`                                                                                                                                                              |
-| Log retention                                                                | `…/components/SettingsLogRetentionSection.tsx`                                                                                                                                                         |
-| About (YARK updates, app data folders, community links, third-party notices) | `…/components/SettingsYarkUpdateSection.tsx`, `…/components/SettingsAppDataSection.tsx`, `…/components/SettingsAboutCommunitySection.tsx`, `…/components/SettingsAboutLegalSection.tsx`                |
-| Density / console-on-start load/migrate                                      | `…/settingsModel.ts`                                                                                                                                                                                   |
-| First-run setup wizard                                                       | `src/renderer/src/features/setup-wizard/` (`onboarding.v1`)                                                                                                                                            |
-| Tray / Windows startup hook                                                  | `…/hooks/useDesktopShellPreferences.ts`                                                                                                                                                                |
-| Desktop-shell persist                                                        | `src/main/desktop-shell-settings.ts`                                                                                                                                                                   |
-| Window bounds / maximized                                                    | `src/main/window-state.ts` (`app_settings.windowState`)                                                                                                                                                |
-| Windows login item                                                           | `src/main/windows-login-item.ts`                                                                                                                                                                       |
-| Tray icon / menu                                                             | `src/main/app-tray.ts`                                                                                                                                                                                 |
-| Sidebar Quit YARK                                                            | `Sidebar.tsx` footer → `app:quit` (#532)                                                                                                                                                               |
-| Shared keys / defaults                                                       | `src/shared/settings/desktop-shell.ts`, `src/shared/settings/ui-density.ts`, `src/shared/settings/open-native-console.ts`, `src/shared/settings/log-retention.ts`, `src/shared/settings/app-update.ts` |
-| Density theme apply                                                          | `src/renderer/src/app/AppProviders.tsx`, `src/renderer/src/main.tsx`                                                                                                                                   |
-| SteamCMD service                                                             | `src/backend/domains/updates/*` (path/install/caches)                                                                                                                                                  |
-| YARK self-update                                                             | `src/main/app-update-service.ts`                                                                                                                                                                       |
-| IPC                                                                          | `src/shared/ipc.ts`, `src/preload/index.ts`, `src/main/ipc-handlers.ts`                                                                                                                                |
+| Role                                                                         | Path                                                                                                                                                                                                                                        |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Page shell                                                                   | `src/renderer/src/features/settings/SettingsPage.tsx`                                                                                                                                                                                       |
+| Category rail                                                                | `…/components/SettingsNav.tsx` (`SETTINGS_CATEGORIES`)                                                                                                                                                                                      |
+| General                                                                      | `…/components/SettingsGeneralSection.tsx`                                                                                                                                                                                                   |
+| Appearance (display size, theme, server panels)                              | `…/components/SettingsAppearanceSection.tsx` + `src/renderer/src/shared/theme/themes.ts`, `src/shared/workspace/workspacePanels.ts`                                                                                                         |
+| Profiles (console, base folder)                                              | `…/components/SettingsServersSection.tsx`                                                                                                                                                                                                   |
+| Auto-start summary                                                           | `…/components/SettingsAutoStartSection.tsx`                                                                                                                                                                                                 |
+| SteamCMD                                                                     | `…/components/SettingsSteamCmdSection.tsx`                                                                                                                                                                                                  |
+| Discord webhooks                                                             | `…/components/SettingsDiscordSection.tsx`                                                                                                                                                                                                   |
+| Log retention                                                                | `…/components/SettingsLogRetentionSection.tsx`                                                                                                                                                                                              |
+| About (YARK updates, app data folders, community links, third-party notices) | `…/components/SettingsYarkUpdateSection.tsx`, `…/components/SettingsAppDataSection.tsx`, `…/components/SettingsAboutCommunitySection.tsx`, `…/components/SettingsAboutLegalSection.tsx`                                                     |
+| Density / appearance / console-on-start load/migrate                         | `…/settingsModel.ts`                                                                                                                                                                                                                        |
+| First-run setup wizard                                                       | `src/renderer/src/features/setup-wizard/` (`onboarding.v1`)                                                                                                                                                                                 |
+| Tray / Windows startup hook                                                  | `…/hooks/useDesktopShellPreferences.ts`                                                                                                                                                                                                     |
+| Desktop-shell persist                                                        | `src/main/desktop-shell-settings.ts`                                                                                                                                                                                                        |
+| Window bounds / maximized                                                    | `src/main/window-state.ts` (`app_settings.windowState`)                                                                                                                                                                                     |
+| Windows login item                                                           | `src/main/windows-login-item.ts`                                                                                                                                                                                                            |
+| Tray icon / menu                                                             | `src/main/app-tray.ts`                                                                                                                                                                                                                      |
+| Sidebar Quit YARK                                                            | `Sidebar.tsx` footer → `app:quit` (#532)                                                                                                                                                                                                    |
+| Shared keys / defaults                                                       | `src/shared/settings/desktop-shell.ts`, `src/shared/settings/ui-density.ts`, `src/shared/settings/appearance.ts`, `src/shared/settings/open-native-console.ts`, `src/shared/settings/log-retention.ts`, `src/shared/settings/app-update.ts` |
+| Theme + density apply                                                        | `src/renderer/src/app/AppProviders.tsx`, `src/renderer/src/main.tsx`                                                                                                                                                                        |
+| SteamCMD service                                                             | `src/backend/domains/updates/*` (path/install/caches)                                                                                                                                                                                       |
+| YARK self-update                                                             | `src/main/app-update-service.ts`                                                                                                                                                                                                            |
+| IPC                                                                          | `src/shared/ipc.ts`, `src/preload/index.ts`, `src/main/ipc-handlers.ts`                                                                                                                                                                     |
 
 ## What lives where
 
 | On Settings                                                                              | Elsewhere                                                                                                                                                             |
 | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Close-to-tray, tray toast, Start with Windows                                            | Per-server `autoStart` toggle (Server tab → Startup)                                                                                                                  |
-| UI density (compact / comfortable)                                                       | Theme is **hardcoded dark** (`AppProviders`) — no light/dark control                                                                                                  |
+| UI density (compact / comfortable) + theme id                                            | One theme ships today (dark) — the registry (`shared/theme/themes.ts`) accepts more as data, without feature CSS changes                                              |
 | SteamCMD path + shared caches                                                            | Live progress: **Downloads** page + footer teaser + Logs → Updates                                                                                                    |
 | Discord webhook + event filters                                                          | One-way notifications only; Discord cannot control YARK                                                                                                               |
 | Default create base folder (`localStorage`)                                              | Profile `installDir` (absolute, per server)                                                                                                                           |
@@ -73,10 +74,19 @@ the Server tab / workspace.
 | YARK updates           | SQLite `osNotifyYarkUpdate`                        | **on**                    | Nested; when a new YARK version is available or ready to install. Click opens Settings → About      |
 | Hide to tray           | SQLite `trayCloseHintDismissed` (UI inverted)      | toast **on**              | Nested; visible only when close-to-tray is on. Also gated by Desktop alerts                         |
 | Start with Windows     | SQLite `startWithWindows` + `setLoginItemSettings` | **off**                   | App only — does **not** start ASA (#54 vs #53)                                                      |
-| Display size           | SQLite `uiDensity`                                 | **compact**               | `compact` \| `comfortable`; see [design-system.md](design-system.md)                                |
 | Quick jump             | localStorage `yark.spotlightRecent.v1` (MRU)       | Ctrl+K                    | Jump to pages/servers; Recent group; Settings → General + logo tooltip (#104)                       |
 | Window size / position | SQLite `windowState`                               | **maximized**             | Remembers last bounds + maximized; off-screen → maximize again                                      |
 | Open setup assistant   | SQLite `onboarding.v1`                             | unset until skip/complete | Empty fleet reopens the full wizard; otherwise Paths + Windows only. Does not reset SteamCMD (#298) |
+
+### Appearance (#PUX-004 Track B)
+
+| Control       | Storage                | Default     | Notes                                                                                                                                                                                |
+| ------------- | ---------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Display size  | SQLite `uiDensity`     | **compact** | `compact` \| `comfortable`; scales the active theme's spacing / radius / font tokens — see [design-system.md](design-system.md)                                                      |
+| Theme         | SQLite `appearance.v1` | **dark**    | Registry id (`shared/theme/themes.ts`). Dark is the only shipped theme; an unknown or missing id falls back to it                                                                    |
+| Server panels | SQLite `appearance.v1` | **auto**    | `auto` \| `drawers`; where the server workspace puts its server list and status panel (`src/shared/workspace/workspacePanels.ts`). Auto uses columns from 1600px, Drawers never does |
+
+Theme, panels and density are independent: density scales the tokens of whichever theme is active, and the panels option only decides where the workspace puts its server list and status panel.
 
 ### Profiles
 
@@ -235,17 +245,19 @@ silent outside Settings status text.
 
 ## Common pitfalls
 
-1. **Two storage backends** — density / shell / SteamCMD path / console-on-start
+1. **Two storage backends** — density / appearance / shell / SteamCMD path / console-on-start
    → SQLite; default base folder → `localStorage` only.
 2. **Start with Windows ≠ Auto-start with YARK** — #54 opens the app; #53 starts
    opted-in ASA profiles after reattach.
 3. **Tray alert polarity** — stored key is `trayCloseHintDismissed`; the nested
    **Hide to tray** switch is “show alert” = `!dismissed`. The master
    **Desktop alerts** switch also gates this banner.
-4. **No theme toggle** — operator docs that mention a theme control are stale;
-   appearance on Settings is density only.
-5. **Do not persist density or console-on-start defaults on read** — only user
-   changes (or legacy migration) write `uiDensity` / `openNativeConsoleOnStart`.
+4. **Appearance is a registry, not a flag** — density and theme live in
+   **Settings → Appearance**; a theme is an entry in `shared/theme/themes.ts` plus
+   its palette, and the `--app-*` role map stays shared. An unknown stored theme id
+   falls back to the default, so a downgrade never leaves the shell without a palette.
+5. **Do not persist density, theme or console-on-start defaults on read** — only user
+   changes (or legacy migration) write `uiDensity` / `appearance.v1` / `openNativeConsoleOnStart`.
 6. **Shell switches disabled until IPC ready** — failed preference load leaves
    controls disabled at defaults.
 7. **SteamCMD set-path** rejects empty paths and requires a successful `+quit`.
@@ -261,6 +273,8 @@ silent outside Settings status text.
 | `tests/unit/log-retention.test.ts`                         | Defaults / normalize / failure classification                                            |
 | `tests/unit/logs-service.test.ts`                          | Retention preview/run path guards                                                        |
 | `tests/unit/ui-density-pref.test.ts`                       | Load / write / legacy migration                                                          |
+| `tests/unit/appearance-pref.test.ts`                       | Theme id parse / fallback, load / write through IPC                                      |
+| `src/renderer/src/shared/theme/themes.test.ts`             | Registry entry, unknown-id fallback, palette wiring, density composition                 |
 | `tests/unit/open-native-console-pref.test.ts`              | Console-on-start load / write / legacy migration                                         |
 | `tests/unit/app-settings-ui-density.test.ts`               | SQLite round-trip                                                                        |
 | `tests/unit/app-settings-open-native-console.test.ts`      | SQLite console-on-start round-trip                                                       |

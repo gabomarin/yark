@@ -21,7 +21,7 @@ import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 import type { RconHistoryEntry } from "@features/server-workspace/ServerWorkspacePage";
 import type { DesktopShellPreferencesController } from "@features/settings/hooks/useDesktopShellPreferences";
-import type { UiDensity } from "@features/settings/settingsModel";
+import type { ThemeId, UiDensity, WorkspacePanelsId } from "@features/settings/settingsModel";
 import type { Route } from "@layout/Sidebar/Sidebar";
 import type { AppBusyOverlayContent } from "@ui/AppBusyOverlay/AppBusyOverlay";
 
@@ -120,6 +120,10 @@ export interface AppSettingsSlice {
   handleOpenNativeConsoleChange: (enabled: boolean) => void;
   uiDensity: UiDensity;
   handleUiDensityChange: (density: UiDensity) => void;
+  themeId: ThemeId;
+  handleThemeChange: (theme: ThemeId) => void;
+  workspacePanels: WorkspacePanelsId;
+  handleWorkspacePanelsChange: (panels: WorkspacePanelsId) => void;
   defaultBaseFolder: string | null;
   setDefaultBaseFolder: Dispatch<SetStateAction<string | null>>;
   extraClusterOptions: KnownClusterOption[] | undefined;

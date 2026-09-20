@@ -54,9 +54,12 @@ the checkpoint and reviews the full PR again.
 Before OCR starts, the workflow sends a minimal authenticated chat-completions
 request to the selected provider. The configured URL must be the provider's exact
 OpenAI-compatible chat-completions endpoint; the workflow does not append a path.
-The job also assigns OpenCodeReview's npm global prefix to a runner-local
-directory and adds its `bin` directory to `PATH`, avoiding hosted-runner npm
-prefix differences when the action invokes the installed `ocr` executable.
+The job installs OpenCodeReview itself into a runner-local npm prefix, waits until
+the CLI answers, and exposes it through a wrapper in a directory npm never
+rewrites. Leaving the install to the action races: the package's postinstall
+fetches its platform binary with a nested npm run that outlives the parent, and
+npm relinks the global `bin/ocr` as `.ocr-<random>` while it does, so the action's
+next step can exec a path that does not exist yet ("No such file or directory").
 The preflight reports the HTTP status and sanitized response body without printing
 the API key. OCR's default `thinking` body is explicitly overridden with `{}` for
 providers that reject that optional field. OpenCode Go requests also include a

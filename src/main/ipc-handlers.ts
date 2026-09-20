@@ -32,6 +32,12 @@ import type { AppSettingsRepository } from "../backend/infra/db/app-settings-rep
 import type { ServerRepository } from "../backend/infra/db/server-repository";
 import { UI_DENSITY_SETTING_KEY, isUiDensity, type UiDensity } from "../shared/settings/ui-density";
 import {
+  APPEARANCE_SETTINGS_KEY,
+  encodeAppearanceSettings,
+  parseAppearanceSettings,
+  type AppearanceSettings,
+} from "../shared/settings/appearance";
+import {
   OPEN_NATIVE_CONSOLE_SETTING_KEY,
   encodeOpenNativeConsolePref,
   parseStoredOpenNativeConsole,
@@ -627,6 +633,19 @@ export function registerIpcHandlers(
   handleValidated(IPC.appSetUiDensity, ipcArgSchemas[IPC.appSetUiDensity], ([density]): UiDensity => {
     settings.set(UI_DENSITY_SETTING_KEY, density);
     return density;
+  });
+
+  handleValidated(IPC.appGetAppearance, ipcArgSchemas[IPC.appGetAppearance], (): AppearanceSettings | null => {
+    const raw = settings.get(APPEARANCE_SETTINGS_KEY);
+    if (raw === null) {
+      return null;
+    }
+    return parseAppearanceSettings(raw);
+  });
+
+  handleValidated(IPC.appSetAppearance, ipcArgSchemas[IPC.appSetAppearance], ([appearance]): AppearanceSettings => {
+    settings.set(APPEARANCE_SETTINGS_KEY, encodeAppearanceSettings(appearance));
+    return appearance;
   });
 
   handleValidated(IPC.appGetOpenNativeConsole, ipcArgSchemas[IPC.appGetOpenNativeConsole], (): boolean | null => {

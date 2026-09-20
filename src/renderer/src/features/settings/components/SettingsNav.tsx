@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { CloudArrowDown, DiscordLogo, FileText, GearSix, HardDrives, Info } from "@phosphor-icons/react";
+import { CloudArrowDown, DiscordLogo, FileText, GearSix, HardDrives, Info, PaintBrush } from "@phosphor-icons/react";
 import { NavLink, Stack } from "@mantine/core";
 import { navSelectedClassName } from "@ui/NavSelected/navSelectedClassName";
 import { SETTINGS_CATEGORIES, type SettingsCategory } from "../settingsModel";
@@ -7,6 +7,7 @@ import classes from "../SettingsPage.module.css";
 
 const CATEGORY_ICONS: Record<SettingsCategory, typeof GearSix> = {
   general: GearSix,
+  appearance: PaintBrush,
   servers: HardDrives,
   steamcmd: CloudArrowDown,
   discord: DiscordLogo,

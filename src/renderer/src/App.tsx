@@ -8,6 +8,13 @@ export type AppProps = AppShellProps;
 export function App({
   initialUiDensity = "compact",
   initialOpenNativeConsole = DEFAULT_OPEN_NATIVE_CONSOLE,
+  initialAppearance,
 }: AppProps): ReactElement {
-  return <AppShell initialUiDensity={initialUiDensity} initialOpenNativeConsole={initialOpenNativeConsole} />;
+  return (
+    <AppShell
+      initialUiDensity={initialUiDensity}
+      initialOpenNativeConsole={initialOpenNativeConsole}
+      initialAppearance={initialAppearance}
+    />
+  );
 }

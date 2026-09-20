@@ -4,8 +4,15 @@ import { Notifications } from "@mantine/notifications";
 import { MantineProvider } from "@mantine/core";
 import { DatesProvider } from "@mantine/dates";
 import { createContext, useContext, useLayoutEffect, useMemo, type PropsWithChildren } from "react";
-import { createAppCssVariablesResolverForDensity, createAppThemeForDensity } from "@theme/theme";
+import { createAppCssVariablesResolverForAppearance, createAppThemeForAppearance } from "@theme/theme";
+import { resolveAppTheme } from "@theme/themes";
 import type { UiDensity } from "@theme/tokens";
+import {
+  DEFAULT_WORKSPACE_PANELS_OPTION,
+  resolveWorkspacePanelsOption,
+  type WorkspacePanelsOption,
+} from "@shared/workspace/workspacePanels";
+import type { ThemeId, WorkspacePanelsId } from "@shared/settings/appearance";
 import { RowActionMenuProvider } from "@ui/RowActionMenu/RowActionMenuProvider";
 import { isRendererTest } from "@renderer/shared/isRendererTest";
 
@@ -15,14 +22,32 @@ export function useUiDensity(): UiDensity {
   return useContext(UiDensityContext);
 }
 
+const WorkspacePanelsContext = createContext<WorkspacePanelsOption>(DEFAULT_WORKSPACE_PANELS_OPTION);
+
+/** How the server workspace arranges its panels (Settings → Appearance). */
+export function useWorkspacePanels(): WorkspacePanelsOption {
+  return useContext(WorkspacePanelsContext);
+}
+
 interface Props extends PropsWithChildren {
   /** Compact (default) or Comfortable. */
   density?: UiDensity;
+  /** Appearance theme id (Settings → Appearance). Unknown ids fall back to dark. */
+  themeId?: ThemeId | string | null;
+  /** Server-workspace panels option. Unknown ids fall back to Auto. */
+  workspacePanels?: WorkspacePanelsId | string | null;
 }
 
-export function AppProviders({ children, density = "compact" }: Props): ReactElement {
+export function AppProviders({
+  children,
+  density = "compact",
+  themeId = null,
+  workspacePanels = null,
+}: Props): ReactElement {
+  const appearance = useMemo(() => resolveAppTheme(themeId), [themeId]);
+  const panels = useMemo(() => resolveWorkspacePanelsOption(workspacePanels), [workspacePanels]);
   const theme = useMemo(() => {
-    const base = createAppThemeForDensity(density);
+    const base = createAppThemeForAppearance(appearance, density);
     if (!isRendererTest()) {
       return base;
     }
@@ -75,8 +100,11 @@ export function AppProviders({ children, density = "compact" }: Props): ReactEle
         },
       },
     };
-  }, [density]);
-  const cssVariablesResolver = useMemo(() => createAppCssVariablesResolverForDensity(density), [density]);
+  }, [appearance, density]);
+  const cssVariablesResolver = useMemo(
+    () => createAppCssVariablesResolverForAppearance(appearance, density),
+    [appearance, density],
+  );
 
   // On <html> so Mantine portals (Modal/Drawer under document.body) inherit
   // compact input height/padding from globals.css.
@@ -92,23 +120,36 @@ export function AppProviders({ children, density = "compact" }: Props): ReactEle
 
   return (
     <UiDensityContext.Provider value={density}>
-      <MantineProvider theme={theme} cssVariablesResolver={cssVariablesResolver} defaultColorScheme="dark">
-        <DatesProvider settings={{ consistentWeeks: true }}>
-          <ModalsProvider
-            modalProps={{
-              centered: true,
-              radius: "md",
-              ...(isRendererTest() ? { transitionProps: { duration: 0 } } : {}),
-            }}
-            labels={{ confirm: "Confirm", cancel: "Cancel" }}
-          >
-            <RowActionMenuProvider>
-              <Notifications position="bottom-right" autoClose={notificationsAutoClose} />
-              {children}
-            </RowActionMenuProvider>
-          </ModalsProvider>
-        </DatesProvider>
-      </MantineProvider>
+      <WorkspacePanelsContext.Provider value={panels}>
+        {/*
+          `forceColorScheme`, not `defaultColorScheme`: the latter only seeds the
+          first mount, so a theme whose scheme differs from the mounted one would
+          swap the palette and keep the old scheme (and a stale Mantine-stored
+          scheme could override the stored preference). If a later slice lets the
+          operator follow the OS scheme, this moves to the scheme manager.
+        */}
+        <MantineProvider
+          theme={theme}
+          cssVariablesResolver={cssVariablesResolver}
+          forceColorScheme={appearance.colorScheme}
+        >
+          <DatesProvider settings={{ consistentWeeks: true }}>
+            <ModalsProvider
+              modalProps={{
+                centered: true,
+                radius: "md",
+                ...(isRendererTest() ? { transitionProps: { duration: 0 } } : {}),
+              }}
+              labels={{ confirm: "Confirm", cancel: "Cancel" }}
+            >
+              <RowActionMenuProvider>
+                <Notifications position="bottom-right" autoClose={notificationsAutoClose} />
+                {children}
+              </RowActionMenuProvider>
+            </ModalsProvider>
+          </DatesProvider>
+        </MantineProvider>
+      </WorkspacePanelsContext.Provider>
     </UiDensityContext.Provider>
   );
 }
