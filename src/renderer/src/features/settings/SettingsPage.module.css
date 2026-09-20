@@ -41,6 +41,11 @@
   min-height: 0;
 }
 
+.navList,
+.navRow {
+  min-width: 0;
+}
+
 .navTitle {
   margin: 0;
   padding: var(--app-space-xxs) var(--app-space-xxs) 0;
@@ -87,6 +92,36 @@
   .navCard {
     border-right: none !important;
     border-bottom: 1px solid var(--app-color-border-subtle) !important;
+  }
+
+  /* The rail becomes a horizontal, scrollable strip. Stacked as a column it pushed the settings
+   * themselves below the fold, which is what the narrow layout is for. */
+  .navPane {
+    flex-direction: row;
+    align-items: center;
+    height: auto;
+  }
+
+  /* The scaffold header is hidden by prop, so the title stays - as the first item of the
+   * strip, at a size that does not turn it into a second banner. */
+  .navTitle {
+    padding: 0;
+    font-size: 18px;
+    white-space: nowrap;
+  }
+
+  .navList {
+    flex: 1 1 auto;
+    overflow-x: auto;
+  }
+
+  .navRow {
+    flex-direction: row;
+    gap: var(--app-space-xs);
+  }
+
+  .navRow :global(.mantine-NavLink-root) {
+    white-space: nowrap;
   }
 }
 

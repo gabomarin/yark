@@ -21,8 +21,8 @@ interface Props {
 
 export function SettingsNav(props: Props): ReactElement {
   return (
-    <nav aria-label="Settings categories">
-      <Stack gap={4}>
+    <nav aria-label="Settings categories" className={classes.navList}>
+      <Stack gap={4} className={classes.navRow}>
         {SETTINGS_CATEGORIES.map((item) => {
           const Icon = CATEGORY_ICONS[item.id];
           const active = item.id === props.active;
