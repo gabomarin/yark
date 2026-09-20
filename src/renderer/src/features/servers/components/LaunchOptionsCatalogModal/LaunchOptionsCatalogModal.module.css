@@ -47,7 +47,7 @@
 
 .versionValue {
   margin-top: 0.15rem;
-  color: var(--app-color-cryo);
+  /* No colour: like `Sidebar .versionValue`, a version is a mono value, not a label. */
   font-family: var(--app-font-mono);
   font-size: var(--mantine-font-size-sm);
 }
@@ -208,6 +208,8 @@
 .token {
   font-family: var(--app-font-mono);
   font-size: var(--mantine-font-size-sm);
+  /* Cryo is the app's tone for an ASA option identifier: `ServerAsaApiPanel .optionLabel`
+   * and `ServerLaunchPanel .optionLabel` colour the same tokens the same way. */
   color: var(--app-color-cryo);
 }
 
@@ -337,6 +339,7 @@
 }
 
 .mono {
+  /* No colour: the app renders mono example values in the text tone
+   * (`ServerLaunchPanel .previewCode`, `RconPanel .playerId`). */
   font-family: var(--app-font-mono);
-  color: var(--app-color-cryo);
 }
