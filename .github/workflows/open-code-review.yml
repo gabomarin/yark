@@ -241,6 +241,13 @@ jobs:
           echo "NPM_CONFIG_PREFIX=$ocr_npm_prefix" >> "$GITHUB_ENV"
           echo "$ocr_npm_prefix/bin" >> "$GITHUB_PATH"
           echo "OpenCodeReview npm prefix: $(npm prefix -g)"
+          echo "--- diagnostics: before the action ---"
+          echo "PATH=$PATH"
+          command -v ocr || echo "ocr is not on PATH yet"
+          npm prefix -g
+          npm root -g
+          ls -la "$ocr_npm_prefix" 2>&1 | head -20
+          cat "$HOME/.npmrc" 2>/dev/null || echo "no user npmrc"
 
       - name: Run OpenCodeReview
         id: ocr-review
@@ -266,6 +273,27 @@ jobs:
           pr_number: ${{ github.event.issue.number || inputs.pr_number }}
           base_ref: ${{ steps.pr-context.outputs.base_ref }}
           head_sha: ${{ steps.pr-context.outputs.head_sha }}
+
+      - name: Diagnose OpenCodeReview CLI path
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          set +e
+          echo "NPM_CONFIG_PREFIX=${NPM_CONFIG_PREFIX:-unset}"
+          echo "--- command -v ocr ---"
+          command -v ocr
+          which -a ocr
+          echo "--- npm prefix/root ---"
+          npm prefix -g
+          npm root -g
+          echo "--- prefix tree ---"
+          ls -la "${NPM_CONFIG_PREFIX:-/nonexistent}" 2>&1 | head -20
+          echo "--- prefix bin ---"
+          ls -la "${NPM_CONFIG_PREFIX:-/nonexistent}/bin" 2>&1 | head -20
+          echo "--- user npmrc ---"
+          cat "$HOME/.npmrc" 2>/dev/null || echo "no user npmrc"
+          echo "--- ocr under RUNNER_TEMP ---"
+          find "$RUNNER_TEMP" -maxdepth 5 \( -name 'ocr' -o -name 'ocr-*' \) 2>/dev/null | head -20
 
       - name: Enrich OpenCodeReview summary
         if: ${{ steps.ocr-review.outcome == 'success' }}
