@@ -217,6 +217,7 @@ export function MoveInstallDialog(props: Props): ReactElement {
       onClose={handleClose}
       title="Move installation"
       size="lg"
+      footerAlign="between"
       closeOnClickOutside={allowChromeClose}
       closeOnEscape={allowChromeClose}
       withCloseButton={allowChromeClose}

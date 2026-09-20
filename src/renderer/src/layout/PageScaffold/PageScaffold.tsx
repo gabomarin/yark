@@ -32,6 +32,9 @@ export function PageScaffold({
       data-fill-viewport={fillViewport || undefined}
       data-edge-to-edge={edgeToEdge || undefined}
       aria-label={showHeader ? undefined : title}
+      /* `aria-label` needs a role to be announced; without the header this root is the
+       * page's landmark instead. */
+      role={showHeader ? undefined : "region"}
     >
       {showHeader ? (
         <header className={classes.header}>

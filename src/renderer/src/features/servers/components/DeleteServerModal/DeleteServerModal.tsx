@@ -97,6 +97,7 @@ export function DeleteServerModal(props: Props): ReactElement {
       }}
       title={`Remove server "${props.serverName}"`}
       size="md"
+      footerAlign="between"
       closeOnClickOutside={!loading}
       closeOnEscape={!loading}
       withCloseButton={!loading}
