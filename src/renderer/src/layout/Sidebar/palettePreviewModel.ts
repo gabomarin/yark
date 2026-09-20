@@ -23,9 +23,6 @@ export const DEFAULT_PALETTE_INTENSITY = 0.5;
 /** ± lightness applied to step 1 when the darkness slider sits at either end. */
 const DARKNESS_SWING = 0.12;
 
-/** Intensity 0 → true neutral greys; 0.5 keeps half the picked colour's tint; 1 goes all the way to it. */
-const INTENSITY_MULTIPLIER = 1;
-
 /** Safety stop only — a pure sRGB primary is ~0.32 chroma and would read as neon chrome. */
 const MAX_PICKED_CHROMA = 0.3;
 
@@ -154,7 +151,7 @@ function lightnessForStep(index: number, darkness: number): number {
 
 /** Chroma for one step, from the picked colour's own chroma × the intensity knob. */
 function chromaForStep(index: number, pickedChroma: number, intensity: number): number {
-  return pickedChroma * (CHROMA_PROFILE[index] as number) * intensity * INTENSITY_MULTIPLIER;
+  return pickedChroma * (CHROMA_PROFILE[index] as number) * intensity;
 }
 
 /**

@@ -607,11 +607,13 @@ function createAppTheme(
         },
       },
       /** Fluent ProgressBar is a thin 4px bar; call sites may still pass `size`. */
-      Progress: {        defaultProps: {
+      Progress: {
+        defaultProps: {
           size: 4,
         },
       },
-      Anchor: {        defaultProps: {
+      Anchor: {
+        defaultProps: {
           underline: "always",
         },
         styles: {
@@ -637,7 +639,8 @@ function createAppTheme(
 /** Inline Alert surface recipes: message (blue), warn (fossil), error (red). */
 export function alertToneForColor(
   color: string,
-): "message" | "success" | "warn" | "error" | "default" {  if (
+): "message" | "success" | "warn" | "error" | "default" {
+  if (
     color === "blue" ||
     color === "cyan" ||
     color === "indigo" ||

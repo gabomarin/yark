@@ -28,7 +28,7 @@ export function LoadingState(props: Props): ReactElement {
       aria-live="polite"
     >
       {props.variant === "block" && <Loader size="sm" />}
-      <span className={classes.label}>Loading {props.label}…</span>
+      <span>Loading {props.label}…</span>
     </div>
   );
 }

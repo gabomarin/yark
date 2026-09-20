@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, ColorInput, Group, Select, Slider, Stack, Text } from "@mantine/core";
 import {
   applyPalettePreview,
@@ -62,6 +62,20 @@ import {
  * `palettePreviewModel` files once the palette is decided.
  */
 
+/** Readout tone for a sampled surface: neutral reads dimmed, past the chroma budget it warns. */
+function tintColor(tint: SurfaceTint | null): string {
+  if (tint === null) return "dimmed";
+  if (tint.chroma > 0.035) return "red";
+  if (tint.chroma > 0.02) return "attention";
+  return "dimmed";
+}
+
+/** Readout tone for a contrast row: a documented gap never reads as a plain failure. */
+function contrastColor(pass: boolean, knownGap: boolean | undefined): string {
+  if (pass) return knownGap ? "dimmed" : "ok";
+  return knownGap ? "attention" : "red";
+}
+
 /** Show the shipped palette until the operator touches a control. */
 const USE_PROPOSAL_ON_LOAD = !hasStoredProposal();
 const PROPOSAL = SHIPPED_PROPOSAL;
@@ -85,14 +99,17 @@ export function PalettePreviewSwitcher(): ReactElement {
   const [shellArt, setShellArt] = useState<ShellArtOption>(() => readStoredShellArt());
   const [iniChrome, setIniChrome] = useState<IniChromeOption>(() => readStoredIniChrome());
   const [panelLift, setPanelLift] = useState<number>(() => (USE_PROPOSAL_ON_LOAD ? PROPOSAL.panelLift : readStoredPanelLift()));
-  const [hairlineLift, setHairlineLift] = useState<number>(() => (USE_PROPOSAL_ON_LOAD ? PROPOSAL.hairlineLift : readStoredHairlineLift()))
+  const [hairlineLift, setHairlineLift] = useState<number>(() =>
+    USE_PROPOSAL_ON_LOAD ? PROPOSAL.hairlineLift : readStoredHairlineLift(),
+  );
   const [plateWarmth, setPlateWarmth] = useState<number>(() =>
     USE_PROPOSAL_ON_LOAD ? PROPOSAL.plateWarmth : readStoredPlateWarmth(),
-  );;
+  );
   const [plateColor, setPlateColor] = useState<string | null>(() =>
     USE_PROPOSAL_ON_LOAD ? PROPOSAL.plateColor : readStoredPlateColor(),
   );
   const [readout, setReadout] = useState<readonly ContrastRow[]>([]);
+  const lastReadoutKey = useRef("");
   const [tint, setTint] = useState<SurfaceTint | null>(null);
 
   useEffect(() => {
@@ -130,6 +147,11 @@ export function PalettePreviewSwitcher(): ReactElement {
   useEffect(() => {
     const read = (): void => {
       const report = readContrastRows();
+      const key = JSON.stringify([report.rows, report.tint]);
+      /* The poll exists because Mantine injects its variables after the first paint. Skip
+       * state updates when nothing changed, or it re-renders the panel forever. */
+      if (key === lastReadoutKey.current) return;
+      lastReadoutKey.current = key;
       setReadout(report.rows);
       setTint(report.tint);
     };
@@ -212,7 +234,7 @@ export function PalettePreviewSwitcher(): ReactElement {
           onClick={() => {
             applyProposalToControls(SHIPPED_PROPOSAL);
           }}
-          aria-label="Reset palette to the shipped one"
+          aria-label="Restore the shipped appearance"
         >
           Reset
         </Button>
@@ -340,7 +362,7 @@ export function PalettePreviewSwitcher(): ReactElement {
         <Text
           size="10px"
           ff="monospace"
-          c={tint === null ? "dimmed" : tint.chroma > 0.035 ? "red" : tint.chroma > 0.02 ? "attention" : "dimmed"}
+          c={tintColor(tint)}
         >
           {tint === null ? "-" : `${tint.chroma.toFixed(3)} · ${tint.hue}°`}
         </Text>
@@ -360,17 +382,6 @@ export function PalettePreviewSwitcher(): ReactElement {
           withPicker
           style={{ flex: 1, minWidth: 0 }}
         />
-        <Button
-          variant="subtle"
-          color="gray"
-          disabled={accent === null}
-          onClick={() => {
-            applyProposalToControls(SHIPPED_PROPOSAL);
-          }}
-          aria-label="Reset accent to the shipped one"
-        >
-          Reset
-        </Button>
       </Group>
 
       <Stack gap={0} data-contrast-readout>
@@ -384,7 +395,7 @@ export function PalettePreviewSwitcher(): ReactElement {
               <Text
                 size="10px"
                 ff="monospace"
-                c={pass ? (row.knownGap ? "dimmed" : "ok") : row.knownGap ? "attention" : "red"}
+                c={contrastColor(pass, row.knownGap)}
               >
                 {row.ratio.toFixed(2)}
                 <Text span size="9px" c="dimmed">

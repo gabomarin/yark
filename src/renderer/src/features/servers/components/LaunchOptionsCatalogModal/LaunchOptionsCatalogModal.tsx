@@ -20,7 +20,7 @@ export function LaunchOptionsCatalogModal(props: Props): ReactElement {
       opened={props.opened}
       onClose={props.onClose}
       title="ASA launch-options catalog"
-      size={1200}
+      size="wide"
       centered={false}
       height="min(84vh, 820px)"
     >
