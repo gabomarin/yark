@@ -128,3 +128,49 @@ body {
 .mantine-Notification-root {
   border-radius: 0;
 }
+
+/*
+ * Controls that are clickable must say so: a switch track/thumb and a segmented
+ * label are hit targets, but Mantine's `--mantine-cursor-type` left them on the
+ * default arrow, which made an *off* switch read like a disabled one. The
+ * disabled state keeps Mantine's own `not-allowed`.
+ */
+.mantine-Switch-input:not(:disabled) ~ .mantine-Switch-track,
+.mantine-Switch-input:not(:disabled) ~ .mantine-Switch-track *,
+.mantine-SegmentedControl-input:not(:disabled) ~ .mantine-SegmentedControl-label {
+  cursor: pointer;
+}
+
+/*
+ * Fluent 2 Switch, OFF state (light): a neutral track with a strong
+ * `colorNeutralStrokeAccessible` outline and a *dark* knob. Mantine's default is a
+ * grey track with a white knob, which reads as a washed-out pill - "disabled"
+ * rather than "off", worst on rows that already carry a muted tone (Launch).
+ * Scoped to unchecked *and* enabled so the ON state keeps its accent track with the
+ * contrast knob (a theme-level thumb override broke exactly that: measured) and a
+ * disabled switch keeps Mantine's own disabled colours. Dark already reads right.
+ */
+:root[data-mantine-color-scheme="light"] .mantine-Switch-input:not(:checked):not(:disabled) ~ .mantine-Switch-track {
+  border: 1px solid var(--ark-gray-11);
+}
+
+:root[data-mantine-color-scheme="light"]
+  .mantine-Switch-input:not(:checked):not(:disabled)
+  ~ .mantine-Switch-track
+  .mantine-Switch-thumb {
+  background-color: var(--ark-gray-11);
+}
+
+/*
+ * Fluent TabList (SegmentedControl): the unselected labels must stay readable, so
+ * an unchecked segment cannot look like a disabled control. Scoped to the unchecked
+ * input, because the selected label takes its colour from the pill's contrast.
+ */
+:root[data-mantine-color-scheme="light"]
+  .mantine-SegmentedControl-input:not(:checked)
+  + .mantine-SegmentedControl-label,
+:root[data-mantine-color-scheme="light"]
+  .mantine-SegmentedControl-control:has(.mantine-SegmentedControl-input:not(:checked))
+  .mantine-SegmentedControl-label {
+  color: var(--app-color-muted);
+}

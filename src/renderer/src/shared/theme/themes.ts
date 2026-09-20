@@ -4,14 +4,17 @@ import {
   darkLadders,
   darkPalette,
   darkShadows,
+  darkSurfaces,
   lightColors,
   lightLadders,
   lightPalette,
   lightShadows,
+  lightSurfaces,
   type AppThemeColors,
   type AppThemeLadders,
   type AppThemePalette,
   type AppThemeShadows,
+  type AppThemeSurfaces,
 } from "./tokens";
 
 /**
@@ -31,6 +34,7 @@ export interface AppTheme {
   palette: AppThemePalette;
   colors: AppThemeColors;
   shadows: AppThemeShadows;
+  surfaces: AppThemeSurfaces;
   ladders: AppThemeLadders;
 }
 
@@ -42,6 +46,7 @@ export const THEMES: Readonly<Record<ThemeId, AppTheme>> = {
     palette: darkPalette,
     colors: darkColors,
     shadows: darkShadows,
+    surfaces: darkSurfaces,
     ladders: darkLadders,
   },
   light: {
@@ -51,6 +56,7 @@ export const THEMES: Readonly<Record<ThemeId, AppTheme>> = {
     palette: lightPalette,
     colors: lightColors,
     shadows: lightShadows,
+    surfaces: lightSurfaces,
     ladders: lightLadders,
   },
 };

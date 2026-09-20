@@ -47,32 +47,32 @@ const accentPalette = {
 /** Light accent: solid step 9 clears AA with a white label (5.0:1), step 11 is the text tone. */
 const lightAccentPalette = {
   steps: [
-    "#eef8ff",
-    "#def0ff",
-    "#c4e5ff",
-    "#a7d9ff",
-    "#8bc9ff",
-    "#71b8ff",
-    "#50a1ff",
-    "#2f86f9",
-    "#006be2",
-    "#005dcc",
-    "#0046a7",
-    "#002a68",
+    "#e9f3ff",
+    "#d9ebff",
+    "#bfe1ff",
+    "#a2d4ff",
+    "#86c4ff",
+    "#6db4ff",
+    "#4b9cff",
+    "#2981f4",
+    "#0067dd",
+    "#0058c7",
+    "#0042a2",
+    "#002563",
   ],
   alpha: [
-    "#006be20a",
-    "#006be212",
-    "#006be224",
-    "#006be233",
-    "#006be242",
-    "#006be252",
-    "#006be266",
-    "#006be280",
-    "#006be299",
-    "#006be28c",
-    "#006be2cc",
-    "#006be2f2",
+    "#0067dd0a",
+    "#0067dd12",
+    "#0067dd24",
+    "#0067dd33",
+    "#0067dd42",
+    "#0067dd52",
+    "#0067dd66",
+    "#0067dd80",
+    "#0067dd99",
+    "#0067dd8c",
+    "#0067ddcc",
+    "#0067ddf2",
   ],
 } as const;
 
@@ -137,29 +137,29 @@ export const darkPalette = {
  * one clearly grey surface (`background`), so the shell reads as a window behind
  * near-white content.
  *
- * Measured against the contract: text 13.9-15.8:1 on chrome/panel/control, muted
- * 6.5-7.4:1, accent solid 4.62:1 as a control on the panel, accent text 7.97:1,
+ * Measured against the contract: text 13.8-14.7:1 on chrome/panel/control, muted
+ * 6.6-7.2:1, accent solid 4.26:1 as a control on the panel, accent text 7.6:1,
  * white label on the solid accent 5.0:1 (the dark theme's documented 3.29:1 gap
  * is closed here), canvas/chrome 1.2:1, chrome/panel 1.04:1 and border/panel
  * 1.31:1 (the light floors, documented in theme.contrast.test.ts).
  */
 export const lightPalette = {
-  background: "#e2e6ec",
+  background: "#dce0e6",
   blue: lightAccentPalette.steps,
   blueAlpha: lightAccentPalette.alpha,
   gray: [
-    "#fbfeff",
-    "#f8fafe",
-    "#f4f6f9",
-    "#eff1f4",
-    "#eaecef",
-    "#e4e6ea",
-    "#d7d9dc",
-    "#c5c7cb",
-    "#a2a5a9",
-    "#898c90",
-    "#505356",
-    "#1d1f23",
+    "#f6f9fd",
+    "#f2f5f9",
+    "#eaedf1",
+    "#e3e6ea",
+    "#dbdee2",
+    "#d4d7db",
+    "#cbced2",
+    "#bbbec2",
+    "#9c9fa2",
+    "#84868a",
+    "#4b4d50",
+    "#191b1d",
   ],
   grayAlpha: [
     "#0a0f1a00",
@@ -308,6 +308,26 @@ export const lightColors: AppThemeColors = {
   biomass: "#166f49",
   fossil: "#8a5a12",
   fossilFilled: "#C2610A",
+};
+
+export type AppThemeSurfaces = {
+  /** Alert / InfoBar base fill, before the severity tint. */
+  alert: string;
+};
+
+export const darkSurfaces: AppThemeSurfaces = {
+  /*
+   * Built from the hull steps (2 and 12 are not plate steps), so it stays neutral
+   * when the plates are warm or tinted, and it sits above both the chrome shell and
+   * the panel cards - the two backgrounds an alert actually lands on. Fluent keeps
+   * an info bar quiet: the tone belongs on the border and icon, never on the fill.
+   */
+  alert: "color-mix(in srgb, var(--ark-gray-2) 82%, var(--ark-gray-12))",
+};
+
+/** Light: near-white base, so the 12% severity tint lands as a light warm bar (Fluent's InfoBar). */
+export const lightSurfaces: AppThemeSurfaces = {
+  alert: "var(--ark-gray-1)",
 };
 
 export type AppThemeShadows = {

@@ -57,14 +57,7 @@ function createAppCssVariablesResolver(
       "--app-color-surface-panel": "var(--ark-gray-3)",
       "--app-color-surface-control": "var(--ark-gray-5)",
       "--app-color-surface-control-hover": "var(--ark-gray-6)",
-      /*
-       * Alert / InfoBar surface. Built from the hull steps (2 and 12 are not plate steps),
-       * so it stays neutral when the plates are warm or tinted, and it sits above both the
-       * chrome shell (0.17 L) and the panel cards (0.23 L) - the two backgrounds an alert
-       * actually lands on. Fluent keeps an info bar quiet: the tone belongs on the border
-       * and icon, never on the fill.
-       */
-      "--app-color-surface-alert": "color-mix(in srgb, var(--ark-gray-2) 82%, var(--ark-gray-12))",
+      "--app-color-surface-alert": theme.surfaces.alert,
       "--app-color-border-subtle": "var(--ark-gray-7)",
       "--app-color-border-control": "var(--ark-gray-9)",
       "--app-color-text-soft": "var(--ark-gray-12)",
@@ -160,10 +153,25 @@ function createAppCssVariablesResolver(
       "--mantine-color-body": "var(--app-color-surface-panel)",
       "--mantine-color-text": "var(--app-color-text)",
       "--mantine-color-dimmed": "var(--app-color-muted)",
+      /*
+       * Disabled and placeholder states come from our own ramp. Mantine's light
+       * defaults are its own grey (a disabled label lands around 2:1 on a near-white
+       * panel), which is where a light theme usually loses "is this disabled or
+       * missing?". `--ark-gray-10` keeps them perceptible without reading as enabled.
+       */
+      "--mantine-color-disabled": "var(--ark-gray-4)",
+      "--mantine-color-disabled-color": "var(--ark-gray-10)",
+      "--mantine-color-disabled-border": "var(--ark-gray-6)",
+      "--mantine-color-placeholder": "var(--ark-gray-10)",
       "--mantine-color-gray-0": "var(--app-color-bg)",
       "--mantine-color-gray-1": "var(--app-color-surface-chrome)",
       "--mantine-color-gray-2": "var(--app-color-surface-panel)",
-      "--mantine-color-gray-3": "var(--app-color-panel-raised)",
+      /*
+       * `gray-3` is what Mantine paints an *off* Switch track with. A panel step
+       * disappears into the row it sits on (1.07:1), which reads as "disabled"
+       * rather than "off", so it takes a control fill here.
+       */
+      "--mantine-color-gray-3": "var(--app-color-surface-control)",
       "--mantine-color-gray-4": "var(--app-color-surface-control)",
       "--mantine-color-gray-5": "var(--app-color-surface-control-hover)",
       "--mantine-color-gray-6": "var(--app-color-border-subtle)",
@@ -234,6 +242,15 @@ function createAppCssVariablesResolver(
       "--mantine-color-dark-7": "var(--app-color-surface-panel)",
       "--mantine-color-dark-8": "var(--app-color-surface-chrome)",
       "--mantine-color-dark-9": "var(--app-color-bg)",
+      /*
+       * Disabled controls: without this, Mantine falls back to `dark-4` (our
+       * `--ark-gray-7`), which on a dark row is a *bright* pill - a disabled Switch
+       * read louder than an enabled one. A step above the row fill keeps it visible
+       * and clearly out of play, and matches the light map's disabled remap.
+       */
+      "--mantine-color-disabled": "var(--ark-gray-6)",
+      "--mantine-color-disabled-color": "var(--ark-gray-10)",
+      "--mantine-color-disabled-border": "var(--ark-gray-7)",
       /*
        * Mantine's `default` variant (outlined buttons, badges, popovers) otherwise
        * keeps Mantine's own mapping — including a hardcoded `white` label. Derive
@@ -332,13 +349,24 @@ function createAppTheme(
          * call site that computes `color` and gets `undefined` still gets the fill.
          * `--sc-label-color` is deliberately NOT set: Mantine then paints the active
          * label with the fill's contrast colour instead of text grey. */
-        ...(props.color === undefined ? { "--sc-color": "var(--app-color-surface-control-hover)" } : {}),
+        ...(props.color === undefined
+          ? {
+              "--sc-color":
+                theme.colorScheme === "light" ? "var(--ark-gray-1)" : "var(--app-color-surface-control-hover)",
+            }
+          : {}),
         "--sc-shadow": "var(--app-elevation-2)",
       },
     }),
     styles: {
       root: {
-        backgroundColor: "var(--app-color-panel-raised)",
+        /*
+         * Fluent TabList track: a control surface, not a panel step. On a light
+         * panel `panel-raised` sits 1.07 from the surface, so the whole control
+         * read as a disabled input.
+         */
+        backgroundColor:
+          theme.colorScheme === "light" ? "var(--app-color-surface-control)" : "var(--app-color-panel-raised)",
       },
       /* Mantine hardcodes `box-shadow: none` on the indicator in dark scheme and
        * only reads `--sc-shadow` in light, so set it inline to get the lift. */
