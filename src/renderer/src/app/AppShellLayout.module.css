@@ -137,10 +137,11 @@
 }
 
 /*
- * App-wide shell surface: chrome base + brand atmosphere + the brand art,
- * painted once here so every page pane can stay transparent. Knobs: the SVG
- * path opacities in src/renderer/src/assets/*.svg, `--app-shell-glow`, and
- * `--app-shell-atmosphere` in shared/theme/theme.ts.
+ * App-wide shell surface: chrome base + brand atmosphere + the brand art, painted once here
+ * so every page pane can stay transparent. Knobs: the tile's own opacity in `--shell-grain-tile`
+ * below, the mask stops on `.main::before`, `--app-shell-glow`, and `--app-shell-atmosphere`
+ * in shared/theme/theme.ts. The motif variants under `[data-shell-art]` belong to the preview
+ * tooling, which is detached from the sidebar (see Sidebar.tsx).
  */
 .main {
   position: relative;

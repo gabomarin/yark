@@ -86,6 +86,9 @@ export function revisionLabel(revision: HostedResourceRevisionDto): string {
   return `Version ${revision.sequence} · ${stamp}`;
 }
 
+/** The neutral and semantic badge colours this helper can hand out. */
+export type ServedBadgeColor = "gray" | "ok" | "red";
+
 /**
  * Badge tone for a served resource: disabled or unpublished is a fact (`gray`), a served
  * resource that stops answering is state (`red`), and a live one is `ok`.
@@ -94,7 +97,7 @@ export function servedBadgeColor(resource: {
   enabled: boolean;
   published: boolean;
   servedOk: boolean;
-}): string {
+}): ServedBadgeColor {
   if (!resource.enabled || !resource.published) return "gray";
   return resource.servedOk ? "ok" : "red";
 }

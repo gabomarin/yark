@@ -32,10 +32,15 @@ export function BackupRestoreModal(props: Props): ReactElement {
   return (
     <AppPanelModal
       opened={backup !== null}
-      onClose={props.onClose}
+      onClose={() => {
+        if (!props.busy) props.onClose();
+      }}
       size="sm"
       title="Restore backup?"
       footerAlign="between"
+      closeOnClickOutside={!props.busy}
+      closeOnEscape={!props.busy}
+      withCloseButton={!props.busy}
       footer={
         <>
           <Button variant="default" onClick={props.onClose} disabled={props.busy}>

@@ -208,7 +208,6 @@ export function CrashRecoverySection({
                   <Button
                     size="xs"
                     variant="default"
-                    color={policy.paused ? "blue" : "attention"}
                     disabled={panel.busy || !policy.enabled}
                     onClick={() => void panel.patch({ paused: !policy.paused })}
                   >

@@ -213,7 +213,6 @@ export function MaintenanceUpNext(props: Props): ReactElement {
           <Group gap="xs" wrap="wrap">
             {policy.cancelable && (
               <Button
-                color="red"
                 variant="default"
                 loading={props.busy}
                 onClick={props.onCancelUpcoming}

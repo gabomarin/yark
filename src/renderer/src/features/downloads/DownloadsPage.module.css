@@ -166,22 +166,24 @@
   pointer-events: none;
 }
 
+/* A row that is queued-but-interrupted or actively working: taller, accent-bordered. It sits
+ * before `:hover` on purpose - both selectors have the same specificity, so the kind fill
+ * would otherwise win and silently kill the hover feedback on those rows. The selection
+ * marker comes from the shared `[data-selected]` rule, so nothing to repeat here. */
+.rowButton[data-kind="interrupted"],
+.rowButton[data-kind="active"] {
+  min-height: 72px;
+  border-color: color-mix(in srgb, var(--app-color-accent) 42%, var(--app-color-border));
+  background: var(--app-color-panel);
+  box-shadow: inset 3px 0 0 var(--app-color-accent);
+}
+
 .rowButton:hover {
   background: var(--app-color-surface-control);
 }
 
 .rowButton[data-selected] {
   border-color: var(--app-color-accent);
-  background: var(--app-color-panel);
-  box-shadow: inset 3px 0 0 var(--app-color-accent);
-}
-
-/* A row that is queued-but-interrupted or actively working: taller, accent-bordered. The
- * `[data-selected]` marker comes from the base rule above, so nothing to repeat here. */
-.rowButton[data-kind="interrupted"],
-.rowButton[data-kind="active"] {
-  min-height: 72px;
-  border-color: color-mix(in srgb, var(--app-color-accent) 42%, var(--app-color-border));
   background: var(--app-color-panel);
   box-shadow: inset 3px 0 0 var(--app-color-accent);
 }

@@ -16,12 +16,17 @@ export function BackupDiskAlertModal(props: Props): ReactElement {
   return (
     <AppPanelModal
       opened={props.opened}
-      onClose={props.onClose}
+      onClose={() => {
+        if (!props.busy) props.onClose();
+      }}
       size="sm"
       title="Warn me when the backup drive fills up"
+      closeOnClickOutside={!props.busy}
+      closeOnEscape={!props.busy}
+      withCloseButton={!props.busy}
       footer={
         <>
-          <Button variant="default" onClick={props.onClose}>
+          <Button variant="default" onClick={props.onClose} disabled={props.busy}>
             Cancel
           </Button>
           <Button loading={props.busy} onClick={props.onSave}>
