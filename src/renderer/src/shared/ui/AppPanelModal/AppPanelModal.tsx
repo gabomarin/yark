@@ -3,7 +3,7 @@ import { Modal, Text } from "@mantine/core";
 import classes from "./AppPanelModal.module.css";
 
 /** Named sizes so no modal invents its own px/percent width (#PUX-004). */
-export type AppModalSize = "sm" | "md" | "lg" | "xl" | "wide";
+type AppModalSize = "sm" | "md" | "lg" | "xl" | "wide";
 
 const SIZE_PX: Record<AppModalSize, number> = {
   sm: 420,

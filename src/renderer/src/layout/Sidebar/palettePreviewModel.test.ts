@@ -6,9 +6,10 @@ import {
   clearPalettePreview,
   hexToOklch,
   readStoredPaletteColor,
-  readStoredShellArtVisible,
+  readStoredShellArt,
+  surfaceLiftBases,
   writeStoredPaletteColor,
-  writeStoredShellArtVisible,
+  writeStoredShellArt,
 } from "./palettePreviewModel";
 
 describe("palette preview (temp PUX-004)", () => {
@@ -107,14 +108,31 @@ describe("palette preview (temp PUX-004)", () => {
     expect(readStoredPaletteColor()).toBeNull();
   });
 
-  it("toggles the shell brand art", () => {
-    applyShellArt(false);
+  it("takes the plates from an explicit plate colour", () => {
+    const hueOf = (value: string): number | null => {
+      const match = /oklch\([\d.]+ [\d.]+ ([\d.]+)\)/.exec(value);
+      return match === null ? null : Number(match[1]);
+    };
+    const pick = hexToOklch("#6f8a6a");
+    expect(pick).not.toBeNull();
+    const moss = surfaceLiftBases(null, 0.65, 0.55, 0, "#6f8a6a").panel;
+    expect(hueOf(moss)).toBe(Math.round(pick?.hue ?? -1));
+    /* Warmth rotates a surface pick; an explicit plate colour is already the answer. */
+    expect(surfaceLiftBases(null, 0.65, 0.55, 1, "#6f8a6a").panel).toBe(moss);
+    /* Intensity dilutes a surface pick; it must not dilute a picked plate colour. */
+    expect(surfaceLiftBases(null, 0.65, 0.1, 0, "#6f8a6a").panel).toBe(moss);
+  });
+
+  it("switches the shell brand art motif", () => {
+    applyShellArt("drop");
+    expect(document.documentElement.dataset.shellArt).toBe("drop");
+    applyShellArt("off");
     expect(document.documentElement.dataset.shellArt).toBe("off");
-    applyShellArt(true);
-    expect(document.documentElement.dataset.shellArt).toBeUndefined();
-    expect(readStoredShellArtVisible()).toBe(true);
-    writeStoredShellArtVisible(false);
-    expect(readStoredShellArtVisible()).toBe(false);
-    applyShellArt(true);
+    expect(readStoredShellArt()).toBe("grain");
+    writeStoredShellArt("tek");
+    expect(readStoredShellArt()).toBe("tek");
+    window.localStorage.setItem("yark.appearance.palettePreviewShellArt.v1", "not-a-motif");
+    expect(readStoredShellArt()).toBe("grain");
+    applyShellArt("grain");
   });
 });

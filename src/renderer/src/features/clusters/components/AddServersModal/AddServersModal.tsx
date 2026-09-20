@@ -1,7 +1,6 @@
 import type { ReactElement } from "react";
 import { useMemo, useState } from "react";
 import {
-  Alert,
   Button,
   Checkbox,
   Group,
@@ -9,6 +8,7 @@ import {
   Stepper,
   Text,
 } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import {
   clusterIniFileSelectionHasWork,
@@ -223,16 +223,16 @@ export function AddServersModal(props: Props): ReactElement {
         </Stepper>
 
         {error !== null && (
-          <Alert color="red" variant="light">
+          <AppAlert color="red" variant="light">
             {error}
-          </Alert>
+          </AppAlert>
         )}
 
         {sharedDir === null && (
-          <Alert color="red" variant="light">
+          <AppAlert color="red" variant="light">
             This cluster does not have one shared directory yet. Align directories on
             every server before adding more.
-          </Alert>
+          </AppAlert>
         )}
 
         {step === 1 && (
@@ -291,10 +291,10 @@ export function AddServersModal(props: Props): ReactElement {
               </dl>
             </div>
             {modWarning && (
-              <Alert color="attention" variant="light">
+              <AppAlert color="attention" variant="light">
                 Mod lists differ from current cluster servers; mod items may be lost
                 on transfer.
-              </Alert>
+              </AppAlert>
             )}
             {hasTemplate ? (
               <Checkbox
@@ -307,10 +307,10 @@ export function AddServersModal(props: Props): ReactElement {
                 description="After membership is saved, write selected template files onto each new member, reapply profile-owned ports/passwords/session name, and take an INI snapshot first. Leave unchecked to only set cluster ID and directory."
               />
             ) : (
-              <Alert color="blue" variant="light">
+              <AppAlert color="blue" variant="light">
                 Saves this Cluster ID and shared folder on the selected servers.
                 Create an INI template first if you want to seed settings on join.
-              </Alert>
+              </AppAlert>
             )}
             {hasTemplate && seedFromTemplate && (
               <Stack gap="sm">
@@ -320,16 +320,16 @@ export function AddServersModal(props: Props): ReactElement {
                   description="Choose which INI files to seed. Unchecked files stay as they are on disk."
                   onChange={setSeedFiles}
                 />
-                <Alert color="ok" variant="light">
+                <AppAlert color="ok" variant="light">
                   Each selected stopped server will receive a restore-style write
                   of the selected files from the saved cluster template after joining.
-                </Alert>
+                </AppAlert>
               </Stack>
             )}
             {hasTemplate && !seedFromTemplate && (
-              <Alert color="blue" variant="light">
+              <AppAlert color="blue" variant="light">
                 Membership only: existing INI files stay unchanged.
-              </Alert>
+              </AppAlert>
             )}
           </Stack>
         )}

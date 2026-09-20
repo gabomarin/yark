@@ -1,4 +1,5 @@
-import { Alert, Button, Stack, Text } from "@mantine/core";
+import { Button, Stack, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { modals } from "@mantine/modals";
 import {
   humanizeHostPortProbeError,
@@ -31,13 +32,13 @@ export function openHostPortProbeModal(args: {
         data-host-port-probe-kind={busy ? "busy" : "inconclusive"}
         data-host-port-probe-suggested={suggested != null ? "true" : "false"}
       >
-        <Alert
+        <AppAlert
           color="attention"
           variant="light"
           title={busy ? "Host port busy" : "Probe inconclusive"}
         >
           {detail}
-        </Alert>
+        </AppAlert>
         {suggested != null ? (
           <Text size="sm" data-host-port-probe-suggestion>
             Suggested free set for this session only: game {suggested.gamePort}, query{" "}

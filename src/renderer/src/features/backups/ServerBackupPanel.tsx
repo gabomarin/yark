@@ -1,9 +1,10 @@
-import { Alert, Group, Stack, Tabs, Title } from "@mantine/core";
+import { Group, Stack, Tabs, Title } from "@mantine/core";
 import type {
   ServerInstallationInfo,
   ServerProfile,
   ServerRuntimeInfo,
 } from "@shared/types";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { DismissibleHint } from "@ui/DismissibleHint/DismissibleHint";
 import type { ReactElement } from "react";
@@ -81,7 +82,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
       )}
 
       {!panel.installReady && (
-        <Alert
+        <AppAlert
           color="attention"
           variant="light"
           title="Install files required"
@@ -89,11 +90,11 @@ export function ServerBackupPanel(props: Props): ReactElement {
         >
           {panel.installLockReason} You can still browse, export, import, and delete
           archived backups.
-        </Alert>
+        </AppAlert>
       )}
 
       {panel.policy?.schedulePaused === true && (
-        <Alert
+        <AppAlert
           color="red"
           variant="light"
           title="World schedule paused"
@@ -102,7 +103,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
           Scheduled world backups are paused for this YARK session after repeated
           failures. Policy stays enabled; restart YARK to resume after fixing the
           cause (destination, map folder, or disk space).
-        </Alert>
+        </AppAlert>
       )}
 
       <AppSurfaceCard className={classes.listPanel} radius={0}>

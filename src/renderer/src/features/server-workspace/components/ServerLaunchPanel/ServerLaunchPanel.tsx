@@ -1,7 +1,6 @@
 import type { ReactElement } from "react";
 import { useMemo, useState } from "react";
 import {
-  Alert,
   Button,
   Group,
   Stack,
@@ -18,6 +17,7 @@ import {
 } from "@shared/asa/structured-launch-options";
 import { useUiDensity } from "@app/AppProviders";
 import { LaunchOptionsCatalogModal } from "@features/servers/components/LaunchOptionsCatalogModal/LaunchOptionsCatalogModal";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { SearchField } from "@ui/SearchField/SearchField";
@@ -150,9 +150,9 @@ export function ServerLaunchPanel(props: Props): ReactElement {
             size={inputSize}
           />
 
-          {error !== null ? <Alert color="red">{error}</Alert> : null}
+          {error !== null ? <AppAlert color="red">{error}</AppAlert> : null}
           {mapIdentityWarnings.length > 0 ? (
-            <Alert color="attention" title="Custom map mod inconsistent">
+            <AppAlert color="attention" title="Custom map mod inconsistent">
               <Stack gap={4}>
                 {mapIdentityWarnings.map((issue) => (
                   <Text key={`${issue.field}:${issue.message}`} size="sm">
@@ -164,7 +164,7 @@ export function ServerLaunchPanel(props: Props): ReactElement {
                   mod is linked and enabled.
                 </Text>
               </Stack>
-            </Alert>
+            </AppAlert>
           ) : null}
 
           <div className={classes.groups}>
@@ -240,7 +240,7 @@ export function ServerLaunchPanel(props: Props): ReactElement {
                 size={inputSize}
               />
               {conflicts.length > 0 ? (
-                <Alert color="red" title="Conflicts">
+                <AppAlert color="red" title="Conflicts">
                   <Stack gap={4}>
                     {conflicts.map((c) => (
                       <Text key={c.message} size="sm">
@@ -248,7 +248,7 @@ export function ServerLaunchPanel(props: Props): ReactElement {
                       </Text>
                     ))}
                   </Stack>
-                </Alert>
+                </AppAlert>
               ) : null}
               {saving ? (
                 <Text size="xs" c="dimmed">

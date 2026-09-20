@@ -111,22 +111,22 @@ Solid **bg / raised / control** come from `tokens.ts` + `theme.ts`. Do **not** i
 
 | Rule | Do | Don’t |
 | --- | --- | --- |
-| Page canvas | Sit on `--app-color-bg` (`#0c1427`) | Wrapping the viewport in a mixed navy card |
-| Chrome | `--app-color-surface-chrome` (`#121213`); the AppShell main paints the brand art (`topography.svg` / `tek-topology.svg`) over it. `--app-shell-atmosphere` (radial glow) is **`none` for now** — it read yellowish over chrome; restore the two gradients noted in `theme.ts` when it is reworked | `color-mix` of gray + blue for sidebars |
-| Raised / panels | `--app-color-panel` (`#1f1f1f`) | Translucent panel washes |
-| Controls | `--app-color-surface-control` (`#303030`) | Mixing control fill with `--ark-blue-*` |
-| Page / tool panes | Transparent panes on the shared AppShell main surface (chrome + atmosphere + brand art), painted once | Wrapping Logs or the whole form in one rounded Card |
+| Page canvas | Sit on `--app-color-bg` (`#010306`) | Wrapping the viewport in a mixed navy card |
+| Chrome | `--app-color-surface-chrome` (`#0b111a`); the AppShell main paints the brand texture (film grain, inline in `AppShellLayout.module.css`) over it. `--app-shell-atmosphere` (radial glow) is **`none` for now** — it read yellowish over chrome; restore the two gradients noted in `theme.ts` when it is reworked | `color-mix` of gray + blue for sidebars |
+| Raised / panels | `--app-color-panel` (`#131e2c`) | Translucent panel washes |
+| Controls | `--app-color-surface-control` (`#233349`) | Mixing control fill with `--ark-blue-*` |
+| Page / tool panes | Transparent panes on the shared AppShell main surface (chrome + atmosphere + brand texture), painted once | Wrapping Logs or the whole form in one rounded Card |
 | Discrete entities | `AppSurfaceCard tone="flat"` (cluster row, backup row) | Cool wash as a page shell |
 | Accent heroes | `tone="coolEmphasis"` (rare) | Using cool wash as the default page shell |
 | Nested widgets | `tone="flat"` / panel on chrome parent | Mixing Card + ad-hoc panel bg |
-| Decorative gradients | Solid fills; layering via the shadow scale | Gradients on buttons, rows, panels, or dialog surfaces — Fluent 2 is flat. Only the INI editor header keeps its documented gradient (#516) |
+| Decorative gradients | Solid fills; layering via the shadow scale | Gradients on buttons, rows, panels, or dialog surfaces — Fluent 2 is flat |
 | Borders / separators | Solid token hairlines (`--app-color-border-subtle`), or a solid semantic for state rows | `color-mix(…, transparent)` borders — a translucent hairline shifts with whatever is behind it |
 | Chips / tags / filter pills | `--app-radius-control` (Fluent uses 4px; this is our smallest token) | Fully-rounded `999px` pills. `999px` is only for true circles (status dots, timeline dots) |
 | Shell rails / fused panes | `tone="chrome"` or chrome slab + panel children | Cool gradients in sidebars |
 | Status accent | `statusTone` on `AppSurfaceCard` | One-off `box-shadow: inset 3px…` |
-| **Exception — INI editor chrome** (#516) | Category headers: deep blue `--app-color-ini-category` (`#0d1836`) + **subtle** blue lift (~90% token) + 3px ark-blue rail. **Other** subgroups: `surface-control` gray + soft ~80%/20% black deepen (no blue wash). Table body tint + opaque setting rows. Hairline `border-bottom` only | Cool **gradients** on page shells / filter bar / `tableWrap`; gray-slate category slabs; strong blue→black washes; translucent setting rows; stacked thick borders when collapsed |
+| **INI editor chrome** | Category = a solid `--app-color-surface-control` band (hover one step up) at `14px`, label 600; **Other** mod subgroups = flat, indented (`28px`) and quieter (muted label); count chips ride the neutral Badge recipe (`control` fill + hairline + text colour, one step up when they sit on a category band); the sticky column header is `--app-color-panel-raised` with a hairline `border-bottom`, so it stays quieter than a category band; the `tableWrap` body is `--app-color-panel` under opaque `surface-chrome` row plates | A separate hue for sections (once the ramp is navy-tinted a blue band reads as a mud patch and competes with the accent), `box-shadow` rails on every band, blue count chips (`!important`), translucent setting rows, or a body darker than its rows |
 
-Solid surfaces stay the default. Category bands stay louder (blue) than **Other** subgroups (gray shade only). Category lifts stay **subtle** (~90%); subgroup shade is a bit stronger (~80%/20%). Setting rows stay fully opaque chrome. Do **not** paint cool gradients on `tableWrap`, the filter bar, or the workspace shell.
+Solid surfaces stay the default. Section hierarchy comes from **elevation, indentation and weight** — never from a second hue. Setting rows and the table body stay fully opaque. Do **not** paint cool gradients on `tableWrap`, the filter bar, or the workspace shell.
 
 ### 2. Spacing / density
 
@@ -241,7 +241,7 @@ Theme `defaultRadius` is **`sm`**. Avoid raw `border-radius` when a token fits. 
   two different attention hues. The colour constants live in the models
   (`serverLogsFormat.statusColor`, `EventSeverityMark.severityColor`, the crash-recovery
   state, the SteamCMD job status), not inline in the component.
-- **Inline Alert surfaces** (theme `Alert` `--alert-bg` / `--alert-bd`): solid `--app-color-panel` fill plus a 1px semantic border (`cryo` / `fossil` / `bad`). Do not use translucent MagicPath washes.
+- **Inline Alert surfaces** (theme `Alert` `--alert-bg` / `--alert-bd`): the neutral `--app-color-surface-alert` base - built from the hull steps, so a warm or tinted plate ramp cannot turn the bar into a slab - **plus 12% of the severity tone**, enough to type the alert without painting a saturated fill. The same tone rides the 1px border and the icon; the icon is a call-site node (`icon={...}`) that the theme colours through `--app-color-alert-icon`, and the title stays in `--app-color-text` (Mantine would tint it with `--alert-color`, which is why the icon does not use that variable). Fluent keeps an info bar quiet: tone on the border and icon, never a filled slab. Do not use translucent MagicPath washes.
 - Text: `--app-color-text` / `--app-color-muted`.
 - Borders: `--app-color-border` / `--app-color-border-subtle`.
 - Never hardcode status hex (`#e5484d`, `#58c89a`, …) in feature CSS.
@@ -611,7 +611,7 @@ line (#234).
 - `ServerCard` product chrome (square list rows, solid `--app-color-panel` fill, 3px status rail; no cool gradient)
 - Downloads queue / footer teaser elevation
 - Settings SteamCMD path row (`ReadonlyPath` + Choose… + Install CTA; not `PathField`)
-- Server workspace 3-column shell / INI editor tables (category headers + solid body tint exception — § Surfaces)
+- Server workspace 3-column shell / INI editor tables (category headers + table body — § Surfaces)
 - Domain empty **content** — wrap with shared EmptyState shell
 - Clusters `MetaStrip` (feature-local until a second screen needs the same strip)
 - Backup volume detail cards (multi-line destination/disk copy; scalar strip uses `AppMetricCard`)

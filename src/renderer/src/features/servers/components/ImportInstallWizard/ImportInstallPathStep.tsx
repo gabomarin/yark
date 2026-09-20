@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
-import { Alert, Badge, Button, Checkbox, Group, Stack, Text } from "@mantine/core";
+import { Badge, Button, Checkbox, Group, Stack, Text } from "@mantine/core";
 import type { ImportInstallProbe } from "@shared/types";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { PathField } from "@ui/PathField/PathField";
 import { healthTone, importHealthBadgeLabel } from "../../importInstallModel";
 
@@ -34,11 +35,11 @@ export function ImportInstallPathStep(props: Props): ReactElement {
 
   return (
     <Stack gap="sm">
-      <Alert color="blue" title="ASA install folder">
+      <AppAlert color="blue" title="ASA install folder">
         Select the root that contains <Text span fw={600}>ShooterGame</Text>.
         YARK only creates a profile. ASA files on disk are not modified until Start
         (or Install/Verify for incomplete trees).
-      </Alert>
+      </AppAlert>
       <PathField
         label="Install folder"
         value={props.installDir}
@@ -77,9 +78,9 @@ export function ImportInstallPathStep(props: Props): ReactElement {
             </Stack>
           ) : null}
           {activeProbe.installation.health === "empty" ? (
-            <Alert color="gray" variant="light" title="Empty folder">
+            <AppAlert color="gray" variant="light" title="Empty folder">
               Import needs an ASA tree on disk. Use New server on this path, then Install.
-            </Alert>
+            </AppAlert>
           ) : null}
           {suggested !== null &&
             props.onUseSuggestedDir !== undefined &&

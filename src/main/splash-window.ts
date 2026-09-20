@@ -110,7 +110,7 @@ export function createSplashWindow(options: {
       : { center: true }),
     show: false,
     title: "YARK server manager",
-    backgroundColor: "#0c1427",
+    backgroundColor: "#010306",
     ...(options.icon !== undefined ? { icon: options.icon } : {}),
     webPreferences: {
       contextIsolation: true,

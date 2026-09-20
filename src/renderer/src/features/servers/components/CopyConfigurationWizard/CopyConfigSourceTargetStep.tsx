@@ -1,6 +1,5 @@
 import type { ReactElement } from "react";
 import {
-  Alert,
   Badge,
   Button,
   Checkbox,
@@ -9,6 +8,7 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import type { ServerProfile, ServerRuntimeInfo, ServerStatus } from "@shared/types";
 import {
   isTargetEligible,
@@ -58,9 +58,9 @@ export function CopyConfigSourceTargetStep(props: Props): ReactElement {
         </Text>
       </Group>
       {props.sourceStatus !== "stopped" && (
-        <Alert color="attention">
+        <AppAlert color="attention">
           Source is running. We copy saved settings, not live game memory.
-        </Alert>
+        </AppAlert>
       )}
 
       <div
@@ -152,7 +152,7 @@ export function CopyConfigSourceTargetStep(props: Props): ReactElement {
       </div>
 
       {ineligibleSelected.length > 0 && (
-        <Alert color="red">
+        <AppAlert color="red">
           Stop{" "}
           {ineligibleSelected
             .map(
@@ -161,7 +161,7 @@ export function CopyConfigSourceTargetStep(props: Props): ReactElement {
             )
             .join(", ")}{" "}
           before continuing.
-        </Alert>
+        </AppAlert>
       )}
 
       <div>

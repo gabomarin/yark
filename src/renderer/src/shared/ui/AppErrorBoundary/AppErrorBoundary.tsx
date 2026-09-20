@@ -37,8 +37,8 @@ export class AppErrorBoundary extends Component<Props, State> {
           margin: 0,
           padding: 32,
           boxSizing: "border-box",
-          background: "#0c1427",
-          color: "#e8edf7",
+          background: "#010306",
+          color: "#e6effd",
           fontFamily: '"Segoe UI", Arial, sans-serif',
         }}
       >

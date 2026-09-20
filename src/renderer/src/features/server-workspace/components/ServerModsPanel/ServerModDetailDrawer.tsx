@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import type { ReactElement } from "react";
 import {
-  Alert,
   Badge,
   Button,
   Drawer,
@@ -20,6 +19,7 @@ import {
 } from "@shared/asa/map-token-suggest";
 import type { ModMetadata } from "@shared/types";
 import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { copyTextToClipboard } from "@ui/copyToClipboard";
 import { MapNameHint } from "@ui/MapNameHint/MapNameHint";
 import { MetaRow } from "@ui/MetaRow/MetaRow";
@@ -274,8 +274,8 @@ function MapPackHint(props: { detail: ModMetadata }): ReactElement | null {
   if (!isMapModCandidate(props.detail)) return null;
   const suggestion = suggestMapTokenFromMetadata(props.detail);
   return (
-    <Alert variant="light" color="blue" title={MAP_NAME_COPY.mapPackAlertTitle} radius="md">
+    <AppAlert variant="light" color="blue" title={MAP_NAME_COPY.mapPackAlertTitle} radius="md">
       <MapNameHint suggestion={suggestion} variant="embedded" />
-    </Alert>
+    </AppAlert>
   );
 }

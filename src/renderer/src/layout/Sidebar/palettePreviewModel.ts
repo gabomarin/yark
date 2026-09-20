@@ -14,7 +14,8 @@
 const STORAGE_KEY = "yark.appearance.palettePreviewColor.v1";
 const DARKNESS_STORAGE_KEY = "yark.appearance.palettePreviewDarkness.v1";
 const INTENSITY_STORAGE_KEY = "yark.appearance.palettePreviewIntensity.v1";
-const ART_STORAGE_KEY = "yark.appearance.shellArtVisible.v1";
+const ART_STORAGE_KEY = "yark.appearance.palettePreviewShellArt.v1";
+const PLATE_COLOR_STORAGE_KEY = "yark.appearance.palettePreviewPlateColor.v1";
 
 export const DEFAULT_PALETTE_DARKNESS = 0.5;
 export const DEFAULT_PALETTE_INTENSITY = 0.5;
@@ -29,7 +30,7 @@ const INTENSITY_MULTIPLIER = 1;
 const MAX_PICKED_CHROMA = 0.3;
 
 /** Radix dark scale, steps 1..12. Fixed length so step lookups are non-optional. */
-export type RadixDarkScale = readonly [
+type RadixDarkScale = readonly [
   string,
   string,
   string,
@@ -83,6 +84,20 @@ export const PALETTE_SWATCHES = [
   "#101211",
   "#111110",
   "#111111",
+] as const;
+
+/**
+ * Plate hues to try: only hue and chroma are read (the ladder owns lightness), so these
+ * are deliberately unremarkable colours that carry a direction - stone, moss, teal,
+ * violet, rose, amber.
+ */
+export const PLATE_SWATCHES = [
+  "#8f7f63",
+  "#6f8a6a",
+  "#5f8a93",
+  "#8578b0",
+  "#9c6f7d",
+  "#a3814f",
 ] as const;
 
 function srgbChannelToLinear(value: number): number {
@@ -183,7 +198,6 @@ const PREVIEW_VARIABLE_NAMES: readonly string[] = [
   "--ark-background",
   "--ark-gray-indicator",
   "--ark-gray-track",
-  "--ark-blue-ini-category",
   ...Array.from({ length: 12 }, (_unused, index) => `--ark-gray-${index + 1}`),
 ];
 
@@ -192,7 +206,6 @@ function previewCssVariables(palette: PalettePreview): Record<string, string> {
     "--ark-background": palette.background,
     "--ark-gray-indicator": palette.gray[7],
     "--ark-gray-track": palette.gray[7],
-    "--ark-blue-ini-category": `color-mix(in srgb, ${palette.background} 78%, ${palette.gray[1]})`,
   };
   palette.gray.forEach((value, index) => {
     variables[`--ark-gray-${index + 1}`] = value;
@@ -223,18 +236,39 @@ export function applyPalettePreview(
   }
 }
 
-export function readStoredPaletteColor(): string | null {
-  const stored = window.localStorage.getItem(STORAGE_KEY);
+function readStoredHex(key: string): string | null {
+  const stored = window.localStorage.getItem(key);
   if (stored === null || parseHex(stored) === null) return null;
   return stored;
 }
 
-export function writeStoredPaletteColor(hex: string | null): void {
+function writeStoredHex(key: string, hex: string | null): void {
   if (hex === null) {
-    window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem(key);
     return;
   }
-  window.localStorage.setItem(STORAGE_KEY, hex);
+  window.localStorage.setItem(key, hex);
+}
+
+export function readStoredPaletteColor(): string | null {
+  return readStoredHex(STORAGE_KEY);
+}
+
+export function writeStoredPaletteColor(hex: string | null): void {
+  writeStoredHex(STORAGE_KEY, hex);
+}
+
+/**
+ * Explicit plate colour: the panel/raised/control/border steps take this hue and chroma
+ * instead of the surface pick, so the plates can be judged on their own (cool hull with
+ * green panels, say). `null` = derive them from the surface pick again.
+ */
+export function readStoredPlateColor(): string | null {
+  return readStoredHex(PLATE_COLOR_STORAGE_KEY);
+}
+
+export function writeStoredPlateColor(hex: string | null): void {
+  writeStoredHex(PLATE_COLOR_STORAGE_KEY, hex);
 }
 
 export function readStoredPaletteDarkness(): number {
@@ -262,23 +296,269 @@ function readStoredUnit(key: string, fallback: number): number {
 }
 
 /**
- * TEMP (PUX-004) — hides the brand art on the shell surface and the canvas
- * pseudo-elements, so the palette can be judged with and without it. Styling
- * lives in `AppShellLayout.module.css` under `[data-shell-art="off"]`.
+ * TEMP (PUX-004) — brand-art candidates on the shell surface, so the motif can be
+ * judged on the real chrome instead of on a mock. One `[data-shell-art="…"]` rule per
+ * tile in `AppShellLayout.module.css`; `hex` is the shipped tile and needs no rule.
  */
-export function applyShellArt(visible: boolean): void {
+export const SHELL_ART_OPTIONS = [
+  { value: "hex", label: "Hex" },
+  { value: "drop", label: "Drop" },
+  { value: "tek", label: "Tek" },
+  { value: "strata", label: "Strata" },
+  { value: "beams", label: "Beams" },
+  { value: "obelisk", label: "Obelisk" },
+  { value: "grain", label: "Grain" },
+  { value: "off", label: "Off" },
+] as const;
+
+export type ShellArtOption = (typeof SHELL_ART_OPTIONS)[number]["value"];
+
+const SHELL_ART_VALUES: readonly string[] = SHELL_ART_OPTIONS.map((option) => option.value);
+
+export function applyShellArt(option: ShellArtOption): void {
+  document.documentElement.dataset.shellArt = option;
+}
+
+export function readStoredShellArt(): ShellArtOption {
+  const stored = window.localStorage.getItem(ART_STORAGE_KEY);
+  return stored !== null && SHELL_ART_VALUES.includes(stored)
+    ? (stored as ShellArtOption)
+    : "grain";
+}
+
+export function writeStoredShellArt(option: ShellArtOption): void {
+  window.localStorage.setItem(ART_STORAGE_KEY, option);
+}
+
+/* ------------------------------------------------------- INI editor chrome */
+
+const INI_CHROME_STORAGE_KEY = "yark.appearance.palettePreviewIniChrome.v1";
+
+/**
+ * TEMP (PUX-004) — INI editor section-header treatments, so both can be judged on the
+ * real table (with mod subheaders in it). `b` is flat (solid band, no wash) and is the
+ * shipped default; `a` is the same neutral band with the older soft wash - no rail in
+ * either, since a rail on every band dilutes the app's selection notch.
+ * Styling: `IniEditorChrome.module.css`.
+ */
+export const INI_CHROME_OPTIONS = [
+  { value: "b", label: "B · flat band" },
+  { value: "a", label: "A · soft wash" },
+] as const;
+
+export type IniChromeOption = (typeof INI_CHROME_OPTIONS)[number]["value"];
+
+const INI_CHROME_VALUES: readonly string[] = INI_CHROME_OPTIONS.map((option) => option.value);
+
+export function applyIniChrome(option: IniChromeOption): void {
+  document.documentElement.dataset.iniChrome = option;
+}
+
+export function readStoredIniChrome(): IniChromeOption {
+  const stored = window.localStorage.getItem(INI_CHROME_STORAGE_KEY);
+  return stored !== null && INI_CHROME_VALUES.includes(stored)
+    ? (stored as IniChromeOption)
+    : "b";
+}
+
+export function writeStoredIniChrome(option: IniChromeOption): void {
+  window.localStorage.setItem(INI_CHROME_STORAGE_KEY, option);
+}
+
+/* ------------------------------------------------- surface separation knobs */
+
+const PANEL_LIFT_STORAGE_KEY = "yark.appearance.palettePreviewPanelLift.v1";
+const HAIRLINE_LIFT_STORAGE_KEY = "yark.appearance.palettePreviewHairlineLift.v1";
+
+/** Both knobs are "mix this much white into the shipped value" (0 = shipped). */
+const DEFAULT_SURFACE_LIFT = 0;
+
+/**
+ * Lifts the panel fill (`--ark-gray-3`) and the hairline (`--ark-gray-7`) toward
+ * white, so an operator can see how much separation a card actually needs before
+ * the WCAG 1.4.11 gap closes (the accent/neutral previews own the rest of the
+ * ramp; this runs after them and only touches those two steps).
+ */
+/**
+ * The values the lift mixes from: the palette preview's own ramp when one is
+ * active, otherwise the shipped greys. Never `radixPalette` directly, or the
+ * knobs would replace a chosen palette's tint with plain grey.
+ */
+export function surfaceLiftBases(
+  color: string | null,
+  darkness: number = DEFAULT_PALETTE_DARKNESS,
+  intensity: number = DEFAULT_PALETTE_INTENSITY,
+  warmth: number = DEFAULT_PLATE_WARMTH,
+  plateColor: string | null = null,
+): { panel: string; hairline: string } {
+  return {
+    panel: plateStep(2, color, plateColor, darkness, intensity, warmth),
+    hairline: plateStep(6, color, plateColor, darkness, intensity, warmth),
+  };
+}
+
+export function applySurfacePreview(
+  panelLift: number = DEFAULT_SURFACE_LIFT,
+  hairlineLift: number = DEFAULT_SURFACE_LIFT,
+  bases: { panel: string; hairline: string } | null = null,
+): void {
   const root = document.documentElement;
-  if (visible) {
-    delete root.dataset.shellArt;
+  /* No picked palette: the shipped steps already own these values (the hairline lift is
+   * baked into `radixPalette`), so drop the override instead of re-deriving it -
+   * `platePaletteContext(null)` cannot know the shipped tint. At 0 with a pick this
+   * re-applies the base verbatim: removing it would drop the tint back to theme grey. */
+  if (bases === null) {
+    root.style.removeProperty("--ark-gray-3");
+    root.style.removeProperty("--ark-gray-7");
     return;
   }
-  root.dataset.shellArt = "off";
+  const mix = (base: string, lift: number): string =>
+    lift <= 0
+      ? base
+      : `color-mix(in srgb, ${base} ${Math.round((1 - lift) * 100)}%, white)`;
+  root.style.setProperty("--ark-gray-3", mix(bases.panel, panelLift));
+  root.style.setProperty("--ark-gray-7", mix(bases.hairline, hairlineLift));
 }
 
-export function readStoredShellArtVisible(): boolean {
-  return window.localStorage.getItem(ART_STORAGE_KEY) !== "0";
+export function readStoredPanelLift(): number {
+  return readStoredUnit(PANEL_LIFT_STORAGE_KEY, DEFAULT_SURFACE_LIFT);
 }
 
-export function writeStoredShellArtVisible(visible: boolean): void {
-  window.localStorage.setItem(ART_STORAGE_KEY, visible ? "1" : "0");
+export function writeStoredPanelLift(value: number): void {
+  window.localStorage.setItem(PANEL_LIFT_STORAGE_KEY, String(value));
+}
+
+export function readStoredHairlineLift(): number {
+  return readStoredUnit(HAIRLINE_LIFT_STORAGE_KEY, DEFAULT_SURFACE_LIFT);
+}
+
+export function writeStoredHairlineLift(value: number): void {
+  window.localStorage.setItem(HAIRLINE_LIFT_STORAGE_KEY, String(value));
+}
+
+/** Inverse of `hexToOklch` for a sampled sRGB triple - used by the tint readout. */
+export function rgbToOklch(
+  r: number,
+  g: number,
+  b: number,
+): { lightness: number; chroma: number; hue: number } {
+  const [lr, lg, lb] = [r, g, b].map(srgbChannelToLinear) as [number, number, number];
+  const l = Math.cbrt(0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb);
+  const m = Math.cbrt(0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb);
+  const s = Math.cbrt(0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb);
+  const lightness = 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s;
+  const a = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s;
+  const bb = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s;
+  return {
+    lightness,
+    chroma: Math.sqrt(a * a + bb * bb),
+    hue: ((Math.atan2(bb, a) * 180) / Math.PI + 360) % 360,
+  };
+}
+
+/* ------------------------------------------------------------ plate warmth */
+
+const PLATE_WARMTH_STORAGE_KEY = "yark.appearance.palettePreviewPlateWarmth.v1";
+
+const DEFAULT_PLATE_WARMTH = 0;
+
+/** Warm stone hue the plates rotate toward at warmth = 1 (amber-grey, never "brown"). */
+const PLATE_WARM_HUE = 58;
+
+/** Steps that read as plates: panel/raised/control/hover, borders (0-based). */
+const PLATE_STEP_INDEXES = [2, 3, 4, 5, 6, 8] as const;
+
+function hueDistance(from: number, to: number): number {
+  return ((((to - from) % 360) + 540) % 360) - 180;
+}
+
+/**
+ * Rotates the *plate* steps toward a warm stone hue while the hull (steps 1-2) and the
+ * text steps stay where the palette put them: the cool-hull/warm-plate seam is what
+ * keeps a dark operational UI from reading as one monochrome blue. `warmth` 0 writes the
+ * palette's own values back, so the knob is reversible without drift.
+ */
+function plateStepValue(
+  index: number,
+  pick: { hue: number; chroma: number },
+  darkness: number,
+  intensity: number,
+  warmth: number,
+): string {
+  const lightness = lightnessForStep(index, darkness);
+  const baseChroma = chromaForStep(index, pick.chroma, intensity);
+  if (!PLATE_STEP_INDEXES.includes(index as (typeof PLATE_STEP_INDEXES)[number])) {
+    return `oklch(${lightness.toFixed(3)} ${baseChroma.toFixed(4)} ${Math.round(pick.hue)})`;
+  }
+  const hue = pick.hue + hueDistance(pick.hue, PLATE_WARM_HUE) * warmth;
+  const chroma = baseChroma + warmth * 0.004;
+  return `oklch(${lightness.toFixed(3)} ${chroma.toFixed(4)} ${Math.round((hue + 360) % 360)})`;
+}
+
+/** The hue/chroma the plates are derived from: the palette's pick, or a neutral grey. */
+function platePaletteContext(color: string | null): { hue: number; chroma: number } {
+  const oklch = color === null ? null : hexToOklch(color);
+  return { hue: oklch?.hue ?? 266, chroma: Math.min(oklch?.chroma ?? 0, MAX_PICKED_CHROMA) };
+}
+
+/**
+ * One plate step, from whichever colour owns the plates: an explicit plate colour wins,
+ * otherwise the surface pick rotated toward `warmth`.
+ *
+ * An explicit plate colour already carries the chroma the operator asked to see, so
+ * neither `warmth` (which rotates a surface pick) nor `intensity` (which dilutes one)
+ * scales it - the ladder's chroma profile is the only thing shaping it.
+ */
+function plateStep(
+  index: number,
+  color: string | null,
+  plateColor: string | null,
+  darkness: number,
+  intensity: number,
+  warmth: number,
+): string {
+  const picked = plateColor === null ? null : hexToOklch(plateColor);
+  if (picked === null) {
+    return plateStepValue(index, platePaletteContext(color), darkness, intensity, warmth);
+  }
+  return plateStepValue(
+    index,
+    { hue: picked.hue, chroma: Math.min(picked.chroma, MAX_PICKED_CHROMA) },
+    darkness,
+    1,
+    0,
+  );
+}
+
+export function applyPlateWarmth(
+  warmth: number,
+  color: string | null,
+  darkness: number = DEFAULT_PALETTE_DARKNESS,
+  intensity: number = DEFAULT_PALETTE_INTENSITY,
+  plateColor: string | null = null,
+): void {
+  const root = document.documentElement;
+  /* Without a pick or an explicit plate colour there is no tint to apply, and the
+   * shipped steps win: writing the neutral fallback here would paint the app grey while
+   * the tokens are tinted. */
+  if (color === null && plateColor === null) {
+    for (const index of PLATE_STEP_INDEXES) {
+      root.style.removeProperty(`--ark-gray-${index + 1}`);
+    }
+    return;
+  }
+  for (const index of PLATE_STEP_INDEXES) {
+    root.style.setProperty(
+      `--ark-gray-${index + 1}`,
+      plateStep(index, color, plateColor, darkness, intensity, warmth),
+    );
+  }
+}
+
+export function readStoredPlateWarmth(): number {
+  return readStoredUnit(PLATE_WARMTH_STORAGE_KEY, DEFAULT_PLATE_WARMTH);
+}
+
+export function writeStoredPlateWarmth(value: number): void {
+  window.localStorage.setItem(PLATE_WARMTH_STORAGE_KEY, String(value));
 }

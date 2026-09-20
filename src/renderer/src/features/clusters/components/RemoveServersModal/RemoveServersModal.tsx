@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { useMemo, useState } from "react";
-import { Alert, Button, Checkbox, Stack, Text } from "@mantine/core";
+import { Button, Checkbox, Stack, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { SelectableListRow } from "@ui/SelectableListRow/SelectableListRow";
@@ -150,9 +151,9 @@ export function RemoveServersModal(props: Props): ReactElement {
         </Text>
 
         {error !== null && (
-          <Alert color="red" variant="light">
+          <AppAlert color="red" variant="light">
             {error}
-          </Alert>
+          </AppAlert>
         )}
 
         <div className={classes.candidateList} data-remove-cluster-servers>
@@ -201,14 +202,14 @@ export function RemoveServersModal(props: Props): ReactElement {
         </div>
 
         {remaining === 0 ? (
-          <Alert color="attention" variant="light">
+          <AppAlert color="attention" variant="light">
             Removing every server clears this cluster from the list until another
             profile uses the ID again.
-          </Alert>
+          </AppAlert>
         ) : remaining === 1 ? (
-          <Alert color="attention" variant="light">
+          <AppAlert color="attention" variant="light">
             One server will remain. Transfers need at least two servers.
-          </Alert>
+          </AppAlert>
         ) : null}
       </Stack>
     </AppPanelModal>

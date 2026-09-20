@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
-import { Alert, Badge, Divider, Group, SimpleGrid, Stack, Switch, Text } from "@mantine/core";
+import { Badge, Divider, Group, SimpleGrid, Stack, Switch, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import type { ClusterIniTemplate } from "@shared/types";
 import {
   EXPERIENCE_PROFILES,
@@ -50,11 +51,11 @@ export function WizardProfileStep(props: Props): ReactElement {
               onSelect={onSelectProfile}
             />
           ) : (
-            <Alert color="blue" title="No cluster INI template yet">
+            <AppAlert color="blue" title="No cluster INI template yet">
               This server is in “{clusterId}”, but that cluster has no saved INI template. Create
               one on the Clusters page, then reopen this wizard to match fleet defaults in one
               step.
-            </Alert>
+            </AppAlert>
           )}
           <Divider
             label="Or use a different preset"
@@ -91,12 +92,12 @@ export function WizardProfileStep(props: Props): ReactElement {
       </SimpleGrid>
 
       {clusterPathSelected ? (
-        <Alert color="blue" title="Cluster path">
+        <AppAlert color="blue" title="Cluster path">
           Continue goes straight to review. Apply copies the full cluster INI template onto this
           server (same as Seed / Restore on Clusters).
-        </Alert>
+        </AppAlert>
       ) : (
-        <Alert color="fossil" className={classes.impactAlert}>
+        <AppAlert color="fossil" className={classes.impactAlert}>
           <Group justify="space-between" align="center" gap="md" wrap="nowrap">
             <Stack gap={6} style={{ minWidth: 0 }}>
               <Group gap="xs" wrap="nowrap">
@@ -120,7 +121,7 @@ export function WizardProfileStep(props: Props): ReactElement {
               aria-label="Enable single-player settings"
             />
           </Group>
-        </Alert>
+        </AppAlert>
       )}
     </WizardStep>
   );

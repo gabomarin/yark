@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { useCallback, useMemo, useState } from "react";
-import { Alert, Button, Group, Stack, Stepper } from "@mantine/core";
+import { Button, Group, Stack, Stepper } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import {
   getServerFolderNameError,
@@ -283,9 +284,9 @@ export function ImportInstallWizard(props: Props): ReactElement {
         </Stepper>
 
         {error !== null && (step !== 1 || probe === null) && (
-          <Alert color="red" title="Could not continue">
+          <AppAlert color="red" title="Could not continue">
             {error}
-          </Alert>
+          </AppAlert>
         )}
 
         {step === 1 && (

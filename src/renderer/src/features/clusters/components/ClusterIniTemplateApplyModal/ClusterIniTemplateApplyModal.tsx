@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
-import { Alert, Badge, Button, Group, Stack, Text } from "@mantine/core";
+import { Badge, Button, Group, Stack, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import {
   clusterIniFileSelectionHasWork,
@@ -240,9 +241,9 @@ export function ClusterIniTemplateApplyModal(props: Props): ReactElement {
         )}
 
         {error !== null && (
-          <Alert color="red" variant="light">
+          <AppAlert color="red" variant="light">
             {error}
-          </Alert>
+          </AppAlert>
         )}
 
         {loading && (

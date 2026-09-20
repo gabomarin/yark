@@ -1,7 +1,8 @@
 import type { ReactElement } from "react";
-import { Alert, Stack, Text } from "@mantine/core";
+import { Stack, Text } from "@mantine/core";
 import type { suggestMapTokenFromMetadata } from "@shared/asa/map-token-suggest";
 import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { CopyMetadataRow } from "@ui/CopyMetadataRow/CopyMetadataRow";
 import { mapFieldHelperTextProps } from "@ui/mapFieldStyles";
 import classes from "./MapNameHint.module.css";
@@ -41,9 +42,9 @@ export function MapNameHint(props: Props): ReactElement {
       return missing;
     }
     return (
-      <Alert variant="light" color="attention" title={MAP_NAME_COPY.notInferredTitle} radius="md">
+      <AppAlert variant="light" color="attention" title={MAP_NAME_COPY.notInferredTitle} radius="md">
         {missing}
-      </Alert>
+      </AppAlert>
     );
   }
 
@@ -84,7 +85,7 @@ export function MapNameHint(props: Props): ReactElement {
   }
 
   return (
-    <Alert variant="light" color="blue" title={title} radius="md">
+    <AppAlert variant="light" color="blue" title={title} radius="md">
       <Stack gap="xs">
         {copyControl}
         <Text size="sm">
@@ -93,6 +94,6 @@ export function MapNameHint(props: Props): ReactElement {
             : MAP_NAME_COPY.chooseWhenReady}
         </Text>
       </Stack>
-    </Alert>
+    </AppAlert>
   );
 }

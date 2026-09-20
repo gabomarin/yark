@@ -1,38 +1,44 @@
-.panel {
-  min-width: 0;
-}
-
 .list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--app-space-sm);
   margin: 0;
-  /* Extra bottom padding so the last row is not clipped under overflow/scrollbar. */
-  padding: 0 4px 8px 0;
+  padding: 0;
   list-style: none;
-  max-height: 280px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-gutter: stable;
 }
 
+/*
+ * Fluent InfoBar per alert (the `DismissibleHint` recipe): solid fill, hairline, left
+ * severity accent. No scroll cap and no translucent `color-mix` border - an alert that
+ * cannot be read at a glance is not an alert, and a translucent hairline shifts with
+ * whatever is behind it.
+ */
 .row {
+  position: relative;
   display: flex;
-  gap: 8px;
+  gap: var(--app-space-sm);
   align-items: flex-start;
-  flex-shrink: 0;
-  padding: 8px 10px;
-  border-radius: 0;
-  border: 1px solid color-mix(in srgb, var(--app-color-border) 50%, transparent);
-  background: var(--app-color-panel);
+  padding: var(--app-space-sm) var(--app-space-md) var(--app-space-sm)
+    calc(var(--app-space-md) + 3px);
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-sm);
+  background: var(--app-color-surface-control);
 }
 
-.row[data-severity="error"] {
-  border-color: color-mix(in srgb, var(--app-color-danger) 35%, var(--app-color-border));
+.row::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 3px;
+  border-radius: 3px 0 0 3px;
+  background: var(--app-color-warn);
+  content: "";
+  pointer-events: none;
 }
 
-.row[data-severity="warning"] {
-  border-color: color-mix(in srgb, var(--app-color-warn) 40%, var(--app-color-border));
+.row[data-severity="error"]::before {
+  background: var(--app-color-danger-bright);
 }
 
 .icon {

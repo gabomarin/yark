@@ -1,4 +1,5 @@
-import { Alert, Button, Group, Stack, Text } from "@mantine/core";
+import { Button, Group, Stack, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import type {
   ServerInstallationInfo,
   ServerProfile,
@@ -49,13 +50,13 @@ export function MaintenancePanel(props: Props): ReactElement {
       </Text>
 
       {panel.error !== null && (
-        <Alert className={classes.alert} color="red" title="Maintenance">
+        <AppAlert className={classes.alert} color="red" title="Maintenance">
           {panel.error}
-        </Alert>
+        </AppAlert>
       )}
 
       {policy?.schedulePaused === true && (
-        <Alert
+        <AppAlert
           className={classes.alert}
           color="red"
           title="Paused after repeated failures"
@@ -74,7 +75,7 @@ export function MaintenancePanel(props: Props): ReactElement {
               Resume schedules
             </Button>
           </Group>
-        </Alert>
+        </AppAlert>
       )}
 
       {policy !== null && (

@@ -19,16 +19,16 @@
 }
 
 .root[data-tone="warning"] {
-  border-color: color-mix(in srgb, var(--mantine-color-yellow-6) 70%, var(--app-color-border));
+  border-color: color-mix(in srgb, var(--app-color-attention) 70%, var(--app-color-border));
 }
 
 .root[data-tone="danger"] {
-  border-color: color-mix(in srgb, var(--mantine-color-red-6) 70%, var(--app-color-border));
+  border-color: color-mix(in srgb, var(--app-color-bad) 70%, var(--app-color-border));
 }
 
 .root[data-tone="warning"] .label,
 .root[data-tone="warning"] .value {
-  color: var(--mantine-color-yellow-4);
+  color: var(--app-color-attention);
 }
 
 .root[data-zero]:not([data-active]) {
@@ -49,34 +49,34 @@
 
 .root[data-tone="danger"] .label,
 .root[data-tone="danger"] .value {
-  color: var(--mantine-color-red-4);
+  color: var(--app-color-danger-bright);
 }
 
 /* Selected — tone-tinted fill; text stays put for default (Running / Stopped). */
 .root[data-active] {
-  border-color: var(--ark-blue-7);
-  background: color-mix(in srgb, var(--app-color-panel) 78%, var(--ark-blue-8));
+  border-color: var(--app-color-accent);
+  background: var(--app-list-selected-bg);
   box-shadow: none;
 }
 
 .root[data-active][data-tone="warning"] {
-  border-color: var(--mantine-color-yellow-5);
-  background: color-mix(in srgb, var(--app-color-panel) 78%, var(--mantine-color-yellow-6));
+  border-color: var(--app-color-attention);
+  background: color-mix(in srgb, var(--app-color-panel) 78%, var(--app-color-attention));
 }
 
 .root[data-active][data-tone="danger"] {
-  border-color: var(--mantine-color-red-5);
-  background: color-mix(in srgb, var(--app-color-panel) 78%, var(--mantine-color-red-6));
+  border-color: var(--app-color-bad);
+  background: color-mix(in srgb, var(--app-color-panel) 78%, var(--app-color-bad));
 }
 
 .root[data-active][data-tone="warning"] .label,
 .root[data-active][data-tone="warning"] .value {
-  color: var(--mantine-color-yellow-3);
+  color: var(--app-color-attention);
 }
 
 .root[data-active][data-tone="danger"] .label,
 .root[data-active][data-tone="danger"] .value {
-  color: var(--mantine-color-red-3);
+  color: var(--app-color-danger-bright);
 }
 
 .root[data-active] .value {
@@ -95,15 +95,15 @@
 }
 
 .root[data-clickable]:hover:not([data-active]) {
-  background: color-mix(in srgb, var(--app-color-panel) 92%, var(--ark-blue-8));
+  background: var(--app-color-surface-control-hover);
 }
 
 .root[data-clickable][data-tone="warning"]:hover:not([data-active]) {
-  background: color-mix(in srgb, var(--app-color-panel) 90%, var(--mantine-color-yellow-6));
+  background: var(--app-color-surface-control-hover);
 }
 
 .root[data-clickable][data-tone="danger"]:hover:not([data-active]) {
-  background: color-mix(in srgb, var(--app-color-panel) 90%, var(--mantine-color-red-6));
+  background: var(--app-color-surface-control-hover);
 }
 
 .root[data-clickable][data-active]:hover {
@@ -130,6 +130,7 @@
 }
 
 .value {
+  font-family: var(--app-font-display);
   font-size: 1.125rem;
   font-weight: 650;
   line-height: 1.15;

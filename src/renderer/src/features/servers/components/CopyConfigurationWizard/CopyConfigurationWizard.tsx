@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { useCallback, useMemo, useState } from "react";
-import { Alert, Stack, Stepper, Text } from "@mantine/core";
+import { Stack, Stepper, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import type { ConfigTransferSelection } from "@shared/ini/config-transfer";
 import { emptyConfigTransferSelection } from "@shared/ini/config-transfer";
@@ -253,9 +254,9 @@ export function CopyConfigurationWizard(props: Props): ReactElement {
         </Stepper>
 
         {error !== null && step < 4 && (
-          <Alert color="red" title="Could not continue">
+          <AppAlert color="red" title="Could not continue">
             {error}
-          </Alert>
+          </AppAlert>
         )}
 
         {step === 1 && sourceId !== null && (

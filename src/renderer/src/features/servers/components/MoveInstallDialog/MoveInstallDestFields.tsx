@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
-import { Alert, Checkbox, Stack, Text } from "@mantine/core";
+import { Checkbox, Stack, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { PathField } from "@ui/PathField/PathField";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 
@@ -57,9 +58,9 @@ export function MoveInstallDestFields(props: Props): ReactElement {
         </Stack>
       )}
       {props.previewIssue !== null && (
-        <Alert color="red" title="Destination path">
+        <AppAlert color="red" title="Destination path">
           <Text size="sm">{props.previewIssue}</Text>
-        </Alert>
+        </AppAlert>
       )}
     </>
   );

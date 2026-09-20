@@ -84,9 +84,7 @@ function renderSectionGroups(
             <Text fw={600} size="xs" className={chrome.subsectionHeaderLabel}>
               {sectionGroup.label}
             </Text>
-            <Badge variant="outline" className={chrome.subsectionCount}>
-              {sectionGroup.rows.length}
-            </Badge>
+            <Badge variant="outline">{sectionGroup.rows.length}</Badge>
           </Group>
         </button>
         {!sectionCollapsed &&

@@ -3,7 +3,6 @@ import type { ReactElement } from "react";
 import { ClockCounterClockwise, HardDrives } from "@phosphor-icons/react";
 import {
   Accordion,
-  Alert,
   Badge,
   Button,
   Group,
@@ -18,6 +17,7 @@ import type { AppEvent, ServerProfile } from "@shared/types";
 import { formatWhenLabel } from "@shared/format-log-datetime";
 import { collapseConsecutiveEvents, formatEventMessageForDisplay } from "@shared/event-details";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { LoadingState } from "@ui/LoadingState/LoadingState";
 import { AppPageHeader } from "@ui/AppPageHeader/AppPageHeader";
@@ -151,7 +151,7 @@ export function LogsPage(props: Props): ReactElement {
         />
 
         <Stack gap="sm" className={classes.logsContent}>
-          {error !== null && <Alert color="red">{error}</Alert>}
+          {error !== null && <AppAlert color="red">{error}</AppAlert>}
 
           <div className={classes.fillPanel}>
             <Stack gap="sm" className={classes.panelStack}>

@@ -1,9 +1,10 @@
 import type { ReactElement } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DownloadSimple } from "@phosphor-icons/react";
-import { Alert, Button, Group, Splitter, Stack, Text } from "@mantine/core";
+import { Button, Group, Splitter, Stack, Text } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { AppPageHeader } from "@ui/AppPageHeader/AppPageHeader";
 import type { ServerProfile, SteamCmdConsoleSnapshot, SteamCmdStatus } from "@shared/types";
@@ -109,7 +110,7 @@ export function DownloadsPage(props: Props): ReactElement {
 
   const steamcmdMissingBanner =
     !props.status.detected && rows.length > 0 ? (
-      <Alert
+      <AppAlert
         color="red"
         variant="light"
         title="SteamCMD is not installed"
@@ -126,7 +127,7 @@ export function DownloadsPage(props: Props): ReactElement {
             Install SteamCMD
           </Button>
         </Stack>
-      </Alert>
+      </AppAlert>
     ) : null;
 
   const queuePane = (

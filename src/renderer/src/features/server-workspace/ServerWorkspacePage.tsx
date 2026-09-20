@@ -1,4 +1,4 @@
-import { Alert } from "@mantine/core";
+
 import { HardDrives } from "@phosphor-icons/react";
 import { useMediaQuery } from "@mantine/hooks";
 import type { ServerRuntimeInfo } from "@shared/types";
@@ -13,6 +13,7 @@ import { WorkspaceTabs } from "./components/WorkspaceTabs/WorkspaceTabs";
 import { WorkspaceHeader } from "./components/WorkspaceHeader/WorkspaceHeader";
 import { StopProgressAlert, stopProgressForServer } from "./components/StopProgressAlert";
 import type { WorkspaceTab } from "./serverWorkspaceTypes";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { WorkspaceCompactDrawers } from "./components/WorkspaceCompactDrawers/WorkspaceCompactDrawers";
 import { useWorkspaceLeaveGuard } from "./useWorkspaceLeaveGuard";
@@ -161,9 +162,9 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
     <section className={classes.main} data-workspace-scroll>
       {stopProgress !== null && <StopProgressAlert progress={stopProgress} />}
       {filesJobActive && (
-        <Alert color="attention" title={filesLockReason} mb="sm">
+        <AppAlert color="attention" title={filesLockReason} mb="sm">
           Start, restore, and other file actions stay locked until this finishes.
-        </Alert>
+        </AppAlert>
       )}
       {assistantOpen ? (
         <ConfigurationWizard

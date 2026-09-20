@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
-import { Alert, Badge, Group, Text, Title } from "@mantine/core";
+import { Badge, Group, Text, Title } from "@mantine/core";
 import type {
   IniFileKey,
   IniPreview,
@@ -14,6 +14,7 @@ import {
   openDangerConfirmModal,
 } from "@ui/DangerConfirmModal/openDangerConfirmModal";
 import { openUnsavedLeaveModal } from "@features/server-workspace/openUnsavedLeaveModal";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import { IniEditorNav } from "@ui/IniEditorNav/IniEditorNav";
 import { ClusterIniTemplateVisualPanel } from "./ClusterIniTemplateVisualPanel";
@@ -233,9 +234,9 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
           </Text>
 
           {error !== null && (
-            <Alert color="red" variant="light">
+            <AppAlert color="red" variant="light">
               {error}
-            </Alert>
+            </AppAlert>
           )}
 
           {preview !== null && preview.changedCount > 0 && (

@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
-import { Alert, Stack, Text } from "@mantine/core";
+import { Stack, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { findPortConflicts } from "@shared/server/port-conflicts";
 import { PORT_MAX, PORT_MIN, type ServerProfile } from "@shared/types";
 import { useMemo } from "react";
@@ -68,7 +69,7 @@ export function ServerFormPortConflictAlert(props: Props): ReactElement | null {
   }
 
   return (
-    <Alert
+    <AppAlert
       color="red"
       title="Port conflicts"
       mt={props.slot === true ? 0 : "xs"}
@@ -85,6 +86,6 @@ export function ServerFormPortConflictAlert(props: Props): ReactElement | null {
           </Text>
         ))}
       </Stack>
-    </Alert>
+    </AppAlert>
   );
 }

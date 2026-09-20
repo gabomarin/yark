@@ -1,7 +1,6 @@
 import type { ReactElement } from "react";
 import { Broadcast, WarningCircle } from "@phosphor-icons/react";
 import {
-  Alert,
   Button,
   Group,
   NumberInput,
@@ -10,6 +9,7 @@ import {
   Text,
 } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { AppPageHeader } from "@ui/AppPageHeader/AppPageHeader";
 import { LoadingState } from "@ui/LoadingState/LoadingState";
@@ -68,6 +68,15 @@ export function HostedResourcesPage(): ReactElement {
         />
 
         <Stack gap="md" className={classes.content}>
+        {/* Task guidance goes first: it is why the operator opened this page, and below the
+         * status card it was easy to never reach. */}
+        {overview !== null && overview.resources.length > 0 && (
+          <AppAlert color="blue" variant="light" title="Next step">
+            Copy a resource URL and paste it into the server setting that uses it, such
+            as <code>AdminListURL</code> in RCON → Admins. Keep YARK running while ASA
+            needs to refresh the URL.
+          </AppAlert>
+        )}
         <DismissibleHint
           storageKey={EXPERIMENTAL_HINT_STORAGE_KEY}
           title="Experimental"
@@ -125,9 +134,9 @@ export function HostedResourcesPage(): ReactElement {
               </Group>
 
               {state.error !== null && (
-                <Alert color="red" variant="light" title="Port unavailable">
+                <AppAlert color="red" variant="light" title="Port unavailable">
                   {state.error}
-                </Alert>
+                </AppAlert>
               )}
             </Stack>
           </AppSurfaceCard>
@@ -165,11 +174,6 @@ export function HostedResourcesPage(): ReactElement {
           </AppSurfaceCard>
         ) : (
           <>
-            <Alert color="blue" variant="light" title="Next step">
-              Copy a resource URL and paste it into the server setting that uses it, such
-              as <code>AdminListURL</code> in RCON → Admins. Keep YARK running while ASA
-              needs to refresh the URL.
-            </Alert>
             <Group justify="flex-end">
               <Button onClick={controller.openCreate}>New resource</Button>
             </Group>

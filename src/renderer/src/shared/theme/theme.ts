@@ -22,7 +22,6 @@ const radixCssVariables = Object.fromEntries([
   ["--ark-gray-indicator", radixPalette.gray[8]],
   ["--ark-gray-track", radixPalette.gray[8]],
   ["--ark-background", radixPalette.background],
-  ["--ark-blue-ini-category", radixPalette.iniCategory],
 ]);
 
 function createAppCssVariablesResolver(
@@ -45,6 +44,15 @@ function createAppCssVariablesResolver(
       "--app-color-surface-panel": "var(--ark-gray-3)",
       "--app-color-surface-control": "var(--ark-gray-5)",
       "--app-color-surface-control-hover": "var(--ark-gray-6)",
+      /*
+       * Alert / InfoBar surface. Built from the hull steps (2 and 12 are not plate steps),
+       * so it stays neutral when the plates are warm or tinted, and it sits above both the
+       * chrome shell (0.17 L) and the panel cards (0.23 L) - the two backgrounds an alert
+       * actually lands on. Fluent keeps an info bar quiet: the tone belongs on the border
+       * and icon, never on the fill.
+       */
+      "--app-color-surface-alert":
+        "color-mix(in srgb, var(--ark-gray-2) 82%, var(--ark-gray-12))",
       "--app-color-border-subtle": "var(--ark-gray-7)",
       "--app-color-border-control": "var(--ark-gray-9)",
       "--app-color-text-soft": "var(--ark-gray-12)",
@@ -72,7 +80,6 @@ function createAppCssVariablesResolver(
       "--app-color-primary": "var(--app-color-accent)",
       "--app-color-accent-deep": "var(--ark-blue-3)",
       "--app-color-panel-raised": "var(--ark-gray-4)",
-      "--app-color-ini-category": "var(--ark-blue-ini-category)",
       "--app-color-ok": tokens.colors.ok,
       "--app-color-warn": tokens.colors.warn,
       "--app-color-attention": tokens.colors.attention,
@@ -416,48 +423,32 @@ function createAppTheme(
           variant: "light",
           radius: "sm",
         },
+        styles: {
+          /* Fluent keeps an info bar's severity to the icon and border. The icon needs its
+           * own variable: Mantine paints it with `--alert-color`, which the title inherits
+           * too, and the title has to stay in the text tone. An unmapped colour leaves
+           * `--alert-icon-color` unset, so the icon inherits the root colour as before. */
+          icon: { color: "var(--alert-icon-color)" },
+        },
         // Mantine paints via --alert-bg / --alert-bd; styles.backgroundColor does not win.
         vars: (_theme: unknown, props: { color?: string | undefined }) => {
           const color =
             typeof props.color === "string" ? props.color : "blue";
-          const tone = alertToneForColor(color);
-          if (tone === "message") {
-            return {
-              root: {
-                "--alert-bg": "var(--app-color-panel)",
-                "--alert-bd": "1px solid var(--app-color-cryo)",
-                "--alert-color": "var(--app-color-text)",
-              },
-            };
+          const toneToken = ALERT_TONE_TOKENS[alertToneForColor(color)];
+          if (toneToken === undefined) {
+            return { root: {} };
           }
-          if (tone === "warn") {
-            return {
-              root: {
-                "--alert-bg": "var(--app-color-panel)",
-                "--alert-bd": "1px solid var(--app-color-fossil)",
-                "--alert-color": "var(--app-color-text)",
-              },
-            };
-          }
-          if (tone === "success") {
-            return {
-              root: {
-                "--alert-bg": "var(--app-color-panel)",
-                "--alert-bd": "1px solid var(--app-color-ok)",
-                "--alert-color": "var(--app-color-text)",
-              },
-            };
-          }
-          if (tone === "error") {
-            return {
-              root: {
-                "--alert-bg": "var(--app-color-panel)",
-                "--alert-bd": "1px solid var(--app-color-bad)",
-                "--alert-color": "var(--app-color-text)",
-              },
-            };
-          }
-          return { root: {} };
+          return {
+            root: {
+              /* Neutral base (see `--app-color-surface-alert`) so a tinted plate ramp cannot
+               * turn the bar into a slab, plus 12% of the tone: enough to type the alert
+               * without painting a saturated fill. */
+              "--alert-bg": `color-mix(in srgb, var(--app-color-surface-alert) 88%, ${toneToken})`,
+              "--alert-bd": `1px solid ${toneToken}`,
+              "--alert-color": "var(--app-color-text)",
+              "--alert-icon-color": toneToken,
+            },
+          };
         },
       },
       /*
@@ -644,10 +635,9 @@ function createAppTheme(
 }
 
 /** Inline Alert surface recipes: message (blue), warn (fossil), error (red). */
-function alertToneForColor(
+export function alertToneForColor(
   color: string,
-): "message" | "success" | "warn" | "error" | "default" {
-  if (
+): "message" | "success" | "warn" | "error" | "default" {  if (
     color === "blue" ||
     color === "cyan" ||
     color === "indigo" ||
@@ -674,6 +664,17 @@ function alertToneForColor(
   }
   return "default";
 }
+
+/**
+ * Severity tone to the token that carries it, used for the alert border, its 12% fill tint
+ * and its icon. `default` has no tone, so an unmapped colour keeps Mantine's defaults.
+ */
+const ALERT_TONE_TOKENS: Partial<Record<ReturnType<typeof alertToneForColor>, string>> = {
+  message: "var(--app-color-cryo)",
+  success: "var(--app-color-ok)",
+  warn: "var(--app-color-fossil)",
+  error: "var(--app-color-bad)",
+};
 
 export function createAppThemeForDensity(density: UiDensity): MantineThemeOverride {
   return createAppTheme(getAppTokens(density), density);

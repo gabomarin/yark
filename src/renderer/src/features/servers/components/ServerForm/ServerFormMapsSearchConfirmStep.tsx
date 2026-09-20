@@ -1,8 +1,9 @@
 import { useEffect, useState, type ReactElement } from "react";
-import { Alert, Button, Group, Image, Stack, Text, TextInput } from "@mantine/core";
+import { Button, Group, Image, Stack, Text, TextInput } from "@mantine/core";
 import { PuzzlePiece } from "@phosphor-icons/react";
 import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
 import type { ModMetadata } from "@shared/types";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { mapSaveFolderDescriptionStyles } from "@ui/mapFieldStyles";
 import type { MapsSearchRow } from "./mapsSearchModel";
 import classes from "./ServerFormMapsSearchModal.module.css";
@@ -28,13 +29,13 @@ export function ServerFormMapsSearchConfirmStep(props: Props): ReactElement {
           {MAP_NAME_COPY.applyConfirmIntro}
         </Text>
         {picked.token === null ? (
-          <Alert color="attention" variant="light" title={MAP_NAME_COPY.notInferredTitle}>
+          <AppAlert color="attention" variant="light" title={MAP_NAME_COPY.notInferredTitle}>
             {MAP_NAME_COPY.notInferredBody} {MAP_NAME_COPY.applyConfirmNeedsMapName}
-          </Alert>
+          </AppAlert>
         ) : picked.token.source === "bare" ? (
-          <Alert color="attention" variant="light" title={MAP_NAME_COPY.confirmTitle}>
+          <AppAlert color="attention" variant="light" title={MAP_NAME_COPY.confirmTitle}>
             {MAP_NAME_COPY.confirmBareWp}
-          </Alert>
+          </AppAlert>
         ) : null}
         <TextInput
           label={MAP_NAME_COPY.label}

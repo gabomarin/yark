@@ -1,8 +1,9 @@
 import type { ReactElement } from "react";
 import { Broom, CloudArrowDown, FolderOpen } from "@phosphor-icons/react";
-import { Alert, Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
+import { Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
 import type { SteamCmdCacheKind, SteamCmdStatus } from "@shared/types";
 import { steamCmdProgressFallbackLabel } from "@shared/server/steamcmd-progress";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppPathRow } from "@ui/AppPathRow/AppPathRow";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import { STEAMCMD_PATH_ATTR } from "../settingsTestIds";
@@ -55,7 +56,7 @@ export function SettingsSteamCmdSection(props: Props): ReactElement {
       </Group>
 
       {steamCmdBusy && (
-        <Alert
+        <AppAlert
           variant="light"
           color="blue"
           title={installingSteamCmd ? "Installing SteamCMD" : "SteamCMD is busy"}
@@ -72,7 +73,7 @@ export function SettingsSteamCmdSection(props: Props): ReactElement {
                 : ""}
             </>
           )}
-        </Alert>
+        </AppAlert>
       )}
 
       <AppPathRow

@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
-import { Alert, Stack, Textarea } from "@mantine/core";
+import { Stack, Textarea } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { useLocalStorage } from "@mantine/hooks";
 import type { IniFileKey, ServerIniPayload } from "@shared/types";
 import { textForFile, withFileText } from "../../iniModel";
@@ -24,7 +25,7 @@ export function ConfigurationEditorTextPanel(props: Props): ReactElement {
   return (
     <Stack gap="sm" className={classes.textPanel}>
       {iniFile === "gameUserSettings" && !hintDismissed && (
-        <Alert
+        <AppAlert
           color="blue"
           variant="light"
           title="Server settings override"
@@ -37,7 +38,7 @@ export function ConfigurationEditorTextPanel(props: Props): ReactElement {
           <code>MaxPlayers</code> – set <strong>Max players</strong> there for{" "}
           <code>-WinLiveMaxPlayers</code> (empty or <code>0</code> omits the flag;
           ASA then defaults to 70).
-        </Alert>
+        </AppAlert>
       )}
       <Textarea
         className={classes.rawEditor}

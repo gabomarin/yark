@@ -1,6 +1,5 @@
 import { useEffect, useState, type ReactElement } from "react";
 import {
-  Alert,
   Button,
   Group,
   Image,
@@ -12,6 +11,7 @@ import { ArrowSquareOut, MapTrifold, PuzzlePiece } from "@phosphor-icons/react";
 import { decodeHtmlEntities } from "@shared/mods/decode-html-entities";
 import { suggestMapTokenFromMetadata } from "@shared/asa/map-token-suggest";
 import type { ModMetadata } from "@shared/types";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { CopyMetadataRow } from "@ui/CopyMetadataRow/CopyMetadataRow";
 import { MapNameHint } from "@ui/MapNameHint/MapNameHint";
 import { useUiDensity } from "@app/AppProviders";
@@ -63,9 +63,9 @@ export function ServerFormMapsSearchDetailStep(props: Props): ReactElement {
           ) : (
             <Stack gap="xs">
               {props.error !== null ? (
-                <Alert color="attention" variant="light">
+                <AppAlert color="attention" variant="light">
                   Could not refresh from CurseForge. Showing cached summary.
-                </Alert>
+                </AppAlert>
               ) : null}
               <Stack gap="xs" className={classes.detailMetaRow}>
                 <MapNameHint suggestion={mapName} variant="inline" />

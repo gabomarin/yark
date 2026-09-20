@@ -1,12 +1,12 @@
 import type { ReactElement } from "react";
 import {
-  Alert,
   NumberInput,
   PasswordInput,
   SimpleGrid,
   Stack,
   TextInput,
 } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { isOfficialMap, normalizeMapToken } from "@shared/asa/map-identity";
 import type { KnownClusterOption } from "@features/clusters/knownClusterOptions";
 import type { ModMetadata, ServerProfile } from "@shared/types";
@@ -45,10 +45,10 @@ export function ImportInstallEditStep(props: Props): ReactElement {
         rconPort={props.form.rconPort}
       />
       {customMapNeedsLink && (
-        <Alert color="attention" title="Custom map">
+        <AppAlert color="attention" title="Custom map">
           Link a Maps-category Project ID below (or on the Mods tab after import)
           before the first Start, or Start will block until map identity is set.
-        </Alert>
+        </AppAlert>
       )}
       <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
         <TextInput

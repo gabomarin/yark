@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import {
   ActionIcon,
-  Alert,
   Button,
   Group,
   Loader,
@@ -9,6 +8,7 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import { ArrowLeft } from "@phosphor-icons/react";
 import type { ModCategory, ModMetadata, ModSearchPage } from "@shared/types";
@@ -273,9 +273,9 @@ export function ServerFormMapsSearchModal(props: Props): ReactElement {
               submitting={searching}
             />
             {error !== null && categoriesResolved && !categoriesLoading ? (
-              <Alert color="red" variant="light">
+              <AppAlert color="red" variant="light">
                 {error}
-              </Alert>
+              </AppAlert>
             ) : null}
           </Stack>
           <div className={classes.modalStepScroll}>

@@ -1,9 +1,10 @@
 import type { ReactElement } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowsLeftRight } from "@phosphor-icons/react";
-import { Alert, Button, Group, Stack, Text } from "@mantine/core";
+import { Button, Group, Stack, Text } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import type { FleetInstallRef } from "@shared/server/server-install-path";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { PathField } from "@ui/PathField/PathField";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import {
@@ -127,9 +128,9 @@ export function ServerFormInstallPath(props: Props): ReactElement {
           />
         </Stack>
         {createPathIssue !== null && (
-          <Alert color="red" title="Install path" mt="xs">
+          <AppAlert color="red" title="Install path" mt="xs">
             <Text size="sm">{createPathIssue}</Text>
-          </Alert>
+          </AppAlert>
         )}
       </>
     );

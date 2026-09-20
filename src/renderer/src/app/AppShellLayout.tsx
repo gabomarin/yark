@@ -1,5 +1,5 @@
 import { AppShell } from "@mantine/core";
-import { Alert, CloseButton, Group, Stack } from "@mantine/core";
+import { CloseButton, Group, Stack } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
 import { Sidebar, type Route } from "@layout/Sidebar/Sidebar";
 import { useSidebarRail } from "@layout/useSidebarRail";
@@ -7,6 +7,7 @@ import {
   AppBusyOverlay,
   type AppBusyOverlayContent,
 } from "@ui/AppBusyOverlay/AppBusyOverlay";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { ChromeRailEdgeToggle } from "@ui/ChromeRailEdgeToggle/ChromeRailEdgeToggle";
 import type { OfficialNetworkStatus } from "@shared/types";
 import type { PropsWithChildren, ReactElement, ReactNode } from "react";
@@ -73,7 +74,7 @@ export function AppShellLayout({ children, ...props }: Props): ReactElement {
       <AppShell.Main>
         <Stack gap={0} className={classes.content}>
           {error !== null && (
-            <Alert
+            <AppAlert
               color="red"
               radius={0}
               variant="light"
@@ -87,7 +88,7 @@ export function AppShellLayout({ children, ...props }: Props): ReactElement {
                   <CloseButton aria-label="Dismiss error" onClick={onDismissError} />
                 )}
               </Group>
-            </Alert>
+            </AppAlert>
           )}
           <div className={classes.mainBody}>{children}</div>
           {workspaceFooter}

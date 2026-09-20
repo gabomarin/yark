@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Button, Group, Loader, Progress, Stack, Text } from "@mantine/core";
+import { Button, Group, Loader, Progress, Stack, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import type { FleetInstallRef } from "@shared/server/server-install-path";
 import type { MoveInstallProgress, ServerProfile } from "@shared/types";
@@ -309,18 +310,18 @@ export function MoveInstallDialog(props: Props): ReactElement {
 
         {phase === "success" && !oldSourceRemoved && oldSourceDir !== null && (
           <Stack gap="sm">
-            <Alert color="attention" title="Move completed with a leftover folder">
+            <AppAlert color="attention" title="Move completed with a leftover folder">
               The profile uses the new path, but the previous folder could not be
               deleted:
-            </Alert>
+            </AppAlert>
             <ReadonlyPath value={oldSourceDir} compact />
           </Stack>
         )}
 
         {error !== null && (
-          <Alert color="red" title={phase === "error" ? "Move failed" : "Error"}>
+          <AppAlert color="red" title={phase === "error" ? "Move failed" : "Error"}>
             {error}
-          </Alert>
+          </AppAlert>
         )}
       </Stack>
     </AppPanelModal>

@@ -282,10 +282,7 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                             <Text fw={600} size="xs" className={chrome.subsectionHeaderLabel}>
                               {sectionGroup.label}
                             </Text>
-                            <Badge
-                              variant="outline"
-                              className={chrome.subsectionCount}
-                            >
+                            <Badge variant="outline">
                               {sectionGroup.rows.length}
                             </Badge>
                           </button>

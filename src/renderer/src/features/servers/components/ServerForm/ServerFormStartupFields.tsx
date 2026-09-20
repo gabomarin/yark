@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
-import { Alert, Switch, Text } from "@mantine/core";
+import { Switch, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import classes from "./ServerForm.module.css";
 
 interface Props {
@@ -28,10 +29,10 @@ export function ServerFormStartupFields(props: Props): ReactElement {
         />
       </div>
       {props.showInactiveWarning && (
-        <Alert color="attention" variant="light">
+        <AppAlert color="attention" variant="light">
           Preference is saved, but Inactive servers never auto-start. Enable the
           server first.
-        </Alert>
+        </AppAlert>
       )}
     </>
   );

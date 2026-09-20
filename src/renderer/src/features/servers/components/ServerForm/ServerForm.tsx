@@ -1,7 +1,8 @@
 import type { ReactElement } from "react";
-import { Alert } from "@mantine/core";
+
 import type { ServerProfile } from "@shared/types";
 import type { KnownClusterOption } from "@features/clusters/knownClusterOptions";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { ServerFormAlerts } from "./ServerFormAlerts";
 import { ServerFormEmbedded } from "./ServerFormEmbedded";
 import { ServerFormProfileFields } from "./ServerFormProfileFields";
@@ -117,7 +118,7 @@ export function ServerForm(props: Props): ReactElement {
   );
 
   const errorAlert =
-    form.error !== null ? <Alert color="red">{form.error}</Alert> : null;
+    form.error !== null ? <AppAlert color="red">{form.error}</AppAlert> : null;
 
   const moveDialog =
     props.initial !== null && props.onOpenMoveInstall === undefined ? (

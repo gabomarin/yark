@@ -1,6 +1,5 @@
 import type { ReactElement } from "react";
 import {
-  Alert,
   Button,
   Group,
   Loader,
@@ -15,6 +14,7 @@ import {
   hasMeaningfulSteamCmdByteProgress,
 } from "@shared/server/steamcmd-progress";
 import { useUiDensity } from "@app/AppProviders";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppPanelConfirmModal } from "@ui/AppPanelConfirmModal/AppPanelConfirmModal";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
@@ -85,7 +85,7 @@ export function ServerAsaApiPanel(props: Props): ReactElement {
             </Group>
 
             {panel.error !== null ? (
-              <Alert color="red">{panel.error}</Alert>
+              <AppAlert color="red">{panel.error}</AppAlert>
             ) : null}
 
             {panel.installProgress !== null ? (

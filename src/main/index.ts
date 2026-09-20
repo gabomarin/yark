@@ -199,7 +199,7 @@ function createWindow(
     skipTaskbar: hiddenUntilReveal,
     focusable: !hiddenUntilReveal,
     title: "YARK server manager",
-    backgroundColor: "#0c1427",
+    backgroundColor: "#010306",
     ...(icon !== undefined ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),

@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
-import { Alert, Badge, Button, Group, Stack, Text } from "@mantine/core";
-import { ArrowClockwise } from "@phosphor-icons/react";
+import { Badge, Button, Group, Stack, Text } from "@mantine/core";
+import { ArrowClockwise, WarningCircle } from "@phosphor-icons/react";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import type { HostedResourcesDiagnosticsDto } from "@shared/ipc";
 import { shortSha } from "../../model/hostedResourcesPageModel";
@@ -49,10 +50,15 @@ export function HostedResourcesDiagnosticsPanel(props: Props): ReactElement {
             </Group>
 
             {!diagnostics.ownership.ok && (
-              <Alert color="red" variant="light" title="Host is not serving">
+              <AppAlert
+                color="red"
+                variant="light"
+                title="Host is not serving"
+                icon={<WarningCircle size={16} />}
+              >
                 A stale URL must not be trusted while the port is unavailable or owned
                 by another process.
-              </Alert>
+              </AppAlert>
             )}
 
             <Stack gap="xs">

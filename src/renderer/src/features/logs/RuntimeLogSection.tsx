@@ -1,6 +1,7 @@
 import { FileText } from "@phosphor-icons/react";
-import { Alert, Group, Select, Stack } from "@mantine/core";
+import { Group, Select, Stack } from "@mantine/core";
 import type { ReactNode, ReactElement } from "react";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { ConsoleSurface } from "@ui/ConsoleSurface/ConsoleSurface";
 import { LoadingState } from "@ui/LoadingState/LoadingState";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
@@ -33,10 +34,10 @@ export function RuntimeLogSection(props: Props): ReactElement {
     <div className={classes.fillPanel}>
       <Stack gap="sm" className={classes.panelStack}>
         {showAsaApiLoading ? (
-          <Alert color="blue" variant="light" title="Loading Ark Server API">
+          <AppAlert color="blue" variant="light" title="Loading Ark Server API">
             Version.dll and plugins are loading. The server window can take a
             minute; Runtime stays quiet until ShooterGame.log starts writing.
-          </Alert>
+          </AppAlert>
         ) : null}
         <Group justify="space-between" align="center" gap="sm" wrap="wrap">
           <Select

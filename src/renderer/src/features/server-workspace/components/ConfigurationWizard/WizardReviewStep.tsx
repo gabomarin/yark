@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
-import { Alert, Badge, Group, Stack, Text } from "@mantine/core";
+import { Badge, Group, Stack, Text } from "@mantine/core";
 import type { wizardChanges } from "../../configuration-wizard/configurationWizardModel";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { ChangeRow, WizardStep } from "./ConfigurationWizardParts";
 
@@ -45,17 +46,17 @@ export function WizardReviewStep(props: Props): ReactElement {
             </Stack>
           </AppSurfaceCard>
           {serverActive && (
-            <Alert color="fossil" title="Server must be stopped">
+            <AppAlert color="fossil" title="Server must be stopped">
               Stop the server before applying cluster defaults.
-            </Alert>
+            </AppAlert>
           )}
         </Stack>
       ) : (
         <>
           {changes.length === 0 ? (
-            <Alert color="blue" title="No changes">
+            <AppAlert color="blue" title="No changes">
               The draft matches the server&apos;s current configuration.
-            </Alert>
+            </AppAlert>
           ) : (
             <Stack gap="xs">
               {changes.map((change) => (
@@ -64,9 +65,9 @@ export function WizardReviewStep(props: Props): ReactElement {
             </Stack>
           )}
           {serverActive && (
-            <Alert color="fossil" title="Requires a server restart" mt="md">
+            <AppAlert color="fossil" title="Requires a server restart" mt="md">
               You can save now; changes will take effect after the restart.
-            </Alert>
+            </AppAlert>
           )}
         </>
       )}

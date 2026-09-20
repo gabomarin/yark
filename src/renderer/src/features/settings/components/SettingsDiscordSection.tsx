@@ -1,6 +1,5 @@
 import { useEffect, useState, type ReactElement } from "react";
 import {
-  Alert,
   ActionIcon,
   Badge,
   Button,
@@ -17,6 +16,7 @@ import {
   Title,
 } from "@mantine/core";
 import { CloudArrowDown, HardDrives, Info, PencilSimple } from "@phosphor-icons/react";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import {
   DEFAULT_DISCORD_WEBHOOK_PREFERENCES,
@@ -276,7 +276,7 @@ export function SettingsDiscordSection(): ReactElement {
           </Button>
         </Group>
 
-        {message !== null && <Alert color={message.color} mt="sm">{message.text}</Alert>}
+        {message !== null && <AppAlert color={message.color} mt="sm">{message.text}</AppAlert>}
       </AppSurfaceCard>
 
       <Group justify="space-between" align="flex-end" gap="sm">

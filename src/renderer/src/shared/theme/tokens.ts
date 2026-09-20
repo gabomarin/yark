@@ -42,27 +42,27 @@ export const accentPalette = {
 } as const;
 
 export const radixPalette = {
-  background: "#0c1427",
-  /**
-   * INI category header fill — deep blue (not gray-slate) between hull
-   * (`#0c1427`) and ark-blue-2. Base for the subtle ~90% blue header lift.
-   */
-  iniCategory: "#0d1836",
+  background: "#010306",
   blue: accentPalette.steps,
   blueAlpha: accentPalette.alpha,
+  /**
+   * Tinted dark ramp from the approved `#10407d` surface pick (darkness 0.65,
+   * intensity 0.55, hue 257). Re-generate with the preview tooling rather than
+   * hand-editing: the steps have to stay on one lightness/chroma ladder.
+   */
   gray: [
-    "#000000",
-    "#121213",
-    "#1f1f1f",
-    "#282829",
-    "#303030",
-    "#39393b",
-    "#484849",
-    "#5f5f61",
-    "#6e6e6f",
-    "#7b7b7c",
-    "#b4b4b5",
-    "#eeeef0",
+    "#05080e",
+    "#0b111a",
+    "#131e2c",
+    "#1b283a",
+    "#233349",
+    "#2c3e57",
+    "#4c607b",
+    "#5c7599",
+    "#6e88ac",
+    "#7f98bb",
+    "#aabedb",
+    "#e6effd",
   ],
   grayAlpha: [
     "#00000000",

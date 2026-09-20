@@ -1,7 +1,6 @@
 import type { ReactElement } from "react";
 import { useCallback, useEffect, useState } from "react";
 import {
-  Alert,
   Button,
   Checkbox,
   NumberInput,
@@ -9,6 +8,7 @@ import {
   Stack,
   TextInput,
 } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import type { CloneInstallProgress, InstallationHealthStatus, ServerProfile } from "@shared/types";
 import {
@@ -197,11 +197,11 @@ export function CloneServerDialog(props: Props): ReactElement {
         ) : (
           <>
             {props.sourceServer && (
-              <Alert color="blue" variant="light">
+              <AppAlert color="blue" variant="light">
                 Cloning from <strong>{props.sourceServer.name}</strong>.
                 Game.ini and GameUserSettings.ini come with the clone; ports and
                 session name on this form replace the source values.
-              </Alert>
+              </AppAlert>
             )}
 
             <Stack gap="sm">
@@ -298,15 +298,15 @@ export function CloneServerDialog(props: Props): ReactElement {
               />
 
               {copyBlocked && props.sourceServer && (
-                <Alert color="attention" variant="light">
+                <AppAlert color="attention" variant="light">
                   Stop <strong>{props.sourceServer.name}</strong> before copying
                   the entire folder. You can still clone the profile only.
-                </Alert>
+                </AppAlert>
               )}
               {copyWarn !== null && (
-                <Alert color="attention" variant="light">
+                <AppAlert color="attention" variant="light">
                   {copyWarn}
-                </Alert>
+                </AppAlert>
               )}
             </Stack>
 

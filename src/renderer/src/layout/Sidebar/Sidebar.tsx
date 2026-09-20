@@ -30,6 +30,7 @@ import { navSelectedClassName } from "@ui/NavSelected/navSelectedClassName";
 import { Fragment } from "react";
 import yarkLogo from "../../assets/brand/yark-logo.png";
 import { QuitYarkModal } from "./QuitYarkModal";
+import { DEBUG_THEME_CONTROLS } from "@shared/debug-flags";
 import { PalettePreviewSwitcher } from "./PalettePreviewSwitcher";
 import classes from "./Sidebar.module.css";
 
@@ -186,6 +187,24 @@ export function Sidebar(props: Props): ReactElement {
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const active = item.id === props.route;
+          const downloads = item.id === "downloads" ? (props.downloadCount ?? 0) : 0;
+          /* Icon-only mode has no room for a right section: the Experimental badge pushed
+           * the icon off-centre, and the tooltip already carries the label. */
+          const rightSection = iconMode ? undefined : downloads > 0 ? (
+            <Text
+              component="span"
+              size="xs"
+              fw={600}
+              c="blue"
+              aria-label={`${downloads} downloads`}
+            >
+              {downloads}
+            </Text>
+          ) : item.experimental === true ? (
+            <Badge variant="light" color="gray" radius="sm">
+              Experimental
+            </Badge>
+          ) : undefined;
           const link = (
             <NavLink
               component="button"
@@ -196,23 +215,7 @@ export function Sidebar(props: Props): ReactElement {
               leftSection={
                 <Icon size={navIconSize} weight={active ? "fill" : "regular"} />
               }
-              rightSection={
-                !iconMode && item.id === "downloads" && (props.downloadCount ?? 0) > 0 ? (
-                  <Text
-                    component="span"
-                    size="xs"
-                    fw={600}
-                    c="blue"
-                    aria-label={`${props.downloadCount} downloads`}
-                  >
-                    {props.downloadCount}
-                  </Text>
-                ) : item.experimental === true ? (
-                  <Badge variant="light" color="gray" radius="sm">
-                    Experimental
-                  </Badge>
-                ) : undefined
-              }
+              rightSection={rightSection}
               className={navSelectedClassName(classes.navLink)}
               onClick={() => props.onNavigate(item.id)}
             />
@@ -228,8 +231,8 @@ export function Sidebar(props: Props): ReactElement {
         })}
       </MantineStack>
 
-      {/* TEMP (PUX-004): palette preview. Remove with PalettePreviewSwitcher. */}
-      {!iconMode && <PalettePreviewSwitcher />}
+      {/* Dev-only (PUX-004): theme/palette preview, enabled with `YARK_DEBUG_THEME=1`. */}
+      {!iconMode && DEBUG_THEME_CONTROLS && <PalettePreviewSwitcher />}
 
       <Divider className={classes.rule} />
 

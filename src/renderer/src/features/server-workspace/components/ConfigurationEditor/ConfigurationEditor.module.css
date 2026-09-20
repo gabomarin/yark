@@ -51,8 +51,8 @@
   border: 1px solid var(--app-color-border-subtle);
   border-radius: var(--app-radius-md);
   overflow: auto;
-  /* ~90% deep blue, soft black deepen — see design-system INI exception */
-  background: color-mix(in srgb, var(--app-color-ini-category) 90%, #000);
+  /* Same surface as the rows it holds: no blue wash, no darker "well" beneath them. */
+  background: var(--app-color-panel);
 }
 
 .tableHead,
@@ -67,16 +67,19 @@
   min-width: 720px;
 }
 
-/* Opaque plates over the tinted table body — no translucent rows */
+/* Rows share the table body's surface - one step above chrome, no darker well beneath. */
 .row {
-  background: var(--app-color-surface-chrome);
+  background: var(--app-color-panel);
 }
 
 .tableHead {
   position: sticky;
   top: 0;
   z-index: 2;
-  background: var(--app-color-surface-control);
+  /* One step quieter than a category band (`surface-control`), so the section band stays
+   * the loudest line in the table and the two do not read as one block. */
+  background: var(--app-color-panel-raised);
+  border-bottom: 1px solid var(--app-color-border-subtle);
   color: var(--app-color-muted);
   font-size: 12px;
   font-weight: 700;

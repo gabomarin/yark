@@ -1,6 +1,5 @@
 import {
   ActionIcon,
-  Alert,
   Button,
   Group,
   Loader,
@@ -8,6 +7,7 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { FloppyDisk } from "@phosphor-icons/react";
 import type { MutableRefObject, ReactElement } from "react";
 import { AdminsRemoteConfig } from "./AdminsRemoteConfig";
@@ -80,9 +80,9 @@ export function AdminsSection(props: Props): ReactElement {
 
       <Stack gap="sm">
         {readOnly ? (
-          <Alert color="fossil" variant="light" p="xs">
+          <AppAlert color="fossil" variant="light" p="xs">
             <Text size="xs">Stop the server to edit the whitelist.</Text>
-          </Alert>
+          </AppAlert>
         ) : (
           <Text size="xs" c="dimmed" className={classes.helper}>
             Public http(s) list of EOS admin ids. Optional.
@@ -90,25 +90,25 @@ export function AdminsSection(props: Props): ReactElement {
         )}
 
         {admins.saveBlockedByIni && !readOnly ? (
-          <Alert color="fossil" variant="light" p="xs">
+          <AppAlert color="fossil" variant="light" p="xs">
             <Text size="xs">
               Save or discard INI Files changes before editing here.
             </Text>
-          </Alert>
+          </AppAlert>
         ) : null}
 
         {admins.state?.mode === "misconfigured" && !readOnly ? (
-          <Alert color="attention" variant="light" p="xs">
+          <AppAlert color="attention" variant="light" p="xs">
             <Text size="xs">
               AdminListURL must be http(s) or empty. Fix and Save.
             </Text>
-          </Alert>
+          </AppAlert>
         ) : null}
 
         {admins.draftDirty && !readOnly ? (
-          <Alert color="fossil" variant="light" p="xs">
+          <AppAlert color="fossil" variant="light" p="xs">
             <Text size="xs">Unsaved changes.</Text>
-          </Alert>
+          </AppAlert>
         ) : null}
 
         <AdminsRemoteConfig

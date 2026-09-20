@@ -31,7 +31,7 @@
 .versionCard {
   border: 1px solid var(--app-color-border-subtle);
   border-radius: 0;
-  background: color-mix(in srgb, var(--ark-blue-ini-category) 72%, transparent);
+  background: var(--app-color-panel);
   padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
   text-align: right;
   min-width: 9.5rem;

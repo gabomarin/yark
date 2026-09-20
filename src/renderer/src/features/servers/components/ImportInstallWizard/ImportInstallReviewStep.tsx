@@ -1,7 +1,6 @@
 import type { ReactElement } from "react";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Alert,
   Button,
   Collapse,
   Group,
@@ -11,6 +10,7 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { isMetadataServiceNotConfiguredMessage } from "@shared/mods/curseforge-proxy-url";
 import type { ImportInstallProbe, ModMetadata } from "@shared/types";
 
@@ -86,15 +86,15 @@ export function ImportInstallReviewStep(props: Props): ReactElement {
 
   return (
     <Stack gap="sm">
-      <Alert color="attention" title="Profile only">
+      <AppAlert color="attention" title="Profile only">
         Schedules, clusters, and other managers&apos; databases are not imported.
         Game.ini / GameUserSettings.ini on disk are left unchanged until you Start
         (or edit and save) this profile.
-      </Alert>
+      </AppAlert>
       {probe.installation.health === "incomplete" ? (
-        <Alert color="attention" title="Incomplete install" variant="light">
+        <AppAlert color="attention" title="Incomplete install" variant="light">
           Start stays blocked until Install or Verify finishes this ASA tree.
-        </Alert>
+        </AppAlert>
       ) : null}
       <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
         {[

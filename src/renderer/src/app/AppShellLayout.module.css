@@ -14,42 +14,96 @@
     );
 }
 
-.shell::before {
+/* Identity: the shell carries a faint brand texture on `.main::before` with
+ * `z-index: -1`: above the pane fill, below every child, so the mask fades the
+ * *texture* and not the UI. Strongest where the app is empty and gone under the
+ * working surfaces. The shipped texture is film grain (no symbol to recognise); the
+ * motif candidates live below as `[data-shell-art="…"]` overrides, reachable from the
+ * preview tooling behind `YARK_DEBUG_THEME`. Knobs: the tile's `opacity`, mask stops. */
+.main::before {
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
-  background-image: url("../assets/topography.svg?no-inline");
-  background-repeat: no-repeat;
-  background-position: left -12% top -4%;
-  background-size: min(920px, 78vw) auto;
-  opacity: 0.85;
   content: "";
+  --shell-grain-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)' opacity='0.05'/%3E%3C/svg%3E");
+  background-image: var(--shell-grain-tile);
+  background-repeat: repeat;
+  background-position: center;
+  background-size: 160px 160px;
+  -webkit-mask-image: radial-gradient(
+    120% 100% at 32% -14%,
+    #000 0%,
+    rgba(0, 0, 0, 0.72) 46%,
+    rgba(0, 0, 0, 0.24) 100%
+  );
+  mask-image: radial-gradient(
+    120% 100% at 32% -14%,
+    #000 0%,
+    rgba(0, 0, 0, 0.72) 46%,
+    rgba(0, 0, 0, 0.24) 100%
+  );
 }
 
-.shell::after {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background-image: url("../assets/tek-topology.svg?no-inline");
-  background-repeat: repeat;
-  background-position: 12px 18px;
-  background-size: 720px 720px;
-  opacity: 1;
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.16),
-    rgba(0, 0, 0, 0.42) 36%,
-    #000 80%
+/* TEMP (PUX-004) — brand-art candidates. Each swaps only the tile: inset, the fade
+ * mask and `z-index` stay in the base rule, so every option fades the same way. The
+ * shipped default is the base honeycomb (`hex`), which needs no rule. */
+
+/* ARK supply drop: light column with its crate, plus a dim obelisk between beams.
+ * The beam carries the motif, so it is the brightest stroke and the obelisk is the
+ * faintest: otherwise the triangles read as a grid of shapes and the story is lost. */
+[data-shell-art="drop"] .main::before {
+  --shell-drop-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='168' height='340' viewBox='0 0 168 340'%3E%3Cpath d='M84 0 L84 232' fill='none' stroke='white' stroke-opacity='0.055' stroke-width='18'/%3E%3Cpath d='M84 0 L84 232' fill='none' stroke='white' stroke-opacity='0.11' stroke-width='1.5'/%3E%3Cpath d='M84 240 L98 256 L84 272 L70 256 Z' fill='none' stroke='white' stroke-opacity='0.12'/%3E%3Cpath d='M36 96 L48 120 L24 120 Z' fill='none' stroke='white' stroke-opacity='0.04'/%3E%3Cpath d='M36 120 L36 208' fill='none' stroke='white' stroke-opacity='0.025'/%3E%3C/svg%3E");
+  background-image: var(--shell-drop-tile);
+  background-size: 168px 340px;
+}
+
+/* Tek plates: the chevron field of Tek floors, so the Art motif stays ARK and not hex. */
+[data-shell-art="tek"] .main::before {
+  --shell-tek-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M0 2 L16 14 L32 2' fill='none' stroke='white' stroke-opacity='0.07'/%3E%3Cpath d='M0 18 L16 30 L32 18' fill='none' stroke='white' stroke-opacity='0.07'/%3E%3C/svg%3E");
+  background-image: var(--shell-tek-tile);
+  background-size: 32px 32px;
+}
+
+/* Fossil strata: sediment bands on a slight tilt. A gradient, so it needs no tile. */
+[data-shell-art="strata"] .main::before {
+  background-image: repeating-linear-gradient(
+    168deg,
+    rgba(255, 255, 255, 0.05) 0 1px,
+    transparent 1px 24px,
+    rgba(255, 255, 255, 0.028) 24px 25px,
+    transparent 25px 52px,
+    rgba(255, 255, 255, 0.018) 52px 53px,
+    transparent 53px 88px
   );
-  mask-image: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.16),
-    rgba(0, 0, 0, 0.42) 36%,
-    #000 80%
-  );
-  content: "";
+  background-size: auto;
+}
+
+/* Light columns only: the drop motif stripped to its beams, to test whether sparse
+ * columns read better than shapes. Same spacing as `drop`, so the two are comparable. */
+[data-shell-art="beams"] .main::before {
+  --shell-beams-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='168' height='340' viewBox='0 0 168 340'%3E%3Cpath d='M84 0 L84 250' fill='none' stroke='white' stroke-opacity='0.055' stroke-width='18'/%3E%3Cpath d='M84 0 L84 250' fill='none' stroke='white' stroke-opacity='0.11' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-image: var(--shell-beams-tile);
+  background-size: 168px 340px;
+}
+
+/* One composition instead of a tile: a cropped obelisk with its shaft, so there is no
+ * grid left to read as wallpaper. Position is a percentage x (tracks the window) with a
+ * fixed y (crops the apex off the top edge). Knobs: `background-size`, `background-position`. */
+[data-shell-art="obelisk"] .main::before {
+  --shell-obelisk-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='420' viewBox='0 0 300 420'%3E%3Cpath d='M150 0 L150 40' fill='none' stroke='white' stroke-opacity='0.04' stroke-width='14'/%3E%3Cpath d='M150 40 L86 300 L214 300 Z' fill='none' stroke='white' stroke-opacity='0.05'/%3E%3Cpath d='M150 150 L172 210 L150 270 L128 210 Z' fill='none' stroke='white' stroke-opacity='0.035'/%3E%3Cpath d='M104 314 L196 314' fill='none' stroke='white' stroke-opacity='0.03'/%3E%3Cpath d='M122 330 L178 330' fill='none' stroke='white' stroke-opacity='0.02'/%3E%3Cpath d='M150 300 L150 420' fill='none' stroke='white' stroke-opacity='0.03' stroke-width='20'/%3E%3Cpath d='M150 300 L150 420' fill='none' stroke='white' stroke-opacity='0.06' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-image: var(--shell-obelisk-art);
+  background-repeat: no-repeat;
+  background-size: min(760px, 62%) auto;
+  background-position: 26% -150px;
+}
+
+/* The motif the shell shipped before the grain: the logo's hexagonal plate honeycomb,
+ * kept so the comparison is still one click away. */
+[data-shell-art="hex"] .main::before {
+  --shell-hex-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='52' height='90' viewBox='0 0 52 90'%3E%3Cpath d='M26 0 L52 15 L52 45 L26 60 L0 45 L0 15 Z M0 45 L26 60 L26 90 L0 105 L-26 90 L-26 60 Z M52 45 L77.9 60 L77.9 90 L52 105 L26 90 L26 60 Z' fill='none' stroke='white' stroke-opacity='0.06' stroke-width='1'/%3E%3C/svg%3E");
+  background-image: var(--shell-hex-tile);
+  background-size: 52px 90px;
 }
 
 /* Do not set position here — Mantine AppShell keeps the navbar fixed. With
@@ -93,21 +147,10 @@
   z-index: 1;
   min-height: 100vh;
   background-color: var(--app-color-surface-chrome);
-  background-image:
-    url("../assets/topography.svg?no-inline"),
-    url("../assets/tek-topology.svg?no-inline"),
-    var(--app-shell-atmosphere);
-  background-repeat: no-repeat, repeat, no-repeat, no-repeat;
-  background-position:
-    left -12% top -4%,
-    12px 18px,
-    center,
-    center;
-  background-size:
-    min(920px, 78vw) auto,
-    720px 720px,
-    auto,
-    auto;
+  background-image: var(--app-shell-atmosphere);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: auto;
 }
 
 .content {
@@ -118,13 +161,9 @@
 
 /* TEMP (PUX-004): sidebar toggle to compare the shell with and without the brand
    art. Delete with `PalettePreviewSwitcher` / `palettePreviewModel`. */
-[data-shell-art="off"] .shell::before,
-[data-shell-art="off"] .shell::after {
-  display: none;
-}
 
-[data-shell-art="off"] .main {
-  background-image: var(--app-shell-atmosphere);
+[data-shell-art="off"] .main::before {
+  display: none;
 }
 
 .mainBody {

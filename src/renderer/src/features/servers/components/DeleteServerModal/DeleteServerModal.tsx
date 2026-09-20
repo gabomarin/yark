@@ -1,8 +1,9 @@
 import type { ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
-import { Alert, Badge, Button, Radio, Stack, Text } from "@mantine/core";
+import { Badge, Button, Radio, Stack, Text } from "@mantine/core";
 import type { DeleteServerOptions, InstallationHealthStatus } from "@shared/types";
 import { EMPTY_WIPE_STALE_MESSAGE } from "@shared/types";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
@@ -119,7 +120,7 @@ export function DeleteServerModal(props: Props): ReactElement {
     >
       <Stack gap="sm">
         {forcedWipe ? (
-          <Alert
+          <AppAlert
             title="Empty install folder"
             variant="light"
             className={classes.dangerAlert}
@@ -128,13 +129,13 @@ export function DeleteServerModal(props: Props): ReactElement {
             This profile never received ASA files (empty folder). YARK will remove the server
             and delete the empty install path. Import cannot adopt an empty folder later. The
             folder is rechecked before wipe.
-          </Alert>
+          </AppAlert>
         ) : (
           <>
             {staleEmptyNotice ? (
-              <Alert color="attention" title="Folder is no longer empty" variant="light">
+              <AppAlert color="attention" title="Folder is no longer empty" variant="light">
                 {EMPTY_WIPE_STALE_MESSAGE}
-              </Alert>
+              </AppAlert>
             ) : null}
 
             <Radio.Group
@@ -205,7 +206,7 @@ export function DeleteServerModal(props: Props): ReactElement {
             </Radio.Group>
 
             {wipe ? (
-              <Alert
+              <AppAlert
                 title="Everything will be deleted"
                 variant="light"
                 className={classes.dangerAlert}
@@ -213,12 +214,12 @@ export function DeleteServerModal(props: Props): ReactElement {
               >
                 This server in YARK and all on-disk content (world, configs, mods, and binaries)
                 will be deleted. This cannot be undone.
-              </Alert>
+              </AppAlert>
             ) : (
-              <Alert color="blue" title="Install folder will be kept" variant="light">
+              <AppAlert color="blue" title="Install folder will be kept" variant="light">
                 YARK stops managing this server. The ASA folder stays on disk for manual launch
                 or a later Import (ready trees, or incomplete with opt-in).
-              </Alert>
+              </AppAlert>
             )}
           </>
         )}

@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { useMemo, useState } from "react";
-import { Alert, Button, Stack, Stepper, Text } from "@mantine/core";
+import { Button, Stack, Stepper, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import {
@@ -241,9 +242,9 @@ export function CreateClusterModal(props: Props): ReactElement {
         </Stepper>
 
         {error !== null && (
-          <Alert color="red" variant="light">
+          <AppAlert color="red" variant="light">
             {error}
-          </Alert>
+          </AppAlert>
         )}
 
         {step === 1 && (

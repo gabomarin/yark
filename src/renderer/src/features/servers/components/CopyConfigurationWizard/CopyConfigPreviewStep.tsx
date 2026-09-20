@@ -1,13 +1,13 @@
 import type { ReactElement } from "react";
 import {
   Accordion,
-  Alert,
   Badge,
   Checkbox,
   Group,
   Stack,
   Text,
 } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import type { ConfigTransferPreview } from "@shared/types";
 import { ClusterIniDiffSummary } from "@features/clusters/components/ClusterIniDiffSummary/ClusterIniDiffSummary";
 
@@ -39,9 +39,9 @@ function PreviewBody(props: {
       )}
 
       {preview.warnings.map((warning) => (
-        <Alert key={`${preview.targetId}:${warning}`} color="attention">
+        <AppAlert key={`${preview.targetId}:${warning}`} color="attention">
           {warning}
-        </Alert>
+        </AppAlert>
       ))}
 
       <ClusterIniDiffSummary
@@ -107,10 +107,10 @@ export function CopyConfigPreviewStep(props: Props): ReactElement {
       </Group>
 
       {!allValid && (
-        <Alert color="red">
+        <AppAlert color="red">
           One or more targets have an invalid INI preview. Fix the source
           selection or regenerate the preview.
-        </Alert>
+        </AppAlert>
       )}
 
       {multi ? (

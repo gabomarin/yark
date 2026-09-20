@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
-import { Alert, Badge, Button, Group, Stack, Text } from "@mantine/core";
+import { Badge, Button, Group, Stack, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { DownloadSimple } from "@phosphor-icons/react";
@@ -80,18 +81,18 @@ export function UpdateAllOutdatedModal(props: Props): ReactElement {
               </Text>
             ) : null}
             {eligibleCount > 0 ? (
-              <Alert
+              <AppAlert
                 color="blue"
                 title={`${eligibleCount} server${eligibleCount === 1 ? "" : "s"} ready to queue`}
               >
                 Confirm queues one Update job per server. Downloads runs
                 jobs one at a time with the usual safe backup/rollback.
-              </Alert>
+              </AppAlert>
             ) : (
-              <Alert color="attention" title="Nothing ready to queue">
+              <AppAlert color="attention" title="Nothing ready to queue">
                 All outdated servers are currently skipped. Stop running
                 servers or clear Downloads jobs, then try again.
-              </Alert>
+              </AppAlert>
             )}
             <div className={classes.listScroll}>
               <Stack gap="xs" className={classes.list}>

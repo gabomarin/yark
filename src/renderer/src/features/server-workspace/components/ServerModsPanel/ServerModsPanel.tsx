@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
-import { Alert, SegmentedControl, Stack } from "@mantine/core";
+import { SegmentedControl, Stack } from "@mantine/core";
 import { isMetadataServiceNotConfiguredMessage } from "@shared/mods/curseforge-proxy-url";
 import type { ModMetadata, ModSearchPage, ServerProfile } from "@shared/types";
 import { prepareModAddApply, type ModAddImportProgress } from "@shared/mods/mod-add-input";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { ServerModDetailDrawer } from "./ServerModDetailDrawer";
@@ -271,7 +272,7 @@ export function ServerModsPanel(props: Props): ReactElement {
             className={classes.viewSelector}
           />
           {error !== null && (
-            <Alert
+            <AppAlert
               className={classes.statusAlert}
               classNames={{ wrapper: classes.statusAlertWrapper }}
               color={isMetadataServiceNotConfiguredMessage(error) ? "attention" : "red"}
@@ -279,10 +280,10 @@ export function ServerModsPanel(props: Props): ReactElement {
               onClose={() => setError(null)}
             >
               {error}
-            </Alert>
+            </AppAlert>
           )}
           {warning !== null && (
-            <Alert
+            <AppAlert
               className={classes.statusAlert}
               classNames={{ wrapper: classes.statusAlertWrapper }}
               color="attention"
@@ -290,7 +291,7 @@ export function ServerModsPanel(props: Props): ReactElement {
               onClose={() => setWarning(null)}
             >
               {warning}
-            </Alert>
+            </AppAlert>
           )}
           {view === "server" ? (
             <ServerModsServerSection

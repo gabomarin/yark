@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { HardDrives, MagnifyingGlass, Plus } from "@phosphor-icons/react";
-import { Alert, Button, Group, Skeleton, VisuallyHidden } from "@mantine/core";
+import { Button, Group, Skeleton, VisuallyHidden } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import type { OverviewFleetFilter } from "@features/overview/model/overviewFleetMetrics";
 import classes from "../OverviewPage.module.css";
@@ -92,10 +93,10 @@ export function ServerGridEmptyStates(props: Props): ReactElement | null {
         }
       >
         {steamCmdSetup ? (
-          <Alert color="attention" variant="light" title="SteamCMD needs setup">
+          <AppAlert color="attention" variant="light" title="SteamCMD needs setup">
             Open Settings to install or point at SteamCMD, or run the setup assistant
             again from Settings.
-          </Alert>
+          </AppAlert>
         ) : null}
       </EmptyState>
     );

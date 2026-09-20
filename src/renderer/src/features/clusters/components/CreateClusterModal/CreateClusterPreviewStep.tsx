@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
-import { Alert, Stack, Text } from "@mantine/core";
+import { Stack, Text } from "@mantine/core";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import classes from "./CreateClusterModal.module.css";
 
@@ -53,9 +54,9 @@ export function CreateClusterPreviewStep(props: Props): ReactElement {
           </div>
         </dl>
       </div>
-      <Alert color="blue" variant="light">
+      <AppAlert color="blue" variant="light">
         Saves the Cluster ID and shared folder on the selected servers.
-      </Alert>
+      </AppAlert>
     </Stack>
   );
 }
