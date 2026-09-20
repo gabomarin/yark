@@ -128,6 +128,8 @@ Solid **bg / raised / control** come from `tokens.ts` + `theme.ts`. Do **not** i
 
 Solid surfaces stay the default. Section hierarchy comes from **elevation, indentation and weight** — never from a second hue. Setting rows and the table body stay fully opaque. Do **not** paint cool gradients on `tableWrap`, the filter bar, or the workspace shell.
 
+**Wide-gamut (P3):** the palette ships sRGB only, from `tokens.ts` / `theme.ts`. Do **not** add a hand-written `color(display-p3 …)` / `oklch(...)` override stylesheet — the former `styles/radix-palette.css` did exactly that and went stale (it kept pre-bake hues and the old `#0c1427` canvas, and nothing read its unique variables). If wide-gamut output is ever wanted, generate it from `radixPalette` / `accentPalette` at build time so the ramp keeps one source.
+
 ### 2. Spacing / density
 
 Mantine **does** have spacing tokens (`theme.spacing` → `gap="xs"` / `p="md"` / `--mantine-spacing-sm`). YARK overrides them so they match `--app-space-*`.
