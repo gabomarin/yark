@@ -5,6 +5,11 @@
   overflow: auto;
 }
 
+/* Keep cards at content height so fillViewport does not crush them (mirrors HostedResourcesPage). */
+.content > * {
+  flex-shrink: 0;
+}
+
 /* Page chrome lives in `AppPageHeader`; keep only layout helpers here. */
 
 /* Fused chrome tool pane flush to the app sidebar; the AppShell main paints the surface. */

@@ -68,13 +68,13 @@
   color: var(--app-color-danger-bright);
 }
 
-.dot[data-processing="true"] {
+.root[data-processing="true"] .dot {
   animation: statusWordPulse 1.2s ease-in-out infinite;
 }
 
 /* Ambient state pulse: keep the state readable, drop the motion. */
 @media (prefers-reduced-motion: reduce) {
-  .dot[data-processing="true"] {
+  .root[data-processing="true"] .dot {
     animation: none;
   }
 }

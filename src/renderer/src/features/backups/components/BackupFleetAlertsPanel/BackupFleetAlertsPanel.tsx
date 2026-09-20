@@ -56,7 +56,7 @@ export function BackupFleetAlertsPanel(props: Props): ReactElement | null {
             <Text size="sm" className={classes.message}>
               {alert.message}
             </Text>
-            <Group gap={4} className={classes.actions} wrap="nowrap">
+            <Group gap={4} className={classes.actions} wrap="wrap">
               {showLogs && (
                 <Button
                   variant="default"

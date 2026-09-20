@@ -212,7 +212,7 @@ export function SteamCmdProgressDock(props: Props): ReactElement {
                     </Text>
                   )}
                 </div>
-                <Group gap={4} wrap="nowrap">
+                <Group gap={4} wrap="wrap">
                   {job.nextActions.includes("retry") && (
                     <Button variant="default" onClick={() => props.onRetryJob(job.id)}>
                       Retry

@@ -43,7 +43,7 @@ export const StatusWord = forwardRef<HTMLSpanElement, Props>(function StatusWord
     "data-processing": processing || undefined,
     ...dataAttributes,
   };
-  const dot = <span className={classes.dot} data-tone={tone} data-processing={processing || undefined} />;
+  const dot = <span className={classes.dot} data-tone={tone} />;
   const classNames = [classes.root, appearance === "dot" ? classes.dotOnly : null, className].filter(Boolean).join(" ");
 
   const marker = (

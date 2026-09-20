@@ -13,4 +13,5 @@
 
 .subtitle {
   margin: var(--app-space-xs) 0 0;
+  color: var(--app-color-muted);
 }

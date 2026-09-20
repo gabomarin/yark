@@ -103,8 +103,9 @@ export function AppPanelModal(props: Props): ReactElement {
         style={
           height === undefined && maxHeight === undefined
             ? undefined
-            : /* A definite height must also lift the class cap, or it gets cut to 720px. */
-              { height, maxHeight: maxHeight ?? height }
+            : /* A definite height must lift the class cap, or it gets cut to 720px - but it
+               still cannot outgrow the viewport, which is what the class guard was for. */
+              { height, maxHeight: maxHeight ?? `min(${height}, 90vh)` }
         }
         {...dataAttributes}
       >
