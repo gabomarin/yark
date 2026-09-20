@@ -11,8 +11,9 @@
   min-height: 0;
   height: 100%;
   width: 100%;
-  max-width: 1440px;
-  margin-inline: auto;
+  /* No width cap here: the fused slab carries the rail, so capping and centring it opens an
+   * empty band between the sidebar and the rail on wide monitors. The readable-width cap
+   * belongs to the content column (`.panel`). */
   overflow: hidden;
   border: 1px solid var(--app-color-border-subtle);
   border-radius: 0;
@@ -54,6 +55,10 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  /* Keep Settings rows at a readable line length on wide monitors without moving the rail. */
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
   background: transparent;
 }
 
