@@ -43,9 +43,7 @@ export function UpdateAllOutdatedModal(props: Props): ReactElement {
           <Button
             onClick={props.onConfirm}
             loading={props.queueing}
-            disabled={
-              props.loading || plan === null || eligibleCount === 0 || props.queueing
-            }
+            disabled={props.loading || plan === null || eligibleCount === 0}
           >
             Accept
           </Button>

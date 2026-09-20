@@ -2,6 +2,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { isYarkE2eShortcutsActive } from "../shared/settings/os-notification-events";
+import { BOOTSTRAP_BACKGROUND } from "../shared/app-chrome";
 
 /** Boot splash is skipped in E2E and when an operator opts out. */
 export const SPLASH_WIDTH = 520;
@@ -12,7 +13,7 @@ export const SPLASH_MIN_MS = 1_500;
 export const SPLASH_MAX_MS = 30_000;
 /** Chromium `url::kMaxURLChars` (2 MiB). Stay strictly under for `loadURL`. */
 export const SPLASH_MAX_DATA_URL_CHARS = 2 * 1024 * 1024;
-export const FALLBACK_SPLASH_TEMPLATE = `<!DOCTYPE html><html lang="en" data-yark-splash="1"><head><meta charset="utf-8"/><title>YARK</title><style>html,body{margin:0;height:100%;background:#010306;color:#aabedb;font:600 13px "Segoe UI",sans-serif;display:grid;place-items:center}</style></head><body><p>__YARK_VERSION__</p></body></html>`;
+export const FALLBACK_SPLASH_TEMPLATE = `<!DOCTYPE html><html lang="en" data-yark-splash="1"><head><meta charset="utf-8"/><title>YARK</title><style>html,body{margin:0;height:100%;background:${BOOTSTRAP_BACKGROUND};color:#aabedb;font:600 13px "Segoe UI",sans-serif;display:grid;place-items:center}</style></head><body><p>__YARK_VERSION__</p></body></html>`;
 
 /** Ms to keep the splash after main is ready (0 = hand off now). */
 export function remainingSplashHoldMs(

@@ -1,10 +1,13 @@
 import type { ReactElement } from "react";
 import { Badge, Button, Group, Stack, Text } from "@mantine/core";
-import { ArrowClockwise, WarningCircle } from "@phosphor-icons/react";
+import { ArrowClockwise } from "@phosphor-icons/react";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import type { HostedResourcesDiagnosticsDto } from "@shared/ipc";
-import { shortSha } from "../../model/hostedResourcesPageModel";
+import {
+  servedBadgeColor,
+  shortSha,
+} from "../../model/hostedResourcesPageModel";
 
 interface Props {
   diagnostics: HostedResourcesDiagnosticsDto | null;
@@ -40,7 +43,7 @@ export function HostedResourcesDiagnosticsPanel(props: Props): ReactElement {
             <Group gap="xs">
               <Badge
                 variant="light"
-                  color={diagnostics.ownership.ok ? "ok" : "red"}
+                color={diagnostics.ownership.ok ? "ok" : "red"}
               >
                 {diagnostics.ownership.ok ? "Loopback ownership verified" : "Ownership failed"}
               </Badge>
@@ -50,12 +53,7 @@ export function HostedResourcesDiagnosticsPanel(props: Props): ReactElement {
             </Group>
 
             {!diagnostics.ownership.ok && (
-              <AppAlert
-                color="red"
-                variant="light"
-                title="Host is not serving"
-                icon={<WarningCircle size={16} />}
-              >
+              <AppAlert color="red" variant="light" title="Host is not serving">
                 A stale URL must not be trusted while the port is unavailable or owned
                 by another process.
               </AppAlert>
@@ -78,16 +76,7 @@ export function HostedResourcesDiagnosticsPanel(props: Props): ReactElement {
                     </Text>
                   </div>
                   <Stack gap={2} align="flex-end">
-                    <Badge
-                      variant="light"
-                      color={
-                        !resource.enabled || !resource.published
-                          ? "gray"
-                          : resource.servedOk
-                            ? "ok"
-                            : "red"
-                      }
-                    >
+                    <Badge variant="light" color={servedBadgeColor(resource)}>
                       {!resource.enabled
                         ? "Disabled"
                         : !resource.published

@@ -115,7 +115,6 @@ export function ClusterDetailPanel(props: Props): ReactElement {
   return (
     <AppSurfaceCard
       fill
-      radius={0}
       className={classes.detailPanel}
       data-cluster-detail={props.report.clusterId}
     >

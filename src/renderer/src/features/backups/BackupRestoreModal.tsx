@@ -35,6 +35,7 @@ export function BackupRestoreModal(props: Props): ReactElement {
       onClose={props.onClose}
       size="sm"
       title="Restore backup?"
+      footerAlign="between"
       footer={
         <>
           <Button variant="default" onClick={props.onClose} disabled={props.busy}>

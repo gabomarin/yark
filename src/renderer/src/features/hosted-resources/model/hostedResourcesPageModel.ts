@@ -85,3 +85,16 @@ export function revisionLabel(revision: HostedResourceRevisionDto): string {
     : when.toLocaleString();
   return `Version ${revision.sequence} · ${stamp}`;
 }
+
+/**
+ * Badge tone for a served resource: disabled or unpublished is a fact (`gray`), a served
+ * resource that stops answering is state (`red`), and a live one is `ok`.
+ */
+export function servedBadgeColor(resource: {
+  enabled: boolean;
+  published: boolean;
+  servedOk: boolean;
+}): string {
+  if (!resource.enabled || !resource.published) return "gray";
+  return resource.servedOk ? "ok" : "red";
+}

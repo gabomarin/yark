@@ -1,4 +1,5 @@
 import type { UiDensity } from "@shared/settings/ui-density";
+import { BOOTSTRAP_BACKGROUND } from "@shared/app-chrome";
 
 export type { UiDensity } from "@shared/settings/ui-density";
 
@@ -42,7 +43,8 @@ export const accentPalette = {
 } as const;
 
 export const radixPalette = {
-  background: "#010306",
+  /* Shared with the main process so the splash/BrowserWindow canvas cannot drift. */
+  background: BOOTSTRAP_BACKGROUND,
   blue: accentPalette.steps,
   blueAlpha: accentPalette.alpha,
   /**

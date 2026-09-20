@@ -3,7 +3,6 @@ import { useMemo, useState } from "react";
 import {
   Button,
   Checkbox,
-  Group,
   Stack,
   Stepper,
   Text,
@@ -181,34 +180,29 @@ export function AddServersModal(props: Props): ReactElement {
       footerAlign="between"
       footer={
         <>
-          <Group justify="space-between">
           <Button
-          variant="default"
-          disabled={saving}
-          onClick={() => {
-          if (step === 1) {
-          props.onClose();
-          return;
-          }
-          setStep(1);
-          }}
+            variant="default"
+            disabled={saving}
+            onClick={() => {
+              if (step === 1) {
+                props.onClose();
+                return;
+              }
+              setStep(1);
+            }}
           >
-          {step === 1 ? "Cancel" : "Back"}
+            {step === 1 ? "Cancel" : "Back"}
           </Button>
           {step === 1 ? (
-          <Button disabled={!canContinue} onClick={() => setStep(2)}>
-          Continue
-          </Button>
+            <Button disabled={!canContinue} onClick={() => setStep(2)}>
+              Continue
+            </Button>
           ) : (
-          <Button
-          loading={saving}
-          disabled={!canAdd}
-          onClick={() => void handleAdd()}
-          >
-          Add to cluster
-          </Button>
+            <Button loading={saving} disabled={!canAdd} onClick={() => void handleAdd()}>
+              Add to cluster
+            </Button>
           )}
-          </Group>        </>
+        </>
       }
     >
       <Stack gap="md">

@@ -265,7 +265,7 @@ export function DownloadsPage(props: Props): ReactElement {
               }
             >
               <Splitter.Pane defaultSize={DEFAULT_SPLIT_SIZES[0]} min={30}>
-                <div className={classes.upperPane}>
+                <div className={`${classes.upperPane} ${classes.upperPaneInPane}`}>
                   {steamcmdMissingBanner}
                   {queuePane}
                 </div>
