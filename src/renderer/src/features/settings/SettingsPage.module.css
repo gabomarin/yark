@@ -92,9 +92,13 @@
     grid-template-rows: auto minmax(0, 1fr);
   }
 
+  /* Same header treatment as every other tool page: a title row with no underline at all
+   * (`AppPageHeader` measures 0 borders on all four sides and a ~43px row), with the category
+   * strip sitting in that row the way other pages keep their actions there. */
   .navCard {
+    padding: var(--app-space-xs) var(--app-space-sm) !important;
     border-right: none !important;
-    border-bottom: 1px solid var(--app-color-border-subtle) !important;
+    border-bottom: none !important;
   }
 
   /* The rail becomes a horizontal, scrollable strip. Stacked as a column it pushed the settings
@@ -105,11 +109,11 @@
     height: auto;
   }
 
-  /* The scaffold header is hidden by prop, so the title stays - as the first item of the
-   * strip, at a size that does not turn it into a second banner. */
+  /* The scaffold header is hidden by prop, so the title stays - as the first item of the strip,
+   * at the same page-title size the other pages' headers use. */
   .navTitle {
     padding: 0;
-    font-size: 18px;
+    font-size: var(--app-font-page);
     white-space: nowrap;
   }
 
