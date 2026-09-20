@@ -32,6 +32,11 @@ brand/yark-logo.svg
 .magicpath*/
 .tmp-magicpath-*/
 
+# Tooling temp output (e.g. website `optimize-marketing-images.mjs` leaves
+# `foo.webp.<pid>.tmp.webp` next to its input): never a source file, never committed.
+*.tmp.*
+*.tmp
+
 # Local Electron env (CurseForge proxy URL for npm run dev/start; never commit)
 .env
 .env.local
