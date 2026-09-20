@@ -66,6 +66,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Disabled buttons keep the shape they have when enabled: Mantine painted every disabled variant with a solid fill, so the workspace Backups **Delete** looked like a filled button with nothing selected and turned text-only once a row selection enabled it. Subtle/transparent buttons now dim instead of gaining a fill.
 - A loopback `AdminListURL` (for example a **Hosted Resources** URL) is now kept verbatim in `GameUserSettings.ini` instead of being rewritten to a `file://` pointer, so the Admins field keeps showing the URL and **Current ids** reads the served list (#564).
 - Launch **Show effective command preview** legend uses the same colors as the command tokens (YARK-owned, Structured, Caution, Raw) (#510).
+- The colour palette has one source again: a hand-written wide-gamut override (`styles/radix-palette.css`, `display-p3`/`oklch`) still carried the pre-bake hues and the old `#0c1427` canvas, so on a P3 display it could repaint the app with the pre-release palette. Nothing read its unique variables; the ramp lives in `tokens.ts` alone.
 
 ## [0.21.0] - 2026-09-16
 

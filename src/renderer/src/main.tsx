@@ -11,7 +11,6 @@ import "@mantine/carousel/styles.css";
 import "@mantine/notifications/styles.layer.css";
 import "@mantine/spotlight/styles.layer.css";
 import "mantine-datatable/styles.layer.css";
-import "./styles/radix-palette.css";
 import "./styles/globals.css";
 
 const container = document.getElementById("root");

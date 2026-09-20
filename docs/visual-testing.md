@@ -154,6 +154,12 @@ available. Unset `ELECTRON_RUN_AS_NODE` first (see [AGENTS.md](../AGENTS.md)).
 | `node scripts/visual-configuration-wizard.cjs`   | Configuration wizard Profile / Pace / selected card at HD / Full HD / QHD (#224)                                                                           |
 | `node scripts/visual-serverform.cjs`             | Playwright review of Create ServerForm (empty / filled / cluster) at HD / Full HD / QHD (#292)                                                             |
 | `node scripts/visual-downloads.cjs`              | Isolated Downloads: Needs attention auto-opens Advanced log on first view; happy path keeps it collapsed with a one-line status; HD / Full HD / QHD (#201) |
+| `node scripts/visual-overview.cjs`               | Overview (empty / small / populated fleet, Compact + Comfortable) at HD / Full HD / QHD                                                                    |
+| `node scripts/visual-settings.cjs`               | Settings category rail and sections at HD / Full HD / QHD                                                                                                  |
+| `node scripts/visual-ini-editor-nav.cjs`         | INI editor nav (file tabs + Visual/Text) layout alignment at HD / Full HD / QHD                                                                            |
+| `node scripts/visual-ini-table-scroll.cjs`       | INI settings table min-width + horizontal scroll, no description/restore overlap (1100 / 1280 / 1920)                                                      |
+| `node scripts/visual-server-card-align.cjs`      | Overview server-card meta column alignment across install states (max 2px drift) at HD / Full HD / QHD                                                     |
+| `node scripts/visual-cluster-ini-modal.cjs`      | Cluster INI modal pinned footer + full-height text editor                                                                                                  |
 | `node scripts/seed-server-logs.cjs [serverName]` | Clear + seed events/update logs into Electron userData (override with `YARK_USER_DATA`)                                                                    |
 
 Also: `npm run e2e:smoke` / `npm run e2e` launch the compiled app via Playwright
