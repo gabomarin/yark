@@ -1,4 +1,4 @@
-import { memo, type KeyboardEvent, type ReactElement } from "react";
+import { memo, type KeyboardEvent, type MouseEvent, type ReactElement } from "react";
 import { Card, Stack } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
 import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
@@ -198,6 +198,19 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
     onOpenWorkspace();
   };
 
+  /**
+   * The whole card is the open target, so the padding, the status row and the
+   * progress / crash-recovery rows are no longer dead zones. Inner controls keep
+   * their own click; the identity button stays the keyboard path, which is why
+   * this is a container handler and not a `role="button"` wrapper.
+   */
+  const onCardClick = (event: MouseEvent<HTMLDivElement>): void => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    if (target.closest("button, a, input, select, textarea, [role='menuitem'], [data-row-actions]")) return;
+    onOpenWorkspace();
+  };
+
   return (
     <Card
       withBorder
@@ -211,6 +224,7 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
       {...{ [SERVER_CARD_ATTR]: true }}
       data-server-name={server.name}
       onContextMenu={onContextMenu}
+      onClick={onCardClick}
       onKeyDown={onCardKeyDown}
       {...menuTriggerProps}
       aria-label={`Server ${server.name}`}
@@ -247,7 +261,6 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
               versionRefreshHint={view.versionRefreshHint}
               playerList={playerList}
               processMetrics={processMetrics}
-              onOpenWorkspace={onOpenWorkspace}
             />
           </div>
 
