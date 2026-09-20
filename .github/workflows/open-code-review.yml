@@ -242,11 +242,10 @@ jobs:
           echo "$ocr_npm_prefix/bin" >> "$GITHUB_PATH"
           echo "OpenCodeReview npm prefix: $(npm prefix -g)"
           echo "--- diagnostics: before the action ---"
-          echo "PATH=$PATH"
           command -v ocr || echo "ocr is not on PATH yet"
           npm prefix -g
           npm root -g
-          ls -la "$ocr_npm_prefix" 2>&1 | head -20
+          ls -la "$ocr_npm_prefix" 2>&1 | head -20 || true
           cat "$HOME/.npmrc" 2>/dev/null || echo "no user npmrc"
 
       - name: Run OpenCodeReview
@@ -293,7 +292,15 @@ jobs:
           echo "--- user npmrc ---"
           cat "$HOME/.npmrc" 2>/dev/null || echo "no user npmrc"
           echo "--- ocr under RUNNER_TEMP ---"
-          find "$RUNNER_TEMP" -maxdepth 5 \( -name 'ocr' -o -name 'ocr-*' \) 2>/dev/null | head -20
+          find "$RUNNER_TEMP" -maxdepth 5 \( -name 'ocr' -o -name 'ocr-*' \) 2>/dev/null | head -20 || true
+          echo "--- ocr elsewhere ---"
+          find /usr/local /home/runner /opt -maxdepth 5 -name 'ocr' 2>/dev/null | head -20 || true
+          echo "--- installed package ---"
+          ls -la "$(npm root -g)/@alibaba-group" 2>&1 | head -20 || true
+          echo "--- ocr symlink ---"
+          readlink -f "${NPM_CONFIG_PREFIX:-/nonexistent}/bin/ocr" 2>&1 || true
+          echo "--- ocr version ---"
+          ocr version 2>&1 | head -5 || true
 
       - name: Enrich OpenCodeReview summary
         if: ${{ steps.ocr-review.outcome == 'success' }}
