@@ -127,6 +127,78 @@ describe("ServerCard", () => {
     expect(onStart).not.toHaveBeenCalled();
   });
 
+  it("opens the workspace from a click anywhere on the card, but never from an inner control", async () => {
+    const user = userEvent.setup();
+    const onOpenWorkspace = vi.fn();
+    const onStart = vi.fn();
+
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={installed}
+          officialSteamBuild={null}
+          onStart={onStart}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={onOpenWorkspace}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+          onDelete={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /^Start server$/i }));
+    expect(onStart).toHaveBeenCalledTimes(1);
+    expect(onOpenWorkspace).not.toHaveBeenCalled();
+
+    await user.click(screen.getByLabelText("Server The Island"));
+    expect(onOpenWorkspace).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the metadata grid readable instead of hiding it behind a decorative hit area", async () => {
+    render(
+      <AppProviders>
+        <ServerCard
+          server={profile}
+          runtime={null}
+          installation={installed}
+          officialSteamBuild={null}
+          onStart={vi.fn()}
+          onStop={vi.fn()}
+          onKill={vi.fn()}
+          onRestart={vi.fn()}
+          onOpenWorkspace={vi.fn()}
+          onOpenLogs={vi.fn()}
+          onReviewError={vi.fn()}
+          onOpenFolder={vi.fn()}
+          onInstallFiles={vi.fn()}
+          onUpdateNow={vi.fn()}
+          onVerifyFiles={vi.fn()}
+          onCheckUpdates={vi.fn()}
+          onClone={vi.fn()}
+          onCopyConfiguration={vi.fn()}
+          onDelete={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    const grid = document.querySelector(META_GRID_SELECTOR);
+    expect(grid).toBeTruthy();
+    expect(grid?.closest('[aria-hidden="true"]')).toBeNull();
+    expect(document.querySelector('[data-meta-label="Map"]')).toHaveTextContent("The Island");
+  });
+
   it("shows an inactive badge and enable action for a disabled profile", async () => {
     const user = userEvent.setup();
     const onToggleEnabled = vi.fn();

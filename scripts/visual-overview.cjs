@@ -234,6 +234,56 @@ async function withOverviewSession(userData, fn) {
   }
 }
 
+/**
+ * Overview cards are one click target. A click on the card padding (a dead zone
+ * before this guard: only the name, the map thumb and the metadata block
+ * responded) must open the workspace, while an inner control keeps its own click
+ * and the metadata grid must stay readable to assistive tech.
+ */
+async function assertCardSurfaceOpensWorkspace(page) {
+  const card = page.locator(SERVER_CARD).first();
+  await card.waitFor({ state: "visible", timeout: 15000 });
+
+  const metaInsideAriaHidden = await page.evaluate(() => {
+    const grid = document.querySelector("[data-meta-grid]");
+    return grid != null && grid.closest('[aria-hidden="true"]') != null;
+  });
+  assert.equal(metaInsideAriaHidden, false, "Metadata grid must not sit inside an aria-hidden hit area");
+
+  const box = await card.boundingBox();
+  assert.ok(box, "Missing card bounding box");
+  const x = Math.round(box.x + box.width / 2);
+  const y = Math.round(box.y + box.height - 4);
+  const target = await page.evaluate(
+    ([px, py]) => {
+      const el = document.elementFromPoint(px, py);
+      if (el == null) return "(none)";
+      const first = String(el.className ?? "").split(" ")[0];
+      return `${el.tagName.toLowerCase()}${first ? "." + first : ""}`;
+    },
+    [x, y],
+  );
+
+  await page.mouse.click(x, y);
+  // Overview stays mounted while a workspace is open, so the marker is the page
+  // heading losing visibility - not `[data-overview-page]` detaching.
+  await page.getByRole("heading", { name: "Servers", level: 1 }).waitFor({ state: "hidden", timeout: 10000 });
+  console.log(`VISUAL_OVERVIEW_CARD_SURFACE_CLICK=workspace opened (target ${target} at ${x},${y})`);
+
+  await waitForOverviewLayoutReady(page);
+  const reopened = page.locator(SERVER_CARD).first();
+  await reopened.waitFor({ state: "visible", timeout: 15000 });
+  await reopened.getByRole("button", { name: "More options" }).click();
+  await page.getByRole("menu").waitFor({ state: "visible", timeout: 5000 });
+  assert.equal(
+    await page.getByRole("heading", { name: "Servers", level: 1 }).isVisible(),
+    true,
+    "Clicking an inner control must not navigate away from Overview",
+  );
+  await page.keyboard.press("Escape");
+  console.log("VISUAL_OVERVIEW_CARD_INNER_CONTROL=stayed on Overview");
+}
+
 async function run() {
   process.chdir(projectRoot);
 
@@ -373,6 +423,11 @@ async function run() {
     console.log(
       `VISUAL_OVERVIEW_QHD_NOTE=populated cards=${qhdPopulated.metrics.cardCount}; no speculative QHD filler applied`,
     );
+    seedServers(userData, 2);
+    await withOverviewSession(userData, async (page) => {
+      await assertCardSurfaceOpensWorkspace(page);
+    });
+
     console.log("VISUAL_OVERVIEW_OK");
   } finally {
     fs.rmSync(userData, { recursive: true, force: true });

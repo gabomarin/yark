@@ -1,5 +1,4 @@
 import type { ReactElement } from "react";
-import { UnstyledButton } from "@mantine/core";
 import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
 import type { ServerProfile, ServerStatus } from "@shared/types";
 import { formatMapDisplayName } from "@shared/asa/map-identity";
@@ -27,7 +26,6 @@ interface Props {
    * so the RAM / CPU column stays hidden (#302).
    */
   processMetrics?: ProcessMetricsUpdatedPush | null;
-  onOpenWorkspace: () => void;
 }
 
 export function ServerCardMetaGrid(props: Props): ReactElement {
@@ -61,25 +59,24 @@ export function ServerCardMetaGrid(props: Props): ReactElement {
   if (survivorsMeta != null) metaCols += 1;
   if (ramCpuMeta != null) metaCols += 1;
 
-  // Decorative open-hit only: identity control is the keyboard path. Version
-  // hints stay mouse/hover (#477).
+  // The card itself owns the open click, so this is plain content: wrapping it in
+  // an `aria-hidden` hit button used to hide Map / Cluster / Mods / Version from
+  // assistive tech. Version hints stay mouse/hover (#477).
   return (
-    <UnstyledButton className={classes.metaOpen} onClick={props.onOpenWorkspace} tabIndex={-1} aria-hidden>
-      <div className={classes.metaGrid} {...{ [META_GRID_ATTR]: true }} data-meta-cols={String(metaCols)}>
-        <ServerCardMetaItem label="Map" value={formatMapDisplayName(props.server.map)} tooltip={props.server.map} />
-        <ServerCardMetaItem label="Cluster" value={props.server.clusterId ?? "–"} />
-        <ServerCardMetaItem label="Mods" value={String(props.server.mods.length)} />
-        {survivorsMeta != null ? (
-          <ServerCardMetaItem label="Survivors" value={survivorsMeta} tone={survivorsMetaTone} />
-        ) : null}
-        {ramCpuMeta != null ? <ServerCardMetaItem label="RAM / CPU" value={ramCpuMeta} /> : null}
-        <ServerCardMetaItem
-          label="Version"
-          value={props.localVersion ?? "–"}
-          tone={props.versionMetaTone}
-          hint={props.versionRefreshHint}
-        />
-      </div>
-    </UnstyledButton>
+    <div className={classes.metaGrid} {...{ [META_GRID_ATTR]: true }} data-meta-cols={String(metaCols)}>
+      <ServerCardMetaItem label="Map" value={formatMapDisplayName(props.server.map)} tooltip={props.server.map} />
+      <ServerCardMetaItem label="Cluster" value={props.server.clusterId ?? "–"} />
+      <ServerCardMetaItem label="Mods" value={String(props.server.mods.length)} />
+      {survivorsMeta != null ? (
+        <ServerCardMetaItem label="Survivors" value={survivorsMeta} tone={survivorsMetaTone} />
+      ) : null}
+      {ramCpuMeta != null ? <ServerCardMetaItem label="RAM / CPU" value={ramCpuMeta} /> : null}
+      <ServerCardMetaItem
+        label="Version"
+        value={props.localVersion ?? "–"}
+        tone={props.versionMetaTone}
+        hint={props.versionRefreshHint}
+      />
+    </div>
   );
 }
