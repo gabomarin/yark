@@ -180,7 +180,7 @@ export function SettingsPage(props: Props): ReactElement {
             {category === "logs" && <SettingsLogRetentionSection />}
             {category === "about" && (
               <Stack gap="lg">
-                <Title order={3} size="h4">
+                <Title order={3} size="h4" className={classes.sectionTitle}>
                   About
                 </Title>
                 <SettingsYarkUpdateSection

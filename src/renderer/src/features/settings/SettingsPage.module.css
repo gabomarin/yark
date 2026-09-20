@@ -101,16 +101,16 @@
     border-bottom: none !important;
   }
 
-  /* The rail becomes a horizontal, scrollable strip. Stacked as a column it pushed the settings
-   * themselves below the fold, which is what the narrow layout is for. */
+  /* The view name keeps its own row and the categories sit in a scrollable strip below it. */
   .navPane {
-    flex-direction: row;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--app-space-xs);
     height: auto;
   }
 
-  /* The scaffold header is hidden by prop, so the title stays - as the first item of the strip,
-   * at the same page-title size the other pages' headers use. */
+  /* The scaffold header is hidden by prop, so the title stays, at the page-title size the other
+   * pages' headers use. */
   .navTitle {
     padding: 0;
     font-size: var(--app-font-page);
@@ -119,12 +119,28 @@
 
   .navList {
     flex: 1 1 auto;
+    width: 100%;
     overflow-x: auto;
   }
 
   .navRow {
     flex-direction: row;
     gap: var(--app-space-xs);
+  }
+
+  /* The category strip already names the section, so a section's own heading is redundant here.
+   * Hidden visually only: each section is `aria-labelledby` its heading, so it stays in the
+   * accessibility tree. */
+  [data-settings-page] :is(h1, h2, h3)[id^="settings-"],
+  .sectionTitle {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    clip-path: inset(50%);
   }
 
   .navRow :global(.mantine-NavLink-root) {
