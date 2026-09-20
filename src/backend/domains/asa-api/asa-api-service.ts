@@ -1,16 +1,9 @@
 import type { AsaApiStatus } from "@shared/types";
 import { clearAsaApiDownloadCache } from "./asa-api-cache";
-import {
-  installAsaApiIntoInstall,
-  type InstallAsaApiOptions,
-} from "./asa-api-install";
+import { installAsaApiIntoInstall, type InstallAsaApiOptions } from "./asa-api-install";
 import { installAsaApiPluginFromZip } from "./asa-api-plugin-install";
 import { asaApiPluginsDir, asaWin64Dir } from "./asa-api-paths";
-import {
-  deleteAsaApiPlugin,
-  readAsaApiStatus,
-  setAsaApiPluginEnabled,
-} from "./asa-api-status";
+import { deleteAsaApiPlugin, readAsaApiStatus, setAsaApiPluginEnabled } from "./asa-api-status";
 import { uninstallAsaApiFromInstall } from "./asa-api-uninstall";
 
 export class AsaApiService {
@@ -20,10 +13,7 @@ export class AsaApiService {
     return readAsaApiStatus(installDir);
   }
 
-  install(
-    installDir: string,
-    options: Omit<InstallAsaApiOptions, "cacheDir">,
-  ): Promise<AsaApiStatus> {
+  install(installDir: string, options: Omit<InstallAsaApiOptions, "cacheDir">): Promise<AsaApiStatus> {
     return installAsaApiIntoInstall(installDir, {
       ...options,
       cacheDir: this.cacheDir,
@@ -38,11 +28,7 @@ export class AsaApiService {
     return clearAsaApiDownloadCache(this.cacheDir);
   }
 
-  setPluginEnabled(
-    installDir: string,
-    pluginName: string,
-    enabled: boolean,
-  ): Promise<AsaApiStatus> {
+  setPluginEnabled(installDir: string, pluginName: string, enabled: boolean): Promise<AsaApiStatus> {
     return setAsaApiPluginEnabled(installDir, pluginName, enabled);
   }
 
@@ -50,10 +36,7 @@ export class AsaApiService {
     return deleteAsaApiPlugin(installDir, pluginName);
   }
 
-  installPluginFromZip(
-    installDir: string,
-    zipPath: string,
-  ): Promise<AsaApiStatus> {
+  installPluginFromZip(installDir: string, zipPath: string): Promise<AsaApiStatus> {
     return installAsaApiPluginFromZip(installDir, zipPath);
   }
 

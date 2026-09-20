@@ -38,10 +38,7 @@ export class InstanceRcon {
         const profile = this.repo.get(status.serverId);
         if (profile) {
           this.autoConnect(profile).catch((error) => {
-            console.error(
-              `[InstanceService] Auto-connect RCON failed for ${profile.name}:`,
-              error,
-            );
+            console.error(`[InstanceService] Auto-connect RCON failed for ${profile.name}:`, error);
           });
         }
       } else if (status.status === "stopping") {
@@ -64,11 +61,7 @@ export class InstanceRcon {
     return this.exec(id, command, { recordEvent: true });
   }
 
-  async exec(
-    id: string,
-    command: string,
-    options?: { recordEvent?: boolean },
-  ): Promise<string> {
+  async exec(id: string, command: string, options?: { recordEvent?: boolean }): Promise<string> {
     if (this.e2eMock) {
       return this.execE2eMock(id, command, options);
     }
@@ -77,57 +70,34 @@ export class InstanceRcon {
     const runtimeStatus = this.processes.getStatus(id).status;
     if (runtimeStatus !== "running" && runtimeStatus !== "stopping") {
       throw new Error(
-        runtimeStatus === "starting"
-          ? "Server is still starting; RCON is not ready yet"
-          : "Server is not running",
+        runtimeStatus === "starting" ? "Server is still starting; RCON is not ready yet" : "Server is not running",
       );
     }
 
     const status = this.sessions.getStatus(id);
     if (status.status !== "connected") {
       console.log(`[RCON] Connecting session for ${profile.name}...`);
-      await this.sessions.connect(
-        id,
-        RCON_HOST,
-        profile.rconPort,
-        profile.adminPassword,
-      );
+      await this.sessions.connect(id, RCON_HOST, profile.rconPort, profile.adminPassword);
       if (runtimeStatus !== "running") {
         this.sessions.setAutoReconnect(id, false);
       }
     }
 
-    console.log(
-      `[RCON] Sending to ${profile.name} (${RCON_HOST}:${profile.rconPort}): "${command}"`,
-    );
+    console.log(`[RCON] Sending to ${profile.name} (${RCON_HOST}:${profile.rconPort}): "${command}"`);
     const response = await this.sessions.send(id, command);
     console.log(`[RCON] Response: "${response}"`);
 
     if (options?.recordEvent !== false) {
-      this.repo.addEvent(
-        id,
-        "rcon_command",
-        "info",
-        `RCON on "${profile.name}": ${command}`,
-      );
+      this.repo.addEvent(id, "rcon_command", "info", `RCON on "${profile.name}": ${command}`);
     }
     return response;
   }
 
-  private async execE2eMock(
-    id: string,
-    command: string,
-    options?: { recordEvent?: boolean },
-  ): Promise<string> {
+  private async execE2eMock(id: string, command: string, options?: { recordEvent?: boolean }): Promise<string> {
     const profile = this.mustGet(id);
     const trimmed = command.trim();
     if (options?.recordEvent !== false) {
-      this.repo.addEvent(
-        id,
-        "rcon_command",
-        "info",
-        `RCON on "${profile.name}": ${trimmed}`,
-      );
+      this.repo.addEvent(id, "rcon_command", "info", `RCON on "${profile.name}": ${trimmed}`);
     }
     if (trimmed === "E2E_FAIL") {
       throw new Error("E2E mock failure");
@@ -136,11 +106,7 @@ export class InstanceRcon {
       await new Promise((resolve) => setTimeout(resolve, 2500));
       return "E2E:slow";
     }
-    if (
-      trimmed === "E2E_EMPTY"
-      || trimmed === "SaveWorld"
-      || trimmed === "DestroyWildDinos"
-    ) {
+    if (trimmed === "E2E_EMPTY" || trimmed === "SaveWorld" || trimmed === "DestroyWildDinos") {
       return "";
     }
     if (trimmed === "ListPlayers") {
@@ -162,11 +128,7 @@ export class InstanceRcon {
     return this.execPlayerCommand(id, playerKey, "BanPlayer");
   }
 
-  private execPlayerCommand(
-    id: string,
-    playerKey: string,
-    command: "KickPlayer" | "BanPlayer",
-  ): Promise<string> {
+  private execPlayerCommand(id: string, playerKey: string, command: "KickPlayer" | "BanPlayer"): Promise<string> {
     const key = playerKey.trim();
     if (key.length === 0) {
       throw new Error("Player id is required");
@@ -182,7 +144,10 @@ export class InstanceRcon {
     return ensureBanListFile(this.mustGet(id).installDir);
   }
 
-  async unbanPlayer(id: string, playerKey: string): Promise<{
+  async unbanPlayer(
+    id: string,
+    playerKey: string,
+  ): Promise<{
     banned: BanListEntry[];
     warning: string | null;
   }> {
@@ -249,21 +214,12 @@ export class InstanceRcon {
       throw new Error("Server is not running");
     }
     this.sessions.disconnect(id);
-    await this.sessions.connect(
-      id,
-      RCON_HOST,
-      profile.rconPort,
-      profile.adminPassword,
-    );
+    await this.sessions.connect(id, RCON_HOST, profile.rconPort, profile.adminPassword);
   }
 
   async autoConnect(
     profile: ServerProfile,
-    waitForPortReady: (
-      host: string,
-      port: number,
-      timeoutMs?: number,
-    ) => Promise<boolean> = (host, port, timeoutMs) =>
+    waitForPortReady: (host: string, port: number, timeoutMs?: number) => Promise<boolean> = (host, port, timeoutMs) =>
       this.waitForPortReady(host, port, timeoutMs),
   ): Promise<void> {
     const runtimeProfile = this.processes.applyRuntimePorts(profile);
@@ -271,14 +227,8 @@ export class InstanceRcon {
       return;
     }
 
-    console.log(
-      `[InstanceService] Waiting for RCON port ${runtimeProfile.rconPort} for ${profile.name}...`,
-    );
-    const isReady = await waitForPortReady(
-      RCON_HOST,
-      runtimeProfile.rconPort,
-      RCON_AUTO_CONNECT_TIMEOUT_MS,
-    );
+    console.log(`[InstanceService] Waiting for RCON port ${runtimeProfile.rconPort} for ${profile.name}...`);
+    const isReady = await waitForPortReady(RCON_HOST, runtimeProfile.rconPort, RCON_AUTO_CONNECT_TIMEOUT_MS);
     if (!isReady) {
       console.log(
         `[InstanceService] RCON port ${runtimeProfile.rconPort} was not ready for ${profile.name}; skipping connection`,
@@ -286,52 +236,34 @@ export class InstanceRcon {
       return;
     }
     if (this.processes.getStatus(profile.id).status !== "running") {
-      console.log(
-        `[InstanceService] Skipping RCON auto-connect for ${profile.name}; server is no longer running`,
-      );
+      console.log(`[InstanceService] Skipping RCON auto-connect for ${profile.name}; server is no longer running`);
       return;
     }
 
     console.log(`[InstanceService] Auto-connecting RCON for ${profile.name}...`);
     try {
-      await this.sessions.connect(
-        profile.id,
-        RCON_HOST,
-        runtimeProfile.rconPort,
-        runtimeProfile.adminPassword,
-      );
+      await this.sessions.connect(profile.id, RCON_HOST, runtimeProfile.rconPort, runtimeProfile.adminPassword);
       if (this.processes.getStatus(profile.id).status !== "running") {
         this.sessions.setAutoReconnect(profile.id, false);
         if (this.processes.getStatus(profile.id).status !== "stopping") {
           this.sessions.disconnect(profile.id);
         }
-        console.log(
-          `[InstanceService] Dropped late RCON auto-connect for ${profile.name}; server left running`,
-        );
+        console.log(`[InstanceService] Dropped late RCON auto-connect for ${profile.name}; server left running`);
         return;
       }
       console.log(`[InstanceService] RCON auto-connected for ${profile.name}`);
     } catch (error) {
-      console.error(
-        `[InstanceService] RCON auto-connect failed for ${profile.name}:`,
-        error,
-      );
+      console.error(`[InstanceService] RCON auto-connect failed for ${profile.name}:`, error);
     }
   }
 
-  async waitForPortReady(
-    host: string,
-    port: number,
-    timeoutMs = 15_000,
-  ): Promise<boolean> {
+  async waitForPortReady(host: string, port: number, timeoutMs = 15_000): Promise<boolean> {
     const startedAt = Date.now();
     while (Date.now() - startedAt < timeoutMs) {
       if (await this.probePort(host, port)) {
         return true;
       }
-      await new Promise((resolve) =>
-        setTimeout(resolve, RCON_AUTO_CONNECT_RETRY_DELAY_MS),
-      );
+      await new Promise((resolve) => setTimeout(resolve, RCON_AUTO_CONNECT_RETRY_DELAY_MS));
     }
     return false;
   }

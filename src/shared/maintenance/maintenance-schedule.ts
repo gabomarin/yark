@@ -4,11 +4,7 @@ import { normalizeRestartDaysOfWeek } from "./maintenance-restart-days";
 /**
  * Next local-clock restart instant strictly after `fromMs` on one of `daysOfWeek`.
  */
-export function nextLocalRestartAt(
-  daysOfWeek: readonly number[],
-  timeLocal: string,
-  fromMs: number,
-): Date | null {
+export function nextLocalRestartAt(daysOfWeek: readonly number[], timeLocal: string, fromMs: number): Date | null {
   const days = normalizeRestartDaysOfWeek(daysOfWeek);
   const parts = /^(\d{2}):(\d{2})$/.exec(timeLocal);
   if (parts === null) return null;

@@ -24,14 +24,8 @@ import {
   resolveExportZipDestination,
   resolveImportedBackupId,
 } from "./backup-portability";
-import {
-  ensureParentDir,
-  sameFsPath,
-} from "./backup-disk";
-import {
-  allocateUniqueZipPath,
-  resolveServerBackupRoot,
-} from "./backup-create-pipeline";
+import { ensureParentDir, sameFsPath } from "./backup-disk";
+import { allocateUniqueZipPath, resolveServerBackupRoot } from "./backup-create-pipeline";
 
 export interface BackupPortabilityOpsHost {
   servers: ServerRepository;
@@ -48,11 +42,7 @@ export class BackupPortabilityOps {
    * ZIP archives are copied as-is; legacy folders are zipped into the destination.
    * Does not mutate the managed archive or live server files.
    */
-  async exportBackup(
-    serverId: string,
-    backupId: string,
-    destinationPath: string,
-  ): Promise<string> {
+  async exportBackup(serverId: string, backupId: string, destinationPath: string): Promise<string> {
     this.host.mustServer(serverId);
     const backup = this.host.backups.getBackup(backupId);
     if (backup === null || backup.serverId !== serverId) {
@@ -89,11 +79,7 @@ export class BackupPortabilityOps {
    * Validate a portable YARK ZIP and copy it into the managed catalog.
    * Never restores live server files.
    */
-  async importBackup(
-    serverId: string,
-    kind: BackupKind,
-    sourcePath: string,
-  ): Promise<BackupRecord> {
+  async importBackup(serverId: string, kind: BackupKind, sourcePath: string): Promise<BackupRecord> {
     const server = this.host.mustServer(serverId);
     const source = sourcePath.trim();
     if (source.length === 0) {
@@ -161,12 +147,7 @@ export class BackupPortabilityOps {
       throw err instanceof Error ? err : new Error(String(err));
     }
 
-    this.host.servers.addEvent(
-      serverId,
-      "backup_created",
-      "info",
-      `Imported ${kind} backup: ${basename(destPath)}`,
-    );
+    this.host.servers.addEvent(serverId, "backup_created", "info", `Imported ${kind} backup: ${basename(destPath)}`);
     this.host.emitChanged(serverId);
     return record;
   }

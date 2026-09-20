@@ -38,8 +38,7 @@ function catalogFor(event: AppEvent): AppEventDetails {
     case "installation_health_degraded":
       return {
         what: "The saved install path no longer looks ready to launch.",
-        cause:
-          "The folder was moved, deleted, partially removed, or became inaccessible since the last healthy check.",
+        cause: "The folder was moved, deleted, partially removed, or became inaccessible since the last healthy check.",
         suggestion:
           "Open the server workspace, confirm the install path, then use Install / Verify or Check Servers Health.",
       };
@@ -73,8 +72,7 @@ function catalogFor(event: AppEvent): AppEventDetails {
     case "install_move_cleanup_failed":
       return {
         what: "Cleanup of the previous install folder failed.",
-        suggestion:
-          "Confirm nothing is using that folder, then retry cleanup from the server workspace.",
+        suggestion: "Confirm nothing is using that folder, then retry cleanup from the server workspace.",
       };
     case "backup_created":
       return {
@@ -123,8 +121,7 @@ function catalogFor(event: AppEvent): AppEventDetails {
     case "auto_restart_scheduled":
       return {
         what: "The server crashed on its own, so crash recovery scheduled a restart.",
-        suggestion:
-          "Pause or turn off crash recovery on the Maintenance tab to stop automatic restarts.",
+        suggestion: "Pause or turn off crash recovery on the Maintenance tab to stop automatic restarts.",
       };
     case "auto_restart_failed":
       return {
@@ -156,14 +153,12 @@ function catalogFor(event: AppEvent): AppEventDetails {
     case "logs_retention_completed":
       return {
         what: "YARK applied the operational log retention policy.",
-        suggestion:
-          "Removed history is not recoverable. Adjust limits under Settings → Log retention if needed.",
+        suggestion: "Removed history is not recoverable. Adjust limits under Settings → Log retention if needed.",
       };
     case "logs_retention_failed":
       return {
         what: "Operational log retention could not finish cleanly.",
-        suggestion:
-          "Check disk permissions on the update-logs folder, then retry Clean up now from Settings.",
+        suggestion: "Check disk permissions on the update-logs folder, then retry Clean up now from Settings.",
       };
     case "rcon_command":
       return {
@@ -195,9 +190,9 @@ export function formatEventMessageForDisplay(message: string): string {
   return message.replace(/\s*\(([a-f0-9]{7,16})\)\s*$/i, "").trim();
 }
 
-export function collapseConsecutiveEvents<
-  T extends { type: string; message: string; serverId?: string | null },
->(events: T[]): Array<{ event: T; count: number }> {
+export function collapseConsecutiveEvents<T extends { type: string; message: string; serverId?: string | null }>(
+  events: T[],
+): Array<{ event: T; count: number }> {
   const out: Array<{ event: T; count: number }> = [];
   for (const event of events) {
     const last = out[out.length - 1];

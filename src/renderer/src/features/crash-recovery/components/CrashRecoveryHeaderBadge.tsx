@@ -21,11 +21,7 @@ export function CrashRecoveryHeaderBadge({
   return <CrashRecoveryHeaderBadgeInner recovery={recovery} />;
 }
 
-function CrashRecoveryHeaderBadgeInner({
-  recovery,
-}: {
-  recovery: CrashRecoveryRuntime;
-}): ReactElement {
+function CrashRecoveryHeaderBadgeInner({ recovery }: { recovery: CrashRecoveryRuntime }): ReactElement {
   const remaining = useCrashRecoveryCountdown(recovery.restartAt);
 
   return (

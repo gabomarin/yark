@@ -9,9 +9,7 @@ export function yarkUpdateToastDedupeKey(status: AppUpdateStatus): string | null
   return null;
 }
 
-export function yarkUpdateToastCopy(
-  status: AppUpdateStatus,
-): { title: string; message: string } | null {
+export function yarkUpdateToastCopy(status: AppUpdateStatus): { title: string; message: string } | null {
   const version = status.availableVersion?.trim() ?? "";
   if (version.length === 0) return null;
   if (status.phase === "available") {

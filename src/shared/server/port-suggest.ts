@@ -31,9 +31,7 @@ export type SuggestedPortTriplet = PortTriplet & {
  * Returns null when the search is exhausted.
  */
 export function suggestNextPortTriplet(input: {
-  profiles: ReadonlyArray<
-    Pick<ServerProfile, "id" | "name" | "gamePort" | "queryPort" | "rconPort">
-  >;
+  profiles: ReadonlyArray<Pick<ServerProfile, "id" | "name" | "gamePort" | "queryPort" | "rconPort">>;
   bases?: PortTriplet;
   /** Draft name for conflict messages; unused for matching. */
   candidateName?: string;

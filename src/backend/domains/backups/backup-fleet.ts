@@ -28,9 +28,7 @@ export interface ComputeBackupServerHealthInput {
 }
 
 /** Pure fleet health badge for one server (used by getFleetSummary). */
-export function computeBackupServerHealth(
-  input: ComputeBackupServerHealthInput,
-): BackupHealthStatus {
+export function computeBackupServerHealth(input: ComputeBackupServerHealthInput): BackupHealthStatus {
   if (!input.destinationOk || input.failedWorld24h > 0) return "critical";
   if (input.failed24h > 0) return "warning";
   if (input.scheduleEnabled && !input.hasWorldBackup) {
@@ -43,9 +41,7 @@ export function computeBackupServerHealth(
 }
 
 /** Newest finished (completed/failed) backup by finish time. */
-function pickLatestFinishedBackup(
-  records: BackupRecord[],
-): BackupRecord | null {
+function pickLatestFinishedBackup(records: BackupRecord[]): BackupRecord | null {
   let latest: BackupRecord | null = null;
   let latestStamp = "";
   for (const row of records) {
@@ -59,21 +55,10 @@ function pickLatestFinishedBackup(
   return latest;
 }
 
-export function normalizeDiskAlertSettings(
-  settings: BackupDiskAlertSettings,
-): BackupDiskAlertSettings {
-  const warnUsedPercent = Math.max(
-    50,
-    Math.min(99, Math.floor(settings.warnUsedPercent)),
-  );
-  const criticalUsedPercent = Math.max(
-    warnUsedPercent + 1,
-    Math.min(100, Math.floor(settings.criticalUsedPercent)),
-  );
-  const warnFreeBytes = Math.max(
-    1024 * 1024 * 1024,
-    Math.floor(settings.warnFreeBytes),
-  );
+export function normalizeDiskAlertSettings(settings: BackupDiskAlertSettings): BackupDiskAlertSettings {
+  const warnUsedPercent = Math.max(50, Math.min(99, Math.floor(settings.warnUsedPercent)));
+  const criticalUsedPercent = Math.max(warnUsedPercent + 1, Math.min(100, Math.floor(settings.criticalUsedPercent)));
+  const warnFreeBytes = Math.max(1024 * 1024 * 1024, Math.floor(settings.warnFreeBytes));
   return { warnUsedPercent, criticalUsedPercent, warnFreeBytes };
 }
 
@@ -97,9 +82,7 @@ export interface BuildBackupServerHealthRowInput {
   nowMs?: number;
 }
 
-export function buildBackupServerHealthRow(
-  input: BuildBackupServerHealthRowInput,
-): BackupServerHealth {
+export function buildBackupServerHealthRow(input: BuildBackupServerHealthRowInput): BackupServerHealth {
   const now = input.nowMs ?? Date.now();
   const dayAgoIso = new Date(now - 24 * 60 * 60 * 1000).toISOString();
   const { records, policy, latestWorld } = input;
@@ -119,9 +102,7 @@ export function buildBackupServerHealthRow(
     } else {
       const stamp = backupFinishedAt(latestWorld);
       const ageMs = now - new Date(stamp).getTime();
-      stale =
-        Number.isFinite(ageMs) &&
-        ageMs > policy.intervalMinutes * 60_000 * BACKUP_STALE_INTERVAL_FACTOR;
+      stale = Number.isFinite(ageMs) && ageMs > policy.intervalMinutes * 60_000 * BACKUP_STALE_INTERVAL_FACTOR;
     }
   }
 
@@ -165,9 +146,7 @@ export interface BuildFleetAlertsForServerInput {
   serverRunning: boolean;
 }
 
-export function buildFleetAlertsForServer(
-  input: BuildFleetAlertsForServerInput,
-): BackupFleetAlert[] {
+export function buildFleetAlertsForServer(input: BuildFleetAlertsForServerInput): BackupFleetAlert[] {
   const { row, failed24h, failedWorld24h, serverRunning } = input;
   const alerts: BackupFleetAlert[] = [];
   const { serverId, serverName, policy, resolvedRoot, destinationOk } = row;
@@ -200,10 +179,7 @@ export function buildFleetAlertsForServer(
   return alerts;
 }
 /** Alerts that depend on server running state (never_backed_up). */
-function buildFleetRunningAlerts(
-  row: BackupServerHealth,
-  serverRunning: boolean,
-): BackupFleetAlert[] {
+function buildFleetRunningAlerts(row: BackupServerHealth, serverRunning: boolean): BackupFleetAlert[] {
   const alerts: BackupFleetAlert[] = [];
   const { serverId, serverName, policy, latestWorld, stale } = row;
   if (policy.enabled && latestWorld === null && serverRunning) {
@@ -239,20 +215,22 @@ function buildFleetFailureAlerts(
   const { serverId, serverName } = row;
   const worldOnly = failedWorld24h.length === row.counts.failed24h;
   const focusBackup = failedWorld24h[0] ?? failed24h[0] ?? null;
-  return [{
-    id: `failed:${serverId}`,
-    kind: "failed",
-    severity: failedWorld24h.length > 0 ? "error" : "warning",
-    serverId,
-    volumePath: null,
-    fingerprint: `${focusBackup?.id ?? "failed"}:${row.counts.failed24h}`,
-    backupId: focusBackup?.id ?? null,
-    message: worldOnly
-      ? `${serverName}: ${row.counts.failed24h} failed world backup${row.counts.failed24h === 1 ? "" : "s"} in the last 24h`
-      : failedWorld24h.length > 0
-        ? `${serverName}: ${row.counts.failed24h} failed backup${row.counts.failed24h === 1 ? "" : "s"} in the last 24h (${failedWorld24h.length} world)`
-        : `${serverName}: ${row.counts.failed24h} failed non-world backup${row.counts.failed24h === 1 ? "" : "s"} in the last 24h`,
-  }];
+  return [
+    {
+      id: `failed:${serverId}`,
+      kind: "failed",
+      severity: failedWorld24h.length > 0 ? "error" : "warning",
+      serverId,
+      volumePath: null,
+      fingerprint: `${focusBackup?.id ?? "failed"}:${row.counts.failed24h}`,
+      backupId: focusBackup?.id ?? null,
+      message: worldOnly
+        ? `${serverName}: ${row.counts.failed24h} failed world backup${row.counts.failed24h === 1 ? "" : "s"} in the last 24h`
+        : failedWorld24h.length > 0
+          ? `${serverName}: ${row.counts.failed24h} failed backup${row.counts.failed24h === 1 ? "" : "s"} in the last 24h (${failedWorld24h.length} world)`
+          : `${serverName}: ${row.counts.failed24h} failed non-world backup${row.counts.failed24h === 1 ? "" : "s"} in the last 24h`,
+    },
+  ];
 }
 
 export function buildDiskVolumeAlerts(
@@ -267,7 +245,7 @@ export function buildDiskVolumeAlerts(
     const lowFree = disk.freeBytes < diskSettings.warnFreeBytes;
     const diskFingerprint = [
       `u${Math.floor(disk.usedPercent)}`,
-      `f${Math.floor(disk.freeBytes / (1024 ** 3))}`,
+      `f${Math.floor(disk.freeBytes / 1024 ** 3)}`,
       `w${diskSettings.warnUsedPercent}`,
       `c${diskSettings.criticalUsedPercent}`,
       `fb${diskSettings.warnFreeBytes}`,
@@ -304,13 +282,9 @@ export function buildDiskVolumeAlerts(
   return alerts;
 }
 
-export function computeFleetSummaryStats(
-  healthRows: BackupServerHealth[],
-): BackupFleetSummary["stats"] {
+export function computeFleetSummaryStats(healthRows: BackupServerHealth[]): BackupFleetSummary["stats"] {
   const protectedCount = healthRows.filter((row) => row.health === "ok").length;
-  const atRiskCount = healthRows.filter(
-    (row) => row.health === "warning" || row.health === "critical",
-  ).length;
+  const atRiskCount = healthRows.filter((row) => row.health === "warning" || row.health === "critical").length;
   const failed24h = healthRows.reduce((sum, row) => sum + row.counts.failed24h, 0);
   const totalBackupBytes = healthRows.reduce((sum, row) => sum + row.usedBytes, 0);
   return { protectedCount, atRiskCount, failed24h, totalBackupBytes };
@@ -345,13 +319,8 @@ export function filterDismissedFleetAlerts(
   return { visible, prunedDismissed: kept };
 }
 
-export async function buildDiskUsageFromHealthRows(
-  rows: BackupServerHealth[],
-): Promise<BackupFleetSummary["disks"]> {
-  const byVolume = new Map<
-    string,
-    { roots: Set<string>; backupBytes: number; probePath: string }
-  >();
+export async function buildDiskUsageFromHealthRows(rows: BackupServerHealth[]): Promise<BackupFleetSummary["disks"]> {
+  const byVolume = new Map<string, { roots: Set<string>; backupBytes: number; probePath: string }>();
 
   for (const row of rows) {
     const volumePath = volumeRootForPath(row.resolvedRoot);
@@ -388,10 +357,7 @@ export async function buildDiskUsageFromHealthRows(
   return disks;
 }
 
-export function listFailedBackupsSince(
-  records: BackupRecord[],
-  sinceIso: string,
-): BackupRecord[] {
+export function listFailedBackupsSince(records: BackupRecord[], sinceIso: string): BackupRecord[] {
   return records.filter((row) => {
     if (row.status !== "failed") return false;
     return backupFinishedAt(row) >= sinceIso;

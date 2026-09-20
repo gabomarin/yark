@@ -1,17 +1,9 @@
-import {
-  Group,
-  Stack,
-  Switch,
-  Text,
-} from "@mantine/core";
+import { Group, Stack, Switch, Text } from "@mantine/core";
 import type { MaintenancePolicyStatus } from "@shared/types";
 import type { ReactElement } from "react";
 import { MaintenancePlayerWarnings } from "../MaintenancePlayerWarnings/MaintenancePlayerWarnings";
 import { MaintenanceRestartSchedule } from "../MaintenanceRestartSchedule/MaintenanceRestartSchedule";
-import {
-  formatRestartSummary,
-  formatUpdateSummary,
-} from "../../model/maintenancePanelModel";
+import { formatRestartSummary, formatUpdateSummary } from "../../model/maintenancePanelModel";
 import classes from "../../MaintenancePanel.module.css";
 
 function Chevron({ open }: { open: boolean }): ReactElement {
@@ -32,9 +24,7 @@ function Chevron({ open }: { open: boolean }): ReactElement {
 }
 
 type PatchFn = (
-  partial: Partial<
-    Omit<MaintenancePolicyStatus, "serverId" | "updatedAt" | "schedulePaused">
-  >,
+  partial: Partial<Omit<MaintenancePolicyStatus, "serverId" | "updatedAt" | "schedulePaused">>,
 ) => Promise<boolean>;
 
 interface SharedProps {
@@ -83,11 +73,7 @@ export function MaintenanceRestartSection(props: SharedProps): ReactElement {
             onChange={(e) => {
               const on = e.currentTarget.checked;
               void props
-                .patch(
-                  on
-                    ? { restartEnabled: true }
-                    : { restartEnabled: false, wipeEnabled: false },
-                )
+                .patch(on ? { restartEnabled: true } : { restartEnabled: false, wipeEnabled: false })
                 .then((ok) => {
                   if (ok && on) props.onOpen();
                 });

@@ -38,10 +38,10 @@ function compileHangingSteamCmdStub(dir) {
       "using System.Linq;",
       "static class P {",
       "  static int Main(string[] args) {",
-      "    Console.WriteLine(\"Loading Steam API...\");",
-      "    var quitOnly = args.Any(a => a == \"+quit\") && !args.Any(a => a == \"+app_update\");",
+      '    Console.WriteLine("Loading Steam API...");',
+      '    var quitOnly = args.Any(a => a == "+quit") && !args.Any(a => a == "+app_update");',
       "    if (!quitOnly) {",
-      "      Console.WriteLine(\"Update state (0x0) 0/1, 0 -- [ 18%]\");",
+      '      Console.WriteLine("Update state (0x0) 0/1, 0 -- [ 18%]");',
       "      System.Threading.Thread.Sleep(180000);",
       "    }",
       "    return 0;",
@@ -54,11 +54,10 @@ function compileHangingSteamCmdStub(dir) {
     ].join("\n"),
     "utf8",
   );
-  execFileSync(
-    "powershell.exe",
-    ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", stubPs1],
-    { stdio: ["ignore", "pipe", "pipe"], windowsHide: true },
-  );
+  execFileSync("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", stubPs1], {
+    stdio: ["ignore", "pipe", "pipe"],
+    windowsHide: true,
+  });
   assert.ok(fs.existsSync(stubExe), `SteamCMD stub missing at ${stubExe}`);
   return stubExe;
 }
@@ -143,9 +142,7 @@ async function dumpDownloads(page, label) {
   const metrics = await page.evaluate(() => {
     const rows = [...document.querySelectorAll("[data-download-row]")];
     return {
-      groups: [...document.querySelectorAll("[data-queue-group]")].map((el) =>
-        el.getAttribute("data-queue-group"),
-      ),
+      groups: [...document.querySelectorAll("[data-queue-group]")].map((el) => el.getAttribute("data-queue-group")),
       rows: rows.map((row) => ({
         id: row.getAttribute("data-download-row"),
         kind: row.getAttribute("data-kind"),
@@ -170,16 +167,10 @@ async function waitRowKind(page, id, kind, timeout = 20_000) {
 }
 
 async function run() {
-  assert.equal(
-    process.platform,
-    "win32",
-    "Pause/Resume E2E needs Windows (hanging steamcmd.exe stub).",
-  );
+  assert.equal(process.platform, "win32", "Pause/Resume E2E needs Windows (hanging steamcmd.exe stub).");
   process.chdir(projectRoot);
 
-  const { profileDir, serversDir, fixtureName, root } = createE2eFixtureRoots(
-    "downloads-pause",
-  );
+  const { profileDir, serversDir, fixtureName, root } = createE2eFixtureRoots("downloads-pause");
   assert.ok(serversDir, "serversDir required");
   assertUnderFixtureRoot(path.join(root, "profiles"), profileDir);
   assertUnderFixtureRoot(path.join(root, "servers"), serversDir);
@@ -248,10 +239,7 @@ async function run() {
       "Pause must not move the install to Needs attention",
     );
     assert.equal(
-      await page
-        .locator(`[data-download-row="${JOB_INSTALL}"]`)
-        .getByText("cancelled", { exact: true })
-        .count(),
+      await page.locator(`[data-download-row="${JOB_INSTALL}"]`).getByText("cancelled", { exact: true }).count(),
       0,
       "Pause must not mark the install cancelled",
     );
@@ -260,10 +248,7 @@ async function run() {
       0,
       "Paused install must not keep the live progress action",
     );
-    assert.equal(
-      await page.getByRole("button", { name: "Pause" }).count(),
-      0,
-    );
+    assert.equal(await page.getByRole("button", { name: "Pause" }).count(), 0);
     await page.locator(`[data-download-row="${JOB_INSTALL}"]`).click();
     const resumeBtn = page.getByRole("button", { name: "Resume" });
     await resumeBtn.waitFor({ state: "visible", timeout: 10_000 });
@@ -287,9 +272,7 @@ async function run() {
       "Resume must not dump jobs into Needs attention",
     );
 
-    const actionableErrors = errors.filter(
-      (message) => !/Failed to load resource|net::ERR_/i.test(message),
-    );
+    const actionableErrors = errors.filter((message) => !/Failed to load resource|net::ERR_/i.test(message));
     assert.deepEqual(actionableErrors, []);
     succeeded = true;
     console.log(`E2E_DOWNLOADS_PAUSE_RESUME_OK fixture=${fixtureName}`);

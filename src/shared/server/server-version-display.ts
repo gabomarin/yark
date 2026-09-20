@@ -16,10 +16,7 @@ export function normalizeArkVersionLabel(value: string): string {
  * Returns negative if `a` is behind `b`, positive if ahead, `0` if equal,
  * or `null` when either side is not an ARK-style version.
  */
-export function compareArkVersionLabels(
-  a: string,
-  b: string,
-): number | null {
+export function compareArkVersionLabels(a: string, b: string): number | null {
   const left = normalizeArkVersionLabel(a);
   const right = normalizeArkVersionLabel(b);
   if (!isArkStyleVersion(left) || !isArkStyleVersion(right)) return null;
@@ -41,10 +38,7 @@ export function compareArkVersionLabels(
  * Never surfaces Steam `build NNNNN` ids as the operator-facing version.
  */
 export function resolveDisplayedServerVersion(
-  installation:
-    | Pick<ServerInstallationInfo, "arkVersion" | "build" | "version">
-    | null
-    | undefined,
+  installation: Pick<ServerInstallationInfo, "arkVersion" | "build" | "version"> | null | undefined,
 ): string | null {
   if (!installation) return null;
   const build = installation.build?.trim() || null;
@@ -57,8 +51,7 @@ export function resolveDisplayedServerVersion(
   return null;
 }
 
-export const VERSION_REFRESHES_ON_START_HINT =
-  "Server is up to date. Version refreshes after you start the server.";
+export const VERSION_REFRESHES_ON_START_HINT = "Server is up to date. Version refreshes after you start the server.";
 
 /**
  * When Steam build matches but the displayed ARK Version is still behind

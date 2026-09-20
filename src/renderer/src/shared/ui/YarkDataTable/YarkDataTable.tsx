@@ -28,10 +28,7 @@ export function YarkDataTable<T>(props: YarkDataTableProps<T>): ReactElement {
   } = props;
 
   return (
-    <div
-      className={[classes.root, className].filter(Boolean).join(" ")}
-      data-ui-density={density}
-    >
+    <div className={[classes.root, className].filter(Boolean).join(" ")} data-ui-density={density}>
       <DataTable
         {...rest}
         verticalSpacing={verticalSpacing}

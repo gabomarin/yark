@@ -19,10 +19,7 @@ interface DraftBaseline {
   rawText: string;
 }
 
-function sameStructured(
-  left: StructuredLaunchArgs,
-  right: StructuredLaunchArgs,
-): boolean {
+function sameStructured(left: StructuredLaunchArgs, right: StructuredLaunchArgs): boolean {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
@@ -37,21 +34,13 @@ export function useServerLaunchPersist(
   extraArgs: string[];
   saving: boolean;
   error: string | null;
-  setEnabled: (
-    id: string,
-    enabled: boolean,
-    defaultValue?: string,
-  ) => Promise<void>;
+  setEnabled: (id: string, enabled: boolean, defaultValue?: string) => Promise<void>;
   setValue: (id: string, value: string) => void;
   persistExtraArgsFromRaw: () => Promise<void>;
 } {
-  const initialStructured = normalizeStructuredLaunchArgs(
-    server.structuredLaunchArgs,
-  );
+  const initialStructured = normalizeStructuredLaunchArgs(server.structuredLaunchArgs);
   const initialRaw = joinRawExtraArgs(server.extraArgs);
-  const [structured, setStructured] = useState<StructuredLaunchArgs>(
-    () => initialStructured,
-  );
+  const [structured, setStructured] = useState<StructuredLaunchArgs>(() => initialStructured);
   const [rawText, setRawText] = useState(() => initialRaw);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -88,16 +77,11 @@ export function useServerLaunchPersist(
 
   function isDraftDirty(): boolean {
     const baseline = baselineRef.current;
-    return (
-      rawTextRef.current !== baseline.rawText
-      || !sameStructured(structuredRef.current, baseline.structured)
-    );
+    return rawTextRef.current !== baseline.rawText || !sameStructured(structuredRef.current, baseline.structured);
   }
 
   function applyServerDraft(nextServer: ServerProfile): void {
-    const nextStructured = normalizeStructuredLaunchArgs(
-      nextServer.structuredLaunchArgs,
-    );
+    const nextStructured = normalizeStructuredLaunchArgs(nextServer.structuredLaunchArgs);
     const nextRaw = joinRawExtraArgs(nextServer.extraArgs);
     structuredRef.current = nextStructured;
     rawTextRef.current = nextRaw;
@@ -183,10 +167,7 @@ export function useServerLaunchPersist(
       onServerUpdatedRef.current();
       return true;
     } finally {
-      if (
-        generation === persistGenerationRef.current
-        && serverIdRef.current === targetServerId
-      ) {
+      if (generation === persistGenerationRef.current && serverIdRef.current === targetServerId) {
         setSaving(false);
       }
     }
@@ -203,30 +184,21 @@ export function useServerLaunchPersist(
     for (const resolve of waiters) resolve(ok);
   }
 
-  function schedulePersist(
-    structuredSnapshot?: StructuredLaunchArgs,
-    extraSnapshot?: string[],
-  ): Promise<boolean> {
+  function schedulePersist(structuredSnapshot?: StructuredLaunchArgs, extraSnapshot?: string[]): Promise<boolean> {
     queuedPersist.current = {
       structured: structuredSnapshot ?? structuredRef.current,
       extraArgs: extraSnapshot ?? [...extraArgsRef.current],
     };
     return new Promise<boolean>((resolve) => {
       persistWaiters.current.push(resolve);
-      persistChain.current = persistChain.current
-        .then(drainPersistQueue)
-        .catch(() => {
-          const waiters = persistWaiters.current.splice(0);
-          for (const waiter of waiters) waiter(false);
-        });
+      persistChain.current = persistChain.current.then(drainPersistQueue).catch(() => {
+        const waiters = persistWaiters.current.splice(0);
+        for (const waiter of waiters) waiter(false);
+      });
     });
   }
 
-  async function setEnabled(
-    id: string,
-    enabled: boolean,
-    defaultValue?: string,
-  ): Promise<void> {
+  async function setEnabled(id: string, enabled: boolean, defaultValue?: string): Promise<void> {
     if (valuePersistTimer.current !== null) {
       clearTimeout(valuePersistTimer.current);
       valuePersistTimer.current = null;

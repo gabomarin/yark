@@ -43,10 +43,7 @@ export function MapArtThumb(props: Props): ReactElement {
   }, [src]);
 
   const className = [classes.thumb, props.className].filter(Boolean).join(" ");
-  const accessibleName =
-    props.label !== undefined && props.label.trim().length > 0
-      ? props.label.trim()
-      : props.mapId;
+  const accessibleName = props.label !== undefined && props.label.trim().length > 0 ? props.label.trim() : props.mapId;
 
   if (src === null || imageFailed) {
     return (
@@ -69,12 +66,7 @@ export function MapArtThumb(props: Props): ReactElement {
   }
 
   return (
-    <div
-      className={className}
-      data-size={size}
-      data-shape={shape}
-      aria-hidden={decorative ? true : undefined}
-    >
+    <div className={className} data-size={size} data-shape={shape} aria-hidden={decorative ? true : undefined}>
       <img
         className={classes.image}
         src={src}

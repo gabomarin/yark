@@ -24,9 +24,7 @@ interface Props {
   onAdminPasswordChange: (value: string) => void;
 }
 
-function createPortsDescription(
-  suggestion: Props["createPortSuggestion"],
-): string | undefined {
+function createPortsDescription(suggestion: Props["createPortSuggestion"]): string | undefined {
   if (suggestion == null) {
     return undefined;
   }

@@ -76,9 +76,7 @@ export class SteamCmdRunner {
     await mkdir(contentCacheDir, { recursive: true });
     await mkdir(depotCacheDir, { recursive: true });
 
-    this.deps.appendSteamCmdConsole(
-      formatSteamCmdCachePathsLine(depotCacheDir, contentCacheDir),
-    );
+    this.deps.appendSteamCmdConsole(formatSteamCmdCachePathsLine(depotCacheDir, contentCacheDir));
 
     const cacheResult = await this.ensureAsaContentCache(
       steamcmdExe,
@@ -99,9 +97,7 @@ export class SteamCmdRunner {
     try {
       if (canSkipAsaContentSync(contentCacheDir, installDir)) {
         const skipped = resolveAsaCacheSyncSkippedProgress(operation);
-        this.deps.appendSteamCmdConsole(
-          "ASA cache sync skipped (install dir is the content cache)",
-        );
+        this.deps.appendSteamCmdConsole("ASA cache sync skipped (install dir is the content cache)");
         this.deps.setProgress(skipped.percent, skipped.label, skipped.line);
       } else {
         const syncStartedAt = Date.now();
@@ -136,13 +132,7 @@ export class SteamCmdRunner {
       }
       const message = error instanceof Error ? error.message : String(error);
       this.deps.appendSteamCmdConsole(formatSyncFailureFallbackLine(message));
-      return await this.invokeSteamCmdAppUpdate(
-        steamcmdExe,
-        steamCmdHome,
-        installDir,
-        operation,
-        serverId,
-      );
+      return await this.invokeSteamCmdAppUpdate(steamcmdExe, steamCmdHome, installDir, operation, serverId);
     } finally {
       if (syncHeartbeat !== null) {
         clearInterval(syncHeartbeat);
@@ -166,16 +156,8 @@ export class SteamCmdRunner {
       return { code: 0, stdout: "", stderr: "" };
     }
 
-    this.deps.appendSteamCmdConsole(
-      formatAsaCacheUpdateConsoleLine(operation, steamCmdHome),
-    );
-    const result = await this.invokeSteamCmdAppUpdate(
-      steamcmdExe,
-      steamCmdHome,
-      contentCacheDir,
-      operation,
-      serverId,
-    );
+    this.deps.appendSteamCmdConsole(formatAsaCacheUpdateConsoleLine(operation, steamCmdHome));
+    const result = await this.invokeSteamCmdAppUpdate(steamcmdExe, steamCmdHome, contentCacheDir, operation, serverId);
     if (result.code === 0) {
       this.contentCacheUpdatedAtMs = Date.now();
     } else {
@@ -230,11 +212,7 @@ export class SteamCmdRunner {
       child.once("error", (error) => {
         this.deps.stopDiskProgressMonitor();
         this.deps.endSteamCmdProcess(child);
-        reject(
-          new Error(
-            `Could not run SteamCMD (${steamcmdExe}). Install or configure it. Detail: ${error.message}`,
-          ),
-        );
+        reject(new Error(`Could not run SteamCMD (${steamcmdExe}). Install or configure it. Detail: ${error.message}`));
       });
 
       child.once("exit", (code) => {
@@ -256,5 +234,4 @@ export class SteamCmdRunner {
       });
     });
   }
-
 }

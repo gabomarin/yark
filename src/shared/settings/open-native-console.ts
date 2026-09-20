@@ -7,12 +7,9 @@ export const OPEN_NATIVE_CONSOLE_SETTING_KEY = "openNativeConsoleOnStart";
 export const DEFAULT_OPEN_NATIVE_CONSOLE = false;
 
 /** Legacy renderer localStorage key (migrated once into `app_settings`). */
-export const OPEN_NATIVE_CONSOLE_LEGACY_LOCAL_STORAGE_KEY =
-  "overview.openNativeTerminalOnStart";
+export const OPEN_NATIVE_CONSOLE_LEGACY_LOCAL_STORAGE_KEY = "overview.openNativeTerminalOnStart";
 
-export function parseStoredOpenNativeConsole(
-  value: string | null | undefined,
-): boolean | null {
+export function parseStoredOpenNativeConsole(value: string | null | undefined): boolean | null {
   if (value === "1" || value === "true") {
     return true;
   }
@@ -26,8 +23,6 @@ export function encodeOpenNativeConsolePref(enabled: boolean): string {
   return enabled ? "1" : "0";
 }
 
-export function parseOpenNativeConsolePref(
-  value: string | null | undefined,
-): boolean {
+export function parseOpenNativeConsolePref(value: string | null | undefined): boolean {
   return parseStoredOpenNativeConsole(value) ?? DEFAULT_OPEN_NATIVE_CONSOLE;
 }

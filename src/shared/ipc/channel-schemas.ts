@@ -57,10 +57,9 @@ import {
   MAX_URL_LENGTH,
 } from "./primitives";
 
-const serverProfilePatchSchema = z.custom<unknown>(
-  (value) => isServerProfilePatch(value),
-  { message: "Invalid server profile patch" },
-);
+const serverProfilePatchSchema = z.custom<unknown>((value) => isServerProfilePatch(value), {
+  message: "Invalid server profile patch",
+});
 
 /** Channels registered with `handleValidated` — keep in sync with ipc-handlers. */
 export const VALIDATED_IPC_CHANNELS = [
@@ -287,24 +286,14 @@ export const ipcArgSchemas = {
   [IPC.serversAsaApiStatus]: z.tuple([serverIdSchema]),
   [IPC.serversAsaApiInstall]: z.tuple([serverIdSchema]),
   [IPC.serversAsaApiUninstall]: z.tuple([serverIdSchema]),
-  [IPC.serversAsaApiSetPluginEnabled]: z.tuple([
-    serverIdSchema,
-    asaApiPluginNameSchema,
-    z.boolean(),
-  ]),
-  [IPC.serversAsaApiDeletePlugin]: z.tuple([
-    serverIdSchema,
-    asaApiPluginNameSchema,
-  ]),
+  [IPC.serversAsaApiSetPluginEnabled]: z.tuple([serverIdSchema, asaApiPluginNameSchema, z.boolean()]),
+  [IPC.serversAsaApiDeletePlugin]: z.tuple([serverIdSchema, asaApiPluginNameSchema]),
   [IPC.serversAsaApiAddPluginZip]: z.tuple([serverIdSchema]),
   [IPC.serversAsaApiOpenWin64]: z.tuple([serverIdSchema]),
   [IPC.serversAsaApiOpenPlugins]: z.tuple([serverIdSchema]),
   [IPC.serversAsaApiClearCache]: z.tuple([]),
   [IPC.serversStatuses]: z.tuple([]),
-  [IPC.serversInstallation]: ipcTuple(
-    z.boolean().nullish(),
-    installationServersModeSchema.nullish(),
-  ),
+  [IPC.serversInstallation]: ipcTuple(z.boolean().nullish(), installationServersModeSchema.nullish()),
   [IPC.steamcmdStatus]: z.tuple([]),
   [IPC.steamcmdSetPath]: z.tuple([windowsAbsPathSchema]),
   [IPC.steamcmdOpenCache]: z.tuple([steamCmdCacheKindSchema]),
@@ -317,10 +306,7 @@ export const ipcArgSchemas = {
   [IPC.criticalJobDismiss]: z.tuple([nonEmptyStringSchema("Critical job id")]),
   [IPC.criticalJobCancel]: z.tuple([nonEmptyStringSchema("Critical job id")]),
   [IPC.criticalJobResume]: z.tuple([nonEmptyStringSchema("Critical job id")]),
-  [IPC.criticalJobReorder]: z.tuple([
-    nonEmptyStringSchema("Critical job id"),
-    z.enum(["up", "down"]),
-  ]),
+  [IPC.criticalJobReorder]: z.tuple([nonEmptyStringSchema("Critical job id"), z.enum(["up", "down"])]),
   [IPC.clusterCheck]: z.tuple([]),
   [IPC.rconCommand]: z.tuple([serverIdSchema, rconCommandTextSchema]),
   [IPC.rconRetryConnection]: z.tuple([serverIdSchema]),
@@ -342,10 +328,7 @@ export const ipcArgSchemas = {
       updateAllowedCheatersInterval: z.number().finite(),
     }),
   ]),
-  [IPC.validateAdminListUrl]: z.tuple([
-    serverIdSchema,
-    z.string().max(MAX_STRING_PARAM_LENGTH),
-  ]),
+  [IPC.validateAdminListUrl]: z.tuple([serverIdSchema, z.string().max(MAX_STRING_PARAM_LENGTH)]),
   [IPC.learnAdminListNames]: z.tuple([
     serverIdSchema,
     z
@@ -370,9 +353,7 @@ export const ipcArgSchemas = {
   [IPC.appGetOpenNativeConsole]: z.tuple([]),
   [IPC.appSetOpenNativeConsole]: z.tuple([z.boolean()]),
   [IPC.appGetLastSeenChangelogVersion]: z.tuple([]),
-  [IPC.appSetLastSeenChangelogVersion]: z.tuple([
-    nonEmptyStringSchema("App version"),
-  ]),
+  [IPC.appSetLastSeenChangelogVersion]: z.tuple([nonEmptyStringSchema("App version")]),
   [IPC.appGetOnboarding]: z.tuple([]),
   [IPC.appSetOnboarding]: z.tuple([onboardingRecordSchema.nullable()]),
   [IPC.appGetDesktopShellPreferences]: z.tuple([]),
@@ -419,42 +400,14 @@ export const ipcArgSchemas = {
   [IPC.clusterIniPreview]: z.tuple([clusterIdSchema, serverIniPayloadSchema]),
   [IPC.clusterIniSave]: z.tuple([clusterIdSchema, serverIniPayloadSchema]),
   [IPC.clusterIniDelete]: z.tuple([clusterIdSchema]),
-  [IPC.clusterIniPreviewRestore]: ipcTuple(
-    clusterIdSchema,
-    serverIdSchema,
-    clusterIniFileSelectionSchema.nullish(),
-  ),
-  [IPC.clusterIniPreviewPromote]: ipcTuple(
-    clusterIdSchema,
-    serverIdSchema,
-    clusterIniFileSelectionSchema.nullish(),
-  ),
-  [IPC.clusterIniPreviewSeed]: ipcTuple(
-    clusterIdSchema,
-    serverIdSchema,
-    clusterIniFileSelectionSchema.nullish(),
-  ),
-  [IPC.clusterIniRestore]: ipcTuple(
-    clusterIdSchema,
-    serverIdSchema,
-    clusterIniFileSelectionSchema.nullish(),
-  ),
-  [IPC.clusterIniPromote]: ipcTuple(
-    clusterIdSchema,
-    serverIdSchema,
-    clusterIniFileSelectionSchema.nullish(),
-  ),
-  [IPC.clusterIniSeed]: ipcTuple(
-    clusterIdSchema,
-    serverIdSchema,
-    clusterIniFileSelectionSchema.nullish(),
-  ),
+  [IPC.clusterIniPreviewRestore]: ipcTuple(clusterIdSchema, serverIdSchema, clusterIniFileSelectionSchema.nullish()),
+  [IPC.clusterIniPreviewPromote]: ipcTuple(clusterIdSchema, serverIdSchema, clusterIniFileSelectionSchema.nullish()),
+  [IPC.clusterIniPreviewSeed]: ipcTuple(clusterIdSchema, serverIdSchema, clusterIniFileSelectionSchema.nullish()),
+  [IPC.clusterIniRestore]: ipcTuple(clusterIdSchema, serverIdSchema, clusterIniFileSelectionSchema.nullish()),
+  [IPC.clusterIniPromote]: ipcTuple(clusterIdSchema, serverIdSchema, clusterIniFileSelectionSchema.nullish()),
+  [IPC.clusterIniSeed]: ipcTuple(clusterIdSchema, serverIdSchema, clusterIniFileSelectionSchema.nullish()),
   [IPC.configTransferDescribe]: z.tuple([serverIdSchema]),
-  [IPC.configTransferPreview]: z.tuple([
-    serverIdSchema,
-    serverIdSchema,
-    plainObjectSchema,
-  ]),
+  [IPC.configTransferPreview]: z.tuple([serverIdSchema, serverIdSchema, plainObjectSchema]),
   [IPC.configTransferCommit]: z.tuple([
     serverIdSchema,
     serverIdSchema,
@@ -462,10 +415,7 @@ export const ipcArgSchemas = {
     nonEmptyStringSchema("Fingerprint", MAX_STRING_PARAM_LENGTH),
   ]),
   [IPC.logsList]: z.tuple([serverIdSchema]),
-  [IPC.logsRuntime]: ipcTuple(
-    serverIdSchema,
-    z.number().int().positive().max(50_000).nullish(),
-  ),
+  [IPC.logsRuntime]: ipcTuple(serverIdSchema, z.number().int().positive().max(50_000).nullish()),
   [IPC.logsReadUpdate]: ipcTuple(
     serverIdSchema,
     logFileNameSchema,
@@ -481,38 +431,20 @@ export const ipcArgSchemas = {
   [IPC.logsSetRetentionSettings]: z.tuple([logRetentionSettingsSchema]),
   [IPC.logsPreviewCleanup]: ipcTuple(logCleanupOptionsSchema.nullish()),
   [IPC.logsRunCleanup]: ipcTuple(logCleanupOptionsSchema.nullish()),
-  [IPC.modsGet]: ipcTuple(
-    nonEmptyStringSchema("Mod id", 64),
-    z.boolean().nullish(),
-  ),
+  [IPC.modsGet]: ipcTuple(nonEmptyStringSchema("Mod id", 64), z.boolean().nullish()),
   [IPC.modsGetMany]: ipcTuple(
     z.array(nonEmptyStringSchema("Mod id", 64)).max(MAX_MOD_IDS_PER_REQUEST),
     z.boolean().nullish(),
   ),
-  [IPC.modsSearch]: ipcTuple(
-    z.string().max(MAX_MOD_QUERY_LENGTH),
-    modsSearchOptionsSchema.nullish(),
-  ),
+  [IPC.modsSearch]: ipcTuple(z.string().max(MAX_MOD_QUERY_LENGTH), modsSearchOptionsSchema.nullish()),
   [IPC.modsListCategories]: z.tuple([]),
-  [IPC.modsGetByReference]: z.tuple([
-    nonEmptyStringSchema("Mod reference", MAX_STRING_PARAM_LENGTH),
-  ]),
-  [IPC.modsOpenCurseForge]: z.tuple([
-    nonEmptyStringSchema("CurseForge URL", MAX_URL_LENGTH),
-  ]),
-  [IPC.backupsList]: ipcTuple(
-    serverIdSchema,
-    z.number().int().positive().max(5_000).nullish(),
-  ),
-  [IPC.backupsCreate]: ipcTuple(
-    serverIdSchema,
-    z.array(backupKindSchema).max(3).nullish(),
-  ),
+  [IPC.modsGetByReference]: z.tuple([nonEmptyStringSchema("Mod reference", MAX_STRING_PARAM_LENGTH)]),
+  [IPC.modsOpenCurseForge]: z.tuple([nonEmptyStringSchema("CurseForge URL", MAX_URL_LENGTH)]),
+  [IPC.backupsList]: ipcTuple(serverIdSchema, z.number().int().positive().max(5_000).nullish()),
+  [IPC.backupsCreate]: ipcTuple(serverIdSchema, z.array(backupKindSchema).max(3).nullish()),
   [IPC.backupsDelete]: z.tuple([
     serverIdSchema,
-    z
-      .array(nonEmptyStringSchema("Backup id", MAX_BACKUP_ID_LENGTH))
-      .max(MAX_BACKUP_IDS_PER_REQUEST),
+    z.array(nonEmptyStringSchema("Backup id", MAX_BACKUP_ID_LENGTH)).max(MAX_BACKUP_IDS_PER_REQUEST),
   ]),
   [IPC.backupsDeleteFailed]: z.tuple([serverIdSchema, backupKindSchema]),
   [IPC.backupsRestore]: ipcTuple(
@@ -533,26 +465,16 @@ export const ipcArgSchemas = {
   [IPC.crashRecoverySetPolicy]: z.tuple([serverIdSchema, crashRecoveryPolicyWriteSchema]),
   [IPC.crashRecoveryResetAttempts]: z.tuple([serverIdSchema]),
   [IPC.backupsResolveRoot]: z.tuple([serverIdSchema]),
-  [IPC.backupsOpenFolder]: z.tuple([
-    serverIdSchema,
-    nonEmptyStringSchema("Backup id", MAX_BACKUP_ID_LENGTH),
-  ]),
+  [IPC.backupsOpenFolder]: z.tuple([serverIdSchema, nonEmptyStringSchema("Backup id", MAX_BACKUP_ID_LENGTH)]),
   [IPC.backupsOpenRoot]: z.tuple([serverIdSchema]),
   [IPC.backupsExport]: z.tuple([
     serverIdSchema,
     nonEmptyStringSchema("Backup id", MAX_BACKUP_ID_LENGTH),
     windowsAbsPathSchema,
   ]),
-  [IPC.backupsImport]: z.tuple([
-    serverIdSchema,
-    backupKindSchema,
-    windowsAbsPathSchema,
-  ]),
+  [IPC.backupsImport]: z.tuple([serverIdSchema, backupKindSchema, windowsAbsPathSchema]),
   [IPC.backupsFleetSummary]: z.tuple([]),
-  [IPC.backupsDismissFleetAlert]: z.tuple([
-    nonEmptyStringSchema("Alert id"),
-    nonEmptyStringSchema("Fingerprint"),
-  ]),
+  [IPC.backupsDismissFleetAlert]: z.tuple([nonEmptyStringSchema("Alert id"), nonEmptyStringSchema("Fingerprint")]),
   [IPC.backupsGetDiskAlertSettings]: z.tuple([]),
   [IPC.backupsSetDiskAlertSettings]: z.tuple([backupDiskAlertSettingsSchema]),
   [IPC.backupsPreviewCleanup]: z.tuple([backupCleanupOptionsSchema]),
@@ -560,11 +482,7 @@ export const ipcArgSchemas = {
   [IPC.hostedResourcesGetOverview]: z.tuple([]),
   [IPC.hostedResourcesSetEnabled]: z.tuple([z.boolean()]),
   [IPC.hostedResourcesSetPort]: z.tuple([
-    z
-      .number()
-      .int()
-      .min(HOSTED_RESOURCES_MIN_PORT)
-      .max(HOSTED_RESOURCES_MAX_PORT),
+    z.number().int().min(HOSTED_RESOURCES_MIN_PORT).max(HOSTED_RESOURCES_MAX_PORT),
   ]),
   [IPC.hostedResourcesCreateResource]: z.tuple([
     z
@@ -587,16 +505,12 @@ export const ipcArgSchemas = {
       .object({
         displayName: nonEmptyStringSchema("Display name", 120),
         notes: z.string().max(HOSTED_RESOURCES_MAX_NOTES_LENGTH),
-        tags: z
-          .array(z.string().trim().min(1).max(HOSTED_RESOURCES_MAX_TAG_LENGTH))
-          .max(HOSTED_RESOURCES_MAX_TAGS),
+        tags: z.array(z.string().trim().min(1).max(HOSTED_RESOURCES_MAX_TAG_LENGTH)).max(HOSTED_RESOURCES_MAX_TAGS),
       })
       .strict()
       .optional(),
   ]),
-  [IPC.hostedResourcesGetContent]: z.tuple([
-    nonEmptyStringSchema("Resource id", 128),
-  ]),
+  [IPC.hostedResourcesGetContent]: z.tuple([nonEmptyStringSchema("Resource id", 128)]),
   [IPC.hostedResourcesPublishRevision]: z.tuple([
     nonEmptyStringSchema("Resource id", 128),
     nonEmptyStringSchema("Revision id", 128),
@@ -611,21 +525,12 @@ export const ipcArgSchemas = {
       .object({
         displayName: nonEmptyStringSchema("Display name", 120),
         notes: z.string().max(HOSTED_RESOURCES_MAX_NOTES_LENGTH),
-        tags: z
-          .array(z.string().trim().min(1).max(HOSTED_RESOURCES_MAX_TAG_LENGTH))
-          .max(HOSTED_RESOURCES_MAX_TAGS),
+        tags: z.array(z.string().trim().min(1).max(HOSTED_RESOURCES_MAX_TAG_LENGTH)).max(HOSTED_RESOURCES_MAX_TAGS),
       })
       .strict(),
   ]),
-  [IPC.hostedResourcesListRevisions]: z.tuple([
-    nonEmptyStringSchema("Resource id", 128),
-  ]),
-  [IPC.hostedResourcesSetResourceEnabled]: z.tuple([
-    nonEmptyStringSchema("Resource id", 128),
-    z.boolean(),
-  ]),
-  [IPC.hostedResourcesDeleteResource]: z.tuple([
-    nonEmptyStringSchema("Resource id", 128),
-  ]),
+  [IPC.hostedResourcesListRevisions]: z.tuple([nonEmptyStringSchema("Resource id", 128)]),
+  [IPC.hostedResourcesSetResourceEnabled]: z.tuple([nonEmptyStringSchema("Resource id", 128), z.boolean()]),
+  [IPC.hostedResourcesDeleteResource]: z.tuple([nonEmptyStringSchema("Resource id", 128)]),
   [IPC.hostedResourcesDiagnostics]: z.tuple([]),
 } as const satisfies Record<ValidatedIpcChannel, z.ZodTypeAny>;

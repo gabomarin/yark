@@ -10,13 +10,7 @@ import {
 
 describe("setupWizardModel", () => {
   it("uses full first-run steps and a paths-shell resume", () => {
-    expect(stepsForMode("first-run")).toEqual([
-      "welcome",
-      "paths",
-      "shell",
-      "cluster",
-      "action",
-    ]);
+    expect(stepsForMode("first-run")).toEqual(["welcome", "paths", "shell", "cluster", "action"]);
     expect(stepsForMode("paths-shell")).toEqual(["paths", "shell"]);
   });
 
@@ -81,9 +75,7 @@ describe("setupWizardModel", () => {
   });
 
   it("suggests a cluster folder under the default server base", () => {
-    expect(suggestSetupClusterDir("D:/ASA/Servers/", " ember ")).toBe(
-      "D:\\ASA\\Servers\\Clusters\\ember",
-    );
+    expect(suggestSetupClusterDir("D:/ASA/Servers/", " ember ")).toBe("D:\\ASA\\Servers\\Clusters\\ember");
     expect(suggestSetupClusterDir(null, "ember")).toBe("");
   });
 

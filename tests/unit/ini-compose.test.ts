@@ -44,9 +44,7 @@ describe("ini-compose", () => {
     expect(text).toContain("QueryPort=27015");
     expect(text).toMatch(/^MaxPlayers=40$/m);
     expect(text).not.toMatch(/\[SessionSettings\][\s\S]*MaxPlayers=/i);
-    expect(text).not.toMatch(
-      /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=/i,
-    );
+    expect(text).not.toMatch(/\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=/i);
   });
 
   it("does not overwrite INI MaxPlayers from the profile", () => {
@@ -55,9 +53,7 @@ describe("ini-compose", () => {
       profileA,
     );
     expect(text).toMatch(/\[SessionSettings\][\s\S]*MaxPlayers=9/i);
-    expect(text).toMatch(
-      /\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=9/i,
-    );
+    expect(text).toMatch(/\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=9/i);
     expect(text).not.toMatch(/MaxPlayers=70/);
   });
 
@@ -122,11 +118,7 @@ describe("ini-compose", () => {
     };
 
     // Even if the wrong profile were passed, current INI identity wins.
-    const restored = composeMemberPayloadFromTemplate(
-      fromB,
-      profileB,
-      currentA,
-    );
+    const restored = composeMemberPayloadFromTemplate(fromB, profileB, currentA);
 
     expect(restored.gameUserSettings).not.toMatch(/MaxPlayers=/i);
     expect(restored.gameUserSettings).toContain("XPMultiplier=3");
@@ -140,9 +132,7 @@ describe("ini-compose", () => {
     expect(restored.gameUserSettings).not.toContain("Gabo Scorched");
     expect(restored.game).toContain("SharedFlag=True");
 
-    const preview = finalizeClusterIniApplyPreview(
-      buildIniPreview(currentA, restored),
-    );
+    const preview = finalizeClusterIniApplyPreview(buildIniPreview(currentA, restored));
     expect(preview.diff.some((row) => row.key === "RCONPort")).toBe(false);
     expect(preview.diff.some((row) => row.key === "SessionName")).toBe(false);
     expect(preview.diff.some((row) => row.key === "Port")).toBe(false);
@@ -177,8 +167,7 @@ describe("ini-compose", () => {
 
   it("strips owned keys when promoting member content into a template", () => {
     const template = composeTemplatePayloadFromMember({
-      gameUserSettings:
-        "[ServerSettings]\nMaxPlayers=55\nRCONPort=27020\nServerAdminPassword=x\nActiveMods=1,2\n",
+      gameUserSettings: "[ServerSettings]\nMaxPlayers=55\nRCONPort=27020\nServerAdminPassword=x\nActiveMods=1,2\n",
       game: "[Custom]\nKeep=1\n",
     });
     expect(template.gameUserSettings).not.toMatch(/MaxPlayers=/i);
@@ -191,13 +180,11 @@ describe("ini-compose", () => {
   it("omits owned keys from operator previews", () => {
     const preview = buildIniPreview(
       {
-        gameUserSettings:
-          "[ServerSettings]\nXPMultiplier=1\nRCONPort=27020\n",
+        gameUserSettings: "[ServerSettings]\nXPMultiplier=1\nRCONPort=27020\n",
         game: "",
       },
       {
-        gameUserSettings:
-          "[ServerSettings]\nXPMultiplier=3\nRCONPort=27030\n",
+        gameUserSettings: "[ServerSettings]\nXPMultiplier=3\nRCONPort=27030\n",
         game: "",
       },
     );
@@ -214,23 +201,15 @@ describe("ini-compose", () => {
         game: "",
       },
       {
-        gameUserSettings:
-          "[ServerSettings]\nXPMultiplier=3\n\n[/Script/Engine.GameSession]\nMaxPlayers=70\n",
+        gameUserSettings: "[ServerSettings]\nXPMultiplier=3\n\n[/Script/Engine.GameSession]\nMaxPlayers=70\n",
         game: "",
       },
     );
     const filtered = omitYarkOwnedFromIniPreview(preview);
-    expect(
-      filtered.diff.some(
-        (row) => row.section === "ServerSettings" && row.key === "MaxPlayers",
-      ),
-    ).toBe(false);
-    expect(
-      filtered.diff.some(
-        (row) =>
-          row.section === "/Script/Engine.GameSession" && row.key === "MaxPlayers",
-      ),
-    ).toBe(false);
+    expect(filtered.diff.some((row) => row.section === "ServerSettings" && row.key === "MaxPlayers")).toBe(false);
+    expect(filtered.diff.some((row) => row.section === "/Script/Engine.GameSession" && row.key === "MaxPlayers")).toBe(
+      false,
+    );
     expect(filtered.diff.some((row) => row.key === "XPMultiplier")).toBe(true);
   });
 
@@ -263,9 +242,7 @@ describe("ini-compose", () => {
       },
     );
     const redacted = redactIniPreviewSecrets(preview);
-    const entry = redacted.diff.find(
-      (row) => row.key.toLowerCase() === "serverpassword",
-    );
+    const entry = redacted.diff.find((row) => row.key.toLowerCase() === "serverpassword");
     expect(entry?.before).toBe("••••••••");
     expect(entry?.after).toBe("••••••••");
   });

@@ -46,28 +46,19 @@ export function hasMapsCategoryFilter(
 }
 
 /** Resolve ASA Maps class/category ids from Worker categories (#295). */
-export function resolveMapsCategoryFilter(
-  categories: ModCategory[],
-): MapsCategoryFilter {
-  const mapsClass = categories.find(
-    (entry) => entry.isClass && MAPS_LABEL.test(entry.name),
-  );
+export function resolveMapsCategoryFilter(categories: ModCategory[]): MapsCategoryFilter {
+  const mapsClass = categories.find((entry) => entry.isClass && MAPS_LABEL.test(entry.name));
   if (mapsClass !== undefined) {
     return { classId: mapsClass.id };
   }
-  const mapsCategory = categories.find(
-    (entry) => !entry.isClass && MAPS_LABEL.test(entry.name),
-  );
+  const mapsCategory = categories.find((entry) => !entry.isClass && MAPS_LABEL.test(entry.name));
   if (mapsCategory !== undefined) {
     return { categoryId: mapsCategory.id };
   }
   return {};
 }
 
-export function buildMapsSearchOptions(
-  categoryFilter: MapsCategoryFilter,
-  page: number,
-): ModSearchOptions {
+export function buildMapsSearchOptions(categoryFilter: MapsCategoryFilter, page: number): ModSearchOptions {
   return {
     index: (page - 1) * MAPS_SEARCH_PAGE_SIZE,
     pageSize: MAPS_SEARCH_PAGE_SIZE,
@@ -79,11 +70,7 @@ export function buildMapsSearchOptions(
 
 export function isValidMapLaunchToken(token: string): boolean {
   const trimmed = token.trim();
-  return (
-    trimmed.length > 0
-    && hasMapTokenWpSuffix(trimmed)
-    && !/\s/.test(trimmed)
-  );
+  return trimmed.length > 0 && hasMapTokenWpSuffix(trimmed) && !/\s/.test(trimmed);
 }
 
 export function buildMapsSearchRows(mods: ModMetadata[]): MapsSearchRow[] {
@@ -94,9 +81,7 @@ export function buildMapsSearchRows(mods: ModMetadata[]): MapsSearchRow[] {
 }
 
 /** Merge search hits with batch metadata (descriptions for token infer, #195). */
-export async function enrichMapsSearchPage(
-  page: ModSearchPage,
-): Promise<ModMetadata[]> {
+export async function enrichMapsSearchPage(page: ModSearchPage): Promise<ModMetadata[]> {
   const ids = page.items.map((item) => item.id);
   if (ids.length === 0) {
     return [];
@@ -123,9 +108,7 @@ export function applyMapsSearchToProfileFields(input: {
   mapSaveFolder: string | null;
 } {
   const { payload } = input;
-  const mods = input.mods.includes(payload.mod.id)
-    ? input.mods
-    : [...input.mods, payload.mod.id];
+  const mods = input.mods.includes(payload.mod.id) ? input.mods : [...input.mods, payload.mod.id];
   const disabledMods = input.disabledMods.filter((id) => id !== payload.mod.id);
   return {
     map: payload.map,

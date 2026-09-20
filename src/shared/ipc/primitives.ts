@@ -1,10 +1,7 @@
 import { z } from "zod";
 import { PORT_MAX, PORT_MIN } from "../types";
 import { MAX_WINDOWS_PATH_LENGTH } from "../server/server-install-path";
-import {
-  MAX_LOG_RETENTION_DAYS,
-  MIN_LOG_RETENTION_DAYS,
-} from "../settings/log-retention";
+import { MAX_LOG_RETENTION_DAYS, MIN_LOG_RETENTION_DAYS } from "../settings/log-retention";
 
 /** Absolute Windows path (drive letter or UNC). */
 const WINDOWS_ABS_PATH = /^(?:[a-zA-Z]:[\\/]|\\\\)/;
@@ -66,11 +63,7 @@ export const clusterIdSchema = z
   });
 
 export const nonEmptyStringSchema = (label: string, max = MAX_STRING_PARAM_LENGTH) =>
-  z
-    .string()
-    .trim()
-    .min(1, `${label} required`)
-    .max(max, `${label} too long`);
+  z.string().trim().min(1, `${label} required`).max(max, `${label} too long`);
 
 /** AsaApi plugin folder name (no path separators / `..`). */
 export const asaApiPluginNameSchema = nonEmptyStringSchema("Plugin name", 128).refine(
@@ -108,22 +101,13 @@ export const backupKindSchema = z.enum(["world", "players", "ini"]);
 
 export const pickPathKindSchema = z.enum(["directory", "file", "save"]);
 
-export const appDataFolderKindSchema = z.enum([
-  "app",
-  "backups",
-  "updateLogs",
-  "steamcmd",
-  "asaApiCache",
-]);
+export const appDataFolderKindSchema = z.enum(["app", "backups", "updateLogs", "steamcmd", "asaApiCache"]);
 
 export const iniFileKeySchema = z.enum(["gameUserSettings", "game"]);
 
 export const uiDensitySchema = z.enum(["comfortable", "compact"]);
 
-export const installationServersModeSchema = z.union([
-  z.boolean(),
-  z.literal("when-official-changed"),
-]);
+export const installationServersModeSchema = z.union([z.boolean(), z.literal("when-official-changed")]);
 
 export const logFileNameSchema = z
   .string()
@@ -202,20 +186,13 @@ export const backupPolicyWriteSchema = z
     retainCountPlayers: z.number().int().min(1).max(500),
     retainCountIni: z.number().int().min(1).max(500),
     backupDir: z.preprocess(
-      (value) =>
-        typeof value === "string" && value.trim().length === 0 ? null : value,
+      (value) => (typeof value === "string" && value.trim().length === 0 ? null : value),
       z.union([windowsAbsPathSchema, z.null()]),
     ),
   })
   .strict();
 
-const maintenanceBroadcastPresetSchema = z.enum([
-  "none",
-  "quiet",
-  "standard",
-  "strict",
-  "custom",
-]);
+const maintenanceBroadcastPresetSchema = z.enum(["none", "quiet", "standard", "strict", "custom"]);
 
 const maintenanceJobWarningsSchema = z
   .object({
@@ -233,10 +210,7 @@ export const maintenancePolicyWriteSchema = z
     updateEnabled: z.boolean(),
     manualRestartWarningsEnabled: z.boolean(),
     manualRestartWarnings: maintenanceJobWarningsSchema,
-    restartDaysOfWeek: z
-      .array(z.number().int().min(0).max(6))
-      .min(1)
-      .max(7),
+    restartDaysOfWeek: z.array(z.number().int().min(0).max(6)).min(1).max(7),
     restartTimeLocal: z.string().regex(/^\d{2}:\d{2}$/),
     wipeSaveWorldFirst: z.boolean(),
     restartWarnings: maintenanceJobWarningsSchema,
@@ -302,13 +276,10 @@ export const logRetentionSettingsSchema = z
     autoCleanupEnabled: z.boolean(),
   })
   .strict()
-  .refine(
-    (settings) => settings.eventsFailureRetainDays >= settings.eventsRetainDays,
-    {
-      message: "Failure event retention must be >= routine event retention",
-      path: ["eventsFailureRetainDays"],
-    },
-  );
+  .refine((settings) => settings.eventsFailureRetainDays >= settings.eventsRetainDays, {
+    message: "Failure event retention must be >= routine event retention",
+    path: ["eventsFailureRetainDays"],
+  });
 
 export const logCleanupOptionsSchema = z
   .object({
@@ -340,13 +311,7 @@ export const modsSearchOptionsSchema = z
     pageSize: z.number().int().positive().max(50).optional(),
     classId: z.number().int().positive().optional(),
     categoryId: z.number().int().positive().optional(),
-    sortField: z.union([
-      z.literal(1),
-      z.literal(2),
-      z.literal(3),
-      z.literal(4),
-      z.literal(6),
-    ]).optional(),
+    sortField: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(6)]).optional(),
     sortOrder: z.enum(["asc", "desc"]).optional(),
   })
   .strict()

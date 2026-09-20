@@ -7,10 +7,7 @@ import {
   suggestNextPortTriplet,
 } from "@shared/server/port-suggest";
 
-function profile(
-  id: string,
-  ports: { gamePort: number; queryPort: number; rconPort: number },
-) {
+function profile(id: string, ports: { gamePort: number; queryPort: number; rconPort: number }) {
   return { id, name: id, ...ports };
 }
 

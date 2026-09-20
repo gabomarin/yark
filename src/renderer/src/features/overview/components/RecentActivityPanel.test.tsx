@@ -26,9 +26,7 @@ describe("RecentActivityPanel", () => {
 
     expect(screen.getByText("Loading recent activity")).toBeInTheDocument();
     expect(screen.getByRole("status")).toBeInTheDocument();
-    expect(container.querySelectorAll("[data-recent-activity] [aria-hidden='true']")).toHaveLength(
-      3,
-    );
+    expect(container.querySelectorAll("[data-recent-activity] [aria-hidden='true']")).toHaveLength(3);
   });
 
   it("shows five operational events, removes RCON noise and opens the full logs", () => {

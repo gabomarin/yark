@@ -7,9 +7,7 @@ declare const __YARK_CURSEFORGE_PROXY_URL__: string;
  */
 function readBuildUrl(): string {
   try {
-    return typeof __YARK_CURSEFORGE_PROXY_URL__ === "string"
-      ? __YARK_CURSEFORGE_PROXY_URL__.trim()
-      : "";
+    return typeof __YARK_CURSEFORGE_PROXY_URL__ === "string" ? __YARK_CURSEFORGE_PROXY_URL__.trim() : "";
   } catch {
     return "";
   }

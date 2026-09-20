@@ -12,16 +12,10 @@ export const DEFAULT_READY_SETTLE_MS = 15_000;
 export const RCON_PROBE_TIMEOUT_MS = 2500;
 
 export function hasReadyLogLine(lines: readonly string[]): boolean {
-  return lines.some((line) =>
-    READY_LOG_PATTERNS.some((pattern) => pattern.test(line)),
-  );
+  return lines.some((line) => READY_LOG_PATTERNS.some((pattern) => pattern.test(line)));
 }
 
-export function shouldDelayRconProbe(input: {
-  sawLogSignal: boolean;
-  elapsedMs: number;
-  minWaitMs?: number;
-}): boolean {
+export function shouldDelayRconProbe(input: { sawLogSignal: boolean; elapsedMs: number; minWaitMs?: number }): boolean {
   const minWaitMs = input.minWaitMs ?? DEFAULT_READY_PROBE_MIN_WAIT_MS;
   return !input.sawLogSignal && input.elapsedMs < minWaitMs;
 }
@@ -54,11 +48,7 @@ export function formatReattachReadyWaitMessage(): string {
 
 const MAX_RUNTIME_LOG_LINES = 1200;
 
-export function formatRuntimeLogLine(
-  timestampIso: string,
-  source: string,
-  message: string,
-): string {
+export function formatRuntimeLogLine(timestampIso: string, source: string, message: string): string {
   return `[${timestampIso}] [${source}] ${message}`;
 }
 
@@ -94,9 +84,6 @@ export function splitRuntimeLogChunk(
 export const RUNTIME_LOG_SOURCES = ["stdout", "stderr", "log"] as const;
 export type RuntimeLogSource = (typeof RUNTIME_LOG_SOURCES)[number];
 
-export function runtimeLogPartialKey(
-  serverId: string,
-  source: RuntimeLogSource,
-): string {
+export function runtimeLogPartialKey(serverId: string, source: RuntimeLogSource): string {
   return `${serverId}\0${source}`;
 }

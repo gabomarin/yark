@@ -24,31 +24,31 @@ or seeds logs for development and QA.
 
 ## Module map
 
-| Role | Path |
-| --- | --- |
-| Aggregation / export / clear / retention | `src/backend/domains/logs/logs-service.ts` |
-| Retention scheduler | `src/backend/domains/logs/log-retention-scheduler.ts` |
-| Shared defaults / normalize | `src/shared/settings/log-retention.ts` |
-| Event persistence | `src/backend/infra/db/server-repository.ts` (`addEvent`) |
-| Diagnostic omit/redact (#144) | `src/shared/credential-redaction.ts` |
-| DB migration (details column) | `src/backend/infra/db/database.ts` (migration **v6**) |
-| Detail catalog + merge | `src/shared/event-details.ts` (`resolveEventDetails`) |
-| Contracts | `src/shared/types.ts` (`AppEvent`, `AppEventDetails`, `ServerOperationalLogs`, `LogRetentionSettings`) |
-| Sidebar Logs (all servers) | `src/renderer/src/features/logs/LogsPage.tsx` (Mantine **Accordion** event rows) |
-| Server workspace Logs | `src/renderer/src/features/logs/ServerLogsPanel.tsx` (Mantine **Accordion** event rows; deep-link focus preserved) |
-| Detail body | `src/renderer/src/features/logs/EventDetailsBody.tsx` (Accordion.Panel content) |
-| Overview recent activity | `src/renderer/src/features/overview/components/RecentActivityPanel.tsx` (Mantine **Timeline**) |
-| Settings retention UI | `src/renderer/src/features/settings/components/SettingsLogRetentionSection.tsx` |
+| Role                                     | Path                                                                                                               |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Aggregation / export / clear / retention | `src/backend/domains/logs/logs-service.ts`                                                                         |
+| Retention scheduler                      | `src/backend/domains/logs/log-retention-scheduler.ts`                                                              |
+| Shared defaults / normalize              | `src/shared/settings/log-retention.ts`                                                                             |
+| Event persistence                        | `src/backend/infra/db/server-repository.ts` (`addEvent`)                                                           |
+| Diagnostic omit/redact (#144)            | `src/shared/credential-redaction.ts`                                                                               |
+| DB migration (details column)            | `src/backend/infra/db/database.ts` (migration **v6**)                                                              |
+| Detail catalog + merge                   | `src/shared/event-details.ts` (`resolveEventDetails`)                                                              |
+| Contracts                                | `src/shared/types.ts` (`AppEvent`, `AppEventDetails`, `ServerOperationalLogs`, `LogRetentionSettings`)             |
+| Sidebar Logs (all servers)               | `src/renderer/src/features/logs/LogsPage.tsx` (Mantine **Accordion** event rows)                                   |
+| Server workspace Logs                    | `src/renderer/src/features/logs/ServerLogsPanel.tsx` (Mantine **Accordion** event rows; deep-link focus preserved) |
+| Detail body                              | `src/renderer/src/features/logs/EventDetailsBody.tsx` (Accordion.Panel content)                                    |
+| Overview recent activity                 | `src/renderer/src/features/overview/components/RecentActivityPanel.tsx` (Mantine **Timeline**)                     |
+| Settings retention UI                    | `src/renderer/src/features/settings/components/SettingsLogRetentionSection.tsx`                                    |
 
 ## Ownership and retention (#84)
 
-| Source | Owner | Retention |
-| --- | --- | --- |
-| SQLite `events` | YARK | Age-based: routine default **90** days; failure evidence **180** days |
-| `userData/update-logs/{serverId}-*.log` | YARK | Keep last **20** successful files per server; failed/unknown kept **180** days |
-| In-memory runtime buffer | YARK (session) | Hard cap **1200** lines in `ProcessManager` — not a Settings control |
-| `ShooterGame/Saved/Logs` | ASA | **Never** deleted by YARK; read/tail only |
-| Backup ZIP history | BackupService | Own retain counts — see [backups.md](backups.md) |
+| Source                                  | Owner          | Retention                                                                      |
+| --------------------------------------- | -------------- | ------------------------------------------------------------------------------ |
+| SQLite `events`                         | YARK           | Age-based: routine default **90** days; failure evidence **180** days          |
+| `userData/update-logs/{serverId}-*.log` | YARK           | Keep last **20** successful files per server; failed/unknown kept **180** days |
+| In-memory runtime buffer                | YARK (session) | Hard cap **1200** lines in `ProcessManager` — not a Settings control           |
+| `ShooterGame/Saved/Logs`                | ASA            | **Never** deleted by YARK; read/tail only                                      |
+| Backup ZIP history                      | BackupService  | Own retain counts — see [backups.md](backups.md)                               |
 
 Persisted policy key: `app_settings` → `logRetention.v1`. Invalid Settings values
 are rejected and the previous policy is kept.
@@ -85,13 +85,13 @@ SQLite `events.details` stores optional JSON (`AppEventDetails`):
 `resolveEventDetails(event)` merges stored fields with a **type catalog**
 (fallback for older rows without details). UI labels:
 
-| Field | UI label |
-| --- | --- |
-| `what` | What |
-| `cause` | Cause |
-| `location` | Where |
-| `suggestion` | Try next |
-| `context` | Key/value chips under the body |
+| Field        | UI label                       |
+| ------------ | ------------------------------ |
+| `what`       | What                           |
+| `cause`      | Cause                          |
+| `location`   | Where                          |
+| `suggestion` | Try next                       |
+| `context`    | Key/value chips under the body |
 
 Catalog coverage includes `update_*`, `backup_*`, `server_*`, `error`,
 `rcon_command`, `logs_retention_*`, plus a default. Safe-update paths in
@@ -104,12 +104,12 @@ Export (`logs:export`) resolves the same fields so text dumps stay useful.
 
 `ServerLogsPanel` sections:
 
-| Section | Source |
-| --- | --- |
-| Events | SQLite `events` for that server |
-| Runtime | In-memory buffer: stdout/stderr plus live tail of `ShooterGame/Saved/Logs/ShooterGame.log` (native console on or off). Cleared on the next Start, not on crash. |
-| Updates | Files under userData `update-logs/` (`{serverId}-….log`) |
-| Backups (**Backup history** in the UI) | Backup records from `BackupService` / repository |
+| Section                                | Source                                                                                                                                                          |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Events                                 | SQLite `events` for that server                                                                                                                                 |
+| Runtime                                | In-memory buffer: stdout/stderr plus live tail of `ShooterGame/Saved/Logs/ShooterGame.log` (native console on or off). Cleared on the next Start, not on crash. |
+| Updates                                | Files under userData `update-logs/` (`{serverId}-….log`)                                                                                                        |
+| Backups (**Backup history** in the UI) | Backup records from `BackupService` / repository                                                                                                                |
 
 While the Runtime tab is selected, the panel quietly refreshes about every 1.5s
 via `logs:runtime` (runtime buffer only — not a full `logs:list`). Stale responses
@@ -135,19 +135,19 @@ consume so it cannot stick to another server. Overview can open
 
 ## Public IPC
 
-| Channel | Purpose |
-| --- | --- |
-| `logs:list` | `ServerOperationalLogs` for one server |
-| `logs:read-update` | Read one update log file |
-| `logs:export` | Export resolved events + related sections |
-| `logs:open-update-file` | Reveal/open an update log on disk |
-| `logs:clear-events` | Delete SQLite events for the server |
-| `logs:clear-runtime` | Clear the process runtime buffer |
-| `logs:delete-update` | Delete one update log file |
-| `logs:clear-updates` | Delete all update logs for the server |
-| `logs:get-retention-settings` / `logs:set-retention-settings` | Read/write retention policy |
-| `logs:preview-cleanup` / `logs:run-cleanup` | Manual retention preview + confirm |
-| `events:recent` | Recent events across servers (Overview / sidebar Logs) |
+| Channel                                                       | Purpose                                                |
+| ------------------------------------------------------------- | ------------------------------------------------------ |
+| `logs:list`                                                   | `ServerOperationalLogs` for one server                 |
+| `logs:read-update`                                            | Read one update log file                               |
+| `logs:export`                                                 | Export resolved events + related sections              |
+| `logs:open-update-file`                                       | Reveal/open an update log on disk                      |
+| `logs:clear-events`                                           | Delete SQLite events for the server                    |
+| `logs:clear-runtime`                                          | Clear the process runtime buffer                       |
+| `logs:delete-update`                                          | Delete one update log file                             |
+| `logs:clear-updates`                                          | Delete all update logs for the server                  |
+| `logs:get-retention-settings` / `logs:set-retention-settings` | Read/write retention policy                            |
+| `logs:preview-cleanup` / `logs:run-cleanup`                   | Manual retention preview + confirm                     |
+| `events:recent`                                               | Recent events across servers (Overview / sidebar Logs) |
 
 Clear actions are confirmed in the UI per section. There is no single
 “clear everything” IPC — call the relevant clears intentionally.
@@ -172,25 +172,25 @@ node scripts/visual-logs.cjs
 
 UserData resolution in the seed script:
 
-| Platform | Default path |
-| --- | --- |
-| Windows | `%APPDATA%/yark-server-manager` |
-| macOS | `~/Library/Application Support/yark-server-manager` |
-| Linux | `~/.config/yark-server-manager` |
+| Platform | Default path                                        |
+| -------- | --------------------------------------------------- |
+| Windows  | `%APPDATA%/yark-server-manager`                     |
+| macOS    | `~/Library/Application Support/yark-server-manager` |
+| Linux    | `~/.config/yark-server-manager`                     |
 
 Override with `YARK_USER_DATA` when needed (cloud agents, portable profiles).
 
 ## Troubleshooting
 
-| Symptom | Likely cause / next step |
-| --- | --- |
-| Event shows only a bare message | Older row without `details`; catalog still fills What / Try next from `type` |
-| Sidebar “Open in server” opens wrong tab | Check `logsFocus.section`; focus is cleared after first workspace render |
-| Clear did not remove update files | Events clear ≠ update-log clear — use Updates section clear/delete |
-| Seed script cannot find DB | App never launched, or wrong userData — set `YARK_USER_DATA` |
-| SteamCMD console empty in Logs | Live console is on the **Downloads** page (footer teaser elsewhere); Updates section shows **files** after jobs |
-| History disappeared after a few months | Retention policy (#84); check Settings → Log retention; deleted data is not recoverable |
-| Cleanup skipped a file | In use / permission — retry later; paths outside `update-logs` are never deleted |
+| Symptom                                  | Likely cause / next step                                                                                        |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Event shows only a bare message          | Older row without `details`; catalog still fills What / Try next from `type`                                    |
+| Sidebar “Open in server” opens wrong tab | Check `logsFocus.section`; focus is cleared after first workspace render                                        |
+| Clear did not remove update files        | Events clear ≠ update-log clear — use Updates section clear/delete                                              |
+| Seed script cannot find DB               | App never launched, or wrong userData — set `YARK_USER_DATA`                                                    |
+| SteamCMD console empty in Logs           | Live console is on the **Downloads** page (footer teaser elsewhere); Updates section shows **files** after jobs |
+| History disappeared after a few months   | Retention policy (#84); check Settings → Log retention; deleted data is not recoverable                         |
+| Cleanup skipped a file                   | In use / permission — retry later; paths outside `update-logs` are never deleted                                |
 
 ## Verification
 

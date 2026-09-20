@@ -1,9 +1,6 @@
 const FLIP_THRESHOLD_PX = 1;
 
-export function shouldFlipQueueOrder(
-  previousIds: readonly string[],
-  nextIds: readonly string[],
-): boolean {
+export function shouldFlipQueueOrder(previousIds: readonly string[], nextIds: readonly string[]): boolean {
   if (previousIds.length < 2 || previousIds.length !== nextIds.length) {
     return false;
   }

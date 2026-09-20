@@ -12,10 +12,7 @@ vi.mock("@backend/domains/instances/sync-profile-ini", () => {
   return {
     syncProfileSettingsToIni,
     applyProfileOwnedIni: vi.fn(
-      async (
-        profile: { id: string },
-        syncVia?: (serverId: string, profile?: unknown) => Promise<void>,
-      ) => {
+      async (profile: { id: string }, syncVia?: (serverId: string, profile?: unknown) => Promise<void>) => {
         if (syncVia !== undefined) {
           await syncVia(profile.id, profile);
           return;
@@ -139,12 +136,7 @@ describe("InstanceService.restart", () => {
       createPreRestartBackup: vi.fn(async () => []),
     } as unknown as BackupService;
 
-    const service = new InstanceService(
-      repo,
-      processes,
-      backups,
-      new InstanceLockManager(),
-    );
+    const service = new InstanceService(repo, processes, backups, new InstanceLockManager());
 
     await service.restart(profile.id, { openNativeConsole: true });
 
@@ -153,15 +145,10 @@ describe("InstanceService.restart", () => {
       profile.id,
       expect.objectContaining({ skipFlush: true }),
     );
-    expect(processes.start).toHaveBeenCalledWith(
-      profile,
-      expect.objectContaining({ openNativeConsole: true }),
-    );
+    expect(processes.start).toHaveBeenCalledWith(profile, expect.objectContaining({ openNativeConsole: true }));
 
-    const stopOrder = vi.mocked(processes.finishGracefulStop).mock
-      .invocationCallOrder[0]!;
-    const backupOrder = vi.mocked(backups.createPreRestartBackup).mock
-      .invocationCallOrder[0]!;
+    const stopOrder = vi.mocked(processes.finishGracefulStop).mock.invocationCallOrder[0]!;
+    const backupOrder = vi.mocked(backups.createPreRestartBackup).mock.invocationCallOrder[0]!;
     const startOrder = vi.mocked(processes.start).mock.invocationCallOrder[0]!;
     expect(stopOrder).toBeLessThan(backupOrder);
     expect(backupOrder).toBeLessThan(startOrder);
@@ -176,20 +163,13 @@ describe("InstanceService.restart", () => {
       createPreRestartBackup: vi.fn(async () => []),
     } as unknown as BackupService;
 
-    const service = new InstanceService(
-      repo,
-      processes,
-      backups,
-      new InstanceLockManager(),
-      { resolveOpenNativeConsole: () => true },
-    );
+    const service = new InstanceService(repo, processes, backups, new InstanceLockManager(), {
+      resolveOpenNativeConsole: () => true,
+    });
 
     await service.restart(profile.id);
 
-    expect(processes.start).toHaveBeenCalledWith(
-      profile,
-      expect.objectContaining({ openNativeConsole: true }),
-    );
+    expect(processes.start).toHaveBeenCalledWith(profile, expect.objectContaining({ openNativeConsole: true }));
   });
 
   it("rejects when the server is not running", async () => {
@@ -200,16 +180,9 @@ describe("InstanceService.restart", () => {
       createPreRestartBackup: vi.fn(),
     } as unknown as BackupService;
 
-    const service = new InstanceService(
-      repo,
-      processes,
-      backups,
-      new InstanceLockManager(),
-    );
+    const service = new InstanceService(repo, processes, backups, new InstanceLockManager());
 
-    await expect(service.restart(profile.id)).rejects.toThrow(
-      "Server is not running",
-    );
+    await expect(service.restart(profile.id)).rejects.toThrow("Server is not running");
     expect(backups.createPreRestartBackup).not.toHaveBeenCalled();
     expect(processes.start).not.toHaveBeenCalled();
   });
@@ -224,12 +197,7 @@ describe("InstanceService.restart", () => {
       }),
     } as unknown as BackupService;
 
-    const service = new InstanceService(
-      repo,
-      processes,
-      backups,
-      new InstanceLockManager(),
-    );
+    const service = new InstanceService(repo, processes, backups, new InstanceLockManager());
 
     await expect(service.restart(profile.id)).rejects.toThrow("disk full");
     expect(processes.finishGracefulStop).toHaveBeenCalled();
@@ -248,12 +216,7 @@ describe("InstanceService.restart", () => {
       createPreRestartBackup: vi.fn(async () => []),
     } as unknown as BackupService;
 
-    const service = new InstanceService(
-      repo,
-      processes,
-      backups,
-      new InstanceLockManager(),
-    );
+    const service = new InstanceService(repo, processes, backups, new InstanceLockManager());
 
     await expect(service.restart(profile.id)).rejects.toThrow("spawn failed");
     expect(backups.createPreRestartBackup).toHaveBeenCalled();
@@ -269,12 +232,7 @@ describe("InstanceService.restart", () => {
       createPreRestartBackup: vi.fn(),
     } as unknown as BackupService;
 
-    const service = new InstanceService(
-      repo,
-      processes,
-      backups,
-      new InstanceLockManager(),
-    );
+    const service = new InstanceService(repo, processes, backups, new InstanceLockManager());
 
     await expect(service.restart(profile.id)).rejects.toThrow(/replaced/);
     expect(backups.createPreRestartBackup).not.toHaveBeenCalled();
@@ -293,16 +251,9 @@ describe("InstanceService.restart", () => {
       createPreRestartBackup: vi.fn(),
     } as unknown as BackupService;
 
-    const service = new InstanceService(
-      repo,
-      processes,
-      backups,
-      new InstanceLockManager(),
-    );
+    const service = new InstanceService(repo, processes, backups, new InstanceLockManager());
 
-    await expect(service.restart(profile.id)).rejects.toThrow(
-      /SaveWorld failed and the process was force-killed/,
-    );
+    await expect(service.restart(profile.id)).rejects.toThrow(/SaveWorld failed and the process was force-killed/);
     expect(backups.createPreRestartBackup).not.toHaveBeenCalled();
     expect(processes.start).not.toHaveBeenCalled();
     expect(processes.finishGracefulStop).not.toHaveBeenCalled();
@@ -343,12 +294,7 @@ describe("InstanceService.restart", () => {
       }),
     } as unknown as BackupService;
 
-    const service = new InstanceService(
-      repo,
-      processes,
-      backups,
-      new InstanceLockManager(),
-    );
+    const service = new InstanceService(repo, processes, backups, new InstanceLockManager());
 
     const restartPromise = service.restart(profile.id);
 
@@ -359,12 +305,8 @@ describe("InstanceService.restart", () => {
     expect(service.isStopInProgress(profile.id)).toBe(true);
     expect(service.isStopInProgress()).toBe(true);
     await expect(service.kill(profile.id)).rejects.toThrow(/restart backup is in progress/);
-    await expect(service.stop(profile.id)).rejects.toThrow(
-      /restart is in progress/,
-    );
-    await expect(service.start(profile.id)).rejects.toThrow(
-      /stop and backup are still in progress/,
-    );
+    await expect(service.stop(profile.id)).rejects.toThrow(/restart is in progress/);
+    await expect(service.start(profile.id)).rejects.toThrow(/stop and backup are still in progress/);
 
     const waitPromise = service.waitForStopJobs();
     finishBackup();
@@ -414,16 +356,12 @@ describe("InstanceService.restart", () => {
       await restartPromise;
       await settlePromise;
 
-      expect(vi.mocked(processes.beginGracefulStop).mock.calls.length).toBeGreaterThan(
-        stopsBeforeQuit,
-      );
+      expect(vi.mocked(processes.beginGracefulStop).mock.calls.length).toBeGreaterThan(stopsBeforeQuit);
       expect(backups.createPreStopBackup).toHaveBeenCalled();
       expect(processes.isActive(profile.id)).toBe(false);
       expect(service.shouldBlockAppQuit()).toBe(false);
     } finally {
-      vi.mocked(syncMod.applyProfileOwnedIni).mockImplementation(
-        async () => undefined,
-      );
+      vi.mocked(syncMod.applyProfileOwnedIni).mockImplementation(async () => undefined);
     }
   });
 
@@ -446,25 +384,17 @@ describe("InstanceService.restart", () => {
       createPreRestartBackup: vi.fn(async () => []),
     } as unknown as BackupService;
 
-    const service = new InstanceService(
-      repo,
-      processes,
-      backups,
-      new InstanceLockManager(),
-    );
+    const service = new InstanceService(repo, processes, backups, new InstanceLockManager());
 
     const restartPromise = service.restart(profile.id);
     await vi.waitFor(() => {
       expect(processes.beginGracefulStop).toHaveBeenCalled();
     });
 
-    await expect(service.stop(profile.id)).rejects.toThrow(
-      /restart is in progress/,
-    );
+    await expect(service.stop(profile.id)).rejects.toThrow(/restart is in progress/);
 
     releaseStop();
     await restartPromise;
     expect(backups.createPreRestartBackup).toHaveBeenCalled();
   });
 });
-

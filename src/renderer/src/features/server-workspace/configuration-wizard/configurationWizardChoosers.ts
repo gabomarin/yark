@@ -73,9 +73,7 @@ export function draftForProfileChoice(
     };
   }
   const draft = applyExperienceProfile(current, profile);
-  const selectedProfile = EXPERIENCE_PROFILES.find(
-    (candidate) => candidate.id === profile,
-  );
+  const selectedProfile = EXPERIENCE_PROFILES.find((candidate) => candidate.id === profile);
   return {
     draft,
     presets: {
@@ -99,8 +97,7 @@ export function draftForProgressionPreset(
         xpRate: initialDraft.xpRate,
         harvestRate: initialDraft.harvestRate,
         tamingRate: initialDraft.tamingRate,
-        resourcesRespawnPeriodMultiplier:
-          initialDraft.resourcesRespawnPeriodMultiplier,
+        resourcesRespawnPeriodMultiplier: initialDraft.resourcesRespawnPeriodMultiplier,
       },
       progressionPreset: "current",
     };
@@ -127,8 +124,7 @@ export function draftForBreedingPreset(
         cuddleIntervalMultiplier: initialDraft.cuddleIntervalMultiplier,
         matingSpeedMultiplier: initialDraft.matingSpeedMultiplier,
         babyImprintAmountMultiplier: initialDraft.babyImprintAmountMultiplier,
-        babyCuddleGracePeriodMultiplier:
-          initialDraft.babyCuddleGracePeriodMultiplier,
+        babyCuddleGracePeriodMultiplier: initialDraft.babyCuddleGracePeriodMultiplier,
       },
       breedingPreset: "current",
     };
@@ -153,10 +149,8 @@ export function draftForWorldPreset(
         harvestHealthMultiplier: initialDraft.harvestHealthMultiplier,
         dayCycleSpeedScale: initialDraft.dayCycleSpeedScale,
         nightTimeSpeedScale: initialDraft.nightTimeSpeedScale,
-        playerCharacterFoodDrainMultiplier:
-          initialDraft.playerCharacterFoodDrainMultiplier,
-        playerCharacterWaterDrainMultiplier:
-          initialDraft.playerCharacterWaterDrainMultiplier,
+        playerCharacterFoodDrainMultiplier: initialDraft.playerCharacterFoodDrainMultiplier,
+        playerCharacterWaterDrainMultiplier: initialDraft.playerCharacterWaterDrainMultiplier,
         structureResistanceMultiplier: initialDraft.structureResistanceMultiplier,
       },
       worldPreset: "current",
@@ -186,10 +180,7 @@ export function draftForDifficultyChoice(
       difficultyChoice,
     };
   }
-  const level =
-    difficultyChoice === "custom"
-      ? current.maxWildDinoLevel
-      : Number(difficultyChoice);
+  const level = difficultyChoice === "custom" ? current.maxWildDinoLevel : Number(difficultyChoice);
   return {
     draft: applyDifficultyLevel(current, level),
     difficultyChoice,

@@ -7,8 +7,7 @@ import {
 } from "../../src/renderer/src/features/servers/components/MoveInstallDialog/moveInstallPathWarning";
 
 function installation(
-  partial: Partial<ServerInstallationInfo> &
-    Pick<ServerInstallationInfo, "health" | "guidance">,
+  partial: Partial<ServerInstallationInfo> & Pick<ServerInstallationInfo, "health" | "guidance">,
 ): ServerInstallationInfo {
   return {
     serverId: "probe",
@@ -56,10 +55,7 @@ describe("moveDestPreviewIssue", () => {
     { id: "rag", name: "Ragnarok", installDir: "C:\\ark\\Ragnarok" },
   ];
 
-  function preview(
-    destDir: string,
-    disk: ImportInstallProbe | null = null,
-  ): string | null {
+  function preview(destDir: string, disk: ImportInstallProbe | null = null): string | null {
     return moveDestPreviewIssue({
       sourceDir: "C:\\ark\\Island",
       destDir,
@@ -117,9 +113,7 @@ describe("moveDestPreviewIssue", () => {
     expect(moveDestFolderName("C:\\ark\\Island", "The Island")).toBe("Island");
     expect(resolveMoveDestDir("F:\\Diego", "Island", false)).toBe("F:\\Diego");
     expect(resolveMoveDestDir("F:\\Diego", "Island", true)).toBe("F:\\Diego\\Island");
-    expect(resolveMoveDestDir("F:\\Diego\\Island", "Island", true)).toBe(
-      "F:\\Diego\\Island",
-    );
+    expect(resolveMoveDestDir("F:\\Diego\\Island", "Island", true)).toBe("F:\\Diego\\Island");
   });
 
   it("rejects a non-empty dest after probe", () => {

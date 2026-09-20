@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { ImportInstallProbe, ServerInstallationInfo } from "@shared/types";
-import { canImportInstallProceed, applyPreferredCluster, suggestionsToForm } from "../../src/renderer/src/features/servers/importInstallModel";
+import {
+  canImportInstallProceed,
+  applyPreferredCluster,
+  suggestionsToForm,
+} from "../../src/renderer/src/features/servers/importInstallModel";
 
-function installation(
-  health: ServerInstallationInfo["health"],
-): ServerInstallationInfo {
+function installation(health: ServerInstallationInfo["health"]): ServerInstallationInfo {
   return {
     serverId: "import:x",
     installed: health === "ready",
@@ -15,8 +17,7 @@ function installation(
     steamBuild: null,
     arkVersion: null,
     version: null,
-    binaryPath:
-      "C:\\ASA\\Server\\ShooterGame\\Binaries\\Win64\\ArkAscendedServer.exe",
+    binaryPath: "C:\\ASA\\Server\\ShooterGame\\Binaries\\Win64\\ArkAscendedServer.exe",
     checkedAt: new Date().toISOString(),
   };
 }
@@ -66,24 +67,12 @@ describe("canImportInstallProceed", () => {
   it("never unlocks empty or other non-ready with opt-in", () => {
     expect(canImportInstallProceed(probe({ health: "empty" }), true)).toBe(false);
     expect(canImportInstallProceed(probe({ health: "missing" }), true)).toBe(false);
-    expect(canImportInstallProceed(probe({ health: "suspicious" }), true)).toBe(
-      false,
-    );
+    expect(canImportInstallProceed(probe({ health: "suspicious" }), true)).toBe(false);
   });
 
   it("blocks managed and nested incomplete even with opt-in", () => {
-    expect(
-      canImportInstallProceed(
-        probe({ health: "incomplete", alreadyManagedBy: "Other" }),
-        true,
-      ),
-    ).toBe(false);
-    expect(
-      canImportInstallProceed(
-        probe({ health: "incomplete", nestedSubfolder: true }),
-        true,
-      ),
-    ).toBe(false);
+    expect(canImportInstallProceed(probe({ health: "incomplete", alreadyManagedBy: "Other" }), true)).toBe(false);
+    expect(canImportInstallProceed(probe({ health: "incomplete", nestedSubfolder: true }), true)).toBe(false);
   });
 });
 

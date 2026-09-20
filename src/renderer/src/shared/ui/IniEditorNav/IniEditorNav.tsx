@@ -2,10 +2,7 @@ import type { ReactElement, ReactNode } from "react";
 import { Code, SquaresFour } from "@phosphor-icons/react";
 import { SegmentedControl } from "@mantine/core";
 import type { IniFileKey } from "@shared/types";
-import {
-  compactLabeledSegmentLabel,
-  compactLabeledSegmentedRootClass,
-} from "@ui/CompactSegmented/CompactSegmented";
+import { compactLabeledSegmentLabel, compactLabeledSegmentedRootClass } from "@ui/CompactSegmented/CompactSegmented";
 import { IniFileSegmented } from "@ui/IniFileSegmented/IniFileSegmented";
 import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
 
@@ -45,11 +42,7 @@ function toModeSegmentData(options: ModeOption[]) {
 export function IniEditorNav(props: Props): ReactElement {
   return (
     <div className={chrome.nav} data-ini-editor-nav>
-      <IniFileSegmented
-        value={props.file}
-        onChange={props.onFileChange}
-        disabled={props.disabled}
-      />
+      <IniFileSegmented value={props.file} onChange={props.onFileChange} disabled={props.disabled} />
       <SegmentedControl
         size="xs"
         aria-label={props.modeAriaLabel ?? "INI edit mode"}

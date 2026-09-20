@@ -47,19 +47,13 @@ const SOURCE_GAME = [
   "EggHatchSpeedMultiplier=8",
   "",
 ].join("\n");
-const TARGET_GUS = [
-  "[ServerSettings]",
-  "XPMultiplier=1",
-  "TamingSpeedMultiplier=1",
-  "",
-].join("\n");
+const TARGET_GUS = ["[ServerSettings]", "XPMultiplier=1", "TamingSpeedMultiplier=1", ""].join("\n");
 
 function assertFixturePath(root, target) {
   const resolvedRoot = path.resolve(root);
   const resolvedTarget = path.resolve(target);
   assert.ok(
-    resolvedTarget === resolvedRoot ||
-      resolvedTarget.startsWith(`${resolvedRoot}${path.sep}`),
+    resolvedTarget === resolvedRoot || resolvedTarget.startsWith(`${resolvedRoot}${path.sep}`),
     `Refusing to use path outside fixture root: ${resolvedTarget}`,
   );
 }
@@ -75,13 +69,7 @@ function resolvedInstallDir(baseFolder, serverName) {
 }
 
 function iniDir(installDir) {
-  return path.join(
-    installDir,
-    "ShooterGame",
-    "Saved",
-    "Config",
-    "WindowsServer",
-  );
+  return path.join(installDir, "ShooterGame", "Saved", "Config", "WindowsServer");
 }
 
 function writeIniPair(installDir, gus, game) {
@@ -106,18 +94,11 @@ async function launchApp() {
 async function quitApp(app) {
   const proc = app.process();
   const exited =
-    proc == null || proc.exitCode != null
-      ? Promise.resolve()
-      : new Promise((resolve) => proc.once("exit", resolve));
+    proc == null || proc.exitCode != null ? Promise.resolve() : new Promise((resolve) => proc.once("exit", resolve));
   await app.evaluate(({ app: electronApp }) => electronApp.quit());
   await Promise.race([
     exited,
-    new Promise((_, reject) =>
-      setTimeout(
-        () => reject(new Error("Electron did not quit within 20 seconds")),
-        20_000,
-      ),
-    ),
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000)),
   ]);
 }
 
@@ -157,9 +138,7 @@ async function createServer(app, page, name, installDir, ports) {
 async function openServerWorkspace(page, name) {
   const card = page.locator(serverCardByName(name)).first();
   await card.waitFor({ state: "visible", timeout: 15000 });
-  await card
-    .getByRole("button", { name: new RegExp(`Open settings for ${escapeRegExp(name)}`, "i") })
-    .click();
+  await card.getByRole("button", { name: new RegExp(`Open settings for ${escapeRegExp(name)}`, "i") }).click();
   await page.locator("[data-workspace-scroll]").waitFor({
     state: "visible",
     timeout: 15000,
@@ -226,10 +205,13 @@ async function completeCopyWizard(page, sourceName, targetNames) {
   await wizard.getByRole("button", { name: /^Next$/i }).click();
 
   // Wait for describe IPC — mods count proves source snapshot loaded.
-  await wizard.getByText(/Loading source settings/i).waitFor({
-    state: "hidden",
-    timeout: 20000,
-  }).catch(() => {});
+  await wizard
+    .getByText(/Loading source settings/i)
+    .waitFor({
+      state: "hidden",
+      timeout: 20000,
+    })
+    .catch(() => {});
   await wizard.getByText(/2 mods/i).waitFor({ state: "visible", timeout: 20000 });
 
   async function enableCategory(title) {
@@ -241,10 +223,7 @@ async function completeCopyWizard(page, sourceName, targetNames) {
       await checkbox.first().click();
     }
     await checkbox.first().waitFor({ state: "attached", timeout: 5000 });
-    assert.ok(
-      await checkbox.first().isChecked(),
-      `${title} should stay checked`,
-    );
+    assert.ok(await checkbox.first().isChecked(), `${title} should stay checked`);
   }
 
   await enableCategory("GameUserSettings.ini");
@@ -252,10 +231,13 @@ async function completeCopyWizard(page, sourceName, targetNames) {
     state: "visible",
     timeout: 20000,
   });
-  await wizard.getByText(/^[1-9]\d* selected$/i).first().waitFor({
-    state: "visible",
-    timeout: 10000,
-  });
+  await wizard
+    .getByText(/^[1-9]\d* selected$/i)
+    .first()
+    .waitFor({
+      state: "visible",
+      timeout: 10000,
+    });
 
   await enableCategory("Game.ini");
   await enableCategory("Mods");
@@ -273,23 +255,18 @@ async function completeCopyWizard(page, sourceName, targetNames) {
   const previewBtn = wizard.getByRole("button", { name: /^Preview$/i });
   await expectEnabled(previewBtn);
   await previewBtn.click();
+  await wizard.getByText(/Overwrite selected settings/i).waitFor({ state: "visible", timeout: 30000 });
   await wizard
-    .getByText(/Overwrite selected settings/i)
-    .waitFor({ state: "visible", timeout: 30000 });
-  await wizard.getByText(/INI changes/i).first().waitFor({
-    state: "visible",
-    timeout: 10000,
-  });
+    .getByText(/INI changes/i)
+    .first()
+    .waitFor({
+      state: "visible",
+      timeout: 10000,
+    });
   const previewText = (await wizard.textContent()) ?? "";
-  assert.match(
-    previewText,
-    /[1-9]\d* INI changes/,
-    "Preview should report INI rate/breeding changes",
-  );
+  assert.match(previewText, /[1-9]\d* INI changes/, "Preview should report INI rate/breeding changes");
 
-  await wizard
-    .getByRole("checkbox", { name: /Overwrite selected settings/i })
-    .click();
+  await wizard.getByRole("checkbox", { name: /Overwrite selected settings/i }).click();
   await wizard.getByRole("button", { name: /^Apply/i }).click();
 
   await wizard.getByText("Copied settings to", { exact: false }).waitFor({
@@ -308,36 +285,16 @@ function assertCopiedTo(installDir, expectedSessionName) {
   const gus = readIni(installDir, "GameUserSettings.ini");
   const game = readIni(installDir, "Game.ini");
   assert.match(gus, /XPMultiplier=2\.5/, "GUS XPMultiplier should be copied");
-  assert.match(
-    gus,
-    /TamingSpeedMultiplier=4/,
-    "GUS TamingSpeedMultiplier should be copied",
-  );
-  assert.match(
-    gus,
-    /HarvestAmountMultiplier=3/,
-    "GUS HarvestAmountMultiplier should be copied",
-  );
+  assert.match(gus, /TamingSpeedMultiplier=4/, "GUS TamingSpeedMultiplier should be copied");
+  assert.match(gus, /HarvestAmountMultiplier=3/, "GUS HarvestAmountMultiplier should be copied");
   assert.match(
     gus,
     new RegExp(`SessionName=${escapeRegExp(expectedSessionName)}`),
     "Target session name must stay profile-owned",
   );
-  assert.doesNotMatch(
-    gus,
-    /SourceSessionShouldNotCopy/,
-    "Source session name must never land on the target",
-  );
-  assert.match(
-    game,
-    /BabyMatureSpeedMultiplier=10/,
-    "Game.ini breeding rate should be copied",
-  );
-  assert.match(
-    game,
-    /EggHatchSpeedMultiplier=8/,
-    "Game.ini egg hatch rate should be copied",
-  );
+  assert.doesNotMatch(gus, /SourceSessionShouldNotCopy/, "Source session name must never land on the target");
+  assert.match(game, /BabyMatureSpeedMultiplier=10/, "Game.ini breeding rate should be copied");
+  assert.match(game, /EggHatchSpeedMultiplier=8/, "Game.ini egg hatch rate should be copied");
 }
 
 function escapeRegExp(value) {
@@ -356,18 +313,12 @@ async function expectEnabled(locator) {
 function assertProfileLists(dbPath, serverName) {
   const db = new DatabaseSync(dbPath);
   try {
-    const row = db
-      .prepare("SELECT mods, extra_args FROM servers WHERE name = ?")
-      .get(serverName);
+    const row = db.prepare("SELECT mods, extra_args FROM servers WHERE name = ?").get(serverName);
     assert.ok(row, `Server row missing for ${serverName}`);
     const mods = JSON.parse(row.mods);
     const extraArgs = JSON.parse(row.extra_args);
     assert.deepEqual(mods, SOURCE_MODS, `${serverName} mods should match source`);
-    assert.deepEqual(
-      extraArgs,
-      SOURCE_EXTRA_ARGS,
-      `${serverName} launch args should match source`,
-    );
+    assert.deepEqual(extraArgs, SOURCE_EXTRA_ARGS, `${serverName} launch args should match source`);
   } finally {
     db.close();
   }

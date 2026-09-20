@@ -1,12 +1,6 @@
 import type { ReactElement } from "react";
 import { CaretDown, CaretRight } from "@phosphor-icons/react";
-import {
-  Group,
-  NumberInput,
-  Switch,
-  Text,
-  UnstyledButton,
-} from "@mantine/core";
+import { Group, NumberInput, Switch, Text, UnstyledButton } from "@mantine/core";
 import type { BackupKind } from "@shared/types";
 import type { DraftPolicy } from "../../model/serverBackupPanelModel";
 import classes from "../../BackupsPage.module.css";
@@ -91,8 +85,7 @@ export function BackupKindSettings(props: Props): ReactElement {
               onChange={(value) =>
                 onDraftPolicyChange({
                   ...draftPolicy,
-                  intervalMinutes:
-                    typeof value === "number" ? value : draftPolicy.intervalMinutes,
+                  intervalMinutes: typeof value === "number" ? value : draftPolicy.intervalMinutes,
                 })
               }
               className={classes.policyField}
@@ -112,8 +105,7 @@ export function BackupKindSettings(props: Props): ReactElement {
               onChange={(value) =>
                 onDraftPolicyChange({
                   ...draftPolicy,
-                  retainCountWorld:
-                    typeof value === "number" ? value : draftPolicy.retainCountWorld,
+                  retainCountWorld: typeof value === "number" ? value : draftPolicy.retainCountWorld,
                 })
               }
               className={classes.policyField}
@@ -137,8 +129,7 @@ export function BackupKindSettings(props: Props): ReactElement {
             onChange={(value) =>
               onDraftPolicyChange({
                 ...draftPolicy,
-                retainCountPlayers:
-                  typeof value === "number" ? value : draftPolicy.retainCountPlayers,
+                retainCountPlayers: typeof value === "number" ? value : draftPolicy.retainCountPlayers,
               })
             }
             className={classes.compactRetain}
@@ -161,8 +152,7 @@ export function BackupKindSettings(props: Props): ReactElement {
             onChange={(value) =>
               onDraftPolicyChange({
                 ...draftPolicy,
-                retainCountIni:
-                  typeof value === "number" ? value : draftPolicy.retainCountIni,
+                retainCountIni: typeof value === "number" ? value : draftPolicy.retainCountIni,
               })
             }
             className={classes.compactRetain}

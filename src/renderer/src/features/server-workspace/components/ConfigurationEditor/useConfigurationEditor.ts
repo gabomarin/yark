@@ -47,13 +47,7 @@ export function useConfigurationEditor(options: {
   categoryOptions: { value: string; label: string }[];
   fileLabel: string;
   filePath: string | null;
-  updateValue: (
-    fileKey: IniFileKey,
-    rowSection: string,
-    key: string,
-    value: string,
-    occurrence?: number,
-  ) => void;
+  updateValue: (fileKey: IniFileKey, rowSection: string, key: string, value: string, occurrence?: number) => void;
   resetChanges: () => void;
   resetActiveFileToDefaults: () => void;
   resetRowToDefault: (row: IniSettingReference) => void;
@@ -93,20 +87,13 @@ export function useConfigurationEditor(options: {
     payloadRef.current = payload;
   });
 
-  const publishDirty = (
-    nextPayload: ServerIniPayload | null,
-    nextBaseline: ServerIniPayload | null,
-  ): void => {
+  const publishDirty = (nextPayload: ServerIniPayload | null, nextBaseline: ServerIniPayload | null): void => {
     onDirtyChangeRef.current?.(iniPayloadsDirty(nextPayload, nextBaseline));
   };
 
-  const applyLoadedSnapshot = (
-    data: ServerIniSnapshot,
-    options?: { preserveDirty?: boolean },
-  ): void => {
+  const applyLoadedSnapshot = (data: ServerIniSnapshot, options?: { preserveDirty?: boolean }): void => {
     const sanitized = sanitizeServerIniPayload(data.payload);
-    const keepDirty =
-      options?.preserveDirty === true && dirtyRef.current && payloadRef.current !== null;
+    const keepDirty = options?.preserveDirty === true && dirtyRef.current && payloadRef.current !== null;
     if (keepDirty && payloadRef.current !== null) {
       // Keep in-editor edits; refresh pending chrome from the push source.
       setSnapshot({ ...data, payload: payloadRef.current });
@@ -195,10 +182,7 @@ export function useConfigurationEditor(options: {
     ],
     [availableRows],
   );
-  const visibleRows = useMemo(
-    () => filterIniSettingReferences(rows, search, filter),
-    [rows, search, filter],
-  );
+  const visibleRows = useMemo(() => filterIniSettingReferences(rows, search, filter), [rows, search, filter]);
   const groupedRows = useMemo(() => groupSettingReferencesByUiCategory(visibleRows), [visibleRows]);
 
   useEffect(() => {
@@ -207,13 +191,7 @@ export function useConfigurationEditor(options: {
     }
   }, [categoryOptions, filter]);
 
-  const updateValue = (
-    fileKey: IniFileKey,
-    rowSection: string,
-    key: string,
-    value: string,
-    occurrence = 0,
-  ) => {
+  const updateValue = (fileKey: IniFileKey, rowSection: string, key: string, value: string, occurrence = 0) => {
     if (payload === null) return;
     const currentText = textForFile(payload, fileKey);
     const nextText = setIniValue(currentText, rowSection, key, value, occurrence);
@@ -324,9 +302,7 @@ export function useConfigurationEditor(options: {
                 ...prev,
                 payload: sanitized,
                 pending: result.data.pending,
-                pendingUpdatedAt: result.data.pending
-                  ? (prev.pendingUpdatedAt ?? new Date().toISOString())
-                  : null,
+                pendingUpdatedAt: result.data.pending ? (prev.pendingUpdatedAt ?? new Date().toISOString()) : null,
               },
         );
         publishDirty(sanitized, sanitized);
@@ -381,11 +357,7 @@ export function useConfigurationEditor(options: {
   };
 
   const filePath =
-    snapshot === null
-      ? null
-      : activeFileKey === "game"
-        ? snapshot.gameIniPath
-        : snapshot.gameUserSettingsPath;
+    snapshot === null ? null : activeFileKey === "game" ? snapshot.gameIniPath : snapshot.gameUserSettingsPath;
   const fileLabel = activeFileKey === "game" ? "Game.ini" : "GameUserSettings.ini";
 
   const publishPayloadChange = (nextPayload: ServerIniPayload) => {

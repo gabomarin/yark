@@ -4,19 +4,12 @@ import { Stack, TextInput } from "@mantine/core";
 import { isBareOfficialMap } from "@shared/asa/map-identity";
 import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
 import { mapSaveFolderDescriptionStyles } from "@ui/mapFieldStyles";
-import {
-  isMapModCandidate,
-  suggestMapTokenFromMetadata,
-} from "@shared/asa/map-token-suggest";
+import { isMapModCandidate, suggestMapTokenFromMetadata } from "@shared/asa/map-token-suggest";
 import { KNOWN_MAP_OPTIONS, type ModMetadata } from "@shared/types";
 import type { MapsSearchApplyPayload } from "./mapsSearchModel";
 import { ServerFormMapsSearchModal } from "./ServerFormMapsSearchModal";
 import { ServerFormMapPicker } from "./ServerFormMapPicker";
-import {
-  CUSTOM_MAP_SELECT_VALUE,
-  mapModSelectValue,
-  parseMapModSelectValue,
-} from "./mapFieldValues";
+import { CUSTOM_MAP_SELECT_VALUE, mapModSelectValue, parseMapModSelectValue } from "./mapFieldValues";
 
 export interface MapFieldChange {
   map: string;
@@ -125,9 +118,7 @@ export function ServerFormMapField(props: Props): ReactElement {
     [enrichedMods],
   );
 
-  const linkedWithToken = mapModsWithToken.find(
-    (entry) => entry.mod.id === props.mapModId,
-  );
+  const linkedWithToken = mapModsWithToken.find((entry) => entry.mod.id === props.mapModId);
 
   const selectValue = bareOfficial
     ? props.map
@@ -140,11 +131,7 @@ export function ServerFormMapField(props: Props): ReactElement {
   const customSelected = selectValue === CUSTOM_MAP_SELECT_VALUE;
 
   const orphanLinkedMod = useMemo(() => {
-    if (
-      !props.mapModId
-      || props.map.trim().length === 0
-      || linkedWithToken !== undefined
-    ) {
+    if (!props.mapModId || props.map.trim().length === 0 || linkedWithToken !== undefined) {
       return null;
     }
     return { id: props.mapModId, label: props.map };
@@ -187,9 +174,7 @@ export function ServerFormMapField(props: Props): ReactElement {
       map: next.map,
       mapModId: next.mapModId,
     });
-    const sameCustomMap =
-      !nextBareOfficial
-      && next.map.trim().toLowerCase() === props.map.trim().toLowerCase();
+    const sameCustomMap = !nextBareOfficial && next.map.trim().toLowerCase() === props.map.trim().toLowerCase();
     props.onChange({
       map: next.map,
       mapModId: next.mapModId,
@@ -261,9 +246,7 @@ export function ServerFormMapField(props: Props): ReactElement {
             props.onChange({
               map: props.map,
               mapModId: props.mapModId,
-              mapSaveFolder: e.currentTarget.value.trim().length > 0
-                ? e.currentTarget.value.trim()
-                : null,
+              mapSaveFolder: e.currentTarget.value.trim().length > 0 ? e.currentTarget.value.trim() : null,
             })
           }
           placeholder="e.g. Svartalfheim"

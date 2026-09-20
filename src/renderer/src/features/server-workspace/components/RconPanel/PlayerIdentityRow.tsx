@@ -71,9 +71,7 @@ export function PlayerIdentityRow(props: Props): ReactElement {
           </Tooltip>
         </Group>
       </div>
-      {props.actions ? (
-        <div className={classes.playerActions}>{props.actions}</div>
-      ) : null}
+      {props.actions ? <div className={classes.playerActions}>{props.actions}</div> : null}
     </div>
   );
 }

@@ -1,14 +1,5 @@
-import {
-  flattenIniText,
-  parseIniTextRows,
-  splitFlatIniKey,
-} from "@shared/ini/ini-text";
-import type {
-  IniDiffEntry,
-  IniPreview,
-  IniValidationIssue,
-  ServerIniPayload,
-} from "@shared/types";
+import { flattenIniText, parseIniTextRows, splitFlatIniKey } from "@shared/ini/ini-text";
+import type { IniDiffEntry, IniPreview, IniValidationIssue, ServerIniPayload } from "@shared/types";
 
 type IniSectionMap = Record<string, Record<string, string>>;
 
@@ -43,8 +34,7 @@ function toDiffEntries(
       key,
       before: before ?? null,
       after: after ?? null,
-      change:
-        before === undefined ? "added" : after === undefined ? "removed" : "changed",
+      change: before === undefined ? "added" : after === undefined ? "removed" : "changed",
     });
   }
 
@@ -130,10 +120,7 @@ function validateNumberRange(
   }
 }
 
-function findIniSection(
-  parsed: IniSectionMap,
-  sectionName: string,
-): Record<string, string> | undefined {
+function findIniSection(parsed: IniSectionMap, sectionName: string): Record<string, string> | undefined {
   const wanted = sectionName.toLowerCase();
   for (const [name, section] of Object.entries(parsed)) {
     if (name.toLowerCase() === wanted) {
@@ -143,21 +130,12 @@ function findIniSection(
   return undefined;
 }
 
-function validateGameUserSettingsSemantics(
-  parsed: IniSectionMap,
-  issues: IniValidationIssue[],
-): void {
+function validateGameUserSettingsSemantics(parsed: IniSectionMap, issues: IniValidationIssue[]): void {
   const serverSettings = findIniSection(parsed, "ServerSettings");
   if (serverSettings !== undefined) {
     validateIntegerRange("RCONPort", serverSettings["RCONPort"], 1024, 65535, issues);
     validateIntegerRange("MaxPlayers", serverSettings["MaxPlayers"], 1, 255, issues);
-    validateNumberRange(
-      "DifficultyOffset",
-      serverSettings["DifficultyOffset"],
-      0,
-      1,
-      issues,
-    );
+    validateNumberRange("DifficultyOffset", serverSettings["DifficultyOffset"], 0, 1, issues);
   }
 
   const gameSession = findIniSection(parsed, "/Script/Engine.GameSession");
@@ -167,17 +145,10 @@ function validateGameUserSettingsSemantics(
 }
 
 /** Diff + semantic validation shared by server INI and cluster templates. */
-export function buildIniPreview(
-  current: ServerIniPayload,
-  next: ServerIniPayload,
-): IniPreview {
+export function buildIniPreview(current: ServerIniPayload, next: ServerIniPayload): IniPreview {
   const validationIssues: IniValidationIssue[] = [];
 
-  const nextGameUserSettings = safeParse(
-    "gameUserSettings",
-    next.gameUserSettings,
-    validationIssues,
-  );
+  const nextGameUserSettings = safeParse("gameUserSettings", next.gameUserSettings, validationIssues);
   const nextGame = safeParse("game", next.game, validationIssues);
 
   if (nextGameUserSettings === null || nextGame === null) {

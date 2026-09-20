@@ -33,10 +33,7 @@ export interface PortOwnerInfo {
 export interface HostPortProbeDeps {
   bindUdp?: (port: number) => Promise<ProbeStatus>;
   bindTcp?: (port: number) => Promise<ProbeStatus>;
-  lookupOwner?: (
-    protocol: PortProtocol,
-    port: number,
-  ) => Promise<PortOwnerInfo | null>;
+  lookupOwner?: (protocol: PortProtocol, port: number) => Promise<PortOwnerInfo | null>;
 }
 
 export interface AssertHostPortsOptions {
@@ -53,10 +50,7 @@ const OWNER_QUERY_TIMEOUT_MS = 5_000;
 const SUGGEST_OFFSET_STEP = 10;
 const SUGGEST_MAX_OFFSET = 1_000;
 
-type ProfilePorts = Pick<
-  ServerProfile,
-  "id" | "name" | "gamePort" | "queryPort" | "rconPort"
->;
+type ProfilePorts = Pick<ServerProfile, "id" | "name" | "gamePort" | "queryPort" | "rconPort">;
 
 function defaultBindUdp(port: number): Promise<ProbeStatus> {
   return new Promise((resolve) => {
@@ -80,10 +74,7 @@ function defaultBindUdp(port: number): Promise<ProbeStatus> {
     try {
       socket.bind({ port, exclusive: true }, () => finish("free"));
     } catch (err: unknown) {
-      const code =
-        err instanceof Error
-          ? (err as NodeJS.ErrnoException).code
-          : undefined;
+      const code = err instanceof Error ? (err as NodeJS.ErrnoException).code : undefined;
       finish(code === "EADDRINUSE" ? "busy" : "inconclusive");
     }
   });
@@ -105,14 +96,9 @@ function defaultBindTcp(port: number): Promise<ProbeStatus> {
       finish(err.code === "EADDRINUSE" ? "busy" : "inconclusive");
     });
     try {
-      server.listen({ port, host: "0.0.0.0", exclusive: true }, () =>
-        finish("free"),
-      );
+      server.listen({ port, host: "0.0.0.0", exclusive: true }, () => finish("free"));
     } catch (err: unknown) {
-      const code =
-        err instanceof Error
-          ? (err as NodeJS.ErrnoException).code
-          : undefined;
+      const code = err instanceof Error ? (err as NodeJS.ErrnoException).code : undefined;
       finish(code === "EADDRINUSE" ? "busy" : "inconclusive");
     }
   });
@@ -147,11 +133,7 @@ export function parseOwnerLookupJson(raw: string): PortOwnerInfo | null {
   }
   return {
     pid: parsed.OwningProcess,
-    processName:
-      typeof parsed.ProcessName === "string" &&
-      parsed.ProcessName.trim() !== ""
-        ? parsed.ProcessName
-        : null,
+    processName: typeof parsed.ProcessName === "string" && parsed.ProcessName.trim() !== "" ? parsed.ProcessName : null,
   };
 }
 
@@ -159,16 +141,8 @@ export function parseOwnerLookupJson(raw: string): PortOwnerInfo | null {
  * Best-effort Windows owner lookup. Numeric port only — never interpolate free text.
  * Uses async execFile so the Electron main process is not blocked.
  */
-async function defaultLookupOwner(
-  protocol: PortProtocol,
-  port: number,
-): Promise<PortOwnerInfo | null> {
-  if (
-    process.platform !== "win32" ||
-    !Number.isInteger(port) ||
-    port < PORT_MIN ||
-    port > PORT_MAX
-  ) {
+async function defaultLookupOwner(protocol: PortProtocol, port: number): Promise<PortOwnerInfo | null> {
+  if (process.platform !== "win32" || !Number.isInteger(port) || port < PORT_MIN || port > PORT_MAX) {
     return null;
   }
   const safePort = port;
@@ -200,9 +174,7 @@ async function defaultLookupOwner(
     return parseOwnerLookupJson(stdout);
   } catch (error: unknown) {
     const detail = error instanceof Error ? error.message : String(error);
-    console.warn(
-      `[yark] host port owner lookup failed for ${protocol}/${safePort}: ${detail}`,
-    );
+    console.warn(`[yark] host port owner lookup failed for ${protocol}/${safePort}: ${detail}`);
     return null;
   }
 }
@@ -215,17 +187,10 @@ function resolveDeps(deps?: HostPortProbeDeps): Required<HostPortProbeDeps> {
   };
 }
 
-async function probeEndpoint(
-  kind: PortKind,
-  port: number,
-  deps?: HostPortProbeDeps,
-): Promise<EndpointProbeResult> {
+async function probeEndpoint(kind: PortKind, port: number, deps?: HostPortProbeDeps): Promise<EndpointProbeResult> {
   const resolved = resolveDeps(deps);
   const protocol: PortProtocol = kind === "rcon" ? "tcp" : "udp";
-  const status =
-    protocol === "tcp"
-      ? await resolved.bindTcp(port)
-      : await resolved.bindUdp(port);
+  const status = protocol === "tcp" ? await resolved.bindTcp(port) : await resolved.bindUdp(port);
 
   if (status !== "busy") {
     return { kind, port, protocol, status };
@@ -242,10 +207,7 @@ async function probeEndpoint(
   };
 }
 
-async function probeProfilePorts(
-  ports: SessionPortSet,
-  deps?: HostPortProbeDeps,
-): Promise<EndpointProbeResult[]> {
+async function probeProfilePorts(ports: SessionPortSet, deps?: HostPortProbeDeps): Promise<EndpointProbeResult[]> {
   return Promise.all([
     probeEndpoint("game", ports.gamePort, deps),
     probeEndpoint("query", ports.queryPort, deps),
@@ -254,9 +216,7 @@ async function probeProfilePorts(
 }
 
 export function collectReservedPorts(
-  profiles: ReadonlyArray<
-    Pick<ServerProfile, "gamePort" | "queryPort" | "rconPort">
-  >,
+  profiles: ReadonlyArray<Pick<ServerProfile, "gamePort" | "queryPort" | "rconPort">>,
 ): Set<number> {
   const reserved = new Set<number>();
   for (const profile of profiles) {
@@ -268,17 +228,11 @@ export function collectReservedPorts(
 }
 
 function inRange(port: number): boolean {
-  return (
-    Number.isInteger(port) && port >= PORT_MIN && port <= PORT_MAX
-  );
+  return Number.isInteger(port) && port >= PORT_MIN && port <= PORT_MAX;
 }
 
 function isDistinctSet(ports: SessionPortSet): boolean {
-  return (
-    ports.gamePort !== ports.queryPort &&
-    ports.gamePort !== ports.rconPort &&
-    ports.queryPort !== ports.rconPort
-  );
+  return ports.gamePort !== ports.queryPort && ports.gamePort !== ports.rconPort && ports.queryPort !== ports.rconPort;
 }
 
 export async function suggestSessionPortSet(
@@ -287,11 +241,7 @@ export async function suggestSessionPortSet(
   deps?: HostPortProbeDeps,
 ): Promise<SessionPortSet | null> {
   const resolved = resolveDeps(deps);
-  for (
-    let offset = SUGGEST_OFFSET_STEP;
-    offset <= SUGGEST_MAX_OFFSET;
-    offset += SUGGEST_OFFSET_STEP
-  ) {
+  for (let offset = SUGGEST_OFFSET_STEP; offset <= SUGGEST_MAX_OFFSET; offset += SUGGEST_OFFSET_STEP) {
     const candidate: SessionPortSet = {
       gamePort: base.gamePort + offset,
       queryPort: base.queryPort + offset,
@@ -305,11 +255,7 @@ export async function suggestSessionPortSet(
     ) {
       continue;
     }
-    if (
-      reserved.has(candidate.gamePort) ||
-      reserved.has(candidate.queryPort) ||
-      reserved.has(candidate.rconPort)
-    ) {
+    if (reserved.has(candidate.gamePort) || reserved.has(candidate.queryPort) || reserved.has(candidate.rconPort)) {
       continue;
     }
 
@@ -330,10 +276,7 @@ function describeEndpoint(result: EndpointProbeResult): string {
   const base = `${proto} ${result.kind} port ${result.port}`;
   if (result.status === "busy") {
     if (result.pid != null) {
-      const name =
-        result.processName != null && result.processName.length > 0
-          ? ` (${result.processName})`
-          : "";
+      const name = result.processName != null && result.processName.length > 0 ? ` (${result.processName})` : "";
       return `${base} is already in use by pid ${result.pid}${name}`;
     }
     return `${base} is already in use`;
@@ -351,9 +294,7 @@ function describeEndpoint(result: EndpointProbeResult): string {
  */
 export async function assertHostPortsAvailable(
   profile: ProfilePorts,
-  otherProfiles: ReadonlyArray<
-    Pick<ServerProfile, "gamePort" | "queryPort" | "rconPort">
-  >,
+  otherProfiles: ReadonlyArray<Pick<ServerProfile, "gamePort" | "queryPort" | "rconPort">>,
   options?: AssertHostPortsOptions,
 ): Promise<void> {
   const ports: SessionPortSet = {
@@ -368,11 +309,7 @@ export async function assertHostPortsAvailable(
     return;
   }
 
-  if (
-    busy.length === 0 &&
-    inconclusive.length > 0 &&
-    options?.allowInconclusive === true
-  ) {
+  if (busy.length === 0 && inconclusive.length > 0 && options?.allowInconclusive === true) {
     return;
   }
 

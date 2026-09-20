@@ -50,43 +50,25 @@ for (const setting of iniSettingMetaList) {
   byFileSectionKey.set(idFor(setting.file, setting.section, setting.key), setting);
 }
 
-export function lookupIniSettingMeta(
-  file: IniMetaFileKey,
-  section: string,
-  key: string,
-): IniSettingMeta | undefined {
+export function lookupIniSettingMeta(file: IniMetaFileKey, section: string, key: string): IniSettingMeta | undefined {
   return byFileSectionKey.get(idFor(file, section, key));
 }
 
-export function lookupIniSettingDefaultValue(
-  file: IniMetaFileKey,
-  section: string,
-  key: string,
-): string | null {
+export function lookupIniSettingDefaultValue(file: IniMetaFileKey, section: string, key: string): string | null {
   const setting = lookupIniSettingMeta(file, section, key);
   if (!setting) return null;
   return setting.defaultValue;
 }
 
-export function lookupIniSettingDescription(
-  file: IniMetaFileKey,
-  section: string,
-  key: string,
-): string | null {
+export function lookupIniSettingDescription(file: IniMetaFileKey, section: string, key: string): string | null {
   const description = lookupIniSettingMeta(file, section, key)?.description.trim();
   return description ? description : null;
 }
 
-export function lookupIniSettingInput(
-  file: IniMetaFileKey,
-  section: string,
-  key: string,
-): IniSettingInput | null {
+export function lookupIniSettingInput(file: IniMetaFileKey, section: string, key: string): IniSettingInput | null {
   return lookupIniSettingMeta(file, section, key)?.input ?? null;
 }
 
-export function settingsMetaForFile(
-  file: IniMetaFileKey,
-): readonly IniSettingMeta[] {
+export function settingsMetaForFile(file: IniMetaFileKey): readonly IniSettingMeta[] {
   return iniSettingMetaList.filter((setting) => setting.file === file);
 }

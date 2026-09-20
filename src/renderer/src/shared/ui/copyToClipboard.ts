@@ -17,9 +17,6 @@ export async function copyTextToClipboard(input: {
       });
     }
   } catch {
-    showOperatorError(
-      input.failureMessage ?? "Could not copy to the clipboard",
-      input.failureTitle ?? "Copy failed",
-    );
+    showOperatorError(input.failureMessage ?? "Could not copy to the clipboard", input.failureTitle ?? "Copy failed");
   }
 }

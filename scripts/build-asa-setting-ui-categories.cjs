@@ -88,14 +88,14 @@ const RULES = [
   {
     category: "chat",
     test: (k, d) =>
-      /motd|messageoftheday|broadcast|badword|chat|globalvoice|proximity/.test(k)
-      || /\bmotd\b|message of the day/.test(d),
+      /motd|messageoftheday|broadcast|badword|chat|globalvoice|proximity/.test(k) ||
+      /\bmotd\b|message of the day/.test(d),
   },
   {
     category: "events",
     test: (k, d) =>
-      /halloween|winterwonder|easter|valentine|turkeytrial|fear|evolution|event/.test(k)
-      || /\bevent\b|seasonal/.test(d),
+      /halloween|winterwonder|easter|valentine|turkeytrial|fear|evolution|event/.test(k) ||
+      /\bevent\b|seasonal/.test(d),
   },
   {
     category: "pve",
@@ -108,67 +108,59 @@ const RULES = [
   {
     category: "breeding",
     test: (k, d) =>
-      /baby|imprint|egg|mate|gestat|incub|cuddle|breed|layegg/.test(k)
-      || /imprint|breeding|gestation|egg hatch/.test(d),
+      /baby|imprint|egg|mate|gestat|incub|cuddle|breed|layegg/.test(k) ||
+      /imprint|breeding|gestation|egg hatch/.test(d),
   },
   {
     category: "dinos",
     test: (k, d) =>
       /dino|tame|flyer|torpor|wild|creature|harvestingdamage|spawnweight|npc|armadoggo|cosmo|cryo|icefox|reaper|wyvern|gacha|stek/.test(
         k,
-      )
-      || /creature|dinosaur|taming|cryopod|cryofridge/.test(d),
+      ) || /creature|dinosaur|taming|cryopod|cryofridge/.test(d),
   },
   {
     category: "structures",
     test: (k, d) =>
       /structure|building|turret|crop|platform|raft|decay|pipe|foundation|wall|gate|tek\b|saddle|bunker|compartment/.test(
         k,
-      )
-      || /structure|building|turret|decay|bunker/.test(d),
+      ) || /structure|building|turret|decay|bunker/.test(d),
   },
   {
     category: "rates",
     test: (k, d) =>
       /xp|multiplier|harvestamount|resourcespeed|tamingspeed|craftingskill|hexagon|spoil|decompos|damagemulti|resistancemulti|fooddrain|waterdrain|staminadrain|healthrecovery|optimizedharvesting/.test(
         k,
-      )
-      || /\bmultiplier\b|\bxp\b|gather rate|taming speed|harvest/.test(d),
+      ) || /\bmultiplier\b|\bxp\b|gather rate|taming speed|harvest/.test(d),
   },
   {
     category: "world",
     test: (k, d) =>
       /day|night|weather|fog|difficulty|supplycrate|resource|world|climate|temperature|oxygen|cave|boss|tribute|hexagonreward|lootcrate|starttime|traversal|treasure|traincar/.test(
         k,
-      )
-      || /day cycle|night|weather|difficulty|world|traversal|treasure/.test(d),
+      ) || /day cycle|night|weather|difficulty|world|traversal|treasure/.test(d),
   },
   {
     category: "tribes",
-    test: (k, d) =>
-      /tribe|alliance|clan|govern/.test(k) || /\btribe\b|alliance/.test(d),
+    test: (k, d) => /tribe|alliance|clan|govern/.test(k) || /\btribe\b|alliance/.test(d),
   },
   {
     category: "players",
     test: (k, d) =>
-      /player|character|engram|level|inventory|crosshair|hud|thirdperson|spectator|implant|respec|tribute/.test(
-        k,
-      )
-      || /player|character|engram|hud/.test(d),
+      /player|character|engram|level|inventory|crosshair|hud|thirdperson|spectator|implant|respec|tribute/.test(k) ||
+      /player|character|engram|hud/.test(d),
   },
   {
     category: "networking",
     test: (k, d) =>
-      /rcon|port|network|tick|bandwidth|connection|latency|packet|ip_|multiHome|serverip/.test(k)
-      || /rcon|network|bandwidth/.test(d),
+      /rcon|port|network|tick|bandwidth|connection|latency|packet|ip_|multiHome|serverip/.test(k) ||
+      /rcon|network|bandwidth/.test(d),
   },
   {
     category: "general",
     test: (k, d) =>
       /password|session|admin|maxplayers|servername|mapname|kick|ban|whitelist|spectator|cheat|force|allow|enable|disable|auto|save|backup|cluster|transfer/.test(
         k,
-      )
-      || /password|admin|session|server name|kick|ban/.test(d),
+      ) || /password|admin|session|server name|kick|ban/.test(d),
   },
 ];
 
@@ -240,4 +232,3 @@ function main() {
 }
 
 main();
-

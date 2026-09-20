@@ -1,11 +1,7 @@
 import { dirname } from "node:path";
 import { isSafeMapToken, isSafeWindowsFolderName } from "@shared/asa/map-identity";
 import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
-import {
-  isAntiCorruptionWorldSaveName,
-  isPrimaryWorldSaveName,
-  isWorldProfileOrTribeName,
-} from "./world-snapshot";
+import { isAntiCorruptionWorldSaveName, isPrimaryWorldSaveName, isWorldProfileOrTribeName } from "./world-snapshot";
 
 /**
  * Prefer an existing/live or manifest folder name over inventing a strip-`_WP`
@@ -69,10 +65,10 @@ export function shouldCopyWorldRestoreFile(options: {
   }
   // Always allow primary + anti-corruption; skip dated/transient if somehow present.
   if (
-    isWorldProfileOrTribeName(name)
-    || isPrimaryWorldSaveName(name)
-    || isAntiCorruptionWorldSaveName(name, options.mapToken)
-    || name.toLowerCase().endsWith(".ark.bak")
+    isWorldProfileOrTribeName(name) ||
+    isPrimaryWorldSaveName(name) ||
+    isAntiCorruptionWorldSaveName(name, options.mapToken) ||
+    name.toLowerCase().endsWith(".ark.bak")
   ) {
     return true;
   }

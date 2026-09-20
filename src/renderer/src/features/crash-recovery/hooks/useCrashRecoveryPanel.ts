@@ -2,10 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { CrashRecoveryPolicy } from "@shared/types";
 import { defaultCrashRecoveryPolicy } from "@shared/crash-recovery/crash-recovery-policy";
 
-type PolicyWrite = Omit<
-  CrashRecoveryPolicy,
-  "serverId" | "updatedAt" | "attempts" | "exhausted" | "lastFailureReason"
->;
+type PolicyWrite = Omit<CrashRecoveryPolicy, "serverId" | "updatedAt" | "attempts" | "exhausted" | "lastFailureReason">;
 
 /** Live poll while the Maintenance tab is open (crashes arrive out-of-band). */
 const CRASH_RECOVERY_POLL_MS = 5_000;

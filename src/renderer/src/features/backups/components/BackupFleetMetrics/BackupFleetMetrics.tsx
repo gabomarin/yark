@@ -11,9 +11,7 @@ interface Props {
   summary: BackupFleetSummary;
   quiet: boolean;
   healthFilter: BackupHealthFilter;
-  onHealthFilter: (
-    next: BackupHealthFilter | ((prev: BackupHealthFilter) => BackupHealthFilter),
-  ) => void;
+  onHealthFilter: (next: BackupHealthFilter | ((prev: BackupHealthFilter) => BackupHealthFilter)) => void;
   onOpenDiskSettings: () => void;
 }
 
@@ -28,20 +26,12 @@ function formatBytes(bytes: number | null | undefined): string {
 
 function worstDiskOf(summary: BackupFleetSummary): BackupFleetSummary["disks"][number] | null {
   if (summary.disks.length === 0) return null;
-  return [...summary.disks].sort(
-    (a, b) => (b.usedPercent ?? -1) - (a.usedPercent ?? -1),
-  )[0] ?? null;
+  return [...summary.disks].sort((a, b) => (b.usedPercent ?? -1) - (a.usedPercent ?? -1))[0] ?? null;
 }
 
-function diskTone(
-  summary: BackupFleetSummary,
-  disk: BackupFleetSummary["disks"][number] | null,
-): AppMetricTone {
+function diskTone(summary: BackupFleetSummary, disk: BackupFleetSummary["disks"][number] | null): AppMetricTone {
   if (disk == null) return "default";
-  if (
-    disk.usedPercent != null &&
-    disk.usedPercent >= summary.diskSettings.criticalUsedPercent
-  ) {
+  if (disk.usedPercent != null && disk.usedPercent >= summary.diskSettings.criticalUsedPercent) {
     return "danger";
   }
   if (
@@ -53,10 +43,7 @@ function diskTone(
   return "default";
 }
 
-function DiskFreeCard(props: {
-  summary: BackupFleetSummary;
-  onOpenDiskSettings: () => void;
-}): ReactElement {
+function DiskFreeCard(props: { summary: BackupFleetSummary; onOpenDiskSettings: () => void }): ReactElement {
   const disk = worstDiskOf(props.summary);
   const hint =
     props.summary.disks.length > 1
@@ -89,10 +76,7 @@ export function BackupFleetMetrics(props: Props): ReactElement {
           No backups yet. Create and restore from each server’s Backups tab.
         </Text>
         <SimpleGrid cols={1} spacing="sm" className={classes.quietDiskMetric}>
-          <DiskFreeCard
-            summary={props.summary}
-            onOpenDiskSettings={props.onOpenDiskSettings}
-          />
+          <DiskFreeCard summary={props.summary} onOpenDiskSettings={props.onOpenDiskSettings} />
         </SimpleGrid>
       </Group>
     );
@@ -104,36 +88,24 @@ export function BackupFleetMetrics(props: Props): ReactElement {
         label="Protected"
         value={`${props.summary.stats.protectedCount}/${props.summary.servers.length}`}
         active={props.healthFilter === "protected"}
-        onClick={() =>
-          props.onHealthFilter((prev) => (prev === "protected" ? "all" : "protected"))
-        }
+        onClick={() => props.onHealthFilter((prev) => (prev === "protected" ? "all" : "protected"))}
       />
       <AppMetricCard
         label="At risk"
         value={String(props.summary.stats.atRiskCount)}
         tone={props.summary.stats.atRiskCount > 0 ? "warning" : "default"}
         active={props.healthFilter === "at_risk"}
-        onClick={() =>
-          props.onHealthFilter((prev) => (prev === "at_risk" ? "all" : "at_risk"))
-        }
+        onClick={() => props.onHealthFilter((prev) => (prev === "at_risk" ? "all" : "at_risk"))}
       />
       <AppMetricCard
         label="Failed (24h)"
         value={String(props.summary.stats.failed24h)}
         tone={props.summary.stats.failed24h > 0 ? "danger" : "default"}
         active={props.healthFilter === "failed"}
-        onClick={() =>
-          props.onHealthFilter((prev) => (prev === "failed" ? "all" : "failed"))
-        }
+        onClick={() => props.onHealthFilter((prev) => (prev === "failed" ? "all" : "failed"))}
       />
-      <AppMetricCard
-        label="Backup used"
-        value={formatBytes(props.summary.stats.totalBackupBytes)}
-      />
-      <DiskFreeCard
-        summary={props.summary}
-        onOpenDiskSettings={props.onOpenDiskSettings}
-      />
+      <AppMetricCard label="Backup used" value={formatBytes(props.summary.stats.totalBackupBytes)} />
+      <DiskFreeCard summary={props.summary} onOpenDiskSettings={props.onOpenDiskSettings} />
     </SimpleGrid>
   );
 }

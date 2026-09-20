@@ -18,10 +18,7 @@ export interface IniGroupingReference extends IniGroupingRow {
 }
 
 /** Collapse-state key for an INI section subgroup under a UI category. */
-export function iniUiSectionCollapseKey(
-  category: AsaUiCategoryId,
-  section: string,
-): string {
+export function iniUiSectionCollapseKey(category: AsaUiCategoryId, section: string): string {
   return `${category}\u001f${section}`;
 }
 
@@ -73,10 +70,7 @@ function buildIniSectionGroups<T extends IniGroupingRow>(rows: T[]): IniUiSectio
     });
 }
 
-function sortCategoryRows<T extends IniGroupingRow>(
-  category: AsaUiCategoryId,
-  list: T[],
-): void {
+function sortCategoryRows<T extends IniGroupingRow>(category: AsaUiCategoryId, list: T[]): void {
   if (category === "other") {
     list.sort(compareIniRowsBySectionThenKey);
     return;
@@ -120,9 +114,7 @@ export function groupRowsByUiCategory<T extends IniGroupingRow>(
   return groups;
 }
 
-export function groupSettingReferencesByUiCategory<T extends IniGroupingReference>(
-  rows: T[],
-): IniUiCategoryGroup<T>[] {
+export function groupSettingReferencesByUiCategory<T extends IniGroupingReference>(rows: T[]): IniUiCategoryGroup<T>[] {
   const buckets = new Map<AsaUiCategoryId, T[]>();
   for (const row of rows) {
     const category = resolveAsaUiCategory(row.fileKey, row.section, row.key);
@@ -142,16 +134,12 @@ export function groupSettingReferencesByUiCategory<T extends IniGroupingReferenc
     if (definition.id === "other") {
       list.sort(
         (a, b) =>
-          a.section.localeCompare(b.section) ||
-          a.key.localeCompare(b.key) ||
-          a.fileKey.localeCompare(b.fileKey),
+          a.section.localeCompare(b.section) || a.key.localeCompare(b.key) || a.fileKey.localeCompare(b.fileKey),
       );
     } else {
       list.sort(
         (a, b) =>
-          a.key.localeCompare(b.key) ||
-          a.fileKey.localeCompare(b.fileKey) ||
-          a.section.localeCompare(b.section),
+          a.key.localeCompare(b.key) || a.fileKey.localeCompare(b.fileKey) || a.section.localeCompare(b.section),
       );
     }
     const group: IniUiCategoryGroup<T> = {

@@ -35,30 +35,18 @@ describe("rowActionModel", () => {
   ];
 
   it("lists only visible items", () => {
-    expect(visibleRowActionItems(sample).map((item) => item.key)).toEqual([
-      "open",
-      "delete",
-    ]);
+    expect(visibleRowActionItems(sample).map((item) => item.key)).toEqual(["open", "delete"]);
   });
 
   it("normalizes stacked and trailing dividers after hidden items", () => {
     const items = normalizeRowActionEntries(sample);
-    expect(items.map((item) => item.key)).toEqual([
-      "lbl",
-      "open",
-      "d1",
-      "delete",
-    ]);
+    expect(items.map((item) => item.key)).toEqual(["lbl", "open", "d1", "delete"]);
   });
 
   it("fingerprints enablement without depending on handler identity", () => {
     const a = rowActionFingerprint(sample);
     const b = rowActionFingerprint(
-      sample.map((entry) =>
-        entry.kind === "item"
-          ? { ...entry, onClick: vi.fn() }
-          : entry,
-      ),
+      sample.map((entry) => (entry.kind === "item" ? { ...entry, onClick: vi.fn() } : entry)),
     );
     expect(a).toBe(b);
   });

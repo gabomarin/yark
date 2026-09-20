@@ -15,24 +15,24 @@ affect start and config writes are summarized at the end.
 
 ## Module map
 
-| Role | Path |
-| --- | --- |
-| Launch args | `src/backend/domains/instances/launch-args.ts` |
+| Role                             | Path                                                                                                                |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Launch args                      | `src/backend/domains/instances/launch-args.ts`                                                                      |
 | ASA launch-options catalog (#92) | `src/shared/asa/asa-launch-options-catalog.ts` (+ JSON); see [launch-options-catalog.md](launch-options-catalog.md) |
-| Profile → INI sync | `src/backend/domains/instances/sync-profile-ini.ts` |
-| Orchestration | `src/backend/domains/instances/instance-service.ts` |
-| Profile validation | `src/backend/domains/instances/validation.ts` |
-| Import existing install (#254) | `src/backend/domains/instances/import-existing-install.ts` |
-| Port conflicts | `src/shared/port-conflicts.ts` |
-| Process lifecycle | `src/backend/infra/process/process-manager.ts` |
-| Process RAM/CPU sample (#302) | `src/backend/domains/instances/process-metrics-sampler.ts`, `src/backend/infra/process/windows-process-sample.ts` |
-| INI read/save | `src/backend/domains/config/ini-service.ts` |
-| INI text / sanitize | `src/shared/ini/ini-text.ts` |
-| Defaults | `src/shared/defaults/*.ini`, `src/shared/ini/ini-defaults.ts` |
-| Config assistant model | `src/renderer/src/features/server-workspace/configurationWizardModel.ts` |
-| Config assistant UI | `…/components/ConfigurationWizard.tsx` |
-| Restart composition | `src/renderer/src/App.tsx` (`stop` then `start`) |
-| IPC | `src/shared/ipc.ts`, `src/preload/index.ts`, `src/main/ipc-handlers.ts` |
+| Profile → INI sync               | `src/backend/domains/instances/sync-profile-ini.ts`                                                                 |
+| Orchestration                    | `src/backend/domains/instances/instance-service.ts`                                                                 |
+| Profile validation               | `src/backend/domains/instances/validation.ts`                                                                       |
+| Import existing install (#254)   | `src/backend/domains/instances/import-existing-install.ts`                                                          |
+| Port conflicts                   | `src/shared/port-conflicts.ts`                                                                                      |
+| Process lifecycle                | `src/backend/infra/process/process-manager.ts`                                                                      |
+| Process RAM/CPU sample (#302)    | `src/backend/domains/instances/process-metrics-sampler.ts`, `src/backend/infra/process/windows-process-sample.ts`   |
+| INI read/save                    | `src/backend/domains/config/ini-service.ts`                                                                         |
+| INI text / sanitize              | `src/shared/ini/ini-text.ts`                                                                                        |
+| Defaults                         | `src/shared/defaults/*.ini`, `src/shared/ini/ini-defaults.ts`                                                       |
+| Config assistant model           | `src/renderer/src/features/server-workspace/configurationWizardModel.ts`                                            |
+| Config assistant UI              | `…/components/ConfigurationWizard.tsx`                                                                              |
+| Restart composition              | `src/renderer/src/App.tsx` (`stop` then `start`)                                                                    |
+| IPC                              | `src/shared/ipc.ts`, `src/preload/index.ts`, `src/main/ipc-handlers.ts`                                             |
 
 Binary path: `{installDir}/ShooterGame/Binaries/Win64/ArkAscendedServer.exe`
 
@@ -45,16 +45,16 @@ adopts the game child PID for status / Leave / kill. Details:
 
 ## CLI vs INI split
 
-| Concern | Where |
-| --- | --- |
-| Map + session name | CLI map URL (`buildMapUrlArg`) |
-| Game port | CLI `-port=N` **and** INI `[SessionSettings] Port` |
-| Max players | CLI `-WinLiveMaxPlayers=N` when profile `maxPlayers` is 1–255. ASA ignores INI `MaxPlayers`. `0` omits the flag (ASA then defaults to **70**) |
-| `-ServerPlatform` | CLI (default `ALL` unless structured/raw trailing args already set it) |
-| Mods / cluster trio | CLI when present on the profile |
-| RCON enable/port | INI `[ServerSettings]` only |
-| Admin / server password | INI `[ServerSettings]` only |
-| Query port | INI `[SessionSettings] QueryPort` only |
+| Concern                 | Where                                                                                                                                         |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Map + session name      | CLI map URL (`buildMapUrlArg`)                                                                                                                |
+| Game port               | CLI `-port=N` **and** INI `[SessionSettings] Port`                                                                                            |
+| Max players             | CLI `-WinLiveMaxPlayers=N` when profile `maxPlayers` is 1–255. ASA ignores INI `MaxPlayers`. `0` omits the flag (ASA then defaults to **70**) |
+| `-ServerPlatform`       | CLI (default `ALL` unless structured/raw trailing args already set it)                                                                        |
+| Mods / cluster trio     | CLI when present on the profile                                                                                                               |
+| RCON enable/port        | INI `[ServerSettings]` only                                                                                                                   |
+| Admin / server password | INI `[ServerSettings]` only                                                                                                                   |
+| Query port              | INI `[SessionSettings] QueryPort` only                                                                                                        |
 
 **Never** put `?listen`, `?Port=`, RCON keys, passwords, or `-QueryPort` on the
 CLI. Unit tests in `tests/unit/launch-args.test.ts` lock this.
@@ -94,13 +94,13 @@ Example logical argv:
 
 ASA map packs use the same launch shape as content mods:
 
-| Concern | Behavior |
-| --- | --- |
-| Launch token | `profile.map` in argv[0] map URL (official `KNOWN_MAPS` or free-form e.g. `Svartalfheim_WP`) |
-| Map pack Project ID | Must be **enabled** on `profile.mods` → `-mods=` |
-| Linked identity | `profile.mapModId` for custom maps and official-token remasters; cleared for bare official maps |
-| ASE `ActiveMapMod` | **Not used** — stripped as `aseLegacy` |
-| `-MapModID=` | Only when `map` is official (`KNOWN_MAPS`) **and** a linked `mapModId` is enabled (Rootservers reforged remasters). Otherwise token + `-mods=` only. |
+| Concern             | Behavior                                                                                                                                             |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Launch token        | `profile.map` in argv[0] map URL (official `KNOWN_MAPS` or free-form e.g. `Svartalfheim_WP`)                                                         |
+| Map pack Project ID | Must be **enabled** on `profile.mods` → `-mods=`                                                                                                     |
+| Linked identity     | `profile.mapModId` for custom maps and official-token remasters; cleared for bare official maps                                                      |
+| ASE `ActiveMapMod`  | **Not used** — stripped as `aseLegacy`                                                                                                               |
+| `-MapModID=`        | Only when `map` is official (`KNOWN_MAPS`) **and** a linked `mapModId` is enabled (Rootservers reforged remasters). Otherwise token + `-mods=` only. |
 
 **Create (`servers:create`)** accepts official `KNOWN_MAPS` tokens or a custom map linked through
 **Search Maps…** (launch token + `mapModId` on `mods`, enabled, not in `disabledMods`). There is
@@ -128,10 +128,10 @@ Low-level `syncProfileSettingsToIni(profile)` still writes
 `{installDir}/ShooterGame/Saved/Config/WindowsServer/GameUserSettings.ini`
 directly (clone seed / tests when IniService is not wired):
 
-| Section | Keys |
-| --- | --- |
-| `ServerSettings` | `RCONEnabled=True`, `RCONPort`, `ServerAdminPassword`, `ServerPassword` (`""` when null) |
-| `SessionSettings` | `SessionName`, `Port` (game), `QueryPort` |
+| Section           | Keys                                                                                     |
+| ----------------- | ---------------------------------------------------------------------------------------- |
+| `ServerSettings`  | `RCONEnabled=True`, `RCONPort`, `ServerAdminPassword`, `ServerPassword` (`""` when null) |
+| `SessionSettings` | `SessionName`, `Port` (game), `QueryPort`                                                |
 
 **When:**
 
@@ -143,10 +143,10 @@ directly (clone seed / tests when IniService is not wired):
 `spawnAsaProcess` in `process-manager.ts` always spawns the **exe + logical
 args** directly with `cwd = installDir`:
 
-| Mode | `shell` | `windowsVerbatimArguments` | `windowsHide` | `detached` | stdio |
-| --- | --- | --- | --- | --- | --- |
-| Piped (default) | `false` | `true` on Windows | `true` | `true` | ignore / pipe / pipe |
-| Native console (`openNativeConsole`) | `false` | `true` on Windows | `false` | `true` | ignore |
+| Mode                                 | `shell` | `windowsVerbatimArguments` | `windowsHide` | `detached` | stdio                |
+| ------------------------------------ | ------- | -------------------------- | ------------- | ---------- | -------------------- |
+| Piped (default)                      | `false` | `true` on Windows          | `true`        | `true`     | ignore / pipe / pipe |
+| Native console (`openNativeConsole`) | `false` | `true` on Windows          | `false`       | `true`     | ignore               |
 
 `InstanceService.start` / `restart` / `startForMaintenance` apply Settings
 `openNativeConsoleOnStart` when the caller omits `openNativeConsole` (maintenance
@@ -198,13 +198,13 @@ Kill on win32 uses `taskkill /pid … /T /F`.
 
 IPC:
 
-| Channel | Backend |
-| --- | --- |
-| `servers:start` | sync INI → `ProcessManager.start` |
-| `servers:set-enabled` | Locked explicit enable/disable transition; never starts or stops ASA implicitly. |
-| `servers:stop` | `InstanceService.stop`: RCON `SaveWorld` → wait `SAVE_WAIT_MS` (8s) → `DoExit` exact process → best-effort stable `pre_stop` backup (world only; #518). Progress via `push:server-stop-progress`. Pass `{ backup: false }` to skip the snapshot (SteamCMD update/verify, restart). |
-| `servers:restart` | `InstanceService.restart`: lock `"restart"` → stop with `{ backup: false }` → fail-hard `pre_restart` backup → start. Options match `servers:start` (`StartServerOptions`). |
-| `servers:kill` | immediate terminate (warning event; UI confirms) |
+| Channel               | Backend                                                                                                                                                                                                                                                                            |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `servers:start`       | sync INI → `ProcessManager.start`                                                                                                                                                                                                                                                  |
+| `servers:set-enabled` | Locked explicit enable/disable transition; never starts or stops ASA implicitly.                                                                                                                                                                                                   |
+| `servers:stop`        | `InstanceService.stop`: RCON `SaveWorld` → wait `SAVE_WAIT_MS` (8s) → `DoExit` exact process → best-effort stable `pre_stop` backup (world only; #518). Progress via `push:server-stop-progress`. Pass `{ backup: false }` to skip the snapshot (SteamCMD update/verify, restart). |
+| `servers:restart`     | `InstanceService.restart`: lock `"restart"` → stop with `{ backup: false }` → fail-hard `pre_restart` backup → start. Options match `servers:start` (`StartServerOptions`).                                                                                                        |
+| `servers:kill`        | immediate terminate (warning event; UI confirms)                                                                                                                                                                                                                                   |
 
 Status push: `push:server-status`. Stop phase progress: `push:server-stop-progress`.
 While a dedicated PID is live **and** the UI needs samples (Overview, or
@@ -244,7 +244,7 @@ updates cannot change it; only `InstanceService.setServerEnabled` may do so.
   destination when possible; the clone then applies profile-owned INI keys so the
   new ports and session name match. Distinct from Copy configuration (#95).
 - **Create / clone install path** must be missing or an empty folder, not inside
-  another YARK profile or ASA tree (path segment *or* unmanaged parent that
+  another YARK profile or ASA tree (path segment _or_ unmanaged parent that
   contains `ShooterGame`), and must not contain another managed install.
   Non-empty ASA trees use **Import install**. Disk probes are async under the
   fleet-create lock. The create form previews fleet nesting immediately and
@@ -277,10 +277,10 @@ Overview card kebab / context menu → **Delete server** opens a confirm
 (`servers:delete` with required `{ deleteInstallFiles: boolean }`). Both modes
 reject while the process is active. Missing profiles are a no-op.
 
-| Mode | UI | Disk | Notes |
-| --- | --- | --- | --- |
-| **Remove from YARK only** (default when a choice is shown) | Keeps install path copy; blue “kept” alert | Never calls `rm` on `installDir` | Allowed even when another profile shares the path. Import (#254/#283) can re-adopt a **ready** tree, or an **incomplete** tree with opt-in |
-| **Delete everything** | Danger alert; confirm **Delete everything** | Recursive wipe of `installDir` after wipe-safety + shared-path checks | Same full wipe as before #267 |
+| Mode                                                       | UI                                          | Disk                                                                  | Notes                                                                                                                                      |
+| ---------------------------------------------------------- | ------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Remove from YARK only** (default when a choice is shown) | Keeps install path copy; blue “kept” alert  | Never calls `rm` on `installDir`                                      | Allowed even when another profile shares the path. Import (#254/#283) can re-adopt a **ready** tree, or an **incomplete** tree with opt-in |
+| **Delete everything**                                      | Danger alert; confirm **Delete everything** | Recursive wipe of `installDir` after wipe-safety + shared-path checks | Same full wipe as before #267                                                                                                              |
 
 **Empty install folder:** when install health is `empty` (folder exists but has
 no ASA files — typical never-installed profile), the mode picker is hidden and
@@ -507,20 +507,20 @@ Interactive fleet/start/stop/update paths must not use unbounded `*Sync`
 filesystem or child-process APIs. Shared helper:
 `src/backend/infra/process/exec-file-bounded.ts` (timeout + `maxBuffer`).
 
-| Path | Behavior |
-|------|----------|
-| Install inspect (fleet / start) | `inspectServerInstallationAsync` — promise FS; opt-in PowerShell VersionInfo / log tails via `execFileBounded` |
-| Crash reattach / checkpoints | `queryWindowsProcessIdentity` async PowerShell |
-| Stop / kill / SteamCMD cancel / move cancel | `killWinProcessTreeAsync` (`taskkill` bounded) |
-| SteamCMD discovery | Candidate `access` + bounded `where.exe` (status polls skip `where`) |
+| Path                                        | Behavior                                                                                                       |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Install inspect (fleet / start)             | `inspectServerInstallationAsync` — promise FS; opt-in PowerShell VersionInfo / log tails via `execFileBounded` |
+| Crash reattach / checkpoints                | `queryWindowsProcessIdentity` async PowerShell                                                                 |
+| Stop / kill / SteamCMD cancel / move cancel | `killWinProcessTreeAsync` (`taskkill` bounded)                                                                 |
+| SteamCMD discovery                          | Candidate `access` + bounded `where.exe` (status polls skip `where`)                                           |
 
 Local Windows sample (2026-08-10, `node scripts/bench-main-hot-paths.cjs`):
 
-| Probe | p50 | p95 |
-|-------|-----|-----|
+| Probe                                       | p50     | p95     |
+| ------------------------------------------- | ------- | ------- |
 | Async FS install probe (version + manifest) | ~1.0 ms | ~1.4 ms |
-| Bounded `where.exe steamcmd` | ~39 ms | ~45 ms |
-| Bounded PowerShell PID identity | ~221 ms | ~586 ms |
+| Bounded `where.exe steamcmd`                | ~39 ms  | ~45 ms  |
+| Bounded PowerShell PID identity             | ~221 ms | ~586 ms |
 
 These remain wall-clock work but run off the main thread’s sync call stack so
 IPC/UI can continue. Re-run the script after storage changes; CI does not gate
@@ -622,11 +622,11 @@ from another manager) but YARK has no profile:
    - Paths under `ShooterGame\...` (e.g. `Binaries\Win64`) are rejected as
      nested folders with a suggested dedicated root. Other non-ready healths
      stay blocked.
-   Best-effort GUS / SavedArks / Mods detection (for ready and incomplete)
-   then creates a profile with the **absolute** `installDir` (does **not** nest
-   via `resolveServerInstallDir` / base-folder create). Map prefill prefers the
-   newest world `.ark` under `SavedArks` (mtime), then GUS leftovers, else
-   `TheIsland_WP`.
+     Best-effort GUS / SavedArks / Mods detection (for ready and incomplete)
+     then creates a profile with the **absolute** `installDir` (does **not** nest
+     via `resolveServerInstallDir` / base-folder create). Map prefill prefers the
+     newest world `.ark` under `SavedArks` (mtime), then GUS leftovers, else
+     `TheIsland_WP`.
 4. No SteamCMD sync and **no INI writes** on import — profile-owned GUS keys
    sync on **Start** (same as other profiles). Discovered mod Project IDs import
    **disabled**. Incomplete import does **not** auto-start SteamCMD.
@@ -648,17 +648,17 @@ UI badges: `importHealthBadgeLabel` in
 explicit opt-in checkbox. Other badges block import and show guidance next to
 the path field (including folders already owned by another YARK profile):
 
-| Badge | When it appears |
-| --- | --- |
-| **Ready** | Chosen folder is a usable ASA dedicated root (`ArkAscendedServer.exe` present under the expected Win64 path). |
-| **Already managed** | Folder matches an existing YARK profile `installDir` (case-insensitive). Continue is blocked; open that server instead. |
-| **Nested folder** | Path contains a `ShooterGame` segment but is not the dedicated root (e.g. `...\ShooterGame\Binaries\Win64`). YARK suggests the parent of `ShooterGame` and offers **Use suggested folder**. |
-| **Empty folder** | Path exists and is empty — fine for SteamCMD install via New server, not for Import (no opt-in). |
-| **Incomplete** | ASA markers exist (`ShooterGame` / `Engine` / `steamapps`) but the dedicated executable is missing or the tree is only partial. Opt-in checkbox required to Continue (#283). |
-| **Missing path** | Path does not exist on disk. |
-| **Inaccessible** | Path exists but YARK cannot read it (permissions). |
-| **Not an ASA install** | Non-empty folder without ASA layout (wrong folder / foreign contents). Operator-facing label for classifier health `suspicious` — not a malware warning. |
-| **Check failed** | Unexpected I/O while probing the path. |
+| Badge                  | When it appears                                                                                                                                                                             |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Ready**              | Chosen folder is a usable ASA dedicated root (`ArkAscendedServer.exe` present under the expected Win64 path).                                                                               |
+| **Already managed**    | Folder matches an existing YARK profile `installDir` (case-insensitive). Continue is blocked; open that server instead.                                                                     |
+| **Nested folder**      | Path contains a `ShooterGame` segment but is not the dedicated root (e.g. `...\ShooterGame\Binaries\Win64`). YARK suggests the parent of `ShooterGame` and offers **Use suggested folder**. |
+| **Empty folder**       | Path exists and is empty — fine for SteamCMD install via New server, not for Import (no opt-in).                                                                                            |
+| **Incomplete**         | ASA markers exist (`ShooterGame` / `Engine` / `steamapps`) but the dedicated executable is missing or the tree is only partial. Opt-in checkbox required to Continue (#283).                |
+| **Missing path**       | Path does not exist on disk.                                                                                                                                                                |
+| **Inaccessible**       | Path exists but YARK cannot read it (permissions).                                                                                                                                          |
+| **Not an ASA install** | Non-empty folder without ASA layout (wrong folder / foreign contents). Operator-facing label for classifier health `suspicious` — not a malware warning.                                    |
+| **Check failed**       | Unexpected I/O while probing the path.                                                                                                                                                      |
 
 ## Common pitfalls
 
@@ -680,23 +680,23 @@ the path field (including folders already owned by another YARK profile):
 
 ## Tests that lock behavior
 
-| File | Focus |
-| --- | --- |
-| `tests/unit/launch-args.test.ts` | CLI shape; no listen/RCON/passwords/QueryPort |
-| `npm run e2e:import-install` | Windows UI: Import install wizard (#254) — nested/ready/Already managed, profile-only INI |
-| `tests/unit/sync-profile-ini.test.ts` | Exact INI keys / null password → `""` |
-| `tests/unit/validation.test.ts` | Ports, paths, cluster, mods, conflicts |
-| `tests/unit/host-port-probe.test.ts` | Host bind classify, suggestions, UDP release, error prefixes |
-| `tests/unit/instance-host-port-start.test.ts` | Start gate busy/inconclusive/sessionPorts |
-| `tests/unit/left-running.test.ts` | Leave identity parse including optional runtimePorts |
-| `npm run e2e:host-port-probe` | Windows UI: busy modal, Edit ports, session start |
-| `tests/unit/ini-service.test.ts` | Sanitize + semantic validation |
-| `tests/unit/import-existing-install.test.ts` | Mod tree discovery + GUS prefill + health gates |
-| `tests/unit/configuration-wizard-model.test.ts` | Presets, difficulty, preserve unknowns |
-| `tests/unit/asa-log-tail.test.ts` | Saved/Logs decode + follow for Runtime |
-| `tests/unit/instance-stop.test.ts` | Pre-stop backup order / best-effort failure |
-| `tests/unit/instance-restart.test.ts` | Restart order, fail-hard backup, lock conflict |
-| `tests/integration/process-manager-real-start.test.ts` | win32 direct spawn / spaced paths |
+| File                                                   | Focus                                                                                     |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| `tests/unit/launch-args.test.ts`                       | CLI shape; no listen/RCON/passwords/QueryPort                                             |
+| `npm run e2e:import-install`                           | Windows UI: Import install wizard (#254) — nested/ready/Already managed, profile-only INI |
+| `tests/unit/sync-profile-ini.test.ts`                  | Exact INI keys / null password → `""`                                                     |
+| `tests/unit/validation.test.ts`                        | Ports, paths, cluster, mods, conflicts                                                    |
+| `tests/unit/host-port-probe.test.ts`                   | Host bind classify, suggestions, UDP release, error prefixes                              |
+| `tests/unit/instance-host-port-start.test.ts`          | Start gate busy/inconclusive/sessionPorts                                                 |
+| `tests/unit/left-running.test.ts`                      | Leave identity parse including optional runtimePorts                                      |
+| `npm run e2e:host-port-probe`                          | Windows UI: busy modal, Edit ports, session start                                         |
+| `tests/unit/ini-service.test.ts`                       | Sanitize + semantic validation                                                            |
+| `tests/unit/import-existing-install.test.ts`           | Mod tree discovery + GUS prefill + health gates                                           |
+| `tests/unit/configuration-wizard-model.test.ts`        | Presets, difficulty, preserve unknowns                                                    |
+| `tests/unit/asa-log-tail.test.ts`                      | Saved/Logs decode + follow for Runtime                                                    |
+| `tests/unit/instance-stop.test.ts`                     | Pre-stop backup order / best-effort failure                                               |
+| `tests/unit/instance-restart.test.ts`                  | Restart order, fail-hard backup, lock conflict                                            |
+| `tests/integration/process-manager-real-start.test.ts` | win32 direct spawn / spaced paths                                                         |
 
 See also [backups.md](backups.md) (restore requires `!isActive`),
 [updates-steamcmd.md](updates-steamcmd.md) (stopped-server safe update,

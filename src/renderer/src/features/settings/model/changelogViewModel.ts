@@ -1,19 +1,6 @@
 import type { ChangelogEntry } from "@shared/settings/changelog";
 
-const MONTHS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-] as const;
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
 
 /** Operator-facing date from curated ISO `YYYY-MM-DD` (local calendar, not UTC). */
 export function formatChangelogDate(isoDate: string): string {

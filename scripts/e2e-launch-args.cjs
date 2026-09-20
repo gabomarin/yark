@@ -130,15 +130,11 @@ async function launchApp() {
 async function quitApp(app) {
   const proc = app.process();
   const exited =
-    proc == null || proc.exitCode != null
-      ? Promise.resolve()
-      : new Promise((resolve) => proc.once("exit", resolve));
+    proc == null || proc.exitCode != null ? Promise.resolve() : new Promise((resolve) => proc.once("exit", resolve));
   await app.evaluate(({ app: electronApp }) => electronApp.quit());
   await Promise.race([
     exited,
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000),
-    ),
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000)),
   ]);
 }
 
@@ -190,15 +186,9 @@ function findCommandLine(runtimeLines) {
 
 function assertCommandLineTokens(commandLine) {
   for (const token of EXPECTED_TOKENS) {
-    assert.ok(
-      commandLine.includes(token),
-      `Commandline missing ${token}:\n${commandLine}`,
-    );
+    assert.ok(commandLine.includes(token), `Commandline missing ${token}:\n${commandLine}`);
   }
-  assert.ok(
-    !/Native server console opened/i.test(commandLine),
-    "Commandline line should not mention native console",
-  );
+  assert.ok(!/Native server console opened/i.test(commandLine), "Commandline line should not mention native console");
 }
 
 async function waitForCommandLine(page, timeoutMs = 15_000) {
@@ -213,23 +203,21 @@ async function waitForCommandLine(page, timeoutMs = 15_000) {
     }
     await page.waitForTimeout(250);
   }
-  throw new Error(
-    `Timed out waiting for Commandline in runtime logs:\n${last.join("\n")}`,
-  );
+  throw new Error(`Timed out waiting for Commandline in runtime logs:\n${last.join("\n")}`);
 }
 
 function cardFor(page) {
-  return page.locator(SERVER_CARD, {
-    has: page.getByText(serverName, { exact: true }),
-  }).first();
+  return page
+    .locator(SERVER_CARD, {
+      has: page.getByText(serverName, { exact: true }),
+    })
+    .first();
 }
 
 async function openWorkspace(page) {
   const card = cardFor(page);
   await card.waitFor({ state: "visible", timeout: 15_000 });
-  await card
-    .getByRole("button", { name: new RegExp(`Open settings for ${serverName}`, "i") })
-    .click();
+  await card.getByRole("button", { name: new RegExp(`Open settings for ${serverName}`, "i") }).click();
   await page.getByRole("tab", { name: "Launch" }).waitFor({
     state: "visible",
     timeout: 15_000,
@@ -342,9 +330,7 @@ async function run() {
     console.log(`E2E_LAUNCH_ARGS_SHOT ${shot}`);
     console.log(`E2E_LAUNCH_ARGS_CMDLINE ${commandLine}`);
 
-    const actionableErrors = errors.filter(
-      (message) => !/Failed to load resource|net::ERR_/i.test(message),
-    );
+    const actionableErrors = errors.filter((message) => !/Failed to load resource|net::ERR_/i.test(message));
     assert.deepEqual(actionableErrors, []);
     succeeded = true;
     console.log(`E2E_LAUNCH_ARGS_OK profile=${profileDir}`);

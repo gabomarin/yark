@@ -55,41 +55,63 @@ export interface UpdatePerformerDependencies {
   updatesLogDir: string;
   checkpointJob: (job: CriticalJob | undefined, phase: string) => void;
   addJobEvent: AddJobEvent;
-  runSteamUpdate: (
-    installDir: string,
-    operation: SteamCmdFilesOperation,
-    serverId: string,
-  ) => Promise<CommandResult>;
+  runSteamUpdate: (installDir: string, operation: SteamCmdFilesOperation, serverId: string) => Promise<CommandResult>;
   appendSteamCmdConsole: (line: string) => void;
   setProgress: (percent: number | null, label: string | null, line?: string) => void;
   setPausedProgress: () => void;
   isPauseRequested: () => boolean;
   isCancelRequested: () => boolean;
-  waitForHealthy: (
-    serverId: string,
-    timeoutMs: number,
-    options?: { ignoreCancellation?: boolean },
-  ) => Promise<boolean>;
+  waitForHealthy: (serverId: string, timeoutMs: number, options?: { ignoreCancellation?: boolean }) => Promise<boolean>;
 }
 
 export class UpdatePerformer {
   constructor(private readonly deps: UpdatePerformerDependencies) {}
 
-  private get servers(): ServerRepository { return this.deps.servers; }
-  private get backups(): BackupService { return this.deps.backups; }
-  private get instances(): InstanceService { return this.deps.instances; }
-  private get processes(): ProcessManager { return this.deps.processes; }
-  private get locks(): InstanceLockManager { return this.deps.locks; }
-  private get updatesLogDir(): string { return this.deps.updatesLogDir; }
-  private get checkpointJob(): UpdatePerformerDependencies["checkpointJob"] { return this.deps.checkpointJob; }
-  private get addJobEvent(): AddJobEvent { return this.deps.addJobEvent; }
-  private get runSteamUpdate(): UpdatePerformerDependencies["runSteamUpdate"] { return this.deps.runSteamUpdate; }
-  private get appendSteamCmdConsole(): UpdatePerformerDependencies["appendSteamCmdConsole"] { return this.deps.appendSteamCmdConsole; }
-  private get setProgress(): UpdatePerformerDependencies["setProgress"] { return this.deps.setProgress; }
-  private get setPausedProgress(): UpdatePerformerDependencies["setPausedProgress"] { return this.deps.setPausedProgress; }
-  private get waitForHealthy(): UpdatePerformerDependencies["waitForHealthy"] { return this.deps.waitForHealthy; }
-  private isPauseRequested(): boolean { return this.deps.isPauseRequested(); }
-  private isCancelRequested(): boolean { return this.deps.isCancelRequested(); }
+  private get servers(): ServerRepository {
+    return this.deps.servers;
+  }
+  private get backups(): BackupService {
+    return this.deps.backups;
+  }
+  private get instances(): InstanceService {
+    return this.deps.instances;
+  }
+  private get processes(): ProcessManager {
+    return this.deps.processes;
+  }
+  private get locks(): InstanceLockManager {
+    return this.deps.locks;
+  }
+  private get updatesLogDir(): string {
+    return this.deps.updatesLogDir;
+  }
+  private get checkpointJob(): UpdatePerformerDependencies["checkpointJob"] {
+    return this.deps.checkpointJob;
+  }
+  private get addJobEvent(): AddJobEvent {
+    return this.deps.addJobEvent;
+  }
+  private get runSteamUpdate(): UpdatePerformerDependencies["runSteamUpdate"] {
+    return this.deps.runSteamUpdate;
+  }
+  private get appendSteamCmdConsole(): UpdatePerformerDependencies["appendSteamCmdConsole"] {
+    return this.deps.appendSteamCmdConsole;
+  }
+  private get setProgress(): UpdatePerformerDependencies["setProgress"] {
+    return this.deps.setProgress;
+  }
+  private get setPausedProgress(): UpdatePerformerDependencies["setPausedProgress"] {
+    return this.deps.setPausedProgress;
+  }
+  private get waitForHealthy(): UpdatePerformerDependencies["waitForHealthy"] {
+    return this.deps.waitForHealthy;
+  }
+  private isPauseRequested(): boolean {
+    return this.deps.isPauseRequested();
+  }
+  private isCancelRequested(): boolean {
+    return this.deps.isCancelRequested();
+  }
 
   async performInstallServerFiles(serverId: string, job?: CriticalJob): Promise<void> {
     await this.locks.withLock(serverId, "install-files", async () => {
@@ -100,22 +122,12 @@ export class UpdatePerformer {
       }
 
       await mkdir(server.installDir, { recursive: true });
-      this.addJobEvent(
-        job,
-        "update_started",
-        "info",
-        `Installing base files via SteamCMD on "${server.name}"`,
-      );
+      this.addJobEvent(job, "update_started", "info", `Installing base files via SteamCMD on "${server.name}"`);
 
       this.checkpointJob(job, "applying-files");
       const cmd = await this.runSteamUpdate(server.installDir, "install-files", serverId);
       if (cmd.code !== 0) {
-        this.addJobEvent(
-          job,
-          "update_failed",
-          "error",
-          `Base install failed (exit ${cmd.code})`,
-        );
+        this.addJobEvent(job, "update_failed", "error", `Base install failed (exit ${cmd.code})`);
         throw new Error(`SteamCMD exited with code ${cmd.code}`);
       }
       if (job !== undefined) {
@@ -124,12 +136,7 @@ export class UpdatePerformer {
       }
       this.checkpointJob(job, "files-applied");
 
-      this.addJobEvent(
-        job,
-        "update_completed",
-        "info",
-        `Base files installed for "${server.name}"`,
-      );
+      this.addJobEvent(job, "update_completed", "info", `Base files installed for "${server.name}"`);
     });
   }
 
@@ -154,16 +161,12 @@ export class UpdatePerformer {
       ) {
         // Operator-actionable: Stop → Retry. A plain Error would mark the job
         // failed with operatorRetryAllowed=false and only offer Dismiss.
-        throw new CriticalJobRecoveryBlockedError(
-          "Stop the server before updating files",
-        );
+        throw new CriticalJobRecoveryBlockedError("Stop the server before updating files");
       }
 
       // Backup identity is the durable resume signal. Unlike `phase`, it
       // survives validation checkpoints and a second crash during retry.
-      const resumeFromPreUpdateBackup = shouldResumeFromPreUpdateBackup(
-        job?.context.preUpdateBackupIds,
-      );
+      const resumeFromPreUpdateBackup = shouldResumeFromPreUpdateBackup(job?.context.preUpdateBackupIds);
       if (job !== undefined) {
         // A new SteamCMD attempt creates a new rollback generation. Evidence
         // from the prior completed rollback must never suppress this attempt's
@@ -171,39 +174,28 @@ export class UpdatePerformer {
         job.context.rollbackRestoredBackupIds = [];
       }
       this.checkpointJob(job, "validating");
-      const wasRunning = resolveUpdateWasRunning(
-        job?.context.wasRunning,
-        isCurrentlyRunning,
-      );
+      const wasRunning = resolveUpdateWasRunning(job?.context.wasRunning, isCurrentlyRunning);
       if (job !== undefined) {
         captureWasRunningOnJob(job.context, isCurrentlyRunning);
       }
       this.checkpointJob(job, "validated");
       const startedAt = new Date();
-      this.servers.addEvent(
-        serverId,
-        "update_started",
-        "info",
-        `Starting safe update for \"${server.name}\"`,
-        {
-          what: wasRunning
-            ? "Legacy safe update resumed (stop if needed → pre-update backup → SteamCMD → restart if it was running)."
-            : "Safe update job started (stopped server → pre-update backup → SteamCMD).",
-          location: server.installDir,
-          suggestion: wasRunning
-            ? "The manager will stop the server for a consistent pre-update backup and SteamCMD, then restart it if the update succeeds."
-            : "Watch SteamCMD progress. The server will stay stopped after a successful update.",
-          context: {
-            operation: "update",
-            wasRunning,
-            installDir: server.installDir,
-          },
+      this.servers.addEvent(serverId, "update_started", "info", `Starting safe update for \"${server.name}\"`, {
+        what: wasRunning
+          ? "Legacy safe update resumed (stop if needed → pre-update backup → SteamCMD → restart if it was running)."
+          : "Safe update job started (stopped server → pre-update backup → SteamCMD).",
+        location: server.installDir,
+        suggestion: wasRunning
+          ? "The manager will stop the server for a consistent pre-update backup and SteamCMD, then restart it if the update succeeds."
+          : "Watch SteamCMD progress. The server will stay stopped after a successful update.",
+        context: {
+          operation: "update",
+          wasRunning,
+          installDir: server.installDir,
         },
-      );
+      });
 
-      let preUpdateBackups: Awaited<
-        ReturnType<BackupService["createPreUpdateBackupForJob"]>
-      > = [];
+      let preUpdateBackups: Awaited<ReturnType<BackupService["createPreUpdateBackupForJob"]>> = [];
       try {
         // Stop before snapshotting — live SavedArks writes would tear rollback archives.
         if (isCurrentlyRunning) {
@@ -213,19 +205,10 @@ export class UpdatePerformer {
 
         if (resumeFromPreUpdateBackup) {
           const persistedIds = job?.context.preUpdateBackupIds ?? [];
-          preUpdateBackups = this.backups.getCompletedBackupsForCriticalJob(
-            serverId,
-            persistedIds,
-          );
+          preUpdateBackups = this.backups.getCompletedBackupsForCriticalJob(serverId, persistedIds);
           // Compare against required critical kinds, not persisted id count:
           // pre-#275 jobs may still list a `players` id that is intentionally ignored.
-          if (
-            !isPreUpdateBackupEvidenceComplete(
-              persistedIds,
-              preUpdateBackups.length,
-              CRITICAL_BACKUP_KINDS.length,
-            )
-          ) {
+          if (!isPreUpdateBackupEvidenceComplete(persistedIds, preUpdateBackups.length, CRITICAL_BACKUP_KINDS.length)) {
             throw new CriticalJobRecoveryBlockedError(
               "Persisted pre-update backup evidence is incomplete; operator review is required",
             );
@@ -235,26 +218,14 @@ export class UpdatePerformer {
           );
         } else {
           this.checkpointJob(job, "creating-pre-update-backup");
-          this.appendSteamCmdConsole(
-            "Creating pre-update backup (world) before SteamCMD…",
-          );
-          this.setProgress(
-            5,
-            "Creating pre-update backup…",
-            "A world snapshot protects rollback if SteamCMD fails",
-          );
+          this.appendSteamCmdConsole("Creating pre-update backup (world) before SteamCMD…");
+          this.setProgress(5, "Creating pre-update backup…", "A world snapshot protects rollback if SteamCMD fails");
           preUpdateBackups = await this.backups.createPreUpdateBackupForJob(serverId, {
             onKindProgress: (kind, index, total) => {
               const label = formatPreUpdateBackupKindLabel(kind);
               const percent = computePreUpdateBackupProgressPercent(index, total);
-              this.appendSteamCmdConsole(
-                `Pre-update backup ${index + 1}/${total}: ${label}…`,
-              );
-              this.setProgress(
-                percent,
-                `Backing up ${label}…`,
-                `Pre-update backup ${index + 1} of ${total}`,
-              );
+              this.appendSteamCmdConsole(`Pre-update backup ${index + 1}/${total}: ${label}…`);
+              this.setProgress(percent, `Backing up ${label}…`, `Pre-update backup ${index + 1} of ${total}`);
             },
             onProgressMessage: (message) => {
               this.appendSteamCmdConsole(message);
@@ -291,9 +262,7 @@ export class UpdatePerformer {
         );
 
         if (cmd.code !== 0) {
-          throw new Error(
-            `SteamCMD exited with code ${cmd.code}. Check log: ${logPath}`,
-          );
+          throw new Error(`SteamCMD exited with code ${cmd.code}. Check log: ${logPath}`);
         }
 
         if (job !== undefined) {
@@ -323,10 +292,8 @@ export class UpdatePerformer {
         if (err instanceof CriticalJobRecoveryBlockedError) throw err;
 
         const phaseAtFailure = job?.phase ?? "";
-        const paused =
-          this.isPauseRequested() || isOperationPausedError(err);
-        const cancelled =
-          this.isCancelRequested() || isOperationCancelledError(err);
+        const paused = this.isPauseRequested() || isOperationPausedError(err);
+        const cancelled = this.isCancelRequested() || isOperationCancelledError(err);
         const installMayHaveChanged = updateInstallMayHaveChanged({
           phase: phaseAtFailure,
           steamCmdExitCode: job?.context.steamCmdExitCode,
@@ -347,17 +314,13 @@ export class UpdatePerformer {
               serverIsActive: this.processes.isActive(serverId),
             })
           ) {
-            this.appendSteamCmdConsole(
-              `Restarting "${server.name}" after pause (server was running before update)…`,
-            );
+            this.appendSteamCmdConsole(`Restarting "${server.name}" after pause (server was running before update)…`);
             await this.instances.startForMaintenance(serverId);
             const healthy = await this.waitForHealthy(serverId, 90_000, {
               ignoreCancellation: true,
             });
             if (!healthy) {
-              throw new Error(
-                "Update was paused before SteamCMD, but the server did not return to running",
-              );
+              throw new Error("Update was paused before SteamCMD, but the server did not return to running");
             }
           }
           throw isOperationPausedError(err) ? err : new OperationPausedError();
@@ -366,14 +329,8 @@ export class UpdatePerformer {
         // Cancel (or failure) before SteamCMD touched the install: do not invent a
         // restore/safeguard unwind — that was the silent multi-minute "Waiting…" hang.
         if (cancelled && !installMayHaveChanged) {
-          this.appendSteamCmdConsole(
-            "Cancel before SteamCMD applied files; skipping rollback restore.",
-          );
-          this.setProgress(
-            null,
-            "Cancelled",
-            "Stopped before game files changed; no rollback restore needed",
-          );
+          this.appendSteamCmdConsole("Cancel before SteamCMD applied files; skipping rollback restore.");
+          this.setProgress(null, "Cancelled", "Stopped before game files changed; no rollback restore needed");
           if (
             shouldRestartServerAfterPreSteamCmdAbort({
               wasRunning,
@@ -381,17 +338,13 @@ export class UpdatePerformer {
               serverIsActive: this.processes.isActive(serverId),
             })
           ) {
-            this.appendSteamCmdConsole(
-              `Restarting "${server.name}" after cancel (server was running before update)…`,
-            );
+            this.appendSteamCmdConsole(`Restarting "${server.name}" after cancel (server was running before update)…`);
             await this.instances.startForMaintenance(serverId);
             const healthy = await this.waitForHealthy(serverId, 90_000, {
               ignoreCancellation: true,
             });
             if (!healthy) {
-              throw new Error(
-                "Update was cancelled before SteamCMD, but the server did not return to running",
-              );
+              throw new Error("Update was cancelled before SteamCMD, but the server did not return to running");
             }
           }
           throw isOperationCancelledError(err) ? err : new OperationCancelledError();
@@ -403,20 +356,14 @@ export class UpdatePerformer {
             ? "Update failed after SteamCMD began; restoring pre-update backups…"
             : "Update failed; restoring pre-update backups…",
         );
-        this.setProgress(
-          null,
-          "Rolling back…",
-          "Restoring pre-update backups",
-        );
+        this.setProgress(null, "Rolling back…", "Restoring pre-update backups");
         // Persist the failure event for Logs; OS toast waits for rollback or the
         // queue's definitive terminal update_failed (#331 — one banner per job).
         this.addJobEvent(
           job,
           "update_failed",
           "error",
-          `Update failed on "${server.name}": ${
-            err instanceof Error ? err.message : String(err)
-          }`,
+          `Update failed on "${server.name}": ${err instanceof Error ? err.message : String(err)}`,
           {
             what: "Safe update failed (backup and/or SteamCMD step).",
             cause: err instanceof Error ? err.message : String(err),
@@ -438,14 +385,8 @@ export class UpdatePerformer {
 
         for (const backup of preUpdateBackups) {
           this.checkpointJob(job, "rollback-restoring-backups");
-          this.appendSteamCmdConsole(
-            `Restoring pre-update ${backup.kind} backup…`,
-          );
-          this.setProgress(
-            null,
-            `Restoring ${backup.kind}…`,
-            `Rollback restore (${backup.kind})`,
-          );
+          this.appendSteamCmdConsole(`Restoring pre-update ${backup.kind} backup…`);
+          this.setProgress(null, `Restoring ${backup.kind}…`, `Rollback restore (${backup.kind})`);
           await this.backups.restoreBackupForJob(serverId, backup.id, {
             onProgressMessage: (message) => {
               this.appendSteamCmdConsole(message);
@@ -463,15 +404,9 @@ export class UpdatePerformer {
         if (wasRunning) {
           this.checkpointJob(job, "rollback-restarting-server");
           await this.instances.startForMaintenance(serverId);
-          const rollbackHealthy = await this.waitForHealthy(
-            serverId,
-            90_000,
-            { ignoreCancellation: true },
-          );
+          const rollbackHealthy = await this.waitForHealthy(serverId, 90_000, { ignoreCancellation: true });
           if (!rollbackHealthy) {
-            throw new Error(
-              "Rollback ran but the server did not return to running",
-            );
+            throw new Error("Rollback ran but the server did not return to running");
           }
         }
 
@@ -486,8 +421,7 @@ export class UpdatePerformer {
             cause: wasRunning
               ? "Update failed; manager restored the pre-update archives and restarted the server."
               : "Update failed; manager restored the pre-update archives and left the server stopped.",
-            suggestion:
-              "Confirm world/players look correct, inspect the update log, then retry the update when ready.",
+            suggestion: "Confirm world/players look correct, inspect the update log, then retry the update when ready.",
             context: {
               backupIds,
             },
@@ -510,10 +444,7 @@ export class UpdatePerformer {
       }
 
       const isCurrentlyRunning = this.processes.isActive(serverId);
-      const wasRunning = resolveUpdateWasRunning(
-        job?.context.wasRunning,
-        isCurrentlyRunning,
-      );
+      const wasRunning = resolveUpdateWasRunning(job?.context.wasRunning, isCurrentlyRunning);
       if (job !== undefined) {
         captureWasRunningOnJob(job.context, isCurrentlyRunning);
       }
@@ -538,9 +469,7 @@ export class UpdatePerformer {
 
       if (isCurrentlyRunning) {
         this.checkpointJob(job, "stopping-server");
-        this.appendSteamCmdConsole(
-          `Stopping "${server.name}" before integrity check…`,
-        );
+        this.appendSteamCmdConsole(`Stopping "${server.name}" before integrity check…`);
         await this.instances.stop(serverId, { backup: false });
       }
 
@@ -549,12 +478,7 @@ export class UpdatePerformer {
         this.checkpointJob(job, "applying-files");
         const cmd = await this.runSteamUpdate(server.installDir, "verify-files", serverId);
         if (cmd.code !== 0) {
-          this.addJobEvent(
-            job,
-            "update_failed",
-            "error",
-            `Integrity verification failed (exit ${cmd.code})`,
-          );
+          this.addJobEvent(job, "update_failed", "error", `Integrity verification failed (exit ${cmd.code})`);
           throw new Error(`SteamCMD validate exited with code ${cmd.code}`);
         }
 
@@ -569,9 +493,7 @@ export class UpdatePerformer {
           await this.instances.startForMaintenance(serverId);
           const healthy = await this.waitForHealthy(serverId, 90_000);
           if (!healthy) {
-            throw new Error(
-              "Verification OK but the server did not return to running",
-            );
+            throw new Error("Verification OK but the server did not return to running");
           }
         }
 
@@ -585,8 +507,7 @@ export class UpdatePerformer {
             : `Integrity verified for "${server.name}"`,
         );
       } catch (error) {
-        const paused =
-          this.isPauseRequested() || isOperationPausedError(error);
+        const paused = this.isPauseRequested() || isOperationPausedError(error);
         if (paused) {
           const phaseAtFailure = job?.phase ?? "";
           const installMayHaveChanged = updateInstallMayHaveChanged({
@@ -620,5 +541,4 @@ export class UpdatePerformer {
       }
     });
   }
-
 }

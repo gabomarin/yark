@@ -60,16 +60,12 @@ describe("isOfficialMap / resolveMapIdentity", () => {
 
   it("classifies KNOWN_MAPS as official and clears stray mapModId", () => {
     expect(isOfficialMap("TheIsland_WP")).toBe(true);
-    expect(
-      resolveMapIdentity({ map: "TheIsland_WP", mapModId: "962796" }),
-    ).toEqual({
+    expect(resolveMapIdentity({ map: "TheIsland_WP", mapModId: "962796" })).toEqual({
       kind: "custom",
       map: "TheIsland_WP",
       mapModId: "962796",
     });
-    expect(
-      resolveMapIdentity({ map: "TheIsland_WP", mapModId: null }),
-    ).toEqual({
+    expect(resolveMapIdentity({ map: "TheIsland_WP", mapModId: null })).toEqual({
       kind: "official",
       map: "TheIsland_WP",
       mapModId: null,
@@ -78,9 +74,7 @@ describe("isOfficialMap / resolveMapIdentity", () => {
 
   it("classifies modded tokens as custom and keeps a valid mapModId", () => {
     expect(isOfficialMap("Svartalfheim_WP")).toBe(false);
-    expect(
-      resolveMapIdentity({ map: "Svartalfheim_WP", mapModId: "962796" }),
-    ).toEqual({
+    expect(resolveMapIdentity({ map: "Svartalfheim_WP", mapModId: "962796" })).toEqual({
       kind: "custom",
       map: "Svartalfheim_WP",
       mapModId: "962796",
@@ -90,29 +84,21 @@ describe("isOfficialMap / resolveMapIdentity", () => {
 
 describe("persistableMapModId", () => {
   it("returns null for bare official maps when a mod id is unset", () => {
-    expect(
-      persistableMapModId({ map: "TheIsland_WP", mapModId: null }),
-    ).toBeNull();
+    expect(persistableMapModId({ map: "TheIsland_WP", mapModId: null })).toBeNull();
   });
 
   it("keeps mapModId for official-token remasters", () => {
-    expect(
-      persistableMapModId({ map: "TheIsland_WP", mapModId: "1460513" }),
-    ).toBe("1460513");
+    expect(persistableMapModId({ map: "TheIsland_WP", mapModId: "1460513" })).toBe("1460513");
   });
 
   it("keeps a valid custom map mod id", () => {
-    expect(
-      persistableMapModId({ map: "Svartalfheim_WP", mapModId: "962796" }),
-    ).toBe("962796");
+    expect(persistableMapModId({ map: "Svartalfheim_WP", mapModId: "962796" })).toBe("962796");
   });
 });
 
 describe("validateMapIdentity", () => {
   it("errors on empty or spaced tokens", () => {
-    expect(validateMapIdentity({ map: "  " })).toEqual([
-      { field: "map", message: "Map required", severity: "error" },
-    ]);
+    expect(validateMapIdentity({ map: "  " })).toEqual([{ field: "map", message: "Map required", severity: "error" }]);
     expect(validateMapIdentity({ map: "Bad Map_WP" })[0]).toMatchObject({
       field: "map",
       severity: "error",
@@ -124,9 +110,7 @@ describe("validateMapIdentity", () => {
     for (const token of ["../Config", "Map/Child", "Map\\Child", "CON", "Map."]) {
       expect(isSafeMapToken(token)).toBe(false);
       expect(validateMapIdentity({ map: token })).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ field: "map", severity: "error" }),
-        ]),
+        expect.arrayContaining([expect.objectContaining({ field: "map", severity: "error" })]),
       );
     }
   });
@@ -141,8 +125,7 @@ describe("validateMapIdentity", () => {
     ).toEqual([
       {
         field: "mapModId",
-        message:
-          "Custom map needs a linked map mod Project ID enabled on Mods (required for -mods=)",
+        message: "Custom map needs a linked map mod Project ID enabled on Mods (required for -mods=)",
         severity: "warning",
       },
     ]);
@@ -352,4 +335,3 @@ describe("persistableMapSaveFolder", () => {
     ).toBeNull();
   });
 });
-

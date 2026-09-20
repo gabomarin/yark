@@ -44,7 +44,10 @@ async function main() {
   const winIco = await toIco(icoBufs);
   fs.writeFileSync(path.join(ROOT, "build", "icon.ico"), winIco);
 
-  await sharp(ICON_SRC).resize(32, 32).png().toFile(path.join(ROOT, "website", "favicon-32x32.png"));
+  await sharp(ICON_SRC)
+    .resize(32, 32)
+    .png()
+    .toFile(path.join(ROOT, "website", "favicon-32x32.png"));
   await sharp(ICON_SRC)
     .resize(32, 32)
     .png()

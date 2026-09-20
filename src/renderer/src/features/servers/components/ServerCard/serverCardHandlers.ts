@@ -51,10 +51,7 @@ export type ServerCardCallbackProps = {
   onToggleEnabled?: () => void;
 };
 
-export function bindServerCardHandlers(
-  handlers: ServerCardHandlers,
-  server: ServerProfile,
-): ServerCardCallbackProps {
+export function bindServerCardHandlers(handlers: ServerCardHandlers, server: ServerProfile): ServerCardCallbackProps {
   const id = server.id;
   return {
     onStart: () => handlers.onStartServer(id),
@@ -75,9 +72,7 @@ export function bindServerCardHandlers(
     onClone: () => handlers.onCloneServer(id),
     onCopyConfiguration: () => handlers.onCopyConfiguration(id),
     onDelete: () => handlers.onDeleteServer(id),
-    onOpenDownloads: handlers.onOpenDownloads
-      ? () => handlers.onOpenDownloads?.(id)
-      : undefined,
+    onOpenDownloads: handlers.onOpenDownloads ? () => handlers.onOpenDownloads?.(id) : undefined,
     onToggleEnabled: handlers.onToggleServerEnabled
       ? () => handlers.onToggleServerEnabled?.(id, !server.enabled)
       : undefined,

@@ -23,22 +23,22 @@ remain visible on the **Downloads** page until the operator acts.
 
 ## Restart contract
 
-| Operation / interrupted phase | Recovery |
-| --- | --- |
-| Install or verify while applying SteamCMD/cache files | Replay from the top; SteamCMD validation and cache sync are idempotent |
-| Install, update, or verify after the `files-applied` checkpoint | Reconcile as complete when runtime already matches; otherwise perform only the remaining restart transition |
-| Install or verify while stopping/restarting ASA | Block; process state may be ambiguous (still **Needs attention** on restart) |
-| Update during validation | Replay; no material side effect has started |
-| Update during stop, backup, file application without completion evidence, restart, or rollback | Hold under **Active** with **Retry** after YARK closes; move to **Needs attention** only if Retry fails |
-| Update after `rollback-complete` | Keep as failed with completed rollback evidence and allow an explicit retry |
-| Pre-update backup after execution began | Reconcile backup rows/ZIPs, reuse completed kind checkpoints marked with the job ID, and continue with the next missing kind |
-| Restore before application | Reuse its restore-history row and marked safeguard backup, then continue |
-| Restore while applying | Block; never apply the restore again automatically |
-| Restore with completed durable history | Reconcile as completed and remove the stale queue row |
-| Any queued/retrying job not yet in an ambiguous phase | Resume with attempts and creation time preserved **when steamcmd.exe is on disk**. Pending file jobs start (Active) like Steam resuming interrupted downloads. Auto-start skips those servers so it cannot beat the files job and block an Update. |
-| SteamCMD not installed | Pending file jobs block with Retry (waiters fail closed). Retry/Resume/new Install-Update-Verify refuse until SteamCMD is installed |
-| Missing server/profile | Fail without retry |
-| Corrupt or unsupported queue data | Copy the raw value to a timestamped `.quarantine.*` setting and reset the active queue |
+| Operation / interrupted phase                                                                  | Recovery                                                                                                                                                                                                                                           |
+| ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Install or verify while applying SteamCMD/cache files                                          | Replay from the top; SteamCMD validation and cache sync are idempotent                                                                                                                                                                             |
+| Install, update, or verify after the `files-applied` checkpoint                                | Reconcile as complete when runtime already matches; otherwise perform only the remaining restart transition                                                                                                                                        |
+| Install or verify while stopping/restarting ASA                                                | Block; process state may be ambiguous (still **Needs attention** on restart)                                                                                                                                                                       |
+| Update during validation                                                                       | Replay; no material side effect has started                                                                                                                                                                                                        |
+| Update during stop, backup, file application without completion evidence, restart, or rollback | Hold under **Active** with **Retry** after YARK closes; move to **Needs attention** only if Retry fails                                                                                                                                            |
+| Update after `rollback-complete`                                                               | Keep as failed with completed rollback evidence and allow an explicit retry                                                                                                                                                                        |
+| Pre-update backup after execution began                                                        | Reconcile backup rows/ZIPs, reuse completed kind checkpoints marked with the job ID, and continue with the next missing kind                                                                                                                       |
+| Restore before application                                                                     | Reuse its restore-history row and marked safeguard backup, then continue                                                                                                                                                                           |
+| Restore while applying                                                                         | Block; never apply the restore again automatically                                                                                                                                                                                                 |
+| Restore with completed durable history                                                         | Reconcile as completed and remove the stale queue row                                                                                                                                                                                              |
+| Any queued/retrying job not yet in an ambiguous phase                                          | Resume with attempts and creation time preserved **when steamcmd.exe is on disk**. Pending file jobs start (Active) like Steam resuming interrupted downloads. Auto-start skips those servers so it cannot beat the files job and block an Update. |
+| SteamCMD not installed                                                                         | Pending file jobs block with Retry (waiters fail closed). Retry/Resume/new Install-Update-Verify refuse until SteamCMD is installed                                                                                                                |
+| Missing server/profile                                                                         | Fail without retry                                                                                                                                                                                                                                 |
+| Corrupt or unsupported queue data                                                              | Copy the raw value to a timestamped `.quarantine.*` setting and reset the active queue                                                                                                                                                             |
 
 The UI shows the server operation, current phase, attempts, last error/recovery
 reason, and only actions supported by the state:

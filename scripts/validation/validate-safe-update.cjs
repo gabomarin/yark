@@ -44,10 +44,7 @@ const SCENARIOS = new Set(
 );
 
 const projectRoot = path.resolve(__dirname, "..", "..");
-const userData = path.join(
-  process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming"),
-  "yark-server-manager",
-);
+const userData = path.join(process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming"), "yark-server-manager");
 const dbPath = path.join(userData, "yark-server-manager.db");
 const realSteamCmdCandidate = path.join(userData, "steamcmd", "steamcmd.exe");
 
@@ -70,17 +67,13 @@ function requireNodeSqlite() {
     return require("node:sqlite");
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
-    throw new Error(
-      `node:sqlite is unavailable (need Node 22.5+). ${detail}`,
-    );
+    throw new Error(`node:sqlite is unavailable (need Node 22.5+). ${detail}`);
   }
 }
 
 function openDb() {
   if (!fs.existsSync(dbPath)) {
-    throw new Error(
-      `YARK database not found at ${dbPath}. Launch the app once, or set APPDATA.`,
-    );
+    throw new Error(`YARK database not found at ${dbPath}. Launch the app once, or set APPDATA.`);
   }
   const { DatabaseSync } = requireNodeSqlite();
   try {
@@ -164,9 +157,7 @@ function redactEvidence(value) {
 
 function assertPrerequisites() {
   if (process.platform !== "win32") {
-    throw new Error(
-      "This validation script only runs on Windows (process.platform === \"win32\").",
-    );
+    throw new Error('This validation script only runs on Windows (process.platform === "win32").');
   }
 
   if (!CONFIRM && !DRY_RUN) {
@@ -188,17 +179,13 @@ function assertPrerequisites() {
 
   const mainJs = path.join(projectRoot, "out", "main", "index.js");
   if (!fs.existsSync(mainJs)) {
-    throw new Error(
-      `Built app missing (${mainJs}). Run: npm run build`,
-    );
+    throw new Error(`Built app missing (${mainJs}). Run: npm run build`);
   }
 
   try {
     require.resolve("playwright");
   } catch {
-    throw new Error(
-      "playwright is not installed. Run: npm install (devDependency).",
-    );
+    throw new Error("playwright is not installed. Run: npm install (devDependency).");
   }
 
   requireNodeSqlite();
@@ -208,13 +195,9 @@ function assertPrerequisites() {
   }
 
   const configured = readSetting("steamcmdPath");
-  const steamOk =
-    (configured != null && fs.existsSync(configured)) ||
-    fs.existsSync(realSteamCmdCandidate);
+  const steamOk = (configured != null && fs.existsSync(configured)) || fs.existsSync(realSteamCmdCandidate);
   if (!steamOk) {
-    throw new Error(
-      "No SteamCMD executable found (Settings steamcmdPath or userData/steamcmd/steamcmd.exe).",
-    );
+    throw new Error("No SteamCMD executable found (Settings steamcmdPath or userData/steamcmd/steamcmd.exe).");
   }
 
   console.log("Prerequisites OK");
@@ -242,7 +225,7 @@ function ensureFailingSteamCmdStub() {
       "using System;",
       "static class P {",
       "  static int Main(string[] args) {",
-      "    Console.Error.WriteLine(\"yark-validate forced SteamCMD failure\");",
+      '    Console.Error.WriteLine("yark-validate forced SteamCMD failure");',
       "    return 1;",
       "  }",
       "}",
@@ -255,16 +238,13 @@ function ensureFailingSteamCmdStub() {
   );
 
   try {
-    execFileSync(
-      "powershell.exe",
-      ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", stubPs1],
-      { stdio: ["ignore", "pipe", "pipe"], windowsHide: true },
-    );
+    execFileSync("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", stubPs1], {
+      stdio: ["ignore", "pipe", "pipe"],
+      windowsHide: true,
+    });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
-    throw new Error(
-      `Failed to compile temporary failing SteamCMD stub in ${failingStubDir}: ${detail}`,
-    );
+    throw new Error(`Failed to compile temporary failing SteamCMD stub in ${failingStubDir}: ${detail}`);
   }
 
   if (!fs.existsSync(stubExe)) {
@@ -281,9 +261,7 @@ function cleanupFailingStub() {
 }
 
 async function withSteamCmdPath(window, nextPath, fn) {
-  previousSteamCmdPath =
-    (await api(window, "getSteamCmdStatus"))?.executablePath ??
-    readSetting("steamcmdPath");
+  previousSteamCmdPath = (await api(window, "getSteamCmdStatus"))?.executablePath ?? readSetting("steamcmdPath");
   try {
     await api(window, "setSteamCmdPath", nextPath);
     return await fn();
@@ -429,15 +407,8 @@ async function scenarioC() {
           (byType.pre_update || []).includes("ini"),
         `Expected pre_update world/players/ini, got ${JSON.stringify(byType)}`,
       );
-      assert.equal(
-        byType.pre_stop,
-        undefined,
-        `Unexpected pre_stop during failed update: ${JSON.stringify(byType)}`,
-      );
-      assert.ok(
-        events.some((e) => e.type === "update_failed") || updateError,
-        "Expected update failure",
-      );
+      assert.equal(byType.pre_stop, undefined, `Unexpected pre_stop during failed update: ${JSON.stringify(byType)}`);
+      assert.ok(events.some((e) => e.type === "update_failed") || updateError, "Expected update failure");
       assert.ok(
         events.some((e) => e.type === "update_rolled_back"),
         "Expected update_rolled_back event",
@@ -450,8 +421,7 @@ async function scenarioC() {
         backups: byType,
         finalStatus,
         events: events.map((e) => e.type),
-        note:
-          "Job retries up to 3 times; each attempt rolls back. Final signal: update failure (not success), runtime usually stopped when wasRunning was false.",
+        note: "Job retries up to 3 times; each attempt rolls back. Final signal: update failure (not success), runtime usually stopped when wasRunning was false.",
       };
     });
   } finally {
@@ -481,10 +451,7 @@ async function scenarioE() {
     while (Date.now() < deadline) {
       const queueAfter = readQueue();
       recovered = queueAfter.find((j) => j.id === job.id) || null;
-      if (
-        recovered &&
-        recovered.lastError === "yark-validate prior error context"
-      ) {
+      if (recovered && recovered.lastError === "yark-validate prior error context") {
         break;
       }
       await sleep(100);
@@ -622,11 +589,7 @@ async function scenarioF() {
     const events = listEventsSince(db, SERVER_ID, since);
     db.close();
     const byType = summarizeBackups(backups);
-    assert.equal(
-      byType.pre_update,
-      undefined,
-      `Verify must not create pre_update: ${JSON.stringify(byType)}`,
-    );
+    assert.equal(byType.pre_update, undefined, `Verify must not create pre_update: ${JSON.stringify(byType)}`);
     assert.ok(events.some((e) => e.type === "update_completed"));
 
     evidence.scenarios.F = {
@@ -661,10 +624,7 @@ async function scenarioD() {
     const cancelled =
       result.outcome === "rejected" &&
       (msg.includes("cancel") || msg.includes("cancelled") || msg.includes("canceled"));
-    assert.ok(
-      cancelled || result.outcome === "rejected",
-      `Cancel must not report success: ${JSON.stringify(result)}`,
-    );
+    assert.ok(cancelled || result.outcome === "rejected", `Cancel must not report success: ${JSON.stringify(result)}`);
 
     evidence.scenarios.D = {
       pass: true,
@@ -695,12 +655,8 @@ async function run() {
     evidence.commit = "unknown";
   }
 
-  console.log(
-    "\nWARNING: Manual real-host run. Uses your YARK userData DB and a disposable ASA profile.",
-  );
-  console.log(
-    "Scenario C temporarily changes steamcmdPath to a temp stub; your real steamcmd.exe is not renamed.",
-  );
+  console.log("\nWARNING: Manual real-host run. Uses your YARK userData DB and a disposable ASA profile.");
+  console.log("Scenario C temporarily changes steamcmdPath to a temp stub; your real steamcmd.exe is not renamed.");
 
   const order = ["C", "E", "B", "A", "F", "D"];
   for (const key of order) {

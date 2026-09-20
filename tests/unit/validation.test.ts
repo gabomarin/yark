@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  findPortConflicts,
-  validateProfileInput,
-} from "@backend/domains/instances/validation";
+import { findPortConflicts, validateProfileInput } from "@backend/domains/instances/validation";
 import type { ServerProfile, ServerProfileInput } from "@shared/types";
 import { offsetPort, PORT_MAX, PORT_MIN } from "@shared/types";
 
@@ -58,9 +55,7 @@ describe("validateProfileInput", () => {
       }),
     );
     expect(issues.some((i) => /requires a value/i.test(i.message))).toBe(true);
-    expect(
-      issues.some((i) => i.field === "structuredLaunchArgs"),
-    ).toBe(true);
+    expect(issues.some((i) => i.field === "structuredLaunchArgs")).toBe(true);
   });
 
   it("rejects raw args that duplicate structured selections (#93)", () => {
@@ -70,9 +65,7 @@ describe("validateProfileInput", () => {
         extraArgs: ["-NoBattlEye"],
       }),
     );
-    expect(issues.some((i) => /duplicates a structured/i.test(i.message))).toBe(
-      true,
-    );
+    expect(issues.some((i) => /duplicates a structured/i.test(i.message))).toBe(true);
     expect(issues.some((i) => i.field === "extraArgs")).toBe(true);
   });
 
@@ -95,9 +88,7 @@ describe("validateProfileInput", () => {
     expect(validateProfileInput(reforged, { create: true })).toEqual([]);
 
     const unlinked = validInput({ map: "Svartalfheim_WP", mapModId: null });
-    expect(
-      validateProfileInput(unlinked, { create: true }).some((i) => i.field === "map"),
-    ).toBe(true);
+    expect(validateProfileInput(unlinked, { create: true }).some((i) => i.field === "map")).toBe(true);
 
     const disabled = validInput({
       map: "Svartalfheim_WP",
@@ -105,9 +96,7 @@ describe("validateProfileInput", () => {
       mods: ["962796"],
       disabledMods: ["962796"],
     });
-    expect(
-      validateProfileInput(disabled, { create: true }).some((i) => i.field === "mapModId"),
-    ).toBe(true);
+    expect(validateProfileInput(disabled, { create: true }).some((i) => i.field === "mapModId")).toBe(true);
   });
 
   it("allows custom maps on edit without create guard (#292)", () => {
@@ -153,18 +142,12 @@ describe("validateProfileInput", () => {
     expect(validateProfileInput(validInput({ maxPlayers: 0 }))).toEqual([]);
     expect(validateProfileInput(validInput({ maxPlayers: 1 }))).toEqual([]);
     expect(validateProfileInput(validInput({ maxPlayers: 255 }))).toEqual([]);
-    expect(
-      validateProfileInput(validInput({ maxPlayers: -1 })).some((i) => i.field === "maxPlayers"),
-    ).toBe(true);
-    expect(
-      validateProfileInput(validInput({ maxPlayers: 256 })).some((i) => i.field === "maxPlayers"),
-    ).toBe(true);
+    expect(validateProfileInput(validInput({ maxPlayers: -1 })).some((i) => i.field === "maxPlayers")).toBe(true);
+    expect(validateProfileInput(validInput({ maxPlayers: 256 })).some((i) => i.field === "maxPlayers")).toBe(true);
   });
 
   it("rejects duplicated internal ports", () => {
-    const issues = validateProfileInput(
-      validInput({ gamePort: 7777, queryPort: 7777 }),
-    );
+    const issues = validateProfileInput(validInput({ gamePort: 7777, queryPort: 7777 }));
     expect(issues.some((i) => i.field === "ports")).toBe(true);
   });
 
@@ -174,16 +157,12 @@ describe("validateProfileInput", () => {
   });
 
   it("accepts UNC paths", () => {
-    const issues = validateProfileInput(
-      validInput({ installDir: "\\\\nas\\asa\\island" }),
-    );
+    const issues = validateProfileInput(validInput({ installDir: "\\\\nas\\asa\\island" }));
     expect(issues).toEqual([]);
   });
 
   it("requires clusterDir when clusterId is set", () => {
-    const issues = validateProfileInput(
-      validInput({ clusterId: "my-cluster", clusterDir: null }),
-    );
+    const issues = validateProfileInput(validInput({ clusterId: "my-cluster", clusterDir: null }));
     expect(issues.some((i) => i.field === "clusterDir")).toBe(true);
   });
 
@@ -199,15 +178,11 @@ describe("validateProfileInput", () => {
 
   it("rejects reserved Windows names", () => {
     const issues = validateProfileInput(validInput({ name: "CON" }));
-    expect(issues.some((i) => i.field === "name" && /reserved/i.test(i.message))).toBe(
-      true,
-    );
+    expect(issues.some((i) => i.field === "name" && /reserved/i.test(i.message))).toBe(true);
   });
 
   it("rejects incompatible installDir segments", () => {
-    const issues = validateProfileInput(
-      validInput({ installDir: "C:\\asa\\bad*folder" }),
-    );
+    const issues = validateProfileInput(validInput({ installDir: "C:\\asa\\bad*folder" }));
     expect(issues.some((i) => i.field === "installDir")).toBe(true);
   });
 });
@@ -297,4 +272,3 @@ describe("findPortConflicts", () => {
     });
   });
 });
-

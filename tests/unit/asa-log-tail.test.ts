@@ -1,11 +1,4 @@
-import {
-  appendFileSync,
-  mkdirSync,
-  mkdtempSync,
-  renameSync,
-  utimesSync,
-  writeFileSync,
-} from "node:fs";
+import { appendFileSync, mkdirSync, mkdtempSync, renameSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -64,10 +57,7 @@ describe("AsaSavedLogsTailer", () => {
     await new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  async function waitFor(
-    condition: () => boolean,
-    timeoutMs = 1_000,
-  ): Promise<void> {
+  async function waitFor(condition: () => boolean, timeoutMs = 1_000): Promise<void> {
     const deadline = Date.now() + timeoutMs;
     while (!condition()) {
       if (Date.now() >= deadline) {
@@ -143,10 +133,7 @@ describe("AsaSavedLogsTailer", () => {
     await delay(30);
     expect(chunks).toEqual([]);
 
-    appendFileSync(
-      logPath,
-      Buffer.concat([encoded.subarray(2), Buffer.from("\n")]),
-    );
+    appendFileSync(logPath, Buffer.concat([encoded.subarray(2), Buffer.from("\n")]));
     await waitFor(() => chunks.length > 0);
     expect(chunks.join("")).toContain("🦖");
     expect(chunks.join("")).not.toContain("�");
@@ -220,9 +207,7 @@ describe("AsaSavedLogsTailer", () => {
 
     renameSync(logPath, rotatedPath);
     writeFileSync(logPath, "new-start-is-larger-than-old\n", "utf8");
-    await waitFor(() =>
-      chunks.join("").includes("new-start-is-larger-than-old"),
-    );
+    await waitFor(() => chunks.join("").includes("new-start-is-larger-than-old"));
     expect(chunks.join("")).toContain("new-start-is-larger-than-old");
 
     tailer.stop();
@@ -285,11 +270,7 @@ describe("ShooterGame.log excerpt reads", () => {
     mkdirSync(logsDir, { recursive: true });
     const head = "HEAD-UNIQUE-MARKER\n";
     const tail = "TAIL-UNIQUE-MARKER\n";
-    writeFileSync(
-      join(logsDir, "ShooterGame.log"),
-      `${head}${"x".repeat(80 * 1024)}${tail}`,
-      "utf8",
-    );
+    writeFileSync(join(logsDir, "ShooterGame.log"), `${head}${"x".repeat(80 * 1024)}${tail}`, "utf8");
     const excerpt = readAsaLogTailExcerpt(root, 64 * 1024);
     expect(excerpt).toContain("TAIL-UNIQUE-MARKER");
     expect(excerpt).not.toContain("HEAD-UNIQUE-MARKER");
@@ -307,11 +288,7 @@ describe("ShooterGame.log excerpt reads", () => {
     const anchor = captureAsaLogSessionAnchor(root);
     expect(readAsaLogSessionExcerpt(root, anchor)).toBe("");
 
-    appendFileSync(
-      join(logsDir, "ShooterGame.log"),
-      "Fatal error!\nAssertion failed: this-run\n",
-      "utf8",
-    );
+    appendFileSync(join(logsDir, "ShooterGame.log"), "Fatal error!\nAssertion failed: this-run\n", "utf8");
     const excerpt = readAsaLogSessionExcerpt(root, anchor);
     expect(excerpt).toContain("Assertion failed: this-run");
     expect(excerpt).not.toContain("1039450");

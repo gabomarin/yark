@@ -1,12 +1,4 @@
-import {
-  closeSync,
-  existsSync,
-  fstatSync,
-  openSync,
-  readSync,
-  readdirSync,
-  statSync,
-} from "node:fs";
+import { closeSync, existsSync, fstatSync, openSync, readSync, readdirSync, statSync } from "node:fs";
 import { open } from "node:fs/promises";
 import { join } from "node:path";
 import { StringDecoder } from "node:string_decoder";
@@ -40,11 +32,7 @@ export interface AsaLogSessionAnchor {
   mtimeMs: number;
 }
 
-function asaLogFileIdentity(stats: {
-  dev: number | bigint;
-  ino: number | bigint;
-  birthtimeMs: number;
-}): string {
+function asaLogFileIdentity(stats: { dev: number | bigint; ino: number | bigint; birthtimeMs: number }): string {
   return `${String(stats.dev)}:${String(stats.ino)}:${stats.birthtimeMs}`;
 }
 
@@ -62,12 +50,7 @@ export function captureAsaLogSessionAnchor(installDir: string): AsaLogSessionAnc
   }
 }
 
-function readFdTailRange(
-  fd: number,
-  fileSize: number,
-  rangeStart: number,
-  maxBytes: number,
-): Buffer {
+function readFdTailRange(fd: number, fileSize: number, rangeStart: number, maxBytes: number): Buffer {
   if (fileSize <= rangeStart) return Buffer.alloc(0);
   const position = Math.max(rangeStart, fileSize - maxBytes);
   const length = fileSize - position;
@@ -79,10 +62,7 @@ function readFdTailRange(
 /**
  * Last `maxBytes` of ShooterGame.log without reading the whole file into memory.
  */
-export function readAsaLogTailExcerpt(
-  installDir: string,
-  maxBytes = DEFAULT_EXCERPT_BYTES,
-): string {
+export function readAsaLogTailExcerpt(installDir: string, maxBytes = DEFAULT_EXCERPT_BYTES): string {
   const path = asaPrimaryLogPath(installDir);
   let fd: number;
   try {
@@ -117,9 +97,7 @@ export function readAsaLogSessionExcerpt(
   try {
     const stats = fstatSync(fd);
     const replacedOrTruncated =
-      anchor.identity === null ||
-      asaLogFileIdentity(stats) !== anchor.identity ||
-      stats.size < anchor.size;
+      anchor.identity === null || asaLogFileIdentity(stats) !== anchor.identity || stats.size < anchor.size;
     const sessionStart = replacedOrTruncated ? 0 : anchor.size;
     return decodeAsaLogBytes(readFdTailRange(fd, stats.size, sessionStart, maxBytes));
   } finally {
@@ -166,13 +144,8 @@ export function decodeAsaLogBytes(buffer: Buffer): string {
  * Prefer `ShooterGame.log` when present. Other *.log files are ignored so Runtime
  * does not jump between secondary Unreal logs.
  */
-export function pickAsaLogFile(
-  logFiles: string[],
-  _startedAtMs?: number,
-): string | null {
-  const primary = logFiles.find((file) =>
-    /(?:^|[/\\])ShooterGame\.log$/i.test(file),
-  );
+export function pickAsaLogFile(logFiles: string[], _startedAtMs?: number): string | null {
+  const primary = logFiles.find((file) => /(?:^|[/\\])ShooterGame\.log$/i.test(file));
   return primary ?? null;
 }
 
@@ -199,9 +172,7 @@ export class AsaSavedLogsTailer {
     this.pollMs = options?.pollMs ?? DEFAULT_POLL_MS;
   }
 
-  start(
-    anchor: AsaLogSessionAnchor = captureAsaLogSessionAnchor(this.installDir),
-  ): void {
+  start(anchor: AsaLogSessionAnchor = captureAsaLogSessionAnchor(this.installDir)): void {
     this.stop();
     this.activeFileIdentity = anchor.identity;
     this.offset = anchor.size;
@@ -231,9 +202,12 @@ export class AsaSavedLogsTailer {
       // The file may disappear while Unreal rotates it; retry on the next poll.
     }
     if (generation !== this.generation) return;
-    this.timer = setTimeout(() => {
-      void this.poll(generation);
-    }, hasMore ? 0 : this.pollMs);
+    this.timer = setTimeout(
+      () => {
+        void this.poll(generation);
+      },
+      hasMore ? 0 : this.pollMs,
+    );
     if (typeof this.timer.unref === "function") {
       this.timer.unref();
     }
@@ -273,12 +247,7 @@ export class AsaSavedLogsTailer {
 
       const length = Math.min(snapshot.size - this.offset, MAX_READ_BYTES);
       const buffer = Buffer.allocUnsafe(length);
-      const { bytesRead } = await handle.read(
-        buffer,
-        0,
-        length,
-        this.offset,
-      );
+      const { bytesRead } = await handle.read(buffer, 0, length, this.offset);
       if (generation !== this.generation || bytesRead === 0) return false;
       this.offset += bytesRead;
       this.consumeBytes(buffer.subarray(0, bytesRead));
@@ -301,10 +270,7 @@ export class AsaSavedLogsTailer {
         this.setEncoding("utf16be");
         data = data.subarray(2);
       } else {
-        if (
-          data.length < 8 &&
-          (!data.includes(0x0a) || data.includes(0x00))
-        ) {
+        if (data.length < 8 && (!data.includes(0x0a) || data.includes(0x00))) {
           this.pendingBytes = data;
           return;
         }
@@ -313,11 +279,7 @@ export class AsaSavedLogsTailer {
         for (const byte of sample) {
           if (byte === 0) nulCount += 1;
         }
-        this.setEncoding(
-          sample.length >= 8 && nulCount >= sample.length / 4
-            ? "utf16le"
-            : "utf8",
-        );
+        this.setEncoding(sample.length >= 8 && nulCount >= sample.length / 4 ? "utf16le" : "utf8");
       }
     }
 
@@ -327,19 +289,14 @@ export class AsaSavedLogsTailer {
     }
     if (data.length === 0) return;
 
-    const decoded =
-      this.encoding === "utf16be"
-        ? this.swapUtf16Pairs(data)
-        : data;
+    const decoded = this.encoding === "utf16be" ? this.swapUtf16Pairs(data) : data;
     const text = this.decoder?.write(decoded) ?? "";
     this.emitDecodedText(text);
   }
 
   private setEncoding(encoding: AsaLogEncoding): void {
     this.encoding = encoding;
-    this.decoder = new StringDecoder(
-      encoding === "utf8" ? "utf8" : "utf16le",
-    );
+    this.decoder = new StringDecoder(encoding === "utf8" ? "utf8" : "utf16le");
   }
 
   private resetDecodingState(): void {
@@ -351,21 +308,13 @@ export class AsaSavedLogsTailer {
 
   private flushDecoder(): void {
     if (this.encoding === null && this.pendingBytes.length > 0) {
-      this.setEncoding(
-        this.pendingBytes.includes(0x00) &&
-          this.pendingBytes.length % 2 === 0
-          ? "utf16le"
-          : "utf8",
-      );
+      this.setEncoding(this.pendingBytes.includes(0x00) && this.pendingBytes.length % 2 === 0 ? "utf16le" : "utf8");
     }
     if (this.pendingBytes.length > 0) {
       const pending =
         this.encoding === "utf16be"
           ? this.swapUtf16Pairs(
-              this.pendingBytes.subarray(
-                0,
-                this.pendingBytes.length - (this.pendingBytes.length % 2),
-              ),
+              this.pendingBytes.subarray(0, this.pendingBytes.length - (this.pendingBytes.length % 2)),
             )
           : this.pendingBytes;
       this.pendingBytes = Buffer.alloc(0);

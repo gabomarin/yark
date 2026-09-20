@@ -1,21 +1,10 @@
 import { z } from "zod";
 
-export type ExperienceProfileId =
-  | "current"
-  | "cluster"
-  | "friends"
-  | "communityPve"
-  | "communityPvp"
-  | "hardcore";
+export type ExperienceProfileId = "current" | "cluster" | "friends" | "communityPve" | "communityPvp" | "hardcore";
 
 export type ProgressionPresetId = "base" | "balanced" | "fast" | "veryFast";
 export type BreedingPresetId = "base" | "balanced" | "fast" | "veryFast";
-export type WorldPresetId =
-  | "veryEasy"
-  | "easy"
-  | "medium"
-  | "hard"
-  | "veryHard";
+export type WorldPresetId = "veryEasy" | "easy" | "medium" | "hard" | "veryHard";
 
 // Additional factors applied by ARK on top of the configured INI values.
 // Source: https://ark.wiki.gg/wiki/Single_Player
@@ -64,25 +53,14 @@ export interface ConfigurationWizardDraft {
 }
 
 export const configurationWizardSchema = z.object({
-  profile: z.enum([
-    "current",
-    "cluster",
-    "friends",
-    "communityPve",
-    "communityPvp",
-    "hardcore",
-  ]),
+  profile: z.enum(["current", "cluster", "friends", "communityPve", "communityPvp", "hardcore"]),
   singlePlayerSettings: z.boolean(),
   pve: z.boolean(),
   hardcore: z.boolean(),
   xpRate: z.number().positive().max(100),
   harvestRate: z.number().positive().max(100),
   tamingRate: z.number().positive().max(100),
-  maxWildDinoLevel: z
-    .number()
-    .int()
-    .min(30)
-    .max(30_000),
+  maxWildDinoLevel: z.number().int().min(30).max(30_000),
   difficultyOffset: z.number().min(0).max(1_000),
   overrideOfficialDifficulty: z.number().min(0).max(1_000),
   eggHatchRate: z.number().positive().max(100),
@@ -110,10 +88,7 @@ export const configurationWizardSchema = z.object({
   structurePickupSeconds: z.number().int().nonnegative().max(3600),
 });
 
-export const DEFAULT_WIZARD_VALUES: Omit<
-  ConfigurationWizardDraft,
-  "profile" | "maxWildDinoLevel"
-> = {
+export const DEFAULT_WIZARD_VALUES: Omit<ConfigurationWizardDraft, "profile" | "maxWildDinoLevel"> = {
   singlePlayerSettings: false,
   pve: false,
   hardcore: false,
@@ -157,7 +132,5 @@ export interface WizardChange {
 }
 
 export function formatWizardNumber(value: number): string {
-  return Number.isInteger(value)
-    ? String(value)
-    : value.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
+  return Number.isInteger(value) ? String(value) : value.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
 }

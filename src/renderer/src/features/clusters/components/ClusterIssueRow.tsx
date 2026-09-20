@@ -13,11 +13,7 @@ export function ClusterIssueRow(props: Props): ReactElement {
   return (
     <li className={classes.issueRow} data-severity={props.issue.severity}>
       <span className={classes.issueIcon}>
-        {props.issue.severity === "error" ? (
-          <WarningCircle size={16} />
-        ) : (
-          <Warning size={16} />
-        )}
+        {props.issue.severity === "error" ? <WarningCircle size={16} /> : <Warning size={16} />}
       </span>
       <div className={classes.issueCopy}>
         <Text size="sm">{props.issue.message}</Text>

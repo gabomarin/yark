@@ -10,18 +10,13 @@ import type { Route } from "@layout/Sidebar/Sidebar";
  * not briefly disable sampling (wide layouts keep Status on screen; compact
  * drawer-closed corrects to false on the first layout report).
  */
-export function useProcessMetricsSamplingInterest(input: {
-  route: Route;
-  overlay: Overlay;
-}): {
+export function useProcessMetricsSamplingInterest(input: { route: Route; overlay: Overlay }): {
   onWorkspaceStatusPanelVisibleChange: (visible: boolean) => void;
 } {
   const [workspaceStatusVisible, setWorkspaceStatusVisible] = useState(true);
-  const onOverview =
-    input.overlay == null && input.route === "overview";
+  const onOverview = input.overlay == null && input.route === "overview";
   const onWorkspace = input.overlay?.kind === "workspace";
-  const samplingNeeded =
-    onOverview || (onWorkspace && workspaceStatusVisible);
+  const samplingNeeded = onOverview || (onWorkspace && workspaceStatusVisible);
 
   useEffect(() => {
     if (!onWorkspace) {

@@ -16,10 +16,7 @@ export function ServerBackupHeader(props: Props): ReactElement {
       <Text fw={600} size="sm" className={classes.embeddedHeaderTitle}>
         {props.title}
       </Text>
-      <DismissibleHint
-        storageKey={BACKUPS_KINDS_HINT_STORAGE_KEY}
-        title="World vs players vs INI"
-      >
+      <DismissibleHint storageKey={BACKUPS_KINDS_HINT_STORAGE_KEY} title="World vs players vs INI">
         {props.subtitle}
       </DismissibleHint>
     </div>

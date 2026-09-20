@@ -64,8 +64,9 @@ describe("cancel helpers", () => {
       recoveryReason: "Cancelled by the operator after pause.",
       updatedAt: "2026-01-02T00:00:00.000Z",
     });
-    expect(planCancelUpdateCriticalJob(false, "2026-01-02T00:00:00.000Z").recoveryReason)
-      .toBe("Cancelled by the operator before execution.");
+    expect(planCancelUpdateCriticalJob(false, "2026-01-02T00:00:00.000Z").recoveryReason).toBe(
+      "Cancelled by the operator before execution.",
+    );
   });
 });
 
@@ -122,19 +123,15 @@ describe("mergeUpdateCriticalJobs", () => {
     expect(merged.phase).toBe("applying-files");
     expect(merged.context.preUpdateBackupIds).toEqual(["b2", "b1"]);
     expect(merged.context.restartInterrupted).toBe(true);
-    expect(updateCriticalJobPhaseRank("applying-files")).toBeGreaterThan(
-      updateCriticalJobPhaseRank("queued"),
-    );
+    expect(updateCriticalJobPhaseRank("applying-files")).toBeGreaterThan(updateCriticalJobPhaseRank("queued"));
   });
 });
 
 describe("resumePhaseForUpdateRetry", () => {
   it("keeps restarting/rollback and jumps after pre-update backups", () => {
-    expect(
-      resumePhaseForUpdateRetry(
-        job({ id: "1", status: "paused", phase: "restarting-server" }),
-      ),
-    ).toBe("restarting-server");
+    expect(resumePhaseForUpdateRetry(job({ id: "1", status: "paused", phase: "restarting-server" }))).toBe(
+      "restarting-server",
+    );
     expect(
       resumePhaseForUpdateRetry(
         job({
@@ -157,9 +154,7 @@ describe("resumePhaseForUpdateRetry", () => {
       ),
     ).toBe("pre-update-backup-complete");
     expect(
-      resumePhaseForUpdateRetry(
-        job({ id: "4", status: "cancelled", phase: "applying-files", type: "verify-files" }),
-      ),
+      resumePhaseForUpdateRetry(job({ id: "4", status: "cancelled", phase: "applying-files", type: "verify-files" })),
     ).toBe("queued");
   });
 });

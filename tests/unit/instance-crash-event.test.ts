@@ -14,9 +14,9 @@ const profile: ServerProfile = {
   map: "TheIsland_WP",
   installDir: "C:\\ARK\\Island",
   enabled: true,
-    autoStart: false,
-    useAsaApi: false,
-    useAsaApiLoader: false,
+  autoStart: false,
+  useAsaApi: false,
+  useAsaApiLoader: false,
   sessionName: "Island",
   maxPlayers: 70,
   gamePort: 7777,
@@ -40,18 +40,11 @@ describe("InstanceService unexpected-exit events", () => {
       addEvent: vi.fn().mockReturnValue(42),
     } as unknown as ServerRepository;
     const processes = new EventEmitter() as unknown as ProcessManager;
-    const instances = new InstanceService(
-      repo,
-      processes,
-      {} as BackupService,
-      new InstanceLockManager(),
-    );
+    const instances = new InstanceService(repo, processes, {} as BackupService, new InstanceLockManager());
     const crashed = vi.fn();
     instances.on("server-crashed", crashed);
 
-    const diagnosis = diagnoseAsaStartupFailure(
-      "Fatal error!\nAssertion failed: nullptr+8",
-    );
+    const diagnosis = diagnoseAsaStartupFailure("Fatal error!\nAssertion failed: nullptr+8");
     (processes as unknown as EventEmitter).emit("unexpected-exit", {
       serverId: profile.id,
       exitCode: 0,
@@ -88,12 +81,7 @@ describe("InstanceService unexpected-exit events", () => {
       addEvent: vi.fn(),
     } as unknown as ServerRepository;
     const processes = new EventEmitter() as unknown as ProcessManager;
-    new InstanceService(
-      repo,
-      processes,
-      {} as BackupService,
-      new InstanceLockManager(),
-    );
+    new InstanceService(repo, processes, {} as BackupService, new InstanceLockManager());
 
     const status: ServerRuntimeInfo = {
       serverId: profile.id,
@@ -108,4 +96,3 @@ describe("InstanceService unexpected-exit events", () => {
     expect(repo.addEvent).not.toHaveBeenCalled();
   });
 });
-

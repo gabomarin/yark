@@ -22,21 +22,21 @@ SteamCMD sync excludes only `ShooterGame\Saved` — see
 
 ## Module map
 
-| Role | Path |
-| --- | --- |
-| Facade | `src/backend/domains/asa-api/asa-api-service.ts` |
-| Paths / GitHub constants | `asa-api-paths.ts` |
-| Profile → inject mode + Version.dll park | `asa-api-inject.ts` |
-| GitHub download + extract | `asa-api-install.ts` |
-| Zip cache + prune | `asa-api-cache.ts` |
-| Disk status + plugin enable/delete + legacy migrate | `asa-api-status.ts` |
-| Plugin zip install | `asa-api-plugin-install.ts` |
-| Uninstall Win64 API files | `asa-api-uninstall.ts` |
-| Spawn binary / loader adopt | `launch-args.ts`, `process-start.ts`, `process-manager.ts` |
-| “Loading Ark Server API…” window poll | `process-asa-api-loading.ts` |
-| IPC wiring | `src/main/ipc-handlers.ts`, `src/shared/ipc.ts` |
-| UI | `…/ServerAsaApiPanel/*` (workspace tab last) |
-| Schema | `schema-migrations.json` (`use_asa_api`, `use_asa_api_loader`) |
+| Role                                                | Path                                                           |
+| --------------------------------------------------- | -------------------------------------------------------------- |
+| Facade                                              | `src/backend/domains/asa-api/asa-api-service.ts`               |
+| Paths / GitHub constants                            | `asa-api-paths.ts`                                             |
+| Profile → inject mode + Version.dll park            | `asa-api-inject.ts`                                            |
+| GitHub download + extract                           | `asa-api-install.ts`                                           |
+| Zip cache + prune                                   | `asa-api-cache.ts`                                             |
+| Disk status + plugin enable/delete + legacy migrate | `asa-api-status.ts`                                            |
+| Plugin zip install                                  | `asa-api-plugin-install.ts`                                    |
+| Uninstall Win64 API files                           | `asa-api-uninstall.ts`                                         |
+| Spawn binary / loader adopt                         | `launch-args.ts`, `process-start.ts`, `process-manager.ts`     |
+| “Loading Ark Server API…” window poll               | `process-asa-api-loading.ts`                                   |
+| IPC wiring                                          | `src/main/ipc-handlers.ts`, `src/shared/ipc.ts`                |
+| UI                                                  | `…/ServerAsaApiPanel/*` (workspace tab last)                   |
+| Schema                                              | `schema-migrations.json` (`use_asa_api`, `use_asa_api_loader`) |
 
 Cache root: `<userData>/cache/asa-api` (`appDataFolders.asaApiCache` in
 `src/main/index.ts`). Settings → App data folders lists **Ark Server API downloads**.
@@ -46,11 +46,11 @@ Cache root: `<userData>/cache/asa-api` (`appDataFolders.asaApiCache` in
 SQLite columns `use_asa_api` / `use_asa_api_loader` map to profile
 `useAsaApi` / `useAsaApiLoader` (defaults **false**). Patch group `"asaApi"`.
 
-| Flags | `resolveAsaApiInjectMode` | Start binary | Version.dll on disk |
-| --- | --- | --- | --- |
-| `useAsaApi` false | `off` | `ArkAscendedServer.exe` | Parked as `Version.dll.yark-off` if present |
-| `useAsaApi` true, loader false | `versionDll` | `ArkAscendedServer.exe` | Must be active `Version.dll` |
-| both true | `loader` | `AsaApiLoader.exe` | Parked (loader must not see active Version.dll) |
+| Flags                          | `resolveAsaApiInjectMode` | Start binary            | Version.dll on disk                             |
+| ------------------------------ | ------------------------- | ----------------------- | ----------------------------------------------- |
+| `useAsaApi` false              | `off`                     | `ArkAscendedServer.exe` | Parked as `Version.dll.yark-off` if present     |
+| `useAsaApi` true, loader false | `versionDll`              | `ArkAscendedServer.exe` | Must be active `Version.dll`                    |
+| both true                      | `loader`                  | `AsaApiLoader.exe`      | Parked (loader must not see active Version.dll) |
 
 `syncAsaApiVersionDll` / `syncAsaApiVersionDllForProfile` rename between
 `Version.dll` and `Version.dll.yark-off`. If both exist, the active file wins:
@@ -104,17 +104,17 @@ Progress phases: `resolving` → `downloading` → `extracting` → `finishing`.
 
 ## IPC
 
-| Channel | Gate | Behavior |
-| --- | --- | --- |
-| `servers:asa-api-status` | — | Disk scan + legacy plugin migrate |
-| `servers:asa-api-install` | Stop if live | Install + progress push |
-| `servers:asa-api-uninstall` | Stop if live | Uninstall files; clear `useAsaApi*` |
-| `servers:asa-api-set-plugin-enabled` | Stop if live | Move Plugins ↔ Disabled_Plugins |
-| `servers:asa-api-delete-plugin` | Stop if live | Permanent delete |
-| `servers:asa-api-add-plugin-zip` | Stop if live | Native open dialog → extract |
-| `servers:asa-api-open-win64` / `open-plugins` | — | `shell.openPath` |
-| `servers:asa-api-clear-cache` | — | Wipe `<userData>/cache/asa-api` |
-| `push:asa-api-install-progress` | — | Normalized progress to all windows |
+| Channel                                       | Gate         | Behavior                            |
+| --------------------------------------------- | ------------ | ----------------------------------- |
+| `servers:asa-api-status`                      | —            | Disk scan + legacy plugin migrate   |
+| `servers:asa-api-install`                     | Stop if live | Install + progress push             |
+| `servers:asa-api-uninstall`                   | Stop if live | Uninstall files; clear `useAsaApi*` |
+| `servers:asa-api-set-plugin-enabled`          | Stop if live | Move Plugins ↔ Disabled_Plugins     |
+| `servers:asa-api-delete-plugin`               | Stop if live | Permanent delete                    |
+| `servers:asa-api-add-plugin-zip`              | Stop if live | Native open dialog → extract        |
+| `servers:asa-api-open-win64` / `open-plugins` | —            | `shell.openPath`                    |
+| `servers:asa-api-clear-cache`                 | —            | Wipe `<userData>/cache/asa-api`     |
+| `push:asa-api-install-progress`               | —            | Normalized progress to all windows  |
 
 Live = any status with `processLive` for that server id.
 
@@ -146,11 +146,11 @@ Live = any status with `processLive` for that server id.
 
 ## Tests
 
-| File | Focus |
-| --- | --- |
-| `tests/unit/asa-api-cache.test.ts` | Cache paths, size match, prune keep-2, clear |
-| `tests/unit/asa-api-status.test.ts` | Inject park, plugin list / migrate / enable |
-| `tests/unit/asa-api-plugin-install.test.ts` | Zip → Plugins folder layout |
+| File                                        | Focus                                        |
+| ------------------------------------------- | -------------------------------------------- |
+| `tests/unit/asa-api-cache.test.ts`          | Cache paths, size match, prune keep-2, clear |
+| `tests/unit/asa-api-status.test.ts`         | Inject park, plugin list / migrate / enable  |
+| `tests/unit/asa-api-plugin-install.test.ts` | Zip → Plugins folder layout                  |
 
 Process-manager / launch coverage for loader adopt and loading chrome lives with
 the broader lifecycle unit tests.

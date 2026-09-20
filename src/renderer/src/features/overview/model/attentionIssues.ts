@@ -1,13 +1,6 @@
-import {
-  installationHealthLabel,
-  isInstallationReady,
-} from "@shared/server/installation-health";
+import { installationHealthLabel, isInstallationReady } from "@shared/server/installation-health";
 import { getServerUpdateState } from "@shared/server/server-update-status";
-import type {
-  ServerInstallationInfo,
-  ServerProfile,
-  ServerRuntimeInfo,
-} from "@shared/types";
+import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 
 export interface AttentionIssue {
   serverId: string;
@@ -53,9 +46,7 @@ export function collectAttentionIssues(input: {
         serverId: server.id,
         serverName: server.name,
         problem: installationHealthLabel(installation.health),
-        guidance:
-          installation.guidance ||
-          "Check the install path, then use Install or Check Servers Health.",
+        guidance: installation.guidance || "Check the install path, then use Install or Check Servers Health.",
         checkedAt: installation.checkedAt,
       });
       continue;

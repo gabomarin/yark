@@ -89,9 +89,7 @@ describe("PlayerSessionWatcher", () => {
     const rcon = vi
       .spyOn(rconClient, "rconExec")
       .mockResolvedValueOnce("0. Alice, 76561198000000000\n")
-      .mockResolvedValueOnce(
-        "0. Alice, 76561198000000000\n1. Bob, 76561198000000001\n",
-      )
+      .mockResolvedValueOnce("0. Alice, 76561198000000000\n1. Bob, 76561198000000001\n")
       .mockResolvedValueOnce("0. Bob, 76561198000000001\n");
 
     const watcher = new PlayerSessionWatcher(backups, servers, processes, 60_000);
@@ -100,20 +98,10 @@ describe("PlayerSessionWatcher", () => {
     expect(createPlayerSessionBackup).not.toHaveBeenCalled();
 
     await watcher.tick();
-    expect(createPlayerSessionBackup).toHaveBeenCalledWith(
-      profile.id,
-      "connect",
-      "76561198000000001",
-      "Bob",
-    );
+    expect(createPlayerSessionBackup).toHaveBeenCalledWith(profile.id, "connect", "76561198000000001", "Bob");
 
     await watcher.tick();
-    expect(createPlayerSessionBackup).toHaveBeenCalledWith(
-      profile.id,
-      "disconnect",
-      "76561198000000000",
-      "Alice",
-    );
+    expect(createPlayerSessionBackup).toHaveBeenCalledWith(profile.id, "disconnect", "76561198000000000", "Alice");
 
     expect(rcon).toHaveBeenCalledTimes(3);
     watcher.stop();
@@ -136,9 +124,7 @@ describe("PlayerSessionWatcher", () => {
       })),
     }) as unknown as ProcessManager;
 
-    vi.spyOn(rconClient, "rconExec").mockResolvedValue(
-      "0. Alice, 76561198000000000\n",
-    );
+    vi.spyOn(rconClient, "rconExec").mockResolvedValue("0. Alice, 76561198000000000\n");
 
     const watcher = new PlayerSessionWatcher(backups, servers, processes, 60_000);
     await watcher.tick(); // seed
@@ -147,12 +133,7 @@ describe("PlayerSessionWatcher", () => {
     status = "stopping";
     await watcher.tick();
 
-    expect(createPlayerSessionBackup).toHaveBeenCalledWith(
-      profile.id,
-      "disconnect",
-      "76561198000000000",
-      "Alice",
-    );
+    expect(createPlayerSessionBackup).toHaveBeenCalledWith(profile.id, "disconnect", "76561198000000000", "Alice");
     watcher.stop();
   });
 
@@ -175,22 +156,11 @@ describe("PlayerSessionWatcher", () => {
     await watcher.tick(); // seed online + profile mtimes
     expect(createPlayerSessionBackup).not.toHaveBeenCalled();
 
-    const profilePath = join(
-      installDir,
-      "ShooterGame",
-      "Saved",
-      "SavedArks",
-      "0002abcdef0123456789.arkprofile",
-    );
+    const profilePath = join(installDir, "ShooterGame", "Saved", "SavedArks", "0002abcdef0123456789.arkprofile");
     await writeFile(profilePath, "NEW_PROFILE", "utf8");
 
     await watcher.tick();
-    expect(createPlayerSessionBackup).toHaveBeenCalledWith(
-      profile.id,
-      "disconnect",
-      "0002abcdef0123456789",
-      null,
-    );
+    expect(createPlayerSessionBackup).toHaveBeenCalledWith(profile.id, "disconnect", "0002abcdef0123456789", null);
     watcher.stop();
   });
 
@@ -206,13 +176,7 @@ describe("PlayerSessionWatcher", () => {
       getStatus: vi.fn(() => runningStatus(profile.id)),
     }) as unknown as ProcessManager;
 
-    const profilePath = join(
-      installDir,
-      "ShooterGame",
-      "Saved",
-      "SavedArks",
-      "76561198000000000.arkprofile",
-    );
+    const profilePath = join(installDir, "ShooterGame", "Saved", "SavedArks", "76561198000000000.arkprofile");
     await writeFile(profilePath, "OLD", "utf8");
     const past = new Date(Date.now() - 60_000);
     await utimes(profilePath, past, past);
@@ -228,12 +192,7 @@ describe("PlayerSessionWatcher", () => {
     await utimes(profilePath, now, now);
 
     await watcher.tick();
-    expect(createPlayerSessionBackup).toHaveBeenCalledWith(
-      profile.id,
-      "disconnect",
-      "76561198000000000",
-      null,
-    );
+    expect(createPlayerSessionBackup).toHaveBeenCalledWith(profile.id, "disconnect", "76561198000000000", null);
     watcher.stop();
   });
 
@@ -250,9 +209,7 @@ describe("PlayerSessionWatcher", () => {
       getStatus: vi.fn(() => runningStatus(profile.id)),
     }) as unknown as ProcessManager;
 
-    vi.spyOn(rconClient, "rconExec").mockResolvedValue(
-      "0. Alice, 76561198000000000\n",
-    );
+    vi.spyOn(rconClient, "rconExec").mockResolvedValue("0. Alice, 76561198000000000\n");
 
     const watcher = new PlayerSessionWatcher(backups, servers, processes, 60_000);
     const pushes: unknown[] = [];
@@ -296,4 +253,3 @@ describe("PlayerSessionWatcher", () => {
     watcher.stop();
   });
 });
-

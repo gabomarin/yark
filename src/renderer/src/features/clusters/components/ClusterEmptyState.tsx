@@ -34,11 +34,7 @@ export function ClusterEmptyState(props: Props): ReactElement {
             </Text>
           )
         }
-        action={
-          props.serverCount > 0 ? (
-            <Button onClick={props.onCreateCluster}>Create cluster</Button>
-          ) : undefined
-        }
+        action={props.serverCount > 0 ? <Button onClick={props.onCreateCluster}>Create cluster</Button> : undefined}
       >
         {props.dirWithoutIdServers.length > 0 && (
           <Stack gap="sm" className={classes.incompleteBlock}>

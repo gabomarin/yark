@@ -27,12 +27,7 @@ function idleStatus(serverId: string): MaintenancePolicyStatus {
 
 /** Live Up next poll while the Maintenance tab is open. */
 function pollIntervalMs(phase: MaintenancePolicyStatus["countdownPhase"]): number {
-  if (
-    phase === "last_minute"
-    || phase === "restarting"
-    || phase === "updating"
-    || phase === "wiping"
-  ) {
+  if (phase === "last_minute" || phase === "restarting" || phase === "updating" || phase === "wiping") {
     return 1_000;
   }
   if (phase === "warning") return 3_000;
@@ -170,8 +165,7 @@ export function useMaintenancePanel(serverId: string) {
     modals.openConfirmModal({
       title: "Run scheduled restart now?",
       centered: true,
-      children:
-        "Players get a short final warning, then a graceful restart with backup. Continue?",
+      children: "Players get a short final warning, then a graceful restart with backup. Continue?",
       labels: { confirm: "Yes, restart", cancel: "Back" },
       confirmProps: { color: "blue" },
       onConfirm: () => {

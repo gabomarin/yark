@@ -1,11 +1,4 @@
-import {
-  existsSync,
-  mkdtempSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -15,10 +8,7 @@ import {
   openDatabase,
   openDatabaseApplyingMigrations,
 } from "@backend/infra/db/database";
-import {
-  formatDatabaseQuarantineStamp,
-  quarantineProfileDatabase,
-} from "@backend/infra/db/database-recovery";
+import { formatDatabaseQuarantineStamp, quarantineProfileDatabase } from "@backend/infra/db/database-recovery";
 import {
   DatabaseRecoveryAbortedError,
   openDatabaseWithOperatorRecovery,
@@ -102,11 +92,9 @@ describe("openDatabase boot hardening", () => {
   it("wraps page-level corruption as DatabaseBootError kind open via quick_check", () => {
     const dir = tempDir("yark-db-malformed-");
     const dbPath = join(dir, "malformed.db");
-    openDatabaseApplyingMigrations(
-      dbPath,
-      [{ version: 1, sql: "CREATE TABLE ok (id INTEGER PRIMARY KEY);" }],
-      { takeSnapshots: false },
-    ).close();
+    openDatabaseApplyingMigrations(dbPath, [{ version: 1, sql: "CREATE TABLE ok (id INTEGER PRIMARY KEY);" }], {
+      takeSnapshots: false,
+    }).close();
 
     const buf = Buffer.from(readFileSync(dbPath));
     for (let i = 100; i < Math.min(200, buf.length); i += 1) {
@@ -115,11 +103,9 @@ describe("openDatabase boot hardening", () => {
     writeFileSync(dbPath, buf);
 
     const openCorrupt = () =>
-      openDatabaseApplyingMigrations(
-        dbPath,
-        [{ version: 1, sql: "CREATE TABLE ok (id INTEGER PRIMARY KEY);" }],
-        { takeSnapshots: false },
-      );
+      openDatabaseApplyingMigrations(dbPath, [{ version: 1, sql: "CREATE TABLE ok (id INTEGER PRIMARY KEY);" }], {
+        takeSnapshots: false,
+      });
 
     expect(openCorrupt).toThrow(DatabaseBootError);
     try {
@@ -139,18 +125,14 @@ describe("openDatabase boot hardening", () => {
   it("wraps migration failures as DatabaseBootError kind migrate", () => {
     const dir = tempDir("yark-db-migrate-");
     const dbPath = join(dir, "migrate.db");
-    openDatabaseApplyingMigrations(dbPath, [
-      { version: 1, sql: "CREATE TABLE ok (id INTEGER);" },
-    ]).close();
+    openDatabaseApplyingMigrations(dbPath, [{ version: 1, sql: "CREATE TABLE ok (id INTEGER);" }]).close();
 
     const badMigrations = [
       { version: 1, sql: "CREATE TABLE ok (id INTEGER);" },
       { version: 2, sql: "THIS IS NOT VALID SQL;" },
     ];
 
-    expect(() => openDatabaseApplyingMigrations(dbPath, badMigrations)).toThrow(
-      DatabaseBootError,
-    );
+    expect(() => openDatabaseApplyingMigrations(dbPath, badMigrations)).toThrow(DatabaseBootError);
     try {
       openDatabaseApplyingMigrations(dbPath, badMigrations);
       expect.unreachable("openDatabaseApplyingMigrations should have thrown");
@@ -199,9 +181,7 @@ describe("openDatabaseWithOperatorRecovery", () => {
       quitApp: vi.fn(),
     };
 
-    await expect(
-      openDatabaseWithOperatorRecovery("C:\\data\\yark.db", ui, { open }),
-    ).resolves.toBe(db);
+    await expect(openDatabaseWithOperatorRecovery("C:\\data\\yark.db", ui, { open })).resolves.toBe(db);
     expect(ui.promptRecovery).not.toHaveBeenCalled();
   });
 
@@ -215,9 +195,9 @@ describe("openDatabaseWithOperatorRecovery", () => {
       quitApp: vi.fn(),
     };
 
-    await expect(
-      openDatabaseWithOperatorRecovery("C:\\data\\yark.db", ui, { open }),
-    ).rejects.toBeInstanceOf(DatabaseRecoveryAbortedError);
+    await expect(openDatabaseWithOperatorRecovery("C:\\data\\yark.db", ui, { open })).rejects.toBeInstanceOf(
+      DatabaseRecoveryAbortedError,
+    );
     expect(ui.revealDatabase).toHaveBeenCalledWith("C:\\data\\yark.db");
     expect(ui.quitApp).toHaveBeenCalledTimes(1);
   });

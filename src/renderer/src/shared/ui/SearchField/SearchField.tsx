@@ -66,20 +66,13 @@ export function SearchField({
   clearable = true,
   clearLabel = "Clear search",
 }: Props): ReactElement {
-  const visibleLabel =
-    fieldLabel !== undefined && fieldLabel.trim().length > 0
-      ? fieldLabel
-      : undefined;
+  const visibleLabel = fieldLabel !== undefined && fieldLabel.trim().length > 0 ? fieldLabel : undefined;
   const iconSize = searchFieldIconSize(size);
   const isSubmit = onSubmit !== undefined;
   const hasFilterText = value.trim().length > 0;
   const showClear = !isSubmit && clearable && hasFilterText;
 
-  const inputClass = [
-    classes.input,
-    isSubmit ? classes.inputSubmit : null,
-    showClear ? classes.inputClearable : null,
-  ]
+  const inputClass = [classes.input, isSubmit ? classes.inputSubmit : null, showClear ? classes.inputClearable : null]
     .filter(Boolean)
     .join(" ");
 
@@ -106,9 +99,7 @@ export function SearchField({
       size={size}
       className={className}
       style={style}
-      leftSection={
-        isSubmit ? undefined : <MagnifyingGlass size={iconSize} />
-      }
+      leftSection={isSubmit ? undefined : <MagnifyingGlass size={iconSize} />}
       rightSection={
         isSubmit ? (
           <ActionIcon
@@ -130,9 +121,7 @@ export function SearchField({
           />
         ) : undefined
       }
-      rightSectionWidth={
-        isSubmit || showClear ? "var(--input-height)" : undefined
-      }
+      rightSectionWidth={isSubmit || showClear ? "var(--input-height)" : undefined}
       rightSectionPointerEvents={isSubmit || showClear ? "all" : undefined}
       classNames={{
         input: inputClass,

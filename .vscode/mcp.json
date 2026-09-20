@@ -2,12 +2,7 @@
   "mcpServers": {
     "playwright-electron": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@hotnsoursoup/playwright-mcp-electron@latest",
-        "--config",
-        ".vscode/electron-mcp.config.json"
-      ]
+      "args": ["-y", "@hotnsoursoup/playwright-mcp-electron@latest", "--config", ".vscode/electron-mcp.config.json"]
     }
   }
 }

@@ -75,11 +75,7 @@ export function isClientIniNoise(section: string, key: string): boolean {
   const s = section.trim().toLowerCase();
   if (s === "startup") {
     const k = key.toLowerCase();
-    if (
-      /dlss|fsr|xess|reflex|framegeneration|superresolution|graphics|resolution|vsync|hdr/.test(
-        k,
-      )
-    ) {
+    if (/dlss|fsr|xess|reflex|framegeneration|superresolution|graphics|resolution|vsync|hdr/.test(k)) {
       return true;
     }
   }
@@ -130,8 +126,7 @@ export function stripClientIniKeys(text: string): string {
     }
 
     const eq = trimmed.indexOf("=");
-    const isAssignment =
-      eq > 0 && !trimmed.startsWith(";") && !trimmed.startsWith("#");
+    const isAssignment = eq > 0 && !trimmed.startsWith(";") && !trimmed.startsWith("#");
 
     if (isAssignment) {
       const key = trimmed.slice(0, eq).trim();
@@ -163,10 +158,10 @@ export function stripClientIniKeys(text: string): string {
   return out;
 }
 
-export function sanitizeServerIniPayload(payload: {
+export function sanitizeServerIniPayload(payload: { gameUserSettings: string; game: string }): {
   gameUserSettings: string;
   game: string;
-}): { gameUserSettings: string; game: string } {
+} {
   return {
     gameUserSettings: stripClientIniKeys(payload.gameUserSettings),
     game: stripClientIniKeys(payload.game),
@@ -234,13 +229,7 @@ export function splitFlatIniKey(flatKey: string): { section: string; key: string
  * `occurrence` selects which of the duplicate keys (0-based) to update.
  * In Unreal/ARK it is normal to repeat the same key (e.g. LastJoinedSessionPerCategory).
  */
-export function setIniTextValue(
-  text: string,
-  section: string,
-  key: string,
-  value: string,
-  occurrence = 0,
-): string {
+export function setIniTextValue(text: string, section: string, key: string, value: string, occurrence = 0): string {
   const lines = text.split(/\r?\n/);
   const result: string[] = [];
   let currentSection = INI_ROOT_SECTION;
@@ -252,11 +241,7 @@ export function setIniTextValue(
   const targetOccurrence = Math.max(0, Math.floor(occurrence));
 
   const flushMissingKeyBeforeLeavingSection = (nextSectionLine: string | null) => {
-    if (
-      found ||
-      currentSectionLower !== sectionLower ||
-      targetOccurrence > 0
-    ) {
+    if (found || currentSectionLower !== sectionLower || targetOccurrence > 0) {
       if (nextSectionLine !== null) {
         result.push(nextSectionLine);
       }
@@ -335,12 +320,7 @@ export function setIniTextValue(
  * Removes one key assignment from a section (first occurrence by default).
  * Preserves surrounding comments and blank lines when possible.
  */
-export function removeIniTextValue(
-  text: string,
-  section: string,
-  key: string,
-  occurrence = 0,
-): string {
+export function removeIniTextValue(text: string, section: string, key: string, occurrence = 0): string {
   const lines = text.split(/\r?\n/);
   const result: string[] = [];
   let currentSection = INI_ROOT_SECTION;

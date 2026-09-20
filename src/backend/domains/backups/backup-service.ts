@@ -33,28 +33,15 @@ import {
   type BackupCriticalJobProgressHandlers,
 } from "./backup-critical-queue";
 import { DefaultBackupCriticalJobExecutor } from "./backup-critical-job-executor";
-import {
-  planBackupCleanup,
-  summarizeCleanupPlan,
-  type BackupCleanupPlanItem,
-} from "./backup-cleanup-plan";
-import {
-  ALL_BACKUP_KINDS,
-  assertRetainCount,
-} from "./backup-policy-helpers";
-import {
-  BackupCreatePipeline,
-  resolveServerBackupRoot,
-} from "./backup-create-pipeline";
+import { planBackupCleanup, summarizeCleanupPlan, type BackupCleanupPlanItem } from "./backup-cleanup-plan";
+import { ALL_BACKUP_KINDS, assertRetainCount } from "./backup-policy-helpers";
+import { BackupCreatePipeline, resolveServerBackupRoot } from "./backup-create-pipeline";
 import { BackupPortabilityOps } from "./backup-portability-ops";
 import { BackupRetention } from "./backup-retention";
 import { BackupScheduleRuntime } from "./backup-schedule-runtime";
 import { BackupFleetOps } from "./backup-fleet-ops";
 
-export {
-  formatPlayerSessionNotes,
-  playersRetentionKey,
-} from "@shared/backups/backup-player-meta";
+export { formatPlayerSessionNotes, playersRetentionKey } from "@shared/backups/backup-player-meta";
 export { computeBackupServerHealth } from "./backup-fleet";
 export { CRITICAL_BACKUP_KINDS } from "./backup-critical-queue";
 
@@ -159,8 +146,7 @@ export class BackupService extends EventEmitter {
       scheduledWorldFailStreak: this.scheduledWorldFailStreak,
       scheduledWorldPaused: this.scheduledWorldPaused,
       applyRetention: (serverId, policy) => this.applyRetention(serverId, policy),
-      reconcileInterruptedRunningBackups: (serverId) =>
-        this.reconcileInterruptedRunningBackups(serverId),
+      reconcileInterruptedRunningBackups: (serverId) => this.reconcileInterruptedRunningBackups(serverId),
       emitChanged: (serverId) => this.emitChanged(serverId),
       createScheduledBackup: (serverId) => this.createScheduledBackup(serverId),
       isInstallReady: (server) => this.isInstallReady(server),
@@ -221,14 +207,8 @@ export class BackupService extends EventEmitter {
     this.emit("changed", { serverId } satisfies BackupChangedPush);
   }
 
-  async createManualBackup(
-    serverId: string,
-    kinds?: BackupKind[],
-  ): Promise<BackupRecord[]> {
-    const source =
-      kinds === undefined || kinds.length === 0
-        ? (["world", "ini"] as BackupKind[])
-        : kinds;
+  async createManualBackup(serverId: string, kinds?: BackupKind[]): Promise<BackupRecord[]> {
+    const source = kinds === undefined || kinds.length === 0 ? (["world", "ini"] as BackupKind[]) : kinds;
     if (source.includes("players")) {
       throw new Error(
         "Full player-profile snapshots are no longer supported. Use a World backup for everyone, or rely on automatic join/leave player archives.",
@@ -256,12 +236,8 @@ export class BackupService extends EventEmitter {
         this.iniSaveTimers.delete(serverId);
         const pending = this.iniSaveWaiters.get(serverId) ?? [];
         this.iniSaveWaiters.delete(serverId);
-        void this.createPipeline.createSingleBackup(
-          serverId,
-          "ini_save",
-          "ini",
-          "Automatic INI backup after save",
-        )
+        void this.createPipeline
+          .createSingleBackup(serverId, "ini_save", "ini", "Automatic INI backup after save")
           .then((record) => {
             for (const waiter of pending) waiter.resolve(record);
           })
@@ -343,26 +319,16 @@ export class BackupService extends EventEmitter {
 
   async createScheduledBackup(serverId: string): Promise<BackupRecord[]> {
     if (this.preStopBackupServers.has(serverId)) return [];
-    return this.createPipeline.createBackups(
-      serverId,
-      "scheduled",
-      "Scheduled backup",
-      [...SCHEDULED_BACKUP_KINDS],
-    );
+    return this.createPipeline.createBackups(serverId, "scheduled", "Scheduled backup", [...SCHEDULED_BACKUP_KINDS]);
   }
 
   async createPreUpdateBackupForJob(
     serverId: string,
     options?: BackupCriticalJobProgressHandlers,
   ): Promise<BackupRecord[]> {
-    return this.criticalQueue.enqueueAndWait<BackupRecord[]>(
-      "pre-update-backup",
-      serverId,
-      null,
-      {
+    return this.criticalQueue.enqueueAndWait<BackupRecord[]>("pre-update-backup", serverId, null, {
       progress: options,
-      },
-    );
+    });
   }
 
   async restoreBackupForJob(
@@ -383,10 +349,7 @@ export class BackupService extends EventEmitter {
     return this.criticalQueue.requestCancel();
   }
 
-  async restoreBackupForRollbackRecovery(
-    serverId: string,
-    backupId: string,
-  ): Promise<void> {
+  async restoreBackupForRollbackRecovery(serverId: string, backupId: string): Promise<void> {
     await this.criticalQueue.enqueueAndWait<void>("restore", serverId, backupId, {
       adoptRetryableRestore: true,
     });
@@ -401,10 +364,7 @@ export class BackupService extends EventEmitter {
    * Returns only {@link CRITICAL_BACKUP_KINDS} (world), in that order.
    * Extra persisted ids (e.g. legacy `players` / `ini` from earlier builds) are ignored.
    */
-  getCompletedBackupsForCriticalJob(
-    serverId: string,
-    backupIds: readonly string[],
-  ): BackupRecord[] {
+  getCompletedBackupsForCriticalJob(serverId: string, backupIds: readonly string[]): BackupRecord[] {
     return this.criticalQueue.getCompletedBackups(serverId, backupIds);
   }
 
@@ -439,10 +399,7 @@ export class BackupService extends EventEmitter {
     };
   }
 
-  setPolicy(
-    serverId: string,
-    policy: Omit<BackupPolicy, "serverId" | "updatedAt">,
-  ): BackupPolicy {
+  setPolicy(serverId: string, policy: Omit<BackupPolicy, "serverId" | "updatedAt">): BackupPolicy {
     this.mustServer(serverId);
     if (policy.intervalMinutes < MIN_INTERVAL_MINUTES) {
       throw new Error(`Minimum backup interval is ${MIN_INTERVAL_MINUTES} minutes`);
@@ -453,10 +410,7 @@ export class BackupService extends EventEmitter {
     assertRetainCount("retainCountWorld", policy.retainCountWorld);
     assertRetainCount("retainCountPlayers", policy.retainCountPlayers);
     assertRetainCount("retainCountIni", policy.retainCountIni);
-    const backupDir =
-      policy.backupDir !== null && policy.backupDir.trim().length > 0
-        ? policy.backupDir.trim()
-        : null;
+    const backupDir = policy.backupDir !== null && policy.backupDir.trim().length > 0 ? policy.backupDir.trim() : null;
     return this.backups.setPolicy({
       serverId,
       enabled: policy.enabled,
@@ -515,9 +469,7 @@ export class BackupService extends EventEmitter {
     // narrow the fresh plan so preview cannot delete a newly protected world.
     let plan = this.buildCleanupPlan(options);
     if (confirmedIds !== undefined && confirmedIds !== null) {
-      const allowed = new Set(
-        confirmedIds.filter((id) => id.trim().length > 0),
-      );
+      const allowed = new Set(confirmedIds.filter((id) => id.trim().length > 0));
       plan = plan.filter((item) => allowed.has(item.backup.id));
     }
     let deleted = 0;
@@ -597,27 +549,15 @@ export class BackupService extends EventEmitter {
     return failed.length;
   }
 
-  async exportBackup(
-    serverId: string,
-    backupId: string,
-    destinationPath: string,
-  ): Promise<string> {
+  async exportBackup(serverId: string, backupId: string, destinationPath: string): Promise<string> {
     return this.portability.exportBackup(serverId, backupId, destinationPath);
   }
 
-  async importBackup(
-    serverId: string,
-    kind: BackupKind,
-    sourcePath: string,
-  ): Promise<BackupRecord> {
+  async importBackup(serverId: string, kind: BackupKind, sourcePath: string): Promise<BackupRecord> {
     return this.portability.importBackup(serverId, kind, sourcePath);
   }
 
-  async restoreBackup(
-    serverId: string,
-    backupId: string,
-    options?: RestoreBackupOptions,
-  ): Promise<void> {
+  async restoreBackup(serverId: string, backupId: string, options?: RestoreBackupOptions): Promise<void> {
     const server = this.mustServer(serverId);
     await this.assertInstallReadyForLiveOps(server);
     if (this.processes.isActive(serverId)) {
@@ -637,12 +577,7 @@ export class BackupService extends EventEmitter {
 
     try {
       // Safeguard before replacing server data (same kind only).
-      await this.createPipeline.createBackups(
-        serverId,
-        "pre_restore",
-        "Safeguard before restore",
-        [backup.kind],
-      );
+      await this.createPipeline.createBackups(serverId, "pre_restore", "Safeguard before restore", [backup.kind]);
       await this.applyRestore(server, backup, options);
 
       this.servers.addEvent(
@@ -654,11 +589,7 @@ export class BackupService extends EventEmitter {
       this.backups.completeRestoreHistory(restoreHistoryId, "completed", null);
       this.emitChanged(serverId);
     } catch (err) {
-      this.backups.completeRestoreHistory(
-        restoreHistoryId,
-        "failed",
-        err instanceof Error ? err.message : String(err),
-      );
+      this.backups.completeRestoreHistory(restoreHistoryId, "failed", err instanceof Error ? err.message : String(err));
       throw err;
     }
   }
@@ -679,10 +610,7 @@ export class BackupService extends EventEmitter {
   /** Create/restore require a Ready ASA install (exe present). Import/export do not. */
   private async assertInstallReadyForLiveOps(server: ServerProfile): Promise<void> {
     const binaryPath = serverBinaryPath(server.installDir);
-    const { health } = await classifyInstallHealthAsync(
-      server.installDir,
-      binaryPath,
-    );
+    const { health } = await classifyInstallHealthAsync(server.installDir, binaryPath);
     if (health !== "ready") {
       throw new Error("Install server files before creating or restoring backups");
     }
@@ -690,21 +618,13 @@ export class BackupService extends EventEmitter {
 
   private async isInstallReady(server: ServerProfile): Promise<boolean> {
     const binaryPath = serverBinaryPath(server.installDir);
-    return (
-      (await classifyInstallHealthAsync(server.installDir, binaryPath)).health
-      === "ready"
-    );
+    return (await classifyInstallHealthAsync(server.installDir, binaryPath)).health === "ready";
   }
 
   private resolveCleanupServers(options: BackupCleanupOptions): ServerProfile[] {
     const allServers = this.servers.list();
-    const selectedIds =
-      options.serverIds !== null && options.serverIds.length > 0
-        ? new Set(options.serverIds)
-        : null;
-    return selectedIds === null
-      ? allServers
-      : allServers.filter((server) => selectedIds.has(server.id));
+    const selectedIds = options.serverIds !== null && options.serverIds.length > 0 ? new Set(options.serverIds) : null;
+    return selectedIds === null ? allServers : allServers.filter((server) => selectedIds.has(server.id));
   }
 
   private buildCleanupPlan(options: BackupCleanupOptions): BackupCleanupPlanItem[] {
@@ -722,9 +642,7 @@ export class BackupService extends EventEmitter {
   }
 
   /** Import orphan archives before cleanup so disk-only zips are eligible. */
-  private async reconcileServersForCleanup(
-    options: BackupCleanupOptions,
-  ): Promise<void> {
+  private async reconcileServersForCleanup(options: BackupCleanupOptions): Promise<void> {
     for (const server of this.resolveCleanupServers(options)) {
       await this.reconcileDiskBackups(server.id);
     }
@@ -768,5 +686,4 @@ export class BackupService extends EventEmitter {
       this.clearPendingServerIni?.(server.id);
     }
   }
-
 }

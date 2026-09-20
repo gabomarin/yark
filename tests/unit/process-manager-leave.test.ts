@@ -62,12 +62,7 @@ describe("ProcessManager.detachForLeave", () => {
 
   it("persists pid, exe, start time, and command line then detaches without kill", async () => {
     cleanupRoot = await mkdtemp(join(tmpdir(), "yark-leave-"));
-    const binaryDir = join(
-      cleanupRoot,
-      "ShooterGame",
-      "Binaries",
-      "Win64",
-    );
+    const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
     await mkdir(binaryDir, { recursive: true });
     const binary = join(binaryDir, "ArkAscendedServer.exe");
     await writeFile(binary, "");
@@ -121,12 +116,7 @@ describe("ProcessManager.detachForLeave", () => {
 
   it("fails Leave when pid is missing", async () => {
     cleanupRoot = await mkdtemp(join(tmpdir(), "yark-leave-nopid-"));
-    const binaryDir = join(
-      cleanupRoot,
-      "ShooterGame",
-      "Binaries",
-      "Win64",
-    );
+    const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
     await mkdir(binaryDir, { recursive: true });
     await writeFile(join(binaryDir, "ArkAscendedServer.exe"), "");
 
@@ -149,12 +139,7 @@ describe("ProcessManager.detachForLeave", () => {
 
   it("fails Leave when OS creation time is unavailable", async () => {
     cleanupRoot = await mkdtemp(join(tmpdir(), "yark-leave-nocreate-"));
-    const binaryDir = join(
-      cleanupRoot,
-      "ShooterGame",
-      "Binaries",
-      "Win64",
-    );
+    const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
     await mkdir(binaryDir, { recursive: true });
     await writeFile(join(binaryDir, "ArkAscendedServer.exe"), "");
 
@@ -181,12 +166,7 @@ describe("ProcessManager.detachForLeave", () => {
 
   it("collectLeaveIdentities does not detach until detachAfterLeavePersist", async () => {
     cleanupRoot = await mkdtemp(join(tmpdir(), "yark-leave-atomic-"));
-    const binaryDir = join(
-      cleanupRoot,
-      "ShooterGame",
-      "Binaries",
-      "Win64",
-    );
+    const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
     await mkdir(binaryDir, { recursive: true });
     const binary = join(binaryDir, "ArkAscendedServer.exe");
     await writeFile(binary, "");
@@ -230,12 +210,7 @@ describe("ProcessManager crash-recovery checkpoints", () => {
 
   it("writes a checkpoint on spawn and clears it on exit", async () => {
     cleanupRoot = await mkdtemp(join(tmpdir(), "yark-checkpoint-"));
-    const binaryDir = join(
-      cleanupRoot,
-      "ShooterGame",
-      "Binaries",
-      "Win64",
-    );
+    const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
     await mkdir(binaryDir, { recursive: true });
     const binary = join(binaryDir, "ArkAscendedServer.exe");
     await writeFile(binary, "");
@@ -279,12 +254,7 @@ describe("ProcessManager crash-recovery checkpoints", () => {
 
   it("clears the checkpoint on process error", async () => {
     cleanupRoot = await mkdtemp(join(tmpdir(), "yark-checkpoint-err-"));
-    const binaryDir = join(
-      cleanupRoot,
-      "ShooterGame",
-      "Binaries",
-      "Win64",
-    );
+    const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
     await mkdir(binaryDir, { recursive: true });
     const binary = join(binaryDir, "ArkAscendedServer.exe");
     await writeFile(binary, "");
@@ -313,12 +283,7 @@ describe("ProcessManager crash-recovery checkpoints", () => {
 
   it("clears the checkpoint when readiness times out and terminates", async () => {
     cleanupRoot = await mkdtemp(join(tmpdir(), "yark-checkpoint-timeout-"));
-    const binaryDir = join(
-      cleanupRoot,
-      "ShooterGame",
-      "Binaries",
-      "Win64",
-    );
+    const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
     await mkdir(binaryDir, { recursive: true });
     const binary = join(binaryDir, "ArkAscendedServer.exe");
     await writeFile(binary, "");
@@ -351,12 +316,7 @@ describe("ProcessManager crash-recovery checkpoints", () => {
 
   it("clears the checkpoint on kill even if the clear hook throws once", async () => {
     cleanupRoot = await mkdtemp(join(tmpdir(), "yark-checkpoint-kill-"));
-    const binaryDir = join(
-      cleanupRoot,
-      "ShooterGame",
-      "Binaries",
-      "Win64",
-    );
+    const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
     await mkdir(binaryDir, { recursive: true });
     const binary = join(binaryDir, "ArkAscendedServer.exe");
     await writeFile(binary, "");
@@ -395,4 +355,3 @@ describe("ProcessManager crash-recovery checkpoints", () => {
     expect(manager.isActive(profile.id)).toBe(false);
   });
 });
-

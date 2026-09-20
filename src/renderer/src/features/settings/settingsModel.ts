@@ -14,13 +14,7 @@ import {
 
 export type { UiDensity };
 
-export type SettingsCategory =
-  | "general"
-  | "servers"
-  | "steamcmd"
-  | "discord"
-  | "logs"
-  | "about";
+export type SettingsCategory = "general" | "servers" | "steamcmd" | "discord" | "logs" | "about";
 
 export const SETTINGS_CATEGORIES: ReadonlyArray<{
   id: SettingsCategory;
@@ -38,8 +32,7 @@ export const SETTINGS_CATEGORIES: ReadonlyArray<{
 export const SETTINGS_CATEGORY_STORAGE_KEY = "yark.settings.category.v1";
 
 /** localStorage: default create-server base folder on this PC (#456). */
-export const DEFAULT_BASE_FOLDER_STORAGE_KEY =
-  "settings.defaultServerBaseFolder";
+export const DEFAULT_BASE_FOLDER_STORAGE_KEY = "settings.defaultServerBaseFolder";
 
 function isSettingsCategory(value: unknown): value is SettingsCategory {
   return SETTINGS_CATEGORIES.some((item) => item.id === value);
@@ -88,9 +81,7 @@ function readLegacyOpenNativeConsoleLocalStorage(): boolean | null {
   if (typeof window === "undefined") {
     return null;
   }
-  return parseStoredOpenNativeConsole(
-    window.localStorage.getItem(OPEN_NATIVE_CONSOLE_LEGACY_LOCAL_STORAGE_KEY),
-  );
+  return parseStoredOpenNativeConsole(window.localStorage.getItem(OPEN_NATIVE_CONSOLE_LEGACY_LOCAL_STORAGE_KEY));
 }
 
 function clearLegacyOpenNativeConsoleLocalStorage(): void {
@@ -108,10 +99,7 @@ function clearLegacyOpenNativeConsoleLocalStorage(): void {
  */
 export async function loadOpenNativeConsolePref(): Promise<boolean> {
   try {
-    if (
-      typeof window === "undefined" ||
-      typeof window.api?.getOpenNativeConsole !== "function"
-    ) {
+    if (typeof window === "undefined" || typeof window.api?.getOpenNativeConsole !== "function") {
       return parseOpenNativeConsolePref(
         typeof window === "undefined"
           ? null
@@ -121,9 +109,7 @@ export async function loadOpenNativeConsolePref(): Promise<boolean> {
 
     const result = await window.api.getOpenNativeConsole();
     if (!result.ok) {
-      return parseOpenNativeConsolePref(
-        window.localStorage.getItem(OPEN_NATIVE_CONSOLE_LEGACY_LOCAL_STORAGE_KEY),
-      );
+      return parseOpenNativeConsolePref(window.localStorage.getItem(OPEN_NATIVE_CONSOLE_LEGACY_LOCAL_STORAGE_KEY));
     }
 
     if (result.data !== null) {
@@ -144,19 +130,14 @@ export async function loadOpenNativeConsolePref(): Promise<boolean> {
     return DEFAULT_OPEN_NATIVE_CONSOLE;
   } catch {
     return parseOpenNativeConsolePref(
-      typeof window === "undefined"
-        ? null
-        : window.localStorage.getItem(OPEN_NATIVE_CONSOLE_LEGACY_LOCAL_STORAGE_KEY),
+      typeof window === "undefined" ? null : window.localStorage.getItem(OPEN_NATIVE_CONSOLE_LEGACY_LOCAL_STORAGE_KEY),
     );
   }
 }
 
 /** @returns true when SQLite accepted the value. */
 export async function writeOpenNativeConsolePref(enabled: boolean): Promise<boolean> {
-  if (
-    typeof window === "undefined" ||
-    typeof window.api?.setOpenNativeConsole !== "function"
-  ) {
+  if (typeof window === "undefined" || typeof window.api?.setOpenNativeConsole !== "function") {
     return false;
   }
   try {
@@ -246,8 +227,14 @@ export function isPathUnderParent(parent: string, child: string | null): boolean
   if (child == null) {
     return false;
   }
-  const p = parent.trim().replace(/[/\\]+$/, "").toLowerCase();
-  const c = child.trim().replace(/[/\\]+$/, "").toLowerCase();
+  const p = parent
+    .trim()
+    .replace(/[/\\]+$/, "")
+    .toLowerCase();
+  const c = child
+    .trim()
+    .replace(/[/\\]+$/, "")
+    .toLowerCase();
   if (p.length === 0 || c.length === 0) {
     return false;
   }
@@ -258,10 +245,7 @@ export function isPathUnderParent(parent: string, child: string | null): boolean
  * Note for About → Bundled SteamCMD when YARK is not using that folder.
  * Null when the active steamcmd.exe lives there.
  */
-export function bundledSteamCmdUnusedNote(
-  bundledDir: string,
-  steamCmdExePath: string | null,
-): string | null {
+export function bundledSteamCmdUnusedNote(bundledDir: string, steamCmdExePath: string | null): string | null {
   if (isPathUnderParent(bundledDir, steamCmdExePath)) {
     return null;
   }

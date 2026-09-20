@@ -13,10 +13,7 @@ export function toBackupPolicyDraft(policy: BackupPolicy): BackupPolicyDraft {
   };
 }
 
-export function isBackupPolicyDraftDirty(
-  draft: BackupPolicyDraft,
-  policy: BackupPolicy,
-): boolean {
+export function isBackupPolicyDraftDirty(draft: BackupPolicyDraft, policy: BackupPolicy): boolean {
   return (
     draft.enabled !== policy.enabled ||
     draft.intervalMinutes !== policy.intervalMinutes ||
@@ -27,10 +24,7 @@ export function isBackupPolicyDraftDirty(
   );
 }
 
-export function isBackupDiskDraftDirty(
-  draft: BackupDiskAlertSettings,
-  saved: BackupDiskAlertSettings,
-): boolean {
+export function isBackupDiskDraftDirty(draft: BackupDiskAlertSettings, saved: BackupDiskAlertSettings): boolean {
   return (
     draft.warnUsedPercent !== saved.warnUsedPercent ||
     draft.criticalUsedPercent !== saved.criticalUsedPercent ||

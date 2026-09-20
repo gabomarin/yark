@@ -1,29 +1,12 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useSyncExternalStore,
-  type ReactElement,
-} from "react";
+import { useEffect, useMemo, useRef, useSyncExternalStore, type ReactElement } from "react";
 import { ClockCounterClockwise, MagnifyingGlass } from "@phosphor-icons/react";
-import {
-  Spotlight,
-  type SpotlightActionData,
-  type SpotlightActionGroupData,
-} from "@mantine/spotlight";
+import { Spotlight, type SpotlightActionData, type SpotlightActionGroupData } from "@mantine/spotlight";
 import type { Route } from "@layout/Sidebar/Sidebar";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import type { ServerProfile } from "@shared/types";
 import { formatMapDisplayName } from "@shared/asa/map-identity";
-import {
-  sortServersForSpotlight,
-  SPOTLIGHT_NAV_ITEMS,
-} from "./appSpotlightModel";
-import {
-  getSpotlightRecentSnapshot,
-  subscribeSpotlightRecent,
-  type SpotlightRecentEntry,
-} from "./appSpotlightRecent";
+import { sortServersForSpotlight, SPOTLIGHT_NAV_ITEMS } from "./appSpotlightModel";
+import { getSpotlightRecentSnapshot, subscribeSpotlightRecent, type SpotlightRecentEntry } from "./appSpotlightRecent";
 import classes from "./AppSpotlight.module.css";
 
 interface Props {
@@ -44,11 +27,7 @@ function serverThumb(server: ServerProfile): ReactElement {
     <MapArtThumb
       mapId={server.map}
       mapModId={server.mapModId}
-      modThumbnailUrl={
-        server.mapModId
-          ? server.modMetadataCache?.[server.mapModId]?.thumbnailUrl
-          : null
-      }
+      modThumbnailUrl={server.mapModId ? server.modMetadataCache?.[server.mapModId]?.thumbnailUrl : null}
       size="sm"
       shape="rounded"
       className={classes.serverThumb}
@@ -59,10 +38,7 @@ function serverThumb(server: ServerProfile): ReactElement {
 
 function serversFingerprint(servers: ServerProfile[]): string {
   return servers
-    .map(
-      (server) =>
-        `${server.id}\0${server.updatedAt}\0${server.name}\0${server.map}\0${server.mapModId ?? ""}`,
-    )
+    .map((server) => `${server.id}\0${server.updatedAt}\0${server.name}\0${server.map}\0${server.mapModId ?? ""}`)
     .join("\n");
 }
 
@@ -70,11 +46,7 @@ function serversFingerprint(servers: ServerProfile[]): string {
  * Global Ctrl+K quick jump for routes and server workspace open (#104).
  */
 export function AppSpotlight(props: Props): ReactElement {
-  const recent = useSyncExternalStore(
-    subscribeSpotlightRecent,
-    getSpotlightRecentSnapshot,
-    () => [],
-  );
+  const recent = useSyncExternalStore(subscribeSpotlightRecent, getSpotlightRecentSnapshot, () => []);
   const callbacksRef = useRef({
     onNavigate: props.onNavigate,
     onOpenServer: props.onOpenServer,
@@ -88,17 +60,13 @@ export function AppSpotlight(props: Props): ReactElement {
 
   const serverKey = serversFingerprint(props.servers);
   const recentKey = recent
-    .map((entry) =>
-      entry.kind === "nav" ? `nav:${entry.route}` : `server:${entry.serverId}`,
-    )
+    .map((entry) => (entry.kind === "nav" ? `nav:${entry.route}` : `server:${entry.serverId}`))
     .join("|");
 
   // Recent is recorded in App after the workspace leave-guard actually applies
   // the navigation / workspace open — not here on click.
   const actions = useMemo(() => {
-    const serversById = new Map(
-      props.servers.map((server) => [server.id, server]),
-    );
+    const serversById = new Map(props.servers.map((server) => [server.id, server]));
     const navById = new Map(SPOTLIGHT_NAV_ITEMS.map((item) => [item.id, item]));
 
     const recentActions: SpotlightActionData[] = [];
@@ -116,9 +84,7 @@ export function AppSpotlight(props: Props): ReactElement {
 
     const navigateGroup: SpotlightActionGroupData = {
       group: "Navigate",
-      actions: SPOTLIGHT_NAV_ITEMS.filter(
-        (item) => item.id !== props.currentRoute,
-      ).map((item) => {
+      actions: SPOTLIGHT_NAV_ITEMS.filter((item) => item.id !== props.currentRoute).map((item) => {
         const Icon = item.icon;
         return {
           id: `nav:${item.id}`,
@@ -188,9 +154,7 @@ function resolveRecentAction(
       description: "Recent",
       keywords: [...item.keywords, "recent"],
       leftSection: <Icon size={20} weight="duotone" aria-hidden />,
-      rightSection: (
-        <ClockCounterClockwise size={14} aria-hidden className={classes.recentMark} />
-      ),
+      rightSection: <ClockCounterClockwise size={14} aria-hidden className={classes.recentMark} />,
       onClick: () => ctx.onNavigate(item.id),
     };
   }
@@ -203,11 +167,16 @@ function resolveRecentAction(
     id: `recent:server:${server.id}`,
     label: server.name,
     description: `${formatMapDisplayName(server.map)} · Recent`,
-    keywords: [server.map, formatMapDisplayName(server.map), server.sessionName, server.installDir, server.id, "recent"],
+    keywords: [
+      server.map,
+      formatMapDisplayName(server.map),
+      server.sessionName,
+      server.installDir,
+      server.id,
+      "recent",
+    ],
     leftSection: serverThumb(server),
-    rightSection: (
-      <ClockCounterClockwise size={14} aria-hidden className={classes.recentMark} />
-    ),
+    rightSection: <ClockCounterClockwise size={14} aria-hidden className={classes.recentMark} />,
     onClick: () => ctx.onOpenServer(server.id),
   };
 }

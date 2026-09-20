@@ -92,9 +92,7 @@ function textFor(payload: ServerIniPayload, fileKey: IniFileKey): string {
 }
 
 function updateText(payload: ServerIniPayload, fileKey: IniFileKey, next: string): ServerIniPayload {
-  return fileKey === "gameUserSettings"
-    ? { ...payload, gameUserSettings: next }
-    : { ...payload, game: next };
+  return fileKey === "gameUserSettings" ? { ...payload, gameUserSettings: next } : { ...payload, game: next };
 }
 
 function applyUpdatesToText(text: string, updates: IniPresetUpdate[]): string {

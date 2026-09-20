@@ -6,12 +6,7 @@ import {
   type BreedingPresetId,
   type ConfigurationWizardDraft,
 } from "../../configuration-wizard/configurationWizardModel";
-import {
-  effectiveRateLabel,
-  PresetSelector,
-  PresetValue,
-  WizardStep,
-} from "./ConfigurationWizardParts";
+import { effectiveRateLabel, PresetSelector, PresetValue, WizardStep } from "./ConfigurationWizardParts";
 
 interface Props {
   draft: ConfigurationWizardDraft;
@@ -69,20 +64,13 @@ export function WizardBreedingStep(props: Props): ReactElement {
               draft.singlePlayerSettings,
             )}
           />
-          <PresetValue
-            label="Imprint amount"
-            value={`${draft.babyImprintAmountMultiplier}×`}
-          />
-          <PresetValue
-            label="Cuddle grace"
-            value={`${draft.babyCuddleGracePeriodMultiplier}×`}
-          />
+          <PresetValue label="Imprint amount" value={`${draft.babyImprintAmountMultiplier}×`} />
+          <PresetValue label="Cuddle grace" value={`${draft.babyCuddleGracePeriodMultiplier}×`} />
         </SimpleGrid>
       </PresetSelector>
       <Text c="dimmed" size="xs">
-        Cuddle interval scales with maturation so imprint can still reach 100%. Faster presets give
-        more % per cuddle so you can miss a few care windows; no preset is meant for a single
-        one-shot cuddle on long raises.
+        Cuddle interval scales with maturation so imprint can still reach 100%. Faster presets give more % per cuddle so
+        you can miss a few care windows; no preset is meant for a single one-shot cuddle on long raises.
       </Text>
     </WizardStep>
   );

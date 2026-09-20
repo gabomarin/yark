@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  createGenerationGate,
-  decideRefreshGeneration,
-} from "../../src/shared/createGenerationGate";
+import { createGenerationGate, decideRefreshGeneration } from "../../src/shared/createGenerationGate";
 
 describe("createGenerationGate", () => {
   it("treats only the latest begin() generation as current", () => {

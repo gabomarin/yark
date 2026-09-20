@@ -4,9 +4,7 @@ import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 describe("runWithFinally", () => {
   it("returns the fn result and always runs cleanup", async () => {
     const cleanup = vi.fn();
-    await expect(
-      runWithFinally(async () => 42, cleanup),
-    ).resolves.toBe(42);
+    await expect(runWithFinally(async () => 42, cleanup)).resolves.toBe(42);
     expect(cleanup).toHaveBeenCalledTimes(1);
   });
 

@@ -73,16 +73,14 @@ describe("buildSplashDocument", () => {
   it("inlines the brand SVG without its XML prolog", () => {
     const svg = `<?xml version="1.0"?>\n<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">\n<svg viewBox="0 0 10 10"></svg>`;
     expect(stripSvgProlog(svg)).toBe(`<svg viewBox="0 0 10 10"></svg>`);
-    expect(
-      buildSplashDocument(`<div>__YARK_SPLASH_SVG__</div><p>__YARK_VERSION__</p>`, svg, "0.11.0"),
-    ).toBe(`<div><svg viewBox="0 0 10 10"></svg></div><p>v0.11.0</p>`);
+    expect(buildSplashDocument(`<div>__YARK_SPLASH_SVG__</div><p>__YARK_VERSION__</p>`, svg, "0.11.0")).toBe(
+      `<div><svg viewBox="0 0 10 10"></svg></div><p>v0.11.0</p>`,
+    );
   });
 
   it("strips SMIL animate so reduced-motion CSS can own the glow", () => {
     const svg = `<svg><g class="yark-glow-soft" opacity="0.20"><animate attributeName="opacity" values="0.20;0.85;0.20" dur="2.6s" repeatCount="indefinite"/><circle/></g><g><animate attributeName="opacity" values="0.28;1;0.28" dur="2.6s">ignored</animate></g></svg>`;
-    expect(stripSvgSmiAnimations(svg)).toBe(
-      `<svg><g class="yark-glow-soft" opacity="0.20"><circle/></g><g></g></svg>`,
-    );
+    expect(stripSvgSmiAnimations(svg)).toBe(`<svg><g class="yark-glow-soft" opacity="0.20"><circle/></g><g></g></svg>`);
     expect(buildSplashDocument(`__YARK_SPLASH_SVG__`, svg, "")).not.toMatch(/<animate\b/i);
   });
 });

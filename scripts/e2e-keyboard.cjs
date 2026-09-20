@@ -58,8 +58,7 @@ async function run() {
   process.chdir(projectRoot);
   assert.equal(process.platform, "win32", "Keyboard E2E requires Windows paths");
 
-  const { profileDir, serversDir, runId, root } =
-    createE2eFixtureRoots("keyboard");
+  const { profileDir, serversDir, runId, root } = createE2eFixtureRoots("keyboard");
   assertUnderFixtureRoot(path.join(root, "profiles"), profileDir);
   assertUnderFixtureRoot(path.join(root, "servers"), serversDir);
 
@@ -122,10 +121,7 @@ async function run() {
     await serverTab.waitFor({ state: "visible", timeout: 10000 });
     await serverTab.focus();
     await page.keyboard.press("ArrowRight");
-    assert.equal(
-      await page.getByRole("tab", { name: "INI Files" }).getAttribute("aria-selected"),
-      "true",
-    );
+    assert.equal(await page.getByRole("tab", { name: "INI Files" }).getAttribute("aria-selected"), "true");
 
     await leaveWorkspaceToServers(page);
     await page.getByRole("button", { name: "Settings", exact: true }).first().click();

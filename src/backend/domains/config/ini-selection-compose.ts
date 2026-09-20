@@ -2,23 +2,14 @@
  * Compose target INI text from a source snapshot using #95 selection rules.
  */
 
-import {
-  INI_FLAT_SEP,
-  parseIniTextRows,
-  removeIniTextValue,
-  setIniTextValue,
-} from "@shared/ini/ini-text";
+import { INI_FLAT_SEP, parseIniTextRows, removeIniTextValue, setIniTextValue } from "@shared/ini/ini-text";
 import {
   isConfigTransferBlockedGusKey,
   type ConfigTransferIniFileSelection,
   type ConfigTransferSelection,
 } from "@shared/ini/config-transfer";
 import type { ServerIniPayload, ServerProfile } from "@shared/types";
-import {
-  applyProfileOwnedKeysToGameUserSettings,
-  resolveMemberIdentity,
-  type ProfileIniIdentity,
-} from "./ini-compose";
+import { applyProfileOwnedKeysToGameUserSettings, resolveMemberIdentity, type ProfileIniIdentity } from "./ini-compose";
 
 function collectSourceKeys(
   sourceText: string,
@@ -26,37 +17,24 @@ function collectSourceKeys(
   fileKey: "game" | "gameUserSettings",
 ): Array<{ section: string; key: string; value: string }> {
   const rows = parseIniTextRows(sourceText);
-  const selectedSections = new Set(
-    file.sections.map((s) => s.toLowerCase()),
-  );
-  const selectedKeys = new Set(
-    file.keys.map((k) => `${k.section.toLowerCase()}${INI_FLAT_SEP}${k.key.toLowerCase()}`),
-  );
+  const selectedSections = new Set(file.sections.map((s) => s.toLowerCase()));
+  const selectedKeys = new Set(file.keys.map((k) => `${k.section.toLowerCase()}${INI_FLAT_SEP}${k.key.toLowerCase()}`));
 
   const out: Array<{ section: string; key: string; value: string }> = [];
   for (const row of rows) {
-    if (
-      fileKey === "gameUserSettings" &&
-      isConfigTransferBlockedGusKey(row.section, row.key)
-    ) {
+    if (fileKey === "gameUserSettings" && isConfigTransferBlockedGusKey(row.section, row.key)) {
       continue;
     }
     const sectionLower = row.section.toLowerCase();
     const flat = `${sectionLower}${INI_FLAT_SEP}${row.key.toLowerCase()}`;
-    const include =
-      file.entireFile ||
-      selectedSections.has(sectionLower) ||
-      selectedKeys.has(flat);
+    const include = file.entireFile || selectedSections.has(sectionLower) || selectedKeys.has(flat);
     if (!include) continue;
     out.push(row);
   }
   return out;
 }
 
-function sectionKeySet(
-  text: string,
-  section: string,
-): Set<string> {
+function sectionKeySet(text: string, section: string): Set<string> {
   const sectionLower = section.toLowerCase();
   const keys = new Set<string>();
   for (const row of parseIniTextRows(text)) {
@@ -106,8 +84,7 @@ export function composeIniFileFromSelection(
   }
 
   // Key-only selection (no entire file / sections): always merge those keys.
-  const keyOnly =
-    !file.entireFile && file.sections.length === 0 && file.keys.length > 0;
+  const keyOnly = !file.entireFile && file.sections.length === 0 && file.keys.length > 0;
 
   if (file.strategy === "replace" && file.entireFile && !keyOnly) {
     // Preserve source ordering and duplicate keys; only strip blocked GUS keys.
@@ -124,17 +101,13 @@ export function composeIniFileFromSelection(
     // not present in the source selection for that section.
     for (const section of file.sections) {
       const sourceInSection = new Set(
-        sourceKeys
-          .filter((r) => r.section.toLowerCase() === section.toLowerCase())
-          .map((r) => r.key.toLowerCase()),
+        sourceKeys.filter((r) => r.section.toLowerCase() === section.toLowerCase()).map((r) => r.key.toLowerCase()),
       );
       for (const key of sectionKeySet(result, section)) {
         if (!sourceInSection.has(key)) {
           // Find original casing from target rows
           const targetRow = parseIniTextRows(result).find(
-            (r) =>
-              r.section.toLowerCase() === section.toLowerCase() &&
-              r.key.toLowerCase() === key,
+            (r) => r.section.toLowerCase() === section.toLowerCase() && r.key.toLowerCase() === key,
           );
           if (targetRow) {
             result = removeIniTextValue(result, targetRow.section, targetRow.key);
@@ -164,12 +137,7 @@ export function composeIniPayloadFromSelection(
     selection.gameUserSettings,
     "gameUserSettings",
   );
-  const game = composeIniFileFromSelection(
-    source.game,
-    target.game,
-    selection.game,
-    "game",
-  );
+  const game = composeIniFileFromSelection(source.game, target.game, selection.game, "game");
 
   // Only reapply owned GUS keys when that file is part of the write set.
   if (!selection.gameUserSettings.enabled) {
@@ -187,19 +155,15 @@ export function composeIniPayloadFromSelection(
     sessionName: targetProfile.sessionName,
     maxPlayers: targetProfile.maxPlayers,
     adminPassword: options?.passwordsFromSource?.adminPassword ?? targetProfile.adminPassword,
-    serverPassword:
-      options?.passwordsFromSource?.serverPassword ?? targetProfile.serverPassword,
+    serverPassword: options?.passwordsFromSource?.serverPassword ?? targetProfile.serverPassword,
   };
   // Prefer on-disk target ports/session when present.
   const resolved = resolveMemberIdentity(owned, target.gameUserSettings);
-  gameUserSettings = applyProfileOwnedKeysToGameUserSettings(
-    gameUserSettings,
-    {
-      ...resolved,
-      adminPassword: owned.adminPassword,
-      serverPassword: owned.serverPassword,
-    },
-  );
+  gameUserSettings = applyProfileOwnedKeysToGameUserSettings(gameUserSettings, {
+    ...resolved,
+    adminPassword: owned.adminPassword,
+    serverPassword: owned.serverPassword,
+  });
 
   return { gameUserSettings, game };
 }

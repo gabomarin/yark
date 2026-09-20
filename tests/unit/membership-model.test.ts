@@ -11,9 +11,7 @@ import {
   remainingMemberCountAfterRemove,
 } from "@features/clusters/membershipModel";
 
-function makeServer(
-  overrides: Partial<ServerProfile> & Pick<ServerProfile, "id" | "name">,
-): ServerProfile {
+function makeServer(overrides: Partial<ServerProfile> & Pick<ServerProfile, "id" | "name">): ServerProfile {
   return {
     map: "TheIsland_WP",
     installDir: `C:\\ARK\\${overrides.id}`,
@@ -100,11 +98,7 @@ describe("membershipModel", () => {
       "Server must not be running",
     );
 
-    const candidates = listAddCandidates(
-      "ember",
-      [free, here, other, running, errored, disabled],
-      statuses,
-    );
+    const candidates = listAddCandidates("ember", [free, here, other, running, errored, disabled], statuses);
     expect(candidates.map((c) => c.server.id)).toEqual(["err", "free", "run"]);
     expect(candidates.find((c) => c.server.id === "free")?.eligible).toBe(true);
     expect(candidates.find((c) => c.server.id === "err")?.eligible).toBe(true);
@@ -162,9 +156,7 @@ describe("membershipModel", () => {
     });
     const joining = makeServer({ id: "j", name: "Joining", mods: ["1"] });
     expect(modsMayDiverge([member], [joining])).toBe(true);
-    expect(
-      modsMayDiverge([member], [makeServer({ id: "j2", name: "J2", mods: ["1", "2"] })]),
-    ).toBe(false);
+    expect(modsMayDiverge([member], [makeServer({ id: "j2", name: "J2", mods: ["1", "2"] })])).toBe(false);
 
     const leave = buildLeaveClusterInput(
       makeServer({
@@ -196,4 +188,3 @@ describe("membershipModel", () => {
     expect(candidates.find((c) => c.server.id === "r")?.eligible).toBe(false);
   });
 });
-

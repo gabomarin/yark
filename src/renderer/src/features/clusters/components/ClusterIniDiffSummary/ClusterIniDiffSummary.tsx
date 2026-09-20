@@ -72,10 +72,7 @@ export function ClusterIniDiffSummary(props: Props): ReactElement {
               <code className={classes.value} title={entry.before ?? undefined}>
                 {entry.before ?? "–"}
               </code>
-              <code
-                className={classes.valueAfter}
-                title={entry.after ?? undefined}
-              >
+              <code className={classes.valueAfter} title={entry.after ?? undefined}>
                 {entry.after ?? "–"}
               </code>
               <span className={classes.file}>{fileLabel(entry.fileKey)}</span>
@@ -83,9 +80,7 @@ export function ClusterIniDiffSummary(props: Props): ReactElement {
           ))}
         </div>
       </div>
-      {props.secretNote !== undefined && (
-        <p className={classes.secretNote}>{props.secretNote}</p>
-      )}
+      {props.secretNote !== undefined && <p className={classes.secretNote}>{props.secretNote}</p>}
     </Stack>
   );
 }

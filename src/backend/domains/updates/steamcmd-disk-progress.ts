@@ -10,10 +10,7 @@
 import { open, readFile, readdir, stat } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
-import {
-  isRegularFileDirent,
-  isTraversableDirectoryDirent,
-} from "../../infra/fs/reparse-points";
+import { isRegularFileDirent, isTraversableDirectoryDirent } from "../../infra/fs/reparse-points";
 import { ASA_APP_ID } from "./steamcmd-content-cache";
 
 /** Typical ASA dedicated server size (~12.0 GiB). Replaced when a real total is known. */
@@ -54,23 +51,16 @@ export function parseAppManifestProgress(manifestText: string): AppManifestProgr
   const stagedMatch = /"BytesStaged"\s+"(\d+)"/i.exec(manifestText);
   const sizeOnDiskMatch = /"SizeOnDisk"\s+"(\d+)"/i.exec(manifestText);
 
-  const bytesDownloaded = downloadedMatch
-    ? Number(downloadedMatch[1])
-    : stagedMatch
-      ? Number(stagedMatch[1])
-      : null;
+  const bytesDownloaded = downloadedMatch ? Number(downloadedMatch[1]) : stagedMatch ? Number(stagedMatch[1]) : null;
   const bytesToDownload = toDownloadMatch
     ? Number(toDownloadMatch[1])
     : sizeOnDiskMatch
       ? Number(sizeOnDiskMatch[1])
       : null;
 
-  const downloaded =
-    bytesDownloaded !== null && Number.isFinite(bytesDownloaded) ? bytesDownloaded : null;
+  const downloaded = bytesDownloaded !== null && Number.isFinite(bytesDownloaded) ? bytesDownloaded : null;
   const total =
-    bytesToDownload !== null && Number.isFinite(bytesToDownload) && bytesToDownload > 0
-      ? bytesToDownload
-      : null;
+    bytesToDownload !== null && Number.isFinite(bytesToDownload) && bytesToDownload > 0 ? bytesToDownload : null;
 
   let percent: number | null = null;
   if (downloaded !== null && total !== null && total > 0) {
@@ -197,10 +187,7 @@ async function sumDirectoryBytes(
 /** Only downloading/temp under force_install_dir (this install). */
 export function installScopedDownloadWatchPaths(forceInstallDir: string): string[] {
   const root = resolve(forceInstallDir);
-  const paths = [
-    join(root, "steamapps", "downloading"),
-    join(root, "steamapps", "temp"),
-  ];
+  const paths = [join(root, "steamapps", "downloading"), join(root, "steamapps", "temp")];
   return paths.filter((path) => existsSync(path));
 }
 
@@ -224,8 +211,7 @@ export function estimateProgressFromDisk(
   total: number;
   deltaBytes: number;
 } {
-  const total =
-    knownTotal !== null && knownTotal > 0 ? knownTotal : ASA_DEDICATED_APPROX_BYTES;
+  const total = knownTotal !== null && knownTotal > 0 ? knownTotal : ASA_DEDICATED_APPROX_BYTES;
   const deltaBytes = Math.max(0, bytesOnDisk - baselineBytes);
   const downloaded = Math.max(0, Math.min(Math.max(bytesOnDisk, deltaBytes), total));
   const percent = Math.max(0, Math.min(99.5, (downloaded / total) * 100));

@@ -25,11 +25,7 @@ export function CloneCopyProgress(props: Props): ReactElement {
         </Text>
       )}
       <Group justify="flex-end">
-        <Button
-          variant="default"
-          onClick={props.onCancel}
-          loading={props.cancelling}
-        >
+        <Button variant="default" onClick={props.onCancel} loading={props.cancelling}>
           Cancel copy
         </Button>
       </Group>

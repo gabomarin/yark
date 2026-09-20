@@ -11,15 +11,8 @@ interface Input {
   setBusyKey: Dispatch<SetStateAction<string | null>>;
   setError: Dispatch<SetStateAction<string | null>>;
   setWarning: Dispatch<SetStateAction<string | null>>;
-  persist: (
-    nextIds: string[],
-    nextDisabled: string[],
-    nextCache: Record<string, ModMetadata>,
-  ) => Promise<void>;
-  notifyMapModIfNeeded: (
-    id: string,
-    meta: ModMetadata | undefined,
-  ) => Promise<void>;
+  persist: (nextIds: string[], nextDisabled: string[], nextCache: Record<string, ModMetadata>) => Promise<void>;
+  notifyMapModIfNeeded: (id: string, meta: ModMetadata | undefined) => Promise<void>;
 }
 
 export function createServerModsListMutations(input: Input) {
@@ -31,9 +24,7 @@ export function createServerModsListMutations(input: Input) {
     const disabledIds = input.disabledIdsRef.current;
     const isNew = !configuredIds.includes(modDetail.id);
     const nextIds = isNew ? [...configuredIds, modDetail.id] : configuredIds;
-    const nextDisabled = isNew
-      ? [...new Set([...disabledIds, modDetail.id])]
-      : disabledIds;
+    const nextDisabled = isNew ? [...new Set([...disabledIds, modDetail.id])] : disabledIds;
     const nextCache = { ...input.cacheRef.current, [modDetail.id]: modDetail };
     try {
       await input.persist(nextIds, nextDisabled, nextCache);
@@ -41,9 +32,7 @@ export function createServerModsListMutations(input: Input) {
         notifyModsAddedDisabled({ name: modDetail.name });
       }
     } catch (cause) {
-      input.setError(
-        cause instanceof Error ? cause.message : "Could not add the mod",
-      );
+      input.setError(cause instanceof Error ? cause.message : "Could not add the mod");
     } finally {
       input.setBusyKey(null);
     }
@@ -65,9 +54,7 @@ export function createServerModsListMutations(input: Input) {
         await input.notifyMapModIfNeeded(id, meta);
       }
     } catch (cause) {
-      input.setError(
-        cause instanceof Error ? cause.message : "Could not update the mod",
-      );
+      input.setError(cause instanceof Error ? cause.message : "Could not update the mod");
     } finally {
       input.setBusyKey(null);
     }
@@ -90,9 +77,7 @@ export function createServerModsListMutations(input: Input) {
       );
       return true;
     } catch (cause) {
-      input.setError(
-        cause instanceof Error ? cause.message : "Could not remove the mod",
-      );
+      input.setError(cause instanceof Error ? cause.message : "Could not remove the mod");
       return false;
     } finally {
       input.setBusyKey(null);
@@ -102,10 +87,7 @@ export function createServerModsListMutations(input: Input) {
   const reorder = async (orderedIds: string[]) => {
     const configuredIds = input.configuredIdsRef.current;
     const disabledIds = input.disabledIdsRef.current;
-    if (
-      orderedIds.length !== configuredIds.length
-      || orderedIds.some((id) => !configuredIds.includes(id))
-    ) {
+    if (orderedIds.length !== configuredIds.length || orderedIds.some((id) => !configuredIds.includes(id))) {
       return;
     }
     if (orderedIds.every((id, index) => id === configuredIds[index])) {
@@ -117,9 +99,7 @@ export function createServerModsListMutations(input: Input) {
     try {
       await input.persist(orderedIds, disabledIds, input.cacheRef.current);
     } catch (cause) {
-      input.setError(
-        cause instanceof Error ? cause.message : "Could not reorder mods",
-      );
+      input.setError(cause instanceof Error ? cause.message : "Could not reorder mods");
     } finally {
       input.setBusyKey(null);
     }

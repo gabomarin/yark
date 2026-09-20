@@ -7,9 +7,7 @@ const packageJsonPath = resolve(__dirname, "package.json");
 const packageJsonRaw = readFileSync(packageJsonPath, "utf8");
 const packageJson = JSON.parse(packageJsonRaw) as { version?: unknown };
 const appVersion =
-  typeof packageJson.version === "string" && packageJson.version.trim().length > 0
-    ? packageJson.version
-    : "0.0.0";
+  typeof packageJson.version === "string" && packageJson.version.trim().length > 0 ? packageJson.version : "0.0.0";
 
 export default defineConfig({
   plugins: [react()],
@@ -51,10 +49,7 @@ export default defineConfig({
         extends: true,
         test: {
           name: "renderer",
-          include: [
-            "src/renderer/src/**/*.test.ts",
-            "src/renderer/src/**/*.test.tsx",
-          ],
+          include: ["src/renderer/src/**/*.test.ts", "src/renderer/src/**/*.test.tsx"],
           environment: "jsdom",
           setupFiles: [resolve(__dirname, "src/renderer/src/test/setup.ts")],
         },

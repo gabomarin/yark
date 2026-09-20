@@ -1,11 +1,6 @@
 import type { Dispatch, ReactElement, SetStateAction } from "react";
 import type { Overlay } from "@app/model/appOverlay";
-import type {
-  AppFleetSlice,
-  AppLifecycleSlice,
-  AppRconSlice,
-  AppSteamCmdSlice,
-} from "@app/model/appMainRouterSlices";
+import type { AppFleetSlice, AppLifecycleSlice, AppRconSlice, AppSteamCmdSlice } from "@app/model/appMainRouterSlices";
 import { AppShellWithChrome, type AppShellChromeProps } from "@app/appShellChrome";
 import { resolveWorkspaceFilesJobState } from "@app/model/workspaceFilesJobState";
 import { ServerWorkspacePage } from "@features/server-workspace/ServerWorkspacePage";
@@ -48,19 +43,9 @@ export function AppWorkspaceOverlay(props: AppWorkspaceOverlayProps): ReactEleme
     onKickPlayer,
     onBanPlayer,
   } = rcon;
-  const {
-    filesQueueByServerId,
-    steamCmdStatus,
-    steamCmdBusy,
-    startSteamFilesJob,
-  } = steamCmd;
+  const { filesQueueByServerId, steamCmdStatus, steamCmdBusy, startSteamFilesJob } = steamCmd;
 
-  const filesJob = resolveWorkspaceFilesJobState(
-    overlay.serverId,
-    filesQueueByServerId,
-    steamCmdBusy,
-    steamCmdStatus,
-  );
+  const filesJob = resolveWorkspaceFilesJobState(overlay.serverId, filesQueueByServerId, steamCmdBusy, steamCmdStatus);
 
   return (
     <AppShellWithChrome shell={shell}>
@@ -89,15 +74,9 @@ export function AppWorkspaceOverlay(props: AppWorkspaceOverlayProps): ReactEleme
         stopProgress={stopProgressByServerId.get(overlay.serverId) ?? null}
         startBusy={startBusyByServerId.has(overlay.serverId)}
         onLogsFocusConsumed={() =>
-          setOverlay((current) =>
-            current?.kind === "workspace"
-              ? { ...current, logsFocus: null }
-              : current,
-          )
+          setOverlay((current) => (current?.kind === "workspace" ? { ...current, logsFocus: null } : current))
         }
-        onDismissOnboarding={() =>
-          setOverlay({ kind: "workspace", serverId: overlay.serverId })
-        }
+        onDismissOnboarding={() => setOverlay({ kind: "workspace", serverId: overlay.serverId })}
         onSelectServer={(serverId) =>
           setOverlay({
             kind: "workspace",

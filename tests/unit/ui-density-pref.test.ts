@@ -7,10 +7,7 @@ import {
   isUiDensity,
   parseUiDensity,
 } from "@shared/settings/ui-density";
-import {
-  loadUiDensityPref,
-  writeUiDensityPref,
-} from "@features/settings/settingsModel";
+import { loadUiDensityPref, writeUiDensityPref } from "@features/settings/settingsModel";
 
 describe("ui density shared helpers", () => {
   it("parses valid values and falls back to compact", () => {
@@ -74,9 +71,7 @@ describe("ui density preference (IPC + legacy migration)", () => {
     });
 
     await expect(loadUiDensityPref()).resolves.toBe("comfortable");
-    expect(window.localStorage.getItem(UI_DENSITY_LEGACY_LOCAL_STORAGE_KEY)).toBe(
-      "comfortable",
-    );
+    expect(window.localStorage.getItem(UI_DENSITY_LEGACY_LOCAL_STORAGE_KEY)).toBe("comfortable");
   });
 
   it("falls back when getUiDensity returns ok:false", async () => {

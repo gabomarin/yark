@@ -8,14 +8,8 @@ export const DISCOVER_PAGE_SIZE = 20;
 export const DISCOVER_DEFAULT_SORT_FIELD: ModsSearchSortField = 2;
 export const DISCOVER_DEFAULT_SORT_ORDER: ModsSearchSortOrder = "desc";
 
-export function isDiscoverDefaultSort(
-  sortField: ModsSearchSortField,
-  sortOrder: ModsSearchSortOrder,
-): boolean {
-  return (
-    sortField === DISCOVER_DEFAULT_SORT_FIELD
-    && sortOrder === DISCOVER_DEFAULT_SORT_ORDER
-  );
+export function isDiscoverDefaultSort(sortField: ModsSearchSortField, sortOrder: ModsSearchSortOrder): boolean {
+  return sortField === DISCOVER_DEFAULT_SORT_FIELD && sortOrder === DISCOVER_DEFAULT_SORT_ORDER;
 }
 
 /** Column accessors that map to CurseForge search sort fields. */
@@ -35,11 +29,7 @@ export function discoverSortFromColumn(
   columnAccessor: string,
   direction: "asc" | "desc",
 ): { sortField: ModsSearchSortField; sortOrder: ModsSearchSortOrder } | null {
-  if (
-    columnAccessor !== "name"
-    && columnAccessor !== "downloadCount"
-    && columnAccessor !== "updatedAt"
-  ) {
+  if (columnAccessor !== "name" && columnAccessor !== "downloadCount" && columnAccessor !== "updatedAt") {
     return null;
   }
   return {

@@ -8,11 +8,7 @@ import { LogsClearAction } from "./components/LogsPanelChrome/LogsPanelChrome";
 import { LogsUpdatesTab } from "./components/LogsUpdatesTab/LogsUpdatesTab";
 import classes from "./LogsPage.module.css";
 import { RuntimeLogSection } from "./RuntimeLogSection";
-import {
-  useServerLogsPanel,
-  type LogsSection,
-  type ServerLogsFocus,
-} from "./hooks/useServerLogsPanel";
+import { useServerLogsPanel, type LogsSection, type ServerLogsFocus } from "./hooks/useServerLogsPanel";
 
 export type { ServerLogsFocus } from "./hooks/useServerLogsPanel";
 
@@ -70,9 +66,7 @@ export function ServerLogsPanel(props: Props): ReactElement {
 
       <Tabs
         value={panel.activeSection}
-        onChange={(value) =>
-          panel.setActiveSection((value as LogsSection) ?? "events")
-        }
+        onChange={(value) => panel.setActiveSection((value as LogsSection) ?? "events")}
         keepMounted={false}
         className={classes.tabs}
       >
@@ -107,12 +101,7 @@ export function ServerLogsPanel(props: Props): ReactElement {
               <LogsClearAction
                 label="Clear captured runtime console output"
                 onClick={panel.confirmClearRuntime}
-                disabled={
-                  panel.loading ||
-                  panel.busy ||
-                  panel.logs === null ||
-                  panel.logs.runtimeLogLines.length === 0
-                }
+                disabled={panel.loading || panel.busy || panel.logs === null || panel.logs.runtimeLogLines.length === 0}
               />
             }
           />
@@ -128,9 +117,7 @@ export function ServerLogsPanel(props: Props): ReactElement {
             selectedUpdateFile={panel.selectedUpdateFile}
             updateContent={panel.updateContent}
             selectedUpdateInfo={panel.selectedUpdateInfo}
-            onOpenUpdateLog={(serverId, fileName) =>
-              void panel.openUpdateLog(serverId, fileName)
-            }
+            onOpenUpdateLog={(serverId, fileName) => void panel.openUpdateLog(serverId, fileName)}
             onClearUpdateLogs={panel.confirmClearUpdateLogs}
             onOpenInExternalViewer={() => void panel.openInExternalViewer()}
             onDeleteSelectedUpdate={panel.confirmDeleteSelectedUpdate}

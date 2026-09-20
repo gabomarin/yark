@@ -45,10 +45,7 @@ function makeProfile(installDir: string, id = "srv-1"): ServerProfile {
   };
 }
 
-function makeService(
-  repo: ServerRepository,
-  processes: ProcessManager,
-): InstanceService {
+function makeService(repo: ServerRepository, processes: ProcessManager): InstanceService {
   const backups = {} as import("@backend/domains/backups/backup-service").BackupService;
   return new InstanceService(repo, processes, backups, new InstanceLockManager());
 }
@@ -108,15 +105,8 @@ describe("InstanceService.delete", () => {
     await service.delete(profile.id, { deleteInstallFiles: false });
 
     expect(repo.delete).toHaveBeenCalledWith(profile.id);
-    expect(repo.addEvent).toHaveBeenCalledWith(
-      null,
-      "server_deleted",
-      "info",
-      expect.stringMatching(/files kept at/),
-    );
-    await expect(
-      access(join(installDir, "marker.txt"), fsConstants.F_OK),
-    ).resolves.toBeUndefined();
+    expect(repo.addEvent).toHaveBeenCalledWith(null, "server_deleted", "info", expect.stringMatching(/files kept at/));
+    await expect(access(join(installDir, "marker.txt"), fsConstants.F_OK)).resolves.toBeUndefined();
   });
 
   it("does not wipe disk when another profile shares the same installDir", async () => {
@@ -141,13 +131,9 @@ describe("InstanceService.delete", () => {
     } as unknown as ProcessManager;
 
     const service = makeService(repo, processes);
-    await expect(
-      service.delete(profile.id, { deleteInstallFiles: true }),
-    ).rejects.toThrow(/also used by/i);
+    await expect(service.delete(profile.id, { deleteInstallFiles: true })).rejects.toThrow(/also used by/i);
     expect(repo.delete).not.toHaveBeenCalled();
-    await expect(
-      access(join(installDir, "marker.txt"), fsConstants.F_OK),
-    ).resolves.toBeUndefined();
+    await expect(access(join(installDir, "marker.txt"), fsConstants.F_OK)).resolves.toBeUndefined();
   });
 
   it("allows profile-only remove when another profile shares the same installDir", async () => {
@@ -175,9 +161,7 @@ describe("InstanceService.delete", () => {
     await service.delete(profile.id, { deleteInstallFiles: false });
 
     expect(repo.delete).toHaveBeenCalledWith(profile.id);
-    await expect(
-      access(join(installDir, "marker.txt"), fsConstants.F_OK),
-    ).resolves.toBeUndefined();
+    await expect(access(join(installDir, "marker.txt"), fsConstants.F_OK)).resolves.toBeUndefined();
   });
 
   it("rejects both modes while the server process is active", async () => {
@@ -200,17 +184,11 @@ describe("InstanceService.delete", () => {
 
     const service = makeService(repo, processes);
 
-    await expect(
-      service.delete(profile.id, { deleteInstallFiles: false }),
-    ).rejects.toThrow(/while it is running/i);
-    await expect(
-      service.delete(profile.id, { deleteInstallFiles: true }),
-    ).rejects.toThrow(/while it is running/i);
+    await expect(service.delete(profile.id, { deleteInstallFiles: false })).rejects.toThrow(/while it is running/i);
+    await expect(service.delete(profile.id, { deleteInstallFiles: true })).rejects.toThrow(/while it is running/i);
 
     expect(repo.delete).not.toHaveBeenCalled();
-    await expect(
-      access(join(installDir, "marker.txt"), fsConstants.F_OK),
-    ).resolves.toBeUndefined();
+    await expect(access(join(installDir, "marker.txt"), fsConstants.F_OK)).resolves.toBeUndefined();
   });
 
   it("wipes when requireEmptyInstall and the folder is still empty", async () => {
@@ -267,9 +245,6 @@ describe("InstanceService.delete", () => {
     ).rejects.toThrow(/no longer empty/i);
 
     expect(repo.delete).not.toHaveBeenCalled();
-    await expect(
-      access(join(installDir, "marker.txt"), fsConstants.F_OK),
-    ).resolves.toBeUndefined();
+    await expect(access(join(installDir, "marker.txt"), fsConstants.F_OK)).resolves.toBeUndefined();
   });
 });
-

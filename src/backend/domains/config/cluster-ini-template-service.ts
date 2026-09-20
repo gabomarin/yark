@@ -1,11 +1,7 @@
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini/ini-defaults";
 import { sanitizeServerIniPayload } from "@shared/ini/ini-text";
 import { stripYarkOwnedFromPayload } from "@shared/asa/yark-owned-ini-keys";
-import type {
-  ClusterIniTemplate,
-  IniPreview,
-  ServerIniPayload,
-} from "@shared/types";
+import type { ClusterIniTemplate, IniPreview, ServerIniPayload } from "@shared/types";
 import type { ClusterIniTemplateRepository } from "../../infra/db/cluster-ini-template-repository";
 import { buildIniPreview } from "./ini-preview";
 
@@ -23,9 +19,7 @@ function normalizeClusterId(clusterId: string): string {
 }
 
 /** Sanitize client noise and strip YARK-owned per-server keys (and INI MaxPlayers). */
-export function prepareClusterIniTemplatePayload(
-  payload: ServerIniPayload,
-): ServerIniPayload {
+export function prepareClusterIniTemplatePayload(payload: ServerIniPayload): ServerIniPayload {
   return stripYarkOwnedFromPayload(sanitizeServerIniPayload(payload));
 }
 
@@ -71,7 +65,10 @@ export class ClusterIniTemplateService {
     return buildIniPreview(current, next);
   }
 
-  save(clusterId: string, payload: ServerIniPayload): {
+  save(
+    clusterId: string,
+    payload: ServerIniPayload,
+  ): {
     template: ClusterIniTemplate;
     preview: IniPreview;
   } {
@@ -80,9 +77,7 @@ export class ClusterIniTemplateService {
     const next = prepareClusterIniTemplatePayload(payload);
     const preview = buildIniPreview(current, next);
     if (!preview.valid) {
-      throw new Error(
-        `Invalid INI: ${preview.issues.map((i) => `${i.fileKey}: ${i.message}`).join(" | ")}`,
-      );
+      throw new Error(`Invalid INI: ${preview.issues.map((i) => `${i.fileKey}: ${i.message}`).join(" | ")}`);
     }
     const template = this.repo.upsert(id, next);
     return { template, preview };

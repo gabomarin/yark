@@ -14,10 +14,7 @@ import type {
   ServerUpdateLogStatus,
 } from "@shared/types";
 import { resolveEventDetails } from "@shared/event-details";
-import {
-  collectKnownSecrets,
-  sanitizeDiagnosticText,
-} from "@shared/credential-redaction";
+import { collectKnownSecrets, sanitizeDiagnosticText } from "@shared/credential-redaction";
 import {
   LOG_RETENTION_SETTINGS_KEY,
   assertLogRetentionSettings,
@@ -51,8 +48,7 @@ function parseUpdateLogHeader(content: string): {
   const durationMatch = header.match(/^durationMs=(\d+)$/m);
   const exitCode = exitCodeMatch !== null ? Number(exitCodeMatch[1]) : null;
   const durationMs = durationMatch !== null ? Number(durationMatch[1]) : null;
-  const status: ServerUpdateLogStatus =
-    exitCode === null ? "unknown" : exitCode === 0 ? "success" : "failed";
+  const status: ServerUpdateLogStatus = exitCode === null ? "unknown" : exitCode === 0 ? "success" : "failed";
   return { status, exitCode, durationMs };
 }
 
@@ -60,9 +56,7 @@ function targetRefKey(ref: LogCleanupTargetRef): string {
   return `${ref.category}|${ref.serverId}|${ref.targetKey}`;
 }
 
-function normalizeCategories(
-  categories: LogRetentionCategory[] | null | undefined,
-): LogRetentionCategory[] {
+function normalizeCategories(categories: LogRetentionCategory[] | null | undefined): LogRetentionCategory[] {
   if (categories === undefined || categories === null || categories.length === 0) {
     return ["events", "updateLogs"];
   }
@@ -78,9 +72,7 @@ function normalizeCategories(
   return unique;
 }
 
-function normalizeServerFilter(
-  serverIds: string[] | null | undefined,
-): Set<string> | null {
+function normalizeServerFilter(serverIds: string[] | null | undefined): Set<string> | null {
   if (serverIds === undefined || serverIds === null || serverIds.length === 0) {
     return null;
   }
@@ -102,10 +94,7 @@ function emptyResult(): LogCleanupResult {
 
 function aggregatePreview(items: LogCleanupItem[]): LogCleanupPreview {
   const byCategoryMap = new Map<LogRetentionCategory, { count: number; bytes: number }>();
-  const byServerMap = new Map<
-    string,
-    { serverId: string; serverName: string; count: number; bytes: number }
-  >();
+  const byServerMap = new Map<string, { serverId: string; serverName: string; count: number; bytes: number }>();
   let totalBytes = 0;
   for (const item of items) {
     totalBytes += item.sizeBytes;
@@ -130,9 +119,7 @@ function aggregatePreview(items: LogCleanupItem[]): LogCleanupPreview {
       const row = byCategoryMap.get(category) ?? { count: 0, bytes: 0 };
       return { category, count: row.count, bytes: row.bytes };
     }),
-    byServer: [...byServerMap.values()].sort((a, b) =>
-      a.serverName.localeCompare(b.serverName),
-    ),
+    byServer: [...byServerMap.values()].sort((a, b) => a.serverName.localeCompare(b.serverName)),
   };
 }
 
@@ -157,10 +144,7 @@ export class LogsService {
    * Distinct from {@link ProcessManager.getRuntimeLogSnapshot}, which is the
    * unsanitized in-memory ring.
    */
-  getRuntimeLogSnapshot(
-    serverId: string,
-    limit = 400,
-  ): { serverId: string; runtimeLogLines: string[] } {
+  getRuntimeLogSnapshot(serverId: string, limit = 400): { serverId: string; runtimeLogLines: string[] } {
     const server = this.repo.get(serverId);
     if (server === null) {
       throw new Error("Server does not exist");
@@ -178,19 +162,11 @@ export class LogsService {
     return collectKnownSecrets(this.repo.list());
   }
 
-  private sanitizeRuntimeLines(
-    lines: string[],
-    secrets: readonly string[],
-  ): string[] {
-    return lines
-      .map((line) => sanitizeDiagnosticText(line, secrets))
-      .filter((line) => line.trim().length > 0);
+  private sanitizeRuntimeLines(lines: string[], secrets: readonly string[]): string[] {
+    return lines.map((line) => sanitizeDiagnosticText(line, secrets)).filter((line) => line.trim().length > 0);
   }
 
-  private async buildServerLogs(
-    serverId: string,
-    secrets: readonly string[],
-  ): Promise<ServerOperationalLogs> {
+  private async buildServerLogs(serverId: string, secrets: readonly string[]): Promise<ServerOperationalLogs> {
     const server = this.repo.get(serverId);
     if (server === null) {
       throw new Error("Server does not exist");
@@ -204,13 +180,8 @@ export class LogsService {
       serverId,
       updateFiles,
       backups,
-      events: this.repo
-        .recentEvents(500)
-        .filter((event) => event.serverId === serverId),
-      runtimeLogLines: this.sanitizeRuntimeLines(
-        this.processes.getRuntimeLogSnapshot(serverId, 400),
-        secrets,
-      ),
+      events: this.repo.recentEvents(500).filter((event) => event.serverId === serverId),
+      runtimeLogLines: this.sanitizeRuntimeLines(this.processes.getRuntimeLogSnapshot(serverId, 400), secrets),
     };
   }
 
@@ -222,8 +193,7 @@ export class LogsService {
   ): Promise<string> {
     const path = this.resolveUpdateLogPath(serverId, fileName);
     const content = await readFile(path, "utf8");
-    const sliced =
-      content.length <= maxBytes ? content : content.slice(content.length - maxBytes);
+    const sliced = content.length <= maxBytes ? content : content.slice(content.length - maxBytes);
     return sanitizeDiagnosticText(sliced, secrets);
   }
 
@@ -241,12 +211,7 @@ export class LogsService {
   }
 
   async readUpdateLog(serverId: string, fileName: string, maxBytes = 250_000): Promise<string> {
-    return this.readAndSanitizeUpdateLog(
-      serverId,
-      fileName,
-      maxBytes,
-      this.collectProfileSecrets(),
-    );
+    return this.readAndSanitizeUpdateLog(serverId, fileName, maxBytes, this.collectProfileSecrets());
   }
 
   clearEvents(serverId: string): number {
@@ -305,11 +270,7 @@ export class LogsService {
     let plan = await this.planCleanup(options);
     const confirmed = options.confirmedTargets;
     if (confirmed !== undefined && confirmed !== null) {
-      const allowed = new Set(
-        confirmed
-          .filter((ref) => ref.targetKey.trim().length > 0)
-          .map(targetRefKey),
-      );
+      const allowed = new Set(confirmed.filter((ref) => ref.targetKey.trim().length > 0).map(targetRefKey));
       plan = plan.filter((item) =>
         allowed.has(
           targetRefKey({
@@ -466,11 +427,7 @@ export class LogsService {
       }
     }
 
-    await writeFile(
-      destinationPath,
-      sanitizeDiagnosticText(`${sections.join("\n")}\n`, secrets),
-      "utf8",
-    );
+    await writeFile(destinationPath, sanitizeDiagnosticText(`${sections.join("\n")}\n`, secrets), "utf8");
     return destinationPath;
   }
 
@@ -536,14 +493,9 @@ export class LogsService {
     return result;
   }
 
-  private recordCleanupOutcome(
-    result: LogCleanupResult,
-    trigger: "manual" | "auto",
-  ): void {
-    const eventsDeleted =
-      result.byCategory.find((row) => row.category === "events")?.deleted ?? 0;
-    const updateDeleted =
-      result.byCategory.find((row) => row.category === "updateLogs")?.deleted ?? 0;
+  private recordCleanupOutcome(result: LogCleanupResult, trigger: "manual" | "auto"): void {
+    const eventsDeleted = result.byCategory.find((row) => row.category === "events")?.deleted ?? 0;
+    const updateDeleted = result.byCategory.find((row) => row.category === "updateLogs")?.deleted ?? 0;
     if (result.failed.length > 0) {
       this.repo.addEvent(
         null,
@@ -622,10 +574,7 @@ export class LogsService {
       if (event.createdAt >= cutoff) {
         continue;
       }
-      const serverName =
-        serverId.length === 0
-          ? "Global"
-          : (nameById.get(serverId) ?? serverId);
+      const serverName = serverId.length === 0 ? "Global" : (nameById.get(serverId) ?? serverId);
       items.push({
         category: "events",
         serverId,
@@ -651,9 +600,7 @@ export class LogsService {
     const items: LogCleanupItem[] = [];
     const servers = this.repo.list();
     const serverIds =
-      serverFilter === null
-        ? servers.map((s) => s.id)
-        : servers.map((s) => s.id).filter((id) => serverFilter.has(id));
+      serverFilter === null ? servers.map((s) => s.id) : servers.map((s) => s.id).filter((id) => serverFilter.has(id));
 
     for (const serverId of serverIds) {
       const files = await this.listUpdateLogsForServer(serverId);

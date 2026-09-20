@@ -1,10 +1,7 @@
 import type { PortConflict, ServerProfile } from "../types";
 
 /** Fields required to detect profile-vs-profile port collisions. */
-export type PortConflictProfile = Pick<
-  ServerProfile,
-  "id" | "name" | "gamePort" | "queryPort" | "rconPort"
->;
+export type PortConflictProfile = Pick<ServerProfile, "id" | "name" | "gamePort" | "queryPort" | "rconPort">;
 
 type Entry = {
   id: string;

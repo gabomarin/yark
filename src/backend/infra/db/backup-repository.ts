@@ -1,12 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
-import type {
-  BackupKind,
-  BackupPolicy,
-  BackupRecord,
-  BackupStatus,
-  BackupType,
-} from "@shared/types";
+import type { BackupKind, BackupPolicy, BackupRecord, BackupStatus, BackupType } from "@shared/types";
 
 const DEFAULT_INTERVAL_MINUTES = 60;
 const DEFAULT_RETAIN_COUNT_WORLD = 20;
@@ -96,18 +90,13 @@ function clampRetain(value: number | null | undefined, fallback: number): number
 
 function rowToPolicy(row: PolicyRow): BackupPolicy {
   const backupDir =
-    typeof row.backup_dir === "string" && row.backup_dir.trim().length > 0
-      ? row.backup_dir.trim()
-      : null;
+    typeof row.backup_dir === "string" && row.backup_dir.trim().length > 0 ? row.backup_dir.trim() : null;
   return {
     serverId: row.server_id,
     enabled: row.enabled === 1,
     intervalMinutes: row.interval_minutes,
     retainCountWorld: clampRetain(row.retain_count, DEFAULT_RETAIN_COUNT_WORLD),
-    retainCountPlayers: clampRetain(
-      row.retain_count_players,
-      DEFAULT_RETAIN_COUNT_PLAYERS,
-    ),
+    retainCountPlayers: clampRetain(row.retain_count_players, DEFAULT_RETAIN_COUNT_PLAYERS),
     retainCountIni: clampRetain(row.retain_count_ini, DEFAULT_RETAIN_COUNT_INI),
     backupDir,
     updatedAt: row.updated_at,
@@ -134,16 +123,7 @@ export class BackupRepository {
           id, server_id, type, kind, path, size_bytes, status, created_at, completed_at, notes, map_token
         ) VALUES (?, ?, ?, ?, ?, 0, 'running', ?, NULL, ?, ?)`,
       )
-      .run(
-        id,
-        input.serverId,
-        input.type,
-        input.kind,
-        input.path,
-        createdAt,
-        input.notes,
-        mapToken,
-      );
+      .run(id, input.serverId, input.type, input.kind, input.path, createdAt, input.notes, mapToken);
 
     return {
       id,
@@ -168,9 +148,7 @@ export class BackupRepository {
   ): BackupRecord | null {
     const finishedAt = completedAt ?? new Date().toISOString();
     this.db
-      .prepare(
-        "UPDATE backups SET status = 'completed', size_bytes = ?, completed_at = ? WHERE id = ?",
-      )
+      .prepare("UPDATE backups SET status = 'completed', size_bytes = ?, completed_at = ? WHERE id = ?")
       .run(sizeBytes, finishedAt, id);
     return this.getBackup(id);
   }
@@ -178,17 +156,13 @@ export class BackupRepository {
   failBackup(id: string, notes: string): BackupRecord | null {
     const now = new Date().toISOString();
     this.db
-      .prepare(
-        "UPDATE backups SET status = 'failed', completed_at = ?, notes = ? WHERE id = ?",
-      )
+      .prepare("UPDATE backups SET status = 'failed', completed_at = ?, notes = ? WHERE id = ?")
       .run(now, notes, id);
     return this.getBackup(id);
   }
 
   getBackup(id: string): BackupRecord | null {
-    const row = this.db
-      .prepare("SELECT * FROM backups WHERE id = ?")
-      .get(id) as unknown as BackupRow | undefined;
+    const row = this.db.prepare("SELECT * FROM backups WHERE id = ?").get(id) as unknown as BackupRow | undefined;
     return row ? rowToBackup(row) : null;
   }
 
@@ -236,11 +210,7 @@ export class BackupRepository {
    * Newest finished (completed/failed) backup for schedule gating.
    * Optional `type` narrows to scheduled vs manual/etc.
    */
-  latestFinished(
-    serverId: string,
-    kind?: BackupKind,
-    type?: BackupRecord["type"],
-  ): BackupRecord | null {
+  latestFinished(serverId: string, kind?: BackupKind, type?: BackupRecord["type"]): BackupRecord | null {
     const clauses = ["server_id = ?", "status IN ('completed', 'failed')"];
     const params: unknown[] = [serverId];
     if (kind !== undefined) {
@@ -265,24 +235,19 @@ export class BackupRepository {
   hasRunning(serverId: string, kind?: BackupKind): boolean {
     if (kind !== undefined) {
       const row = this.db
-        .prepare(
-          "SELECT 1 AS ok FROM backups WHERE server_id = ? AND kind = ? AND status = 'running' LIMIT 1",
-        )
+        .prepare("SELECT 1 AS ok FROM backups WHERE server_id = ? AND kind = ? AND status = 'running' LIMIT 1")
         .get(serverId, kind) as { ok: number } | undefined;
       return row !== undefined;
     }
     const row = this.db
-      .prepare(
-        "SELECT 1 AS ok FROM backups WHERE server_id = ? AND status = 'running' LIMIT 1",
-      )
+      .prepare("SELECT 1 AS ok FROM backups WHERE server_id = ? AND status = 'running' LIMIT 1")
       .get(serverId) as { ok: number } | undefined;
     return row !== undefined;
   }
 
   getPolicy(serverId: string): BackupPolicy {
-    const row = this.db
-      .prepare("SELECT * FROM backup_policies WHERE server_id = ?")
-      .get(serverId) as unknown as PolicyRow | undefined;
+    const row = this.db.prepare("SELECT * FROM backup_policies WHERE server_id = ?").get(serverId) as unknown as
+      PolicyRow | undefined;
     if (row !== undefined) return rowToPolicy(row);
 
     const now = new Date().toISOString();
@@ -324,10 +289,7 @@ export class BackupRepository {
     backupDir: string | null;
   }): BackupPolicy {
     const now = new Date().toISOString();
-    const backupDir =
-      input.backupDir !== null && input.backupDir.trim().length > 0
-        ? input.backupDir.trim()
-        : null;
+    const backupDir = input.backupDir !== null && input.backupDir.trim().length > 0 ? input.backupDir.trim() : null;
     // retain_days kept in schema as unused legacy; write a fixed placeholder.
     // retain_count stores world retention (legacy column name).
     this.db
@@ -370,9 +332,9 @@ export class BackupRepository {
   }
 
   listBackupPaths(serverId: string): string[] {
-    const rows = this.db
-      .prepare("SELECT path FROM backups WHERE server_id = ?")
-      .all(serverId) as Array<{ path: string }>;
+    const rows = this.db.prepare("SELECT path FROM backups WHERE server_id = ?").all(serverId) as Array<{
+      path: string;
+    }>;
     return rows.map((row) => row.path);
   }
 
@@ -459,9 +421,7 @@ export class BackupRepository {
   }
 
   getRestoreHistory(id: number): RestoreHistoryRecord | null {
-    const row = this.db
-      .prepare("SELECT * FROM restore_history WHERE id = ?")
-      .get(id) as RestoreHistoryRow | undefined;
+    const row = this.db.prepare("SELECT * FROM restore_history WHERE id = ?").get(id) as RestoreHistoryRow | undefined;
     if (row === undefined) return null;
     return {
       id: row.id,
@@ -477,9 +437,7 @@ export class BackupRepository {
   completeRestoreHistory(id: number, status: "completed" | "failed", notes: string | null): void {
     const now = new Date().toISOString();
     this.db
-      .prepare(
-        "UPDATE restore_history SET completed_at = ?, status = ?, notes = ? WHERE id = ?",
-      )
+      .prepare("UPDATE restore_history SET completed_at = ?, status = ?, notes = ? WHERE id = ?")
       .run(now, status, notes, id);
   }
 }

@@ -30,9 +30,7 @@ describe("decideFilesJobEnqueue", () => {
       action: "replace",
       occupant: verifyQueued,
     });
-    expect(decideFilesJobEnqueue("install-files", verifyQueued).action).toBe(
-      "replace",
-    );
+    expect(decideFilesJobEnqueue("install-files", verifyQueued).action).toBe("replace");
   });
 
   it("does not interrupt a running job, even with a stronger incoming job", () => {
@@ -50,23 +48,19 @@ describe("decideFilesJobEnqueue", () => {
   });
 
   it("treats Install and Update as the same weight", () => {
-    expect(decideFilesJobEnqueue("install-files", updateQueued).action).toBe(
-      "reject-occupied",
-    );
-    expect(decideFilesJobEnqueue("update", {
-      id: "i1",
-      operation: "install-files",
-      status: "pending",
-    }).action).toBe("reject-occupied");
+    expect(decideFilesJobEnqueue("install-files", updateQueued).action).toBe("reject-occupied");
+    expect(
+      decideFilesJobEnqueue("update", {
+        id: "i1",
+        operation: "install-files",
+        status: "pending",
+      }).action,
+    ).toBe("reject-occupied");
   });
 
   it("rejects a duplicate of the same operation", () => {
-    expect(decideFilesJobEnqueue("verify-files", verifyQueued).action).toBe(
-      "reject-duplicate",
-    );
-    expect(
-      decideFilesJobEnqueue("update", { ...updateQueued, status: "paused" }).action,
-    ).toBe("reject-paused");
+    expect(decideFilesJobEnqueue("verify-files", verifyQueued).action).toBe("reject-duplicate");
+    expect(decideFilesJobEnqueue("update", { ...updateQueued, status: "paused" }).action).toBe("reject-paused");
   });
 });
 
@@ -80,9 +74,7 @@ describe("canEnqueueFilesJobFromMenu", () => {
 
 describe("pickOccupyingFilesJob", () => {
   it("prefers a running job over a stronger queued job", () => {
-    expect(pickOccupyingFilesJob([updateQueued, verifyRunning])).toEqual(
-      verifyRunning,
-    );
+    expect(pickOccupyingFilesJob([updateQueued, verifyRunning])).toEqual(verifyRunning);
   });
 });
 
@@ -112,11 +104,7 @@ describe("occupyingFilesJobForServer", () => {
 
 describe("filesJobEnqueueCopy", () => {
   it("explains a queue replace without Needs attention wording", () => {
-    const copy = filesJobEnqueueCopy(
-      "update",
-      { action: "replace", occupant: verifyQueued },
-      "Island",
-    );
+    const copy = filesJobEnqueueCopy("update", { action: "replace", occupant: verifyQueued }, "Island");
     expect(copy.title).toBe("Downloads queue updated");
     expect(copy.message).toMatch(/Update replaced Verify.*Island/i);
   });

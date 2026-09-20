@@ -28,8 +28,6 @@ describe("AppSettingsRepository openNativeConsoleOnStart (#350)", () => {
 
     settings.set(OPEN_NATIVE_CONSOLE_SETTING_KEY, encodeOpenNativeConsolePref(false));
     expect(settings.get(OPEN_NATIVE_CONSOLE_SETTING_KEY)).toBe("0");
-    expect(parseStoredOpenNativeConsole(settings.get(OPEN_NATIVE_CONSOLE_SETTING_KEY))).toBe(
-      false,
-    );
+    expect(parseStoredOpenNativeConsole(settings.get(OPEN_NATIVE_CONSOLE_SETTING_KEY))).toBe(false);
   });
 });

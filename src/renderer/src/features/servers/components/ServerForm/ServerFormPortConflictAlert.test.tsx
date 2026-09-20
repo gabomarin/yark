@@ -21,9 +21,9 @@ function profile(partial: Partial<ServerProfile> & Pick<ServerProfile, "id" | "n
     mods: [],
     disabledMods: [],
     modMetadataCache: {},
-    
+
     autoStart: false,
-    
+
     useAsaApi: false,
     useAsaApiLoader: false,
     enabled: true,
@@ -47,13 +47,7 @@ describe("ServerFormPortConflictAlert", () => {
   it("shows conflicts for valid overlapping ports (#178)", () => {
     render(
       <AppProviders>
-        <ServerFormPortConflictAlert
-          servers={fleet}
-          name="New"
-          gamePort="7777"
-          queryPort="27015"
-          rconPort="27020"
-        />
+        <ServerFormPortConflictAlert servers={fleet} name="New" gamePort="7777" queryPort="27015" rconPort="27020" />
       </AppProviders>,
     );
 
@@ -63,29 +57,16 @@ describe("ServerFormPortConflictAlert", () => {
   it("hides preview for empty or out-of-range ports (#178)", () => {
     const { rerender } = render(
       <AppProviders>
-        <ServerFormPortConflictAlert
-          servers={fleet}
-          name="New"
-          gamePort=""
-          queryPort="27015"
-          rconPort="27020"
-        />
+        <ServerFormPortConflictAlert servers={fleet} name="New" gamePort="" queryPort="27015" rconPort="27020" />
       </AppProviders>,
     );
     expect(screen.queryByText(/port conflicts/i)).not.toBeInTheDocument();
 
     rerender(
       <AppProviders>
-        <ServerFormPortConflictAlert
-          servers={fleet}
-          name="New"
-          gamePort="80"
-          queryPort="27015"
-          rconPort="27020"
-        />
+        <ServerFormPortConflictAlert servers={fleet} name="New" gamePort="80" queryPort="27015" rconPort="27020" />
       </AppProviders>,
     );
     expect(screen.queryByText(/port conflicts/i)).not.toBeInTheDocument();
   });
 });
-

@@ -106,9 +106,7 @@ function installApi(): RendererApi {
     }),
     getModByReference: vi.fn().mockImplementation(async (ref: string) => {
       const known = [awesomeDetail, superDetail, mapModDetail];
-      const match = known.find(
-        (item) => item.id === ref || item.slug === ref || item.curseforgeUrl === ref,
-      );
+      const match = known.find((item) => item.id === ref || item.slug === ref || item.curseforgeUrl === ref);
       return { ok: true, data: match ?? superDetail };
     }),
     openCurseForgeMod: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
@@ -289,9 +287,7 @@ describe("ServerModsPanel", () => {
     const callsBeforeRelease = vi.mocked(api.updateServerPatch).mock.calls.length;
     releaseDetail();
     await waitFor(() => {
-      expect(vi.mocked(api.updateServerPatch).mock.calls.length).toBeGreaterThan(
-        callsBeforeRelease,
-      );
+      expect(vi.mocked(api.updateServerPatch).mock.calls.length).toBeGreaterThan(callsBeforeRelease);
     });
     const lastCall = vi.mocked(api.updateServerPatch).mock.calls.at(-1)?.[1];
     expect(lastCall).toEqual(

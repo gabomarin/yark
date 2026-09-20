@@ -34,16 +34,10 @@ export class InstanceLockManager {
     }
   }
 
-  async withLock<T>(
-    resourceId: string,
-    purpose: string,
-    work: () => Promise<T>,
-  ): Promise<T> {
+  async withLock<T>(resourceId: string, purpose: string, work: () => Promise<T>): Promise<T> {
     if (this.locks.has(resourceId)) {
       const owner = this.locks.get(resourceId) ?? "another job";
-      throw new Error(
-        `Instance already has a running job (${owner}); cannot start ${purpose}`,
-      );
+      throw new Error(`Instance already has a running job (${owner}); cannot start ${purpose}`);
     }
 
     this.locks.set(resourceId, purpose);

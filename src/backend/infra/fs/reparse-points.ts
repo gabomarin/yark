@@ -36,10 +36,7 @@ export function isRegularFileDirent(entry: Dirent): boolean {
 
 function isNotFoundErrno(error: unknown): boolean {
   return (
-    typeof error === "object"
-    && error !== null
-    && "code" in error
-    && (error as NodeJS.ErrnoException).code === "ENOENT"
+    typeof error === "object" && error !== null && "code" in error && (error as NodeJS.ErrnoException).code === "ENOENT"
   );
 }
 
@@ -91,7 +88,10 @@ function normalizeExcludeDirs(excludeDirs: readonly string[] | undefined): strin
     return [];
   }
   return excludeDirs.map((dir) =>
-    dir.replace(/[/\\]+/g, "/").replace(/^\/+|\/+$/g, "").toLowerCase(),
+    dir
+      .replace(/[/\\]+/g, "/")
+      .replace(/^\/+|\/+$/g, "")
+      .toLowerCase(),
   );
 }
 
@@ -100,9 +100,7 @@ function isExcludedRel(relPosix: string, excludes: readonly string[]): boolean {
     return false;
   }
   const rel = relPosix.toLowerCase();
-  return excludes.some(
-    (ex) => rel === ex || rel.startsWith(`${ex}/`),
-  );
+  return excludes.some((ex) => rel === ex || rel.startsWith(`${ex}/`));
 }
 
 /**
@@ -120,9 +118,7 @@ export async function assertPathChainHasNoReparsePoints(
   const label = options.operationLabel ?? "write into this folder";
 
   if (!isPathInsideOrEqualWin(target, root)) {
-    throw new Error(
-      `${label} blocked: destination is outside the approved folder.`,
-    );
+    throw new Error(`${label} blocked: destination is outside the approved folder.`);
   }
 
   if (options.isCancelled?.() === true) {
@@ -189,8 +185,7 @@ export async function assertNoReparsePointAncestors(
   const label = options.operationLabel ?? "write into this folder";
   const maxAncestors = options.maxAncestors ?? 8;
   const includeLeaf = options.includeLeaf !== false;
-  const stopAt =
-    options.stopAt !== undefined ? resolve(options.stopAt) : null;
+  const stopAt = options.stopAt !== undefined ? resolve(options.stopAt) : null;
 
   let current = includeLeaf ? dest : dirname(dest);
   if (!includeLeaf && pathsEqualWin(current, dest)) {
@@ -216,8 +211,7 @@ export async function assertNoReparsePointAncestors(
       }
     }
     if (info?.isSymbolicLink() === true) {
-      const rel =
-        pathsEqualWin(current, dest) ? "." : basenameSafe(current);
+      const rel = pathsEqualWin(current, dest) ? "." : basenameSafe(current);
       throwReparseBlocked(label, rel);
     }
 
@@ -255,7 +249,9 @@ export async function isRealDirectory(path: string): Promise<boolean> {
 }
 
 function basenameSafe(pathValue: string): string {
-  const parts = resolve(pathValue).split(/[/\\]/).filter((p) => p.length > 0);
+  const parts = resolve(pathValue)
+    .split(/[/\\]/)
+    .filter((p) => p.length > 0);
   return parts[parts.length - 1] ?? ".";
 }
 
@@ -311,9 +307,7 @@ export async function assertNoReparsePointsUnderRoot(
     for (const entry of entries) {
       visited += 1;
       if (visited > maxEntries) {
-        throw new Error(
-          `Could not finish checking for links or junctions before ${label} (folder tree is too large).`,
-        );
+        throw new Error(`Could not finish checking for links or junctions before ${label} (folder tree is too large).`);
       }
       if (options.isCancelled?.() === true) {
         throwCancelled();

@@ -56,13 +56,8 @@ export function resolveAsaContentCacheDir(steamCmdHome: string): string {
   return join(steamCmdHome, "asa_content_cache");
 }
 
-export function resolveSteamCmdCacheDir(
-  steamCmdHome: string,
-  kind: SteamCmdCacheKind,
-): string {
-  return kind === "depot"
-    ? resolveDepotCacheDir(steamCmdHome)
-    : resolveAsaContentCacheDir(steamCmdHome);
+export function resolveSteamCmdCacheDir(steamCmdHome: string, kind: SteamCmdCacheKind): string {
+  return kind === "depot" ? resolveDepotCacheDir(steamCmdHome) : resolveAsaContentCacheDir(steamCmdHome);
 }
 
 function asaAppManifestPath(installOrCacheDir: string): string {
@@ -102,9 +97,7 @@ export const STEAMCMD_ENGLISH_ARGS = ["-language", "english"] as const;
  * Env overrides so SteamCMD prefers English even when the OS UI is not.
  * Best-effort on Windows (bootstrapper may still follow UI language until -language applies).
  */
-export function steamCmdSpawnEnv(
-  baseEnv: NodeJS.ProcessEnv = process.env,
-): NodeJS.ProcessEnv {
+export function steamCmdSpawnEnv(baseEnv: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
   return {
     ...baseEnv,
     LANG: "en_US.UTF-8",

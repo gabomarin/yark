@@ -1,18 +1,11 @@
 import type { MutableRefObject } from "react";
 import { notifications } from "@mantine/notifications";
-import {
-  isMapModCandidate,
-  suggestMapTokenFromMetadata,
-} from "@shared/asa/map-token-suggest";
+import { isMapModCandidate, suggestMapTokenFromMetadata } from "@shared/asa/map-token-suggest";
 import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
 import type { ModMetadata } from "@shared/types";
 
 interface PersistCacheFn {
-  (
-    nextIds: string[],
-    nextDisabled: string[],
-    nextCache: Record<string, ModMetadata>,
-  ): Promise<void>;
+  (nextIds: string[], nextDisabled: string[], nextCache: Record<string, ModMetadata>): Promise<void>;
 }
 
 /**
@@ -27,10 +20,7 @@ export function useMapModEnableNotify(options: {
 }): {
   notifyMapModIfNeeded: (modId: string, meta: ModMetadata | undefined) => Promise<void>;
 } {
-  const notifyMapModIfNeeded = async (
-    modId: string,
-    meta: ModMetadata | undefined,
-  ) => {
+  const notifyMapModIfNeeded = async (modId: string, meta: ModMetadata | undefined) => {
     let detail = meta;
     if (detail === undefined || !isMapModCandidate(detail)) {
       return;
@@ -43,14 +33,10 @@ export function useMapModEnableNotify(options: {
           detail = result.data;
           // Re-read lists after the await so a concurrent toggle is not reverted.
           // Only enrich cache; do not force-enable this mod if the operator disabled it.
-          await options.persist(
-            options.configuredIdsRef.current,
-            options.disabledIdsRef.current,
-            {
-              ...options.cacheRef.current,
-              [detail.id]: detail,
-            },
-          );
+          await options.persist(options.configuredIdsRef.current, options.disabledIdsRef.current, {
+            ...options.cacheRef.current,
+            [detail.id]: detail,
+          });
         }
       } catch {
         // Still notify; Custom… remains available.
@@ -61,9 +47,7 @@ export function useMapModEnableNotify(options: {
     notifications.show({
       color: "blue",
       title: "Map mod available",
-      message: hasToken
-        ? MAP_NAME_COPY.chooseWhenReady
-        : MAP_NAME_COPY.setUnderCustom,
+      message: hasToken ? MAP_NAME_COPY.chooseWhenReady : MAP_NAME_COPY.setUnderCustom,
     });
   };
 

@@ -74,10 +74,7 @@ describe("inspectServerInstallation", () => {
 
       const buildDir = join(installDir, "Engine", "Build");
       mkdirSync(buildDir, { recursive: true });
-      writeFileSync(
-        join(buildDir, "Build.version"),
-        '{"BuildVersion":"57.20","Changelist":123456}',
-      );
+      writeFileSync(join(buildDir, "Build.version"), '{"BuildVersion":"57.20","Changelist":123456}');
 
       const info = inspectServerInstallation("srv-3b", installDir);
       expect(info.installed).toBe(true);
@@ -286,10 +283,7 @@ describe("inspectServerInstallation", () => {
 
       mkdirSync(join(installDir, "steamapps"), { recursive: true });
       const manifestPath = join(installDir, "steamapps", "appmanifest_2430930.acf");
-      writeFileSync(
-        manifestPath,
-        '"AppState"\n{\n  "appid" "2430930"\n  "buildid" "250"\n  "installdir" "asa"\n}',
-      );
+      writeFileSync(manifestPath, '"AppState"\n{\n  "appid" "2430930"\n  "buildid" "250"\n  "installdir" "asa"\n}');
       const newer = Date.now();
       utimesSync(manifestPath, newer / 1000, newer / 1000);
 
@@ -313,10 +307,7 @@ describe("inspectServerInstallation", () => {
 
       const logsDir = join(installDir, "ShooterGame", "Saved", "Logs");
       mkdirSync(logsDir, { recursive: true });
-      writeFileSync(
-        join(logsDir, "ShooterGame.log"),
-        "[2026.07.23-12.45.00] Startup\nARK Version: 58.31\nReady",
-      );
+      writeFileSync(join(logsDir, "ShooterGame.log"), "[2026.07.23-12.45.00] Startup\nARK Version: 58.31\nReady");
 
       const info = inspectServerInstallation("srv-8", installDir, {
         allowLogVersionProbe: true,
@@ -338,10 +329,7 @@ describe("inspectServerInstallation", () => {
       const logsDir = join(installDir, "ShooterGame", "Saved", "Logs");
       mkdirSync(logsDir, { recursive: true });
       const prefix = "x".repeat(400 * 1024);
-      writeFileSync(
-        join(logsDir, "ShooterGame.log"),
-        `${prefix}\nARK Version: 59.01\n`,
-      );
+      writeFileSync(join(logsDir, "ShooterGame.log"), `${prefix}\nARK Version: 59.01\n`);
 
       const info = inspectServerInstallation("srv-8-tail", installDir, {
         bypassCache: true,
@@ -447,11 +435,7 @@ describe("inspectServerInstallation", () => {
       const syncInfo = inspectServerInstallation("srv-foreign-sync", installDir, {
         bypassCache: true,
       });
-      const asyncInfo = await inspectServerInstallationAsync(
-        "srv-foreign-async",
-        installDir,
-        { bypassCache: true },
-      );
+      const asyncInfo = await inspectServerInstallationAsync("srv-foreign-async", installDir, { bypassCache: true });
       expect(asyncInfo.health).toBe("suspicious");
       expect(asyncInfo.reasonCodes).toEqual(syncInfo.reasonCodes);
     } finally {
@@ -495,8 +479,6 @@ describe("parseOfficialServerStatus", () => {
         'ARK Official Server Network Status: <RichColor Color="1, 0, 0, 1">Offline (v92.21)</>',
       ),
     ).toEqual({ version: "92.21", networkStatus: "offline" });
-    expect(
-      extractOfficialVersionFromStatusText("ARK Official Server Network Status: Offline"),
-    ).toBeNull();
+    expect(extractOfficialVersionFromStatusText("ARK Official Server Network Status: Offline")).toBeNull();
   });
 });

@@ -48,15 +48,8 @@ export function dangerConfirmBody(children: ReactNode): ReactNode {
  *   `handleCloseModal`); Cancel also fires `onCancel` first. Use `onClose`
  *   when cleanup must run on ESC, not only on Cancel.
  */
-export function openDangerConfirmModal(
-  input: OpenDangerConfirmModalInput,
-): string {
-  const {
-    confirmLabel,
-    cancelLabel = DANGER_CONFIRM_CANCEL_LABEL,
-    confirmProps,
-    ...rest
-  } = input;
+export function openDangerConfirmModal(input: OpenDangerConfirmModalInput): string {
+  const { confirmLabel, cancelLabel = DANGER_CONFIRM_CANCEL_LABEL, confirmProps, ...rest } = input;
   return modals.openConfirmModal({
     ...rest,
     labels: { confirm: confirmLabel, cancel: cancelLabel },

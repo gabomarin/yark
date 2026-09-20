@@ -24,9 +24,7 @@ function queueKindForJob(status: CriticalJobSummary["status"]): ServerFilesQueue
 }
 
 /** Latest install/update/verify job per server (active wins over paused over queued). */
-export function filesQueueStateByServerId(
-  jobs: CriticalJobSummary[] | undefined,
-): Map<string, ServerFilesQueueState> {
+export function filesQueueStateByServerId(jobs: CriticalJobSummary[] | undefined): Map<string, ServerFilesQueueState> {
   const map = new Map<string, ServerFilesQueueState>();
   for (const job of jobs ?? []) {
     if (!FILES_QUEUE_OPERATIONS.has(job.operation)) continue;
@@ -41,12 +39,7 @@ export function filesQueueStateByServerId(
       kind,
       jobId: job.id,
       operation: job.operation,
-      label:
-        kind === "queued"
-          ? `Queued · ${title}`
-          : kind === "paused"
-            ? `Paused · ${title}`
-            : title,
+      label: kind === "queued" ? `Queued · ${title}` : kind === "paused" ? `Paused · ${title}` : title,
     });
   }
   return map;

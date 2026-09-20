@@ -105,10 +105,7 @@ async function run() {
     console.log(JSON.stringify({ size: "900", ...narrow }));
     assert.equal(narrow.found, true, "900: table found");
     assert.equal(narrow.overlap, false, "900: no overlap");
-    assert.ok(
-      narrow.canScrollX || narrow.clientWidth >= 720,
-      "900: scroll X when wrap under 720",
-    );
+    assert.ok(narrow.canScrollX || narrow.clientWidth >= 720, "900: scroll X when wrap under 720");
     if (narrow.canScrollX) {
       await page.evaluate(() => {
         const body = document.querySelector("[data-ini-settings-scroll]");

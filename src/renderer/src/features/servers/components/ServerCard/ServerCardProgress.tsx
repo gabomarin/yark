@@ -29,13 +29,7 @@ function ProgressLabel({
       aria-label={`${shortProgressLabel} – open Downloads`}
       onClick={onOpenDownloads}
     >
-      <Text
-        span
-        size="sm"
-        fw={500}
-        c="var(--mantine-color-blue-light-color)"
-        className={classes.progressCtaLabel}
-      >
+      <Text span size="sm" fw={500} c="var(--mantine-color-blue-light-color)" className={classes.progressCtaLabel}>
         {shortProgressLabel}
       </Text>
     </UnstyledButton>
@@ -50,12 +44,9 @@ export function ServerCardProgress({
   showProgressBar = true,
   onOpenDownloads,
 }: Props): ReactElement {
-  const label = (
-    <ProgressLabel shortProgressLabel={shortProgressLabel} onOpenDownloads={onOpenDownloads} />
-  );
+  const label = <ProgressLabel shortProgressLabel={shortProgressLabel} onOpenDownloads={onOpenDownloads} />;
   const showByteLine =
-    byteProgressLabel !== null
-    && !byteProgressLineIsRedundant(shortProgressLabel, byteProgressLabel);
+    byteProgressLabel !== null && !byteProgressLineIsRedundant(shortProgressLabel, byteProgressLabel);
 
   if (!showProgressBar) {
     return (

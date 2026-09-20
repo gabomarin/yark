@@ -8,10 +8,7 @@ import type { MoveInstallProgress } from "@shared/types";
 import type { ProcessManager } from "../../infra/process/process-manager";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
-import {
-  assertSafeInstallDirForWipe,
-  installDirKey,
-} from "./install-dir-safety";
+import { assertSafeInstallDirForWipe, installDirKey } from "./install-dir-safety";
 import type { MoveInstallRegistry } from "./move-install-registry";
 
 async function pathExists(target: string): Promise<boolean> {
@@ -42,10 +39,7 @@ export class MoveInstallCleanup {
    * Requires a main-process-recorded prior path for this server (#215) and that
    * the profile no longer reference that path.
    */
-  async cleanupOldSource(
-    serverId: string,
-    oldSourceDirRaw: string,
-  ): Promise<void> {
+  async cleanupOldSource(serverId: string, oldSourceDirRaw: string): Promise<void> {
     const profile = this.host.repo.get(serverId);
     if (profile === null) {
       throw new Error("Server does not exist");
@@ -54,9 +48,7 @@ export class MoveInstallCleanup {
       throw new Error("Stop the server before cleaning up the old installation");
     }
 
-    const requestedDir = assertSafeInstallDirForWipe(
-      normalizeWindowsPath(oldSourceDirRaw),
-    );
+    const requestedDir = assertSafeInstallDirForWipe(normalizeWindowsPath(oldSourceDirRaw));
     const recordedDir = await this.host.registry.getPendingCleanup(serverId);
     if (recordedDir === null) {
       throw new Error(
@@ -64,9 +56,7 @@ export class MoveInstallCleanup {
       );
     }
     if (installDirKey(recordedDir) !== installDirKey(requestedDir)) {
-      throw new Error(
-        "Cleanup path does not match the previous installation recorded for this server.",
-      );
+      throw new Error("Cleanup path does not match the previous installation recorded for this server.");
     }
     // Wipe only the main-recorded path (renderer value is for equality only).
     const oldSourceDir = recordedDir;
@@ -104,8 +94,7 @@ export class MoveInstallCleanup {
           what: "Cleanup of the previous install folder failed.",
           cause: message,
           location: oldSourceDir,
-          suggestion:
-            "Confirm no other process is using the folder, then retry cleanup.",
+          suggestion: "Confirm no other process is using the folder, then retry cleanup.",
         },
       );
       this.host.emitProgress({
@@ -146,26 +135,16 @@ export class MoveInstallCleanup {
       throw new Error("Server does not exist");
     }
 
-    const oldSourceDir = assertSafeInstallDirForWipe(
-      normalizeWindowsPath(oldSourceDirRaw),
-    );
+    const oldSourceDir = assertSafeInstallDirForWipe(normalizeWindowsPath(oldSourceDirRaw));
     if (installDirKey(profile.installDir) === installDirKey(oldSourceDir)) {
-      throw new Error(
-        "Cannot delete the old path: the profile still points at it. Finish Move installation first.",
-      );
+      throw new Error("Cannot delete the old path: the profile still points at it. Finish Move installation first.");
     }
 
     const shared = this.host.repo
       .list()
-      .filter(
-        (item) =>
-          item.id !== serverId
-          && installDirKey(item.installDir) === installDirKey(oldSourceDir),
-      );
+      .filter((item) => item.id !== serverId && installDirKey(item.installDir) === installDirKey(oldSourceDir));
     if (shared.length > 0) {
-      throw new Error(
-        `Cannot delete "${oldSourceDir}": still used by ${shared.map((s) => s.name).join(", ")}.`,
-      );
+      throw new Error(`Cannot delete "${oldSourceDir}": still used by ${shared.map((s) => s.name).join(", ")}.`);
     }
 
     if (!(await pathExists(oldSourceDir))) {

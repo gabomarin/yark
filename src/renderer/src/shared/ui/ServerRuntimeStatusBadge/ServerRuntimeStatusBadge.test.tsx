@@ -12,9 +12,7 @@ describe("ServerRuntimeStatusBadge", () => {
   it("renders the status label by default", () => {
     renderBadge(<ServerRuntimeStatusBadge status="running" />);
     expect(screen.getByText("Running")).toBeInTheDocument();
-    expect(screen.getByRole("status", { name: "Running" })).toHaveAttribute(
-      "data-runtime-status",
-    );
+    expect(screen.getByRole("status", { name: "Running" })).toHaveAttribute("data-runtime-status");
     expect(document.querySelector(".mantine-Badge-root")).toBeNull();
   });
 
@@ -28,9 +26,6 @@ describe("ServerRuntimeStatusBadge", () => {
 
   it("pulses the dot while starting / stopping", () => {
     renderBadge(<ServerRuntimeStatusBadge status="starting" appearance="dot" />);
-    expect(screen.getByRole("status", { name: "Starting" })).toHaveAttribute(
-      "data-processing",
-      "true",
-    );
+    expect(screen.getByRole("status", { name: "Starting" })).toHaveAttribute("data-processing", "true");
   });
 });

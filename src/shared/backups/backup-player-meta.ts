@@ -25,9 +25,7 @@ export function parsePlayerNameFromNotes(notes: string | null | undefined): stri
   }
 
   // Legacy notes: `[playerKey=…] Player connected: Name (key)`
-  const legacy = notes?.match(
-    /Player (?:connected|disconnected):\s*(.+?)\s*\(/i,
-  );
+  const legacy = notes?.match(/Player (?:connected|disconnected):\s*(.+?)\s*\(/i);
   const legacyName = legacy?.[1]?.trim();
   if (legacyName !== undefined && legacyName.length > 0) {
     return legacyName;
@@ -41,8 +39,7 @@ export function formatPlayerSessionNotes(
   playerName: string | null,
 ): string {
   const label = event === "connect" ? "Player connected" : "Player disconnected";
-  const trimmedName =
-    playerName !== null && playerName.trim().length > 0 ? playerName.trim() : null;
+  const trimmedName = playerName !== null && playerName.trim().length > 0 ? playerName.trim() : null;
   const nameTag = trimmedName !== null ? `[playerName=${trimmedName}] ` : "";
   const namePart = trimmedName !== null ? `${trimmedName} ` : "";
   return `[playerKey=${playerKey}] ${nameTag}${label}: ${namePart}(${playerKey})`;

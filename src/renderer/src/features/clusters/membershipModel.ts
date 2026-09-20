@@ -62,9 +62,7 @@ export function listAddCandidates(
     });
 }
 
-export function removeIneligibilityReason(
-  runtime: ServerProcessRuntime,
-): string | null {
+export function removeIneligibilityReason(runtime: ServerProcessRuntime): string | null {
   return clusterProcessBusyReason(runtime);
 }
 
@@ -86,10 +84,7 @@ export function listRemoveCandidates(
     });
 }
 
-export function getJoinPortError(
-  currentMembers: ServerProfile[],
-  joining: ServerProfile[],
-): string | null {
+export function getJoinPortError(currentMembers: ServerProfile[], joining: ServerProfile[]): string | null {
   if (joining.length === 0) return null;
   const conflicts = findPortConflicts([...currentMembers, ...joining]);
   if (conflicts.length === 0) return null;
@@ -97,13 +92,9 @@ export function getJoinPortError(
   return `${first.serverA} and ${first.serverB} both use ${first.kind} port ${first.port}. Change ports before adding.`;
 }
 
-export function modsMayDiverge(
-  currentMembers: ServerProfile[],
-  joining: ServerProfile[],
-): boolean {
+export function modsMayDiverge(currentMembers: ServerProfile[], joining: ServerProfile[]): boolean {
   if (currentMembers.length === 0 || joining.length === 0) return false;
-  const signature = (server: ServerProfile): string =>
-    [...server.mods].map(String).sort().join(",");
+  const signature = (server: ServerProfile): string => [...server.mods].map(String).sort().join(",");
   const baseline = signature(currentMembers[0]!);
   for (const member of currentMembers.slice(1)) {
     if (signature(member) !== baseline) return true;
@@ -119,9 +110,6 @@ export function buildLeaveClusterInput(server: ServerProfile): ServerProfileInpu
   };
 }
 
-export function remainingMemberCountAfterRemove(
-  memberCount: number,
-  removeCount: number,
-): number {
+export function remainingMemberCountAfterRemove(memberCount: number, removeCount: number): number {
   return Math.max(0, memberCount - removeCount);
 }

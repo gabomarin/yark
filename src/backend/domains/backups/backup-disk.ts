@@ -56,9 +56,7 @@ export async function ensureParentDir(filePath: string): Promise<void> {
       await mkdir(dir);
     } catch (err) {
       const code =
-        err !== null && typeof err === "object" && "code" in err
-          ? String((err as { code: unknown }).code)
-          : "";
+        err !== null && typeof err === "object" && "code" in err ? String((err as { code: unknown }).code) : "";
       if ((code === "EEXIST" || code === "EPERM") && existsSync(dir)) {
         continue;
       }
@@ -76,11 +74,7 @@ export function isBackupDestinationReachable(rootPath: string): boolean {
 
 export async function readVolumeSpace(anyPathOnVolume: string): Promise<VolumeSpace | null> {
   const volumePath = volumeRootForPath(anyPathOnVolume);
-  const probe = existsSync(anyPathOnVolume)
-    ? anyPathOnVolume
-    : existsSync(volumePath)
-      ? volumePath
-      : null;
+  const probe = existsSync(anyPathOnVolume) ? anyPathOnVolume : existsSync(volumePath) ? volumePath : null;
   if (probe === null) return null;
   try {
     const stats = await statfs(probe);

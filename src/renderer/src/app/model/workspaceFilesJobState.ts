@@ -9,9 +9,7 @@ export interface WorkspaceFilesJobState {
   filesJobLabel: string | null;
 }
 
-function liveFilesJobLabel(
-  steamCmdStatus: SteamCmdStatus,
-): string {
+function liveFilesJobLabel(steamCmdStatus: SteamCmdStatus): string {
   if (steamCmdStatus.operation === "update") return "Updating server files";
   if (steamCmdStatus.operation === "verify-files") return "Verifying server files";
   if (steamCmdStatus.operation === "install-files") return "Installing server files";
@@ -26,8 +24,7 @@ export function resolveWorkspaceFilesJobState(
   steamCmdStatus: SteamCmdStatus | null,
 ): WorkspaceFilesJobState {
   const queued = filesQueueByServerId.get(serverId);
-  const liveOnServer =
-    steamCmdBusy && steamCmdStatus?.serverId === serverId;
+  const liveOnServer = steamCmdBusy && steamCmdStatus?.serverId === serverId;
 
   let filesJobOperation: WorkspaceFilesJobState["filesJobOperation"] = null;
   if (queued !== undefined && isFilesJobOperation(queued.operation)) {
@@ -36,9 +33,7 @@ export function resolveWorkspaceFilesJobState(
     filesJobOperation = steamCmdStatus.operation;
   }
 
-  const filesJobQueueKind =
-    queued?.kind
-    ?? (liveOnServer ? "active" : null);
+  const filesJobQueueKind = queued?.kind ?? (liveOnServer ? "active" : null);
 
   let filesJobLabel: string | null = null;
   if (queued?.kind === "queued") {

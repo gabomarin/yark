@@ -1,9 +1,6 @@
 import type { ReactElement } from "react";
 import { Menu } from "@mantine/core";
-import {
-  normalizeRowActionEntries,
-  type RowActionEntry,
-} from "./rowActionModel";
+import { normalizeRowActionEntries, type RowActionEntry } from "./rowActionModel";
 
 interface Props {
   entries: readonly RowActionEntry[];

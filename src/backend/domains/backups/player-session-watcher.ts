@@ -46,10 +46,7 @@ export class PlayerSessionWatcher extends EventEmitter {
   private readonly profileScanSeeded = new Set<string>();
   private readonly recentSessionBackupAt = new Map<string, number>();
   private readonly rconFailStreak = new Map<string, number>();
-  private readonly lastPlayersPush = new Map<
-    string,
-    { error: string | null; fingerprint: string }
-  >();
+  private readonly lastPlayersPush = new Map<string, { error: string | null; fingerprint: string }>();
   private listPlayersExecutor: ListPlayersExecutor | null = null;
 
   constructor(
@@ -111,10 +108,10 @@ export class PlayerSessionWatcher extends EventEmitter {
 
   private readonly onProcessStatus = (info: ServerRuntimeInfo): void => {
     if (
-      info.status === "running"
-      || info.status === "stopping"
-      || info.status === "stopped"
-      || info.status === "error"
+      info.status === "running" ||
+      info.status === "stopping" ||
+      info.status === "stopped" ||
+      info.status === "error"
     ) {
       void this.tick();
     }
@@ -139,14 +136,8 @@ export class PlayerSessionWatcher extends EventEmitter {
     }
   }
 
-  private emitPlayersUpdated(
-    serverId: string,
-    players: ListedPlayer[],
-    error: string | null,
-  ): void {
-    const fingerprint = players
-      .map((player) => `${player.key}\0${player.name ?? ""}`)
-      .join("\n");
+  private emitPlayersUpdated(serverId: string, players: ListedPlayer[], error: string | null): void {
+    const fingerprint = players.map((player) => `${player.key}\0${player.name ?? ""}`).join("\n");
     const prior = this.lastPlayersPush.get(serverId);
     if (prior !== undefined && prior.error === error && prior.fingerprint === fingerprint) {
       return;
@@ -166,22 +157,17 @@ export class PlayerSessionWatcher extends EventEmitter {
       return this.listPlayersExecutor(server.id);
     }
     const runtime = this.processes.applyRuntimePorts(server);
-    return rconExec(
-      RCON_HOST,
-      runtime.rconPort,
-      runtime.adminPassword,
-      "ListPlayers",
-    );
+    return rconExec(RCON_HOST, runtime.rconPort, runtime.adminPassword, "ListPlayers");
   }
 
   private async tickServer(server: ServerProfile): Promise<void> {
     const status = this.processes.getStatus(server.id).status;
     if (status !== "running") {
       const hadTrackedSession =
-        this.onlineByServer.has(server.id)
-        || this.profileMtimes.has(server.id)
-        || this.profileScanSeeded.has(server.id)
-        || this.rconFailStreak.has(server.id);
+        this.onlineByServer.has(server.id) ||
+        this.profileMtimes.has(server.id) ||
+        this.profileScanSeeded.has(server.id) ||
+        this.rconFailStreak.has(server.id);
       await this.flushOnlineAsDisconnect(server.id);
       this.onlineByServer.delete(server.id);
       this.profileMtimes.delete(server.id);
@@ -206,8 +192,7 @@ export class PlayerSessionWatcher extends EventEmitter {
     } catch (error) {
       const streak = (this.rconFailStreak.get(server.id) ?? 0) + 1;
       this.rconFailStreak.set(server.id, streak);
-      const message =
-        error instanceof Error ? error.message : String(error);
+      const message = error instanceof Error ? error.message : String(error);
       // Keep previous online set; log occasionally so silent RCON death is visible.
       if (streak === 1 || streak % 6 === 0) {
         this.servers.addEvent(
@@ -217,11 +202,7 @@ export class PlayerSessionWatcher extends EventEmitter {
           `ListPlayers RCON failed (${streak}x); player session backups may lag: ${message}`,
         );
       }
-      this.emitPlayersUpdated(
-        server.id,
-        this.getOnlinePlayers(server.id),
-        message,
-      );
+      this.emitPlayersUpdated(server.id, this.getOnlinePlayers(server.id), message);
     }
 
     if (listed !== null) {
@@ -317,12 +298,7 @@ export class PlayerSessionWatcher extends EventEmitter {
     this.recentSessionBackupAt.set(dedupeKey, Date.now());
 
     try {
-      const record = await this.backups.createPlayerSessionBackup(
-        serverId,
-        event,
-        player.key,
-        player.name,
-      );
+      const record = await this.backups.createPlayerSessionBackup(serverId, event, player.key, player.name);
       // Empty (no profile on disk) — allow a later retry once the file appears.
       if (record === null) {
         this.recentSessionBackupAt.delete(dedupeKey);

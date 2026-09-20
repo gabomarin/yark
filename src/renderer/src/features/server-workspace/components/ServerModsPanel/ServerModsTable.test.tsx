@@ -69,9 +69,7 @@ describe("ServerModsTable", () => {
     expect(row).not.toBeNull();
     fireEvent.contextMenu(row!);
 
-    await user.click(
-      await screen.findByRole("menuitem", { name: /Remove Alpha Mod/i }),
-    );
+    await user.click(await screen.findByRole("menuitem", { name: /Remove Alpha Mod/i }));
     expect(onRemove).not.toHaveBeenCalled();
 
     await user.click(await screen.findByRole("button", { name: "Remove mod" }));
@@ -96,26 +94,16 @@ describe("ServerModsTable", () => {
       </AppProviders>,
     );
 
-    expect(
-      screen.getByRole("button", { name: "Reorder Alpha Mod" }),
-    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Reorder Alpha Mod" })).toBeTruthy();
 
     const modHeader = screen.getByText("Mod", { selector: "th, th *" });
     await user.click(modHeader.closest("th") ?? modHeader);
-    expect(
-      await screen.findByRole("button", { name: "Clear sort" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Reorder unavailable for Alpha Mod" }),
-    ).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "Clear sort" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Reorder unavailable for Alpha Mod" })).toBeTruthy();
 
     await user.click(screen.getByRole("button", { name: "Clear sort" }));
-    expect(
-      screen.queryByRole("button", { name: "Clear sort" }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Reorder Alpha Mod" }),
-    ).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Clear sort" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Reorder Alpha Mod" })).toBeTruthy();
   });
 
   it("disables drag while a list mutation busy key is set", () => {
@@ -135,12 +123,8 @@ describe("ServerModsTable", () => {
       </AppProviders>,
     );
 
-    expect(
-      screen.getByRole("button", { name: "Reorder unavailable for Alpha Mod" }),
-    ).toBeTruthy();
-    expect(
-      screen.getByRole("switch", { name: "Disable Alpha Mod" }),
-    ).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Reorder unavailable for Alpha Mod" })).toBeTruthy();
+    expect(screen.getByRole("switch", { name: "Disable Alpha Mod" })).toBeDisabled();
   });
 
   it("mutes disabled inventory rows instead of a Status badge (#226)", () => {

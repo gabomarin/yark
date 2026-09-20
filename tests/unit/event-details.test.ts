@@ -64,28 +64,23 @@ describe("resolveEventDetails", () => {
   });
 
   it("describes installation health degradation", () => {
-    const resolved = resolveEventDetails(
-      base({ type: "installation_health_degraded", severity: "warning" }),
-    );
+    const resolved = resolveEventDetails(base({ type: "installation_health_degraded", severity: "warning" }));
     expect(resolved.what).toMatch(/install path/i);
     expect(resolved.suggestion).toMatch(/Check Servers Health/i);
   });
 
   it("describes move installation outcomes", () => {
-    expect(
-      resolveEventDetails(base({ type: "install_move_started", severity: "info" })).what,
-    ).toMatch(/Move installation/i);
-    expect(
-      resolveEventDetails(base({ type: "install_move_completed", severity: "info" }))
-        .suggestion,
-    ).toMatch(/previous install folder is removed/i);
-    expect(
-      resolveEventDetails(base({ type: "install_move_failed", severity: "error" }))
-        .suggestion,
-    ).toMatch(/original install path remains authoritative/i);
-    expect(
-      resolveEventDetails(base({ type: "install_move_cancelled", severity: "warning" }))
-        .what,
-    ).toMatch(/cancelled/i);
+    expect(resolveEventDetails(base({ type: "install_move_started", severity: "info" })).what).toMatch(
+      /Move installation/i,
+    );
+    expect(resolveEventDetails(base({ type: "install_move_completed", severity: "info" })).suggestion).toMatch(
+      /previous install folder is removed/i,
+    );
+    expect(resolveEventDetails(base({ type: "install_move_failed", severity: "error" })).suggestion).toMatch(
+      /original install path remains authoritative/i,
+    );
+    expect(resolveEventDetails(base({ type: "install_move_cancelled", severity: "warning" })).what).toMatch(
+      /cancelled/i,
+    );
   });
 });

@@ -2,10 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { DatabaseSync } from "node:sqlite";
 import { openDatabase } from "@backend/infra/db/database";
 import { backfillMaxPlayersFromLegacyLaunchArgs } from "@backend/infra/db/backfill-max-players";
-import {
-  coerceMapModId,
-  ServerRepository,
-} from "@backend/infra/db/server-repository";
+import { coerceMapModId, ServerRepository } from "@backend/infra/db/server-repository";
 import type { ServerProfileInput } from "@shared/types";
 
 function input(overrides: Partial<ServerProfileInput> = {}): ServerProfileInput {
@@ -115,8 +112,7 @@ describe("ServerRepository", () => {
             authors: ["A"],
             downloadCount: 1,
             dateModified: "2026-01-01T00:00:00.000Z",
-            curseforgeUrl:
-              "https://www.curseforge.com/ark-survival-ascended/mods/demo",
+            curseforgeUrl: "https://www.curseforge.com/ark-survival-ascended/mods/demo",
             slug: "demo",
           },
         },
@@ -127,18 +123,10 @@ describe("ServerRepository", () => {
   });
 
   it("lists profiles sorted by created_at oldest first, tie-break id", () => {
-    const older = repo.create(
-      input({ name: "Zeta", gamePort: 7787, queryPort: 27025, rconPort: 27030 }),
-    );
+    const older = repo.create(input({ name: "Zeta", gamePort: 7787, queryPort: 27025, rconPort: 27030 }));
     const newer = repo.create(input({ name: "Alpha" }));
-    db.prepare("UPDATE servers SET created_at = ? WHERE id = ?").run(
-      "2020-01-01T00:00:00.000Z",
-      older.id,
-    );
-    db.prepare("UPDATE servers SET created_at = ? WHERE id = ?").run(
-      "2021-01-01T00:00:00.000Z",
-      newer.id,
-    );
+    db.prepare("UPDATE servers SET created_at = ? WHERE id = ?").run("2020-01-01T00:00:00.000Z", older.id);
+    db.prepare("UPDATE servers SET created_at = ? WHERE id = ?").run("2021-01-01T00:00:00.000Z", newer.id);
     const ids = repo.list().map((p) => p.id);
     expect(ids).toEqual([older.id, newer.id]);
   });
@@ -163,9 +151,7 @@ describe("ServerRepository", () => {
 
   it("rejects duplicate names via UNIQUE constraint", () => {
     repo.create(input());
-    expect(() =>
-      repo.create(input({ gamePort: 7787, queryPort: 27025, rconPort: 27030 })),
-    ).toThrow();
+    expect(() => repo.create(input({ gamePort: 7787, queryPort: 27025, rconPort: 27030 }))).toThrow();
   });
 
   it("records and retrieves recent events in descending order", () => {
@@ -207,9 +193,7 @@ describe("ServerRepository", () => {
 
   it("promotes leftover Launch/extra WinLiveMaxPlayers into max_players", () => {
     const created = repo.create(input({ extraArgs: ["-NoBattlEye"], maxPlayers: 70 }));
-    db.prepare(
-      "UPDATE servers SET extra_args = ?, structured_launch_args = ? WHERE id = ?",
-    ).run(
+    db.prepare("UPDATE servers SET extra_args = ?, structured_launch_args = ? WHERE id = ?").run(
       JSON.stringify(["-NoBattlEye", "-WinLiveMaxPlayers=40"]),
       JSON.stringify({
         "winlivemaxplayers-integer": { enabled: true, value: "20" },
@@ -255,12 +239,8 @@ describe("ServerRepository", () => {
 
   it("fails closed when leftover Launch JSON is corrupt", () => {
     const created = repo.create(input({ extraArgs: ["-NoBattlEye"], maxPlayers: 70 }));
-    db.prepare("UPDATE servers SET extra_args = ? WHERE id = ?").run(
-      "[-WinLiveMaxPlayers=40",
-      created.id,
-    );
+    db.prepare("UPDATE servers SET extra_args = ? WHERE id = ?").run("[-WinLiveMaxPlayers=40", created.id);
 
     expect(() => backfillMaxPlayersFromLegacyLaunchArgs(db)).toThrow(/invalid JSON/i);
   });
 });
-

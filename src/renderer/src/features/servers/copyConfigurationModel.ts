@@ -3,12 +3,7 @@ import {
   type ConfigTransferIniFileSelection,
   type ConfigTransferSelection,
 } from "@shared/ini/config-transfer";
-import type {
-  ConfigTransferIniCategoryInfo,
-  ServerProfile,
-  ServerRuntimeInfo,
-  ServerStatus,
-} from "@shared/types";
+import type { ConfigTransferIniCategoryInfo, ServerProfile, ServerRuntimeInfo, ServerStatus } from "@shared/types";
 
 export type CopyConfigurationStep = 1 | 2 | 3 | 4;
 
@@ -21,14 +16,12 @@ export const REPLACE_STRATEGY_TOOLTIP =
 export const MODS_MERGE_TOOLTIP =
   "Add source mods the target is missing. Existing target mods stay; disabled flags from either side are kept.";
 
-export const MODS_REPLACE_TOOLTIP =
-  "Replace the target mod list with the source list, including disabled state.";
+export const MODS_REPLACE_TOOLTIP = "Replace the target mod list with the source list, including disabled state.";
 
 export const EXTRA_ARGS_MERGE_TOOLTIP =
   "Merge Extra arguments and structured Launch options from the source. Matching Extra tokens stay; structured flags are overlaid by id.";
 
-export const EXTRA_ARGS_REPLACE_TOOLTIP =
-  "Replace Extra arguments and structured Launch options with the source.";
+export const EXTRA_ARGS_REPLACE_TOOLTIP = "Replace Extra arguments and structured Launch options with the source.";
 
 export function statusLabel(status: ServerStatus): string {
   if (status === "running") return "Running";
@@ -46,12 +39,8 @@ export function iniKeyRefId(section: string, key: string): string {
   return `${section}\u001f${key}`;
 }
 
-function allDescribeKeyIds(
-  categories: ConfigTransferIniCategoryInfo[],
-): string[] {
-  return categories.flatMap((category) =>
-    category.keys.map((row) => iniKeyRefId(row.section, row.key)),
-  );
+function allDescribeKeyIds(categories: ConfigTransferIniCategoryInfo[]): string[] {
+  return categories.flatMap((category) => category.keys.map((row) => iniKeyRefId(row.section, row.key)));
 }
 
 export function selectedIniKeyIds(
@@ -80,10 +69,7 @@ export function selectedIniKeyIds(
 function keysByRawSection(
   categories: ConfigTransferIniCategoryInfo[],
 ): Map<string, Array<{ section: string; key: string; id: string }>> {
-  const bySection = new Map<
-    string,
-    Array<{ section: string; key: string; id: string }>
-  >();
+  const bySection = new Map<string, Array<{ section: string; key: string; id: string }>>();
   const seen = new Set<string>();
   for (const category of categories) {
     for (const row of category.keys) {
@@ -110,14 +96,11 @@ function rebuildIniFileSelection(
   }
 
   const allIds = allDescribeKeyIds(categories);
-  const entireFile =
-    allIds.length > 0 && allIds.every((id) => selected.has(id));
+  const entireFile = allIds.length > 0 && allIds.every((id) => selected.has(id));
 
   if (entireFile) {
     const allKeys = categories.flatMap((c) => c.keys);
-    const uniqueSections = [
-      ...new Set(allKeys.map((row) => row.section)),
-    ];
+    const uniqueSections = [...new Set(allKeys.map((row) => row.section))];
     return {
       enabled: true,
       strategy,
@@ -161,11 +144,7 @@ export function toggleIniEntireFile(
   if (!enabled) {
     return emptyIniFileSelection(file.strategy);
   }
-  return rebuildIniFileSelection(
-    file.strategy,
-    describeCategories,
-    new Set(allDescribeKeyIds(describeCategories)),
-  );
+  return rebuildIniFileSelection(file.strategy, describeCategories, new Set(allDescribeKeyIds(describeCategories)));
 }
 
 export function setIniStrategy(
@@ -222,9 +201,7 @@ export function categorySelectionState(
     return { checked: false, indeterminate: false, selectedCount: 0, total: 0 };
   }
   const selected = selectedIniKeyIds(file, describeCategories);
-  const selectedCount = category.keys.filter((row) =>
-    selected.has(iniKeyRefId(row.section, row.key)),
-  ).length;
+  const selectedCount = category.keys.filter((row) => selected.has(iniKeyRefId(row.section, row.key))).length;
   return {
     checked: selectedCount === category.keys.length,
     indeterminate: selectedCount > 0 && selectedCount < category.keys.length,
@@ -256,9 +233,7 @@ export function selectionHasWork(selection: ConfigTransferSelection): boolean {
         selection.gameUserSettings.sections.length > 0 ||
         selection.gameUserSettings.keys.length > 0)) ||
     (selection.game.enabled &&
-      (selection.game.entireFile ||
-        selection.game.sections.length > 0 ||
-        selection.game.keys.length > 0)) ||
+      (selection.game.entireFile || selection.game.sections.length > 0 || selection.game.keys.length > 0)) ||
     selection.mods.enabled ||
     selection.extraArgs.enabled ||
     selection.backupPolicy ||
@@ -266,18 +241,11 @@ export function selectionHasWork(selection: ConfigTransferSelection): boolean {
   );
 }
 
-export function listCopyTargets(
-  servers: ServerProfile[],
-  sourceId: string,
-): ServerProfile[] {
+export function listCopyTargets(servers: ServerProfile[], sourceId: string): ServerProfile[] {
   return servers.filter((s) => s.id !== sourceId);
 }
 
-export function toggleTargetId(
-  selected: string[],
-  targetId: string,
-  enabled: boolean,
-): string[] {
+export function toggleTargetId(selected: string[], targetId: string, enabled: boolean): string[] {
   if (enabled) {
     if (selected.includes(targetId)) return selected;
     return [...selected, targetId];
@@ -285,11 +253,7 @@ export function toggleTargetId(
   return selected.filter((id) => id !== targetId);
 }
 
-export function toggleAllTargetIds(
-  selected: string[],
-  eligibleIds: string[],
-  enabled: boolean,
-): string[] {
+export function toggleAllTargetIds(selected: string[], eligibleIds: string[], enabled: boolean): string[] {
   if (!enabled) {
     const drop = new Set(eligibleIds);
     return selected.filter((id) => !drop.has(id));
@@ -315,20 +279,12 @@ export function targetListSelectionState(
 }
 
 /** True when every selected target is stopped (or unknown → treated as stopped). */
-export function allTargetsEligible(
-  targetIds: string[],
-  statuses: Map<string, ServerRuntimeInfo>,
-): boolean {
+export function allTargetsEligible(targetIds: string[], statuses: Map<string, ServerRuntimeInfo>): boolean {
   if (targetIds.length === 0) return false;
-  return targetIds.every((id) =>
-    isTargetEligible(runtimeStatus(statuses, id)),
-  );
+  return targetIds.every((id) => isTargetEligible(runtimeStatus(statuses, id)));
 }
 
-export function formatTargetNames(
-  servers: ServerProfile[],
-  targetIds: string[],
-): string {
+export function formatTargetNames(servers: ServerProfile[], targetIds: string[]): string {
   const names = targetIds
     .map((id) => servers.find((s) => s.id === id)?.name)
     .filter((name): name is string => name !== undefined);
@@ -338,10 +294,7 @@ export function formatTargetNames(
   return `${names[0]} + ${names.length - 1} more`;
 }
 
-export function runtimeStatus(
-  statuses: Map<string, ServerRuntimeInfo>,
-  serverId: string,
-): ServerStatus {
+export function runtimeStatus(statuses: Map<string, ServerRuntimeInfo>, serverId: string): ServerStatus {
   return statuses.get(serverId)?.status ?? "stopped";
 }
 

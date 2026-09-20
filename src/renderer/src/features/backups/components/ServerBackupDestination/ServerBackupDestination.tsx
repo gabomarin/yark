@@ -30,24 +30,13 @@ export function ServerBackupDestination(props: Props): ReactElement {
   } = props;
 
   return (
-    <Group
-      align="center"
-      gap={6}
-      wrap="nowrap"
-      className={classes.sharedDestination}
-      data-server-backup-destination
-    >
+    <Group align="center" gap={6} wrap="nowrap" className={classes.sharedDestination} data-server-backup-destination>
       <Group gap={4} wrap="nowrap" align="center">
         <Text size="xs" component="label" htmlFor="backup-destination" className={classes.inlineLabel}>
           Destination
         </Text>
         <Tooltip label="Shared folder for world, player, and INI archives">
-          <ActionIcon
-            variant="subtle"
-            size="xs"
-            aria-label="About shared backup folder"
-            tabIndex={0}
-          >
+          <ActionIcon variant="subtle" size="xs" aria-label="About shared backup folder" tabIndex={0}>
             <Info size={12} />
           </ActionIcon>
         </Tooltip>

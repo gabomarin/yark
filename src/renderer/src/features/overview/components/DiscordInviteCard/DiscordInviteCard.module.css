@@ -7,11 +7,7 @@
 }
 
 .card {
-  border-color: color-mix(
-    in srgb,
-    var(--app-color-accent) 32%,
-    var(--app-color-border)
-  );
+  border-color: color-mix(in srgb, var(--app-color-accent) 32%, var(--app-color-border));
 }
 
 .layout {

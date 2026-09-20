@@ -29,19 +29,13 @@ export interface DesktopShellPreferencesController {
 }
 
 export function useDesktopShellPreferences(): DesktopShellPreferencesController {
-  const [closeWindowToTray, setCloseWindowToTray] = useState(
-    DEFAULT_CLOSE_WINDOW_TO_TRAY,
-  );
-  const [startWithWindows, setStartWithWindows] = useState(
-    DEFAULT_START_WITH_WINDOWS,
-  );
+  const [closeWindowToTray, setCloseWindowToTray] = useState(DEFAULT_CLOSE_WINDOW_TO_TRAY);
+  const [startWithWindows, setStartWithWindows] = useState(DEFAULT_START_WITH_WINDOWS);
   const [trayCloseHintDismissed, setTrayCloseHintDismissed] = useState(false);
   const [osNotifyEnabled, setOsNotifyEnabled] = useState(DEFAULT_OS_NOTIFY_ENABLED);
   const [osNotifyCrash, setOsNotifyCrash] = useState(DEFAULT_OS_NOTIFY_CRASH);
   const [osNotifySteamCmd, setOsNotifySteamCmd] = useState(DEFAULT_OS_NOTIFY_STEAMCMD);
-  const [osNotifyYarkUpdate, setOsNotifyYarkUpdate] = useState(
-    DEFAULT_OS_NOTIFY_YARK_UPDATE,
-  );
+  const [osNotifyYarkUpdate, setOsNotifyYarkUpdate] = useState(DEFAULT_OS_NOTIFY_YARK_UPDATE);
   const [desktopShellReady, setDesktopShellReady] = useState(false);
   const [shellError, setShellError] = useState<string | null>(null);
 
@@ -105,9 +99,7 @@ export function useDesktopShellPreferences(): DesktopShellPreferencesController 
       const result = await window.api.setTrayCloseHintDismissed(dismissed);
       if (!result.ok) {
         setTrayCloseHintDismissed(previous);
-        setShellError(
-          result.error ?? "Could not update tray notification preference",
-        );
+        setShellError(result.error ?? "Could not update tray notification preference");
       }
     })();
   };

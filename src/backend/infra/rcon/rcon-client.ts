@@ -30,10 +30,7 @@ export class RconClient {
   socket: Socket | null = null;
   private buffer = Buffer.alloc(0);
   private nextId = 1;
-  private pending = new Map<
-    number,
-    { resolve: (body: string) => void; reject: (err: Error) => void }
-  >();
+  private pending = new Map<number, { resolve: (body: string) => void; reject: (err: Error) => void }>();
   /** Source RCON is single-flight; overlapping sends corrupt reply matching. */
   private sendChain: Promise<void> = Promise.resolve();
 
@@ -55,9 +52,7 @@ export class RconClient {
           this.logError(`[RconClient] Connection error: ${err.message}`);
           reject(err);
         };
-        socket.setTimeout(this.timeoutMs, () =>
-          onError(new Error("RCON connection timeout")),
-        );
+        socket.setTimeout(this.timeoutMs, () => onError(new Error("RCON connection timeout")));
         socket.once("error", onError);
         socket.connect(this.port, this.host, () => {
           socket.setTimeout(0);
@@ -66,9 +61,7 @@ export class RconClient {
           this.log(`[RconClient] Connected to ${this.host}:${this.port}`);
           socket.on("data", (chunk) => this.onData(chunk));
           socket.on("error", (err) => this.failAll(err));
-          socket.on("close", () =>
-            this.failAll(new Error("RCON connection closed")),
-          );
+          socket.on("close", () => this.failAll(new Error("RCON connection closed")));
           resolve();
         });
       });
@@ -140,11 +133,7 @@ export class RconClient {
     this.failAll(new Error("RCON client closed"));
   }
 
-  private sendPacket(
-    id: number,
-    type: number,
-    body: string,
-  ): Promise<string | null> {
+  private sendPacket(id: number, type: number, body: string): Promise<string | null> {
     return new Promise((resolve, reject) => {
       if (this.socket === null) {
         reject(new Error("RCON not connected"));
@@ -189,9 +178,7 @@ export class RconClient {
     if (this.buffer.length < 4 + size) return null;
     const id = this.buffer.readInt32LE(4);
     const type = this.buffer.readInt32LE(8);
-    const body = this.buffer
-      .subarray(12, 4 + size - 2)
-      .toString("utf8");
+    const body = this.buffer.subarray(12, 4 + size - 2).toString("utf8");
     this.buffer = this.buffer.subarray(4 + size);
     return { id, type, body };
   }
@@ -261,9 +248,7 @@ export async function rconExec(
     return result;
   } catch (err) {
     if (!quiet) {
-      console.error(
-        `[rconExec] Error: ${err instanceof Error ? err.message : String(err)}`,
-      );
+      console.error(`[rconExec] Error: ${err instanceof Error ? err.message : String(err)}`);
     }
     throw err;
   } finally {

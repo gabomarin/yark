@@ -12,10 +12,12 @@ export type RowContextMenuBindings = {
   onContextMenu: MouseEventHandler;
   onKeyDown: KeyboardEventHandler;
   /** Spread onto the row/card when a menu can open. */
-  menuTriggerProps: {
-    tabIndex: 0;
-    "aria-haspopup": "menu";
-  } | Record<string, never>;
+  menuTriggerProps:
+    | {
+        tabIndex: 0;
+        "aria-haspopup": "menu";
+      }
+    | Record<string, never>;
 };
 
 /**
@@ -34,8 +36,7 @@ export function useRowContextMenu(
   useEffect(() => {
     entriesRef.current = entries;
   });
-  const canOpen =
-    !disabled && visibleRowActionItems(normalizeRowActionEntries(entries)).length > 0;
+  const canOpen = !disabled && visibleRowActionItems(normalizeRowActionEntries(entries)).length > 0;
 
   useEffect(() => {
     if (disabled) {
@@ -54,9 +55,7 @@ export function useRowContextMenu(
 
   const openFromKeyboard: KeyboardEventHandler = (event) => {
     if (!canOpen) return;
-    const isContextKey =
-      event.key === "ContextMenu" ||
-      (event.key === "F10" && event.shiftKey);
+    const isContextKey = event.key === "ContextMenu" || (event.key === "F10" && event.shiftKey);
     if (!isContextKey) return;
     event.preventDefault();
     event.stopPropagation();
@@ -67,8 +66,6 @@ export function useRowContextMenu(
   return {
     onContextMenu: openFromPointer,
     onKeyDown: openFromKeyboard,
-    menuTriggerProps: canOpen
-      ? { tabIndex: 0, "aria-haspopup": "menu" as const }
-      : {},
+    menuTriggerProps: canOpen ? { tabIndex: 0, "aria-haspopup": "menu" as const } : {},
   };
 }

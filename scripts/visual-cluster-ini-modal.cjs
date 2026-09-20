@@ -49,10 +49,7 @@ async function measure(page) {
     return {
       footerFound: footer !== null,
       footerVisible:
-        footerRect !== undefined &&
-        footerRect.top >= 0 &&
-        footerRect.bottom <= vh + 1 &&
-        footerRect.height > 20,
+        footerRect !== undefined && footerRect.top >= 0 && footerRect.bottom <= vh + 1 && footerRect.height > 20,
       footerBottom: footerRect?.bottom ?? null,
       shellBottom: shellRect?.bottom ?? null,
       editorHeight: editorRect?.height ?? null,
@@ -86,9 +83,12 @@ async function run() {
       fullPage: false,
     });
 
-    await page.getByRole("radio", { name: "Text" }).click().catch(async () => {
-      await page.locator("[data-ini-editor-nav]").getByText("Text", { exact: true }).click();
-    });
+    await page
+      .getByRole("radio", { name: "Text" })
+      .click()
+      .catch(async () => {
+        await page.locator("[data-ini-editor-nav]").getByText("Text", { exact: true }).click();
+      });
     await page.locator("[data-cluster-ini-raw]").waitFor({ state: "visible", timeout: 10000 });
     await page.waitForTimeout(300);
 

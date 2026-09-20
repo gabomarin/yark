@@ -9,11 +9,7 @@ export const compactSegmentedRootClass = classes.root;
 export const compactLabeledSegmentedRootClass = `${classes.root} ${classes.rootLabeled}`;
 
 /** Icon segment label with tooltip + accessible name (Overview grouping switch pattern). */
-export function compactIconSegmentLabel(
-  tooltip: string,
-  ariaLabel: string,
-  icon: ReactNode,
-): ReactElement {
+export function compactIconSegmentLabel(tooltip: string, ariaLabel: string, icon: ReactNode): ReactElement {
   return (
     <Tooltip label={tooltip} withArrow>
       <span className={classes.icon} aria-label={ariaLabel}>

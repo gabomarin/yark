@@ -5,13 +5,13 @@ YARK server manager uses **Semantic Versioning** (`MAJOR.MINOR.PATCH`) and a
 
 ## Source of truth
 
-| Surface | Where |
-| --- | --- |
-| Package / installer version | `package.json` → `"version"` |
-| UI sidebar (`vX.Y.Z`) | `src/shared/app-version.ts` (imports `package.json`) |
-| electron-builder artifacts | reads `package.json` automatically |
-| Human-readable history | `CHANGELOG.md` (+ curated `src/shared/settings/changelog.ts` for site + in-app What's new) |
-| Project site hero pill / download CTA | `website/src/data/site.ts` (reads root `package.json` `version`) |
+| Surface                               | Where                                                                                      |
+| ------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Package / installer version           | `package.json` → `"version"`                                                               |
+| UI sidebar (`vX.Y.Z`)                 | `src/shared/app-version.ts` (imports `package.json`)                                       |
+| electron-builder artifacts            | reads `package.json` automatically                                                         |
+| Human-readable history                | `CHANGELOG.md` (+ curated `src/shared/settings/changelog.ts` for site + in-app What's new) |
+| Project site hero pill / download CTA | `website/src/data/site.ts` (reads root `package.json` `version`)                           |
 
 Do **not** hardcode a second app version string in React components. Import
 `APP_VERSION` from `@shared/app-version` when the UI needs it. Bumping
@@ -34,9 +34,9 @@ for user-visible feature batches and PATCH for hotfix builds. Promote to
 
 ## Day-to-day vs publish
 
-| Moment | What happens |
-| --- | --- |
-| Feature / fix work | One GitHub issue → one PR into `main`; note user-visible changes under `## [Unreleased]` |
+| Moment               | What happens                                                                              |
+| -------------------- | ----------------------------------------------------------------------------------------- |
+| Feature / fix work   | One GitHub issue → one PR into `main`; note user-visible changes under `## [Unreleased]`  |
 | Publish an installer | Bump SemVer, move Unreleased → `[X.Y.Z]`, tag `vX.Y.Z`, CI builds the Windows NSIS `.exe` |
 
 Do **not** cut a new version/tag on every merge. Group merged tickets into a MINOR
@@ -88,16 +88,16 @@ Workflow: [`.github/workflows/release.yml`](../.github/workflows/release.yml)
   `@electron/fuses` **direct** `devDependency` (`require.resolve` of its CLI
   does not see electron-builder's nested copy).
 
-| Fuse | Packaged value | Why |
-| --- | --- | --- |
-| `runAsNode` | off | Blocks `ELECTRON_RUN_AS_NODE` turning the shipped `.exe` into plain Node (SteamCMD/ASA still use normal `spawn`, not `process.fork`) |
-| `enableCookieEncryption` | on | OS-backed Chromium cookie store encryption |
-| `enableNodeOptionsEnvironmentVariable` | off | Ignores `NODE_OPTIONS` / `NODE_EXTRA_CA_CERTS` injection |
-| `enableNodeCliInspectArguments` | off | Ignores `--inspect` / related main-process debugger flags |
-| `enableEmbeddedAsarIntegrityValidation` | on | Validates `app.asar` against the embedded integrity hash (Electron ≥ 30 on Windows) |
-| `onlyLoadAppFromAsar` | on | Loads app code only from `app.asar` (no unpacked `app/` sideload bypass) |
-| `loadBrowserProcessSpecificV8Snapshot` | off | No custom main-process V8 snapshot |
-| `grantFileProtocolExtraPrivileges` | on | Required while the shell loads the renderer via `loadFile` (`file://`); turn off only after migrating to a custom protocol |
+| Fuse                                    | Packaged value | Why                                                                                                                                  |
+| --------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `runAsNode`                             | off            | Blocks `ELECTRON_RUN_AS_NODE` turning the shipped `.exe` into plain Node (SteamCMD/ASA still use normal `spawn`, not `process.fork`) |
+| `enableCookieEncryption`                | on             | OS-backed Chromium cookie store encryption                                                                                           |
+| `enableNodeOptionsEnvironmentVariable`  | off            | Ignores `NODE_OPTIONS` / `NODE_EXTRA_CA_CERTS` injection                                                                             |
+| `enableNodeCliInspectArguments`         | off            | Ignores `--inspect` / related main-process debugger flags                                                                            |
+| `enableEmbeddedAsarIntegrityValidation` | on             | Validates `app.asar` against the embedded integrity hash (Electron ≥ 30 on Windows)                                                  |
+| `onlyLoadAppFromAsar`                   | on             | Loads app code only from `app.asar` (no unpacked `app/` sideload bypass)                                                             |
+| `loadBrowserProcessSpecificV8Snapshot`  | off            | No custom main-process V8 snapshot                                                                                                   |
+| `grantFileProtocolExtraPrivileges`      | on             | Required while the shell loads the renderer via `loadFile` (`file://`); turn off only after migrating to a custom protocol           |
 
 Unpackaged `npm run dev` / `npm start` still use Electron’s default fuse wire. E2E/visual helpers unset `ELECTRON_RUN_AS_NODE` for those workflows; that env escape is disabled only on packaged binaries.
 
@@ -145,35 +145,42 @@ must pass; a failure blocks the release until fixed.
    - Settings: each category (General, Profiles, SteamCMD, Log files, About).
    - Downloads: queue a SteamCMD job, pause → resume.
    - Keyboard: Ctrl+K Spotlight, Shift+F10 card menu, Escape to dismiss.
-   Record pass/fail per flow; note any regressions vs the previous release.
+     Record pass/fail per flow; note any regressions vs the previous release.
 
 2. **React Doctor** — renderer/backend hygiene (not a merge gate, but a
    pre-release snapshot):
+
    ```
    npx react-doctor@latest --verbose --scope changed
    npx react-doctor@latest design --verbose
    ```
+
    Avoid regressing newly introduced **errors**. Do not mass-fix warnings.
    See [react-doctor.md](react-doctor.md) for baseline and rules turned off.
 
 3. **Static analysis**
+
    ```
    npm run typecheck
    npm run lint
    npm run knip
    ```
+
    All three must be clean. `knip` catches unused files, exports, and deps;
    see [knip.md](knip.md).
 
 4. **Unit / integration tests**
+
    ```
    npm test
    ```
+
    All tests green. On Linux, the ~8 Windows-path tests are expected failures;
    validate via `cmd.exe /c "npm test"` on Windows or in CI.
 
 5. **E2E suite** — run the full matrix appropriate to the changes shipped
    ([e2e-validation.md](e2e-validation.md)):
+
    ```
    npm run build
    npm run e2e:smoke          # empty-fleet overview
@@ -182,6 +189,7 @@ must pass; a failure blocks the release until fixed.
    npm run e2e:install-health  # install-state badges
    npm run e2e:host-port-probe # UDP conflict modal
    ```
+
    Add any **UI-changing** script from the mapping table in `e2e-validation.md`
    (e.g. `e2e:mods`, `e2e:launch-args`, `e2e:clusters-membership`) when the
    release touches those surfaces. All must pass on Windows.

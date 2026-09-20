@@ -44,9 +44,7 @@ export function isAllowedExternalUrl(url: string): boolean {
  * sanitized operator-facing Error (does not echo the raw URL into IPC/toasts).
  * Used by main before `shell.openExternal` (window-open handler + release notes).
  */
-export function requireAllowedExternalUrl(
-  url: string | null | undefined,
-): string {
+export function requireAllowedExternalUrl(url: string | null | undefined): string {
   if (typeof url !== "string") {
     throw new Error("No external URL is available.");
   }

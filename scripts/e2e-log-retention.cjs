@@ -29,11 +29,7 @@ function touchAge(filePath, daysAgo) {
 
 function writeUpdateLog(dir, fileName, exitCode, daysAgo) {
   const fullPath = path.join(dir, fileName);
-  fs.writeFileSync(
-    fullPath,
-    `exitCode=${exitCode}\ndurationMs=12\n--- stdout ---\nseeded for e2e\n`,
-    "utf8",
-  );
+  fs.writeFileSync(fullPath, `exitCode=${exitCode}\ndurationMs=12\n--- stdout ---\nseeded for e2e\n`, "utf8");
   touchAge(fullPath, daysAgo);
 }
 
@@ -57,22 +53,8 @@ function seedRetentionFixtures(userData) {
       `INSERT INTO events (server_id, type, severity, message, created_at, details)
        VALUES (?, ?, ?, ?, ?, ?)`,
     );
-    insert.run(
-      serverId,
-      "server_started",
-      "info",
-      "Old routine start (should be removed)",
-      daysAgoIso(100),
-      null,
-    );
-    insert.run(
-      serverId,
-      "server_stopped",
-      "info",
-      "Recent routine stop (should be kept)",
-      daysAgoIso(5),
-      null,
-    );
+    insert.run(serverId, "server_started", "info", "Old routine start (should be removed)", daysAgoIso(100), null);
+    insert.run(serverId, "server_stopped", "info", "Recent routine stop (should be kept)", daysAgoIso(5), null);
     insert.run(
       serverId,
       "update_failed",
@@ -148,9 +130,11 @@ async function dismissOpenMenus(page) {
 }
 
 async function removeServerIfPresent(page, name) {
-  const card = page.locator(SERVER_CARD, {
-    has: page.getByText(name, { exact: true }),
-  }).first();
+  const card = page
+    .locator(SERVER_CARD, {
+      has: page.getByText(name, { exact: true }),
+    })
+    .first();
   if ((await card.count()) === 0) {
     return;
   }
@@ -256,9 +240,7 @@ async function run() {
   const runId = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
   const serverName = `E2E-LogRet-${runId}`;
   const installDir =
-    process.platform === "win32"
-      ? `C:\\asa-e2e\\log-ret-${runId}`
-      : path.join(os.tmpdir(), `asa-e2e-log-ret-${runId}`);
+    process.platform === "win32" ? `C:\\asa-e2e\\log-ret-${runId}` : path.join(os.tmpdir(), `asa-e2e-log-ret-${runId}`);
   const ports = {
     game: 23000 + Math.floor(Math.random() * 500),
     query: 24000 + Math.floor(Math.random() * 500),
@@ -303,9 +285,7 @@ async function run() {
     app = null;
 
     const seeded = seedRetentionFixtures(userData);
-    console.log(
-      `SEEDED server=${seeded.serverName} id=${seeded.serverId} minRemovable=${seeded.expectedMinRemovable}`,
-    );
+    console.log(`SEEDED server=${seeded.serverName} id=${seeded.serverId} minRemovable=${seeded.expectedMinRemovable}`);
 
     app = await launchApp(projectRoot, userData);
     page = await waitForOverview(app);
@@ -389,14 +369,8 @@ async function run() {
     });
     await removeServerIfPresent(page, serverName);
 
-    const relevantPageErrors = pageErrors.filter(
-      (msg) => !/ResizeObserver|Non-Error promise rejection/i.test(msg),
-    );
-    assert.equal(
-      relevantPageErrors.length,
-      0,
-      `Unexpected page errors: ${relevantPageErrors.join(" | ")}`,
-    );
+    const relevantPageErrors = pageErrors.filter((msg) => !/ResizeObserver|Non-Error promise rejection/i.test(msg));
+    assert.equal(relevantPageErrors.length, 0, `Unexpected page errors: ${relevantPageErrors.join(" | ")}`);
 
     console.log("E2E_LOG_RETENTION_OK");
     console.log(`REMOVED_COUNT=${removeCount}`);

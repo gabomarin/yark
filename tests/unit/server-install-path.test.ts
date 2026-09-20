@@ -30,18 +30,12 @@ describe("server-install-path", () => {
   });
 
   it("nests server name under the chosen base folder", () => {
-    expect(resolveServerInstallDir("C:/ark_servers", "my_server")).toBe(
-      "C:\\ark_servers\\my_server",
-    );
-    expect(resolveServerInstallDir("C:\\ark_servers\\", "My Server")).toBe(
-      "C:\\ark_servers\\My Server",
-    );
+    expect(resolveServerInstallDir("C:/ark_servers", "my_server")).toBe("C:\\ark_servers\\my_server");
+    expect(resolveServerInstallDir("C:\\ark_servers\\", "My Server")).toBe("C:\\ark_servers\\My Server");
   });
 
   it("does not double-nest if the base already ends with the server folder", () => {
-    expect(resolveServerInstallDir("C:\\ark_servers\\my_server", "my_server")).toBe(
-      "C:\\ark_servers\\my_server",
-    );
+    expect(resolveServerInstallDir("C:\\ark_servers\\my_server", "my_server")).toBe("C:\\ark_servers\\my_server");
   });
 
   it("rejects path segments with incompatible characters", () => {
@@ -56,9 +50,7 @@ describe("server-install-path", () => {
   });
 
   it("suggests a sibling folder for clone installs", () => {
-    expect(suggestCloneInstallDir("C:\\ark_servers\\Island", "Island-copy")).toBe(
-      "C:\\ark_servers\\Island-copy",
-    );
+    expect(suggestCloneInstallDir("C:\\ark_servers\\Island", "Island-copy")).toBe("C:\\ark_servers\\Island-copy");
     expect(suggestCloneInstallDir("D:\\ARK", "ARK-copy")).toBe("D:\\ARK-copy");
   });
 
@@ -77,23 +69,15 @@ describe("server-install-path", () => {
     ];
     expect(findInstallDirConflict("C:\\ark\\Scorched", fleet)).toBeNull();
     expect(findInstallDirConflict("C:\\ark\\Island", fleet)?.relation).toBe("same");
-    expect(findInstallDirConflict("C:\\ark\\Island\\Foo", fleet)?.relation).toBe(
-      "inside-other",
-    );
+    expect(findInstallDirConflict("C:\\ark\\Island\\Foo", fleet)?.relation).toBe("inside-other");
     expect(findInstallDirConflict("C:\\ark", fleet)?.relation).toBe("contains-other");
-    expect(
-      findInstallDirConflict("C:\\ark\\Island\\Foo", fleet, "a"),
-    ).toBeNull();
+    expect(findInstallDirConflict("C:\\ark\\Island\\Foo", fleet, "a")).toBeNull();
   });
 
   it("detects dest inside or wrapping the current install (#294)", () => {
     expect(selfNestInstallWarning("C:\\ark\\Island", "C:\\ark\\Ragnarok")).toBeNull();
     expect(selfNestInstallWarning("C:\\ark\\Island", "C:\\ark\\Island")).toBeNull();
-    expect(selfNestInstallWarning("C:\\ark\\Island", "C:\\ark\\Island\\Backup")).toMatch(
-      /inside the current install/i,
-    );
-    expect(selfNestInstallWarning("C:\\ark\\Island", "C:\\ark")).toMatch(
-      /would contain the current install/i,
-    );
+    expect(selfNestInstallWarning("C:\\ark\\Island", "C:\\ark\\Island\\Backup")).toMatch(/inside the current install/i);
+    expect(selfNestInstallWarning("C:\\ark\\Island", "C:\\ark")).toMatch(/would contain the current install/i);
   });
 });

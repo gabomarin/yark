@@ -6,16 +6,8 @@ import {
   type ConfigurationWizardDraft,
   type ProgressionPresetId,
 } from "../../configuration-wizard/configurationWizardModel";
-import {
-  effectiveRateLabel,
-  PresetSelector,
-  PresetValue,
-  WizardStep,
-} from "./ConfigurationWizardParts";
-import {
-  WizardDifficultyControl,
-  type DifficultyChoice,
-} from "./WizardDifficultyControl";
+import { effectiveRateLabel, PresetSelector, PresetValue, WizardStep } from "./ConfigurationWizardParts";
+import { WizardDifficultyControl, type DifficultyChoice } from "./WizardDifficultyControl";
 
 interface Props {
   draft: ConfigurationWizardDraft;
@@ -60,10 +52,7 @@ export function WizardPaceStep(props: Props): ReactElement {
               draft.singlePlayerSettings,
             )}
           />
-          <PresetValue
-            label="Resource respawn"
-            value={`${draft.resourcesRespawnPeriodMultiplier}×`}
-          />
+          <PresetValue label="Resource respawn" value={`${draft.resourcesRespawnPeriodMultiplier}×`} />
         </SimpleGrid>
       </PresetSelector>
       <Text c="dimmed" size="xs">
@@ -71,8 +60,8 @@ export function WizardPaceStep(props: Props): ReactElement {
       </Text>
       {draft.singlePlayerSettings && (
         <Text c="yellow.3" size="xs">
-          Single-player mode also reduces XP requirements, so the final XP effect cannot be expressed
-          as a single multiplier.
+          Single-player mode also reduces XP requirements, so the final XP effect cannot be expressed as a single
+          multiplier.
         </Text>
       )}
       <WizardDifficultyControl

@@ -39,12 +39,7 @@ function resolveHostSteamCmdExe() {
     return path.resolve(override);
   }
   const candidates = [
-    path.join(
-      process.env.APPDATA ?? "",
-      "yark-server-manager",
-      "steamcmd",
-      "steamcmd.exe",
-    ),
+    path.join(process.env.APPDATA ?? "", "yark-server-manager", "steamcmd", "steamcmd.exe"),
     "C:\\steamcmd\\steamcmd.exe",
     "D:\\steamcmd\\steamcmd.exe",
   ];
@@ -61,13 +56,7 @@ function windowsConfigDir(installDir) {
 }
 
 function exePath(installDir) {
-  return path.join(
-    installDir,
-    "ShooterGame",
-    "Binaries",
-    "Win64",
-    "ArkAscendedServer.exe",
-  );
+  return path.join(installDir, "ShooterGame", "Binaries", "Win64", "ArkAscendedServer.exe");
 }
 
 function worldMarkerPath(installDir) {
@@ -228,18 +217,12 @@ async function waitDialogHidden(page, dialog, destDir, timeoutMs, label) {
       return;
     }
     const submit = dialog.getByRole("button", { name: "Clone server" });
-    if (
-      (await submit.count()) > 0 &&
-      (await submit.isVisible()) &&
-      (await cancel.count()) === 0
-    ) {
+    if ((await submit.count()) > 0 && (await submit.isVisible()) && (await cancel.count()) === 0) {
       const snippet = (await dialog.innerText().catch(() => "")).slice(0, 240);
       throw new Error(`${label} clone form returned (copy failed?). ${snippet}`);
     }
     const exe = exePath(destDir);
-    console.log(
-      `${label} dest=${fs.existsSync(destDir) ? 1 : 0} exe=${fs.existsSync(exe) ? 1 : 0}`,
-    );
+    console.log(`${label} dest=${fs.existsSync(destDir) ? 1 : 0} exe=${fs.existsSync(exe) ? 1 : 0}`);
     await page.waitForTimeout(15000);
   }
   throw new Error(`${label} dialog still open after ${timeoutMs}ms`);
@@ -250,14 +233,10 @@ async function run() {
   assert.equal(process.platform, "win32", "Real clone-copy E2E requires Windows");
 
   const steamCmdExe = resolveHostSteamCmdExe();
-  assert.ok(
-    steamCmdExe,
-    "steamcmd.exe not found. Install SteamCMD or set YARK_E2E_STEAMCMD.",
-  );
+  assert.ok(steamCmdExe, "steamcmd.exe not found. Install SteamCMD or set YARK_E2E_STEAMCMD.");
   console.log(`E2E_CLONE_REAL_STEAMCMD=${steamCmdExe}`);
 
-  const { profileDir, serversDir, runId, fixtureName, root } =
-    createE2eFixtureRoots("clone-real");
+  const { profileDir, serversDir, runId, fixtureName, root } = createE2eFixtureRoots("clone-real");
   assertUnderFixtureRoot(path.join(root, "profiles"), profileDir);
   assertUnderFixtureRoot(path.join(root, "servers"), serversDir);
 
@@ -326,11 +305,7 @@ async function run() {
       ]),
       "E2E_CLONE_REAL_INSTALL_PROGRESS",
     );
-    assert.equal(
-      installResult.ok,
-      true,
-      `installServerFiles failed: ${installResult.error ?? "?"}`,
-    );
+    assert.equal(installResult.ok, true, `installServerFiles failed: ${installResult.error ?? "?"}`);
     assert.ok(
       isRealAsaBinary(exePath(sourceInstall)),
       `install finished but binary missing/too small: ${exePath(sourceInstall)}`,
@@ -383,11 +358,7 @@ async function run() {
       false,
       "config-only clone must not copy ArkAscendedServer.exe",
     );
-    assert.equal(
-      fs.existsSync(worldMarkerPath(configCloneDir)),
-      false,
-      "config-only clone must not copy world marker",
-    );
+    assert.equal(fs.existsSync(worldMarkerPath(configCloneDir)), false, "config-only clone must not copy world marker");
     console.log("E2E_CLONE_REAL_CONFIG_OK");
 
     console.log("E2E_CLONE_REAL_COPY_BEGIN");
@@ -404,19 +375,10 @@ async function run() {
     assert.equal(await fullCopy.isChecked(), true);
     const copyStarted = Date.now();
     await fullDialog.getByRole("button", { name: "Clone server" }).click();
-    await waitDialogHidden(
-      page,
-      fullDialog,
-      fullCloneDir,
-      FOLDER_COPY_TIMEOUT_MS,
-      "E2E_CLONE_REAL_COPY_PROGRESS",
-    );
+    await waitDialogHidden(page, fullDialog, fullCloneDir, FOLDER_COPY_TIMEOUT_MS, "E2E_CLONE_REAL_COPY_PROGRESS");
     await waitForCardByName(page, fullCloneName, 30000);
 
-    assert.ok(
-      isRealAsaBinary(exePath(fullCloneDir)),
-      `folder copy missing real exe: ${exePath(fullCloneDir)}`,
-    );
+    assert.ok(isRealAsaBinary(exePath(fullCloneDir)), `folder copy missing real exe: ${exePath(fullCloneDir)}`);
     assert.equal(
       fs.statSync(exePath(fullCloneDir)).size,
       fs.statSync(exePath(sourceInstall)).size,

@@ -79,9 +79,7 @@ export function useMoveDestPreview(options: {
           return;
         }
         setProbe(null);
-        setProbeError(
-          probeFailureMessage(error instanceof Error ? error.message : undefined),
-        );
+        setProbeError(probeFailureMessage(error instanceof Error ? error.message : undefined));
         setProbeSettled(true);
       });
     return () => {
@@ -89,10 +87,7 @@ export function useMoveDestPreview(options: {
     };
   }, [debouncedDest, options.opened, syncIssue]);
 
-  const probePending =
-    dest.length > 0 &&
-    syncIssue === null &&
-    (dest !== debouncedDest || !probeSettled);
+  const probePending = dest.length > 0 && syncIssue === null && (dest !== debouncedDest || !probeSettled);
 
   const destVacant =
     dest.length > 0 &&

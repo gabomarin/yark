@@ -52,18 +52,8 @@ describe("window-state", () => {
   });
 
   it("detects off-screen restored bounds", () => {
-    expect(
-      isWindowStateVisibleOnDisplays(
-        { x: 8000, y: 0, width: 1280, height: 800 },
-        [primary],
-      ),
-    ).toBe(false);
-    expect(
-      isWindowStateVisibleOnDisplays(
-        { x: 100, y: 100, width: 1280, height: 800 },
-        [primary],
-      ),
-    ).toBe(true);
+    expect(isWindowStateVisibleOnDisplays({ x: 8000, y: 0, width: 1280, height: 800 }, [primary])).toBe(false);
+    expect(isWindowStateVisibleOnDisplays({ x: 100, y: 100, width: 1280, height: 800 }, [primary])).toBe(true);
   });
 
   it("maximizes on first launch or invalid state", () => {
@@ -73,18 +63,15 @@ describe("window-state", () => {
       shouldMaximize: true,
     });
     expect(
-      resolveWindowCreationOptions(
-        { x: 9000, y: 0, width: 1280, height: 800, isMaximized: false },
-        [primary],
-      ).shouldMaximize,
+      resolveWindowCreationOptions({ x: 9000, y: 0, width: 1280, height: 800, isMaximized: false }, [primary])
+        .shouldMaximize,
     ).toBe(true);
   });
 
   it("restores saved normal bounds and maximized flag", () => {
-    const restored = resolveWindowCreationOptions(
-      { x: 12, y: 34, width: 1400, height: 900, isMaximized: false },
-      [primary],
-    );
+    const restored = resolveWindowCreationOptions({ x: 12, y: 34, width: 1400, height: 900, isMaximized: false }, [
+      primary,
+    ]);
     expect(restored).toEqual({
       width: 1400,
       height: 900,
@@ -93,10 +80,9 @@ describe("window-state", () => {
       shouldMaximize: false,
     });
 
-    const maximized = resolveWindowCreationOptions(
-      { x: 12, y: 34, width: 1400, height: 900, isMaximized: true },
-      [primary],
-    );
+    const maximized = resolveWindowCreationOptions({ x: 12, y: 34, width: 1400, height: 900, isMaximized: true }, [
+      primary,
+    ]);
     expect(maximized.shouldMaximize).toBe(true);
     expect(maximized.x).toBe(12);
     expect(maximized.y).toBe(34);
@@ -121,12 +107,7 @@ describe("resolveSplashPlacement", () => {
   });
 
   it("falls back to the fallback point's monitor", () => {
-    const pos = resolveSplashPlacement(
-      splash,
-      { width: 1280, height: 800 },
-      [primary, secondary],
-      primaryCenter,
-    );
+    const pos = resolveSplashPlacement(splash, { width: 1280, height: 800 }, [primary, secondary], primaryCenter);
     expect(pos).toEqual({
       x: Math.round((1920 - 520) / 2),
       y: Math.round((1080 - 560) / 2),

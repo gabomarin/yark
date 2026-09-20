@@ -7,11 +7,7 @@ import {
   normalizeManualRestartWarnings,
 } from "@shared/maintenance/maintenance-policy";
 import { normalizeRestartDaysOfWeek } from "@shared/maintenance/maintenance-restart-days";
-import type {
-  MaintenanceBroadcastPreset,
-  MaintenanceJobWarnings,
-  MaintenancePolicy,
-} from "@shared/types";
+import type { MaintenanceBroadcastPreset, MaintenanceJobWarnings, MaintenancePolicy } from "@shared/types";
 
 interface PolicyRow {
   server_id: string;
@@ -30,28 +26,19 @@ interface PolicyRow {
   updated_at: string;
 }
 
-function parseWarnings(
-  raw: string,
-  fallback: MaintenanceJobWarnings,
-): MaintenanceJobWarnings {
+function parseWarnings(raw: string, fallback: MaintenanceJobWarnings): MaintenanceJobWarnings {
   try {
     const parsed = JSON.parse(raw) as Partial<MaintenanceJobWarnings>;
     const preset = parsed.preset;
     const validPreset: MaintenanceBroadcastPreset =
-      preset === "none" ||
-      preset === "quiet" ||
-      preset === "standard" ||
-      preset === "strict" ||
-      preset === "custom"
+      preset === "none" || preset === "quiet" || preset === "standard" || preset === "strict" || preset === "custom"
         ? preset
         : fallback.preset;
     const customOffsets = Array.isArray(parsed.customOffsets)
       ? parsed.customOffsets.filter((x): x is string => typeof x === "string")
       : [...fallback.customOffsets];
     const template =
-      typeof parsed.template === "string" && parsed.template.trim().length > 0
-        ? parsed.template
-        : fallback.template;
+      typeof parsed.template === "string" && parsed.template.trim().length > 0 ? parsed.template : fallback.template;
     const lastMinuteChat = parsed.lastMinuteChat !== false;
     return { preset: validPreset, customOffsets, template, lastMinuteChat };
   } catch {
@@ -89,14 +76,10 @@ function rowToPolicy(row: PolicyRow): MaintenancePolicy {
     updateEnabled: row.update_enabled === 1,
     manualRestartWarningsEnabled: row.manual_restart_warnings === 1,
     manualRestartWarnings: normalizeManualRestartWarnings(
-      parseWarnings(
-        row.manual_restart_warning_json ?? "",
-        MANUAL_RESTART_WARNING_DEFAULT_WARNINGS,
-      ),
+      parseWarnings(row.manual_restart_warning_json ?? "", MANUAL_RESTART_WARNING_DEFAULT_WARNINGS),
     ),
     restartDaysOfWeek: parseRestartDaysOfWeek(row),
-    restartTimeLocal:
-      /^\d{2}:\d{2}$/.test(row.restart_time_local) ? row.restart_time_local : "04:00",
+    restartTimeLocal: /^\d{2}:\d{2}$/.test(row.restart_time_local) ? row.restart_time_local : "04:00",
     wipeSaveWorldFirst: row.wipe_save_world_first === 1,
     restartWarnings: parseWarnings(row.restart_warnings_json, DEFAULT_RESTART_WARNINGS),
     updateWarnings: parseWarnings(row.update_warnings_json, DEFAULT_UPDATE_WARNINGS),
@@ -109,9 +92,8 @@ export class MaintenanceRepository {
 
   /** Read-only: returns defaults when no row exists (does not INSERT). */
   getPolicy(serverId: string): MaintenancePolicy {
-    const row = this.db
-      .prepare("SELECT * FROM maintenance_policies WHERE server_id = ?")
-      .get(serverId) as unknown as PolicyRow | undefined;
+    const row = this.db.prepare("SELECT * FROM maintenance_policies WHERE server_id = ?").get(serverId) as unknown as
+      PolicyRow | undefined;
     if (row !== undefined) return rowToPolicy(row);
     return defaultMaintenancePolicy(serverId, new Date().toISOString());
   }
@@ -121,9 +103,8 @@ export class MaintenanceRepository {
    * callers cannot race on UNIQUE(server_id).
    */
   ensurePolicy(serverId: string): void {
-    const existing = this.db
-      .prepare("SELECT 1 AS ok FROM maintenance_policies WHERE server_id = ?")
-      .get(serverId) as { ok: number } | undefined;
+    const existing = this.db.prepare("SELECT 1 AS ok FROM maintenance_policies WHERE server_id = ?").get(serverId) as
+      { ok: number } | undefined;
     if (existing !== undefined) return;
 
     const now = new Date().toISOString();
@@ -155,14 +136,10 @@ export class MaintenanceRepository {
     }
   }
 
-  setPolicy(
-    input: Omit<MaintenancePolicy, "updatedAt">,
-  ): MaintenancePolicy {
+  setPolicy(input: Omit<MaintenancePolicy, "updatedAt">): MaintenancePolicy {
     const now = new Date().toISOString();
     const days = normalizeRestartDaysOfWeek(input.restartDaysOfWeek);
-    const time = /^\d{2}:\d{2}$/.test(input.restartTimeLocal)
-      ? input.restartTimeLocal
-      : "04:00";
+    const time = /^\d{2}:\d{2}$/.test(input.restartTimeLocal) ? input.restartTimeLocal : "04:00";
     const daysJson = JSON.stringify(days);
     const legacyCadence = days.length === 7 ? "daily" : "weekly";
     const legacyDay = days[0] ?? 0;
@@ -212,9 +189,7 @@ export class MaintenanceRepository {
   }
 
   listPolicies(): MaintenancePolicy[] {
-    const rows = this.db
-      .prepare("SELECT * FROM maintenance_policies")
-      .all() as unknown as PolicyRow[];
+    const rows = this.db.prepare("SELECT * FROM maintenance_policies").all() as unknown as PolicyRow[];
     return rows.map(rowToPolicy);
   }
 }

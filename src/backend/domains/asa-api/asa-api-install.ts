@@ -48,19 +48,11 @@ export interface InstallAsaApiOptions {
   onProgress?: (payload: AsaApiInstallProgress) => void;
 }
 
-function pickZipAsset(
-  release: GitHubRelease,
-  preferredName: RegExp,
-  repoLabel: string,
-): GitHubReleaseAsset {
+function pickZipAsset(release: GitHubRelease, preferredName: RegExp, repoLabel: string): GitHubReleaseAsset {
   const assets = release.assets ?? [];
-  const zip =
-    assets.find((a) => preferredName.test(a.name)) ??
-    assets.find((a) => /\.zip$/i.test(a.name));
+  const zip = assets.find((a) => preferredName.test(a.name)) ?? assets.find((a) => /\.zip$/i.test(a.name));
   if (zip === undefined) {
-    throw new Error(
-      `No zip asset found on ${repoLabel} release ${release.tag_name}`,
-    );
+    throw new Error(`No zip asset found on ${repoLabel} release ${release.tag_name}`);
   }
   return zip;
 }
@@ -73,9 +65,7 @@ async function fetchLatestRelease(url: string, repoLabel: string): Promise<GitHu
     },
   });
   if (!releaseResponse.ok) {
-    throw new Error(
-      `Could not reach GitHub releases for ${repoLabel} (${releaseResponse.status})`,
-    );
+    throw new Error(`Could not reach GitHub releases for ${repoLabel} (${releaseResponse.status})`);
   }
   return (await releaseResponse.json()) as GitHubRelease;
 }
@@ -116,9 +106,7 @@ async function downloadToFile(
   let downloaded = 0;
   let lastEmitAt = 0;
   await mkdir(dirname(destPath), { recursive: true });
-  const nodeStream = Readable.fromWeb(
-    response.body as import("node:stream/web").ReadableStream,
-  );
+  const nodeStream = Readable.fromWeb(response.body as import("node:stream/web").ReadableStream);
   const counter = new Transform({
     transform(chunk, _encoding, callback) {
       downloaded += chunk.length;
@@ -141,22 +129,20 @@ type ProgressEmit = (
   },
 ) => void;
 
-async function obtainZip(
-  options: {
-    cacheDir: string;
-    repo: string;
-    tag: string;
-    asset: GitHubReleaseAsset;
-    expectedSize: number;
-    emit: ProgressEmit;
-    downloadLabel: (byteSuffix: string) => string;
-    cachedLabel: string;
-    downloadPercentBase: number;
-    downloadPercentSpan: number;
-    budgetBytesSoFar: number;
-    downloadBudget: number;
-  },
-): Promise<{ zipPath: string; fromCache: boolean }> {
+async function obtainZip(options: {
+  cacheDir: string;
+  repo: string;
+  tag: string;
+  asset: GitHubReleaseAsset;
+  expectedSize: number;
+  emit: ProgressEmit;
+  downloadLabel: (byteSuffix: string) => string;
+  cachedLabel: string;
+  downloadPercentBase: number;
+  downloadPercentSpan: number;
+  budgetBytesSoFar: number;
+  downloadBudget: number;
+}): Promise<{ zipPath: string; fromCache: boolean }> {
   const cached = await resolveAsaApiCachedZip(
     options.cacheDir,
     options.repo,
@@ -168,9 +154,7 @@ async function obtainZip(
     options.emit({
       phase: "downloading",
       label: options.cachedLabel,
-      percent: clampPercent(
-        options.downloadPercentBase + options.downloadPercentSpan,
-      ),
+      percent: clampPercent(options.downloadPercentBase + options.downloadPercentSpan),
       bytesDownloaded: options.budgetBytesSoFar + options.expectedSize,
       bytesTotal: options.downloadBudget,
       assetLabel: options.asset.name,
@@ -178,41 +162,25 @@ async function obtainZip(
     return { zipPath: cached, fromCache: true };
   }
 
-  const finalPath = asaApiCachedZipPath(
-    options.cacheDir,
-    options.repo,
-    options.tag,
-    options.asset.name,
-  );
+  const finalPath = asaApiCachedZipPath(options.cacheDir, options.repo, options.tag, options.asset.name);
   const partialPath = asaApiCachedZipPartialPath(finalPath);
   await rm(partialPath, { force: true }).catch(() => {
     // ignore
   });
 
-  await downloadToFile(
-    options.asset.browser_download_url,
-    partialPath,
-    options.expectedSize,
-    (downloaded, total) => {
-      const knownTotal = total ?? options.expectedSize;
-      const span =
-        knownTotal > 0
-          ? (downloaded / knownTotal) * options.downloadPercentSpan
-          : 0;
-      const byteLabel =
-        knownTotal > 0
-          ? ` · ${formatSteamCmdByteProgress(downloaded, knownTotal)}`
-          : "";
-      options.emit({
-        phase: "downloading",
-        label: options.downloadLabel(byteLabel),
-        percent: clampPercent(options.downloadPercentBase + span),
-        bytesDownloaded: options.budgetBytesSoFar + downloaded,
-        bytesTotal: options.downloadBudget,
-        assetLabel: options.asset.name,
-      });
-    },
-  );
+  await downloadToFile(options.asset.browser_download_url, partialPath, options.expectedSize, (downloaded, total) => {
+    const knownTotal = total ?? options.expectedSize;
+    const span = knownTotal > 0 ? (downloaded / knownTotal) * options.downloadPercentSpan : 0;
+    const byteLabel = knownTotal > 0 ? ` · ${formatSteamCmdByteProgress(downloaded, knownTotal)}` : "";
+    options.emit({
+      phase: "downloading",
+      label: options.downloadLabel(byteLabel),
+      percent: clampPercent(options.downloadPercentBase + span),
+      bytesDownloaded: options.budgetBytesSoFar + downloaded,
+      bytesTotal: options.downloadBudget,
+      assetLabel: options.asset.name,
+    });
+  });
 
   await finalizeAsaApiCacheDownload(partialPath, finalPath);
   await pruneAsaApiRepoCache(options.cacheDir, options.repo);
@@ -256,21 +224,11 @@ export async function installAsaApiIntoInstall(
   await mkdir(cacheDir, { recursive: true });
 
   const [asaRelease, versionRelease] = await Promise.all([
-    fetchLatestRelease(
-      ASA_API_RELEASES_LATEST,
-      `${ASA_API_GITHUB_OWNER}/${ASA_API_GITHUB_REPO}`,
-    ),
-    fetchLatestRelease(
-      ASA_API_VERSION_LOADER_RELEASES_LATEST,
-      `${ASA_API_GITHUB_OWNER}/${ASA_API_LOADER_GITHUB_REPO}`,
-    ),
+    fetchLatestRelease(ASA_API_RELEASES_LATEST, `${ASA_API_GITHUB_OWNER}/${ASA_API_GITHUB_REPO}`),
+    fetchLatestRelease(ASA_API_VERSION_LOADER_RELEASES_LATEST, `${ASA_API_GITHUB_OWNER}/${ASA_API_LOADER_GITHUB_REPO}`),
   ]);
 
-  const asaAsset = pickZipAsset(
-    asaRelease,
-    /^AsaApi_.*\.zip$/i,
-    `${ASA_API_GITHUB_OWNER}/${ASA_API_GITHUB_REPO}`,
-  );
+  const asaAsset = pickZipAsset(asaRelease, /^AsaApi_.*\.zip$/i, `${ASA_API_GITHUB_OWNER}/${ASA_API_GITHUB_REPO}`);
   const versionAsset = pickZipAsset(
     versionRelease,
     /VersionLoader|Version.*\.zip$/i,
@@ -278,11 +236,9 @@ export async function installAsaApiIntoInstall(
   );
 
   const asaTag = asaRelease.tag_name || asaRelease.name || asaAsset.name;
-  const versionTag =
-    versionRelease.tag_name || versionRelease.name || versionAsset.name;
+  const versionTag = versionRelease.tag_name || versionRelease.name || versionAsset.name;
   const asaBytes = asaAsset.size && asaAsset.size > 0 ? asaAsset.size : 28_000_000;
-  const versionBytes =
-    versionAsset.size && versionAsset.size > 0 ? versionAsset.size : 400_000;
+  const versionBytes = versionAsset.size && versionAsset.size > 0 ? versionAsset.size : 400_000;
   const downloadBudget = asaBytes + versionBytes;
 
   const asaZip = await obtainZip({
@@ -329,9 +285,7 @@ export async function installAsaApiIntoInstall(
 
   emit({
     phase: "extracting",
-    label: versionZip.fromCache
-      ? "Unpacking cached Version.dll…"
-      : "Unpacking Version.dll…",
+    label: versionZip.fromCache ? "Unpacking cached Version.dll…" : "Unpacking Version.dll…",
     percent: 94,
     bytesDownloaded: downloadBudget,
     bytesTotal: downloadBudget,
@@ -369,9 +323,7 @@ export async function installAsaApiIntoInstall(
     );
   }
   if (!status.apiCorePresent) {
-    throw new Error(
-      `ArkApi\\AsaApi.dll was not found at ${asaApiCoreDllPath(installDir)} after extract.`,
-    );
+    throw new Error(`ArkApi\\AsaApi.dll was not found at ${asaApiCoreDllPath(installDir)} after extract.`);
   }
 
   emit({

@@ -72,15 +72,10 @@ describe("seedCloneIniFiles", () => {
 
     await seedCloneIniFiles(sourceDir, profile(destDir));
 
-    const game = readFileSync(
-      join(windowsServerConfig(destDir), "Game.ini"),
-      "utf8",
-    );
+    const game = readFileSync(join(windowsServerConfig(destDir), "Game.ini"), "utf8");
     expect(game).toContain("BabyMatureSpeedMultiplier=12.0");
 
-    const gus = flattenIniText(
-      readFileSync(join(windowsServerConfig(destDir), "GameUserSettings.ini"), "utf8"),
-    );
+    const gus = flattenIniText(readFileSync(join(windowsServerConfig(destDir), "GameUserSettings.ini"), "utf8"));
     expect(gus[flatKey("ServerSettings", "HarvestAmountMultiplier")]).toBe("3.0");
     expect(gus[flatKey("SessionSettings", "SessionName")]).toBe("Winter Session");
     expect(gus[flatKey("SessionSettings", "Port")]).toBe("7787");
@@ -88,29 +83,24 @@ describe("seedCloneIniFiles", () => {
     expect(gus[flatKey("ServerSettings", "RCONPort")]).toBe("27030");
   });
 
-  it.runIf(process.platform === "win32")(
-    "refuses to seed INI through a destination junction",
-    async () => {
-      const { execFileSync } = await import("node:child_process");
-      const root = mkdtempSync(join(tmpdir(), "ark-clone-ini-junc-"));
-      tmpDirs.push(root);
-      const sourceDir = join(root, "source");
-      const sentinel = join(root, "sentinel");
-      const destDir = join(root, "dest");
-      mkdirSync(windowsServerConfig(sourceDir), { recursive: true });
-      mkdirSync(sentinel, { recursive: true });
-      writeFileSync(join(sentinel, "marker.txt"), "UNTOUCHED", "utf8");
-      execFileSync("cmd.exe", ["/c", "mklink", "/J", destDir, sentinel], {
-        stdio: "ignore",
-        windowsHide: true,
-      });
+  it.runIf(process.platform === "win32")("refuses to seed INI through a destination junction", async () => {
+    const { execFileSync } = await import("node:child_process");
+    const root = mkdtempSync(join(tmpdir(), "ark-clone-ini-junc-"));
+    tmpDirs.push(root);
+    const sourceDir = join(root, "source");
+    const sentinel = join(root, "sentinel");
+    const destDir = join(root, "dest");
+    mkdirSync(windowsServerConfig(sourceDir), { recursive: true });
+    mkdirSync(sentinel, { recursive: true });
+    writeFileSync(join(sentinel, "marker.txt"), "UNTOUCHED", "utf8");
+    execFileSync("cmd.exe", ["/c", "mklink", "/J", destDir, sentinel], {
+      stdio: "ignore",
+      windowsHide: true,
+    });
 
-      await expect(seedCloneIniFiles(sourceDir, profile(destDir))).rejects.toThrow(
-        /link or junction/i,
-      );
-      expect(readFileSync(join(sentinel, "marker.txt"), "utf8")).toBe("UNTOUCHED");
-    },
-  );
+    await expect(seedCloneIniFiles(sourceDir, profile(destDir))).rejects.toThrow(/link or junction/i);
+    expect(readFileSync(join(sentinel, "marker.txt"), "utf8")).toBe("UNTOUCHED");
+  });
 
   it("falls back to default INIs when the source has none", async () => {
     const sourceDir = mkdtempSync(join(tmpdir(), "ark-clone-ini-empty-"));
@@ -119,13 +109,10 @@ describe("seedCloneIniFiles", () => {
 
     await seedCloneIniFiles(sourceDir, profile(destDir));
 
-    expect(
-      readFileSync(join(windowsServerConfig(destDir), "Game.ini"), "utf8"),
-    ).toContain("[/script/shootergame.shootergamemode]");
-    const gus = flattenIniText(
-      readFileSync(join(windowsServerConfig(destDir), "GameUserSettings.ini"), "utf8"),
+    expect(readFileSync(join(windowsServerConfig(destDir), "Game.ini"), "utf8")).toContain(
+      "[/script/shootergame.shootergamemode]",
     );
+    const gus = flattenIniText(readFileSync(join(windowsServerConfig(destDir), "GameUserSettings.ini"), "utf8"));
     expect(gus[flatKey("SessionSettings", "SessionName")]).toBe("Winter Session");
   });
 });
-

@@ -22,9 +22,7 @@ afterEach(() => {
   }
 });
 
-const latestSchemaVersion = Math.max(
-  ...schemaMigrations.map((migration) => migration.version),
-);
+const latestSchemaVersion = Math.max(...schemaMigrations.map((migration) => migration.version));
 
 describe("schema-migrations.json E2E seed path", () => {
   it("reaches the current user_version so openDatabase is a no-op migrate", () => {
@@ -40,17 +38,11 @@ describe("schema-migrations.json E2E seed path", () => {
       expect(row.user_version).toBe(latestSchemaVersion);
       expect(row.user_version).toBeGreaterThanOrEqual(MAX_PLAYERS_LAUNCH_BACKFILL_SCHEMA_VERSION);
       expect(
-        db
-          .prepare(
-            "SELECT 1 AS present FROM sqlite_master WHERE type = 'table' AND name = 'servers'",
-          )
-          .get(),
+        db.prepare("SELECT 1 AS present FROM sqlite_master WHERE type = 'table' AND name = 'servers'").get(),
       ).toEqual({ present: 1 });
       expect(
         db
-          .prepare(
-            "SELECT 1 AS present FROM sqlite_master WHERE type = 'index' AND name = 'idx_servers_created_at'",
-          )
+          .prepare("SELECT 1 AS present FROM sqlite_master WHERE type = 'index' AND name = 'idx_servers_created_at'")
           .get(),
       ).toEqual({ present: 1 });
     } finally {

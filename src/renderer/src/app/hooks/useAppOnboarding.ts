@@ -1,43 +1,27 @@
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { APP_VERSION } from "@shared/app-version";
 import { shouldShowWhatsNewForVersion } from "@shared/settings/changelog";
-import {
-  createOnboardingRecord,
-  shouldAutoShowSetupWizard,
-  type OnboardingRecord,
-} from "@shared/settings/onboarding";
-import {
-  type PendingSetupCluster,
-  type SetupWizardMode,
-} from "@features/setup-wizard/setupWizardModel";
+import { createOnboardingRecord, shouldAutoShowSetupWizard, type OnboardingRecord } from "@shared/settings/onboarding";
+import { type PendingSetupCluster, type SetupWizardMode } from "@features/setup-wizard/setupWizardModel";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
 import { notifications } from "@mantine/notifications";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export function useAppOnboarding(options: {
-  overviewLoading: boolean;
-  serverCount: number;
-}) {
+export function useAppOnboarding(options: { overviewLoading: boolean; serverCount: number }) {
   const { overviewLoading, serverCount } = options;
   const [changelogOpen, setChangelogOpen] = useState(false);
-  const [changelogInitialTab, setChangelogInitialTab] = useState<"current" | "recent">(
-    "current",
-  );
+  const [changelogInitialTab, setChangelogInitialTab] = useState<"current" | "recent">("current");
   const changelogPromptSettledRef = useRef(false);
   const [setupWizardMode, setSetupWizardMode] = useState<SetupWizardMode | null>(null);
   const [setupWizardBusy, setSetupWizardBusy] = useState(false);
-  const [pendingSetupCluster, setPendingSetupCluster] =
-    useState<PendingSetupCluster | null>(null);
+  const [pendingSetupCluster, setPendingSetupCluster] = useState<PendingSetupCluster | null>(null);
   const setupWizardPromptSettledRef = useRef(false);
   const setupWizardBusyRef = useRef(false);
   const onboardingRecordRef = useRef<OnboardingRecord | null>(null);
   const retryOnboardingReadRef = useRef<(() => void) | null>(null);
 
   const persistOnboardingStatus = useCallback(
-    async (
-      status: "completed" | "skipped",
-      cluster: PendingSetupCluster | null,
-    ): Promise<boolean> => {
+    async (status: "completed" | "skipped", cluster: PendingSetupCluster | null): Promise<boolean> => {
       if (typeof window.api.setOnboarding !== "function") {
         showOperatorError("Onboarding settings are unavailable. Try restarting YARK.");
         return false;
@@ -65,27 +49,27 @@ export function useAppOnboarding(options: {
   }, []);
 
   const finishSetupWizard = useCallback(
-    async (
-      status: "completed" | "skipped",
-      cluster: PendingSetupCluster | null,
-    ): Promise<boolean> => {
+    async (status: "completed" | "skipped", cluster: PendingSetupCluster | null): Promise<boolean> => {
       if (setupWizardBusyRef.current) {
         return false;
       }
       setupWizardBusyRef.current = true;
       setSetupWizardBusy(true);
-      return runWithFinally(async () => {
-        const saved = await persistOnboardingStatus(status, cluster);
-        if (!saved) {
-          return false;
-        }
-        setPendingSetupCluster(cluster);
-        closeSetupWizard();
-        return true;
-      }, () => {
-        setupWizardBusyRef.current = false;
-        setSetupWizardBusy(false);
-      });
+      return runWithFinally(
+        async () => {
+          const saved = await persistOnboardingStatus(status, cluster);
+          if (!saved) {
+            return false;
+          }
+          setPendingSetupCluster(cluster);
+          closeSetupWizard();
+          return true;
+        },
+        () => {
+          setupWizardBusyRef.current = false;
+          setSetupWizardBusy(false);
+        },
+      );
     },
     [closeSetupWizard, persistOnboardingStatus],
   );
@@ -131,10 +115,7 @@ export function useAppOnboarding(options: {
     let cancelled = false;
 
     const loadOnboardingAndMaybeOpen = async (): Promise<boolean> => {
-      if (
-        typeof window.api.getOnboarding !== "function" ||
-        setupWizardPromptSettledRef.current
-      ) {
+      if (typeof window.api.getOnboarding !== "function" || setupWizardPromptSettledRef.current) {
         return false;
       }
       let onboardingRes: Awaited<ReturnType<typeof window.api.getOnboarding>>;

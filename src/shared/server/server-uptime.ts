@@ -2,10 +2,7 @@
  * Relative uptime for a running dedicated process (#301).
  * Uses `–` when not running or `startedAt` is missing/invalid.
  */
-export function formatServerUptime(
-  startedAt: string | null | undefined,
-  nowMs: number = Date.now(),
-): string {
+export function formatServerUptime(startedAt: string | null | undefined, nowMs: number = Date.now()): string {
   if (startedAt == null || startedAt.trim() === "") {
     return "–";
   }

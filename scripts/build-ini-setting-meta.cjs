@@ -168,9 +168,7 @@ function classifyValueType(vt, value) {
 function extractRange(description, valueType) {
   const text = `${description || ""} ${valueType || ""}`;
   const fromTo =
-    /(?:valid values?\s+(?:are\s+)?from|from|between)\s*(-?\d+(?:\.\d+)?)\s*(?:to|and)\s*(-?\d+(?:\.\d+)?)/i.exec(
-      text,
-    );
+    /(?:valid values?\s+(?:are\s+)?from|from|between)\s*(-?\d+(?:\.\d+)?)\s*(?:to|and)\s*(-?\d+(?:\.\d+)?)/i.exec(text);
   if (fromTo) {
     const min = Number(fromTo[1]);
     const max = Number(fromTo[2]);
@@ -246,10 +244,7 @@ function loadOverrides() {
 
 function main() {
   const overrides = loadOverrides();
-  const parsed = [
-    ...parseIniFile(GUS_PATH, "gameUserSettings"),
-    ...parseIniFile(GAME_PATH, "game"),
-  ];
+  const parsed = [...parseIniFile(GUS_PATH, "gameUserSettings"), ...parseIniFile(GAME_PATH, "game")];
 
   const settings = [];
   const report = {
@@ -287,10 +282,7 @@ function main() {
     report.total += 1;
     report.withInput += 1;
     if (input.type === "range") report.rangeFromComments += 1;
-    if (
-      input.type === "number" &&
-      isMultiplierLike(row.key, row.description, row.valueType)
-    ) {
+    if (input.type === "number" && isMultiplierLike(row.key, row.description, row.valueType)) {
       report.suggestCurate.push(id);
     }
   }

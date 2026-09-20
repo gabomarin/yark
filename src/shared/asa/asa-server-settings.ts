@@ -39,8 +39,7 @@ function toAsaSetting(setting: IniSettingMeta): AsaServerSetting {
   };
 }
 
-export const asaServerSettings: readonly AsaServerSetting[] =
-  iniSettingMetaList.map(toAsaSetting);
+export const asaServerSettings: readonly AsaServerSetting[] = iniSettingMetaList.map(toAsaSetting);
 
 export const asaServerSettingsMeta = {
   gusCount: iniSettingMetaStats.gusCount,
@@ -49,28 +48,16 @@ export const asaServerSettingsMeta = {
   wikiOnly: 0,
 };
 
-export function lookupAsaSetting(
-  file: AsaIniFileKey,
-  section: string,
-  key: string,
-): AsaServerSetting | undefined {
+export function lookupAsaSetting(file: AsaIniFileKey, section: string, key: string): AsaServerSetting | undefined {
   const hit = lookupIniSettingMeta(file, section, key);
   return hit ? toAsaSetting(hit) : undefined;
 }
 
-export function lookupAsaDefaultValue(
-  file: AsaIniFileKey,
-  section: string,
-  key: string,
-): string | null {
+export function lookupAsaDefaultValue(file: AsaIniFileKey, section: string, key: string): string | null {
   return lookupIniSettingDefaultValue(file, section, key);
 }
 
-export function lookupAsaDescription(
-  file: AsaIniFileKey,
-  section: string,
-  key: string,
-): string | null {
+export function lookupAsaDescription(file: AsaIniFileKey, section: string, key: string): string | null {
   return lookupIniSettingDescription(file, section, key);
 }
 

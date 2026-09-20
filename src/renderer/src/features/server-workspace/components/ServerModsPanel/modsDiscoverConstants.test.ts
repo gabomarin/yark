@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  discoverColumnSort,
-  discoverSortFromColumn,
-  isDiscoverDefaultSort,
-} from "./modsDiscoverConstants";
+import { discoverColumnSort, discoverSortFromColumn, isDiscoverDefaultSort } from "./modsDiscoverConstants";
 
 describe("modsDiscoverConstants catalog sort", () => {
   it("detects the Popularity default", () => {

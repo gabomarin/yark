@@ -41,9 +41,7 @@ const stopped: ServerRuntimeInfo = {
   lastError: null,
 };
 
-function renderPanel(
-  extra: Partial<Parameters<typeof SidePanel>[0]> = {},
-): {
+function renderPanel(extra: Partial<Parameters<typeof SidePanel>[0]> = {}): {
   onUpdateNow: ReturnType<typeof vi.fn>;
   onToggleEnabled: ReturnType<typeof vi.fn>;
 } {
@@ -177,4 +175,3 @@ describe("SidePanel", () => {
     expect(cpuLabel.parentElement).toHaveTextContent("–");
   });
 });
-

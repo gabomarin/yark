@@ -27,9 +27,7 @@ export function readSteamBuildFromLocalManifest(installDir: string): string | nu
   }
 }
 
-export async function readSteamBuildFromLocalManifestAsync(
-  installDir: string,
-): Promise<string | null> {
+export async function readSteamBuildFromLocalManifestAsync(installDir: string): Promise<string | null> {
   const manifestPath = join(installDir, "steamapps", `appmanifest_${ASA_APP_ID}.acf`);
   try {
     const content = await readFile(manifestPath, "utf8");
@@ -51,9 +49,7 @@ export function readLocalSteamManifestMtimeMs(installDir: string): number | null
   }
 }
 
-export async function readLocalSteamManifestMtimeMsAsync(
-  installDir: string,
-): Promise<number | null> {
+export async function readLocalSteamManifestMtimeMsAsync(installDir: string): Promise<number | null> {
   const manifestPath = join(installDir, "steamapps", `appmanifest_${ASA_APP_ID}.acf`);
   try {
     return (await stat(manifestPath)).mtimeMs;

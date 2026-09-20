@@ -91,15 +91,17 @@ describe("buildBackupServerHealthRow", () => {
 
 describe("filterDismissedFleetAlerts", () => {
   it("hides matching fingerprints and prunes stale dismiss rows", () => {
-    const alerts = [{
-      id: "failed:srv-1",
-      kind: "failed" as const,
-      severity: "error" as const,
-      serverId: "srv-1",
-      volumePath: null,
-      fingerprint: "a:1",
-      message: "failed",
-    }];
+    const alerts = [
+      {
+        id: "failed:srv-1",
+        kind: "failed" as const,
+        severity: "error" as const,
+        serverId: "srv-1",
+        volumePath: null,
+        fingerprint: "a:1",
+        message: "failed",
+      },
+    ];
     const { visible, prunedDismissed } = filterDismissedFleetAlerts(alerts, {
       "failed:srv-1": { fingerprint: "a:1", dismissedAt: "2026-01-01T00:00:00.000Z" },
       stale: { fingerprint: "old", dismissedAt: "2026-01-01T00:00:00.000Z" },

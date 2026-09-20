@@ -33,24 +33,14 @@ describe("host-port-probe-errors", () => {
     const ports = { gamePort: 7787, queryPort: 27025, rconPort: 27030 };
     const encoded = encodeSuggestedSessionPorts(ports);
     expect(encoded).toBe("suggested=game:7787,query:27025,rcon:27030");
-    expect(
-      parseSuggestedSessionPorts(
-        formatHostPortBusyError("UDP game port 7777 is already in use.", ports),
-      ),
-    ).toEqual(ports);
+    expect(parseSuggestedSessionPorts(formatHostPortBusyError("UDP game port 7777 is already in use.", ports))).toEqual(
+      ports,
+    );
   });
 
   it("rejects invalid suggested trailers", () => {
-    expect(
-      parseSuggestedSessionPorts(
-        "HOST_PORT_BUSY: nope suggested=game:1,query:2,rcon:3",
-      ),
-    ).toBeNull();
-    expect(
-      parseSuggestedSessionPorts(
-        "HOST_PORT_BUSY: nope suggested=game:7777,query:7777,rcon:27020",
-      ),
-    ).toBeNull();
+    expect(parseSuggestedSessionPorts("HOST_PORT_BUSY: nope suggested=game:1,query:2,rcon:3")).toBeNull();
+    expect(parseSuggestedSessionPorts("HOST_PORT_BUSY: nope suggested=game:7777,query:7777,rcon:27020")).toBeNull();
   });
 
   it("classifies prefixes and humanizes messages", () => {
@@ -62,13 +52,9 @@ describe("host-port-probe-errors", () => {
     expect(isHostPortBusyError(busy)).toBe(true);
     expect(isInconclusiveHostPortProbeError(busy)).toBe(false);
     expect(isHostPortProbeError(busy)).toBe(true);
-    expect(humanizeHostPortProbeError(busy)).toBe(
-      "UDP game port 7777 is already in use.",
-    );
+    expect(humanizeHostPortProbeError(busy)).toBe("UDP game port 7777 is already in use.");
 
-    const inconclusive = formatHostPortInconclusiveError(
-      "Could not confirm whether UDP game port 7777 is free.",
-    );
+    const inconclusive = formatHostPortInconclusiveError("Could not confirm whether UDP game port 7777 is free.");
     expect(isInconclusiveHostPortProbeError(inconclusive)).toBe(true);
     expect(isHostPortProbeError(inconclusive)).toBe(true);
   });
@@ -76,11 +62,10 @@ describe("host-port-probe-errors", () => {
 
 describe("parseOwnerLookupJson", () => {
   it("parses ConvertTo-Json owner rows", () => {
-    expect(
-      parseOwnerLookupJson(
-        '{"OwningProcess":4242,"ProcessName":"ArkAscendedServer"}',
-      ),
-    ).toEqual({ pid: 4242, processName: "ArkAscendedServer" });
+    expect(parseOwnerLookupJson('{"OwningProcess":4242,"ProcessName":"ArkAscendedServer"}')).toEqual({
+      pid: 4242,
+      processName: "ArkAscendedServer",
+    });
     expect(parseOwnerLookupJson('{"OwningProcess":99,"ProcessName":null}')).toEqual({
       pid: 99,
       processName: null,
@@ -226,11 +211,7 @@ describe("host-port-probe", () => {
     deps.bindUdp = async () => "busy";
     deps.bindTcp = async () => "busy";
     await expect(
-      suggestSessionPortSet(
-        { gamePort: 7777, queryPort: 27015, rconPort: 27020 },
-        new Set(),
-        deps,
-      ),
+      suggestSessionPortSet({ gamePort: 7777, queryPort: 27015, rconPort: 27020 }, new Set(), deps),
     ).resolves.toBeNull();
   });
 });

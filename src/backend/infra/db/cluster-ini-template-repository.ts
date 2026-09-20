@@ -69,9 +69,7 @@ export class ClusterIniTemplateRepository {
     if (id.length === 0) {
       return false;
     }
-    const result = this.db
-      .prepare(`DELETE FROM cluster_ini_templates WHERE cluster_id = ?`)
-      .run(id);
+    const result = this.db.prepare(`DELETE FROM cluster_ini_templates WHERE cluster_id = ?`).run(id);
     return Number(result.changes) > 0;
   }
 }

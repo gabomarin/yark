@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type {
-  ServerInstallationInfo,
-  ServerProfile,
-  ServerRuntimeInfo,
-} from "@shared/types";
+import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import {
   computeOverviewFleetStats,
   computeOverviewProcessFleetReadouts,
@@ -14,11 +10,11 @@ import {
 const base: Omit<ServerProfile, "id" | "name" | "enabled"> = {
   map: "TheIsland_WP",
   installDir: "C:/ARK",
-  
-    autoStart: false,
-  
-    useAsaApi: false,
-    useAsaApiLoader: false,
+
+  autoStart: false,
+
+  useAsaApi: false,
+  useAsaApiLoader: false,
   sessionName: "s",
   maxPlayers: 70,
   gamePort: 7777,
@@ -34,9 +30,7 @@ const base: Omit<ServerProfile, "id" | "name" | "enabled"> = {
   updatedAt: "2026-07-23T00:00:00.000Z",
 };
 
-function server(
-  partial: Partial<ServerProfile> & Pick<ServerProfile, "id" | "name">,
-): ServerProfile {
+function server(partial: Partial<ServerProfile> & Pick<ServerProfile, "id" | "name">): ServerProfile {
   return {
     ...base,
     enabled: true,
@@ -44,10 +38,7 @@ function server(
   };
 }
 
-function runtime(
-  serverId: string,
-  status: ServerRuntimeInfo["status"],
-): ServerRuntimeInfo {
+function runtime(serverId: string, status: ServerRuntimeInfo["status"]): ServerRuntimeInfo {
   return {
     serverId,
     status,
@@ -58,10 +49,7 @@ function runtime(
   };
 }
 
-function readyInstall(
-  serverId: string,
-  overrides: Partial<ServerInstallationInfo> = {},
-): ServerInstallationInfo {
+function readyInstall(serverId: string, overrides: Partial<ServerInstallationInfo> = {}): ServerInstallationInfo {
   return {
     serverId,
     installed: true,
@@ -80,11 +68,7 @@ function readyInstall(
 
 describe("overviewFleetMetrics", () => {
   it("counts running, stopped, attention, and updates on the enabled fleet", () => {
-    const enabled = [
-      server({ id: "a", name: "A" }),
-      server({ id: "b", name: "B" }),
-      server({ id: "c", name: "C" }),
-    ];
+    const enabled = [server({ id: "a", name: "A" }), server({ id: "b", name: "B" }), server({ id: "c", name: "C" })];
     const statuses = new Map([
       ["a", runtime("a", "running")],
       ["b", runtime("b", "stopped")],
@@ -125,10 +109,7 @@ describe("overviewFleetMetrics", () => {
   });
 
   it("filters by fleet metric and toggles back to all", () => {
-    const enabled = [
-      server({ id: "a", name: "A" }),
-      server({ id: "b", name: "B" }),
-    ];
+    const enabled = [server({ id: "a", name: "A" }), server({ id: "b", name: "B" })];
     const statuses = new Map([
       ["a", runtime("a", "running")],
       ["b", runtime("b", "stopped")],
@@ -144,16 +125,8 @@ describe("overviewFleetMetrics", () => {
       playerListsByServer: new Map(),
     });
 
-    expect(
-      filterOverviewServersByFleet(enabled, "running", stats, statuses).map(
-        (s) => s.id,
-      ),
-    ).toEqual(["a"]);
-    expect(
-      filterOverviewServersByFleet(enabled, "stopped", stats, statuses).map(
-        (s) => s.id,
-      ),
-    ).toEqual(["b"]);
+    expect(filterOverviewServersByFleet(enabled, "running", stats, statuses).map((s) => s.id)).toEqual(["a"]);
+    expect(filterOverviewServersByFleet(enabled, "stopped", stats, statuses).map((s) => s.id)).toEqual(["b"]);
     expect(toggleOverviewFleetFilter("running", "running")).toBe("all");
     expect(toggleOverviewFleetFilter("all", "stopped")).toBe("stopped");
   });
@@ -186,24 +159,12 @@ describe("overviewFleetMetrics", () => {
 
     expect(stats.runningCount).toBe(3);
     expect(stats.stoppedCount).toBe(1);
-    expect(
-      filterOverviewServersByFleet(enabled, "running", stats, statuses).map(
-        (s) => s.id,
-      ),
-    ).toEqual(["a", "b", "c"]);
-    expect(
-      filterOverviewServersByFleet(enabled, "stopped", stats, statuses).map(
-        (s) => s.id,
-      ),
-    ).toEqual(["d"]);
+    expect(filterOverviewServersByFleet(enabled, "running", stats, statuses).map((s) => s.id)).toEqual(["a", "b", "c"]);
+    expect(filterOverviewServersByFleet(enabled, "stopped", stats, statuses).map((s) => s.id)).toEqual(["d"]);
   });
 
   it("sums known online survivors for the header label (#301)", () => {
-    const enabled = [
-      server({ id: "a", name: "A" }),
-      server({ id: "b", name: "B" }),
-      server({ id: "c", name: "C" }),
-    ];
+    const enabled = [server({ id: "a", name: "A" }), server({ id: "b", name: "B" }), server({ id: "c", name: "C" })];
     const statuses = new Map([
       ["a", runtime("a", "running")],
       ["b", runtime("b", "running")],
@@ -253,9 +214,7 @@ describe("overviewFleetMetrics", () => {
       statuses,
       installationInfo: new Map([["a", readyInstall("a")]]),
       officialSteamBuild: "build 111",
-      playerListsByServer: new Map([
-        ["a", { players: [], error: null, loading: false }],
-      ]),
+      playerListsByServer: new Map([["a", { players: [], error: null, loading: false }]]),
     });
     // Empty while truly running is a valid 0 (server up, nobody online).
     expect(withEmpty.survivorsOnlineTotal).toBe(0);
@@ -271,11 +230,7 @@ describe("overviewFleetMetrics", () => {
   });
 
   it("computes process fleet header readouts (#302)", () => {
-    const enabled = [
-      server({ id: "a", name: "A" }),
-      server({ id: "b", name: "B" }),
-      server({ id: "c", name: "C" }),
-    ];
+    const enabled = [server({ id: "a", name: "A" }), server({ id: "b", name: "B" }), server({ id: "c", name: "C" })];
     const statuses = new Map([
       ["a", runtime("a", "running")],
       ["b", runtime("b", "starting")],
@@ -331,4 +286,3 @@ describe("overviewFleetMetrics", () => {
     });
   });
 });
-

@@ -23,9 +23,7 @@ export function buildSteamCmdCandidatePaths(input: {
     join(input.steamcmdDir, "steamcmd.exe"),
   ];
   if (input.isolated) {
-    return candidates.filter(
-      (value): value is string => value != null && value.trim().length > 0,
-    );
+    return candidates.filter((value): value is string => value != null && value.trim().length > 0);
   }
   const programFilesX86 = input.programFilesX86 ?? "C:\\Program Files (x86)";
   const programFiles = input.programFiles ?? "C:\\Program Files";
@@ -36,9 +34,7 @@ export function buildSteamCmdCandidatePaths(input: {
     join(programFilesX86, "SteamCMD", "steamcmd.exe"),
     join(programFiles, "SteamCMD", "steamcmd.exe"),
     join(programFilesX86, "Steam", "steamcmd.exe"),
-    input.localAppData !== undefined
-      ? join(input.localAppData, "Programs", "steamcmd", "steamcmd.exe")
-      : null,
+    input.localAppData !== undefined ? join(input.localAppData, "Programs", "steamcmd", "steamcmd.exe") : null,
   ].filter((value): value is string => value != null && value.trim().length > 0);
 }
 
@@ -55,10 +51,7 @@ export function resolveSteamCmdExecutableCached(input: {
   if (input.confirmedMissing) {
     return null;
   }
-  if (
-    input.lastKnownPath != null
-    && input.lastKnownPath.trim().length > 0
-  ) {
+  if (input.lastKnownPath != null && input.lastKnownPath.trim().length > 0) {
     return input.lastKnownPath;
   }
   if (input.configured != null && input.configured.trim().length > 0) {
@@ -107,26 +100,17 @@ export function buildSteamCmdInstallPowerShell(steamcmdDir: string): string {
   ].join("; ");
 }
 
-export function isSteamCmdVerifyExitAcceptable(
-  code: number | null,
-  sawOutput: boolean,
-): boolean {
+export function isSteamCmdVerifyExitAcceptable(code: number | null, sawOutput: boolean): boolean {
   return (code ?? 1) === 0 || sawOutput;
 }
 
 /** True when this job still needs steamcmd.exe (not a post-SteamCMD recovery phase). */
-export function updateJobNeedsSteamCmdExecutable(
-  job: Pick<UpdateCriticalJob, "type" | "phase">,
-): boolean {
+export function updateJobNeedsSteamCmdExecutable(job: Pick<UpdateCriticalJob, "type" | "phase">): boolean {
   if (job.phase === "files-applied" || job.phase === "restarting-server") {
     return false;
   }
   if (job.phase.startsWith("rollback-") && job.phase !== "rollback-complete") {
     return false;
   }
-  return (
-    job.type === "install-files"
-    || job.type === "update"
-    || job.type === "verify-files"
-  );
+  return job.type === "install-files" || job.type === "update" || job.type === "verify-files";
 }

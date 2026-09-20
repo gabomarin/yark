@@ -15,11 +15,7 @@ import {
 } from "./asa-api-paths";
 
 function isSafePluginName(name: string): boolean {
-  return (
-    name.trim().length > 0
-    && !/[\\/]/.test(name)
-    && !name.includes("..")
-  );
+  return name.trim().length > 0 && !/[\\/]/.test(name) && !name.includes("..");
 }
 
 function legacyDisabledPluginName(folderName: string): string | null {
@@ -30,16 +26,8 @@ function legacyDisabledPluginName(folderName: string): string | null {
   return isSafePluginName(name) ? name : null;
 }
 
-async function resolveConfigFile(
-  pluginDir: string,
-  pluginName: string,
-): Promise<string | null> {
-  const candidates = [
-    "config.json",
-    "Config.json",
-    `${pluginName}.json`,
-    "PluginInfo.json",
-  ];
+async function resolveConfigFile(pluginDir: string, pluginName: string): Promise<string | null> {
+  const candidates = ["config.json", "Config.json", `${pluginName}.json`, "PluginInfo.json"];
   for (const file of candidates) {
     const full = join(pluginDir, file);
     if (existsSync(full)) return file;
@@ -58,9 +46,7 @@ async function listPluginDirs(root: string): Promise<string[]> {
  * - `Plugins\Name.disabled` (early YARK rename)
  * - `Win64\Disabled_Plugins\Name` (brief layout before sibling-of-Plugins)
  */
-async function migrateLegacyDisabledPluginFolders(
-  installDir: string,
-): Promise<void> {
+async function migrateLegacyDisabledPluginFolders(installDir: string): Promise<void> {
   const pluginsRoot = asaApiPluginsDir(installDir);
   const disabledRoot = asaApiDisabledPluginsDir(installDir);
 
@@ -98,9 +84,7 @@ async function migrateLegacyDisabledPluginFolders(
   }
 }
 
-async function collectPlugins(
-  installDir: string,
-): Promise<AsaApiPluginInfo[]> {
+async function collectPlugins(installDir: string): Promise<AsaApiPluginInfo[]> {
   await migrateLegacyDisabledPluginFolders(installDir);
 
   const pluginsRoot = asaApiPluginsDir(installDir);
@@ -142,16 +126,12 @@ async function collectPlugins(
     });
   }
 
-  plugins.sort((a, b) =>
-    a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
-  );
+  plugins.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
   return plugins;
 }
 
 /** Read-only AsaApi presence + plugins for one install. */
-export async function readAsaApiStatus(
-  installDir: string,
-): Promise<AsaApiStatus> {
+export async function readAsaApiStatus(installDir: string): Promise<AsaApiStatus> {
   const win64 = asaWin64Dir(installDir);
   const loaderPath = asaApiLoaderPath(installDir);
   const versionDllPath = asaApiVersionDllPath(installDir);
@@ -173,8 +153,7 @@ export async function readAsaApiStatus(
     }
   }
 
-  const installedOnDisk =
-    loaderPresent || versionDllPresent || versionDllDisabledPresent || apiCorePresent;
+  const installedOnDisk = loaderPresent || versionDllPresent || versionDllDisabledPresent || apiCorePresent;
 
   return {
     installedOnDisk,
@@ -182,11 +161,7 @@ export async function readAsaApiStatus(
     loaderPath: loaderPresent ? loaderPath : null,
     versionDllPresent,
     versionDllDisabledPresent,
-    versionDllPath: versionDllPresent
-      ? versionDllPath
-      : versionDllDisabledPresent
-        ? versionDllDisabledPath
-        : null,
+    versionDllPath: versionDllPresent ? versionDllPath : versionDllDisabledPresent ? versionDllDisabledPath : null,
     apiCorePresent,
     win64Path: win64,
     pluginsPath: pluginsRoot,
@@ -217,20 +192,13 @@ export async function setAsaApiPluginEnabled(
   const disabledRoot = asaApiDisabledPluginsDir(installDir);
   const enabledDir = join(pluginsRoot, trimmed);
   const disabledDir = join(disabledRoot, trimmed);
-  const legacyDisabledDir = join(
-    pluginsRoot,
-    `${trimmed}${ASA_API_PLUGIN_DISABLED_SUFFIX}`,
-  );
+  const legacyDisabledDir = join(pluginsRoot, `${trimmed}${ASA_API_PLUGIN_DISABLED_SUFFIX}`);
 
   if (enabled) {
     if (existsSync(enabledDir)) {
       return readAsaApiStatus(installDir);
     }
-    const source = existsSync(disabledDir)
-      ? disabledDir
-      : existsSync(legacyDisabledDir)
-        ? legacyDisabledDir
-        : null;
+    const source = existsSync(disabledDir) ? disabledDir : existsSync(legacyDisabledDir) ? legacyDisabledDir : null;
     if (source === null) {
       throw new Error(`Plugin "${trimmed}" was not found on disk`);
     }
@@ -240,11 +208,7 @@ export async function setAsaApiPluginEnabled(
     if (existsSync(disabledDir)) {
       return readAsaApiStatus(installDir);
     }
-    const source = existsSync(enabledDir)
-      ? enabledDir
-      : existsSync(legacyDisabledDir)
-        ? legacyDisabledDir
-        : null;
+    const source = existsSync(enabledDir) ? enabledDir : existsSync(legacyDisabledDir) ? legacyDisabledDir : null;
     if (source === null) {
       throw new Error(`Plugin "${trimmed}" was not found on disk`);
     }
@@ -259,10 +223,7 @@ export async function setAsaApiPluginEnabled(
  * Permanently delete a plugin folder from Plugins, Disabled_Plugins, or legacy
  * `Name.disabled` under Plugins.
  */
-export async function deleteAsaApiPlugin(
-  installDir: string,
-  pluginName: string,
-): Promise<AsaApiStatus> {
+export async function deleteAsaApiPlugin(installDir: string, pluginName: string): Promise<AsaApiStatus> {
   const trimmed = pluginName.trim();
   if (!isSafePluginName(trimmed)) {
     throw new Error("Invalid plugin name");

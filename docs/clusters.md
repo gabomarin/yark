@@ -21,33 +21,33 @@ Multiple servers on the same map in one cluster are allowed and not flagged.
 
 ## Module map
 
-| Role | Path |
-| --- | --- |
-| Compliance rules | `src/backend/domains/cluster/compliance.ts` (`checkClusterCompliance`) |
-| Instance facade | `src/backend/domains/instances/instance-service.ts` (`checkClusters`) |
-| Launch args (cluster trio) | `src/backend/domains/instances/launch-args.ts` |
-| Profile validation | `src/backend/domains/instances/validation.ts` |
-| Port conflicts helper | `src/shared/port-conflicts.ts` (`findPortConflicts`) |
-| Contracts | `src/shared/types.ts` (`ClusterComplianceReport`, `ClusterComplianceIssue`) |
-| IPC channel | `src/shared/ipc.ts` (`cluster:check`) → `window.api.checkCluster()` |
-| IPC handler | `src/main/ipc-handlers.ts` |
-| Preload | `src/preload/index.ts` |
-| Fleet UI | `src/renderer/src/features/clusters/` (`ClustersPage`, `clusterModel`, `createClusterModel`, `membershipModel`, `CreateClusterModal`, `AddServersModal`, `RemoveServersModal`, `ClusterIniTemplateModal`) |
-| Cluster INI templates | `src/backend/domains/config/cluster-ini-template-service.ts`, `src/backend/domains/config/cluster-ini-template-apply-service.ts`, `src/backend/domains/config/ini-compose.ts`, `src/backend/infra/db/cluster-ini-template-repository.ts`, `src/shared/yark-owned-ini-keys.ts` |
-| Known cluster picker | `src/renderer/src/features/clusters/knownClusterOptions.ts` |
-| First-run setup (pending cluster) | `src/renderer/src/features/setup-wizard/` — optional Cluster ID/dir persisted in `onboarding.v1` until the first successful create/import (#298) |
-| Create / edit form | `src/renderer/src/features/servers/components/ServerForm/` |
-| Onboarding (experience + files) | `src/renderer/src/features/server-workspace/components/ServerOnboardingChecklist/` |
-| Visual helper | `scripts/visual-clusters.cjs` |
+| Role                              | Path                                                                                                                                                                                                                                                                          |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Compliance rules                  | `src/backend/domains/cluster/compliance.ts` (`checkClusterCompliance`)                                                                                                                                                                                                        |
+| Instance facade                   | `src/backend/domains/instances/instance-service.ts` (`checkClusters`)                                                                                                                                                                                                         |
+| Launch args (cluster trio)        | `src/backend/domains/instances/launch-args.ts`                                                                                                                                                                                                                                |
+| Profile validation                | `src/backend/domains/instances/validation.ts`                                                                                                                                                                                                                                 |
+| Port conflicts helper             | `src/shared/port-conflicts.ts` (`findPortConflicts`)                                                                                                                                                                                                                          |
+| Contracts                         | `src/shared/types.ts` (`ClusterComplianceReport`, `ClusterComplianceIssue`)                                                                                                                                                                                                   |
+| IPC channel                       | `src/shared/ipc.ts` (`cluster:check`) → `window.api.checkCluster()`                                                                                                                                                                                                           |
+| IPC handler                       | `src/main/ipc-handlers.ts`                                                                                                                                                                                                                                                    |
+| Preload                           | `src/preload/index.ts`                                                                                                                                                                                                                                                        |
+| Fleet UI                          | `src/renderer/src/features/clusters/` (`ClustersPage`, `clusterModel`, `createClusterModel`, `membershipModel`, `CreateClusterModal`, `AddServersModal`, `RemoveServersModal`, `ClusterIniTemplateModal`)                                                                     |
+| Cluster INI templates             | `src/backend/domains/config/cluster-ini-template-service.ts`, `src/backend/domains/config/cluster-ini-template-apply-service.ts`, `src/backend/domains/config/ini-compose.ts`, `src/backend/infra/db/cluster-ini-template-repository.ts`, `src/shared/yark-owned-ini-keys.ts` |
+| Known cluster picker              | `src/renderer/src/features/clusters/knownClusterOptions.ts`                                                                                                                                                                                                                   |
+| First-run setup (pending cluster) | `src/renderer/src/features/setup-wizard/` — optional Cluster ID/dir persisted in `onboarding.v1` until the first successful create/import (#298)                                                                                                                              |
+| Create / edit form                | `src/renderer/src/features/servers/components/ServerForm/`                                                                                                                                                                                                                    |
+| Onboarding (experience + files)   | `src/renderer/src/features/server-workspace/components/ServerOnboardingChecklist/`                                                                                                                                                                                            |
+| Visual helper                     | `scripts/visual-clusters.cjs`                                                                                                                                                                                                                                                 |
 
 Reports refresh on App bootstrap/`refresh()` and whenever the Clusters view
 opens (the page calls refresh on mount). There is no separate Recheck button.
 
 ## Profile fields
 
-| Field | Type | Meaning |
-| --- | --- | --- |
-| `clusterId` | `string \| null` | Shared cluster name ID (`-clusterid=`) |
+| Field        | Type             | Meaning                                                              |
+| ------------ | ---------------- | -------------------------------------------------------------------- |
+| `clusterId`  | `string \| null` | Shared cluster name ID (`-clusterid=`)                               |
 | `clusterDir` | `string \| null` | Shared storage path (`-ClusterDirOverride=`) — Windows absolute path |
 
 ### Validation (`validateProfileInput`)
@@ -89,13 +89,13 @@ Example (two maps, same cluster):
 2. Group remaining profiles by exact `clusterId` string.
 3. For each group, emit issues and one `ClusterComplianceReport`.
 
-| Condition | Severity | Effect on `ok` |
-| --- | --- | --- |
-| Fewer than 2 servers | `warning` | still `ok` |
-| Members use different `clusterDir` values (incl. empty) | `error` | `ok: false` |
-| A server has null/empty `clusterDir` | `error` | `ok: false` |
-| Port conflict among servers (`game` / `query` / `rcon`) | `error` | `ok: false` |
-| Sorted mod-id lists differ across servers | `warning` | still `ok` |
+| Condition                                               | Severity  | Effect on `ok` |
+| ------------------------------------------------------- | --------- | -------------- |
+| Fewer than 2 servers                                    | `warning` | still `ok`     |
+| Members use different `clusterDir` values (incl. empty) | `error`   | `ok: false`    |
+| A server has null/empty `clusterDir`                    | `error`   | `ok: false`    |
+| Port conflict among servers (`game` / `query` / `rcon`) | `error`   | `ok: false`    |
+| Sorted mod-id lists differ across servers               | `warning` | still `ok`     |
 
 Port conflicts use `findPortConflicts(members)` — **only servers in that
 cluster group**, not the whole fleet. Fleet-wide port checks live on Create /
@@ -241,33 +241,33 @@ Report shape:
 
 ## Troubleshooting
 
-| Symptom | Likely cause | What to do |
-| --- | --- | --- |
-| Cluster missing from Clusters list | Server has `clusterDir` but null `clusterId` | Set both fields; reopen Clusters |
-| `ok: false` / different directories | Typo or per-server dirs | Align `clusterDir` on every member |
-| Port conflict error | Overlapping ports inside the cluster | Change ports on one member |
-| Warning: only one server | Only one server tagged with that ID | Add another server or ignore if intentional |
-| Warning: different mod lists | Divergent `mods` arrays | Align Project IDs if transfers matter |
-| Launch missing `-clusterid=` | One of ID/dir is null | Both required for the CLI trio |
-| Save rejected | `clusterId` set without `clusterDir` | Provide a Windows absolute cluster path |
-| Template missing ports / SessionName / ActiveMods | By design — profileSync + ASE-legacy keys | Set identity/ports on each profile; ASA mods on the Mods panel |
+| Symptom                                           | Likely cause                                 | What to do                                                     |
+| ------------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------- |
+| Cluster missing from Clusters list                | Server has `clusterDir` but null `clusterId` | Set both fields; reopen Clusters                               |
+| `ok: false` / different directories               | Typo or per-server dirs                      | Align `clusterDir` on every member                             |
+| Port conflict error                               | Overlapping ports inside the cluster         | Change ports on one member                                     |
+| Warning: only one server                          | Only one server tagged with that ID          | Add another server or ignore if intentional                    |
+| Warning: different mod lists                      | Divergent `mods` arrays                      | Align Project IDs if transfers matter                          |
+| Launch missing `-clusterid=`                      | One of ID/dir is null                        | Both required for the CLI trio                                 |
+| Save rejected                                     | `clusterId` set without `clusterDir`         | Provide a Windows absolute cluster path                        |
+| Template missing ports / SessionName / ActiveMods | By design — profileSync + ASE-legacy keys    | Set identity/ports on each profile; ASA mods on the Mods panel |
 
 ## Tests and visual review
 
-| Artifact | Coverage |
-| --- | --- |
-| `tests/unit/compliance.test.ts` | Ready cluster, ignore unclustered, single-server warning, dir mismatch, port conflict, mod mismatch |
-| `src/renderer/src/features/clusters/ClustersPage.test.tsx` | Empty / ready / broken UI, dir-without-id copy, create-cluster wizard, add/remove membership, INI template modal, promote/restore/seed |
-| `tests/unit/create-cluster-model.test.ts` | Eligibility, ID/dir validation, create input |
-| `tests/unit/membership-model.test.ts` | Add/remove eligibility, join ports, leave input |
-| `tests/unit/yark-owned-ini-keys.test.ts` | Owned-key strip / match |
-| `tests/unit/cluster-ini-template.test.ts` | Template repo/service CRUD + validation |
-| `tests/unit/ini-compose.test.ts` | Template↔member composition + secret redaction |
-| `tests/unit/cluster-ini-template-apply.test.ts` | Restore/promote/seed commit + selective files (#181) + failure preservation |
-| `tests/unit/known-cluster-options.test.ts` | Fleet `{clusterId, clusterDir}` picker options (#178) |
+| Artifact                                                                      | Coverage                                                                                                                                    |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tests/unit/compliance.test.ts`                                               | Ready cluster, ignore unclustered, single-server warning, dir mismatch, port conflict, mod mismatch                                         |
+| `src/renderer/src/features/clusters/ClustersPage.test.tsx`                    | Empty / ready / broken UI, dir-without-id copy, create-cluster wizard, add/remove membership, INI template modal, promote/restore/seed      |
+| `tests/unit/create-cluster-model.test.ts`                                     | Eligibility, ID/dir validation, create input                                                                                                |
+| `tests/unit/membership-model.test.ts`                                         | Add/remove eligibility, join ports, leave input                                                                                             |
+| `tests/unit/yark-owned-ini-keys.test.ts`                                      | Owned-key strip / match                                                                                                                     |
+| `tests/unit/cluster-ini-template.test.ts`                                     | Template repo/service CRUD + validation                                                                                                     |
+| `tests/unit/ini-compose.test.ts`                                              | Template↔member composition + secret redaction                                                                                              |
+| `tests/unit/cluster-ini-template-apply.test.ts`                               | Restore/promote/seed commit + selective files (#181) + failure preservation                                                                 |
+| `tests/unit/known-cluster-options.test.ts`                                    | Fleet `{clusterId, clusterDir}` picker options (#178)                                                                                       |
 | `src/renderer/src/features/servers/components/ServerForm/ServerForm.test.tsx` | Create Cluster select (None / join) + empty-fleet CTA; edit keeps free-text Cluster ID + PathField dir (#178 / #222); port-conflict preview |
-| `node scripts/e2e-clusters-membership.cjs` | Playwright create (PathField Browse stub) → add → remove membership (Windows) |
-| `node scripts/visual-clusters.cjs` | Playwright sidebar → Clusters compliance UI |
+| `node scripts/e2e-clusters-membership.cjs`                                    | Playwright create (PathField Browse stub) → add → remove membership (Windows)                                                               |
+| `node scripts/visual-clusters.cjs`                                            | Playwright sidebar → Clusters compliance UI                                                                                                 |
 
 Visible Clusters UI changes still follow [visual-testing.md](visual-testing.md)
 (HD / Full HD / QHD).

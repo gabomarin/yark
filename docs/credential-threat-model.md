@@ -10,11 +10,11 @@ user. Encrypting only the database would not change who can read the secrets.
 
 ## Inventory
 
-| Secret | SQLite (`servers`) | ASA INI | Process command line | IPC list / Edit | UI | Diagnostics |
-| --- | --- | --- | --- | --- | --- | --- |
-| Admin password (`ServerAdminPassword` / RCON) | Plaintext column (`admin_password`) | Required plaintext so `ArkAscendedServer.exe` can read it | **Not** passed as a launch arg | Returned on the profile so Edit can show the masked field | `PasswordInput` (masked) | Password **settings omitted** from GUS/config dumps; leftover assignments redacted |
-| Join password (`ServerPassword`) | Plaintext column or SQL `NULL` | Required plaintext when set | **Not** a YARK-owned launch arg | Same as admin | `PasswordInput` (masked) | Same omit/redact rules |
-| Assistant / CurseForge API keys | Not stored in the profile DB | n/a | n/a | n/a | n/a | Worker errors redact `x-api-key` / Bearer ([#134](https://github.com/gabomarin/yark/issues/134) is separate) |
+| Secret                                        | SQLite (`servers`)                  | ASA INI                                                   | Process command line            | IPC list / Edit                                           | UI                       | Diagnostics                                                                                                  |
+| --------------------------------------------- | ----------------------------------- | --------------------------------------------------------- | ------------------------------- | --------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| Admin password (`ServerAdminPassword` / RCON) | Plaintext column (`admin_password`) | Required plaintext so `ArkAscendedServer.exe` can read it | **Not** passed as a launch arg  | Returned on the profile so Edit can show the masked field | `PasswordInput` (masked) | Password **settings omitted** from GUS/config dumps; leftover assignments redacted                           |
+| Join password (`ServerPassword`)              | Plaintext column or SQL `NULL`      | Required plaintext when set                               | **Not** a YARK-owned launch arg | Same as admin                                             | `PasswordInput` (masked) | Same omit/redact rules                                                                                       |
+| Assistant / CurseForge API keys               | Not stored in the profile DB        | n/a                                                       | n/a                             | n/a                                                       | n/a                      | Worker errors redact `x-api-key` / Bearer ([#134](https://github.com/gabomarin/yark/issues/134) is separate) |
 
 Other copies:
 
@@ -72,10 +72,10 @@ must reuse these rules.
 
 ## Backup and restore
 
-| Artifact | Credentials | Restore |
-| --- | --- | --- |
-| World / players ZIP | None | Unaffected |
-| INI ZIP | Plaintext GUS passwords | Restores onto disk as ASA needs them |
+| Artifact               | Credentials                | Restore                                           |
+| ---------------------- | -------------------------- | ------------------------------------------------- |
+| World / players ZIP    | None                       | Unaffected                                        |
+| INI ZIP                | Plaintext GUS passwords    | Restores onto disk as ASA needs them              |
 | Profile DB + snapshots | Plaintext password columns | Same Windows user. Treat copies like the live DB. |
 
 ## File-permission expectations
@@ -97,15 +97,15 @@ has (often inherited from the disk). Treat install folders as trusted.
 
 ## Module map
 
-| Role | Path |
-| --- | --- |
-| Omit + redact | `src/shared/credential-redaction.ts` |
-| IPC errors | `src/main/ipc-validate.ts` |
-| Events | `src/backend/infra/db/server-repository.ts` (`addEvent` write + `recentEvents` read; LogsService does not wrap again) |
-| Log list / export / runtime / update-log reads | `src/backend/domains/logs/logs-service.ts` |
-| Runtime console ring | `src/backend/infra/process/process-manager.ts` (omit/redact on append) |
-| Crash excerpts | `src/backend/domains/instances/instance-crash.ts` |
-| Cluster INI previews (omit owned keys) | `src/backend/domains/config/ini-compose.ts` — **pre-existing** `omitYarkOwnedFromIniPreview`; not added by #144 |
+| Role                                           | Path                                                                                                                  |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Omit + redact                                  | `src/shared/credential-redaction.ts`                                                                                  |
+| IPC errors                                     | `src/main/ipc-validate.ts`                                                                                            |
+| Events                                         | `src/backend/infra/db/server-repository.ts` (`addEvent` write + `recentEvents` read; LogsService does not wrap again) |
+| Log list / export / runtime / update-log reads | `src/backend/domains/logs/logs-service.ts`                                                                            |
+| Runtime console ring                           | `src/backend/infra/process/process-manager.ts` (omit/redact on append)                                                |
+| Crash excerpts                                 | `src/backend/domains/instances/instance-crash.ts`                                                                     |
+| Cluster INI previews (omit owned keys)         | `src/backend/domains/config/ini-compose.ts` — **pre-existing** `omitYarkOwnedFromIniPreview`; not added by #144       |
 
 Related operator copy: [Security & privacy](https://getyark.com/docs/security-privacy/),
 [`SECURITY.md`](../SECURITY.md), [profile-database.md](profile-database.md),

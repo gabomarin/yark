@@ -27,9 +27,7 @@ export const onboardingRecordSchema = z.object({
     .optional(),
 });
 
-export function parseOnboardingRecord(
-  raw: string | null | undefined,
-): OnboardingRecord | null {
+export function parseOnboardingRecord(raw: string | null | undefined): OnboardingRecord | null {
   if (raw === null || raw === undefined) {
     return null;
   }
@@ -50,9 +48,7 @@ export function serializeOnboardingRecord(record: OnboardingRecord): string {
   return JSON.stringify({
     status: record.status,
     completedAt: record.completedAt,
-    ...(record.pendingCluster === undefined
-      ? {}
-      : { pendingCluster: record.pendingCluster }),
+    ...(record.pendingCluster === undefined ? {} : { pendingCluster: record.pendingCluster }),
   });
 }
 

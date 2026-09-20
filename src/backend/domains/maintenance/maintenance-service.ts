@@ -22,12 +22,7 @@ export class MaintenanceService {
     instances: InstanceService,
     updates: UpdateService,
   ) {
-    this.restartRuntime = new MaintenanceRestartRuntime(
-      repo,
-      servers,
-      processes,
-      instances,
-    );
+    this.restartRuntime = new MaintenanceRestartRuntime(repo, servers, processes, instances);
     this.updateRuntime = new MaintenanceUpdateRuntime(
       repo,
       servers,
@@ -36,9 +31,7 @@ export class MaintenanceService {
       updates,
       this.restartRuntime,
     );
-    this.restartRuntime.setPeerBusyCheck((serverId) =>
-      this.updateRuntime.hasActiveCountdown(serverId),
-    );
+    this.restartRuntime.setPeerBusyCheck((serverId) => this.updateRuntime.hasActiveCountdown(serverId));
     this.restartRuntime.setPeerPauseNotify((serverId) => {
       this.updateRuntime.pauseScheduleFromPeer(serverId);
     });
@@ -50,8 +43,7 @@ export class MaintenanceService {
   async getPolicy(serverId: string): Promise<MaintenancePolicyStatus> {
     this.repo.ensurePolicy(serverId);
     const base = this.restartRuntime.enrichStatus(this.repo.getPolicy(serverId));
-    const steamUpdateAvailable =
-      await this.updateRuntime.isSteamUpdateAvailable(serverId);
+    const steamUpdateAvailable = await this.updateRuntime.isSteamUpdateAvailable(serverId);
     return this.updateRuntime.mergeStatus(base, steamUpdateAvailable);
   }
 
@@ -89,10 +81,7 @@ export class MaintenanceService {
    * server. Crash recovery must not restart into an active maintenance window.
    */
   isMaintenanceActive(serverId: string): boolean {
-    return (
-      this.restartRuntime.hasActiveCountdown(serverId)
-      || this.updateRuntime.hasActiveCountdown(serverId)
-    );
+    return this.restartRuntime.hasActiveCountdown(serverId) || this.updateRuntime.hasActiveCountdown(serverId);
   }
 
   /** Live countdown changes (arm/teardown) so main can re-push runtime status. */

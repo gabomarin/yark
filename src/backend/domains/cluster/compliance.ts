@@ -1,18 +1,12 @@
 import { findPortConflicts } from "@shared/server/port-conflicts";
-import type {
-  ClusterComplianceIssue,
-  ClusterComplianceReport,
-  ServerProfile,
-} from "@shared/types";
+import type { ClusterComplianceIssue, ClusterComplianceReport, ServerProfile } from "@shared/types";
 
 /**
  * Evaluates consistency of all clusters defined across profiles.
  * A cluster is transferable when: >= 2 members, same clusterDir,
  * no port conflicts between members, and consistent mods.
  */
-export function checkClusterCompliance(
-  profiles: ServerProfile[],
-): ClusterComplianceReport[] {
+export function checkClusterCompliance(profiles: ServerProfile[]): ClusterComplianceReport[] {
   const clusters = new Map<string, ServerProfile[]>();
   for (const p of profiles) {
     if (p.clusterId === null) continue;
@@ -61,9 +55,7 @@ export function checkClusterCompliance(
     }
 
     // Mod consistency: warn if a member differs from the common set.
-    const modSignatures = new Set(
-      members.map((m) => [...m.mods].sort().join(",")),
-    );
+    const modSignatures = new Set(members.map((m) => [...m.mods].sort().join(",")));
     if (modSignatures.size > 1) {
       issues.push({
         serverId: null,

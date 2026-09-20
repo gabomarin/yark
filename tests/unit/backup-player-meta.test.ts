@@ -33,12 +33,9 @@ describe("backup-player-meta", () => {
   });
 
   it("parses legacy notes without playerName tag", () => {
-    const legacy =
-      "[playerKey=76561198000000000] Player disconnected: Bob (76561198000000000)";
+    const legacy = "[playerKey=76561198000000000] Player disconnected: Bob (76561198000000000)";
     expect(parsePlayerNameFromNotes(legacy)).toBe("Bob");
-    expect(playersRetentionKey(backup({ notes: legacy, type: "player_disconnect" }))).toBe(
-      "76561198000000000",
-    );
+    expect(playersRetentionKey(backup({ notes: legacy, type: "player_disconnect" }))).toBe("76561198000000000");
   });
 
   it("falls back to key, All players, or path stem", () => {
@@ -50,11 +47,9 @@ describe("backup-player-meta", () => {
         }),
       ),
     ).toBe("abc");
-    expect(
-      playerBackupDisplayName(
-        backup({ notes: null, type: "manual", path: "C:/backups/full-players" }),
-      ),
-    ).toBe("All players");
+    expect(playerBackupDisplayName(backup({ notes: null, type: "manual", path: "C:/backups/full-players" }))).toBe(
+      "All players",
+    );
     expect(
       playerBackupDisplayName(
         backup({

@@ -27,7 +27,6 @@ export function workspaceHeaderControls(input: {
       !startBusy,
     canEnable: isServerDisabled && input.hasToggleEnabled && !filesJobActive,
     canStop: status === "running" || status === "starting",
-    canRestart:
-      status === "running" && !filesJobActive && input.filesReady && !startBusy,
+    canRestart: status === "running" && !filesJobActive && input.filesReady && !startBusy,
   };
 }

@@ -13,10 +13,7 @@ const { pathToFileURL } = require("node:url");
 
 function percentile(sorted, p) {
   if (sorted.length === 0) return null;
-  const idx = Math.min(
-    sorted.length - 1,
-    Math.max(0, Math.ceil((p / 100) * sorted.length) - 1),
-  );
+  const idx = Math.min(sorted.length - 1, Math.max(0, Math.ceil((p / 100) * sorted.length) - 1));
   return sorted[idx];
 }
 
@@ -64,10 +61,7 @@ async function main() {
     await timeMany("async-fs-install-probe", 40, async () => {
       await access(join(binDir, "ArkAscendedServer.exe"));
       await readFile(join(binDir, "version.txt"), "utf8");
-      await readFile(
-        join(installDir, "steamapps", "appmanifest_2430930.acf"),
-        "utf8",
-      );
+      await readFile(join(installDir, "steamapps", "appmanifest_2430930.acf"), "utf8");
       await readdir(installDir);
       await stat(binDir);
     });
@@ -92,11 +86,11 @@ async function main() {
           `$p = Get-CimInstance -ClassName Win32_Process -Filter ('ProcessId=' + $ProcessId) -ErrorAction SilentlyContinue`,
           `if ($null -eq $p) { '' } else { $p | Select-Object ProcessId | ConvertTo-Json -Compress }`,
         ].join("; ");
-        await execFileAsync(
-          "powershell.exe",
-          ["-NoProfile", "-NoLogo", "-NonInteractive", "-Command", script],
-          { timeout: 5_000, windowsHide: true, maxBuffer: 1024 * 1024 },
-        );
+        await execFileAsync("powershell.exe", ["-NoProfile", "-NoLogo", "-NonInteractive", "-Command", script], {
+          timeout: 5_000,
+          windowsHide: true,
+          maxBuffer: 1024 * 1024,
+        });
       });
     } else {
       console.log("Skipping Windows-only process probes (not win32)");

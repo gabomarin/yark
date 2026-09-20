@@ -36,9 +36,7 @@ describe("listIniUiCategoryTree", () => {
     const text = "[ServerSettings]\nXPMultiplier=2\n";
     const tree = listIniUiCategoryTree(text, "gameUserSettings");
     const rates = tree.find((c) => c.id === "rates");
-    expect(rates?.keys).toEqual([
-      { section: "ServerSettings", key: "XPMultiplier" },
-    ]);
+    expect(rates?.keys).toEqual([{ section: "ServerSettings", key: "XPMultiplier" }]);
   });
 
   it("puts custom mod sections under Other like the visual editor", () => {

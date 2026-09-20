@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  asaLaunchOptionEntries,
-  lookupLaunchOptionById,
-} from "@shared/asa/asa-launch-options-catalog";
+import { asaLaunchOptionEntries, lookupLaunchOptionById } from "@shared/asa/asa-launch-options-catalog";
 import {
   CATALOG_STATUS_FILTERS,
   catalogBrowseSecondary,
@@ -16,12 +13,7 @@ import {
 
 describe("launchOptionsCatalogModel (#381)", () => {
   it("exposes operator tooltips for every browse filter", () => {
-    expect(CATALOG_STATUS_FILTERS.map(catalogStatusLabel)).toEqual([
-      "All",
-      "Supported",
-      "Uncertain",
-      "YARK-owned",
-    ]);
+    expect(CATALOG_STATUS_FILTERS.map(catalogStatusLabel)).toEqual(["All", "Supported", "Uncertain", "YARK-owned"]);
     for (const filter of CATALOG_STATUS_FILTERS) {
       const tooltip = catalogStatusFilterTooltip(filter);
       expect(tooltip.trim().length).toBeGreaterThan(20);
@@ -44,9 +36,7 @@ describe("launchOptionsCatalogModel (#381)", () => {
     expect(yarkManagedLaunchCopy("port")).toBe(
       "YARK already sets this from Server settings. Do not add it in Extra arguments.",
     );
-    expect(yarkManagedLaunchCopy("mods")).toBe(
-      "YARK already sets this from Mods. Do not add it in Extra arguments.",
-    );
+    expect(yarkManagedLaunchCopy("mods")).toBe("YARK already sets this from Mods. Do not add it in Extra arguments.");
 
     for (const id of YARK_OWNED_CATALOG_IDS) {
       const entry = lookupLaunchOptionById(id);
@@ -62,9 +52,7 @@ describe("launchOptionsCatalogModel (#381)", () => {
   });
 
   it("throws when a YARK-owned id has no managed-surface mapping", () => {
-    expect(() => yarkManagedSurfaceForCatalogId("not-a-mapped-yark-owned")).toThrow(
-      /no managed-surface mapping/i,
-    );
+    expect(() => yarkManagedSurfaceForCatalogId("not-a-mapped-yark-owned")).toThrow(/no managed-surface mapping/i);
   });
 
   it("keeps Conflicts metadata for non–YARK-owned rows", () => {

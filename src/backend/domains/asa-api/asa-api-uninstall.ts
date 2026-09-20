@@ -37,9 +37,7 @@ function looksLikeAsaApiConfigJson(raw: string): boolean {
     const settings = parsed.settings;
     if (settings === null || typeof settings !== "object") return false;
     return (
-      "AutomaticPluginReloading" in settings ||
-      "AttachToParent" in settings ||
-      "AutomaticCacheDownload" in settings
+      "AutomaticPluginReloading" in settings || "AttachToParent" in settings || "AutomaticCacheDownload" in settings
     );
   } catch {
     return false;
@@ -56,9 +54,7 @@ async function removePath(target: string): Promise<void> {
  * dedicated binary and Steam files intact. Does not change profile flags —
  * callers clear `useAsaApi` / `useAsaApiLoader`.
  */
-export async function uninstallAsaApiFromInstall(
-  installDir: string,
-): Promise<AsaApiStatus> {
+export async function uninstallAsaApiFromInstall(installDir: string): Promise<AsaApiStatus> {
   const win64 = asaWin64Dir(installDir);
   if (!existsSync(win64)) {
     return readAsaApiStatus(installDir);

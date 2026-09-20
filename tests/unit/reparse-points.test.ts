@@ -3,14 +3,7 @@
  * Native junction cases run only on win32.
  */
 import { execFileSync } from "node:child_process";
-import {
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
@@ -94,9 +87,7 @@ describe("reparse-point walks (cross-platform)", () => {
   });
 
   it("allows a missing destination root", async () => {
-    await expect(
-      assertNoReparsePointsUnderRoot(join(tmpdir(), "yark-missing-dest-nope")),
-    ).resolves.toBeUndefined();
+    await expect(assertNoReparsePointsUnderRoot(join(tmpdir(), "yark-missing-dest-nope"))).resolves.toBeUndefined();
   });
 
   it("honors cancel during under-root scans", async () => {
@@ -178,9 +169,9 @@ describe.runIf(IS_WINDOWS)("Windows junction hardening (#322)", () => {
     writeFileSync(join(sentinel, "marker.txt"), "UNTOUCHED", "utf8");
     createJunction(join(dest, "data"), sentinel);
 
-    await expect(
-      robocopyTree(source, dest, { operationLabel: "junction dest copy test" }),
-    ).rejects.toThrow(/link or junction at "data"/i);
+    await expect(robocopyTree(source, dest, { operationLabel: "junction dest copy test" })).rejects.toThrow(
+      /link or junction at "data"/i,
+    );
 
     expect(readFileSync(join(sentinel, "marker.txt"), "utf8")).toBe("UNTOUCHED");
     expect(existsSync(join(sentinel, "payload.txt"))).toBe(false);
@@ -243,9 +234,9 @@ describe.runIf(IS_WINDOWS)("Windows junction hardening (#322)", () => {
     createJunction(parent, sentinel);
 
     const dest = join(parent, "NewServer");
-    await expect(
-      robocopyTree(source, dest, { operationLabel: "parent junction copy" }),
-    ).rejects.toThrow(/link or junction/i);
+    await expect(robocopyTree(source, dest, { operationLabel: "parent junction copy" })).rejects.toThrow(
+      /link or junction/i,
+    );
 
     expect(existsSync(join(sentinel, "NewServer"))).toBe(false);
     expect(readFileSync(join(sentinel, "marker.txt"), "utf8")).toBe("UNTOUCHED");
@@ -274,9 +265,7 @@ describe.runIf(IS_WINDOWS)("Windows junction hardening (#322)", () => {
   });
 
   it("resolveWorldMapSaveDir ignores a map folder that is a junction", async () => {
-    const { resolveWorldMapSaveDir } = await import(
-      "@backend/domains/backups/world-snapshot"
-    );
+    const { resolveWorldMapSaveDir } = await import("@backend/domains/backups/world-snapshot");
     const root = trackTemp(mkdtempSync(join(tmpdir(), "yark-junc-map-")));
     const savedArks = join(root, "SavedArks");
     const sentinel = join(root, "sentinel");
@@ -304,9 +293,11 @@ describe.runIf(IS_WINDOWS)("Windows junction hardening (#322)", () => {
     ).resolves.toBeUndefined();
 
     createJunction(join(dest, "Engine", "bad"), sentinel);
-    await expect(assertNoReparsePointsUnderRoot(dest, {
-      excludeDirs: ["ShooterGame\\Saved"],
-    })).rejects.toThrow(/Engine\/bad/i);
+    await expect(
+      assertNoReparsePointsUnderRoot(dest, {
+        excludeDirs: ["ShooterGame\\Saved"],
+      }),
+    ).rejects.toThrow(/Engine\/bad/i);
   });
 
   it("recursive delete removes the junction link but not the sentinel target", async () => {
@@ -350,9 +341,7 @@ describe.runIf(IS_WINDOWS)("Windows junction hardening (#322)", () => {
     mkdirSync(sentinel, { recursive: true });
     createJunction(join(tree, "nested", "escape"), sentinel);
 
-    await expect(assertNoReparsePointsUnderRoot(tree)).rejects.toThrow(
-      /nested\/escape/i,
-    );
+    await expect(assertNoReparsePointsUnderRoot(tree)).rejects.toThrow(/nested\/escape/i);
     try {
       await assertNoReparsePointsUnderRoot(tree);
       expect.unreachable("expected reparse-point rejection");

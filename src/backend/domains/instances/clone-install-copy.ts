@@ -6,9 +6,7 @@
 import { type ChildProcess } from "node:child_process";
 import { dirname } from "node:path";
 import { readVolumeSpace } from "../backups/backup-disk";
-import {
-  estimateDirectoryBytes as estimateDirectoryBytesSafe,
-} from "../../infra/fs/reparse-points";
+import { estimateDirectoryBytes as estimateDirectoryBytesSafe } from "../../infra/fs/reparse-points";
 import { robocopyTree } from "../updates/robocopy-tree";
 
 /** Extra free-space headroom beyond estimated source size (10%). */
@@ -27,10 +25,7 @@ export async function estimateDirectoryBytes(root: string): Promise<number> {
   return estimateDirectoryBytesSafe(root, { maxEntries: MAX_SIZE_WALK_ENTRIES });
 }
 
-export async function assertEnoughFreeSpaceForCopy(
-  destinationDir: string,
-  sourceBytes: number,
-): Promise<void> {
+export async function assertEnoughFreeSpaceForCopy(destinationDir: string, sourceBytes: number): Promise<void> {
   if (sourceBytes <= 0) {
     return;
   }
@@ -42,9 +37,7 @@ export async function assertEnoughFreeSpaceForCopy(
   if (space.freeBytes < needed) {
     const freeGb = (space.freeBytes / 1024 ** 3).toFixed(1);
     const needGb = (needed / 1024 ** 3).toFixed(1);
-    throw new Error(
-      `Not enough free space on ${space.volumePath} (need ~${needGb} GB, have ${freeGb} GB).`,
-    );
+    throw new Error(`Not enough free space on ${space.volumePath} (need ~${needGb} GB, have ${freeGb} GB).`);
   }
 }
 
@@ -61,9 +54,7 @@ export interface CopyInstallTreeProgressArgs {
  * Copies `sourceDir` → `destDir` with robocopy `/E` `/XJ` and reports approximate
  * progress from destination-volume free-space delta.
  */
-export async function copyInstallTreeWithProgress(
-  args: CopyInstallTreeProgressArgs,
-): Promise<number> {
+export async function copyInstallTreeWithProgress(args: CopyInstallTreeProgressArgs): Promise<number> {
   const { sourceDir, destDir, sourceBytes, isCancelled, onSpawn, onProgress } = args;
 
   let pollTimer: ReturnType<typeof setInterval> | null = null;
@@ -84,9 +75,7 @@ export async function copyInstallTreeWithProgress(
       }
       const copied = Math.max(0, freeBaseline - space.freeBytes);
       const ratio = Math.min(1, copied / sourceBytes);
-      const percent = Math.round(
-        COPY_PROGRESS_START + ratio * (COPY_PROGRESS_END - COPY_PROGRESS_START),
-      );
+      const percent = Math.round(COPY_PROGRESS_START + ratio * (COPY_PROGRESS_END - COPY_PROGRESS_START));
       onProgress(percent, `Copying server folder… ${percent}%`);
     } catch {
       // Best effort — keep last progress.

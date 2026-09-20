@@ -1,12 +1,6 @@
 import type { ReactElement, ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
-import {
-  Group,
-  Stack,
-  Text,
-  Tooltip,
-  UnstyledButton,
-} from "@mantine/core";
+import { Group, Stack, Text, Tooltip, UnstyledButton } from "@mantine/core";
 import {
   countAsaBrowseLaunchOptions,
   filterLaunchOptions,
@@ -37,20 +31,10 @@ function isBrowseStatus(status: AsaLaunchOptionStatus): status is BrowseStatus {
 }
 
 function StatusBadge({ status }: { status: BrowseStatus }): ReactElement {
-  return (
-    <span className={classes[catalogStatusToneClass(status)]}>
-      {catalogStatusLabel(status)}
-    </span>
-  );
+  return <span className={classes[catalogStatusToneClass(status)]}>{catalogStatusLabel(status)}</span>;
 }
 
-function MetaRow({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}): ReactElement {
+function MetaRow({ label, children }: { label: string; children: ReactNode }): ReactElement {
   return (
     <div className={classes.metaRow}>
       <Text size="xs" c="dimmed" tt="uppercase" className={classes.metaLabel}>
@@ -66,10 +50,7 @@ export function LaunchOptionsCatalogEntriesTab(props: Props): ReactElement {
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const entries = useMemo(
-    () => filterLaunchOptions({ status: filter, query, asaOnly: true }),
-    [filter, query],
-  );
+  const entries = useMemo(() => filterLaunchOptions({ status: filter, query, asaOnly: true }), [filter, query]);
 
   useEffect(() => {
     if (entries.length === 0) {
@@ -81,12 +62,9 @@ export function LaunchOptionsCatalogEntriesTab(props: Props): ReactElement {
     }
   }, [entries, selectedId]);
 
-  const selected: AsaLaunchOptionEntry | undefined =
-    entries.find((entry) => entry.id === selectedId) ?? entries[0];
+  const selected: AsaLaunchOptionEntry | undefined = entries.find((entry) => entry.id === selectedId) ?? entries[0];
   const selectedSecondary =
-    selected !== undefined && isBrowseStatus(selected.status)
-      ? catalogBrowseSecondary(selected)
-      : null;
+    selected !== undefined && isBrowseStatus(selected.status) ? catalogBrowseSecondary(selected) : null;
 
   const counts = useMemo(() => countAsaBrowseLaunchOptions(), []);
 
@@ -163,13 +141,9 @@ export function LaunchOptionsCatalogEntriesTab(props: Props): ReactElement {
                   <Text className={classes.rowExample} lineClamp={1}>
                     Example: {entry.example}
                   </Text>
-                  {secondary?.kind === "managed" ? (
-                    <div className={classes.rowManaged}>{secondary.text}</div>
-                  ) : null}
+                  {secondary?.kind === "managed" ? <div className={classes.rowManaged}>{secondary.text}</div> : null}
                   {secondary?.kind === "conflicts" ? (
-                    <div className={classes.rowConflicts}>
-                      Conflicts: {secondary.items.join(", ")}
-                    </div>
+                    <div className={classes.rowConflicts}>Conflicts: {secondary.items.join(", ")}</div>
                   ) : null}
                 </UnstyledButton>
               );
@@ -193,9 +167,7 @@ export function LaunchOptionsCatalogEntriesTab(props: Props): ReactElement {
             <div className={classes.detailPane} data-catalog-detail-pane>
               <div className={classes.metaBlock}>
                 <MetaRow label="Summary">{selected.summary}</MetaRow>
-                {selected.details ? (
-                  <MetaRow label="Details">{selected.details}</MetaRow>
-                ) : null}
+                {selected.details ? <MetaRow label="Details">{selected.details}</MetaRow> : null}
                 <MetaRow label="Example">
                   <span className={classes.mono}>{selected.example}</span>
                 </MetaRow>
@@ -204,9 +176,7 @@ export function LaunchOptionsCatalogEntriesTab(props: Props): ReactElement {
                 ) : null}
                 {selected.aliases.length > 0 ? (
                   <MetaRow label="Aliases">
-                    <span className={classes.mono}>
-                      {selected.aliases.join(", ")}
-                    </span>
+                    <span className={classes.mono}>{selected.aliases.join(", ")}</span>
                   </MetaRow>
                 ) : null}
                 {selectedSecondary?.kind === "managed" ? (
@@ -216,13 +186,7 @@ export function LaunchOptionsCatalogEntriesTab(props: Props): ReactElement {
                   <MetaRow label="Conflicts">
                     <Stack gap={4}>
                       {selectedSecondary.items.map((conflict) => (
-                        <Text
-                          key={conflict}
-                          span
-                          size="sm"
-                          c="attention"
-                          className={classes.mono}
-                        >
+                        <Text key={conflict} span size="sm" c="attention" className={classes.mono}>
                           {conflict}
                         </Text>
                       ))}

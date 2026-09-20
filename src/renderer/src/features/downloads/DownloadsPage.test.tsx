@@ -4,10 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import type { CriticalJobSummary, ServerProfile, SteamCmdStatus } from "@shared/types";
 import { DownloadsPage } from "./DownloadsPage";
-import {
-  ADVANCED_LOG_SEEN_IDS_KEY,
-  ADVANCED_LOG_STORAGE_KEY,
-} from "./useAdvancedLogExpanded";
+import { ADVANCED_LOG_SEEN_IDS_KEY, ADVANCED_LOG_STORAGE_KEY } from "./useAdvancedLogExpanded";
 
 afterEach(() => {
   cleanup();
@@ -15,7 +12,9 @@ afterEach(() => {
   window.sessionStorage.removeItem(ADVANCED_LOG_SEEN_IDS_KEY);
 });
 
-function job(overrides: Partial<CriticalJobSummary> & Pick<CriticalJobSummary, "id" | "operation" | "status">): CriticalJobSummary {
+function job(
+  overrides: Partial<CriticalJobSummary> & Pick<CriticalJobSummary, "id" | "operation" | "status">,
+): CriticalJobSummary {
   return {
     serverId: "srv-1",
     serverName: "Island",
@@ -183,12 +182,7 @@ describe("DownloadsPage", () => {
     const pageHandlers = handlers();
     render(
       <AppProviders>
-        <DownloadsPage
-          status={baseStatus()}
-          console={null}
-          servers={[]}
-          {...pageHandlers}
-        />
+        <DownloadsPage status={baseStatus()} console={null} servers={[]} {...pageHandlers} />
       </AppProviders>,
     );
 
@@ -206,9 +200,7 @@ describe("DownloadsPage", () => {
     const user = userEvent.setup();
     const pageHandlers = renderPage(baseStatus({ detected: false, executablePath: null }));
 
-    expect(
-      screen.getByText(/Install SteamCMD in Settings first/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Install SteamCMD in Settings first/i)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Install SteamCMD" }));
     expect(pageHandlers.onOpenSettings).toHaveBeenCalledTimes(1);
   });
@@ -249,9 +241,7 @@ describe("DownloadsPage", () => {
     expect(screen.queryByRole("button", { name: "Cancel this job" })).not.toBeInTheDocument();
     const queuedRow = document.querySelector('[data-download-row="job-queued"]');
     expect(queuedRow).not.toBeNull();
-    expect(
-      within(queuedRow as HTMLElement).getByRole("button", { name: "Cancel download" }),
-    ).toBeEnabled();
+    expect(within(queuedRow as HTMLElement).getByRole("button", { name: "Cancel download" })).toBeEnabled();
   });
 
   it("cancels a queued job without calling live SteamCMD cancel", async () => {
@@ -260,9 +250,7 @@ describe("DownloadsPage", () => {
     const queuedRow = document.querySelector('[data-download-row="job-queued"]');
     expect(queuedRow).not.toBeNull();
 
-    await user.click(
-      within(queuedRow as HTMLElement).getByRole("button", { name: "Cancel download" }),
-    );
+    await user.click(within(queuedRow as HTMLElement).getByRole("button", { name: "Cancel download" }));
     expect(pageHandlers.onCancelJob).toHaveBeenCalledWith("job-queued");
     expect(pageHandlers.onCancelLive).not.toHaveBeenCalled();
     expect(pageHandlers.onPauseLive).not.toHaveBeenCalled();
@@ -313,17 +301,13 @@ describe("DownloadsPage", () => {
                 operation: "update",
                 status: "failed",
                 phase: "applying-files",
-                recoveryReason:
-                  'YARK closed during phase "applying-files". Retry to continue.',
+                recoveryReason: 'YARK closed during phase "applying-files". Retry to continue.',
                 nextActions: ["retry", "dismiss"],
               }),
             ],
           })}
           console={{
-            lines: [
-              "[stdout] Update state (0x61) downloading",
-              "Retry when ready",
-            ],
+            lines: ["[stdout] Update state (0x61) downloading", "Retry when ready"],
             updatedAt: "2026-08-18T00:00:00.000Z",
           }}
           servers={[server()]}
@@ -348,8 +332,7 @@ describe("DownloadsPage", () => {
           operation: "update",
           status: "failed",
           phase: "applying-files",
-          recoveryReason:
-            'YARK closed during phase "applying-files". Retry to continue.',
+          recoveryReason: 'YARK closed during phase "applying-files". Retry to continue.',
           nextActions: ["retry", "dismiss"],
         }),
       ],
@@ -367,10 +350,7 @@ describe("DownloadsPage", () => {
 
     expect(screen.getByRole("button", { name: /^Hide advanced log$/i })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /^Hide advanced log$/i }));
-    expect(screen.getByRole("button", { name: /^Advanced log$/i })).toHaveAttribute(
-      "aria-expanded",
-      "false",
-    );
+    expect(screen.getByRole("button", { name: /^Advanced log$/i })).toHaveAttribute("aria-expanded", "false");
     unmount();
 
     render(
@@ -384,10 +364,7 @@ describe("DownloadsPage", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByRole("button", { name: /^Advanced log$/i })).toHaveAttribute(
-      "aria-expanded",
-      "false",
-    );
+    expect(screen.getByRole("button", { name: /^Advanced log$/i })).toHaveAttribute("aria-expanded", "false");
 
     const newerLeftover = baseStatus({
       busy: true,
@@ -397,8 +374,7 @@ describe("DownloadsPage", () => {
           operation: "update",
           status: "failed",
           phase: "applying-files",
-          recoveryReason:
-            'YARK closed during phase "applying-files". Retry to continue.',
+          recoveryReason: 'YARK closed during phase "applying-files". Retry to continue.',
           nextActions: ["retry", "dismiss"],
         }),
       ],
@@ -441,4 +417,3 @@ describe("DownloadsPage", () => {
     expect(pageHandlers.onOpenSettings).toHaveBeenCalledTimes(1);
   });
 });
-

@@ -1,8 +1,5 @@
 import { spawn, type ChildProcess } from "node:child_process";
-import {
-  buildWindowsVerbatimSpawnArgs,
-  quoteWindowsArg,
-} from "../../domains/instances/launch-args";
+import { buildWindowsVerbatimSpawnArgs, quoteWindowsArg } from "../../domains/instances/launch-args";
 
 export function argsIncludeLogFlag(args: readonly string[]): boolean {
   return args.some((arg) => /^[-/]log$/i.test(arg.trim()));
@@ -12,10 +9,7 @@ export function argsIncludeConsoleFlag(args: readonly string[]): boolean {
   return args.some((arg) => /^[-/]console$/i.test(arg.trim()));
 }
 
-export function ensureLaunchLogFlags(
-  args: readonly string[],
-  nativeConsole: boolean,
-): string[] {
+export function ensureLaunchLogFlags(args: readonly string[], nativeConsole: boolean): string[] {
   let spawnArgs = [...args];
   if (nativeConsole && !argsIncludeConsoleFlag(spawnArgs)) {
     spawnArgs = [...spawnArgs, "-console"];
@@ -37,9 +31,7 @@ export function spawnAsaProcess(
   options: { nativeConsole: boolean },
 ): ChildProcess {
   const isWindows = process.platform === "win32";
-  const spawnArgs = isWindows
-    ? buildWindowsVerbatimSpawnArgs([...args])
-    : [...args];
+  const spawnArgs = isWindows ? buildWindowsVerbatimSpawnArgs([...args]) : [...args];
   const argv0 = isWindows ? quoteWindowsArg(binary) : binary;
 
   if (options.nativeConsole) {

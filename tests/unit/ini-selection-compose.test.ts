@@ -28,13 +28,9 @@ describe("composeIniFileFromSelection", () => {
     "ServerAdminPassword=from-source",
     "",
   ].join("\n");
-  const target = [
-    "[ServerSettings]",
-    "XPMultiplier=1",
-    "MaxPlayers=40",
-    "ServerAdminPassword=target-secret",
-    "",
-  ].join("\n");
+  const target = ["[ServerSettings]", "XPMultiplier=1", "MaxPlayers=40", "ServerAdminPassword=target-secret", ""].join(
+    "\n",
+  );
 
   it("merges selected keys and skips owned password keys", () => {
     const selection = {
@@ -45,12 +41,7 @@ describe("composeIniFileFromSelection", () => {
         { section: "ServerSettings", key: "ServerAdminPassword" },
       ],
     };
-    const next = composeIniFileFromSelection(
-      source,
-      target,
-      selection,
-      "gameUserSettings",
-    );
+    const next = composeIniFileFromSelection(source, target, selection, "gameUserSettings");
     expect(next).toContain("XPMultiplier=3");
     expect(next).toContain("MaxPlayers=40");
     expect(next).toContain("ServerAdminPassword=target-secret");
@@ -63,12 +54,7 @@ describe("composeIniFileFromSelection", () => {
       enabled: true,
       sections: ["ServerSettings"],
     };
-    const next = composeIniFileFromSelection(
-      source,
-      target,
-      selection,
-      "gameUserSettings",
-    );
+    const next = composeIniFileFromSelection(source, target, selection, "gameUserSettings");
     expect(next).toContain("XPMultiplier=3");
     expect(next).toContain("TamingSpeedMultiplier=5");
     expect(next).not.toContain("MaxPlayers=40");
@@ -83,12 +69,7 @@ describe("composeIniFileFromSelection", () => {
       enabled: true,
       entireFile: true,
     };
-    const next = composeIniFileFromSelection(
-      source,
-      target,
-      selection,
-      "gameUserSettings",
-    );
+    const next = composeIniFileFromSelection(source, target, selection, "gameUserSettings");
     expect(next).toContain("XPMultiplier=3");
     expect(next).toContain("TamingSpeedMultiplier=5");
     expect(next).toContain("MaxPlayers=40");
@@ -109,12 +90,7 @@ describe("composeIniFileFromSelection", () => {
       enabled: true,
       entireFile: true,
     };
-    const next = composeIniFileFromSelection(
-      sourceWithMods,
-      target,
-      selection,
-      "gameUserSettings",
-    );
+    const next = composeIniFileFromSelection(sourceWithMods, target, selection, "gameUserSettings");
     expect(next).toContain("XPMultiplier=3");
     expect(next).toContain("OverrideNamedEngramEntries=(a)");
     expect(next).toContain("OverrideNamedEngramEntries=(b)");
@@ -174,13 +150,11 @@ describe("composeIniPayloadFromSelection", () => {
     };
     const composed = composeIniPayloadFromSelection(
       {
-        gameUserSettings:
-          "[ServerSettings]\nXPMultiplier=9\nRCONPort=11111\n",
+        gameUserSettings: "[ServerSettings]\nXPMultiplier=9\nRCONPort=11111\n",
         game: "[/Script/ShooterGame.ShooterGameMode]\nBabyMatureSpeedMultiplier=10\n",
       },
       {
-        gameUserSettings:
-          "[ServerSettings]\nXPMultiplier=1\nRCONPort=27020\n",
+        gameUserSettings: "[ServerSettings]\nXPMultiplier=1\nRCONPort=27020\n",
         game: "[/Script/ShooterGame.ShooterGameMode]\nBabyMatureSpeedMultiplier=1\n",
       },
       selection,
@@ -194,22 +168,15 @@ describe("composeIniPayloadFromSelection", () => {
         queryPort: 27015,
       },
     );
-    expect(composed.gameUserSettings).toBe(
-      "[ServerSettings]\nXPMultiplier=1\nRCONPort=27020\n",
-    );
+    expect(composed.gameUserSettings).toBe("[ServerSettings]\nXPMultiplier=1\nRCONPort=27020\n");
     expect(composed.game).toContain("BabyMatureSpeedMultiplier=10");
   });
 });
 
 describe("composeStringList / composeModLists", () => {
   it("merges lists without duplicates and replaces wholesale", () => {
-    expect(
-      composeStringList(["-a", "-b"], ["-b", "-c"], "merge"),
-    ).toEqual(["-b", "-c", "-a"]);
-    expect(composeStringList(["-a", "-b"], ["-b", "-c"], "replace")).toEqual([
-      "-a",
-      "-b",
-    ]);
+    expect(composeStringList(["-a", "-b"], ["-b", "-c"], "merge")).toEqual(["-b", "-c", "-a"]);
+    expect(composeStringList(["-a", "-b"], ["-b", "-c"], "replace")).toEqual(["-a", "-b"]);
   });
 
   it("merges mods keeping target order and unioning disabled flags", () => {

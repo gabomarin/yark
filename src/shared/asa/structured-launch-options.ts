@@ -13,11 +13,7 @@ export interface StructuredLaunchArgState {
 
 export type StructuredLaunchArgs = Record<string, StructuredLaunchArgState>;
 
-export type StructuredLaunchGroupId =
-  | "world"
-  | "security"
-  | "logging"
-  | "performance";
+export type StructuredLaunchGroupId = "world" | "security" | "logging" | "performance";
 
 interface StructuredLaunchCuration {
   /** Catalog entry id (must be status=supported). */
@@ -67,21 +63,15 @@ const SERVER_PLATFORM_CODES = ["PC", "PS5", "XSX", "WINGDK"] as const;
 export type ServerPlatformCode = (typeof SERVER_PLATFORM_CODES)[number];
 
 /** Persist MultiSelect codes as ALL (all selected), A+B, or "" when none. */
-export function encodeServerPlatformSelection(
-  codes: readonly string[],
-): string {
-  const selected = SERVER_PLATFORM_CODES.filter((code) =>
-    codes.some((c) => c.toUpperCase() === code),
-  );
+export function encodeServerPlatformSelection(codes: readonly string[]): string {
+  const selected = SERVER_PLATFORM_CODES.filter((code) => codes.some((c) => c.toUpperCase() === code));
   if (selected.length === 0) return "";
   if (selected.length === SERVER_PLATFORM_CODES.length) return "ALL";
   return selected.join("+");
 }
 
 /** Expand stored ALL / PC+XSX into MultiSelect values. Empty → none selected. */
-export function decodeServerPlatformSelection(
-  value: string | undefined,
-): ServerPlatformCode[] {
+export function decodeServerPlatformSelection(value: string | undefined): ServerPlatformCode[] {
   const raw = (value ?? "").trim();
   if (raw.length === 0) return [];
   if (/^ALL$/i.test(raw)) {
@@ -104,16 +94,14 @@ const STRUCTURED_LAUNCH_CURATION: readonly StructuredLaunchCuration[] = [
     id: "forcerespawndinos",
     group: "world",
     common: true,
-    operatorWarning:
-      "Wipes wild dinos on every start. Turn off after maintenance unless you intend this every boot.",
+    operatorWarning: "Wipes wild dinos on every start. Turn off after maintenance unless you intend this every boot.",
   },
   { id: "nobattleye", group: "security", common: true },
   {
     id: "exclusivejoin",
     group: "security",
     common: true,
-    operatorWarning:
-      "If PlayersExclusiveJoinList.txt is missing or empty, nobody can join.",
+    operatorWarning: "If PlayersExclusiveJoinList.txt is missing or empty, nobody can join.",
   },
   { id: "forcedupelog", group: "security", common: true },
   { id: "disabledupelogdeletes", group: "security", common: true },
@@ -185,9 +173,7 @@ const STRUCTURED_LAUNCH_CURATION: readonly StructuredLaunchCuration[] = [
   { id: "nowildbabies", group: "world", common: true },
 ] as const;
 
-const CURATION_BY_ID = new Map(
-  STRUCTURED_LAUNCH_CURATION.map((c) => [c.id, c]),
-);
+const CURATION_BY_ID = new Map(STRUCTURED_LAUNCH_CURATION.map((c) => [c.id, c]));
 
 /** True when every ancestor in the `dependsOn` chain is enabled. */
 export function isStructuredDependencyMet(
@@ -238,9 +224,7 @@ export function emptyStructuredLaunchArgs(): StructuredLaunchArgs {
   return {};
 }
 
-export function normalizeStructuredLaunchArgs(
-  value: StructuredLaunchArgs | null | undefined,
-): StructuredLaunchArgs {
+export function normalizeStructuredLaunchArgs(value: StructuredLaunchArgs | null | undefined): StructuredLaunchArgs {
   if (value == null || typeof value !== "object") return {};
   const out: StructuredLaunchArgs = {};
   for (const [id, state] of Object.entries(value)) {
@@ -256,10 +240,7 @@ export function normalizeStructuredLaunchArgs(
 function tokenStem(token: string): string {
   let t = token.trim();
   // Drop wrapping quotes around the whole token if present.
-  if (
-    (t.startsWith('"') && t.endsWith('"')) ||
-    (t.startsWith("'") && t.endsWith("'"))
-  ) {
+  if ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith("'") && t.endsWith("'"))) {
     t = t.slice(1, -1).trim();
   }
   // Key is before '=' / whitespace (Unreal `?Option=` or `-Option=`).
@@ -283,10 +264,7 @@ function stripCatalogPlaceholders(token: string): string {
  * Build a pasteable CLI token from catalog entry + selection value.
  * Returns null when a valued option has no usable value (do not emit placeholders).
  */
-export function buildStructuredLaunchToken(
-  entry: AsaLaunchOptionEntry,
-  value: string | undefined,
-): string | null {
+export function buildStructuredLaunchToken(entry: AsaLaunchOptionEntry, value: string | undefined): string | null {
   if (entry.valueType === "flag") {
     return entry.example.trim() || entry.token.trim().split(/\s+/)[0]!;
   }
@@ -296,10 +274,7 @@ export function buildStructuredLaunchToken(
   const sanitized = Array.from(rawValue)
     .filter((ch) => ch !== '"')
     .join("");
-  const quoted =
-    /^https?:\/\//i.test(sanitized) || /\s/.test(sanitized)
-      ? `"${sanitized}"`
-      : sanitized;
+  const quoted = /^https?:\/\//i.test(sanitized) || /\s/.test(sanitized) ? `"${sanitized}"` : sanitized;
   const base = stripCatalogPlaceholders(entry.token);
   if (base.includes("=")) {
     const eq = base.indexOf("=");
@@ -318,9 +293,7 @@ export interface LaunchArgConflict {
 }
 
 /** Issues for effectively-on valued options missing a usable value. */
-function findStructuredLaunchValueIssues(
-  structured: StructuredLaunchArgs | null | undefined,
-): LaunchArgConflict[] {
+function findStructuredLaunchValueIssues(structured: StructuredLaunchArgs | null | undefined): LaunchArgConflict[] {
   const state = normalizeStructuredLaunchArgs(structured);
   const issues: LaunchArgConflict[] = [];
   for (const curation of STRUCTURED_LAUNCH_CURATION) {
@@ -339,9 +312,7 @@ function findStructuredLaunchValueIssues(
 }
 
 /** Enabled structured tokens in curation order (skips valued options with empty values). */
-export function buildStructuredLaunchArgList(
-  structured: StructuredLaunchArgs | null | undefined,
-): string[] {
+export function buildStructuredLaunchArgList(structured: StructuredLaunchArgs | null | undefined): string[] {
   const state = normalizeStructuredLaunchArgs(structured);
   const tokens: string[] = [];
   for (const curation of STRUCTURED_LAUNCH_CURATION) {
@@ -383,15 +354,8 @@ export function yarkModsArg(modIds: readonly string[]): string {
 }
 
 /** Cluster trio when both id and dir are set. */
-export function yarkClusterArgs(
-  clusterId: string,
-  clusterDir: string,
-): string[] {
-  return [
-    `-clusterid=${clusterId}`,
-    `-ClusterDirOverride=${clusterDir}`,
-    "-NoTransferFromFiltering",
-  ];
+export function yarkClusterArgs(clusterId: string, clusterDir: string): string[] {
+  return [`-clusterid=${clusterId}`, `-ClusterDirOverride=${clusterDir}`, "-NoTransferFromFiltering"];
 }
 
 /**

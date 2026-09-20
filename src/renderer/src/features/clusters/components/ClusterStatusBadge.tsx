@@ -15,13 +15,7 @@ export function ClusterStatusBadge({ report, size = "sm" }: Props): ReactElement
   const textSize = size === "lg" || size === "md" ? "sm" : "xs";
 
   return (
-    <Text
-      size={textSize}
-      fw={600}
-      span
-      className={classes.status}
-      data-tone={tone}
-    >
+    <Text size={textSize} fw={600} span className={classes.status} data-tone={tone}>
       {label}
     </Text>
   );

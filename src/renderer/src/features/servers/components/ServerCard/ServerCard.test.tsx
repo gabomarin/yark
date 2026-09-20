@@ -24,9 +24,9 @@ const profile = {
   extraArgs: [],
   mods: [],
   enabled: true,
-    autoStart: false,
-    useAsaApi: false,
-    useAsaApiLoader: false,
+  autoStart: false,
+  useAsaApi: false,
+  useAsaApiLoader: false,
   createdAt: "2026-07-23T00:00:00.000Z",
   updatedAt: "2026-07-23T00:00:00.000Z",
 };
@@ -81,10 +81,7 @@ describe("ServerCard", () => {
     expect(onStart).toHaveBeenCalledTimes(1);
 
     expect(document.querySelector(SERVER_CARD_SELECTOR)).toHaveAttribute("data-tone", "stopped");
-    expect(document.querySelector(SERVER_CARD_SELECTOR)).not.toHaveAttribute(
-      "data-disabled",
-      "true",
-    );
+    expect(document.querySelector(SERVER_CARD_SELECTOR)).not.toHaveAttribute("data-disabled", "true");
 
     await user.click(screen.getByRole("button", { name: /Open settings for The Island/i }));
     expect(onOpenWorkspace).toHaveBeenCalledTimes(1);
@@ -339,10 +336,7 @@ describe("ServerCard", () => {
     const ramCpuMeta = document.querySelector('[data-meta-label="RAM / CPU"]');
     expect(ramCpuMeta).not.toBeNull();
     expect(ramCpuMeta).toHaveTextContent("14.2 GB · 38%");
-    expect(document.querySelector(META_GRID_SELECTOR)).toHaveAttribute(
-      "data-meta-cols",
-      "6",
-    );
+    expect(document.querySelector(META_GRID_SELECTOR)).toHaveAttribute("data-meta-cols", "6");
   });
 
   it("shows em dash for RAM / CPU when the server is stopped (#302)", () => {
@@ -436,19 +430,14 @@ describe("ServerCard", () => {
     expect(onUpdateNow).not.toHaveBeenCalled();
 
     await user.click(card.getByRole("button", { name: "More options" }));
-    expect(
-      await screen.findByRole("menuitem", { name: "Stop safely" }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("menuitem", { name: "Stop safely" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Restart" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Open folder" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: /Update \(couldn't check version\)/i })).toHaveAttribute(
       "data-disabled",
       "true",
     );
-    expect(screen.getByRole("menuitem", { name: "Verify integrity" })).not.toHaveAttribute(
-      "data-disabled",
-      "true",
-    );
+    expect(screen.getByRole("menuitem", { name: "Verify integrity" })).not.toHaveAttribute("data-disabled", "true");
     expect(screen.queryByRole("button", { name: /^Delete server$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Force close \(matar\)$/i })).not.toBeInTheDocument();
   });
@@ -671,8 +660,7 @@ describe("ServerCard", () => {
             installed: false,
             health: "suspicious",
             reasonCodes: ["foreign_contents"],
-            guidance:
-              "Point the profile at a real ASA server install.",
+            guidance: "Point the profile at a real ASA server install.",
           }}
           officialSteamBuild={null}
           onStart={vi.fn()}
@@ -863,10 +851,7 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    expect(document.querySelector('[data-meta-label="Version"]')).toHaveAttribute(
-      "data-meta-tone",
-      "attention",
-    );
+    expect(document.querySelector('[data-meta-label="Version"]')).toHaveAttribute("data-meta-tone", "attention");
     expect(screen.getByText("92.23")).toBeInTheDocument();
     expect(screen.queryByText("Update available")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^Start server$/i })).toBeEnabled();
@@ -911,10 +896,7 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    expect(document.querySelector('[data-meta-label="Version"]')).toHaveAttribute(
-      "data-meta-tone",
-      "muted",
-    );
+    expect(document.querySelector('[data-meta-label="Version"]')).toHaveAttribute("data-meta-tone", "muted");
     expect(screen.queryByText("Not installed")).not.toBeInTheDocument();
   });
 
@@ -1116,9 +1098,7 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    await user.click(
-      screen.getByRole("button", { name: /Verifying integrity… – open Downloads/i }),
-    );
+    await user.click(screen.getByRole("button", { name: /Verifying integrity… – open Downloads/i }));
     expect(onOpenDownloads).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("button", { name: /Cancel SteamCMD/i })).not.toBeInTheDocument();
   });
@@ -1158,9 +1138,7 @@ describe("ServerCard", () => {
     );
 
     expect(screen.getByRole("button", { name: /^Start server$/i })).toBeDisabled();
-    await user.click(
-      screen.getByRole("button", { name: /Paused · Updating server – open Downloads/i }),
-    );
+    await user.click(screen.getByRole("button", { name: /Paused · Updating server – open Downloads/i }));
     expect(onOpenDownloads).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("button", { name: /Resume download/i })).not.toBeInTheDocument();
   });
@@ -1235,9 +1213,7 @@ describe("ServerCard", () => {
     expect(document.querySelector(SERVER_CARD_SELECTOR)).toHaveAttribute("data-queued");
     expect(screen.getByText(/Queued · Verifying integrity/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^Start server$/i })).toBeDisabled();
-    await user.click(
-      screen.getByRole("button", { name: /Queued · Verifying integrity – open Downloads/i }),
-    );
+    await user.click(screen.getByRole("button", { name: /Queued · Verifying integrity – open Downloads/i }));
     expect(onOpenDownloads).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("button", { name: /Remove from queue/i })).not.toBeInTheDocument();
   });
@@ -1281,14 +1257,8 @@ describe("ServerCard", () => {
     expect(screen.getByRole("button", { name: /^Start server$/i })).toBeDisabled();
     expect(screen.getByRole("button", { name: /^Update server$/i })).toBeEnabled();
     await user.click(screen.getByRole("button", { name: "More options" }));
-    expect(await screen.findByRole("menuitem", { name: "Update server" })).not.toHaveAttribute(
-      "data-disabled",
-      "true",
-    );
-    expect(screen.getByRole("menuitem", { name: "Verify integrity" })).toHaveAttribute(
-      "data-disabled",
-      "true",
-    );
+    expect(await screen.findByRole("menuitem", { name: "Update server" })).not.toHaveAttribute("data-disabled", "true");
+    expect(screen.getByRole("menuitem", { name: "Verify integrity" })).toHaveAttribute("data-disabled", "true");
   });
 
   it("allows manual Update when official Steam build is unknown", async () => {
@@ -1375,9 +1345,7 @@ describe("ServerCard", () => {
     await user.click(start);
     expect(onStart).toHaveBeenCalledTimes(1);
 
-    await user.click(
-      screen.getByRole("button", { name: /Review error – open runtime logs/i }),
-    );
+    await user.click(screen.getByRole("button", { name: /Review error – open runtime logs/i }));
     expect(onReviewError).toHaveBeenCalledTimes(1);
   });
 
@@ -1418,10 +1386,7 @@ describe("ServerCard", () => {
       </AppProviders>,
     );
 
-    expect(document.querySelector(SERVER_CARD_SELECTOR)).toHaveAttribute(
-      "data-tone",
-      "attention",
-    );
+    expect(document.querySelector(SERVER_CARD_SELECTOR)).toHaveAttribute("data-tone", "attention");
     const notice = screen.getByRole("button", {
       name: /Review notice – open runtime logs/i,
     });
@@ -1664,55 +1629,25 @@ describe("ServerCard", () => {
 
     const { rerender } = render(
       <AppProviders density="compact">
-        <ServerCard
-          server={profile}
-          runtime={null}
-          installation={installed}
-          officialSteamBuild={null}
-          {...callbacks}
-        />
+        <ServerCard server={profile} runtime={null} installation={installed} officialSteamBuild={null} {...callbacks} />
       </AppProviders>,
     );
 
-    expect(document.querySelector(SERVER_CARD_SELECTOR)).toHaveAttribute(
-      "data-ui-density",
-      "compact",
-    );
-    expect(document.querySelector(`${SERVER_CARD_SELECTOR} [data-shape]`)).toHaveAttribute(
-      "data-size",
-      "md",
-    );
-    expect(screen.getByRole("button", { name: /^Start server$/i })).toHaveAttribute(
-      "data-size",
-      "md",
-    );
+    expect(document.querySelector(SERVER_CARD_SELECTOR)).toHaveAttribute("data-ui-density", "compact");
+    expect(document.querySelector(`${SERVER_CARD_SELECTOR} [data-shape]`)).toHaveAttribute("data-size", "md");
+    expect(screen.getByRole("button", { name: /^Start server$/i })).toHaveAttribute("data-size", "md");
     // Narrow-viewport stacking is density-scoped in ServerCard.module.css (#377):
     // Comfortable uses :not([data-ui-density="compact"]); Compact has later breakpoints.
 
     rerender(
       <AppProviders density="comfortable">
-        <ServerCard
-          server={profile}
-          runtime={null}
-          installation={installed}
-          officialSteamBuild={null}
-          {...callbacks}
-        />
+        <ServerCard server={profile} runtime={null} installation={installed} officialSteamBuild={null} {...callbacks} />
       </AppProviders>,
     );
 
-    expect(document.querySelector(SERVER_CARD_SELECTOR)).toHaveAttribute(
-      "data-ui-density",
-      "comfortable",
-    );
-    expect(document.querySelector(`${SERVER_CARD_SELECTOR} [data-shape]`)).toHaveAttribute(
-      "data-size",
-      "lg",
-    );
-    expect(screen.getByRole("button", { name: /^Start server$/i })).toHaveAttribute(
-      "data-size",
-      "lg",
-    );
+    expect(document.querySelector(SERVER_CARD_SELECTOR)).toHaveAttribute("data-ui-density", "comfortable");
+    expect(document.querySelector(`${SERVER_CARD_SELECTOR} [data-shape]`)).toHaveAttribute("data-size", "lg");
+    expect(screen.getByRole("button", { name: /^Start server$/i })).toHaveAttribute("data-size", "lg");
 
     rerender(
       <AppProviders density="compact">

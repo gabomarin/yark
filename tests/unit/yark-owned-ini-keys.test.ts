@@ -24,16 +24,8 @@ describe("yark-owned-ini-keys", () => {
         "SessionName",
       ].sort(),
     );
-    expect(
-      YARK_OWNED_INI_KEYS.filter((entry) => entry.reason === "aseLegacy").map(
-        (entry) => entry.key,
-      ),
-    ).toEqual(
-      expect.arrayContaining([
-        "ActiveMods",
-        "ActiveMapMod",
-        "ActiveTotalConversion",
-      ]),
+    expect(YARK_OWNED_INI_KEYS.filter((entry) => entry.reason === "aseLegacy").map((entry) => entry.key)).toEqual(
+      expect.arrayContaining(["ActiveMods", "ActiveMapMod", "ActiveTotalConversion"]),
     );
   });
 
@@ -43,9 +35,7 @@ describe("yark-owned-ini-keys", () => {
     expect(isYarkOwnedIniKey("ServerSettings", "ActiveMods")).toBe(true);
     expect(isYarkOwnedIniKey("ServerSettings", "MaxPlayers")).toBe(false);
     expect(isYarkOwnedIniKey("SessionSettings", "MaxPlayers")).toBe(false);
-    expect(isYarkOwnedIniKey("/Script/Engine.GameSession", "MaxPlayers")).toBe(
-      false,
-    );
+    expect(isYarkOwnedIniKey("/Script/Engine.GameSession", "MaxPlayers")).toBe(false);
     expect(isAsaIgnoredIniMaxPlayers("MaxPlayers")).toBe(true);
     expect(isAsaIgnoredIniMaxPlayers("XPMultiplier")).toBe(false);
   });

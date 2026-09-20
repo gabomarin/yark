@@ -30,9 +30,7 @@ export async function ensureParentDirectory(targetPath: string): Promise<void> {
   const parent = dirname(targetPath);
   if (isWindowsDriveRoot(parent)) {
     if (!(await pathExists(parent))) {
-      throw new Error(
-        `Drive is not available: ${parent}. Choose a folder on a mounted volume.`,
-      );
+      throw new Error(`Drive is not available: ${parent}. Choose a folder on a mounted volume.`);
     }
     return;
   }
@@ -55,11 +53,7 @@ export class MoveInstallRegistry {
         [PENDING_CLEANUP_REGISTRY_KEY]?: unknown;
       };
       const byServerId = parsed[PENDING_CLEANUP_REGISTRY_KEY];
-      if (
-        byServerId === null
-        || typeof byServerId !== "object"
-        || Array.isArray(byServerId)
-      ) {
+      if (byServerId === null || typeof byServerId !== "object" || Array.isArray(byServerId)) {
         return {};
       }
       const result: Record<string, string> = {};
@@ -74,9 +68,7 @@ export class MoveInstallRegistry {
     }
   }
 
-  async writePendingCleanupRegistry(
-    byServerId: Record<string, string>,
-  ): Promise<void> {
+  async writePendingCleanupRegistry(byServerId: Record<string, string>): Promise<void> {
     if (this.pendingCleanupRegistryPath === null) {
       return;
     }
@@ -91,15 +83,10 @@ export class MoveInstallRegistry {
   async getPendingCleanup(serverId: string): Promise<string | null> {
     const registry = await this.readPendingCleanupRegistry();
     const pathValue = registry[serverId];
-    return typeof pathValue === "string" && pathValue.length > 0
-      ? pathValue
-      : null;
+    return typeof pathValue === "string" && pathValue.length > 0 ? pathValue : null;
   }
 
-  async setPendingCleanup(
-    serverId: string,
-    oldSourceDir: string,
-  ): Promise<void> {
+  async setPendingCleanup(serverId: string, oldSourceDir: string): Promise<void> {
     if (this.pendingCleanupRegistryPath === null) {
       return;
     }

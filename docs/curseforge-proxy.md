@@ -32,22 +32,22 @@ never identity or attestation.
 
 ## Baseline controls (deployed)
 
-| Control | Behavior |
-| --- | --- |
-| Input bounds | Batch ≤ 50 mod IDs; search `pageSize` ≤ 50; `searchFilter` ≤ 200 chars; validated index |
-| Body limit | POST body ≤ 16 KiB → `413` / `body_too_large` |
-| Upstream timeout | 10s abort → `504` / `upstream_timeout` |
-| Rate limits | Route-class IP limits via Workers Rate Limiting bindings (below) |
-| Cache | Cache API on successful GET read (10 min) and search (60s); `X-Yark-Cache: HIT\|MISS` |
-| Errors | Sanitized envelope; API key / bearer redacted; wrong method → `405` |
+| Control          | Behavior                                                                                |
+| ---------------- | --------------------------------------------------------------------------------------- |
+| Input bounds     | Batch ≤ 50 mod IDs; search `pageSize` ≤ 50; `searchFilter` ≤ 200 chars; validated index |
+| Body limit       | POST body ≤ 16 KiB → `413` / `body_too_large`                                           |
+| Upstream timeout | 10s abort → `504` / `upstream_timeout`                                                  |
+| Rate limits      | Route-class IP limits via Workers Rate Limiting bindings (below)                        |
+| Cache            | Cache API on successful GET read (10 min) and search (60s); `X-Yark-Cache: HIT\|MISS`   |
+| Errors           | Sanitized envelope; API key / bearer redacted; wrong method → `405`                     |
 
 ### Rate-limit defaults (assumptions — tune after measurement)
 
-| Route class | Binding | Limit / period | Key |
-| --- | --- | --- | --- |
-| search | `RATE_LIMIT_SEARCH` | 30 / 60s | `search:<CF-Connecting-IP>` |
-| read | `RATE_LIMIT_READ` | 60 / 60s | `read:<CF-Connecting-IP>` |
-| batch | `RATE_LIMIT_BATCH` | 20 / 60s | `batch:<CF-Connecting-IP>` |
+| Route class | Binding             | Limit / period | Key                         |
+| ----------- | ------------------- | -------------- | --------------------------- |
+| search      | `RATE_LIMIT_SEARCH` | 30 / 60s       | `search:<CF-Connecting-IP>` |
+| read        | `RATE_LIMIT_READ`   | 60 / 60s       | `read:<CF-Connecting-IP>`   |
+| batch       | `RATE_LIMIT_BATCH`  | 20 / 60s       | `batch:<CF-Connecting-IP>`  |
 
 Deny → `429` / `rate_limited` (same code clients already see for upstream 429).
 
@@ -104,13 +104,13 @@ errors. Correlate with `X-Yark-Cache` when debugging upstream exposure.
 
 ## Cache rules
 
-| Route | Cached? | TTL | Cache key |
-| --- | --- | --- | --- |
-| `GET /v1/mods/:id` | Yes (HTTP 200 only) | 600s | Synthetic origin + path |
-| `GET /v1/mods/search` | Yes (HTTP 200 only) | 60s | Allow-listed query params only (same as upstream) |
-| `GET /v1/categories` | Yes (HTTP 200 only) | 6h | `gameId` + optional `classId` / `classesOnly` |
-| `POST /v1/mods` | No | — | — |
-| Errors / rate limits | No | — | — |
+| Route                 | Cached?             | TTL  | Cache key                                         |
+| --------------------- | ------------------- | ---- | ------------------------------------------------- |
+| `GET /v1/mods/:id`    | Yes (HTTP 200 only) | 600s | Synthetic origin + path                           |
+| `GET /v1/mods/search` | Yes (HTTP 200 only) | 60s  | Allow-listed query params only (same as upstream) |
+| `GET /v1/categories`  | Yes (HTTP 200 only) | 6h   | `gameId` + optional `classId` / `classesOnly`     |
+| `POST /v1/mods`       | No                  | —    | —                                                 |
+| Errors / rate limits  | No                  | —    | —                                                 |
 
 Edge `Cache-Control` is for Cache API TTL only. Client responses always get
 `Cache-Control: no-store` plus `X-Yark-Cache: HIT|MISS` (HIT and MISS behave the

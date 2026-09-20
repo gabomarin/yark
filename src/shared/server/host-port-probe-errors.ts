@@ -11,16 +11,13 @@ const HOST_PORT_INCONCLUSIVE_PREFIX = "HOST_PORT_PROBE_INCONCLUSIVE:";
 
 export type { SessionPortSet };
 
-const SUGGESTED_RE =
-  /\bsuggested=game:(\d+),query:(\d+),rcon:(\d+)\b/;
+const SUGGESTED_RE = /\bsuggested=game:(\d+),query:(\d+),rcon:(\d+)\b/;
 
 export function encodeSuggestedSessionPorts(ports: SessionPortSet): string {
   return `suggested=game:${ports.gamePort},query:${ports.queryPort},rcon:${ports.rconPort}`;
 }
 
-export function parseSuggestedSessionPorts(
-  message: string,
-): SessionPortSet | null {
+export function parseSuggestedSessionPorts(message: string): SessionPortSet | null {
   const match = SUGGESTED_RE.exec(message);
   if (match === null) {
     return null;
@@ -59,17 +56,11 @@ export function isHostPortProbeError(message: string): boolean {
   return isHostPortBusyError(message) || isInconclusiveHostPortProbeError(message);
 }
 
-export function formatHostPortBusyError(
-  detail: string,
-  suggested?: SessionPortSet | null,
-): string {
+export function formatHostPortBusyError(detail: string, suggested?: SessionPortSet | null): string {
   return joinProbeError(HOST_PORT_BUSY_PREFIX, detail, suggested);
 }
 
-export function formatHostPortInconclusiveError(
-  detail: string,
-  suggested?: SessionPortSet | null,
-): string {
+export function formatHostPortInconclusiveError(detail: string, suggested?: SessionPortSet | null): string {
   return joinProbeError(HOST_PORT_INCONCLUSIVE_PREFIX, detail, suggested);
 }
 
@@ -83,11 +74,7 @@ export function humanizeHostPortProbeError(message: string): string {
     .trim();
 }
 
-function joinProbeError(
-  prefix: string,
-  detail: string,
-  suggested?: SessionPortSet | null,
-): string {
+function joinProbeError(prefix: string, detail: string, suggested?: SessionPortSet | null): string {
   const trimmed = detail.trim();
   if (suggested == null) {
     return `${prefix} ${trimmed}`;

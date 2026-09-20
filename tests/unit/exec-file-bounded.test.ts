@@ -20,11 +20,10 @@ describe("execFileBounded", () => {
     const started = Date.now();
     const hang =
       process.platform === "win32"
-        ? execFileBounded(
-            "powershell.exe",
-            ["-NoProfile", "-Command", "Start-Sleep -Seconds 30"],
-            { timeoutMs: 400, maxBuffer: 64 * 1024 },
-          )
+        ? execFileBounded("powershell.exe", ["-NoProfile", "-Command", "Start-Sleep -Seconds 30"], {
+            timeoutMs: 400,
+            maxBuffer: 64 * 1024,
+          })
         : execFileBounded("node", ["-e", "setTimeout(() => {}, 30000)"], {
             timeoutMs: 400,
             maxBuffer: 64 * 1024,
@@ -41,11 +40,10 @@ describe("execFileBounded", () => {
   it("rejects when stdout exceeds maxBuffer", async () => {
     // Use Node on all platforms — PowerShell cold start on Windows CI can exceed
     // a short vitest timeout before maxBuffer is even hit.
-    const bloated = execFileBounded(
-      "node",
-      ["-e", "process.stdout.write('x'.repeat(20000))"],
-      { timeoutMs: 10_000, maxBuffer: 256 },
-    );
+    const bloated = execFileBounded("node", ["-e", "process.stdout.write('x'.repeat(20000))"], {
+      timeoutMs: 10_000,
+      maxBuffer: 256,
+    });
 
     await expect(bloated).rejects.toMatchObject({
       name: "ExecFileBoundedError",

@@ -61,9 +61,7 @@ function envInt(name, fallback) {
 
 const projectRoot = path.resolve(__dirname, "..");
 const defaultArkRoot =
-  process.platform === "win32"
-    ? "C:\\asa-e2e\\website-gallery"
-    : path.join(os.tmpdir(), "yark-gallery");
+  process.platform === "win32" ? "C:\\asa-e2e\\website-gallery" : path.join(os.tmpdir(), "yark-gallery");
 
 const VIEWPORT = {
   width: envInt("WEBSITE_VIEWPORT_WIDTH", 1440),
@@ -76,10 +74,7 @@ const DEMO_MOD_IDS = envOr("WEBSITE_DEMO_MOD_IDS", "947033,928793,940975")
   .map((id) => id.trim())
   .filter(Boolean);
 const DEMO_CLUSTER_ID = envOr("WEBSITE_DEMO_CLUSTER_ID", "yark");
-const DEMO_CLUSTER_DIR = envOr(
-  "WEBSITE_DEMO_CLUSTER_DIR",
-  path.join(DEMO_INSTALL_ROOT, "Cluster"),
-);
+const DEMO_CLUSTER_DIR = envOr("WEBSITE_DEMO_CLUSTER_DIR", path.join(DEMO_INSTALL_ROOT, "Cluster"));
 
 /** Extra fleet members for overview + Clusters screenshots (isolated profile only). */
 const DEMO_FLEET = [
@@ -157,24 +152,22 @@ async function captureSetupAssistant(page, outDir) {
   } else {
     await page.keyboard.press("Escape");
   }
-  await page.locator("[data-setup-wizard]").waitFor({
-    state: "hidden",
-    timeout: 10000,
-  }).catch(() => undefined);
+  await page
+    .locator("[data-setup-wizard]")
+    .waitFor({
+      state: "hidden",
+      timeout: 10000,
+    })
+    .catch(() => undefined);
   await settle(page, 400);
 }
 
 async function redactPrivatePaths(page) {
   try {
     await page.evaluate(() => {
-      const scrub = (value) =>
-        value
-          .replace(/Users\\[^\\]+/gi, "Users\\You")
-          .replace(/\/Users\/[^/]+/gi, "/Users/You");
+      const scrub = (value) => value.replace(/Users\\[^\\]+/gi, "Users\\You").replace(/\/Users\/[^/]+/gi, "/Users/You");
 
-      const roots = [
-        ...document.querySelectorAll("main, [data-settings-page], .mantine-AppShell-main"),
-      ];
+      const roots = [...document.querySelectorAll("main, [data-settings-page], .mantine-AppShell-main")];
       const scopes = roots.length > 0 ? roots : [document.body];
 
       for (const scope of scopes) {
@@ -195,9 +188,7 @@ async function redactPrivatePaths(page) {
       }
     });
   } catch (error) {
-    console.warn(
-      `WARN: could not redact private paths before Settings shot: ${error?.message ?? error}`,
-    );
+    console.warn(`WARN: could not redact private paths before Settings shot: ${error?.message ?? error}`);
   }
 }
 
@@ -206,9 +197,7 @@ function applyDemoMapsInDb(userData) {
   const dbPath = path.join(userData, "yark-server-manager.db");
   assert.ok(fs.existsSync(dbPath), `DB missing at ${dbPath}`);
   const db = new DatabaseSync(dbPath);
-  const update = db.prepare(
-    `UPDATE servers SET map = ?, map_mod_id = NULL, updated_at = ? WHERE name = ?`,
-  );
+  const update = db.prepare(`UPDATE servers SET map = ?, map_mod_id = NULL, updated_at = ? WHERE name = ?`);
   const now = new Date().toISOString();
   for (const demo of DEMO_FLEET) {
     update.run(demo.mapId, now, demo.name);
@@ -258,9 +247,11 @@ async function dismissNotifications(page) {
 async function openWorkspaceByName(page, name) {
   await goNav(page, "Servers");
   await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 15000 });
-  const card = page.locator(SERVER_CARD, {
-    has: page.getByText(name, { exact: true }),
-  }).first();
+  const card = page
+    .locator(SERVER_CARD, {
+      has: page.getByText(name, { exact: true }),
+    })
+    .first();
   await card.waitFor({ state: "visible", timeout: 10000 });
   await card.getByRole("button", { name: /Open settings/i }).click();
   await page.getByRole("tab", { name: "Server", exact: true }).waitFor({ state: "visible", timeout: 15000 });
@@ -314,10 +305,10 @@ function compileSteamCmdStub(dir, options = {}) {
       "using System.Linq;",
       "static class P {",
       "  static int Main(string[] args) {",
-      "    Console.WriteLine(\"Loading Steam API...\");",
-      "    var quitOnly = args.Any(a => a == \"+quit\") && !args.Any(a => a == \"+app_update\");",
+      '    Console.WriteLine("Loading Steam API...");',
+      '    var quitOnly = args.Any(a => a == "+quit") && !args.Any(a => a == "+app_update");',
       "    if (!quitOnly) {",
-      "      Console.WriteLine(\"Update state (0x0) 0/1, 0 -- [ 38%]\");",
+      '      Console.WriteLine("Update state (0x0) 0/1, 0 -- [ 38%]");',
       `      System.Threading.Thread.Sleep(${hangMs});`,
       "    }",
       "    return 0;",
@@ -330,11 +321,10 @@ function compileSteamCmdStub(dir, options = {}) {
     ].join("\n"),
     "utf8",
   );
-  execFileSync(
-    "powershell.exe",
-    ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", stubPs1],
-    { stdio: ["ignore", "pipe", "pipe"], windowsHide: true },
-  );
+  execFileSync("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", stubPs1], {
+    stdio: ["ignore", "pipe", "pipe"],
+    windowsHide: true,
+  });
   assert.ok(fs.existsSync(stubExe), `SteamCMD stub missing at ${stubExe}`);
   return stubExe;
 }
@@ -371,14 +361,8 @@ function seedDemoReadyInstall(installDir) {
   fs.writeFileSync(path.join(win64, "version.txt"), "93.19\n");
   // Copy shared defaults (hundreds of keys). A minimal stub only has YARK-owned
   // keys, which the visual editor hides → "All settings (0)".
-  fs.copyFileSync(
-    path.join(defaultsDir, "GameUserSettings.ini"),
-    path.join(config, "GameUserSettings.ini"),
-  );
-  fs.copyFileSync(
-    path.join(defaultsDir, "Game.ini"),
-    path.join(config, "Game.ini"),
-  );
+  fs.copyFileSync(path.join(defaultsDir, "GameUserSettings.ini"), path.join(config, "GameUserSettings.ini"));
+  fs.copyFileSync(path.join(defaultsDir, "Game.ini"), path.join(config, "Game.ini"));
 }
 
 /** Minimal on-disk AsaApi layout so the marketing panel shows the installed UI. */
@@ -390,17 +374,14 @@ function seedDemoAsaApiInstall(installDir) {
   fs.writeFileSync(path.join(win64, "Version.dll"), Buffer.alloc(64));
   fs.writeFileSync(path.join(arkApi, "AsaApi.dll"), Buffer.alloc(64));
   fs.writeFileSync(path.join(pluginDir, "Permissions.dll"), Buffer.alloc(64));
-  fs.writeFileSync(
-    path.join(pluginDir, "config.json"),
-    `${JSON.stringify({ Enabled: true }, null, 2)}\n`,
-  );
+  fs.writeFileSync(path.join(pluginDir, "config.json"), `${JSON.stringify({ Enabled: true }, null, 2)}\n`);
 }
 
 function demoModMetadataCache() {
   const names = {
-    "947033": "Cybers Structures QoL+",
-    "928793": "Pelayori's Cryo Storage",
-    "940975": "Awesome Spyglass!",
+    947033: "Cybers Structures QoL+",
+    928793: "Pelayori's Cryo Storage",
+    940975: "Awesome Spyglass!",
   };
   /** @type {Record<string, object>} */
   const cache = {};
@@ -589,9 +570,7 @@ function seedGalleryFleetSql(userData) {
   });
 
   // Featured Launch tab: a few curated flags enabled (no search filter in capture).
-  db.prepare(
-    `UPDATE servers SET structured_launch_args = ? WHERE id = ?`,
-  ).run(
+  db.prepare(`UPDATE servers SET structured_launch_args = ? WHERE id = ?`).run(
     JSON.stringify({
       servergamelog: { enabled: true },
       servergamelogincludetribelogs: { enabled: true },
@@ -607,19 +586,10 @@ function seedGalleryFleetSql(userData) {
     ) VALUES (?, ?, ?, ?)`,
   ).run(
     DEMO_CLUSTER_ID,
-    [
-      "[ServerSettings]",
-      "XPMultiplier=2.0",
-      "TamingSpeedMultiplier=3.0",
-      "HarvestAmountMultiplier=2.5",
-      "",
-    ].join("\n"),
-    [
-      "[/Script/ShooterGame.ShooterGameMode]",
-      "BabyMatureSpeedMultiplier=3.0",
-      "EggHatchSpeedMultiplier=3.0",
-      "",
-    ].join("\n"),
+    ["[ServerSettings]", "XPMultiplier=2.0", "TamingSpeedMultiplier=3.0", "HarvestAmountMultiplier=2.5", ""].join("\n"),
+    ["[/Script/ShooterGame.ShooterGameMode]", "BabyMatureSpeedMultiplier=3.0", "EggHatchSpeedMultiplier=3.0", ""].join(
+      "\n",
+    ),
     now,
   );
 
@@ -772,15 +742,11 @@ async function captureDownloadsGallery(userData, outDir) {
 async function quitApp(app) {
   const proc = app.process();
   const exited =
-    proc == null || proc.exitCode != null
-      ? Promise.resolve()
-      : new Promise((resolve) => proc.once("exit", resolve));
+    proc == null || proc.exitCode != null ? Promise.resolve() : new Promise((resolve) => proc.once("exit", resolve));
   await app.evaluate(({ app: electronApp }) => electronApp.quit());
   await Promise.race([
     exited,
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000),
-    ),
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000)),
   ]);
 }
 
@@ -870,9 +836,7 @@ async function run() {
 
     seedGalleryFleetSql(userData);
     applyDemoMapsInDb(userData);
-    console.log(
-      `WEBSITE_SCREENSHOTS_SEEDED=${DEMO_FLEET.map((d) => d.name).join(",")} cluster=${DEMO_CLUSTER_ID}`,
-    );
+    console.log(`WEBSITE_SCREENSHOTS_SEEDED=${DEMO_FLEET.map((d) => d.name).join(",")} cluster=${DEMO_CLUSTER_ID}`);
 
     let app = await launchIsolatedApp(userData);
 
@@ -908,9 +872,7 @@ async function run() {
             timeout: 15000,
           });
         } catch {
-          console.warn(
-            `WARN: cluster detail "${DEMO_CLUSTER_ID}" not visible; capturing Clusters page as-is`,
-          );
+          console.warn(`WARN: cluster detail "${DEMO_CLUSTER_ID}" not visible; capturing Clusters page as-is`);
         }
       }
       await settle(page, 800);

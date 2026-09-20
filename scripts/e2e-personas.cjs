@@ -74,7 +74,10 @@ async function createServerAsBeginner(app, page, name, baseDir, ports) {
 
   await waitOverviewReady(page);
   await page.getByText(name).first().waitFor({ timeout: 15000 });
-  await page.getByText(/need(s)? attention/i).first().waitFor({ timeout: 10000 });
+  await page
+    .getByText(/need(s)? attention/i)
+    .first()
+    .waitFor({ timeout: 10000 });
 }
 
 async function openWorkspaceAndAssistant(page, serverName) {
@@ -101,9 +104,11 @@ async function runExperiencedFlow(page, serverName) {
   await search.fill(serverName);
   await page.getByText(serverName).first().waitFor({ timeout: 10000 });
 
-  const card = page.locator(SERVER_CARD, {
-    has: page.getByText(serverName, { exact: true }),
-  }).first();
+  const card = page
+    .locator(SERVER_CARD, {
+      has: page.getByText(serverName, { exact: true }),
+    })
+    .first();
   await card.waitFor({ state: "visible", timeout: 10000 });
 
   await card.getByRole("button", { name: "More options" }).click();
@@ -118,12 +123,13 @@ async function runExperiencedFlow(page, serverName) {
   await dialog.getByRole("button", { name: "Clone server" }).click();
   await dialog.waitFor({ state: "hidden", timeout: 15_000 });
 
-  const cloneTitle = page.locator(SERVER_CARD, {
-    has: page.getByText(expectedCloneName, { exact: true }),
-  }).first();
+  const cloneTitle = page
+    .locator(SERVER_CARD, {
+      has: page.getByText(expectedCloneName, { exact: true }),
+    })
+    .first();
   await cloneTitle.waitFor({ state: "visible", timeout: 15_000 });
-  const cloneName =
-    (await cloneTitle.getAttribute("data-server-name"))?.trim() ?? expectedCloneName;
+  const cloneName = (await cloneTitle.getAttribute("data-server-name"))?.trim() ?? expectedCloneName;
   assert.equal(cloneName, expectedCloneName);
 
   // Experienced-user navigation through operational sections.
@@ -140,9 +146,11 @@ async function runExperiencedFlow(page, serverName) {
   await waitOverviewReady(page);
 
   await search.fill(cloneName);
-  const cloneCard = page.locator(SERVER_CARD, {
-    has: page.getByText(cloneName, { exact: true }),
-  }).first();
+  const cloneCard = page
+    .locator(SERVER_CARD, {
+      has: page.getByText(cloneName, { exact: true }),
+    })
+    .first();
   await cloneCard.waitFor({ state: "visible", timeout: 10000 });
 
   await cloneCard.getByRole("button", { name: "More options" }).click();
@@ -165,9 +173,11 @@ async function deleteServerIfPresent(page, serverName) {
   }
   await search.fill(serverName);
 
-  const card = page.locator(SERVER_CARD, {
-    has: page.getByText(serverName, { exact: true }),
-  }).first();
+  const card = page
+    .locator(SERVER_CARD, {
+      has: page.getByText(serverName, { exact: true }),
+    })
+    .first();
 
   if ((await card.count()) === 0) {
     await search.fill("");
@@ -285,10 +295,7 @@ async function run() {
         await quitElectronApp(app);
       }
     } finally {
-      await Promise.all([
-        removeFixtureDir(fixtures.profileDir),
-        removeFixtureDir(fixtures.serversDir),
-      ]);
+      await Promise.all([removeFixtureDir(fixtures.profileDir), removeFixtureDir(fixtures.serversDir)]);
     }
   }
 }

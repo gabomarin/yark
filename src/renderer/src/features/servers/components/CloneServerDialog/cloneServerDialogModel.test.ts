@@ -12,9 +12,8 @@ vi.mock("@shared/server/port-suggest", async (importOriginal) => {
 });
 
 const mockedSuggest = vi.mocked(portSuggest.suggestNextPortTriplet);
-const realSuggest = (
-  await vi.importActual<typeof import("@shared/server/port-suggest")>("@shared/server/port-suggest")
-).suggestNextPortTriplet;
+const realSuggest = (await vi.importActual<typeof import("@shared/server/port-suggest")>("@shared/server/port-suggest"))
+  .suggestNextPortTriplet;
 
 function profile(partial: Partial<ServerProfile> & Pick<ServerProfile, "id" | "name">): ServerProfile {
   return {
@@ -140,4 +139,3 @@ describe("cloneDialogFormState", () => {
     expect(Number(state.gamePort)).toBeLessThanOrEqual(65535);
   });
 });
-

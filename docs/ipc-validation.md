@@ -4,12 +4,12 @@ YARK validates renderer→main `ipcMain.handle` arguments with Zod before domain
 
 ## How it works
 
-| Piece | Location |
-| --- | --- |
-| Shared primitives / limits | [`src/shared/ipc/primitives.ts`](../src/shared/ipc/primitives.ts) |
-| Channel arg schemas | [`src/shared/ipc/channel-schemas.ts`](../src/shared/ipc/channel-schemas.ts) |
-| `handleValidated` + channel registry | [`src/main/ipc-validate.ts`](../src/main/ipc-validate.ts) |
-| Handler registration | [`src/main/ipc-handlers.ts`](../src/main/ipc-handlers.ts) |
+| Piece                                | Location                                                                    |
+| ------------------------------------ | --------------------------------------------------------------------------- |
+| Shared primitives / limits           | [`src/shared/ipc/primitives.ts`](../src/shared/ipc/primitives.ts)           |
+| Channel arg schemas                  | [`src/shared/ipc/channel-schemas.ts`](../src/shared/ipc/channel-schemas.ts) |
+| `handleValidated` + channel registry | [`src/main/ipc-validate.ts`](../src/main/ipc-validate.ts)                   |
+| Handler registration                 | [`src/main/ipc-handlers.ts`](../src/main/ipc-handlers.ts)                   |
 
 `handleValidated(channel, argsSchema, fn)`:
 

@@ -1,8 +1,4 @@
-import type {
-  ServerProfile,
-  ServerStopProgress,
-  ServerStopProgressReason,
-} from "@shared/types";
+import type { ServerProfile, ServerStopProgress, ServerStopProgressReason } from "@shared/types";
 import type { BackupService } from "../backups/backup-service";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
 import type { ServerRepository } from "../../infra/db/server-repository";
@@ -46,9 +42,7 @@ export class InstanceStop {
 
   stop(id: string, options?: StopServerOptions): Promise<void> {
     if (this.criticalJobs.has(id)) {
-      return Promise.reject(
-        new Error("Cannot stop while a restart is in progress"),
-      );
+      return Promise.reject(new Error("Cannot stop while a restart is in progress"));
     }
     const existing = this.stopJobs.get(id);
     if (existing !== undefined) return existing.then(() => undefined);
@@ -72,10 +66,7 @@ export class InstanceStop {
   async waitForJobs(): Promise<void> {
     const failures: unknown[] = [];
     while (this.stopJobs.size > 0 || this.criticalJobs.size > 0) {
-      const results = await Promise.allSettled([
-        ...this.stopJobs.values(),
-        ...this.criticalJobs.values(),
-      ]);
+      const results = await Promise.allSettled([...this.stopJobs.values(), ...this.criticalJobs.values()]);
       for (const result of results) {
         if (result.status === "rejected") failures.push(result.reason);
       }
@@ -93,21 +84,14 @@ export class InstanceStop {
     if (activeIds.length === 0) {
       return;
     }
-    const results = await Promise.allSettled(
-      activeIds.map((id) => this.stop(id, { reason: "quit" })),
-    );
-    const firstFailure = results.find(
-      (result): result is PromiseRejectedResult => result.status === "rejected",
-    );
+    const results = await Promise.allSettled(activeIds.map((id) => this.stop(id, { reason: "quit" })));
+    const firstFailure = results.find((result): result is PromiseRejectedResult => result.status === "rejected");
     if (firstFailure !== undefined) {
       throw firstFailure.reason;
     }
   }
 
-  async withCriticalJob<T>(
-    id: string,
-    work: () => Promise<T>,
-  ): Promise<T> {
+  async withCriticalJob<T>(id: string, work: () => Promise<T>): Promise<T> {
     if (this.criticalJobs.has(id)) {
       throw new Error("Another server operation is already in progress");
     }
@@ -125,19 +109,10 @@ export class InstanceStop {
   /** Flush queued GUS/Game.ini after the process has exited (#530). */
   async flushPendingIni(id: string): Promise<void> {
     const profile = this.mustGet(id);
-    await flushPendingIniBestEffort(
-      this.dependencies.flushPendingServerIni,
-      this.dependencies.repo,
-      id,
-      profile.name,
-    );
+    await flushPendingIniBestEffort(this.dependencies.flushPendingServerIni, this.dependencies.repo, id, profile.name);
   }
 
-  enqueue(
-    id: string,
-    wantBackup: boolean,
-    reason: ServerStopProgressReason = "user",
-  ): Promise<StopJobOutcome> {
+  enqueue(id: string, wantBackup: boolean, reason: ServerStopProgressReason = "user"): Promise<StopJobOutcome> {
     const existing = this.stopJobs.get(id);
     if (existing !== undefined) return existing;
     const job = this.run(id, wantBackup, reason).finally(() => {
@@ -149,11 +124,7 @@ export class InstanceStop {
     return job;
   }
 
-  private async run(
-    id: string,
-    wantBackup: boolean,
-    reason: ServerStopProgressReason,
-  ): Promise<StopJobOutcome> {
+  private async run(id: string, wantBackup: boolean, reason: ServerStopProgressReason): Promise<StopJobOutcome> {
     const profile = this.mustGet(id);
     let didBackup = false;
     let exitedExternally = false;
@@ -162,9 +133,8 @@ export class InstanceStop {
       return "noop";
     }
 
-    const progress = (
-      partial: Omit<ServerStopProgress, "serverId" | "reason">,
-    ): ServerStopProgress => buildServerStopProgress(id, reason, partial);
+    const progress = (partial: Omit<ServerStopProgress, "serverId" | "reason">): ServerStopProgress =>
+      buildServerStopProgress(id, reason, partial);
 
     try {
       if (this.dependencies.processes.getStatus(id).status === "starting") {
@@ -198,8 +168,7 @@ export class InstanceStop {
       );
 
       const runtimeProfile = this.dependencies.processes.applyRuntimePorts(profile);
-      const preparation =
-        await this.dependencies.processes.beginGracefulStop(runtimeProfile);
+      const preparation = await this.dependencies.processes.beginGracefulStop(runtimeProfile);
       if (preparation.phase === "absent") {
         await flushPendingIniBestEffort(
           this.dependencies.flushPendingServerIni,
@@ -234,15 +203,9 @@ export class InstanceStop {
           percent: 25,
         }),
       );
-      const finishResult =
-        await this.dependencies.processes.finishGracefulStop(
-          runtimeProfile,
-          preparation.handle,
-        );
+      const finishResult = await this.dependencies.processes.finishGracefulStop(runtimeProfile, preparation.handle);
       if (finishResult === "replaced") {
-        throw new Error(
-          "The original process was replaced during stop; the new process was left running",
-        );
+        throw new Error("The original process was replaced during stop; the new process was left running");
       }
       exitedExternally = finishResult === "already_exited";
 

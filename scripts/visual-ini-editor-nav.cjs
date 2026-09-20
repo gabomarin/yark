@@ -92,7 +92,11 @@ async function ensureServer(app, page, outDir) {
 async function openWorkspaceIni(page) {
   await goNav(page, "Servers");
   await page.locator("[data-overview-page]").waitFor({ timeout: 15000 });
-  await page.locator(SERVER_CARD).first().getByRole("button", { name: /Open settings/i }).click();
+  await page
+    .locator(SERVER_CARD)
+    .first()
+    .getByRole("button", { name: /Open settings/i })
+    .click();
   await page.waitForTimeout(400);
   await page.getByRole("tab", { name: "INI Files" }).click();
   await page.waitForTimeout(400);
@@ -107,14 +111,8 @@ async function assertNavOk(metrics, sizeName) {
   const [fileSeg, modeSeg] = metrics.rects;
   const topDelta = Math.abs(fileSeg.top - modeSeg.top);
   const heightDelta = Math.abs(fileSeg.height - modeSeg.height);
-  assert.ok(
-    topDelta <= 2,
-    `${sizeName}: segmented tops aligned (delta=${topDelta.toFixed(2)})`,
-  );
-  assert.ok(
-    heightDelta <= 2,
-    `${sizeName}: segmented heights match (delta=${heightDelta.toFixed(2)})`,
-  );
+  assert.ok(topDelta <= 2, `${sizeName}: segmented tops aligned (delta=${topDelta.toFixed(2)})`);
+  assert.ok(heightDelta <= 2, `${sizeName}: segmented heights match (delta=${heightDelta.toFixed(2)})`);
   assert.ok(
     modeSeg.left >= fileSeg.left + fileSeg.width - 1,
     `${sizeName}: mode control sits to the right of file control`,
@@ -140,9 +138,13 @@ async function run() {
     page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
 
     await page.waitForLoadState("domcontentloaded");
-    await page.locator("[data-overview-page], [data-clusters-page]").first().waitFor({
-      timeout: 20000,
-    }).catch(() => undefined);
+    await page
+      .locator("[data-overview-page], [data-clusters-page]")
+      .first()
+      .waitFor({
+        timeout: 20000,
+      })
+      .catch(() => undefined);
 
     await ensureServer(app, page, outDir);
     await openWorkspaceIni(page);

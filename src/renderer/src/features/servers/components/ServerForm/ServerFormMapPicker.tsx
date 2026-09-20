@@ -1,23 +1,13 @@
 import type { ReactElement } from "react";
 import { useMemo } from "react";
-import {
-  Button,
-  Combobox,
-  InputBase,
-  Input,
-  Text,
-  useCombobox,
-} from "@mantine/core";
+import { Button, Combobox, InputBase, Input, Text, useCombobox } from "@mantine/core";
 import { CaretDown, Check, HardDrives, MagnifyingGlass } from "@phosphor-icons/react";
 import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
 import { KNOWN_MAP_OPTIONS, type ModMetadata } from "@shared/types";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import { resolveMapArtUrl } from "@ui/MapArtThumb/mapArt";
 import { SEARCH_MAPS_SELECT_VALUE } from "./mapsSearchModel";
-import {
-  CUSTOM_MAP_SELECT_VALUE,
-  mapModSelectValue,
-} from "./mapFieldValues";
+import { CUSTOM_MAP_SELECT_VALUE, mapModSelectValue } from "./mapFieldValues";
 import classes from "./ServerFormMapPicker.module.css";
 
 interface MapPickerModRow {
@@ -49,10 +39,7 @@ export function ServerFormMapPicker(props: Props): ReactElement {
 
   const mapMods = useMemo(() => {
     const rows = [...props.mapModsWithToken];
-    if (
-      props.orphanLinkedMod
-      && !rows.some((row) => row.mod.id === props.orphanLinkedMod!.id)
-    ) {
+    if (props.orphanLinkedMod && !rows.some((row) => row.mod.id === props.orphanLinkedMod!.id)) {
       rows.push({
         mod: {
           id: props.orphanLinkedMod.id,
@@ -80,9 +67,7 @@ export function ServerFormMapPicker(props: Props): ReactElement {
       label="Map"
       required
       size={props.inputSize}
-      description={
-        props.isCreate ? MAP_NAME_COPY.searchMapsCreateHint : undefined
-      }
+      description={props.isCreate ? MAP_NAME_COPY.searchMapsCreateHint : undefined}
     >
       <Combobox
         store={combobox}
@@ -133,9 +118,7 @@ export function ServerFormMapPicker(props: Props): ReactElement {
                 <span className={classes.triggerTitle}>{props.trigger.title}</span>
                 <span className={classes.triggerMeta}>
                   {props.trigger.badge}
-                  {props.trigger.subtitle.length > 0
-                    ? ` · ${props.trigger.subtitle}`
-                    : ""}
+                  {props.trigger.subtitle.length > 0 ? ` · ${props.trigger.subtitle}` : ""}
                 </span>
               </span>
             </span>
@@ -165,12 +148,7 @@ export function ServerFormMapPicker(props: Props): ReactElement {
                     </span>
                   ) : null}
                   {art !== null ? (
-                    <img
-                      className={classes.officialArt}
-                      src={art}
-                      alt=""
-                      draggable={false}
-                    />
+                    <img className={classes.officialArt} src={art} alt="" draggable={false} />
                   ) : (
                     <span className={classes.officialArtFallback} aria-hidden>
                       <HardDrives size={18} weight="duotone" />

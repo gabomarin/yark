@@ -4,35 +4,20 @@ import { basename, extname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { extractZip } from "../backups/backup-archive";
 import type { AsaApiStatus } from "@shared/types";
-import {
-  asaApiDisabledPluginsDir,
-  asaApiPluginsDir,
-} from "./asa-api-paths";
+import { asaApiDisabledPluginsDir, asaApiPluginsDir } from "./asa-api-paths";
 import { readAsaApiStatus } from "./asa-api-status";
 
-const IGNORED_TOP_LEVEL = new Set([
-  "__macosx",
-  ".ds_store",
-  "thumbs.db",
-]);
+const IGNORED_TOP_LEVEL = new Set(["__macosx", ".ds_store", "thumbs.db"]);
 
 function isSafePluginName(name: string): boolean {
-  return (
-    name.trim().length > 0
-    && !/[\\/]/.test(name)
-    && !name.includes("..")
-    && name !== "."
-    && name !== ".."
-  );
+  return name.trim().length > 0 && !/[\\/]/.test(name) && !name.includes("..") && name !== "." && name !== "..";
 }
 
 function isIgnoredTopLevelName(name: string): boolean {
   return IGNORED_TOP_LEVEL.has(name.toLowerCase());
 }
 
-async function listMeaningfulEntries(dir: string): Promise<
-  Array<{ name: string; isDirectory: boolean }>
-> {
+async function listMeaningfulEntries(dir: string): Promise<Array<{ name: string; isDirectory: boolean }>> {
   const entries = await readdir(dir, { withFileTypes: true });
   return entries
     .filter((e) => !isIgnoredTopLevelName(e.name))
@@ -60,23 +45,14 @@ export async function resolvePluginPayloadFromStaging(stagingDir: string): Promi
   if (dirs.length === 1 && files.length === 0) {
     const folderName = dirs[0]!.name;
     const pluginDir = join(stagingDir, folderName);
-    const dlls = (await readdir(pluginDir)).filter((name) =>
-      name.toLowerCase().endsWith(".dll"),
-    );
+    const dlls = (await readdir(pluginDir)).filter((name) => name.toLowerCase().endsWith(".dll"));
     if (dlls.length === 0) {
-      throw new Error(
-        `Plugin folder "${folderName}" has no .dll. Folder name should match Name.dll.`,
-      );
+      throw new Error(`Plugin folder "${folderName}" has no .dll. Folder name should match Name.dll.`);
     }
-    const matched = dlls.find(
-      (dll) =>
-        basename(dll, extname(dll)).toLowerCase() === folderName.toLowerCase(),
-    );
+    const matched = dlls.find((dll) => basename(dll, extname(dll)).toLowerCase() === folderName.toLowerCase());
     const dllName = matched ?? (dlls.length === 1 ? dlls[0]! : null);
     if (dllName === null) {
-      throw new Error(
-        `Plugin folder "${folderName}" has multiple DLLs and none match the folder name.`,
-      );
+      throw new Error(`Plugin folder "${folderName}" has multiple DLLs and none match the folder name.`);
     }
     const pluginName = basename(dllName, extname(dllName));
     if (!isSafePluginName(pluginName)) {
@@ -94,9 +70,7 @@ export async function resolvePluginPayloadFromStaging(stagingDir: string): Promi
     return { sourceDir: stagingDir, pluginName, flatLayout: true };
   }
 
-  throw new Error(
-    "Plugin zip must contain either one plugin folder (with Name.dll) or a single .dll at the root.",
-  );
+  throw new Error("Plugin zip must contain either one plugin folder (with Name.dll) or a single .dll at the root.");
 }
 
 async function moveDirContents(fromDir: string, toDir: string): Promise<void> {
@@ -110,10 +84,7 @@ async function moveDirContents(fromDir: string, toDir: string): Promise<void> {
  * Install an AsaApi plugin from a local zip into `ArkApi\\Plugins\\<Name>`.
  * Replaces an existing Plugins or Disabled_Plugins copy of the same name.
  */
-export async function installAsaApiPluginFromZip(
-  installDir: string,
-  zipPath: string,
-): Promise<AsaApiStatus> {
+export async function installAsaApiPluginFromZip(installDir: string, zipPath: string): Promise<AsaApiStatus> {
   const trimmedZip = zipPath.trim();
   if (trimmedZip.length === 0 || !trimmedZip.toLowerCase().endsWith(".zip")) {
     throw new Error("Choose a .zip plugin archive");

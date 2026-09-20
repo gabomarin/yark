@@ -22,9 +22,7 @@ describe("parseSteamCmdProgressLine", () => {
   });
 
   it("parses verifying progress", () => {
-    const parsed = parseSteamCmdProgressLine(
-      "Update state (0x81) verifying update, progress: 12.3 (10 / 100)",
-    );
+    const parsed = parseSteamCmdProgressLine("Update state (0x81) verifying update, progress: 12.3 (10 / 100)");
     expect(parsed.percent).toBeCloseTo(12.3);
     expect(parsed.label).toMatch(/Verifying/);
   });
@@ -36,9 +34,7 @@ describe("parseSteamCmdProgressLine", () => {
   });
 
   it("parses English SteamCMD bootstrapper bracket progress", () => {
-    const parsed = parseSteamCmdProgressLine(
-      "[ 59%] Downloading update (11,343 of 19,014 KB)...",
-    );
+    const parsed = parseSteamCmdProgressLine("[ 59%] Downloading update (11,343 of 19,014 KB)...");
     expect(parsed.percent).toBe(59);
     expect(parsed.label).toMatch(/Updating SteamCMD/i);
     expect(parsed.label).toMatch(/MB/);
@@ -47,9 +43,7 @@ describe("parseSteamCmdProgressLine", () => {
   });
 
   it("updates percent from localized bootstrapper lines without translating labels", () => {
-    const parsed = parseSteamCmdProgressLine(
-      "[ 59%] Descargando archivos (11,343 de 19,014 KB)...",
-    );
+    const parsed = parseSteamCmdProgressLine("[ 59%] Descargando archivos (11,343 de 19,014 KB)...");
     expect(parsed.percent).toBe(59);
     // No Spanish dictionary — leave label null so the dock keeps its English status text.
     expect(parsed.label).toBeNull();

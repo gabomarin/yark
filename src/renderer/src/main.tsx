@@ -2,10 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { AppErrorBoundary } from "@ui/AppErrorBoundary/AppErrorBoundary";
-import {
-  loadOpenNativeConsolePref,
-  loadUiDensityPref,
-} from "@features/settings/settingsModel";
+import { loadOpenNativeConsolePref, loadUiDensityPref } from "@features/settings/settingsModel";
 import { DEFAULT_OPEN_NATIVE_CONSOLE } from "@shared/settings/open-native-console";
 import { DEFAULT_UI_DENSITY } from "@shared/settings/ui-density";
 import "@mantine/core/styles.layer.css";
@@ -40,10 +37,7 @@ void (async () => {
     <React.StrictMode>
       {/* Outside App/Mantine so a provider throw still shows Reload chrome. */}
       <AppErrorBoundary>
-        <App
-          initialUiDensity={initialUiDensity}
-          initialOpenNativeConsole={initialOpenNativeConsole}
-        />
+        <App initialUiDensity={initialUiDensity} initialOpenNativeConsole={initialOpenNativeConsole} />
       </AppErrorBoundary>
     </React.StrictMode>,
   );

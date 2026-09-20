@@ -12,9 +12,7 @@ describe("parseListPlayersResponse", () => {
   });
 
   it("parses steam-style ListPlayers lines", () => {
-    const players = parseListPlayersResponse(
-      "0. Alice, 76561198000000000\n1. Bob, 76561198000000001\n",
-    );
+    const players = parseListPlayersResponse("0. Alice, 76561198000000000\n1. Bob, 76561198000000001\n");
     expect(players).toEqual([
       { key: "76561198000000000", name: "Alice" },
       { key: "76561198000000001", name: "Bob" },
@@ -22,11 +20,7 @@ describe("parseListPlayersResponse", () => {
   });
 
   it("parses EOS / UniqueNetId lines", () => {
-    const players = parseListPlayersResponse(
-      "0. Carol, UniqueNetId:0002abcdef0123456789\n",
-    );
-    expect(players).toEqual([
-      { key: "0002abcdef0123456789", name: "Carol" },
-    ]);
+    const players = parseListPlayersResponse("0. Carol, UniqueNetId:0002abcdef0123456789\n");
+    expect(players).toEqual([{ key: "0002abcdef0123456789", name: "Carol" }]);
   });
 });

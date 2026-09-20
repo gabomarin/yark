@@ -6,17 +6,8 @@ import {
   sanitizeDiagnosticText,
   sanitizeDiagnosticValue,
 } from "@shared/credential-redaction";
-import type {
-  AppEvent,
-  AppEventDetails,
-  ModMetadata,
-  ServerProfile,
-  ServerProfileInput,
-} from "@shared/types";
-import {
-  persistableMapModId,
-  persistableMapSaveFolder,
-} from "@shared/asa/map-identity";
+import type { AppEvent, AppEventDetails, ModMetadata, ServerProfile, ServerProfileInput } from "@shared/types";
+import { persistableMapModId, persistableMapSaveFolder } from "@shared/asa/map-identity";
 import {
   emptyStructuredLaunchArgs,
   normalizeStructuredLaunchArgs,
@@ -63,9 +54,7 @@ function parseJson<T>(raw: string | null | undefined, fallback: T): T {
 }
 
 /** Coerce SQLite `map_mod_id` to string | null at the DB boundary (#190). */
-export function coerceMapModId(
-  value: string | number | null | undefined,
-): string | null {
+export function coerceMapModId(value: string | number | null | undefined): string | null {
   if (value === null || value === undefined) {
     return null;
   }
@@ -79,9 +68,7 @@ function rowToProfile(row: ServerRow): ServerProfile {
     name: row.name,
     map: row.map,
     mapModId: coerceMapModId(row.map_mod_id),
-    mapSaveFolder: row.map_save_folder?.trim()
-      ? row.map_save_folder.trim()
-      : null,
+    mapSaveFolder: row.map_save_folder?.trim() ? row.map_save_folder.trim() : null,
     installDir: row.install_dir,
     enabled: row.enabled === 1,
     autoStart: row.auto_start === 1,
@@ -119,9 +106,7 @@ export class ServerRepository {
   }
 
   get(id: string): ServerProfile | null {
-    const row = this.db
-      .prepare("SELECT * FROM servers WHERE id = ?")
-      .get(id) as ServerRow | undefined;
+    const row = this.db.prepare("SELECT * FROM servers WHERE id = ?").get(id) as ServerRow | undefined;
     return row ? rowToProfile(row) : null;
   }
 
@@ -146,9 +131,7 @@ export class ServerRepository {
       useAsaApiLoader: input.useAsaApiLoader === true,
       disabledMods: input.disabledMods ?? [],
       modMetadataCache: input.modMetadataCache ?? {},
-      structuredLaunchArgs: normalizeStructuredLaunchArgs(
-        input.structuredLaunchArgs ?? emptyStructuredLaunchArgs(),
-      ),
+      structuredLaunchArgs: normalizeStructuredLaunchArgs(input.structuredLaunchArgs ?? emptyStructuredLaunchArgs()),
       id: randomUUID(),
       createdAt: now,
       updatedAt: now,
@@ -205,10 +188,7 @@ export class ServerRepository {
     const mapSaveFolder = persistableMapSaveFolder({
       map: input.map,
       mapModId: mapModId,
-      mapSaveFolder:
-        input.mapSaveFolder !== undefined
-          ? input.mapSaveFolder
-          : existing.mapSaveFolder,
+      mapSaveFolder: input.mapSaveFolder !== undefined ? input.mapSaveFolder : existing.mapSaveFolder,
     });
     this.db
       .prepare(
@@ -241,9 +221,7 @@ export class ServerRepository {
         input.clusterDir,
         JSON.stringify(input.extraArgs),
         JSON.stringify(
-          normalizeStructuredLaunchArgs(
-            input.structuredLaunchArgs ?? existing.structuredLaunchArgs ?? {},
-          ),
+          normalizeStructuredLaunchArgs(input.structuredLaunchArgs ?? existing.structuredLaunchArgs ?? {}),
         ),
         JSON.stringify(input.mods),
         JSON.stringify(input.disabledMods ?? existing.disabledMods ?? []),
@@ -262,11 +240,7 @@ export class ServerRepository {
     const existing = this.get(id);
     if (existing === null) return null;
     const updatedAt = new Date().toISOString();
-    this.db
-      .prepare(
-        `UPDATE servers SET install_dir = ?, updated_at = ? WHERE id = ?`,
-      )
-      .run(installDir, updatedAt, id);
+    this.db.prepare(`UPDATE servers SET install_dir = ?, updated_at = ? WHERE id = ?`).run(installDir, updatedAt, id);
     return this.get(id);
   }
 
@@ -276,11 +250,7 @@ export class ServerRepository {
       return existing;
     }
     const updatedAt = new Date().toISOString();
-    this.db
-      .prepare(
-        `UPDATE servers SET enabled = ?, updated_at = ? WHERE id = ?`,
-      )
-      .run(enabled ? 1 : 0, updatedAt, id);
+    this.db.prepare(`UPDATE servers SET enabled = ?, updated_at = ? WHERE id = ?`).run(enabled ? 1 : 0, updatedAt, id);
     return this.get(id);
   }
 
@@ -306,22 +276,10 @@ export class ServerRepository {
       details !== undefined && details !== null
         ? (sanitizeDiagnosticValue(details, secrets) as AppEventDetails)
         : details;
-    const detailsJson =
-      safeDetails !== undefined && safeDetails !== null
-        ? JSON.stringify(safeDetails)
-        : null;
+    const detailsJson = safeDetails !== undefined && safeDetails !== null ? JSON.stringify(safeDetails) : null;
     const result = this.db
-      .prepare(
-        "INSERT INTO events (server_id, type, severity, message, created_at, details) VALUES (?, ?, ?, ?, ?, ?)",
-      )
-      .run(
-        serverId,
-        type,
-        severity,
-        safeMessage,
-        new Date().toISOString(),
-        detailsJson,
-      );
+      .prepare("INSERT INTO events (server_id, type, severity, message, created_at, details) VALUES (?, ?, ?, ?, ?, ?)")
+      .run(serverId, type, severity, safeMessage, new Date().toISOString(), detailsJson);
     return Number(result.lastInsertRowid);
   }
 
@@ -362,18 +320,14 @@ export class ServerRepository {
   }
 
   deleteEventsForServer(serverId: string): number {
-    const result = this.db
-      .prepare("DELETE FROM events WHERE server_id = ?")
-      .run(serverId);
+    const result = this.db.prepare("DELETE FROM events WHERE server_id = ?").run(serverId);
     return Number(result.changes);
   }
 
   /** All events (oldest first) for retention planning. */
   listAllEvents(): AppEvent[] {
     const rows = this.db
-      .prepare(
-        "SELECT id, server_id, type, severity, message, created_at, details FROM events ORDER BY id ASC",
-      )
+      .prepare("SELECT id, server_id, type, severity, message, created_at, details FROM events ORDER BY id ASC")
       .all() as Array<{
       id: number;
       server_id: string | null;

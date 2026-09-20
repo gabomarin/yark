@@ -82,26 +82,14 @@ function writeInstallFixtures() {
   // missing: do not create installDir
   fs.mkdirSync(path.join(serversDir, "empty"), { recursive: true });
 
-  const incompleteBin = path.join(
-    serversDir,
-    "incomplete",
-    "ShooterGame",
-    "Binaries",
-    "Win64",
-  );
+  const incompleteBin = path.join(serversDir, "incomplete", "ShooterGame", "Binaries", "Win64");
   fs.mkdirSync(incompleteBin, { recursive: true });
 
   const suspiciousDir = path.join(serversDir, "suspicious");
   fs.mkdirSync(suspiciousDir, { recursive: true });
   fs.writeFileSync(path.join(suspiciousDir, "readme.txt"), "not an ASA install\n");
 
-  const readyBin = path.join(
-    serversDir,
-    "ready",
-    "ShooterGame",
-    "Binaries",
-    "Win64",
-  );
+  const readyBin = path.join(serversDir, "ready", "ShooterGame", "Binaries", "Win64");
   fs.mkdirSync(readyBin, { recursive: true });
   fs.writeFileSync(path.join(readyBin, "ArkAscendedServer.exe"), "fake-asa-binary\n");
   fs.writeFileSync(path.join(readyBin, "version.txt"), "e2e-1.0\n");
@@ -157,22 +145,20 @@ async function launchApp() {
 async function quitApp(app) {
   const proc = app.process();
   const exited =
-    proc == null || proc.exitCode != null
-      ? Promise.resolve()
-      : new Promise((resolve) => proc.once("exit", resolve));
+    proc == null || proc.exitCode != null ? Promise.resolve() : new Promise((resolve) => proc.once("exit", resolve));
   await app.evaluate(({ app: electronApp }) => electronApp.quit());
   await Promise.race([
     exited,
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000),
-    ),
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000)),
   ]);
 }
 
 function cardFor(page, name) {
-  return page.locator(SERVER_CARD, {
-    has: page.getByText(name, { exact: true }),
-  }).first();
+  return page
+    .locator(SERVER_CARD, {
+      has: page.getByText(name, { exact: true }),
+    })
+    .first();
 }
 
 async function waitForAttentionSettled(page, expectedCount, timeout = 30_000) {
@@ -192,9 +178,7 @@ async function waitForAttentionSettled(page, expectedCount, timeout = 30_000) {
     }
     await page.waitForTimeout(250);
   }
-  throw new Error(
-    `Timed out waiting for attention count=${expectedCount} after install-health scan`,
-  );
+  throw new Error(`Timed out waiting for attention count=${expectedCount} after install-health scan`);
 }
 
 async function run() {
@@ -275,9 +259,7 @@ async function run() {
     await waitForAttentionSettled(page, expectedAttention, 30_000);
 
     // Workspace Status shows install health (check time lives in attention details only).
-    await readyCard
-      .getByRole("button", { name: new RegExp(`Open settings for ${FIXTURES[4].name}`, "i") })
-      .click();
+    await readyCard.getByRole("button", { name: new RegExp(`Open settings for ${FIXTURES[4].name}`, "i") }).click();
     await page.getByRole("tab", { name: "Server", exact: true }).waitFor({
       state: "visible",
       timeout: 15_000,
@@ -287,11 +269,7 @@ async function run() {
     if ((await statusActions.count()) > 0) {
       await statusActions.click();
     }
-    const sidePanel = page
-      .locator("aside")
-      .filter({ hasText: "Install" })
-      .filter({ hasText: "Ready" })
-      .last();
+    const sidePanel = page.locator("aside").filter({ hasText: "Install" }).filter({ hasText: "Ready" }).last();
     await sidePanel.waitFor({ state: "visible", timeout: 10_000 });
     await expectText(sidePanel, "Ready");
     assert.equal(
@@ -300,9 +278,7 @@ async function run() {
       "install check time should not appear on workspace Status",
     );
 
-    const actionableErrors = errors.filter(
-      (message) => !/Failed to load resource|net::ERR_/i.test(message),
-    );
+    const actionableErrors = errors.filter((message) => !/Failed to load resource|net::ERR_/i.test(message));
     assert.deepEqual(actionableErrors, []);
     succeeded = true;
     console.log(`E2E_INSTALL_HEALTH_OK profile=${profileDir}`);

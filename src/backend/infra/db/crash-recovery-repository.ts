@@ -84,13 +84,7 @@ export class CrashRecoveryRepository {
           attempts, paused, last_failure_reason, updated_at
         ) VALUES (?, 0, ?, ?, ?, 0, 0, NULL, ?)`,
       )
-      .run(
-        serverId,
-        defaults.maxAttempts,
-        defaults.backoffSeconds,
-        defaults.stabilitySeconds,
-        now,
-      );
+      .run(serverId, defaults.maxAttempts, defaults.backoffSeconds, defaults.stabilitySeconds, now);
   }
 
   ensurePoliciesForServers(serverIds: readonly string[]): void {
@@ -100,10 +94,7 @@ export class CrashRecoveryRepository {
   }
 
   /** Upsert policy knobs; never touches the persisted attempt budget. */
-  setPolicy(
-    serverId: string,
-    input: CrashRecoveryPolicyWrite,
-  ): CrashRecoveryPolicy {
+  setPolicy(serverId: string, input: CrashRecoveryPolicyWrite): CrashRecoveryPolicy {
     const now = new Date().toISOString();
     this.db
       .prepare(
@@ -147,23 +138,14 @@ export class CrashRecoveryRepository {
   }
 
   /** Persist the consumed budget after an unexpected exit. */
-  recordAttempt(
-    serverId: string,
-    attempts: number,
-    lastFailureReason: string | null,
-  ): void {
+  recordAttempt(serverId: string, attempts: number, lastFailureReason: string | null): void {
     this.db
       .prepare(
         `UPDATE crash_recovery_policies
          SET attempts = ?, last_failure_reason = ?, updated_at = ?
          WHERE server_id = ?`,
       )
-      .run(
-        Math.max(0, Math.trunc(attempts)),
-        lastFailureReason,
-        new Date().toISOString(),
-        serverId,
-      );
+      .run(Math.max(0, Math.trunc(attempts)), lastFailureReason, new Date().toISOString(), serverId);
   }
 
   /** Clear the attempt budget (operator reset or stable run). */

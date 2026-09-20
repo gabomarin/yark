@@ -20,10 +20,7 @@ afterEach(() => {
   }
 });
 
-async function writeZip(
-  zipPath: string,
-  entries: Array<{ name: string; body: string }>,
-): Promise<void> {
+async function writeZip(zipPath: string, entries: Array<{ name: string; body: string }>): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     const zip = new yazl.ZipFile();
     for (const entry of entries) {
@@ -92,16 +89,7 @@ describe("asa-api-plugin-install", () => {
     expect(status.plugins[0]?.name).toBe("CrossChat");
     expect(
       existsSync(
-        join(
-          installDir,
-          "ShooterGame",
-          "Binaries",
-          "Win64",
-          "ArkApi",
-          "Plugins",
-          "CrossChat",
-          "CrossChat.dll",
-        ),
+        join(installDir, "ShooterGame", "Binaries", "Win64", "ArkApi", "Plugins", "CrossChat", "CrossChat.dll"),
       ),
     ).toBe(true);
   });

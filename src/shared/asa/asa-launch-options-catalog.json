@@ -297,9 +297,7 @@
       "example": "-ClusterDirOverride=C:\\ARK\\Cluster",
       "defaultSemantics": "Emitted with clusterid when both cluster fields are set.",
       "status": "yarkOwned",
-      "conflicts": [
-        "extraArgs:-ClusterDirOverride"
-      ],
+      "conflicts": ["extraArgs:-ClusterDirOverride"],
       "wikiAsa": "Yes",
       "wikiAse": "Yes",
       "wikiDeprecated": false,
@@ -325,9 +323,7 @@
       "example": "-clusterid=my-cluster",
       "defaultSemantics": "Emitted with cluster dir + NoTransferFromFiltering when clustered.",
       "status": "yarkOwned",
-      "conflicts": [
-        "extraArgs:-clusterid"
-      ],
+      "conflicts": ["extraArgs:-clusterid"],
       "wikiAsa": "Yes",
       "wikiAse": "Yes",
       "wikiDeprecated": false,
@@ -1550,9 +1546,7 @@
       "example": "-mods=928988,929420",
       "defaultSemantics": "Composed from profile.mods minus disabledMods.",
       "status": "yarkOwned",
-      "conflicts": [
-        "extraArgs:-mods"
-      ],
+      "conflicts": ["extraArgs:-mods"],
       "wikiAsa": "Yes",
       "wikiAse": "No",
       "wikiDeprecated": false,
@@ -2292,9 +2286,7 @@
       "example": "-NoTransferFromFiltering",
       "defaultSemantics": "Emitted with the cluster trio when clustered.",
       "status": "yarkOwned",
-      "conflicts": [
-        "extraArgs:-NoTransferFromFiltering"
-      ],
+      "conflicts": ["extraArgs:-NoTransferFromFiltering"],
       "wikiAsa": "Yes",
       "wikiAse": "Yes",
       "wikiDeprecated": false,
@@ -2549,9 +2541,7 @@
       "example": "-port=7777",
       "defaultSemantics": "Always composed from profile.gamePort.",
       "status": "yarkOwned",
-      "conflicts": [
-        "extraArgs:-port"
-      ],
+      "conflicts": ["extraArgs:-port"],
       "wikiAsa": "Yes",
       "wikiAse": "No",
       "wikiDeprecated": false,
@@ -3471,9 +3461,7 @@
       "example": "-WinLiveMaxPlayers=70",
       "defaultSemantics": "Composed from profile.maxPlayers when 1–255; omitted at 0 (ASA then defaults to 70). INI MaxPlayers is ignored.",
       "status": "yarkOwned",
-      "conflicts": [
-        "extraArgs:-WinLiveMaxPlayers"
-      ],
+      "conflicts": ["extraArgs:-WinLiveMaxPlayers"],
       "wikiAsa": "Yes",
       "wikiAse": "No",
       "wikiDeprecated": false,
@@ -3704,9 +3692,7 @@
       "example": "\"TheIsland_WP\"?SessionName=\"MyASAServer\"",
       "defaultSemantics": "Always composed first from profile.map + profile.sessionName.",
       "status": "yarkOwned",
-      "conflicts": [
-        "extraArgs:\"Map\"?SessionName"
-      ],
+      "conflicts": ["extraArgs:\"Map\"?SessionName"],
       "wikiAsa": "n/a",
       "wikiAse": "n/a",
       "wikiDeprecated": false,

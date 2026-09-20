@@ -479,15 +479,11 @@ export const changelog: ChangelogEntry[] = [
       },
       {
         title: "Fixed",
-        items: [
-          "Release CI no longer flakes on execFileBounded maxBuffer coverage on Windows runners.",
-        ],
+        items: ["Release CI no longer flakes on execFileBounded maxBuffer coverage on Windows runners."],
       },
       {
         title: "Added",
-        items: [
-          "Engineering runbook for workspace Mods in docs/mods.md.",
-        ],
+        items: ["Engineering runbook for workspace Mods in docs/mods.md."],
       },
     ],
   },
@@ -542,9 +538,7 @@ export const changelog: ChangelogEntry[] = [
       },
       {
         title: "Fixed",
-        items: [
-          "Public docs body links under GitHub Pages keep the /yark base path.",
-        ],
+        items: ["Public docs body links under GitHub Pages keep the /yark base path."],
       },
     ],
   },
@@ -580,9 +574,7 @@ export const changelog: ChangelogEntry[] = [
       },
       {
         title: "Removed",
-        items: [
-          "Redundant Back to servers control from the workspace header (use the sidebar Servers nav).",
-        ],
+        items: ["Redundant Back to servers control from the workspace header (use the sidebar Servers nav)."],
       },
     ],
   },
@@ -716,9 +708,7 @@ export const changelog: ChangelogEntry[] = [
       },
       {
         title: "Changed",
-        items: [
-          "Official version and local install probes run less often to avoid UI freezes.",
-        ],
+        items: ["Official version and local install probes run less often to avoid UI freezes."],
       },
       {
         title: "Fixed",
@@ -830,9 +820,6 @@ export function shouldShowWhatsNewForVersion(
   if (getChangelogForVersion(current, entries) === null) {
     return false;
   }
-  const seen =
-    lastSeenVersion === null || lastSeenVersion === undefined
-      ? ""
-      : normalizeVersion(lastSeenVersion);
+  const seen = lastSeenVersion === null || lastSeenVersion === undefined ? "" : normalizeVersion(lastSeenVersion);
   return seen !== current;
 }

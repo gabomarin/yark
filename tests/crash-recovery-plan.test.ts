@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  crashRecoveryBlockReason,
-  planCrashRecovery,
-} from "@backend/domains/crash-recovery/crash-recovery-plan";
+import { crashRecoveryBlockReason, planCrashRecovery } from "@backend/domains/crash-recovery/crash-recovery-plan";
 import { defaultCrashRecoveryPolicy } from "@shared/crash-recovery/crash-recovery-policy";
 import type { CrashRecoveryPolicy } from "@shared/types";
 
@@ -66,23 +63,17 @@ describe("planCrashRecovery", () => {
   it("schedules attempt N with linear backoff", () => {
     const first = planCrashRecovery(input({ uptimeMs: 1_000 }));
     expect(first).toMatchObject({ kind: "restart", attempts: 1, delayMs: 30_000 });
-    const second = planCrashRecovery(
-      input({ policy: policy({ attempts: 1 }), uptimeMs: 1_000 }),
-    );
+    const second = planCrashRecovery(input({ policy: policy({ attempts: 1 }), uptimeMs: 1_000 }));
     expect(second).toMatchObject({ kind: "restart", attempts: 2, delayMs: 60_000 });
   });
 
   it("exhausts once the budget is spent", () => {
-    const plan = planCrashRecovery(
-      input({ policy: policy({ attempts: 3 }), uptimeMs: 1_000 }),
-    );
+    const plan = planCrashRecovery(input({ policy: policy({ attempts: 3 }), uptimeMs: 1_000 }));
     expect(plan).toEqual({ kind: "exhausted", attempts: 3, maxAttempts: 3 });
   });
 
   it("resets the budget when the crashed run was stable", () => {
-    const plan = planCrashRecovery(
-      input({ policy: policy({ attempts: 3 }), uptimeMs: 600_000 }),
-    );
+    const plan = planCrashRecovery(input({ policy: policy({ attempts: 3 }), uptimeMs: 600_000 }));
     expect(plan).toMatchObject({
       kind: "restart",
       attempts: 1,

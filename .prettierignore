@@ -8,11 +8,14 @@ coverage/
 .kilo/
 artifacts/
 
-# Separate packages with their own tooling.
-website/node_modules/
-website/dist/
-website/public/media/
-workers/curseforge-proxy/node_modules/
+# Local-only working notes and agent tooling are not source.
+.cursor/
+.agents/
+skills-lock.json
+
+# Separate packages with their own tooling and formatters.
+website/
+workers/
 electron-mcp-server/
 
 # Vendored / generated content.

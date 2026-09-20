@@ -63,10 +63,7 @@ function playFlip(el: HTMLElement, dy: number): void {
   });
 }
 
-export function useDownloadQueueFlip(
-  containerRef: RefObject<HTMLElement | null>,
-  rowIds: readonly string[],
-): void {
+export function useDownloadQueueFlip(containerRef: RefObject<HTMLElement | null>, rowIds: readonly string[]): void {
   const previousIdsRef = useRef<string[]>([]);
   const previousBoxesRef = useRef<Map<string, DOMRect>>(new Map());
   const orderKey = rowIds.join("\0");

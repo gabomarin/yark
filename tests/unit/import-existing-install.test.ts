@@ -51,15 +51,7 @@ describe("import-existing-install", () => {
 
   it("discovers primary Win64 nested Mods tree and merges secondary", async () => {
     const install = join(await tempRoot(), "TheIsland");
-    const primary = join(
-      install,
-      "ShooterGame",
-      "Binaries",
-      "Win64",
-      "ShooterGame",
-      "Mods",
-      "83374",
-    );
+    const primary = join(install, "ShooterGame", "Binaries", "Win64", "ShooterGame", "Mods", "83374");
     const secondary = join(install, "ShooterGame", "Mods", "83374");
     await mkdir(join(primary, "111_1"), { recursive: true });
     await mkdir(join(secondary, "222_9"), { recursive: true });
@@ -76,18 +68,12 @@ describe("import-existing-install", () => {
   });
 
   it("extracts -mods= leftovers from text", () => {
-    expect(extractModIdsFromText('foo -mods=10,20,10 bar')).toEqual(["10", "20"]);
+    expect(extractModIdsFromText("foo -mods=10,20,10 bar")).toEqual(["10", "20"]);
   });
 
   it("prefills suggestions from GameUserSettings.ini", async () => {
     const install = join(await tempRoot(), "MyServer");
-    const gusDir = join(
-      install,
-      "ShooterGame",
-      "Saved",
-      "Config",
-      "WindowsServer",
-    );
+    const gusDir = join(install, "ShooterGame", "Saved", "Config", "WindowsServer");
     await mkdir(gusDir, { recursive: true });
     await writeFile(
       join(gusDir, "GameUserSettings.ini"),
@@ -141,30 +127,18 @@ ServerPassword=joinme
 
   it("allows incomplete import only with explicit opt-in", () => {
     expect(() => assertImportHealthAllowed("ready")).not.toThrow();
-    expect(() =>
-      assertImportHealthAllowed("incomplete", { allowIncompleteInstall: true }),
-    ).not.toThrow();
+    expect(() => assertImportHealthAllowed("incomplete", { allowIncompleteInstall: true })).not.toThrow();
     expect(() => assertImportHealthAllowed("incomplete")).toThrow(/incomplete/i);
-    expect(() =>
-      assertImportHealthAllowed("incomplete", { allowIncompleteInstall: false }),
-    ).toThrow(/incomplete/i);
-    expect(() =>
-      assertImportHealthAllowed("empty", { allowIncompleteInstall: true }),
-    ).toThrow(/ready ASA/i);
-    expect(() =>
-      assertImportHealthAllowed("missing", { allowIncompleteInstall: true }),
-    ).toThrow(/ready ASA/i);
-    expect(() =>
-      assertImportHealthAllowed("suspicious", { allowIncompleteInstall: true }),
-    ).toThrow(/ready ASA/i);
+    expect(() => assertImportHealthAllowed("incomplete", { allowIncompleteInstall: false })).toThrow(/incomplete/i);
+    expect(() => assertImportHealthAllowed("empty", { allowIncompleteInstall: true })).toThrow(/ready ASA/i);
+    expect(() => assertImportHealthAllowed("missing", { allowIncompleteInstall: true })).toThrow(/ready ASA/i);
+    expect(() => assertImportHealthAllowed("suspicious", { allowIncompleteInstall: true })).toThrow(/ready ASA/i);
   });
 
   it("rejects nested import roots before the health gate", () => {
-    expect(() =>
-      assertImportNotNested(
-        "C:\\ASA\\LostColony\\ShooterGame\\Binaries\\Win64",
-      ),
-    ).toThrow(/inside an ASA install/i);
+    expect(() => assertImportNotNested("C:\\ASA\\LostColony\\ShooterGame\\Binaries\\Win64")).toThrow(
+      /inside an ASA install/i,
+    );
     expect(() => assertImportNotNested("C:\\ASA\\LostColony")).not.toThrow();
   });
 
@@ -197,24 +171,16 @@ ServerPassword=joinme
 
   it("detects nested paths under ShooterGame and suggests the dedicated root", () => {
     expect(
-      resolveNestedAsaInstallRoot(
-        "C:\\ASA server\\lost_colony\\LostColony\\ShooterGame\\Binaries\\Win64",
-      ),
+      resolveNestedAsaInstallRoot("C:\\ASA server\\lost_colony\\LostColony\\ShooterGame\\Binaries\\Win64"),
     ).toEqual({
       nestedSubfolder: true,
       suggestedInstallDir: "C:\\ASA server\\lost_colony\\LostColony",
     });
-    expect(
-      resolveNestedAsaInstallRoot(
-        "C:\\ASA server\\lost_colony\\LostColony\\ShooterGame",
-      ),
-    ).toEqual({
+    expect(resolveNestedAsaInstallRoot("C:\\ASA server\\lost_colony\\LostColony\\ShooterGame")).toEqual({
       nestedSubfolder: true,
       suggestedInstallDir: "C:\\ASA server\\lost_colony\\LostColony",
     });
-    expect(
-      resolveNestedAsaInstallRoot("C:\\ASA server\\lost_colony\\LostColony"),
-    ).toEqual({
+    expect(resolveNestedAsaInstallRoot("C:\\ASA server\\lost_colony\\LostColony")).toEqual({
       nestedSubfolder: false,
       suggestedInstallDir: null,
     });
@@ -222,9 +188,7 @@ ServerPassword=joinme
 
   it("parses map tokens from world save filenames", () => {
     expect(mapTokenFromWorldSaveName("LostColony_WP.ark")).toBe("LostColony_WP");
-    expect(
-      mapTokenFromWorldSaveName("LostColony_WP_24.07.2025_21.51.53.ark"),
-    ).toBe("LostColony_WP");
+    expect(mapTokenFromWorldSaveName("LostColony_WP_24.07.2025_21.51.53.ark")).toBe("LostColony_WP");
     expect(mapTokenFromWorldSaveName("player.arkprofile")).toBeNull();
     expect(mapTokenFromWorldSaveName("tribe.arktribe")).toBeNull();
   });
@@ -265,9 +229,7 @@ ServerPassword=joinme
     ]);
     expect(clash?.name).toBe("Island");
     expect(
-      findManagedInstallClash("D:\\Servers\\Other", [
-        { name: "Island", installDir: "D:\\Servers\\Island" },
-      ]),
+      findManagedInstallClash("D:\\Servers\\Other", [{ name: "Island", installDir: "D:\\Servers\\Island" }]),
     ).toBeNull();
   });
 });

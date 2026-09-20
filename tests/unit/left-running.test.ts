@@ -7,9 +7,7 @@ import {
   type LeftRunningProcessIdentity,
 } from "@shared/settings/left-running";
 
-function makeRecord(
-  overrides: Partial<LeftRunningProcessIdentity> = {},
-): LeftRunningProcessIdentity {
+function makeRecord(overrides: Partial<LeftRunningProcessIdentity> = {}): LeftRunningProcessIdentity {
   return {
     schemaVersion: LEFT_RUNNING_SCHEMA_VERSION,
     serverId: "srv-1",
@@ -59,12 +57,8 @@ describe("left-running identity", () => {
 
   it("rejects invalid or wrong-schema payloads", () => {
     expect(parseLeftRunningProcesses("not-json")).toEqual([]);
-    expect(parseLeftRunningProcesses(JSON.stringify([{ schemaVersion: 99 }]))).toEqual(
-      [],
-    );
-    expect(
-      parseLeftRunningProcesses(JSON.stringify([makeRecord({ pid: -1 })])),
-    ).toEqual([]);
+    expect(parseLeftRunningProcesses(JSON.stringify([{ schemaVersion: 99 }]))).toEqual([]);
+    expect(parseLeftRunningProcesses(JSON.stringify([makeRecord({ pid: -1 })]))).toEqual([]);
   });
 
   it("matches when creation time agrees even if command line quoting differs", () => {
@@ -120,15 +114,12 @@ describe("left-running identity", () => {
 
   it("treats inaccessible when only a bare PID is available", () => {
     expect(
-      classifyLeaveCandidate(
-        makeRecord({ osCreationTime: null, osExecutablePath: null }),
-        {
-          pid: 4242,
-          executablePath: null,
-          commandLine: null,
-          osCreationTime: null,
-        },
-      ),
+      classifyLeaveCandidate(makeRecord({ osCreationTime: null, osExecutablePath: null }), {
+        pid: 4242,
+        executablePath: null,
+        commandLine: null,
+        osCreationTime: null,
+      }),
     ).toBe("inaccessible");
   });
 

@@ -49,11 +49,7 @@ function isSameStartingGeneration(
   managed: ReadyWaitManaged,
   generation: number,
 ): boolean {
-  return (
-    current === managed
-    && managed.status === "starting"
-    && managed.readinessGeneration === generation
-  );
+  return current === managed && managed.status === "starting" && managed.readinessGeneration === generation;
 }
 
 function hasReadyLogSignal(lines: readonly string[]): boolean {
@@ -81,13 +77,7 @@ export async function waitUntilReady(
   const bootStartedAt = Date.parse(managed.startedAt) || Date.now();
 
   for (;;) {
-    if (
-      !isSameStartingGeneration(
-        host.getManaged(profile.id),
-        managed,
-        generation,
-      )
-    ) {
+    if (!isSameStartingGeneration(host.getManaged(profile.id), managed, generation)) {
       return;
     }
 
@@ -102,93 +92,43 @@ export async function waitUntilReady(
     if (!mayProbe) {
       if (!loggedWaitingForBoot) {
         loggedWaitingForBoot = true;
-        host.appendRuntimeLog(
-          profile.id,
-          "system",
-          formatReadyBootWaitMessage(probeMinWaitMs),
-        );
+        host.appendRuntimeLog(profile.id, "system", formatReadyBootWaitMessage(probeMinWaitMs));
       }
       await delay(pollMs);
       continue;
     }
 
     if (sawLogSignal && !loggedProbeStart) {
-      host.appendRuntimeLog(
-        profile.id,
-        "system",
-        formatReadyProbeStartMessage(true),
-      );
+      host.appendRuntimeLog(profile.id, "system", formatReadyProbeStartMessage(true));
     } else if (!loggedProbeStart) {
-      host.appendRuntimeLog(
-        profile.id,
-        "system",
-        formatReadyProbeStartMessage(false),
-      );
+      host.appendRuntimeLog(profile.id, "system", formatReadyProbeStartMessage(false));
     }
     loggedProbeStart = true;
 
     try {
-      await rconExec(
-        RCON_HOST,
-        profile.rconPort,
-        profile.adminPassword,
-        "ListPlayers",
-        RCON_PROBE_TIMEOUT_MS,
-        { quiet: true },
-      );
-      if (
-        !isSameStartingGeneration(
-          host.getManaged(profile.id),
-          managed,
-          generation,
-        )
-      ) {
+      await rconExec(RCON_HOST, profile.rconPort, profile.adminPassword, "ListPlayers", RCON_PROBE_TIMEOUT_MS, {
+        quiet: true,
+      });
+      if (!isSameStartingGeneration(host.getManaged(profile.id), managed, generation)) {
         return;
       }
 
       if (settleMs > 0) {
-        host.appendRuntimeLog(
-          profile.id,
-          "system",
-          formatReadySettleMessage(settleMs),
-        );
+        host.appendRuntimeLog(profile.id, "system", formatReadySettleMessage(settleMs));
         const settleDeadline = Date.now() + settleMs;
         while (Date.now() < settleDeadline) {
-          if (
-            !isSameStartingGeneration(
-              host.getManaged(profile.id),
-              managed,
-              generation,
-            )
-          ) {
+          if (!isSameStartingGeneration(host.getManaged(profile.id), managed, generation)) {
             return;
           }
           await delay(Math.min(pollMs, settleDeadline - Date.now()));
         }
-        if (
-          !isSameStartingGeneration(
-            host.getManaged(profile.id),
-            managed,
-            generation,
-          )
-        ) {
+        if (!isSameStartingGeneration(host.getManaged(profile.id), managed, generation)) {
           return;
         }
-        await rconExec(
-          RCON_HOST,
-          profile.rconPort,
-          profile.adminPassword,
-          "ListPlayers",
-          RCON_PROBE_TIMEOUT_MS,
-          { quiet: true },
-        );
-        if (
-          !isSameStartingGeneration(
-            host.getManaged(profile.id),
-            managed,
-            generation,
-          )
-        ) {
+        await rconExec(RCON_HOST, profile.rconPort, profile.adminPassword, "ListPlayers", RCON_PROBE_TIMEOUT_MS, {
+          quiet: true,
+        });
+        if (!isSameStartingGeneration(host.getManaged(profile.id), managed, generation)) {
           return;
         }
       }
@@ -196,11 +136,7 @@ export async function waitUntilReady(
       managed.status = "running";
       managed.lastError = null;
       managed.asaApiLoading = false;
-      host.appendRuntimeLog(
-        profile.id,
-        "system",
-        formatReadySuccessMessage(),
-      );
+      host.appendRuntimeLog(profile.id, "system", formatReadySuccessMessage());
       host.emitStatus(profile.id);
       return;
     } catch {
@@ -208,23 +144,13 @@ export async function waitUntilReady(
     }
 
     if (Date.now() >= deadline) {
-      if (
-        !isSameStartingGeneration(
-          host.getManaged(profile.id),
-          managed,
-          generation,
-        )
-      ) {
+      if (!isSameStartingGeneration(host.getManaged(profile.id), managed, generation)) {
         return;
       }
       if (!terminateOnTimeout) {
         if (!loggedReattachWait) {
           loggedReattachWait = true;
-          host.appendRuntimeLog(
-            profile.id,
-            "warning",
-            formatReattachReadyWaitMessage(),
-          );
+          host.appendRuntimeLog(profile.id, "warning", formatReattachReadyWaitMessage());
         }
         await delay(pollMs);
         continue;

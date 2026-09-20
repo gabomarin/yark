@@ -34,9 +34,7 @@ export class AsaApiWindowPoller {
   }
 
   stopIfIdle(): void {
-    const anyLoading = [...this.host.processes.values()].some(
-      (managed) => managed.asaApiLoading === true,
-    );
+    const anyLoading = [...this.host.processes.values()].some((managed) => managed.asaApiLoading === true);
     if (anyLoading || this.timer === null) return;
     clearInterval(this.timer);
     this.timer = null;
@@ -51,10 +49,7 @@ export class AsaApiWindowPoller {
         const pid = managed.child.pid;
         if (pid == null || pid <= 0) continue;
         if (await this.host.hasMainWindow(pid)) {
-          this.host.clearAsaApiLoading(
-            serverId,
-            "Ark Server API finished loading; server console is up.",
-          );
+          this.host.clearAsaApiLoading(serverId, "Ark Server API finished loading; server console is up.");
         }
       }
     } finally {

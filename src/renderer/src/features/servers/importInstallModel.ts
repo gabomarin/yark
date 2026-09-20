@@ -137,9 +137,7 @@ export function formToProfileInput(
   };
 }
 
-export function healthTone(
-  probe: Pick<ImportInstallProbe, "canContinue">,
-): "ready" | "blocked" {
+export function healthTone(probe: Pick<ImportInstallProbe, "canContinue">): "ready" | "blocked" {
   return probe.canContinue ? "ready" : "blocked";
 }
 
@@ -147,10 +145,7 @@ export function healthTone(
  * Whether the Import wizard may leave step 1 (#254 / #283).
  * Ready probes unlock via `canContinue`; incomplete requires explicit opt-in.
  */
-export function canImportInstallProceed(
-  probe: ImportInstallProbe,
-  allowIncompleteInstall: boolean,
-): boolean {
+export function canImportInstallProceed(probe: ImportInstallProbe, allowIncompleteInstall: boolean): boolean {
   if (probe.canContinue) return true;
   if (!allowIncompleteInstall) return false;
   if (probe.alreadyManagedBy !== null) return false;
@@ -160,10 +155,7 @@ export function canImportInstallProceed(
 
 /** Operator-facing badge text for import (never show raw `suspicious`). */
 export function importHealthBadgeLabel(
-  probe: Pick<
-    ImportInstallProbe,
-    "nestedSubfolder" | "installation" | "alreadyManagedBy"
-  >,
+  probe: Pick<ImportInstallProbe, "nestedSubfolder" | "installation" | "alreadyManagedBy">,
 ): string {
   if (probe.alreadyManagedBy !== null && probe.alreadyManagedBy.length > 0) {
     return "Already managed";

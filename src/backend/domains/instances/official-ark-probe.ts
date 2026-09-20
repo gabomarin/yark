@@ -3,8 +3,7 @@ import type { OfficialNetworkStatus } from "@shared/types";
 import { ASA_APP_ID, asaSteamCmdInfoUrl } from "@shared/asa/asa-steam";
 
 const OFFICIAL_VERSION_TTL_MS = 15 * 60 * 1000;
-const OFFICIAL_SERVER_STATUS_URL =
-  "https://cdn2.arkdedicated.com/asa/officialserverstatus.ini";
+const OFFICIAL_SERVER_STATUS_URL = "https://cdn2.arkdedicated.com/asa/officialserverstatus.ini";
 
 export interface OfficialArkVersionProbe {
   version: string | null;
@@ -184,9 +183,7 @@ function fetchOfficialArkVersion(): Promise<OfficialArkVersionProbe> {
  * - Failed probe: keep last success when available; otherwise shorten TTL (~30s)
  *   so the next poll can retry without waiting the full window.
  */
-export async function readOfficialArkVersionCached(
-  force = false,
-): Promise<OfficialArkVersionProbe> {
+export async function readOfficialArkVersionCached(force = false): Promise<OfficialArkVersionProbe> {
   const now = Date.now();
   if (!force && now - officialVersionCache.checkedAt < OFFICIAL_VERSION_TTL_MS) {
     return {
@@ -209,16 +206,12 @@ export async function readOfficialArkVersionCached(
       }
       // Do not lock a failed probe for the full TTL — retry soon, keep last success.
       if (officialVersionCache.value === null) {
-        officialVersionCache.checkedAt =
-          Date.now() - OFFICIAL_VERSION_TTL_MS + 30_000;
+        officialVersionCache.checkedAt = Date.now() - OFFICIAL_VERSION_TTL_MS + 30_000;
         officialVersionCache.networkStatus = probe.networkStatus;
       }
       return {
         version: officialVersionCache.value,
-        networkStatus:
-          officialVersionCache.value !== null
-            ? officialVersionCache.networkStatus
-            : probe.networkStatus,
+        networkStatus: officialVersionCache.value !== null ? officialVersionCache.networkStatus : probe.networkStatus,
       };
     })
     .finally(() => {
@@ -250,8 +243,7 @@ export async function readOfficialArkBuildCached(force = false): Promise<string 
         return value;
       }
       // Keep last success; shorten TTL so the next poll can retry (#490).
-      officialBuildCache.checkedAt =
-        Date.now() - OFFICIAL_VERSION_TTL_MS + 30_000;
+      officialBuildCache.checkedAt = Date.now() - OFFICIAL_VERSION_TTL_MS + 30_000;
       return officialBuildCache.value;
     })
     .finally(() => {

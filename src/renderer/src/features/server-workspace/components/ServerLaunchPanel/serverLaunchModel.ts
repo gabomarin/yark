@@ -72,19 +72,14 @@ export function joinRawExtraArgs(args: string[]): string {
 }
 
 export function yarkOwnedPreviewTokens(server: ServerProfile): string[] {
-  const parts = [
-    buildMapUrlArg(server.map, server.sessionName),
-    yarkPortArg(server.gamePort),
-  ];
+  const parts = [buildMapUrlArg(server.map, server.sessionName), yarkPortArg(server.gamePort)];
   if (server.maxPlayers > 0) {
     parts.push(yarkWinLiveMaxPlayersArg(server.maxPlayers));
   }
-  const structured = buildStructuredLaunchArgList(
-    server.structuredLaunchArgs,
-  ).filter((arg) => !isWinLiveMaxPlayersArg(arg));
-  const extraArgs = server.extraArgs.filter(
+  const structured = buildStructuredLaunchArgList(server.structuredLaunchArgs).filter(
     (arg) => !isWinLiveMaxPlayersArg(arg),
   );
+  const extraArgs = server.extraArgs.filter((arg) => !isWinLiveMaxPlayersArg(arg));
   const trailing = [...structured, ...extraArgs];
   if (!argsIncludeServerPlatform(trailing)) {
     parts.push(YARK_DEFAULT_SERVER_PLATFORM_ARG);
@@ -114,17 +109,12 @@ export function buildLaunchPreviewParts(input: {
   };
   return {
     yark: yarkOwnedPreviewTokens(draft),
-    structured: buildStructuredLaunchArgList(input.structured).map(
-      redactLaunchArgForPreview,
-    ),
+    structured: buildStructuredLaunchArgList(input.structured).map(redactLaunchArgForPreview),
     raw: input.extraArgs.map(redactLaunchArgForPreview),
   };
 }
 
-export function groupStructuredOptions(): Map<
-  StructuredLaunchGroupId,
-  StructuredLaunchUiOption[]
-> {
+export function groupStructuredOptions(): Map<StructuredLaunchGroupId, StructuredLaunchUiOption[]> {
   const map = new Map<StructuredLaunchGroupId, StructuredLaunchUiOption[]>();
   for (const group of STRUCTURED_LAUNCH_GROUP_ORDER) map.set(group, []);
 
@@ -138,10 +128,7 @@ export function groupStructuredOptions(): Map<
     dependentsByParent.set(parentId, list);
   }
 
-  const appendWithDependents = (
-    groupId: StructuredLaunchGroupId,
-    option: StructuredLaunchUiOption,
-  ): void => {
+  const appendWithDependents = (groupId: StructuredLaunchGroupId, option: StructuredLaunchUiOption): void => {
     const bucket = map.get(groupId);
     if (bucket === undefined) {
       map.set(groupId, [option]);
@@ -163,10 +150,7 @@ export function groupStructuredOptions(): Map<
 const structuredLaunchSearchHaystackCache = new Map<string, string>();
 
 /** Precomputed operator-visible text for Launch tab search (#352). */
-function structuredLaunchSearchHaystack(
-  option: StructuredLaunchUiOption,
-  groupId: StructuredLaunchGroupId,
-): string {
+function structuredLaunchSearchHaystack(option: StructuredLaunchUiOption, groupId: StructuredLaunchGroupId): string {
   const key = `${groupId}:${option.curation.id}`;
   const cached = structuredLaunchSearchHaystackCache.get(key);
   if (cached !== undefined) return cached;
@@ -223,16 +207,10 @@ export function filterGroupedStructuredOptions(
   const out = new Map<StructuredLaunchGroupId, StructuredLaunchUiOption[]>();
   for (const groupId of STRUCTURED_LAUNCH_GROUP_ORDER) {
     const options = grouped.get(groupId) ?? [];
-    const filtered = options.filter((option) =>
-      matchesStructuredLaunchSearch(option, groupId, q),
-    );
+    const filtered = options.filter((option) => matchesStructuredLaunchSearch(option, groupId, q));
     if (filtered.length > 0) out.set(groupId, filtered);
   }
   return out;
 }
 
-export {
-  structuredLaunchGroupLabel,
-  findLaunchArgConflicts,
-  STRUCTURED_LAUNCH_GROUP_ORDER,
-};
+export { structuredLaunchGroupLabel, findLaunchArgConflicts, STRUCTURED_LAUNCH_GROUP_ORDER };

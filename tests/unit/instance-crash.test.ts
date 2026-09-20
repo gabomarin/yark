@@ -37,8 +37,7 @@ describe("planUnexpectedServerCrashEvent", () => {
           summary: "Assertion failed",
           cause: "fatal",
           suggestion: "Retry",
-          excerpt:
-            "[ServerSettings]\nServerAdminPassword=hunter2-secret\nMaxPlayers=70",
+          excerpt: "[ServerSettings]\nServerAdminPassword=hunter2-secret\nMaxPlayers=70",
           missingModIds: [],
         },
       },

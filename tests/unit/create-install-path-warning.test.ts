@@ -7,8 +7,7 @@ import {
 } from "../../src/renderer/src/features/servers/components/ServerForm/createInstallPathWarning";
 
 function installation(
-  partial: Partial<ServerInstallationInfo> &
-    Pick<ServerInstallationInfo, "health" | "guidance">,
+  partial: Partial<ServerInstallationInfo> & Pick<ServerInstallationInfo, "health" | "guidance">,
 ): ServerInstallationInfo {
   return {
     serverId: "probe",
@@ -58,9 +57,7 @@ describe("createInstallPathWarning", () => {
   });
 
   it("rejects a path inside another YARK install", () => {
-    expect(fleetCreateInstallWarning("C:\\ark\\Island\\Nested", fleet)).toMatch(
-      /inside "The Island"/i,
-    );
+    expect(fleetCreateInstallWarning("C:\\ark\\Island\\Nested", fleet)).toMatch(/inside "The Island"/i);
   });
 
   it("rejects a path that would contain another YARK install", () => {
@@ -75,16 +72,12 @@ describe("createInstallPathWarning", () => {
     const fleetWithIds = [{ id: "a", name: "The Island", installDir: "C:\\ark\\Island" }];
     expect(fleetCreateInstallWarning("C:\\ark\\Island", fleetWithIds, "a")).toBeNull();
     expect(fleetCreateInstallWarning("C:\\ark\\Island\\Nested", fleetWithIds, "a")).toBeNull();
-    expect(fleetCreateInstallWarning("C:\\ark\\Island", fleetWithIds, "b")).toMatch(
-      /already uses folder/i,
-    );
+    expect(fleetCreateInstallWarning("C:\\ark\\Island", fleetWithIds, "b")).toMatch(/already uses folder/i);
   });
 
   it("allows missing or empty disk probes", () => {
     expect(
-      diskCreateInstallWarning(
-        probe({ installation: installation({ health: "missing", guidance: "" }) }),
-      ),
+      diskCreateInstallWarning(probe({ installation: installation({ health: "missing", guidance: "" }) })),
     ).toBeNull();
     expect(
       diskCreateInstallWarning(probe({ installation: installation({ health: "empty", guidance: "" }) })),
@@ -103,20 +96,14 @@ describe("createInstallPathWarning", () => {
         }),
       ),
     ).toMatch(/inside an ASA install/i);
+    expect(diskCreateInstallWarning(probe({ installation: installation({ health: "ready", guidance: "" }) }))).toMatch(
+      /not empty/i,
+    );
+    expect(diskMoveInstallWarning(probe({ installation: installation({ health: "ready", guidance: "" }) }))).toMatch(
+      /not empty/i,
+    );
     expect(
-      diskCreateInstallWarning(
-        probe({ installation: installation({ health: "ready", guidance: "" }) }),
-      ),
-    ).toMatch(/not empty/i);
-    expect(
-      diskMoveInstallWarning(
-        probe({ installation: installation({ health: "ready", guidance: "" }) }),
-      ),
-    ).toMatch(/not empty/i);
-    expect(
-      diskMoveInstallWarning(
-        probe({ installation: installation({ health: "ready", guidance: "" }) }),
-      ),
+      diskMoveInstallWarning(probe({ installation: installation({ health: "ready", guidance: "" }) })),
     ).not.toMatch(/Import install/i);
   });
 });

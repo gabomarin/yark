@@ -14,7 +14,7 @@ describe("credential diagnostic sanitizer", () => {
     const raw = [
       "[ServerSettings]",
       "ServerAdminPassword=hunter2-secret",
-      "ServerPassword=\"join-secret\"",
+      'ServerPassword="join-secret"',
       "MaxPlayers=70",
       "RCONPort=27020",
     ].join("\n");
@@ -54,8 +54,7 @@ describe("credential diagnostic sanitizer", () => {
   });
 
   it("omits prefixed runtime lines that are only a GUS password assignment", () => {
-    const raw =
-      "[2026-08-29T00:00:00.000Z] [stdout] ServerAdminPassword=hunter2-secret";
+    const raw = "[2026-08-29T00:00:00.000Z] [stdout] ServerAdminPassword=hunter2-secret";
     expect(sanitizeDiagnosticText(raw)).toBe("");
   });
 
@@ -67,16 +66,13 @@ describe("credential diagnostic sanitizer", () => {
   });
 
   it("redacts assignment values that contain & or spaces when quoted", () => {
-    const sanitized = sanitizeDiagnosticText(
-      'INI write failed ServerAdminPassword="p&ss word"',
-    );
+    const sanitized = sanitizeDiagnosticText('INI write failed ServerAdminPassword="p&ss word"');
     expect(sanitized).not.toContain("p&ss");
     expect(sanitized).toContain(`ServerAdminPassword=${REDACTED_SECRET}`);
   });
 
   it("redacts bearer tokens and API keys", () => {
-    const raw =
-      "Authorization: Bearer tok_abc and x-api-key=cf_secret";
+    const raw = "Authorization: Bearer tok_abc and x-api-key=cf_secret";
     const sanitized = sanitizeDiagnosticText(raw);
     expect(sanitized).not.toContain("tok_abc");
     expect(sanitized).not.toContain("cf_secret");
@@ -84,19 +80,13 @@ describe("credential diagnostic sanitizer", () => {
   });
 
   it("redacts known plaintext secrets even without a key name", () => {
-    const sanitized = sanitizeDiagnosticText(
-      "failed auth with hunter2-secret on RCON",
-      ["hunter2-secret"],
-    );
+    const sanitized = sanitizeDiagnosticText("failed auth with hunter2-secret on RCON", ["hunter2-secret"]);
     expect(sanitized).not.toContain("hunter2-secret");
     expect(sanitized).toContain(REDACTED_SECRET);
   });
 
   it("does not redact a known secret as a substring of a longer word", () => {
-    const sanitized = sanitizeDiagnosticText(
-      "administrator login failed",
-      ["admin"],
-    );
+    const sanitized = sanitizeDiagnosticText("administrator login failed", ["admin"]);
     expect(sanitized).toBe("administrator login failed");
   });
 

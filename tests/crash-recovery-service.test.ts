@@ -43,12 +43,7 @@ function makeHarness() {
   const servers = {
     get: (id: string) => (id === "s1" ? server : null),
     list: () => [server],
-    addEvent: (
-      _serverId: string,
-      type: string,
-      _severity: string,
-      message: string,
-    ) => {
+    addEvent: (_serverId: string, type: string, _severity: string, message: string) => {
       events.push({ type, message });
       return events.length;
     },
@@ -63,13 +58,7 @@ function makeHarness() {
     start,
     isStopInProgress: () => false,
   };
-  const service = new CrashRecoveryService(
-    repo,
-    servers as never,
-    processes as never,
-    instances as never,
-    locks,
-  );
+  const service = new CrashRecoveryService(repo, servers as never, processes as never, instances as never, locks);
   service.start();
   return { db, repo, processes, locks, events, start, service };
 }

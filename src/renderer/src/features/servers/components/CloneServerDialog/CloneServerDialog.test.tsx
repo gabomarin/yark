@@ -11,9 +11,9 @@ const source: ServerProfile = {
   map: "TheIsland_WP",
   installDir: "C:\\ARK\\Island",
   enabled: false,
-    autoStart: false,
-    useAsaApi: false,
-    useAsaApiLoader: false,
+  autoStart: false,
+  useAsaApi: false,
+  useAsaApiLoader: false,
   sessionName: "Island Session",
   maxPlayers: 70,
   gamePort: 7777,
@@ -43,12 +43,7 @@ describe("CloneServerDialog", () => {
     const user = userEvent.setup();
     render(
       <AppProviders>
-        <CloneServerDialog
-          opened
-          sourceServer={source}
-          onClose={vi.fn()}
-          onClone={vi.fn(async () => true)}
-        />
+        <CloneServerDialog opened sourceServer={source} onClose={vi.fn()} onClone={vi.fn(async () => true)} />
       </AppProviders>,
     );
 
@@ -69,45 +64,29 @@ describe("CloneServerDialog", () => {
 
     render(
       <AppProviders>
-        <CloneServerDialog
-          opened
-          sourceServer={source}
-          onClose={vi.fn()}
-          onClone={vi.fn(async () => true)}
-        />
+        <CloneServerDialog opened sourceServer={source} onClose={vi.fn()} onClone={vi.fn(async () => true)} />
       </AppProviders>,
     );
 
     const name = screen.getByRole("textbox", { name: "Server name" });
 
     await user.click(screen.getByRole("button", { name: /Browse/i }));
-    expect(screen.getByLabelText("Install directory")).toHaveTextContent(
-      "D:\\Custom\\Clone",
-    );
+    expect(screen.getByLabelText("Install directory")).toHaveTextContent("D:\\Custom\\Clone");
 
     await user.clear(name);
     await user.type(name, "Winter");
 
-    expect(screen.getByLabelText("Install directory")).toHaveTextContent(
-      "D:\\Custom\\Clone",
-    );
+    expect(screen.getByLabelText("Install directory")).toHaveTextContent("D:\\Custom\\Clone");
   });
 
   it("keeps Copy entire server folder off by default", () => {
     render(
       <AppProviders>
-        <CloneServerDialog
-          opened
-          sourceServer={source}
-          onClose={vi.fn()}
-          onClone={vi.fn(async () => true)}
-        />
+        <CloneServerDialog opened sourceServer={source} onClose={vi.fn()} onClone={vi.fn(async () => true)} />
       </AppProviders>,
     );
 
-    expect(
-      screen.getByRole("checkbox", { name: /Copy entire server folder/i }),
-    ).not.toBeChecked();
+    expect(screen.getByRole("checkbox", { name: /Copy entire server folder/i })).not.toBeChecked();
   });
 
   it("sends copyInstallFolder when the operator opts in", async () => {
@@ -116,23 +95,14 @@ describe("CloneServerDialog", () => {
 
     render(
       <AppProviders>
-        <CloneServerDialog
-          opened
-          sourceServer={source}
-          onClose={vi.fn()}
-          onClone={onClone}
-        />
+        <CloneServerDialog opened sourceServer={source} onClose={vi.fn()} onClone={onClone} />
       </AppProviders>,
     );
 
-    await user.click(
-      screen.getByRole("checkbox", { name: /Copy entire server folder/i }),
-    );
+    await user.click(screen.getByRole("checkbox", { name: /Copy entire server folder/i }));
     await user.click(screen.getByRole("button", { name: "Clone server" }));
 
-    expect(onClone).toHaveBeenCalledWith(
-      expect.objectContaining({ copyInstallFolder: true }),
-    );
+    expect(onClone).toHaveBeenCalledWith(expect.objectContaining({ copyInstallFolder: true }));
   });
 
   it("disables folder copy when the source has no install files", async () => {
@@ -141,13 +111,7 @@ describe("CloneServerDialog", () => {
 
     render(
       <AppProviders>
-        <CloneServerDialog
-          opened
-          sourceServer={source}
-          sourceHealth="empty"
-          onClose={vi.fn()}
-          onClone={onClone}
-        />
+        <CloneServerDialog opened sourceServer={source} sourceHealth="empty" onClose={vi.fn()} onClone={onClone} />
       </AppProviders>,
     );
 
@@ -156,14 +120,10 @@ describe("CloneServerDialog", () => {
     });
     expect(copy).toBeDisabled();
     expect(copy).not.toBeChecked();
-    expect(
-      screen.getByText(/no install files yet/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/no install files yet/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Clone server" }));
-    expect(onClone).toHaveBeenCalledWith(
-      expect.objectContaining({ copyInstallFolder: false }),
-    );
+    expect(onClone).toHaveBeenCalledWith(expect.objectContaining({ copyInstallFolder: false }));
   });
 
   it("warns when copying an incomplete install", async () => {
@@ -181,12 +141,8 @@ describe("CloneServerDialog", () => {
       </AppProviders>,
     );
 
-    await user.click(
-      screen.getByRole("checkbox", { name: /Copy entire server folder/i }),
-    );
-    expect(
-      screen.getByText(/install is incomplete/i),
-    ).toBeInTheDocument();
+    await user.click(screen.getByRole("checkbox", { name: /Copy entire server folder/i }));
+    expect(screen.getByText(/install is incomplete/i)).toBeInTheDocument();
   });
 
   it("blocks copy while the source server is still running", async () => {
@@ -195,23 +151,13 @@ describe("CloneServerDialog", () => {
 
     render(
       <AppProviders>
-        <CloneServerDialog
-          opened
-          sourceServer={source}
-          sourceBusy
-          onClose={vi.fn()}
-          onClone={onClone}
-        />
+        <CloneServerDialog opened sourceServer={source} sourceBusy onClose={vi.fn()} onClone={onClone} />
       </AppProviders>,
     );
 
-    await user.click(
-      screen.getByRole("checkbox", { name: /Copy entire server folder/i }),
-    );
+    await user.click(screen.getByRole("checkbox", { name: /Copy entire server folder/i }));
 
-    expect(
-      screen.getByText(/before copying the entire folder/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/before copying the entire folder/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Clone server" })).toBeDisabled();
     expect(onClone).not.toHaveBeenCalled();
   });
@@ -231,4 +177,3 @@ describe("CloneServerDialog", () => {
     expect(screen.getByRole("button", { name: "Clone server" })).toBeEnabled();
   });
 });
-

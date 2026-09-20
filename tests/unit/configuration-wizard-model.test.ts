@@ -107,11 +107,8 @@ describe("configuration wizard model", () => {
 
     expect(next.difficultyOffset).toBe(1);
     expect(next.overrideOfficialDifficulty).toBe(6);
-    expect(
-      changes.filter((change) => change.label === "World difficulty"),
-    ).toHaveLength(1);
-    expect(changes.find((change) => change.label === "World difficulty")?.after)
-      .toBe("Level 180 · difficulty 6");
+    expect(changes.filter((change) => change.label === "World difficulty")).toHaveLength(1);
+    expect(changes.find((change) => change.label === "World difficulty")?.after).toBe("Level 180 · difficulty 6");
   });
 
   it("treats override-only difficulty as a World difficulty change", () => {
@@ -231,13 +228,9 @@ describe("configuration wizard model", () => {
       ...initial,
       tamingRate: 3,
     });
-    const tamingEntries =
-      next.gameUserSettings.match(/TamingSpeedMultiplier=[^\n]+/g) ?? [];
+    const tamingEntries = next.gameUserSettings.match(/TamingSpeedMultiplier=[^\n]+/g) ?? [];
 
-    expect(tamingEntries).toEqual([
-      "TamingSpeedMultiplier=1.0",
-      "TamingSpeedMultiplier=3",
-    ]);
+    expect(tamingEntries).toEqual(["TamingSpeedMultiplier=1.0", "TamingSpeedMultiplier=3"]);
   });
 
   it("builds a human-readable summary without treating profile selection as an INI change", () => {
@@ -305,12 +298,8 @@ describe("configuration wizard model", () => {
       structurePickupSeconds: 120,
     };
     const changes = wizardChanges(initial, next);
-    expect(changes.some((change) => change.field === "structurePickupSeconds")).toBe(
-      false,
-    );
-    expect(changes.some((change) => change.field === "alwaysAllowStructurePickup")).toBe(
-      true,
-    );
+    expect(changes.some((change) => change.field === "structurePickupSeconds")).toBe(false);
+    expect(changes.some((change) => change.field === "alwaysAllowStructurePickup")).toBe(true);
   });
 
   const worldRoundTripCases: Array<{

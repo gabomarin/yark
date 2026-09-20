@@ -7,10 +7,7 @@ import {
   type DurableCriticalJob,
 } from "@backend/orchestration/critical-job-recovery";
 
-function interruptedJob(
-  type: DurableCriticalJob["type"],
-  phase: string,
-): Partial<DurableCriticalJob> {
+function interruptedJob(type: DurableCriticalJob["type"], phase: string): Partial<DurableCriticalJob> {
   return {
     id: "job-1",
     type,
@@ -30,16 +27,13 @@ function interruptedJob(
 
 describe("critical job restart recovery", () => {
   it("requeues a replay-safe interrupted phase and preserves attempts", () => {
-    const recovered = migrateCriticalJob<DurableCriticalJob>(
-      interruptedJob("verify-files", "applying-files"),
-      {
-        type: "verify-files",
-        serverId: "server-1",
-        defaultPhase: "queued",
-        interruptedIsAmbiguous: false,
-        serverExists: true,
-      },
-    );
+    const recovered = migrateCriticalJob<DurableCriticalJob>(interruptedJob("verify-files", "applying-files"), {
+      type: "verify-files",
+      serverId: "server-1",
+      defaultPhase: "queued",
+      interruptedIsAmbiguous: false,
+      serverExists: true,
+    });
 
     expect(recovered.status).toBe("pending");
     expect(recovered.attempts).toBe(1);
@@ -65,21 +59,17 @@ describe("critical job restart recovery", () => {
   });
 
   it("fails a recovered job whose server profile was deleted", () => {
-    const recovered = migrateCriticalJob<DurableCriticalJob>(
-      interruptedJob("install-files", "validating"),
-      {
-        type: "install-files",
-        serverId: "server-1",
-        defaultPhase: "queued",
-        interruptedIsAmbiguous: false,
-        serverExists: false,
-      },
-    );
+    const recovered = migrateCriticalJob<DurableCriticalJob>(interruptedJob("install-files", "validating"), {
+      type: "install-files",
+      serverId: "server-1",
+      defaultPhase: "queued",
+      interruptedIsAmbiguous: false,
+      serverExists: false,
+    });
 
     expect(recovered.status).toBe("failed");
     expect(recovered.recoveryReason).toMatch(/no longer exists/i);
-    expect(nextActionsForStatus(recovered.status, recovered.operatorRetryAllowed))
-      .toEqual(["dismiss"]);
+    expect(nextActionsForStatus(recovered.status, recovered.operatorRetryAllowed)).toEqual(["dismiss"]);
   });
 
   it("keeps a paused job paused across restart and offers resume", () => {
@@ -115,7 +105,6 @@ describe("critical job restart recovery", () => {
   });
 
   it("uses stable operation identity to coalesce duplicate work", () => {
-    expect(makeIdempotencyKey("restore", "server-1", "backup-7"))
-      .toBe("restore:server-1:backup-7");
+    expect(makeIdempotencyKey("restore", "server-1", "backup-7")).toBe("restore:server-1:backup-7");
   });
 });

@@ -28,9 +28,7 @@ describe("serverCardProcessMeta", () => {
   });
 
   it("shows em dash until a usable running sample exists", () => {
-    expect(
-      formatServerRamCpuMeta({ status: "stopped", metrics: null }),
-    ).toBe("–");
+    expect(formatServerRamCpuMeta({ status: "stopped", metrics: null })).toBe("–");
     expect(
       formatServerRamCpuMeta({
         status: "running",
@@ -102,15 +100,9 @@ describe("serverCardProcessMeta", () => {
       ],
     ]);
 
-    expect(
-      sumFleetWorkingSetBytes({ enabledServers, statuses, metricsByServer }),
-    ).toBe(1_500_000_000);
-    expect(
-      sumFleetCpuPercent({ enabledServers, statuses, metricsByServer }),
-    ).toBe(75.5);
-    expect(
-      hasLiveProcessFleet({ enabledServers, statuses }),
-    ).toBe(true);
+    expect(sumFleetWorkingSetBytes({ enabledServers, statuses, metricsByServer })).toBe(1_500_000_000);
+    expect(sumFleetCpuPercent({ enabledServers, statuses, metricsByServer })).toBe(75.5);
+    expect(hasLiveProcessFleet({ enabledServers, statuses })).toBe(true);
   });
 
   it("includes starting servers in fleet RAM / CPU sum (#302)", () => {
@@ -144,12 +136,8 @@ describe("serverCardProcessMeta", () => {
       ],
     ]);
 
-    expect(
-      sumFleetCpuPercent({ enabledServers, statuses, metricsByServer }),
-    ).toBe(57.3);
-    expect(
-      sumFleetWorkingSetBytes({ enabledServers, statuses, metricsByServer }),
-    ).toBe(6_790_000_000);
+    expect(sumFleetCpuPercent({ enabledServers, statuses, metricsByServer })).toBe(57.3);
+    expect(sumFleetWorkingSetBytes({ enabledServers, statuses, metricsByServer })).toBe(6_790_000_000);
   });
 
   it("hides process fleet metrics when every server is stopped", () => {

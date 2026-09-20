@@ -28,9 +28,7 @@ function createE2eFixtureRoots(label = "e2e", options = {}) {
   const runId = `${Date.now()}-${process.pid}`;
   const fixtureName = `${label}-${runId}`;
   const preferAsa = process.platform === "win32";
-  const root = preferAsa
-    ? path.resolve("C:\\asa-e2e")
-    : path.join(os.tmpdir(), "yark-e2e");
+  const root = preferAsa ? path.resolve("C:\\asa-e2e") : path.join(os.tmpdir(), "yark-e2e");
   const profileDir = path.join(root, "profiles", fixtureName);
   const serversDir = path.join(root, "servers", fixtureName);
   fs.mkdirSync(profileDir, { recursive: true });
@@ -81,9 +79,7 @@ async function launchElectronApp(options) {
     });
   } catch (error) {
     const detail = error?.stack ?? String(error);
-    throw new Error(
-      `Electron failed to launch (check display / ELECTRON_RUN_AS_NODE / build).\n${detail}`,
-    );
+    throw new Error(`Electron failed to launch (check display / ELECTRON_RUN_AS_NODE / build).\n${detail}`);
   }
 
   return app;
@@ -130,10 +126,7 @@ async function waitForOverview(app, options = {}) {
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
   if (await pageLooksLikeSplash(page)) {
-    throw new Error(
-      `Electron splash was still open after ${timeoutMs}ms ` +
-        `(windows=${app.windows().length}).`,
-    );
+    throw new Error(`Electron splash was still open after ${timeoutMs}ms ` + `(windows=${app.windows().length}).`);
   }
 
   await page.waitForLoadState("domcontentloaded");
@@ -177,9 +170,7 @@ async function quitElectronApp(app, options = {}) {
   }
   const proc = app.process();
   const exited =
-    proc == null || proc.exitCode != null
-      ? Promise.resolve()
-      : new Promise((resolve) => proc.once("exit", resolve));
+    proc == null || proc.exitCode != null ? Promise.resolve() : new Promise((resolve) => proc.once("exit", resolve));
   try {
     await app.evaluate(({ app: electronApp }) => electronApp.quit());
   } catch {
@@ -188,12 +179,7 @@ async function quitElectronApp(app, options = {}) {
   }
   await Promise.race([
     exited,
-    new Promise((_, reject) =>
-      setTimeout(
-        () => reject(new Error("Electron did not quit within 20 seconds")),
-        20_000,
-      ),
-    ),
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000)),
   ]).catch(async () => {
     await app.close().catch(() => {});
   });
@@ -237,21 +223,19 @@ async function pickPathField(app, page, ariaLabel, folderPath, options = {}) {
     name: new RegExp(`^${escapeRegExp(ariaLabel)}$`, "i"),
   });
   await chip.waitFor({ state: "visible", timeout: 10000 });
-  await chip.locator("xpath=..").getByRole("button", { name: /^Browse$/i }).click();
+  await chip
+    .locator("xpath=..")
+    .getByRole("button", { name: /^Browse$/i })
+    .click();
   const expectedLower = folderPath.replace(/\//g, "\\").toLowerCase();
   await page.waitForFunction(
     ({ label, expected }) => {
       const nodes = [...document.querySelectorAll('[role="textbox"][aria-label]')];
-      const el = nodes.find(
-        (node) =>
-          (node.getAttribute("aria-label") || "").toLowerCase() === label.toLowerCase(),
-      );
+      const el = nodes.find((node) => (node.getAttribute("aria-label") || "").toLowerCase() === label.toLowerCase());
       if (!el) {
         return false;
       }
-      const shown = `${el.getAttribute("title") || ""} ${el.textContent || ""}`
-        .replace(/\//g, "\\")
-        .toLowerCase();
+      const shown = `${el.getAttribute("title") || ""} ${el.textContent || ""}`.replace(/\//g, "\\").toLowerCase();
       return shown.includes(expected);
     },
     { label: ariaLabel, expected: expectedLower },
@@ -285,9 +269,7 @@ function forceKillPid(pid, { tree = true } = {}) {
   if (process.platform !== "win32") {
     return;
   }
-  const args = tree
-    ? ["/PID", String(pid), "/F", "/T"]
-    : ["/PID", String(pid), "/F"];
+  const args = tree ? ["/PID", String(pid), "/F", "/T"] : ["/PID", String(pid), "/F"];
   spawnSync("taskkill", args, {
     windowsHide: true,
     stdio: "ignore",
@@ -352,19 +334,13 @@ function killStrayElectronApps(options = {}) {
     "} | ForEach-Object { $_.ProcessId }",
   ].join(" ");
 
-  for (const pid of listPidsMatchingEnv(
-    "YARK_E2E_KILL_UNUSED",
-    "1",
-    electronScript,
-  )) {
+  for (const pid of listPidsMatchingEnv("YARK_E2E_KILL_UNUSED", "1", electronScript)) {
     forceKillPid(pid, { tree: true });
     killed.add(pid);
   }
 
   if (!quiet && killed.size > 0) {
-    console.log(
-      `E2E_KILL_LEFTOVER killed ${killed.size} Electron process tree(s): ${[...killed].join(", ")}`,
-    );
+    console.log(`E2E_KILL_LEFTOVER killed ${killed.size} Electron process tree(s): ${[...killed].join(", ")}`);
   }
   return [...killed];
 }

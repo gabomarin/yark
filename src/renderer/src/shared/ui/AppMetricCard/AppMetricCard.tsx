@@ -47,18 +47,14 @@ export function AppMetricCard(props: Props): ReactElement {
     className,
   } = props;
 
-  const showRing =
-    typeof progressPercent === "number" &&
-    Number.isFinite(progressPercent) &&
-    progressPercent >= 0;
+  const showRing = typeof progressPercent === "number" && Number.isFinite(progressPercent) && progressPercent >= 0;
 
   const classNames = [classes.root, className]
     .filter((part): part is string => typeof part === "string" && part.length > 0)
     .join(" ");
 
   const clickable = onClick !== undefined;
-  const numericZero =
-    value === 0 || (typeof value === "string" && value.trim() === "0");
+  const numericZero = value === 0 || (typeof value === "string" && value.trim() === "0");
 
   return (
     <Card
@@ -75,12 +71,7 @@ export function AppMetricCard(props: Props): ReactElement {
       data-clickable={clickable || undefined}
       aria-pressed={clickable ? active : undefined}
     >
-      <Text
-        size="xs"
-        c={active || tone !== "default" ? undefined : "dimmed"}
-        fw={700}
-        className={classes.label}
-      >
+      <Text size="xs" c={active || tone !== "default" ? undefined : "dimmed"} fw={700} className={classes.label}>
         {icon}
         <span>{label}</span>
       </Text>

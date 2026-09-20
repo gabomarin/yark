@@ -10,11 +10,9 @@ export const MAX_WINDOWS_PATH_LENGTH = 4096;
 const INVALID_FOLDER_CHARS = /[<>:"/\\|?*\u0000-\u001f]/;
 
 /** Reserved Windows device names (with or without extension). */
-const RESERVED_FOLDER_NAMES =
-  /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(?:\..*)?$/i;
+const RESERVED_FOLDER_NAMES = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(?:\..*)?$/i;
 
-const INVALID_CHARS_MESSAGE =
-  'Cannot contain < > : " / \\ | ? * or control characters';
+const INVALID_CHARS_MESSAGE = 'Cannot contain < > : " / \\ | ? * or control characters';
 
 /**
  * Returns an error reason if the name is not a valid Windows folder name, or null if valid.
@@ -68,7 +66,9 @@ export function normalizeWindowsPath(path: string): string {
 }
 
 function pathLeaf(path: string): string {
-  const parts = normalizeWindowsPath(path).split("\\").filter((part) => part.length > 0);
+  const parts = normalizeWindowsPath(path)
+    .split("\\")
+    .filter((part) => part.length > 0);
   return parts[parts.length - 1] ?? "";
 }
 
@@ -76,7 +76,10 @@ function pathLeaf(path: string): string {
 export function windowsPathFolderSegments(path: string): string[] {
   const normalized = normalizeWindowsPath(path);
   if (normalized.startsWith("\\\\")) {
-    return normalized.slice(2).split("\\").filter((part) => part.length > 0);
+    return normalized
+      .slice(2)
+      .split("\\")
+      .filter((part) => part.length > 0);
   }
   return normalized
     .replace(/^[a-zA-Z]:\\?/, "")
@@ -213,10 +216,7 @@ export function installDirConflictMessage(conflict: InstallDirConflict): string 
  * Dest must not sit inside the current install, and must not wrap it.
  * Fleet nesting excludes this profile, so create helpers miss this case (#294).
  */
-export function selfNestInstallWarning(
-  sourceDir: string,
-  destDir: string,
-): string | null {
+export function selfNestInstallWarning(sourceDir: string, destDir: string): string | null {
   const source = normalizeWindowsPath(sourceDir);
   const dest = normalizeWindowsPath(destDir);
   if (source.length === 0 || dest.length === 0 || isWindowsPathEqual(source, dest)) {

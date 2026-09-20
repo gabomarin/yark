@@ -4,13 +4,8 @@ import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
 import type { ServerProfile, ServerStatus } from "@shared/types";
 import { formatMapDisplayName } from "@shared/asa/map-identity";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
-import {
-  formatServerRamCpuMeta,
-} from "@features/servers/model/serverCardProcessMeta";
-import {
-  formatServerSurvivorMeta,
-  resolveServerSurvivorCount,
-} from "@features/servers/model/serverCardSurvivorMeta";
+import { formatServerRamCpuMeta } from "@features/servers/model/serverCardProcessMeta";
+import { formatServerSurvivorMeta, resolveServerSurvivorCount } from "@features/servers/model/serverCardSurvivorMeta";
 import { ServerCardMetaItem } from "./ServerCardMetaItem";
 import { META_GRID_ATTR } from "./serverCardTestIds";
 import classes from "./ServerCard.module.css";
@@ -52,8 +47,7 @@ export function ServerCardMetaGrid(props: Props): ReactElement {
           maxPlayers: props.server.maxPlayers,
         })
       : null;
-  const survivorsMetaTone =
-    survivorCount != null && survivorCount > 0 ? "ok" : "default";
+  const survivorsMetaTone = survivorCount != null && survivorCount > 0 ? "ok" : "default";
 
   const ramCpuMeta =
     props.processMetrics !== undefined
@@ -70,34 +64,15 @@ export function ServerCardMetaGrid(props: Props): ReactElement {
   // Decorative open-hit only: identity control is the keyboard path. Version
   // hints stay mouse/hover (#477).
   return (
-    <UnstyledButton
-      className={classes.metaOpen}
-      onClick={props.onOpenWorkspace}
-      tabIndex={-1}
-      aria-hidden
-    >
-      <div
-        className={classes.metaGrid}
-        {...{ [META_GRID_ATTR]: true }}
-        data-meta-cols={String(metaCols)}
-      >
-        <ServerCardMetaItem
-          label="Map"
-          value={formatMapDisplayName(props.server.map)}
-          tooltip={props.server.map}
-        />
+    <UnstyledButton className={classes.metaOpen} onClick={props.onOpenWorkspace} tabIndex={-1} aria-hidden>
+      <div className={classes.metaGrid} {...{ [META_GRID_ATTR]: true }} data-meta-cols={String(metaCols)}>
+        <ServerCardMetaItem label="Map" value={formatMapDisplayName(props.server.map)} tooltip={props.server.map} />
         <ServerCardMetaItem label="Cluster" value={props.server.clusterId ?? "–"} />
         <ServerCardMetaItem label="Mods" value={String(props.server.mods.length)} />
         {survivorsMeta != null ? (
-          <ServerCardMetaItem
-            label="Survivors"
-            value={survivorsMeta}
-            tone={survivorsMetaTone}
-          />
+          <ServerCardMetaItem label="Survivors" value={survivorsMeta} tone={survivorsMetaTone} />
         ) : null}
-        {ramCpuMeta != null ? (
-          <ServerCardMetaItem label="RAM / CPU" value={ramCpuMeta} />
-        ) : null}
+        {ramCpuMeta != null ? <ServerCardMetaItem label="RAM / CPU" value={ramCpuMeta} /> : null}
         <ServerCardMetaItem
           label="Version"
           value={props.localVersion ?? "–"}

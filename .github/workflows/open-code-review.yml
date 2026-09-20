@@ -254,7 +254,7 @@ jobs:
           # the checkpoint fingerprint, so a per-head value would fail closed to a
           # full review on every push and make checkpoint_range a no-op.
           llm_extra_headers: x-opencode-session=${{ github.repository }}-pr-${{ github.event.issue.number || inputs.pr_number }}
-          llm_extra_body: '{}'
+          llm_extra_body: "{}"
           language: English
           ocr_version: "1.12.4"
           effort: ${{ steps.provider.outputs.effort_override || steps.effort.outputs.effort }}

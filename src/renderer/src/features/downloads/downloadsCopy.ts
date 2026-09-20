@@ -44,10 +44,7 @@ export function formatDownloadPhase(phase: string): string {
 }
 
 function isRedundantPhase(statusLabel: string, phase: string): boolean {
-  return (
-    statusLabel.replace(/[-_]+/g, " ").toLowerCase()
-    === phase.replace(/[-_]+/g, " ").toLowerCase()
-  );
+  return statusLabel.replace(/[-_]+/g, " ").toLowerCase() === phase.replace(/[-_]+/g, " ").toLowerCase();
 }
 
 function operatorLeadLabel(row: DownloadRowMetaInput): string {

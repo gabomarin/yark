@@ -30,7 +30,11 @@ describe("SettingsDiscordSection", () => {
     };
     vi.stubGlobal("api", api);
     const user = userEvent.setup();
-    render(<MantineProvider><SettingsDiscordSection /></MantineProvider>);
+    render(
+      <MantineProvider>
+        <SettingsDiscordSection />
+      </MantineProvider>,
+    );
 
     const master = await screen.findByRole("switch", { name: "Discord alerts" });
     await user.click(master);
@@ -45,30 +49,46 @@ describe("SettingsDiscordSection", () => {
   it("saves a valid webhook and sends a test", async () => {
     const api = {
       getDiscordWebhook: vi.fn().mockResolvedValue({ ok: true, data: preferences }),
-      setDiscordWebhook: vi.fn().mockResolvedValue({ ok: true, data: { ...preferences, enabled: true, webhookUrl: "https://discord.com/api/webhooks/123/token" } }),
+      setDiscordWebhook: vi.fn().mockResolvedValue({
+        ok: true,
+        data: { ...preferences, enabled: true, webhookUrl: "https://discord.com/api/webhooks/123/token" },
+      }),
       testDiscordWebhook: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
     };
     vi.stubGlobal("api", api);
     const user = userEvent.setup();
-    render(<MantineProvider><SettingsDiscordSection /></MantineProvider>);
+    render(
+      <MantineProvider>
+        <SettingsDiscordSection />
+      </MantineProvider>,
+    );
 
     const input = await screen.findByLabelText("Webhook URL");
     await user.type(input, "https://discord.com/api/webhooks/123/token");
     await user.tab();
     await waitFor(() => expect(api.setDiscordWebhook).toHaveBeenCalled());
     await user.click(screen.getByRole("button", { name: "Send test" }));
-    await waitFor(() => expect(api.testDiscordWebhook).toHaveBeenCalledWith("https://discord.com/api/webhooks/123/token", undefined));
+    await waitFor(() =>
+      expect(api.testDiscordWebhook).toHaveBeenCalledWith("https://discord.com/api/webhooks/123/token", undefined),
+    );
   });
 
   it("persists a per-event custom message template on blur", async () => {
     const api = {
       getDiscordWebhook: vi.fn().mockResolvedValue({ ok: true, data: { ...preferences, enabled: true } }),
-      setDiscordWebhook: vi.fn().mockResolvedValue({ ok: true, data: { ...preferences, enabled: true, customMessages: { serverCrashed: "The {server} world is down" } } }),
+      setDiscordWebhook: vi.fn().mockResolvedValue({
+        ok: true,
+        data: { ...preferences, enabled: true, customMessages: { serverCrashed: "The {server} world is down" } },
+      }),
       testDiscordWebhook: vi.fn(),
     };
     vi.stubGlobal("api", api);
     const user = userEvent.setup();
-    render(<MantineProvider><SettingsDiscordSection /></MantineProvider>);
+    render(
+      <MantineProvider>
+        <SettingsDiscordSection />
+      </MantineProvider>,
+    );
 
     await user.click(await screen.findByRole("button", { name: "Customize message for Server crash" }));
     const field = screen.getByLabelText("Custom message for Server crash");
@@ -92,7 +112,11 @@ describe("SettingsDiscordSection", () => {
     };
     vi.stubGlobal("api", api);
     const user = userEvent.setup();
-    render(<MantineProvider><SettingsDiscordSection /></MantineProvider>);
+    render(
+      <MantineProvider>
+        <SettingsDiscordSection />
+      </MantineProvider>,
+    );
 
     expect(screen.getByText("Server events")).toBeInTheDocument();
     expect(screen.getByText("SteamCMD jobs")).toBeInTheDocument();
@@ -118,14 +142,29 @@ describe("SettingsDiscordSection", () => {
 
   it("sends a test notification using the focused field's template", async () => {
     const api = {
-      getDiscordWebhook: vi.fn().mockResolvedValue({ ok: true, data: { ...preferences, enabled: true, webhookUrl: "https://discord.com/api/webhooks/123/token" } }),
-      setDiscordWebhook: vi.fn().mockResolvedValue({ ok: true, data: { ...preferences, enabled: true, webhookUrl: "https://discord.com/api/webhooks/123/token", customMessages: { serverCrashed: "The {server} world is down" } } }),
+      getDiscordWebhook: vi.fn().mockResolvedValue({
+        ok: true,
+        data: { ...preferences, enabled: true, webhookUrl: "https://discord.com/api/webhooks/123/token" },
+      }),
+      setDiscordWebhook: vi.fn().mockResolvedValue({
+        ok: true,
+        data: {
+          ...preferences,
+          enabled: true,
+          webhookUrl: "https://discord.com/api/webhooks/123/token",
+          customMessages: { serverCrashed: "The {server} world is down" },
+        },
+      }),
       testDiscordWebhook: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
     };
     vi.stubGlobal("api", api);
     const user = userEvent.setup();
 
-    render(<MantineProvider><SettingsDiscordSection /></MantineProvider>);
+    render(
+      <MantineProvider>
+        <SettingsDiscordSection />
+      </MantineProvider>,
+    );
 
     await user.click(await screen.findByRole("button", { name: "Customize message for Server crash" }));
     const crash = screen.getByLabelText("Custom message for Server crash");

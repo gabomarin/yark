@@ -3,18 +3,9 @@ import type { Route } from "@layout/Sidebar/Sidebar";
 export const SPOTLIGHT_RECENT_STORAGE_KEY = "yark.spotlightRecent.v1";
 const SPOTLIGHT_RECENT_MAX = 5;
 
-export type SpotlightRecentEntry =
-  | { kind: "nav"; route: Route }
-  | { kind: "server"; serverId: string };
+export type SpotlightRecentEntry = { kind: "nav"; route: Route } | { kind: "server"; serverId: string };
 
-const NAV_ROUTES = new Set<Route>([
-  "overview",
-  "downloads",
-  "clusters",
-  "backups",
-  "logs",
-  "settings",
-]);
+const NAV_ROUTES = new Set<Route>(["overview", "downloads", "clusters", "backups", "logs", "settings"]);
 
 function isRoute(value: unknown): value is Route {
   return typeof value === "string" && NAV_ROUTES.has(value as Route);
@@ -35,16 +26,11 @@ function isRecentEntry(value: unknown): value is SpotlightRecentEntry {
 }
 
 function entryKey(entry: SpotlightRecentEntry): string {
-  return entry.kind === "nav"
-    ? `nav:${entry.route}`
-    : `server:${entry.serverId}`;
+  return entry.kind === "nav" ? `nav:${entry.route}` : `server:${entry.serverId}`;
 }
 
 /** Parse and normalize a stored recent list (MRU first, capped). */
-export function normalizeSpotlightRecent(
-  raw: unknown,
-  max = SPOTLIGHT_RECENT_MAX,
-): SpotlightRecentEntry[] {
+export function normalizeSpotlightRecent(raw: unknown, max = SPOTLIGHT_RECENT_MAX): SpotlightRecentEntry[] {
   if (!Array.isArray(raw)) {
     return [];
   }
@@ -60,9 +46,7 @@ export function normalizeSpotlightRecent(
     }
     seen.add(key);
     out.push(
-      item.kind === "nav"
-        ? { kind: "nav", route: item.route }
-        : { kind: "server", serverId: item.serverId.trim() },
+      item.kind === "nav" ? { kind: "nav", route: item.route } : { kind: "server", serverId: item.serverId.trim() },
     );
     if (out.length >= max) {
       break;
@@ -96,9 +80,7 @@ export function writeSpotlightRecent(entries: SpotlightRecentEntry[]): void {
 }
 
 /** Prepend an entry (dedupe + cap) and persist. */
-export function pushSpotlightRecent(
-  entry: SpotlightRecentEntry,
-): SpotlightRecentEntry[] {
+export function pushSpotlightRecent(entry: SpotlightRecentEntry): SpotlightRecentEntry[] {
   const next = normalizeSpotlightRecent([entry, ...readSpotlightRecent()]);
   writeSpotlightRecent(next);
   return next;

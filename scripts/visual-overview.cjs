@@ -42,15 +42,11 @@ async function launchApp(userData) {
 async function quitApp(app) {
   const proc = app.process();
   const exited =
-    proc == null || proc.exitCode != null
-      ? Promise.resolve()
-      : new Promise((resolve) => proc.once("exit", resolve));
+    proc == null || proc.exitCode != null ? Promise.resolve() : new Promise((resolve) => proc.once("exit", resolve));
   await app.evaluate(({ app: electronApp }) => electronApp.quit());
   await Promise.race([
     exited,
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000),
-    ),
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000)),
   ]);
 }
 
@@ -90,15 +86,12 @@ async function measureOverview(page) {
     const style = content ? getComputedStyle(content) : null;
     const overviewRect = overview?.getBoundingClientRect();
     const serversRect = servers?.getBoundingClientRect();
-    const activityVisible =
-      activity !== null && getComputedStyle(activity).display !== "none";
+    const activityVisible = activity !== null && getComputedStyle(activity).display !== "none";
     const activityRect = activityVisible ? activity.getBoundingClientRect() : undefined;
     const scanRect = scanStatus?.getBoundingClientRect();
     const checkRect = checkBtn?.getBoundingClientRect();
     const inviteRect = discordInvite?.getBoundingClientRect();
-    const invitePosition = discordInvite
-      ? getComputedStyle(discordInvite).position
-      : null;
+    const invitePosition = discordInvite ? getComputedStyle(discordInvite).position : null;
 
     const inviteOverlapsContent =
       inviteRect !== undefined &&
@@ -122,14 +115,11 @@ async function measureOverview(page) {
       activityRect.left > serversRect.right - 8;
 
     const scanOnButton =
-      scanStatus !== null &&
-      checkBtn !== undefined &&
-      (scanStatus === checkBtn || checkBtn.contains(scanStatus));
+      scanStatus !== null && checkBtn !== undefined && (scanStatus === checkBtn || checkBtn.contains(scanStatus));
 
     return {
       viewport: { width: window.innerWidth, height: window.innerHeight },
-      hasHorizontalOverflow:
-        Math.max(root.scrollWidth, body.scrollWidth) > root.clientWidth + 1,
+      hasHorizontalOverflow: Math.max(root.scrollWidth, body.scrollWidth) > root.clientWidth + 1,
       overviewWidth: overviewRect?.width ?? null,
       contentDisplay: style?.display ?? null,
       serversWidth: serversRect?.width ?? null,
@@ -153,11 +143,9 @@ async function setDensity(page, density) {
   await page.getByRole("heading", { name: "Settings", level: 1 }).waitFor({ timeout: 10000 });
   const label = density === "compact" ? "Compact" : "Comfortable";
   await page.locator("[aria-label='Display size']").getByText(label, { exact: true }).click();
-  await page.waitForFunction(
-    (wanted) => document.documentElement.getAttribute("data-ui-density") === wanted,
-    density,
-    { timeout: 5000 },
-  );
+  await page.waitForFunction((wanted) => document.documentElement.getAttribute("data-ui-density") === wanted, density, {
+    timeout: 5000,
+  });
   await waitForOverviewLayoutReady(page);
 }
 
@@ -310,8 +298,7 @@ async function run() {
           metrics,
           screenshot: shot,
           expectSideBySide: size.width >= 1600,
-          sideBySideOk:
-            size.width >= 1600 ? metrics.sideBySide === true : metrics.sideBySide !== true,
+          sideBySideOk: size.width >= 1600 ? metrics.sideBySide === true : metrics.sideBySide !== true,
           overflowOk: metrics.hasHorizontalOverflow !== true,
           fleetKind: fleetKind(metrics.cardCount),
         });
@@ -334,10 +321,7 @@ async function run() {
         true,
         "Install-scan marker should be on the Check Servers Health button (not a fixed top overlay)",
       );
-      assert.ok(
-        (scanMetrics.scanTop ?? 0) > 40,
-        "Install-scan control should not sit in a window-top overlay",
-      );
+      assert.ok((scanMetrics.scanTop ?? 0) > 40, "Install-scan control should not sit in a window-top overlay");
       await page.locator("[data-install-health-scan]").waitFor({ state: "detached", timeout: 60000 });
 
       if (errors.length > 0) throw new Error(errors.join("\n"));
@@ -364,16 +348,8 @@ async function run() {
           0,
         ),
       );
-      assert.equal(
-        report.overflowOk,
-        true,
-        `Horizontal overflow at ${report.prefix} ${report.viewport}`,
-      );
-      assert.equal(
-        report.sideBySideOk,
-        true,
-        `Unexpected side-by-side layout at ${report.prefix} ${report.viewport}`,
-      );
+      assert.equal(report.overflowOk, true, `Horizontal overflow at ${report.prefix} ${report.viewport}`);
+      assert.equal(report.sideBySideOk, true, `Unexpected side-by-side layout at ${report.prefix} ${report.viewport}`);
       if (report.metrics.discordInviteVisible) {
         assert.notEqual(
           report.metrics.discordInvitePosition,
@@ -388,9 +364,7 @@ async function run() {
       }
     }
 
-    const qhdPopulated = reports.find(
-      (r) => r.prefix === "populated-comfortable" && r.size === "qhd-2k",
-    );
+    const qhdPopulated = reports.find((r) => r.prefix === "populated-comfortable" && r.size === "qhd-2k");
     assert.ok(qhdPopulated, "Missing populated-comfortable qhd-2k report");
     assert.ok(
       (qhdPopulated.metrics.overviewWidth ?? 0) >= 1900,

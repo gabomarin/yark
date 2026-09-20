@@ -8,9 +8,7 @@ import {
 
 describe("process-readiness helpers", () => {
   it("detects ready log lines", () => {
-    expect(
-      hasReadyLogLine(["[system] Server has completed startup"]),
-    ).toBe(true);
+    expect(hasReadyLogLine(["[system] Server has completed startup"])).toBe(true);
     expect(hasReadyLogLine(["still booting"])).toBe(false);
   });
 

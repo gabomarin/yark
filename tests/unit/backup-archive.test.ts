@@ -109,31 +109,28 @@ describe("backup-archive zip safety", () => {
     await writeFile(join(source, "manifest.json"), '{"ok":true}', "utf8");
     await zipDirectory(source, zipPath, { lightCompressBinarySaves: true });
 
-    const entries = await new Promise<
-      Map<string, { method: number; compressed: number; uncompressed: number }>
-    >((resolvePromise, reject) => {
-      yauzl.open(zipPath, { lazyEntries: true }, (openErr, zipfile) => {
-        if (openErr !== null || zipfile === undefined) {
-          reject(openErr ?? new Error("Could not open zip"));
-          return;
-        }
-        const out = new Map<
-          string,
-          { method: number; compressed: number; uncompressed: number }
-        >();
-        zipfile.readEntry();
-        zipfile.on("entry", (entry: yauzl.Entry) => {
-          out.set(entry.fileName, {
-            method: entry.compressionMethod,
-            compressed: entry.compressedSize,
-            uncompressed: entry.uncompressedSize,
-          });
+    const entries = await new Promise<Map<string, { method: number; compressed: number; uncompressed: number }>>(
+      (resolvePromise, reject) => {
+        yauzl.open(zipPath, { lazyEntries: true }, (openErr, zipfile) => {
+          if (openErr !== null || zipfile === undefined) {
+            reject(openErr ?? new Error("Could not open zip"));
+            return;
+          }
+          const out = new Map<string, { method: number; compressed: number; uncompressed: number }>();
           zipfile.readEntry();
+          zipfile.on("entry", (entry: yauzl.Entry) => {
+            out.set(entry.fileName, {
+              method: entry.compressionMethod,
+              compressed: entry.compressedSize,
+              uncompressed: entry.uncompressedSize,
+            });
+            zipfile.readEntry();
+          });
+          zipfile.on("end", () => resolvePromise(out));
+          zipfile.on("error", reject);
         });
-        zipfile.on("end", () => resolvePromise(out));
-        zipfile.on("error", reject);
-      });
-    });
+      },
+    );
 
     const ark = entries.get("SavedArks/Genesis_WP.ark");
     const manifest = entries.get("manifest.json");
@@ -170,9 +167,7 @@ describe("backup-archive zip safety", () => {
     await writeFile(join(source, "other.txt"), "noise", "utf8");
     await zipDirectory(source, zipPath);
 
-    await expect(readZipTextEntry(zipPath, "manifest.json")).resolves.toBe(
-      '{"kind":"world"}',
-    );
+    await expect(readZipTextEntry(zipPath, "manifest.json")).resolves.toBe('{"kind":"world"}');
     await expect(readZipTextEntry(zipPath, "missing.json")).resolves.toBeNull();
   });
 
@@ -193,9 +188,7 @@ describe("backup-archive zip safety", () => {
     await mkdir(dest, { recursive: true });
     await writeFile(zipPath, buildStoredZip("../evil.txt", "pwned"));
 
-    await expect(extractZip(zipPath, dest)).rejects.toThrow(
-      /Unsafe zip entry|invalid relative path/i,
-    );
+    await expect(extractZip(zipPath, dest)).rejects.toThrow(/Unsafe zip entry|invalid relative path/i);
     expect(existsSync(outside)).toBe(false);
   });
 
@@ -243,11 +236,7 @@ describe("backup-archive zip safety", () => {
     const root = await makeTempDir("ark-portable-ok-");
     const source = join(root, "src");
     await mkdir(join(source, "SavedArks"), { recursive: true });
-    await writeFile(
-      join(source, "manifest.json"),
-      JSON.stringify({ backup: { kind: "world", id: "w1" } }),
-      "utf8",
-    );
+    await writeFile(join(source, "manifest.json"), JSON.stringify({ backup: { kind: "world", id: "w1" } }), "utf8");
     await writeFile(join(source, "SavedArks", "map.ark"), "WORLD", "utf8");
     const zipPath = join(root, "world.zip");
     await zipDirectory(source, zipPath);
@@ -261,18 +250,12 @@ describe("backup-archive zip safety", () => {
     const root = await makeTempDir("ark-portable-bad-");
     const iniSrc = join(root, "ini-src");
     await mkdir(join(iniSrc, "ConfigWindowsServer"), { recursive: true });
-    await writeFile(
-      join(iniSrc, "manifest.json"),
-      JSON.stringify({ backup: { kind: "ini" } }),
-      "utf8",
-    );
+    await writeFile(join(iniSrc, "manifest.json"), JSON.stringify({ backup: { kind: "ini" } }), "utf8");
     await writeFile(join(iniSrc, "ConfigWindowsServer", "Game.ini"), "[/script]", "utf8");
     const iniZip = join(root, "ini.zip");
     await zipDirectory(iniSrc, iniZip);
 
-    await expect(validatePortableZip(iniZip, "world")).rejects.toThrow(
-      /missing expected SavedArks|kind is ini/i,
-    );
+    await expect(validatePortableZip(iniZip, "world")).rejects.toThrow(/missing expected SavedArks|kind is ini/i);
 
     const slipZip = join(root, "slip.zip");
     await writeFile(slipZip, buildStoredZip("../evil.txt", "pwned"));
@@ -285,8 +268,6 @@ describe("backup-archive zip safety", () => {
     const root = await makeTempDir("ark-portable-corrupt-");
     const badZip = join(root, "bad.zip");
     await writeFile(badZip, "not-a-zip", "utf8");
-    await expect(validatePortableZip(badZip, "world")).rejects.toThrow(
-      /corrupt|unreadable/i,
-    );
+    await expect(validatePortableZip(badZip, "world")).rejects.toThrow(/corrupt|unreadable/i);
   });
 });

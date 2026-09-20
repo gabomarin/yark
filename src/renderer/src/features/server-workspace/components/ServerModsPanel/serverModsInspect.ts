@@ -13,11 +13,7 @@ interface InspectInput {
   setBusyKey: Dispatch<SetStateAction<string | null>>;
   setError: Dispatch<SetStateAction<string | null>>;
   setWarning: Dispatch<SetStateAction<string | null>>;
-  persist: (
-    nextIds: string[],
-    nextDisabled: string[],
-    nextCache: Record<string, ModMetadata>,
-  ) => Promise<void>;
+  persist: (nextIds: string[], nextDisabled: string[], nextCache: Record<string, ModMetadata>) => Promise<void>;
 }
 
 /**
@@ -46,26 +42,17 @@ export async function inspectServerMod(input: InspectInput): Promise<void> {
         input.setDetail(result.data);
         if (input.configuredIdsRef.current.includes(result.data.id)) {
           const previous = input.cacheRef.current[result.data.id];
-          if (
-            previous === undefined
-            || !sameModMetadata(previous, result.data)
-          ) {
-            await input.persist(
-              input.configuredIdsRef.current,
-              input.disabledIdsRef.current,
-              {
-                ...input.cacheRef.current,
-                [result.data.id]: result.data,
-              },
-            );
+          if (previous === undefined || !sameModMetadata(previous, result.data)) {
+            await input.persist(input.configuredIdsRef.current, input.disabledIdsRef.current, {
+              ...input.cacheRef.current,
+              [result.data.id]: result.data,
+            });
           }
         }
       } catch (cause) {
         if (input.inspectTargetRef.current !== ref) return;
         if (cachedDetail === undefined) {
-          input.setError(
-            cause instanceof Error ? cause.message : "Could not load mod metadata",
-          );
+          input.setError(cause instanceof Error ? cause.message : "Could not load mod metadata");
         }
       }
     },

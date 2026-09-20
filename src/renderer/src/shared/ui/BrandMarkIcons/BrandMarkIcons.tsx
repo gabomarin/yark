@@ -5,10 +5,7 @@ type MarkProps = SVGProps<SVGSVGElement> & {
 };
 
 /** GitHub mark (Phosphor no longer ships brand logos). */
-export function GithubMarkIcon({
-  size = 16,
-  ...props
-}: MarkProps): ReactElement {
+export function GithubMarkIcon({ size = 16, ...props }: MarkProps): ReactElement {
   return (
     <svg
       width={size}
@@ -30,10 +27,7 @@ export function GithubMarkIcon({
 }
 
 /** Discord mark (Phosphor no longer ships brand logos). */
-export function DiscordMarkIcon({
-  size = 16,
-  ...props
-}: MarkProps): ReactElement {
+export function DiscordMarkIcon({ size = 16, ...props }: MarkProps): ReactElement {
   return (
     <svg
       width={size}

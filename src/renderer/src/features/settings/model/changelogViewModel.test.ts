@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ChangelogEntry } from "@shared/settings/changelog";
-import {
-  changelogNoteCount,
-  changelogNoteCountLabel,
-  formatChangelogDate,
-} from "./changelogViewModel";
+import { changelogNoteCount, changelogNoteCountLabel, formatChangelogDate } from "./changelogViewModel";
 
 describe("changelogViewModel", () => {
   it("formats ISO dates as day Mon year without UTC shift", () => {

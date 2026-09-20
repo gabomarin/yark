@@ -33,9 +33,9 @@ function baseInput(installDir: string): ServerProfileInput {
     clusterDir: null,
     extraArgs: [],
     mods: [],
-    
+
     autoStart: false,
-    
+
     useAsaApi: false,
     useAsaApiLoader: false,
   };
@@ -65,9 +65,7 @@ describe("InstanceService.importExisting incomplete opt-in (#283)", () => {
     } as unknown as ServerRepository;
 
     const service = makeService(repo);
-    await expect(service.importExisting(baseInput(installDir))).rejects.toThrow(
-      /incomplete/i,
-    );
+    await expect(service.importExisting(baseInput(installDir))).rejects.toThrow(/incomplete/i);
     expect(repo.create).not.toHaveBeenCalled();
   });
 
@@ -151,4 +149,3 @@ describe("InstanceService.importExisting incomplete opt-in (#283)", () => {
     expect(repo.create).not.toHaveBeenCalled();
   });
 });
-

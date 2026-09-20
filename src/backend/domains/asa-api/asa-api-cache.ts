@@ -18,12 +18,7 @@ export function sanitizeAsaApiCacheSegment(raw: string): string {
 }
 
 /** `{cacheRoot}/{repo}/{tag}/{assetFileName}` */
-export function asaApiCachedZipPath(
-  cacheRoot: string,
-  repo: string,
-  tag: string,
-  assetFileName: string,
-): string {
+export function asaApiCachedZipPath(cacheRoot: string, repo: string, tag: string, assetFileName: string): string {
   return join(
     cacheRoot,
     sanitizeAsaApiCacheSegment(repo),
@@ -48,11 +43,7 @@ export async function resolveAsaApiCachedZip(
   try {
     const info = await stat(path);
     if (!info.isFile() || info.size <= 0) return null;
-    if (
-      expectedSize !== null
-      && expectedSize > 0
-      && info.size !== expectedSize
-    ) {
+    if (expectedSize !== null && expectedSize > 0 && info.size !== expectedSize) {
       return null;
     }
     return path;
@@ -73,10 +64,7 @@ async function ensureAsaApiCacheParent(finalPath: string): Promise<void> {
   await mkdir(dirname(finalPath), { recursive: true });
 }
 
-export async function finalizeAsaApiCacheDownload(
-  partialPath: string,
-  finalPath: string,
-): Promise<void> {
+export async function finalizeAsaApiCacheDownload(partialPath: string, finalPath: string): Promise<void> {
   await ensureAsaApiCacheParent(finalPath);
   if (existsSync(finalPath)) {
     await rm(finalPath, { force: true });
@@ -112,11 +100,9 @@ export async function pruneAsaApiRepoCache(
 
   tags.sort((a, b) => b.mtimeMs - a.mtimeMs);
   for (const stale of tags.slice(keep)) {
-    await rm(join(repoDir, stale.name), { recursive: true, force: true }).catch(
-      () => {
-        // best-effort
-      },
-    );
+    await rm(join(repoDir, stale.name), { recursive: true, force: true }).catch(() => {
+      // best-effort
+    });
   }
 }
 

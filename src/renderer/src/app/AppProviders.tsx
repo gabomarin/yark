@@ -3,17 +3,8 @@ import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
 import { MantineProvider } from "@mantine/core";
 import { DatesProvider } from "@mantine/dates";
-import {
-  createContext,
-  useContext,
-  useLayoutEffect,
-  useMemo,
-  type PropsWithChildren,
-} from "react";
-import {
-  createAppCssVariablesResolverForDensity,
-  createAppThemeForDensity,
-} from "@theme/theme";
+import { createContext, useContext, useLayoutEffect, useMemo, type PropsWithChildren } from "react";
+import { createAppCssVariablesResolverForDensity, createAppThemeForDensity } from "@theme/theme";
 import type { UiDensity } from "@theme/tokens";
 import { RowActionMenuProvider } from "@ui/RowActionMenu/RowActionMenuProvider";
 import { isRendererTest } from "@renderer/shared/isRendererTest";
@@ -29,10 +20,7 @@ interface Props extends PropsWithChildren {
   density?: UiDensity;
 }
 
-export function AppProviders({
-  children,
-  density = "compact",
-}: Props): ReactElement {
+export function AppProviders({ children, density = "compact" }: Props): ReactElement {
   const theme = useMemo(() => {
     const base = createAppThemeForDensity(density);
     if (!isRendererTest()) {
@@ -88,10 +76,7 @@ export function AppProviders({
       },
     };
   }, [density]);
-  const cssVariablesResolver = useMemo(
-    () => createAppCssVariablesResolverForDensity(density),
-    [density],
-  );
+  const cssVariablesResolver = useMemo(() => createAppCssVariablesResolverForDensity(density), [density]);
 
   // On <html> so Mantine portals (Modal/Drawer under document.body) inherit
   // compact input height/padding from globals.css.
@@ -107,19 +92,13 @@ export function AppProviders({
 
   return (
     <UiDensityContext.Provider value={density}>
-      <MantineProvider
-        theme={theme}
-        cssVariablesResolver={cssVariablesResolver}
-        defaultColorScheme="dark"
-      >
+      <MantineProvider theme={theme} cssVariablesResolver={cssVariablesResolver} defaultColorScheme="dark">
         <DatesProvider settings={{ consistentWeeks: true }}>
           <ModalsProvider
             modalProps={{
               centered: true,
               radius: "md",
-              ...(isRendererTest()
-                ? { transitionProps: { duration: 0 } }
-                : {}),
+              ...(isRendererTest() ? { transitionProps: { duration: 0 } } : {}),
             }}
             labels={{ confirm: "Confirm", cancel: "Cancel" }}
           >

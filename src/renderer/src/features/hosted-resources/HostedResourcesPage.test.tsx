@@ -74,12 +74,8 @@ describe("HostedResourcesPage", () => {
 
   it("lists published resources with their loopback URL", async () => {
     const api = createRendererApiMock({
-      getHostedResourcesOverview: vi
-        .fn()
-        .mockResolvedValue({ ok: true, data: overview(true, [resource]) }),
-      getHostedResourceContent: vi
-        .fn()
-        .mockResolvedValue({ ok: true, data: "EOSID1\nEOSID2\n" }),
+      getHostedResourcesOverview: vi.fn().mockResolvedValue({ ok: true, data: overview(true, [resource]) }),
+      getHostedResourceContent: vi.fn().mockResolvedValue({ ok: true, data: "EOSID1\nEOSID2\n" }),
     });
     Object.defineProperty(window, "api", { configurable: true, value: api });
 
@@ -106,9 +102,7 @@ describe("HostedResourcesPage", () => {
   it("disables a resource after confirmation", async () => {
     const user = userEvent.setup();
     const api = createRendererApiMock({
-      getHostedResourcesOverview: vi
-        .fn()
-        .mockResolvedValue({ ok: true, data: overview(true, [resource]) }),
+      getHostedResourcesOverview: vi.fn().mockResolvedValue({ ok: true, data: overview(true, [resource]) }),
       setHostedResourceEnabled: vi.fn().mockResolvedValue({ ok: true, data: resource }),
     });
     Object.defineProperty(window, "api", { configurable: true, value: api });

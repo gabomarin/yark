@@ -39,12 +39,7 @@ export interface LeftRunningProcessIdentity {
   leftAt: string;
 }
 
-export type LeaveIdentityMatch =
-  | "match"
-  | "missing"
-  | "stale_pid"
-  | "mismatched"
-  | "inaccessible";
+export type LeaveIdentityMatch = "match" | "missing" | "stale_pid" | "mismatched" | "inaccessible";
 
 /** Live OS view used to validate a persisted leave record. */
 export interface LiveProcessIdentity {
@@ -103,12 +98,7 @@ export function classifyLeaveCandidate(
 
 /** Loose command-line compare: ignore quote/spacing differences; require exe + key tokens. */
 export function commandLinesCompatible(expected: string, live: string): boolean {
-  const normalize = (value: string): string =>
-    value
-      .trim()
-      .replace(/\s+/g, " ")
-      .replace(/"/g, "")
-      .toLowerCase();
+  const normalize = (value: string): string => value.trim().replace(/\s+/g, " ").replace(/"/g, "").toLowerCase();
   const a = normalize(expected);
   const b = normalize(live);
   if (a === b) {
@@ -118,9 +108,7 @@ export function commandLinesCompatible(expected: string, live: string): boolean 
   return b.includes(a) || a.includes(b);
 }
 
-export function parseLeftRunningProcesses(
-  raw: string | null | undefined,
-): LeftRunningProcessIdentity[] {
+export function parseLeftRunningProcesses(raw: string | null | undefined): LeftRunningProcessIdentity[] {
   if (raw === null || raw === undefined || raw.trim() === "") {
     return [];
   }

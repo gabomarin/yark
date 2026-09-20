@@ -7,11 +7,7 @@ import { InstanceLockManager } from "@backend/orchestration/instance-lock-manage
 import { InstanceService } from "@backend/domains/instances/instance-service";
 import type { BackupService } from "@backend/domains/backups/backup-service";
 import type { ProcessManager } from "@backend/infra/process/process-manager";
-import {
-  applyServerProfilePatch,
-  isServerProfilePatch,
-  serverProfileToInput,
-} from "@shared/server/server-profile";
+import { applyServerProfilePatch, isServerProfilePatch, serverProfileToInput } from "@shared/server/server-profile";
 import type { ServerProfile, ServerProfileInput } from "@shared/types";
 
 vi.mock("@backend/domains/instances/sync-profile-ini", () => {
@@ -19,10 +15,7 @@ vi.mock("@backend/domains/instances/sync-profile-ini", () => {
   return {
     syncProfileSettingsToIni,
     applyProfileOwnedIni: vi.fn(
-      async (
-        profile: { id: string },
-        syncVia?: (serverId: string, profile?: unknown) => Promise<void>,
-      ) => {
+      async (profile: { id: string }, syncVia?: (serverId: string, profile?: unknown) => Promise<void>) => {
         if (syncVia !== undefined) {
           await syncVia(profile.id, profile);
           return;
@@ -201,4 +194,3 @@ describe("InstanceService.updatePatch concurrency (#209)", () => {
     ).toBe(true);
   });
 });
-

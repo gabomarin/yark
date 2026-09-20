@@ -56,19 +56,11 @@ function clampCount(value: number, fallback: number): number {
  * Coerce and clamp retention settings. Ensures failure retain days are at least
  * as long as routine event retain days.
  */
-export function normalizeLogRetentionSettings(
-  settings: LogRetentionSettings,
-): LogRetentionSettings {
-  const eventsRetainDays = clampDays(
-    settings.eventsRetainDays,
-    DEFAULT_LOG_RETENTION_SETTINGS.eventsRetainDays,
-  );
+export function normalizeLogRetentionSettings(settings: LogRetentionSettings): LogRetentionSettings {
+  const eventsRetainDays = clampDays(settings.eventsRetainDays, DEFAULT_LOG_RETENTION_SETTINGS.eventsRetainDays);
   const eventsFailureRetainDays = Math.max(
     eventsRetainDays,
-    clampDays(
-      settings.eventsFailureRetainDays,
-      DEFAULT_LOG_RETENTION_SETTINGS.eventsFailureRetainDays,
-    ),
+    clampDays(settings.eventsFailureRetainDays, DEFAULT_LOG_RETENTION_SETTINGS.eventsFailureRetainDays),
   );
   return {
     eventsRetainDays,
@@ -98,9 +90,9 @@ export function assertLogRetentionSettings(settings: LogRetentionSettings): void
     }
   }
   if (
-    !Number.isFinite(settings.updateLogsRetainCount)
-    || settings.updateLogsRetainCount < MIN_COUNT
-    || settings.updateLogsRetainCount > MAX_COUNT
+    !Number.isFinite(settings.updateLogsRetainCount) ||
+    settings.updateLogsRetainCount < MIN_COUNT ||
+    settings.updateLogsRetainCount > MAX_COUNT
   ) {
     throw new Error(`updateLogsRetainCount must be between ${MIN_COUNT} and ${MAX_COUNT}`);
   }

@@ -33,12 +33,12 @@ Operator-owned Windows host. Two YARK-managed dedicated servers, shared cluster.
 Paths, Cluster ID, map names, YARK/ASA build numbers, and log excerpts were
 **not** pasted (redacted / not captured).
 
-| Step | Result |
-| --- | --- |
-| Upload items and dinos; survivor transfer A → B | OK |
-| Restart both servers | OK |
-| Rejoin the map where the character stayed; items and dinos still at the terminal | OK |
-| Survivor transfer B → A; retrieve stored objects on the original server | OK |
+| Step                                                                             | Result |
+| -------------------------------------------------------------------------------- | ------ |
+| Upload items and dinos; survivor transfer A → B                                  | OK     |
+| Restart both servers                                                             | OK     |
+| Rejoin the map where the character stayed; items and dinos still at the terminal | OK     |
+| Survivor transfer B → A; retrieve stored objects on the original server          | OK     |
 
 No transfer-data corruption observed. No follow-up defect issues from this run.
 

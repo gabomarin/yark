@@ -3,10 +3,7 @@ import type { ProcessManager } from "@backend/infra/process/process-manager";
 import type { ServerRepository } from "@backend/infra/db/server-repository";
 import type { ServerProfile, StartServerOptions } from "@shared/types";
 
-type AutoStartSkipReason =
-  | "inactive"
-  | "already_running"
-  | "reattach_uncertain";
+type AutoStartSkipReason = "inactive" | "already_running" | "reattach_uncertain";
 
 export type AutoStartResult =
   | { serverId: string; name: string; outcome: "started" }
@@ -40,9 +37,7 @@ export interface RunAutoStartOptions {
   openNativeConsole?: boolean;
 }
 
-function uncertainReattachIds(
-  outcomes: LeaveReattachOutcome[] | undefined,
-): Set<string> {
+function uncertainReattachIds(outcomes: LeaveReattachOutcome[] | undefined): Set<string> {
   const ids = new Set<string>();
   if (outcomes === undefined) {
     return ids;
@@ -62,9 +57,7 @@ function uncertainReattachIds(
  *
  * Concurrency: 1 (documented). Always call `start` so InstanceService guards apply.
  */
-export async function runAutoStartOnLaunch(
-  options: RunAutoStartOptions,
-): Promise<AutoStartResult[]> {
+export async function runAutoStartOnLaunch(options: RunAutoStartOptions): Promise<AutoStartResult[]> {
   const uncertain = uncertainReattachIds(options.reattachOutcomes);
   const results: AutoStartResult[] = [];
 
@@ -96,12 +89,7 @@ async function evaluateAndMaybeStart(
   },
 ): Promise<AutoStartResult> {
   if (!profile.enabled) {
-    return skip(
-      profile,
-      "inactive",
-      `Auto-start skipped for "${profile.name}": profile is Inactive`,
-      ctx.repo,
-    );
+    return skip(profile, "inactive", `Auto-start skipped for "${profile.name}": profile is Inactive`, ctx.repo);
   }
 
   if (ctx.processes.isActive(profile.id)) {
@@ -126,16 +114,10 @@ async function evaluateAndMaybeStart(
     await ctx.start(profile.id, {
       openNativeConsole: ctx.openNativeConsole === true,
     });
-    ctx.repo.addEvent(
-      profile.id,
-      "auto_start_succeeded",
-      "info",
-      `Auto-start launched "${profile.name}"`,
-      {
-        what: "Opt-in auto-start launched this server at application launch.",
-        context: { reason: "started" },
-      },
-    );
+    ctx.repo.addEvent(profile.id, "auto_start_succeeded", "info", `Auto-start launched "${profile.name}"`, {
+      what: "Opt-in auto-start launched this server at application launch.",
+      context: { reason: "started" },
+    });
     return {
       serverId: profile.id,
       name: profile.name,
@@ -143,17 +125,11 @@ async function evaluateAndMaybeStart(
     };
   } catch (error: unknown) {
     const detail = error instanceof Error ? error.message : String(error);
-    ctx.repo.addEvent(
-      profile.id,
-      "auto_start_failed",
-      "error",
-      `Auto-start failed for "${profile.name}": ${detail}`,
-      {
-        what: "Opt-in auto-start could not launch this server.",
-        cause: detail,
-        context: { reason: "start_rejected" },
-      },
-    );
+    ctx.repo.addEvent(profile.id, "auto_start_failed", "error", `Auto-start failed for "${profile.name}": ${detail}`, {
+      what: "Opt-in auto-start could not launch this server.",
+      cause: detail,
+      context: { reason: "start_rejected" },
+    });
     return {
       serverId: profile.id,
       name: profile.name,

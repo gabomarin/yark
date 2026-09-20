@@ -15,9 +15,7 @@ describe("SearchField", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByRole("textbox", { name: "Search servers" })).toHaveValue(
-      "Island",
-    );
+    expect(screen.getByRole("textbox", { name: "Search servers" })).toHaveValue("Island");
     await user.click(screen.getByRole("button", { name: "Clear search" }));
     expect(onChange).toHaveBeenCalledWith("");
   });
@@ -65,12 +63,7 @@ describe("SearchField", () => {
 
     rerender(
       <AppProviders>
-        <SearchField
-          value="raptor"
-          onChange={vi.fn()}
-          label="Discover mods"
-          onSubmit={onSubmit}
-        />
+        <SearchField value="raptor" onChange={vi.fn()} label="Discover mods" onSubmit={onSubmit} />
       </AppProviders>,
     );
     expect(screen.getByRole("button", { name: "Search" })).toBeInTheDocument();

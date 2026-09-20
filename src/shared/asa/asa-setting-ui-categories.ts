@@ -27,9 +27,7 @@ const byId = data.byId as Record<string, AsaUiCategoryId>;
 
 export const ASA_UI_CATEGORIES: readonly AsaUiCategoryDef[] = categories;
 
-const labelById = new Map<AsaUiCategoryId, string>(
-  categories.map((item) => [item.id, item.label]),
-);
+const labelById = new Map<AsaUiCategoryId, string>(categories.map((item) => [item.id, item.label]));
 
 function entryId(file: string, section: string, key: string): string {
   return `${file}\0${section}\0${key}`.toLowerCase();
@@ -40,11 +38,7 @@ export function asaUiCategoryLabel(id: AsaUiCategoryId): string {
 }
 
 /** Lookup in the pre-generated JSON map; null if not in the catalog. */
-export function lookupAsaUiCategory(
-  file: string,
-  section: string,
-  key: string,
-): AsaUiCategoryId | null {
+export function lookupAsaUiCategory(file: string, section: string, key: string): AsaUiCategoryId | null {
   const hit = byId[entryId(file, section, key)];
   return hit ?? null;
 }
@@ -76,11 +70,7 @@ export function isKnownVanillaIniSection(section: string): boolean {
 /**
  * UI category for a setting. Uses the JSON; if missing, light heuristic.
  */
-export function resolveAsaUiCategory(
-  file: string,
-  section: string,
-  key: string,
-): AsaUiCategoryId {
+export function resolveAsaUiCategory(file: string, section: string, key: string): AsaUiCategoryId {
   const fromMap = lookupAsaUiCategory(file, section, key);
   if (fromMap !== null) {
     return fromMap;

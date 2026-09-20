@@ -1,7 +1,4 @@
-type AsaStartupFailureKind =
-  | "mods_not_installed"
-  | "fatal"
-  | "generic";
+type AsaStartupFailureKind = "mods_not_installed" | "fatal" | "generic";
 
 export interface AsaStartupFailure {
   kind: AsaStartupFailureKind;
@@ -40,7 +37,10 @@ export function sanitizeAsaLogExcerpt(text: string, maxChars = 2_000): string {
 function relevantExcerpt(lines: string[], start: number): string {
   const slice = lines.slice(start, Math.min(lines.length, start + 8));
   return sanitizeAsaLogExcerpt(
-    slice.map(stripLogPrefix).filter((line) => line.length > 0).join("\n"),
+    slice
+      .map(stripLogPrefix)
+      .filter((line) => line.length > 0)
+      .join("\n"),
   );
 }
 
@@ -64,16 +64,12 @@ export function diagnoseAsaStartupFailure(logText: string): AsaStartupFailure | 
     .filter((line) => line.length > 0);
   if (lines.length === 0) return null;
 
-  const modsIndex = lines.findIndex((line) =>
-    /ASAMods:\s*Error:\s*Not all mods were installed/i.test(line),
-  );
+  const modsIndex = lines.findIndex((line) => /ASAMods:\s*Error:\s*Not all mods were installed/i.test(line));
   if (modsIndex >= 0) {
     const window = lines.slice(modsIndex, modsIndex + 8).join("\n");
     const missingModIds = collectModIds(window);
     const cosmetics = /Custom Cosmetics/i.test(window);
-    const crossPlatform = /pc-only mods on a cross-platform server/i.test(
-      window,
-    );
+    const crossPlatform = /pc-only mods on a cross-platform server/i.test(window);
     const idList = missingModIds.length > 0 ? missingModIds.join(", ") : "unknown";
     return {
       kind: "mods_not_installed",
@@ -91,9 +87,7 @@ export function diagnoseAsaStartupFailure(logText: string): AsaStartupFailure | 
     };
   }
 
-  const fatalIndex = lines.findIndex((line) =>
-    /(?:^|\s)(?:LogFatal|Fatal error)/i.test(stripLogPrefix(line)),
-  );
+  const fatalIndex = lines.findIndex((line) => /(?:^|\s)(?:LogFatal|Fatal error)/i.test(stripLogPrefix(line)));
   if (fatalIndex >= 0) {
     const excerpt = relevantExcerpt(lines, fatalIndex);
     return {

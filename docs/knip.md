@@ -38,16 +38,16 @@ if win32 `node_modules` are required.
 Configuration lives in [`knip.jsonc`](../knip.jsonc). All listed rules are **errors**
 (no warnings-only drift):
 
-| Rule | Typical failure |
-| --- | --- |
-| `files` | Source file never imported (not an entry) |
-| `exports` / `nsExports` | Named export nothing imports |
-| `types` / `nsTypes` | Exported type never used |
-| `dependencies` / `devDependencies` | Package in `package.json` but unused |
-| `unlisted` | Import without a matching dependency |
-| `unresolved` | Import path Knip cannot resolve |
-| `duplicates` | Same dependency listed twice |
-| `binaries` | Spawned executable not allowlisted |
+| Rule                               | Typical failure                           |
+| ---------------------------------- | ----------------------------------------- |
+| `files`                            | Source file never imported (not an entry) |
+| `exports` / `nsExports`            | Named export nothing imports              |
+| `types` / `nsTypes`                | Exported type never used                  |
+| `dependencies` / `devDependencies` | Package in `package.json` but unused      |
+| `unlisted`                         | Import without a matching dependency      |
+| `unresolved`                       | Import path Knip cannot resolve           |
+| `duplicates`                       | Same dependency listed twice              |
+| `binaries`                         | Spawned executable not allowlisted        |
 
 Knip does **not** flag unused CSS **classes** inside a `.module.css` file — only
 unused CSS **files**. `website/` and `workers/` are separate packages and ignored here.

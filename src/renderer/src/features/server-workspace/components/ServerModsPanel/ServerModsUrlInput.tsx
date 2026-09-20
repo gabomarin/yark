@@ -20,9 +20,7 @@ export function ServerModsUrlInput(props: Props): ReactElement {
   const density = useUiDensity();
   const size = density === "compact" ? "xs" : "sm";
   const progressValue =
-    props.progress !== null && props.progress.total > 0
-      ? (props.progress.completed / props.progress.total) * 100
-      : 0;
+    props.progress !== null && props.progress.total > 0 ? (props.progress.completed / props.progress.total) * 100 : 0;
 
   return (
     <Stack gap="xs">
@@ -50,9 +48,7 @@ export function ServerModsUrlInput(props: Props): ReactElement {
         <Stack gap={4}>
           <Text size="sm" c="dimmed">
             {formatModAddImportProgress(props.progress)}
-            {props.progress.failed > 0
-              ? ` · ${props.progress.failed} failed`
-              : ""}
+            {props.progress.failed > 0 ? ` · ${props.progress.failed} failed` : ""}
           </Text>
           <Progress
             value={progressValue}

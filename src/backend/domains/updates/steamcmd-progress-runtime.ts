@@ -1,10 +1,7 @@
 import { existsSync, statSync } from "node:fs";
 import type { ChildProcess } from "node:child_process";
 import type { SteamCmdConsoleSnapshot } from "../../../shared/types";
-import {
-  parseSteamCmdProgressLine,
-  formatSteamCmdByteProgress,
-} from "../../../shared/server/steamcmd-progress";
+import { parseSteamCmdProgressLine, formatSteamCmdByteProgress } from "../../../shared/server/steamcmd-progress";
 import {
   STEAMCMD_CONSOLE_MAX_LINES,
   STEAMCMD_PROGRESS_CONSOLE_LOG_MIN_DELTA,
@@ -311,11 +308,11 @@ export class SteamCmdProgressRuntime {
     const installDir = this.diskProgressForceInstallDir;
     const steamCmdHome = this.diskProgressSteamCmdHome;
     if (
-      installDir === null
-      || steamCmdHome === null
-      || this.diskProgressInFlight
-      || this.deps.isCancelRequested()
-      || this.deps.isPauseRequested()
+      installDir === null ||
+      steamCmdHome === null ||
+      this.diskProgressInFlight ||
+      this.deps.isCancelRequested() ||
+      this.deps.isPauseRequested()
     ) {
       return;
     }
@@ -327,21 +324,16 @@ export class SteamCmdProgressRuntime {
       if (logChunk.text.length > 0) {
         this.captureOutput(logChunk.text, "console_log");
       }
-      if (
-        shouldPreferOfficialProgressOverDiskEstimate(
-          this.lastOfficialProgressAtMs,
-          Date.now(),
-        )
-      ) {
+      if (shouldPreferOfficialProgressOverDiskEstimate(this.lastOfficialProgressAtMs, Date.now())) {
         return;
       }
 
       const manifest = await readInstallAppManifestProgress(installDir, ASA_APP_ID);
       if (
-        manifest !== null
-        && manifest.bytesDownloaded !== null
-        && manifest.bytesToDownload !== null
-        && manifest.bytesToDownload > 0
+        manifest !== null &&
+        manifest.bytesDownloaded !== null &&
+        manifest.bytesToDownload !== null &&
+        manifest.bytesToDownload > 0
       ) {
         this.progressBytesDownloaded = manifest.bytesDownloaded;
         this.progressBytesTotal = manifest.bytesToDownload;
@@ -359,17 +351,13 @@ export class SteamCmdProgressRuntime {
 
       const bytesOnDisk = await measureInstallDownloadingBytes(installDir);
       if (
-        this.diskProgressForceInstallDir !== installDir
-        || this.deps.isCancelRequested()
-        || this.deps.isPauseRequested()
+        this.diskProgressForceInstallDir !== installDir ||
+        this.deps.isCancelRequested() ||
+        this.deps.isPauseRequested()
       ) {
         return;
       }
-      const estimate = estimateProgressFromDisk(
-        bytesOnDisk,
-        this.progressBytesTotal,
-        this.diskProgressBaselineBytes,
-      );
+      const estimate = estimateProgressFromDisk(bytesOnDisk, this.progressBytesTotal, this.diskProgressBaselineBytes);
       if (estimate.downloaded < 1_000_000 && estimate.deltaBytes < 1_000_000) {
         return;
       }
@@ -465,11 +453,7 @@ export class SteamCmdProgressRuntime {
   }
 
   private freezePausedProgressSnapshot(): void {
-    if (
-      this.progressPercent === null
-      && this.progressBytesDownloaded === null
-      && this.progressBytesTotal === null
-    ) {
+    if (this.progressPercent === null && this.progressBytesDownloaded === null && this.progressBytesTotal === null) {
       return;
     }
     this.pausedProgressSnapshot = this.getProgressSnapshot();

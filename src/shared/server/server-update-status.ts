@@ -36,9 +36,7 @@ export function getServerUpdateState(
   if (localId !== null && officialId !== null) {
     return localId >= officialId ? "current" : "available";
   }
-  return installation.steamBuild === officialSteamBuild
-    ? "current"
-    : "available";
+  return installation.steamBuild === officialSteamBuild ? "current" : "available";
 }
 
 export function isServerUpdateAvailable(

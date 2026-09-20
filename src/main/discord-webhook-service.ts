@@ -38,9 +38,7 @@ export class DiscordWebhookService {
   ) {}
 
   getPreferences(): DiscordWebhookPreferences {
-    return parseDiscordWebhookPreferences(
-      this.settings.get(DISCORD_WEBHOOK_SETTING_KEY),
-    );
+    return parseDiscordWebhookPreferences(this.settings.get(DISCORD_WEBHOOK_SETTING_KEY));
   }
 
   async test(webhookUrl: string, description?: string): Promise<void> {
@@ -52,8 +50,7 @@ export class DiscordWebhookService {
   }
 
   notifyLifecycle(payload: DiscordLifecyclePayload): void {
-    const event: DiscordWebhookEvent =
-      payload.status === "started" ? "serverStarted" : "serverStopped";
+    const event: DiscordWebhookEvent = payload.status === "started" ? "serverStarted" : "serverStopped";
     this.enqueue(
       event,
       payload.serverId,
@@ -108,12 +105,7 @@ export class DiscordWebhookService {
       {
         title,
         description: `**${name}** — ${safeText(payload.message)}`,
-        color:
-          event === "updateCompleted"
-            ? 0x57f287
-            : event === "updateFailed"
-              ? 0xed4245
-              : 0xfee75c,
+        color: event === "updateCompleted" ? 0x57f287 : event === "updateFailed" ? 0xed4245 : 0xfee75c,
       },
       { server: payload.serverName ?? "Server", detail: payload.message },
     );
@@ -152,10 +144,7 @@ export class DiscordWebhookService {
       .catch(() => undefined);
   }
 
-  private async deliver(
-    webhookUrl: string,
-    embed: Record<string, unknown>,
-  ): Promise<void> {
+  private async deliver(webhookUrl: string, embed: Record<string, unknown>): Promise<void> {
     if (!isDiscordWebhookUrl(webhookUrl)) {
       throw new Error("Enter a valid discord.com webhook URL");
     }

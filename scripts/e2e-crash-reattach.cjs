@@ -18,13 +18,7 @@ const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
 const assert = require("node:assert/strict");
 const { spawnSync, execFileSync } = require("node:child_process");
 const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
-const {
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  rmSync,
-  statSync,
-} = require("node:fs");
+const { existsSync, mkdirSync, mkdtempSync, rmSync, statSync } = require("node:fs");
 const { tmpdir } = require("node:os");
 const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
@@ -67,9 +61,7 @@ function queryOsIdentity(pid) {
 }
 
 function forceKillPid(pid, { tree = true } = {}) {
-  const args = tree
-    ? ["/PID", String(pid), "/F", "/T"]
-    : ["/PID", String(pid), "/F"];
+  const args = tree ? ["/PID", String(pid), "/F", "/T"] : ["/PID", String(pid), "/F"];
   spawnSync("taskkill", args, {
     windowsHide: true,
     stdio: "ignore",
@@ -131,9 +123,7 @@ async function waitForElectronExit(userData, timeoutMs = 45_000) {
     }
     await new Promise((resolve) => setTimeout(resolve, 750));
   }
-  throw new Error(
-    `Electron still running for ${userData}: ${listElectronPidsForUserData(userData).join(", ")}`,
-  );
+  throw new Error(`Electron still running for ${userData}: ${listElectronPidsForUserData(userData).join(", ")}`);
 }
 
 /** Kill any process whose ExecutablePath is under rootDir. */
@@ -157,12 +147,7 @@ function resolveHostSteamCmdExe() {
     return path.resolve(override);
   }
   const candidates = [
-    path.join(
-      process.env.APPDATA ?? "",
-      "yark-server-manager",
-      "steamcmd",
-      "steamcmd.exe",
-    ),
+    path.join(process.env.APPDATA ?? "", "yark-server-manager", "steamcmd", "steamcmd.exe"),
     "C:\\steamcmd\\steamcmd.exe",
     "D:\\steamcmd\\steamcmd.exe",
   ];
@@ -203,9 +188,7 @@ async function createServer(app, page, serverName, baseFolder, ports) {
   });
 
   await page.getByRole("textbox", { name: /^Name$/ }).fill(serverName);
-  await page
-    .getByRole("textbox", { name: /^Session name$/ })
-    .fill(`Session ${serverName}`);
+  await page.getByRole("textbox", { name: /^Session name$/ }).fill(`Session ${serverName}`);
   await pickPathField(app, page, "Base folder", baseFolder);
 
   await page.getByLabel("Game port").fill(String(ports.game));
@@ -241,9 +224,7 @@ async function waitForManagedPid(page, timeoutMs = 120000) {
     const result = await page.evaluate(async () => window.api.getStatuses());
     assert.equal(result.ok, true, `getStatuses failed: ${result.error ?? "?"}`);
     const active = (result.data ?? []).find(
-      (row) =>
-        row.pid != null &&
-        (row.status === "starting" || row.status === "running"),
+      (row) => row.pid != null && (row.status === "starting" || row.status === "running"),
     );
     last = result.data;
     if (active) {
@@ -251,9 +232,7 @@ async function waitForManagedPid(page, timeoutMs = 120000) {
     }
     await page.waitForTimeout(500);
   }
-  throw new Error(
-    `Timed out waiting for managed pid; last=${JSON.stringify(last)}`,
-  );
+  throw new Error(`Timed out waiting for managed pid; last=${JSON.stringify(last)}`);
 }
 
 async function waitForSamePidAttached(page, expectedPid, timeoutMs = 120_000) {
@@ -263,9 +242,7 @@ async function waitForSamePidAttached(page, expectedPid, timeoutMs = 120_000) {
     const result = await page.evaluate(async () => window.api.getStatuses());
     assert.equal(result.ok, true, `getStatuses failed: ${result.error ?? "?"}`);
     const match = (result.data ?? []).find(
-      (row) =>
-        row.pid === expectedPid &&
-        (row.status === "starting" || row.status === "running"),
+      (row) => row.pid === expectedPid && (row.status === "starting" || row.status === "running"),
     );
     last = result.data;
     if (match) {
@@ -273,9 +250,7 @@ async function waitForSamePidAttached(page, expectedPid, timeoutMs = 120_000) {
     }
     await page.waitForTimeout(500);
   }
-  throw new Error(
-    `Timed out waiting for reattach pid=${expectedPid}; last=${JSON.stringify(last)}`,
-  );
+  throw new Error(`Timed out waiting for reattach pid=${expectedPid}; last=${JSON.stringify(last)}`);
 }
 
 async function run() {
@@ -287,9 +262,7 @@ async function run() {
   const steamCmdExe = resolveHostSteamCmdExe();
   if (steamCmdExe === null) {
     console.log("E2E_CRASH_REATTACH_SKIP");
-    console.log(
-      "steamcmd.exe not found. Install SteamCMD or set YARK_E2E_STEAMCMD.",
-    );
+    console.log("steamcmd.exe not found. Install SteamCMD or set YARK_E2E_STEAMCMD.");
     return;
   }
   console.log(`E2E_CRASH_STEAMCMD=${steamCmdExe}`);
@@ -305,13 +278,7 @@ async function run() {
 
   const serverName = `CrashE2E-${Date.now()}`;
   const expectedInstallDir = path.join(serversRoot, serverName);
-  const binaryPath = path.join(
-    expectedInstallDir,
-    "ShooterGame",
-    "Binaries",
-    "Win64",
-    "ArkAscendedServer.exe",
-  );
+  const binaryPath = path.join(expectedInstallDir, "ShooterGame", "Binaries", "Win64", "ArkAscendedServer.exe");
   const ports = {
     game: 28000 + Math.floor(Math.random() * 500),
     query: 28500 + Math.floor(Math.random() * 500),
@@ -360,35 +327,20 @@ async function run() {
         );
       }),
     ]);
-    assert.equal(
-      installResult.ok,
-      true,
-      `installServerFiles failed: ${installResult.error ?? "?"}`,
-    );
-    console.log(
-      `E2E_CRASH_INSTALL_OK elapsedSec=${Math.round((Date.now() - installStarted) / 1000)}`,
-    );
-    assert.ok(
-      isRealAsaBinary(binaryPath),
-      `install finished but binary missing/too small: ${binaryPath}`,
-    );
+    assert.equal(installResult.ok, true, `installServerFiles failed: ${installResult.error ?? "?"}`);
+    console.log(`E2E_CRASH_INSTALL_OK elapsedSec=${Math.round((Date.now() - installStarted) / 1000)}`);
+    assert.ok(isRealAsaBinary(binaryPath), `install finished but binary missing/too small: ${binaryPath}`);
 
     // 4) Start with native ASA console window visible, then wait before kill.
     const startResult = await page.evaluate(async (serverId) => {
       return window.api.startServer(serverId, { openNativeConsole: true });
     }, profile.id);
-    assert.equal(
-      startResult.ok,
-      true,
-      `startServer failed: ${startResult.error ?? "?"}`,
-    );
+    assert.equal(startResult.ok, true, `startServer failed: ${startResult.error ?? "?"}`);
 
     const managed = await waitForManagedPid(page);
     managedPid = managed.pid;
     assert.ok(managedPid > 0, "managed pid missing after Start");
-    console.log(
-      `E2E_CRASH_STARTED status=${managed.status} pid=${managedPid}`,
-    );
+    console.log(`E2E_CRASH_STARTED status=${managed.status} pid=${managedPid}`);
 
     const liveBeforeKill = queryOsIdentity(managedPid);
     assert.ok(liveBeforeKill, "OS process missing right after Start");
@@ -397,10 +349,7 @@ async function run() {
     const settleMs = Number(process.env.YARK_E2E_ASA_SETTLE_MS ?? 12000);
     console.log(`E2E_CRASH_WAIT_CONSOLE_MS=${settleMs}`);
     await new Promise((r) => setTimeout(r, settleMs));
-    assert.ok(
-      queryOsIdentity(managedPid),
-      `server pid ${managedPid} exited during console settle wait`,
-    );
+    assert.ok(queryOsIdentity(managedPid), `server pid ${managedPid} exited during console settle wait`);
 
     // 5) Hard-kill UI only (no Playwright app.close — that triggers before-quit
     // Ask/Stop dialog). No /T on the first shot so the detached ASA child can
@@ -416,21 +365,12 @@ async function run() {
     console.log("E2E_CRASH_UI_KILLED");
 
     const liveAfterKill = queryOsIdentity(managedPid);
-    assert.ok(
-      liveAfterKill,
-      `server pid ${managedPid} died with UI — detach/orphan failed`,
-    );
-    assert.equal(
-      liveAfterKill.osCreationTime,
-      liveBeforeKill.osCreationTime,
-      "creation time changed after UI kill",
-    );
+    assert.ok(liveAfterKill, `server pid ${managedPid} died with UI — detach/orphan failed`);
+    assert.equal(liveAfterKill.osCreationTime, liveBeforeKill.osCreationTime, "creation time changed after UI kill");
     console.log(`E2E_CRASH_OS_ALIVE pid=${managedPid}`);
 
     const db = new DatabaseSync(path.join(userData, "yark-server-manager.db"));
-    const row = db
-      .prepare("SELECT value FROM app_settings WHERE key = ?")
-      .get(LEFT_RUNNING_KEY);
+    const row = db.prepare("SELECT value FROM app_settings WHERE key = ?").get(LEFT_RUNNING_KEY);
     db.close();
     assert.ok(row?.value, "leftRunningProcesses checkpoint missing after UI kill");
     const checkpoint = JSON.parse(row.value);
@@ -443,9 +383,7 @@ async function run() {
     const page2 = await waitForOverview(app);
 
     const reattached = await waitForSamePidAttached(page2, managedPid);
-    console.log(
-      `E2E_CRASH_REATTACHED status=${reattached.status} pid=${reattached.pid}`,
-    );
+    console.log(`E2E_CRASH_REATTACHED status=${reattached.status} pid=${reattached.pid}`);
     console.log("E2E_CRASH_REATTACH_OK");
   } finally {
     // Stop the detached ASA process before quit — otherwise app.quit() opens the
@@ -475,9 +413,7 @@ async function run() {
       rmSync(root, { recursive: true, force: true });
       console.log("E2E_CRASH_CLEANUP_OK");
     } catch (error) {
-      console.warn(
-        `E2E_CRASH_CLEANUP_WARN ${error instanceof Error ? error.message : String(error)}`,
-      );
+      console.warn(`E2E_CRASH_CLEANUP_WARN ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 }

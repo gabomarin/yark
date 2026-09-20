@@ -24,25 +24,29 @@ describe("Discord webhook preferences", () => {
   });
 
   it("merges missing event flags with enabled defaults", () => {
-    const value = parseDiscordWebhookPreferences(JSON.stringify({
-      enabled: true,
-      webhookUrl: " https://discord.com/api/webhooks/123/token ",
-      events: { serverCrashed: false },
-    }));
+    const value = parseDiscordWebhookPreferences(
+      JSON.stringify({
+        enabled: true,
+        webhookUrl: " https://discord.com/api/webhooks/123/token ",
+        events: { serverCrashed: false },
+      }),
+    );
     expect(value.webhookUrl).toBe("https://discord.com/api/webhooks/123/token");
     expect(value.events.serverCrashed).toBe(false);
     expect(value.events.serverStarted).toBe(true);
   });
 
   it("parses and sanitizes per-event custom message templates", () => {
-    const value = parseDiscordWebhookPreferences(JSON.stringify({
-      enabled: true,
-      webhookUrl: "",
-      customMessages: {
-        serverStarted: "  {server} is up!  ",
-        serverCrashed: "{unknown} @everyone {server} down",
-      },
-    }));
+    const value = parseDiscordWebhookPreferences(
+      JSON.stringify({
+        enabled: true,
+        webhookUrl: "",
+        customMessages: {
+          serverStarted: "  {server} is up!  ",
+          serverCrashed: "{unknown} @everyone {server} down",
+        },
+      }),
+    );
     expect(value.customMessages.serverStarted).toBe("{server} is up!");
     expect(value.customMessages.serverCrashed).toBe("@\u200beveryone {server} down");
     expect(value.customMessages.serverStopped).toBeUndefined();
@@ -51,9 +55,7 @@ describe("Discord webhook preferences", () => {
 
 describe("Discord message templates", () => {
   it("sanitizes mentions and drops unknown tokens", () => {
-    expect(sanitizeDiscordMessageTemplate("@everyone {server} @here")).toBe(
-      "@\u200beveryone {server} @\u200bhere",
-    );
+    expect(sanitizeDiscordMessageTemplate("@everyone {server} @here")).toBe("@\u200beveryone {server} @\u200bhere");
     expect(sanitizeDiscordMessageTemplate("token {oops} ok")).toBe("token  ok");
     expect(sanitizeDiscordMessageTemplate("{message} {server}")).toBe("{server}");
     expect(sanitizeDiscordMessageTemplate("**bold** *italic* __u__ ~~s~~ `c`")).toBe(
@@ -76,9 +78,7 @@ describe("Discord message templates", () => {
   });
 
   it("drops {detail} when the event context has no detail", () => {
-    expect(renderDiscordMessage("Issue {detail} on {server}", { server: "Island" })).toBe(
-      "Issue on Island",
-    );
+    expect(renderDiscordMessage("Issue {detail} on {server}", { server: "Island" })).toBe("Issue on Island");
     expect(renderDiscordMessage("Failed: {detail}", { server: "Island" })).toBe("Failed:");
   });
 });

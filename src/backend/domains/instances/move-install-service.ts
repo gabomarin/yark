@@ -4,21 +4,10 @@
  */
 
 import { EventEmitter } from "node:events";
-import {
-  access,
-  mkdir,
-  readdir,
-  rename,
-  rm,
-  writeFile,
-} from "node:fs/promises";
+import { access, mkdir, readdir, rename, rm, writeFile } from "node:fs/promises";
 import { type ChildProcess } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
-import {
-  getWindowsPathError,
-  normalizeWindowsPath,
-  selfNestInstallWarning,
-} from "@shared/server/server-install-path";
+import { getWindowsPathError, normalizeWindowsPath, selfNestInstallWarning } from "@shared/server/server-install-path";
 import { isInstallationReady } from "@shared/server/installation-health";
 import type { MoveInstallProgress } from "@shared/types";
 import { readVolumeSpace, volumeRootForPath } from "../backups/backup-disk";
@@ -27,20 +16,11 @@ import type { InstanceLockManager } from "../../orchestration/instance-lock-mana
 import { killChildProcessTreeAsync } from "../../infra/process/kill-win-process-tree";
 import type { ProcessManager } from "../../infra/process/process-manager";
 import type { ServerRepository } from "../../infra/db/server-repository";
-import {
-  installDirKey,
-  isWindowsDriveRoot,
-} from "./install-dir-safety";
+import { installDirKey, isWindowsDriveRoot } from "./install-dir-safety";
 import type { InstanceService } from "./instance-service";
 import { serverBinaryPath } from "./launch-args";
-import {
-  classifyInstallHealthAsync,
-  inspectServerInstallationAsync,
-} from "./server-installation";
-import {
-  isOperationCancelledError,
-  OperationCancelledError,
-} from "../updates/robocopy-tree";
+import { classifyInstallHealthAsync, inspectServerInstallationAsync } from "./server-installation";
+import { isOperationCancelledError, OperationCancelledError } from "../updates/robocopy-tree";
 import { estimateDirectoryBytes as estimateDirectoryBytesSafe } from "../../infra/fs/reparse-points";
 import { MoveInstallCleanup } from "./move-install-cleanup";
 import {
@@ -88,8 +68,12 @@ function pathsOnSameVolume(a: string, b: string): boolean {
 
 /** True when `child` is `parent` or nested under it (Windows, case-insensitive). */
 export function isPathInside(parent: string, child: string): boolean {
-  const p = resolve(parent).replace(/[/\\]+$/, "").toLowerCase();
-  const c = resolve(child).replace(/[/\\]+$/, "").toLowerCase();
+  const p = resolve(parent)
+    .replace(/[/\\]+$/, "")
+    .toLowerCase();
+  const c = resolve(child)
+    .replace(/[/\\]+$/, "")
+    .toLowerCase();
   return c === p || c.startsWith(`${p}\\`);
 }
 
@@ -143,10 +127,7 @@ export class MoveInstallService extends EventEmitter {
     pendingCleanupRegistryPath: string | null = null,
   ) {
     super();
-    this.registry = new MoveInstallRegistry(
-      stagingRegistryPath,
-      pendingCleanupRegistryPath,
-    );
+    this.registry = new MoveInstallRegistry(stagingRegistryPath, pendingCleanupRegistryPath);
     this.cleanup = new MoveInstallCleanup({
       repo,
       processes,
@@ -180,13 +161,9 @@ export class MoveInstallService extends EventEmitter {
    */
   async sweepStaleStaging(): Promise<number> {
     const profiles = this.repo.list();
-    const protectedKeys = new Set(
-      profiles.map((profile) => installDirKey(profile.installDir)),
-    );
+    const protectedKeys = new Set(profiles.map((profile) => installDirKey(profile.installDir)));
     const registered = await this.registry.readStagingRegistry();
-    const parentDirs = new Set(
-      profiles.map((profile) => dirname(resolve(profile.installDir))),
-    );
+    const parentDirs = new Set(profiles.map((profile) => dirname(resolve(profile.installDir))));
     for (const stagingPath of registered) {
       parentDirs.add(dirname(resolve(stagingPath)));
     }
@@ -240,17 +217,12 @@ export class MoveInstallService extends EventEmitter {
       }
     }
 
-    const remaining = registered.filter(
-      (entry) => !removedKeys.has(installDirKey(entry)),
-    );
+    const remaining = registered.filter((entry) => !removedKeys.has(installDirKey(entry)));
     await this.registry.writeStagingRegistry(remaining);
     return removed;
   }
 
-  async moveInstall(
-    serverId: string,
-    destinationDirRaw: string,
-  ): Promise<MoveInstallResult> {
+  async moveInstall(serverId: string, destinationDirRaw: string): Promise<MoveInstallResult> {
     if (this.activeServerId !== null) {
       throw new Error("Another move installation is already running");
     }
@@ -333,11 +305,7 @@ export class MoveInstallService extends EventEmitter {
           },
         );
 
-        const sourceInspect = await inspectServerInstallationAsync(
-          serverId,
-          sourceDir,
-          { bypassCache: true },
-        );
+        const sourceInspect = await inspectServerInstallationAsync(serverId, sourceDir, { bypassCache: true });
         if (!isInstallationReady(sourceInspect)) {
           throw new Error(
             `Source installation is not ready to move (health: ${sourceInspect.health}). ${sourceInspect.guidance}`,
@@ -347,14 +315,9 @@ export class MoveInstallService extends EventEmitter {
         await this.instances.assertInstallDirAvailable(destResolved, serverId);
 
         const destBinary = serverBinaryPath(destResolved);
-        const destHealth = await classifyInstallHealthAsync(
-          destResolved,
-          destBinary,
-        );
+        const destHealth = await classifyInstallHealthAsync(destResolved, destBinary);
         if (destHealth.health !== "missing" && destHealth.health !== "empty") {
-          throw new Error(
-            "Destination is not empty. It must have no files or subfolders.",
-          );
+          throw new Error("Destination is not empty. It must have no files or subfolders.");
         }
 
         const useRename = canUseSameVolumeRename(sourceDir, destResolved);
@@ -364,11 +327,9 @@ export class MoveInstallService extends EventEmitter {
           const needed = Math.ceil(sourceBytes * FREE_SPACE_MARGIN);
           const space = await readVolumeSpace(dirname(destResolved));
           if (space !== null && space.freeBytes < needed) {
-            const freeGb = (space.freeBytes / (1024 ** 3)).toFixed(1);
-            const needGb = (needed / (1024 ** 3)).toFixed(1);
-            throw new Error(
-              `Not enough free space on ${space.volumePath} (need ~${needGb} GB, have ${freeGb} GB).`,
-            );
+            const freeGb = (space.freeBytes / 1024 ** 3).toFixed(1);
+            const needGb = (needed / 1024 ** 3).toFixed(1);
+            throw new Error(`Not enough free space on ${space.volumePath} (need ~${needGb} GB, have ${freeGb} GB).`);
           }
         }
 
@@ -397,9 +358,7 @@ export class MoveInstallService extends EventEmitter {
             await rename(sourceDir, destResolved);
           } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
-            throw new Error(
-              `Could not move the installation on the same drive: ${message}`,
-            );
+            throw new Error(`Could not move the installation on the same drive: ${message}`);
           }
           oldSourceStillPresent = false;
           renamedAwayFromSource = true;
@@ -477,11 +436,7 @@ export class MoveInstallService extends EventEmitter {
           awaitingCleanup: false,
         });
 
-        const verified = await inspectServerInstallationAsync(
-          serverId,
-          verifyPath,
-          { bypassCache: true },
-        );
+        const verified = await inspectServerInstallationAsync(serverId, verifyPath, { bypassCache: true });
         if (!isInstallationReady(verified)) {
           if (useRename && !oldSourceStillPresent) {
             try {
@@ -491,10 +446,7 @@ export class MoveInstallService extends EventEmitter {
               oldSourceStillPresent = true;
               renamedAwayFromSource = false;
             } catch (rollbackError) {
-              const rollbackMessage =
-                rollbackError instanceof Error
-                  ? rollbackError.message
-                  : String(rollbackError);
+              const rollbackMessage = rollbackError instanceof Error ? rollbackError.message : String(rollbackError);
               throw new Error(
                 `Moved installation failed verification (health: ${verified.health}) and could not be moved back: ${rollbackMessage}. ${verified.guidance}`,
               );
@@ -568,8 +520,7 @@ export class MoveInstallService extends EventEmitter {
             });
             oldSourceRemoved = true;
           } catch (cleanupErr) {
-            cleanupError =
-              cleanupErr instanceof Error ? cleanupErr.message : String(cleanupErr);
+            cleanupError = cleanupErr instanceof Error ? cleanupErr.message : String(cleanupErr);
             this.repo.addEvent(
               serverId,
               "install_move_cleanup_failed",
@@ -579,8 +530,7 @@ export class MoveInstallService extends EventEmitter {
                 what: "The profile uses the new path, but the previous folder could not be deleted.",
                 cause: cleanupError,
                 location: sourceDir,
-                suggestion:
-                  "Confirm nothing is using that folder, then retry cleanup from Move installation.",
+                suggestion: "Confirm nothing is using that folder, then retry cleanup from Move installation.",
               },
             );
           }
@@ -601,8 +551,7 @@ export class MoveInstallService extends EventEmitter {
             ...(oldSourceRemoved
               ? {}
               : {
-                  suggestion:
-                    "Retry deleting the previous installation folder when it is no longer in use.",
+                  suggestion: "Retry deleting the previous installation folder when it is no longer in use.",
                 }),
             context: {
               oldSourceDir: sourceDir,
@@ -626,10 +575,7 @@ export class MoveInstallService extends EventEmitter {
           // Only drop a pending leftover if we just removed that same path.
           // A later successful move must not erase an older unbound leftover (#215).
           const pending = await this.registry.getPendingCleanup(serverId);
-          if (
-            pending === null
-            || installDirKey(pending) === installDirKey(sourceDir)
-          ) {
+          if (pending === null || installDirKey(pending) === installDirKey(sourceDir)) {
             await this.registry.clearPendingCleanup(serverId);
           }
         } else {
@@ -640,9 +586,7 @@ export class MoveInstallService extends EventEmitter {
           serverId,
           active: false,
           phase: null,
-          label: oldSourceRemoved
-            ? "Move completed."
-            : "Move completed, but the previous folder could not be deleted.",
+          label: oldSourceRemoved ? "Move completed." : "Move completed, but the previous folder could not be deleted.",
           percent: 100,
           sourceDir,
           stagingDir: null,
@@ -656,20 +600,16 @@ export class MoveInstallService extends EventEmitter {
       });
     } catch (error) {
       const cancelled = isOperationCancelledError(error) || this.cancelRequested;
-      const message =
-        error instanceof Error ? error.message : String(error);
+      const message = error instanceof Error ? error.message : String(error);
 
       // Same-volume rename left the only copy at dest; restore before we claim
       // the profile still uses sourceDir (cancel/fail between rename and commit).
       let renameRollbackFailed = false;
       if (renamedAwayFromSource && !profileCommittedToDest) {
         const current = this.repo.get(serverId);
-        const stillOnSource =
-          current !== null
-          && installDirKey(current.installDir) === installDirKey(sourceDir);
+        const stillOnSource = current !== null && installDirKey(current.installDir) === installDirKey(sourceDir);
         const alreadyOnDestination =
-          current !== null
-          && installDirKey(current.installDir) === installDirKey(destResolved);
+          current !== null && installDirKey(current.installDir) === installDirKey(destResolved);
         if (alreadyOnDestination) {
           // commitInstallDir updates the profile before recording its event. If
           // that event write throws, the move is already committed and dest is
@@ -703,10 +643,9 @@ export class MoveInstallService extends EventEmitter {
         // Leave for sweepStaleStaging (path stays in the registry).
       }
 
-      const authoritativePath =
-        profileCommittedToDest
-          ? destResolved
-          : renameRollbackFailed || renamedAwayFromSource
+      const authoritativePath = profileCommittedToDest
+        ? destResolved
+        : renameRollbackFailed || renamedAwayFromSource
           ? destResolved
           : sourceDir;
       const destinationCommittedMessage = cancelled
@@ -719,25 +658,25 @@ export class MoveInstallService extends EventEmitter {
         profileCommittedToDest
           ? destinationCommittedMessage
           : cancelled
-          ? renameRollbackFailed
-            ? `Move installation cancelled after rename; files may remain at ${destResolved} while the profile still points at ${sourceDir}.`
-            : `Move installation cancelled. Profile still uses ${sourceDir}.`
-          : renameRollbackFailed
-            ? `Move installation failed: ${message}. Files may remain at ${destResolved} while the profile still points at ${sourceDir}.`
-            : `Move installation failed: ${message}. Profile still uses ${sourceDir}.`,
+            ? renameRollbackFailed
+              ? `Move installation cancelled after rename; files may remain at ${destResolved} while the profile still points at ${sourceDir}.`
+              : `Move installation cancelled. Profile still uses ${sourceDir}.`
+            : renameRollbackFailed
+              ? `Move installation failed: ${message}. Files may remain at ${destResolved} while the profile still points at ${sourceDir}.`
+              : `Move installation failed: ${message}. Profile still uses ${sourceDir}.`,
         {
           what: profileCommittedToDest
             ? "Move reached profile commit before finalization failed."
             : cancelled
-            ? "Move installation was cancelled before profile commit."
-            : "Move installation failed before profile commit.",
+              ? "Move installation was cancelled before profile commit."
+              : "Move installation failed before profile commit.",
           cause: cancelled ? "Cancelled by the operator." : message,
           location: authoritativePath,
           suggestion: profileCommittedToDest
             ? "The destination is authoritative. Verify it before retrying Move installation."
             : renameRollbackFailed
-            ? `Move the folder back from ${destResolved} to ${sourceDir} manually, or update the profile after confirming the destination tree is intact.`
-            : "The original install path remains authoritative. Fix the issue and retry Move installation.",
+              ? `Move the folder back from ${destResolved} to ${sourceDir} manually, or update the profile after confirming the destination tree is intact.`
+              : "The original install path remains authoritative. Fix the issue and retry Move installation.",
         },
       );
 
@@ -770,10 +709,7 @@ export class MoveInstallService extends EventEmitter {
     }
   }
 
-  async cleanupOldSource(
-    serverId: string,
-    oldSourceDirRaw: string,
-  ): Promise<void> {
+  async cleanupOldSource(serverId: string, oldSourceDirRaw: string): Promise<void> {
     return this.cleanup.cleanupOldSource(serverId, oldSourceDirRaw);
   }
 

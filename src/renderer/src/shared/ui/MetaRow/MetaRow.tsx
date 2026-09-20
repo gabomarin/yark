@@ -11,13 +11,10 @@ interface Props {
 export function MetaRow(props: Props): ReactElement {
   return (
     <Group justify="space-between" wrap="nowrap" align="flex-start">
-      <Text size="sm" c="dimmed">{props.label}</Text>
-      <Text
-        size={props.mono ? "xs" : "sm"}
-        ta="right"
-        fw={500}
-        ff={props.mono ? "monospace" : undefined}
-      >
+      <Text size="sm" c="dimmed">
+        {props.label}
+      </Text>
+      <Text size={props.mono ? "xs" : "sm"} ta="right" fw={500} ff={props.mono ? "monospace" : undefined}>
         {props.value}
       </Text>
     </Group>

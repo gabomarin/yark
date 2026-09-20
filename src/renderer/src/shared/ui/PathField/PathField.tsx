@@ -71,12 +71,7 @@ export function PathField({
           {busy ? "Opening…" : "Browse"}
         </Button>
         {clearable && (
-          <Button
-            variant="subtle"
-            size={size}
-            onClick={() => onChange("")}
-            disabled={!canClear}
-          >
+          <Button variant="subtle" size={size} onClick={() => onChange("")} disabled={!canClear}>
             Clear
           </Button>
         )}
@@ -85,11 +80,7 @@ export function PathField({
   );
 
   if (inline) {
-    return (
-      <div className={[classes.root, classes.inline, className].filter(Boolean).join(" ")}>
-        {row}
-      </div>
-    );
+    return <div className={[classes.root, classes.inline, className].filter(Boolean).join(" ")}>{row}</div>;
   }
 
   return (

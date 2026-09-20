@@ -13,28 +13,15 @@ export interface PlayerListSnapshot {
   loading: boolean;
 }
 
-function samePlayers(
-  left: OnlinePlayerInfo[],
-  right: OnlinePlayerInfo[],
-): boolean {
+function samePlayers(left: OnlinePlayerInfo[], right: OnlinePlayerInfo[]): boolean {
   return (
-    left.length === right.length
-    && left.every(
-      (player, index) =>
-        player.key === right[index]?.key && player.name === right[index]?.name,
-    )
+    left.length === right.length &&
+    left.every((player, index) => player.key === right[index]?.key && player.name === right[index]?.name)
   );
 }
 
-function samePlayerList(
-  left: PlayerListSnapshot,
-  right: PlayerListSnapshot,
-): boolean {
-  return (
-    left.loading === right.loading
-    && left.error === right.error
-    && samePlayers(left.players, right.players)
-  );
+function samePlayerList(left: PlayerListSnapshot, right: PlayerListSnapshot): boolean {
+  return left.loading === right.loading && left.error === right.error && samePlayers(left.players, right.players);
 }
 
 /** Patch one player-list row without churning the Map when content is unchanged. */
@@ -92,17 +79,14 @@ function sameCrashRecovery(
 ): boolean {
   if (left == null || right == null) return left == null && right == null;
   return (
-    left.attempt === right.attempt
-    && left.maxAttempts === right.maxAttempts
-    && left.restartAt === right.restartAt
-    && left.reason === right.reason
+    left.attempt === right.attempt &&
+    left.maxAttempts === right.maxAttempts &&
+    left.restartAt === right.restartAt &&
+    left.reason === right.reason
   );
 }
 
-function sameMaintenance(
-  left: ServerRuntimeInfo["maintenance"],
-  right: ServerRuntimeInfo["maintenance"],
-): boolean {
+function sameMaintenance(left: ServerRuntimeInfo["maintenance"], right: ServerRuntimeInfo["maintenance"]): boolean {
   if (left == null || right == null) return left == null && right == null;
   if (left.manualRestartWarningsEnabled !== right.manualRestartWarningsEnabled) {
     return false;
@@ -113,25 +97,22 @@ function sameMaintenance(
     return leftCountdown == null && rightCountdown == null;
   }
   return (
-    leftCountdown.kind === rightCountdown.kind
-    && leftCountdown.phase === rightCountdown.phase
-    && leftCountdown.targetAtMs === rightCountdown.targetAtMs
+    leftCountdown.kind === rightCountdown.kind &&
+    leftCountdown.phase === rightCountdown.phase &&
+    leftCountdown.targetAtMs === rightCountdown.targetAtMs
   );
 }
 
-function sameRuntime(
-  left: ServerRuntimeInfo,
-  right: ServerRuntimeInfo,
-): boolean {
+function sameRuntime(left: ServerRuntimeInfo, right: ServerRuntimeInfo): boolean {
   return (
-    left.serverId === right.serverId
-    && left.status === right.status
-    && left.pid === right.pid
-    && left.startedAt === right.startedAt
-    && left.processLive === right.processLive
-    && left.lastError === right.lastError
-    && sameCrashRecovery(left.crashRecovery, right.crashRecovery)
-    && sameMaintenance(left.maintenance, right.maintenance)
+    left.serverId === right.serverId &&
+    left.status === right.status &&
+    left.pid === right.pid &&
+    left.startedAt === right.startedAt &&
+    left.processLive === right.processLive &&
+    left.lastError === right.lastError &&
+    sameCrashRecovery(left.crashRecovery, right.crashRecovery) &&
+    sameMaintenance(left.maintenance, right.maintenance)
   );
 }
 export function reconcileStatusMap(
@@ -139,8 +120,8 @@ export function reconcileStatusMap(
   nextList: ServerRuntimeInfo[],
 ): Map<string, ServerRuntimeInfo> {
   if (
-    previous.size === nextList.length
-    && nextList.every((status) => {
+    previous.size === nextList.length &&
+    nextList.every((status) => {
       const prior = previous.get(status.serverId);
       return prior !== undefined && sameRuntime(prior, status);
     })
@@ -151,10 +132,7 @@ export function reconcileStatusMap(
   const next = new Map<string, ServerRuntimeInfo>();
   for (const status of nextList) {
     const prior = previous.get(status.serverId);
-    next.set(
-      status.serverId,
-      prior !== undefined && sameRuntime(prior, status) ? prior : status,
-    );
+    next.set(status.serverId, prior !== undefined && sameRuntime(prior, status) ? prior : status);
   }
   return next;
 }
@@ -171,21 +149,18 @@ export function upsertRuntimeStatus(
   return next;
 }
 
-function sameInstall(
-  left: ServerInstallationInfo,
-  right: ServerInstallationInfo,
-): boolean {
+function sameInstall(left: ServerInstallationInfo, right: ServerInstallationInfo): boolean {
   return (
-    left.serverId === right.serverId
-    && left.health === right.health
-    && left.installed === right.installed
-    && left.build === right.build
-    && left.steamBuild === right.steamBuild
-    && left.arkVersion === right.arkVersion
-    && left.versionRefreshPending === right.versionRefreshPending
-    && left.version === right.version
-    && left.guidance === right.guidance
-    && left.checkedAt === right.checkedAt
+    left.serverId === right.serverId &&
+    left.health === right.health &&
+    left.installed === right.installed &&
+    left.build === right.build &&
+    left.steamBuild === right.steamBuild &&
+    left.arkVersion === right.arkVersion &&
+    left.versionRefreshPending === right.versionRefreshPending &&
+    left.version === right.version &&
+    left.guidance === right.guidance &&
+    left.checkedAt === right.checkedAt
   );
 }
 
@@ -194,8 +169,8 @@ export function reconcileInstallationMap(
   nextList: ServerInstallationInfo[],
 ): Map<string, ServerInstallationInfo> {
   if (
-    previous.size === nextList.length
-    && nextList.every((row) => {
+    previous.size === nextList.length &&
+    nextList.every((row) => {
       const prior = previous.get(row.serverId);
       return prior !== undefined && sameInstall(prior, row);
     })
@@ -206,56 +181,50 @@ export function reconcileInstallationMap(
   const next = new Map<string, ServerInstallationInfo>();
   for (const row of nextList) {
     const prior = previous.get(row.serverId);
-    next.set(
-      row.serverId,
-      prior !== undefined && sameInstall(prior, row) ? prior : row,
-    );
+    next.set(row.serverId, prior !== undefined && sameInstall(prior, row) ? prior : row);
   }
   return next;
 }
 
-export function reconcileSteamCmdStatus(
-  previous: SteamCmdStatus | null,
-  next: SteamCmdStatus,
-): SteamCmdStatus {
+export function reconcileSteamCmdStatus(previous: SteamCmdStatus | null, next: SteamCmdStatus): SteamCmdStatus {
   if (previous === null) return next;
   // Ignore late install-validation progress built before persist (older checkedAt).
   // A newer poll that clears detection (settings wipe / missing path) still applies.
   if (
-    previous.detected
-    && !next.detected
-    && previous.executablePath != null
-    && next.executablePath == null
-    && next.checkedAt <= previous.checkedAt
+    previous.detected &&
+    !next.detected &&
+    previous.executablePath != null &&
+    next.executablePath == null &&
+    next.checkedAt <= previous.checkedAt
   ) {
     return previous;
   }
   const previousJobs = previous.criticalJobs ?? [];
   const nextJobs = next.criticalJobs ?? [];
   if (
-    previous.detected === next.detected
-    && previous.executablePath === next.executablePath
-    && previous.depotCacheDir === next.depotCacheDir
-    && previous.contentCacheDir === next.contentCacheDir
-    && previous.busy === next.busy
-    && previous.running === next.running
-    && previous.operation === next.operation
-    && previous.serverId === next.serverId
-    && previous.startedAt === next.startedAt
-    && previous.pid === next.pid
-    && previous.progressPercent === next.progressPercent
-    && previous.progressLabel === next.progressLabel
-    && previous.progressBytesDownloaded === next.progressBytesDownloaded
-    && previous.progressBytesTotal === next.progressBytesTotal
-    && previous.lastLine === next.lastLine
-    && previous.queuedCount === next.queuedCount
+    previous.detected === next.detected &&
+    previous.executablePath === next.executablePath &&
+    previous.depotCacheDir === next.depotCacheDir &&
+    previous.contentCacheDir === next.contentCacheDir &&
+    previous.busy === next.busy &&
+    previous.running === next.running &&
+    previous.operation === next.operation &&
+    previous.serverId === next.serverId &&
+    previous.startedAt === next.startedAt &&
+    previous.pid === next.pid &&
+    previous.progressPercent === next.progressPercent &&
+    previous.progressLabel === next.progressLabel &&
+    previous.progressBytesDownloaded === next.progressBytesDownloaded &&
+    previous.progressBytesTotal === next.progressBytesTotal &&
+    previous.lastLine === next.lastLine &&
+    previous.queuedCount === next.queuedCount &&
     // Ignore checkedAt — getSteamCmdStatus() stamps a fresh ISO on every call.
-    && previousJobs.length === nextJobs.length
-    && previousJobs.every(
+    previousJobs.length === nextJobs.length &&
+    previousJobs.every(
       (job, index) =>
-        job.id === nextJobs[index]?.id
-        && job.updatedAt === nextJobs[index]?.updatedAt
-        && job.status === nextJobs[index]?.status,
+        job.id === nextJobs[index]?.id &&
+        job.updatedAt === nextJobs[index]?.updatedAt &&
+        job.status === nextJobs[index]?.status,
     )
   ) {
     return previous;
@@ -269,23 +238,17 @@ export function reconcileSteamCmdConsole(
 ): SteamCmdConsoleSnapshot {
   if (previous === null) return next;
   if (
-    previous.updatedAt === next.updatedAt
-    && previous.lines.length === next.lines.length
-    && previous.lines.every((line, index) => line === next.lines[index])
+    previous.updatedAt === next.updatedAt &&
+    previous.lines.length === next.lines.length &&
+    previous.lines.every((line, index) => line === next.lines[index])
   ) {
     return previous;
   }
   return next;
 }
 
-export function reconcileEvents(
-  previous: AppEvent[],
-  next: AppEvent[],
-): AppEvent[] {
-  if (
-    previous.length === next.length
-    && previous.every((event, index) => event.id === next[index]?.id)
-  ) {
+export function reconcileEvents(previous: AppEvent[], next: AppEvent[]): AppEvent[] {
+  if (previous.length === next.length && previous.every((event, index) => event.id === next[index]?.id)) {
     return previous;
   }
   return next;
@@ -296,11 +259,9 @@ export function reconcileClusterReports<T extends { clusterId: string; checkedAt
   next: T[],
 ): T[] {
   if (
-    previous.length === next.length
-    && previous.every(
-      (report, index) =>
-        report.clusterId === next[index]?.clusterId
-        && report.checkedAt === next[index]?.checkedAt,
+    previous.length === next.length &&
+    previous.every(
+      (report, index) => report.clusterId === next[index]?.clusterId && report.checkedAt === next[index]?.checkedAt,
     )
   ) {
     return previous;

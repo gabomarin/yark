@@ -9,13 +9,7 @@ import { basename, join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
 import { formatBackupFileStamp } from "@shared/backups/backup-file-stamp";
-import type {
-  BackupKind,
-  BackupPolicy,
-  BackupRecord,
-  BackupType,
-  ServerProfile,
-} from "@shared/types";
+import type { BackupKind, BackupPolicy, BackupRecord, BackupType, ServerProfile } from "@shared/types";
 import type { BackupRepository } from "../../infra/db/backup-repository";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { ProcessManager } from "../../infra/process/process-manager";
@@ -33,10 +27,7 @@ function mapTokenFileSlug(mapToken: string): string {
   return trimmed.replace(/[^A-Za-z0-9_]+/g, "-").replace(/^-+|-+$/g, "") || "map";
 }
 
-export function allocateUniqueZipPath(
-  kindDir: string,
-  preferredName: string,
-): string {
+export function allocateUniqueZipPath(kindDir: string, preferredName: string): string {
   const safeName = basename(preferredName);
   const candidate = join(kindDir, safeName);
   if (!existsSync(candidate)) {
@@ -59,10 +50,7 @@ function humanBackupSize(bytes: number): string {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 }
 
-export function resolveServerBackupRoot(
-  installDir: string,
-  backupDir: string | null | undefined,
-): string {
+export function resolveServerBackupRoot(installDir: string, backupDir: string | null | undefined): string {
   if (typeof backupDir === "string" && backupDir.trim().length > 0) {
     return backupDir.trim();
   }
@@ -88,9 +76,7 @@ export class BackupCreatePipeline {
 
   async flushWorldIfActive(serverId: string): Promise<void> {
     if (!this.host.processes.isActive(serverId)) return;
-    const server = this.host.processes.applyRuntimePorts(
-      this.host.mustServer(serverId),
-    );
+    const server = this.host.processes.applyRuntimePorts(this.host.mustServer(serverId));
     try {
       await rconExec(RCON_HOST, server.rconPort, server.adminPassword, "SaveWorld");
     } catch {
@@ -145,15 +131,10 @@ export class BackupCreatePipeline {
     // The full stop batch already includes world; do not queue
     // automatic single-kind work behind it while the app may be waiting to quit.
     if (this.host.preStopBackupServers.has(serverId)) return Promise.resolve(null);
-    return this.withServerBackupJob(serverId, () =>
-      this.createBackup(serverId, type, kind, notes, options),
-    );
+    return this.withServerBackupJob(serverId, () => this.createBackup(serverId, type, kind, notes, options));
   }
 
-  async withServerBackupJob<T>(
-    serverId: string,
-    work: () => Promise<T>,
-  ): Promise<T> {
+  async withServerBackupJob<T>(serverId: string, work: () => Promise<T>): Promise<T> {
     const previous = this.host.backupJobs.get(serverId) ?? Promise.resolve();
     const result = previous.catch(() => undefined).then(work);
     const tail = result.then(
@@ -196,12 +177,8 @@ export class BackupCreatePipeline {
       options?.playerKey !== undefined && options.playerKey.length > 0
         ? `-${slugBackupFilePart(options.playerKey).slice(0, 24)}`
         : "";
-    const mapSlug =
-      kind === "world" && server.map.trim().length > 0
-        ? `-${mapTokenFileSlug(server.map)}`
-        : "";
-    const preferredName =
-      `${slugBackupFilePart(server.name)}-${kind}-${type}${mapSlug}${playerSlug}-${stamp}.zip`;
+    const mapSlug = kind === "world" && server.map.trim().length > 0 ? `-${mapTokenFileSlug(server.map)}` : "";
+    const preferredName = `${slugBackupFilePart(server.name)}-${kind}-${type}${mapSlug}${playerSlug}-${stamp}.zip`;
     await mkdir(kindDir, { recursive: true });
     const zipPath = allocateUniqueZipPath(kindDir, preferredName);
     const stagingDir = join(tmpdir(), `yark-backup-${randomUUID()}`);
@@ -233,11 +210,7 @@ export class BackupCreatePipeline {
 
       // Per-player session archives with no matching profile are not recoverable —
       // drop them so they do not consume retention slots.
-      if (
-        options?.playerKey !== undefined
-        && kind === "players"
-        && packaged.meta.empty === true
-      ) {
+      if (options?.playerKey !== undefined && kind === "players" && packaged.meta.empty === true) {
         await rm(stagingDir, { recursive: true, force: true });
         await rm(zipPath, { force: true }).catch(() => undefined);
         this.host.backups.deleteBackupRecord(record.id);
@@ -289,9 +262,7 @@ export class BackupCreatePipeline {
 
       const lightCompressBinarySaves = kind === "world" || kind === "players";
       options?.onProgressMessage?.(
-        lightCompressBinarySaves
-          ? `Writing ${kind} backup archive…`
-          : `Compressing ${kind} backup archive…`,
+        lightCompressBinarySaves ? `Writing ${kind} backup archive…` : `Compressing ${kind} backup archive…`,
       );
       const sizeBytes = await zipDirectory(stagingDir, zipPath, {
         lightCompressBinarySaves,
@@ -319,8 +290,7 @@ export class BackupCreatePipeline {
       try {
         await this.host.applyRetention(serverId, policy);
       } catch (retentionErr) {
-        const retentionMessage =
-          retentionErr instanceof Error ? retentionErr.message : String(retentionErr);
+        const retentionMessage = retentionErr instanceof Error ? retentionErr.message : String(retentionErr);
         this.host.servers.addEvent(
           serverId,
           "error",

@@ -83,12 +83,7 @@ export default defineConfig(
   },
 
   {
-    files: [
-      "src/main/**/*.ts",
-      "src/backend/**/*.ts",
-      "src/preload/**/*.ts",
-      "src/shared/**/*.ts",
-    ],
+    files: ["src/main/**/*.ts", "src/backend/**/*.ts", "src/preload/**/*.ts", "src/shared/**/*.ts"],
     languageOptions: {
       globals: globals.node,
     },

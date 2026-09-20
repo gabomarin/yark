@@ -38,8 +38,8 @@ async function measureClusters(page) {
     const layout = pageRoot?.querySelector("[class*='layout']") ?? null;
     const detail = document.querySelector("[data-cluster-detail]");
     const empty = pageRoot?.textContent?.includes("No clusters configured") === true;
-    const navClusters = Array.from(document.querySelectorAll("button")).find((el) =>
-      (el.textContent ?? "").trim() === "Clusters",
+    const navClusters = Array.from(document.querySelectorAll("button")).find(
+      (el) => (el.textContent ?? "").trim() === "Clusters",
     );
     const main = document.querySelector(".mantine-AppShell-main") ?? document.querySelector("main");
     const pageRect = pageRoot?.getBoundingClientRect();
@@ -47,8 +47,7 @@ async function measureClusters(page) {
 
     return {
       viewport: { width: window.innerWidth, height: window.innerHeight },
-      hasHorizontalOverflow:
-        Math.max(root.scrollWidth, body.scrollWidth) > root.clientWidth + 1,
+      hasHorizontalOverflow: Math.max(root.scrollWidth, body.scrollWidth) > root.clientWidth + 1,
       pageVisible: pageRoot !== null && (pageRect?.width ?? 0) > 0,
       empty,
       hasDetail: detail !== null,
@@ -111,19 +110,20 @@ async function run() {
     page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
 
     await page.waitForLoadState("domcontentloaded");
-    await page.locator("[data-overview-page], [data-clusters-page]").first().waitFor({
-      timeout: 20000,
-    }).catch(() => undefined);
+    await page
+      .locator("[data-overview-page], [data-clusters-page]")
+      .first()
+      .waitFor({
+        timeout: 20000,
+      })
+      .catch(() => undefined);
 
     await ensureClusterSeed(app, page, outDir);
 
     // Navigation: Servers → Clusters should be one click from sidebar.
     await goNav(page, "Clusters");
     await page.locator("[data-clusters-page]").waitFor({ state: "visible", timeout: 15000 });
-    assert.ok(
-      await page.getByRole("heading", { name: "Clusters" }).first().isVisible(),
-      "Clusters page title visible",
-    );
+    assert.ok(await page.getByRole("heading", { name: "Clusters" }).first().isVisible(), "Clusters page title visible");
 
     for (const size of sizes) {
       await page.setViewportSize({ width: size.width, height: size.height });
@@ -133,11 +133,7 @@ async function run() {
       reports.push({ size: size.name, file, metrics });
       assert.equal(metrics.pageVisible, true, `${size.name}: clusters page visible`);
       assert.equal(metrics.sidebarHasClusters, true, `${size.name}: sidebar Clusters present`);
-      assert.equal(
-        metrics.hasHorizontalOverflow,
-        false,
-        `${size.name}: no horizontal overflow`,
-      );
+      assert.equal(metrics.hasHorizontalOverflow, false, `${size.name}: no horizontal overflow`);
     }
 
     // Interaction: select first cluster card if present.

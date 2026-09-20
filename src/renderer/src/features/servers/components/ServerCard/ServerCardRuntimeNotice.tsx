@@ -28,9 +28,7 @@ export function ServerCardRuntimeNotice({
     <UnstyledButton
       className={classes.runtimeError}
       onClick={onReviewError}
-      aria-label={
-        stopped ? "Review notice – open runtime logs" : "Review error – open runtime logs"
-      }
+      aria-label={stopped ? "Review notice – open runtime logs" : "Review error – open runtime logs"}
     >
       <Text c={stopped ? "attention" : "red"} size="sm" className={classes.runtimeErrorText}>
         {lastError}

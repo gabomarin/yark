@@ -35,9 +35,7 @@ function initialSelectedIds(
   preferredIds: string[] | undefined,
 ): string[] {
   const candidates = listRemoveCandidates(members, statuses);
-  const eligibleIds = candidates
-    .filter((candidate) => candidate.eligible)
-    .map((candidate) => candidate.server.id);
+  const eligibleIds = candidates.filter((candidate) => candidate.eligible).map((candidate) => candidate.server.id);
   const eligible = new Set(eligibleIds);
   const preselected = (preferredIds ?? []).filter((id) => eligible.has(id));
   if (preselected.length > 0) return preselected;
@@ -56,10 +54,7 @@ export function RemoveServersModal(props: Props): ReactElement {
     () => listRemoveCandidates(props.members, props.statuses),
     [props.members, props.statuses],
   );
-  const activeSelectedIds = useMemo(
-    () => pruneSelectedServerIds(selectedIds, candidates),
-    [selectedIds, candidates],
-  );
+  const activeSelectedIds = useMemo(() => pruneSelectedServerIds(selectedIds, candidates), [selectedIds, candidates]);
   const selected = useMemo(
     () => resolveSelectedCandidates(candidates, activeSelectedIds),
     [candidates, activeSelectedIds],
@@ -80,10 +75,7 @@ export function RemoveServersModal(props: Props): ReactElement {
             const failMessage = result.error ?? "Could not remove servers from the cluster";
             const rollbackFailures: string[] = [];
             for (const previous of [...applied].reverse()) {
-              const rollback = await window.api.updateServer(
-                previous.id,
-                serverProfileToInput(previous),
-              );
+              const rollback = await window.api.updateServer(previous.id, serverProfileToInput(previous));
               if (!rollback.ok) rollbackFailures.push(previous.name);
             }
             if (rollbackFailures.length > 0) {
@@ -92,9 +84,7 @@ export function RemoveServersModal(props: Props): ReactElement {
               );
               props.onChanged();
             } else if (applied.length > 0) {
-              setError(
-                `Failed on “${candidate.server.name}”: ${failMessage}. Previous profiles were restored.`,
-              );
+              setError(`Failed on “${candidate.server.name}”: ${failMessage}. Previous profiles were restored.`);
             } else {
               setError(failMessage);
             }
@@ -142,8 +132,8 @@ export function RemoveServersModal(props: Props): ReactElement {
     >
       <Stack gap="md">
         <Text size="sm" c="dimmed">
-          Clears Cluster ID and shared directory on the selected profiles. Transfer files in the
-          shared folder are not deleted.
+          Clears Cluster ID and shared directory on the selected profiles. Transfer files in the shared folder are not
+          deleted.
         </Text>
 
         {error !== null && (
@@ -161,10 +151,7 @@ export function RemoveServersModal(props: Props): ReactElement {
               onClick={() => {
                 if (candidate.eligible) {
                   setSelectedIds((current) =>
-                    toggleSelectedServerId(
-                      pruneSelectedServerIds(current, candidates),
-                      candidate.server.id,
-                    ),
+                    toggleSelectedServerId(pruneSelectedServerIds(current, candidates), candidate.server.id),
                   );
                 }
               }}
@@ -197,8 +184,7 @@ export function RemoveServersModal(props: Props): ReactElement {
 
         {remaining === 0 ? (
           <AppAlert color="attention" variant="light">
-            Removing every server clears this cluster from the list until another profile uses the
-            ID again.
+            Removing every server clears this cluster from the list until another profile uses the ID again.
           </AppAlert>
         ) : remaining === 1 ? (
           <AppAlert color="attention" variant="light">

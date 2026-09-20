@@ -4,10 +4,7 @@ import { installDirKey } from "./install-dir-safety";
 import { sameServerIds } from "./instance-lifecycle";
 import type { ServerInstallationInfo } from "@shared/types";
 
-export function applySessionPortsToProfile(
-  profile: ServerProfile,
-  session: SessionPortSet,
-): ServerProfile {
+export function applySessionPortsToProfile(profile: ServerProfile, session: SessionPortSet): ServerProfile {
   validateSessionPorts(session);
   return {
     ...profile,
@@ -24,21 +21,11 @@ export function validateSessionPorts(ports: SessionPortSet): void {
     ["rconPort", ports.rconPort],
   ];
   for (const [field, value] of entries) {
-    if (
-      !Number.isInteger(value)
-      || value < PORT_MIN
-      || value > PORT_MAX
-    ) {
-      throw new Error(
-        `${field} must be an integer between ${PORT_MIN} and ${PORT_MAX}`,
-      );
+    if (!Number.isInteger(value) || value < PORT_MIN || value > PORT_MAX) {
+      throw new Error(`${field} must be an integer between ${PORT_MIN} and ${PORT_MAX}`);
     }
   }
-  if (
-    ports.gamePort === ports.queryPort
-    || ports.gamePort === ports.rconPort
-    || ports.queryPort === ports.rconPort
-  ) {
+  if (ports.gamePort === ports.queryPort || ports.gamePort === ports.rconPort || ports.queryPort === ports.rconPort) {
     throw new Error("Game, query, and RCON session ports must be distinct");
   }
 }
@@ -61,10 +48,9 @@ export function shouldInspectFleetInstallations(input: {
   serverSetChanged: boolean;
 }): boolean {
   return (
-    input.forceOfficialCheck
-    || input.serversMode === true
-    || (input.serversMode === "when-official-changed"
-      && (input.officialChanged || input.serverSetChanged))
+    input.forceOfficialCheck ||
+    input.serversMode === true ||
+    (input.serversMode === "when-official-changed" && (input.officialChanged || input.serverSetChanged))
   );
 }
 

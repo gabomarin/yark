@@ -19,10 +19,7 @@ function windowsServerConfigDir(installDir: string): string {
  * Copies source `Game.ini` and `GameUserSettings.ini` when present; missing
  * files get YARK defaults. Then syncs clone identity into GameUserSettings.ini.
  */
-export async function seedCloneIniFiles(
-  sourceInstallDir: string,
-  profile: ServerProfile,
-): Promise<void> {
+export async function seedCloneIniFiles(sourceInstallDir: string, profile: ServerProfile): Promise<void> {
   const sourceConfig = windowsServerConfigDir(sourceInstallDir);
   const destConfig = windowsServerConfigDir(profile.installDir);
   await assertDestAndParentNotReparsePoints(profile.installDir, {

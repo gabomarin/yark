@@ -9,11 +9,7 @@ vi.mock("@mantine/modals", () => ({
   },
 }));
 
-import {
-  DANGER_CONFIRM_CANCEL_LABEL,
-  dangerConfirmBody,
-  openDangerConfirmModal,
-} from "./openDangerConfirmModal";
+import { DANGER_CONFIRM_CANCEL_LABEL, dangerConfirmBody, openDangerConfirmModal } from "./openDangerConfirmModal";
 
 describe("openDangerConfirmModal", () => {
   beforeEach(() => {

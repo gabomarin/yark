@@ -20,20 +20,20 @@ RCON tab** and related IPC (#17 / #154 / #153).
 
 ## Module map
 
-| Role | Path |
-| --- | --- |
-| Protocol client + one-shot `rconExec` | `src/backend/infra/rcon/rcon-client.ts` |
-| Persistent sessions / reconnect / send queue | `src/backend/infra/rcon/rcon-session-manager.ts` |
-| BanList path / parse / rewrite | `src/backend/domains/instances/ban-list.ts` |
-| Admin whitelist path / GUS / validate | `src/backend/domains/instances/admin-list.ts` |
-| Orchestration (`execRcon`, kick/ban/unban, auto-connect) | `src/backend/domains/instances/instance-service.ts` |
-| Readiness / stop one-shots (or session executor when wired) | `src/backend/infra/process/process-manager.ts` |
-| Online poll + `ListPlayers` parse | `src/backend/domains/backups/player-session-watcher.ts`, `src/backend/domains/instances/list-players.ts` |
-| App-level history + player cache | `src/renderer/src/App.tsx` |
-| Console UI | `…/RconPanel/RconPanel.tsx`, `RconConsoleHistory.tsx` |
-| Survivors / bans / admins UI | `PlayerListSection.tsx` (Survivors \| Admins tabs), `BannedPlayersSection.tsx`, `AdminsSection.tsx` |
-| Header status + retry | `…/RconStatusIcon/RconStatusIcon.tsx` |
-| IPC | `src/shared/ipc.ts`, `src/preload/index.ts`, `src/main/ipc-handlers.ts` |
+| Role                                                        | Path                                                                                                     |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Protocol client + one-shot `rconExec`                       | `src/backend/infra/rcon/rcon-client.ts`                                                                  |
+| Persistent sessions / reconnect / send queue                | `src/backend/infra/rcon/rcon-session-manager.ts`                                                         |
+| BanList path / parse / rewrite                              | `src/backend/domains/instances/ban-list.ts`                                                              |
+| Admin whitelist path / GUS / validate                       | `src/backend/domains/instances/admin-list.ts`                                                            |
+| Orchestration (`execRcon`, kick/ban/unban, auto-connect)    | `src/backend/domains/instances/instance-service.ts`                                                      |
+| Readiness / stop one-shots (or session executor when wired) | `src/backend/infra/process/process-manager.ts`                                                           |
+| Online poll + `ListPlayers` parse                           | `src/backend/domains/backups/player-session-watcher.ts`, `src/backend/domains/instances/list-players.ts` |
+| App-level history + player cache                            | `src/renderer/src/App.tsx`                                                                               |
+| Console UI                                                  | `…/RconPanel/RconPanel.tsx`, `RconConsoleHistory.tsx`                                                    |
+| Survivors / bans / admins UI                                | `PlayerListSection.tsx` (Survivors \| Admins tabs), `BannedPlayersSection.tsx`, `AdminsSection.tsx`      |
+| Header status + retry                                       | `…/RconStatusIcon/RconStatusIcon.tsx`                                                                    |
+| IPC                                                         | `src/shared/ipc.ts`, `src/preload/index.ts`, `src/main/ipc-handlers.ts`                                  |
 
 Host is always `127.0.0.1`. Auth uses the profile `adminPassword` and the
 **runtime** RCON port (`applyRuntimePorts` / session ports).
@@ -72,21 +72,21 @@ Host is always `127.0.0.1`. Auth uses the profile `adminPassword` and the
 
 ### Readiness vs UI session
 
-| Path | Mechanism |
-| --- | --- |
-| Readiness while `starting` | Quiet **one-shot** `rconExec(..., "ListPlayers")` — not the session manager |
-| Workspace console / Kick / Ban | Persistent session after promotion to `running` |
-| Stop / player watcher (after main wiring) | Prefer `instances.execRcon(..., { recordEvent: false })` |
+| Path                                      | Mechanism                                                                   |
+| ----------------------------------------- | --------------------------------------------------------------------------- |
+| Readiness while `starting`                | Quiet **one-shot** `rconExec(..., "ListPlayers")` — not the session manager |
+| Workspace console / Kick / Ban            | Persistent session after promotion to `running`                             |
+| Stop / player watcher (after main wiring) | Prefer `instances.execRcon(..., { recordEvent: false })`                    |
 
 ### Persistence across UI navigation
 
-| Concern | Lives where | Survives workspace tab switch? |
-| --- | --- | --- |
-| TCP session | Main `RconSessionManager` | Yes (tied to process status) |
-| Console history | `App.tsx` `rconHistoryByServer` (cap **100**) | Yes (in-memory; cleared on app restart) |
-| Online survivors | App cache + watcher push | Yes; refresh on RCON tab focus |
-| Banned list | Loaded in `BannedPlayersSection` | Reloads on mount / Refresh |
-| Admin whitelist | Loaded in `AdminsSection` | Reloads on mount / Refresh |
+| Concern          | Lives where                                   | Survives workspace tab switch?          |
+| ---------------- | --------------------------------------------- | --------------------------------------- |
+| TCP session      | Main `RconSessionManager`                     | Yes (tied to process status)            |
+| Console history  | `App.tsx` `rconHistoryByServer` (cap **100**) | Yes (in-memory; cleared on app restart) |
+| Online survivors | App cache + watcher push                      | Yes; refresh on RCON tab focus          |
+| Banned list      | Loaded in `BannedPlayersSection`              | Reloads on mount / Refresh              |
+| Admin whitelist  | Loaded in `AdminsSection`                     | Reloads on mount / Refresh              |
 
 ## Features
 
@@ -113,30 +113,30 @@ Host is always `127.0.0.1`. Auth uses the profile `adminPassword` and the
 
 ### Ban list
 
-| Item | Detail |
-| --- | --- |
-| Primary path | `{installDir}/ShooterGame/Binaries/Win64/BanList.txt` |
-| Alternate candidates (not merged) | `ShooterGame/Saved/BanList.txt`, `{installDir}/BanList.txt` |
-| Line format | Often `eosId,playerName,0`; RCON uses **id only** |
-| Unban RCON | `Unban <id>` (**not** `UnbanPlayer`) when `running` / `stopping` |
-| Disk | Rewrite primary Win64 file after unban; preserve comments / metadata |
-| BanListURL | If set in GUS (and not blank/N/A) → warning that remote list may still block |
-| Open file | `ensureBanListFile` then `shell.openPath` |
+| Item                              | Detail                                                                       |
+| --------------------------------- | ---------------------------------------------------------------------------- |
+| Primary path                      | `{installDir}/ShooterGame/Binaries/Win64/BanList.txt`                        |
+| Alternate candidates (not merged) | `ShooterGame/Saved/BanList.txt`, `{installDir}/BanList.txt`                  |
+| Line format                       | Often `eosId,playerName,0`; RCON uses **id only**                            |
+| Unban RCON                        | `Unban <id>` (**not** `UnbanPlayer`) when `running` / `stopping`             |
+| Disk                              | Rewrite primary Win64 file after unban; preserve comments / metadata         |
+| BanListURL                        | If set in GUS (and not blank/N/A) → warning that remote list may still block |
+| Open file                         | `ensureBanListFile` then `shell.openPath`                                    |
 
 ### Administrator whitelist (#153)
 
 Wiki: `ShooterGame/Saved/AllowedCheaterAccountIDs.txt` (one EOS / Ark id per
 line). Not BanList format. Not exclusive-join player whitelist.
 
-| Item | Detail |
-| --- | --- |
-| Product UI (now) | **Remote http(s) AdminListURL only** — URL field, Validate, `UpdateAllowedCheatersInterval`, Current ids |
-| Local / loopback | Experimental, default-off **Hosted Resources** loopback host now exists ([docs/hosted-resources.md](hosted-resources.md), [#564](https://github.com/gabomarin/yark/issues/564)). Paste its `http://127.0.0.1:<port>/r/<token>` URL into `AdminListURL`; YARK classifies it as **loopback** mode, keeps the URL verbatim, and fetches it for `Current ids` like a remote list. AdminList-from-star wiring is still a follow-up; sanitize / mirror / `file:///` helpers remain |
-| Interval | Default **600**; values **&lt; 3** → **3** |
-| Restart vs poll | Changing URL → **restart** dedicated once; then re-fetches on interval |
-| While starting / running | Admins tab is **read-only**; stop the dedicated to change settings |
-| Names | YARK sidecar when Online matches EOS id (ASA stores ids only) |
-| Not in SQLite | Whitelist is the remote URL + INI; names sidecar is app-only |
+| Item                     | Detail                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Product UI (now)         | **Remote http(s) AdminListURL only** — URL field, Validate, `UpdateAllowedCheatersInterval`, Current ids                                                                                                                                                                                                                                                                                                                                                                     |
+| Local / loopback         | Experimental, default-off **Hosted Resources** loopback host now exists ([docs/hosted-resources.md](hosted-resources.md), [#564](https://github.com/gabomarin/yark/issues/564)). Paste its `http://127.0.0.1:<port>/r/<token>` URL into `AdminListURL`; YARK classifies it as **loopback** mode, keeps the URL verbatim, and fetches it for `Current ids` like a remote list. AdminList-from-star wiring is still a follow-up; sanitize / mirror / `file:///` helpers remain |
+| Interval                 | Default **600**; values **&lt; 3** → **3**                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Restart vs poll          | Changing URL → **restart** dedicated once; then re-fetches on interval                                                                                                                                                                                                                                                                                                                                                                                                       |
+| While starting / running | Admins tab is **read-only**; stop the dedicated to change settings                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Names                    | YARK sidecar when Online matches EOS id (ASA stores ids only)                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Not in SQLite            | Whitelist is the remote URL + INI; names sidecar is app-only                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 Do **not** leave `AdminListURL` blank/`N/A` and expect the Saved file alone to
 grant admin – ASA commonly ignores that (community Procmon traces show current ASA
@@ -155,27 +155,27 @@ loopback / link-local / private ranges (SSRF) before shipping that path.
 
 ## IPC and push events
 
-| Channel | API | Role |
-| --- | --- | --- |
-| `rcon:command` | `sendRconCommand` | Audited console / SidePanel send |
-| `rcon:retry-connection` | `retryRconConnection` | Disconnect + connect; requires `running` |
-| `rcon:get-status` / `rcon:get-all-status` | status queries | Header badge |
-| `rcon:tab-focus-changed` | `notifyRconTabFocus` | Focus → refresh online list |
-| `rcon:refresh-player-list` | `refreshPlayerList` | Manual refresh |
-| `rcon:kick-player` / `rcon:ban-player` | Kick / Ban + refresh | Survivors section |
-| `rcon:list-banned-players` | `listBannedPlayers` | Disk → `{ key, name }` |
-| `rcon:unban-player` | `unbanPlayer` | RCON + disk; may return BanListURL warning |
-| `rcon:open-ban-list-file` | `openBanListFile` | Open primary BanList.txt |
-| `admin-list:get` | `getAdminList` | Mode, URL, interval, id list |
-| `admin-list:set-config` | `setAdminList` | Write GUS URL + interval |
-| `admin-list:validate-url` | `validateAdminListUrl` | Fetch + count without Apply |
-| `admin-list:learn-names` | `learnAdminListNames` | Persist Online display-name hints |
+| Channel                                   | API                    | Role                                       |
+| ----------------------------------------- | ---------------------- | ------------------------------------------ |
+| `rcon:command`                            | `sendRconCommand`      | Audited console / SidePanel send           |
+| `rcon:retry-connection`                   | `retryRconConnection`  | Disconnect + connect; requires `running`   |
+| `rcon:get-status` / `rcon:get-all-status` | status queries         | Header badge                               |
+| `rcon:tab-focus-changed`                  | `notifyRconTabFocus`   | Focus → refresh online list                |
+| `rcon:refresh-player-list`                | `refreshPlayerList`    | Manual refresh                             |
+| `rcon:kick-player` / `rcon:ban-player`    | Kick / Ban + refresh   | Survivors section                          |
+| `rcon:list-banned-players`                | `listBannedPlayers`    | Disk → `{ key, name }`                     |
+| `rcon:unban-player`                       | `unbanPlayer`          | RCON + disk; may return BanListURL warning |
+| `rcon:open-ban-list-file`                 | `openBanListFile`      | Open primary BanList.txt                   |
+| `admin-list:get`                          | `getAdminList`         | Mode, URL, interval, id list               |
+| `admin-list:set-config`                   | `setAdminList`         | Write GUS URL + interval                   |
+| `admin-list:validate-url`                 | `validateAdminListUrl` | Fetch + count without Apply                |
+| `admin-list:learn-names`                  | `learnAdminListNames`  | Persist Online display-name hints          |
 
 Push:
 
-| Channel | Payload |
-| --- | --- |
-| `push:rcon-status-changed` | `{ serverId, status, lastError }` |
+| Channel                    | Payload                                   |
+| -------------------------- | ----------------------------------------- |
+| `push:rcon-status-changed` | `{ serverId, status, lastError }`         |
 | `push:player-list-updated` | `{ serverId, players, timestamp, error }` |
 
 Statuses: `disconnected` \| `connecting` \| `connected` \| `error`.
@@ -199,15 +199,15 @@ Statuses: `disconnected` \| `connecting` \| `connected` \| `error`.
 
 ## Tests and e2e
 
-| Artifact | Focus |
-| --- | --- |
-| `tests/unit/rcon-session-manager.test.ts` | ACK normalize, queue, reconnect, generation supersede |
-| `tests/unit/instance-rcon.test.ts` | Auto-connect, retry gate, Kick/Ban/Unban, audit vs silent |
-| `tests/unit/ban-list.test.ts` | Paths, parse, remove preserves metadata, BanListURL helpers |
-| `tests/unit/admin-list.test.ts` | Wiki path, mode, interval clamp, ensure clears legacy, set-config |
-| `…/ServerWorkspacePage.test.tsx` | RCON tab, history, SidePanel Save/ServerChat |
-| `…/RconStatusIcon.test.tsx` | Status badge / retry |
-| `npm run e2e:rcon` (`scripts/e2e-rcon.cjs`) | Windows UI + mock RCON; HD/FHD/QHD shots |
+| Artifact                                    | Focus                                                             |
+| ------------------------------------------- | ----------------------------------------------------------------- |
+| `tests/unit/rcon-session-manager.test.ts`   | ACK normalize, queue, reconnect, generation supersede             |
+| `tests/unit/instance-rcon.test.ts`          | Auto-connect, retry gate, Kick/Ban/Unban, audit vs silent         |
+| `tests/unit/ban-list.test.ts`               | Paths, parse, remove preserves metadata, BanListURL helpers       |
+| `tests/unit/admin-list.test.ts`             | Wiki path, mode, interval clamp, ensure clears legacy, set-config |
+| `…/ServerWorkspacePage.test.tsx`            | RCON tab, history, SidePanel Save/ServerChat                      |
+| `…/RconStatusIcon.test.tsx`                 | Status badge / retry                                              |
+| `npm run e2e:rcon` (`scripts/e2e-rcon.cjs`) | Windows UI + mock RCON; HD/FHD/QHD shots                          |
 
 Player-session backups that consume the same `ListPlayers` stream:
 [backups.md](backups.md).

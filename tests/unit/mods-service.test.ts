@@ -1,9 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MOCK_MOD_CATALOG } from "@backend/domains/mods/mock-mod-catalog";
-import {
-  ModsService,
-  normalizeModId,
-} from "@backend/domains/mods/mods-service";
+import { ModsService, normalizeModId } from "@backend/domains/mods/mods-service";
 import {
   METADATA_SERVICE_NOT_CONFIGURED_MESSAGE,
   normalizeCurseforgeProxyUrl,
@@ -18,8 +15,7 @@ const awesome: ModMetadata = {
   authors: ["ChrisMods"],
   downloadCount: 1,
   dateModified: "2026-03-15T12:00:00.000Z",
-  curseforgeUrl:
-    "https://www.curseforge.com/ark-survival-ascended/mods/awesomespyglass",
+  curseforgeUrl: "https://www.curseforge.com/ark-survival-ascended/mods/awesomespyglass",
   slug: "awesomespyglass",
   categories: ["Visuals"],
 };
@@ -40,9 +36,9 @@ function profileInput(mods: string[]): ServerProfileInput {
     clusterDir: null,
     extraArgs: [],
     mods,
-    
+
     autoStart: false,
-    
+
     useAsaApi: false,
     useAsaApiLoader: false,
   };
@@ -54,25 +50,17 @@ afterEach(() => {
 
 describe("normalizeCurseforgeProxyUrl", () => {
   it("normalizes https URLs and strips trailing slashes", () => {
-    expect(normalizeCurseforgeProxyUrl("https://proxy.example/")).toBe(
-      "https://proxy.example",
-    );
+    expect(normalizeCurseforgeProxyUrl("https://proxy.example/")).toBe("https://proxy.example");
   });
 
   it("allows loopback http only", () => {
-    expect(normalizeCurseforgeProxyUrl("http://127.0.0.1:8787")).toBe(
-      "http://127.0.0.1:8787",
-    );
+    expect(normalizeCurseforgeProxyUrl("http://127.0.0.1:8787")).toBe("http://127.0.0.1:8787");
     expect(() => normalizeCurseforgeProxyUrl("http://example.com")).toThrow(/loopback/);
   });
 
   it("rejects credentials and query strings", () => {
-    expect(() =>
-      normalizeCurseforgeProxyUrl("https://user:pass@proxy.example"),
-    ).toThrow(/credentials/);
-    expect(() => normalizeCurseforgeProxyUrl("https://proxy.example?x=1")).toThrow(
-      /query/,
-    );
+    expect(() => normalizeCurseforgeProxyUrl("https://user:pass@proxy.example")).toThrow(/credentials/);
+    expect(() => normalizeCurseforgeProxyUrl("https://proxy.example?x=1")).toThrow(/query/);
   });
 });
 
@@ -121,24 +109,18 @@ describe("ModsService (mock catalog)", () => {
     });
     expect(page.pagination.totalCount).toBe(5);
     expect(page.items).toHaveLength(2);
-    expect(page.items[0]?.downloadCount).toBeGreaterThanOrEqual(
-      page.items[1]?.downloadCount ?? 0,
-    );
+    expect(page.items[0]?.downloadCount).toBeGreaterThanOrEqual(page.items[1]?.downloadCount ?? 0);
 
     const structures = await service.search("", {
       categoryId: 900_101,
       pageSize: 20,
     });
-    expect(structures.items.every((item) =>
-      (item.categories ?? []).includes("Structures"),
-    )).toBe(true);
+    expect(structures.items.every((item) => (item.categories ?? []).includes("Structures"))).toBe(true);
   });
 
   it("lists mock ASA categories (#297)", async () => {
     const categories = await service.listCategories();
-    expect(categories.some((entry) => entry.isClass && entry.name === "Mods")).toBe(
-      true,
-    );
+    expect(categories.some((entry) => entry.isClass && entry.name === "Mods")).toBe(true);
   });
 
   it("resolves a known catalog slug", async () => {
@@ -165,9 +147,7 @@ describe("ModsService proxy URL precedence (#151)", () => {
 
   it("fails closed when no endpoint is configured", async () => {
     const service = new ModsService({ buildDefaultUrl: "" });
-    await expect(service.getMod("947033")).rejects.toThrow(
-      METADATA_SERVICE_NOT_CONFIGURED_MESSAGE,
-    );
+    await expect(service.getMod("947033")).rejects.toThrow(METADATA_SERVICE_NOT_CONFIGURED_MESSAGE);
   });
 
   it("rejects a malformed env URL instead of falling through to build", () => {
@@ -181,15 +161,16 @@ describe("ModsService proxy URL precedence (#151)", () => {
 
 describe("ModsService (Worker client)", () => {
   it("maps a successful Worker envelope", async () => {
-    const fetchImpl = vi.fn(async () =>
-      ({
-        ok: true,
-        status: 200,
-        json: async () => ({
+    const fetchImpl = vi.fn(
+      async () =>
+        ({
           ok: true,
-          data: awesome,
-        }),
-      }) as Response,
+          status: 200,
+          json: async () => ({
+            ok: true,
+            data: awesome,
+          }),
+        }) as Response,
     );
     const service = new ModsService({
       buildDefaultUrl: "",
@@ -224,18 +205,19 @@ describe("ModsService (Worker client)", () => {
   });
 
   it("returns resolved batch items even when some IDs are skipped", async () => {
-    const fetchImpl = vi.fn(async () =>
-      ({
-        ok: true,
-        status: 200,
-        json: async () => ({
+    const fetchImpl = vi.fn(
+      async () =>
+        ({
           ok: true,
-          data: {
-            items: [awesome],
-            skipped: [{ id: "1", reason: "not_asa_mod" }],
-          },
-        }),
-      }) as Response,
+          status: 200,
+          json: async () => ({
+            ok: true,
+            data: {
+              items: [awesome],
+              skipped: [{ id: "1", reason: "not_asa_mod" }],
+            },
+          }),
+        }) as Response,
     );
     const service = new ModsService({
       buildDefaultUrl: "",
@@ -253,18 +235,19 @@ describe("ModsService (Worker client)", () => {
   });
 
   it("keys batch results by stringified Worker ids", async () => {
-    const fetchImpl = vi.fn(async () =>
-      ({
-        ok: true,
-        status: 200,
-        json: async () => ({
+    const fetchImpl = vi.fn(
+      async () =>
+        ({
           ok: true,
-          data: {
-            items: [{ ...awesome, id: 947033 as unknown as string }],
-            skipped: [],
-          },
-        }),
-      }) as Response,
+          status: 200,
+          json: async () => ({
+            ok: true,
+            data: {
+              items: [{ ...awesome, id: 947033 as unknown as string }],
+              skipped: [],
+            },
+          }),
+        }) as Response,
     );
     const service = new ModsService({
       buildDefaultUrl: "",
@@ -279,18 +262,19 @@ describe("ModsService (Worker client)", () => {
 
 describe("ModsService.enrichNewServerMods", () => {
   it("Worker-verifies new IDs and ignores untrusted client cache", async () => {
-    const fetchImpl = vi.fn(async () =>
-      ({
-        ok: true,
-        status: 200,
-        json: async () => ({
+    const fetchImpl = vi.fn(
+      async () =>
+        ({
           ok: true,
-          data: {
-            items: [awesome],
-            skipped: [],
-          },
-        }),
-      }) as Response,
+          status: 200,
+          json: async () => ({
+            ok: true,
+            data: {
+              items: [awesome],
+              skipped: [],
+            },
+          }),
+        }) as Response,
     );
     const service = new ModsService({
       buildDefaultUrl: "",
@@ -300,8 +284,7 @@ describe("ModsService.enrichNewServerMods", () => {
     const forged: ModMetadata = {
       ...awesome,
       name: "Forged",
-      curseforgeUrl:
-        "https://www.curseforge.com/ark-survival-ascended/mods/awesomespyglass",
+      curseforgeUrl: "https://www.curseforge.com/ark-survival-ascended/mods/awesomespyglass",
     };
     const result = await service.enrichNewServerMods(
       {
@@ -328,9 +311,9 @@ describe("ModsService.enrichNewServerMods", () => {
           }),
         }) as Response) as typeof fetch,
     });
-    await expect(
-      service.enrichNewServerMods(profileInput(["1"]), { mods: [] }),
-    ).rejects.toThrow(/metadata could not be resolved/);
+    await expect(service.enrichNewServerMods(profileInput(["1"]), { mods: [] })).rejects.toThrow(
+      /metadata could not be resolved/,
+    );
   });
 
   it("preserves IDs already stored on the profile without re-fetch", async () => {
@@ -349,4 +332,3 @@ describe("ModsService.enrichNewServerMods", () => {
     expect(result.modMetadataCache?.["947033"]).toEqual(awesome);
   });
 });
-

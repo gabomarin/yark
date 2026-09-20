@@ -70,8 +70,7 @@ interface LastWipeMemory {
   ok: boolean;
 }
 
-const MANUAL_RESTART_CANCELED_CHAT =
-  "Server restart canceled. The server will remain online.";
+const MANUAL_RESTART_CANCELED_CHAT = "Server restart canceled. The server will remain online.";
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => {
@@ -134,21 +133,14 @@ export class MaintenanceRestartRuntime {
   }
 
   /** Warning config that owns a window: manual restart uses its own job. */
-  private warningsForSource(
-    policy: MaintenancePolicy,
-    source: ActiveCountdown["source"],
-  ): MaintenanceJobWarnings {
-    return source === "manual"
-      ? normalizeManualRestartWarnings(policy.manualRestartWarnings)
-      : policy.restartWarnings;
+  private warningsForSource(policy: MaintenancePolicy, source: ActiveCountdown["source"]): MaintenanceJobWarnings {
+    return source === "manual" ? normalizeManualRestartWarnings(policy.manualRestartWarnings) : policy.restartWarnings;
   }
 
   private presetTableForSource(
     source: ActiveCountdown["source"],
   ): Record<"quiet" | "standard" | "strict", readonly string[]> {
-    return source === "manual"
-      ? MAINTENANCE_MANUAL_RESTART_PRESET_OFFSETS
-      : MAINTENANCE_RESTART_PRESET_OFFSETS;
+    return source === "manual" ? MAINTENANCE_MANUAL_RESTART_PRESET_OFFSETS : MAINTENANCE_RESTART_PRESET_OFFSETS;
   }
 
   isSchedulePaused(serverId: string): boolean {
@@ -178,11 +170,7 @@ export class MaintenanceRestartRuntime {
     const paused = this.pausedServerIds.has(policy.serverId);
     let nextRestartAt: string | null = null;
     if (policy.restartEnabled && active === undefined && !paused) {
-      const next = nextLocalRestartAt(
-        policy.restartDaysOfWeek,
-        policy.restartTimeLocal,
-        now,
-      );
+      const next = nextLocalRestartAt(policy.restartDaysOfWeek, policy.restartTimeLocal, now);
       if (next !== null) nextRestartAt = next.toISOString();
     } else if (active !== undefined) {
       nextRestartAt = new Date(active.targetAtMs).toISOString();
@@ -193,19 +181,13 @@ export class MaintenanceRestartRuntime {
       schedulePaused: this.pausedServerIds.has(policy.serverId),
       nextRestartAt,
       countdownRemainingMs:
-        active !== undefined
-        && (active.phase === "warning" || active.phase === "last_minute")
+        active !== undefined && (active.phase === "warning" || active.phase === "last_minute")
           ? Math.max(0, active.targetAtMs - now)
           : active !== undefined
             ? 0
             : null,
       countdownPhase: active?.phase ?? "idle",
-      countdownKind:
-        active !== undefined
-          ? active.source === "manual"
-            ? "manual"
-            : "restart"
-          : null,
+      countdownKind: active !== undefined ? (active.source === "manual" ? "manual" : "restart") : null,
       lastRestartAt: last?.atIso ?? null,
       lastRestartOk: last?.ok ?? null,
       lastUpdateAt: null,
@@ -214,9 +196,9 @@ export class MaintenanceRestartRuntime {
       lastWipeAt: wipe?.atIso ?? null,
       lastWipeOk: wipe?.ok ?? null,
       cancelable:
-        active !== undefined
-        && (active.phase === "warning" || active.phase === "last_minute")
-        && !active.cancelRequested,
+        active !== undefined &&
+        (active.phase === "warning" || active.phase === "last_minute") &&
+        !active.cancelRequested,
     };
   }
 
@@ -225,9 +207,7 @@ export class MaintenanceRestartRuntime {
     const policy = this.repo.getPolicy(info.serverId);
     const status = this.enrichStatus(policy);
     const countdownKind =
-      status.countdownKind === "restart" || status.countdownKind === "manual"
-        ? status.countdownKind
-        : null;
+      status.countdownKind === "restart" || status.countdownKind === "manual" ? status.countdownKind : null;
     const maintenance: ServerMaintenanceRuntime = {
       manualRestartWarningsEnabled: policy.manualRestartWarningsEnabled,
       countdown:
@@ -248,10 +228,7 @@ export class MaintenanceRestartRuntime {
       try {
         await this.considerSchedule(policy);
       } catch (error) {
-        console.error(
-          `Maintenance schedule tick failed for ${policy.serverId}`,
-          error,
-        );
+        console.error(`Maintenance schedule tick failed for ${policy.serverId}`, error);
       }
     }
   }
@@ -273,9 +250,7 @@ export class MaintenanceRestartRuntime {
       return this.enrichStatus(policy);
     }
     if (this.isPeerBusy(serverId)) {
-      throw new Error(
-        "An auto-update countdown is already active — Cancel it first, or wait",
-      );
+      throw new Error("An auto-update countdown is already active — Cancel it first, or wait");
     }
     const targetAtMs = Date.now() + MAINTENANCE_RUN_NOW_LEAD_MS;
     this.startCountdown(policy, targetAtMs, "run_now", null);
@@ -297,15 +272,10 @@ export class MaintenanceRestartRuntime {
     // action safe and predictable by using the Standard cadence rather than a
     // legacy 30-minute custom window.
     const manualWarnings = this.warningsForSource(policy, "manual");
-    const offsets = resolveWarningOffsetLabels(
-      manualWarnings,
-      MAINTENANCE_MANUAL_RESTART_PRESET_OFFSETS,
-    );
+    const offsets = resolveWarningOffsetLabels(manualWarnings, MAINTENANCE_MANUAL_RESTART_PRESET_OFFSETS);
     const leadMs = maxWarningLeadMs(offsets);
     if (leadMs <= 0) {
-      throw new Error(
-        "Add at least one warning time in Maintenance → Manual restart warnings",
-      );
+      throw new Error("Add at least one warning time in Maintenance → Manual restart warnings");
     }
     const server = this.servers.get(serverId);
     if (server === null) throw new Error("Server does not exist");
@@ -327,9 +297,7 @@ export class MaintenanceRestartRuntime {
       return this.enrichStatus(policy);
     }
     if (this.isPeerBusy(serverId)) {
-      throw new Error(
-        "An auto-update countdown is already active — Cancel it first, or wait",
-      );
+      throw new Error("An auto-update countdown is already active — Cancel it first, or wait");
     }
     this.startCountdown(policy, Date.now() + leadMs, "manual", null);
     return this.enrichStatus(policy);
@@ -338,8 +306,7 @@ export class MaintenanceRestartRuntime {
   cancelUpcoming(serverId: string): MaintenancePolicyStatus {
     const active = this.active.get(serverId);
     if (active !== undefined) {
-      const shouldNotifyPlayers =
-        active.source === "manual" && active.firedOffsets.size > 0;
+      const shouldNotifyPlayers = active.source === "manual" && active.firedOffsets.size > 0;
       active.cancelRequested = true;
       this.clearTimer(active);
       this.markOccurrenceDone(active);
@@ -347,11 +314,7 @@ export class MaintenanceRestartRuntime {
       this.notifyRuntimeChange(serverId);
       if (shouldNotifyPlayers) {
         void this.instances
-          .execRcon(
-            serverId,
-            `ServerChat ${MANUAL_RESTART_CANCELED_CHAT}`,
-            { recordEvent: false },
-          )
+          .execRcon(serverId, `ServerChat ${MANUAL_RESTART_CANCELED_CHAT}`, { recordEvent: false })
           .catch(() => {
             // The restart is already cancelled. A disconnected RCON session
             // must not turn that operator action back into an active window.
@@ -367,10 +330,7 @@ export class MaintenanceRestartRuntime {
     }
   }
 
-  private isCurrentTick(
-    serverId: string,
-    expectedTargetAtMs: number,
-  ): ActiveCountdown | null {
+  private isCurrentTick(serverId: string, expectedTargetAtMs: number): ActiveCountdown | null {
     const state = this.active.get(serverId);
     if (state === undefined) return null;
     if (state.cancelRequested) return null;
@@ -390,33 +350,18 @@ export class MaintenanceRestartRuntime {
     if (this.isIntentionalStop(policy.serverId)) return;
 
     const now = Date.now();
-    const next = nextLocalRestartAt(
-      policy.restartDaysOfWeek,
-      policy.restartTimeLocal,
-      now,
-    );
+    const next = nextLocalRestartAt(policy.restartDaysOfWeek, policy.restartTimeLocal, now);
     if (next === null) return;
     const targetKey = next.toISOString();
     if (this.completedTargets.has(targetKey)) return;
 
-    const offsets = resolveWarningOffsetLabels(
-      policy.restartWarnings,
-      MAINTENANCE_RESTART_PRESET_OFFSETS,
-    );
+    const offsets = resolveWarningOffsetLabels(policy.restartWarnings, MAINTENANCE_RESTART_PRESET_OFFSETS);
     // Warnings Off → lead 0; still arm within one scheduler tick so T0 runs.
-    const armWindowMs = Math.max(
-      maxWarningLeadMs(offsets),
-      MAINTENANCE_SCHEDULER_TICK_MS,
-    );
+    const armWindowMs = Math.max(maxWarningLeadMs(offsets), MAINTENANCE_SCHEDULER_TICK_MS);
     const remaining = next.getTime() - now;
     if (remaining > armWindowMs) return;
 
-    this.startCountdown(
-      policy,
-      Math.max(now + 1_000, next.getTime()),
-      "schedule",
-      targetKey,
-    );
+    this.startCountdown(policy, Math.max(now + 1_000, next.getTime()), "schedule", targetKey);
   }
 
   private startCountdown(
@@ -434,9 +379,7 @@ export class MaintenanceRestartRuntime {
       firedOffsets: new Set(),
       rconFailStreak: 0,
       cancelRequested: false,
-      phase: shouldUseLastMinuteChat(remaining, warnings, source)
-        ? "last_minute"
-        : "warning",
+      phase: shouldUseLastMinuteChat(remaining, warnings, source) ? "last_minute" : "warning",
       timer: null,
       timerGeneration: 0,
       runPromise: null,
@@ -455,11 +398,7 @@ export class MaintenanceRestartRuntime {
     state.timerGeneration += 1;
   }
 
-  private scheduleNextTick(
-    serverId: string,
-    expectedTargetAtMs: number,
-    delayMs: number,
-  ): void {
+  private scheduleNextTick(serverId: string, expectedTargetAtMs: number, delayMs: number): void {
     const state = this.isCurrentTick(serverId, expectedTargetAtMs);
     if (state === null) return;
     this.clearTimer(state);
@@ -503,30 +442,20 @@ export class MaintenanceRestartRuntime {
   }
 
   /** Soft-fail Broadcast; hard-fail after consecutive tick failures. */
-  private noteRconOutcome(
-    state: ActiveCountdown,
-    ok: boolean,
-    errorMessage: string,
-  ): "continue" | "abort" {
+  private noteRconOutcome(state: ActiveCountdown, ok: boolean, errorMessage: string): "continue" | "abort" {
     if (ok) {
       state.rconFailStreak = 0;
       return "continue";
     }
     state.rconFailStreak += 1;
     if (state.rconFailStreak >= MAINTENANCE_RCON_SOFT_FAIL_LIMIT) {
-      this.abortWindowHard(
-        state,
-        `RCON ServerChat failed ${state.rconFailStreak} times: ${errorMessage}`,
-      );
+      this.abortWindowHard(state, `RCON ServerChat failed ${state.rconFailStreak} times: ${errorMessage}`);
       return "abort";
     }
     return "continue";
   }
 
-  private async tickCountdown(
-    serverId: string,
-    expectedTargetAtMs: number,
-  ): Promise<void> {
+  private async tickCountdown(serverId: string, expectedTargetAtMs: number): Promise<void> {
     const state = this.isCurrentTick(serverId, expectedTargetAtMs);
     if (state === null) {
       const orphan = this.active.get(serverId);
@@ -542,10 +471,7 @@ export class MaintenanceRestartRuntime {
 
     if (!this.processes.isActive(serverId)) {
       // Unexpected exit (typically status `error`) — count toward fail-streak.
-      this.abortWindowHard(
-        state,
-        "Server stopped during maintenance countdown",
-      );
+      this.abortWindowHard(state, "Server stopped during maintenance countdown");
       return;
     }
 
@@ -567,11 +493,7 @@ export class MaintenanceRestartRuntime {
       let broadcastOk = true;
       let broadcastError = "";
       try {
-        await this.instances.execRcon(
-          serverId,
-          `ServerChat ${renderLastMinuteRestart(sec)}`,
-          { recordEvent: false },
-        );
+        await this.instances.execRcon(serverId, `ServerChat ${renderLastMinuteRestart(sec)}`, { recordEvent: false });
       } catch (error) {
         broadcastOk = false;
         broadcastError = error instanceof Error ? error.message : String(error);
@@ -587,19 +509,12 @@ export class MaintenanceRestartRuntime {
 
     if (remainingMs <= 60_000) {
       state.phase = "warning";
-      this.scheduleNextTick(
-        serverId,
-        expectedTargetAtMs,
-        Math.max(250, remainingMs),
-      );
+      this.scheduleNextTick(serverId, expectedTargetAtMs, Math.max(250, remainingMs));
       return;
     }
 
     state.phase = "warning";
-    const offsets = resolveWarningOffsetLabels(
-      warnings,
-      this.presetTableForSource(state.source),
-    );
+    const offsets = resolveWarningOffsetLabels(warnings, this.presetTableForSource(state.source));
     for (const label of offsets) {
       const offsetMs = parseMaintenanceOffsetToMs(label);
       if (offsetMs === null) continue;
@@ -609,11 +524,9 @@ export class MaintenanceRestartRuntime {
       let broadcastOk = true;
       let broadcastError = "";
       try {
-        await this.instances.execRcon(
-          serverId,
-          `ServerChat ${renderWarningTemplate(warnings.template, remainingMs)}`,
-          { recordEvent: false },
-        );
+        await this.instances.execRcon(serverId, `ServerChat ${renderWarningTemplate(warnings.template, remainingMs)}`, {
+          recordEvent: false,
+        });
       } catch (error) {
         broadcastOk = false;
         broadcastError = error instanceof Error ? error.message : String(error);
@@ -638,10 +551,7 @@ export class MaintenanceRestartRuntime {
     this.scheduleNextTick(serverId, expectedTargetAtMs, Math.max(250, wakeIn));
   }
 
-  private async executeRestart(
-    policy: MaintenancePolicy,
-    state: ActiveCountdown,
-  ): Promise<void> {
+  private async executeRestart(policy: MaintenancePolicy, state: ActiveCountdown): Promise<void> {
     if (state.runPromise !== null) return;
     const serverId = policy.serverId;
     const expectedTargetAtMs = state.targetAtMs;
@@ -669,25 +579,18 @@ export class MaintenanceRestartRuntime {
               ok: true,
             });
           } catch (wipeError) {
-            const message =
-              wipeError instanceof Error ? wipeError.message : String(wipeError);
+            const message = wipeError instanceof Error ? wipeError.message : String(wipeError);
             this.lastWipe.set(serverId, {
               atIso: new Date().toISOString(),
               ok: false,
             });
             // Restart already succeeded — do not inflate restart fail-streak.
-            this.servers.addEvent(
-              serverId,
-              "error",
-              "error",
-              "Maintenance wild wipe failed",
-              {
-                what: "Post-restart DestroyWildDinos did not complete.",
-                cause: message,
-                suggestion:
-                  "Confirm RCON works, then wipe manually from the RCON panel or wait for the next restart window.",
-              },
-            );
+            this.servers.addEvent(serverId, "error", "error", "Maintenance wild wipe failed", {
+              what: "Post-restart DestroyWildDinos did not complete.",
+              cause: message,
+              suggestion:
+                "Confirm RCON works, then wipe manually from the RCON panel or wait for the next restart window.",
+            });
           }
         }
       } catch (error) {
@@ -714,10 +617,7 @@ export class MaintenanceRestartRuntime {
    * After a successful maintenance restart: wait for ready, settle, optional
    * SaveWorld, then DestroyWildDinos (#488). Launch ForceRespawnDinos is unchanged.
    */
-  private async runPostRestartWipe(
-    serverId: string,
-    policy: MaintenancePolicy,
-  ): Promise<void> {
+  private async runPostRestartWipe(serverId: string, policy: MaintenancePolicy): Promise<void> {
     await this.waitUntilRunningForWipe(serverId);
     if (this.isIntentionalStop(serverId)) {
       throw new Error("Stop in progress during post-restart wipe");
@@ -749,9 +649,7 @@ export class MaintenanceRestartRuntime {
       const status = this.processes.getStatus(serverId).status;
       if (status === "running") return;
       if (status === "error" || status === "stopped") {
-        throw new Error(
-          `Server left starting (${status}) before post-restart wipe`,
-        );
+        throw new Error(`Server left starting (${status}) before post-restart wipe`);
       }
       await delay(500);
     }

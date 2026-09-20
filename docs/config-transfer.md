@@ -38,16 +38,16 @@ saves, logs, history.
 
 ## Architecture (shared pipeline with #40 / #89 / #90)
 
-| Piece | Location |
-| --- | --- |
-| Selection model | `src/shared/config-transfer.ts` |
-| INI merge/replace compose | `src/backend/domains/config/ini-selection-compose.ts` |
-| Preview / commit / fingerprint / rollback | `src/backend/domains/config/config-transfer-service.ts` |
-| Owned-key reapply + secret redaction | `ini-compose.ts`, `yark-owned-ini-keys.ts` |
-| Diff preview | `ini-preview.ts` + `ClusterIniDiffSummary` |
-| Locks | `InstanceLockManager` purpose `config-transfer` |
-| Pre-write snapshot | `.yark-pre-copy/<stamp>/` (+ optional catalog INI backup) |
-| IPC | `config-transfer:describe` / `preview` / `commit` |
+| Piece                                     | Location                                                  |
+| ----------------------------------------- | --------------------------------------------------------- |
+| Selection model                           | `src/shared/config-transfer.ts`                           |
+| INI merge/replace compose                 | `src/backend/domains/config/ini-selection-compose.ts`     |
+| Preview / commit / fingerprint / rollback | `src/backend/domains/config/config-transfer-service.ts`   |
+| Owned-key reapply + secret redaction      | `ini-compose.ts`, `yark-owned-ini-keys.ts`                |
+| Diff preview                              | `ini-preview.ts` + `ClusterIniDiffSummary`                |
+| Locks                                     | `InstanceLockManager` purpose `config-transfer`           |
+| Pre-write snapshot                        | `.yark-pre-copy/<stamp>/` (+ optional catalog INI backup) |
+| IPC                                       | `config-transfer:describe` / `preview` / `commit`         |
 
 Cluster template apply (#89) remains the full-file template path; #95 adds
 granular selection. Whichever feature lands first should keep composing through
@@ -56,9 +56,9 @@ cluster templates (#40) and bulk apply (#90) can reuse the same engine.
 
 ### Commit order
 
-1. Acquire target lock  
-2. Assert stopped + fingerprint match  
-3. Write `.yark-pre-copy` snapshot (+ optional catalog backup)  
+1. Acquire target lock
+2. Assert stopped + fingerprint match
+3. Write `.yark-pre-copy` snapshot (+ optional catalog backup)
 4. INI files after composition + target-owned reapply (before profile update so
    async profile→INI sync cannot clobber copied rates). Normally only selected
    INI files are written; if the **target** still has a `pending_server_ini`
@@ -66,9 +66,9 @@ cluster templates (#40) and bulk apply (#90) can reuse the same engine.
    `clearPendingServerIni` so a partial selection cannot drop the other draft
    file (#530 / #545). Queue / flush semantics:
    [server-lifecycle.md](server-lifecycle.md) (INI read / save / sanitize).
-5. Profile fields (mods / Extra arguments + structured Launch options / passwords)  
-6. Backup policy schedule/retention (target `backupDir` is preserved)  
-7. Emit one auditable event  
+5. Profile fields (mods / Extra arguments + structured Launch options / passwords)
+6. Backup policy schedule/retention (target `backupDir` is preserved)
+7. Emit one auditable event
 
 On failure after the first write, restore profile/policy/INI from the snapshot.
 The source is never mutated.

@@ -18,12 +18,9 @@ export type RowActionEntry =
       onClick: () => void;
     };
 
-export function visibleRowActionItems(
-  entries: readonly RowActionEntry[],
-): Extract<RowActionEntry, { kind: "item" }>[] {
+export function visibleRowActionItems(entries: readonly RowActionEntry[]): Extract<RowActionEntry, { kind: "item" }>[] {
   return entries.filter(
-    (entry): entry is Extract<RowActionEntry, { kind: "item" }> =>
-      entry.kind === "item" && entry.hidden !== true,
+    (entry): entry is Extract<RowActionEntry, { kind: "item" }> => entry.kind === "item" && entry.hidden !== true,
   );
 }
 
@@ -46,9 +43,7 @@ export function rowActionFingerprint(entries: readonly RowActionEntry[]): string
 }
 
 /** Drop stacked / leading / trailing dividers after hidden items are omitted. */
-export function normalizeRowActionEntries(
-  entries: readonly RowActionEntry[],
-): RowActionEntry[] {
+export function normalizeRowActionEntries(entries: readonly RowActionEntry[]): RowActionEntry[] {
   const out: RowActionEntry[] = [];
   for (const entry of entries) {
     if (entry.kind === "item" && entry.hidden === true) continue;

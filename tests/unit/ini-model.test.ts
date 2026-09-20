@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  parseIniTextRows,
-  sectionShortName,
-  setIniTextValue,
-  stripClientIniKeys,
-} from "@shared/ini/ini-text";
+import { parseIniTextRows, sectionShortName, setIniTextValue, stripClientIniKeys } from "@shared/ini/ini-text";
 import {
   filterIniRows,
   inferControlKind,
@@ -36,9 +31,7 @@ LastJoinedSessionPerCategory=Three
   });
 
   it("keeps duplicate unreal keys as separate occurrences", () => {
-    const rows = parseIniRows(sample).filter(
-      (row) => row.key === "LastJoinedSessionPerCategory",
-    );
+    const rows = parseIniRows(sample).filter((row) => row.key === "LastJoinedSessionPerCategory");
     expect(rows).toHaveLength(3);
     expect(rows.map((row) => row.value)).toEqual(["One", "Two", "Three"]);
     expect(rows.map((row) => row.occurrence)).toEqual([0, 1, 2]);
@@ -56,9 +49,7 @@ LastJoinedSessionPerCategory=Three
 
   it("hides client graphics sections from dedicated editor filters", () => {
     expect(isClientNoiseKey("LastJoinedSessionPerCategory")).toBe(true);
-    expect(isClientNoiseKey("GraphicsQuality", "/Script/ShooterGame.ShooterGameUserSettings")).toBe(
-      true,
-    );
+    expect(isClientNoiseKey("GraphicsQuality", "/Script/ShooterGame.ShooterGameUserSettings")).toBe(true);
     expect(isClientNoiseKey("sg.ShadowQuality", "ScalabilityGroups")).toBe(true);
     expect(isClientNoiseKey("MaxPlayers", "/Script/Engine.GameSession")).toBe(false);
     expect(inferControlKind("True")).toBe("boolean");
@@ -98,9 +89,7 @@ LastJoinedSessionPerCategory=Three
       "New",
       1,
     );
-    const rows = parseIniRows(next).filter(
-      (row) => row.key === "LastJoinedSessionPerCategory",
-    );
+    const rows = parseIniRows(next).filter((row) => row.key === "LastJoinedSessionPerCategory");
     expect(rows.map((row) => row.value)).toEqual(["One", "New", "Three"]);
   });
 
@@ -116,11 +105,7 @@ LastJoinedSessionPerCategory=Three
   });
 
   it("updates keys in existing sections even when section casing differs", () => {
-    const text = [
-      "[serversettings]",
-      "MaxPlayers=70",
-      "",
-    ].join("\n");
+    const text = ["[serversettings]", "MaxPlayers=70", ""].join("\n");
 
     const next = setIniTextValue(text, "ServerSettings", "MaxPlayers", "80");
 
@@ -143,9 +128,7 @@ LastJoinedSessionPerCategory=Three
         key: "SessionName",
       }),
     ).toBe("text");
-    expect(
-      resolveControlKind("1234", { key: "ServerPassword" }),
-    ).toBe("text");
+    expect(resolveControlKind("1234", { key: "ServerPassword" })).toBe("text");
     expect(
       resolveControlKind("70", {
         valueType: "integer",

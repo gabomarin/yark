@@ -12,15 +12,8 @@ import { ServerCardProgress } from "./ServerCardProgress";
 import { ServerCardRuntimeNotice } from "./ServerCardRuntimeNotice";
 import { ServerCardStatusBadges } from "./ServerCardStatusBadges";
 import { buildServerCardMenuActions } from "./serverCardMenuActions";
-import {
-  bindServerCardHandlers,
-  type ServerCardCallbackProps,
-  type ServerCardHandlers,
-} from "./serverCardHandlers";
-import {
-  deriveServerCardView,
-  type SteamCmdOperation,
-} from "./serverCardModel";
+import { bindServerCardHandlers, type ServerCardCallbackProps, type ServerCardHandlers } from "./serverCardHandlers";
+import { deriveServerCardView, type SteamCmdOperation } from "./serverCardModel";
 import { SERVER_CARD_ATTR } from "./serverCardTestIds";
 import classes from "./ServerCard.module.css";
 
@@ -53,8 +46,7 @@ type ServerCardSharedProps = {
 
 /** Overview: stable `handlers` bag. Tests/other callers: explicit zero-arg callbacks. */
 export type ServerCardProps =
-  | (ServerCardSharedProps & { handlers: ServerCardHandlers })
-  | (ServerCardSharedProps & ServerCardCallbackProps);
+  (ServerCardSharedProps & { handlers: ServerCardHandlers }) | (ServerCardSharedProps & ServerCardCallbackProps);
 
 function ServerCardComponent(props: ServerCardProps): ReactElement {
   const {
@@ -99,9 +91,7 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
     onDelete,
     onOpenDownloads,
     onToggleEnabled,
-  } = "handlers" in props
-    ? bindServerCardHandlers(props.handlers, server)
-    : props;
+  } = "handlers" in props ? bindServerCardHandlers(props.handlers, server) : props;
   const density = useUiDensity();
   const compact = density === "compact";
   const status = runtime?.status ?? "stopped";
@@ -119,7 +109,7 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
     steamCmdOperation,
     steamCmdProgressLabel:
       (steamCmdQueued || steamCmdPaused) && !steamCmdBusy
-        ? steamCmdQueueLabel ?? steamCmdProgressLabel
+        ? (steamCmdQueueLabel ?? steamCmdProgressLabel)
         : steamCmdProgressLabel,
     steamCmdProgressBytesDownloaded,
     steamCmdProgressBytesTotal,
@@ -134,8 +124,7 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
       : steamCmdProgressPercent;
   const showProgressBar = stopBusy || steamCmdBusy;
   const badgeBusy = stopBusy || steamCmdBusy || steamCmdPaused || steamCmdQueued;
-  const filesJobBadge =
-    !stopBusy && (steamCmdBusy || steamCmdPaused || steamCmdQueued);
+  const filesJobBadge = !stopBusy && (steamCmdBusy || steamCmdPaused || steamCmdQueued);
   const filesJobProgressCta = filesJobBadge && onOpenDownloads !== undefined;
   const workspaceOpenLabel =
     steamCmdQueued && !steamCmdBusy
@@ -191,10 +180,11 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
     onDelete,
     onToggleEnabled,
   });
-  const { onContextMenu, onKeyDown: onContextKeyDown, menuTriggerProps } = useRowContextMenu(
-    menuEntries,
-    { disabled: menuDisabled },
-  );
+  const {
+    onContextMenu,
+    onKeyDown: onContextKeyDown,
+    menuTriggerProps,
+  } = useRowContextMenu(menuEntries, { disabled: menuDisabled });
 
   const onCardKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     onContextKeyDown(event);
@@ -243,12 +233,8 @@ function ServerCardComponent(props: ServerCardProps): ReactElement {
                 serverEnabled={server.enabled}
                 compact={compact}
                 asaApiLoading={
-                  runtime?.asaApiLoading === true
-                  || (
-                    startBusy
-                    && server.useAsaApi === true
-                    && (status === "stopped" || status === "error")
-                  )
+                  runtime?.asaApiLoading === true ||
+                  (startBusy && server.useAsaApi === true && (status === "stopped" || status === "error"))
                 }
               />
             </div>

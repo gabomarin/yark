@@ -19,10 +19,7 @@ export interface AppShellChromeProps {
   workspaceFooter: ReactNode;
 }
 
-export function AppShellWithChrome(props: {
-  shell: AppShellChromeProps;
-  children: ReactNode;
-}): ReactElement {
+export function AppShellWithChrome(props: { shell: AppShellChromeProps; children: ReactNode }): ReactElement {
   const { shell, children } = props;
   return (
     <AppShellLayout

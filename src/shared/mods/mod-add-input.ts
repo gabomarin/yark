@@ -65,12 +65,8 @@ export function parseModAddInput(raw: string): ParsedModAddInput {
   return { ids, urls, invalid };
 }
 
-export function formatInvalidModAddTokens(
-  invalid: InvalidModAddToken[],
-): string {
-  return invalid
-    .map((entry) => `"${entry.raw}" (${entry.reason})`)
-    .join("; ");
+export function formatInvalidModAddTokens(invalid: InvalidModAddToken[]): string {
+  return invalid.map((entry) => `"${entry.raw}" (${entry.reason})`).join("; ");
 }
 
 export interface ModAddApplyState {
@@ -90,20 +86,18 @@ export interface ModAddImportProgress {
 
 export type ModAddApplyOutcome =
   | {
-    status: "validation-error";
-    message: string;
-  }
+      status: "validation-error";
+      message: string;
+    }
   | {
-    status: "ready";
-    next: ModAddApplyState;
-    clearInput: boolean;
-    warning: string | null;
-    error: string | null;
-  };
+      status: "ready";
+      next: ModAddApplyState;
+      clearInput: boolean;
+      warning: string | null;
+      error: string | null;
+    };
 
-type FetchDetailResult =
-  | { ok: true; data: ModMetadata }
-  | { ok: false; error: string };
+type FetchDetailResult = { ok: true; data: ModMetadata } | { ok: false; error: string };
 
 export interface PrepareModAddApplyOptions {
   batchSize?: number;
@@ -210,9 +204,7 @@ export async function prepareModAddApply(
     skipParts.push(`Skipped: ${formatInvalidModAddTokens(parsed.invalid)}`);
   }
   if (resolutionFailures.length > 0) {
-    skipParts.push(
-      `Could not verify as ASA mod(s): ${resolutionFailures.join("; ")}`,
-    );
+    skipParts.push(`Could not verify as ASA mod(s): ${resolutionFailures.join("; ")}`);
   }
   const skipMessage = skipParts.length > 0 ? skipParts.join(" ") : null;
 
@@ -240,9 +232,7 @@ function getResolvedDetailError(detail: ModMetadata): string | null {
   return null;
 }
 
-export function formatModAddImportProgress(
-  progress: ModAddImportProgress,
-): string {
+export function formatModAddImportProgress(progress: ModAddImportProgress): string {
   if (progress.total === 0) return "Importing mods…";
   return `Importing mods ${progress.completed}/${progress.total} (batch ${progress.batchIndex}/${progress.batchCount})`;
 }

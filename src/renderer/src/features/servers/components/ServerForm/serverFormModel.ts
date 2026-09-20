@@ -1,6 +1,4 @@
-import {
-  resolveServerInstallDir,
-} from "@shared/server/server-install-path";
+import { resolveServerInstallDir } from "@shared/server/server-install-path";
 import {
   DEFAULT_GAME_PORT,
   DEFAULT_QUERY_PORT,
@@ -37,9 +35,7 @@ export type CreatePortSuggestion = {
 };
 
 export function resolveCreatePortFields(
-  fleetProfiles: ReadonlyArray<
-    Pick<ServerProfile, "id" | "name" | "gamePort" | "queryPort" | "rconPort">
-  > = [],
+  fleetProfiles: ReadonlyArray<Pick<ServerProfile, "id" | "name" | "gamePort" | "queryPort" | "rconPort">> = [],
 ): {
   gamePort: string;
   queryPort: string;
@@ -132,16 +128,13 @@ export function serverFormToInput(
     map: state.map.trim(),
     mapModId: state.mapModId,
     mapSaveFolder: state.mapSaveFolder,
-    installDir: isCreate
-      ? resolveServerInstallDir(baseOrInstall, name)
-      : baseOrInstall,
+    installDir: isCreate ? resolveServerInstallDir(baseOrInstall, name) : baseOrInstall,
     sessionName: state.sessionName.trim(),
     maxPlayers: parseOptionalMaxPlayers(state.maxPlayers),
     gamePort: Number(state.gamePort),
     queryPort: Number(state.queryPort),
     rconPort: Number(state.rconPort),
-    serverPassword:
-      state.serverPassword.trim().length > 0 ? state.serverPassword.trim() : null,
+    serverPassword: state.serverPassword.trim().length > 0 ? state.serverPassword.trim() : null,
     adminPassword: state.adminPassword,
     clusterId: state.clusterId.trim().length > 0 ? state.clusterId.trim() : null,
     clusterDir: state.clusterDir.trim().length > 0 ? state.clusterDir.trim() : null,

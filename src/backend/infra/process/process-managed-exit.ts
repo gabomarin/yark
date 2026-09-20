@@ -1,9 +1,6 @@
 import type { AsaStartupFailure } from "@shared/asa/asa-startup-failure";
 import { diagnoseAsaStartupFailure } from "@shared/asa/asa-startup-failure";
-import {
-  readAsaLogSessionExcerpt,
-  type AsaLogSessionAnchor,
-} from "./asa-log-tail";
+import { readAsaLogSessionExcerpt, type AsaLogSessionAnchor } from "./asa-log-tail";
 import {
   formatProcessExitLogLine,
   isOperatorClosedExit,
@@ -65,10 +62,7 @@ export function handleManagedProcessExit(
     exitCode: code,
   });
   if (!unexpected) {
-    if (
-      isOperatorClosedManagedPhase(wasStarting, wasRunning)
-      && isOperatorClosedExit(code)
-    ) {
+    if (isOperatorClosedManagedPhase(wasStarting, wasRunning) && isOperatorClosedExit(code)) {
       managed.status = "stopped";
       managed.lastError = OPERATOR_CLOSED_NOTICE;
       host.appendRuntimeLog(serverId, "system", OPERATOR_CLOSED_NOTICE);

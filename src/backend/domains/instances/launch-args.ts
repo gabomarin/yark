@@ -17,24 +17,12 @@ export { buildMapUrlArg } from "@shared/asa/launch-map-url";
 
 /** Path to the dedicated server executable inside the install. */
 export function serverBinaryPath(installDir: string): string {
-  return join(
-    installDir,
-    "ShooterGame",
-    "Binaries",
-    "Win64",
-    "ArkAscendedServer.exe",
-  );
+  return join(installDir, "ShooterGame", "Binaries", "Win64", "ArkAscendedServer.exe");
 }
 
 /** Path to community AsaApiLoader.exe (same Win64 folder) (#243). */
 function asaApiLoaderBinaryPath(installDir: string): string {
-  return join(
-    installDir,
-    "ShooterGame",
-    "Binaries",
-    "Win64",
-    "AsaApiLoader.exe",
-  );
+  return join(installDir, "ShooterGame", "Binaries", "Win64", "AsaApiLoader.exe");
 }
 
 /**
@@ -90,10 +78,7 @@ export function quoteWindowsArg(value: string): string {
  * Builds the exact Windows lpCommandLine for CreateProcess, including a quoted
  * executable when needed and a literal map URL (`"Map"?SessionName="..."`).
  */
-export function buildWindowsCreateProcessCommandLine(
-  binaryPath: string,
-  args: string[],
-): string {
+export function buildWindowsCreateProcessCommandLine(binaryPath: string, args: string[]): string {
   const parts: string[] = [quoteWindowsArg(binaryPath)];
   for (const arg of args) {
     if (isUnrealMapUrlArg(arg)) {
@@ -111,9 +96,7 @@ export function buildWindowsCreateProcessCommandLine(
  * Other arguments are quoted individually when Windows whitespace requires it.
  */
 export function buildWindowsVerbatimSpawnArgs(args: string[]): string[] {
-  return args.map((arg) =>
-    isUnrealMapUrlArg(arg) ? arg : quoteWindowsArg(arg),
-  );
+  return args.map((arg) => (isUnrealMapUrlArg(arg) ? arg : quoteWindowsArg(arg)));
 }
 
 /**
@@ -129,12 +112,10 @@ export function buildWindowsVerbatimSpawnArgs(args: string[]): string[] {
  */
 export function buildLaunchArgs(profile: ServerProfile): string[] {
   const mapUrl = buildMapUrlArg(profile.map, profile.sessionName);
-  const structuredArgs = buildStructuredLaunchArgList(
-    profile.structuredLaunchArgs,
-  ).filter((arg) => !isWinLiveMaxPlayersArg(arg));
-  const extraArgs = profile.extraArgs.filter(
+  const structuredArgs = buildStructuredLaunchArgList(profile.structuredLaunchArgs).filter(
     (arg) => !isWinLiveMaxPlayersArg(arg),
   );
+  const extraArgs = profile.extraArgs.filter((arg) => !isWinLiveMaxPlayersArg(arg));
   const trailingArgs = [...structuredArgs, ...extraArgs];
   const args: string[] = [mapUrl, yarkPortArg(profile.gamePort)];
   if (profile.maxPlayers > 0) {
@@ -168,10 +149,7 @@ export function buildLaunchArgs(profile: ServerProfile): string[] {
  * Formats the dedicated-server command line for UI/logs (logical quotes, not `\"`).
  * When `binaryPath` is set, prefixes the exe with Windows path quoting only.
  */
-export function formatLaunchCommandLine(
-  profile: ServerProfile,
-  binaryPath?: string,
-): string {
+export function formatLaunchCommandLine(profile: ServerProfile, binaryPath?: string): string {
   const args = buildLaunchArgs(profile);
   if (binaryPath === undefined) {
     return args.join(" ");

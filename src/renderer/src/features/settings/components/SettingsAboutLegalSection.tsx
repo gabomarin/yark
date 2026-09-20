@@ -15,8 +15,7 @@ export function SettingsAboutLegalSection(): ReactElement {
         Third-party notices
       </Title>
       <Text size="sm" c="dimmed">
-        Credits for default INI templates, launch-options catalog copy, map
-        artwork, and trademarks used in YARK.
+        Credits for default INI templates, launch-options catalog copy, map artwork, and trademarks used in YARK.
       </Text>
       <Group gap="xs" align="center">
         <Anchor

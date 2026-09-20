@@ -32,11 +32,7 @@ describe("diagnoseAsaStartupFailure", () => {
   });
 
   it("returns null when the log is only startup noise", () => {
-    expect(
-      diagnoseAsaStartupFailure(
-        "Log file open, 08/13/26 16:52:15\nARK Version: 92.37",
-      ),
-    ).toBeNull();
+    expect(diagnoseAsaStartupFailure("Log file open, 08/13/26 16:52:15\nARK Version: 92.37")).toBeNull();
   });
 
   it("bounds and strips control characters from excerpts", () => {

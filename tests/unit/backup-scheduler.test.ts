@@ -11,24 +11,13 @@ describe("BackupScheduler", () => {
   it("reports a rejected cycle and retries on the next tick", async () => {
     vi.useFakeTimers();
     const error = new Error("database unavailable");
-    const runScheduledCycle = vi
-      .fn()
-      .mockRejectedValueOnce(error)
-      .mockResolvedValue(undefined);
-    const consoleError = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => undefined);
-    const scheduler = new BackupScheduler(
-      { runScheduledCycle } as unknown as BackupService,
-      100,
-    );
+    const runScheduledCycle = vi.fn().mockRejectedValueOnce(error).mockResolvedValue(undefined);
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const scheduler = new BackupScheduler({ runScheduledCycle } as unknown as BackupService, 100);
 
     scheduler.start();
     await vi.advanceTimersByTimeAsync(100);
-    expect(consoleError).toHaveBeenCalledWith(
-      "Scheduled backup cycle failed",
-      error,
-    );
+    expect(consoleError).toHaveBeenCalledWith("Scheduled backup cycle failed", error);
 
     await vi.advanceTimersByTimeAsync(100);
     expect(runScheduledCycle).toHaveBeenCalledTimes(2);

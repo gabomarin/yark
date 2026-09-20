@@ -1,8 +1,4 @@
-import type {
-  CrashRecoveryPolicy,
-  CrashRecoveryRuntime,
-  ServerRuntimeInfo,
-} from "@shared/types";
+import type { CrashRecoveryPolicy, CrashRecoveryRuntime, ServerRuntimeInfo } from "@shared/types";
 import type { CrashRecoveryRepository, CrashRecoveryPolicyWrite } from "../../infra/db/crash-recovery-repository";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { ProcessManager, UnexpectedManagedExit } from "../../infra/process/process-manager";
@@ -18,10 +14,7 @@ interface PendingRestart {
 }
 
 type CrashRecoveryServers = Pick<ServerRepository, "get" | "list" | "addEvent">;
-type CrashRecoveryProcesses = Pick<
-  ProcessManager,
-  "on" | "off" | "getStatus" | "isActive"
->;
+type CrashRecoveryProcesses = Pick<ProcessManager, "on" | "off" | "getStatus" | "isActive">;
 type CrashRecoveryInstances = Pick<InstanceService, "start" | "isStopInProgress">;
 type CrashRecoveryLocks = Pick<InstanceLockManager, "isLocked">;
 
@@ -115,10 +108,7 @@ export class CrashRecoveryService {
     return uptimeMs !== null && uptimeMs >= policy.stabilitySeconds * 1000;
   }
 
-  setPolicy(
-    serverId: string,
-    input: CrashRecoveryPolicyWrite,
-  ): CrashRecoveryPolicy {
+  setPolicy(serverId: string, input: CrashRecoveryPolicyWrite): CrashRecoveryPolicy {
     if (this.servers.get(serverId) === null) {
       throw new Error("Server does not exist");
     }
@@ -138,9 +128,7 @@ export class CrashRecoveryService {
     return this.getPolicy(serverId);
   }
 
-  private readonly onUnexpectedExit = (
-    payload: UnexpectedManagedExit,
-  ): void => {
+  private readonly onUnexpectedExit = (payload: UnexpectedManagedExit): void => {
     this.handleCrash(payload);
   };
 
@@ -208,13 +196,7 @@ export class CrashRecoveryService {
         },
       },
     );
-    this.scheduleTimer(
-      payload.serverId,
-      plan.delayMs,
-      plan.attempts,
-      plan.maxAttempts,
-      payload.lastError,
-    );
+    this.scheduleTimer(payload.serverId, plan.delayMs, plan.attempts, plan.maxAttempts, payload.lastError);
   }
 
   private scheduleTimer(
@@ -256,11 +238,7 @@ export class CrashRecoveryService {
     if (hadTimer || hadNotice) this.runtimeChange(serverId);
   }
 
-  private async attemptRestart(
-    serverId: string,
-    attempt: number,
-    maxAttempts: number,
-  ): Promise<void> {
+  private async attemptRestart(serverId: string, attempt: number, maxAttempts: number): Promise<void> {
     if (!this.started) return;
 
     const policy = this.repo.getPolicy(serverId);

@@ -40,15 +40,11 @@ async function launchApp() {
 async function quitApp(app) {
   const proc = app.process();
   const exited =
-    proc == null || proc.exitCode != null
-      ? Promise.resolve()
-      : new Promise((resolve) => proc.once("exit", resolve));
+    proc == null || proc.exitCode != null ? Promise.resolve() : new Promise((resolve) => proc.once("exit", resolve));
   await app.evaluate(({ app: electronApp }) => electronApp.quit());
   await Promise.race([
     exited,
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000),
-    ),
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Electron did not quit within 20 seconds")), 20_000)),
   ]);
 }
 
@@ -105,14 +101,7 @@ function seedDatabase() {
       wasRunning: true,
     }),
     {
-      ...job(
-        "install-retryable",
-        "install-files",
-        serverId,
-        "blocked",
-        "restarting-server",
-        { wasRunning: false },
-      ),
+      ...job("install-retryable", "install-files", serverId, "blocked", "restarting-server", { wasRunning: false }),
       operatorRetryAllowed: true,
     },
     job("verify-cancelled", "verify-files", serverId, "cancelled", "cancelled"),
@@ -234,9 +223,7 @@ async function run() {
     page = await openRecoveryUi(app, errors);
     await assertRecoveryState(page, false, false);
 
-    const actionableErrors = errors.filter(
-      (message) => !/Failed to load resource|net::ERR_/i.test(message),
-    );
+    const actionableErrors = errors.filter((message) => !/Failed to load resource|net::ERR_/i.test(message));
     assert.deepEqual(actionableErrors, []);
     succeeded = true;
     console.log(`E2E_CRITICAL_JOB_RECOVERY_OK profile=${profileDir}`);

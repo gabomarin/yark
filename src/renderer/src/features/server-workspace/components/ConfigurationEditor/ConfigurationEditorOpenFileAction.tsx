@@ -31,13 +31,7 @@ export function ConfigurationEditorOpenFileAction(props: Props): ReactElement {
       withArrow
     >
       <span>
-        <ActionIcon
-          size={iconSize}
-          variant="default"
-          aria-label={`Open ${fileLabel}`}
-          onClick={onOpen}
-          disabled={busy}
-        >
+        <ActionIcon size={iconSize} variant="default" aria-label={`Open ${fileLabel}`} onClick={onOpen} disabled={busy}>
           <ArrowSquareOut size={glyphSize} />
         </ActionIcon>
       </span>

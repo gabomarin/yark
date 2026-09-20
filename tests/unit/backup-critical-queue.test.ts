@@ -37,10 +37,7 @@ function makeProfile(): ServerProfile {
   };
 }
 
-function makeRestoreJob(
-  status: BackupCriticalJob["status"],
-  phase: string,
-): BackupCriticalJob {
+function makeRestoreJob(status: BackupCriticalJob["status"], phase: string): BackupCriticalJob {
   const now = new Date().toISOString();
   return {
     id: `restore-${status}`,
@@ -61,15 +58,12 @@ function makeRestoreJob(
   };
 }
 
-function createQueue(
-  job: BackupCriticalJob,
-  executor: BackupCriticalJobExecutor,
-): BackupCriticalQueue {
+function createQueue(job: BackupCriticalJob, executor: BackupCriticalJobExecutor): BackupCriticalQueue {
   const profile = makeProfile();
   const store = new Map<string, string | null>([[QUEUE_KEY, JSON.stringify([job])]]);
   const dependencies: BackupCriticalQueueDependencies = {
     servers: {
-      get: vi.fn((serverId: string) => serverId === profile.id ? profile : null),
+      get: vi.fn((serverId: string) => (serverId === profile.id ? profile : null)),
       addEvent: vi.fn(() => 1),
     },
     backups: {
@@ -116,17 +110,9 @@ describe("BackupCriticalQueue", () => {
         resumePreUpdateBackupJob: vi.fn(),
         resumeRestoreJob: vi.fn(async () => undefined),
       };
-      const queue = createQueue(
-        makeRestoreJob(status, status === "blocked" ? "applying-restore" : "failed"),
-        executor,
-      );
+      const queue = createQueue(makeRestoreJob(status, status === "blocked" ? "applying-restore" : "failed"), executor);
 
-      const completion = queue.enqueueAndWait<void>(
-        "restore",
-        "srv-1",
-        "backup-1",
-        { adoptRetryableRestore: true },
-      );
+      const completion = queue.enqueueAndWait<void>("restore", "srv-1", "backup-1", { adoptRetryableRestore: true });
       await queue.processQueue();
       await completion;
 
@@ -135,4 +121,3 @@ describe("BackupCriticalQueue", () => {
     },
   );
 });
-

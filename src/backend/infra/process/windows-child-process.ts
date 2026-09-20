@@ -11,10 +11,7 @@ interface WmiChildRow {
  * Find a direct child of `parentPid` whose image name matches `imageName`
  * (e.g. ArkAscendedServer.exe). Windows only; null elsewhere or on miss.
  */
-export async function findWindowsChildProcessByName(
-  parentPid: number,
-  imageName: string,
-): Promise<number | null> {
+export async function findWindowsChildProcessByName(parentPid: number, imageName: string): Promise<number | null> {
   if (process.platform !== "win32" || !Number.isInteger(parentPid) || parentPid <= 0) {
     return null;
   }
@@ -50,9 +47,7 @@ export async function findWindowsChildProcessByName(
     return parsed.ProcessId;
   } catch (error: unknown) {
     const detail = error instanceof Error ? error.message : String(error);
-    console.warn(
-      `[yark] findWindowsChildProcessByName failed for parent ${safeParent}: ${detail}`,
-    );
+    console.warn(`[yark] findWindowsChildProcessByName failed for parent ${safeParent}: ${detail}`);
     return null;
   }
 }

@@ -59,18 +59,10 @@ describe("ProcessMetricsSampler", () => {
     processes.setLive("srv-1", 4242);
     const sampleResources = vi
       .fn()
-      .mockResolvedValueOnce(
-        new Map([[4242, { pid: 4242, workingSetBytes: 2_147_483_648, cpuSeconds: 10 }]]),
-      )
-      .mockResolvedValueOnce(
-        new Map([[4242, { pid: 4242, workingSetBytes: 2_147_483_648, cpuSeconds: 12 }]]),
-      );
+      .mockResolvedValueOnce(new Map([[4242, { pid: 4242, workingSetBytes: 2_147_483_648, cpuSeconds: 10 }]]))
+      .mockResolvedValueOnce(new Map([[4242, { pid: 4242, workingSetBytes: 2_147_483_648, cpuSeconds: 12 }]]));
 
-    const sampler = new ProcessMetricsSampler(
-      processes as never,
-      60_000,
-      sampleResources,
-    );
+    const sampler = new ProcessMetricsSampler(processes as never, 60_000, sampleResources);
     const updates: unknown[] = [];
     sampler.on("metrics-updated", (payload) => updates.push(payload));
 
@@ -105,21 +97,14 @@ describe("ProcessMetricsSampler", () => {
   it("clears metrics when the process leaves (#302)", async () => {
     const processes = new FakeProcessManager();
     processes.setLive("srv-1", 99);
-    const sampleResources = vi.fn().mockResolvedValue(
-      new Map([[99, { pid: 99, workingSetBytes: 1000, cpuSeconds: 1 }]]),
-    );
-    const sampler = new ProcessMetricsSampler(
-      processes as never,
-      60_000,
-      sampleResources,
-    );
+    const sampleResources = vi
+      .fn()
+      .mockResolvedValue(new Map([[99, { pid: 99, workingSetBytes: 1000, cpuSeconds: 1 }]]));
+    const sampler = new ProcessMetricsSampler(processes as never, 60_000, sampleResources);
     const updates: Array<{ pid: number; workingSetBytes: number | null }> = [];
-    sampler.on(
-      "metrics-updated",
-      (payload: { pid: number; workingSetBytes: number | null }) => {
-        updates.push(payload);
-      },
-    );
+    sampler.on("metrics-updated", (payload: { pid: number; workingSetBytes: number | null }) => {
+      updates.push(payload);
+    });
 
     sampler.start();
     sampler.setSamplingEnabled(true);
@@ -141,11 +126,7 @@ describe("ProcessMetricsSampler", () => {
     await Promise.resolve();
     expect(updates.filter((u) => u.pid === 0)).toHaveLength(clearsBefore);
     // No permanent "cleared" fingerprint left behind.
-    expect(
-      (sampler as unknown as { lastPush: Map<string, string> }).lastPush.has(
-        "srv-1",
-      ),
-    ).toBe(false);
+    expect((sampler as unknown as { lastPush: Map<string, string> }).lastPush.has("srv-1")).toBe(false);
 
     sampler.stop();
   });
@@ -153,14 +134,8 @@ describe("ProcessMetricsSampler", () => {
   it("skips PowerShell ticks until sampling is enabled (#302)", async () => {
     const processes = new FakeProcessManager();
     processes.setLive("srv-1", 7);
-    const sampleResources = vi.fn().mockResolvedValue(
-      new Map([[7, { pid: 7, workingSetBytes: 100, cpuSeconds: 1 }]]),
-    );
-    const sampler = new ProcessMetricsSampler(
-      processes as never,
-      60_000,
-      sampleResources,
-    );
+    const sampleResources = vi.fn().mockResolvedValue(new Map([[7, { pid: 7, workingSetBytes: 100, cpuSeconds: 1 }]]));
+    const sampler = new ProcessMetricsSampler(processes as never, 60_000, sampleResources);
     const updates: unknown[] = [];
     sampler.on("metrics-updated", (payload) => updates.push(payload));
 
@@ -187,21 +162,14 @@ describe("ProcessMetricsSampler", () => {
   it("clears pushed samples when sampling turns off so UI does not keep stale RAM/CPU (#302)", async () => {
     const processes = new FakeProcessManager();
     processes.setLive("srv-1", 42);
-    const sampleResources = vi.fn().mockResolvedValue(
-      new Map([[42, { pid: 42, workingSetBytes: 2048, cpuSeconds: 1 }]]),
-    );
-    const sampler = new ProcessMetricsSampler(
-      processes as never,
-      60_000,
-      sampleResources,
-    );
+    const sampleResources = vi
+      .fn()
+      .mockResolvedValue(new Map([[42, { pid: 42, workingSetBytes: 2048, cpuSeconds: 1 }]]));
+    const sampler = new ProcessMetricsSampler(processes as never, 60_000, sampleResources);
     const updates: Array<{ pid: number; workingSetBytes: number | null }> = [];
-    sampler.on(
-      "metrics-updated",
-      (payload: { pid: number; workingSetBytes: number | null }) => {
-        updates.push(payload);
-      },
-    );
+    sampler.on("metrics-updated", (payload: { pid: number; workingSetBytes: number | null }) => {
+      updates.push(payload);
+    });
 
     sampler.start();
     sampler.setSamplingEnabled(true);
@@ -215,9 +183,7 @@ describe("ProcessMetricsSampler", () => {
       workingSetBytes: null,
       cpuPercent: null,
     });
-    expect(
-      (sampler as unknown as { lastPush: Map<string, string> }).lastPush.size,
-    ).toBe(0);
+    expect((sampler as unknown as { lastPush: Map<string, string> }).lastPush.size).toBe(0);
 
     sampler.stop();
   });
@@ -227,28 +193,15 @@ describe("ProcessMetricsSampler", () => {
     processes.setLive("srv-1", 4242);
     const sampleResources = vi
       .fn()
-      .mockResolvedValueOnce(
-        new Map([[4242, { pid: 4242, workingSetBytes: 1_000, cpuSeconds: 10 }]]),
-      )
-      .mockResolvedValueOnce(
-        new Map([[4242, { pid: 4242, workingSetBytes: 1_000, cpuSeconds: 12 }]]),
-      )
-      .mockResolvedValueOnce(
-        new Map([[4242, { pid: 4242, workingSetBytes: 1_000, cpuSeconds: 12.1 }]]),
-      );
+      .mockResolvedValueOnce(new Map([[4242, { pid: 4242, workingSetBytes: 1_000, cpuSeconds: 10 }]]))
+      .mockResolvedValueOnce(new Map([[4242, { pid: 4242, workingSetBytes: 1_000, cpuSeconds: 12 }]]))
+      .mockResolvedValueOnce(new Map([[4242, { pid: 4242, workingSetBytes: 1_000, cpuSeconds: 12.1 }]]));
 
-    const sampler = new ProcessMetricsSampler(
-      processes as never,
-      60_000,
-      sampleResources,
-    );
+    const sampler = new ProcessMetricsSampler(processes as never, 60_000, sampleResources);
     const updates: Array<{ cpuPercent: number | null }> = [];
-    sampler.on(
-      "metrics-updated",
-      (payload: { cpuPercent: number | null }) => {
-        updates.push(payload);
-      },
-    );
+    sampler.on("metrics-updated", (payload: { cpuPercent: number | null }) => {
+      updates.push(payload);
+    });
 
     vi.useFakeTimers({ now: 1_000 });
     sampler.start();

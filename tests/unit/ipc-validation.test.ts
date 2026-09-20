@@ -1,15 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { IPC } from "@shared/ipc";
-import {
-  VALIDATED_IPC_CHANNELS,
-  ipcArgSchemas,
-} from "@shared/ipc/channel-schemas";
-import {
-  formatZodError,
-  serverIdSchema,
-  windowsAbsPathSchema,
-} from "@shared/ipc/primitives";
+import { VALIDATED_IPC_CHANNELS, ipcArgSchemas } from "@shared/ipc/channel-schemas";
+import { formatZodError, serverIdSchema, windowsAbsPathSchema } from "@shared/ipc/primitives";
 
 const handleMock = vi.fn();
 
@@ -26,9 +19,7 @@ describe("validated IPC schema registry", () => {
     for (const channel of VALIDATED_IPC_CHANNELS) {
       expect(ipcArgSchemas[channel]).toBeDefined();
     }
-    expect(Object.keys(ipcArgSchemas).sort()).toEqual(
-      [...VALIDATED_IPC_CHANNELS].sort(),
-    );
+    expect(Object.keys(ipcArgSchemas).sort()).toEqual([...VALIDATED_IPC_CHANNELS].sort());
   });
 
   it("covers every invokable IPC channel in the shared contract", () => {
@@ -62,69 +53,41 @@ describe("ipc primitives", () => {
 
 describe("validated arg schemas (reject)", () => {
   it("rejects non-boolean enabled flag", () => {
-    const parsed = ipcArgSchemas[IPC.serversSetEnabled].safeParse([
-      "srv-1",
-      "yes",
-    ]);
+    const parsed = ipcArgSchemas[IPC.serversSetEnabled].safeParse(["srv-1", "yes"]);
     expect(parsed.success).toBe(false);
   });
 
   it("rejects invalid start options keys", () => {
-    const parsed = ipcArgSchemas[IPC.serversStart].safeParse([
-      "srv-1",
-      { skipPortValidation: true, unexpected: true },
-    ]);
+    const parsed = ipcArgSchemas[IPC.serversStart].safeParse(["srv-1", { skipPortValidation: true, unexpected: true }]);
     expect(parsed.success).toBe(false);
   });
 
   it("accepts start with one arg or nullish options", () => {
     expect(ipcArgSchemas[IPC.serversStart].safeParse(["srv-1"]).success).toBe(true);
-    expect(
-      ipcArgSchemas[IPC.serversStart].safeParse(["srv-1", null]).success,
-    ).toBe(true);
-    expect(
-      ipcArgSchemas[IPC.serversStart].safeParse(["srv-1", undefined]).success,
-    ).toBe(true);
+    expect(ipcArgSchemas[IPC.serversStart].safeParse(["srv-1", null]).success).toBe(true);
+    expect(ipcArgSchemas[IPC.serversStart].safeParse(["srv-1", undefined]).success).toBe(true);
   });
 
   it("accepts pickPath with 1–3 args and null middle", () => {
     expect(ipcArgSchemas[IPC.pickPath].safeParse(["directory"]).success).toBe(true);
-    expect(
-      ipcArgSchemas[IPC.pickPath].safeParse(["directory", "C:\\ARK"]).success,
-    ).toBe(true);
-    expect(
-      ipcArgSchemas[IPC.pickPath].safeParse(["file", null, "Import ZIP"]).success,
-    ).toBe(true);
-    expect(
-      ipcArgSchemas[IPC.pickPath].safeParse(["save", "C:\\out.zip", "Export"]).success,
-    ).toBe(true);
+    expect(ipcArgSchemas[IPC.pickPath].safeParse(["directory", "C:\\ARK"]).success).toBe(true);
+    expect(ipcArgSchemas[IPC.pickPath].safeParse(["file", null, "Import ZIP"]).success).toBe(true);
+    expect(ipcArgSchemas[IPC.pickPath].safeParse(["save", "C:\\out.zip", "Export"]).success).toBe(true);
   });
 
   it("rejects relative move destination", () => {
-    const parsed = ipcArgSchemas[IPC.serversMoveInstall].safeParse([
-      "srv-1",
-      "not\\absolute",
-    ]);
+    const parsed = ipcArgSchemas[IPC.serversMoveInstall].safeParse(["srv-1", "not\\absolute"]);
     expect(parsed.success).toBe(false);
   });
 
   it("trims absolute paths before regex", () => {
-    expect(
-      ipcArgSchemas[IPC.steamcmdSetPath].safeParse(["  C:\\Steam\\steamcmd.exe  "])
-        .success,
-    ).toBe(true);
+    expect(ipcArgSchemas[IPC.steamcmdSetPath].safeParse(["  C:\\Steam\\steamcmd.exe  "]).success).toBe(true);
   });
 
   it("rejects whitespace-only RCON but keeps intentional leading spaces", () => {
-    expect(ipcArgSchemas[IPC.rconCommand].safeParse(["srv-1", ""]).success).toBe(
-      false,
-    );
-    expect(ipcArgSchemas[IPC.rconCommand].safeParse(["srv-1", "   "]).success).toBe(
-      false,
-    );
-    expect(ipcArgSchemas[IPC.rconCommand].safeParse(["srv-1", " ListPlayers"]).success).toBe(
-      true,
-    );
+    expect(ipcArgSchemas[IPC.rconCommand].safeParse(["srv-1", ""]).success).toBe(false);
+    expect(ipcArgSchemas[IPC.rconCommand].safeParse(["srv-1", "   "]).success).toBe(false);
+    expect(ipcArgSchemas[IPC.rconCommand].safeParse(["srv-1", " ListPlayers"]).success).toBe(true);
   });
 
   it("rejects unknown steamcmd cache kind", () => {
@@ -133,10 +96,7 @@ describe("validated arg schemas (reject)", () => {
   });
 
   it("rejects invalid profile patch", () => {
-    const parsed = ipcArgSchemas[IPC.serversUpdatePatch].safeParse([
-      "srv-1",
-      { group: "launch" },
-    ]);
+    const parsed = ipcArgSchemas[IPC.serversUpdatePatch].safeParse(["srv-1", { group: "launch" }]);
     expect(parsed.success).toBe(false);
   });
 
@@ -164,39 +124,18 @@ describe("validated arg schemas (reject)", () => {
   });
 
   it("rejects path traversal in update log file names", () => {
-    expect(
-      ipcArgSchemas[IPC.logsDeleteUpdate].safeParse(["srv-1", "../secret.log"])
-        .success,
-    ).toBe(false);
-    expect(
-      ipcArgSchemas[IPC.logsDeleteUpdate].safeParse(["srv-1", "srv-1-foo..bar.log"])
-        .success,
-    ).toBe(false);
-    expect(
-      ipcArgSchemas[IPC.logsOpenUpdateFile].safeParse([
-        "srv-1",
-        "srv-1-ok.log:ads",
-      ]).success,
-    ).toBe(false);
+    expect(ipcArgSchemas[IPC.logsDeleteUpdate].safeParse(["srv-1", "../secret.log"]).success).toBe(false);
+    expect(ipcArgSchemas[IPC.logsDeleteUpdate].safeParse(["srv-1", "srv-1-foo..bar.log"]).success).toBe(false);
+    expect(ipcArgSchemas[IPC.logsOpenUpdateFile].safeParse(["srv-1", "srv-1-ok.log:ads"]).success).toBe(false);
   });
 
   it("accepts omitted cluster file selection and empty global cleanup serverId", () => {
-    expect(
-      ipcArgSchemas[IPC.clusterIniRestore].safeParse(["cluster-a", "srv-1"]).success,
-    ).toBe(true);
-    expect(
-      ipcArgSchemas[IPC.clusterIniRestore].safeParse([
-        "cluster-a",
-        "srv-1",
-        null,
-      ]).success,
-    ).toBe(true);
+    expect(ipcArgSchemas[IPC.clusterIniRestore].safeParse(["cluster-a", "srv-1"]).success).toBe(true);
+    expect(ipcArgSchemas[IPC.clusterIniRestore].safeParse(["cluster-a", "srv-1", null]).success).toBe(true);
     expect(
       ipcArgSchemas[IPC.logsRunCleanup].safeParse([
         {
-          confirmedTargets: [
-            { category: "events", serverId: "", targetKey: "12" },
-          ],
+          confirmedTargets: [{ category: "events", serverId: "", targetKey: "12" }],
         },
       ]).success,
     ).toBe(true);
@@ -245,15 +184,8 @@ describe("validated arg schemas (reject)", () => {
 
   it("rejects oversize paths and mods pagination past CurseForge limits", () => {
     const longPath = `C:\\${"a".repeat(4200)}`;
-    expect(ipcArgSchemas[IPC.steamcmdSetPath].safeParse([longPath]).success).toBe(
-      false,
-    );
-    expect(
-      ipcArgSchemas[IPC.modsSearch].safeParse([
-        "query",
-        { index: 10_000, pageSize: 50 },
-      ]).success,
-    ).toBe(false);
+    expect(ipcArgSchemas[IPC.steamcmdSetPath].safeParse([longPath]).success).toBe(false);
+    expect(ipcArgSchemas[IPC.modsSearch].safeParse(["query", { index: 10_000, pageSize: 50 }]).success).toBe(false);
   });
 
   it("rejects disk-alert settings that violate warn/critical floors", () => {
@@ -353,9 +285,7 @@ describe("handleValidated", () => {
   });
 
   it("redacts known live secrets in IPC error strings", async () => {
-    const { handleValidated, setIpcDiagnosticKnownSecrets } = await import(
-      "../../src/main/ipc-validate"
-    );
+    const { handleValidated, setIpcDiagnosticKnownSecrets } = await import("../../src/main/ipc-validate");
     setIpcDiagnosticKnownSecrets(() => ["hunter2-secret"]);
     handleValidated("test:bare-secret-err", z.tuple([]), () => {
       throw new Error("RCON rejected hunter2-secret from 127.0.0.1");
@@ -376,8 +306,6 @@ describe("handleValidated", () => {
     const { handleValidated } = await import("../../src/main/ipc-validate");
     const schema = z.tuple([]);
     handleValidated("test:dup", schema, () => undefined);
-    expect(() => handleValidated("test:dup", schema, () => undefined)).toThrow(
-      /already registered/,
-    );
+    expect(() => handleValidated("test:dup", schema, () => undefined)).toThrow(/already registered/);
   });
 });

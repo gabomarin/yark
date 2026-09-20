@@ -5,10 +5,7 @@ import { spotlight } from "@mantine/spotlight";
 import { AppProviders } from "@app/AppProviders";
 import type { ServerProfile } from "@shared/types";
 import { AppSpotlight } from "./AppSpotlight";
-import {
-  sortServersForSpotlight,
-  SPOTLIGHT_NAV_ITEMS,
-} from "./appSpotlightModel";
+import { sortServersForSpotlight, SPOTLIGHT_NAV_ITEMS } from "./appSpotlightModel";
 import {
   resetSpotlightRecentCacheForTests,
   SPOTLIGHT_RECENT_STORAGE_KEY,
@@ -28,9 +25,9 @@ const server: ServerProfile = {
   map: "ScorchedEarth_WP",
   installDir: "C:/ARK/Scorched",
   enabled: true,
-    autoStart: false,
-    useAsaApi: false,
-    useAsaApiLoader: false,
+  autoStart: false,
+  useAsaApi: false,
+  useAsaApiLoader: false,
   sessionName: "Scorched Cluster",
   maxPlayers: 70,
   gamePort: 7777,
@@ -75,34 +72,24 @@ describe("AppSpotlight", () => {
 
     render(
       <AppProviders>
-        <AppSpotlight
-          servers={[server]}
-          onNavigate={onNavigate}
-          onOpenServer={onOpenServer}
-        />
+        <AppSpotlight servers={[server]} onNavigate={onNavigate} onOpenServer={onOpenServer} />
       </AppProviders>,
     );
 
     spotlight.open();
-    expect(
-      await screen.findByPlaceholderText("Jump to page or server (Ctrl+K)…"),
-    ).toBeInTheDocument();
+    expect(await screen.findByPlaceholderText("Jump to page or server (Ctrl+K)…")).toBeInTheDocument();
 
     const settings = screen.getByRole("button", { name: /Settings/i });
     expect(settings.querySelector("svg")).toBeTruthy();
 
     const serverAction = screen.getByRole("button", { name: /Gabo Scorched/i });
-    expect(
-      serverAction.querySelector("img") ?? serverAction.querySelector("svg"),
-    ).toBeTruthy();
+    expect(serverAction.querySelector("img") ?? serverAction.querySelector("svg")).toBeTruthy();
 
     await user.click(settings);
     expect(onNavigate).toHaveBeenCalledWith("settings");
 
     spotlight.open();
-    await user.click(
-      await screen.findByRole("button", { name: /Gabo Scorched/i }),
-    );
+    await user.click(await screen.findByRole("button", { name: /Gabo Scorched/i }));
     expect(onOpenServer).toHaveBeenCalledWith("srv-1");
   });
 
@@ -115,22 +102,13 @@ describe("AppSpotlight", () => {
 
     render(
       <AppProviders>
-        <AppSpotlight
-          servers={[server]}
-          onNavigate={vi.fn()}
-          onOpenServer={vi.fn()}
-        />
+        <AppSpotlight servers={[server]} onNavigate={vi.fn()} onOpenServer={vi.fn()} />
       </AppProviders>,
     );
 
     spotlight.open();
     expect(await screen.findByText("Recent")).toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: /Backups/i }).length).toBeGreaterThanOrEqual(
-      1,
-    );
-    expect(
-      screen.getAllByRole("button", { name: /Gabo Scorched/i }).length,
-    ).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByRole("button", { name: /Backups/i }).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByRole("button", { name: /Gabo Scorched/i }).length).toBeGreaterThanOrEqual(1);
   });
 });
-

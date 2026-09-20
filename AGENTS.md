@@ -100,10 +100,10 @@ Notes specific to running this in the Linux cloud VM:
   Optional UI hygiene: `npx react-doctor@latest --verbose --scope changed`
   ([docs/react-doctor.md](docs/react-doctor.md)).
   `npm run build` is clean.
- GitHub Actions **CI** (`.github/workflows/ci.yml`) runs two parallel
- `windows-latest` jobs: typecheck + lint + knip + tests, and build + Electron E2E
- CRUD / install-health / host-port-probe (#12). Matrix:
- [docs/e2e-validation.md](docs/e2e-validation.md).
+  GitHub Actions **CI** (`.github/workflows/ci.yml`) runs two parallel
+  `windows-latest` jobs: typecheck + lint + knip + tests, and build + Electron E2E
+  CRUD / install-health / host-port-probe (#12). Matrix:
+  [docs/e2e-validation.md](docs/e2e-validation.md).
   PRs also run **Changelog** (`.github/workflows/changelog.yml`): `CHANGELOG.md` must change
   unless the PR is labeled `skip-changelog`.
   Local Husky hooks (after `npm install`): pre-commit runs typecheck + lint; pre-push runs
@@ -117,7 +117,7 @@ Notes specific to running this in the Linux cloud VM:
   `unset ELECTRON_RUN_AS_NODE` before `npm run dev` / `npm start`. Packaged visual helpers
   and the `e2e:*` scripts (via `scripts/e2e-launch.cjs`) clear the variable themselves.
 - On the headless Linux desktop, Electron prints benign `dbus/bus.cc ... Failed to connect
-  to the bus` and `viz_main_impl.cc ... Exiting GPU process` errors on launch. These are
+to the bus` and `viz_main_impl.cc ... Exiting GPU process` errors on launch. These are
   harmless; the window still renders and the app is fully usable.
 - `npm test` (vitest): ~235 pass. 8 tests fail on Linux because they assert Windows path
   semantics (e.g. `C:\tools\steamcmd`, "resolves Windows drive roots") that Node's POSIX

@@ -3,10 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
-import {
-  SERVER_LIST_SORT_STORAGE_KEY,
-  SERVER_LIST_VIEW_STORAGE_KEY,
-} from "../../../servers/serverListModel";
+import { SERVER_LIST_SORT_STORAGE_KEY, SERVER_LIST_VIEW_STORAGE_KEY } from "../../../servers/serverListModel";
 import { ServerListPanel } from "./ServerListPanel";
 
 function profile(overrides: Partial<ServerProfile> = {}): ServerProfile {
@@ -81,9 +78,7 @@ describe("ServerListPanel", () => {
     expect(screen.getByText("All servers")).toBeInTheDocument();
     const images = Array.from(container.querySelectorAll("img"));
     expect(images).toHaveLength(2);
-    expect(images.some((img) => img.getAttribute("src") === "https://cdn.example/svart.png")).toBe(
-      true,
-    );
+    expect(images.some((img) => img.getAttribute("src") === "https://cdn.example/svart.png")).toBe(true);
     expect(
       images.some((img) => {
         const src = img.getAttribute("src") ?? "";
@@ -112,9 +107,7 @@ describe("ServerListPanel", () => {
     expect(screen.getByText("Unclustered")).toBeInTheDocument();
     expect(screen.queryByText("Running")).not.toBeInTheDocument();
     expect(screen.getByText("Island")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Island · The Island · Running/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Island · The Island · Running/i })).toBeInTheDocument();
   });
 
   it("omits Add server and Import from the server list (#397)", () => {
@@ -130,9 +123,7 @@ describe("ServerListPanel", () => {
     );
 
     expect(screen.queryByRole("button", { name: "Add server" })).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "More add-server options" }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "More add-server options" })).not.toBeInTheDocument();
   });
 
   it("hides labels and exposes rail tooltips in icon mode (#107)", () => {
@@ -151,9 +142,7 @@ describe("ServerListPanel", () => {
     expect(screen.queryByText("All servers")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Search servers")).not.toBeInTheDocument();
     expect(screen.queryByText("The Island")).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /The Island · The Island · Stopped/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /The Island · The Island · Stopped/i })).toBeInTheDocument();
   });
 
   it("calls onToggleRail from the header control (#107)", async () => {
@@ -229,10 +218,7 @@ describe("ServerListPanel", () => {
     render(
       <AppProviders>
         <ServerListPanel
-          servers={[
-            profile({ id: "a", name: "Island", clusterId: "Alpha" }),
-            disabled,
-          ]}
+          servers={[profile({ id: "a", name: "Island", clusterId: "Alpha" }), disabled]}
           selectedServerId="a"
           statuses={new Map()}
           onSelectServer={() => undefined}
@@ -275,12 +261,8 @@ describe("ServerListPanel", () => {
       </AppProviders>,
     );
 
-    expect(
-      screen.getByRole("button", { name: /The Island · The Island · Stopped/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /Frozen · Ragnarok_WP/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /The Island · The Island · Stopped/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Frozen · Ragnarok_WP/i })).not.toBeInTheDocument();
   });
 
   it("shows sort and view controls with shared prefs (#351)", () => {
@@ -322,4 +304,3 @@ describe("ServerListPanel", () => {
     expect(screen.getByText("Solo")).toBeInTheDocument();
   });
 });
-

@@ -1,6 +1,5 @@
 const CURSEFORGE_HOST = /(^|\.)curseforge\.com$/i;
-const ASA_MOD_PATH =
-  /^\/ark-survival-ascended\/mods\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?$/i;
+const ASA_MOD_PATH = /^\/ark-survival-ascended\/mods\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?$/i;
 
 export function getCurseForgeAsaModUrlError(raw: string): string | null {
   const value = raw.trim();
@@ -34,7 +33,5 @@ export function curseForgeAsaSlugFromUrl(raw: string): string {
 }
 
 export function canonicalCurseForgeAsaModUrl(raw: string): string {
-  return `https://www.curseforge.com/ark-survival-ascended/mods/${
-    curseForgeAsaSlugFromUrl(raw)
-  }`;
+  return `https://www.curseforge.com/ark-survival-ascended/mods/${curseForgeAsaSlugFromUrl(raw)}`;
 }

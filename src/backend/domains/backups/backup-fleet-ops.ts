@@ -2,12 +2,7 @@
  * Fleet summary, disk-alert settings, and dismissed-alert persistence for BackupService.
  */
 
-import type {
-  BackupDiskAlertSettings,
-  BackupFleetAlert,
-  BackupFleetSummary,
-  BackupServerHealth,
-} from "@shared/types";
+import type { BackupDiskAlertSettings, BackupFleetAlert, BackupFleetSummary, BackupServerHealth } from "@shared/types";
 import type { AppSettingsRepository } from "../../infra/db/app-settings-repository";
 import type { BackupRepository } from "../../infra/db/backup-repository";
 import type { ServerRepository } from "../../infra/db/server-repository";
@@ -34,8 +29,7 @@ const DEFAULT_DISK_ALERT_SETTINGS: BackupDiskAlertSettings = {
   warnFreeBytes: 20 * 1024 * 1024 * 1024,
 };
 /** SQLite `app_settings.key` for dismissed fleet-alert fingerprints (#455). */
-export const BACKUP_FLEET_ALERTS_DISMISSED_SETTING_KEY =
-  "backupFleetAlerts.dismissed.v1";
+export const BACKUP_FLEET_ALERTS_DISMISSED_SETTING_KEY = "backupFleetAlerts.dismissed.v1";
 
 export interface BackupFleetOpsHost {
   servers: ServerRepository;
@@ -148,9 +142,7 @@ export class BackupFleetOps {
             ? parsed.criticalUsedPercent
             : DEFAULT_DISK_ALERT_SETTINGS.criticalUsedPercent,
         warnFreeBytes:
-          typeof parsed.warnFreeBytes === "number"
-            ? parsed.warnFreeBytes
-            : DEFAULT_DISK_ALERT_SETTINGS.warnFreeBytes,
+          typeof parsed.warnFreeBytes === "number" ? parsed.warnFreeBytes : DEFAULT_DISK_ALERT_SETTINGS.warnFreeBytes,
       });
     } catch {
       return { ...DEFAULT_DISK_ALERT_SETTINGS };
@@ -190,9 +182,7 @@ export class BackupFleetOps {
     }
   }
 
-  private writeDismissedFleetAlerts(
-    map: Record<string, DismissedFleetAlertEntry>,
-  ): void {
+  private writeDismissedFleetAlerts(map: Record<string, DismissedFleetAlertEntry>): void {
     this.host.settings.set(BACKUP_FLEET_ALERTS_DISMISSED_SETTING_KEY, JSON.stringify(map));
   }
 

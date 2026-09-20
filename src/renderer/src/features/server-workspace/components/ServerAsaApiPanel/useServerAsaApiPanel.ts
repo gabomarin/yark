@@ -1,10 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import type {
-  AsaApiInstallProgress,
-  AsaApiPluginInfo,
-  AsaApiStatus,
-  ServerProfile,
-} from "@shared/types";
+import type { AsaApiInstallProgress, AsaApiPluginInfo, AsaApiStatus, ServerProfile } from "@shared/types";
 import type { AsaApiBusyKind, AsaApiConfirm } from "./asaApiPanelModel";
 
 export function useServerAsaApiPanel(
@@ -20,17 +15,11 @@ export function useServerAsaApiPanel(
   installProgress: AsaApiInstallProgress | null;
   locked: boolean;
   isBusy: (kind: AsaApiBusyKind) => boolean;
-  persistAsaApiFlags: (next: {
-    useAsaApi: boolean;
-    useAsaApiLoader: boolean;
-  }) => Promise<void>;
+  persistAsaApiFlags: (next: { useAsaApi: boolean; useAsaApiLoader: boolean }) => Promise<void>;
   onInstall: () => Promise<void>;
   onUninstall: () => void;
   onClearCache: () => void;
-  onPluginEnabled: (
-    plugin: AsaApiPluginInfo,
-    enabled: boolean,
-  ) => Promise<void>;
+  onPluginEnabled: (plugin: AsaApiPluginInfo, enabled: boolean) => Promise<void>;
   onDeletePlugin: (plugin: AsaApiPluginInfo) => void;
   closeConfirm: () => void;
   runConfirm: () => void;
@@ -42,8 +31,7 @@ export function useServerAsaApiPanel(
   const [confirm, setConfirm] = useState<AsaApiConfirm | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [versionHint, setVersionHint] = useState<string | null>(null);
-  const [installProgress, setInstallProgress] =
-    useState<AsaApiInstallProgress | null>(null);
+  const [installProgress, setInstallProgress] = useState<AsaApiInstallProgress | null>(null);
 
   const locked = busy !== null;
   const isBusy = (kind: AsaApiBusyKind): boolean => busy === kind;
@@ -76,10 +64,7 @@ export function useServerAsaApiPanel(
     });
   }, [server.id]);
 
-  const persistAsaApiFlags = async (next: {
-    useAsaApi: boolean;
-    useAsaApiLoader: boolean;
-  }): Promise<void> => {
+  const persistAsaApiFlags = async (next: { useAsaApi: boolean; useAsaApiLoader: boolean }): Promise<void> => {
     setBusy("flags");
     setError(null);
     const result = await window.api.updateServerPatch(server.id, {
@@ -129,17 +114,10 @@ export function useServerAsaApiPanel(
     setConfirm({ kind: "clearCache" });
   };
 
-  const onPluginEnabled = async (
-    plugin: AsaApiPluginInfo,
-    enabled: boolean,
-  ): Promise<void> => {
+  const onPluginEnabled = async (plugin: AsaApiPluginInfo, enabled: boolean): Promise<void> => {
     setBusy("pluginToggle");
     setError(null);
-    const result = await window.api.setAsaApiPluginEnabled(
-      server.id,
-      plugin.name,
-      enabled,
-    );
+    const result = await window.api.setAsaApiPluginEnabled(server.id, plugin.name, enabled);
     setBusy(null);
     if (!result.ok) {
       setError(result.error);
@@ -187,10 +165,7 @@ export function useServerAsaApiPanel(
         return;
       }
       setBusy("deletePlugin");
-      const result = await window.api.deleteAsaApiPlugin(
-        server.id,
-        pending.plugin.name,
-      );
+      const result = await window.api.deleteAsaApiPlugin(server.id, pending.plugin.name);
       setBusy(null);
       setConfirm(null);
       if (!result.ok) {

@@ -10,11 +10,11 @@ Operator-facing storage and network expectations live in
 
 ## Supported versions
 
-| Version | Supported |
-| --- | --- |
-| Latest release on [GitHub Releases](https://github.com/gabomarin/yark/releases) | Yes |
-| Older `0.x` releases | Best-effort only — upgrade to the latest installer when possible |
-| Unreleased / `main` builds | Not a support channel for production; security fixes land there first |
+| Version                                                                         | Supported                                                             |
+| ------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Latest release on [GitHub Releases](https://github.com/gabomarin/yark/releases) | Yes                                                                   |
+| Older `0.x` releases                                                            | Best-effort only — upgrade to the latest installer when possible      |
+| Unreleased / `main` builds                                                      | Not a support channel for production; security fixes land there first |
 
 `0.x` builds are evolving prereleases. Prefer the newest tagged release when verifying a
 fix.

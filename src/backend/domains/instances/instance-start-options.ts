@@ -17,10 +17,7 @@ export interface InstanceServiceOptions {
    * Apply profile-owned GUS keys via IniService (queues while live) (#530).
    * When omitted, falls back to direct `syncProfileSettingsToIni` (tests).
    */
-  syncProfileOwnedKeys?: (
-    serverId: string,
-    profile?: ServerProfile,
-  ) => Promise<void>;
+  syncProfileOwnedKeys?: (serverId: string, profile?: ServerProfile) => Promise<void>;
 }
 
 export function defaultResolveOpenNativeConsole(): boolean {
@@ -37,7 +34,6 @@ export function withOpenNativeConsolePref(
 ): StartServerOptions {
   return {
     ...options,
-    openNativeConsole:
-      options?.openNativeConsole ?? resolveOpenNativeConsole(),
+    openNativeConsole: options?.openNativeConsole ?? resolveOpenNativeConsole(),
   };
 }
