@@ -1,4 +1,10 @@
 import {
+  DEFAULT_APPEARANCE_SETTINGS,
+  normalizeAppearanceSettings,
+  type AppearanceSettings,
+  type ThemeId,
+} from "@shared/settings/appearance";
+import {
   DEFAULT_OPEN_NATIVE_CONSOLE,
   OPEN_NATIVE_CONSOLE_LEGACY_LOCAL_STORAGE_KEY,
   parseOpenNativeConsolePref,
@@ -12,15 +18,16 @@ import {
   type UiDensity,
 } from "@shared/settings/ui-density";
 
-export type { UiDensity };
+export type { UiDensity, ThemeId };
 
-export type SettingsCategory = "general" | "servers" | "steamcmd" | "discord" | "logs" | "about";
+export type SettingsCategory = "general" | "appearance" | "servers" | "steamcmd" | "discord" | "logs" | "about";
 
 export const SETTINGS_CATEGORIES: ReadonlyArray<{
   id: SettingsCategory;
   label: string;
 }> = [
   { id: "general", label: "General" },
+  { id: "appearance", label: "Appearance" },
   { id: "servers", label: "Profiles" },
   { id: "steamcmd", label: "SteamCMD" },
   { id: "discord", label: "Discord" },
@@ -217,6 +224,42 @@ export async function writeUiDensityPref(density: UiDensity): Promise<boolean> {
     }
     clearLegacyUiDensityLocalStorage();
     return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Load the appearance preference from `app_settings` (via IPC) before the theme
+ * mounts. An unknown theme id falls back to the default (`parseAppearanceSettings`),
+ * so the renderer always has a palette.
+ * Does not write the product default on read — persist only from user changes.
+ */
+export async function loadAppearancePref(): Promise<AppearanceSettings> {
+  try {
+    if (typeof window === "undefined" || typeof window.api?.getAppearance !== "function") {
+      return { ...DEFAULT_APPEARANCE_SETTINGS };
+    }
+
+    const result = await window.api.getAppearance();
+    if (!result.ok || result.data === null) {
+      return { ...DEFAULT_APPEARANCE_SETTINGS };
+    }
+
+    return normalizeAppearanceSettings(result.data);
+  } catch {
+    return { ...DEFAULT_APPEARANCE_SETTINGS };
+  }
+}
+
+/** @returns true when SQLite accepted the value. */
+export async function writeAppearancePref(appearance: AppearanceSettings): Promise<boolean> {
+  if (typeof window === "undefined" || typeof window.api?.setAppearance !== "function") {
+    return false;
+  }
+  try {
+    const result = await window.api.setAppearance(appearance);
+    return result.ok;
   } catch {
     return false;
   }

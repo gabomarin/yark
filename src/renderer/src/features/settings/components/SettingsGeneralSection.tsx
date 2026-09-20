@@ -1,11 +1,8 @@
 import type { ReactElement } from "react";
-import { Button, SegmentedControl, Switch, Text, Title } from "@mantine/core";
-import type { UiDensity } from "../settingsModel";
+import { Button, Switch, Text, Title } from "@mantine/core";
 import classes from "../SettingsPage.module.css";
 
 interface Props {
-  uiDensity: UiDensity;
-  onUiDensityChange: (density: UiDensity) => void;
   closeWindowToTray: boolean;
   onCloseWindowToTrayChange: (enabled: boolean) => void;
   trayCloseHintDismissed: boolean;
@@ -177,33 +174,6 @@ export function SettingsGeneralSection(props: Props): ReactElement {
             <Text size="xs" c="dimmed" mt={2}>
               Press Ctrl+K to jump to a page or open a server by name.
             </Text>
-          </div>
-        </div>
-
-        <div className={classes.settingRow}>
-          <div className={classes.settingCopy}>
-            <Text size="sm" fw={600}>
-              Display size
-            </Text>
-            <Text size="xs" c="dimmed" mt={2}>
-              Compact fits more on screen. Comfortable uses larger type and spacing.
-            </Text>
-          </div>
-          <div className={classes.settingControl}>
-            <SegmentedControl
-              size="xs"
-              value={props.uiDensity}
-              onChange={(value) => {
-                if (value === "comfortable" || value === "compact") {
-                  props.onUiDensityChange(value);
-                }
-              }}
-              data={[
-                { label: "Comfortable", value: "comfortable" },
-                { label: "Compact", value: "compact" },
-              ]}
-              aria-label="Display size"
-            />
           </div>
         </div>
 

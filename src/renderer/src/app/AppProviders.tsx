@@ -4,8 +4,10 @@ import { Notifications } from "@mantine/notifications";
 import { MantineProvider } from "@mantine/core";
 import { DatesProvider } from "@mantine/dates";
 import { createContext, useContext, useLayoutEffect, useMemo, type PropsWithChildren } from "react";
-import { createAppCssVariablesResolverForDensity, createAppThemeForDensity } from "@theme/theme";
+import { createAppCssVariablesResolverForAppearance, createAppThemeForAppearance } from "@theme/theme";
+import { resolveAppTheme } from "@theme/themes";
 import type { UiDensity } from "@theme/tokens";
+import type { ThemeId } from "@shared/settings/appearance";
 import { RowActionMenuProvider } from "@ui/RowActionMenu/RowActionMenuProvider";
 import { isRendererTest } from "@renderer/shared/isRendererTest";
 
@@ -18,11 +20,14 @@ export function useUiDensity(): UiDensity {
 interface Props extends PropsWithChildren {
   /** Compact (default) or Comfortable. */
   density?: UiDensity;
+  /** Appearance theme id (Settings → Appearance). Unknown ids fall back to dark. */
+  themeId?: ThemeId | string | null;
 }
 
-export function AppProviders({ children, density = "compact" }: Props): ReactElement {
+export function AppProviders({ children, density = "compact", themeId = null }: Props): ReactElement {
+  const appearance = useMemo(() => resolveAppTheme(themeId), [themeId]);
   const theme = useMemo(() => {
-    const base = createAppThemeForDensity(density);
+    const base = createAppThemeForAppearance(appearance, density);
     if (!isRendererTest()) {
       return base;
     }
@@ -75,8 +80,11 @@ export function AppProviders({ children, density = "compact" }: Props): ReactEle
         },
       },
     };
-  }, [density]);
-  const cssVariablesResolver = useMemo(() => createAppCssVariablesResolverForDensity(density), [density]);
+  }, [appearance, density]);
+  const cssVariablesResolver = useMemo(
+    () => createAppCssVariablesResolverForAppearance(appearance, density),
+    [appearance, density],
+  );
 
   // On <html> so Mantine portals (Modal/Drawer under document.body) inherit
   // compact input height/padding from globals.css.
@@ -92,7 +100,11 @@ export function AppProviders({ children, density = "compact" }: Props): ReactEle
 
   return (
     <UiDensityContext.Provider value={density}>
-      <MantineProvider theme={theme} cssVariablesResolver={cssVariablesResolver} defaultColorScheme="dark">
+      <MantineProvider
+        theme={theme}
+        cssVariablesResolver={cssVariablesResolver}
+        defaultColorScheme={appearance.colorScheme}
+      >
         <DatesProvider settings={{ consistentWeeks: true }}>
           <ModalsProvider
             modalProps={{

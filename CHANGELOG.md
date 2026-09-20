@@ -11,6 +11,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- **Settings → Appearance** groups the shell's look in one place: display size (Compact / Comfortable) and theme, with a theme registry behind it. Dark is the only shipped theme; an unknown or missing stored id falls back to it, and the choice persists across restarts.
+
 - On-demand OpenCodeReview GitHub Action supports `/open-code-review` commands and manual primary/fallback provider selection without reviewing every PR push.
 - Local `npm run e2e:perf` prints a repeatable cold-start-to-Overview timing snapshot for performance investigations (#219).
 - OpenCodeReview now preflights the selected LLM provider and reports configuration errors before starting a review.

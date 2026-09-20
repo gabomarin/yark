@@ -34,12 +34,15 @@ import { SetupWizard } from "@features/setup-wizard/SetupWizard";
 import { toSyntheticClusterOption } from "@features/setup-wizard/setupWizardModel";
 import {
   readDefaultBaseFolderPref,
+  writeAppearancePref,
   writeDefaultBaseFolderPref,
   writeOpenNativeConsolePref,
   writeSettingsCategoryPref,
   writeUiDensityPref,
+  type ThemeId,
   type UiDensity,
 } from "@features/settings/settingsModel";
+import { DEFAULT_THEME_ID } from "@shared/settings/appearance";
 import { DEFAULT_OPEN_NATIVE_CONSOLE } from "@shared/settings/open-native-console";
 import { useDesktopShellPreferences } from "@features/settings/hooks/useDesktopShellPreferences";
 import type { Route } from "@layout/Sidebar/Sidebar";
@@ -51,6 +54,8 @@ export interface AppShellProps {
   initialUiDensity?: UiDensity;
   /** Resolved from `app_settings` (via IPC) before first paint. */
   initialOpenNativeConsole?: boolean;
+  /** Resolved from `app_settings` (via IPC) before first paint. */
+  initialThemeId?: ThemeId;
 }
 
 /**
@@ -60,6 +65,7 @@ export interface AppShellProps {
 export function AppShell({
   initialUiDensity = "compact",
   initialOpenNativeConsole = DEFAULT_OPEN_NATIVE_CONSOLE,
+  initialThemeId = DEFAULT_THEME_ID,
 }: AppShellProps): ReactElement {
   const [route, setRoute] = useState<Route>("overview");
   const [overlay, setOverlay] = useState<Overlay>(null);
@@ -115,6 +121,7 @@ export function AppShell({
   const [copyConfig, setCopyConfig] = useState<CopyConfigSession | null>(null);
   const [openNativeTerminalOnStart, setOpenNativeTerminalOnStart] = useState(initialOpenNativeConsole);
   const [uiDensity, setUiDensity] = useState<UiDensity>(initialUiDensity);
+  const [themeId, setThemeId] = useState<ThemeId>(initialThemeId);
   const [defaultBaseFolder, setDefaultBaseFolder] = useState<string | null>(readDefaultBaseFolderPref);
   const [appUpdateStatus, setAppUpdateStatus] = useState<AppUpdateStatus | null>(null);
   const [focusYarkUpdates, setFocusYarkUpdates] = useState(false);
@@ -168,6 +175,19 @@ export function AppShell({
       return;
     }
     setUiDensity(density);
+  }, []);
+
+  const handleThemeChange = useCallback(async (theme: ThemeId) => {
+    const saved = await writeAppearancePref({ theme });
+    if (!saved) {
+      notifications.show({
+        color: "red",
+        title: "Could not save theme",
+        message: "Your selection was not stored. Try again.",
+      });
+      return;
+    }
+    setThemeId(theme);
   }, []);
 
   const extraClusterOptions = useMemo(
@@ -385,7 +405,7 @@ export function AppShell({
   }, []);
 
   return (
-    <AppProviders density={uiDensity}>
+    <AppProviders density={uiDensity} themeId={themeId}>
       <AppSpotlight
         servers={servers}
         currentRoute={route}
@@ -528,6 +548,8 @@ export function AppShell({
           handleOpenNativeConsoleChange,
           uiDensity,
           handleUiDensityChange,
+          themeId,
+          handleThemeChange,
           defaultBaseFolder,
           setDefaultBaseFolder,
           extraClusterOptions,

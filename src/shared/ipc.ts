@@ -57,6 +57,7 @@ import type {
 } from "./types";
 import type { AppUpdateStatus } from "./settings/app-update";
 import type { UiDensity } from "./settings/ui-density";
+import type { AppearanceSettings } from "./settings/appearance";
 import type { DesktopShellPreferences } from "./settings/desktop-shell";
 import type { DiscordWebhookPreferences } from "./settings/discord-webhook";
 import type { HostedResourceFormat } from "./settings/hosted-resources";
@@ -146,6 +147,8 @@ export const IPC = {
   appOpenDataFolder: "app:open-data-folder",
   appGetUiDensity: "app:get-ui-density",
   appSetUiDensity: "app:set-ui-density",
+  appGetAppearance: "app:get-appearance",
+  appSetAppearance: "app:set-appearance",
   appGetOpenNativeConsole: "app:get-open-native-console",
   appSetOpenNativeConsole: "app:set-open-native-console",
   appGetLastSeenChangelogVersion: "app:get-last-seen-changelog-version",
@@ -546,6 +549,9 @@ export interface RendererApi {
   /** `null` when unset in `app_settings` (caller may migrate / apply default). */
   getUiDensity(): Promise<IpcResult<UiDensity | null>>;
   setUiDensity(density: UiDensity): Promise<IpcResult<UiDensity>>;
+  /** `null` when unset in `app_settings` (caller applies the default appearance). */
+  getAppearance(): Promise<IpcResult<AppearanceSettings | null>>;
+  setAppearance(settings: AppearanceSettings): Promise<IpcResult<AppearanceSettings>>;
   /** `null` when unset in `app_settings` (caller may migrate / apply default). */
   getOpenNativeConsole(): Promise<IpcResult<boolean | null>>;
   setOpenNativeConsole(enabled: boolean): Promise<IpcResult<boolean>>;

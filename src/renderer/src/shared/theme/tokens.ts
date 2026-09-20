@@ -82,6 +82,9 @@ export const radixPalette = {
   ],
 } as const;
 
+/** Palette shape a theme registry entry carries (`shared/theme/themes.ts`). */
+export type AppThemePalette = typeof radixPalette;
+
 /** Compact ≈ Chromium zoom-out ×2 (~80–85%). */
 export const UI_DENSITY_COMPACT_SCALE = 0.82;
 

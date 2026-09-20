@@ -7,6 +7,7 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { SettingsAboutCommunitySection } from "./components/SettingsAboutCommunitySection";
 import { SettingsAboutLegalSection } from "./components/SettingsAboutLegalSection";
 import { SettingsAppDataSection } from "./components/SettingsAppDataSection";
+import { SettingsAppearanceSection } from "./components/SettingsAppearanceSection";
 import { SettingsAutoStartSection } from "./components/SettingsAutoStartSection";
 import { SettingsGeneralSection } from "./components/SettingsGeneralSection";
 import { SettingsLogRetentionSection } from "./components/SettingsLogRetentionSection";
@@ -19,6 +20,7 @@ import {
   readSettingsCategoryPref,
   writeSettingsCategoryPref,
   type SettingsCategory,
+  type ThemeId,
   type UiDensity,
 } from "./settingsModel";
 import type { DesktopShellPreferencesController } from "./hooks/useDesktopShellPreferences";
@@ -41,6 +43,8 @@ interface Props {
   onOpenNativeTerminalOnStartChange: (enabled: boolean) => void;
   uiDensity: UiDensity;
   onUiDensityChange: (density: UiDensity) => void;
+  themeId: ThemeId;
+  onThemeChange: (theme: ThemeId) => void;
   defaultBaseFolder: string | null;
   onDefaultBaseFolderChange: (path: string | null) => void;
   onPickSteamCmdPath: () => void;
@@ -130,8 +134,6 @@ export function SettingsPage(props: Props): ReactElement {
           <div ref={panelScrollRef} className={classes.panelScroll} {...{ [SETTINGS_PANEL_SCROLL_ATTR]: true }}>
             {category === "general" && (
               <SettingsGeneralSection
-                uiDensity={props.uiDensity}
-                onUiDensityChange={props.onUiDensityChange}
                 closeWindowToTray={desktopShell.closeWindowToTray}
                 onCloseWindowToTrayChange={desktopShell.onCloseWindowToTrayChange}
                 trayCloseHintDismissed={desktopShell.trayCloseHintDismissed}
@@ -148,6 +150,14 @@ export function SettingsPage(props: Props): ReactElement {
                 onOsNotifyYarkUpdateChange={desktopShell.onOsNotifyYarkUpdateChange}
                 desktopShellReady={desktopShell.desktopShellReady}
                 onRunSetupAgain={props.onRunSetupAgain}
+              />
+            )}
+            {category === "appearance" && (
+              <SettingsAppearanceSection
+                uiDensity={props.uiDensity}
+                onUiDensityChange={props.onUiDensityChange}
+                themeId={props.themeId}
+                onThemeChange={props.onThemeChange}
               />
             )}
             {category === "servers" && (

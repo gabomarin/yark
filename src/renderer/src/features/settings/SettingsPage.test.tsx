@@ -184,6 +184,8 @@ function defaultSettingsProps(
     onOpenNativeTerminalOnStartChange: vi.fn(),
     uiDensity: "compact",
     onUiDensityChange: vi.fn(),
+    themeId: "dark",
+    onThemeChange: vi.fn(),
     defaultBaseFolder: null,
     onDefaultBaseFolderChange: vi.fn(),
     onPickSteamCmdPath: vi.fn(),
@@ -252,8 +254,6 @@ describe("SettingsPage", () => {
     expect(screen.getByText("YARK updates")).toBeInTheDocument();
     expect(screen.getByText("Hide to tray")).toBeInTheDocument();
     expect(screen.queryByText("On quit with active servers")).not.toBeInTheDocument();
-    expect(screen.getByText("Display size")).toBeInTheDocument();
-    expect(screen.getByLabelText("Display size")).toBeInTheDocument();
     expect(screen.queryByText("Show server console on start")).not.toBeInTheDocument();
     expect(document.querySelector(STEAMCMD_PATH_SELECTOR)).toBeNull();
     expect(screen.queryByText(/YARK server manager · v0.1.0/i)).not.toBeInTheDocument();
@@ -362,8 +362,26 @@ describe("SettingsPage", () => {
 
     renderSettings({ onUiDensityChange });
 
+    await openCategory(user, "Appearance");
     await user.click(screen.getByRole("radio", { name: "Comfortable" }));
     expect(onUiDensityChange).toHaveBeenCalledWith("comfortable");
+  });
+
+  it("keeps display size and theme together in Appearance (#PUX-004)", async () => {
+    const user = userEvent.setup();
+    const onThemeChange = vi.fn();
+    stubSettingsApi();
+
+    renderSettings({ themeId: "dark", onThemeChange });
+
+    await openCategory(user, "Appearance");
+    expect(document.querySelector("[data-settings-appearance]")).not.toBeNull();
+    expect(screen.getByLabelText("Display size")).toBeInTheDocument();
+
+    // The registry drives the control: Dark is the only shipped theme today.
+    expect(screen.getByLabelText("Theme")).toBeInTheDocument();
+    await user.click(screen.getByRole("radio", { name: "Dark" }));
+    expect(onThemeChange).not.toHaveBeenCalled();
   });
 
   it("persists dismissing the tray-hide notification", async () => {

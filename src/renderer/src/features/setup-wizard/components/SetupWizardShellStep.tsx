@@ -88,7 +88,8 @@ export function SetupWizardShellStep(props: Props): ReactElement {
             Display size
           </Text>
           <Text size="xs" c="dimmed" mt={2}>
-            Compact fits more on screen. Comfortable uses larger type and spacing.
+            Compact fits more on screen. Comfortable uses larger type and spacing. Change it later in Settings →
+            Appearance.
           </Text>
         </div>
         <div className={classes.settingControl}>
