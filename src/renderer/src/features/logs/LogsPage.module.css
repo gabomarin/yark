@@ -132,8 +132,9 @@
   height: 100%;
   min-height: 0;
   overflow: hidden;
-  border: 1px solid var(--app-color-border-subtle);
-  border-radius: 0;
+  /* No border: the shared chrome surface already frames the page, and a bordered panel here put
+   * every Logs card inside a box inside a box. The sibling tool pages use the same wrapper
+   * borderless (Backups' `.toolShell` keeps the padding and nothing else). */
   background: transparent;
   padding: var(--app-space-md);
 }
