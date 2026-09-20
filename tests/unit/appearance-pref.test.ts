@@ -18,8 +18,8 @@ import {
 import { loadAppearancePref, writeAppearancePref } from "@features/settings/settingsModel";
 
 describe("appearance shared helpers (#PUX-004 Track B)", () => {
-  it("names the shipped theme and panels option, and the SQLite key", () => {
-    expect(THEME_IDS).toEqual(["dark"]);
+  it("names the shipped themes and panels option, and the SQLite key", () => {
+    expect(THEME_IDS).toEqual(["dark", "light"]);
     expect(WORKSPACE_PANELS_IDS).toEqual(["auto", "drawers"]);
     expect(DEFAULT_THEME_ID).toBe("dark");
     expect(DEFAULT_WORKSPACE_PANELS_ID).toBe("auto");
@@ -29,10 +29,12 @@ describe("appearance shared helpers (#PUX-004 Track B)", () => {
 
   it("accepts only registry ids", () => {
     expect(isThemeId("dark")).toBe(true);
-    expect(isThemeId("light")).toBe(false);
+    expect(isThemeId("light")).toBe(true);
+    expect(isThemeId("vaporwave")).toBe(false);
     expect(isThemeId(undefined)).toBe(false);
     expect(isThemeId(7)).toBe(false);
-    expect(parseThemeId("light")).toBe("dark");
+    expect(parseThemeId("vaporwave")).toBe("dark");
+    expect(parseThemeId("light")).toBe("light");
 
     expect(isWorkspacePanelsId("auto")).toBe(true);
     expect(isWorkspacePanelsId("drawers")).toBe(true);
@@ -48,17 +50,17 @@ describe("appearance shared helpers (#PUX-004 Track B)", () => {
     expect(parseAppearanceSettings(JSON.stringify({ theme: "vaporwave" }))).toEqual(defaults);
     expect(parseAppearanceSettings(JSON.stringify({}))).toEqual(defaults);
     // A row written before panels existed keeps its theme and gains the default option.
-    expect(parseAppearanceSettings(JSON.stringify({ theme: "dark" }))).toEqual(defaults);
+    expect(parseAppearanceSettings(JSON.stringify({ theme: "light" }))).toEqual({ theme: "light", panels: "auto" });
     // Unknown values fall back per field, so one bad id does not reset the other.
     expect(parseAppearanceSettings(JSON.stringify({ theme: "dark", panels: "mosaic" }))).toEqual(defaults);
-    expect(normalizeAppearanceSettings({ theme: "dark", panels: "drawers" })).toEqual({
-      theme: "dark",
+    expect(normalizeAppearanceSettings({ theme: "light", panels: "drawers" })).toEqual({
+      theme: "light",
       panels: "drawers",
     });
   });
 
   it("round-trips the stored form", () => {
-    const stored = { theme: "dark", panels: "drawers" } as const;
+    const stored = { theme: "light", panels: "drawers" } as const;
     expect(parseAppearanceSettings(encodeAppearanceSettings(stored))).toEqual(stored);
   });
 });

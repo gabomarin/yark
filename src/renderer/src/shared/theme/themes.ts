@@ -1,14 +1,27 @@
 import { DEFAULT_THEME_ID, THEME_IDS, isThemeId, type ThemeId } from "@shared/settings/appearance";
-import { radixPalette, type AppThemePalette } from "./tokens";
+import {
+  darkColors,
+  darkLadders,
+  darkPalette,
+  darkShadows,
+  lightColors,
+  lightLadders,
+  lightPalette,
+  lightShadows,
+  type AppThemeColors,
+  type AppThemeLadders,
+  type AppThemePalette,
+  type AppThemeShadows,
+} from "./tokens";
 
 /**
  * Theme registry (#PUX-004 Track B).
  *
- * A theme is a palette, never a second design system: the `--app-*` role map,
- * the semantic colours (ok / attention / fossil / danger), radii, spacing and
- * motion are shared, and feature CSS keeps reading roles instead of palette
- * steps. Adding a theme is one entry here plus its palette - no third copy of
- * the colour language.
+ * A theme is a payload, never a second design system: the `--app-*` role map,
+ * the density tokens and the motion tokens are shared, and feature CSS keeps
+ * reading roles. An entry carries everything that genuinely differs per theme -
+ * the palette (ramps, canvas, contrasts, alphas), the semantic colours, the
+ * elevation ladder and the Mantine colour scales derived from those semantics.
  */
 export interface AppTheme {
   id: ThemeId;
@@ -16,6 +29,9 @@ export interface AppTheme {
   /** Mantine colour scheme the provider mounts for this theme. */
   colorScheme: "dark" | "light";
   palette: AppThemePalette;
+  colors: AppThemeColors;
+  shadows: AppThemeShadows;
+  ladders: AppThemeLadders;
 }
 
 export const THEMES: Readonly<Record<ThemeId, AppTheme>> = {
@@ -23,7 +39,19 @@ export const THEMES: Readonly<Record<ThemeId, AppTheme>> = {
     id: "dark",
     label: "Dark",
     colorScheme: "dark",
-    palette: radixPalette,
+    palette: darkPalette,
+    colors: darkColors,
+    shadows: darkShadows,
+    ladders: darkLadders,
+  },
+  light: {
+    id: "light",
+    label: "Light",
+    colorScheme: "light",
+    palette: lightPalette,
+    colors: lightColors,
+    shadows: lightShadows,
+    ladders: lightLadders,
   },
 };
 

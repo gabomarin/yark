@@ -349,7 +349,7 @@ const DEFAULT_SURFACE_LIFT = 0;
  */
 /**
  * The values the lift mixes from: the palette preview's own ramp when one is
- * active, otherwise the shipped greys. Never `radixPalette` directly, or the
+ * active, otherwise the shipped greys. Never `darkPalette` directly, or the
  * knobs would replace a chosen palette's tint with plain grey.
  */
 export function surfaceLiftBases(
@@ -372,7 +372,7 @@ export function applySurfacePreview(
 ): void {
   const root = document.documentElement;
   /* No picked palette: the shipped steps already own these values (the hairline lift is
-   * baked into `radixPalette`), so drop the override instead of re-deriving it -
+   * baked into `darkPalette`), so drop the override instead of re-deriving it -
    * `platePaletteContext(null)` cannot know the shipped tint. At 0 with a pick this
    * re-applies the base verbatim: removing it would drop the tint back to theme grey. */
   if (bases === null) {

@@ -6,6 +6,19 @@ body,
   margin: 0;
 }
 
+/*
+ * Native widgets follow the mounted theme instead of the OS default: scrollbars
+ * in contexts that ignore `scrollbar-color`, `<select>` popups, the text caret
+ * and autofill. Mantine writes the scheme attribute for us.
+ */
+:root[data-mantine-color-scheme="dark"] {
+  color-scheme: dark;
+}
+
+:root[data-mantine-color-scheme="light"] {
+  color-scheme: light;
+}
+
 * {
   box-sizing: border-box;
   scrollbar-width: thin;

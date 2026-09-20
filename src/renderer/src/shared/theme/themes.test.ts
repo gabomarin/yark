@@ -1,51 +1,67 @@
+import { readFileSync } from "node:fs";
 import { DEFAULT_THEME } from "@mantine/core";
 import { describe, expect, it } from "vitest";
 import { createAppCssVariablesResolverForAppearance, createAppThemeForAppearance } from "./theme";
 import { APP_THEME_LIST, DEFAULT_APP_THEME, THEMES, resolveAppTheme } from "./themes";
-import { radixPalette } from "./tokens";
+import { darkPalette } from "./tokens";
+
+/**
+ * The map the dark theme resolved to before the per-theme payload split
+ * (#PUX-004 B3). It is the safety net for that refactor: splitting the semantic
+ * colours, shadows and Mantine ladders onto the registry must not move a single
+ * value of the shipped theme.
+ */
+const darkResolverSnapshot: unknown = JSON.parse(
+  readFileSync("src/renderer/src/shared/theme/darkResolverSnapshot.json", "utf8"),
+);
 
 describe("theme registry (#PUX-004 Track B)", () => {
-  it("ships the dark theme as a named registry entry", () => {
-    expect(THEMES.dark.id).toBe("dark");
-    expect(THEMES.dark.label).toBe("Dark");
-    expect(THEMES.dark.colorScheme).toBe("dark");
-    expect(DEFAULT_APP_THEME).toBe(THEMES.dark);
-    expect(APP_THEME_LIST.map((theme) => theme.id)).toEqual(["dark"]);
+  it("names both shipped themes and keeps dark as the default", () => {
+    expect(APP_THEME_LIST.map((theme) => theme.id)).toEqual(["dark", "light"]);
+    expect(DEFAULT_APP_THEME.id).toBe("dark");
+    expect(THEMES.light.colorScheme).toBe("light");
   });
 
-  it("falls back to the default theme for an unknown or missing id", () => {
-    expect(resolveAppTheme("light").id).toBe("dark");
+  it("resolves an unknown or missing id to the default theme", () => {
+    expect(resolveAppTheme("vaporwave").id).toBe("dark");
     expect(resolveAppTheme(null).id).toBe("dark");
     expect(resolveAppTheme(undefined).id).toBe("dark");
+    expect(resolveAppTheme("light").id).toBe("light");
   });
 
-  it("carries the palette as data, so a second theme is an entry and not a second design system", () => {
-    // The registry entry owns the palette: `theme.ts` reads it instead of the
-    // shipped import, which is what makes a new theme a data change.
-    expect(THEMES.dark.palette).toBe(radixPalette);
+  it("keeps the shipped dark theme identical after the per-theme payload split", () => {
+    const resolved = createAppCssVariablesResolverForAppearance(THEMES.dark, "comfortable")(DEFAULT_THEME);
+    // `light` is a scheme map shared by every theme (it was empty before B3 and
+    // is filled now), so the regression net covers the roles and the dark map.
+    expect({ variables: resolved.variables, dark: resolved.dark }).toEqual({
+      variables: (darkResolverSnapshot as { variables: unknown }).variables,
+      dark: (darkResolverSnapshot as { dark: unknown }).dark,
+    });
+  });
+
+  it("carries the palette as data, so a theme is an entry and not a second design system", () => {
+    expect(THEMES.dark.palette).toBe(darkPalette);
 
     const vars = createAppCssVariablesResolverForAppearance(DEFAULT_APP_THEME, "compact")(DEFAULT_THEME).variables;
-    expect(vars["--ark-gray-2"]).toBe(radixPalette.gray[1]);
-    expect(vars["--ark-background"]).toBe(radixPalette.background);
-    // Roles stay shared and keep pointing at the palette steps.
+    // Roles stay shared and keep pointing at the active palette's steps.
     expect(vars["--app-color-surface-chrome"]).toBe("var(--ark-gray-2)");
     expect(vars["--app-color-bg"]).toBe("var(--ark-background)");
+    expect(vars["--app-color-ok"]).toBe(THEMES.dark.colors.ok);
+    expect(vars["--app-color-ok"]).not.toBe(THEMES.light.colors.ok);
   });
 
-  it("derives every --ark-* value from the palette, so a theme stays data", () => {
-    // Guards the claim in themes.ts: if a value is hardcoded in the builder, a
-    // second theme would silently inherit dark-oriented steps.
-    const vars = createAppCssVariablesResolverForAppearance(DEFAULT_APP_THEME, "compact")(DEFAULT_THEME).variables;
+  it.each(APP_THEME_LIST)("derives every --ark-* value from the $label palette", (theme) => {
+    const vars = createAppCssVariablesResolverForAppearance(theme, "compact")(DEFAULT_THEME).variables;
     const paletteValues = new Set<string>([
-      ...radixPalette.blue,
-      ...radixPalette.blueAlpha,
-      ...radixPalette.gray,
-      ...radixPalette.grayAlpha,
-      radixPalette.background,
-      radixPalette.blueContrast,
-      radixPalette.blueSurface,
-      radixPalette.grayContrast,
-      radixPalette.graySurface,
+      ...theme.palette.blue,
+      ...theme.palette.blueAlpha,
+      ...theme.palette.gray,
+      ...theme.palette.grayAlpha,
+      theme.palette.background,
+      theme.palette.blueContrast,
+      theme.palette.blueSurface,
+      theme.palette.grayContrast,
+      theme.palette.graySurface,
     ]);
 
     const hardcoded = Object.entries(vars)
@@ -56,11 +72,13 @@ describe("theme registry (#PUX-004 Track B)", () => {
     expect(hardcoded).toEqual([]);
   });
 
-  it("feeds the entry palette into the Mantine colour scales", () => {
-    const theme = createAppThemeForAppearance(DEFAULT_APP_THEME, "compact");
+  it.each(APP_THEME_LIST)("feeds the $label palette and ladders into Mantine", (theme) => {
+    const mantine = createAppThemeForAppearance(theme, "compact");
 
-    expect(theme.colors?.dark?.[0]).toBe(radixPalette.gray[11]);
-    expect(theme.colors?.blue?.[5]).toBe(radixPalette.blue[8]);
+    expect(mantine.colors?.dark?.[0]).toBe(theme.palette.gray[11]);
+    expect(mantine.colors?.blue?.[5]).toBe(theme.palette.blue[8]);
+    expect(mantine.colors?.ok).toEqual(theme.ladders.ok);
+    expect(mantine.colors?.red).toEqual(theme.ladders.red);
   });
 
   it("composes with density: colours follow the theme, scales follow density", () => {

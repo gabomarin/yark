@@ -1,7 +1,7 @@
 /**
  * TEMP (PUX-004) — palette presets for the appearance preview.
  *
- * `SHIPPED_PROPOSAL` mirrors what is baked into `radixPalette` / `accentPalette`
+ * `SHIPPED_PROPOSAL` mirrors what is baked into `darkPalette` / `accentPalette`
  * (`tokens.ts`) and is applied on first load, so a dev run and the installed app show
  * the same picture — the tool must never paint a palette the app does not have. The
  * other two are comparison points: "paleo tech" (logo-derived; its deeper `#2a72e8`
@@ -78,7 +78,7 @@ const DARCULA_PROPOSAL: PaletteProposal = {
 /**
  * The baked shipped palette (PUX-004 decision): surface `#10407d` at darkness 0.65 /
  * intensity 0.55, hairline step lifted 8%, no plate warmth, shipped accent. Its numbers
- * must stay in step with `radixPalette` in `tokens.ts`, or "preview off" stops matching
+ * must stay in step with `darkPalette` in `tokens.ts`, or "preview off" stops matching
  * the installed app.
  */
 export const SHIPPED_PROPOSAL: PaletteProposal = {

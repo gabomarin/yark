@@ -40,6 +40,12 @@
   mask-image: radial-gradient(120% 100% at 32% -14%, #000 0%, rgba(0, 0, 0, 0.72) 46%, rgba(0, 0, 0, 0.24) 100%);
 }
 
+/* The grain is dark noise, so on a light canvas it reads as dirt rather than
+ * texture: the light theme keeps the shell plain. */
+:global([data-mantine-color-scheme="light"]) .main::before {
+  background-image: none;
+}
+
 /* TEMP (PUX-004) — brand-art candidates. Each swaps only the tile: inset, the fade
  * mask and `z-index` stay in the base rule, so every option fades the same way. The
  * shipped default is the base honeycomb (`hex`), which needs no rule. */

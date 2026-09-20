@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { accentPalette, appTokens, radixPalette } from "./tokens";
+import { APP_THEME_LIST, type AppTheme } from "./themes";
 
 /**
- * Contrast contract for the shipped default theme (#PUX-004).
+ * Contrast contract, per shipped theme (#PUX-004).
  *
- * The palette is swappable, so "looks fine on my screen" is not a gate. These
- * numbers are the shipped dark Paleo-Tech ramp; a palette change that breaks
- * them fails here instead of shipping unreadable states.
+ * The palette is swappable, so "looks fine on my screen" is not a gate. Every
+ * theme in the registry runs the same floors against its own ramp; the light
+ * theme is held to AA on the filled accent because it was authored with a solid
+ * that clears it, while the dark theme keeps its documented 3.29:1 gap.
  */
 
 function channelToLinear(channel: number): number {
@@ -27,19 +28,24 @@ function contrast(a: string, b: string): number {
   return ((hi as number) + 0.05) / ((lo as number) + 0.05);
 }
 
-const SURFACE = {
-  chrome: radixPalette.gray[1],
-  panel: radixPalette.gray[2],
-  control: radixPalette.gray[4],
-  border: radixPalette.gray[6],
-  text: radixPalette.gray[11],
-  muted: appTokens.colors.muted,
-} as const;
+/** Radix role steps: 2 chrome, 3 panel, 5 control, 7 border, 12 text, 11 muted. */
+function surfacesOf(theme: AppTheme) {
+  return {
+    chrome: theme.palette.gray[1] as string,
+    panel: theme.palette.gray[2] as string,
+    control: theme.palette.gray[4] as string,
+    border: theme.palette.gray[6] as string,
+    text: theme.palette.gray[11] as string,
+    muted: theme.palette.gray[10] as string,
+  };
+}
 
 /** AA for normal-size text. */
 const TEXT_MIN = 4.5;
 
-describe("default theme contrast", () => {
+describe.each(APP_THEME_LIST)("$label theme contrast", (theme) => {
+  const SURFACE = surfacesOf(theme);
+
   it("keeps body text and muted copy readable on the shell surfaces", () => {
     for (const surface of [SURFACE.chrome, SURFACE.panel, SURFACE.control]) {
       expect(contrast(SURFACE.text, surface)).toBeGreaterThanOrEqual(TEXT_MIN);
@@ -48,9 +54,9 @@ describe("default theme contrast", () => {
   });
 
   it("keeps the accent usable for controls, for text, and as a label backdrop", () => {
-    // Step 9 is the solid accent, step 11 its text/icon tone (see accentPalette).
-    const solid = accentPalette.steps[8];
-    const asText = accentPalette.steps[10];
+    // Step 9 is the solid accent, step 11 its text/icon tone (see the palette).
+    const solid = theme.palette.blue[8] as string;
+    const asText = theme.palette.blue[10] as string;
     const surfaces = [
       ["chrome", SURFACE.chrome],
       ["panel", SURFACE.panel],
@@ -68,27 +74,29 @@ describe("default theme contrast", () => {
         failures.push(`accent-text on ${name} = ${textRatio.toFixed(2)} (min ${TEXT_MIN})`);
       }
     }
-    // Known gap (open): a white label on the solid accent is 3.29:1, below AA text. It is the
-    // label every filled primary shares (New server, Continue, Apply, and now the lifecycle
-    // Start/Resume), so closing it is one global decision about the accent, not a per-button fix.
-    // Reaching 4.5 needs a darker solid or black labels — a brand decision, not a
-    // token bug, so this only fails if it gets *worse* than the 3:1 control bar.
+    /*
+     * The white label on a filled primary. The dark accent ships a documented
+     * 3.29:1 gap (one global brand decision, see docs/design-system.md); the
+     * light accent was authored to clear AA, so it is held to that floor.
+     */
+    const labelMin = theme.colorScheme === "light" ? TEXT_MIN : 3;
     const labelRatio = contrast("#ffffff", solid);
-    if (labelRatio < 3) {
-      failures.push(`white label on accent = ${labelRatio.toFixed(2)} (min 3)`);
+    if (labelRatio < labelMin) {
+      failures.push(`white label on accent = ${labelRatio.toFixed(2)} (min ${labelMin})`);
     }
     expect(failures, failures.join(" | ")).toEqual([]);
   });
 
   it("keeps every semantic status colour readable as text", () => {
     const semantic = {
-      ok: appTokens.colors.ok,
-      warn: appTokens.colors.warn,
-      attention: appTokens.colors.attention,
-      bad: appTokens.colors.bad,
-      dangerBright: appTokens.colors.dangerBright,
-      cryo: appTokens.colors.cryo,
-      fossil: appTokens.colors.fossil,
+      ok: theme.colors.ok,
+      warn: theme.colors.warn,
+      attention: theme.colors.attention,
+      bad: theme.colors.bad,
+      dangerBright: theme.colors.dangerBright,
+      // `--app-color-cryo` is the palette's step 11, not a fixed hex.
+      cryo: theme.palette.blue[10] as string,
+      fossil: theme.colors.fossil,
     };
     const failures: string[] = [];
     for (const [name, value] of Object.entries(semantic)) {
@@ -104,10 +112,10 @@ describe("default theme contrast", () => {
   });
 
   it("documents the card-separation gap instead of hiding it", () => {
-    // Known gap: raised cards separate from the shell by a ~1.15:1 fill and a
-    // ~1.80:1 hairline, below WCAG 1.4.11's 3:1 for component boundaries. Raising
-    // it is a design decision tracked in docs/design-system.md; this assertion
-    // only fails if the separation gets *worse*.
+    // Known gap: raised cards separate from the shell by a small fill delta and a
+    // hairline, below WCAG 1.4.11's 3:1 for component boundaries. Raising it is a
+    // design decision tracked in docs/design-system.md; this assertion only fails
+    // if the separation gets *worse* than what shipped.
     expect(contrast(SURFACE.chrome, SURFACE.panel)).toBeGreaterThan(1.1);
     expect(contrast(SURFACE.border, SURFACE.panel)).toBeGreaterThan(1.6);
   });
