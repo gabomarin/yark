@@ -100,6 +100,11 @@ export function AppProviders({ children, density = "compact", themeId = null }: 
 
   return (
     <UiDensityContext.Provider value={density}>
+      {/*
+        The scheme is the theme's, but it stays a *default* on purpose: B3 (a light
+        theme) has to switch schemes at runtime, and that needs `forceColorScheme`
+        or a remount - `defaultColorScheme` only seeds the first mount.
+      */}
       <MantineProvider
         theme={theme}
         cssVariablesResolver={cssVariablesResolver}
