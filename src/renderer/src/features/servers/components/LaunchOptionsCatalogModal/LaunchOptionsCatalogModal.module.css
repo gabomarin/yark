@@ -80,10 +80,12 @@
   background: var(--app-color-surface-control);
 }
 
+/* An active category filter is the same chip with an accent outline and label, not a
+ * tinted fill: the palette stays neutral and the accent marks the state. */
 .filterActive {
   color: var(--app-color-accent-text);
   border-color: var(--app-color-accent);
-  background: var(--app-color-accent-subtle);
+  background: var(--app-color-surface-control);
 }
 
 .filterCount {
@@ -194,10 +196,13 @@
   background: var(--app-color-surface-control);
 }
 
+/* Same selection language as the sidebar, Settings nav and the Logs / Server-list rows: a
+ * neutral fill plus an accent marker. The tinted `accent-subtle` fill this used to carry
+ * read as a saturated blue block next to the muted navy palette. */
 .rowActive {
-  border-color: var(--app-color-accent);
-  background: var(--app-color-accent-subtle);
-  box-shadow: inset 3px 0 0 var(--app-color-accent);
+  border-color: var(--app-color-accent-subtle);
+  background: var(--app-list-selected-bg);
+  box-shadow: var(--app-list-selected-inset);
 }
 
 .token {
