@@ -53,8 +53,12 @@
   overflow: hidden;
 }
 
-/* Only the content scrolls: header and footer stay pinned. */
+/* Only the content scrolls: header and footer stay pinned. A flex column, like the in-dialog
+ * body the atom replaced: several dialogs (maps search, catalog pickers) size their inner
+ * panes with `flex: 1; min-height: 0`, which does nothing inside a plain block. */
 .bodyContent {
+  display: flex;
+  flex-direction: column;
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
