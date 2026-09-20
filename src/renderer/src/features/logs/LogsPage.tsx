@@ -190,7 +190,7 @@ export function LogsPage(props: Props): ReactElement {
                   value={search}
                   onChange={setSearch}
                   label="Search events across servers"
-                  placeholder="Search messages…"
+                  placeholder="Search servers, types, or messages."
                   className={classes.fleetSearch}
                 />
               </Group>

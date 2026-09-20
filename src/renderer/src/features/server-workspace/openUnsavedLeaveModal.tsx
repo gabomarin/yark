@@ -24,8 +24,8 @@ export function openUnsavedLeaveModal(input: {
             Keep editing
           </Button>
           <Button
-            color="fossil"
-            variant="default"
+            color="red"
+            variant="subtle"
             onClick={() => {
               modals.close(id);
               input.onDiscard();

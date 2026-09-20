@@ -7,7 +7,7 @@ export type ServerCardRuntimeAction = {
   kind: "enable" | "start" | "stop" | "starting" | "stopping";
   label: string;
   color: string;
-  variant: "filled" | "default" | "subtle" | "light";
+  variant: "filled" | "default";
   disabled: boolean;
   /** Tooltip when it differs from the button label (e.g. why Start is locked). */
   hint?: string;
@@ -19,7 +19,7 @@ export type ServerCardRuntimeAction = {
 export type ServerCardRestartAction = {
   label: string;
   /** Fluent appearance: Restart is a secondary flow control, so no colour. */
-  variant: "default" | "filled" | "subtle" | "light";
+  variant: "default" | "filled";
   disabled: boolean;
   visible: boolean;
 };
@@ -31,7 +31,7 @@ export type ServerCardUpdateAction = {
   updateState: ServerUpdateState | null;
   label: string;
   color: string;
-  variant: "filled" | "default" | "subtle" | "light";
+  variant: "filled" | "default";
   disabled: boolean;
   visible: boolean;
 };
@@ -52,7 +52,7 @@ export type ServerCardPrimaryAction = {
     | "stop";
   label: string;
   color: string;
-  variant: "filled" | "default" | "subtle" | "light";
+  variant: "filled" | "default";
   disabled: boolean;
 };
 

@@ -274,7 +274,7 @@ function MapPackHint(props: { detail: ModMetadata }): ReactElement | null {
   if (!isMapModCandidate(props.detail)) return null;
   const suggestion = suggestMapTokenFromMetadata(props.detail);
   return (
-    <AppAlert variant="light" color="blue" title={MAP_NAME_COPY.mapPackAlertTitle} radius="md">
+    <AppAlert variant="light" color="blue" title={MAP_NAME_COPY.mapPackAlertTitle}>
       <MapNameHint suggestion={suggestion} variant="embedded" />
     </AppAlert>
   );

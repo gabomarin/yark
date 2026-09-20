@@ -309,8 +309,6 @@ export function CloneServerDialog(props: Props): ReactElement {
                 </AppAlert>
               )}
             </Stack>
-
-
           </>
         )}
       </Stack>
