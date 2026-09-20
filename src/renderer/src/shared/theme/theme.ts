@@ -48,6 +48,12 @@ function createAppCssVariablesResolver(
        */
       "--app-shell-glow": "rgba(255, 255, 255, 0.055)",
       "--app-shell-atmosphere": "none",
+      /*
+       * Brand, not theme: the logo lockup is a dark-navy mark with a light
+       * wordmark, so the light theme backs it with this plate instead of leaving
+       * it to disappear into a near-white sidebar.
+       */
+      "--app-brand-plate": "#0d1526",
       "--app-color-surface-panel": "var(--ark-gray-3)",
       "--app-color-surface-control": "var(--ark-gray-5)",
       "--app-color-surface-control-hover": "var(--ark-gray-6)",

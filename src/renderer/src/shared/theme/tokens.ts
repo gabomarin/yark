@@ -129,30 +129,37 @@ export const darkPalette = {
 /**
  * Light palette (#PUX-004 B3). Same hue as the dark ramp (257) with a minimal
  * chroma, inverted direction: 1 is the lightest (app background) and 12 the
- * darkest (high-contrast text). Measured against the contrast contract:
- * text 11.6-14.9:1 on chrome/panel/control, muted 5.6-7.2:1, accent solid
- * 4.19:1 as a control on the panel, accent text 7.2:1, white label on the
- * solid accent 5.0:1 (the dark theme's documented 3.29:1 gap is closed here),
- * chrome/panel separation 1.11:1 and border/panel 1.68:1.
+ * darkest (high-contrast text).
+ *
+ * Surfaces stay near-white and the separation comes from a light hairline plus
+ * the elevation ladder, not from a visible grey step: a light theme that leans
+ * on grey fills with hard borders reads like a 9x-era dialog. The canvas is the
+ * one clearly grey surface (`background`), so the shell reads as a window behind
+ * near-white content.
+ *
+ * Measured against the contract: text 13.9-15.8:1 on chrome/panel/control, muted
+ * 6.5-7.4:1, accent solid 4.62:1 as a control on the panel, accent text 7.97:1,
+ * white label on the solid accent 5.0:1 (the dark theme's documented 3.29:1 gap
+ * is closed here), canvas/chrome 1.2:1, chrome/panel 1.04:1 and border/panel
+ * 1.31:1 (the light floors, documented in theme.contrast.test.ts).
  */
 export const lightPalette = {
-  /** Canvas, a step below the chrome so the shell reads as chrome behind panels. */
-  background: "#edf0f6",
+  background: "#e2e6ec",
   blue: lightAccentPalette.steps,
   blueAlpha: lightAccentPalette.alpha,
   gray: [
-    "#fafcff",
-    "#f5f7fa",
-    "#e9ebee",
-    "#e2e5e8",
-    "#dadce0",
-    "#d2d4d7",
-    "#b5b7bb",
-    "#a3a5a8",
-    "#7e8084",
-    "#6f7276",
+    "#fbfeff",
+    "#f8fafe",
+    "#f4f6f9",
+    "#eff1f4",
+    "#eaecef",
+    "#e4e6ea",
+    "#d7d9dc",
+    "#c5c7cb",
+    "#a2a5a9",
+    "#898c90",
     "#505356",
-    "#1f2225",
+    "#1d1f23",
   ],
   grayAlpha: [
     "#0a0f1a00",
@@ -328,12 +335,14 @@ export const darkShadows: AppThemeShadows = {
 
 /** Light shadows: a dark hairline instead of the white highlight, and lighter alphas. */
 export const lightShadows: AppThemeShadows = {
-  panel: "0 1px 0 rgba(16, 24, 40, 0.06)",
-  elevation2: "0 0 2px rgba(16, 24, 40, 0.06), 0 1px 2px rgba(16, 24, 40, 0.08)",
-  elevation4: "0 0 2px rgba(16, 24, 40, 0.06), 0 2px 4px rgba(16, 24, 40, 0.1)",
-  elevation8: "0 0 2px rgba(16, 24, 40, 0.08), 0 4px 8px rgba(16, 24, 40, 0.12)",
-  elevation16: "0 0 4px rgba(16, 24, 40, 0.08), 0 8px 16px rgba(16, 24, 40, 0.14)",
-  elevation28: "0 0 8px rgba(16, 24, 40, 0.08), 0 14px 28px rgba(16, 24, 40, 0.16)",
+  panel: "0 1px 0 rgba(16, 24, 40, 0.05)",
+  /* The light surfaces sit within a few percent of each other, so the elevation
+   * ladder - not the fill - is what separates a card from the pane behind it. */
+  elevation2: "0 0 2px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.1)",
+  elevation4: "0 0 2px rgba(16, 24, 40, 0.08), 0 2px 4px rgba(16, 24, 40, 0.12)",
+  elevation8: "0 0 2px rgba(16, 24, 40, 0.1), 0 4px 8px rgba(16, 24, 40, 0.14)",
+  elevation16: "0 0 4px rgba(16, 24, 40, 0.1), 0 8px 16px rgba(16, 24, 40, 0.16)",
+  elevation28: "0 0 8px rgba(16, 24, 40, 0.1), 0 14px 28px rgba(16, 24, 40, 0.18)",
 };
 
 const sharedColors = {

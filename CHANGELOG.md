@@ -12,7 +12,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Added
 
 - **Settings → Appearance** groups the shell's look in one place: display size (Compact / Comfortable), theme and where the server workspace puts its panels (Auto / Drawers), with a registry behind each. An unknown or missing stored id falls back to the default, and the choice persists across restarts.
-- **Light theme**: a second theme ships alongside dark, with its own ramp, semantic colours, elevation ladder and Mantine scales. The dark theme is unchanged (pinned by a snapshot test), the light accent closes the white-label contrast gap that dark still documents, and `color-scheme` follows the theme so native widgets match.
+- **Light theme**: a second theme ships alongside dark, with its own ramp, semantic colours, elevation ladder and Mantine scales. Surfaces stay near-white and separate with a light hairline plus the elevation ladder (a visible grey step with hard borders is what makes a light theme read like an old dialog), the logo gets a brand plate so the dark-navy lockup stays readable, the dark theme is unchanged (pinned by a snapshot test), the light accent closes the white-label contrast gap that dark still documents, and `color-scheme` follows the theme so native widgets match.
 
 - On-demand OpenCodeReview GitHub Action supports `/open-code-review` commands and manual primary/fallback provider selection without reviewing every PR push.
 - Local `npm run e2e:perf` prints a repeatable cold-start-to-Overview timing snapshot for performance investigations (#219).
