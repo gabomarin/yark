@@ -11,11 +11,6 @@
     "src/main/splash/splash.html",
     // Documented design-system atom; no feature import yet — do not delete.
     "src/renderer/src/shared/ui/AccentIconTile/AccentIconTile.tsx",
-    // Appearance preview tooling, detached from the sidebar on purpose (see the re-attach
-    // note in src/renderer/src/layout/Sidebar/Sidebar.tsx). Kept so it can be re-attached
-    // rather than rebuilt; not dead code.
-    "src/renderer/src/layout/Sidebar/PalettePreviewSwitcher.tsx",
-    "src/shared/debug-flags.ts",
   ],
   "ignore": [
     "website/**",

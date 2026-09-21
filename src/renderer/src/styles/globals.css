@@ -158,7 +158,7 @@ body {
   .mantine-Switch-input:not(:checked):not(:disabled)
   ~ .mantine-Switch-track
   .mantine-Switch-thumb {
-  background-color: var(--ark-gray-11);
+  background-color: var(--app-color-text);
 }
 
 /*
@@ -168,9 +168,54 @@ body {
  */
 :root[data-mantine-color-scheme="light"]
   .mantine-SegmentedControl-input:not(:checked)
-  + .mantine-SegmentedControl-label,
-:root[data-mantine-color-scheme="light"]
-  .mantine-SegmentedControl-control:has(.mantine-SegmentedControl-input:not(:checked))
-  .mantine-SegmentedControl-label {
+  + .mantine-SegmentedControl-label {
   color: var(--app-color-muted);
+}
+
+/*
+ * Windows High Contrast / forced colours. Fluent ships a full high-contrast token
+ * set; this is the minimal version that stops the app fighting the OS, which is
+ * the real accessibility gap for a Windows desktop app:
+ * - decorative chrome (brand grain, atmosphere) is noise when the OS owns the
+ *   palette, so it is dropped;
+ * - surfaces become the system canvas and the separation moves to `CanvasText`
+ *   borders, because a forced-colours world separates with strokes, not fills;
+ * - text, muted copy and controls take the system colours, and the focus ring
+ *   becomes `Highlight` (Fluent does the same instead of using the brand accent);
+ * - status tones collapse to `CanvasText`: the meaning then rides on the label and
+ *   the glyph shape, which is how high contrast keeps state readable.
+ * `!important` is deliberate here: Mantine injects its resolver into a body style
+ * that lands after this file, and this is an override of the whole palette.
+ */
+@media (forced-colors: active) {
+  .mantine-AppShell-main::before,
+  .main::before {
+    background-image: none !important;
+  }
+
+  :root {
+    --app-color-bg: Canvas !important;
+    --app-color-surface-chrome: Canvas !important;
+    --app-color-surface-panel: Canvas !important;
+    --app-color-surface-control: ButtonFace !important;
+    --app-color-surface-control-hover: ButtonFace !important;
+    --app-color-surface-alert: Canvas !important;
+    --app-color-panel-raised: Canvas !important;
+    --app-color-border-subtle: CanvasText !important;
+    --app-color-border-control: ButtonText !important;
+    --app-color-text: CanvasText !important;
+    --app-color-text-soft: CanvasText !important;
+    --app-color-muted: GrayText !important;
+    --app-color-muted-soft: GrayText !important;
+    --app-color-accent: Highlight !important;
+    --app-color-accent-text: LinkText !important;
+    --app-color-focus-ring: Highlight !important;
+    --app-color-ok: CanvasText !important;
+    --app-color-warn: CanvasText !important;
+    --app-color-attention: CanvasText !important;
+    --app-color-bad: CanvasText !important;
+    --app-color-danger-bright: CanvasText !important;
+    --app-color-fossil: CanvasText !important;
+    --app-color-cryo: CanvasText !important;
+  }
 }

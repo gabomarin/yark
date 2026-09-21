@@ -188,16 +188,6 @@ export function Sidebar(props: Props): ReactElement {
         })}
       </MantineStack>
 
-      {/*
-       * Dev-only appearance preview (palette, accent, plate hue, lifts, brand texture, INI
-       * chrome A/B, contrast readout). Detached on purpose: the palette is decided and the
-       * panel should not sit in the operator's sidebar. To re-attach, restore the two imports
-       * (`DEBUG_THEME_CONTROLS` from `@shared/debug-flags`, `PalettePreviewSwitcher` from
-       * `./PalettePreviewSwitcher`) and render `{!iconMode && DEBUG_THEME_CONTROLS && <PalettePreviewSwitcher />}`
-       * right here, then build with `YARK_DEBUG_THEME=1`. The files are kept in knip's
-       * `entry` so they are not reported as dead code.
-       */}
-
       <Divider className={classes.rule} />
 
       {iconMode ? (
