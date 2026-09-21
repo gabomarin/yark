@@ -146,6 +146,19 @@ async function run() {
     );
     await page.getByRole("button", { name: "Discard changes" }).click();
 
+    // The discard has to actually revert the toggle, not merely close the editor: without this
+    // the probe passes even when the revert silently fails and the INI stays dirty with the
+    // switch reading a value the profile does not have.
+    await page.waitForFunction(
+      () => {
+        const root = document.querySelector("[data-ini-settings-scroll]");
+        const input = root?.querySelector('input[role="switch"]');
+        return input instanceof HTMLInputElement && input.checked === false;
+      },
+      null,
+      { timeout: 10000 },
+    );
+
     await leaveWorkspaceToServers(page);
     await page.getByRole("button", { name: "Settings", exact: true }).first().click();
     await page.getByRole("heading", { name: "Settings", level: 1 }).waitFor({

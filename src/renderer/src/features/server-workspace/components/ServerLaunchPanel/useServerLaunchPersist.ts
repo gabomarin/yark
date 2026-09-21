@@ -255,6 +255,19 @@ export function useServerLaunchPersist(
   }
 
   async function persistExtraArgsFromRaw(): Promise<void> {
+    /*
+     * The same guard setEnabled and setValue have. Without it this path handed conflicting
+     * arguments straight to schedulePersist - the one route that could reach persistOnce while
+     * the panel was showing a conflict, and the reason the "write failures only" contract on
+     * the error channel had a hole.
+     */
+    const rawIssues = findLaunchArgConflicts({
+      structured: structuredRef.current,
+      extraArgs: parseRawExtraArgs(rawTextRef.current),
+    });
+    if (rawIssues.length > 0) {
+      return;
+    }
     const nextExtra = parseRawExtraArgs(rawTextRef.current);
     extraArgsRef.current = nextExtra;
     const prev = serverProfileRef.current.extraArgs;
