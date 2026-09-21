@@ -662,11 +662,27 @@ function seedGalleryHostedResources(userData) {
   const insertRevision = db.prepare(
     `INSERT INTO hosted_resource_revisions
        (id, resource_id, sequence, content, sha256, validation, created_at, published_at)
-     VALUES (?, ?, 1, ?, ?, 'ok', ?, ?)` ,
+     VALUES (?, ?, 1, ?, ?, 'ok', ?, ?)`,
   );
   for (const resource of resources) {
-    insertResource.run(resource.id, resource.token, resource.displayName, resource.format, now, now, resource.notes, resource.tags);
-    insertRevision.run(randomUUID(), resource.id, resource.content, createHash("sha256").update(resource.content).digest("hex"), now, now);
+    insertResource.run(
+      resource.id,
+      resource.token,
+      resource.displayName,
+      resource.format,
+      now,
+      now,
+      resource.notes,
+      resource.tags,
+    );
+    insertRevision.run(
+      randomUUID(),
+      resource.id,
+      resource.content,
+      createHash("sha256").update(resource.content).digest("hex"),
+      now,
+      now,
+    );
   }
   db.close();
 }
