@@ -1039,7 +1039,9 @@ async function run() {
           await settle(page, 500);
         }
       }
-      await shot(page, path.join(outDir, "workspace-map-search.png"));
+      if ((await page.getByRole("dialog").count()) > 0) {
+        await shot(page, path.join(outDir, "workspace-map-search.png"));
+      }
       await page.keyboard.press("Escape");
       await settle(page, 300);
 
