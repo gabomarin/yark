@@ -118,6 +118,11 @@ async function startServing(harness: Harness): Promise<number> {
 describe("hosted resources settings", () => {
   it("applies rapid enable changes in request order", async () => {
     const harness = createHarness();
+    // Reserve a port instead of letting the service fall back to the default 8935: binding a
+    // fixed port made this suite depend on whatever else holds it on the machine (the
+    // "fails locally, passes in CI" flake), and it is not what this test is about - it
+    // checks the order the two calls are applied in.
+    harness.settings.set(HOSTED_RESOURCES_PORT_SETTING_KEY, String(await reserveLoopbackPort()));
     const first = harness.service.setEnabled(true);
     const second = harness.service.setEnabled(false);
 
