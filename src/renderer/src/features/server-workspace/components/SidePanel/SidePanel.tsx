@@ -9,6 +9,7 @@ import {
   FolderOpen,
   Power,
   ShieldCheck,
+  Trash,
   Wrench,
 } from "@phosphor-icons/react";
 import { Button, Stack, Text } from "@mantine/core";
@@ -47,6 +48,8 @@ interface Props {
   onVerifyFiles: () => void;
   onSaveWorld: () => void;
   onCopyConfiguration: () => void;
+  /** Same flow as the card menu's Delete: it opens the confirmation first. */
+  onDelete?: () => void;
   onKill: () => void;
   onToggleEnabled?: () => void;
 }
@@ -242,6 +245,19 @@ export function SidePanel(props: Props): ReactElement {
           >
             Copy configuration
           </Button>
+          {props.onDelete !== undefined && (
+            <Button
+              size="sm"
+              color="red"
+              variant="subtle"
+              fullWidth
+              justify="flex-start"
+              leftSection={<Trash size={14} />}
+              onClick={props.onDelete}
+            >
+              Delete server
+            </Button>
+          )}
           <Button
             size="sm"
             color="red"

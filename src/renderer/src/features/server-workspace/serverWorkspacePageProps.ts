@@ -60,4 +60,5 @@ export interface ServerWorkspacePageProps {
   onBanPlayer: (serverId: string, playerKey: string) => Promise<boolean>;
   onServerUpdated: () => void;
   onCopyConfiguration: (serverId: string) => void;
+  onDeleteServer?: (id: string) => void;
 }
