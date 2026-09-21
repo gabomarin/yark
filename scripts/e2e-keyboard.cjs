@@ -123,8 +123,6 @@ async function run() {
     await page.keyboard.press("ArrowRight");
     assert.equal(await page.getByRole("tab", { name: "INI Files" }).getAttribute("aria-selected"), "true");
 
-    // Anchored to the INI panel: an unanchored `getByRole("switch").first()` would happily
-    // toggle whatever switch happens to come first and still pass.
     // Anchored to the INI settings table: an unanchored `getByRole("switch").first()` would
     // happily toggle whatever switch happens to come first and still pass.
     const iniPanel = page.locator("[data-ini-settings-scroll]");

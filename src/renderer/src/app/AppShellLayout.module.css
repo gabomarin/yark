@@ -17,9 +17,8 @@
 /* Identity: the shell carries a faint brand texture on `.main::before` with
  * `z-index: -1`: above the pane fill, below every child, so the mask fades the
  * *texture* and not the UI. Strongest where the app is empty and gone under the
- * working surfaces. The shipped texture is film grain (no symbol to recognise); the
- * motif candidates live below as `[data-shell-art="…"]` overrides, reachable from the
- * preview tooling behind `YARK_DEBUG_THEME`. Knobs: the tile's `opacity`, mask stops. */
+ * working surfaces. The shipped texture is film grain (no symbol to recognise).
+ * Knobs: the tile's `opacity`, mask stops. */
 .main::before {
   position: absolute;
   inset: 0;

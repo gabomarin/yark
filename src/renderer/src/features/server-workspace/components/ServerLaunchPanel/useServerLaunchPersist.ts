@@ -32,7 +32,6 @@ export function useServerLaunchPersist(
   rawText: string;
   setRawText: (value: string) => void;
   extraArgs: string[];
-  saving: boolean;
   error: string | null;
   setEnabled: (id: string, enabled: boolean, defaultValue?: string) => Promise<void>;
   setValue: (id: string, value: string) => void;
@@ -273,7 +272,6 @@ export function useServerLaunchPersist(
     rawText,
     setRawText,
     extraArgs,
-    saving,
     error,
     setEnabled,
     setValue,

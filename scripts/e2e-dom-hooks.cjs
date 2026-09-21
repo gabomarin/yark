@@ -42,7 +42,6 @@ async function probeSwitchMotion(locator) {
 
 /** Asserts a switch actually toggled and animated, naming the part that failed. */
 function assertSwitchMotion(motion, what) {
-  assert.ok(motion, `${what}: the switch thumb is not in the DOM - did Mantine's markup change?`);
   assert.equal(motion.changed, true, `${what}: the switch did not toggle`);
   assert.equal(motion.sameNode, true, `${what}: the thumb was replaced instead of kept mounted`);
   assert.equal(motion.connected, true, `${what}: the thumb left the document while toggling`);
