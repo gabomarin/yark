@@ -24,7 +24,15 @@ delete process.env.ELECTRON_RUN_AS_NODE;
  * inside their own panes.
  *
  * Usage: npm run build && node scripts/visual-workspace-tabs.cjs
+ *        YARK_VISUAL_THEME=light node scripts/visual-workspace-tabs.cjs
+ *
+ * Runs dark by default. `YARK_VISUAL_THEME=light` seeds the light theme and asserts the mounted
+ * scheme, so the same contract covers both themes without a second helper: the light shell has
+ * no grain, which leaves elevation and hairlines to do all the separation work.
  */
+
+const THEME = process.env.YARK_VISUAL_THEME === "light" ? "light" : "dark";
+const THEME_LABEL = THEME;
 
 const TABS = ["Server", "INI Files", "Mods", "Launch", "Backups", "Logs", "RCON", "Maintenance", "Ark Server API"];
 
@@ -49,7 +57,7 @@ function seedProfile(profileDir) {
   db.prepare(
     `INSERT INTO app_settings (key, value, updated_at) VALUES (?, ?, ?)
      ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
-  ).run("appearance.v1", JSON.stringify({ theme: "dark", panels: "auto" }), now);
+  ).run("appearance.v1", JSON.stringify({ theme: THEME, panels: "auto" }), now);
   db.prepare("DELETE FROM servers").run();
   db.prepare(
     `INSERT INTO servers (id, name, map, install_dir, enabled, session_name, game_port, query_port, rcon_port,
@@ -159,7 +167,7 @@ async function run() {
 
   const { profileDir } = createE2eFixtureRoots("visual-workspace-tabs");
   seedProfile(profileDir);
-  const outDir = path.join(os.tmpdir(), "ark-gbo-visual-workspace-tabs");
+  const outDir = path.join(os.tmpdir(), "ark-gbo-visual-workspace-tabs", THEME);
   fs.mkdirSync(outDir, { recursive: true });
 
   const app = await launchElectronApp({ profileDir });
@@ -186,8 +194,18 @@ async function run() {
         await page.waitForTimeout(650);
 
         const metrics = await page.evaluate(measureTab);
-        const file = await shot(page, outDir, `workspace-${label}-${size.name}`);
-        reports.push({ tab, size: size.name, file, metrics });
+        const mountedScheme = await page.evaluate(() =>
+          document.documentElement.getAttribute("data-mantine-color-scheme"),
+        );
+        metrics.mountedScheme = mountedScheme;
+        const file = await shot(page, outDir, `workspace-${label}-${THEME_LABEL}-${size.name}`);
+        reports.push({ tab, theme: THEME, size: size.name, file, metrics });
+
+        assert.equal(
+          metrics.mountedScheme,
+          THEME,
+          `${size.name} / ${tab}: the ${THEME} scheme is the one that mounted`,
+        );
 
         assert.equal(
           await page.getByRole("tab", { name: tab, exact: true }).first().getAttribute("aria-selected"),
@@ -210,11 +228,11 @@ async function run() {
     removeFixtureDir(profileDir);
   }
 
-  const summary = { outDir, errors, reports };
+  const summary = { outDir, theme: THEME, errors, reports };
   fs.writeFileSync(path.join(outDir, "summary.json"), JSON.stringify(summary, null, 2), "utf8");
-  console.log(JSON.stringify({ outDir, tabs: reports.length, errors }, null, 2));
+  console.log(JSON.stringify({ outDir, theme: THEME, tabs: reports.length, errors }, null, 2));
   assert.equal(errors.length, 0, `console/page errors during the run: ${errors.slice(0, 3).join(" | ")}`);
-  console.log("VISUAL_WORKSPACE_TABS_OK");
+  console.log(THEME === "light" ? "VISUAL_WORKSPACE_TABS_LIGHT_OK" : "VISUAL_WORKSPACE_TABS_OK");
 }
 
 run().catch((error) => {
