@@ -1,6 +1,6 @@
 ---
 title: Configure SteamCMD, updates, and desktop prefs in YARK Settings
-description: App-wide YARK Settings on Windows — SteamCMD path, self-update, default folders, UI density, close-to-tray, desktop alerts, and Start with Windows.
+description: App-wide YARK Settings on Windows — SteamCMD path, self-update, default folders, appearance (theme, display size), close-to-tray, desktop alerts, and Start with Windows.
 ---
 
 import { withBase } from "../../../data/site";
@@ -39,9 +39,13 @@ closes; there is no normal “leave servers running and quit YARK” option.
 
 Optional convenience when creating new profiles (where you tend to place installs). Each profile still stores its own absolute `installDir`.
 
-## UI density
+## Appearance
 
-**Display size** (compact vs comfortable) applies to the desktop shell only. There is no light/dark theme control — the app uses a dark shell. Density does not change dedicated-server behavior.
+**Display size** (compact vs comfortable), **Theme** (dark or light) and **Server panels** (auto or drawers) all live in Settings -> Appearance. Each applies the moment you change it - nothing needs a restart - and the choice is remembered across restarts. None of them change dedicated-server behavior.
+
+**Windows High Contrast**: YARK follows forced-colours mode, so surfaces, text and controls take the system palette, the focus ring uses `Highlight`, and separation comes from borders instead of fills rather than from brand colour.
+
+**Reduced motion**: with the Windows animation preference set to off, transitions collapse and the ambient pulses in the sidebar stop.
 
 ## Setup assistant
 
