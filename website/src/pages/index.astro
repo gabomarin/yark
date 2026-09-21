@@ -9,6 +9,7 @@ import { site, withBase } from "../data/site";
 import { SHOT_WIDTHS } from "../data/screenshot-media.mjs";
 import { screenshotSlug, screenshots } from "../data/screenshots";
 import { roadmapItems } from "../data/roadmap";
+import { changelog } from "../data/changelog";
 
 const logoSizes = "(max-width: 22rem) calc(100vw - 3rem), 22rem";
 const gallerySizes = "(max-width: 720px) calc(100vw - 3rem), calc(min(72rem, 100vw) / 2)";
@@ -20,6 +21,17 @@ const gallerySizes = "(max-width: 720px) calc(100vw - 3rem), calc(min(72rem, 100
  */
 const gallerySlugs = ["workspace-mods", "backups", "logs", "settings"];
 const galleryShots = screenshots.filter((shot) => gallerySlugs.includes(screenshotSlug(shot)));
+/*
+ * Momentum, from the same source the app's What's new modal reads - the shared curated
+ * changelog. No network call, no hand-copied version, and it cannot go stale: when a release
+ * is cut, the landing says so.
+ */
+const latestRelease = changelog[0];
+const latestHighlights = (
+  latestRelease?.sections.find((section) => section.title === "Highlights")?.items ??
+  latestRelease?.sections[0]?.items ??
+  []
+).slice(0, 3);
 const logoSrcset = `${withBase("/media/yark-logo-320.webp")} 320w, ${withBase("/media/yark-logo-640.webp")} 640w`;
 ---
 
@@ -83,6 +95,18 @@ const logoSrcset = `${withBase("/media/yark-logo-320.webp")} 320w, ${withBase("/
 
     <ProductStage shots={screenshots} />
 
+    <section class="section" id="latest" data-reveal>
+      <h2 data-reveal-child>Latest release</h2>
+      <p class="section-lede" data-reveal-child>
+        <strong>{latestRelease?.version}</strong>{latestRelease?.date ? ` - ${latestRelease.date}` : ""}.{" "}
+        <a href={withBase("/changelog/")}>Full changelog</a>.
+      </p>
+      <ul class="feature-list" data-reveal-child>
+        {latestHighlights.map((item) => (
+          <li>{item}</li>
+        ))}
+      </ul>
+    </section>
     <section class="showcase" id="screenshots" aria-label="Application screenshots" data-reveal>
       <div class="showcase-inner">
         <p class="showcase-eyebrow" data-reveal-child>A look at the app</p>
@@ -142,52 +166,42 @@ const logoSrcset = `${withBase("/media/yark-logo-320.webp")} 320w, ${withBase("/
       </p>
     </section>
 
-  <section class="section" id="scope" data-reveal>
-    <h2 data-reveal-child>Current development scope</h2>
-    <p class="section-lede" data-reveal-child>
-      Areas already being built and exercised in early public prerelease builds
-      (Electron + React + TypeScript on Windows). This is not a shipping product checklist.
-    </p>
-    <ul class="feature-list" data-reveal-child>
-      <li>Multiple server profiles from a single desktop shell</li>
-      <li>Start, stop, restart, and force-stop dedicated instances</li>
-      <li>
-        Per-server <strong>Maintenance</strong> — scheduled restart, optional wild dino wipe, and
-        opt-in auto-update with player chat warnings (while YARK is open)
-      </li>
-      <li>
-        Optional <strong>Ark Server API</strong> tab — community API install, Load on Start, and
-        plugin zips (experimental; not Wildcard)
-      </li>
-      <li>Install, update, and verify server files with SteamCMD; queue jobs on **Downloads**</li>
-      <li>Overview **Update All** for stopped outdated servers; fleet sort/view toggles on Servers</li>
-      <li>Overview fleet metric strip, survivor counts, and dedicated-process RAM/CPU while servers are live</li>
-      <li>Create and Clone suggest the next free game/query/RCON ports across the fleet</li>
-      <li>Visual Map picker, Search Maps… on CurseForge, and official-token remaster linking</li>
-      <li>Create, restore, export, and import backups; review operation history</li>
-      <li>Runtime, update, and Backup history logs with retention for YARK-owned history</li>
-      <li>Move installation folders and opt-in auto-start when YARK launches</li>
-      <li>Cluster create, membership, INI templates, and compliance checks</li>
-      <li>Workspace RCON console for commands, survivors, ban list, and remote AdminListURL whitelist</li>
-      <li>Copy selected configuration between stopped server profiles</li>
-      <li>Server Workspace with visual/raw INI editing and an on-demand configuration assistant</li>
-      <li>
-        Workspace Launch tab — curated ASA flags, flag search, Extra arguments, command preview, and a
-        browsable launch-options catalog
-      </li>
-      <li>Quick jump (Ctrl+K) to pages and servers</li>
-      <li>
-        CurseForge Mods tab — Project IDs, enable/disable without dropping IDs,
-        Discover browse, detail screenshots/description, Worker-backed metadata, and launch-time <code>-mods=</code>
-      </li>
-      <li>
-        Custom / CurseForge Maps launch tokens with map-mod linking, Search Maps…, and Start/Launch alerts
-      </li>
-      <li>Settings for SteamCMD path, appearance (theme and display size), log retention, YARK updates, and related prefs</li>
-      <li>Settings → About Community links for GitHub and the YARK Discord</li>
-      <li>Official ARK network version from Wildcard’s public status CDN</li>
-    </ul>
-  </section>
+    <section class="section" id="scope" data-reveal>
+      <h2 data-reveal-child>What it does</h2>
+      <p class="section-lede" data-reveal-child>
+        Built and exercised in early public prerelease builds (Electron + React + TypeScript on
+        Windows). This is not a shipping product checklist.
+      </p>
+      <div class="feature-grid" data-reveal-child>
+        <article class="feature-card">
+          <h3>Profiles and lifecycle</h3>
+          <p>Several ARK profiles in one shell, with start, stop, restart, force-stop and optional auto-start.</p>
+        </article>
+        <article class="feature-card">
+          <h3>Server files</h3>
+          <p>Install, update and verify with SteamCMD, queue jobs on Downloads, and Update All for a fleet that is stopped and outdated.</p>
+        </article>
+        <article class="feature-card">
+          <h3>Mods and maps</h3>
+          <p>CurseForge Project IDs that survive an enable/disable cycle, Discover browsing, and map-mod linking for custom maps.</p>
+        </article>
+        <article class="feature-card">
+          <h3>Workspace and INI</h3>
+          <p>Visual or raw INI editing, curated launch flags with a command preview, an RCON console, and a configuration assistant on demand.</p>
+        </article>
+        <article class="feature-card">
+          <h3>Backups and logs</h3>
+          <p>Create, restore, export and import backups, with operation history, retention and fleet-wide alerts.</p>
+        </article>
+        <article class="feature-card">
+          <h3>Clusters and maintenance</h3>
+          <p>Cluster membership, shared INI templates and compliance checks, plus scheduled restarts, optional dino wipes and update warnings.</p>
+        </article>
+      </div>
+      <p class="section-lede" data-reveal-child>
+        <a href={withBase("/docs/")}>The docs cover the full surface</a> - every tab, every setting.
+      </p>
+    </section>
 
   <section class="section" id="roadmap" data-reveal>
     <h2 data-reveal-child>Next on the roadmap</h2>
@@ -245,3 +259,48 @@ const logoSrcset = `${withBase("/media/yark-logo-320.webp")} 320w, ${withBase("/
     </p>
   </section>
 </BaseLayout>
+<style>
+  .feature-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  @media (min-width: 800px) {
+    .feature-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .feature-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .feature-card {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1.25rem;
+    background: color-mix(in srgb, var(--bg-1) 70%, transparent);
+  }
+
+  .feature-card h3 {
+    margin: 0 0 0.35rem;
+    font-size: 1rem;
+  }
+
+  .feature-card p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  /* A screenshot reads as a running app, not a flat image. */
+  .shot img {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  }
+</style>
