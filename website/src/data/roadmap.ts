@@ -12,7 +12,7 @@ export type RoadmapItem = {
  *
  * Shipped in v0.22.0 (removed from this list): Settings -> Appearance (theme, display size,
  * server panels) with a light theme, Windows High Contrast support, a boot canvas that follows
- * the saved theme.
+ * the saved theme, and Hosted Resources as an experimental feature.
  * Shipped in v0.20.0 (removed from this list): experimental Ark Server API workspace
  * tab (#243), Settings → About Community GitHub/Discord links, Discord #releases
  * notify after Windows release assets upload.
@@ -48,19 +48,25 @@ export type RoadmapItem = {
  * Shipped in v0.11.0 (removed from this list): remove-from-YARK-only (#267).
  * Shipped in v0.10.0 (removed from this list): import existing install (#254),
  * profile-DB snapshots (#252), per-map world backups (#262), Electron fuses (#217).
+ * Shipped in v0.22.0 (removed from this list): Settings -> Appearance (theme, display size,
+ * server panels) with a light theme, Windows High Contrast support, a boot canvas that follows
+ * the saved theme, and Hosted Resources as an experimental feature.
  * Still omitted here (tracked in-repo): E2E/real-host validation (#12), Authenticode (#142),
- * incomplete-import opt-in (#283) is shipped with Import — not listed as future work.
- * Local AdminListURL / hosted list files remain deferred (Hosted Resources / PHOST-001).
+ * incomplete-import opt-in (#283) is shipped with Import - not listed as future work.
  */
-  export const roadmapItems: RoadmapItem[] = [
-    {
-      tag: "planned",
-      text: "Delete a server from the workspace Quick actions, with confirmation",
-    },
-    {
-      tag: "planned",
-      text: "Local / hosted AdminListURL for ASA admin whitelist (beyond remote http(s))",
-    },
+export const roadmapItems: RoadmapItem[] = [
+  {
+    tag: "building",
+    text: "Hosted Resources (experimental): serve text, INI or JSON from this PC at a URL, for ASA settings that take one - admin whitelist, dynamic config",
+  },
+  {
+    tag: "planned",
+    text: "Point ASA settings that take a URL (admin whitelist, dynamic config) at a local Hosted Resources URL",
+  },
+  {
+    tag: "planned",
+    text: "Delete a server from the workspace Quick actions, with confirmation",
+  },
   {
     tag: "planned",
     text: "Optional AI chat assistant (bring-your-own OpenAI-compatible key) for fleet help",
