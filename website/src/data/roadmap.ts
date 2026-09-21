@@ -10,6 +10,9 @@ export type RoadmapItem = {
  * Prefer operator-visible product work from open issues (not CI/packaging hygiene).
  * Not a ship promise — keep wording directional. Milestones on GitHub stay authoritative.
  *
+ * Shipped in v0.22.0 (removed from this list): Settings -> Appearance (theme, display size,
+ * server panels) with a light theme, Windows High Contrast support, a boot canvas that follows
+ * the saved theme.
  * Shipped in v0.20.0 (removed from this list): experimental Ark Server API workspace
  * tab (#243), Settings → About Community GitHub/Discord links, Discord #releases
  * notify after Windows release assets upload.
@@ -49,11 +52,15 @@ export type RoadmapItem = {
  * incomplete-import opt-in (#283) is shipped with Import — not listed as future work.
  * Local AdminListURL / hosted list files remain deferred (Hosted Resources / PHOST-001).
  */
-export const roadmapItems: RoadmapItem[] = [
-  {
-    tag: "planned",
-    text: "Local / hosted AdminListURL for ASA admin whitelist (beyond remote http(s))",
-  },
+  export const roadmapItems: RoadmapItem[] = [
+    {
+      tag: "planned",
+      text: "Delete a server from the workspace Quick actions, with confirmation",
+    },
+    {
+      tag: "planned",
+      text: "Local / hosted AdminListURL for ASA admin whitelist (beyond remote http(s))",
+    },
   {
     tag: "planned",
     text: "Optional AI chat assistant (bring-your-own OpenAI-compatible key) for fleet help",
