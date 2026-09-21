@@ -170,9 +170,14 @@ the whole list:
 | Radius `lg` 10px, spacing `xl` 28px | Jumps 8→12 and 20→24→32              | 10 and 28                                     | Off-ramp steps kept for layout reasons; changing them moves every screen.                                                                                                                                        |
 | Shadow alphas                       | Dark 0.24/0.28, light 0.12/0.14      | Dark 0.28-0.46, light 0.08-0.18               | The light theme separates with hairline + shadow, so its alphas are tuned to that pair.                                                                                                                          |
 
-**Not covered yet (real gaps, tracked):** Windows High Contrast / `forced-colors`
-(Fluent ships a full high-contrast token set and switches its focus outline to
-`Highlight` - the biggest a11y gap for a Windows desktop app), stroke-width tokens
+**Covered:** Windows High Contrast / `forced-colors` - the app takes the system palette for
+surfaces, text and controls, puts the focus ring on `Highlight`, separates with borders instead
+of fills, and drops the brand texture; verified in the running app with
+`emulateMedia({ forcedColors: "active" })`. Reduced motion is honoured at the **token** level:
+every transition reads `--app-motion-*`, so one media query collapses all of them, plus a sweep
+for keyframe animations (the sidebar's pulses), which are not token-driven.
+
+**Not covered yet (real gaps, tracked):** stroke-width tokens
 (we only have 1px hairlines), `shadow64` and brand-tinted shadows, Fluent's `zIndex*`
 ladder (we use Mantine's), and the granular `colorStatus*` families (we have one tone
 per state plus the Mantine ladders).
