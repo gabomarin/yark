@@ -155,4 +155,62 @@ describe("createServerModsListMutations", () => {
     expect(setError).toHaveBeenCalledWith("Could not save");
     expect(notifySpy).not.toHaveBeenCalled();
   });
+
+  it("restores the previous disabled ids when a toggle persist fails", async () => {
+    const persist = vi.fn(async () => {
+      throw new Error("Could not save");
+    });
+    const disabledIdsRef = { current: ["a"] };
+    const setDisabledIds = vi.fn();
+    const setError = vi.fn();
+    const { toggle } = createServerModsListMutations({
+      configuredIdsRef: { current: ["a", "b"] },
+      disabledIdsRef,
+      metadata: new Map(),
+      cacheRef: { current: {} },
+      setBusyKey: vi.fn(),
+      setDisabledIds,
+      setError,
+      setWarning: vi.fn(),
+      persist,
+      notifyMapModIfNeeded: vi.fn(),
+    });
+
+    await toggle("a", true);
+
+    // Optimistic paint first, then the failed write puts both the ref and the state back.
+    expect(setDisabledIds).toHaveBeenNthCalledWith(1, []);
+    expect(setDisabledIds).toHaveBeenLastCalledWith(["a"]);
+    expect(disabledIdsRef.current).toEqual(["a"]);
+    expect(setError).toHaveBeenCalledWith("Could not save");
+  });
+
+  it("keeps a write that landed when only the follow-up notification throws", async () => {
+    const persist = vi.fn(async () => undefined);
+    const notifyMapModIfNeeded = vi.fn(async () => {
+      throw new Error("notify failed");
+    });
+    const disabledIdsRef = { current: ["a"] };
+    const setDisabledIds = vi.fn();
+    const setError = vi.fn();
+    const { toggle } = createServerModsListMutations({
+      configuredIdsRef: { current: ["a", "b"] },
+      disabledIdsRef,
+      metadata: new Map(),
+      cacheRef: { current: {} },
+      setBusyKey: vi.fn(),
+      setDisabledIds,
+      setError,
+      setWarning: vi.fn(),
+      persist,
+      notifyMapModIfNeeded,
+    });
+
+    await toggle("a", true);
+
+    // The profile has the new value, so undoing the UI here would be a lie.
+    expect(setDisabledIds).toHaveBeenLastCalledWith([]);
+    expect(disabledIdsRef.current).toEqual([]);
+    expect(setError).toHaveBeenCalledWith("notify failed");
+  });
 });
