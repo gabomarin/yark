@@ -1,30 +1,6 @@
 ---
-import { nav, site, withBase } from "../data/site";
-import DownloadIcon from "./DownloadIcon.astro";
-
-const pathname = Astro.url.pathname;
-const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-const pathAfterBase =
-  pathname === base || pathname === `${base}/`
-    ? "/"
-    : pathname.startsWith(`${base}/`)
-      ? pathname.slice(base.length)
-      : pathname;
-
-const isActive = (href: string): boolean =>
-  href === "/"
-    ? pathAfterBase === "/"
-    : href === "/docs/"
-      ? pathAfterBase.startsWith("/docs")
-      : href.endsWith("/")
-        ? pathAfterBase === href || pathAfterBase === href.slice(0, -1)
-        : pathAfterBase.startsWith(href);
-
-const navItems = nav.map((item) => ({
-  ...item,
-  href: withBase(item.href),
-  current: isActive(item.href),
-}));
+import { withBase } from "../data/site";
+import SiteNavLinks from "./SiteNavLinks.astro";
 ---
 
 <header class="site-nav">
@@ -34,37 +10,17 @@ const navItems = nav.map((item) => ({
       <span>YARK</span>
     </a>
     <nav class="site-nav-links" aria-label="Primary">
-      {
-        navItems.map((item) => (
-          <a href={item.href} aria-current={item.current ? "page" : undefined}>
-            {item.label}
-          </a>
-        ))
-      }
-      <a class="site-nav-download" href={site.downloadUrl}>
-        <DownloadIcon />
-        {site.downloadLabel}
-      </a>
+      <SiteNavLinks />
     </nav>
     <details class="mobile-nav">
       <summary>
-          <span class="visually-hidden">Open navigation</span>
+        <span class="visually-hidden">Open navigation</span>
         <span></span>
         <span></span>
         <span></span>
       </summary>
       <nav aria-label="Mobile primary">
-        {
-          navItems.map((item) => (
-            <a href={item.href} aria-current={item.current ? "page" : undefined}>
-              {item.label}
-            </a>
-          ))
-        }
-        <a class="site-nav-download" href={site.downloadUrl}>
-          <DownloadIcon />
-          {site.downloadLabel}
-        </a>
+        <SiteNavLinks />
       </nav>
     </details>
   </div>
