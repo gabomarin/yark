@@ -63,6 +63,15 @@
   padding: 0.4rem 0.55rem;
 }
 
+/*
+ * A row whose dependency is unmet is genuinely unavailable (not merely off): the
+ * Switch is disabled and the row says so. An *off* row gets no dimming at all - the
+ * knob carries that state, so the label and the card keep their colour.
+ */
+.optionRowUnavailable {
+  opacity: 0.85;
+}
+
 .optionRowCaution {
   border-color: var(--app-color-fossil);
   background: color-mix(in srgb, var(--app-color-fossil) 10%, transparent);
