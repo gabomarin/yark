@@ -45,6 +45,37 @@ const rows: ModRow[] = [
 ];
 
 describe("ServerModsTable", () => {
+  it("preserves the switch thumb when its controlled state changes", () => {
+    const props = {
+      mode: "server" as const,
+      busyKey: null,
+      onInspect: vi.fn(),
+      onAdd: vi.fn(),
+      onToggle: vi.fn(),
+      onRemove: vi.fn(),
+      onOpenExternal: vi.fn(),
+      onReorder: vi.fn(),
+    };
+    const { rerender } = render(
+      <AppProviders>
+        <ServerModsTable {...props} rows={rows} />
+      </AppProviders>,
+    );
+    const switchBefore = screen.getByRole("switch", { name: "Disable Alpha Mod" });
+    const thumbBefore = switchBefore.parentElement?.querySelector(".mantine-Switch-thumb");
+    expect(thumbBefore).toBeInstanceOf(HTMLElement);
+
+    rerender(
+      <AppProviders>
+        <ServerModsTable {...props} rows={[{ ...rows[0]!, enabled: false }, rows[1]!]} />
+      </AppProviders>,
+    );
+
+    const switchAfter = screen.getByRole("switch", { name: "Enable Alpha Mod" });
+    expect(switchAfter).not.toBeChecked();
+    expect(switchAfter.parentElement?.querySelector(".mantine-Switch-thumb")).toBe(thumbBefore);
+  });
+
   it("confirms before removing from the row context menu", async () => {
     const user = userEvent.setup();
     const onRemove = vi.fn();
