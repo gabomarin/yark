@@ -926,15 +926,14 @@ async function run() {
      * "disabled" unless the opt-in setting is on - so the marketing shot would show the off
      * state of the feature it advertises.
      */
+    // Mirrors HOSTED_RESOURCES_ENABLED_SETTING_KEY in src/shared/settings/hosted-resources.ts.
     {
-      const settingsDb = new DatabaseSync(path.join(userData, "yark-server-manager.db"));
-      settingsDb
-        .prepare(
-          "INSERT INTO app_settings (key, value, updated_at) VALUES ('hostedResources.enabled', 'true', ?) " +
-            "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
-        )
-        .run(new Date().toISOString());
-      settingsDb.close();
+      const db = openSeedDb(userData);
+      try {
+        upsertAppSetting(db, "hostedResources.enabled", "true", new Date().toISOString());
+      } finally {
+        db.close();
+      }
     }
     applyDemoMapsInDb(userData);
     console.log(`WEBSITE_SCREENSHOTS_SEEDED=${DEMO_FLEET.map((d) => d.name).join(",")} cluster=${DEMO_CLUSTER_ID}`);

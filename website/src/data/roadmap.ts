@@ -10,7 +10,6 @@ export type RoadmapItem = {
  * Prefer operator-visible product work from open issues (not CI/packaging hygiene).
  * Not a ship promise — keep wording directional. Milestones on GitHub stay authoritative.
  *
-
  * Shipped in v0.22.0 (removed from this list): Settings -> Appearance (theme, display size,
  * server panels) with a light theme, Windows High Contrast support, a boot canvas that follows
  * the saved theme, and Hosted Resources as an experimental feature.
@@ -49,7 +48,7 @@ export type RoadmapItem = {
  * Shipped in v0.11.0 (removed from this list): remove-from-YARK-only (#267).
  * Shipped in v0.10.0 (removed from this list): import existing install (#254),
  * profile-DB snapshots (#252), per-map world backups (#262), Electron fuses (#217).
-
+ *
  * Still omitted here (tracked in-repo): E2E/real-host validation (#12), Authenticode (#142),
  * incomplete-import opt-in (#283) is shipped with Import - not listed as future work.
  */

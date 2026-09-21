@@ -1,0 +1,34 @@
+---
+import { nav, site, withBase } from "../data/site";
+import DownloadIcon from "./DownloadIcon.astro";
+
+const pathname = Astro.url.pathname;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const pathAfterBase =
+  pathname === base || pathname === `${base}/`
+    ? "/"
+    : pathname.startsWith(`${base}/`)
+      ? pathname.slice(base.length)
+      : pathname;
+
+const isActive = (href: string): boolean =>
+  href === "/"
+    ? pathAfterBase === "/"
+    : href === "/docs/"
+      ? pathAfterBase.startsWith("/docs")
+      : href.endsWith("/")
+        ? pathAfterBase === href || pathAfterBase === href.slice(0, -1)
+        : pathAfterBase.startsWith(href);
+---
+
+{
+  nav.map((item) => (
+    <a href={withBase(item.href)} aria-current={isActive(item.href) ? "page" : undefined}>
+      {item.label}
+    </a>
+  ))
+}
+<a class="site-nav-download" href={site.downloadUrl}>
+  <DownloadIcon />
+  {site.downloadLabel}
+</a>
