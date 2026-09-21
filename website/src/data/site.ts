@@ -70,7 +70,7 @@ export function withBase(path = "/"): string {
 
 export const nav = [
   { href: "/", label: "Home" },
-  { href: "/#screenshots", label: "Screenshots" },
+  { href: "/screenshots/", label: "Screenshots" },
   { href: "/docs/", label: "Docs" },
   { href: "/changelog/", label: "Changelog" },
   { href: "/faq/", label: "FAQ" },
