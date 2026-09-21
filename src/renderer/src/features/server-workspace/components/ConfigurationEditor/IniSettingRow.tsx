@@ -1,6 +1,7 @@
 import { ArrowUUpLeft, ArrowSquareOut } from "@phosphor-icons/react";
-import { ActionIcon, NumberInput, Switch, Text, TextInput, Tooltip } from "@mantine/core";
+import { ActionIcon, NumberInput, Text, TextInput, Tooltip } from "@mantine/core";
 import type { IniFileKey } from "@shared/types";
+import { AppSwitch } from "@ui/AppSwitch/AppSwitch";
 import type { ReactElement } from "react";
 import {
   lookupDefaultValue,
@@ -62,17 +63,12 @@ export function IniSettingRow(props: Props): ReactElement {
             {row.value.trim().length > 0 ? row.value : "Not set"}
           </Text>
         ) : kind === "boolean" ? (
-          <Switch
+          <AppSwitch
             aria-label={label}
             checked={row.value.toLowerCase() === "true"}
-            onChange={(event) =>
-              onUpdateValue(
-                row.fileKey,
-                row.section,
-                row.key,
-                event.currentTarget.checked ? "True" : "False",
-                row.occurrence,
-              )
+            deferChange
+            onCheckedChange={(checked) =>
+              onUpdateValue(row.fileKey, row.section, row.key, checked ? "True" : "False", row.occurrence)
             }
           />
         ) : kind === "number" ? (

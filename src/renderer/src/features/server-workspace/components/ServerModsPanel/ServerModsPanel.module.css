@@ -237,23 +237,6 @@
   align-items: center;
 }
 
-/* Keep the thumb animation on the compositor while a large mods table rerenders. */
-.enableControl :global(.mantine-Switch-thumb) {
-  inset-inline-start: var(--switch-track-label-padding);
-  transform: translateX(0);
-  transition: transform 150ms ease;
-}
-
-.enableControl :global(.mantine-Switch-input:checked + * > .mantine-Switch-thumb) {
-  transform: translateX(calc(var(--switch-width) - var(--switch-thumb-size) - 2 * var(--switch-track-label-padding)));
-}
-
-:global([dir="rtl"]) .enableControl :global(.mantine-Switch-input:checked + * > .mantine-Switch-thumb) {
-  transform: translateX(
-    calc(-1 * (var(--switch-width) - var(--switch-thumb-size) - 2 * var(--switch-track-label-padding)))
-  );
-}
-
 .identityGroup {
   min-width: 0;
   width: 100%;

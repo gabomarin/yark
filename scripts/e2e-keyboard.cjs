@@ -123,6 +123,28 @@ async function run() {
     await page.keyboard.press("ArrowRight");
     assert.equal(await page.getByRole("tab", { name: "INI Files" }).getAttribute("aria-selected"), "true");
 
+    const iniSwitch = page.getByRole("switch").first();
+    await iniSwitch.waitFor({ state: "attached", timeout: 10000 });
+    const switchMotion = await iniSwitch.evaluate((input) => {
+      const thumb = input.parentElement?.querySelector(".mantine-Switch-thumb");
+      if (!(input instanceof HTMLInputElement) || !(thumb instanceof HTMLElement)) return null;
+      const before = input.checked;
+      input.click();
+      return {
+        changed: input.checked !== before,
+        connected: thumb.isConnected,
+        animationCount: thumb.getAnimations().length,
+        transitionProperty: getComputedStyle(thumb).transitionProperty,
+      };
+    });
+    assert.deepEqual(switchMotion, {
+      changed: true,
+      connected: true,
+      animationCount: 1,
+      transitionProperty: "transform",
+    });
+    await page.getByRole("button", { name: "Discard changes" }).click();
+
     await leaveWorkspaceToServers(page);
     await page.getByRole("button", { name: "Settings", exact: true }).first().click();
     await page.getByRole("heading", { name: "Settings", level: 1 }).waitFor({

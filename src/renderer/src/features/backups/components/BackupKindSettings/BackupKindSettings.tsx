@@ -1,7 +1,8 @@
 import type { ReactElement } from "react";
 import { CaretDown, CaretRight } from "@phosphor-icons/react";
-import { Group, NumberInput, Switch, Text, UnstyledButton } from "@mantine/core";
+import { Group, NumberInput, Text, UnstyledButton } from "@mantine/core";
 import type { BackupKind } from "@shared/types";
+import { AppSwitch } from "@ui/AppSwitch/AppSwitch";
 import type { DraftPolicy } from "../../model/serverBackupPanelModel";
 import classes from "../../BackupsPage.module.css";
 
@@ -58,15 +59,15 @@ export function BackupKindSettings(props: Props): ReactElement {
 
       {settingsOpen && activeKind === "world" && (
         <Group align="center" gap="xs" wrap="wrap" mt={4} className={classes.kindSettingsFields}>
-          <Switch
+          <AppSwitch
             size="sm"
             label="Schedule"
             checked={draftPolicy.enabled}
             disabled={busy || !installReady}
-            onChange={(event) =>
+            onCheckedChange={(checked) =>
               onDraftPolicyChange({
                 ...draftPolicy,
-                enabled: event.currentTarget.checked,
+                enabled: checked,
               })
             }
           />

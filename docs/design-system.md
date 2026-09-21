@@ -370,6 +370,13 @@ the control, so a `Switch` label sits left of the track. That order is set once 
 theme (`Switch.defaultProps.labelPosition = "left"`) - do not pass `labelPosition` per
 call site, and do not fake it with `row-reverse`.
 
+Switch thumbs move with the global compositor-driven `transform` rule in
+`styles/globals.css`. Use `AppSwitch` for controlled product settings; enable its
+`deferChange` prop only when measurement shows that rebuilding the parent delays the
+first paint (the server and cluster INI editors, and the large Mods table). Lightweight
+or immediately submitted forms keep the default synchronous parent update so a
+follow-up Save cannot observe stale state.
+
 Note for anyone auditing us against Fluent: Fluent UI React's `Switch` defaults to
 `labelPosition="after"`, so this is a **deliberate deviation**, not Fluent's own
 behaviour. An earlier version of this section attributed the left-label order to

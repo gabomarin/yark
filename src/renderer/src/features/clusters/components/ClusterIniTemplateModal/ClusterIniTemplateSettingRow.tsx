@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 import { ArrowCounterClockwise } from "@phosphor-icons/react";
-import { Button, NumberInput, Switch, Text, TextInput } from "@mantine/core";
+import { Button, NumberInput, Text, TextInput } from "@mantine/core";
+import { AppSwitch } from "@ui/AppSwitch/AppSwitch";
 import {
   lookupDefaultValue,
   lookupSettingDescription,
@@ -39,12 +40,11 @@ export function ClusterIniTemplateSettingRow(props: Props): ReactElement {
       </div>
       <div>
         {kind === "boolean" ? (
-          <Switch
+          <AppSwitch
             aria-label={label}
             checked={row.value.toLowerCase() === "true"}
-            onChange={(event) =>
-              onChange(row.section, row.key, event.currentTarget.checked ? "True" : "False", row.occurrence)
-            }
+            deferChange
+            onCheckedChange={(checked) => onChange(row.section, row.key, checked ? "True" : "False", row.occurrence)}
           />
         ) : kind === "number" ? (
           <NumberInput

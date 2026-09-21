@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
-import { Badge, Group, MultiSelect, Select, Stack, Switch, Text, TextInput, Tooltip } from "@mantine/core";
+import { Badge, Group, MultiSelect, Select, Stack, Text, TextInput, Tooltip } from "@mantine/core";
+import { AppSwitch } from "@ui/AppSwitch/AppSwitch";
 import {
   decodeServerPlatformSelection,
   encodeServerPlatformSelection,
@@ -41,12 +42,12 @@ export function ServerLaunchOptionRow(props: Props): ReactElement {
   return (
     <div className={`${classes.optionRow} ${caution ? classes.optionRowCaution : ""}`}>
       <Group align="center" gap="sm" wrap="nowrap">
-        <Switch
+        <AppSwitch
           checked={enabled}
           size="sm"
           disabled={!dependencyMet}
           aria-label={`Enable ${tokenLabel}`}
-          onChange={(e) => props.onEnabledChange(e.currentTarget.checked)}
+          onCheckedChange={props.onEnabledChange}
         />
         <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
           <Group gap={6} wrap="nowrap" align="center">

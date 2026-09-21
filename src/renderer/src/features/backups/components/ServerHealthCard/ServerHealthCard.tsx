@@ -1,7 +1,8 @@
 import type { ReactElement } from "react";
 import { ArrowSquareOut, FloppyDisk, FolderOpen, HardDrives } from "@phosphor-icons/react";
-import { Button, Group, NumberInput, Stack, Switch, Text, Title, Tooltip } from "@mantine/core";
+import { Button, Group, NumberInput, Stack, Text, Title, Tooltip } from "@mantine/core";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { AppSwitch } from "@ui/AppSwitch/AppSwitch";
 import { PathField } from "@ui/PathField/PathField";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import { StatusWord } from "@ui/StatusWord/StatusWord";
@@ -126,13 +127,13 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
               onBrowse={props.onBrowse}
             />
             <Group align="flex-end" gap="md" wrap="wrap">
-              <Switch
+              <AppSwitch
                 label="Enable scheduled world backups"
                 checked={draft.enabled}
-                onChange={(event) =>
+                onCheckedChange={(checked) =>
                   props.onDraftChange({
                     ...draft,
-                    enabled: event.currentTarget.checked,
+                    enabled: checked,
                   })
                 }
               />
