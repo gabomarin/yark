@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Discord `#releases` now announces the curated in-app What's new for the released version instead of GitHub's auto-generated PR list, so the post reads like the app rather than a developer changelog.
 - The product website now leads with the running app, a clearer download path, operator-focused capabilities, and a tighter public-release story across desktop and mobile.
 
 ## [0.22.0] - 2026-09-21

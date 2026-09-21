@@ -13,6 +13,11 @@ on:
         description: "Existing release tag to announce (e.g. v0.19.0)"
         required: true
         type: string
+      dry_run:
+        description: "Print the rendered message in the job log instead of posting"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -37,9 +42,10 @@ jobs:
           WEBHOOK_URL: ${{ secrets.DISCORD_RELEASES_WEBHOOK_URL }}
           INPUT_TAG: ${{ inputs.tag }}
           RELEASE_JSON: ${{ runner.temp }}/release.json
+          DRY_RUN: ${{ inputs.dry_run }}
         run: |
           set -euo pipefail
-          if [ -z "${DISCORD_BOT_TOKEN}" ] && [ -z "${WEBHOOK_URL}" ]; then
+          if [ "${DRY_RUN}" != "true" ] && [ -z "${DISCORD_BOT_TOKEN}" ] && [ -z "${WEBHOOK_URL}" ]; then
             echo "::error::Set secret DISCORD_BOT_TOKEN (preferred) or DISCORD_RELEASES_WEBHOOK_URL"
             exit 1
           fi

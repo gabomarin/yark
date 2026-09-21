@@ -83,7 +83,14 @@ incremental re-review of a small follow-up push on a large PR still uses `medium
 After **Release Windows** finishes creating the GitHub Release **with installer
 assets**, the same job posts the tag and release-notes body to Discord
 (`scripts/ci/discord-release-notify.py`) **as the Yark Bot Discord application**.
-It refuses to post if the release has no assets yet. If repo variable
+It refuses to post if the release has no assets yet.
+
+The body is the curated entry for the released version from the in-app What's new
+(`src/shared/settings/changelog.ts`), so `#releases` reads like the app (Highlights
+/ Changed / Fixed) instead of the auto-generated PR list with `@` mentions and PR
+links. Keep that curated entry in sync at release cut
+([versioning.md](versioning.md)); when it has no entry for the tag, the bot falls
+back to the GitHub release notes body. If repo variable
 `DISCORD_RELEASES_CHANNEL_ID` is unset, Discord notify is **skipped** (no
 hardcoded channel fallback).
 
@@ -94,9 +101,11 @@ hardcoded channel fallback).
    - Secret `DISCORD_BOT_TOKEN` → bot token
    - Variable `DISCORD_RELEASES_CHANNEL_ID` → `#releases` channel snowflake
      (Developer Mode → right-click channel → Copy Channel ID)
-3. Optional dry-run: Actions → **Discord release notify** → Run workflow → enter
-   a tag that already has assets (e.g. `v0.20.0`). The workflow job is skipped
-   when `DISCORD_RELEASES_CHANNEL_ID` is unset.
+3. Preview without posting: Actions → **Discord release notify** → Run workflow →
+   enter a tag that already has assets (e.g. `v0.20.0`) and set **dry_run** to
+   `true`. The job prints the rendered message in its log and posts nothing; a
+   real post needs `dry_run` off. The workflow job is skipped when
+   `DISCORD_RELEASES_CHANNEL_ID` is unset.
 4. Legacy fallback: secret `DISCORD_RELEASES_WEBHOOK_URL` still works if the bot
    token is unset (posts under the webhook’s own name, not Yark Bot) — only when
    the channel variable is also set.
