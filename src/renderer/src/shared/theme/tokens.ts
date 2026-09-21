@@ -1,5 +1,5 @@
 import type { UiDensity } from "@shared/settings/ui-density";
-import { BOOTSTRAP_BACKGROUND } from "@shared/app-chrome";
+import { BOOTSTRAP_BACKGROUND, bootstrapBackgroundFor } from "@shared/app-chrome";
 
 export type { UiDensity } from "@shared/settings/ui-density";
 
@@ -144,7 +144,7 @@ export const darkPalette = {
  * 1.31:1 (the light floors, documented in theme.contrast.test.ts).
  */
 export const lightPalette = {
-  background: "#dce0e6",
+  background: bootstrapBackgroundFor("light"),
   blue: lightAccentPalette.steps,
   blueAlpha: lightAccentPalette.alpha,
   gray: [

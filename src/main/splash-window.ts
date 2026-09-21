@@ -2,7 +2,7 @@ import { app, BrowserWindow } from "electron";
 import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { BOOTSTRAP_BACKGROUND } from "../shared/app-chrome";
+import { BRAND_PLATE_BACKGROUND } from "../shared/app-chrome";
 import {
   FALLBACK_SPLASH_TEMPLATE,
   SPLASH_HEIGHT,
@@ -91,7 +91,7 @@ export function createSplashWindow(options: { version: string; icon?: string; x?
     ...(options.x !== undefined && options.y !== undefined ? { x: options.x, y: options.y } : { center: true }),
     show: false,
     title: "YARK server manager",
-    backgroundColor: BOOTSTRAP_BACKGROUND,
+    backgroundColor: BRAND_PLATE_BACKGROUND,
     ...(options.icon !== undefined ? { icon: options.icon } : {}),
     webPreferences: {
       contextIsolation: true,

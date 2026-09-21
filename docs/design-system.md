@@ -678,3 +678,15 @@ line (#234).
 - Atomic file layout: [component-structure.md](component-structure.md)
 - Operator-facing copy: [Operator-facing copy](#operator-facing-copy)
 - Issue tracker: [#44](https://github.com/gabomarin/yark/issues/44)
+
+## Boot surfaces
+
+Two surfaces paint before the renderer's first frame, and they follow different rules:
+
+- The **window canvas** (`bootstrapBackgroundFor` in `src/shared/app-chrome.ts`) follows the theme,
+  so it matches `--app-color-bg`. It is shared with the renderer - the dark palette's `background`
+  and the light one both read this module - so the two sides cannot drift. The main process sets it
+  on `BrowserWindow` creation and repaints it when the appearance preference changes.
+- The **brand plate** (`BRAND_PLATE_BACKGROUND`) is the navy behind the light-on-dark lockup, so it
+  is the same in both themes: the launch splash document and the sidebar's brand plate. A light
+  splash under a dark logo would mean redrawing the mark, not switching a colour.

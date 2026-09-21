@@ -11,7 +11,8 @@ import {
 import { BackupRepository } from "../backend/infra/db/backup-repository";
 import { ServerRepository } from "../backend/infra/db/server-repository";
 import { ProcessManager } from "../backend/infra/process/process-manager";
-import { BOOTSTRAP_BACKGROUND } from "../shared/app-chrome";
+import { bootstrapBackgroundFromStored } from "../shared/app-chrome";
+import { APPEARANCE_SETTINGS_KEY } from "../shared/settings/appearance";
 import { BackupService } from "../backend/domains/backups/backup-service";
 import { BackupScheduler } from "../backend/domains/backups/backup-scheduler";
 import { MaintenanceScheduler } from "../backend/domains/maintenance/maintenance-scheduler";
@@ -193,7 +194,7 @@ function createWindow(
     skipTaskbar: hiddenUntilReveal,
     focusable: !hiddenUntilReveal,
     title: "YARK server manager",
-    backgroundColor: BOOTSTRAP_BACKGROUND,
+    backgroundColor: bootstrapBackgroundFromStored(settings.get(APPEARANCE_SETTINGS_KEY)),
     ...(icon !== undefined ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
