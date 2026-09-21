@@ -38,7 +38,7 @@ export function HostedResourcesPage(): ReactElement {
       <div className={classes.pageShell} data-hosted-resources-page>
         <AppPageHeader
           title="Hosted Resources"
-          subtitle="Publish text, JSON, or INI content over a URL that ASA can load from this PC."
+          subtitle="Serve text, INI or JSON from this PC at a URL, so an ASA setting that takes a URL - an admin whitelist, a dynamic config - can point here instead of at a public pastebin."
           actions={
             <Button variant="default" onClick={() => void controller.reload()} loading={controller.loading}>
               Refresh
