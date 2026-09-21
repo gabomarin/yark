@@ -37,13 +37,19 @@ export class AppErrorBoundary extends Component<Props, State> {
           margin: 0,
           padding: 32,
           boxSizing: "border-box",
+          /*
+           * Literal colours on purpose. This screen exists for the case where the providers
+           * themselves threw, and the `--app-color-*` variables are injected by the Mantine
+           * resolver - so relying on them here would render an unstyled page in exactly the
+           * failure this boundary is for. Kept in sync with the dark palette by eye.
+           */
           background: "#010306",
           color: "#e6effd",
           fontFamily: '"Segoe UI", Arial, sans-serif',
         }}
       >
         <h1 style={{ fontSize: 22, margin: "0 0 12px" }}>YARK hit an error</h1>
-        <p style={{ color: "#9aa3b5", maxWidth: 560, lineHeight: 1.45 }}>
+        <p style={{ color: "var(--app-color-muted)", maxWidth: 560, lineHeight: 1.45 }}>
           The window stayed open so you can reload. Your servers are not stopped from this screen.
         </p>
         <p

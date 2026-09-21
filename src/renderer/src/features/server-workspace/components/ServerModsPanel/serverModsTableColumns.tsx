@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
-import { Group, Loader, Switch, Text } from "@mantine/core";
+import { Group, Loader, Text } from "@mantine/core";
 import type { DataTableColumn } from "mantine-datatable";
+import { AppSwitch } from "@ui/AppSwitch/AppSwitch";
 import { ModIdentityCell } from "./ModIdentityCell";
 import { ServerModsActionsCell } from "./ServerModsActionsCell";
 import type { ModRow } from "./serverModsModel";
@@ -53,14 +54,15 @@ export function buildServerModsTableColumns(input: {
       render: (row) =>
         row.id === null ? null : (
           <div className={classes.enableControl} onClick={(event) => event.stopPropagation()}>
-            <Switch
+            <AppSwitch
               checked={row.enabled}
+              deferChange
               disabled={isModRowBusy(input.busyKey, row)}
               aria-label={`${row.enabled ? "Disable" : "Enable"} ${row.name}`}
               // Mantine trackLabel is aria-hidden but still intercepts hits; keep
               // the input as the real click target for mouse + Playwright.
               styles={{ trackLabel: { pointerEvents: "none" } }}
-              onChange={(event) => input.onToggle(row.id!, event.currentTarget.checked)}
+              onCheckedChange={(checked) => input.onToggle(row.id!, checked)}
             />
           </div>
         ),

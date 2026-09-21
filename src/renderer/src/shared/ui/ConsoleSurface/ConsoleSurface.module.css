@@ -1,10 +1,30 @@
 .root {
+  /*
+   * A console pane is a *literal* surface, not a themed one: this is the native console
+   * (black plate, light ink, monospace), so SteamCMD output and an update's details read
+   * the same in both themes - the reason a terminal keeps its colours inside a light IDE.
+   * The values are local, not `--ark-*`, because the ramp they used to read is what turned
+   * this pane near-white under the light theme.
+   */
+  --console-bg: #0c0c0c;
+  --console-ink: #d6d6d6;
+  --console-edge: #2a2a2a;
+
   min-height: 0;
   overflow: hidden;
-  border: 1px solid var(--ark-gray-a3);
+  border: 1px solid var(--console-edge);
   border-radius: var(--app-radius-md);
-  background: var(--ark-gray-1);
-  color: var(--ark-blue-12);
+  background: var(--console-bg);
+  color: var(--console-ink);
+}
+
+/* High contrast owns the palette: a fixed black plate would be unreadable on white. */
+@media (forced-colors: active) {
+  .root {
+    border-color: CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
 }
 
 .fill {

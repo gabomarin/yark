@@ -370,6 +370,13 @@ the control, so a `Switch` label sits left of the track. That order is set once 
 theme (`Switch.defaultProps.labelPosition = "left"`) - do not pass `labelPosition` per
 call site, and do not fake it with `row-reverse`.
 
+Switch thumbs move with the global compositor-driven `transform` rule in
+`styles/globals.css`. Use `AppSwitch` for controlled product settings; enable its
+`deferChange` prop only when measurement shows that rebuilding the parent delays the
+first paint (the server and cluster INI editors, and the large Mods table). Lightweight
+or immediately submitted forms keep the default synchronous parent update so a
+follow-up Save cannot observe stale state.
+
 Note for anyone auditing us against Fluent: Fluent UI React's `Switch` defaults to
 `labelPosition="after"`, so this is a **deliberate deviation**, not Fluent's own
 behaviour. An earlier version of this section attributed the left-label order to
@@ -678,3 +685,15 @@ line (#234).
 - Atomic file layout: [component-structure.md](component-structure.md)
 - Operator-facing copy: [Operator-facing copy](#operator-facing-copy)
 - Issue tracker: [#44](https://github.com/gabomarin/yark/issues/44)
+
+## Boot surfaces
+
+Two surfaces paint before the renderer's first frame, and they follow different rules:
+
+- The **window canvas** (`bootstrapBackgroundFor` in `src/shared/app-chrome.ts`) follows the theme,
+  so it matches `--app-color-bg`. It is shared with the renderer - the dark palette's `background`
+  and the light one both read this module - so the two sides cannot drift. The main process sets it
+  on `BrowserWindow` creation and repaints it when the appearance preference changes.
+- The **brand plate** (`BRAND_PLATE_BACKGROUND`) is the navy behind the light-on-dark lockup, so it
+  is the same in both themes: the launch splash document and the sidebar's brand plate. A light
+  splash under a dark logo would mean redrawing the mark, not switching a colour.

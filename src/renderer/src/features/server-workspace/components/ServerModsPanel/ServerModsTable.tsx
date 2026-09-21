@@ -1,4 +1,4 @@
-import type { MouseEvent as ReactMouseEvent, ReactElement } from "react";
+import type { MouseEvent as ReactMouseEvent, ReactElement, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Center, TableTd, Tooltip } from "@mantine/core";
 import { DragDropContext, Draggable, Droppable, type DropResult } from "@hello-pangea/dnd";
@@ -14,6 +14,21 @@ import { sortModRows, type ModRow, type ModRowSortAccessor, type ModRowSortStatu
 import classes from "./ServerModsPanel.module.css";
 
 const CONTEXT_SOURCE_ID = "server-mods-table";
+
+// mantine-datatable renders tableWrapper as a component type. Keep it stable so
+// controlled row updates do not remount the table DOM and cancel transitions.
+function ServerModsTableWrapper({ children }: { children: ReactNode }): ReactElement {
+  return (
+    <Droppable droppableId="server-mods">
+      {(provided) => (
+        <div {...provided.droppableProps} ref={provided.innerRef}>
+          {children}
+          {provided.placeholder}
+        </div>
+      )}
+    </Droppable>
+  );
+}
 
 /** Sentinel: not a sortable column — means canonical load-order / default catalog view. */
 export const LOAD_ORDER_SORT: DataTableSortStatus<ModRow> = {
@@ -188,20 +203,7 @@ export function ServerModsTable(props: Props): ReactElement {
       highlightOnHover={false}
       onRowClick={onRowClick}
       onRowContextMenu={onRowContextMenu}
-      tableWrapper={
-        useDnD
-          ? ({ children }) => (
-              <Droppable droppableId="server-mods">
-                {(provided) => (
-                  <div {...provided.droppableProps} ref={provided.innerRef}>
-                    {children}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            )
-          : undefined
-      }
+      tableWrapper={useDnD ? ServerModsTableWrapper : undefined}
       rowFactory={
         useDnD
           ? ({ record, index, rowProps, children }) => (

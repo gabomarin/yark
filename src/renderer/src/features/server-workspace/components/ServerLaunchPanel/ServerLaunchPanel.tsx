@@ -39,7 +39,7 @@ export function ServerLaunchPanel(props: Props): ReactElement {
   const [previewOpen, setPreviewOpen] = useState(true);
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const { structured, rawText, setRawText, extraArgs, saving, error, setEnabled, setValue, persistExtraArgsFromRaw } =
+  const { structured, rawText, setRawText, extraArgs, error, setEnabled, setValue, persistExtraArgsFromRaw } =
     useServerLaunchPersist(props.server, props.onServerUpdated);
 
   const mapIdentityWarnings = useMemo(
@@ -106,7 +106,6 @@ export function ServerLaunchPanel(props: Props): ReactElement {
             size={inputSize}
           />
 
-          {error !== null ? <AppAlert color="red">{error}</AppAlert> : null}
           {mapIdentityWarnings.length > 0 ? (
             <AppAlert color="attention" title="Custom map mod inconsistent">
               <Stack gap={4}>
@@ -168,54 +167,63 @@ export function ServerLaunchPanel(props: Props): ReactElement {
               );
             })}
           </div>
-
-          <AppSurfaceCard tone="flat" radius={0}>
-            <Stack gap="xs">
-              <Textarea
-                label="Extra arguments"
-                description='Example: -CustomNotificationURL="http://example.com/notice.html"'
-                value={rawText}
-                onChange={(e) => setRawText(e.currentTarget.value)}
-                onBlur={() => {
-                  void persistExtraArgsFromRaw();
-                }}
-                minRows={3}
-                autosize
-                size={inputSize}
-              />
-              {conflicts.length > 0 ? (
-                <AppAlert color="red" title="Conflicts">
-                  <Stack gap={4}>
-                    {conflicts.map((c) => (
-                      <Text key={c.message} size="sm">
-                        {c.message}
-                      </Text>
-                    ))}
-                  </Stack>
-                </AppAlert>
-              ) : null}
-              {saving ? (
-                <Text size="xs" c="dimmed">
-                  Saving…
-                </Text>
-              ) : null}
-            </Stack>
-          </AppSurfaceCard>
-
-          <ServerLaunchPreview
-            installDir={props.server.installDir}
-            useAsaApi={props.server.useAsaApi === true}
-            useAsaApiLoader={props.server.useAsaApiLoader === true}
-            inputSize={inputSize}
-            open={previewOpen}
-            onToggle={() => setPreviewOpen((v) => !v)}
-            yark={preview.yark}
-            structured={preview.structured}
-            raw={preview.raw}
-            cautionTokens={cautionTokens}
-          />
         </Stack>
       </div>
+
+      {/*
+       * Extra arguments and the effective command sit outside the scroller: they are what the
+       * operator checks *while* toggling flags, so they stay on screen and only the option
+       * grid scrolls.
+       */}
+      <Stack gap="sm" className={classes.footer}>
+        {/*
+         * Persist failures belong next to the controls that caused them: the option grid
+         * above is the scroller, so an error rendered up there would scroll out of sight
+         * and a failed toggle would look like a silent snap-back.
+         */}
+        {error !== null ? <AppAlert color="red">{error}</AppAlert> : null}
+        <AppSurfaceCard tone="flat" radius={0}>
+          <Stack gap="xs">
+            <Textarea
+              label="Extra arguments"
+              description='Example: -CustomNotificationURL="http://example.com/notice.html"'
+              value={rawText}
+              onChange={(e) => setRawText(e.currentTarget.value)}
+              onBlur={() => {
+                void persistExtraArgsFromRaw();
+              }}
+              minRows={3}
+              maxRows={6}
+              autosize
+              size={inputSize}
+            />
+            {conflicts.length > 0 ? (
+              <AppAlert color="red" title="Conflicts">
+                <Stack gap={4}>
+                  {conflicts.map((c) => (
+                    <Text key={c.message} size="sm">
+                      {c.message}
+                    </Text>
+                  ))}
+                </Stack>
+              </AppAlert>
+            ) : null}
+          </Stack>
+        </AppSurfaceCard>
+
+        <ServerLaunchPreview
+          installDir={props.server.installDir}
+          useAsaApi={props.server.useAsaApi === true}
+          useAsaApiLoader={props.server.useAsaApiLoader === true}
+          inputSize={inputSize}
+          open={previewOpen}
+          onToggle={() => setPreviewOpen((v) => !v)}
+          yark={preview.yark}
+          structured={preview.structured}
+          raw={preview.raw}
+          cautionTokens={cautionTokens}
+        />
+      </Stack>
 
       <LaunchOptionsCatalogModal opened={catalogOpen} onClose={() => setCatalogOpen(false)} />
     </AppSurfaceCard>

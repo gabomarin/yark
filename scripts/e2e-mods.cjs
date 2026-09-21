@@ -1,4 +1,4 @@
-const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
+const { SERVER_CARD, probeSwitchMotion, assertSwitchMotion } = require("./e2e-dom-hooks.cjs");
 /**
  * E2E: Server Workspace Mods tab (add Project ID, enable/disable, cleanup).
  *
@@ -123,10 +123,7 @@ async function openModsTab(page) {
 async function clickModSwitch(page, ariaPrefix) {
   const switchInput = page.getByRole("switch", { name: new RegExp(`^${ariaPrefix} `, "i") }).first();
   await switchInput.waitFor({ state: "attached", timeout: 10000 });
-  await switchInput.evaluate((el) => {
-    el.scrollIntoView({ block: "center", inline: "center" });
-    el.click();
-  });
+  assertSwitchMotion(await probeSwitchMotion(switchInput), "Mods switch");
   return switchInput;
 }
 

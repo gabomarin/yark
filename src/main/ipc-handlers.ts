@@ -37,6 +37,7 @@ import {
   parseAppearanceSettings,
   type AppearanceSettings,
 } from "../shared/settings/appearance";
+import { bootstrapBackgroundFor } from "../shared/app-chrome";
 import {
   OPEN_NATIVE_CONSOLE_SETTING_KEY,
   encodeOpenNativeConsolePref,
@@ -645,6 +646,14 @@ export function registerIpcHandlers(
 
   handleValidated(IPC.appSetAppearance, ipcArgSchemas[IPC.appSetAppearance], ([appearance]): AppearanceSettings => {
     settings.set(APPEARANCE_SETTINGS_KEY, encodeAppearanceSettings(appearance));
+    // The window canvas outlives this call: a theme switch has to repaint it too, or the
+    // next resize flashes the previous theme behind the shell.
+    const backgroundColor = bootstrapBackgroundFor(appearance.theme);
+    for (const win of BrowserWindow.getAllWindows()) {
+      if (!win.isDestroyed()) {
+        win.setBackgroundColor(backgroundColor);
+      }
+    }
     return appearance;
   });
 

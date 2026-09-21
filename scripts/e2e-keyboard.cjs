@@ -1,4 +1,4 @@
-const { SERVER_CARD, STEAMCMD_PATH } = require("./e2e-dom-hooks.cjs");
+const { SERVER_CARD, STEAMCMD_PATH, probeSwitchMotion, assertSwitchMotion } = require("./e2e-dom-hooks.cjs");
 /**
  * Keyboard smoke: Spotlight, Overview card menu, dismissible modal (#476),
  * search Escape, fleet strip, workspace tabs, Settings categories (#477).
@@ -122,6 +122,31 @@ async function run() {
     await serverTab.focus();
     await page.keyboard.press("ArrowRight");
     assert.equal(await page.getByRole("tab", { name: "INI Files" }).getAttribute("aria-selected"), "true");
+
+    // Anchored to the INI panel: an unanchored `getByRole("switch").first()` would happily
+    // toggle whatever switch happens to come first and still pass.
+    // Anchored to the INI settings table: an unanchored `getByRole("switch").first()` would
+    // happily toggle whatever switch happens to come first and still pass.
+    const iniPanel = page.locator("[data-ini-settings-scroll]");
+    await iniPanel.waitFor({ state: "visible", timeout: 15000 });
+    const iniSwitch = iniPanel.getByRole("switch").first();
+    await iniSwitch.waitFor({ state: "attached", timeout: 10000 });
+    assertSwitchMotion(await probeSwitchMotion(iniSwitch), "INI switch");
+
+    // The editor only marks itself dirty once the deferred update propagates; clicking
+    // Discard before that waits 30s and fails with an "element is disabled" timeout that
+    // says nothing about the switch.
+    await page.waitForFunction(
+      () => {
+        const button = [...document.querySelectorAll("button")].find(
+          (el) => el.textContent?.trim() === "Discard changes",
+        );
+        return button instanceof HTMLButtonElement && !button.disabled;
+      },
+      null,
+      { timeout: 10000 },
+    );
+    await page.getByRole("button", { name: "Discard changes" }).click();
 
     await leaveWorkspaceToServers(page);
     await page.getByRole("button", { name: "Settings", exact: true }).first().click();

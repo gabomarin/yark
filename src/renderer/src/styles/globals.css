@@ -141,6 +141,23 @@ body {
   cursor: pointer;
 }
 
+/* Animate every Switch thumb on the compositor, including render-heavy editors. */
+.mantine-Switch-thumb {
+  inset-inline-start: var(--switch-track-label-padding);
+  transform: translateX(0);
+  transition: transform 150ms ease;
+}
+
+.mantine-Switch-input:checked + * > .mantine-Switch-thumb {
+  transform: translateX(calc(var(--switch-width) - var(--switch-thumb-size) - 2 * var(--switch-track-label-padding)));
+}
+
+[dir="rtl"] .mantine-Switch-input:checked + * > .mantine-Switch-thumb {
+  transform: translateX(
+    calc(-1 * (var(--switch-width) - var(--switch-thumb-size) - 2 * var(--switch-track-label-padding)))
+  );
+}
+
 /*
  * Fluent 2 Switch, OFF state (light): a neutral track with a strong
  * `colorNeutralStrokeAccessible` outline and a *dark* knob. Mantine's default is a
