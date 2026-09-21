@@ -59,6 +59,12 @@ function envInt(name, fallback) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+function openSeedDb(userData) {
+  const dbPath = path.join(userData, "yark-server-manager.db");
+  assert.ok(fs.existsSync(dbPath), `DB missing at ${dbPath}`);
+  return new DatabaseSync(dbPath);
+}
+
 const projectRoot = path.resolve(__dirname, "..");
 const defaultArkRoot =
   process.platform === "win32" ? "C:\\asa-e2e\\website-gallery" : path.join(os.tmpdir(), "yark-gallery");
@@ -508,22 +514,21 @@ function seedGalleryActivityEvents(db, servers) {
 
 /** Replace isolated-profile servers after first boot. Maps/cluster live on the rows. */
 function seedGalleryFleetSql(userData) {
-  const dbPath = path.join(userData, "yark-server-manager.db");
-  assert.ok(fs.existsSync(dbPath), `DB missing at ${dbPath}`);
-  const db = new DatabaseSync(dbPath);
-  db.prepare("DELETE FROM backups").run();
-  db.prepare("DELETE FROM backup_policies").run();
-  db.prepare("DELETE FROM events").run();
-  db.prepare("DELETE FROM cluster_ini_templates").run();
-  db.prepare("DELETE FROM servers").run();
-  const now = new Date().toISOString();
-  const steamCmd = ensureGallerySteamCmdStub();
-  upsertAppSetting(db, "steamcmdPath", steamCmd, now);
+  const db = openSeedDb(userData);
+  try {
+    db.prepare("DELETE FROM backups").run();
+    db.prepare("DELETE FROM backup_policies").run();
+    db.prepare("DELETE FROM events").run();
+    db.prepare("DELETE FROM cluster_ini_templates").run();
+    db.prepare("DELETE FROM servers").run();
+    const now = new Date().toISOString();
+    const steamCmd = ensureGallerySteamCmdStub();
+    upsertAppSetting(db, "steamcmdPath", steamCmd, now);
 
-  const modIdsJson = JSON.stringify(DEMO_MOD_IDS);
-  const modMetaJson = JSON.stringify(demoModMetadataCache());
-  const insert = db.prepare(
-    `INSERT INTO servers (
+    const modIdsJson = JSON.stringify(DEMO_MOD_IDS);
+    const modMetaJson = JSON.stringify(demoModMetadataCache());
+    const insert = db.prepare(
+      `INSERT INTO servers (
       id, name, map, install_dir, enabled, session_name,
       game_port, query_port, rcon_port,
       server_password, admin_password,
@@ -531,196 +536,205 @@ function seedGalleryFleetSql(userData) {
       disabled_mods, mod_metadata_cache, use_asa_api, use_asa_api_loader,
       created_at, updated_at
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  );
-
-  /** @type {Array<{ id: string, name: string, mapId: string, installDir: string }>} */
-  const seeded = [];
-  DEMO_FLEET.forEach((demo, index) => {
-    const installDir = path.join(DEMO_INSTALL_ROOT, demo.folder);
-    seedDemoReadyInstall(installDir);
-    const enableAsaApi = demo.name === DEMO_SERVER;
-    if (enableAsaApi) {
-      seedDemoAsaApiInstall(installDir);
-    }
-    const id = `gallery-dl-${index}`;
-    insert.run(
-      id,
-      demo.name,
-      demo.mapId,
-      installDir,
-      1,
-      demo.session,
-      18000 + index * 10,
-      38000 + index * 10,
-      39000 + index * 10,
-      null,
-      "admin1234",
-      DEMO_CLUSTER_ID,
-      DEMO_CLUSTER_DIR,
-      "[]",
-      modIdsJson,
-      "[]",
-      modMetaJson,
-      enableAsaApi ? 1 : 0,
-      0,
-      now,
-      now,
     );
-    seeded.push({ id, name: demo.name, mapId: demo.mapId, installDir });
-  });
 
-  // Featured Launch tab: a few curated flags enabled (no search filter in capture).
-  db.prepare(`UPDATE servers SET structured_launch_args = ? WHERE id = ?`).run(
-    JSON.stringify({
-      servergamelog: { enabled: true },
-      servergamelogincludetribelogs: { enabled: true },
-      forceallowcaveflyers: { enabled: true },
-      notifyadmincommandsinchat: { enabled: true },
-    }),
-    seeded[0]?.id ?? "gallery-dl-0",
-  );
+    /** @type {Array<{ id: string, name: string, mapId: string, installDir: string }>} */
+    const seeded = [];
+    DEMO_FLEET.forEach((demo, index) => {
+      const installDir = path.join(DEMO_INSTALL_ROOT, demo.folder);
+      seedDemoReadyInstall(installDir);
+      const enableAsaApi = demo.name === DEMO_SERVER;
+      if (enableAsaApi) {
+        seedDemoAsaApiInstall(installDir);
+      }
+      const id = `gallery-dl-${index}`;
+      insert.run(
+        id,
+        demo.name,
+        demo.mapId,
+        installDir,
+        1,
+        demo.session,
+        18000 + index * 10,
+        38000 + index * 10,
+        39000 + index * 10,
+        null,
+        "admin1234",
+        DEMO_CLUSTER_ID,
+        DEMO_CLUSTER_DIR,
+        "[]",
+        modIdsJson,
+        "[]",
+        modMetaJson,
+        enableAsaApi ? 1 : 0,
+        0,
+        now,
+        now,
+      );
+      seeded.push({ id, name: demo.name, mapId: demo.mapId, installDir });
+    });
 
-  db.prepare(
-    `INSERT INTO cluster_ini_templates (
+    // Featured Launch tab: a few curated flags enabled (no search filter in capture).
+    db.prepare(`UPDATE servers SET structured_launch_args = ? WHERE id = ?`).run(
+      JSON.stringify({
+        servergamelog: { enabled: true },
+        servergamelogincludetribelogs: { enabled: true },
+        forceallowcaveflyers: { enabled: true },
+        notifyadmincommandsinchat: { enabled: true },
+      }),
+      seeded[0]?.id ?? "gallery-dl-0",
+    );
+
+    db.prepare(
+      `INSERT INTO cluster_ini_templates (
       cluster_id, game_user_settings_ini, game_ini, updated_at
     ) VALUES (?, ?, ?, ?)`,
-  ).run(
-    DEMO_CLUSTER_ID,
-    ["[ServerSettings]", "XPMultiplier=2.0", "TamingSpeedMultiplier=3.0", "HarvestAmountMultiplier=2.5", ""].join("\n"),
-    ["[/Script/ShooterGame.ShooterGameMode]", "BabyMatureSpeedMultiplier=3.0", "EggHatchSpeedMultiplier=3.0", ""].join(
-      "\n",
-    ),
-    now,
-  );
+    ).run(
+      DEMO_CLUSTER_ID,
+      ["[ServerSettings]", "XPMultiplier=2.0", "TamingSpeedMultiplier=3.0", "HarvestAmountMultiplier=2.5", ""].join(
+        "\n",
+      ),
+      [
+        "[/Script/ShooterGame.ShooterGameMode]",
+        "BabyMatureSpeedMultiplier=3.0",
+        "EggHatchSpeedMultiplier=3.0",
+        "",
+      ].join("\n"),
+      now,
+    );
 
-  for (const server of seeded) {
-    if (server.name === DEMO_SERVER) {
-      seedServerBackups(db, server, {
-        world: 3,
-        players: 2,
-        ini: 1,
-        scheduleEnabled: true,
-      });
-    } else if (server.name === "Scorched Earth") {
-      seedServerBackups(db, server, {
-        world: 1,
-        players: 1,
-        ini: 0,
-        scheduleEnabled: true,
-      });
-    } else {
-      seedServerBackups(db, server, {
-        world: 1,
-        players: 0,
-        ini: 1,
-        scheduleEnabled: false,
-      });
+    for (const server of seeded) {
+      if (server.name === DEMO_SERVER) {
+        seedServerBackups(db, server, {
+          world: 3,
+          players: 2,
+          ini: 1,
+          scheduleEnabled: true,
+        });
+      } else if (server.name === "Scorched Earth") {
+        seedServerBackups(db, server, {
+          world: 1,
+          players: 1,
+          ini: 0,
+          scheduleEnabled: true,
+        });
+      } else {
+        seedServerBackups(db, server, {
+          world: 1,
+          players: 0,
+          ini: 1,
+          scheduleEnabled: false,
+        });
+      }
     }
-  }
 
-  seedGalleryActivityEvents(
-    db,
-    seeded.map((row) => ({ id: row.id, name: row.name })),
-  );
-  db.close();
+    seedGalleryActivityEvents(
+      db,
+      seeded.map((row) => ({ id: row.id, name: row.name })),
+    );
+  } finally {
+    db.close();
+  }
 }
 
 /** Seed representative Hosted Resources cards for the website capture. */
 function seedGalleryHostedResources(userData) {
-  const dbPath = path.join(userData, "yark-server-manager.db");
-  assert.ok(fs.existsSync(dbPath), `DB missing at ${dbPath}`);
-  const db = new DatabaseSync(dbPath);
-  db.prepare("DELETE FROM hosted_resource_revisions").run();
-  db.prepare("DELETE FROM hosted_resources").run();
+  const db = openSeedDb(userData);
+  try {
+    db.prepare("DELETE FROM hosted_resource_revisions").run();
+    db.prepare("DELETE FROM hosted_resources").run();
 
-  const now = new Date().toISOString();
-  const resources = [
-    {
-      id: "gallery-hosted-game-ini",
-      token: "gallery-ini-overrides-9sK4dR9tY2wF7mN8qP1vX",
-      displayName: "Game.ini overrides",
-      format: "ini",
-      notes: "Per-map multiplier overrides served locally",
-      tags: JSON.stringify(["ini"]),
-      content: "[ServerSettings]\nTamingSpeedMultiplier=2.0\nXPMultiplier=2.0\n",
-    },
-    {
-      id: "gallery-hosted-admin-list",
-      token: "gallery-admin-list-7f3kL2mQ9xR4vN8pT6yW1zC5",
-      displayName: "Admin whitelist",
-      format: "text",
-      notes: "ASA AdminListURL example",
-      tags: JSON.stringify(["admin-list"]),
-      content: "76561198000000001\n76561198000000002\n",
-    },
-    {
-      id: "gallery-hosted-dynamic-config",
-      token: "gallery-dynamic-json-3mN8qP1vX6sK4dR9tY2wF7",
-      displayName: "Dynamic server config",
-      format: "json",
-      notes: "Small JSON payload served locally to an ASA setting",
-      tags: JSON.stringify(["dynamic-config"]),
-      content: JSON.stringify({ motd: "YARK demo", rates: { harvest: 2, taming: 3 } }, null, 2),
-    },
-  ];
-  const insertResource = db.prepare(
-    `INSERT INTO hosted_resources
+    const now = new Date().toISOString();
+    const resources = [
+      {
+        id: "gallery-hosted-game-ini",
+        token: "gallery-ini-overrides-9sK4dR9tY2wF7mN8qP1vX",
+        displayName: "Game.ini overrides",
+        format: "ini",
+        notes: "Per-map multiplier overrides served locally",
+        tags: JSON.stringify(["ini"]),
+        content: "[ServerSettings]\nTamingSpeedMultiplier=2.0\nXPMultiplier=2.0\n",
+      },
+      {
+        id: "gallery-hosted-admin-list",
+        token: "gallery-admin-list-7f3kL2mQ9xR4vN8pT6yW1zC5",
+        displayName: "Admin whitelist",
+        format: "text",
+        notes: "ASA AdminListURL example",
+        tags: JSON.stringify(["admin-list"]),
+        content: "76561198000000001\n76561198000000002\n",
+      },
+      {
+        id: "gallery-hosted-dynamic-config",
+        token: "gallery-dynamic-json-3mN8qP1vX6sK4dR9tY2wF7",
+        displayName: "Dynamic server config",
+        format: "json",
+        notes: "Small JSON payload served locally to an ASA setting",
+        tags: JSON.stringify(["dynamic-config"]),
+        content: JSON.stringify({ motd: "YARK demo", rates: { harvest: 2, taming: 3 } }, null, 2),
+      },
+    ];
+    const insertResource = db.prepare(
+      `INSERT INTO hosted_resources
        (id, token, display_name, format, created_at, updated_at, disabled_at, notes, tags_json)
      VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?)`,
-  );
-  const insertRevision = db.prepare(
-    `INSERT INTO hosted_resource_revisions
+    );
+    const insertRevision = db.prepare(
+      `INSERT INTO hosted_resource_revisions
        (id, resource_id, sequence, content, sha256, validation, created_at, published_at)
      VALUES (?, ?, 1, ?, ?, 'ok', ?, ?)`,
-  );
-  for (const resource of resources) {
-    insertResource.run(
-      resource.id,
-      resource.token,
-      resource.displayName,
-      resource.format,
-      now,
-      now,
-      resource.notes,
-      resource.tags,
     );
-    insertRevision.run(
-      randomUUID(),
-      resource.id,
-      resource.content,
-      createHash("sha256").update(resource.content).digest("hex"),
-      now,
-      now,
-    );
+    for (const resource of resources) {
+      insertResource.run(
+        resource.id,
+        resource.token,
+        resource.displayName,
+        resource.format,
+        now,
+        now,
+        resource.notes,
+        resource.tags,
+      );
+      insertRevision.run(
+        randomUUID(),
+        resource.id,
+        resource.content,
+        createHash("sha256").update(resource.content).digest("hex"),
+        now,
+        now,
+      );
+    }
+  } finally {
+    db.close();
   }
-  db.close();
 }
 
 function seedDownloadsJobs(userData, steamCmdPath) {
-  const dbPath = path.join(userData, "yark-server-manager.db");
-  assert.ok(fs.existsSync(dbPath), `DB missing at ${dbPath}`);
-  const db = new DatabaseSync(dbPath);
-  const servers = db.prepare("SELECT id, name FROM servers").all();
-  const byName = new Map(servers.map((row) => [row.name, row.id]));
-  const islandId = byName.get(DEMO_SERVER);
-  const scorchedId = byName.get("Scorched Earth");
-  const ragnarokId = byName.get("Ragnarok");
-  assert.ok(islandId, `Demo server "${DEMO_SERVER}" missing`);
-  assert.ok(scorchedId, "Demo server Scorched Earth missing");
-  assert.ok(ragnarokId, "Demo server Ragnarok missing");
-  const jobs = [
-    galleryJob("job-island-verify", "verify-files", islandId, "pending", "queued"),
-    galleryJob("job-scorched-verify", "verify-files", scorchedId, "pending", "queued"),
-    galleryJob("job-ragnarok-verify", "verify-files", ragnarokId, "pending", "queued"),
-  ];
-  const now = new Date().toISOString();
-  const set = db.prepare(
-    `INSERT INTO app_settings (key, value, updated_at) VALUES (?, ?, ?)
+  const db = openSeedDb(userData);
+  try {
+    const servers = db.prepare("SELECT id, name FROM servers").all();
+    const byName = new Map(servers.map((row) => [row.name, row.id]));
+    const islandId = byName.get(DEMO_SERVER);
+    const scorchedId = byName.get("Scorched Earth");
+    const ragnarokId = byName.get("Ragnarok");
+    assert.ok(islandId, `Demo server "${DEMO_SERVER}" missing`);
+    assert.ok(scorchedId, "Demo server Scorched Earth missing");
+    assert.ok(ragnarokId, "Demo server Ragnarok missing");
+    const jobs = [
+      galleryJob("job-island-verify", "verify-files", islandId, "pending", "queued"),
+      galleryJob("job-scorched-verify", "verify-files", scorchedId, "pending", "queued"),
+      galleryJob("job-ragnarok-verify", "verify-files", ragnarokId, "pending", "queued"),
+    ];
+    const now = new Date().toISOString();
+    const set = db.prepare(
+      `INSERT INTO app_settings (key, value, updated_at) VALUES (?, ?, ?)
      ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
-  );
-  set.run("criticalJobsQueue.v1", JSON.stringify(jobs), now);
-  set.run("steamcmdPath", steamCmdPath, now);
-  db.close();
+    );
+    set.run("criticalJobsQueue.v1", JSON.stringify(jobs), now);
+    set.run("steamcmdPath", steamCmdPath, now);
+  } finally {
+    db.close();
+  }
 }
 
 async function captureDownloadsPage(page, outDir) {
