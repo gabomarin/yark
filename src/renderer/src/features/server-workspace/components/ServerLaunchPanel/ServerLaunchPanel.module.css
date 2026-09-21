@@ -15,6 +15,19 @@
   scrollbar-gutter: stable;
 }
 
+/*
+ * The pinned half of the panel. Capped and scrollable on its own only so a pathologically
+ * long argv cannot eat the option grid; in practice the textarea autosizes and the command
+ * preview collapses, so this never scrolls.
+ */
+.footer {
+  flex: 0 0 auto;
+  max-height: 50%;
+  overflow-y: auto;
+  border-top: 1px solid var(--app-color-border-subtle);
+  padding: var(--app-space-sm) var(--app-space-md) var(--app-space-md);
+}
+
 .groups {
   display: flex;
   flex-direction: column;
