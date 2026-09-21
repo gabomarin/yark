@@ -202,11 +202,14 @@ export function ServerLaunchPanel(props: Props): ReactElement {
                 </Stack>
               </AppAlert>
             ) : null}
-            {saving ? (
-              <Text size="xs" c="dimmed">
-                Saving…
-              </Text>
-            ) : null}
+            {/*
+             * Always mounted on purpose: this label appears on every save, and mounting it grew the
+             * Extra arguments block - the flash the operator saw in that zone. Hidden, it reserves its
+             * line instead.
+             */}
+            <Text size="xs" c="dimmed" style={{ visibility: saving ? "visible" : "hidden" }}>
+              Saving…
+            </Text>
           </Stack>
         </AppSurfaceCard>
 
