@@ -16,6 +16,15 @@ interface Input {
   notifyMapModIfNeeded: (id: string, meta: ModMetadata | undefined) => Promise<void>;
 }
 
+/**
+ * Same members, order-insensitive. The rollback must not depend on array identity: any writer
+ * that copies `disabledIds` (a sort, a spread, a future normaliser) would otherwise make the
+ * guard never match and the revert silently stop happening.
+ */
+function sameDisabledIds(a: readonly string[], b: readonly string[]): boolean {
+  return a.length === b.length && a.every((id) => b.includes(id));
+}
+
 export function createServerModsListMutations(input: Input) {
   const add = async (modDetail: ModMetadata) => {
     input.setBusyKey(modDetail.id);
@@ -70,7 +79,7 @@ export function createServerModsListMutations(input: Input) {
        * because the notification after it threw, and a late failure must not clobber the
        * value a newer toggle has already written.
        */
-      if (!persisted && input.disabledIdsRef.current === nextDisabled) {
+      if (!persisted && sameDisabledIds(input.disabledIdsRef.current, nextDisabled)) {
         input.disabledIdsRef.current = previousDisabled;
         input.setDisabledIds(previousDisabled);
       }

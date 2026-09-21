@@ -141,11 +141,13 @@ body {
   cursor: pointer;
 }
 
-/* Animate every Switch thumb on the compositor, including render-heavy editors. */
+/* Animate every Switch thumb on the compositor, including render-heavy editors.
+   The duration and curve come from the shared motion tokens, like every other animated
+   surface: hardcoding them here made this the one transition that ignores the ramp. */
 .mantine-Switch-thumb {
   inset-inline-start: var(--switch-track-label-padding);
   transform: translateX(0);
-  transition: transform 150ms ease;
+  transition: transform var(--app-motion-base) var(--app-ease-standard);
 }
 
 .mantine-Switch-input:checked + * > .mantine-Switch-thumb {
