@@ -12,6 +12,14 @@ import { roadmapItems } from "../data/roadmap";
 
 const logoSizes = "(max-width: 22rem) calc(100vw - 3rem), 22rem";
 const gallerySizes = "(max-width: 720px) calc(100vw - 3rem), calc(min(72rem, 100vw) / 2)";
+/*
+ * The hero stage already shows the first five shots, and the section below used to render the
+ * whole set again - the same captures twice, and a wall of full-app screenshots before the page
+ * had made its argument. The section keeps four surfaces that the stage does not show, so nothing
+ * is repeated; the rest live at /screenshots/.
+ */
+const gallerySlugs = ["workspace-mods", "backups", "logs", "settings"];
+const galleryShots = screenshots.filter((shot) => gallerySlugs.includes(screenshotSlug(shot)));
 const logoSrcset = `${withBase("/media/yark-logo-320.webp")} 320w, ${withBase("/media/yark-logo-640.webp")} 640w`;
 ---
 
@@ -78,14 +86,15 @@ const logoSrcset = `${withBase("/media/yark-logo-320.webp")} 320w, ${withBase("/
     <section class="showcase" id="screenshots" aria-label="Application screenshots" data-reveal>
       <div class="showcase-inner">
         <p class="showcase-eyebrow" data-reveal-child>A look at the app</p>
-        <h2 class="showcase-title" data-reveal-child>Every workspace surface</h2>
+        <h2 class="showcase-title" data-reveal-child>The surfaces that carry the work</h2>
         <p class="showcase-lede" data-reveal-child>
           Captured from the Electron + React desktop shell. Interface is under active
-          development and may change between builds.
+          development and may change between builds. <a href={withBase("/screenshots/")}>See every
+          surface</a>.
         </p>
         <div class="shots">
           {
-            screenshots.map((shot) => (
+            galleryShots.map((shot) => (
               <figure class="shot" data-reveal-child>
                 <a href={shot.src} target="_blank" rel="noopener">
                   <ResponsiveShot

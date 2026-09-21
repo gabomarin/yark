@@ -1,0 +1,86 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import ResponsiveShot from "../components/ResponsiveShot.astro";
+import { site, withBase } from "../data/site";
+import { SHOT_WIDTHS } from "../data/screenshot-media.mjs";
+import { screenshotSlug, screenshots } from "../data/screenshots";
+
+const gallerySizes = "(max-width: 720px) calc(100vw - 3rem), calc(min(72rem, 100vw) / 2)";
+---
+
+<BaseLayout
+  title={`Screenshots — ${site.name} - ARK Ascended server manager`}
+  description="Every YARK surface captured from the Electron + React desktop shell: Overview, the server workspace tabs, Mods, Backups, Logs, Settings and the setup assistant."
+  path="/screenshots/"
+>
+  <header class="page-header">
+    <p class="eyebrow">A look at the app</p>
+    <h1>Screenshots</h1>
+    <p>
+      Captured from the Electron + React desktop shell in the dark shell. The interface is under active
+      development and may change between builds. The <a href={withBase("/")}>landing page</a> shows a
+      shorter selection; this is the whole set.
+    </p>
+  </header>
+
+  <div class="shots">
+    {
+      screenshots.map((shot) => (
+        <figure class="shot">
+          <a href={shot.src} target="_blank" rel="noopener">
+            <ResponsiveShot
+              slug={screenshotSlug(shot)}
+              alt={shot.alt}
+              fallbackSrc={shot.src}
+              widths={[...SHOT_WIDTHS]}
+              sizes={gallerySizes}
+              width={1440}
+              height={900}
+              loading="lazy"
+            />
+          </a>
+          <figcaption>{shot.caption}</figcaption>
+        </figure>
+      ))
+    }
+  </div>
+</BaseLayout>
+
+<style>
+  .page-header {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 0.5rem;
+  }
+
+  .shots {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 1.5rem;
+  }
+
+  @media (min-width: 900px) {
+    .shots {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .shot {
+    margin: 0;
+  }
+
+  .shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .shot figcaption {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    opacity: 0.75;
+  }
+</style>
