@@ -56,15 +56,24 @@ export function createServerModsListMutations(input: Input) {
       : [...new Set([...previousDisabled, id])];
     input.disabledIdsRef.current = nextDisabled;
     input.setDisabledIds(nextDisabled);
+    let persisted = false;
     try {
       await input.persist(configuredIds, nextDisabled, input.cacheRef.current);
+      persisted = true;
       if (enabled) {
         const meta = input.cacheRef.current[id] ?? input.metadata.get(id);
         await input.notifyMapModIfNeeded(id, meta);
       }
     } catch (cause) {
-      input.disabledIdsRef.current = previousDisabled;
-      input.setDisabledIds(previousDisabled);
+      /*
+       * Undo this call's own optimistic flip only: a write that landed must not be reverted
+       * because the notification after it threw, and a late failure must not clobber the
+       * value a newer toggle has already written.
+       */
+      if (!persisted && input.disabledIdsRef.current === nextDisabled) {
+        input.disabledIdsRef.current = previousDisabled;
+        input.setDisabledIds(previousDisabled);
+      }
       input.setError(cause instanceof Error ? cause.message : "Could not update the mod");
     }
   };

@@ -110,7 +110,6 @@
   position: relative;
   z-index: 1;
   height: 100vh;
-  min-height: 100vh;
   overflow: hidden;
   background-color: var(--app-color-surface-chrome);
   background-image: var(--app-shell-atmosphere);

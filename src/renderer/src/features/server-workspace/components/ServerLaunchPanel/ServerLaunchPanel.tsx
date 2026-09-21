@@ -106,7 +106,6 @@ export function ServerLaunchPanel(props: Props): ReactElement {
             size={inputSize}
           />
 
-          {error !== null ? <AppAlert color="red">{error}</AppAlert> : null}
           {mapIdentityWarnings.length > 0 ? (
             <AppAlert color="attention" title="Custom map mod inconsistent">
               <Stack gap={4}>
@@ -177,6 +176,12 @@ export function ServerLaunchPanel(props: Props): ReactElement {
        * grid scrolls.
        */}
       <Stack gap="sm" className={classes.footer}>
+        {/*
+         * Persist failures belong next to the controls that caused them: the option grid
+         * above is the scroller, so an error rendered up there would scroll out of sight
+         * and a failed toggle would look like a silent snap-back.
+         */}
+        {error !== null ? <AppAlert color="red">{error}</AppAlert> : null}
         <AppSurfaceCard tone="flat" radius={0}>
           <Stack gap="xs">
             <Textarea
@@ -188,6 +193,7 @@ export function ServerLaunchPanel(props: Props): ReactElement {
                 void persistExtraArgsFromRaw();
               }}
               minRows={3}
+              maxRows={6}
               autosize
               size={inputSize}
             />

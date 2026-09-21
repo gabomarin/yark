@@ -25,8 +25,11 @@ describe("AppSwitch", () => {
     expect(toggle).toBeChecked();
     expect(onCheckedChange).toHaveBeenCalledWith(true);
 
+    // A successful write must not snap the knob back: the parent owns `checked` and may
+    // commit it later (or never, for a parent that only reports the intent). Snapping here
+    // is the pre-click flash this component exists to prevent.
     await act(async () => finishUpdate?.());
-    expect(toggle).not.toBeChecked();
+    expect(toggle).toBeChecked();
   });
 
   it("reconciles with the controlled state after a rejected update", async () => {
@@ -45,5 +48,22 @@ describe("AppSwitch", () => {
 
     await act(async () => Promise.resolve());
     expect(toggle).not.toBeChecked();
+  });
+
+  it("follows an externally driven checked change without a stale frame", () => {
+    const onCheckedChange = vi.fn();
+    const view = (checked: boolean) => (
+      <AppProviders>
+        <AppSwitch aria-label="Feature" checked={checked} onCheckedChange={onCheckedChange} />
+      </AppProviders>
+    );
+
+    const { rerender } = render(view(false));
+    const toggle = screen.getByRole("switch", { name: "Feature" });
+    expect(toggle).not.toBeChecked();
+
+    // A reload or a rollback elsewhere moves the prop: the knob must show it on that paint.
+    rerender(view(true));
+    expect(toggle).toBeChecked();
   });
 });

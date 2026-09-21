@@ -37,8 +37,14 @@ export class AppErrorBoundary extends Component<Props, State> {
           margin: 0,
           padding: 32,
           boxSizing: "border-box",
-          background: "var(--app-color-bg)",
-          color: "var(--app-color-text)",
+          /*
+           * Literal colours on purpose. This screen exists for the case where the providers
+           * themselves threw, and the `--app-color-*` variables are injected by the Mantine
+           * resolver - so relying on them here would render an unstyled page in exactly the
+           * failure this boundary is for. Kept in sync with the dark palette by eye.
+           */
+          background: "#010306",
+          color: "#e6effd",
           fontFamily: '"Segoe UI", Arial, sans-serif',
         }}
       >
@@ -48,7 +54,7 @@ export class AppErrorBoundary extends Component<Props, State> {
         </p>
         <p
           style={{
-            color: "var(--app-color-muted)",
+            color: "#9aa3b5",
             fontSize: 13,
             wordBreak: "break-word",
             maxWidth: 640,
