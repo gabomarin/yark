@@ -42,5 +42,36 @@ const pathAfterBase =
         {site.downloadLabel}
       </a>
     </nav>
+    <details class="mobile-nav">
+      <summary aria-label="Open navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </summary>
+      <nav aria-label="Mobile primary">
+        {
+          nav.map((item) => {
+            const href = withBase(item.href);
+            const current =
+              item.href === "/"
+                ? pathAfterBase === "/"
+                : item.href === "/docs/"
+                  ? pathAfterBase.startsWith("/docs")
+                  : item.href.endsWith("/")
+                    ? pathAfterBase === item.href || pathAfterBase === item.href.slice(0, -1)
+                    : pathAfterBase.startsWith(item.href);
+            return (
+              <a href={href} aria-current={current ? "page" : undefined}>
+                {item.label}
+              </a>
+            );
+          })
+        }
+        <a class="site-nav-download" href={site.downloadUrl}>
+          <DownloadIcon />
+          {site.downloadLabel}
+        </a>
+      </nav>
+    </details>
   </div>
 </header>

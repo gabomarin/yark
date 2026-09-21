@@ -26,6 +26,9 @@ const stageSizes = "(max-width: 720px) 100vw, min(78rem, 100vw)";
                     class:list={["product-slide", index === 0 && "is-active"]}
                     data-product-slide
                     data-caption={shot.caption}
+                    id={`preview-panel-${index}`}
+                    role="tabpanel"
+                    aria-labelledby={`preview-tab-${index}`}
                     aria-hidden={index === 0 ? "false" : "true"}
                   >
                     <ResponsiveShot
@@ -43,24 +46,31 @@ const stageSizes = "(max-width: 720px) 100vw, min(78rem, 100vw)";
                 ))
               }
             </div>
+            <button class="product-arrow product-arrow-prev" type="button" data-product-prev aria-label="Show previous preview">←</button>
+            <button class="product-arrow product-arrow-next" type="button" data-product-next aria-label="Show next preview">→</button>
           </div>
         </div>
       </div>
       <p class="product-caption" data-product-caption data-reveal-child>
         {featured[0]?.caption}
       </p>
-      <div class="product-dots" role="tablist" aria-label="Preview screens" data-reveal-child>
+      <div class="product-controls" data-reveal-child>
+        <div class="product-dots" role="tablist" aria-label="Preview screens">
         {
           featured.map((shot, index) => (
             <button
               type="button"
               class:list={["product-dot", index === 0 && "is-active"]}
               data-product-dot
+              id={`preview-tab-${index}`}
+              role="tab"
+              aria-controls={`preview-panel-${index}`}
               aria-label={`Show: ${shot.caption}`}
-              aria-current={index === 0 ? "true" : "false"}
+              aria-selected={index === 0 ? "true" : "false"}
             />
           ))
         }
+        </div>
       </div>
     </div>
   </div>

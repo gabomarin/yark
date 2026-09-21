@@ -61,7 +61,7 @@ export const roadmapItems: RoadmapItem[] = [
   },
   {
     tag: "planned",
-    text: "Point ASA settings that take a URL (admin whitelist, dynamic config) at a local Hosted Resources URL",
+    text: "Admin whitelist editor: manage ASA administrator IDs in YARK and publish the list through Hosted Resources without maintaining a separate Gist",
   },
   {
     tag: "planned",
@@ -69,6 +69,6 @@ export const roadmapItems: RoadmapItem[] = [
   },
   {
     tag: "planned",
-    text: "Optional AI chat assistant (bring-your-own OpenAI-compatible key) for fleet help",
+    text: "Pinned INI settings: keep frequently adjusted server settings together for faster review and editing",
   },
 ];

@@ -2,8 +2,10 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import DiscordIcon from "../components/DiscordIcon.astro";
 import DownloadIcon from "../components/DownloadIcon.astro";
+import FeatureIcon from "../components/FeatureIcon.astro";
 import GithubIcon from "../components/GithubIcon.astro";
 import ProductStage from "../components/ProductStage.astro";
+import ImageLightbox from "../components/ImageLightbox.astro";
 import ResponsiveShot from "../components/ResponsiveShot.astro";
 import { site, withBase } from "../data/site";
 import { SHOT_WIDTHS } from "../data/screenshot-media.mjs";
@@ -11,296 +13,286 @@ import { screenshotSlug, screenshots } from "../data/screenshots";
 import { roadmapItems } from "../data/roadmap";
 import { changelog } from "../data/changelog";
 
-const logoSizes = "(max-width: 22rem) calc(100vw - 3rem), 22rem";
-const gallerySizes = "(max-width: 720px) calc(100vw - 3rem), calc(min(72rem, 100vw) / 2)";
-/*
- * The hero stage already shows the first five shots, and the section below used to render the
- * whole set again - the same captures twice, and a wall of full-app screenshots before the page
- * had made its argument. The section keeps four surfaces that the stage does not show, so nothing
- * is repeated; the rest live at /screenshots/.
- */
-const gallerySlugs = ["workspace-mods", "backups", "logs", "settings"];
+const showcaseSizes = "(max-width: 720px) calc(100vw - 2.5rem), calc(min(72rem, 100vw) * 0.66)";
+const featuredShowcaseSizes = "(max-width: 720px) calc(100vw - 2.5rem), min(72rem, calc(100vw - 3rem))";
+const gallerySlugs = ["configuration-wizard", "clusters", "workspace-map-search", "workspace-mods", "workspace-ini"];
 const galleryShots = screenshots.filter((shot) => gallerySlugs.includes(screenshotSlug(shot)));
-/*
- * Momentum, from the same source the app's What's new modal reads - the shared curated
- * changelog. No network call, no hand-copied version, and it cannot go stale: when a release
- * is cut, the landing says so.
- */
 const latestRelease = changelog[0];
 const latestHighlights = (
   latestRelease?.sections.find((section) => section.title === "Highlights")?.items ??
   latestRelease?.sections[0]?.items ??
   []
 ).slice(0, 3);
-const logoSrcset = `${withBase("/media/yark-logo-320.webp")} 320w, ${withBase("/media/yark-logo-640.webp")} 640w`;
+const featuredRoadmap = roadmapItems;
+
+const features = [
+  { icon: "servers" as const, label: "Fleet control", title: "Profiles and lifecycle", body: "Start, stop, restart and inspect every ASA instance from one Windows workspace." },
+  { icon: "files" as const, label: "SteamCMD", title: "Server files, handled", body: "Install, update and verify builds through a visible queue instead of juggling folders." },
+  { icon: "mods" as const, label: "CurseForge", title: "CurseForge integration", body: "Browse and manage CurseForge Project IDs alongside load order and map-mod links — no API key required in the desktop app." },
+  { icon: "config" as const, label: "Configuration", title: "Configuration wizard", body: "Start from a server profile, tune pacing, breeding, world and QoL settings, then review the changes before applying them." },
+  { icon: "config" as const, label: "Clusters", title: "Cluster INI templates", body: "Define shared Game.ini and GameUserSettings.ini defaults once, then seed or restore member servers from the cluster." },
+  { icon: "backups" as const, label: "Recovery", title: "Backups you can audit", body: "Create, restore, import and export with operation history, retention and fleet alerts." },
+  { icon: "maintenance" as const, label: "Operations", title: "Maintenance on schedule", body: "Coordinate restarts, update warnings, dino wipes, clusters, RCON and shared configuration." },
+  { icon: "hosted" as const, label: "Building", title: "Hosted resources", body: "A local alternative to Gists for ASA settings: serve reusable text, INI or JSON from this PC at a URL for AdminListURL, ban lists and dynamic config." },
+  { icon: "maps" as const, label: "Maps", title: "Map search", body: "Find official maps and map mods in one searchable picker before assigning them to a server." },
+];
 ---
 
 <BaseLayout title={site.seoTitle} description={site.description} path="/" softwareSchema>
-  <Fragment slot="head">
-    <link
-      rel="preload"
-      as="image"
-      type="image/webp"
-      href={withBase("/media/yark-logo-640.webp")}
-      imagesrcset={logoSrcset}
-      imagesizes={logoSizes}
-      fetchpriority="high"
-    />
-  </Fragment>
   <Fragment slot="before-main">
     <header class="hero">
-      <div class="brand-lockup" data-hero-item>
-        <ResponsiveShot
-          slug="yark-logo"
-          alt=""
-          fallbackSrc={withBase("/assets/yark-logo.png")}
-          widths={[320, 640]}
-          sizes={logoSizes}
-          width={420}
-          height={420}
-          loading="eager"
-          fetchpriority="high"
-        />
+      <div class="hero-copy">
+        <p class="eyebrow" data-hero-item>Open-source ARK server tooling</p>
+        <h1 class="hero-title" data-hero-item>A local Windows manager for ASA servers.</h1>
+        <p class="lede" data-hero-item>
+          YARK is a local Windows desktop app for running and maintaining ARK: Survival Ascended
+          dedicated servers. It brings profiles, SteamCMD, mods, backups, logs and INI configuration
+          into one place.
+        </p>
+        <div class="cta-row" data-hero-item>
+          <a class="cta primary" href={site.downloadUrl}><DownloadIcon />{site.downloadLabel}</a>
+          <a class="cta ghost icon-only" href={site.repoUrl} aria-label="View source" title="View source"><GithubIcon /></a>
+          <a class="cta ghost icon-only" href={site.discordUrl} aria-label="Join Discord" title="Join Discord"><DiscordIcon /></a>
+        </div>
+        <p class="release-trust" data-hero-item>
+          {site.statusLabel}. Download from this site or GitHub Releases, then <a href={withBase("/docs/getting-started/#verify-your-download")}>verify the installer</a>.
+        </p>
       </div>
-      <h1 class="hero-title" data-hero-item>
-        YARK — ARK Survival Ascended dedicated server manager for Windows
-      </h1>
-      <p class="lede" data-hero-item>
-        Local ARK: Survival Ascended dedicated servers on Windows — managed from one
-        desktop shell. Profiles, SteamCMD, mods, backups, logs, and INI in a single app.
-      </p>
-      <div class="cta-row" data-hero-item>
-        <a class="cta primary" href={site.downloadUrl}>
-          <DownloadIcon />
-          {site.downloadLabel}
-        </a>
-        <a class="cta ghost" href={site.releasesUrl}>All releases</a>
-        <a class="cta ghost" href={site.repoUrl}>
-          <GithubIcon />
-          GitHub
-        </a>
-        <a class="cta ghost" href={site.discordUrl}>
-          <DiscordIcon />
-          Discord
-        </a>
-      </div>
-      <p class="status-pill" data-hero-item>{site.statusLabel}</p>
-      <p class="release-trust" data-hero-item>
-        Public prerelease — download only from this site or GitHub Releases.{" "}
-        <a href={withBase("/docs/getting-started/#verify-your-download")}
-          >Verify the official download before installing</a
-        >.
-      </p>
+      <div class="hero-product" data-hero-item><ProductStage shots={screenshots} /></div>
     </header>
 
-    <ProductStage shots={screenshots} />
-
-    <section class="section" id="latest" data-reveal>
-      <h2 data-reveal-child>Latest release</h2>
-      <p class="section-lede" data-reveal-child>
-        <strong>{latestRelease?.version}</strong>{latestRelease?.date ? ` - ${latestRelease.date}` : ""}.{" "}
-        <a href={withBase("/changelog/")}>Full changelog</a>.
-      </p>
-      <ul class="feature-list" data-reveal-child>
-        {latestHighlights.map((item) => (
-          <li>{item}</li>
-        ))}
-      </ul>
-    </section>
-    <section class="showcase" id="screenshots" aria-label="Application screenshots" data-reveal>
-      <div class="showcase-inner">
-        <p class="showcase-eyebrow" data-reveal-child>A look at the app</p>
-        <h2 class="showcase-title" data-reveal-child>The surfaces that carry the work</h2>
-        <p class="showcase-lede" data-reveal-child>
-          Captured from the Electron + React desktop shell. Interface is under active
-          development and may change between builds.
-        </p>
-        <div class="shots">
-          {
-            galleryShots.map((shot) => (
-              <figure class="shot" data-reveal-child>
-                <a href={shot.src} target="_blank" rel="noopener">
-                  <ResponsiveShot
-                    slug={screenshotSlug(shot)}
-                    alt={shot.alt}
-                    fallbackSrc={shot.src}
-                    widths={[...SHOT_WIDTHS]}
-                    sizes={gallerySizes}
-                    width={1440}
-                    height={900}
-                    loading="lazy"
-                  />
-                </a>
-                <figcaption>{shot.caption}</figcaption>
-              </figure>
-            ))
-          }
-        </div>
-        <div class="cta-row" data-reveal-child>
-          <a class="cta ghost" href={withBase("/screenshots/")}>Open the full gallery</a>
-        </div>
-      </div>
-    </section>
+    <div class="trust-rail" aria-label="Product principles" data-reveal>
+      <div data-reveal-child><strong>Runs on your PC</strong><span>Profiles and settings stay local</span></div>
+      <div data-reveal-child><strong>Open source</strong><span>Public code, docs and changelog</span></div>
+      <div data-reveal-child><strong>Built for Windows</strong><span>A desktop tool, not a hosting service</span></div>
+      <div data-reveal-child><strong>No account required</strong><span>Run YARK without a hosted service</span></div>
+    </div>
   </Fragment>
 
-  <section class="section" id="why" data-reveal>
-    <h2 data-reveal-child>Why YARK exists</h2>
-    <p class="section-lede" data-reveal-child>
-      YARK started because I was tired of the tools I used to manage my ASA servers. They
-      worked, but I spent too much time fighting their configuration screens — and several
-      features I wanted sat behind paid tiers.
+  <section class="home-section capability-section" id="scope" data-reveal>
+    <div class="section-heading" data-reveal-child>
+      <p class="eyebrow">Current capabilities</p>
+      <h2>What YARK currently covers</h2>
+      <p>Manage the repetitive work from one place while keeping the server files and credentials on the machine you control.</p>
+    </div>
+    <div class="feature-grid">
+      {features.map((feature) => (
+        <article class="feature-card" data-reveal-child>
+          <div class="feature-icon-wrap"><FeatureIcon name={feature.icon} /></div>
+          <p class="feature-label">{feature.label}</p>
+          <h3>{feature.title}</h3>
+          <p>{feature.body}</p>
+        </article>
+      ))}
+    </div>
+    <p class="capability-detail" data-reveal-child>
+      Additional operator workflows include fleet metrics and survivor counts, Update All for stopped
+      outdated servers, automatic port suggestions, an experimental Ark Server API tab, a searchable
+      launch-options catalog, RCON, configuration copy between profiles and a visual Map picker for
+      official maps and map mods. This is an active public prerelease, not a shipping-product checklist.
     </p>
-    <p class="section-lede" data-reveal-child>
-      I wanted a Windows app that was easier to live with, ran on my own machine, and did
-      not lock the useful parts behind a paywall. At first it was just for my own servers.
-        Once it became useful enough, I released it as a free, open-source prerelease.
-      </p>
-    </section>
+    <a class="text-link" href={withBase("/docs/")} data-reveal-child>Explore the complete operator documentation <span aria-hidden="true">→</span></a>
+  </section>
 
-    <section class="section" id="not" data-reveal>
-      <h2 data-reveal-child>What it is not</h2>
-      <p class="section-lede" data-reveal-child>
-        YARK is not a cloud host, not an ARK game client launcher, and not an official
-        Wildcard product. It is an independent local manager for dedicated-server tooling you
-        run on your own machine.
-      </p>
-    </section>
-
-    <section class="section" id="scope" data-reveal>
-      <h2 data-reveal-child>What it does</h2>
-      <p class="section-lede" data-reveal-child>
-        Built and exercised in early public prerelease builds (Electron + React + TypeScript on
-        Windows). This is not a shipping product checklist.
-      </p>
-      <div class="feature-grid" data-reveal-child>
-        <article class="feature-card">
-          <h3>Profiles and lifecycle</h3>
-          <p>Several ARK profiles in one shell, with start, stop, restart, force-stop and optional auto-start.</p>
-        </article>
-        <article class="feature-card">
-          <h3>Server files</h3>
-          <p>Install, update and verify with SteamCMD, queue jobs on Downloads, and Update All for a fleet that is stopped and outdated.</p>
-        </article>
-        <article class="feature-card">
-          <h3>Mods and maps</h3>
-          <p>CurseForge Project IDs that survive an enable/disable cycle, Discover browsing, and map-mod linking for custom maps.</p>
-        </article>
-        <article class="feature-card">
-          <h3>Workspace and INI</h3>
-          <p>Visual or raw INI editing, curated launch flags with a command preview, an RCON console, and a configuration assistant on demand.</p>
-        </article>
-        <article class="feature-card">
-          <h3>Backups and logs</h3>
-          <p>Create, restore, export and import backups, with operation history, retention and fleet-wide alerts.</p>
-        </article>
-        <article class="feature-card">
-          <h3>Clusters and maintenance</h3>
-          <p>Cluster membership, shared INI templates and compliance checks, plus scheduled restarts, optional dino wipes and update warnings.</p>
-        </article>
+  <section class="showcase" id="screenshots" aria-labelledby="showcase-title" data-reveal>
+    <div class="showcase-inner">
+      <div class="section-heading" data-reveal-child>
+        <p class="eyebrow">Current desktop interface</p>
+        <h2 id="showcase-title">Screens from the current build</h2>
+        <p>Real captures from the current build. Interface may change during prerelease.</p>
       </div>
-      <p class="section-lede" data-reveal-child>
-        <a href={withBase("/docs/")}>The docs cover the full surface</a> - every tab, every setting.
+      <div class="editorial-shots">
+        {galleryShots.map((shot, index) => (
+          <figure class:list={["shot", index === 0 && "shot-featured"]} data-reveal-child>
+            <button
+              class="shot-trigger"
+              type="button"
+              data-lightbox-trigger
+              data-lightbox-src={shot.src}
+              data-lightbox-alt={shot.alt}
+              data-lightbox-caption={shot.caption}
+              aria-label={`Open larger preview: ${shot.caption}`}
+            >
+              <ResponsiveShot slug={screenshotSlug(shot)} alt={shot.alt} fallbackSrc={shot.src} widths={[...SHOT_WIDTHS]} sizes={index === 0 ? featuredShowcaseSizes : showcaseSizes} width={1440} height={900} loading="lazy" />
+            </button>
+            <figcaption>{shot.caption}</figcaption>
+          </figure>
+        ))}
+      </div>
+      <a class="cta ghost" href={withBase("/screenshots/")} data-reveal-child>Open the full gallery</a>
+    </div>
+    <ImageLightbox />
+  </section>
+
+  <section class="home-section story-section" id="why" data-reveal>
+    <div class="story-copy" data-reveal-child>
+      <p class="eyebrow">Why YARK exists</p>
+      <h2>Why YARK exists</h2>
+      <p>YARK started because I was tired of the tools I used to manage my ASA servers. They worked, but I spent too much time fighting their configuration screens — and several features I wanted sat behind paid tiers.</p>
+      <p>I wanted a Windows app that was easier to live with, ran on my own machine, and did not lock the useful parts behind a paywall. At first it was just for my own servers. Once it became useful enough, I released it as a free, open-source prerelease.</p>
+    </div>
+    <aside class="boundary-card" data-reveal-child>
+      <span class="boundary-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+          <path d="M7 10V8a5 5 0 0 1 10 0v2" />
+          <rect x="4" y="10" width="16" height="10" rx="2" />
+          <path d="M12 14v2" />
+        </svg>
+      </span>
+      <div>
+        <p class="feature-label">Clear boundary</p>
+        <h3>Local manager, not a cloud host.</h3>
+        <p>YARK is not an ARK client launcher or an official Wildcard product. It manages the dedicated-server tooling you run on your own Windows machine.</p>
+      </div>
+    </aside>
+  </section>
+
+  <section class="home-section momentum-section" id="latest" data-reveal>
+    <div class="section-heading" data-reveal-child>
+      <p class="eyebrow">Project status</p>
+      <h2>Current release and planned work</h2>
+      <p>Release notes and planned work come from the same sources used by the app and repository.</p>
+    </div>
+    <div class="momentum-grid">
+      <article class="release-card" data-reveal-child>
+        <div class="card-heading">
+          <div><p class="feature-label">Latest release</p><h3>YARK {latestRelease?.version}</h3></div>
+          {latestRelease?.date && <time>{latestRelease.date}</time>}
+        </div>
+        <ul>{latestHighlights.map((item) => <li>{item}</li>)}</ul>
+        <a class="text-link" href={withBase("/changelog/")}>Read the full changelog <span aria-hidden="true">→</span></a>
+      </article>
+      <article class="roadmap-card" data-reveal-child>
+        <div class="card-heading">
+          <div><p class="feature-label">Planned work</p><h3>Public roadmap</h3></div>
+          <span class="roadmap-note">No 1.0 date promised</span>
+        </div>
+        <ol>
+          {featuredRoadmap.map((item) => (
+            <li><span class:list={["tag", item.tag]}>{item.tag === "building" ? "Building" : "Planned"}</span><span>{item.text}</span></li>
+          ))}
+        </ol>
+      </article>
+    </div>
+  </section>
+
+  <section class="home-section privacy-section" id="privacy" data-reveal>
+    <div data-reveal-child><p class="eyebrow">Local by design</p><h2>Your server workspace stays yours.</h2></div>
+    <div data-reveal-child>
+      <p>
+        Profiles and app settings stay on your PC in local SQLite. There is no YARK cloud account.
+        Network use covers SteamCMD content, Wildcard’s public official-status CDN and CurseForge
+        integration, with no API key required in the desktop app. ASA server and admin credentials remain
+        local and may be present in app data, INI files and INI backups.
       </p>
-    </section>
-
-  <section class="section" id="roadmap" data-reveal>
-    <h2 data-reveal-child>Next on the roadmap</h2>
-    <p class="section-lede" data-reveal-child>
-      Candidate product work after v0.20.0 — features operators will notice day to day.
-      GitHub milestones stay authoritative; nothing here promises a stable 1.0 date.
-    </p>
-    <ul class="roadmap-list" data-reveal-child>
-      {
-        roadmapItems.map((item) => (
-          <li>
-            <span class:list={["tag", item.tag]}>
-              {item.tag === "building" ? "Building" : "Planned"}
-            </span>
-            {item.text}
-          </li>
-        ))
-      }
-    </ul>
+      <a class="text-link" href={withBase("/docs/security-privacy/")}>Read security &amp; privacy <span aria-hidden="true">→</span></a>
+    </div>
   </section>
 
-  <section class="section" id="what-is" data-reveal>
-    <h2 data-reveal-child>ARK Survival Ascended dedicated server manager</h2>
-    <p class="section-lede" data-reveal-child>
-      YARK is a Windows desktop <strong>ASA dedicated server manager</strong> for hosts who run
-      local ARK: Survival Ascended servers. Instead of juggling SteamCMD folders, INI files,
-      CurseForge Project IDs, and backup scripts by hand, you keep multiple server profiles in
-      one shell — install and update files, start and stop instances, schedule world backups,
-      inspect logs, and edit configuration with a visual INI editor and guided assistant.
-    </p>
+  <section class="final-cta" data-reveal>
+    <div data-reveal-child><p class="eyebrow">Project files</p><h2>YARK is a public Windows prerelease.</h2><p>Download the current build, read the documentation, or inspect the source and its development history.</p></div>
+    <div class="final-actions" data-reveal-child>
+      <a class="cta primary" href={site.downloadUrl}><DownloadIcon />{site.downloadLabel}</a>
+      <a class="text-link" href={site.releasesUrl}>All releases <span aria-hidden="true">→</span></a>
+    </div>
   </section>
-
-    <section class="section" id="privacy" data-reveal>
-    <h2 data-reveal-child>Privacy and data</h2>
-    <p class="section-lede" data-reveal-child>
-      Server profiles and app settings stay on your PC (local SQLite). There is no YARK cloud
-      account. Network use covers SteamCMD content, Wildcard’s public official-status CDN,
-      and CurseForge mod metadata via a small{" "}
-      <a href="https://github.com/gabomarin/yark/tree/main/workers/curseforge-proxy"
-        >Cloudflare Worker proxy</a
-      >. The desktop app never embeds a CurseForge API key.
-      Server/admin credentials required by ASA remain local and may be present in app data,
-      INI files, and INI backups. See{" "}
-      <a href={withBase("/docs/security-privacy/")}>Security &amp; privacy</a> for the current
-      protection boundary.
-    </p>
-  </section>
-
-  <section class="section" id="about" data-reveal>
-    <h2 data-reveal-child>About this site</h2>
-    <p class="section-lede" data-reveal-child>
-      Product pages and operator docs for YARK. Source and license: GPL-3.0 on{" "}
-      <a href={site.repoUrl}>GitHub</a>. Chat and support:{" "}
-      <a href={site.discordUrl}>Discord</a>.
-    </p>
-  </section>
+  <p class="site-note">
+    Product pages and operator docs for YARK. Source and license: GPL-3.0 on
+    <a href={site.repoUrl}>GitHub</a>. Chat and support: <a href={site.discordUrl}>Discord</a>.
+  </p>
 </BaseLayout>
-<style>
-  .feature-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    margin-top: 1.5rem;
-  }
 
-  @media (min-width: 800px) {
-    .feature-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+<style is:global>
+  .hero { display: grid; grid-template-columns: minmax(0, .82fr) minmax(34rem, 1.18fr); align-items: center; gap: clamp(2.5rem, 6vw, 6rem); max-width: 82rem; min-height: calc(100vh - 4rem); margin: 0 auto; padding: clamp(3.5rem, 8vh, 7rem) 1.5rem clamp(3rem, 7vh, 6rem); }
+  .hero-copy { position: relative; z-index: 2; }
+  .eyebrow { margin: 0 0 .75rem; color: var(--cryo); font-family: var(--mono); font-size: .72rem; font-weight: 500; letter-spacing: .11em; text-transform: uppercase; }
+  .hero-title { max-width: 20ch; margin: 0 0 1.2rem; color: var(--ink); font-size: clamp(2.55rem, 5vw, 4.25rem); font-weight: 720; line-height: .98; letter-spacing: -.055em; text-wrap: balance; }
+  .hero .lede { max-width: 34rem; margin-bottom: 1.8rem; font-size: clamp(1.05rem, 1.6vw, 1.22rem); line-height: 1.6; }
+  .hero .cta-row { margin-bottom: 1.35rem; }
+  .hero .cta.icon-only { width: 3rem; min-width: 3rem; padding-inline: 0; justify-content: center; }
+  .hero .release-trust { max-width: 33rem; margin-top: 0; }
+  .hero-product { min-width: 0; }
+  .hero .product-band, .hero .product-stage { padding: 0; }
+  .hero .product-band-inner { padding: 0; }
+  .hero .product-glow { inset: 8% 2% 16%; }
+  .hero .product-bezel { transform: rotateY(-4deg) rotateX(1deg); border-color: color-mix(in srgb, var(--cryo) 38%, var(--line)); }
+  .hero .product-caption { max-width: 34rem; margin-top: 1rem; font-size: .82rem; }
+  .trust-rail { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); max-width: 82rem; margin: 0 auto; padding: 0 1.5rem 4.5rem; }
+  .trust-rail > div { padding: 1.25rem 1.4rem; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .trust-rail > div + div { border-left: 1px solid var(--line); }
+  .trust-rail strong, .trust-rail span { display: block; }
+  .trust-rail strong { margin-bottom: .25rem; color: var(--ink); font-size: .9rem; }
+  .trust-rail span { color: var(--muted); font-size: .78rem; line-height: 1.45; }
+  main { max-width: none; padding: 0 0 5rem; }
+  .home-section, .showcase-inner, .final-cta { width: min(72rem, calc(100% - 3rem)); margin-inline: auto; }
+  .home-section { padding: clamp(4.5rem, 9vw, 7.5rem) 0; }
+  .section-heading { max-width: 43rem; margin-bottom: 2.5rem; }
+  .section-heading h2, .story-section h2, .privacy-section h2, .final-cta h2 { margin: 0 0 .8rem; color: var(--ink); font-size: clamp(2rem, 4vw, 3.35rem); line-height: 1.06; letter-spacing: -.045em; text-wrap: balance; }
+  .section-heading > p:last-child, .story-copy > p:last-child, .privacy-section p, .final-cta p { margin: 0; color: var(--muted); font-size: 1.02rem; line-height: 1.65; }
+  .story-copy > p:not(.eyebrow) { margin: 0 0 1rem; color: var(--muted); font-size: 1.02rem; line-height: 1.65; }
+  .story-copy > p:last-child { margin-bottom: 0; }
+  .feature-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+  .feature-card { min-height: 15rem; padding: 1.65rem; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--bg-1) 54%, transparent); transition: background 180ms var(--ease-out); }
+  .feature-card:hover { background: color-mix(in srgb, var(--bg-1) 88%, transparent); }
+  .feature-icon-wrap { display: grid; width: 2.7rem; height: 2.7rem; margin-bottom: 1.5rem; place-items: center; border: 1px solid color-mix(in srgb, var(--cryo) 35%, var(--line)); border-radius: .35rem; color: var(--cryo); background: color-mix(in srgb, var(--cryo) 8%, transparent); }
+  .feature-label { margin: 0 0 .45rem; color: var(--fossil); font-family: var(--mono); font-size: .68rem; letter-spacing: .075em; text-transform: uppercase; }
+  .feature-card h3, .boundary-card h3, .card-heading h3 { margin: 0 0 .6rem; color: var(--ink); font-size: 1.14rem; letter-spacing: -.02em; }
+  .feature-card > p:last-child, .boundary-card div > p:last-child { margin: 0; color: var(--muted); font-size: .91rem; line-height: 1.6; }
+  .capability-detail { max-width: 58rem; margin: 2rem 0 0; color: var(--muted); font-size: .94rem; line-height: 1.65; }
+  .text-link { display: inline-flex; gap: .5rem; align-items: center; margin-top: 1.5rem; color: var(--ink); font-weight: 650; text-decoration: none; }
+  .text-link span { color: var(--cryo); transition: transform 160ms var(--ease-out); }
+  .text-link:hover { color: var(--cryo); }
+  .text-link:hover span { transform: translateX(.2rem); }
+  .showcase { padding: clamp(4.5rem, 9vw, 7.5rem) 0; border-block: 1px solid var(--line); background: color-mix(in srgb, var(--bg-1) 72%, transparent); }
+  .editorial-shots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; align-items: start; }
+  .editorial-shots .shot-featured { grid-column: 1 / -1; }
+  .editorial-shots .shot-trigger { border-radius: .5rem; box-shadow: 0 24px 70px rgba(0, 0, 0, .34); }
+  .editorial-shots .shot-trigger:focus-visible { outline: 2px solid var(--cryo); outline-offset: 4px; }
+  .editorial-shots .shot figcaption { max-width: 48rem; }
+  .showcase .cta { margin-top: 1.75rem; }
+  .story-section { display: grid; grid-template-columns: minmax(0, 1fr) minmax(20rem, .72fr); gap: clamp(3rem, 8vw, 7rem); align-items: center; }
+  .boundary-card { display: grid; grid-template-columns: auto 1fr; gap: 1.25rem; padding: 1.75rem; border: 1px solid var(--line); border-left: 3px solid var(--fossil); background: color-mix(in srgb, var(--bg-1) 72%, transparent); }
+  .boundary-mark { display: grid; width: 2.5rem; height: 2.5rem; place-items: center; border: 1px solid color-mix(in srgb, var(--cryo) 40%, var(--line)); border-radius: .3rem; color: var(--cryo); }
+  .boundary-mark svg { display: block; width: 1.45rem; height: 1.45rem; color: var(--cryo); }
+  .momentum-section { border-top: 1px solid var(--line); }
+  .momentum-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; }
+  .release-card, .roadmap-card { padding: clamp(1.4rem, 3vw, 2rem); border: 1px solid var(--line); background: color-mix(in srgb, var(--bg-1) 68%, transparent); }
+  .card-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: start; padding-bottom: 1.25rem; border-bottom: 1px solid var(--line); }
+  .card-heading h3 { margin-bottom: 0; font-size: 1.35rem; }
+  .card-heading time, .roadmap-note { color: var(--muted); font-family: var(--mono); font-size: .68rem; white-space: nowrap; }
+  .release-card ul, .roadmap-card ol { margin: 0; padding: 0; list-style: none; }
+  .release-card li, .roadmap-card li { padding: 1rem 0; border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent); color: color-mix(in srgb, var(--ink) 82%, var(--muted)); font-size: .9rem; line-height: 1.55; }
+  .roadmap-card li { display: grid; grid-template-columns: auto 1fr; gap: .75rem; }
+  .privacy-section { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1fr); gap: clamp(3rem, 8vw, 7rem); border-top: 1px solid var(--line); }
+  .final-cta { display: flex; justify-content: space-between; gap: 3rem; align-items: end; padding: clamp(2rem, 5vw, 3.5rem); border: 1px solid var(--line); background: color-mix(in srgb, var(--bg-1) 72%, transparent); }
+  .final-cta h2 { max-width: 14ch; font-size: clamp(1.9rem, 3vw, 2.75rem); }
+  .final-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 1.5rem; }
+  .final-actions .text-link { margin-top: 0; }
+  .site-note { width: min(72rem, calc(100% - 3rem)); margin: 1.5rem auto 0; color: var(--muted); font-size: .86rem; text-align: center; }
+  @media (max-width: 1050px) {
+    .hero { grid-template-columns: 1fr; min-height: auto; padding-top: 4rem; }
+    .hero-copy { max-width: 42rem; }
+    .hero-title { max-width: 20ch; }
+    .hero-product { width: min(100%, 52rem); margin-inline: auto; }
+    .feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
-
-  @media (min-width: 1200px) {
-    .feature-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-  }
-
-  .feature-card {
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 1.25rem;
-    background: color-mix(in srgb, var(--bg-1) 70%, transparent);
-  }
-
-  .feature-card h3 {
-    margin: 0 0 0.35rem;
-    font-size: 1rem;
-  }
-
-  .feature-card p {
-    margin: 0;
-    color: var(--muted);
-    font-size: 0.9rem;
-  }
-
-  /* A screenshot reads as a running app, not a flat image. */
-  .shot img {
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  @media (max-width: 720px) {
+    .hero { gap: 3rem; padding: 2.5rem 1.25rem 3rem; }
+    .hero-title { max-width: 14ch; font-size: clamp(2.45rem, 12vw, 3.6rem); }
+    .hero .cta-row .cta { justify-content: center; width: 100%; }
+    .hero .cta-row .cta.icon-only { width: 3rem; min-width: 3rem; }
+    .hero .product-caption { min-height: 3.8em; }
+    .trust-rail { grid-template-columns: 1fr 1fr; padding: 0 1.25rem 3.5rem; }
+    .trust-rail > div:nth-child(3) { border-left: 0; }
+    .trust-rail > div:nth-child(n + 3) { border-top: 0; }
+    .home-section, .showcase-inner, .final-cta { width: min(100% - 2.5rem, 72rem); }
+    .feature-grid, .editorial-shots, .story-section, .momentum-grid, .privacy-section { grid-template-columns: 1fr; }
+    .feature-card { min-height: auto; }
+    .editorial-shots .shot-featured { grid-column: auto; }
+    .story-section, .privacy-section { gap: 2rem; }
+    .roadmap-card li { grid-template-columns: 1fr; }
+    .roadmap-card .tag { width: fit-content; }
+    .final-cta, .final-actions { flex-direction: column; align-items: stretch; }
+    .final-actions .cta { justify-content: center; }
   }
 </style>

@@ -33,9 +33,15 @@ export const screenshots: Screenshot[] = [
   },
   {
     src: withBase("/screenshots/workspace-server.png"),
-    alt: "ASA dedicated server configuration in YARK with visual Map picker, identity, Max players, Move installation, networking, cluster, and Auto-start",
+    alt: "YARK ASA dedicated server configuration with identity, ports, access, cluster, and Auto-start controls",
     caption:
-      "Server configuration — visual Map picker (Official / Map mods / Search Maps…), identity, ports, access, cluster, and Auto-start.",
+      "Server configuration — identity, ports, access, cluster membership, and Auto-start in one panel.",
+  },
+  {
+    src: withBase("/screenshots/workspace-map-search.png"),
+    alt: "YARK Map search modal opened from ASA dedicated server configuration, with searchable official and map-mod choices",
+    caption:
+      "Map search — open the picker from server configuration to search official maps and map mods before assigning one.",
   },
   {
     src: withBase("/screenshots/workspace-launch.png"),
@@ -78,6 +84,12 @@ export const screenshots: Screenshot[] = [
     alt: "YARK configuration assistant with experience-profile cards and a six-step wizard",
     caption:
       "Configuration assistant — experience cards and a guided six-step wizard; nothing is written until the final review.",
+  },
+  {
+    src: withBase("/screenshots/hosted-resources.png"),
+    alt: "YARK Hosted Resources page showing local URL resources, status, and diagnostics for text, INI, and JSON",
+    caption:
+      "Hosted Resources — serve text, INI, or JSON from this PC at a local URL instead of maintaining a separate Gist.",
   },
   {
     src: withBase("/screenshots/backups.png"),

@@ -36,7 +36,7 @@ const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
  */
 const assert = require("node:assert/strict");
 const { execFileSync } = require("node:child_process");
-const { randomUUID } = require("node:crypto");
+const { createHash, randomUUID } = require("node:crypto");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
@@ -625,6 +625,52 @@ function seedGalleryFleetSql(userData) {
   db.close();
 }
 
+/** Seed representative Hosted Resources cards for the website capture. */
+function seedGalleryHostedResources(userData) {
+  const dbPath = path.join(userData, "yark-server-manager.db");
+  assert.ok(fs.existsSync(dbPath), `DB missing at ${dbPath}`);
+  const db = new DatabaseSync(dbPath);
+  db.prepare("DELETE FROM hosted_resource_revisions").run();
+  db.prepare("DELETE FROM hosted_resources").run();
+
+  const now = new Date().toISOString();
+  const resources = [
+    {
+      id: "gallery-hosted-admin-list",
+      token: "gallery-admin-list-7f3kL2mQ9xR4vN8pT6yW1zC5",
+      displayName: "Admin whitelist",
+      format: "text",
+      notes: "ASA AdminListURL example",
+      tags: JSON.stringify(["admin-list"]),
+      content: "76561198000000001\n76561198000000002\n",
+    },
+    {
+      id: "gallery-hosted-dynamic-config",
+      token: "gallery-dynamic-json-3mN8qP1vX6sK4dR9tY2wF7",
+      displayName: "Dynamic server config",
+      format: "json",
+      notes: "Small JSON payload served locally to an ASA setting",
+      tags: JSON.stringify(["dynamic-config"]),
+      content: JSON.stringify({ motd: "YARK demo", rates: { harvest: 2, taming: 3 } }, null, 2),
+    },
+  ];
+  const insertResource = db.prepare(
+    `INSERT INTO hosted_resources
+       (id, token, display_name, format, created_at, updated_at, disabled_at, notes, tags_json)
+     VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?)`,
+  );
+  const insertRevision = db.prepare(
+    `INSERT INTO hosted_resource_revisions
+       (id, resource_id, sequence, content, sha256, validation, created_at, published_at)
+     VALUES (?, ?, 1, ?, ?, 'ok', ?, ?)` ,
+  );
+  for (const resource of resources) {
+    insertResource.run(resource.id, resource.token, resource.displayName, resource.format, now, now, resource.notes, resource.tags);
+    insertRevision.run(randomUUID(), resource.id, resource.content, createHash("sha256").update(resource.content).digest("hex"), now, now);
+  }
+  db.close();
+}
+
 function seedDownloadsJobs(userData, steamCmdPath) {
   const dbPath = path.join(userData, "yark-server-manager.db");
   assert.ok(fs.existsSync(dbPath), `DB missing at ${dbPath}`);
@@ -835,6 +881,7 @@ async function run() {
     }
 
     seedGalleryFleetSql(userData);
+    seedGalleryHostedResources(userData);
     applyDemoMapsInDb(userData);
     console.log(`WEBSITE_SCREENSHOTS_SEEDED=${DEMO_FLEET.map((d) => d.name).join(",")} cluster=${DEMO_CLUSTER_ID}`);
 
@@ -878,6 +925,15 @@ async function run() {
       await settle(page, 800);
       await dismissNotifications(page);
       await shot(page, path.join(outDir, "clusters.png"));
+
+      await goNav(page, "Hosted Resources");
+      await page.locator("[data-hosted-resources-page]").waitFor({
+        state: "visible",
+        timeout: 10000,
+      });
+      await settle(page, 700);
+      await dismissNotifications(page);
+      await shot(page, path.join(outDir, "hosted-resources.png"));
 
       await goNav(page, "Settings");
       await page.getByRole("heading", { name: "Settings" }).waitFor({
@@ -923,6 +979,30 @@ async function run() {
       await dismissNotifications(page);
       await shot(page, path.join(outDir, "workspace-server.png"));
 
+      const mapPicker = page.getByRole("combobox", { name: "Map" });
+      if ((await mapPicker.count()) > 0) {
+        await mapPicker.first().click();
+        const searchMaps = page.getByRole("button", { name: /Search Maps/i });
+        if ((await searchMaps.count()) > 0) {
+          await searchMaps.first().click();
+          await page.getByRole("dialog").waitFor({ state: "visible", timeout: 10000 });
+          // The map catalog fetch is asynchronous; do not capture the modal's transient loader.
+          await page.getByRole("button", { name: "Use map" }).first().waitFor({
+            state: "visible",
+            timeout: 30_000,
+          });
+          await page.waitForFunction(
+            () => [...document.querySelectorAll('[role="dialog"] img')].every((image) => image.complete),
+            undefined,
+            { timeout: 15_000 },
+          );
+          await settle(page, 500);
+        }
+      }
+      await shot(page, path.join(outDir, "workspace-map-search.png"));
+      await page.keyboard.press("Escape");
+      await settle(page, 300);
+
       await page.getByRole("tab", { name: "Launch" }).click();
       await settle(page, 600);
       // Keep the curated list visible — do not leave a search that matches nothing.
@@ -952,7 +1032,7 @@ async function run() {
         timeout: 10000,
       });
       await settle(page, 600);
-      // Prefer Discover browse for the marketing shot when the proxy is reachable.
+      // Prefer Discover browse for the marketing shot when CurseForge integration is reachable.
       // SegmentedControl radios are visually hidden — click the label text.
       const discoverLabel = page.getByText("Discover mods", { exact: true });
       if ((await discoverLabel.count()) > 0) {
