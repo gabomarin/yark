@@ -24,6 +24,48 @@ const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.22.0",
+    date: "2026-09-21",
+    sections: [
+      {
+        title: "Highlights",
+        items: [
+          "Appearance is a real setting: choose the theme (dark or light), the display size and where the server workspace puts its panels. It applies the moment you change it and is remembered.",
+          "A light theme for bright rooms, with its own surfaces and contrast, next to the dark shell you already had.",
+          "The whole interface follows Fluent 2: one chrome surface, one depth ladder, and one colour language for status.",
+          "Hosted Resources (experimental, off by default) serves text, INI or JSON from this PC at a URL, so an ASA setting that takes a URL - an admin whitelist, a dynamic config - can point at it instead of at a public pastebin. Each resource carries operator notes and tags.",
+          "Crash recovery (off by default): after an unexpected exit YARK can restart the server, with an attempt budget, backoff and a stability window.",
+          "Accessibility: YARK follows Windows High Contrast, and it stops animating when Windows asks for reduced motion.",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "The shell has its own colour identity now: surfaces move from neutral grey to a tinted navy ramp generated from one hue, the hairline step is lifted so cards still separate from the page, and the shell's brand texture is film grain instead of the hexagonal honeycomb.",
+          "The window canvas follows the saved theme, so a light-shell operator no longer gets a dark flash on startup or on resize. The launch splash keeps its brand plate on purpose - it is the light-on-dark lockup.",
+          "SteamCMD output and an update's details read like a native console in both themes.",
+          "One notice per view while a file job is queued or running, instead of a banner repeating what the tab already explains.",
+          "Alerts are legible again: they sit on their own surface with the severity tone in the border and icon, instead of blending into the cards behind them.",
+          "Wide windows keep Settings and server forms at a readable line length, the Overview fleet metrics read as one labelled strip instead of separate cards, and Settings and Clusters use a fused list-and-detail pane.",
+          "Manual restarts can use Quiet, Standard or Frequent player-notification presets.",
+          "Buttons, badges, menus, dialogs, segmented pickers and switches share one grammar: one primary per surface, neutral badges, Fluent control radii and one elevation ladder. The lifecycle Start uses the accent like every other primary action, and two operator fixes rode along - the sidebar's Experimental chip no longer squashes the icon, and Backups fleet alerts render full width.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "The SteamCMD progress bar no longer covers save buttons and cards: the shell reserves a row for it, and each view fills the content box instead of the viewport.",
+          "Switches move consistently, including inside long lists, and a write that fails puts the switch back where it belongs.",
+          "SteamCMD settings say why an action is locked, instead of leaving a disabled control with no explanation.",
+          "Disabled buttons keep the shape they have when enabled.",
+          "A Hosted Resources URL used as a loopback admin list is kept as written instead of being rewritten.",
+          "A launch option that needs a value is reported once instead of twice, and RCON drops the Recent commands box (Console history already lists the same commands, with their responses).",
+          "Clicking anywhere on an Overview server card opens the workspace.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.21.0",
     date: "2026-09-16",
     sections: [
