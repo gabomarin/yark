@@ -198,7 +198,6 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
           servers={props.servers}
           runtime={runtime}
           installation={installation}
-          events={props.events}
           rconHistory={props.rconHistory}
           playerList={props.playerList}
           opsLocked={opsLocked}

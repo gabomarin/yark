@@ -1,5 +1,5 @@
 import { Tabs } from "@mantine/core";
-import type { AppEvent, ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { lazy, Suspense, useState, type ReactElement } from "react";
 import { ServerBackupPanel } from "@features/backups/ServerBackupPanel";
 import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
@@ -45,7 +45,6 @@ interface Props {
   servers: ServerProfile[];
   runtime: ServerRuntimeInfo | null;
   installation: ServerInstallationInfo | null;
-  events: AppEvent[];
   rconHistory: RconHistoryEntry[];
   playerList: PlayerListState;
   opsLocked: boolean;
