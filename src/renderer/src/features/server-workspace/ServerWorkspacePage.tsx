@@ -141,7 +141,6 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
         void props.onSendRcon(selectedServer.id, "SaveWorld");
       }}
       onCopyConfiguration={() => props.onCopyConfiguration(selectedServer.id)}
-      onDelete={() => props.onDeleteServer?.(selectedServer.id)}
       onKill={() => props.onKillServer(selectedServer.id)}
       onToggleEnabled={() => props.onToggleServerEnabled?.(selectedServer.id, !selectedServer.enabled)}
     />

@@ -8,8 +8,6 @@ import { ServerWorkspacePage } from "@features/server-workspace/ServerWorkspaceP
 type WorkspaceOverlay = Extract<Overlay, { kind: "workspace" }>;
 
 export interface AppWorkspaceOverlayProps {
-  /** Same confirmation flow as the card menu's Delete, for the workspace Quick actions. */
-  onDeleteServer?: (id: string) => void;
   shell: AppShellChromeProps;
   overlay: WorkspaceOverlay;
   setOverlay: Dispatch<SetStateAction<Overlay>>;
@@ -109,7 +107,6 @@ export function AppWorkspaceOverlay(props: AppWorkspaceOverlayProps): ReactEleme
         onBanPlayer={onBanPlayer}
         onServerUpdated={() => void refresh()}
         onCopyConfiguration={(id) => actions.setCopyConfig({ sourceServerId: id })}
-        onDeleteServer={props.onDeleteServer}
       />
     </AppShellWithChrome>
   );
