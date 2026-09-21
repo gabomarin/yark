@@ -122,7 +122,7 @@ paths or the Notion hub URL in tracked files.
   In-app **What's new** (#290) from `src/shared/settings/changelog.ts` (Settings, sidebar
   version, one-shot after upgrade; This version vs Earlier releases). Runtime **ShooterGame.log** tail stays on with
   native console; crash buffer until next Start (#326).
-- Settings is live in the shell (SteamCMD path, desktop shell, density, and related preferences — no light/dark theme control). Full map: [settings.md](settings.md). Clusters surfaces `clusterId` / `clusterDir` compliance reports (not a live transfer probe); real-host checklist: [spikes/22-cluster-live-transfers.md](spikes/22-cluster-live-transfers.md) (#22). Workspace **RCON** tab: [rcon.md](rcon.md).
+- Settings is live in the shell (SteamCMD path, desktop shell, density, and related preferences — theme (dark or light) and server panels). Full map: [settings.md](settings.md). Clusters surfaces `clusterId` / `clusterDir` compliance reports (not a live transfer probe); real-host checklist: [spikes/22-cluster-live-transfers.md](spikes/22-cluster-live-transfers.md) (#22). Workspace **RCON** tab: [rcon.md](rcon.md).
 - Sidebar Backups settings page and per-server workspace Backups tab are live.
 - Backups are kind-scoped ZIP archives: `world` (per-map folder under `SavedArks/{MapToken}/`, including profiles/tribes in that folder), `players` (profiles from SavedArks/SaveGames), `ini` (`Game.ini` + `GameUserSettings.ini`).
   - On disk under the shared root: `World/`, `Player profiles/`, `INI/` subfolders; each snapshot is a `.zip` (legacy loose folders still restore). Listing reconciles orphan archives from disk into SQLite.

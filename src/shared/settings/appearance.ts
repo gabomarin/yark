@@ -7,7 +7,7 @@
  * row, or a theme that has not shipped yet can never leave the renderer without
  * a palette.
  */
-export const THEME_IDS = ["dark"] as const;
+export const THEME_IDS = ["dark", "light"] as const;
 
 export type ThemeId = (typeof THEME_IDS)[number];
 

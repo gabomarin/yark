@@ -88,7 +88,7 @@ export function IniSettingRow(props: Props): ReactElement {
               )
             }
             decimalScale={4}
-            hideControls={false}
+            hideControls
           />
         ) : (
           <TextInput

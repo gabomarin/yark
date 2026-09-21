@@ -63,10 +63,6 @@
   padding: 0.4rem 0.55rem;
 }
 
-.optionRowDisabled {
-  opacity: 0.7;
-}
-
 .optionRowCaution {
   border-color: var(--app-color-fossil);
   background: color-mix(in srgb, var(--app-color-fossil) 10%, transparent);

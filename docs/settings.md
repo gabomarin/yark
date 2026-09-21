@@ -47,19 +47,19 @@ the Server tab / workspace.
 
 ## What lives where
 
-| On Settings                                                                              | Elsewhere                                                                                                                                                             |
-| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Close-to-tray, tray toast, Start with Windows                                            | Per-server `autoStart` toggle (Server tab → Startup)                                                                                                                  |
-| UI density (compact / comfortable) + theme id                                            | One theme ships today (dark) — the registry (`shared/theme/themes.ts`) accepts more as data, without feature CSS changes                                              |
-| SteamCMD path + shared caches                                                            | Live progress: **Downloads** page + footer teaser + Logs → Updates                                                                                                    |
-| Discord webhook + event filters                                                          | One-way notifications only; Discord cannot control YARK                                                                                                               |
-| Default create base folder (`localStorage`)                                              | Profile `installDir` (absolute, per server)                                                                                                                           |
-| App data folder shortcuts                                                                | Backup disk-alert thresholds (Backups page modal)                                                                                                                     |
-| Opted-in auto-start **summary**                                                          | Quit-with-servers Stop/Cancel dialog (hardcoded in main; not a Setting)                                                                                               |
-| **Log retention** limits + Clean up now                                                  | Per-section clear on Logs workspace; ASA Saved/Logs never touched — [logs.md](logs.md)                                                                                |
-| **YARK updates** check / download / restart                                              | Overview **Check server updates** is ASA/SteamCMD only; sidebar `vX.Y.Z` accents when a YARK update is available — [versioning.md](versioning.md)                     |
-| **What's new** (curated notes, one-shot after upgrade)                                   | Sidebar version label; Settings → About → What's new. This version vs Earlier releases accordion (#290)                                                               |
-| **Open setup assistant** (SteamCMD + Windows shell; full wizard when the fleet is empty) | First-run auto-show after a **successful** read when `onboarding.v1` is unset and there are no profiles; a read error keeps Overview usable and can be retried (#298) |
+| On Settings                                                                              | Elsewhere                                                                                                                                                                                 |
+| ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Close-to-tray, tray toast, Start with Windows                                            | Per-server `autoStart` toggle (Server tab → Startup)                                                                                                                                      |
+| UI density (compact / comfortable) + theme id                                            | Two themes ship: **dark** (default) and **light**, both registry entries in `shared/theme/themes.ts` — a theme carries its palette, semantic colours, elevation ladder and Mantine scales |
+| SteamCMD path + shared caches                                                            | Live progress: **Downloads** page + footer teaser + Logs → Updates                                                                                                                        |
+| Discord webhook + event filters                                                          | One-way notifications only; Discord cannot control YARK                                                                                                                                   |
+| Default create base folder (`localStorage`)                                              | Profile `installDir` (absolute, per server)                                                                                                                                               |
+| App data folder shortcuts                                                                | Backup disk-alert thresholds (Backups page modal)                                                                                                                                         |
+| Opted-in auto-start **summary**                                                          | Quit-with-servers Stop/Cancel dialog (hardcoded in main; not a Setting)                                                                                                                   |
+| **Log retention** limits + Clean up now                                                  | Per-section clear on Logs workspace; ASA Saved/Logs never touched — [logs.md](logs.md)                                                                                                    |
+| **YARK updates** check / download / restart                                              | Overview **Check server updates** is ASA/SteamCMD only; sidebar `vX.Y.Z` accents when a YARK update is available — [versioning.md](versioning.md)                                         |
+| **What's new** (curated notes, one-shot after upgrade)                                   | Sidebar version label; Settings → About → What's new. This version vs Earlier releases accordion (#290)                                                                                   |
+| **Open setup assistant** (SteamCMD + Windows shell; full wizard when the fleet is empty) | First-run auto-show after a **successful** read when `onboarding.v1` is unset and there are no profiles; a read error keeps Overview usable and can be retried (#298)                     |
 
 ## Controls and defaults
 
@@ -83,7 +83,7 @@ the Server tab / workspace.
 | Control       | Storage                | Default     | Notes                                                                                                                                                                                |
 | ------------- | ---------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Display size  | SQLite `uiDensity`     | **compact** | `compact` \| `comfortable`; scales the active theme's spacing / radius / font tokens — see [design-system.md](design-system.md)                                                      |
-| Theme         | SQLite `appearance.v1` | **dark**    | Registry id (`shared/theme/themes.ts`). Dark is the only shipped theme; an unknown or missing id falls back to it                                                                    |
+| Theme         | SQLite `appearance.v1` | **dark**    | Registry id (`shared/theme/themes.ts`): `dark` \| `light`. An unknown or missing id falls back to `dark`                                                                             |
 | Server panels | SQLite `appearance.v1` | **auto**    | `auto` \| `drawers`; where the server workspace puts its server list and status panel (`src/shared/workspace/workspacePanels.ts`). Auto uses columns from 1600px, Drawers never does |
 
 Theme, panels and density are independent: density scales the tokens of whichever theme is active, and the panels option only decides where the workspace puts its server list and status panel.
@@ -267,21 +267,22 @@ silent outside Settings status text.
 
 ## Tests
 
-| File                                                       | Focus                                                                                    |
-| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `src/renderer/src/features/settings/SettingsPage.test.tsx` | Page controls, density, caches, base folder, SteamCMD setup, log retention, YARK updates |
-| `tests/unit/log-retention.test.ts`                         | Defaults / normalize / failure classification                                            |
-| `tests/unit/logs-service.test.ts`                          | Retention preview/run path guards                                                        |
-| `tests/unit/ui-density-pref.test.ts`                       | Load / write / legacy migration                                                          |
-| `tests/unit/appearance-pref.test.ts`                       | Theme id parse / fallback, load / write through IPC                                      |
-| `src/renderer/src/shared/theme/themes.test.ts`             | Registry entry, unknown-id fallback, palette wiring, density composition                 |
-| `tests/unit/open-native-console-pref.test.ts`              | Console-on-start load / write / legacy migration                                         |
-| `tests/unit/app-settings-ui-density.test.ts`               | SQLite round-trip                                                                        |
-| `tests/unit/app-settings-open-native-console.test.ts`      | SQLite console-on-start round-trip                                                       |
-| `tests/unit/desktop-shell-settings.test.ts`                | Tray / Windows prefs persist                                                             |
-| `tests/unit/database-boot-recovery.test.ts`                | Corrupt DB open/migrate errors, quarantine, recovery loop                                |
-| `tests/unit/auto-start.test.ts`                            | Launch skip/start behavior                                                               |
-| `scripts/visual-settings.cjs`                              | Packaged Settings visual review                                                          |
+| File                                                       | Focus                                                                                                                               |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `src/renderer/src/features/settings/SettingsPage.test.tsx` | Page controls, density, caches, base folder, SteamCMD setup, log retention, YARK updates                                            |
+| `tests/unit/log-retention.test.ts`                         | Defaults / normalize / failure classification                                                                                       |
+| `tests/unit/logs-service.test.ts`                          | Retention preview/run path guards                                                                                                   |
+| `tests/unit/ui-density-pref.test.ts`                       | Load / write / legacy migration                                                                                                     |
+| `tests/unit/appearance-pref.test.ts`                       | Theme id parse / fallback, load / write through IPC                                                                                 |
+| `src/renderer/src/shared/theme/themes.test.ts`             | Registry entry, unknown-id fallback, palette wiring, density composition                                                            |
+| `tests/unit/open-native-console-pref.test.ts`              | Console-on-start load / write / legacy migration                                                                                    |
+| `tests/unit/app-settings-ui-density.test.ts`               | SQLite round-trip                                                                                                                   |
+| `tests/unit/app-settings-open-native-console.test.ts`      | SQLite console-on-start round-trip                                                                                                  |
+| `tests/unit/desktop-shell-settings.test.ts`                | Tray / Windows prefs persist                                                                                                        |
+| `tests/unit/database-boot-recovery.test.ts`                | Corrupt DB open/migrate errors, quarantine, recovery loop                                                                           |
+| `tests/unit/auto-start.test.ts`                            | Launch skip/start behavior                                                                                                          |
+| `scripts/visual-settings.cjs`                              | Packaged Settings visual review                                                                                                     |
+| `scripts/visual-light-theme.cjs`                           | Light theme pass: seeds `appearance.v1`, checks the mounted scheme, captures Overview / Settings / Appearance at HD / Full HD / QHD |
 
 See also [server-lifecycle.md](server-lifecycle.md) (tray, auto-start, quit),
 [design-system.md](design-system.md) (density tokens), and

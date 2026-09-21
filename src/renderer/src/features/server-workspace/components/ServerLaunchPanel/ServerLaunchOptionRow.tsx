@@ -39,11 +39,7 @@ export function ServerLaunchOptionRow(props: Props): ReactElement {
   const showValue = enabled && props.option.entry.valueType !== "flag";
 
   return (
-    <div
-      className={`${classes.optionRow} ${
-        caution ? classes.optionRowCaution : enabled ? "" : classes.optionRowDisabled
-      }`}
-    >
+    <div className={`${classes.optionRow} ${caution ? classes.optionRowCaution : ""}`}>
       <Group align="center" gap="sm" wrap="nowrap">
         <Switch
           checked={enabled}

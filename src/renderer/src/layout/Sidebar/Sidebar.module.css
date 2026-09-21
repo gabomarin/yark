@@ -40,6 +40,17 @@
   padding: var(--app-space-xxs) var(--app-space-xxs) var(--app-space-xs);
 }
 
+/*
+ * The lockup is a dark-navy mark with a light wordmark, so on the light theme it
+ * needs its own dark backing to stay readable. Flush: no padding, no radius, no
+ * margin - the band reads as chrome (a title-bar strip) instead of a floating card.
+ * The plate is brand, not theme, so the logo looks the way it does in dark.
+ */
+:global([data-mantine-color-scheme="light"]) .brand {
+  background: var(--app-brand-plate);
+  padding: 0;
+}
+
 .brandLockup {
   display: block;
   width: 100%;
