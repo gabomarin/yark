@@ -161,6 +161,23 @@ body {
 }
 
 /*
+ * Reduced motion, at the token level. Every transition in the app reads these tokens (there is
+ * no rule left with a hard-coded duration), so collapsing them covers the whole shell - nav,
+ * switches, rows, panes - instead of one media query per module. The Mantine resolver injects
+ * its own `:root` values after this stylesheet, hence `!important`. `0.01ms` rather than `0s`
+ * keeps `transitionend` firing for anything that waits on it.
+ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --app-motion-fast: 0.01ms !important;
+    --app-motion-base: 0.01ms !important;
+    --app-motion-slow: 0.01ms !important;
+    --app-ease-standard: linear !important;
+    --app-ease-decelerate: linear !important;
+  }
+}
+
+/*
  * Fluent 2 Switch, OFF state (light): a neutral track with a strong
  * `colorNeutralStrokeAccessible` outline and a *dark* knob. Mantine's default is a
  * grey track with a white knob, which reads as a washed-out pill - "disabled"
