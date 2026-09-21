@@ -39,7 +39,7 @@ export function ServerLaunchPanel(props: Props): ReactElement {
   const [previewOpen, setPreviewOpen] = useState(true);
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const { structured, rawText, setRawText, extraArgs, saving, error, setEnabled, setValue, persistExtraArgsFromRaw } =
+  const { structured, rawText, setRawText, extraArgs, error, setEnabled, setValue, persistExtraArgsFromRaw } =
     useServerLaunchPersist(props.server, props.onServerUpdated);
 
   const mapIdentityWarnings = useMemo(
@@ -202,14 +202,6 @@ export function ServerLaunchPanel(props: Props): ReactElement {
                 </Stack>
               </AppAlert>
             ) : null}
-            {/*
-             * Always mounted on purpose: this label appears on every save, and mounting it grew the
-             * Extra arguments block - the flash the operator saw in that zone. Hidden, it reserves its
-             * line instead.
-             */}
-            <Text size="xs" c="dimmed" style={{ visibility: saving ? "visible" : "hidden" }}>
-              Saving…
-            </Text>
           </Stack>
         </AppSurfaceCard>
 

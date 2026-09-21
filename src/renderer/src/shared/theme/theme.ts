@@ -606,16 +606,6 @@ function createAppTheme(
         defaultProps: {
           labelPosition: "left",
         },
-        /*
-         * One transition for every switch in the app. Only transform/colour animate, so the
-         * ON-state knob keeps whatever colour it already has (a colour override here was
-         * measured to break it), and a section that re-mounts its rows cannot leave its
-         * toggles jumping while the rest of the app eases. Fluent's durationFast is 100ms.
-         */
-        styles: {
-          track: { transition: "background-color 100ms ease, border-color 100ms ease" },
-          thumb: { transition: "transform 100ms ease, inset-inline-start 100ms ease" },
-        },
       },
       InputWrapper: {
         styles: {
