@@ -33,6 +33,8 @@ delete process.env.ELECTRON_RUN_AS_NODE;
 
 const THEME = process.env.YARK_VISUAL_THEME === "light" ? "light" : "dark";
 const THEME_LABEL = THEME;
+/** The product default is Compact, so the walk covers it unless asked otherwise. */
+const DENSITY = process.env.YARK_VISUAL_DENSITY === "comfortable" ? "comfortable" : "compact";
 
 const TABS = ["Server", "INI Files", "Mods", "Launch", "Backups", "Logs", "RCON", "Maintenance", "Ark Server API"];
 
@@ -58,6 +60,11 @@ function seedProfile(profileDir) {
     `INSERT INTO app_settings (key, value, updated_at) VALUES (?, ?, ?)
      ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
   ).run("appearance.v1", JSON.stringify({ theme: THEME, panels: "auto" }), now);
+  // Stored as the bare value, not JSON: that is how the density pref is written and read.
+  db.prepare(
+    `INSERT INTO app_settings (key, value, updated_at) VALUES (?, ?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+  ).run("uiDensity", DENSITY, now);
   db.prepare("DELETE FROM servers").run();
   db.prepare(
     `INSERT INTO servers (id, name, map, install_dir, enabled, session_name, game_port, query_port, rcon_port,
@@ -167,7 +174,7 @@ async function run() {
 
   const { profileDir } = createE2eFixtureRoots("visual-workspace-tabs");
   seedProfile(profileDir);
-  const outDir = path.join(os.tmpdir(), "ark-gbo-visual-workspace-tabs", THEME);
+  const outDir = path.join(os.tmpdir(), "ark-gbo-visual-workspace-tabs", `${THEME}-${DENSITY}`);
   fs.mkdirSync(outDir, { recursive: true });
 
   const app = await launchElectronApp({ profileDir });
@@ -198,8 +205,8 @@ async function run() {
           document.documentElement.getAttribute("data-mantine-color-scheme"),
         );
         metrics.mountedScheme = mountedScheme;
-        const file = await shot(page, outDir, `workspace-${label}-${THEME_LABEL}-${size.name}`);
-        reports.push({ tab, theme: THEME, size: size.name, file, metrics });
+        const file = await shot(page, outDir, `workspace-${label}-${THEME_LABEL}-${DENSITY}-${size.name}`);
+        reports.push({ tab, theme: THEME, density: DENSITY, size: size.name, file, metrics });
 
         assert.equal(
           metrics.mountedScheme,
@@ -228,9 +235,9 @@ async function run() {
     removeFixtureDir(profileDir);
   }
 
-  const summary = { outDir, theme: THEME, errors, reports };
+  const summary = { outDir, theme: THEME, density: DENSITY, errors, reports };
   fs.writeFileSync(path.join(outDir, "summary.json"), JSON.stringify(summary, null, 2), "utf8");
-  console.log(JSON.stringify({ outDir, theme: THEME, tabs: reports.length, errors }, null, 2));
+  console.log(JSON.stringify({ outDir, theme: THEME, density: DENSITY, tabs: reports.length, errors }, null, 2));
   assert.equal(errors.length, 0, `console/page errors during the run: ${errors.slice(0, 3).join(" | ")}`);
   console.log(THEME === "light" ? "VISUAL_WORKSPACE_TABS_LIGHT_OK" : "VISUAL_WORKSPACE_TABS_OK");
 }
