@@ -177,7 +177,9 @@ export const lightPalette = {
   ],
   blueContrast: "#ffffff",
   blueSurface: "#006be224",
-  grayContrast: "#ffffff",
+  /* Labels sit on the *solid* gray steps, which are dark in this ramp: a white one
+     would be invisible. This is the one contrast value that inverts with the ramp. */
+  grayContrast: "#1a1c1f",
   graySurface: "rgba(0, 0, 0, 0.04)",
 } as const;
 

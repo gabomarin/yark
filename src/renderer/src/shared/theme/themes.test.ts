@@ -31,12 +31,10 @@ describe("theme registry (#PUX-004 Track B)", () => {
 
   it("keeps the shipped dark theme identical after the per-theme payload split", () => {
     const resolved = createAppCssVariablesResolverForAppearance(THEMES.dark, "comfortable")(DEFAULT_THEME);
-    // `light` is a scheme map shared by every theme (it was empty before B3 and
-    // is filled now), so the regression net covers the roles and the dark map.
-    expect({ variables: resolved.variables, dark: resolved.dark }).toEqual({
-      variables: (darkResolverSnapshot as { variables: unknown }).variables,
-      dark: (darkResolverSnapshot as { dark: unknown }).dark,
-    });
+    // All three maps are asserted: the roles, the scheme maps and the dark map. The
+    // fixture is regenerated only when a change is intentional, so a drift shows up
+    // as a diff instead of passing silently.
+    expect({ variables: resolved.variables, light: resolved.light, dark: resolved.dark }).toEqual(darkResolverSnapshot);
   });
 
   it("carries the palette as data, so a theme is an entry and not a second design system", () => {

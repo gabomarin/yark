@@ -150,7 +150,7 @@
     "--mantine-color-gray-0": "var(--app-color-bg)",
     "--mantine-color-gray-1": "var(--app-color-surface-chrome)",
     "--mantine-color-gray-2": "var(--app-color-surface-panel)",
-    "--mantine-color-gray-3": "var(--app-color-panel-raised)",
+    "--mantine-color-gray-3": "var(--app-color-surface-control)",
     "--mantine-color-gray-4": "var(--app-color-surface-control)",
     "--mantine-color-gray-5": "var(--app-color-surface-control-hover)",
     "--mantine-color-gray-6": "var(--app-color-border-subtle)",

@@ -40,10 +40,9 @@ function seedLightTheme(profileDir) {
 
 async function goNav(page, label) {
   const btn = page.getByRole("button", { name: label, exact: true }).first();
-  if ((await btn.count()) > 0) {
-    await btn.click();
-    await page.waitForTimeout(200);
-  }
+  assert.ok((await btn.count()) > 0, `Sidebar entry "${label}" not found - renamed or localised?`);
+  await btn.click();
+  await page.waitForTimeout(200);
 }
 
 async function shot(page, outDir, name) {
@@ -62,9 +61,10 @@ async function run() {
   const profileDir = fs.mkdtempSync(path.join(os.tmpdir(), "yark-visual-light-"));
   seedLightTheme(profileDir);
 
-  const app = await launchElectronApp({ profileDir });
+  let app = null;
   const errors = [];
   try {
+    app = await launchElectronApp({ profileDir });
     const page = await waitForOverview(app);
     page.on("console", (message) => {
       if (message.type() === "error") errors.push(`console: ${message.text()}`);
@@ -83,6 +83,8 @@ async function run() {
     });
     assert.equal(mounted.attribute, "light", "Mantine scheme attribute is not light");
     assert.ok(mounted.colorScheme.includes("light"), `color-scheme is "${mounted.colorScheme}"`);
+    assert.ok(mounted.panel.length > 0, "--app-color-panel is not emitted by the resolver");
+    assert.ok(mounted.text.length > 0, "--app-color-text is not emitted by the resolver");
     console.log(
       `VISUAL_LIGHT_SCHEME=${mounted.attribute} panel=${mounted.panel} text=${mounted.text} color-scheme=${mounted.colorScheme}`,
     );
@@ -124,7 +126,9 @@ async function run() {
     }
     console.log("VISUAL_LIGHT_THEME_OK");
   } finally {
-    await quitElectronApp(app);
+    if (app !== null) {
+      await quitElectronApp(app);
+    }
     removeFixtureDir(profileDir);
   }
 }
