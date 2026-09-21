@@ -42,26 +42,26 @@ const features = [
   <Fragment slot="before-main">
     <header class="hero">
       <div class="hero-copy">
-        <p class="eyebrow" data-hero-item>Open-source ARK server tooling</p>
-        <h1 class="hero-title" data-hero-item>A local Windows manager for ASA servers.</h1>
-        <p class="lede" data-hero-item>
+        <p class="eyebrow">Open-source ARK server tooling</p>
+        <h1 class="hero-title">A local Windows manager for ASA servers.</h1>
+        <p class="lede">
           YARK is a local Windows desktop app for running and maintaining ARK: Survival Ascended
           dedicated servers. It brings profiles, SteamCMD, mods, backups, logs and INI configuration
           into one place.
         </p>
-        <div class="cta-row" data-hero-item>
+        <div class="cta-row">
           <a class="cta primary" href={site.downloadUrl}><DownloadIcon />{site.downloadLabel}</a>
           <a class="cta ghost icon-only" href={site.repoUrl} aria-label="View source" title="View source"><GithubIcon /></a>
           <a class="cta ghost icon-only" href={site.discordUrl} aria-label="Join Discord" title="Join Discord"><DiscordIcon /></a>
         </div>
-        <p class="release-trust" data-hero-item>
+        <p class="release-trust">
           {site.statusLabel}. Download from this site or GitHub Releases, then <a href={withBase("/docs/getting-started/#verify-your-download")}>verify the installer</a>.
         </p>
       </div>
-      <div class="hero-product" data-hero-item><ProductStage shots={screenshots} /></div>
+      <div class="hero-product"><ProductStage shots={screenshots} /></div>
     </header>
 
-    <div class="trust-rail" aria-label="Product principles" data-reveal>
+    <div class="trust-rail" role="group" aria-label="Product principles" data-reveal>
       <div data-reveal-child><strong>Runs on your PC</strong><span>Profiles and settings stay local</span></div>
       <div data-reveal-child><strong>Open source</strong><span>Public code, docs and changelog</span></div>
       <div data-reveal-child><strong>Built for Windows</strong><span>A desktop tool, not a hosting service</span></div>
@@ -205,8 +205,7 @@ const features = [
 <style is:global>
   .hero { display: grid; grid-template-columns: minmax(0, .82fr) minmax(34rem, 1.18fr); align-items: center; gap: clamp(2.5rem, 6vw, 6rem); max-width: 82rem; min-height: calc(100vh - 4rem); margin: 0 auto; padding: clamp(3.5rem, 8vh, 7rem) 1.5rem clamp(3rem, 7vh, 6rem); }
   .hero-copy { position: relative; z-index: 2; }
-  .eyebrow { margin: 0 0 .75rem; color: var(--cryo); font-family: var(--mono); font-size: .72rem; font-weight: 500; letter-spacing: .11em; text-transform: uppercase; }
-  .hero-title { max-width: 20ch; margin: 0 0 1.2rem; color: var(--ink); font-size: clamp(2.55rem, 5vw, 4.25rem); font-weight: 720; line-height: .98; letter-spacing: -.055em; text-wrap: balance; }
+    .hero-title { max-width: 20ch; margin: 0 0 1.2rem; color: var(--ink); font-size: clamp(2.55rem, 5vw, 4.25rem); font-weight: 720; line-height: .98; letter-spacing: -.055em; text-wrap: balance; }
   .hero .lede { max-width: 34rem; margin-bottom: 1.8rem; font-size: clamp(1.05rem, 1.6vw, 1.22rem); line-height: 1.6; }
   .hero .cta-row { margin-bottom: 1.35rem; }
   .hero .cta.icon-only { width: 3rem; min-width: 3rem; padding-inline: 0; justify-content: center; }
@@ -235,15 +234,10 @@ const features = [
   .feature-card { min-height: 15rem; padding: 1.65rem; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--bg-1) 54%, transparent); transition: background 180ms var(--ease-out); }
   .feature-card:hover { background: color-mix(in srgb, var(--bg-1) 88%, transparent); }
   .feature-icon-wrap { display: grid; width: 2.7rem; height: 2.7rem; margin-bottom: 1.5rem; place-items: center; border: 1px solid color-mix(in srgb, var(--cryo) 35%, var(--line)); border-radius: .35rem; color: var(--cryo); background: color-mix(in srgb, var(--cryo) 8%, transparent); }
-  .feature-label { margin: 0 0 .45rem; color: var(--fossil); font-family: var(--mono); font-size: .68rem; letter-spacing: .075em; text-transform: uppercase; }
-  .feature-card h3, .boundary-card h3, .card-heading h3 { margin: 0 0 .6rem; color: var(--ink); font-size: 1.14rem; letter-spacing: -.02em; }
+    .feature-card h3, .boundary-card h3, .card-heading h3 { margin: 0 0 .6rem; color: var(--ink); font-size: 1.14rem; letter-spacing: -.02em; }
   .feature-card > p:last-child, .boundary-card div > p:last-child { margin: 0; color: var(--muted); font-size: .91rem; line-height: 1.6; }
   .capability-detail { max-width: 58rem; margin: 2rem 0 0; color: var(--muted); font-size: .94rem; line-height: 1.65; }
-  .text-link { display: inline-flex; gap: .5rem; align-items: center; margin-top: 1.5rem; color: var(--ink); font-weight: 650; text-decoration: none; }
-  .text-link span { color: var(--cryo); transition: transform 160ms var(--ease-out); }
-  .text-link:hover { color: var(--cryo); }
-  .text-link:hover span { transform: translateX(.2rem); }
-  .showcase { padding: clamp(4.5rem, 9vw, 7.5rem) 0; border-block: 1px solid var(--line); background: color-mix(in srgb, var(--bg-1) 72%, transparent); }
+          .showcase { padding: clamp(4.5rem, 9vw, 7.5rem) 0; border-block: 1px solid var(--line); background: color-mix(in srgb, var(--bg-1) 72%, transparent); }
   .editorial-shots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; align-items: start; }
   .editorial-shots .shot-featured { grid-column: 1 / -1; }
   .editorial-shots .shot-trigger { border-radius: .5rem; box-shadow: 0 24px 70px rgba(0, 0, 0, .34); }

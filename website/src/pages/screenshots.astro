@@ -6,7 +6,8 @@ import { site, withBase } from "../data/site";
 import { SHOT_WIDTHS } from "../data/screenshot-media.mjs";
 import { screenshotSlug, screenshots } from "../data/screenshots";
 
-const gallerySizes = "(max-width: 560px) calc(100vw - 2.5rem), calc(min(84rem, 100vw) / 3)";
+const gallerySizes =
+  "(max-width: 560px) calc(100vw - 2.5rem), (max-width: 799px) calc((min(84rem, 100vw) - 3.75rem) / 2), calc((min(84rem, 100vw) - 5.5rem) / 3)";
 ---
 
 <BaseLayout
@@ -27,7 +28,7 @@ const gallerySizes = "(max-width: 560px) calc(100vw - 2.5rem), calc(min(84rem, 1
 
   <div class="shots">
     {
-      screenshots.map((shot) => (
+      screenshots.map((shot, index) => (
         <figure class="shot">
           <button
             class="shot-trigger"
@@ -46,7 +47,7 @@ const gallerySizes = "(max-width: 560px) calc(100vw - 2.5rem), calc(min(84rem, 1
               sizes={gallerySizes}
               width={1440}
               height={900}
-              loading="lazy"
+              loading={index === 0 ? "eager" : "lazy"}
             />
           </button>
           <figcaption>{shot.caption}</figcaption>
@@ -122,7 +123,7 @@ const gallerySizes = "(max-width: 560px) calc(100vw - 2.5rem), calc(min(84rem, 1
     outline-offset: 4px;
   }
 
-  .shot img {
+  .shot :global(img) {
     display: block;
     width: 100%;
     height: auto;

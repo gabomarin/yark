@@ -59,9 +59,6 @@ export function withBase(path = "/"): string {
   if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("mailto:")) {
     return path;
   }
-  if (path.startsWith("/#")) {
-    return `${base.replace(/\/$/, "")}${path}`;
-  }
   if (path === "/") {
     return base;
   }

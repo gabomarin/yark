@@ -16,7 +16,10 @@
     document.querySelectorAll<HTMLElement>("[data-lightbox-trigger]").forEach((trigger) => {
       trigger.addEventListener("click", () => {
         lastTrigger = trigger;
-        image.src = trigger.dataset.lightboxSrc ?? "";
+        const src = trigger.dataset.lightboxSrc ?? "";
+            if (src !== "") {
+              image.src = src;
+            }
         image.alt = trigger.dataset.lightboxAlt ?? "Screenshot preview";
         if (caption) caption.textContent = trigger.dataset.lightboxCaption ?? "";
         lightbox.showModal();

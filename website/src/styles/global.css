@@ -161,7 +161,7 @@ a:hover {
 }
 
 /* Beat `.site-nav-links a { color: muted }` — fossil CTA, not cryo. */
-.site-nav-links a.site-nav-download {
+a.site-nav-download {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -178,8 +178,8 @@ a:hover {
     transform 160ms var(--ease-out);
 }
 
-.site-nav-links a.site-nav-download:hover,
-.site-nav-links a.site-nav-download:focus-visible {
+a.site-nav-download:hover,
+a.site-nav-download:focus-visible {
   color: var(--cta-ink);
   background: var(--fossil-bright);
   box-shadow: 0 8px 24px rgba(212, 180, 131, 0.22);
@@ -1006,3 +1006,12 @@ code {
     display: block;
   }
 }
+
+/* Shared by every page (index, /screenshots/, 404): these used to live in a page-level
+   is:global block, so the pages that also use them rendered them unstyled. */
+.eyebrow { margin: 0 0 .75rem; color: var(--cryo); font-family: var(--mono); font-size: .72rem; font-weight: 500; letter-spacing: .11em; text-transform: uppercase; }
+.feature-label { margin: 0 0 .45rem; color: var(--fossil); font-family: var(--mono); font-size: .68rem; letter-spacing: .075em; text-transform: uppercase; }
+.text-link { display: inline-flex; gap: .5rem; align-items: center; margin-top: 1.5rem; color: var(--ink); font-weight: 650; text-decoration: none; }
+.text-link span { color: var(--cryo); transition: transform 160ms var(--ease-out); }
+.text-link:hover { color: var(--cryo); }
+.text-link:hover span { transform: translateX(.2rem); }
