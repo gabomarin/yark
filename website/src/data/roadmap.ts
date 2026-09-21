@@ -59,7 +59,7 @@ export type RoadmapItem = {
     },
     {
       tag: "planned",
-      text: "Point ASA settings that take a URL (admin whitelist, dynamic config) at a local Hosted Resources URL",
+      text: "Local / hosted AdminListURL for ASA admin whitelist (beyond remote http(s))",
     },
   {
     tag: "planned",
