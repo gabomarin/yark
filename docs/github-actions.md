@@ -83,7 +83,14 @@ incremental re-review of a small follow-up push on a large PR still uses `medium
 After **Release Windows** finishes creating the GitHub Release **with installer
 assets**, the same job posts the tag and release-notes body to Discord
 (`scripts/ci/discord-release-notify.py`) **as the Yark Bot Discord application**.
-It refuses to post if the release has no assets yet. If repo variable
+It refuses to post if the release has no assets yet.
+
+The body is the curated entry for the released version from the in-app What's new
+(`src/shared/settings/changelog.ts`), so `#releases` reads like the app (Highlights
+/ Changed / Fixed) instead of the auto-generated PR list with `@` mentions and PR
+links. Keep that curated entry in sync at release cut
+([versioning.md](versioning.md)); when it has no entry for the tag, the bot falls
+back to the GitHub release notes body. If repo variable
 `DISCORD_RELEASES_CHANNEL_ID` is unset, Discord notify is **skipped** (no
 hardcoded channel fallback).
 
