@@ -1,7 +1,7 @@
-import { Badge, Button, Group, Stack, Text, TextInput } from "@mantine/core";
-import type { AppEvent, ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import { Button, Group, Stack, Text, TextInput } from "@mantine/core";
+import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import type { ReactElement } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import searchFieldClasses from "@ui/SearchField/SearchField.module.css";
 import type { RconHistoryEntry } from "../../serverWorkspaceTypes";
@@ -12,7 +12,6 @@ import classes from "./RconPanel.module.css";
 interface Props {
   server: ServerProfile;
   runtime: ServerRuntimeInfo | null;
-  events: AppEvent[];
   rconHistory: RconHistoryEntry[];
   playerList: PlayerListState;
   onSendRcon: (serverId: string, command: string) => Promise<boolean>;
@@ -40,22 +39,6 @@ const QUICK_COMMANDS: QuickCommand[] = [
   { label: "DestroyWildDinos", command: "DestroyWildDinos", danger: true },
   { label: "GetChat", command: "GetChat" },
 ] as const;
-
-function formatRconTime(date: string): string {
-  return new Date(date).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function extractCommand(message: string): string {
-  const prefix = 'RCON on "';
-  if (!message.startsWith(prefix)) return message;
-  const marker = '": ';
-  const index = message.indexOf(marker);
-  if (index < 0) return message;
-  return message.slice(index + marker.length);
-}
 
 export function RconPanel(props: Props): ReactElement {
   const { server, onRconTabFocusChanged } = props;
@@ -96,12 +79,6 @@ export function RconPanel(props: Props): ReactElement {
       unsubscribe();
     };
   }, [props.server.id]);
-
-  const auditHistory = useMemo(
-    () =>
-      props.events.filter((event) => event.serverId === props.server.id && event.type === "rcon_command").slice(0, 5),
-    [props.events, props.server.id],
-  );
 
   const sendCommand = async (nextCommand: string): Promise<void> => {
     const trimmed = nextCommand.trim();
@@ -185,31 +162,6 @@ export function RconPanel(props: Props): ReactElement {
                 </Button>
               </Group>
             </div>
-
-            <Stack gap={4}>
-              <Text className={classes.title}>Recent commands</Text>
-              {auditHistory.length > 0 ? (
-                <div className={classes.historyList}>
-                  {auditHistory.map((event) => (
-                    <div key={event.id} className={classes.historyItem}>
-                      <div style={{ minWidth: 0 }}>
-                        <Text size="sm" className={classes.historyCommand}>
-                          {extractCommand(event.message)}
-                        </Text>
-                        <Text className={classes.historyMeta}>{formatRconTime(event.createdAt)}</Text>
-                      </div>
-                      <Badge variant="light" color={event.severity === "error" ? "red" : "blue"}>
-                        sent
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <Text size="sm" c="dimmed">
-                  Sent RCON commands will appear here.
-                </Text>
-              )}
-            </Stack>
           </Stack>
         </AppSurfaceCard>
 

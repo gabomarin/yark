@@ -218,7 +218,10 @@ export function useServerLaunchPersist(
       extraArgs: extraArgsRef.current,
     });
     if (draftIssues.length > 0) {
-      setError(draftIssues.map((c) => c.message).join(" "));
+      // The conflicts are already listed next to the controls that cause them, so repeating
+      // them here produced the same sentence twice on screen (once per alert). Clearing the
+      // error keeps this channel for write failures only.
+      setError(null);
       return;
     }
     const ok = await schedulePersist(next, [...extraArgsRef.current]);
@@ -247,7 +250,8 @@ export function useServerLaunchPersist(
         extraArgs: extraArgsRef.current,
       });
       if (draftIssues.length > 0) {
-        setError(draftIssues.map((c) => c.message).join(" "));
+        // Same as setEnabled: the conflict list is the single place that names these.
+        setError(null);
         return;
       }
       void schedulePersist(snapshot, [...extraArgsRef.current]);

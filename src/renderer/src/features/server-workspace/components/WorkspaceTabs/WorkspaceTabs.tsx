@@ -186,7 +186,6 @@ export function WorkspaceTabs(props: Props): ReactElement {
                 <RconPanel
                   server={props.server}
                   runtime={props.runtime}
-                  events={props.events}
                   rconHistory={props.rconHistory}
                   playerList={props.playerList}
                   iniDirty={props.iniDirty}
