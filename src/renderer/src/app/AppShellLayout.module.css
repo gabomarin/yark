@@ -53,60 +53,15 @@
 /* ARK supply drop: light column with its crate, plus a dim obelisk between beams.
  * The beam carries the motif, so it is the brightest stroke and the obelisk is the
  * faintest: otherwise the triangles read as a grid of shapes and the story is lost. */
-[data-shell-art="drop"] .main::before {
-  --shell-drop-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='168' height='340' viewBox='0 0 168 340'%3E%3Cpath d='M84 0 L84 232' fill='none' stroke='white' stroke-opacity='0.055' stroke-width='18'/%3E%3Cpath d='M84 0 L84 232' fill='none' stroke='white' stroke-opacity='0.11' stroke-width='1.5'/%3E%3Cpath d='M84 240 L98 256 L84 272 L70 256 Z' fill='none' stroke='white' stroke-opacity='0.12'/%3E%3Cpath d='M36 96 L48 120 L24 120 Z' fill='none' stroke='white' stroke-opacity='0.04'/%3E%3Cpath d='M36 120 L36 208' fill='none' stroke='white' stroke-opacity='0.025'/%3E%3C/svg%3E");
-  background-image: var(--shell-drop-tile);
-  background-size: 168px 340px;
-}
-
 /* Tek plates: the chevron field of Tek floors, so the Art motif stays ARK and not hex. */
-[data-shell-art="tek"] .main::before {
-  --shell-tek-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M0 2 L16 14 L32 2' fill='none' stroke='white' stroke-opacity='0.07'/%3E%3Cpath d='M0 18 L16 30 L32 18' fill='none' stroke='white' stroke-opacity='0.07'/%3E%3C/svg%3E");
-  background-image: var(--shell-tek-tile);
-  background-size: 32px 32px;
-}
-
 /* Fossil strata: sediment bands on a slight tilt. A gradient, so it needs no tile. */
-[data-shell-art="strata"] .main::before {
-  background-image: repeating-linear-gradient(
-    168deg,
-    rgba(255, 255, 255, 0.05) 0 1px,
-    transparent 1px 24px,
-    rgba(255, 255, 255, 0.028) 24px 25px,
-    transparent 25px 52px,
-    rgba(255, 255, 255, 0.018) 52px 53px,
-    transparent 53px 88px
-  );
-  background-size: auto;
-}
-
 /* Light columns only: the drop motif stripped to its beams, to test whether sparse
  * columns read better than shapes. Same spacing as `drop`, so the two are comparable. */
-[data-shell-art="beams"] .main::before {
-  --shell-beams-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='168' height='340' viewBox='0 0 168 340'%3E%3Cpath d='M84 0 L84 250' fill='none' stroke='white' stroke-opacity='0.055' stroke-width='18'/%3E%3Cpath d='M84 0 L84 250' fill='none' stroke='white' stroke-opacity='0.11' stroke-width='1.5'/%3E%3C/svg%3E");
-  background-image: var(--shell-beams-tile);
-  background-size: 168px 340px;
-}
-
 /* One composition instead of a tile: a cropped obelisk with its shaft, so there is no
  * grid left to read as wallpaper. Position is a percentage x (tracks the window) with a
  * fixed y (crops the apex off the top edge). Knobs: `background-size`, `background-position`. */
-[data-shell-art="obelisk"] .main::before {
-  --shell-obelisk-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='420' viewBox='0 0 300 420'%3E%3Cpath d='M150 0 L150 40' fill='none' stroke='white' stroke-opacity='0.04' stroke-width='14'/%3E%3Cpath d='M150 40 L86 300 L214 300 Z' fill='none' stroke='white' stroke-opacity='0.05'/%3E%3Cpath d='M150 150 L172 210 L150 270 L128 210 Z' fill='none' stroke='white' stroke-opacity='0.035'/%3E%3Cpath d='M104 314 L196 314' fill='none' stroke='white' stroke-opacity='0.03'/%3E%3Cpath d='M122 330 L178 330' fill='none' stroke='white' stroke-opacity='0.02'/%3E%3Cpath d='M150 300 L150 420' fill='none' stroke='white' stroke-opacity='0.03' stroke-width='20'/%3E%3Cpath d='M150 300 L150 420' fill='none' stroke='white' stroke-opacity='0.06' stroke-width='1.5'/%3E%3C/svg%3E");
-  background-image: var(--shell-obelisk-art);
-  background-repeat: no-repeat;
-  background-size: min(760px, 62%) auto;
-  background-position: 26% -150px;
-}
-
 /* The motif the shell shipped before the grain: the logo's hexagonal plate honeycomb,
  * kept so the comparison is still one click away. */
-[data-shell-art="hex"] .main::before {
-  --shell-hex-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='52' height='90' viewBox='0 0 52 90'%3E%3Cpath d='M26 0 L52 15 L52 45 L26 60 L0 45 L0 15 Z M0 45 L26 60 L26 90 L0 105 L-26 90 L-26 60 Z M52 45 L77.9 60 L77.9 90 L52 105 L26 90 L26 60 Z' fill='none' stroke='white' stroke-opacity='0.06' stroke-width='1'/%3E%3C/svg%3E");
-  background-image: var(--shell-hex-tile);
-  background-size: 52px 90px;
-}
-
 /* Do not set position here — Mantine AppShell keeps the navbar fixed. With
    styles.layer.css, unlayered module rules win and `position: relative` pushed
    Main below a full-viewport nav (empty main area / double-height shell).
@@ -141,13 +96,22 @@
  * App-wide shell surface: chrome base + brand atmosphere + the brand art, painted once here
  * so every page pane can stay transparent. Knobs: the tile's own opacity in `--shell-grain-tile`
  * below, the mask stops on `.main::before`, `--app-shell-glow`, and `--app-shell-atmosphere`
- * in shared/theme/theme.ts. The motif variants under `[data-shell-art]` belong to the preview
- * tooling, which is detached from the sidebar (see Sidebar.tsx).
+ * in shared/theme/theme.ts.
+ */
+/*
+ * A flex column with a bounded height, so `mainBody` (flex: 1, min-height: 0, overflow: auto)
+ * actually gets the leftover space and the workspace footer gets its own row. Without the
+ * bound, `flex: 1` had nothing to resolve against and the footer's own height was never
+ * subtracted - it drew over the content it should have pushed up (save buttons, cards).
  */
 .main {
+  display: flex;
+  flex-direction: column;
   position: relative;
   z-index: 1;
+  height: 100vh;
   min-height: 100vh;
+  overflow: hidden;
   background-color: var(--app-color-surface-chrome);
   background-image: var(--app-shell-atmosphere);
   background-repeat: no-repeat;
@@ -155,17 +119,17 @@
   background-size: auto;
 }
 
+/*
+ * The flexible item, not a fixed 100vh box. It holds `mainBody` plus the workspace footer
+ * (the SteamCMD bar), so pinning it to the full viewport forced the footer out of the
+ * window - over the content it should have pushed up. `flex: 1` + `min-height: 0` lets
+ * `mainBody` keep the leftover height and scroll, and the footer keep its own row.
+ */
 .content {
-  min-height: 100vh;
-  height: 100vh;
+  flex: 1 1 0%;
+  min-height: 0;
+  height: auto;
   width: 100%;
-}
-
-/* TEMP (PUX-004): sidebar toggle to compare the shell with and without the brand
-   art. Delete with `PalettePreviewSwitcher` / `palettePreviewModel`. */
-
-[data-shell-art="off"] .main::before {
-  display: none;
 }
 
 .mainBody {
