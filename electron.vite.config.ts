@@ -38,14 +38,10 @@ const packageJson = JSON.parse(packageJsonRaw) as { version?: unknown };
 const appVersion =
   typeof packageJson.version === "string" && packageJson.version.trim().length > 0 ? packageJson.version : "0.0.0";
 const curseforgeProxyUrl = process.env.YARK_CURSEFORGE_PROXY_URL?.trim() ?? "";
-/** Dev-only theme/palette preview controls (`YARK_DEBUG_THEME=1` in `.env`). */
-const debugThemeControls = /^(1|true)$/i.test(process.env.YARK_DEBUG_THEME?.trim() ?? "");
 const appDefines = {
   __APP_VERSION__: JSON.stringify(appVersion),
   // Official release builds inject via Actions `vars.YARK_CURSEFORGE_PROXY_URL` (#151).
   __YARK_CURSEFORGE_PROXY_URL__: JSON.stringify(curseforgeProxyUrl),
-  // Dev-only theme/palette preview controls (YARK_DEBUG_THEME=1 in .env).
-  __YARK_DEBUG_THEME__: JSON.stringify(debugThemeControls),
 };
 
 const sharedAlias = {
