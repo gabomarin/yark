@@ -66,7 +66,6 @@ export function IniSettingRow(props: Props): ReactElement {
           <AppSwitch
             aria-label={label}
             checked={row.value.toLowerCase() === "true"}
-            deferChange
             onCheckedChange={(checked) =>
               onUpdateValue(row.fileKey, row.section, row.key, checked ? "True" : "False", row.occurrence)
             }

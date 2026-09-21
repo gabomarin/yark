@@ -38,6 +38,7 @@ import {
   type AppearanceSettings,
 } from "../shared/settings/appearance";
 import { bootstrapBackgroundFor } from "../shared/app-chrome";
+import { isSplashWindow } from "./splash-window";
 import {
   OPEN_NATIVE_CONSOLE_SETTING_KEY,
   encodeOpenNativeConsolePref,
@@ -650,7 +651,8 @@ export function registerIpcHandlers(
     // next resize flashes the previous theme behind the shell.
     const backgroundColor = bootstrapBackgroundFor(appearance.theme);
     for (const win of BrowserWindow.getAllWindows()) {
-      if (!win.isDestroyed()) {
+      // The splash keeps its brand plate; only the app canvas follows the theme.
+      if (!win.isDestroyed() && !isSplashWindow(win)) {
         win.setBackgroundColor(backgroundColor);
       }
     }

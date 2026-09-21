@@ -43,7 +43,6 @@ export function ClusterIniTemplateSettingRow(props: Props): ReactElement {
           <AppSwitch
             aria-label={label}
             checked={row.value.toLowerCase() === "true"}
-            deferChange
             onCheckedChange={(checked) => onChange(row.section, row.key, checked ? "True" : "False", row.occurrence)}
           />
         ) : kind === "number" ? (

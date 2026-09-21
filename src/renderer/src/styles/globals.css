@@ -141,11 +141,13 @@ body {
   cursor: pointer;
 }
 
-/* Animate every Switch thumb on the compositor, including render-heavy editors. */
+/* Animate every Switch thumb on the compositor, including render-heavy editors.
+   The duration and curve come from the shared motion tokens, like every other animated
+   surface: hardcoding them here made this the one transition that ignores the ramp. */
 .mantine-Switch-thumb {
   inset-inline-start: var(--switch-track-label-padding);
   transform: translateX(0);
-  transition: transform 150ms ease;
+  transition: transform var(--app-motion-base) var(--app-ease-standard);
 }
 
 .mantine-Switch-input:checked + * > .mantine-Switch-thumb {
@@ -156,6 +158,36 @@ body {
   transform: translateX(
     calc(-1 * (var(--switch-width) - var(--switch-thumb-size) - 2 * var(--switch-track-label-padding)))
   );
+}
+
+/*
+ * Reduced motion, at the token level. Every *transition* in the app reads these tokens (there
+ * is no rule left with a hard-coded duration), so collapsing them covers all transition-driven
+ * motion - nav, switches, rows, panes - instead of one media query per module. The Mantine
+ * resolver injects its own `:root` values after this stylesheet, hence `!important`. `0.01ms`
+ * rather than `0s` keeps `transitionend` firing for anything that waits on it.
+ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --app-motion-fast: 0.01ms !important;
+    --app-motion-base: 0.01ms !important;
+    --app-motion-slow: 0.01ms !important;
+    --app-ease-standard: linear !important;
+    --app-ease-decelerate: linear !important;
+  }
+
+  /*
+   * Keyframe animations are not token-driven, so the block above does not reach them: the
+   * sidebar's ambient status pulse and update nudge kept looping. This is the standard sweep -
+   * collapsed to one iteration at effectively zero duration, so anything that waits on
+   * `animationend` still fires - and it covers future keyframes too.
+   */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
 
 /*

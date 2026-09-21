@@ -56,7 +56,6 @@ export function buildServerModsTableColumns(input: {
           <div className={classes.enableControl} onClick={(event) => event.stopPropagation()}>
             <AppSwitch
               checked={row.enabled}
-              deferChange
               disabled={isModRowBusy(input.busyKey, row)}
               aria-label={`${row.enabled ? "Disable" : "Enable"} ${row.name}`}
               // Mantine trackLabel is aria-hidden but still intercepts hits; keep

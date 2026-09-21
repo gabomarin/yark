@@ -16,13 +16,18 @@
 }
 
 /*
- * The pinned half of the panel. It must not scroll or grow: toggling a flag changes the
- * command's length, and if that resized this block the whole section would jump (and a
- * scrollbar would appear and disappear) on every switch. The command block inside caps
- * itself instead, so the layout stays put.
+ * The pinned half of the panel. Capped and scrollable on its own, so a short window cannot
+ * starve the option grid above (the padding is part of the cap, hence border-box), with a
+ * stable gutter so crossing the cap does not make a scrollbar appear and shift the section -
+ * that shift was the flash this split originally introduced. The command block inside caps
+ * itself too, so in practice this cap only matters on very short viewports.
  */
 .footer {
   flex: 0 0 auto;
+  box-sizing: border-box;
+  max-height: 50%;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
   border-top: 1px solid var(--app-color-border-subtle);
   padding: var(--app-space-sm) var(--app-space-md) var(--app-space-md);
 }

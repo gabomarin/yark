@@ -4,6 +4,9 @@ import { describe, expect, it } from "vitest";
 import {
   BOOTSTRAP_BACKGROUND,
   BRAND_PLATE_BACKGROUND,
+  ERROR_SCREEN_BACKGROUND,
+  ERROR_SCREEN_MUTED,
+  ERROR_SCREEN_TEXT,
   bootstrapBackgroundFor,
   bootstrapBackgroundFromStored,
 } from "./app-chrome";
@@ -45,5 +48,16 @@ describe("brand plate literals", () => {
       variables: Record<string, string>;
     };
     expect(snapshot.variables["--app-brand-plate"]).toBe(BRAND_PLATE_BACKGROUND);
+  });
+
+  it("keeps the crash-screen literals on the rendered dark ramp", () => {
+    const snapshot = JSON.parse(read("src/renderer/src/shared/theme/darkResolverSnapshot.json")) as {
+      variables: Record<string, string>;
+    };
+    // The boundary cannot read these at runtime, so the drift this catches is silent otherwise:
+    // a literal that no longer matches the ramp looks wrong on the one screen nobody hunts for.
+    expect(ERROR_SCREEN_BACKGROUND).toBe(BOOTSTRAP_BACKGROUND);
+    expect(ERROR_SCREEN_TEXT).toBe(snapshot.variables["--app-color-text"]);
+    expect(ERROR_SCREEN_MUTED).toBe(snapshot.variables["--ark-gray-11"]);
   });
 });

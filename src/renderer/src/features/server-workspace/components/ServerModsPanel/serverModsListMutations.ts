@@ -16,6 +16,21 @@ interface Input {
   notifyMapModIfNeeded: (id: string, meta: ModMetadata | undefined) => Promise<void>;
 }
 
+/**
+ * Set equality, not membership of a list: duplicate entries must not make two different lists
+ * compare equal (`["x","x"]` vs `["x","y"]` passes a multiset check), and `includes` inside a
+ * loop rescans the list. Order-insensitive, which is what the rollback needs - array identity
+ * was too strict (any copy would silently stop the revert) and a naive scan too loose.
+ */
+function sameDisabledIds(a: readonly string[], b: readonly string[]): boolean {
+  const aSet = new Set(a);
+  if (aSet.size !== a.length) {
+    return false;
+  }
+  const bSet = new Set(b);
+  return aSet.size === bSet.size && a.every((id) => bSet.has(id));
+}
+
 export function createServerModsListMutations(input: Input) {
   const add = async (modDetail: ModMetadata) => {
     input.setBusyKey(modDetail.id);
@@ -70,7 +85,7 @@ export function createServerModsListMutations(input: Input) {
        * because the notification after it threw, and a late failure must not clobber the
        * value a newer toggle has already written.
        */
-      if (!persisted && input.disabledIdsRef.current === nextDisabled) {
+      if (!persisted && sameDisabledIds(input.disabledIdsRef.current, nextDisabled)) {
         input.disabledIdsRef.current = previousDisabled;
         input.setDisabledIds(previousDisabled);
       }

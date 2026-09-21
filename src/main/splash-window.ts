@@ -18,6 +18,18 @@ export { SPLASH_HEIGHT, SPLASH_MAX_MS, SPLASH_WIDTH, remainingSplashHoldMs, shou
 
 const splashTempDirs = new WeakMap<BrowserWindow, string>();
 
+/**
+ * Windows this module created for the startup splash. They exist to show the brand plate, so
+ * a theme-driven canvas repaint must skip them: repainting the splash to the app canvas would
+ * replace the plate with the page colour for the frame before it hands over.
+ */
+const splashWindows = new WeakSet<BrowserWindow>();
+
+/** True for windows created by `createSplashWindow`. */
+export function isSplashWindow(win: BrowserWindow): boolean {
+  return splashWindows.has(win);
+}
+
 function firstExisting(paths: string[]): string | undefined {
   return paths.find((candidate) => existsSync(candidate));
 }
@@ -105,6 +117,9 @@ export function createSplashWindow(options: { version: string; icon?: string; x?
       win.show();
     }
   });
+  // Registered as soon as the window exists: the tracking must not depend on the loading below
+  // succeeding, or a throw in between would leave a live splash window the repaint can find.
+  splashWindows.add(win);
   win.on("closed", () => {
     cleanupSplashTempDir(win);
   });
