@@ -218,7 +218,8 @@ export function useServerLaunchPersist(
       extraArgs: extraArgsRef.current,
     });
     if (draftIssues.length > 0) {
-      setError(draftIssues.map((c) => c.message).join(" "));
+      // The conflicts are listed next to the controls that cause them, so they are not pushed
+      // into this channel; it carries write failures, and clearing it here would erase one.
       return;
     }
     const ok = await schedulePersist(next, [...extraArgsRef.current]);
@@ -247,7 +248,7 @@ export function useServerLaunchPersist(
         extraArgs: extraArgsRef.current,
       });
       if (draftIssues.length > 0) {
-        setError(draftIssues.map((c) => c.message).join(" "));
+        // Same as setEnabled: the conflict list is the single place that names these.
         return;
       }
       void schedulePersist(snapshot, [...extraArgsRef.current]);

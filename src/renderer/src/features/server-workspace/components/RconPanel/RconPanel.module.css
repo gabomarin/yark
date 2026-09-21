@@ -77,36 +77,6 @@
   gap: var(--app-space-sm);
 }
 
-.historyList {
-  display: flex;
-  flex-direction: column;
-  gap: var(--app-space-xxs);
-  max-height: 180px;
-  overflow: auto;
-}
-
-.historyItem {
-  display: flex;
-  justify-content: space-between;
-  align-items: start;
-  gap: var(--app-space-sm);
-  padding: var(--app-space-xs) var(--app-space-sm);
-  border: 1px solid var(--app-color-border-subtle);
-  border-radius: 0;
-  background: var(--app-color-surface-control);
-}
-
-.historyCommand {
-  min-width: 0;
-  font-weight: 600;
-  word-break: break-word;
-}
-
-.historyMeta {
-  color: var(--app-color-muted);
-  font-size: var(--mantine-font-size-xxs);
-}
-
 .responseList {
   display: flex;
   flex-direction: column;

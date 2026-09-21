@@ -149,7 +149,12 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
   const mainSection = (
     <section className={classes.main} data-workspace-scroll>
       {stopProgress !== null && <StopProgressAlert progress={stopProgress} />}
-      {filesJobActive && (
+      {/*
+       * One notice per view. The Server and Backups tabs show their own (and more useful)
+       * alert for this same lock - "you can save profile settings now", "you can still
+       * browse, export, import" - so this generic banner would only repeat it.
+       */}
+      {filesJobActive && workspaceTab !== "server" && workspaceTab !== "backups" && (
         <AppAlert color="attention" title={filesLockReason} mb="sm">
           Start, restore, and other file actions stay locked until this finishes.
         </AppAlert>
@@ -193,7 +198,6 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
           servers={props.servers}
           runtime={runtime}
           installation={installation}
-          events={props.events}
           rconHistory={props.rconHistory}
           playerList={props.playerList}
           opsLocked={opsLocked}
