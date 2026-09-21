@@ -25,6 +25,7 @@ const stageSizes = "(max-width: 720px) 100vw, min(78rem, 100vw)";
                   <figure
                     class:list={["product-slide", index === 0 && "is-active"]}
                     data-product-slide
+      tabindex={index === 0 ? 0 : undefined}
                     data-caption={shot.caption}
                     id={`preview-panel-${index}`}
                     role="tabpanel"

@@ -86,19 +86,19 @@ function initProductRotator(): void {
   if (!root) return;
 
   const slides = [...root.querySelectorAll<HTMLElement>("[data-product-slide]")];
-  const caption = document.querySelector<HTMLElement>("[data-product-caption]");
-  const dots = [...document.querySelectorAll<HTMLButtonElement>("[data-product-dot]")];
-  const previous = document.querySelector<HTMLButtonElement>("[data-product-prev]");
-  const next = document.querySelector<HTMLButtonElement>("[data-product-next]");
+  const caption = root.querySelector<HTMLElement>("[data-product-caption]");
+  const dots = [...root.querySelectorAll<HTMLButtonElement>("[data-product-dot]")];
+  const previous = root.querySelector<HTMLButtonElement>("[data-product-prev]");
+  const nextButton = root.querySelector<HTMLButtonElement>("[data-product-next]");
   if (slides.length < 2) return;
 
   let index = 0;
 
-  const show = (next: number) => {
-    index = (next + slides.length) % slides.length;
+  const show = (targetIndex: number) => {
+    index = (targetIndex + slides.length) % slides.length;
     slides.forEach((slide, i) => {
       slide.classList.toggle("is-active", i === index);
-      slide.setAttribute("aria-hidden", i === index ? "false" : "true");
+      slide.setAttribute("aria-hidden", i === index ? "false" : "true"); slide.tabIndex = i === index ? 0 : -1;
     });
     dots.forEach((dot, i) => {
       dot.classList.toggle("is-active", i === index);
@@ -118,14 +118,14 @@ function initProductRotator(): void {
     dot.addEventListener("keydown", (event) => {
       if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
       event.preventDefault();
-      const next = event.key === "ArrowRight" ? i + 1 : i - 1;
-      show(next);
-      dots[(next + dots.length) % dots.length]?.focus();
+      const targetIndex = event.key === "ArrowRight" ? i + 1 : i - 1;
+      show(targetIndex);
+      dots[index]?.focus();
     });
   });
 
   previous?.addEventListener("click", () => show(index - 1));
-  next?.addEventListener("click", () => show(index + 1));
+  nextButton?.addEventListener("click", () => show(index + 1));
 
   show(0);
 }
