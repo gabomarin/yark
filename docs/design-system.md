@@ -156,6 +156,27 @@ Preference key: SQLite `app_settings.uiDensity` (IPC `app:get-ui-density` / `app
 
 **Server-workspace panels** (`src/shared/workspace/workspacePanels.ts`, #PUX-004 Track B). Where the server workspace puts its server list and status panel is data, not a `matchMedia` buried in one component: `auto` (columns from 1600px, the shipped default) and `drawers` (never). `workspacePanelsModeFor(option, width)` is the pure decision, `drawersMediaQuery(option)` is what the workspace subscribes to, and a test keeps the two in step. CSS cannot read the option, so the one hand-written mirror — Overview's `@media (min-width: 1600px)` side-by-side — is pinned by that same test. This is **not** an app-level _layout_ (how the whole app is structured, sidebar + main content today): that is a separate ticket, so the word stays free for it.
 
+**Deliberate deviations from Fluent 2.** A token-level audit against the Fluent UI
+React ramps found these on purpose; keep them, and do not "fix" one without deciding
+the whole list:
+
+| Area                                | Fluent 2                             | YARK                                          | Why                                                                                                                                                                                                              |
+| ----------------------------------- | ------------------------------------ | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Light layer direction               | White canvas, grey elevated surfaces | **Grey canvas, near-white surfaces**          | The canvas is the largest surface, so a white one glares; a grey window with near-white content also reads denser for an operations tool. The dark theme still follows Fluent's "elevated = a step up the ramp". |
+| Neutral tint                        | Pure grey                            | Hue 257 navy tint                             | Brand identity (#PUX-004).                                                                                                                                                                                       |
+| Focus ring                          | Neutral `colorStrokeFocus2`          | Brand accent (`--ark-blue-a8`, ≥3:1 measured) | The accent clears the WCAG focus floor in both themes and carries identity; Fluent's neutral is a defensible alternative, not a rule we break.                                                                   |
+| Switch label order                  | `labelPosition="after"`              | Label before the control                      | Windows Settings convention (§5e).                                                                                                                                                                               |
+| Type ramp                           | 10/12/14/16/20/24 (+hero)            | Adds 18, 22, 11, 34                           | Mantine's inherited steps. Aligning them is a visual change across the app, not a token edit.                                                                                                                    |
+| Radius `lg` 10px, spacing `xl` 28px | Jumps 8→12 and 20→24→32              | 10 and 28                                     | Off-ramp steps kept for layout reasons; changing them moves every screen.                                                                                                                                        |
+| Shadow alphas                       | Dark 0.24/0.28, light 0.12/0.14      | Dark 0.28-0.46, light 0.08-0.18               | The light theme separates with hairline + shadow, so its alphas are tuned to that pair.                                                                                                                          |
+
+**Not covered yet (real gaps, tracked):** Windows High Contrast / `forced-colors`
+(Fluent ships a full high-contrast token set and switches its focus outline to
+`Highlight` - the biggest a11y gap for a Windows desktop app), stroke-width tokens
+(we only have 1px hairlines), `shadow64` and brand-tinted shadows, Fluent's `zIndex*`
+ladder (we use Mantine's), and the granular `colorStatus*` families (we have one tone
+per state plus the Mantine ladders).
+
 `AppProviders` rebuilds the Mantine theme + `--app-space-*` / `--app-radius-*` / `--app-font-page` CSS vars when density changes and sets `data-ui-density` on `document.documentElement` so Modal/Drawer portals inherit compact input styles. Compact sets `defaultProps.size="xs"` on text inputs / selects / buttons (not Switch/Checkbox/Radio). Forms or icon rows that hardcode larger sizes (e.g. ServerCard ActionIcon `lg`) should follow `useUiDensity()` so Compact still shrinks them. **ServerCard:** primary Start/Stop/kebab stay `md` / `lg` (#233 hit targets); progress Pause/Cancel/Resume use `xs` / `sm`. Overview card **narrow-viewport stacking** is density-aware: Comfortable stacks earlier (`1100px` / `760px`); Compact keeps a denser horizontal row longer and only stacks at smaller widths (#377). Hardcoded feature CSS `px` values do **not** scale — snap those to tokens when you touch a file (same rule as before). Do **not** use Electron zoom / `html { zoom }` for product density.
 
 ```tsx
@@ -344,9 +365,15 @@ Reference: `ServerModDetailDrawer` Remove footer (#344); quiet row icons (#397).
 
 ### 5e. Switch / control label order
 
-Fluent 2 reads the label **before** the control, so a `Switch` label sits left of the
-track. That order is set once in the theme (`Switch.defaultProps.labelPosition =
-"left"`) - do not pass `labelPosition` per call site, and do not fake it with `row-reverse`.
+The **Windows Settings convention** (which this app follows) reads the label **before**
+the control, so a `Switch` label sits left of the track. That order is set once in the
+theme (`Switch.defaultProps.labelPosition = "left"`) - do not pass `labelPosition` per
+call site, and do not fake it with `row-reverse`.
+
+Note for anyone auditing us against Fluent: Fluent UI React's `Switch` defaults to
+`labelPosition="after"`, so this is a **deliberate deviation**, not Fluent's own
+behaviour. An earlier version of this section attributed the left-label order to
+Fluent 2; that was wrong.
 
 - A switch inside a row that already owns the title (Settings rows, INI setting rows,
   table cells) passes **`aria-label` only** - never a second visible label next to the
