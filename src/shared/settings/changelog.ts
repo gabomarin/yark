@@ -24,6 +24,44 @@ const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.22.0",
+    date: "2026-09-21",
+    sections: [
+      {
+        title: "Highlights",
+        items: [
+          "Appearance is a real setting: choose the theme (dark or light), the display size and where the server workspace puts its panels. It applies the moment you change it and is remembered.",
+          "A light theme for bright rooms, with its own surfaces and contrast, next to the dark shell you already had.",
+          "The whole interface follows Fluent 2: one chrome surface, one depth ladder, and one colour language for status.",
+          "Accessibility: YARK follows Windows High Contrast, and it stops animating when Windows asks for reduced motion.",
+          "Crash recovery (off by default): after an unexpected exit YARK can restart the server, with an attempt budget, backoff and a stability window.",
+          "Hosted Resources (experimental, off by default) can carry operator notes and tags, so a resource is identifiable at a glance.",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "The window canvas follows the saved theme, so a light-shell operator no longer gets a dark flash on startup or on resize. The launch splash keeps its brand plate on purpose - it is the light-on-dark lockup.",
+          "SteamCMD output and an update's details read like a native console in both themes.",
+          "One notice per view while a file job is queued or running, instead of a banner repeating what the tab already explains.",
+          "Manual restarts can use Quiet, Standard or Frequent player-notification presets.",
+          "Wide windows keep Settings and server forms at a readable line length, and the Overview fleet metrics read as one labelled strip instead of separate cards.",
+          "Alerts, buttons, badges, menus and segmented pickers share one grammar, and the lifecycle Start uses the accent like every other primary action.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "The SteamCMD progress bar no longer covers save buttons and cards: the shell reserves a row for it, and each view fills the content box instead of the viewport.",
+          "Switches move consistently, including inside long lists, and a write that fails puts the switch back where it belongs.",
+          "SteamCMD settings say why an action is locked, instead of leaving a disabled control with no explanation.",
+          "Disabled buttons keep the shape they have when enabled.",
+          "A launch option that needs a value is reported once, and RCON drops the Recent commands box (Console history already lists the same commands, with their responses).",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.21.0",
     date: "2026-09-16",
     sections: [

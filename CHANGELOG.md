@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-09-21
+
 ### Added
 
 - **Settings → Appearance** groups the shell's look in one place: display size (Compact / Comfortable), theme and where the server workspace puts its panels (Auto / Drawers), with a registry behind each. An unknown or missing stored id falls back to the default, and the choice persists across restarts.
