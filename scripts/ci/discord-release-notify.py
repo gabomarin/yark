@@ -6,6 +6,7 @@ Preferred env (posts as the Discord application "Yark Bot"):
   DISCORD_RELEASES_CHANNEL_ID — snowflake for #releases
   RELEASE_JSON — path to gh api release JSON (required)
   WHATS_NEW_TS — curated changelog path (default src/shared/settings/changelog.ts)
+  DRY_RUN — when truthy, print the rendered message and post nothing
 
 Fallback (legacy webhook identity, e.g. "Github Release"):
   WEBHOOK_URL — Discord incoming webhook URL
@@ -190,13 +191,18 @@ def post_json(url: str, payload: dict, headers: dict[str, str]) -> tuple[int, st
         return e.code, detail
 
 
+def is_dry_run() -> bool:
+    return (os.environ.get("DRY_RUN") or "").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def main() -> int:
+    dry_run = is_dry_run()
     bot_token = (os.environ.get("DISCORD_BOT_TOKEN") or "").strip()
     channel_id = (os.environ.get("DISCORD_RELEASES_CHANNEL_ID") or "").strip()
     webhook = (os.environ.get("WEBHOOK_URL") or "").strip()
 
     use_bot = bool(bot_token and channel_id)
-    if not use_bot and not webhook:
+    if not use_bot and not webhook and not dry_run:
         print(
             "::error::Set DISCORD_BOT_TOKEN + DISCORD_RELEASES_CHANNEL_ID "
             "(preferred, posts as Yark Bot) or WEBHOOK_URL (legacy).",
@@ -222,6 +228,13 @@ def main() -> int:
         "flags": 4,
         "allowed_mentions": {"parse": []},
     }
+
+    if dry_run:
+        target = f"channel {channel_id}" if use_bot else "webhook" if webhook else "no target"
+        print(f"--- dry run ({target}); {len(content)} chars; nothing posted ---")
+        print(content)
+        print("--- end dry run ---")
+        return 0
 
     if use_bot:
         url = f"https://discord.com/api/v10/channels/{channel_id}/messages"

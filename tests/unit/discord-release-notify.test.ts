@@ -1,8 +1,31 @@
 import { spawnSync } from "node:child_process";
+import { mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const script = join(process.cwd(), "scripts/ci/discord-release-notify.py").replace(/\\/g, "/");
+
+function runNotifyScript(env: NodeJS.ProcessEnv): { status: number | null; stdout: string; stderr: string } {
+  const cmd = process.platform === "win32" ? "py" : "python3";
+  const args = process.platform === "win32" ? ["-3", script] : [script];
+  const attempt = (command: string, commandArgs: string[]) =>
+    spawnSync(command, commandArgs, {
+      env: { ...process.env, ...env },
+      encoding: "utf8",
+      timeout: 15_000,
+      windowsHide: true,
+    });
+
+  const result = attempt(cmd, args);
+  if (result.error || result.status !== 0) {
+    const fallback = attempt("python", [script]);
+    if (!fallback.error && fallback.status === 0) {
+      return { status: fallback.status, stdout: fallback.stdout, stderr: fallback.stderr };
+    }
+  }
+  return { status: result.status, stdout: result.stdout, stderr: result.stderr };
+}
 
 function runPython(code: string, input: string): string {
   const cmd = process.platform === "win32" ? "py" : "python3";
@@ -141,6 +164,38 @@ describe("discord-release-notify curated What's new", () => {
     expect(content).toContain("Light theme for bright rooms.");
     expect(content).not.toContain("pull/1");
     expect(content).not.toContain("@gabomarin");
+  });
+
+  it("prints the message and posts nothing in dry-run", () => {
+    const dir = mkdtempSync(join(tmpdir(), "yark-discord-dry-run-"));
+    const releasePath = join(dir, "release.json");
+    const changelogPath = join(dir, "changelog.ts");
+    writeFileSync(changelogPath, sampleChangelogTs);
+    writeFileSync(
+      releasePath,
+      JSON.stringify({
+        tag_name: "v0.2.0",
+        name: "YARK server manager v0.2.0",
+        html_url: "https://github.com/gabomarin/yark/releases/tag/v0.2.0",
+        prerelease: false,
+        assets: [{ name: "setup.exe" }],
+        body: "* feat: x (#1) by @gabomarin in https://github.com/gabomarin/yark/pull/1",
+      }),
+    );
+
+    const { status, stdout } = runNotifyScript({
+      RELEASE_JSON: releasePath,
+      WHATS_NEW_TS: changelogPath,
+      DRY_RUN: "true",
+      DISCORD_BOT_TOKEN: "",
+      DISCORD_RELEASES_CHANNEL_ID: "",
+      WEBHOOK_URL: "",
+    });
+
+    expect(status).toBe(0);
+    expect(stdout).toContain("dry run");
+    expect(stdout).toContain("Light theme for bright rooms.");
+    expect(stdout).not.toContain("pull/1");
   });
 
   it("falls back to the release notes when no curated entry exists", () => {
