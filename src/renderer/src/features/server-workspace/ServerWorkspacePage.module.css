@@ -1,8 +1,13 @@
+/*
+ * Fills the shell's content box, not the viewport. `100vh` ignored the row the shell
+ * reserves for the workspace footer, so the bottom of this pane (Save changes, the last
+ * launch options) ended up underneath the SteamCMD bar.
+ */
 .root {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  max-height: 100vh;
+  height: 100%;
+  max-height: 100%;
   min-height: 0;
   overflow: hidden;
   margin: 0;
