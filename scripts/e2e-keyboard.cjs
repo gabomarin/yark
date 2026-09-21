@@ -124,7 +124,7 @@ async function run() {
     assert.equal(await page.getByRole("tab", { name: "INI Files" }).getAttribute("aria-selected"), "true");
 
     // Anchored to the INI settings table: an unanchored `getByRole("switch").first()` would
-    // happily toggle whatever switch happens to come first and still pass.
+    // toggle whatever switch comes first and still pass.
     const iniPanel = page.locator("[data-ini-settings-scroll]");
     await iniPanel.waitFor({ state: "visible", timeout: 15000 });
     const iniSwitch = iniPanel.getByRole("switch").first();

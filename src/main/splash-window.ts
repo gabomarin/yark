@@ -117,13 +117,15 @@ export function createSplashWindow(options: { version: string; icon?: string; x?
       win.show();
     }
   });
+  // Registered as soon as the window exists: the tracking must not depend on the loading below
+  // succeeding, or a throw in between would leave a live splash window the repaint can find.
+  splashWindows.add(win);
   win.on("closed", () => {
     cleanupSplashTempDir(win);
   });
 
   const fallbackHtml = applySplashVersion(FALLBACK_SPLASH_TEMPLATE, options.version);
   loadSplashHtml(win, readSplashDocumentHtml(options.version), fallbackHtml);
-  splashWindows.add(win);
   return win;
 }
 

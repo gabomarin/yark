@@ -17,12 +17,18 @@ interface Input {
 }
 
 /**
- * Same members, order-insensitive. The rollback must not depend on array identity: any writer
- * that copies `disabledIds` (a sort, a spread, a future normaliser) would otherwise make the
- * guard never match and the revert silently stop happening.
+ * Set equality, not membership of a list: duplicate entries must not make two different lists
+ * compare equal (`["x","x"]` vs `["x","y"]` passes a multiset check), and `includes` inside a
+ * loop rescans the list. Order-insensitive, which is what the rollback needs - array identity
+ * was too strict (any copy would silently stop the revert) and a naive scan too loose.
  */
 function sameDisabledIds(a: readonly string[], b: readonly string[]): boolean {
-  return a.length === b.length && a.every((id) => b.includes(id));
+  const aSet = new Set(a);
+  if (aSet.size !== a.length) {
+    return false;
+  }
+  const bSet = new Set(b);
+  return aSet.size === bSet.size && a.every((id) => bSet.has(id));
 }
 
 export function createServerModsListMutations(input: Input) {

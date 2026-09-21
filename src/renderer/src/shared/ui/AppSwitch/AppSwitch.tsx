@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactElement } from "react";
+import { useLayoutEffect, useRef, useState, type ReactElement } from "react";
 import { Switch, type SwitchProps } from "@mantine/core";
 
 export interface AppSwitchProps extends Omit<SwitchProps, "checked" | "defaultChecked" | "onChange"> {
@@ -12,9 +12,11 @@ function isThenable(value: unknown): value is PromiseLike<unknown> {
 }
 
 /**
- * Mantine Switch that paints the knob on the click, for parents whose re-render is heavy.
+ * Mantine Switch with an optimistic knob: it flips on the click and the parent's value catches
+ * up on its own schedule. Note the write runs synchronously in the click handler - deliberately
+ * not in a transition, which React may start and discard, losing the write - so a heavy parent
+ * re-render is batched with the knob paint and will delay it. Keep parent update paths cheap.
  *
- * The knob follows the click immediately and the parent's value catches up on its own schedule.
  * An externally driven change (a reload, or a failed write going back) is picked up **during
  * render** with React's documented "adjust state when a prop changes" pattern: that avoids the
  * one-frame stale paint a `useEffect` mirror gives, and keeps render pure - no ref is written
@@ -36,9 +38,11 @@ export function AppSwitch({ checked, onCheckedChange, ...props }: AppSwitchProps
     setOptimisticChecked(checked);
   }
 
-  // The only place a ref may hold a prop is an effect: it runs after commit, so the revert
-  // never reads a value React started and discarded.
-  useEffect(() => {
+  // The only place a ref may hold a prop is an effect, and it has to be a *layout* one: a
+  // rejection settles in a microtask, which can run after the commit but before a passive
+  // effect, and in that window the revert would read the stale pre-commit value and clobber an
+  // externally driven change.
+  useLayoutEffect(() => {
     committedRef.current = checked;
   }, [checked]);
 
@@ -65,7 +69,10 @@ export function AppSwitch({ checked, onCheckedChange, ...props }: AppSwitchProps
           if (isThenable(result)) {
             void Promise.resolve(result).catch(() => revert(action));
           }
-        } catch {
+        } catch (error) {
+          // Not swallowed: this component only keeps the knob honest, it is not the place that
+          // reports failures, and a silent throw would hide a write that never happened.
+          console.error("AppSwitch: onCheckedChange threw", error);
           revert(action);
         }
       }}

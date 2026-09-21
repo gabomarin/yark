@@ -43,8 +43,10 @@ async function probeSwitchMotion(locator) {
 /** Asserts a switch actually toggled and animated, naming the part that failed. */
 function assertSwitchMotion(motion, what) {
   assert.equal(motion.changed, true, `${what}: the switch did not toggle`);
+  // Before sameNode: a thumb that was never mounted makes `null === null` pass that check, and
+  // the failure would read as "the thumb left the document" instead of "the markup changed".
+  assert.ok(motion.connected, `${what}: the switch thumb is not in the DOM - did Mantine's markup change?`);
   assert.equal(motion.sameNode, true, `${what}: the thumb was replaced instead of kept mounted`);
-  assert.equal(motion.connected, true, `${what}: the thumb left the document while toggling`);
   assert.ok(motion.animationCount > 0, `${what}: no transition was running on the thumb`);
   assert.equal(
     motion.transitionProperty,

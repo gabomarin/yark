@@ -161,11 +161,11 @@ body {
 }
 
 /*
- * Reduced motion, at the token level. Every transition in the app reads these tokens (there is
- * no rule left with a hard-coded duration), so collapsing them covers the whole shell - nav,
- * switches, rows, panes - instead of one media query per module. The Mantine resolver injects
- * its own `:root` values after this stylesheet, hence `!important`. `0.01ms` rather than `0s`
- * keeps `transitionend` firing for anything that waits on it.
+ * Reduced motion, at the token level. Every *transition* in the app reads these tokens (there
+ * is no rule left with a hard-coded duration), so collapsing them covers all transition-driven
+ * motion - nav, switches, rows, panes - instead of one media query per module. The Mantine
+ * resolver injects its own `:root` values after this stylesheet, hence `!important`. `0.01ms`
+ * rather than `0s` keeps `transitionend` firing for anything that waits on it.
  */
 @media (prefers-reduced-motion: reduce) {
   :root {
@@ -174,6 +174,19 @@ body {
     --app-motion-slow: 0.01ms !important;
     --app-ease-standard: linear !important;
     --app-ease-decelerate: linear !important;
+  }
+
+  /*
+   * Keyframe animations are not token-driven, so the block above does not reach them: the
+   * sidebar's ambient status pulse and update nudge kept looping. This is the standard sweep -
+   * collapsed to one iteration at effectively zero duration, so anything that waits on
+   * `animationend` still fires - and it covers future keyframes too.
+   */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
 

@@ -1,3 +1,4 @@
+import { ERROR_SCREEN_BACKGROUND, ERROR_SCREEN_MUTED, ERROR_SCREEN_TEXT } from "@shared/app-chrome";
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
 interface Props {
@@ -41,20 +42,21 @@ export class AppErrorBoundary extends Component<Props, State> {
            * Literal colours on purpose. This screen exists for the case where the providers
            * themselves threw, and the `--app-color-*` variables are injected by the Mantine
            * resolver - so relying on them here would render an unstyled page in exactly the
-           * failure this boundary is for. Kept in sync with the dark palette by eye.
+           * failure this boundary is for. The values live in `shared/app-chrome` and a test
+           * keeps them equal to the rendered dark ramp, instead of "by eye" drifting.
            */
-          background: "#010306",
-          color: "#e6effd",
+          background: ERROR_SCREEN_BACKGROUND,
+          color: ERROR_SCREEN_TEXT,
           fontFamily: '"Segoe UI", Arial, sans-serif',
         }}
       >
         <h1 style={{ fontSize: 22, margin: "0 0 12px" }}>YARK hit an error</h1>
-        <p style={{ color: "#9aa3b5", maxWidth: 560, lineHeight: 1.45 }}>
+        <p style={{ color: ERROR_SCREEN_MUTED, maxWidth: 560, lineHeight: 1.45 }}>
           The window stayed open so you can reload. Your servers are not stopped from this screen.
         </p>
         <p
           style={{
-            color: "#9aa3b5",
+            color: ERROR_SCREEN_MUTED,
             fontSize: 13,
             wordBreak: "break-word",
             maxWidth: 640,

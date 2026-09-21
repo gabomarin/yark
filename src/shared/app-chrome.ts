@@ -18,6 +18,17 @@ import { DEFAULT_THEME_ID, parseAppearanceSettings, type ThemeId } from "./setti
 /** Navy behind the brand lockup - the splash document and the sidebar plate. */
 export const BRAND_PLATE_BACKGROUND = "#0d1526";
 
+/*
+ * Crash-screen literals. The boundary renders when the providers themselves are what threw, so
+ * it cannot read `--app-color-*` (the Mantine resolver may never have run). They are the dark
+ * ramp's steps 12 / 11 and the canvas - kept here, next to the canvas constant, so a palette
+ * change has one place to update and `app-chrome.test.ts` can fail if they drift from the
+ * rendered ramp instead of relying on someone noticing.
+ */
+export const ERROR_SCREEN_BACKGROUND = "#010306";
+export const ERROR_SCREEN_TEXT = "#e6effd";
+export const ERROR_SCREEN_MUTED = "#aabedb";
+
 const BOOTSTRAP_BACKGROUNDS: Record<ThemeId, string> = {
   dark: "#010306",
   light: "#dce0e6",
