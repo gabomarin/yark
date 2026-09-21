@@ -15,7 +15,7 @@ describe("AppSwitch", () => {
 
     render(
       <AppProviders>
-        <AppSwitch aria-label="Feature" checked={false} deferChange onCheckedChange={onCheckedChange} />
+        <AppSwitch aria-label="Feature" checked={false} onCheckedChange={onCheckedChange} />
       </AppProviders>,
     );
 
