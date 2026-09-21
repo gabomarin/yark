@@ -86,22 +86,27 @@ function initProductRotator(): void {
   if (!root) return;
 
   const slides = [...root.querySelectorAll<HTMLElement>("[data-product-slide]")];
-  const caption = document.querySelector<HTMLElement>("[data-product-caption]");
+  // Only the slides live inside the rotator: the arrows, dots and caption are elsewhere in the
+    // stage, so these stay document-level (one stage per page).
+    const caption = document.querySelector<HTMLElement>("[data-product-caption]");
   const dots = [...document.querySelectorAll<HTMLButtonElement>("[data-product-dot]")];
+  const previous = document.querySelector<HTMLButtonElement>("[data-product-prev]");
+  const nextButton = document.querySelector<HTMLButtonElement>("[data-product-next]");
   if (slides.length < 2) return;
 
   let index = 0;
-  let timer = 0;
 
-  const show = (next: number) => {
-    index = (next + slides.length) % slides.length;
+  const show = (targetIndex: number) => {
+    index = (targetIndex + slides.length) % slides.length;
     slides.forEach((slide, i) => {
       slide.classList.toggle("is-active", i === index);
       slide.setAttribute("aria-hidden", i === index ? "false" : "true");
+        slide.tabIndex = i === index ? 0 : -1;
     });
     dots.forEach((dot, i) => {
       dot.classList.toggle("is-active", i === index);
-      dot.setAttribute("aria-current", i === index ? "true" : "false");
+      dot.setAttribute("aria-selected", i === index ? "true" : "false");
+      dot.tabIndex = i === index ? 0 : -1;
     });
     const active = slides[index];
     if (caption && active?.dataset.caption) {
@@ -109,21 +114,23 @@ function initProductRotator(): void {
     }
   };
 
-  const schedule = () => {
-    if (prefersReducedMotion()) return;
-    window.clearInterval(timer);
-    timer = window.setInterval(() => show(index + 1), 4200);
-  };
-
   dots.forEach((dot, i) => {
     dot.addEventListener("click", () => {
       show(i);
-      schedule();
+    });
+    dot.addEventListener("keydown", (event) => {
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      event.preventDefault();
+      const targetIndex = event.key === "ArrowRight" ? i + 1 : i - 1;
+      show(targetIndex);
+      dots[index]?.focus();
     });
   });
 
+  previous?.addEventListener("click", () => show(index - 1));
+  nextButton?.addEventListener("click", () => show(index + 1));
+
   show(0);
-  schedule();
 }
 
 function showRevealsImmediately(): void {

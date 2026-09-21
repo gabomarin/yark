@@ -1,0 +1,158 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import ResponsiveShot from "../components/ResponsiveShot.astro";
+import ImageLightbox from "../components/ImageLightbox.astro";
+import { site, withBase } from "../data/site";
+import { SHOT_WIDTHS } from "../data/screenshot-media.mjs";
+import { screenshotSlug, screenshots } from "../data/screenshots";
+
+const gallerySizes =
+  "(max-width: 560px) calc(100vw - 2.5rem), (max-width: 799px) calc((min(84rem, 100vw) - 4.25rem) / 2), calc((min(84rem, 100vw) - 5.5rem) / 3)";
+---
+
+<BaseLayout
+  wide
+  title={`Screenshots — ${site.name} - ARK Ascended server manager`}
+  description="Every YARK surface captured from the Electron + React desktop shell: Overview, the server workspace tabs, Mods, Backups, Logs, Settings and the setup assistant."
+  path="/screenshots/"
+>
+  <header class="page-header">
+    <p class="eyebrow">A look at the app</p>
+    <h1>Screenshots</h1>
+    <p>
+      See the day-to-day operator workflow: configure servers, review SteamCMD jobs, edit INI settings,
+      manage mods and backups, and check cluster or hosted-resource state. Screens may change during
+      prerelease development.
+    </p>
+  </header>
+
+  <div class="shots">
+    {
+      screenshots.map((shot, index) => (
+        <figure class="shot">
+          <button
+            class="shot-trigger"
+            type="button"
+            data-lightbox-trigger
+            data-lightbox-src={shot.src}
+            data-lightbox-alt={shot.alt}
+            data-lightbox-caption={shot.caption}
+            aria-label={`Open larger preview: ${shot.caption}`}
+          >
+            <ResponsiveShot
+              slug={screenshotSlug(shot)}
+              alt={shot.alt}
+              fallbackSrc={shot.src}
+              widths={[...SHOT_WIDTHS]}
+              sizes={gallerySizes}
+              width={1440}
+              height={900}
+              loading={index === 0 ? "eager" : "lazy"}
+              fetchpriority={index === 0 ? "high" : undefined}
+            />
+          </button>
+          <figcaption>{shot.caption}</figcaption>
+        </figure>
+      ))
+    }
+  </div>
+  <ImageLightbox />
+</BaseLayout>
+
+<style>
+  :global(main.wide) {
+    max-width: none;
+    padding-inline: 0;
+  }
+
+  .page-header {
+    max-width: 84rem;
+    margin: 0 auto;
+    padding: clamp(2.75rem, 6vw, 4.5rem) 1.5rem 0.5rem;
+  }
+
+  .page-header h1 {
+    max-width: 12ch;
+    margin: 0 0 0.85rem;
+    font-size: clamp(2.6rem, 6vw, 4.8rem);
+    line-height: 0.98;
+    letter-spacing: -0.055em;
+  }
+
+  .page-header > p:last-child {
+    max-width: 44rem;
+    margin: 0;
+    color: var(--muted);
+    font-size: 1.05rem;
+    line-height: 1.65;
+  }
+
+  .shots {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(1.5rem, 3vw, 2.5rem) 1.25rem;
+    max-width: 84rem;
+    margin: 0 auto;
+    padding: 1.5rem;
+  }
+
+  .shot {
+    margin: 0;
+  }
+
+  .shot-trigger {
+    display: block;
+    width: 100%;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 0.55rem;
+    background: var(--bg-1);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.26);
+    transition: border-color 180ms var(--ease-out), transform 180ms var(--ease-out), box-shadow 180ms var(--ease-out);
+    cursor: zoom-in;
+  }
+
+  .shot-trigger:hover {
+    border-color: color-mix(in srgb, var(--cryo) 55%, var(--line));
+    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.42);
+    transform: translateY(-2px);
+  }
+
+  .shot-trigger:focus-visible {
+    outline: 2px solid var(--cryo);
+    outline-offset: 4px;
+  }
+
+  .shot :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .shot figcaption {
+    max-width: 48rem;
+    margin-top: 0.75rem;
+    color: var(--muted);
+    font-size: 0.875rem;
+    line-height: 1.55;
+  }
+
+  @media (max-width: 799px) {
+    .shots {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 560px) {
+    .page-header {
+      padding-inline: 1.25rem;
+    }
+
+    .shots {
+      grid-template-columns: 1fr;
+      width: min(100% - 2.5rem, 72rem);
+      padding: 1rem 0 2.5rem;
+    }
+  }
+</style>

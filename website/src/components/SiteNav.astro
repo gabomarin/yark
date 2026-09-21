@@ -10,6 +10,21 @@ const pathAfterBase =
     : pathname.startsWith(`${base}/`)
       ? pathname.slice(base.length)
       : pathname;
+
+const isActive = (href: string): boolean =>
+  href === "/"
+    ? pathAfterBase === "/"
+    : href === "/docs/"
+      ? pathAfterBase.startsWith("/docs")
+      : href.endsWith("/")
+        ? pathAfterBase === href || pathAfterBase === href.slice(0, -1)
+        : pathAfterBase.startsWith(href);
+
+const navItems = nav.map((item) => ({
+  ...item,
+  href: withBase(item.href),
+  current: isActive(item.href),
+}));
 ---
 
 <header class="site-nav">
@@ -20,27 +35,37 @@ const pathAfterBase =
     </a>
     <nav class="site-nav-links" aria-label="Primary">
       {
-        nav.map((item) => {
-          const href = withBase(item.href);
-          const current =
-            item.href === "/"
-              ? pathAfterBase === "/"
-              : item.href === "/docs/"
-                ? pathAfterBase.startsWith("/docs")
-                : item.href.endsWith("/")
-                  ? pathAfterBase === item.href || pathAfterBase === item.href.slice(0, -1)
-                  : pathAfterBase.startsWith(item.href);
-          return (
-            <a href={href} aria-current={current ? "page" : undefined}>
-              {item.label}
-            </a>
-          );
-        })
+        navItems.map((item) => (
+          <a href={item.href} aria-current={item.current ? "page" : undefined}>
+            {item.label}
+          </a>
+        ))
       }
       <a class="site-nav-download" href={site.downloadUrl}>
         <DownloadIcon />
         {site.downloadLabel}
       </a>
     </nav>
+    <details class="mobile-nav">
+      <summary>
+          <span class="visually-hidden">Open navigation</span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </summary>
+      <nav aria-label="Mobile primary">
+        {
+          navItems.map((item) => (
+            <a href={item.href} aria-current={item.current ? "page" : undefined}>
+              {item.label}
+            </a>
+          ))
+        }
+        <a class="site-nav-download" href={site.downloadUrl}>
+          <DownloadIcon />
+          {site.downloadLabel}
+        </a>
+      </nav>
+    </details>
   </div>
 </header>

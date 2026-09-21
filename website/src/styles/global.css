@@ -161,7 +161,9 @@ a:hover {
 }
 
 /* Beat `.site-nav-links a { color: muted }` — fossil CTA, not cryo. */
-.site-nav-links a.site-nav-download {
+/* Fossil CTA. Broadened so the mobile-nav link gets the same button; it now ties with
+   `.site-nav-links a` on specificity, so keep this rule after those link styles. */
+a.site-nav-download {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -178,12 +180,75 @@ a:hover {
     transform 160ms var(--ease-out);
 }
 
-.site-nav-links a.site-nav-download:hover,
-.site-nav-links a.site-nav-download:focus-visible {
+a.site-nav-download:hover,
+a.site-nav-download:focus-visible {
   color: var(--cta-ink);
   background: var(--fossil-bright);
   box-shadow: 0 8px 24px rgba(212, 180, 131, 0.22);
   transform: translateY(-1px);
+}
+
+.mobile-nav {
+  display: none;
+  margin-left: auto;
+}
+
+.mobile-nav summary {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0.65rem;
+  place-content: center;
+  gap: 0.25rem;
+  border: 1px solid var(--line);
+  border-radius: 0.4rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.mobile-nav summary::-webkit-details-marker {
+  display: none;
+}
+
+.mobile-nav summary span:not(.visually-hidden) {
+  display: block;
+  width: 1rem;
+  height: 1px;
+  background: var(--ink);
+}
+
+.mobile-nav nav {
+  position: absolute;
+  top: calc(100% + 1px);
+  right: 1rem;
+  left: 1rem;
+  display: grid;
+  padding: 0.6rem;
+  border: 1px solid var(--line);
+  z-index: 1;
+  max-height: calc(100vh - 4.5rem);
+  overflow-y: auto;
+  background: var(--bg-0);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.48);
+}
+
+.mobile-nav nav a {
+  padding: 0.75rem;
+  color: var(--muted);
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.mobile-nav nav a[aria-current="page"] {
+  color: var(--cryo);
+}
+
+.mobile-nav nav /* Fossil CTA. Broadened so the mobile-nav link gets the same button; it now ties with
+   `.site-nav-links a` on specificity, so keep this rule after those link styles. */
+a.site-nav-download {
+  justify-content: center;
+  margin-top: 0.35rem;
+  color: var(--cta-ink);
 }
 
 .hero {
@@ -192,30 +257,6 @@ a:hover {
   padding: clamp(2rem, 8vh, 4.5rem) 1.5rem 1.75rem;
 }
 
-.brand-lockup {
-  display: block;
-  width: min(100%, 22rem);
-  height: auto;
-  margin: 0 0 1.35rem;
-  filter: drop-shadow(0 18px 40px rgba(126, 200, 227, 0.12));
-}
-
-.brand-lockup picture,
-.brand-lockup img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-.hero-title {
-  margin: 0 0 0.85rem;
-  max-width: 36rem;
-  color: var(--text);
-  font-size: clamp(1.15rem, 2.4vw, 1.45rem);
-  font-weight: 650;
-  line-height: 1.35;
-  letter-spacing: -0.01em;
-}
 
 .lede {
   margin: 0 0 1.6rem;
@@ -276,13 +317,6 @@ a.cta.primary:focus-visible {
   color: var(--cryo);
 }
 
-.status-pill {
-  margin: 0;
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.02em;
-}
 
 .release-trust {
   max-width: 38rem;
@@ -442,6 +476,63 @@ a.cta.primary:focus-visible {
   gap: 0.45rem;
 }
 
+.product-controls {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-arrow {
+  display: grid;
+  width: 2.15rem;
+  height: 2.15rem;
+  padding: 0;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg-1) 78%, transparent);
+  color: var(--ink);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 160ms var(--ease-out), color 160ms var(--ease-out), transform 160ms var(--ease-out);
+}
+
+.product-arrow:hover {
+  border-color: color-mix(in srgb, var(--cryo) 60%, var(--line));
+  color: var(--cryo);
+  transform: translateY(-1px);
+}
+
+.product-bezel .product-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  transform: translateY(-50%);
+  border-color: color-mix(in srgb, var(--ink) 35%, var(--line));
+  background: color-mix(in srgb, var(--bg-0) 74%, transparent);
+  backdrop-filter: blur(5px);
+}
+
+.product-bezel .product-arrow:hover {
+  transform: translateY(-50%) scale(1.05);
+}
+
+.product-arrow-prev {
+  left: 1rem;
+}
+
+.product-arrow-next {
+  right: 1rem;
+}
+
+.product-arrow:focus-visible {
+  outline: 2px solid var(--cryo);
+  outline-offset: 3px;
+}
+
 .product-dot {
   width: 0.55rem;
   height: 0.55rem;
@@ -472,26 +563,8 @@ a.cta.primary:focus-visible {
   margin: 0 auto;
 }
 
-.showcase-eyebrow {
-  margin: 0 0 0.35rem;
-  font-family: var(--mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--cryo);
-}
 
-.showcase-title {
-  margin: 0 0 0.5rem;
-  font-size: clamp(1.35rem, 3vw, 1.75rem);
-  letter-spacing: -0.02em;
-}
 
-.showcase-lede {
-  margin: 0 0 1.75rem;
-  max-width: 40rem;
-  color: var(--muted);
-}
 
 .shots {
   display: grid;
@@ -503,17 +576,21 @@ a.cta.primary:focus-visible {
   margin: 0;
 }
 
-.shot a {
+.shot-trigger {
   display: block;
+  width: 100%;
+  padding: 0;
   border: 1px solid var(--line);
   border-radius: 0.7rem;
   overflow: hidden;
   background: var(--bg-1);
+  color: inherit;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
   transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+  cursor: zoom-in;
 }
 
-.shot a:hover {
+.shot-trigger:hover {
   border-color: color-mix(in srgb, var(--cryo) 45%, var(--line));
   transform: translateY(-3px);
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
@@ -871,8 +948,36 @@ code {
     gap: 0.35rem;
   }
 
-  .site-nav-links {
-    margin-left: 0;
-    width: 100%;
+  .site-nav-inner {
+    flex-wrap: nowrap;
+    padding: 0.65rem 1.25rem;
   }
+
+  .site-nav-links {
+    display: none;
+  }
+
+  .mobile-nav {
+    display: block;
+  }
+}
+
+/* Shared by every page (index, /screenshots/, 404): these used to live in a page-level
+   is:global block, so the pages that also use them rendered them unstyled. */
+.eyebrow { margin: 0 0 .75rem; color: var(--cryo); font-family: var(--mono); font-size: .72rem; font-weight: 500; letter-spacing: .11em; text-transform: uppercase; }
+.feature-label { margin: 0 0 .45rem; color: var(--fossil); font-family: var(--mono); font-size: .68rem; letter-spacing: .075em; text-transform: uppercase; }
+.text-link { display: inline-flex; gap: .5rem; align-items: center; margin-top: 1.5rem; color: var(--ink); font-weight: 650; text-decoration: none; }
+.text-link span { color: var(--cryo); transition: transform 160ms var(--ease-out); }
+.text-link:hover { color: var(--cryo); }
+.text-link:hover span { transform: translateX(.2rem); }
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }

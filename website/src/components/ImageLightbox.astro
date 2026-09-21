@@ -1,0 +1,113 @@
+<dialog class="image-lightbox" data-image-lightbox aria-label="Screenshot preview">
+  <button class="image-lightbox-close" type="button" data-image-lightbox-close aria-label="Close image preview">×</button>
+  <div class="image-lightbox-panel">
+    <img data-image-lightbox-image alt="" />
+    <p data-image-lightbox-caption></p>
+  </div>
+</dialog>
+
+<script>
+  const lightbox = document.querySelector<HTMLDialogElement>("[data-image-lightbox]");
+  const image = lightbox?.querySelector<HTMLImageElement>("[data-image-lightbox-image]");
+  const caption = lightbox?.querySelector<HTMLElement>("[data-image-lightbox-caption]");
+
+  if (lightbox && image) {
+    let lastTrigger: HTMLElement | null = null;
+    document.querySelectorAll<HTMLElement>("[data-lightbox-trigger]").forEach((trigger) => {
+      trigger.addEventListener("click", () => {
+        lastTrigger = trigger;
+        const src = trigger.dataset.lightboxSrc ?? "";
+            if (src === "") return;
+            if (src !== "") {
+              image.src = src;
+            }
+        image.alt = trigger.dataset.lightboxAlt ?? "Screenshot preview";
+        if (caption) caption.textContent = trigger.dataset.lightboxCaption ?? "";
+        lightbox.showModal();
+      });
+    });
+
+    lightbox.querySelector<HTMLButtonElement>("[data-image-lightbox-close]")?.addEventListener("click", () => {
+      lightbox.close();
+    });
+
+    lightbox.addEventListener("click", (event) => {
+      if (event.target === lightbox) lightbox.close();
+    });
+
+    lightbox.addEventListener("close", () => {
+      image.removeAttribute("src");
+      lastTrigger?.focus();
+    });
+  }
+</script>
+
+<style>
+  .image-lightbox {
+    width: min(92vw, 90rem);
+    max-width: none;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 0.7rem;
+    background: var(--bg-1);
+    color: var(--ink);
+    box-shadow: 0 2rem 7rem rgba(0, 0, 0, 0.58);
+  }
+
+  .image-lightbox::backdrop {
+    background: rgba(5, 10, 16, 0.84);
+    backdrop-filter: blur(8px);
+  }
+
+  .image-lightbox-panel {
+    position: relative;
+    padding: 0.65rem;
+  }
+
+  .image-lightbox img {
+    display: block;
+    width: 100%;
+    max-height: 82vh;
+    object-fit: contain;
+    border-radius: 0.35rem;
+  }
+
+  .image-lightbox p {
+    margin: 0.75rem 0.25rem 0.15rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+
+  .image-lightbox-close {
+    position: absolute;
+    top: 0.8rem;
+    right: 0.8rem;
+    z-index: 2;
+    display: grid;
+    width: 2.25rem;
+    height: 2.25rem;
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--ink) 32%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--bg-0) 82%, transparent);
+    color: var(--ink);
+    font-size: 1.5rem;
+    line-height: 1;
+    pointer-events: auto;
+    cursor: pointer;
+    transition: border-color 160ms var(--ease-out), background 160ms var(--ease-out), color 160ms var(--ease-out), transform 160ms var(--ease-out);
+  }
+
+  .image-lightbox-close:hover {
+    border-color: color-mix(in srgb, var(--cryo) 65%, var(--line));
+    background: color-mix(in srgb, var(--cryo) 18%, var(--bg-0));
+    color: var(--cryo);
+    transform: scale(1.05);
+  }
+
+  .image-lightbox-close:focus-visible {
+    outline: 2px solid var(--cryo);
+    outline-offset: 3px;
+  }
+</style>

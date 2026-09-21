@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- The product website now leads with the running app, a clearer download path, operator-focused capabilities, and a tighter public-release story across desktop and mobile.
+
 ## [0.22.0] - 2026-09-21
 
 ### Added
