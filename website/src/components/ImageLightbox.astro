@@ -17,6 +17,7 @@
       trigger.addEventListener("click", () => {
         lastTrigger = trigger;
         const src = trigger.dataset.lightboxSrc ?? "";
+            if (src === "") return;
             if (src !== "") {
               image.src = src;
             }

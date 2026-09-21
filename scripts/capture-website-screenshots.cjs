@@ -1054,6 +1054,10 @@ async function run() {
         }
       }
       if ((await page.getByRole("dialog").count()) > 0) {
+        assert.ok(
+          (await page.getByRole("dialog").count()) > 0,
+          "Map search dialog did not open; workspace-map-search.png would go stale in the gallery",
+        );
         await shot(page, path.join(outDir, "workspace-map-search.png"));
       }
       await page.keyboard.press("Escape");

@@ -7,7 +7,7 @@ import { SHOT_WIDTHS } from "../data/screenshot-media.mjs";
 import { screenshotSlug, screenshots } from "../data/screenshots";
 
 const gallerySizes =
-  "(max-width: 560px) calc(100vw - 2.5rem), (max-width: 799px) calc((min(84rem, 100vw) - 3.75rem) / 2), calc((min(84rem, 100vw) - 5.5rem) / 3)";
+  "(max-width: 560px) calc(100vw - 2.5rem), (max-width: 799px) calc((min(84rem, 100vw) - 4.25rem) / 2), calc((min(84rem, 100vw) - 5.5rem) / 3)";
 ---
 
 <BaseLayout
@@ -48,6 +48,7 @@ const gallerySizes =
               width={1440}
               height={900}
               loading={index === 0 ? "eager" : "lazy"}
+              fetchpriority={index === 0 ? "high" : undefined}
             />
           </button>
           <figcaption>{shot.caption}</figcaption>

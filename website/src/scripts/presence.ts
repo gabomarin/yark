@@ -86,10 +86,12 @@ function initProductRotator(): void {
   if (!root) return;
 
   const slides = [...root.querySelectorAll<HTMLElement>("[data-product-slide]")];
-  const caption = root.querySelector<HTMLElement>("[data-product-caption]");
-  const dots = [...root.querySelectorAll<HTMLButtonElement>("[data-product-dot]")];
-  const previous = root.querySelector<HTMLButtonElement>("[data-product-prev]");
-  const nextButton = root.querySelector<HTMLButtonElement>("[data-product-next]");
+  // Only the slides live inside the rotator: the arrows, dots and caption are elsewhere in the
+    // stage, so these stay document-level (one stage per page).
+    const caption = document.querySelector<HTMLElement>("[data-product-caption]");
+  const dots = [...document.querySelectorAll<HTMLButtonElement>("[data-product-dot]")];
+  const previous = document.querySelector<HTMLButtonElement>("[data-product-prev]");
+  const nextButton = document.querySelector<HTMLButtonElement>("[data-product-next]");
   if (slides.length < 2) return;
 
   let index = 0;
@@ -98,7 +100,8 @@ function initProductRotator(): void {
     index = (targetIndex + slides.length) % slides.length;
     slides.forEach((slide, i) => {
       slide.classList.toggle("is-active", i === index);
-      slide.setAttribute("aria-hidden", i === index ? "false" : "true"); slide.tabIndex = i === index ? 0 : -1;
+      slide.setAttribute("aria-hidden", i === index ? "false" : "true");
+        slide.tabIndex = i === index ? 0 : -1;
     });
     dots.forEach((dot, i) => {
       dot.classList.toggle("is-active", i === index);
