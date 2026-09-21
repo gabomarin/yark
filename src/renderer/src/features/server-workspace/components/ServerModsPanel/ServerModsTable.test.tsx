@@ -45,6 +45,32 @@ const rows: ModRow[] = [
 ];
 
 describe("ServerModsTable", () => {
+  it("shows the toggled state immediately while the parent update is pending", async () => {
+    const user = userEvent.setup();
+    const onToggle = vi.fn();
+    render(
+      <AppProviders>
+        <ServerModsTable
+          rows={[{ ...rows[0]!, enabled: false }]}
+          mode="server"
+          busyKey={null}
+          onInspect={vi.fn()}
+          onAdd={vi.fn()}
+          onToggle={onToggle}
+          onRemove={vi.fn()}
+          onOpenExternal={vi.fn()}
+          onReorder={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    const toggle = screen.getByRole("switch", { name: "Enable Alpha Mod" });
+    await user.click(toggle);
+
+    expect(onToggle).toHaveBeenCalledWith("1", true);
+    expect(toggle).toBeChecked();
+  });
+
   it("preserves the switch thumb when its controlled state changes", () => {
     const props = {
       mode: "server" as const,

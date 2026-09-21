@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import { memo, startTransition, useEffect, useState } from "react";
 import { Group, Loader, Switch, Text } from "@mantine/core";
 import type { DataTableColumn } from "mantine-datatable";
 import { ModIdentityCell } from "./ModIdentityCell";
@@ -12,6 +13,36 @@ export { MODS_REORDER_BUSY_KEY, isModsListBusy } from "./serverModsBusy";
 export function isModRowBusy(busyKey: string | null, row: ModRow): boolean {
   return isModsListBusy(busyKey) || busyKey === row.id || busyKey === row.slug || busyKey === `detail:${row.slug}`;
 }
+
+const ModEnabledSwitch = memo(function ModEnabledSwitch(props: {
+  id: string;
+  name: string;
+  enabled: boolean;
+  disabled: boolean;
+  onToggle: (id: string, enabled: boolean) => void;
+}): ReactElement {
+  const [enabled, setEnabled] = useState(props.enabled);
+
+  useEffect(() => {
+    setEnabled(props.enabled);
+  }, [props.enabled]);
+
+  return (
+    <Switch
+      checked={enabled}
+      disabled={props.disabled}
+      aria-label={`${enabled ? "Disable" : "Enable"} ${props.name}`}
+      // Mantine trackLabel is aria-hidden but still intercepts hits; keep
+      // the input as the real click target for mouse + Playwright.
+      styles={{ trackLabel: { pointerEvents: "none" } }}
+      onChange={(event) => {
+        const nextEnabled = event.currentTarget.checked;
+        setEnabled(nextEnabled);
+        startTransition(() => props.onToggle(props.id, nextEnabled));
+      }}
+    />
+  );
+});
 
 export function buildServerModsTableColumns(input: {
   mode: "server" | "discover";
@@ -53,14 +84,12 @@ export function buildServerModsTableColumns(input: {
       render: (row) =>
         row.id === null ? null : (
           <div className={classes.enableControl} onClick={(event) => event.stopPropagation()}>
-            <Switch
-              checked={row.enabled}
+            <ModEnabledSwitch
+              id={row.id}
+              name={row.name}
+              enabled={row.enabled}
               disabled={isModRowBusy(input.busyKey, row)}
-              aria-label={`${row.enabled ? "Disable" : "Enable"} ${row.name}`}
-              // Mantine trackLabel is aria-hidden but still intercepts hits; keep
-              // the input as the real click target for mouse + Playwright.
-              styles={{ trackLabel: { pointerEvents: "none" } }}
-              onChange={(event) => input.onToggle(row.id!, event.currentTarget.checked)}
+              onToggle={input.onToggle}
             />
           </div>
         ),

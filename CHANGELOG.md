@@ -69,7 +69,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
-- Mods **Enabled** switches now animate their thumb instead of jumping when toggled; the drag-enabled table keeps its controls mounted through optimistic updates.
+- Mods **Enabled** switches now animate their thumb instead of jumping when toggled; the drag-enabled table keeps its controls mounted through optimistic updates, and large mod lists start the compositor-driven motion immediately.
 - SteamCMD settings say why an action is locked: an info banner ("SteamCMD is busy" / "Installing SteamCMD", naming the activity and any queued jobs, and what stays locked) plus a one-line tooltip on the disabled control ("SteamCMD is busy", "Set up SteamCMD first") - no more dead-looking buttons that read like a broken path.
 - Disabled buttons keep the shape they have when enabled: Mantine painted every disabled variant with a solid fill, so the workspace Backups **Delete** looked like a filled button with nothing selected and turned text-only once a row selection enabled it. Subtle/transparent buttons now dim instead of gaining a fill.
 - A loopback `AdminListURL` (for example a **Hosted Resources** URL) is now kept verbatim in `GameUserSettings.ini` instead of being rewritten to a `file://` pointer, so the Admins field keeps showing the URL and **Current ids** reads the served list (#564).

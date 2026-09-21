@@ -123,10 +123,22 @@ async function openModsTab(page) {
 async function clickModSwitch(page, ariaPrefix) {
   const switchInput = page.getByRole("switch", { name: new RegExp(`^${ariaPrefix} `, "i") }).first();
   await switchInput.waitFor({ state: "attached", timeout: 10000 });
-  await switchInput.evaluate((el) => {
+  const transition = await switchInput.evaluate((el) => {
     el.scrollIntoView({ block: "center", inline: "center" });
+    const originalThumb = el.parentElement?.querySelector(".mantine-Switch-thumb");
     el.click();
+    const currentThumb = el.parentElement?.querySelector(".mantine-Switch-thumb");
+    return {
+      sameNode: originalThumb === currentThumb,
+      connected: originalThumb?.isConnected ?? false,
+      animationCount: originalThumb?.getAnimations().length ?? 0,
+      transitionProperty: originalThumb ? getComputedStyle(originalThumb).transitionProperty : "",
+    };
   });
+  assert.equal(transition.sameNode, true, "Mods switch thumb should remain mounted while toggling");
+  assert.equal(transition.connected, true, "Mods switch thumb should stay connected while toggling");
+  assert.ok(transition.animationCount > 0, "Mods switch thumb should have an active transition");
+  assert.equal(transition.transitionProperty, "transform");
   return switchInput;
 }
 
