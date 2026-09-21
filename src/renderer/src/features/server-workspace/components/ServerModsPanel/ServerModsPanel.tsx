@@ -146,6 +146,7 @@ export function ServerModsPanel(props: Props): ReactElement {
     metadata,
     cacheRef,
     setBusyKey,
+    setDisabledIds,
     setError,
     setWarning,
     persist,

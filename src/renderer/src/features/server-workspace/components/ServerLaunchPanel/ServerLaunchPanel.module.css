@@ -16,14 +16,13 @@
 }
 
 /*
- * The pinned half of the panel. Capped and scrollable on its own only so a pathologically
- * long argv cannot eat the option grid; in practice the textarea autosizes and the command
- * preview collapses, so this never scrolls.
+ * The pinned half of the panel. It must not scroll or grow: toggling a flag changes the
+ * command's length, and if that resized this block the whole section would jump (and a
+ * scrollbar would appear and disappear) on every switch. The command block inside caps
+ * itself instead, so the layout stays put.
  */
 .footer {
   flex: 0 0 auto;
-  max-height: 50%;
-  overflow-y: auto;
   border-top: 1px solid var(--app-color-border-subtle);
   padding: var(--app-space-sm) var(--app-space-md) var(--app-space-md);
 }
@@ -104,8 +103,16 @@
   outline-offset: 2px;
 }
 
+/*
+ * Capped so a long argv scrolls inside the command block instead of resizing the pinned
+ * footer (which is what made the section flash). `scrollbar-gutter` keeps the reserved
+ * space, so crossing the cap does not shift the text sideways either.
+ */
 .previewCode {
   display: block;
+  max-height: 12rem;
+  overflow: auto;
+  scrollbar-gutter: stable;
   white-space: pre-wrap;
   word-break: break-all;
   font-family: var(--app-font-mono);

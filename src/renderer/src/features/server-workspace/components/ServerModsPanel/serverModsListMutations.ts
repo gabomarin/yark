@@ -9,6 +9,7 @@ interface Input {
   metadata: Map<string, ModMetadata>;
   cacheRef: MutableRefObject<Record<string, ModMetadata>>;
   setBusyKey: Dispatch<SetStateAction<string | null>>;
+  setDisabledIds: Dispatch<SetStateAction<string[]>>;
   setError: Dispatch<SetStateAction<string | null>>;
   setWarning: Dispatch<SetStateAction<string | null>>;
   persist: (nextIds: string[], nextDisabled: string[], nextCache: Record<string, ModMetadata>) => Promise<void>;
@@ -38,15 +39,23 @@ export function createServerModsListMutations(input: Input) {
     }
   };
 
+  /**
+   * Optimistic on purpose. The row's own switch is the control in flight, so it has to show
+   * the new state at once: marking the row busy for the length of the write disabled every
+   * action icon in it (a visible flash) and froze the knob at the old value until the write
+   * landed, which read as a switch with no animation. The refs move with the state so a
+   * second click computes from the optimistic value, and a failed write puts both back.
+   */
   const toggle = async (id: string, enabled: boolean) => {
-    input.setBusyKey(id);
     input.setError(null);
     input.setWarning(null);
     const configuredIds = input.configuredIdsRef.current;
-    const disabledIds = input.disabledIdsRef.current;
+    const previousDisabled = input.disabledIdsRef.current;
     const nextDisabled = enabled
-      ? disabledIds.filter((candidate) => candidate !== id)
-      : [...new Set([...disabledIds, id])];
+      ? previousDisabled.filter((candidate) => candidate !== id)
+      : [...new Set([...previousDisabled, id])];
+    input.disabledIdsRef.current = nextDisabled;
+    input.setDisabledIds(nextDisabled);
     try {
       await input.persist(configuredIds, nextDisabled, input.cacheRef.current);
       if (enabled) {
@@ -54,9 +63,9 @@ export function createServerModsListMutations(input: Input) {
         await input.notifyMapModIfNeeded(id, meta);
       }
     } catch (cause) {
+      input.disabledIdsRef.current = previousDisabled;
+      input.setDisabledIds(previousDisabled);
       input.setError(cause instanceof Error ? cause.message : "Could not update the mod");
-    } finally {
-      input.setBusyKey(null);
     }
   };
 

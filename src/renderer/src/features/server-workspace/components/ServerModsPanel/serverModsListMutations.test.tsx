@@ -31,6 +31,7 @@ describe("createServerModsListMutations", () => {
       metadata: new Map(),
       cacheRef: { current: {} },
       setBusyKey: vi.fn(),
+      setDisabledIds: vi.fn(),
       setError: vi.fn(),
       setWarning: vi.fn(),
       persist,
@@ -44,6 +45,7 @@ describe("createServerModsListMutations", () => {
 
   it("sets the reorder busy key while persisting load order", async () => {
     const setBusyKey = vi.fn();
+    const setDisabledIds = vi.fn();
     let resolvePersist: (() => void) | undefined;
     const persist = vi.fn(
       () =>
@@ -58,6 +60,7 @@ describe("createServerModsListMutations", () => {
       metadata: new Map(),
       cacheRef: { current: {} },
       setBusyKey,
+      setDisabledIds,
       setError: vi.fn(),
       setWarning: vi.fn(),
       persist,
@@ -76,6 +79,7 @@ describe("createServerModsListMutations", () => {
   it("starts new mods disabled and toasts that they are not live yet (#226)", async () => {
     const persist = vi.fn(async () => undefined);
     const setBusyKey = vi.fn();
+    const setDisabledIds = vi.fn();
     const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
     const { add } = createServerModsListMutations({
       configuredIdsRef: { current: ["947033"] },
@@ -83,6 +87,7 @@ describe("createServerModsListMutations", () => {
       metadata: new Map(),
       cacheRef: { current: {} },
       setBusyKey,
+      setDisabledIds,
       setError: vi.fn(),
       setWarning: vi.fn(),
       persist,
@@ -111,6 +116,7 @@ describe("createServerModsListMutations", () => {
       metadata: new Map(),
       cacheRef: { current: {} },
       setBusyKey: vi.fn(),
+      setDisabledIds: vi.fn(),
       setError: vi.fn(),
       setWarning: vi.fn(),
       persist,
@@ -127,6 +133,7 @@ describe("createServerModsListMutations", () => {
       throw new Error("Could not save");
     });
     const setBusyKey = vi.fn();
+    const setDisabledIds = vi.fn();
     const setError = vi.fn();
     const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
     const { add } = createServerModsListMutations({
@@ -135,6 +142,7 @@ describe("createServerModsListMutations", () => {
       metadata: new Map(),
       cacheRef: { current: {} },
       setBusyKey,
+      setDisabledIds,
       setError,
       setWarning: vi.fn(),
       persist,
