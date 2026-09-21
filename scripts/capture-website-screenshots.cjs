@@ -636,6 +636,15 @@ function seedGalleryHostedResources(userData) {
   const now = new Date().toISOString();
   const resources = [
     {
+      id: "gallery-hosted-game-ini",
+      token: "gallery-ini-overrides-9sK4dR9tY2wF7mN8qP1vX",
+      displayName: "Game.ini overrides",
+      format: "ini",
+      notes: "Per-map multiplier overrides served locally",
+      tags: JSON.stringify(["ini"]),
+      content: "[ServerSettings]\nTamingSpeedMultiplier=2.0\nXPMultiplier=2.0\n",
+    },
+    {
       id: "gallery-hosted-admin-list",
       token: "gallery-admin-list-7f3kL2mQ9xR4vN8pT6yW1zC5",
       displayName: "Admin whitelist",

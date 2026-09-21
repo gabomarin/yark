@@ -253,30 +253,6 @@ a.site-nav-download:focus-visible {
   padding: clamp(2rem, 8vh, 4.5rem) 1.5rem 1.75rem;
 }
 
-.brand-lockup {
-  display: block;
-  width: min(100%, 22rem);
-  height: auto;
-  margin: 0 0 1.35rem;
-  filter: drop-shadow(0 18px 40px rgba(126, 200, 227, 0.12));
-}
-
-.brand-lockup picture,
-.brand-lockup img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-.hero-title {
-  margin: 0 0 0.85rem;
-  max-width: 36rem;
-  color: var(--text);
-  font-size: clamp(1.15rem, 2.4vw, 1.45rem);
-  font-weight: 650;
-  line-height: 1.35;
-  letter-spacing: -0.01em;
-}
 
 .lede {
   margin: 0 0 1.6rem;
@@ -337,13 +313,6 @@ a.cta.primary:focus-visible {
   color: var(--cryo);
 }
 
-.status-pill {
-  margin: 0;
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.02em;
-}
 
 .release-trust {
   max-width: 38rem;
@@ -590,26 +559,8 @@ a.cta.primary:focus-visible {
   margin: 0 auto;
 }
 
-.showcase-eyebrow {
-  margin: 0 0 0.35rem;
-  font-family: var(--mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--cryo);
-}
 
-.showcase-title {
-  margin: 0 0 0.5rem;
-  font-size: clamp(1.35rem, 3vw, 1.75rem);
-  letter-spacing: -0.02em;
-}
 
-.showcase-lede {
-  margin: 0 0 1.75rem;
-  max-width: 40rem;
-  color: var(--muted);
-}
 
 .shots {
   display: grid;
@@ -1015,3 +966,14 @@ code {
 .text-link span { color: var(--cryo); transition: transform 160ms var(--ease-out); }
 .text-link:hover { color: var(--cryo); }
 .text-link:hover span { transform: translateX(.2rem); }
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
