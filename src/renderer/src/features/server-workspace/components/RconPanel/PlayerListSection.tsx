@@ -18,7 +18,9 @@ export interface PlayerListState {
   loading: boolean;
 }
 
-function starLabel(isAdmin: boolean, name: string | null | undefined): string {
+function starLabel(isAdmin: boolean, name: string | null | undefined, editable: boolean): string {
+  if (!editable)
+    return isAdmin ? `${name ?? "This survivor"} is an admin` : `${name ?? "This survivor"} is not an admin`;
   if (isAdmin) return "Remove from admin list";
   return name ? `Add ${name} to admin list` : "Add to admin list";
 }
@@ -192,7 +194,7 @@ export function PlayerListSection(props: Props): ReactElement {
                   {props.playerList.players.map((player) => {
                     const busy = actionKey === player.key;
                     const name = resolvePlayerDisplayName(player.key, player.name, nameById);
-                    const isAdmin = adminMembership.editable && adminMembership.isMember(player.key);
+                    const isAdmin = adminMembership.isMember(player.key);
                     const starDisabled = !adminMembership.editable || adminMembership.busyKey !== null;
                     return (
                       <PlayerIdentityRow
@@ -201,13 +203,13 @@ export function PlayerListSection(props: Props): ReactElement {
                         playerKey={player.key}
                         actions={
                           <>
-                            {adminMembership.editable ? (
-                              <Tooltip label={starLabel(isAdmin, player.name)}>
+                            {adminMembership.visible ? (
+                              <Tooltip label={starLabel(isAdmin, name, adminMembership.editable)}>
                                 <ActionIcon
                                   size="xs"
                                   variant="subtle"
                                   color={isAdmin ? "yellow" : undefined}
-                                  aria-label={starLabel(isAdmin, player.name)}
+                                  aria-label={starLabel(isAdmin, name, adminMembership.editable)}
                                   loading={adminMembership.busyKey === player.key}
                                   disabled={starDisabled}
                                   onClick={() =>

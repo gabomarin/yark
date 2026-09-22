@@ -9,7 +9,7 @@ import {
   notifyHostedResourcesDiagnosticsUpdated,
 } from "@features/hosted-resources/hooks/useHostedResourcesHealth";
 import { useHostedResourceOptions } from "@features/hosted-resources/hooks/useHostedResourceOptions";
-import { isAdminListEditable, runAdminListEditMember } from "./useAdminListMembership";
+import { isAdminListEditable, isAdminListUrlMode, runAdminListEditMember } from "./useAdminListMembership";
 
 function normalizeInterval(value: number | string): number {
   const raw = typeof value === "number" ? value : Number.parseFloat(String(value));
@@ -44,7 +44,7 @@ export function useAdminsSection(args: UseAdminsSectionArgs) {
 
   const applyStateToDrafts = useCallback((next: AdminListStateDto): void => {
     setState(next);
-    const url = next.mode === "remote" || next.mode === "loopback" ? next.adminListUrl : "";
+    const url = isAdminListUrlMode(next.mode) ? next.adminListUrl : "";
     setUrlDraft(url);
     setIntervalDraft(next.updateAllowedCheatersInterval);
     setSavedUrl(url);

@@ -4,6 +4,7 @@ import type { AdminListStateDto } from "@shared/ipc";
 import type { KeyboardEvent, ReactElement } from "react";
 import { useState } from "react";
 import { PlayerIdentityRow, resolvePlayerDisplayName } from "./PlayerIdentityRow";
+import { isAdminListUrlMode } from "./useAdminListMembership";
 import classes from "./RconPanel.module.css";
 
 interface AddIdRowProps {
@@ -127,7 +128,7 @@ function AdminEntriesBody({
   if (state !== null && state.entries.length === 0 && !state.listError) {
     return (
       <Text size="sm" c="dimmed">
-        {state.mode === "remote" || state.mode === "loopback" ? "No ids in the list." : "No list URL set."}
+        {isAdminListUrlMode(state.mode) ? "No ids in the list." : "No list URL set."}
       </Text>
     );
   }

@@ -4,7 +4,7 @@ import type { AdminListStateDto } from "@shared/ipc";
 import { resetHostedResourceOptionsSnapshot } from "@features/hosted-resources/hooks/useHostedResourceOptions";
 import { notifyHostedResourcesDiagnosticsUpdated } from "@features/hosted-resources/hooks/useHostedResourcesHealth";
 import { useAdminsSection } from "./useAdminsSection";
-import { runAdminListEditMember, useAdminListMembership } from "./useAdminListMembership";
+import { isAdminListUrlMode, runAdminListEditMember, useAdminListMembership } from "./useAdminListMembership";
 
 const { showOperatorToast } = vi.hoisted(() => ({
   showOperatorToast: vi.fn(),
@@ -97,6 +97,14 @@ describe("useAdminsSection", () => {
 
   afterEach(() => {
     cleanup();
+  });
+
+  it("recognizes remote and loopback AdminListURL modes", () => {
+    expect(isAdminListUrlMode("remote")).toBe(true);
+    expect(isAdminListUrlMode("loopback")).toBe(true);
+    expect(isAdminListUrlMode("local")).toBe(false);
+    expect(isAdminListUrlMode("misconfigured")).toBe(false);
+    expect(isAdminListUrlMode(undefined)).toBe(false);
   });
 
   it("marks draft dirty when URL or interval change and clears dirty after discard", async () => {
@@ -288,6 +296,22 @@ describe("useAdminsSection", () => {
     await waitFor(() => {
       expect(result.current.editable).toBe(false);
     });
+  });
+
+  it("keeps remote membership visible for read-only Survivors stars", async () => {
+    vi.mocked(window.api.getAdminList).mockResolvedValue({
+      ok: true,
+      data: remoteState(),
+    });
+
+    const { result } = renderHook(() => useAdminListMembership("srv-1"));
+
+    await waitFor(() => {
+      expect(result.current.visible).toBe(true);
+      expect(result.current.editable).toBe(false);
+    });
+    expect(result.current.isMember("0002E03AF5F4487985E94C6BA4080369")).toBe(true);
+    expect(result.current.isMember("0002aaaaaaaaaaaaaaaaaaaaaaaaaaaa")).toBe(false);
   });
 
   it("never counts ids from the local AllowedCheaterAccountIDs.txt file as admins", async () => {
