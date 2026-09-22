@@ -88,7 +88,7 @@ export function WorkspaceTabs(props: Props): ReactElement {
   useEffect(() => {
     // Only ever apply a focus, never clear one: consuming it flips the prop to undefined,
     // and clearing here would undo the focus the operator just asked for.
-    if (initialRconFocus == null) return;
+    if (initialRconFocus === undefined || initialRconFocus === null) return;
     setRconPlayersFocus(initialRconFocus);
     onRconFocusConsumed?.();
   }, [initialRconFocus, onRconFocusConsumed]);

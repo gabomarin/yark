@@ -31,6 +31,7 @@ describe("summarizeHostedResourcesHealth", () => {
       key: "AdminListURL",
       url: "http://127.0.0.1:8935/r/resource-1",
       status: "stale-port" as const,
+      source: "ini" as const,
     };
     const summary = summarizeHostedResourcesHealth(diagnostics({ references: [reference] }));
 
@@ -46,6 +47,7 @@ describe("summarizeHostedResourcesHealth", () => {
       key: "AdminListURL",
       url: "http://127.0.0.1:8935/r/resource-1",
       status: "current" as const,
+      source: "ini" as const,
     };
 
     expect(

@@ -514,6 +514,7 @@ describe("hosted resources HTTP host", () => {
         key: "AdminListURL",
         url: resource.url,
         status: "current",
+        source: "ini",
       },
     ]);
   });
@@ -545,6 +546,7 @@ describe("hosted resources HTTP host", () => {
         key: "CustomNotificationURL",
         url: resource.url,
         status: "current",
+        source: "launch-arg",
       },
     ]);
   });
@@ -577,6 +579,30 @@ describe("hosted resources HTTP host", () => {
       expect(reference.url).toBe(resource.url);
       expect(reference.status).toBe("current");
     }
+    // The INI row and the launch flag are separate surfaces the operator fixes differently.
+    expect(diagnostics.references.map((reference) => reference.source)).toEqual(["ini", "launch-arg"]);
+  });
+
+  it("keeps the same key from two INI sections as two references", async () => {
+    const tokenHolder: { url: string } = { url: "" };
+    const harness = createHarness(() => [
+      {
+        serverId: "s1",
+        serverName: "Island",
+        text: `[ServerSettings]\nAdminListURL=${tokenHolder.url}\n[MyMod]\nAdminListURL=${tokenHolder.url}\n`,
+      },
+    ]);
+    await startServing(harness);
+    const resource = harness.service.createResource({
+      displayName: "Admins",
+      format: "text",
+      content: "EOSID1",
+    });
+    tokenHolder.url = resource.url;
+
+    const diagnostics = await harness.service.runDiagnostics();
+    expect(diagnostics.references.map((reference) => reference.source)).toEqual(["ini", "ini"]);
+    expect(diagnostics.references).toHaveLength(2);
   });
 
   it("marks references that still use the previous serving port", async () => {

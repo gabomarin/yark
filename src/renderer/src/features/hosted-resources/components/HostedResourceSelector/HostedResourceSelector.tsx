@@ -4,6 +4,7 @@ import { Plus } from "@phosphor-icons/react";
 import { HOSTED_RESOURCE_KIND_LABELS } from "@shared/settings/hosted-resources";
 import type { HostedResourceConsumer } from "@shared/settings/hosted-resource-consumers";
 import {
+  assignmentIssueColor,
   assignmentIssueMessage,
   classifyHostedResourceValue,
   compatibleResources,
@@ -24,21 +25,25 @@ interface Props {
 }
 
 /**
- * Searchable URL field for a setting that accepts a Hosted Resource (#577). Typing a URL
- * still works — the dropdown only adds discovery, and nothing here rewrites the value.
+ * URL field for a setting that accepts a Hosted Resource (#577). Typing a URL still works —
+ * the dropdown adds discovery only, it opens on click so a typed value is never replaced by
+ * a highlighted option, and nothing here rewrites the value.
  */
 export function HostedResourceSelector(props: Props): ReactElement {
   const combobox = useCombobox({ onDropdownClose: () => combobox.resetSelectedOption() });
-  const { resources, hostEnabled, reload } = useHostedResourceOptions();
-  const create = useHostedResourceQuickCreate(props.consumer, (url) => {
+  const { resources, hostEnabled, loaded, reload } = useHostedResourceOptions();
+  const create = useHostedResourceQuickCreate(props.consumer, async (url) => {
+    // Refetch before handing the URL back: otherwise the just-created token is classified
+    // against the old list and flashes "no current resource serves it".
+    await reload();
     props.onChange(url);
-    // Without the refetch the just-created URL has no matching resource here, and the field
-    // flags it as "no current resource serves it".
-    void reload();
   });
   const options = compatibleResources(resources, props.consumer);
   const assignment = classifyHostedResourceValue(props.value, resources, props.consumer);
-  const issue = assignmentIssueMessage(assignment, props.consumer);
+  // Until the catalog has loaded, an unmatched token may simply not be listed yet.
+  const missingHidden = !loaded && assignment.issue === "missing";
+  const issue = missingHidden ? null : assignmentIssueMessage(assignment, props.consumer);
+  const issueColor = missingHidden || assignment.issue === null ? null : assignmentIssueColor(assignment.issue);
   const kindLabel = HOSTED_RESOURCE_KIND_LABELS[props.consumer.kind];
   const isEmpty = props.value.trim().length === 0;
 
@@ -97,15 +102,8 @@ export function HostedResourceSelector(props: Props): ReactElement {
           </Combobox.Dropdown>
         </Combobox>
 
-        {issue !== null ? (
-          <Text
-            size="xs"
-            c={
-              assignment.issue === "missing" || assignment.issue === "disabled" || assignment.issue === "stale-port"
-                ? "red"
-                : "attention"
-            }
-          >
+        {issue !== null && issueColor !== null ? (
+          <Text size="xs" c={issueColor}>
             {issue}
           </Text>
         ) : null}

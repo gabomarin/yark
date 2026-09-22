@@ -6,6 +6,8 @@ interface HostedResourceOptions {
   resources: HostedResourceLike[];
   /** False when the loopback host is off; creating still works, nothing is served yet. */
   hostEnabled: boolean;
+  /** False until the first overview response lands, so callers can hold back "missing". */
+  loaded: boolean;
   /** Refetch after a resource is created while a selector is mounted. */
   reload: () => Promise<void>;
 }
@@ -13,9 +15,10 @@ interface HostedResourceOptions {
 interface HostedResourceOptionsSnapshot {
   resources: HostedResourceLike[];
   hostEnabled: boolean;
+  loaded: boolean;
 }
 
-const EMPTY_SNAPSHOT: HostedResourceOptionsSnapshot = { resources: [], hostEnabled: false };
+const EMPTY_SNAPSHOT: HostedResourceOptionsSnapshot = { resources: [], hostEnabled: false, loaded: false };
 
 /**
  * One overview per app, shared by every mounted selector: opening the Visual INI tab or a
@@ -24,6 +27,12 @@ const EMPTY_SNAPSHOT: HostedResourceOptionsSnapshot = { resources: [], hostEnabl
 let snapshot: HostedResourceOptionsSnapshot = EMPTY_SNAPSHOT;
 let inflight: Promise<void> | null = null;
 const listeners = new Set<() => void>();
+
+/** Drop the module snapshot so renderer suites do not inherit another test's options. */
+export function resetHostedResourceOptionsSnapshot(): void {
+  snapshot = EMPTY_SNAPSHOT;
+  inflight = null;
+}
 
 function toLike(resource: HostedResourceDto): HostedResourceLike {
   return {
@@ -36,10 +45,6 @@ function toLike(resource: HostedResourceDto): HostedResourceLike {
   };
 }
 
-function emit(): void {
-  for (const listener of listeners) listener();
-}
-
 /** Refetch the catalog once, no matter how many selectors ask at the same time. */
 async function loadHostedResourceOptions(): Promise<void> {
   if (inflight !== null) return inflight;
@@ -50,8 +55,9 @@ async function loadHostedResourceOptions(): Promise<void> {
         snapshot = {
           resources: result.data.resources.map(toLike),
           hostEnabled: result.data.state.enabled,
+          loaded: true,
         };
-        emit();
+        for (const listener of listeners) listener();
       }
     } catch {
       // Selector degrades to a plain URL field.
@@ -72,12 +78,18 @@ export function useHostedResourceOptions(): HostedResourceOptions {
   useEffect(() => {
     const listener = () => setValue(snapshot);
     listeners.add(listener);
-    // Revalidate on mount so a selector opened later never shows a stale list.
-    void loadHostedResourceOptions().then(listener);
+    // Revalidate on mount so a selector opened later never shows a stale list. Only a
+    // successful load notifies, so a failure cannot re-render every selector for nothing.
+    void loadHostedResourceOptions();
     return () => {
       listeners.delete(listener);
     };
   }, []);
 
-  return { resources: value.resources, hostEnabled: value.hostEnabled, reload: loadHostedResourceOptions };
+  return {
+    resources: value.resources,
+    hostEnabled: value.hostEnabled,
+    loaded: value.loaded,
+    reload: loadHostedResourceOptions,
+  };
 }

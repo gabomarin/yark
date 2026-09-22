@@ -33,7 +33,8 @@ export function HostedResourceCard(props: Props): ReactElement {
   const badge = resourceStateBadge(resource, props.diagnosticStatus);
   const versionLabel = resourceVersionLabel(resource);
   const hasPreviousPortReference = props.referenceIssues.some((reference) => reference.status === "stale-port");
-  const hasDisabledReference = props.referenceIssues.some((reference) => reference.status === "disabled");
+  // Pick the disabled one explicitly: the list can mix statuses, so `[0]` may be stale-port.
+  const disabledReference = props.referenceIssues.find((reference) => reference.status === "disabled");
   return (
     <AppSurfaceCard radius={0} data-hosted-resource-card={resource.id}>
       <Stack gap="xs">
@@ -51,7 +52,7 @@ export function HostedResourceCard(props: Props): ReactElement {
                 Previous port
               </Badge>
             )}
-            {hasDisabledReference && (
+            {disabledReference !== undefined && (
               <Badge variant="light" color="attention">
                 Referenced while disabled
               </Badge>
@@ -105,12 +106,14 @@ export function HostedResourceCard(props: Props): ReactElement {
         {props.referenceIssues.length > 0 && (
           <Stack gap={2}>
             <Text size="sm" c="attention" fw={600}>
-              {hasDisabledReference
-                ? disabledReferenceMessage(props.referenceIssues)
+              {disabledReference !== undefined
+                ? disabledReferenceMessage(disabledReference)
                 : "Some server settings still use a previous URL for this resource."}
             </Text>
             {props.referenceIssues.map((reference) => (
-              <Text key={`${reference.serverId}:${reference.key}`} size="xs" c="dimmed">
+              // The same server can legitimately hold one key twice (INI row and launch
+              // flag), so the URL is part of the key too.
+              <Text key={`${reference.serverId}:${reference.key}:${reference.url}`} size="xs" c="dimmed">
                 Fix in{" "}
                 <Anchor component="button" type="button" size="xs" onClick={() => props.onOpenReference(reference)}>
                   {reference.serverName} · {referenceLocation(reference.key)}
@@ -161,13 +164,8 @@ export function HostedResourceCard(props: Props): ReactElement {
   );
 }
 
-function disabledReferenceMessage(references: HostedResourceReferenceDto[]): string {
-  const [reference] = references;
-  // `length === 1` guarantees the element, but the index is still `| undefined` by type.
-  if (references.length === 1 && reference !== undefined) {
-    return `This resource is disabled, but the ${referenceLocation(reference.key)} setting still references it.`;
-  }
-  return "This resource is disabled, but server settings still reference it.";
+function disabledReferenceMessage(reference: HostedResourceReferenceDto): string {
+  return `This resource is disabled, but the ${referenceLocation(reference.key)} setting still references it.`;
 }
 
 function referenceLocation(key: string): string {

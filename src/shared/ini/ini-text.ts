@@ -313,7 +313,10 @@ export function setIniTextValue(text: string, section: string, key: string, valu
       continue;
     }
 
-    if (index === commentedSlotIndex) {
+    // `!found` matters when the same section name appears twice: the first block already
+    // got its assignment from `flushMissingKeyBeforeLeavingSection`, and uncommenting the
+    // slot in the second block would leave two live assignments for one key.
+    if (index === commentedSlotIndex && !found) {
       const indent = line.match(/^\s*/)?.[0] ?? "";
       result.push(`${indent}${key}=${value}`);
       found = true;

@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import type { HostedResourceConsumer } from "@shared/settings/hosted-resource-consumers";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
+import { parseTagsText } from "../model/hostedResourcesPageModel";
 import type { HostedResourceEditorDraft } from "./useHostedResourcesPage";
 
 interface HostedResourceQuickCreate {
@@ -20,7 +21,8 @@ interface HostedResourceQuickCreate {
  */
 export function useHostedResourceQuickCreate(
   consumer: HostedResourceConsumer,
-  onCreated: (url: string) => void,
+  /** May return a promise: the selector refetches its catalog before the value is applied. */
+  onCreated: (url: string) => void | Promise<void>,
 ): HostedResourceQuickCreate {
   const [draft, setDraft] = useState<HostedResourceEditorDraft | null>(null);
   const [busy, setBusy] = useState(false);
@@ -56,10 +58,7 @@ export function useHostedResourceQuickCreate(
       showOperatorError("Add the content before saving.");
       return;
     }
-    const tags = draft.tagsText
-      .split(",")
-      .map((tag) => tag.trim())
-      .filter(Boolean);
+    const tags = parseTagsText(draft.tagsText);
     setBusy(true);
     void runWithFinally(
       async () => {
@@ -76,7 +75,7 @@ export function useHostedResourceQuickCreate(
             showOperatorError(result.error, "Could not create the resource");
             return;
           }
-          onCreated(result.data.url);
+          await onCreated(result.data.url);
           showOperatorToast({
             title: "Resource published",
             message: "The URL is now assigned to this field. Save to keep it.",

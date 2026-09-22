@@ -25,12 +25,15 @@ import type { WorkspaceTab } from "@features/server-workspace/ServerWorkspacePag
 
 /**
  * Where a hosted-resources reference opens: the surface its setting is edited on, not the
- * tab its key name suggests, so a reference never lands where it cannot be fixed. Keys that
- * are not in the consumer catalog (a mod's own INI row or launch flag) only exist in the INI
- * editor, so that is the fallback.
+ * tab its key name suggests, so a reference never lands where it cannot be fixed. A launch
+ * flag can only be fixed in the Launch tab whatever key carries it, and a key that is not
+ * in the consumer catalog only exists in the INI editor.
  */
-function referenceTargetFor(key: string): { tab: WorkspaceTab; rconFocus?: "admins" } {
-  switch (consumerForSetting(key)?.surface) {
+function referenceTargetFor(reference: HostedResourceReferenceDto): { tab: WorkspaceTab; rconFocus?: "admins" } {
+  if (reference.source === "launch-arg") {
+    return { tab: "launch" };
+  }
+  switch (consumerForSetting(reference.key)?.surface) {
     case "rcon-admins":
       return { tab: "rcon", rconFocus: "admins" };
     case "launch-option":
@@ -228,7 +231,7 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
         page: (
           <HostedResourcesPage
             onOpenReference={(reference: HostedResourceReferenceDto) => {
-              const target = referenceTargetFor(reference.key);
+              const target = referenceTargetFor(reference);
               setOverlay({
                 kind: "workspace",
                 serverId: reference.serverId,

@@ -95,7 +95,9 @@ export function AppWorkspaceOverlay(props: AppWorkspaceOverlayProps): ReactEleme
             kind: "workspace",
             serverId,
             initialTab: overlay.initialTab,
-            initialRconFocus: overlay.initialRconFocus,
+            // A reference's focus belongs to the server it was opened for; like logsFocus,
+            // it must not leak onto a server the reference was never about.
+            initialRconFocus: undefined,
             logsFocus: null,
           })
         }

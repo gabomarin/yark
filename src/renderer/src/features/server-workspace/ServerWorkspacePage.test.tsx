@@ -1462,6 +1462,7 @@ describe("ServerWorkspacePage", () => {
             key: "AdminListURL",
             url: "http://127.0.0.1:8935/r/resource-1",
             status: "stale-port",
+            source: "ini",
           },
         ],
         onOpenHostedResources,
@@ -1470,7 +1471,9 @@ describe("ServerWorkspacePage", () => {
 
     expect(screen.getByText("Hosted resource references need attention")).toBeInTheDocument();
     expect(
-      screen.getByText(/One setting on this server points at a hosted resource that cannot be fetched\./),
+      screen.getByText(
+        /One setting on this server points at a hosted resource that is disabled or uses an outdated URL\./,
+      ),
     ).toBeInTheDocument();
     screen.getByRole("button", { name: "Open Hosted Resources diagnostics" }).click();
     expect(onOpenHostedResources).toHaveBeenCalledOnce();

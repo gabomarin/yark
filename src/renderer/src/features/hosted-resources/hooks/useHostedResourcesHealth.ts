@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { HostedResourcesDiagnosticsDto } from "@shared/ipc";
 import { summarizeHostedResourcesHealth, type HostedResourcesHealthSummary } from "../model/hostedResourcesHealth";
 
@@ -6,6 +6,7 @@ const HOSTED_RESOURCES_DIAGNOSTICS_UPDATED_EVENT = "yark:hosted-resources-diagno
 export const HOSTED_RESOURCES_DIAGNOSTICS_LOADED_EVENT = "yark:hosted-resources-diagnostics-loaded";
 
 let cachedDiagnostics: HostedResourcesDiagnosticsDto | null = null;
+let inflightDiagnostics: Promise<HostedResourcesDiagnosticsDto | null> | null = null;
 
 export function getCachedHostedResourcesDiagnostics(): HostedResourcesDiagnosticsDto | null {
   return cachedDiagnostics;
@@ -14,6 +15,7 @@ export function getCachedHostedResourcesDiagnostics(): HostedResourcesDiagnostic
 /** Drop the module snapshot so renderer suites do not inherit another test's diagnostics. */
 export function resetHostedResourcesDiagnosticsSnapshot(): void {
   cachedDiagnostics = null;
+  inflightDiagnostics = null;
 }
 
 /** Publish a fresh snapshot to the shared cache; every consumer renders from it. */
@@ -26,20 +28,36 @@ export function notifyHostedResourcesDiagnosticsUpdated(): void {
   window.dispatchEvent(new Event(HOSTED_RESOURCES_DIAGNOSTICS_UPDATED_EVENT));
 }
 
+/**
+ * One probe at a time: concurrent triggers (mount + event fan-out) share the same request,
+ * so a slower stale response cannot land after a newer one and overwrite the cache.
+ */
+async function fetchHostedResourcesDiagnostics(): Promise<HostedResourcesDiagnosticsDto | null> {
+  if (inflightDiagnostics !== null) return inflightDiagnostics;
+  inflightDiagnostics = (async () => {
+    try {
+      const result = await window.api.getHostedResourcesDiagnostics();
+      return result?.ok === true ? result.data : null;
+    } catch {
+      // The sidebar stays neutral when diagnostics are not available yet.
+      return null;
+    } finally {
+      inflightDiagnostics = null;
+    }
+  })();
+  return inflightDiagnostics;
+}
+
 export function useHostedResourcesHealth(): HostedResourcesHealthSummary {
   const [diagnostics, setDiagnostics] = useState<HostedResourcesDiagnosticsDto | null>(cachedDiagnostics);
 
   useEffect(() => {
     let active = true;
     const load = async () => {
-      try {
-        const result = await window.api.getHostedResourcesDiagnostics();
-        if (active && result?.ok === true) {
-          setCachedHostedResourcesDiagnostics(result.data);
-          setDiagnostics(result.data);
-        }
-      } catch {
-        // The sidebar stays neutral when diagnostics are not available yet.
+      const data = await fetchHostedResourcesDiagnostics();
+      if (active && data !== null) {
+        setCachedHostedResourcesDiagnostics(data);
+        setDiagnostics(data);
       }
     };
     // Render from the cache another consumer just published; never refetch on this event.
@@ -59,5 +77,7 @@ export function useHostedResourcesHealth(): HostedResourcesHealthSummary {
     };
   }, []);
 
-  return summarizeHostedResourcesHealth(diagnostics);
+  // The summary builds fresh Maps/arrays; memoizing it keeps downstream prop identities
+  // stable across the AppShell's frequent re-renders while the snapshot is unchanged.
+  return useMemo(() => summarizeHostedResourcesHealth(diagnostics), [diagnostics]);
 }

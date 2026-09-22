@@ -13,6 +13,7 @@ import {
 } from "@shared/settings/hosted-resources";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
+import { parsePortDraft, parseTagsText } from "../model/hostedResourcesPageModel";
 import { openDangerConfirmModal, dangerConfirmBody } from "@ui/DangerConfirmModal/openDangerConfirmModal";
 import {
   getCachedHostedResourcesDiagnostics,
@@ -21,12 +22,14 @@ import {
 } from "./useHostedResourcesHealth";
 
 /**
- * A missing / crashed IPC handler rejects instead of returning `IpcResult`,
- * which would otherwise strand the page on its loading state.
+ * A missing / crashed IPC handler rejects instead of returning `IpcResult`, and an unwired
+ * one can resolve `undefined` despite the type. Both are normalized to a failed result here
+ * so callers can trust `result.ok` instead of re-checking for `undefined` at every call.
  */
 async function attempt<T>(run: () => Promise<IpcResult<T>>): Promise<IpcResult<T>> {
   try {
-    return await run();
+    const result: IpcResult<T> | undefined = await run();
+    return result ?? { ok: false, error: "The request failed." };
   } catch (error) {
     return {
       ok: false,
@@ -153,8 +156,8 @@ export function useHostedResourcesPage(): HostedResourcesController {
     await runWithFinally(
       async () => {
         const result = await attempt(() => window.api.getHostedResourcesDiagnostics());
-        if (result === undefined || !result.ok) {
-          showOperatorError(result?.error ?? "The diagnostics request failed.", "Diagnostics failed");
+        if (!result.ok) {
+          showOperatorError(result.error, "Diagnostics failed");
           return;
         }
         // One fan-out point: publish to the shared cache, whose LOADED event updates
@@ -168,22 +171,21 @@ export function useHostedResourcesPage(): HostedResourcesController {
     );
   }, []);
 
+  /** Invalidate the snapshot and re-probe: every state change that can alter what is served. */
+  const refreshDiagnostics = useCallback(() => {
+    setDiagnostics(null);
+    void runDiagnostics();
+  }, [runDiagnostics]);
+
   const toggleEnabled = useCallback(
     async (enabled: boolean) => {
-      await applyState(
-        "toggle",
-        () => window.api.setHostedResourcesEnabled(enabled),
-        () => {
-          setDiagnostics(null);
-          void runDiagnostics();
-        },
-      );
+      await applyState("toggle", () => window.api.setHostedResourcesEnabled(enabled), refreshDiagnostics);
     },
-    [applyState, runDiagnostics],
+    [applyState, refreshDiagnostics],
   );
 
   const applyPort = useCallback(async () => {
-    const port = typeof portDraft === "number" ? portDraft : Number.parseInt(portDraft.replaceAll(",", ""), 10);
+    const port = parsePortDraft(portDraft);
     if (!Number.isInteger(port) || port < 1024 || port > 65535) {
       showOperatorError("Port must be between 1024 and 65535.");
       return;
@@ -195,8 +197,7 @@ export function useHostedResourcesPage(): HostedResourcesController {
       () => {
         // The port is stored even when it did not change, so always re-probe: a cleared
         // snapshot must not outlive the change, and the toast is a separate concern.
-        setDiagnostics(null);
-        void runDiagnostics();
+        refreshDiagnostics();
         if (previousPort !== undefined && previousPort !== port) {
           showOperatorToast({
             title: "Serving port changed",
@@ -205,7 +206,7 @@ export function useHostedResourcesPage(): HostedResourcesController {
         }
       },
     );
-  }, [applyState, overview?.state.port, portDraft, runDiagnostics]);
+  }, [applyState, overview?.state.port, portDraft, refreshDiagnostics]);
 
   const openCreate = useCallback(() => {
     setEditor({
@@ -259,10 +260,7 @@ export function useHostedResourcesPage(): HostedResourcesController {
       showOperatorError("Add the new content before saving.");
       return;
     }
-    const tags = editor.tagsText
-      .split(",")
-      .map((tag) => tag.trim())
-      .filter(Boolean);
+    const tags = parseTagsText(editor.tagsText);
     setBusy("editor");
     await runWithFinally(
       async () => {
@@ -355,14 +353,7 @@ export function useHostedResourcesPage(): HostedResourcesController {
   const toggleResourceEnabled = useCallback(
     (resource: HostedResourceDto, enabled: boolean) => {
       if (enabled) {
-        void applyState(
-          "enable",
-          () => window.api.setHostedResourceEnabled(resource.id, true),
-          () => {
-            setDiagnostics(null);
-            void runDiagnostics();
-          },
-        );
+        void applyState("enable", () => window.api.setHostedResourceEnabled(resource.id, true), refreshDiagnostics);
         return;
       }
       openDangerConfirmModal({
@@ -372,18 +363,11 @@ export function useHostedResourcesPage(): HostedResourcesController {
           `"${resource.displayName}" stops serving immediately, including after a restart. Revisions stay listed and you can re-enable it anytime.`,
         ),
         onConfirm: () => {
-          void applyState(
-            "disable",
-            () => window.api.setHostedResourceEnabled(resource.id, false),
-            () => {
-              setDiagnostics(null);
-              void runDiagnostics();
-            },
-          );
+          void applyState("disable", () => window.api.setHostedResourceEnabled(resource.id, false), refreshDiagnostics);
         },
       });
     },
-    [applyState, runDiagnostics],
+    [applyState, refreshDiagnostics],
   );
 
   const confirmDelete = useCallback(

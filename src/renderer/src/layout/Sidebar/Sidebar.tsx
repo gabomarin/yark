@@ -124,11 +124,13 @@ export function Sidebar(props: Props): ReactElement {
 
   const versionTooltip = officialVersionTooltip(props.officialVersion, props.officialNetworkStatus);
   const hostedResourcesHealth = props.hostedResourcesHealth ?? "neutral";
-  const hostedResourcesHealthMeta = {
-    neutral: { color: "gray" as const, label: "Hosted Resources health not checked" },
-    healthy: { color: "ok" as const, label: "Hosted Resources healthy" },
-    warning: { color: "attention" as const, label: "Hosted Resources need attention" },
-    error: { color: "red" as const, label: "Hosted Resources unavailable" },
+  // Label only: the icon colour comes from `hostedResourcesIconColor` below, so keeping a
+  // second colour map here would just invite the two to drift apart.
+  const hostedResourcesHealthLabel = {
+    neutral: "Hosted Resources health not checked",
+    healthy: "Hosted Resources healthy",
+    warning: "Hosted Resources need attention",
+    error: "Hosted Resources unavailable",
   }[hostedResourcesHealth];
   const hostedResourcesIconColor = {
     neutral: undefined,
@@ -179,7 +181,7 @@ export function Sidebar(props: Props): ReactElement {
               Experimental
             </Badge>
           ) : undefined;
-          const itemTooltip = item.id === "hostedResources" ? hostedResourcesHealthMeta.label : item.label;
+          const itemTooltip = item.id === "hostedResources" ? hostedResourcesHealthLabel : item.label;
           const icon = (
             <Icon
               size={navIconSize}

@@ -10,7 +10,12 @@ import { LoadingState } from "@ui/LoadingState/LoadingState";
 import { DismissibleHint } from "@ui/DismissibleHint/DismissibleHint";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { hasDiagnosticWarning } from "./model/hostedResourcesHealth";
-import { listeningBadge, resolveHeaderAlert, summarizeReferences } from "./model/hostedResourcesPageModel";
+import {
+  listeningBadge,
+  parsePortDraft,
+  resolveHeaderAlert,
+  summarizeReferences,
+} from "./model/hostedResourcesPageModel";
 import { useHostedResourcesPage } from "./hooks/useHostedResourcesPage";
 import { HostedResourceCard } from "./components/HostedResourceCard/HostedResourceCard";
 import { HostedResourceEditorModal } from "./components/HostedResourceEditorModal/HostedResourceEditorModal";
@@ -18,11 +23,6 @@ import { HostedResourceRevisionsModal } from "./components/HostedResourceRevisio
 import classes from "./HostedResourcesPage.module.css";
 
 const EXPERIMENTAL_HINT_STORAGE_KEY = "yark.hostedResources.experimentalHint.dismissed.v1";
-
-/** Mirrors how `applyPort` parses the draft: Mantine can hand back "" or "8,080" mid-edit. */
-function parsePortDraft(value: number | string): number {
-  return typeof value === "number" ? value : Number.parseInt(value.replaceAll(",", ""), 10);
-}
 
 interface Props {
   onOpenReference?: (reference: HostedResourceReferenceDto) => void;

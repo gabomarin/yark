@@ -50,6 +50,8 @@ export function IniSettingRow(props: Props): ReactElement {
   // Only the GameUserSettings rows the catalog declares as INI-edited get the selector;
   // AdminListURL is managed in RCON — Admins and stays read-only here.
   const hostedConsumer = consumerForSetting(row.key);
+  // `hostedConsumer !== null` is repeated in the branch below because TS does not narrow
+  // through this boolean.
   const hostedResourceRow =
     hostedConsumer !== null && hostedConsumer.surface === "ini-visual" && row.fileKey === "gameUserSettings";
 

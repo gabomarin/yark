@@ -94,6 +94,17 @@ describe("HostedResourceSelector", () => {
     expect(await screen.findByText(/is disabled, so ASA cannot fetch this URL/i)).toBeInTheDocument();
   });
 
+  it("holds back the 'missing' warning until the catalog has loaded", async () => {
+    const api = createRendererApiMock({
+      // Never resolves: "not listed yet" must not be reported as "deleted".
+      getHostedResourcesOverview: vi.fn(() => new Promise<never>(() => undefined)),
+    });
+    renderSelector(api, URL_FOR_TOKEN);
+
+    expect(await screen.findByLabelText("AdminListURL")).toBeInTheDocument();
+    expect(screen.queryByText(/no current resource serves it/i)).not.toBeInTheDocument();
+  });
+
   it("offers a pre-filled create flow when empty and assigns the new URL", async () => {
     const user = userEvent.setup();
     const api = createRendererApiMock({
@@ -120,8 +131,10 @@ describe("HostedResourceSelector", () => {
       expect(api.createHostedResource).toHaveBeenCalledWith(
         expect.objectContaining({ displayName: "Admin list", format: "text", kind: "admin-list" }),
       );
+      // The selector refetches the catalog before applying the URL, so the value lands a
+      // tick later than the create call.
+      expect(onChange).toHaveBeenCalledWith(URL_FOR_TOKEN);
     });
-    expect(onChange).toHaveBeenCalledWith(URL_FOR_TOKEN);
   });
 
   it("notes that the host is off while still allowing creation", async () => {

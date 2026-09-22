@@ -15,7 +15,7 @@ import {
   type HostedResourceLike,
 } from "@shared/settings/hosted-resource-consumers";
 
-type HostedResourceAssignmentIssue =
+export type HostedResourceAssignmentIssue =
   "disabled" | "unpublished" | "stale-port" | "incompatible-kind" | "untyped" | "missing";
 
 export interface HostedResourceAssignment {
@@ -51,6 +51,8 @@ export function classifyHostedResourceValue(
   if (token === null) {
     return { resource: null, issue: null };
   }
+  // Matched on the token, so `localhost` and `127.0.0.1` (or `[::1]`) are deliberately
+  // equivalent for the same token and port: both spellings reach the same listener.
   const resource = resources.find((entry) => tokenOf(entry.url) === token) ?? null;
   if (resource === null) return { resource: null, issue: "missing" };
   if (!resource.enabled) return { resource, issue: "disabled" };
@@ -88,8 +90,27 @@ export function assignmentIssueMessage(
     case "untyped":
       return `${name} has no resource type. It still serves, but it is not offered for ${consumer.label} fields until you set one.`;
     case "incompatible-kind":
+      // `classifyHostedResourceValue` only emits this for a typed resource, but TS cannot
+      // see across functions, so the null arm exists for the type system, not for runtime.
       return `${name} is typed as ${
         resource.kind === null ? "untyped" : HOSTED_RESOURCE_KIND_LABELS[resource.kind]
       }, not ${consumer.label}. It still serves, but it is not offered here.`;
+  }
+}
+
+/**
+ * Severity of an issue message: a value ASA cannot fetch is red, a value that still serves
+ * but is no longer offered is amber. Kept next to the wording so the two cannot drift.
+ */
+export function assignmentIssueColor(issue: HostedResourceAssignmentIssue): "red" | "attention" {
+  switch (issue) {
+    case "missing":
+    case "disabled":
+    case "stale-port":
+      return "red";
+    case "unpublished":
+    case "untyped":
+    case "incompatible-kind":
+      return "attention";
   }
 }

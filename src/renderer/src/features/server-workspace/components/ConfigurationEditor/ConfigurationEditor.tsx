@@ -34,20 +34,20 @@ export function ConfigurationEditor(props: Props): ReactElement {
   const openFileIconSize = density === "compact" ? "sm" : "md";
   const openFileGlyphSize = density === "compact" ? 14 : 16;
   const { onRegisterSave, onSaved } = props;
+  /** Save, then let the workspace refresh once it succeeded. Both save paths share this. */
+  const runSave = useCallback(
+    async (save: () => Promise<boolean>): Promise<boolean> => {
+      const saved = await save();
+      if (saved) onSaved?.();
+      return saved;
+    },
+    [onSaved],
+  );
   // Stable identity: `useConfigurationEditor` re-registers its save handler whenever this
   // callback changes, and an inline wrapper would tear that down on every keystroke.
   const registerSave = useCallback(
-    (save: (() => Promise<boolean>) | null) =>
-      onRegisterSave?.(
-        save === null
-          ? null
-          : async () => {
-              const saved = await save();
-              if (saved) onSaved?.();
-              return saved;
-            },
-      ),
-    [onRegisterSave, onSaved],
+    (save: (() => Promise<boolean>) | null) => onRegisterSave?.(save === null ? null : () => runSave(save)),
+    [onRegisterSave, runSave],
   );
   const editor = useConfigurationEditor({
     serverId: props.server.id,
@@ -55,10 +55,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
     onRegisterSave: registerSave,
   });
 
-  const saveAndNotify = async (): Promise<void> => {
-    const saved = await editor.saveIni();
-    if (saved) props.onSaved?.();
-  };
+  const saveAndNotify = () => runSave(editor.saveIni);
 
   const iniNavigation = (
     <IniEditorNav

@@ -109,6 +109,19 @@ export function resolveHeaderAlert(input: {
   return null;
 }
 
+/** Comma-separated tag draft → trimmed, non-empty tags; shared by both create paths. */
+export function parseTagsText(tagsText: string): string[] {
+  return tagsText
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+}
+
+/** Parses a Mantine NumberInput draft, which can be a number, "" or "8,080" mid-edit. */
+export function parsePortDraft(value: number | string): number {
+  return typeof value === "number" ? value : Number.parseInt(value.replaceAll(",", ""), 10);
+}
+
 /** Reference counts are per server; wording avoids implying the game loaded it. */
 export function summarizeReferences(references: { serverId: string }[]): number {
   return new Set(references.map((reference) => reference.serverId)).size;

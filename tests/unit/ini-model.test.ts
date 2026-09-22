@@ -134,6 +134,62 @@ LastJoinedSessionPerCategory=Three
     expect(parseIniRows(next).filter((row) => row.key === "AdminListURL")).toMatchObject([{ value: "New" }]);
   });
 
+  it("uncomments a semicolon-style default slot too", () => {
+    const text = ["[ServerSettings]", ";AdminListURL=N/A", ""].join("\n");
+
+    const next = setIniTextValue(text, "ServerSettings", "AdminListURL", "New");
+
+    expect(next).toContain("AdminListURL=New");
+    expect(next).not.toContain(";AdminListURL");
+    expect(next.match(/AdminListURL=/g)).toHaveLength(1);
+  });
+
+  it("keeps the indentation of an uncommented default slot", () => {
+    const text = ["[ServerSettings]", "    #AdminListURL=N/A", ""].join("\n");
+
+    const next = setIniTextValue(text, "ServerSettings", "AdminListURL", "New");
+
+    expect(next).toContain("    AdminListURL=New");
+  });
+
+  it("does not uncomment the default slot when a later occurrence is requested", () => {
+    const text = ["[ServerSettings]", "#AdminListURL=N/A", ""].join("\n");
+
+    const next = setIniTextValue(text, "ServerSettings", "AdminListURL", "Second", 1);
+
+    // occurrence > 0 never rewrites the shipped default slot.
+    expect(next).toContain("#AdminListURL=N/A");
+    expect(parseIniRows(next).filter((row) => row.key === "AdminListURL")).toHaveLength(0);
+  });
+
+  it("uncomments only the first commented occurrence of the same key", () => {
+    const text = ["[ServerSettings]", "#AdminListURL=N/A", "#AdminListURL=N/A", ""].join("\n");
+
+    const next = setIniTextValue(text, "ServerSettings", "AdminListURL", "New");
+
+    expect(next.match(/^AdminListURL=New$/gm)).toHaveLength(1);
+    expect(next.match(/#AdminListURL=N\/A/g)).toHaveLength(1);
+  });
+
+  it("does not uncomment a slot in a repeated section block after inserting the key", () => {
+    const text = [
+      "[ServerSettings]",
+      "AutoSavePeriodMinutes=15.0",
+      "[Other]",
+      "Flag=1",
+      "[ServerSettings]",
+      "#AdminListURL=N/A",
+      "",
+    ].join("\n");
+
+    const next = setIniTextValue(text, "ServerSettings", "AdminListURL", "New");
+
+    // The first [ServerSettings] block got the assignment, so the slot in the second block
+    // must stay commented instead of producing a second live assignment.
+    expect(next.match(/^AdminListURL=New$/gm)).toHaveLength(1);
+    expect(next).toContain("#AdminListURL=N/A");
+  });
+
   it("edits the live assignment when the key is set next to a commented default", () => {
     const text = ["[ServerSettings]", "#AdminListURL=N/A", "AdminListURL=Old", ""].join("\n");
 

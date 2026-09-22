@@ -405,10 +405,12 @@ export interface HostedResourceReferenceDto {
   resourceId: string;
   serverId: string;
   serverName: string;
-  /** INI key where a YARK resource URL was found (no name heuristics). */
+  /** INI key or launch flag where a YARK resource URL was found (no name heuristics). */
   key: string;
   url: string;
   status: "current" | "stale-port" | "disabled";
+  /** Which surface the value lives on; a launch flag can only be fixed on the Launch tab. */
+  source: "ini" | "launch-arg";
 }
 
 export interface HostedResourcesDiagnosticsDto {
@@ -706,19 +708,19 @@ export interface RendererApi {
     content: string;
     notes?: string;
     tags?: string[];
-    kind?: string | null;
+    kind?: HostedResourceKind | null;
   }): Promise<IpcResult<HostedResourceDto>>;
   publishHostedResourceContent(
     resourceId: string,
     content: string,
-    metadata?: { displayName: string; notes: string; tags: string[]; kind?: string | null },
+    metadata?: { displayName: string; notes: string; tags: string[]; kind?: HostedResourceKind | null },
   ): Promise<IpcResult<HostedResourceDto>>;
   getHostedResourceContent(resourceId: string): Promise<IpcResult<string>>;
   publishHostedResourceRevision(resourceId: string, revisionId: string): Promise<IpcResult<HostedResourceDto>>;
   renameHostedResource(resourceId: string, displayName: string): Promise<IpcResult<HostedResourceDto>>;
   updateHostedResourceMetadata(
     resourceId: string,
-    input: { displayName: string; notes: string; tags: string[]; kind?: string | null },
+    input: { displayName: string; notes: string; tags: string[]; kind?: HostedResourceKind | null },
   ): Promise<IpcResult<HostedResourceDto>>;
   listHostedResourceRevisions(resourceId: string): Promise<IpcResult<HostedResourceRevisionDto[]>>;
   setHostedResourceEnabled(resourceId: string, enabled: boolean): Promise<IpcResult<HostedResourceDto>>;

@@ -62,6 +62,8 @@ const HOSTED_RESOURCES_DIAGNOSTIC_HEADER = "x-yark-diagnostics";
 
 /** In-memory ownership/served-bytes probe timeout. */
 const PROBE_TIMEOUT_MS = 3_000;
+/** Each probe buffers a whole body, so diagnostics probe in small batches, not all at once. */
+const DIAGNOSTIC_PROBE_CONCURRENCY = 4;
 const HEADERS_TIMEOUT_MS = 10_000;
 const REQUEST_TIMEOUT_MS = 15_000;
 const KEEP_ALIVE_TIMEOUT_MS = 5_000;
@@ -254,8 +256,7 @@ export class HostedResourcesService {
     this.assertValidContent(resource.format, content);
     // Omitted kind keeps the stored one; an explicit `null` untypes on purpose, matching
     // `updateMetadata`, so the editor's "clear the type then save" path actually clears it.
-    const kind = normalizeHostedResourceKind(metadataInput?.kind === undefined ? resource.kind : metadataInput.kind);
-    this.assertKindMatchesFormat(kind, resource.format);
+    const kind = this.resolveKind(resource, metadataInput?.kind);
     const metadata = this.normalizeMetadata(
       metadataInput?.displayName ?? resource.displayName,
       metadataInput?.notes ?? resource.notes,
@@ -316,9 +317,7 @@ export class HostedResourcesService {
     input: { displayName: string; notes: string; tags: string[]; kind?: string | null },
   ): HostedResourceDto {
     const resource = this.mustGetResource(resourceId);
-    // Omitted kind keeps the stored one; `null` untypes on purpose.
-    const kind = input.kind === undefined ? resource.kind : normalizeHostedResourceKind(input.kind);
-    this.assertKindMatchesFormat(kind, resource.format);
+    const kind = this.resolveKind(resource, input.kind);
     const metadata = this.normalizeMetadata(input.displayName, input.notes, input.tags, kind);
     const now = new Date().toISOString();
     this.deps.repo.updateMetadata(resourceId, metadata.displayName, metadata.notes, metadata.tags, metadata.kind, now);
@@ -361,41 +360,14 @@ export class HostedResourcesService {
     // could otherwise report bytes served by the foreign process.
     const state = this.getState();
     const serving = ownership.ok && state.listening;
-    // Probes are independent, so they run together instead of costing one timeout each;
-    // the promise array keeps the reported order stable.
-    const resources = await Promise.all(
-      this.deps.repo.listResourceSummaries().map(async (summary): Promise<HostedResourceDiagnosticDto> => {
-        const url = formatHostedResourceUrl(state.port, summary.token);
-        let servedSha256: string | null = null;
-        let status: HostedResourceDiagnosticStatus;
-        if (summary.disabledAt !== null) {
-          status = "disabled";
-        } else if (summary.publishedRevisionId === null) {
-          status = "unpublished";
-        } else if (!serving) {
-          status = "unreachable";
-        } else {
-          const served = await this.fetchServed(url);
-          servedSha256 = served.sha256;
-          if (!served.ok) {
-            status = "unreachable";
-          } else {
-            status = servedSha256 === summary.publishedSha256 ? "verified" : "mismatch";
-          }
-        }
-        return {
-          resourceId: summary.id,
-          displayName: summary.displayName,
-          url,
-          enabled: summary.disabledAt === null,
-          published: summary.publishedRevisionId !== null,
-          declaredSha256: summary.publishedSha256,
-          servedSha256,
-          status,
-          requestCount: this.requestCounts.get(summary.id) ?? 0,
-        };
-      }),
-    );
+    // Probes are independent, so they run in small batches: sequential would cost one
+    // timeout per resource, unbounded would hold every response body in memory at once.
+    const summaries = this.deps.repo.listResourceSummaries();
+    const resources: HostedResourceDiagnosticDto[] = [];
+    for (let start = 0; start < summaries.length; start += DIAGNOSTIC_PROBE_CONCURRENCY) {
+      const batch = summaries.slice(start, start + DIAGNOSTIC_PROBE_CONCURRENCY);
+      resources.push(...(await Promise.all(batch.map((summary) => this.probeResource(summary, state.port, serving)))));
+    }
     return {
       state,
       ownership,
@@ -545,6 +517,43 @@ export class HostedResourcesService {
     }
   }
 
+  /** One resource's diagnostic row: lifecycle status first, then a hash comparison when served. */
+  private async probeResource(
+    summary: HostedResourceSummaryRow,
+    port: number,
+    serving: boolean,
+  ): Promise<HostedResourceDiagnosticDto> {
+    const url = formatHostedResourceUrl(port, summary.token);
+    let servedSha256: string | null = null;
+    let status: HostedResourceDiagnosticStatus;
+    if (summary.disabledAt !== null) {
+      status = "disabled";
+    } else if (summary.publishedRevisionId === null) {
+      status = "unpublished";
+    } else if (!serving) {
+      status = "unreachable";
+    } else {
+      const served = await this.fetchServed(url);
+      servedSha256 = served.sha256;
+      if (!served.ok) {
+        status = "unreachable";
+      } else {
+        status = servedSha256 === summary.publishedSha256 ? "verified" : "mismatch";
+      }
+    }
+    return {
+      resourceId: summary.id,
+      displayName: summary.displayName,
+      url,
+      enabled: summary.disabledAt === null,
+      published: summary.publishedRevisionId !== null,
+      declaredSha256: summary.publishedSha256,
+      servedSha256,
+      status,
+      requestCount: this.requestCounts.get(summary.id) ?? 0,
+    };
+  }
+
   /** HTTP reachability only; the caller compares the hash and picks mismatch vs verified. */
   private async fetchServed(url: string): Promise<{ sha256: string | null; ok: boolean }> {
     try {
@@ -569,7 +578,13 @@ export class HostedResourcesService {
     // One setting can hold the URL in an INI *and* as a launch flag; report it once.
     const seen = new Set<string>();
 
-    const pushReference = (source: HostedResourceReferenceSource, key: string, rawValue: string): void => {
+    const pushReference = (
+      source: HostedResourceReferenceSource,
+      key: string,
+      rawValue: string,
+      origin: HostedResourceReferenceDto["source"],
+      section: string | null,
+    ): void => {
       // The URL can be embedded in the value (quotes, a trailing comment, a joined command
       // line), so the reference is whichever loopback URL the value contains.
       const found = findHostedResource(rawValue);
@@ -577,7 +592,9 @@ export class HostedResourcesService {
       const resource = resourcesByToken.get(found.parsed.token);
       if (resource === undefined) return;
       const url = found.url;
-      const identity = `${source.serverId}\u0000${key.toLowerCase()}\u0000${url}`;
+      // The section is part of the identity: the same key name in two sections is two
+      // assignments the operator has to fix separately, and both must stay visible.
+      const identity = `${source.serverId}\u0000${origin}\u0000${section ?? ""}\u0000${key.toLowerCase()}\u0000${url}`;
       if (seen.has(identity)) return;
       seen.add(identity);
       let status: HostedResourceReferenceDto["status"] = "current";
@@ -595,17 +612,18 @@ export class HostedResourcesService {
         key,
         url,
         status,
+        source: origin,
       });
     };
 
     for (const source of sources) {
       for (const row of parseIniTextRows(source.text)) {
-        pushReference(source, row.key, row.value);
+        pushReference(source, row.key, row.value, "ini", row.section);
       }
       for (const arg of source.launchArgs ?? []) {
         const launchArg = hostedResourceLaunchArg(arg);
         if (launchArg !== null) {
-          pushReference(source, launchArg.key, launchArg.value);
+          pushReference(source, launchArg.key, launchArg.value, "launch-arg", null);
         }
       }
     }
@@ -676,6 +694,17 @@ export class HostedResourcesService {
       tags: normalizeHostedResourceTags(tags ?? []),
       kind,
     };
+  }
+
+  /**
+   * Omitted kind keeps the stored one; an explicit `null` untypes on purpose. Both write
+   * paths (`publishContent`, `updateMetadata`) resolve and validate through here so their
+   * rules cannot drift apart.
+   */
+  private resolveKind(resource: HostedResourceRow, input: string | null | undefined): HostedResourceKind | null {
+    const kind = input === undefined ? resource.kind : normalizeHostedResourceKind(input);
+    this.assertKindMatchesFormat(kind, resource.format);
+    return kind;
   }
 
   /**

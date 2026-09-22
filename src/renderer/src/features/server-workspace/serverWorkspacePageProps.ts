@@ -1,5 +1,4 @@
-import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
-import type { HostedResourceReferenceDto } from "@shared/ipc";
+import type { HostedResourceReferenceDto, ProcessMetricsUpdatedPush } from "@shared/ipc";
 import type {
   AppEvent,
   ServerInstallationInfo,

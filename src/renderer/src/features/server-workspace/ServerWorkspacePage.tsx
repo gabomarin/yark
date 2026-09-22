@@ -173,11 +173,13 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
           onClose={() => setHostedResourceAlertDismissed(true)}
         >
           {hostedResourceIssueCount === 1
-            ? "One setting on this server points at a hosted resource that cannot be fetched."
-            : `${hostedResourceIssueCount} settings on this server point at hosted resources that cannot be fetched.`}{" "}
-          <Button variant="subtle" size="compact-sm" onClick={props.onOpenHostedResources}>
-            Open Hosted Resources diagnostics
-          </Button>
+            ? "One setting on this server points at a hosted resource that is disabled or uses an outdated URL."
+            : `${hostedResourceIssueCount} settings on this server point at hosted resources that are disabled or use outdated URLs.`}{" "}
+          {props.onOpenHostedResources !== undefined && (
+            <Button variant="subtle" size="compact-sm" onClick={props.onOpenHostedResources}>
+              Open Hosted Resources diagnostics
+            </Button>
+          )}
         </AppAlert>
       )}
       {stopProgress !== null && <StopProgressAlert progress={stopProgress} />}
