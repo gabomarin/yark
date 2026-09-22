@@ -79,9 +79,15 @@ export function useAdminsSection(args: UseAdminsSectionArgs) {
    * discarding an unsaved URL/interval edit the operator is mid-way through.
    */
   const refreshEntries = useCallback(async (): Promise<void> => {
-    const result = await window.api.getAdminList(serverId);
-    if (result.ok) {
-      setState(result.data);
+    try {
+      const result = await window.api.getAdminList(serverId);
+      if (result.ok) {
+        setState(result.data);
+      } else {
+        showOperatorError(result.error ?? "Could not read admin list");
+      }
+    } catch (error) {
+      showOperatorError(error instanceof Error ? error.message : "Could not read admin list");
     }
   }, [serverId]);
 

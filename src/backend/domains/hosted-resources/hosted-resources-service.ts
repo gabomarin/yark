@@ -298,14 +298,18 @@ export class HostedResourcesService {
   /**
    * Resource id serving a loopback resource URL, or null. Used for admin-list edit gating (#565).
    * Mirrors the served-resource contract so an edit cannot target a resource ASA can never fetch:
-   * a disabled resource and one whose URL port differs from ours are both unserved.
+   * the host must be listening, the resource enabled with a published revision, and the URL port
+   * ours — otherwise ASA sees a 404 and the edit could never take effect.
    */
   resolveResourceIdByUrl(url: string): string | null {
+    const state = this.getState();
+    if (!state.listening) return null;
     const parsed = parseHostedResourceUrl(url);
     if (parsed === null) return null;
     const resource = this.deps.repo.getResourceByToken(parsed.token);
     if (resource === null || resource.disabledAt !== null) return null;
-    if (parsed.port !== this.getState().port) return null;
+    if (this.deps.repo.getPublishedRevision(resource.id) === null) return null;
+    if (parsed.port !== state.port) return null;
     return resource.id;
   }
 

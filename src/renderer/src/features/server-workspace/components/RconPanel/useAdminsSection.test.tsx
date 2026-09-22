@@ -439,5 +439,11 @@ describe("useAdminsSection", () => {
       runAdminListEditMember({ serverId: "srv-1", id: "y", action: "add", setBusyKey, onSuccess }),
     ).resolves.toBe(false);
     expect(onSuccess).toHaveBeenCalledTimes(1);
+
+    vi.mocked(window.api.editAdminListMember).mockRejectedValueOnce(new Error("IPC down"));
+    await expect(
+      runAdminListEditMember({ serverId: "srv-1", id: "z", action: "add", setBusyKey, onSuccess }),
+    ).resolves.toBe(false);
+    expect(onSuccess).toHaveBeenCalledTimes(1);
   });
 });

@@ -40,7 +40,10 @@ function AddIdRow({ interval, disabled, onAdd }: AddIdRowProps): ReactElement {
           size="xs"
           placeholder="EOS account id"
           value={id}
-          onChange={(event) => setId(event.currentTarget.value)}
+          onChange={(event) => {
+            setId(event.currentTarget.value);
+            setError(null);
+          }}
           onKeyDown={onKeyDown}
           disabled={disabled}
           error={error ?? undefined}

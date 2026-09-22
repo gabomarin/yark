@@ -52,20 +52,25 @@ export async function runAdminListEditMember(input: {
   setBusyKey(id);
   return runWithFinally(
     async () => {
-      const result = await window.api.editAdminListMember(serverId, id, action, name);
-      if (!result.ok) {
-        showOperatorError(result.error ?? `Could not ${action} admin id`);
+      try {
+        const result = await window.api.editAdminListMember(serverId, id, action, name);
+        if (!result.ok) {
+          showOperatorError(result.error ?? `Could not ${action} admin id`);
+          return false;
+        }
+        onSuccess(result.data);
+        notifyHostedResourcesDiagnosticsUpdated();
+        showOperatorToast({
+          title: "Admin list",
+          message: `Saved. ASA re-checks this list every ${result.data.updateAllowedCheatersInterval}s — no restart needed.`,
+          color: "ok",
+          autoClose: 6000,
+        });
+        return true;
+      } catch (error) {
+        showOperatorError(error instanceof Error ? error.message : `Could not ${action} admin id`);
         return false;
       }
-      onSuccess(result.data);
-      notifyHostedResourcesDiagnosticsUpdated();
-      showOperatorToast({
-        title: "Admin list",
-        message: `Saved. ASA re-checks this list every ${result.data.updateAllowedCheatersInterval}s — no restart needed.`,
-        color: "ok",
-        autoClose: 6000,
-      });
-      return true;
     },
     () => {
       setBusyKey(null);
