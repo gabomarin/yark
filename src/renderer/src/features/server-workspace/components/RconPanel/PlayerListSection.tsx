@@ -1,5 +1,5 @@
 import { ActionIcon, Button, Group, Loader, Stack, Tabs, Text, Tooltip } from "@mantine/core";
-import { ArrowClockwise } from "@phosphor-icons/react";
+import { ArrowClockwise, Star } from "@phosphor-icons/react";
 import type { OnlinePlayerInfo } from "@shared/ipc";
 import type { ReactElement } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -9,12 +9,18 @@ import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { BannedPlayersSection } from "./BannedPlayersSection";
 import { AdminsSection } from "./AdminsSection";
 import { PlayerIdentityRow, mergeNameHints, resolvePlayerDisplayName } from "./PlayerIdentityRow";
+import { useAdminListMembership } from "./useAdminListMembership";
 import classes from "./RconPanel.module.css";
 
 export interface PlayerListState {
   players: OnlinePlayerInfo[];
   error: string | null;
   loading: boolean;
+}
+
+function starLabel(isAdmin: boolean, name: string | null | undefined): string {
+  if (isAdmin) return "Remove from admin list";
+  return name ? `Add ${name} to admin list` : "Add to admin list";
 }
 
 interface Props {
@@ -41,6 +47,7 @@ export function PlayerListSection(props: Props): ReactElement {
   const [nameById, setNameById] = useState(() => new Map<string, string>());
   const reloadBannedRef = useRef<(() => Promise<void>) | null>(null);
   const reloadAdminsRef = useRef<(() => Promise<void>) | null>(null);
+  const adminMembership = useAdminListMembership(props.serverId);
   const rconDisabled = !props.serverRunning || !props.rconConnected || props.playerList.loading;
 
   useEffect(() => {
@@ -66,6 +73,7 @@ export function PlayerListSection(props: Props): ReactElement {
         await props.onRefreshPlayers(props.serverId);
         await (reloadBannedRef.current?.() ?? Promise.resolve());
         await (reloadAdminsRef.current?.() ?? Promise.resolve());
+        await adminMembership.reload();
       },
       () => {
         setPanelRefreshing(false);
@@ -184,6 +192,8 @@ export function PlayerListSection(props: Props): ReactElement {
                   {props.playerList.players.map((player) => {
                     const busy = actionKey === player.key;
                     const name = resolvePlayerDisplayName(player.key, player.name, nameById);
+                    const isAdmin = adminMembership.editable && adminMembership.isMember(player.key);
+                    const starDisabled = !adminMembership.editable || adminMembership.busyKey !== null;
                     return (
                       <PlayerIdentityRow
                         key={player.key}
@@ -191,6 +201,27 @@ export function PlayerListSection(props: Props): ReactElement {
                         playerKey={player.key}
                         actions={
                           <>
+                            {adminMembership.editable ? (
+                              <Tooltip label={starLabel(isAdmin, player.name)}>
+                                <ActionIcon
+                                  size="xs"
+                                  variant="subtle"
+                                  color={isAdmin ? "yellow" : undefined}
+                                  aria-label={starLabel(isAdmin, player.name)}
+                                  loading={adminMembership.busyKey === player.key}
+                                  disabled={starDisabled}
+                                  onClick={() =>
+                                    void adminMembership.editMember(
+                                      player.key,
+                                      isAdmin ? "remove" : "add",
+                                      player.name ?? undefined,
+                                    )
+                                  }
+                                >
+                                  <Star size={12} weight={isAdmin ? "fill" : "regular"} />
+                                </ActionIcon>
+                              </Tooltip>
+                            ) : null}
                             <Button
                               size="xs"
                               variant="default"

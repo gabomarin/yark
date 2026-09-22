@@ -34,6 +34,7 @@ import {
   isHostedResourcesPort,
   parseHostedResourcesEnabled,
   parseHostedResourcesPort,
+  parseHostedResourceUrl,
   serializeHostedResourcesEnabled,
   validateHostedResourceContent,
   type HostedResourceFormat,
@@ -292,6 +293,24 @@ export class HostedResourcesService {
       throw new Error("This resource has no published content.");
     }
     return revision.content;
+  }
+
+  /**
+   * Resource id serving a loopback resource URL, or null. Used for admin-list edit gating (#565).
+   * Mirrors the served-resource contract so an edit cannot target a resource ASA can never fetch:
+   * the host must be listening, the resource enabled with a published revision, and the URL port
+   * ours — otherwise ASA sees a 404 and the edit could never take effect.
+   */
+  resolveResourceIdByUrl(url: string): string | null {
+    const state = this.getState();
+    if (!state.listening) return null;
+    const parsed = parseHostedResourceUrl(url);
+    if (parsed === null) return null;
+    const resource = this.deps.repo.getResourceByToken(parsed.token);
+    if (resource === null || resource.disabledAt !== null) return null;
+    if (this.deps.repo.getPublishedRevision(resource.id) === null) return null;
+    if (parsed.port !== state.port) return null;
+    return resource.id;
   }
 
   publishRevision(resourceId: string, revisionId: string): HostedResourceDto {

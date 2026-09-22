@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { HostedResourcesDiagnosticsDto } from "@shared/ipc";
 import { summarizeHostedResourcesHealth, type HostedResourcesHealthSummary } from "../model/hostedResourcesHealth";
 
-const HOSTED_RESOURCES_DIAGNOSTICS_UPDATED_EVENT = "yark:hosted-resources-diagnostics-updated";
+export const HOSTED_RESOURCES_DIAGNOSTICS_UPDATED_EVENT = "yark:hosted-resources-diagnostics-updated";
 export const HOSTED_RESOURCES_DIAGNOSTICS_LOADED_EVENT = "yark:hosted-resources-diagnostics-loaded";
 
 let cachedDiagnostics: HostedResourcesDiagnosticsDto | null = null;

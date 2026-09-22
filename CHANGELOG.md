@@ -12,6 +12,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Added
 
 - Hosted Resources can be **typed** (admin list, ban list, bad words list, good words list, dynamic config, live tuning, notification URL), and every URL setting YARK knows — `AdminListURL`, `BanListURL`, `BadWordListURL`, `BadWordWhiteListURL`, `CustomLiveTuningUrl`, `CustomDynamicConfigUrl`, and `CustomNotificationURL` — now offers a searchable picker of the matching resources and can create one from the field, with a warning when a value points at a disabled, deleted, or differently typed resource (#577).
+- When `AdminListURL` is a YARK Hosted Resource, EOS admin ids can be added or removed locally from RCON → Admins and via a star toggle on Survivors; YARK republishes the resource body so ASA re-fetches it on the check interval without a restart, and third-party remote lists stay read-only (#565).
 
 ### Changed
 
@@ -699,6 +700,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Survivors admin stars and the Admins tab list now stay in sync after an admin id is added or removed from either place (#565).
 - Server and cluster **INI editors** ignore stale async loads when switching server/cluster mid-fetch, and the workspace dirty flag updates from edit events (not a sync effect) so leave-guards stay accurate.
 - Cluster and **Copy configuration** wizards remount when opened so form state resets cleanly without flash-of-stale UI.
 - **Copy configuration** keeps every checked category when several are toggled in quick succession (no longer drops earlier INI picks) (#95).

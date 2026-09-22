@@ -141,6 +141,7 @@ export const IPC = {
   setAdminList: "admin-list:set-config",
   validateAdminListUrl: "admin-list:validate-url",
   learnAdminListNames: "admin-list:learn-names",
+  adminListEditMember: "admin-list:edit-member",
   eventsRecent: "events:recent",
   pickPath: "fs:pick-path",
   appListDataFolders: "app:list-data-folders",
@@ -332,6 +333,9 @@ interface AdminListValidateDto {
 interface AdminListLearnNamesDto {
   updated: number;
 }
+
+/** Local membership edit on a hosted AdminList resource (#565). */
+export type AdminListEditAction = "add" | "remove";
 
 /** Experimental loopback HTTP host for published text/JSON/INI resources (#564). */
 export interface HostedResourcesStateDto {
@@ -549,6 +553,13 @@ export interface RendererApi {
     serverId: string,
     hints: Array<{ id: string; name: string }>,
   ): Promise<IpcResult<AdminListLearnNamesDto>>;
+  /** Add/remove an id on the hosted AdminList resource behind a loopback AdminListURL (#565). */
+  editAdminListMember(
+    serverId: string,
+    id: string,
+    action: AdminListEditAction,
+    name?: string,
+  ): Promise<IpcResult<AdminListStateDto>>;
   recentEvents(limit: number): Promise<IpcResult<AppEvent[]>>;
   pickPath(kind: PickPathKind, defaultPath?: string, title?: string): Promise<IpcResult<string | null>>;
   pickFolder(defaultPath?: string): Promise<string | null>;

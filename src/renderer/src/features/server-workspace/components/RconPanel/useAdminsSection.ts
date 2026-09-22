@@ -1,10 +1,15 @@
-import type { AdminListStateDto } from "@shared/ipc";
+import type { AdminListEditAction, AdminListStateDto } from "@shared/ipc";
 import type { MutableRefObject } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { ADMIN_LIST_DEFAULT_INTERVAL_SEC, ADMIN_LIST_MIN_INTERVAL_SEC } from "./adminListFormConstants";
-import { notifyHostedResourcesDiagnosticsUpdated } from "@features/hosted-resources/hooks/useHostedResourcesHealth";
+import {
+  HOSTED_RESOURCES_DIAGNOSTICS_UPDATED_EVENT,
+  notifyHostedResourcesDiagnosticsUpdated,
+} from "@features/hosted-resources/hooks/useHostedResourcesHealth";
+import { useHostedResourceOptions } from "@features/hosted-resources/hooks/useHostedResourceOptions";
+import { isAdminListEditable, runAdminListEditMember } from "./useAdminListMembership";
 
 function normalizeInterval(value: number | string): number {
   const raw = typeof value === "number" ? value : Number.parseFloat(String(value));
@@ -34,6 +39,8 @@ export function useAdminsSection(args: UseAdminsSectionArgs) {
   const [error, setError] = useState<string | null>(null);
   const [validating, setValidating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [busyKey, setBusyKey] = useState<string | null>(null);
+  const { resources, loaded } = useHostedResourceOptions();
 
   const applyStateToDrafts = useCallback((next: AdminListStateDto): void => {
     setState(next);
@@ -65,6 +72,34 @@ export function useAdminsSection(args: UseAdminsSectionArgs) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  /**
+   * Refresh only the entries, leaving urlDraft/intervalDraft alone. The Survivors star edits the
+   * same list and broadcasts the diagnostics event, so this tab must follow along without
+   * discarding an unsaved URL/interval edit the operator is mid-way through.
+   */
+  const refreshEntries = useCallback(async (): Promise<void> => {
+    try {
+      const result = await window.api.getAdminList(serverId);
+      if (result.ok) {
+        setState(result.data);
+      } else {
+        showOperatorError(result.error ?? "Could not read admin list");
+      }
+    } catch (error) {
+      showOperatorError(error instanceof Error ? error.message : "Could not read admin list");
+    }
+  }, [serverId]);
+
+  useEffect(() => {
+    const onUpdated = (): void => {
+      void refreshEntries();
+    };
+    window.addEventListener(HOSTED_RESOURCES_DIAGNOSTICS_UPDATED_EVENT, onUpdated);
+    return () => {
+      window.removeEventListener(HOSTED_RESOURCES_DIAGNOSTICS_UPDATED_EVENT, onUpdated);
+    };
+  }, [refreshEntries]);
 
   useEffect(() => {
     if (!args.reloadRef) return;
@@ -210,6 +245,16 @@ export function useAdminsSection(args: UseAdminsSectionArgs) {
       ? "Save AdminListURL"
       : "No changes to save";
 
+  const editable = isAdminListEditable(loaded, state, resources);
+
+  const editMember = useCallback(
+    (id: string, action: AdminListEditAction, name?: string): Promise<boolean> =>
+      // setState (not applyStateToDrafts): an entry edit never changes the saved URL/interval,
+      // so refresh the rows and leave any unsaved panel draft untouched.
+      runAdminListEditMember({ serverId, id, action, name, setBusyKey, onSuccess: setState }),
+    [serverId],
+  );
+
   return {
     state,
     urlDraft,
@@ -221,6 +266,9 @@ export function useAdminsSection(args: UseAdminsSectionArgs) {
     draftDirty,
     saveBlockedByIni: iniDirty && draftDirty,
     saveTooltip,
+    editable,
+    busyKey,
+    editMember,
     setUrlDraft,
     setIntervalDraft,
     discardDraft,
