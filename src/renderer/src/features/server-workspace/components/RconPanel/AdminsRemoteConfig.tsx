@@ -1,5 +1,7 @@
-import { Button, NumberInput, Stack, TextInput } from "@mantine/core";
+import { Button, NumberInput, Stack } from "@mantine/core";
 import type { ReactElement } from "react";
+import { ADMIN_LIST_URL_CONSUMER } from "@shared/settings/hosted-resource-consumers";
+import { HostedResourceSelector } from "@features/hosted-resources/components/HostedResourceSelector/HostedResourceSelector";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { ADMIN_LIST_MIN_INTERVAL_SEC } from "./adminListFormConstants";
 import classes from "./RconPanel.module.css";
@@ -21,15 +23,13 @@ export function AdminsRemoteConfig(props: AdminsRemoteConfigProps): ReactElement
   return (
     <AppSurfaceCard tone="flat" padding="sm" radius={0} className={classes.sourceCard}>
       <Stack gap="sm">
-        <TextInput
-          label="AdminListURL"
-          description="Public http(s) URL to a plain-text EOS id list. Leave empty to clear."
-          size="xs"
+        <HostedResourceSelector
+          consumer={ADMIN_LIST_URL_CONSUMER}
           value={props.urlDraft}
+          size="xs"
           disabled={readOnly}
-          readOnly={readOnly}
-          onChange={(event) => props.onUrlChange(event.currentTarget.value)}
-          placeholder="https://…"
+          description="Public http(s) URL, or a YARK Hosted Resource. Leave empty to clear."
+          onChange={props.onUrlChange}
         />
         <NumberInput
           label="Refresh interval (seconds)"

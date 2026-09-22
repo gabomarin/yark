@@ -1,4 +1,4 @@
-import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
+import type { HostedResourceReferenceDto, ProcessMetricsUpdatedPush } from "@shared/ipc";
 import type {
   AppEvent,
   ServerInstallationInfo,
@@ -18,12 +18,15 @@ export interface ServerWorkspacePageProps {
   events: AppEvent[];
   onboarding?: boolean;
   initialTab?: WorkspaceTab;
+  initialRconFocus?: "admins";
   logsFocus?: ServerLogsFocus | null;
   rconHistory: RconHistoryEntry[];
   playerList: PlayerListState;
   /** Dedicated-process RAM/CPU sample for Status (#302). */
   processMetrics?: ProcessMetricsUpdatedPush | null;
   onLogsFocusConsumed?: () => void;
+  /** Clear the overlay's `initialRconFocus` once WorkspaceTabs has applied it. */
+  onRconFocusConsumed?: () => void;
   /** SteamCMD is rewriting this server's install (install/update/verify/sync). */
   filesJobActive?: boolean;
   filesJobLabel?: string | null;
@@ -40,6 +43,8 @@ export interface ServerWorkspacePageProps {
   onRegisterLeaveGuard?: (guard: ((action: () => void) => void) | null) => void;
   /** Status panel visible (wide always; compact when drawer open) (#302). */
   onStatusPanelVisibleChange?: (visible: boolean) => void;
+  hostedResourceReferences?: HostedResourceReferenceDto[];
+  onOpenHostedResources?: () => void;
   onStartServer: (serverId: string) => void;
   onStopServer: (serverId: string) => void;
   onRestartServer: (serverId: string) => void;

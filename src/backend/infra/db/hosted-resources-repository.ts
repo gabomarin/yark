@@ -1,11 +1,17 @@
 import type { DatabaseSync } from "node:sqlite";
-import type { HostedResourceFormat } from "@shared/settings/hosted-resources";
+import {
+  isHostedResourceKind,
+  type HostedResourceFormat,
+  type HostedResourceKind,
+} from "@shared/settings/hosted-resources";
 
 export interface HostedResourceRow {
   id: string;
   token: string;
   displayName: string;
   format: HostedResourceFormat;
+  /** Typed ASA consumer (#577); null for a manual, undeclared resource. */
+  kind: HostedResourceKind | null;
   createdAt: string;
   updatedAt: string;
   /** Null while enabled; set to the disable timestamp while disabled. */
@@ -40,6 +46,7 @@ interface ResourceDbRow {
   token: string;
   display_name: string;
   format: string;
+  kind: string | null;
   created_at: string;
   updated_at: string;
   disabled_at: string | null;
@@ -81,6 +88,8 @@ function toResource(row: ResourceDbRow): HostedResourceRow {
     token: row.token,
     displayName: row.display_name,
     format: row.format as HostedResourceFormat,
+    // Lenient read: an unknown stored value degrades to untyped instead of failing a list.
+    kind: isHostedResourceKind(row.kind) ? row.kind : null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     disabledAt: row.disabled_at,
@@ -157,14 +166,15 @@ export class HostedResourcesRepository {
     this.db
       .prepare(
         `INSERT INTO hosted_resources
-           (id, token, display_name, format, created_at, updated_at, disabled_at, notes, tags_json)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           (id, token, display_name, format, kind, created_at, updated_at, disabled_at, notes, tags_json)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         row.id,
         row.token,
         row.displayName,
         row.format,
+        row.kind,
         row.createdAt,
         row.updatedAt,
         row.disabledAt,
@@ -179,10 +189,19 @@ export class HostedResourcesRepository {
       .run(displayName, updatedAt, id);
   }
 
-  updateMetadata(id: string, displayName: string, notes: string, tags: string[], updatedAt: string): void {
+  updateMetadata(
+    id: string,
+    displayName: string,
+    notes: string,
+    tags: string[],
+    kind: HostedResourceKind | null,
+    updatedAt: string,
+  ): void {
     this.db
-      .prepare("UPDATE hosted_resources SET display_name = ?, notes = ?, tags_json = ?, updated_at = ? WHERE id = ?")
-      .run(displayName, notes, JSON.stringify(tags), updatedAt, id);
+      .prepare(
+        "UPDATE hosted_resources SET display_name = ?, notes = ?, tags_json = ?, kind = ?, updated_at = ? WHERE id = ?",
+      )
+      .run(displayName, notes, JSON.stringify(tags), kind, updatedAt, id);
   }
 
   /** Disabling is reversible: `null` re-enables serving. */
@@ -282,6 +301,7 @@ export class HostedResourcesRepository {
     displayName: string;
     notes: string;
     tags: string[];
+    kind: HostedResourceKind | null;
     publishedAt: string;
     revision: HostedResourceRevisionRow;
   }): void {
@@ -318,10 +338,17 @@ export class HostedResourcesRepository {
       this.db
         .prepare(
           `UPDATE hosted_resources
-           SET display_name = ?, notes = ?, tags_json = ?, updated_at = ?
+           SET display_name = ?, notes = ?, tags_json = ?, kind = ?, updated_at = ?
            WHERE id = ?`,
         )
-        .run(input.displayName, input.notes, JSON.stringify(input.tags), input.publishedAt, input.resourceId);
+        .run(
+          input.displayName,
+          input.notes,
+          JSON.stringify(input.tags),
+          input.kind,
+          input.publishedAt,
+          input.resourceId,
+        );
       this.db.exec("COMMIT;");
     } catch (error) {
       try {

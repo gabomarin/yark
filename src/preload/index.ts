@@ -119,6 +119,8 @@ const api: RendererApi = {
   setAdminList: (serverId: string, config) => ipcRenderer.invoke(IPC.setAdminList, serverId, config),
   validateAdminListUrl: (serverId: string, url: string) => ipcRenderer.invoke(IPC.validateAdminListUrl, serverId, url),
   learnAdminListNames: (serverId: string, hints) => ipcRenderer.invoke(IPC.learnAdminListNames, serverId, hints),
+  editAdminListMember: (serverId: string, id: string, action, name) =>
+    ipcRenderer.invoke(IPC.adminListEditMember, serverId, id, action, name),
   recentEvents: (limit: number) => ipcRenderer.invoke(IPC.eventsRecent, limit),
   pickPath: (kind, defaultPath, title) => ipcRenderer.invoke(IPC.pickPath, kind, defaultPath, title),
   pickFolder: async (defaultPath) => {

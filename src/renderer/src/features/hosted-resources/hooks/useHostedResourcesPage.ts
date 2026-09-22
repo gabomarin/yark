@@ -6,18 +6,30 @@ import type {
   HostedResourcesOverviewDto,
   IpcResult,
 } from "@shared/ipc";
-import { DEFAULT_HOSTED_RESOURCES_PORT, type HostedResourceFormat } from "@shared/settings/hosted-resources";
+import {
+  DEFAULT_HOSTED_RESOURCES_PORT,
+  type HostedResourceFormat,
+  type HostedResourceKind,
+} from "@shared/settings/hosted-resources";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
+import { parsePortDraft, parseTagsText } from "../model/hostedResourcesPageModel";
 import { openDangerConfirmModal, dangerConfirmBody } from "@ui/DangerConfirmModal/openDangerConfirmModal";
+import {
+  getCachedHostedResourcesDiagnostics,
+  HOSTED_RESOURCES_DIAGNOSTICS_LOADED_EVENT,
+  setCachedHostedResourcesDiagnostics,
+} from "./useHostedResourcesHealth";
 
 /**
- * A missing / crashed IPC handler rejects instead of returning `IpcResult`,
- * which would otherwise strand the page on its loading state.
+ * A missing / crashed IPC handler rejects instead of returning `IpcResult`, and an unwired
+ * one can resolve `undefined` despite the type. Both are normalized to a failed result here
+ * so callers can trust `result.ok` instead of re-checking for `undefined` at every call.
  */
 async function attempt<T>(run: () => Promise<IpcResult<T>>): Promise<IpcResult<T>> {
   try {
-    return await run();
+    const result: IpcResult<T> | undefined = await run();
+    return result ?? { ok: false, error: "The request failed." };
   } catch (error) {
     return {
       ok: false,
@@ -31,6 +43,7 @@ export interface HostedResourceEditorDraft {
   resourceId: string | null;
   displayName: string;
   format: HostedResourceFormat;
+  kind: HostedResourceKind | null;
   content: string;
   notes: string;
   tagsText: string;
@@ -73,7 +86,9 @@ export function useHostedResourcesPage(): HostedResourcesController {
   const [editor, setEditor] = useState<HostedResourceEditorDraft | null>(null);
   const [revisionsFor, setRevisionsFor] = useState<string | null>(null);
   const [revisions, setRevisions] = useState<HostedResourceRevisionDto[]>([]);
-  const [diagnostics, setDiagnostics] = useState<HostedResourcesDiagnosticsDto | null>(null);
+  const [diagnostics, setDiagnostics] = useState<HostedResourcesDiagnosticsDto | null>(() =>
+    getCachedHostedResourcesDiagnostics(),
+  );
   const [diagnosticsBusy, setDiagnosticsBusy] = useState(false);
 
   const reload = useCallback(async (opts?: { quiet?: boolean }) => {
@@ -105,8 +120,18 @@ export function useHostedResourcesPage(): HostedResourcesController {
     void reload();
   }, [reload]);
 
+  useEffect(() => {
+    const syncCachedDiagnostics = () => {
+      const cached = getCachedHostedResourcesDiagnostics();
+      if (cached !== null) setDiagnostics(cached);
+    };
+    window.addEventListener(HOSTED_RESOURCES_DIAGNOSTICS_LOADED_EVENT, syncCachedDiagnostics);
+    syncCachedDiagnostics();
+    return () => window.removeEventListener(HOSTED_RESOURCES_DIAGNOSTICS_LOADED_EVENT, syncCachedDiagnostics);
+  }, []);
+
   const applyState = useCallback(
-    async (action: string, run: () => Promise<IpcResult<unknown>>) => {
+    async (action: string, run: () => Promise<IpcResult<unknown>>, onSuccess?: () => void) => {
       setBusy(action);
       await runWithFinally(
         async () => {
@@ -116,6 +141,7 @@ export function useHostedResourcesPage(): HostedResourcesController {
             return;
           }
           await reload({ quiet: true });
+          onSuccess?.();
         },
         () => {
           setBusy(null);
@@ -125,21 +151,62 @@ export function useHostedResourcesPage(): HostedResourcesController {
     [reload],
   );
 
+  const runDiagnostics = useCallback(async () => {
+    setDiagnosticsBusy(true);
+    await runWithFinally(
+      async () => {
+        const result = await attempt(() => window.api.getHostedResourcesDiagnostics());
+        if (!result.ok) {
+          showOperatorError(result.error, "Diagnostics failed");
+          return;
+        }
+        // One fan-out point: publish to the shared cache, whose LOADED event updates
+        // every consumer (sidebar, this page, open selectors) without re-probing.
+        setDiagnostics(result.data);
+        setCachedHostedResourcesDiagnostics(result.data);
+      },
+      () => {
+        setDiagnosticsBusy(false);
+      },
+    );
+  }, []);
+
+  /** Invalidate the snapshot and re-probe: every state change that can alter what is served. */
+  const refreshDiagnostics = useCallback(() => {
+    setDiagnostics(null);
+    void runDiagnostics();
+  }, [runDiagnostics]);
+
   const toggleEnabled = useCallback(
     async (enabled: boolean) => {
-      await applyState("toggle", () => window.api.setHostedResourcesEnabled(enabled));
+      await applyState("toggle", () => window.api.setHostedResourcesEnabled(enabled), refreshDiagnostics);
     },
-    [applyState],
+    [applyState, refreshDiagnostics],
   );
 
   const applyPort = useCallback(async () => {
-    const port = typeof portDraft === "number" ? portDraft : Number.parseInt(portDraft, 10);
+    const port = parsePortDraft(portDraft);
     if (!Number.isInteger(port) || port < 1024 || port > 65535) {
       showOperatorError("Port must be between 1024 and 65535.");
       return;
     }
-    await applyState("port", () => window.api.setHostedResourcesPort(port));
-  }, [applyState, portDraft]);
+    const previousPort = overview?.state.port;
+    await applyState(
+      "port",
+      () => window.api.setHostedResourcesPort(port),
+      () => {
+        // The port is stored even when it did not change, so always re-probe: a cleared
+        // snapshot must not outlive the change, and the toast is a separate concern.
+        refreshDiagnostics();
+        if (previousPort !== undefined && previousPort !== port) {
+          showOperatorToast({
+            title: "Serving port changed",
+            message: `Resources now use port ${port}. Update any server settings that still use port ${previousPort}.`,
+          });
+        }
+      },
+    );
+  }, [applyState, overview?.state.port, portDraft, refreshDiagnostics]);
 
   const openCreate = useCallback(() => {
     setEditor({
@@ -147,6 +214,7 @@ export function useHostedResourcesPage(): HostedResourcesController {
       resourceId: null,
       displayName: "",
       format: "text",
+      kind: null,
       content: "",
       notes: "",
       tagsText: "",
@@ -164,6 +232,7 @@ export function useHostedResourcesPage(): HostedResourcesController {
       resourceId: resource.id,
       displayName: resource.displayName,
       format: resource.format,
+      kind: resource.kind,
       content: result.data,
       notes: resource.notes,
       tagsText: resource.tags.join(", "),
@@ -191,10 +260,7 @@ export function useHostedResourcesPage(): HostedResourcesController {
       showOperatorError("Add the new content before saving.");
       return;
     }
-    const tags = editor.tagsText
-      .split(",")
-      .map((tag) => tag.trim())
-      .filter(Boolean);
+    const tags = parseTagsText(editor.tagsText);
     setBusy("editor");
     await runWithFinally(
       async () => {
@@ -206,11 +272,13 @@ export function useHostedResourcesPage(): HostedResourcesController {
                 content: editor.content,
                 notes: editor.notes,
                 tags,
+                kind: editor.kind,
               })
             : window.api.publishHostedResourceContent(editor.resourceId ?? "", editor.content, {
                 displayName,
                 notes: editor.notes,
                 tags,
+                kind: editor.kind,
               }),
         );
         if (!result.ok) {
@@ -223,12 +291,17 @@ export function useHostedResourcesPage(): HostedResourcesController {
         });
         setEditor(null);
         await reload({ quiet: true });
+        // A publish is only verifiable while the host is up; probe loopback so the card
+        // can show the resource-specific result instead of "not checked".
+        if (overview?.state.enabled === true) {
+          void runDiagnostics();
+        }
       },
       () => {
         setBusy(null);
       },
     );
-  }, [editor, reload]);
+  }, [editor, overview, reload, runDiagnostics]);
 
   const openRevisions = useCallback(async (resource: HostedResourceDto) => {
     setRevisionsFor(resource.id);
@@ -280,7 +353,7 @@ export function useHostedResourcesPage(): HostedResourcesController {
   const toggleResourceEnabled = useCallback(
     (resource: HostedResourceDto, enabled: boolean) => {
       if (enabled) {
-        void applyState("enable", () => window.api.setHostedResourceEnabled(resource.id, true));
+        void applyState("enable", () => window.api.setHostedResourceEnabled(resource.id, true), refreshDiagnostics);
         return;
       }
       openDangerConfirmModal({
@@ -290,11 +363,11 @@ export function useHostedResourcesPage(): HostedResourcesController {
           `"${resource.displayName}" stops serving immediately, including after a restart. Revisions stay listed and you can re-enable it anytime.`,
         ),
         onConfirm: () => {
-          void applyState("disable", () => window.api.setHostedResourceEnabled(resource.id, false));
+          void applyState("disable", () => window.api.setHostedResourceEnabled(resource.id, false), refreshDiagnostics);
         },
       });
     },
-    [applyState],
+    [applyState, refreshDiagnostics],
   );
 
   const confirmDelete = useCallback(
@@ -312,23 +385,6 @@ export function useHostedResourcesPage(): HostedResourcesController {
     },
     [applyState],
   );
-
-  const runDiagnostics = useCallback(async () => {
-    setDiagnosticsBusy(true);
-    await runWithFinally(
-      async () => {
-        const result = await attempt(() => window.api.getHostedResourcesDiagnostics());
-        if (!result.ok) {
-          showOperatorError(result.error, "Diagnostics failed");
-          return;
-        }
-        setDiagnostics(result.data);
-      },
-      () => {
-        setDiagnosticsBusy(false);
-      },
-    );
-  }, []);
 
   return {
     overview,

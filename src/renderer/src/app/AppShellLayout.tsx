@@ -7,6 +7,7 @@ import { AppBusyOverlay, type AppBusyOverlayContent } from "@ui/AppBusyOverlay/A
 import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { ChromeRailEdgeToggle } from "@ui/ChromeRailEdgeToggle/ChromeRailEdgeToggle";
 import type { OfficialNetworkStatus } from "@shared/types";
+import type { HostedResourcesHealth } from "@features/hosted-resources/model/hostedResourcesHealth";
 import type { PropsWithChildren, ReactElement, ReactNode } from "react";
 import classes from "./AppShellLayout.module.css";
 
@@ -28,10 +29,19 @@ interface Props extends PropsWithChildren {
   busyOverlay?: AppBusyOverlayContent | null;
   workspaceFooter?: ReactNode;
   downloadCount?: number;
+  hostedResourcesHealth?: HostedResourcesHealth;
 }
 
 export function AppShellLayout({ children, ...props }: Props): ReactElement {
-  const { error = null, onDismissError, busyOverlay = null, workspaceFooter, downloadCount, ...shellProps } = props;
+  const {
+    error = null,
+    onDismissError,
+    busyOverlay = null,
+    workspaceFooter,
+    downloadCount,
+    hostedResourcesHealth,
+    ...shellProps
+  } = props;
   const density = useUiDensity();
   const fullNavbarWidth = density === "compact" ? 212 : 248;
   const sidebarRail = useSidebarRail(fullNavbarWidth);
@@ -47,7 +57,12 @@ export function AppShellLayout({ children, ...props }: Props): ReactElement {
       }}
     >
       <AppShell.Navbar>
-        <Sidebar {...shellProps} iconMode={sidebarRail.iconMode} downloadCount={downloadCount} />
+        <Sidebar
+          {...shellProps}
+          iconMode={sidebarRail.iconMode}
+          downloadCount={downloadCount}
+          hostedResourcesHealth={hostedResourcesHealth}
+        />
         <ChromeRailEdgeToggle
           className={classes.sidebarEdgeToggle}
           style={{ left: sidebarRail.railWidthPx }}

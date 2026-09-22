@@ -1,6 +1,6 @@
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 import type { useAppFleetRefresh } from "@app/hooks/useAppFleetRefresh";
-import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
+import type { HostedResourceReferenceDto, ProcessMetricsUpdatedPush } from "@shared/ipc";
 import type {
   AppEvent,
   ClusterComplianceReport,
@@ -23,6 +23,7 @@ import type { RconHistoryEntry } from "@features/server-workspace/ServerWorkspac
 import type { DesktopShellPreferencesController } from "@features/settings/hooks/useDesktopShellPreferences";
 import type { ThemeId, UiDensity, WorkspacePanelsId } from "@features/settings/settingsModel";
 import type { Route } from "@layout/Sidebar/Sidebar";
+import type { HostedResourcesHealth } from "@features/hosted-resources/model/hostedResourcesHealth";
 import type { AppBusyOverlayContent } from "@ui/AppBusyOverlay/AppBusyOverlay";
 
 /** Shared fleet refresh signature used across router overlays and pages. */
@@ -143,4 +144,6 @@ export interface AppShellChromeInputs {
   stopBusyOverlay: AppBusyOverlayContent | null;
   downloadCount: number;
   downloadsWorkspaceFooter: ReactNode;
+  hostedResourcesHealth: HostedResourcesHealth;
+  hostedResourceReferencesByServerId: Map<string, HostedResourceReferenceDto[]>;
 }
