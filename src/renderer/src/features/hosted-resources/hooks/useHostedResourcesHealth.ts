@@ -5,7 +5,7 @@ import {
   type HostedResourcesHealthSummary,
 } from "../model/hostedResourcesHealth";
 
-export const HOSTED_RESOURCES_DIAGNOSTICS_UPDATED_EVENT = "yark:hosted-resources-diagnostics-updated";
+const HOSTED_RESOURCES_DIAGNOSTICS_UPDATED_EVENT = "yark:hosted-resources-diagnostics-updated";
 export const HOSTED_RESOURCES_DIAGNOSTICS_LOADED_EVENT = "yark:hosted-resources-diagnostics-loaded";
 
 let cachedDiagnostics: HostedResourcesDiagnosticsDto | null = null;
@@ -14,7 +14,7 @@ export function getCachedHostedResourcesDiagnostics(): HostedResourcesDiagnostic
   return cachedDiagnostics;
 }
 
-export function setCachedHostedResourcesDiagnostics(diagnostics: HostedResourcesDiagnosticsDto): void {
+function setCachedHostedResourcesDiagnostics(diagnostics: HostedResourcesDiagnosticsDto): void {
   cachedDiagnostics = diagnostics;
   window.dispatchEvent(new Event(HOSTED_RESOURCES_DIAGNOSTICS_LOADED_EVENT));
 }
