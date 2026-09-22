@@ -1,7 +1,8 @@
-import { ActionIcon, Button, Group, Loader, Stack, Text, Tooltip } from "@mantine/core";
+import { ActionIcon, Button, Group, Loader, Stack, Text, TextInput, Tooltip } from "@mantine/core";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
-import { FloppyDisk } from "@phosphor-icons/react";
-import type { MutableRefObject, ReactElement } from "react";
+import { FloppyDisk, Star } from "@phosphor-icons/react";
+import type { KeyboardEvent, MutableRefObject, ReactElement } from "react";
+import { useState } from "react";
 import { AdminsRemoteConfig } from "./AdminsRemoteConfig";
 import { PlayerIdentityRow, resolvePlayerDisplayName } from "./PlayerIdentityRow";
 import { useAdminsSection } from "./useAdminsSection";
@@ -23,12 +24,28 @@ interface Props {
 export function AdminsSection(props: Props): ReactElement {
   const iniDirty = props.iniDirty === true;
   const readOnly = props.readOnly === true;
+  const [newId, setNewId] = useState("");
+  const [newIdError, setNewIdError] = useState<string | null>(null);
   const admins = useAdminsSection({
     serverId: props.serverId,
     iniDirty,
     nameById: props.nameById,
     reloadRef: props.reloadRef,
   });
+  const editable = admins.editable;
+  const entriesEditable = editable && admins.busyKey === null;
+
+  const addId = async (): Promise<void> => {
+    const id = newId.trim();
+    if (id.length === 0) return;
+    setNewIdError(null);
+    await admins.editMember(id, "add");
+    setNewId("");
+  };
+
+  const onAddIdKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
+    if (event.key === "Enter") void addId();
+  };
 
   const saveDisabled = readOnly || !admins.draftDirty || iniDirty;
   const saveTooltip = readOnly ? "Stop the server to edit" : admins.saveTooltip;
@@ -65,7 +82,11 @@ export function AdminsSection(props: Props): ReactElement {
       <Stack gap="sm">
         {readOnly ? (
           <AppAlert color="fossil" variant="light" p="xs">
-            <Text size="xs">Stop the server to edit the whitelist.</Text>
+            <Text size="xs">
+              {editable
+                ? "The whitelist URL is locked while the server runs, but ids below stay editable — ASA re-fetches this list automatically."
+                : "Stop the server to edit the whitelist."}
+            </Text>
           </AppAlert>
         ) : (
           <Text size="xs" c="dimmed" className={classes.helper}>
@@ -103,6 +124,38 @@ export function AdminsSection(props: Props): ReactElement {
 
         <Text className={classes.sectionTitle}>Current ids</Text>
 
+        {editable ? (
+          <Stack gap={4}>
+            <Group gap="xs" align="flex-end">
+              <TextInput
+                label="Add admin id"
+                size="xs"
+                placeholder="EOS account id"
+                value={newId}
+                onChange={(event) => setNewId(event.currentTarget.value)}
+                onKeyDown={onAddIdKeyDown}
+                disabled={!entriesEditable}
+                error={newIdError ?? undefined}
+              />
+              <Button
+                size="xs"
+                disabled={newId.trim().length === 0 || !entriesEditable}
+                onClick={() => void addId()}
+              >
+                Add
+              </Button>
+            </Group>
+            <Text size="xs" c="dimmed">
+              Changes publish instantly; ASA re-checks this list every{" "}
+              {admins.state?.updateAllowedCheatersInterval ?? "…"}s.
+            </Text>
+          </Stack>
+        ) : admins.state?.mode === "remote" ? (
+          <Text size="xs" c="dimmed">
+            Read-only: this list is hosted elsewhere. Edit it at its source.
+          </Text>
+        ) : null}
+
         {admins.error !== null ? (
           <Text size="sm" c="red">
             {admins.error}
@@ -134,6 +187,22 @@ export function AdminsSection(props: Props): ReactElement {
                 key={entry.id}
                 name={resolvePlayerDisplayName(entry.id, entry.name, props.nameById ?? EMPTY_NAME_BY_ID)}
                 playerKey={entry.id}
+                actions={
+                  editable ? (
+                    <Tooltip label="Remove from admin list">
+                      <ActionIcon
+                        size="xs"
+                        variant="subtle"
+                        aria-label={`Remove ${resolvePlayerDisplayName(entry.id, entry.name, props.nameById ?? EMPTY_NAME_BY_ID)} from admin list`}
+                        loading={admins.busyKey === entry.id}
+                        disabled={!entriesEditable}
+                        onClick={() => void admins.editMember(entry.id, "remove")}
+                      >
+                        <Star size={12} weight="fill" />
+                      </ActionIcon>
+                    </Tooltip>
+                  ) : undefined
+                }
               />
             ))}
           </div>

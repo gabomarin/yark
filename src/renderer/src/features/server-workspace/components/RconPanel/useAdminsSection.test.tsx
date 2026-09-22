@@ -1,7 +1,10 @@
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AdminListStateDto } from "@shared/ipc";
+import { resetHostedResourceOptionsSnapshot } from "@features/hosted-resources/hooks/useHostedResourceOptions";
+import { notifyHostedResourcesDiagnosticsUpdated } from "@features/hosted-resources/hooks/useHostedResourcesHealth";
 import { useAdminsSection } from "./useAdminsSection";
+import { useAdminListMembership } from "./useAdminListMembership";
 
 const { showOperatorToast } = vi.hoisted(() => ({
   showOperatorToast: vi.fn(),
@@ -35,8 +38,21 @@ const remoteState = (overrides: Partial<AdminListStateDto> = {}): AdminListState
   ...overrides,
 });
 
+const loopbackState = (overrides: Partial<AdminListStateDto> = {}): AdminListStateDto => ({
+  mode: "loopback",
+  adminListUrl: "http://127.0.0.1:8935/r/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  updateAllowedCheatersInterval: 600,
+  entries: [{ id: "0002e03af5f4487985e94c6ba4080369", name: "Alpha" }],
+  listError: null,
+  filePath: "C:\\ARK\\ShooterGame\\Saved\\AllowedCheaterAccountIDs.txt",
+  fileExists: true,
+  fileByteLength: 0,
+  ...overrides,
+});
+
 describe("useAdminsSection", () => {
   beforeEach(() => {
+    resetHostedResourceOptionsSnapshot();
     showOperatorToast.mockClear();
     window.api = {
       getAdminList: vi.fn(async () => ({
@@ -55,6 +71,26 @@ describe("useAdminsSection", () => {
       learnAdminListNames: vi.fn(async () => ({
         ok: true as const,
         data: { updated: 1 },
+      })),
+      getHostedResourcesOverview: vi.fn(async () => ({
+        ok: true as const,
+        data: {
+          state: { enabled: true },
+          resources: [
+            {
+              id: "res-1",
+              displayName: "Admins",
+              url: "http://127.0.0.1:8935/r/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              enabled: true,
+              kind: "admin-list",
+              publishedRevisionId: "rev-1",
+            },
+          ],
+        },
+      })),
+      editAdminListMember: vi.fn(async () => ({
+        ok: true as const,
+        data: loopbackState(),
       })),
     } as unknown as typeof window.api;
   });
@@ -189,5 +225,147 @@ describe("useAdminsSection", () => {
       await reloadRef.current?.();
     });
     expect(window.api.getAdminList).toHaveBeenCalledWith("srv-1");
+  });
+
+  it("is editable for a loopback URL served by a compatible hosted resource and removes a member", async () => {
+    vi.mocked(window.api.getAdminList).mockResolvedValue({
+      ok: true,
+      data: loopbackState(),
+    });
+    const after = loopbackState({
+      entries: [{ id: "0002aaaaaaaaaaaaaaaaaaaaaaaaaaaa", name: null }],
+    });
+    vi.mocked(window.api.editAdminListMember).mockResolvedValue({ ok: true, data: after });
+
+    const { result } = renderHook(() => useAdminsSection({ serverId: "srv-1", iniDirty: false }));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+    await waitFor(() => {
+      expect(result.current.editable).toBe(true);
+    });
+
+    act(() => {
+      void result.current.editMember("0002e03af5f4487985e94c6ba4080369", "remove");
+    });
+
+    await waitFor(() => {
+      expect(window.api.editAdminListMember).toHaveBeenCalledWith(
+        "srv-1",
+        "0002e03af5f4487985e94c6ba4080369",
+        "remove",
+        undefined,
+      );
+    });
+    await waitFor(() => {
+      expect(result.current.busyKey).toBeNull();
+    });
+    expect(result.current.state?.entries.map((entry) => entry.id)).toEqual(["0002aaaaaaaaaaaaaaaaaaaaaaaaaaaa"]);
+    expect(showOperatorToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: "Saved. ASA re-checks this list every 600s — no restart needed.",
+        color: "ok",
+      }),
+    );
+  });
+
+  it("is not editable for a remote list even when hosted resources load", async () => {
+    vi.mocked(window.api.getAdminList).mockResolvedValue({
+      ok: true,
+      data: remoteState(),
+    });
+
+    const { result } = renderHook(() => useAdminsSection({ serverId: "srv-1", iniDirty: false }));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+    await waitFor(() => {
+      expect(result.current.editable).toBe(false);
+    });
+  });
+
+  it("never counts ids from the local AllowedCheaterAccountIDs.txt file as admins", async () => {
+    vi.mocked(window.api.getAdminList).mockResolvedValue({
+      ok: true,
+      data: {
+        mode: "local",
+        adminListUrl: "",
+        updateAllowedCheatersInterval: 600,
+        entries: [{ id: "0002e03af5f4487985e94c6ba4080369", name: null }],
+        listError: null,
+        filePath: "C:\\ARK\\ShooterGame\\Saved\\AllowedCheaterAccountIDs.txt",
+        fileExists: true,
+        fileByteLength: 10,
+      },
+    });
+
+    const { result } = renderHook(() => useAdminListMembership("srv-1"));
+
+    await waitFor(() => {
+      expect(result.current.editable).toBe(false);
+    });
+    expect(result.current.isMember("0002e03af5f4487985e94c6ba4080369")).toBe(false);
+  });
+
+  it("useAdminListMembership matches ids case-insensitively and forwards the name on add", async () => {
+    const after = loopbackState({
+      entries: [
+        { id: "0002e03af5f4487985e94c6ba4080369", name: "Alpha" },
+        { id: "0002dddddddddddddddddddddddddddddd", name: "Bravo" },
+      ],
+    });
+    vi.mocked(window.api.getAdminList)
+      .mockResolvedValueOnce({ ok: true, data: loopbackState() })
+      .mockResolvedValue({ ok: true, data: after });
+    vi.mocked(window.api.editAdminListMember).mockResolvedValue({ ok: true, data: after });
+
+    const { result } = renderHook(() => useAdminListMembership("srv-1"));
+
+    await waitFor(() => {
+      expect(result.current.editable).toBe(true);
+    });
+    expect(result.current.isMember("0002E03AF5F4487985E94C6BA4080369")).toBe(true);
+    expect(result.current.isMember("0002aaaaaaaaaaaaaaaaaaaaaaaaaaaa")).toBe(false);
+
+    act(() => {
+      void result.current.editMember("0002dddddddddddddddddddddddddddddd", "add", "Bravo");
+    });
+
+    await waitFor(() => {
+      expect(window.api.editAdminListMember).toHaveBeenCalledWith(
+        "srv-1",
+        "0002dddddddddddddddddddddddddddddd",
+        "add",
+        "Bravo",
+      );
+    });
+    await waitFor(() => {
+      expect(result.current.busyKey).toBeNull();
+    });
+    expect(result.current.isMember("0002dddddddddddddddddddddddddddddd")).toBe(true);
+  });
+
+  it("reloads membership when another admin-list editor publishes an update", async () => {
+    const memberId = "0002e03af5f4487985e94c6ba4080369";
+    vi.mocked(window.api.getAdminList)
+      .mockResolvedValueOnce({ ok: true, data: loopbackState() })
+      .mockResolvedValueOnce({ ok: true, data: loopbackState({ entries: [] }) });
+
+    const { result } = renderHook(() => useAdminListMembership("srv-1"));
+
+    await waitFor(() => {
+      expect(result.current.isMember(memberId)).toBe(true);
+    });
+
+    act(() => {
+      notifyHostedResourcesDiagnosticsUpdated();
+    });
+
+    await waitFor(() => {
+      expect(window.api.getAdminList).toHaveBeenCalledTimes(2);
+      expect(result.current.isMember(memberId)).toBe(false);
+    });
   });
 });

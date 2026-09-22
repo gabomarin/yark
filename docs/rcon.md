@@ -131,7 +131,7 @@ line). Not BanList format. Not exclusive-join player whitelist.
 | Item                     | Detail                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Product UI (now)         | **Remote http(s) AdminListURL** — searchable field that offers YARK **Hosted Resources** typed `admin-list`, Validate, `UpdateAllowedCheatersInterval`, Current ids ([docs/hosted-resources.md](hosted-resources.md#typed-resources-and-setting-selectors))                                                                                                                                                                                                               |
-| Local / loopback         | Experimental, default-off **Hosted Resources** loopback host ([docs/hosted-resources.md](hosted-resources.md), [#564](https://github.com/gabomarin/yark/issues/564)). Pick its `http://127.0.0.1:<port>/r/<token>` URL from the field (or paste it); YARK classifies it as **loopback** mode, keeps the URL verbatim, and fetches it for `Current ids` like a remote list. AdminList-from-star wiring is still a follow-up; sanitize / mirror / `file:///` helpers remain |
+| Local / loopback         | Experimental, default-off **Hosted Resources** loopback host ([docs/hosted-resources.md](hosted-resources.md), [#564](https://github.com/gabomarin/yark/issues/564)). Pick its `http://127.0.0.1:<port>/r/<token>` URL from the field (or paste it); YARK classifies it as **loopback** mode, keeps the URL verbatim, and fetches it for `Current ids` like a remote list. When the URL is a YARK Hosted Resource, ids can be added/removed locally (Admins `Current ids` + Survivors star); YARK republishes the resource body so ASA re-fetches it on the interval — no restart. Third-party remote lists and resources that no longer match stay read-only ([#565](https://github.com/gabomarin/yark/issues/565)) |
 | Interval                 | Default **600**; values **&lt; 3** → **3**                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | Restart vs poll          | Changing URL → **restart** dedicated once; then re-fetches on interval                                                                                                                                                                                                                                                                                                                                                                                                    |
 | While starting / running | Admins tab is **read-only**; stop the dedicated to change settings                                                                                                                                                                                                                                                                                                                                                                                                        |
@@ -145,7 +145,8 @@ similar) raw http(s) URLs remain supported, and the experimental Hosted Resource
 loopback host ([docs/hosted-resources.md](hosted-resources.md)) is the local
 alternative. In `local` mode `Current ids` is a disk read of that file, not proof
 ASA applied it; whether to keep showing it is part of the follow-up local AdminList
-work.
+work. The Survivors star reflects membership only when `AdminListURL` is a YARK
+Hosted Resource — the local file never counts a player as admin ([#565](https://github.com/gabomarin/yark/issues/565)).
 
 **Trust boundary (Validate / Current ids):** the renderer may ask main to
 `fetch` an operator-supplied http(s) URL (`admin-list:validate-url` and
@@ -170,6 +171,7 @@ loopback / link-local / private ranges (SSRF) before shipping that path.
 | `admin-list:set-config`                   | `setAdminList`         | Write GUS URL + interval                   |
 | `admin-list:validate-url`                 | `validateAdminListUrl` | Fetch + count without Apply                |
 | `admin-list:learn-names`                  | `learnAdminListNames`  | Persist Online display-name hints          |
+| `admin-list:edit-member`                  | `editAdminListMember`  | Add/remove id on a hosted AdminList (loopback + resource match only) |
 
 Push:
 
@@ -204,7 +206,7 @@ Statuses: `disconnected` \| `connecting` \| `connected` \| `error`.
 | `tests/unit/rcon-session-manager.test.ts`   | ACK normalize, queue, reconnect, generation supersede             |
 | `tests/unit/instance-rcon.test.ts`          | Auto-connect, retry gate, Kick/Ban/Unban, audit vs silent         |
 | `tests/unit/ban-list.test.ts`               | Paths, parse, remove preserves metadata, BanListURL helpers       |
-| `tests/unit/admin-list.test.ts`             | Wiki path, mode, interval clamp, ensure clears legacy, set-config |
+| `tests/unit/admin-list.test.ts`             | Wiki path, mode, interval clamp, ensure clears legacy, set-config, hosted-list add/remove |
 | `…/ServerWorkspacePage.test.tsx`            | RCON tab, history, SidePanel Save/ServerChat                      |
 | `…/RconStatusIcon.test.tsx`                 | Status badge / retry                                              |
 | `npm run e2e:rcon` (`scripts/e2e-rcon.cjs`) | Windows UI + mock RCON; HD/FHD/QHD shots                          |

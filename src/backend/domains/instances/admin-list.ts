@@ -52,6 +52,41 @@ export interface AdminListValidateResult {
   ids: string[];
 }
 
+/** Local membership edit on a hosted AdminList resource (#565). */
+export type AdminListEditAction = "add" | "remove";
+
+/**
+ * Minimal surface a hosted AdminList resource must provide so the admin-linked
+ * handle in this file can read and republish its content without knowing Hosted
+ * Resources internals. `HostedResourcesService` satisfies it directly.
+ */
+export interface AdminListResourceHost {
+  /** Resource id serving the loopback AdminListURL, or null when no resource does. */
+  resolveResourceIdByUrl(adminListUrl: string): string | null;
+  /** Published body currently served, for parsing the current admin ids. */
+  getPublishedContent(resourceId: string): string;
+  /** Publish a new revision with the given body. */
+  publishContent(resourceId: string, content: string): void;
+}
+
+/**
+ * Pure add/remove on parsed ids, deduped case-insensitively. Idempotent:
+ * adding an existing id / removing an absent one is a `changed: false` no-op.
+ */
+export function applyAdminListEdit(
+  ids: string[],
+  id: string,
+  action: AdminListEditAction,
+): { ids: string[]; changed: boolean } {
+  const key = id.trim().toLowerCase();
+  if (action === "add") {
+    if (ids.some((entry) => entry.toLowerCase() === key)) return { ids, changed: false };
+    return { ids: [...ids, id.trim()], changed: true };
+  }
+  const kept = ids.filter((entry) => entry.toLowerCase() !== key);
+  return { ids: kept, changed: kept.length !== ids.length };
+}
+
 /** Wiki path: ShooterGame/Saved/AllowedCheaterAccountIDs.txt */
 export function adminListPath(installDir: string): string {
   return join(installDir, "ShooterGame", "Saved", "AllowedCheaterAccountIDs.txt");
@@ -600,6 +635,50 @@ export async function getAdminListState(
     listError,
     ...localFileStats(installDir),
   };
+}
+
+/**
+ * Local add/remove of an id on the hosted AdminList resource behind the active
+ * loopback AdminListURL (#565). Republishes the parsed id list as a new revision
+ * and returns the fresh whitelist state. Stubbornly refuses anything that is not
+ * a loopback URL served by a current YARK resource: third-party remote lists are
+ * read-only here. GUS is never rewritten – a URL change still needs a restart,
+ * but content edits re-fetch within `UpdateAllowedCheatersInterval`.
+ */
+export async function editAdminListMember(
+  installDir: string,
+  host: AdminListResourceHost,
+  input: { id: string; action: AdminListEditAction; name?: string },
+): Promise<AdminListState> {
+  const id = input.id.trim();
+  if (id.length === 0) {
+    throw new Error("Enter an EOS admin id first.");
+  }
+  const { adminListUrl, mode } = await readGusIntervalAndUrl(installDir);
+  if (mode !== "loopback" || adminListUrl.length === 0) {
+    throw new Error(
+      "Admins can only be added or removed here when AdminListURL is a YARK Hosted Resource.",
+    );
+  }
+  const resourceId = host.resolveResourceIdByUrl(adminListUrl);
+  if (resourceId === null) {
+    throw new Error(
+      "AdminListURL does not point at a current YARK Hosted Resource, so it cannot be edited here.",
+    );
+  }
+
+  const ids = parseAdminListIds(host.getPublishedContent(resourceId));
+  const { ids: nextIds, changed } = applyAdminListEdit(ids, id, input.action);
+  if (changed) {
+    host.publishContent(resourceId, formatAdminListIdsBody(nextIds));
+  }
+
+  const learnedName = input.name?.trim();
+  if (input.action === "add" && learnedName !== undefined && learnedName.length > 0) {
+    await learnAdminListNames(installDir, [{ id, name: learnedName }]);
+  }
+
+  return getAdminListState(installDir);
 }
 
 /**

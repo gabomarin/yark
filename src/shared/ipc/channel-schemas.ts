@@ -138,6 +138,7 @@ export const VALIDATED_IPC_CHANNELS = [
   IPC.setAdminList,
   IPC.validateAdminListUrl,
   IPC.learnAdminListNames,
+  IPC.adminListEditMember,
   IPC.eventsRecent,
   IPC.appSetUiDensity,
   IPC.appSetAppearance,
@@ -346,6 +347,12 @@ export const ipcArgSchemas = {
         }),
       )
       .max(500),
+  ]),
+  [IPC.adminListEditMember]: z.tuple([
+    serverIdSchema,
+    z.string().min(1).max(MAX_STRING_PARAM_LENGTH),
+    z.enum(["add", "remove"]),
+    z.string().min(1).max(MAX_STRING_PARAM_LENGTH).nullish(),
   ]),
   [IPC.eventsRecent]: z.tuple([z.number().int().positive().max(5_000)]),
   [IPC.pickPath]: ipcTuple(

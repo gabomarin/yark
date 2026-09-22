@@ -1,10 +1,12 @@
-import type { AdminListStateDto } from "@shared/ipc";
+import type { AdminListEditAction, AdminListStateDto } from "@shared/ipc";
 import type { MutableRefObject } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { ADMIN_LIST_DEFAULT_INTERVAL_SEC, ADMIN_LIST_MIN_INTERVAL_SEC } from "./adminListFormConstants";
 import { notifyHostedResourcesDiagnosticsUpdated } from "@features/hosted-resources/hooks/useHostedResourcesHealth";
+import { useHostedResourceOptions } from "@features/hosted-resources/hooks/useHostedResourceOptions";
+import { isAdminListEditable } from "./useAdminListMembership";
 
 function normalizeInterval(value: number | string): number {
   const raw = typeof value === "number" ? value : Number.parseFloat(String(value));
@@ -34,6 +36,8 @@ export function useAdminsSection(args: UseAdminsSectionArgs) {
   const [error, setError] = useState<string | null>(null);
   const [validating, setValidating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [busyKey, setBusyKey] = useState<string | null>(null);
+  const { resources, loaded } = useHostedResourceOptions();
 
   const applyStateToDrafts = useCallback((next: AdminListStateDto): void => {
     setState(next);
@@ -210,6 +214,32 @@ export function useAdminsSection(args: UseAdminsSectionArgs) {
       ? "Save AdminListURL"
       : "No changes to save";
 
+  const editable = isAdminListEditable(loaded, state, resources);
+
+  const editMember = async (id: string, action: AdminListEditAction, name?: string): Promise<void> => {
+    setBusyKey(id);
+    await runWithFinally(
+      async () => {
+        const result = await window.api.editAdminListMember(serverId, id, action, name);
+        if (result.ok) {
+          applyStateToDrafts(result.data);
+          notifyHostedResourcesDiagnosticsUpdated();
+          showOperatorToast({
+            title: "Admin list",
+            message: `Saved. ASA re-checks this list every ${result.data.updateAllowedCheatersInterval}s — no restart needed.`,
+            color: "ok",
+            autoClose: 6000,
+          });
+        } else {
+          showOperatorError(result.error ?? `Could not ${action} admin id`);
+        }
+      },
+      () => {
+        setBusyKey(null);
+      },
+    );
+  };
+
   return {
     state,
     urlDraft,
@@ -221,6 +251,9 @@ export function useAdminsSection(args: UseAdminsSectionArgs) {
     draftDirty,
     saveBlockedByIni: iniDirty && draftDirty,
     saveTooltip,
+    editable,
+    busyKey,
+    editMember,
     setUrlDraft,
     setIntervalDraft,
     discardDraft,

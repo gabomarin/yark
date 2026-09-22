@@ -152,7 +152,9 @@ describe("hosted resources settings", () => {
     expect(validateHostedResourceContent("json", "{}").ok).toBe(true);
     expect(validateHostedResourceContent("json", "{").ok).toBe(false);
     expect(validateHostedResourceContent("text", "hello").ok).toBe(true);
-    expect(validateHostedResourceContent("text", "").ok).toBe(false);
+    // An emptied id/word list is a valid plain-text publish (removing the last admin).
+    expect(validateHostedResourceContent("text", "").ok).toBe(true);
+    expect(validateHostedResourceContent("json", "").ok).toBe(false);
     expect(validateHostedResourceContent("ini", "[ServerSettings]\nA=B").ok).toBe(true);
     expect(validateHostedResourceContent("ini", "not ini at all").ok).toBe(false);
     // The official dynamicconfig.ini is flat and section-less; do not require [Section].

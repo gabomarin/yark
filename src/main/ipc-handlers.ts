@@ -13,6 +13,7 @@ import type { PlayerSessionWatcher } from "../backend/domains/backups/player-ses
 import type { ProcessMetricsSampler } from "../backend/domains/instances/process-metrics-sampler";
 import type { InstanceService } from "../backend/domains/instances/instance-service";
 import {
+  editAdminListMember,
   getAdminListState,
   learnAdminListNames,
   setAdminListConfig,
@@ -562,6 +563,14 @@ export function registerIpcHandlers(
 
   handleValidated(IPC.learnAdminListNames, ipcArgSchemas[IPC.learnAdminListNames], async ([serverId, hints]) =>
     learnAdminListNames(instances.installDirFor(serverId), hints),
+  );
+
+  handleValidated(IPC.adminListEditMember, ipcArgSchemas[IPC.adminListEditMember], async ([serverId, id, action, name]) =>
+    editAdminListMember(instances.installDirFor(serverId), hostedResources, {
+      id,
+      action,
+      name: name ?? undefined,
+    }),
   );
 
   handleValidated(IPC.eventsRecent, ipcArgSchemas[IPC.eventsRecent], ([limit]) => repo.recentEvents(limit));

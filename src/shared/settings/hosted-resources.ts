@@ -261,7 +261,7 @@ export interface HostedResourceValidation {
  */
 export function validateHostedResourceContent(format: HostedResourceFormat, content: string): HostedResourceValidation {
   const bytes = new TextEncoder().encode(content).length;
-  if (bytes === 0) {
+  if (bytes === 0 && format !== "text") {
     return { ok: false, message: "Content is empty." };
   }
   if (bytes > HOSTED_RESOURCES_MAX_CONTENT_BYTES) {

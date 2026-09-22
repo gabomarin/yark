@@ -34,6 +34,7 @@ import {
   isHostedResourcesPort,
   parseHostedResourcesEnabled,
   parseHostedResourcesPort,
+  parseHostedResourceUrl,
   serializeHostedResourcesEnabled,
   validateHostedResourceContent,
   type HostedResourceFormat,
@@ -292,6 +293,13 @@ export class HostedResourcesService {
       throw new Error("This resource has no published content.");
     }
     return revision.content;
+  }
+
+  /** Resource id serving a loopback resource URL, or null. Used for admin-list edit gating (#565). */
+  resolveResourceIdByUrl(url: string): string | null {
+    const parsed = parseHostedResourceUrl(url);
+    if (parsed === null) return null;
+    return this.deps.repo.getResourceByToken(parsed.token)?.id ?? null;
   }
 
   publishRevision(resourceId: string, revisionId: string): HostedResourceDto {
