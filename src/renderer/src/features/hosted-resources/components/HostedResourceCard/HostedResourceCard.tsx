@@ -112,12 +112,7 @@ export function HostedResourceCard(props: Props): ReactElement {
             {props.referenceIssues.map((reference) => (
               <Text key={`${reference.serverId}:${reference.key}`} size="xs" c="dimmed">
                 Fix in{" "}
-                <Anchor
-                  component="button"
-                  type="button"
-                  size="xs"
-                  onClick={() => props.onOpenReference(reference)}
-                >
+                <Anchor component="button" type="button" size="xs" onClick={() => props.onOpenReference(reference)}>
                   {reference.serverName} · {referenceLocation(reference.key)}
                 </Anchor>
               </Text>

@@ -29,8 +29,7 @@ export function HostedResourcesPage({ onOpenReference = () => undefined }: Props
   const state = overview?.state ?? null;
   const hostedResourcesDisabledWithReferences =
     controller.diagnostics?.state.enabled === false && controller.diagnostics.references.length > 0;
-  const portChanged =
-    state !== null && Number(controller.portDraft) !== state.port;
+  const portChanged = state !== null && Number(controller.portDraft) !== state.port;
   const diagnosticsWarning =
     controller.diagnostics !== null &&
     controller.diagnostics.state.enabled &&
@@ -60,8 +59,9 @@ export function HostedResourcesPage({ onOpenReference = () => undefined }: Props
   };
 
   const referenceIssuesFor = (resourceId: string) =>
-    (controller.diagnostics?.references ?? [])
-      .filter((reference) => reference.resourceId === resourceId && reference.status !== "current");
+    (controller.diagnostics?.references ?? []).filter(
+      (reference) => reference.resourceId === resourceId && reference.status !== "current",
+    );
 
   return (
     <PageScaffold title="Hosted Resources" fillViewport edgeToEdge showHeader={false}>
@@ -83,8 +83,8 @@ export function HostedResourcesPage({ onOpenReference = () => undefined }: Props
             <AppAlert color={headerAlert?.color ?? "blue"} variant="light" title={headerAlert?.title ?? "Next step"}>
               {headerAlert?.message ?? (
                 <>
-                  Copy a resource URL and paste it into the server setting that uses it, such as <code>AdminListURL</code>{" "}
-                  in RCON → Admins. Keep YARK running while ASA needs to refresh the URL.
+                  Copy a resource URL and paste it into the server setting that uses it, such as{" "}
+                  <code>AdminListURL</code> in RCON → Admins. Keep YARK running while ASA needs to refresh the URL.
                 </>
               )}
             </AppAlert>
@@ -214,7 +214,6 @@ export function HostedResourcesPage({ onOpenReference = () => undefined }: Props
               ))}
             </>
           )}
-
         </Stack>
 
         <HostedResourceEditorModal

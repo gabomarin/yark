@@ -57,12 +57,12 @@ export function AppShellLayout({ children, ...props }: Props): ReactElement {
       }}
     >
       <AppShell.Navbar>
-      <Sidebar
-        {...shellProps}
-        iconMode={sidebarRail.iconMode}
-        downloadCount={downloadCount}
-        hostedResourcesHealth={hostedResourcesHealth}
-      />
+        <Sidebar
+          {...shellProps}
+          iconMode={sidebarRail.iconMode}
+          downloadCount={downloadCount}
+          hostedResourcesHealth={hostedResourcesHealth}
+        />
         <ChromeRailEdgeToggle
           className={classes.sidebarEdgeToggle}
           style={{ left: sidebarRail.railWidthPx }}

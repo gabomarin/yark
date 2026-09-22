@@ -168,33 +168,40 @@ export function useHostedResourcesPage(): HostedResourcesController {
 
   const toggleEnabled = useCallback(
     async (enabled: boolean) => {
-      await applyState("toggle", () => window.api.setHostedResourcesEnabled(enabled), () => {
-        setDiagnostics(null);
-        notifyHostedResourcesDiagnosticsUpdated();
-        void runDiagnostics();
-      });
+      await applyState(
+        "toggle",
+        () => window.api.setHostedResourcesEnabled(enabled),
+        () => {
+          setDiagnostics(null);
+          notifyHostedResourcesDiagnosticsUpdated();
+          void runDiagnostics();
+        },
+      );
     },
     [applyState, runDiagnostics],
   );
 
   const applyPort = useCallback(async () => {
-    const port =
-      typeof portDraft === "number" ? portDraft : Number.parseInt(portDraft.replaceAll(",", ""), 10);
+    const port = typeof portDraft === "number" ? portDraft : Number.parseInt(portDraft.replaceAll(",", ""), 10);
     if (!Number.isInteger(port) || port < 1024 || port > 65535) {
       showOperatorError("Port must be between 1024 and 65535.");
       return;
     }
     const previousPort = overview?.state.port;
-    await applyState("port", () => window.api.setHostedResourcesPort(port), () => {
-      setDiagnostics(null);
-      if (previousPort !== undefined && previousPort !== port) {
-        showOperatorToast({
-          title: "Serving port changed",
-          message: `Resources now use port ${port}. Update any server settings that still use port ${previousPort}.`,
-        });
-        void runDiagnostics();
-      }
-    });
+    await applyState(
+      "port",
+      () => window.api.setHostedResourcesPort(port),
+      () => {
+        setDiagnostics(null);
+        if (previousPort !== undefined && previousPort !== port) {
+          showOperatorToast({
+            title: "Serving port changed",
+            message: `Resources now use port ${port}. Update any server settings that still use port ${previousPort}.`,
+          });
+          void runDiagnostics();
+        }
+      },
+    );
   }, [applyState, overview?.state.port, portDraft, runDiagnostics]);
 
   const openCreate = useCallback(() => {
@@ -345,11 +352,15 @@ export function useHostedResourcesPage(): HostedResourcesController {
   const toggleResourceEnabled = useCallback(
     (resource: HostedResourceDto, enabled: boolean) => {
       if (enabled) {
-        void applyState("enable", () => window.api.setHostedResourceEnabled(resource.id, true), () => {
-          setDiagnostics(null);
-          notifyHostedResourcesDiagnosticsUpdated();
-          void runDiagnostics();
-        });
+        void applyState(
+          "enable",
+          () => window.api.setHostedResourceEnabled(resource.id, true),
+          () => {
+            setDiagnostics(null);
+            notifyHostedResourcesDiagnosticsUpdated();
+            void runDiagnostics();
+          },
+        );
         return;
       }
       openDangerConfirmModal({
@@ -359,11 +370,15 @@ export function useHostedResourcesPage(): HostedResourcesController {
           `"${resource.displayName}" stops serving immediately, including after a restart. Revisions stay listed and you can re-enable it anytime.`,
         ),
         onConfirm: () => {
-          void applyState("disable", () => window.api.setHostedResourceEnabled(resource.id, false), () => {
-            setDiagnostics(null);
-            notifyHostedResourcesDiagnosticsUpdated();
-            void runDiagnostics();
-          });
+          void applyState(
+            "disable",
+            () => window.api.setHostedResourceEnabled(resource.id, false),
+            () => {
+              setDiagnostics(null);
+              notifyHostedResourcesDiagnosticsUpdated();
+              void runDiagnostics();
+            },
+          );
         },
       });
     },

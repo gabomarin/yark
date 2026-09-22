@@ -2,9 +2,7 @@ import type { HostedResourcesDiagnosticsDto } from "@shared/ipc";
 import { describe, expect, it } from "vitest";
 import { summarizeHostedResourcesHealth } from "./hostedResourcesHealth";
 
-function diagnostics(
-  overrides: Partial<HostedResourcesDiagnosticsDto> = {},
-): HostedResourcesDiagnosticsDto {
+function diagnostics(overrides: Partial<HostedResourcesDiagnosticsDto> = {}): HostedResourcesDiagnosticsDto {
   return {
     state: { enabled: true, port: 8935, bindHost: "127.0.0.1", listening: true, error: null },
     ownership: { ok: true, message: "YARK is listening." },
@@ -21,9 +19,7 @@ describe("summarizeHostedResourcesHealth", () => {
 
   it("reports an unavailable enabled host as an error", () => {
     expect(
-      summarizeHostedResourcesHealth(
-        diagnostics({ ownership: { ok: false, message: "The port is unavailable." } }),
-      ),
+      summarizeHostedResourcesHealth(diagnostics({ ownership: { ok: false, message: "The port is unavailable." } })),
     ).toMatchObject({ state: "error" });
   });
 

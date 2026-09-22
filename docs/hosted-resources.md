@@ -48,10 +48,10 @@ expect an HTTP URL body (for example `AdminListURL`, `BanListURL`). The experime
 **Healthy**, **Attention needed**, or **Unavailable**. They are intentionally
 separate — none of them proves the game accepted the resource:
 
-| Check                 | What it proves                                                                   |
-| --------------------- | -------------------------------------------------------------------------------- |
-| Loopback ownership    | A loopback request answered with YARK's marker header, so the port is ours       |
-| Served bytes          | A loopback GET of each resource hashes to the declared SHA-256                   |
+| Check                 | What it proves                                                                               |
+| --------------------- | -------------------------------------------------------------------------------------------- |
+| Loopback ownership    | A loopback request answered with YARK's marker header, so the port is ours                   |
+| Served bytes          | A loopback GET of each resource hashes to the declared SHA-256                               |
 | Discovered references | A managed server INI contains a YARK URL, with stale-port and disabled references identified |
 
 Each resource is reported as **Verified**, **Content changed**, **Unreachable**,
@@ -65,14 +65,14 @@ by its resource token and marked **Previous port**; it still needs to be updated
 
 ## Known consumers (ASA)
 
-| Consumer                                         | Expected body                         | Where it is set                        |
-| ------------------------------------------------ | ------------------------------------- | -------------------------------------- |
-| `AdminListURL`                                   | Plain text, one EOS / Ark id per line | `GameUserSettings.ini` (RCON → Admins) |
-| `BanListURL`                                     | Plain text ban entries                | `GameUserSettings.ini`                 |
-| `BadWordListURL` / `BadWordWhiteListURL`         | Plain text word list                  | `GameUserSettings.ini`                 |
-| `CustomDynamicConfigUrl` (+ `-UseDynamicConfig`) | **INI** — flat `Key=Value` lines      | Launch arg or `GameUserSettings.ini`   |
-| `CustomNotificationURL` (`-CustomNotificationURL`) | Plain text / HTML notification page | Launch arg                             |
-| `CustomLiveTuningUrl`                            | **JSON**                              | Launch arg or `GameUserSettings.ini`   |
+| Consumer                                           | Expected body                         | Where it is set                        |
+| -------------------------------------------------- | ------------------------------------- | -------------------------------------- |
+| `AdminListURL`                                     | Plain text, one EOS / Ark id per line | `GameUserSettings.ini` (RCON → Admins) |
+| `BanListURL`                                       | Plain text ban entries                | `GameUserSettings.ini`                 |
+| `BadWordListURL` / `BadWordWhiteListURL`           | Plain text word list                  | `GameUserSettings.ini`                 |
+| `CustomDynamicConfigUrl` (+ `-UseDynamicConfig`)   | **INI** — flat `Key=Value` lines      | Launch arg or `GameUserSettings.ini`   |
+| `CustomNotificationURL` (`-CustomNotificationURL`) | Plain text / HTML notification page   | Launch arg                             |
+| `CustomLiveTuningUrl`                              | **JSON**                              | Launch arg or `GameUserSettings.ini`   |
 
 `CustomDynamicConfigUrl` only accepts **HTTP** (HTTPS is unsupported), which is exactly
 what the loopback host provides. ASA re-reads the dynamic config on world (auto)save or

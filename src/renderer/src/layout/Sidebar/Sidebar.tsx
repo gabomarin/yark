@@ -197,7 +197,9 @@ export function Sidebar(props: Props): ReactElement {
               leftSection={
                 // Icon rail wraps the whole link in a tooltip below; nesting another here
                 // would stack two tooltips on the same hover.
-                iconMode ? icon : (
+                iconMode ? (
+                  icon
+                ) : (
                   <Tooltip label={itemTooltip} position="right" withArrow openDelay={200}>
                     {icon}
                   </Tooltip>
