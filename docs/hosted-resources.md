@@ -58,7 +58,9 @@ Each resource is reported as **Verified**, **Content changed**, **Unreachable**,
 **Disabled**, or **Nothing published**. Request counts are external requests since
 YARK started; Diagnostics' own verification requests are excluded. A served match
 only means YARK returned those bytes; it does not mean ASA loaded them. References
-cover YARK-managed server INI files. A URL using a previous serving port is recognized
+cover YARK-managed `GameUserSettings.ini` files and each server's launch arguments — a
+consumer can take its URL from a flag, and a mod may embed one in its own argument.
+A URL using a previous serving port is recognized
 by its resource token and marked **Previous port**; it still needs to be updated manually.
 
 ## Known consumers (ASA)
@@ -69,6 +71,7 @@ by its resource token and marked **Previous port**; it still needs to be updated
 | `BanListURL`                                     | Plain text ban entries                | `GameUserSettings.ini`                 |
 | `BadWordListURL` / `BadWordWhiteListURL`         | Plain text word list                  | `GameUserSettings.ini`                 |
 | `CustomDynamicConfigUrl` (+ `-UseDynamicConfig`) | **INI** — flat `Key=Value` lines      | Launch arg or `GameUserSettings.ini`   |
+| `CustomNotificationURL` (`-CustomNotificationURL`) | Plain text / HTML notification page | Launch arg                             |
 | `CustomLiveTuningUrl`                            | **JSON**                              | Launch arg or `GameUserSettings.ini`   |
 
 `CustomDynamicConfigUrl` only accepts **HTTP** (HTTPS is unsupported), which is exactly
@@ -82,7 +85,8 @@ serve mod settings.
 
 ### Typed resources and setting selectors
 
-A resource can carry a **type**: `admin-list`, `ban-list`, or `dynamic-config`. The type
+A resource can carry a **type**: `admin-list`, `ban-list`, `bad-word-list`,
+`good-word-list`, `dynamic-config`, `live-tuning`, or `notification-url`. The type
 fixes the body format and is what compatibility is based on — tags stay free-form
 categorization and never decide what a setting offers.
 
@@ -91,11 +95,15 @@ The **format is chosen when the resource is created and never changes**: the ser
 from it. A body in another format is a **new resource** (new URL), not an edit. Clearing the
 type keeps the format and simply stops every setting selector from offering the resource.
 
-| Setting                  | Type             | Edited in                          |
-| ------------------------ | ---------------- | ---------------------------------- |
-| `AdminListURL`           | `admin-list`     | RCON → Admins                      |
-| `BanListURL`             | `ban-list`       | INI Files → Visual                 |
-| `CustomDynamicConfigUrl` | `dynamic-config` | Launch (`-UseDynamicConfig` first) |
+| Setting                  | Type               | Edited in                          |
+| ------------------------ | ------------------ | ---------------------------------- |
+| `AdminListURL`           | `admin-list`       | RCON → Admins                      |
+| `BanListURL`             | `ban-list`         | INI Files → Visual                 |
+| `BadWordListURL`         | `bad-word-list`    | INI Files → Visual                 |
+| `BadWordWhiteListURL`    | `good-word-list`   | INI Files → Visual                 |
+| `CustomLiveTuningUrl`    | `live-tuning`      | INI Files → Visual                 |
+| `CustomDynamicConfigUrl` | `dynamic-config`   | Launch (`-UseDynamicConfig` first) |
+| `CustomNotificationURL`  | `notification-url` | Launch                             |
 
 Each of those fields lists enabled, published resources of its own type, still accepts an
 arbitrary external http(s) URL, and pre-fills a create flow when empty. Nothing is

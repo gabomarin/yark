@@ -3,6 +3,7 @@ import { ClockCounterClockwise, Copy, DotsThreeVertical, PencilSimple, Power, Tr
 import { ActionIcon, Anchor, Badge, CopyButton, Group, Menu, Stack, Text, Tooltip } from "@mantine/core";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import type { HostedResourceDiagnosticStatus, HostedResourceDto, HostedResourceReferenceDto } from "@shared/ipc";
+import { HOSTED_RESOURCE_SURFACE_LABELS, consumerForSetting } from "@shared/settings/hosted-resource-consumers";
 import {
   formatByteSize,
   formatLabel,
@@ -177,20 +178,6 @@ function disabledReferenceMessage(references: HostedResourceReferenceDto[]): str
 }
 
 function referenceLocation(key: string): string {
-  switch (key) {
-    case "AdminListURL":
-      return "RCON → Admins";
-    case "BanListURL":
-      return "RCON → Bans";
-    case "BadWordListURL":
-      return "RCON → Chat filters";
-    case "BadWordWhiteListURL":
-      return "RCON → Chat filter allowlist";
-    case "CustomDynamicConfigUrl":
-      return "Custom dynamic config settings";
-    case "CustomLiveTuningUrl":
-      return "Custom live tuning settings";
-    default:
-      return "server settings";
-  }
+  const consumer = consumerForSetting(key);
+  return consumer === null ? "server settings" : HOSTED_RESOURCE_SURFACE_LABELS[consumer.surface];
 }

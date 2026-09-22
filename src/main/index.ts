@@ -40,6 +40,7 @@ import { ModsService } from "../backend/domains/mods/mods-service";
 import { HostedResourcesService } from "../backend/domains/hosted-resources/hosted-resources-service";
 import { HostedResourcesRepository } from "../backend/infra/db/hosted-resources-repository";
 import { gameUserSettingsIniPath } from "../backend/domains/instances/sync-profile-ini";
+import { buildLaunchArgs } from "../backend/domains/instances/launch-args";
 import { InstanceLockManager } from "../backend/orchestration/instance-lock-manager";
 import { AppUpdateService } from "./app-update-service";
 import { DiscordWebhookService } from "./discord-webhook-service";
@@ -416,7 +417,15 @@ if (isPrimaryInstance) {
           } catch {
             text = "";
           }
-          return { serverId: profile.id, serverName: profile.name, text };
+          // A consumer can take its URL from a launch flag instead of the INI, so the
+          // effective command line is scanned alongside GameUserSettings.ini.
+          let launchArgs = profile.extraArgs;
+          try {
+            launchArgs = buildLaunchArgs(profile);
+          } catch {
+            // Keep the raw args; a profile YARK cannot compose must not blank diagnostics.
+          }
+          return { serverId: profile.id, serverName: profile.name, text, launchArgs };
         }),
     });
     const backupRepo = new BackupRepository(db);

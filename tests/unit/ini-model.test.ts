@@ -104,6 +104,35 @@ LastJoinedSessionPerCategory=Three
     expect(next).toContain("MaxPlayers=40");
   });
 
+  it("uncomments a commented default instead of appending a second assignment", () => {
+    const text = [
+      "[ServerSettings]",
+      "# Value type: string with a URL",
+      "#AdminListURL=N/A",
+      "AutoSavePeriodMinutes=15.0",
+      "",
+    ].join("\n");
+
+    const next = setIniTextValue(text, "ServerSettings", "AdminListURL", '"http://127.0.0.1:8935/r/token"');
+
+    expect(next).toContain('AdminListURL="http://127.0.0.1:8935/r/token"');
+    expect(next).not.toContain("#AdminListURL");
+    expect(next.match(/AdminListURL=/g)).toHaveLength(1);
+    // The documentation line above it survives.
+    expect(next).toContain("# Value type: string with a URL");
+    expect(parseIniRows(next).filter((row) => row.key === "AdminListURL")).toHaveLength(1);
+  });
+
+  it("edits the live assignment when the key is set next to a commented default", () => {
+    const text = ["[ServerSettings]", "#AdminListURL=N/A", "AdminListURL=Old", ""].join("\n");
+
+    const next = setIniTextValue(text, "ServerSettings", "AdminListURL", "New");
+
+    expect(next).toContain("AdminListURL=New");
+    expect(next).toContain("#AdminListURL=N/A");
+    expect(next.match(/^AdminListURL=/gm)).toHaveLength(1);
+  });
+
   it("updates keys in existing sections even when section casing differs", () => {
     const text = ["[serversettings]", "MaxPlayers=70", ""].join("\n");
 

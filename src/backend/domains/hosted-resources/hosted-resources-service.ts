@@ -25,6 +25,7 @@ import {
   HOSTED_RESOURCE_CONTENT_TYPES,
   formatForHostedResourceKind,
   formatHostedResourceUrl,
+  hostedResourceLaunchArg,
   normalizeHostedResourceKind,
   normalizeHostedResourceTags,
   HOSTED_RESOURCES_MAX_DISPLAY_NAME_LENGTH,
@@ -76,6 +77,8 @@ interface HostedResourceReferenceSource {
   serverName: string;
   /** GameUserSettings.ini text scanned for YARK resource URLs. */
   text: string;
+  /** Effective launch arguments; a consumer can take its URL from a flag as well. */
+  launchArgs?: readonly string[];
 }
 
 export interface HostedResourcesServiceDeps {
@@ -552,21 +555,37 @@ export class HostedResourcesService {
     const resources = this.deps.repo.listResourceSummaries();
     const resourcesByToken = new Map(resources.map((resource) => [resource.token, resource]));
     const references: HostedResourceReferenceDto[] = [];
+    // One setting can hold the URL in an INI *and* as a launch flag; report it once.
+    const seen = new Set<string>();
+
+    const pushReference = (source: HostedResourceReferenceSource, key: string, rawValue: string): void => {
+      const parsed = parseHostedResourceUrl(rawValue);
+      if (parsed === null) return;
+      const resource = resourcesByToken.get(parsed.token);
+      if (resource === undefined) return;
+      const url = rawValue.trim();
+      const identity = `${source.serverId}\u0000${key.toLowerCase()}\u0000${url}`;
+      if (seen.has(identity)) return;
+      seen.add(identity);
+      references.push({
+        resourceId: resource.id,
+        serverId: source.serverId,
+        serverName: source.serverName,
+        key,
+        url,
+        status: resource.disabledAt !== null ? "disabled" : parsed.port !== port ? "stale-port" : "current",
+      });
+    };
+
     for (const source of sources) {
-      const rows = parseIniTextRows(source.text);
-      for (const row of rows) {
-        const parsed = parseHostedResourceUrl(row.value);
-        if (parsed === null) continue;
-        const resource = resourcesByToken.get(parsed.token);
-        if (resource === undefined) continue;
-        references.push({
-          resourceId: resource.id,
-          serverId: source.serverId,
-          serverName: source.serverName,
-          key: row.key,
-          url: row.value.trim(),
-          status: resource.disabledAt !== null ? "disabled" : parsed.port !== port ? "stale-port" : "current",
-        });
+      for (const row of parseIniTextRows(source.text)) {
+        pushReference(source, row.key, row.value);
+      }
+      for (const arg of source.launchArgs ?? []) {
+        const launchArg = hostedResourceLaunchArg(arg);
+        if (launchArg !== null) {
+          pushReference(source, launchArg.key, launchArg.value);
+        }
       }
     }
     return references;

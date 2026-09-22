@@ -48,7 +48,12 @@ interface Harness {
 }
 
 function createHarness(
-  readReferenceSources: () => { serverId: string; serverName: string; text: string }[] = () => [],
+  readReferenceSources: () => {
+    serverId: string;
+    serverName: string;
+    text: string;
+    launchArgs?: readonly string[];
+  }[] = () => [],
 ): Harness {
   const db = openDatabase(":memory:");
   openDbs.push(db);
@@ -497,6 +502,37 @@ describe("hosted resources HTTP host", () => {
         serverName: "Island",
         key: "AdminListURL",
         url: resource.url,
+        status: "current",
+      },
+    ]);
+  });
+
+  it("discovers hosted URLs carried by launch arguments, not only by INIs", async () => {
+    const tokenHolder: { url: string } = { url: "" };
+    const harness = createHarness(() => [
+      {
+        serverId: "s1",
+        serverName: "Island",
+        text: "",
+        launchArgs: [`-CustomNotificationURL="${tokenHolder.url}"`, "-NoBattlEye"],
+      },
+    ]);
+    await startServing(harness);
+    const resource = harness.service.createResource({
+      displayName: "Notice page",
+      format: "text",
+      content: "<html>maintenance</html>",
+    });
+    tokenHolder.url = resource.url;
+
+    const diagnostics = await harness.service.runDiagnostics();
+    expect(diagnostics.references).toEqual([
+      {
+        resourceId: resource.id,
+        serverId: "s1",
+        serverName: "Island",
+        key: "CustomNotificationURL",
+        url: `"${resource.url}"`,
         status: "current",
       },
     ]);

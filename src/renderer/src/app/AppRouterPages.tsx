@@ -20,6 +20,7 @@ import { OverviewPage } from "@features/overview/OverviewPage";
 import { SettingsPage } from "@features/settings/SettingsPage";
 import type { Route } from "@layout/Sidebar/Sidebar";
 import type { HostedResourceReferenceDto } from "@shared/ipc";
+import { consumerForSetting } from "@shared/settings/hosted-resource-consumers";
 import type { WorkspaceTab } from "@features/server-workspace/ServerWorkspacePage";
 
 export interface AppRouterPagesProps {
@@ -210,17 +211,20 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
         page: (
           <HostedResourcesPage
             onOpenReference={(reference: HostedResourceReferenceDto) => {
+              // Where the setting is edited, not where its key name suggests: a reference
+              // must never land on a tab that cannot fix it.
+              const consumer = consumerForSetting(reference.key);
               const initialTab: WorkspaceTab =
-                reference.key === "AdminListURL"
+                consumer?.surface === "rcon-admins"
                   ? "rcon"
-                  : reference.key === "CustomDynamicConfigUrl" || reference.key === "CustomLiveTuningUrl"
+                  : consumer?.surface === "launch-option"
                     ? "launch"
                     : "iniFiles";
               setOverlay({
                 kind: "workspace",
                 serverId: reference.serverId,
                 initialTab,
-                initialRconFocus: reference.key === "AdminListURL" ? "admins" : undefined,
+                initialRconFocus: consumer?.surface === "rcon-admins" ? "admins" : undefined,
               });
             }}
           />

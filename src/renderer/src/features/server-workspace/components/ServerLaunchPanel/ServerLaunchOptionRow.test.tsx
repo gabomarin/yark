@@ -8,13 +8,14 @@ import { groupStructuredOptions } from "./serverLaunchModel";
 import { ServerLaunchOptionRow } from "./ServerLaunchOptionRow";
 
 const DYNAMIC_URL = `http://127.0.0.1:8935/r/${"C".repeat(43)}`;
+const NOTIFICATION_URL = `http://127.0.0.1:8935/r/${"N".repeat(43)}`;
 
-function dynamicConfigResource(): HostedResourceDto {
+function hostedResource(overrides: Partial<HostedResourceDto>): HostedResourceDto {
   return {
-    id: "hr-dynamic",
-    displayName: "Dynamic config",
-    format: "ini",
-    kind: "dynamic-config",
+    id: "hr-1",
+    displayName: "Resource",
+    format: "text",
+    kind: "admin-list",
     url: DYNAMIC_URL,
     enabled: true,
     createdAt: "2026-07-24T00:00:00.000Z",
@@ -26,25 +27,26 @@ function dynamicConfigResource(): HostedResourceDto {
     publishedSizeBytes: 32,
     notes: "",
     tags: [],
+    ...overrides,
   };
 }
 
-function customDynamicConfigOption() {
+function optionById(id: string) {
   const options = [...groupStructuredOptions().values()].flat();
-  const option = options.find((entry) => entry.curation.id === "customdynamicconfigurl-url");
+  const option = options.find((entry) => entry.curation.id === id);
   if (option === undefined) {
-    throw new Error("catalog drift: the CustomDynamicConfigUrl row is missing");
+    throw new Error(`catalog drift: the ${id} row is missing`);
   }
   return option;
 }
 
-function setup(enabled: boolean) {
+function setup(optionId: string, enabled: boolean, resources: HostedResourceDto[]) {
   const api = createRendererApiMock({
     getHostedResourcesOverview: vi.fn().mockResolvedValue({
       ok: true,
       data: {
         state: { enabled: true, port: 8935, bindHost: "127.0.0.1", listening: true, error: null },
-        resources: [dynamicConfigResource()],
+        resources,
       },
     }),
   });
@@ -53,7 +55,7 @@ function setup(enabled: boolean) {
   const utils = render(
     <AppProviders>
       <ServerLaunchOptionRow
-        option={customDynamicConfigOption()}
+        option={optionById(optionId)}
         selection={{ enabled, value: "" }}
         inputSize="sm"
         dependencyMet
@@ -68,7 +70,9 @@ function setup(enabled: boolean) {
 describe("ServerLaunchOptionRow hosted resource wiring (#577)", () => {
   it("assigns a hosted dynamic-config resource to CustomDynamicConfigUrl", async () => {
     const user = userEvent.setup();
-    const { onValueChange, container } = setup(true);
+    const { onValueChange, container } = setup("customdynamicconfigurl-url", true, [
+      hostedResource({ id: "hr-dynamic", displayName: "Dynamic config", format: "ini", kind: "dynamic-config" }),
+    ]);
 
     const field = container.querySelector("[data-hosted-resource-selector]");
     expect(field).not.toBeNull();
@@ -78,8 +82,29 @@ describe("ServerLaunchOptionRow hosted resource wiring (#577)", () => {
     expect(onValueChange).toHaveBeenCalledWith(DYNAMIC_URL);
   });
 
+  it("assigns a hosted notification-url resource to CustomNotificationURL", async () => {
+    const user = userEvent.setup();
+    const { onValueChange, container } = setup("customnotificationurl-url", true, [
+      hostedResource({
+        id: "hr-notice",
+        displayName: "Notice page",
+        kind: "notification-url",
+        url: NOTIFICATION_URL,
+      }),
+    ]);
+
+    const field = container.querySelector("[data-hosted-resource-selector]");
+    expect(field).not.toBeNull();
+    await user.click(field as HTMLElement);
+    await user.click(await screen.findByRole("option", { name: "Notice page" }));
+
+    expect(onValueChange).toHaveBeenCalledWith(NOTIFICATION_URL);
+  });
+
   it("keeps the selector hidden while the row is off", () => {
-    const { container } = setup(false);
+    const { container } = setup("customdynamicconfigurl-url", false, [
+      hostedResource({ id: "hr-dynamic", displayName: "Dynamic config", format: "ini", kind: "dynamic-config" }),
+    ]);
     expect(container.querySelector("[data-hosted-resource-selector]")).toBeNull();
   });
 });

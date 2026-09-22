@@ -53,12 +53,23 @@ export type HostedResourceFormat = "json" | "ini" | "text";
  * Typed compatibility, separate from operator tags: a kind names the ASA consumer the
  * body is written for, which is what a setting's selector filters on.
  */
-export type HostedResourceKind = "admin-list" | "ban-list" | "dynamic-config";
+export type HostedResourceKind =
+  | "admin-list"
+  | "ban-list"
+  | "dynamic-config"
+  | "notification-url"
+  | "bad-word-list"
+  | "good-word-list"
+  | "live-tuning";
 
 export const HOSTED_RESOURCE_KINDS = [
   "admin-list",
   "ban-list",
   "dynamic-config",
+  "notification-url",
+  "bad-word-list",
+  "good-word-list",
+  "live-tuning",
 ] as const satisfies readonly HostedResourceKind[];
 
 /** A kind fixes the body format, so a resource can never be half re-typed later. */
@@ -66,12 +77,20 @@ const HOSTED_RESOURCE_KIND_FORMATS: Record<HostedResourceKind, HostedResourceFor
   "admin-list": "text",
   "ban-list": "text",
   "dynamic-config": "ini",
+  "notification-url": "text",
+  "bad-word-list": "text",
+  "good-word-list": "text",
+  "live-tuning": "json",
 };
 
 export const HOSTED_RESOURCE_KIND_LABELS: Record<HostedResourceKind, string> = {
   "admin-list": "Admin list",
   "ban-list": "Ban list",
   "dynamic-config": "Dynamic config",
+  "notification-url": "Notification URL",
+  "bad-word-list": "Bad words list",
+  "good-word-list": "Good words list",
+  "live-tuning": "Live tuning",
 };
 
 export function isHostedResourceKind(value: unknown): value is HostedResourceKind {
@@ -184,6 +203,20 @@ export function parseHostedResourceUrl(value: string): ParsedHostedResourceUrl |
   const token = url.pathname.slice(HOSTED_RESOURCES_PATH_PREFIX.length);
   if (!HOSTED_RESOURCES_TOKEN_PATTERN.test(token)) return null;
   return { token, host, port: url.port.length === 0 ? null : Number.parseInt(url.port, 10) };
+}
+
+/**
+ * `-Flag=value` / `?Flag=value` launch argument whose value is a loopback resource URL.
+ * ASA reads several consumers from the command line (and a mod may embed a YARK URL in
+ * its own argument), so reference scanning is not INI-only.
+ */
+export function hostedResourceLaunchArg(arg: string): { key: string; value: string } | null {
+  const match = /^[-?]([^=\s]+)=(.+)$/.exec(arg.trim());
+  if (match === null) {
+    return null;
+  }
+  const value = (match[2] ?? "").trim();
+  return parseHostedResourceUrl(value) === null ? null : { key: match[1] ?? "", value };
 }
 
 export interface HostedResourceValidation {
