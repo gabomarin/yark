@@ -3,6 +3,7 @@ import type { AppBusyOverlayContent } from "@ui/AppBusyOverlay/AppBusyOverlay";
 import { AppShellLayout } from "./AppShellLayout";
 import type { Route } from "@layout/Sidebar/Sidebar";
 import type { OfficialNetworkStatus } from "@shared/types";
+import type { HostedResourcesHealth } from "@features/hosted-resources/model/hostedResourcesHealth";
 import type { ReactNode, ReactElement } from "react";
 
 interface OverviewSlot {
@@ -56,6 +57,7 @@ interface Props {
   busyOverlay?: AppBusyOverlayContent | null;
   workspaceFooter?: ReactNode;
   downloadCount?: number;
+  hostedResourcesHealth?: HostedResourcesHealth;
 }
 
 export function AppRouter(props: Props): ReactElement {
@@ -97,6 +99,7 @@ export function AppRouter(props: Props): ReactElement {
       busyOverlay={props.busyOverlay}
       workspaceFooter={props.workspaceFooter}
       downloadCount={props.downloadCount}
+      hostedResourcesHealth={props.hostedResourcesHealth}
     >
       {content}
     </AppShellLayout>

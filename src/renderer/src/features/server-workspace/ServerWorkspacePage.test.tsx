@@ -5,6 +5,7 @@ import { setupUser } from "@renderer/test/setupUser";
 import { ServerWorkspacePage, type RconHistoryEntry } from "./ServerWorkspacePage";
 import { INI_GUS_OVERRIDE_HINT_STORAGE_KEY } from "./components/ConfigurationEditor/configurationEditorModel";
 import type { PlayerListState } from "./components/RconPanel/PlayerListSection";
+import type { HostedResourceReferenceDto } from "@shared/ipc";
 import { STOP_PROGRESS_SELECTOR } from "./components/StopProgressAlert";
 
 const serverA = {
@@ -65,6 +66,8 @@ function renderWorkspace(
     onRegisterLeaveGuard?: (guard: ((action: () => void) => void) | null) => void;
     onServerUpdated?: () => void;
     workspacePanels?: "auto" | "drawers";
+    hostedResourceReferences?: HostedResourceReferenceDto[];
+    onOpenHostedResources?: () => void;
   } = {},
 ): void {
   render(
@@ -92,6 +95,8 @@ function renderWorkspace(
         {...playerListHandlers}
         onCopyConfiguration={vi.fn()}
         onServerUpdated={extra.onServerUpdated ?? vi.fn()}
+        hostedResourceReferences={extra.hostedResourceReferences}
+        onOpenHostedResources={extra.onOpenHostedResources}
       />
     </AppProviders>,
   );
@@ -1440,5 +1445,37 @@ describe("ServerWorkspacePage", () => {
     });
     expect(onLeave).toHaveBeenCalledOnce();
     expect(window.api.updateServer).toHaveBeenCalled();
+  });
+
+  it("warns only the workspace whose hosted resource references need attention", () => {
+    const onOpenHostedResources = vi.fn();
+    renderWorkspace(
+      vi.fn(),
+      vi.fn(async () => true),
+      [],
+      {
+        hostedResourceReferences: [
+          {
+            resourceId: "resource-1",
+            serverId: "srv-a",
+            serverName: "The Island",
+            key: "AdminListURL",
+            url: "http://127.0.0.1:8935/r/resource-1",
+            status: "stale-port",
+            source: "ini",
+          },
+        ],
+        onOpenHostedResources,
+      },
+    );
+
+    expect(screen.getByText("Hosted resource references need attention")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /One setting on this server points at a hosted resource that is disabled or uses an outdated URL\./,
+      ),
+    ).toBeInTheDocument();
+    screen.getByRole("button", { name: "Open Hosted Resources diagnostics" }).click();
+    expect(onOpenHostedResources).toHaveBeenCalledOnce();
   });
 });

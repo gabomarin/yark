@@ -1,6 +1,6 @@
 import { Tabs } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
-import { lazy, Suspense, useState, type ReactElement } from "react";
+import { lazy, Suspense, useEffect, useState, type ReactElement } from "react";
 import { ServerBackupPanel } from "@features/backups/ServerBackupPanel";
 import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
 import { RconPanel } from "../RconPanel/RconPanel";
@@ -40,6 +40,7 @@ function WorkspacePanelLoading(): ReactElement {
 
 interface Props {
   value: WorkspaceTab;
+  initialRconFocus?: "admins";
   server: ServerProfile;
   /** Fleet profiles — port-conflict preview on edit and Move dest nesting (#294). */
   servers: ServerProfile[];
@@ -66,6 +67,8 @@ interface Props {
   onRegisterProfileSave?: (save: (() => Promise<boolean>) | null) => void;
   onRegisterIniSave?: (save: (() => Promise<boolean>) | null) => void;
   onLogsFocusConsumed?: () => void;
+  /** Clear the overlay's `initialRconFocus` once it has been applied. */
+  onRconFocusConsumed?: () => void;
   onSendRcon: (serverId: string, command: string) => Promise<boolean>;
   onClearRconHistory: (serverId: string) => void;
   onRconTabFocusChanged: (serverId: string, isFocused: boolean) => Promise<void>;
@@ -76,10 +79,19 @@ interface Props {
 }
 
 export function WorkspaceTabs(props: Props): ReactElement {
+  const { initialRconFocus, onRconFocusConsumed } = props;
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   /** Snapshot at open so refresh remounts do not rewrite the dialog mid-move. */
   const [moveServer, setMoveServer] = useState<ServerProfile | null>(null);
-  const [rconPlayersFocus, setRconPlayersFocus] = useState<"survivors" | "admins" | null>(null);
+  const [rconPlayersFocus, setRconPlayersFocus] = useState<"survivors" | "admins" | null>(initialRconFocus ?? null);
+
+  useEffect(() => {
+    // Only ever apply a focus, never clear one: consuming it flips the prop to undefined,
+    // and clearing here would undo the focus the operator just asked for.
+    if (initialRconFocus === undefined || initialRconFocus === null) return;
+    setRconPlayersFocus(initialRconFocus);
+    onRconFocusConsumed?.();
+  }, [initialRconFocus, onRconFocusConsumed]);
 
   return (
     <>
@@ -143,6 +155,7 @@ export function WorkspaceTabs(props: Props): ReactElement {
                     filesJobActive={props.filesJobActive}
                     onDirtyChange={props.onIniDirtyChange}
                     onRegisterSave={props.onRegisterIniSave}
+                    onSaved={props.onServerUpdated}
                     onOpenAdminList={() => {
                       setRconPlayersFocus("admins");
                       props.onChange("rcon");

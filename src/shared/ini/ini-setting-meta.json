@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-06T00:17:38.946Z",
+  "generatedAt": "2026-09-22T05:24:46.481Z",
   "settings": [
     {
       "id": "game:/script/shootergame.shootergamemode:AdjustableMutagenSpawnDelayMultiplier",
@@ -1755,6 +1755,42 @@
       }
     },
     {
+      "id": "gameUserSettings:ServerSettings:BadWordListURL",
+      "file": "gameUserSettings",
+      "section": "ServerSettings",
+      "key": "BadWordListURL",
+      "defaultValue": ": \"http://arkdedicated.com/badwords.txt\"",
+      "valueType": "string with a URL",
+      "description": ": \"http://cdn2.arkdedicated.com/asa/badwords.txt\" Add the URL to hosting your own bad words list. Note: on ARK: Survival Evolved servers only the HTTP protocol is supported (an HTTPS URL will not work).",
+      "input": {
+        "type": "text"
+      }
+    },
+    {
+      "id": "gameUserSettings:ServerSettings:BadWordWhiteListURL",
+      "file": "gameUserSettings",
+      "section": "ServerSettings",
+      "key": "BadWordWhiteListURL",
+      "defaultValue": ": \"http://arkdedicated.com/goodwords.txt\"",
+      "valueType": "string with a URL",
+      "description": ": \"http://cdn2.arkdedicated.com/asa/goodwords.txt\" Add the URL to hosting your own good words list. Note: on ARK: Survival Evolved servers only the HTTP protocol is supported (an HTTPS URL will not work).",
+      "input": {
+        "type": "text"
+      }
+    },
+    {
+      "id": "gameUserSettings:ServerSettings:BanListURL",
+      "file": "gameUserSettings",
+      "section": "ServerSettings",
+      "key": "BanListURL",
+      "defaultValue": "",
+      "valueType": "string with a URL",
+      "description": "Sets the global ban list. Must be enclosed in double quotes. The list is fetched every 10 minutes (to check if there are new banned IDs). ARK: Survival Evolved: Official ban list URL is http://arkdedicated.com/banlist.txt (before 279.233 the URL was http://playark.com/banlist.txt). Note: it supports the HTTP protocol only (HTTPS is not supported). ARK: Survival Ascended: Official ban list URL is https://cdn2.arkdedicated.com/asa/BanList.txt. Note: it supports both HTTP and HTTPS protocols.",
+      "input": {
+        "type": "text"
+      }
+    },
+    {
       "id": "gameUserSettings:ServerSettings:bFilterCharacterNames",
       "file": "gameUserSettings",
       "section": "ServerSettings",
@@ -2035,6 +2071,18 @@
       "input": {
         "type": "number",
         "step": 0.1
+      }
+    },
+    {
+      "id": "gameUserSettings:ServerSettings:CustomLiveTuningUrl",
+      "file": "gameUserSettings",
+      "section": "ServerSettings",
+      "key": "CustomLiveTuningUrl",
+      "defaultValue": "",
+      "valueType": "string with a URL",
+      "description": "Direct link to the live tuning file. For more information on how to use this system check out the official announcement: https://survivetheark.com/index.php?/forums/topic/569366-server-configuration-live-tuning-system. ARK: Survival Evolved: official servers use http://arkdedicated.com/DefaultOverloads.json. Note: string with a URL must use the HTTP protocol (HTTPS is not supported) and inside quotes if used in command line. ARK: Survival Ascended: official servers use https://cdn2.arkdedicated.com/asa/livetuningoverloads.json. Note: string with a URL must use inside quotes if used in command line.",
+      "input": {
+        "type": "text"
       }
     },
     {

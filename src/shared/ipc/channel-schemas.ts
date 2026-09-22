@@ -9,6 +9,7 @@ import { IPC } from "../ipc";
 import { DISCORD_MESSAGE_MAX_LENGTH } from "../settings/discord-webhook";
 import { onboardingRecordSchema } from "../settings/onboarding";
 import {
+  HOSTED_RESOURCE_KINDS,
   HOSTED_RESOURCES_MAX_CONTENT_BYTES,
   HOSTED_RESOURCES_MAX_NOTES_LENGTH,
   HOSTED_RESOURCES_MAX_PORT,
@@ -61,6 +62,9 @@ import {
 const serverProfilePatchSchema = z.custom<unknown>((value) => isServerProfilePatch(value), {
   message: "Invalid server profile patch",
 });
+
+/** Typed resource kind (#577); unknown kinds are rejected before they reach storage. */
+const hostedResourceKindSchema = z.enum(HOSTED_RESOURCE_KINDS);
 
 /** Channels registered with `handleValidated` — keep in sync with ipc-handlers. */
 export const VALIDATED_IPC_CHANNELS = [
@@ -134,6 +138,7 @@ export const VALIDATED_IPC_CHANNELS = [
   IPC.setAdminList,
   IPC.validateAdminListUrl,
   IPC.learnAdminListNames,
+  IPC.adminListEditMember,
   IPC.eventsRecent,
   IPC.appSetUiDensity,
   IPC.appSetAppearance,
@@ -343,6 +348,13 @@ export const ipcArgSchemas = {
       )
       .max(500),
   ]),
+  [IPC.adminListEditMember]: z.tuple([
+    serverIdSchema,
+    z.string().min(1).max(MAX_STRING_PARAM_LENGTH),
+    z.enum(["add", "remove"]),
+    // Blank/empty names are tolerated: the backend skips the empty-name sidecar write.
+    z.string().max(MAX_STRING_PARAM_LENGTH).nullish(),
+  ]),
   [IPC.eventsRecent]: z.tuple([z.number().int().positive().max(5_000)]),
   [IPC.pickPath]: ipcTuple(
     pickPathKindSchema,
@@ -500,6 +512,7 @@ export const ipcArgSchemas = {
           .array(z.string().trim().min(1).max(HOSTED_RESOURCES_MAX_TAG_LENGTH))
           .max(HOSTED_RESOURCES_MAX_TAGS)
           .optional(),
+        kind: hostedResourceKindSchema.nullable().optional(),
       })
       .strict(),
   ]),
@@ -511,6 +524,7 @@ export const ipcArgSchemas = {
         displayName: nonEmptyStringSchema("Display name", 120),
         notes: z.string().max(HOSTED_RESOURCES_MAX_NOTES_LENGTH),
         tags: z.array(z.string().trim().min(1).max(HOSTED_RESOURCES_MAX_TAG_LENGTH)).max(HOSTED_RESOURCES_MAX_TAGS),
+        kind: hostedResourceKindSchema.nullable().optional(),
       })
       .strict()
       .optional(),
@@ -531,6 +545,7 @@ export const ipcArgSchemas = {
         displayName: nonEmptyStringSchema("Display name", 120),
         notes: z.string().max(HOSTED_RESOURCES_MAX_NOTES_LENGTH),
         tags: z.array(z.string().trim().min(1).max(HOSTED_RESOURCES_MAX_TAG_LENGTH)).max(HOSTED_RESOURCES_MAX_TAGS),
+        kind: hostedResourceKindSchema.nullable().optional(),
       })
       .strict(),
   ]),

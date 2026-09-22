@@ -23,20 +23,27 @@ import {
   HOSTED_RESOURCES_TOKEN_BYTES,
   HOSTED_RESOURCES_TOKEN_PATTERN,
   HOSTED_RESOURCE_CONTENT_TYPES,
+  formatForHostedResourceKind,
+  findHostedResource,
   formatHostedResourceUrl,
+  hostedResourceLaunchArg,
+  normalizeHostedResourceKind,
   normalizeHostedResourceTags,
   HOSTED_RESOURCES_MAX_DISPLAY_NAME_LENGTH,
   HOSTED_RESOURCES_MAX_NOTES_LENGTH,
   isHostedResourcesPort,
   parseHostedResourcesEnabled,
   parseHostedResourcesPort,
+  parseHostedResourceUrl,
   serializeHostedResourcesEnabled,
   validateHostedResourceContent,
   type HostedResourceFormat,
+  type HostedResourceKind,
 } from "@shared/settings/hosted-resources";
 import { parseIniTextRows } from "@shared/ini/ini-text";
 import type {
   HostedResourceDiagnosticDto,
+  HostedResourceDiagnosticStatus,
   HostedResourceDto,
   HostedResourceReferenceDto,
   HostedResourceRevisionDto,
@@ -55,6 +62,8 @@ export const HOSTED_RESOURCES_MARKER_HEADER = "x-yark-hosted-resources";
 
 /** In-memory ownership/served-bytes probe timeout. */
 const PROBE_TIMEOUT_MS = 3_000;
+/** Each probe buffers a whole body, so diagnostics probe in small batches, not all at once. */
+const DIAGNOSTIC_PROBE_CONCURRENCY = 4;
 const HEADERS_TIMEOUT_MS = 10_000;
 const REQUEST_TIMEOUT_MS = 15_000;
 const KEEP_ALIVE_TIMEOUT_MS = 5_000;
@@ -68,8 +77,10 @@ interface HostedResourcesSettingsStore {
 interface HostedResourceReferenceSource {
   serverId: string;
   serverName: string;
-  /** GameUserSettings.ini text scanned for exact YARK URLs. */
+  /** GameUserSettings.ini text scanned for YARK resource URLs. */
   text: string;
+  /** Effective launch arguments; a consumer can take its URL from a flag as well. */
+  launchArgs?: readonly string[];
 }
 
 export interface HostedResourcesServiceDeps {
@@ -124,6 +135,8 @@ export class HostedResourcesService {
   private boundPort = DEFAULT_HOSTED_RESOURCES_PORT;
   private lastError: string | null = null;
   private readonly requestCounts = new Map<string, number>();
+  /** Ids with an in-flight diagnostics fetch. Those GETs are ours, so they must not bump the counter. */
+  private readonly probing = new Set<string>();
   private queue: Promise<unknown> = Promise.resolve();
 
   constructor(private readonly deps: HostedResourcesServiceDeps) {}
@@ -201,15 +214,19 @@ export class HostedResourcesService {
     content: string;
     notes?: string;
     tags?: string[];
+    kind?: string | null;
   }): HostedResourceDto {
     this.assertValidContent(input.format, input.content);
-    const metadata = this.normalizeMetadata(input.displayName, input.notes, input.tags);
+    const kind = normalizeHostedResourceKind(input.kind);
+    this.assertKindMatchesFormat(kind, input.format);
+    const metadata = this.normalizeMetadata(input.displayName, input.notes, input.tags, kind);
     const now = new Date().toISOString();
     const resource: HostedResourceRow = {
       id: randomUUID(),
       token: mintToken(),
       displayName: metadata.displayName,
       format: input.format,
+      kind: metadata.kind,
       createdAt: now,
       updatedAt: now,
       disabledAt: null,
@@ -233,14 +250,18 @@ export class HostedResourcesService {
   publishContent(
     resourceId: string,
     content: string,
-    metadataInput?: { displayName: string; notes: string; tags: string[] },
+    metadataInput?: { displayName: string; notes: string; tags: string[]; kind?: string | null },
   ): HostedResourceDto {
     const resource = this.mustGetResource(resourceId);
     this.assertValidContent(resource.format, content);
+    // Omitted kind keeps the stored one; an explicit `null` untypes on purpose, matching
+    // `updateMetadata`, so the editor's "clear the type then save" path actually clears it.
+    const kind = this.resolveKind(resource, metadataInput?.kind);
     const metadata = this.normalizeMetadata(
       metadataInput?.displayName ?? resource.displayName,
       metadataInput?.notes ?? resource.notes,
       metadataInput?.tags ?? resource.tags,
+      kind,
     );
     const now = new Date().toISOString();
     const revisionId = randomUUID();
@@ -249,6 +270,7 @@ export class HostedResourcesService {
       displayName: metadata.displayName,
       notes: metadata.notes,
       tags: metadata.tags,
+      kind: metadata.kind,
       publishedAt: now,
       revision: {
         id: revisionId,
@@ -273,6 +295,24 @@ export class HostedResourcesService {
     return revision.content;
   }
 
+  /**
+   * Resource id serving a loopback resource URL, or null. Used for admin-list edit gating (#565).
+   * Mirrors the served-resource contract so an edit cannot target a resource ASA can never fetch:
+   * the host must be listening, the resource enabled with a published revision, and the URL port
+   * ours — otherwise ASA sees a 404 and the edit could never take effect.
+   */
+  resolveResourceIdByUrl(url: string): string | null {
+    const state = this.getState();
+    if (!state.listening) return null;
+    const parsed = parseHostedResourceUrl(url);
+    if (parsed === null) return null;
+    const resource = this.deps.repo.getResourceByToken(parsed.token);
+    if (resource === null || resource.disabledAt !== null) return null;
+    if (this.deps.repo.getPublishedRevision(resource.id) === null) return null;
+    if (parsed.port !== state.port) return null;
+    return resource.id;
+  }
+
   publishRevision(resourceId: string, revisionId: string): HostedResourceDto {
     this.mustGetResource(resourceId);
     const revision = this.deps.repo.getRevision(revisionId);
@@ -285,16 +325,20 @@ export class HostedResourcesService {
 
   renameResource(resourceId: string, displayName: string): HostedResourceDto {
     const resource = this.mustGetResource(resourceId);
-    const metadata = this.normalizeMetadata(displayName, resource.notes, resource.tags);
+    const metadata = this.normalizeMetadata(displayName, resource.notes, resource.tags, resource.kind);
     this.deps.repo.renameResource(resourceId, metadata.displayName, new Date().toISOString());
     return this.toResourceDto(this.mustGetSummary(resourceId), this.getState().port);
   }
 
-  updateMetadata(resourceId: string, input: { displayName: string; notes: string; tags: string[] }): HostedResourceDto {
-    this.mustGetResource(resourceId);
-    const metadata = this.normalizeMetadata(input.displayName, input.notes, input.tags);
+  updateMetadata(
+    resourceId: string,
+    input: { displayName: string; notes: string; tags: string[]; kind?: string | null },
+  ): HostedResourceDto {
+    const resource = this.mustGetResource(resourceId);
+    const kind = this.resolveKind(resource, input.kind);
+    const metadata = this.normalizeMetadata(input.displayName, input.notes, input.tags, kind);
     const now = new Date().toISOString();
-    this.deps.repo.updateMetadata(resourceId, metadata.displayName, metadata.notes, metadata.tags, now);
+    this.deps.repo.updateMetadata(resourceId, metadata.displayName, metadata.notes, metadata.tags, metadata.kind, now);
     return this.toResourceDto(this.mustGetSummary(resourceId), this.getState().port);
   }
 
@@ -334,24 +378,13 @@ export class HostedResourcesService {
     // could otherwise report bytes served by the foreign process.
     const state = this.getState();
     const serving = ownership.ok && state.listening;
+    // Probes are independent, so they run in small batches: sequential would cost one
+    // timeout per resource, unbounded would hold every response body in memory at once.
+    const summaries = this.deps.repo.listResourceSummaries();
     const resources: HostedResourceDiagnosticDto[] = [];
-    for (const summary of this.deps.repo.listResourceSummaries()) {
-      const url = formatHostedResourceUrl(state.port, summary.token);
-      let servedSha256: string | null = null;
-      if (serving && summary.disabledAt === null && summary.publishedRevisionId !== null) {
-        servedSha256 = await this.fetchServedSha256(url);
-      }
-      resources.push({
-        resourceId: summary.id,
-        displayName: summary.displayName,
-        url,
-        enabled: summary.disabledAt === null,
-        published: summary.publishedRevisionId !== null,
-        declaredSha256: summary.publishedSha256,
-        servedSha256,
-        servedOk: servedSha256 !== null && servedSha256 === summary.publishedSha256,
-        requestCount: this.requestCounts.get(summary.id) ?? 0,
-      });
+    for (let start = 0; start < summaries.length; start += DIAGNOSTIC_PROBE_CONCURRENCY) {
+      const batch = summaries.slice(start, start + DIAGNOSTIC_PROBE_CONCURRENCY);
+      resources.push(...(await Promise.all(batch.map((summary) => this.probeResource(summary, state.port, serving)))));
     }
     return {
       state,
@@ -470,7 +503,9 @@ export class HostedResourcesService {
       res.end();
       return;
     }
-    this.requestCounts.set(resource.id, (this.requestCounts.get(resource.id) ?? 0) + 1);
+    if (!this.probing.has(resource.id)) {
+      this.requestCounts.set(resource.id, (this.requestCounts.get(resource.id) ?? 0) + 1);
+    }
     res.end(body);
   }
 
@@ -500,12 +535,54 @@ export class HostedResourcesService {
     }
   }
 
-  private async fetchServedSha256(url: string): Promise<string | null> {
+  /** One resource's diagnostic row: lifecycle status first, then a hash comparison when served. */
+  private async probeResource(
+    summary: HostedResourceSummaryRow,
+    port: number,
+    serving: boolean,
+  ): Promise<HostedResourceDiagnosticDto> {
+    const url = formatHostedResourceUrl(port, summary.token);
+    let servedSha256: string | null = null;
+    let status: HostedResourceDiagnosticStatus;
+    if (summary.disabledAt !== null) {
+      status = "disabled";
+    } else if (summary.publishedRevisionId === null) {
+      status = "unpublished";
+    } else if (!serving) {
+      status = "unreachable";
+    } else {
+      const served = await this.fetchServed(url, summary.id);
+      servedSha256 = served.sha256;
+      if (!served.ok) {
+        status = "unreachable";
+      } else {
+        status = servedSha256 === summary.publishedSha256 ? "verified" : "mismatch";
+      }
+    }
+    return {
+      resourceId: summary.id,
+      displayName: summary.displayName,
+      url,
+      enabled: summary.disabledAt === null,
+      published: summary.publishedRevisionId !== null,
+      declaredSha256: summary.publishedSha256,
+      servedSha256,
+      status,
+      requestCount: this.requestCounts.get(summary.id) ?? 0,
+    };
+  }
+
+  /** HTTP reachability only; the caller compares the hash and picks mismatch vs verified. */
+  private async fetchServed(url: string, resourceId: string): Promise<{ sha256: string | null; ok: boolean }> {
+    this.probing.add(resourceId);
     try {
       const result = await probeUrl(url);
-      return result.status === 200 ? hostedResourceSha256(result.body) : null;
+      if (result.status !== 200) return { sha256: null, ok: false };
+      return { sha256: hostedResourceSha256(result.body), ok: true };
     } catch {
-      return null;
+      return { sha256: null, ok: false };
+    } finally {
+      this.probing.delete(resourceId);
     }
   }
 
@@ -516,22 +593,58 @@ export class HostedResourcesService {
     } catch {
       return [];
     }
-    const resources = this.deps.repo.listResourceSummaries().filter((row) => row.disabledAt === null);
+    const resources = this.deps.repo.listResourceSummaries();
+    const resourcesByToken = new Map(resources.map((resource) => [resource.token, resource]));
     const references: HostedResourceReferenceDto[] = [];
+    // One setting can hold the URL in an INI *and* as a launch flag; report it once.
+    const seen = new Set<string>();
+
+    const pushReference = (
+      source: HostedResourceReferenceSource,
+      key: string,
+      rawValue: string,
+      origin: HostedResourceReferenceDto["source"],
+      section: string | null,
+    ): void => {
+      // The URL can be embedded in the value (quotes, a trailing comment, a joined command
+      // line), so the reference is whichever loopback URL the value contains.
+      const found = findHostedResource(rawValue);
+      if (found === null) return;
+      const resource = resourcesByToken.get(found.parsed.token);
+      if (resource === undefined) return;
+      const url = found.url;
+      // The section is part of the identity: the same key name in two sections is two
+      // assignments the operator has to fix separately, and both must stay visible.
+      const identity = `${source.serverId}\u0000${origin}\u0000${section ?? ""}\u0000${key.toLowerCase()}\u0000${url}`;
+      if (seen.has(identity)) return;
+      seen.add(identity);
+      let status: HostedResourceReferenceDto["status"] = "current";
+      if (resource.disabledAt !== null) {
+        status = "disabled";
+      } else if (found.parsed.port !== port) {
+        // A portless URL means port 80, which is never YARK's port: `null !== port`
+        // correctly reports the stale address rather than guessing a scheme default.
+        status = "stale-port";
+      }
+      references.push({
+        resourceId: resource.id,
+        serverId: source.serverId,
+        serverName: source.serverName,
+        key,
+        url,
+        status,
+        source: origin,
+      });
+    };
+
     for (const source of sources) {
-      const rows = parseIniTextRows(source.text);
-      for (const resource of resources) {
-        const url = formatHostedResourceUrl(port, resource.token);
-        for (const row of rows) {
-          if (row.value.includes(url)) {
-            references.push({
-              resourceId: resource.id,
-              serverId: source.serverId,
-              serverName: source.serverName,
-              key: row.key,
-              url,
-            });
-          }
+      for (const row of parseIniTextRows(source.text)) {
+        pushReference(source, row.key, row.value, "ini", row.section);
+      }
+      for (const arg of source.launchArgs ?? []) {
+        const launchArg = hostedResourceLaunchArg(arg);
+        if (launchArg !== null) {
+          pushReference(source, launchArg.key, launchArg.value, "launch-arg", null);
         }
       }
     }
@@ -566,6 +679,7 @@ export class HostedResourcesService {
       id: row.id,
       displayName: row.displayName,
       format: row.format,
+      kind: row.kind,
       url: formatHostedResourceUrl(port, row.token),
       enabled: row.disabledAt === null,
       createdAt: row.createdAt,
@@ -584,7 +698,8 @@ export class HostedResourcesService {
     displayName: string,
     notes: string | undefined,
     tags: readonly string[] | undefined,
-  ): { displayName: string; notes: string; tags: string[] } {
+    kind: HostedResourceKind | null,
+  ): { displayName: string; notes: string; tags: string[]; kind: HostedResourceKind | null } {
     const normalizedName = displayName.trim();
     if (normalizedName.length === 0) throw new Error("Display name is required.");
     if (normalizedName.length > HOSTED_RESOURCES_MAX_DISPLAY_NAME_LENGTH) {
@@ -598,6 +713,31 @@ export class HostedResourcesService {
       displayName: normalizedName,
       notes: normalizedNotes,
       tags: normalizeHostedResourceTags(tags ?? []),
+      kind,
     };
+  }
+
+  /**
+   * Omitted kind keeps the stored one; an explicit `null` untypes on purpose. Both write
+   * paths (`publishContent`, `updateMetadata`) resolve and validate through here so their
+   * rules cannot drift apart.
+   */
+  private resolveKind(resource: HostedResourceRow, input: string | null | undefined): HostedResourceKind | null {
+    const kind = input === undefined ? resource.kind : normalizeHostedResourceKind(input);
+    this.assertKindMatchesFormat(kind, resource.format);
+    return kind;
+  }
+
+  /**
+   * A kind implies a body format and a resource's format never changes after creation, so
+   * a kind can only be applied to a resource it is compatible with (#577). `null` means
+   * untyped and is always allowed.
+   */
+  private assertKindMatchesFormat(kind: HostedResourceKind | null, format: HostedResourceFormat): void {
+    if (kind === null) return;
+    const expected = formatForHostedResourceKind(kind);
+    if (expected !== format) {
+      throw new Error(`A ${kind} resource must use the ${expected} format.`);
+    }
   }
 }

@@ -1,4 +1,4 @@
-import type { HostedResourceDto, HostedResourceRevisionDto } from "@shared/ipc";
+import type { HostedResourceDiagnosticStatus, HostedResourceDto, HostedResourceRevisionDto } from "@shared/ipc";
 import type { HostedResourceFormat } from "@shared/settings/hosted-resources";
 
 interface FormatOption {
@@ -59,18 +59,80 @@ export function formatByteSize(bytes: number): string {
   return `${(kb / 1024).toFixed(1)} MB`;
 }
 
+export interface HostedResourcesHeaderAlert {
+  color: "red" | "attention";
+  title: string;
+  message: string;
+}
+
+/** First matching alert wins, hardest failure first; null shows the default next-step hint. */
+export function resolveHeaderAlert(input: {
+  stateError: string | null | undefined;
+  disabledWithReferences: boolean;
+  ownershipFailed: boolean;
+  portChanged: boolean;
+  diagnosticsWarning: boolean;
+}): HostedResourcesHeaderAlert | null {
+  if (input.stateError !== null && input.stateError !== undefined) {
+    return { color: "red", title: "Port unavailable", message: input.stateError };
+  }
+  if (input.disabledWithReferences) {
+    return {
+      color: "red",
+      title: "Hosted Resources is disabled",
+      message:
+        "One or more server settings still reference hosted URLs. Enable Hosted Resources or update those settings.",
+    };
+  }
+  if (input.ownershipFailed) {
+    return {
+      color: "red",
+      title: "Hosted Resources is unavailable",
+      message: "Check that the configured port is free and that YARK is still running before using these URLs.",
+    };
+  }
+  if (input.portChanged) {
+    return {
+      color: "attention",
+      title: "Existing URLs will become stale",
+      message:
+        "Update the affected resource cards after changing the port. Diagnostics will identify server settings that still use the previous URL.",
+    };
+  }
+  if (input.diagnosticsWarning) {
+    return {
+      color: "attention",
+      title: "Hosted Resources need attention",
+      message: "Review the highlighted resource cards below for the affected server settings and resource state.",
+    };
+  }
+  return null;
+}
+
+/** Comma-separated tag draft → trimmed, non-empty tags; shared by both create paths. */
+export function parseTagsText(tagsText: string): string[] {
+  return tagsText
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+}
+
+/** Parses a Mantine NumberInput draft, which can be a number, "" or "8,080" mid-edit. */
+export function parsePortDraft(value: number | string): number {
+  return typeof value === "number" ? value : Number.parseInt(value.replaceAll(",", ""), 10);
+}
+
 /** Reference counts are per server; wording avoids implying the game loaded it. */
 export function summarizeReferences(references: { serverId: string }[]): number {
   return new Set(references.map((reference) => reference.serverId)).size;
 }
-export function resourcePublishedLabel(resource: HostedResourceDto): string {
-  if (!resource.enabled) {
-    return "Disabled — not served";
-  }
+
+/** Version detail for a published resource; null while nothing is published. */
+export function resourceVersionLabel(resource: HostedResourceDto): string | null {
   if (resource.publishedRevisionId === null) {
-    return "Nothing published yet";
+    return null;
   }
-  return `Serving version ${resource.publishedSequence ?? "?"} · ${shortSha(resource.publishedSha256)}`;
+  return `Version ${resource.publishedSequence ?? "?"} · ${shortSha(resource.publishedSha256)}`;
 }
 
 export function revisionLabel(revision: HostedResourceRevisionDto): string {
@@ -80,17 +142,36 @@ export function revisionLabel(revision: HostedResourceRevisionDto): string {
 }
 
 /** The neutral and semantic badge colours this helper can hand out. */
-export type ServedBadgeColor = "gray" | "ok" | "red";
+export type ServedBadgeColor = "gray" | "ok" | "red" | "attention";
 
-/**
- * Badge tone for a served resource: disabled or unpublished is a fact (`gray`), a served
- * resource that stops answering is state (`red`), and a live one is `ok`.
- */
-export function servedBadgeColor(resource: {
-  enabled: boolean;
-  published: boolean;
-  servedOk: boolean;
-}): ServedBadgeColor {
-  if (!resource.enabled || !resource.published) return "gray";
-  return resource.servedOk ? "ok" : "red";
+/** Listening badge for the status card: label and colour are picked once, so they cannot drift. */
+export function listeningBadge(state: { enabled: boolean; listening: boolean }): {
+  color: ServedBadgeColor;
+  label: string;
+} {
+  if (!state.enabled) return { color: "gray", label: "Disabled" };
+  if (state.listening) return { color: "ok", label: "Listening" };
+  return { color: "red", label: "Not listening" };
+}
+
+/** State badge for a resource card. Diagnostics remain resource-specific and live on the card. */
+export function resourceStateBadge(
+  resource: HostedResourceDto,
+  diagnosticStatus: HostedResourceDiagnosticStatus | null,
+): { color: ServedBadgeColor; label: string } {
+  if (!resource.enabled) return { color: "gray", label: "Disabled" };
+  if (resource.publishedRevisionId === null) return { color: "gray", label: "Nothing published" };
+  if (diagnosticStatus === null) return { color: "gray", label: "Published · not checked" };
+  switch (diagnosticStatus) {
+    case "verified":
+      return { color: "ok", label: "Verified" };
+    case "mismatch":
+      return { color: "attention", label: "Content changed" };
+    case "unreachable":
+      return { color: "red", label: "Unreachable" };
+    case "disabled":
+      return { color: "gray", label: "Disabled" };
+    case "unpublished":
+      return { color: "gray", label: "Nothing published" };
+  }
 }
