@@ -303,8 +303,8 @@ export const darkColors: AppThemeColors = {
 /** Light semantics: every text tone clears 4.5:1 on the light panel (`bad` 4.1:1 as a fill). */
 export const lightColors: AppThemeColors = {
   ok: "#166f49",
-  warn: "#8a6a00",
-  attention: "#8a6a00",
+  warn: "#806200",
+  attention: "#806200",
   bad: "#C94040",
   dangerBright: "#b3261e",
   biomass: "#166f49",
