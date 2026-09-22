@@ -29,6 +29,7 @@ export function isAdminListEditable(
 interface AdminListMembership {
   state: AdminListStateDto | null;
   editable: boolean;
+  visible: boolean;
   busyKey: string | null;
   isMember: (id: string) => boolean;
   reload: () => Promise<void>;
@@ -113,11 +114,12 @@ export function useAdminListMembership(serverId: string): AdminListMembership {
   }, [reload]);
 
   const editable = isAdminListEditable(loaded, state, resources);
+  const visible = state?.mode === "loopback" || state?.mode === "remote";
 
   const isMember = useCallback(
     (id: string): boolean =>
-      editable ? (state?.entries.some((entry) => entry.id.toLowerCase() === id.toLowerCase()) ?? false) : false,
-    [editable, state],
+      visible ? (state?.entries.some((entry) => entry.id.toLowerCase() === id.toLowerCase()) ?? false) : false,
+    [state, visible],
   );
 
   const editMember = useCallback(
@@ -126,5 +128,5 @@ export function useAdminListMembership(serverId: string): AdminListMembership {
     [serverId],
   );
 
-  return { state, editable, busyKey, isMember, reload, editMember };
+  return { state, editable, visible, busyKey, isMember, reload, editMember };
 }
