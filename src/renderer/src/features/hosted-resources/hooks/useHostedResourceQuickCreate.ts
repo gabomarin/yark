@@ -29,14 +29,15 @@ export function useHostedResourceQuickCreate(
     setDraft({
       mode: "create",
       resourceId: null,
-      displayName: consumer.setting,
+      // The operator-facing label, not the setting key: they are naming a resource, not an INI key.
+      displayName: consumer.label,
       format: consumer.format,
       kind: consumer.kind,
       content: "",
       notes: "",
       tagsText: "",
     });
-  }, [consumer.format, consumer.kind, consumer.setting]);
+  }, [consumer.format, consumer.kind, consumer.label]);
 
   const close = useCallback(() => setDraft(null), []);
 
@@ -45,7 +46,7 @@ export function useHostedResourceQuickCreate(
   }, []);
 
   const submit = useCallback(() => {
-    if (draft === null) return;
+    if (draft === null || busy) return;
     const displayName = draft.displayName.trim();
     if (displayName.length === 0) {
       showOperatorError("Display name is required.");
@@ -87,7 +88,7 @@ export function useHostedResourceQuickCreate(
       },
       () => setBusy(false),
     );
-  }, [draft, onCreated]);
+  }, [busy, draft, onCreated]);
 
   return { draft, busy, open, close, update, submit };
 }

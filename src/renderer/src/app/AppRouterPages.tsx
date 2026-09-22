@@ -23,6 +23,23 @@ import type { HostedResourceReferenceDto } from "@shared/ipc";
 import { consumerForSetting } from "@shared/settings/hosted-resource-consumers";
 import type { WorkspaceTab } from "@features/server-workspace/ServerWorkspacePage";
 
+/**
+ * Where a hosted-resources reference opens: the surface its setting is edited on, not the
+ * tab its key name suggests, so a reference never lands where it cannot be fixed. Keys that
+ * are not in the consumer catalog (a mod's own INI row or launch flag) only exist in the INI
+ * editor, so that is the fallback.
+ */
+function referenceTargetFor(key: string): { tab: WorkspaceTab; rconFocus?: "admins" } {
+  switch (consumerForSetting(key)?.surface) {
+    case "rcon-admins":
+      return { tab: "rcon", rconFocus: "admins" };
+    case "launch-option":
+      return { tab: "launch" };
+    default:
+      return { tab: "iniFiles" };
+  }
+}
+
 export interface AppRouterPagesProps {
   shell: AppShellChromeProps;
   route: Route;
@@ -211,20 +228,12 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
         page: (
           <HostedResourcesPage
             onOpenReference={(reference: HostedResourceReferenceDto) => {
-              // Where the setting is edited, not where its key name suggests: a reference
-              // must never land on a tab that cannot fix it.
-              const consumer = consumerForSetting(reference.key);
-              const initialTab: WorkspaceTab =
-                consumer?.surface === "rcon-admins"
-                  ? "rcon"
-                  : consumer?.surface === "launch-option"
-                    ? "launch"
-                    : "iniFiles";
+              const target = referenceTargetFor(reference.key);
               setOverlay({
                 kind: "workspace",
                 serverId: reference.serverId,
-                initialTab,
-                initialRconFocus: consumer?.surface === "rcon-admins" ? "admins" : undefined,
+                initialTab: target.tab,
+                initialRconFocus: target.rconFocus,
               });
             }}
           />

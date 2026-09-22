@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import type { HostedResourceReferenceDto } from "@shared/ipc";
 import { AppFormOverlays } from "@app/AppFormOverlays";
 import { AppRouterPages } from "@app/AppRouterPages";
 import { AppWorkspaceOverlay } from "@app/AppWorkspaceOverlay";
@@ -13,6 +14,9 @@ import type {
   AppShellChromeInputs,
   AppSteamCmdSlice,
 } from "@app/model/appMainRouterSlices";
+
+/** Stable identity so a missing summary does not re-create the prop on every render. */
+const EMPTY_HOSTED_RESOURCE_REFERENCES_BY_SERVER: Map<string, HostedResourceReferenceDto[]> = new Map();
 
 export interface AppMainRouterProps {
   navigation: AppNavigationSlice;
@@ -63,7 +67,9 @@ export function AppMainRouter(props: AppMainRouterProps): ReactElement {
         steamCmd={steamCmd}
         registerOverlayLeaveGuard={navigation.registerOverlayLeaveGuard}
         onStatusPanelVisibleChange={navigation.onWorkspaceStatusPanelVisibleChange}
-        hostedResourceReferencesByServerId={shell.hostedResourceReferencesByServerId ?? new Map()}
+        hostedResourceReferencesByServerId={
+          shell.hostedResourceReferencesByServerId ?? EMPTY_HOSTED_RESOURCE_REFERENCES_BY_SERVER
+        }
       />
     );
   }

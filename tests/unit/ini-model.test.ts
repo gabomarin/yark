@@ -123,6 +123,17 @@ LastJoinedSessionPerCategory=Three
     expect(parseIniRows(next).filter((row) => row.key === "AdminListURL")).toHaveLength(1);
   });
 
+  it("leaves a doubly commented line alone when writing the key", () => {
+    const text = ["[ServerSettings]", "##AdminListURL=N/A", "AutoSavePeriodMinutes=15.0", ""].join("\n");
+
+    const next = setIniTextValue(text, "ServerSettings", "AdminListURL", "New");
+
+    // `##Key=…` is a line someone disabled on purpose, not the shipped default slot: it
+    // stays commented, and the write appends its own assignment instead.
+    expect(next).toContain("##AdminListURL=N/A");
+    expect(parseIniRows(next).filter((row) => row.key === "AdminListURL")).toMatchObject([{ value: "New" }]);
+  });
+
   it("edits the live assignment when the key is set next to a commented default", () => {
     const text = ["[ServerSettings]", "#AdminListURL=N/A", "AdminListURL=Old", ""].join("\n");
 

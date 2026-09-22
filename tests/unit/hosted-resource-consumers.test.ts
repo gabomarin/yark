@@ -108,7 +108,7 @@ describe("hostedResourceLaunchArg", () => {
   it("reads the flag name and value of a launch argument that points at a resource", () => {
     expect(hostedResourceLaunchArg(`-CustomNotificationURL="http://127.0.0.1:8935/r/${TOKEN}"`)).toEqual({
       key: "CustomNotificationURL",
-      value: `"http://127.0.0.1:8935/r/${TOKEN}"`,
+      value: `http://127.0.0.1:8935/r/${TOKEN}`,
     });
     expect(hostedResourceLaunchArg(`?CustomLiveTuningUrl=http://127.0.0.1:8935/r/${TOKEN}`)).toMatchObject({
       key: "CustomLiveTuningUrl",
@@ -116,6 +116,12 @@ describe("hostedResourceLaunchArg", () => {
     // A mod's own argument counts too: anything whose value is a YARK URL.
     expect(hostedResourceLaunchArg(`-MyModConfigOverride=http://localhost/r/${TOKEN}`)).toMatchObject({
       key: "MyModConfigOverride",
+    });
+  });
+
+  it("names the flag that precedes the URL when ASA joins several options into one argument", () => {
+    expect(hostedResourceLaunchArg(`?Flag1=x?CustomDynamicConfigUrl=http://127.0.0.1:8935/r/${TOKEN}`)).toMatchObject({
+      key: "CustomDynamicConfigUrl",
     });
   });
 

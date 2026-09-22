@@ -25,10 +25,9 @@ export interface HostedResourceAssignment {
   issue: HostedResourceAssignmentIssue | null;
 }
 
-/** http default, so a portless loopback URL still compares to the served port. */
+/** Explicit port only; `null` (portless) compares equal to `null` instead of guessing a scheme default. */
 function portOf(url: string): number | null {
-  const parsed = parseHostedResourceUrl(url);
-  return parsed === null ? null : (parsed.port ?? 80);
+  return parseHostedResourceUrl(url)?.port ?? null;
 }
 
 function tokenOf(url: string): string | null {
@@ -74,19 +73,23 @@ export function assignmentIssueMessage(
 ): string | null {
   const { issue, resource } = assignment;
   if (issue === null) return null;
-  const name = resource === null ? null : `"${resource.displayName}"`;
+  // "missing" is the only issue without a resource; every other issue carries one.
+  if (issue === "missing" || resource === null) {
+    return "This looks like a YARK Hosted Resource URL, but no current resource serves it. It may have been deleted.";
+  }
+  const name = `"${resource.displayName}"`;
   switch (issue) {
     case "disabled":
       return `${name} is disabled, so ASA cannot fetch this URL. Re-enable it in Hosted Resources.`;
     case "unpublished":
       return `${name} has no published content yet, so this URL serves nothing.`;
     case "stale-port":
-      return `${name} is now served on port ${portOf(resource!.url)}, but this URL points at another port, so ASA cannot fetch it. Pick the resource again to use the current address.`;
+      return `${name} is now served on port ${portOf(resource.url)}, but this URL points at another port, so ASA cannot fetch it. Pick the resource again to use the current address.`;
     case "untyped":
       return `${name} has no resource type. It still serves, but it is not offered for ${consumer.label} fields until you set one.`;
     case "incompatible-kind":
-      return `${name} is typed as ${HOSTED_RESOURCE_KIND_LABELS[resource!.kind!]}, not ${consumer.label}. It still serves, but it is not offered here.`;
-    case "missing":
-      return "This looks like a YARK Hosted Resource URL, but no current resource serves it. It may have been deleted.";
+      return `${name} is typed as ${
+        resource.kind === null ? "untyped" : HOSTED_RESOURCE_KIND_LABELS[resource.kind]
+      }, not ${consumer.label}. It still serves, but it is not offered here.`;
   }
 }

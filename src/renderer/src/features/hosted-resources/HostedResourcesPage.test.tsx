@@ -347,7 +347,7 @@ describe("HostedResourcesPage", () => {
     await user.click(screen.getByRole("button", { name: "Check health" }));
     expect(await screen.findByText("Referenced while disabled")).toBeInTheDocument();
     expect(
-      screen.getByText("This resource is disabled, but RCON → Admins still references it through AdminListURL."),
+      screen.getByText("This resource is disabled, but the RCON → Admins setting still references it."),
     ).toBeInTheDocument();
     const referenceLink = screen.getByRole("button", { name: "The Island · RCON → Admins" });
     expect(referenceLink).toBeInTheDocument();

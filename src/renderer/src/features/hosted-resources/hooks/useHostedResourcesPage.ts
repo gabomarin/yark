@@ -17,7 +17,7 @@ import { openDangerConfirmModal, dangerConfirmBody } from "@ui/DangerConfirmModa
 import {
   getCachedHostedResourcesDiagnostics,
   HOSTED_RESOURCES_DIAGNOSTICS_LOADED_EVENT,
-  notifyHostedResourcesDiagnosticsUpdated,
+  setCachedHostedResourcesDiagnostics,
 } from "./useHostedResourcesHealth";
 
 /**
@@ -83,7 +83,7 @@ export function useHostedResourcesPage(): HostedResourcesController {
   const [editor, setEditor] = useState<HostedResourceEditorDraft | null>(null);
   const [revisionsFor, setRevisionsFor] = useState<string | null>(null);
   const [revisions, setRevisions] = useState<HostedResourceRevisionDto[]>([]);
-  const [diagnostics, setDiagnostics] = useState<HostedResourcesDiagnosticsDto | null>(
+  const [diagnostics, setDiagnostics] = useState<HostedResourcesDiagnosticsDto | null>(() =>
     getCachedHostedResourcesDiagnostics(),
   );
   const [diagnosticsBusy, setDiagnosticsBusy] = useState(false);
@@ -157,8 +157,10 @@ export function useHostedResourcesPage(): HostedResourcesController {
           showOperatorError(result?.error ?? "The diagnostics request failed.", "Diagnostics failed");
           return;
         }
+        // One fan-out point: publish to the shared cache, whose LOADED event updates
+        // every consumer (sidebar, this page, open selectors) without re-probing.
         setDiagnostics(result.data);
-        notifyHostedResourcesDiagnosticsUpdated();
+        setCachedHostedResourcesDiagnostics(result.data);
       },
       () => {
         setDiagnosticsBusy(false);
@@ -173,7 +175,6 @@ export function useHostedResourcesPage(): HostedResourcesController {
         () => window.api.setHostedResourcesEnabled(enabled),
         () => {
           setDiagnostics(null);
-          notifyHostedResourcesDiagnosticsUpdated();
           void runDiagnostics();
         },
       );
@@ -192,13 +193,15 @@ export function useHostedResourcesPage(): HostedResourcesController {
       "port",
       () => window.api.setHostedResourcesPort(port),
       () => {
+        // The port is stored even when it did not change, so always re-probe: a cleared
+        // snapshot must not outlive the change, and the toast is a separate concern.
         setDiagnostics(null);
+        void runDiagnostics();
         if (previousPort !== undefined && previousPort !== port) {
           showOperatorToast({
             title: "Serving port changed",
             message: `Resources now use port ${port}. Update any server settings that still use port ${previousPort}.`,
           });
-          void runDiagnostics();
         }
       },
     );
@@ -357,7 +360,6 @@ export function useHostedResourcesPage(): HostedResourcesController {
           () => window.api.setHostedResourceEnabled(resource.id, true),
           () => {
             setDiagnostics(null);
-            notifyHostedResourcesDiagnosticsUpdated();
             void runDiagnostics();
           },
         );
@@ -375,7 +377,6 @@ export function useHostedResourcesPage(): HostedResourcesController {
             () => window.api.setHostedResourceEnabled(resource.id, false),
             () => {
               setDiagnostics(null);
-              notifyHostedResourcesDiagnosticsUpdated();
               void runDiagnostics();
             },
           );

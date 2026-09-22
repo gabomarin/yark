@@ -8,7 +8,12 @@
  * `kind` (never by operator tags), and the create helper pre-fills kind + format from here.
  */
 
-import { formatForHostedResourceKind, type HostedResourceFormat, type HostedResourceKind } from "./hosted-resources";
+import {
+  HOSTED_RESOURCE_KIND_LABELS,
+  formatForHostedResourceKind,
+  type HostedResourceFormat,
+  type HostedResourceKind,
+} from "./hosted-resources";
 
 /** Where a URL-consuming setting is edited. Keeps docs and surface wiring aligned. */
 export type HostedResourceConsumerSurface = "rcon-admins" | "ini-visual" | "launch-option";
@@ -42,7 +47,7 @@ export const ADMIN_LIST_URL_CONSUMER: HostedResourceConsumer = {
   launchOptionId: null,
   kind: "admin-list",
   format: formatForHostedResourceKind("admin-list"),
-  label: "Admin list",
+  label: HOSTED_RESOURCE_KIND_LABELS["admin-list"],
   surface: "rcon-admins",
 };
 
@@ -51,7 +56,7 @@ export const BAN_LIST_URL_CONSUMER: HostedResourceConsumer = {
   launchOptionId: null,
   kind: "ban-list",
   format: formatForHostedResourceKind("ban-list"),
-  label: "Ban list",
+  label: HOSTED_RESOURCE_KIND_LABELS["ban-list"],
   surface: "ini-visual",
 };
 
@@ -60,7 +65,7 @@ export const BAD_WORD_LIST_URL_CONSUMER: HostedResourceConsumer = {
   launchOptionId: null,
   kind: "bad-word-list",
   format: formatForHostedResourceKind("bad-word-list"),
-  label: "Bad words list",
+  label: HOSTED_RESOURCE_KIND_LABELS["bad-word-list"],
   surface: "ini-visual",
 };
 
@@ -69,7 +74,7 @@ export const BAD_WORD_WHITE_LIST_URL_CONSUMER: HostedResourceConsumer = {
   launchOptionId: null,
   kind: "good-word-list",
   format: formatForHostedResourceKind("good-word-list"),
-  label: "Good words list",
+  label: HOSTED_RESOURCE_KIND_LABELS["good-word-list"],
   surface: "ini-visual",
 };
 
@@ -78,7 +83,7 @@ export const CUSTOM_LIVE_TUNING_URL_CONSUMER: HostedResourceConsumer = {
   launchOptionId: null,
   kind: "live-tuning",
   format: formatForHostedResourceKind("live-tuning"),
-  label: "Live tuning",
+  label: HOSTED_RESOURCE_KIND_LABELS["live-tuning"],
   surface: "ini-visual",
 };
 
@@ -87,7 +92,7 @@ export const CUSTOM_DYNAMIC_CONFIG_URL_CONSUMER: HostedResourceConsumer = {
   launchOptionId: "customdynamicconfigurl-url",
   kind: "dynamic-config",
   format: formatForHostedResourceKind("dynamic-config"),
-  label: "Dynamic config",
+  label: HOSTED_RESOURCE_KIND_LABELS["dynamic-config"],
   surface: "launch-option",
   dependsOnLaunchOptionId: "usedynamicconfig",
 };
@@ -97,7 +102,7 @@ export const CUSTOM_NOTIFICATION_URL_CONSUMER: HostedResourceConsumer = {
   launchOptionId: "customnotificationurl-url",
   kind: "notification-url",
   format: formatForHostedResourceKind("notification-url"),
-  label: "Notification URL",
+  label: HOSTED_RESOURCE_KIND_LABELS["notification-url"],
   surface: "launch-option",
 };
 

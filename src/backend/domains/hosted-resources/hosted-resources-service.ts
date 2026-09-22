@@ -24,6 +24,7 @@ import {
   HOSTED_RESOURCES_TOKEN_PATTERN,
   HOSTED_RESOURCE_CONTENT_TYPES,
   formatForHostedResourceKind,
+  findHostedResource,
   formatHostedResourceUrl,
   hostedResourceLaunchArg,
   normalizeHostedResourceKind,
@@ -35,7 +36,6 @@ import {
   parseHostedResourcesPort,
   serializeHostedResourcesEnabled,
   validateHostedResourceContent,
-  parseHostedResourceUrl,
   type HostedResourceFormat,
   type HostedResourceKind,
 } from "@shared/settings/hosted-resources";
@@ -133,6 +133,8 @@ export class HostedResourcesService {
   private boundPort = DEFAULT_HOSTED_RESOURCES_PORT;
   private lastError: string | null = null;
   private readonly requestCounts = new Map<string, number>();
+  /** Per-process secret: only our own diagnostics probe may suppress the request counter. */
+  private readonly diagnosticNonce = randomBytes(16).toString("base64url");
   private queue: Promise<unknown> = Promise.resolve();
 
   constructor(private readonly deps: HostedResourcesServiceDeps) {}
@@ -250,7 +252,9 @@ export class HostedResourcesService {
   ): HostedResourceDto {
     const resource = this.mustGetResource(resourceId);
     this.assertValidContent(resource.format, content);
-    const kind = normalizeHostedResourceKind(metadataInput?.kind ?? resource.kind);
+    // Omitted kind keeps the stored one; an explicit `null` untypes on purpose, matching
+    // `updateMetadata`, so the editor's "clear the type then save" path actually clears it.
+    const kind = normalizeHostedResourceKind(metadataInput?.kind === undefined ? resource.kind : metadataInput.kind);
     this.assertKindMatchesFormat(kind, resource.format);
     const metadata = this.normalizeMetadata(
       metadataInput?.displayName ?? resource.displayName,
@@ -357,34 +361,41 @@ export class HostedResourcesService {
     // could otherwise report bytes served by the foreign process.
     const state = this.getState();
     const serving = ownership.ok && state.listening;
-    const resources: HostedResourceDiagnosticDto[] = [];
-    for (const summary of this.deps.repo.listResourceSummaries()) {
-      const url = formatHostedResourceUrl(state.port, summary.token);
-      let servedSha256: string | null = null;
-      let status: HostedResourceDiagnosticStatus;
-      if (summary.disabledAt !== null) {
-        status = "disabled";
-      } else if (summary.publishedRevisionId === null) {
-        status = "unpublished";
-      } else if (!serving) {
-        status = "unreachable";
-      } else {
-        const served = await this.fetchServed(url);
-        servedSha256 = served.sha256;
-        status = !served.ok ? "unreachable" : servedSha256 !== summary.publishedSha256 ? "mismatch" : "verified";
-      }
-      resources.push({
-        resourceId: summary.id,
-        displayName: summary.displayName,
-        url,
-        enabled: summary.disabledAt === null,
-        published: summary.publishedRevisionId !== null,
-        declaredSha256: summary.publishedSha256,
-        servedSha256,
-        status,
-        requestCount: this.requestCounts.get(summary.id) ?? 0,
-      });
-    }
+    // Probes are independent, so they run together instead of costing one timeout each;
+    // the promise array keeps the reported order stable.
+    const resources = await Promise.all(
+      this.deps.repo.listResourceSummaries().map(async (summary): Promise<HostedResourceDiagnosticDto> => {
+        const url = formatHostedResourceUrl(state.port, summary.token);
+        let servedSha256: string | null = null;
+        let status: HostedResourceDiagnosticStatus;
+        if (summary.disabledAt !== null) {
+          status = "disabled";
+        } else if (summary.publishedRevisionId === null) {
+          status = "unpublished";
+        } else if (!serving) {
+          status = "unreachable";
+        } else {
+          const served = await this.fetchServed(url);
+          servedSha256 = served.sha256;
+          if (!served.ok) {
+            status = "unreachable";
+          } else {
+            status = servedSha256 === summary.publishedSha256 ? "verified" : "mismatch";
+          }
+        }
+        return {
+          resourceId: summary.id,
+          displayName: summary.displayName,
+          url,
+          enabled: summary.disabledAt === null,
+          published: summary.publishedRevisionId !== null,
+          declaredSha256: summary.publishedSha256,
+          servedSha256,
+          status,
+          requestCount: this.requestCounts.get(summary.id) ?? 0,
+        };
+      }),
+    );
     return {
       state,
       ownership,
@@ -502,7 +513,7 @@ export class HostedResourcesService {
       res.end();
       return;
     }
-    if (req.headers[HOSTED_RESOURCES_DIAGNOSTIC_HEADER] !== "1") {
+    if (req.headers[HOSTED_RESOURCES_DIAGNOSTIC_HEADER] !== this.diagnosticNonce) {
       this.requestCounts.set(resource.id, (this.requestCounts.get(resource.id) ?? 0) + 1);
     }
     res.end(body);
@@ -537,7 +548,7 @@ export class HostedResourcesService {
   /** HTTP reachability only; the caller compares the hash and picks mismatch vs verified. */
   private async fetchServed(url: string): Promise<{ sha256: string | null; ok: boolean }> {
     try {
-      const result = await probeUrl(url, { [HOSTED_RESOURCES_DIAGNOSTIC_HEADER]: "1" });
+      const result = await probeUrl(url, { [HOSTED_RESOURCES_DIAGNOSTIC_HEADER]: this.diagnosticNonce });
       if (result.status !== 200) return { sha256: null, ok: false };
       return { sha256: hostedResourceSha256(result.body), ok: true };
     } catch {
@@ -559,21 +570,31 @@ export class HostedResourcesService {
     const seen = new Set<string>();
 
     const pushReference = (source: HostedResourceReferenceSource, key: string, rawValue: string): void => {
-      const parsed = parseHostedResourceUrl(rawValue);
-      if (parsed === null) return;
-      const resource = resourcesByToken.get(parsed.token);
+      // The URL can be embedded in the value (quotes, a trailing comment, a joined command
+      // line), so the reference is whichever loopback URL the value contains.
+      const found = findHostedResource(rawValue);
+      if (found === null) return;
+      const resource = resourcesByToken.get(found.parsed.token);
       if (resource === undefined) return;
-      const url = rawValue.trim();
+      const url = found.url;
       const identity = `${source.serverId}\u0000${key.toLowerCase()}\u0000${url}`;
       if (seen.has(identity)) return;
       seen.add(identity);
+      let status: HostedResourceReferenceDto["status"] = "current";
+      if (resource.disabledAt !== null) {
+        status = "disabled";
+      } else if (found.parsed.port !== port) {
+        // A portless URL means port 80, which is never YARK's port: `null !== port`
+        // correctly reports the stale address rather than guessing a scheme default.
+        status = "stale-port";
+      }
       references.push({
         resourceId: resource.id,
         serverId: source.serverId,
         serverName: source.serverName,
         key,
         url,
-        status: resource.disabledAt !== null ? "disabled" : parsed.port !== port ? "stale-port" : "current",
+        status,
       });
     };
 

@@ -67,6 +67,8 @@ interface Props {
   onRegisterProfileSave?: (save: (() => Promise<boolean>) | null) => void;
   onRegisterIniSave?: (save: (() => Promise<boolean>) | null) => void;
   onLogsFocusConsumed?: () => void;
+  /** Clear the overlay's `initialRconFocus` once it has been applied. */
+  onRconFocusConsumed?: () => void;
   onSendRcon: (serverId: string, command: string) => Promise<boolean>;
   onClearRconHistory: (serverId: string) => void;
   onRconTabFocusChanged: (serverId: string, isFocused: boolean) => Promise<void>;
@@ -77,16 +79,21 @@ interface Props {
 }
 
 export function WorkspaceTabs(props: Props): ReactElement {
+  const { initialRconFocus, onRconFocusConsumed } = props;
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   /** Snapshot at open so refresh remounts do not rewrite the dialog mid-move. */
   const [moveServer, setMoveServer] = useState<ServerProfile | null>(null);
   const [rconPlayersFocus, setRconPlayersFocus] = useState<"survivors" | "admins" | null>(
-    props.initialRconFocus ?? null,
+    initialRconFocus ?? null,
   );
 
   useEffect(() => {
-    setRconPlayersFocus(props.initialRconFocus ?? null);
-  }, [props.initialRconFocus]);
+    // Only ever apply a focus, never clear one: consuming it flips the prop to undefined,
+    // and clearing here would undo the focus the operator just asked for.
+    if (initialRconFocus == null) return;
+    setRconPlayersFocus(initialRconFocus);
+    onRconFocusConsumed?.();
+  }, [initialRconFocus, onRconFocusConsumed]);
 
   return (
     <>

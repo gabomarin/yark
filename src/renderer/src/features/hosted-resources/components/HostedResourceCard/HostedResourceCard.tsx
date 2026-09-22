@@ -162,12 +162,10 @@ export function HostedResourceCard(props: Props): ReactElement {
 }
 
 function disabledReferenceMessage(references: HostedResourceReferenceDto[]): string {
-  if (references.length === 1) {
-    const reference = references[0];
-    if (reference === undefined) {
-      return "This resource is disabled, but a server setting still references it.";
-    }
-    return `This resource is disabled, but ${referenceLocation(reference.key)} still references it through ${reference.key}.`;
+  const [reference] = references;
+  // `length === 1` guarantees the element, but the index is still `| undefined` by type.
+  if (references.length === 1 && reference !== undefined) {
+    return `This resource is disabled, but the ${referenceLocation(reference.key)} setting still references it.`;
   }
   return "This resource is disabled, but server settings still reference it.";
 }

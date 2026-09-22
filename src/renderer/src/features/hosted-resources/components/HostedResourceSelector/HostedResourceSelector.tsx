@@ -29,8 +29,13 @@ interface Props {
  */
 export function HostedResourceSelector(props: Props): ReactElement {
   const combobox = useCombobox({ onDropdownClose: () => combobox.resetSelectedOption() });
-  const { resources, hostEnabled } = useHostedResourceOptions();
-  const create = useHostedResourceQuickCreate(props.consumer, props.onChange);
+  const { resources, hostEnabled, reload } = useHostedResourceOptions();
+  const create = useHostedResourceQuickCreate(props.consumer, (url) => {
+    props.onChange(url);
+    // Without the refetch the just-created URL has no matching resource here, and the field
+    // flags it as "no current resource serves it".
+    void reload();
+  });
   const options = compatibleResources(resources, props.consumer);
   const assignment = classifyHostedResourceValue(props.value, resources, props.consumer);
   const issue = assignmentIssueMessage(assignment, props.consumer);
@@ -58,9 +63,14 @@ export function HostedResourceSelector(props: Props): ReactElement {
               disabled={props.disabled}
               value={props.value}
               onChange={(event) => props.onChange(event.currentTarget.value)}
+              // Option picking is click-only: an auto-opened dropdown lets Enter/ArrowDown
+              // replace a hand-typed URL with the highlighted option, which would rewrite
+              // the value the operator typed.
               onClick={() => combobox.openDropdown()}
-              onFocus={() => combobox.openDropdown()}
               onBlur={() => combobox.closeDropdown()}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") combobox.closeDropdown();
+              }}
               rightSection={<Combobox.Chevron />}
               rightSectionPointerEvents="none"
               placeholder="https://…"

@@ -196,7 +196,9 @@ export function parseHostedResourceUrl(value: string): ParsedHostedResourceUrl |
   } catch {
     return null;
   }
-  if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+  // YARK only ever serves plain HTTP on the loopback port, so an https value is not a
+  // resource URL: classifying it as current would tell an operator a TLS-failing URL is fine.
+  if (url.protocol !== "http:") return null;
   const host = url.hostname.toLowerCase();
   if (!LOOPBACK_HOSTS.has(host)) return null;
   if (!url.pathname.startsWith(HOSTED_RESOURCES_PATH_PREFIX)) return null;
@@ -205,18 +207,38 @@ export function parseHostedResourceUrl(value: string): ParsedHostedResourceUrl |
   return { token, host, port: url.port.length === 0 ? null : Number.parseInt(url.port, 10) };
 }
 
+/** A loopback resource URL anywhere inside a larger value (quote/flag tolerating). */
+const HOSTED_RESOURCE_URL_IN_VALUE =
+  /http:\/\/(?:127\.0\.0\.1|localhost|\[::1\]|::1)[^\s"'=;]*\/r\/[A-Za-z0-9_-]{43}/gi;
+
 /**
- * `-Flag=value` / `?Flag=value` launch argument whose value is a loopback resource URL.
- * ASA reads several consumers from the command line (and a mod may embed a YARK URL in
- * its own argument), so reference scanning is not INI-only.
+ * First YARK resource URL found inside a value, with what it points at, or null. ASA joins
+ * its own syntax around the URL (`AdminListURL="…"`, `?Flag=…?CustomDynamicConfigUrl=…`, a
+ * trailing INI comment) and a mod may embed one in an argument of its own, so a reference is
+ * a substring match — the candidate still has to survive {@link parseHostedResourceUrl}.
+ */
+export function findHostedResource(value: string): { url: string; parsed: ParsedHostedResourceUrl } | null {
+  for (const candidate of value.matchAll(HOSTED_RESOURCE_URL_IN_VALUE)) {
+    const parsed = parseHostedResourceUrl(candidate[0]);
+    if (parsed !== null) {
+      return { url: candidate[0], parsed };
+    }
+  }
+  return null;
+}
+
+/**
+ * Launch argument carrying a resource URL, named by the flag that precedes it
+ * (`-CustomNotificationURL="…"`, `?Flag1=x?CustomLiveTuningUrl=…`).
  */
 export function hostedResourceLaunchArg(arg: string): { key: string; value: string } | null {
-  const match = /^[-?]([^=\s]+)=(.+)$/.exec(arg.trim());
-  if (match === null) {
+  const found = findHostedResource(arg);
+  if (found === null) {
     return null;
   }
-  const value = (match[2] ?? "").trim();
-  return parseHostedResourceUrl(value) === null ? null : { key: match[1] ?? "", value };
+  const flag = /[-?]([^=\s]+)=\s*["']?$/.exec(arg.slice(0, arg.indexOf(found.url)));
+  if (flag === null || flag[1] === undefined) return null;
+  return { key: flag[1], value: found.url };
 }
 
 export interface HostedResourceValidation {

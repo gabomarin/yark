@@ -131,6 +131,16 @@ export function revisionLabel(revision: HostedResourceRevisionDto): string {
 /** The neutral and semantic badge colours this helper can hand out. */
 export type ServedBadgeColor = "gray" | "ok" | "red" | "attention";
 
+/** Listening badge for the status card: label and colour are picked once, so they cannot drift. */
+export function listeningBadge(state: { enabled: boolean; listening: boolean }): {
+  color: ServedBadgeColor;
+  label: string;
+} {
+  if (!state.enabled) return { color: "gray", label: "Disabled" };
+  if (state.listening) return { color: "ok", label: "Listening" };
+  return { color: "red", label: "Not listening" };
+}
+
 /** State badge for a resource card. Diagnostics remain resource-specific and live on the card. */
 export function resourceStateBadge(
   resource: HostedResourceDto,

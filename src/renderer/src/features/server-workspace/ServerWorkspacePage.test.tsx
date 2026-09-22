@@ -1468,7 +1468,10 @@ describe("ServerWorkspacePage", () => {
       },
     );
 
-    expect(screen.getByText("This server uses hosted resources with outdated URLs")).toBeInTheDocument();
+    expect(screen.getByText("Hosted resource references need attention")).toBeInTheDocument();
+    expect(
+      screen.getByText(/One setting on this server points at a hosted resource that cannot be fetched\./),
+    ).toBeInTheDocument();
     screen.getByRole("button", { name: "Open Hosted Resources diagnostics" }).click();
     expect(onOpenHostedResources).toHaveBeenCalledOnce();
   });

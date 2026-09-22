@@ -26,6 +26,8 @@ export interface ServerWorkspacePageProps {
   /** Dedicated-process RAM/CPU sample for Status (#302). */
   processMetrics?: ProcessMetricsUpdatedPush | null;
   onLogsFocusConsumed?: () => void;
+  /** Clear the overlay's `initialRconFocus` once WorkspaceTabs has applied it. */
+  onRconFocusConsumed?: () => void;
   /** SteamCMD is rewriting this server's install (install/update/verify/sync). */
   filesJobActive?: boolean;
   filesJobLabel?: string | null;

@@ -10,7 +10,7 @@ import { LoadingState } from "@ui/LoadingState/LoadingState";
 import { DismissibleHint } from "@ui/DismissibleHint/DismissibleHint";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { hasDiagnosticWarning } from "./model/hostedResourcesHealth";
-import { resolveHeaderAlert, summarizeReferences } from "./model/hostedResourcesPageModel";
+import { listeningBadge, resolveHeaderAlert, summarizeReferences } from "./model/hostedResourcesPageModel";
 import { useHostedResourcesPage } from "./hooks/useHostedResourcesPage";
 import { HostedResourceCard } from "./components/HostedResourceCard/HostedResourceCard";
 import { HostedResourceEditorModal } from "./components/HostedResourceEditorModal/HostedResourceEditorModal";
@@ -18,6 +18,11 @@ import { HostedResourceRevisionsModal } from "./components/HostedResourceRevisio
 import classes from "./HostedResourcesPage.module.css";
 
 const EXPERIMENTAL_HINT_STORAGE_KEY = "yark.hostedResources.experimentalHint.dismissed.v1";
+
+/** Mirrors how `applyPort` parses the draft: Mantine can hand back "" or "8,080" mid-edit. */
+function parsePortDraft(value: number | string): number {
+  return typeof value === "number" ? value : Number.parseInt(value.replaceAll(",", ""), 10);
+}
 
 interface Props {
   onOpenReference?: (reference: HostedResourceReferenceDto) => void;
@@ -29,7 +34,9 @@ export function HostedResourcesPage({ onOpenReference = () => undefined }: Props
   const state = overview?.state ?? null;
   const hostedResourcesDisabledWithReferences =
     controller.diagnostics?.state.enabled === false && controller.diagnostics.references.length > 0;
-  const portChanged = state !== null && Number(controller.portDraft) !== state.port;
+  const draftPort = state === null ? Number.NaN : parsePortDraft(controller.portDraft);
+  const portChanged = state !== null && Number.isInteger(draftPort) && draftPort !== state.port;
+  const listening = state === null ? null : listeningBadge(state);
   const diagnosticsWarning =
     controller.diagnostics !== null &&
     controller.diagnostics.state.enabled &&
@@ -103,9 +110,11 @@ export function HostedResourcesPage({ onOpenReference = () => undefined }: Props
                       <Text fw={600}>
                         {state.enabled ? "Hosted Resources is enabled" : "Hosted Resources is disabled"}
                       </Text>
-                      <Badge variant="light" color={!state.enabled ? "gray" : state.listening ? "ok" : "red"}>
-                        {!state.enabled ? "Disabled" : state.listening ? "Listening" : "Not listening"}
-                      </Badge>
+                      {listening !== null && (
+                        <Badge variant="light" color={listening.color}>
+                          {listening.label}
+                        </Badge>
+                      )}
                     </Group>
                     <Text size="sm" c="dimmed">
                       {state.enabled

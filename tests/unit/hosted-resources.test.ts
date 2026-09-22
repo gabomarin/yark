@@ -245,6 +245,17 @@ describe("hosted resources repository", () => {
       kind: null,
     });
     expect(untyped.kind).toBeNull();
+
+    // The editor's save/publish path can clear the type too, so an explicit `null` there
+    // must untype rather than silently keep the stored kind.
+    expect(
+      harness.service.publishContent(resource.id, "EOSID4", {
+        displayName: "Admins",
+        notes: "",
+        tags: [],
+        kind: null,
+      }).kind,
+    ).toBeNull();
   });
 
   it("rejects a kind whose format does not match, and defaults to untyped", () => {
@@ -532,10 +543,40 @@ describe("hosted resources HTTP host", () => {
         serverId: "s1",
         serverName: "Island",
         key: "CustomNotificationURL",
-        url: `"${resource.url}"`,
+        url: resource.url,
         status: "current",
       },
     ]);
+  });
+
+  it("finds a resource URL embedded in a value, not only when it is the whole value", async () => {
+    const tokenHolder: { url: string } = { url: "" };
+    const harness = createHarness(() => [
+      {
+        serverId: "s1",
+        serverName: "Island",
+        // Quoted with a trailing comment, and an ASA-style joined command line.
+        text: `[ServerSettings]\nAdminListURL=${tokenHolder.url} ; keep for the cluster\n`,
+        launchArgs: [`?Flag1=x?CustomDynamicConfigUrl=${tokenHolder.url}`],
+      },
+    ]);
+    await startServing(harness);
+    const resource = harness.service.createResource({
+      displayName: "Admins",
+      format: "text",
+      content: "EOSID1",
+    });
+    tokenHolder.url = resource.url;
+
+    const diagnostics = await harness.service.runDiagnostics();
+    expect(diagnostics.references.map((reference) => reference.key)).toEqual([
+      "AdminListURL",
+      "CustomDynamicConfigUrl",
+    ]);
+    for (const reference of diagnostics.references) {
+      expect(reference.url).toBe(resource.url);
+      expect(reference.status).toBe("current");
+    }
   });
 
   it("marks references that still use the previous serving port", async () => {

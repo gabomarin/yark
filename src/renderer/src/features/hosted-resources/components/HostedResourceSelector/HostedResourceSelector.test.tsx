@@ -107,7 +107,7 @@ describe("HostedResourceSelector", () => {
 
     await user.click(await screen.findByRole("button", { name: "Create admin list resource" }));
     // The modal mounts one transition tick after the click.
-    expect(await screen.findByLabelText(/display name/i)).toHaveValue("AdminListURL");
+    expect(await screen.findByLabelText(/display name/i)).toHaveValue("Admin list");
     // Mantine's Select labels both the input and its listbox, so pin the query to the input.
     const format = screen.getByLabelText("Format", { selector: "input" });
     expect(format).toHaveValue("Plain text");
@@ -118,7 +118,7 @@ describe("HostedResourceSelector", () => {
 
     await waitFor(() => {
       expect(api.createHostedResource).toHaveBeenCalledWith(
-        expect.objectContaining({ displayName: "AdminListURL", format: "text", kind: "admin-list" }),
+        expect.objectContaining({ displayName: "Admin list", format: "text", kind: "admin-list" }),
       );
     });
     expect(onChange).toHaveBeenCalledWith(URL_FOR_TOKEN);

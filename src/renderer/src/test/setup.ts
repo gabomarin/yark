@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterEach } from "vitest";
+import { resetHostedResourcesDiagnosticsSnapshot } from "@features/hosted-resources/hooks/useHostedResourcesHealth";
 
 const pendingTimeouts = new Set<ReturnType<typeof setTimeout>>();
 const nativeSetTimeout = globalThis.setTimeout.bind(globalThis);
@@ -35,6 +36,9 @@ globalThis.clearTimeout = ((id?: ReturnType<typeof setTimeout>) => {
 
 afterEach(() => {
   cleanup();
+  // Module-level snapshot: without this, a page that ran diagnostics leaves the next
+  // test's page rendering that snapshot instead of its own "not checked" state.
+  resetHostedResourcesDiagnosticsSnapshot();
   for (const id of pendingTimeouts) {
     nativeClearTimeout(id);
   }

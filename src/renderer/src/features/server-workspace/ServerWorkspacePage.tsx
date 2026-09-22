@@ -39,6 +39,7 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
   const [iniEditorVersion, setIniEditorVersion] = useState(0);
   const [serverSwitcherOpen, setServerSwitcherOpen] = useState(false);
   const [serverActionsOpen, setServerActionsOpen] = useState(false);
+  const [hostedResourceAlertDismissed, setHostedResourceAlertDismissed] = useState(false);
   const panels = useWorkspacePanels();
   // `null` = this option never uses columns, so the workspace stays compact at any width.
   const drawersQuery = drawersMediaQuery(panels);
@@ -82,6 +83,11 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
       setWorkspaceTab(props.initialTab);
     }
   }, [props.initialTab]);
+
+  // A dismissed hosted-resources banner belongs to the server it was read on.
+  useEffect(() => {
+    setHostedResourceAlertDismissed(false);
+  }, [props.selectedServerId]);
 
   const selectedServer = useMemo(() => {
     return props.servers.find((server) => server.id === props.selectedServerId) ?? props.servers[0] ?? null;
@@ -158,16 +164,17 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
 
   const mainSection = (
     <section className={classes.main} data-workspace-scroll>
-      {hostedResourceIssueCount > 0 && (
+      {hostedResourceIssueCount > 0 && !hostedResourceAlertDismissed && (
         <AppAlert
           color="attention"
-          title="This server uses hosted resources with outdated URLs"
+          title="Hosted resource references need attention"
           mb="sm"
-          withCloseButton={false}
+          withCloseButton
+          onClose={() => setHostedResourceAlertDismissed(true)}
         >
           {hostedResourceIssueCount === 1
-            ? "One hosted resource reference needs attention."
-            : `${hostedResourceIssueCount} hosted resource references need attention.`}{" "}
+            ? "One setting on this server points at a hosted resource that cannot be fetched."
+            : `${hostedResourceIssueCount} settings on this server point at hosted resources that cannot be fetched.`}{" "}
           <Button variant="subtle" size="compact-sm" onClick={props.onOpenHostedResources}>
             Open Hosted Resources diagnostics
           </Button>
@@ -257,6 +264,7 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
           onRegisterProfileSave={registerProfileSave}
           onRegisterIniSave={registerIniSave}
           onLogsFocusConsumed={props.onLogsFocusConsumed}
+          onRconFocusConsumed={props.onRconFocusConsumed}
           onSendRcon={props.onSendRcon}
           onClearRconHistory={props.onClearRconHistory}
           onRconTabFocusChanged={props.onRconTabFocusChanged}

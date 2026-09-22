@@ -8,6 +8,9 @@ import type { HostedResourceReferenceDto } from "@shared/ipc";
 
 type WorkspaceOverlay = Extract<Overlay, { kind: "workspace" }>;
 
+/** Stable identity so a server without references does not re-create the prop on every render. */
+const EMPTY_HOSTED_RESOURCE_REFERENCES: HostedResourceReferenceDto[] = [];
+
 export interface AppWorkspaceOverlayProps {
   shell: AppShellChromeProps;
   overlay: WorkspaceOverlay;
@@ -79,18 +82,28 @@ export function AppWorkspaceOverlay(props: AppWorkspaceOverlayProps): ReactEleme
         onLogsFocusConsumed={() =>
           setOverlay((current) => (current?.kind === "workspace" ? { ...current, logsFocus: null } : current))
         }
+        // Clearing the focus once taken mirrors logsFocus, so a remount or a second click on
+        // the same reference does not keep re-forcing the RCON players panel.
+        onRconFocusConsumed={() =>
+          setOverlay((current) =>
+            current?.kind === "workspace" ? { ...current, initialRconFocus: undefined } : current,
+          )
+        }
         onDismissOnboarding={() => setOverlay({ kind: "workspace", serverId: overlay.serverId })}
         onSelectServer={(serverId) =>
           setOverlay({
             kind: "workspace",
             serverId,
             initialTab: overlay.initialTab,
+            initialRconFocus: overlay.initialRconFocus,
             logsFocus: null,
           })
         }
         onRegisterLeaveGuard={registerOverlayLeaveGuard}
         onStatusPanelVisibleChange={onStatusPanelVisibleChange}
-        hostedResourceReferences={props.hostedResourceReferencesByServerId.get(overlay.serverId) ?? []}
+        hostedResourceReferences={
+          props.hostedResourceReferencesByServerId.get(overlay.serverId) ?? EMPTY_HOSTED_RESOURCE_REFERENCES
+        }
         onOpenHostedResources={() => props.shell.navigate("hostedResources")}
         onBack={() => setOverlay(null)}
         onStartServer={(id) => void actions.startServer(id)}

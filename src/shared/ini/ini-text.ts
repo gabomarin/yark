@@ -248,7 +248,9 @@ function scanKeySlots(
       continue;
     }
     const commented = trimmed.startsWith("#") || trimmed.startsWith(";");
-    const body = commented ? trimmed.replace(/^[#;]+\s*/, "") : trimmed;
+    // One marker only: a doubly-commented line (`##Key=…`) is not the shipped default,
+    // it is a line someone deliberately disabled, and must stay commented.
+    const body = commented ? trimmed.replace(/^[#;]?\s*/, "") : trimmed;
     const eq = body.indexOf("=");
     if (eq <= 0 || body.slice(0, eq).trim().toLowerCase() !== keyLower) {
       continue;

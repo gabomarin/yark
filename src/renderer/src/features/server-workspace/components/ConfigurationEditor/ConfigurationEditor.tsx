@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import { useCallback, type ReactElement } from "react";
 import { Group, Stack, Text } from "@mantine/core";
 import type { ServerProfile } from "@shared/types";
 import { IniEditorNav } from "@ui/IniEditorNav/IniEditorNav";
@@ -33,19 +33,26 @@ export function ConfigurationEditor(props: Props): ReactElement {
   const density = useUiDensity();
   const openFileIconSize = density === "compact" ? "sm" : "md";
   const openFileGlyphSize = density === "compact" ? 14 : 16;
-  const editor = useConfigurationEditor({
-    serverId: props.server.id,
-    onDirtyChange: props.onDirtyChange,
-    onRegisterSave: (save) =>
-      props.onRegisterSave?.(
+  const { onRegisterSave, onSaved } = props;
+  // Stable identity: `useConfigurationEditor` re-registers its save handler whenever this
+  // callback changes, and an inline wrapper would tear that down on every keystroke.
+  const registerSave = useCallback(
+    (save: (() => Promise<boolean>) | null) =>
+      onRegisterSave?.(
         save === null
           ? null
           : async () => {
               const saved = await save();
-              if (saved) props.onSaved?.();
+              if (saved) onSaved?.();
               return saved;
             },
       ),
+    [onRegisterSave, onSaved],
+  );
+  const editor = useConfigurationEditor({
+    serverId: props.server.id,
+    onDirtyChange: props.onDirtyChange,
+    onRegisterSave: registerSave,
   });
 
   const saveAndNotify = async (): Promise<void> => {
