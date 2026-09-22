@@ -1,6 +1,6 @@
 import { Tabs } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
-import { lazy, Suspense, useState, type ReactElement } from "react";
+import { lazy, Suspense, useEffect, useState, type ReactElement } from "react";
 import { ServerBackupPanel } from "@features/backups/ServerBackupPanel";
 import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
 import { RconPanel } from "../RconPanel/RconPanel";
@@ -40,6 +40,7 @@ function WorkspacePanelLoading(): ReactElement {
 
 interface Props {
   value: WorkspaceTab;
+  initialRconFocus?: "admins";
   server: ServerProfile;
   /** Fleet profiles — port-conflict preview on edit and Move dest nesting (#294). */
   servers: ServerProfile[];
@@ -79,7 +80,13 @@ export function WorkspaceTabs(props: Props): ReactElement {
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   /** Snapshot at open so refresh remounts do not rewrite the dialog mid-move. */
   const [moveServer, setMoveServer] = useState<ServerProfile | null>(null);
-  const [rconPlayersFocus, setRconPlayersFocus] = useState<"survivors" | "admins" | null>(null);
+  const [rconPlayersFocus, setRconPlayersFocus] = useState<"survivors" | "admins" | null>(
+    props.initialRconFocus ?? null,
+  );
+
+  useEffect(() => {
+    setRconPlayersFocus(props.initialRconFocus ?? null);
+  }, [props.initialRconFocus]);
 
   return (
     <>
@@ -143,6 +150,7 @@ export function WorkspaceTabs(props: Props): ReactElement {
                     filesJobActive={props.filesJobActive}
                     onDirtyChange={props.onIniDirtyChange}
                     onRegisterSave={props.onRegisterIniSave}
+                    onSaved={props.onServerUpdated}
                     onOpenAdminList={() => {
                       setRconPlayersFocus("admins");
                       props.onChange("rcon");

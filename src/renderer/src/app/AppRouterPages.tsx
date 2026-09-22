@@ -19,6 +19,8 @@ import { HostedResourcesPage } from "@features/hosted-resources/HostedResourcesP
 import { OverviewPage } from "@features/overview/OverviewPage";
 import { SettingsPage } from "@features/settings/SettingsPage";
 import type { Route } from "@layout/Sidebar/Sidebar";
+import type { HostedResourceReferenceDto } from "@shared/ipc";
+import type { WorkspaceTab } from "@features/server-workspace/ServerWorkspacePage";
 
 export interface AppRouterPagesProps {
   shell: AppShellChromeProps;
@@ -87,6 +89,7 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
       onYarkUpdateClick={shell.onYarkUpdateClick}
       busyOverlay={shell.busyOverlay}
       downloadCount={shell.downloadCount}
+      hostedResourcesHealth={shell.hostedResourcesHealth}
       workspaceFooter={shell.workspaceFooter}
       overview={{
         page: (
@@ -204,7 +207,24 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
         ),
       }}
       hostedResources={{
-        page: <HostedResourcesPage />,
+        page: (
+          <HostedResourcesPage
+            onOpenReference={(reference: HostedResourceReferenceDto) => {
+              const initialTab: WorkspaceTab =
+                reference.key === "AdminListURL"
+                  ? "rcon"
+                  : reference.key === "CustomDynamicConfigUrl" || reference.key === "CustomLiveTuningUrl"
+                    ? "launch"
+                    : "iniFiles";
+              setOverlay({
+                kind: "workspace",
+                serverId: reference.serverId,
+                initialTab,
+                initialRconFocus: reference.key === "AdminListURL" ? "admins" : undefined,
+              });
+            }}
+          />
+        ),
       }}
       settings={{
         page: (

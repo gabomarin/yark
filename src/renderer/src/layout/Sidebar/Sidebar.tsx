@@ -26,6 +26,7 @@ import {
 } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
 import type { OfficialNetworkStatus } from "@shared/types";
+import type { HostedResourcesHealth } from "@features/hosted-resources/model/hostedResourcesHealth";
 import { navSelectedClassName } from "@ui/NavSelected/navSelectedClassName";
 import { Fragment } from "react";
 import yarkLogo from "../../assets/brand/yark-logo.png";
@@ -78,6 +79,7 @@ interface Props {
   /** Icon-only chrome rail (#107 recipe). */
   iconMode?: boolean;
   downloadCount?: number;
+  hostedResourcesHealth?: HostedResourcesHealth;
 }
 
 function officialVersionTooltip(version: string | null, networkStatus: OfficialNetworkStatus): string {
@@ -121,6 +123,19 @@ export function Sidebar(props: Props): ReactElement {
   const steamCmdButtonSize = compact ? "sm" : "md";
 
   const versionTooltip = officialVersionTooltip(props.officialVersion, props.officialNetworkStatus);
+  const hostedResourcesHealth = props.hostedResourcesHealth ?? "neutral";
+  const hostedResourcesHealthMeta = {
+    neutral: { color: "gray" as const, label: "Hosted Resources health not checked" },
+    healthy: { color: "ok" as const, label: "Hosted Resources healthy" },
+    warning: { color: "attention" as const, label: "Hosted Resources need attention" },
+    error: { color: "red" as const, label: "Hosted Resources unavailable" },
+  }[hostedResourcesHealth];
+  const hostedResourcesIconColor = {
+    neutral: undefined,
+    healthy: "var(--app-color-ok)",
+    warning: "var(--app-color-attention)",
+    error: "var(--app-color-danger-bright)",
+  }[hostedResourcesHealth];
   const updateAvailable = props.yarkUpdateAvailableVersion != null && props.yarkUpdateAvailableVersion !== "";
   const versionLabel = (
     <Text
@@ -164,6 +179,7 @@ export function Sidebar(props: Props): ReactElement {
               Experimental
             </Badge>
           ) : undefined;
+          const itemTooltip = item.id === "hostedResources" ? hostedResourcesHealthMeta.label : item.label;
           const link = (
             <NavLink
               component="button"
@@ -171,7 +187,15 @@ export function Sidebar(props: Props): ReactElement {
               active={active}
               label={iconMode ? undefined : item.label}
               aria-label={item.label}
-              leftSection={<Icon size={navIconSize} weight={active ? "fill" : "regular"} />}
+              leftSection={
+                <Tooltip label={itemTooltip} position="right" withArrow openDelay={200}>
+                  <Icon
+                    size={navIconSize}
+                    weight={active ? "fill" : "regular"}
+                    color={item.id === "hostedResources" ? hostedResourcesIconColor : undefined}
+                  />
+                </Tooltip>
+              }
               rightSection={rightSection}
               className={navSelectedClassName(classes.navLink)}
               onClick={() => props.onNavigate(item.id)}
@@ -181,7 +205,7 @@ export function Sidebar(props: Props): ReactElement {
             return <Fragment key={item.id}>{link}</Fragment>;
           }
           return (
-            <Tooltip key={item.id} label={item.label} position="right" withArrow openDelay={200}>
+            <Tooltip key={item.id} label={itemTooltip} position="right" withArrow openDelay={200}>
               {link}
             </Tooltip>
           );

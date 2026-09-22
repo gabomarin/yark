@@ -1,4 +1,5 @@
 import type { ProcessMetricsUpdatedPush } from "@shared/ipc";
+import type { HostedResourceReferenceDto } from "@shared/ipc";
 import type {
   AppEvent,
   ServerInstallationInfo,
@@ -18,6 +19,7 @@ export interface ServerWorkspacePageProps {
   events: AppEvent[];
   onboarding?: boolean;
   initialTab?: WorkspaceTab;
+  initialRconFocus?: "admins";
   logsFocus?: ServerLogsFocus | null;
   rconHistory: RconHistoryEntry[];
   playerList: PlayerListState;
@@ -40,6 +42,8 @@ export interface ServerWorkspacePageProps {
   onRegisterLeaveGuard?: (guard: ((action: () => void) => void) | null) => void;
   /** Status panel visible (wide always; compact when drawer open) (#302). */
   onStatusPanelVisibleChange?: (visible: boolean) => void;
+  hostedResourceReferences?: HostedResourceReferenceDto[];
+  onOpenHostedResources?: () => void;
   onStartServer: (serverId: string) => void;
   onStopServer: (serverId: string) => void;
   onRestartServer: (serverId: string) => void;

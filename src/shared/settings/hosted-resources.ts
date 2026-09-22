@@ -49,14 +49,62 @@ export const HOSTED_RESOURCES_MAX_TAG_LENGTH = 32;
 
 export type HostedResourceFormat = "json" | "ini" | "text";
 
-/** Common ASA URL consumers; MultiSelect also permits operator-defined tags. */
-export const HOSTED_RESOURCE_TAG_OPTIONS = [
-  { value: "admin-list", label: "Admin list" },
-  { value: "ban-list", label: "Ban list" },
-  { value: "dynamic-config", label: "Dynamic config" },
-];
+/**
+ * Typed compatibility, separate from operator tags: a kind names the ASA consumer the
+ * body is written for, which is what a setting's selector filters on.
+ */
+export type HostedResourceKind = "admin-list" | "ban-list" | "dynamic-config";
 
-/** Stable, case-insensitive tags used for operator categorisation and future selectors. */
+export const HOSTED_RESOURCE_KINDS = [
+  "admin-list",
+  "ban-list",
+  "dynamic-config",
+] as const satisfies readonly HostedResourceKind[];
+
+/** A kind fixes the body format, so a resource can never be half re-typed later. */
+const HOSTED_RESOURCE_KIND_FORMATS: Record<HostedResourceKind, HostedResourceFormat> = {
+  "admin-list": "text",
+  "ban-list": "text",
+  "dynamic-config": "ini",
+};
+
+export const HOSTED_RESOURCE_KIND_LABELS: Record<HostedResourceKind, string> = {
+  "admin-list": "Admin list",
+  "ban-list": "Ban list",
+  "dynamic-config": "Dynamic config",
+};
+
+export function isHostedResourceKind(value: unknown): value is HostedResourceKind {
+  return typeof value === "string" && (HOSTED_RESOURCE_KINDS as readonly string[]).includes(value);
+}
+
+export function formatForHostedResourceKind(kind: HostedResourceKind): HostedResourceFormat {
+  return HOSTED_RESOURCE_KIND_FORMATS[kind];
+}
+
+/** Kinds an existing resource may be re-typed to, given its immovable format. */
+export function kindsForHostedResourceFormat(format: HostedResourceFormat): HostedResourceKind[] {
+  return HOSTED_RESOURCE_KINDS.filter((kind) => HOSTED_RESOURCE_KIND_FORMATS[kind] === format);
+}
+
+/** `null` means untyped: a manual resource the operator has not declared a consumer for. */
+export function normalizeHostedResourceKind(value: string | null | undefined): HostedResourceKind | null {
+  if (value === null || value === undefined) return null;
+  const trimmed = value.trim().toLowerCase();
+  if (trimmed.length === 0) return null;
+  if (!isHostedResourceKind(trimmed)) {
+    throw new Error(`Unknown hosted resource kind: ${value}`);
+  }
+  return trimmed;
+}
+
+/** Common ASA URL consumers; MultiSelect also permits operator-defined tags. */
+export const HOSTED_RESOURCE_TAG_OPTIONS = HOSTED_RESOURCE_KINDS.map((kind) => ({
+  value: kind,
+  label: HOSTED_RESOURCE_KIND_LABELS[kind],
+}));
+
+/** Stable, case-insensitive tags used for operator categorisation only; compatibility uses the typed kind. */
 export function normalizeHostedResourceTags(tags: readonly string[]): string[] {
   const normalized = new Set<string>();
   for (const tag of tags) {
@@ -100,6 +148,42 @@ function formatHostedResourcePath(token: string): string {
 
 export function formatHostedResourceUrl(port: number, token: string): string {
   return `http://${HOSTED_RESOURCES_BIND_HOST}:${port}${formatHostedResourcePath(token)}`;
+}
+
+/** Localhost spellings YARK treats as its own loopback host. */
+const LOOPBACK_HOSTS = new Set([HOSTED_RESOURCES_BIND_HOST, "localhost", "::1", "[::1]"]);
+
+export interface ParsedHostedResourceUrl {
+  token: string;
+  host: string;
+  /** Null when the URL carries no explicit port. */
+  port: number | null;
+}
+
+/**
+ * Reduce a value to the token of a YARK loopback resource URL. Matching on the token
+ * instead of the whole URL keeps a reference recognisable after the host port changes.
+ * Returns null for anything that is not a loopback resource URL, including external URLs.
+ */
+export function parseHostedResourceUrl(value: string): ParsedHostedResourceUrl | null {
+  const raw = value
+    .trim()
+    .replace(/^"(.*)"$/, "$1")
+    .trim();
+  if (raw.length === 0) return null;
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+  const host = url.hostname.toLowerCase();
+  if (!LOOPBACK_HOSTS.has(host)) return null;
+  if (!url.pathname.startsWith(HOSTED_RESOURCES_PATH_PREFIX)) return null;
+  const token = url.pathname.slice(HOSTED_RESOURCES_PATH_PREFIX.length);
+  if (!HOSTED_RESOURCES_TOKEN_PATTERN.test(token)) return null;
+  return { token, host, port: url.port.length === 0 ? null : Number.parseInt(url.port, 10) };
 }
 
 export interface HostedResourceValidation {

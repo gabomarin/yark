@@ -50,6 +50,7 @@ import { useDesktopShellPreferences } from "@features/settings/hooks/useDesktopS
 import type { Route } from "@layout/Sidebar/Sidebar";
 import { AppSpotlight } from "@layout/AppSpotlight/AppSpotlight";
 import { pushSpotlightRecent } from "@layout/AppSpotlight/appSpotlightRecent";
+import { useHostedResourcesHealth } from "@features/hosted-resources/hooks/useHostedResourcesHealth";
 
 export interface AppShellProps {
   /** Resolved from `app_settings` (via IPC) before first paint. */
@@ -104,6 +105,7 @@ export function AppShell({
     route,
     overlay,
   });
+  const hostedResourcesHealth = useHostedResourcesHealth();
   const [importInstallOpen, setImportInstallOpen] = useState(false);
   /** Remount Import wizard on each open so step/probe state resets without adjust-on-prop effects. */
   const [importWizardKey, setImportWizardKey] = useState(0);
@@ -596,6 +598,8 @@ export function AppShell({
           stopBusyOverlay,
           downloadCount,
           downloadsWorkspaceFooter,
+          hostedResourcesHealth: hostedResourcesHealth.state,
+          hostedResourceReferencesByServerId: hostedResourcesHealth.referencesByServerId,
         }}
       />
       <CloneServerDialog

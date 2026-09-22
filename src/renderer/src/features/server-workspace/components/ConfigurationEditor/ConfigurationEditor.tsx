@@ -25,6 +25,7 @@ interface Props {
   onRegisterSave?: (save: (() => Promise<boolean>) | null) => void;
   /** Open RCON → Admins (AdminListURL is managed there). */
   onOpenAdminList?: () => void;
+  onSaved?: () => void;
 }
 
 export function ConfigurationEditor(props: Props): ReactElement {
@@ -35,8 +36,22 @@ export function ConfigurationEditor(props: Props): ReactElement {
   const editor = useConfigurationEditor({
     serverId: props.server.id,
     onDirtyChange: props.onDirtyChange,
-    onRegisterSave: props.onRegisterSave,
+    onRegisterSave: (save) =>
+      props.onRegisterSave?.(
+        save === null
+          ? null
+          : async () => {
+              const saved = await save();
+              if (saved) props.onSaved?.();
+              return saved;
+            },
+      ),
   });
+
+  const saveAndNotify = async (): Promise<void> => {
+    const saved = await editor.saveIni();
+    if (saved) props.onSaved?.();
+  };
 
   const iniNavigation = (
     <IniEditorNav
@@ -88,7 +103,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
               loading={editor.loading}
               onRestoreFile={editor.resetActiveFileToDefaults}
               onDiscard={editor.resetChanges}
-              onSave={() => void editor.saveIni()}
+              onSave={() => void saveAndNotify()}
             />
 
             <ConfigurationEditorFilterBar
@@ -136,7 +151,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
               dirty={editor.dirty}
               busy={editor.busy}
               onDiscard={editor.resetChanges}
-              onSave={() => void editor.saveIni()}
+              onSave={() => void saveAndNotify()}
             />
             <ConfigurationEditorTextPanel
               iniFile={editor.iniFile}

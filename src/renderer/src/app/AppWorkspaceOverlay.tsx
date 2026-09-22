@@ -4,6 +4,7 @@ import type { AppFleetSlice, AppLifecycleSlice, AppRconSlice, AppSteamCmdSlice }
 import { AppShellWithChrome, type AppShellChromeProps } from "@app/appShellChrome";
 import { resolveWorkspaceFilesJobState } from "@app/model/workspaceFilesJobState";
 import { ServerWorkspacePage } from "@features/server-workspace/ServerWorkspacePage";
+import type { HostedResourceReferenceDto } from "@shared/ipc";
 
 type WorkspaceOverlay = Extract<Overlay, { kind: "workspace" }>;
 
@@ -17,6 +18,7 @@ export interface AppWorkspaceOverlayProps {
   steamCmd: AppSteamCmdSlice;
   registerOverlayLeaveGuard: (guard: ((action: () => void) => void) | null) => void;
   onStatusPanelVisibleChange?: (visible: boolean) => void;
+  hostedResourceReferencesByServerId: Map<string, HostedResourceReferenceDto[]>;
 }
 
 export function AppWorkspaceOverlay(props: AppWorkspaceOverlayProps): ReactElement {
@@ -66,6 +68,7 @@ export function AppWorkspaceOverlay(props: AppWorkspaceOverlayProps): ReactEleme
         processMetrics={processMetricsByServer.get(overlay.serverId) ?? null}
         onboarding={overlay.onboarding === true}
         initialTab={overlay.initialTab}
+        initialRconFocus={overlay.initialRconFocus}
         logsFocus={overlay.logsFocus}
         filesJobActive={filesJob.filesJobActive}
         filesJobOperation={filesJob.filesJobOperation}
@@ -87,6 +90,8 @@ export function AppWorkspaceOverlay(props: AppWorkspaceOverlayProps): ReactEleme
         }
         onRegisterLeaveGuard={registerOverlayLeaveGuard}
         onStatusPanelVisibleChange={onStatusPanelVisibleChange}
+        hostedResourceReferences={props.hostedResourceReferencesByServerId.get(overlay.serverId) ?? []}
+        onOpenHostedResources={() => props.shell.navigate("hostedResources")}
         onBack={() => setOverlay(null)}
         onStartServer={(id) => void actions.startServer(id)}
         onStopServer={(id) => void actions.runAction(() => window.api.stopServer(id))}

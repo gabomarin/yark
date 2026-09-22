@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
-import { Broadcast, WarningCircle } from "@phosphor-icons/react";
-import { Button, Group, NumberInput, Stack, Switch, Text } from "@mantine/core";
+import { ArrowClockwise, Broadcast, WarningCircle } from "@phosphor-icons/react";
+import { Badge, Button, Group, NumberInput, Stack, Switch, Text } from "@mantine/core";
+import type { HostedResourceReferenceDto } from "@shared/ipc";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
@@ -13,15 +14,55 @@ import { useHostedResourcesPage } from "./hooks/useHostedResourcesPage";
 import { HostedResourceCard } from "./components/HostedResourceCard/HostedResourceCard";
 import { HostedResourceEditorModal } from "./components/HostedResourceEditorModal/HostedResourceEditorModal";
 import { HostedResourceRevisionsModal } from "./components/HostedResourceRevisionsModal/HostedResourceRevisionsModal";
-import { HostedResourcesDiagnosticsPanel } from "./components/HostedResourcesDiagnosticsPanel/HostedResourcesDiagnosticsPanel";
 import classes from "./HostedResourcesPage.module.css";
 
 const EXPERIMENTAL_HINT_STORAGE_KEY = "yark.hostedResources.experimentalHint.dismissed.v1";
 
-export function HostedResourcesPage(): ReactElement {
+interface Props {
+  onOpenReference?: (reference: HostedResourceReferenceDto) => void;
+}
+
+export function HostedResourcesPage({ onOpenReference = () => undefined }: Props = {}): ReactElement {
   const controller = useHostedResourcesPage();
   const overview = controller.overview;
   const state = overview?.state ?? null;
+  const hostedResourcesDisabledWithReferences =
+    controller.diagnostics?.state.enabled === false && controller.diagnostics.references.length > 0;
+  const portChanged =
+    state !== null && Number(controller.portDraft) !== state.port;
+  const diagnosticsWarning =
+    controller.diagnostics !== null &&
+    controller.diagnostics.state.enabled &&
+    (controller.diagnostics.resources.some((resource) => resource.status !== "verified") ||
+      controller.diagnostics.references.some((reference) => reference.status !== "current"));
+  const headerAlert =
+    state?.error !== null && state?.error !== undefined
+      ? { color: "red" as const, title: "Port unavailable", message: state.error }
+      : hostedResourcesDisabledWithReferences
+        ? {
+            color: "red" as const,
+            title: "Hosted Resources is disabled",
+            message: "One or more server settings still reference hosted URLs. Enable Hosted Resources or update those settings.",
+          }
+        : controller.diagnostics?.state.enabled === true && !controller.diagnostics.ownership.ok
+        ? {
+            color: "red" as const,
+            title: "Hosted Resources is unavailable",
+            message: "Check that the configured port is free and that YARK is still running before using these URLs.",
+          }
+        : portChanged
+          ? {
+              color: "attention" as const,
+              title: "Existing URLs will become stale",
+              message: "Update the affected resource cards after changing the port. Diagnostics will identify server settings that still use the previous URL.",
+            }
+          : diagnosticsWarning
+            ? {
+                color: "attention" as const,
+                title: "Hosted Resources need attention",
+                message: "Review the highlighted resource cards below for the affected server settings and resource state.",
+              }
+            : null;
 
   const referenceCountFor = (resourceId: string): number =>
     summarizeReferences(
@@ -32,6 +73,16 @@ export function HostedResourcesPage(): ReactElement {
     const found = controller.diagnostics?.resources.find((entry) => entry.resourceId === resourceId);
     return found === undefined ? null : found.requestCount;
   };
+
+  const diagnosticStatusFor = (resourceId: string) => {
+    if (controller.diagnostics?.state.enabled === false) return null;
+    const found = controller.diagnostics?.resources.find((entry) => entry.resourceId === resourceId);
+    return found?.status ?? null;
+  };
+
+  const referenceIssuesFor = (resourceId: string) =>
+    (controller.diagnostics?.references ?? [])
+      .filter((reference) => reference.resourceId === resourceId && reference.status !== "current");
 
   return (
     <PageScaffold title="Hosted Resources" fillViewport edgeToEdge showHeader={false}>
@@ -49,10 +100,14 @@ export function HostedResourcesPage(): ReactElement {
         <Stack gap="md" className={classes.content}>
           {/* Task guidance goes first: it is why the operator opened this page, and below the
            * status card it was easy to never reach. */}
-          {overview !== null && overview.resources.length > 0 && (
-            <AppAlert color="blue" variant="light" title="Next step">
-              Copy a resource URL and paste it into the server setting that uses it, such as <code>AdminListURL</code>{" "}
-              in RCON → Admins. Keep YARK running while ASA needs to refresh the URL.
+          {overview !== null && (overview.resources.length > 0 || headerAlert !== null) && (
+            <AppAlert color={headerAlert?.color ?? "blue"} variant="light" title={headerAlert?.title ?? "Next step"}>
+              {headerAlert?.message ?? (
+                <>
+                  Copy a resource URL and paste it into the server setting that uses it, such as <code>AdminListURL</code>{" "}
+                  in RCON → Admins. Keep YARK running while ASA needs to refresh the URL.
+                </>
+              )}
             </AppAlert>
           )}
           <DismissibleHint storageKey={EXPERIMENTAL_HINT_STORAGE_KEY} title="Experimental">
@@ -65,9 +120,14 @@ export function HostedResourcesPage(): ReactElement {
               <Stack gap="sm">
                 <Group justify="space-between" align="flex-start">
                   <div>
-                    <Text fw={600}>
-                      {state.enabled ? "Hosted Resources is enabled" : "Hosted Resources is disabled"}
-                    </Text>
+                    <Group gap="xs">
+                      <Text fw={600}>
+                        {state.enabled ? "Hosted Resources is enabled" : "Hosted Resources is disabled"}
+                      </Text>
+                      <Badge variant="light" color={!state.enabled ? "gray" : state.listening ? "ok" : "red"}>
+                        {!state.enabled ? "Disabled" : state.listening ? "Listening" : "Not listening"}
+                      </Badge>
+                    </Group>
                     <Text size="sm" c="dimmed">
                       {state.enabled
                         ? state.listening
@@ -85,33 +145,41 @@ export function HostedResourcesPage(): ReactElement {
                   />
                 </Group>
 
-                <Group align="flex-end">
-                  <NumberInput
-                    label="Port"
-                    value={controller.portDraft}
-                    onChange={controller.setPortDraft}
-                    min={1024}
-                    max={65535}
-                    clampBehavior="strict"
-                    w={140}
-                    disabled={!state.enabled}
-                    data-hosted-resources-port
-                  />
-                  <Button
-                    variant="default"
-                    onClick={() => void controller.applyPort()}
-                    loading={controller.busy === "port"}
-                    disabled={!state.enabled}
-                  >
-                    Apply port
-                  </Button>
-                </Group>
-
-                {state.error !== null && (
-                  <AppAlert color="red" variant="light" title="Port unavailable">
-                    {state.error}
-                  </AppAlert>
-                )}
+                <Stack gap="xs">
+                  <Group justify="space-between" align="flex-end" wrap="wrap">
+                    <Group align="flex-end">
+                      <NumberInput
+                        label="Serving port"
+                        description="Changing this port changes every resource URL."
+                        value={controller.portDraft}
+                        onChange={controller.setPortDraft}
+                        min={1024}
+                        max={65535}
+                        clampBehavior="strict"
+                        w={180}
+                        disabled={!state.enabled}
+                        data-hosted-resources-port
+                      />
+                      <Button
+                        variant="default"
+                        onClick={() => void controller.applyPort()}
+                        loading={controller.busy === "port"}
+                        disabled={!state.enabled}
+                      >
+                        {portChanged ? "Change serving port" : "Apply port"}
+                      </Button>
+                    </Group>
+                    <Button
+                      size="sm"
+                      variant="default"
+                      leftSection={<ArrowClockwise size={14} />}
+                      onClick={() => void controller.runDiagnostics()}
+                      loading={controller.diagnosticsBusy}
+                    >
+                      Check health
+                    </Button>
+                  </Group>
+                </Stack>
               </Stack>
             </AppSurfaceCard>
           )}
@@ -155,6 +223,9 @@ export function HostedResourcesPage(): ReactElement {
                   resource={resource}
                   referencedServerCount={referenceCountFor(resource.id)}
                   observedRequests={observedRequestsFor(resource.id)}
+                  diagnosticStatus={diagnosticStatusFor(resource.id)}
+                  referenceIssues={referenceIssuesFor(resource.id)}
+                  onOpenReference={onOpenReference}
                   busy={controller.busy !== null}
                   onEdit={() => void controller.openEdit(resource)}
                   onRevisions={() => void controller.openRevisions(resource)}
@@ -165,11 +236,6 @@ export function HostedResourcesPage(): ReactElement {
             </>
           )}
 
-          <HostedResourcesDiagnosticsPanel
-            diagnostics={controller.diagnostics}
-            busy={controller.diagnosticsBusy}
-            onRun={() => void controller.runDiagnostics()}
-          />
         </Stack>
 
         <HostedResourceEditorModal

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { ADMIN_LIST_DEFAULT_INTERVAL_SEC, ADMIN_LIST_MIN_INTERVAL_SEC } from "./adminListFormConstants";
+import { notifyHostedResourcesDiagnosticsUpdated } from "@features/hosted-resources/hooks/useHostedResourcesHealth";
 
 function normalizeInterval(value: number | string): number {
   const raw = typeof value === "number" ? value : Number.parseFloat(String(value));
@@ -183,6 +184,7 @@ export function useAdminsSection(args: UseAdminsSectionArgs) {
         });
         if (result.ok) {
           applyStateToDrafts(result.data);
+          notifyHostedResourcesDiagnosticsUpdated();
           showOperatorToast({
             title: "Admin list",
             message:

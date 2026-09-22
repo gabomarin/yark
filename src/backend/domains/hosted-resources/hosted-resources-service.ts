@@ -23,7 +23,9 @@ import {
   HOSTED_RESOURCES_TOKEN_BYTES,
   HOSTED_RESOURCES_TOKEN_PATTERN,
   HOSTED_RESOURCE_CONTENT_TYPES,
+  formatForHostedResourceKind,
   formatHostedResourceUrl,
+  normalizeHostedResourceKind,
   normalizeHostedResourceTags,
   HOSTED_RESOURCES_MAX_DISPLAY_NAME_LENGTH,
   HOSTED_RESOURCES_MAX_NOTES_LENGTH,
@@ -32,11 +34,14 @@ import {
   parseHostedResourcesPort,
   serializeHostedResourcesEnabled,
   validateHostedResourceContent,
+  parseHostedResourceUrl,
   type HostedResourceFormat,
+  type HostedResourceKind,
 } from "@shared/settings/hosted-resources";
 import { parseIniTextRows } from "@shared/ini/ini-text";
 import type {
   HostedResourceDiagnosticDto,
+  HostedResourceDiagnosticStatus,
   HostedResourceDto,
   HostedResourceReferenceDto,
   HostedResourceRevisionDto,
@@ -52,6 +57,7 @@ import type {
 
 /** Constant marker so an ownership self-test can prove a loopback answer is ours. */
 export const HOSTED_RESOURCES_MARKER_HEADER = "x-yark-hosted-resources";
+const HOSTED_RESOURCES_DIAGNOSTIC_HEADER = "x-yark-diagnostics";
 
 /** In-memory ownership/served-bytes probe timeout. */
 const PROBE_TIMEOUT_MS = 3_000;
@@ -68,7 +74,7 @@ interface HostedResourcesSettingsStore {
 interface HostedResourceReferenceSource {
   serverId: string;
   serverName: string;
-  /** GameUserSettings.ini text scanned for exact YARK URLs. */
+  /** GameUserSettings.ini text scanned for YARK resource URLs. */
   text: string;
 }
 
@@ -97,9 +103,9 @@ export function isLoopbackAddress(address: string | undefined): boolean {
   return address === "127.0.0.1" || address === "::1" || address === "::ffff:127.0.0.1";
 }
 
-function probeUrl(url: string): Promise<HttpProbeResult> {
+function probeUrl(url: string, headers?: Record<string, string>): Promise<HttpProbeResult> {
   return new Promise((resolve, reject) => {
-    const req = httpRequest(url, { method: "GET", timeout: PROBE_TIMEOUT_MS }, (res) => {
+    const req = httpRequest(url, { method: "GET", timeout: PROBE_TIMEOUT_MS, headers }, (res) => {
       let body = "";
       res.setEncoding("utf8");
       res.on("data", (chunk: string) => {
@@ -201,15 +207,19 @@ export class HostedResourcesService {
     content: string;
     notes?: string;
     tags?: string[];
+    kind?: string | null;
   }): HostedResourceDto {
     this.assertValidContent(input.format, input.content);
-    const metadata = this.normalizeMetadata(input.displayName, input.notes, input.tags);
+    const kind = normalizeHostedResourceKind(input.kind);
+    this.assertKindMatchesFormat(kind, input.format);
+    const metadata = this.normalizeMetadata(input.displayName, input.notes, input.tags, kind);
     const now = new Date().toISOString();
     const resource: HostedResourceRow = {
       id: randomUUID(),
       token: mintToken(),
       displayName: metadata.displayName,
       format: input.format,
+      kind: metadata.kind,
       createdAt: now,
       updatedAt: now,
       disabledAt: null,
@@ -233,14 +243,17 @@ export class HostedResourcesService {
   publishContent(
     resourceId: string,
     content: string,
-    metadataInput?: { displayName: string; notes: string; tags: string[] },
+    metadataInput?: { displayName: string; notes: string; tags: string[]; kind?: string | null },
   ): HostedResourceDto {
     const resource = this.mustGetResource(resourceId);
     this.assertValidContent(resource.format, content);
+    const kind = normalizeHostedResourceKind(metadataInput?.kind ?? resource.kind);
+    this.assertKindMatchesFormat(kind, resource.format);
     const metadata = this.normalizeMetadata(
       metadataInput?.displayName ?? resource.displayName,
       metadataInput?.notes ?? resource.notes,
       metadataInput?.tags ?? resource.tags,
+      kind,
     );
     const now = new Date().toISOString();
     const revisionId = randomUUID();
@@ -249,6 +262,7 @@ export class HostedResourcesService {
       displayName: metadata.displayName,
       notes: metadata.notes,
       tags: metadata.tags,
+      kind: metadata.kind,
       publishedAt: now,
       revision: {
         id: revisionId,
@@ -285,16 +299,22 @@ export class HostedResourcesService {
 
   renameResource(resourceId: string, displayName: string): HostedResourceDto {
     const resource = this.mustGetResource(resourceId);
-    const metadata = this.normalizeMetadata(displayName, resource.notes, resource.tags);
+    const metadata = this.normalizeMetadata(displayName, resource.notes, resource.tags, resource.kind);
     this.deps.repo.renameResource(resourceId, metadata.displayName, new Date().toISOString());
     return this.toResourceDto(this.mustGetSummary(resourceId), this.getState().port);
   }
 
-  updateMetadata(resourceId: string, input: { displayName: string; notes: string; tags: string[] }): HostedResourceDto {
-    this.mustGetResource(resourceId);
-    const metadata = this.normalizeMetadata(input.displayName, input.notes, input.tags);
+  updateMetadata(
+    resourceId: string,
+    input: { displayName: string; notes: string; tags: string[]; kind?: string | null },
+  ): HostedResourceDto {
+    const resource = this.mustGetResource(resourceId);
+    // Omitted kind keeps the stored one; `null` untypes on purpose.
+    const kind = input.kind === undefined ? resource.kind : normalizeHostedResourceKind(input.kind);
+    this.assertKindMatchesFormat(kind, resource.format);
+    const metadata = this.normalizeMetadata(input.displayName, input.notes, input.tags, kind);
     const now = new Date().toISOString();
-    this.deps.repo.updateMetadata(resourceId, metadata.displayName, metadata.notes, metadata.tags, now);
+    this.deps.repo.updateMetadata(resourceId, metadata.displayName, metadata.notes, metadata.tags, metadata.kind, now);
     return this.toResourceDto(this.mustGetSummary(resourceId), this.getState().port);
   }
 
@@ -334,12 +354,22 @@ export class HostedResourcesService {
     // could otherwise report bytes served by the foreign process.
     const state = this.getState();
     const serving = ownership.ok && state.listening;
+    const checkedAt = new Date().toISOString();
     const resources: HostedResourceDiagnosticDto[] = [];
     for (const summary of this.deps.repo.listResourceSummaries()) {
       const url = formatHostedResourceUrl(state.port, summary.token);
       let servedSha256: string | null = null;
-      if (serving && summary.disabledAt === null && summary.publishedRevisionId !== null) {
-        servedSha256 = await this.fetchServedSha256(url);
+      let status: HostedResourceDiagnosticStatus;
+      if (summary.disabledAt !== null) {
+        status = "disabled";
+      } else if (summary.publishedRevisionId === null) {
+        status = "unpublished";
+      } else if (!serving) {
+        status = "unreachable";
+      } else {
+        const served = await this.fetchServedSha256(url);
+        servedSha256 = served.sha256;
+        status = served.status === "verified" && servedSha256 !== summary.publishedSha256 ? "mismatch" : served.status;
       }
       resources.push({
         resourceId: summary.id,
@@ -349,12 +379,14 @@ export class HostedResourcesService {
         published: summary.publishedRevisionId !== null,
         declaredSha256: summary.publishedSha256,
         servedSha256,
-        servedOk: servedSha256 !== null && servedSha256 === summary.publishedSha256,
+        status,
+        servedOk: status === "verified",
         requestCount: this.requestCounts.get(summary.id) ?? 0,
       });
     }
     return {
       state,
+      checkedAt,
       ownership,
       resources,
       references: this.scanReferences(state.port),
@@ -470,7 +502,9 @@ export class HostedResourcesService {
       res.end();
       return;
     }
-    this.requestCounts.set(resource.id, (this.requestCounts.get(resource.id) ?? 0) + 1);
+    if (req.headers[HOSTED_RESOURCES_DIAGNOSTIC_HEADER] !== "1") {
+      this.requestCounts.set(resource.id, (this.requestCounts.get(resource.id) ?? 0) + 1);
+    }
     res.end(body);
   }
 
@@ -500,12 +534,16 @@ export class HostedResourcesService {
     }
   }
 
-  private async fetchServedSha256(url: string): Promise<string | null> {
+  private async fetchServedSha256(
+    url: string,
+  ): Promise<{ sha256: string | null; status: Extract<HostedResourceDiagnosticStatus, "verified" | "mismatch" | "unreachable"> }> {
     try {
-      const result = await probeUrl(url);
-      return result.status === 200 ? hostedResourceSha256(result.body) : null;
+      const result = await probeUrl(url, { [HOSTED_RESOURCES_DIAGNOSTIC_HEADER]: "1" });
+      if (result.status !== 200) return { sha256: null, status: "unreachable" };
+      const sha256 = hostedResourceSha256(result.body);
+      return { sha256, status: "verified" };
     } catch {
-      return null;
+      return { sha256: null, status: "unreachable" };
     }
   }
 
@@ -516,23 +554,24 @@ export class HostedResourcesService {
     } catch {
       return [];
     }
-    const resources = this.deps.repo.listResourceSummaries().filter((row) => row.disabledAt === null);
+    const resources = this.deps.repo.listResourceSummaries();
+    const resourcesByToken = new Map(resources.map((resource) => [resource.token, resource]));
     const references: HostedResourceReferenceDto[] = [];
     for (const source of sources) {
       const rows = parseIniTextRows(source.text);
-      for (const resource of resources) {
-        const url = formatHostedResourceUrl(port, resource.token);
-        for (const row of rows) {
-          if (row.value.includes(url)) {
-            references.push({
-              resourceId: resource.id,
-              serverId: source.serverId,
-              serverName: source.serverName,
-              key: row.key,
-              url,
-            });
-          }
-        }
+      for (const row of rows) {
+        const parsed = parseHostedResourceUrl(row.value);
+        if (parsed === null) continue;
+        const resource = resourcesByToken.get(parsed.token);
+        if (resource === undefined) continue;
+        references.push({
+          resourceId: resource.id,
+          serverId: source.serverId,
+          serverName: source.serverName,
+          key: row.key,
+          url: row.value.trim(),
+          status: resource.disabledAt !== null ? "disabled" : parsed.port !== port ? "stale-port" : "current",
+        });
       }
     }
     return references;
@@ -566,6 +605,7 @@ export class HostedResourcesService {
       id: row.id,
       displayName: row.displayName,
       format: row.format,
+      kind: row.kind,
       url: formatHostedResourceUrl(port, row.token),
       enabled: row.disabledAt === null,
       createdAt: row.createdAt,
@@ -584,7 +624,8 @@ export class HostedResourcesService {
     displayName: string,
     notes: string | undefined,
     tags: readonly string[] | undefined,
-  ): { displayName: string; notes: string; tags: string[] } {
+    kind: HostedResourceKind | null,
+  ): { displayName: string; notes: string; tags: string[]; kind: HostedResourceKind | null } {
     const normalizedName = displayName.trim();
     if (normalizedName.length === 0) throw new Error("Display name is required.");
     if (normalizedName.length > HOSTED_RESOURCES_MAX_DISPLAY_NAME_LENGTH) {
@@ -598,6 +639,20 @@ export class HostedResourcesService {
       displayName: normalizedName,
       notes: normalizedNotes,
       tags: normalizeHostedResourceTags(tags ?? []),
+      kind,
     };
+  }
+
+  /**
+   * A kind implies a body format and a resource's format never changes after creation, so
+   * a kind can only be applied to a resource it is compatible with (#577). `null` means
+   * untyped and is always allowed.
+   */
+  private assertKindMatchesFormat(kind: HostedResourceKind | null, format: HostedResourceFormat): void {
+    if (kind === null) return;
+    const expected = formatForHostedResourceKind(kind);
+    if (expected !== format) {
+      throw new Error(`A ${kind} resource must use the ${expected} format.`);
+    }
   }
 }

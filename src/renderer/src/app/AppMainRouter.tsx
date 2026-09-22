@@ -42,6 +42,8 @@ function buildShellChrome(
     busyOverlay: chrome.stopBusyOverlay,
     downloadCount: chrome.downloadCount,
     workspaceFooter: chrome.downloadsWorkspaceFooter,
+    hostedResourcesHealth: chrome.hostedResourcesHealth,
+    hostedResourceReferencesByServerId: chrome.hostedResourceReferencesByServerId,
   };
 }
 
@@ -61,6 +63,7 @@ export function AppMainRouter(props: AppMainRouterProps): ReactElement {
         steamCmd={steamCmd}
         registerOverlayLeaveGuard={navigation.registerOverlayLeaveGuard}
         onStatusPanelVisibleChange={navigation.onWorkspaceStatusPanelVisibleChange}
+        hostedResourceReferencesByServerId={shell.hostedResourceReferencesByServerId ?? new Map()}
       />
     );
   }

@@ -27,12 +27,15 @@ expect an HTTP URL body (for example `AdminListURL`, `BanListURL`). The experime
 1. Open **Hosted Resources** in the sidebar and turn the host on.
 2. Set one port (default `8935`) and **Apply port**. If the port is busy, the host
    fails closed and shows an error — YARK never assumes an open port belongs to it.
-3. **New resource**: pick a display name and format, paste the body, and **Create
-   resource**. Add optional operator notes and tags such as `admin-list`, `ban-list`,
-   or `dynamic-config`; custom tags can be added for mods or local conventions. The editor shows a live UTF-8
-   size counter and enforces the **512 KB** cap per version.
-4. Copy the URL and paste it into the server setting or mod config that expects it
-   (for example `AdminListURL` in `GameUserSettings.ini`).
+3. **New resource**: pick a display name, a **type** (Admin list, Ban list, or Dynamic
+   config) when the body is for a known ASA setting, and the format that type implies,
+   then paste the body and **Create resource**. Add optional operator notes and tags.
+   Tags are free-form categorization; the type is what setting selectors match on. The
+   editor shows a live UTF-8 size counter and enforces the **512 KB** cap per version.
+4. Assign the URL: pick the resource from the setting's selector (see
+   [Setting selectors](#typed-resources-and-setting-selectors)), or copy the URL and paste
+   it into the setting or mod config that expects it (for example `AdminListURL` in
+   `GameUserSettings.ini`).
 5. To change the body, use **Edit** and **Save**. Every save keeps the previous version
    listed under **Revisions**, where it can be **restored**. The swap is atomic, so a
    request always sees exactly one version.
@@ -41,17 +44,22 @@ expect an HTTP URL body (for example `AdminListURL`, `BanListURL`). The experime
 
 ## Diagnostics
 
-**Run diagnostics** performs three independent checks. They are intentionally
+**Run diagnostics** performs three independent checks and reports a summary as
+**Healthy**, **Attention needed**, or **Unavailable**. They are intentionally
 separate — none of them proves the game accepted the resource:
 
 | Check                 | What it proves                                                                   |
 | --------------------- | -------------------------------------------------------------------------------- |
 | Loopback ownership    | A loopback request answered with YARK's marker header, so the port is ours       |
 | Served bytes          | A loopback GET of each resource hashes to the declared SHA-256                   |
-| Discovered references | A managed server INI contains the exact YARK URL (no guesswork on setting names) |
+| Discovered references | A managed server INI contains a YARK URL, with stale-port and disabled references identified |
 
-The panel also shows observed request counts since YARK started. A served match only
-means YARK returned those bytes; it does not mean ASA loaded them.
+Each resource is reported as **Verified**, **Content changed**, **Unreachable**,
+**Disabled**, or **Nothing published**. Request counts are external requests since
+YARK started; Diagnostics' own verification requests are excluded. A served match
+only means YARK returned those bytes; it does not mean ASA loaded them. References
+cover YARK-managed server INI files. A URL using a previous serving port is recognized
+by its resource token and marked **Previous port**; it still needs to be updated manually.
 
 ## Known consumers (ASA)
 
@@ -71,6 +79,43 @@ Mod settings are a different story: ASA mods read their options from local
 `[ModSettings]` / per-mod sections of `GameUserSettings.ini`, and Ark Server API plugins
 read a local `config.json`. Neither fetches INI over HTTP, so the loopback host does not
 serve mod settings.
+
+### Typed resources and setting selectors
+
+A resource can carry a **type**: `admin-list`, `ban-list`, or `dynamic-config`. The type
+fixes the body format and is what compatibility is based on — tags stay free-form
+categorization and never decide what a setting offers.
+
+The **format is chosen when the resource is created and never changes**: the served
+`Content-Type`, the validation applied on every save, and the type it can carry all derive
+from it. A body in another format is a **new resource** (new URL), not an edit. Clearing the
+type keeps the format and simply stops every setting selector from offering the resource.
+
+| Setting                  | Type             | Edited in                          |
+| ------------------------ | ---------------- | ---------------------------------- |
+| `AdminListURL`           | `admin-list`     | RCON → Admins                      |
+| `BanListURL`             | `ban-list`       | INI Files → Visual                 |
+| `CustomDynamicConfigUrl` | `dynamic-config` | Launch (`-UseDynamicConfig` first) |
+
+Each of those fields lists enabled, published resources of its own type, still accepts an
+arbitrary external http(s) URL, and pre-fills a create flow when empty. Nothing is
+rewritten behind the operator: the picked URL lands in the field's own draft, and that
+field's existing Save owns persistence (RCON → Admins still warns that a URL change needs
+one restart).
+
+A value is matched to a resource by its **token**, not by the whole URL: that is what lets a
+stale-port value be recognised as "this resource, wrong port" instead of an unknown URL. The
+field warns when its value points at:
+
+- a resource that is **disabled** or has **no published version** — ASA cannot fetch it;
+- a resource now served on a **different host port** than the one in the value, which is what
+  a port change leaves behind until the field is updated — pick the resource again;
+- a resource typed for a **different setting**, or left **untyped** — it still serves, but it
+  is not offered for that field;
+- a YARK-shaped URL that **no current resource serves** — the resource was deleted.
+
+Resources created before types existed stay **untyped** and are not offered anywhere until
+a type is set in the resource editor.
 
 ### AdminListURL + loopback mode
 
@@ -133,9 +178,9 @@ Recommended smoke test:
 Notes and tags are YARK-only metadata; they never change the body served at the URL.
 Tags are normalized to lowercase, deduplicated, and limited to 12 labels of 32
 characters each. The editor suggests the ASA URL consumers `admin-list`, `ban-list`,
-and `dynamic-config`; operators can also create custom tags for mods, maps, or local
-conventions. Tags provide stable metadata for a future resource picker in server URL
-settings.
+and `dynamic-config`, and operators can create custom tags for mods, maps, or local
+conventions. The **type** described above is the separate, typed field that setting
+selectors match on; tags never affect compatibility.
 
 ## Port changes and stale URLs
 
@@ -210,11 +255,13 @@ policy.
 
 ## Module map
 
-| Concern                                                       | File                                                                  |
-| ------------------------------------------------------------- | --------------------------------------------------------------------- |
-| Settings, limits, URL shape                                   | `src/shared/settings/hosted-resources.ts`                             |
-| Persistence (`hosted_resources`, `hosted_resource_revisions`) | `src/backend/infra/db/hosted-resources-repository.ts`                 |
-| Loopback listener, publish/enable/disable, diagnostics        | `src/backend/domains/hosted-resources/hosted-resources-service.ts`    |
-| IPC handlers                                                  | `src/main/ipc-handlers.ts` (`hosted-resources:*`)                     |
-| UI                                                            | `src/renderer/src/features/hosted-resources/`                         |
-| Tests                                                         | `tests/unit/hosted-resources.test.ts`, `HostedResourcesPage.test.tsx` |
+| Concern                                                       | File                                                                                                      |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Settings, limits, URL shape, types                            | `src/shared/settings/hosted-resources.ts`                                                                 |
+| Setting → type/format catalog (compatibility)                 | `src/shared/settings/hosted-resource-consumers.ts`                                                        |
+| Persistence (`hosted_resources`, `hosted_resource_revisions`) | `src/backend/infra/db/hosted-resources-repository.ts`                                                     |
+| Loopback listener, publish/enable/disable, diagnostics        | `src/backend/domains/hosted-resources/hosted-resources-service.ts`                                        |
+| IPC handlers                                                  | `src/main/ipc-handlers.ts` (`hosted-resources:*`)                                                         |
+| Resource UI                                                   | `src/renderer/src/features/hosted-resources/`                                                             |
+| Setting selector + assignment warnings                        | `src/renderer/src/features/hosted-resources/components/HostedResourceSelector/`                           |
+| Tests                                                         | `tests/unit/hosted-resources*.test.ts`, `HostedResourcesPage.test.tsx`, `HostedResourceSelector.test.tsx` |

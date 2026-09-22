@@ -6,10 +6,19 @@ import type {
   HostedResourcesOverviewDto,
   IpcResult,
 } from "@shared/ipc";
-import { DEFAULT_HOSTED_RESOURCES_PORT, type HostedResourceFormat } from "@shared/settings/hosted-resources";
+import {
+  DEFAULT_HOSTED_RESOURCES_PORT,
+  type HostedResourceFormat,
+  type HostedResourceKind,
+} from "@shared/settings/hosted-resources";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
 import { openDangerConfirmModal, dangerConfirmBody } from "@ui/DangerConfirmModal/openDangerConfirmModal";
+import {
+  getCachedHostedResourcesDiagnostics,
+  HOSTED_RESOURCES_DIAGNOSTICS_LOADED_EVENT,
+  notifyHostedResourcesDiagnosticsUpdated,
+} from "./useHostedResourcesHealth";
 
 /**
  * A missing / crashed IPC handler rejects instead of returning `IpcResult`,
@@ -31,6 +40,7 @@ export interface HostedResourceEditorDraft {
   resourceId: string | null;
   displayName: string;
   format: HostedResourceFormat;
+  kind: HostedResourceKind | null;
   content: string;
   notes: string;
   tagsText: string;
@@ -73,7 +83,9 @@ export function useHostedResourcesPage(): HostedResourcesController {
   const [editor, setEditor] = useState<HostedResourceEditorDraft | null>(null);
   const [revisionsFor, setRevisionsFor] = useState<string | null>(null);
   const [revisions, setRevisions] = useState<HostedResourceRevisionDto[]>([]);
-  const [diagnostics, setDiagnostics] = useState<HostedResourcesDiagnosticsDto | null>(null);
+  const [diagnostics, setDiagnostics] = useState<HostedResourcesDiagnosticsDto | null>(
+    getCachedHostedResourcesDiagnostics(),
+  );
   const [diagnosticsBusy, setDiagnosticsBusy] = useState(false);
 
   const reload = useCallback(async (opts?: { quiet?: boolean }) => {
@@ -105,8 +117,18 @@ export function useHostedResourcesPage(): HostedResourcesController {
     void reload();
   }, [reload]);
 
+  useEffect(() => {
+    const syncCachedDiagnostics = () => {
+      const cached = getCachedHostedResourcesDiagnostics();
+      if (cached !== null) setDiagnostics(cached);
+    };
+    window.addEventListener(HOSTED_RESOURCES_DIAGNOSTICS_LOADED_EVENT, syncCachedDiagnostics);
+    syncCachedDiagnostics();
+    return () => window.removeEventListener(HOSTED_RESOURCES_DIAGNOSTICS_LOADED_EVENT, syncCachedDiagnostics);
+  }, []);
+
   const applyState = useCallback(
-    async (action: string, run: () => Promise<IpcResult<unknown>>) => {
+    async (action: string, run: () => Promise<IpcResult<unknown>>, onSuccess?: () => void) => {
       setBusy(action);
       await runWithFinally(
         async () => {
@@ -116,6 +138,7 @@ export function useHostedResourcesPage(): HostedResourcesController {
             return;
           }
           await reload({ quiet: true });
+          onSuccess?.();
         },
         () => {
           setBusy(null);
@@ -125,21 +148,54 @@ export function useHostedResourcesPage(): HostedResourcesController {
     [reload],
   );
 
+  const runDiagnostics = useCallback(async () => {
+    setDiagnosticsBusy(true);
+    await runWithFinally(
+      async () => {
+        const result = await attempt(() => window.api.getHostedResourcesDiagnostics());
+        if (result === undefined || !result.ok) {
+          showOperatorError(result?.error ?? "The diagnostics request failed.", "Diagnostics failed");
+          return;
+        }
+        setDiagnostics(result.data);
+        notifyHostedResourcesDiagnosticsUpdated();
+      },
+      () => {
+        setDiagnosticsBusy(false);
+      },
+    );
+  }, []);
+
   const toggleEnabled = useCallback(
     async (enabled: boolean) => {
-      await applyState("toggle", () => window.api.setHostedResourcesEnabled(enabled));
+      await applyState("toggle", () => window.api.setHostedResourcesEnabled(enabled), () => {
+        setDiagnostics(null);
+        notifyHostedResourcesDiagnosticsUpdated();
+        void runDiagnostics();
+      });
     },
-    [applyState],
+    [applyState, runDiagnostics],
   );
 
   const applyPort = useCallback(async () => {
-    const port = typeof portDraft === "number" ? portDraft : Number.parseInt(portDraft, 10);
+    const port =
+      typeof portDraft === "number" ? portDraft : Number.parseInt(portDraft.replaceAll(",", ""), 10);
     if (!Number.isInteger(port) || port < 1024 || port > 65535) {
       showOperatorError("Port must be between 1024 and 65535.");
       return;
     }
-    await applyState("port", () => window.api.setHostedResourcesPort(port));
-  }, [applyState, portDraft]);
+    const previousPort = overview?.state.port;
+    await applyState("port", () => window.api.setHostedResourcesPort(port), () => {
+      setDiagnostics(null);
+      if (previousPort !== undefined && previousPort !== port) {
+        showOperatorToast({
+          title: "Serving port changed",
+          message: `Resources now use port ${port}. Update any server settings that still use port ${previousPort}.`,
+        });
+        void runDiagnostics();
+      }
+    });
+  }, [applyState, overview?.state.port, portDraft, runDiagnostics]);
 
   const openCreate = useCallback(() => {
     setEditor({
@@ -147,6 +203,7 @@ export function useHostedResourcesPage(): HostedResourcesController {
       resourceId: null,
       displayName: "",
       format: "text",
+      kind: null,
       content: "",
       notes: "",
       tagsText: "",
@@ -164,6 +221,7 @@ export function useHostedResourcesPage(): HostedResourcesController {
       resourceId: resource.id,
       displayName: resource.displayName,
       format: resource.format,
+      kind: resource.kind,
       content: result.data,
       notes: resource.notes,
       tagsText: resource.tags.join(", "),
@@ -206,11 +264,13 @@ export function useHostedResourcesPage(): HostedResourcesController {
                 content: editor.content,
                 notes: editor.notes,
                 tags,
+                kind: editor.kind,
               })
             : window.api.publishHostedResourceContent(editor.resourceId ?? "", editor.content, {
                 displayName,
                 notes: editor.notes,
                 tags,
+                kind: editor.kind,
               }),
         );
         if (!result.ok) {
@@ -223,12 +283,17 @@ export function useHostedResourcesPage(): HostedResourcesController {
         });
         setEditor(null);
         await reload({ quiet: true });
+        // A publish is only verifiable while the host is up; probe loopback so the card
+        // can show the resource-specific result instead of "not checked".
+        if (overview?.state.enabled === true) {
+          void runDiagnostics();
+        }
       },
       () => {
         setBusy(null);
       },
     );
-  }, [editor, reload]);
+  }, [editor, overview, reload, runDiagnostics]);
 
   const openRevisions = useCallback(async (resource: HostedResourceDto) => {
     setRevisionsFor(resource.id);
@@ -280,7 +345,11 @@ export function useHostedResourcesPage(): HostedResourcesController {
   const toggleResourceEnabled = useCallback(
     (resource: HostedResourceDto, enabled: boolean) => {
       if (enabled) {
-        void applyState("enable", () => window.api.setHostedResourceEnabled(resource.id, true));
+        void applyState("enable", () => window.api.setHostedResourceEnabled(resource.id, true), () => {
+          setDiagnostics(null);
+          notifyHostedResourcesDiagnosticsUpdated();
+          void runDiagnostics();
+        });
         return;
       }
       openDangerConfirmModal({
@@ -290,11 +359,15 @@ export function useHostedResourcesPage(): HostedResourcesController {
           `"${resource.displayName}" stops serving immediately, including after a restart. Revisions stay listed and you can re-enable it anytime.`,
         ),
         onConfirm: () => {
-          void applyState("disable", () => window.api.setHostedResourceEnabled(resource.id, false));
+          void applyState("disable", () => window.api.setHostedResourceEnabled(resource.id, false), () => {
+            setDiagnostics(null);
+            notifyHostedResourcesDiagnosticsUpdated();
+            void runDiagnostics();
+          });
         },
       });
     },
-    [applyState],
+    [applyState, runDiagnostics],
   );
 
   const confirmDelete = useCallback(
@@ -312,23 +385,6 @@ export function useHostedResourcesPage(): HostedResourcesController {
     },
     [applyState],
   );
-
-  const runDiagnostics = useCallback(async () => {
-    setDiagnosticsBusy(true);
-    await runWithFinally(
-      async () => {
-        const result = await attempt(() => window.api.getHostedResourcesDiagnostics());
-        if (!result.ok) {
-          showOperatorError(result.error, "Diagnostics failed");
-          return;
-        }
-        setDiagnostics(result.data);
-      },
-      () => {
-        setDiagnosticsBusy(false);
-      },
-    );
-  }, []);
 
   return {
     overview,
