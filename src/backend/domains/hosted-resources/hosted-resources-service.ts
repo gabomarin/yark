@@ -58,7 +58,6 @@ import type {
 
 /** Constant marker so an ownership self-test can prove a loopback answer is ours. */
 export const HOSTED_RESOURCES_MARKER_HEADER = "x-yark-hosted-resources";
-const HOSTED_RESOURCES_DIAGNOSTIC_HEADER = "x-yark-diagnostics";
 
 /** In-memory ownership/served-bytes probe timeout. */
 const PROBE_TIMEOUT_MS = 3_000;
@@ -108,9 +107,9 @@ export function isLoopbackAddress(address: string | undefined): boolean {
   return address === "127.0.0.1" || address === "::1" || address === "::ffff:127.0.0.1";
 }
 
-function probeUrl(url: string, headers?: Record<string, string>): Promise<HttpProbeResult> {
+function probeUrl(url: string): Promise<HttpProbeResult> {
   return new Promise((resolve, reject) => {
-    const req = httpRequest(url, { method: "GET", timeout: PROBE_TIMEOUT_MS, headers }, (res) => {
+    const req = httpRequest(url, { method: "GET", timeout: PROBE_TIMEOUT_MS }, (res) => {
       let body = "";
       res.setEncoding("utf8");
       res.on("data", (chunk: string) => {
@@ -135,8 +134,8 @@ export class HostedResourcesService {
   private boundPort = DEFAULT_HOSTED_RESOURCES_PORT;
   private lastError: string | null = null;
   private readonly requestCounts = new Map<string, number>();
-  /** Per-process secret: only our own diagnostics probe may suppress the request counter. */
-  private readonly diagnosticNonce = randomBytes(16).toString("base64url");
+  /** Ids with an in-flight diagnostics fetch. Those GETs are ours, so they must not bump the counter. */
+  private readonly probing = new Set<string>();
   private queue: Promise<unknown> = Promise.resolve();
 
   constructor(private readonly deps: HostedResourcesServiceDeps) {}
@@ -485,7 +484,7 @@ export class HostedResourcesService {
       res.end();
       return;
     }
-    if (req.headers[HOSTED_RESOURCES_DIAGNOSTIC_HEADER] !== this.diagnosticNonce) {
+    if (!this.probing.has(resource.id)) {
       this.requestCounts.set(resource.id, (this.requestCounts.get(resource.id) ?? 0) + 1);
     }
     res.end(body);
@@ -533,7 +532,7 @@ export class HostedResourcesService {
     } else if (!serving) {
       status = "unreachable";
     } else {
-      const served = await this.fetchServed(url);
+      const served = await this.fetchServed(url, summary.id);
       servedSha256 = served.sha256;
       if (!served.ok) {
         status = "unreachable";
@@ -555,13 +554,16 @@ export class HostedResourcesService {
   }
 
   /** HTTP reachability only; the caller compares the hash and picks mismatch vs verified. */
-  private async fetchServed(url: string): Promise<{ sha256: string | null; ok: boolean }> {
+  private async fetchServed(url: string, resourceId: string): Promise<{ sha256: string | null; ok: boolean }> {
+    this.probing.add(resourceId);
     try {
-      const result = await probeUrl(url, { [HOSTED_RESOURCES_DIAGNOSTIC_HEADER]: this.diagnosticNonce });
+      const result = await probeUrl(url);
       if (result.status !== 200) return { sha256: null, ok: false };
       return { sha256: hostedResourceSha256(result.body), ok: true };
     } catch {
       return { sha256: null, ok: false };
+    } finally {
+      this.probing.delete(resourceId);
     }
   }
 

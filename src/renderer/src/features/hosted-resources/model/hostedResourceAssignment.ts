@@ -90,11 +90,9 @@ export function assignmentIssueMessage(
     case "untyped":
       return `${name} has no resource type. It still serves, but it is not offered for ${consumer.label} fields until you set one.`;
     case "incompatible-kind":
-      // `classifyHostedResourceValue` only emits this for a typed resource, but TS cannot
-      // see across functions, so the null arm exists for the type system, not for runtime.
-      return `${name} is typed as ${
-        resource.kind === null ? "untyped" : HOSTED_RESOURCE_KIND_LABELS[resource.kind]
-      }, not ${consumer.label}. It still serves, but it is not offered here.`;
+      // Only emitted for a typed resource. `kind` stays `T | null` on the shared shape, so the
+      // assertion is the type-system bridge, not a runtime branch.
+      return `${name} is typed as ${HOSTED_RESOURCE_KIND_LABELS[resource.kind!]}, not ${consumer.label}. It still serves, but it is not offered here.`;
   }
 }
 

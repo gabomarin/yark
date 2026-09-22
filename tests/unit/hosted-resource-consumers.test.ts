@@ -137,6 +137,7 @@ describe("parseHostedResourceUrl", () => {
   it("extracts the token from a YARK loopback URL, including a quoted INI value", () => {
     expect(parseHostedResourceUrl(`http://127.0.0.1:8935/r/${TOKEN}`)).toMatchObject({ token: TOKEN, port: 8935 });
     expect(parseHostedResourceUrl(`"http://127.0.0.1:8935/r/${TOKEN}"`)).toMatchObject({ token: TOKEN });
+    expect(parseHostedResourceUrl(`'http://127.0.0.1:8935/r/${TOKEN}'`)).toMatchObject({ token: TOKEN });
     expect(parseHostedResourceUrl(`http://localhost/r/${TOKEN}`)).toMatchObject({ token: TOKEN, port: null });
     expect(parseHostedResourceUrl(`http://[::1]:9000/r/${TOKEN}`)).toMatchObject({ token: TOKEN });
   });

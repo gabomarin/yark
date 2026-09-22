@@ -169,8 +169,8 @@ export function formatHostedResourceUrl(port: number, token: string): string {
   return `http://${HOSTED_RESOURCES_BIND_HOST}:${port}${formatHostedResourcePath(token)}`;
 }
 
-/** Localhost spellings YARK treats as its own loopback host. */
-const LOOPBACK_HOSTS = new Set([HOSTED_RESOURCES_BIND_HOST, "localhost", "::1", "[::1]"]);
+/** Localhost spellings YARK treats as its own loopback host. `url.hostname` keeps IPv6 brackets. */
+const LOOPBACK_HOSTS = new Set([HOSTED_RESOURCES_BIND_HOST, "localhost", "[::1]"]);
 
 export interface ParsedHostedResourceUrl {
   token: string;
@@ -187,7 +187,7 @@ export interface ParsedHostedResourceUrl {
 export function parseHostedResourceUrl(value: string): ParsedHostedResourceUrl | null {
   const raw = value
     .trim()
-    .replace(/^"(.*)"$/, "$1")
+    .replace(/^(["'])(.*)\1$/, "$2")
     .trim();
   if (raw.length === 0) return null;
   let url: URL;
@@ -207,9 +207,18 @@ export function parseHostedResourceUrl(value: string): ParsedHostedResourceUrl |
   return { token, host, port: url.port.length === 0 ? null : Number.parseInt(url.port, 10) };
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Unanchored token body, so the scanner and HOSTED_RESOURCES_TOKEN_PATTERN cannot drift. */
+const TOKEN_SHAPE = HOSTED_RESOURCES_TOKEN_PATTERN.source.replace(/^\^/, "").replace(/\$$/, "");
+
 /** A loopback resource URL anywhere inside a larger value (quote/flag tolerating). */
-const HOSTED_RESOURCE_URL_IN_VALUE =
-  /http:\/\/(?:127\.0\.0\.1|localhost|\[::1\]|::1)[^\s"'=;]*\/r\/[A-Za-z0-9_-]{43}/gi;
+const HOSTED_RESOURCE_URL_IN_VALUE = new RegExp(
+  `http://(?:${[...LOOPBACK_HOSTS].map(escapeRegExp).join("|")})[^\\s"'=;]*${escapeRegExp(HOSTED_RESOURCES_PATH_PREFIX)}${TOKEN_SHAPE}`,
+  "gi",
+);
 
 /**
  * First YARK resource URL found inside a value, with what it points at, or null. ASA joins
