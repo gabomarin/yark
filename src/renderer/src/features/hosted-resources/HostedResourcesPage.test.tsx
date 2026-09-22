@@ -37,10 +37,9 @@ function overview(enabled: boolean, resources: HostedResourceDto[] = []): Hosted
   };
 }
 
-function diagnostics(servedOk = true): HostedResourcesDiagnosticsDto {
+function diagnostics(): HostedResourcesDiagnosticsDto {
   return {
     state: overview(true).state,
-    checkedAt: "2026-09-21T22:00:00.000Z",
     ownership: { ok: true, message: "Only YARK's listener answered." },
     resources: [
       {
@@ -50,9 +49,8 @@ function diagnostics(servedOk = true): HostedResourcesDiagnosticsDto {
         enabled: true,
         published: true,
         declaredSha256: resource.publishedSha256,
-        servedSha256: servedOk ? resource.publishedSha256 : null,
-        status: servedOk ? "verified" : "unreachable",
-        servedOk,
+        servedSha256: resource.publishedSha256,
+        status: "verified",
         requestCount: 3,
       },
     ],
@@ -321,7 +319,6 @@ describe("HostedResourcesPage", () => {
               ...diagnostics().resources[0],
               enabled: false,
               status: "disabled",
-              servedOk: false,
               servedSha256: null,
             },
           ],

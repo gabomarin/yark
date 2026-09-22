@@ -466,7 +466,6 @@ describe("hosted resources HTTP host", () => {
     expect(diagnostics.state.listening).toBe(true);
     expect(diagnostics.ownership.ok).toBe(true);
     expect(diagnostics.resources).toHaveLength(1);
-    expect(diagnostics.resources[0]?.servedOk).toBe(true);
     expect(diagnostics.resources[0]?.status).toBe("verified");
     expect(diagnostics.resources[0]?.requestCount).toBe(0);
     expect(diagnostics.resources[0]?.declaredSha256).toBe(hostedResourceSha256("EOSID1"));

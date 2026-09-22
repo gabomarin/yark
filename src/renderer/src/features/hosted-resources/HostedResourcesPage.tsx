@@ -9,7 +9,8 @@ import { AppPageHeader } from "@ui/AppPageHeader/AppPageHeader";
 import { LoadingState } from "@ui/LoadingState/LoadingState";
 import { DismissibleHint } from "@ui/DismissibleHint/DismissibleHint";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
-import { summarizeReferences } from "./model/hostedResourcesPageModel";
+import { hasDiagnosticWarning } from "./model/hostedResourcesHealth";
+import { resolveHeaderAlert, summarizeReferences } from "./model/hostedResourcesPageModel";
 import { useHostedResourcesPage } from "./hooks/useHostedResourcesPage";
 import { HostedResourceCard } from "./components/HostedResourceCard/HostedResourceCard";
 import { HostedResourceEditorModal } from "./components/HostedResourceEditorModal/HostedResourceEditorModal";
@@ -33,36 +34,14 @@ export function HostedResourcesPage({ onOpenReference = () => undefined }: Props
   const diagnosticsWarning =
     controller.diagnostics !== null &&
     controller.diagnostics.state.enabled &&
-    (controller.diagnostics.resources.some((resource) => resource.status !== "verified") ||
-      controller.diagnostics.references.some((reference) => reference.status !== "current"));
-  const headerAlert =
-    state?.error !== null && state?.error !== undefined
-      ? { color: "red" as const, title: "Port unavailable", message: state.error }
-      : hostedResourcesDisabledWithReferences
-        ? {
-            color: "red" as const,
-            title: "Hosted Resources is disabled",
-            message: "One or more server settings still reference hosted URLs. Enable Hosted Resources or update those settings.",
-          }
-        : controller.diagnostics?.state.enabled === true && !controller.diagnostics.ownership.ok
-        ? {
-            color: "red" as const,
-            title: "Hosted Resources is unavailable",
-            message: "Check that the configured port is free and that YARK is still running before using these URLs.",
-          }
-        : portChanged
-          ? {
-              color: "attention" as const,
-              title: "Existing URLs will become stale",
-              message: "Update the affected resource cards after changing the port. Diagnostics will identify server settings that still use the previous URL.",
-            }
-          : diagnosticsWarning
-            ? {
-                color: "attention" as const,
-                title: "Hosted Resources need attention",
-                message: "Review the highlighted resource cards below for the affected server settings and resource state.",
-              }
-            : null;
+    hasDiagnosticWarning(controller.diagnostics);
+  const headerAlert = resolveHeaderAlert({
+    stateError: state?.error,
+    disabledWithReferences: hostedResourcesDisabledWithReferences,
+    ownershipFailed: controller.diagnostics?.state.enabled === true && !controller.diagnostics.ownership.ok,
+    portChanged,
+    diagnosticsWarning,
+  });
 
   const referenceCountFor = (resourceId: string): number =>
     summarizeReferences(

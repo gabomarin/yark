@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { HostedResourceDto } from "@shared/ipc";
-import { resourceStateBadge, resourceVersionLabel } from "./hostedResourcesPageModel";
+import { resolveHeaderAlert, resourceStateBadge, resourceVersionLabel } from "./hostedResourcesPageModel";
 
 function dto(patch: Partial<HostedResourceDto> = {}): HostedResourceDto {
   return {
@@ -49,6 +49,35 @@ describe("resourceStateBadge", () => {
     expect(resourceStateBadge(dto(), "verified")).toEqual({ color: "ok", label: "Verified" });
     expect(resourceStateBadge(dto(), "unreachable")).toEqual({ color: "red", label: "Unreachable" });
     expect(resourceStateBadge(dto(), "mismatch")).toEqual({ color: "attention", label: "Content changed" });
+  });
+});
+
+describe("resolveHeaderAlert", () => {
+  const base = {
+    stateError: null,
+    disabledWithReferences: false,
+    ownershipFailed: false,
+    portChanged: false,
+    diagnosticsWarning: false,
+  };
+
+  it("shows nothing when everything is fine", () => {
+    expect(resolveHeaderAlert(base)).toBeNull();
+  });
+
+  it("reports the hardest failure first", () => {
+    expect(resolveHeaderAlert({ ...base, stateError: "Port 8935 is in use", portChanged: true })).toMatchObject({
+      title: "Port unavailable",
+    });
+    expect(resolveHeaderAlert({ ...base, disabledWithReferences: true, diagnosticsWarning: true })).toMatchObject({
+      title: "Hosted Resources is disabled",
+    });
+    expect(resolveHeaderAlert({ ...base, portChanged: true, diagnosticsWarning: true })).toMatchObject({
+      title: "Existing URLs will become stale",
+    });
+    expect(resolveHeaderAlert({ ...base, diagnosticsWarning: true })).toMatchObject({
+      title: "Hosted Resources need attention",
+    });
   });
 });
 

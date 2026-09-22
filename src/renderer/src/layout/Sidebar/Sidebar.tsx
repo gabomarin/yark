@@ -180,6 +180,13 @@ export function Sidebar(props: Props): ReactElement {
             </Badge>
           ) : undefined;
           const itemTooltip = item.id === "hostedResources" ? hostedResourcesHealthMeta.label : item.label;
+          const icon = (
+            <Icon
+              size={navIconSize}
+              weight={active ? "fill" : "regular"}
+              color={item.id === "hostedResources" ? hostedResourcesIconColor : undefined}
+            />
+          );
           const link = (
             <NavLink
               component="button"
@@ -188,13 +195,13 @@ export function Sidebar(props: Props): ReactElement {
               label={iconMode ? undefined : item.label}
               aria-label={item.label}
               leftSection={
-                <Tooltip label={itemTooltip} position="right" withArrow openDelay={200}>
-                  <Icon
-                    size={navIconSize}
-                    weight={active ? "fill" : "regular"}
-                    color={item.id === "hostedResources" ? hostedResourcesIconColor : undefined}
-                  />
-                </Tooltip>
+                // Icon rail wraps the whole link in a tooltip below; nesting another here
+                // would stack two tooltips on the same hover.
+                iconMode ? icon : (
+                  <Tooltip label={itemTooltip} position="right" withArrow openDelay={200}>
+                    {icon}
+                  </Tooltip>
+                )
               }
               rightSection={rightSection}
               className={navSelectedClassName(classes.navLink)}

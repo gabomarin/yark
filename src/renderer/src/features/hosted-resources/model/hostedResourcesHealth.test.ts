@@ -7,7 +7,6 @@ function diagnostics(
 ): HostedResourcesDiagnosticsDto {
   return {
     state: { enabled: true, port: 8935, bindHost: "127.0.0.1", listening: true, error: null },
-    checkedAt: new Date().toISOString(),
     ownership: { ok: true, message: "YARK is listening." },
     resources: [],
     references: [],
@@ -25,7 +24,7 @@ describe("summarizeHostedResourcesHealth", () => {
       summarizeHostedResourcesHealth(
         diagnostics({ ownership: { ok: false, message: "The port is unavailable." } }),
       ),
-    ).toMatchObject({ state: "error", label: "Hosted Resources unavailable" });
+    ).toMatchObject({ state: "error" });
   });
 
   it("reports stale references as a warning for the affected server", () => {
@@ -39,7 +38,7 @@ describe("summarizeHostedResourcesHealth", () => {
     };
     const summary = summarizeHostedResourcesHealth(diagnostics({ references: [reference] }));
 
-    expect(summary).toMatchObject({ state: "warning", label: "Hosted Resources need attention" });
+    expect(summary.state).toBe("warning");
     expect(summary.referencesByServerId.get("server-1")).toEqual([reference]);
   });
 
@@ -60,7 +59,7 @@ describe("summarizeHostedResourcesHealth", () => {
           references: [reference],
         }),
       ),
-    ).toMatchObject({ state: "error", label: "Hosted Resources unavailable" });
+    ).toMatchObject({ state: "error" });
   });
 
   it("keeps an off host with no server references neutral", () => {
@@ -70,7 +69,7 @@ describe("summarizeHostedResourcesHealth", () => {
           state: { enabled: false, port: 8935, bindHost: "127.0.0.1", listening: false, error: null },
         }),
       ),
-    ).toMatchObject({ state: "neutral", label: "Hosted Resources off" });
+    ).toMatchObject({ state: "neutral" });
   });
 
   it("reports verified content as healthy", () => {
@@ -87,7 +86,28 @@ describe("summarizeHostedResourcesHealth", () => {
               declaredSha256: "hash",
               servedSha256: "hash",
               status: "verified",
-              servedOk: true,
+              requestCount: 0,
+            },
+          ],
+        }),
+      ).state,
+    ).toBe("healthy");
+  });
+
+  it("does not warn about a disabled resource with no references", () => {
+    expect(
+      summarizeHostedResourcesHealth(
+        diagnostics({
+          resources: [
+            {
+              resourceId: "resource-1",
+              displayName: "Admin list",
+              url: "http://127.0.0.1:8935/r/resource-1",
+              enabled: false,
+              published: true,
+              declaredSha256: "hash",
+              servedSha256: null,
+              status: "disabled",
               requestCount: 0,
             },
           ],

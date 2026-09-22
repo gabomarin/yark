@@ -398,7 +398,6 @@ export interface HostedResourceDiagnosticDto {
   servedSha256: string | null;
   /** Explicit result so the UI can distinguish an unreachable resource from a content mismatch. */
   status: HostedResourceDiagnosticStatus;
-  servedOk: boolean;
   requestCount: number;
 }
 
@@ -414,8 +413,6 @@ export interface HostedResourceReferenceDto {
 
 export interface HostedResourcesDiagnosticsDto {
   state: HostedResourcesStateDto;
-  /** ISO timestamp for the completed diagnostic run. */
-  checkedAt: string;
   /** Loopback ownership probe: only YARK's listener answers with its marker. */
   ownership: { ok: boolean; message: string };
   resources: HostedResourceDiagnosticDto[];

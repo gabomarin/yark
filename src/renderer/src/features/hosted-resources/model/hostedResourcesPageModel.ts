@@ -59,6 +59,56 @@ export function formatByteSize(bytes: number): string {
   return `${(kb / 1024).toFixed(1)} MB`;
 }
 
+export interface HostedResourcesHeaderAlert {
+  color: "red" | "attention";
+  title: string;
+  message: string;
+}
+
+/** First matching alert wins, hardest failure first; null shows the default next-step hint. */
+export function resolveHeaderAlert(input: {
+  stateError: string | null | undefined;
+  disabledWithReferences: boolean;
+  ownershipFailed: boolean;
+  portChanged: boolean;
+  diagnosticsWarning: boolean;
+}): HostedResourcesHeaderAlert | null {
+  if (input.stateError !== null && input.stateError !== undefined) {
+    return { color: "red", title: "Port unavailable", message: input.stateError };
+  }
+  if (input.disabledWithReferences) {
+    return {
+      color: "red",
+      title: "Hosted Resources is disabled",
+      message:
+        "One or more server settings still reference hosted URLs. Enable Hosted Resources or update those settings.",
+    };
+  }
+  if (input.ownershipFailed) {
+    return {
+      color: "red",
+      title: "Hosted Resources is unavailable",
+      message: "Check that the configured port is free and that YARK is still running before using these URLs.",
+    };
+  }
+  if (input.portChanged) {
+    return {
+      color: "attention",
+      title: "Existing URLs will become stale",
+      message:
+        "Update the affected resource cards after changing the port. Diagnostics will identify server settings that still use the previous URL.",
+    };
+  }
+  if (input.diagnosticsWarning) {
+    return {
+      color: "attention",
+      title: "Hosted Resources need attention",
+      message: "Review the highlighted resource cards below for the affected server settings and resource state.",
+    };
+  }
+  return null;
+}
+
 /** Reference counts are per server; wording avoids implying the game loaded it. */
 export function summarizeReferences(references: { serverId: string }[]): number {
   return new Set(references.map((reference) => reference.serverId)).size;

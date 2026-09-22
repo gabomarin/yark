@@ -354,7 +354,6 @@ export class HostedResourcesService {
     // could otherwise report bytes served by the foreign process.
     const state = this.getState();
     const serving = ownership.ok && state.listening;
-    const checkedAt = new Date().toISOString();
     const resources: HostedResourceDiagnosticDto[] = [];
     for (const summary of this.deps.repo.listResourceSummaries()) {
       const url = formatHostedResourceUrl(state.port, summary.token);
@@ -367,9 +366,9 @@ export class HostedResourcesService {
       } else if (!serving) {
         status = "unreachable";
       } else {
-        const served = await this.fetchServedSha256(url);
+        const served = await this.fetchServed(url);
         servedSha256 = served.sha256;
-        status = served.status === "verified" && servedSha256 !== summary.publishedSha256 ? "mismatch" : served.status;
+        status = !served.ok ? "unreachable" : servedSha256 !== summary.publishedSha256 ? "mismatch" : "verified";
       }
       resources.push({
         resourceId: summary.id,
@@ -380,13 +379,11 @@ export class HostedResourcesService {
         declaredSha256: summary.publishedSha256,
         servedSha256,
         status,
-        servedOk: status === "verified",
         requestCount: this.requestCounts.get(summary.id) ?? 0,
       });
     }
     return {
       state,
-      checkedAt,
       ownership,
       resources,
       references: this.scanReferences(state.port),
@@ -534,16 +531,14 @@ export class HostedResourcesService {
     }
   }
 
-  private async fetchServedSha256(
-    url: string,
-  ): Promise<{ sha256: string | null; status: Extract<HostedResourceDiagnosticStatus, "verified" | "mismatch" | "unreachable"> }> {
+  /** HTTP reachability only; the caller compares the hash and picks mismatch vs verified. */
+  private async fetchServed(url: string): Promise<{ sha256: string | null; ok: boolean }> {
     try {
       const result = await probeUrl(url, { [HOSTED_RESOURCES_DIAGNOSTIC_HEADER]: "1" });
-      if (result.status !== 200) return { sha256: null, status: "unreachable" };
-      const sha256 = hostedResourceSha256(result.body);
-      return { sha256, status: "verified" };
+      if (result.status !== 200) return { sha256: null, ok: false };
+      return { sha256: hostedResourceSha256(result.body), ok: true };
     } catch {
-      return { sha256: null, status: "unreachable" };
+      return { sha256: null, ok: false };
     }
   }
 
