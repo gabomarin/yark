@@ -1,10 +1,14 @@
 import type { Dispatch, ReactElement, SetStateAction } from "react";
+import { useState } from "react";
 import type { Overlay } from "@app/model/appOverlay";
 import type { AppFleetSlice, AppLifecycleSlice, AppRconSlice, AppSteamCmdSlice } from "@app/model/appMainRouterSlices";
 import { AppShellWithChrome, type AppShellChromeProps } from "@app/appShellChrome";
 import { resolveWorkspaceFilesJobState } from "@app/model/workspaceFilesJobState";
 import { ServerWorkspacePage } from "@features/server-workspace/ServerWorkspacePage";
+import { DeleteServerModal } from "@features/servers/components/DeleteServerModal/DeleteServerModal";
+import { EMPTY_WIPE_STALE_MESSAGE } from "@shared/types";
 import type { HostedResourceReferenceDto } from "@shared/ipc";
+import { showOperatorError } from "@ui/operatorToast";
 
 type WorkspaceOverlay = Extract<Overlay, { kind: "workspace" }>;
 
@@ -49,6 +53,7 @@ export function AppWorkspaceOverlay(props: AppWorkspaceOverlayProps): ReactEleme
     onBanPlayer,
   } = rcon;
   const { filesQueueByServerId, steamCmdStatus, steamCmdBusy, startSteamFilesJob } = steamCmd;
+  const [deleteServerId, setDeleteServerId] = useState<string | null>(null);
 
   const filesJob = resolveWorkspaceFilesJobState(overlay.serverId, filesQueueByServerId, steamCmdBusy, steamCmdStatus);
 
@@ -114,6 +119,7 @@ export function AppWorkspaceOverlay(props: AppWorkspaceOverlayProps): ReactEleme
         onRestartWithWarning={(id) => void actions.restartServerWithWarning(id)}
         onCancelRestartWarning={(id) => void actions.cancelRestartWarning(id)}
         onKillServer={(id) => actions.confirmKillServer(id)}
+        onDeleteServer={(id) => setDeleteServerId(id)}
         onToggleServerEnabled={(id, enabled) => void actions.setServerEnabled(id, enabled)}
         onOpenFolder={(id) => void actions.runAction(() => window.api.openServerFolder(id))}
         onInstallFiles={(id) => startSteamFilesJob(id, "install")}
@@ -127,6 +133,40 @@ export function AppWorkspaceOverlay(props: AppWorkspaceOverlayProps): ReactEleme
         onBanPlayer={onBanPlayer}
         onServerUpdated={() => void refresh()}
         onCopyConfiguration={(id) => actions.setCopyConfig({ sourceServerId: id })}
+      />
+      <DeleteServerModal
+        key={deleteServerId ?? "closed"}
+        opened={deleteServerId !== null}
+        serverId={deleteServerId ?? ""}
+        serverName={
+          deleteServerId !== null
+            ? (servers.find((server) => server.id === deleteServerId)?.name ?? deleteServerId)
+            : ""
+        }
+        installDir={
+          deleteServerId !== null
+            ? (servers.find((server) => server.id === deleteServerId)?.installDir ?? "(unknown path)")
+            : ""
+        }
+        installHealth={deleteServerId !== null ? (installationInfo.get(deleteServerId)?.health ?? null) : null}
+        onClose={() => setDeleteServerId(null)}
+        onConfirm={async (options) => {
+          if (deleteServerId === null) return { ok: false };
+          const targetId = deleteServerId;
+          const result = await window.api.deleteServer(targetId, options);
+          if (!result.ok) {
+            const message = result.error ?? "Unknown error";
+            const emptyWipeStale = message === EMPTY_WIPE_STALE_MESSAGE;
+            if (!emptyWipeStale) {
+              showOperatorError(message);
+            }
+            await refresh({ includeInstallation: true });
+            return { ok: false, emptyWipeStale };
+          }
+          await refresh({ includeInstallation: true });
+          setOverlay(null);
+          return { ok: true };
+        }}
       />
     </AppShellWithChrome>
   );

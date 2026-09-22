@@ -174,4 +174,29 @@ describe("SidePanel", () => {
     const cpuLabel = screen.getByText("CPU");
     expect(cpuLabel.parentElement).toHaveTextContent("–");
   });
+
+  it("offers Delete server from Quick actions when the server is stopped", async () => {
+    const user = setupUser();
+    const onDelete = vi.fn();
+    renderPanel({ onDelete });
+
+    const deleteButton = screen.getByRole("button", { name: "Delete server" });
+    expect(deleteButton).toBeEnabled();
+    await user.click(deleteButton);
+    expect(onDelete).toHaveBeenCalledTimes(1);
+  });
+
+  it("blocks Delete server while the server is active", () => {
+    renderPanel({
+      onDelete: vi.fn(),
+      runtime: {
+        ...stopped,
+        status: "running",
+        processLive: true,
+        pid: 42,
+      },
+    });
+
+    expect(screen.getByRole("button", { name: "Delete server" })).toBeDisabled();
+  });
 });
