@@ -83,9 +83,7 @@ export function WorkspaceTabs(props: Props): ReactElement {
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   /** Snapshot at open so refresh remounts do not rewrite the dialog mid-move. */
   const [moveServer, setMoveServer] = useState<ServerProfile | null>(null);
-  const [rconPlayersFocus, setRconPlayersFocus] = useState<"survivors" | "admins" | null>(
-    initialRconFocus ?? null,
-  );
+  const [rconPlayersFocus, setRconPlayersFocus] = useState<"survivors" | "admins" | null>(initialRconFocus ?? null);
 
   useEffect(() => {
     // Only ever apply a focus, never clear one: consuming it flips the prop to undefined,
