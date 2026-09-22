@@ -26,6 +26,11 @@ export function isAdminListEditable(
   return assignment.resource !== null && assignment.issue === null;
 }
 
+/** True when AdminListURL points at an HTTP list whose ids can be displayed in RCON. */
+export function isAdminListUrlMode(mode: AdminListStateDto["mode"] | undefined): boolean {
+  return mode === "loopback" || mode === "remote";
+}
+
 interface AdminListMembership {
   state: AdminListStateDto | null;
   editable: boolean;
@@ -114,7 +119,7 @@ export function useAdminListMembership(serverId: string): AdminListMembership {
   }, [reload]);
 
   const editable = isAdminListEditable(loaded, state, resources);
-  const visible = state?.mode === "loopback" || state?.mode === "remote";
+  const visible = isAdminListUrlMode(state?.mode);
 
   const isMember = useCallback(
     (id: string): boolean =>
