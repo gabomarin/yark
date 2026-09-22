@@ -1,6 +1,8 @@
 import { ArrowUUpLeft, ArrowSquareOut } from "@phosphor-icons/react";
 import { ActionIcon, NumberInput, Text, TextInput, Tooltip } from "@mantine/core";
 import type { IniFileKey } from "@shared/types";
+import { consumerForSetting } from "@shared/settings/hosted-resource-consumers";
+import { HostedResourceSelector } from "@features/hosted-resources/components/HostedResourceSelector/HostedResourceSelector";
 import { AppSwitch } from "@ui/AppSwitch/AppSwitch";
 import type { ReactElement } from "react";
 import {
@@ -45,6 +47,13 @@ export function IniSettingRow(props: Props): ReactElement {
   const humanLabel = humanizeIniKey(row.key);
   const label = humanLabel.length > 0 && humanLabel !== row.key ? humanLabel : keyLabel;
   const adminListUrl = isAdminListUrlRow(row);
+  // Only the GameUserSettings rows the catalog declares as INI-edited get the selector;
+  // AdminListURL is managed in RCON — Admins and stays read-only here.
+  const hostedConsumer = consumerForSetting(row.key);
+  // `hostedConsumer !== null` is repeated in the branch below because TS does not narrow
+  // through this boolean.
+  const hostedResourceRow =
+    hostedConsumer !== null && hostedConsumer.surface === "ini-visual" && row.fileKey === "gameUserSettings";
 
   return (
     <div className={classes.row}>
@@ -62,6 +71,15 @@ export function IniSettingRow(props: Props): ReactElement {
           <Text size="sm" style={{ wordBreak: "break-all" }} c={row.value.trim().length > 0 ? undefined : "dimmed"}>
             {row.value.trim().length > 0 ? row.value : "Not set"}
           </Text>
+        ) : hostedResourceRow && hostedConsumer !== null ? (
+          <HostedResourceSelector
+            consumer={hostedConsumer}
+            value={row.value}
+            label={null}
+            size="xs"
+            disabled={busy}
+            onChange={(value) => onUpdateValue(row.fileKey, row.section, row.key, value, row.occurrence)}
+          />
         ) : kind === "boolean" ? (
           <AppSwitch
             aria-label={label}

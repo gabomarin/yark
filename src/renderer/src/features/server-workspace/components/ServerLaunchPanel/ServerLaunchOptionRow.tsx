@@ -1,5 +1,7 @@
 import type { ReactElement } from "react";
 import { Badge, Group, MultiSelect, Select, Stack, Text, TextInput, Tooltip } from "@mantine/core";
+import { consumerForLaunchOptionId } from "@shared/settings/hosted-resource-consumers";
+import { HostedResourceSelector } from "@features/hosted-resources/components/HostedResourceSelector/HostedResourceSelector";
 import { AppSwitch } from "@ui/AppSwitch/AppSwitch";
 import {
   decodeServerPlatformSelection,
@@ -38,6 +40,7 @@ export function ServerLaunchOptionRow(props: Props): ReactElement {
   const isEnum =
     !isMulti && (props.option.entry.valueType === "enum" || (props.option.curation.enumOptions?.length ?? 0) > 0);
   const showValue = enabled && props.option.entry.valueType !== "flag";
+  const hostedConsumer = consumerForLaunchOptionId(props.option.curation.id);
 
   return (
     <div className={`${classes.optionRow} ${caution ? classes.optionRowCaution : ""}`}>
@@ -96,6 +99,15 @@ export function ServerLaunchOptionRow(props: Props): ReactElement {
                   if (value !== null) props.onValueChange(value);
                 }}
                 allowDeselect={false}
+              />
+            ) : hostedConsumer !== null ? (
+              <HostedResourceSelector
+                consumer={hostedConsumer}
+                value={props.selection?.value ?? ""}
+                label={null}
+                size={props.inputSize}
+                disabled={!dependencyMet}
+                onChange={props.onValueChange}
               />
             ) : (
               <TextInput

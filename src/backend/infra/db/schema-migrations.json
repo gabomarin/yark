@@ -106,5 +106,9 @@
   {
     "version": 27,
     "sql": "ALTER TABLE hosted_resources ADD COLUMN notes TEXT NOT NULL DEFAULT '';\nALTER TABLE hosted_resources ADD COLUMN tags_json TEXT NOT NULL DEFAULT '[]';"
+  },
+  {
+    "version": 28,
+    "sql": "ALTER TABLE hosted_resources ADD COLUMN kind TEXT;"
   }
 ]

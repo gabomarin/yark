@@ -48,7 +48,12 @@ interface Harness {
 }
 
 function createHarness(
-  readReferenceSources: () => { serverId: string; serverName: string; text: string }[] = () => [],
+  readReferenceSources: () => {
+    serverId: string;
+    serverName: string;
+    text: string;
+    launchArgs?: readonly string[];
+  }[] = () => [],
 ): Harness {
   const db = openDatabase(":memory:");
   openDbs.push(db);
@@ -205,6 +210,89 @@ describe("hosted resources repository", () => {
     expect(updated.tags).toEqual(["production"]);
   });
 
+  it("types a resource and carries the kind through publish and update (#577)", () => {
+    const harness = createHarness();
+    const resource = harness.service.createResource({
+      displayName: "Admins",
+      format: "text",
+      content: "EOSID1",
+      kind: "admin-list",
+    });
+    expect(resource.kind).toBe("admin-list");
+    expect(harness.service.getOverview().resources[0]?.kind).toBe("admin-list");
+
+    const published = harness.service.publishContent(resource.id, "EOSID2", {
+      displayName: "Admins",
+      notes: "",
+      tags: [],
+      kind: "ban-list",
+    });
+    expect(published.kind).toBe("ban-list");
+
+    // Publishing without metadata keeps the stored kind instead of clearing it.
+    expect(harness.service.publishContent(resource.id, "EOSID3").kind).toBe("ban-list");
+
+    // Renaming without passing a kind also keeps it.
+    expect(harness.service.updateMetadata(resource.id, { displayName: "Renamed", notes: "", tags: [] }).kind).toBe(
+      "ban-list",
+    );
+
+    // Untyping is explicit and allowed: a manual resource stays valid.
+    const untyped = harness.service.updateMetadata(resource.id, {
+      displayName: "Admins",
+      notes: "",
+      tags: [],
+      kind: null,
+    });
+    expect(untyped.kind).toBeNull();
+
+    // The editor's save/publish path can clear the type too, so an explicit `null` there
+    // must untype rather than silently keep the stored kind.
+    expect(
+      harness.service.publishContent(resource.id, "EOSID4", {
+        displayName: "Admins",
+        notes: "",
+        tags: [],
+        kind: null,
+      }).kind,
+    ).toBeNull();
+  });
+
+  it("rejects a kind whose format does not match, and defaults to untyped", () => {
+    const harness = createHarness();
+    expect(() =>
+      harness.service.createResource({
+        displayName: "Bad",
+        format: "text",
+        content: "EOSID1",
+        kind: "dynamic-config",
+      }),
+    ).toThrow(/ini/);
+    expect(() =>
+      harness.service.createResource({
+        displayName: "Bad",
+        format: "text",
+        content: "EOSID1",
+        kind: "not-a-kind",
+      }),
+    ).toThrow(/Unknown hosted resource kind/);
+
+    const resource = harness.service.createResource({
+      displayName: "Manually typed",
+      format: "text",
+      content: "EOSID1",
+    });
+    expect(resource.kind).toBeNull();
+    expect(() =>
+      harness.service.updateMetadata(resource.id, {
+        displayName: "Manually typed",
+        notes: "",
+        tags: [],
+        kind: "dynamic-config",
+      }),
+    ).toThrow(/ini/);
+  });
+
   it("swaps the published revision atomically and never serves unpublished ones", () => {
     const db = openDatabase(":memory:");
     openDbs.push(db);
@@ -215,6 +303,7 @@ describe("hosted resources repository", () => {
       token: "t".repeat(43),
       displayName: "Admins",
       format: "text",
+      kind: null,
       createdAt: now,
       updatedAt: now,
       disabledAt: null,
@@ -393,7 +482,8 @@ describe("hosted resources HTTP host", () => {
     expect(diagnostics.state.listening).toBe(true);
     expect(diagnostics.ownership.ok).toBe(true);
     expect(diagnostics.resources).toHaveLength(1);
-    expect(diagnostics.resources[0]?.servedOk).toBe(true);
+    expect(diagnostics.resources[0]?.status).toBe("verified");
+    expect(diagnostics.resources[0]?.requestCount).toBe(0);
     expect(diagnostics.resources[0]?.declaredSha256).toBe(hostedResourceSha256("EOSID1"));
     expect(resource.url).toBe(formatHostedResourceUrl(port, resource.url.split("/r/")[1]!));
   });
@@ -423,8 +513,119 @@ describe("hosted resources HTTP host", () => {
         serverName: "Island",
         key: "AdminListURL",
         url: resource.url,
+        status: "current",
+        source: "ini",
       },
     ]);
+  });
+
+  it("discovers hosted URLs carried by launch arguments, not only by INIs", async () => {
+    const tokenHolder: { url: string } = { url: "" };
+    const harness = createHarness(() => [
+      {
+        serverId: "s1",
+        serverName: "Island",
+        text: "",
+        launchArgs: [`-CustomNotificationURL="${tokenHolder.url}"`, "-NoBattlEye"],
+      },
+    ]);
+    await startServing(harness);
+    const resource = harness.service.createResource({
+      displayName: "Notice page",
+      format: "text",
+      content: "<html>maintenance</html>",
+    });
+    tokenHolder.url = resource.url;
+
+    const diagnostics = await harness.service.runDiagnostics();
+    expect(diagnostics.references).toEqual([
+      {
+        resourceId: resource.id,
+        serverId: "s1",
+        serverName: "Island",
+        key: "CustomNotificationURL",
+        url: resource.url,
+        status: "current",
+        source: "launch-arg",
+      },
+    ]);
+  });
+
+  it("finds a resource URL embedded in a value, not only when it is the whole value", async () => {
+    const tokenHolder: { url: string } = { url: "" };
+    const harness = createHarness(() => [
+      {
+        serverId: "s1",
+        serverName: "Island",
+        // Quoted with a trailing comment, and an ASA-style joined command line.
+        text: `[ServerSettings]\nAdminListURL=${tokenHolder.url} ; keep for the cluster\n`,
+        launchArgs: [`?Flag1=x?CustomDynamicConfigUrl=${tokenHolder.url}`],
+      },
+    ]);
+    await startServing(harness);
+    const resource = harness.service.createResource({
+      displayName: "Admins",
+      format: "text",
+      content: "EOSID1",
+    });
+    tokenHolder.url = resource.url;
+
+    const diagnostics = await harness.service.runDiagnostics();
+    expect(diagnostics.references.map((reference) => reference.key)).toEqual([
+      "AdminListURL",
+      "CustomDynamicConfigUrl",
+    ]);
+    for (const reference of diagnostics.references) {
+      expect(reference.url).toBe(resource.url);
+      expect(reference.status).toBe("current");
+    }
+    // The INI row and the launch flag are separate surfaces the operator fixes differently.
+    expect(diagnostics.references.map((reference) => reference.source)).toEqual(["ini", "launch-arg"]);
+  });
+
+  it("keeps the same key from two INI sections as two references", async () => {
+    const tokenHolder: { url: string } = { url: "" };
+    const harness = createHarness(() => [
+      {
+        serverId: "s1",
+        serverName: "Island",
+        text: `[ServerSettings]\nAdminListURL=${tokenHolder.url}\n[MyMod]\nAdminListURL=${tokenHolder.url}\n`,
+      },
+    ]);
+    await startServing(harness);
+    const resource = harness.service.createResource({
+      displayName: "Admins",
+      format: "text",
+      content: "EOSID1",
+    });
+    tokenHolder.url = resource.url;
+
+    const diagnostics = await harness.service.runDiagnostics();
+    expect(diagnostics.references.map((reference) => reference.source)).toEqual(["ini", "ini"]);
+    expect(diagnostics.references).toHaveLength(2);
+  });
+
+  it("marks references that still use the previous serving port", async () => {
+    const tokenHolder: { url: string } = { url: "" };
+    const harness = createHarness(() => [
+      {
+        serverId: "s1",
+        serverName: "Island",
+        text: `[ServerSettings]\nAdminListURL=${tokenHolder.url}\n`,
+      },
+    ]);
+    const resource = harness.service.createResource({
+      displayName: "Admins",
+      format: "text",
+      content: "EOSID1",
+    });
+    tokenHolder.url = resource.url;
+    await startServing(harness);
+    await harness.service.setPort(8936);
+
+    const diagnostics = await harness.service.runDiagnostics();
+    expect(diagnostics.references[0]?.status).toBe("stale-port");
+    expect(diagnostics.references[0]?.url).toBe(resource.url);
   });
 
   it("does not serve anything while disabled", async () => {

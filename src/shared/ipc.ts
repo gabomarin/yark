@@ -60,7 +60,7 @@ import type { UiDensity } from "./settings/ui-density";
 import type { AppearanceSettings } from "./settings/appearance";
 import type { DesktopShellPreferences } from "./settings/desktop-shell";
 import type { DiscordWebhookPreferences } from "./settings/discord-webhook";
-import type { HostedResourceFormat } from "./settings/hosted-resources";
+import type { HostedResourceFormat, HostedResourceKind } from "./settings/hosted-resources";
 
 type PickPathKind = "directory" | "file" | "save";
 
@@ -349,6 +349,8 @@ export interface HostedResourceDto {
   id: string;
   displayName: string;
   format: HostedResourceFormat;
+  /** Typed ASA consumer (#577), used for setting compatibility; null when undeclared. */
+  kind: HostedResourceKind | null;
   /** Canonical URL for the current port. Unavailable while YARK is closed. */
   url: string;
   /** Disabled resources keep their data but are never served. */
@@ -383,6 +385,8 @@ export interface HostedResourcesOverviewDto {
 }
 
 /** Per-resource served-bytes self-check (not proof the game accepted it). */
+export type HostedResourceDiagnosticStatus = "verified" | "mismatch" | "unreachable" | "disabled" | "unpublished";
+
 export interface HostedResourceDiagnosticDto {
   resourceId: string;
   displayName: string;
@@ -392,7 +396,8 @@ export interface HostedResourceDiagnosticDto {
   declaredSha256: string | null;
   /** SHA-256 of the bytes served over loopback, or null when unreachable. */
   servedSha256: string | null;
-  servedOk: boolean;
+  /** Explicit result so the UI can distinguish an unreachable resource from a content mismatch. */
+  status: HostedResourceDiagnosticStatus;
   requestCount: number;
 }
 
@@ -400,9 +405,12 @@ export interface HostedResourceReferenceDto {
   resourceId: string;
   serverId: string;
   serverName: string;
-  /** INI key the exact YARK URL was found under (no name heuristics). */
+  /** INI key or launch flag where a YARK resource URL was found (no name heuristics). */
   key: string;
   url: string;
+  status: "current" | "stale-port" | "disabled";
+  /** Which surface the value lives on; a launch flag can only be fixed on the Launch tab. */
+  source: "ini" | "launch-arg";
 }
 
 export interface HostedResourcesDiagnosticsDto {
@@ -700,18 +708,19 @@ export interface RendererApi {
     content: string;
     notes?: string;
     tags?: string[];
+    kind?: HostedResourceKind | null;
   }): Promise<IpcResult<HostedResourceDto>>;
   publishHostedResourceContent(
     resourceId: string,
     content: string,
-    metadata?: { displayName: string; notes: string; tags: string[] },
+    metadata?: { displayName: string; notes: string; tags: string[]; kind?: HostedResourceKind | null },
   ): Promise<IpcResult<HostedResourceDto>>;
   getHostedResourceContent(resourceId: string): Promise<IpcResult<string>>;
   publishHostedResourceRevision(resourceId: string, revisionId: string): Promise<IpcResult<HostedResourceDto>>;
   renameHostedResource(resourceId: string, displayName: string): Promise<IpcResult<HostedResourceDto>>;
   updateHostedResourceMetadata(
     resourceId: string,
-    input: { displayName: string; notes: string; tags: string[] },
+    input: { displayName: string; notes: string; tags: string[]; kind?: HostedResourceKind | null },
   ): Promise<IpcResult<HostedResourceDto>>;
   listHostedResourceRevisions(resourceId: string): Promise<IpcResult<HostedResourceRevisionDto[]>>;
   setHostedResourceEnabled(resourceId: string, enabled: boolean): Promise<IpcResult<HostedResourceDto>>;

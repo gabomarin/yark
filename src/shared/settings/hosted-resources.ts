@@ -49,14 +49,81 @@ export const HOSTED_RESOURCES_MAX_TAG_LENGTH = 32;
 
 export type HostedResourceFormat = "json" | "ini" | "text";
 
-/** Common ASA URL consumers; MultiSelect also permits operator-defined tags. */
-export const HOSTED_RESOURCE_TAG_OPTIONS = [
-  { value: "admin-list", label: "Admin list" },
-  { value: "ban-list", label: "Ban list" },
-  { value: "dynamic-config", label: "Dynamic config" },
-];
+/**
+ * Typed compatibility, separate from operator tags: a kind names the ASA consumer the
+ * body is written for, which is what a setting's selector filters on.
+ */
+export type HostedResourceKind =
+  | "admin-list"
+  | "ban-list"
+  | "dynamic-config"
+  | "notification-url"
+  | "bad-word-list"
+  | "good-word-list"
+  | "live-tuning";
 
-/** Stable, case-insensitive tags used for operator categorisation and future selectors. */
+export const HOSTED_RESOURCE_KINDS = [
+  "admin-list",
+  "ban-list",
+  "dynamic-config",
+  "notification-url",
+  "bad-word-list",
+  "good-word-list",
+  "live-tuning",
+] as const satisfies readonly HostedResourceKind[];
+
+/** A kind fixes the body format, so a resource can never be half re-typed later. */
+const HOSTED_RESOURCE_KIND_FORMATS: Record<HostedResourceKind, HostedResourceFormat> = {
+  "admin-list": "text",
+  "ban-list": "text",
+  "dynamic-config": "ini",
+  "notification-url": "text",
+  "bad-word-list": "text",
+  "good-word-list": "text",
+  "live-tuning": "json",
+};
+
+export const HOSTED_RESOURCE_KIND_LABELS: Record<HostedResourceKind, string> = {
+  "admin-list": "Admin list",
+  "ban-list": "Ban list",
+  "dynamic-config": "Dynamic config",
+  "notification-url": "Notification URL",
+  "bad-word-list": "Bad words list",
+  "good-word-list": "Good words list",
+  "live-tuning": "Live tuning",
+};
+
+export function isHostedResourceKind(value: unknown): value is HostedResourceKind {
+  return typeof value === "string" && (HOSTED_RESOURCE_KINDS as readonly string[]).includes(value);
+}
+
+export function formatForHostedResourceKind(kind: HostedResourceKind): HostedResourceFormat {
+  return HOSTED_RESOURCE_KIND_FORMATS[kind];
+}
+
+/** Kinds an existing resource may be re-typed to, given its immovable format. */
+export function kindsForHostedResourceFormat(format: HostedResourceFormat): HostedResourceKind[] {
+  return HOSTED_RESOURCE_KINDS.filter((kind) => HOSTED_RESOURCE_KIND_FORMATS[kind] === format);
+}
+
+/** `null` means untyped: a manual resource the operator has not declared a consumer for. */
+export function normalizeHostedResourceKind(value: string | null | undefined): HostedResourceKind | null {
+  if (value === null || value === undefined) return null;
+  const trimmed = value.trim().toLowerCase();
+  if (trimmed.length === 0) return null;
+  if (!isHostedResourceKind(trimmed)) {
+    throw new Error(`Unknown hosted resource kind: ${value}`);
+  }
+  return trimmed;
+}
+
+/** Common ASA URL consumers; MultiSelect also permits operator-defined tags. */
+export const HOSTED_RESOURCE_TAG_OPTIONS = HOSTED_RESOURCE_KINDS.map((kind) => ({
+  value: kind,
+  label: HOSTED_RESOURCE_KIND_LABELS[kind],
+}));
+
+/** Stable, case-insensitive tags used for operator categorisation only; compatibility uses the typed kind. */
 export function normalizeHostedResourceTags(tags: readonly string[]): string[] {
   const normalized = new Set<string>();
   for (const tag of tags) {
@@ -100,6 +167,87 @@ function formatHostedResourcePath(token: string): string {
 
 export function formatHostedResourceUrl(port: number, token: string): string {
   return `http://${HOSTED_RESOURCES_BIND_HOST}:${port}${formatHostedResourcePath(token)}`;
+}
+
+/** Localhost spellings YARK treats as its own loopback host. `url.hostname` keeps IPv6 brackets. */
+const LOOPBACK_HOSTS = new Set([HOSTED_RESOURCES_BIND_HOST, "localhost", "[::1]"]);
+
+export interface ParsedHostedResourceUrl {
+  token: string;
+  host: string;
+  /** Null when the URL carries no explicit port. */
+  port: number | null;
+}
+
+/**
+ * Reduce a value to the token of a YARK loopback resource URL. Matching on the token
+ * instead of the whole URL keeps a reference recognisable after the host port changes.
+ * Returns null for anything that is not a loopback resource URL, including external URLs.
+ */
+export function parseHostedResourceUrl(value: string): ParsedHostedResourceUrl | null {
+  const raw = value
+    .trim()
+    .replace(/^(["'])(.*)\1$/, "$2")
+    .trim();
+  if (raw.length === 0) return null;
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return null;
+  }
+  // YARK only ever serves plain HTTP on the loopback port, so an https value is not a
+  // resource URL: classifying it as current would tell an operator a TLS-failing URL is fine.
+  if (url.protocol !== "http:") return null;
+  const host = url.hostname.toLowerCase();
+  if (!LOOPBACK_HOSTS.has(host)) return null;
+  if (!url.pathname.startsWith(HOSTED_RESOURCES_PATH_PREFIX)) return null;
+  const token = url.pathname.slice(HOSTED_RESOURCES_PATH_PREFIX.length);
+  if (!HOSTED_RESOURCES_TOKEN_PATTERN.test(token)) return null;
+  return { token, host, port: url.port.length === 0 ? null : Number.parseInt(url.port, 10) };
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Unanchored token body, so the scanner and HOSTED_RESOURCES_TOKEN_PATTERN cannot drift. */
+const TOKEN_SHAPE = HOSTED_RESOURCES_TOKEN_PATTERN.source.replace(/^\^/, "").replace(/\$$/, "");
+
+/** A loopback resource URL anywhere inside a larger value (quote/flag tolerating). */
+const HOSTED_RESOURCE_URL_IN_VALUE = new RegExp(
+  `http://(?:${[...LOOPBACK_HOSTS].map(escapeRegExp).join("|")})[^\\s"'=;]*${escapeRegExp(HOSTED_RESOURCES_PATH_PREFIX)}${TOKEN_SHAPE}`,
+  "gi",
+);
+
+/**
+ * First YARK resource URL found inside a value, with what it points at, or null. ASA joins
+ * its own syntax around the URL (`AdminListURL="…"`, `?Flag=…?CustomDynamicConfigUrl=…`, a
+ * trailing INI comment) and a mod may embed one in an argument of its own, so a reference is
+ * a substring match — the candidate still has to survive {@link parseHostedResourceUrl}.
+ */
+export function findHostedResource(value: string): { url: string; parsed: ParsedHostedResourceUrl } | null {
+  for (const candidate of value.matchAll(HOSTED_RESOURCE_URL_IN_VALUE)) {
+    const parsed = parseHostedResourceUrl(candidate[0]);
+    if (parsed !== null) {
+      return { url: candidate[0], parsed };
+    }
+  }
+  return null;
+}
+
+/**
+ * Launch argument carrying a resource URL, named by the flag that precedes it
+ * (`-CustomNotificationURL="…"`, `?Flag1=x?CustomLiveTuningUrl=…`).
+ */
+export function hostedResourceLaunchArg(arg: string): { key: string; value: string } | null {
+  const found = findHostedResource(arg);
+  if (found === null) {
+    return null;
+  }
+  const flag = /[-?]([^=\s]+)=\s*["']?$/.exec(arg.slice(0, arg.indexOf(found.url)));
+  if (flag === null || flag[1] === undefined) return null;
+  return { key: flag[1], value: found.url };
 }
 
 export interface HostedResourceValidation {

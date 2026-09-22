@@ -9,10 +9,27 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Hosted Resources can be **typed** (admin list, ban list, bad words list, good words list, dynamic config, live tuning, notification URL), and every URL setting YARK knows — `AdminListURL`, `BanListURL`, `BadWordListURL`, `BadWordWhiteListURL`, `CustomLiveTuningUrl`, `CustomDynamicConfigUrl`, and `CustomNotificationURL` — now offers a searchable picker of the matching resources and can create one from the field, with a warning when a value points at a disabled, deleted, or differently typed resource (#577).
+
 ### Changed
 
+- The URL settings edited in INI Files (`BanListURL`, `BadWordListURL`, `BadWordWhiteListURL`, `CustomLiveTuningUrl`) now ship uncommented in the default `GameUserSettings.ini`, so a fresh server shows the row and its Hosted Resource picker; writing one of them for the first time now uncomments that default in place instead of leaving both a `#Key=N/A` line and a second assignment.
+- Hosted Resources diagnostics now also find YARK URLs on a server's launch arguments, not only in `GameUserSettings.ini`, so a flag- or mod-supplied reference is rechecked and warned about like any other.
+- Hosted Resources now shows health at a glance: a **Listening / Not listening** badge on the status card and a **Serving / Not serving / Published · not checked** badge on every resource, with an automatic diagnostics probe after a resource is created or edited while the host is on - so the card reports what was actually served, never an assumed green. Per-resource Diagnostics now separates unreachable content from hash mismatches, marks stale references on the affected cards, offers one-click URL copying, reruns automatically after serving-port and resource enablement changes, identifies settings that still use the previous port, and surfaces warning/error states in the sidebar and affected server workspace.
+- Affected Hosted Resources references now link directly to the server workspace tab where the setting can be fixed.
+- Hosted Resources diagnostics now remain visible across navigation and rerun after relevant server-setting saves, so a warning clears only after the affected reference is rechecked.
+- The last Hosted Resources diagnostic is shared between the sidebar and page after startup, so disabled hosts with dependent servers show the same error everywhere.
+- Warning tones now use a more distinct amber so sidebar and resource-card warnings are easier to distinguish from errors.
+- Hosted Resources warning icons now use the same bright semantic warning tone as resource cards instead of a darker palette step.
+- Hosted Resources error icons now resolve to the valid danger token instead of falling back to black.
 - Discord `#releases` now announces the curated in-app What's new for the released version instead of GitHub's auto-generated PR list, so the post reads like the app rather than a developer changelog.
 - The product website now leads with the running app, a clearer download path, operator-focused capabilities, and a tighter public-release story across desktop and mobile.
+
+### Fixed
+
+- A Hosted Resource URL wrapped in single quotes is recognised the same way as one wrapped in double quotes (#577).
 
 ## [0.22.0] - 2026-09-21
 

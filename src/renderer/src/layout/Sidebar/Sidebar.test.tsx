@@ -9,6 +9,29 @@ afterEach(() => {
 });
 
 describe("Sidebar YARK version update affordance", () => {
+  it("marks Hosted Resources when diagnostics need attention", async () => {
+    const user = userEvent.setup();
+    render(
+      <AppProviders>
+        <Sidebar
+          route="overview"
+          onNavigate={vi.fn()}
+          steamCmdDetected
+          steamCmdRunning={false}
+          officialVersion="1.0"
+          officialNetworkStatus="online"
+          appVersion="0.5.2"
+          hostedResourcesHealth="warning"
+        />
+      </AppProviders>,
+    );
+
+    const hostedResources = screen.getByRole("button", { name: "Hosted Resources" });
+    expect(hostedResources).toBeInTheDocument();
+    await user.hover(hostedResources.querySelector("svg") as SVGElement);
+    expect(await screen.findByText("Hosted Resources need attention")).toBeInTheDocument();
+  });
+
   it("makes only the version label open What's new when no update is available", async () => {
     const user = userEvent.setup();
     const onWhatsNewClick = vi.fn();

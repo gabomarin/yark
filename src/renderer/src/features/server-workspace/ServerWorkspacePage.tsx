@@ -1,5 +1,6 @@
 import { HardDrives } from "@phosphor-icons/react";
 import { useMediaQuery } from "@mantine/hooks";
+import { Button } from "@mantine/core";
 import type { ServerRuntimeInfo } from "@shared/types";
 import type { ReactElement } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -21,6 +22,7 @@ import { useWorkspaceLeaveGuard } from "./useWorkspaceLeaveGuard";
 import { useWorkspaceStatusPanelVisible } from "./useWorkspaceStatusPanelVisible";
 import type { ServerWorkspacePageProps } from "./serverWorkspacePageProps";
 import classes from "./ServerWorkspacePage.module.css";
+import { notifyHostedResourcesDiagnosticsUpdated } from "@features/hosted-resources/hooks/useHostedResourcesHealth";
 
 export type { RconHistoryEntry, WorkspaceTab } from "./serverWorkspaceTypes";
 
@@ -30,17 +32,23 @@ function isServerActive(runtime: ServerRuntimeInfo | null): boolean {
 }
 
 export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactElement {
+  const { onServerUpdated } = props;
   const [workspaceTab, setWorkspaceTab] = useState<WorkspaceTab>(props.initialTab ?? "server");
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(props.onboarding === true);
   const [iniEditorVersion, setIniEditorVersion] = useState(0);
   const [serverSwitcherOpen, setServerSwitcherOpen] = useState(false);
   const [serverActionsOpen, setServerActionsOpen] = useState(false);
+  const [hostedResourceAlertDismissed, setHostedResourceAlertDismissed] = useState(false);
   const panels = useWorkspacePanels();
   // `null` = this option never uses columns, so the workspace stays compact at any width.
   const drawersQuery = drawersMediaQuery(panels);
   const drawersBelowBreakpoint = useMediaQuery(drawersQuery ?? "(max-width: 0px)", drawersQuery === null);
   const compactWorkspace = drawersQuery === null || drawersBelowBreakpoint;
+  const handleServerUpdated = useCallback(() => {
+    onServerUpdated();
+    notifyHostedResourcesDiagnosticsUpdated();
+  }, [onServerUpdated]);
   const {
     iniDirty,
     setIniDirty,
@@ -76,6 +84,11 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
     }
   }, [props.initialTab]);
 
+  // A dismissed hosted-resources banner belongs to the server it was read on.
+  useEffect(() => {
+    setHostedResourceAlertDismissed(false);
+  }, [props.selectedServerId]);
+
   const selectedServer = useMemo(() => {
     return props.servers.find((server) => server.id === props.selectedServerId) ?? props.servers[0] ?? null;
   }, [props.selectedServerId, props.servers]);
@@ -108,6 +121,9 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
   const filesJobActive = props.filesJobActive === true;
   const stopProgress = stopProgressForServer(props.stopProgress, selectedServer.id);
   const stopJobActive = stopProgress !== null;
+  const hostedResourceIssueCount = (props.hostedResourceReferences ?? []).filter(
+    (reference) => reference.status !== "current",
+  ).length;
   /** Same operational lock as a running server, plus SteamCMD file jobs. */
   const opsLocked = serverActive || filesJobActive || stopJobActive;
   const filesLockReason = props.filesJobLabel?.trim() || "Updating server files";
@@ -148,6 +164,24 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
 
   const mainSection = (
     <section className={classes.main} data-workspace-scroll>
+      {hostedResourceIssueCount > 0 && !hostedResourceAlertDismissed && (
+        <AppAlert
+          color="attention"
+          title="Hosted resource references need attention"
+          mb="sm"
+          withCloseButton
+          onClose={() => setHostedResourceAlertDismissed(true)}
+        >
+          {hostedResourceIssueCount === 1
+            ? "One setting on this server points at a hosted resource that is disabled or uses an outdated URL."
+            : `${hostedResourceIssueCount} settings on this server point at hosted resources that are disabled or use outdated URLs.`}{" "}
+          {props.onOpenHostedResources !== undefined && (
+            <Button variant="subtle" size="compact-sm" onClick={props.onOpenHostedResources}>
+              Open Hosted Resources diagnostics
+            </Button>
+          )}
+        </AppAlert>
+      )}
       {stopProgress !== null && <StopProgressAlert progress={stopProgress} />}
       {/*
        * One notice per view. The Server and Backups tabs show their own (and more useful)
@@ -172,6 +206,7 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
             assistantDirtyRef.current = false;
             setIniDirty(false);
             setIniEditorVersion((current) => current + 1);
+            handleServerUpdated();
           }}
           onDraftChange={onAssistantDraftChange}
         />
@@ -208,6 +243,7 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
           startBusy={props.startBusy === true}
           iniDirty={iniDirty}
           iniEditorVersion={iniEditorVersion}
+          initialRconFocus={props.initialRconFocus}
           logsFocus={props.logsFocus}
           onChange={(tab) => {
             if (tab === workspaceTab) return;
@@ -230,13 +266,14 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
           onRegisterProfileSave={registerProfileSave}
           onRegisterIniSave={registerIniSave}
           onLogsFocusConsumed={props.onLogsFocusConsumed}
+          onRconFocusConsumed={props.onRconFocusConsumed}
           onSendRcon={props.onSendRcon}
           onClearRconHistory={props.onClearRconHistory}
           onRconTabFocusChanged={props.onRconTabFocusChanged}
           onRefreshPlayers={props.onRefreshPlayers}
           onKickPlayer={props.onKickPlayer}
           onBanPlayer={props.onBanPlayer}
-          onServerUpdated={props.onServerUpdated}
+          onServerUpdated={handleServerUpdated}
         />
       )}
     </section>

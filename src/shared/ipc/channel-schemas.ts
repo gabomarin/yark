@@ -9,6 +9,7 @@ import { IPC } from "../ipc";
 import { DISCORD_MESSAGE_MAX_LENGTH } from "../settings/discord-webhook";
 import { onboardingRecordSchema } from "../settings/onboarding";
 import {
+  HOSTED_RESOURCE_KINDS,
   HOSTED_RESOURCES_MAX_CONTENT_BYTES,
   HOSTED_RESOURCES_MAX_NOTES_LENGTH,
   HOSTED_RESOURCES_MAX_PORT,
@@ -61,6 +62,9 @@ import {
 const serverProfilePatchSchema = z.custom<unknown>((value) => isServerProfilePatch(value), {
   message: "Invalid server profile patch",
 });
+
+/** Typed resource kind (#577); unknown kinds are rejected before they reach storage. */
+const hostedResourceKindSchema = z.enum(HOSTED_RESOURCE_KINDS);
 
 /** Channels registered with `handleValidated` — keep in sync with ipc-handlers. */
 export const VALIDATED_IPC_CHANNELS = [
@@ -500,6 +504,7 @@ export const ipcArgSchemas = {
           .array(z.string().trim().min(1).max(HOSTED_RESOURCES_MAX_TAG_LENGTH))
           .max(HOSTED_RESOURCES_MAX_TAGS)
           .optional(),
+        kind: hostedResourceKindSchema.nullable().optional(),
       })
       .strict(),
   ]),
@@ -511,6 +516,7 @@ export const ipcArgSchemas = {
         displayName: nonEmptyStringSchema("Display name", 120),
         notes: z.string().max(HOSTED_RESOURCES_MAX_NOTES_LENGTH),
         tags: z.array(z.string().trim().min(1).max(HOSTED_RESOURCES_MAX_TAG_LENGTH)).max(HOSTED_RESOURCES_MAX_TAGS),
+        kind: hostedResourceKindSchema.nullable().optional(),
       })
       .strict()
       .optional(),
@@ -531,6 +537,7 @@ export const ipcArgSchemas = {
         displayName: nonEmptyStringSchema("Display name", 120),
         notes: z.string().max(HOSTED_RESOURCES_MAX_NOTES_LENGTH),
         tags: z.array(z.string().trim().min(1).max(HOSTED_RESOURCES_MAX_TAG_LENGTH)).max(HOSTED_RESOURCES_MAX_TAGS),
+        kind: hostedResourceKindSchema.nullable().optional(),
       })
       .strict(),
   ]),

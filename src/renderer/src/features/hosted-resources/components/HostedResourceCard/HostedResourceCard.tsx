@@ -1,15 +1,25 @@
 import type { ReactElement } from "react";
 import { ClockCounterClockwise, Copy, DotsThreeVertical, PencilSimple, Power, Trash } from "@phosphor-icons/react";
-import { ActionIcon, Badge, CopyButton, Group, Menu, Stack, Text, Tooltip } from "@mantine/core";
+import { ActionIcon, Anchor, Badge, CopyButton, Group, Menu, Stack, Text, Tooltip } from "@mantine/core";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
-import type { HostedResourceDto } from "@shared/ipc";
-import { formatByteSize, formatLabel, resourcePublishedLabel } from "../../model/hostedResourcesPageModel";
+import type { HostedResourceDiagnosticStatus, HostedResourceDto, HostedResourceReferenceDto } from "@shared/ipc";
+import { HOSTED_RESOURCE_SURFACE_LABELS, consumerForSetting } from "@shared/settings/hosted-resource-consumers";
+import {
+  formatByteSize,
+  formatLabel,
+  resourceStateBadge,
+  resourceVersionLabel,
+} from "../../model/hostedResourcesPageModel";
 
 interface Props {
   resource: HostedResourceDto;
   referencedServerCount: number;
   /** Null until diagnostics have run. */
   observedRequests: number | null;
+  /** Null until diagnostics have run; never inferred from "published". */
+  diagnosticStatus: HostedResourceDiagnosticStatus | null;
+  referenceIssues: HostedResourceReferenceDto[];
+  onOpenReference: (reference: HostedResourceReferenceDto) => void;
   busy: boolean;
   onEdit: () => void;
   onRevisions: () => void;
@@ -20,6 +30,11 @@ interface Props {
 export function HostedResourceCard(props: Props): ReactElement {
   const { resource } = props;
   const disabled = !resource.enabled;
+  const badge = resourceStateBadge(resource, props.diagnosticStatus);
+  const versionLabel = resourceVersionLabel(resource);
+  const hasPreviousPortReference = props.referenceIssues.some((reference) => reference.status === "stale-port");
+  // Pick the disabled one explicitly: the list can mix statuses, so `[0]` may be stale-port.
+  const disabledReference = props.referenceIssues.find((reference) => reference.status === "disabled");
   return (
     <AppSurfaceCard radius={0} data-hosted-resource-card={resource.id}>
       <Stack gap="xs">
@@ -29,9 +44,17 @@ export function HostedResourceCard(props: Props): ReactElement {
             <Badge variant="light" color="gray">
               {formatLabel(resource.format)}
             </Badge>
-            {disabled && (
-              <Badge variant="light" color="gray">
-                Disabled
+            <Badge variant="light" color={badge.color} data-hosted-resource-state>
+              {badge.label}
+            </Badge>
+            {hasPreviousPortReference && (
+              <Badge variant="light" color="attention">
+                Previous port
+              </Badge>
+            )}
+            {disabledReference !== undefined && (
+              <Badge variant="light" color="attention">
+                Referenced while disabled
               </Badge>
             )}
           </Group>
@@ -80,9 +103,31 @@ export function HostedResourceCard(props: Props): ReactElement {
           {resource.url}
         </Text>
 
-        <Text size="sm" c="dimmed">
-          {resourcePublishedLabel(resource)}
-        </Text>
+        {props.referenceIssues.length > 0 && (
+          <Stack gap={2}>
+            <Text size="sm" c="attention" fw={600}>
+              {disabledReference !== undefined
+                ? disabledReferenceMessage(disabledReference)
+                : "Some server settings still use a previous URL for this resource."}
+            </Text>
+            {props.referenceIssues.map((reference) => (
+              // The same server can legitimately hold one key twice (INI row and launch
+              // flag), so the URL is part of the key too.
+              <Text key={`${reference.serverId}:${reference.key}:${reference.url}`} size="xs" c="dimmed">
+                Fix in{" "}
+                <Anchor component="button" type="button" size="xs" onClick={() => props.onOpenReference(reference)}>
+                  {reference.serverName} · {referenceLocation(reference.key)}
+                </Anchor>
+              </Text>
+            ))}
+          </Stack>
+        )}
+
+        {versionLabel !== null && (
+          <Text size="sm" c="dimmed">
+            {versionLabel}
+          </Text>
+        )}
 
         {resource.notes.length > 0 && <Text size="sm">{resource.notes}</Text>}
         {resource.tags.length > 0 && (
@@ -110,11 +155,20 @@ export function HostedResourceCard(props: Props): ReactElement {
           </Text>
           <Text size="xs" c="dimmed">
             {props.observedRequests === null
-              ? "Requests: run diagnostics"
+              ? "Requests: check health"
               : `${props.observedRequests} request${props.observedRequests === 1 ? "" : "s"} observed`}
           </Text>
         </Group>
       </Stack>
     </AppSurfaceCard>
   );
+}
+
+function disabledReferenceMessage(reference: HostedResourceReferenceDto): string {
+  return `This resource is disabled, but the ${referenceLocation(reference.key)} setting still references it.`;
+}
+
+function referenceLocation(key: string): string {
+  const consumer = consumerForSetting(key);
+  return consumer === null ? "server settings" : HOSTED_RESOURCE_SURFACE_LABELS[consumer.surface];
 }
