@@ -8,6 +8,7 @@ import { dangerConfirmBody, openDangerConfirmModal } from "@ui/DangerConfirmModa
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { BannedPlayersSection } from "./BannedPlayersSection";
 import { AdminsSection } from "./AdminsSection";
+import { confirmAdminListRemoval } from "./adminListConfirm";
 import { PlayerIdentityRow, mergeNameHints, resolvePlayerDisplayName } from "./PlayerIdentityRow";
 import { useAdminListMembership } from "./useAdminListMembership";
 import classes from "./RconPanel.module.css";
@@ -212,13 +213,15 @@ export function PlayerListSection(props: Props): ReactElement {
                                   aria-label={starLabel(isAdmin, name, adminMembership.editable)}
                                   loading={adminMembership.busyKey === player.key}
                                   disabled={starDisabled}
-                                  onClick={() =>
-                                    void adminMembership.editMember(
-                                      player.key,
-                                      isAdmin ? "remove" : "add",
-                                      player.name ?? undefined,
-                                    )
-                                  }
+                                  onClick={() => {
+                                    if (isAdmin) {
+                                      confirmAdminListRemoval(name, () => {
+                                        void adminMembership.editMember(player.key, "remove");
+                                      });
+                                      return;
+                                    }
+                                    void adminMembership.editMember(player.key, "add", player.name ?? undefined);
+                                  }}
                                 >
                                   <Star size={12} weight={isAdmin ? "fill" : "regular"} />
                                 </ActionIcon>
