@@ -565,12 +565,15 @@ export function registerIpcHandlers(
     learnAdminListNames(instances.installDirFor(serverId), hints),
   );
 
-  handleValidated(IPC.adminListEditMember, ipcArgSchemas[IPC.adminListEditMember], async ([serverId, id, action, name]) =>
-    editAdminListMember(instances.installDirFor(serverId), hostedResources, {
-      id,
-      action,
-      name: name ?? undefined,
-    }),
+  handleValidated(
+    IPC.adminListEditMember,
+    ipcArgSchemas[IPC.adminListEditMember],
+    async ([serverId, id, action, name]) =>
+      editAdminListMember(instances.installDirFor(serverId), hostedResources, {
+        id,
+        action,
+        name: name ?? undefined,
+      }),
   );
 
   handleValidated(IPC.eventsRecent, ipcArgSchemas[IPC.eventsRecent], ([limit]) => repo.recentEvents(limit));

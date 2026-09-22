@@ -295,11 +295,18 @@ export class HostedResourcesService {
     return revision.content;
   }
 
-  /** Resource id serving a loopback resource URL, or null. Used for admin-list edit gating (#565). */
+  /**
+   * Resource id serving a loopback resource URL, or null. Used for admin-list edit gating (#565).
+   * Mirrors the served-resource contract so an edit cannot target a resource ASA can never fetch:
+   * a disabled resource and one whose URL port differs from ours are both unserved.
+   */
   resolveResourceIdByUrl(url: string): string | null {
     const parsed = parseHostedResourceUrl(url);
     if (parsed === null) return null;
-    return this.deps.repo.getResourceByToken(parsed.token)?.id ?? null;
+    const resource = this.deps.repo.getResourceByToken(parsed.token);
+    if (resource === null || resource.disabledAt !== null) return null;
+    if (parsed.port !== this.getState().port) return null;
+    return resource.id;
   }
 
   publishRevision(resourceId: string, revisionId: string): HostedResourceDto {

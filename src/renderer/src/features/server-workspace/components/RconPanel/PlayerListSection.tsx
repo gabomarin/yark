@@ -18,6 +18,11 @@ export interface PlayerListState {
   loading: boolean;
 }
 
+function starLabel(isAdmin: boolean, name: string | null | undefined): string {
+  if (isAdmin) return "Remove from admin list";
+  return name ? `Add ${name} to admin list` : "Add to admin list";
+}
+
 interface Props {
   serverId: string;
   serverRunning: boolean;
@@ -68,6 +73,7 @@ export function PlayerListSection(props: Props): ReactElement {
         await props.onRefreshPlayers(props.serverId);
         await (reloadBannedRef.current?.() ?? Promise.resolve());
         await (reloadAdminsRef.current?.() ?? Promise.resolve());
+        await adminMembership.reload();
       },
       () => {
         setPanelRefreshing(false);
@@ -187,10 +193,7 @@ export function PlayerListSection(props: Props): ReactElement {
                     const busy = actionKey === player.key;
                     const name = resolvePlayerDisplayName(player.key, player.name, nameById);
                     const isAdmin = adminMembership.editable && adminMembership.isMember(player.key);
-                    const starDisabled =
-                      !adminMembership.editable ||
-                      adminMembership.busyKey !== null ||
-                      adminMembership.busyKey === player.key;
+                    const starDisabled = !adminMembership.editable || adminMembership.busyKey !== null;
                     return (
                       <PlayerIdentityRow
                         key={player.key}
@@ -199,19 +202,12 @@ export function PlayerListSection(props: Props): ReactElement {
                         actions={
                           <>
                             {adminMembership.editable ? (
-                              <Tooltip
-                                label={
-                                  isAdmin
-                                    ? "Remove from admin list"
-                                    : player.name
-                                      ? `Add ${player.name} to admin list`
-                                      : "Add to admin list"
-                                }
-                              >
+                              <Tooltip label={starLabel(isAdmin, player.name)}>
                                 <ActionIcon
                                   size="xs"
                                   variant="subtle"
                                   color={isAdmin ? "yellow" : undefined}
+                                  aria-label={starLabel(isAdmin, player.name)}
                                   loading={adminMembership.busyKey === player.key}
                                   disabled={starDisabled}
                                   onClick={() =>

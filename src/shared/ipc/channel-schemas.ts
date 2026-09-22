@@ -352,7 +352,8 @@ export const ipcArgSchemas = {
     serverIdSchema,
     z.string().min(1).max(MAX_STRING_PARAM_LENGTH),
     z.enum(["add", "remove"]),
-    z.string().min(1).max(MAX_STRING_PARAM_LENGTH).nullish(),
+    // Blank/empty names are tolerated: the backend skips the empty-name sidecar write.
+    z.string().max(MAX_STRING_PARAM_LENGTH).nullish(),
   ]),
   [IPC.eventsRecent]: z.tuple([z.number().int().positive().max(5_000)]),
   [IPC.pickPath]: ipcTuple(

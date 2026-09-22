@@ -700,7 +700,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
-- Survivors admin stars now refresh after an admin id is removed from the Admins tab (#565).
+- Survivors admin stars and the Admins tab list now stay in sync after an admin id is added or removed from either place (#565).
 - Server and cluster **INI editors** ignore stale async loads when switching server/cluster mid-fetch, and the workspace dirty flag updates from edit events (not a sync effect) so leave-guards stay accurate.
 - Cluster and **Copy configuration** wizards remount when opened so form state resets cleanly without flash-of-stale UI.
 - **Copy configuration** keeps every checked category when several are toggled in quick succession (no longer drops earlier INI picks) (#95).

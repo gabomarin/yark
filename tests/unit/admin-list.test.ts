@@ -530,7 +530,10 @@ describe("admin-list", () => {
         getPublishedContent: () => ["0002aaaaaaaaaaaaaaaaaaaaaaaaaaaa"].join("\n"),
         publishContent,
       };
-      vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, text: async () => served })));
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => ({ ok: true, text: async () => served })),
+      );
 
       const state = await editAdminListMember(root, host, {
         id: "0002e03af5f4487985e94c6ba4080369",
@@ -561,7 +564,10 @@ describe("admin-list", () => {
         getPublishedContent: () => "0002e03af5f4487985e94c6ba4080369\n",
         publishContent,
       };
-      vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, text: async () => "0002e03af5f4487985e94c6ba4080369\n" })));
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => ({ ok: true, text: async () => "0002e03af5f4487985e94c6ba4080369\n" })),
+      );
 
       const state = await editAdminListMember(root, host, {
         id: "0002E03AF5F4487985E94C6BA4080369",
@@ -593,7 +599,10 @@ describe("admin-list", () => {
         getPublishedContent: () => published,
         publishContent,
       };
-      vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, text: async () => served })));
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => ({ ok: true, text: async () => served })),
+      );
 
       const state = await editAdminListMember(root, host, {
         id: "0002e03af5f4487985e94c6ba4080369",
@@ -626,7 +635,10 @@ describe("admin-list", () => {
         getPublishedContent: () => "0002e03af5f4487985e94c6ba4080369\n",
         publishContent,
       };
-      vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, text: async () => served })));
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => ({ ok: true, text: async () => served })),
+      );
 
       const state = await editAdminListMember(root, host, {
         id: "0002e03af5f4487985e94c6ba4080369",
@@ -655,7 +667,10 @@ describe("admin-list", () => {
         getPublishedContent: () => "",
         publishContent: () => {},
       };
-      vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, text: async () => "0002e03af5f4487985e94c6ba4080369\n" })));
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => ({ ok: true, text: async () => "0002e03af5f4487985e94c6ba4080369\n" })),
+      );
 
       const state = await editAdminListMember(root, host, {
         id: "0002e03af5f4487985e94c6ba4080369",

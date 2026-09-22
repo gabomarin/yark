@@ -31,7 +31,46 @@ interface AdminListMembership {
   editable: boolean;
   busyKey: string | null;
   isMember: (id: string) => boolean;
-  editMember: (id: string, action: AdminListEditAction, name?: string) => Promise<void>;
+  reload: () => Promise<void>;
+  editMember: (id: string, action: AdminListEditAction, name?: string) => Promise<boolean>;
+}
+
+/**
+ * The one add/remove flow shared by the Admins tab and the Survivors star, so the busy flag,
+ * toast copy and diagnostics broadcast cannot drift between two copies. Resolves true when the
+ * backend applied the edit, false when it reported an error (already surfaced as a toast).
+ */
+export async function runAdminListEditMember(input: {
+  serverId: string;
+  id: string;
+  action: AdminListEditAction;
+  name?: string;
+  setBusyKey: (key: string | null) => void;
+  onSuccess: (state: AdminListStateDto) => void;
+}): Promise<boolean> {
+  const { serverId, id, action, name, setBusyKey, onSuccess } = input;
+  setBusyKey(id);
+  return runWithFinally(
+    async () => {
+      const result = await window.api.editAdminListMember(serverId, id, action, name);
+      if (!result.ok) {
+        showOperatorError(result.error ?? `Could not ${action} admin id`);
+        return false;
+      }
+      onSuccess(result.data);
+      notifyHostedResourcesDiagnosticsUpdated();
+      showOperatorToast({
+        title: "Admin list",
+        message: `Saved. ASA re-checks this list every ${result.data.updateAllowedCheatersInterval}s — no restart needed.`,
+        color: "ok",
+        autoClose: 6000,
+      });
+      return true;
+    },
+    () => {
+      setBusyKey(null);
+    },
+  );
 }
 
 /** Survivors star toggling for the AdminList hosted resource behind the loopback URL (#565). */
@@ -40,23 +79,33 @@ export function useAdminListMembership(serverId: string): AdminListMembership {
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const { resources, loaded } = useHostedResourceOptions();
 
-  const load = useCallback(async (): Promise<void> => {
-    const result = await window.api.getAdminList(serverId);
-    if (result.ok) {
-      setState(result.data);
+  const reload = useCallback(async (): Promise<void> => {
+    try {
+      const result = await window.api.getAdminList(serverId);
+      if (result.ok) {
+        setState(result.data);
+      } else {
+        showOperatorError(result.error ?? "Could not read admin list");
+      }
+    } catch (error) {
+      showOperatorError(error instanceof Error ? error.message : "Could not read admin list");
     }
   }, [serverId]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    void reload();
+  }, [reload]);
 
+  // The Admins tab edits this same list; reload so a removal there clears this star too.
   useEffect(() => {
-    window.addEventListener(HOSTED_RESOURCES_DIAGNOSTICS_UPDATED_EVENT, load);
-    return () => {
-      window.removeEventListener(HOSTED_RESOURCES_DIAGNOSTICS_UPDATED_EVENT, load);
+    const onUpdated = (): void => {
+      void reload();
     };
-  }, [load]);
+    window.addEventListener(HOSTED_RESOURCES_DIAGNOSTICS_UPDATED_EVENT, onUpdated);
+    return () => {
+      window.removeEventListener(HOSTED_RESOURCES_DIAGNOSTICS_UPDATED_EVENT, onUpdated);
+    };
+  }, [reload]);
 
   const editable = isAdminListEditable(loaded, state, resources);
 
@@ -67,32 +116,10 @@ export function useAdminListMembership(serverId: string): AdminListMembership {
   );
 
   const editMember = useCallback(
-    async (id: string, action: AdminListEditAction, name?: string): Promise<void> => {
-      setBusyKey(id);
-      await runWithFinally(
-        async () => {
-          const result = await window.api.editAdminListMember(serverId, id, action, name);
-          if (result.ok) {
-            setState(result.data);
-            notifyHostedResourcesDiagnosticsUpdated();
-            const interval = result.data.updateAllowedCheatersInterval;
-            showOperatorToast({
-              title: "Admin list",
-              message: `Saved. ASA re-checks this list every ${interval}s — no restart needed.`,
-              color: "ok",
-              autoClose: 6000,
-            });
-          } else {
-            showOperatorError(result.error ?? `Could not ${action} admin id`);
-          }
-        },
-        () => {
-          setBusyKey(null);
-        },
-      );
-    },
+    (id: string, action: AdminListEditAction, name?: string): Promise<boolean> =>
+      runAdminListEditMember({ serverId, id, action, name, setBusyKey, onSuccess: setState }),
     [serverId],
   );
 
-  return { state, editable, busyKey, isMember, editMember };
+  return { state, editable, busyKey, isMember, reload, editMember };
 }

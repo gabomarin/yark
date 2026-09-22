@@ -4,7 +4,7 @@ import type { AdminListStateDto } from "@shared/ipc";
 import { resetHostedResourceOptionsSnapshot } from "@features/hosted-resources/hooks/useHostedResourceOptions";
 import { notifyHostedResourcesDiagnosticsUpdated } from "@features/hosted-resources/hooks/useHostedResourcesHealth";
 import { useAdminsSection } from "./useAdminsSection";
-import { useAdminListMembership } from "./useAdminListMembership";
+import { runAdminListEditMember, useAdminListMembership } from "./useAdminListMembership";
 
 const { showOperatorToast } = vi.hoisted(() => ({
   showOperatorToast: vi.fn(),
@@ -228,14 +228,18 @@ describe("useAdminsSection", () => {
   });
 
   it("is editable for a loopback URL served by a compatible hosted resource and removes a member", async () => {
-    vi.mocked(window.api.getAdminList).mockResolvedValue({
-      ok: true,
-      data: loopbackState(),
-    });
+    const before = loopbackState();
     const after = loopbackState({
       entries: [{ id: "0002aaaaaaaaaaaaaaaaaaaaaaaaaaaa", name: null }],
     });
-    vi.mocked(window.api.editAdminListMember).mockResolvedValue({ ok: true, data: after });
+    // The hook reloads on the diagnostics broadcast after an edit, so a later read must reflect
+    // the applied change (as the real backend does) instead of replaying the pre-edit list.
+    let current = before;
+    vi.mocked(window.api.getAdminList).mockImplementation(async () => ({ ok: true, data: current }));
+    vi.mocked(window.api.editAdminListMember).mockImplementation(async () => {
+      current = after;
+      return { ok: true, data: after };
+    });
 
     const { result } = renderHook(() => useAdminsSection({ serverId: "srv-1", iniDirty: false }));
 
@@ -367,5 +371,73 @@ describe("useAdminsSection", () => {
       expect(window.api.getAdminList).toHaveBeenCalledTimes(2);
       expect(result.current.isMember(memberId)).toBe(false);
     });
+  });
+
+  it("refreshes the Admins tab entries when another editor publishes an update", async () => {
+    vi.mocked(window.api.getAdminList)
+      .mockResolvedValueOnce({ ok: true, data: loopbackState() })
+      .mockResolvedValueOnce({ ok: true, data: loopbackState({ entries: [] }) });
+
+    const { result } = renderHook(() => useAdminsSection({ serverId: "srv-1", iniDirty: false }));
+    await waitFor(() => {
+      expect(result.current.state?.entries).toHaveLength(1);
+    });
+
+    act(() => {
+      notifyHostedResourcesDiagnosticsUpdated();
+    });
+
+    await waitFor(() => {
+      expect(result.current.state?.entries).toHaveLength(0);
+    });
+  });
+
+  it("keeps pending URL/interval drafts when another editor refreshes the entries", async () => {
+    vi.mocked(window.api.getAdminList)
+      .mockResolvedValueOnce({ ok: true, data: loopbackState() })
+      .mockResolvedValueOnce({ ok: true, data: loopbackState({ entries: [] }) });
+
+    const { result } = renderHook(() => useAdminsSection({ serverId: "srv-1", iniDirty: false }));
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    act(() => {
+      result.current.setUrlDraft("https://example.com/pending.txt");
+    });
+    expect(result.current.draftDirty).toBe(true);
+
+    act(() => {
+      notifyHostedResourcesDiagnosticsUpdated();
+    });
+
+    await waitFor(() => {
+      expect(result.current.state?.entries).toHaveLength(0);
+    });
+    expect(result.current.urlDraft).toBe("https://example.com/pending.txt");
+    expect(result.current.draftDirty).toBe(true);
+  });
+
+  it("resolves runAdminListEditMember to true on success and false on a reported error", async () => {
+    const setBusyKey = vi.fn();
+    const onSuccess = vi.fn();
+
+    vi.mocked(window.api.editAdminListMember).mockResolvedValueOnce({
+      ok: true as const,
+      data: loopbackState(),
+    });
+    await expect(
+      runAdminListEditMember({ serverId: "srv-1", id: "x", action: "add", setBusyKey, onSuccess }),
+    ).resolves.toBe(true);
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+
+    vi.mocked(window.api.editAdminListMember).mockResolvedValueOnce({
+      ok: false as const,
+      error: "AdminListURL does not point at a current YARK Hosted Resource",
+    });
+    await expect(
+      runAdminListEditMember({ serverId: "srv-1", id: "y", action: "add", setBusyKey, onSuccess }),
+    ).resolves.toBe(false);
+    expect(onSuccess).toHaveBeenCalledTimes(1);
   });
 });

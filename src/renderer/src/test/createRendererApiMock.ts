@@ -225,7 +225,7 @@ export function createRendererApiMock(overrides: Partial<RendererApi> = {}): Ren
       ok: true,
       data: {
         mode: "loopback",
-        adminListUrl: "",
+        adminListUrl: "http://127.0.0.1:8935/r/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         updateAllowedCheatersInterval: 600,
         entries: [],
         listError: null,

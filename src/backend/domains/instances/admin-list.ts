@@ -656,15 +656,11 @@ export async function editAdminListMember(
   }
   const { adminListUrl, mode } = await readGusIntervalAndUrl(installDir);
   if (mode !== "loopback" || adminListUrl.length === 0) {
-    throw new Error(
-      "Admins can only be added or removed here when AdminListURL is a YARK Hosted Resource.",
-    );
+    throw new Error("Admins can only be added or removed here when AdminListURL is a YARK Hosted Resource.");
   }
   const resourceId = host.resolveResourceIdByUrl(adminListUrl);
   if (resourceId === null) {
-    throw new Error(
-      "AdminListURL does not point at a current YARK Hosted Resource, so it cannot be edited here.",
-    );
+    throw new Error("AdminListURL does not point at a current YARK Hosted Resource, so it cannot be edited here.");
   }
 
   const ids = parseAdminListIds(host.getPublishedContent(resourceId));
