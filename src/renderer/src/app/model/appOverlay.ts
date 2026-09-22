@@ -11,6 +11,7 @@ export type Overlay =
       serverId: string;
       onboarding?: boolean;
       initialTab?: WorkspaceTab;
+      initialRconFocus?: "admins";
       logsFocus?: ServerLogsFocus | null;
     }
   | null;

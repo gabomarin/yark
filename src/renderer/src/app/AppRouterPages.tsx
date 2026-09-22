@@ -19,6 +19,29 @@ import { HostedResourcesPage } from "@features/hosted-resources/HostedResourcesP
 import { OverviewPage } from "@features/overview/OverviewPage";
 import { SettingsPage } from "@features/settings/SettingsPage";
 import type { Route } from "@layout/Sidebar/Sidebar";
+import type { HostedResourceReferenceDto } from "@shared/ipc";
+import { consumerForSetting } from "@shared/settings/hosted-resource-consumers";
+import type { WorkspaceTab } from "@features/server-workspace/ServerWorkspacePage";
+
+/**
+ * Where a hosted-resources reference opens: the surface its setting is edited on, not the
+ * tab its key name suggests, so a reference never lands where it cannot be fixed. A launch
+ * flag can only be fixed in the Launch tab whatever key carries it, and a key that is not
+ * in the consumer catalog only exists in the INI editor.
+ */
+function referenceTargetFor(reference: HostedResourceReferenceDto): { tab: WorkspaceTab; rconFocus?: "admins" } {
+  if (reference.source === "launch-arg") {
+    return { tab: "launch" };
+  }
+  switch (consumerForSetting(reference.key)?.surface) {
+    case "rcon-admins":
+      return { tab: "rcon", rconFocus: "admins" };
+    case "launch-option":
+      return { tab: "launch" };
+    default:
+      return { tab: "iniFiles" };
+  }
+}
 
 export interface AppRouterPagesProps {
   shell: AppShellChromeProps;
@@ -87,6 +110,7 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
       onYarkUpdateClick={shell.onYarkUpdateClick}
       busyOverlay={shell.busyOverlay}
       downloadCount={shell.downloadCount}
+      hostedResourcesHealth={shell.hostedResourcesHealth}
       workspaceFooter={shell.workspaceFooter}
       overview={{
         page: (
@@ -204,7 +228,19 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
         ),
       }}
       hostedResources={{
-        page: <HostedResourcesPage />,
+        page: (
+          <HostedResourcesPage
+            onOpenReference={(reference: HostedResourceReferenceDto) => {
+              const target = referenceTargetFor(reference);
+              setOverlay({
+                kind: "workspace",
+                serverId: reference.serverId,
+                initialTab: target.tab,
+                initialRconFocus: target.rconFocus,
+              });
+            }}
+          />
+        ),
       }}
       settings={{
         page: (

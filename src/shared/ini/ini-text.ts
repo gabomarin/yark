@@ -223,6 +223,51 @@ export function splitFlatIniKey(flatKey: string): { section: string; key: string
 }
 
 /**
+ * Whether the section already carries a live assignment of `key`, and where its
+ * comment-style default (`#Key=…` / `;Key=…`) sits. The shipped GameUserSettings.ini
+ * documents optional keys this way, so a first write must uncomment that line instead of
+ * appending a second assignment at the section end.
+ */
+function scanKeySlots(
+  lines: readonly string[],
+  sectionLower: string,
+  keyLower: string,
+): { hasActive: boolean; commentedIndex: number } {
+  let currentSection = INI_ROOT_SECTION.toLowerCase();
+  let hasActive = false;
+  let commentedIndex = -1;
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const trimmed = lines[index]?.trim() ?? "";
+    const sectionMatch = /^\[(.+)\]$/.exec(trimmed);
+    if (sectionMatch !== null) {
+      currentSection = (sectionMatch[1] ?? INI_ROOT_SECTION).trim().toLowerCase();
+      continue;
+    }
+    if (currentSection !== sectionLower) {
+      continue;
+    }
+    const commented = trimmed.startsWith("#") || trimmed.startsWith(";");
+    // One marker only: a doubly-commented line (`##Key=…`) is not the shipped default,
+    // it is a line someone deliberately disabled, and must stay commented.
+    const body = commented ? trimmed.replace(/^[#;]?\s*/, "") : trimmed;
+    const eq = body.indexOf("=");
+    if (eq <= 0 || body.slice(0, eq).trim().toLowerCase() !== keyLower) {
+      continue;
+    }
+    if (commented) {
+      if (commentedIndex < 0) {
+        commentedIndex = index;
+      }
+      continue;
+    }
+    hasActive = true;
+  }
+
+  return { hasActive, commentedIndex };
+}
+
+/**
  * Updates or inserts a key while preserving the rest of the file
  * (order, comments, and blank lines) as best as possible.
  *
@@ -239,6 +284,8 @@ export function setIniTextValue(text: string, section: string, key: string, valu
   const sectionLower = section.toLowerCase();
   const keyLower = key.toLowerCase();
   const targetOccurrence = Math.max(0, Math.floor(occurrence));
+  const slots = scanKeySlots(lines, sectionLower, keyLower);
+  const commentedSlotIndex = !slots.hasActive && targetOccurrence === 0 ? slots.commentedIndex : -1;
 
   const flushMissingKeyBeforeLeavingSection = (nextSectionLine: string | null) => {
     if (found || currentSectionLower !== sectionLower || targetOccurrence > 0) {
@@ -254,7 +301,8 @@ export function setIniTextValue(text: string, section: string, key: string, valu
     }
   };
 
-  for (const line of lines) {
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index] ?? "";
     const trimmed = line.trim();
     const sectionMatch = /^\[(.+)\]$/.exec(trimmed);
 
@@ -262,6 +310,16 @@ export function setIniTextValue(text: string, section: string, key: string, valu
       flushMissingKeyBeforeLeavingSection(line);
       currentSection = sectionMatch[1] ?? INI_ROOT_SECTION;
       currentSectionLower = currentSection.toLowerCase();
+      continue;
+    }
+
+    // `!found` matters when the same section name appears twice: the first block already
+    // got its assignment from `flushMissingKeyBeforeLeavingSection`, and uncommenting the
+    // slot in the second block would leave two live assignments for one key.
+    if (index === commentedSlotIndex && !found) {
+      const indent = line.match(/^\s*/)?.[0] ?? "";
+      result.push(`${indent}${key}=${value}`);
+      found = true;
       continue;
     }
 

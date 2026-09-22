@@ -6,9 +6,11 @@ import { tmpdir } from "node:os";
 import {
   adminListAsaPointerPath,
   adminListPath,
+  applyAdminListEdit,
   classifyAdminListUrl,
   clampUpdateAllowedCheatersInterval,
   DEFAULT_UPDATE_ALLOWED_CHEATERS_INTERVAL,
+  editAdminListMember,
   ensureAdminListFile,
   formatAdminListUrlForIni,
   formatLocalAdminListFileUrlForIni,
@@ -20,6 +22,7 @@ import {
   syncAdminListAsaPointer,
   unwrapIniUrl,
   windowsPathFromAdminListFileUrl,
+  type AdminListResourceHost,
 } from "@backend/domains/instances/admin-list";
 import { gameUserSettingsIniPath } from "@backend/domains/instances/sync-profile-ini";
 import { readIniServerSetting } from "@backend/domains/instances/ban-list";
@@ -423,6 +426,260 @@ describe("admin-list", () => {
       expect(state.mode).toBe("local");
       expect(state.entries).toEqual([]);
       expect((await readFile(adminListPath(root), "utf8")).trim()).toBe("");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("applyAdminListEdit adds, trims, and dedupes case-insensitively", () => {
+    const ids = ["EOSID0001", "0002aaaaaaaaaaaaaaaaaaaaaaaaaaaa"];
+    expect(applyAdminListEdit(ids, "EOSID0001", "add")).toEqual({ ids, changed: false });
+    expect(applyAdminListEdit(ids, "0002AAAAAAAAAAAAAAAAAAAAAAAAAAAA", "add")).toEqual({
+      ids,
+      changed: false,
+    });
+    expect(applyAdminListEdit(ids, "  eosid0002  ", "add")).toEqual({
+      ids: [...ids, "eosid0002"],
+      changed: true,
+    });
+  });
+
+  it("applyAdminListEdit removes case-insensitively and reports no-op", () => {
+    const ids = ["EOSID0001", "0002aaaaaaaaaaaaaaaaaaaaaaaaaaaa"];
+    expect(applyAdminListEdit(ids, "EOSID0001", "remove")).toEqual({
+      ids: ["0002aaaaaaaaaaaaaaaaaaaaaaaaaaaa"],
+      changed: true,
+    });
+    expect(applyAdminListEdit(ids, "doesnotexist", "remove")).toEqual({
+      ids,
+      changed: false,
+    });
+  });
+
+  it("rejects empty EOS ids before touching GUS", async () => {
+    const root = await mkdtemp(join(tmpdir(), "yark-admin-edit-empty-"));
+    try {
+      const host: AdminListResourceHost = {
+        resolveResourceIdByUrl: () => null,
+        getPublishedContent: () => "",
+        publishContent: () => {},
+      };
+      await expect(editAdminListMember(root, host, { id: "   ", action: "add" })).rejects.toThrow(/EOS admin id/i);
+      await expect(editAdminListMember(root, host, { id: "", action: "remove" })).rejects.toThrow(/EOS admin id/i);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects editing a non-loopback AdminListURL", async () => {
+    const root = await mkdtemp(join(tmpdir(), "yark-admin-edit-local-"));
+    try {
+      await mkdir(join(root, "ShooterGame", "Saved", "Config", "WindowsServer"), { recursive: true });
+      await writeFile(gameUserSettingsIniPath(root), "[ServerSettings]\nAdminListURL=N/A\n", "utf8");
+      const host: AdminListResourceHost = {
+        resolveResourceIdByUrl: () => null,
+        getPublishedContent: () => "",
+        publishContent: () => {},
+      };
+      await expect(
+        editAdminListMember(root, host, { id: "0002e03af5f4487985e94c6ba4080369", action: "add" }),
+      ).rejects.toThrow(/YARK Hosted Resource/i);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a loopback URL that is not a current hosted resource", async () => {
+    const root = await mkdtemp(join(tmpdir(), "yark-admin-edit-token-"));
+    try {
+      await mkdir(join(root, "ShooterGame", "Saved", "Config", "WindowsServer"), { recursive: true });
+      await writeFile(
+        gameUserSettingsIniPath(root),
+        '[ServerSettings]\nAdminListURL="http://127.0.0.1:8935/r/missing-token"\n',
+        "utf8",
+      );
+      const host: AdminListResourceHost = {
+        resolveResourceIdByUrl: () => null,
+        getPublishedContent: () => "",
+        publishContent: () => {},
+      };
+      await expect(
+        editAdminListMember(root, host, { id: "0002e03af5f4487985e94c6ba4080369", action: "add" }),
+      ).rejects.toThrow(/does not point/i);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("adds a member to a hosted AdminList and publishes the new body", async () => {
+    const root = await mkdtemp(join(tmpdir(), "yark-admin-edit-add-"));
+    try {
+      await mkdir(join(root, "ShooterGame", "Saved", "Config", "WindowsServer"), { recursive: true });
+      await writeFile(
+        gameUserSettingsIniPath(root),
+        '[ServerSettings]\nAdminListURL="http://127.0.0.1:8935/r/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"\n' +
+          "UpdateAllowedCheatersInterval=10\n",
+        "utf8",
+      );
+      let served = ["0002aaaaaaaaaaaaaaaaaaaaaaaaaaaa"].join("\n") + "\n";
+      const publishContent = vi.fn((_resourceId: string, content: string) => {
+        served = content;
+      });
+      const host: AdminListResourceHost = {
+        resolveResourceIdByUrl: () => "res-1",
+        getPublishedContent: () => ["0002aaaaaaaaaaaaaaaaaaaaaaaaaaaa"].join("\n"),
+        publishContent,
+      };
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => ({ ok: true, text: async () => served })),
+      );
+
+      const state = await editAdminListMember(root, host, {
+        id: "0002e03af5f4487985e94c6ba4080369",
+        action: "add",
+      });
+      expect(publishContent).toHaveBeenCalledTimes(1);
+      expect(publishContent.mock.calls[0]![0]).toBe("res-1");
+      expect(publishContent.mock.calls[0]![1]).toContain("0002e03af5f4487985e94c6ba4080369");
+      expect(state.mode).toBe("loopback");
+      expect(state.entries.map((entry) => entry.id)).toContain("0002e03af5f4487985e94c6ba4080369");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("adds an existing member without republishing", async () => {
+    const root = await mkdtemp(join(tmpdir(), "yark-admin-edit-noop-"));
+    try {
+      await mkdir(join(root, "ShooterGame", "Saved", "Config", "WindowsServer"), { recursive: true });
+      await writeFile(
+        gameUserSettingsIniPath(root),
+        '[ServerSettings]\nAdminListURL="http://127.0.0.1:8935/r/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"\n',
+        "utf8",
+      );
+      const publishContent = vi.fn();
+      const host: AdminListResourceHost = {
+        resolveResourceIdByUrl: () => "res-1",
+        getPublishedContent: () => "0002e03af5f4487985e94c6ba4080369\n",
+        publishContent,
+      };
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => ({ ok: true, text: async () => "0002e03af5f4487985e94c6ba4080369\n" })),
+      );
+
+      const state = await editAdminListMember(root, host, {
+        id: "0002E03AF5F4487985E94C6BA4080369",
+        action: "add",
+      });
+      expect(publishContent).not.toHaveBeenCalled();
+      expect(state.mode).toBe("loopback");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("removes a member from a hosted AdminList and publishes the new body", async () => {
+    const root = await mkdtemp(join(tmpdir(), "yark-admin-edit-remove-"));
+    try {
+      await mkdir(join(root, "ShooterGame", "Saved", "Config", "WindowsServer"), { recursive: true });
+      await writeFile(
+        gameUserSettingsIniPath(root),
+        '[ServerSettings]\nAdminListURL="http://localhost:8935/r/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"\n',
+        "utf8",
+      );
+      const published = ["0002e03af5f4487985e94c6ba4080369", "0002aaaaaaaaaaaaaaaaaaaaaaaaaaaa"].join("\n") + "\n";
+      let served = published;
+      const publishContent = vi.fn((_resourceId: string, content: string) => {
+        served = content;
+      });
+      const host: AdminListResourceHost = {
+        resolveResourceIdByUrl: () => "res-1",
+        getPublishedContent: () => published,
+        publishContent,
+      };
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => ({ ok: true, text: async () => served })),
+      );
+
+      const state = await editAdminListMember(root, host, {
+        id: "0002e03af5f4487985e94c6ba4080369",
+        action: "remove",
+      });
+      expect(publishContent).toHaveBeenCalledTimes(1);
+      expect(publishContent.mock.calls[0]![1]).not.toContain("0002e03af5f4487985e94c6ba4080369");
+      expect(publishContent.mock.calls[0]![1]).toContain("0002aaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+      expect(state.entries.map((entry) => entry.id)).not.toContain("0002e03af5f4487985e94c6ba4080369");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("removing the last member publishes an empty body so ASA drops the admin", async () => {
+    const root = await mkdtemp(join(tmpdir(), "yark-admin-edit-remove-last-"));
+    try {
+      await mkdir(join(root, "ShooterGame", "Saved", "Config", "WindowsServer"), { recursive: true });
+      await writeFile(
+        gameUserSettingsIniPath(root),
+        '[ServerSettings]\nAdminListURL="http://127.0.0.1:8935/r/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"\n',
+        "utf8",
+      );
+      let served = "0002e03af5f4487985e94c6ba4080369\n";
+      const publishContent = vi.fn((_resourceId: string, content: string) => {
+        served = content;
+      });
+      const host: AdminListResourceHost = {
+        resolveResourceIdByUrl: () => "res-1",
+        getPublishedContent: () => "0002e03af5f4487985e94c6ba4080369\n",
+        publishContent,
+      };
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => ({ ok: true, text: async () => served })),
+      );
+
+      const state = await editAdminListMember(root, host, {
+        id: "0002e03af5f4487985e94c6ba4080369",
+        action: "remove",
+      });
+      expect(publishContent).toHaveBeenCalledTimes(1);
+      expect(publishContent.mock.calls[0]![1]).toBe("");
+      expect(state.entries).toHaveLength(0);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("learns the display name sidecar when adding a member", async () => {
+    const { adminListNamesPath } = await import("@backend/domains/instances/admin-list");
+    const root = await mkdtemp(join(tmpdir(), "yark-admin-edit-learn-"));
+    try {
+      await mkdir(join(root, "ShooterGame", "Saved", "Config", "WindowsServer"), { recursive: true });
+      await writeFile(
+        gameUserSettingsIniPath(root),
+        '[ServerSettings]\nAdminListURL="http://127.0.0.1:8935/r/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"\n',
+        "utf8",
+      );
+      const host: AdminListResourceHost = {
+        resolveResourceIdByUrl: () => "res-1",
+        getPublishedContent: () => "",
+        publishContent: () => {},
+      };
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => ({ ok: true, text: async () => "0002e03af5f4487985e94c6ba4080369\n" })),
+      );
+
+      const state = await editAdminListMember(root, host, {
+        id: "0002e03af5f4487985e94c6ba4080369",
+        action: "add",
+        name: "gabomarin26",
+      });
+      expect(existsSync(adminListNamesPath(root))).toBe(true);
+      expect((await readFile(adminListNamesPath(root), "utf8")).toLowerCase()).toContain("gabomarin26");
+      expect(state.entries.some((entry) => entry.id === "0002e03af5f4487985e94c6ba4080369")).toBe(true);
     } finally {
       await rm(root, { recursive: true, force: true });
     }

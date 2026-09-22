@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import { useCallback, type ReactElement } from "react";
 import { Group, Stack, Text } from "@mantine/core";
 import type { ServerProfile } from "@shared/types";
 import { IniEditorNav } from "@ui/IniEditorNav/IniEditorNav";
@@ -25,6 +25,7 @@ interface Props {
   onRegisterSave?: (save: (() => Promise<boolean>) | null) => void;
   /** Open RCON → Admins (AdminListURL is managed there). */
   onOpenAdminList?: () => void;
+  onSaved?: () => void;
 }
 
 export function ConfigurationEditor(props: Props): ReactElement {
@@ -32,11 +33,29 @@ export function ConfigurationEditor(props: Props): ReactElement {
   const density = useUiDensity();
   const openFileIconSize = density === "compact" ? "sm" : "md";
   const openFileGlyphSize = density === "compact" ? 14 : 16;
+  const { onRegisterSave, onSaved } = props;
+  /** Save, then let the workspace refresh once it succeeded. Both save paths share this. */
+  const runSave = useCallback(
+    async (save: () => Promise<boolean>): Promise<boolean> => {
+      const saved = await save();
+      if (saved) onSaved?.();
+      return saved;
+    },
+    [onSaved],
+  );
+  // Stable identity: `useConfigurationEditor` re-registers its save handler whenever this
+  // callback changes, and an inline wrapper would tear that down on every keystroke.
+  const registerSave = useCallback(
+    (save: (() => Promise<boolean>) | null) => onRegisterSave?.(save === null ? null : () => runSave(save)),
+    [onRegisterSave, runSave],
+  );
   const editor = useConfigurationEditor({
     serverId: props.server.id,
     onDirtyChange: props.onDirtyChange,
-    onRegisterSave: props.onRegisterSave,
+    onRegisterSave: registerSave,
   });
+
+  const saveAndNotify = () => runSave(editor.saveIni);
 
   const iniNavigation = (
     <IniEditorNav
@@ -88,7 +107,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
               loading={editor.loading}
               onRestoreFile={editor.resetActiveFileToDefaults}
               onDiscard={editor.resetChanges}
-              onSave={() => void editor.saveIni()}
+              onSave={() => void saveAndNotify()}
             />
 
             <ConfigurationEditorFilterBar
@@ -136,7 +155,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
               dirty={editor.dirty}
               busy={editor.busy}
               onDiscard={editor.resetChanges}
-              onSave={() => void editor.saveIni()}
+              onSave={() => void saveAndNotify()}
             />
             <ConfigurationEditorTextPanel
               iniFile={editor.iniFile}
