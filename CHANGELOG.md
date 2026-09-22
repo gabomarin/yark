@@ -14,6 +14,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Hosted Resources can be **typed** (admin list, ban list, bad words list, good words list, dynamic config, live tuning, notification URL), and every URL setting YARK knows — `AdminListURL`, `BanListURL`, `BadWordListURL`, `BadWordWhiteListURL`, `CustomLiveTuningUrl`, `CustomDynamicConfigUrl`, and `CustomNotificationURL` — now offers a searchable picker of the matching resources and can create one from the field, with a warning when a value points at a disabled, deleted, or differently typed resource (#577).
 - When `AdminListURL` is a YARK Hosted Resource, EOS admin ids can be added or removed locally from RCON → Admins and via a star toggle on Survivors; YARK republishes the resource body so ASA re-fetches it on the check interval without a restart, and third-party remote lists stay read-only (#565).
 - RCON → Survivors now shows read-only admin stars for third-party remote `AdminListURL` lists, using the existing EOS id/name mapping without enabling edits (#619).
+- Removing an admin from RCON → Survivors or Admins now requires explicit confirmation.
 
 ### Changed
 

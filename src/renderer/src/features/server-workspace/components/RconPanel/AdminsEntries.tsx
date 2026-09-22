@@ -3,6 +3,7 @@ import { X } from "@phosphor-icons/react";
 import type { AdminListStateDto } from "@shared/ipc";
 import type { KeyboardEvent, ReactElement } from "react";
 import { useState } from "react";
+import { confirmAdminListRemoval } from "./adminListConfirm";
 import { PlayerIdentityRow, resolvePlayerDisplayName } from "./PlayerIdentityRow";
 import { isAdminListUrlMode } from "./useAdminListMembership";
 import classes from "./RconPanel.module.css";
@@ -88,7 +89,11 @@ function AdminEntriesList({ entries, editable, busyKey, nameById, onRemove }: En
                     aria-label={`Remove ${label} from admin list`}
                     loading={busyKey === entry.id}
                     disabled={rowsDisabled}
-                    onClick={() => void onRemove(entry.id)}
+                    onClick={() =>
+                      confirmAdminListRemoval(label, () => {
+                        void onRemove(entry.id);
+                      })
+                    }
                   >
                     <X size={12} />
                   </ActionIcon>
