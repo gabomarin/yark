@@ -49,7 +49,7 @@ export function resolveWorkerConfig(env: Env): WorkerConfig | { error: string } 
     corsHeaders: {
       "Access-Control-Allow-Origin": corsAllowOrigin,
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Accept",
+      "Access-Control-Allow-Headers": "Content-Type, Accept, X-Yark-Client, X-Yark-Version",
       "Access-Control-Max-Age": "86400",
     },
   };

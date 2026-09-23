@@ -65,6 +65,8 @@ Normal Mods workspace use (per install / short session), **assumptions**:
   route only on explicit inspect/add flows — not on batch profile refresh.
 - **POST** batch may trigger `/description` only for **Maps-category** mods
   (map-token heuristics, #195) — not for every id in the batch.
+- Batch description requests run at most six concurrently to stay within the
+  Worker's outgoing-connection limit.
 - Screenshot URLs ride on the existing Get Mod / batch / search payloads (no
   extra CurseForge round-trip; capped HTTPS URLs only).
 
@@ -76,13 +78,16 @@ Documented alert thresholds to start from (operators refine with real logs):
 
 ## Observability
 
-Each request (including denials) emits one JSON log line via `console.log`:
+Each request (including denials) emits one structured log event via `console.log`:
 
 ```json
 {
   "service": "yark-curseforge-proxy",
   "routeClass": "search",
   "method": "GET",
+  "country": "US",
+  "client": "yark-desktop",
+  "clientVersion": "0.22.0",
   "status": 200,
   "latencyMs": 42,
   "cache": "HIT",
@@ -92,7 +97,12 @@ Each request (including denials) emits one JSON log line via `console.log`:
 ```
 
 **Never logged:** CurseForge API key, bearer tokens, `searchFilter` text, full
-client IPs, or request bodies.
+client IPs, or request bodies. `country` is only Cloudflare's two-letter
+country code derived from the client IP; it is `null` when unavailable and is
+not a precise location. The Worker records `client` only when the client sends
+the exact `X-Yark-Client: yark-desktop` value, and accepts `clientVersion` only
+as a short SemVer value. These headers are self-reported labels and do not
+authenticate or attest the desktop app.
 
 ```bash
 cd workers/curseforge-proxy

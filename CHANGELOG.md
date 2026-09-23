@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- CurseForge proxy requests now identify the YARK desktop client and app version in logs, alongside Cloudflare's country code, for aggregate usage analysis; client IPs remain unlogged.
 - Hosted Resources can be **typed** (admin list, ban list, bad words list, good words list, dynamic config, live tuning, notification URL), and every URL setting YARK knows — `AdminListURL`, `BanListURL`, `BadWordListURL`, `BadWordWhiteListURL`, `CustomLiveTuningUrl`, `CustomDynamicConfigUrl`, and `CustomNotificationURL` — now offers a searchable picker of the matching resources and can create one from the field, with a warning when a value points at a disabled, deleted, or differently typed resource (#577).
 - When `AdminListURL` is a YARK Hosted Resource, EOS admin ids can be added or removed locally from RCON → Admins and via a star toggle on Survivors; YARK republishes the resource body so ASA re-fetches it on the check interval without a restart, and third-party remote lists stay read-only (#565).
 - RCON → Survivors now shows read-only admin stars for third-party remote `AdminListURL` lists, using the existing EOS id/name mapping without enabling edits (#619).
@@ -21,6 +22,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- CurseForge map metadata batches now fetch descriptions with bounded concurrency to avoid exceeding Worker connection limits.
 - Plasma Breeze keeps KDE cyan for selection and focus while using a darker, AA-readable blue for filled primary actions; Settings now labels the scheme control **Color scheme**.
 
 - Appearance settings now separate the visual theme family from its light/dark scheme, preserving the current Fluent/base theme as the fallback while preparing the registry for future families.
