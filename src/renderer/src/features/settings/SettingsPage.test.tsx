@@ -184,7 +184,7 @@ function defaultSettingsProps(
     onOpenNativeTerminalOnStartChange: vi.fn(),
     uiDensity: "compact",
     onUiDensityChange: vi.fn(),
-    themeId: "dark",
+    scheme: "dark",
     onThemeChange: vi.fn(),
     workspacePanels: "auto",
     onWorkspacePanelsChange: vi.fn(),
@@ -376,7 +376,7 @@ describe("SettingsPage", () => {
     stubSettingsApi();
 
     renderSettings({
-      themeId: "dark",
+      scheme: "dark",
       onThemeChange,
       workspacePanels: "auto",
       onWorkspacePanelsChange,

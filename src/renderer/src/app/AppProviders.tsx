@@ -5,14 +5,14 @@ import { MantineProvider } from "@mantine/core";
 import { DatesProvider } from "@mantine/dates";
 import { createContext, useContext, useLayoutEffect, useMemo, type PropsWithChildren } from "react";
 import { createAppCssVariablesResolverForAppearance, createAppThemeForAppearance } from "@theme/theme";
-import { resolveAppTheme } from "@theme/themes";
+import { resolveThemeSelection } from "@theme/themes";
 import type { UiDensity } from "@theme/tokens";
 import {
   DEFAULT_WORKSPACE_PANELS_OPTION,
   resolveWorkspacePanelsOption,
   type WorkspacePanelsOption,
 } from "@shared/workspace/workspacePanels";
-import type { ThemeId, WorkspacePanelsId } from "@shared/settings/appearance";
+import type { ThemeSelection, WorkspacePanelsId } from "@shared/settings/appearance";
 import { RowActionMenuProvider } from "@ui/RowActionMenu/RowActionMenuProvider";
 import { isRendererTest } from "@renderer/shared/isRendererTest";
 
@@ -32,8 +32,8 @@ export function useWorkspacePanels(): WorkspacePanelsOption {
 interface Props extends PropsWithChildren {
   /** Compact (default) or Comfortable. */
   density?: UiDensity;
-  /** Appearance theme id (Settings → Appearance). Unknown ids fall back to dark. */
-  themeId?: ThemeId | string | null;
+  /** Appearance family + scheme. Unknown selections fall back to the shipped family/scheme. */
+  themeSelection?: ThemeSelection | null;
   /** Server-workspace panels option. Unknown ids fall back to Auto. */
   workspacePanels?: WorkspacePanelsId | string | null;
 }
@@ -41,10 +41,10 @@ interface Props extends PropsWithChildren {
 export function AppProviders({
   children,
   density = "compact",
-  themeId = null,
+  themeSelection = null,
   workspacePanels = null,
 }: Props): ReactElement {
-  const appearance = useMemo(() => resolveAppTheme(themeId), [themeId]);
+  const appearance = useMemo(() => resolveThemeSelection(themeSelection), [themeSelection]);
   const panels = useMemo(() => resolveWorkspacePanelsOption(workspacePanels), [workspacePanels]);
   const theme = useMemo(() => {
     const base = createAppThemeForAppearance(appearance, density);

@@ -7,12 +7,26 @@
  * row, or a theme that has not shipped yet can never leave the renderer without
  * a palette.
  */
-export const THEME_IDS = ["dark", "light"] as const;
+export const THEME_FAMILY_IDS = ["fluent"] as const;
+export const THEME_SCHEMES = ["dark", "light"] as const;
+/** Backward-compatible registry name for the former scheme ids. */
+export const THEME_IDS = THEME_SCHEMES;
 
-export type ThemeId = (typeof THEME_IDS)[number];
+export type ThemeFamilyId = (typeof THEME_FAMILY_IDS)[number];
+export type ThemeScheme = (typeof THEME_SCHEMES)[number];
+export type ThemeSelection = {
+  family: ThemeFamilyId;
+  scheme: ThemeScheme;
+};
 
-/** Product default - the shipped Paleo-Tech dark shell. */
-export const DEFAULT_THEME_ID: ThemeId = "dark";
+/** Backward-compatible alias for callers that only handled the old scheme id. */
+export type ThemeId = ThemeScheme;
+
+/** Product default - the shipped Fluent dark shell. */
+export const DEFAULT_THEME_FAMILY: ThemeFamilyId = "fluent";
+export const DEFAULT_THEME_SCHEME: ThemeScheme = "dark";
+/** Backward-compatible default for the former combined theme id. */
+export const DEFAULT_THEME_ID: ThemeId = DEFAULT_THEME_SCHEME;
 
 /**
  * Server-workspace panels (`shared/workspace/workspacePanels.ts`). `auto` is the
@@ -33,21 +47,39 @@ export const DEFAULT_WORKSPACE_PANELS_ID: WorkspacePanelsId = "auto";
 export const APPEARANCE_SETTINGS_KEY = "appearance.v1";
 
 export interface AppearanceSettings {
-  theme: ThemeId;
+  themeFamily: ThemeFamilyId;
+  scheme: ThemeScheme;
   panels: WorkspacePanelsId;
 }
 
 export const DEFAULT_APPEARANCE_SETTINGS: AppearanceSettings = {
-  theme: DEFAULT_THEME_ID,
+  themeFamily: DEFAULT_THEME_FAMILY,
+  scheme: DEFAULT_THEME_SCHEME,
   panels: DEFAULT_WORKSPACE_PANELS_ID,
 };
 
 export function isThemeId(value: unknown): value is ThemeId {
-  return typeof value === "string" && (THEME_IDS as readonly string[]).includes(value);
+  return isThemeScheme(value);
 }
 
 export function parseThemeId(value: unknown): ThemeId {
   return isThemeId(value) ? value : DEFAULT_THEME_ID;
+}
+
+export function isThemeFamilyId(value: unknown): value is ThemeFamilyId {
+  return typeof value === "string" && (THEME_FAMILY_IDS as readonly string[]).includes(value);
+}
+
+export function parseThemeFamilyId(value: unknown): ThemeFamilyId {
+  return isThemeFamilyId(value) ? value : DEFAULT_THEME_FAMILY;
+}
+
+export function isThemeScheme(value: unknown): value is ThemeScheme {
+  return typeof value === "string" && (THEME_SCHEMES as readonly string[]).includes(value);
+}
+
+export function parseThemeScheme(value: unknown): ThemeScheme {
+  return isThemeScheme(value) ? value : DEFAULT_THEME_SCHEME;
 }
 
 export function isWorkspacePanelsId(value: unknown): value is WorkspacePanelsId {
@@ -58,8 +90,14 @@ export function parseWorkspacePanelsId(value: unknown): WorkspacePanelsId {
   return isWorkspacePanelsId(value) ? value : DEFAULT_WORKSPACE_PANELS_ID;
 }
 
-export function normalizeAppearanceSettings(input: Partial<AppearanceSettings>): AppearanceSettings {
-  return { theme: parseThemeId(input.theme), panels: parseWorkspacePanelsId(input.panels) };
+export function normalizeAppearanceSettings(
+  input: Partial<AppearanceSettings> & { theme?: unknown; family?: unknown },
+): AppearanceSettings {
+  return {
+    themeFamily: parseThemeFamilyId(input.themeFamily ?? input.family),
+    scheme: parseThemeScheme(input.scheme ?? input.theme),
+    panels: parseWorkspacePanelsId(input.panels),
+  };
 }
 
 export function parseAppearanceSettings(raw: string | null): AppearanceSettings {
@@ -74,5 +112,5 @@ export function parseAppearanceSettings(raw: string | null): AppearanceSettings 
 }
 
 export function encodeAppearanceSettings(settings: AppearanceSettings): string {
-  return JSON.stringify(settings);
+  return JSON.stringify(normalizeAppearanceSettings(settings));
 }

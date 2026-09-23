@@ -24,7 +24,7 @@ describe("appearance shared helpers (#PUX-004 Track B)", () => {
     expect(DEFAULT_THEME_ID).toBe("dark");
     expect(DEFAULT_WORKSPACE_PANELS_ID).toBe("auto");
     expect(APPEARANCE_SETTINGS_KEY).toBe("appearance.v1");
-    expect(DEFAULT_APPEARANCE_SETTINGS).toEqual({ theme: "dark", panels: "auto" });
+    expect(DEFAULT_APPEARANCE_SETTINGS).toEqual({ themeFamily: "fluent", scheme: "dark", panels: "auto" });
   });
 
   it("accepts only registry ids", () => {
@@ -43,24 +43,29 @@ describe("appearance shared helpers (#PUX-004 Track B)", () => {
   });
 
   it("falls back per field for a missing, corrupt or partial row", () => {
-    const defaults = { theme: "dark", panels: "auto" };
+    const defaults = { themeFamily: "fluent", scheme: "dark", panels: "auto" };
     expect(parseAppearanceSettings(null)).toEqual(defaults);
     expect(parseAppearanceSettings("")).toEqual(defaults);
     expect(parseAppearanceSettings("{not json")).toEqual(defaults);
     expect(parseAppearanceSettings(JSON.stringify({ theme: "vaporwave" }))).toEqual(defaults);
     expect(parseAppearanceSettings(JSON.stringify({}))).toEqual(defaults);
     // A row written before panels existed keeps its theme and gains the default option.
-    expect(parseAppearanceSettings(JSON.stringify({ theme: "light" }))).toEqual({ theme: "light", panels: "auto" });
+    expect(parseAppearanceSettings(JSON.stringify({ theme: "light" }))).toEqual({
+      themeFamily: "fluent",
+      scheme: "light",
+      panels: "auto",
+    });
     // Unknown values fall back per field, so one bad id does not reset the other.
     expect(parseAppearanceSettings(JSON.stringify({ theme: "dark", panels: "mosaic" }))).toEqual(defaults);
     expect(normalizeAppearanceSettings({ theme: "light", panels: "drawers" })).toEqual({
-      theme: "light",
+      themeFamily: "fluent",
+      scheme: "light",
       panels: "drawers",
     });
   });
 
   it("round-trips the stored form", () => {
-    const stored = { theme: "light", panels: "drawers" } as const;
+    const stored = { themeFamily: "fluent", scheme: "light", panels: "drawers" } as const;
     expect(parseAppearanceSettings(encodeAppearanceSettings(stored))).toEqual(stored);
   });
 });
@@ -76,7 +81,7 @@ describe("appearance preference (IPC)", () => {
       setAppearance: vi.fn(),
     });
 
-    await expect(loadAppearancePref()).resolves.toEqual({ theme: "dark", panels: "drawers" });
+    await expect(loadAppearancePref()).resolves.toEqual({ themeFamily: "fluent", scheme: "dark", panels: "drawers" });
     expect(window.api.getAppearance).toHaveBeenCalled();
   });
 
@@ -87,7 +92,7 @@ describe("appearance preference (IPC)", () => {
       setAppearance,
     });
 
-    await expect(loadAppearancePref()).resolves.toEqual({ theme: "dark", panels: "auto" });
+    await expect(loadAppearancePref()).resolves.toEqual({ themeFamily: "fluent", scheme: "dark", panels: "auto" });
     expect(setAppearance).not.toHaveBeenCalled();
   });
 
@@ -96,17 +101,17 @@ describe("appearance preference (IPC)", () => {
       getAppearance: vi.fn().mockResolvedValue({ ok: false, error: "db locked" }),
       setAppearance: vi.fn(),
     });
-    await expect(loadAppearancePref()).resolves.toEqual({ theme: "dark", panels: "auto" });
+    await expect(loadAppearancePref()).resolves.toEqual({ themeFamily: "fluent", scheme: "dark", panels: "auto" });
 
     vi.stubGlobal("api", {
       getAppearance: vi.fn().mockRejectedValue(new Error("No handler")),
       setAppearance: vi.fn(),
     });
-    await expect(loadAppearancePref()).resolves.toEqual({ theme: "dark", panels: "auto" });
+    await expect(loadAppearancePref()).resolves.toEqual({ themeFamily: "fluent", scheme: "dark", panels: "auto" });
   });
 
   it("persists through setAppearance and reports failure", async () => {
-    const stored = { theme: "dark", panels: "drawers" } as const;
+    const stored = { themeFamily: "fluent", scheme: "dark", panels: "drawers" } as const;
     const setAppearance = vi.fn().mockResolvedValue({ ok: true, data: stored });
     vi.stubGlobal("api", { getAppearance: vi.fn(), setAppearance });
     await expect(writeAppearancePref(stored)).resolves.toBe(true);

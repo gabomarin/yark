@@ -40,7 +40,7 @@ import {
   writeSettingsCategoryPref,
   writeUiDensityPref,
   type AppearanceSettings,
-  type ThemeId,
+  type ThemeScheme,
   type UiDensity,
   type WorkspacePanelsId,
 } from "@features/settings/settingsModel";
@@ -211,7 +211,7 @@ export function AppShell({
   }, []);
 
   const handleThemeChange = useCallback(
-    (theme: ThemeId) => void persistAppearance({ theme }, "Could not save theme"),
+    (scheme: ThemeScheme) => void persistAppearance({ scheme }, "Could not save theme"),
     [persistAppearance],
   );
 
@@ -435,7 +435,11 @@ export function AppShell({
   }, []);
 
   return (
-    <AppProviders density={uiDensity} themeId={appearance.theme} workspacePanels={appearance.panels}>
+    <AppProviders
+      density={uiDensity}
+      themeSelection={{ family: appearance.themeFamily, scheme: appearance.scheme }}
+      workspacePanels={appearance.panels}
+    >
       <AppSpotlight
         servers={servers}
         currentRoute={route}
@@ -578,7 +582,7 @@ export function AppShell({
           handleOpenNativeConsoleChange,
           uiDensity,
           handleUiDensityChange,
-          themeId: appearance.theme,
+          scheme: appearance.scheme,
           handleThemeChange,
           workspacePanels: appearance.panels,
           handleWorkspacePanelsChange,

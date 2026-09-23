@@ -5,6 +5,32 @@ Complements [component-structure.md](component-structure.md) (Atomic Design file
 
 Source of truth for numeric tokens: `src/renderer/src/shared/theme/tokens.ts` → CSS vars + Mantine theme in `theme.ts`.
 
+## Internal theme contract
+
+Theme selection separates the visual family from the light/dark scheme:
+
+```ts
+type ThemeSelection = {
+  family: ThemeFamilyId;
+  scheme: "light" | "dark";
+};
+```
+
+The persisted appearance record stores `themeFamily` and `scheme` independently.
+The current shipped family is `fluent`, with `dark` and `light` variants. The
+registry in `src/renderer/src/shared/theme/themes.ts` owns family/variant
+resolution and always falls back to the shipped `fluent`/`dark` selection.
+
+`--app-*` names are stable semantic roles. A family may change its palette,
+semantic status values, elevation and Mantine `recipeSet`, but feature CSS must
+continue to consume the roles rather than family-specific values. The current
+`fluent` component recipes remain the compatibility default; Plasma Breeze and
+Glassy can add recipe sets later without adding executable JavaScript/JSX theme
+payloads or changing the selection contract.
+
+Rows written by older versions as `{ "theme": "dark" | "light" }` are read as
+the `fluent` family plus that scheme. New writes use `{ "themeFamily", "scheme" }`.
+
 ## Principles
 
 1. **Prefer Mantine first.** Use Mantine components for interaction and structure

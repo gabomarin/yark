@@ -241,8 +241,14 @@ export function createRendererApiMock(overrides: Partial<RendererApi> = {}): Ren
     openAppDataFolder: vi.fn(),
     getUiDensity: vi.fn().mockResolvedValue({ ok: true, data: "compact" }),
     setUiDensity: vi.fn().mockResolvedValue({ ok: true, data: "compact" }),
-    getAppearance: vi.fn().mockResolvedValue({ ok: true, data: { theme: "dark", panels: "auto" } }),
-    setAppearance: vi.fn().mockResolvedValue({ ok: true, data: { theme: "dark", panels: "auto" } }),
+    getAppearance: vi.fn().mockResolvedValue({
+      ok: true,
+      data: { themeFamily: "fluent", scheme: "dark", panels: "auto" },
+    }),
+    setAppearance: vi.fn().mockResolvedValue({
+      ok: true,
+      data: { themeFamily: "fluent", scheme: "dark", panels: "auto" },
+    }),
     getOpenNativeConsole: vi.fn().mockResolvedValue({ ok: true, data: false }),
     setOpenNativeConsole: vi.fn().mockResolvedValue({ ok: true, data: false }),
     getLastSeenChangelogVersion: vi.fn().mockResolvedValue({

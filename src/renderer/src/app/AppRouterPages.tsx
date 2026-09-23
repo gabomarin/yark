@@ -85,7 +85,7 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
     handleOpenNativeConsoleChange,
     uiDensity,
     handleUiDensityChange,
-    themeId,
+    scheme,
     handleThemeChange,
     workspacePanels,
     handleWorkspacePanelsChange,
@@ -259,8 +259,8 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
             onOpenNativeTerminalOnStartChange={(enabled) => void handleOpenNativeConsoleChange(enabled)}
             uiDensity={uiDensity}
             onUiDensityChange={(density) => void handleUiDensityChange(density)}
-            themeId={themeId}
-            onThemeChange={(theme) => void handleThemeChange(theme)}
+            scheme={scheme}
+            onThemeChange={(nextScheme) => void handleThemeChange(nextScheme)}
             workspacePanels={workspacePanels}
             onWorkspacePanelsChange={(panels) => void handleWorkspacePanelsChange(panels)}
             defaultBaseFolder={defaultBaseFolder}

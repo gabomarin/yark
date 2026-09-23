@@ -2,7 +2,7 @@ import { z } from "zod";
 import { PORT_MAX, PORT_MIN } from "../types";
 import { MAX_WINDOWS_PATH_LENGTH } from "../server/server-install-path";
 import { MAX_LOG_RETENTION_DAYS, MIN_LOG_RETENTION_DAYS } from "../settings/log-retention";
-import { THEME_IDS, WORKSPACE_PANELS_IDS } from "../settings/appearance";
+import { THEME_FAMILY_IDS, THEME_SCHEMES, WORKSPACE_PANELS_IDS } from "../settings/appearance";
 
 /** Absolute Windows path (drive letter or UNC). */
 const WINDOWS_ABS_PATH = /^(?:[a-zA-Z]:[\\/]|\\\\)/;
@@ -108,9 +108,9 @@ export const iniFileKeySchema = z.enum(["gameUserSettings", "game"]);
 
 export const uiDensitySchema = z.enum(["comfortable", "compact"]);
 
-/** Appearance preference (#PUX-004 Track B): theme id + workspace panels, validated against the registries. */
+/** Appearance preference: theme family + independent scheme + workspace panels. */
 export const appearanceSettingsSchema = z
-  .object({ theme: z.enum(THEME_IDS), panels: z.enum(WORKSPACE_PANELS_IDS) })
+  .object({ themeFamily: z.enum(THEME_FAMILY_IDS), scheme: z.enum(THEME_SCHEMES), panels: z.enum(WORKSPACE_PANELS_IDS) })
   .strict();
 
 export const installationServersModeSchema = z.union([z.boolean(), z.literal("when-official-changed")]);

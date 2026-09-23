@@ -3,14 +3,14 @@ import { SegmentedControl, Text, Title } from "@mantine/core";
 import { APP_THEME_LIST } from "@theme/themes";
 import { isThemeId, isWorkspacePanelsId } from "@shared/settings/appearance";
 import { WORKSPACE_PANELS_OPTION_LIST, resolveWorkspacePanelsOption } from "@shared/workspace/workspacePanels";
-import type { ThemeId, UiDensity, WorkspacePanelsId } from "../settingsModel";
+import type { ThemeScheme, UiDensity, WorkspacePanelsId } from "../settingsModel";
 import classes from "../SettingsPage.module.css";
 
 interface Props {
   uiDensity: UiDensity;
   onUiDensityChange: (density: UiDensity) => void;
-  themeId: ThemeId;
-  onThemeChange: (theme: ThemeId) => void;
+  scheme: ThemeScheme;
+  onThemeChange: (scheme: ThemeScheme) => void;
   workspacePanels: WorkspacePanelsId;
   onWorkspacePanelsChange: (panels: WorkspacePanelsId) => void;
 }
@@ -71,9 +71,9 @@ export function SettingsAppearanceSection(props: Props): ReactElement {
           <div className={classes.settingControl}>
             <SegmentedControl
               size="xs"
-              value={props.themeId}
+              value={props.scheme}
               onChange={(value) => {
-                if (isThemeId(value) && value !== props.themeId) {
+                if (isThemeId(value) && value !== props.scheme) {
                   props.onThemeChange(value);
                 }
               }}

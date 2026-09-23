@@ -20,7 +20,7 @@ import {
   readSettingsCategoryPref,
   writeSettingsCategoryPref,
   type SettingsCategory,
-  type ThemeId,
+  type ThemeScheme,
   type UiDensity,
   type WorkspacePanelsId,
 } from "./settingsModel";
@@ -44,8 +44,8 @@ interface Props {
   onOpenNativeTerminalOnStartChange: (enabled: boolean) => void;
   uiDensity: UiDensity;
   onUiDensityChange: (density: UiDensity) => void;
-  themeId: ThemeId;
-  onThemeChange: (theme: ThemeId) => void;
+  scheme: ThemeScheme;
+  onThemeChange: (scheme: ThemeScheme) => void;
   workspacePanels: WorkspacePanelsId;
   onWorkspacePanelsChange: (panels: WorkspacePanelsId) => void;
   defaultBaseFolder: string | null;
@@ -159,7 +159,7 @@ export function SettingsPage(props: Props): ReactElement {
               <SettingsAppearanceSection
                 uiDensity={props.uiDensity}
                 onUiDensityChange={props.onUiDensityChange}
-                themeId={props.themeId}
+                scheme={props.scheme}
                 onThemeChange={props.onThemeChange}
                 workspacePanels={props.workspacePanels}
                 onWorkspacePanelsChange={props.onWorkspacePanelsChange}
