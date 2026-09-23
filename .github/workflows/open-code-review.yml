@@ -42,8 +42,10 @@ concurrency:
       || (
         github.event.issue.pull_request
         && (
-          startsWith(github.event.comment.body, '/open-code-review')
-          || startsWith(github.event.comment.body, '/ocr')
+          github.event.comment.body == '/open-code-review'
+          || startsWith(github.event.comment.body, '/open-code-review ')
+          || github.event.comment.body == '/ocr'
+          || startsWith(github.event.comment.body, '/ocr ')
         )
         && format('ocr-{0}', github.event.issue.number)
         || format('ocr-noop-{0}', github.run_id)
@@ -72,8 +74,10 @@ jobs:
             || github.event.comment.author_association == 'COLLABORATOR'
           )
           && (
-            startsWith(github.event.comment.body, '/open-code-review')
-            || startsWith(github.event.comment.body, '/ocr')
+            github.event.comment.body == '/open-code-review'
+            || startsWith(github.event.comment.body, '/open-code-review ')
+            || github.event.comment.body == '/ocr'
+            || startsWith(github.event.comment.body, '/ocr ')
           )
         )
       }}
@@ -96,7 +100,7 @@ jobs:
               const match = command.match(/^(?:\/open-code-review|\/ocr)(?:\s+(primary|fallback|retry|high))?$/i);
 
               if (!match) {
-                core.setFailed('Use exactly /ocr, /ocr primary, /ocr retry, /ocr fallback, or /ocr high.');
+                core.setFailed('Use exactly /ocr (or /open-code-review), optionally followed by primary, retry, fallback, or high.');
                 return;
               }
 
@@ -385,9 +389,12 @@ jobs:
                   pull_number: prNumber,
                   mediaType: { format: 'diff' },
                 });
-                const diff = String(diffResponse.data || '').slice(0, 50000);
+                const fullDiff = String(diffResponse.data || '');
+                const diffTruncated = fullDiff.length > 50000;
+                const diff = fullDiff.slice(0, 50000);
                 const llmResponse = await fetch(process.env.OCR_LLM_URL, {
                   method: 'POST',
+                  signal: AbortSignal.timeout(60000),
                   headers: {
                     authorization: `Bearer ${process.env.OCR_LLM_TOKEN}`,
                     'content-type': 'application/json',
@@ -403,9 +410,10 @@ jobs:
                         'Explain what the PR changes from an operator or user perspective, grouping related changes into 2-5 bullets.',
                         'Do not mention code review findings, models, prompts, or the diff. Do not invent behavior.',
                         'Return only Markdown bullets, without a heading.',
+                        ...(diffTruncated ? ['The diff is truncated; summarize only the visible portion and do not claim full coverage.'] : []),
                         '',
                         diff,
-                      ].join('\\n'),
+                      ].join('\n'),
                     }],
                   }),
                 });
@@ -415,7 +423,7 @@ jobs:
                 const payload = await llmResponse.json();
                 const content = payload.choices?.[0]?.message?.content?.trim();
                 if (content) {
-                  prSummary = content;
+                  prSummary = content.replace(/<!--[\s\S]*?-->/g, '').trim() || prSummary;
                 }
               } catch (error) {
                 core.warning(`Could not generate the PR summary: ${error.message}`);
