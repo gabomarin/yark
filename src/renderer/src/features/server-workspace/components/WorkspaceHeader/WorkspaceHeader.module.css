@@ -13,8 +13,26 @@
   flex: 1;
 }
 
-.crumb {
-  letter-spacing: 0.02em;
+.mapDetails {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.details {
+  min-width: 0;
+  row-gap: var(--app-space-xs);
+}
+
+.detailItem {
+  min-width: 0;
+}
+
+.detailValue {
+  min-width: 0;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .controls {

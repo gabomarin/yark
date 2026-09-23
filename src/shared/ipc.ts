@@ -148,6 +148,8 @@ export const IPC = {
   appOpenDataFolder: "app:open-data-folder",
   appGetUiDensity: "app:get-ui-density",
   appSetUiDensity: "app:set-ui-density",
+  /** Best-effort public IPv4 lookup for the workspace join-info surface (#505). */
+  appGetPublicIp: "app:get-public-ip",
   appGetAppearance: "app:get-appearance",
   appSetAppearance: "app:set-appearance",
   appGetOpenNativeConsole: "app:get-open-native-console",
@@ -568,6 +570,8 @@ export interface RendererApi {
   /** `null` when unset in `app_settings` (caller may migrate / apply default). */
   getUiDensity(): Promise<IpcResult<UiDensity | null>>;
   setUiDensity(density: UiDensity): Promise<IpcResult<UiDensity>>;
+  /** Best-effort public IPv4 for the join-info surface; `ok:false` on lookup failure. */
+  getPublicIp(): Promise<IpcResult<string>>;
   /** `null` when unset in `app_settings` (caller applies the default appearance). */
   getAppearance(): Promise<IpcResult<AppearanceSettings | null>>;
   setAppearance(settings: AppearanceSettings): Promise<IpcResult<AppearanceSettings>>;

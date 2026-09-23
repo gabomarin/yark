@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
-import { Eye, HardDrives, Play, Stop, Wrench } from "@phosphor-icons/react";
-import { Badge, Button, Group, Stack, Text, Title } from "@mantine/core";
+import { Copy, Eye, HardDrives, Play, ShareNetwork, Stop, Wrench } from "@phosphor-icons/react";
+import { ActionIcon, Badge, Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { isInstallationReady } from "@shared/server/installation-health";
 import { resolveDisplayedServerVersion } from "@shared/server/server-version-display";
@@ -31,6 +31,15 @@ interface Props {
   onToggleEnabled?: () => void;
   onOpenServerSwitcher?: () => void;
   onOpenServerActions?: () => void;
+  /** Opens the join-info dialog (#505). */
+  onOpenJoinInfo?: () => void;
+  /**
+   * `open IP:port` when a public IP is known, `null` while it is still unknown
+   * (no chip rendered). The command itself is copied by `onCopyJoinCommand`.
+   */
+  joinCommand?: string | null;
+  onCopyJoinCommand?: () => void;
+  onCopySessionName?: () => void;
 }
 
 export function WorkspaceHeader(props: Props): ReactElement {
@@ -67,9 +76,6 @@ export function WorkspaceHeader(props: Props): ReactElement {
           size="lg"
         />
         <Stack gap={2} style={{ minWidth: 0 }}>
-          <Text className={classes.crumb} fz="xs" c="dimmed">
-            Servers / {props.server.name}
-          </Text>
           <Group gap="xs" wrap="nowrap">
             <Title order={3} fz="lg" lineClamp={1}>
               {props.server.name}
@@ -83,9 +89,51 @@ export function WorkspaceHeader(props: Props): ReactElement {
               </Badge>
             )}
           </Group>
-          <Text size="xs" c="dimmed" lineClamp={1} title={props.server.map}>
+          <Text size="xs" c="dimmed" lineClamp={1} title={props.server.map} className={classes.mapDetails}>
             {formatMapDisplayName(props.server.map)} · port {props.server.gamePort} · version {version}
           </Text>
+          <Group gap="sm" wrap="wrap" align="center" className={classes.details}>
+            <Group gap="xs" wrap="nowrap" align="center" className={classes.detailItem}>
+              <Text size="xs" c="dimmed">
+                Session:
+              </Text>
+              <Text size="xs" title={props.server.sessionName} className={classes.detailValue}>
+                {props.server.sessionName}
+              </Text>
+              <Tooltip label="Copy session name" withArrow>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="xs"
+                  aria-label={`Copy session name ${props.server.sessionName}`}
+                  onClick={props.onCopySessionName}
+                >
+                  <Copy size={12} />
+                </ActionIcon>
+              </Tooltip>
+            </Group>
+            {props.joinCommand !== null && props.joinCommand !== undefined && (
+              <Group gap="xs" wrap="nowrap" align="center" className={classes.detailItem}>
+                <Text size="xs" c="dimmed">
+                  Join:
+                </Text>
+                <Text size="xs" ff="monospace" title={props.joinCommand} className={classes.detailValue}>
+                  {props.joinCommand}
+                </Text>
+                <Tooltip label="Copy in-game command" withArrow>
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    size="xs"
+                    aria-label={`Copy join command ${props.joinCommand}`}
+                    onClick={props.onCopyJoinCommand}
+                  >
+                    <Copy size={12} />
+                  </ActionIcon>
+                </Tooltip>
+              </Group>
+            )}
+          </Group>
         </Stack>
       </Group>
 
@@ -138,14 +186,29 @@ export function WorkspaceHeader(props: Props): ReactElement {
           </Button>
         </Group>
 
-        {props.onOpenServerSwitcher !== undefined && props.onOpenServerActions !== undefined && (
+        {(props.onOpenJoinInfo !== undefined ||
+          (props.onOpenServerSwitcher !== undefined && props.onOpenServerActions !== undefined)) && (
           <Group gap={6} wrap="nowrap" className={classes.compactTools}>
-            <Button variant="default" leftSection={<HardDrives size={14} />} onClick={props.onOpenServerSwitcher}>
-              Switch server
-            </Button>
-            <Button variant="default" leftSection={<Wrench size={14} />} onClick={props.onOpenServerActions}>
-              Status and actions
-            </Button>
+            {props.onOpenJoinInfo !== undefined && (
+              <Button
+                variant="default"
+                leftSection={<ShareNetwork size={14} />}
+                onClick={props.onOpenJoinInfo}
+                title="Share the IP, join command, ports, and password"
+              >
+                Share connection details
+              </Button>
+            )}
+            {props.onOpenServerSwitcher !== undefined && props.onOpenServerActions !== undefined && (
+              <>
+                <Button variant="default" leftSection={<HardDrives size={14} />} onClick={props.onOpenServerSwitcher}>
+                  Switch server
+                </Button>
+                <Button variant="default" leftSection={<Wrench size={14} />} onClick={props.onOpenServerActions}>
+                  Status and actions
+                </Button>
+              </>
+            )}
           </Group>
         )}
       </Stack>

@@ -76,6 +76,7 @@ import {
   type DiscordWebhookPreferences,
 } from "../shared/settings/discord-webhook";
 import { handleValidated } from "./ipc-validate";
+import { lookupPublicIp } from "./public-ip-service";
 
 export interface AppDataFolderRoots {
   app: string;
@@ -648,6 +649,8 @@ export function registerIpcHandlers(
     settings.set(UI_DENSITY_SETTING_KEY, density);
     return density;
   });
+
+  handleValidated(IPC.appGetPublicIp, ipcArgSchemas[IPC.appGetPublicIp], () => lookupPublicIp());
 
   handleValidated(IPC.appGetAppearance, ipcArgSchemas[IPC.appGetAppearance], (): AppearanceSettings | null => {
     const raw = settings.get(APPEARANCE_SETTINGS_KEY);

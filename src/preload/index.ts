@@ -131,6 +131,7 @@ const api: RendererApi = {
   openAppDataFolder: (kind) => ipcRenderer.invoke(IPC.appOpenDataFolder, kind),
   getUiDensity: () => ipcRenderer.invoke(IPC.appGetUiDensity),
   setUiDensity: (density) => ipcRenderer.invoke(IPC.appSetUiDensity, density),
+  getPublicIp: () => ipcRenderer.invoke(IPC.appGetPublicIp),
   getAppearance: () => ipcRenderer.invoke(IPC.appGetAppearance),
   setAppearance: (settings) => ipcRenderer.invoke(IPC.appSetAppearance, settings),
   getOpenNativeConsole: () => ipcRenderer.invoke(IPC.appGetOpenNativeConsole),

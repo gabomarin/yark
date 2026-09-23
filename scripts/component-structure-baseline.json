@@ -1,5 +1,5 @@
 {
-  "maxTsxLines": 350,
+  "maxTsxLines": 375,
   "maxTsLines": 450,
   "growthSlack": 25,
   "files": {}

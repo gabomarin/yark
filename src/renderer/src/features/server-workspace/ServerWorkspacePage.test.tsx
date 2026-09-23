@@ -7,6 +7,7 @@ import { INI_GUS_OVERRIDE_HINT_STORAGE_KEY } from "./components/ConfigurationEdi
 import type { PlayerListState } from "./components/RconPanel/PlayerListSection";
 import type { HostedResourceReferenceDto } from "@shared/ipc";
 import { STOP_PROGRESS_SELECTOR } from "./components/StopProgressAlert";
+import type { ServerRuntimeInfo } from "@shared/types";
 
 const serverA = {
   id: "srv-a",
@@ -68,6 +69,7 @@ function renderWorkspace(
     workspacePanels?: "auto" | "drawers";
     hostedResourceReferences?: HostedResourceReferenceDto[];
     onOpenHostedResources?: () => void;
+    statuses?: Map<string, ServerRuntimeInfo>;
   } = {},
 ): void {
   render(
@@ -75,7 +77,7 @@ function renderWorkspace(
       <ServerWorkspacePage
         servers={[serverA, serverB]}
         selectedServerId={serverA.id}
-        statuses={new Map()}
+        statuses={extra.statuses ?? new Map()}
         installationInfo={new Map()}
         events={[]}
         rconHistory={rconHistory}
@@ -111,6 +113,7 @@ describe("ServerWorkspacePage", () => {
 
   beforeEach(() => {
     vi.stubGlobal("api", {
+      getPublicIp: vi.fn(async () => ({ ok: true, data: "203.0.113.5" })),
       readServerIni: vi.fn(async (serverId: string) => ({
         ok: true,
         data: {
@@ -1477,5 +1480,38 @@ describe("ServerWorkspacePage", () => {
     ).toBeInTheDocument();
     screen.getByRole("button", { name: "Open Hosted Resources diagnostics" }).click();
     expect(onOpenHostedResources).toHaveBeenCalledOnce();
+  });
+
+  it("copies the header join command for the detected public IP (#505)", async () => {
+    const user = setupUser();
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
+    renderWorkspace(
+      vi.fn(),
+      vi.fn(async () => true),
+      [],
+      {
+        statuses: new Map([
+          [
+            "srv-a",
+            {
+              serverId: "srv-a",
+              status: "running",
+              processLive: true,
+              pid: 123,
+              startedAt: "2026-01-01T00:00:00.000Z",
+              lastError: null,
+            },
+          ],
+        ]),
+      },
+    );
+
+    const chip = await screen.findByRole("button", { name: /copy join command open 203\.0\.113\.5:7777/i });
+    await user.click(chip);
+
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalledWith("open 203.0.113.5:7777");
+    });
   });
 });
