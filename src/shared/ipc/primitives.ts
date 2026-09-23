@@ -110,7 +110,11 @@ export const uiDensitySchema = z.enum(["comfortable", "compact"]);
 
 /** Appearance preference: theme family + independent scheme + workspace panels. */
 export const appearanceSettingsSchema = z
-  .object({ themeFamily: z.enum(THEME_FAMILY_IDS), scheme: z.enum(THEME_SCHEMES), panels: z.enum(WORKSPACE_PANELS_IDS) })
+  .object({
+    themeFamily: z.enum(THEME_FAMILY_IDS),
+    scheme: z.enum(THEME_SCHEMES),
+    panels: z.enum(WORKSPACE_PANELS_IDS),
+  })
   .strict();
 
 export const installationServersModeSchema = z.union([z.boolean(), z.literal("when-official-changed")]);

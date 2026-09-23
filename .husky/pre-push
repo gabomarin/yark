@@ -2,6 +2,8 @@
 set -e
 . "$(dirname "$0")/common.sh"
 
+echo "husky (pre-push): format check..."
+npm_host run format:check
 echo "husky (pre-push): typecheck..."
 npm_host run typecheck
 echo "husky (pre-push): typecheck ok — running tests..."

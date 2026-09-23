@@ -16,9 +16,7 @@ describe("appearance theme selection", () => {
   });
 
   it("falls back independently when family or scheme is unknown", () => {
-    expect(
-      normalizeAppearanceSettings({ themeFamily: "glassy", scheme: "sepia", panels: "auto" } as never),
-    ).toEqual(
+    expect(normalizeAppearanceSettings({ themeFamily: "glassy", scheme: "sepia", panels: "auto" } as never)).toEqual(
       DEFAULT_APPEARANCE_SETTINGS,
     );
   });
