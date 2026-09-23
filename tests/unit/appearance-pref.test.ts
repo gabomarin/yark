@@ -82,6 +82,21 @@ describe("appearance preference (IPC)", () => {
     expect(window.api.getAppearance).toHaveBeenCalled();
   });
 
+  it("loads a Plasma Breeze family and keeps its scheme (#PUX-005-B)", async () => {
+    vi.stubGlobal("api", {
+      getAppearance: vi
+        .fn()
+        .mockResolvedValue({ ok: true, data: { themeFamily: "plasma-breeze", scheme: "light", panels: "auto" } }),
+      setAppearance: vi.fn(),
+    });
+
+    await expect(loadAppearancePref()).resolves.toEqual({
+      themeFamily: "plasma-breeze",
+      scheme: "light",
+      panels: "auto",
+    });
+  });
+
   it("applies the defaults when the row is unset, without writing them", async () => {
     const setAppearance = vi.fn();
     vi.stubGlobal("api", {

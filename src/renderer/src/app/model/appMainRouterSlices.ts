@@ -21,7 +21,7 @@ import type { ServerLogsFocus } from "@features/logs/ServerLogsPanel";
 import type { PlayerListState } from "@features/server-workspace/components/RconPanel/PlayerListSection";
 import type { RconHistoryEntry } from "@features/server-workspace/ServerWorkspacePage";
 import type { DesktopShellPreferencesController } from "@features/settings/hooks/useDesktopShellPreferences";
-import type { ThemeScheme, UiDensity, WorkspacePanelsId } from "@features/settings/settingsModel";
+import type { ThemeFamilyId, ThemeScheme, UiDensity, WorkspacePanelsId } from "@features/settings/settingsModel";
 import type { Route } from "@layout/Sidebar/Sidebar";
 import type { HostedResourcesHealth } from "@features/hosted-resources/model/hostedResourcesHealth";
 import type { AppBusyOverlayContent } from "@ui/AppBusyOverlay/AppBusyOverlay";
@@ -121,6 +121,8 @@ export interface AppSettingsSlice {
   handleOpenNativeConsoleChange: (enabled: boolean) => void;
   uiDensity: UiDensity;
   handleUiDensityChange: (density: UiDensity) => void;
+  family: ThemeFamilyId;
+  handleFamilyChange: (family: ThemeFamilyId) => void;
   scheme: ThemeScheme;
   handleSchemeChange: (scheme: ThemeScheme) => void;
   workspacePanels: WorkspacePanelsId;

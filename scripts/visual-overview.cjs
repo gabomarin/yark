@@ -19,6 +19,9 @@ delete process.env.ELECTRON_RUN_AS_NODE;
 
 const projectRoot = path.resolve(__dirname, "..");
 
+/** Family axis (#PUX-005-B): default Fluent, or the Plasma Breeze family. */
+const FAMILY = process.env.YARK_VISUAL_FAMILY === "plasma-breeze" ? "plasma-breeze" : "fluent";
+
 const sizes = [
   { name: "hd", width: 1280, height: 720 },
   { name: "full-hd", width: 1920, height: 1080 },
@@ -155,6 +158,10 @@ function seedServers(userData, count) {
   const db = new DatabaseSync(dbPath);
   db.prepare("DELETE FROM servers").run();
   const now = new Date().toISOString();
+  db.prepare(
+    `INSERT INTO app_settings (key, value, updated_at) VALUES (?, ?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+  ).run("appearance.v1", JSON.stringify({ themeFamily: FAMILY, scheme: "dark", panels: "auto" }), now);
   const insert = db.prepare(
     `INSERT INTO servers (
       id, name, map, install_dir, enabled, session_name,
@@ -287,7 +294,7 @@ async function assertCardSurfaceOpensWorkspace(page) {
 async function run() {
   process.chdir(projectRoot);
 
-  const outDir = path.join(os.tmpdir(), "ark-gbo-visual-overview");
+  const outDir = path.join(os.tmpdir(), "ark-gbo-visual-overview", FAMILY);
   fs.mkdirSync(outDir, { recursive: true });
   const userData = fs.mkdtempSync(path.join(os.tmpdir(), "yark-visual-overview-"));
   const reports = [];

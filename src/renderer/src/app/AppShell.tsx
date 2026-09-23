@@ -40,6 +40,7 @@ import {
   writeSettingsCategoryPref,
   writeUiDensityPref,
   type AppearanceSettings,
+  type ThemeFamilyId,
   type ThemeScheme,
   type UiDensity,
   type WorkspacePanelsId,
@@ -209,6 +210,11 @@ export function AppShell({
     }
     setAppearance(next);
   }, []);
+
+  const handleFamilyChange = useCallback(
+    (themeFamily: ThemeFamilyId) => void persistAppearance({ themeFamily }, "Could not save theme"),
+    [persistAppearance],
+  );
 
   const handleSchemeChange = useCallback(
     (scheme: ThemeScheme) => void persistAppearance({ scheme }, "Could not save theme"),
@@ -582,6 +588,8 @@ export function AppShell({
           handleOpenNativeConsoleChange,
           uiDensity,
           handleUiDensityChange,
+          family: appearance.themeFamily,
+          handleFamilyChange,
           scheme: appearance.scheme,
           handleSchemeChange,
           workspacePanels: appearance.panels,

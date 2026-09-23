@@ -72,7 +72,8 @@ body,
 body {
   background: var(--app-color-bg);
   color: var(--app-color-text);
-  font-family: "Segoe UI Variable Text", "Segoe UI", Arial, sans-serif;
+  /* Follows the active theme family's body stack (Fluent Segoe / Breeze Noto). */
+  font-family: var(--mantine-font-family, "Segoe UI", system-ui, sans-serif);
 }
 
 /* Compact: tighter TextInput height + horizontal padding than Mantine `sm` alone. */

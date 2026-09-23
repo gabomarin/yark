@@ -26,4 +26,15 @@ describe("appearance theme selection", () => {
       '{"themeFamily":"fluent","scheme":"light","panels":"auto"}',
     );
   });
+
+  it("accepts the Plasma Breeze family independently of the scheme (#PUX-005-B)", () => {
+    expect(normalizeAppearanceSettings({ themeFamily: "plasma-breeze", scheme: "light", panels: "auto" })).toEqual({
+      themeFamily: "plasma-breeze",
+      scheme: "light",
+      panels: "auto",
+    });
+    expect(encodeAppearanceSettings({ themeFamily: "plasma-breeze", scheme: "dark", panels: "drawers" })).toBe(
+      '{"themeFamily":"plasma-breeze","scheme":"dark","panels":"drawers"}',
+    );
+  });
 });

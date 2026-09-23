@@ -17,16 +17,85 @@ type ThemeSelection = {
 ```
 
 The persisted appearance record stores `themeFamily` and `scheme` independently.
-The current shipped family is `fluent`, with `dark` and `light` variants. The
-registry in `src/renderer/src/shared/theme/themes.ts` owns family/variant
-resolution and always falls back to the shipped `fluent`/`dark` selection.
+The registry in `src/renderer/src/shared/theme/themes.ts` owns family/variant
+resolution and always falls back to the shipped `fluent`/`dark` selection. Two
+families ship today:
+
+- **`fluent`** — the compatibility default (Segoe UI, 8px flyout corners,
+  elevation ladder). Both schemes unchanged from #PUX-004.
+- **`plasma-breeze`** — a KDE Plasma/Breeze family (`Breeze Dark`, `Breeze Light`)
+  anchored on the exact `KDE/breeze` colour schemes. Flat 4px chrome, restrained
+  shadows, a Noto Sans typography profile and the Breeze accent `#3daee9`.
 
 `--app-*` names are stable semantic roles. A family may change its palette,
-semantic status values, elevation and Mantine `recipeSet`, but feature CSS must
-continue to consume the roles rather than family-specific values. The current
-`fluent` component recipes remain the compatibility default; Plasma Breeze and
-Glassy can add recipe sets later without adding executable JavaScript/JSX theme
-payloads or changing the selection contract.
+semantic status values, elevation, typography and Mantine `recipeSet`, but feature
+CSS must continue to consume the roles rather than family-specific values. Each
+family owns its component recipes (`recipes/fluent.ts`, `recipes/plasmaBreeze.ts`);
+`recipes/plasmaBreeze.ts` composes the Fluent base and overrides only the
+components where Breeze genuinely differs (4px menus/popovers/modals, a flat
+SegmentedControl). Glassy can add a recipe set the same way, without executable
+JavaScript/JSX theme payloads or a change to the selection contract.
+
+### Theme family radius
+
+The corner ladder is family-owned (`AppThemeRadius`), scaled by Display size like
+the shared tokens. Fluent keeps `4 / 8 / 10` (control / surface / large). Plasma
+Breeze uses KDE's smaller ladder, `4 / 6 / 8`: controls are ~4px
+(`kstyle/breezemetrics.h` `Frame_FrameRadius = 5` → `frameRadius()` ≈ 4.5,
+checkbox 4) and large surfaces follow `largeRadius = smallRadius * 2` ≈ 6px. Cards
+(`AppSurfaceCard` default `radius="md"`) and dialogs (`AppPanelModal` `radius="md"`)
+resolve through the family ladder, so controls and surfaces stay in one deliberate
+scale instead of mixing Fluent's 8px with Breeze's 4px. Pills (`Progress`,
+`Skeleton`) and circular `ActionIcon`s stay as-is; Breeze's rounded-square tool
+buttons are a deliberate deviation left for a later pass.
+
+### Theme family typography
+
+Typography is a family-level profile (`AppThemeTypography`): `body`, `display`,
+`mono`, `labelWeight`, `headingWeight`, `bodyLineHeight` and `letterSpacing`. It is
+shared by the family's light and dark variants unless a variant documents an
+exception. Fluent keeps the Segoe stack; Plasma Breeze uses
+`"Noto Sans", "Segoe UI", system-ui, sans-serif` with a Hack → Cascadia mono
+fallback. No family loads a remote font. `body` also feeds `--mantine-font-family`,
+which `globals.css` uses for the document.
+
+### Breeze deviations (intentional)
+
+Plasma Breeze keeps the exact Breeze accent, which does not meet YARK's Fluent
+contrast floors. Each family declares its own floors in `AppThemeContrast` and
+`theme.contrast.test.ts` holds it to them:
+
+- **Accent `#3daee9`** is a mid-tone: as a non-text UI element it sits ~2.3:1 on
+  the light shell and a white label on it is ~2.49:1, both below AA. KDE ships
+  Breeze that way, so the family declares those floors instead of darkening the
+  accent. If visual review finds it too weak, the fallback is Breeze's link blue
+  `#2980b9` as the filled-primary step while keeping `#3daee9` for focus/selection.
+- **The accent's filled label is white**, as KDE's `[Colors:Selection]` foreground
+  is. Mantine's `autoContrast` reads the mid-tone as "light" and would label it
+  black, and `--mantine-color-blue-contrast` is only honoured for virtual colors,
+  so the family supplies a `variantColorResolver` that overrides only the accent's
+  filled variant. Semantic filled colors (fossil/attention/red) keep Mantine's
+  autoContrast, which they still need for their dark labels.
+- **Breeze status colours** (positive `#27ae60`, neutral `#f67400`, negative
+  `#da4453`) are kept as hue anchors; the light variant darkens the green/amber and
+  the danger-text tone so they clear AA on the near-white panel.
+- **Muted copy**: Breeze's `ForegroundInactive` (`#707d8a` on light) is 4.2:1, so
+  the neutral ramp's muted step (11) is authored to clear 4.5:1 on every shell
+  surface: `#555b62` light, `#a6aeb6` dark. Text (step 12) stays `#232629` /
+  `#fcfcfc`. The dark ramp previously had muted and text one step off, which made
+  "dimmed" copy render near-white.
+- **Borders are hairlines, not heavy frames**: Breeze's `frameRadius` and frame
+  colour sit close to its hairline, so the two border steps stay near each other
+  (`#c8ccd0` / `#b6bbc0` light, `#525860` / `#666c74` dark) instead of Fluent's
+  strong control border. Panels, list rows and inputs all read one hairline.
+- **Line edits and toggle knobs**: Breeze fields are flat on the window colour
+  (`#ffffff` light, `#202326` dark) with a single hairline, and the switch knob is
+  a white circle with its own hairline and a hair of lift. Both live in the family
+  recipes (`Input`, `Switch`), so Fluent keeps Mantine's chrome unchanged.
+
+Everything else (text, muted, accent-as-text, status text, focus rings) still
+clears AA. Density stays the operator's Display size preference rather than a
+family token, and radius reuses the shared token ladder.
 
 Rows written by older versions as `{ "theme": "dark" | "light" }` are read as
 the `fluent` family plus that scheme. New writes use `{ "themeFamily", "scheme" }`.

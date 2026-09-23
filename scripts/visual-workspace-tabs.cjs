@@ -35,6 +35,8 @@ const THEME = process.env.YARK_VISUAL_THEME === "light" ? "light" : "dark";
 const THEME_LABEL = THEME;
 /** The product default is Compact, so the walk covers it unless asked otherwise. */
 const DENSITY = process.env.YARK_VISUAL_DENSITY === "comfortable" ? "comfortable" : "compact";
+/** Family axis (#PUX-005-B): default Fluent, or the Plasma Breeze family. */
+const FAMILY = process.env.YARK_VISUAL_FAMILY === "plasma-breeze" ? "plasma-breeze" : "fluent";
 
 const TABS = ["Server", "INI Files", "Mods", "Launch", "Backups", "Logs", "RCON", "Maintenance", "Ark Server API"];
 
@@ -59,7 +61,7 @@ function seedProfile(profileDir) {
   db.prepare(
     `INSERT INTO app_settings (key, value, updated_at) VALUES (?, ?, ?)
      ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
-  ).run("appearance.v1", JSON.stringify({ theme: THEME, panels: "auto" }), now);
+  ).run("appearance.v1", JSON.stringify({ themeFamily: FAMILY, scheme: THEME, panels: "auto" }), now);
   // Stored as the bare value, not JSON: that is how the density pref is written and read.
   db.prepare(
     `INSERT INTO app_settings (key, value, updated_at) VALUES (?, ?, ?)
@@ -174,7 +176,7 @@ async function run() {
 
   const { profileDir } = createE2eFixtureRoots("visual-workspace-tabs");
   seedProfile(profileDir);
-  const outDir = path.join(os.tmpdir(), "ark-gbo-visual-workspace-tabs", `${THEME}-${DENSITY}`);
+  const outDir = path.join(os.tmpdir(), "ark-gbo-visual-workspace-tabs", `${FAMILY}-${THEME}-${DENSITY}`);
   fs.mkdirSync(outDir, { recursive: true });
 
   const app = await launchElectronApp({ profileDir });
@@ -187,6 +189,19 @@ async function run() {
       if (message.type() === "error") errors.push(`console: ${message.text()}`);
     });
     page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
+
+    const mounted = await page.evaluate(() => {
+      const style = getComputedStyle(document.documentElement);
+      return {
+        accent: style.getPropertyValue("--ark-blue-9").trim().toLowerCase(),
+        font: style.getPropertyValue("--mantine-font-family").trim(),
+      };
+    });
+    if (FAMILY === "plasma-breeze") {
+      assert.equal(mounted.accent, "#3daee9", `Plasma Breeze accent is "${mounted.accent}", expected the Breeze #3daee9`);
+      assert.ok(mounted.font.includes("Noto Sans"), `Plasma Breeze body font is "${mounted.font}", expected Noto Sans`);
+    }
+    console.log(`VISUAL_WORKSPACE_TABS_FAMILY=${FAMILY} accent=${mounted.accent}`);
 
     await page.locator("[data-server-card]").first().click();
     await page.getByRole("tab", { name: "Server", exact: true }).waitFor({ state: "visible", timeout: 20000 });
@@ -205,8 +220,8 @@ async function run() {
           document.documentElement.getAttribute("data-mantine-color-scheme"),
         );
         metrics.mountedScheme = mountedScheme;
-        const file = await shot(page, outDir, `workspace-${label}-${THEME_LABEL}-${DENSITY}-${size.name}`);
-        reports.push({ tab, theme: THEME, density: DENSITY, size: size.name, file, metrics });
+        const file = await shot(page, outDir, `workspace-${label}-${FAMILY}-${THEME_LABEL}-${DENSITY}-${size.name}`);
+        reports.push({ tab, family: FAMILY, theme: THEME, density: DENSITY, size: size.name, file, metrics });
 
         assert.equal(
           metrics.mountedScheme,
@@ -235,9 +250,9 @@ async function run() {
     removeFixtureDir(profileDir);
   }
 
-  const summary = { outDir, theme: THEME, density: DENSITY, errors, reports };
+  const summary = { outDir, family: FAMILY, theme: THEME, density: DENSITY, errors, reports };
   fs.writeFileSync(path.join(outDir, "summary.json"), JSON.stringify(summary, null, 2), "utf8");
-  console.log(JSON.stringify({ outDir, theme: THEME, density: DENSITY, tabs: reports.length, errors }, null, 2));
+  console.log(JSON.stringify({ outDir, family: FAMILY, theme: THEME, density: DENSITY, tabs: reports.length, errors }, null, 2));
   assert.equal(errors.length, 0, `console/page errors during the run: ${errors.slice(0, 3).join(" | ")}`);
   console.log(THEME === "light" ? "VISUAL_WORKSPACE_TABS_LIGHT_OK" : "VISUAL_WORKSPACE_TABS_OK");
 }

@@ -184,7 +184,7 @@ export const lightPalette = {
 } as const;
 
 /** One 12-step Radix ramp. A tuple, so indexing yields `string` and not `string | undefined`. */
-type AppThemeRamp = readonly [
+export type AppThemeRamp = readonly [
   string,
   string,
   string,
@@ -386,7 +386,7 @@ const sharedColors = {
 const sharedShadows = darkShadows;
 
 /** Mantine `color="red"` — `--app-color-bad` (filled) + `--app-color-danger-bright` (text/icons). */
-function createDangerRedPalette(
+export function createDangerRedPalette(
   bad: string,
   bright: string,
 ): [string, string, string, string, string, string, string, string, string, string] {
@@ -414,6 +414,71 @@ export type AppThemeLadders = {
   attention: AppThemeLadder;
   fossil: AppThemeLadder;
   red: AppThemeLadder;
+};
+
+/**
+ * Family-level typography profile (#PUX-005-B). Shared by the family's light and
+ * dark variants unless a variant documents an exception. Every stack must have a
+ * local fallback: a theme never loads a remote font.
+ */
+export type AppThemeTypography = {
+  /** Body / UI stack. */
+  body: string;
+  /** Display stack for page titles and headings. */
+  display: string;
+  mono: string;
+  /** Form labels and control text. */
+  labelWeight: number;
+  headingWeight: number;
+  bodyLineHeight: number;
+  /** `normal` or a letter-spacing value. */
+  letterSpacing: string;
+};
+
+/**
+ * Family-level radius ladder (#PUX-005-B), in comfortable-scale pixels. Fluent
+ * ships the original 4 / 8 / 10; Plasma Breeze uses KDE's smaller ladder, where
+ * controls are ~4px (`kstyle/breezemetrics.h` `Frame_FrameRadius = 5` →
+ * `frameRadius()` ≈ 4.5, checkbox 4) and large surfaces (cards, popups, dialogs)
+ * are `largeRadius = smallRadius * 2` ≈ 6px. Density scales it the same way the
+ * shared tokens scale.
+ */
+export type AppThemeRadius = {
+  sm: number;
+  md: number;
+  lg: number;
+  control: number;
+};
+
+export const fluentRadius: AppThemeRadius = { sm: 4, md: 8, lg: 10, control: 4 };
+export const plasmaBreezeRadius: AppThemeRadius = { sm: 4, md: 6, lg: 8, control: 4 };
+
+/**
+ * Documented contrast floors per theme (#PUX-005-B). The palette is swappable, so
+ * "looks fine" is not a gate: each theme declares the floors it ships with and
+ * `theme.contrast.test.ts` holds it to them. Fluent keeps the original Fluent 2
+ * floors; Plasma Breeze declares the exact KDE Breeze accent behavior, where a
+ * filled accent carries a white label below AA on purpose (KDE ships it that way).
+ */
+export type AppThemeContrast = {
+  /** White label on the solid accent (filled primary). */
+  accentLabel: number;
+  /** Accent solid as a non-text UI element (switch track, checkbox fill). */
+  accentUi: number;
+  /** Accent text/icon tone on the shell surfaces. */
+  accentText: number;
+  /** Body text on the shell surfaces. */
+  text: number;
+  /** Muted copy on the shell surfaces. */
+  muted: number;
+  /** Status tones as text on the panel. */
+  status: number;
+  /** `bad` as a filled control (non-text 3:1 bar). */
+  statusFill: number;
+  /** Card fill delta against the shell. */
+  cardFill: number;
+  /** Card hairline against the panel. */
+  cardBorder: number;
 };
 
 export const darkLadders: AppThemeLadders = {
@@ -508,6 +573,43 @@ export const lightLadders: AppThemeLadders = {
   ],
 };
 
+/** Fluent family typography (#PUX-005-B). One profile shared by both schemes. */
+export const fluentTypography: AppThemeTypography = {
+  body: '"Segoe UI Variable Text", "Segoe UI", Arial, sans-serif',
+  display: '"Segoe UI Variable Display", "Segoe UI Semibold", "Segoe UI", Arial, sans-serif',
+  mono: '"Cascadia Mono", Consolas, monospace',
+  labelWeight: 500,
+  headingWeight: 600,
+  bodyLineHeight: 1.5,
+  letterSpacing: "normal",
+};
+
+/** Fluent dark floors (#PUX-004): the shipped dark theme's documented contract. */
+export const darkContrast: AppThemeContrast = {
+  accentLabel: 3,
+  accentUi: 3,
+  accentText: 4.5,
+  text: 4.5,
+  muted: 4.5,
+  status: 4.5,
+  statusFill: 3,
+  cardFill: 1.1,
+  cardBorder: 1.6,
+};
+
+/** Fluent light floors: the light accent was authored to clear AA as a label backdrop. */
+export const lightContrast: AppThemeContrast = {
+  accentLabel: 4.5,
+  accentUi: 3,
+  accentText: 4.5,
+  text: 4.5,
+  muted: 4.5,
+  status: 4.5,
+  statusFill: 3,
+  cardFill: 1.03,
+  cardBorder: 1.25,
+};
+
 export type AppTokens = {
   colors: typeof sharedColors;
   radius: { sm: number; md: number; lg: number; control: number };
@@ -569,4 +671,14 @@ export const appTokens: AppTokens = comfortableTokens;
 
 export function getAppTokens(density: UiDensity): AppTokens {
   return density === "compact" ? compactTokens : comfortableTokens;
+}
+
+/**
+ * Shared tokens with the family's radius ladder applied (#PUX-005-B). Spacing,
+ * fonts and headings stay shared; only the corners are family-owned.
+ */
+export function getAppTokensForTheme(density: UiDensity, radius: AppThemeRadius): AppTokens {
+  const base = getAppTokens(density);
+  const scaled = density === "compact" ? scaleRecord(radius, UI_DENSITY_COMPACT_SCALE) : radius;
+  return { ...base, radius: { ...scaled } };
 }

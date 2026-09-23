@@ -17,6 +17,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Removing an admin from RCON → Survivors or Admins now requires explicit confirmation.
 - Workspace Quick actions now offers the same guarded Delete server flow as the server card menu (#597).
 - Operator action icons now follow a consistent semantic palette: neutral utilities, blue primary actions, amber attention states, and red destructive actions.
+- A new **Plasma Breeze** theme family (Breeze Dark and Breeze Light) joins Fluent, and Settings → Appearance now picks the theme family separately from the light/dark scheme.
 
 ### Changed
 

@@ -6,7 +6,7 @@
  * Unknown families fall back to the default family; unknown schemes (including
  * the legacy `theme` value) fall back to the default scheme.
  */
-export const THEME_FAMILY_IDS = ["fluent"] as const;
+export const THEME_FAMILY_IDS = ["fluent", "plasma-breeze"] as const;
 export const THEME_SCHEMES = ["dark", "light"] as const;
 
 export type ThemeFamilyId = (typeof THEME_FAMILY_IDS)[number];
