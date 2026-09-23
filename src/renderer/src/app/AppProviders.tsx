@@ -44,7 +44,15 @@ export function AppProviders({
   themeSelection = null,
   workspacePanels = null,
 }: Props): ReactElement {
-  const appearance = useMemo(() => resolveThemeSelection(themeSelection), [themeSelection]);
+  const themeFamily = themeSelection?.family;
+  const themeScheme = themeSelection?.scheme;
+  const appearance = useMemo(
+    () =>
+      resolveThemeSelection(
+        themeFamily === undefined || themeScheme === undefined ? null : { family: themeFamily, scheme: themeScheme },
+      ),
+    [themeFamily, themeScheme],
+  );
   const panels = useMemo(() => resolveWorkspacePanelsOption(workspacePanels), [workspacePanels]);
   const theme = useMemo(() => {
     const base = createAppThemeForAppearance(appearance, density);

@@ -30,6 +30,9 @@ payloads or changing the selection contract.
 
 Rows written by older versions as `{ "theme": "dark" | "light" }` are read as
 the `fluent` family plus that scheme. New writes use `{ "themeFamily", "scheme" }`.
+This is a one-way upgrade: older builds do not understand the new payload shape,
+so downgrading while retaining the same settings database may reset appearance to
+the older default.
 
 ## Principles
 

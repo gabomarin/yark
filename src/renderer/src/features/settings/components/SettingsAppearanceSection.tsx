@@ -10,7 +10,7 @@ interface Props {
   uiDensity: UiDensity;
   onUiDensityChange: (density: UiDensity) => void;
   scheme: ThemeScheme;
-  onThemeChange: (scheme: ThemeScheme) => void;
+  onSchemeChange: (scheme: ThemeScheme) => void;
   workspacePanels: WorkspacePanelsId;
   onWorkspacePanelsChange: (panels: WorkspacePanelsId) => void;
 }
@@ -74,10 +74,10 @@ export function SettingsAppearanceSection(props: Props): ReactElement {
               value={props.scheme}
               onChange={(value) => {
                 if (isThemeScheme(value) && value !== props.scheme) {
-                  props.onThemeChange(value);
+                  props.onSchemeChange(value);
                 }
               }}
-              data={APP_THEME_LIST.map((theme) => ({ label: theme.label, value: theme.id }))}
+              data={APP_THEME_LIST.map((theme) => ({ label: theme.label, value: theme.scheme }))}
               aria-label="Theme"
             />
           </div>

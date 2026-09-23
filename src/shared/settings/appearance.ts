@@ -68,9 +68,9 @@ export function parseWorkspacePanelsId(value: unknown): WorkspacePanelsId {
 }
 
 export function normalizeAppearanceSettings(
-  input: Partial<AppearanceSettings> & { theme?: unknown; family?: unknown },
+  input: Partial<AppearanceSettings> & { theme?: unknown },
 ): AppearanceSettings {
-  const family = input.themeFamily ?? input.family;
+  const family = input.themeFamily;
   const scheme = input.scheme ?? input.theme;
   return {
     themeFamily: isThemeFamilyId(family) ? family : DEFAULT_THEME_FAMILY,

@@ -210,7 +210,7 @@ export function AppShell({
     setAppearance(next);
   }, []);
 
-  const handleThemeChange = useCallback(
+  const handleSchemeChange = useCallback(
     (scheme: ThemeScheme) => void persistAppearance({ scheme }, "Could not save theme"),
     [persistAppearance],
   );
@@ -583,7 +583,7 @@ export function AppShell({
           uiDensity,
           handleUiDensityChange,
           scheme: appearance.scheme,
-          handleThemeChange,
+          handleSchemeChange,
           workspacePanels: appearance.panels,
           handleWorkspacePanelsChange,
           defaultBaseFolder,

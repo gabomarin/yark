@@ -86,7 +86,7 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
     uiDensity,
     handleUiDensityChange,
     scheme,
-    handleThemeChange,
+    handleSchemeChange,
     workspacePanels,
     handleWorkspacePanelsChange,
     defaultBaseFolder,
@@ -260,7 +260,7 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
             uiDensity={uiDensity}
             onUiDensityChange={(density) => void handleUiDensityChange(density)}
             scheme={scheme}
-            onThemeChange={(nextScheme) => void handleThemeChange(nextScheme)}
+            onSchemeChange={(nextScheme) => void handleSchemeChange(nextScheme)}
             workspacePanels={workspacePanels}
             onWorkspacePanelsChange={(panels) => void handleWorkspacePanelsChange(panels)}
             defaultBaseFolder={defaultBaseFolder}

@@ -36,8 +36,6 @@ import {
  * elevation ladder and the Mantine colour scales derived from those semantics.
  */
 export interface AppTheme {
-  /** Stable variant id kept for existing UI/tests; family and scheme are separate. */
-  id: ThemeScheme;
   family: ThemeFamilyId;
   scheme: ThemeScheme;
   /** Component recipe family; kept separate from semantic tokens for future families. */
@@ -55,7 +53,6 @@ export interface AppTheme {
 export const THEME_FAMILIES: Readonly<Record<ThemeFamilyId, Readonly<Record<ThemeScheme, AppTheme>>>> = {
   fluent: {
     dark: {
-      id: "dark",
       family: "fluent",
       scheme: "dark",
       recipeSet: "fluent",
@@ -68,7 +65,6 @@ export const THEME_FAMILIES: Readonly<Record<ThemeFamilyId, Readonly<Record<Them
       ladders: darkLadders,
     },
     light: {
-      id: "light",
       family: "fluent",
       scheme: "light",
       recipeSet: "fluent",
@@ -83,7 +79,10 @@ export const THEME_FAMILIES: Readonly<Record<ThemeFamilyId, Readonly<Record<Them
   },
 };
 
-/** Flat compatibility view for callers that still enumerate the shipped variants. */
+/**
+ * Flat compatibility view for callers that still enumerate the shipped variants.
+ * @deprecated This view is pinned to Fluent; use THEME_FAMILIES and resolveThemeSelection.
+ */
 export const THEMES: Readonly<Record<ThemeScheme, AppTheme>> = THEME_FAMILIES.fluent;
 
 /** Registry order = the order the Appearance control lists them in. */
@@ -97,14 +96,12 @@ export function resolveThemeSelection(selection: ThemeSelection | string | null 
   }
   if (selection !== null && selection !== undefined && isThemeFamilyId(selection.family)) {
     const family = THEME_FAMILIES[selection.family];
-    if (isThemeScheme(selection.scheme)) {
-      return family[selection.scheme];
-    }
+    return family[isThemeScheme(selection.scheme) ? selection.scheme : DEFAULT_THEME_SCHEME];
   }
   return DEFAULT_APP_THEME;
 }
 
-/** Compatibility resolver for the former combined theme id. */
+/** @deprecated Compatibility resolver for the former combined theme id. */
 export function resolveAppTheme(id: string | null | undefined): AppTheme {
   return resolveThemeSelection(id);
 }

@@ -45,7 +45,7 @@ interface Props {
   uiDensity: UiDensity;
   onUiDensityChange: (density: UiDensity) => void;
   scheme: ThemeScheme;
-  onThemeChange: (scheme: ThemeScheme) => void;
+  onSchemeChange: (scheme: ThemeScheme) => void;
   workspacePanels: WorkspacePanelsId;
   onWorkspacePanelsChange: (panels: WorkspacePanelsId) => void;
   defaultBaseFolder: string | null;
@@ -160,7 +160,7 @@ export function SettingsPage(props: Props): ReactElement {
                 uiDensity={props.uiDensity}
                 onUiDensityChange={props.onUiDensityChange}
                 scheme={props.scheme}
-                onThemeChange={props.onThemeChange}
+                onSchemeChange={props.onSchemeChange}
                 workspacePanels={props.workspacePanels}
                 onWorkspacePanelsChange={props.onWorkspacePanelsChange}
               />

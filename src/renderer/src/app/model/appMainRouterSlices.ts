@@ -122,7 +122,7 @@ export interface AppSettingsSlice {
   uiDensity: UiDensity;
   handleUiDensityChange: (density: UiDensity) => void;
   scheme: ThemeScheme;
-  handleThemeChange: (scheme: ThemeScheme) => void;
+  handleSchemeChange: (scheme: ThemeScheme) => void;
   workspacePanels: WorkspacePanelsId;
   handleWorkspacePanelsChange: (panels: WorkspacePanelsId) => void;
   defaultBaseFolder: string | null;
