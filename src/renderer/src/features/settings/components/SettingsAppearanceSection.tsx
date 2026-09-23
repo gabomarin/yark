@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { SegmentedControl, Text, Title } from "@mantine/core";
 import { APP_THEME_LIST } from "@theme/themes";
-import { isThemeId, isWorkspacePanelsId } from "@shared/settings/appearance";
+import { isThemeScheme, isWorkspacePanelsId } from "@shared/settings/appearance";
 import { WORKSPACE_PANELS_OPTION_LIST, resolveWorkspacePanelsOption } from "@shared/workspace/workspacePanels";
 import type { ThemeScheme, UiDensity, WorkspacePanelsId } from "../settingsModel";
 import classes from "../SettingsPage.module.css";
@@ -73,7 +73,7 @@ export function SettingsAppearanceSection(props: Props): ReactElement {
               size="xs"
               value={props.scheme}
               onChange={(value) => {
-                if (isThemeId(value) && value !== props.scheme) {
+                if (isThemeScheme(value) && value !== props.scheme) {
                   props.onThemeChange(value);
                 }
               }}

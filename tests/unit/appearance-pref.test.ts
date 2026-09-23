@@ -3,38 +3,35 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   APPEARANCE_SETTINGS_KEY,
   DEFAULT_APPEARANCE_SETTINGS,
-  DEFAULT_THEME_ID,
+  DEFAULT_THEME_SCHEME,
   DEFAULT_WORKSPACE_PANELS_ID,
-  THEME_IDS,
+  THEME_SCHEMES,
   WORKSPACE_PANELS_IDS,
   encodeAppearanceSettings,
-  isThemeId,
+  isThemeScheme,
   isWorkspacePanelsId,
   normalizeAppearanceSettings,
   parseAppearanceSettings,
-  parseThemeId,
   parseWorkspacePanelsId,
 } from "@shared/settings/appearance";
 import { loadAppearancePref, writeAppearancePref } from "@features/settings/settingsModel";
 
 describe("appearance shared helpers (#PUX-004 Track B)", () => {
   it("names the shipped themes and panels option, and the SQLite key", () => {
-    expect(THEME_IDS).toEqual(["dark", "light"]);
+    expect(THEME_SCHEMES).toEqual(["dark", "light"]);
     expect(WORKSPACE_PANELS_IDS).toEqual(["auto", "drawers"]);
-    expect(DEFAULT_THEME_ID).toBe("dark");
+    expect(DEFAULT_THEME_SCHEME).toBe("dark");
     expect(DEFAULT_WORKSPACE_PANELS_ID).toBe("auto");
     expect(APPEARANCE_SETTINGS_KEY).toBe("appearance.v1");
     expect(DEFAULT_APPEARANCE_SETTINGS).toEqual({ themeFamily: "fluent", scheme: "dark", panels: "auto" });
   });
 
   it("accepts only registry ids", () => {
-    expect(isThemeId("dark")).toBe(true);
-    expect(isThemeId("light")).toBe(true);
-    expect(isThemeId("vaporwave")).toBe(false);
-    expect(isThemeId(undefined)).toBe(false);
-    expect(isThemeId(7)).toBe(false);
-    expect(parseThemeId("vaporwave")).toBe("dark");
-    expect(parseThemeId("light")).toBe("light");
+    expect(isThemeScheme("dark")).toBe(true);
+    expect(isThemeScheme("light")).toBe(true);
+    expect(isThemeScheme("vaporwave")).toBe(false);
+    expect(isThemeScheme(undefined)).toBe(false);
+    expect(isThemeScheme(7)).toBe(false);
 
     expect(isWorkspacePanelsId("auto")).toBe(true);
     expect(isWorkspacePanelsId("drawers")).toBe(true);

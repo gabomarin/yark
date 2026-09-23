@@ -9,8 +9,6 @@
  */
 export const THEME_FAMILY_IDS = ["fluent"] as const;
 export const THEME_SCHEMES = ["dark", "light"] as const;
-/** Backward-compatible registry name for the former scheme ids. */
-export const THEME_IDS = THEME_SCHEMES;
 
 export type ThemeFamilyId = (typeof THEME_FAMILY_IDS)[number];
 export type ThemeScheme = (typeof THEME_SCHEMES)[number];
@@ -19,14 +17,9 @@ export type ThemeSelection = {
   scheme: ThemeScheme;
 };
 
-/** Backward-compatible alias for callers that only handled the old scheme id. */
-export type ThemeId = ThemeScheme;
-
 /** Product default - the shipped Fluent dark shell. */
 export const DEFAULT_THEME_FAMILY: ThemeFamilyId = "fluent";
 export const DEFAULT_THEME_SCHEME: ThemeScheme = "dark";
-/** Backward-compatible default for the former combined theme id. */
-export const DEFAULT_THEME_ID: ThemeId = DEFAULT_THEME_SCHEME;
 
 /**
  * Server-workspace panels (`shared/workspace/workspacePanels.ts`). `auto` is the
@@ -58,28 +51,12 @@ export const DEFAULT_APPEARANCE_SETTINGS: AppearanceSettings = {
   panels: DEFAULT_WORKSPACE_PANELS_ID,
 };
 
-export function isThemeId(value: unknown): value is ThemeId {
-  return isThemeScheme(value);
-}
-
-export function parseThemeId(value: unknown): ThemeId {
-  return isThemeId(value) ? value : DEFAULT_THEME_ID;
-}
-
 export function isThemeFamilyId(value: unknown): value is ThemeFamilyId {
   return typeof value === "string" && (THEME_FAMILY_IDS as readonly string[]).includes(value);
 }
 
-export function parseThemeFamilyId(value: unknown): ThemeFamilyId {
-  return isThemeFamilyId(value) ? value : DEFAULT_THEME_FAMILY;
-}
-
 export function isThemeScheme(value: unknown): value is ThemeScheme {
   return typeof value === "string" && (THEME_SCHEMES as readonly string[]).includes(value);
-}
-
-export function parseThemeScheme(value: unknown): ThemeScheme {
-  return isThemeScheme(value) ? value : DEFAULT_THEME_SCHEME;
 }
 
 export function isWorkspacePanelsId(value: unknown): value is WorkspacePanelsId {
@@ -93,9 +70,11 @@ export function parseWorkspacePanelsId(value: unknown): WorkspacePanelsId {
 export function normalizeAppearanceSettings(
   input: Partial<AppearanceSettings> & { theme?: unknown; family?: unknown },
 ): AppearanceSettings {
+  const family = input.themeFamily ?? input.family;
+  const scheme = input.scheme ?? input.theme;
   return {
-    themeFamily: parseThemeFamilyId(input.themeFamily ?? input.family),
-    scheme: parseThemeScheme(input.scheme ?? input.theme),
+    themeFamily: isThemeFamilyId(family) ? family : DEFAULT_THEME_FAMILY,
+    scheme: isThemeScheme(scheme) ? scheme : DEFAULT_THEME_SCHEME,
     panels: parseWorkspacePanelsId(input.panels),
   };
 }

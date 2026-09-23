@@ -10,17 +10,17 @@ import {
   bootstrapBackgroundFor,
   bootstrapBackgroundFromStored,
 } from "./app-chrome";
-import { DEFAULT_THEME_ID, THEME_IDS } from "./settings/appearance";
+import { DEFAULT_THEME_SCHEME, THEME_SCHEMES } from "./settings/appearance";
 
 describe("app chrome bootstrap colours", () => {
-  it("has a canvas for every theme id", () => {
-    for (const id of THEME_IDS) {
-      expect(bootstrapBackgroundFor(id), id).toMatch(/^#[0-9a-f]{6}$/);
+  it("has a canvas for every color scheme", () => {
+    for (const scheme of THEME_SCHEMES) {
+      expect(bootstrapBackgroundFor(scheme), scheme).toMatch(/^#[0-9a-f]{6}$/);
     }
   });
 
   it("keeps the default theme's canvas as the shared constant", () => {
-    expect(BOOTSTRAP_BACKGROUND).toBe(bootstrapBackgroundFor(DEFAULT_THEME_ID));
+    expect(BOOTSTRAP_BACKGROUND).toBe(bootstrapBackgroundFor(DEFAULT_THEME_SCHEME));
   });
 
   it("reads the stored preference and falls back to the default theme", () => {

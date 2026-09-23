@@ -1,8 +1,8 @@
 # Knip (unused code and dependency checks)
 
 Knip scans the root Electron app for dead code and dependency drift. GitHub Actions
-runs it on every pull request and push to `main`; **Husky hooks do not**, so CI is
-often the first place unused exports show up after a refactor.
+runs it on every pull request and push to `main`; the Husky pre-push hook runs it
+before publishing a branch as well.
 
 ## When to run
 
@@ -16,18 +16,18 @@ Run `npm run knip` locally before you commit or push when you:
 For a quick pre-PR sweep, run the same checks CI uses:
 
 ```bash
+npm run format:check
 npm run typecheck
 npm run lint
 npm run knip
 npm test
 ```
 
-Husky already runs typecheck + lint on **pre-commit** and typecheck + test + lint on
-**pre-push**. Add knip yourself when the change touches surface area Knip cares about
-(exports, entry files, deps). A full gate before opening a PR:
+Husky runs typecheck + lint on **pre-commit** and format check + typecheck + knip +
+test + lint on **pre-push**. A full gate before opening a PR:
 
 ```bash
-npm run typecheck && npm run lint && npm run knip && npm test
+npm run format:check && npm run typecheck && npm run lint && npm run knip && npm test
 ```
 
 On WSL with a Windows checkout, use the same `cmd.exe /c` pattern as other npm scripts

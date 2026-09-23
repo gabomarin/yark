@@ -6,7 +6,9 @@ echo "husky (pre-push): format check..."
 npm_host run format:check
 echo "husky (pre-push): typecheck..."
 npm_host run typecheck
-echo "husky (pre-push): typecheck ok — running tests..."
+echo "husky (pre-push): knip..."
+npm_host run knip
+echo "husky (pre-push): typecheck and knip ok — running tests..."
 npm_host test
 echo "husky (pre-push): lint..."
 npm_host run lint
