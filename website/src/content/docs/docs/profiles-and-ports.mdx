@@ -60,6 +60,16 @@ never copies map identity (including that link).
   <figcaption>Server Workspace — Map popover, identity, ports, access, and cluster fields for one profile.</figcaption>
 </figure>
 
+## Share connection details
+
+Each time a server starts, YARK refreshes its public IPv4 and shows a copyable `Join: open IP:port`
+command in the workspace header. Open **Share connection details** to view and copy the public IP,
+session name, game port, query port, and join password (shown masked and copied only on demand). The
+public IP is read-only; use refresh to check it again. ASA's `open` command needs an **IP address**,
+not a hostname. YARK ships **no** `steam://` deep link, and copying connection details does not mean
+the server is reachable: forwarding the game port (and the query port for the browser) on your router
+and firewall is still up to you.
+
 ## Port conflicts
 
 YARK flags the **same numeric port** used by different profiles (any of game / query / RCON).

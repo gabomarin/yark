@@ -144,6 +144,10 @@ operator walkthrough.
   and [docs/credential-threat-model.md](docs/credential-threat-model.md).
 - CurseForge metadata requests use a small Cloudflare Worker so the upstream API key is never
   embedded in the Electron application.
+- YARK refreshes your public IPv4 through `ipify.org` each time a server starts. If no address is
+  available, opening **Share connection details** also checks it; use Refresh to check again (main
+  process; the renderer CSP blocks outbound fetches). The IP is read-only in the dialog. Only your
+  public IP is sent — no profile data — and lookup is best-effort.
 - Recursive install/backup/move/cache copies do not follow Windows directory junctions; destination
   trees that already contain links fail closed before writes
   ([#322](https://github.com/gabomarin/yark/issues/322)).

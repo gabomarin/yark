@@ -242,6 +242,7 @@ export function createRendererApiMock(overrides: Partial<RendererApi> = {}): Ren
     openAppDataFolder: vi.fn(),
     getUiDensity: vi.fn().mockResolvedValue({ ok: true, data: "compact" }),
     setUiDensity: vi.fn().mockResolvedValue({ ok: true, data: "compact" }),
+    getPublicIp: vi.fn().mockResolvedValue({ ok: true, data: "203.0.113.5" }),
     getAppearance: vi.fn().mockResolvedValue({ ok: true, data: { ...DEFAULT_APPEARANCE_SETTINGS } }),
     setAppearance: vi.fn().mockResolvedValue({ ok: true, data: { ...DEFAULT_APPEARANCE_SETTINGS } }),
     getOpenNativeConsole: vi.fn().mockResolvedValue({ ok: true, data: false }),

@@ -279,6 +279,45 @@ async function run() {
     await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 10_000 });
 
     await openWorkspace(page);
+
+    // Share connection details (#505): IP is read-only and detected by the main process.
+    await app.evaluate(() => {
+      const originalFetch = globalThis.fetch;
+      globalThis.__yarkIpLookupCount = 0;
+      globalThis.fetch = (input, init) => {
+        const url = new URL(typeof input === "string" ? input : input.url);
+        if (url.hostname === "api.ipify.org") {
+          globalThis.__yarkIpLookupCount += 1;
+          return Promise.resolve(
+            new Response(JSON.stringify({ ip: globalThis.__yarkIpLookupCount === 1 ? "203.0.113.5" : "203.0.113.6" }), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            }),
+          );
+        }
+        return originalFetch(input, init);
+      };
+    });
+    await page.getByRole("button", { name: "Share connection details" }).click();
+    await page.locator('[data-testid="join-info-modal"]').waitFor({ state: "visible", timeout: 10_000 });
+    await page.getByText("203.0.113.5", { exact: true }).waitFor({ state: "visible", timeout: 10_000 });
+    await page.evaluate(() => {
+      window.__yarkJoinCopies = [];
+      navigator.clipboard.writeText = (text) => {
+        window.__yarkJoinCopies.push(text);
+        return Promise.resolve();
+      };
+    });
+    await page.getByTestId("join-info-modal").getByRole("button", { name: "Copy In-game command" }).click();
+    const joinCommand = await page.evaluate(() => window.__yarkJoinCopies?.[0] ?? "");
+    assert.equal(joinCommand, `open 203.0.113.5:${PORTS.game}`, `Unexpected join command: ${joinCommand}`);
+    assert.ok(!joinCommand.includes("steam://"), `Join command must not contain steam://: ${joinCommand}`);
+    await page.getByRole("button", { name: "Close dialog" }).click();
+    await page
+      .getByRole("button", { name: new RegExp(`Copy join command open 203\\.0\\.113\\.5:${PORTS.game}`) })
+      .waitFor({ state: "visible", timeout: 10_000 });
+    console.log("E2E_LAUNCH_ARGS_JOIN_OK");
+
     await page.getByRole("tab", { name: "Launch" }).click();
     await page.getByText(/Extra arguments/i).waitFor({ state: "visible", timeout: 10_000 });
     // Seeded structured flags should surface in Launch (labels from catalog tokens).
@@ -304,6 +343,9 @@ async function run() {
       !runtimeLines.some((line) => /Native server console opened/i.test(line)),
       "Native console should not open for this e2e",
     );
+    await page
+      .getByRole("button", { name: new RegExp(`Copy join command open 203\\.0\\.113\\.6:${PORTS.game}`) })
+      .waitFor({ state: "visible", timeout: 10_000 });
 
     await openWorkspaceTab(page, "Logs");
     await page.getByRole("tab", { name: "Runtime" }).click();

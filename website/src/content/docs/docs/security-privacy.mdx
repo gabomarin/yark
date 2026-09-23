@@ -29,6 +29,7 @@ that Windows-account boundary.
 | Operator-chosen AdminListURL | RCON **Admins** Validate / Apply fetches your remote http(s) whitelist URL from the main process (desktop trust boundary; not a YARK cloud hop) |
 | Local loopback HTTP host (experimental, off by default) | Serves only the text/INI/JSON resources you publish, to `127.0.0.1` only, so ASA can fetch them; never LAN/WAN, and URLs stop working when YARK exits |
 | Discord (optional) | Outbound server lifecycle and SteamCMD event notifications through the webhook URL you provide |
+| ipify.org (on server start; when opening **Share connection details** with no address; or on manual refresh) | Detects your public IPv4 for the workspace; only your public IP is sent, and no profile data is included |
 
 The desktop app does **not** embed a CurseForge API key. Lookups send Project IDs / search queries — not profiles, passwords, or install paths.
 

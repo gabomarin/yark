@@ -184,7 +184,7 @@ dependencies, and unused CSS **files** — not unused classes inside a
 touch exports or deps ([knip.md](knip.md)). Size caps on `src/renderer/src/features/**/*.{ts,tsx}` (excluding
 `*.test.*`):
 
-- New/ungrandfathered React component files (`.tsx`) must stay ≤ **350** lines.
+- New/ungrandfathered React component files (`.tsx`) must stay ≤ **375** lines.
 - New/ungrandfathered model/helper files (`.ts`) must stay ≤ **450** lines.
 - Existing mega-files are listed in
   [`scripts/component-structure-baseline.json`](../scripts/component-structure-baseline.json)

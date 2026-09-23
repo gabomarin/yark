@@ -10,6 +10,8 @@ import { ConfigurationWizard } from "./components/ConfigurationWizard/Configurat
 import { ServerListPanel } from "./components/ServerListPanel/ServerListPanel";
 import { ServerOnboardingChecklist } from "./components/ServerOnboardingChecklist/ServerOnboardingChecklist";
 import { SidePanel } from "./components/SidePanel/SidePanel";
+import { JoinInfoModal } from "./components/JoinInfoModal/JoinInfoModal";
+import { useWorkspaceJoinInfo } from "./useWorkspaceJoinInfo";
 import { WorkspaceSplitBody } from "./components/WorkspaceSplitBody/WorkspaceSplitBody";
 import { WorkspaceTabs } from "./components/WorkspaceTabs/WorkspaceTabs";
 import { WorkspaceHeader } from "./components/WorkspaceHeader/WorkspaceHeader";
@@ -23,7 +25,6 @@ import { useWorkspaceStatusPanelVisible } from "./useWorkspaceStatusPanelVisible
 import type { ServerWorkspacePageProps } from "./serverWorkspacePageProps";
 import classes from "./ServerWorkspacePage.module.css";
 import { notifyHostedResourcesDiagnosticsUpdated } from "@features/hosted-resources/hooks/useHostedResourcesHealth";
-
 export type { RconHistoryEntry, WorkspaceTab } from "./serverWorkspaceTypes";
 
 function isServerActive(runtime: ServerRuntimeInfo | null): boolean {
@@ -39,6 +40,13 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
   const [iniEditorVersion, setIniEditorVersion] = useState(0);
   const [serverSwitcherOpen, setServerSwitcherOpen] = useState(false);
   const [serverActionsOpen, setServerActionsOpen] = useState(false);
+  const [joinInfoOpen, setJoinInfoOpen] = useState(false);
+  const selectedServer = useMemo(() => {
+    return props.servers.find((server) => server.id === props.selectedServerId) ?? props.servers[0] ?? null;
+  }, [props.selectedServerId, props.servers]);
+  const { publicIp, refreshPublicIp, joinCommandFor, copyJoinCommandFor, copySessionName } = useWorkspaceJoinInfo(
+    selectedServer !== null && props.statuses.get(selectedServer.id)?.status === "running",
+  );
   const [hostedResourceAlertDismissed, setHostedResourceAlertDismissed] = useState(false);
   const panels = useWorkspacePanels();
   // `null` = this option never uses columns, so the workspace stays compact at any width.
@@ -62,16 +70,13 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
     setAssistantOpen(false);
     setServerSwitcherOpen(false);
   });
-
   const onAssistantDraftChange = useCallback(
     (dirty: boolean) => {
       assistantDirtyRef.current = dirty;
     },
     [assistantDirtyRef],
   );
-
   useWorkspaceStatusPanelVisible(compactWorkspace, serverActionsOpen, props.onStatusPanelVisibleChange);
-
   useEffect(() => {
     if (props.onboarding === true) {
       setShowOnboarding(true);
@@ -88,10 +93,6 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
   useEffect(() => {
     setHostedResourceAlertDismissed(false);
   }, [props.selectedServerId]);
-
-  const selectedServer = useMemo(() => {
-    return props.servers.find((server) => server.id === props.selectedServerId) ?? props.servers[0] ?? null;
-  }, [props.selectedServerId, props.servers]);
 
   const handleSelectServer = (serverId: string) => {
     if (serverId === props.selectedServerId) return;
@@ -303,6 +304,10 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
         onToggleEnabled={() => props.onToggleServerEnabled?.(selectedServer.id, !selectedServer.enabled)}
         onOpenServerSwitcher={compactWorkspace ? () => setServerSwitcherOpen(true) : undefined}
         onOpenServerActions={compactWorkspace ? () => setServerActionsOpen(true) : undefined}
+        onOpenJoinInfo={() => setJoinInfoOpen(true)}
+        joinCommand={joinCommandFor(selectedServer.gamePort)}
+        onCopyJoinCommand={() => copyJoinCommandFor(selectedServer.gamePort)}
+        onCopySessionName={() => copySessionName(selectedServer.sessionName)}
       />
 
       <div className={classes.body} data-compact={compactWorkspace || undefined}>
@@ -325,6 +330,15 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
           sidePanel={sidePanel}
         />
       )}
+
+      <JoinInfoModal
+        opened={joinInfoOpen}
+        onClose={() => setJoinInfoOpen(false)}
+        server={selectedServer}
+        serverRunning={runtime?.status === "running"}
+        publicIp={publicIp}
+        refreshPublicIp={refreshPublicIp}
+      />
     </div>
   );
 }
