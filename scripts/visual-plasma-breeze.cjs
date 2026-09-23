@@ -2,14 +2,14 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
-const { DatabaseSync } = require("node:sqlite");
 const {
-  initProfileDatabase,
   launchElectronApp,
   quitElectronApp,
   removeFixtureDir,
+  seedAppearance,
   waitForOverview,
 } = require("./e2e-launch.cjs");
+const { assertFamilyMounted } = require("./visual-family-tokens.cjs");
 
 /**
  * Plasma Breeze visual review (#PUX-005-B) - docs/visual-testing.md
@@ -41,19 +41,18 @@ const ROUTES = [
   { label: "Hosted Resources", page: "[data-hosted-resources-page]" },
 ];
 
-function seedBreezeTheme(profileDir, scheme) {
-  const dbPath = path.join(profileDir, "yark-server-manager.db");
-  initProfileDatabase(dbPath);
-  const db = new DatabaseSync(dbPath);
-  db.prepare(
-    `INSERT INTO app_settings (key, value, updated_at) VALUES (?, ?, ?)
-     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
-  ).run(
-    "appearance.v1",
-    JSON.stringify({ themeFamily: "plasma-breeze", scheme, panels: "auto" }),
-    new Date().toISOString(),
-  );
-  db.close();
+function collectWindowErrors(app, errors) {
+  const attach = (page) => {
+    page.on("console", (message) => {
+      if (message.type() === "error") errors.push(`console: ${message.text()}`);
+    });
+    page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
+  };
+
+  app.on("window", attach);
+  for (const page of app.windows()) {
+    attach(page);
+  }
 }
 
 async function goNav(page, label) {
@@ -78,39 +77,21 @@ async function run() {
 
   for (const scheme of SCHEMES) {
     const profileDir = fs.mkdtempSync(path.join(os.tmpdir(), `yark-visual-breeze-${scheme}-`));
-    seedBreezeTheme(profileDir, scheme);
+    seedAppearance(profileDir, { family: "plasma-breeze", scheme });
 
     let app = null;
     const errors = [];
     try {
       app = await launchElectronApp({ profileDir });
+      collectWindowErrors(app, errors);
       const page = await waitForOverview(app);
-      page.on("console", (message) => {
-        if (message.type() === "error") errors.push(`console: ${message.text()}`);
-      });
-      page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
+      const mounted = await assertFamilyMounted(page, "plasma-breeze");
 
-      const mounted = await page.evaluate(() => {
+      const mountedScheme = await page.evaluate(() => {
         const root = document.documentElement;
-        const style = getComputedStyle(root);
-        return {
-          attribute: root.getAttribute("data-mantine-color-scheme"),
-          accent: style.getPropertyValue("--ark-blue-9").trim().toLowerCase(),
-          font: style.getPropertyValue("--mantine-font-family").trim(),
-          panel: style.getPropertyValue("--app-color-panel").trim(),
-          radiusMd: style.getPropertyValue("--app-radius-md").trim(),
-        };
+        return root.getAttribute("data-mantine-color-scheme");
       });
-      assert.equal(mounted.attribute, scheme, `Mantine scheme attribute is not ${scheme}`);
-      assert.equal(mounted.accent, "#3daee9", `accent is "${mounted.accent}", expected the Breeze #3daee9`);
-      assert.ok(mounted.font.includes("Noto Sans"), `body font is "${mounted.font}", expected Noto Sans`);
-      assert.ok(mounted.panel.length > 0, "--app-color-panel is not emitted by the resolver");
-      // KDE ladder: large surfaces 6px (compact default -> 5px), not Fluent's 8px.
-      assert.equal(
-        mounted.radiusMd,
-        "5px",
-        `${scheme}: --app-radius-md is "${mounted.radiusMd}", expected Breeze's 5px (6 * compact)`,
-      );
+      assert.equal(mountedScheme, scheme, `Mantine scheme attribute is not ${scheme}`);
       console.log(
         `VISUAL_BREEZE_SCHEME=${scheme} accent=${mounted.accent} font=${mounted.font} panel=${mounted.panel}`,
       );

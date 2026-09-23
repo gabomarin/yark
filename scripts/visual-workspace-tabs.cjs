@@ -9,8 +9,10 @@ const {
   launchElectronApp,
   quitElectronApp,
   removeFixtureDir,
+  seedAppearance,
   waitForOverview,
 } = require("./e2e-launch.cjs");
+const { assertFamilyMounted } = require("./visual-family-tokens.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -56,12 +58,9 @@ function seedProfile(profileDir) {
   fs.writeFileSync(path.join(iniDir, "GameUserSettings.ini"), INI);
   fs.writeFileSync(path.join(iniDir, "Game.ini"), "[ServerSettings]\n");
 
+  seedAppearance(profileDir, { family: FAMILY, scheme: THEME });
   const db = new DatabaseSync(dbPath);
   const now = new Date().toISOString();
-  db.prepare(
-    `INSERT INTO app_settings (key, value, updated_at) VALUES (?, ?, ?)
-     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
-  ).run("appearance.v1", JSON.stringify({ themeFamily: FAMILY, scheme: THEME, panels: "auto" }), now);
   // Stored as the bare value, not JSON: that is how the density pref is written and read.
   db.prepare(
     `INSERT INTO app_settings (key, value, updated_at) VALUES (?, ?, ?)
@@ -190,21 +189,7 @@ async function run() {
     });
     page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
 
-    const mounted = await page.evaluate(() => {
-      const style = getComputedStyle(document.documentElement);
-      return {
-        accent: style.getPropertyValue("--ark-blue-9").trim().toLowerCase(),
-        font: style.getPropertyValue("--mantine-font-family").trim(),
-      };
-    });
-    if (FAMILY === "plasma-breeze") {
-      assert.equal(
-        mounted.accent,
-        "#3daee9",
-        `Plasma Breeze accent is "${mounted.accent}", expected the Breeze #3daee9`,
-      );
-      assert.ok(mounted.font.includes("Noto Sans"), `Plasma Breeze body font is "${mounted.font}", expected Noto Sans`);
-    }
+    const mounted = await assertFamilyMounted(page, FAMILY);
     console.log(`VISUAL_WORKSPACE_TABS_FAMILY=${FAMILY} accent=${mounted.accent}`);
 
     await page.locator("[data-server-card]").first().click();

@@ -14,6 +14,8 @@ const os = require("node:os");
 const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
+const { seedAppearance } = require("./e2e-launch.cjs");
+const { assertFamilyMounted } = require("./visual-family-tokens.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -158,10 +160,6 @@ function seedServers(userData, count) {
   const db = new DatabaseSync(dbPath);
   db.prepare("DELETE FROM servers").run();
   const now = new Date().toISOString();
-  db.prepare(
-    `INSERT INTO app_settings (key, value, updated_at) VALUES (?, ?, ?)
-     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
-  ).run("appearance.v1", JSON.stringify({ themeFamily: FAMILY, scheme: "dark", panels: "auto" }), now);
   const insert = db.prepare(
     `INSERT INTO servers (
       id, name, map, install_dir, enabled, session_name,
@@ -235,6 +233,7 @@ async function withOverviewSession(userData, fn) {
     page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
     await page.waitForLoadState("domcontentloaded");
     await waitForOverviewLayoutReady(page);
+    await assertFamilyMounted(page, FAMILY);
     await fn(page, errors);
   } finally {
     await quitApp(app);
@@ -300,7 +299,10 @@ async function run() {
   const reports = [];
 
   try {
-    // Init schema on an empty profile, then capture empty Overview.
+    // Seed appearance before the first session so even empty-fleet shots use the requested family.
+    seedAppearance(userData, { family: FAMILY, scheme: "dark" });
+
+    // Capture empty Overview after the family has been mounted and asserted.
     await withOverviewSession(userData, async (page, errors) => {
       await setDensity(page, "comfortable");
       assert.equal(await page.locator(SERVER_CARD).count(), 0);
