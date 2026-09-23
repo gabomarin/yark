@@ -158,6 +158,7 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
       }}
       onCopyConfiguration={() => props.onCopyConfiguration(selectedServer.id)}
       onKill={() => props.onKillServer(selectedServer.id)}
+      onDelete={() => props.onDeleteServer?.(selectedServer.id)}
       onToggleEnabled={() => props.onToggleServerEnabled?.(selectedServer.id, !selectedServer.enabled)}
     />
   );
