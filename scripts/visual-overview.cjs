@@ -14,10 +14,15 @@ const os = require("node:os");
 const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
+const { seedAppearance } = require("./e2e-launch.cjs");
+const { assertFamilyMounted } = require("./visual-family-tokens.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
 const projectRoot = path.resolve(__dirname, "..");
+
+/** Family axis (#PUX-005-B): default Fluent, or the Plasma Breeze family. */
+const FAMILY = process.env.YARK_VISUAL_FAMILY === "plasma-breeze" ? "plasma-breeze" : "fluent";
 
 const sizes = [
   { name: "hd", width: 1280, height: 720 },
@@ -228,6 +233,7 @@ async function withOverviewSession(userData, fn) {
     page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
     await page.waitForLoadState("domcontentloaded");
     await waitForOverviewLayoutReady(page);
+    await assertFamilyMounted(page, FAMILY);
     await fn(page, errors);
   } finally {
     await quitApp(app);
@@ -287,13 +293,16 @@ async function assertCardSurfaceOpensWorkspace(page) {
 async function run() {
   process.chdir(projectRoot);
 
-  const outDir = path.join(os.tmpdir(), "ark-gbo-visual-overview");
+  const outDir = path.join(os.tmpdir(), "ark-gbo-visual-overview", FAMILY);
   fs.mkdirSync(outDir, { recursive: true });
   const userData = fs.mkdtempSync(path.join(os.tmpdir(), "yark-visual-overview-"));
   const reports = [];
 
   try {
-    // Init schema on an empty profile, then capture empty Overview.
+    // Seed appearance before the first session so even empty-fleet shots use the requested family.
+    seedAppearance(userData, { family: FAMILY, scheme: "dark" });
+
+    // Capture empty Overview after the family has been mounted and asserted.
     await withOverviewSession(userData, async (page, errors) => {
       await setDensity(page, "comfortable");
       assert.equal(await page.locator(SERVER_CARD).count(), 0);

@@ -11,6 +11,12 @@ const require = createRequire(import.meta.url);
 const { initProfileDatabase } = require("../../scripts/e2e-init-profile-db.cjs") as {
   initProfileDatabase: (dbPath: string) => void;
 };
+const { seedAppearance } = require("../../scripts/e2e-launch.cjs") as {
+  seedAppearance: (
+    profileDir: string,
+    selection: { family: "fluent" | "plasma-breeze"; scheme: "dark" | "light" },
+  ) => void;
+};
 
 const tempRoots: string[] = [];
 
@@ -45,6 +51,21 @@ describe("schema-migrations.json E2E seed path", () => {
           .prepare("SELECT 1 AS present FROM sqlite_master WHERE type = 'index' AND name = 'idx_servers_created_at'")
           .get(),
       ).toEqual({ present: 1 });
+    } finally {
+      db.close();
+    }
+  });
+
+  it("seeds appearance into a new isolated profile before app launch", () => {
+    const dir = mkdtempSync(join(tmpdir(), "yark-e2e-appearance-"));
+    tempRoots.push(dir);
+
+    seedAppearance(dir, { family: "plasma-breeze", scheme: "light" });
+
+    const db = openDatabase(join(dir, "yark-server-manager.db"), { takeSnapshots: false });
+    try {
+      const row = db.prepare("SELECT value FROM app_settings WHERE key = ?").get("appearance.v1") as { value: string };
+      expect(JSON.parse(row.value)).toEqual({ themeFamily: "plasma-breeze", scheme: "light", panels: "auto" });
     } finally {
       db.close();
     }

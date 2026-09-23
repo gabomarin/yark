@@ -145,7 +145,6 @@ export function AppProviders({
             <ModalsProvider
               modalProps={{
                 centered: true,
-                radius: "md",
                 ...(isRendererTest() ? { transitionProps: { duration: 0 } } : {}),
               }}
               labels={{ confirm: "Confirm", cancel: "Cancel" }}

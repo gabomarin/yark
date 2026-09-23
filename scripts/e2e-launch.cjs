@@ -11,6 +11,7 @@ const { execFileSync, spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
 const { initProfileDatabase } = require("./e2e-init-profile-db.cjs");
 
@@ -42,6 +43,33 @@ function createE2eFixtureRoots(label = "e2e", options = {}) {
     fixtureName,
     root,
   };
+}
+
+/**
+ * Seed the persisted theme family and scheme before launching the app.
+ * Initializes a new isolated profile when the database does not exist yet.
+ * @param {string} profileDir
+ * @param {{ family: "fluent" | "plasma-breeze", scheme: "dark" | "light" }} selection
+ */
+function seedAppearance(profileDir, selection) {
+  const dbPath = path.join(profileDir, "yark-server-manager.db");
+  if (!fs.existsSync(dbPath)) {
+    initProfileDatabase(dbPath);
+  }
+
+  const db = new DatabaseSync(dbPath);
+  try {
+    db.prepare(
+      `INSERT INTO app_settings (key, value, updated_at) VALUES (?, ?, ?)
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+    ).run(
+      "appearance.v1",
+      JSON.stringify({ themeFamily: selection.family, scheme: selection.scheme, panels: "auto" }),
+      new Date().toISOString(),
+    );
+  } finally {
+    db.close();
+  }
 }
 
 /**
@@ -378,6 +406,7 @@ async function openWorkspaceTab(page, name) {
 module.exports = {
   projectRoot,
   createE2eFixtureRoots,
+  seedAppearance,
   assertUnderFixtureRoot,
   launchElectronApp,
   waitForOverview,

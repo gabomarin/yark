@@ -85,6 +85,8 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
     handleOpenNativeConsoleChange,
     uiDensity,
     handleUiDensityChange,
+    family,
+    handleFamilyChange,
     scheme,
     handleSchemeChange,
     workspacePanels,
@@ -259,6 +261,8 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
             onOpenNativeTerminalOnStartChange={(enabled) => void handleOpenNativeConsoleChange(enabled)}
             uiDensity={uiDensity}
             onUiDensityChange={(density) => void handleUiDensityChange(density)}
+            family={family}
+            onFamilyChange={(nextFamily) => void handleFamilyChange(nextFamily)}
             scheme={scheme}
             onSchemeChange={(nextScheme) => void handleSchemeChange(nextScheme)}
             workspacePanels={workspacePanels}

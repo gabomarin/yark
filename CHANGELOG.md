@@ -17,8 +17,11 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Removing an admin from RCON → Survivors or Admins now requires explicit confirmation.
 - Workspace Quick actions now offers the same guarded Delete server flow as the server card menu (#597).
 - Operator action icons now follow a consistent semantic palette: neutral utilities, blue primary actions, amber attention states, and red destructive actions.
+- A new **Plasma Breeze** theme family (Breeze Dark and Breeze Light) joins Fluent, and Settings → Appearance now picks the theme family separately from the light/dark scheme.
 
 ### Changed
+
+- Plasma Breeze keeps KDE cyan for selection and focus while using a darker, AA-readable blue for filled primary actions; Settings now labels the scheme control **Color scheme**.
 
 - Appearance settings now separate the visual theme family from its light/dark scheme, preserving the current Fluent/base theme as the fallback while preparing the registry for future families.
 - OpenCodeReview PR comments now include an operator-facing change summary and can be triggered with the shorter `/ocr` slash command alias.

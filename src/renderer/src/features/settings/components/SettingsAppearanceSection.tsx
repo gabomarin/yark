@@ -1,14 +1,16 @@
 import type { ReactElement } from "react";
 import { SegmentedControl, Text, Title } from "@mantine/core";
-import { APP_THEME_LIST } from "@theme/themes";
-import { isThemeScheme, isWorkspacePanelsId } from "@shared/settings/appearance";
+import { THEME_FAMILY_LIST, themeVariantsForFamily } from "@theme/themes";
+import { isThemeFamilyId, isThemeScheme, isWorkspacePanelsId } from "@shared/settings/appearance";
 import { WORKSPACE_PANELS_OPTION_LIST, resolveWorkspacePanelsOption } from "@shared/workspace/workspacePanels";
-import type { ThemeScheme, UiDensity, WorkspacePanelsId } from "../settingsModel";
+import type { ThemeFamilyId, ThemeScheme, UiDensity, WorkspacePanelsId } from "../settingsModel";
 import classes from "../SettingsPage.module.css";
 
 interface Props {
   uiDensity: UiDensity;
   onUiDensityChange: (density: UiDensity) => void;
+  family: ThemeFamilyId;
+  onFamilyChange: (family: ThemeFamilyId) => void;
   scheme: ThemeScheme;
   onSchemeChange: (scheme: ThemeScheme) => void;
   workspacePanels: WorkspacePanelsId;
@@ -16,10 +18,11 @@ interface Props {
 }
 
 /**
- * Appearance (#PUX-004 Track B). Display size, theme and where the server
- * workspace puts its panels - the three "how it looks on this PC" choices, so
- * density lives here instead of in General. Both id controls render their
- * registry, so shipping another theme or option is data, not a UI change.
+ * Appearance (#PUX-004 Track B, family split #PUX-005-B). Display size, theme
+ * family, scheme and where the server workspace puts its panels - the four "how
+ * it looks on this PC" choices, so density lives here instead of in General.
+ * Every id control renders its registry, so shipping another family, variant or
+ * option is data, not a UI change.
  */
 export function SettingsAppearanceSection(props: Props): ReactElement {
   return (
@@ -28,7 +31,7 @@ export function SettingsAppearanceSection(props: Props): ReactElement {
         Appearance
       </Title>
       <Text size="sm" c="dimmed">
-        Theme, size and how the server workspace arranges its panels.
+        Theme family, color scheme, display size and how the server workspace arranges its panels.
       </Text>
 
       <div className={classes.settingStack}>
@@ -62,10 +65,34 @@ export function SettingsAppearanceSection(props: Props): ReactElement {
         <div className={classes.settingRow}>
           <div className={classes.settingCopy}>
             <Text size="sm" fw={600}>
-              Theme
+              Theme family
             </Text>
             <Text size="xs" c="dimmed" mt={2}>
-              The shell colours.
+              The visual language of the shell.
+            </Text>
+          </div>
+          <div className={classes.settingControl}>
+            <SegmentedControl
+              size="xs"
+              value={props.family}
+              onChange={(value) => {
+                if (isThemeFamilyId(value) && value !== props.family) {
+                  props.onFamilyChange(value);
+                }
+              }}
+              data={THEME_FAMILY_LIST.map((family) => ({ label: family.label, value: family.id }))}
+              aria-label="Theme family"
+            />
+          </div>
+        </div>
+
+        <div className={classes.settingRow}>
+          <div className={classes.settingCopy}>
+            <Text size="sm" fw={600}>
+              Color scheme
+            </Text>
+            <Text size="xs" c="dimmed" mt={2}>
+              Choose the light or dark scheme.
             </Text>
           </div>
           <div className={classes.settingControl}>
@@ -77,8 +104,8 @@ export function SettingsAppearanceSection(props: Props): ReactElement {
                   props.onSchemeChange(value);
                 }
               }}
-              data={APP_THEME_LIST.map((theme) => ({ label: theme.label, value: theme.scheme }))}
-              aria-label="Theme"
+              data={themeVariantsForFamily(props.family).map((theme) => ({ label: theme.label, value: theme.scheme }))}
+              aria-label="Color scheme"
             />
           </div>
         </div>

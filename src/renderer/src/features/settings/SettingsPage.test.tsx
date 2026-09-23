@@ -184,6 +184,8 @@ function defaultSettingsProps(
     onOpenNativeTerminalOnStartChange: vi.fn(),
     uiDensity: "compact",
     onUiDensityChange: vi.fn(),
+    family: "fluent",
+    onFamilyChange: vi.fn(),
     scheme: "dark",
     onSchemeChange: vi.fn(),
     workspacePanels: "auto",
@@ -369,13 +371,16 @@ describe("SettingsPage", () => {
     expect(onUiDensityChange).toHaveBeenCalledWith("comfortable");
   });
 
-  it("keeps display size, theme and server panels together in Appearance (#PUX-004)", async () => {
+  it("keeps display size, theme family, theme and server panels together in Appearance (#PUX-004, #PUX-005-B)", async () => {
     const user = userEvent.setup();
+    const onFamilyChange = vi.fn();
     const onSchemeChange = vi.fn();
     const onWorkspacePanelsChange = vi.fn();
     stubSettingsApi();
 
     renderSettings({
+      family: "fluent",
+      onFamilyChange,
       scheme: "dark",
       onSchemeChange,
       workspacePanels: "auto",
@@ -386,14 +391,30 @@ describe("SettingsPage", () => {
     expect(document.querySelector("[data-settings-appearance]")).not.toBeNull();
     expect(screen.getByLabelText("Display size")).toBeInTheDocument();
 
-    // Both id controls render their registry: Dark is the only theme, Auto the default.
-    expect(screen.getByLabelText("Theme")).toBeInTheDocument();
+    // Family and scheme are independent controls, both rendered from the registry.
+    expect(screen.getByLabelText("Theme family")).toBeInTheDocument();
+    await user.click(screen.getByRole("radio", { name: "Plasma Breeze" }));
+    expect(onFamilyChange).toHaveBeenCalledWith("plasma-breeze");
+
+    // Fluent is active, so the scheme control lists Fluent's variants.
+    expect(screen.getByLabelText("Color scheme")).toBeInTheDocument();
     await user.click(screen.getByRole("radio", { name: "Dark" }));
     expect(onSchemeChange).not.toHaveBeenCalled();
 
     expect(screen.getByLabelText("Server panels")).toBeInTheDocument();
     await user.click(screen.getByRole("radio", { name: "Drawers" }));
     expect(onWorkspacePanelsChange).toHaveBeenCalledWith("drawers");
+  });
+
+  it("lists the active family's scheme variants in Appearance (#PUX-005-B)", async () => {
+    const user = userEvent.setup();
+    stubSettingsApi();
+
+    renderSettings({ family: "plasma-breeze", scheme: "light" });
+
+    await openCategory(user, "Appearance");
+    expect(screen.getByRole("radio", { name: "Breeze Light" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Breeze Dark" })).toBeInTheDocument();
   });
 
   it("persists dismissing the tray-hide notification", async () => {
