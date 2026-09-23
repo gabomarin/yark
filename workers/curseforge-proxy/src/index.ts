@@ -9,6 +9,7 @@
  */
 
 import { decodeHtmlEntities } from "../../../src/shared/mods/decode-html-entities";
+import { YARK_CLIENT_ID } from "../../../src/shared/mods/curseforge-proxy-headers";
 import { resolveWorkerConfig, type Env, type RateLimiter } from "./config";
 
 export type { Env };
@@ -57,6 +58,8 @@ const UPSTREAM = "https://api.curseforge.com";
 const UPSTREAM_HOST = "api.curseforge.com";
 const MAX_UPSTREAM_REDIRECTS = 3;
 const MAX_BATCH_MOD_IDS = 50;
+/** Keep concurrent upstream requests below Cloudflare's per-invocation connection limit. */
+const MAX_CONCURRENT_DESCRIPTION_FETCHES = 6;
 const MAX_SEARCH_FILTER_LENGTH = 200;
 const MAX_SEARCH_PAGE_SIZE = 50;
 /** POST /v1/mods body cap (50 mod IDs is far smaller). */
@@ -86,10 +89,14 @@ const SEARCH_FORWARD_PARAMS = [
 type CorsHeaders = Record<string, string>;
 type RouteClass = "health" | "search" | "read" | "batch" | "unknown";
 type CacheOutcome = "HIT" | "MISS" | "BYPASS";
+type CloudflareRequest = Request & { cf?: { country?: unknown } };
 
 interface RequestMetrics {
   routeClass: RouteClass;
   method: string;
+  country: string | null;
+  client: typeof YARK_CLIENT_ID | null;
+  clientVersion: string | null;
   cache: CacheOutcome;
   upstreamStatus: number | null;
   rateLimited: boolean;
@@ -98,9 +105,23 @@ interface RequestMetrics {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const started = Date.now();
+    const country = (request as CloudflareRequest).cf?.country;
+    const client =
+      request.headers.get("X-Yark-Client")?.trim() === YARK_CLIENT_ID ? YARK_CLIENT_ID : null;
+    const rawClientVersion = request.headers.get("X-Yark-Version")?.trim();
+    const clientVersion =
+      client !== null &&
+      rawClientVersion !== undefined &&
+      rawClientVersion.length <= 32 &&
+      /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(rawClientVersion)
+        ? rawClientVersion
+        : null;
     const metrics: RequestMetrics = {
       routeClass: "unknown",
       method: request.method,
+      country: typeof country === "string" ? country : null,
+      client,
+      clientVersion,
       cache: "BYPASS",
       upstreamStatus: null,
       rateLimited: false,
@@ -417,11 +438,20 @@ async function handleGetMods(
   // for every ASA id in the batch is an N+1 that slows the UI and burns CF quota.
   const mapMods = asaMods.filter(({ raw }) => isMapsCategoryMod(raw));
   const descriptions = new Map<number, string | null>();
-  await Promise.all(
-    mapMods.map(async ({ id }) => {
-      descriptions.set(id, await fetchModDescription(String(id), apiKey, metrics));
-    }),
+  let nextMapModIndex = 0;
+  const descriptionWorkers = Array.from(
+    { length: Math.min(mapMods.length, MAX_CONCURRENT_DESCRIPTION_FETCHES) },
+    async () => {
+      while (nextMapModIndex < mapMods.length) {
+        // This claim runs synchronously until the next await, so workers cannot take the same index.
+        const mod = mapMods[nextMapModIndex];
+        if (mod === undefined) return;
+        nextMapModIndex += 1;
+        descriptions.set(mod.id, await fetchModDescription(String(mod.id), apiKey, metrics));
+      }
+    },
   );
+  await Promise.all(descriptionWorkers);
   const items: YarkModMetadata[] = asaMods.map(({ id, raw }) =>
     toYarkMod(raw, descriptions.get(id) ?? null),
   );
@@ -1158,18 +1188,19 @@ function logRequest(
   latencyMs: number,
 ): void {
   // Privacy: never log API keys, bearer tokens, searchFilter text, full IPs, or bodies.
-  console.log(
-    JSON.stringify({
-      service: "yark-curseforge-proxy",
-      routeClass: metrics.routeClass,
-      method: metrics.method,
-      status,
-      latencyMs,
-      cache: metrics.cache,
-      upstreamStatus: metrics.upstreamStatus,
-      rateLimited: metrics.rateLimited,
-    }),
-  );
+  console.log({
+    service: "yark-curseforge-proxy",
+    routeClass: metrics.routeClass,
+    method: metrics.method,
+    country: metrics.country,
+    client: metrics.client,
+    clientVersion: metrics.clientVersion,
+    status,
+    latencyMs,
+    cache: metrics.cache,
+    upstreamStatus: metrics.upstreamStatus,
+    rateLimited: metrics.rateLimited,
+  });
 }
 
 function sanitizeErrorMessage(cause: unknown): string {

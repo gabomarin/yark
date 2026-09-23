@@ -392,11 +392,9 @@ jobs:
                 const fullDiff = String(diffResponse.data || '');
                 const diffTruncated = fullDiff.length > 50000;
                 const diff = fullDiff.slice(0, 50000);
+                const llmResponse = await fetch(process.env.OCR_LLM_URL, {
+                  method: 'POST',
                   signal: AbortSignal.timeout(60000),
-                });
-                if (!llmResponse.ok) {
-                  throw new Error(`LLM endpoint returned HTTP ${llmResponse.status}`);
-                }
                   headers: {
                     authorization: `Bearer ${process.env.OCR_LLM_TOKEN}`,
                     'content-type': 'application/json',
