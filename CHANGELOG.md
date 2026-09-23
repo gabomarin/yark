@@ -20,6 +20,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- OpenCodeReview PR comments now include an operator-facing change summary and can be triggered with the shorter `/ocr` slash command alias.
 - The URL settings edited in INI Files (`BanListURL`, `BadWordListURL`, `BadWordWhiteListURL`, `CustomLiveTuningUrl`) now ship uncommented in the default `GameUserSettings.ini`, so a fresh server shows the row and its Hosted Resource picker; writing one of them for the first time now uncomments that default in place instead of leaving both a `#Key=N/A` line and a second assignment.
 - Hosted Resources diagnostics now also find YARK URLs on a server's launch arguments, not only in `GameUserSettings.ini`, so a flag- or mod-supplied reference is rechecked and warned about like any other.
 - Hosted Resources now shows health at a glance: a **Listening / Not listening** badge on the status card and a **Serving / Not serving / Published · not checked** badge on every resource, with an automatic diagnostics probe after a resource is created or edited while the host is on - so the card reports what was actually served, never an assumed green. Per-resource Diagnostics now separates unreachable content from hash mismatches, marks stale references on the affected cards, offers one-click URL copying, reruns automatically after serving-port and resource enablement changes, identifies settings that still use the previous port, and surfaces warning/error states in the sidebar and affected server workspace.
