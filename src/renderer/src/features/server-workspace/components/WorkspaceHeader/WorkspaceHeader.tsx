@@ -100,19 +100,21 @@ export function WorkspaceHeader(props: Props): ReactElement {
               <Text size="xs" title={props.server.sessionName} className={classes.detailValue}>
                 {props.server.sessionName}
               </Text>
-              <Tooltip label="Copy session name" withArrow>
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  size="xs"
-                  aria-label={`Copy session name ${props.server.sessionName}`}
-                  onClick={props.onCopySessionName}
-                >
-                  <Copy size={12} />
-                </ActionIcon>
-              </Tooltip>
+              {props.onCopySessionName && (
+                <Tooltip label="Copy session name" withArrow>
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    size="xs"
+                    aria-label={`Copy session name ${props.server.sessionName}`}
+                    onClick={props.onCopySessionName}
+                  >
+                    <Copy size={12} />
+                  </ActionIcon>
+                </Tooltip>
+              )}
             </Group>
-            {props.joinCommand !== null && props.joinCommand !== undefined && (
+            {props.joinCommand && (
               <Group gap="xs" wrap="nowrap" align="center" className={classes.detailItem}>
                 <Text size="xs" c="dimmed">
                   Join:
@@ -120,17 +122,19 @@ export function WorkspaceHeader(props: Props): ReactElement {
                 <Text size="xs" ff="monospace" title={props.joinCommand} className={classes.detailValue}>
                   {props.joinCommand}
                 </Text>
-                <Tooltip label="Copy in-game command" withArrow>
-                  <ActionIcon
-                    variant="subtle"
-                    color="gray"
-                    size="xs"
-                    aria-label={`Copy join command ${props.joinCommand}`}
-                    onClick={props.onCopyJoinCommand}
-                  >
-                    <Copy size={12} />
-                  </ActionIcon>
-                </Tooltip>
+                {props.onCopyJoinCommand && (
+                  <Tooltip label="Copy in-game command" withArrow>
+                    <ActionIcon
+                      variant="subtle"
+                      color="gray"
+                      size="xs"
+                      aria-label={`Copy join command ${props.joinCommand}`}
+                      onClick={props.onCopyJoinCommand}
+                    >
+                      <Copy size={12} />
+                    </ActionIcon>
+                  </Tooltip>
+                )}
               </Group>
             )}
           </Group>

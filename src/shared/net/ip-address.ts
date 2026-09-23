@@ -6,5 +6,5 @@
 export function isIpv4Address(value: string): boolean {
   const parts = value.trim().split(".");
   if (parts.length !== 4) return false;
-  return parts.every((part) => /^\d{1,3}$/.test(part) && Number(part) <= 255);
+  return parts.every((part) => /^(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$/.test(part));
 }

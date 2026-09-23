@@ -11,8 +11,6 @@ export interface JoinInfoInput {
   gamePort: number;
   queryPort: number;
   serverPassword: string | null;
-  /** Operator-supplied or auto-detected public IPv4; empty when unknown. */
-  host: string;
 }
 
 export function normalizeJoinHost(host: string): string {
@@ -41,7 +39,25 @@ export function hasJoinPassword(serverPassword: string | null): boolean {
 /** Masked password for on-screen display; empty when none is set. */
 export function maskJoinPassword(serverPassword: string | null): string {
   const password = serverPassword?.trim() ?? "";
-  return password.length > 0 ? "•".repeat(Math.min(password.length, 12)) : "";
+  return password.length > 0 ? "•".repeat(8) : "";
+}
+
+export function getPublicIpStatusText(
+  state: "idle" | "loading" | "detected" | "failed",
+  hasIp: boolean,
+  hostInvalid: boolean,
+): string {
+  if (state === "loading") return "Checking this PC’s public IP…";
+  if (state === "failed") {
+    return hasIp
+      ? "Couldn’t refresh the public IP. The current address is still shown."
+      : "Couldn’t detect this PC’s public IP. Use refresh to try again.";
+  }
+  if (hostInvalid) return "The detected address is not a valid IPv4 address. Refresh to try again.";
+  if (state === "detected") return "Detected from this PC. Use refresh to check again.";
+  return hasIp
+    ? "Using the current address. Refresh to check it again."
+    : "No public IP detected yet. Use refresh to try again.";
 }
 
 export interface JoinInfoFieldCopies {

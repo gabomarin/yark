@@ -15,7 +15,6 @@ function input(partial: Partial<JoinInfoInput> = {}): JoinInfoInput {
     gamePort: 7777,
     queryPort: 27015,
     serverPassword: null,
-    host: "",
     ...partial,
   };
 }
@@ -31,6 +30,7 @@ describe("joinInfoModel", () => {
     expect(isJoinHostUsable("")).toBe(false);
     expect(isJoinHostUsable("play.example.com")).toBe(false);
     expect(isJoinHostUsable("203.0.113.999")).toBe(false);
+    expect(isJoinHostUsable("203.000.113.5")).toBe(false);
   });
 
   it("builds the open console command from a valid host", () => {
@@ -46,8 +46,8 @@ describe("joinInfoModel", () => {
     expect(hasJoinPassword("   ")).toBe(false);
     expect(hasJoinPassword("hunter2")).toBe(true);
     expect(maskJoinPassword(null)).toBe("");
-    expect(maskJoinPassword("hunter2")).toBe("•".repeat(7));
-    expect(maskJoinPassword("x".repeat(40))).toBe("•".repeat(12));
+    expect(maskJoinPassword("hunter2")).toBe("•".repeat(8));
+    expect(maskJoinPassword("x".repeat(40))).toBe("•".repeat(8));
   });
 
   it("builds per-field copies", () => {

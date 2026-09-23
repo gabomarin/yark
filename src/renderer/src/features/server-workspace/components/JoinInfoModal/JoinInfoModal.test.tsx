@@ -84,13 +84,40 @@ describe("JoinInfoModal", () => {
     expect(screen.getByText("203.0.113.5")).toBeInTheDocument();
   });
 
+  it("retries detection each time the dialog is reopened while no usable IP exists", async () => {
+    const refreshPublicIp = vi.fn(async () => true);
+    const { rerender } = render(
+      <AppProviders>
+        <JoinInfoModal opened onClose={vi.fn()} server={profile()} publicIp="" refreshPublicIp={refreshPublicIp} />
+      </AppProviders>,
+    );
+    await waitFor(() => expect(refreshPublicIp).toHaveBeenCalledOnce());
+    rerender(
+      <AppProviders>
+        <JoinInfoModal
+          opened={false}
+          onClose={vi.fn()}
+          server={profile()}
+          publicIp=""
+          refreshPublicIp={refreshPublicIp}
+        />
+      </AppProviders>,
+    );
+    rerender(
+      <AppProviders>
+        <JoinInfoModal opened onClose={vi.fn()} server={profile()} publicIp="" refreshPublicIp={refreshPublicIp} />
+      </AppProviders>,
+    );
+    await waitFor(() => expect(refreshPublicIp).toHaveBeenCalledTimes(2));
+  });
+
   it("masks the join password but copies the real value on demand", async () => {
     const user = userEvent.setup();
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
     renderModal(profile({ serverPassword: "hunter2" }));
 
-    expect(screen.getByText("•".repeat(7))).toBeInTheDocument();
+    expect(screen.getByText("•".repeat(8))).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /copy join password/i }));
     await waitFor(() => {
       expect(writeText).toHaveBeenCalledWith("hunter2");

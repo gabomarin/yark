@@ -9,6 +9,7 @@ import { copyTextToClipboard } from "@ui/copyToClipboard";
 import {
   buildJoinFieldCopies,
   buildOpenCommand,
+  getPublicIpStatusText,
   hasJoinPassword,
   isJoinHostUsable,
   maskJoinPassword,
@@ -35,7 +36,7 @@ type IpState = "idle" | "loading" | "detected" | "failed";
 export function JoinInfoModal(props: Props): ReactElement {
   const { opened, serverRunning, publicIp, refreshPublicIp } = props;
   const [ipState, setIpState] = useState<IpState>("idle");
-  const requestedRef = useRef(false);
+  const wasOpenedRef = useRef(false);
 
   const runDetect = useCallback(async () => {
     setIpState("loading");
@@ -48,20 +49,23 @@ export function JoinInfoModal(props: Props): ReactElement {
   }, [refreshPublicIp]);
 
   useEffect(() => {
-    if (opened && serverRunning !== true && !requestedRef.current && publicIp.trim().length === 0) {
-      requestedRef.current = true;
+    if (!opened) {
+      wasOpenedRef.current = false;
+      return;
+    }
+    if (!wasOpenedRef.current && serverRunning !== true && !isJoinHostUsable(publicIp)) {
+      wasOpenedRef.current = true;
       void runDetect();
     }
-  }, [opened, serverRunning, publicIp, runDetect]);
+  }, [opened, publicIp, serverRunning, runDetect]);
 
   const hasIp = publicIp.trim().length > 0;
 
   const input: JoinInfoInput = {
     sessionName: props.server.sessionName,
     gamePort: props.server.gamePort,
-    queryPort: props.server.queryPort,
     serverPassword: props.server.serverPassword,
-    host: publicIp,
+    queryPort: props.server.queryPort,
   };
   const fields = buildJoinFieldCopies(input);
   const command = buildOpenCommand(publicIp, props.server.gamePort);
@@ -112,19 +116,7 @@ export function JoinInfoModal(props: Props): ReactElement {
           )}
         </Group>
         <Text size="xs" c="dimmed" role={ipState === "failed" || hostInvalid ? "status" : undefined}>
-          {ipState === "loading"
-            ? "Checking this PC’s public IP…"
-            : ipState === "failed"
-              ? hasIp
-                ? "Couldn’t refresh the public IP. The current address is still shown."
-                : "Couldn’t detect this PC’s public IP. Use refresh to try again."
-              : hostInvalid
-                ? "The detected address is not a valid IPv4 address. Refresh to try again."
-                : ipState === "detected"
-                  ? "Detected from this PC. Use refresh to check again."
-                  : hasIp
-                    ? "Using the current address. Refresh to check it again."
-                    : "No public IP detected yet. Use refresh to try again."}
+          {getPublicIpStatusText(ipState, hasIp, hostInvalid)}
         </Text>
 
         {command !== null ? (

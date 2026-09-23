@@ -41,11 +41,12 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
   const [serverSwitcherOpen, setServerSwitcherOpen] = useState(false);
   const [serverActionsOpen, setServerActionsOpen] = useState(false);
   const [joinInfoOpen, setJoinInfoOpen] = useState(false);
-  const joinInfoServer =
-    props.servers.find((server) => server.id === props.selectedServerId) ?? props.servers[0] ?? null;
-  const joinInfoServerRunning = joinInfoServer !== null && props.statuses.get(joinInfoServer.id)?.status === "running";
-  const { publicIp, refreshPublicIp, joinCommandFor, copyJoinCommandFor, copySessionName } =
-    useWorkspaceJoinInfo(joinInfoServerRunning);
+  const selectedServer = useMemo(() => {
+    return props.servers.find((server) => server.id === props.selectedServerId) ?? props.servers[0] ?? null;
+  }, [props.selectedServerId, props.servers]);
+  const { publicIp, refreshPublicIp, joinCommandFor, copyJoinCommandFor, copySessionName } = useWorkspaceJoinInfo(
+    selectedServer !== null && props.statuses.get(selectedServer.id)?.status === "running",
+  );
   const [hostedResourceAlertDismissed, setHostedResourceAlertDismissed] = useState(false);
   const panels = useWorkspacePanels();
   // `null` = this option never uses columns, so the workspace stays compact at any width.
@@ -92,10 +93,6 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
   useEffect(() => {
     setHostedResourceAlertDismissed(false);
   }, [props.selectedServerId]);
-
-  const selectedServer = useMemo(() => {
-    return props.servers.find((server) => server.id === props.selectedServerId) ?? props.servers[0] ?? null;
-  }, [props.selectedServerId, props.servers]);
 
   const handleSelectServer = (serverId: string) => {
     if (serverId === props.selectedServerId) return;
