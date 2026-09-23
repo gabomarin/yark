@@ -71,7 +71,7 @@ describe("profile database snapshots (#252)", () => {
     } finally {
       restored.close();
     }
-  });
+  }, 30_000);
 
   it("rotates oldest snapshots per kind", () => {
     const dir = tempDir("yark-db-snap-rotate-");

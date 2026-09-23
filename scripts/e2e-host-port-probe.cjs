@@ -157,7 +157,14 @@ function cardFor(page) {
 async function clickStart(page) {
   const card = cardFor(page);
   await card.waitFor({ state: "visible", timeout: 15_000 });
-  await card.getByRole("button", { name: "Start server", exact: true }).click();
+  const startButton = card.getByRole("button", { name: "Start server", exact: true });
+  if ((await startButton.count()) === 0 && (await page.locator("[data-install-health-scan]").count()) === 0) {
+    // Overview can render before the startup install scan starts. Trigger a scan so
+    // the card does not remain in its unknown-health state without a Start action.
+    await page.getByRole("button", { name: "Check Servers Health", exact: true }).click();
+  }
+  await startButton.waitFor({ state: "visible", timeout: 30_000 });
+  await startButton.click();
 }
 
 async function waitForProbeModal(page) {
