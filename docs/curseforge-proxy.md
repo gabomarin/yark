@@ -65,8 +65,9 @@ Normal Mods workspace use (per install / short session), **assumptions**:
   route only on explicit inspect/add flows — not on batch profile refresh.
 - **POST** batch may trigger `/description` only for **Maps-category** mods
   (map-token heuristics, #195) — not for every id in the batch.
-- Batch description requests run at most six concurrently to stay within the
-  Worker's outgoing-connection limit.
+- Batch description requests use a six-request worker pool: each completed
+  description immediately frees a slot for the next map, while staying within
+  the Worker's outgoing-connection limit.
 - Screenshot URLs ride on the existing Get Mod / batch / search payloads (no
   extra CurseForge round-trip; capped HTTPS URLs only).
 
@@ -103,6 +104,11 @@ not a precise location. The Worker records `client` only when the client sends
 the exact `X-Yark-Client: yark-desktop` value, and accepts `clientVersion` only
 as a short SemVer value. These headers are self-reported labels and do not
 authenticate or attest the desktop app.
+
+Logs intentionally use `head_sampling_rate = 1` (full sampling) while building
+an initial usage and country baseline after deployment. Review log volume after
+several days; lowering the rate can reduce ingest volume, but makes client and
+country counts sampled estimates rather than exact totals.
 
 ```bash
 cd workers/curseforge-proxy

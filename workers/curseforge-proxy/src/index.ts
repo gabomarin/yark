@@ -9,6 +9,7 @@
  */
 
 import { decodeHtmlEntities } from "../../../src/shared/mods/decode-html-entities";
+import { YARK_CLIENT_ID } from "../../../src/shared/mods/curseforge-proxy-headers";
 import { resolveWorkerConfig, type Env, type RateLimiter } from "./config";
 
 export type { Env };
@@ -94,7 +95,7 @@ interface RequestMetrics {
   routeClass: RouteClass;
   method: string;
   country: string | null;
-  client: "yark-desktop" | null;
+  client: typeof YARK_CLIENT_ID | null;
   clientVersion: string | null;
   cache: CacheOutcome;
   upstreamStatus: number | null;
@@ -105,7 +106,8 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const started = Date.now();
     const country = (request as CloudflareRequest).cf?.country;
-    const client = request.headers.get("X-Yark-Client")?.trim() === "yark-desktop" ? "yark-desktop" : null;
+    const client =
+      request.headers.get("X-Yark-Client")?.trim() === YARK_CLIENT_ID ? YARK_CLIENT_ID : null;
     const rawClientVersion = request.headers.get("X-Yark-Version")?.trim();
     const clientVersion =
       client !== null &&
@@ -436,14 +438,19 @@ async function handleGetMods(
   // for every ASA id in the batch is an N+1 that slows the UI and burns CF quota.
   const mapMods = asaMods.filter(({ raw }) => isMapsCategoryMod(raw));
   const descriptions = new Map<number, string | null>();
-  for (let offset = 0; offset < mapMods.length; offset += MAX_CONCURRENT_DESCRIPTION_FETCHES) {
-    const batch = mapMods.slice(offset, offset + MAX_CONCURRENT_DESCRIPTION_FETCHES);
-    await Promise.all(
-      batch.map(async ({ id }) => {
-        descriptions.set(id, await fetchModDescription(String(id), apiKey, metrics));
-      }),
-    );
-  }
+  let nextMapModIndex = 0;
+  const descriptionWorkers = Array.from(
+    { length: Math.min(mapMods.length, MAX_CONCURRENT_DESCRIPTION_FETCHES) },
+    async () => {
+      while (nextMapModIndex < mapMods.length) {
+        const mod = mapMods[nextMapModIndex];
+        if (mod === undefined) return;
+        nextMapModIndex += 1;
+        descriptions.set(mod.id, await fetchModDescription(String(mod.id), apiKey, metrics));
+      }
+    },
+  );
+  await Promise.all(descriptionWorkers);
   const items: YarkModMetadata[] = asaMods.map(({ id, raw }) =>
     toYarkMod(raw, descriptions.get(id) ?? null),
   );

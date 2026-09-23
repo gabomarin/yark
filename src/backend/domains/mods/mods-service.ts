@@ -1,5 +1,6 @@
 import { curseForgeAsaSlugFromUrl, getCurseForgeAsaModUrlError } from "@shared/mods/curseforge-url";
 import { BUILD_CURSEFORGE_PROXY_URL } from "@shared/mods/curseforge-proxy-build-url";
+import { YARK_CLIENT_ID } from "@shared/mods/curseforge-proxy-headers";
 import { MetadataServiceNotConfiguredError, normalizeCurseforgeProxyUrl } from "@shared/mods/curseforge-proxy-url";
 import { normalizeModScreenshotUrls } from "@shared/mods/mod-screenshot-urls";
 import { APP_VERSION } from "@shared/app-version";
@@ -289,7 +290,7 @@ export class ModsService {
         ...init,
         headers: {
           Accept: "application/json",
-          "X-Yark-Client": "yark-desktop",
+          "X-Yark-Client": YARK_CLIENT_ID,
           "X-Yark-Version": APP_VERSION,
           ...(init?.headers ?? {}),
         },

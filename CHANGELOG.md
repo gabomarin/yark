@@ -22,7 +22,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
-- CurseForge map metadata batches now fetch descriptions with bounded concurrency to avoid exceeding Worker connection limits.
+- CurseForge map metadata batches now keep up to six description requests active without waiting between waves.
 - Plasma Breeze keeps KDE cyan for selection and focus while using a darker, AA-readable blue for filled primary actions; Settings now labels the scheme control **Color scheme**.
 
 - Appearance settings now separate the visual theme family from its light/dark scheme, preserving the current Fluent/base theme as the fallback while preparing the registry for future families.
