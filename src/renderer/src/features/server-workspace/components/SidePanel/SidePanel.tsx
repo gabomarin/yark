@@ -161,7 +161,7 @@ export function SidePanel(props: Props): ReactElement {
             justify="flex-start"
             leftSection={
               props.server.enabled ? (
-                <EyeSlash size={14} color="var(--mantine-color-red-6)" />
+                <EyeSlash size={14} color="var(--mantine-color-attention-6)" />
               ) : (
                 <Eye size={14} weight="fill" color="var(--mantine-color-blue-6)" />
               )
@@ -177,7 +177,7 @@ export function SidePanel(props: Props): ReactElement {
             variant="default"
             fullWidth
             justify="flex-start"
-            leftSection={<FolderOpen size={14} color="var(--mantine-color-blue-6)" />}
+            leftSection={<FolderOpen size={14} />}
             onClick={props.onOpenFolder}
           >
             Open folder
@@ -213,7 +213,7 @@ export function SidePanel(props: Props): ReactElement {
             variant="default"
             fullWidth
             justify="flex-start"
-            leftSection={<ShieldCheck size={14} color="var(--mantine-color-teal-6)" />}
+            leftSection={<ShieldCheck size={14} color="var(--mantine-color-blue-6)" />}
             onClick={props.onVerifyFiles}
             disabled={verifyLocked}
             title={verifyLockTitle}
@@ -237,7 +237,7 @@ export function SidePanel(props: Props): ReactElement {
             variant="default"
             fullWidth
             justify="flex-start"
-            leftSection={<FloppyDisk size={14} color="var(--mantine-color-teal-6)" />}
+            leftSection={<FloppyDisk size={14} color="var(--mantine-color-blue-6)" />}
             onClick={props.onSaveWorld}
             disabled={status !== "running"}
           >
@@ -248,7 +248,7 @@ export function SidePanel(props: Props): ReactElement {
             variant="default"
             fullWidth
             justify="flex-start"
-            leftSection={<CopySimple size={14} color="var(--mantine-color-blue-6)" />}
+            leftSection={<CopySimple size={14} />}
             onClick={props.onCopyConfiguration}
           >
             Copy configuration

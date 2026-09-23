@@ -97,7 +97,7 @@ export function buildServerCardMenuActions(input: ServerCardMenuActionInput): Ro
       kind: "item",
       key: "open-settings",
       label: "Open settings",
-      icon: <GearSix size={ICON} color="var(--mantine-color-blue-6)" />,
+      icon: <GearSix size={ICON} />,
       onClick: input.onOpenWorkspace,
     },
     {
@@ -105,7 +105,7 @@ export function buildServerCardMenuActions(input: ServerCardMenuActionInput): Ro
       key: "toggle-enabled",
       label: enabledState.label,
       icon: input.serverEnabled ? (
-        <EyeSlash size={ICON} color="var(--app-color-danger-bright)" />
+        <EyeSlash size={ICON} color="var(--mantine-color-attention-6)" />
       ) : (
         <Eye size={ICON} color="var(--mantine-color-blue-6)" />
       ),
@@ -162,14 +162,14 @@ export function buildServerCardMenuActions(input: ServerCardMenuActionInput): Ro
       kind: "item",
       key: "open-folder",
       label: "Open folder",
-      icon: <FolderOpen size={ICON} color="var(--mantine-color-blue-6)" />,
+      icon: <FolderOpen size={ICON} />,
       onClick: input.onOpenFolder,
     },
     {
       kind: "item",
       key: "view-logs",
       label: "View logs",
-      icon: <FileText size={ICON} color="var(--mantine-color-blue-6)" />,
+      icon: <FileText size={ICON} />,
       disabled: !input.isInstallationReady,
       onClick: input.onOpenLogs,
     },
@@ -182,7 +182,7 @@ export function buildServerCardMenuActions(input: ServerCardMenuActionInput): Ro
       kind: "item",
       key: "configure-manual-restart-warnings",
       label: "Warn players on manual restart…",
-      icon: <Warning size={ICON} color="var(--mantine-color-blue-6)" />,
+      icon: <Warning size={ICON} color="var(--mantine-color-attention-6)" />,
       onClick: () => input.onConfigureRestartWarnings?.(),
     });
   }
@@ -193,7 +193,7 @@ export function buildServerCardMenuActions(input: ServerCardMenuActionInput): Ro
         kind: "item",
         key: "check-updates",
         label: "Check server updates",
-        icon: <MagnifyingGlass size={ICON} color="var(--mantine-color-blue-6)" />,
+        icon: <MagnifyingGlass size={ICON} />,
         disabled: input.checkingUpdates,
         onClick: input.onCheckUpdates,
       },
@@ -223,7 +223,7 @@ export function buildServerCardMenuActions(input: ServerCardMenuActionInput): Ro
         kind: "item",
         key: "verify",
         label: "Verify integrity",
-        icon: <ShieldCheck size={ICON} color="var(--mantine-color-teal-6)" />,
+        icon: <ShieldCheck size={ICON} color="var(--mantine-color-blue-6)" />,
         disabled: input.verifyFilesLocked === true,
         title: input.verifyFilesLocked === true ? "A Downloads job is already queued for this server" : undefined,
         onClick: input.onVerifyFiles,
@@ -246,14 +246,14 @@ export function buildServerCardMenuActions(input: ServerCardMenuActionInput): Ro
       kind: "item",
       key: "clone",
       label: "Clone",
-      icon: <Copy size={ICON} color="var(--mantine-color-blue-6)" />,
+      icon: <Copy size={ICON} />,
       onClick: input.onClone,
     },
     {
       kind: "item",
       key: "copy-configuration",
       label: "Copy configuration…",
-      icon: <Copy size={ICON} color="var(--mantine-color-teal-6)" />,
+      icon: <Copy size={ICON} />,
       onClick: input.onCopyConfiguration,
     },
     { kind: "divider", key: "div-danger" },

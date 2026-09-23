@@ -16,6 +16,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - RCON → Survivors now shows read-only admin stars for third-party remote `AdminListURL` lists, using the existing EOS id/name mapping without enabling edits (#619).
 - Removing an admin from RCON → Survivors or Admins now requires explicit confirmation.
 - Workspace Quick actions now offers the same guarded Delete server flow as the server card menu (#597).
+- Operator action icons now follow a consistent semantic palette: neutral utilities, blue primary actions, amber attention states, and red destructive actions.
 
 ### Changed
 
