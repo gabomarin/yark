@@ -34,9 +34,24 @@ type IpState = "idle" | "loading" | "detected" | "failed";
  * server is reachable and ships no `steam://` deep link.
  */
 export function JoinInfoModal(props: Props): ReactElement {
-  const { opened, serverRunning, publicIp, refreshPublicIp } = props;
+  return (
+    <AppPanelModal
+      opened={props.opened}
+      onClose={props.onClose}
+      title="Share connection details"
+      meta="Copy what players need to find and join this server."
+      size="md"
+      data-testid="join-info-modal"
+    >
+      {props.opened ? <JoinInfoModalContent {...props} /> : null}
+    </AppPanelModal>
+  );
+}
+
+function JoinInfoModalContent(props: Props): ReactElement {
+  const { serverRunning, publicIp, refreshPublicIp } = props;
   const [ipState, setIpState] = useState<IpState>("idle");
-  const wasOpenedRef = useRef(false);
+  const didAutoDetectRef = useRef(false);
 
   const runDetect = useCallback(async () => {
     setIpState("loading");
@@ -49,16 +64,11 @@ export function JoinInfoModal(props: Props): ReactElement {
   }, [refreshPublicIp]);
 
   useEffect(() => {
-    if (!opened) {
-      wasOpenedRef.current = false;
-      setIpState("idle");
-      return;
-    }
-    if (!wasOpenedRef.current && serverRunning !== true && !isJoinHostUsable(publicIp)) {
-      wasOpenedRef.current = true;
+    if (!didAutoDetectRef.current && serverRunning !== true && !isJoinHostUsable(publicIp)) {
+      didAutoDetectRef.current = true;
       void runDetect();
     }
-  }, [opened, publicIp, serverRunning, runDetect]);
+  }, [publicIp, serverRunning, runDetect]);
 
   const hasIp = publicIp.trim().length > 0;
 
@@ -75,121 +85,108 @@ export function JoinInfoModal(props: Props): ReactElement {
   const hasPassword = hasJoinPassword(props.server.serverPassword);
 
   return (
-    <AppPanelModal
-      opened={props.opened}
-      onClose={props.onClose}
-      title="Share connection details"
-      meta="Copy what players need to find and join this server."
-      size="md"
-      data-testid="join-info-modal"
-    >
-      <Stack gap="sm">
-        <Text fw={600} size="sm">
-          Connection details
-        </Text>
-        <Group gap="sm" wrap="nowrap" align="center">
-          <Box style={{ flex: 1, minWidth: 0 }}>
-            {hasIp && !hostInvalid ? (
-              <CopyMetadataRow
-                label="Public IP address"
-                value={publicIp.trim()}
-                failureMessage="Could not copy the public IP address"
-              />
-            ) : (
-              <Stack gap={2}>
-                <Text c="dimmed" tt="uppercase" fw={500} size="xs">
-                  Public IP address
-                </Text>
-                <Text size="sm" c="dimmed">
-                  {hostInvalid ? "Detected address is invalid" : ipState === "loading" ? "Detecting…" : "Not detected"}
-                </Text>
-              </Stack>
-            )}
-          </Box>
-          {ipState === "loading" ? (
-            <Loader size={16} data-testid="join-info-detecting" />
+    <Stack gap="sm">
+      <Text fw={600} size="sm">
+        Connection details
+      </Text>
+      <Group gap="sm" wrap="nowrap" align="center">
+        <Box style={{ flex: 1, minWidth: 0 }}>
+          {hasIp && !hostInvalid ? (
+            <CopyMetadataRow
+              label="Public IP address"
+              value={publicIp.trim()}
+              failureMessage="Could not copy the public IP address"
+            />
           ) : (
-            <Tooltip label="Refresh public IP">
-              <ActionIcon variant="subtle" color="gray" aria-label="Refresh public IP" onClick={() => void runDetect()}>
-                <ArrowClockwise size={16} />
-              </ActionIcon>
-            </Tooltip>
-          )}
-        </Group>
-        <Text size="xs" c="dimmed" role={ipState === "failed" || hostInvalid ? "status" : undefined}>
-          {getPublicIpStatusText(ipState, hasIp, hostInvalid)}
-        </Text>
-
-        {command !== null ? (
-          <CopyMetadataRow
-            label="In-game command"
-            value={command}
-            failureMessage="Could not copy the in-game command"
-          />
-        ) : (
-          <Stack gap={2}>
-            <Text c="dimmed" tt="uppercase" fw={500} size="xs">
-              In-game command
-            </Text>
-            <Text size="sm" c="dimmed">
-              Available when a public IP is detected.
-            </Text>
-          </Stack>
-        )}
-        <Text size="xs" c="dimmed">
-          Paste the command into ARK’s console (Tab or ~) to connect.
-        </Text>
-
-        <Text size="xs" c="dimmed">
-          Players can join only when the server is reachable from the internet.
-        </Text>
-
-        {hasPassword ? (
-          <Group gap="xs" align="center">
-            <Text size="sm">
-              Join password:{" "}
-              <Text span ff="monospace">
-                {maskedPassword}
+            <Stack gap={2}>
+              <Text c="dimmed" tt="uppercase" fw={500} size="xs">
+                Public IP address
               </Text>
+              <Text size="sm" c="dimmed">
+                {hostInvalid ? "Detected address is invalid" : ipState === "loading" ? "Detecting…" : "Not detected"}
+              </Text>
+            </Stack>
+          )}
+        </Box>
+        {ipState === "loading" ? (
+          <Loader size={16} data-testid="join-info-detecting" />
+        ) : (
+          <Tooltip label="Refresh public IP">
+            <ActionIcon variant="subtle" color="gray" aria-label="Refresh public IP" onClick={() => void runDetect()}>
+              <ArrowClockwise size={16} />
+            </ActionIcon>
+          </Tooltip>
+        )}
+      </Group>
+      <Text size="xs" c="dimmed" role={ipState === "failed" || hostInvalid ? "status" : undefined}>
+        {getPublicIpStatusText(ipState, hasIp, hostInvalid)}
+      </Text>
+
+      {command !== null ? (
+        <CopyMetadataRow label="In-game command" value={command} failureMessage="Could not copy the in-game command" />
+      ) : (
+        <Stack gap={2}>
+          <Text c="dimmed" tt="uppercase" fw={500} size="xs">
+            In-game command
+          </Text>
+          <Text size="sm" c="dimmed">
+            Available when a public IP is detected.
+          </Text>
+        </Stack>
+      )}
+      <Text size="xs" c="dimmed">
+        Paste the command into ARK’s console (Tab or ~) to connect.
+      </Text>
+
+      <Text size="xs" c="dimmed">
+        Players can join only when the server is reachable from the internet.
+      </Text>
+
+      {hasPassword ? (
+        <Group gap="xs" align="center">
+          <Text size="sm">
+            Join password:{" "}
+            <Text span ff="monospace">
+              {maskedPassword}
             </Text>
-            <Tooltip label="Copy join password">
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                size="sm"
-                aria-label="Copy join password"
-                onClick={() =>
-                  void copyTextToClipboard({
-                    text: fields.password,
-                    notifySuccess: true,
-                    successMessage: "Join password copied",
-                  })
-                }
-              >
-                <Copy size={14} />
-              </ActionIcon>
-            </Tooltip>
-          </Group>
-        ) : null}
+          </Text>
+          <Tooltip label="Copy join password">
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              size="sm"
+              aria-label="Copy join password"
+              onClick={() =>
+                void copyTextToClipboard({
+                  text: fields.password,
+                  notifySuccess: true,
+                  successMessage: "Join password copied",
+                })
+              }
+            >
+              <Copy size={14} />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
+      ) : null}
 
-        <Text fw={600} size="sm" mt="xs">
-          Server details
-        </Text>
-        <SimpleGrid cols={{ base: 1, xs: 3 }} spacing="sm">
-          <CopyMetadataRow
-            label="Session name"
-            value={fields.sessionName}
-            failureMessage="Could not copy the session name"
-          />
-          <CopyMetadataRow label="Game port" value={fields.gamePort} failureMessage="Could not copy the game port" />
-          <CopyMetadataRow label="Query port" value={fields.queryPort} failureMessage="Could not copy the query port" />
-        </SimpleGrid>
+      <Text fw={600} size="sm" mt="xs">
+        Server details
+      </Text>
+      <SimpleGrid cols={{ base: 1, xs: 3 }} spacing="sm">
+        <CopyMetadataRow
+          label="Session name"
+          value={fields.sessionName}
+          failureMessage="Could not copy the session name"
+        />
+        <CopyMetadataRow label="Game port" value={fields.gamePort} failureMessage="Could not copy the game port" />
+        <CopyMetadataRow label="Query port" value={fields.queryPort} failureMessage="Could not copy the query port" />
+      </SimpleGrid>
 
-        <AppAlert color="attention" title="Router and firewall">
-          Forward the game port so players can connect. Forward the query port too if they need to find this server in
-          the server browser.
-        </AppAlert>
-      </Stack>
-    </AppPanelModal>
+      <AppAlert color="attention" title="Router and firewall">
+        Forward the game port so players can connect. Forward the query port too if they need to find this server in the
+        server browser.
+      </AppAlert>
+    </Stack>
   );
 }
