@@ -443,6 +443,7 @@ async function handleGetMods(
     { length: Math.min(mapMods.length, MAX_CONCURRENT_DESCRIPTION_FETCHES) },
     async () => {
       while (nextMapModIndex < mapMods.length) {
+        // This claim runs synchronously until the next await, so workers cannot take the same index.
         const mod = mapMods[nextMapModIndex];
         if (mod === undefined) return;
         nextMapModIndex += 1;
