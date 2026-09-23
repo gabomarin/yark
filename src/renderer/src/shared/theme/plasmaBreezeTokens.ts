@@ -264,7 +264,18 @@ export const plasmaBreezeLightLadders: AppThemeLadders = {
     "#452500",
     "#2e1800",
   ],
-  fossil: ["#fbf0e2", "#f5ddc0", "#ecc896", "#e0ac63", "#b06a1a", "#8a4b00", "#733e00", "#5c3100", "#452500", "#2e1800"],
+  fossil: [
+    "#fbf0e2",
+    "#f5ddc0",
+    "#ecc896",
+    "#e0ac63",
+    "#b06a1a",
+    "#8a4b00",
+    "#733e00",
+    "#5c3100",
+    "#452500",
+    "#2e1800",
+  ],
   red: createDangerRedPalette("#da4453", "#b03745"),
 };
 
@@ -282,7 +293,18 @@ export const plasmaBreezeDarkLadders: AppThemeLadders = {
     "#914300",
     "#6e3200",
   ],
-  fossil: ["#fdf0e0", "#fadfc0", "#f6c98f", "#f3b15c", "#f48220", "#f67400", "#d56400", "#b35300", "#914300", "#6e3200"],
+  fossil: [
+    "#fdf0e0",
+    "#fadfc0",
+    "#f6c98f",
+    "#f3b15c",
+    "#f48220",
+    "#f67400",
+    "#d56400",
+    "#b35300",
+    "#914300",
+    "#6e3200",
+  ],
   red: createDangerRedPalette("#da4453", "#e8808c"),
 };
 
@@ -304,10 +326,10 @@ export const plasmaBreezeTypography: AppThemeTypography = {
 
 /**
  * Documented floors for the exact Breeze accent. `#3daee9` is a mid-tone: as a
- * non-text UI element it sits ~2.3:1 on the light shell and a white label on it
- * is ~2.49:1, both below AA. KDE ships Breeze that way, so the family declares
- * those floors instead of pretending otherwise; every text and status tone still
- * clears AA. See `docs/design-system.md` (Breeze deviations).
+ * non-text UI element it sits ~2.3:1 on the light shell and a white label on the
+ * selection is ~2.49:1, both below AA. KDE ships Breeze that way, so the family
+ * declares those floors for selection/focus; primary actions have a separate AA
+ * role. Every text and status tone still clears AA. See `docs/design-system.md`.
  */
 export const plasmaBreezeLightContrast: AppThemeContrast = {
   accentLabel: 2.4,

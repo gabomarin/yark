@@ -68,14 +68,11 @@ contrast floors. Each family declares its own floors in `AppThemeContrast` and
 - **Accent `#3daee9`** is a mid-tone: as a non-text UI element it sits ~2.3:1 on
   the light shell and a white label on it is ~2.49:1, both below AA. KDE ships
   Breeze that way, so the family declares those floors instead of darkening the
-  accent. If visual review finds it too weak, the fallback is Breeze's link blue
-  `#2980b9` as the filled-primary step while keeping `#3daee9` for focus/selection.
-- **The accent's filled label is white**, as KDE's `[Colors:Selection]` foreground
-  is. Mantine's `autoContrast` reads the mid-tone as "light" and would label it
-  black, and `--mantine-color-blue-contrast` is only honoured for virtual colors,
-  so the family supplies a `variantColorResolver` that overrides only the accent's
-  filled variant. Semantic filled colors (fossil/attention/red) keep Mantine's
-  autoContrast, which they still need for their dark labels.
+  accent. Filled primary actions use the darker `#2475a5` (`#206b99` on hover),
+  which clears 4.5:1 with white labels while keeping `#3daee9` for focus/selection.
+- **Semantic filled colors** (fossil/attention/red) keep Mantine's autoContrast,
+  which they still need. The Breeze `variantColorResolver` changes only the blue
+  primary fill and its white label.
 - **Breeze status colours** (positive `#27ae60`, neutral `#f67400`, negative
   `#da4453`) are kept as hue anchors; the light variant darkens the green/amber and
   the danger-text tone so they clear AA on the near-white panel.

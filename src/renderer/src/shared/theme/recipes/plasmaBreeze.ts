@@ -4,18 +4,20 @@ import type { AppTheme } from "../themes";
 import { createFluentComponents } from "./fluent";
 
 /**
- * KDE Breeze puts a **white** label on the `#3daee9` selection (`[Colors:Selection]`
- * foreground `252,252,252`). Mantine's `autoContrast` uses WCAG luminance and sees
- * `#3daee9` as "light", so it picks black instead, and `--mantine-color-blue-contrast`
- * is only honoured for virtual colors. This resolver restores the Breeze label on the
- * accent's filled variant while leaving every semantic color (fossil/attention/red)
- * on Mantine's autoContrast, which those still need.
+ * Breeze selection/focus keeps `#3daee9`; filled primary actions use a darker
+ * AA-safe blue so their white labels remain readable. Semantic colors
+ * (fossil/attention/red) stay on Mantine's autoContrast.
  */
 export const plasmaBreezeVariantColorsResolver: VariantColorsResolver = (input) => {
   const resolved = defaultVariantColorsResolver(input);
   const isAccent = input.color === undefined || input.color === "blue";
   if (input.variant === "filled" && isAccent) {
-    return { ...resolved, color: "var(--mantine-color-white)" };
+    return {
+      ...resolved,
+      background: "var(--app-color-accent-filled)",
+      hover: "var(--app-color-accent-filled-hover)",
+      color: "var(--mantine-color-white)",
+    };
   }
   return resolved;
 };
@@ -29,10 +31,7 @@ export const plasmaBreezeVariantColorsResolver: VariantColorsResolver = (input) 
  * KDE accent `#3daee9`. Everything else composes the Fluent base unchanged -
  * only a real visual difference earns an override.
  */
-export function createPlasmaBreezeComponents(
-  density: UiDensity,
-  theme: AppTheme,
-): MantineThemeOverride["components"] {
+export function createPlasmaBreezeComponents(density: UiDensity, theme: AppTheme): MantineThemeOverride["components"] {
   const fluent = createFluentComponents(density, theme) ?? {};
 
   return {

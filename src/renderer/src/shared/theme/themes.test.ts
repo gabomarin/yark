@@ -77,9 +77,10 @@ describe("theme registry (#PUX-004 Track B, #PUX-005-B)", () => {
   });
 
   it("uses the family typography profile for the resolver's font tokens", () => {
-    const breeze = createAppCssVariablesResolverForAppearance(THEME_FAMILIES["plasma-breeze"].light, "compact")(
-      DEFAULT_THEME,
-    ).variables;
+    const breeze = createAppCssVariablesResolverForAppearance(
+      THEME_FAMILIES["plasma-breeze"].light,
+      "compact",
+    )(DEFAULT_THEME).variables;
     expect(breeze["--app-font-display"]).toBe(plasmaBreezeTypography.display);
     expect(breeze["--app-font-mono"]).toBe(plasmaBreezeTypography.mono);
     expect(breeze["--app-font-display"]).toMatch(/Noto Sans/);
@@ -92,9 +93,10 @@ describe("theme registry (#PUX-004 Track B, #PUX-005-B)", () => {
   });
 
   it("carries the family radius ladder into the resolver and Mantine (#PUX-005-B)", () => {
-    const breeze = createAppCssVariablesResolverForAppearance(THEME_FAMILIES["plasma-breeze"].light, "comfortable")(
-      DEFAULT_THEME,
-    ).variables;
+    const breeze = createAppCssVariablesResolverForAppearance(
+      THEME_FAMILIES["plasma-breeze"].light,
+      "comfortable",
+    )(DEFAULT_THEME).variables;
     // Breeze: controls 4px, large surfaces 6px (largeRadius = smallRadius * 2).
     expect(breeze["--app-radius-sm"]).toBe("4px");
     expect(breeze["--app-radius-md"]).toBe("6px");
@@ -113,8 +115,7 @@ describe("theme registry (#PUX-004 Track B, #PUX-005-B)", () => {
   it("gives Breeze flat line-edit and knob chrome, leaving Fluent alone (#PUX-005-B)", () => {
     const breezeDark = createAppThemeForAppearance(THEME_FAMILIES["plasma-breeze"].dark, "compact");
     const inputStyles = breezeDark.components?.Input?.styles as
-      | { input?: { backgroundColor?: string; borderColor?: string } }
-      | undefined;
+      { input?: { backgroundColor?: string; borderColor?: string } } | undefined;
     expect(inputStyles?.input?.backgroundColor).toBe("var(--ark-gray-2)");
     expect(inputStyles?.input?.borderColor).toBe("var(--app-color-border-control)");
 
@@ -138,7 +139,7 @@ describe("theme registry (#PUX-004 Track B, #PUX-005-B)", () => {
     expect(THEME_FAMILIES["plasma-breeze"].light.palette.gray[11]).toBe("#232629");
   });
 
-  it("labels the Breeze accent filled variant white (KDE) without touching semantic colors (#PUX-005-B)", () => {
+  it("uses an AA-safe fill for Breeze primary actions without touching semantic colors (#PUX-005-B)", () => {
     const input = {
       color: "blue",
       theme: DEFAULT_THEME,
@@ -148,7 +149,17 @@ describe("theme registry (#PUX-004 Track B, #PUX-005-B)", () => {
     };
     const breeze = createAppThemeForAppearance(THEME_FAMILIES["plasma-breeze"].dark, "compact");
     expect(breeze.variantColorResolver).toBeDefined();
-    expect(breeze.variantColorResolver!(input).color).toBe("var(--mantine-color-white)");
+    expect(breeze.variantColorResolver!(input)).toMatchObject({
+      background: "var(--app-color-accent-filled)",
+      hover: "var(--app-color-accent-filled-hover)",
+      color: "var(--mantine-color-white)",
+    });
+    const breezeVars = createAppCssVariablesResolverForAppearance(
+      THEME_FAMILIES["plasma-breeze"].dark,
+      "compact",
+    )(DEFAULT_THEME).variables;
+    expect(breezeVars["--app-color-accent-filled"]).toBe("#2475a5");
+    expect(breezeVars["--app-color-accent-filled-hover"]).toBe("#206b99");
 
     // Only the accent is touched: semantic colors resolve exactly as Mantine would
     // (fossil/attention still rely on autoContrast for their dark label).

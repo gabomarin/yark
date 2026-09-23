@@ -21,6 +21,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Plasma Breeze keeps KDE cyan for selection and focus while using a darker, AA-readable blue for filled primary actions; Settings now labels the scheme control **Color scheme**.
+
 - Appearance settings now separate the visual theme family from its light/dark scheme, preserving the current Fluent/base theme as the fallback while preparing the registry for future families.
 - OpenCodeReview PR comments now include an operator-facing change summary and can be triggered with the shorter `/ocr` slash command alias.
 - The URL settings edited in INI Files (`BanListURL`, `BadWordListURL`, `BadWordWhiteListURL`, `CustomLiveTuningUrl`) now ship uncommented in the default `GameUserSettings.ini`, so a fresh server shows the row and its Hosted Resource picker; writing one of them for the first time now uncomments that default in place instead of leaving both a `#Key=N/A` line and a second assignment.

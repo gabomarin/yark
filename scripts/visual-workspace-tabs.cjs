@@ -198,7 +198,11 @@ async function run() {
       };
     });
     if (FAMILY === "plasma-breeze") {
-      assert.equal(mounted.accent, "#3daee9", `Plasma Breeze accent is "${mounted.accent}", expected the Breeze #3daee9`);
+      assert.equal(
+        mounted.accent,
+        "#3daee9",
+        `Plasma Breeze accent is "${mounted.accent}", expected the Breeze #3daee9`,
+      );
       assert.ok(mounted.font.includes("Noto Sans"), `Plasma Breeze body font is "${mounted.font}", expected Noto Sans`);
     }
     console.log(`VISUAL_WORKSPACE_TABS_FAMILY=${FAMILY} accent=${mounted.accent}`);
@@ -252,7 +256,9 @@ async function run() {
 
   const summary = { outDir, family: FAMILY, theme: THEME, density: DENSITY, errors, reports };
   fs.writeFileSync(path.join(outDir, "summary.json"), JSON.stringify(summary, null, 2), "utf8");
-  console.log(JSON.stringify({ outDir, family: FAMILY, theme: THEME, density: DENSITY, tabs: reports.length, errors }, null, 2));
+  console.log(
+    JSON.stringify({ outDir, family: FAMILY, theme: THEME, density: DENSITY, tabs: reports.length, errors }, null, 2),
+  );
   assert.equal(errors.length, 0, `console/page errors during the run: ${errors.slice(0, 3).join(" | ")}`);
   console.log(THEME === "light" ? "VISUAL_WORKSPACE_TABS_LIGHT_OK" : "VISUAL_WORKSPACE_TABS_OK");
 }

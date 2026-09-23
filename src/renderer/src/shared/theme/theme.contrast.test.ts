@@ -8,13 +8,10 @@ import { ALL_APP_THEMES, type AppTheme } from "./themes";
  * variant in the registry runs the floors it declares in `theme.contrast`; the
  * test holds each theme to what it shipped with, so a regression fails.
  *
- * Fluent keeps the original Fluent 2 floors (the dark theme's documented 3.29:1
- * white-on-accent gap, the light theme's AA accent). Plasma Breeze declares the
- * exact KDE Breeze accent behaviour: `#3daee9` is a mid-tone, so a filled accent
- * carries a white label around 2.49:1 and sits around 2.3:1 as a non-text UI
- * element - KDE ships Breeze that way, so the family declares those floors
- * instead of pretending otherwise. Every text, muted, status and focus tone still
- * clears AA on its own surfaces.
+ * Fluent keeps its original family floors. Plasma Breeze declares the exact KDE
+ * accent behaviour for focus/selection (`#3daee9`); filled primary actions have a
+ * separate AA-safe role. Every text, muted, status and focus tone clears its
+ * documented floor on its own surfaces.
  */
 
 function channelToLinear(channel: number): number {
@@ -84,6 +81,15 @@ describe.each(ALL_APP_THEMES)("$family $label theme contrast", (theme) => {
       failures.push(`white label on accent = ${labelRatio.toFixed(2)} (min ${FLOOR.accentLabel})`);
     }
     expect(failures, failures.join(" | ")).toEqual([]);
+  });
+
+  it("keeps filled primary action labels at WCAG AA", () => {
+    if (theme.family === "plasma-breeze") {
+      expect(contrast("#ffffff", "#2475a5")).toBeGreaterThanOrEqual(4.5);
+      expect(contrast("#ffffff", "#206b99")).toBeGreaterThanOrEqual(4.5);
+    } else {
+      expect(contrast("#ffffff", theme.palette.blue[8] as string)).toBeGreaterThanOrEqual(FLOOR.accentLabel);
+    }
   });
 
   it("keeps every semantic status colour readable as text", () => {

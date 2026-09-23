@@ -457,11 +457,11 @@ export const plasmaBreezeRadius: AppThemeRadius = { sm: 4, md: 6, lg: 8, control
  * Documented contrast floors per theme (#PUX-005-B). The palette is swappable, so
  * "looks fine" is not a gate: each theme declares the floors it ships with and
  * `theme.contrast.test.ts` holds it to them. Fluent keeps the original Fluent 2
- * floors; Plasma Breeze declares the exact KDE Breeze accent behavior, where a
- * filled accent carries a white label below AA on purpose (KDE ships it that way).
+ * floors; Plasma Breeze declares the exact KDE Breeze accent behavior for
+ * selection/focus while its primary action fill has a separate AA gate.
  */
 export type AppThemeContrast = {
-  /** White label on the solid accent (filled primary). */
+  /** White label on the exact accent when used by a family-specific surface. */
   accentLabel: number;
   /** Accent solid as a non-text UI element (switch track, checkbox fill). */
   accentUi: number;

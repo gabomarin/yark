@@ -18,7 +18,8 @@ const {
  * Seeds `appearance.v1` with the plasma-breeze family in an isolated profile, for
  * both schemes, then asserts the exact Breeze accent and the Noto Sans typography
  * actually mounted before capturing Overview, Settings, Appearance and the New
- * server overlay at HD and Full HD. The nine server-workspace tabs are covered by
+ * server overlay at HD, Full HD and QHD. The setup assistant welcome overlay is
+ * captured at QHD. The nine server-workspace tabs are covered by
  * `visual-workspace-tabs.cjs` with `YARK_VISUAL_FAMILY=plasma-breeze`.
  */
 delete process.env.ELECTRON_RUN_AS_NODE;
@@ -26,6 +27,7 @@ delete process.env.ELECTRON_RUN_AS_NODE;
 const sizes = [
   { name: "hd", width: 1280, height: 720 },
   { name: "full-hd", width: 1920, height: 1080 },
+  { name: "qhd-2k", width: 2560, height: 1440 },
 ];
 
 const SCHEMES = ["dark", "light"];
@@ -104,7 +106,11 @@ async function run() {
       assert.ok(mounted.font.includes("Noto Sans"), `body font is "${mounted.font}", expected Noto Sans`);
       assert.ok(mounted.panel.length > 0, "--app-color-panel is not emitted by the resolver");
       // KDE ladder: large surfaces 6px (compact default -> 5px), not Fluent's 8px.
-      assert.equal(mounted.radiusMd, "5px", `${scheme}: --app-radius-md is "${mounted.radiusMd}", expected Breeze's 5px (6 * compact)`);
+      assert.equal(
+        mounted.radiusMd,
+        "5px",
+        `${scheme}: --app-radius-md is "${mounted.radiusMd}", expected Breeze's 5px (6 * compact)`,
+      );
       console.log(
         `VISUAL_BREEZE_SCHEME=${scheme} accent=${mounted.accent} font=${mounted.font} panel=${mounted.panel}`,
       );
@@ -150,13 +156,21 @@ async function run() {
         // Overlay: the New server modal, so dialogs are reviewed in Breeze too.
         await goNav(page, "Servers");
         await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 15000 });
-        // KDE Breeze puts a white label on the accent fill; Mantine's WCAG autoContrast
-        // would pick black, so the family resolver must have restored white.
-        const primaryLabel = await page
+        // Filled primary actions use the AA-safe action role; focus/selection stay cyan.
+        const primaryStyle = await page
           .getByRole("button", { name: "New server" })
           .first()
-          .evaluate((el) => getComputedStyle(el).color);
-        assert.equal(primaryLabel, "rgb(255, 255, 255)", `${scheme} / ${size.name}: Breeze accent label is "${primaryLabel}"`);
+          .evaluate((el) => ({ color: getComputedStyle(el).color, background: getComputedStyle(el).backgroundColor }));
+        assert.equal(
+          primaryStyle.color,
+          "rgb(255, 255, 255)",
+          `${scheme} / ${size.name}: primary label is "${primaryStyle.color}"`,
+        );
+        assert.equal(
+          primaryStyle.background,
+          "rgb(36, 117, 165)",
+          `${scheme} / ${size.name}: primary fill is "${primaryStyle.background}"`,
+        );
         await page.getByRole("button", { name: "New server" }).first().click();
         await page.getByRole("heading", { name: "New server" }).waitFor({ timeout: 10000 });
         await page.waitForTimeout(250);
@@ -164,6 +178,18 @@ async function run() {
         await page.keyboard.press("Escape");
         await page.waitForTimeout(250);
       }
+
+      // Review one extra Breeze overlay at QHD, where the main route loop ends.
+      await page.setViewportSize({ width: 2560, height: 1440 });
+      await goNav(page, "Settings");
+      await page.getByRole("heading", { name: "Settings", level: 1 }).waitFor({ timeout: 10000 });
+      await page
+        .getByRole("navigation", { name: "Settings categories" })
+        .getByRole("button", { name: "General" })
+        .click();
+      await page.getByRole("button", { name: "Open setup assistant" }).click();
+      await page.locator('[data-setup-wizard-step="welcome"]').waitFor({ timeout: 10000 });
+      await shot(page, outDir, `setup-assistant-${scheme}-qhd-2k`);
 
       if (errors.length > 0) {
         throw new Error(errors.join("\n"));

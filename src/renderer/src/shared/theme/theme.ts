@@ -77,6 +77,13 @@ function createAppCssVariablesResolver(
       "--app-color-accent": "var(--ark-blue-9)",
       /* Accent role set — one hue, its states. See `accentPalette` for the source. */
       "--app-color-accent-hover": "var(--ark-blue-10)",
+      ...(theme.recipeSet === "plasma-breeze"
+        ? {
+            /* Filled Breeze actions use an AA-safe blue; selection/focus retain the exact KDE accent. */
+            "--app-color-accent-filled": "#2475a5",
+            "--app-color-accent-filled-hover": "#206b99",
+          }
+        : {}),
       "--app-color-accent-text": "var(--ark-blue-11)",
       "--app-color-accent-subtle": "var(--ark-blue-a3)",
       "--app-color-accent-subtle-hover": "var(--ark-blue-a4)",

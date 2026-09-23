@@ -31,7 +31,7 @@ export function SettingsAppearanceSection(props: Props): ReactElement {
         Appearance
       </Title>
       <Text size="sm" c="dimmed">
-        Theme, size and how the server workspace arranges its panels.
+        Theme family, color scheme, display size and how the server workspace arranges its panels.
       </Text>
 
       <div className={classes.settingStack}>
@@ -89,10 +89,10 @@ export function SettingsAppearanceSection(props: Props): ReactElement {
         <div className={classes.settingRow}>
           <div className={classes.settingCopy}>
             <Text size="sm" fw={600}>
-              Theme
+              Color scheme
             </Text>
             <Text size="xs" c="dimmed" mt={2}>
-              The shell colours.
+              Choose the light or dark scheme.
             </Text>
           </div>
           <div className={classes.settingControl}>
@@ -105,7 +105,7 @@ export function SettingsAppearanceSection(props: Props): ReactElement {
                 }
               }}
               data={themeVariantsForFamily(props.family).map((theme) => ({ label: theme.label, value: theme.scheme }))}
-              aria-label="Theme"
+              aria-label="Color scheme"
             />
           </div>
         </div>

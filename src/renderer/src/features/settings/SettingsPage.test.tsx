@@ -397,7 +397,7 @@ describe("SettingsPage", () => {
     expect(onFamilyChange).toHaveBeenCalledWith("plasma-breeze");
 
     // Fluent is active, so the scheme control lists Fluent's variants.
-    expect(screen.getByLabelText("Theme")).toBeInTheDocument();
+    expect(screen.getByLabelText("Color scheme")).toBeInTheDocument();
     await user.click(screen.getByRole("radio", { name: "Dark" }));
     expect(onSchemeChange).not.toHaveBeenCalled();
 
