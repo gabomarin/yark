@@ -26,7 +26,6 @@ export function CopyMetadataRow(props: Props): ReactElement {
         </Text>
         <Tooltip label={`Copy ${copyLabel}`}>
           <ActionIcon
-            component="span"
             variant="subtle"
             color="gray"
             size="sm"
