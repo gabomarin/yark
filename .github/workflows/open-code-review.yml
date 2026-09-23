@@ -74,7 +74,7 @@ jobs:
     steps:
       - name: Resolve provider and validate command
         id: provider
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           REQUESTED_PROVIDER: ${{ inputs.provider || '' }}
           REQUESTED_EFFORT: ${{ inputs.effort || '' }}
@@ -125,7 +125,7 @@ jobs:
       # provider never leaves a "working on it" reaction behind.
       - name: Acknowledge review request
         if: ${{ github.event_name == 'issue_comment' }}
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           github-token: ${{ github.token }}
           script: |
@@ -142,7 +142,7 @@ jobs:
 
       - name: Resolve pull request refs
         id: pr-context
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           PR_NUMBER: ${{ github.event.issue.number || inputs.pr_number }}
         with:
@@ -171,7 +171,7 @@ jobs:
       - name: Select review effort
         id: effort
         if: ${{ !steps.provider.outputs.effort_override }}
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           PR_NUMBER: ${{ github.event.issue.number || inputs.pr_number }}
         with:
@@ -284,7 +284,7 @@ jobs:
 
       - name: Run OpenCodeReview
         id: ocr-review
-        uses: alibaba/open-code-review@f1101fd7f51304c82e4a4f292bbee88aea0823cf # v1.12.4
+        uses: alibaba/open-code-review@7a571b78d3493b249f6ad14d835c6a79a0a67d2e # v1.12.6
         with:
           llm_url: ${{ steps.provider.outputs.provider == 'fallback' && vars.OCR_FALLBACK_URL || vars.OCR_PRIMARY_URL }}
           llm_auth_token: ${{ steps.provider.outputs.provider == 'fallback' && secrets.OCR_FALLBACK_API_KEY || secrets.OCR_PRIMARY_API_KEY }}
@@ -309,7 +309,7 @@ jobs:
 
       - name: Enrich OpenCodeReview summary
         if: ${{ steps.ocr-review.outcome == 'success' }}
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           PR_NUMBER: ${{ github.event.issue.number || inputs.pr_number }}
           OCR_SUMMARY_URL: ${{ steps.ocr-review.outputs.summary_comment_url }}
