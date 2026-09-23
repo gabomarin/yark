@@ -2,14 +2,7 @@ import { readFileSync } from "node:fs";
 import { DEFAULT_THEME } from "@mantine/core";
 import { describe, expect, it } from "vitest";
 import { createAppCssVariablesResolverForAppearance, createAppThemeForAppearance } from "./theme";
-import {
-  APP_THEME_LIST,
-  DEFAULT_APP_THEME,
-  THEME_FAMILIES,
-  THEMES,
-  resolveAppTheme,
-  resolveThemeSelection,
-} from "./themes";
+import { APP_THEME_LIST, DEFAULT_APP_THEME, THEME_FAMILIES, THEMES, resolveThemeSelection } from "./themes";
 import { darkPalette } from "./tokens";
 
 /**
@@ -36,13 +29,6 @@ describe("theme registry (#PUX-004 Track B)", () => {
     expect(resolveThemeSelection({ family: "fluent", scheme: "light" }).scheme).toBe("light");
     expect(resolveThemeSelection({ family: "glassy", scheme: "dark" } as never)).toBe(DEFAULT_APP_THEME);
     expect(resolveThemeSelection({ family: "fluent", scheme: "sepia" } as never)).toBe(THEMES.dark);
-  });
-
-  it("resolves an unknown or missing id to the default theme", () => {
-    expect(resolveAppTheme("vaporwave").scheme).toBe("dark");
-    expect(resolveAppTheme(null).scheme).toBe("dark");
-    expect(resolveAppTheme(undefined).scheme).toBe("dark");
-    expect(resolveAppTheme("light").scheme).toBe("light");
   });
 
   it("keeps the shipped dark theme identical after the per-theme payload split", () => {

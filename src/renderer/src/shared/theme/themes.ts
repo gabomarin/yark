@@ -86,22 +86,16 @@ export const THEME_FAMILIES: Readonly<Record<ThemeFamilyId, Readonly<Record<Them
 export const THEMES: Readonly<Record<ThemeScheme, AppTheme>> = THEME_FAMILIES.fluent;
 
 /** Registry order = the order the Appearance control lists them in. */
-export const APP_THEME_LIST: readonly AppTheme[] = THEME_SCHEMES.map((scheme) => THEMES[scheme]);
+export const APP_THEME_LIST: readonly AppTheme[] = THEME_SCHEMES.map(
+  (scheme) => THEME_FAMILIES[DEFAULT_THEME_FAMILY][scheme],
+);
 
 export const DEFAULT_APP_THEME: AppTheme = THEME_FAMILIES[DEFAULT_THEME_FAMILY][DEFAULT_THEME_SCHEME];
 
-export function resolveThemeSelection(selection: ThemeSelection | string | null | undefined): AppTheme {
-  if (typeof selection === "string") {
-    return isThemeScheme(selection) ? THEMES[selection] : DEFAULT_APP_THEME;
-  }
+export function resolveThemeSelection(selection: ThemeSelection | null | undefined): AppTheme {
   if (selection !== null && selection !== undefined && isThemeFamilyId(selection.family)) {
     const family = THEME_FAMILIES[selection.family];
     return family[isThemeScheme(selection.scheme) ? selection.scheme : DEFAULT_THEME_SCHEME];
   }
   return DEFAULT_APP_THEME;
-}
-
-/** @deprecated Compatibility resolver for the former combined theme id. */
-export function resolveAppTheme(id: string | null | undefined): AppTheme {
-  return resolveThemeSelection(id);
 }
