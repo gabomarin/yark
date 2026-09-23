@@ -52,6 +52,7 @@ export interface ServerWorkspacePageProps {
   onRestartWithWarning?: (serverId: string) => void;
   onCancelRestartWarning?: (serverId: string) => void;
   onKillServer: (serverId: string) => void;
+  onDeleteServer?: (serverId: string) => void;
   onToggleServerEnabled?: (serverId: string, enabled: boolean) => void;
   onOpenFolder: (serverId: string) => void;
   onInstallFiles: (serverId: string) => void;
