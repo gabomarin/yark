@@ -1,16 +1,16 @@
 import type { ReactElement } from "react";
 import { SegmentedControl, Text, Title } from "@mantine/core";
 import { APP_THEME_LIST } from "@theme/themes";
-import { isThemeId, isWorkspacePanelsId } from "@shared/settings/appearance";
+import { isThemeScheme, isWorkspacePanelsId } from "@shared/settings/appearance";
 import { WORKSPACE_PANELS_OPTION_LIST, resolveWorkspacePanelsOption } from "@shared/workspace/workspacePanels";
-import type { ThemeId, UiDensity, WorkspacePanelsId } from "../settingsModel";
+import type { ThemeScheme, UiDensity, WorkspacePanelsId } from "../settingsModel";
 import classes from "../SettingsPage.module.css";
 
 interface Props {
   uiDensity: UiDensity;
   onUiDensityChange: (density: UiDensity) => void;
-  themeId: ThemeId;
-  onThemeChange: (theme: ThemeId) => void;
+  scheme: ThemeScheme;
+  onSchemeChange: (scheme: ThemeScheme) => void;
   workspacePanels: WorkspacePanelsId;
   onWorkspacePanelsChange: (panels: WorkspacePanelsId) => void;
 }
@@ -71,13 +71,13 @@ export function SettingsAppearanceSection(props: Props): ReactElement {
           <div className={classes.settingControl}>
             <SegmentedControl
               size="xs"
-              value={props.themeId}
+              value={props.scheme}
               onChange={(value) => {
-                if (isThemeId(value) && value !== props.themeId) {
-                  props.onThemeChange(value);
+                if (isThemeScheme(value) && value !== props.scheme) {
+                  props.onSchemeChange(value);
                 }
               }}
-              data={APP_THEME_LIST.map((theme) => ({ label: theme.label, value: theme.id }))}
+              data={APP_THEME_LIST.map((theme) => ({ label: theme.label, value: theme.scheme }))}
               aria-label="Theme"
             />
           </div>

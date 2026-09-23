@@ -1,4 +1,4 @@
-import { DEFAULT_THEME_ID, parseAppearanceSettings, type ThemeId } from "./settings/appearance";
+import { DEFAULT_THEME_SCHEME, parseAppearanceSettings, type ThemeScheme } from "./settings/appearance";
 
 /**
  * Colours the app paints before the renderer's first frame.
@@ -29,17 +29,17 @@ export const ERROR_SCREEN_BACKGROUND = "#010306";
 export const ERROR_SCREEN_TEXT = "#e6effd";
 export const ERROR_SCREEN_MUTED = "#aabedb";
 
-const BOOTSTRAP_BACKGROUNDS: Record<ThemeId, string> = {
+const BOOTSTRAP_BACKGROUNDS: Record<ThemeScheme, string> = {
   dark: "#010306",
   light: "#dce0e6",
 };
 
 /** Canvas of the shipped default theme (the dark palette's `background`). */
-export const BOOTSTRAP_BACKGROUND = BOOTSTRAP_BACKGROUNDS[DEFAULT_THEME_ID];
+export const BOOTSTRAP_BACKGROUND = BOOTSTRAP_BACKGROUNDS[DEFAULT_THEME_SCHEME];
 
 /** Canvas for a theme id. */
-export function bootstrapBackgroundFor(theme: ThemeId): string {
-  return BOOTSTRAP_BACKGROUNDS[theme];
+export function bootstrapBackgroundFor(scheme: ThemeScheme): string {
+  return BOOTSTRAP_BACKGROUNDS[scheme];
 }
 
 /**
@@ -47,5 +47,5 @@ export function bootstrapBackgroundFor(theme: ThemeId): string {
  * window over. A missing, hand-edited or unknown value falls back to the default theme.
  */
 export function bootstrapBackgroundFromStored(raw: string | null): string {
-  return bootstrapBackgroundFor(parseAppearanceSettings(raw).theme);
+  return bootstrapBackgroundFor(parseAppearanceSettings(raw).scheme);
 }

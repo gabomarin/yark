@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { DEFAULT_THEME } from "@mantine/core";
 import { describe, expect, it } from "vitest";
 import { createAppCssVariablesResolverForAppearance, createAppThemeForAppearance } from "./theme";
-import { APP_THEME_LIST, DEFAULT_APP_THEME, THEMES, resolveAppTheme } from "./themes";
+import { APP_THEME_LIST, DEFAULT_APP_THEME, THEME_FAMILIES, THEMES, resolveThemeSelection } from "./themes";
 import { darkPalette } from "./tokens";
 
 /**
@@ -17,16 +17,18 @@ const darkResolverSnapshot: unknown = JSON.parse(
 
 describe("theme registry (#PUX-004 Track B)", () => {
   it("names both shipped themes and keeps dark as the default", () => {
-    expect(APP_THEME_LIST.map((theme) => theme.id)).toEqual(["dark", "light"]);
-    expect(DEFAULT_APP_THEME.id).toBe("dark");
+    expect(APP_THEME_LIST.map((theme) => theme.scheme)).toEqual(["dark", "light"]);
+    expect(DEFAULT_APP_THEME.scheme).toBe("dark");
     expect(THEMES.light.colorScheme).toBe("light");
+    expect(Object.keys(THEME_FAMILIES)).toEqual(["fluent"]);
+    expect(THEME_FAMILIES.fluent.light.scheme).toBe("light");
+    expect(THEME_FAMILIES.fluent.dark.recipeSet).toBe("fluent");
   });
 
-  it("resolves an unknown or missing id to the default theme", () => {
-    expect(resolveAppTheme("vaporwave").id).toBe("dark");
-    expect(resolveAppTheme(null).id).toBe("dark");
-    expect(resolveAppTheme(undefined).id).toBe("dark");
-    expect(resolveAppTheme("light").id).toBe("light");
+  it("resolves family and scheme independently, with a safe default", () => {
+    expect(resolveThemeSelection({ family: "fluent", scheme: "light" }).scheme).toBe("light");
+    expect(resolveThemeSelection({ family: "glassy", scheme: "dark" } as never)).toBe(DEFAULT_APP_THEME);
+    expect(resolveThemeSelection({ family: "fluent", scheme: "sepia" } as never)).toBe(THEMES.dark);
   });
 
   it("keeps the shipped dark theme identical after the per-theme payload split", () => {

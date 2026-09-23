@@ -1,6 +1,7 @@
 import { vi } from "vitest";
 import type { AppUpdateStatus } from "@shared/settings/app-update";
 import { defaultCrashRecoveryPolicy } from "@shared/crash-recovery/crash-recovery-policy";
+import { DEFAULT_APPEARANCE_SETTINGS } from "@shared/settings/appearance";
 import type { RendererApi } from "@shared/ipc";
 
 /** Stable ISO timestamp for fixture payloads — bump when suites assert on age. */
@@ -241,8 +242,8 @@ export function createRendererApiMock(overrides: Partial<RendererApi> = {}): Ren
     openAppDataFolder: vi.fn(),
     getUiDensity: vi.fn().mockResolvedValue({ ok: true, data: "compact" }),
     setUiDensity: vi.fn().mockResolvedValue({ ok: true, data: "compact" }),
-    getAppearance: vi.fn().mockResolvedValue({ ok: true, data: { theme: "dark", panels: "auto" } }),
-    setAppearance: vi.fn().mockResolvedValue({ ok: true, data: { theme: "dark", panels: "auto" } }),
+    getAppearance: vi.fn().mockResolvedValue({ ok: true, data: { ...DEFAULT_APPEARANCE_SETTINGS } }),
+    setAppearance: vi.fn().mockResolvedValue({ ok: true, data: { ...DEFAULT_APPEARANCE_SETTINGS } }),
     getOpenNativeConsole: vi.fn().mockResolvedValue({ ok: true, data: false }),
     setOpenNativeConsole: vi.fn().mockResolvedValue({ ok: true, data: false }),
     getLastSeenChangelogVersion: vi.fn().mockResolvedValue({

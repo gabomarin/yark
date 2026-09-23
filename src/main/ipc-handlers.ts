@@ -661,7 +661,7 @@ export function registerIpcHandlers(
     settings.set(APPEARANCE_SETTINGS_KEY, encodeAppearanceSettings(appearance));
     // The window canvas outlives this call: a theme switch has to repaint it too, or the
     // next resize flashes the previous theme behind the shell.
-    const backgroundColor = bootstrapBackgroundFor(appearance.theme);
+    const backgroundColor = bootstrapBackgroundFor(appearance.scheme);
     for (const win of BrowserWindow.getAllWindows()) {
       // The splash keeps its brand plate; only the app canvas follows the theme.
       if (!win.isDestroyed() && !isSplashWindow(win)) {

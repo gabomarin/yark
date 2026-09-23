@@ -303,6 +303,12 @@ function createAppCssVariablesResolver(
   });
 }
 
+/**
+ * Builds the shared semantic Mantine theme plus the selected component recipe set.
+ * The only shipped recipe set is Fluent; keeping this boundary on AppTheme means a
+ * future family can replace component chrome without changing semantic roles or CSS
+ * variable resolution.
+ */
 function createAppTheme(
   tokens: AppTokens = defaultAppTokens,
   density: UiDensity = "comfortable",

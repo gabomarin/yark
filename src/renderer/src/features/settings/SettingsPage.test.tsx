@@ -184,8 +184,8 @@ function defaultSettingsProps(
     onOpenNativeTerminalOnStartChange: vi.fn(),
     uiDensity: "compact",
     onUiDensityChange: vi.fn(),
-    themeId: "dark",
-    onThemeChange: vi.fn(),
+    scheme: "dark",
+    onSchemeChange: vi.fn(),
     workspacePanels: "auto",
     onWorkspacePanelsChange: vi.fn(),
     defaultBaseFolder: null,
@@ -371,13 +371,13 @@ describe("SettingsPage", () => {
 
   it("keeps display size, theme and server panels together in Appearance (#PUX-004)", async () => {
     const user = userEvent.setup();
-    const onThemeChange = vi.fn();
+    const onSchemeChange = vi.fn();
     const onWorkspacePanelsChange = vi.fn();
     stubSettingsApi();
 
     renderSettings({
-      themeId: "dark",
-      onThemeChange,
+      scheme: "dark",
+      onSchemeChange,
       workspacePanels: "auto",
       onWorkspacePanelsChange,
     });
@@ -389,7 +389,7 @@ describe("SettingsPage", () => {
     // Both id controls render their registry: Dark is the only theme, Auto the default.
     expect(screen.getByLabelText("Theme")).toBeInTheDocument();
     await user.click(screen.getByRole("radio", { name: "Dark" }));
-    expect(onThemeChange).not.toHaveBeenCalled();
+    expect(onSchemeChange).not.toHaveBeenCalled();
 
     expect(screen.getByLabelText("Server panels")).toBeInTheDocument();
     await user.click(screen.getByRole("radio", { name: "Drawers" }));
