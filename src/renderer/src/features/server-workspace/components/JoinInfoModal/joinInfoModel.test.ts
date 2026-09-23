@@ -31,6 +31,7 @@ describe("joinInfoModel", () => {
     expect(isJoinHostUsable("play.example.com")).toBe(false);
     expect(isJoinHostUsable("203.0.113.999")).toBe(false);
     expect(isJoinHostUsable("203.000.113.5")).toBe(false);
+    expect(isJoinHostUsable("192.168.001.001")).toBe(false);
   });
 
   it("builds the open console command from a valid host", () => {

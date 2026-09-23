@@ -13,6 +13,13 @@ const PUBLIC_IP_ENDPOINT = "https://api.ipify.org?format=json";
 const PUBLIC_IP_TIMEOUT_MS = 4000;
 let activeLookup: Promise<string> | null = null;
 
+class PublicIpLookupError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PublicIpLookupError";
+  }
+}
+
 /** Returns the detected public IPv4 or throws an operator-facing Error. */
 export function lookupPublicIp(): Promise<string> {
   if (activeLookup !== null) return activeLookup;
@@ -28,24 +35,27 @@ export function lookupPublicIp(): Promise<string> {
 
 async function performPublicIpLookup(): Promise<string> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(new Error("Public IP lookup timed out.")), PUBLIC_IP_TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), PUBLIC_IP_TIMEOUT_MS);
   try {
     const response = await fetch(PUBLIC_IP_ENDPOINT, {
       headers: { accept: "application/json" },
       signal: controller.signal,
     });
     if (!response.ok) {
-      throw new Error(`Public IP lookup failed (HTTP ${response.status}).`);
+      throw new PublicIpLookupError(`Public IP lookup failed (HTTP ${response.status}).`);
     }
     const body: unknown = await response.json();
     const raw = typeof body === "object" && body !== null && "ip" in body ? (body as { ip: unknown }).ip : null;
     const ip = typeof raw === "string" ? raw.trim() : "";
     if (!isIpv4Address(ip)) {
-      throw new Error("Public IP lookup returned an unexpected value.");
+      throw new PublicIpLookupError("Public IP lookup returned an unexpected value.");
     }
     return ip;
   } catch (error) {
-    if (error instanceof Error && error.message.startsWith("Public IP lookup")) throw error;
+    if (error instanceof PublicIpLookupError) throw error;
+    if (controller.signal.aborted) {
+      throw new PublicIpLookupError("Public IP lookup timed out.");
+    }
     throw new Error("Could not detect the public IP. Check the network connection and try again.");
   } finally {
     clearTimeout(timer);

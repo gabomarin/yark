@@ -111,6 +111,40 @@ describe("JoinInfoModal", () => {
     await waitFor(() => expect(refreshPublicIp).toHaveBeenCalledTimes(2));
   });
 
+  it("clears the previous detection status when closed", async () => {
+    let resolveSecondRefresh!: (value: boolean) => void;
+    const secondRefresh = new Promise<boolean>((resolve) => {
+      resolveSecondRefresh = resolve;
+    });
+    const refreshPublicIp = vi.fn().mockResolvedValueOnce(false).mockReturnValueOnce(secondRefresh);
+    const onClose = vi.fn();
+    const renderWithOpenState = (opened: boolean) => (
+      <AppProviders>
+        <JoinInfoModal
+          opened={opened}
+          onClose={onClose}
+          server={profile()}
+          publicIp=""
+          refreshPublicIp={refreshPublicIp}
+        />
+      </AppProviders>
+    );
+    const { rerender } = render(renderWithOpenState(true));
+    await waitFor(() =>
+      expect(screen.getByText("Couldn’t detect this PC’s public IP. Use refresh to try again.")).toBeInTheDocument(),
+    );
+
+    rerender(renderWithOpenState(false));
+    rerender(renderWithOpenState(true));
+
+    await waitFor(() => expect(refreshPublicIp).toHaveBeenCalledTimes(2));
+    expect(screen.getByText("Checking this PC’s public IP…")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Couldn’t detect this PC’s public IP. Use refresh to try again."),
+    ).not.toBeInTheDocument();
+    resolveSecondRefresh(false);
+  });
+
   it("masks the join password but copies the real value on demand", async () => {
     const user = userEvent.setup();
     const writeText = vi.fn().mockResolvedValue(undefined);

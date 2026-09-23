@@ -51,6 +51,7 @@ export function JoinInfoModal(props: Props): ReactElement {
   useEffect(() => {
     if (!opened) {
       wasOpenedRef.current = false;
+      setIpState("idle");
       return;
     }
     if (!wasOpenedRef.current && serverRunning !== true && !isJoinHostUsable(publicIp)) {
