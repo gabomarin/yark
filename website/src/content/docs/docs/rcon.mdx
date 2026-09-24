@@ -13,7 +13,8 @@ Readiness while **starting** and graceful stop still use RCON under the hood; se
 
 - Send console commands and review responses in the session history (history survives switching workspace tabs inside the app session)
 - Kick / Ban / Unban from the survivors and ban list panels
-- Configure admin whitelist with a **remote http(s) AdminListURL** (Validate, refresh interval). Save writes `GameUserSettings.ini` unless the INI Files tab has unsaved edits; Discard restores the draft. Local file / loopback hosting is deferred.
+- Configure admin whitelist with a **remote http(s) AdminListURL** or a YARK **Hosted Resources** admin-list URL (Validate, refresh interval). Save writes `GameUserSettings.ini` unless the INI Files tab has unsaved edits; Discard restores the draft.
+- When the URL is a YARK Hosted Resource, add or remove EOS ids from **Admins** or the Survivors star; third-party remote lists stay read-only (stars show membership only)
 - Use SidePanel **Save world** / **Broadcast**, which share the same send path
 
 Host is always `127.0.0.1`. Auth uses the profile admin password and the **runtime** RCON port for that session.
@@ -23,16 +24,18 @@ Host is always `127.0.0.1`. Auth uses the profile admin password and the **runti
 ASA auto-admins use EOS / Ark ids (32-character), not Steam ids.
 
 Paste a public **http(s)** list URL (one EOS id per line — for example a GitHub
-Gist raw link) and Save. **Restart** so ASA picks up the URL, then the dedicated
+Gist raw link), or pick a typed **admin-list** Hosted Resource from the field, then
+Save. Changing the URL needs a **Restart** so ASA picks it up; after that the dedicated
 re-fetches on **UpdateAllowedCheatersInterval** (default 600 seconds; minimum 3).
+Edits to a YARK Hosted Resource body republish immediately so ASA re-fetches on the
+interval without another restart.
 
-Local `file://` / in-app hosted lists are **not** in the product UI yet (planned
-under Hosted Resources). Until then, use a remote URL.
-
-The whitelist is **not** stored in YARK’s database.
+The whitelist is **not** stored in YARK’s database (only the URL and refresh interval
+are profile/INI settings). Removing an admin asks for confirmation first.
 
 <Aside type="note">
-  In-app add/remove of admin ids is planned separately; this release configures the remote URL and shows the current list.
+  Experimental **Hosted Resources** (sidebar, off by default) can serve the list from
+  this PC at a loopback URL. Third-party remote lists remain read-only in YARK.
 </Aside>
 
 ## When the console is available

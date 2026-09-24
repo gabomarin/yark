@@ -24,6 +24,36 @@ const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.23.0",
+    date: "2026-09-23",
+    sections: [
+      {
+        title: "Highlights",
+        items: [
+          "Plasma Breeze joins Fluent as a second theme family: pick the family and its light or dark color scheme in Settings → Appearance.",
+          "Hosted Resources (experimental) can be typed for the ASA URL settings YARK knows, with a searchable picker on each setting and health badges that show Listening / Serving after a real probe.",
+          "When AdminListURL points at a YARK Hosted Resource, add or remove admins from RCON → Admins or the Survivors star; ASA re-fetches on the interval without a restart. Third-party remote lists stay read-only, with stars that only show membership.",
+          "Share connection details: a copyable Join: open IP:port in the workspace header, plus IP, ports, and a masked join password. Port forwarding is still yours.",
+          "Delete server is available from workspace Quick actions, with the same confirmation as the server card menu.",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "Removing an admin asks for confirmation first.",
+          "Discord #releases posts the curated What's new for the version, not the GitHub PR list.",
+          "Action icons share one semantic palette: neutral utilities, blue primary, amber attention, red destructive.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "A Hosted Resource URL wrapped in single quotes is recognised the same way as one wrapped in double quotes.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.22.0",
     date: "2026-09-21",
     sections: [
