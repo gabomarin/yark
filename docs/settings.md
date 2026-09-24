@@ -83,10 +83,11 @@ the Server tab / workspace.
 | Control       | Storage                | Default     | Notes                                                                                                                                                                                |
 | ------------- | ---------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Display size  | SQLite `uiDensity`     | **compact** | `compact` \| `comfortable`; scales the active theme's spacing / radius / font tokens — see [design-system.md](design-system.md)                                                      |
-| Theme         | SQLite `appearance.v1` | **dark**    | Registry id (`shared/theme/themes.ts`): `dark` \| `light`. An unknown or missing id falls back to `dark`                                                                             |
+| Theme family  | SQLite `appearance.v1` | **fluent**  | `fluent` \| `plasma-breeze` (`shared/theme/themes.ts`). An unknown or missing family falls back to Fluent                                                                            |
+| Color scheme  | SQLite `appearance.v1` | **dark**    | `dark` \| `light` within the selected family (Fluent Dark/Light, Breeze Dark/Light). An unknown or missing scheme falls back to dark                                                 |
 | Server panels | SQLite `appearance.v1` | **auto**    | `auto` \| `drawers`; where the server workspace puts its server list and status panel (`src/shared/workspace/workspacePanels.ts`). Auto uses columns from 1600px, Drawers never does |
 
-Theme, panels and density are independent: density scales the tokens of whichever theme is active, and the panels option only decides where the workspace puts its server list and status panel.
+Family, scheme, panels and density are independent: density scales the tokens of whichever theme is active, and the panels option only decides where the workspace puts its server list and status panel.
 
 ### Profiles
 

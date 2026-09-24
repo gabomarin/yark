@@ -220,7 +220,7 @@ async function run() {
       state: "visible",
       timeout: 10_000,
     });
-    await page.getByText("ok", { exact: true }).first().waitFor({ state: "visible" });
+    await page.getByText("Sent", { exact: true }).first().waitFor({ state: "visible" });
 
     // Empty success → "No response".
     await sendCommand(page, "E2E_EMPTY");
@@ -235,7 +235,7 @@ async function run() {
       .locator("p")
       .filter({ hasText: /^E2E mock failure$/ })
       .waitFor({ state: "visible", timeout: 10_000 });
-    await page.getByText("failed", { exact: true }).waitFor({ state: "visible" });
+    await page.getByText("Failed", { exact: true }).waitFor({ state: "visible" });
 
     // Identical pending + Clear keeps in-flight.
     await sendCommand(page, "E2E_SLOW");
