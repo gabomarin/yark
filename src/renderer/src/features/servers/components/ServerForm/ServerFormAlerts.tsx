@@ -10,17 +10,12 @@ interface Props {
 
 /** Running / files / move warnings above the edit form (#292). */
 export function ServerFormAlerts(props: Props): ReactElement | null {
-  if (!props.filesJobActive && !props.moveJobActive && !props.serverActive) {
+  if (!props.moveJobActive && (!props.serverActive || props.filesJobActive)) {
     return null;
   }
 
   return (
     <Stack gap="sm">
-      {props.filesJobActive && (
-        <AppAlert color="attention" title="Updating server files">
-          You can save profile settings now. Wait until the file update finishes before starting Move installation.
-        </AppAlert>
-      )}
       {props.moveJobActive && (
         <AppAlert color="attention" title="Moving installation">
           Wait until the move finishes before starting or updating this server.

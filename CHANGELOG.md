@@ -10,6 +10,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ## [Unreleased]
 
 - Mods can now be marked **Passive** (row action, detail drawer, or row menu) to load their data without spawning content: passive IDs are sent on `-passivemods=` and removed from `-mods=`, and YARK dedupes both flags (#509).
+- Server workspace file-job notices now appear once above the tabs on every workspace tab (#630).
 - The Launch tab's `-passivemods=` field is gone in favor of the Mods tab; saved selections are migrated to the server's passive mods on first launch, so existing servers keep loading them.
 - OpenCodeReview now supports OpenAI Responses API providers such as GPT Luna across review, preflight, and pull request summaries via the `OCR_PRIMARY_PROTOCOL` and `OCR_FALLBACK_PROTOCOL` Actions variables.
 - OpenCodeReview Responses summaries avoid unsupported sampling settings for reasoning models such as GPT Luna.

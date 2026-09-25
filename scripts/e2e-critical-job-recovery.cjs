@@ -8,6 +8,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
 const { _electron: electron } = require("playwright");
+const { openWorkspaceTab } = require("./e2e-launch.cjs");
 
 delete process.env.ELECTRON_RUN_AS_NODE;
 
@@ -123,6 +124,23 @@ function seedDatabase() {
   db.close();
 }
 
+function seedWorkspaceNoticeJob() {
+  const db = new DatabaseSync(dbPath);
+  const row = db.prepare("SELECT value FROM app_settings WHERE key = ?").get("criticalJobsQueue.v1");
+  assert.ok(row && typeof row.value === "string");
+  const jobs = JSON.parse(row.value);
+  jobs.push({
+    ...job("update-notice", "update", serverId, "paused", "queued"),
+    idempotencyKey: `update:${serverId}:workspace-notice`,
+  });
+  db.prepare("UPDATE app_settings SET value = ?, updated_at = ? WHERE key = ?").run(
+    JSON.stringify(jobs),
+    new Date().toISOString(),
+    "criticalJobsQueue.v1",
+  );
+  db.close();
+}
+
 async function openRecoveryUi(app, errors) {
   const page = await app.firstWindow();
   page.on("console", (message) => {
@@ -181,6 +199,37 @@ async function assertRecoveryState(page, expectCancelled, expectRetryable) {
   }
 }
 
+async function assertWorkspaceFileJobNotice(page) {
+  await page.getByRole("button", { name: "Servers", exact: true }).click();
+  await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 10_000 });
+  await page.getByRole("button", { name: `Open ${serverName} (operation in progress)` }).click();
+
+  for (const tabName of [
+    "Server",
+    "INI Files",
+    "Mods",
+    "Launch",
+    "Backups",
+    "Logs",
+    "RCON",
+    "Maintenance",
+    "Ark Server API",
+  ]) {
+    await openWorkspaceTab(page, tabName);
+    const notice = page.getByRole("alert").filter({ hasText: "Paused · Updating server" });
+    assert.equal(await notice.count(), 1, `${tabName} should show exactly one file-job notice`);
+    const tab = page.getByRole("tab", { name: tabName, exact: true });
+    assert.ok(
+      await notice.evaluate(
+        (element, tabElement) =>
+          Boolean(element.compareDocumentPosition(tabElement) & Node.DOCUMENT_POSITION_FOLLOWING),
+        await tab.elementHandle(),
+      ),
+      `${tabName} should show the file-job notice above the tab bar`,
+    );
+  }
+}
+
 async function run() {
   process.chdir(projectRoot);
   assert.equal(process.platform, "win32", "Critical-job E2E requires Windows");
@@ -217,11 +266,13 @@ async function run() {
     await cancelled.waitFor({ state: "detached", timeout: 10_000 });
     await quitApp(app);
     app = null;
+    seedWorkspaceNoticeJob();
 
     // Second restart proves recovered states and the dismissal persisted.
     app = await launchApp();
     page = await openRecoveryUi(app, errors);
     await assertRecoveryState(page, false, false);
+    await assertWorkspaceFileJobNotice(page);
 
     const actionableErrors = errors.filter((message) => !/Failed to load resource|net::ERR_/i.test(message));
     assert.deepEqual(actionableErrors, []);
