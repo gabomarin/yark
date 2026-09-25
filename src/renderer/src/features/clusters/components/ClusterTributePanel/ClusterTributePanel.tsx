@@ -2,8 +2,10 @@ import type { ReactElement } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Button, Stack, Text } from "@mantine/core";
 import type { ServerIniSnapshot, ServerProfile, ServerRuntimeInfo } from "@shared/types";
-import { ClusterWideTributeSettings } from "./ClusterWideTributeSettings";
-import { MapTributeSettings } from "./MapTributeSettings";
+import { ClusterWideSummary } from "./ClusterWideSummary";
+import { ClusterWideEditor } from "./ClusterWideEditor";
+import { MapTributeSummary } from "./MapTributeSummary";
+import { MapTributeEditor } from "./MapTributeEditor";
 
 interface Props {
   clusterId: string;
@@ -16,6 +18,8 @@ export function ClusterTributePanel(props: Props): ReactElement {
   const [snapshots, setSnapshots] = useState<Map<string, ServerIniSnapshot>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [wideEditOpen, setWideEditOpen] = useState(false);
+  const [mapEditOpen, setMapEditOpen] = useState(false);
   const readGeneration = useRef(0);
 
   const refresh = useCallback(async (): Promise<void> => {
@@ -74,27 +78,46 @@ export function ClusterTributePanel(props: Props): ReactElement {
         </Text>
       ) : (
         <>
-          <ClusterWideTributeSettings
+          <ClusterWideSummary
             clusterId={props.clusterId}
             members={props.members}
             statuses={props.statuses}
             snapshots={snapshots}
-            onApplied={() => {
-              props.onChanged();
-              void refresh();
-            }}
+            onEdit={() => setWideEditOpen(true)}
           />
-          <MapTributeSettings
+          <MapTributeSummary
             members={props.members}
             statuses={props.statuses}
             snapshots={snapshots}
-            onSaved={() => {
-              props.onChanged();
-              void refresh();
-            }}
+            onEdit={() => setMapEditOpen(true)}
           />
         </>
       )}
+
+      <ClusterWideEditor
+        opened={wideEditOpen}
+        clusterId={props.clusterId}
+        members={props.members}
+        statuses={props.statuses}
+        snapshots={snapshots}
+        onClose={() => setWideEditOpen(false)}
+        onApplied={() => {
+          props.onChanged();
+          void refresh();
+        }}
+      />
+
+      <MapTributeEditor
+        opened={mapEditOpen}
+        members={props.members}
+        statuses={props.statuses}
+        snapshots={snapshots}
+        onClose={() => setMapEditOpen(false)}
+        onSaved={() => {
+          props.onChanged();
+          void refresh();
+        }}
+      />
     </Stack>
   );
 }

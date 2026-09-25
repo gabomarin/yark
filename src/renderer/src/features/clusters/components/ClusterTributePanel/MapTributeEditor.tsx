@@ -15,9 +15,11 @@ import {
 } from "../../tributeModel";
 
 interface Props {
+  opened: boolean;
   members: ServerProfile[];
   statuses: Map<string, ServerRuntimeInfo>;
   snapshots: Map<string, ServerIniSnapshot>;
+  onClose: () => void;
   onSaved: () => void;
 }
 
@@ -43,7 +45,7 @@ function formValues(snapshot: ServerIniSnapshot | undefined): Record<MapTributeK
   return readMapTributeValues(readTributeValues(snapshot?.payload.gameUserSettings ?? ""));
 }
 
-export function MapTributeSettings(props: Props): ReactElement {
+export function MapTributeEditor(props: Props): ReactElement {
   const [serverId, setServerId] = useState(props.members[0]?.id ?? "");
   const [values, setValues] = useState<Record<MapTributeKey, boolean>>(() => formValues(props.snapshots.get(serverId)));
   const [valuesForServer, setValuesForServer] = useState(serverId);
@@ -128,99 +130,83 @@ export function MapTributeSettings(props: Props): ReactElement {
   };
 
   return (
-    <Stack gap="xs">
-      <div>
-        <Text fw={600} size="sm">
-          This map only
-        </Text>
-        <Text size="xs" c="dimmed">
-          These controls may intentionally differ by map. They are never part of the cluster drift check or cluster-wide
-          apply.
-        </Text>
-      </div>
-      <Group align="flex-end" grow>
-        <Select
-          label="Selected map"
-          value={serverId || null}
-          data={props.members.map((member) => ({ value: member.id, label: `${member.name} · ${member.map}` }))}
-          onChange={(value) => {
-            if (value !== null) {
-              setServerId(value);
-              setError(null);
-              setNotice(null);
-            }
-          }}
-        />
-        <Text size="xs" c={busyReason === null ? "dimmed" : "attention"}>
-          {busyReason === null
-            ? `Status: ${runtime?.status ?? "unknown"}`
-            : `${runtime?.status ?? "unknown"}: ${busyReason}`}
-        </Text>
-      </Group>
-
-      {error !== null && (
-        <Alert color="red" title="Could not save per-map settings">
-          {error}
-        </Alert>
-      )}
-      {notice !== null && <Alert color="ok">{notice}</Alert>}
-
-      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
-        {MAP_TRIBUTE_KEYS.map((key) => (
-          <Tooltip key={key} label={tributeSettingMeta(key).description} multiline w={340}>
-            <Checkbox
-              label={LABELS[key]}
-              checked={displayedValues[key]}
-              disabled={busyReason !== null}
-              onChange={(event) => {
-                setValues((current) => ({ ...current, [key]: event.currentTarget.checked }));
-                setValuesForServer(serverId);
+    <AppPanelModal
+      opened={props.opened}
+      onClose={() => {
+        if (!saving) props.onClose();
+      }}
+      title="Edit per-map tribute settings"
+      size="md"
+      closeOnClickOutside={!saving}
+      closeOnEscape={!saving}
+      withCloseButton={!saving}
+      footerAlign="between"
+      footer={
+        <>
+          <Button variant="default" disabled={saving} onClick={props.onClose}>
+            Cancel
+          </Button>
+          <Button
+            loading={saving}
+            disabled={busyReason !== null || snapshot === undefined}
+            onClick={() => void prepareReview()}
+          >
+            Preview & save
+          </Button>
+        </>
+      }
+    >
+      <Stack gap="xs">
+        <Group align="flex-end" grow>
+          <Select
+            label="Selected map"
+            value={serverId || null}
+            data={props.members.map((member) => ({ value: member.id, label: `${member.name} · ${member.map}` }))}
+            onChange={(value) => {
+              if (value !== null) {
+                setServerId(value);
                 setError(null);
                 setNotice(null);
-              }}
-            />
-          </Tooltip>
-        ))}
-      </SimpleGrid>
-      <Text size="xs" c="dimmed">
-        Unchecked, missing keys use the catalog's False default and are not written unless you change them.
-      </Text>
+              }
+            }}
+            disabled={saving}
+          />
+          <Text size="xs" c={busyReason === null ? "dimmed" : "attention"}>
+            {busyReason === null
+              ? `Status: ${runtime?.status ?? "unknown"}`
+              : `${runtime?.status ?? "unknown"}: ${busyReason}`}
+          </Text>
+        </Group>
 
-      <Group justify="space-between" align="center" wrap="wrap">
+        {error !== null && (
+          <Alert color="red" title="Could not save per-map settings">
+            {error}
+          </Alert>
+        )}
+        {notice !== null && <Alert color="ok">{notice}</Alert>}
+
+        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
+          {MAP_TRIBUTE_KEYS.map((key) => (
+            <Tooltip key={key} label={tributeSettingMeta(key).description} multiline w={340}>
+              <Checkbox
+                label={LABELS[key]}
+                checked={displayedValues[key]}
+                disabled={busyReason !== null || saving}
+                onChange={(event) => {
+                  setValues((current) => ({ ...current, [key]: event.currentTarget.checked }));
+                  setValuesForServer(serverId);
+                  setError(null);
+                  setNotice(null);
+                }}
+              />
+            </Tooltip>
+          ))}
+        </SimpleGrid>
+
         <Text size="xs" c="dimmed">
-          Changes apply to this stopped server only and use the existing INI backup/save path.
+          Unchecked, missing keys use the catalog's False default and are not written unless you change them.
         </Text>
-        <Button
-          variant="default"
-          disabled={busyReason !== null || snapshot === undefined}
-          onClick={() => void prepareReview()}
-        >
-          Preview map settings
-        </Button>
-      </Group>
 
-      <AppPanelModal
-        opened={review !== null}
-        onClose={() => {
-          if (!saving) setReview(null);
-        }}
-        title="Apply tribute settings to this map"
-        size="md"
-        closeOnClickOutside={!saving}
-        closeOnEscape={!saving}
-        withCloseButton={!saving}
-        footerAlign="between"
-        footer={
-          <>
-            <Button variant="default" disabled={saving} onClick={() => setReview(null)}>
-              Cancel
-            </Button>
-            <Button loading={saving} onClick={() => void save()}>
-              Save this map
-            </Button>
-          </>
-        }
-      >
         {review !== null && (
           <Stack gap="sm">
             <Text size="sm">
@@ -234,9 +220,17 @@ export function MapTributeSettings(props: Props): ReactElement {
             <Text size="xs" c="dimmed">
               Preview: {review.changedCount} INI change(s). The server must remain stopped.
             </Text>
+            <Group justify="flex-end">
+              <Button variant="default" onClick={() => setReview(null)}>
+                Back
+              </Button>
+              <Button loading={saving} onClick={() => void save()}>
+                Save this map
+              </Button>
+            </Group>
           </Stack>
         )}
-      </AppPanelModal>
-    </Stack>
+      </Stack>
+    </AppPanelModal>
   );
 }
