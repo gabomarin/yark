@@ -4,14 +4,17 @@ import {
   argsIncludeServerPlatform,
   buildStructuredLaunchArgList,
   findLaunchArgConflicts,
+  isPassiveModsArg,
   isWinLiveMaxPlayersArg,
   listStructuredLaunchUiOptions,
   redactLaunchArgForPreview,
+  resolveProfileModBuckets,
   structuredLaunchGroupLabel,
   STRUCTURED_LAUNCH_GROUP_ORDER,
   YARK_DEFAULT_SERVER_PLATFORM_ARG,
   yarkClusterArgs,
   yarkModsArg,
+  yarkPassiveModsArg,
   yarkPortArg,
   yarkWinLiveMaxPlayersArg,
   type StructuredLaunchArgs,
@@ -84,9 +87,9 @@ export function yarkOwnedPreviewTokens(server: ServerProfile): string[] {
   if (!argsIncludeServerPlatform(trailing)) {
     parts.push(YARK_DEFAULT_SERVER_PLATFORM_ARG);
   }
-  const disabled = new Set(server.disabledMods ?? []);
-  const mods = server.mods.filter((id) => !disabled.has(id));
-  if (mods.length > 0) parts.push(yarkModsArg(mods));
+  const { active, passive } = resolveProfileModBuckets(server);
+  if (active.length > 0) parts.push(yarkModsArg(active));
+  if (passive.length > 0) parts.push(yarkPassiveModsArg(passive));
   if (server.clusterId && server.clusterDir) {
     parts.push(...yarkClusterArgs(server.clusterId, server.clusterDir));
   }
@@ -107,10 +110,14 @@ export function buildLaunchPreviewParts(input: {
     structuredLaunchArgs: input.structured,
     extraArgs: input.extraArgs,
   };
+  // Mirror buildLaunchArgs: once the profile owns passive mods, the manual
+  // `-passivemods=` structured/raw token is stripped from the effective command.
+  const ownsPassive = resolveProfileModBuckets(draft).passive.length > 0;
+  const keep = (token: string) => !(ownsPassive && isPassiveModsArg(token));
   return {
     yark: yarkOwnedPreviewTokens(draft),
-    structured: buildStructuredLaunchArgList(input.structured).map(redactLaunchArgForPreview),
-    raw: input.extraArgs.map(redactLaunchArgForPreview),
+    structured: buildStructuredLaunchArgList(input.structured).map(redactLaunchArgForPreview).filter(keep),
+    raw: input.extraArgs.map(redactLaunchArgForPreview).filter(keep),
   };
 }
 

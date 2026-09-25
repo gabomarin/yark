@@ -117,6 +117,57 @@ describe("buildLaunchArgs", () => {
     expect(args).toContain("-mods=111,333");
   });
 
+  it("emits passive mods only on -passivemods= (never duplicated on -mods=)", () => {
+    const args = buildLaunchArgs(
+      profile({
+        mods: ["111", "222", "333"],
+        passiveMods: ["222"],
+      }),
+    );
+    expect(args).toContain("-mods=111,333");
+    expect(args).toContain("-passivemods=222");
+    const modsToken = args.find((a) => a.startsWith("-mods="))!;
+    expect(modsToken).not.toContain("222");
+  });
+
+  it("drops a passive ID that is also disabled", () => {
+    const args = buildLaunchArgs(profile({ mods: ["111", "222"], disabledMods: ["222"], passiveMods: ["222"] }));
+    expect(args).toContain("-mods=111");
+    expect(args.some((a) => a.startsWith("-passivemods="))).toBe(false);
+  });
+
+  it("excludes manual -passivemods= IDs from -mods= when the profile owns none", () => {
+    const args = buildLaunchArgs(profile({ mods: ["111", "222"], extraArgs: ["-passivemods=222"] }));
+    expect(args).toContain("-mods=111");
+    expect(args).toContain("-passivemods=222");
+  });
+
+  it("strips legacy manual -passivemods= once the profile declares passive mods", () => {
+    const args = buildLaunchArgs(
+      profile({
+        mods: ["111", "222"],
+        passiveMods: ["222"],
+        extraArgs: ["-passivemods=222"],
+      }),
+    );
+    expect(args.filter((a) => a.startsWith("-passivemods="))).toEqual(["-passivemods=222"]);
+    expect(args).toContain("-mods=111");
+  });
+
+  it("does not emit -MapModID= or -mods= for a passive-linked official map mod", () => {
+    const args = buildLaunchArgs(
+      profile({
+        map: "TheIsland_WP",
+        mapModId: "1460513",
+        mods: ["1460513", "947033"],
+        passiveMods: ["1460513"],
+      }),
+    );
+    expect(args.join(" ")).not.toContain("-MapModID=");
+    expect(args).toContain("-mods=947033");
+    expect(args).toContain("-passivemods=1460513");
+  });
+
   it("adds cluster flags when clusterId and clusterDir are set", () => {
     const args = buildLaunchArgs(profile({ clusterId: "my-cluster", clusterDir: "C:\\asa\\cluster" }));
     expect(args).toContain("-clusterid=my-cluster");

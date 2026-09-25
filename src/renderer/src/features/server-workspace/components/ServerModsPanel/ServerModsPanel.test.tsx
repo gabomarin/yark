@@ -597,6 +597,39 @@ describe("ServerModsPanel", () => {
     });
   });
 
+  it("marks an enabled mod passive and persists passiveMods (#509)", async () => {
+    const api = installApi();
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.click(await screen.findByRole("button", { name: "Mark passive Awesome Spyglass!" }));
+
+    await waitFor(() => {
+      expect(api.updateServerPatch).toHaveBeenCalledWith(
+        "server-1",
+        expect.objectContaining({
+          group: "mods",
+          mods: ["947033"],
+          disabledMods: [],
+          passiveMods: ["947033"],
+        }),
+      );
+    });
+    expect(document.querySelector('[data-mod-passive="true"]')).not.toBeNull();
+  });
+
+  it("does not offer passive on a disabled mod (#509)", async () => {
+    installApi();
+    render(
+      <AppProviders>
+        <ServerModsPanel server={{ ...server, disabledMods: ["947033"], mods: ["947033"] }} onServerUpdated={vi.fn()} />
+      </AppProviders>,
+    );
+
+    const button = await screen.findByRole("button", { name: "Mark passive Awesome Spyglass!" });
+    expect(button).toBeDisabled();
+  });
+
   it("opens CurseForge links through the operating system", async () => {
     const api = installApi();
     const user = userEvent.setup();

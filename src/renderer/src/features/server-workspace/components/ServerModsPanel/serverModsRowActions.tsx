@@ -1,4 +1,4 @@
-import { ArrowSquareOut, MagnifyingGlass, Plus, Trash } from "@phosphor-icons/react";
+import { ArrowSquareOut, MagnifyingGlass, Moon, Plus, Trash } from "@phosphor-icons/react";
 import type { RowActionEntry } from "@ui/RowActionMenu/rowActionModel";
 import type { ModRow } from "./serverModsModel";
 
@@ -12,6 +12,8 @@ export interface ServerModsRowActionInput {
   onAdd: (row: ModRow) => void;
   onRemove: (row: ModRow) => void;
   onOpenExternal: (url: string) => void;
+  /** Toggle passive load (`-passivemods=` only). Server mode, enabled rows. */
+  onSetPassive?: (row: ModRow) => void;
 }
 
 export function buildServerModsRowActions(input: ServerModsRowActionInput): RowActionEntry[] {
@@ -37,6 +39,20 @@ export function buildServerModsRowActions(input: ServerModsRowActionInput): RowA
       },
     },
   ];
+
+  if (input.mode === "server" && input.row.id !== null && input.onSetPassive !== undefined) {
+    entries.push({
+      kind: "item",
+      key: "passive",
+      label: input.row.passive ? "Mark as active" : "Mark as passive",
+      icon: <Moon size={ICON} weight={input.row.passive ? "fill" : "regular"} />,
+      // Passive implies enabled: an off row has to be enabled first.
+      disabled: input.busy || !input.row.enabled,
+      onClick: () => {
+        input.onSetPassive?.(input.row);
+      },
+    });
+  }
 
   if (input.mode === "discover") {
     entries.push({

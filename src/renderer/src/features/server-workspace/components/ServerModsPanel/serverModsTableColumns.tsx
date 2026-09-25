@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
-import { Group, Loader, Text } from "@mantine/core";
+import { ActionIcon, Group, Loader, Text, Tooltip } from "@mantine/core";
+import { Moon } from "@phosphor-icons/react";
 import type { DataTableColumn } from "mantine-datatable";
 import { AppSwitch } from "@ui/AppSwitch/AppSwitch";
 import { ModIdentityCell } from "./ModIdentityCell";
@@ -23,6 +24,7 @@ export function buildServerModsTableColumns(input: {
   onToggle: (id: string, enabled: boolean) => void;
   onRemove: (id: string) => void;
   onOpenExternal: (url: string) => void;
+  onSetPassive?: (row: ModRow) => void;
 }): DataTableColumn<ModRow>[] {
   const columns: DataTableColumn<ModRow>[] = [];
 
@@ -63,6 +65,27 @@ export function buildServerModsTableColumns(input: {
               styles={{ trackLabel: { pointerEvents: "none" } }}
               onCheckedChange={(checked) => input.onToggle(row.id!, checked)}
             />
+          </div>
+        ),
+    });
+    columns.push({
+      accessor: "passive",
+      title: "Passive",
+      width: 68,
+      render: (row) =>
+        row.id === null || input.onSetPassive === undefined ? null : (
+          <div className={classes.enableControl} onClick={(event) => event.stopPropagation()}>
+            <Tooltip label={row.passive ? "Mark as active" : "Mark as passive"} withArrow>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                aria-label={`${row.passive ? "Mark active" : "Mark passive"} ${row.name}`}
+                disabled={isModRowBusy(input.busyKey, row) || !row.enabled}
+                onClick={() => input.onSetPassive?.(row)}
+              >
+                <Moon size={16} weight={row.passive ? "fill" : "regular"} />
+              </ActionIcon>
+            </Tooltip>
           </div>
         ),
     });

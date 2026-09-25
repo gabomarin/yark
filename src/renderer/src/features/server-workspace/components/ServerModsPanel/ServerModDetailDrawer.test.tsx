@@ -39,10 +39,12 @@ function renderDrawer(detail: ModMetadata | null) {
         opened={detail !== null}
         configured={false}
         enabled={false}
+        passive={false}
         busy={false}
         onClose={() => undefined}
         onOpenExternal={() => undefined}
         onToggle={() => undefined}
+        onSetPassive={() => undefined}
         onAdd={() => undefined}
         onRemove={() => undefined}
       />

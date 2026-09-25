@@ -7,13 +7,21 @@ import { MODS_BULK_BUSY_KEY, MODS_REORDER_BUSY_KEY } from "./serverModsBusy";
 interface Input {
   configuredIdsRef: MutableRefObject<string[]>;
   disabledIdsRef: MutableRefObject<string[]>;
+  /** Optional: passive load state. Omitted by legacy callers/tests. */
+  passiveIdsRef?: MutableRefObject<string[]>;
   metadata: Map<string, ModMetadata>;
   cacheRef: MutableRefObject<Record<string, ModMetadata>>;
   setBusyKey: Dispatch<SetStateAction<string | null>>;
   setDisabledIds: Dispatch<SetStateAction<string[]>>;
+  setPassiveIds?: Dispatch<SetStateAction<string[]>>;
   setError: Dispatch<SetStateAction<string | null>>;
   setWarning: Dispatch<SetStateAction<string | null>>;
-  persist: (nextIds: string[], nextDisabled: string[], nextCache: Record<string, ModMetadata>) => Promise<void>;
+  persist: (
+    nextIds: string[],
+    nextDisabled: string[],
+    nextCache: Record<string, ModMetadata>,
+    nextPassive?: string[],
+  ) => Promise<void>;
   notifyMapModIfNeeded: (id: string, meta: ModMetadata | undefined) => Promise<void>;
 }
 
@@ -23,7 +31,7 @@ interface Input {
  * loop rescans the list. Order-insensitive, which is what the rollback needs - array identity
  * was too strict (any copy would silently stop the revert) and a naive scan too loose.
  */
-function sameDisabledIds(a: readonly string[], b: readonly string[]): boolean {
+function sameIdSet(a: readonly string[], b: readonly string[]): boolean {
   const aSet = new Set(a);
   if (aSet.size !== a.length) {
     return false;
@@ -33,6 +41,12 @@ function sameDisabledIds(a: readonly string[], b: readonly string[]): boolean {
 }
 
 export function createServerModsListMutations(input: Input) {
+  const readPassive = (): string[] => input.passiveIdsRef?.current ?? [];
+  const writePassive = (next: string[]): void => {
+    if (input.passiveIdsRef) input.passiveIdsRef.current = next;
+    input.setPassiveIds?.(next);
+  };
+
   const add = async (modDetail: ModMetadata) => {
     input.setBusyKey(modDetail.id);
     input.setError(null);
@@ -67,14 +81,18 @@ export function createServerModsListMutations(input: Input) {
     input.setWarning(null);
     const configuredIds = input.configuredIdsRef.current;
     const previousDisabled = input.disabledIdsRef.current;
+    const previousPassive = readPassive();
     const nextDisabled = enabled
       ? previousDisabled.filter((candidate) => candidate !== id)
       : [...new Set([...previousDisabled, id])];
+    // Passive implies enabled: disabling a row drops its passive mark.
+    const nextPassive = enabled ? previousPassive : previousPassive.filter((candidate) => candidate !== id);
     input.disabledIdsRef.current = nextDisabled;
     input.setDisabledIds(nextDisabled);
+    writePassive(nextPassive);
     let persisted = false;
     try {
-      await input.persist(configuredIds, nextDisabled, input.cacheRef.current);
+      await input.persist(configuredIds, nextDisabled, input.cacheRef.current, nextPassive);
       persisted = true;
       if (enabled) {
         const meta = input.cacheRef.current[id] ?? input.metadata.get(id);
@@ -86,9 +104,34 @@ export function createServerModsListMutations(input: Input) {
        * because the notification after it threw, and a late failure must not clobber the
        * value a newer toggle has already written.
        */
-      if (!persisted && sameDisabledIds(input.disabledIdsRef.current, nextDisabled)) {
+      if (!persisted && sameIdSet(input.disabledIdsRef.current, nextDisabled)) {
         input.disabledIdsRef.current = previousDisabled;
         input.setDisabledIds(previousDisabled);
+        writePassive(previousPassive);
+      }
+      input.setError(cause instanceof Error ? cause.message : "Could not update the mod");
+    }
+  };
+
+  /** Optimistic like {@link toggle}; passive requires the row to be enabled. */
+  const setPassive = async (id: string, passive: boolean) => {
+    const configuredIds = input.configuredIdsRef.current;
+    const disabledIds = input.disabledIdsRef.current;
+    if (!configuredIds.includes(id) || (passive && disabledIds.includes(id))) return;
+    input.setError(null);
+    input.setWarning(null);
+    const previousPassive = readPassive();
+    const nextPassive = passive
+      ? [...new Set([...previousPassive, id])]
+      : previousPassive.filter((candidate) => candidate !== id);
+    writePassive(nextPassive);
+    let persisted = false;
+    try {
+      await input.persist(configuredIds, disabledIds, input.cacheRef.current, nextPassive);
+      persisted = true;
+    } catch (cause) {
+      if (!persisted && sameIdSet(readPassive(), nextPassive)) {
+        writePassive(previousPassive);
       }
       input.setError(cause instanceof Error ? cause.message : "Could not update the mod");
     }
@@ -103,11 +146,14 @@ export function createServerModsListMutations(input: Input) {
     const disabledIds = input.disabledIdsRef.current;
     const nextCache = { ...input.cacheRef.current };
     delete nextCache[id];
+    const nextPassive = readPassive().filter((candidate) => candidate !== id);
+    writePassive(nextPassive);
     try {
       await input.persist(
         configuredIds.filter((candidate) => candidate !== id),
         disabledIds.filter((candidate) => candidate !== id),
         nextCache,
+        nextPassive,
       );
       return true;
     } catch (cause) {
@@ -161,26 +207,29 @@ export function createServerModsListMutations(input: Input) {
   const disableAll = async () => {
     const configuredIds = input.configuredIdsRef.current;
     if (configuredIds.length === 0 || input.disabledIdsRef.current.length === configuredIds.length) return;
+    // No optimistic write: `runListWrite` has no rollback, and `persist` applies the
+    // next state on success. Nothing can stay passive once every mod is disabled.
     await runListWrite(MODS_BULK_BUSY_KEY, "Could not disable all mods", () =>
-      input.persist(configuredIds, [...configuredIds], input.cacheRef.current),
+      input.persist(configuredIds, [...configuredIds], input.cacheRef.current, []),
     );
   };
 
-  /** Bulk: drop disabled IDs from `mods` / `disabledMods` and clear their cache. One patch. */
+  /** Bulk: drop disabled IDs from `mods` / `disabledMods` / `passiveMods` and clear their cache. One patch. */
   const removeAllDisabled = async () => {
     const configuredIds = input.configuredIdsRef.current;
     const disabledIds = input.disabledIdsRef.current;
     if (disabledIds.length === 0) return;
     const disabledSet = new Set(disabledIds);
     const nextIds = configuredIds.filter((id) => !disabledSet.has(id));
+    const nextPassive = readPassive().filter((id) => !disabledSet.has(id));
     const nextCache = { ...input.cacheRef.current };
     for (const id of disabledIds) {
       delete nextCache[id];
     }
     await runListWrite(MODS_BULK_BUSY_KEY, "Could not remove disabled mods", () =>
-      input.persist(nextIds, [], nextCache),
+      input.persist(nextIds, [], nextCache, nextPassive),
     );
   };
 
-  return { add, toggle, remove, reorder, enableAll, disableAll, removeAllDisabled };
+  return { add, toggle, remove, reorder, enableAll, disableAll, removeAllDisabled, setPassive };
 }

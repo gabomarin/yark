@@ -22,6 +22,8 @@ export interface ModRow {
   url: string | null;
   configured: boolean;
   enabled: boolean;
+  /** Enabled + marked passive: emitted on `-passivemods=` only. */
+  passive: boolean;
 }
 
 export type ModRowSortAccessor = "name" | "downloadCount" | "updatedAt";
@@ -38,8 +40,11 @@ export function buildServerRows(
   configuredIds: string[],
   disabledIds: Set<string>,
   metadata: Map<string, ModMetadata>,
+  passiveIds: Set<string> = new Set(),
 ): ModRow[] {
-  return configuredIds.map((id, loadIndex) => metadataRow(id, metadata.get(id), !disabledIds.has(id), loadIndex));
+  return configuredIds.map((id, loadIndex) =>
+    metadataRow(id, metadata.get(id), !disabledIds.has(id), passiveIds.has(id), loadIndex),
+  );
 }
 
 export function buildDiscoveryRows(
@@ -47,6 +52,7 @@ export function buildDiscoveryRows(
   disabledIds: Set<string>,
   metadata: Map<string, ModMetadata>,
   catalog: ModSearchPage | null,
+  passiveIds: Set<string> = new Set(),
 ): ModRow[] {
   const configuredBySlug = new Map(
     configuredIds
@@ -60,6 +66,7 @@ export function buildDiscoveryRows(
       item,
       configuredMetadata,
       configuredMetadata !== undefined && !disabledIds.has(configuredMetadata.id),
+      configuredMetadata !== undefined && passiveIds.has(configuredMetadata.id),
       loadIndex,
     );
   });
@@ -102,7 +109,13 @@ function formatModDownloadCount(count: number | undefined): string {
   return count === undefined ? "Unknown" : count.toLocaleString();
 }
 
-function metadataRow(id: string, item: ModMetadata | undefined, enabled: boolean, loadIndex: number): ModRow {
+function metadataRow(
+  id: string,
+  item: ModMetadata | undefined,
+  enabled: boolean,
+  passive: boolean,
+  loadIndex: number,
+): ModRow {
   const unknownUpdated = item === undefined || item.dateModified === new Date(0).toISOString();
   return {
     key: `id:${id}`,
@@ -121,6 +134,7 @@ function metadataRow(id: string, item: ModMetadata | undefined, enabled: boolean
     url: item?.curseforgeUrl ?? null,
     configured: true,
     enabled,
+    passive,
   };
 }
 
@@ -128,6 +142,7 @@ function catalogRow(
   item: ModMetadata,
   configuredMetadata: ModMetadata | undefined,
   enabled: boolean,
+  passive: boolean,
   loadIndex: number,
 ): ModRow {
   return {
@@ -147,6 +162,7 @@ function catalogRow(
     url: item.curseforgeUrl,
     configured: configuredMetadata !== undefined,
     enabled,
+    passive,
   };
 }
 

@@ -57,6 +57,7 @@ function profileTransferFingerprint(profile: ServerProfile): string {
     updatedAt: profile.updatedAt,
     mods: profile.mods,
     disabledMods: profile.disabledMods ?? [],
+    passiveMods: profile.passiveMods ?? [],
     extraArgs: profile.extraArgs,
     structuredLaunchArgs: profile.structuredLaunchArgs ?? {},
     modMetadataCache: profile.modMetadataCache ?? {},
@@ -215,11 +216,13 @@ export class ConfigTransferService {
                 {
                   mods: source.mods,
                   disabledMods: source.disabledMods ?? [],
+                  passiveMods: source.passiveMods ?? [],
                   modMetadataCache: source.modMetadataCache ?? {},
                 },
                 {
                   mods: target.mods,
                   disabledMods: target.disabledMods ?? [],
+                  passiveMods: target.passiveMods ?? [],
                   modMetadataCache: target.modMetadataCache ?? {},
                 },
                 selection.mods.strategy,
@@ -256,6 +259,7 @@ export class ConfigTransferService {
               : { ...(target.structuredLaunchArgs ?? {}) },
             mods: composedMods !== null ? composedMods.mods : [...target.mods],
             disabledMods: composedMods !== null ? composedMods.disabledMods : [...(target.disabledMods ?? [])],
+            passiveMods: composedMods !== null ? composedMods.passiveMods : [...(target.passiveMods ?? [])],
             modMetadataCache:
               composedMods !== null ? composedMods.modMetadataCache : { ...(target.modMetadataCache ?? {}) },
           });
@@ -533,6 +537,7 @@ export class ConfigTransferService {
           },
           mods: [...profileSnapshot.mods],
           disabledMods: [...(profileSnapshot.disabledMods ?? [])],
+          passiveMods: [...(profileSnapshot.passiveMods ?? [])],
           modMetadataCache: { ...(profileSnapshot.modMetadataCache ?? {}) },
         });
       }

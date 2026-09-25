@@ -22,6 +22,7 @@ const rows: ModRow[] = [
     url: "https://example.com/a",
     configured: true,
     enabled: true,
+    passive: false,
     loadIndex: 0,
   },
   {
@@ -40,6 +41,7 @@ const rows: ModRow[] = [
     url: "https://example.com/z",
     configured: true,
     enabled: true,
+    passive: false,
     loadIndex: 1,
   },
 ];

@@ -82,6 +82,7 @@ describe("server-profile patch helpers (#209)", () => {
         group: "mods",
         mods: ["111", "222"],
         disabledMods: ["222"],
+        passiveMods: [],
       },
     );
     expect(afterMods.extraArgs).toEqual(["-ForceAllowCaveFlyers"]);
@@ -102,6 +103,7 @@ describe("server-profile patch helpers (#209)", () => {
         group: "mods",
         mods: ["1"],
         disabledMods: [],
+        passiveMods: [],
       }),
     ).toBe(true);
     expect(isServerProfilePatch({ group: "launch" })).toBe(false);
@@ -158,6 +160,7 @@ describe("InstanceService.updatePatch concurrency (#209)", () => {
       group: "mods",
       mods: ["111", "222"],
       disabledMods: ["222"],
+      passiveMods: [],
       modMetadataCache: {},
     });
 

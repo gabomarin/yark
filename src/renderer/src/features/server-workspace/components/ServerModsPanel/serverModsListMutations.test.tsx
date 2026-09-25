@@ -41,7 +41,53 @@ describe("createServerModsListMutations", () => {
 
     disabledIdsRef.current = ["a", "b"];
     await toggle("a", true);
-    expect(persist).toHaveBeenCalledWith(["a", "b"], ["b"], {});
+    expect(persist).toHaveBeenCalledWith(["a", "b"], ["b"], {}, []);
+  });
+
+  it("marks a passive id optimistically and persists the set", async () => {
+    const persist = vi.fn(async () => undefined);
+    const passiveIdsRef = { current: [] as string[] };
+    const setPassiveIds = vi.fn();
+    const { setPassive } = createServerModsListMutations({
+      configuredIdsRef: { current: ["a", "b"] },
+      disabledIdsRef: { current: [] },
+      passiveIdsRef,
+      metadata: new Map(),
+      cacheRef: { current: {} },
+      setBusyKey: vi.fn(),
+      setDisabledIds: vi.fn(),
+      setPassiveIds,
+      setError: vi.fn(),
+      setWarning: vi.fn(),
+      persist,
+      notifyMapModIfNeeded: vi.fn(),
+    });
+
+    await setPassive("b", true);
+    expect(setPassiveIds).toHaveBeenCalledWith(["b"]);
+    expect(passiveIdsRef.current).toEqual(["b"]);
+    expect(persist).toHaveBeenCalledWith(["a", "b"], [], {}, ["b"]);
+  });
+
+  it("refuses to mark a disabled mod passive", async () => {
+    const persist = vi.fn(async () => undefined);
+    const { setPassive } = createServerModsListMutations({
+      configuredIdsRef: { current: ["a", "b"] },
+      disabledIdsRef: { current: ["b"] },
+      passiveIdsRef: { current: [] },
+      metadata: new Map(),
+      cacheRef: { current: {} },
+      setBusyKey: vi.fn(),
+      setDisabledIds: vi.fn(),
+      setPassiveIds: vi.fn(),
+      setError: vi.fn(),
+      setWarning: vi.fn(),
+      persist,
+      notifyMapModIfNeeded: vi.fn(),
+    });
+
+    await setPassive("b", true);
+    expect(persist).not.toHaveBeenCalled();
   });
 
   it("sets the reorder busy key while persisting load order", async () => {
@@ -257,7 +303,7 @@ describe("createServerModsListMutations", () => {
 
     await disableAll();
 
-    expect(persist).toHaveBeenCalledWith(["a", "b"], ["a", "b"], {});
+    expect(persist).toHaveBeenCalledWith(["a", "b"], ["a", "b"], {}, []);
   });
 
   it("removes disabled mods and their cache in one patch (#637)", async () => {
@@ -271,7 +317,7 @@ describe("createServerModsListMutations", () => {
 
     await removeAllDisabled();
 
-    expect(persist).toHaveBeenCalledWith(["a", "c"], [], { a: { id: "a" } });
+    expect(persist).toHaveBeenCalledWith(["a", "c"], [], { a: { id: "a" } }, []);
   });
 
   it("shows one aggregated map toast when bulk-enabling map mods (#637)", async () => {

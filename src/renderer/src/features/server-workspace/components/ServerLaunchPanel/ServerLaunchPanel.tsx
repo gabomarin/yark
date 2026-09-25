@@ -49,8 +49,9 @@ export function ServerLaunchPanel(props: Props): ReactElement {
         mapModId: props.server.mapModId,
         mods: props.server.mods,
         disabledMods: props.server.disabledMods,
+        passiveMods: props.server.passiveMods,
       }).filter((issue) => issue.severity === "warning"),
-    [props.server.disabledMods, props.server.map, props.server.mapModId, props.server.mods],
+    [props.server.disabledMods, props.server.map, props.server.mapModId, props.server.mods, props.server.passiveMods],
   );
   const conflicts = useMemo(() => findLaunchArgConflicts({ structured, extraArgs }), [structured, extraArgs]);
   const grouped = useMemo(() => groupStructuredOptions(), []);

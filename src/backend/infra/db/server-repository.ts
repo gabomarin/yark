@@ -8,6 +8,7 @@ import {
 } from "@shared/credential-redaction";
 import type { AppEvent, AppEventDetails, ModMetadata, ServerProfile, ServerProfileInput } from "@shared/types";
 import { persistableMapModId, persistableMapSaveFolder } from "@shared/asa/map-identity";
+import { normalizePassiveMods } from "@shared/server/server-profile";
 import {
   emptyStructuredLaunchArgs,
   normalizeStructuredLaunchArgs,
@@ -39,6 +40,7 @@ interface ServerRow {
   structured_launch_args: string;
   mods: string;
   disabled_mods: string;
+  passive_mods: string;
   mod_metadata_cache: string;
   created_at: string;
   updated_at: string;
@@ -89,6 +91,7 @@ function rowToProfile(row: ServerRow): ServerProfile {
     ),
     mods: JSON.parse(row.mods) as string[],
     disabledMods: parseJson(row.disabled_mods, []),
+    passiveMods: parseJson(row.passive_mods, []),
     modMetadataCache: parseJson<Record<string, ModMetadata>>(row.mod_metadata_cache, {}),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -130,6 +133,7 @@ export class ServerRepository {
       useAsaApi: input.useAsaApi === true,
       useAsaApiLoader: input.useAsaApiLoader === true,
       disabledMods: input.disabledMods ?? [],
+      passiveMods: normalizePassiveMods(input.mods, input.disabledMods ?? [], input.passiveMods),
       modMetadataCache: input.modMetadataCache ?? {},
       structuredLaunchArgs: normalizeStructuredLaunchArgs(input.structuredLaunchArgs ?? emptyStructuredLaunchArgs()),
       id: randomUUID(),
@@ -143,8 +147,8 @@ export class ServerRepository {
           max_players, game_port, query_port, rcon_port,
           server_password, admin_password,
           cluster_id, cluster_dir, extra_args, structured_launch_args, mods,
-          disabled_mods, mod_metadata_cache, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          disabled_mods, passive_mods, mod_metadata_cache, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         profile.id,
@@ -170,6 +174,7 @@ export class ServerRepository {
         JSON.stringify(profile.structuredLaunchArgs ?? {}),
         JSON.stringify(profile.mods),
         JSON.stringify(profile.disabledMods),
+        JSON.stringify(profile.passiveMods),
         JSON.stringify(profile.modMetadataCache),
         profile.createdAt,
         profile.updatedAt,
@@ -190,6 +195,8 @@ export class ServerRepository {
       mapModId: mapModId,
       mapSaveFolder: input.mapSaveFolder !== undefined ? input.mapSaveFolder : existing.mapSaveFolder,
     });
+    const disabledMods = input.disabledMods ?? existing.disabledMods ?? [];
+    const passiveMods = normalizePassiveMods(input.mods, disabledMods, input.passiveMods ?? existing.passiveMods);
     this.db
       .prepare(
         `UPDATE servers SET
@@ -197,7 +204,7 @@ export class ServerRepository {
           max_players = ?, game_port = ?, query_port = ?, rcon_port = ?,
           server_password = ?, admin_password = ?,
           cluster_id = ?, cluster_dir = ?, extra_args = ?, structured_launch_args = ?, mods = ?,
-          disabled_mods = ?, mod_metadata_cache = ?,
+          disabled_mods = ?, passive_mods = ?, mod_metadata_cache = ?,
           auto_start = ?,
           use_asa_api = ?,
           use_asa_api_loader = ?,
@@ -224,7 +231,8 @@ export class ServerRepository {
           normalizeStructuredLaunchArgs(input.structuredLaunchArgs ?? existing.structuredLaunchArgs ?? {}),
         ),
         JSON.stringify(input.mods),
-        JSON.stringify(input.disabledMods ?? existing.disabledMods ?? []),
+        JSON.stringify(disabledMods),
+        JSON.stringify(passiveMods),
         JSON.stringify(input.modMetadataCache ?? existing.modMetadataCache ?? {}),
         input.autoStart === true ? 1 : 0,
         input.useAsaApi === true ? 1 : 0,

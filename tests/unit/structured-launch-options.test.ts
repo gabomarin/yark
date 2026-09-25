@@ -8,7 +8,9 @@ import {
   findLaunchArgConflicts,
   listStructuredLaunchUiOptions,
   parseWinLiveMaxPlayersValue,
+  takeLegacyPassiveMods,
   takeLegacyWinLiveMaxPlayers,
+  LEGACY_PASSIVE_MODS_OPTION_ID,
   STRUCTURED_LAUNCH_GROUP_ORDER,
 } from "@shared/asa/structured-launch-options";
 
@@ -148,10 +150,45 @@ describe("structured-launch-options", () => {
     ).toEqual(["-servergamelog"]);
   });
 
-  it("has no Cluster edge group; passivemods is curated under world", () => {
+  it("has no Cluster edge group and no curated passivemods (the Mods tab owns it)", () => {
     expect(STRUCTURED_LAUNCH_GROUP_ORDER).not.toContain("cluster");
-    const passive = listStructuredLaunchUiOptions().find((o) => o.curation.id === "passivemods-modid1-[-modid2-[...]]");
-    expect(passive?.curation.group).toBe("world");
+    expect(listStructuredLaunchUiOptions().map((o) => o.curation.id)).not.toContain(LEGACY_PASSIVE_MODS_OPTION_ID);
+    expect(
+      buildStructuredLaunchArgList({ [LEGACY_PASSIVE_MODS_OPTION_ID]: { enabled: true, value: "111,222" } }),
+    ).toEqual([]);
+  });
+
+  it("promotes the leftover Launch passivemods option into passiveMods", () => {
+    const taken = takeLegacyPassiveMods({
+      structuredLaunchArgs: {
+        nobattleye: { enabled: true },
+        [LEGACY_PASSIVE_MODS_OPTION_ID]: { enabled: true, value: "111,222" },
+      },
+      mods: ["111", "222", "333"],
+      disabledMods: ["333"],
+      passiveMods: ["444"],
+    });
+    expect(taken.passiveMods).toEqual(["111", "222"]);
+    expect(taken.structuredLaunchArgs).toEqual({ nobattleye: { enabled: true } });
+  });
+
+  it("drops passivemods IDs that are not installed, disabled, or the option was off", () => {
+    expect(
+      takeLegacyPassiveMods({
+        structuredLaunchArgs: { [LEGACY_PASSIVE_MODS_OPTION_ID]: { enabled: true, value: "111,999" } },
+        mods: ["111", "222"],
+        disabledMods: ["222"],
+        passiveMods: [],
+      }).passiveMods,
+    ).toEqual(["111"]);
+    expect(
+      takeLegacyPassiveMods({
+        structuredLaunchArgs: { [LEGACY_PASSIVE_MODS_OPTION_ID]: { enabled: false, value: "111" } },
+        mods: ["111"],
+        disabledMods: [],
+        passiveMods: [],
+      }).passiveMods,
+    ).toEqual([]);
   });
 
   it("parses leftover 0.12 WinLiveMaxPlayers tokens; extra args win", () => {

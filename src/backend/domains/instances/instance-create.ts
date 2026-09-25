@@ -5,7 +5,7 @@ import {
   normalizeWindowsPath,
   resolveServerInstallDir,
 } from "@shared/server/server-install-path";
-import { normalizeDisabledMods } from "@shared/server/server-profile";
+import { normalizeDisabledMods, normalizePassiveMods } from "@shared/server/server-profile";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import { findPortConflicts, validateProfileInput } from "./validation";
 import { assertInstallDirVacantForCreate, installDirKey } from "./install-dir-safety";
@@ -63,11 +63,13 @@ export class InstanceCreate {
   ): Promise<ServerProfile> {
     const installDir = normalizeWindowsPath(input.installDir);
     const mods = [...(input.mods ?? [])];
+    const disabledMods = normalizeDisabledMods(mods, input.disabledMods);
     const normalized: ServerProfileInput = {
       ...input,
       installDir,
       mods,
-      disabledMods: normalizeDisabledMods(mods, input.disabledMods),
+      disabledMods,
+      passiveMods: normalizePassiveMods(mods, disabledMods, input.passiveMods),
     };
     this.assertValidInput(normalized);
     this.assertUniqueName(normalized.name);

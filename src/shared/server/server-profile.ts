@@ -21,6 +21,7 @@ export function serverProfileToInput(server: ServerProfile): ServerProfileInput 
     structuredLaunchArgs: server.structuredLaunchArgs ?? {},
     mods: server.mods,
     disabledMods: server.disabledMods ?? [],
+    passiveMods: server.passiveMods ?? [],
     modMetadataCache: server.modMetadataCache ?? {},
     autoStart: server.autoStart,
     useAsaApi: server.useAsaApi === true,
@@ -52,6 +53,7 @@ export function applyServerProfilePatch(existing: ServerProfile, patch: ServerPr
     ...base,
     mods: patch.mods,
     disabledMods: patch.disabledMods,
+    passiveMods: normalizePassiveMods(patch.mods, patch.disabledMods, patch.passiveMods),
     modMetadataCache: patch.modMetadataCache ?? base.modMetadataCache,
   };
 }
@@ -64,6 +66,20 @@ export function applyServerProfilePatch(existing: ServerProfile, patch: ServerPr
 export function normalizeDisabledMods(mods: readonly string[], disabledMods?: readonly string[] | null): string[] {
   const modSet = new Set(mods);
   return [...new Set((disabledMods ?? mods).filter((id) => modSet.has(id)))];
+}
+
+/**
+ * Keep `passiveMods` within `mods` and outside `disabledMods` — passive implies
+ * enabled, so a disabled ID can never stay passive (it is silently cleared).
+ */
+export function normalizePassiveMods(
+  mods: readonly string[],
+  disabledMods: readonly string[],
+  passiveMods?: readonly string[] | null,
+): string[] {
+  const modSet = new Set(mods);
+  const disabledSet = new Set(disabledMods);
+  return [...new Set((passiveMods ?? []).filter((id) => modSet.has(id) && !disabledSet.has(id)))];
 }
 
 export function isServerProfilePatch(value: unknown): value is ServerProfilePatch {
@@ -84,6 +100,8 @@ export function isServerProfilePatch(value: unknown): value is ServerProfilePatc
       body.mods.every((item) => typeof item === "string") &&
       Array.isArray(body.disabledMods) &&
       body.disabledMods.every((item) => typeof item === "string") &&
+      Array.isArray(body.passiveMods) &&
+      body.passiveMods.every((item) => typeof item === "string") &&
       (body.modMetadataCache === undefined ||
         (body.modMetadataCache !== null &&
           typeof body.modMetadataCache === "object" &&

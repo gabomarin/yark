@@ -85,12 +85,12 @@ Internal popularity (`common`) is docs/audit metadata only.
 
 ### Curated groups
 
-| Group                 | Options                                                                                                                                                                                                                              |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| World & gameplay      | `-ForceAllowCaveFlyers`, `-AutoDestroyStructures`, `-EnableIdlePlayerKick`, `-ForceRespawnDinos` (caution), `-UseDynamicConfig` (+ optional CustomDynamicConfigUrl), `-passivemods=` (Mods tab still owns `-mods=`), `-NoWildBabies` |
-| Security & integrity  | `-NoBattlEye`, `-exclusivejoin` (caution), dupe-log / cosmetics family (adjacent pairs)                                                                                                                                              |
-| Logging & messaging   | game log → tribe logs → RCON tribe logs, `-culture=`, `-CustomNotificationURL=`                                                                                                                                                      |
-| Performance & network | `-ServerPlatform=` (multi-select → `ALL`), `-GBUsageToForceRestart=`, `-nosound`, thread/net knobs                                                                                                                                   |
+| Group                 | Options                                                                                                                                                                                                                                                       |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| World & gameplay      | `-ForceAllowCaveFlyers`, `-AutoDestroyStructures`, `-EnableIdlePlayerKick`, `-ForceRespawnDinos` (caution), `-UseDynamicConfig` (+ optional CustomDynamicConfigUrl), `-NoWildBabies` (`-passivemods=` and `-mods=` live in the Mods tab, not on Launch cards) |
+| Security & integrity  | `-NoBattlEye`, `-exclusivejoin` (caution), dupe-log / cosmetics family (adjacent pairs)                                                                                                                                                                       |
+| Logging & messaging   | game log → tribe logs → RCON tribe logs, `-culture=`, `-CustomNotificationURL=`                                                                                                                                                                               |
+| Performance & network | `-ServerPlatform=` (multi-select → `ALL`), `-GBUsageToForceRestart=`, `-nosound`, thread/net knobs                                                                                                                                                            |
 
 ### Not on Launch cards (Extra arguments / catalog)
 

@@ -4,6 +4,10 @@ import {
   backfillMaxPlayersFromLegacyLaunchArgs,
   MAX_PLAYERS_LAUNCH_BACKFILL_SCHEMA_VERSION,
 } from "./backfill-max-players";
+import {
+  backfillPassiveModsFromStructuredLaunchArgs,
+  PASSIVE_MODS_BACKFILL_SCHEMA_VERSION,
+} from "./backfill-passive-mods";
 import { isOnDiskProfileDatabasePath, writeProfileDatabaseSnapshot } from "./database-snapshots";
 import schemaMigrations from "./schema-migrations.json";
 
@@ -124,6 +128,9 @@ export function openDatabaseApplyingMigrations(
         db.exec(migration.sql);
         if (migration.version === MAX_PLAYERS_LAUNCH_BACKFILL_SCHEMA_VERSION) {
           backfillMaxPlayersFromLegacyLaunchArgs(db);
+        }
+        if (migration.version === PASSIVE_MODS_BACKFILL_SCHEMA_VERSION) {
+          backfillPassiveModsFromStructuredLaunchArgs(db);
         }
         // Same transaction as E2E `initProfileDatabase`. WAL header writes
         // (`user_version`) are not rolled back; do not move this after COMMIT

@@ -25,6 +25,7 @@ function row(partial: Partial<ModRow> & Pick<ModRow, "key" | "name" | "loadIndex
     configured: true,
     enabled: true,
     ...partial,
+    passive: partial.passive ?? false,
   };
 }
 

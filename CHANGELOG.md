@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+- Mods can now be marked **Passive** (row action, detail drawer, or row menu) to load their data without spawning content: passive IDs are sent on `-passivemods=` and removed from `-mods=`, and YARK dedupes both flags (#509).
+- The Launch tab's `-passivemods=` field is gone in favor of the Mods tab; saved selections are migrated to the server's passive mods on first launch, so existing servers keep loading them.
 - Mods now has **Enable all**, **Disable all**, and **Remove all disabled** quick actions on the Server view, and Import install enables every scanned mod by default instead of staging them disabled.
 - URL fields that support Hosted Resources now pair the free-form URL input with a dedicated resource picker button, so it is clear operators can type a URL or choose a YARK Hosted Resource.
 - getyark.com and a Shields badge can now show installer downloads only, backed by a scheduled Worker that counts just the `.exe` release assets.

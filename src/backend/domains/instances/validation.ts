@@ -155,6 +155,7 @@ export function validateProfileInput(
     mapModId: input.mapModId,
     mods: parsed.data.mods,
     disabledMods: input.disabledMods,
+    passiveMods: input.passiveMods,
   })) {
     // Warnings (disabled/missing map mod) surface in Launch/start (#194).
     if (mapIssue.severity === "error") {

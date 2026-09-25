@@ -16,7 +16,8 @@ interface Props {
 
 /**
  * Icon-only row actions for Mods (details, CurseForge, add/remove).
- * Context menu still reuses `buildServerModsRowActions` on the table.
+ * Passive load is its own column; the context menu still offers it via
+ * `buildServerModsRowActions` on the table.
  */
 export function ServerModsActionsCell(props: Props): ReactElement {
   const { row } = props;

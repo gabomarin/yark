@@ -59,7 +59,8 @@ describe("ServerLaunchPanel", () => {
     expect(screen.queryByText(/cluster edge/i)).not.toBeInTheDocument();
     expect(screen.getByLabelText(/^extra arguments$/i)).toBeInTheDocument();
     expect(screen.getByText(/ForceAllowCaveFlyers/i)).toBeInTheDocument();
-    expect(screen.getByText(/passivemods/i)).toBeInTheDocument();
+    // -passivemods= moved to the Mods tab (#509).
+    expect(screen.queryByText(/passivemods/i)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /browse asa catalog/i }));
     expect(await screen.findByRole("dialog", { name: /asa launch-options catalog/i })).toBeInTheDocument();
@@ -159,7 +160,7 @@ describe("ServerLaunchPanel", () => {
     );
 
     expect(screen.getByText(/ForceAllowCaveFlyers/i)).toBeInTheDocument();
-    expect(screen.getByText(/passivemods/i)).toBeInTheDocument();
+    expect(screen.queryByText(/passivemods/i)).not.toBeInTheDocument();
 
     const search = screen.getByLabelText(/filter launch flags/i);
     await user.type(search, "battleye");
