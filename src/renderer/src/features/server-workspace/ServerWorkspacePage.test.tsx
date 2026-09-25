@@ -70,6 +70,7 @@ function renderWorkspace(
     hostedResourceReferences?: HostedResourceReferenceDto[];
     onOpenHostedResources?: () => void;
     statuses?: Map<string, ServerRuntimeInfo>;
+    filesJobActive?: boolean;
   } = {},
 ): void {
   render(
@@ -97,6 +98,7 @@ function renderWorkspace(
         {...playerListHandlers}
         onCopyConfiguration={vi.fn()}
         onServerUpdated={extra.onServerUpdated ?? vi.fn()}
+        filesJobActive={extra.filesJobActive}
         hostedResourceReferences={extra.hostedResourceReferences}
         onOpenHostedResources={extra.onOpenHostedResources}
       />
@@ -372,6 +374,39 @@ describe("ServerWorkspacePage", () => {
         },
       })),
     });
+  });
+
+  it("shows one file-job notice above the tab bar on every workspace tab", async () => {
+    const user = setupUser();
+    renderWorkspace(
+      vi.fn(),
+      vi.fn(async () => true),
+      [],
+      { filesJobActive: true },
+    );
+
+    for (const tabName of [
+      "Server",
+      "INI Files",
+      "Mods",
+      "Launch",
+      "Backups",
+      "Logs",
+      "RCON",
+      "Maintenance",
+      "Ark Server API",
+    ]) {
+      const tab = screen.getByRole("tab", { name: tabName });
+      if (!tab.getAttribute("aria-selected")) await user.click(tab);
+
+      await waitFor(() => {
+        const notices = screen
+          .getAllByRole("alert")
+          .filter((alert) => alert.textContent?.includes("Updating server files"));
+        expect(notices).toHaveLength(1);
+        expect(notices[0]!.compareDocumentPosition(tab) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      });
+    }
   });
 
   it("renders workspace with server list and allows switching servers", async () => {

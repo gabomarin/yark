@@ -13,7 +13,7 @@ interface Props {
 export function ConfigurationEditorStatusAlerts(props: Props): ReactElement | null {
   const { error, onDismissError, serverActive, filesJobActive, pendingQueued } = props;
 
-  if (error === null && !serverActive && !filesJobActive && !pendingQueued) {
+  if (error === null && (!serverActive || filesJobActive) && !pendingQueued) {
     return null;
   }
 
@@ -33,11 +33,6 @@ export function ConfigurationEditorStatusAlerts(props: Props): ReactElement | nu
       {serverActive && !filesJobActive && !pendingQueued && (
         <AppAlert color="attention" mb="sm" title="Server is running">
           Saving queues your changes until the server stops — ASA may overwrite live INI files while it is running.
-        </AppAlert>
-      )}
-      {filesJobActive && (
-        <AppAlert color="attention" mb="sm" title="Updating server files">
-          You can edit INI now. Prefer saving after the file update finishes.
         </AppAlert>
       )}
     </>
