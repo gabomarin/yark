@@ -132,11 +132,12 @@ jobs:
               return;
             }
 
-            const protocol = (provider === 'fallback'
+            const rawProtocol = provider === 'fallback'
               ? process.env.FALLBACK_PROTOCOL
-              : process.env.PRIMARY_PROTOCOL).trim().toLowerCase();
+              : process.env.PRIMARY_PROTOCOL;
+            const protocol = rawProtocol.trim().toLowerCase();
             if (!['openai', 'openai-responses'].includes(protocol)) {
-              core.setFailed(`Unsupported LLM protocol: ${protocol}. Use openai or openai-responses.`);
+              core.setFailed(`Unsupported LLM protocol: ${JSON.stringify(rawProtocol)}. Use openai or openai-responses.`);
               return;
             }
 
@@ -241,7 +242,7 @@ jobs:
             --data "$(jq -cn \
               --arg model "$LLM_MODEL" \
               --arg protocol "$LLM_PROTOCOL" \
-              'if $protocol == "openai-responses" then {model: $model, input: [{role: "user", content: "Reply with OK"}], max_output_tokens: 4} else {model: $model, messages: [{role: "user", content: "Reply with OK"}], max_tokens: 4} end')" \
+              'if $protocol == "openai-responses" then {model: $model, input: [{role: "user", content: "Reply with OK"}], max_output_tokens: 16} else {model: $model, messages: [{role: "user", content: "Reply with OK"}], max_tokens: 4} end')" \
             > /tmp/ocr-llm-preflight-status.txt || curl_exit=$?
 
           if [[ "$curl_exit" -ne 0 ]]; then
@@ -421,6 +422,7 @@ jobs:
                 const requestBody = process.env.OCR_PROTOCOL === 'openai-responses'
                   ? {
                       model: process.env.OCR_MODEL,
+                      temperature: 0.2,
                       input: [{ role: 'user', content: prompt }],
                       max_output_tokens: 700,
                     }
