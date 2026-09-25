@@ -422,7 +422,6 @@ jobs:
                 const requestBody = process.env.OCR_PROTOCOL === 'openai-responses'
                   ? {
                       model: process.env.OCR_MODEL,
-                      temperature: 0.2,
                       input: [{ role: 'user', content: prompt }],
                       max_output_tokens: 700,
                     }
