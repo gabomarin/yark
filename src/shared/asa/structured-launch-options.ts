@@ -379,7 +379,7 @@ export function parsePassiveModIds(args: readonly string[]): string[] {
       .replace(/^["']|["']$/g, "")
       .trim();
     if (value.length === 0) continue;
-    for (const id of value.split(/[,;]+/)) {
+    for (const id of value.split(/[,;\s]+/)) {
       const trimmed = id.trim();
       if (trimmed.length > 0) ids.push(trimmed);
     }

@@ -1,7 +1,9 @@
 import { notifications } from "@mantine/notifications";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ModMetadata } from "@shared/types";
+import type { ModMetadata, ServerProfile } from "@shared/types";
 import { createServerModsListMutations } from "./serverModsListMutations";
+import { useServerModsListController } from "./useServerModsListController";
 import { MODS_BULK_BUSY_KEY, MODS_REORDER_BUSY_KEY } from "./serverModsBusy";
 import { resetModAddedToastQueue } from "./notifyModsAddedDisabled";
 
@@ -67,6 +69,64 @@ describe("createServerModsListMutations", () => {
     expect(setPassiveIds).toHaveBeenCalledWith(["b"]);
     expect(passiveIdsRef.current).toEqual(["b"]);
     expect(persist).toHaveBeenCalledWith(["a", "b"], [], {}, ["b"]);
+  });
+
+  it("serializes passive clicks and marks the whole list busy while saving", async () => {
+    const setBusyKey = vi.fn();
+    let finishPersist: (() => void) | undefined;
+    const persist = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          finishPersist = resolve;
+        }),
+    );
+    const { setPassive } = createServerModsListMutations({
+      configuredIdsRef: { current: ["a", "b"] },
+      disabledIdsRef: { current: [] },
+      passiveIdsRef: { current: [] },
+      metadata: new Map(),
+      cacheRef: { current: {} },
+      setBusyKey,
+      setDisabledIds: vi.fn(),
+      setPassiveIds: vi.fn(),
+      setError: vi.fn(),
+      setWarning: vi.fn(),
+      persist,
+      notifyMapModIfNeeded: vi.fn(),
+    });
+
+    const first = setPassive("a", true);
+    const second = setPassive("b", true);
+    expect(setBusyKey).toHaveBeenCalledWith(MODS_BULK_BUSY_KEY);
+    expect(persist).toHaveBeenCalledTimes(1);
+    finishPersist?.();
+    await Promise.all([first, second]);
+    expect(setBusyKey).toHaveBeenLastCalledWith(null);
+  });
+
+  it("restores a removed mod's passive mark when persistence fails", async () => {
+    const passiveIdsRef = { current: ["b"] };
+    const setPassiveIds = vi.fn();
+    const { remove } = createServerModsListMutations({
+      configuredIdsRef: { current: ["a", "b"] },
+      disabledIdsRef: { current: [] },
+      passiveIdsRef,
+      metadata: new Map(),
+      cacheRef: { current: {} },
+      setBusyKey: vi.fn(),
+      setDisabledIds: vi.fn(),
+      setPassiveIds,
+      setError: vi.fn(),
+      setWarning: vi.fn(),
+      persist: async () => {
+        throw new Error("write failed");
+      },
+      notifyMapModIfNeeded: vi.fn(),
+    });
+
+    expect(await remove("b")).toBe(false);
+    expect(passiveIdsRef.current).toEqual(["b"]);
+    expect(setPassiveIds).toHaveBeenLastCalledWith(["b"]);
   });
 
   it("refuses to mark a disabled mod passive", async () => {
@@ -348,5 +408,63 @@ describe("createServerModsListMutations", () => {
     await allDisabled.disableAll();
 
     expect(persist).not.toHaveBeenCalled();
+  });
+});
+
+describe("useServerModsListController persistence", () => {
+  it("serializes whole-profile writes and syncs the passive ref on success", async () => {
+    const server = { id: "s1" } as ServerProfile;
+    let finishFirst: ((result: { ok: true; data: ServerProfile }) => void) | undefined;
+    let finishSecond: ((result: { ok: true; data: ServerProfile }) => void) | undefined;
+    const updateServerPatch = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise<{ ok: true; data: ServerProfile }>((resolve) => {
+            finishFirst = resolve;
+          }),
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise<{ ok: true; data: ServerProfile }>((resolve) => {
+            finishSecond = resolve;
+          }),
+      );
+    window.api = { ...(window.api ?? {}), updateServerPatch } as typeof window.api;
+    const passiveIdsRef = { current: ["old"] };
+    const { result } = renderHook(() =>
+      useServerModsListController({
+        serverRef: { current: server },
+        configuredIdsRef: { current: ["a", "b"] },
+        disabledIdsRef: { current: [] },
+        passiveIdsRef,
+        cacheRef: { current: {} },
+        metadata: new Map(),
+        onServerUpdated: vi.fn(),
+        setConfiguredIds: vi.fn(),
+        setDisabledIds: vi.fn(),
+        setPassiveIds: vi.fn(),
+        setBusyKey: vi.fn(),
+        setError: vi.fn(),
+        setWarning: vi.fn(),
+        setMetadata: vi.fn(),
+      }),
+    );
+
+    let first!: Promise<void>;
+    let second!: Promise<void>;
+    act(() => {
+      first = result.current.persist(["a", "b"], [], {}, ["a"]);
+      second = result.current.persist(["a", "b"], [], {}, ["b"]);
+    });
+    await waitFor(() => expect(updateServerPatch).toHaveBeenCalledTimes(1));
+    expect(passiveIdsRef.current).toEqual(["old"]);
+    finishFirst?.({ ok: true, data: server });
+    await act(async () => first);
+    expect(passiveIdsRef.current).toEqual(["a"]);
+    await waitFor(() => expect(updateServerPatch).toHaveBeenCalledTimes(2));
+    finishSecond?.({ ok: true, data: server });
+    await act(async () => second);
+    expect(passiveIdsRef.current).toEqual(["b"]);
   });
 });

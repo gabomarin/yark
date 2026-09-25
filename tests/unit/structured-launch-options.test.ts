@@ -7,6 +7,7 @@ import {
   encodeServerPlatformSelection,
   findLaunchArgConflicts,
   listStructuredLaunchUiOptions,
+  parsePassiveModIds,
   parseWinLiveMaxPlayersValue,
   takeLegacyPassiveMods,
   takeLegacyWinLiveMaxPlayers,
@@ -170,6 +171,16 @@ describe("structured-launch-options", () => {
     });
     expect(taken.passiveMods).toEqual(["111", "222"]);
     expect(taken.structuredLaunchArgs).toEqual({ nobattleye: { enabled: true } });
+  });
+
+  it("parses whitespace-separated IDs from manual passivemods args", () => {
+    expect(parsePassiveModIds(['-passivemods="111 222,333"', "?passivemods=444 555"])).toEqual([
+      "111",
+      "222",
+      "333",
+      "444",
+      "555",
+    ]);
   });
 
   it("drops passivemods IDs that are not installed, disabled, or the option was off", () => {

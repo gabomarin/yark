@@ -130,7 +130,10 @@ export function openDatabaseApplyingMigrations(
           backfillMaxPlayersFromLegacyLaunchArgs(db);
         }
         if (migration.version === PASSIVE_MODS_BACKFILL_SCHEMA_VERSION) {
-          backfillPassiveModsFromStructuredLaunchArgs(db);
+          const skipped = backfillPassiveModsFromStructuredLaunchArgs(db);
+          if (skipped.length > 0) {
+            console.warn("[yark] Passive-mods backfill skipped malformed profile rows:", skipped.join(", "));
+          }
         }
         // Same transaction as E2E `initProfileDatabase`. WAL header writes
         // (`user_version`) are not rolled back; do not move this after COMMIT

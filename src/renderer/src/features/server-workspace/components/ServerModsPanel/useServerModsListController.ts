@@ -1,4 +1,4 @@
-import type { Dispatch, MutableRefObject, SetStateAction } from "react";
+import { useRef, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
 import type { ModMetadata, ServerProfile } from "@shared/types";
 import { mergeMetadata } from "./serverModsModel";
 import { createServerModsListMutations } from "./serverModsListMutations";
@@ -28,7 +28,8 @@ interface Input {
  * call sites never have to thread it.
  */
 export function useServerModsListController(input: Input) {
-  const persist = async (
+  const persistQueueRef = useRef<Promise<void> | null>(null);
+  const persist = (
     nextIds: string[],
     nextDisabled: string[],
     nextCache: Record<string, ModMetadata>,
@@ -36,21 +37,31 @@ export function useServerModsListController(input: Input) {
   ): Promise<void> => {
     // Snapshot the server id so a workspace switch mid-await does not apply this write.
     const targetServerId = input.serverRef.current.id;
-    const result = await window.api.updateServerPatch(targetServerId, {
-      group: "mods",
-      mods: nextIds,
-      disabledMods: nextDisabled,
-      passiveMods: nextPassive,
-      modMetadataCache: nextCache,
+    const write = (persistQueueRef.current ?? Promise.resolve()).then(async () => {
+      const result = await window.api.updateServerPatch(targetServerId, {
+        group: "mods",
+        mods: nextIds,
+        disabledMods: nextDisabled,
+        passiveMods: nextPassive,
+        modMetadataCache: nextCache,
+      });
+      if (!result.ok) throw new Error(result.error);
+      if (input.serverRef.current.id !== targetServerId) return;
+      input.configuredIdsRef.current = nextIds;
+      input.disabledIdsRef.current = nextDisabled;
+      input.passiveIdsRef.current = nextPassive;
+      input.setConfiguredIds(nextIds);
+      input.setDisabledIds(nextDisabled);
+      input.setPassiveIds(nextPassive);
+      input.cacheRef.current = nextCache;
+      input.setMetadata((previous) => mergeMetadata(previous, nextCache));
+      input.onServerUpdated();
     });
-    if (!result.ok) throw new Error(result.error);
-    if (input.serverRef.current.id !== targetServerId) return;
-    input.setConfiguredIds(nextIds);
-    input.setDisabledIds(nextDisabled);
-    input.setPassiveIds(nextPassive);
-    input.cacheRef.current = nextCache;
-    input.setMetadata((previous) => mergeMetadata(previous, nextCache));
-    input.onServerUpdated();
+    persistQueueRef.current = write.then(
+      () => undefined,
+      () => undefined,
+    );
+    return write;
   };
 
   const { notifyMapModIfNeeded } = useMapModEnableNotify({

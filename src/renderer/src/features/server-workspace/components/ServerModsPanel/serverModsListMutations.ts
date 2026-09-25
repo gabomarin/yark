@@ -41,6 +41,7 @@ function sameIdSet(a: readonly string[], b: readonly string[]): boolean {
 }
 
 export function createServerModsListMutations(input: Input) {
+  let passiveWriteInFlight = false;
   const readPassive = (): string[] => input.passiveIdsRef?.current ?? [];
   const writePassive = (next: string[]): void => {
     if (input.passiveIdsRef) input.passiveIdsRef.current = next;
@@ -104,7 +105,11 @@ export function createServerModsListMutations(input: Input) {
        * because the notification after it threw, and a late failure must not clobber the
        * value a newer toggle has already written.
        */
-      if (!persisted && sameIdSet(input.disabledIdsRef.current, nextDisabled)) {
+      if (
+        !persisted &&
+        sameIdSet(input.disabledIdsRef.current, nextDisabled) &&
+        sameIdSet(readPassive(), nextPassive)
+      ) {
         input.disabledIdsRef.current = previousDisabled;
         input.setDisabledIds(previousDisabled);
         writePassive(previousPassive);
@@ -115,25 +120,30 @@ export function createServerModsListMutations(input: Input) {
 
   /** Optimistic like {@link toggle}; passive requires the row to be enabled. */
   const setPassive = async (id: string, passive: boolean) => {
+    if (passiveWriteInFlight) return;
     const configuredIds = input.configuredIdsRef.current;
     const disabledIds = input.disabledIdsRef.current;
     if (!configuredIds.includes(id) || (passive && disabledIds.includes(id))) return;
+    const previousPassive = readPassive();
+    if (previousPassive.includes(id) === passive) return;
     input.setError(null);
     input.setWarning(null);
-    const previousPassive = readPassive();
     const nextPassive = passive
       ? [...new Set([...previousPassive, id])]
       : previousPassive.filter((candidate) => candidate !== id);
+    passiveWriteInFlight = true;
+    input.setBusyKey(MODS_BULK_BUSY_KEY);
     writePassive(nextPassive);
-    let persisted = false;
     try {
       await input.persist(configuredIds, disabledIds, input.cacheRef.current, nextPassive);
-      persisted = true;
     } catch (cause) {
-      if (!persisted && sameIdSet(readPassive(), nextPassive)) {
+      if (sameIdSet(readPassive(), nextPassive)) {
         writePassive(previousPassive);
       }
       input.setError(cause instanceof Error ? cause.message : "Could not update the mod");
+    } finally {
+      passiveWriteInFlight = false;
+      input.setBusyKey(null);
     }
   };
 
@@ -146,6 +156,7 @@ export function createServerModsListMutations(input: Input) {
     const disabledIds = input.disabledIdsRef.current;
     const nextCache = { ...input.cacheRef.current };
     delete nextCache[id];
+    const previousPassive = readPassive();
     const nextPassive = readPassive().filter((candidate) => candidate !== id);
     writePassive(nextPassive);
     try {
@@ -157,6 +168,9 @@ export function createServerModsListMutations(input: Input) {
       );
       return true;
     } catch (cause) {
+      if (sameIdSet(readPassive(), nextPassive)) {
+        writePassive(previousPassive);
+      }
       input.setError(cause instanceof Error ? cause.message : "Could not remove the mod");
       return false;
     } finally {

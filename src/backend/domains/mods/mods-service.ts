@@ -266,10 +266,13 @@ export class ModsService {
       if (!configured.has(id)) delete cache[id];
     }
 
-    const disabledMods = (input.disabledMods ?? existing.disabledMods ?? []).filter((id) => configured.has(id.trim()));
+    const retainConfigured = (ids: readonly string[]): string[] => [
+      ...new Set(ids.map((id) => id.trim()).filter((id) => configured.has(id))),
+    ];
+    const disabledMods = retainConfigured(input.disabledMods ?? existing.disabledMods ?? []);
     const disabledSet = new Set(disabledMods);
-    const passiveMods = (input.passiveMods ?? existing.passiveMods ?? []).filter(
-      (id) => configured.has(id.trim()) && !disabledSet.has(id),
+    const passiveMods = retainConfigured(input.passiveMods ?? existing.passiveMods ?? []).filter(
+      (id) => !disabledSet.has(id),
     );
 
     return {

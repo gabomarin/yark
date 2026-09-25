@@ -8,7 +8,7 @@ import {
 } from "@shared/credential-redaction";
 import type { AppEvent, AppEventDetails, ModMetadata, ServerProfile, ServerProfileInput } from "@shared/types";
 import { persistableMapModId, persistableMapSaveFolder } from "@shared/asa/map-identity";
-import { normalizePassiveMods } from "@shared/server/server-profile";
+import { normalizeDisabledMods, normalizePassiveMods } from "@shared/server/server-profile";
 import {
   emptyStructuredLaunchArgs,
   normalizeStructuredLaunchArgs,
@@ -55,6 +55,13 @@ function parseJson<T>(raw: string | null | undefined, fallback: T): T {
   }
 }
 
+function parseStringArray(raw: string | null | undefined): string[] {
+  const parsed = parseJson<unknown>(raw, []);
+  return Array.isArray(parsed)
+    ? parsed.filter((value): value is string => typeof value === "string").map((id) => id.trim())
+    : [];
+}
+
 /** Coerce SQLite `map_mod_id` to string | null at the DB boundary (#190). */
 export function coerceMapModId(value: string | number | null | undefined): string | null {
   if (value === null || value === undefined) {
@@ -65,6 +72,8 @@ export function coerceMapModId(value: string | number | null | undefined): strin
 }
 
 function rowToProfile(row: ServerRow): ServerProfile {
+  const mods = parseStringArray(row.mods);
+  const disabledMods = normalizeDisabledMods(mods, parseStringArray(row.disabled_mods));
   return {
     id: row.id,
     name: row.name,
@@ -89,9 +98,9 @@ function rowToProfile(row: ServerRow): ServerProfile {
     structuredLaunchArgs: normalizeStructuredLaunchArgs(
       parseJson<StructuredLaunchArgs>(row.structured_launch_args, {}),
     ),
-    mods: JSON.parse(row.mods) as string[],
-    disabledMods: parseJson(row.disabled_mods, []),
-    passiveMods: parseJson(row.passive_mods, []),
+    mods,
+    disabledMods,
+    passiveMods: normalizePassiveMods(mods, disabledMods, parseStringArray(row.passive_mods)),
     modMetadataCache: parseJson<Record<string, ModMetadata>>(row.mod_metadata_cache, {}),
     createdAt: row.created_at,
     updatedAt: row.updated_at,

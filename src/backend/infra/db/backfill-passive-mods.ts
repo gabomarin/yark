@@ -21,6 +21,11 @@ function parseJsonColumn<T>(raw: string | null | undefined, fallback: T, label: 
   }
 }
 
+function parseStringArrayColumn(raw: string | null | undefined, label: string): string[] | null {
+  const parsed = parseJsonColumn<unknown>(raw, [], label);
+  return Array.isArray(parsed) && parsed.every((item) => typeof item === "string") ? parsed : null;
+}
+
 function tableHasColumn(db: DatabaseSync, table: string, column: string): boolean {
   const cols = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
   return cols.some((col) => col.name === column);
@@ -38,14 +43,14 @@ function tableHasColumn(db: DatabaseSync, table: string, column: string): boolea
  * not on every database open. Callers that already hold a transaction should not
  * wrap this again.
  */
-export function backfillPassiveModsFromStructuredLaunchArgs(db: DatabaseSync): void {
+export function backfillPassiveModsFromStructuredLaunchArgs(db: DatabaseSync): string[] {
   if (
     !tableHasColumn(db, "servers", "passive_mods") ||
     !tableHasColumn(db, "servers", "structured_launch_args") ||
     !tableHasColumn(db, "servers", "mods") ||
     !tableHasColumn(db, "servers", "disabled_mods")
   ) {
-    return;
+    return [];
   }
 
   const rows = db
@@ -62,23 +67,35 @@ export function backfillPassiveModsFromStructuredLaunchArgs(db: DatabaseSync): v
     passive_mods: string;
   }>;
   if (rows.length === 0) {
-    return;
+    return [];
   }
 
   const update = db.prepare("UPDATE servers SET structured_launch_args = ?, passive_mods = ? WHERE id = ?");
+  const skipped: string[] = [];
 
   for (const row of rows) {
-    const structured = parseJsonColumn<StructuredLaunchArgs>(
+    const parsedStructured = parseJsonColumn<unknown>(
       row.structured_launch_args,
       {},
       `servers.structured_launch_args id=${row.id}`,
     );
-    const mods = parseJsonColumn<string[]>(row.mods, [], `servers.mods id=${row.id}`);
-    const disabledMods = normalizeDisabledMods(
-      mods,
-      parseJsonColumn<string[]>(row.disabled_mods, [], `servers.disabled_mods id=${row.id}`),
-    );
-    const passiveMods = parseJsonColumn<string[]>(row.passive_mods, [], `servers.passive_mods id=${row.id}`);
+    const mods = parseStringArrayColumn(row.mods, `servers.mods id=${row.id}`);
+    const disabledValues = parseStringArrayColumn(row.disabled_mods, `servers.disabled_mods id=${row.id}`);
+    const passiveValues = parseStringArrayColumn(row.passive_mods, `servers.passive_mods id=${row.id}`);
+    if (
+      parsedStructured === null ||
+      typeof parsedStructured !== "object" ||
+      Array.isArray(parsedStructured) ||
+      mods === null ||
+      disabledValues === null ||
+      passiveValues === null
+    ) {
+      skipped.push(row.id);
+      continue;
+    }
+    const structured = parsedStructured as StructuredLaunchArgs;
+    const disabledMods = normalizeDisabledMods(mods, disabledValues);
+    const passiveMods = passiveValues;
     const taken = takeLegacyPassiveMods({
       structuredLaunchArgs: structured,
       mods,
@@ -95,4 +112,5 @@ export function backfillPassiveModsFromStructuredLaunchArgs(db: DatabaseSync): v
     }
     update.run(nextStructured, nextPassive, row.id);
   }
+  return skipped;
 }

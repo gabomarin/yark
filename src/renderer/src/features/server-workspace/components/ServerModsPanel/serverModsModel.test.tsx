@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { ModMetadata } from "@shared/types";
 import {
+  buildDiscoveryRows,
+  buildServerRows,
   mergeMetadata,
   modsMetadataSyncKey,
   pickModListCategory,
@@ -60,6 +62,24 @@ describe("serverModsModel sort/reorder", () => {
     expect(reorderModIds(["1", "2", "3"], 0, 2)).toEqual(["2", "3", "1"]);
     expect(reorderModIds(["1", "2", "3"], 2, 0)).toEqual(["3", "1", "2"]);
     expect(reorderModIds(["1", "2", "3"], 1, 1)).toEqual(["1", "2", "3"]);
+  });
+});
+
+describe("serverModsModel passive state", () => {
+  it("does not mark disabled configured rows passive", () => {
+    const rows = buildServerRows(["1"], new Set(["1"]), new Map([["1", baseMeta]]), new Set(["1"]));
+    expect(rows[0]?.passive).toBe(false);
+  });
+
+  it("keeps a configured passive mark visible in Discover", () => {
+    const rows = buildDiscoveryRows(
+      ["1"],
+      new Set(),
+      new Map([["1", baseMeta]]),
+      { items: [baseMeta], pagination: { index: 0, pageSize: 20, resultCount: 1, totalCount: 1 } },
+      new Set(["1"]),
+    );
+    expect(rows[0]?.passive).toBe(true);
   });
 });
 

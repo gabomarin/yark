@@ -59,13 +59,13 @@ export function applyServerProfilePatch(existing: ServerProfile, patch: ServerPr
 }
 
 /**
- * Keep `disabledMods` within `mods` (trim/identity aside). Omitted
+ * Keep trimmed `disabledMods` within `mods`. Omitted
  * `disabledMods` defaults to every mod disabled — the create/stage default.
  * Import install passes `[]` when the operator opts to enable all (#637).
  */
 export function normalizeDisabledMods(mods: readonly string[], disabledMods?: readonly string[] | null): string[] {
-  const modSet = new Set(mods);
-  return [...new Set((disabledMods ?? mods).filter((id) => modSet.has(id)))];
+  const modSet = new Set(mods.map((id) => id.trim()));
+  return [...new Set((disabledMods ?? mods).map((id) => id.trim()).filter((id) => modSet.has(id)))];
 }
 
 /**
@@ -77,9 +77,11 @@ export function normalizePassiveMods(
   disabledMods: readonly string[],
   passiveMods?: readonly string[] | null,
 ): string[] {
-  const modSet = new Set(mods);
-  const disabledSet = new Set(disabledMods);
-  return [...new Set((passiveMods ?? []).filter((id) => modSet.has(id) && !disabledSet.has(id)))];
+  const modSet = new Set(mods.map((id) => id.trim()));
+  const disabledSet = new Set(disabledMods.map((id) => id.trim()));
+  return [
+    ...new Set((passiveMods ?? []).map((id) => id.trim()).filter((id) => modSet.has(id) && !disabledSet.has(id))),
+  ];
 }
 
 export function isServerProfilePatch(value: unknown): value is ServerProfilePatch {

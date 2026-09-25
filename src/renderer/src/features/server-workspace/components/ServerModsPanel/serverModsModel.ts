@@ -43,7 +43,7 @@ export function buildServerRows(
   passiveIds: Set<string> = new Set(),
 ): ModRow[] {
   return configuredIds.map((id, loadIndex) =>
-    metadataRow(id, metadata.get(id), !disabledIds.has(id), passiveIds.has(id), loadIndex),
+    metadataRow(id, metadata.get(id), !disabledIds.has(id), !disabledIds.has(id) && passiveIds.has(id), loadIndex),
   );
 }
 
@@ -66,7 +66,9 @@ export function buildDiscoveryRows(
       item,
       configuredMetadata,
       configuredMetadata !== undefined && !disabledIds.has(configuredMetadata.id),
-      configuredMetadata !== undefined && passiveIds.has(configuredMetadata.id),
+      configuredMetadata !== undefined &&
+        !disabledIds.has(configuredMetadata.id) &&
+        passiveIds.has(configuredMetadata.id),
       loadIndex,
     );
   });

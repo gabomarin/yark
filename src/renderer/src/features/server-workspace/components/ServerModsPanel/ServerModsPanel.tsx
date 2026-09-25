@@ -23,6 +23,7 @@ import { confirmRemoveDisabledMods } from "./confirmRemoveServerMod";
 import { inspectServerMod } from "./serverModsInspect";
 import { notifyNewlyAddedMods } from "./notifyModsAddedDisabled";
 import { useServerModsListController } from "./useServerModsListController";
+import { isModsListBusy } from "./serverModsBusy";
 import classes from "./ServerModsPanel.module.css";
 
 interface Props {
@@ -324,6 +325,7 @@ export function ServerModsPanel(props: Props): ReactElement {
             <ServerModsDiscoverSection
               configuredIds={configuredIds}
               disabledIds={disabledIds}
+              passiveIds={passiveIds}
               metadata={metadata}
               busyKey={busyKey}
               onError={setError}
@@ -341,7 +343,7 @@ export function ServerModsPanel(props: Props): ReactElement {
         configured={detail !== null && configuredIds.includes(detail.id)}
         enabled={detail !== null && !disabledSet.has(detail.id)}
         passive={detail !== null && passiveSet.has(detail.id)}
-        busy={detail !== null && busyKey === `detail:${detail.slug}`}
+        busy={detail !== null && (busyKey === `detail:${detail.slug}` || isModsListBusy(busyKey))}
         onClose={() => {
           inspectTargetRef.current = null;
           setDetail(null);

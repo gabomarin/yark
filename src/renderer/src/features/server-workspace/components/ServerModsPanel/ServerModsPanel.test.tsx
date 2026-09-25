@@ -618,6 +618,29 @@ describe("ServerModsPanel", () => {
     expect(document.querySelector('[data-mod-passive="true"]')).not.toBeNull();
   });
 
+  it("keeps the passive badge visible for configured mods in Discover", async () => {
+    const api = installApi();
+    vi.mocked(api.searchMods).mockResolvedValue({
+      ok: true,
+      data: {
+        items: [awesomeDetail],
+        pagination: { index: 0, pageSize: 50, resultCount: 1, totalCount: 1 },
+      },
+    });
+    const user = userEvent.setup();
+    render(
+      <AppProviders>
+        <ServerModsPanel server={{ ...server, passiveMods: ["947033"] }} onServerUpdated={vi.fn()} />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("radio", { name: "Discover mods" }));
+    await user.click(screen.getByRole("button", { name: "Search mods" }));
+    await screen.findByText("Awesome Spyglass!");
+
+    expect(document.querySelector('[data-mod-passive="true"]')).not.toBeNull();
+  });
+
   it("does not offer passive on a disabled mod (#509)", async () => {
     installApi();
     render(

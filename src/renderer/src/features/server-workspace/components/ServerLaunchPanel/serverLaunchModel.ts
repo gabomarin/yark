@@ -7,6 +7,7 @@ import {
   isPassiveModsArg,
   isWinLiveMaxPlayersArg,
   listStructuredLaunchUiOptions,
+  parsePassiveModIds,
   redactLaunchArgForPreview,
   resolveProfileModBuckets,
   structuredLaunchGroupLabel,
@@ -79,17 +80,19 @@ export function yarkOwnedPreviewTokens(server: ServerProfile): string[] {
   if (server.maxPlayers > 0) {
     parts.push(yarkWinLiveMaxPlayersArg(server.maxPlayers));
   }
-  const structured = buildStructuredLaunchArgList(server.structuredLaunchArgs).filter(
+  let trailing = [...buildStructuredLaunchArgList(server.structuredLaunchArgs), ...server.extraArgs].filter(
     (arg) => !isWinLiveMaxPlayersArg(arg),
   );
-  const extraArgs = server.extraArgs.filter((arg) => !isWinLiveMaxPlayersArg(arg));
-  const trailing = [...structured, ...extraArgs];
   if (!argsIncludeServerPlatform(trailing)) {
     parts.push(YARK_DEFAULT_SERVER_PLATFORM_ARG);
   }
-  const { active, passive } = resolveProfileModBuckets(server);
+  const { active: profileActive, passive: profilePassive } = resolveProfileModBuckets(server);
+  const ownsPassive = profilePassive.length > 0;
+  if (ownsPassive) trailing = trailing.filter((arg) => !isPassiveModsArg(arg));
+  const passiveIds = new Set([...profilePassive, ...(ownsPassive ? [] : parsePassiveModIds(trailing))]);
+  const active = profileActive.filter((id) => !passiveIds.has(id));
   if (active.length > 0) parts.push(yarkModsArg(active));
-  if (passive.length > 0) parts.push(yarkPassiveModsArg(passive));
+  if (ownsPassive) parts.push(yarkPassiveModsArg(profilePassive));
   if (server.clusterId && server.clusterDir) {
     parts.push(...yarkClusterArgs(server.clusterId, server.clusterDir));
   }
