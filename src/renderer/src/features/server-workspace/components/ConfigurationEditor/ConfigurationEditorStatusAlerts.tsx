@@ -13,7 +13,7 @@ interface Props {
 export function ConfigurationEditorStatusAlerts(props: Props): ReactElement | null {
   const { error, onDismissError, serverActive, filesJobActive, pendingQueued } = props;
 
-  if (error === null && (!serverActive || filesJobActive) && !pendingQueued) {
+  if (error === null && !serverActive && !pendingQueued) {
     return null;
   }
 
