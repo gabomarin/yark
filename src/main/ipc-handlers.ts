@@ -4,6 +4,7 @@ import { mkdir } from "node:fs/promises";
 import { IPC, IPC_PUSH } from "../shared/ipc";
 import { ipcArgSchemas } from "../shared/ipc/channel-schemas";
 import { canonicalCurseForgeAsaModUrl } from "../shared/mods/curseforge-url";
+import { normalizeDisabledMods } from "../shared/server/server-profile";
 import type { AsaApiInstallProgress, ServerProfileInput, ServerProfilePatch } from "../shared/types";
 import { normalizeAsaApiInstallProgress } from "../shared/types";
 import type { BackupService } from "../backend/domains/backups/backup-service";
@@ -192,10 +193,8 @@ export function registerIpcHandlers(
     // Soft CurseForge resolve: keep all disk-discovered IDs even when some
     // names are missing; do not fail import on proxy gaps (#254).
     // Product default: import stages discovered mods disabled. Honor an explicit
-    // disabledMods from the review step's "Enable all imported mods" (#637);
-    // only IDs on the mod list may be disabled.
-    const modsSet = new Set(modsList);
-    const disabled = (profileInput.disabledMods ?? modsList).filter((id) => modsSet.has(id));
+    // disabledMods from the review step's "Enable all imported mods" (#637).
+    const disabled = normalizeDisabledMods(modsList, profileInput.disabledMods);
     const cache = { ...(profileInput.modMetadataCache ?? {}) };
     try {
       const fetched = await mods.getMods(modsList);

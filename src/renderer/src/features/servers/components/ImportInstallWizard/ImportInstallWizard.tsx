@@ -66,14 +66,19 @@ export function ImportInstallWizard(props: Props): ReactElement {
   // Parent remounts this wizard on each open (`key={importWizardKey}`) so form
   // state starts fresh without an adjust-on-prop-change close effect.
 
+  /** Clear probe-derived state when the install path changes (#254 / #637). */
+  const resetProbeState = (): void => {
+    setAllowIncompleteInstall(false);
+    setModMetadata({});
+    setEnableAllMods(true);
+  };
+
   const applyProbe = (next: ImportInstallProbe): void => {
     // Keep UI path in sync with backend normalizeWindowsPath (trailing separators, etc.).
     setInstallDir(next.installDir);
     setProbe(next);
-    setAllowIncompleteInstall(false);
+    resetProbeState();
     setForm(applyPreferredCluster(suggestionsToForm(next.suggestions), preferredCluster));
-    setModMetadata({});
-    setEnableAllMods(true);
     setModsOpen(next.suggestions.mods.length > 0 && next.suggestions.mods.length < MODS_LIST_AUTO_COLLAPSE_AT);
   };
 
@@ -130,9 +135,7 @@ export function ImportInstallWizard(props: Props): ReactElement {
         if (result.data !== null) {
           setInstallDir(result.data);
           setProbe(null);
-          setAllowIncompleteInstall(false);
-          setModMetadata({});
-          setEnableAllMods(true);
+          resetProbeState();
           await probePath(result.data);
         }
       },
@@ -287,18 +290,14 @@ export function ImportInstallWizard(props: Props): ReactElement {
             onInstallDirChange={(value) => {
               setInstallDir(value);
               setProbe(null);
-              setAllowIncompleteInstall(false);
-              setModMetadata({});
-              setEnableAllMods(true);
+              resetProbeState();
               setError(null);
             }}
             onBrowse={() => void handleBrowse()}
             onUseSuggestedDir={(path) => {
               setInstallDir(path);
               setProbe(null);
-              setAllowIncompleteInstall(false);
-              setModMetadata({});
-              setEnableAllMods(true);
+              resetProbeState();
               setError(null);
               void probePath(path);
             }}

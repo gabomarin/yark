@@ -234,8 +234,8 @@ async function run() {
     }
 
     // Header quick actions (#637): one patch each, from the current switch state.
-    const bulkSwitch = page.getByRole("switch", { name: /^(Disable|Enable) /i }).first();
-    if (!(await bulkSwitch.isChecked())) {
+    const hasDisabledMod = (await page.getByRole("switch", { name: /^Enable /i }).count()) > 0;
+    if (hasDisabledMod) {
       await page.getByRole("button", { name: "Enable all", exact: true }).click();
       await waitForModSwitchChecked(page, "Disable", true);
     }
@@ -243,7 +243,7 @@ async function run() {
     await waitForModSwitchChecked(page, "Enable", false);
     await page.getByRole("button", { name: "Remove all disabled", exact: true }).click();
     await page.getByRole("dialog").getByRole("button", { name: "Remove all disabled", exact: true }).click();
-    await page.getByText(DEMO_MOD_ID, { exact: true }).first().waitFor({ state: "detached", timeout: 15000 });
+    await page.locator("[data-mod-row]", { hasText: DEMO_MOD_ID }).waitFor({ state: "detached", timeout: 15000 });
 
     await leaveWorkspaceToServers(page, 10000);
     await removeServerIfPresent(page, serverName);

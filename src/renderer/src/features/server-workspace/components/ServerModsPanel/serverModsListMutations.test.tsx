@@ -274,6 +274,25 @@ describe("createServerModsListMutations", () => {
     expect(persist).toHaveBeenCalledWith(["a", "c"], [], { a: { id: "a" } });
   });
 
+  it("shows one aggregated map toast when bulk-enabling map mods (#637)", async () => {
+    const persist = vi.fn(async () => undefined);
+    const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
+    const { enableAll } = bulkInput({
+      configured: ["a", "b"],
+      disabled: ["a", "b"],
+      cache: {
+        a: { id: "a", name: "Map One", categories: ["Maps"] } as ModMetadata,
+        b: { id: "b", name: "Map Two", categories: ["Maps"] } as ModMetadata,
+      },
+      persist,
+    });
+
+    await enableAll();
+
+    expect(notifySpy).toHaveBeenCalledTimes(1);
+    expect(notifySpy).toHaveBeenCalledWith(expect.objectContaining({ title: "2 map mods available" }));
+  });
+
   it("skips the write when the bulk action would change nothing (#637)", async () => {
     const persist = vi.fn(async () => undefined);
     const emptyDisabled = bulkInput({ configured: ["a"], disabled: [], persist });
