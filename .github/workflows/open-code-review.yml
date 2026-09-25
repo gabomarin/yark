@@ -60,7 +60,7 @@ jobs:
     timeout-minutes: 30
     env:
       # Single source for the CLI version: our pre-install and the action input.
-      OCR_VERSION: "1.12.4"
+      OCR_VERSION: "1.12.9"
     if: >-
       ${{
         github.event_name == 'workflow_dispatch'
@@ -90,6 +90,9 @@ jobs:
           REQUESTED_EFFORT: ${{ inputs.effort || '' }}
           PRIMARY_CONFIGURED: ${{ vars.OCR_PRIMARY_URL != '' && vars.OCR_PRIMARY_MODEL != '' && secrets.OCR_PRIMARY_API_KEY != '' }}
           FALLBACK_CONFIGURED: ${{ vars.OCR_FALLBACK_URL != '' && vars.OCR_FALLBACK_MODEL != '' && secrets.OCR_FALLBACK_API_KEY != '' }}
+          # Set OCR_PRIMARY_PROTOCOL / OCR_FALLBACK_PROTOCOL to openai-responses for Responses API URLs.
+          PRIMARY_PROTOCOL: ${{ vars.OCR_PRIMARY_PROTOCOL || 'openai' }}
+          FALLBACK_PROTOCOL: ${{ vars.OCR_FALLBACK_PROTOCOL || 'openai' }}
         with:
           script: |
             const requestedProvider = process.env.REQUESTED_PROVIDER;
@@ -129,7 +132,16 @@ jobs:
               return;
             }
 
+            const protocol = (provider === 'fallback'
+              ? process.env.FALLBACK_PROTOCOL
+              : process.env.PRIMARY_PROTOCOL).trim().toLowerCase();
+            if (!['openai', 'openai-responses'].includes(protocol)) {
+              core.setFailed(`Unsupported LLM protocol: ${protocol}. Use openai or openai-responses.`);
+              return;
+            }
+
             core.setOutput('provider', provider);
+            core.setOutput('protocol', protocol);
 
       # Runs after validation so an unparseable command or an unconfigured
       # provider never leaves a "working on it" reaction behind.
@@ -208,6 +220,7 @@ jobs:
         env:
           LLM_URL: ${{ steps.provider.outputs.provider == 'fallback' && vars.OCR_FALLBACK_URL || vars.OCR_PRIMARY_URL }}
           LLM_MODEL: ${{ steps.provider.outputs.provider == 'fallback' && vars.OCR_FALLBACK_MODEL || vars.OCR_PRIMARY_MODEL }}
+          LLM_PROTOCOL: ${{ steps.provider.outputs.protocol }}
           LLM_TOKEN: ${{ steps.provider.outputs.provider == 'fallback' && secrets.OCR_FALLBACK_API_KEY || secrets.OCR_PRIMARY_API_KEY }}
           LLM_SESSION: ${{ github.repository }}-pr-${{ github.event.issue.number || inputs.pr_number }}
         shell: bash
@@ -227,7 +240,8 @@ jobs:
             -H 'Content-Type: application/json' \
             --data "$(jq -cn \
               --arg model "$LLM_MODEL" \
-              '{model: $model, messages: [{role: "user", content: "Reply with OK"}], max_tokens: 4}')" \
+              --arg protocol "$LLM_PROTOCOL" \
+              'if $protocol == "openai-responses" then {model: $model, input: [{role: "user", content: "Reply with OK"}], max_output_tokens: 4} else {model: $model, messages: [{role: "user", content: "Reply with OK"}], max_tokens: 4} end')" \
             > /tmp/ocr-llm-preflight-status.txt || curl_exit=$?
 
           if [[ "$curl_exit" -ne 0 ]]; then
@@ -294,12 +308,13 @@ jobs:
 
       - name: Run OpenCodeReview
         id: ocr-review
-        uses: alibaba/open-code-review@7a571b78d3493b249f6ad14d835c6a79a0a67d2e # v1.12.6
+        uses: alibaba/open-code-review@bccbc15f785269400735d5255540c231e6c02b6d # v1.12.9
         with:
           llm_url: ${{ steps.provider.outputs.provider == 'fallback' && vars.OCR_FALLBACK_URL || vars.OCR_PRIMARY_URL }}
           llm_auth_token: ${{ steps.provider.outputs.provider == 'fallback' && secrets.OCR_FALLBACK_API_KEY || secrets.OCR_PRIMARY_API_KEY }}
           llm_model: ${{ steps.provider.outputs.provider == 'fallback' && vars.OCR_FALLBACK_MODEL || vars.OCR_PRIMARY_MODEL }}
           llm_use_anthropic: false
+          llm_protocol: ${{ steps.provider.outputs.protocol }}
           # Session id stays stable for the life of the PR: this value is part of
           # the checkpoint fingerprint, so a per-head value would fail closed to a
           # full review on every push and make checkpoint_range a no-op.
@@ -329,9 +344,11 @@ jobs:
           OCR_RANGE_SUMMARY: ${{ steps.ocr-review.outputs.range_summary }}
           OCR_PROVIDER: ${{ steps.provider.outputs.provider }}
           OCR_MODEL: ${{ steps.provider.outputs.provider == 'fallback' && vars.OCR_FALLBACK_MODEL || vars.OCR_PRIMARY_MODEL }}
+          OCR_PROTOCOL: ${{ steps.provider.outputs.protocol }}
           OCR_EFFORT: ${{ steps.provider.outputs.effort_override || steps.effort.outputs.effort }}
           OCR_LLM_URL: ${{ steps.provider.outputs.provider == 'fallback' && vars.OCR_FALLBACK_URL || vars.OCR_PRIMARY_URL }}
           OCR_LLM_TOKEN: ${{ steps.provider.outputs.provider == 'fallback' && secrets.OCR_FALLBACK_API_KEY || secrets.OCR_PRIMARY_API_KEY }}
+          OCR_LLM_SESSION: ${{ github.repository }}-pr-${{ github.event.issue.number || inputs.pr_number }}
         with:
           github-token: ${{ github.token }}
           script: |
@@ -392,36 +409,49 @@ jobs:
                 const fullDiff = String(diffResponse.data || '');
                 const diffTruncated = fullDiff.length > 50000;
                 const diff = fullDiff.slice(0, 50000);
+                const prompt = [
+                  'Write a concise GitHub pull request summary in English based only on the diff below.',
+                  'Explain what the PR changes from an operator or user perspective, grouping related changes into 2-5 bullets.',
+                  'Do not mention code review findings, models, prompts, or the diff. Do not invent behavior.',
+                  'Return only Markdown bullets, without a heading.',
+                  ...(diffTruncated ? ['The diff is truncated; summarize only the visible portion and do not claim full coverage.'] : []),
+                  '',
+                  diff,
+                ].join('\n');
+                const requestBody = process.env.OCR_PROTOCOL === 'openai-responses'
+                  ? {
+                      model: process.env.OCR_MODEL,
+                      input: [{ role: 'user', content: prompt }],
+                      max_output_tokens: 700,
+                    }
+                  : {
+                      model: process.env.OCR_MODEL,
+                      temperature: 0.2,
+                      max_tokens: 700,
+                      messages: [{ role: 'user', content: prompt }],
+                    };
                 const llmResponse = await fetch(process.env.OCR_LLM_URL, {
                   method: 'POST',
                   signal: AbortSignal.timeout(60000),
                   headers: {
                     authorization: `Bearer ${process.env.OCR_LLM_TOKEN}`,
                     'content-type': 'application/json',
+                    'x-opencode-session': process.env.OCR_LLM_SESSION,
+                    'user-agent': 'YARK-OpenCodeReview/1.0',
                   },
-                  body: JSON.stringify({
-                    model: process.env.OCR_MODEL,
-                    temperature: 0.2,
-                    max_tokens: 700,
-                    messages: [{
-                      role: 'user',
-                      content: [
-                        'Write a concise GitHub pull request summary in English based only on the diff below.',
-                        'Explain what the PR changes from an operator or user perspective, grouping related changes into 2-5 bullets.',
-                        'Do not mention code review findings, models, prompts, or the diff. Do not invent behavior.',
-                        'Return only Markdown bullets, without a heading.',
-                        ...(diffTruncated ? ['The diff is truncated; summarize only the visible portion and do not claim full coverage.'] : []),
-                        '',
-                        diff,
-                      ].join('\n'),
-                    }],
-                  }),
+                  body: JSON.stringify(requestBody),
                 });
                 if (!llmResponse.ok) {
                   throw new Error(`summary model returned HTTP ${llmResponse.status}`);
                 }
                 const payload = await llmResponse.json();
-                const content = payload.choices?.[0]?.message?.content?.trim();
+                const content = process.env.OCR_PROTOCOL === 'openai-responses'
+                  ? payload.output?.flatMap((item) => item.content || [])
+                    .filter((item) => item.type === 'output_text')
+                    .map((item) => item.text)
+                    .join('\n')
+                    .trim()
+                  : payload.choices?.[0]?.message?.content?.trim();
                 if (content) {
                   prSummary = content.replace(/<!--[\s\S]*?-->/g, '').trim() || prSummary;
                 }
@@ -437,6 +467,7 @@ jobs:
                 `- **Findings:** ${total} (${inline} inline, ${routed} in summary)`,
                 `- **Review range:** ${process.env.OCR_RANGE_SUMMARY || 'full PR range'}`,
                 `- **Provider:** ${process.env.OCR_PROVIDER || 'primary'} (${process.env.OCR_MODEL || 'configured model'})`,
+                `- **Protocol:** ${process.env.OCR_PROTOCOL || 'openai'}`,
                 `- **Effort:** ${process.env.OCR_EFFORT || 'medium'}`,
               ].join('\n');
 
