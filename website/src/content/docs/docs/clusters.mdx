@@ -32,6 +32,7 @@ The Clusters page shows **compliance** for Cluster ID / shared directory, and su
 - **Create cluster** — assign a Cluster ID and shared folder to one or more stopped servers
 - **Add / remove** membership on an existing cluster (stopped servers only; transfer files are not deleted)
 - **INI templates** — edit Game.ini / GameUserSettings.ini for the cluster, then **Promote**, **Restore**, or **Seed** onto members (ports, passwords, and session stay profile-owned)
+- **Transfer / tribute** — inspect expiration timers and upload slot caps across members, align cluster-wide values, and edit upload/download restrictions for one map
 
 You can also join an existing fleet cluster when creating a server profile.
 
@@ -49,6 +50,25 @@ You can also join an existing fleet cluster when creating a server profile.
 </figure>
 
 Compliance is **static profile math** (IDs, directories, ports, mods) — it does not probe live transfers in-game. A two-map host checklist (upload, transfer both ways, restart, retrieve items) is in the engineering runbook for [#22](https://github.com/gabomarin/yark/issues/22).
+
+## Transfer and tribute settings
+
+Cluster-wide expiration timers and slot caps are read from
+`GameUserSettings.ini` `[ServerSettings]`. YARK flags missing or mismatched
+values. Mismatched expiration timers can delete ARK Data when a player opens
+tribute on a map with a shorter timer. Expiration values are entered in hours
+and cannot exceed one year. Slot-cap descriptions follow the INI catalog; it
+warns that increasing them may corrupt player or cluster data.
+
+When applying cluster-wide values, YARK previews which stopped members will be
+updated and which running members will be skipped. It uses the cluster INI
+template restore path, including its backups and preservation of unrelated and
+profile-owned settings.
+
+Upload/download restrictions (`PreventUpload*`, `PreventDownload*`,
+`noTributeDownloads`, and `CrossARKAllowForeignDinoDownloads`) are **This map
+only** settings. They are not included in cluster drift checks or cluster-wide
+applies and can only be saved for the selected stopped server.
 
 ## Operator tips
 

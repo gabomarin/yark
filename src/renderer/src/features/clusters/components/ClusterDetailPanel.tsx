@@ -17,6 +17,7 @@ import { AddServersModal } from "./AddServersModal/AddServersModal";
 import { RemoveServersModal } from "./RemoveServersModal/RemoveServersModal";
 import { ClusterIniTemplateModal } from "./ClusterIniTemplateModal/ClusterIniTemplateModal";
 import { ClusterIniTemplateApplyModal } from "./ClusterIniTemplateApplyModal/ClusterIniTemplateApplyModal";
+import { ClusterTributePanel } from "./ClusterTributePanel/ClusterTributePanel";
 
 interface Props {
   report: ClusterComplianceReport;
@@ -219,6 +220,13 @@ export function ClusterDetailPanel(props: Props): ReactElement {
             </div>
           )}
         </Stack>
+
+        <ClusterTributePanel
+          clusterId={props.report.clusterId}
+          members={props.members}
+          statuses={props.statuses}
+          onChanged={props.onMembershipChanged}
+        />
 
         <Stack gap="xs" className={classes.issuesBlock}>
           <Text fw={600} size="sm">
