@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { Button, Collapse, Group, Loader, ScrollArea, SimpleGrid, Stack, Text } from "@mantine/core";
+import { Button, Checkbox, Collapse, Group, Loader, ScrollArea, SimpleGrid, Stack, Text } from "@mantine/core";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { isMetadataServiceNotConfiguredMessage } from "@shared/mods/curseforge-proxy-url";
 import type { ImportInstallProbe, ModMetadata } from "@shared/types";
@@ -12,6 +12,9 @@ interface Props {
   /** Filled CurseForge rows keyed by Project ID (parent owns persist). */
   modMetadata: Record<string, ModMetadata>;
   onModMetadataChange: (next: Record<string, ModMetadata>) => void;
+  /** Import every scanned ID enabled instead of staged disabled (#637). */
+  enableAllMods: boolean;
+  onEnableAllModsChange: (enabled: boolean) => void;
 }
 
 export function ImportInstallReviewStep(props: Props): ReactElement {
@@ -107,17 +110,29 @@ export function ImportInstallReviewStep(props: Props): ReactElement {
               {loadingMeta && <Loader size="xs" />}
             </Group>
             <Text size="xs" c="dimmed">
-              Enable them manually later on the Mods tab.
+              {props.enableAllMods
+                ? "They will be enabled when you import."
+                : "Enable them manually later on the Mods tab."}
             </Text>
           </div>
-          <Button
-            size="xs"
-            variant="subtle"
-            onClick={() => props.onModsOpenChange(!props.modsOpen)}
-            disabled={modIds.length === 0}
-          >
-            {props.modsOpen ? "Hide list" : "Show list"}
-          </Button>
+          <Group gap="xs" wrap="nowrap">
+            {modIds.length > 0 && (
+              <Checkbox
+                size="xs"
+                checked={props.enableAllMods}
+                onChange={(event) => props.onEnableAllModsChange(event.currentTarget.checked)}
+                label="Enable all imported mods"
+              />
+            )}
+            <Button
+              size="xs"
+              variant="subtle"
+              onClick={() => props.onModsOpenChange(!props.modsOpen)}
+              disabled={modIds.length === 0}
+            >
+              {props.modsOpen ? "Hide list" : "Show list"}
+            </Button>
+          </Group>
         </Group>
         {metaWarning !== null && (
           <Text size="xs" c="dimmed" mt={4}>

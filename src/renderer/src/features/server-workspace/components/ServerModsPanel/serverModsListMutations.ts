@@ -1,7 +1,8 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 import type { ModMetadata } from "@shared/types";
 import { notifyModsAddedDisabled } from "./notifyModsAddedDisabled";
-import { MODS_REORDER_BUSY_KEY } from "./serverModsBusy";
+import { notifyMapModsEnabled } from "./notifyMapModsEnabled";
+import { MODS_BULK_BUSY_KEY, MODS_REORDER_BUSY_KEY } from "./serverModsBusy";
 
 interface Input {
   configuredIdsRef: MutableRefObject<string[]>;
@@ -117,6 +118,20 @@ export function createServerModsListMutations(input: Input) {
     }
   };
 
+  /** Shared busy/error scaffolding for one-shot list writes (reorder + bulk). */
+  const runListWrite = async (busyKey: string, fallbackError: string, work: () => Promise<void>) => {
+    input.setBusyKey(busyKey);
+    input.setError(null);
+    input.setWarning(null);
+    try {
+      await work();
+    } catch (cause) {
+      input.setError(cause instanceof Error ? cause.message : fallbackError);
+    } finally {
+      input.setBusyKey(null);
+    }
+  };
+
   const reorder = async (orderedIds: string[]) => {
     const configuredIds = input.configuredIdsRef.current;
     const disabledIds = input.disabledIdsRef.current;
@@ -127,17 +142,45 @@ export function createServerModsListMutations(input: Input) {
     if (orderedIds.every((id, index) => id === configuredIds[index])) {
       return;
     }
-    input.setBusyKey(MODS_REORDER_BUSY_KEY);
-    input.setError(null);
-    input.setWarning(null);
-    try {
-      await input.persist(orderedIds, disabledIds, input.cacheRef.current);
-    } catch (cause) {
-      input.setError(cause instanceof Error ? cause.message : "Could not reorder mods");
-    } finally {
-      input.setBusyKey(null);
-    }
+    await runListWrite(MODS_REORDER_BUSY_KEY, "Could not reorder mods", () =>
+      input.persist(orderedIds, disabledIds, input.cacheRef.current),
+    );
   };
 
-  return { add, toggle, remove, reorder };
+  /** Bulk: clear `disabledMods`. One patch; one aggregated Maps-mod toast. */
+  const enableAll = async () => {
+    const disabledIds = input.disabledIdsRef.current;
+    if (disabledIds.length === 0) return;
+    await runListWrite(MODS_BULK_BUSY_KEY, "Could not enable all mods", async () => {
+      await input.persist(input.configuredIdsRef.current, [], input.cacheRef.current);
+      notifyMapModsEnabled(disabledIds, input.cacheRef.current);
+    });
+  };
+
+  /** Bulk: `disabledMods` = every configured ID. One patch. */
+  const disableAll = async () => {
+    const configuredIds = input.configuredIdsRef.current;
+    if (configuredIds.length === 0 || input.disabledIdsRef.current.length === configuredIds.length) return;
+    await runListWrite(MODS_BULK_BUSY_KEY, "Could not disable all mods", () =>
+      input.persist(configuredIds, [...configuredIds], input.cacheRef.current),
+    );
+  };
+
+  /** Bulk: drop disabled IDs from `mods` / `disabledMods` and clear their cache. One patch. */
+  const removeAllDisabled = async () => {
+    const configuredIds = input.configuredIdsRef.current;
+    const disabledIds = input.disabledIdsRef.current;
+    if (disabledIds.length === 0) return;
+    const disabledSet = new Set(disabledIds);
+    const nextIds = configuredIds.filter((id) => !disabledSet.has(id));
+    const nextCache = { ...input.cacheRef.current };
+    for (const id of disabledIds) {
+      delete nextCache[id];
+    }
+    await runListWrite(MODS_BULK_BUSY_KEY, "Could not remove disabled mods", () =>
+      input.persist(nextIds, [], nextCache),
+    );
+  };
+
+  return { add, toggle, remove, reorder, enableAll, disableAll, removeAllDisabled };
 }

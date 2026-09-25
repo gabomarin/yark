@@ -56,6 +56,16 @@ export function applyServerProfilePatch(existing: ServerProfile, patch: ServerPr
   };
 }
 
+/**
+ * Keep `disabledMods` within `mods` (trim/identity aside). Omitted
+ * `disabledMods` defaults to every mod disabled — the create/stage default.
+ * Import install passes `[]` when the operator opts to enable all (#637).
+ */
+export function normalizeDisabledMods(mods: readonly string[], disabledMods?: readonly string[] | null): string[] {
+  const modSet = new Set(mods);
+  return [...new Set((disabledMods ?? mods).filter((id) => modSet.has(id)))];
+}
+
 export function isServerProfilePatch(value: unknown): value is ServerProfilePatch {
   if (value === null || typeof value !== "object") return false;
   const body = value as Record<string, unknown>;

@@ -679,4 +679,59 @@ describe("ServerModsPanel", () => {
 
     expect(await screen.findByText("Loading…")).toBeInTheDocument();
   });
+
+  it("writes one patch per bulk enable/disable/remove-all (#637)", async () => {
+    const api = installApi();
+    const user = userEvent.setup();
+    render(
+      <AppProviders>
+        <ServerModsPanel server={{ ...server, disabledMods: ["947033"] }} onServerUpdated={vi.fn()} />
+      </AppProviders>,
+    );
+
+    expect(await screen.findByText("1 disabled")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Enable all" }));
+    await waitFor(() => {
+      expect(api.updateServerPatch).toHaveBeenCalledTimes(1);
+      expect(api.updateServerPatch).toHaveBeenLastCalledWith(
+        "server-1",
+        expect.objectContaining({ group: "mods", mods: ["947033"], disabledMods: [] }),
+      );
+    });
+
+    await user.click(screen.getByRole("button", { name: "Disable all" }));
+    await waitFor(() => {
+      expect(api.updateServerPatch).toHaveBeenCalledTimes(2);
+      expect(api.updateServerPatch).toHaveBeenLastCalledWith(
+        "server-1",
+        expect.objectContaining({ group: "mods", mods: ["947033"], disabledMods: ["947033"] }),
+      );
+    });
+
+    await user.click(screen.getByRole("button", { name: "Remove all disabled" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Remove all disabled" }));
+    await waitFor(() => {
+      expect(api.updateServerPatch).toHaveBeenCalledTimes(3);
+      expect(api.updateServerPatch).toHaveBeenLastCalledWith(
+        "server-1",
+        expect.objectContaining({ group: "mods", mods: [], disabledMods: [], modMetadataCache: {} }),
+      );
+    });
+  });
+
+  it("disables the bulk actions when there are no mods (#637)", async () => {
+    installApi();
+    const emptyServer: ServerProfile = { ...server, mods: [], disabledMods: [], modMetadataCache: {} };
+    render(
+      <AppProviders>
+        <ServerModsPanel server={emptyServer} onServerUpdated={vi.fn()} />
+      </AppProviders>,
+    );
+
+    expect(await screen.findByRole("button", { name: "Enable all" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Disable all" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Remove all disabled" })).toBeDisabled();
+  });
 });

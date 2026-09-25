@@ -47,6 +47,7 @@ export function ImportInstallWizard(props: Props): ReactElement {
   const [allowIncompleteInstall, setAllowIncompleteInstall] = useState(false);
   const [modsOpen, setModsOpen] = useState(false);
   const [modMetadata, setModMetadata] = useState<Record<string, ModMetadata>>({});
+  const [enableAllMods, setEnableAllMods] = useState(true);
   const [form, setForm] = useState<ImportFormState>(emptyImportForm);
 
   const knownClusters = useMemo(
@@ -65,13 +66,19 @@ export function ImportInstallWizard(props: Props): ReactElement {
   // Parent remounts this wizard on each open (`key={importWizardKey}`) so form
   // state starts fresh without an adjust-on-prop-change close effect.
 
+  /** Clear probe-derived state when the install path changes (#254 / #637). */
+  const resetProbeState = (): void => {
+    setAllowIncompleteInstall(false);
+    setModMetadata({});
+    setEnableAllMods(true);
+  };
+
   const applyProbe = (next: ImportInstallProbe): void => {
     // Keep UI path in sync with backend normalizeWindowsPath (trailing separators, etc.).
     setInstallDir(next.installDir);
     setProbe(next);
-    setAllowIncompleteInstall(false);
+    resetProbeState();
     setForm(applyPreferredCluster(suggestionsToForm(next.suggestions), preferredCluster));
-    setModMetadata({});
     setModsOpen(next.suggestions.mods.length > 0 && next.suggestions.mods.length < MODS_LIST_AUTO_COLLAPSE_AT);
   };
 
@@ -128,8 +135,7 @@ export function ImportInstallWizard(props: Props): ReactElement {
         if (result.data !== null) {
           setInstallDir(result.data);
           setProbe(null);
-          setAllowIncompleteInstall(false);
-          setModMetadata({});
+          resetProbeState();
           await probePath(result.data);
         }
       },
@@ -187,6 +193,7 @@ export function ImportInstallWizard(props: Props): ReactElement {
       probe.installDir,
       probe.suggestions.mods,
       modMetadata,
+      enableAllMods,
     );
     if ("error" in inputOrError) {
       setError(inputOrError.error);
@@ -218,7 +225,7 @@ export function ImportInstallWizard(props: Props): ReactElement {
       onClose={props.onClose}
       title="Import install"
       size="lg"
-      closeOnClickOutside={!saving && !probing}
+      closeOnClickOutside={false}
       closeOnEscape={!saving && !probing}
       withCloseButton={!saving && !probing}
       footerAlign="between"
@@ -283,16 +290,14 @@ export function ImportInstallWizard(props: Props): ReactElement {
             onInstallDirChange={(value) => {
               setInstallDir(value);
               setProbe(null);
-              setAllowIncompleteInstall(false);
-              setModMetadata({});
+              resetProbeState();
               setError(null);
             }}
             onBrowse={() => void handleBrowse()}
             onUseSuggestedDir={(path) => {
               setInstallDir(path);
               setProbe(null);
-              setAllowIncompleteInstall(false);
-              setModMetadata({});
+              resetProbeState();
               setError(null);
               void probePath(path);
             }}
@@ -306,6 +311,8 @@ export function ImportInstallWizard(props: Props): ReactElement {
             onModsOpenChange={setModsOpen}
             modMetadata={modMetadata}
             onModMetadataChange={handleModMetadataChange}
+            enableAllMods={enableAllMods}
+            onEnableAllModsChange={setEnableAllMods}
           />
         )}
 

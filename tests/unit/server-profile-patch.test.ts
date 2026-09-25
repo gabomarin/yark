@@ -7,7 +7,12 @@ import { InstanceLockManager } from "@backend/orchestration/instance-lock-manage
 import { InstanceService } from "@backend/domains/instances/instance-service";
 import type { BackupService } from "@backend/domains/backups/backup-service";
 import type { ProcessManager } from "@backend/infra/process/process-manager";
-import { applyServerProfilePatch, isServerProfilePatch, serverProfileToInput } from "@shared/server/server-profile";
+import {
+  applyServerProfilePatch,
+  isServerProfilePatch,
+  normalizeDisabledMods,
+  serverProfileToInput,
+} from "@shared/server/server-profile";
 import type { ServerProfile, ServerProfileInput } from "@shared/types";
 
 vi.mock("@backend/domains/instances/sync-profile-ini", () => {
@@ -192,5 +197,15 @@ describe("InstanceService.updatePatch concurrency (#209)", () => {
         useAsaApiLoader: false,
       }),
     ).toBe(true);
+  });
+});
+
+describe("normalizeDisabledMods (#637)", () => {
+  it("defaults to every mod disabled and drops IDs not on the list", () => {
+    expect(normalizeDisabledMods(["111", "222"])).toEqual(["111", "222"]);
+    expect(normalizeDisabledMods(["111", "222"], ["222", "999"])).toEqual(["222"]);
+    expect(normalizeDisabledMods(["111", "222"], [])).toEqual([]);
+    expect(normalizeDisabledMods([], ["111"])).toEqual([]);
+    expect(normalizeDisabledMods(["111", "111"], ["111"])).toEqual(["111"]);
   });
 });

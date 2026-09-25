@@ -37,3 +37,20 @@ export function confirmRemoveServerMod(
     },
   });
 }
+
+/** Confirm before removing every disabled mod at once (#637). */
+export function confirmRemoveDisabledMods(count: number, onConfirm: () => void | Promise<void>): void {
+  openDangerConfirmModal({
+    title: "Remove all disabled mods?",
+    children: dangerConfirmBody(
+      <>
+        Remove <strong>{count}</strong> disabled {count === 1 ? "mod" : "mods"} from this server and discard their
+        cached metadata?
+      </>,
+    ),
+    confirmLabel: "Remove all disabled",
+    onConfirm: () => {
+      void onConfirm();
+    },
+  });
+}

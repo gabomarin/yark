@@ -1,7 +1,8 @@
 import { notifications } from "@mantine/notifications";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { ModMetadata } from "@shared/types";
 import { createServerModsListMutations } from "./serverModsListMutations";
-import { MODS_REORDER_BUSY_KEY } from "./serverModsBusy";
+import { MODS_BULK_BUSY_KEY, MODS_REORDER_BUSY_KEY } from "./serverModsBusy";
 import { resetModAddedToastQueue } from "./notifyModsAddedDisabled";
 
 const sampleMod = {
@@ -212,5 +213,94 @@ describe("createServerModsListMutations", () => {
     expect(setDisabledIds).toHaveBeenLastCalledWith([]);
     expect(disabledIdsRef.current).toEqual([]);
     expect(setError).toHaveBeenCalledWith("notify failed");
+  });
+
+  function bulkInput(
+    overrides: {
+      configured?: string[];
+      disabled?: string[];
+      cache?: Record<string, ModMetadata>;
+      persist?: (ids: string[], disabled: string[], cache: Record<string, ModMetadata>) => Promise<void>;
+    } = {},
+  ) {
+    const setBusyKey = vi.fn();
+    const persist = overrides.persist ?? vi.fn(async () => undefined);
+    const input = {
+      configuredIdsRef: { current: overrides.configured ?? ["a", "b"] },
+      disabledIdsRef: { current: overrides.disabled ?? [] },
+      metadata: new Map<string, ModMetadata>(),
+      cacheRef: { current: overrides.cache ?? {} },
+      setBusyKey,
+      setDisabledIds: vi.fn(),
+      setError: vi.fn(),
+      setWarning: vi.fn(),
+      persist,
+      notifyMapModIfNeeded: vi.fn(),
+    };
+    return { ...createServerModsListMutations(input), setBusyKey, persist };
+  }
+
+  it("enables every mod in one patch when enabling all (#637)", async () => {
+    const persist = vi.fn(async () => undefined);
+    const { enableAll, setBusyKey } = bulkInput({ configured: ["a", "b"], disabled: ["a", "b"], persist });
+
+    await enableAll();
+
+    expect(setBusyKey).toHaveBeenCalledWith(MODS_BULK_BUSY_KEY);
+    expect(persist).toHaveBeenCalledWith(["a", "b"], [], {});
+    expect(setBusyKey).toHaveBeenLastCalledWith(null);
+  });
+
+  it("disables every configured mod in one patch when disabling all (#637)", async () => {
+    const persist = vi.fn(async () => undefined);
+    const { disableAll } = bulkInput({ configured: ["a", "b"], disabled: [], persist });
+
+    await disableAll();
+
+    expect(persist).toHaveBeenCalledWith(["a", "b"], ["a", "b"], {});
+  });
+
+  it("removes disabled mods and their cache in one patch (#637)", async () => {
+    const persist = vi.fn(async () => undefined);
+    const { removeAllDisabled } = bulkInput({
+      configured: ["a", "b", "c"],
+      disabled: ["b"],
+      cache: { b: { id: "b" } as ModMetadata, a: { id: "a" } as ModMetadata },
+      persist,
+    });
+
+    await removeAllDisabled();
+
+    expect(persist).toHaveBeenCalledWith(["a", "c"], [], { a: { id: "a" } });
+  });
+
+  it("shows one aggregated map toast when bulk-enabling map mods (#637)", async () => {
+    const persist = vi.fn(async () => undefined);
+    const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
+    const { enableAll } = bulkInput({
+      configured: ["a", "b"],
+      disabled: ["a", "b"],
+      cache: {
+        a: { id: "a", name: "Map One", categories: ["Maps"] } as ModMetadata,
+        b: { id: "b", name: "Map Two", categories: ["Maps"] } as ModMetadata,
+      },
+      persist,
+    });
+
+    await enableAll();
+
+    expect(notifySpy).toHaveBeenCalledTimes(1);
+    expect(notifySpy).toHaveBeenCalledWith(expect.objectContaining({ title: "2 map mods available" }));
+  });
+
+  it("skips the write when the bulk action would change nothing (#637)", async () => {
+    const persist = vi.fn(async () => undefined);
+    const emptyDisabled = bulkInput({ configured: ["a"], disabled: [], persist });
+    await emptyDisabled.enableAll();
+    await emptyDisabled.removeAllDisabled();
+    const allDisabled = bulkInput({ configured: ["a"], disabled: ["a"], persist });
+    await allDisabled.disableAll();
+
+    expect(persist).not.toHaveBeenCalled();
   });
 });

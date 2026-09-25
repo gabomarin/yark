@@ -5,6 +5,7 @@ import {
   normalizeWindowsPath,
   resolveServerInstallDir,
 } from "@shared/server/server-install-path";
+import { normalizeDisabledMods } from "@shared/server/server-profile";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import { findPortConflicts, validateProfileInput } from "./validation";
 import { assertInstallDirVacantForCreate, installDirKey } from "./install-dir-safety";
@@ -53,8 +54,8 @@ export class InstanceCreate {
    * Uses the absolute `installDir` as-is (does not nest via resolveServerInstallDir).
    * No SteamCMD sync and **no INI writes** — Start (or later edits) sync profile-owned
    * keys. Requires install health `ready`, or `incomplete` with
-   * `allowIncompleteInstall` (#283). All discovered mods are forced into
-   * `disabledMods` until the operator enables them.
+   * `allowIncompleteInstall` (#283). Discovered mods stage disabled by default;
+   * the operator can opt to import them all enabled (#637).
    */
   async importExisting(
     input: ServerProfileInput,
@@ -66,7 +67,7 @@ export class InstanceCreate {
       ...input,
       installDir,
       mods,
-      disabledMods: [...mods],
+      disabledMods: normalizeDisabledMods(mods, input.disabledMods),
     };
     this.assertValidInput(normalized);
     this.assertUniqueName(normalized.name);

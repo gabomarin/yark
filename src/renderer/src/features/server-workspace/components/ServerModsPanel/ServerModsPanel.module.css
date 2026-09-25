@@ -11,6 +11,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
   flex-shrink: 0;
   gap: var(--app-space-md);
   padding: var(--app-space-md);

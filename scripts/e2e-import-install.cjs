@@ -234,6 +234,9 @@ async function run() {
 
     await expectText(dialog, /Profile only/i);
     await expectText(dialog, /Found 1 mods/i);
+    const enableAllMods = dialog.getByRole("checkbox", { name: /Enable all imported mods/i });
+    await enableAllMods.waitFor({ state: "visible", timeout: 10_000 });
+    assert.equal(await enableAllMods.isChecked(), true, "Enable all imported mods should default on");
     await dialog.getByRole("button", { name: /^Continue$/i }).click();
 
     // Edit step: name/session/ports should be prefilled; ensure admin password.
@@ -262,7 +265,8 @@ async function run() {
     const mods = JSON.parse(String(row.mods));
     const disabled = JSON.parse(String(row.disabled_mods));
     assert.deepEqual(mods, [MOD_ID]);
-    assert.deepEqual(disabled, [MOD_ID]);
+    // "Enable all imported mods" defaults on (#637) → scanned ID imports enabled.
+    assert.deepEqual(disabled, []);
 
     assert.equal(sha256File(iniPaths(installDir).gus), gusBefore, "Import must not rewrite GameUserSettings.ini");
     assert.equal(sha256File(iniPaths(installDir).game), gameBefore, "Import must not rewrite Game.ini");

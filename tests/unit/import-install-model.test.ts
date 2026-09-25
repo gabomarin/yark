@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
-import type { ImportInstallProbe, ServerInstallationInfo } from "@shared/types";
+import type { ImportInstallProbe, ServerInstallationInfo, ServerProfileInput } from "@shared/types";
 import {
   canImportInstallProceed,
   applyPreferredCluster,
+  emptyImportForm,
+  formToProfileInput,
   suggestionsToForm,
 } from "../../src/renderer/src/features/servers/importInstallModel";
 
@@ -90,5 +92,21 @@ describe("applyPreferredCluster", () => {
       clusterDir: "D:\\ASA\\Clusters\\Ember",
     });
     expect(applyPreferredCluster(form, undefined).clusterId).toBe("");
+  });
+});
+
+describe("formToProfileInput mods (#637)", () => {
+  const form = { ...emptyImportForm(), name: "Server", sessionName: "Session", adminPassword: "admin" };
+
+  it("stages scanned mods disabled when the toggle is off", () => {
+    const input = formToProfileInput(form, "C:\\ASA", ["111", "222"], {}, false);
+    expect("error" in input).toBe(false);
+    expect((input as ServerProfileInput).disabledMods).toEqual(["111", "222"]);
+  });
+
+  it("imports scanned mods enabled when asked", () => {
+    const input = formToProfileInput(form, "C:\\ASA", ["111", "222"], {}, true);
+    expect("error" in input).toBe(false);
+    expect((input as ServerProfileInput).disabledMods).toEqual([]);
   });
 });
