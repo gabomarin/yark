@@ -331,4 +331,20 @@ describe("ModsService.enrichNewServerMods", () => {
     expect(result.mods).toEqual(["947033"]);
     expect(result.modMetadataCache?.["947033"]).toEqual(awesome);
   });
+
+  it("trims disabled and passive IDs before enforcing their relationship", async () => {
+    const service = new ModsService({ useMockCatalog: true });
+    const result = await service.enrichNewServerMods(
+      {
+        ...profileInput(["947033"]),
+        disabledMods: [" 947033 "],
+        passiveMods: ["947033"],
+      },
+      { mods: ["947033"] },
+    );
+
+    expect(result.mods).toEqual(["947033"]);
+    expect(result.disabledMods).toEqual(["947033"]);
+    expect(result.passiveMods).toEqual([]);
+  });
 });

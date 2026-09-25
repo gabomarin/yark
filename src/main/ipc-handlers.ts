@@ -139,6 +139,7 @@ export function registerIpcHandlers(
       const enriched = await mods.enrichNewServerMods(profileInput, {
         mods: existing.mods,
         disabledMods: existing.disabledMods,
+        passiveMods: existing.passiveMods,
         modMetadataCache: existing.modMetadataCache,
       });
       return instances.update(id, enriched);
@@ -154,6 +155,7 @@ export function registerIpcHandlers(
       return mods.enrichNewServerMods(merged, {
         mods: existing.mods,
         disabledMods: existing.disabledMods,
+        passiveMods: existing.passiveMods,
         modMetadataCache: existing.modMetadataCache,
       });
     });
@@ -214,6 +216,7 @@ export function registerIpcHandlers(
       {
         mods: modsList,
         disabledMods: disabled,
+        passiveMods: [],
         modMetadataCache: cache,
       },
     );

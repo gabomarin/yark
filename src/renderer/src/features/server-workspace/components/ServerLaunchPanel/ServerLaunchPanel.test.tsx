@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
 import type { ServerProfile } from "@shared/types";
+import { buildLaunchPreviewParts } from "./serverLaunchModel";
 import { ServerLaunchPanel } from "./ServerLaunchPanel";
 
 function profile(partial: Partial<ServerProfile> = {}): ServerProfile {
@@ -45,6 +46,17 @@ describe("ServerLaunchPanel", () => {
     } as typeof window.api;
   });
 
+  it("keeps manual passive IDs out of YARK's -mods= preview", () => {
+    const preview = buildLaunchPreviewParts({
+      server: profile({ mods: ["123", "456"] }),
+      structured: {},
+      extraArgs: ["-passivemods=123 456"],
+    });
+
+    expect(preview.yark).not.toContain("-mods=123,456");
+    expect(preview.raw).toContain("-passivemods=123 456");
+  });
+
   it("renders common structured options and opens the catalog (#93)", async () => {
     const user = userEvent.setup();
 
@@ -59,7 +71,8 @@ describe("ServerLaunchPanel", () => {
     expect(screen.queryByText(/cluster edge/i)).not.toBeInTheDocument();
     expect(screen.getByLabelText(/^extra arguments$/i)).toBeInTheDocument();
     expect(screen.getByText(/ForceAllowCaveFlyers/i)).toBeInTheDocument();
-    expect(screen.getByText(/passivemods/i)).toBeInTheDocument();
+    // -passivemods= moved to the Mods tab (#509).
+    expect(screen.queryByText(/passivemods/i)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /browse asa catalog/i }));
     expect(await screen.findByRole("dialog", { name: /asa launch-options catalog/i })).toBeInTheDocument();
@@ -159,7 +172,7 @@ describe("ServerLaunchPanel", () => {
     );
 
     expect(screen.getByText(/ForceAllowCaveFlyers/i)).toBeInTheDocument();
-    expect(screen.getByText(/passivemods/i)).toBeInTheDocument();
+    expect(screen.queryByText(/passivemods/i)).not.toBeInTheDocument();
 
     const search = screen.getByLabelText(/filter launch flags/i);
     await user.type(search, "battleye");

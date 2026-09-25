@@ -4,14 +4,18 @@ import {
   argsIncludeServerPlatform,
   buildStructuredLaunchArgList,
   findLaunchArgConflicts,
+  isPassiveModsArg,
   isWinLiveMaxPlayersArg,
   listStructuredLaunchUiOptions,
+  parsePassiveModIds,
   redactLaunchArgForPreview,
+  resolveProfileModBuckets,
   structuredLaunchGroupLabel,
   STRUCTURED_LAUNCH_GROUP_ORDER,
   YARK_DEFAULT_SERVER_PLATFORM_ARG,
   yarkClusterArgs,
   yarkModsArg,
+  yarkPassiveModsArg,
   yarkPortArg,
   yarkWinLiveMaxPlayersArg,
   type StructuredLaunchArgs,
@@ -76,17 +80,19 @@ export function yarkOwnedPreviewTokens(server: ServerProfile): string[] {
   if (server.maxPlayers > 0) {
     parts.push(yarkWinLiveMaxPlayersArg(server.maxPlayers));
   }
-  const structured = buildStructuredLaunchArgList(server.structuredLaunchArgs).filter(
+  let trailing = [...buildStructuredLaunchArgList(server.structuredLaunchArgs), ...server.extraArgs].filter(
     (arg) => !isWinLiveMaxPlayersArg(arg),
   );
-  const extraArgs = server.extraArgs.filter((arg) => !isWinLiveMaxPlayersArg(arg));
-  const trailing = [...structured, ...extraArgs];
   if (!argsIncludeServerPlatform(trailing)) {
     parts.push(YARK_DEFAULT_SERVER_PLATFORM_ARG);
   }
-  const disabled = new Set(server.disabledMods ?? []);
-  const mods = server.mods.filter((id) => !disabled.has(id));
-  if (mods.length > 0) parts.push(yarkModsArg(mods));
+  const { active: profileActive, passive: profilePassive } = resolveProfileModBuckets(server);
+  const ownsPassive = profilePassive.length > 0;
+  if (ownsPassive) trailing = trailing.filter((arg) => !isPassiveModsArg(arg));
+  const passiveIds = new Set([...profilePassive, ...(ownsPassive ? [] : parsePassiveModIds(trailing))]);
+  const active = profileActive.filter((id) => !passiveIds.has(id));
+  if (active.length > 0) parts.push(yarkModsArg(active));
+  if (ownsPassive) parts.push(yarkPassiveModsArg(profilePassive));
   if (server.clusterId && server.clusterDir) {
     parts.push(...yarkClusterArgs(server.clusterId, server.clusterDir));
   }
@@ -107,10 +113,14 @@ export function buildLaunchPreviewParts(input: {
     structuredLaunchArgs: input.structured,
     extraArgs: input.extraArgs,
   };
+  // Mirror buildLaunchArgs: once the profile owns passive mods, the manual
+  // `-passivemods=` structured/raw token is stripped from the effective command.
+  const ownsPassive = resolveProfileModBuckets(draft).passive.length > 0;
+  const keep = (token: string) => !(ownsPassive && isPassiveModsArg(token));
   return {
     yark: yarkOwnedPreviewTokens(draft),
-    structured: buildStructuredLaunchArgList(input.structured).map(redactLaunchArgForPreview),
-    raw: input.extraArgs.map(redactLaunchArgForPreview),
+    structured: buildStructuredLaunchArgList(input.structured).map(redactLaunchArgForPreview).filter(keep),
+    raw: input.extraArgs.map(redactLaunchArgForPreview).filter(keep),
   };
 }
 

@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { DatabaseSync } from "node:sqlite";
 import { openDatabase } from "@backend/infra/db/database";
 import { backfillMaxPlayersFromLegacyLaunchArgs } from "@backend/infra/db/backfill-max-players";
+import { backfillPassiveModsFromStructuredLaunchArgs } from "@backend/infra/db/backfill-passive-mods";
+import { LEGACY_PASSIVE_MODS_OPTION_ID } from "@shared/asa/structured-launch-options";
 import { coerceMapModId, ServerRepository } from "@backend/infra/db/server-repository";
 import type { ServerProfileInput } from "@shared/types";
 
@@ -51,6 +53,22 @@ describe("ServerRepository", () => {
     expect(fetched!.extraArgs).toEqual(["-NoBattlEye"]);
     expect(fetched!.autoStart).toBe(false);
     expect(fetched!.enabled).toBe(true);
+  });
+
+  it("normalizes passive and disabled IDs when reading persisted rows", () => {
+    const created = repo.create(input({ mods: ["111", "222"] }));
+    db.prepare("UPDATE servers SET disabled_mods = ?, passive_mods = ? WHERE id = ?").run(
+      JSON.stringify([" 222 "]),
+      JSON.stringify(["111", "222", "999", "111"]),
+      created.id,
+    );
+
+    const fetched = repo.get(created.id);
+    expect(fetched?.disabledMods).toEqual(["222"]);
+    expect(fetched?.passiveMods).toEqual(["111"]);
+
+    db.prepare("UPDATE servers SET passive_mods = ? WHERE id = ?").run(JSON.stringify({ invalid: true }), created.id);
+    expect(repo.get(created.id)?.passiveMods).toEqual([]);
   });
 
   it("persists autoStart on create and update", () => {
@@ -242,5 +260,55 @@ describe("ServerRepository", () => {
     db.prepare("UPDATE servers SET extra_args = ? WHERE id = ?").run("[-WinLiveMaxPlayers=40", created.id);
 
     expect(() => backfillMaxPlayersFromLegacyLaunchArgs(db)).toThrow(/invalid JSON/i);
+  });
+
+  it("promotes leftover Launch passivemods into passive_mods and leaves extra args alone", () => {
+    const created = repo.create(input({ mods: ["111", "222", "333"], disabledMods: ["333"] }));
+    db.prepare("UPDATE servers SET structured_launch_args = ?, extra_args = ? WHERE id = ?").run(
+      JSON.stringify({
+        nobattleye: { enabled: true },
+        [LEGACY_PASSIVE_MODS_OPTION_ID]: { enabled: true, value: "111,222,999" },
+      }),
+      JSON.stringify(["-passivemods=555"]),
+      created.id,
+    );
+
+    backfillPassiveModsFromStructuredLaunchArgs(db);
+
+    const next = repo.get(created.id);
+    // Hand-typed extra args are left alone; 999 is not installed, 333 is disabled.
+    expect(next?.passiveMods).toEqual(["111", "222"]);
+    expect(next?.extraArgs).toEqual(["-passivemods=555"]);
+    expect(next?.structuredLaunchArgs).toEqual({ nobattleye: { enabled: true } });
+  });
+
+  it("fails closed when leftover passivemods Launch JSON is corrupt", () => {
+    const created = repo.create(input());
+    db.prepare("UPDATE servers SET structured_launch_args = ? WHERE id = ?").run(
+      JSON.stringify({ [LEGACY_PASSIVE_MODS_OPTION_ID]: { enabled: true, value: "111" } }).slice(0, -1),
+      created.id,
+    );
+
+    expect(() => backfillPassiveModsFromStructuredLaunchArgs(db)).toThrow(/invalid JSON/i);
+  });
+
+  it("skips a candidate row with a valid but invalid-shaped mods column", () => {
+    const created = repo.create(input({ mods: ["111"] }));
+    const structured = JSON.stringify({
+      [LEGACY_PASSIVE_MODS_OPTION_ID]: { enabled: true, value: "111" },
+    });
+    db.prepare("UPDATE servers SET mods = ?, structured_launch_args = ? WHERE id = ?").run(
+      JSON.stringify({ unexpected: "shape" }),
+      structured,
+      created.id,
+    );
+
+    expect(backfillPassiveModsFromStructuredLaunchArgs(db)).toEqual([created.id]);
+    const row = db.prepare("SELECT structured_launch_args, passive_mods FROM servers WHERE id = ?").get(created.id) as {
+      structured_launch_args: string;
+      passive_mods: string;
+    };
+    expect(row.structured_launch_args).toBe(structured);
+    expect(row.passive_mods).toBe("[]");
   });
 });

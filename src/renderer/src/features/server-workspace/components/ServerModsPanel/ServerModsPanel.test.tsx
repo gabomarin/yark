@@ -597,6 +597,62 @@ describe("ServerModsPanel", () => {
     });
   });
 
+  it("marks an enabled mod passive and persists passiveMods (#509)", async () => {
+    const api = installApi();
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.click(await screen.findByRole("button", { name: "Mark passive Awesome Spyglass!" }));
+
+    await waitFor(() => {
+      expect(api.updateServerPatch).toHaveBeenCalledWith(
+        "server-1",
+        expect.objectContaining({
+          group: "mods",
+          mods: ["947033"],
+          disabledMods: [],
+          passiveMods: ["947033"],
+        }),
+      );
+    });
+    expect(document.querySelector('[data-mod-passive="true"]')).not.toBeNull();
+  });
+
+  it("keeps the passive badge visible for configured mods in Discover", async () => {
+    const api = installApi();
+    vi.mocked(api.searchMods).mockResolvedValue({
+      ok: true,
+      data: {
+        items: [awesomeDetail],
+        pagination: { index: 0, pageSize: 50, resultCount: 1, totalCount: 1 },
+      },
+    });
+    const user = userEvent.setup();
+    render(
+      <AppProviders>
+        <ServerModsPanel server={{ ...server, passiveMods: ["947033"] }} onServerUpdated={vi.fn()} />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("radio", { name: "Discover mods" }));
+    await user.click(screen.getByRole("button", { name: "Search mods" }));
+    await screen.findByText("Awesome Spyglass!");
+
+    expect(document.querySelector('[data-mod-passive="true"]')).not.toBeNull();
+  });
+
+  it("does not offer passive on a disabled mod (#509)", async () => {
+    installApi();
+    render(
+      <AppProviders>
+        <ServerModsPanel server={{ ...server, disabledMods: ["947033"], mods: ["947033"] }} onServerUpdated={vi.fn()} />
+      </AppProviders>,
+    );
+
+    const button = await screen.findByRole("button", { name: "Mark passive Awesome Spyglass!" });
+    expect(button).toBeDisabled();
+  });
+
   it("opens CurseForge links through the operating system", async () => {
     const api = installApi();
     const user = userEvent.setup();

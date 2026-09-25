@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { ReactElement } from "react";
 import { Badge, Button, Drawer, Group, Image, Stack, Switch, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { ArrowSquareOut, Copy, Plus, PuzzlePiece, X } from "@phosphor-icons/react";
+import { ArrowSquareOut, Copy, Moon, Plus, PuzzlePiece, X } from "@phosphor-icons/react";
 import { isMapCategoryLabel, isMapModCandidate, suggestMapTokenFromMetadata } from "@shared/asa/map-token-suggest";
 import type { ModMetadata } from "@shared/types";
 import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
@@ -24,10 +24,12 @@ interface Props {
   opened: boolean;
   configured: boolean;
   enabled: boolean;
+  passive: boolean;
   busy: boolean;
   onClose: () => void;
   onOpenExternal: (url: string) => void;
   onToggle: (id: string, enabled: boolean) => void;
+  onSetPassive: (id: string, passive: boolean) => void;
   onAdd: (detail: ModMetadata) => void;
   onRemove: (id: string) => void | Promise<boolean | void>;
 }
@@ -100,6 +102,31 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                   aria-label={`${props.enabled ? "Disable" : "Enable"} ${detail.name} from details`}
                   onChange={(event) => props.onToggle(detail.id, event.currentTarget.checked)}
                 />
+              </div>
+            )}
+
+            {props.configured && (
+              <div className={classes.detailDrawerLoadBand}>
+                <div>
+                  <Text size="sm" fw={500}>
+                    Passive
+                  </Text>
+                  <Text size="xs" c="dimmed">
+                    {props.passive
+                      ? "Loads data only — no spawns. Sent on -passivemods=."
+                      : "Load data without spawns (cluster transfer)."}
+                  </Text>
+                </div>
+                <Button
+                  size={copyButtonSize}
+                  variant="default"
+                  leftSection={<Moon size={14} weight={props.passive ? "fill" : "regular"} />}
+                  disabled={props.busy || !props.enabled}
+                  aria-label={`${props.passive ? "Mark active" : "Mark passive"} ${detail.name} from details`}
+                  onClick={() => props.onSetPassive(detail.id, !props.passive)}
+                >
+                  {props.passive ? "Mark active" : "Mark passive"}
+                </Button>
               </div>
             )}
 

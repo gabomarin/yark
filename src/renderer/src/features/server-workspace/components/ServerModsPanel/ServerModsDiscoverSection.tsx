@@ -27,6 +27,7 @@ import classes from "./ServerModsPanel.module.css";
 interface Props {
   configuredIds: string[];
   disabledIds: string[];
+  passiveIds: string[];
   metadata: Map<string, import("@shared/types").ModMetadata>;
   busyKey: string | null;
   onError: (message: string | null) => void;
@@ -64,9 +65,10 @@ export function ServerModsDiscoverSection(props: Props): ReactElement {
   }, [sortField, sortOrder]);
 
   const disabledSet = useMemo(() => new Set(props.disabledIds), [props.disabledIds]);
+  const passiveSet = useMemo(() => new Set(props.passiveIds), [props.passiveIds]);
   const rows = useMemo(
-    () => buildDiscoveryRows(props.configuredIds, disabledSet, props.metadata, catalog),
-    [catalog, props.configuredIds, disabledSet, props.metadata],
+    () => buildDiscoveryRows(props.configuredIds, disabledSet, props.metadata, catalog, passiveSet),
+    [catalog, props.configuredIds, disabledSet, props.metadata, passiveSet],
   );
 
   const categoryOptions = useMemo(() => {

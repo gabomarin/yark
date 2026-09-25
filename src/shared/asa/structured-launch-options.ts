@@ -164,12 +164,6 @@ const STRUCTURED_LAUNCH_CURATION: readonly StructuredLaunchCuration[] = [
     dependsOn: "usedynamicconfig",
     defaultValue: "",
   },
-  {
-    id: "passivemods-modid1-[-modid2-[...]]",
-    group: "world",
-    common: true,
-    defaultValue: "",
-  },
   { id: "nowildbabies", group: "world", common: true },
 ] as const;
 
@@ -351,6 +345,102 @@ export const YARK_DEFAULT_SERVER_PLATFORM_ARG = "-ServerPlatform=ALL";
 /** `-mods=a,b,c` for enabled CurseForge project IDs. */
 export function yarkModsArg(modIds: readonly string[]): string {
   return `-mods=${modIds.join(",")}`;
+}
+
+/**
+ * Catalog id of the retired Launch `-passivemods=` option. The Mods tab owns
+ * passive mods now; the option is kept only to migrate saved selections (#509).
+ */
+export const LEGACY_PASSIVE_MODS_OPTION_ID = "passivemods-modid1-[-modid2-[...]]";
+
+/** `-passivemods=a,b,c` for enabled passive CurseForge project IDs. */
+export function yarkPassiveModsArg(modIds: readonly string[]): string {
+  return `-passivemods=${modIds.join(",")}`;
+}
+
+/** True when an arg is a real `-passivemods=` / `?passivemods` token. */
+export function isPassiveModsArg(arg: string): boolean {
+  return tokenStem(arg) === "passivemods";
+}
+
+function isLegacyPassiveModsOptionId(id: string): boolean {
+  return tokenStem(id) === LEGACY_PASSIVE_MODS_OPTION_ID;
+}
+
+/** Comma/space separated Project IDs from every `-passivemods=` token. */
+export function parsePassiveModIds(args: readonly string[]): string[] {
+  const ids: string[] = [];
+  for (const arg of args) {
+    if (!isPassiveModsArg(arg)) continue;
+    const eq = arg.indexOf("=");
+    if (eq < 0) continue;
+    const value = arg
+      .slice(eq + 1)
+      .replace(/^["']|["']$/g, "")
+      .trim();
+    if (value.length === 0) continue;
+    for (const id of value.split(/[,;\s]+/)) {
+      const trimmed = id.trim();
+      if (trimmed.length > 0) ids.push(trimmed);
+    }
+  }
+  return ids;
+}
+
+/**
+ * Split configured mods into `-mods=` (active) and `-passivemods=` (passive).
+ * Passive implies enabled; a disabled ID can never be passive. Load order
+ * follows the `mods` array for both buckets.
+ */
+export function resolveProfileModBuckets(profile: {
+  mods: readonly string[];
+  disabledMods?: readonly string[];
+  passiveMods?: readonly string[];
+}): { active: string[]; passive: string[] } {
+  const disabled = new Set(profile.disabledMods ?? []);
+  const enabled = profile.mods.filter((id) => !disabled.has(id));
+  const enabledSet = new Set(enabled);
+  const passiveSet = new Set((profile.passiveMods ?? []).filter((id) => enabledSet.has(id)));
+  return {
+    active: enabled.filter((id) => !passiveSet.has(id)),
+    passive: enabled.filter((id) => passiveSet.has(id)),
+  };
+}
+
+/**
+ * Promote the retired Launch `-passivemods=` option into `passiveMods` and drop
+ * it from structured args, mirroring the WinLiveMaxPlayers promotion. Only a
+ * selection that was actually emitted (`enabled`) carries over; IDs outside
+ * `mods` (or disabled) are dropped by {@link resolveProfileModBuckets}. Hand-typed
+ * extra-arg tokens are left untouched.
+ */
+export function takeLegacyPassiveMods(input: {
+  structuredLaunchArgs: StructuredLaunchArgs | null | undefined;
+  mods: readonly string[];
+  disabledMods: readonly string[];
+  passiveMods: readonly string[];
+}): { structuredLaunchArgs: StructuredLaunchArgs; passiveMods: string[] } {
+  const structured = normalizeStructuredLaunchArgs(input.structuredLaunchArgs);
+  const nextStructured: StructuredLaunchArgs = {};
+  const ids: string[] = [];
+  for (const [id, state] of Object.entries(structured)) {
+    if (isLegacyPassiveModsOptionId(id)) {
+      if (state.enabled === true && typeof state.value === "string") {
+        ids.push(...parsePassiveModIds([`-passivemods=${state.value}`]));
+      }
+      continue;
+    }
+    nextStructured[id] = state;
+  }
+  return {
+    structuredLaunchArgs: nextStructured,
+    // Reuse the same bucket rule as launch time: installed, enabled, `mods` order.
+    passiveMods: resolveProfileModBuckets({
+      mods: input.mods,
+      disabledMods: input.disabledMods,
+      passiveMods: [...input.passiveMods, ...ids],
+    }).passive,
+  };
 }
 
 /** Cluster trio when both id and dir are set. */

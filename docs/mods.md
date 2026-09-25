@@ -1,8 +1,9 @@
 # Mods (workspace CurseForge load order)
 
 Per-server CurseForge Project ID inventory for ASA dedicated servers: discover /
-add by ID or ASA mod URL, enable/disable without dropping IDs, drag load order,
-and emit `-mods=` on launch for **enabled** IDs only.
+add by ID or ASA mod URL, enable/disable without dropping IDs, mark **passive**
+(load data, no spawns → `-passivemods=`), drag load order, and emit `-mods=` on
+launch for **enabled, non-passive** IDs only.
 
 Worker abuse controls and URL ownership:
 [curseforge-proxy.md](curseforge-proxy.md). Custom map packs (`mapModId`) and
@@ -46,10 +47,14 @@ Research archive: [spikes/65-modded-asa-maps.md](spikes/65-modded-asa-maps.md).
 | ------------------ | ------------------ | -------------------------------------------------------------------------------------------------------------- |
 | `mods`             | SQLite JSON array  | Configured Project IDs in **load order**                                                                       |
 | `disabledMods`     | SQLite JSON array  | Subset of `mods` omitted from `-mods=`                                                                         |
+| `passiveMods`      | SQLite JSON array  | Subset of enabled `mods` emitted only on `-passivemods=` (load data, no spawns); passive implies enabled       |
 | `modMetadataCache` | SQLite JSON object | Last known `ModMetadata` per ID (name, thumb, capped screenshot URLs, description when fetched, categories, …) |
 | `mapModId`         | column (nullable)  | Linked Maps pack for custom `map` — **not** managed on the Mods tab; set under Server Information → Map        |
 
 `disabledMods` entries that are not in `mods` are stripped on enrich/persist.
+`passiveMods` entries that are not enabled `mods` are stripped too — disabling a
+row clears its passive mark, and nothing is allowed on both `-mods=` and
+`-passivemods=`.
 
 ## Operator workflows
 
@@ -71,17 +76,22 @@ Workspace → **Mods** has two views (`SegmentedControl`):
    The Mod column shows one CurseForge category under the name (Maps uses
    attention color; extra tags collapse to **+N** with a hover list).
    Remaining tags stay in the detail drawer.
-4. **Remove** drops the ID from `mods` / `disabledMods` and clears its cache entry
-   (confirm dialog).
-5. Column sort is **view-only** — clear sort before drag-reorder (drag disabled
+4. **Passive** (row action icon, row context menu, and detail drawer) toggles
+   membership in `passiveMods` for **enabled** rows. Passive mods load their data
+   with functionality disabled (cluster transfer / no spawns): the row shows a
+   **Passive** badge and the ID moves from `-mods=` to `-passivemods=`. A disabled
+   row cannot be marked passive — enable it first (#509).
+5. **Remove** drops the ID from `mods` / `disabledMods` / `passiveMods` and clears
+   its cache entry (confirm dialog).
+6. Column sort is **view-only** — clear sort before drag-reorder (drag disabled
    while sorted or while any row mutation / reorder persist is busy).
-6. Detail drawer / Open on CurseForge uses cached metadata or
+7. Detail drawer / Open on CurseForge uses cached metadata or
    `mods:get-by-reference`; external open is fail-closed to a validated ASA
    CurseForge mod URL (`mods:open-curseforge`). Configured mods can also be
-   enabled/disabled and removed from the drawer (same persist as the table).
-   Discover inspect can **Add to this server** (same persist as table Add; starts
-   disabled). Maps packs show a launch-token hint in the drawer; YARK does not
-   change `map` / `mapModId` from that surface.
+   enabled/disabled, marked passive/active, and removed from the drawer (same
+   persist as the table). Discover inspect can **Add to this server** (same
+   persist as table Add; starts disabled). Maps packs show a launch-token hint in
+   the drawer; YARK does not change `map` / `mapModId` from that surface.
 
 ### Discover
 
@@ -149,18 +159,31 @@ get-by-id (`mods:get-by-reference`) — drawer inspect, add-by-URL, catalog add,
 etc. Batch profile refresh and search do **not** fetch long descriptions for
 every mod, so browsing the table without opening the drawer does not burn quota.
 
-`buildLaunchArgs` filters `profile.mods` with `disabledMods`:
+`buildLaunchArgs` splits `profile.mods` with `disabledMods` / `passiveMods`:
 
 ```text
 -mods=<enabledId1>,<enabledId2>,...
+-passivemods=<passiveId1>,<passiveId2>,...
 ```
 
-Order matches the `mods` array. Empty enabled set → no `-mods=` flag.
+Order matches the `mods` array in both buckets. Empty set → no flag. Any ID
+marked passive is emitted **only** on `-passivemods=`; it is removed from
+`-mods=` even when a legacy/manual `-passivemods=` or extra arg would also list
+it. Once the profile declares passive mods, YARK strips conflicting manual
+`-passivemods=` tokens from structured Launch / extra args so the Mods tab is the
+single source of truth (#509).
+
+The Launch tab no longer offers a `-passivemods=` field — the Mods tab owns it.
+Schema migration **29** promotes any saved selection into `passive_mods` before
+removing it (same one-shot pattern as the `-WinLiveMaxPlayers` → `max_players`
+backfill), so upgrading servers keep their passive mods. IDs that are not in
+`mods`, or are disabled, are dropped. Hand-typed `-passivemods=` extra args are
+left as-is.
 
 Example (logical argv fragment):
 
 ```text
-"TheIsland_WP"?SessionName="MyServer" -port=7777 -WinLiveMaxPlayers=70 -ServerPlatform=ALL -mods=929420,947033
+"TheIsland_WP"?SessionName="MyServer" -port=7777 -WinLiveMaxPlayers=70 -ServerPlatform=ALL -mods=929420,947033 -passivemods=962796
 ```
 
 ## Metadata resolution
@@ -210,6 +233,7 @@ window.api.updateServerPatch(serverId, {
   group: "mods",
   mods,
   disabledMods,
+  passiveMods,
   modMetadataCache,
 });
 ```

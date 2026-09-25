@@ -162,6 +162,31 @@ describe("validateMapIdentity", () => {
     ]);
   });
 
+  it("treats a passive-only linked map mod as a Start blocker (#509)", () => {
+    expect(
+      validateMapIdentity({
+        map: "Svartalfheim_WP",
+        mapModId: "962796",
+        mods: ["962796"],
+        passiveMods: ["962796"],
+      }),
+    ).toEqual([
+      {
+        field: "mapModId",
+        message: "Map mod Project ID is passive and will be omitted from -mods= — mark it active",
+        severity: "warning",
+      },
+    ]);
+    expect(
+      mapIdentityStartBlockers({
+        map: "Svartalfheim_WP",
+        mapModId: "962796",
+        mods: ["962796"],
+        passiveMods: ["962796"],
+      }),
+    ).toHaveLength(1);
+  });
+
   it("exposes warnings as start blockers (#194)", () => {
     expect(
       mapIdentityStartBlockers({

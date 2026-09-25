@@ -12,6 +12,7 @@ The Workspace **Mods** tab stores CurseForge **Project IDs** per profile.
 
 - **Enabled** IDs are passed at launch as `-mods=id1,id2,…`
 - **Disabled** IDs stay on the profile until you turn them back on (no need to delete an ID to skip one boot)
+- **Passive** IDs (row action, row menu, or detail drawer, on an enabled row) load their data with functionality disabled — for cluster transfer / “load data, no spawns”. They are sent only as `-passivemods=id1,id2,…`, never on `-mods=`, and the row shows a **Passive** badge. Disable a passive row and the passive mark is cleared.
 - Newly added IDs start **disabled** — enable them explicitly before they appear on `-mods=`. Add shows a **Mod Added** toast (two can stay visible; a third drops the oldest). Disabled inventory rows are dimmed (thumb + text) while the Enabled switch stays full strength; row **Remove** stays red **subtle**. One CurseForge category sits under the mod name (Maps uses attention color; extra tags as +N with a hover list). The detail drawer can enable, disable, and remove a configured ID, add a Discover result to this server, and shows a Maps launch-token hint (current map unchanged).
 - **Discover** browses CurseForge on open: category filter, in-field search (icon / Enter), pagination, and catalog sort from table headers (Name / Downloads / Updated), with Clear sort back to Popularity. The table scrolls in the panel with a fixed pagination footer. If the category list cannot load yet, Discover still works with a soft failure.
 - Names / summaries / links come from a small Cloudflare Worker proxy and are cached locally
@@ -75,7 +76,8 @@ map pack enabled on Mods.
 2. Restart after changing the enabled set so the new `-mods=` list applies
 3. Back up the world before enabling mods a world already depends on (or before removing them)
 4. Cluster members that transfer together usually need compatible mod sets
-5. For map packs, confirm both **enabled on Mods** and the correct **Map** token before Start
+5. For map packs, confirm both **enabled on Mods** and the correct **Map** token before Start — a
+   passive map pack is omitted from `-mods=`, so Mods shows a warning until you mark it active again
 6. Row actions and right-click menus share the same Menu chrome as the icon buttons — use either path
 
 Discover is the supported CurseForge browse surface on this tab (beyond typing Project IDs or URLs).

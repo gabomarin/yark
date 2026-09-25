@@ -63,6 +63,11 @@ export interface ServerProfile {
   mods: string[];
   /** Configured mod IDs that are omitted from `-mods=` until re-enabled. */
   disabledMods?: string[];
+  /**
+   * Configured, enabled mod IDs emitted only on `-passivemods=` (load data,
+   * no spawns) and removed from `-mods=`. Passive implies enabled.
+   */
+  passiveMods?: string[];
   /** CurseForge metadata retained across UI sessions (Worker-backed). */
   modMetadataCache?: Record<string, ModMetadata>;
   createdAt: string;
@@ -86,6 +91,7 @@ type ServerProfileModsPatch = {
   group: "mods";
   mods: string[];
   disabledMods: string[];
+  passiveMods: string[];
   modMetadataCache?: Record<string, ModMetadata>;
 };
 

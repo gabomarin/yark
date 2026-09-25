@@ -220,6 +220,7 @@ export class ModsService {
     existing: {
       mods: string[];
       disabledMods?: string[];
+      passiveMods?: string[];
       modMetadataCache?: Record<string, ModMetadata>;
     },
   ): Promise<ServerProfileInput> {
@@ -265,10 +266,20 @@ export class ModsService {
       if (!configured.has(id)) delete cache[id];
     }
 
+    const retainConfigured = (ids: readonly string[]): string[] => [
+      ...new Set(ids.map((id) => id.trim()).filter((id) => configured.has(id))),
+    ];
+    const disabledMods = retainConfigured(input.disabledMods ?? existing.disabledMods ?? []);
+    const disabledSet = new Set(disabledMods);
+    const passiveMods = retainConfigured(input.passiveMods ?? existing.passiveMods ?? []).filter(
+      (id) => !disabledSet.has(id),
+    );
+
     return {
       ...input,
       mods: input.mods.map((id) => normalizeModId(id)),
-      disabledMods: (input.disabledMods ?? existing.disabledMods ?? []).filter((id) => configured.has(id.trim())),
+      disabledMods,
+      passiveMods,
       modMetadataCache: cache,
     };
   }

@@ -172,6 +172,7 @@ export class InstanceClone {
       structuredLaunchArgs: { ...(source.structuredLaunchArgs ?? {}) },
       mods: [...source.mods],
       disabledMods: [...(source.disabledMods ?? [])],
+      passiveMods: [...(source.passiveMods ?? [])],
       modMetadataCache: { ...(source.modMetadataCache ?? {}) },
       autoStart: source.autoStart,
       useAsaApi: source.useAsaApi === true,

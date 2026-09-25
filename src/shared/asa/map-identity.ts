@@ -11,6 +11,7 @@ export interface MapIdentityFields {
   mapModId?: string | null;
   mods?: string[];
   disabledMods?: string[];
+  passiveMods?: string[];
 }
 
 type MapIdentityKind = "official" | "custom";
@@ -225,6 +226,7 @@ export function validateMapIdentity(fields: MapIdentityFields): MapIdentityIssue
   const modId = rawModId;
   const mods = fields.mods ?? [];
   const disabled = new Set(fields.disabledMods ?? []);
+  const passive = new Set(fields.passiveMods ?? []);
   if (!mods.includes(modId)) {
     issues.push({
       field: "mapModId",
@@ -235,6 +237,12 @@ export function validateMapIdentity(fields: MapIdentityFields): MapIdentityIssue
     issues.push({
       field: "mapModId",
       message: "Map mod Project ID is disabled and will be omitted from -mods=",
+      severity: "warning",
+    });
+  } else if (passive.has(modId)) {
+    issues.push({
+      field: "mapModId",
+      message: "Map mod Project ID is passive and will be omitted from -mods= — mark it active",
       severity: "warning",
     });
   }

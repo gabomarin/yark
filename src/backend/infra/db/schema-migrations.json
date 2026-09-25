@@ -110,5 +110,9 @@
   {
     "version": 28,
     "sql": "ALTER TABLE hosted_resources ADD COLUMN kind TEXT;"
+  },
+  {
+    "version": 29,
+    "sql": "\n      ALTER TABLE servers ADD COLUMN passive_mods TEXT NOT NULL DEFAULT '[]';\n    "
   }
 ]

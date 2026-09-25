@@ -45,6 +45,8 @@ interface Props {
   onToggle: (id: string, enabled: boolean) => void;
   onRemove: (id: string) => void;
   onOpenExternal: (url: string) => void;
+  /** Server mode action: toggle passive load (`-passivemods=`). */
+  onSetPassive?: (row: ModRow) => void;
   /** Persist load-order change (server mode only). */
   onReorder?: (orderedIds: string[]) => void;
   /**
@@ -98,6 +100,7 @@ export function ServerModsTable(props: Props): ReactElement {
     onToggle: props.onToggle,
     onRemove: props.onRemove,
     onOpenExternal: props.onOpenExternal,
+    onSetPassive: props.onSetPassive,
     onReorder: props.onReorder,
   });
   useEffect(() => {
@@ -107,6 +110,7 @@ export function ServerModsTable(props: Props): ReactElement {
       onToggle: props.onToggle,
       onRemove: props.onRemove,
       onOpenExternal: props.onOpenExternal,
+      onSetPassive: props.onSetPassive,
       onReorder: props.onReorder,
     };
   });
@@ -122,6 +126,7 @@ export function ServerModsTable(props: Props): ReactElement {
         onToggle: (id, enabled) => handlersRef.current.onToggle(id, enabled),
         onRemove: (id) => handlersRef.current.onRemove(id),
         onOpenExternal: (url) => handlersRef.current.onOpenExternal(url),
+        onSetPassive: (row) => handlersRef.current.onSetPassive?.(row),
       }),
     [props.mode, props.busyKey],
   );
@@ -145,6 +150,7 @@ export function ServerModsTable(props: Props): ReactElement {
       "data-mod-row": true,
       "data-mod-key": row.key,
       "data-mod-enabled": row.enabled ? "true" : "false",
+      "data-mod-passive": row.passive ? "true" : "false",
     }),
     [],
   );
@@ -176,6 +182,7 @@ export function ServerModsTable(props: Props): ReactElement {
           });
         },
         onOpenExternal: (url) => handlersRef.current.onOpenExternal(url),
+        onSetPassive: (row) => handlersRef.current.onSetPassive?.(row),
       });
       event.preventDefault();
       event.stopPropagation();

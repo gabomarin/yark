@@ -20,6 +20,7 @@ interface Props {
   onToggle: (id: string, enabled: boolean) => void;
   onRemove: (id: string) => void;
   onOpenExternal: (url: string) => void;
+  onSetPassive: (row: ModRow) => void;
   onReorder: (orderedIds: string[]) => void;
 }
 
@@ -58,6 +59,7 @@ export function ServerModsServerSection(props: Props): ReactElement {
             onToggle={props.onToggle}
             onRemove={props.onRemove}
             onOpenExternal={props.onOpenExternal}
+            onSetPassive={props.onSetPassive}
             onReorder={props.onReorder}
           />
         )}

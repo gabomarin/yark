@@ -110,23 +110,27 @@ export function composeModLists<TCache>(
   source: {
     mods: readonly string[];
     disabledMods: readonly string[];
+    passiveMods?: readonly string[];
     modMetadataCache: Record<string, TCache>;
   },
   target: {
     mods: readonly string[];
     disabledMods: readonly string[];
+    passiveMods?: readonly string[];
     modMetadataCache: Record<string, TCache>;
   },
   strategy: ConfigTransferIniStrategy,
 ): {
   mods: string[];
   disabledMods: string[];
+  passiveMods: string[];
   modMetadataCache: Record<string, TCache>;
 } {
   if (strategy === "replace") {
     return {
       mods: [...source.mods],
       disabledMods: [...source.disabledMods],
+      passiveMods: [...(source.passiveMods ?? [])],
       modMetadataCache: { ...source.modMetadataCache },
     };
   }
@@ -140,9 +144,16 @@ export function composeModLists<TCache>(
   for (const id of source.disabledMods) {
     if (modSet.has(id.toLowerCase())) disabled.add(id);
   }
+  const disabledKeys = new Set([...disabled].map((id) => id.toLowerCase()));
+  const passive = new Set<string>();
+  for (const id of [...(target.passiveMods ?? []), ...(source.passiveMods ?? [])]) {
+    const key = id.toLowerCase();
+    if (modSet.has(key) && !disabledKeys.has(key)) passive.add(id);
+  }
   return {
     mods,
     disabledMods: [...disabled],
+    passiveMods: [...passive],
     modMetadataCache: {
       ...target.modMetadataCache,
       ...source.modMetadataCache,

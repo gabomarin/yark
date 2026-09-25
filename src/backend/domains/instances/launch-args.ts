@@ -5,10 +5,14 @@ import { linkedOfficialMapModLaunchId } from "@shared/asa/map-identity";
 import {
   argsIncludeServerPlatform,
   buildStructuredLaunchArgList,
+  isPassiveModsArg,
   isWinLiveMaxPlayersArg,
+  parsePassiveModIds,
+  resolveProfileModBuckets,
   YARK_DEFAULT_SERVER_PLATFORM_ARG,
   yarkClusterArgs,
   yarkModsArg,
+  yarkPassiveModsArg,
   yarkPortArg,
   yarkWinLiveMaxPlayersArg,
 } from "@shared/asa/structured-launch-options";
@@ -116,7 +120,7 @@ export function buildLaunchArgs(profile: ServerProfile): string[] {
     (arg) => !isWinLiveMaxPlayersArg(arg),
   );
   const extraArgs = profile.extraArgs.filter((arg) => !isWinLiveMaxPlayersArg(arg));
-  const trailingArgs = [...structuredArgs, ...extraArgs];
+  let trailingArgs = [...structuredArgs, ...extraArgs];
   const args: string[] = [mapUrl, yarkPortArg(profile.gamePort)];
   if (profile.maxPlayers > 0) {
     args.push(yarkWinLiveMaxPlayersArg(profile.maxPlayers));
@@ -126,17 +130,28 @@ export function buildLaunchArgs(profile: ServerProfile): string[] {
     args.push(YARK_DEFAULT_SERVER_PLATFORM_ARG);
   }
 
-  const disabledMods = new Set(profile.disabledMods ?? []);
-  const enabledMods = profile.mods.filter((id) => !disabledMods.has(id));
+  const { active: profileActive, passive: profilePassive } = resolveProfileModBuckets(profile);
+  // Mods tab owns `-passivemods=` whenever the profile declares passive IDs:
+  // strip manual tokens so a legacy structured/raw value cannot duplicate them.
+  const ownsPassive = profilePassive.length > 0;
+  if (ownsPassive) {
+    trailingArgs = trailingArgs.filter((arg) => !isPassiveModsArg(arg));
+  }
+  // Dedupe either direction: a manual passive ID must never also land on `-mods=`.
+  const passiveIds = new Set([...profilePassive, ...(ownsPassive ? [] : parsePassiveModIds(trailingArgs))]);
+  const activeMods = profileActive.filter((id) => !passiveIds.has(id));
   const mapModLaunchId = linkedOfficialMapModLaunchId({
     map: profile.map,
     mapModId: profile.mapModId,
   });
-  if (mapModLaunchId !== null && enabledMods.includes(mapModLaunchId)) {
+  if (mapModLaunchId !== null && activeMods.includes(mapModLaunchId)) {
     args.push(`-MapModID=${mapModLaunchId}`);
   }
-  if (enabledMods.length > 0) {
-    args.push(yarkModsArg(enabledMods));
+  if (activeMods.length > 0) {
+    args.push(yarkModsArg(activeMods));
+  }
+  if (ownsPassive) {
+    args.push(yarkPassiveModsArg(profilePassive));
   }
   if (profile.clusterId !== null && profile.clusterDir !== null) {
     args.push(...yarkClusterArgs(profile.clusterId, profile.clusterDir));

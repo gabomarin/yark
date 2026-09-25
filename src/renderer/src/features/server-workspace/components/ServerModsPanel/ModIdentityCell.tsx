@@ -7,6 +7,7 @@ import classes from "./ServerModsPanel.module.css";
 export function ModIdentityCell(props: { row: ModRow }): ReactElement {
   const row = props.row;
   const category = pickModListCategory(row.categories);
+  const hasBadges = category.label !== null || row.passive;
   return (
     <Group wrap="nowrap" gap="sm" miw={0} className={classes.identityGroup}>
       <ModThumbnail src={row.thumbnailUrl} />
@@ -17,29 +18,51 @@ export function ModIdentityCell(props: { row: ModRow }): ReactElement {
         <Text size="xs" c="dimmed" lineClamp={1}>
           {row.author}
         </Text>
-        {category.label !== null && (
-          <CategoryBadges label={category.label} extraLabels={category.extraLabels} isMap={category.isMap} />
+        {hasBadges && (
+          <CategoryBadges
+            label={category.label}
+            extraLabels={category.extraLabels}
+            isMap={category.isMap}
+            passive={row.passive}
+          />
         )}
       </div>
     </Group>
   );
 }
 
-function CategoryBadges(props: { label: string; extraLabels: string[]; isMap: boolean }): ReactElement {
+function CategoryBadges(props: {
+  label: string | null;
+  extraLabels: string[];
+  isMap: boolean;
+  passive: boolean;
+}): ReactElement {
   const extras = props.extraLabels.join(", ");
   const badges = (
     <div className={classes.categoryRow}>
-      <Badge
-        variant="light"
-        color={props.isMap ? "attention" : "gray"}
-        className={classes.categoryBadge}
-        title={extras.length === 0 ? props.label : undefined}
-      >
-        {props.label}
-      </Badge>
+      {props.label !== null && (
+        <Badge
+          variant="light"
+          color={props.isMap ? "attention" : "gray"}
+          className={classes.categoryBadge}
+          title={extras.length === 0 ? props.label : undefined}
+        >
+          {props.label}
+        </Badge>
+      )}
       {props.extraLabels.length > 0 && (
         <Badge variant="light" color="gray" className={classes.categoryExtra}>
           +{props.extraLabels.length}
+        </Badge>
+      )}
+      {props.passive && (
+        <Badge
+          variant="light"
+          color="attention"
+          className={classes.categoryBadge}
+          title="Loads data only (-passivemods=)"
+        >
+          Passive
         </Badge>
       )}
     </div>
