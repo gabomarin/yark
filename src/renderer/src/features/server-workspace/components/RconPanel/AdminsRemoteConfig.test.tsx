@@ -60,8 +60,8 @@ describe("AdminsRemoteConfig", () => {
     const user = userEvent.setup();
     const onUrlChange = setup();
 
-    await user.click(await screen.findByLabelText("AdminListURL"));
-    await user.click(await screen.findByRole("option", { name: "Admins allowlist" }));
+    await user.click(await screen.findByRole("button", { name: "Choose a YARK Hosted Resource" }));
+    await user.click(await screen.findByRole("option", { name: /Admins allowlist/ }));
 
     expect(onUrlChange).toHaveBeenCalledWith(ADMIN_URL);
   });
@@ -83,7 +83,7 @@ describe("AdminsRemoteConfig", () => {
       </AppProviders>,
     );
 
-    expect(await screen.findByLabelText("AdminListURL")).toBeDisabled();
+    expect(await screen.findByRole("combobox", { name: "AdminListURL" })).toBeDisabled();
     expect(screen.queryByRole("button", { name: "Validate" })).not.toBeInTheDocument();
   });
 });

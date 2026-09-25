@@ -9,6 +9,9 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+- URL fields that support Hosted Resources now pair the free-form URL input with a dedicated resource picker button, so it is clear operators can type a URL or choose a YARK Hosted Resource.
+- getyark.com and a Shields badge can now show installer downloads only, backed by a scheduled Worker that counts just the `.exe` release assets.
+
 ## [0.23.0] - 2026-09-23
 
 ### Added

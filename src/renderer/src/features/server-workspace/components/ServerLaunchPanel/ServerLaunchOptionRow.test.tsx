@@ -76,7 +76,7 @@ describe("ServerLaunchOptionRow hosted resource wiring (#577)", () => {
 
     const field = container.querySelector("[data-hosted-resource-selector]");
     expect(field).not.toBeNull();
-    await user.click(field as HTMLElement);
+    await user.click(screen.getByRole("button", { name: "Choose a YARK Hosted Resource" }));
     await user.click(await screen.findByRole("option", { name: "Dynamic config" }));
 
     expect(onValueChange).toHaveBeenCalledWith(DYNAMIC_URL);
@@ -95,7 +95,7 @@ describe("ServerLaunchOptionRow hosted resource wiring (#577)", () => {
 
     const field = container.querySelector("[data-hosted-resource-selector]");
     expect(field).not.toBeNull();
-    await user.click(field as HTMLElement);
+    await user.click(screen.getByRole("button", { name: "Choose a YARK Hosted Resource" }));
     await user.click(await screen.findByRole("option", { name: "Notice page" }));
 
     expect(onValueChange).toHaveBeenCalledWith(NOTIFICATION_URL);
