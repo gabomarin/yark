@@ -23,13 +23,17 @@ export function sumExeDownloads(releases: readonly GitHubRelease[]): number {
   let total = 0;
   for (const release of releases) {
     for (const asset of release.assets ?? []) {
-      if (asset.name.toLowerCase().endsWith(EXE_SUFFIX)) total += asset.download_count;
+      // `Number.isFinite` also rejects a non-number at runtime, so a drifted API
+      // response can never poison the total with NaN (which reads back as 0).
+      if (asset.name.toLowerCase().endsWith(EXE_SUFFIX) && Number.isFinite(asset.download_count)) {
+        total += asset.download_count;
+      }
     }
   }
   return total;
 }
 
-/** Constant-time compare for the refresh token (avoids short-circuit leak). */
+/** Constant-time over equal-length inputs; a length mismatch returns early (leaks only the length). */
 export function safeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   let diff = 0;

@@ -76,10 +76,14 @@ export function HostedResourceSelector(props: Props): ReactElement {
               disabled={props.disabled}
               value={props.value}
               onChange={(event) => props.onChange(event.currentTarget.value)}
+              // Clicking back into the field to edit a URL closes the list instead of
+              // leaving it floating over the form (opening stays button-only).
+              onFocus={() => combobox.closeDropdown()}
               placeholder="https://…"
               leftSection={<LinkSimple size={14} />}
               leftSectionPointerEvents="none"
-              // A touch more than the section width so the last character never touches the picker.
+              // Section sized for the english "Choose" label + caret; the +6px keeps the
+              // last typed character off the picker. Re-check both if the label changes.
               styles={{ input: { paddingInlineEnd: "calc(var(--input-right-section-size) + 6px)" } }}
               rightSectionWidth={92}
               rightSectionPointerEvents="all"

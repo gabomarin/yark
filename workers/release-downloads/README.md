@@ -16,8 +16,10 @@ Runbook, cache rules, and deploy checklist: [docs/release-downloads.md](../../do
 | Method | Path | Notes |
 | --- | --- | --- |
 | `GET` | `/` | `{ "downloads": number, "updatedAt": string \| null }`; `Access-Control-Allow-Origin: *`, `max-age=300` |
-| `GET` | `/refresh?token=…` | Forces a recount and returns the fresh JSON. `404` unless `REFRESH_TOKEN` is set and matches. `no-store`. |
+| `GET` | `/refresh` | Forces a recount and returns the fresh JSON. `404` unless `REFRESH_TOKEN` is set and the `Authorization: Bearer` token matches. `no-store`. |
 | — | cron | `scheduled()` recounts from GitHub and writes KV; see `docs/release-downloads.md` |
+
+Any other path returns `404`; non-`GET`/`HEAD` returns `405`.
 
 ## Setup
 
@@ -38,7 +40,7 @@ request as _not planned_; the Quick Edit trigger button is unreliable). To
 recount on demand after a deploy or a release:
 
 ```bash
-curl "https://<worker-url>/refresh?token=$REFRESH_TOKEN"
+curl -H "Authorization: Bearer $REFRESH_TOKEN" "https://<worker-url>/refresh"
 ```
 
 Without `REFRESH_TOKEN` the route returns `404` (off by default). Local:

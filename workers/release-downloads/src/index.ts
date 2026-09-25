@@ -82,24 +82,35 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
+    if (request.method !== "GET" && request.method !== "HEAD") {
+      return new Response("Method not allowed", { status: 405, headers: { Allow: "GET, HEAD" } });
+    }
+
     // Manual recount. Cloudflare has no "run now" in the dashboard (the Quick
     // Edit trigger button is unreliable), so a fetch route is the sanctioned
-    // way to force a refresh. Guarded by a secret; 404 hides the route when
-    // unconfigured or the token is wrong.
+    // way to force a refresh. The secret travels as `Authorization: Bearer`
+    // (never a query string, which invocation logs can capture); 404 hides the
+    // route when it is unconfigured or the token is wrong.
     if (url.pathname === "/refresh") {
-      const token = url.searchParams.get("token") ?? "";
+      const token = request.headers.get("Authorization")?.replace(/^Bearer /, "") ?? "";
       if (!env.REFRESH_TOKEN || !safeEqual(token, env.REFRESH_TOKEN)) {
         return new Response("Not found", { status: 404 });
       }
       try {
         await refresh(env);
       } catch (error) {
+        // Log the detail; the caller gets a bounded payload, not GitHub internals.
+        console.error("refresh failed:", error);
         return Response.json(
-          { ok: false, error: String(error) },
+          { ok: false, error: "refresh failed" },
           { status: 502, headers: { "Cache-Control": "no-store" } },
         );
       }
       return Response.json(await readCount(env), { headers: { "Cache-Control": "no-store" } });
+    }
+
+    if (url.pathname !== "/") {
+      return new Response("Not found", { status: 404 });
     }
 
     // Public JSON for the Shields badge and getyark.com (client-side fetch).

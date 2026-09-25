@@ -163,6 +163,36 @@ describe("HostedResourceSelector", () => {
     expect(screen.getByRole("option", { name: /Notifications/ })).toBeInTheDocument();
   });
 
+  it("closes the resource list when the field is focused for editing", async () => {
+    const user = userEvent.setup();
+    const api = createRendererApiMock({
+      getHostedResourcesOverview: vi.fn().mockResolvedValue({ ok: true, data: overview([dto()]) }),
+    });
+    renderSelector(api, "");
+    const field = await screen.findByRole("combobox", { name: "AdminListURL" });
+
+    await user.click(screen.getByRole("button", { name: "Choose a YARK Hosted Resource" }));
+    expect(field).toHaveAttribute("aria-expanded", "true");
+
+    await user.click(field);
+    expect(field).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("opens the resource list from the field with the keyboard", async () => {
+    const user = userEvent.setup();
+    const api = createRendererApiMock({
+      getHostedResourcesOverview: vi.fn().mockResolvedValue({ ok: true, data: overview([dto()]) }),
+    });
+    renderSelector(api, "");
+    const field = await screen.findByRole("combobox", { name: "AdminListURL" });
+
+    await user.click(field);
+    await user.keyboard("{ArrowDown}");
+
+    expect(field).toHaveAttribute("aria-expanded", "true");
+    expect(await screen.findByRole("option", { name: /Admins allowlist/ })).toBeInTheDocument();
+  });
+
   it("offers a pre-filled create flow when empty and assigns the new URL", async () => {
     const user = userEvent.setup();
     const api = createRendererApiMock({

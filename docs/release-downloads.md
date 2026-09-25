@@ -29,7 +29,8 @@ sum across releases — hence this Worker.
 
 1. `scheduled()` (cron `17 */6 * * *`, every 6h) pages GitHub Releases
    (`per_page=100`), sums `.exe` downloads, and writes `exe` + `updatedAt` to KV.
-2. `GET /` reads KV and returns `{ downloads, updatedAt }`.
+2. `GET /` reads KV and returns `{ downloads, updatedAt }`. Any other path
+   returns `404`, and non-`GET`/`HEAD` returns `405`.
 
 KV is the **last good value**: if GitHub is down or rate-limited, `refresh()`
 throws before writing, so the endpoint keeps serving the previous count. KV
@@ -55,16 +56,20 @@ feature request for a dashboard button as _not planned_. Adding a Cron Trigger
 also takes up to 15 minutes to propagate, so tweaking the schedule is not a
 workaround.
 
-Instead, `GET /refresh?token=…` calls the same `refresh()` path as the cron:
+Instead, `GET /refresh` calls the same `refresh()` path as the cron. The secret
+travels in the `Authorization` header, never the query string, so it does not
+land in Cloudflare invocation logs, `wrangler tail`, or browser history:
 
 ```bash
-curl "https://<worker-url>/refresh?token=$REFRESH_TOKEN"
+curl -H "Authorization: Bearer $REFRESH_TOKEN" "https://<worker-url>/refresh"
 ```
 
 - Requires the `REFRESH_TOKEN` secret; the route is `404` when it is unset or
-  the token does not match (`safeEqual`, constant-time).
+  the bearer token does not match (`safeEqual`, constant-time over equal-length
+  inputs).
 - Returns the fresh `{ downloads, updatedAt }` with `Cache-Control: no-store`,
-  or `502` if GitHub fails (KV keeps the previous value).
+  or `502` (bounded `{ ok: false }` body; the detail goes to `console.error`) if
+  GitHub fails (KV keeps the previous value).
 - Local equivalent: `npx wrangler dev --test-scheduled`, then
   `curl "http://localhost:8787/__scheduled?cron=17%20*/6%20*%20*%20*"`.
 

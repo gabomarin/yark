@@ -5,7 +5,7 @@ workers_dev = true
 
 # Secrets (dashboard or CLI — never commit real values):
 #   npx wrangler secret put GITHUB_TOKEN     # optional read-only token
-#   npx wrangler secret put REFRESH_TOKEN    # enables GET /refresh?token=…
+#   npx wrangler secret put REFRESH_TOKEN    # enables GET /refresh (Authorization: Bearer)
 #
 # KV namespace (create once, paste the id below):
 #   npx wrangler kv namespace create DOWNLOADS
