@@ -37,10 +37,10 @@ throws before writing, so the endpoint keeps serving the previous count. KV
 
 ## Consumers
 
-| Consumer | How it reads |
-| --- | --- |
-| Shields badge | `https://img.shields.io/badge/dynamic/json?url=<worker-url>/&query=$.downloads&label=.exe%20downloads` |
-| getyark.com | client-side `fetch(<worker-url>/)`; the site is static (Astro/Pages) so a build-time fetch would freeze the number until the next site deploy |
+| Consumer      | How it reads                                                                                                                                  |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Shields badge | `https://img.shields.io/badge/dynamic/json?url=<worker-url>/&query=$.downloads&label=.exe%20downloads`                                        |
+| getyark.com   | client-side `fetch(<worker-url>/)`; the site is static (Astro/Pages) so a build-time fetch would freeze the number until the next site deploy |
 
 The endpoint sends `Access-Control-Allow-Origin: *` for the website fetch.
 Shields fetches server-side and needs no CORS.
