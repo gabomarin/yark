@@ -17,6 +17,8 @@ export default defineConfig(
     "node_modules/**",
     "out/**",
     "dist/**",
+    "**/.wrangler/**",
+    "**/.wrangler-dry-run/**",
     "website/**",
     "coverage/**",
     "build/**",

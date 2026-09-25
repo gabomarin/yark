@@ -1,0 +1,33 @@
+name = "yark-release-downloads"
+main = "src/index.ts"
+compatibility_date = "2025-07-01"
+workers_dev = true
+
+# Secrets (dashboard or CLI — never commit real values):
+#   npx wrangler secret put GITHUB_TOKEN     # optional read-only token
+#   npx wrangler secret put REFRESH_TOKEN    # enables GET /refresh?token=…
+#
+# KV namespace (create once, paste the id below):
+#   npx wrangler kv namespace create DOWNLOADS
+#
+# Runbook: docs/release-downloads.md
+
+[vars]
+# Public repository to count. Installer assets only (`*.exe`).
+GITHUB_REPOSITORY = "gabomarin/yark"
+
+[[kv_namespaces]]
+binding = "DOWNLOADS"
+id = "fd7fe683614d44adb8cac3e4715bba29"
+
+# Every 6 hours (off the hour to dodge cron congestion).
+[triggers]
+crons = ["17 */6 * * *"]
+
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+invocation_logs = true
