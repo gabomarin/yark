@@ -59,9 +59,7 @@ export function readTributeValues(text: string): TributeSettingValues {
 }
 
 function comparableValue(key: ClusterWideTributeKey, value: string): string {
-  return expirationKeys.has(key) || slotKeys.has(key)
-    ? String(Number(value))
-    : value.trim().toLowerCase();
+  return expirationKeys.has(key) || slotKeys.has(key) ? String(Number(value)) : value.trim().toLowerCase();
 }
 
 export function summarizeClusterWideValues(
@@ -82,7 +80,8 @@ export function summarizeClusterWideValues(
 export function validateClusterWideValues(values: ClusterWideTributeValues): string | null {
   for (const key of TRIBUTE_EXPIRATION_KEYS) {
     const value = values[key];
-    if (!Number.isInteger(value) || value < 0) return `${tributeSettingMeta(key).key} must be a non-negative whole number of seconds.`;
+    if (!Number.isInteger(value) || value < 0)
+      return `${tributeSettingMeta(key).key} must be a non-negative whole number of seconds.`;
     if (value > MAX_TRIBUTE_EXPIRATION_SECONDS) return "Expiration timers cannot exceed one year (31,536,000 seconds).";
   }
   for (const key of TRIBUTE_SLOT_KEYS) {

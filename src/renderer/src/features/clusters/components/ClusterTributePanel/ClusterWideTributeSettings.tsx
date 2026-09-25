@@ -1,7 +1,12 @@
 import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 import { Alert, Badge, Button, Group, NumberInput, Stack, Table, Text } from "@mantine/core";
-import type { ClusterIniTemplateFileSelection, ServerIniSnapshot, ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import type {
+  ClusterIniTemplateFileSelection,
+  ServerIniSnapshot,
+  ServerProfile,
+  ServerRuntimeInfo,
+} from "@shared/types";
 import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import { resolveServerRuntime } from "../../createClusterModel";
 import { templateApplyIneligibilityReason } from "../../templateApplyModel";
@@ -53,7 +58,9 @@ function numericFormValues(values: FormValues): ClusterWideTributeValues | null 
   if (CLUSTER_WIDE_TRIBUTE_KEYS.some((key) => values[key].trim() === "" || !Number.isFinite(Number(values[key])))) {
     return null;
   }
-  return Object.fromEntries(CLUSTER_WIDE_TRIBUTE_KEYS.map((key) => [key, Number(values[key])])) as ClusterWideTributeValues;
+  return Object.fromEntries(
+    CLUSTER_WIDE_TRIBUTE_KEYS.map((key) => [key, Number(values[key])]),
+  ) as ClusterWideTributeValues;
 }
 
 function displayValue(key: ClusterWideTributeKey, value: string | null): string {
@@ -81,15 +88,14 @@ export function ClusterWideTributeSettings(props: Props): ReactElement {
     const snapshot = props.snapshots.get(member.id);
     return snapshot === undefined ? null : readTributeValues(snapshot.payload.gameUserSettings);
   });
-  const status = summarizeClusterWideValues(
-    memberValues.flatMap((values) => (values === null ? [] : [values])),
-  );
+  const status = summarizeClusterWideValues(memberValues.flatMap((values) => (values === null ? [] : [values])));
   const eligible = props.members.filter(
     (member) => templateApplyIneligibilityReason(resolveServerRuntime(props.statuses, member.id)) === null,
   );
   const skipped = props.members.filter((member) => !eligible.some((candidate) => candidate.id === member.id));
   const parsedValues = numericFormValues(form);
-  const validationError = parsedValues === null ? "Enter a value for each setting." : validateClusterWideValues(parsedValues);
+  const validationError =
+    parsedValues === null ? "Enter a value for each setting." : validateClusterWideValues(parsedValues);
 
   const updateForm = (key: ClusterWideTributeKey, value: string | number): void => {
     setForm((current) => ({ ...current, [key]: String(value) }));
@@ -127,7 +133,9 @@ export function ClusterWideTributeSettings(props: Props): ReactElement {
           `Template saved. Updated ${eligible.length - failures.length} of ${eligible.length} stopped members. ${failures.join("; ")}`,
         );
       } else {
-        setNotice(`Saved cluster-wide values and updated ${eligible.length} stopped member${eligible.length === 1 ? "" : "s"}.`);
+        setNotice(
+          `Saved cluster-wide values and updated ${eligible.length} stopped member${eligible.length === 1 ? "" : "s"}.`,
+        );
       }
       setReviewOpen(false);
     } catch (cause) {
@@ -148,12 +156,20 @@ export function ClusterWideTributeSettings(props: Props): ReactElement {
     <Stack gap="xs">
       <Group justify="space-between" align="flex-start" wrap="wrap">
         <div>
-          <Text fw={600} size="sm">Cluster-wide settings</Text>
-          <Text size="xs" c="dimmed">Expiration timers and slot caps are aligned by restoring the GUS template.</Text>
+          <Text fw={600} size="sm">
+            Cluster-wide settings
+          </Text>
+          <Text size="xs" c="dimmed">
+            Expiration timers and slot caps are aligned by restoring the GUS template.
+          </Text>
         </div>
       </Group>
 
-      {error !== null && <Alert color="red" title="Tribute settings need attention">{error}</Alert>}
+      {error !== null && (
+        <Alert color="red" title="Tribute settings need attention">
+          {error}
+        </Alert>
+      )}
       {notice !== null && <Alert color="ok">{notice}</Alert>}
 
       <Table.ScrollContainer minWidth={900} type="native">
@@ -184,7 +200,9 @@ export function ClusterWideTributeSettings(props: Props): ReactElement {
                   <Table.Th scope="row">
                     <Stack gap={2}>
                       <Text size="sm">{member.name}</Text>
-                      <Text size="xs" c="dimmed">{resolveServerRuntime(props.statuses, member.id).status}</Text>
+                      <Text size="xs" c="dimmed">
+                        {resolveServerRuntime(props.statuses, member.id).status}
+                      </Text>
                     </Stack>
                   </Table.Th>
                   {CLUSTER_WIDE_TRIBUTE_KEYS.map((key) => {
@@ -193,7 +211,9 @@ export function ClusterWideTributeSettings(props: Props): ReactElement {
                       <Table.Td key={key}>
                         <Text size="xs">{displayValue(key, value)}</Text>
                         {value === null && (
-                          <Text size="xs" c="dimmed">Catalog default: {tributeSettingMeta(key).defaultValue}</Text>
+                          <Text size="xs" c="dimmed">
+                            Catalog default: {tributeSettingMeta(key).defaultValue}
+                          </Text>
                         )}
                       </Table.Td>
                     );
@@ -206,12 +226,17 @@ export function ClusterWideTributeSettings(props: Props): ReactElement {
       </Table.ScrollContainer>
 
       <Text size="xs" c="dimmed">
-        A mismatch or a missing timer is shown per member above. Missing keys use ASA/catalog defaults; YARK does not assume those values are saved in the file.
+        A mismatch or a missing timer is shown per member above. Missing keys use ASA/catalog defaults; YARK does not
+        assume those values are saved in the file.
       </Text>
 
       <Stack gap="xs">
-        <Text fw={600} size="sm">Set values for the cluster</Text>
-        <Text size="xs" c="dimmed">Inputs start from the first member's saved values; missing keys use the catalog defaults shown above.</Text>
+        <Text fw={600} size="sm">
+          Set values for the cluster
+        </Text>
+        <Text size="xs" c="dimmed">
+          Inputs start from the first member's saved values; missing keys use the catalog defaults shown above.
+        </Text>
         <Group align="flex-start" grow>
           {TRIBUTE_EXPIRATION_KEYS.map((key) => (
             <NumberInput
@@ -240,7 +265,11 @@ export function ClusterWideTributeSettings(props: Props): ReactElement {
             />
           ))}
         </Group>
-        {validationError !== null && <Text size="xs" c="red">{validationError}</Text>}
+        {validationError !== null && (
+          <Text size="xs" c="red">
+            {validationError}
+          </Text>
+        )}
         <Group justify="space-between" align="center" wrap="wrap">
           <Text size="xs" c="dimmed">
             Only stopped members are eligible. Running members are identified and skipped before confirmation.
@@ -264,37 +293,62 @@ export function ClusterWideTributeSettings(props: Props): ReactElement {
         footerAlign="between"
         footer={
           <>
-            <Button variant="default" disabled={applying} onClick={() => setReviewOpen(false)}>Cancel</Button>
-            <Button loading={applying} onClick={() => void apply()}>Save template & restore</Button>
+            <Button variant="default" disabled={applying} onClick={() => setReviewOpen(false)}>
+              Cancel
+            </Button>
+            <Button loading={applying} onClick={() => void apply()}>
+              Save template & restore
+            </Button>
           </>
         }
       >
         <Stack gap="sm">
           <Alert color="attention" title="Cross-ARK data safety">
-            Different expiration timers can cause stored ARK Data to be deleted when a player opens tribute on a map with a shorter timer. Expiration is limited to one year.
+            Different expiration timers can cause stored ARK Data to be deleted when a player opens tribute on a map
+            with a shorter timer. Expiration is limited to one year.
           </Alert>
-          <Text size="sm">The cluster INI template will be updated, then its GameUserSettings.ini settings will be restored to these stopped members:</Text>
-          {eligible.map((member) => <Text key={member.id} size="sm">• {member.name}</Text>)}
+          <Text size="sm">
+            The cluster INI template will be updated, then its GameUserSettings.ini settings will be restored to these
+            stopped members:
+          </Text>
+          {eligible.map((member) => (
+            <Text key={member.id} size="sm">
+              • {member.name}
+            </Text>
+          ))}
           <Stack gap={2}>
-            <Text fw={600} size="sm">Values to apply</Text>
-            {parsedValues !== null && CLUSTER_WIDE_TRIBUTE_KEYS.map((key) => (
-              <Text key={key} size="sm">
-                {SETTING_LABELS[key]}: {key.startsWith("Tribute")
-                  ? formatTributeExpiration(String(parsedValues[key]), tributeSettingMeta(key).defaultValue)
-                  : parsedValues[key]}
-              </Text>
-            ))}
+            <Text fw={600} size="sm">
+              Values to apply
+            </Text>
+            {parsedValues !== null &&
+              CLUSTER_WIDE_TRIBUTE_KEYS.map((key) => (
+                <Text key={key} size="sm">
+                  {SETTING_LABELS[key]}:{" "}
+                  {key.startsWith("Tribute")
+                    ? formatTributeExpiration(String(parsedValues[key]), tributeSettingMeta(key).defaultValue)
+                    : parsedValues[key]}
+                </Text>
+              ))}
           </Stack>
           {skipped.length > 0 && (
             <Stack gap="xs">
-              <Text fw={600} size="sm">Skipped before confirmation</Text>
+              <Text fw={600} size="sm">
+                Skipped before confirmation
+              </Text>
               {skipped.map((member) => {
                 const reason = templateApplyIneligibilityReason(resolveServerRuntime(props.statuses, member.id));
-                return <Text key={member.id} size="sm">{member.name}: {reason ?? "not eligible"}</Text>;
+                return (
+                  <Text key={member.id} size="sm">
+                    {member.name}: {reason ?? "not eligible"}
+                  </Text>
+                );
               })}
             </Stack>
           )}
-          <Text size="xs" c="dimmed">Each restore uses the existing backup, composition, and stopped-server checks. Unrelated INI settings and profile-owned keys are preserved.</Text>
+          <Text size="xs" c="dimmed">
+            Each restore uses the existing backup, composition, and stopped-server checks. Unrelated INI settings and
+            profile-owned keys are preserved.
+          </Text>
         </Stack>
       </AppPanelModal>
     </Stack>

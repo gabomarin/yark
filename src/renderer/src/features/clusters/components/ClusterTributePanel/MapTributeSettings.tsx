@@ -89,7 +89,12 @@ export function MapTributeSettings(props: Props): ReactElement {
       const preview = await window.api.previewServerIni(server.id, payload);
       if (!preview.ok) throw new Error(preview.error ?? "Could not preview the selected map settings");
       if (!preview.data.valid) throw new Error(preview.data.issues.map((issue) => issue.message).join("; "));
-      setReview({ serverId: server.id, values: displayedValues, keys: changedKeys, changedCount: preview.data.changedCount });
+      setReview({
+        serverId: server.id,
+        values: displayedValues,
+        keys: changedKeys,
+        changedCount: preview.data.changedCount,
+      });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     }
@@ -125,9 +130,12 @@ export function MapTributeSettings(props: Props): ReactElement {
   return (
     <Stack gap="xs">
       <div>
-        <Text fw={600} size="sm">This map only</Text>
+        <Text fw={600} size="sm">
+          This map only
+        </Text>
         <Text size="xs" c="dimmed">
-          These controls may intentionally differ by map. They are never part of the cluster drift check or cluster-wide apply.
+          These controls may intentionally differ by map. They are never part of the cluster drift check or cluster-wide
+          apply.
         </Text>
       </div>
       <Group align="flex-end" grow>
@@ -144,11 +152,17 @@ export function MapTributeSettings(props: Props): ReactElement {
           }}
         />
         <Text size="xs" c={busyReason === null ? "dimmed" : "attention"}>
-          {busyReason === null ? `Status: ${runtime?.status ?? "unknown"}` : `${runtime?.status ?? "unknown"}: ${busyReason}`}
+          {busyReason === null
+            ? `Status: ${runtime?.status ?? "unknown"}`
+            : `${runtime?.status ?? "unknown"}: ${busyReason}`}
         </Text>
       </Group>
 
-      {error !== null && <Alert color="red" title="Could not save per-map settings">{error}</Alert>}
+      {error !== null && (
+        <Alert color="red" title="Could not save per-map settings">
+          {error}
+        </Alert>
+      )}
       {notice !== null && <Alert color="ok">{notice}</Alert>}
 
       <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
@@ -168,11 +182,19 @@ export function MapTributeSettings(props: Props): ReactElement {
           </Tooltip>
         ))}
       </SimpleGrid>
-      <Text size="xs" c="dimmed">Unchecked, missing keys use the catalog's False default and are not written unless you change them.</Text>
+      <Text size="xs" c="dimmed">
+        Unchecked, missing keys use the catalog's False default and are not written unless you change them.
+      </Text>
 
       <Group justify="space-between" align="center" wrap="wrap">
-        <Text size="xs" c="dimmed">Changes apply to this stopped server only and use the existing INI backup/save path.</Text>
-        <Button variant="default" disabled={busyReason !== null || snapshot === undefined} onClick={() => void prepareReview()}>
+        <Text size="xs" c="dimmed">
+          Changes apply to this stopped server only and use the existing INI backup/save path.
+        </Text>
+        <Button
+          variant="default"
+          disabled={busyReason !== null || snapshot === undefined}
+          onClick={() => void prepareReview()}
+        >
           Preview map settings
         </Button>
       </Group>
@@ -190,16 +212,28 @@ export function MapTributeSettings(props: Props): ReactElement {
         footerAlign="between"
         footer={
           <>
-            <Button variant="default" disabled={saving} onClick={() => setReview(null)}>Cancel</Button>
-            <Button loading={saving} onClick={() => void save()}>Save this map</Button>
+            <Button variant="default" disabled={saving} onClick={() => setReview(null)}>
+              Cancel
+            </Button>
+            <Button loading={saving} onClick={() => void save()}>
+              Save this map
+            </Button>
           </>
         }
       >
         {review !== null && (
           <Stack gap="sm">
-            <Text size="sm">Only <b>{server?.name}</b> will be changed. This map's values are not copied to other cluster members.</Text>
-            {review.keys.map((key) => <Text key={key} size="sm">{LABELS[key]}: {review.values[key] ? "Enabled" : "Disabled"}</Text>)}
-            <Text size="xs" c="dimmed">Preview: {review.changedCount} INI change(s). The server must remain stopped.</Text>
+            <Text size="sm">
+              Only <b>{server?.name}</b> will be changed. This map's values are not copied to other cluster members.
+            </Text>
+            {review.keys.map((key) => (
+              <Text key={key} size="sm">
+                {LABELS[key]}: {review.values[key] ? "Enabled" : "Disabled"}
+              </Text>
+            ))}
+            <Text size="xs" c="dimmed">
+              Preview: {review.changedCount} INI change(s). The server must remain stopped.
+            </Text>
           </Stack>
         )}
       </AppPanelModal>

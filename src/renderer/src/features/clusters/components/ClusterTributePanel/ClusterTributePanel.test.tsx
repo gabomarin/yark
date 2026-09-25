@@ -78,7 +78,10 @@ function installApi(read: (serverId: string) => ServerIniSnapshot): void {
     ...(window.api ?? {}),
     readServerIni: vi.fn(async (serverId: string) => ({ ok: true, data: read(serverId) })),
     getClusterIniTemplate: vi.fn(async () => ({ ok: true, data: null })),
-    previewClusterIniTemplate: vi.fn(async () => ({ ok: true, data: { valid: true, issues: [], diff: [], changedCount: 6 } })),
+    previewClusterIniTemplate: vi.fn(async () => ({
+      ok: true,
+      data: { valid: true, issues: [], diff: [], changedCount: 6 },
+    })),
     saveClusterIniTemplate: vi.fn(async (clusterId: string, payload: ServerIniPayload) => ({
       ok: true,
       data: {
@@ -128,7 +131,12 @@ describe("ClusterTributePanel", () => {
         <ClusterTributePanel
           clusterId="alpha"
           members={[island, scorched]}
-          statuses={new Map([["srv-a", runtime("stopped")], ["srv-b", { ...runtime("stopped"), serverId: "srv-b" }]])}
+          statuses={
+            new Map([
+              ["srv-a", runtime("stopped")],
+              ["srv-b", { ...runtime("stopped"), serverId: "srv-b" }],
+            ])
+          }
           onChanged={vi.fn()}
         />
       </AppProviders>,
@@ -160,10 +168,12 @@ describe("ClusterTributePanel", () => {
         <ClusterTributePanel
           clusterId="alpha"
           members={[island, scorched]}
-          statuses={new Map([
-            ["srv-a", runtime("stopped")],
-            ["srv-b", { ...runtime("running"), serverId: "srv-b" }],
-          ])}
+          statuses={
+            new Map([
+              ["srv-a", runtime("stopped")],
+              ["srv-b", { ...runtime("running"), serverId: "srv-b" }],
+            ])
+          }
           onChanged={onChanged}
         />
       </AppProviders>,
@@ -180,10 +190,12 @@ describe("ClusterTributePanel", () => {
     expect(window.api.saveClusterIniTemplate).not.toHaveBeenCalled();
 
     await user.click(within(dialog).getByRole("button", { name: /save template & restore/i }));
-    await waitFor(() => expect(window.api.restoreClusterIniFromTemplate).toHaveBeenCalledWith("alpha", "srv-a", {
-      gameUserSettings: true,
-      game: false,
-    }));
+    await waitFor(() =>
+      expect(window.api.restoreClusterIniFromTemplate).toHaveBeenCalledWith("alpha", "srv-a", {
+        gameUserSettings: true,
+        game: false,
+      }),
+    );
     expect(window.api.restoreClusterIniFromTemplate).toHaveBeenCalledTimes(1);
     expect(window.api.saveClusterIniTemplate).toHaveBeenCalledWith(
       "alpha",
@@ -206,10 +218,12 @@ describe("ClusterTributePanel", () => {
         <ClusterTributePanel
           clusterId="alpha"
           members={[island, scorched]}
-          statuses={new Map([
-            ["srv-a", runtime("running")],
-            ["srv-b", { ...runtime("stopped"), serverId: "srv-b" }],
-          ])}
+          statuses={
+            new Map([
+              ["srv-a", runtime("running")],
+              ["srv-b", { ...runtime("stopped"), serverId: "srv-b" }],
+            ])
+          }
           onChanged={vi.fn()}
         />
       </AppProviders>,
@@ -229,10 +243,12 @@ describe("ClusterTributePanel", () => {
         <ClusterTributePanel
           clusterId="alpha"
           members={[island, scorched]}
-          statuses={new Map([
-            ["srv-a", runtime("stopped")],
-            ["srv-b", { ...runtime("stopped"), serverId: "srv-b" }],
-          ])}
+          statuses={
+            new Map([
+              ["srv-a", runtime("stopped")],
+              ["srv-b", { ...runtime("stopped"), serverId: "srv-b" }],
+            ])
+          }
           onChanged={vi.fn()}
         />
       </AppProviders>,

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { defaultClusterWideValues, readTributeValues, summarizeClusterWideValues, validateClusterWideValues } from "./tributeModel";
+import {
+  defaultClusterWideValues,
+  readTributeValues,
+  summarizeClusterWideValues,
+  validateClusterWideValues,
+} from "./tributeModel";
 
 describe("cluster tribute settings model", () => {
   it("uses catalog defaults only to seed the editable form when a key is missing", () => {
@@ -30,9 +35,7 @@ describe("cluster tribute settings model", () => {
 
   it("rejects invalid durations and slot values below the catalog defaults", () => {
     const defaults = defaultClusterWideValues();
-    expect(validateClusterWideValues({ ...defaults, TributeItemExpirationSeconds: 31_536_001 })).toMatch(
-      /one year/i,
-    );
+    expect(validateClusterWideValues({ ...defaults, TributeItemExpirationSeconds: 31_536_001 })).toMatch(/one year/i);
     expect(validateClusterWideValues({ ...defaults, TributeItemExpirationSeconds: 31_536_000 })).toBeNull();
     expect(validateClusterWideValues({ ...defaults, MaxTributeDinos: 19 })).toMatch(/default of 20/i);
     expect(validateClusterWideValues({ ...defaults, MaxTributeItems: 1.5 })).toMatch(/whole number/i);

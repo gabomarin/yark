@@ -54,7 +54,8 @@ export function ClusterTributePanel(props: Props): ReactElement {
           Transfer / tribute
         </Text>
         <Text size="xs" c="dimmed">
-          Expiration timers and upload slots should match across the cluster. A shorter timer can delete stored ARK Data.
+          Expiration timers and upload slots should match across the cluster. A shorter timer can delete stored ARK
+          Data.
         </Text>
       </div>
       {error !== null && (
