@@ -399,7 +399,8 @@ export function resolveProfileModBuckets(profile: {
 }): { active: string[]; passive: string[] } {
   const disabled = new Set(profile.disabledMods ?? []);
   const enabled = profile.mods.filter((id) => !disabled.has(id));
-  const passiveSet = new Set((profile.passiveMods ?? []).filter((id) => enabled.includes(id)));
+  const enabledSet = new Set(enabled);
+  const passiveSet = new Set((profile.passiveMods ?? []).filter((id) => enabledSet.has(id)));
   return {
     active: enabled.filter((id) => !passiveSet.has(id)),
     passive: enabled.filter((id) => passiveSet.has(id)),
