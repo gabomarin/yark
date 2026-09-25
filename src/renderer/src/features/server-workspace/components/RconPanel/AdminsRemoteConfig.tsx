@@ -28,7 +28,6 @@ export function AdminsRemoteConfig(props: AdminsRemoteConfigProps): ReactElement
           value={props.urlDraft}
           size="xs"
           disabled={readOnly}
-          description="Public http(s) URL, or a YARK Hosted Resource. Leave empty to clear."
           onChange={props.onUrlChange}
         />
         <NumberInput
