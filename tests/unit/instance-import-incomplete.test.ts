@@ -148,4 +148,44 @@ describe("InstanceService.importExisting incomplete opt-in (#283)", () => {
     ).rejects.toThrow(/inside an ASA install/i);
     expect(repo.create).not.toHaveBeenCalled();
   });
+
+  it("honors an explicit disabledMods list and defaults to all-disabled (#637)", async () => {
+    const installDir = await mkdtemp(join(tmpdir(), "ark-import-mods-"));
+    tmpDirs.push(installDir);
+    await mkdir(join(installDir, "ShooterGame"), { recursive: true });
+    await mkdir(join(installDir, "Engine"), { recursive: true });
+
+    const create = vi.fn((input: ServerProfileInput): ServerProfile => ({
+      id: "srv-import",
+      ...input,
+      enabled: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }));
+    const repo = {
+      get: vi.fn(() => null),
+      list: vi.fn(() => [] as ServerProfile[]),
+      create,
+      addEvent: vi.fn(),
+    } as unknown as ServerRepository;
+    const service = makeService(repo);
+
+    // Enable-all import (#637): the operator chose to import every mod enabled.
+    await service.importExisting(
+      { ...baseInput(installDir), mods: ["111", "222"], disabledMods: [] },
+      { allowIncompleteInstall: true },
+    );
+    expect(create).toHaveBeenLastCalledWith(expect.objectContaining({ disabledMods: [] }));
+
+    // Explicit subset is preserved.
+    await service.importExisting(
+      { ...baseInput(installDir), mods: ["111", "222"], disabledMods: ["222"] },
+      { allowIncompleteInstall: true },
+    );
+    expect(create).toHaveBeenLastCalledWith(expect.objectContaining({ disabledMods: ["222"] }));
+
+    // No disabledMods → product default stages every discovered ID disabled.
+    await service.importExisting({ ...baseInput(installDir), mods: ["111", "222"] }, { allowIncompleteInstall: true });
+    expect(create).toHaveBeenLastCalledWith(expect.objectContaining({ disabledMods: ["111", "222"] }));
+  });
 });

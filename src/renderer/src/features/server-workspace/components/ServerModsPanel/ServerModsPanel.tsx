@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
-import { SegmentedControl, Stack } from "@mantine/core";
+import { Button, Group, SegmentedControl, Stack } from "@mantine/core";
 import { isMetadataServiceNotConfiguredMessage } from "@shared/mods/curseforge-proxy-url";
 import type { ModMetadata, ModSearchPage, ServerProfile } from "@shared/types";
 import { prepareModAddApply, type ModAddImportProgress } from "@shared/mods/mod-add-input";
@@ -20,6 +20,7 @@ import {
   type ModRow,
 } from "./serverModsModel";
 import { createServerModsListMutations } from "./serverModsListMutations";
+import { confirmRemoveDisabledMods } from "./confirmRemoveServerMod";
 import { inspectServerMod } from "./serverModsInspect";
 import { notifyNewlyAddedMods } from "./notifyModsAddedDisabled";
 import { useMapModEnableNotify } from "./useMapModEnableNotify";
@@ -140,7 +141,7 @@ export function ServerModsPanel(props: Props): ReactElement {
     persist,
   });
 
-  const { add, toggle, remove, reorder } = createServerModsListMutations({
+  const { add, toggle, remove, reorder, enableAll, disableAll, removeAllDisabled } = createServerModsListMutations({
     configuredIdsRef,
     disabledIdsRef,
     metadata,
@@ -244,9 +245,42 @@ export function ServerModsPanel(props: Props): ReactElement {
     if (mod !== undefined) void activateCatalogMod(mod);
   };
 
+  const listBusy = busyKey !== null;
+  const hasMods = configuredIds.length > 0;
+  const headerActions =
+    view === "server" ? (
+      <Group gap={4} wrap="nowrap">
+        <Button
+          size="xs"
+          variant="default"
+          disabled={listBusy || !hasMods || disabledCount === 0}
+          onClick={() => void enableAll()}
+        >
+          Enable all
+        </Button>
+        <Button
+          size="xs"
+          variant="default"
+          disabled={listBusy || !hasMods || disabledCount === configuredIds.length}
+          onClick={() => void disableAll()}
+        >
+          Disable all
+        </Button>
+        <Button
+          size="xs"
+          variant="default"
+          color="red"
+          disabled={listBusy || !hasMods || disabledCount === 0}
+          onClick={() => confirmRemoveDisabledMods(disabledCount, removeAllDisabled)}
+        >
+          Remove all disabled
+        </Button>
+      </Group>
+    ) : undefined;
+
   return (
     <AppSurfaceCard tone="flat" fill padding={0} radius={0} className={classes.root}>
-      <ServerModsHeader activeCount={activeCount} disabledCount={disabledCount} />
+      <ServerModsHeader activeCount={activeCount} disabledCount={disabledCount} actions={headerActions} />
       <div className={classes.content}>
         <Stack gap="md" className={classes.contentStack}>
           <SegmentedControl

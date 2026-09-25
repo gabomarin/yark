@@ -82,6 +82,7 @@ export function formToProfileInput(
   installDir: string,
   mods: string[],
   modMetadataCache: Record<string, ModMetadata> = {},
+  modsEnabled = false,
 ): ServerProfileInput | { error: string } {
   const gamePort = parsePort(form.gamePort);
   const queryPort = parsePort(form.queryPort);
@@ -129,7 +130,7 @@ export function formToProfileInput(
     extraArgs: [],
     structuredLaunchArgs: {},
     mods: [...mods],
-    disabledMods: [...mods],
+    disabledMods: modsEnabled ? [] : [...mods],
     modMetadataCache: cache,
     autoStart: form.autoStart,
     useAsaApi: false,

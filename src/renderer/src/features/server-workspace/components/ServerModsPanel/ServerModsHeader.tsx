@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { Group, Text, Title } from "@mantine/core";
 import { DismissibleHint } from "@ui/DismissibleHint/DismissibleHint";
 import { MODS_PROJECT_ID_HINT_STORAGE_KEY } from "./serverModsModel";
@@ -7,6 +7,8 @@ import classes from "./ServerModsPanel.module.css";
 interface Props {
   activeCount: number;
   disabledCount: number;
+  /** Server-view quick actions (#637); omitted on Discover. */
+  actions?: ReactNode;
 }
 
 export function ServerModsHeader(props: Props): ReactElement {
@@ -19,7 +21,7 @@ export function ServerModsHeader(props: Props): ReactElement {
           same as pasting an ID.
         </DismissibleHint>
       </div>
-      <Group gap="xs" wrap="nowrap">
+      <Group gap="xs" wrap="nowrap" align="center">
         <Text size="sm" c="dimmed">
           {props.activeCount} active
         </Text>
@@ -28,6 +30,7 @@ export function ServerModsHeader(props: Props): ReactElement {
             {props.disabledCount} disabled
           </Text>
         )}
+        {props.actions}
       </Group>
     </header>
   );

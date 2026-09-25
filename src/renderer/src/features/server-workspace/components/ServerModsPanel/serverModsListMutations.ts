@@ -1,7 +1,8 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 import type { ModMetadata } from "@shared/types";
 import { notifyModsAddedDisabled } from "./notifyModsAddedDisabled";
-import { MODS_REORDER_BUSY_KEY } from "./serverModsBusy";
+import { MODS_BULK_BUSY_KEY, MODS_REORDER_BUSY_KEY } from "./serverModsBusy";
+import { notifyMapModsEnabled } from "./useMapModEnableNotify";
 
 interface Input {
   configuredIdsRef: MutableRefObject<string[]>;
@@ -139,5 +140,63 @@ export function createServerModsListMutations(input: Input) {
     }
   };
 
-  return { add, toggle, remove, reorder };
+  /** Bulk: clear `disabledMods`. One patch; one aggregated Maps-mod toast. */
+  const enableAll = async () => {
+    const configuredIds = input.configuredIdsRef.current;
+    const disabledIds = input.disabledIdsRef.current;
+    if (disabledIds.length === 0) return;
+    input.setBusyKey(MODS_BULK_BUSY_KEY);
+    input.setError(null);
+    input.setWarning(null);
+    try {
+      await input.persist(configuredIds, [], input.cacheRef.current);
+      notifyMapModsEnabled(disabledIds, input.cacheRef.current);
+    } catch (cause) {
+      input.setError(cause instanceof Error ? cause.message : "Could not enable all mods");
+    } finally {
+      input.setBusyKey(null);
+    }
+  };
+
+  /** Bulk: `disabledMods` = every configured ID. One patch. */
+  const disableAll = async () => {
+    const configuredIds = input.configuredIdsRef.current;
+    const disabledIds = input.disabledIdsRef.current;
+    if (configuredIds.length === 0 || disabledIds.length === configuredIds.length) return;
+    input.setBusyKey(MODS_BULK_BUSY_KEY);
+    input.setError(null);
+    input.setWarning(null);
+    try {
+      await input.persist(configuredIds, [...configuredIds], input.cacheRef.current);
+    } catch (cause) {
+      input.setError(cause instanceof Error ? cause.message : "Could not disable all mods");
+    } finally {
+      input.setBusyKey(null);
+    }
+  };
+
+  /** Bulk: drop disabled IDs from `mods` / `disabledMods` and clear their cache. One patch. */
+  const removeAllDisabled = async () => {
+    const configuredIds = input.configuredIdsRef.current;
+    const disabledIds = input.disabledIdsRef.current;
+    if (disabledIds.length === 0) return;
+    const disabledSet = new Set(disabledIds);
+    const nextIds = configuredIds.filter((id) => !disabledSet.has(id));
+    const nextCache = { ...input.cacheRef.current };
+    for (const id of disabledIds) {
+      delete nextCache[id];
+    }
+    input.setBusyKey(MODS_BULK_BUSY_KEY);
+    input.setError(null);
+    input.setWarning(null);
+    try {
+      await input.persist(nextIds, [], nextCache);
+    } catch (cause) {
+      input.setError(cause instanceof Error ? cause.message : "Could not remove disabled mods");
+    } finally {
+      input.setBusyKey(null);
+    }
+  };
+
+  return { add, toggle, remove, reorder, enableAll, disableAll, removeAllDisabled };
 }

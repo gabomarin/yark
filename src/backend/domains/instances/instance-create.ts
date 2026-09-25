@@ -53,8 +53,8 @@ export class InstanceCreate {
    * Uses the absolute `installDir` as-is (does not nest via resolveServerInstallDir).
    * No SteamCMD sync and **no INI writes** — Start (or later edits) sync profile-owned
    * keys. Requires install health `ready`, or `incomplete` with
-   * `allowIncompleteInstall` (#283). All discovered mods are forced into
-   * `disabledMods` until the operator enables them.
+   * `allowIncompleteInstall` (#283). Discovered mods stage disabled by default;
+   * the operator can opt to import them all enabled (#637).
    */
   async importExisting(
     input: ServerProfileInput,
@@ -62,11 +62,14 @@ export class InstanceCreate {
   ): Promise<ServerProfile> {
     const installDir = normalizeWindowsPath(input.installDir);
     const mods = [...(input.mods ?? [])];
+    const modSet = new Set(mods);
+    // Honor an explicit disabledMods (enable-all import, #637); otherwise stage
+    // every discovered ID disabled. Never disable an ID that is not on the list.
     const normalized: ServerProfileInput = {
       ...input,
       installDir,
       mods,
-      disabledMods: [...mods],
+      disabledMods: (input.disabledMods ?? mods).filter((id) => modSet.has(id)),
     };
     this.assertValidInput(normalized);
     this.assertUniqueName(normalized.name);

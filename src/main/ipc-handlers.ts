@@ -191,8 +191,11 @@ export function registerIpcHandlers(
     const modsList = profileInput.mods ?? [];
     // Soft CurseForge resolve: keep all disk-discovered IDs even when some
     // names are missing; do not fail import on proxy gaps (#254).
-    // Product rule: import always leaves discovered mods disabled (service enforces too).
-    const disabled = [...modsList];
+    // Product default: import stages discovered mods disabled. Honor an explicit
+    // disabledMods from the review step's "Enable all imported mods" (#637);
+    // only IDs on the mod list may be disabled.
+    const modsSet = new Set(modsList);
+    const disabled = (profileInput.disabledMods ?? modsList).filter((id) => modsSet.has(id));
     const cache = { ...(profileInput.modMetadataCache ?? {}) };
     try {
       const fetched = await mods.getMods(modsList);
