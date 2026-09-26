@@ -44,6 +44,10 @@ export function ClustersPage(props: Props): ReactElement {
   );
   const dirWithoutIdServers = useMemo(() => listDirWithoutIdServers(props.servers), [props.servers]);
   const sortedReports = useMemo(() => sortClusterReports(props.reports), [props.reports]);
+  const membersByCluster = useMemo(
+    () => new Map(sortedReports.map((report) => [report.clusterId, resolveMembers(report, serverById)])),
+    [serverById, sortedReports],
+  );
   const { errorCount, warningOnlyCount } = useMemo(() => summarizeClusterReports(sortedReports), [sortedReports]);
 
   const activeClusterId = resolveActiveClusterId(sortedReports, selectedClusterId);
@@ -112,7 +116,7 @@ export function ClustersPage(props: Props): ReactElement {
                 <Tabs.Panel key={report.clusterId} value={report.clusterId} className={classes.clusterTabsPanel}>
                   <ClusterDetailPanel
                     report={report}
-                    members={resolveMembers(report, serverById)}
+                    members={membersByCluster.get(report.clusterId) ?? []}
                     servers={props.servers}
                     statuses={props.statuses}
                     serverById={serverById}

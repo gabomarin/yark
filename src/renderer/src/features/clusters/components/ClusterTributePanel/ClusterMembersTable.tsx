@@ -13,6 +13,8 @@ import {
   formatTributeExpiration,
   readTributeValues,
   summarizeClusterWideValues,
+  clusterWideTributeValuesEqual,
+  normalizeClusterWideTributeValue,
   tributeSettingMeta,
   TRIBUTE_EXPIRATION_KEYS,
   type ClusterWideTributeKey,
@@ -61,8 +63,25 @@ function differsFromTemplate(
     const expected = templateValues[key];
     if (expected === null || expected === undefined) return false;
     const actual = values?.[key];
-    return actual === null || actual === undefined || String(Number(actual)) !== String(Number(expected));
+    return !clusterWideTributeValuesEqual(key, actual, expected);
   });
+}
+
+function differsFromClusterExpected(
+  key: ClusterWideTributeKey,
+  value: string | null,
+  expected: string | null | undefined,
+  status: "missing" | "matching" | "different",
+  firstMemberValue: string | undefined,
+): boolean {
+  if (expected !== null && expected !== undefined) {
+    return !clusterWideTributeValuesEqual(key, value, expected);
+  }
+  if (value === null) return status === "missing";
+  if (normalizeClusterWideTributeValue(key, value) === null) return true;
+  return status === "different" && firstMemberValue !== undefined
+    ? !clusterWideTributeValuesEqual(key, value, firstMemberValue)
+    : false;
 }
 
 function TableAction(props: {
@@ -173,7 +192,10 @@ export function ClusterMembersTable(props: Props): ReactElement {
                 const templateApplyReason = templateApplyIneligibilityReason(runtime);
                 const memberDiffers = differsFromTemplate(values ?? null, props.templateValues);
                 const firstValueFor = (key: ClusterWideTributeKey): string | undefined =>
-                  memberValues.find((memberValuesForKey) => memberValuesForKey?.[key] != null)?.[key] ?? undefined;
+                  memberValues.find((memberValuesForKey) => {
+                    const candidate = memberValuesForKey?.[key];
+                    return normalizeClusterWideTributeValue(key, candidate) !== null;
+                  })?.[key] ?? undefined;
 
                 return (
                   <Table.Tr key={`${props.clusterId}-${member.id}`}>
@@ -208,14 +230,13 @@ export function ClusterMembersTable(props: Props): ReactElement {
                       const value = values?.[key] ?? null;
                       const expected = props.templateValues[key];
                       const firstValue = firstValueFor(key);
-                      const differsFromExpected =
-                        expected !== null && expected !== undefined
-                          ? value === null || String(Number(value)) !== String(Number(expected))
-                          : value === null
-                            ? memberStatus[key] === "missing"
-                            : memberStatus[key] === "different" &&
-                              firstValue !== undefined &&
-                              String(Number(value)) !== String(Number(firstValue));
+                      const differsFromExpected = differsFromClusterExpected(
+                        key,
+                        value,
+                        expected,
+                        memberStatus[key],
+                        firstValue,
+                      );
                       return (
                         <Table.Td key={key} className={differsFromExpected ? classes.differentCell : undefined}>
                           <Text size="sm">{displayValue(key, value)}</Text>

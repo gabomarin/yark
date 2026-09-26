@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
-import type { ClusterComplianceReport, ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import type { ClusterComplianceReport, ServerIniSnapshot, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
@@ -15,7 +15,14 @@ import { RemoveServersModal } from "./RemoveServersModal/RemoveServersModal";
 import { ClusterIniTemplateModal } from "./ClusterIniTemplateModal/ClusterIniTemplateModal";
 import { ClusterIniTemplateApplyModal } from "./ClusterIniTemplateApplyModal/ClusterIniTemplateApplyModal";
 import { ClusterTributePanel } from "./ClusterTributePanel/ClusterTributePanel";
-import type { TransferReviewSummary } from "./ClusterTributePanel/ClusterTributePanel";
+import {
+  CLUSTER_WIDE_TRIBUTE_KEYS,
+  clusterWideTributeValuesEqual,
+  readTributeValues,
+  summarizeClusterWideValues,
+  TRIBUTE_EXPIRATION_KEYS,
+  type ClusterWideTributeKey,
+} from "../tributeModel";
 
 interface Props {
   report: ClusterComplianceReport;
@@ -35,8 +42,11 @@ export function ClusterDetailPanel(props: Props): ReactElement {
   const [removeInitialIds, setRemoveInitialIds] = useState<string[]>([]);
   const [templateOpen, setTemplateOpen] = useState(false);
   const [hasTemplate, setHasTemplate] = useState(false);
-  const [templateStatusError, setTemplateStatusError] = useState<string | null>(null);
-  const [transferReview, setTransferReview] = useState<TransferReviewSummary | null>(null);
+  const [snapshots, setSnapshots] = useState<Map<string, ServerIniSnapshot>>(new Map());
+  const [templateValues, setTemplateValues] = useState<Partial<Record<ClusterWideTributeKey, string | null>>>({});
+  const [transferLoading, setTransferLoading] = useState(true);
+  const [transferError, setTransferError] = useState<string | null>(null);
+  const readGeneration = useRef(0);
   const [applyTarget, setApplyTarget] = useState<{
     serverId: string;
     serverName: string;
@@ -53,49 +63,61 @@ export function ClusterDetailPanel(props: Props): ReactElement {
     });
   }, [props.members, props.statuses]);
 
-  const updateTransferReview = useCallback((summary: TransferReviewSummary): void => {
-    setTransferReview(summary);
-  }, []);
-
-  const refreshTemplateStatus = async (): Promise<void> => {
+  const refreshTransferData = useCallback(async (): Promise<void> => {
+    const generation = ++readGeneration.current;
+    setTransferLoading(true);
+    setTransferError(null);
     try {
-      const result = await window.api.getClusterIniTemplate(props.report.clusterId);
-      if (!result.ok) {
-        setTemplateStatusError(result.error ?? "Could not load template status");
-        setHasTemplate(false);
-        return;
+      const [results, templateResult] = await Promise.all([
+        Promise.all(props.members.map((member) => window.api.readServerIni(member.id))),
+        window.api.getClusterIniTemplate(props.report.clusterId),
+      ]);
+      if (generation !== readGeneration.current) return;
+      if (!templateResult.ok) throw new Error(templateResult.error ?? "Could not read the cluster INI template");
+      const next = new Map<string, ServerIniSnapshot>();
+      for (const result of results) {
+        if (!result.ok) throw new Error(result.error ?? "Could not read member INI files");
+        next.set(result.data.serverId, result.data);
       }
-      setTemplateStatusError(null);
-      setHasTemplate(result.data !== null);
-    } catch (error) {
-      setTemplateStatusError(error instanceof Error ? error.message : String(error));
+      setSnapshots(next);
+      setHasTemplate(templateResult.data !== null);
+      setTemplateValues(
+        templateResult.data === null ? {} : readTributeValues(templateResult.data.payload.gameUserSettings),
+      );
+    } catch (cause) {
+      if (generation !== readGeneration.current) return;
+      setTransferError(cause instanceof Error ? cause.message : String(cause));
+      setSnapshots(new Map());
+      setTemplateValues({});
       setHasTemplate(false);
+    } finally {
+      if (generation === readGeneration.current) setTransferLoading(false);
     }
-  };
+  }, [props.members, props.report.clusterId]);
+
+  const memberValues = props.members.map((member) => {
+    const snapshot = snapshots.get(member.id);
+    return snapshot === undefined ? null : readTributeValues(snapshot.payload.gameUserSettings);
+  });
+  const memberStatus = summarizeClusterWideValues(memberValues.map((values) => values ?? {}));
+  const differingCount = CLUSTER_WIDE_TRIBUTE_KEYS.filter((key) => memberStatus[key] === "different").length;
+  const missingCount = CLUSTER_WIDE_TRIBUTE_KEYS.filter((key) => memberStatus[key] === "missing").length;
+  const templateDriftCount = CLUSTER_WIDE_TRIBUTE_KEYS.filter((key) => {
+    const expected = templateValues[key];
+    if (expected === null || expected === undefined) return false;
+    return memberValues.some((values) => !clusterWideTributeValuesEqual(key, values?.[key], expected));
+  }).length;
+  const expirationMismatch = TRIBUTE_EXPIRATION_KEYS.some((key) => memberStatus[key] !== "matching");
+  const transferReview = transferLoading
+    ? null
+    : { differingCount, missingCount, templateDriftCount, expirationMismatch };
 
   useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const result = await window.api.getClusterIniTemplate(props.report.clusterId);
-        if (cancelled) return;
-        if (!result.ok) {
-          setTemplateStatusError(result.error ?? "Could not load template status");
-          setHasTemplate(false);
-          return;
-        }
-        setTemplateStatusError(null);
-        setHasTemplate(result.data !== null);
-      } catch (error) {
-        if (cancelled) return;
-        setTemplateStatusError(error instanceof Error ? error.message : String(error));
-        setHasTemplate(false);
-      }
-    })();
+    void refreshTransferData();
     return () => {
-      cancelled = true;
+      readGeneration.current += 1;
     };
-  }, [props.report.clusterId, templateOpen]);
+  }, [refreshTransferData, templateOpen]);
 
   return (
     <AppSurfaceCard
@@ -111,7 +133,8 @@ export function ClusterDetailPanel(props: Props): ReactElement {
           (transferReview !== null &&
             (transferReview.differingCount > 0 ||
               transferReview.missingCount > 0 ||
-              transferReview.templateDriftCount > 0))) && (
+              transferReview.templateDriftCount > 0 ||
+              transferReview.expirationMismatch))) && (
           <AppAlert
             color={props.report.issues.some((issue) => issue.severity === "error") ? "red" : "attention"}
             variant="light"
@@ -124,8 +147,8 @@ export function ClusterDetailPanel(props: Props): ReactElement {
                   <Text size="sm" fw={600}>
                     Compliance
                   </Text>
-                  {props.report.issues.map((issue, index) => (
-                    <Text key={`${issue.serverId ?? "cluster"}-${index}`} size="sm" lh={1.45}>
+                  {props.report.issues.map((issue) => (
+                    <Text key={`${issue.serverId ?? "cluster"}-${issue.severity}-${issue.message}`} size="sm" lh={1.45}>
                       {issue.serverId === null
                         ? ""
                         : `${props.serverById.get(issue.serverId)?.name ?? issue.serverId}: `}
@@ -137,7 +160,8 @@ export function ClusterDetailPanel(props: Props): ReactElement {
               {transferReview !== null &&
                 (transferReview.differingCount > 0 ||
                   transferReview.missingCount > 0 ||
-                  transferReview.templateDriftCount > 0) && (
+                  transferReview.templateDriftCount > 0 ||
+                  transferReview.expirationMismatch) && (
                   <Stack gap="xs">
                     {props.report.issues.length > 0 && (
                       <Text size="sm" fw={600}>
@@ -205,12 +229,6 @@ export function ClusterDetailPanel(props: Props): ReactElement {
           </Group>
         </Group>
 
-        {templateStatusError !== null && (
-          <Text size="xs" c="attention">
-            {templateStatusError}
-          </Text>
-        )}
-
         <MetaStrip
           className={classes.detailMeta}
           items={[
@@ -230,15 +248,17 @@ export function ClusterDetailPanel(props: Props): ReactElement {
 
         <ClusterTributePanel
           clusterId={props.report.clusterId}
-          onTransferReviewChange={updateTransferReview}
           members={props.members}
+          snapshots={snapshots}
+          templateValues={templateValues}
+          loading={transferLoading}
+          error={transferError}
+          onRefresh={refreshTransferData}
           statuses={props.statuses}
           hasTemplate={hasTemplate}
           canRemoveAny={memberStatuses.some((entry) => entry.canRemove)}
           onChanged={props.onMembershipChanged}
-          onTemplateChanged={() => {
-            void refreshTemplateStatus();
-          }}
+          onTemplateChanged={() => void refreshTransferData()}
           onOpenServer={props.onOpenServer}
           onRemoveAll={() => {
             setRemoveInitialIds([]);
@@ -289,9 +309,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
           opened
           clusterId={props.report.clusterId}
           onClose={() => setTemplateOpen(false)}
-          onChanged={() => {
-            void refreshTemplateStatus();
-          }}
+          onChanged={() => void refreshTransferData()}
         />
       )}
       {applyTarget !== null && (
@@ -303,7 +321,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
           operation={applyTarget.operation}
           onClose={() => setApplyTarget(null)}
           onApplied={() => {
-            void refreshTemplateStatus();
+            void refreshTransferData();
             props.onMembershipChanged();
           }}
         />

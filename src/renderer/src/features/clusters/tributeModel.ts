@@ -58,8 +58,26 @@ export function readTributeValues(text: string): TributeSettingValues {
   ) as TributeSettingValues;
 }
 
-function comparableValue(key: ClusterWideTributeKey, value: string): string {
-  return expirationKeys.has(key) || slotKeys.has(key) ? String(Number(value)) : value.trim().toLowerCase();
+export function normalizeClusterWideTributeValue(
+  key: ClusterWideTributeKey,
+  value: string | null | undefined,
+): string | null {
+  if (value === null || value === undefined || value.trim() === "") return null;
+  if (expirationKeys.has(key) || slotKeys.has(key)) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && Number.isInteger(parsed) ? String(parsed) : null;
+  }
+  return value.trim().toLowerCase();
+}
+
+export function clusterWideTributeValuesEqual(
+  key: ClusterWideTributeKey,
+  left: string | null | undefined,
+  right: string | null | undefined,
+): boolean {
+  const normalizedLeft = normalizeClusterWideTributeValue(key, left);
+  const normalizedRight = normalizeClusterWideTributeValue(key, right);
+  return normalizedLeft !== null && normalizedRight !== null && normalizedLeft === normalizedRight;
 }
 
 export function summarizeClusterWideValues(
@@ -68,10 +86,9 @@ export function summarizeClusterWideValues(
   return Object.fromEntries(
     CLUSTER_WIDE_TRIBUTE_KEYS.map((key) => {
       const values = members.map((member) => member[key]);
-      if (values.length === 0 || values.some((value) => value === null || value === undefined || value === "")) {
-        return [key, "missing"];
-      }
-      const normalized = values.map((value) => comparableValue(key, value!));
+      if (values.length === 0) return [key, "missing"];
+      const normalized = values.map((value) => normalizeClusterWideTributeValue(key, value));
+      if (normalized.some((value) => value === null)) return [key, "missing"];
       return [key, normalized.every((value) => value === normalized[0]) ? "matching" : "different"];
     }),
   ) as Record<ClusterWideTributeKey, "missing" | "matching" | "different">;

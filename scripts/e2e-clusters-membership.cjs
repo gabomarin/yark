@@ -274,11 +274,11 @@ async function run() {
       assertFixturePath(path.dirname(serversRoot), serversRoot);
       fs.rmSync(profileDir, { recursive: true, force: true });
       fs.rmSync(serversRoot, { recursive: true, force: true });
-      if (process.env.YARK_E2E_KEEP_VISUALS !== "1") {
-        fs.rmSync(visualDir, { recursive: true, force: true });
-      }
     } else {
       console.error(`E2E_CLUSTERS_MEMBERSHIP_PROFILE_PRESERVED ${profileDir}`);
+    }
+    if (process.env.YARK_E2E_KEEP_VISUALS !== "1") {
+      fs.rmSync(visualDir, { recursive: true, force: true });
     }
   }
 }

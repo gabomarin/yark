@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CaretDown, Info } from "@phosphor-icons/react";
 import { ActionIcon, Alert, Button, Group, Menu, NumberInput, Stack, Text, Tooltip } from "@mantine/core";
 import type {
@@ -83,17 +83,30 @@ function numericFormValues(values: FormValues): ClusterWideTributeValues | null 
 
 export function ClusterWideEditor(props: Props): ReactElement {
   const [form, setForm] = useState<FormValues>(() => initialFormValues(props.snapshots));
-  const [formInitialized, setFormInitialized] = useState(false);
+  const formSource = useRef<{ clusterId: string; snapshots: Map<string, ServerIniSnapshot> } | null>(null);
+  const formDirty = useRef(false);
   const [saving, setSaving] = useState(false);
   const [showSkipped, setShowSkipped] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!formInitialized && props.snapshots.size > 0) {
-      setForm(initialFormValues(props.snapshots));
-      setFormInitialized(true);
+    if (!props.opened) {
+      formSource.current = null;
+      formDirty.current = false;
+      return;
     }
-  }, [formInitialized, props.snapshots]);
+    if (saving || props.snapshots.size === 0) return;
+    if (formSource.current?.clusterId === props.clusterId && formSource.current.snapshots === props.snapshots) return;
+    if (formSource.current?.clusterId === props.clusterId && formDirty.current) {
+      formSource.current = { clusterId: props.clusterId, snapshots: props.snapshots };
+      return;
+    }
+    setForm(initialFormValues(props.snapshots));
+    setError(null);
+    setShowSkipped(false);
+    formDirty.current = false;
+    formSource.current = { clusterId: props.clusterId, snapshots: props.snapshots };
+  }, [props.clusterId, props.opened, props.snapshots, saving]);
 
   const eligible = props.members.filter(
     (member) => templateApplyIneligibilityReason(resolveServerRuntime(props.statuses, member.id)) === null,
@@ -108,6 +121,7 @@ export function ClusterWideEditor(props: Props): ReactElement {
     parsedValues === null ? "Enter a value for each setting." : validateClusterWideValues(parsedValues);
 
   const updateForm = (key: ClusterWideTributeKey, value: string | number): void => {
+    formDirty.current = true;
     setForm((current) => ({ ...current, [key]: String(value) }));
     setError(null);
   };
@@ -147,13 +161,15 @@ export function ClusterWideEditor(props: Props): ReactElement {
       }
     } catch (cause) {
       closeAfterSave = !templateSaved;
-      setError(
-        templateSaved
-          ? `Template saved, but member apply stopped: ${cause instanceof Error ? cause.message : String(cause)}`
-          : cause instanceof Error
-            ? cause.message
-            : String(cause),
-      );
+      let message: string;
+      if (templateSaved) {
+        message = `Template saved, but member apply stopped: ${cause instanceof Error ? cause.message : String(cause)}`;
+      } else if (cause instanceof Error) {
+        message = cause.message;
+      } else {
+        message = String(cause);
+      }
+      setError(message);
     } finally {
       setSaving(false);
       if (templateSaved) {

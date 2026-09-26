@@ -119,9 +119,16 @@ const scorched = member("srv-b", "Scorched", "ScorchedEarth_WP");
 
 function panelActions() {
   return {
+    snapshots: new Map([
+      ["srv-a", snapshot("srv-a", gus)],
+      ["srv-b", snapshot("srv-b", gus)],
+    ]),
+    templateValues: {},
+    loading: false,
+    error: null,
+    onRefresh: vi.fn(async () => {}),
     hasTemplate: false,
     canRemoveAny: true,
-    onTransferReviewChange: vi.fn(),
     onTemplateChanged: vi.fn(),
     onOpenServer: vi.fn(),
     onRemoveAll: vi.fn(),
@@ -146,6 +153,10 @@ describe("ClusterTributePanel", () => {
           {...panelActions()}
           clusterId="alpha"
           members={[island, scorched]}
+          snapshots={new Map([
+            ["srv-a", snapshot("srv-a", gus)],
+            ["srv-b", snapshot("srv-b", differentAndMissing)],
+          ])}
           statuses={
             new Map([
               ["srv-a", runtime("stopped")],
@@ -157,7 +168,6 @@ describe("ClusterTributePanel", () => {
       </AppProviders>,
     );
 
-    expect(await screen.findByText(/needs review/i)).toBeInTheDocument();
     expect(screen.getAllByText(/missing/i).length).toBeGreaterThan(0);
     expect(screen.getByRole("row", { name: /The Island/ })).toBeInTheDocument();
     expect(screen.getByText(/86,400 seconds \(1 day\)/)).toBeInTheDocument();
@@ -245,6 +255,10 @@ describe("ClusterTributePanel", () => {
           {...panelActions()}
           clusterId="alpha"
           members={[island, scorched]}
+          snapshots={new Map([
+            ["srv-a", snapshot("srv-a", restrictedGus)],
+            ["srv-b", snapshot("srv-b", gus)],
+          ])}
           statuses={
             new Map([
               ["srv-a", runtime("stopped")],
