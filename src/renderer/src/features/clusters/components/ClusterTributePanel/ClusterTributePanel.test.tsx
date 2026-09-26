@@ -117,6 +117,20 @@ function installApi(read: (serverId: string) => ServerIniSnapshot): void {
 const island = member("srv-a", "The Island", "TheIsland_WP");
 const scorched = member("srv-b", "Scorched", "ScorchedEarth_WP");
 
+function panelActions() {
+  return {
+    hasTemplate: false,
+    canRemoveAny: true,
+    onTransferReviewChange: vi.fn(),
+    onTemplateChanged: vi.fn(),
+    onOpenServer: vi.fn(),
+    onRemoveAll: vi.fn(),
+    onRemoveServer: vi.fn(),
+    onPromoteToTemplate: vi.fn(),
+    onApplyIniTemplate: vi.fn(),
+  };
+}
+
 describe("ClusterTributePanel", () => {
   afterEach(cleanup);
 
@@ -129,6 +143,7 @@ describe("ClusterTributePanel", () => {
     render(
       <AppProviders>
         <ClusterTributePanel
+          {...panelActions()}
           clusterId="alpha"
           members={[island, scorched]}
           statuses={
@@ -142,14 +157,15 @@ describe("ClusterTributePanel", () => {
       </AppProviders>,
     );
 
-    expect(await screen.findByText(/different/i)).toBeInTheDocument();
+    expect(await screen.findByText(/needs review/i)).toBeInTheDocument();
     expect(screen.getAllByText(/missing/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText("1 day").length).toBeGreaterThan(0);
-    expect(screen.getByText("2 days")).toBeInTheDocument();
-    expect(screen.getByText(/This map only/i)).toBeInTheDocument();
+    expect(screen.getByRole("row", { name: /The Island/ })).toBeInTheDocument();
+    expect(screen.getByText(/86,400 seconds \(1 day\)/)).toBeInTheDocument();
+    expect(screen.getByText(/172,800 seconds \(2 days\)/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /edit settings for this map/i })).not.toBeInTheDocument();
   });
 
-  it("previews eligible and skipped members before saving the template and restoring stopped members", async () => {
+  it("applies cluster-wide values only to stopped members and preserves other template keys", async () => {
     const user = userEvent.setup();
     const getClusterIniTemplate = vi.fn(async () => ({
       ok: true,
@@ -166,6 +182,7 @@ describe("ClusterTributePanel", () => {
     render(
       <AppProviders>
         <ClusterTributePanel
+          {...panelActions()}
           clusterId="alpha"
           members={[island, scorched]}
           statuses={
@@ -184,19 +201,20 @@ describe("ClusterTributePanel", () => {
     const editor = await screen.findByRole("dialog", { name: /edit cluster-wide tribute settings/i });
 
     // Change item expiration to 36 hours
-    const itemExpiration = await screen.findByRole("textbox", { name: /items expire after \(hours\)/i });
+    const itemExpiration = await screen.findByRole("textbox", { name: /items expire after \(seconds\)/i });
     await user.clear(itemExpiration);
     await user.type(itemExpiration, "36");
 
-    // Check review shows correct values
-    expect(editor.textContent).toContain("The Island");
+    // The modal summarizes the target and only expands skipped members on request.
+    expect(editor.textContent).toContain("Applies to 1 stopped member");
+    await user.click(within(editor).getByRole("button", { name: /show 1 skipped member/i }));
     expect(editor.textContent).toContain("Scorched");
     expect(editor.textContent).toContain("must not be running");
-    expect(editor.textContent).toContain("Items expire after: 36 hours");
+    expect(itemExpiration).toHaveValue("36");
     expect(window.api.saveClusterIniTemplate).not.toHaveBeenCalled();
 
     // Propagate (saving auto-propagates to stopped members)
-    await user.click(within(editor).getByRole("button", { name: /propagate to 1 stopped member/i }));
+    await user.click(within(editor).getByRole("button", { name: /save and apply to servers/i }));
     await waitFor(() =>
       expect(window.api.restoreClusterIniFromTemplate).toHaveBeenCalledWith("alpha", "srv-a", {
         gameUserSettings: true,
@@ -212,45 +230,19 @@ describe("ClusterTributePanel", () => {
     );
     expect(window.api.saveClusterIniTemplate).toHaveBeenCalledWith(
       "alpha",
-      expect.objectContaining({ gameUserSettings: expect.stringContaining("TributeItemExpirationSeconds=129600") }),
+      expect.objectContaining({ gameUserSettings: expect.stringContaining("TributeItemExpirationSeconds=36") }),
     );
     expect(onChanged).toHaveBeenCalledOnce();
   });
 
-  it("disables per-map writes for a running selected member", async () => {
-    installApi((id) => snapshot(id, gus));
+  it("keeps per-map settings in the server INI workspace", async () => {
+    const restrictedGus = gus.replace("PreventUploadItems=False", "PreventUploadItems=True");
+    installApi((id) => snapshot(id, id === "srv-a" ? restrictedGus : gus));
 
     render(
       <AppProviders>
         <ClusterTributePanel
-          clusterId="alpha"
-          members={[island, scorched]}
-          statuses={
-            new Map([
-              ["srv-a", runtime("running")],
-              ["srv-b", { ...runtime("stopped"), serverId: "srv-b" }],
-            ])
-          }
-          onChanged={vi.fn()}
-        />
-      </AppProviders>,
-    );
-
-    // Wait for loading to complete
-    await screen.findByText(/Cluster-wide settings/i);
-
-    // The per-map edit button should be disabled for running server
-    expect(screen.getByRole("button", { name: /edit settings for this map/i })).toBeDisabled();
-    expect(window.api.saveServerIni).not.toHaveBeenCalled();
-  });
-
-  it("saves per-map controls only to the selected stopped member", async () => {
-    const user = userEvent.setup();
-    installApi((id) => snapshot(id, gus));
-
-    render(
-      <AppProviders>
-        <ClusterTributePanel
+          {...panelActions()}
           clusterId="alpha"
           members={[island, scorched]}
           statuses={
@@ -264,23 +256,8 @@ describe("ClusterTributePanel", () => {
       </AppProviders>,
     );
 
-    // Open per-map editor
-    await user.click(await screen.findByRole("button", { name: /edit settings for this map/i }));
-    const editor = await screen.findByRole("dialog", { name: /edit per-map tribute settings/i });
-
-    // Toggle a checkbox
-    await user.click(await screen.findByRole("checkbox", { name: "Prevent item uploads" }));
-
-    // Preview & save
-    await user.click(within(editor).getByRole("button", { name: /preview & save/i }));
-    const previewDialog = await screen.findByRole("dialog", { name: /edit per-map tribute settings/i });
-    expect(previewDialog.textContent).toContain("Only The Island will be changed");
-    await user.click(within(previewDialog).getByRole("button", { name: /save this map/i }));
-
-    await waitFor(() => expect(window.api.saveServerIni).toHaveBeenCalledOnce());
-    const [serverId, payload] = vi.mocked(window.api.saveServerIni).mock.calls[0]!;
-    expect(serverId).toBe("srv-a");
-    expect(payload.gameUserSettings).toContain("PreventUploadItems=True");
-    expect(payload.gameUserSettings).toContain("UnrelatedSetting=keep-me");
+    expect(await screen.findByText(/Per-map transfer overrides are active on 1 server/i)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /edit settings for this map/i })).not.toBeInTheDocument();
+    expect(window.api.saveServerIni).not.toHaveBeenCalled();
   });
 });

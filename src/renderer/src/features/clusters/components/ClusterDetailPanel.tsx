@@ -1,23 +1,21 @@
 import type { ReactElement } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
 import type { ClusterComplianceReport, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
-import { formatMapDisplayName } from "@shared/asa/map-identity";
 import { MetaStrip } from "./MetaStrip/MetaStrip";
 import { formatCheckedAt, sharedClusterDir } from "../clusterModel";
 import { resolveServerRuntime } from "../createClusterModel";
 import { canAddServersToCluster, removeIneligibilityReason } from "../membershipModel";
-import { templateApplyIneligibilityReason } from "../templateApplyModel";
 import classes from "../clusters.module.css";
-import { ClusterIssueRow } from "./ClusterIssueRow";
-import { ClusterMemberRow } from "./ClusterMemberRow";
 import { AddServersModal } from "./AddServersModal/AddServersModal";
 import { RemoveServersModal } from "./RemoveServersModal/RemoveServersModal";
 import { ClusterIniTemplateModal } from "./ClusterIniTemplateModal/ClusterIniTemplateModal";
 import { ClusterIniTemplateApplyModal } from "./ClusterIniTemplateApplyModal/ClusterIniTemplateApplyModal";
 import { ClusterTributePanel } from "./ClusterTributePanel/ClusterTributePanel";
+import type { TransferReviewSummary } from "./ClusterTributePanel/ClusterTributePanel";
 
 interface Props {
   report: ClusterComplianceReport;
@@ -38,6 +36,7 @@ export function ClusterDetailPanel(props: Props): ReactElement {
   const [templateOpen, setTemplateOpen] = useState(false);
   const [hasTemplate, setHasTemplate] = useState(false);
   const [templateStatusError, setTemplateStatusError] = useState<string | null>(null);
+  const [transferReview, setTransferReview] = useState<TransferReviewSummary | null>(null);
   const [applyTarget, setApplyTarget] = useState<{
     serverId: string;
     serverName: string;
@@ -48,17 +47,15 @@ export function ClusterDetailPanel(props: Props): ReactElement {
     return props.members.map((server) => {
       const runtime = resolveServerRuntime(props.statuses, server.id);
       const removeReason = removeIneligibilityReason(runtime);
-      const templateApplyReason = templateApplyIneligibilityReason(runtime);
       return {
-        server,
-        status: runtime.status,
-        removeReason,
         canRemove: removeReason === null,
-        templateApplyReason,
-        canTemplateApply: templateApplyReason === null,
       };
     });
   }, [props.members, props.statuses]);
+
+  const updateTransferReview = useCallback((summary: TransferReviewSummary): void => {
+    setTransferReview(summary);
+  }, []);
 
   const refreshTemplateStatus = async (): Promise<void> => {
     try {
@@ -101,17 +98,93 @@ export function ClusterDetailPanel(props: Props): ReactElement {
   }, [props.report.clusterId, templateOpen]);
 
   return (
-    <AppSurfaceCard fill className={classes.detailPanel} data-cluster-detail={props.report.clusterId}>
+    <AppSurfaceCard
+      fill
+      tone="flat"
+      padding="md"
+      radius={0}
+      className={classes.detailPanel}
+      data-cluster-detail={props.report.clusterId}
+    >
       <Stack gap="md" className={classes.panelStack}>
+        {(props.report.issues.length > 0 ||
+          (transferReview !== null &&
+            (transferReview.differingCount > 0 ||
+              transferReview.missingCount > 0 ||
+              transferReview.templateDriftCount > 0))) && (
+          <AppAlert
+            color={props.report.issues.some((issue) => issue.severity === "error") ? "red" : "attention"}
+            variant="light"
+            title="Cluster needs review"
+            data-cluster-review-alert
+          >
+            <Stack gap="sm">
+              {props.report.issues.length > 0 && (
+                <Stack gap="xs">
+                  <Text size="sm" fw={600}>
+                    Compliance
+                  </Text>
+                  {props.report.issues.map((issue, index) => (
+                    <Text key={`${issue.serverId ?? "cluster"}-${index}`} size="sm" lh={1.45}>
+                      {issue.serverId === null
+                        ? ""
+                        : `${props.serverById.get(issue.serverId)?.name ?? issue.serverId}: `}
+                      {issue.message}
+                    </Text>
+                  ))}
+                </Stack>
+              )}
+              {transferReview !== null &&
+                (transferReview.differingCount > 0 ||
+                  transferReview.missingCount > 0 ||
+                  transferReview.templateDriftCount > 0) && (
+                  <Stack gap="xs">
+                    {props.report.issues.length > 0 && (
+                      <Text size="sm" fw={600}>
+                        Transfer settings
+                      </Text>
+                    )}
+                    {transferReview.differingCount > 0 && (
+                      <Text size="sm" lh={1.45}>
+                        {transferReview.differingCount} setting
+                        {transferReview.differingCount === 1 ? " differs" : "s differ"} between servers.
+                      </Text>
+                    )}
+                    {transferReview.missingCount > 0 && (
+                      <Text size="sm" lh={1.45}>
+                        {transferReview.missingCount} setting{transferReview.missingCount === 1 ? " is" : "s are"}{" "}
+                        missing on one or more servers.
+                      </Text>
+                    )}
+                    {transferReview.templateDriftCount > 0 && (
+                      <Text size="sm" lh={1.45}>
+                        {transferReview.templateDriftCount} setting
+                        {transferReview.templateDriftCount === 1 ? " differs" : "s differ"} from the saved cluster
+                        template.
+                      </Text>
+                    )}
+                    {transferReview.expirationMismatch && (
+                      <Text size="sm" lh={1.45}>
+                        Different expiration timers can delete stored ARK Data when a player opens tribute on a map with
+                        a shorter timer.
+                      </Text>
+                    )}
+                  </Stack>
+                )}
+            </Stack>
+          </AppAlert>
+        )}
         <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
-          <div>
-            <Title order={3} size="h4">
-              {props.report.clusterId}
-            </Title>
-            <Text size="sm" c="dimmed">
-              Checked {formatCheckedAt(props.report.checkedAt)}
-            </Text>
-          </div>
+          <Group gap="xs" align="center">
+            <Stack gap={2}>
+              <Title order={3} size="h4">
+                {props.report.clusterId}
+              </Title>
+              <Text size="xs" c="dimmed">
+                Checked {formatCheckedAt(props.report.checkedAt)}
+              </Text>
+            </Stack>
+          </Group>
           <Group gap="xs" wrap="wrap">
             <Button variant="default" onClick={() => setTemplateOpen(true)}>
               {hasTemplate ? "Edit INI template" : "Create INI template"}
@@ -148,7 +221,6 @@ export function ClusterDetailPanel(props: Props): ReactElement {
               ),
             },
             { label: "Servers", value: String(props.members.length) },
-            { label: "Issues", value: String(props.report.issues.length) },
             {
               label: "INI template",
               value: hasTemplate ? "Saved" : "None",
@@ -156,100 +228,37 @@ export function ClusterDetailPanel(props: Props): ReactElement {
           ]}
         />
 
-        <Stack gap="xs">
-          <Group justify="space-between" align="center">
-            <Text fw={600} size="sm">
-              Servers in this cluster
-            </Text>
-            <Button
-              color="red"
-              variant="subtle"
-              disabled={!memberStatuses.some((entry) => entry.canRemove)}
-              onClick={() => {
-                setRemoveInitialIds([]);
-                setRemoveOpen(true);
-              }}
-            >
-              Remove servers
-            </Button>
-          </Group>
-          {props.members.length === 0 ? (
-            <Text size="sm" c="dimmed">
-              Server profiles could not be resolved.
-            </Text>
-          ) : (
-            <div className={classes.memberList}>
-              {memberStatuses.map(
-                ({ server, status, canRemove, removeReason, canTemplateApply, templateApplyReason }) => (
-                  <ClusterMemberRow
-                    key={server.id}
-                    server={server}
-                    status={status}
-                    canRemove={canRemove}
-                    removeReason={removeReason}
-                    hasTemplate={hasTemplate}
-                    canTemplateApply={canTemplateApply}
-                    templateApplyReason={templateApplyReason}
-                    subtitle={formatMapDisplayName(server.map)}
-                    onOpen={props.onOpenServer}
-                    onRemove={(serverId) => {
-                      setRemoveInitialIds([serverId]);
-                      setRemoveOpen(true);
-                    }}
-                    onPromoteToTemplate={(serverId) => {
-                      const member = props.members.find((row) => row.id === serverId);
-                      if (member === undefined) return;
-                      setApplyTarget({
-                        serverId,
-                        serverName: member.name,
-                        operation: "promote",
-                      });
-                    }}
-                    onRestoreFromTemplate={(serverId) => {
-                      const member = props.members.find((row) => row.id === serverId);
-                      if (member === undefined) return;
-                      setApplyTarget({
-                        serverId,
-                        serverName: member.name,
-                        operation: "restore",
-                      });
-                    }}
-                  />
-                ),
-              )}
-            </div>
-          )}
-        </Stack>
-
         <ClusterTributePanel
           clusterId={props.report.clusterId}
+          onTransferReviewChange={updateTransferReview}
           members={props.members}
           statuses={props.statuses}
+          hasTemplate={hasTemplate}
+          canRemoveAny={memberStatuses.some((entry) => entry.canRemove)}
           onChanged={props.onMembershipChanged}
+          onTemplateChanged={() => {
+            void refreshTemplateStatus();
+          }}
+          onOpenServer={props.onOpenServer}
+          onRemoveAll={() => {
+            setRemoveInitialIds([]);
+            setRemoveOpen(true);
+          }}
+          onRemoveServer={(serverId) => {
+            setRemoveInitialIds([serverId]);
+            setRemoveOpen(true);
+          }}
+          onPromoteToTemplate={(serverId) => {
+            const member = props.members.find((row) => row.id === serverId);
+            if (member === undefined) return;
+            setApplyTarget({ serverId, serverName: member.name, operation: "promote" });
+          }}
+          onApplyIniTemplate={(serverId) => {
+            const member = props.members.find((row) => row.id === serverId);
+            if (member === undefined) return;
+            setApplyTarget({ serverId, serverName: member.name, operation: "restore" });
+          }}
         />
-
-        <Stack gap="xs" className={classes.issuesBlock}>
-          <Text fw={600} size="sm">
-            Compliance
-          </Text>
-          {props.report.issues.length === 0 ? (
-            <Text size="sm" c="dimmed">
-              No issues. Servers share a coherent cluster setup for transfers.
-            </Text>
-          ) : (
-            <ul className={classes.issueList}>
-              {props.report.issues.map((issue) => (
-                <ClusterIssueRow
-                  key={`${issue.severity}-${issue.serverId ?? "fleet"}-${issue.message}`}
-                  issue={issue}
-                  relatedServerName={
-                    issue.serverId !== null ? (props.serverById.get(issue.serverId)?.name ?? issue.serverId) : null
-                  }
-                />
-              ))}
-            </ul>
-          )}
-        </Stack>
       </Stack>
 
       {addOpen && (

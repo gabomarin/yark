@@ -78,18 +78,30 @@ export function summarizeClusterWideValues(
 }
 
 export function validateClusterWideValues(values: ClusterWideTributeValues): string | null {
-  for (const key of TRIBUTE_EXPIRATION_KEYS) {
-    const value = values[key];
-    if (!Number.isInteger(value) || value < 0)
-      return `${tributeSettingMeta(key).key} must be a non-negative whole number of seconds.`;
-    if (value > MAX_TRIBUTE_EXPIRATION_SECONDS) return "Expiration timers cannot exceed one year (31,536,000 seconds).";
+  return CLUSTER_WIDE_TRIBUTE_KEYS.map((key) => validateClusterWideValue(key, values[key])).find(Boolean) ?? null;
+}
+
+export function validateClusterWideValue(key: ClusterWideTributeKey, value: number): string | null {
+  if (!Number.isFinite(value) || !Number.isInteger(value)) {
+    return expirationKeys.has(key)
+      ? `${tributeSettingMeta(key).key} must be a whole number of seconds.`
+      : `${key} must be a whole number.`;
   }
-  for (const key of TRIBUTE_SLOT_KEYS) {
-    const value = values[key];
-    const minimum = Number(tributeSettingMeta(key).defaultValue);
-    if (!Number.isInteger(value)) return `${key} must be a whole number.`;
-    if (value < minimum) return `${key} cannot be below the catalog default of ${minimum}.`;
+  if (expirationKeys.has(key)) {
+    if (value < 0 && key !== "TributeCharacterExpirationSeconds") {
+      return `${tributeSettingMeta(key).key} must be 0 or more seconds.`;
+    }
+    if (value > MAX_TRIBUTE_EXPIRATION_SECONDS) {
+      return "Expiration timers cannot exceed one year (31,536,000 seconds).";
+    }
+    return null;
   }
+
+  const meta = tributeSettingMeta(key);
+  const input = meta.input.type === "number" || meta.input.type === "range" ? meta.input : null;
+  const minimum = input?.min ?? Number(meta.defaultValue);
+  if (value < minimum) return `${key} cannot be below the catalog default of ${minimum}.`;
+  if (input?.max !== undefined && value > input.max) return `${key} cannot exceed ${input.max}.`;
   return null;
 }
 
@@ -106,31 +118,37 @@ export function withClusterWideTributeValues(
   };
 }
 
-export function withMapTributeValues(
-  payload: ServerIniPayload,
-  values: Record<MapTributeKey, boolean>,
-  keys: readonly MapTributeKey[] = MAP_TRIBUTE_KEYS,
-): ServerIniPayload {
-  return {
-    ...payload,
-    gameUserSettings: keys.reduce(
-      (text, key) => setIniTextValue(text, "ServerSettings", key, values[key] ? "True" : "False"),
-      payload.gameUserSettings,
-    ),
-  };
-}
-
 export function readMapTributeValues(values: TributeSettingValues): Record<MapTributeKey, boolean> {
   return Object.fromEntries(
     MAP_TRIBUTE_KEYS.map((key) => [key, values[key]?.trim().toLowerCase() === "true"]),
   ) as Record<MapTributeKey, boolean>;
 }
 
-export function formatTributeExpiration(seconds: string | null, fallback: string): string {
+export function formatTributeDuration(seconds: number, key: ClusterWideTributeKey): string {
+  if (key === "TributeCharacterExpirationSeconds" && seconds <= 0) return "does not expire";
+  if (seconds === 0) return "game default";
+  if (seconds < 0) return "game default";
+
+  let remaining = Math.trunc(seconds);
+  const parts: string[] = [];
+  for (const [unit, size] of [
+    ["day", 86_400],
+    ["hour", 3_600],
+    ["minute", 60],
+    ["second", 1],
+  ] as const) {
+    const count = Math.floor(remaining / size);
+    if (count > 0) {
+      parts.push(`${count} ${unit}${count === 1 ? "" : "s"}`);
+      remaining %= size;
+    }
+  }
+  return parts.join(", ");
+}
+
+export function formatTributeExpiration(seconds: string | null, fallback: string, key: ClusterWideTributeKey): string {
   const value = Number(seconds ?? fallback);
   if (!Number.isFinite(value)) return seconds ?? "Missing";
-  if (value === 0) return "0 (game default)";
-  if (value % 86_400 === 0) return `${value / 86_400} ${value === 86_400 ? "day" : "days"}`;
-  if (value % 3_600 === 0) return `${value / 3_600} ${value === 3_600 ? "hour" : "hours"}`;
-  return `${value.toLocaleString()} seconds`;
+  const savedValue = `${value.toLocaleString()} second${Math.abs(value) === 1 ? "" : "s"}`;
+  return `${savedValue} (${formatTributeDuration(value, key)})`;
 }

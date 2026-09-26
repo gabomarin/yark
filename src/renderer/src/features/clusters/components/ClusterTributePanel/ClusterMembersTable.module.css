@@ -1,0 +1,52 @@
+.scrollContainer {
+  width: 100%;
+}
+
+.membersTable {
+  background: var(--app-color-panel);
+}
+
+.membersTable :global(thead),
+.membersTable :global(thead th) {
+  background: var(--app-color-panel-raised);
+}
+
+.membersTable :global(th),
+.membersTable :global(td) {
+  border-color: var(--app-color-border-subtle);
+}
+
+.membersTable :global(tbody tr:hover) {
+  background: var(--app-color-surface-control);
+}
+
+.memberHeader,
+.memberCell {
+  min-width: 15rem;
+}
+
+.memberIdentity {
+  min-width: 0;
+  flex: 1;
+}
+
+.memberLink {
+  display: block;
+  max-width: 15rem;
+  color: var(--app-color-text);
+  text-align: left;
+}
+
+.memberLink:hover {
+  color: var(--app-color-accent);
+  text-decoration: underline;
+}
+
+.memberLink:focus-visible {
+  outline: 2px solid var(--app-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.differentCell {
+  background: var(--mantine-color-attention-light);
+}

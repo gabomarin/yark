@@ -9,7 +9,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
-- Clusters now inspect and align Cross-ARK tribute timers and upload slots across stopped members, with per-map upload/download controls kept separate (#325).
+- Cluster tabs match Server Workspace sizing, and each cluster's content is grouped in a panel with its review alert (#325).
 - Mods can now be marked **Passive** (row action, detail drawer, or row menu) to load their data without spawning content: passive IDs are sent on `-passivemods=` and removed from `-mods=`, and YARK dedupes both flags (#509).
 - Server workspace file-job notices now appear once above the tabs on every workspace tab (#630).
 - The Launch tab's `-passivemods=` field is gone in favor of the Mods tab; saved selections are migrated to the server's passive mods on first launch, so existing servers keep loading them.

@@ -191,15 +191,19 @@ Report shape:
 
 ### Transfer / tribute settings (#325)
 
-The Clusters detail panel reads `GameUserSettings.ini` `[ServerSettings]` for
-each member and shows saved values, missing keys, and cluster-wide mismatches.
-Missing settings are identified as missing; the adjacent catalog default is
-informational and is not treated as a value saved in the file.
+The Clusters page uses a tab for each cluster. One member table combines each
+server's map and runtime status, its `GameUserSettings.ini` `[ServerSettings]`
+transfer values, and row actions. Values are compared across members and
+against the saved cluster template; missing settings are identified as missing,
+and the adjacent catalog default is informational rather than a saved file
+value. Compliance status is shown beside the cluster name, with issue details
+available from its tooltip.
 
 The **Cluster-wide settings** group aligns these keys across members:
 
 - `TributeItemExpirationSeconds`, `TributeDinoExpirationSeconds`, and
-  `TributeCharacterExpirationSeconds` — entered in hours and stored in seconds.
+  `TributeCharacterExpirationSeconds` — entered and stored in seconds, with a
+  readable duration shown alongside the saved value.
   Values above 31,536,000 seconds (one year) are rejected. Different timers can
   delete ARK Data when a player opens tribute on a map with a shorter timer.
 - `MaxTributeItems` (catalog default 50), `MaxTributeDinos` (20), and
@@ -208,20 +212,20 @@ The **Cluster-wide settings** group aligns these keys across members:
   and creature upper-limit figures are community claims marked unverified, so
   YARK displays that guidance without presenting it as a confirmed safe cap.
 
-Before confirmation, YARK lists the stopped members that will be updated and
-the running/busy members that will be skipped. It updates only these keys in
-the cluster's `GameUserSettings.ini` template, then restores that file to each
-eligible member through the existing template composition and backup path.
+The editor saves the cluster template by default. **Save and apply to servers**
+also restores the template to eligible stopped members. Table actions promote a
+member to the template, apply the INI template, apply only the six cluster-wide
+settings, or remove a member. Applying only the six settings leaves other INI
+values unchanged. Per-map transfer overrides remain in each server's INI editor.
 The restore path preserves unrelated INI values and profile-owned keys, and
 checks again that each server is stopped before writing.
 
-The **This map only** group edits `PreventUploadItems`, `PreventDownloadItems`,
+Per-map settings such as `PreventUploadItems`, `PreventDownloadItems`,
 `PreventUploadDinos`, `PreventDownloadDinos`, `PreventUploadSurvivors`,
 `PreventDownloadSurvivors`, `noTributeDownloads`, and
-`CrossARKAllowForeignDinoDownloads`. These settings are excluded from drift
-checks and cluster-wide applies. They can be previewed and saved only for the
-selected stopped server; running servers are disabled. `MinimumDinoReuploadInterval`
-is not included in this surface.
+`CrossARKAllowForeignDinoDownloads` remain available in each server's INI Files
+tab. They are excluded from cluster-wide drift checks and applies.
+`MinimumDinoReuploadInterval` is not included in the cluster settings surface.
 
 ### Server form / onboarding
 

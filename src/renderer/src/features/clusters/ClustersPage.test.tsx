@@ -271,10 +271,11 @@ describe("ClustersPage", () => {
 
     expect(screen.getByText(/2 clusters · 1 ready · 1 with errors/)).toBeInTheDocument();
 
-    // Broken clusters sort first — detail should show beta's error.
-    expect(screen.getByText(/no cluster directory configured/i)).toBeInTheDocument();
+    // Broken clusters sort first — compliance details are available from the cluster header.
+    await user.hover(screen.getByText("Errors", { exact: true }));
+    expect(await screen.findByRole("tooltip")).toHaveTextContent(/no cluster directory configured/i);
 
-    await user.click(screen.getByRole("button", { name: /alpha/i }));
+    await user.click(screen.getByRole("tab", { name: /alpha/i }));
     const detail = document.querySelector('[data-cluster-detail="alpha"]');
     expect(detail).not.toBeNull();
     const islandRow = within(detail as HTMLElement).getByRole("button", {
@@ -318,7 +319,7 @@ describe("ClustersPage", () => {
       </AppProviders>,
     );
 
-    await user.click(screen.getByRole("button", { name: /alpha/i }));
+    await user.click(screen.getByRole("tab", { name: /alpha/i }));
     expect(screen.getByText("Inactive")).toBeInTheDocument();
   });
 
