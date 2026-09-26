@@ -209,8 +209,8 @@ describe("ClusterTributePanel", () => {
     );
 
     // Open cluster-wide editor
-    await user.click(await screen.findByRole("button", { name: /edit cluster settings/i }));
-    const editor = await screen.findByRole("dialog", { name: /edit cluster-wide tribute settings/i });
+    await user.click(await screen.findByRole("button", { name: /edit transfer settings/i }));
+    const editor = await screen.findByRole("dialog", { name: /edit cluster transfer settings/i });
 
     // Change item expiration to 36 hours
     const itemExpiration = await screen.findByRole("textbox", { name: /items expire after \(seconds\)/i });
