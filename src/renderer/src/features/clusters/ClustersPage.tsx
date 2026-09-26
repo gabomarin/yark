@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
-import { Button, Stack } from "@mantine/core";
+import { Plus } from "@phosphor-icons/react";
+import { Button, Stack, Tabs, Tooltip } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import { AppPageHeader } from "@ui/AppPageHeader/AppPageHeader";
 import type { ClusterComplianceReport, ServerProfile, ServerRuntimeInfo } from "@shared/types";
@@ -16,7 +17,6 @@ import classes from "./clusters.module.css";
 import { ClusterDetailPanel } from "./components/ClusterDetailPanel";
 import { ClusterEmptyState } from "./components/ClusterEmptyState";
 import { ClusterGuidanceCard } from "./components/ClusterGuidanceCard";
-import { ClusterListPanel } from "./components/ClusterListPanel";
 import { ClusterSummaryBadges } from "./components/ClusterSummaryBadges";
 import { CreateClusterModal } from "./components/CreateClusterModal/CreateClusterModal";
 
@@ -44,22 +44,18 @@ export function ClustersPage(props: Props): ReactElement {
   );
   const dirWithoutIdServers = useMemo(() => listDirWithoutIdServers(props.servers), [props.servers]);
   const sortedReports = useMemo(() => sortClusterReports(props.reports), [props.reports]);
+  const membersByCluster = useMemo(
+    () => new Map(sortedReports.map((report) => [report.clusterId, resolveMembers(report, serverById)])),
+    [serverById, sortedReports],
+  );
   const { errorCount, warningOnlyCount } = useMemo(() => summarizeClusterReports(sortedReports), [sortedReports]);
 
   const activeClusterId = resolveActiveClusterId(sortedReports, selectedClusterId);
-  const activeReport =
-    activeClusterId === null ? null : (sortedReports.find((report) => report.clusterId === activeClusterId) ?? null);
-  const activeMembers = resolveMembers(activeReport, serverById);
 
   return (
     <PageScaffold title="Clusters" fillViewport edgeToEdge showHeader={false}>
       <div className={classes.pageShell} data-clusters-page>
-        <AppPageHeader
-          title="Clusters"
-          actions={
-            sortedReports.length > 0 ? <Button onClick={() => setCreateOpen(true)}>Create cluster</Button> : undefined
-          }
-        />
+        <AppPageHeader title="Clusters" />
 
         <Stack gap="sm" className={classes.content}>
           <ClusterGuidanceCard defaultOpen={sortedReports.length === 0} />
@@ -87,25 +83,49 @@ export function ClustersPage(props: Props): ReactElement {
               onCreateCluster={() => setCreateOpen(true)}
             />
           ) : (
-            <div className={classes.layout}>
-              <ClusterListPanel
-                reports={sortedReports}
-                serverById={serverById}
-                activeClusterId={activeClusterId}
-                onSelect={setSelectedClusterId}
-              />
-              {activeReport !== null && (
-                <ClusterDetailPanel
-                  report={activeReport}
-                  members={activeMembers}
-                  servers={props.servers}
-                  statuses={props.statuses}
-                  serverById={serverById}
-                  onOpenServer={props.onOpenServer}
-                  onMembershipChanged={props.onRefresh}
-                />
-              )}
-            </div>
+            <Tabs
+              value={activeClusterId}
+              onChange={(value) => {
+                if (value !== null) setSelectedClusterId(value);
+              }}
+              variant="default"
+              radius="sm"
+              className={classes.clusterTabs}
+              keepMounted={false}
+            >
+              <div className={classes.clusterTabBar}>
+                <Tabs.List className={classes.clusterTabsList} aria-label="Clusters">
+                  {sortedReports.map((report) => (
+                    <Tabs.Tab key={report.clusterId} value={report.clusterId}>
+                      <Tooltip label={report.clusterId} openDelay={500} disabled={report.clusterId.length < 24}>
+                        <span className={classes.clusterTabName}>{report.clusterId}</span>
+                      </Tooltip>
+                    </Tabs.Tab>
+                  ))}
+                </Tabs.List>
+                <Button
+                  size="xs"
+                  leftSection={<Plus size={16} weight="bold" />}
+                  className={classes.createClusterAction}
+                  onClick={() => setCreateOpen(true)}
+                >
+                  Create cluster
+                </Button>
+              </div>
+              {sortedReports.map((report) => (
+                <Tabs.Panel key={report.clusterId} value={report.clusterId} className={classes.clusterTabsPanel}>
+                  <ClusterDetailPanel
+                    report={report}
+                    members={membersByCluster.get(report.clusterId) ?? []}
+                    servers={props.servers}
+                    statuses={props.statuses}
+                    serverById={serverById}
+                    onOpenServer={props.onOpenServer}
+                    onMembershipChanged={props.onRefresh}
+                  />
+                </Tabs.Panel>
+              ))}
+            </Tabs>
           )}
         </Stack>
       </div>

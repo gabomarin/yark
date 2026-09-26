@@ -24,6 +24,7 @@ const fixtureName = `clusters-membership-${Date.now()}-${Math.floor(Math.random(
 const profileDir = path.join(profilesRoot, fixtureName);
 const serversRoot = path.join(os.tmpdir(), "yark-e2e-servers", fixtureName);
 const clusterShareDir = path.join(serversRoot, "cluster-share");
+const visualDir = path.join(os.tmpdir(), `yark-e2e-clusters-tribute-${fixtureName}`);
 
 function assertFixturePath(root, target) {
   const resolvedRoot = path.resolve(root);
@@ -190,6 +191,27 @@ async function run() {
     assert.ok(await page.getByText(nameA, { exact: true }).first().isVisible(), "Cluster detail lists server A");
     assert.ok(await page.getByText(nameB, { exact: true }).first().isVisible(), "Cluster detail lists server B");
 
+    fs.mkdirSync(visualDir, { recursive: true });
+    const tributeDetail = page.locator(`[data-cluster-detail="${clusterId}"]`);
+    const tribute = tributeDetail.locator("[data-cluster-tribute-settings]");
+    await tribute.waitFor({ state: "visible", timeout: 10000 });
+    for (const size of [
+      { name: "hd", width: 1280, height: 720 },
+      { name: "full-hd", width: 1920, height: 1080 },
+      { name: "qhd-2k", width: 2560, height: 1440 },
+    ]) {
+      await page.setViewportSize({ width: size.width, height: size.height });
+      await tribute.scrollIntoViewIfNeeded();
+      await page.waitForTimeout(200);
+      const horizontalOverflow = await page.evaluate(() => {
+        const documentWidth = Math.max(document.documentElement.scrollWidth, document.body.scrollWidth);
+        return documentWidth > document.documentElement.clientWidth + 1;
+      });
+      assert.equal(horizontalOverflow, false, `${size.name}: tribute panel does not overflow the viewport`);
+      await page.screenshot({ path: path.join(visualDir, `cluster-tribute-${size.name}.png`) });
+    }
+    await page.setViewportSize({ width: 1920, height: 1080 });
+
     // --- Add C (#41) ---
     await page.getByRole("button", { name: /add servers/i }).click();
     const addDialog = page.getByRole("dialog", { name: new RegExp(`add servers to ${clusterId}`, "i") });
@@ -212,9 +234,7 @@ async function run() {
 
     // --- Remove C (#41) ---
     const detail = page.locator(`[data-cluster-detail="${clusterId}"]`);
-    const cMemberRow = detail.locator("[class*='memberRow']", {
-      has: page.getByText(nameC, { exact: true }),
-    });
+    const cMemberRow = detail.locator("tr").filter({ has: page.getByText(nameC, { exact: true }) });
     await cMemberRow.getByRole("button", { name: /^remove /i }).click();
     const removeDialog = page.getByRole("dialog", {
       name: new RegExp(`remove from ${clusterId}`, "i"),
@@ -239,6 +259,7 @@ async function run() {
     console.log("E2E_CLUSTERS_MEMBERSHIP_OK");
     console.log(`E2E_CLUSTER_ID=${clusterId}`);
     console.log(`E2E_PROFILE=${profileDir}`);
+    console.log(`E2E_CLUSTER_VISUALS=${visualDir}`);
   } finally {
     if (app !== null) {
       try {
@@ -255,6 +276,9 @@ async function run() {
       fs.rmSync(serversRoot, { recursive: true, force: true });
     } else {
       console.error(`E2E_CLUSTERS_MEMBERSHIP_PROFILE_PRESERVED ${profileDir}`);
+    }
+    if (process.env.YARK_E2E_KEEP_VISUALS !== "1") {
+      fs.rmSync(visualDir, { recursive: true, force: true });
     }
   }
 }

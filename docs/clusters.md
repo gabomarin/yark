@@ -189,6 +189,44 @@ Report shape:
     Steam Workshop INI path; unused on ASA — YARK launches `-mods=` from
     profile CurseForge IDs)
 
+### Transfer / tribute settings (#325)
+
+The Clusters page uses a tab for each cluster. One member table combines each
+server's map and runtime status, its `GameUserSettings.ini` `[ServerSettings]`
+transfer values, and row actions. Values are compared across members and
+against the saved cluster template; missing settings are identified as missing,
+and the adjacent catalog default is informational rather than a saved file
+value. Compliance status is shown beside the cluster name, with issue details
+available from its tooltip.
+
+The **Cluster-wide settings** group aligns these keys across members:
+
+- `TributeItemExpirationSeconds`, `TributeDinoExpirationSeconds`, and
+  `TributeCharacterExpirationSeconds` — entered and stored in seconds, with a
+  readable duration shown alongside the saved value.
+  Values above 31,536,000 seconds (one year) are rejected. Different timers can
+  delete ARK Data when a player opens tribute on a map with a shorter timer.
+- `MaxTributeItems` (catalog default 50), `MaxTributeDinos` (20), and
+  `MaxTributeCharacters` (10) — values below the catalog defaults are rejected.
+  The catalog warns that increases may corrupt cluster/player data; its item
+  and creature upper-limit figures are community claims marked unverified, so
+  YARK displays that guidance without presenting it as a confirmed safe cap.
+
+The editor saves the cluster template by default. **Save and apply to servers**
+also restores the template to eligible stopped members. Table actions promote a
+member to the template, apply the INI template, apply only the six cluster-wide
+settings, or remove a member. Applying only the six settings leaves other INI
+values unchanged. Per-map transfer overrides remain in each server's INI editor.
+The restore path preserves unrelated INI values and profile-owned keys, and
+checks again that each server is stopped before writing.
+
+Per-map settings such as `PreventUploadItems`, `PreventDownloadItems`,
+`PreventUploadDinos`, `PreventDownloadDinos`, `PreventUploadSurvivors`,
+`PreventDownloadSurvivors`, `noTributeDownloads`, and
+`CrossARKAllowForeignDinoDownloads` remain available in each server's INI Files
+tab. They are excluded from cluster-wide drift checks and applies.
+`MinimumDinoReuploadInterval` is not included in the cluster settings surface.
+
 ### Server form / onboarding
 
 - **Create server (#178):** Cluster section is a **Cluster** select (**None** or
@@ -254,20 +292,22 @@ Report shape:
 
 ## Tests and visual review
 
-| Artifact                                                                      | Coverage                                                                                                                                    |
-| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tests/unit/compliance.test.ts`                                               | Ready cluster, ignore unclustered, single-server warning, dir mismatch, port conflict, mod mismatch                                         |
-| `src/renderer/src/features/clusters/ClustersPage.test.tsx`                    | Empty / ready / broken UI, dir-without-id copy, create-cluster wizard, add/remove membership, INI template modal, promote/restore/seed      |
-| `tests/unit/create-cluster-model.test.ts`                                     | Eligibility, ID/dir validation, create input                                                                                                |
-| `tests/unit/membership-model.test.ts`                                         | Add/remove eligibility, join ports, leave input                                                                                             |
-| `tests/unit/yark-owned-ini-keys.test.ts`                                      | Owned-key strip / match                                                                                                                     |
-| `tests/unit/cluster-ini-template.test.ts`                                     | Template repo/service CRUD + validation                                                                                                     |
-| `tests/unit/ini-compose.test.ts`                                              | Template↔member composition + secret redaction                                                                                              |
-| `tests/unit/cluster-ini-template-apply.test.ts`                               | Restore/promote/seed commit + selective files (#181) + failure preservation                                                                 |
-| `tests/unit/known-cluster-options.test.ts`                                    | Fleet `{clusterId, clusterDir}` picker options (#178)                                                                                       |
-| `src/renderer/src/features/servers/components/ServerForm/ServerForm.test.tsx` | Create Cluster select (None / join) + empty-fleet CTA; edit keeps free-text Cluster ID + PathField dir (#178 / #222); port-conflict preview |
-| `node scripts/e2e-clusters-membership.cjs`                                    | Playwright create (PathField Browse stub) → add → remove membership (Windows)                                                               |
-| `node scripts/visual-clusters.cjs`                                            | Playwright sidebar → Clusters compliance UI                                                                                                 |
+| Artifact                                                                       | Coverage                                                                                                                                      |
+| ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tests/unit/compliance.test.ts`                                                | Ready cluster, ignore unclustered, single-server warning, dir mismatch, port conflict, mod mismatch                                           |
+| `src/renderer/src/features/clusters/ClustersPage.test.tsx`                     | Empty / ready / broken UI, dir-without-id copy, create-cluster wizard, add/remove membership, INI template modal, promote/restore/seed        |
+| `src/renderer/src/features/clusters/components/ClusterTributePanel/*.test.tsx` | Tribute drift/missing display, stopped-member preview/apply, per-map-only write behavior                                                      |
+| `src/renderer/src/features/clusters/tributeModel.test.ts`                      | Catalog defaults, missing/different values, expiration and slot validation                                                                    |
+| `tests/unit/create-cluster-model.test.ts`                                      | Eligibility, ID/dir validation, create input                                                                                                  |
+| `tests/unit/membership-model.test.ts`                                          | Add/remove eligibility, join ports, leave input                                                                                               |
+| `tests/unit/yark-owned-ini-keys.test.ts`                                       | Owned-key strip / match                                                                                                                       |
+| `tests/unit/cluster-ini-template.test.ts`                                      | Template repo/service CRUD + validation                                                                                                       |
+| `tests/unit/ini-compose.test.ts`                                               | Template↔member composition + secret redaction                                                                                                |
+| `tests/unit/cluster-ini-template-apply.test.ts`                                | Restore/promote/seed commit + selective files (#181) + failure preservation                                                                   |
+| `tests/unit/known-cluster-options.test.ts`                                     | Fleet `{clusterId, clusterDir}` picker options (#178)                                                                                         |
+| `src/renderer/src/features/servers/components/ServerForm/ServerForm.test.tsx`  | Create Cluster select (None / join) + empty-fleet CTA; edit keeps free-text Cluster ID + PathField dir (#178 / #222); port-conflict preview   |
+| `node scripts/e2e-clusters-membership.cjs`                                     | Playwright create (PathField Browse stub) → add → remove membership; tribute-panel screenshot/overflow matrix at HD / Full HD / QHD (Windows) |
+| `node scripts/visual-clusters.cjs`                                             | Playwright sidebar → Clusters compliance UI                                                                                                   |
 
 Visible Clusters UI changes still follow [visual-testing.md](visual-testing.md)
 (HD / Full HD / QHD).

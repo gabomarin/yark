@@ -98,7 +98,7 @@ modals, workspace tabs, PathFields):
 | Import / move install                             | `e2e:import-install`, `e2e:move-install`                                                       |
 | Launch / Runtime / console-on-start               | `e2e:launch-args`                                                                              |
 | RCON console                                      | `e2e:rcon`                                                                                     |
-| Clusters membership                               | `e2e:clusters-membership`                                                                      |
+| Clusters membership / tribute panel               | `e2e:clusters-membership`                                                                      |
 | Copy configuration                                | `e2e:copy-configuration`                                                                       |
 | Downloads queue / critical-job recovery           | `e2e:critical-job-recovery`, `e2e:downloads-pause-resume`, `node scripts/visual-downloads.cjs` |
 | Log retention (Settings → Logs)                   | `e2e:log-retention`                                                                            |
