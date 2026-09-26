@@ -295,9 +295,9 @@ export function ClusterWideEditor(props: Props): ReactElement {
         </Stack>
 
         <Text size="xs" c="dimmed">
-          Save updates only the cluster template. Save and apply updates the template and applies these values to eligible
-          stopped servers. Running or busy servers are skipped. YARK creates a backup before applying and preserves
-          other INI settings, including profile-managed values.
+          Save updates only the cluster template. Save and apply updates the template and applies these values to
+          eligible stopped servers. Running or busy servers are skipped. YARK creates a backup before applying and
+          preserves other INI settings, including profile-managed values.
         </Text>
         {skipped.length > 0 && (
           <Stack gap="xs">
