@@ -14,7 +14,7 @@ export function ClusterWideSummary(props: Props): ReactElement {
           </Text>
         </Group>
         <Button variant="default" onClick={props.onEdit}>
-          Edit cluster settings
+          Edit transfer settings
         </Button>
       </Group>
     </Stack>

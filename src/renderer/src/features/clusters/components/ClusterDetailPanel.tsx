@@ -194,8 +194,8 @@ export function ClusterDetailPanel(props: Props): ReactElement {
                     )}
                     {transferReview.expirationMismatch && (
                       <Text size="sm" lh={1.45}>
-                        Different expiration timers can delete stored ARK Data when a player opens tribute on a map with
-                        a shorter timer.
+                        If servers use different expiration timers, stored ARK Data can be deleted when a player opens
+                        Tribute on a map with a shorter timer.
                       </Text>
                     )}
                   </Stack>

@@ -185,7 +185,7 @@ export function ClusterWideEditor(props: Props): ReactElement {
       onClose={() => {
         if (!saving) props.onClose();
       }}
-      title="Edit cluster-wide tribute settings"
+      title="Edit cluster transfer settings"
       size="lg"
       closeOnClickOutside={!saving}
       closeOnEscape={!saving}
@@ -222,9 +222,9 @@ export function ClusterWideEditor(props: Props): ReactElement {
             {error}
           </Alert>
         )}
-        <Alert color="attention" title="Cross-ARK data safety">
-          Different expiration timers can cause stored ARK Data to be deleted when a player opens tribute on a map with
-          a shorter timer. Expiration is limited to one year.
+        <Alert color="attention" title="Avoid data loss">
+          If servers use different expiration timers, stored ARK Data can be deleted when a player opens Tribute on a
+          map with a shorter timer.
         </Alert>
 
         <Stack gap="xs">
@@ -232,7 +232,8 @@ export function ClusterWideEditor(props: Props): ReactElement {
             Expiration
           </Text>
           <Text size="xs" c="dimmed">
-            Enter the saved value in seconds. 0 uses the game default; values are limited to one year.
+            Enter whole values in seconds. Maximum: 1 year. For items and creatures, 0 uses the game default; for
+            survivors, 0 means no expiration.
           </Text>
           <Group align="flex-start" grow>
             {TRIBUTE_EXPIRATION_KEYS.map((key) => {
@@ -262,7 +263,8 @@ export function ClusterWideEditor(props: Props): ReactElement {
             Upload slots
           </Text>
           <Text size="xs" c="dimmed">
-            Values below the catalog defaults are rejected; raising them can corrupt cluster data.
+            Values below each catalog default are rejected. Increasing upload limits may risk stored ARK Data; check
+            each field’s info before changing it.
           </Text>
           <Group align="flex-start" grow>
             {TRIBUTE_SLOT_KEYS.map((key) => {
@@ -293,8 +295,9 @@ export function ClusterWideEditor(props: Props): ReactElement {
         </Stack>
 
         <Text size="xs" c="dimmed">
-          Save updates the cluster template. Save and apply also restores these values to stopped members; running or
-          busy members are skipped. Existing backups are used; unrelated and profile-owned INI settings are preserved.
+          Save updates only the cluster template. Save and apply updates the template and applies these values to eligible
+          stopped servers. Running or busy servers are skipped. YARK creates a backup before applying and preserves
+          other INI settings, including profile-managed values.
         </Text>
         {skipped.length > 0 && (
           <Stack gap="xs">
