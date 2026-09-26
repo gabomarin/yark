@@ -103,6 +103,19 @@ describe("ClustersPage", () => {
   beforeEach(() => {
     window.api = {
       ...(window.api ?? {}),
+      readServerIni: vi.fn(async (serverId: string) => ({
+        ok: true,
+        data: {
+          serverId,
+          gameUserSettingsPath: `C:/ARK/${serverId}/GameUserSettings.ini`,
+          gameIniPath: `C:/ARK/${serverId}/Game.ini`,
+          gameUserSettingsExisted: true,
+          gameIniExisted: true,
+          payload: { gameUserSettings: "[ServerSettings]\n", game: "" },
+          pending: false,
+          pendingUpdatedAt: null,
+        },
+      })),
       getClusterIniTemplate: vi.fn(async () => ({ ok: true, data: null })),
       getClusterIniTemplateOrDraft: vi.fn(async (clusterId: string) => ({
         ok: true,
@@ -271,9 +284,8 @@ describe("ClustersPage", () => {
 
     expect(screen.getByText(/2 clusters · 1 ready · 1 with errors/)).toBeInTheDocument();
 
-    // Broken clusters sort first — compliance details are available from the cluster header.
-    await user.hover(screen.getByText("Errors", { exact: true }));
-    expect(await screen.findByRole("tooltip")).toHaveTextContent(/no cluster directory configured/i);
+    // Broken clusters sort first — the detail surfaces the compliance issue.
+    expect(await screen.findByText(/no cluster directory configured/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: /alpha/i }));
     const detail = document.querySelector('[data-cluster-detail="alpha"]');
@@ -654,7 +666,7 @@ describe("ClustersPage", () => {
       </AppProviders>,
     );
 
-    const removeButtons = screen.getAllByRole("button", { name: /^remove /i });
+    const removeButtons = await screen.findAllByRole("button", { name: /^remove /i });
     await user.click(removeButtons[0]!);
     const dialog = await screen.findByRole("dialog", { name: /remove from alpha/i });
     await user.click(within(dialog).getByRole("button", { name: /remove from cluster/i }));
@@ -712,7 +724,7 @@ describe("ClustersPage", () => {
     );
 
     const restore = await screen.findByRole("button", {
-      name: /restore the island from template/i,
+      name: /apply INI template to The Island/i,
     });
     expect(restore).toBeDisabled();
   });
@@ -787,7 +799,7 @@ describe("ClustersPage", () => {
       </AppProviders>,
     );
 
-    await user.click(await screen.findByRole("button", { name: /restore the island from template/i }));
+    await user.click(await screen.findByRole("button", { name: /apply INI template to The Island/i }));
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByText(/restore member from template/i)).toBeInTheDocument();
     expect(await within(dialog).findByText(/XPMultiplier/i)).toBeInTheDocument();
@@ -851,7 +863,7 @@ describe("ClustersPage", () => {
     const dialog = await screen.findByRole("dialog");
     await user.click(within(dialog).getByRole("button", { name: /Free Map/i }));
     await user.click(within(dialog).getByRole("button", { name: /continue/i }));
-    const seedToggle = within(dialog).getByRole("checkbox", {
+    const seedToggle = await within(dialog).findByRole("checkbox", {
       name: /seed ini from cluster template/i,
     });
     expect(seedToggle).not.toBeChecked();

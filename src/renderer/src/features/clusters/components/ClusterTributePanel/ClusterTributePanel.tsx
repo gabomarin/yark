@@ -4,10 +4,7 @@ import { Button, Group, Stack, Text } from "@mantine/core";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
 import type { ServerIniSnapshot, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { setIniTextValue } from "@shared/ini/ini-text";
-import {
-  CLUSTER_WIDE_TRIBUTE_KEYS,
-  type ClusterWideTributeKey,
-} from "../../tributeModel";
+import { CLUSTER_WIDE_TRIBUTE_KEYS, type ClusterWideTributeKey } from "../../tributeModel";
 import { ClusterWideSummary } from "./ClusterWideSummary";
 import { ClusterMembersTable } from "./ClusterMembersTable";
 import { ClusterWideEditor } from "./ClusterWideEditor";

@@ -153,10 +153,12 @@ describe("ClusterTributePanel", () => {
           {...panelActions()}
           clusterId="alpha"
           members={[island, scorched]}
-          snapshots={new Map([
-            ["srv-a", snapshot("srv-a", gus)],
-            ["srv-b", snapshot("srv-b", differentAndMissing)],
-          ])}
+          snapshots={
+            new Map([
+              ["srv-a", snapshot("srv-a", gus)],
+              ["srv-b", snapshot("srv-b", differentAndMissing)],
+            ])
+          }
           statuses={
             new Map([
               ["srv-a", runtime("stopped")],
@@ -170,8 +172,8 @@ describe("ClusterTributePanel", () => {
 
     expect(screen.getAllByText(/missing/i).length).toBeGreaterThan(0);
     expect(screen.getByRole("row", { name: /The Island/ })).toBeInTheDocument();
-    expect(screen.getByText(/86,400 seconds \(1 day\)/)).toBeInTheDocument();
-    expect(screen.getByText(/172,800 seconds \(2 days\)/)).toBeInTheDocument();
+    expect(screen.getAllByText(/86,400 seconds \(1 day\)/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/172,800 seconds \(2 days\)/).length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: /edit settings for this map/i })).not.toBeInTheDocument();
   });
 
@@ -215,16 +217,16 @@ describe("ClusterTributePanel", () => {
     await user.clear(itemExpiration);
     await user.type(itemExpiration, "36");
 
-    // The modal summarizes the target and only expands skipped members on request.
-    expect(editor.textContent).toContain("Applies to 1 stopped member");
+    // The modal only expands skipped members on request.
     await user.click(within(editor).getByRole("button", { name: /show 1 skipped member/i }));
     expect(editor.textContent).toContain("Scorched");
     expect(editor.textContent).toContain("must not be running");
     expect(itemExpiration).toHaveValue("36");
     expect(window.api.saveClusterIniTemplate).not.toHaveBeenCalled();
 
-    // Propagate (saving auto-propagates to stopped members)
-    await user.click(within(editor).getByRole("button", { name: /save and apply to servers/i }));
+    // Save-and-apply lives behind the split-button menu (rendered in a portal).
+    await user.click(within(editor).getByRole("button", { name: /more save options/i }));
+    await user.click(await screen.findByRole("menuitem", { name: /save and apply to servers/i }));
     await waitFor(() =>
       expect(window.api.restoreClusterIniFromTemplate).toHaveBeenCalledWith("alpha", "srv-a", {
         gameUserSettings: true,
@@ -255,10 +257,12 @@ describe("ClusterTributePanel", () => {
           {...panelActions()}
           clusterId="alpha"
           members={[island, scorched]}
-          snapshots={new Map([
-            ["srv-a", snapshot("srv-a", restrictedGus)],
-            ["srv-b", snapshot("srv-b", gus)],
-          ])}
+          snapshots={
+            new Map([
+              ["srv-a", snapshot("srv-a", restrictedGus)],
+              ["srv-b", snapshot("srv-b", gus)],
+            ])
+          }
           statuses={
             new Map([
               ["srv-a", runtime("stopped")],

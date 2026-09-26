@@ -108,9 +108,10 @@ export function ClusterDetailPanel(props: Props): ReactElement {
     return memberValues.some((values) => !clusterWideTributeValuesEqual(key, values?.[key], expected));
   }).length;
   const expirationMismatch = TRIBUTE_EXPIRATION_KEYS.some((key) => memberStatus[key] !== "matching");
-  const transferReview = transferLoading
-    ? null
-    : { differingCount, missingCount, templateDriftCount, expirationMismatch };
+  const transferReview =
+    transferLoading || transferError !== null
+      ? null
+      : { differingCount, missingCount, templateDriftCount, expirationMismatch };
 
   useEffect(() => {
     void refreshTransferData();
@@ -147,8 +148,12 @@ export function ClusterDetailPanel(props: Props): ReactElement {
                   <Text size="sm" fw={600}>
                     Compliance
                   </Text>
-                  {props.report.issues.map((issue) => (
-                    <Text key={`${issue.serverId ?? "cluster"}-${issue.severity}-${issue.message}`} size="sm" lh={1.45}>
+                  {props.report.issues.map((issue, index) => (
+                    <Text
+                      key={`${issue.serverId ?? "cluster"}-${issue.severity}-${issue.message}-${index}`}
+                      size="sm"
+                      lh={1.45}
+                    >
                       {issue.serverId === null
                         ? ""
                         : `${props.serverById.get(issue.serverId)?.name ?? issue.serverId}: `}
