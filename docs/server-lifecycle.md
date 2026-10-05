@@ -354,7 +354,7 @@ explicit password action).
 | When | Refresh when the selected server transitions to running; dialog auto-detects if opened idle without a usable IP; operator **Refresh** forces another lookup. |
 | Payload | `open {IPv4}:{gamePort}` only — hostnames are rejected (`isIpv4Address`). **No** `steam://` deep link (ASA dedicated has no reliable one). |
 | Trust | Revealing the public IP to ipify is inherent to the lookup; documented in `SECURITY.md` and operator `security-privacy.mdx`. Address is read-only in the dialog. |
-| Reachability | Copying details does **not** mean the server is joinable — game (and query for browser) port forwarding remains the operator’s job. |
+| Reachability | Copying details does **not** mean the server is joinable — game (and query for browser) port forwarding remains the operator's job. |
 
 Pure builders live in `joinInfoModel.ts` (unit-tested). Hook
 `useWorkspaceJoinInfo` shares one IP state between the header and the modal.
