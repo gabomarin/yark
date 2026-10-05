@@ -9,6 +9,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+- Documented workspace **Share connection details** / public-IP lookup, Quick-actions Delete server, RCON admin-star confirm rules, backup History Date labeling, and the release-downloads Worker index (#505, #517, #619, #622, #623, #630).
 - Cluster tabs match Server Workspace sizing, and transfer settings clarify expiration defaults, upload risks, and apply behavior (#325).
 - Mods can now be marked **Passive** (row action, detail drawer, or row menu) to load their data without spawning content: passive IDs are sent on `-passivemods=` and removed from `-mods=`, and YARK dedupes both flags (#509).
 - Server workspace file-job notices now appear once above the tabs on every workspace tab (#630).

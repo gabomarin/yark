@@ -32,6 +32,7 @@ affect start and config writes are summarized at the end.
 | Config assistant model           | `src/renderer/src/features/server-workspace/configurationWizardModel.ts`                                            |
 | Config assistant UI              | `…/components/ConfigurationWizard.tsx`                                                                              |
 | Restart composition              | `src/renderer/src/App.tsx` (`stop` then `start`)                                                                    |
+| Share connection / public IP (#505) | `src/main/public-ip-service.ts`, `…/JoinInfoModal/`, `…/useWorkspaceJoinInfo.ts`                                 |
 | IPC                              | `src/shared/ipc.ts`, `src/preload/index.ts`, `src/main/ipc-handlers.ts`                                             |
 
 Binary path: `{installDir}/ShooterGame/Binaries/Win64/ArkAscendedServer.exe`
@@ -273,9 +274,10 @@ updates cannot change it; only `InstanceService.setServerEnabled` may do so.
 
 ### Remove or delete a server (#267)
 
-Overview card kebab / context menu → **Delete server** opens a confirm
-(`servers:delete` with required `{ deleteInstallFiles: boolean }`). Both modes
-reject while the process is active. Missing profiles are a no-op.
+Overview card kebab / context menu **or** workspace **Quick actions → Delete
+server** (#623) opens the same confirm (`servers:delete` with required
+`{ deleteInstallFiles: boolean }`). Both modes reject while the process is
+active. Missing profiles are a no-op.
 
 | Mode                                                       | UI                                          | Disk                                                                  | Notes                                                                                                                                      |
 | ---------------------------------------------------------- | ------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -338,6 +340,32 @@ probe recovery actions call **start** (not restart again).
 
 Actionable install degradation (e.g. `ready` → `missing`) emits
 `installation_health_degraded` once per transition (no startup spam).
+
+### Share connection details (#505)
+
+Workspace header shows a copyable `Join: open IP:port` command once a public
+IPv4 is known, plus **Share connection details** (`JoinInfoModal`) for session
+name, game/query ports, and join password (masked on screen; copied only on the
+explicit password action).
+
+| Piece | Detail |
+| ----- | ------ |
+| Lookup | Main-process `app:get-public-ip` → `lookupPublicIp()` (`api.ipify.org?format=json`, 4s timeout, single-flight). Renderer CSP blocks outbound fetch, so this cannot run in the page. |
+| When | Refresh when the selected server transitions to running; dialog auto-detects if opened idle without a usable IP; operator **Refresh** forces another lookup. |
+| Payload | `open {IPv4}:{gamePort}` only — hostnames are rejected (`isIpv4Address`). **No** `steam://` deep link (ASA dedicated has no reliable one). |
+| Trust | Revealing the public IP to ipify is inherent to the lookup; documented in `SECURITY.md` and operator `security-privacy.mdx`. Address is read-only in the dialog. |
+| Reachability | Copying details does **not** mean the server is joinable — game (and query for browser) port forwarding remains the operator’s job. |
+
+Pure builders live in `joinInfoModel.ts` (unit-tested). Hook
+`useWorkspaceJoinInfo` shares one IP state between the header and the modal.
+Operator copy: website `profiles-and-ports.mdx`.
+
+### File-job notice placement (#630)
+
+While an Install / Update / Verify job owns the server, one attention
+`AppAlert` sits **above the workspace tab bar** on every tab (not inside
+Server / INI / Launch panels). That keeps Start/restore locks visible without
+duplicating notices when switching tabs.
 
 ### Auto-start on application launch (#53)
 
@@ -697,6 +725,10 @@ the path field (including folders already owned by another YARK profile):
 | `tests/unit/instance-stop.test.ts`                     | Pre-stop backup order / best-effort failure                                               |
 | `tests/unit/instance-restart.test.ts`                  | Restart order, fail-hard backup, lock conflict                                            |
 | `tests/integration/process-manager-real-start.test.ts` | win32 direct spawn / spaced paths                                                         |
+| `tests/unit/public-ip-service.test.ts`                 | ipify JSON parse, non-IPv4 rejection, timeout envelope                                    |
+| `…/JoinInfoModal/joinInfoModel.test.ts`                | `open IP:port` builder, host validation, password mask                                    |
+| `…/useWorkspaceJoinInfo.test.ts`                       | Shared header/modal IP refresh                                                            |
+| `npm run e2e:launch-args`                              | Also covers join-info chrome smoke on Windows                                             |
 
 See also [backups.md](backups.md) (restore requires `!isActive`),
 [updates-steamcmd.md](updates-steamcmd.md) (stopped-server safe update,

@@ -354,6 +354,7 @@ After a successful `ini:save`, `createIniSaveBackup` debounces **2s** per server
 - **Server Workspace → Backups** — kind subtabs (**World save** | **Player profiles** | **INI**). History titles use a friendly map name plus why the archive exists (zip name stays secondary). Embedded chrome includes a short header, a shared **Destination** `PathField` (default root for all three kinds), and per-kind policy disclosure open by default (collapsible; collapse persists within a kind tab but resets when switching kinds). World/INI support **Backup now** + import from the history toolbar; Players is join/leave history (export/delete/restore) with no manual create or import.
 - Destination is shared across kinds; schedule controls live on the World subtab; Players/INI keep compact retain controls near history.
 - **Backup history** uses shared **`YarkDataTable`** (`mantine-datatable`) for selection, density, and empty/loading; row actions and right-click menus stay on `backupHistoryRowActionModel` (#94).
+- **Date column (#517):** `formatWhenLabel` (`src/shared/format-log-datetime.ts`) — English relative time when the row is younger than **24h** (`WHEN_RECENT_MS`); local `YYYY-MM-DD HH:MM:SS` when older. Tooltip shows the other form. English-only until app i18n (#358); do not use the OS locale.
 - Visual protocol for the workspace tab: `scripts/visual-backups.cjs` (asserts header/shared destination, policy open by default, HD list height).
 
 ## Troubleshooting
