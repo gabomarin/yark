@@ -129,6 +129,7 @@ function panelActions() {
     onRefresh: vi.fn(async () => {}),
     hasTemplate: false,
     canRemoveAny: true,
+    onChanged: vi.fn(),
     onTemplateChanged: vi.fn(),
     onOpenServer: vi.fn(),
     onRemoveAll: vi.fn(),
@@ -177,12 +178,13 @@ describe("ClusterTributePanel", () => {
     expect(screen.queryByRole("button", { name: /edit settings for this map/i })).not.toBeInTheDocument();
   });
 
-  it("applies cluster-wide values only to stopped members and preserves other template keys", async () => {
+  it("applies cluster-wide values only to stopped members and preserves other member INI keys", async () => {
     const user = userEvent.setup();
     const getClusterIniTemplate = vi.fn(async () => ({
       ok: true,
       data: {
         clusterId: "alpha",
+        // Sparse/empty-ish template must not wipe member GUS on Save and apply.
         payload: { gameUserSettings: "[ServerSettings]\nUnrelatedTemplateValue=keep-too\n", game: "" },
         updatedAt: "2026-08-05T00:00:00.000Z",
       },
@@ -227,13 +229,18 @@ describe("ClusterTributePanel", () => {
     // Save-and-apply lives behind the split-button menu (rendered in a portal).
     await user.click(within(editor).getByRole("button", { name: /more save options/i }));
     await user.click(await screen.findByRole("menuitem", { name: /save and apply to servers/i }));
-    await waitFor(() =>
-      expect(window.api.restoreClusterIniFromTemplate).toHaveBeenCalledWith("alpha", "srv-a", {
-        gameUserSettings: true,
-        game: false,
+    await waitFor(() => expect(window.api.saveServerIni).toHaveBeenCalledTimes(1));
+    expect(window.api.restoreClusterIniFromTemplate).not.toHaveBeenCalled();
+    expect(window.api.saveServerIni).toHaveBeenCalledWith(
+      "srv-a",
+      expect.objectContaining({
+        gameUserSettings: expect.stringMatching(/TributeItemExpirationSeconds=36/),
       }),
     );
-    expect(window.api.restoreClusterIniFromTemplate).toHaveBeenCalledTimes(1);
+    const savedPayload = vi.mocked(window.api.saveServerIni).mock.calls[0]?.[1] as ServerIniPayload;
+    expect(savedPayload.gameUserSettings).toContain("UnrelatedSetting=keep-me");
+    expect(savedPayload.gameUserSettings).toContain("PreventUploadItems=False");
+    expect(savedPayload.gameUserSettings).not.toContain("UnrelatedTemplateValue=keep-too");
     expect(window.api.saveClusterIniTemplate).toHaveBeenCalledWith(
       "alpha",
       expect.objectContaining({
@@ -245,6 +252,33 @@ describe("ClusterTributePanel", () => {
       expect.objectContaining({ gameUserSettings: expect.stringContaining("TributeItemExpirationSeconds=36") }),
     );
     expect(onChanged).toHaveBeenCalledOnce();
+  });
+
+  it("keeps per-map settings intact when Save and apply runs with an empty cluster template", async () => {
+    const user = userEvent.setup();
+    installApi((id) => snapshot(id, gus));
+    // Default installApi returns no template; Save and apply must still patch keys only.
+    render(
+      <AppProviders>
+        <ClusterTributePanel
+          {...panelActions()}
+          clusterId="alpha"
+          members={[island]}
+          statuses={new Map([["srv-a", runtime("stopped")]])}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: /edit transfer settings/i }));
+    await user.click(await screen.findByRole("button", { name: /more save options/i }));
+    await user.click(await screen.findByRole("menuitem", { name: /save and apply to servers/i }));
+
+    await waitFor(() => expect(window.api.saveServerIni).toHaveBeenCalledTimes(1));
+    expect(window.api.restoreClusterIniFromTemplate).not.toHaveBeenCalled();
+    const savedPayload = vi.mocked(window.api.saveServerIni).mock.calls[0]?.[1] as ServerIniPayload;
+    expect(savedPayload.gameUserSettings).toContain("UnrelatedSetting=keep-me");
+    expect(savedPayload.gameUserSettings).toContain("PreventUploadItems=False");
+    expect(savedPayload.gameUserSettings).toMatch(/TributeItemExpirationSeconds=\d+/);
   });
 
   it("keeps per-map settings in the server INI workspace", async () => {

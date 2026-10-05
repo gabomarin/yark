@@ -213,12 +213,15 @@ The **Cluster-wide settings** group aligns these keys across members:
   YARK displays that guidance without presenting it as a confirmed safe cap.
 
 The editor saves the cluster template by default. **Save and apply to servers**
-also restores the template to eligible stopped members. Table actions promote a
-member to the template, apply the INI template, apply only the six cluster-wide
-settings, or remove a member. Applying only the six settings leaves other INI
-values unchanged. Per-map transfer overrides remain in each server's INI editor.
-The restore path preserves unrelated INI values and profile-owned keys, and
-checks again that each server is stopped before writing.
+also patches the six cluster-wide keys onto eligible stopped members (same as
+the row **Apply cluster transfer settings** action) without replacing the rest
+of `GameUserSettings.ini`. Table actions promote a member to the template,
+apply the full INI template, apply only the six cluster-wide settings, or
+remove a member. Applying only the six settings leaves other INI values
+unchanged. Per-map transfer overrides remain in each server's INI editor.
+Full **Apply INI template** restore replaces selected INI files from the
+template (then re-applies profile-owned keys) and checks again that each
+server is stopped before writing.
 
 Per-map settings such as `PreventUploadItems`, `PreventDownloadItems`,
 `PreventUploadDinos`, `PreventDownloadDinos`, `PreventUploadSurvivors`,
