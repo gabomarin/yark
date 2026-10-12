@@ -9,6 +9,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+- Docs: Appearance theme-family contract (Fluent + Plasma Breeze), workspace file-job notice placement, and OpenCodeReview `/ocr` + Responses protocol variables.
 - Cluster tabs match Server Workspace sizing, and transfer settings clarify expiration defaults, upload risks, and apply behavior (#325).
 - Mods can now be marked **Passive** (row action, detail drawer, or row menu) to load their data without spawning content: passive IDs are sent on `-passivemods=` and removed from `-mods=`, and YARK dedupes both flags (#509).
 - Server workspace file-job notices now appear once above the tabs on every workspace tab (#630).

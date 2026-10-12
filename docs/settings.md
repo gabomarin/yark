@@ -50,7 +50,7 @@ the Server tab / workspace.
 | On Settings                                                                              | Elsewhere                                                                                                                                                                                 |
 | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Close-to-tray, tray toast, Start with Windows                                            | Per-server `autoStart` toggle (Server tab → Startup)                                                                                                                                      |
-| UI density (compact / comfortable) + theme id                                            | Two themes ship: **dark** (default) and **light**, both registry entries in `shared/theme/themes.ts` — a theme carries its palette, semantic colours, elevation ladder and Mantine scales |
+| UI density (compact / comfortable) + Appearance (`themeFamily` + `scheme`)               | Two families ship in `shared/theme/themes.ts`: **fluent** (default) and **plasma-breeze**, each with **dark** / **light** — four registry payloads; density scales whichever is active   |
 | SteamCMD path + shared caches                                                            | Live progress: **Downloads** page + footer teaser + Logs → Updates                                                                                                                        |
 | Discord webhook + event filters                                                          | One-way notifications only; Discord cannot control YARK                                                                                                                                   |
 | Default create base folder (`localStorage`)                                              | Profile `installDir` (absolute, per server)                                                                                                                                               |
@@ -254,9 +254,10 @@ silent outside Settings status text.
    **Hide to tray** switch is “show alert” = `!dismissed`. The master
    **Desktop alerts** switch also gates this banner.
 4. **Appearance is a registry, not a flag** — density and theme live in
-   **Settings → Appearance**; a theme is an entry in `shared/theme/themes.ts` plus
-   its palette, and the `--app-*` role map stays shared. An unknown stored theme id
-   falls back to the default, so a downgrade never leaves the shell without a palette.
+   **Settings → Appearance**; selection is `themeFamily` + `scheme` resolved through
+   `shared/theme/themes.ts`, and the `--app-*` role map stays shared. Unknown family
+   or scheme values fall back to Fluent Dark; legacy `{ "theme": "dark"|"light" }`
+   rows read as Fluent plus that scheme (`normalizeAppearanceSettings`).
 5. **Do not persist density, theme or console-on-start defaults on read** — only user
    changes (or legacy migration) write `uiDensity` / `appearance.v1` / `openNativeConsoleOnStart`.
 6. **Shell switches disabled until IPC ready** — failed preference load leaves

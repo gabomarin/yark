@@ -31,29 +31,33 @@ Configure these repository **Variables**:
 
 - `OCR_PRIMARY_URL` — primary OpenAI-compatible endpoint.
 - `OCR_PRIMARY_MODEL` — primary model name.
+- `OCR_PRIMARY_PROTOCOL` — `openai` (default, Chat Completions) or `openai-responses` (Responses API, e.g. GPT Luna).
 - `OCR_FALLBACK_URL` — fallback OpenAI-compatible endpoint.
 - `OCR_FALLBACK_MODEL` — fallback model name.
+- `OCR_FALLBACK_PROTOCOL` — same values as `OCR_PRIMARY_PROTOCOL` (default `openai`).
 
 Configure these repository **Secrets**:
 
 - `OCR_PRIMARY_API_KEY` — credential for the primary endpoint.
 - `OCR_FALLBACK_API_KEY` — credential for the fallback endpoint.
 
-Use these exact PR comments:
+Use these exact PR comments (`/ocr` is an alias of `/open-code-review`):
 
-- `/open-code-review` — review with the primary provider.
-- `/open-code-review primary` — review with the primary provider.
-- `/open-code-review retry` — force a full review with the primary provider.
-- `/open-code-review fallback` — review with the fallback provider.
-- `/open-code-review high` — force high-effort review with the primary provider.
+- `/open-code-review` or `/ocr` — review with the primary provider.
+- `/open-code-review primary` or `/ocr primary` — review with the primary provider.
+- `/open-code-review retry` or `/ocr retry` — force a full review with the primary provider.
+- `/open-code-review fallback` or `/ocr fallback` — review with the fallback provider.
+- `/open-code-review high` or `/ocr high` — force high-effort review with the primary provider.
 
 Repeated reviews use sticky summaries, incremental comments, and checkpoint ranges
 to avoid repeating already reviewed changes. The explicit `retry` command bypasses
 the checkpoint and reviews the full PR again.
 
-Before OCR starts, the workflow sends a minimal authenticated chat-completions
-request to the selected provider. The configured URL must be the provider's exact
-OpenAI-compatible chat-completions endpoint; the workflow does not append a path.
+Before OCR starts, the workflow sends a minimal authenticated preflight request to
+the selected provider. Request/response shape follows the configured protocol
+(`messages` / `choices` for `openai`, `input` / `output` for `openai-responses`).
+The configured URL must be the provider's exact endpoint for that protocol; the
+workflow does not append a path.
 The job installs OpenCodeReview itself into a runner-local npm prefix, waits until
 the CLI answers, and exposes it through a wrapper in a directory npm never
 rewrites. Leaving the install to the action races: the package's postinstall
@@ -70,12 +74,14 @@ preflight-only `User-Agent` for efficient provider routing. OCR's reserved
 After a successful review, a follow-up step enriches the sticky OCR summary with
 the result, finding counts, reviewed range, and selected provider/model. Findings
 remain inline review comments; the extra summary is presentation metadata and
-does not replace those comments.
+does not replace those comments. Summary LLM calls use the same protocol as the
+selected provider; Responses summaries omit unsupported sampling fields such as
+`temperature` (needed for reasoning models like GPT Luna).
 
 Normal reviews automatically select `low` effort for PRs with up to 5 changed
 files and 120 changed lines; larger PRs use `medium`. High effort is never
-selected automatically and must be requested with `/open-code-review high` or
-the manual workflow's effort input. Effort is measured from the whole PR, so an
+selected automatically and must be requested with `/open-code-review high`,
+`/ocr high`, or the manual workflow's effort input. Effort is measured from the whole PR, so an
 incremental re-review of a small follow-up push on a large PR still uses `medium`.
 
 ### Discord release notify

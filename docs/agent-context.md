@@ -86,7 +86,7 @@ paths or the Notion hub URL in tracked files.
 - [launch-options-catalog.md](launch-options-catalog.md) — verified ASA CLI catalog (#92); regenerates via `npm run catalog:launch-options`.
 - [rcon.md](rcon.md) — workspace RCON console, persistent session, players, ban list.
 - [hosted-resources.md](hosted-resources.md) — experimental, default-off loopback HTTP host for versioned text/INI/JSON URL bodies (#564).
-- [settings.md](settings.md) — app-wide prefs, category rail (General / Profiles / SteamCMD / Log files / About), desktop shell, SteamCMD path, density, auto-start summary.
+- [settings.md](settings.md) — app-wide prefs, category rail (General / Appearance / Profiles / SteamCMD / Discord / Log files / About), desktop shell, SteamCMD path, density, theme family + scheme, auto-start summary.
 - [clusters.md](clusters.md) — transfer-compliance reports, cluster launch trio, Clusters page. Live-host archive: [spikes/22-cluster-live-transfers.md](spikes/22-cluster-live-transfers.md) (#22).
 - [mods.md](mods.md) — workspace CurseForge inventory, enable/disable, load order, metadata proxy, `-mods=`.
 - [curseforge-proxy.md](curseforge-proxy.md) — Worker abuse controls, URL ownership, secret rotation.
@@ -122,7 +122,7 @@ paths or the Notion hub URL in tracked files.
   In-app **What's new** (#290) from `src/shared/settings/changelog.ts` (Settings, sidebar
   version, one-shot after upgrade; This version vs Earlier releases). Runtime **ShooterGame.log** tail stays on with
   native console; crash buffer until next Start (#326).
-- Settings is live in the shell (SteamCMD path, desktop shell, density, and related preferences — theme (dark or light) and server panels). Full map: [settings.md](settings.md). Clusters surfaces `clusterId` / `clusterDir` compliance reports (not a live transfer probe); real-host checklist: [spikes/22-cluster-live-transfers.md](spikes/22-cluster-live-transfers.md) (#22). Workspace **RCON** tab: [rcon.md](rcon.md).
+- Settings is live in the shell (SteamCMD path, desktop shell, density, Appearance theme family + color scheme, Discord webhook alerts, and server panels). Full map: [settings.md](settings.md). Clusters surfaces `clusterId` / `clusterDir` compliance reports (not a live transfer probe); real-host checklist: [spikes/22-cluster-live-transfers.md](spikes/22-cluster-live-transfers.md) (#22). Workspace **RCON** tab: [rcon.md](rcon.md).
 - Sidebar Backups settings page and per-server workspace Backups tab are live.
 - Backups are kind-scoped ZIP archives: `world` (per-map folder under `SavedArks/{MapToken}/`, including profiles/tribes in that folder), `players` (profiles from SavedArks/SaveGames), `ini` (`Game.ini` + `GameUserSettings.ini`).
   - On disk under the shared root: `World/`, `Player profiles/`, `INI/` subfolders; each snapshot is a `.zip` (legacy loose folders still restore). Listing reconciles orphan archives from disk into SQLite.

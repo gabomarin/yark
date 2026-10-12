@@ -21,6 +21,12 @@ Statuses are `pending`, `running`, `retrying`, `paused`, `blocked`, `failed`, an
 `cancelled`. Successful jobs are removed. Blocked, failed, and cancelled jobs
 remain visible on the **Downloads** page until the operator acts.
 
+While an Install / Update / Verify job owns a server, the server workspace also
+shows one attention alert **above the tab bar on every workspace tab**
+(`filesJobActive` / `filesLockReason` in `ServerWorkspacePage`). Start, restore,
+and other file actions stay locked until that job finishes. Retry / Dismiss /
+Cancel remain on Downloads — the workspace notice is status only (#630 / #645).
+
 ## Restart contract
 
 | Operation / interrupted phase                                                                  | Recovery                                                                                                                                                                                                                                           |
