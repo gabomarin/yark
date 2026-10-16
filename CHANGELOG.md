@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Docs
+
+- Added a prepared Windows runner workflow and sanitized evidence guidance for real-ASA lifecycle, backup-restore, and safe-update validation (#12).
+
 ## [0.24.0] - 2026-10-16
 
 ### Added

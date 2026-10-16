@@ -731,6 +731,7 @@ the path field (including folders already owned by another YARK profile):
 | `npm run e2e:launch-args`                              | Also covers join-info chrome smoke on Windows                                             |
 
 See also [backups.md](backups.md) (restore requires `!isActive`),
+[e2e-validation.md](e2e-validation.md) (prepared-host lifecycle validation),
 [updates-steamcmd.md](updates-steamcmd.md) (stopped-server safe update,
 Overview **Update All** fleet queue, `pre_update`, rollback, real-host validation),
 [logs.md](logs.md) (runtime buffer from piped stdout/stderr and Saved/Logs tail;
