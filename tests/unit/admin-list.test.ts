@@ -54,6 +54,31 @@ describe("admin-list", () => {
     ).toEqual(["0002e03af5f4487985e94c6ba4080369", "0002aabbccddeeff0011223344556677"]);
   });
 
+  it("keeps every comma-separated id on a line (CSV paste)", () => {
+    expect(
+      parseAdminListIds(
+        "0002aaaaaaaaaaaaaaaaaaaaaaaaaaaa,0002bbbbbbbbbbbbbbbbbbbbbbbbbbbb,0002cccccccccccccccccccccccccccc\n0002dddddddddddddddddddddddddddd\n",
+      ),
+    ).toEqual([
+      "0002aaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "0002bbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "0002cccccccccccccccccccccccccccc",
+      "0002dddddddddddddddddddddddddddd",
+    ]);
+  });
+
+  it("treats CR-only bodies as line breaks instead of concatenating ids", () => {
+    expect(
+      parseAdminListIds(
+        "0002aaaaaaaaaaaaaaaaaaaaaaaaaaaa\r0002bbbbbbbbbbbbbbbbbbbbbbbbbbbb\r0002cccccccccccccccccccccccccccc",
+      ),
+    ).toEqual([
+      "0002aaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "0002bbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "0002cccccccccccccccccccccccccccc",
+    ]);
+  });
+
   it("dedupes ids case-insensitively", () => {
     expect(parseAdminListIds("Abc\nabc\nABC\n")).toEqual(["Abc"]);
   });
@@ -544,6 +569,87 @@ describe("admin-list", () => {
       expect(publishContent.mock.calls[0]![1]).toContain("0002e03af5f4487985e94c6ba4080369");
       expect(state.mode).toBe("loopback");
       expect(state.entries.map((entry) => entry.id)).toContain("0002e03af5f4487985e94c6ba4080369");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("preserves comma-separated hosted AdminList ids when adding a member", async () => {
+    const root = await mkdtemp(join(tmpdir(), "yark-admin-edit-csv-"));
+    try {
+      await mkdir(join(root, "ShooterGame", "Saved", "Config", "WindowsServer"), { recursive: true });
+      await writeFile(
+        gameUserSettingsIniPath(root),
+        '[ServerSettings]\nAdminListURL="http://127.0.0.1:8935/r/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"\n',
+        "utf8",
+      );
+      const published =
+        "0002aaaaaaaaaaaaaaaaaaaaaaaaaaaa,0002bbbbbbbbbbbbbbbbbbbbbbbbbbbb,0002cccccccccccccccccccccccccccc\n";
+      let served = published;
+      const publishContent = vi.fn((_resourceId: string, content: string) => {
+        served = content;
+      });
+      const host: AdminListResourceHost = {
+        resolveResourceIdByUrl: () => "res-1",
+        getPublishedContent: () => published,
+        publishContent,
+      };
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => ({ ok: true, text: async () => served })),
+      );
+
+      await editAdminListMember(root, host, {
+        id: "0002e03af5f4487985e94c6ba4080369",
+        action: "add",
+      });
+      expect(publishContent).toHaveBeenCalledTimes(1);
+      const body = publishContent.mock.calls[0]![1] as string;
+      expect(body).toContain("0002aaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+      expect(body).toContain("0002bbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+      expect(body).toContain("0002cccccccccccccccccccccccccccc");
+      expect(body).toContain("0002e03af5f4487985e94c6ba4080369");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("preserves CR-only hosted AdminList ids when adding a member", async () => {
+    const root = await mkdtemp(join(tmpdir(), "yark-admin-edit-cr-"));
+    try {
+      await mkdir(join(root, "ShooterGame", "Saved", "Config", "WindowsServer"), { recursive: true });
+      await writeFile(
+        gameUserSettingsIniPath(root),
+        '[ServerSettings]\nAdminListURL="http://127.0.0.1:8935/r/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"\n',
+        "utf8",
+      );
+      const published =
+        "0002aaaaaaaaaaaaaaaaaaaaaaaaaaaa\r0002bbbbbbbbbbbbbbbbbbbbbbbbbbbb\r0002cccccccccccccccccccccccccccc";
+      let served = published;
+      const publishContent = vi.fn((_resourceId: string, content: string) => {
+        served = content;
+      });
+      const host: AdminListResourceHost = {
+        resolveResourceIdByUrl: () => "res-1",
+        getPublishedContent: () => published,
+        publishContent,
+      };
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => ({ ok: true, text: async () => served })),
+      );
+
+      await editAdminListMember(root, host, {
+        id: "0002e03af5f4487985e94c6ba4080369",
+        action: "add",
+      });
+      expect(publishContent).toHaveBeenCalledTimes(1);
+      const body = publishContent.mock.calls[0]![1] as string;
+      expect(body).toContain("0002aaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+      expect(body).toContain("0002bbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+      expect(body).toContain("0002cccccccccccccccccccccccccccc");
+      expect(body).toContain("0002e03af5f4487985e94c6ba4080369");
+      expect(body).not.toContain("0002aaaaaaaaaaaaaaaaaaaaaaaaaaaa0002bbbbbbbbbbbbbbbbbbbbbbbbbbbb");
     } finally {
       await rm(root, { recursive: true, force: true });
     }
