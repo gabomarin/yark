@@ -2,12 +2,7 @@ import type { ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
 import { CaretDown, Info } from "@phosphor-icons/react";
 import { ActionIcon, Alert, Button, Group, Menu, NumberInput, Stack, Text, Tooltip } from "@mantine/core";
-import type {
-  ClusterIniTemplateFileSelection,
-  ServerIniSnapshot,
-  ServerProfile,
-  ServerRuntimeInfo,
-} from "@shared/types";
+import type { ServerIniSnapshot, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import { resolveServerRuntime } from "../../createClusterModel";
 import { templateApplyIneligibilityReason } from "../../templateApplyModel";
@@ -37,8 +32,6 @@ interface Props {
 }
 
 type FormValues = Record<ClusterWideTributeKey, string>;
-
-const GUS_ONLY: ClusterIniTemplateFileSelection = { gameUserSettings: true, game: false };
 
 const SETTING_LABELS: Record<ClusterWideTributeKey, string> = {
   TributeItemExpirationSeconds: "Items expire after",
@@ -148,9 +141,37 @@ export function ClusterWideEditor(props: Props): ReactElement {
       templateSaved = true;
 
       if (applyToServers) {
+        // Patch only the six cluster-wide tribute keys on each member.
+        // Do not call restoreClusterIniFromTemplate here — that replaces the
+        // whole GameUserSettings.ini from the template and can wipe unrelated
+        // settings (including when the template was empty/sparse).
         for (const member of eligible) {
-          const result = await window.api.restoreClusterIniFromTemplate(props.clusterId, member.id, GUS_ONLY);
-          if (!result.ok) failures.push(`${member.name}: ${result.error ?? "restore failed"}`);
+          try {
+            // Re-read right before writing so edits made elsewhere while this
+            // dialog was open are overlaid, not overwritten.
+            const latest = await window.api.readServerIni(member.id);
+            if (!latest.ok) {
+              failures.push(`${member.name}: ${latest.error ?? "Could not read this server's current INI values"}`);
+              continue;
+            }
+            const memberPayload = withClusterWideTributeValues(latest.data.payload, parsedValues);
+            const memberPreview = await window.api.previewServerIni(member.id, memberPayload);
+            if (!memberPreview.ok) {
+              failures.push(`${member.name}: ${memberPreview.error ?? "Could not preview cluster transfer settings"}`);
+              continue;
+            }
+            if (!memberPreview.data.valid) {
+              failures.push(`${member.name}: ${memberPreview.data.issues.map((issue) => issue.message).join("; ")}`);
+              continue;
+            }
+            const result = await window.api.saveServerIni(member.id, memberPayload);
+            if (!result.ok) {
+              failures.push(`${member.name}: ${result.error ?? "Could not apply cluster transfer settings"}`);
+            }
+          } catch (cause) {
+            // One member's IPC/backend exception must not stop the rest.
+            failures.push(`${member.name}: ${cause instanceof Error ? cause.message : String(cause)}`);
+          }
         }
         if (failures.length > 0) {
           closeAfterSave = false;
@@ -295,9 +316,9 @@ export function ClusterWideEditor(props: Props): ReactElement {
         </Stack>
 
         <Text size="xs" c="dimmed">
-          Save updates only the cluster template. Save and apply updates the template and applies these values to
-          eligible stopped servers. Running or busy servers are skipped. YARK creates a backup before applying and
-          preserves other INI settings, including profile-managed values.
+          Save updates only the cluster template. Save and apply updates the template and writes these six values onto
+          eligible stopped servers without replacing the rest of GameUserSettings.ini. Running or busy servers are
+          skipped. Use Apply INI template when you intend a full template restore.
         </Text>
         {skipped.length > 0 && (
           <Stack gap="xs">
