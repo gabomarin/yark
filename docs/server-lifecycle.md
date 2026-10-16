@@ -15,25 +15,25 @@ affect start and config writes are summarized at the end.
 
 ## Module map
 
-| Role                             | Path                                                                                                                |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Launch args                      | `src/backend/domains/instances/launch-args.ts`                                                                      |
-| ASA launch-options catalog (#92) | `src/shared/asa/asa-launch-options-catalog.ts` (+ JSON); see [launch-options-catalog.md](launch-options-catalog.md) |
-| Profile → INI sync               | `src/backend/domains/instances/sync-profile-ini.ts`                                                                 |
-| Orchestration                    | `src/backend/domains/instances/instance-service.ts`                                                                 |
-| Profile validation               | `src/backend/domains/instances/validation.ts`                                                                       |
-| Import existing install (#254)   | `src/backend/domains/instances/import-existing-install.ts`                                                          |
-| Port conflicts                   | `src/shared/port-conflicts.ts`                                                                                      |
-| Process lifecycle                | `src/backend/infra/process/process-manager.ts`                                                                      |
-| Process RAM/CPU sample (#302)    | `src/backend/domains/instances/process-metrics-sampler.ts`, `src/backend/infra/process/windows-process-sample.ts`   |
-| INI read/save                    | `src/backend/domains/config/ini-service.ts`                                                                         |
-| INI text / sanitize              | `src/shared/ini/ini-text.ts`                                                                                        |
-| Defaults                         | `src/shared/defaults/*.ini`, `src/shared/ini/ini-defaults.ts`                                                       |
-| Config assistant model           | `src/renderer/src/features/server-workspace/configurationWizardModel.ts`                                            |
-| Config assistant UI              | `…/components/ConfigurationWizard.tsx`                                                                              |
-| Restart composition              | `src/renderer/src/App.tsx` (`stop` then `start`)                                                                    |
-| Share connection / public IP (#505) | `src/main/public-ip-service.ts`, `…/JoinInfoModal/`, `…/useWorkspaceJoinInfo.ts`                                 |
-| IPC                              | `src/shared/ipc.ts`, `src/preload/index.ts`, `src/main/ipc-handlers.ts`                                             |
+| Role                                | Path                                                                                                                |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Launch args                         | `src/backend/domains/instances/launch-args.ts`                                                                      |
+| ASA launch-options catalog (#92)    | `src/shared/asa/asa-launch-options-catalog.ts` (+ JSON); see [launch-options-catalog.md](launch-options-catalog.md) |
+| Profile → INI sync                  | `src/backend/domains/instances/sync-profile-ini.ts`                                                                 |
+| Orchestration                       | `src/backend/domains/instances/instance-service.ts`                                                                 |
+| Profile validation                  | `src/backend/domains/instances/validation.ts`                                                                       |
+| Import existing install (#254)      | `src/backend/domains/instances/import-existing-install.ts`                                                          |
+| Port conflicts                      | `src/shared/port-conflicts.ts`                                                                                      |
+| Process lifecycle                   | `src/backend/infra/process/process-manager.ts`                                                                      |
+| Process RAM/CPU sample (#302)       | `src/backend/domains/instances/process-metrics-sampler.ts`, `src/backend/infra/process/windows-process-sample.ts`   |
+| INI read/save                       | `src/backend/domains/config/ini-service.ts`                                                                         |
+| INI text / sanitize                 | `src/shared/ini/ini-text.ts`                                                                                        |
+| Defaults                            | `src/shared/defaults/*.ini`, `src/shared/ini/ini-defaults.ts`                                                       |
+| Config assistant model              | `src/renderer/src/features/server-workspace/configurationWizardModel.ts`                                            |
+| Config assistant UI                 | `…/components/ConfigurationWizard.tsx`                                                                              |
+| Restart composition                 | `src/renderer/src/App.tsx` (`stop` then `start`)                                                                    |
+| Share connection / public IP (#505) | `src/main/public-ip-service.ts`, `…/JoinInfoModal/`, `…/useWorkspaceJoinInfo.ts`                                    |
+| IPC                                 | `src/shared/ipc.ts`, `src/preload/index.ts`, `src/main/ipc-handlers.ts`                                             |
 
 Binary path: `{installDir}/ShooterGame/Binaries/Win64/ArkAscendedServer.exe`
 
@@ -348,13 +348,13 @@ IPv4 is known, plus **Share connection details** (`JoinInfoModal`) for session
 name, game/query ports, and join password (masked on screen; copied only on the
 explicit password action).
 
-| Piece | Detail |
-| ----- | ------ |
-| Lookup | Main-process `app:get-public-ip` → `lookupPublicIp()` (`api.ipify.org?format=json`, 4s timeout, single-flight). Renderer CSP blocks outbound fetch, so this cannot run in the page. |
-| When | Refresh when the selected server transitions to running; dialog auto-detects if opened idle without a usable IP; operator **Refresh** forces another lookup. |
-| Payload | `open {IPv4}:{gamePort}` only — hostnames are rejected (`isIpv4Address`). **No** `steam://` deep link (ASA dedicated has no reliable one). |
-| Trust | Revealing the public IP to ipify is inherent to the lookup; documented in `SECURITY.md` and operator `security-privacy.mdx`. Address is read-only in the dialog. |
-| Reachability | Copying details does **not** mean the server is joinable — game (and query for browser) port forwarding remains the operator's job. |
+| Piece        | Detail                                                                                                                                                                              |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lookup       | Main-process `app:get-public-ip` → `lookupPublicIp()` (`api.ipify.org?format=json`, 4s timeout, single-flight). Renderer CSP blocks outbound fetch, so this cannot run in the page. |
+| When         | Refresh when the selected server transitions to running; dialog auto-detects if opened idle without a usable IP; operator **Refresh** forces another lookup.                        |
+| Payload      | `open {IPv4}:{gamePort}` only — hostnames are rejected (`isIpv4Address`). **No** `steam://` deep link (ASA dedicated has no reliable one).                                          |
+| Trust        | Revealing the public IP to ipify is inherent to the lookup; documented in `SECURITY.md` and operator `security-privacy.mdx`. Address is read-only in the dialog.                    |
+| Reachability | Copying details does **not** mean the server is joinable — game (and query for browser) port forwarding remains the operator's job.                                                 |
 
 Pure builders live in `joinInfoModel.ts` (unit-tested). Hook
 `useWorkspaceJoinInfo` shares one IP state between the header and the modal.
