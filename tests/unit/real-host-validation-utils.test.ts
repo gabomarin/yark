@@ -1,4 +1,5 @@
 import { createRequire } from "node:module";
+import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -20,11 +21,28 @@ describe("real-host validation utilities", () => {
   });
 
   it("only accepts evidence and install paths below the disposable root", () => {
-    const root = path.join("tmp", "asa-validation");
-    expect(assertDisposablePath(path.join(root, "evidence.json"), root)).toBe(path.resolve(root, "evidence.json"));
-    expect(() => assertDisposablePath(path.join("tmp", "operator", "world.ark"), root)).toThrow(
-      /outside the disposable root/,
-    );
+    const root = fs.mkdtempSync(path.join(process.cwd(), "real-host-validation-"));
+    try {
+      expect(assertDisposablePath(path.join(root, "evidence.json"), root)).toBe(path.resolve(root, "evidence.json"));
+      expect(() => assertDisposablePath(path.join(path.dirname(root), "operator", "world.ark"), root)).toThrow(
+        /outside the disposable root/,
+      );
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects symbolic links in disposable paths", () => {
+    const root = fs.mkdtempSync(path.join(process.cwd(), "real-host-validation-"));
+    const outside = fs.mkdtempSync(path.join(process.cwd(), "real-host-validation-outside-"));
+    const link = path.join(root, "linked");
+    try {
+      fs.symlinkSync(outside, link, process.platform === "win32" ? "junction" : "dir");
+      expect(() => assertDisposablePath(path.join(link, "evidence.json"), root)).toThrow(/reparse point/);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+      fs.rmSync(outside, { recursive: true, force: true });
+    }
   });
 
   it("redacts credentials without changing other evidence", () => {

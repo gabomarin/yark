@@ -63,11 +63,19 @@ jobs:
       - name: Collect safe-update evidence
         if: always()
         shell: pwsh
+        env:
+          YARK_REAL_HOST_ROOT: ${{ inputs.host_root }}
+          YARK_REAL_HOST_EVIDENCE_ROOT: ${{ runner.temp }}
         run: |
-          $source = Join-Path $env:APPDATA "yark-server-manager\safe-update-validation-evidence.json"
-          $destination = Join-Path "${{ inputs.host_root }}" "safe-update-validation-evidence.json"
-          if (Test-Path $source) {
-            Copy-Item $source $destination -Force
+          $lifecycleSource = Join-Path $env:YARK_REAL_HOST_ROOT "real-host-evidence.json"
+          $safeUpdateSource = Join-Path $env:APPDATA "yark-server-manager\safe-update-validation-evidence.json"
+          $destinationRoot = $env:YARK_REAL_HOST_EVIDENCE_ROOT
+          New-Item -ItemType Directory -Path $destinationRoot -Force | Out-Null
+          if (Test-Path $lifecycleSource -PathType Leaf) {
+            Copy-Item $lifecycleSource (Join-Path $destinationRoot "real-host-evidence.json") -Force
+          }
+          if (Test-Path $safeUpdateSource -PathType Leaf) {
+            Copy-Item $safeUpdateSource (Join-Path $destinationRoot "safe-update-validation-evidence.json") -Force
           }
 
       - name: Upload sanitized evidence
@@ -76,7 +84,7 @@ jobs:
         with:
           name: real-host-validation-evidence-${{ github.run_id }}
           path: |
-            ${{ inputs.host_root }}\real-host-evidence.json
-            ${{ inputs.host_root }}\safe-update-validation-evidence.json
+            ${{ runner.temp }}\yark-real-host-evidence.json
+            ${{ runner.temp }}\safe-update-validation-evidence.json
           if-no-files-found: warn
           retention-days: 14

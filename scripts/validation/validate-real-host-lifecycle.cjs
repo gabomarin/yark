@@ -113,6 +113,7 @@ async function validateTarget(page) {
 
 async function runLifecycle(page) {
   const startedAt = new Date().toISOString();
+  evidence.scenarios.lifecycle = { ok: false, startedAt };
   await api(page, "startServer", SERVER_ID, { openNativeConsole: false });
   await waitForStatus(page, "running");
   const rcon = await api(page, "sendRconCommand", SERVER_ID, "ListPlayers");
@@ -128,6 +129,7 @@ async function runLifecycle(page) {
 
 async function runBackupRestore(page) {
   const startedAt = new Date().toISOString();
+  evidence.scenarios["backup-restore"] = { ok: false, startedAt };
   const backups = await api(page, "createManualBackup", SERVER_ID, ["world"]);
   const completed = backups.find((backup) => backup.status === "completed");
   assert.ok(completed, "Manual world backup did not complete");
@@ -156,31 +158,48 @@ async function run() {
   }
 
   let app = null;
+  let page = null;
   try {
     app = await launch();
-    const page = await waitForOverview(app);
+    page = await waitForOverview(app);
     await validateTarget(page);
     for (const scenario of SCENARIOS) {
       if (scenario === "lifecycle") await runLifecycle(page);
       if (scenario === "backup-restore") await runBackupRestore(page);
     }
-    fs.writeFileSync(
-      assertDisposablePath(EVIDENCE_PATH, REAL_HOST_ROOT),
-      `${JSON.stringify(redactEvidence(evidence), null, 2)}\n`,
-    );
-    console.log(`REAL_HOST_VALIDATION_OK evidence=${EVIDENCE_PATH}`);
+    evidence.completedAt = new Date().toISOString();
+  } catch (error) {
+    evidence.error = {
+      message: error?.message ?? String(error),
+      name: error?.name ?? "Error",
+      at: new Date().toISOString(),
+    };
+    throw error;
   } finally {
     if (app !== null) {
       try {
-        const statuses = await app.firstWindow().evaluate(async () => window.api.getStatuses());
+        page ??= await app.firstWindow();
+        const statuses = await page.evaluate(async () => window.api.getStatuses());
         const target = statuses.data?.find((status) => status.serverId === SERVER_ID);
         if (target?.status === "running" || target?.status === "starting") {
-          await app.firstWindow().evaluate(async (serverId) => window.api.stopServer(serverId), SERVER_ID);
+          await page.evaluate(async (serverId) => window.api.stopServer(serverId), SERVER_ID);
+          await waitForStatus(page, "stopped", 60_000);
         }
       } catch {
         // Preserve the original validation failure; the operator can inspect the target profile.
       }
       await quitElectronApp(app, { autoConfirmQuitDialog: true });
+    }
+    if (!DRY_RUN && REAL_HOST_ROOT && EVIDENCE_PATH) {
+      try {
+        fs.writeFileSync(
+          assertDisposablePath(EVIDENCE_PATH, REAL_HOST_ROOT),
+          `${JSON.stringify(redactEvidence(evidence), null, 2)}\n`,
+        );
+        if (!evidence.error) console.log(`REAL_HOST_VALIDATION_OK evidence=${EVIDENCE_PATH}`);
+      } catch (evidenceError) {
+        console.error(`Unable to write validation evidence: ${evidenceError?.message ?? evidenceError}`);
+      }
     }
   }
 }
