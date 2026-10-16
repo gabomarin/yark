@@ -10,6 +10,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ## [Unreleased]
 
 - Docs: Appearance theme-family contract (Fluent + Plasma Breeze), workspace file-job notice placement, and OpenCodeReview `/ocr` + Responses protocol variables.
+- Documented workspace **Share connection details** / public-IP lookup, Quick-actions Delete server, RCON admin-star confirm rules, backup History Date labeling, and the release-downloads Worker index (#505, #517, #619, #622, #623, #630).
 - Hosted AdminList add/remove no longer drops comma-separated ids or CR-only line endings when republishing the resource body (#620).
 - **Save and apply** for cluster transfer settings now patches only the six tribute keys onto stopped members instead of restoring the full INI template (which could wipe unrelated GameUserSettings).
 - Cluster tabs match Server Workspace sizing, and transfer settings clarify expiration defaults, upload risks, and apply behavior (#325).
