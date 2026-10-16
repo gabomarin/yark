@@ -620,10 +620,10 @@ export class HostedResourcesService {
       let status: HostedResourceReferenceDto["status"] = "current";
       if (resource === undefined) {
         status = "missing";
-      } else if (resource.publishedRevisionId === null) {
-        status = "unpublished";
       } else if (resource.disabledAt !== null) {
         status = "disabled";
+      } else if (resource.publishedRevisionId === null) {
+        status = "unpublished";
       } else if (found.parsed.port !== port) {
         // A portless URL means port 80, which is never YARK's port: `null !== port`
         // correctly reports the stale address rather than guessing a scheme default.
