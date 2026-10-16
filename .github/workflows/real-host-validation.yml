@@ -1,0 +1,90 @@
+name: Prepared Windows host validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      server_id:
+        description: "Test-owned YARK profile id"
+        required: true
+        type: string
+      host_root:
+        description: "Disposable validation root on the prepared runner"
+        required: true
+        type: string
+      user_data:
+        description: "YARK userData directory containing the test-owned profile"
+        required: true
+        type: string
+      scenarios:
+        description: "Comma-separated lifecycle scenarios"
+        required: false
+        default: "lifecycle,backup-restore"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  real-host:
+    name: Real ASA lifecycle and safe-update validation
+    runs-on: [self-hosted, windows, yark-asa]
+    timeout-minutes: 180
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Validate lifecycle and backup restore
+        env:
+          YARK_VALIDATE_USER_DATA: ${{ inputs.user_data }}
+          YARK_VALIDATE_SERVER_ID: ${{ inputs.server_id }}
+          YARK_REAL_HOST_ROOT: ${{ inputs.host_root }}
+          YARK_REAL_HOST_SCENARIOS: ${{ inputs.scenarios }}
+          YARK_REAL_HOST_EVIDENCE: ${{ inputs.host_root }}\real-host-evidence.json
+        run: npm run validate:real-host -- --confirm
+
+      - name: Validate safe-update scenarios
+        env:
+          YARK_VALIDATE_USER_DATA: ${{ inputs.user_data }}
+          YARK_VALIDATE_SERVER_ID: ${{ inputs.server_id }}
+        run: node scripts/validation/validate-safe-update.cjs --confirm
+
+      - name: Collect safe-update evidence
+        if: always()
+        shell: pwsh
+        env:
+          YARK_REAL_HOST_ROOT: ${{ inputs.host_root }}
+          YARK_REAL_HOST_EVIDENCE_ROOT: ${{ runner.temp }}
+        run: |
+          $lifecycleSource = Join-Path $env:YARK_REAL_HOST_ROOT "real-host-evidence.json"
+          $safeUpdateSource = Join-Path $env:APPDATA "yark-server-manager\safe-update-validation-evidence.json"
+          $destinationRoot = $env:YARK_REAL_HOST_EVIDENCE_ROOT
+          New-Item -ItemType Directory -Path $destinationRoot -Force | Out-Null
+          if (Test-Path $lifecycleSource -PathType Leaf) {
+            Copy-Item $lifecycleSource (Join-Path $destinationRoot "real-host-evidence.json") -Force
+          }
+          if (Test-Path $safeUpdateSource -PathType Leaf) {
+            Copy-Item $safeUpdateSource (Join-Path $destinationRoot "safe-update-validation-evidence.json") -Force
+          }
+
+      - name: Upload sanitized evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: real-host-validation-evidence-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}\yark-real-host-evidence.json
+            ${{ runner.temp }}\safe-update-validation-evidence.json
+          if-no-files-found: warn
+          retention-days: 14

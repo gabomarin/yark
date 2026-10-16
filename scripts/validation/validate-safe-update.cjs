@@ -44,7 +44,9 @@ const SCENARIOS = new Set(
 );
 
 const projectRoot = path.resolve(__dirname, "..", "..");
-const userData = path.join(process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming"), "yark-server-manager");
+const userData =
+  process.env.YARK_VALIDATE_USER_DATA?.trim() ||
+  path.join(process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming"), "yark-server-manager");
 const dbPath = path.join(userData, "yark-server-manager.db");
 const realSteamCmdCandidate = path.join(userData, "steamcmd", "steamcmd.exe");
 
@@ -73,7 +75,7 @@ function requireNodeSqlite() {
 
 function openDb() {
   if (!fs.existsSync(dbPath)) {
-    throw new Error(`YARK database not found at ${dbPath}. Launch the app once, or set APPDATA.`);
+    throw new Error(`YARK database not found at ${dbPath}. Launch the app once, or set YARK_VALIDATE_USER_DATA.`);
   }
   const { DatabaseSync } = requireNodeSqlite();
   try {
@@ -289,6 +291,7 @@ async function launchApp() {
   const app = await electron.launch({
     args: ["."],
     cwd: projectRoot,
+    env: { ...process.env, YARK_E2E_USER_DATA: userData },
     timeout: 120_000,
   });
   const window = await app.firstWindow();
@@ -369,6 +372,13 @@ function summarizeBackups(rows) {
   return byType;
 }
 
+function expectedPreUpdateKinds() {
+  return (process.env.YARK_VALIDATE_EXPECTED_BACKUP_KINDS || "world")
+    .split(",")
+    .map((kind) => kind.trim().toLowerCase())
+    .filter(Boolean);
+}
+
 async function ensureStopped(window) {
   const status = await getServerStatus(window, SERVER_ID);
   if (status === "running" || status === "starting") {
@@ -401,11 +411,10 @@ async function scenarioC() {
       db.close();
 
       const byType = summarizeBackups(backups);
+      const expectedKinds = expectedPreUpdateKinds();
       assert.ok(
-        (byType.pre_update || []).includes("world") &&
-          (byType.pre_update || []).includes("players") &&
-          (byType.pre_update || []).includes("ini"),
-        `Expected pre_update world/players/ini, got ${JSON.stringify(byType)}`,
+        expectedKinds.every((kind) => (byType.pre_update || []).includes(kind)),
+        `Expected pre_update ${expectedKinds.join(",")}, got ${JSON.stringify(byType)}`,
       );
       assert.equal(byType.pre_stop, undefined, `Unexpected pre_stop during failed update: ${JSON.stringify(byType)}`);
       assert.ok(events.some((e) => e.type === "update_failed") || updateError, "Expected update failure");
@@ -419,6 +428,7 @@ async function scenarioC() {
         pass: true,
         updateError,
         backups: byType,
+        expectedPreUpdateKinds: expectedKinds,
         finalStatus,
         events: events.map((e) => e.type),
         note: "Job retries up to 3 times; each attempt rolls back. Final signal: update failure (not success), runtime usually stopped when wasRunning was false.",

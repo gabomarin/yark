@@ -226,6 +226,8 @@ User restart (`servers:restart` via `InstanceService.restart`):
 5. Restore history is written to SQLite; there is **no** list IPC/UI for it yet.
 
 UI restore uses a confirm modal (world: profiles/tribes checkbox). Update rollback uses the queued `restoreBackupForJob` path (profiles/tribes on).
+The prepared Windows host validator exercises a test-owned world backup create/restore
+after a real ASA start/stop cycle; see [e2e-validation.md](e2e-validation.md).
 
 ### World schedule and retention
 

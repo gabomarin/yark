@@ -116,6 +116,29 @@ Cursor rule: [`.cursor/rules/e2e-ui.mdc`](../.cursor/rules/e2e-ui.mdc).
 4. Record date, commit, scenario pass/fail; **redact** passwords and player PII.
 5. Link evidence on GitHub **#12** (and #14 for safe-update).
 
+### Prepared-runner automation
+
+The remaining real-ASA checks can be run through the manually triggered
+[Prepared Windows host validation workflow](../.github/workflows/real-host-validation.yml).
+It requires a self-hosted runner labeled `self-hosted`, `windows`, and `yark-asa`.
+The runner must have SteamCMD, a built/test-owned ASA profile, unique ports, and
+enough disk for a world backup.
+
+The workflow accepts the YARK `userData` directory containing the test-owned
+profile, its profile id, disposable install root, and a comma-separated scenario
+list. It runs the lifecycle validator and the existing safe-update validator:
+
+```powershell
+npm run validate:real-host -- --confirm
+node scripts/validation/validate-safe-update.cjs --confirm
+```
+
+The lifecycle runner validates RCON readiness, `SaveWorld`, stop/restart, and
+world backup create/restore. Both runners write sanitized evidence artifacts.
+They do not run on pull requests, download ASA on GitHub-hosted runners, or
+delete paths outside the supplied disposable root. Review evidence for secrets
+or player identifiers before linking it from #12.
+
 ## EBUSY cleanup (integration)
 
 Historical full-suite flakes on Windows when deleting a just-killed fake ASA
