@@ -11,6 +11,10 @@ on:
         description: "Disposable validation root on the prepared runner"
         required: true
         type: string
+      user_data:
+        description: "YARK userData directory containing the test-owned profile"
+        required: true
+        type: string
       scenarios:
         description: "Comma-separated lifecycle scenarios"
         required: false
@@ -43,6 +47,7 @@ jobs:
 
       - name: Validate lifecycle and backup restore
         env:
+          YARK_VALIDATE_USER_DATA: ${{ inputs.user_data }}
           YARK_VALIDATE_SERVER_ID: ${{ inputs.server_id }}
           YARK_REAL_HOST_ROOT: ${{ inputs.host_root }}
           YARK_REAL_HOST_SCENARIOS: ${{ inputs.scenarios }}
@@ -51,6 +56,7 @@ jobs:
 
       - name: Validate safe-update scenarios
         env:
+          YARK_VALIDATE_USER_DATA: ${{ inputs.user_data }}
           YARK_VALIDATE_SERVER_ID: ${{ inputs.server_id }}
         run: node scripts/validation/validate-safe-update.cjs --confirm
 

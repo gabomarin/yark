@@ -124,9 +124,9 @@ It requires a self-hosted runner labeled `self-hosted`, `windows`, and `yark-asa
 The runner must have SteamCMD, a built/test-owned ASA profile, unique ports, and
 enough disk for a world backup.
 
-The workflow accepts the test-owned YARK profile id, its disposable install root,
-and a comma-separated scenario list. It runs the lifecycle validator and the
-existing safe-update validator:
+The workflow accepts the YARK `userData` directory containing the test-owned
+profile, its profile id, disposable install root, and a comma-separated scenario
+list. It runs the lifecycle validator and the existing safe-update validator:
 
 ```powershell
 npm run validate:real-host -- --confirm

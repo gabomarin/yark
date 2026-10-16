@@ -9,6 +9,7 @@
  * Usage:
  *   npm run build
  *   Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+ *   $env:YARK_VALIDATE_USER_DATA = "C:\yark_dev_profile"
  *   $env:YARK_VALIDATE_SERVER_ID = "<test-owned-profile-id>"
  *   $env:YARK_REAL_HOST_ROOT = "C:\asa-validation"
  *   node scripts/validation/validate-real-host-lifecycle.cjs --confirm
@@ -30,6 +31,7 @@ const args = new Set(process.argv.slice(2));
 const CONFIRM = args.has("--confirm") || args.has("--force");
 const DRY_RUN = args.has("--dry-run");
 const PROJECT_ROOT = path.resolve(__dirname, "..", "..");
+const USER_DATA = process.env.YARK_VALIDATE_USER_DATA?.trim() || "";
 const SERVER_ID = process.env.YARK_VALIDATE_SERVER_ID?.trim() || "";
 const REAL_HOST_ROOT = process.env.YARK_REAL_HOST_ROOT?.trim() || "";
 const EVIDENCE_PATH =
@@ -50,6 +52,9 @@ function requireConfiguration() {
   }
   if (!SERVER_ID) {
     throw new Error("Set YARK_VALIDATE_SERVER_ID to a test-owned YARK profile id.");
+  }
+  if (!USER_DATA) {
+    throw new Error("Set YARK_VALIDATE_USER_DATA to the YARK userData directory.");
   }
   if (!REAL_HOST_ROOT) {
     throw new Error("Set YARK_REAL_HOST_ROOT to the disposable validation root.");
@@ -83,7 +88,7 @@ async function waitForStatus(page, expected, timeoutMs = 180_000) {
 }
 
 async function launch() {
-  const env = { ...process.env, YARK_VALIDATE_SERVER_ID: SERVER_ID };
+  const env = { ...process.env, YARK_E2E_USER_DATA: USER_DATA, YARK_VALIDATE_SERVER_ID: SERVER_ID };
   delete env.ELECTRON_RUN_AS_NODE;
   return electron.launch({ args: ["."], cwd: PROJECT_ROOT, env });
 }
@@ -113,8 +118,6 @@ async function runLifecycle(page) {
   const rcon = await api(page, "sendRconCommand", SERVER_ID, "ListPlayers");
   assert.equal(typeof rcon, "string", "ListPlayers did not return an RCON response");
   await api(page, "sendRconCommand", SERVER_ID, "SaveWorld");
-  await api(page, "stopServer", SERVER_ID);
-  await waitForStatus(page, "stopped");
   await api(page, "restartServer", SERVER_ID, { openNativeConsole: false });
   await waitForStatus(page, "running");
   await api(page, "sendRconCommand", SERVER_ID, "SaveWorld");
@@ -141,7 +144,13 @@ async function run() {
   requireConfiguration();
   if (DRY_RUN) {
     console.log(
-      JSON.stringify({ ok: true, serverId: SERVER_ID, root: path.resolve(REAL_HOST_ROOT), scenarios: SCENARIOS }),
+      JSON.stringify({
+        ok: true,
+        userData: path.resolve(USER_DATA),
+        serverId: SERVER_ID,
+        root: path.resolve(REAL_HOST_ROOT),
+        scenarios: SCENARIOS,
+      }),
     );
     return;
   }

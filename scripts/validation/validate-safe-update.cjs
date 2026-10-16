@@ -44,7 +44,9 @@ const SCENARIOS = new Set(
 );
 
 const projectRoot = path.resolve(__dirname, "..", "..");
-const userData = path.join(process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming"), "yark-server-manager");
+const userData =
+  process.env.YARK_VALIDATE_USER_DATA?.trim() ||
+  path.join(process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming"), "yark-server-manager");
 const dbPath = path.join(userData, "yark-server-manager.db");
 const realSteamCmdCandidate = path.join(userData, "steamcmd", "steamcmd.exe");
 
@@ -73,7 +75,7 @@ function requireNodeSqlite() {
 
 function openDb() {
   if (!fs.existsSync(dbPath)) {
-    throw new Error(`YARK database not found at ${dbPath}. Launch the app once, or set APPDATA.`);
+    throw new Error(`YARK database not found at ${dbPath}. Launch the app once, or set YARK_VALIDATE_USER_DATA.`);
   }
   const { DatabaseSync } = requireNodeSqlite();
   try {
