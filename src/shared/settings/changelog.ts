@@ -24,6 +24,34 @@ const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.24.0",
+    date: "2026-10-16",
+    sections: [
+      {
+        title: "Highlights",
+        items: [
+          "Clusters now have a Transfer section for tribute expiration and upload/download slot settings, with a safe preview and per-member apply.",
+          "Mark mods as Passive to load their data without spawning content; YARK owns the -passivemods= launch argument and migrates existing selections.",
+          "Hosted Resource URL fields offer a searchable picker, and hosted AdminList edits preserve existing list formatting.",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "Workspace file-job notices now appear once in a predictable location across every tab.",
+          "Mods provides bulk enable, disable, and remove-disabled actions, while imported mods are enabled by default.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "Cluster transfer edits patch only the tribute settings instead of restoring an entire INI template.",
+          "Hosted AdminList publishing keeps comma-separated IDs and CR-only line endings intact.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.23.0",
     date: "2026-09-23",
     sections: [

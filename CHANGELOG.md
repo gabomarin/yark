@@ -9,19 +9,32 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
-- Docs: Appearance theme-family contract (Fluent + Plasma Breeze), workspace file-job notice placement, and OpenCodeReview `/ocr` + Responses protocol variables.
-- Documented workspace **Share connection details** / public-IP lookup, Quick-actions Delete server, RCON admin-star confirm rules, backup History Date labeling, and the release-downloads Worker index (#505, #517, #619, #622, #623, #630).
-- Hosted AdminList add/remove no longer drops comma-separated ids or CR-only line endings when republishing the resource body (#620).
-- **Save and apply** for cluster transfer settings now patches only the six tribute keys onto stopped members instead of restoring the full INI template (which could wipe unrelated GameUserSettings).
-- Cluster tabs match Server Workspace sizing, and transfer settings clarify expiration defaults, upload risks, and apply behavior (#325).
-- Mods can now be marked **Passive** (row action, detail drawer, or row menu) to load their data without spawning content: passive IDs are sent on `-passivemods=` and removed from `-mods=`, and YARK dedupes both flags (#509).
+## [0.24.0] - 2026-10-16
+
+### Added
+
+- Cluster transfer settings now have a dedicated workspace section for tribute expiration, upload slots, and download slots (#325).
+- Servers can mark mods as **Passive**, sending those IDs through `-passivemods=` instead of spawning their content (#509).
+- getyark.com and a Shields badge can show installer downloads only, backed by a scheduled Worker that counts `.exe` release assets.
+
+### Changed
+
+- Workspace **Share connection details**, public-IP lookup, Quick-actions Delete server, RCON admin-star confirmations, backup History Date labeling, and release-download documentation are now documented (#505, #517, #619, #622, #623, #630).
+- Cluster transfer settings patch only the six tribute keys onto stopped members instead of restoring the full INI template, protecting unrelated `GameUserSettings.ini` values.
+- Cluster tabs now match Server Workspace sizing, with clearer expiration defaults, upload risks, and apply behavior (#325).
 - Server workspace file-job notices now appear once above the tabs on every workspace tab (#630).
-- The Launch tab's `-passivemods=` field is gone in favor of the Mods tab; saved selections are migrated to the server's passive mods on first launch, so existing servers keep loading them.
-- OpenCodeReview now supports OpenAI Responses API providers such as GPT Luna across review, preflight, and pull request summaries via the `OCR_PRIMARY_PROTOCOL` and `OCR_FALLBACK_PROTOCOL` Actions variables.
-- OpenCodeReview Responses summaries avoid unsupported sampling settings for reasoning models such as GPT Luna.
-- Mods now has **Enable all**, **Disable all**, and **Remove all disabled** quick actions on the Server view, and Import install enables every scanned mod by default instead of staging them disabled.
-- URL fields that support Hosted Resources now pair the free-form URL input with a dedicated resource picker button, so it is clear operators can type a URL or choose a YARK Hosted Resource.
-- getyark.com and a Shields badge can now show installer downloads only, backed by a scheduled Worker that counts just the `.exe` release assets.
+- The Launch tab's `-passivemods=` field is now managed from Mods; existing saved selections migrate to passive mods on first launch.
+- OpenCodeReview supports OpenAI Responses API providers and avoids unsupported sampling settings for reasoning models.
+- Mods provides **Enable all**, **Disable all**, and **Remove all disabled** actions, and Import install enables scanned mods by default.
+- Hosted Resource URL fields now combine free-form entry with a dedicated resource picker.
+
+### Fixed
+
+- Hosted AdminList add/remove preserves comma-separated IDs and CR-only line endings when republishing the resource body (#620).
+
+### Docs
+
+- Documented the Appearance theme-family contract, workspace file-job notice placement, OpenCodeReview `/ocr` and Responses protocol variables, connection sharing, and release-download Worker behavior.
 
 ## [0.23.0] - 2026-09-23
 
