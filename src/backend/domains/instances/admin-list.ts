@@ -293,16 +293,24 @@ export function clampUpdateAllowedCheatersInterval(value: number): number {
 /** Parse one-EOS-id-per-line list (skip blanks and `#` comments). */
 export function parseAdminListIds(raw: string): string[] {
   const byKey = new Map<string, string>();
-  const text = raw.replace(/^\uFEFF/, "").replace(/\r/g, "");
+  // Same newline normalization as sanitizeAdminListWikiFile: treat CR-only and
+  // CRLF as line breaks. Stripping `\r` alone would glue CR-only ids together.
+  const text = raw
+    .replace(/^\uFEFF/, "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n");
   for (const line of text.split("\n")) {
     const trimmed = line.trim();
     if (trimmed.length === 0 || trimmed.startsWith("#")) continue;
-    // Take first token only (ignore accidental trailing junk).
-    const id = trimmed.split(/[\s,]+/)[0]?.trim() ?? "";
-    if (id.length === 0) continue;
-    const key = id.toLowerCase();
-    if (!byKey.has(key)) {
-      byKey.set(key, id);
+    // Comma-separated fields are each an id (CSV paste / Discord). Within a
+    // field, take the first whitespace token only so trailing junk is ignored.
+    for (const field of trimmed.split(",")) {
+      const id = field.trim().split(/\s+/)[0]?.trim() ?? "";
+      if (id.length === 0 || id.startsWith("#")) continue;
+      const key = id.toLowerCase();
+      if (!byKey.has(key)) {
+        byKey.set(key, id);
+      }
     }
   }
   return [...byKey.values()];
