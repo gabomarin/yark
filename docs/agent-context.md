@@ -88,8 +88,9 @@ paths or the Notion hub URL in tracked files.
 - [hosted-resources.md](hosted-resources.md) — experimental, default-off loopback HTTP host for versioned text/INI/JSON URL bodies (#564).
 - [settings.md](settings.md) — app-wide prefs, category rail (General / Profiles / SteamCMD / Log files / About), desktop shell, SteamCMD path, density, auto-start summary.
 - [clusters.md](clusters.md) — transfer-compliance reports, cluster launch trio, Clusters page. Live-host archive: [spikes/22-cluster-live-transfers.md](spikes/22-cluster-live-transfers.md) (#22).
-- [mods.md](mods.md) — workspace CurseForge inventory, enable/disable, load order, metadata proxy, `-mods=`.
+- [mods.md](mods.md) — workspace CurseForge inventory, enable/disable/passive, load order, metadata proxy, `-mods=` / `-passivemods=`.
 - [curseforge-proxy.md](curseforge-proxy.md) — Worker abuse controls, URL ownership, secret rotation.
+- [release-downloads.md](release-downloads.md) — Cloudflare Worker that counts GitHub Release `.exe` downloads for Shields / getyark.com.
 - [website.md](website.md) — Cloudflare Pages deploy (`getyark`), screenshot gallery capture/redaction, version pill sync.
 
 ## Current functional status
@@ -109,10 +110,13 @@ paths or the Notion hub URL in tracked files.
   destination / retention) with “Open in server” to jump into the workspace tab.
   **Maintenance** is per-server scheduled restart, optional wipe-after-restart, and
   opt-in Steam-newer auto-update — full map: [maintenance.md](maintenance.md)
-  (#315 / #486–#489). **Mods** manages CurseForge Project IDs (enable/disable without
-  dropping IDs, Worker-backed metadata, launch `-mods=` for enabled only) — full map:
-  [mods.md](mods.md). CurseForge proxy abuse controls:
-  [curseforge-proxy.md](curseforge-proxy.md) (#70). A six-step configuration
+  (#315 / #486–#489). **Mods** manages CurseForge Project IDs (enable/disable /
+  passive without dropping IDs, Worker-backed metadata, launch `-mods=` /
+  `-passivemods=`) — full map: [mods.md](mods.md). CurseForge proxy abuse controls:
+  [curseforge-proxy.md](curseforge-proxy.md) (#70). Workspace header **Share
+  connection details** (#505) refreshes public IPv4 via `app:get-public-ip` and
+  copies `open IP:port` (no `steam://`) — [server-lifecycle.md](server-lifecycle.md#share-connection-details-505).
+  A six-step configuration
   assistant launches on demand from `Server`; it uses an isolated draft and
   writes only after explicit review. Workspace leave-guard (#292 / #299) confirms
   before sidebar / Spotlight / Back / server switch / Create / leaving Server or
