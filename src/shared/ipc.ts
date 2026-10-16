@@ -408,13 +408,14 @@ export interface HostedResourceDiagnosticDto {
 }
 
 export interface HostedResourceReferenceDto {
-  resourceId: string;
+  /** Null when the URL token no longer belongs to a current resource. */
+  resourceId: string | null;
   serverId: string;
   serverName: string;
   /** INI key or launch flag where a YARK resource URL was found (no name heuristics). */
   key: string;
   url: string;
-  status: "current" | "stale-port" | "disabled";
+  status: "current" | "stale-port" | "disabled" | "unpublished" | "missing";
   /** Which surface the value lives on; a launch flag can only be fixed on the Launch tab. */
   source: "ini" | "launch-arg";
 }

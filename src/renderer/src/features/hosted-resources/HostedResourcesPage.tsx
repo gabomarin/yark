@@ -48,6 +48,8 @@ export function HostedResourcesPage({ onOpenReference = () => undefined }: Props
     portChanged,
     diagnosticsWarning,
   });
+  const missingReferences =
+    controller.diagnostics?.references.filter((reference) => reference.status === "missing") ?? [];
 
   const referenceCountFor = (resourceId: string): number =>
     summarizeReferences(
@@ -95,6 +97,30 @@ export function HostedResourcesPage({ onOpenReference = () => undefined }: Props
                 </>
               )}
             </AppAlert>
+          )}
+          {missingReferences.length > 0 && (
+            <AppSurfaceCard radius={0}>
+              <Stack gap="xs">
+                <Text fw={600}>Unresolved Hosted Resource references</Text>
+                <Text size="sm" c="dimmed">
+                  These settings still contain a YARK URL, but the resource was deleted. Open each setting to remove the
+                  stale URL or choose a replacement.
+                </Text>
+                {missingReferences.map((reference) => (
+                  <Group
+                    key={`${reference.serverId}-${reference.source}-${reference.key}-${reference.url}`}
+                    justify="space-between"
+                  >
+                    <Text size="sm">
+                      {reference.serverName} · {reference.key}
+                    </Text>
+                    <Button size="xs" variant="default" onClick={() => onOpenReference(reference)}>
+                      Open setting
+                    </Button>
+                  </Group>
+                ))}
+              </Stack>
+            </AppSurfaceCard>
           )}
           <DismissibleHint storageKey={EXPERIMENTAL_HINT_STORAGE_KEY} title="Experimental">
             This host binds to 127.0.0.1 only. URLs stop working when YARK exits, and a stale URL must not be trusted

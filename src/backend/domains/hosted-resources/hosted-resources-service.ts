@@ -611,7 +611,6 @@ export class HostedResourcesService {
       const found = findHostedResource(rawValue);
       if (found === null) return;
       const resource = resourcesByToken.get(found.parsed.token);
-      if (resource === undefined) return;
       const url = found.url;
       // The section is part of the identity: the same key name in two sections is two
       // assignments the operator has to fix separately, and both must stay visible.
@@ -619,15 +618,19 @@ export class HostedResourcesService {
       if (seen.has(identity)) return;
       seen.add(identity);
       let status: HostedResourceReferenceDto["status"] = "current";
-      if (resource.disabledAt !== null) {
+      if (resource === undefined) {
+        status = "missing";
+      } else if (resource.disabledAt !== null) {
         status = "disabled";
+      } else if (resource.publishedRevisionId === null) {
+        status = "unpublished";
       } else if (found.parsed.port !== port) {
         // A portless URL means port 80, which is never YARK's port: `null !== port`
         // correctly reports the stale address rather than guessing a scheme default.
         status = "stale-port";
       }
       references.push({
-        resourceId: resource.id,
+        resourceId: resource?.id ?? null,
         serverId: source.serverId,
         serverName: source.serverName,
         key,
