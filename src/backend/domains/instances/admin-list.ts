@@ -295,7 +295,10 @@ export function parseAdminListIds(raw: string): string[] {
   const byKey = new Map<string, string>();
   // Same newline normalization as sanitizeAdminListWikiFile: treat CR-only and
   // CRLF as line breaks. Stripping `\r` alone would glue CR-only ids together.
-  const text = raw.replace(/^\uFEFF/, "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const text = raw
+    .replace(/^\uFEFF/, "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n");
   for (const line of text.split("\n")) {
     const trimmed = line.trim();
     if (trimmed.length === 0 || trimmed.startsWith("#")) continue;
