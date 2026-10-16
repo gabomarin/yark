@@ -146,24 +146,31 @@ export function ClusterWideEditor(props: Props): ReactElement {
         // whole GameUserSettings.ini from the template and can wipe unrelated
         // settings (including when the template was empty/sparse).
         for (const member of eligible) {
-          const snapshot = props.snapshots.get(member.id);
-          if (snapshot === undefined) {
-            failures.push(`${member.name}: Could not read this server's current INI values`);
-            continue;
-          }
-          const memberPayload = withClusterWideTributeValues(snapshot.payload, parsedValues);
-          const memberPreview = await window.api.previewServerIni(member.id, memberPayload);
-          if (!memberPreview.ok) {
-            failures.push(`${member.name}: ${memberPreview.error ?? "Could not preview cluster transfer settings"}`);
-            continue;
-          }
-          if (!memberPreview.data.valid) {
-            failures.push(`${member.name}: ${memberPreview.data.issues.map((issue) => issue.message).join("; ")}`);
-            continue;
-          }
-          const result = await window.api.saveServerIni(member.id, memberPayload);
-          if (!result.ok) {
-            failures.push(`${member.name}: ${result.error ?? "Could not apply cluster transfer settings"}`);
+          try {
+            // Re-read right before writing so edits made elsewhere while this
+            // dialog was open are overlaid, not overwritten.
+            const latest = await window.api.readServerIni(member.id);
+            if (!latest.ok) {
+              failures.push(`${member.name}: ${latest.error ?? "Could not read this server's current INI values"}`);
+              continue;
+            }
+            const memberPayload = withClusterWideTributeValues(latest.data.payload, parsedValues);
+            const memberPreview = await window.api.previewServerIni(member.id, memberPayload);
+            if (!memberPreview.ok) {
+              failures.push(`${member.name}: ${memberPreview.error ?? "Could not preview cluster transfer settings"}`);
+              continue;
+            }
+            if (!memberPreview.data.valid) {
+              failures.push(`${member.name}: ${memberPreview.data.issues.map((issue) => issue.message).join("; ")}`);
+              continue;
+            }
+            const result = await window.api.saveServerIni(member.id, memberPayload);
+            if (!result.ok) {
+              failures.push(`${member.name}: ${result.error ?? "Could not apply cluster transfer settings"}`);
+            }
+          } catch (cause) {
+            // One member's IPC/backend exception must not stop the rest.
+            failures.push(`${member.name}: ${cause instanceof Error ? cause.message : String(cause)}`);
           }
         }
         if (failures.length > 0) {

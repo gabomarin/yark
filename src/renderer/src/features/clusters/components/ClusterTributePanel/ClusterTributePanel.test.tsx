@@ -281,6 +281,39 @@ describe("ClusterTributePanel", () => {
     expect(savedPayload.gameUserSettings).toMatch(/TributeItemExpirationSeconds=\d+/);
   });
 
+  it("keeps applying to later members when an earlier member's apply rejects", async () => {
+    const user = userEvent.setup();
+    installApi((id) => snapshot(id, gus));
+    const saveServerIni = vi.fn(async (serverId: string) => {
+      if (serverId === "srv-a") throw new Error("IPC exploded");
+      return { ok: true, data: { valid: true, issues: [], diff: [], changedCount: 1, pending: false } };
+    });
+    window.api = { ...window.api, saveServerIni } as typeof window.api;
+
+    render(
+      <AppProviders>
+        <ClusterTributePanel
+          {...panelActions()}
+          clusterId="alpha"
+          members={[island, scorched]}
+          statuses={
+            new Map([
+              ["srv-a", runtime("stopped")],
+              ["srv-b", { ...runtime("stopped"), serverId: "srv-b" }],
+            ])
+          }
+        />
+      </AppProviders>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: /edit transfer settings/i }));
+    await user.click(await screen.findByRole("button", { name: /more save options/i }));
+    await user.click(await screen.findByRole("menuitem", { name: /save and apply to servers/i }));
+
+    await waitFor(() => expect(saveServerIni).toHaveBeenCalledTimes(2));
+    expect(saveServerIni).toHaveBeenCalledWith("srv-b", expect.anything());
+  });
+
   it("keeps per-map settings in the server INI workspace", async () => {
     const restrictedGus = gus.replace("PreventUploadItems=False", "PreventUploadItems=True");
     installApi((id) => snapshot(id, id === "srv-a" ? restrictedGus : gus));
