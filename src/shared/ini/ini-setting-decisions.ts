@@ -45,8 +45,6 @@ export const INI_IMPORT_PRECEDENCE = {
   absenceIsNotCatalogDefault: true,
 } as const;
 
-export type IniImportPrecedence = typeof INI_IMPORT_PRECEDENCE;
-
 export function lookupSettingOwner(file: IniMetaFileKey, section: string, key: string): IniSettingOwner | "unknown" {
   return lookupIniSettingMeta(file, section, key)?.owner ?? "unknown";
 }
@@ -120,19 +118,17 @@ export function classifyIniSettingPresence(
   return "knownSupported";
 }
 
-export type IniSettingMetaDiagnosticCode =
-  | "duplicate_identity"
-  | "unsupported_owner"
-  | "unsupported_absence_policy"
-  | "unsupported_enforcement"
-  | "unsupported_confidence"
-  | "stale_verified_provenance"
-  | "invalid_reviewed_at"
-  | "seed_missing_from_catalog"
-  | "owned_catalog_missing_from_seed";
-
 export interface IniSettingMetaDiagnostic {
-  code: IniSettingMetaDiagnosticCode;
+  code:
+    | "duplicate_identity"
+    | "unsupported_owner"
+    | "unsupported_absence_policy"
+    | "unsupported_enforcement"
+    | "unsupported_confidence"
+    | "stale_verified_provenance"
+    | "invalid_reviewed_at"
+    | "seed_missing_from_catalog"
+    | "owned_catalog_missing_from_seed";
   message: string;
   id?: string;
 }

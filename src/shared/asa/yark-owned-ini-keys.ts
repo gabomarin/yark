@@ -20,7 +20,7 @@ import { isAsaIgnoredIniMaxPlayers, isCatalogOwnedIniKey } from "../ini/ini-sett
  * ASA ignores it and uses `-WinLiveMaxPlayers` from the Server form. Cluster
  * templates still strip MaxPlayers so they cannot author a decoy slot limit.
  */
-export type YarkOwnedIniReason = "profileSync" | "aseLegacy";
+type YarkOwnedIniReason = "profileSync" | "aseLegacy";
 
 export interface YarkOwnedIniKey {
   /** INI file — owned keys today are GameUserSettings only. */

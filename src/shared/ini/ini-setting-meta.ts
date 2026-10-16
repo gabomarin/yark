@@ -8,7 +8,7 @@ export type IniSettingAbsencePolicy = "allowed" | "forbidden" | "mapsToProfileNu
 
 export type IniSettingEnforcement = "blocking" | "warning" | "advisory";
 
-export type IniSettingProvenanceConfidence = "verified" | "inferred" | "unknown";
+type IniSettingProvenanceConfidence = "verified" | "inferred" | "unknown";
 
 export interface IniSettingProvenance {
   source: string;
@@ -16,7 +16,7 @@ export interface IniSettingProvenance {
   confidence: IniSettingProvenanceConfidence;
 }
 
-export interface IniSettingApplicability {
+interface IniSettingApplicability {
   game: "asa";
   /** Reserved for future mod-scoped metadata. */
   modIds?: string[];
