@@ -8,7 +8,7 @@ import {
 } from "@phosphor-icons/react";
 import { ActionIcon, Badge, Button, Group, Select, Text, Textarea, Tooltip } from "@mantine/core";
 import type { IniFileKey, ServerIniPayload } from "@shared/types";
-import { isAsaIgnoredIniMaxPlayers, isYarkOwnedIniKey } from "@shared/asa/yark-owned-ini-keys";
+import { isCatalogOwnedIniKey, isVisuallyEditableIniSetting } from "@shared/ini/ini-setting-decisions";
 import {
   filterIniSettingReferences,
   groupSettingReferencesByUiCategory,
@@ -44,10 +44,7 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
       ...row,
       fileKey: props.iniFile,
     }));
-    if (props.iniFile !== "gameUserSettings") {
-      return parsed;
-    }
-    return parsed.filter((row) => !isYarkOwnedIniKey(row.section, row.key) && !isAsaIgnoredIniMaxPlayers(row.key));
+    return parsed.filter((row) => isVisuallyEditableIniSetting(props.iniFile, row.section, row.key));
   }, [activeText, props.iniFile]);
 
   const availableRows = useMemo(() => filterIniSettingReferences(rows, "", "all"), [rows]);
@@ -69,7 +66,7 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
   const groupedRows = useMemo(() => groupSettingReferencesByUiCategory(visibleRows), [visibleRows]);
 
   const updateValue = (section: string, key: string, value: string, occurrence = 0): void => {
-    if (props.iniFile === "gameUserSettings" && isYarkOwnedIniKey(section, key)) {
+    if (props.iniFile === "gameUserSettings" && isCatalogOwnedIniKey(section, key)) {
       return;
     }
     props.onPayloadChange(

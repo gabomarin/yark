@@ -33,12 +33,14 @@ describe("yark-owned-ini-keys", () => {
     expect(isYarkOwnedIniKey("SessionSettings", "SessionName")).toBe(true);
     expect(isYarkOwnedIniKey("sessionsettings", "sessionname")).toBe(true);
     expect(isYarkOwnedIniKey("ServerSettings", "ActiveMods")).toBe(true);
+    expect(isYarkOwnedIniKey("ServerSettings", "ServerAdminPassword")).toBe(true);
     expect(isYarkOwnedIniKey("ServerSettings", "MaxPlayers")).toBe(false);
     expect(isYarkOwnedIniKey("SessionSettings", "MaxPlayers")).toBe(false);
     expect(isYarkOwnedIniKey("/Script/Engine.GameSession", "MaxPlayers")).toBe(false);
     expect(isAsaIgnoredIniMaxPlayers("MaxPlayers")).toBe(true);
     expect(isAsaIgnoredIniMaxPlayers("XPMultiplier")).toBe(false);
   });
+
 
   it("strips owned keys while preserving other settings and comments", () => {
     const input = `[ServerSettings]

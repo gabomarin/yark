@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-22T05:24:46.481Z",
+  "generatedAt": "2026-10-16T23:32:08.329Z",
   "settings": [
     {
       "id": "game:/script/shootergame.shootergamemode:AdjustableMutagenSpawnDelayMultiplier",
@@ -12,6 +12,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -27,6 +38,17 @@
         "min": 0,
         "max": 86400,
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -42,6 +64,17 @@
         "min": 0,
         "max": 86400,
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -55,6 +88,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -68,6 +112,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -81,6 +136,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -94,6 +160,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -107,6 +184,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -120,6 +208,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -133,6 +232,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -145,6 +255,17 @@
       "description": "If False, disabled custom RP-oriented Recipe/Cooking System (including Skill-Based results).",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -157,6 +278,17 @@
       "description": "Specifies whether flyer creatures can have their Movement Speed levelled up. In ARK: Survival Ascended, setting this to True only works if bAllowSpeedLeveling is also True.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -169,6 +301,17 @@
       "description": "If True, allows multiple platform floors.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -181,6 +324,17 @@
       "description": "Specifies whether players and non-flyer creatures can have their Movement Speed levelled up.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -193,6 +347,17 @@
       "description": "If False, prevents players to unclaim tame creatures.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -205,6 +370,17 @@
       "description": "If True, allows more than one usage of Mindwipe Tonic without 24 hours cooldown.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -218,6 +394,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -231,6 +418,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -243,6 +441,17 @@
       "description": "If True, enabled PvE mode in a PvPvE server at pre-specified times. The option bAutoPvEUseSystemTime determinates what kind of time to use, while AutoPvEStartTimeSeconds and AutoPvEStopTimeSeconds set the begin and end time of PvE mode.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -255,6 +464,17 @@
       "description": "If True, PvE mode begin and end times in a PvPvE server will refer to the server system time instead of in-game world time. Options bAutoPvETimer, AutoPvEStartTimeSeconds and AutoPvEStopTimeSeconds must also be set.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -267,6 +487,17 @@
       "description": "If True, unlocks all Engrams available. Ignores OverrideEngramEntries and OverrideNamedEngramEntries entries.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -279,6 +510,17 @@
       "description": "If True, disables Genesis 2 Tek Suit on Spawn.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -291,6 +533,17 @@
       "description": "If True, prevents tames to be bred.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -303,6 +556,17 @@
       "description": "If True, prevents players to ride tames.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -315,6 +579,17 @@
       "description": "If True, prevents players to tame wild creatures.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -327,6 +602,17 @@
       "description": "If True, prevents Friendly-Fire (among tribe mates/tames/structures).",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -339,6 +625,17 @@
       "description": "If True, disables missions on Genesis.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -351,6 +648,17 @@
       "description": "If True, disables the Hexagon store",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -363,6 +671,17 @@
       "description": "If True, prevents spawning of Loot crates (artifact creates will still spawn).",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -375,6 +694,17 @@
       "description": "Defines if photo mode is allowed (False) or not (True).",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -387,6 +717,17 @@
       "description": "If True, allows for structures to clip into the terrain.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -399,6 +740,17 @@
       "description": "If True, disables world effects from Missions (Genesis: Part 2) altogether. To disable specific world buffs, see DisableWorldBuffs of #DynamicConfig.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -411,6 +763,17 @@
       "description": "If True, makes world effects from Missions (Genesis: Part 2) scale from server settings, rather than add/subtract a flat amount to the value at runtime.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -423,6 +786,17 @@
       "description": "If True, Quetz platforms will allow any non-allied tame to base on them when they are flying.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -435,6 +809,17 @@
       "description": "If True, disables building in mission areas on Genesis: Part 1.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -447,6 +832,17 @@
       "description": "If True, enables the retroactive turret hard limit (100 turrets within a 10k unit radius).",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -459,6 +855,17 @@
       "description": "If True, allows only Engrams to be sold on the Hex Store, disables everything else.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -471,6 +878,17 @@
       "description": "If True, enables building areas where normally it's not allowed, such around some maps' Obelisks, in the Aberration Portal and in Mission Volumes areas on Genesis: Part 1. Note: in Genesis: Part 1 this settings is enabled by default and there is an ad hoc settings called bGenesisUseStructuresPreventionVolumes to disable it.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -483,6 +901,17 @@
       "description": "If False, disables PvP additional re-spawn time (IncreasePvPRespawnIntervalBaseAmount) that scales (IncreasePvPRespawnIntervalMultiplier) when a player is killed by a team within a certain amount of time (IncreasePvPRespawnIntervalCheckPeriod).",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -495,6 +924,17 @@
       "description": "If False, doesn't limit the maximum allowed automated turrets (including Plant Species X) in a certain range.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -507,6 +947,17 @@
       "description": "If True, any Engram not explicitly specified by OverrideEngramEntries or OverrideNamedEngramEntries list will be hidden. All Items and Blueprints based on hidden Engrams will be removed.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -519,6 +970,17 @@
       "description": "If True, allows spike walls to damage wild/riderless creatures.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -531,6 +993,17 @@
       "description": "If False, disables capability for Tribes to officially declare war on each other for mutually-agreed-upon period of time.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -543,6 +1016,17 @@
       "description": "If True, allows cancellation of an agreed-upon war before it has actually started.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -555,6 +1039,17 @@
       "description": "If True, disabled Friendly-Fire (among tribe mates/tames/structures) in PvE servers.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -567,6 +1062,17 @@
       "description": "If True, adds a button to the pause menu to enable/disable creative mode.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -579,6 +1085,17 @@
       "description": "If False, prevents survivors to see a green light beam at the location of their dead body.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -591,6 +1108,17 @@
       "description": "If False, tame creatures on level-up will not perform the related animation.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -603,6 +1131,17 @@
       "description": "If True, all game settings will be more balanced for an individual player experience. Useful for dedicated server with a very small amount of players. See Single Player Settings section for more details.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -615,6 +1154,17 @@
       "description": "If True will make Tame Units only be applied and used for Platforms with Structures and Rafts effectively disabling Tame Units for tames without Platform Structures.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -628,6 +1178,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -641,6 +1202,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -654,6 +1226,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -667,6 +1250,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -680,6 +1274,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -693,6 +1298,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -707,6 +1323,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -720,6 +1347,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -733,6 +1371,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -746,6 +1395,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -760,6 +1420,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -775,6 +1446,17 @@
         "min": 1,
         "max": 5,
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -788,6 +1470,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -801,6 +1494,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -814,6 +1518,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -827,6 +1542,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -840,6 +1566,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -853,6 +1590,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -866,6 +1614,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -879,6 +1638,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -891,6 +1661,17 @@
       "description": "No further information has been added about this variable. If you know anything, please consider creating an account and contributing.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -904,6 +1685,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -917,6 +1709,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -930,6 +1733,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -943,6 +1757,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -956,6 +1781,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -970,6 +1806,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -984,6 +1831,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -998,6 +1856,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1012,6 +1881,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1026,6 +1906,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1039,6 +1930,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1052,6 +1954,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1065,6 +1978,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1078,6 +2002,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1092,6 +2027,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1106,6 +2052,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1119,6 +2076,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1133,6 +2101,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1146,6 +2125,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1159,6 +2149,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1172,6 +2173,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1185,6 +2197,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1200,6 +2223,17 @@
         "min": 0,
         "max": 1,
         "step": 0.01
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1215,6 +2249,17 @@
         "min": 0,
         "max": 1,
         "step": 0.01
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1228,6 +2273,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1242,6 +2298,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1257,6 +2324,17 @@
         "min": 1,
         "max": 5,
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1270,6 +2348,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1283,6 +2372,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1296,6 +2396,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1309,6 +2420,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1322,6 +2444,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1335,6 +2468,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1348,6 +2492,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1361,6 +2516,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1375,6 +2541,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1389,6 +2566,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1401,6 +2589,17 @@
       "description": "A single line string for a message displayed to played once logged-in. No quotes needed. Use \\n to start a new line in the message.",
       "input": {
         "type": "text"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1413,6 +2612,17 @@
       "description": "Specifies which mod map is loaded.",
       "input": {
         "type": "text"
+      },
+      "owner": "system",
+      "absencePolicy": "allowed",
+      "enforcement": "warning",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "yark-ase-legacy",
+        "reviewedAt": "2026-08-13",
+        "confidence": "verified"
       }
     },
     {
@@ -1425,6 +2635,40 @@
       "description": "Specifies the order and which mods are loaded. ModIDs are comma separated and in one line. Priority is in descending order (the left-most ModID hast the highest priority). Alternatively, but not suggested, the command line ?GameModIds= can be used.",
       "input": {
         "type": "text"
+      },
+      "owner": "system",
+      "absencePolicy": "allowed",
+      "enforcement": "warning",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "yark-ase-legacy",
+        "reviewedAt": "2026-08-13",
+        "confidence": "verified"
+      }
+    },
+    {
+      "id": "gameUserSettings:ServerSettings:ActiveTotalConversion",
+      "file": "gameUserSettings",
+      "section": "ServerSettings",
+      "key": "ActiveTotalConversion",
+      "defaultValue": "",
+      "valueType": "string",
+      "description": "YARK-owned setting; managed outside the visual INI catalog (Server Settings / Mods).",
+      "input": {
+        "type": "text"
+      },
+      "owner": "system",
+      "absencePolicy": "allowed",
+      "enforcement": "warning",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "yark-ase-legacy",
+        "reviewedAt": "2026-08-13",
+        "confidence": "verified"
       }
     },
     {
@@ -1437,6 +2681,17 @@
       "description": "If True, logs all admin commands to in-game chat.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1449,6 +2704,17 @@
       "description": "If True, allows anyone to \"take care\" of a baby creatures (cuddle etc.), not just whomever imprinted on it.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1461,6 +2727,17 @@
       "description": "",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1473,6 +2750,17 @@
       "description": "",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1485,6 +2773,17 @@
       "description": "",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1497,6 +2796,17 @@
       "description": "If True, allows building in caves when PvE mode is also enabled. Note: no more working in command-line options before patch 241.5.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1509,6 +2819,17 @@
       "description": "If False, prevents building in caves when PvP mode is also enabled.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1521,6 +2842,17 @@
       "description": "If True, allows from-the-air Supply Crates to appear on top of Structures, rather than being prevented by Structures.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1533,6 +2865,17 @@
       "description": "If True, allows cryofridges to be built on platform saddles and rafts.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1545,6 +2888,17 @@
       "description": "",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1557,6 +2911,17 @@
       "description": "If True, allows flying creatures to pick up wild creatures in PvE.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1569,6 +2934,17 @@
       "description": "If True, allows server to recover Stamina when standing on a Flyer.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1581,6 +2957,17 @@
       "description": "If False, shows the damage sources in tribe logs.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1593,6 +2980,17 @@
       "description": "If False, disables optional markers for ranged attacks.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1605,6 +3003,17 @@
       "description": "if False, disables all of the new S+ structures (intended mainly for letting unofficial servers that want to keep using the S+ mod version to keep using that without a ton of extra duplicate structures).",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1617,6 +3026,17 @@
       "description": "If True, allows to attach more than one C4 per creature.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1629,6 +3049,17 @@
       "description": "If True, allows Titanosaurs to be permanently tamed (namely allow them to be fed). Note: in The Island only spawns a maximum of 3 Titanosaurs, so 3 tamed ones should ultimately block any more ones from spawning.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1641,6 +3072,17 @@
       "description": "",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1653,6 +3095,17 @@
       "description": "If True, allows family sharing players to connect to the server.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1665,6 +3118,17 @@
       "description": "If True, enables TEK suit powers in Genesis: Part 1.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1677,6 +3141,17 @@
       "description": "If False, disables third person camera allowed by default on all dedicated servers.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1689,6 +3164,17 @@
       "description": "If True disables the timer on the quick pick-up system.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1701,6 +3187,17 @@
       "description": "If True, players will always get notified if someone leaves the server",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1714,6 +3211,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1726,6 +3234,17 @@
       "description": "If True, auto-destroys claimable decayed tames on load, rather than have them remain around as claimable. Note: after patch 273.691, in PvE mode the tame auto-unclaim after decay period has been disabled in official PvE.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1739,6 +3258,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1752,6 +3282,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1764,6 +3305,17 @@
       "description": ": \"http://cdn2.arkdedicated.com/asa/badwords.txt\" Add the URL to hosting your own bad words list. Note: on ARK: Survival Evolved servers only the HTTP protocol is supported (an HTTPS URL will not work).",
       "input": {
         "type": "text"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1776,6 +3328,17 @@
       "description": ": \"http://cdn2.arkdedicated.com/asa/goodwords.txt\" Add the URL to hosting your own good words list. Note: on ARK: Survival Evolved servers only the HTTP protocol is supported (an HTTPS URL will not work).",
       "input": {
         "type": "text"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1788,6 +3351,17 @@
       "description": "Sets the global ban list. Must be enclosed in double quotes. The list is fetched every 10 minutes (to check if there are new banned IDs). ARK: Survival Evolved: Official ban list URL is http://arkdedicated.com/banlist.txt (before 279.233 the URL was http://playark.com/banlist.txt). Note: it supports the HTTP protocol only (HTTPS is not supported). ARK: Survival Ascended: Official ban list URL is https://cdn2.arkdedicated.com/asa/BanList.txt. Note: it supports both HTTP and HTTPS protocols.",
       "input": {
         "type": "text"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1800,6 +3374,17 @@
       "description": "If True, filters out character names based on the bad words/good words list.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1812,6 +3397,17 @@
       "description": "If True, filters out character names based on the bad word/good words list.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1824,6 +3420,17 @@
       "description": "If True, filters out tribe names based on the badwords/goodwords list.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1837,6 +3444,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1850,6 +3468,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1863,6 +3492,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1876,6 +3516,17 @@
       "input": {
         "type": "number",
         "step": 0.01
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1890,6 +3541,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1904,6 +3566,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1918,6 +3591,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1930,6 +3614,17 @@
       "description": "If True, clamps all spoiling times to the items' maximum spoiling times. Useful if any infinite-spoiling exploits were used on the server and you wish to clean them up. Could potentially cause issues with mods that alter spoiling time, hence it is an option.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1942,6 +3637,17 @@
       "description": "If True, enables stats clamping for items. See ItemStatClamps for more info.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1954,6 +3660,17 @@
       "description": "If True, limit the damage caused by a tame to a resource on harvesting based on resource remaining health. Note: enabling this setting may result in sensible resource harvesting reduction using high damage tools or creatures.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1967,6 +3684,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1979,6 +3707,17 @@
       "description": "If True, enables non-native creatures tribute download on Aberration.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -1992,6 +3731,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2005,6 +3755,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2018,6 +3779,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2031,6 +3803,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2044,6 +3827,17 @@
       "input": {
         "type": "number",
         "step": 0.01
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2058,6 +3852,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2071,6 +3876,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2083,6 +3899,17 @@
       "description": "Direct link to the live tuning file. For more information on how to use this system check out the official announcement: https://survivetheark.com/index.php?/forums/topic/569366-server-configuration-live-tuning-system. ARK: Survival Evolved: official servers use http://arkdedicated.com/DefaultOverloads.json. Note: string with a URL must use the HTTP protocol (HTTPS is not supported) and inside quotes if used in command line. ARK: Survival Ascended: official servers use https://cdn2.arkdedicated.com/asa/livetuningoverloads.json. Note: string with a URL must use inside quotes if used in command line.",
       "input": {
         "type": "text"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2096,6 +3923,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2109,6 +3947,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2121,6 +3970,17 @@
       "description": "Dinos above the Soft Tame Server Limit will be marked â€œFor Cryoâ€ and display an icon and a timer indicating how soon they need to be cryopodded before they are automatically destroyed. Dinos marked and dinos destroyed by this system will be logged in the tribe log. This differs from the standard tame limit, as it still allows new players to join servers and tame creatures above the 5000 limit, whereas previously, they would not have been able to tame or breed creatures at the server cap. You can define the soft tame limit with MaxTamedDinos_SoftTameLimit. You can define the time (in seconds) before tame's autodestruction with MaxTamedDinos_SoftTameLimit_CountdownForDeletionDuration.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2134,6 +3994,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2147,6 +4018,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2160,6 +4042,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2173,6 +4066,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2186,6 +4090,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2199,6 +4114,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2212,6 +4138,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2224,6 +4161,17 @@
       "description": "If True, allows cryopods to be used while enemies are nearby.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2236,6 +4184,17 @@
       "description": "If True, allows cryopods to be used without needing to be in range of a powered cryofridge.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2248,6 +4207,17 @@
       "description": "If True, disables the creature decay in PvE mode. Note: after patch 273.691, in PvE mode the creature auto-unclaim after decay period has been disabled.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2260,6 +4230,17 @@
       "description": "If True, disables the creature imprinting player Stat Bonus. Where whomever specifically imprinted on the creature, and raised it to have an Imprinting Quality, gets extra Damage/Resistance buff.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2272,6 +4253,17 @@
       "description": "If True, prevents use of console command \"gamma\" in PvE mode.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2284,6 +4276,17 @@
       "description": "If True, disables the gradual auto-decay of player structures.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2296,6 +4299,17 @@
       "description": "If True, disables fog.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2308,6 +4322,17 @@
       "description": "If True, globally disables player joins notifications.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2320,6 +4345,17 @@
       "description": "If True and -DisableDupeLogDeletes is present, prevents the server to automatically restore a backup in case of corrupted save. Undocumented by Wildcard.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2335,6 +4371,17 @@
         "min": 0,
         "max": 1,
         "step": 0.01
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2347,6 +4394,17 @@
       "description": "If True, there is no Cryopod cooldown timer, and creatures do not become unconscious. If this option is set, than EnableCryopodNerf and CryopodNerfIncomingDamageMultPercent must be set as well or they will default to 0.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2359,6 +4417,17 @@
       "description": "If True, enables Cryopod cooldown timer when deploying a creature.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2371,6 +4440,17 @@
       "description": "If True, disables building in specific resource-rich areas, in particular setup on The Island around the major mountains.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2383,6 +4463,17 @@
       "description": "If False, disables mesh biting protection. Undocumented by Wildcard.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2395,6 +4486,17 @@
       "description": "If True, allows use of console command \"gamma\" in PvP mode.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2408,6 +4510,17 @@
       "input": {
         "type": "number",
         "step": 0.01
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2420,6 +4533,17 @@
       "description": "If True, unsnapped foundations/pillars/fences/Tek Dedicated Storage will decay after the time stated by FastDecayInterval in Game.ini (default is 12 hours). Before 259.0, it set the decay time for such structures straight to 5 times faster.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2432,6 +4556,17 @@
       "description": "If True, will default lock all structures.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2444,6 +4579,17 @@
       "description": "If True, Gachas will become unhappy within caves.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2456,6 +4602,17 @@
       "description": "If True, freezes the Reaper King pregnancy timer and experience gain. Undocumented by Wildcard.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2468,6 +4625,17 @@
       "description": "If True, voice chat turns global.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2481,6 +4649,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2494,6 +4673,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2506,6 +4696,17 @@
       "description": "If True, removes the limit of 150 decorative structures (flags, signs, dermis etc.).",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2519,6 +4720,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2532,6 +4744,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2545,6 +4768,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2557,6 +4791,17 @@
       "description": "",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2571,6 +4816,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2584,6 +4840,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2596,6 +4863,17 @@
       "description": "If True, enables advanced chat logging. Chat logs will be saved in ShooterGame/Saved/Logs/ChatLogs/<SessionName>/ in json format. Disabled on official. The file will be split according to ChatLogFileSplitIntervalSeconds value and flushed every ChatLogFlushIntervalSeconds seconds value. Note: <SessionName> will be written without spaces. Undocumented by Wildcard.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2609,6 +4887,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2623,6 +4912,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2637,6 +4937,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2651,6 +4962,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2665,6 +4987,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2679,6 +5012,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2693,6 +5037,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2706,6 +5061,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2720,6 +5086,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2734,6 +5111,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2748,6 +5136,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2762,6 +5161,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2776,6 +5186,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2790,6 +5211,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2803,6 +5235,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2816,6 +5259,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2829,6 +5283,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2841,6 +5306,17 @@
       "description": "If True, makes permanent diseases not permanent. Players will lose them if on re-spawn.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2853,6 +5329,17 @@
       "description": "If True, prevents CrossArk-data downloads inCross-ARK Data Transfer.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2866,6 +5353,17 @@
       "input": {
         "type": "number",
         "step": 0.01
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2880,6 +5378,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2894,6 +5403,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2906,6 +5426,17 @@
       "description": "If True, prevents any non-core/non-foundation structures from auto-destroying (however they'll still get auto-destroyed if a floor that they're on gets auto-destroyed). Official PvE Servers used this option.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2918,6 +5449,17 @@
       "description": "If True, only unsnapped core structures will decay. Useful for eliminating lone pillar/foundation spam.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2931,6 +5473,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2943,6 +5496,17 @@
       "description": "If True, turrets becomes be buildable and functional on platform saddles. Since 247.999 applies on spike structure too. Note: despite patch notes, in ShooterGameServer it's coded OverrideStructurePlatformPrevention with two r.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2956,6 +5520,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2969,6 +5544,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2983,6 +5569,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -2996,6 +5593,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3009,6 +5617,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3022,6 +5641,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3035,6 +5665,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3048,6 +5689,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3061,6 +5713,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3074,6 +5737,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3086,6 +5760,17 @@
       "description": "If True, completely diseases on the server. Thus far just Swamp Fever.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3098,6 +5783,17 @@
       "description": "If True, prevents creatures download from ARK Data in Cross-ARK Data Transfer.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3110,6 +5806,17 @@
       "description": "If True, prevents items download from ARK Data in Cross-ARK Data Transfer.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3122,6 +5829,17 @@
       "description": "If True, prevents survivors download from ARK Data in Cross-ARK Data Transfer.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3134,6 +5852,17 @@
       "description": "If True, disables creature mate boosting.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3146,6 +5875,17 @@
       "description": "If True, enables the Offline Raiding Prevention (ORP). When all tribe members are logged off, tribe characters, creature and structures become invulnerable. Creature starvation still applies, moreover, characters and creature can still die if drowned. Despite the name, it works on both PvE and PvP game modes. Due to performance reason, it is recommended to set a minimum interval with PreventOfflinePvPInterval option before ORP becomes active. ORP also helps lowering memory and CPU usage on a server. Enabled by default on Official PvE since 258.3",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3159,6 +5899,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3171,6 +5922,17 @@
       "description": "If True, prevents out of tribe players to use pins on structures (doors, elevators, storage boxes, etc). Undocumented by Wildcard.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3183,6 +5945,17 @@
       "description": "If True, player characters (re)spawn without the wake-up animation.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3195,6 +5968,17 @@
       "description": "If True, prevents tribes from creating Alliances.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3207,6 +5991,17 @@
       "description": "If True, prevents creatures upload to ARK Data in Cross-ARK Data Transfer.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3219,6 +6014,17 @@
       "description": "If True, prevents items upload to ARK Data in Cross-ARK Data Transfer.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3231,6 +6037,17 @@
       "description": "If True, prevents survivors upload to ARK Data in Cross-ARK Data Transfer.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3243,6 +6060,17 @@
       "description": "If True, only players near each other can see their chat messages",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3255,6 +6083,17 @@
       "description": "If True, allows building near supply drop points in PvE mode.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3268,6 +6107,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3281,6 +6131,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3293,6 +6154,17 @@
       "description": "If True, enables creatures' decay in PvP while the Offline Raid Prevention is active.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3305,6 +6177,17 @@
       "description": "If True, enables structures decay on PvP servers while the Offline Raid Prevention is active.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3318,6 +6201,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3331,6 +6225,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3343,6 +6248,17 @@
       "description": "If True, supply drops are in random locations. Note: This setting is known to cause artifacts becoming inaccessible on Ragnarok if active.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3355,6 +6271,17 @@
       "description": "If True, enables RCON, needs RCONPort=<TCP_PORT> and ServerAdminPassword=<admin_password> to work.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "serverProfile",
+      "absencePolicy": "forbidden",
+      "enforcement": "blocking",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "yark-profile-sync",
+        "reviewedAt": "2026-08-13",
+        "confidence": "verified"
       }
     },
     {
@@ -3369,6 +6296,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "serverProfile",
+      "absencePolicy": "forbidden",
+      "enforcement": "blocking",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "yark-profile-sync",
+        "reviewedAt": "2026-08-13",
+        "confidence": "verified"
       }
     },
     {
@@ -3382,6 +6320,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3395,6 +6344,40 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
+      }
+    },
+    {
+      "id": "gameUserSettings:ServerSettings:ServerAdminPassword",
+      "file": "gameUserSettings",
+      "section": "ServerSettings",
+      "key": "ServerAdminPassword",
+      "defaultValue": "",
+      "valueType": "string",
+      "description": "YARK-owned setting; managed outside the visual INI catalog (Server Settings / Mods).",
+      "input": {
+        "type": "text"
+      },
+      "owner": "serverProfile",
+      "absencePolicy": "mapsToProfileNull",
+      "enforcement": "blocking",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "yark-profile-sync",
+        "reviewedAt": "2026-08-13",
+        "confidence": "verified"
       }
     },
     {
@@ -3408,6 +6391,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3420,6 +6414,17 @@
       "description": "If False, disables the Crosshair on your server.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3432,6 +6437,17 @@
       "description": "Involved in foliage repopulation. Takes no effect if -forcedisablemeshchecking is set. Enabled on official. Undocumented.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3444,6 +6460,17 @@
       "description": "If True, HUD is always disabled for non-tribe owned NPCs.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3456,6 +6483,40 @@
       "description": "If True, enables Hardcore mode (player characters revert to level 1 upon death)",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
+      }
+    },
+    {
+      "id": "gameUserSettings:ServerSettings:ServerPassword",
+      "file": "gameUserSettings",
+      "section": "ServerSettings",
+      "key": "ServerPassword",
+      "defaultValue": "",
+      "valueType": "string",
+      "description": "YARK-owned setting; managed outside the visual INI catalog (Server Settings / Mods).",
+      "input": {
+        "type": "text"
+      },
+      "owner": "serverProfile",
+      "absencePolicy": "mapsToProfileNull",
+      "enforcement": "blocking",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "yark-profile-sync",
+        "reviewedAt": "2026-08-13",
+        "confidence": "verified"
       }
     },
     {
@@ -3468,6 +6529,17 @@
       "description": "If True, disables PvP and enables PvE",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3480,6 +6552,17 @@
       "description": "If True, enables RPG-style popup damage text mode.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3492,6 +6575,17 @@
       "description": "If False, hides each player their own precise position when they view their map.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3505,6 +6599,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3518,6 +6623,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3531,6 +6647,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3544,6 +6671,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3557,6 +6695,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3570,6 +6719,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3583,6 +6743,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3596,6 +6767,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3610,6 +6792,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3622,6 +6815,17 @@
       "description": "By default, enemy structure destruction (for the victim tribe) is not displayed in the tribe Logs, set this to true to enable it.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3634,6 +6838,17 @@
       "description": "If False, prevents tribe to merge. Undocumented by Wildcard.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3647,6 +6862,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3660,6 +6886,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3674,6 +6911,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3688,6 +6936,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3702,6 +6961,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3715,6 +6985,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3727,6 +7008,17 @@
       "description": "Used to enable character tracking. Alternatively, this option can be configured with -disableCharacterTracker argument in the command line (note that the argument from command line has priority over the value set in GameUserSettings.ini). Undocumented by Wildcard.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3739,6 +7031,17 @@
       "description": "If True, allows same behaviour as -exclusivejoin. Undocumented by Wildcard.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3751,6 +7054,17 @@
       "description": "If True, enables the biome teleport in Fjordur when holding R (enabled in official PvE servers).",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3763,6 +7077,17 @@
       "description": "If True, enables a server harvesting optimization with high HarvestAmountMultiplier (but less rare items). Note: on ARK: Survival Evolved it's suggested to enable this option if harvesting with Tek Stryder causes lag spikes.",
       "input": {
         "type": "boolean"
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3776,6 +7101,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3789,6 +7125,17 @@
       "input": {
         "type": "number",
         "step": 0.1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
       }
     },
     {
@@ -3803,6 +7150,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "serverProfile",
+      "absencePolicy": "forbidden",
+      "enforcement": "blocking",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "yark-profile-sync",
+        "reviewedAt": "2026-08-13",
+        "confidence": "verified"
       }
     },
     {
@@ -3817,6 +7175,17 @@
         "type": "number",
         "integer": true,
         "step": 1
+      },
+      "owner": "serverProfile",
+      "absencePolicy": "forbidden",
+      "enforcement": "blocking",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "yark-profile-sync",
+        "reviewedAt": "2026-08-13",
+        "confidence": "verified"
       }
     },
     {
@@ -3829,6 +7198,17 @@
       "description": "Specifies the Server name advertised in the Game Server Browser as well in Steam Server browser. If no name is provide, the default name will be ARK # followed by a random 6 digit number. Note: Name must not be typed between quotes unless it is launched from command line.",
       "input": {
         "type": "text"
+      },
+      "owner": "serverProfile",
+      "absencePolicy": "forbidden",
+      "enforcement": "blocking",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "yark-profile-sync",
+        "reviewedAt": "2026-08-13",
+        "confidence": "verified"
       }
     }
   ]

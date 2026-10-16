@@ -9,7 +9,7 @@ import {
   type AsaUiCategoryId,
 } from "../asa/asa-setting-ui-categories";
 import { isClientIniNoise, parseIniTextRows } from "./ini-text";
-import { isYarkOwnedIniKey } from "../asa/yark-owned-ini-keys";
+import { isVisuallyEditableIniSetting } from "./ini-setting-decisions";
 
 export type IniUiFileKey = "gameUserSettings" | "game";
 
@@ -25,7 +25,10 @@ export interface IniUiCategoryGroup {
 }
 
 export interface ListIniUiCategoryTreeOptions {
-  /** Drop YARK-owned GameUserSettings keys (ports, passwords, session, …). */
+  /**
+   * Drop keys that are not visually editable (profile/system-owned GUS keys,
+   * ASA-ignored MaxPlayers, client noise).
+   */
   excludeOwnedGusKeys?: boolean;
 }
 
@@ -42,12 +45,11 @@ export function listIniUiCategoryTree(
   const seen = new Set<string>();
 
   for (const row of parseIniTextRows(text)) {
-    if (isClientIniNoise(row.section, row.key)) continue;
-    if (
-      options.excludeOwnedGusKeys === true &&
-      fileKey === "gameUserSettings" &&
-      isYarkOwnedIniKey(row.section, row.key)
-    ) {
+    if (options.excludeOwnedGusKeys === true) {
+      if (!isVisuallyEditableIniSetting(fileKey, row.section, row.key)) {
+        continue;
+      }
+    } else if (isClientIniNoise(row.section, row.key)) {
       continue;
     }
     const identity = `${row.section.toLowerCase()}\0${row.key.toLowerCase()}`;

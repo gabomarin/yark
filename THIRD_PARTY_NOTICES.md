@@ -23,7 +23,7 @@ apply to the listed portions only.
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `src/shared/defaults/Game.ini`                       | Default ASA dedicated `Game.ini` body                                                                              |
 | `src/shared/defaults/GameUserSettings.ini`           | Default ASA dedicated `GameUserSettings.ini` body                                                                  |
-| `src/shared/ini/ini-setting-meta.json`               | Editor metadata (`description`, `valueType`, defaults) generated from the files above (`npm run catalog:ini-meta`) |
+| `src/shared/ini/ini-setting-meta.json`               | Editor metadata (`description`, `valueType`, defaults, ownership) generated from the files above (`npm run catalog:ini-meta`) |
 | `src/shared/asa/asa-setting-ui-categories-data.json` | INI editor category groupings derived from `ini-setting-meta.json`                                                 |
 
 YARK may reorder sections, normalize placeholder values (e.g. empty `ActiveMods=`),

@@ -33,7 +33,7 @@ Multiple servers on the same map in one cluster are allowed and not flagged.
 | IPC handler                       | `src/main/ipc-handlers.ts`                                                                                                                                                                                                                                                    |
 | Preload                           | `src/preload/index.ts`                                                                                                                                                                                                                                                        |
 | Fleet UI                          | `src/renderer/src/features/clusters/` (`ClustersPage`, `clusterModel`, `createClusterModel`, `membershipModel`, `CreateClusterModal`, `AddServersModal`, `RemoveServersModal`, `ClusterIniTemplateModal`)                                                                     |
-| Cluster INI templates             | `src/backend/domains/config/cluster-ini-template-service.ts`, `src/backend/domains/config/cluster-ini-template-apply-service.ts`, `src/backend/domains/config/ini-compose.ts`, `src/backend/infra/db/cluster-ini-template-repository.ts`, `src/shared/yark-owned-ini-keys.ts` |
+| Cluster INI templates             | `src/backend/domains/config/cluster-ini-template-service.ts`, `src/backend/domains/config/cluster-ini-template-apply-service.ts`, `src/backend/domains/config/ini-compose.ts`, `src/backend/infra/db/cluster-ini-template-repository.ts`, `src/shared/asa/yark-owned-ini-keys.ts`, `src/shared/ini/ini-setting-decisions.ts` |
 | Known cluster picker              | `src/renderer/src/features/clusters/knownClusterOptions.ts`                                                                                                                                                                                                                   |
 | First-run setup (pending cluster) | `src/renderer/src/features/setup-wizard/` — optional Cluster ID/dir persisted in `onboarding.v1` until the first successful create/import (#298)                                                                                                                              |
 | Create / edit form                | `src/renderer/src/features/servers/components/ServerForm/`                                                                                                                                                                                                                    |
@@ -182,7 +182,7 @@ Report shape:
 - Deleting a template does not delete any server INI files on disk.
 - Clusters that exist only as profile fields can still own a template (including
   after all members leave — the row remains until deleted).
-- Owned keys catalog: `src/shared/yark-owned-ini-keys.ts`
+- Owned keys / decisions: `src/shared/asa/yark-owned-ini-keys.ts`, `src/shared/ini/ini-setting-decisions.ts` ([ini-metadata.md](ini-metadata.md))
   - **profileSync**: RCON / passwords / SessionName / Port / QueryPort
     (`syncProfileSettingsToIni` / `applyProfileOwnedKeysToGameUserSettings`)
   - **aseLegacy**: `ActiveMods`, `ActiveMapMod`, `ActiveTotalConversion` (ASE /

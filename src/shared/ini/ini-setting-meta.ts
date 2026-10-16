@@ -2,6 +2,26 @@ import meta from "./ini-setting-meta.json";
 
 export type IniMetaFileKey = "gameUserSettings" | "game";
 
+export type IniSettingOwner = "serverProfile" | "iniVisual" | "externalManual" | "system";
+
+export type IniSettingAbsencePolicy = "allowed" | "forbidden" | "mapsToProfileNull";
+
+export type IniSettingEnforcement = "blocking" | "warning" | "advisory";
+
+export type IniSettingProvenanceConfidence = "verified" | "inferred" | "unknown";
+
+export interface IniSettingProvenance {
+  source: string;
+  reviewedAt: string | null;
+  confidence: IniSettingProvenanceConfidence;
+}
+
+export interface IniSettingApplicability {
+  game: "asa";
+  /** Reserved for future mod-scoped metadata. */
+  modIds?: string[];
+}
+
 export type IniSettingInput =
   | { type: "boolean" }
   | { type: "text"; multiline?: boolean }
@@ -23,6 +43,15 @@ export interface IniSettingMeta {
   valueType: string | null;
   description: string;
   input: IniSettingInput;
+  owner: IniSettingOwner;
+  absencePolicy: IniSettingAbsencePolicy;
+  enforcement: IniSettingEnforcement;
+  applicability: IniSettingApplicability;
+  provenance: IniSettingProvenance;
+  /** Tier-2: restart impact when known; omit/null means unknown (never guessed). */
+  restartImpact?: string | null;
+  /** Tier-2: conflicting keys when known; omit/null means unknown. */
+  conflicts?: string[] | null;
 }
 
 interface IniSettingMetaFile {

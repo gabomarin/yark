@@ -27,10 +27,12 @@ describe("listIniUiCategoryTree", () => {
     expect(allKeys).not.toContain("ServerAdminPassword");
     expect(allKeys).not.toContain("RCONPort");
     expect(allKeys).not.toContain("SessionName");
+    expect(allKeys).not.toContain("MaxPlayers");
     // Raw INI section headers are not category labels
     expect(labels).not.toContain("ServerSettings");
     expect(labels).not.toContain("[ServerSettings]");
   });
+
 
   it("keeps section+key on each leaf for compose", () => {
     const text = "[ServerSettings]\nXPMultiplier=2\n";
