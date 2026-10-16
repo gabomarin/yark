@@ -37,7 +37,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Docs
 
-- Documented the Appearance theme-family contract, workspace file-job notice placement, OpenCodeReview `/ocr` and Responses protocol variables, connection sharing, and release-download Worker behavior.
+- Documented the Appearance theme-family contract, workspace file-job notice placement, OpenCodeReview `/ocr` and Responses protocol variables, connection sharing, Hosted Resources, and release-download Worker behavior.
 
 ## [0.23.0] - 2026-09-23
 

@@ -137,6 +137,7 @@ export default defineConfig({
             { label: "Maintenance", link: "/docs/maintenance/" },
             { label: "Ark Server API", link: "/docs/ark-server-api/" },
             { label: "RCON console", link: "/docs/rcon/" },
+            { label: "Hosted Resources", link: "/docs/hosted-resources/" },
             { label: "Updates & SteamCMD", link: "/docs/updates-and-steamcmd/" },
             { label: "Backups", link: "/docs/backups/" },
             { label: "Logs & diagnostics", link: "/docs/logs/" },
