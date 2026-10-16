@@ -18,9 +18,7 @@ describe("ini-setting-decisions", () => {
   it("assigns verified ownership metadata to profile and ASE-legacy keys", () => {
     expect(lookupSettingOwner("gameUserSettings", "SessionSettings", "SessionName")).toBe("serverProfile");
     expect(lookupAbsencePolicy("gameUserSettings", "SessionSettings", "Port")).toBe("forbidden");
-    expect(lookupAbsencePolicy("gameUserSettings", "ServerSettings", "ServerPassword")).toBe(
-      "mapsToProfileNull",
-    );
+    expect(lookupAbsencePolicy("gameUserSettings", "ServerSettings", "ServerPassword")).toBe("mapsToProfileNull");
     expect(lookupEnforcement("gameUserSettings", "ServerSettings", "RCONPort")).toBe("blocking");
     expect(lookupSettingOwner("gameUserSettings", "ServerSettings", "ActiveMods")).toBe("system");
     expect(lookupEnforcement("gameUserSettings", "ServerSettings", "ActiveMods")).toBe("warning");
@@ -34,26 +32,16 @@ describe("ini-setting-decisions", () => {
     expect(lookupSettingOwner("gameUserSettings", "ServerSettings", "AdminLogging")).toBe("iniVisual");
     expect(lookupAbsencePolicy("gameUserSettings", "ServerSettings", "AdminLogging")).toBe("allowed");
     expect(lookupEnforcement("gameUserSettings", "ServerSettings", "AdminLogging")).toBe("advisory");
-    expect(lookupProvenance("gameUserSettings", "ServerSettings", "AdminLogging")?.confidence).toBe(
-      "inferred",
-    );
+    expect(lookupProvenance("gameUserSettings", "ServerSettings", "AdminLogging")?.confidence).toBe("inferred");
   });
 
   it("keeps unknown keys unknown (no invented catalog owner)", () => {
     expect(lookupSettingOwner("gameUserSettings", "SuperStructures", "EnableSomething")).toBe("unknown");
     expect(lookupAbsencePolicy("gameUserSettings", "SuperStructures", "EnableSomething")).toBe("unknown");
-    expect(classifyIniSettingPresence("gameUserSettings", "SuperStructures", "EnableSomething", true)).toBe(
-      "unknown",
-    );
-    expect(classifyIniSettingPresence("gameUserSettings", "ServerSettings", "AdminLogging", false)).toBe(
-      "absent",
-    );
-    expect(classifyIniSettingPresence("gameUserSettings", "SessionSettings", "SessionName", true)).toBe(
-      "profileOwned",
-    );
-    expect(classifyIniSettingPresence("gameUserSettings", "ServerSettings", "ActiveMods", true)).toBe(
-      "systemOwned",
-    );
+    expect(classifyIniSettingPresence("gameUserSettings", "SuperStructures", "EnableSomething", true)).toBe("unknown");
+    expect(classifyIniSettingPresence("gameUserSettings", "ServerSettings", "AdminLogging", false)).toBe("absent");
+    expect(classifyIniSettingPresence("gameUserSettings", "SessionSettings", "SessionName", true)).toBe("profileOwned");
+    expect(classifyIniSettingPresence("gameUserSettings", "ServerSettings", "ActiveMods", true)).toBe("systemOwned");
     expect(classifyIniSettingPresence("gameUserSettings", "ServerSettings", "AdminLogging", true)).toBe(
       "knownSupported",
     );

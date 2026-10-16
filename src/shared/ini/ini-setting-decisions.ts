@@ -28,12 +28,7 @@ export function isAsaIgnoredIniMaxPlayers(key: string): boolean {
   return key.trim().toLowerCase() === "maxplayers";
 }
 
-export type IniSettingPresenceKind =
-  | "knownSupported"
-  | "profileOwned"
-  | "systemOwned"
-  | "unknown"
-  | "absent";
+export type IniSettingPresenceKind = "knownSupported" | "profileOwned" | "systemOwned" | "unknown" | "absent";
 
 /**
  * Import / sync contract for PINI-004 / PINI-010 / PINI-011 consumers.
@@ -52,11 +47,7 @@ export const INI_IMPORT_PRECEDENCE = {
 
 export type IniImportPrecedence = typeof INI_IMPORT_PRECEDENCE;
 
-export function lookupSettingOwner(
-  file: IniMetaFileKey,
-  section: string,
-  key: string,
-): IniSettingOwner | "unknown" {
+export function lookupSettingOwner(file: IniMetaFileKey, section: string, key: string): IniSettingOwner | "unknown" {
   return lookupIniSettingMeta(file, section, key)?.owner ?? "unknown";
 }
 
@@ -76,11 +67,7 @@ export function lookupEnforcement(
   return lookupIniSettingMeta(file, section, key)?.enforcement ?? "unknown";
 }
 
-export function lookupProvenance(
-  file: IniMetaFileKey,
-  section: string,
-  key: string,
-): IniSettingProvenance | null {
+export function lookupProvenance(file: IniMetaFileKey, section: string, key: string): IniSettingProvenance | null {
   return lookupIniSettingMeta(file, section, key)?.provenance ?? null;
 }
 

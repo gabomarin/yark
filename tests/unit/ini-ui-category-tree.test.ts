@@ -33,7 +33,6 @@ describe("listIniUiCategoryTree", () => {
     expect(labels).not.toContain("[ServerSettings]");
   });
 
-
   it("keeps section+key on each leaf for compose", () => {
     const text = "[ServerSettings]\nXPMultiplier=2\n";
     const tree = listIniUiCategoryTree(text, "gameUserSettings");

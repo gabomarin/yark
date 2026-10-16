@@ -41,7 +41,6 @@ describe("yark-owned-ini-keys", () => {
     expect(isAsaIgnoredIniMaxPlayers("XPMultiplier")).toBe(false);
   });
 
-
   it("strips owned keys while preserving other settings and comments", () => {
     const input = `[ServerSettings]
 ; keep me

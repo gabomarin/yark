@@ -85,12 +85,7 @@ describe("ini-setting-meta (defaults-derived)", () => {
       expect(setting?.provenance.source.length).toBeGreaterThan(0);
       expect(setting?.provenance.confidence).toMatch(/^(verified|inferred|unknown)$/);
     }
-    expect(lookupIniSettingMeta("gameUserSettings", "SessionSettings", "SessionName")?.owner).toBe(
-      "serverProfile",
-    );
-    expect(lookupIniSettingMeta("gameUserSettings", "ServerSettings", "AdminLogging")?.owner).toBe(
-      "iniVisual",
-    );
+    expect(lookupIniSettingMeta("gameUserSettings", "SessionSettings", "SessionName")?.owner).toBe("serverProfile");
+    expect(lookupIniSettingMeta("gameUserSettings", "ServerSettings", "AdminLogging")?.owner).toBe("iniVisual");
   });
 });
-

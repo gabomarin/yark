@@ -1,9 +1,6 @@
 import type { ServerIniPayload } from "../types";
 import ownershipSeed from "../ini/ini-setting-ownership-seed.json";
-import {
-  isAsaIgnoredIniMaxPlayers,
-  isCatalogOwnedIniKey,
-} from "../ini/ini-setting-decisions";
+import { isAsaIgnoredIniMaxPlayers, isCatalogOwnedIniKey } from "../ini/ini-setting-decisions";
 
 /**
  * GameUserSettings keys that cluster INI templates must not author.

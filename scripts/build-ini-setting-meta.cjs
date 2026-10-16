@@ -334,8 +334,7 @@ function synthesizeOwnedEntry(id, seedEntry) {
     defaultValue: "",
     valueType: "string",
     description:
-      seedEntry.description ||
-      "YARK-owned setting; managed outside the visual INI catalog (Server Settings / Mods).",
+      seedEntry.description || "YARK-owned setting; managed outside the visual INI catalog (Server Settings / Mods).",
     input: { type: "text" },
     ...ownership,
   };

@@ -8,12 +8,12 @@ visual editors, compose/strip, and future import work share one decision path.
 
 ## Sources
 
-| Input | Role |
-| --- | --- |
-| [`src/shared/defaults/*.ini`](../src/shared/defaults/) | Annotated defaults → descriptions, value types, inferred inputs |
-| [`ini-setting-input-overrides.json`](../src/shared/ini/ini-setting-input-overrides.json) | Optional hand-tuned editor inputs |
-| [`ini-setting-ownership-seed.json`](../src/shared/ini/ini-setting-ownership-seed.json) | Non-default ownership / absence / enforcement / provenance |
-| `npm run catalog:ini-meta` | Writes deterministic [`ini-setting-meta.json`](../src/shared/ini/ini-setting-meta.json) |
+| Input                                                                                    | Role                                                                                    |
+| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [`src/shared/defaults/*.ini`](../src/shared/defaults/)                                   | Annotated defaults → descriptions, value types, inferred inputs                         |
+| [`ini-setting-input-overrides.json`](../src/shared/ini/ini-setting-input-overrides.json) | Optional hand-tuned editor inputs                                                       |
+| [`ini-setting-ownership-seed.json`](../src/shared/ini/ini-setting-ownership-seed.json)   | Non-default ownership / absence / enforcement / provenance                              |
+| `npm run catalog:ini-meta`                                                               | Writes deterministic [`ini-setting-meta.json`](../src/shared/ini/ini-setting-meta.json) |
 
 Do not add a second settings catalog. Prefer `@shared/ini/ini-setting-meta` and
 `@shared/ini/ini-setting-decisions` over inventing parallel registries.
@@ -22,12 +22,12 @@ thin compatibility facade.
 
 ## Ownership
 
-| `owner` | Meaning |
-| --- | --- |
-| `serverProfile` | Authoritative on the server profile (identity, ports, RCON, credentials). Excluded from visual INI editing. |
-| `iniVisual` | Supported in the Configuration / template visual editors. |
-| `externalManual` | Reserved for tools/mods that own a key; not used by the seed today. |
-| `system` | YARK policy surface other than Server Settings (e.g. ASE-legacy mod INI keys). Excluded from visual editing. |
+| `owner`          | Meaning                                                                                                      |
+| ---------------- | ------------------------------------------------------------------------------------------------------------ |
+| `serverProfile`  | Authoritative on the server profile (identity, ports, RCON, credentials). Excluded from visual INI editing.  |
+| `iniVisual`      | Supported in the Configuration / template visual editors.                                                    |
+| `externalManual` | Reserved for tools/mods that own a key; not used by the seed today.                                          |
+| `system`         | YARK policy surface other than Server Settings (e.g. ASE-legacy mod INI keys). Excluded from visual editing. |
 
 Unknown runtime keys (not in the catalog) stay **unknown**. The parser and Raw
 editor still see them; the visual editor may show them as custom rows, but
@@ -44,22 +44,22 @@ sites. New code should use `isVisuallyEditableIniSetting` /
 
 ## Absence policy
 
-| Policy | Meaning |
-| --- | --- |
-| `allowed` | Key may be absent; absence is not a catalog default. |
-| `forbidden` | After intentional profile sync, the key is expected to be present. |
-| `mapsToProfileNull` | Absence maps to a nullable profile field (e.g. empty passwords). |
+| Policy              | Meaning                                                            |
+| ------------------- | ------------------------------------------------------------------ |
+| `allowed`           | Key may be absent; absence is not a catalog default.               |
+| `forbidden`         | After intentional profile sync, the key is expected to be present. |
+| `mapsToProfileNull` | Absence maps to a nullable profile field (e.g. empty passwords).   |
 
 Opening or saving must never materialize a guessed default solely because a
 catalog entry exists.
 
 ## Enforcement
 
-| Level | Intent |
-| --- | --- |
+| Level      | Intent                                                                               |
+| ---------- | ------------------------------------------------------------------------------------ |
 | `blocking` | Structural / YARK invariant (metadata only here; save validators may consume later). |
-| `warning` | Documented but uncertain compatibility. |
-| `advisory` | Heuristics and soft guidance. |
+| `warning`  | Documented but uncertain compatibility.                                              |
+| `advisory` | Heuristics and soft guidance.                                                        |
 
 This ticket stores and looks up enforcement levels. It does not add new save-time
 validators.
