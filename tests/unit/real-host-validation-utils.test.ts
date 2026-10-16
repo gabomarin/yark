@@ -8,7 +8,10 @@ const { assertDisposablePath, parseScenarioList, redactEvidence } =
   require("../../scripts/validation/real-host-validation-utils.cjs") as {
     assertDisposablePath: (candidate: string, root: string) => string;
     parseScenarioList: (raw?: string) => string[];
-    redactEvidence: <T>(value: T) => T;
+    redactEvidence: <T>(
+      value: T,
+      knownSecretProfiles?: Array<{ adminPassword: string; serverPassword: string | null }>,
+    ) => T;
   };
 
 describe("real-host validation utilities", () => {
@@ -57,5 +60,17 @@ describe("real-host validation utilities", () => {
       adminPassword: "***",
       nested: { password: "***" },
     });
+  });
+
+  it("redacts credentials embedded in diagnostic messages", () => {
+    const evidence = redactEvidence(
+      { error: { message: 'RCON failed ServerAdminPassword="top-secret" for top-secret' } },
+      [{ adminPassword: "top-secret", serverPassword: null }],
+    );
+
+    expect(evidence).toEqual({
+      error: { message: 'RCON failed ServerAdminPassword="••••••••" for ••••••••' },
+    });
+    expect(JSON.stringify(evidence)).not.toContain("top-secret");
   });
 });

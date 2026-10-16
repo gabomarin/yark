@@ -65,15 +65,85 @@ function assertNoReparsePoints(startPath) {
   }
 }
 
-function redactEvidence(value) {
-  return JSON.parse(
-    JSON.stringify(value)
-      .replace(/("adminPassword"\s*:\s*")[^"]*(")/gi, "$1***$2")
-      .replace(/("serverPassword"\s*:\s*")[^"]*(")/gi, "$1***$2")
-      .replace(/("admin_password"\s*:\s*")[^"]*(")/gi, "$1***$2")
-      .replace(/("server_password"\s*:\s*")[^"]*(")/gi, "$1***$2")
-      .replace(/("password"\s*:\s*")[^"]*(")/gi, "$1***$2"),
-  );
+let credentialRedaction;
+
+function loadCredentialRedaction() {
+  if (credentialRedaction !== undefined) return credentialRedaction;
+
+  const builtCandidates = [
+    path.resolve(__dirname, "../../out/main/credential-redaction.js"),
+    path.resolve(__dirname, "../../out/shared/credential-redaction.js"),
+    path.resolve(__dirname, "../../out/main/shared/credential-redaction.js"),
+  ];
+  for (const candidate of builtCandidates) {
+    try {
+      credentialRedaction = require(candidate);
+      return credentialRedaction;
+    } catch {
+      // Try the source fallback below.
+    }
+  }
+
+  try {
+    const Module = require("node:module");
+    const typescript = require("typescript");
+    const sourcePath = path.resolve(__dirname, "../../src/shared/credential-redaction.ts");
+    const source = fs.readFileSync(sourcePath, "utf8");
+    const compiled = typescript.transpileModule(source, {
+      compilerOptions: { module: typescript.ModuleKind.CommonJS, target: typescript.ScriptTarget.ES2022 },
+      fileName: sourcePath,
+    }).outputText;
+    const runtimeModule = new Module(sourcePath, module);
+    runtimeModule.filename = sourcePath;
+    runtimeModule.paths = module.paths;
+    runtimeModule._compile(compiled, sourcePath);
+    credentialRedaction = runtimeModule.exports;
+    return credentialRedaction;
+  } catch {
+    credentialRedaction = null;
+    return credentialRedaction;
+  }
+}
+
+function legacyRedactSerializedEvidence(serialized) {
+  return serialized
+    .replace(/("adminPassword"\s*:\s*")[^"]*(")/gi, "$1***$2")
+    .replace(/("serverPassword"\s*:\s*")[^"]*(")/gi, "$1***$2")
+    .replace(/("admin_password"\s*:\s*")[^"]*(")/gi, "$1***$2")
+    .replace(/("server_password"\s*:\s*")[^"]*(")/gi, "$1***$2")
+    .replace(/("password"\s*:\s*")[^"]*(")/gi, "$1***$2");
+}
+
+function redactKnownSecretValues(serialized, knownSecrets) {
+  return [...new Set(knownSecrets.map((secret) => String(secret).trim()).filter((secret) => secret.length >= 4))]
+    .sort((left, right) => right.length - left.length)
+    .reduce((text, secret) => text.split(secret).join("••••••••"), serialized);
+}
+
+function redactEvidence(value, knownSecretProfiles = []) {
+  const serialized = JSON.stringify(value);
+  const helper = loadCredentialRedaction();
+  let sanitized = serialized;
+  const profileSecrets = [];
+  for (const profile of knownSecretProfiles) {
+    if (typeof profile?.adminPassword === "string") profileSecrets.push(profile.adminPassword);
+    if (typeof profile?.serverPassword === "string") profileSecrets.push(profile.serverPassword);
+  }
+  if (helper?.sanitizeDiagnosticText && helper?.collectKnownSecrets) {
+    let knownSecrets = [];
+    try {
+      knownSecrets = helper.collectKnownSecrets(knownSecretProfiles);
+    } catch {
+      knownSecrets = [];
+    }
+    sanitized = helper.sanitizeDiagnosticText(serialized, knownSecrets);
+  }
+  sanitized = redactKnownSecretValues(sanitized, profileSecrets);
+  try {
+    return JSON.parse(legacyRedactSerializedEvidence(sanitized));
+  } catch {
+    return JSON.parse(legacyRedactSerializedEvidence(redactKnownSecretValues(serialized, profileSecrets)));
+  }
 }
 
 module.exports = {

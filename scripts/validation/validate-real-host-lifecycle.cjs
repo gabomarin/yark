@@ -45,6 +45,7 @@ const evidence = {
   scenarios: {},
   notes: [],
 };
+let knownSecretProfiles = [];
 
 function requireConfiguration() {
   if (process.platform !== "win32" && !DRY_RUN) {
@@ -97,6 +98,7 @@ async function validateTarget(page) {
   const servers = await api(page, "listServers");
   const profile = servers.find((server) => server.id === SERVER_ID);
   assert.ok(profile, `No YARK profile found for YARK_VALIDATE_SERVER_ID=${SERVER_ID}`);
+  knownSecretProfiles = [profile];
   const installDir = assertDisposablePath(profile.installDir, REAL_HOST_ROOT);
   evidence.installDir = installDir;
   assert.equal(
@@ -194,7 +196,7 @@ async function run() {
       try {
         fs.writeFileSync(
           assertDisposablePath(EVIDENCE_PATH, REAL_HOST_ROOT),
-          `${JSON.stringify(redactEvidence(evidence), null, 2)}\n`,
+          `${JSON.stringify(redactEvidence(evidence, knownSecretProfiles), null, 2)}\n`,
         );
         if (!evidence.error) console.log(`REAL_HOST_VALIDATION_OK evidence=${EVIDENCE_PATH}`);
       } catch (evidenceError) {
