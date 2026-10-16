@@ -630,6 +630,39 @@ describe("hosted resources HTTP host", () => {
     expect(diagnostics.references[0]?.url).toBe(resource.url);
   });
 
+  it("keeps deleted resource URLs visible as missing references", async () => {
+    const tokenHolder: { url: string } = { url: "" };
+    const harness = createHarness(() => [
+      {
+        serverId: "s1",
+        serverName: "Island",
+        text: `[ServerSettings]\nAdminListURL=${tokenHolder.url}\n`,
+      },
+    ]);
+    const resource = harness.service.createResource({
+      displayName: "Admins",
+      format: "text",
+      content: "EOSID1",
+    });
+    tokenHolder.url = resource.url;
+    await startServing(harness);
+    harness.service.deleteResource(resource.id);
+
+    const diagnostics = await harness.service.runDiagnostics();
+
+    expect(diagnostics.references).toEqual([
+      {
+        resourceId: null,
+        serverId: "s1",
+        serverName: "Island",
+        key: "AdminListURL",
+        url: resource.url,
+        status: "missing",
+        source: "ini",
+      },
+    ]);
+  });
+
   it("does not serve anything while disabled", async () => {
     const harness = createHarness();
     harness.settings.set(HOSTED_RESOURCES_ENABLED_SETTING_KEY, "false");

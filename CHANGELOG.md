@@ -31,6 +31,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Fixed
 
 - Hosted AdminList add/remove preserves comma-separated IDs and CR-only line endings when republishing the resource body (#620).
+- Hosted Resource diagnostics now retain references to deleted or unpublished resources so affected server settings remain visible for repair.
+- Cluster documentation now states the correct seconds unit for tribute expiration values.
 
 ### Docs
 
