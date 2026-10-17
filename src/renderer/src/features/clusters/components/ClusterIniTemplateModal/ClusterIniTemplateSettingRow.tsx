@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { ArrowCounterClockwise, ArrowUUpLeft } from "@phosphor-icons/react";
-import { ActionIcon, Badge, NumberInput, Text, TextInput, Tooltip } from "@mantine/core";
+import { ActionIcon, NumberInput, Text, TextInput, Tooltip } from "@mantine/core";
 import { AppSwitch } from "@ui/AppSwitch/AppSwitch";
 import {
   lookupDefaultValue,
@@ -42,22 +42,17 @@ export function ClusterIniTemplateSettingRow(props: Props): ReactElement {
       <div>
         <Text fw={600} size="sm">
           {label}
-          {unsaved ? (
-            <Badge
-              component="span"
-              color="attention"
-              variant="light"
-              size="xs"
-              ml={6}
-              style={{ verticalAlign: "middle" }}
-              data-ini-row-unsaved-badge
-            >
-              Unsaved
-            </Badge>
-          ) : null}
         </Text>
         <Text c="dimmed" size="xs">
           {sectionShortName(row.section)}
+          {unsaved ? (
+            <>
+              {" · "}
+              <Text span c="attention" fw={600} size="xs" data-ini-row-unsaved-status>
+                Unsaved
+              </Text>
+            </>
+          ) : null}
         </Text>
       </div>
       <div>

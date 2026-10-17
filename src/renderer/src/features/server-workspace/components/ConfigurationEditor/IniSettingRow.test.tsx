@@ -130,7 +130,7 @@ describe("IniSettingRow unsaved highlighting (PINI-001 / #661)", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText("Unsaved")).toBeInTheDocument();
+    expect(document.querySelector("[data-ini-row-unsaved-status]")).toHaveTextContent("Unsaved");
     expect(screen.getByText("Saved: 0.2")).toBeInTheDocument();
     expect(document.querySelector('[data-ini-row-unsaved="true"]')).not.toBeNull();
     await user.click(screen.getByRole("button", { name: "Revert DifficultyOffset to saved value" }));

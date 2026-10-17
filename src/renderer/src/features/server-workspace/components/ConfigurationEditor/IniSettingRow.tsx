@@ -1,5 +1,5 @@
 import { ArrowCounterClockwise, ArrowUUpLeft, ArrowSquareOut } from "@phosphor-icons/react";
-import { ActionIcon, Badge, NumberInput, Text, TextInput, Tooltip } from "@mantine/core";
+import { ActionIcon, NumberInput, Text, TextInput, Tooltip } from "@mantine/core";
 import type { IniFileKey } from "@shared/types";
 import { consumerForSetting } from "@shared/settings/hosted-resource-consumers";
 import { HostedResourceSelector } from "@features/hosted-resources/components/HostedResourceSelector/HostedResourceSelector";
@@ -183,29 +183,27 @@ function GroupLabel(props: {
   occurrence: number;
   unsaved: boolean;
 }): ReactElement {
+  const meta =
+    props.keyLabel === props.label
+      ? sectionShortName(props.section)
+      : `${props.keyLabel} · ${sectionShortName(props.section)}`;
+  const duplicate = props.duplicateCount > 1 ? ` · ${props.occurrence + 1}/${props.duplicateCount}` : "";
   return (
     <>
       <Text fw={600} size="sm">
         {props.label}
-        {props.unsaved ? (
-          <Badge
-            component="span"
-            color="attention"
-            variant="light"
-            size="xs"
-            ml={6}
-            style={{ verticalAlign: "middle" }}
-            data-ini-row-unsaved-badge
-          >
-            Unsaved
-          </Badge>
-        ) : null}
       </Text>
       <Text c="dimmed" size="xs">
-        {props.keyLabel === props.label
-          ? sectionShortName(props.section)
-          : `${props.keyLabel} · ${sectionShortName(props.section)}`}
-        {props.duplicateCount > 1 ? ` · ${props.occurrence + 1}/${props.duplicateCount}` : ""}
+        {meta}
+        {duplicate}
+        {props.unsaved ? (
+          <>
+            {" · "}
+            <Text span c="attention" fw={600} size="xs" data-ini-row-unsaved-status>
+              Unsaved
+            </Text>
+          </>
+        ) : null}
       </Text>
     </>
   );
