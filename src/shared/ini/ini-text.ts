@@ -223,10 +223,10 @@ export function splitFlatIniKey(flatKey: string): { section: string; key: string
 }
 
 /** One INI line plus the exact separator that followed it (`""` if none). */
-export type IniTextLine = { content: string; eol: string };
+type IniTextLine = { content: string; eol: string };
 
 /** Split so mixed LF/CRLF separators can be preserved on rewrite (#667). */
-export function splitIniTextWithEols(text: string): IniTextLine[] {
+function splitIniTextWithEols(text: string): IniTextLine[] {
   const lines: IniTextLine[] = [];
   let start = 0;
   let index = 0;
@@ -251,7 +251,7 @@ export function splitIniTextWithEols(text: string): IniTextLine[] {
   return lines;
 }
 
-export function joinIniTextWithEols(lines: readonly IniTextLine[]): string {
+function joinIniTextWithEols(lines: readonly IniTextLine[]): string {
   return lines.map((line) => `${line.content}${line.eol}`).join("");
 }
 
