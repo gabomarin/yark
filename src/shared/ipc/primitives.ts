@@ -267,6 +267,14 @@ export const serverIniPayloadSchema = z
   })
   .strict();
 
+/** Baseline hashes from `ini:read` required by `ini:save` (#665). */
+export const iniFileFingerprintsSchema = z
+  .object({
+    gameUserSettings: z.string().min(1).max(64),
+    game: z.string().min(1).max(64),
+  })
+  .strict();
+
 export const clusterIniFileSelectionSchema = z
   .object({
     gameUserSettings: z.boolean(),

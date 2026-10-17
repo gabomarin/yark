@@ -7,6 +7,7 @@ import { INI_GUS_OVERRIDE_HINT_STORAGE_KEY } from "./components/ConfigurationEdi
 import type { PlayerListState } from "./components/RconPanel/PlayerListSection";
 import type { HostedResourceReferenceDto } from "@shared/ipc";
 import { STOP_PROGRESS_SELECTOR } from "./components/StopProgressAlert";
+import { fingerprintIniPayload } from "@shared/ini/ini-fingerprints";
 import type { ServerRuntimeInfo } from "@shared/types";
 
 const serverA = {
@@ -116,23 +117,27 @@ describe("ServerWorkspacePage", () => {
   beforeEach(() => {
     vi.stubGlobal("api", {
       getPublicIp: vi.fn(async () => ({ ok: true, data: "203.0.113.5" })),
-      readServerIni: vi.fn(async (serverId: string) => ({
-        ok: true,
-        data: {
-          serverId,
-          gameUserSettingsPath: `C:/ARK/${serverId}/GameUserSettings.ini`,
-          gameIniPath: `C:/ARK/${serverId}/Game.ini`,
-          gameUserSettingsExisted: true,
-          gameIniExisted: true,
-          pending: false,
-          pendingUpdatedAt: null,
-          payload: {
-            gameUserSettings: `[ServerSettings]\nXPMultiplier=1.5\nAllowFlyerCarryPVE=True\n`,
-            game: `[/Script/ShooterGame.ShooterGameMode]\nXPMultiplier=1.0\n`,
+      readServerIni: vi.fn(async (serverId: string) => {
+        const payload = {
+          gameUserSettings: `[ServerSettings]\nXPMultiplier=1.5\nAllowFlyerCarryPVE=True\n`,
+          game: `[/Script/ShooterGame.ShooterGameMode]\nXPMultiplier=1.0\n`,
+        };
+        return {
+          ok: true as const,
+          data: {
+            serverId,
+            gameUserSettingsPath: `C:/ARK/${serverId}/GameUserSettings.ini`,
+            gameIniPath: `C:/ARK/${serverId}/Game.ini`,
+            gameUserSettingsExisted: true,
+            gameIniExisted: true,
+            pending: false,
+            pendingUpdatedAt: null,
+            payload,
+            fingerprints: fingerprintIniPayload(payload),
           },
-        },
-      })),
-      saveServerIni: vi.fn(async () => ({
+        };
+      }),
+      saveServerIni: vi.fn(async (_serverId: string, payload: { gameUserSettings: string; game: string }) => ({
         ok: true,
         data: {
           valid: true,
@@ -140,6 +145,7 @@ describe("ServerWorkspacePage", () => {
           diff: [],
           changedCount: 1,
           pending: false,
+          fingerprints: fingerprintIniPayload(payload),
         },
       })),
       onServerIniChanged: vi.fn(() => () => undefined),
@@ -865,22 +871,26 @@ describe("ServerWorkspacePage", () => {
 
   it("shows only available category filters and resets an invalid filter between INI files", async () => {
     const user = setupUser();
-    vi.mocked(window.api.readServerIni).mockResolvedValue({
-      ok: true,
-      data: {
-        serverId: serverA.id,
-        gameUserSettingsPath: "C:/ARK/srv-a/GameUserSettings.ini",
-        gameIniPath: "C:/ARK/srv-a/Game.ini",
-        gameUserSettingsExisted: true,
-        gameIniExisted: true,
-        pending: false,
-        pendingUpdatedAt: null,
-        payload: {
-          gameUserSettings: "[ServerSettings]\nAllowFlyerCarryPVE=True\n",
-          game: "[Custom]\nTotallyUnknownSettingXYZ=1\n",
+    {
+      const payload = {
+        gameUserSettings: "[ServerSettings]\nAllowFlyerCarryPVE=True\n",
+        game: "[Custom]\nTotallyUnknownSettingXYZ=1\n",
+      };
+      vi.mocked(window.api.readServerIni).mockResolvedValue({
+        ok: true,
+        data: {
+          serverId: serverA.id,
+          gameUserSettingsPath: "C:/ARK/srv-a/GameUserSettings.ini",
+          gameIniPath: "C:/ARK/srv-a/Game.ini",
+          gameUserSettingsExisted: true,
+          gameIniExisted: true,
+          pending: false,
+          pendingUpdatedAt: null,
+          payload,
+          fingerprints: fingerprintIniPayload(payload),
         },
-      },
-    });
+      });
+    }
     renderWorkspace();
 
     await user.click(screen.getByRole("tab", { name: "INI Files" }));
@@ -914,30 +924,34 @@ describe("ServerWorkspacePage", () => {
 
   it("ignores client settings without showing a warning or pending changes", async () => {
     const user = setupUser();
-    vi.mocked(window.api.readServerIni).mockResolvedValue({
-      ok: true,
-      data: {
-        serverId: serverA.id,
-        gameUserSettingsPath: "C:/ARK/srv-a/GameUserSettings.ini",
-        gameIniPath: "C:/ARK/srv-a/Game.ini",
-        gameUserSettingsExisted: true,
-        gameIniExisted: true,
-        pending: false,
-        pendingUpdatedAt: null,
-        payload: {
-          gameUserSettings: [
-            "[ServerSettings]",
-            "XPMultiplier=1.5",
-            "",
-            "[/Script/ShooterGame.ShooterGameUserSettings]",
-            "LastJoinedSessionPerCategory=Foo",
-            "ResolutionSizeX=1920",
-            "",
-          ].join("\n"),
-          game: "",
+    {
+      const payload = {
+        gameUserSettings: [
+          "[ServerSettings]",
+          "XPMultiplier=1.5",
+          "",
+          "[/Script/ShooterGame.ShooterGameUserSettings]",
+          "LastJoinedSessionPerCategory=Foo",
+          "ResolutionSizeX=1920",
+          "",
+        ].join("\n"),
+        game: "",
+      };
+      vi.mocked(window.api.readServerIni).mockResolvedValue({
+        ok: true,
+        data: {
+          serverId: serverA.id,
+          gameUserSettingsPath: "C:/ARK/srv-a/GameUserSettings.ini",
+          gameIniPath: "C:/ARK/srv-a/Game.ini",
+          gameUserSettingsExisted: true,
+          gameIniExisted: true,
+          pending: false,
+          pendingUpdatedAt: null,
+          payload,
+          fingerprints: fingerprintIniPayload(payload),
         },
-      },
-    });
+      });
+    }
     renderWorkspace();
 
     await user.click(screen.getByRole("tab", { name: "INI Files" }));

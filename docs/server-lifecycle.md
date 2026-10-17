@@ -565,14 +565,22 @@ setting catalog: [ini-metadata.md](ini-metadata.md) (PINI-016 / #659).
 - Read seeds missing files from `src/shared/defaults` and always returns
   `sanitizeServerIniPayload` (disk is not rewritten on read). When a durable
   **pending** draft exists (`pending_server_ini`), read returns that payload with
-  `pending: true` so leave/return keeps the operator’s edits (#530).
+  `pending: true` so leave/return keeps the operator’s edits (#530). Each read
+  also returns per-file **fingerprints** (SHA-256 truncated) of the sanitized
+  payload the editor sees (#665 / PINI-003).
 - Save (lock purpose `"ini-save"`):
+  - Requires the fingerprints from the editor’s last load / successful save.
+    Under the lock, re-read and compare; mismatch throws `INI_STALE_DOCUMENT`
+    (no disk write, no pending upsert). The Configuration editor surfaces Reload
+    from disk — there is no force-overwrite in this ticket.
   - **Process idle:** sanitize → semantic validate → write both files → clear
     pending → event; IPC best-effort `createIniSaveBackup`.
   - **Process live** (`ProcessManager.isActive`: starting / running / stopping /
     live error): same validate, then **queue** both files in SQLite (last save
     wins) — do **not** write the live install files (ASA can clobber them).
     Emits `push:server-ini-changed` so an open Configuration editor reloads.
+  - Trusted YARK writers (`syncProfileOwnedKeys`, flush, config transfer, cluster
+    template apply) do not use the editor baseline API.
 - **Flush** after the process has exited (plain Stop, force-kill paths) and
   again as a start-guard before `syncProfileSettingsToIni` (covers crash /
   quit without Start). Restart order: Stop → flush → pre_restart backup →

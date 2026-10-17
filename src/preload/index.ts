@@ -4,6 +4,7 @@ import type { AppUpdateStatus } from "../shared/settings/app-update";
 import type {
   BackupKind,
   ClusterIniTemplateFileSelection,
+  IniFileFingerprints,
   InstallationServersMode,
   ServerIniPayload,
   ServerProfileInput,
@@ -163,7 +164,8 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.iniOpenInEditor, serverId, fileKey),
   previewServerIni: (serverId: string, payload: ServerIniPayload) =>
     ipcRenderer.invoke(IPC.iniPreview, serverId, payload),
-  saveServerIni: (serverId: string, payload: ServerIniPayload) => ipcRenderer.invoke(IPC.iniSave, serverId, payload),
+  saveServerIni: (serverId: string, payload: ServerIniPayload, expectedFingerprints: IniFileFingerprints) =>
+    ipcRenderer.invoke(IPC.iniSave, serverId, payload, expectedFingerprints),
   getClusterIniTemplate: (clusterId: string) => ipcRenderer.invoke(IPC.clusterIniGet, clusterId),
   getClusterIniTemplateOrDraft: (clusterId: string) => ipcRenderer.invoke(IPC.clusterIniGetOrDraft, clusterId),
   previewClusterIniTemplate: (clusterId: string, payload: ServerIniPayload) =>

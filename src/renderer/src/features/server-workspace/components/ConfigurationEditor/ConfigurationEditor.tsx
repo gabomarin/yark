@@ -88,6 +88,9 @@ export function ConfigurationEditor(props: Props): ReactElement {
         <ConfigurationEditorStatusAlerts
           error={editor.error}
           onDismissError={() => editor.setError(null)}
+          staleDocument={editor.staleDocument}
+          onReloadStale={() => void editor.reloadFromDisk()}
+          reloadBusy={editor.busy}
           serverActive={props.serverActive === true}
           filesJobActive={filesJobActive}
           pendingQueued={editor.pendingQueued}

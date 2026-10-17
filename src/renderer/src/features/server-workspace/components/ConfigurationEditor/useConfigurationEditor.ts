@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { modals } from "@mantine/modals";
+import { INI_STALE_DOCUMENT_CODE } from "@shared/ini/ini-fingerprints";
 import type { IniFileKey, IniPreview, ServerIniPayload, ServerIniSnapshot } from "@shared/types";
 import { showOperatorToast } from "@ui/operatorToast";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
@@ -39,6 +40,7 @@ export function useConfigurationEditor(options: {
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [staleDocument, setStaleDocument] = useState(false);
   const [preview, setPreview] = useState<IniPreview | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<IniFilterId>("all");
@@ -84,10 +86,30 @@ export function useConfigurationEditor(options: {
     applyLoadedSnapshotRef.current = applyLoadedSnapshot;
   });
 
+  const reloadFromDisk = async (): Promise<void> => {
+    setBusy(true);
+    setError(null);
+    setStaleDocument(false);
+    await runWithFinally(
+      async () => {
+        const result = await window.api.readServerIni(serverId);
+        if (!result.ok) {
+          setError(result.error ?? "Could not read the INI");
+          return;
+        }
+        applyLoadedSnapshotRef.current(result.data);
+      },
+      () => {
+        setBusy(false);
+      },
+    );
+  };
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
+    setStaleDocument(false);
     setPreview(null);
     publishDirty(null, null);
 
@@ -285,15 +307,17 @@ export function useConfigurationEditor(options: {
   };
 
   const saveIni = async (): Promise<boolean> => {
-    if (payload === null) return false;
+    if (payload === null || snapshot === null) return false;
     setBusy(true);
     setError(null);
+    setStaleDocument(false);
     return runWithFinally(
       async () => {
         const sanitized = sanitizeServerIniPayload(payload);
-        const result = await window.api.saveServerIni(serverId, sanitized);
+        const result = await window.api.saveServerIni(serverId, sanitized, snapshot.fingerprints);
         if (!result.ok) {
           setError(result.error ?? "Could not save the INI");
+          setStaleDocument(result.code === INI_STALE_DOCUMENT_CODE);
           return false;
         }
         setPayload(sanitized);
@@ -305,6 +329,7 @@ export function useConfigurationEditor(options: {
             : {
                 ...prev,
                 payload: sanitized,
+                fingerprints: result.data.fingerprints,
                 pending: result.data.pending,
                 pendingUpdatedAt: result.data.pending ? (prev.pendingUpdatedAt ?? new Date().toISOString()) : null,
               },
@@ -376,7 +401,14 @@ export function useConfigurationEditor(options: {
     loading,
     busy,
     error,
-    setError,
+    setError: (next: string | null) => {
+      setError(next);
+      if (next === null) {
+        setStaleDocument(false);
+      }
+    },
+    staleDocument,
+    reloadFromDisk,
     preview,
     search,
     setSearch,

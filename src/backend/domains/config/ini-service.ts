@@ -3,9 +3,15 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini/ini-defaults";
+import {
+  fingerprintIniPayload,
+  IniStaleDocumentError,
+  iniFingerprintsMatch,
+} from "@shared/ini/ini-fingerprints";
 import { sanitizeServerIniPayload } from "@shared/ini/ini-text";
 import type { ServerIniChangedPush } from "@shared/ipc";
 import type {
+  IniFileFingerprints,
   IniPreview,
   ServerIniPayload,
   ServerIniSaveResult,
@@ -71,18 +77,18 @@ export class IniService extends EventEmitter {
     const disk = await this.readDiskSnapshot(serverId);
     const pending = this.options?.pending.get(serverId) ?? null;
     if (pending === null) {
-      return {
+      return this.withFingerprints({
         ...disk,
         pending: false,
         pendingUpdatedAt: null,
-      };
+      });
     }
-    return {
+    return this.withFingerprints({
       ...disk,
       payload: this.withProfileOwnedKeys(serverId, sanitizeServerIniPayload(pending.payload)),
       pending: true,
       pendingUpdatedAt: pending.updatedAt,
-    };
+    });
   }
 
   async previewServerIni(serverId: string, payload: ServerIniPayload): Promise<IniPreview> {
@@ -90,10 +96,17 @@ export class IniService extends EventEmitter {
     return this.previewWithCurrent(current.payload, sanitizeServerIniPayload(payload));
   }
 
-  async saveServerIni(serverId: string, payload: ServerIniPayload): Promise<ServerIniSaveResult> {
+  async saveServerIni(
+    serverId: string,
+    payload: ServerIniPayload,
+    expectedFingerprints: IniFileFingerprints,
+  ): Promise<ServerIniSaveResult> {
     return this.locks.withLock(serverId, "ini-save", () =>
       this.withIniMutation(serverId, async () => {
         const current = await this.readServerIni(serverId);
+        if (!iniFingerprintsMatch(current.fingerprints, expectedFingerprints)) {
+          throw new IniStaleDocumentError();
+        }
         const sanitized = sanitizeServerIniPayload(payload);
         const preview = this.previewWithCurrent(current.payload, sanitized);
         if (!preview.valid) {
@@ -116,10 +129,11 @@ export class IniService extends EventEmitter {
             `INI configuration queued (${preview.changedCount} changes; applies when stopped)`,
           );
           this.emitChanged(serverId, true);
-          return { ...preview, pending: true };
+          return { ...preview, pending: true, fingerprints: fingerprintIniPayload(queued) };
         }
 
-        await this.writePayloadToDisk(current, this.withProfileOwnedKeys(serverId, sanitized));
+        const written = this.withProfileOwnedKeys(serverId, sanitized);
+        await this.writePayloadToDisk(current, written);
         this.options?.pending.delete(serverId);
         this.repo.addEvent(
           serverId,
@@ -128,7 +142,7 @@ export class IniService extends EventEmitter {
           `INI configuration updated (${preview.changedCount} changes)`,
         );
         this.emitChanged(serverId, false);
-        return { ...preview, pending: false };
+        return { ...preview, pending: false, fingerprints: fingerprintIniPayload(written) };
       }),
     );
   }
@@ -242,12 +256,23 @@ export class IniService extends EventEmitter {
     };
   }
 
+  private withFingerprints(
+    snapshot: Omit<ServerIniSnapshot, "fingerprints">,
+  ): ServerIniSnapshot {
+    return {
+      ...snapshot,
+      fingerprints: fingerprintIniPayload(snapshot.payload),
+    };
+  }
+
   private emitChanged(serverId: string, pending: boolean): void {
     const payload: ServerIniChangedPush = { serverId, pending };
     this.emit("changed", payload);
   }
 
-  private async readDiskSnapshot(serverId: string): Promise<Omit<ServerIniSnapshot, "pending" | "pendingUpdatedAt">> {
+  private async readDiskSnapshot(
+    serverId: string,
+  ): Promise<Omit<ServerIniSnapshot, "pending" | "pendingUpdatedAt" | "fingerprints">> {
     const server = this.repo.get(serverId);
     if (server === null) {
       throw new Error("Server does not exist");

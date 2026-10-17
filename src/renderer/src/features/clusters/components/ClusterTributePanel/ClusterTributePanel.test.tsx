@@ -2,6 +2,7 @@ import { cleanup, render, screen, waitFor, within } from "@testing-library/react
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
+import { fingerprintIniPayload } from "@shared/ini/ini-fingerprints";
 import type { ServerIniPayload, ServerIniSnapshot, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { ClusterTributePanel } from "./ClusterTributePanel";
 
@@ -32,13 +33,15 @@ function member(id: string, name: string, map: string): ServerProfile {
 }
 
 function snapshot(serverId: string, gameUserSettings: string): ServerIniSnapshot {
+  const payload = { gameUserSettings, game: "[ShooterGameMode]\nXPMultiplier=1\n" };
   return {
     serverId,
     gameUserSettingsPath: `C:/ARK/${serverId}/GameUserSettings.ini`,
     gameIniPath: `C:/ARK/${serverId}/Game.ini`,
     gameUserSettingsExisted: true,
     gameIniExisted: true,
-    payload: { gameUserSettings, game: "[ShooterGameMode]\nXPMultiplier=1\n" },
+    payload,
+    fingerprints: fingerprintIniPayload(payload),
     pending: false,
     pendingUpdatedAt: null,
   };
@@ -107,9 +110,16 @@ function installApi(read: (serverId: string) => ServerIniSnapshot): void {
       },
     })),
     previewServerIni: vi.fn(async () => ({ ok: true, data: { valid: true, issues: [], diff: [], changedCount: 1 } })),
-    saveServerIni: vi.fn(async () => ({
+    saveServerIni: vi.fn(async (_serverId: string, payload: ServerIniPayload) => ({
       ok: true,
-      data: { valid: true, issues: [], diff: [], changedCount: 1, pending: false },
+      data: {
+        valid: true,
+        issues: [],
+        diff: [],
+        changedCount: 1,
+        pending: false,
+        fingerprints: fingerprintIniPayload(payload),
+      },
     })),
   } as typeof window.api;
 }
@@ -236,6 +246,7 @@ describe("ClusterTributePanel", () => {
       expect.objectContaining({
         gameUserSettings: expect.stringMatching(/TributeItemExpirationSeconds=36/),
       }),
+      expect.objectContaining({ gameUserSettings: expect.any(String), game: expect.any(String) }),
     );
     const savedPayload = vi.mocked(window.api.saveServerIni).mock.calls[0]?.[1] as ServerIniPayload;
     expect(savedPayload.gameUserSettings).toContain("UnrelatedSetting=keep-me");
@@ -284,9 +295,19 @@ describe("ClusterTributePanel", () => {
   it("keeps applying to later members when an earlier member's apply rejects", async () => {
     const user = userEvent.setup();
     installApi((id) => snapshot(id, gus));
-    const saveServerIni = vi.fn(async (serverId: string) => {
+    const saveServerIni = vi.fn(async (serverId: string, payload: ServerIniPayload) => {
       if (serverId === "srv-a") throw new Error("IPC exploded");
-      return { ok: true, data: { valid: true, issues: [], diff: [], changedCount: 1, pending: false } };
+      return {
+        ok: true as const,
+        data: {
+          valid: true,
+          issues: [],
+          diff: [],
+          changedCount: 1,
+          pending: false,
+          fingerprints: fingerprintIniPayload(payload),
+        },
+      };
     });
     window.api = { ...window.api, saveServerIni } as typeof window.api;
 
@@ -311,7 +332,7 @@ describe("ClusterTributePanel", () => {
     await user.click(await screen.findByRole("menuitem", { name: /save and apply to servers/i }));
 
     await waitFor(() => expect(saveServerIni).toHaveBeenCalledTimes(2));
-    expect(saveServerIni).toHaveBeenCalledWith("srv-b", expect.anything());
+    expect(saveServerIni).toHaveBeenCalledWith("srv-b", expect.anything(), expect.anything());
   });
 
   it("keeps per-map settings in the server INI workspace", async () => {

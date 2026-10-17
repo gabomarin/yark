@@ -24,14 +24,26 @@ export function resetValidatedIpcChannelsForTests(): void {
   ipcKnownSecrets = () => [];
 }
 
+function ipcErrorCode(err: unknown): string | undefined {
+  if (typeof err !== "object" || err === null || !("code" in err)) {
+    return undefined;
+  }
+  const code = (err as { code: unknown }).code;
+  return typeof code === "string" && code.length > 0 ? code : undefined;
+}
+
 function wrapIpcResult<T>(fn: () => T | Promise<T>): Promise<IpcResult<T>> {
   return Promise.resolve()
     .then(fn)
     .then((data): IpcResult<T> => ({ ok: true, data }))
-    .catch((err: unknown): IpcResult<T> => ({
-      ok: false,
-      error: sanitizeDiagnosticText(err instanceof Error ? err.message : String(err), ipcKnownSecrets()),
-    }));
+    .catch((err: unknown): IpcResult<T> => {
+      const error = sanitizeDiagnosticText(
+        err instanceof Error ? err.message : String(err),
+        ipcKnownSecrets(),
+      );
+      const code = ipcErrorCode(err);
+      return code !== undefined ? { ok: false, error, code } : { ok: false, error };
+    });
 }
 
 /**

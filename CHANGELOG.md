@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Configuration Save refuses to overwrite `Game.ini` / `GameUserSettings.ini` when those files changed outside YARK since the editor loaded, and offers Reload from disk (#665).
 - Configuration and cluster INI visual editors highlight unsaved rows, show the last saved value (or that a key is absent), and support per-row revert or discard without clearing other drafts (#661).
 
 ### Docs

@@ -9,6 +9,10 @@ export interface ConfigurationEditorApi {
   busy: boolean;
   error: string | null;
   setError: (error: string | null) => void;
+  /** True when the last Save failed because INI changed outside YARK (#665). */
+  staleDocument: boolean;
+  /** Re-read install / pending draft and reset the editor baseline. */
+  reloadFromDisk: () => Promise<void>;
   preview: IniPreview | null;
   search: string;
   setSearch: (value: string) => void;
