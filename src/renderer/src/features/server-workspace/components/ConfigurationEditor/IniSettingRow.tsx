@@ -1,5 +1,5 @@
 import { ArrowCounterClockwise, ArrowUUpLeft, ArrowSquareOut } from "@phosphor-icons/react";
-import { ActionIcon, NumberInput, Text, TextInput, Tooltip } from "@mantine/core";
+import { ActionIcon, NumberInput, Text, TextInput, Tooltip, VisuallyHidden } from "@mantine/core";
 import type { IniFileKey } from "@shared/types";
 import { consumerForSetting } from "@shared/settings/hosted-resource-consumers";
 import { HostedResourceSelector } from "@features/hosted-resources/components/HostedResourceSelector/HostedResourceSelector";
@@ -123,7 +123,7 @@ export function IniSettingRow(props: Props): ReactElement {
         )}
         {unsaved && savedValue !== null && (
           <Text c="dimmed" size="xs" mt={4} data-ini-row-saved-value>
-            Saved: {savedValue.length > 0 ? savedValue : "(empty)"}
+            Last saved: {savedValue.length > 0 ? savedValue : "(empty)"}
           </Text>
         )}
       </div>
@@ -183,27 +183,24 @@ function GroupLabel(props: {
   occurrence: number;
   unsaved: boolean;
 }): ReactElement {
-  const meta =
-    props.keyLabel === props.label
-      ? sectionShortName(props.section)
-      : `${props.keyLabel} · ${sectionShortName(props.section)}`;
-  const duplicate = props.duplicateCount > 1 ? ` · ${props.occurrence + 1}/${props.duplicateCount}` : "";
   return (
     <>
       <Text fw={600} size="sm">
         {props.label}
-      </Text>
-      <Text c="dimmed" size="xs">
-        {meta}
-        {duplicate}
         {props.unsaved ? (
           <>
-            {" · "}
-            <Text span c="attention" fw={600} size="xs" data-ini-row-unsaved-status>
-              Unsaved
+            <Text span c="attention" fw={700} aria-hidden data-ini-row-unsaved-status>
+              {" *"}
             </Text>
+            <VisuallyHidden>Unsaved</VisuallyHidden>
           </>
         ) : null}
+      </Text>
+      <Text c="dimmed" size="xs">
+        {props.keyLabel === props.label
+          ? sectionShortName(props.section)
+          : `${props.keyLabel} · ${sectionShortName(props.section)}`}
+        {props.duplicateCount > 1 ? ` · ${props.occurrence + 1}/${props.duplicateCount}` : ""}
       </Text>
     </>
   );

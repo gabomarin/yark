@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { ArrowCounterClockwise, ArrowUUpLeft } from "@phosphor-icons/react";
-import { ActionIcon, NumberInput, Text, TextInput, Tooltip } from "@mantine/core";
+import { ActionIcon, NumberInput, Text, TextInput, Tooltip, VisuallyHidden } from "@mantine/core";
 import { AppSwitch } from "@ui/AppSwitch/AppSwitch";
 import {
   lookupDefaultValue,
@@ -42,17 +42,17 @@ export function ClusterIniTemplateSettingRow(props: Props): ReactElement {
       <div>
         <Text fw={600} size="sm">
           {label}
+          {unsaved ? (
+            <>
+              <Text span c="attention" fw={700} aria-hidden data-ini-row-unsaved-status>
+                {" *"}
+              </Text>
+              <VisuallyHidden>Unsaved</VisuallyHidden>
+            </>
+          ) : null}
         </Text>
         <Text c="dimmed" size="xs">
           {sectionShortName(row.section)}
-          {unsaved ? (
-            <>
-              {" · "}
-              <Text span c="attention" fw={600} size="xs" data-ini-row-unsaved-status>
-                Unsaved
-              </Text>
-            </>
-          ) : null}
         </Text>
       </div>
       <div>
@@ -79,7 +79,7 @@ export function ClusterIniTemplateSettingRow(props: Props): ReactElement {
         )}
         {unsaved && savedValue !== null && (
           <Text c="dimmed" size="xs" mt={4} data-ini-row-saved-value>
-            Saved: {savedValue.length > 0 ? savedValue : "(empty)"}
+            Last saved: {savedValue.length > 0 ? savedValue : "(empty)"}
           </Text>
         )}
       </div>

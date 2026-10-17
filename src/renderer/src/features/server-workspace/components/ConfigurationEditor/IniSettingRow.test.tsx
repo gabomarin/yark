@@ -102,7 +102,7 @@ describe("IniSettingRow hosted resource wiring (#577)", () => {
 });
 
 describe("IniSettingRow unsaved highlighting (PINI-001 / #661)", () => {
-  it("shows Unsaved status, saved value, and reverts that row only", async () => {
+  it("shows unsaved asterisk, last-saved value, and reverts that row only", async () => {
     const user = userEvent.setup();
     const api = createRendererApiMock({
       getHostedResourcesOverview: vi.fn().mockResolvedValue({
@@ -130,8 +130,9 @@ describe("IniSettingRow unsaved highlighting (PINI-001 / #661)", () => {
       </AppProviders>,
     );
 
-    expect(document.querySelector("[data-ini-row-unsaved-status]")).toHaveTextContent("Unsaved");
-    expect(screen.getByText("Saved: 0.2")).toBeInTheDocument();
+    expect(document.querySelector("[data-ini-row-unsaved-status]")).toHaveTextContent("*");
+    expect(screen.getByText("Unsaved")).toBeInTheDocument();
+    expect(screen.getByText("Last saved: 0.2")).toBeInTheDocument();
     expect(document.querySelector('[data-ini-row-unsaved="true"]')).not.toBeNull();
     await user.click(screen.getByRole("button", { name: "Revert DifficultyOffset to saved value" }));
     expect(onRevertRowToSaved).toHaveBeenCalledWith(row);
