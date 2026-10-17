@@ -83,6 +83,10 @@ Unknown metadata remains unknown.
 - **Raw:** Full file text, including owned and unknown keys.
 - **Strip/templates:** Still remove owned keys + MaxPlayers before template apply;
   profile sync recomposes profile-owned keys afterward.
+- **Unsaved rows (PINI-001 / #661):** Visual rows compare against the editor
+  baseline (load / last successful Save). Dirty rows get an accessible Unsaved
+  status, the saved value, and **Revert to saved value** (distinct from reset to
+  catalog default). Filter counts disclose pending rows even when filtered out.
 
 ## Import / sync contract (types only)
 

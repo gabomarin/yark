@@ -17,7 +17,12 @@ import {
   type IniFilterId,
   type IniSettingReference,
 } from "../../iniModel";
-import { iniPayloadsDirty } from "./configurationEditorModel";
+import {
+  countUnsavedIniRowsForFile,
+  iniPayloadsDirty,
+  isIniRowUnsaved,
+  lookupBaselineIniValue,
+} from "./configurationEditorModel";
 
 export function useConfigurationEditor(options: {
   serverId: string;
@@ -41,16 +46,21 @@ export function useConfigurationEditor(options: {
   iniMode: "visual" | "text";
   setIniMode: (mode: "visual" | "text") => void;
   dirty: boolean;
+  /** Unsaved visual-row count for the active file (PINI-001 / #661). */
+  unsavedRowCount: number;
   /** True when the editor baseline is a queued draft (#530). */
   pendingQueued: boolean;
   groupedRows: ReturnType<typeof groupSettingReferencesByUiCategory>;
   categoryOptions: { value: string; label: string }[];
   fileLabel: string;
   filePath: string | null;
+  isRowUnsaved: (row: IniSettingReference) => boolean;
+  savedValueForRow: (row: IniSettingReference) => string | null;
   updateValue: (fileKey: IniFileKey, rowSection: string, key: string, value: string, occurrence?: number) => void;
   resetChanges: () => void;
   resetActiveFileToDefaults: () => void;
   resetRowToDefault: (row: IniSettingReference) => void;
+  revertRowToSaved: (row: IniSettingReference) => void;
   toggleSection: (sectionName: string) => void;
   setSectionGroupsCollapsed: (category: string, collapsed: boolean) => void;
   setAllSectionsCollapsed: (collapsed: boolean) => void;
@@ -169,19 +179,26 @@ export function useConfigurationEditor(options: {
     [activeFileKey, activeText],
   );
   const availableRows = useMemo(() => filterIniSettingReferences(rows, "", "all"), [rows]);
-  const categoryOptions = useMemo(
-    () => [
+  const unsavedCounts = useMemo(
+    () => countUnsavedIniRowsForFile(payload, baseline, activeFileKey),
+    [payload, baseline, activeFileKey],
+  );
+  const categoryOptions = useMemo(() => {
+    const formatCount = (rowCount: number, unsavedInScope: number): string => {
+      if (unsavedInScope <= 0) return String(rowCount);
+      return `${rowCount} · ${unsavedInScope} unsaved`;
+    };
+    return [
       {
         value: "all",
-        label: `All settings (${availableRows.length})`,
+        label: `All settings (${formatCount(availableRows.length, unsavedCounts.file)})`,
       },
       ...groupSettingReferencesByUiCategory(availableRows).map((group) => ({
         value: group.category,
-        label: `${group.label} (${group.rows.length})`,
+        label: `${group.label} (${formatCount(group.rows.length, unsavedCounts.byCategory.get(group.category) ?? 0)})`,
       })),
-    ],
-    [availableRows],
-  );
+    ];
+  }, [availableRows, unsavedCounts]);
   const visibleRows = useMemo(() => filterIniSettingReferences(rows, search, filter), [rows, search, filter]);
   const groupedRows = useMemo(() => groupSettingReferencesByUiCategory(visibleRows), [visibleRows]);
 
@@ -244,6 +261,20 @@ export function useConfigurationEditor(options: {
       message: `${row.key} restored to default (pending save).`,
     });
   };
+
+  const revertRowToSaved = (row: IniSettingReference) => {
+    const saved = lookupBaselineIniValue(baseline, row.fileKey, row.section, row.key, row.occurrence);
+    if (saved === null) return;
+    updateValue(row.fileKey, row.section, row.key, saved, row.occurrence);
+    showOperatorToast({
+      title: "INI editor",
+      message: `${row.key} reverted to saved value.`,
+    });
+  };
+
+  const isRowUnsaved = (row: IniSettingReference): boolean => isIniRowUnsaved(row, baseline);
+  const savedValueForRow = (row: IniSettingReference): string | null =>
+    lookupBaselineIniValue(baseline, row.fileKey, row.section, row.key, row.occurrence);
 
   const toggleSection = (sectionName: string) => {
     setCollapsedSections((prev) => ({
@@ -384,15 +415,19 @@ export function useConfigurationEditor(options: {
     iniMode,
     setIniMode,
     dirty,
+    unsavedRowCount: unsavedCounts.file,
     pendingQueued,
     groupedRows,
     categoryOptions,
     fileLabel,
     filePath,
+    isRowUnsaved,
+    savedValueForRow,
     updateValue,
     resetChanges,
     resetActiveFileToDefaults,
     resetRowToDefault,
+    revertRowToSaved,
     toggleSection,
     setSectionGroupsCollapsed,
     setAllSectionsCollapsed,

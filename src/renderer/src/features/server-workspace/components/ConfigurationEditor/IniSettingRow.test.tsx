@@ -53,12 +53,20 @@ function setup(row: IniSettingReference, resource: HostedResourceDto | null = ba
   });
   Object.defineProperty(window, "api", { configurable: true, value: api });
   const onUpdateValue = vi.fn();
+  const onRevertRowToSaved = vi.fn();
   const utils = render(
     <AppProviders>
-      <IniSettingRow row={row} busy={false} onUpdateValue={onUpdateValue} onResetRowToDefault={vi.fn()} />
+      <IniSettingRow
+        row={row}
+        busy={false}
+        unsaved={false}
+        onUpdateValue={onUpdateValue}
+        onResetRowToDefault={vi.fn()}
+        onRevertRowToSaved={onRevertRowToSaved}
+      />
     </AppProviders>,
   );
-  return { onUpdateValue, ...utils };
+  return { onUpdateValue, onRevertRowToSaved, ...utils };
 }
 
 describe("IniSettingRow hosted resource wiring (#577)", () => {
@@ -90,5 +98,42 @@ describe("IniSettingRow hosted resource wiring (#577)", () => {
     expect(container.querySelector("[data-hosted-resource-selector]")).not.toBeNull();
     await user.click(screen.getByRole("button", { name: "Choose a YARK Hosted Resource" }));
     expect(screen.queryByRole("option", { name: "Bans list" })).not.toBeInTheDocument();
+  });
+});
+
+describe("IniSettingRow unsaved highlighting (PINI-001 / #661)", () => {
+  it("shows Unsaved status, saved value, and reverts that row only", async () => {
+    const user = userEvent.setup();
+    const api = createRendererApiMock({
+      getHostedResourcesOverview: vi.fn().mockResolvedValue({
+        ok: true,
+        data: {
+          state: { enabled: false, port: 8935, bindHost: "127.0.0.1", listening: false, error: null },
+          resources: [],
+        },
+      }),
+    });
+    Object.defineProperty(window, "api", { configurable: true, value: api });
+    const onRevertRowToSaved = vi.fn();
+    const row = iniRow("DifficultyOffset", "0.9");
+    render(
+      <AppProviders>
+        <IniSettingRow
+          row={row}
+          busy={false}
+          unsaved
+          savedValue="0.2"
+          onUpdateValue={vi.fn()}
+          onResetRowToDefault={vi.fn()}
+          onRevertRowToSaved={onRevertRowToSaved}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByText("Unsaved")).toBeInTheDocument();
+    expect(screen.getByText("Saved: 0.2")).toBeInTheDocument();
+    expect(document.querySelector('[data-ini-row-unsaved="true"]')).not.toBeNull();
+    await user.click(screen.getByRole("button", { name: "Revert DifficultyOffset to saved value" }));
+    expect(onRevertRowToSaved).toHaveBeenCalledWith(row);
   });
 });

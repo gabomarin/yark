@@ -248,6 +248,7 @@ export function ClusterIniTemplateModal(props: Props): ReactElement {
             <ClusterIniTemplateVisualPanel
               key={`${iniFile}:${mode}`}
               payload={payload}
+              baseline={baseline}
               iniFile={iniFile}
               mode={mode}
               onPayloadChange={setPayload}

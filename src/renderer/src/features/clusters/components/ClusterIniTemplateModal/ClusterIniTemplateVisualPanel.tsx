@@ -20,6 +20,11 @@ import {
   type IniFilterId,
   type IniSettingReference,
 } from "@features/server-workspace/iniModel";
+import {
+  countUnsavedIniRowsForFile,
+  isIniRowUnsaved,
+  lookupBaselineIniValue,
+} from "@features/server-workspace/components/ConfigurationEditor/configurationEditorModel";
 import { useMemo, useState } from "react";
 import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
 import { SearchField } from "@ui/SearchField/SearchField";
@@ -28,6 +33,7 @@ import classes from "./ClusterIniTemplateModal.module.css";
 
 interface Props {
   payload: ServerIniPayload;
+  baseline: ServerIniPayload | null;
   iniFile: IniFileKey;
   mode: "visual" | "raw";
   onPayloadChange: (next: ServerIniPayload) => void;
@@ -48,16 +54,23 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
   }, [activeText, props.iniFile]);
 
   const availableRows = useMemo(() => filterIniSettingReferences(rows, "", "all"), [rows]);
-  const categoryOptions = useMemo(
-    () => [
-      { value: "all", label: `All settings (${availableRows.length})` },
+  const unsavedCounts = useMemo(
+    () => countUnsavedIniRowsForFile(props.payload, props.baseline, props.iniFile),
+    [props.payload, props.baseline, props.iniFile],
+  );
+  const categoryOptions = useMemo(() => {
+    const formatCount = (rowCount: number, unsavedInScope: number): string => {
+      if (unsavedInScope <= 0) return String(rowCount);
+      return `${rowCount} · ${unsavedInScope} unsaved`;
+    };
+    return [
+      { value: "all", label: `All settings (${formatCount(availableRows.length, unsavedCounts.file)})` },
       ...groupSettingReferencesByUiCategory(availableRows).map((group) => ({
         value: group.category,
-        label: `${group.label} (${group.rows.length})`,
+        label: `${group.label} (${formatCount(group.rows.length, unsavedCounts.byCategory.get(group.category) ?? 0)})`,
       })),
-    ],
-    [availableRows],
-  );
+    ];
+  }, [availableRows, unsavedCounts]);
   const activeFilter = categoryOptions.some((option) => option.value === filter) ? filter : "all";
   const visibleRows = useMemo(
     () => filterIniSettingReferences(rows, search, activeFilter),
@@ -72,6 +85,12 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
     props.onPayloadChange(
       withFileText(props.payload, props.iniFile, setIniValue(activeText, section, key, value, occurrence)),
     );
+  };
+
+  const revertRowToSaved = (row: IniSettingReference): void => {
+    const saved = lookupBaselineIniValue(props.baseline, row.fileKey, row.section, row.key, row.occurrence);
+    if (saved === null) return;
+    updateValue(row.section, row.key, saved, row.occurrence);
   };
 
   if (props.mode === "raw") {
@@ -242,7 +261,16 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                               <ClusterIniTemplateSettingRow
                                 key={`${row.section}-${row.key}-${row.occurrence}`}
                                 row={row}
+                                unsaved={isIniRowUnsaved(row, props.baseline)}
+                                savedValue={lookupBaselineIniValue(
+                                  props.baseline,
+                                  row.fileKey,
+                                  row.section,
+                                  row.key,
+                                  row.occurrence,
+                                )}
                                 onChange={updateValue}
+                                onRevertToSaved={revertRowToSaved}
                               />
                             ))}
                         </div>
@@ -279,7 +307,16 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                       <ClusterIniTemplateSettingRow
                         key={`${row.section}-${row.key}-${row.occurrence}`}
                         row={row}
+                        unsaved={isIniRowUnsaved(row, props.baseline)}
+                        savedValue={lookupBaselineIniValue(
+                          props.baseline,
+                          row.fileKey,
+                          row.section,
+                          row.key,
+                          row.occurrence,
+                        )}
                         onChange={updateValue}
+                        onRevertToSaved={revertRowToSaved}
                       />
                     ))}
                 </div>

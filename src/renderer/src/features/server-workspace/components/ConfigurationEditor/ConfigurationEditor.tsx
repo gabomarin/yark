@@ -117,6 +117,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
               onFilterChange={editor.setFilter}
               categoryOptions={editor.categoryOptions}
               dirty={editor.dirty}
+              unsavedRowCount={editor.unsavedRowCount}
               onCollapseAll={() => editor.setAllSectionsCollapsed(true)}
               onExpandAll={() => editor.setAllSectionsCollapsed(false)}
             />
@@ -126,10 +127,13 @@ export function ConfigurationEditor(props: Props): ReactElement {
               groupedRows={editor.groupedRows}
               collapsedSections={editor.collapsedSections}
               busy={editor.busy}
+              isRowUnsaved={editor.isRowUnsaved}
+              savedValueForRow={editor.savedValueForRow}
               onToggleSection={editor.toggleSection}
               onSetSectionGroupsCollapsed={editor.setSectionGroupsCollapsed}
               onUpdateValue={editor.updateValue}
               onResetRowToDefault={editor.resetRowToDefault}
+              onRevertRowToSaved={editor.revertRowToSaved}
               onOpenAdminList={props.onOpenAdminList}
             />
 

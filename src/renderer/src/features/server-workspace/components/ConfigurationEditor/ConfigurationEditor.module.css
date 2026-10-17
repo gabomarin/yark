@@ -58,7 +58,7 @@
 .tableHead,
 .row {
   display: grid;
-  grid-template-columns: minmax(180px, 1.1fr) minmax(200px, 1fr) minmax(240px, 1.4fr) 48px;
+  grid-template-columns: minmax(180px, 1.1fr) minmax(200px, 1fr) minmax(240px, 1.4fr) minmax(72px, auto);
   gap: var(--app-space-sm);
   align-items: center;
   padding: var(--app-space-xs) var(--app-space-sm);
@@ -70,6 +70,12 @@
 /* Rows share the table body's surface - one step above chrome, no darker well beneath. */
 .row {
   background: var(--app-color-panel);
+}
+
+/* PINI-001 / #661 — amber wash + inset so pending is not color-only. */
+.rowUnsaved {
+  background: color-mix(in srgb, var(--app-color-attention) 12%, var(--app-color-panel));
+  box-shadow: inset 3px 0 0 var(--app-color-attention);
 }
 
 .tableHead {
@@ -110,6 +116,7 @@
   display: flex;
   justify-content: flex-end;
   flex-shrink: 0;
+  gap: 2px;
 }
 
 .row > :nth-child(3) {
