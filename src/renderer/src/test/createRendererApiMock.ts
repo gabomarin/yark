@@ -295,6 +295,7 @@ export function createRendererApiMock(overrides: Partial<RendererApi> = {}): Ren
     openServerIniInEditor: vi.fn(),
     previewServerIni: vi.fn(),
     saveServerIni: vi.fn(),
+    saveServerIniSemantic: vi.fn(),
     getClusterIniTemplate: vi.fn().mockResolvedValue({ ok: true, data: null }),
     getClusterIniTemplateOrDraft: vi.fn(),
     previewClusterIniTemplate: vi.fn(),

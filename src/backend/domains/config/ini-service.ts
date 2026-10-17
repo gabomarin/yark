@@ -4,13 +4,16 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini/ini-defaults";
 import { IniStaleDocumentError, iniFingerprintsMatch } from "@shared/ini/ini-fingerprints";
+import { applyIniSemanticOps, type IniSemanticOp } from "@shared/ini/ini-semantic-ops";
 import { sanitizeServerIniPayload } from "@shared/ini/ini-text";
 import type { ServerIniChangedPush } from "@shared/ipc";
+import { MAX_INI_FILE_CHARS } from "@shared/ipc/primitives";
 import type {
   IniFileFingerprints,
   IniPreview,
   ServerIniPayload,
   ServerIniSaveResult,
+  ServerIniSemanticSaveResult,
   ServerIniSnapshot,
   ServerProfile,
 } from "@shared/types";
@@ -105,43 +108,78 @@ export class IniService extends EventEmitter {
           throw new IniStaleDocumentError();
         }
         const sanitized = sanitizeServerIniPayload(payload);
-        const preview = this.previewWithCurrent(current.payload, sanitized);
-        if (!preview.valid) {
-          throw new Error(`Invalid INI: ${preview.issues.map((i) => `${i.fileKey}: ${i.message}`).join(" | ")}`);
-        }
-
-        const active = this.options?.isServerActive(serverId) === true;
-        if (active) {
-          if (this.options === undefined) {
-            throw new Error("Pending INI queue is not configured");
-          }
-          // Bake current profile identity into the draft so Server-tab values
-          // stay aligned; read/flush also re-apply from the live profile (#530).
-          const queued = this.withProfileOwnedKeys(serverId, sanitized);
-          this.options.pending.upsert(serverId, queued);
-          this.repo.addEvent(
-            serverId,
-            "server_updated",
-            "info",
-            `INI configuration queued (${preview.changedCount} changes; applies when stopped)`,
-          );
-          this.emitChanged(serverId, true);
-          return { ...preview, pending: true, fingerprints: fingerprintIniPayload(queued) };
-        }
-
-        const written = this.withProfileOwnedKeys(serverId, sanitized);
-        await this.writePayloadToDisk(current, written);
-        this.options?.pending.delete(serverId);
-        this.repo.addEvent(
-          serverId,
-          "server_updated",
-          "info",
-          `INI configuration updated (${preview.changedCount} changes)`,
-        );
-        this.emitChanged(serverId, false);
-        return { ...preview, pending: false, fingerprints: fingerprintIniPayload(written) };
+        const committed = await this.commitSanitizedPayload(serverId, current, sanitized);
+        const { payload: _payload, ...result } = committed;
+        return result;
       }),
     );
+  }
+
+  /**
+   * Apply visual Set/Unset ops to the latest read payload under the lock (#667).
+   * Expected-previous values are the concurrency check — whole-file fingerprints
+   * are not required (non-overlapping external edits can coexist).
+   */
+  async saveServerIniSemantic(serverId: string, ops: readonly IniSemanticOp[]): Promise<ServerIniSemanticSaveResult> {
+    return this.locks.withLock(serverId, "ini-save", () =>
+      this.withIniMutation(serverId, async () => {
+        const current = await this.readServerIni(serverId);
+        const patched = applyIniSemanticOps(current.payload, ops);
+        const sanitized = sanitizeServerIniPayload(patched);
+        return this.commitSanitizedPayload(serverId, current, sanitized);
+      }),
+    );
+  }
+
+  private assertIniPayloadWithinLimit(payload: ServerIniPayload): void {
+    if (payload.gameUserSettings.length > MAX_INI_FILE_CHARS || payload.game.length > MAX_INI_FILE_CHARS) {
+      throw new Error(`INI save exceeds ${MAX_INI_FILE_CHARS} characters per file`);
+    }
+  }
+
+  private async commitSanitizedPayload(
+    serverId: string,
+    current: ServerIniSnapshot,
+    sanitized: ServerIniPayload,
+  ): Promise<ServerIniSemanticSaveResult> {
+    const preview = this.previewWithCurrent(current.payload, sanitized);
+    if (!preview.valid) {
+      throw new Error(`Invalid INI: ${preview.issues.map((i) => `${i.fileKey}: ${i.message}`).join(" | ")}`);
+    }
+
+    const active = this.options?.isServerActive(serverId) === true;
+    if (active) {
+      if (this.options === undefined) {
+        throw new Error("Pending INI queue is not configured");
+      }
+      // Bake current profile identity into the draft so Server-tab values
+      // stay aligned; read/flush also re-apply from the live profile (#530).
+      const queued = this.withProfileOwnedKeys(serverId, sanitized);
+      // Validate after profile-owned keys — passwords/SessionName can grow the string (#667).
+      this.assertIniPayloadWithinLimit(queued);
+      this.options.pending.upsert(serverId, queued);
+      this.repo.addEvent(
+        serverId,
+        "server_updated",
+        "info",
+        `INI configuration queued (${preview.changedCount} changes; applies when stopped)`,
+      );
+      this.emitChanged(serverId, true);
+      return { ...preview, pending: true, fingerprints: fingerprintIniPayload(queued), payload: queued };
+    }
+
+    const written = this.withProfileOwnedKeys(serverId, sanitized);
+    this.assertIniPayloadWithinLimit(written);
+    await this.writePayloadToDisk(current, written);
+    this.options?.pending.delete(serverId);
+    this.repo.addEvent(
+      serverId,
+      "server_updated",
+      "info",
+      `INI configuration updated (${preview.changedCount} changes)`,
+    );
+    this.emitChanged(serverId, false);
+    return { ...preview, pending: false, fingerprints: fingerprintIniPayload(written), payload: written };
   }
 
   /**

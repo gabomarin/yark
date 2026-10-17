@@ -14,7 +14,8 @@ export const MAX_BACKUP_ID_LENGTH = 256;
 export const MAX_BACKUP_IDS_PER_REQUEST = 200;
 export const MAX_STRING_PARAM_LENGTH = 512;
 const MAX_PLAYER_KEY_LENGTH = 256;
-const MAX_INI_FILE_CHARS = 2_000_000;
+/** Max characters per Game.ini / GameUserSettings.ini payload string. */
+export const MAX_INI_FILE_CHARS = 2_000_000;
 export const MAX_MOD_IDS_PER_REQUEST = 200;
 export const MAX_MOD_QUERY_LENGTH = 200;
 const MAX_LOG_FILE_NAME_LENGTH = 255;
@@ -274,6 +275,56 @@ export const iniFileFingerprintsSchema = z
     game: z.string().min(1).max(64),
   })
   .strict();
+
+const MAX_INI_SEMANTIC_OPS = 2_000;
+const MAX_INI_SEMANTIC_VALUE_CHARS = 100_000;
+/** Aggregate cap across all op strings in one `ini:save-semantic` request (#667). */
+const MAX_INI_SEMANTIC_OPS_TOTAL_CHARS = MAX_INI_FILE_CHARS * 2;
+
+/** Visual Set/Unset ops for `ini:save-semantic` (#667). */
+export const iniSemanticOpsSchema = z
+  .array(
+    z.discriminatedUnion("kind", [
+      z
+        .object({
+          kind: z.literal("set"),
+          fileKey: iniFileKeySchema,
+          section: z.string().min(1).max(MAX_STRING_PARAM_LENGTH),
+          key: z.string().min(1).max(MAX_STRING_PARAM_LENGTH),
+          occurrence: z.number().int().min(0).max(10_000),
+          expectedPreviousValue: z.string().max(MAX_INI_SEMANTIC_VALUE_CHARS).nullable(),
+          nextValue: z.string().max(MAX_INI_SEMANTIC_VALUE_CHARS),
+        })
+        .strict(),
+      z
+        .object({
+          kind: z.literal("unset"),
+          fileKey: iniFileKeySchema,
+          section: z.string().min(1).max(MAX_STRING_PARAM_LENGTH),
+          key: z.string().min(1).max(MAX_STRING_PARAM_LENGTH),
+          occurrence: z.number().int().min(0).max(10_000),
+          expectedPreviousValue: z.string().max(MAX_INI_SEMANTIC_VALUE_CHARS),
+        })
+        .strict(),
+    ]),
+  )
+  .max(MAX_INI_SEMANTIC_OPS)
+  .superRefine((ops, ctx) => {
+    let chars = 0;
+    for (const op of ops) {
+      chars += op.section.length + op.key.length + (op.expectedPreviousValue?.length ?? 0);
+      if (op.kind === "set") {
+        chars += op.nextValue.length;
+      }
+      if (chars > MAX_INI_SEMANTIC_OPS_TOTAL_CHARS) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `INI semantic ops exceed ${MAX_INI_SEMANTIC_OPS_TOTAL_CHARS} total characters`,
+        });
+        return;
+      }
+    }
+  });
 
 export const clusterIniFileSelectionSchema = z
   .object({

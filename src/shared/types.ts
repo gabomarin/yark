@@ -1028,6 +1028,8 @@ export interface IniDiffEntry {
   fileKey: IniFileKey;
   section: string;
   key: string;
+  /** 0-based occurrence among live assignments of section+key (duplicates). */
+  occurrence?: number;
   before: string | null;
   after: string | null;
   change: "added" | "removed" | "changed";
@@ -1083,6 +1085,15 @@ export interface ServerIniSaveResult extends IniPreview {
   pending: boolean;
   /** Fingerprints of the payload that was written or queued (next Save baseline). */
   fingerprints: IniFileFingerprints;
+}
+
+/**
+ * Result of `ini:save-semantic` (PINI-004 / #667).
+ * Includes the merged payload so the editor can adopt non-overlapping external edits.
+ */
+export interface ServerIniSemanticSaveResult extends ServerIniSaveResult {
+  /** Payload after ops were applied (disk or pending draft). */
+  payload: ServerIniPayload;
 }
 
 /**

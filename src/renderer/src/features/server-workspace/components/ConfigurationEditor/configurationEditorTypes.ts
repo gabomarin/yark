@@ -5,6 +5,8 @@ import type { IniFilterId, IniSettingReference, IniUiCategoryGroup } from "../..
 export interface ConfigurationEditorApi {
   snapshot: ServerIniSnapshot | null;
   payload: ServerIniPayload | null;
+  /** Load / last successful Save baseline (for outside-change diffs) (#667). */
+  baseline: ServerIniPayload | null;
   loading: boolean;
   busy: boolean;
   error: string | null;
@@ -14,6 +16,8 @@ export interface ConfigurationEditorApi {
   /** Disk/pending changed while the editor has unsaved edits (#665). */
   externalChangeDetected: boolean;
   setExternalChangeDetected: (value: boolean) => void;
+  /** Disk/pending payload captured when an external change was detected (#667). */
+  externalDiskPayload: ServerIniPayload | null;
   /** Re-read install / pending draft and reset the editor baseline. */
   reloadFromDisk: () => Promise<void>;
   /** Reload button — confirms first when the editor is dirty. */

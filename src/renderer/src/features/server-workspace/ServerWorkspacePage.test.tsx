@@ -155,6 +155,24 @@ describe("ServerWorkspacePage", () => {
           fingerprints: fingerprintIniPayload(payload),
         },
       })),
+      saveServerIniSemantic: vi.fn(async (_serverId: string, ops: unknown[]) => {
+        const payload = {
+          gameUserSettings: `[ServerSettings]\nXPMultiplier=1.5\nAllowFlyerCarryPVE=True\n`,
+          game: `[/Script/ShooterGame.ShooterGameMode]\nXPMultiplier=1.0\n`,
+        };
+        return {
+          ok: true as const,
+          data: {
+            valid: true,
+            issues: [],
+            diff: [],
+            changedCount: Array.isArray(ops) ? ops.length : 0,
+            pending: false,
+            fingerprints: fingerprintIniPayload(payload),
+            payload,
+          },
+        };
+      }),
       onServerIniChanged: vi.fn(() => () => undefined),
       previewServerIni: vi.fn(async () => ({
         ok: true,
@@ -1093,7 +1111,11 @@ describe("ServerWorkspacePage", () => {
       window.dispatchEvent(new Event("focus"));
     });
 
-    expect(await screen.findByRole("alert", { name: "INI changed outside YARK" })).toBeVisible();
+    const banner = await screen.findByRole("alert", { name: "INI updated outside YARK" });
+    expect(banner).toBeVisible();
+    expect(banner).toHaveTextContent(/Click Save to merge/i);
+    expect(within(banner).getByRole("button", { name: "View outside changes" })).toBeVisible();
+    expect(within(banner).queryByRole("button", { name: "Reload from disk" })).not.toBeInTheDocument();
     expect(screen.getByDisplayValue("2")).toBeVisible();
   });
 

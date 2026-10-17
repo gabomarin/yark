@@ -1,3 +1,4 @@
+import type { IniSemanticOp } from "./ini/ini-semantic-ops";
 import type { OnboardingRecord } from "./settings/onboarding";
 import type {
   AppEvent,
@@ -39,6 +40,7 @@ import type {
   IniFileFingerprints,
   ServerIniPayload,
   ServerIniSaveResult,
+  ServerIniSemanticSaveResult,
   ServerIniSnapshot,
   ServerInstallationSnapshot,
   ServerProfilePatch,
@@ -180,6 +182,8 @@ export const IPC = {
   iniRead: "ini:read",
   iniPreview: "ini:preview",
   iniSave: "ini:save",
+  /** Visual Set/Unset patch save (PINI-004 / #667). */
+  iniSaveSemantic: "ini:save-semantic",
   iniOpenInEditor: "ini:open-in-editor",
   clusterIniGet: "cluster-ini:get",
   clusterIniGetOrDraft: "cluster-ini:get-or-draft",
@@ -612,6 +616,8 @@ export interface RendererApi {
     payload: ServerIniPayload,
     expectedFingerprints: IniFileFingerprints,
   ): Promise<IpcResult<ServerIniSaveResult>>;
+  /** Visual Set/Unset patch save — merges onto latest disk under lock (#667). */
+  saveServerIniSemantic(serverId: string, ops: IniSemanticOp[]): Promise<IpcResult<ServerIniSemanticSaveResult>>;
   getClusterIniTemplate(clusterId: string): Promise<IpcResult<ClusterIniTemplate | null>>;
   getClusterIniTemplateOrDraft(clusterId: string): Promise<IpcResult<ClusterIniTemplate>>;
   previewClusterIniTemplate(clusterId: string, payload: ServerIniPayload): Promise<IpcResult<IniPreview>>;

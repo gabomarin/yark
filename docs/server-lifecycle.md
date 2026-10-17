@@ -569,12 +569,21 @@ setting catalog: [ini-metadata.md](ini-metadata.md) (PINI-016 / #659).
   also returns per-file **fingerprints** (SHA-256 truncated) of the sanitized
   payload the editor sees (#665 / PINI-003).
 - Save (lock purpose `"ini-save"`):
-  - Requires the fingerprints from the editor’s last load / successful save.
-    Under the lock, re-read and compare; mismatch throws `INI_STALE_DOCUMENT`
-    (no disk write, no pending upsert). There is no force-overwrite in this
-    ticket. The Configuration editor also re-checks fingerprints when the
-    window regains focus: auto-reload when the editor is clean, or an attention
-    banner when dirty; **Reload from disk** is always available in the toolbar.
+  - **Visual editor (`ini:save-semantic`, #667 / PINI-004):** applies Set/Unset
+    ops (occurrence + expected previous value) to the latest read payload under
+    the lock. Non-overlapping external edits survive; expected-previous
+    mismatches throw `INI_SEMANTIC_CONFLICT` without writing. Ownership /
+    absence policy rejects use `INI_SEMANTIC_OWNERSHIP` /
+    `INI_SEMANTIC_UNSET_FORBIDDEN`. Returns the merged `payload` so the editor
+    can adopt external non-overlapping changes. Does **not** require whole-file
+    fingerprints (per-op expected values are the concurrency check).
+  - **Raw/text and full-buffer Save (`ini:save`, #665 / PINI-003):** requires the
+    fingerprints from the editor’s last load / successful save. Under the lock,
+    re-read and compare; mismatch throws `INI_STALE_DOCUMENT` (no disk write, no
+    pending upsert). There is no force-overwrite. The Configuration editor also
+    re-checks fingerprints when the window regains focus: auto-reload when the
+    editor is clean, or an attention banner when dirty; **Reload from disk** is
+    always available in the toolbar.
   - **Process idle:** sanitize → semantic validate → write both files → clear
     pending → event; IPC best-effort `createIniSaveBackup`.
   - **Process live** (`ProcessManager.isActive`: starting / running / stopping /

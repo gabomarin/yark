@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron";
+import type { IniSemanticOp } from "../shared/ini/ini-semantic-ops";
 import { IPC, IPC_PUSH, type RendererApi } from "../shared/ipc";
 import type { AppUpdateStatus } from "../shared/settings/app-update";
 import type {
@@ -166,6 +167,8 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.iniPreview, serverId, payload),
   saveServerIni: (serverId: string, payload: ServerIniPayload, expectedFingerprints: IniFileFingerprints) =>
     ipcRenderer.invoke(IPC.iniSave, serverId, payload, expectedFingerprints),
+  saveServerIniSemantic: (serverId: string, ops: IniSemanticOp[]) =>
+    ipcRenderer.invoke(IPC.iniSaveSemantic, serverId, ops),
   getClusterIniTemplate: (clusterId: string) => ipcRenderer.invoke(IPC.clusterIniGet, clusterId),
   getClusterIniTemplateOrDraft: (clusterId: string) => ipcRenderer.invoke(IPC.clusterIniGetOrDraft, clusterId),
   previewClusterIniTemplate: (clusterId: string, payload: ServerIniPayload) =>

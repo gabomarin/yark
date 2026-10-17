@@ -102,7 +102,30 @@ Unknown metadata remains unknown.
 3. Conflicts are reported, not treated as independent visual settings.
 4. Absence is not a catalog default.
 
-Full import UI is PINI-010 / PINI-011; semantic patch save is PINI-004.
+Full import UI is PINI-010 / PINI-011.
+
+## Semantic visual Save (PINI-004 / #667)
+
+The Configuration **visual** editor Save path sends Set/Unset ops (file, section,
+key, occurrence, expected previous value; Set also carries the next value) via
+`ini:save-semantic`. The backend applies those ops to the **latest** read
+payload under the existing INI lock — not a blind overwrite of the editor
+buffer — so non-overlapping external edits can coexist. Overlapping
+expected-previous mismatches fail with `INI_SEMANTIC_CONFLICT` (no silent
+clobber; conflict-review UI is PINI-005). Profile/system-owned keys and
+forbidden Unset policies are rejected (`INI_SEMANTIC_OWNERSHIP` /
+`INI_SEMANTIC_UNSET_FORBIDDEN`). Per-row **Revert** stays draft-only against the
+editor baseline. The Raw/text editor and other full-buffer writers still use
+`ini:save` with fingerprints (PINI-003 / #665).
+
+**Operator chrome:** while dirty, a fingerprint mismatch on focus shows an
+**info** banner in visual mode (“INI updated outside YARK”) with a short count
+of outside setting changes, a compact **View outside changes** text link that
+opens a Needs-attention-style detail popover, and copy to click Save to merge
+when edits do not overlap (no Reload button in that banner). Text mode keeps an
+attention banner with Reload because Save will refuse until then. A failed Save
+with an overlapping conflict uses a red **INI conflict** alert (Reload offered
+there).
 
 ## Diagnostics
 
