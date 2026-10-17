@@ -16,9 +16,9 @@ describe("appearance theme selection", () => {
   });
 
   it("falls back independently when family or scheme is unknown", () => {
-    expect(normalizeAppearanceSettings({ themeFamily: "glassy", scheme: "sepia", panels: "auto" } as never)).toEqual(
-      DEFAULT_APPEARANCE_SETTINGS,
-    );
+    expect(
+      normalizeAppearanceSettings({ themeFamily: "unknown-family", scheme: "sepia", panels: "auto" } as never),
+    ).toEqual(DEFAULT_APPEARANCE_SETTINGS);
   });
 
   it("writes the new selection contract", () => {
@@ -35,6 +35,17 @@ describe("appearance theme selection", () => {
     });
     expect(encodeAppearanceSettings({ themeFamily: "plasma-breeze", scheme: "dark", panels: "drawers" })).toBe(
       '{"themeFamily":"plasma-breeze","scheme":"dark","panels":"drawers"}',
+    );
+  });
+
+  it("accepts the Glassy family independently of the scheme (#PUX-005-A)", () => {
+    expect(normalizeAppearanceSettings({ themeFamily: "glassy", scheme: "light", panels: "auto" })).toEqual({
+      themeFamily: "glassy",
+      scheme: "light",
+      panels: "auto",
+    });
+    expect(encodeAppearanceSettings({ themeFamily: "glassy", scheme: "dark", panels: "drawers" })).toBe(
+      '{"themeFamily":"glassy","scheme":"dark","panels":"drawers"}',
     );
   });
 });

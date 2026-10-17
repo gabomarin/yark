@@ -38,7 +38,10 @@ const THEME_LABEL = THEME;
 /** The product default is Compact, so the walk covers it unless asked otherwise. */
 const DENSITY = process.env.YARK_VISUAL_DENSITY === "comfortable" ? "comfortable" : "compact";
 /** Family axis (#PUX-005-B): default Fluent, or the Plasma Breeze family. */
-const FAMILY = process.env.YARK_VISUAL_FAMILY === "plasma-breeze" ? "plasma-breeze" : "fluent";
+const FAMILY =
+  process.env.YARK_VISUAL_FAMILY === "plasma-breeze" || process.env.YARK_VISUAL_FAMILY === "glassy"
+    ? process.env.YARK_VISUAL_FAMILY
+    : "fluent";
 
 const TABS = ["Server", "INI Files", "Mods", "Launch", "Backups", "Logs", "RCON", "Maintenance", "Ark Server API"];
 

@@ -452,6 +452,48 @@ export type AppThemeRadius = {
 
 export const fluentRadius: AppThemeRadius = { sm: 4, md: 8, lg: 10, control: 4 };
 export const plasmaBreezeRadius: AppThemeRadius = { sm: 4, md: 6, lg: 8, control: 4 };
+/** Glassy (#PUX-005-A): medium corners on floating surfaces, still compact on controls. */
+export const glassyRadius: AppThemeRadius = { sm: 6, md: 10, lg: 14, control: 6 };
+
+/**
+ * Progressive material payload (#PUX-005-A). Solid `--app-color-*` roles stay the
+ * contrast and fallback surfaces. These values are consumed only by the app shell
+ * and shared overlay recipes — never by feature CSS.
+ */
+export type AppThemeMaterials = {
+  chrome: {
+    background: string;
+    fallback: string;
+    backdropFilter: string;
+  };
+  content: {
+    background: string;
+    fallback: string;
+  };
+  overlay: {
+    background: string;
+    fallback: string;
+    backdropFilter: string;
+  };
+  innerHighlight: string;
+  scrim: string;
+};
+
+/** Fluent / Plasma Breeze: opaque fills, no backdrop filter. */
+export function solidMaterials(
+  palette: AppThemePalette,
+  extras: { innerHighlight: string; scrim: string },
+): AppThemeMaterials {
+  const chrome = palette.gray[1];
+  const panel = palette.gray[2];
+  return {
+    chrome: { background: chrome, fallback: chrome, backdropFilter: "none" },
+    content: { background: panel, fallback: panel },
+    overlay: { background: panel, fallback: panel, backdropFilter: "none" },
+    innerHighlight: extras.innerHighlight,
+    scrim: extras.scrim,
+  };
+}
 
 /**
  * Documented contrast floors per theme (#PUX-005-B). The palette is swappable, so

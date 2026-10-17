@@ -22,7 +22,10 @@ delete process.env.ELECTRON_RUN_AS_NODE;
 const projectRoot = path.resolve(__dirname, "..");
 
 /** Family axis (#PUX-005-B): default Fluent, or the Plasma Breeze family. */
-const FAMILY = process.env.YARK_VISUAL_FAMILY === "plasma-breeze" ? "plasma-breeze" : "fluent";
+const FAMILY =
+  process.env.YARK_VISUAL_FAMILY === "plasma-breeze" || process.env.YARK_VISUAL_FAMILY === "glassy"
+    ? process.env.YARK_VISUAL_FAMILY
+    : "fluent";
 
 const sizes = [
   { name: "hd", width: 1280, height: 720 },

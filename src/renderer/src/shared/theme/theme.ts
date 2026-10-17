@@ -8,6 +8,7 @@ import {
 } from "./tokens";
 import { DEFAULT_APP_THEME, type AppTheme } from "./themes";
 import { createFluentComponents } from "./recipes/fluent";
+import { createGlassyComponents, glassyVariantColorsResolver } from "./recipes/glassy";
 import { createPlasmaBreezeComponents, plasmaBreezeVariantColorsResolver } from "./recipes/plasmaBreeze";
 
 export { alertToneForColor } from "./recipes/alertTone";
@@ -87,7 +88,7 @@ function createAppCssVariablesResolver(
       "--app-color-accent-text": "var(--ark-blue-11)",
       "--app-color-accent-subtle": "var(--ark-blue-a3)",
       "--app-color-accent-subtle-hover": "var(--ark-blue-a4)",
-      "--app-color-accent-contrast": "#ffffff",
+      "--app-color-accent-contrast": theme.palette.blueContrast,
       /* One brand-coloured focus ring for the whole app (alpha so it reads on any surface). */
       "--app-color-focus-ring": "var(--ark-blue-a8)",
       /* Informational state reported by the server — deliberately NOT the accent. */
@@ -153,6 +154,16 @@ function createAppCssVariablesResolver(
       "--app-list-selected-inset": "inset 3px 0 0 var(--ark-blue-9)",
       "--app-anchor-color": "var(--ark-blue-11)",
       "--app-anchor-hover-color": "var(--ark-blue-12)",
+      "--app-material-chrome-bg": theme.materials.chrome.background,
+      "--app-material-chrome-fallback": theme.materials.chrome.fallback,
+      "--app-material-chrome-filter": theme.materials.chrome.backdropFilter,
+      "--app-material-content-bg": theme.materials.content.background,
+      "--app-material-content-fallback": theme.materials.content.fallback,
+      "--app-material-overlay-bg": theme.materials.overlay.background,
+      "--app-material-overlay-fallback": theme.materials.overlay.fallback,
+      "--app-material-overlay-filter": theme.materials.overlay.backdropFilter,
+      "--app-material-inner-highlight": theme.materials.innerHighlight,
+      "--app-material-scrim": theme.materials.scrim,
     },
     light: {
       /*
@@ -314,6 +325,27 @@ function createAppCssVariablesResolver(
   });
 }
 
+function componentsForRecipe(density: UiDensity, theme: AppTheme): MantineThemeOverride["components"] {
+  switch (theme.recipeSet) {
+    case "plasma-breeze":
+      return createPlasmaBreezeComponents(density, theme);
+    case "glassy":
+      return createGlassyComponents(density, theme);
+    default:
+      return createFluentComponents(density, theme);
+  }
+}
+
+function variantResolverFor(theme: AppTheme) {
+  if (theme.recipeSet === "plasma-breeze") {
+    return plasmaBreezeVariantColorsResolver;
+  }
+  if (theme.recipeSet === "glassy") {
+    return glassyVariantColorsResolver;
+  }
+  return undefined;
+}
+
 /**
  * Builds the shared semantic Mantine theme plus the selected component recipe set.
  * The recipe set boundary lives on AppTheme, so a family can replace component
@@ -324,16 +356,15 @@ function createAppTheme(
   density: UiDensity = "comfortable",
   theme: AppTheme = DEFAULT_APP_THEME,
 ): MantineThemeOverride {
-  const isBreeze = theme.recipeSet === "plasma-breeze";
-  const components = isBreeze ? createPlasmaBreezeComponents(density, theme) : createFluentComponents(density, theme);
+  const components = componentsForRecipe(density, theme);
+  const variantColorResolver = variantResolverFor(theme);
 
   return createTheme({
     /*
-     * Plasma Breeze keeps the exact KDE accent, which Mantine's WCAG autoContrast
-     * reads as "light" and would label black. Only Breeze sets a resolver: passing
-     * `undefined` explicitly would overwrite Mantine's default and crash components.
+     * Family resolvers are opt-in. Passing `undefined` explicitly would overwrite
+     * Mantine's default and crash components, so only Breeze and Glassy set one.
      */
-    ...(isBreeze ? { variantColorResolver: plasmaBreezeVariantColorsResolver } : {}),
+    ...(variantColorResolver ? { variantColorResolver } : {}),
     primaryColor: "blue",
     primaryShade: 5,
     /** Dark text on light filled colors (fossil Restart, attention); white on red/teal filled. */
