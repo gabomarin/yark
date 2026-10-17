@@ -83,6 +83,7 @@ paths or the Notion hub URL in tracked files.
 - [credential-threat-model.md](credential-threat-model.md) — local admin/join password boundary (SQLite + INI plaintext; logs omit password settings).
 - [server-lifecycle.md](server-lifecycle.md) — launch args, profile→INI sync, spawn, start/stop/kill, INI sanitize / pending queue / assistant; custom / Maps pack launch + Start blockers (#65 Phase 1 / #190–#195). Research archive: [spikes/65-modded-asa-maps.md](spikes/65-modded-asa-maps.md).
 - [config-transfer.md](config-transfer.md) — one-shot Copy configuration between profiles (#95); pending-draft source/target rules (#530).
+- [ini-metadata.md](ini-metadata.md) — INI catalog ownership, absence, enforcement, provenance (PINI-016 / #659).
 - [launch-options-catalog.md](launch-options-catalog.md) — verified ASA CLI catalog (#92); regenerates via `npm run catalog:launch-options`.
 - [rcon.md](rcon.md) — workspace RCON console, persistent session, players, ban list.
 - [hosted-resources.md](hosted-resources.md) — experimental, default-off loopback HTTP host for versioned text/INI/JSON URL bodies (#564).

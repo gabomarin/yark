@@ -70,4 +70,22 @@ describe("ini-setting-meta (defaults-derived)", () => {
     expect(defaultGameUserSettingsIni).not.toMatch(/^\s*ActiveEvent=/im);
     expect(asaServerSettings.some((s) => s.key === "ActiveEvent")).toBe(false);
   });
+
+  it("includes ownership / absence / enforcement / provenance on every catalog entry", () => {
+    for (const setting of [
+      lookupIniSettingMeta("gameUserSettings", "ServerSettings", "AdminLogging"),
+      lookupIniSettingMeta("gameUserSettings", "SessionSettings", "SessionName"),
+      lookupIniSettingMeta("gameUserSettings", "ServerSettings", "ServerAdminPassword"),
+    ]) {
+      expect(setting).toBeDefined();
+      expect(setting?.owner).toMatch(/^(serverProfile|iniVisual|externalManual|system)$/);
+      expect(setting?.absencePolicy).toMatch(/^(allowed|forbidden|mapsToProfileNull)$/);
+      expect(setting?.enforcement).toMatch(/^(blocking|warning|advisory)$/);
+      expect(setting?.applicability.game).toBe("asa");
+      expect(setting?.provenance.source.length).toBeGreaterThan(0);
+      expect(setting?.provenance.confidence).toMatch(/^(verified|inferred|unknown)$/);
+    }
+    expect(lookupIniSettingMeta("gameUserSettings", "SessionSettings", "SessionName")?.owner).toBe("serverProfile");
+    expect(lookupIniSettingMeta("gameUserSettings", "ServerSettings", "AdminLogging")?.owner).toBe("iniVisual");
+  });
 });

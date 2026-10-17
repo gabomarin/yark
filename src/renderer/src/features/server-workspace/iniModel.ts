@@ -12,7 +12,7 @@ import {
   setIniTextValue,
   type IniTextRow,
 } from "@shared/ini/ini-text";
-import { isAsaIgnoredIniMaxPlayers, isYarkOwnedIniKey } from "@shared/asa/yark-owned-ini-keys";
+import { isVisuallyEditableIniSetting } from "@shared/ini/ini-setting-decisions";
 
 export type { IniUiCategoryGroup, IniUiSectionGroup } from "./iniUiCategoryGrouping";
 export {
@@ -209,13 +209,7 @@ export function filterIniRows(
   const query = search.trim().toLowerCase();
   const resolvedFile = fileKey ?? "gameUserSettings";
   return rows.filter((row) => {
-    if (isClientIniNoise(row.section, row.key)) {
-      return false;
-    }
-    if (
-      resolvedFile === "gameUserSettings" &&
-      (isYarkOwnedIniKey(row.section, row.key) || isAsaIgnoredIniMaxPlayers(row.key))
-    ) {
+    if (!isVisuallyEditableIniSetting(resolvedFile, row.section, row.key)) {
       return false;
     }
     if (filter !== "all") {

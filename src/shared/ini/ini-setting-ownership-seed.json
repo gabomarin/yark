@@ -1,0 +1,113 @@
+{
+  "$comment": "Non-default ownership annotations merged by build-ini-setting-meta.cjs. Keys use file:section:key. MaxPlayers is ASA-ignored policy, not listed here.",
+  "gameUserSettings:ServerSettings:RCONEnabled": {
+    "owner": "serverProfile",
+    "absencePolicy": "forbidden",
+    "enforcement": "blocking",
+    "legacyReason": "profileSync",
+    "provenance": {
+      "source": "yark-profile-sync",
+      "reviewedAt": "2026-08-13",
+      "confidence": "verified"
+    }
+  },
+  "gameUserSettings:ServerSettings:RCONPort": {
+    "owner": "serverProfile",
+    "absencePolicy": "forbidden",
+    "enforcement": "blocking",
+    "legacyReason": "profileSync",
+    "provenance": {
+      "source": "yark-profile-sync",
+      "reviewedAt": "2026-08-13",
+      "confidence": "verified"
+    }
+  },
+  "gameUserSettings:ServerSettings:ServerAdminPassword": {
+    "owner": "serverProfile",
+    "absencePolicy": "mapsToProfileNull",
+    "enforcement": "blocking",
+    "legacyReason": "profileSync",
+    "provenance": {
+      "source": "yark-profile-sync",
+      "reviewedAt": "2026-08-13",
+      "confidence": "verified"
+    }
+  },
+  "gameUserSettings:ServerSettings:ServerPassword": {
+    "owner": "serverProfile",
+    "absencePolicy": "mapsToProfileNull",
+    "enforcement": "blocking",
+    "legacyReason": "profileSync",
+    "provenance": {
+      "source": "yark-profile-sync",
+      "reviewedAt": "2026-08-13",
+      "confidence": "verified"
+    }
+  },
+  "gameUserSettings:SessionSettings:SessionName": {
+    "owner": "serverProfile",
+    "absencePolicy": "forbidden",
+    "enforcement": "blocking",
+    "legacyReason": "profileSync",
+    "provenance": {
+      "source": "yark-profile-sync",
+      "reviewedAt": "2026-08-13",
+      "confidence": "verified"
+    }
+  },
+  "gameUserSettings:SessionSettings:Port": {
+    "owner": "serverProfile",
+    "absencePolicy": "forbidden",
+    "enforcement": "blocking",
+    "legacyReason": "profileSync",
+    "provenance": {
+      "source": "yark-profile-sync",
+      "reviewedAt": "2026-08-13",
+      "confidence": "verified"
+    }
+  },
+  "gameUserSettings:SessionSettings:QueryPort": {
+    "owner": "serverProfile",
+    "absencePolicy": "forbidden",
+    "enforcement": "blocking",
+    "legacyReason": "profileSync",
+    "provenance": {
+      "source": "yark-profile-sync",
+      "reviewedAt": "2026-08-13",
+      "confidence": "verified"
+    }
+  },
+  "gameUserSettings:ServerSettings:ActiveMods": {
+    "owner": "system",
+    "absencePolicy": "allowed",
+    "enforcement": "warning",
+    "legacyReason": "aseLegacy",
+    "provenance": {
+      "source": "yark-ase-legacy",
+      "reviewedAt": "2026-08-13",
+      "confidence": "verified"
+    }
+  },
+  "gameUserSettings:ServerSettings:ActiveMapMod": {
+    "owner": "system",
+    "absencePolicy": "allowed",
+    "enforcement": "warning",
+    "legacyReason": "aseLegacy",
+    "provenance": {
+      "source": "yark-ase-legacy",
+      "reviewedAt": "2026-08-13",
+      "confidence": "verified"
+    }
+  },
+  "gameUserSettings:ServerSettings:ActiveTotalConversion": {
+    "owner": "system",
+    "absencePolicy": "allowed",
+    "enforcement": "warning",
+    "legacyReason": "aseLegacy",
+    "provenance": {
+      "source": "yark-ase-legacy",
+      "reviewedAt": "2026-08-13",
+      "confidence": "verified"
+    }
+  }
+}

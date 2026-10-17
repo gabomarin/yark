@@ -242,7 +242,7 @@ silent outside Settings status text.
   Backups page. Defaults and normalize rules: [backups.md](backups.md).
 - **Quit policy (#59)** — always Stop / Cancel when quitting with active
   servers; no Settings Ask/Stop preference.
-- **INI setting meta** (`src/shared/ini/ini-setting-meta.json`) — descriptions / value types / inferred editor inputs from `defaults/*.ini` (`npm run catalog:ini-meta`); unrelated to this Settings page.
+- **INI setting meta** (`src/shared/ini/ini-setting-meta.json`) — descriptions / value types / inferred editor inputs / ownership from `defaults/*.ini` plus ownership seed (`npm run catalog:ini-meta`); see [ini-metadata.md](ini-metadata.md). Unrelated to this Settings page.
 
 ## Common pitfalls
 

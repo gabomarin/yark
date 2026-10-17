@@ -1,5 +1,6 @@
 /**
- * Build src/shared/ini/ini-setting-meta.json from defaults/*.ini only.
+ * Build src/shared/ini/ini-setting-meta.json from defaults/*.ini,
+ * input overrides, and ownership seed annotations.
  *
  * Usage: node scripts/build-ini-setting-meta.cjs
  */
@@ -10,7 +11,28 @@ const ROOT = path.resolve(__dirname, "..");
 const GUS_PATH = path.join(ROOT, "src/shared/defaults/GameUserSettings.ini");
 const GAME_PATH = path.join(ROOT, "src/shared/defaults/Game.ini");
 const OVERRIDES_PATH = path.join(ROOT, "src/shared/ini/ini-setting-input-overrides.json");
+const OWNERSHIP_SEED_PATH = path.join(ROOT, "src/shared/ini/ini-setting-ownership-seed.json");
+const ENUMS_PATH = path.join(ROOT, "src/shared/ini/ini-setting-meta-enums.json");
 const OUT_PATH = path.join(ROOT, "src/shared/ini/ini-setting-meta.json");
+
+const META_ENUMS = JSON.parse(fs.readFileSync(ENUMS_PATH, "utf8"));
+const OWNERS = new Set(META_ENUMS.owners);
+const ABSENCE_POLICIES = new Set(META_ENUMS.absencePolicies);
+const ENFORCEMENTS = new Set(META_ENUMS.enforcements);
+const CONFIDENCES = new Set(META_ENUMS.provenanceConfidences);
+const APPLICABILITY_GAMES = new Set(META_ENUMS.applicabilityGames);
+
+const DEFAULT_OWNERSHIP = {
+  owner: "iniVisual",
+  absencePolicy: "allowed",
+  enforcement: "advisory",
+  applicability: { game: "asa" },
+  provenance: {
+    source: "defaults-catalog",
+    reviewedAt: null,
+    confidence: "inferred",
+  },
+};
 
 function clean(s) {
   return String(s || "")
@@ -231,9 +253,9 @@ function inferInput(setting, typeClass) {
   };
 }
 
-function loadOverrides() {
-  if (!fs.existsSync(OVERRIDES_PATH)) return {};
-  const raw = JSON.parse(fs.readFileSync(OVERRIDES_PATH, "utf8"));
+function loadJsonObject(filePath) {
+  if (!fs.existsSync(filePath)) return {};
+  const raw = JSON.parse(fs.readFileSync(filePath, "utf8"));
   const out = {};
   for (const [key, value] of Object.entries(raw || {})) {
     if (key.startsWith("$")) continue;
@@ -242,9 +264,133 @@ function loadOverrides() {
   return out;
 }
 
+function loadOverrides() {
+  return loadJsonObject(OVERRIDES_PATH);
+}
+
+function assertEnum(value, allowed, label, id) {
+  if (!allowed.has(value)) {
+    throw new Error(`Invalid ${label} "${value}" for ${id}`);
+  }
+}
+
+function isPlainObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function assertApplicability(applicability, id) {
+  if (!isPlainObject(applicability)) {
+    throw new Error(`Invalid applicability for ${id}`);
+  }
+  assertEnum(applicability.game, APPLICABILITY_GAMES, "applicability.game", id);
+  if (applicability.modIds !== undefined) {
+    if (!Array.isArray(applicability.modIds) || !applicability.modIds.every((m) => typeof m === "string")) {
+      throw new Error(`Invalid applicability.modIds for ${id}`);
+    }
+  }
+}
+
+function assertProvenance(provenance, id) {
+  if (!isPlainObject(provenance)) {
+    throw new Error(`Missing provenance for ${id}`);
+  }
+  assertEnum(provenance.confidence, CONFIDENCES, "provenance.confidence", id);
+  if (typeof provenance.source !== "string" || !provenance.source.trim()) {
+    throw new Error(`Missing provenance.source for ${id}`);
+  }
+  if (provenance.reviewedAt != null && typeof provenance.reviewedAt !== "string") {
+    throw new Error(`Invalid provenance.reviewedAt for ${id}`);
+  }
+  if (provenance.confidence === "verified" && !provenance.reviewedAt) {
+    throw new Error(`verified provenance requires reviewedAt for ${id}`);
+  }
+}
+
+function loadOwnershipSeed() {
+  if (!fs.existsSync(OWNERSHIP_SEED_PATH)) {
+    return {};
+  }
+  const raw = JSON.parse(fs.readFileSync(OWNERSHIP_SEED_PATH, "utf8"));
+  const seed = {};
+  for (const [id, entry] of Object.entries(raw || {})) {
+    if (id.startsWith("$")) continue;
+    if (!isPlainObject(entry)) {
+      throw new Error(`Ownership seed entry must be a non-null object: ${id}`);
+    }
+    assertEnum(entry.owner, OWNERS, "owner", id);
+    assertEnum(entry.absencePolicy, ABSENCE_POLICIES, "absencePolicy", id);
+    assertEnum(entry.enforcement, ENFORCEMENTS, "enforcement", id);
+    assertProvenance(entry.provenance, id);
+    const applicability = entry.applicability ?? { game: "asa" };
+    assertApplicability(applicability, id);
+    seed[id] = {
+      ...entry,
+      applicability,
+    };
+  }
+  return seed;
+}
+
+function resolveOwnership(id, seed) {
+  const override = seed[id];
+  if (!override) {
+    return { ...DEFAULT_OWNERSHIP, provenance: { ...DEFAULT_OWNERSHIP.provenance } };
+  }
+  const applicability = override.applicability ?? { game: "asa" };
+  assertApplicability(applicability, id);
+  assertProvenance(override.provenance, id);
+  return {
+    owner: override.owner,
+    absencePolicy: override.absencePolicy,
+    enforcement: override.enforcement,
+    applicability: {
+      game: applicability.game,
+      ...(Array.isArray(applicability.modIds) ? { modIds: applicability.modIds } : {}),
+    },
+    provenance: {
+      source: override.provenance.source,
+      reviewedAt: override.provenance.reviewedAt ?? null,
+      confidence: override.provenance.confidence,
+    },
+  };
+}
+
+/**
+ * Profile/system-owned keys may be absent from defaults (N/A placeholders or
+ * ASE-legacy keys). Synthesize minimal catalog rows so ownership stays in the
+ * single meta catalog.
+ */
+function synthesizeOwnedEntry(id, seedEntry) {
+  const parts = id.split(":");
+  if (parts.length < 3) {
+    throw new Error(`Invalid ownership seed id: ${id}`);
+  }
+  const file = parts[0];
+  const key = parts[parts.length - 1];
+  const section = parts.slice(1, -1).join(":");
+  if (file !== "gameUserSettings" && file !== "game") {
+    throw new Error(`Unsupported file in ownership seed id: ${id}`);
+  }
+  const ownership = resolveOwnership(id, { [id]: seedEntry });
+  return {
+    id,
+    file,
+    section,
+    key,
+    defaultValue: "",
+    valueType: "string",
+    description:
+      seedEntry.description || "YARK-owned setting; managed outside the visual INI catalog (Server Settings / Mods).",
+    input: { type: "text" },
+    ...ownership,
+  };
+}
+
 function main() {
   const overrides = loadOverrides();
+  const ownershipSeed = loadOwnershipSeed();
   const parsed = [...parseIniFile(GUS_PATH, "gameUserSettings"), ...parseIniFile(GAME_PATH, "game")];
+  const catalogIds = new Set();
 
   const settings = [];
   const report = {
@@ -252,6 +398,8 @@ function main() {
     withInput: 0,
     rangeFromComments: 0,
     suggestCurate: [],
+    ownedOverrides: 0,
+    synthesizedOwned: 0,
   };
 
   for (const row of parsed) {
@@ -263,10 +411,16 @@ function main() {
     }
 
     const id = settingId(row.file, row.section, row.key);
+    catalogIds.add(id);
     const typeClass = classifyValueType(row.valueType, defaultValue);
     let input = inferInput({ ...row, defaultValue }, typeClass);
     if (overrides[id]) {
       input = overrides[id];
+    }
+
+    const ownership = resolveOwnership(id, ownershipSeed);
+    if (ownershipSeed[id]) {
+      report.ownedOverrides += 1;
     }
 
     settings.push({
@@ -278,6 +432,7 @@ function main() {
       valueType: row.valueType || null,
       description: row.description || "",
       input,
+      ...ownership,
     });
     report.total += 1;
     report.withInput += 1;
@@ -285,6 +440,16 @@ function main() {
     if (input.type === "number" && isMultiplierLike(row.key, row.description, row.valueType)) {
       report.suggestCurate.push(id);
     }
+  }
+
+  for (const [id, seedEntry] of Object.entries(ownershipSeed)) {
+    if (catalogIds.has(id)) continue;
+    settings.push(synthesizeOwnedEntry(id, seedEntry));
+    catalogIds.add(id);
+    report.synthesizedOwned += 1;
+    report.total += 1;
+    report.withInput += 1;
+    report.ownedOverrides += 1;
   }
 
   settings.sort((a, b) => {
@@ -309,6 +474,8 @@ function main() {
         gus: settings.filter((s) => s.file === "gameUserSettings").length,
         game: settings.filter((s) => s.file === "game").length,
         rangeInputs: report.rangeFromComments,
+        ownershipOverrides: report.ownedOverrides,
+        synthesizedOwned: report.synthesizedOwned,
         suggestCurateMultipliers: report.suggestCurate.length,
       },
       null,

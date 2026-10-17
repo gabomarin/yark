@@ -559,6 +559,9 @@ on the numbers.
 Paths under `{installDir}/ShooterGame/Saved/Config/WindowsServer/`:
 `GameUserSettings.ini`, `Game.ini`.
 
+Ownership, absence policy, enforcement, and visual-vs-raw boundaries for the
+setting catalog: [ini-metadata.md](ini-metadata.md) (PINI-016 / #659).
+
 - Read seeds missing files from `src/shared/defaults` and always returns
   `sanitizeServerIniPayload` (disk is not rewritten on read). When a durable
   **pending** draft exists (`pending_server_ini`), read returns that payload with

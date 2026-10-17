@@ -1,0 +1,8 @@
+{
+  "$comment": "Shared enum vocabulary for catalog generation (build-ini-setting-meta.cjs) and runtime diagnostics (ini-setting-decisions.ts).",
+  "owners": ["serverProfile", "iniVisual", "externalManual", "system"],
+  "absencePolicies": ["allowed", "forbidden", "mapsToProfileNull"],
+  "enforcements": ["blocking", "warning", "advisory"],
+  "provenanceConfidences": ["verified", "inferred", "unknown"],
+  "applicabilityGames": ["asa"]
+}
