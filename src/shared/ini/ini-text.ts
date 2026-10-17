@@ -375,10 +375,13 @@ export function setIniTextValue(text: string, section: string, key: string, valu
 }
 
 /**
- * Removes one key assignment from a section (first occurrence by default).
+ * Removes one **live** key assignment from a section (first occurrence by default).
+ * Comment lines (`#` / `;`) are never counted or removed — same rules as
+ * {@link parseIniTextRows} / semantic Unset (#667).
  * Preserves surrounding comments and blank lines when possible.
  */
 export function removeIniTextValue(text: string, section: string, key: string, occurrence = 0): string {
+  const newline = text.includes("\r\n") ? "\r\n" : "\n";
   const lines = text.split(/\r?\n/);
   const result: string[] = [];
   let currentSection = INI_ROOT_SECTION;
@@ -392,6 +395,12 @@ export function removeIniTextValue(text: string, section: string, key: string, o
     const sectionMatch = /^\[(.+)\]$/.exec(trimmed);
     if (sectionMatch !== null) {
       currentSection = sectionMatch[1] ?? INI_ROOT_SECTION;
+      result.push(line);
+      continue;
+    }
+
+    // Skip comments so occurrence indexes match parseIniTextRows / getIniTextValueAt.
+    if (trimmed.startsWith(";") || trimmed.startsWith("#")) {
       result.push(line);
       continue;
     }
@@ -411,9 +420,9 @@ export function removeIniTextValue(text: string, section: string, key: string, o
     result.push(line);
   }
 
-  let out = result.join("\n");
-  if (out.length > 0 && !out.endsWith("\n")) {
-    out += "\n";
+  let out = result.join(newline);
+  if (out.length > 0 && !out.endsWith(newline)) {
+    out += newline;
   }
   return out;
 }

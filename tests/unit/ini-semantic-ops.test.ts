@@ -235,4 +235,106 @@ CustomFlag=a
       },
     ]);
   });
+
+  it("targets baseline occurrence when removing an earlier duplicate and editing a later one", () => {
+    const baseline = gus(`[ServerSettings]
+CustomFlag=a
+CustomFlag=b
+`);
+    const draft = gus(`[ServerSettings]
+CustomFlag=b2
+`);
+    const ops = buildIniSemanticOps(baseline, draft);
+    expect(ops).toEqual([
+      {
+        kind: "set",
+        fileKey: "gameUserSettings",
+        section: "ServerSettings",
+        key: "CustomFlag",
+        occurrence: 1,
+        expectedPreviousValue: "b",
+        nextValue: "b2",
+      },
+      {
+        kind: "unset",
+        fileKey: "gameUserSettings",
+        section: "ServerSettings",
+        key: "CustomFlag",
+        occurrence: 0,
+        expectedPreviousValue: "a",
+      },
+    ]);
+    const next = applyIniSemanticOps(baseline, ops);
+    expect(getIniTextValueAt(next.gameUserSettings, "ServerSettings", "CustomFlag", 0)).toBe("b2");
+    expect(getIniTextValueAt(next.gameUserSettings, "ServerSettings", "CustomFlag", 1)).toBeNull();
+  });
+});
+
+describe("applyIniSemanticOps ordering", () => {
+  it("applies Set before lower-index Unset so occurrence indexes stay valid", () => {
+    const disk = gus(`[ServerSettings]
+CustomFlag=a
+CustomFlag=b
+`);
+    const next = applyIniSemanticOps(disk, [
+      {
+        kind: "unset",
+        fileKey: "gameUserSettings",
+        section: "ServerSettings",
+        key: "CustomFlag",
+        occurrence: 0,
+        expectedPreviousValue: "a",
+      },
+      {
+        kind: "set",
+        fileKey: "gameUserSettings",
+        section: "ServerSettings",
+        key: "CustomFlag",
+        occurrence: 1,
+        expectedPreviousValue: "b",
+        nextValue: "b2",
+      },
+    ]);
+    expect(getIniTextValueAt(next.gameUserSettings, "ServerSettings", "CustomFlag", 0)).toBe("b2");
+    expect(getIniTextValueAt(next.gameUserSettings, "ServerSettings", "CustomFlag", 1)).toBeNull();
+  });
+
+  it("Unsets the live assignment when a commented default precedes it", () => {
+    const disk = gus(`[ServerSettings]
+#CustomFlag=default
+CustomFlag=live
+`);
+    const next = applyIniSemanticOps(disk, [
+      {
+        kind: "unset",
+        fileKey: "gameUserSettings",
+        section: "ServerSettings",
+        key: "CustomFlag",
+        occurrence: 0,
+        expectedPreviousValue: "live",
+      },
+    ]);
+    expect(next.gameUserSettings).toContain("#CustomFlag=default");
+    expect(getIniTextValueAt(next.gameUserSettings, "ServerSettings", "CustomFlag", 0)).toBeNull();
+  });
+
+  it("preserves CRLF line endings when appending a duplicate", () => {
+    const disk: ServerIniPayload = {
+      gameUserSettings: "[ServerSettings]\r\nCustomFlag=a\r\n",
+      game: "",
+    };
+    const next = applyIniSemanticOps(disk, [
+      {
+        kind: "set",
+        fileKey: "gameUserSettings",
+        section: "ServerSettings",
+        key: "CustomFlag",
+        occurrence: 1,
+        expectedPreviousValue: null,
+        nextValue: "b",
+      },
+    ]);
+    expect(next.gameUserSettings).toContain("\r\n");
+    expect(next.gameUserSettings).toContain("CustomFlag=a\r\nCustomFlag=b\r\n");
+  });
 });

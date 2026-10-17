@@ -168,20 +168,21 @@ function assertExpectedMatches(op: IniSemanticOp, actual: string | null): void {
 
 /** Append `key=value` inside an existing section (new trailing duplicate). */
 function appendIniTextValue(text: string, section: string, key: string, value: string): string {
+  const newline = text.includes("\r\n") ? "\r\n" : "\n";
+  const hadTrailingNewline = text.endsWith("\n");
   const lines = text.split(/\r?\n/);
+  if (hadTrailingNewline && lines[lines.length - 1] === "") {
+    lines.pop();
+  }
   const sectionLower = section.toLowerCase();
   let currentSection = "(root)";
   let lastKeyLineInSection = -1;
   let sectionHeaderIndex = -1;
-  let sectionEndIndex = -1;
 
   for (let index = 0; index < lines.length; index += 1) {
     const trimmed = (lines[index] ?? "").trim();
     const sectionMatch = /^\[(.+)\]$/.exec(trimmed);
     if (sectionMatch !== null) {
-      if (currentSection.toLowerCase() === sectionLower && sectionEndIndex < 0) {
-        sectionEndIndex = index;
-      }
       currentSection = (sectionMatch[1] ?? "(root)").trim();
       if (currentSection.toLowerCase() === sectionLower) {
         sectionHeaderIndex = index;
@@ -196,9 +197,6 @@ function appendIniTextValue(text: string, section: string, key: string, value: s
       lastKeyLineInSection = index;
     }
   }
-  if (currentSection.toLowerCase() === sectionLower && sectionEndIndex < 0) {
-    sectionEndIndex = lines.length;
-  }
 
   if (sectionHeaderIndex < 0) {
     return setIniTextValue(text, section, key, value, 0);
@@ -207,9 +205,9 @@ function appendIniTextValue(text: string, section: string, key: string, value: s
   const insertAt = lastKeyLineInSection >= sectionHeaderIndex ? lastKeyLineInSection + 1 : sectionHeaderIndex + 1;
   const next = [...lines];
   next.splice(insertAt, 0, `${key}=${value}`);
-  let out = next.join("\n");
-  if (!out.endsWith("\n")) {
-    out += "\n";
+  let out = next.join(newline);
+  if (hadTrailingNewline) {
+    out += newline;
   }
   return out;
 }
@@ -230,8 +228,8 @@ function applyOneOpToText(text: string, op: IniSemanticOp): string {
 }
 
 /**
- * Sort so Unsets remove high occurrences first (stable indices), then Sets.
- * Inserts (expectedPrevious null) run last within a key group.
+ * Sort so Sets run before Unsets (validated against pre-patch indexes).
+ * Within Sets: updates first, then inserts. Within Unsets: high occurrence first.
  */
 function sortOpsForApply(ops: readonly IniSemanticOp[]): IniSemanticOp[] {
   return [...ops].sort((a, b) => {
@@ -240,7 +238,8 @@ function sortOpsForApply(ops: readonly IniSemanticOp[]): IniSemanticOp[] {
     const groupCmp = groupKey(a.section, a.key).localeCompare(groupKey(b.section, b.key));
     if (groupCmp !== 0) return groupCmp;
     if (a.kind !== b.kind) {
-      return a.kind === "unset" ? -1 : 1;
+      // Sets before Unsets so lower-index Unsets cannot shift Set targets.
+      return a.kind === "set" ? -1 : 1;
     }
     if (a.kind === "unset" && b.kind === "unset") {
       return b.occurrence - a.occurrence;
@@ -281,17 +280,25 @@ export function applyIniSemanticOps(payload: ServerIniPayload, ops: readonly Ini
   return next;
 }
 
-/** Align draft duplicates to baseline (equal-first, then order). */
+type IniDuplicateMatch = { baselineOccurrence: number; value: string };
+
+/**
+ * Align draft duplicates to baseline (equal-first, then equal-value, then order).
+ * Returns baseline occurrence indexes so Sets target the pre-patch document.
+ */
 function alignIniDuplicateValuesForOps(
   draftValues: readonly string[],
   baselineValues: readonly string[],
-): { matched: (string | null)[]; unusedBaseline: Array<{ occurrence: number; value: string }> } {
-  const matched: (string | null)[] = Array.from({ length: draftValues.length }, () => null);
+): {
+  matched: Array<IniDuplicateMatch | null>;
+  unusedBaseline: Array<{ occurrence: number; value: string }>;
+} {
+  const matched: Array<IniDuplicateMatch | null> = Array.from({ length: draftValues.length }, () => null);
   const usedBaseline = new Set<number>();
 
   for (let i = 0; i < draftValues.length; i++) {
     if (i < baselineValues.length && draftValues[i] === baselineValues[i]) {
-      matched[i] = baselineValues[i] ?? null;
+      matched[i] = { baselineOccurrence: i, value: baselineValues[i] ?? "" };
       usedBaseline.add(i);
     }
   }
@@ -300,7 +307,7 @@ function alignIniDuplicateValuesForOps(
     if (matched[i] !== null) continue;
     const j = baselineValues.findIndex((value, idx) => !usedBaseline.has(idx) && value === draftValues[i]);
     if (j >= 0) {
-      matched[i] = baselineValues[j] ?? null;
+      matched[i] = { baselineOccurrence: j, value: baselineValues[j] ?? "" };
       usedBaseline.add(j);
     }
   }
@@ -308,14 +315,19 @@ function alignIniDuplicateValuesForOps(
   const remainingBaseline = baselineValues
     .map((value, idx) => ({ value, idx }))
     .filter((entry) => !usedBaseline.has(entry.idx));
-  let remainingCursor = 0;
+  const unmatchedDraftIndexes: number[] = [];
   for (let i = 0; i < draftValues.length; i++) {
-    if (matched[i] !== null) continue;
-    if (remainingCursor < remainingBaseline.length) {
-      matched[i] = remainingBaseline[remainingCursor]?.value ?? null;
-      usedBaseline.add(remainingBaseline[remainingCursor]?.idx ?? -1);
-      remainingCursor += 1;
-    }
+    if (matched[i] === null) unmatchedDraftIndexes.push(i);
+  }
+  // Prefer later baseline slots when the draft shrank (operators usually delete
+  // earlier duplicates and keep/edit the trailing ones).
+  const pairedBaseline = remainingBaseline.slice(-unmatchedDraftIndexes.length);
+  for (let k = 0; k < unmatchedDraftIndexes.length; k++) {
+    const draftIndex = unmatchedDraftIndexes[k];
+    const entry = pairedBaseline[k];
+    if (draftIndex === undefined || entry === undefined) continue;
+    matched[draftIndex] = { baselineOccurrence: entry.idx, value: entry.value };
+    usedBaseline.add(entry.idx);
   }
 
   const unusedBaseline = baselineValues
@@ -367,18 +379,37 @@ export function buildIniSemanticOps(baseline: ServerIniPayload, draft: ServerIni
         baselineEntries.map((entry) => entry.value),
       );
 
-      for (let occurrence = 0; occurrence < draftEntries.length; occurrence++) {
-        const entry = draftEntries[occurrence];
+      let insertOffset = 0;
+      for (let draftOccurrence = 0; draftOccurrence < draftEntries.length; draftOccurrence++) {
+        const entry = draftEntries[draftOccurrence];
         if (entry === undefined) continue;
-        const expected = matched[occurrence] ?? null;
-        if (expected === entry.value) continue;
+        const match = matched[draftOccurrence] ?? null;
+        if (match !== null && match.value === entry.value) continue;
+
+        if (match === null) {
+          // Insert: address the first absent occurrence after current baseline count.
+          const occurrence = baselineEntries.length + insertOffset;
+          insertOffset += 1;
+          ops.push({
+            kind: "set",
+            fileKey,
+            section: entry.section,
+            key: entry.key,
+            occurrence,
+            expectedPreviousValue: null,
+            nextValue: entry.value,
+          });
+          continue;
+        }
+
         ops.push({
           kind: "set",
           fileKey,
           section: entry.section,
           key: entry.key,
-          occurrence,
-          expectedPreviousValue: expected,
+          // Target the baseline/disk occurrence, not the draft row index (#667 OCR).
+          occurrence: match.baselineOccurrence,
+          expectedPreviousValue: match.value,
           nextValue: entry.value,
         });
       }

@@ -7,6 +7,7 @@ import { IniStaleDocumentError, iniFingerprintsMatch } from "@shared/ini/ini-fin
 import { applyIniSemanticOps, type IniSemanticOp } from "@shared/ini/ini-semantic-ops";
 import { sanitizeServerIniPayload } from "@shared/ini/ini-text";
 import type { ServerIniChangedPush } from "@shared/ipc";
+import { MAX_INI_FILE_CHARS } from "@shared/ipc/primitives";
 import type {
   IniFileFingerprints,
   IniPreview,
@@ -125,6 +126,9 @@ export class IniService extends EventEmitter {
         const current = await this.readServerIni(serverId);
         const patched = applyIniSemanticOps(current.payload, ops);
         const sanitized = sanitizeServerIniPayload(patched);
+        if (sanitized.gameUserSettings.length > MAX_INI_FILE_CHARS || sanitized.game.length > MAX_INI_FILE_CHARS) {
+          throw new Error(`INI semantic save exceeds ${MAX_INI_FILE_CHARS} characters per file`);
+        }
         return this.commitSanitizedPayload(serverId, current, sanitized);
       }),
     );

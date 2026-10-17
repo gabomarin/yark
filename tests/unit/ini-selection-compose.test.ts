@@ -18,6 +18,13 @@ describe("removeIniTextValue", () => {
     expect(next).not.toContain("XPMultiplier");
     expect(next).toContain("MaxPlayers=40");
   });
+
+  it("skips commented defaults when counting occurrences (#667)", () => {
+    const text = "[ServerSettings]\n#XPMultiplier=0\nXPMultiplier=1\n";
+    const next = removeIniTextValue(text, "ServerSettings", "XPMultiplier", 0);
+    expect(next).toContain("#XPMultiplier=0");
+    expect(next).not.toContain("XPMultiplier=1");
+  });
 });
 
 describe("composeIniFileFromSelection", () => {
