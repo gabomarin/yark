@@ -583,6 +583,11 @@ setting catalog: [ini-metadata.md](ini-metadata.md) (PINI-016 / #659).
     Emits `push:server-ini-changed` so an open Configuration editor reloads.
   - Trusted YARK writers (`syncProfileOwnedKeys`, flush, config transfer, cluster
     template apply) do not use the editor baseline API.
+  - Fingerprints hash the sanitized editor payload with profile password keys
+    redacted (those keys are always reapplied from the Server profile). While a
+    **pending** draft is active, the baseline is the draft the operator sees —
+    live-disk edits made outside YARK are still overwritten when that draft
+    flushes after stop (#530).
 - **Flush** after the process has exited (plain Stop, force-kill paths) and
   again as a start-guard before `syncProfileSettingsToIni` (covers crash /
   quit without Start). Restart order: Stop → flush → pre_restart backup →

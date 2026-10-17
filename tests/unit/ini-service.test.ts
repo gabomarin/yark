@@ -301,6 +301,28 @@ describe("IniService fingerprints (#665)", () => {
     expect(second.fingerprints).toEqual(first.fingerprints);
   });
 
+  it("ignores profile password values when fingerprinting GUS", async () => {
+    const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
+    tmpDirs.push(installDir);
+    prepareIniFiles(installDir);
+    writeFileSync(
+      gameUserSettingsPath(installDir),
+      "[ServerSettings]\nRCONPort=27020\nServerAdminPassword=secret-a\nServerPassword=join-a\n",
+      "utf8",
+    );
+
+    const { service, profile } = makeService(installDir);
+    const first = await service.readServerIni(profile.id);
+    writeFileSync(
+      gameUserSettingsPath(installDir),
+      "[ServerSettings]\nRCONPort=27020\nServerAdminPassword=secret-b\nServerPassword=join-b\n",
+      "utf8",
+    );
+    const second = await service.readServerIni(profile.id);
+
+    expect(second.fingerprints).toEqual(first.fingerprints);
+  });
+
   it("rejects save when disk changed after the editor baseline", async () => {
     const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
     tmpDirs.push(installDir);

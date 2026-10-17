@@ -18,6 +18,61 @@ interface Props {
   pendingQueued: boolean;
 }
 
+function ReloadFromDiskButton(props: { busy: boolean; onClick?: () => void }): ReactElement | null {
+  if (props.onClick === undefined) {
+    return null;
+  }
+  return (
+    <Group gap="xs">
+      <Button variant="default" size="compact-sm" loading={props.busy} onClick={props.onClick}>
+        Reload from disk
+      </Button>
+    </Group>
+  );
+}
+
+function SaveErrorAlert(props: {
+  error: string;
+  staleDocument: boolean;
+  reloadBusy: boolean;
+  onDismiss: () => void;
+  onReload?: () => void;
+}): ReactElement {
+  if (!props.staleDocument) {
+    return (
+      <AppAlert color="red" mb="sm" onClose={props.onDismiss} withCloseButton>
+        {props.error}
+      </AppAlert>
+    );
+  }
+  return (
+    <AppAlert color="red" mb="sm" title="INI changed outside YARK" onClose={props.onDismiss} withCloseButton>
+      <Stack gap="xs">
+        <Text size="sm">{props.error}</Text>
+        <ReloadFromDiskButton busy={props.reloadBusy} onClick={props.onReload} />
+      </Stack>
+    </AppAlert>
+  );
+}
+
+function ExternalChangeAlert(props: {
+  reloadBusy: boolean;
+  onDismiss?: () => void;
+  onReload?: () => void;
+}): ReactElement {
+  return (
+    <AppAlert color="attention" mb="sm" title="INI changed outside YARK" onClose={props.onDismiss} withCloseButton>
+      <Stack gap="xs">
+        <Text size="sm">
+          The files on disk (or the queued draft) changed since this editor loaded. Reload to see those edits, or keep
+          editing — Save will still refuse to overwrite them until you reload.
+        </Text>
+        <ReloadFromDiskButton busy={props.reloadBusy} onClick={props.onReload} />
+      </Stack>
+    </AppAlert>
+  );
+}
+
 export function ConfigurationEditorStatusAlerts(props: Props): ReactElement | null {
   const {
     error,
@@ -39,51 +94,16 @@ export function ConfigurationEditorStatusAlerts(props: Props): ReactElement | nu
   return (
     <>
       {error !== null && (
-        <AppAlert
-          color="red"
-          mb="sm"
-          title={staleDocument ? "INI changed outside YARK" : undefined}
-          onClose={onDismissError}
-          withCloseButton
-        >
-          {staleDocument ? (
-            <Stack gap="xs">
-              <Text size="sm">{error}</Text>
-              {onReloadStale !== undefined && (
-                <Group gap="xs">
-                  <Button variant="default" size="compact-sm" loading={reloadBusy} onClick={onReloadStale}>
-                    Reload from disk
-                  </Button>
-                </Group>
-              )}
-            </Stack>
-          ) : (
-            error
-          )}
-        </AppAlert>
+        <SaveErrorAlert
+          error={error}
+          staleDocument={staleDocument}
+          reloadBusy={reloadBusy}
+          onDismiss={onDismissError}
+          onReload={onReloadStale}
+        />
       )}
       {externalChangeDetected && error === null && (
-        <AppAlert
-          color="attention"
-          mb="sm"
-          title="INI changed outside YARK"
-          onClose={onDismissExternalChange}
-          withCloseButton
-        >
-          <Stack gap="xs">
-            <Text size="sm">
-              The files on disk (or the queued draft) changed since this editor loaded. Reload to see those edits, or
-              keep editing — Save will still refuse to overwrite them until you reload.
-            </Text>
-            {onReloadStale !== undefined && (
-              <Group gap="xs">
-                <Button variant="default" size="compact-sm" loading={reloadBusy} onClick={onReloadStale}>
-                  Reload from disk
-                </Button>
-              </Group>
-            )}
-          </Stack>
-        </AppAlert>
+        <ExternalChangeAlert reloadBusy={reloadBusy} onDismiss={onDismissExternalChange} onReload={onReloadStale} />
       )}
       {pendingQueued && (
         <AppAlert color="attention" mb="sm" title="INI queued">

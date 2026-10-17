@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { modals } from "@mantine/modals";
-import { INI_STALE_DOCUMENT_CODE } from "@shared/ini/ini-fingerprints";
+import { INI_STALE_DOCUMENT_CODE, iniFingerprintsMatch } from "@shared/ini/ini-fingerprints";
 import type { IniFileKey, IniPreview, ServerIniPayload, ServerIniSnapshot } from "@shared/types";
 import { showOperatorToast } from "@ui/operatorToast";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
@@ -106,8 +106,18 @@ export function useConfigurationEditor(options: {
     const sanitized = sanitizeServerIniPayload(data.payload);
     const keepDirty = options?.preserveDirty === true && dirtyRef.current && payloadRef.current !== null;
     if (keepDirty && payloadRef.current !== null) {
-      // Keep in-editor edits; refresh pending chrome from the push source.
-      setSnapshot({ ...data, payload: payloadRef.current });
+      // Keep in-editor edits and the Save baseline fingerprints. Advancing
+      // fingerprints here would let Save overwrite the external change (#665).
+      const previous = snapshotRef.current;
+      const baselineFingerprints = previous?.fingerprints ?? data.fingerprints;
+      setSnapshot({
+        ...data,
+        payload: payloadRef.current,
+        fingerprints: baselineFingerprints,
+      });
+      if (!iniFingerprintsMatch(baselineFingerprints, data.fingerprints)) {
+        diskSync.setExternalChangeDetected(true);
+      }
       return;
     }
     setSnapshot({ ...data, payload: sanitized });
