@@ -17,47 +17,21 @@ import {
   type IniFilterId,
   type IniSettingReference,
 } from "../../iniModel";
-import { iniPayloadsDirty } from "./configurationEditorModel";
+import {
+  applyIniRowRevertToPayload,
+  buildIniRowMatchIndex,
+  countUnsavedIniRowsForFile,
+  iniPayloadsDirty,
+  isIniRowUnsaved,
+  lookupMatchedBaselineValue,
+} from "./configurationEditorModel";
+import type { ConfigurationEditorApi } from "./configurationEditorTypes";
 
 export function useConfigurationEditor(options: {
   serverId: string;
   onDirtyChange?: (dirty: boolean) => void;
   onRegisterSave?: (save: (() => Promise<boolean>) | null) => void;
-}): {
-  snapshot: ServerIniSnapshot | null;
-  payload: ServerIniPayload | null;
-  loading: boolean;
-  busy: boolean;
-  error: string | null;
-  setError: (error: string | null) => void;
-  preview: IniPreview | null;
-  search: string;
-  setSearch: (value: string) => void;
-  filter: IniFilterId;
-  setFilter: (value: IniFilterId) => void;
-  collapsedSections: Record<string, boolean>;
-  iniFile: IniFileKey;
-  setIniFile: (file: IniFileKey) => void;
-  iniMode: "visual" | "text";
-  setIniMode: (mode: "visual" | "text") => void;
-  dirty: boolean;
-  /** True when the editor baseline is a queued draft (#530). */
-  pendingQueued: boolean;
-  groupedRows: ReturnType<typeof groupSettingReferencesByUiCategory>;
-  categoryOptions: { value: string; label: string }[];
-  fileLabel: string;
-  filePath: string | null;
-  updateValue: (fileKey: IniFileKey, rowSection: string, key: string, value: string, occurrence?: number) => void;
-  resetChanges: () => void;
-  resetActiveFileToDefaults: () => void;
-  resetRowToDefault: (row: IniSettingReference) => void;
-  toggleSection: (sectionName: string) => void;
-  setSectionGroupsCollapsed: (category: string, collapsed: boolean) => void;
-  setAllSectionsCollapsed: (collapsed: boolean) => void;
-  saveIni: () => Promise<boolean>;
-  openExternal: () => Promise<void>;
-  publishPayloadChange: (nextPayload: ServerIniPayload) => void;
-} {
+}): ConfigurationEditorApi {
   const { serverId, onRegisterSave } = options;
   const [snapshot, setSnapshot] = useState<ServerIniSnapshot | null>(null);
   const [payload, setPayload] = useState<ServerIniPayload | null>(null);
@@ -169,19 +143,30 @@ export function useConfigurationEditor(options: {
     [activeFileKey, activeText],
   );
   const availableRows = useMemo(() => filterIniSettingReferences(rows, "", "all"), [rows]);
-  const categoryOptions = useMemo(
-    () => [
+  const matchIndex = useMemo(
+    () => buildIniRowMatchIndex(payload, baseline, activeFileKey),
+    [payload, baseline, activeFileKey],
+  );
+  const unsavedCounts = useMemo(
+    () => countUnsavedIniRowsForFile(payload, matchIndex, activeFileKey),
+    [payload, matchIndex, activeFileKey],
+  );
+  const categoryOptions = useMemo(() => {
+    const formatCount = (rowCount: number, unsavedInScope: number): string => {
+      if (unsavedInScope <= 0) return String(rowCount);
+      return `${rowCount} · ${unsavedInScope} unsaved`;
+    };
+    return [
       {
         value: "all",
-        label: `All settings (${availableRows.length})`,
+        label: `All settings (${formatCount(availableRows.length, unsavedCounts.file)})`,
       },
       ...groupSettingReferencesByUiCategory(availableRows).map((group) => ({
         value: group.category,
-        label: `${group.label} (${group.rows.length})`,
+        label: `${group.label} (${formatCount(group.rows.length, unsavedCounts.byCategory.get(group.category) ?? 0)})`,
       })),
-    ],
-    [availableRows],
-  );
+    ];
+  }, [availableRows, unsavedCounts]);
   const visibleRows = useMemo(() => filterIniSettingReferences(rows, search, filter), [rows, search, filter]);
   const groupedRows = useMemo(() => groupSettingReferencesByUiCategory(visibleRows), [visibleRows]);
 
@@ -244,6 +229,25 @@ export function useConfigurationEditor(options: {
       message: `${row.key} restored to default (pending save).`,
     });
   };
+
+  const revertRowToSaved = (row: IniSettingReference) => {
+    if (payload === null || matchIndex === null) return;
+    const { nextPayload, outcome } = applyIniRowRevertToPayload(payload, matchIndex, row);
+    setPayload(nextPayload);
+    publishDirty(nextPayload, baseline);
+    setPreview(null);
+    showOperatorToast({
+      title: "INI editor",
+      message:
+        outcome === "discarded" ? `${row.key} discarded (not in saved file).` : `${row.key} reverted to saved value.`,
+    });
+  };
+
+  const isRowUnsaved = (row: IniSettingReference): boolean => isIniRowUnsaved(row, matchIndex);
+  const savedValueForRow = (row: IniSettingReference): string | null =>
+    matchIndex === null
+      ? null
+      : lookupMatchedBaselineValue(matchIndex, row.fileKey, row.section, row.key, row.occurrence);
 
   const toggleSection = (sectionName: string) => {
     setCollapsedSections((prev) => ({
@@ -384,15 +388,19 @@ export function useConfigurationEditor(options: {
     iniMode,
     setIniMode,
     dirty,
+    unsavedRowCount: unsavedCounts.file,
     pendingQueued,
     groupedRows,
     categoryOptions,
     fileLabel,
     filePath,
+    isRowUnsaved,
+    savedValueForRow,
     updateValue,
     resetChanges,
     resetActiveFileToDefaults,
     resetRowToDefault,
+    revertRowToSaved,
     toggleSection,
     setSectionGroupsCollapsed,
     setAllSectionsCollapsed,

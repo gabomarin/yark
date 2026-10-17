@@ -20,6 +20,14 @@ import {
   type IniFilterId,
   type IniSettingReference,
 } from "@features/server-workspace/iniModel";
+import {
+  applyIniRowRevertToPayload,
+  buildIniRowMatchIndex,
+  countUnsavedIniRowsForFile,
+  iniRowIdentity,
+  isIniRowUnsaved,
+  lookupMatchedBaselineValue,
+} from "@features/server-workspace/components/ConfigurationEditor/configurationEditorModel";
 import { useMemo, useState } from "react";
 import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
 import { SearchField } from "@ui/SearchField/SearchField";
@@ -28,6 +36,7 @@ import classes from "./ClusterIniTemplateModal.module.css";
 
 interface Props {
   payload: ServerIniPayload;
+  baseline: ServerIniPayload | null;
   iniFile: IniFileKey;
   mode: "visual" | "raw";
   onPayloadChange: (next: ServerIniPayload) => void;
@@ -48,16 +57,27 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
   }, [activeText, props.iniFile]);
 
   const availableRows = useMemo(() => filterIniSettingReferences(rows, "", "all"), [rows]);
-  const categoryOptions = useMemo(
-    () => [
-      { value: "all", label: `All settings (${availableRows.length})` },
+  const matchIndex = useMemo(
+    () => buildIniRowMatchIndex(props.payload, props.baseline, props.iniFile),
+    [props.payload, props.baseline, props.iniFile],
+  );
+  const unsavedCounts = useMemo(
+    () => countUnsavedIniRowsForFile(props.payload, matchIndex, props.iniFile),
+    [props.payload, matchIndex, props.iniFile],
+  );
+  const categoryOptions = useMemo(() => {
+    const formatCount = (rowCount: number, unsavedInScope: number): string => {
+      if (unsavedInScope <= 0) return String(rowCount);
+      return `${rowCount} · ${unsavedInScope} unsaved`;
+    };
+    return [
+      { value: "all", label: `All settings (${formatCount(availableRows.length, unsavedCounts.file)})` },
       ...groupSettingReferencesByUiCategory(availableRows).map((group) => ({
         value: group.category,
-        label: `${group.label} (${group.rows.length})`,
+        label: `${group.label} (${formatCount(group.rows.length, unsavedCounts.byCategory.get(group.category) ?? 0)})`,
       })),
-    ],
-    [availableRows],
-  );
+    ];
+  }, [availableRows, unsavedCounts]);
   const activeFilter = categoryOptions.some((option) => option.value === filter) ? filter : "all";
   const visibleRows = useMemo(
     () => filterIniSettingReferences(rows, search, activeFilter),
@@ -73,6 +93,17 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
       withFileText(props.payload, props.iniFile, setIniValue(activeText, section, key, value, occurrence)),
     );
   };
+
+  const revertRowToSaved = (row: IniSettingReference): void => {
+    if (matchIndex === null) return;
+    const { nextPayload } = applyIniRowRevertToPayload(props.payload, matchIndex, row);
+    props.onPayloadChange(nextPayload);
+  };
+
+  const savedValueForRow = (row: IniSettingReference): string | null =>
+    matchIndex === null
+      ? null
+      : lookupMatchedBaselineValue(matchIndex, row.fileKey, row.section, row.key, row.occurrence);
 
   if (props.mode === "raw") {
     return (
@@ -240,9 +271,12 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                           {!sectionCollapsed &&
                             sectionGroup.rows.map((row) => (
                               <ClusterIniTemplateSettingRow
-                                key={`${row.section}-${row.key}-${row.occurrence}`}
+                                key={iniRowIdentity(row.fileKey, row.section, row.key, row.occurrence)}
                                 row={row}
+                                unsaved={isIniRowUnsaved(row, matchIndex)}
+                                savedValue={savedValueForRow(row)}
                                 onChange={updateValue}
+                                onRevertToSaved={revertRowToSaved}
                               />
                             ))}
                         </div>
@@ -277,9 +311,12 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                   {!isCollapsed &&
                     group.rows.map((row) => (
                       <ClusterIniTemplateSettingRow
-                        key={`${row.section}-${row.key}-${row.occurrence}`}
+                        key={iniRowIdentity(row.fileKey, row.section, row.key, row.occurrence)}
                         row={row}
+                        unsaved={isIniRowUnsaved(row, matchIndex)}
+                        savedValue={savedValueForRow(row)}
                         onChange={updateValue}
+                        onRevertToSaved={revertRowToSaved}
                       />
                     ))}
                 </div>

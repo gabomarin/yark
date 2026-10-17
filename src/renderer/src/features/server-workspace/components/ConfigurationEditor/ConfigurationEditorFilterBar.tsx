@@ -17,12 +17,24 @@ interface Props {
   onFilterChange: (value: IniFilterId) => void;
   categoryOptions: CategoryOption[];
   dirty: boolean;
+  /** Unsaved visual-row count for the active file (may exceed visible filtered rows). */
+  unsavedRowCount?: number;
   onCollapseAll: () => void;
   onExpandAll: () => void;
 }
 
 export function ConfigurationEditorFilterBar(props: Props): ReactElement {
-  const { search, onSearchChange, filter, onFilterChange, categoryOptions, dirty, onCollapseAll, onExpandAll } = props;
+  const {
+    search,
+    onSearchChange,
+    filter,
+    onFilterChange,
+    categoryOptions,
+    dirty,
+    unsavedRowCount = 0,
+    onCollapseAll,
+    onExpandAll,
+  } = props;
 
   return (
     <Group gap="sm" align="center" className={classes.filterBar}>
@@ -64,8 +76,8 @@ export function ConfigurationEditorFilterBar(props: Props): ReactElement {
         Expand
       </Button>
       {dirty && (
-        <Badge color="attention" variant="light">
-          Unsaved
+        <Badge color="attention" variant="light" data-ini-unsaved-count={unsavedRowCount}>
+          {unsavedRowCount > 0 ? `Unsaved · ${unsavedRowCount}` : "Unsaved"}
         </Badge>
       )}
     </Group>

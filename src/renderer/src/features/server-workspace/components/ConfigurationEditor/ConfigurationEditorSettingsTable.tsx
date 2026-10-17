@@ -10,6 +10,7 @@ import {
   type IniUiSectionGroup,
 } from "../../iniModel";
 import classes from "./ConfigurationEditor.module.css";
+import { iniRowIdentity } from "./configurationEditorModel";
 import { IniSettingRow } from "./IniSettingRow";
 
 interface Props {
@@ -17,29 +18,38 @@ interface Props {
   groupedRows: IniUiCategoryGroup[];
   collapsedSections: Record<string, boolean>;
   busy: boolean;
+  isRowUnsaved: (row: IniSettingReference) => boolean;
+  savedValueForRow: (row: IniSettingReference) => string | null;
   onToggleSection: (sectionName: string) => void;
   onSetSectionGroupsCollapsed: (category: string, collapsed: boolean) => void;
   onUpdateValue: (fileKey: IniFileKey, rowSection: string, key: string, value: string, occurrence?: number) => void;
   onResetRowToDefault: (row: IniSettingReference) => void;
+  onRevertRowToSaved: (row: IniSettingReference) => void;
   onOpenAdminList?: () => void;
 }
 
 function renderSettingRows(
   rows: IniSettingReference[],
   busy: boolean,
+  isRowUnsaved: Props["isRowUnsaved"],
+  savedValueForRow: Props["savedValueForRow"],
   onUpdateValue: Props["onUpdateValue"],
   onResetRowToDefault: Props["onResetRowToDefault"],
+  onRevertRowToSaved: Props["onRevertRowToSaved"],
   onOpenAdminList: Props["onOpenAdminList"],
 ): ReactElement[] {
   return rows.map((row) => {
-    const controlId = `${row.fileKey}\u001f${row.section}\u001f${row.key}\u001f${row.occurrence}`;
+    const controlId = iniRowIdentity(row.fileKey, row.section, row.key, row.occurrence);
     return (
       <IniSettingRow
         key={controlId}
         row={row}
         busy={busy}
+        unsaved={isRowUnsaved(row)}
+        savedValue={savedValueForRow(row)}
         onUpdateValue={onUpdateValue}
         onResetRowToDefault={onResetRowToDefault}
+        onRevertRowToSaved={onRevertRowToSaved}
         onOpenAdminList={onOpenAdminList}
       />
     );
@@ -51,9 +61,12 @@ function renderSectionGroups(
   category: IniUiCategoryGroup["category"],
   collapsedSections: Record<string, boolean>,
   busy: boolean,
+  isRowUnsaved: Props["isRowUnsaved"],
+  savedValueForRow: Props["savedValueForRow"],
   onToggleSection: (sectionName: string) => void,
   onUpdateValue: Props["onUpdateValue"],
   onResetRowToDefault: Props["onResetRowToDefault"],
+  onRevertRowToSaved: Props["onRevertRowToSaved"],
   onOpenAdminList: Props["onOpenAdminList"],
 ): ReactElement[] {
   return sectionGroups.map((sectionGroup) => {
@@ -80,8 +93,11 @@ function renderSectionGroups(
           renderSettingRows(
             sectionGroup.rows as IniSettingReference[],
             busy,
+            isRowUnsaved,
+            savedValueForRow,
             onUpdateValue,
             onResetRowToDefault,
+            onRevertRowToSaved,
             onOpenAdminList,
           )}
       </div>
@@ -139,10 +155,13 @@ export function ConfigurationEditorSettingsTable(props: Props): ReactElement {
     groupedRows,
     collapsedSections,
     busy,
+    isRowUnsaved,
+    savedValueForRow,
     onToggleSection,
     onSetSectionGroupsCollapsed,
     onUpdateValue,
     onResetRowToDefault,
+    onRevertRowToSaved,
   } = props;
 
   return (
@@ -183,9 +202,12 @@ export function ConfigurationEditorSettingsTable(props: Props): ReactElement {
                     group.category,
                     collapsedSections,
                     busy,
+                    isRowUnsaved,
+                    savedValueForRow,
                     onToggleSection,
                     onUpdateValue,
                     onResetRowToDefault,
+                    onRevertRowToSaved,
                     props.onOpenAdminList,
                   )}
                 </div>
@@ -216,8 +238,11 @@ export function ConfigurationEditorSettingsTable(props: Props): ReactElement {
                   renderSettingRows(
                     group.rows as IniSettingReference[],
                     busy,
+                    isRowUnsaved,
+                    savedValueForRow,
                     onUpdateValue,
                     onResetRowToDefault,
+                    onRevertRowToSaved,
                     props.onOpenAdminList,
                   )}
               </div>

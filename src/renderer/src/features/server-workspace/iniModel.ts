@@ -9,6 +9,7 @@ import {
   parseIniTextRows,
   sanitizeServerIniPayload,
   sectionShortName,
+  removeIniTextValue,
   setIniTextValue,
   type IniTextRow,
 } from "@shared/ini/ini-text";
@@ -102,6 +103,10 @@ export function parseIniRows(text: string): IniSettingRow[] {
 
 export function setIniValue(text: string, section: string, key: string, value: string, occurrence = 0): string {
   return setIniTextValue(text, section, key, value, occurrence);
+}
+
+export function removeIniValue(text: string, section: string, key: string, occurrence = 0): string {
+  return removeIniTextValue(text, section, key, occurrence);
 }
 
 export function inferControlKind(value: string): IniControlKind {

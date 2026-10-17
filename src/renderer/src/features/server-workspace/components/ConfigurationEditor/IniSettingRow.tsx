@@ -1,5 +1,5 @@
-import { ArrowUUpLeft, ArrowSquareOut } from "@phosphor-icons/react";
-import { ActionIcon, NumberInput, Text, TextInput, Tooltip } from "@mantine/core";
+import { ArrowCounterClockwise, ArrowUUpLeft, ArrowSquareOut } from "@phosphor-icons/react";
+import { ActionIcon, NumberInput, Text, TextInput, Tooltip, VisuallyHidden } from "@mantine/core";
 import type { IniFileKey } from "@shared/types";
 import { consumerForSetting } from "@shared/settings/hosted-resource-consumers";
 import { HostedResourceSelector } from "@features/hosted-resources/components/HostedResourceSelector/HostedResourceSelector";
@@ -19,8 +19,11 @@ import classes from "./ConfigurationEditor.module.css";
 interface Props {
   row: IniSettingReference;
   busy: boolean;
+  unsaved?: boolean;
+  savedValue?: string | null;
   onUpdateValue: (fileKey: IniFileKey, rowSection: string, key: string, value: string, occurrence?: number) => void;
   onResetRowToDefault: (row: IniSettingReference) => void;
+  onRevertRowToSaved?: (row: IniSettingReference) => void;
   /** Jump to RCON → Admins for AdminListURL (not edited in INI Files). */
   onOpenAdminList?: () => void;
 }
@@ -35,6 +38,8 @@ function isAdminListUrlRow(row: IniSettingReference): boolean {
 
 export function IniSettingRow(props: Props): ReactElement {
   const { row, busy, onUpdateValue, onResetRowToDefault } = props;
+  const unsaved = props.unsaved === true;
+  const savedValue = props.savedValue ?? null;
 
   const kind = resolveControlKind(row.value, {
     fileKey: row.fileKey,
@@ -43,6 +48,10 @@ export function IniSettingRow(props: Props): ReactElement {
   });
   const defaultValue = lookupDefaultValue(row.fileKey, row.section, row.key);
   const canResetDefault = defaultValue !== null && defaultValue !== row.value;
+  const canRevertSaved = unsaved && props.onRevertRowToSaved !== undefined;
+  const revertLabel = savedValue !== null ? `Revert to saved value: ${savedValue}` : "Discard key (not in saved file)";
+  const revertAriaLabel =
+    savedValue !== null ? `Revert ${row.key} to saved value` : `Discard ${row.key} (not in saved file)`;
   const keyLabel = row.duplicateCount > 1 ? `${row.key} #${row.occurrence + 1}` : row.key;
   const humanLabel = humanizeIniKey(row.key);
   const label = humanLabel.length > 0 && humanLabel !== row.key ? humanLabel : keyLabel;
@@ -56,15 +65,19 @@ export function IniSettingRow(props: Props): ReactElement {
     hostedConsumer !== null && hostedConsumer.surface === "ini-visual" && row.fileKey === "gameUserSettings";
 
   return (
-    <div className={classes.row}>
+    <div
+      className={`${classes.row}${unsaved ? ` ${classes.rowUnsaved}` : ""}`}
+      data-ini-row-unsaved={unsaved ? "true" : undefined}
+    >
       <div>
-        <Text fw={600} size="sm">
-          {label}
-        </Text>
-        <Text c="dimmed" size="xs">
-          {keyLabel === label ? sectionShortName(row.section) : `${keyLabel} · ${sectionShortName(row.section)}`}
-          {row.duplicateCount > 1 ? ` · ${row.occurrence + 1}/${row.duplicateCount}` : ""}
-        </Text>
+        <GroupLabel
+          label={label}
+          keyLabel={keyLabel}
+          section={row.section}
+          duplicateCount={row.duplicateCount}
+          occurrence={row.occurrence}
+          unsaved={unsaved}
+        />
       </div>
       <div>
         {adminListUrl ? (
@@ -111,6 +124,13 @@ export function IniSettingRow(props: Props): ReactElement {
             }
           />
         )}
+        {unsaved ? (
+          <Text c="dimmed" size="xs" mt={4} data-ini-row-saved-value>
+            {savedValue !== null
+              ? `Last saved: ${savedValue.length > 0 ? savedValue : "(empty)"}`
+              : "Last saved: (not in file)"}
+          </Text>
+        ) : null}
       </div>
       <div>
         <Text c="dimmed" size="sm">
@@ -127,19 +147,66 @@ export function IniSettingRow(props: Props): ReactElement {
             </ActionIcon>
           </Tooltip>
         ) : (
-          <Tooltip label={canResetDefault ? `Default: ${defaultValue}` : "No known default for this key/section"}>
-            <ActionIcon
-              variant="subtle"
-              color="gray"
-              disabled={!canResetDefault || busy}
-              aria-label={`Reset ${row.key} to default`}
-              onClick={() => onResetRowToDefault(row)}
-            >
-              <ArrowUUpLeft size={14} />
-            </ActionIcon>
-          </Tooltip>
+          <>
+            {canRevertSaved ? (
+              <Tooltip label={revertLabel}>
+                <ActionIcon
+                  variant="subtle"
+                  color="attention"
+                  disabled={busy}
+                  aria-label={revertAriaLabel}
+                  data-ini-row-revert-saved
+                  onClick={() => props.onRevertRowToSaved?.(row)}
+                >
+                  <ArrowCounterClockwise size={14} />
+                </ActionIcon>
+              </Tooltip>
+            ) : null}
+            <Tooltip label={canResetDefault ? `Default: ${defaultValue}` : "No known default for this key/section"}>
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                disabled={!canResetDefault || busy}
+                aria-label={`Reset ${row.key} to default`}
+                onClick={() => onResetRowToDefault(row)}
+              >
+                <ArrowUUpLeft size={14} />
+              </ActionIcon>
+            </Tooltip>
+          </>
         )}
       </div>
     </div>
+  );
+}
+
+function GroupLabel(props: {
+  label: string;
+  keyLabel: string;
+  section: string;
+  duplicateCount: number;
+  occurrence: number;
+  unsaved: boolean;
+}): ReactElement {
+  return (
+    <>
+      <Text fw={600} size="sm">
+        {props.label}
+        {props.unsaved ? (
+          <>
+            <Text span c="attention" fw={700} aria-hidden data-ini-row-unsaved-status>
+              {" *"}
+            </Text>
+            <VisuallyHidden>Unsaved</VisuallyHidden>
+          </>
+        ) : null}
+      </Text>
+      <Text c="dimmed" size="xs">
+        {props.keyLabel === props.label
+          ? sectionShortName(props.section)
+          : `${props.keyLabel} · ${sectionShortName(props.section)}`}
+        {props.duplicateCount > 1 ? ` · ${props.occurrence + 1}/${props.duplicateCount}` : ""}
+      </Text>
+    </>
   );
 }

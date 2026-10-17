@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Configuration and cluster INI visual editors highlight unsaved rows, show the last saved value (or that a key is absent), and support per-row revert or discard without clearing other drafts (#661).
+
 ### Docs
 
 - Added a prepared Windows runner workflow and sanitized evidence guidance for real-ASA lifecycle, backup-restore, and safe-update validation (#12).
