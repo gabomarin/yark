@@ -222,6 +222,59 @@ export function splitFlatIniKey(flatKey: string): { section: string; key: string
   };
 }
 
+/** One INI line plus the exact separator that followed it (`""` if none). */
+export type IniTextLine = { content: string; eol: string };
+
+/** Split so mixed LF/CRLF separators can be preserved on rewrite (#667). */
+export function splitIniTextWithEols(text: string): IniTextLine[] {
+  const lines: IniTextLine[] = [];
+  let start = 0;
+  let index = 0;
+  while (index < text.length) {
+    if (text[index] === "\r" && text[index + 1] === "\n") {
+      lines.push({ content: text.slice(start, index), eol: "\r\n" });
+      index += 2;
+      start = index;
+      continue;
+    }
+    if (text[index] === "\n") {
+      lines.push({ content: text.slice(start, index), eol: "\n" });
+      index += 1;
+      start = index;
+      continue;
+    }
+    index += 1;
+  }
+  if (start < text.length) {
+    lines.push({ content: text.slice(start), eol: "" });
+  }
+  return lines;
+}
+
+export function joinIniTextWithEols(lines: readonly IniTextLine[]): string {
+  return lines.map((line) => `${line.content}${line.eol}`).join("");
+}
+
+function preferredIniEol(lines: readonly IniTextLine[]): string {
+  if (lines.some((line) => line.eol === "\r\n")) {
+    return "\r\n";
+  }
+  if (lines.some((line) => line.eol === "\n")) {
+    return "\n";
+  }
+  return "\n";
+}
+
+function ensureTrailingIniNewline(lines: IniTextLine[], eol: string): void {
+  if (lines.length === 0) {
+    return;
+  }
+  const last = lines[lines.length - 1];
+  if (last !== undefined && last.eol === "") {
+    last.eol = eol;
+  }
+}
+
 /**
  * Whether the section already carries a live assignment of `key`, and where its
  * comment-style default (`#Key=…` / `;Key=…`) sits. The shipped GameUserSettings.ini
@@ -269,14 +322,15 @@ function scanKeySlots(
 
 /**
  * Updates or inserts a key while preserving the rest of the file
- * (order, comments, and blank lines) as best as possible.
+ * (order, comments, blank lines, and per-line separators) as best as possible.
  *
  * `occurrence` selects which of the duplicate keys (0-based) to update.
  * In Unreal/ARK it is normal to repeat the same key (e.g. LastJoinedSessionPerCategory).
  */
 export function setIniTextValue(text: string, section: string, key: string, value: string, occurrence = 0): string {
-  const lines = text.split(/\r?\n/);
-  const result: string[] = [];
+  const source = splitIniTextWithEols(text);
+  const eol = preferredIniEol(source);
+  const result: IniTextLine[] = [];
   let currentSection = INI_ROOT_SECTION;
   let currentSectionLower = currentSection.toLowerCase();
   let found = false;
@@ -284,26 +338,34 @@ export function setIniTextValue(text: string, section: string, key: string, valu
   const sectionLower = section.toLowerCase();
   const keyLower = key.toLowerCase();
   const targetOccurrence = Math.max(0, Math.floor(occurrence));
-  const slots = scanKeySlots(lines, sectionLower, keyLower);
+  const slots = scanKeySlots(
+    source.map((line) => line.content),
+    sectionLower,
+    keyLower,
+  );
   const commentedSlotIndex = !slots.hasActive && targetOccurrence === 0 ? slots.commentedIndex : -1;
 
-  const flushMissingKeyBeforeLeavingSection = (nextSectionLine: string | null) => {
+  const pushNew = (content: string): void => {
+    result.push({ content, eol });
+  };
+
+  const flushMissingKeyBeforeLeavingSection = (nextSectionLine: IniTextLine | null) => {
     if (found || currentSectionLower !== sectionLower || targetOccurrence > 0) {
       if (nextSectionLine !== null) {
         result.push(nextSectionLine);
       }
       return;
     }
-    result.push(`${key}=${value}`);
+    pushNew(`${key}=${value}`);
     found = true;
     if (nextSectionLine !== null) {
       result.push(nextSectionLine);
     }
   };
 
-  for (let index = 0; index < lines.length; index += 1) {
-    const line = lines[index] ?? "";
-    const trimmed = line.trim();
+  for (let index = 0; index < source.length; index += 1) {
+    const line = source[index] ?? { content: "", eol: "" };
+    const trimmed = line.content.trim();
     const sectionMatch = /^\[(.+)\]$/.exec(trimmed);
 
     if (sectionMatch !== null) {
@@ -317,8 +379,8 @@ export function setIniTextValue(text: string, section: string, key: string, valu
     // got its assignment from `flushMissingKeyBeforeLeavingSection`, and uncommenting the
     // slot in the second block would leave two live assignments for one key.
     if (index === commentedSlotIndex && !found) {
-      const indent = line.match(/^\s*/)?.[0] ?? "";
-      result.push(`${indent}${key}=${value}`);
+      const indent = line.content.match(/^\s*/)?.[0] ?? "";
+      result.push({ content: `${indent}${key}=${value}`, eol: line.eol || eol });
       found = true;
       continue;
     }
@@ -334,8 +396,8 @@ export function setIniTextValue(text: string, section: string, key: string, valu
         const lineKey = trimmed.slice(0, eq).trim();
         if (lineKey.toLowerCase() === keyLower) {
           if (matchIndex === targetOccurrence) {
-            const indent = line.match(/^\s*/)?.[0] ?? "";
-            result.push(`${indent}${key}=${value}`);
+            const indent = line.content.match(/^\s*/)?.[0] ?? "";
+            result.push({ content: `${indent}${key}=${value}`, eol: line.eol || eol });
             found = true;
             matchIndex += 1;
             continue;
@@ -350,48 +412,46 @@ export function setIniTextValue(text: string, section: string, key: string, valu
 
   if (!found && targetOccurrence === 0) {
     if (currentSectionLower === sectionLower) {
-      result.push(`${key}=${value}`);
+      pushNew(`${key}=${value}`);
       found = true;
     }
   }
 
   if (!found && targetOccurrence === 0) {
     if (section === INI_ROOT_SECTION) {
-      result.unshift(`${key}=${value}`);
+      result.unshift({ content: `${key}=${value}`, eol });
     } else {
-      if (result.length > 0 && result[result.length - 1]?.trim() !== "") {
-        result.push("");
+      const last = result[result.length - 1];
+      if (result.length > 0 && last !== undefined && last.content.trim() !== "") {
+        pushNew("");
       }
-      result.push(`[${section}]`);
-      result.push(`${key}=${value}`);
+      pushNew(`[${section}]`);
+      pushNew(`${key}=${value}`);
     }
   }
 
-  let out = result.join("\n");
-  if (!out.endsWith("\n")) {
-    out += "\n";
-  }
-  return out;
+  ensureTrailingIniNewline(result, eol);
+  return joinIniTextWithEols(result);
 }
 
 /**
  * Removes one **live** key assignment from a section (first occurrence by default).
  * Comment lines (`#` / `;`) are never counted or removed — same rules as
  * {@link parseIniTextRows} / semantic Unset (#667).
- * Preserves surrounding comments and blank lines when possible.
+ * Preserves surrounding comments, blank lines, and each original line separator.
  */
 export function removeIniTextValue(text: string, section: string, key: string, occurrence = 0): string {
-  const newline = text.includes("\r\n") ? "\r\n" : "\n";
-  const lines = text.split(/\r?\n/);
-  const result: string[] = [];
+  const source = splitIniTextWithEols(text);
+  const eol = preferredIniEol(source);
+  const result: IniTextLine[] = [];
   let currentSection = INI_ROOT_SECTION;
   let matchIndex = 0;
   const sectionLower = section.toLowerCase();
   const keyLower = key.toLowerCase();
   const targetOccurrence = Math.max(0, Math.floor(occurrence));
 
-  for (const line of lines) {
-    const trimmed = line.trim();
+  for (const line of source) {
+    const trimmed = line.content.trim();
     const sectionMatch = /^\[(.+)\]$/.exec(trimmed);
     if (sectionMatch !== null) {
       currentSection = sectionMatch[1] ?? INI_ROOT_SECTION;
@@ -420,11 +480,50 @@ export function removeIniTextValue(text: string, section: string, key: string, o
     result.push(line);
   }
 
-  let out = result.join(newline);
-  if (out.length > 0 && !out.endsWith(newline)) {
-    out += newline;
+  ensureTrailingIniNewline(result, eol);
+  return joinIniTextWithEols(result);
+}
+
+/**
+ * Append `key=value` at the end of an existing section (new trailing duplicate).
+ * Preserves each original line separator; only the inserted line uses a preferred EOL.
+ */
+export function appendIniTextValue(text: string, section: string, key: string, value: string): string {
+  const source = splitIniTextWithEols(text);
+  const eol = preferredIniEol(source);
+  const sectionLower = section.toLowerCase();
+  let currentSection = "(root)";
+  let lastKeyLineInSection = -1;
+  let sectionHeaderIndex = -1;
+
+  for (let index = 0; index < source.length; index += 1) {
+    const trimmed = (source[index]?.content ?? "").trim();
+    const sectionMatch = /^\[(.+)\]$/.exec(trimmed);
+    if (sectionMatch !== null) {
+      currentSection = (sectionMatch[1] ?? "(root)").trim();
+      if (currentSection.toLowerCase() === sectionLower) {
+        sectionHeaderIndex = index;
+        lastKeyLineInSection = index;
+      }
+      continue;
+    }
+    if (currentSection.toLowerCase() !== sectionLower) {
+      continue;
+    }
+    if (trimmed.length > 0 && !trimmed.startsWith(";") && !trimmed.startsWith("#")) {
+      lastKeyLineInSection = index;
+    }
   }
-  return out;
+
+  if (sectionHeaderIndex < 0) {
+    return setIniTextValue(text, section, key, value, 0);
+  }
+
+  const insertAt = lastKeyLineInSection >= sectionHeaderIndex ? lastKeyLineInSection + 1 : sectionHeaderIndex + 1;
+  const next = [...source];
+  next.splice(insertAt, 0, { content: `${key}=${value}`, eol });
+  ensureTrailingIniNewline(next, eol);
+  return joinIniTextWithEols(next);
 }
 
 /** Short category name: last part after the dot (GameSession). */

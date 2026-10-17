@@ -236,7 +236,7 @@ CustomFlag=a
     ]);
   });
 
-  it("targets baseline occurrence when removing an earlier duplicate and editing a later one", () => {
+  it("pairs draft rows to baseline by occurrence order (not equal-value remapping)", () => {
     const baseline = gus(`[ServerSettings]
 CustomFlag=a
 CustomFlag=b
@@ -251,8 +251,8 @@ CustomFlag=b2
         fileKey: "gameUserSettings",
         section: "ServerSettings",
         key: "CustomFlag",
-        occurrence: 1,
-        expectedPreviousValue: "b",
+        occurrence: 0,
+        expectedPreviousValue: "a",
         nextValue: "b2",
       },
       {
@@ -260,13 +260,48 @@ CustomFlag=b2
         fileKey: "gameUserSettings",
         section: "ServerSettings",
         key: "CustomFlag",
-        occurrence: 0,
-        expectedPreviousValue: "a",
+        occurrence: 1,
+        expectedPreviousValue: "b",
       },
     ]);
     const next = applyIniSemanticOps(baseline, ops);
     expect(getIniTextValueAt(next.gameUserSettings, "ServerSettings", "CustomFlag", 0)).toBe("b2");
     expect(getIniTextValueAt(next.gameUserSettings, "ServerSettings", "CustomFlag", 1)).toBeNull();
+  });
+
+  it("emits Sets that reproduce duplicate reordering", () => {
+    const baseline = gus(`[ServerSettings]
+CustomFlag=a
+CustomFlag=b
+`);
+    const draft = gus(`[ServerSettings]
+CustomFlag=b
+CustomFlag=a
+`);
+    const ops = buildIniSemanticOps(baseline, draft);
+    expect(ops).toEqual([
+      {
+        kind: "set",
+        fileKey: "gameUserSettings",
+        section: "ServerSettings",
+        key: "CustomFlag",
+        occurrence: 0,
+        expectedPreviousValue: "a",
+        nextValue: "b",
+      },
+      {
+        kind: "set",
+        fileKey: "gameUserSettings",
+        section: "ServerSettings",
+        key: "CustomFlag",
+        occurrence: 1,
+        expectedPreviousValue: "b",
+        nextValue: "a",
+      },
+    ]);
+    const next = applyIniSemanticOps(baseline, ops);
+    expect(getIniTextValueAt(next.gameUserSettings, "ServerSettings", "CustomFlag", 0)).toBe("b");
+    expect(getIniTextValueAt(next.gameUserSettings, "ServerSettings", "CustomFlag", 1)).toBe("a");
   });
 });
 

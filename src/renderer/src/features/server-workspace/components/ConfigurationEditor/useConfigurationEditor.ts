@@ -119,6 +119,9 @@ export function useConfigurationEditor(options: {
       if (!iniFingerprintsMatch(baselineFingerprints, data.fingerprints)) {
         diskSync.setExternalDiskPayload(sanitized);
         diskSync.setExternalChangeDetected(true);
+      } else {
+        // Disk restored to the Save baseline — clear a stale outside-change banner (#667).
+        diskSync.clearExternalChangeFlags();
       }
       return;
     }
@@ -304,6 +307,11 @@ export function useConfigurationEditor(options: {
           setError(outcome.error);
           setStaleDocument(outcome.conflict);
           if (outcome.conflict && iniMode === "visual") {
+            // Capture current disk so the outside-changes popover has real details (#667).
+            const latest = await window.api.readServerIni(serverId);
+            if (latest.ok) {
+              diskSync.setExternalDiskPayload(sanitizeServerIniPayload(latest.data.payload));
+            }
             diskSync.setExternalChangeDetected(true);
           }
           return false;

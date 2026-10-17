@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactElement } from "react";
+import { useEffect, useId, useState, type ReactElement } from "react";
 import { Anchor, Button, Group, Popover, Stack, Text } from "@mantine/core";
 import type { IniDiffEntry, ServerIniPayload } from "@shared/types";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
@@ -52,6 +52,7 @@ function OutsideChangesPopover(props: {
   tone: "blue" | "attention";
 }): ReactElement | null {
   const [opened, setOpened] = useState(false);
+  const dropdownId = useId();
 
   useEffect(() => {
     if (!opened) {
@@ -97,6 +98,8 @@ function OutsideChangesPopover(props: {
           className={classes.detailLink}
           data-external-ini-change-count={props.changedCount}
           aria-expanded={opened}
+          aria-controls={dropdownId}
+          aria-haspopup="dialog"
           onClick={() => {
             setOpened((prev) => !prev);
           }}
@@ -104,11 +107,17 @@ function OutsideChangesPopover(props: {
           View outside changes
         </Anchor>
       </Popover.Target>
-      <Popover.Dropdown className={classes.dropdown} data-external-ini-changes>
+      <Popover.Dropdown
+        id={dropdownId}
+        role="region"
+        aria-label="Outside INI changes"
+        className={classes.dropdown}
+        data-external-ini-changes
+      >
         <Stack gap="xs" className={classes.changeList}>
           {visible.map((entry) => (
             <div
-              key={`${entry.fileKey}.${entry.section}.${entry.key}.${entry.change}`}
+              key={`${entry.fileKey}.${entry.section}.${entry.key}.${entry.occurrence ?? 0}.${entry.change}`}
               className={classes.changeRow}
               data-external-ini-change={entry.key}
             >

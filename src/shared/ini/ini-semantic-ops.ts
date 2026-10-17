@@ -8,7 +8,7 @@
 
 import type { IniFileKey, ServerIniPayload } from "../types";
 import { isVisuallyEditableIniSetting, lookupAbsencePolicy, lookupSettingOwner } from "./ini-setting-decisions";
-import { parseIniTextRows, removeIniTextValue, setIniTextValue } from "./ini-text";
+import { appendIniTextValue, parseIniTextRows, removeIniTextValue, setIniTextValue } from "./ini-text";
 
 type IniSemanticOpKind = "set" | "unset";
 
@@ -166,52 +166,6 @@ function assertExpectedMatches(op: IniSemanticOp, actual: string | null): void {
   );
 }
 
-/** Append `key=value` inside an existing section (new trailing duplicate). */
-function appendIniTextValue(text: string, section: string, key: string, value: string): string {
-  const newline = text.includes("\r\n") ? "\r\n" : "\n";
-  const hadTrailingNewline = text.endsWith("\n");
-  const lines = text.split(/\r?\n/);
-  if (hadTrailingNewline && lines[lines.length - 1] === "") {
-    lines.pop();
-  }
-  const sectionLower = section.toLowerCase();
-  let currentSection = "(root)";
-  let lastKeyLineInSection = -1;
-  let sectionHeaderIndex = -1;
-
-  for (let index = 0; index < lines.length; index += 1) {
-    const trimmed = (lines[index] ?? "").trim();
-    const sectionMatch = /^\[(.+)\]$/.exec(trimmed);
-    if (sectionMatch !== null) {
-      currentSection = (sectionMatch[1] ?? "(root)").trim();
-      if (currentSection.toLowerCase() === sectionLower) {
-        sectionHeaderIndex = index;
-        lastKeyLineInSection = index;
-      }
-      continue;
-    }
-    if (currentSection.toLowerCase() !== sectionLower) {
-      continue;
-    }
-    if (trimmed.length > 0 && !trimmed.startsWith(";") && !trimmed.startsWith("#")) {
-      lastKeyLineInSection = index;
-    }
-  }
-
-  if (sectionHeaderIndex < 0) {
-    return setIniTextValue(text, section, key, value, 0);
-  }
-
-  const insertAt = lastKeyLineInSection >= sectionHeaderIndex ? lastKeyLineInSection + 1 : sectionHeaderIndex + 1;
-  const next = [...lines];
-  next.splice(insertAt, 0, `${key}=${value}`);
-  let out = next.join(newline);
-  if (hadTrailingNewline) {
-    out += newline;
-  }
-  return out;
-}
-
 function applyOneOpToText(text: string, op: IniSemanticOp): string {
   if (op.kind === "unset") {
     return removeIniTextValue(text, op.section, op.key, op.occurrence);
@@ -283,8 +237,9 @@ export function applyIniSemanticOps(payload: ServerIniPayload, ops: readonly Ini
 type IniDuplicateMatch = { baselineOccurrence: number; value: string };
 
 /**
- * Align draft duplicates to baseline (equal-first, then equal-value, then order).
- * Returns baseline occurrence indexes so Sets target the pre-patch document.
+ * Align draft duplicates to baseline by occurrence order (positional).
+ * Equal-value / trailing-slot matching hid reorderings and could remap edits to
+ * the wrong duplicate; draft row i always targets baseline occurrence i (#667).
  */
 function alignIniDuplicateValuesForOps(
   draftValues: readonly string[],
@@ -293,46 +248,17 @@ function alignIniDuplicateValuesForOps(
   matched: Array<IniDuplicateMatch | null>;
   unusedBaseline: Array<{ occurrence: number; value: string }>;
 } {
-  const matched: Array<IniDuplicateMatch | null> = Array.from({ length: draftValues.length }, () => null);
-  const usedBaseline = new Set<number>();
-
+  const matched: Array<IniDuplicateMatch | null> = [];
   for (let i = 0; i < draftValues.length; i++) {
-    if (i < baselineValues.length && draftValues[i] === baselineValues[i]) {
-      matched[i] = { baselineOccurrence: i, value: baselineValues[i] ?? "" };
-      usedBaseline.add(i);
+    if (i < baselineValues.length) {
+      matched.push({ baselineOccurrence: i, value: baselineValues[i] ?? "" });
+    } else {
+      matched.push(null);
     }
   }
-
-  for (let i = 0; i < draftValues.length; i++) {
-    if (matched[i] !== null) continue;
-    const j = baselineValues.findIndex((value, idx) => !usedBaseline.has(idx) && value === draftValues[i]);
-    if (j >= 0) {
-      matched[i] = { baselineOccurrence: j, value: baselineValues[j] ?? "" };
-      usedBaseline.add(j);
-    }
-  }
-
-  const remainingBaseline = baselineValues
-    .map((value, idx) => ({ value, idx }))
-    .filter((entry) => !usedBaseline.has(entry.idx));
-  const unmatchedDraftIndexes: number[] = [];
-  for (let i = 0; i < draftValues.length; i++) {
-    if (matched[i] === null) unmatchedDraftIndexes.push(i);
-  }
-  // Prefer later baseline slots when the draft shrank (operators usually delete
-  // earlier duplicates and keep/edit the trailing ones).
-  const pairedBaseline = remainingBaseline.slice(-unmatchedDraftIndexes.length);
-  for (let k = 0; k < unmatchedDraftIndexes.length; k++) {
-    const draftIndex = unmatchedDraftIndexes[k];
-    const entry = pairedBaseline[k];
-    if (draftIndex === undefined || entry === undefined) continue;
-    matched[draftIndex] = { baselineOccurrence: entry.idx, value: entry.value };
-    usedBaseline.add(entry.idx);
-  }
-
   const unusedBaseline = baselineValues
     .map((value, occurrence) => ({ occurrence, value }))
-    .filter((entry) => !usedBaseline.has(entry.occurrence));
+    .filter((entry) => entry.occurrence >= draftValues.length);
 
   return { matched, unusedBaseline };
 }

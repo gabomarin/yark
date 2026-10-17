@@ -126,12 +126,15 @@ export class IniService extends EventEmitter {
         const current = await this.readServerIni(serverId);
         const patched = applyIniSemanticOps(current.payload, ops);
         const sanitized = sanitizeServerIniPayload(patched);
-        if (sanitized.gameUserSettings.length > MAX_INI_FILE_CHARS || sanitized.game.length > MAX_INI_FILE_CHARS) {
-          throw new Error(`INI semantic save exceeds ${MAX_INI_FILE_CHARS} characters per file`);
-        }
         return this.commitSanitizedPayload(serverId, current, sanitized);
       }),
     );
+  }
+
+  private assertIniPayloadWithinLimit(payload: ServerIniPayload): void {
+    if (payload.gameUserSettings.length > MAX_INI_FILE_CHARS || payload.game.length > MAX_INI_FILE_CHARS) {
+      throw new Error(`INI save exceeds ${MAX_INI_FILE_CHARS} characters per file`);
+    }
   }
 
   private async commitSanitizedPayload(
@@ -152,6 +155,8 @@ export class IniService extends EventEmitter {
       // Bake current profile identity into the draft so Server-tab values
       // stay aligned; read/flush also re-apply from the live profile (#530).
       const queued = this.withProfileOwnedKeys(serverId, sanitized);
+      // Validate after profile-owned keys — passwords/SessionName can grow the string (#667).
+      this.assertIniPayloadWithinLimit(queued);
       this.options.pending.upsert(serverId, queued);
       this.repo.addEvent(
         serverId,
@@ -164,6 +169,7 @@ export class IniService extends EventEmitter {
     }
 
     const written = this.withProfileOwnedKeys(serverId, sanitized);
+    this.assertIniPayloadWithinLimit(written);
     await this.writePayloadToDisk(current, written);
     this.options?.pending.delete(serverId);
     this.repo.addEvent(

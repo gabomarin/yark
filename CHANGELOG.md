@@ -16,6 +16,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Configuration Save refuses to overwrite `Game.ini` / `GameUserSettings.ini` when those files changed outside YARK since the editor loaded; the editor also re-checks on window focus, auto-reloads when clean, and always offers Reload from disk (#665).
 - Configuration and cluster INI visual editors highlight unsaved rows, show the last saved value (or that a key is absent), and support per-row revert or discard without clearing other drafts (#661).
 
+### Fixed
+
+- Outside-change Configuration banner clears when disk matches the Save baseline again, conflict Save captures disk details for View outside changes, and semantic INI edits keep mixed line endings / duplicate occurrence order (#667).
+
 ### Docs
 
 - Added a prepared Windows runner workflow and sanitized evidence guidance for real-ASA lifecycle, backup-restore, and safe-update validation (#12).

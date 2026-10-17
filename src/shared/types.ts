@@ -1028,6 +1028,8 @@ export interface IniDiffEntry {
   fileKey: IniFileKey;
   section: string;
   key: string;
+  /** 0-based occurrence among live assignments of section+key (duplicates). */
+  occurrence?: number;
   before: string | null;
   after: string | null;
   change: "added" | "removed" | "changed";
