@@ -275,6 +275,38 @@ export const iniFileFingerprintsSchema = z
   })
   .strict();
 
+const MAX_INI_SEMANTIC_OPS = 2_000;
+const MAX_INI_SEMANTIC_VALUE_CHARS = 100_000;
+
+/** Visual Set/Unset ops for `ini:save-semantic` (#667). */
+export const iniSemanticOpsSchema = z
+  .array(
+    z.discriminatedUnion("kind", [
+      z
+        .object({
+          kind: z.literal("set"),
+          fileKey: iniFileKeySchema,
+          section: z.string().min(1).max(MAX_STRING_PARAM_LENGTH),
+          key: z.string().min(1).max(MAX_STRING_PARAM_LENGTH),
+          occurrence: z.number().int().min(0).max(10_000),
+          expectedPreviousValue: z.string().max(MAX_INI_SEMANTIC_VALUE_CHARS).nullable(),
+          nextValue: z.string().max(MAX_INI_SEMANTIC_VALUE_CHARS),
+        })
+        .strict(),
+      z
+        .object({
+          kind: z.literal("unset"),
+          fileKey: iniFileKeySchema,
+          section: z.string().min(1).max(MAX_STRING_PARAM_LENGTH),
+          key: z.string().min(1).max(MAX_STRING_PARAM_LENGTH),
+          occurrence: z.number().int().min(0).max(10_000),
+          expectedPreviousValue: z.string().max(MAX_INI_SEMANTIC_VALUE_CHARS),
+        })
+        .strict(),
+    ]),
+  )
+  .max(MAX_INI_SEMANTIC_OPS);
+
 export const clusterIniFileSelectionSchema = z
   .object({
     gameUserSettings: z.boolean(),

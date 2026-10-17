@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ServerIniPayload, ServerProfile } from "@shared/types";
 import { IniStaleDocumentError } from "@shared/ini/ini-fingerprints";
+import { INI_SEMANTIC_CONFLICT_CODE, IniSemanticPatchError } from "@shared/ini/ini-semantic-ops";
 import { IniService } from "@backend/domains/config/ini-service";
 import { openDatabase } from "@backend/infra/db/database";
 import { PendingServerIniRepository } from "@backend/infra/db/pending-server-ini-repository";
@@ -404,6 +405,107 @@ describe("IniService fingerprints (#665)", () => {
     ).rejects.toBeInstanceOf(IniStaleDocumentError);
 
     expect(pending?.get(profile.id)?.payload.gameUserSettings).toContain("XPMultiplier=9.0");
+    db?.close();
+  });
+});
+
+describe("IniService semantic save (#667)", () => {
+  it("merges a local Set with non-overlapping external disk edits", async () => {
+    const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
+    tmpDirs.push(installDir);
+    prepareIniFiles(installDir);
+    writeFileSync(
+      gameUserSettingsPath(installDir),
+      "[ServerSettings]\nXPMultiplier=1\nTamingSpeedMultiplier=2\n",
+      "utf8",
+    );
+
+    const { service, profile } = makeService(installDir);
+
+    // External non-overlapping edit while the editor held XP expected=1.
+    writeFileSync(
+      gameUserSettingsPath(installDir),
+      "[ServerSettings]\nXPMultiplier=1\nTamingSpeedMultiplier=9\n; external comment\n",
+      "utf8",
+    );
+
+    const result = await service.saveServerIniSemantic(profile.id, [
+      {
+        kind: "set",
+        fileKey: "gameUserSettings",
+        section: "ServerSettings",
+        key: "XPMultiplier",
+        occurrence: 0,
+        expectedPreviousValue: "1",
+        nextValue: "3",
+      },
+    ]);
+
+    expect(result.payload.gameUserSettings).toContain("XPMultiplier=3");
+    expect(result.payload.gameUserSettings).toContain("TamingSpeedMultiplier=9");
+    expect(result.payload.gameUserSettings).toContain("; external comment");
+    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).toContain("XPMultiplier=3");
+    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).toContain("TamingSpeedMultiplier=9");
+  });
+
+  it("rejects overlapping expected-previous mismatches without writing", async () => {
+    const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
+    tmpDirs.push(installDir);
+    prepareIniFiles(installDir);
+    writeFileSync(gameUserSettingsPath(installDir), "[ServerSettings]\nXPMultiplier=9\n", "utf8");
+
+    const { service, profile, addEvent } = makeService(installDir);
+
+    try {
+      await service.saveServerIniSemantic(profile.id, [
+        {
+          kind: "set",
+          fileKey: "gameUserSettings",
+          section: "ServerSettings",
+          key: "XPMultiplier",
+          occurrence: 0,
+          expectedPreviousValue: "1",
+          nextValue: "3",
+        },
+      ]);
+      expect.fail("expected conflict");
+    } catch (err) {
+      expect(err).toBeInstanceOf(IniSemanticPatchError);
+      expect((err as IniSemanticPatchError).code).toBe(INI_SEMANTIC_CONFLICT_CODE);
+    }
+
+    expect(addEvent).not.toHaveBeenCalled();
+    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).toContain("XPMultiplier=9");
+    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).not.toContain("XPMultiplier=3");
+  });
+
+  it("queues semantic patches while the process is active (#530)", async () => {
+    const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
+    tmpDirs.push(installDir);
+    prepareIniFiles(installDir);
+    writeFileSync(gameUserSettingsPath(installDir), "[ServerSettings]\nXPMultiplier=1\n", "utf8");
+
+    const { service, profile, pending, db } = makeService(installDir, {
+      withPending: true,
+      isServerActive: () => true,
+    });
+
+    const result = await service.saveServerIniSemantic(profile.id, [
+      {
+        kind: "set",
+        fileKey: "gameUserSettings",
+        section: "ServerSettings",
+        key: "XPMultiplier",
+        occurrence: 0,
+        expectedPreviousValue: "1",
+        nextValue: "4",
+      },
+    ]);
+
+    expect(result.pending).toBe(true);
+    expect(result.payload.gameUserSettings).toContain("XPMultiplier=4");
+    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).toContain("XPMultiplier=1");
+    expect(pending?.get(profile.id)?.payload.gameUserSettings).toContain("XPMultiplier=4");
     db?.close();
   });
 });

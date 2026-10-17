@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { modals } from "@mantine/modals";
-import { INI_STALE_DOCUMENT_CODE, iniFingerprintsMatch } from "@shared/ini/ini-fingerprints";
+import { iniFingerprintsMatch } from "@shared/ini/ini-fingerprints";
 import type { IniFileKey, IniPreview, ServerIniPayload, ServerIniSnapshot } from "@shared/types";
 import { showOperatorToast } from "@ui/operatorToast";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
@@ -26,6 +26,10 @@ import {
   isIniRowUnsaved,
   lookupMatchedBaselineValue,
 } from "./configurationEditorModel";
+import {
+  configurationEditorSaveToastMessage,
+  performConfigurationEditorSave,
+} from "./configurationEditorSave";
 import type { ConfigurationEditorApi } from "./configurationEditorTypes";
 import { useConfigurationEditorDiskSync } from "./useConfigurationEditorDiskSync";
 
@@ -284,53 +288,47 @@ export function useConfigurationEditor(options: {
   };
 
   const saveIni = async (): Promise<boolean> => {
-    if (payload === null || snapshot === null) return false;
+    if (payload === null || snapshot === null || baseline === null) return false;
     setBusy(true);
     setError(null);
     setStaleDocument(false);
     diskSync.setExternalChangeDetected(false);
     return runWithFinally(
       async () => {
-        const sanitized = sanitizeServerIniPayload(payload);
-        const result = await window.api.saveServerIni(serverId, sanitized, snapshot.fingerprints);
-        if (!result.ok) {
-          setError(result.error ?? "Could not save the INI");
-          setStaleDocument(result.code === INI_STALE_DOCUMENT_CODE);
+        const outcome = await performConfigurationEditorSave({
+          serverId,
+          mode: iniMode,
+          draft: payload,
+          baseline,
+          expectedFingerprints: snapshot.fingerprints,
+        });
+        if (!outcome.ok) {
+          setError(outcome.error);
+          setStaleDocument(outcome.conflict);
+          if (outcome.conflict && iniMode === "visual") {
+            diskSync.setExternalChangeDetected(true);
+          }
           return false;
         }
-        setPayload(sanitized);
-        setPreview(result.data);
-        setBaseline(sanitized);
+
+        const { savedPayload, preview, fingerprints, pending, changedCount } = outcome;
+        setPayload(savedPayload);
+        setPreview(preview);
+        setBaseline(savedPayload);
         diskSync.setExternalChangeDetected(false);
         setSnapshot((prev) =>
           prev === null
             ? prev
             : {
                 ...prev,
-                payload: sanitized,
-                fingerprints: result.data.fingerprints,
-                pending: result.data.pending,
-                pendingUpdatedAt: result.data.pending ? (prev.pendingUpdatedAt ?? new Date().toISOString()) : null,
+                payload: savedPayload,
+                fingerprints,
+                pending,
+                pendingUpdatedAt: pending ? (prev.pendingUpdatedAt ?? new Date().toISOString()) : null,
               },
         );
-        publishDirty(sanitized, sanitized);
-        if (result.data.pending) {
-          showOperatorToast({
-            title: "INI queued",
-            message:
-              result.data.changedCount > 0
-                ? `Queued ${result.data.changedCount} change${result.data.changedCount === 1 ? "" : "s"} — applies when the server stops.`
-                : "Queued with no changes — applies when the server stops.",
-          });
-        } else {
-          showOperatorToast({
-            title: "INI saved",
-            message:
-              result.data.changedCount > 0
-                ? `Saved ${result.data.changedCount} change${result.data.changedCount === 1 ? "" : "s"}.`
-                : "Saved with no changes.",
-          });
-        }
+        publishDirty(savedPayload, savedPayload);
+        showOperatorToast(configurationEditorSaveToastMessage(pending, changedCount));
         return true;
       },
       () => {

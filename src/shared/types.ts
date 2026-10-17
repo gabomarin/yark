@@ -1086,6 +1086,15 @@ export interface ServerIniSaveResult extends IniPreview {
 }
 
 /**
+ * Result of `ini:save-semantic` (PINI-004 / #667).
+ * Includes the merged payload so the editor can adopt non-overlapping external edits.
+ */
+export interface ServerIniSemanticSaveResult extends ServerIniSaveResult {
+  /** Payload after ops were applied (disk or pending draft). */
+  payload: ServerIniPayload;
+}
+
+/**
  * Optional cluster-scoped INI template (#88).
  * Keyed by cluster ID string; independent of member install directories.
  */

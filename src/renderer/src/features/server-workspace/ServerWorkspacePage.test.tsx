@@ -155,6 +155,24 @@ describe("ServerWorkspacePage", () => {
           fingerprints: fingerprintIniPayload(payload),
         },
       })),
+      saveServerIniSemantic: vi.fn(async (_serverId: string, ops: unknown[]) => {
+        const payload = {
+          gameUserSettings: `[ServerSettings]\nXPMultiplier=1.5\nAllowFlyerCarryPVE=True\n`,
+          game: `[/Script/ShooterGame.ShooterGameMode]\nXPMultiplier=1.0\n`,
+        };
+        return {
+          ok: true as const,
+          data: {
+            valid: true,
+            issues: [],
+            diff: [],
+            changedCount: Array.isArray(ops) ? ops.length : 0,
+            pending: false,
+            fingerprints: fingerprintIniPayload(payload),
+            payload,
+          },
+        };
+      }),
       onServerIniChanged: vi.fn(() => () => undefined),
       previewServerIni: vi.fn(async () => ({
         ok: true,
