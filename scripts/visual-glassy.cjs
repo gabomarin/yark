@@ -65,6 +65,16 @@ async function goNav(page, label) {
   await page.waitForTimeout(200);
 }
 
+async function clickSwitch(page, name) {
+  const switchInput = page.getByRole("switch", { name });
+  await switchInput.waitFor({ state: "attached", timeout: 10000 });
+  await switchInput.evaluate((el) => {
+    el.scrollIntoView({ block: "center", inline: "center" });
+    el.click();
+  });
+  return switchInput;
+}
+
 async function shot(page, outDir, name) {
   const file = path.join(outDir, `${name}.png`);
   await page.screenshot({ path: file, fullPage: false });
@@ -126,7 +136,33 @@ async function run() {
         const schemeLabel = scheme === "dark" ? "Glassy Dark" : "Glassy Light";
         const schemeSelected = await page.getByRole("radio", { name: schemeLabel, exact: true }).isChecked();
         assert.equal(schemeSelected, true, `${scheme} / ${size.name}: ${schemeLabel} is not the selected scheme`);
+        const canvasSwitch = page.getByRole("switch", { name: "Canvas background" });
+        assert.equal(
+          await canvasSwitch.count(),
+          1,
+          `${scheme} / ${size.name}: Canvas background switch missing on Glassy Appearance`,
+        );
         await shot(page, outDir, `appearance-${scheme}-${size.name}`);
+
+        if (scheme === "dark" && size.name === "full-hd") {
+          await clickSwitch(page, "Canvas background");
+          await page.waitForTimeout(400);
+          const scene = await page.evaluate(() => document.documentElement.getAttribute("data-canvas-scene"));
+          assert.equal(scene, "the-island", "data-canvas-scene was not set after enabling Canvas background");
+          await shot(page, outDir, `appearance-canvas-${scheme}-${size.name}`);
+          await goNav(page, "Servers");
+          await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 15000 });
+          await shot(page, outDir, `overview-canvas-${scheme}-${size.name}`);
+          await goNav(page, "Settings");
+          await page.getByRole("heading", { name: "Settings", level: 1 }).waitFor({ timeout: 10000 });
+          await page
+            .getByRole("navigation", { name: "Settings categories" })
+            .getByRole("button", { name: "Appearance" })
+            .click();
+          await page.getByRole("heading", { name: "Appearance", level: 3 }).waitFor({ timeout: 10000 });
+          await clickSwitch(page, "Canvas background");
+          await page.waitForTimeout(200);
+        }
 
         for (const route of ROUTES) {
           await goNav(page, route.label);

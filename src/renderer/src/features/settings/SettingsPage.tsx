@@ -51,6 +51,8 @@ interface Props {
   onSchemeChange: (scheme: ThemeScheme) => void;
   workspacePanels: WorkspacePanelsId;
   onWorkspacePanelsChange: (panels: WorkspacePanelsId) => void;
+  canvasBackground: boolean;
+  onCanvasBackgroundChange: (enabled: boolean) => void;
   defaultBaseFolder: string | null;
   onDefaultBaseFolderChange: (path: string | null) => void;
   onPickSteamCmdPath: () => void;
@@ -168,6 +170,8 @@ export function SettingsPage(props: Props): ReactElement {
                 onSchemeChange={props.onSchemeChange}
                 workspacePanels={props.workspacePanels}
                 onWorkspacePanelsChange={props.onWorkspacePanelsChange}
+                canvasBackground={props.canvasBackground}
+                onCanvasBackgroundChange={props.onCanvasBackgroundChange}
               />
             )}
             {category === "servers" && (

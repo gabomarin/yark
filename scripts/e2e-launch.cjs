@@ -49,7 +49,7 @@ function createE2eFixtureRoots(label = "e2e", options = {}) {
  * Seed the persisted theme family and scheme before launching the app.
  * Initializes a new isolated profile when the database does not exist yet.
  * @param {string} profileDir
- * @param {{ family: "fluent" | "plasma-breeze" | "glassy", scheme: "dark" | "light" }} selection
+ * @param {{ family: "fluent" | "plasma-breeze" | "glassy", scheme: "dark" | "light", canvasBackground?: boolean }} selection
  */
 function seedAppearance(profileDir, selection) {
   const dbPath = path.join(profileDir, "yark-server-manager.db");
@@ -64,7 +64,12 @@ function seedAppearance(profileDir, selection) {
        ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
     ).run(
       "appearance.v1",
-      JSON.stringify({ themeFamily: selection.family, scheme: selection.scheme, panels: "auto" }),
+      JSON.stringify({
+        themeFamily: selection.family,
+        scheme: selection.scheme,
+        panels: "auto",
+        canvasBackground: selection.canvasBackground === true,
+      }),
       new Date().toISOString(),
     );
   } finally {

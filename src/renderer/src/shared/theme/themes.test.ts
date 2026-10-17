@@ -244,11 +244,23 @@ describe("theme registry (#PUX-004 Track B, #PUX-005-B)", () => {
     )(DEFAULT_THEME).variables;
     expect(vars["--app-color-accent-contrast"]).toBe("#071a28");
     expect(vars["--app-material-chrome-filter"]).toContain("blur(");
+    expect(vars["--app-material-content-filter"]).toContain("blur(");
+    expect(vars["--app-surface-filter"]).toContain("blur(");
+    expect(vars["--app-color-panel"]).toBe("var(--app-material-content-bg)");
+    expect(vars["--app-color-border"]).toContain("color-mix");
     expect(
       createAppCssVariablesResolverForAppearance(THEMES.dark, "compact")(DEFAULT_THEME).variables[
         "--app-material-chrome-filter"
       ],
     ).toBe("none");
+  });
+
+  it("frosts Glassy cards and keeps filled primaries solid (#PUX-005-A)", () => {
+    const glassy = createAppThemeForAppearance(THEME_FAMILIES.glassy.dark, "compact");
+    const cardStyles = glassy.components?.Card?.styles as { root?: { backdropFilter?: string } } | undefined;
+    expect(cardStyles?.root?.backdropFilter).toBe("var(--app-material-content-filter)");
+    const fluentCard = createAppThemeForAppearance(THEMES.dark, "compact").components?.Card?.styles;
+    expect(fluentCard).toBeUndefined();
   });
 
   it("composes with density: colours follow the theme, scales follow density", () => {

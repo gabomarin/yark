@@ -18,6 +18,7 @@ const SOLID_SURFACE_VARS = [
   "--app-surface-border",
   "--app-surface-flat",
   "--app-surface-chrome",
+  "--app-surface-filter",
   "--app-list-selected-bg",
 ] as const;
 

@@ -12,6 +12,7 @@ describe("appearance theme selection", () => {
       themeFamily: "fluent",
       scheme: "light",
       panels: "drawers",
+      canvasBackground: false,
     });
   });
 
@@ -23,7 +24,7 @@ describe("appearance theme selection", () => {
 
   it("writes the new selection contract", () => {
     expect(encodeAppearanceSettings({ themeFamily: "fluent", scheme: "light", panels: "auto" })).toBe(
-      '{"themeFamily":"fluent","scheme":"light","panels":"auto"}',
+      '{"themeFamily":"fluent","scheme":"light","panels":"auto","canvasBackground":false}',
     );
   });
 
@@ -32,9 +33,10 @@ describe("appearance theme selection", () => {
       themeFamily: "plasma-breeze",
       scheme: "light",
       panels: "auto",
+      canvasBackground: false,
     });
     expect(encodeAppearanceSettings({ themeFamily: "plasma-breeze", scheme: "dark", panels: "drawers" })).toBe(
-      '{"themeFamily":"plasma-breeze","scheme":"dark","panels":"drawers"}',
+      '{"themeFamily":"plasma-breeze","scheme":"dark","panels":"drawers","canvasBackground":false}',
     );
   });
 
@@ -43,9 +45,42 @@ describe("appearance theme selection", () => {
       themeFamily: "glassy",
       scheme: "light",
       panels: "auto",
+      canvasBackground: false,
     });
     expect(encodeAppearanceSettings({ themeFamily: "glassy", scheme: "dark", panels: "drawers" })).toBe(
-      '{"themeFamily":"glassy","scheme":"dark","panels":"drawers"}',
+      '{"themeFamily":"glassy","scheme":"dark","panels":"drawers","canvasBackground":false}',
     );
+  });
+
+  it("round-trips the Glassy canvas background flag (#PUX-005-A)", () => {
+    expect(
+      normalizeAppearanceSettings({
+        themeFamily: "glassy",
+        scheme: "dark",
+        panels: "auto",
+        canvasBackground: true,
+      }),
+    ).toEqual({
+      themeFamily: "glassy",
+      scheme: "dark",
+      panels: "auto",
+      canvasBackground: true,
+    });
+    expect(
+      encodeAppearanceSettings({
+        themeFamily: "glassy",
+        scheme: "dark",
+        panels: "auto",
+        canvasBackground: true,
+      }),
+    ).toBe('{"themeFamily":"glassy","scheme":"dark","panels":"auto","canvasBackground":true}');
+    expect(
+      normalizeAppearanceSettings({ themeFamily: "glassy", scheme: "dark", canvasBackground: "yes" } as never),
+    ).toEqual({
+      themeFamily: "glassy",
+      scheme: "dark",
+      panels: "auto",
+      canvasBackground: false,
+    });
   });
 });

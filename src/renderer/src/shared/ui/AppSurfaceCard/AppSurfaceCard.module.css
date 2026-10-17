@@ -3,6 +3,8 @@
   background-color: var(--app-color-panel-cool);
   background-image: var(--app-surface-cool);
   box-shadow: var(--app-shadow-panel);
+  backdrop-filter: var(--app-surface-filter);
+  -webkit-backdrop-filter: var(--app-surface-filter);
 }
 
 .root[data-tone="coolEmphasis"] {

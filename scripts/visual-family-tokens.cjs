@@ -46,11 +46,16 @@ async function assertFamilyMounted(page, family) {
       return {
         family: document.documentElement.getAttribute("data-theme-family"),
         filter: style.getPropertyValue("--app-material-chrome-filter").trim(),
+        contentFilter: style.getPropertyValue("--app-material-content-filter").trim(),
         contrast: style.getPropertyValue("--app-color-accent-contrast").trim().toLowerCase(),
       };
     });
     assert.equal(materials.family, "glassy", `data-theme-family is "${materials.family}"`);
     assert.ok(materials.filter.includes("blur("), `Glassy chrome filter is "${materials.filter}"`);
+    assert.ok(
+      materials.contentFilter.includes("blur("),
+      `Glassy content filter is "${materials.contentFilter}"`,
+    );
     if (scheme === "dark") {
       assert.equal(materials.contrast, "#071a28", `Glassy Dark accent-contrast is "${materials.contrast}"`);
     }

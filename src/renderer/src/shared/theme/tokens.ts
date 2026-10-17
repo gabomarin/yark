@@ -469,6 +469,7 @@ export type AppThemeMaterials = {
   content: {
     background: string;
     fallback: string;
+    backdropFilter: string;
   };
   overlay: {
     background: string;
@@ -488,7 +489,7 @@ export function solidMaterials(
   const panel = palette.gray[2];
   return {
     chrome: { background: chrome, fallback: chrome, backdropFilter: "none" },
-    content: { background: panel, fallback: panel },
+    content: { background: panel, fallback: panel, backdropFilter: "none" },
     overlay: { background: panel, fallback: panel, backdropFilter: "none" },
     innerHighlight: extras.innerHighlight,
     scrim: extras.scrim,

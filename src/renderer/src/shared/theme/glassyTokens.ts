@@ -17,11 +17,11 @@ import {
 /**
  * Glassy family tokens (#PUX-005-A).
  *
- * Cool-neutral operations glass: a Mica-like tinted canvas, selective frost on
- * persistent chrome and transient overlays, and opaque content surfaces. Light
- * and Dark are authored independently — Dark is not an inversion of Light.
- * Semantic status tones reuse Fluent's measured values so operational state
- * stays recognizable across families.
+ * Cool-neutral operations glass: a tinted canvas, frost on chrome, cards,
+ * controls and overlays so the atmosphere (or optional map scene) reads between
+ * surfaces. Light and Dark are authored independently — Dark is not an inversion
+ * of Light. Semantic status tones reuse Fluent's measured values so operational
+ * state stays recognizable across families.
  */
 
 const glassyDarkBlue: AppThemeRamp = [
@@ -197,39 +197,41 @@ export const glassyLightShadows: AppThemeShadows = {
 
 export const glassyDarkMaterials: AppThemeMaterials = {
   chrome: {
-    background: "rgba(13,20,32,0.78)",
+    background: "rgba(8,14,24,0.52)",
     fallback: "#0d1420",
-    backdropFilter: "blur(18px) saturate(120%)",
+    backdropFilter: "blur(22px) saturate(140%)",
   },
   content: {
-    background: "rgba(20,30,44,0.94)",
+    background: "rgba(12,20,34,0.62)",
     fallback: "#141e2c",
+    backdropFilter: "blur(20px) saturate(150%)",
   },
   overlay: {
-    background: "rgba(20,30,44,0.90)",
+    background: "rgba(12,20,34,0.82)",
     fallback: "#141e2c",
-    backdropFilter: "blur(24px) saturate(125%)",
+    backdropFilter: "blur(28px) saturate(145%)",
   },
-  innerHighlight: "rgba(255,255,255,0.12)",
+  innerHighlight: "rgba(255,255,255,0.16)",
   scrim: "rgba(2,6,12,0.56)",
 };
 
 export const glassyLightMaterials: AppThemeMaterials = {
   chrome: {
-    background: "rgba(247,250,253,0.78)",
+    background: "rgba(247,250,253,0.55)",
     fallback: "#f7fafd",
-    backdropFilter: "blur(18px) saturate(112%)",
+    backdropFilter: "blur(22px) saturate(120%)",
   },
   content: {
-    background: "rgba(240,245,250,0.94)",
+    background: "rgba(240,245,250,0.62)",
     fallback: "#f0f5fa",
+    backdropFilter: "blur(20px) saturate(125%)",
   },
   overlay: {
-    background: "rgba(250,252,255,0.90)",
+    background: "rgba(250,252,255,0.86)",
     fallback: "#f7fafd",
-    backdropFilter: "blur(24px) saturate(115%)",
+    backdropFilter: "blur(28px) saturate(120%)",
   },
-  innerHighlight: "rgba(255,255,255,0.72)",
+  innerHighlight: "rgba(255,255,255,0.78)",
   scrim: "rgba(24,36,49,0.24)",
 };
 

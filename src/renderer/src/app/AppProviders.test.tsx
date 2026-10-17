@@ -38,6 +38,32 @@ describe("AppProviders", () => {
       </AppProviders>,
     );
     expect(document.documentElement).toHaveAttribute("data-theme-family", "glassy");
+    expect(document.documentElement).not.toHaveAttribute("data-canvas-scene");
+    unmount();
+  });
+
+  it("sets data-canvas-scene only for Glassy with canvas background enabled (#PUX-005-A)", () => {
+    const { rerender, unmount } = render(
+      <AppProviders
+        density="compact"
+        themeSelection={{ family: "glassy", scheme: "dark" }}
+        canvasBackground
+      >
+        <Probe />
+      </AppProviders>,
+    );
+    expect(document.documentElement).toHaveAttribute("data-canvas-scene", "the-island");
+
+    rerender(
+      <AppProviders
+        density="compact"
+        themeSelection={{ family: "fluent", scheme: "dark" }}
+        canvasBackground
+      >
+        <Probe />
+      </AppProviders>,
+    );
+    expect(document.documentElement).not.toHaveAttribute("data-canvas-scene");
     unmount();
   });
 });

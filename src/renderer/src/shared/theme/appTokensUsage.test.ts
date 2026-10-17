@@ -66,4 +66,24 @@ describe("app token usage", () => {
     }
     expect(offenders, `Fallbacks on --app-* tokens: ${offenders.join(" | ")}`).toEqual([]);
   });
+
+  it("keeps --app-material-* out of feature CSS (#PUX-005-A)", () => {
+    const allowed = [
+      path.join("shared", "theme"),
+      path.join("app", "AppShellLayout.module.css"),
+      path.join("styles", "globals.css"),
+    ];
+    const offenders: string[] = [];
+    for (const file of walkFiles(RENDERER_SRC)) {
+      const relative = path.relative(RENDERER_SRC, file);
+      if (allowed.some((prefix) => relative.startsWith(prefix))) {
+        continue;
+      }
+      const source = fs.readFileSync(file, "utf8");
+      if (source.includes("--app-material-")) {
+        offenders.push(relative);
+      }
+    }
+    expect(offenders, `Feature CSS reading --app-material-*: ${offenders.join(" | ")}`).toEqual([]);
+  });
 });

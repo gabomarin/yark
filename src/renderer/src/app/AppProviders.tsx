@@ -36,6 +36,8 @@ interface Props extends PropsWithChildren {
   themeSelection?: ThemeSelection | null;
   /** Server-workspace panels option. Unknown ids fall back to Auto. */
   workspacePanels?: WorkspacePanelsId | string | null;
+  /** Glassy-only map scene. Ignored for other families. */
+  canvasBackground?: boolean;
 }
 
 export function AppProviders({
@@ -43,6 +45,7 @@ export function AppProviders({
   density = "compact",
   themeSelection = null,
   workspacePanels = null,
+  canvasBackground = false,
 }: Props): ReactElement {
   const themeFamily = themeSelection?.family;
   const themeScheme = themeSelection?.scheme;
@@ -120,11 +123,17 @@ export function AppProviders({
     const root = document.documentElement;
     root.dataset.uiDensity = density;
     root.dataset.themeFamily = appearance.family;
+    if (appearance.family === "glassy" && canvasBackground) {
+      root.dataset.canvasScene = "the-island";
+    } else {
+      delete root.dataset.canvasScene;
+    }
     return () => {
       delete root.dataset.uiDensity;
       delete root.dataset.themeFamily;
+      delete root.dataset.canvasScene;
     };
-  }, [appearance.family, density]);
+  }, [appearance.family, canvasBackground, density]);
 
   const notificationsAutoClose = isRendererTest() ? false : 5000;
 

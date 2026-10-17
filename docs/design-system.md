@@ -27,8 +27,9 @@ families ship today:
   anchored on the exact `KDE/breeze` colour schemes. Flat 4px chrome, restrained
   shadows, a Noto Sans typography profile and the Breeze accent `#3daee9`.
 - **`glassy`** — operational glass (`Glassy Dark`, `Glassy Light`): a cool-neutral
-  tinted canvas, selective frost on persistent chrome and transient overlays, and
-  opaque content. Grain is off. Native Windows Mica/Acrylic is out of scope.
+  tinted canvas with frost on chrome, cards, controls and overlays so atmosphere
+  (or an optional The Island scene) reads between surfaces. Grain is off. Native
+  Windows Mica/Acrylic is out of scope.
 
 `--app-*` names are stable semantic roles. A family may change its palette,
 semantic status values, elevation, typography and Mantine `recipeSet`, but feature
@@ -64,13 +65,20 @@ which `globals.css` uses for the document.
 
 ### Glassy materials (intentional)
 
-Glassy keeps solid `--app-color-*` roles for contrast and fallback. Translucent
-`--app-material-*` roles (chrome, overlay, scrim, inner highlight) are consumed
-only by the app shell and shared recipes. Feature CSS must not read them.
+Glassy keeps solid `--app-color-*` roles for contrast and fallback, then remaps
+panel/border aliases onto content frost so feature CSS (`AppSurfaceCard`,
+`ServerCard`) becomes glass without reading `--app-material-*`. Translucent
+`--app-material-*` roles (chrome, content, overlay, scrim, inner highlight) are
+consumed only by the app shell and shared recipes. `--app-surface-filter` is the
+shared role feature CSS may use for backdrop blur (`none` on opaque families).
 `backdrop-filter` is progressive: no-filter, reduced-transparency, and forced-colors
-remap the same variables to opaque fills. Glassy Dark filled primaries use the
-cyan solid `#4ba8e8` with dark ink `#071a28` (`palette.blueContrast`); Glassy Light
-uses `#176fb3` with a white label. Grain is off.
+remap the same variables to opaque fills. The main pane stays transparent so
+individual cards frost; an optional **Canvas background** switch (Glassy only,
+default off) places a darkened The Island scene on the shell. Glassy Dark filled
+primaries use the cyan solid `#4ba8e8` with dark ink `#071a28`
+(`palette.blueContrast`); Glassy Light uses `#176fb3` with a white label. Grain is
+off. The first-run wizard still only offers display size — this checkbox stays in
+Settings → Appearance.
 
 ### Breeze deviations (intentional)
 
@@ -260,7 +268,7 @@ Mantine **does** have spacing tokens (`theme.spacing` → `gap="xs"` / `p="md"` 
 
 Preference key: SQLite `app_settings.uiDensity` (IPC `app:get-ui-density` / `app:set-ui-density`). Loaded in `main.tsx` **before** the first `AppProviders` theme mount (falls back to Compact if IPC fails). Persisted only from the Settings change handler (not a mount effect — Safe under `StrictMode`). Failed saves keep the previous density and show an error notification. A legacy `localStorage` value (`settings.uiDensity`) is migrated once when the SQLite row is missing — and only cleared after a successful write.
 
-**Theme registry** (`src/renderer/src/shared/theme/themes.ts`, #PUX-004 Track B / #PUX-005-B / #PUX-005-A). A theme is a **payload**, not a second design system: an entry carries everything that genuinely differs — the palette (ramps, canvas, contrasts, alpha ramps), the semantic colours (`ok` / `attention` / `bad` / `dangerBright` / `fossil`…), the elevation ladder, family typography/radius, the Mantine colour scales built from those semantics, and the `AppThemeMaterials` chrome/overlay contract. `theme.ts` reads all of it; the `--app-*` role map, the density tokens and the motion tokens stay shared, so feature CSS keeps reading roles and never gains a second colour language. `--app-material-*` roles are restricted to the app shell and shared recipes. Selection is `{ family, scheme }` over `THEME_FAMILIES` (**fluent**, **plasma-breeze**, and **glassy**, each with dark/light). Preference key: SQLite `app_settings.appearance.v1` (IPC `app:get-appearance` / `app:set-appearance`), JSON `{ "themeFamily": "fluent", "scheme": "dark", "panels": "auto" }`, loaded in `main.tsx` before the first mount like density. Unknown family/scheme values fall back to Fluent Dark (`parseAppearanceSettings`); legacy `{ "theme": "dark"|"light" }` rows upgrade to Fluent plus that scheme (see [Internal theme contract](#internal-theme-contract)). `--app-color-accent-contrast` resolves from `palette.blueContrast` so Glassy Dark can use a measured dark ink label on its cyan solid.
+**Theme registry** (`src/renderer/src/shared/theme/themes.ts`, #PUX-004 Track B / #PUX-005-B / #PUX-005-A). A theme is a **payload**, not a second design system: an entry carries everything that genuinely differs — the palette (ramps, canvas, contrasts, alpha ramps), the semantic colours (`ok` / `attention` / `bad` / `dangerBright` / `fossil`…), the elevation ladder, family typography/radius, the Mantine colour scales built from those semantics, and the `AppThemeMaterials` chrome/overlay contract. `theme.ts` reads all of it; the `--app-*` role map, the density tokens and the motion tokens stay shared, so feature CSS keeps reading roles and never gains a second colour language. `--app-material-*` roles are restricted to the app shell and shared recipes. Selection is `{ family, scheme }` over `THEME_FAMILIES` (**fluent**, **plasma-breeze**, and **glassy**, each with dark/light). Preference key: SQLite `app_settings.appearance.v1` (IPC `app:get-appearance` / `app:set-appearance`), JSON `{ "themeFamily": "fluent", "scheme": "dark", "panels": "auto", "canvasBackground": false }`, loaded in `main.tsx` before the first mount like density. `canvasBackground` is Glassy-only in the UI (default off); other families ignore it. Unknown family/scheme values fall back to Fluent Dark (`parseAppearanceSettings`); legacy `{ "theme": "dark"|"light" }` rows upgrade to Fluent plus that scheme (see [Internal theme contract](#internal-theme-contract)). `--app-color-accent-contrast` resolves from `palette.blueContrast` so Glassy Dark can use a measured dark ink label on its cyan solid.
 
 **Server-workspace panels** (`src/shared/workspace/workspacePanels.ts`, #PUX-004 Track B). Where the server workspace puts its server list and status panel is data, not a `matchMedia` buried in one component: `auto` (columns from 1600px, the shipped default) and `drawers` (never). `workspacePanelsModeFor(option, width)` is the pure decision, `drawersMediaQuery(option)` is what the workspace subscribes to, and a test keeps the two in step. CSS cannot read the option, so the one hand-written mirror — Overview's `@media (min-width: 1600px)` side-by-side — is pinned by that same test. This is **not** an app-level _layout_ (how the whole app is structured, sidebar + main content today): that is a separate ticket, so the word stays free for it.
 

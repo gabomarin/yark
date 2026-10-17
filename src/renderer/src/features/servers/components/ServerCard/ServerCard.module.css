@@ -6,6 +6,8 @@
   border-color: var(--app-color-border);
   background-color: var(--app-color-panel);
   background-image: none;
+  backdrop-filter: var(--app-surface-filter);
+  -webkit-backdrop-filter: var(--app-surface-filter);
   max-width: 100%;
   background-clip: padding-box;
   /* Stack / status-dot from card width (sidebar shrinks content vs viewport) (#302). */

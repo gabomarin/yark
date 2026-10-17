@@ -2,7 +2,12 @@ import { defaultVariantColorsResolver, type MantineThemeOverride, type VariantCo
 import type { UiDensity } from "../tokens";
 import type { AppTheme } from "../themes";
 import { createFluentComponents } from "./fluent";
-import { overlayDialogMaterialStyles, overlayMaterialStyles } from "./materialSurface";
+import {
+  contentMaterialStyles,
+  controlMaterialStyles,
+  overlayDialogMaterialStyles,
+  overlayMaterialStyles,
+} from "./materialSurface";
 
 /**
  * Glassy filled primaries use the family's accent fill with `blueContrast` as
@@ -23,13 +28,27 @@ export const glassyVariantColorsResolver: VariantColorsResolver = (input) => {
   return resolved;
 };
 
+function isGlassButtonVariant(variant: string | undefined): boolean {
+  return (
+    variant === "default" ||
+    variant === "light" ||
+    variant === "outline" ||
+    variant === "subtle" ||
+    variant === "transparent"
+  );
+}
+
+/** ActionIcon defaults to `subtle`; Button defaults to `filled`. */
+function isGlassActionIconVariant(variant: string | undefined): boolean {
+  return variant === undefined || isGlassButtonVariant(variant);
+}
+
 /**
  * Glassy component recipes (#PUX-005-A).
  *
- * Compose Fluent and override only surfaces whose material behavior changes:
- * transparent idle nav on chrome, stable opaque controls, and one overlay
- * material on menus / popovers / dialogs / dropdowns. Routine cards stay on
- * the Fluent (opaque) Card recipe.
+ * Compose Fluent and frost the surfaces the mockup treats as glass: cards,
+ * papers, idle buttons, inputs, menus and dialogs. Filled primaries stay solid
+ * cyan. Feature CSS keeps reading `--app-*` roles; recipes own `--app-material-*`.
  */
 export function createGlassyComponents(density: UiDensity, theme: AppTheme): MantineThemeOverride["components"] {
   const fluent = createFluentComponents(density, theme) ?? {};
@@ -42,19 +61,62 @@ export function createGlassyComponents(density: UiDensity, theme: AppTheme): Man
         ...fluent.NavLink?.styles,
         root: {
           "--nl-bg": "transparent",
-          "--nl-hover": "var(--app-color-surface-control-hover)",
+          "--nl-hover": "color-mix(in srgb, var(--app-color-accent) 12%, transparent)",
           "--nl-color": "var(--app-color-text)",
         },
       },
+    },
+    Card: {
+      ...fluent.Card,
+      styles: {
+        ...fluent.Card?.styles,
+        root: contentMaterialStyles,
+      },
+    },
+    Paper: {
+      ...fluent.Paper,
+      styles: {
+        ...fluent.Paper?.styles,
+        root: contentMaterialStyles,
+      },
+    },
+    Button: {
+      ...fluent.Button,
+      vars: (_mantineTheme: unknown, props: { variant?: string | undefined }) =>
+        isGlassButtonVariant(props.variant)
+          ? {
+              root: {
+                "--button-bg": "var(--app-material-content-bg)",
+                "--button-hover": "color-mix(in srgb, var(--app-color-accent) 16%, var(--app-material-content-bg))",
+                "--button-bd": "1px solid var(--app-color-border-subtle)",
+              },
+            }
+          : { root: {} },
+      styles: (_mantineTheme: unknown, props: { variant?: string | undefined }) =>
+        isGlassButtonVariant(props.variant) ? { root: controlMaterialStyles } : {},
+    },
+    ActionIcon: {
+      ...fluent.ActionIcon,
+      vars: (_mantineTheme: unknown, props: { variant?: string | undefined }) =>
+        isGlassActionIconVariant(props.variant)
+          ? {
+              root: {
+                "--ai-bg": "var(--app-material-content-bg)",
+                "--ai-hover": "color-mix(in srgb, var(--app-color-accent) 16%, var(--app-material-content-bg))",
+                "--ai-bd": "1px solid var(--app-color-border-subtle)",
+              },
+            }
+          : { root: {} },
+      styles: (_mantineTheme: unknown, props: { variant?: string | undefined }) =>
+        isGlassActionIconVariant(props.variant) ? { root: controlMaterialStyles } : {},
     },
     Input: {
       ...fluent.Input,
       styles: {
         ...fluent.Input?.styles,
         input: {
-          backgroundColor: "var(--app-color-surface-control)",
-          borderColor: "var(--app-color-border-control)",
-          boxShadow: "inset 0 1px 0 var(--app-material-inner-highlight)",
+          ...controlMaterialStyles,
+          backgroundColor: "var(--app-material-content-bg)",
         },
       },
     },
@@ -62,6 +124,10 @@ export function createGlassyComponents(density: UiDensity, theme: AppTheme): Man
       ...fluent.SegmentedControl,
       styles: {
         ...fluent.SegmentedControl?.styles,
+        root: {
+          ...controlMaterialStyles,
+          backgroundColor: "var(--app-material-content-bg)",
+        },
         indicator: {
           boxShadow: "var(--app-elevation-2), inset 0 1px 0 var(--app-material-inner-highlight)",
         },
@@ -73,7 +139,7 @@ export function createGlassyComponents(density: UiDensity, theme: AppTheme): Man
         ...fluent.Menu?.styles,
         dropdown: {
           ...overlayMaterialStyles,
-          "--menu-item-hover": "var(--app-color-surface-control-hover)",
+          "--menu-item-hover": "color-mix(in srgb, var(--app-color-accent) 14%, transparent)",
         },
       },
     },
@@ -95,10 +161,7 @@ export function createGlassyComponents(density: UiDensity, theme: AppTheme): Man
       ...fluent.Tooltip,
       styles: {
         ...fluent.Tooltip?.styles,
-        tooltip: {
-          backgroundColor: "var(--app-material-overlay-fallback)",
-          border: "1px solid var(--app-color-border-subtle)",
-        },
+        tooltip: overlayMaterialStyles,
       },
     },
     Modal: {
@@ -110,7 +173,7 @@ export function createGlassyComponents(density: UiDensity, theme: AppTheme): Man
         },
         content: overlayDialogMaterialStyles,
         body: {
-          backgroundColor: "var(--app-material-content-fallback)",
+          backgroundColor: "transparent",
         },
       },
     },

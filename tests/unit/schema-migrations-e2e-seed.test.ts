@@ -65,7 +65,12 @@ describe("schema-migrations.json E2E seed path", () => {
     const db = openDatabase(join(dir, "yark-server-manager.db"), { takeSnapshots: false });
     try {
       const row = db.prepare("SELECT value FROM app_settings WHERE key = ?").get("appearance.v1") as { value: string };
-      expect(JSON.parse(row.value)).toEqual({ themeFamily: "plasma-breeze", scheme: "light", panels: "auto" });
+      expect(JSON.parse(row.value)).toEqual({
+        themeFamily: "plasma-breeze",
+        scheme: "light",
+        panels: "auto",
+        canvasBackground: false,
+      });
     } finally {
       db.close();
     }

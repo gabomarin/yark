@@ -127,6 +127,8 @@ export interface AppSettingsSlice {
   handleSchemeChange: (scheme: ThemeScheme) => void;
   workspacePanels: WorkspacePanelsId;
   handleWorkspacePanelsChange: (panels: WorkspacePanelsId) => void;
+  canvasBackground: boolean;
+  handleCanvasBackgroundChange: (enabled: boolean) => void;
   defaultBaseFolder: string | null;
   setDefaultBaseFolder: Dispatch<SetStateAction<string | null>>;
   extraClusterOptions: KnownClusterOption[] | undefined;

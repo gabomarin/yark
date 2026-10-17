@@ -52,7 +52,17 @@ function createAppCssVariablesResolver(
        *   radial-gradient(ellipse 40% 32% at 52% 110%, color-mix(in srgb, var(--app-color-fossil) 6%, transparent), transparent 74%)
        */
       "--app-shell-glow": "rgba(255, 255, 255, 0.055)",
-      "--app-shell-atmosphere": "none",
+      /*
+       * Glassy keeps a cool radial so frost still reads when the optional map
+       * scene is off. Other families keep atmosphere hidden (it read yellowish
+       * over Fluent chrome).
+       */
+      "--app-shell-atmosphere":
+        theme.recipeSet === "glassy"
+          ? theme.colorScheme === "light"
+            ? "radial-gradient(ellipse 70% 55% at 82% 0%, color-mix(in srgb, var(--ark-blue-9) 14%, transparent), transparent 72%), radial-gradient(ellipse 50% 40% at 10% 100%, color-mix(in srgb, var(--ark-blue-9) 8%, transparent), transparent 70%)"
+            : "radial-gradient(ellipse 70% 55% at 82% 0%, color-mix(in srgb, var(--ark-blue-9) 24%, transparent), transparent 72%), radial-gradient(ellipse 50% 40% at 10% 100%, color-mix(in srgb, var(--ark-blue-9) 14%, transparent), transparent 70%)"
+          : "none",
       /*
        * Brand, not theme: the logo lockup is a dark-navy mark with a light
        * wordmark, so the light theme backs it with this plate instead of leaving
@@ -150,6 +160,7 @@ function createAppCssVariablesResolver(
       "--app-surface-cool-emphasis": "none",
       "--app-surface-flat": "var(--app-color-panel)",
       "--app-surface-chrome": "var(--app-color-surface-chrome)",
+      "--app-surface-filter": theme.materials.content.backdropFilter,
       "--app-list-selected-bg": "var(--app-color-surface-control)",
       "--app-list-selected-inset": "inset 3px 0 0 var(--ark-blue-9)",
       "--app-anchor-color": "var(--ark-blue-11)",
@@ -159,11 +170,26 @@ function createAppCssVariablesResolver(
       "--app-material-chrome-filter": theme.materials.chrome.backdropFilter,
       "--app-material-content-bg": theme.materials.content.background,
       "--app-material-content-fallback": theme.materials.content.fallback,
+      "--app-material-content-filter": theme.materials.content.backdropFilter,
       "--app-material-overlay-bg": theme.materials.overlay.background,
       "--app-material-overlay-fallback": theme.materials.overlay.fallback,
       "--app-material-overlay-filter": theme.materials.overlay.backdropFilter,
       "--app-material-inner-highlight": theme.materials.innerHighlight,
       "--app-material-scrim": theme.materials.scrim,
+      ...(theme.recipeSet === "glassy"
+        ? {
+            "--app-color-panel": "var(--app-material-content-bg)",
+            "--app-color-panel-cool": "var(--app-material-content-bg)",
+            "--app-color-panel-cool-emphasis": "var(--app-material-content-bg)",
+            "--app-color-panel-alt": "var(--app-material-content-bg)",
+            "--app-surface-flat": "var(--app-material-content-bg)",
+            "--app-surface-chrome": "var(--app-material-chrome-bg)",
+            "--app-color-border-subtle": "color-mix(in srgb, var(--ark-blue-9) 32%, var(--ark-gray-7))",
+            "--app-color-border": "color-mix(in srgb, var(--ark-blue-9) 40%, var(--ark-gray-7))",
+            "--app-color-border-control": "color-mix(in srgb, var(--ark-blue-9) 45%, var(--ark-gray-9))",
+            "--app-list-selected-bg": "color-mix(in srgb, var(--ark-blue-9) 22%, transparent)",
+          }
+        : {}),
     },
     light: {
       /*

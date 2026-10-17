@@ -250,6 +250,8 @@ body {
     --app-material-overlay-bg: var(--app-material-overlay-fallback) !important;
     --app-material-overlay-filter: none !important;
     --app-material-content-bg: var(--app-material-content-fallback) !important;
+    --app-material-content-filter: none !important;
+    --app-surface-filter: none !important;
   }
 }
 
@@ -260,6 +262,8 @@ body {
     --app-material-overlay-bg: var(--app-material-overlay-fallback) !important;
     --app-material-overlay-filter: none !important;
     --app-material-content-bg: var(--app-material-content-fallback) !important;
+    --app-material-content-filter: none !important;
+    --app-surface-filter: none !important;
   }
 }
 
@@ -298,6 +302,8 @@ body {
     --app-material-chrome-filter: none !important;
     --app-material-content-bg: Canvas !important;
     --app-material-content-fallback: Canvas !important;
+    --app-material-content-filter: none !important;
+    --app-surface-filter: none !important;
     --app-material-overlay-bg: Canvas !important;
     --app-material-overlay-fallback: Canvas !important;
     --app-material-overlay-filter: none !important;
