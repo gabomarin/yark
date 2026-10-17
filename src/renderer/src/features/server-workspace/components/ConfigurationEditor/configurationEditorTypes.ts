@@ -11,8 +11,13 @@ export interface ConfigurationEditorApi {
   setError: (error: string | null) => void;
   /** True when the last Save failed because INI changed outside YARK (#665). */
   staleDocument: boolean;
+  /** Disk/pending changed while the editor has unsaved edits (#665). */
+  externalChangeDetected: boolean;
+  setExternalChangeDetected: (value: boolean) => void;
   /** Re-read install / pending draft and reset the editor baseline. */
   reloadFromDisk: () => Promise<void>;
+  /** Reload button — confirms first when the editor is dirty. */
+  requestReloadFromDisk: () => void;
   preview: IniPreview | null;
   search: string;
   setSearch: (value: string) => void;

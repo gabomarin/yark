@@ -571,8 +571,10 @@ setting catalog: [ini-metadata.md](ini-metadata.md) (PINI-016 / #659).
 - Save (lock purpose `"ini-save"`):
   - Requires the fingerprints from the editor’s last load / successful save.
     Under the lock, re-read and compare; mismatch throws `INI_STALE_DOCUMENT`
-    (no disk write, no pending upsert). The Configuration editor surfaces Reload
-    from disk — there is no force-overwrite in this ticket.
+    (no disk write, no pending upsert). There is no force-overwrite in this
+    ticket. The Configuration editor also re-checks fingerprints when the
+    window regains focus: auto-reload when the editor is clean, or an attention
+    banner when dirty; **Reload from disk** is always available in the toolbar.
   - **Process idle:** sanitize → semantic validate → write both files → clear
     pending → event; IPC best-effort `createIniSaveBackup`.
   - **Process live** (`ProcessManager.isActive`: starting / running / stopping /

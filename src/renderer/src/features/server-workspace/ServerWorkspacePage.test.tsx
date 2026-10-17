@@ -1024,6 +1024,79 @@ describe("ServerWorkspacePage", () => {
     expect(await screen.findByLabelText("Reset XPMultiplier to default")).toBeVisible();
   });
 
+  it("offers Reload from disk and auto-reloads a clean editor when focus finds newer fingerprints (#665)", async () => {
+    const user = setupUser();
+    renderWorkspace();
+    await user.click(screen.getByRole("tab", { name: "INI Files" }));
+    expect(await screen.findByDisplayValue("1.5")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Reload from disk" })).toBeEnabled();
+
+    const newerPayload = {
+      gameUserSettings: `[ServerSettings]\nXPMultiplier=9.9\nAllowFlyerCarryPVE=True\nExternalEdit=1\n`,
+      game: `[/Script/ShooterGame.ShooterGameMode]\nXPMultiplier=1.0\n`,
+    };
+    vi.mocked(window.api.readServerIni).mockResolvedValue({
+      ok: true,
+      data: {
+        serverId: serverA.id,
+        gameUserSettingsPath: "C:/ARK/srv-a/GameUserSettings.ini",
+        gameIniPath: "C:/ARK/srv-a/Game.ini",
+        gameUserSettingsExisted: true,
+        gameIniExisted: true,
+        pending: false,
+        pendingUpdatedAt: null,
+        payload: newerPayload,
+        // Distinct from length-based mock of the initial payload.
+        fingerprints: { gameUserSettings: "external-gus-fingerprint!", game: "external-game-fingerprint" },
+      },
+    });
+
+    const readsBefore = vi.mocked(window.api.readServerIni).mock.calls.length;
+    act(() => {
+      window.dispatchEvent(new Event("focus"));
+    });
+
+    await waitFor(() => {
+      expect(vi.mocked(window.api.readServerIni).mock.calls.length).toBeGreaterThan(readsBefore);
+    });
+    expect(await screen.findByDisplayValue("9.9")).toBeVisible();
+  });
+
+  it("shows an external-change banner when focus finds newer fingerprints while dirty (#665)", async () => {
+    const user = setupUser();
+    renderWorkspace();
+    await user.click(screen.getByRole("tab", { name: "INI Files" }));
+    const xp = await screen.findByDisplayValue("1.5");
+    fireEvent.change(xp, { target: { value: "2" } });
+    expect(await screen.findByDisplayValue("2")).toBeVisible();
+
+    const newerPayload = {
+      gameUserSettings: `[ServerSettings]\nXPMultiplier=9.9\nAllowFlyerCarryPVE=True\nExternalEdit=1\n`,
+      game: `[/Script/ShooterGame.ShooterGameMode]\nXPMultiplier=1.0\n`,
+    };
+    vi.mocked(window.api.readServerIni).mockResolvedValue({
+      ok: true,
+      data: {
+        serverId: serverA.id,
+        gameUserSettingsPath: "C:/ARK/srv-a/GameUserSettings.ini",
+        gameIniPath: "C:/ARK/srv-a/Game.ini",
+        gameUserSettingsExisted: true,
+        gameIniExisted: true,
+        pending: false,
+        pendingUpdatedAt: null,
+        payload: newerPayload,
+        fingerprints: { gameUserSettings: "external-gus-fingerprint!", game: "external-game-fingerprint" },
+      },
+    });
+
+    act(() => {
+      window.dispatchEvent(new Event("focus"));
+    });
+
+    expect(await screen.findByRole("alert", { name: "INI changed outside YARK" })).toBeVisible();
+    expect(screen.getByDisplayValue("2")).toBeVisible();
+  });
+
   it("warns in raw GameUserSettings that Server settings override max players", async () => {
     const user = setupUser();
     renderWorkspace();
@@ -1127,7 +1200,8 @@ describe("ServerWorkspacePage", () => {
 
     expect(await screen.findByRole("heading", { name: "Configuration applied" })).toBeVisible();
     expect(screen.getByText(/Only the settings in this wizard were changed/i)).toBeVisible();
-    expect(await screen.findByRole("alert")).toHaveTextContent(/24 settings were updated on The Island/i);
+    // Prefer text over role=alert — Mantine notifications and other AppAlerts also use alert.
+    expect(await screen.findByText(/24 settings were updated on The Island/i)).toBeVisible();
     expect(window.api.previewServerIni).toHaveBeenCalledTimes(1);
     expect(window.api.saveServerIni).toHaveBeenCalledTimes(1);
     // Wizard initial load + re-read before save (INI editor is not pre-mounted).

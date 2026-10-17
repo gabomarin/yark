@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from "react";
-import { ArrowCounterClockwise, ArrowUUpLeft, FloppyDisk } from "@phosphor-icons/react";
+import { ArrowClockwise, ArrowCounterClockwise, ArrowUUpLeft, FloppyDisk } from "@phosphor-icons/react";
 import { Button, Group, Stack, Text, Title } from "@mantine/core";
 import classes from "./ConfigurationEditor.module.css";
 
@@ -13,6 +13,7 @@ interface Props {
   dirty: boolean;
   busy: boolean;
   loading?: boolean;
+  onReloadFromDisk?: () => void;
   onRestoreFile?: () => void;
   onDiscard: () => void;
   onSave: () => void;
@@ -29,6 +30,7 @@ export function ConfigurationEditorHeader(props: Props): ReactElement {
     dirty,
     busy,
     loading = false,
+    onReloadFromDisk,
     onRestoreFile,
     onDiscard,
     onSave,
@@ -48,6 +50,17 @@ export function ConfigurationEditorHeader(props: Props): ReactElement {
       <div className={classes.headerToolbar}>
         {iniNavigation}
         <Group gap="xs" wrap="wrap" ml="auto">
+          {onReloadFromDisk !== undefined && (
+            <Button
+              size="xs"
+              variant="default"
+              leftSection={<ArrowClockwise size={16} />}
+              onClick={onReloadFromDisk}
+              disabled={busy || loading}
+            >
+              Reload from disk
+            </Button>
+          )}
           {showRestoreFile && onRestoreFile !== undefined && (
             <Button
               size="xs"

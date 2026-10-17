@@ -27,6 +27,7 @@ import {
   lookupMatchedBaselineValue,
 } from "./configurationEditorModel";
 import type { ConfigurationEditorApi } from "./configurationEditorTypes";
+import { useConfigurationEditorDiskSync } from "./useConfigurationEditorDiskSync";
 
 export function useConfigurationEditor(options: {
   serverId: string;
@@ -62,10 +63,44 @@ export function useConfigurationEditor(options: {
   useEffect(() => {
     payloadRef.current = payload;
   });
+  const snapshotRef = useRef(snapshot);
+  useEffect(() => {
+    snapshotRef.current = snapshot;
+  });
+  const busyRef = useRef(busy);
+  useEffect(() => {
+    busyRef.current = busy;
+  });
+  const loadingRef = useRef(loading);
+  useEffect(() => {
+    loadingRef.current = loading;
+  });
 
   const publishDirty = (nextPayload: ServerIniPayload | null, nextBaseline: ServerIniPayload | null): void => {
     onDirtyChangeRef.current?.(iniPayloadsDirty(nextPayload, nextBaseline));
   };
+
+  const applyLoadedSnapshotRef = useRef<(data: ServerIniSnapshot, options?: { preserveDirty?: boolean }) => void>(
+    () => undefined,
+  );
+
+  const diskSync = useConfigurationEditorDiskSync({
+    serverId,
+    dirtyRef,
+    busyRef,
+    loadingRef,
+    snapshotRef,
+    applyLoadedSnapshotRef,
+    setBusy,
+    setLoading,
+    setError,
+    setStaleDocument,
+    setSnapshot,
+    setPayload,
+    setBaseline,
+    setPreview,
+    publishDirty,
+  });
 
   const applyLoadedSnapshot = (data: ServerIniSnapshot, options?: { preserveDirty?: boolean }): void => {
     const sanitized = sanitizeServerIniPayload(data.payload);
@@ -79,80 +114,12 @@ export function useConfigurationEditor(options: {
     setPayload(sanitized);
     setBaseline(sanitized);
     setPreview(null);
+    diskSync.clearExternalChangeFlags();
     publishDirty(sanitized, sanitized);
   };
-  const applyLoadedSnapshotRef = useRef(applyLoadedSnapshot);
   useEffect(() => {
     applyLoadedSnapshotRef.current = applyLoadedSnapshot;
   });
-
-  const reloadFromDisk = async (): Promise<void> => {
-    setBusy(true);
-    setError(null);
-    setStaleDocument(false);
-    await runWithFinally(
-      async () => {
-        const result = await window.api.readServerIni(serverId);
-        if (!result.ok) {
-          setError(result.error ?? "Could not read the INI");
-          return;
-        }
-        applyLoadedSnapshotRef.current(result.data);
-      },
-      () => {
-        setBusy(false);
-      },
-    );
-  };
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setStaleDocument(false);
-    setPreview(null);
-    publishDirty(null, null);
-
-    void runWithFinally(
-      async () => {
-        const result = await window.api.readServerIni(serverId);
-        if (cancelled) return;
-        if (!result.ok) {
-          setSnapshot(null);
-          setPayload(null);
-          setBaseline(null);
-          setError(result.error ?? "Could not read the INI");
-          publishDirty(null, null);
-          return;
-        }
-        applyLoadedSnapshotRef.current(result.data);
-      },
-      () => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      },
-    );
-
-    return () => {
-      cancelled = true;
-    };
-  }, [serverId]);
-
-  useEffect(() => {
-    return window.api.onServerIniChanged((event) => {
-      if (event.serverId !== serverId) {
-        return;
-      }
-      void (async () => {
-        const result = await window.api.readServerIni(serverId);
-        if (!result.ok) {
-          return;
-        }
-        applyLoadedSnapshotRef.current(result.data, { preserveDirty: true });
-      })();
-    });
-  }, [serverId]);
 
   const activeFileKey = iniFile;
   const activeText = payload !== null ? textForFile(payload, activeFileKey) : "";
@@ -311,6 +278,7 @@ export function useConfigurationEditor(options: {
     setBusy(true);
     setError(null);
     setStaleDocument(false);
+    diskSync.setExternalChangeDetected(false);
     return runWithFinally(
       async () => {
         const sanitized = sanitizeServerIniPayload(payload);
@@ -323,6 +291,7 @@ export function useConfigurationEditor(options: {
         setPayload(sanitized);
         setPreview(result.data);
         setBaseline(sanitized);
+        diskSync.setExternalChangeDetected(false);
         setSnapshot((prev) =>
           prev === null
             ? prev
@@ -408,7 +377,10 @@ export function useConfigurationEditor(options: {
       }
     },
     staleDocument,
-    reloadFromDisk,
+    externalChangeDetected: diskSync.externalChangeDetected,
+    setExternalChangeDetected: diskSync.setExternalChangeDetected,
+    reloadFromDisk: diskSync.reloadFromDisk,
+    requestReloadFromDisk: diskSync.requestReloadFromDisk,
     preview,
     search,
     setSearch,
