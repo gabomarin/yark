@@ -4,6 +4,7 @@ import { iniFingerprintsMatch } from "@shared/ini/ini-fingerprints";
 import type { IniPreview, ServerIniPayload, ServerIniSnapshot } from "@shared/types";
 import { showOperatorToast } from "@ui/operatorToast";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
+import { sanitizeServerIniPayload } from "../../iniModel";
 
 /**
  * Reload-from-disk + focus/visibility fingerprint re-check (#665).
@@ -28,6 +29,9 @@ export function useConfigurationEditorDiskSync(options: {
 }): {
   externalChangeDetected: boolean;
   setExternalChangeDetected: (value: boolean) => void;
+  /** Latest disk/pending payload when an external change was detected while dirty (#667). */
+  externalDiskPayload: ServerIniPayload | null;
+  setExternalDiskPayload: (payload: ServerIniPayload | null) => void;
   reloadFromDisk: () => Promise<void>;
   requestReloadFromDisk: () => void;
   clearExternalChangeFlags: () => void;
@@ -51,6 +55,7 @@ export function useConfigurationEditorDiskSync(options: {
   } = options;
 
   const [externalChangeDetected, setExternalChangeDetected] = useState(false);
+  const [externalDiskPayload, setExternalDiskPayload] = useState<ServerIniPayload | null>(null);
   const freshnessCheckInFlight = useRef(false);
   /** Bumped on every serverId change so in-flight reads cannot apply to the wrong editor. */
   const generationRef = useRef(0);
@@ -61,6 +66,7 @@ export function useConfigurationEditorDiskSync(options: {
 
   const clearExternalChangeFlags = (): void => {
     setExternalChangeDetected(false);
+    setExternalDiskPayload(null);
     setStaleDocument(false);
   };
 
@@ -131,9 +137,11 @@ export function useConfigurationEditorDiskSync(options: {
       }
       if (iniFingerprintsMatch(result.data.fingerprints, baselineFingerprints)) {
         setExternalChangeDetected(false);
+        setExternalDiskPayload(null);
         return;
       }
       if (dirtyRef.current) {
+        setExternalDiskPayload(sanitizeServerIniPayload(result.data.payload));
         setExternalChangeDetected(true);
         return;
       }
@@ -175,6 +183,7 @@ export function useConfigurationEditorDiskSync(options: {
     setError(null);
     setStaleDocument(false);
     setExternalChangeDetected(false);
+    setExternalDiskPayload(null);
     setPreview(null);
     publishDirty(null, null);
 
@@ -226,9 +235,18 @@ export function useConfigurationEditorDiskSync(options: {
     });
   }, [serverId, applyLoadedSnapshotRef, busyRef, loadingRef]);
 
+  const setExternalChangeDetectedAndPayload = (value: boolean): void => {
+    setExternalChangeDetected(value);
+    if (!value) {
+      setExternalDiskPayload(null);
+    }
+  };
+
   return {
     externalChangeDetected,
-    setExternalChangeDetected,
+    setExternalChangeDetected: setExternalChangeDetectedAndPayload,
+    externalDiskPayload,
+    setExternalDiskPayload,
     reloadFromDisk,
     requestReloadFromDisk,
     clearExternalChangeFlags,

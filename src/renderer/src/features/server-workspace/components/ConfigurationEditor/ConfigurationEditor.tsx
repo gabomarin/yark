@@ -90,6 +90,9 @@ export function ConfigurationEditor(props: Props): ReactElement {
           onDismissError={() => editor.setError(null)}
           staleDocument={editor.staleDocument}
           externalChangeDetected={editor.externalChangeDetected}
+          iniMode={editor.iniMode}
+          baseline={editor.baseline}
+          externalDiskPayload={editor.externalDiskPayload}
           onReloadStale={editor.requestReloadFromDisk}
           onDismissExternalChange={() => editor.setExternalChangeDetected(false)}
           reloadBusy={editor.busy}

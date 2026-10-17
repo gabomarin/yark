@@ -1,0 +1,35 @@
+.detailLink {
+  display: inline;
+  width: fit-content;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  line-height: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dropdown {
+  padding: var(--app-space-sm);
+}
+
+.changeList {
+  max-height: 240px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.changeRow {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--app-space-xs);
+  border-radius: var(--app-radius-sm);
+  border: 1px solid var(--app-color-border-subtle);
+  background: transparent;
+}
+
+.changeKey {
+  color: var(--app-color-text);
+}

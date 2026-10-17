@@ -1111,7 +1111,11 @@ describe("ServerWorkspacePage", () => {
       window.dispatchEvent(new Event("focus"));
     });
 
-    expect(await screen.findByRole("alert", { name: "INI changed outside YARK" })).toBeVisible();
+    const banner = await screen.findByRole("alert", { name: "INI updated outside YARK" });
+    expect(banner).toBeVisible();
+    expect(banner).toHaveTextContent(/Click Save to merge/i);
+    expect(within(banner).getByRole("button", { name: "View outside changes" })).toBeVisible();
+    expect(within(banner).queryByRole("button", { name: "Reload from disk" })).not.toBeInTheDocument();
     expect(screen.getByDisplayValue("2")).toBeVisible();
   });
 

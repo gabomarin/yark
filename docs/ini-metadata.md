@@ -118,6 +118,15 @@ forbidden Unset policies are rejected (`INI_SEMANTIC_OWNERSHIP` /
 editor baseline. The Raw/text editor and other full-buffer writers still use
 `ini:save` with fingerprints (PINI-003 / #665).
 
+**Operator chrome:** while dirty, a fingerprint mismatch on focus shows an
+**info** banner in visual mode (“INI updated outside YARK”) with a short count
+of outside setting changes, a compact **View outside changes** text link that
+opens a Needs-attention-style detail popover, and copy to click Save to merge
+when edits do not overlap (no Reload button in that banner). Text mode keeps an
+attention banner with Reload because Save will refuse until then. A failed Save
+with an overlapping conflict uses a red **INI conflict** alert (Reload offered
+there).
+
 ## Diagnostics
 
 `diagnoseIniSettingMetaCatalog()` checks duplicate identities, unsupported enums,

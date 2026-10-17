@@ -117,6 +117,7 @@ export function useConfigurationEditor(options: {
         fingerprints: baselineFingerprints,
       });
       if (!iniFingerprintsMatch(baselineFingerprints, data.fingerprints)) {
+        diskSync.setExternalDiskPayload(sanitized);
         diskSync.setExternalChangeDetected(true);
       }
       return;
@@ -372,6 +373,7 @@ export function useConfigurationEditor(options: {
   return {
     snapshot,
     payload,
+    baseline,
     loading,
     busy,
     error,
@@ -384,6 +386,7 @@ export function useConfigurationEditor(options: {
     staleDocument,
     externalChangeDetected: diskSync.externalChangeDetected,
     setExternalChangeDetected: diskSync.setExternalChangeDetected,
+    externalDiskPayload: diskSync.externalDiskPayload,
     reloadFromDisk: diskSync.reloadFromDisk,
     requestReloadFromDisk: diskSync.requestReloadFromDisk,
     preview,
