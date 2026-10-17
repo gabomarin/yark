@@ -454,9 +454,7 @@ export type OsNotificationOpenPush =
   | { kind: "yarkUpdate" };
 
 /** Normalized result of IPC operations. Optional `code` for UI branching (#665). */
-export type IpcResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; error: string; code?: string };
+export type IpcResult<T> = { ok: true; data: T } | { ok: false; error: string; code?: string };
 
 /** API exposed to the renderer via contextBridge. */
 export interface RendererApi {

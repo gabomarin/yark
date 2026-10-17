@@ -11,9 +11,7 @@ export const INI_STALE_DOCUMENT_CODE = "INI_STALE_DOCUMENT" as const;
 export class IniStaleDocumentError extends Error {
   readonly code = INI_STALE_DOCUMENT_CODE;
 
-  constructor(
-    message = "INI files changed outside YARK since this editor loaded. Reload before saving.",
-  ) {
+  constructor(message = "INI files changed outside YARK since this editor loaded. Reload before saving.") {
     super(message);
     this.name = "IniStaleDocumentError";
   }

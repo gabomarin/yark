@@ -164,11 +164,7 @@ export function ClusterWideEditor(props: Props): ReactElement {
               failures.push(`${member.name}: ${memberPreview.data.issues.map((issue) => issue.message).join("; ")}`);
               continue;
             }
-            const result = await window.api.saveServerIni(
-              member.id,
-              memberPayload,
-              latest.data.fingerprints,
-            );
+            const result = await window.api.saveServerIni(member.id, memberPayload, latest.data.fingerprints);
             if (!result.ok) {
               failures.push(`${member.name}: ${result.error ?? "Could not apply cluster transfer settings"}`);
             }

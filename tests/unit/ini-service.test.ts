@@ -98,11 +98,7 @@ function prepareIniFiles(installDir: string): void {
 }
 
 /** Read current fingerprints then save (editor baseline contract). */
-async function saveIni(
-  service: IniService,
-  serverId: string,
-  payload: ServerIniPayload,
-) {
+async function saveIni(service: IniService, serverId: string, payload: ServerIniPayload) {
   const snapshot = await service.readServerIni(serverId);
   return service.saveServerIni(serverId, payload, snapshot.fingerprints);
 }
@@ -314,11 +310,7 @@ describe("IniService fingerprints (#665)", () => {
     const { service, profile, addEvent } = makeService(installDir);
     const baseline = await service.readServerIni(profile.id);
 
-    writeFileSync(
-      gameUserSettingsPath(installDir),
-      "[ServerSettings]\nRCONPort=27020\nExternalEdit=1\n",
-      "utf8",
-    );
+    writeFileSync(gameUserSettingsPath(installDir), "[ServerSettings]\nRCONPort=27020\nExternalEdit=1\n", "utf8");
 
     await expect(
       service.saveServerIni(

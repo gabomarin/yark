@@ -3,11 +3,7 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini/ini-defaults";
-import {
-  fingerprintIniPayload,
-  IniStaleDocumentError,
-  iniFingerprintsMatch,
-} from "@shared/ini/ini-fingerprints";
+import { fingerprintIniPayload, IniStaleDocumentError, iniFingerprintsMatch } from "@shared/ini/ini-fingerprints";
 import { sanitizeServerIniPayload } from "@shared/ini/ini-text";
 import type { ServerIniChangedPush } from "@shared/ipc";
 import type {
@@ -256,9 +252,7 @@ export class IniService extends EventEmitter {
     };
   }
 
-  private withFingerprints(
-    snapshot: Omit<ServerIniSnapshot, "fingerprints">,
-  ): ServerIniSnapshot {
+  private withFingerprints(snapshot: Omit<ServerIniSnapshot, "fingerprints">): ServerIniSnapshot {
     return {
       ...snapshot,
       fingerprints: fingerprintIniPayload(snapshot.payload),
