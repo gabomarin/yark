@@ -12,12 +12,15 @@ const GUS_PATH = path.join(ROOT, "src/shared/defaults/GameUserSettings.ini");
 const GAME_PATH = path.join(ROOT, "src/shared/defaults/Game.ini");
 const OVERRIDES_PATH = path.join(ROOT, "src/shared/ini/ini-setting-input-overrides.json");
 const OWNERSHIP_SEED_PATH = path.join(ROOT, "src/shared/ini/ini-setting-ownership-seed.json");
+const ENUMS_PATH = path.join(ROOT, "src/shared/ini/ini-setting-meta-enums.json");
 const OUT_PATH = path.join(ROOT, "src/shared/ini/ini-setting-meta.json");
 
-const OWNERS = new Set(["serverProfile", "iniVisual", "externalManual", "system"]);
-const ABSENCE_POLICIES = new Set(["allowed", "forbidden", "mapsToProfileNull"]);
-const ENFORCEMENTS = new Set(["blocking", "warning", "advisory"]);
-const CONFIDENCES = new Set(["verified", "inferred", "unknown"]);
+const META_ENUMS = JSON.parse(fs.readFileSync(ENUMS_PATH, "utf8"));
+const OWNERS = new Set(META_ENUMS.owners);
+const ABSENCE_POLICIES = new Set(META_ENUMS.absencePolicies);
+const ENFORCEMENTS = new Set(META_ENUMS.enforcements);
+const CONFIDENCES = new Set(META_ENUMS.provenanceConfidences);
+const APPLICABILITY_GAMES = new Set(META_ENUMS.applicabilityGames);
 
 const DEFAULT_OWNERSHIP = {
   owner: "iniVisual",
@@ -271,22 +274,59 @@ function assertEnum(value, allowed, label, id) {
   }
 }
 
+function isPlainObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function assertApplicability(applicability, id) {
+  if (!isPlainObject(applicability)) {
+    throw new Error(`Invalid applicability for ${id}`);
+  }
+  assertEnum(applicability.game, APPLICABILITY_GAMES, "applicability.game", id);
+  if (applicability.modIds !== undefined) {
+    if (!Array.isArray(applicability.modIds) || !applicability.modIds.every((m) => typeof m === "string")) {
+      throw new Error(`Invalid applicability.modIds for ${id}`);
+    }
+  }
+}
+
+function assertProvenance(provenance, id) {
+  if (!isPlainObject(provenance)) {
+    throw new Error(`Missing provenance for ${id}`);
+  }
+  assertEnum(provenance.confidence, CONFIDENCES, "provenance.confidence", id);
+  if (typeof provenance.source !== "string" || !provenance.source.trim()) {
+    throw new Error(`Missing provenance.source for ${id}`);
+  }
+  if (provenance.reviewedAt != null && typeof provenance.reviewedAt !== "string") {
+    throw new Error(`Invalid provenance.reviewedAt for ${id}`);
+  }
+  if (provenance.confidence === "verified" && !provenance.reviewedAt) {
+    throw new Error(`verified provenance requires reviewedAt for ${id}`);
+  }
+}
+
 function loadOwnershipSeed() {
-  const seed = loadJsonObject(OWNERSHIP_SEED_PATH);
-  for (const [id, entry] of Object.entries(seed)) {
+  if (!fs.existsSync(OWNERSHIP_SEED_PATH)) {
+    return {};
+  }
+  const raw = JSON.parse(fs.readFileSync(OWNERSHIP_SEED_PATH, "utf8"));
+  const seed = {};
+  for (const [id, entry] of Object.entries(raw || {})) {
+    if (id.startsWith("$")) continue;
+    if (!isPlainObject(entry)) {
+      throw new Error(`Ownership seed entry must be a non-null object: ${id}`);
+    }
     assertEnum(entry.owner, OWNERS, "owner", id);
     assertEnum(entry.absencePolicy, ABSENCE_POLICIES, "absencePolicy", id);
     assertEnum(entry.enforcement, ENFORCEMENTS, "enforcement", id);
-    if (!entry.provenance || typeof entry.provenance !== "object") {
-      throw new Error(`Missing provenance for ${id}`);
-    }
-    assertEnum(entry.provenance.confidence, CONFIDENCES, "provenance.confidence", id);
-    if (typeof entry.provenance.source !== "string" || !entry.provenance.source.trim()) {
-      throw new Error(`Missing provenance.source for ${id}`);
-    }
-    if (entry.provenance.confidence === "verified" && !entry.provenance.reviewedAt) {
-      throw new Error(`verified provenance requires reviewedAt for ${id}`);
-    }
+    assertProvenance(entry.provenance, id);
+    const applicability = entry.applicability ?? { game: "asa" };
+    assertApplicability(applicability, id);
+    seed[id] = {
+      ...entry,
+      applicability,
+    };
   }
   return seed;
 }
@@ -296,11 +336,17 @@ function resolveOwnership(id, seed) {
   if (!override) {
     return { ...DEFAULT_OWNERSHIP, provenance: { ...DEFAULT_OWNERSHIP.provenance } };
   }
+  const applicability = override.applicability ?? { game: "asa" };
+  assertApplicability(applicability, id);
+  assertProvenance(override.provenance, id);
   return {
     owner: override.owner,
     absencePolicy: override.absencePolicy,
     enforcement: override.enforcement,
-    applicability: override.applicability ?? { game: "asa" },
+    applicability: {
+      game: applicability.game,
+      ...(Array.isArray(applicability.modIds) ? { modIds: applicability.modIds } : {}),
+    },
     provenance: {
       source: override.provenance.source,
       reviewedAt: override.provenance.reviewedAt ?? null,

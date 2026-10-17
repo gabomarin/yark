@@ -16,12 +16,13 @@ import {
   type IniSettingProvenance,
 } from "./ini-setting-meta";
 import { isClientIniNoise } from "./ini-text";
+import metaEnums from "./ini-setting-meta-enums.json";
 import ownershipSeed from "./ini-setting-ownership-seed.json";
 
-const OWNERS = new Set<IniSettingOwner>(["serverProfile", "iniVisual", "externalManual", "system"]);
-const ABSENCE_POLICIES = new Set<IniSettingAbsencePolicy>(["allowed", "forbidden", "mapsToProfileNull"]);
-const ENFORCEMENTS = new Set<IniSettingEnforcement>(["blocking", "warning", "advisory"]);
-const CONFIDENCES = new Set(["verified", "inferred", "unknown"]);
+const OWNERS = new Set<IniSettingOwner>(metaEnums.owners as IniSettingOwner[]);
+const ABSENCE_POLICIES = new Set<IniSettingAbsencePolicy>(metaEnums.absencePolicies as IniSettingAbsencePolicy[]);
+const ENFORCEMENTS = new Set<IniSettingEnforcement>(metaEnums.enforcements as IniSettingEnforcement[]);
+const CONFIDENCES = new Set(metaEnums.provenanceConfidences);
 
 /** ASA ignores INI MaxPlayers; the live cap is `-WinLiveMaxPlayers`. */
 export function isAsaIgnoredIniMaxPlayers(key: string): boolean {
@@ -208,11 +209,12 @@ export function diagnoseIniSettingMetaCatalog(): IniSettingMetaDiagnostic[] {
     }
   }
 
-  const catalogIds = new Set(iniSettingMetaList.map((s) => s.id));
+  // Match runtime lookup: file/section/key identity is case-insensitive.
+  const catalogIds = new Set(iniSettingMetaList.map((s) => s.id.toLowerCase()));
   const seed = seedEntries();
-  const seedIds = new Set(seed.map((e) => e.id));
+  const seedIds = new Set(seed.map((e) => e.id.toLowerCase()));
   for (const entry of seed) {
-    if (!catalogIds.has(entry.id)) {
+    if (!catalogIds.has(entry.id.toLowerCase())) {
       diagnostics.push({
         code: "seed_missing_from_catalog",
         id: entry.id,
@@ -223,7 +225,7 @@ export function diagnoseIniSettingMetaCatalog(): IniSettingMetaDiagnostic[] {
 
   for (const setting of iniSettingMetaList) {
     if (setting.owner === "serverProfile" || setting.owner === "system") {
-      if (!seedIds.has(setting.id)) {
+      if (!seedIds.has(setting.id.toLowerCase())) {
         diagnostics.push({
           code: "owned_catalog_missing_from_seed",
           id: setting.id,

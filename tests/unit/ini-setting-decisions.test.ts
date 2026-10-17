@@ -12,6 +12,7 @@ import {
   lookupSettingOwner,
 } from "@shared/ini/ini-setting-decisions";
 import { lookupIniSettingMeta } from "@shared/ini/ini-setting-meta";
+import metaEnums from "@shared/ini/ini-setting-meta-enums.json";
 import { sanitizeServerIniPayload } from "@shared/ini/ini-text";
 
 describe("ini-setting-decisions", () => {
@@ -66,6 +67,14 @@ describe("ini-setting-decisions", () => {
 
   it("reports a clean catalog diagnostic pass", () => {
     expect(diagnoseIniSettingMetaCatalog()).toEqual([]);
+  });
+
+  it("shares enum vocabulary with the catalog builder", () => {
+    expect(metaEnums.owners).toEqual(["serverProfile", "iniVisual", "externalManual", "system"]);
+    expect(metaEnums.absencePolicies).toEqual(["allowed", "forbidden", "mapsToProfileNull"]);
+    expect(metaEnums.enforcements).toEqual(["blocking", "warning", "advisory"]);
+    expect(metaEnums.provenanceConfidences).toEqual(["verified", "inferred", "unknown"]);
+    expect(metaEnums.applicabilityGames).toEqual(["asa"]);
   });
 
   it("does not materialize catalog defaults for absent keys during sanitize round-trip", () => {

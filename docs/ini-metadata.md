@@ -13,6 +13,7 @@ visual editors, compose/strip, and future import work share one decision path.
 | [`src/shared/defaults/*.ini`](../src/shared/defaults/)                                   | Annotated defaults → descriptions, value types, inferred inputs                         |
 | [`ini-setting-input-overrides.json`](../src/shared/ini/ini-setting-input-overrides.json) | Optional hand-tuned editor inputs                                                       |
 | [`ini-setting-ownership-seed.json`](../src/shared/ini/ini-setting-ownership-seed.json)   | Non-default ownership / absence / enforcement / provenance                              |
+| [`ini-setting-meta-enums.json`](../src/shared/ini/ini-setting-meta-enums.json)           | Shared owner / absence / enforcement / confidence vocabulary for builder + diagnostics  |
 | `npm run catalog:ini-meta`                                                               | Writes deterministic [`ini-setting-meta.json`](../src/shared/ini/ini-setting-meta.json) |
 
 Do not add a second settings catalog. Prefer `@shared/ini/ini-setting-meta` and
