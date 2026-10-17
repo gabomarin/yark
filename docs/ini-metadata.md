@@ -72,9 +72,21 @@ Each entry has `provenance: { source, reviewedAt, confidence }`:
 - Catalog defaults from annotated INI comments use `confidence: "inferred"` and
   `reviewedAt: null`.
 - Ownership-seed rows use `confidence: "verified"` with a fixed `reviewedAt`.
+  A small starter set of visual keys (e.g. `DifficultyOffset`, `AdminLogging`,
+  `XPMultiplier`) is also marked verified for PINI-002 UI demos; grow this only
+  with an explicit review date and source.
 
 Tier-2 fields (`restartImpact`, `conflicts`) stay omitted/null until verified.
 Unknown metadata remains unknown.
+
+## Catalog relation indicators (PINI-002 / #663)
+
+Visual rows show a dimmed **Custom** / **Default** / **Unset** / **Unknown**
+label from the **saved** value vs a **verified** catalog default only
+(`lookupVerifiedIniDefault`). Inferred project defaults never count as Default.
+**Unset** (action) removes an occurrence when `absencePolicy` is `allowed` and
+must not invent a default. Unsaved draft highlighting (`*`, PINI-001) stays
+separate.
 
 ## Visual vs raw
 

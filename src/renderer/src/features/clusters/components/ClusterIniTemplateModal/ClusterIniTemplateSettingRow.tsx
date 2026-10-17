@@ -1,9 +1,14 @@
 import type { ReactElement } from "react";
-import { ArrowCounterClockwise, ArrowUUpLeft } from "@phosphor-icons/react";
+import { ArrowCounterClockwise, ArrowUUpLeft, MinusCircle } from "@phosphor-icons/react";
 import { ActionIcon, NumberInput, Text, TextInput, Tooltip, VisuallyHidden } from "@mantine/core";
+import {
+  canUnsetIniSetting,
+  catalogRelationLabel,
+  lookupVerifiedIniDefault,
+  resolveIniCatalogRelation,
+} from "@shared/ini/ini-catalog-relation";
 import { AppSwitch } from "@ui/AppSwitch/AppSwitch";
 import {
-  lookupDefaultValue,
   lookupSettingDescription,
   resolveControlKind,
   sectionShortName,
@@ -18,24 +23,34 @@ interface Props {
   savedValue?: string | null;
   onChange: (section: string, key: string, value: string, occurrence?: number) => void;
   onRevertToSaved?: (row: IniSettingReference) => void;
+  onApplyVerifiedDefault?: (row: IniSettingReference) => void;
+  onUnsetRow?: (row: IniSettingReference) => void;
 }
 
 export function ClusterIniTemplateSettingRow(props: Props): ReactElement {
   const { row, onChange } = props;
   const unsaved = props.unsaved === true;
   const savedValue = props.savedValue ?? null;
-  const defaultValue = lookupDefaultValue(row.fileKey, row.section, row.key);
-  const canReset = defaultValue !== null && defaultValue !== row.value;
+  const verified = lookupVerifiedIniDefault(row.fileKey, row.section, row.key);
+  const catalogRelation = resolveIniCatalogRelation(savedValue, verified?.value ?? null);
+  const canApplyVerified =
+    verified !== null && verified.value !== row.value && props.onApplyVerifiedDefault !== undefined;
+  const canUnset = canUnsetIniSetting(row.fileKey, row.section, row.key) && props.onUnsetRow !== undefined;
   const canRevertSaved = unsaved && props.onRevertToSaved !== undefined;
   const label = row.duplicateCount > 1 ? `${row.key} #${row.occurrence + 1}` : row.key;
   const revertLabel = savedValue !== null ? `Revert to saved value: ${savedValue}` : "Discard key (not in saved file)";
   const revertAriaLabel =
     savedValue !== null ? `Revert ${row.key} to saved value` : `Discard ${row.key} (not in saved file)`;
+  const verifiedTooltip =
+    verified !== null
+      ? `Use verified default ${verified.value} (${verified.source}, reviewed ${verified.reviewedAt})`
+      : "No verified ASA default for this key";
 
   return (
     <div
       className={`${classes.row}${unsaved ? ` ${classes.rowUnsaved}` : ""}`}
       data-ini-row-unsaved={unsaved ? "true" : undefined}
+      data-ini-row-catalog-relation={catalogRelation}
     >
       <div>
         <Text fw={600} size="sm">
@@ -51,6 +66,10 @@ export function ClusterIniTemplateSettingRow(props: Props): ReactElement {
         </Text>
         <Text c="dimmed" size="xs">
           {sectionShortName(row.section)}
+          {" · "}
+          <Text span c="dimmed" size="xs" data-ini-row-catalog-relation-label>
+            {catalogRelationLabel(catalogRelation)}
+          </Text>
         </Text>
       </div>
       <div>
@@ -80,19 +99,34 @@ export function ClusterIniTemplateSettingRow(props: Props): ReactElement {
             </ActionIcon>
           </Tooltip>
         ) : null}
-        <Tooltip label={canReset ? `Default: ${defaultValue}` : "No known default"}>
+        <Tooltip label={verifiedTooltip}>
           <ActionIcon
             variant="subtle"
             color="gray"
-            aria-label={`Reset ${row.key} to default`}
-            disabled={!canReset}
-            onClick={() => {
-              if (defaultValue !== null) {
-                onChange(row.section, row.key, defaultValue, row.occurrence);
-              }
-            }}
+            aria-label={`Use verified default for ${row.key}`}
+            data-ini-row-use-verified-default
+            disabled={!canApplyVerified}
+            onClick={() => props.onApplyVerifiedDefault?.(row)}
           >
             <ArrowUUpLeft size={14} />
+          </ActionIcon>
+        </Tooltip>
+        <Tooltip
+          label={
+            canUnset
+              ? "Unset — remove this key from the file (absence is not a default)"
+              : "Unset is not allowed for this key"
+          }
+        >
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            aria-label={`Unset ${row.key}`}
+            data-ini-row-unset
+            disabled={!canUnset}
+            onClick={() => props.onUnsetRow?.(row)}
+          >
+            <MinusCircle size={14} />
           </ActionIcon>
         </Tooltip>
       </div>

@@ -23,7 +23,8 @@ interface Props {
   onToggleSection: (sectionName: string) => void;
   onSetSectionGroupsCollapsed: (category: string, collapsed: boolean) => void;
   onUpdateValue: (fileKey: IniFileKey, rowSection: string, key: string, value: string, occurrence?: number) => void;
-  onResetRowToDefault: (row: IniSettingReference) => void;
+  onApplyVerifiedDefault: (row: IniSettingReference) => void;
+  onUnsetRow: (row: IniSettingReference) => void;
   onRevertRowToSaved: (row: IniSettingReference) => void;
   onOpenAdminList?: () => void;
 }
@@ -34,7 +35,8 @@ function renderSettingRows(
   isRowUnsaved: Props["isRowUnsaved"],
   savedValueForRow: Props["savedValueForRow"],
   onUpdateValue: Props["onUpdateValue"],
-  onResetRowToDefault: Props["onResetRowToDefault"],
+  onApplyVerifiedDefault: Props["onApplyVerifiedDefault"],
+  onUnsetRow: Props["onUnsetRow"],
   onRevertRowToSaved: Props["onRevertRowToSaved"],
   onOpenAdminList: Props["onOpenAdminList"],
 ): ReactElement[] {
@@ -48,7 +50,8 @@ function renderSettingRows(
         unsaved={isRowUnsaved(row)}
         savedValue={savedValueForRow(row)}
         onUpdateValue={onUpdateValue}
-        onResetRowToDefault={onResetRowToDefault}
+        onApplyVerifiedDefault={onApplyVerifiedDefault}
+        onUnsetRow={onUnsetRow}
         onRevertRowToSaved={onRevertRowToSaved}
         onOpenAdminList={onOpenAdminList}
       />
@@ -65,7 +68,8 @@ function renderSectionGroups(
   savedValueForRow: Props["savedValueForRow"],
   onToggleSection: (sectionName: string) => void,
   onUpdateValue: Props["onUpdateValue"],
-  onResetRowToDefault: Props["onResetRowToDefault"],
+  onApplyVerifiedDefault: Props["onApplyVerifiedDefault"],
+  onUnsetRow: Props["onUnsetRow"],
   onRevertRowToSaved: Props["onRevertRowToSaved"],
   onOpenAdminList: Props["onOpenAdminList"],
 ): ReactElement[] {
@@ -96,7 +100,8 @@ function renderSectionGroups(
             isRowUnsaved,
             savedValueForRow,
             onUpdateValue,
-            onResetRowToDefault,
+            onApplyVerifiedDefault,
+            onUnsetRow,
             onRevertRowToSaved,
             onOpenAdminList,
           )}
@@ -160,7 +165,8 @@ export function ConfigurationEditorSettingsTable(props: Props): ReactElement {
     onToggleSection,
     onSetSectionGroupsCollapsed,
     onUpdateValue,
-    onResetRowToDefault,
+    onApplyVerifiedDefault,
+    onUnsetRow,
     onRevertRowToSaved,
   } = props;
 
@@ -206,7 +212,8 @@ export function ConfigurationEditorSettingsTable(props: Props): ReactElement {
                     savedValueForRow,
                     onToggleSection,
                     onUpdateValue,
-                    onResetRowToDefault,
+                    onApplyVerifiedDefault,
+                    onUnsetRow,
                     onRevertRowToSaved,
                     props.onOpenAdminList,
                   )}
@@ -241,7 +248,8 @@ export function ConfigurationEditorSettingsTable(props: Props): ReactElement {
                     isRowUnsaved,
                     savedValueForRow,
                     onUpdateValue,
-                    onResetRowToDefault,
+                    onApplyVerifiedDefault,
+                    onUnsetRow,
                     onRevertRowToSaved,
                     props.onOpenAdminList,
                   )}

@@ -1,5 +1,5 @@
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini/ini-defaults";
-import { lookupAsaDefaultValue, lookupAsaDescription, lookupAsaSetting } from "@shared/asa/asa-server-settings";
+import { lookupAsaDescription, lookupAsaSetting } from "@shared/asa/asa-server-settings";
 import { lookupIniSettingInput } from "@shared/ini/ini-setting-meta";
 import { asaUiCategoryLabel, resolveAsaUiCategory, type AsaUiCategoryId } from "@shared/asa/asa-setting-ui-categories";
 import type { IniFileKey, ServerIniPayload } from "@shared/types";
@@ -57,19 +57,6 @@ export function isClientNoiseKey(key: string, section?: string): boolean {
     return isClientIniNoise(section, key);
   }
   return isClientIniKey(key);
-}
-
-export function lookupDefaultValue(fileKey: IniFileKey, section: string, key: string): string | null {
-  // Prefer shared/defaults/*.ini as source of truth; catalog is metadata only.
-  const sectionLower = section.toLowerCase();
-  const keyLower = key.toLowerCase();
-  const match = parseIniTextRows(defaultTextForFile(fileKey)).find(
-    (row) => row.section.toLowerCase() === sectionLower && row.key.toLowerCase() === keyLower,
-  );
-  if (match !== undefined) {
-    return match.value;
-  }
-  return lookupAsaDefaultValue(fileKey, section, key);
 }
 
 export function lookupSettingDescription(fileKey: IniFileKey, section: string, key: string): string {

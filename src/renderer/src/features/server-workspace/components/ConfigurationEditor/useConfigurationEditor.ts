@@ -8,8 +8,8 @@ import {
   filterIniSettingReferences,
   groupSettingReferencesByUiCategory,
   iniUiSectionCollapseKey,
-  lookupDefaultValue,
   parseIniRows,
+  removeIniValue,
   sanitizeServerIniPayload,
   setIniValue,
   textForFile,
@@ -17,6 +17,7 @@ import {
   type IniFilterId,
   type IniSettingReference,
 } from "../../iniModel";
+import { canUnsetIniSetting, lookupVerifiedIniDefault } from "@shared/ini/ini-catalog-relation";
 import {
   applyIniRowRevertToPayload,
   buildIniRowMatchIndex,
@@ -220,13 +221,27 @@ export function useConfigurationEditor(options: {
     });
   };
 
-  const resetRowToDefault = (row: IniSettingReference) => {
-    const defaultValue = lookupDefaultValue(row.fileKey, row.section, row.key);
-    if (defaultValue === null) return;
-    updateValue(row.fileKey, row.section, row.key, defaultValue, row.occurrence);
+  const applyVerifiedDefault = (row: IniSettingReference) => {
+    const verified = lookupVerifiedIniDefault(row.fileKey, row.section, row.key);
+    if (verified === null) return;
+    updateValue(row.fileKey, row.section, row.key, verified.value, row.occurrence);
     showOperatorToast({
       title: "INI editor",
-      message: `${row.key} restored to default (pending save).`,
+      message: `${row.key} set to verified default (pending save).`,
+    });
+  };
+
+  const unsetRow = (row: IniSettingReference) => {
+    if (payload === null) return;
+    if (!canUnsetIniSetting(row.fileKey, row.section, row.key)) return;
+    const nextText = removeIniValue(textForFile(payload, row.fileKey), row.section, row.key, row.occurrence);
+    const nextPayload = withFileText(payload, row.fileKey, nextText);
+    setPayload(nextPayload);
+    publishDirty(nextPayload, baseline);
+    setPreview(null);
+    showOperatorToast({
+      title: "INI editor",
+      message: `${row.key} unset (pending save).`,
     });
   };
 
@@ -399,7 +414,8 @@ export function useConfigurationEditor(options: {
     updateValue,
     resetChanges,
     resetActiveFileToDefaults,
-    resetRowToDefault,
+    applyVerifiedDefault,
+    unsetRow,
     revertRowToSaved,
     toggleSection,
     setSectionGroupsCollapsed,

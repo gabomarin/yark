@@ -30,10 +30,17 @@ describe("ini-setting-decisions", () => {
   });
 
   it("defaults ordinary catalog settings to iniVisual with allowed absence", () => {
-    expect(lookupSettingOwner("gameUserSettings", "ServerSettings", "AdminLogging")).toBe("iniVisual");
-    expect(lookupAbsencePolicy("gameUserSettings", "ServerSettings", "AdminLogging")).toBe("allowed");
-    expect(lookupEnforcement("gameUserSettings", "ServerSettings", "AdminLogging")).toBe("advisory");
-    expect(lookupProvenance("gameUserSettings", "ServerSettings", "AdminLogging")?.confidence).toBe("inferred");
+    expect(lookupSettingOwner("gameUserSettings", "ServerSettings", "AllowFlyerCarryPvE")).toBe("iniVisual");
+    expect(lookupAbsencePolicy("gameUserSettings", "ServerSettings", "AllowFlyerCarryPvE")).toBe("allowed");
+    expect(lookupEnforcement("gameUserSettings", "ServerSettings", "AllowFlyerCarryPvE")).toBe("advisory");
+    expect(lookupProvenance("gameUserSettings", "ServerSettings", "AllowFlyerCarryPvE")?.confidence).toBe("inferred");
+  });
+
+  it("keeps a small verified default seed for PINI-002 demo keys", () => {
+    const admin = lookupProvenance("gameUserSettings", "ServerSettings", "AdminLogging");
+    expect(admin?.confidence).toBe("verified");
+    expect(admin?.source).toBe("community-defaults-review");
+    expect(admin?.reviewedAt).toBe("2026-10-17");
   });
 
   it("keeps unknown keys unknown (no invented catalog owner)", () => {

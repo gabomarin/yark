@@ -61,7 +61,8 @@ function setup(row: IniSettingReference, resource: HostedResourceDto | null = ba
         busy={false}
         unsaved={false}
         onUpdateValue={onUpdateValue}
-        onResetRowToDefault={vi.fn()}
+        onApplyVerifiedDefault={vi.fn()}
+        onUnsetRow={vi.fn()}
         onRevertRowToSaved={onRevertRowToSaved}
       />
     </AppProviders>,
@@ -124,7 +125,8 @@ describe("IniSettingRow unsaved highlighting (PINI-001 / #661)", () => {
           unsaved
           savedValue="0.2"
           onUpdateValue={vi.fn()}
-          onResetRowToDefault={vi.fn()}
+          onApplyVerifiedDefault={vi.fn()}
+          onUnsetRow={vi.fn()}
           onRevertRowToSaved={onRevertRowToSaved}
         />
       </AppProviders>,
@@ -134,6 +136,10 @@ describe("IniSettingRow unsaved highlighting (PINI-001 / #661)", () => {
     expect(screen.getByText("Unsaved")).toBeInTheDocument();
     expect(screen.getByText("Last saved: 0.2")).toBeInTheDocument();
     expect(document.querySelector('[data-ini-row-unsaved="true"]')).not.toBeNull();
+    expect(document.querySelector("[data-ini-row-catalog-relation]")).toHaveAttribute(
+      "data-ini-row-catalog-relation",
+      "custom",
+    );
     await user.click(screen.getByRole("button", { name: "Revert DifficultyOffset to saved value" }));
     expect(onRevertRowToSaved).toHaveBeenCalledWith(row);
   });
@@ -150,14 +156,45 @@ describe("IniSettingRow unsaved highlighting (PINI-001 / #661)", () => {
           unsaved
           savedValue={null}
           onUpdateValue={vi.fn()}
-          onResetRowToDefault={vi.fn()}
+          onApplyVerifiedDefault={vi.fn()}
+          onUnsetRow={vi.fn()}
           onRevertRowToSaved={onRevertRowToSaved}
         />
       </AppProviders>,
     );
 
     expect(screen.getByText("Last saved: (not in file)")).toBeInTheDocument();
+    expect(document.querySelector("[data-ini-row-catalog-relation]")).toHaveAttribute(
+      "data-ini-row-catalog-relation",
+      "unset",
+    );
     await user.click(screen.getByRole("button", { name: "Discard XPMultiplier (not in saved file)" }));
     expect(onRevertRowToSaved).toHaveBeenCalledWith(row);
+  });
+
+  it("applies verified default and unsets when allowed (PINI-002 / #663)", async () => {
+    const user = userEvent.setup();
+    const onApplyVerifiedDefault = vi.fn();
+    const onUnsetRow = vi.fn();
+    const row = iniRow("DifficultyOffset", "0.9");
+    render(
+      <AppProviders>
+        <IniSettingRow
+          row={row}
+          busy={false}
+          unsaved={false}
+          savedValue="0.9"
+          onUpdateValue={vi.fn()}
+          onApplyVerifiedDefault={onApplyVerifiedDefault}
+          onUnsetRow={onUnsetRow}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByText("Custom")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Use verified default for DifficultyOffset" }));
+    expect(onApplyVerifiedDefault).toHaveBeenCalledWith(row);
+    await user.click(screen.getByRole("button", { name: "Unset DifficultyOffset" }));
+    expect(onUnsetRow).toHaveBeenCalledWith(row);
   });
 });

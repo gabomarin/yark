@@ -33,7 +33,8 @@ export interface ConfigurationEditorApi {
   updateValue: (fileKey: IniFileKey, rowSection: string, key: string, value: string, occurrence?: number) => void;
   resetChanges: () => void;
   resetActiveFileToDefaults: () => void;
-  resetRowToDefault: (row: IniSettingReference) => void;
+  applyVerifiedDefault: (row: IniSettingReference) => void;
+  unsetRow: (row: IniSettingReference) => void;
   revertRowToSaved: (row: IniSettingReference) => void;
   toggleSection: (sectionName: string) => void;
   setSectionGroupsCollapsed: (category: string, collapsed: boolean) => void;
