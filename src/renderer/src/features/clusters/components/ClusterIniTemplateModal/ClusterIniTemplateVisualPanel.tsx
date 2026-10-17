@@ -14,12 +14,14 @@ import {
   groupSettingReferencesByUiCategory,
   iniUiSectionCollapseKey,
   parseIniRows,
+  removeIniValue,
   setIniValue,
   textForFile,
   withFileText,
   type IniFilterId,
   type IniSettingReference,
 } from "@features/server-workspace/iniModel";
+import { canUnsetIniSetting, lookupVerifiedIniDefault } from "@shared/ini/ini-catalog-relation";
 import {
   applyIniRowRevertToPayload,
   buildIniRowMatchIndex,
@@ -98,6 +100,19 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
     if (matchIndex === null) return;
     const { nextPayload } = applyIniRowRevertToPayload(props.payload, matchIndex, row);
     props.onPayloadChange(nextPayload);
+  };
+
+  const applyVerifiedDefault = (row: IniSettingReference): void => {
+    const verified = lookupVerifiedIniDefault(row.fileKey, row.section, row.key);
+    if (verified === null) return;
+    updateValue(row.section, row.key, verified.value, row.occurrence);
+  };
+
+  const unsetRow = (row: IniSettingReference): void => {
+    if (!canUnsetIniSetting(row.fileKey, row.section, row.key)) return;
+    props.onPayloadChange(
+      withFileText(props.payload, props.iniFile, removeIniValue(activeText, row.section, row.key, row.occurrence)),
+    );
   };
 
   const savedValueForRow = (row: IniSettingReference): string | null =>
@@ -277,6 +292,8 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                                 savedValue={savedValueForRow(row)}
                                 onChange={updateValue}
                                 onRevertToSaved={revertRowToSaved}
+                                onApplyVerifiedDefault={applyVerifiedDefault}
+                                onUnsetRow={unsetRow}
                               />
                             ))}
                         </div>
@@ -317,6 +334,8 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                         savedValue={savedValueForRow(row)}
                         onChange={updateValue}
                         onRevertToSaved={revertRowToSaved}
+                        onApplyVerifiedDefault={applyVerifiedDefault}
+                        onUnsetRow={unsetRow}
                       />
                     ))}
                 </div>

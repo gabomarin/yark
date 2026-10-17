@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-17T00:12:58.232Z",
+  "generatedAt": "2026-10-17T18:13:06.143Z",
   "settings": [
     {
       "id": "game:/script/shootergame.shootergamemode:AdjustableMutagenSpawnDelayMultiplier",
@@ -2689,9 +2689,9 @@
         "game": "asa"
       },
       "provenance": {
-        "source": "defaults-catalog",
-        "reviewedAt": null,
-        "confidence": "inferred"
+        "source": "community-defaults-review",
+        "reviewedAt": "2026-10-17",
+        "confidence": "verified"
       }
     },
     {
@@ -4002,9 +4002,9 @@
         "game": "asa"
       },
       "provenance": {
-        "source": "defaults-catalog",
-        "reviewedAt": null,
-        "confidence": "inferred"
+        "source": "community-defaults-review",
+        "reviewedAt": "2026-10-17",
+        "confidence": "verified"
       }
     },
     {
@@ -7109,9 +7109,9 @@
         "game": "asa"
       },
       "provenance": {
-        "source": "defaults-catalog",
-        "reviewedAt": null,
-        "confidence": "inferred"
+        "source": "community-defaults-review",
+        "reviewedAt": "2026-10-17",
+        "confidence": "verified"
       }
     },
     {

@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Configuration and cluster INI visual editors show **Custom** / **Default** / **Unset** / **Unknown** against verified catalog defaults only, with separate Use verified default and Unset actions (#663).
 - Configuration and cluster INI visual editors highlight unsaved rows, show the last saved value (or that a key is absent), and support per-row revert or discard without clearing other drafts (#661).
 
 ### Docs

@@ -109,5 +109,38 @@
       "reviewedAt": "2026-08-13",
       "confidence": "verified"
     }
+  },
+  "gameUserSettings:ServerSettings:DifficultyOffset": {
+    "owner": "iniVisual",
+    "absencePolicy": "allowed",
+    "enforcement": "advisory",
+    "legacyReason": "verifiedDefaultSeed",
+    "provenance": {
+      "source": "community-defaults-review",
+      "reviewedAt": "2026-10-17",
+      "confidence": "verified"
+    }
+  },
+  "gameUserSettings:ServerSettings:AdminLogging": {
+    "owner": "iniVisual",
+    "absencePolicy": "allowed",
+    "enforcement": "advisory",
+    "legacyReason": "verifiedDefaultSeed",
+    "provenance": {
+      "source": "community-defaults-review",
+      "reviewedAt": "2026-10-17",
+      "confidence": "verified"
+    }
+  },
+  "gameUserSettings:ServerSettings:XPMultiplier": {
+    "owner": "iniVisual",
+    "absencePolicy": "allowed",
+    "enforcement": "advisory",
+    "legacyReason": "verifiedDefaultSeed",
+    "provenance": {
+      "source": "community-defaults-review",
+      "reviewedAt": "2026-10-17",
+      "confidence": "verified"
+    }
   }
 }
