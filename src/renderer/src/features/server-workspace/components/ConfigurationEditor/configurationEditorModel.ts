@@ -19,12 +19,6 @@ export function iniRowIdentity(fileKey: IniFileKey, section: string, key: string
   return `${fileKey}\u001f${section}\u001f${key}\u001f${occurrence}`.toLowerCase();
 }
 
-export function iniSettingReferenceIdentity(
-  row: Pick<IniSettingReference, "fileKey" | "section" | "key" | "occurrence">,
-): string {
-  return iniRowIdentity(row.fileKey, row.section, row.key, row.occurrence);
-}
-
 /** Baseline value for an occurrence, or null when that occurrence is absent from the saved file. */
 export function lookupBaselineIniValue(
   baseline: ServerIniPayload | null,
