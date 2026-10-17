@@ -88,6 +88,11 @@ export function ConfigurationEditor(props: Props): ReactElement {
         <ConfigurationEditorStatusAlerts
           error={editor.error}
           onDismissError={() => editor.setError(null)}
+          staleDocument={editor.staleDocument}
+          externalChangeDetected={editor.externalChangeDetected}
+          onReloadStale={editor.requestReloadFromDisk}
+          onDismissExternalChange={() => editor.setExternalChangeDetected(false)}
+          reloadBusy={editor.busy}
           serverActive={props.serverActive === true}
           filesJobActive={filesJobActive}
           pendingQueued={editor.pendingQueued}
@@ -105,6 +110,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
               dirty={editor.dirty}
               busy={editor.busy}
               loading={editor.loading}
+              onReloadFromDisk={editor.requestReloadFromDisk}
               onRestoreFile={editor.resetActiveFileToDefaults}
               onDiscard={editor.resetChanges}
               onSave={() => void saveAndNotify()}
@@ -158,6 +164,8 @@ export function ConfigurationEditor(props: Props): ReactElement {
               iniNavigation={iniNavigation}
               dirty={editor.dirty}
               busy={editor.busy}
+              loading={editor.loading}
+              onReloadFromDisk={editor.requestReloadFromDisk}
               onDiscard={editor.resetChanges}
               onSave={() => void saveAndNotify()}
             />

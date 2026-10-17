@@ -308,4 +308,25 @@ describe("handleValidated", () => {
     handleValidated("test:dup", schema, () => undefined);
     expect(() => handleValidated("test:dup", schema, () => undefined)).toThrow(/already registered/);
   });
+
+  it("surfaces Error.code on ok:false results", async () => {
+    const { handleValidated } = await import("../../src/main/ipc-validate");
+    handleValidated("test:coded-err", z.tuple([]), () => {
+      const err = new Error("INI files changed outside YARK") as Error & { code: string };
+      err.code = "INI_STALE_DOCUMENT";
+      throw err;
+    });
+
+    const handler = handleMock.mock.calls[0]?.[1] as (
+      event: unknown,
+      ...args: unknown[]
+    ) => Promise<{ ok: boolean; error?: string; code?: string }>;
+
+    const result = await handler({});
+    expect(result).toEqual({
+      ok: false,
+      error: "INI files changed outside YARK",
+      code: "INI_STALE_DOCUMENT",
+    });
+  });
 });

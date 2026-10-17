@@ -1045,6 +1045,15 @@ export interface ServerIniPayload {
   game: string;
 }
 
+/**
+ * Content fingerprints for GameUserSettings.ini + Game.ini (#665 / PINI-003).
+ * Derived from the sanitized payload the editor loads (including pending drafts).
+ */
+export interface IniFileFingerprints {
+  gameUserSettings: string;
+  game: string;
+}
+
 export interface ServerIniSnapshot {
   serverId: string;
   gameUserSettingsPath: string;
@@ -1054,6 +1063,11 @@ export interface ServerIniSnapshot {
   /** True if the file already existed on disk before this read. */
   gameIniExisted: boolean;
   payload: ServerIniPayload;
+  /**
+   * Stable hashes of `payload` at read time. Pass back on Save so YARK can
+   * refuse to overwrite external edits (#665).
+   */
+  fingerprints: IniFileFingerprints;
   /**
    * True when `payload` is a durable pending draft (queued while the process
    * was live) rather than the live install files alone (#530).
@@ -1067,6 +1081,8 @@ export interface ServerIniSnapshot {
 export interface ServerIniSaveResult extends IniPreview {
   /** True when the payload was queued for flush after the process stops. */
   pending: boolean;
+  /** Fingerprints of the payload that was written or queued (next Save baseline). */
+  fingerprints: IniFileFingerprints;
 }
 
 /**

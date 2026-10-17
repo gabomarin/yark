@@ -817,8 +817,8 @@ export function registerIpcHandlers(
     ini.previewServerIni(serverId, payload),
   );
 
-  handleValidated(IPC.iniSave, ipcArgSchemas[IPC.iniSave], async ([serverId, payload]) => {
-    const result = await ini.saveServerIni(serverId, payload);
+  handleValidated(IPC.iniSave, ipcArgSchemas[IPC.iniSave], async ([serverId, payload, expectedFingerprints]) => {
+    const result = await ini.saveServerIni(serverId, payload, expectedFingerprints);
     // Disk write only — queued drafts must not snapshot stale live files (#530).
     if (!result.pending) {
       void backups.createIniSaveBackup(serverId).catch(() => undefined);

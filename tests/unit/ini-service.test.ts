@@ -2,7 +2,8 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ServerProfile } from "@shared/types";
+import type { ServerIniPayload, ServerProfile } from "@shared/types";
+import { IniStaleDocumentError } from "@shared/ini/ini-fingerprints";
 import { IniService } from "@backend/domains/config/ini-service";
 import { openDatabase } from "@backend/infra/db/database";
 import { PendingServerIniRepository } from "@backend/infra/db/pending-server-ini-repository";
@@ -94,6 +95,12 @@ function prepareIniFiles(installDir: string): void {
   });
   writeFileSync(settingsPath, "", "utf8");
   writeFileSync(iniPath, "", "utf8");
+}
+
+/** Read current fingerprints then save (editor baseline contract). */
+async function saveIni(service: IniService, serverId: string, payload: ServerIniPayload) {
+  const snapshot = await service.readServerIni(serverId);
+  return service.saveServerIni(serverId, payload, snapshot.fingerprints);
 }
 
 const tmpDirs: string[] = [];
@@ -191,7 +198,7 @@ describe("IniService semantic validation", () => {
     const { service, profile, addEvent } = makeService(installDir);
 
     await expect(
-      service.saveServerIni(profile.id, {
+      saveIni(service, profile.id, {
         gameUserSettings: "[ServerSettings]\nRCONPort=99999\n",
         game: "",
       }),
@@ -209,7 +216,7 @@ describe("IniService semantic validation", () => {
 
     const { service, profile, addEvent } = makeService(installDir);
 
-    const preview = await service.saveServerIni(profile.id, {
+    const preview = await saveIni(service, profile.id, {
       gameUserSettings: "[ServerSettings]\nRCONPort=27020\nMaxPlayers=70\n",
       game: "[/Script/ShooterGame.ShooterGameMode]\n",
     });
@@ -229,7 +236,7 @@ describe("IniService semantic validation", () => {
 
     const { service, profile } = makeService(installDir);
 
-    await service.saveServerIni(profile.id, {
+    await saveIni(service, profile.id, {
       gameUserSettings: [
         "[ServerSettings]",
         "RCONPort=27020",
@@ -277,6 +284,130 @@ describe("IniService semantic validation", () => {
   });
 });
 
+describe("IniService fingerprints (#665)", () => {
+  it("returns stable fingerprints for unchanged content", async () => {
+    const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
+    tmpDirs.push(installDir);
+    prepareIniFiles(installDir);
+    writeFileSync(gameUserSettingsPath(installDir), "[ServerSettings]\nRCONPort=27020\n", "utf8");
+    writeFileSync(gameIniPath(installDir), "[Game]\nFoo=1\n", "utf8");
+
+    const { service, profile } = makeService(installDir);
+    const first = await service.readServerIni(profile.id);
+    const second = await service.readServerIni(profile.id);
+
+    expect(first.fingerprints.gameUserSettings).toMatch(/^[a-f0-9]{24}$/);
+    expect(first.fingerprints.game).toMatch(/^[a-f0-9]{24}$/);
+    expect(second.fingerprints).toEqual(first.fingerprints);
+  });
+
+  it("ignores profile password values when fingerprinting GUS", async () => {
+    const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
+    tmpDirs.push(installDir);
+    prepareIniFiles(installDir);
+    writeFileSync(
+      gameUserSettingsPath(installDir),
+      "[ServerSettings]\nRCONPort=27020\nServerAdminPassword=secret-a\nServerPassword=join-a\n",
+      "utf8",
+    );
+
+    const { service, profile } = makeService(installDir);
+    const first = await service.readServerIni(profile.id);
+    writeFileSync(
+      gameUserSettingsPath(installDir),
+      "[ServerSettings]\nRCONPort=27020\nServerAdminPassword=secret-b\nServerPassword=join-b\n",
+      "utf8",
+    );
+    const second = await service.readServerIni(profile.id);
+
+    expect(second.fingerprints).toEqual(first.fingerprints);
+  });
+
+  it("rejects save when disk changed after the editor baseline", async () => {
+    const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
+    tmpDirs.push(installDir);
+    prepareIniFiles(installDir);
+    writeFileSync(gameUserSettingsPath(installDir), "[ServerSettings]\nRCONPort=27020\n", "utf8");
+
+    const { service, profile, addEvent } = makeService(installDir);
+    const baseline = await service.readServerIni(profile.id);
+
+    writeFileSync(gameUserSettingsPath(installDir), "[ServerSettings]\nRCONPort=27020\nExternalEdit=1\n", "utf8");
+
+    await expect(
+      service.saveServerIni(
+        profile.id,
+        {
+          gameUserSettings: "[ServerSettings]\nRCONPort=27020\nFromYark=1\n",
+          game: "",
+        },
+        baseline.fingerprints,
+      ),
+    ).rejects.toBeInstanceOf(IniStaleDocumentError);
+
+    expect(addEvent).not.toHaveBeenCalled();
+    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).toContain("ExternalEdit=1");
+    expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).not.toContain("FromYark=1");
+  });
+
+  it("returns fresh fingerprints after a successful save", async () => {
+    const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
+    tmpDirs.push(installDir);
+    prepareIniFiles(installDir);
+
+    const { service, profile } = makeService(installDir);
+    const before = await service.readServerIni(profile.id);
+    const result = await service.saveServerIni(
+      profile.id,
+      {
+        gameUserSettings: "[ServerSettings]\nRCONPort=27020\n",
+        game: "[Game]\nSaved=1\n",
+      },
+      before.fingerprints,
+    );
+    const after = await service.readServerIni(profile.id);
+
+    expect(result.fingerprints).toEqual(after.fingerprints);
+    expect(result.fingerprints).not.toEqual(before.fingerprints);
+  });
+
+  it("rejects stale save against a pending draft without mutating the queue", async () => {
+    const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
+    tmpDirs.push(installDir);
+    prepareIniFiles(installDir);
+
+    const { service, profile, pending, db } = makeService(installDir, {
+      withPending: true,
+      isServerActive: () => true,
+    });
+
+    await saveIni(service, profile.id, {
+      gameUserSettings: "[ServerSettings]\nRCONPort=27020\nXPMultiplier=2.0\n",
+      game: "[Game]\nA=1\n",
+    });
+    const baseline = await service.readServerIni(profile.id);
+
+    pending?.upsert(profile.id, {
+      gameUserSettings: "[ServerSettings]\nRCONPort=27020\nXPMultiplier=9.0\n",
+      game: "[Game]\nA=9\n",
+    });
+
+    await expect(
+      service.saveServerIni(
+        profile.id,
+        {
+          gameUserSettings: "[ServerSettings]\nRCONPort=27020\nXPMultiplier=3.0\n",
+          game: "[Game]\nA=3\n",
+        },
+        baseline.fingerprints,
+      ),
+    ).rejects.toBeInstanceOf(IniStaleDocumentError);
+
+    expect(pending?.get(profile.id)?.payload.gameUserSettings).toContain("XPMultiplier=9.0");
+    db?.close();
+  });
+});
+
 describe("IniService pending queue (#530)", () => {
   it("queues GUS and Game.ini while active without writing live files", async () => {
     const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
@@ -293,7 +424,7 @@ describe("IniService pending queue (#530)", () => {
     const changed: Array<{ serverId: string; pending: boolean }> = [];
     service.on("changed", (payload) => changed.push(payload));
 
-    const result = await service.saveServerIni(profile.id, {
+    const result = await saveIni(service, profile.id, {
       gameUserSettings: "[ServerSettings]\nRCONPort=27020\nXPMultiplier=2.0\n",
       game: "[Game]\nFoo=1\nBar=2\n",
     });
@@ -324,11 +455,11 @@ describe("IniService pending queue (#530)", () => {
       isServerActive: () => true,
     });
 
-    await service.saveServerIni(profile.id, {
+    await saveIni(service, profile.id, {
       gameUserSettings: "[ServerSettings]\nRCONPort=27020\nXPMultiplier=2.0\n",
       game: "[Game]\nA=1\n",
     });
-    await service.saveServerIni(profile.id, {
+    await saveIni(service, profile.id, {
       gameUserSettings: "[ServerSettings]\nRCONPort=27020\nXPMultiplier=3.0\n",
       game: "[Game]\nA=2\n",
     });
@@ -350,7 +481,7 @@ describe("IniService pending queue (#530)", () => {
       isServerActive: () => active,
     });
 
-    await service.saveServerIni(profile.id, {
+    await saveIni(service, profile.id, {
       gameUserSettings: "[ServerSettings]\nRCONPort=27020\nXPMultiplier=2.5\n",
       game: "[Game]\nQueued=1\n",
     });
@@ -393,7 +524,7 @@ describe("IniService pending queue (#530)", () => {
       game: "",
     });
 
-    const result = await service.saveServerIni(profile.id, {
+    const result = await saveIni(service, profile.id, {
       gameUserSettings: "[ServerSettings]\nRCONPort=27020\nFresh=1\n",
       game: "[Game]\nOk=1\n",
     });
@@ -456,7 +587,7 @@ describe("IniService pending queue (#530)", () => {
       isServerActive: () => true,
     });
 
-    await service.saveServerIni(profile.id, {
+    await saveIni(service, profile.id, {
       gameUserSettings: "[ServerSettings]\nRCONPort=27020\nXPMultiplier=3.0\n\n[SessionSettings]\nSessionName=First\n",
       game: "[Game]\nKeep=1\n",
     });
@@ -491,7 +622,7 @@ describe("IniService pending queue (#530)", () => {
       isServerActive: () => active,
     });
 
-    await service.saveServerIni(profile.id, {
+    await saveIni(service, profile.id, {
       gameUserSettings:
         "[ServerSettings]\nRCONPort=27020\nXPMultiplier=2.0\n\n[SessionSettings]\nSessionName=OriginalSession\n",
       game: "[Game]\nQueued=1\n",
@@ -540,6 +671,10 @@ describe("IniService pending queue (#530)", () => {
       isServerActive: () => true,
     });
 
+    // Baseline fingerprints before patching read (editor contract). Injection
+    // must happen on save's *locked* re-read, not on a pre-save helper read.
+    const baseline = await service.readServerIni(profile.id);
+
     // Deterministic interleaving: during save's first read, start a profile
     // sync. The sync must enqueue behind this save on the mutation chain so it
     // merges into the queued gameplay draft instead of upserting stale disk.
@@ -558,11 +693,15 @@ describe("IniService pending queue (#530)", () => {
       return snapshot;
     };
 
-    await service.saveServerIni(profile.id, {
-      gameUserSettings:
-        "[ServerSettings]\nRCONPort=27020\nXPMultiplier=9.0\n\n[SessionSettings]\nSessionName=DiskSession\n",
-      game: "[Game]\nQueuedGameplay=1\n",
-    });
+    await service.saveServerIni(
+      profile.id,
+      {
+        gameUserSettings:
+          "[ServerSettings]\nRCONPort=27020\nXPMultiplier=9.0\n\n[SessionSettings]\nSessionName=DiskSession\n",
+        game: "[Game]\nQueuedGameplay=1\n",
+      },
+      baseline.fingerprints,
+    );
     await syncPromise;
 
     const pending = pendingRepo.get(profile.id);

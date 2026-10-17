@@ -2,8 +2,22 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
-import type { ClusterComplianceReport, ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import type {
+  ClusterComplianceReport,
+  IniFileFingerprints,
+  ServerIniPayload,
+  ServerProfile,
+  ServerRuntimeInfo,
+} from "@shared/types";
 import { ClustersPage } from "./ClustersPage";
+
+/** Stable mock fingerprints (renderer tests must not import node:crypto). */
+function fingerprintIniPayload(payload: ServerIniPayload): IniFileFingerprints {
+  return {
+    gameUserSettings: `gus:${payload.gameUserSettings.length}`.padEnd(24, "0").slice(0, 24),
+    game: `game:${payload.game.length}`.padEnd(24, "0").slice(0, 24),
+  };
+}
 
 function makeServer(overrides: Partial<ServerProfile> & Pick<ServerProfile, "id" | "name">): ServerProfile {
   const { enabled, ...rest } = overrides;
@@ -103,19 +117,23 @@ describe("ClustersPage", () => {
   beforeEach(() => {
     window.api = {
       ...(window.api ?? {}),
-      readServerIni: vi.fn(async (serverId: string) => ({
-        ok: true,
-        data: {
-          serverId,
-          gameUserSettingsPath: `C:/ARK/${serverId}/GameUserSettings.ini`,
-          gameIniPath: `C:/ARK/${serverId}/Game.ini`,
-          gameUserSettingsExisted: true,
-          gameIniExisted: true,
-          payload: { gameUserSettings: "[ServerSettings]\n", game: "" },
-          pending: false,
-          pendingUpdatedAt: null,
-        },
-      })),
+      readServerIni: vi.fn(async (serverId: string) => {
+        const payload = { gameUserSettings: "[ServerSettings]\n", game: "" };
+        return {
+          ok: true as const,
+          data: {
+            serverId,
+            gameUserSettingsPath: `C:/ARK/${serverId}/GameUserSettings.ini`,
+            gameIniPath: `C:/ARK/${serverId}/Game.ini`,
+            gameUserSettingsExisted: true,
+            gameIniExisted: true,
+            payload,
+            fingerprints: fingerprintIniPayload(payload),
+            pending: false,
+            pendingUpdatedAt: null,
+          },
+        };
+      }),
       getClusterIniTemplate: vi.fn(async () => ({ ok: true, data: null })),
       getClusterIniTemplateOrDraft: vi.fn(async (clusterId: string) => ({
         ok: true,

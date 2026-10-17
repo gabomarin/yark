@@ -320,7 +320,7 @@ export function useConfigurationWizard(options: UseConfigurationWizardOptions): 
           );
           return;
         }
-        const result = await window.api.saveServerIni(options.server.id, payload);
+        const result = await window.api.saveServerIni(options.server.id, payload, latestResult.data.fingerprints);
         if (!result.ok) {
           setError(result.error ?? "Could not apply the configuration");
           return;

@@ -51,7 +51,7 @@ export function ClusterTributePanel(props: Props): ReactElement {
       const preview = await window.api.previewServerIni(serverId, payload);
       if (!preview.ok) throw new Error(preview.error ?? "Could not preview cluster transfer settings");
       if (!preview.data.valid) throw new Error(preview.data.issues.map((issue) => issue.message).join("; "));
-      const result = await window.api.saveServerIni(serverId, payload);
+      const result = await window.api.saveServerIni(serverId, payload, snapshot.fingerprints);
       if (!result.ok) throw new Error(result.error ?? "Could not apply cluster transfer settings");
       props.onChanged();
       await props.onRefresh();

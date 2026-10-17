@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { modals } from "@mantine/modals";
+import { INI_STALE_DOCUMENT_CODE, iniFingerprintsMatch } from "@shared/ini/ini-fingerprints";
 import type { IniFileKey, IniPreview, ServerIniPayload, ServerIniSnapshot } from "@shared/types";
 import { showOperatorToast } from "@ui/operatorToast";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
@@ -26,6 +27,7 @@ import {
   lookupMatchedBaselineValue,
 } from "./configurationEditorModel";
 import type { ConfigurationEditorApi } from "./configurationEditorTypes";
+import { useConfigurationEditorDiskSync } from "./useConfigurationEditorDiskSync";
 
 export function useConfigurationEditor(options: {
   serverId: string;
@@ -39,6 +41,7 @@ export function useConfigurationEditor(options: {
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [staleDocument, setStaleDocument] = useState(false);
   const [preview, setPreview] = useState<IniPreview | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<IniFilterId>("all");
@@ -60,77 +63,73 @@ export function useConfigurationEditor(options: {
   useEffect(() => {
     payloadRef.current = payload;
   });
+  const snapshotRef = useRef(snapshot);
+  useEffect(() => {
+    snapshotRef.current = snapshot;
+  });
+  const busyRef = useRef(busy);
+  useEffect(() => {
+    busyRef.current = busy;
+  });
+  const loadingRef = useRef(loading);
+  useEffect(() => {
+    loadingRef.current = loading;
+  });
 
   const publishDirty = (nextPayload: ServerIniPayload | null, nextBaseline: ServerIniPayload | null): void => {
     onDirtyChangeRef.current?.(iniPayloadsDirty(nextPayload, nextBaseline));
   };
 
+  const applyLoadedSnapshotRef = useRef<(data: ServerIniSnapshot, options?: { preserveDirty?: boolean }) => void>(
+    () => undefined,
+  );
+
+  const diskSync = useConfigurationEditorDiskSync({
+    serverId,
+    dirtyRef,
+    busyRef,
+    loadingRef,
+    snapshotRef,
+    applyLoadedSnapshotRef,
+    setBusy,
+    setLoading,
+    setError,
+    setStaleDocument,
+    setSnapshot,
+    setPayload,
+    setBaseline,
+    setPreview,
+    publishDirty,
+  });
+
   const applyLoadedSnapshot = (data: ServerIniSnapshot, options?: { preserveDirty?: boolean }): void => {
     const sanitized = sanitizeServerIniPayload(data.payload);
     const keepDirty = options?.preserveDirty === true && dirtyRef.current && payloadRef.current !== null;
     if (keepDirty && payloadRef.current !== null) {
-      // Keep in-editor edits; refresh pending chrome from the push source.
-      setSnapshot({ ...data, payload: payloadRef.current });
+      // Keep in-editor edits and the Save baseline fingerprints. Advancing
+      // fingerprints here would let Save overwrite the external change (#665).
+      const previous = snapshotRef.current;
+      const baselineFingerprints = previous?.fingerprints ?? data.fingerprints;
+      setSnapshot({
+        ...data,
+        payload: payloadRef.current,
+        fingerprints: baselineFingerprints,
+      });
+      if (!iniFingerprintsMatch(baselineFingerprints, data.fingerprints)) {
+        diskSync.setExternalChangeDetected(true);
+      }
       return;
     }
     setSnapshot({ ...data, payload: sanitized });
     setPayload(sanitized);
     setBaseline(sanitized);
     setPreview(null);
+    diskSync.clearExternalChangeFlags();
     publishDirty(sanitized, sanitized);
   };
-  const applyLoadedSnapshotRef = useRef(applyLoadedSnapshot);
   useEffect(() => {
     applyLoadedSnapshotRef.current = applyLoadedSnapshot;
   });
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setPreview(null);
-    publishDirty(null, null);
-
-    void runWithFinally(
-      async () => {
-        const result = await window.api.readServerIni(serverId);
-        if (cancelled) return;
-        if (!result.ok) {
-          setSnapshot(null);
-          setPayload(null);
-          setBaseline(null);
-          setError(result.error ?? "Could not read the INI");
-          publishDirty(null, null);
-          return;
-        }
-        applyLoadedSnapshotRef.current(result.data);
-      },
-      () => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      },
-    );
-
-    return () => {
-      cancelled = true;
-    };
-  }, [serverId]);
-
-  useEffect(() => {
-    return window.api.onServerIniChanged((event) => {
-      if (event.serverId !== serverId) {
-        return;
-      }
-      void (async () => {
-        const result = await window.api.readServerIni(serverId);
-        if (!result.ok) {
-          return;
-        }
-        applyLoadedSnapshotRef.current(result.data, { preserveDirty: true });
-      })();
-    });
-  }, [serverId]);
 
   const activeFileKey = iniFile;
   const activeText = payload !== null ? textForFile(payload, activeFileKey) : "";
@@ -285,26 +284,31 @@ export function useConfigurationEditor(options: {
   };
 
   const saveIni = async (): Promise<boolean> => {
-    if (payload === null) return false;
+    if (payload === null || snapshot === null) return false;
     setBusy(true);
     setError(null);
+    setStaleDocument(false);
+    diskSync.setExternalChangeDetected(false);
     return runWithFinally(
       async () => {
         const sanitized = sanitizeServerIniPayload(payload);
-        const result = await window.api.saveServerIni(serverId, sanitized);
+        const result = await window.api.saveServerIni(serverId, sanitized, snapshot.fingerprints);
         if (!result.ok) {
           setError(result.error ?? "Could not save the INI");
+          setStaleDocument(result.code === INI_STALE_DOCUMENT_CODE);
           return false;
         }
         setPayload(sanitized);
         setPreview(result.data);
         setBaseline(sanitized);
+        diskSync.setExternalChangeDetected(false);
         setSnapshot((prev) =>
           prev === null
             ? prev
             : {
                 ...prev,
                 payload: sanitized,
+                fingerprints: result.data.fingerprints,
                 pending: result.data.pending,
                 pendingUpdatedAt: result.data.pending ? (prev.pendingUpdatedAt ?? new Date().toISOString()) : null,
               },
@@ -376,7 +380,17 @@ export function useConfigurationEditor(options: {
     loading,
     busy,
     error,
-    setError,
+    setError: (next: string | null) => {
+      setError(next);
+      if (next === null) {
+        setStaleDocument(false);
+      }
+    },
+    staleDocument,
+    externalChangeDetected: diskSync.externalChangeDetected,
+    setExternalChangeDetected: diskSync.setExternalChangeDetected,
+    reloadFromDisk: diskSync.reloadFromDisk,
+    requestReloadFromDisk: diskSync.requestReloadFromDisk,
     preview,
     search,
     setSearch,
