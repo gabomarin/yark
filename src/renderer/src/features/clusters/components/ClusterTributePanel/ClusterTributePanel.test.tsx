@@ -2,8 +2,21 @@ import { cleanup, render, screen, waitFor, within } from "@testing-library/react
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
-import { fingerprintIniPayload } from "@shared/ini/ini-fingerprints";
-import type { ServerIniPayload, ServerIniSnapshot, ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import type {
+  IniFileFingerprints,
+  ServerIniPayload,
+  ServerIniSnapshot,
+  ServerProfile,
+  ServerRuntimeInfo,
+} from "@shared/types";
+
+/** Stable mock fingerprints (renderer tests must not import node:crypto). */
+function fingerprintIniPayload(payload: ServerIniPayload): IniFileFingerprints {
+  return {
+    gameUserSettings: `gus:${payload.gameUserSettings.length}`.padEnd(24, "0").slice(0, 24),
+    game: `game:${payload.game.length}`.padEnd(24, "0").slice(0, 24),
+  };
+}
 import { ClusterTributePanel } from "./ClusterTributePanel";
 
 function member(id: string, name: string, map: string): ServerProfile {

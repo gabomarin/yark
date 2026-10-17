@@ -2,9 +2,22 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@app/AppProviders";
-import { fingerprintIniPayload } from "@shared/ini/ini-fingerprints";
-import type { ClusterComplianceReport, ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import type {
+  ClusterComplianceReport,
+  IniFileFingerprints,
+  ServerIniPayload,
+  ServerProfile,
+  ServerRuntimeInfo,
+} from "@shared/types";
 import { ClustersPage } from "./ClustersPage";
+
+/** Stable mock fingerprints (renderer tests must not import node:crypto). */
+function fingerprintIniPayload(payload: ServerIniPayload): IniFileFingerprints {
+  return {
+    gameUserSettings: `gus:${payload.gameUserSettings.length}`.padEnd(24, "0").slice(0, 24),
+    game: `game:${payload.game.length}`.padEnd(24, "0").slice(0, 24),
+  };
+}
 
 function makeServer(overrides: Partial<ServerProfile> & Pick<ServerProfile, "id" | "name">): ServerProfile {
   const { enabled, ...rest } = overrides;

@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini/ini-defaults";
-import { fingerprintIniPayload, IniStaleDocumentError, iniFingerprintsMatch } from "@shared/ini/ini-fingerprints";
+import { IniStaleDocumentError, iniFingerprintsMatch } from "@shared/ini/ini-fingerprints";
 import { sanitizeServerIniPayload } from "@shared/ini/ini-text";
 import type { ServerIniChangedPush } from "@shared/ipc";
 import type {
@@ -18,6 +18,7 @@ import type { PendingServerIniRepository } from "../../infra/db/pending-server-i
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
 import { applyProfileOwnedKeysToGameUserSettings } from "./ini-compose";
+import { fingerprintIniPayload } from "./ini-fingerprint";
 import { buildIniPreview } from "./ini-preview";
 
 export interface IniServiceOptions {

@@ -7,8 +7,15 @@ import { INI_GUS_OVERRIDE_HINT_STORAGE_KEY } from "./components/ConfigurationEdi
 import type { PlayerListState } from "./components/RconPanel/PlayerListSection";
 import type { HostedResourceReferenceDto } from "@shared/ipc";
 import { STOP_PROGRESS_SELECTOR } from "./components/StopProgressAlert";
-import { fingerprintIniPayload } from "@shared/ini/ini-fingerprints";
-import type { ServerRuntimeInfo } from "@shared/types";
+import type { IniFileFingerprints, ServerIniPayload, ServerRuntimeInfo } from "@shared/types";
+
+/** Stable mock fingerprints (renderer tests must not import node:crypto). */
+function fingerprintIniPayload(payload: ServerIniPayload): IniFileFingerprints {
+  return {
+    gameUserSettings: `gus:${payload.gameUserSettings.length}`.padEnd(24, "0").slice(0, 24),
+    game: `game:${payload.game.length}`.padEnd(24, "0").slice(0, 24),
+  };
+}
 
 const serverA = {
   id: "srv-a",
