@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  alignIniDuplicateValues,
   applyIniRowRevertToPayload,
-  buildIniBaselineValueIndex,
+  buildIniRowMatchIndex,
   countUnsavedIniRowsForFile,
   iniPayloadsDirty,
   iniRowIdentity,
   isIniRowUnsaved,
-  lookupBaselineIniValue,
-  lookupBaselineIniValueFromIndex,
+  lookupMatchedBaselineValue,
 } from "@features/server-workspace/components/ConfigurationEditor/configurationEditorModel";
 import { textForFile } from "@features/server-workspace/iniModel";
 import type { ServerIniPayload } from "@shared/types";
@@ -34,12 +34,23 @@ describe("configurationEditorModel unsaved rows (PINI-001 / #661)", () => {
     );
   });
 
-  it("marks only the edited occurrence as unsaved via a shared baseline index", () => {
+  it("aligns duplicate values so inserts do not steal the baseline occurrence", () => {
+    expect(alignIniDuplicateValues(["new", "old"], ["old"])).toEqual([null, "old"]);
+    expect(alignIniDuplicateValues(["B", "A"], ["A", "B"])).toEqual(["B", "A"]);
+    expect(alignIniDuplicateValues(["changed"], ["old"])).toEqual(["old"]);
+  });
+
+  it("marks only the edited occurrence as unsaved via a shared match index", () => {
     const baseline = gus(`[ServerSettings]
 ConfigOverrideItemMaxQuantity=A
 ConfigOverrideItemMaxQuantity=B
 `);
-    const index = buildIniBaselineValueIndex(baseline, "gameUserSettings");
+    const payload = gus(`[ServerSettings]
+ConfigOverrideItemMaxQuantity=A
+ConfigOverrideItemMaxQuantity=CHANGED
+`);
+    const index = buildIniRowMatchIndex(payload, baseline, "gameUserSettings");
+    expect(index).not.toBeNull();
     expect(
       isIniRowUnsaved(
         {
@@ -65,12 +76,61 @@ ConfigOverrideItemMaxQuantity=B
       ),
     ).toBe(true);
     expect(
-      lookupBaselineIniValueFromIndex(index, "gameUserSettings", "ServerSettings", "ConfigOverrideItemMaxQuantity", 1),
+      lookupMatchedBaselineValue(index!, "gameUserSettings", "ServerSettings", "ConfigOverrideItemMaxQuantity", 1),
     ).toBe("B");
   });
 
+  it("matches baseline values after a raw-mode insert before a duplicate", () => {
+    const baseline = gus("[ServerSettings]\nConfigOverrideItemMaxQuantity=old\n");
+    const payload = gus(`[ServerSettings]
+ConfigOverrideItemMaxQuantity=new
+ConfigOverrideItemMaxQuantity=old
+`);
+    const index = buildIniRowMatchIndex(payload, baseline, "gameUserSettings");
+    expect(
+      isIniRowUnsaved(
+        {
+          fileKey: "gameUserSettings",
+          section: "ServerSettings",
+          key: "ConfigOverrideItemMaxQuantity",
+          value: "new",
+          occurrence: 0,
+        },
+        index,
+      ),
+    ).toBe(true);
+    expect(
+      lookupMatchedBaselineValue(index!, "gameUserSettings", "ServerSettings", "ConfigOverrideItemMaxQuantity", 0),
+    ).toBeNull();
+    expect(
+      isIniRowUnsaved(
+        {
+          fileKey: "gameUserSettings",
+          section: "ServerSettings",
+          key: "ConfigOverrideItemMaxQuantity",
+          value: "old",
+          occurrence: 1,
+        },
+        index,
+      ),
+    ).toBe(false);
+
+    const discarded = applyIniRowRevertToPayload(payload, index!, {
+      fileKey: "gameUserSettings",
+      section: "ServerSettings",
+      key: "ConfigOverrideItemMaxQuantity",
+      occurrence: 0,
+    });
+    expect(discarded.outcome).toBe("discarded");
+    expect(textForFile(discarded.nextPayload, "gameUserSettings").trim()).toBe(
+      "[ServerSettings]\nConfigOverrideItemMaxQuantity=old",
+    );
+  });
+
   it("clears unsaved when the draft matches the saved value again", () => {
-    const index = buildIniBaselineValueIndex(gus("[ServerSettings]\nDifficultyOffset=0.2\n"), "gameUserSettings");
+    const baseline = gus("[ServerSettings]\nDifficultyOffset=0.2\n");
+    const dirty = buildIniRowMatchIndex(gus("[ServerSettings]\nDifficultyOffset=0.9\n"), baseline, "gameUserSettings");
+    const clean = buildIniRowMatchIndex(gus("[ServerSettings]\nDifficultyOffset=0.2\n"), baseline, "gameUserSettings");
     expect(
       isIniRowUnsaved(
         {
@@ -80,7 +140,7 @@ ConfigOverrideItemMaxQuantity=B
           value: "0.9",
           occurrence: 0,
         },
-        index,
+        dirty,
       ),
     ).toBe(true);
     expect(
@@ -92,14 +152,15 @@ ConfigOverrideItemMaxQuantity=B
           value: "0.2",
           occurrence: 0,
         },
-        index,
+        clean,
       ),
     ).toBe(false);
   });
 
-  it("treats draft-only occurrences as unsaved with a null saved value", () => {
+  it("treats draft-only keys as unsaved with a null saved value", () => {
     const baseline = gus("[ServerSettings]\nDifficultyOffset=0.2\n");
-    const index = buildIniBaselineValueIndex(baseline, "gameUserSettings");
+    const payload = gus("[ServerSettings]\nDifficultyOffset=0.2\nXPMultiplier=2\n");
+    const index = buildIniRowMatchIndex(payload, baseline, "gameUserSettings");
     expect(
       isIniRowUnsaved(
         {
@@ -112,15 +173,14 @@ ConfigOverrideItemMaxQuantity=B
         index,
       ),
     ).toBe(true);
-    expect(lookupBaselineIniValueFromIndex(index, "gameUserSettings", "ServerSettings", "XPMultiplier", 0)).toBeNull();
-    expect(lookupBaselineIniValue(baseline, "gameUserSettings", "ServerSettings", "XPMultiplier", 0)).toBeNull();
+    expect(lookupMatchedBaselineValue(index!, "gameUserSettings", "ServerSettings", "XPMultiplier", 0)).toBeNull();
   });
 
   it("discards draft-only occurrences on revert", () => {
     const baseline = gus("[ServerSettings]\nDifficultyOffset=0.2\n");
     const payload = gus("[ServerSettings]\nDifficultyOffset=0.2\nXPMultiplier=2\n");
-    const index = buildIniBaselineValueIndex(baseline, "gameUserSettings");
-    const result = applyIniRowRevertToPayload(payload, index, {
+    const index = buildIniRowMatchIndex(payload, baseline, "gameUserSettings");
+    const result = applyIniRowRevertToPayload(payload, index!, {
       fileKey: "gameUserSettings",
       section: "ServerSettings",
       key: "XPMultiplier",
@@ -142,10 +202,10 @@ AdminLogging=False
 RCONPort=27021
 XPMultiplier=2
 `);
+    const index = buildIniRowMatchIndex(payload, baseline, "gameUserSettings");
     // RCONPort is profile-owned / not visually editable — must not inflate counts.
     // XPMultiplier present only in draft counts as unsaved.
-    const counts = countUnsavedIniRowsForFile(payload, baseline, "gameUserSettings");
+    const counts = countUnsavedIniRowsForFile(payload, index, "gameUserSettings");
     expect(counts.file).toBe(2);
-    expect(lookupBaselineIniValue(baseline, "gameUserSettings", "ServerSettings", "XPMultiplier", 0)).toBeNull();
   });
 });

@@ -22,11 +22,11 @@ import {
 } from "@features/server-workspace/iniModel";
 import {
   applyIniRowRevertToPayload,
-  buildIniBaselineValueIndex,
+  buildIniRowMatchIndex,
   countUnsavedIniRowsForFile,
   iniRowIdentity,
   isIniRowUnsaved,
-  lookupBaselineIniValueFromIndex,
+  lookupMatchedBaselineValue,
 } from "@features/server-workspace/components/ConfigurationEditor/configurationEditorModel";
 import { useMemo, useState } from "react";
 import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
@@ -57,13 +57,13 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
   }, [activeText, props.iniFile]);
 
   const availableRows = useMemo(() => filterIniSettingReferences(rows, "", "all"), [rows]);
-  const baselineIndex = useMemo(
-    () => (props.baseline === null ? null : buildIniBaselineValueIndex(props.baseline, props.iniFile)),
-    [props.baseline, props.iniFile],
+  const matchIndex = useMemo(
+    () => buildIniRowMatchIndex(props.payload, props.baseline, props.iniFile),
+    [props.payload, props.baseline, props.iniFile],
   );
   const unsavedCounts = useMemo(
-    () => countUnsavedIniRowsForFile(props.payload, props.baseline, props.iniFile),
-    [props.payload, props.baseline, props.iniFile],
+    () => countUnsavedIniRowsForFile(props.payload, matchIndex, props.iniFile),
+    [props.payload, matchIndex, props.iniFile],
   );
   const categoryOptions = useMemo(() => {
     const formatCount = (rowCount: number, unsavedInScope: number): string => {
@@ -95,15 +95,15 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
   };
 
   const revertRowToSaved = (row: IniSettingReference): void => {
-    if (baselineIndex === null) return;
-    const { nextPayload } = applyIniRowRevertToPayload(props.payload, baselineIndex, row);
+    if (matchIndex === null) return;
+    const { nextPayload } = applyIniRowRevertToPayload(props.payload, matchIndex, row);
     props.onPayloadChange(nextPayload);
   };
 
   const savedValueForRow = (row: IniSettingReference): string | null =>
-    baselineIndex === null
+    matchIndex === null
       ? null
-      : lookupBaselineIniValueFromIndex(baselineIndex, row.fileKey, row.section, row.key, row.occurrence);
+      : lookupMatchedBaselineValue(matchIndex, row.fileKey, row.section, row.key, row.occurrence);
 
   if (props.mode === "raw") {
     return (
@@ -273,7 +273,7 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                               <ClusterIniTemplateSettingRow
                                 key={iniRowIdentity(row.fileKey, row.section, row.key, row.occurrence)}
                                 row={row}
-                                unsaved={isIniRowUnsaved(row, baselineIndex)}
+                                unsaved={isIniRowUnsaved(row, matchIndex)}
                                 savedValue={savedValueForRow(row)}
                                 onChange={updateValue}
                                 onRevertToSaved={revertRowToSaved}
@@ -313,7 +313,7 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                       <ClusterIniTemplateSettingRow
                         key={iniRowIdentity(row.fileKey, row.section, row.key, row.occurrence)}
                         row={row}
-                        unsaved={isIniRowUnsaved(row, baselineIndex)}
+                        unsaved={isIniRowUnsaved(row, matchIndex)}
                         savedValue={savedValueForRow(row)}
                         onChange={updateValue}
                         onRevertToSaved={revertRowToSaved}
