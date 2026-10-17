@@ -26,10 +26,7 @@ import {
   isIniRowUnsaved,
   lookupMatchedBaselineValue,
 } from "./configurationEditorModel";
-import {
-  configurationEditorSaveToastMessage,
-  performConfigurationEditorSave,
-} from "./configurationEditorSave";
+import { configurationEditorSaveToastMessage, performConfigurationEditorSave } from "./configurationEditorSave";
 import type { ConfigurationEditorApi } from "./configurationEditorTypes";
 import { useConfigurationEditorDiskSync } from "./useConfigurationEditorDiskSync";
 

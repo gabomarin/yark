@@ -75,7 +75,10 @@ export async function performConfigurationEditorSave(input: {
   };
 }
 
-export function configurationEditorSaveToastMessage(pending: boolean, changedCount: number): {
+export function configurationEditorSaveToastMessage(
+  pending: boolean,
+  changedCount: number,
+): {
   title: string;
   message: string;
 } {
@@ -91,8 +94,6 @@ export function configurationEditorSaveToastMessage(pending: boolean, changedCou
   return {
     title: "INI saved",
     message:
-      changedCount > 0
-        ? `Saved ${changedCount} change${changedCount === 1 ? "" : "s"}.`
-        : "Saved with no changes.",
+      changedCount > 0 ? `Saved ${changedCount} change${changedCount === 1 ? "" : "s"}.` : "Saved with no changes.",
   };
 }

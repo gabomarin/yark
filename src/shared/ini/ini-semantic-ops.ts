@@ -7,11 +7,7 @@
  */
 
 import type { IniFileKey, ServerIniPayload } from "../types";
-import {
-  isVisuallyEditableIniSetting,
-  lookupAbsencePolicy,
-  lookupSettingOwner,
-} from "./ini-setting-decisions";
+import { isVisuallyEditableIniSetting, lookupAbsencePolicy, lookupSettingOwner } from "./ini-setting-decisions";
 import { parseIniTextRows, removeIniTextValue, setIniTextValue } from "./ini-text";
 
 type IniSemanticOpKind = "set" | "unset";
@@ -87,12 +83,7 @@ function groupKey(section: string, key: string): string {
 }
 
 /** Live value at occurrence, or `null` when that occurrence is absent. */
-export function getIniTextValueAt(
-  text: string,
-  section: string,
-  key: string,
-  occurrence: number,
-): string | null {
+export function getIniTextValueAt(text: string, section: string, key: string, occurrence: number): string | null {
   const target = Math.max(0, Math.floor(occurrence));
   let matchIndex = 0;
   const sectionLower = section.trim().toLowerCase();
@@ -266,10 +257,7 @@ function sortOpsForApply(ops: readonly IniSemanticOp[]): IniSemanticOp[] {
  * All expected-previous checks use the pre-patch document; then mutations run
  * in a safe order. Throws {@link IniSemanticPatchError} on conflict / policy.
  */
-export function applyIniSemanticOps(
-  payload: ServerIniPayload,
-  ops: readonly IniSemanticOp[],
-): ServerIniPayload {
+export function applyIniSemanticOps(payload: ServerIniPayload, ops: readonly IniSemanticOp[]): ServerIniPayload {
   if (ops.length === 0) {
     return payload;
   }
@@ -342,10 +330,7 @@ function alignIniDuplicateValuesForOps(
  * (load / last save) and the current draft. Revert stays draft-only — callers
  * must not emit Unset for per-row revert.
  */
-export function buildIniSemanticOps(
-  baseline: ServerIniPayload,
-  draft: ServerIniPayload,
-): IniSemanticOp[] {
+export function buildIniSemanticOps(baseline: ServerIniPayload, draft: ServerIniPayload): IniSemanticOp[] {
   const ops: IniSemanticOp[] = [];
   const fileKeys: IniFileKey[] = ["gameUserSettings", "game"];
 
