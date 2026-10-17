@@ -48,7 +48,10 @@ export function IniSettingRow(props: Props): ReactElement {
   });
   const defaultValue = lookupDefaultValue(row.fileKey, row.section, row.key);
   const canResetDefault = defaultValue !== null && defaultValue !== row.value;
-  const canRevertSaved = unsaved && savedValue !== null && props.onRevertRowToSaved !== undefined;
+  const canRevertSaved = unsaved && props.onRevertRowToSaved !== undefined;
+  const revertLabel = savedValue !== null ? `Revert to saved value: ${savedValue}` : "Discard key (not in saved file)";
+  const revertAriaLabel =
+    savedValue !== null ? `Revert ${row.key} to saved value` : `Discard ${row.key} (not in saved file)`;
   const keyLabel = row.duplicateCount > 1 ? `${row.key} #${row.occurrence + 1}` : row.key;
   const humanLabel = humanizeIniKey(row.key);
   const label = humanLabel.length > 0 && humanLabel !== row.key ? humanLabel : keyLabel;
@@ -121,11 +124,13 @@ export function IniSettingRow(props: Props): ReactElement {
             }
           />
         )}
-        {unsaved && savedValue !== null && (
+        {unsaved ? (
           <Text c="dimmed" size="xs" mt={4} data-ini-row-saved-value>
-            Last saved: {savedValue.length > 0 ? savedValue : "(empty)"}
+            {savedValue !== null
+              ? `Last saved: ${savedValue.length > 0 ? savedValue : "(empty)"}`
+              : "Last saved: (not in file)"}
           </Text>
-        )}
+        ) : null}
       </div>
       <div>
         <Text c="dimmed" size="sm">
@@ -144,12 +149,12 @@ export function IniSettingRow(props: Props): ReactElement {
         ) : (
           <>
             {canRevertSaved ? (
-              <Tooltip label={`Revert to saved value: ${savedValue}`}>
+              <Tooltip label={revertLabel}>
                 <ActionIcon
                   variant="subtle"
                   color="attention"
                   disabled={busy}
-                  aria-label={`Revert ${row.key} to saved value`}
+                  aria-label={revertAriaLabel}
                   data-ini-row-revert-saved
                   onClick={() => props.onRevertRowToSaved?.(row)}
                 >

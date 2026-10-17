@@ -10,6 +10,7 @@ import {
   type IniUiSectionGroup,
 } from "../../iniModel";
 import classes from "./ConfigurationEditor.module.css";
+import { iniRowIdentity } from "./configurationEditorModel";
 import { IniSettingRow } from "./IniSettingRow";
 
 interface Props {
@@ -38,7 +39,7 @@ function renderSettingRows(
   onOpenAdminList: Props["onOpenAdminList"],
 ): ReactElement[] {
   return rows.map((row) => {
-    const controlId = `${row.fileKey}\u001f${row.section}\u001f${row.key}\u001f${row.occurrence}`;
+    const controlId = iniRowIdentity(row.fileKey, row.section, row.key, row.occurrence);
     return (
       <IniSettingRow
         key={controlId}

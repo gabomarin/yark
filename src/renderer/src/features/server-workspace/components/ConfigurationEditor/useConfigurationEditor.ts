@@ -18,56 +18,20 @@ import {
   type IniSettingReference,
 } from "../../iniModel";
 import {
+  applyIniRowRevertToPayload,
+  buildIniBaselineValueIndex,
   countUnsavedIniRowsForFile,
   iniPayloadsDirty,
   isIniRowUnsaved,
-  lookupBaselineIniValue,
+  lookupBaselineIniValueFromIndex,
 } from "./configurationEditorModel";
+import type { ConfigurationEditorApi } from "./configurationEditorTypes";
 
 export function useConfigurationEditor(options: {
   serverId: string;
   onDirtyChange?: (dirty: boolean) => void;
   onRegisterSave?: (save: (() => Promise<boolean>) | null) => void;
-}): {
-  snapshot: ServerIniSnapshot | null;
-  payload: ServerIniPayload | null;
-  loading: boolean;
-  busy: boolean;
-  error: string | null;
-  setError: (error: string | null) => void;
-  preview: IniPreview | null;
-  search: string;
-  setSearch: (value: string) => void;
-  filter: IniFilterId;
-  setFilter: (value: IniFilterId) => void;
-  collapsedSections: Record<string, boolean>;
-  iniFile: IniFileKey;
-  setIniFile: (file: IniFileKey) => void;
-  iniMode: "visual" | "text";
-  setIniMode: (mode: "visual" | "text") => void;
-  dirty: boolean;
-  /** Unsaved visual-row count for the active file (PINI-001 / #661). */
-  unsavedRowCount: number;
-  /** True when the editor baseline is a queued draft (#530). */
-  pendingQueued: boolean;
-  groupedRows: ReturnType<typeof groupSettingReferencesByUiCategory>;
-  categoryOptions: { value: string; label: string }[];
-  fileLabel: string;
-  filePath: string | null;
-  isRowUnsaved: (row: IniSettingReference) => boolean;
-  savedValueForRow: (row: IniSettingReference) => string | null;
-  updateValue: (fileKey: IniFileKey, rowSection: string, key: string, value: string, occurrence?: number) => void;
-  resetChanges: () => void;
-  resetActiveFileToDefaults: () => void;
-  resetRowToDefault: (row: IniSettingReference) => void;
-  revertRowToSaved: (row: IniSettingReference) => void;
-  toggleSection: (sectionName: string) => void;
-  setSectionGroupsCollapsed: (category: string, collapsed: boolean) => void;
-  setAllSectionsCollapsed: (collapsed: boolean) => void;
-  saveIni: () => Promise<boolean>;
-  openExternal: () => Promise<void>;
-  publishPayloadChange: (nextPayload: ServerIniPayload) => void;
-} {
+}): ConfigurationEditorApi {
   const { serverId, onRegisterSave } = options;
   const [snapshot, setSnapshot] = useState<ServerIniSnapshot | null>(null);
   const [payload, setPayload] = useState<ServerIniPayload | null>(null);
@@ -179,6 +143,10 @@ export function useConfigurationEditor(options: {
     [activeFileKey, activeText],
   );
   const availableRows = useMemo(() => filterIniSettingReferences(rows, "", "all"), [rows]);
+  const baselineIndex = useMemo(
+    () => (baseline === null ? null : buildIniBaselineValueIndex(baseline, activeFileKey)),
+    [baseline, activeFileKey],
+  );
   const unsavedCounts = useMemo(
     () => countUnsavedIniRowsForFile(payload, baseline, activeFileKey),
     [payload, baseline, activeFileKey],
@@ -263,18 +231,23 @@ export function useConfigurationEditor(options: {
   };
 
   const revertRowToSaved = (row: IniSettingReference) => {
-    const saved = lookupBaselineIniValue(baseline, row.fileKey, row.section, row.key, row.occurrence);
-    if (saved === null) return;
-    updateValue(row.fileKey, row.section, row.key, saved, row.occurrence);
+    if (payload === null || baselineIndex === null) return;
+    const { nextPayload, outcome } = applyIniRowRevertToPayload(payload, baselineIndex, row);
+    setPayload(nextPayload);
+    publishDirty(nextPayload, baseline);
+    setPreview(null);
     showOperatorToast({
       title: "INI editor",
-      message: `${row.key} reverted to saved value.`,
+      message:
+        outcome === "discarded" ? `${row.key} discarded (not in saved file).` : `${row.key} reverted to saved value.`,
     });
   };
 
-  const isRowUnsaved = (row: IniSettingReference): boolean => isIniRowUnsaved(row, baseline);
+  const isRowUnsaved = (row: IniSettingReference): boolean => isIniRowUnsaved(row, baselineIndex);
   const savedValueForRow = (row: IniSettingReference): string | null =>
-    lookupBaselineIniValue(baseline, row.fileKey, row.section, row.key, row.occurrence);
+    baselineIndex === null
+      ? null
+      : lookupBaselineIniValueFromIndex(baselineIndex, row.fileKey, row.section, row.key, row.occurrence);
 
   const toggleSection = (sectionName: string) => {
     setCollapsedSections((prev) => ({

@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyIniRowRevertToPayload,
+  buildIniBaselineValueIndex,
   countUnsavedIniRowsForFile,
   iniPayloadsDirty,
   iniRowIdentity,
   isIniRowUnsaved,
   lookupBaselineIniValue,
+  lookupBaselineIniValueFromIndex,
 } from "@features/server-workspace/components/ConfigurationEditor/configurationEditorModel";
+import { textForFile } from "@features/server-workspace/iniModel";
 import type { ServerIniPayload } from "@shared/types";
 
 function gus(text: string): ServerIniPayload {
@@ -30,11 +34,12 @@ describe("configurationEditorModel unsaved rows (PINI-001 / #661)", () => {
     );
   });
 
-  it("marks only the edited occurrence as unsaved", () => {
+  it("marks only the edited occurrence as unsaved via a shared baseline index", () => {
     const baseline = gus(`[ServerSettings]
 ConfigOverrideItemMaxQuantity=A
 ConfigOverrideItemMaxQuantity=B
 `);
+    const index = buildIniBaselineValueIndex(baseline, "gameUserSettings");
     expect(
       isIniRowUnsaved(
         {
@@ -44,7 +49,7 @@ ConfigOverrideItemMaxQuantity=B
           value: "A",
           occurrence: 0,
         },
-        baseline,
+        index,
       ),
     ).toBe(false);
     expect(
@@ -56,16 +61,16 @@ ConfigOverrideItemMaxQuantity=B
           value: "CHANGED",
           occurrence: 1,
         },
-        baseline,
+        index,
       ),
     ).toBe(true);
     expect(
-      lookupBaselineIniValue(baseline, "gameUserSettings", "ServerSettings", "ConfigOverrideItemMaxQuantity", 1),
+      lookupBaselineIniValueFromIndex(index, "gameUserSettings", "ServerSettings", "ConfigOverrideItemMaxQuantity", 1),
     ).toBe("B");
   });
 
   it("clears unsaved when the draft matches the saved value again", () => {
-    const baseline = gus("[ServerSettings]\nDifficultyOffset=0.2\n");
+    const index = buildIniBaselineValueIndex(gus("[ServerSettings]\nDifficultyOffset=0.2\n"), "gameUserSettings");
     expect(
       isIniRowUnsaved(
         {
@@ -75,7 +80,7 @@ ConfigOverrideItemMaxQuantity=B
           value: "0.9",
           occurrence: 0,
         },
-        baseline,
+        index,
       ),
     ).toBe(true);
     expect(
@@ -87,9 +92,42 @@ ConfigOverrideItemMaxQuantity=B
           value: "0.2",
           occurrence: 0,
         },
-        baseline,
+        index,
       ),
     ).toBe(false);
+  });
+
+  it("treats draft-only occurrences as unsaved with a null saved value", () => {
+    const baseline = gus("[ServerSettings]\nDifficultyOffset=0.2\n");
+    const index = buildIniBaselineValueIndex(baseline, "gameUserSettings");
+    expect(
+      isIniRowUnsaved(
+        {
+          fileKey: "gameUserSettings",
+          section: "ServerSettings",
+          key: "XPMultiplier",
+          value: "2",
+          occurrence: 0,
+        },
+        index,
+      ),
+    ).toBe(true);
+    expect(lookupBaselineIniValueFromIndex(index, "gameUserSettings", "ServerSettings", "XPMultiplier", 0)).toBeNull();
+    expect(lookupBaselineIniValue(baseline, "gameUserSettings", "ServerSettings", "XPMultiplier", 0)).toBeNull();
+  });
+
+  it("discards draft-only occurrences on revert", () => {
+    const baseline = gus("[ServerSettings]\nDifficultyOffset=0.2\n");
+    const payload = gus("[ServerSettings]\nDifficultyOffset=0.2\nXPMultiplier=2\n");
+    const index = buildIniBaselineValueIndex(baseline, "gameUserSettings");
+    const result = applyIniRowRevertToPayload(payload, index, {
+      fileKey: "gameUserSettings",
+      section: "ServerSettings",
+      key: "XPMultiplier",
+      occurrence: 0,
+    });
+    expect(result.outcome).toBe("discarded");
+    expect(textForFile(result.nextPayload, "gameUserSettings")).not.toContain("XPMultiplier");
   });
 
   it("counts unsaved visual rows per file without inventing defaults or owned keys", () => {

@@ -137,4 +137,27 @@ describe("IniSettingRow unsaved highlighting (PINI-001 / #661)", () => {
     await user.click(screen.getByRole("button", { name: "Revert DifficultyOffset to saved value" }));
     expect(onRevertRowToSaved).toHaveBeenCalledWith(row);
   });
+
+  it("offers discard when the key is absent from the saved file", async () => {
+    const user = userEvent.setup();
+    const onRevertRowToSaved = vi.fn();
+    const row = iniRow("XPMultiplier", "2");
+    render(
+      <AppProviders>
+        <IniSettingRow
+          row={row}
+          busy={false}
+          unsaved
+          savedValue={null}
+          onUpdateValue={vi.fn()}
+          onResetRowToDefault={vi.fn()}
+          onRevertRowToSaved={onRevertRowToSaved}
+        />
+      </AppProviders>,
+    );
+
+    expect(screen.getByText("Last saved: (not in file)")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Discard XPMultiplier (not in saved file)" }));
+    expect(onRevertRowToSaved).toHaveBeenCalledWith(row);
+  });
 });

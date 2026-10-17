@@ -21,9 +21,12 @@ import {
   type IniSettingReference,
 } from "@features/server-workspace/iniModel";
 import {
+  applyIniRowRevertToPayload,
+  buildIniBaselineValueIndex,
   countUnsavedIniRowsForFile,
+  iniRowIdentity,
   isIniRowUnsaved,
-  lookupBaselineIniValue,
+  lookupBaselineIniValueFromIndex,
 } from "@features/server-workspace/components/ConfigurationEditor/configurationEditorModel";
 import { useMemo, useState } from "react";
 import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
@@ -54,6 +57,10 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
   }, [activeText, props.iniFile]);
 
   const availableRows = useMemo(() => filterIniSettingReferences(rows, "", "all"), [rows]);
+  const baselineIndex = useMemo(
+    () => (props.baseline === null ? null : buildIniBaselineValueIndex(props.baseline, props.iniFile)),
+    [props.baseline, props.iniFile],
+  );
   const unsavedCounts = useMemo(
     () => countUnsavedIniRowsForFile(props.payload, props.baseline, props.iniFile),
     [props.payload, props.baseline, props.iniFile],
@@ -88,10 +95,15 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
   };
 
   const revertRowToSaved = (row: IniSettingReference): void => {
-    const saved = lookupBaselineIniValue(props.baseline, row.fileKey, row.section, row.key, row.occurrence);
-    if (saved === null) return;
-    updateValue(row.section, row.key, saved, row.occurrence);
+    if (baselineIndex === null) return;
+    const { nextPayload } = applyIniRowRevertToPayload(props.payload, baselineIndex, row);
+    props.onPayloadChange(nextPayload);
   };
+
+  const savedValueForRow = (row: IniSettingReference): string | null =>
+    baselineIndex === null
+      ? null
+      : lookupBaselineIniValueFromIndex(baselineIndex, row.fileKey, row.section, row.key, row.occurrence);
 
   if (props.mode === "raw") {
     return (
@@ -259,16 +271,10 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                           {!sectionCollapsed &&
                             sectionGroup.rows.map((row) => (
                               <ClusterIniTemplateSettingRow
-                                key={`${row.section}-${row.key}-${row.occurrence}`}
+                                key={iniRowIdentity(row.fileKey, row.section, row.key, row.occurrence)}
                                 row={row}
-                                unsaved={isIniRowUnsaved(row, props.baseline)}
-                                savedValue={lookupBaselineIniValue(
-                                  props.baseline,
-                                  row.fileKey,
-                                  row.section,
-                                  row.key,
-                                  row.occurrence,
-                                )}
+                                unsaved={isIniRowUnsaved(row, baselineIndex)}
+                                savedValue={savedValueForRow(row)}
                                 onChange={updateValue}
                                 onRevertToSaved={revertRowToSaved}
                               />
@@ -305,16 +311,10 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
                   {!isCollapsed &&
                     group.rows.map((row) => (
                       <ClusterIniTemplateSettingRow
-                        key={`${row.section}-${row.key}-${row.occurrence}`}
+                        key={iniRowIdentity(row.fileKey, row.section, row.key, row.occurrence)}
                         row={row}
-                        unsaved={isIniRowUnsaved(row, props.baseline)}
-                        savedValue={lookupBaselineIniValue(
-                          props.baseline,
-                          row.fileKey,
-                          row.section,
-                          row.key,
-                          row.occurrence,
-                        )}
+                        unsaved={isIniRowUnsaved(row, baselineIndex)}
+                        savedValue={savedValueForRow(row)}
                         onChange={updateValue}
                         onRevertToSaved={revertRowToSaved}
                       />
