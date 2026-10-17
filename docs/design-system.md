@@ -18,7 +18,7 @@ type ThemeSelection = {
 
 The persisted appearance record stores `themeFamily` and `scheme` independently.
 The registry in `src/renderer/src/shared/theme/themes.ts` owns family/variant
-resolution and always falls back to the shipped `fluent`/`dark` selection. Two
+resolution and always falls back to the shipped `fluent`/`dark` selection. Three
 families ship today:
 
 - **`fluent`** — the compatibility default (Segoe UI, 8px flyout corners,
@@ -26,21 +26,24 @@ families ship today:
 - **`plasma-breeze`** — a KDE Plasma/Breeze family (`Breeze Dark`, `Breeze Light`)
   anchored on the exact `KDE/breeze` colour schemes. Flat 4px chrome, restrained
   shadows, a Noto Sans typography profile and the Breeze accent `#3daee9`.
+- **`glassy`** — operational glass (`Glassy Dark`, `Glassy Light`): a cool-neutral
+  tinted canvas, selective frost on persistent chrome and transient overlays, and
+  opaque content. Grain is off. Native Windows Mica/Acrylic is out of scope.
 
 `--app-*` names are stable semantic roles. A family may change its palette,
 semantic status values, elevation, typography and Mantine `recipeSet`, but feature
 CSS must continue to consume the roles rather than family-specific values. Each
-family owns its component recipes (`recipes/fluent.ts`, `recipes/plasmaBreeze.ts`);
-`recipes/plasmaBreeze.ts` composes the Fluent base and overrides only the
-components where Breeze genuinely differs (4px menus/popovers/modals, a flat
-SegmentedControl). Glassy can add a recipe set the same way, without executable
-JavaScript/JSX theme payloads or a change to the selection contract.
+family owns its component recipes (`recipes/fluent.ts`, `recipes/plasmaBreeze.ts`,
+`recipes/glassy.ts`); Breeze and Glassy compose the Fluent base and override only
+the components where they genuinely differ. Do not add executable JavaScript/JSX
+theme payloads or a change to the selection contract.
 
 ### Theme family radius
 
 The corner ladder is family-owned (`AppThemeRadius`), scaled by Display size like
-the shared tokens. Fluent keeps `4 / 8 / 10` (control / surface / large). Plasma
-Breeze uses KDE's smaller ladder, `4 / 6 / 8`: controls are ~4px
+the shared tokens. Fluent keeps `4 / 8 / 10` (sm / md / lg; control 4). Plasma
+Breeze uses KDE's smaller ladder, `4 / 6 / 8`. Glassy uses `6 / 10 / 14` with
+control `6`. Plasma Breeze controls are ~4px
 (`kstyle/breezemetrics.h` `Frame_FrameRadius = 5` → `frameRadius()` ≈ 4.5,
 checkbox 4) and large surfaces follow `largeRadius = smallRadius * 2` ≈ 6px. Cards
 (`AppSurfaceCard` default `radius="md"`) and dialogs (`AppPanelModal` `radius="md"`)
@@ -58,6 +61,16 @@ exception. Fluent keeps the Segoe stack; Plasma Breeze uses
 `"Noto Sans", "Segoe UI", system-ui, sans-serif` with a Hack → Cascadia mono
 fallback. No family loads a remote font. `body` also feeds `--mantine-font-family`,
 which `globals.css` uses for the document.
+
+### Glassy materials (intentional)
+
+Glassy keeps solid `--app-color-*` roles for contrast and fallback. Translucent
+`--app-material-*` roles (chrome, overlay, scrim, inner highlight) are consumed
+only by the app shell and shared recipes. Feature CSS must not read them.
+`backdrop-filter` is progressive: no-filter, reduced-transparency, and forced-colors
+remap the same variables to opaque fills. Glassy Dark filled primaries use the
+cyan solid `#4ba8e8` with dark ink `#071a28` (`palette.blueContrast`); Glassy Light
+uses `#176fb3` with a white label. Grain is off.
 
 ### Breeze deviations (intentional)
 
@@ -247,7 +260,7 @@ Mantine **does** have spacing tokens (`theme.spacing` → `gap="xs"` / `p="md"` 
 
 Preference key: SQLite `app_settings.uiDensity` (IPC `app:get-ui-density` / `app:set-ui-density`). Loaded in `main.tsx` **before** the first `AppProviders` theme mount (falls back to Compact if IPC fails). Persisted only from the Settings change handler (not a mount effect — Safe under `StrictMode`). Failed saves keep the previous density and show an error notification. A legacy `localStorage` value (`settings.uiDensity`) is migrated once when the SQLite row is missing — and only cleared after a successful write.
 
-**Theme registry** (`src/renderer/src/shared/theme/themes.ts`, #PUX-004 Track B / #PUX-005-B). A theme is a **payload**, not a second design system: an entry carries everything that genuinely differs — the palette (ramps, canvas, contrasts, alpha ramps), the semantic colours (`ok` / `attention` / `bad` / `dangerBright` / `fossil`…), the elevation ladder, family typography/radius, and the Mantine colour scales built from those semantics. `theme.ts` reads all of it; the `--app-*` role map, the density tokens and the motion tokens stay shared, so feature CSS keeps reading roles and never gains a second colour language. Selection is `{ family, scheme }` over `THEME_FAMILIES` (**fluent** and **plasma-breeze**, each with dark/light). Preference key: SQLite `app_settings.appearance.v1` (IPC `app:get-appearance` / `app:set-appearance`), JSON `{ "themeFamily": "fluent", "scheme": "dark", "panels": "auto" }`, loaded in `main.tsx` before the first mount like density. Unknown family/scheme values fall back to Fluent Dark (`parseAppearanceSettings`); legacy `{ "theme": "dark"|"light" }` rows upgrade to Fluent plus that scheme (see [Internal theme contract](#internal-theme-contract)).
+**Theme registry** (`src/renderer/src/shared/theme/themes.ts`, #PUX-004 Track B / #PUX-005-B / #PUX-005-A). A theme is a **payload**, not a second design system: an entry carries everything that genuinely differs — the palette (ramps, canvas, contrasts, alpha ramps), the semantic colours (`ok` / `attention` / `bad` / `dangerBright` / `fossil`…), the elevation ladder, family typography/radius, the Mantine colour scales built from those semantics, and the `AppThemeMaterials` chrome/overlay contract. `theme.ts` reads all of it; the `--app-*` role map, the density tokens and the motion tokens stay shared, so feature CSS keeps reading roles and never gains a second colour language. `--app-material-*` roles are restricted to the app shell and shared recipes. Selection is `{ family, scheme }` over `THEME_FAMILIES` (**fluent**, **plasma-breeze**, and **glassy**, each with dark/light). Preference key: SQLite `app_settings.appearance.v1` (IPC `app:get-appearance` / `app:set-appearance`), JSON `{ "themeFamily": "fluent", "scheme": "dark", "panels": "auto" }`, loaded in `main.tsx` before the first mount like density. Unknown family/scheme values fall back to Fluent Dark (`parseAppearanceSettings`); legacy `{ "theme": "dark"|"light" }` rows upgrade to Fluent plus that scheme (see [Internal theme contract](#internal-theme-contract)). `--app-color-accent-contrast` resolves from `palette.blueContrast` so Glassy Dark can use a measured dark ink label on its cyan solid.
 
 **Server-workspace panels** (`src/shared/workspace/workspacePanels.ts`, #PUX-004 Track B). Where the server workspace puts its server list and status panel is data, not a `matchMedia` buried in one component: `auto` (columns from 1600px, the shipped default) and `drawers` (never). `workspacePanelsModeFor(option, width)` is the pure decision, `drawersMediaQuery(option)` is what the workspace subscribes to, and a test keeps the two in step. CSS cannot read the option, so the one hand-written mirror — Overview's `@media (min-width: 1600px)` side-by-side — is pinned by that same test. This is **not** an app-level _layout_ (how the whole app is structured, sidebar + main content today): that is a separate ticket, so the word stays free for it.
 

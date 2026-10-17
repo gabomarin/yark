@@ -76,9 +76,9 @@ describe.each(ALL_APP_THEMES)("$family $label theme contrast", (theme) => {
         failures.push(`accent-text on ${name} = ${textRatio.toFixed(2)} (min ${FLOOR.accentText})`);
       }
     }
-    const labelRatio = contrast("#ffffff", solid);
+    const labelRatio = contrast(theme.palette.blueContrast, solid);
     if (labelRatio < FLOOR.accentLabel) {
-      failures.push(`white label on accent = ${labelRatio.toFixed(2)} (min ${FLOOR.accentLabel})`);
+      failures.push(`accent-contrast label on accent = ${labelRatio.toFixed(2)} (min ${FLOOR.accentLabel})`);
     }
     expect(failures, failures.join(" | ")).toEqual([]);
   });
@@ -88,7 +88,9 @@ describe.each(ALL_APP_THEMES)("$family $label theme contrast", (theme) => {
       expect(contrast("#ffffff", "#2475a5")).toBeGreaterThanOrEqual(4.5);
       expect(contrast("#ffffff", "#206b99")).toBeGreaterThanOrEqual(4.5);
     } else {
-      expect(contrast("#ffffff", theme.palette.blue[8] as string)).toBeGreaterThanOrEqual(FLOOR.accentLabel);
+      expect(contrast(theme.palette.blueContrast, theme.palette.blue[8] as string)).toBeGreaterThanOrEqual(
+        FLOOR.accentLabel,
+      );
     }
   });
 

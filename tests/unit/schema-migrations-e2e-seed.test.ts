@@ -14,7 +14,7 @@ const { initProfileDatabase } = require("../../scripts/e2e-init-profile-db.cjs")
 const { seedAppearance } = require("../../scripts/e2e-launch.cjs") as {
   seedAppearance: (
     profileDir: string,
-    selection: { family: "fluent" | "plasma-breeze"; scheme: "dark" | "light" },
+    selection: { family: "fluent" | "plasma-breeze" | "glassy"; scheme: "dark" | "light" },
   ) => void;
 };
 

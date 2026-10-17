@@ -237,6 +237,32 @@ body {
  * `!important` is deliberate here: Mantine injects its resolver into a body style
  * that lands after this file, and this is an override of the whole palette.
  */
+/*
+ * Glassy material fallbacks (#PUX-005-A). Capability detection remaps the shared
+ * `--app-material-*` roles so recipes never depend on blur being available.
+ * `!important` matches the forced-colors block: Mantine injects resolver vars
+ * after this file.
+ */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --app-material-chrome-bg: var(--app-material-chrome-fallback) !important;
+    --app-material-chrome-filter: none !important;
+    --app-material-overlay-bg: var(--app-material-overlay-fallback) !important;
+    --app-material-overlay-filter: none !important;
+    --app-material-content-bg: var(--app-material-content-fallback) !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --app-material-chrome-bg: var(--app-material-chrome-fallback) !important;
+    --app-material-chrome-filter: none !important;
+    --app-material-overlay-bg: var(--app-material-overlay-fallback) !important;
+    --app-material-overlay-filter: none !important;
+    --app-material-content-bg: var(--app-material-content-fallback) !important;
+  }
+}
+
 @media (forced-colors: active) {
   .mantine-AppShell-main::before,
   .main::before {
@@ -267,5 +293,15 @@ body {
     --app-color-danger-bright: CanvasText !important;
     --app-color-fossil: CanvasText !important;
     --app-color-cryo: CanvasText !important;
+    --app-material-chrome-bg: Canvas !important;
+    --app-material-chrome-fallback: Canvas !important;
+    --app-material-chrome-filter: none !important;
+    --app-material-content-bg: Canvas !important;
+    --app-material-content-fallback: Canvas !important;
+    --app-material-overlay-bg: Canvas !important;
+    --app-material-overlay-fallback: Canvas !important;
+    --app-material-overlay-filter: none !important;
+    --app-material-inner-highlight: CanvasText !important;
+    --app-material-scrim: Canvas !important;
   }
 }

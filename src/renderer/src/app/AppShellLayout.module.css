@@ -75,6 +75,23 @@
   transition: width var(--app-motion-base) var(--app-ease-standard);
 }
 
+/* Glassy (#PUX-005-A): one chrome material at each persistent shell boundary. */
+:global([data-theme-family="glassy"]) .navbar {
+  background-color: var(--app-material-chrome-bg);
+  backdrop-filter: var(--app-material-chrome-filter);
+  -webkit-backdrop-filter: var(--app-material-chrome-filter);
+}
+
+:global([data-theme-family="glassy"]) .main::before {
+  background-image: none;
+}
+
+:global([data-theme-family="glassy"]) .main {
+  background-color: var(--app-material-chrome-bg);
+  backdrop-filter: var(--app-material-chrome-filter);
+  -webkit-backdrop-filter: var(--app-material-chrome-filter);
+}
+
 .sidebarEdgeToggle {
   position: fixed;
   top: 50vh;

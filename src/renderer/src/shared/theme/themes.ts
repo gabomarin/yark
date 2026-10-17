@@ -23,10 +23,13 @@ import {
   lightPalette,
   lightShadows,
   lightSurfaces,
+  glassyRadius,
   plasmaBreezeRadius,
+  solidMaterials,
   type AppThemeColors,
   type AppThemeContrast,
   type AppThemeLadders,
+  type AppThemeMaterials,
   type AppThemePalette,
   type AppThemeRadius,
   type AppThemeShadows,
@@ -48,22 +51,39 @@ import {
   plasmaBreezeLightSurfaces,
   plasmaBreezeTypography,
 } from "./plasmaBreezeTokens";
+import {
+  glassyDarkColors,
+  glassyDarkContrast,
+  glassyDarkLadders,
+  glassyDarkMaterials,
+  glassyDarkPalette,
+  glassyDarkShadows,
+  glassyDarkSurfaces,
+  glassyLightColors,
+  glassyLightContrast,
+  glassyLightLadders,
+  glassyLightMaterials,
+  glassyLightPalette,
+  glassyLightShadows,
+  glassyLightSurfaces,
+  glassyTypography,
+} from "./glassyTokens";
 
 /**
- * Theme registry (#PUX-004 Track B, #PUX-005-B).
+ * Theme registry (#PUX-004 Track B, #PUX-005-B, #PUX-005-A).
  *
  * A theme is a payload, never a second design system: the `--app-*` role map,
  * the density tokens and the motion tokens are shared, and feature CSS keeps
  * reading roles. An entry carries everything that genuinely differs per theme -
  * the palette (ramps, canvas, contrasts, alphas), the semantic colours, the
  * elevation ladder, the Mantine colour scales derived from those semantics, the
- * family typography profile and the family's documented contrast floors.
+ * family typography profile, materials, and the family's documented contrast floors.
  */
 export interface AppTheme {
   family: ThemeFamilyId;
   scheme: ThemeScheme;
   /** Component recipe family; each family owns its recipes and overrides. */
-  recipeSet: "fluent" | "plasma-breeze";
+  recipeSet: "fluent" | "plasma-breeze" | "glassy";
   label: string;
   /** Mantine colour scheme the provider mounts for this theme. */
   colorScheme: "dark" | "light";
@@ -76,6 +96,7 @@ export interface AppTheme {
   /** Family radius ladder (comfortable scale); density scales it per run. */
   radius: AppThemeRadius;
   contrast: AppThemeContrast;
+  materials: AppThemeMaterials;
 }
 
 export const THEME_FAMILIES: Readonly<Record<ThemeFamilyId, Readonly<Record<ThemeScheme, AppTheme>>>> = {
@@ -94,6 +115,10 @@ export const THEME_FAMILIES: Readonly<Record<ThemeFamilyId, Readonly<Record<Them
       typography: fluentTypography,
       radius: fluentRadius,
       contrast: darkContrast,
+      materials: solidMaterials(darkPalette, {
+        innerHighlight: "rgba(255, 255, 255, 0.06)",
+        scrim: "rgba(0, 0, 0, 0.55)",
+      }),
     },
     light: {
       family: "fluent",
@@ -109,6 +134,10 @@ export const THEME_FAMILIES: Readonly<Record<ThemeFamilyId, Readonly<Record<Them
       typography: fluentTypography,
       radius: fluentRadius,
       contrast: lightContrast,
+      materials: solidMaterials(lightPalette, {
+        innerHighlight: "rgba(255, 255, 255, 0.82)",
+        scrim: "rgba(16, 24, 40, 0.25)",
+      }),
     },
   },
   "plasma-breeze": {
@@ -126,6 +155,10 @@ export const THEME_FAMILIES: Readonly<Record<ThemeFamilyId, Readonly<Record<Them
       typography: plasmaBreezeTypography,
       radius: plasmaBreezeRadius,
       contrast: plasmaBreezeDarkContrast,
+      materials: solidMaterials(plasmaBreezeDarkPalette, {
+        innerHighlight: "rgba(255, 255, 255, 0.05)",
+        scrim: "rgba(0, 0, 0, 0.55)",
+      }),
     },
     light: {
       family: "plasma-breeze",
@@ -141,6 +174,44 @@ export const THEME_FAMILIES: Readonly<Record<ThemeFamilyId, Readonly<Record<Them
       typography: plasmaBreezeTypography,
       radius: plasmaBreezeRadius,
       contrast: plasmaBreezeLightContrast,
+      materials: solidMaterials(plasmaBreezeLightPalette, {
+        innerHighlight: "rgba(255, 255, 255, 0.82)",
+        scrim: "rgba(16, 24, 40, 0.25)",
+      }),
+    },
+  },
+  glassy: {
+    dark: {
+      family: "glassy",
+      scheme: "dark",
+      recipeSet: "glassy",
+      label: "Glassy Dark",
+      colorScheme: "dark",
+      palette: glassyDarkPalette,
+      colors: glassyDarkColors,
+      shadows: glassyDarkShadows,
+      surfaces: glassyDarkSurfaces,
+      ladders: glassyDarkLadders,
+      typography: glassyTypography,
+      radius: glassyRadius,
+      contrast: glassyDarkContrast,
+      materials: glassyDarkMaterials,
+    },
+    light: {
+      family: "glassy",
+      scheme: "light",
+      recipeSet: "glassy",
+      label: "Glassy Light",
+      colorScheme: "light",
+      palette: glassyLightPalette,
+      colors: glassyLightColors,
+      shadows: glassyLightShadows,
+      surfaces: glassyLightSurfaces,
+      ladders: glassyLightLadders,
+      typography: glassyTypography,
+      radius: glassyRadius,
+      contrast: glassyLightContrast,
+      materials: glassyLightMaterials,
     },
   },
 };
@@ -149,6 +220,7 @@ export const THEME_FAMILIES: Readonly<Record<ThemeFamilyId, Readonly<Record<Them
 export const THEME_FAMILY_LIST: ReadonlyArray<{ id: ThemeFamilyId; label: string }> = [
   { id: "fluent", label: "Fluent" },
   { id: "plasma-breeze", label: "Plasma Breeze" },
+  { id: "glassy", label: "Glassy" },
 ];
 
 /**

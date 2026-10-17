@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 /**
  * Assert the visual family mounted before family-specific screenshots are taken.
  * @param {import("playwright").Page} page
- * @param {"fluent" | "plasma-breeze"} family
+ * @param {"fluent" | "plasma-breeze" | "glassy"} family
  */
 async function assertFamilyMounted(page, family) {
   const mounted = await page.evaluate(() => {
@@ -28,6 +28,32 @@ async function assertFamilyMounted(page, family) {
       expectedRadius,
       `Plasma Breeze --app-radius-md is "${mounted.radiusMd}" at ${mounted.density} density`,
     );
+  }
+
+  if (family === "glassy") {
+    const scheme = await page.evaluate(() => document.documentElement.getAttribute("data-mantine-color-scheme"));
+    const expectedAccent = scheme === "light" ? "#176fb3" : "#4ba8e8";
+    assert.equal(mounted.accent, expectedAccent, `Glassy accent is "${mounted.accent}", expected ${expectedAccent}`);
+    assert.ok(mounted.panel.length > 0, "--app-color-panel is not emitted by the resolver");
+    const expectedRadius = mounted.density === "compact" ? "8px" : "10px";
+    assert.equal(
+      mounted.radiusMd,
+      expectedRadius,
+      `Glassy --app-radius-md is "${mounted.radiusMd}" at ${mounted.density} density`,
+    );
+    const materials = await page.evaluate(() => {
+      const style = getComputedStyle(document.documentElement);
+      return {
+        family: document.documentElement.getAttribute("data-theme-family"),
+        filter: style.getPropertyValue("--app-material-chrome-filter").trim(),
+        contrast: style.getPropertyValue("--app-color-accent-contrast").trim().toLowerCase(),
+      };
+    });
+    assert.equal(materials.family, "glassy", `data-theme-family is "${materials.family}"`);
+    assert.ok(materials.filter.includes("blur("), `Glassy chrome filter is "${materials.filter}"`);
+    if (scheme === "dark") {
+      assert.equal(materials.contrast, "#071a28", `Glassy Dark accent-contrast is "${materials.contrast}"`);
+    }
   }
 
   return mounted;

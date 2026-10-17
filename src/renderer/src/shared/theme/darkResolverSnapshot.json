@@ -137,7 +137,17 @@
     "--app-list-selected-bg": "var(--app-color-surface-control)",
     "--app-list-selected-inset": "inset 3px 0 0 var(--ark-blue-9)",
     "--app-anchor-color": "var(--ark-blue-11)",
-    "--app-anchor-hover-color": "var(--ark-blue-12)"
+    "--app-anchor-hover-color": "var(--ark-blue-12)",
+    "--app-material-chrome-bg": "#0b111a",
+    "--app-material-chrome-fallback": "#0b111a",
+    "--app-material-chrome-filter": "none",
+    "--app-material-content-bg": "#131e2c",
+    "--app-material-content-fallback": "#131e2c",
+    "--app-material-overlay-bg": "#131e2c",
+    "--app-material-overlay-fallback": "#131e2c",
+    "--app-material-overlay-filter": "none",
+    "--app-material-inner-highlight": "rgba(255, 255, 255, 0.06)",
+    "--app-material-scrim": "rgba(0, 0, 0, 0.55)"
   },
   "light": {
     "--mantine-color-body": "var(--app-color-surface-panel)",

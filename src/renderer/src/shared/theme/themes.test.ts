@@ -13,6 +13,7 @@ import {
 } from "./themes";
 import { darkPalette } from "./tokens";
 import { plasmaBreezeTypography } from "./plasmaBreezeTokens";
+import { glassyTypography } from "./glassyTokens";
 
 /**
  * The map the dark theme resolved to before the per-theme payload split
@@ -25,12 +26,12 @@ const darkResolverSnapshot: unknown = JSON.parse(
 );
 
 describe("theme registry (#PUX-004 Track B, #PUX-005-B)", () => {
-  it("names both families and keeps fluent dark as the default", () => {
+  it("names the shipped families and keeps fluent dark as the default", () => {
     expect(APP_THEME_LIST.map((theme) => theme.scheme)).toEqual(["dark", "light"]);
     expect(DEFAULT_APP_THEME.family).toBe("fluent");
     expect(DEFAULT_APP_THEME.scheme).toBe("dark");
     expect(THEMES.light.colorScheme).toBe("light");
-    expect(Object.keys(THEME_FAMILIES)).toEqual(["fluent", "plasma-breeze"]);
+    expect(Object.keys(THEME_FAMILIES)).toEqual(["fluent", "plasma-breeze", "glassy"]);
     expect(THEME_FAMILIES.fluent.light.scheme).toBe("light");
     expect(THEME_FAMILIES.fluent.dark.recipeSet).toBe("fluent");
   });
@@ -53,7 +54,7 @@ describe("theme registry (#PUX-004 Track B, #PUX-005-B)", () => {
   it("resolves family and scheme independently, with a safe default", () => {
     expect(resolveThemeSelection({ family: "fluent", scheme: "light" }).scheme).toBe("light");
     expect(resolveThemeSelection({ family: "plasma-breeze", scheme: "light" }).label).toBe("Breeze Light");
-    expect(resolveThemeSelection({ family: "glassy", scheme: "dark" } as never)).toBe(DEFAULT_APP_THEME);
+    expect(resolveThemeSelection({ family: "unknown-family", scheme: "dark" } as never)).toBe(DEFAULT_APP_THEME);
     expect(resolveThemeSelection({ family: "fluent", scheme: "sepia" } as never)).toBe(THEMES.dark);
   });
 
@@ -199,6 +200,55 @@ describe("theme registry (#PUX-004 Track B, #PUX-005-B)", () => {
     expect(mantine.colors?.blue?.[5]).toBe(theme.palette.blue[8]);
     expect(mantine.colors?.ok).toEqual(theme.ladders.ok);
     expect(mantine.colors?.red).toEqual(theme.ladders.red);
+  });
+
+  it("registers Glassy Light and Dark as variants of one family (#PUX-005-A)", () => {
+    expect(themeVariantsForFamily("glassy").map((theme) => theme.label)).toEqual(["Glassy Dark", "Glassy Light"]);
+    expect(THEME_FAMILIES.glassy.dark.recipeSet).toBe("glassy");
+    expect(THEME_FAMILIES.glassy.light.typography).toBe(glassyTypography);
+    expect(THEME_FAMILIES.glassy.dark.palette).not.toBe(THEME_FAMILIES.glassy.light.palette);
+    expect(resolveThemeSelection({ family: "glassy", scheme: "light" }).label).toBe("Glassy Light");
+  });
+
+  it("keeps the shared --app-* role keys identical across families (#PUX-005-A)", () => {
+    const keysOf = (theme: (typeof ALL_APP_THEMES)[number]) =>
+      Object.keys(createAppCssVariablesResolverForAppearance(theme, "compact")(DEFAULT_THEME).variables)
+        .filter((key) => key.startsWith("--app-"))
+        .sort();
+    const fluentKeys = keysOf(THEME_FAMILIES.fluent.dark);
+    expect(fluentKeys.some((key) => key.startsWith("--app-material-"))).toBe(true);
+    expect(keysOf(THEME_FAMILIES.fluent.light)).toEqual(fluentKeys);
+    expect(keysOf(THEME_FAMILIES.glassy.dark)).toEqual(fluentKeys);
+    expect(keysOf(THEME_FAMILIES.glassy.light)).toEqual(fluentKeys);
+    const breezeOnly = keysOf(THEME_FAMILIES["plasma-breeze"].dark).filter((key) => !fluentKeys.includes(key));
+    expect(breezeOnly).toEqual(["--app-color-accent-filled", "--app-color-accent-filled-hover"]);
+  });
+
+  it("uses dark ink on Glassy Dark filled primaries (#PUX-005-A)", () => {
+    const input = {
+      color: "blue",
+      theme: DEFAULT_THEME,
+      variant: "filled" as const,
+      gradient: undefined,
+      autoContrast: true,
+    };
+    const glassy = createAppThemeForAppearance(THEME_FAMILIES.glassy.dark, "compact");
+    expect(glassy.variantColorResolver!(input)).toMatchObject({
+      background: "var(--app-color-accent)",
+      hover: "var(--app-color-accent-hover)",
+      color: "var(--app-color-accent-contrast)",
+    });
+    const vars = createAppCssVariablesResolverForAppearance(
+      THEME_FAMILIES.glassy.dark,
+      "compact",
+    )(DEFAULT_THEME).variables;
+    expect(vars["--app-color-accent-contrast"]).toBe("#071a28");
+    expect(vars["--app-material-chrome-filter"]).toContain("blur(");
+    expect(
+      createAppCssVariablesResolverForAppearance(THEMES.dark, "compact")(DEFAULT_THEME).variables[
+        "--app-material-chrome-filter"
+      ],
+    ).toBe("none");
   });
 
   it("composes with density: colours follow the theme, scales follow density", () => {

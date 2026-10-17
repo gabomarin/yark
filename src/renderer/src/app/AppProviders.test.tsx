@@ -17,6 +17,7 @@ describe("AppProviders", () => {
 
     expect(screen.getByText("provider-ready")).toBeInTheDocument();
     expect(document.documentElement).toHaveAttribute("data-ui-density", "compact");
+    expect(document.documentElement).toHaveAttribute("data-theme-family", "fluent");
 
     rerender(
       <AppProviders density="comfortable">
@@ -27,5 +28,16 @@ describe("AppProviders", () => {
 
     unmount();
     expect(document.documentElement).not.toHaveAttribute("data-ui-density");
+    expect(document.documentElement).not.toHaveAttribute("data-theme-family");
+  });
+
+  it("sets data-theme-family for Glassy (#PUX-005-A)", () => {
+    const { unmount } = render(
+      <AppProviders density="compact" themeSelection={{ family: "glassy", scheme: "dark" }}>
+        <Probe />
+      </AppProviders>,
+    );
+    expect(document.documentElement).toHaveAttribute("data-theme-family", "glassy");
+    unmount();
   });
 });

@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Settings → Appearance adds the **Glassy** theme family (Glassy Dark and Glassy Light): a cool-tinted operations shell with selective chrome frost, opaque content, and a solid fallback when blur is unavailable (#669).
 - Configuration Save refuses to overwrite `Game.ini` / `GameUserSettings.ini` when those files changed outside YARK since the editor loaded; the editor also re-checks on window focus, auto-reloads when clean, and always offers Reload from disk (#665).
 - Configuration and cluster INI visual editors highlight unsaved rows, show the last saved value (or that a key is absent), and support per-row revert or discard without clearing other drafts (#661).
 

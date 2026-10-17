@@ -119,10 +119,12 @@ export function AppProviders({
   useLayoutEffect(() => {
     const root = document.documentElement;
     root.dataset.uiDensity = density;
+    root.dataset.themeFamily = appearance.family;
     return () => {
       delete root.dataset.uiDensity;
+      delete root.dataset.themeFamily;
     };
-  }, [density]);
+  }, [appearance.family, density]);
 
   const notificationsAutoClose = isRendererTest() ? false : 5000;
 

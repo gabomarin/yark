@@ -395,6 +395,8 @@ describe("SettingsPage", () => {
     expect(screen.getByLabelText("Theme family")).toBeInTheDocument();
     await user.click(screen.getByRole("radio", { name: "Plasma Breeze" }));
     expect(onFamilyChange).toHaveBeenCalledWith("plasma-breeze");
+    await user.click(screen.getByRole("radio", { name: "Glassy" }));
+    expect(onFamilyChange).toHaveBeenCalledWith("glassy");
 
     // Fluent is active, so the scheme control lists Fluent's variants.
     expect(screen.getByLabelText("Color scheme")).toBeInTheDocument();
@@ -415,6 +417,17 @@ describe("SettingsPage", () => {
     await openCategory(user, "Appearance");
     expect(screen.getByRole("radio", { name: "Breeze Light" })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Breeze Dark" })).toBeInTheDocument();
+  });
+
+  it("lists Glassy scheme variants in Appearance (#PUX-005-A)", async () => {
+    const user = userEvent.setup();
+    stubSettingsApi();
+
+    renderSettings({ family: "glassy", scheme: "dark" });
+
+    await openCategory(user, "Appearance");
+    expect(screen.getByRole("radio", { name: "Glassy Dark" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Glassy Light" })).toBeInTheDocument();
   });
 
   it("persists dismissing the tray-hide notification", async () => {
