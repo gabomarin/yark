@@ -66,4 +66,16 @@ describe("app token usage", () => {
     }
     expect(offenders, `Fallbacks on --app-* tokens: ${offenders.join(" | ")}`).toEqual([]);
   });
+
+  it("does not select a theme family from component CSS", () => {
+    const offenders: string[] = [];
+    for (const file of walkFiles(RENDERER_SRC)) {
+      if (!file.endsWith(".module.css")) continue;
+      const source = fs.readFileSync(file, "utf8");
+      if (/data-theme-family|glassy|--app-material-/.test(source)) {
+        offenders.push(path.relative(RENDERER_SRC, file));
+      }
+    }
+    expect(offenders, `Family-specific component CSS: ${offenders.join(" | ")}`).toEqual([]);
+  });
 });

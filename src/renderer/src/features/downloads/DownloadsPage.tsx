@@ -7,6 +7,7 @@ import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { AppPageHeader } from "@ui/AppPageHeader/AppPageHeader";
+import { appContentPaneClass, withAppSurface } from "@ui/AppSurface/appSurfaceClassName";
 import type { ServerProfile, SteamCmdConsoleSnapshot, SteamCmdStatus } from "@shared/types";
 import {
   buildDownloadRows,
@@ -188,7 +189,7 @@ export function DownloadsPage(props: Props): ReactElement {
   );
 
   const consolePane = (
-    <div className={classes.consoleOnlyPane} aria-label="SteamCMD console" data-steamcmd-console>
+    <div className={withAppSurface(appContentPaneClass, classes.consoleOnlyPane)} aria-label="SteamCMD console" data-steamcmd-console>
       <ConsoleSurface fill text={consoleBody} />
     </div>
   );
@@ -219,7 +220,7 @@ export function DownloadsPage(props: Props): ReactElement {
       >
         <AppPageHeader title="Downloads" />
         {rows.length === 0 ? (
-          <div className={classes.upperPane}>{queuePane}</div>
+          <div className={withAppSurface(appContentPaneClass, classes.upperPane)}>{queuePane}</div>
         ) : logExpanded ? (
           <div className={classes.splitHost}>
             <Splitter
@@ -229,7 +230,7 @@ export function DownloadsPage(props: Props): ReactElement {
               onSizeChange={(sizes) => setSplitSizes([Math.round(Number(sizes[0])), Math.round(Number(sizes[1]))])}
             >
               <Splitter.Pane defaultSize={DEFAULT_SPLIT_SIZES[0]} min={30}>
-                <div className={`${classes.upperPane} ${classes.upperPaneInPane}`}>
+                <div className={withAppSurface(appContentPaneClass, classes.upperPane, classes.upperPaneInPane)}>
                   {steamcmdMissingBanner}
                   {queuePane}
                 </div>
@@ -243,7 +244,7 @@ export function DownloadsPage(props: Props): ReactElement {
             </Splitter>
           </div>
         ) : (
-          <div className={classes.upperPane}>
+          <div className={withAppSurface(appContentPaneClass, classes.upperPane)}>
             {steamcmdMissingBanner}
             {queuePane}
             {logToggle}

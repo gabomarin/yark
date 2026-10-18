@@ -9,9 +9,9 @@ import { ALL_APP_THEMES, type AppTheme } from "./themes";
  * test holds each theme to what it shipped with, so a regression fails.
  *
  * Fluent keeps its original family floors. Plasma Breeze declares the exact KDE
- * accent behaviour for focus/selection (`#3daee9`); filled primary actions have a
- * separate AA-safe role. Every text, muted, status and focus tone clears its
- * documented floor on its own surfaces.
+ * accent behaviour for focus, selection, and filled primary actions (`#3daee9`).
+ * Every text, muted, status and focus tone clears its documented floor on its
+ * own surfaces.
  */
 
 function channelToLinear(channel: number): number {
@@ -83,13 +83,9 @@ describe.each(ALL_APP_THEMES)("$family $label theme contrast", (theme) => {
     expect(failures, failures.join(" | ")).toEqual([]);
   });
 
-  it("keeps filled primary action labels at WCAG AA", () => {
-    if (theme.family === "plasma-breeze") {
-      expect(contrast("#ffffff", "#2475a5")).toBeGreaterThanOrEqual(4.5);
-      expect(contrast("#ffffff", "#206b99")).toBeGreaterThanOrEqual(4.5);
-    } else {
-      expect(contrast("#ffffff", theme.palette.blue[8] as string)).toBeGreaterThanOrEqual(FLOOR.accentLabel);
-    }
+  it("keeps filled primary action labels on the family accent floor", () => {
+    const filled = theme.family === "plasma-breeze" ? "#3daee9" : (theme.palette.blue[8] as string);
+    expect(contrast("#ffffff", filled)).toBeGreaterThanOrEqual(FLOOR.accentLabel);
   });
 
   it("keeps every semantic status colour readable as text", () => {

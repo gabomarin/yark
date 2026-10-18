@@ -12,6 +12,7 @@ import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { LoadingState } from "@ui/LoadingState/LoadingState";
 import { AppPageHeader } from "@ui/AppPageHeader/AppPageHeader";
 import { SearchField } from "@ui/SearchField/SearchField";
+import { appContentPaneClass, appFlatRowClass, withAppSurface } from "@ui/AppSurface/appSurfaceClassName";
 import { EventDetailsBody } from "./EventDetailsBody";
 import { EventSeverityMark } from "./components/EventSeverityMark/EventSeverityMark";
 import type { ServerLogsFocus } from "./ServerLogsPanel";
@@ -126,7 +127,7 @@ export function LogsPage(props: Props): ReactElement {
         <Stack gap="sm" className={classes.logsContent}>
           {error !== null && <AppAlert color="red">{error}</AppAlert>}
 
-          <div className={classes.fillPanel}>
+          <div className={withAppSurface(appContentPaneClass, classes.fillPanel)}>
             <Stack gap="sm" className={classes.panelStack}>
               <Group justify="space-between" align="flex-end" wrap="wrap" gap="sm">
                 <Title order={3}>Activity across servers</Title>
@@ -204,7 +205,7 @@ export function LogsPage(props: Props): ReactElement {
                       setExpandedEventId(Number.isFinite(id) ? id : null);
                     }}
                     classNames={{
-                      item: classes.fleetAccordionItem,
+                      item: withAppSurface(appFlatRowClass, classes.fleetAccordionItem),
                       control: classes.fleetAccordionControl,
                       panel: classes.eventAccordionPanel,
                     }}

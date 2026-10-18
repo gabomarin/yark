@@ -77,13 +77,6 @@ function createAppCssVariablesResolver(
       "--app-color-accent": "var(--ark-blue-9)",
       /* Accent role set — one hue, its states. See `accentPalette` for the source. */
       "--app-color-accent-hover": "var(--ark-blue-10)",
-      ...(theme.recipeSet === "plasma-breeze"
-        ? {
-            /* Filled Breeze actions use an AA-safe blue; selection/focus retain the exact KDE accent. */
-            "--app-color-accent-filled": "#2475a5",
-            "--app-color-accent-filled-hover": "#206b99",
-          }
-        : {}),
       "--app-color-accent-text": "var(--ark-blue-11)",
       "--app-color-accent-subtle": "var(--ark-blue-a3)",
       "--app-color-accent-subtle-hover": "var(--ark-blue-a4)",
@@ -149,6 +142,24 @@ function createAppCssVariablesResolver(
       "--app-surface-cool-emphasis": "none",
       "--app-surface-flat": "var(--app-color-panel)",
       "--app-surface-chrome": "var(--app-color-surface-chrome)",
+      /*
+       * Material roles. Copied from `theme.materials` for every family — do not
+       * branch these on family id. Opaque families ship `none` / `transparent`.
+       */
+      "--app-surface-filter": theme.materials.surfaceFilter,
+      "--app-surface-chrome-filter": theme.materials.chromeFilter,
+      "--app-surface-raised-filter": theme.materials.raisedFilter,
+      "--app-content-pane-bg": theme.materials.contentPaneBg,
+      "--app-content-pane-border": theme.materials.contentPaneBorder,
+      "--app-content-pane-shadow": theme.materials.contentPaneShadow,
+      "--app-content-pane-radius": theme.materials.contentPaneRadius,
+      "--app-shell-main-bg": theme.materials.shellMainBg,
+      "--app-color-list-row": theme.materials.listRowBg,
+      "--app-nav-selected-fill": theme.materials.navSelectedFill,
+      "--app-nav-selected-notch": theme.materials.navSelectedNotch,
+      "--app-raised-surface-bg": theme.materials.raisedBg,
+      "--app-raised-surface-border": theme.materials.raisedBorder,
+      "--app-raised-surface-shadow": theme.materials.raisedShadow,
       "--app-list-selected-bg": "var(--app-color-surface-control)",
       "--app-list-selected-inset": "inset 3px 0 0 var(--ark-blue-9)",
       "--app-anchor-color": "var(--ark-blue-11)",

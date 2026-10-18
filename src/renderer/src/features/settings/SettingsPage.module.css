@@ -67,7 +67,6 @@
   width: 100%;
   max-width: 1440px;
   margin-inline: auto;
-  background: transparent;
 }
 
 .navStack {
@@ -274,9 +273,7 @@
 
 .cacheList {
   padding: var(--app-space-sm);
-  border: 1px solid var(--app-color-border-subtle);
   border-radius: 0;
-  background: var(--app-color-panel);
 }
 
 .cacheRow {
@@ -297,9 +294,7 @@
 
 .autoStartList {
   padding: var(--app-space-sm);
-  border: 1px solid var(--app-color-border-subtle);
   border-radius: 0;
-  background: var(--app-color-panel);
 }
 
 .autoStartRow {

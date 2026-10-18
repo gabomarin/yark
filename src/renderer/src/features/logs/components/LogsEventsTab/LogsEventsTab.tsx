@@ -6,6 +6,7 @@ import { collapseConsecutiveEvents, formatEventMessageForDisplay } from "@shared
 import type { ReactElement } from "react";
 import { EventDetailsBody } from "../../EventDetailsBody";
 import { LoadingState } from "@ui/LoadingState/LoadingState";
+import { appContentPaneClass, appFlatRowClass, withAppSurface } from "@ui/AppSurface/appSurfaceClassName";
 import { EventSeverityMark } from "../EventSeverityMark/EventSeverityMark";
 import classes from "../../LogsPage.module.css";
 import { LogsClearAction, LogsEmptyState, LogsTabIntro } from "../LogsPanelChrome/LogsPanelChrome";
@@ -26,7 +27,7 @@ export function LogsEventsTab(props: LogsEventsTabProps): ReactElement {
     props;
 
   return (
-    <div className={classes.fillPanel}>
+    <div className={withAppSurface(appContentPaneClass, classes.fillPanel)}>
       <Stack gap="sm" className={classes.panelStack}>
         <LogsTabIntro
           embedded={embedded}
@@ -66,7 +67,7 @@ export function LogsEventsTab(props: LogsEventsTabProps): ReactElement {
                 onExpandedEventIdChange(Number.isFinite(id) ? id : null);
               }}
               classNames={{
-                item: classes.eventAccordionItem,
+                item: withAppSurface(appFlatRowClass, classes.eventAccordionItem),
                 control: classes.eventAccordionControl,
                 panel: classes.eventAccordionPanel,
               }}

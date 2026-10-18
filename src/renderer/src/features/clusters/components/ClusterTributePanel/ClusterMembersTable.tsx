@@ -4,6 +4,7 @@ import { ActionIcon, Alert, Group, Stack, Table, Text, Tooltip, UnstyledButton }
 import { formatMapDisplayName } from "@shared/asa/map-identity";
 import type { ServerIniSnapshot, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
+import { appPanelSurfaceClass, withAppSurface } from "@ui/AppSurface/appSurfaceClassName";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
 import { resolveServerRuntime } from "../../createClusterModel";
 import { removeIneligibilityReason } from "../../membershipModel";
@@ -138,7 +139,7 @@ export function ClusterMembersTable(props: Props): ReactElement {
       )}
       <Table.ScrollContainer minWidth={1180} type="native" className={classes.scrollContainer}>
         <Table
-          className={classes.membersTable}
+          className={withAppSurface(appPanelSurfaceClass, classes.membersTable)}
           withTableBorder
           highlightOnHover
           stickyHeader

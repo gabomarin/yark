@@ -5,6 +5,7 @@ import { Button, Stack, Text, Title } from "@mantine/core";
 import type { AppDataFolderInfo, AppDataFolderKind } from "@shared/ipc";
 import { AppPathRow } from "@ui/AppPathRow/AppPathRow";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
+import { appRaisedSurfaceClass, withAppSurface } from "@ui/AppSurface/appSurfaceClassName";
 import { bundledSteamCmdUnusedNote } from "../settingsModel";
 import classes from "../SettingsPage.module.css";
 
@@ -59,7 +60,7 @@ export function SettingsAppDataSection(props: Props): ReactElement {
         </Text>
       )}
 
-      <Stack gap="sm" className={classes.cacheList}>
+      <Stack gap="sm" className={withAppSurface(appRaisedSurfaceClass, classes.cacheList)}>
         {dataFolders.map((folder) => {
           const unusedNote =
             folder.kind === "steamcmd" ? bundledSteamCmdUnusedNote(folder.path, props.steamCmdExecutablePath) : null;

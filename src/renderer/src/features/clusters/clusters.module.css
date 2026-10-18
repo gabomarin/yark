@@ -193,8 +193,6 @@
   gap: var(--app-space-sm);
   padding: var(--app-space-xs) var(--app-space-sm);
   border-radius: 0;
-  border: 1px solid var(--app-color-border-subtle);
-  background: var(--app-color-panel);
 }
 
 .memberRow[data-clickable="true"] {

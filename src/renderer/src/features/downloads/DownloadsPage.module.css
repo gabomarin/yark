@@ -139,9 +139,7 @@
   width: 100%;
   min-height: 56px;
   padding: 8px 12px;
-  border: 1px solid var(--app-color-border-subtle);
   border-radius: 0;
-  background: var(--app-color-panel);
   color: inherit;
   text-align: left;
 }

@@ -11,7 +11,7 @@ import {
   resolveThemeSelection,
   themeVariantsForFamily,
 } from "./themes";
-import { darkPalette } from "./tokens";
+import { darkPalette, opaqueMaterials, type AppThemeMaterials } from "./tokens";
 import { plasmaBreezeTypography } from "./plasmaBreezeTokens";
 
 /**
@@ -126,8 +126,13 @@ describe("theme registry (#PUX-004 Track B, #PUX-005-B)", () => {
     const lightInput = breezeLight.components?.Input?.styles as { input?: { backgroundColor?: string } } | undefined;
     expect(lightInput?.input?.backgroundColor).toBe("var(--ark-gray-1)");
 
-    // Fluent keeps Mantine's input chrome: no override.
-    expect(createAppThemeForAppearance(THEMES.dark, "compact").components?.Input?.styles).toBeUndefined();
+    // Fluent does not restyle the field fill. Both families share the surface filter.
+    const fluentInput = createAppThemeForAppearance(THEMES.dark, "compact").components?.Input?.styles as
+      | { input?: { backgroundColor?: string; backdropFilter?: string } }
+      | undefined;
+    expect(fluentInput?.input?.backgroundColor).toBeUndefined();
+    expect(fluentInput?.input?.backdropFilter).toBe("var(--app-surface-filter)");
+    expect(inputStyles?.input).toMatchObject({ backdropFilter: "var(--app-surface-filter)" });
   });
 
   it("keeps Breeze muted copy dimmer than body text (#PUX-005-B)", () => {
@@ -139,7 +144,7 @@ describe("theme registry (#PUX-004 Track B, #PUX-005-B)", () => {
     expect(THEME_FAMILIES["plasma-breeze"].light.palette.gray[11]).toBe("#232629");
   });
 
-  it("uses an AA-safe fill for Breeze primary actions without touching semantic colors (#PUX-005-B)", () => {
+  it("keeps Breeze filled primaries on the accent without touching semantic colors (#PUX-005-B)", () => {
     const input = {
       color: "blue",
       theme: DEFAULT_THEME,
@@ -148,18 +153,13 @@ describe("theme registry (#PUX-004 Track B, #PUX-005-B)", () => {
       autoContrast: true,
     };
     const breeze = createAppThemeForAppearance(THEME_FAMILIES["plasma-breeze"].dark, "compact");
+    const defaults = defaultVariantColorsResolver(input);
     expect(breeze.variantColorResolver).toBeDefined();
     expect(breeze.variantColorResolver!(input)).toMatchObject({
-      background: "var(--app-color-accent-filled)",
-      hover: "var(--app-color-accent-filled-hover)",
+      background: defaults.background,
+      hover: defaults.hover,
       color: "var(--mantine-color-white)",
     });
-    const breezeVars = createAppCssVariablesResolverForAppearance(
-      THEME_FAMILIES["plasma-breeze"].dark,
-      "compact",
-    )(DEFAULT_THEME).variables;
-    expect(breezeVars["--app-color-accent-filled"]).toBe("#2475a5");
-    expect(breezeVars["--app-color-accent-filled-hover"]).toBe("#206b99");
 
     // Only the accent is touched: semantic colors resolve exactly as Mantine would
     // (fossil/attention still rely on autoContrast for their dark label).
@@ -199,6 +199,34 @@ describe("theme registry (#PUX-004 Track B, #PUX-005-B)", () => {
     expect(mantine.colors?.blue?.[5]).toBe(theme.palette.blue[8]);
     expect(mantine.colors?.ok).toEqual(theme.ladders.ok);
     expect(mantine.colors?.red).toEqual(theme.ladders.red);
+  });
+
+  it("copies materials onto surface roles without reading the family id", () => {
+    expect(JSON.parse(JSON.stringify(opaqueMaterials))).toEqual(opaqueMaterials);
+    for (const value of Object.values(opaqueMaterials)) {
+      expect(typeof value).toBe("string");
+    }
+
+    const frost: AppThemeMaterials = {
+      ...opaqueMaterials,
+      surfaceFilter: "blur(20px)",
+      contentPaneBg: "rgb(0 0 0 / 40%)",
+      navSelectedFill: "rgb(0 200 255 / 30%)",
+      navSelectedNotch: "0px",
+    };
+    const fluent = { ...THEME_FAMILIES.fluent.dark, materials: frost };
+    const breeze = { ...THEME_FAMILIES["plasma-breeze"].dark, materials: frost };
+    const fluentVars = createAppCssVariablesResolverForAppearance(fluent, "comfortable")(DEFAULT_THEME).variables;
+    const breezeVars = createAppCssVariablesResolverForAppearance(breeze, "comfortable")(DEFAULT_THEME).variables;
+
+    expect(fluentVars["--app-surface-filter"]).toBe("blur(20px)");
+    expect(fluentVars["--app-content-pane-bg"]).toBe("rgb(0 0 0 / 40%)");
+    expect(fluentVars["--app-nav-selected-fill"]).toBe("rgb(0 200 255 / 30%)");
+    expect(fluentVars["--app-nav-selected-notch"]).toBe("0px");
+    expect(breezeVars["--app-surface-filter"]).toBe(fluentVars["--app-surface-filter"]);
+    expect(breezeVars["--app-content-pane-bg"]).toBe(fluentVars["--app-content-pane-bg"]);
+    expect(breezeVars["--app-nav-selected-fill"]).toBe(fluentVars["--app-nav-selected-fill"]);
+    expect(breezeVars["--app-raised-surface-bg"]).toBe(fluentVars["--app-raised-surface-bg"]);
   });
 
   it("composes with density: colours follow the theme, scales follow density", () => {

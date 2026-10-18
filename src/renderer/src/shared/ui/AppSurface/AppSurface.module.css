@@ -1,0 +1,36 @@
+/*
+ * Shared surface recipes. Feature CSS keeps layout (flex, grid, padding).
+ * These classes own the material so a theme changes the role values, not each view.
+ * Opaque families resolve the roles to today's fills (`none` / `transparent` / the
+ * existing panel), so attaching a class does not add chrome.
+ */
+
+.contentPane {
+  background: var(--app-content-pane-bg);
+  border: var(--app-content-pane-border);
+  box-shadow: var(--app-content-pane-shadow);
+  border-radius: var(--app-content-pane-radius);
+  backdrop-filter: var(--app-surface-filter);
+  -webkit-backdrop-filter: var(--app-surface-filter);
+}
+
+/* Discrete panel fill (table body, metric strip) that should blur with the surface. */
+.panel {
+  background: var(--app-color-panel);
+  backdrop-filter: var(--app-surface-filter);
+  -webkit-backdrop-filter: var(--app-surface-filter);
+}
+
+/* Bordered vessel. Identity matches the hairline panel boxes tool pages already draw. */
+.raised {
+  background: var(--app-raised-surface-bg);
+  border: var(--app-raised-surface-border);
+  box-shadow: var(--app-raised-surface-shadow);
+  backdrop-filter: var(--app-surface-raised-filter);
+  -webkit-backdrop-filter: var(--app-surface-raised-filter);
+}
+
+/* Fused list row. Identity matches `--app-color-panel`, so rows stay solid today. */
+.flatRow {
+  background: var(--app-color-list-row);
+}

@@ -3,6 +3,7 @@ import { HardDrives } from "@phosphor-icons/react";
 import { Button, Stack } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { appContentPaneClass, withAppSurface } from "@ui/AppSurface/appSurfaceClassName";
 import { AppPageHeader } from "@ui/AppPageHeader/AppPageHeader";
 import { LoadingState } from "@ui/LoadingState/LoadingState";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
@@ -53,7 +54,7 @@ export function BackupsPage(props: Props): ReactElement {
           }
         />
 
-        <Stack gap="md" className={classes.content}>
+        <Stack gap="md" className={withAppSurface(appContentPaneClass, classes.content)}>
           {props.servers.length === 0 ? (
             <AppSurfaceCard radius={0} className={classes.emptyFleetCard}>
               <EmptyState

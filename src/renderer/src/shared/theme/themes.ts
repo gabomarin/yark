@@ -17,6 +17,8 @@ import {
   darkSurfaces,
   fluentRadius,
   fluentTypography,
+  opaqueMaterials,
+  type AppThemeMaterials,
   lightColors,
   lightContrast,
   lightLadders,
@@ -75,6 +77,8 @@ export interface AppTheme {
   typography: AppThemeTypography;
   /** Family radius ladder (comfortable scale); density scales it per run. */
   radius: AppThemeRadius;
+  /** Surface material. Copied to `--app-*` with no family-id branch. */
+  materials: AppThemeMaterials;
   contrast: AppThemeContrast;
 }
 
@@ -93,6 +97,7 @@ export const THEME_FAMILIES: Readonly<Record<ThemeFamilyId, Readonly<Record<Them
       ladders: darkLadders,
       typography: fluentTypography,
       radius: fluentRadius,
+      materials: opaqueMaterials,
       contrast: darkContrast,
     },
     light: {
@@ -108,6 +113,7 @@ export const THEME_FAMILIES: Readonly<Record<ThemeFamilyId, Readonly<Record<Them
       ladders: lightLadders,
       typography: fluentTypography,
       radius: fluentRadius,
+      materials: opaqueMaterials,
       contrast: lightContrast,
     },
   },
@@ -125,6 +131,7 @@ export const THEME_FAMILIES: Readonly<Record<ThemeFamilyId, Readonly<Record<Them
       ladders: plasmaBreezeDarkLadders,
       typography: plasmaBreezeTypography,
       radius: plasmaBreezeRadius,
+      materials: opaqueMaterials,
       contrast: plasmaBreezeDarkContrast,
     },
     light: {
@@ -140,6 +147,7 @@ export const THEME_FAMILIES: Readonly<Record<ThemeFamilyId, Readonly<Record<Them
       ladders: plasmaBreezeLightLadders,
       typography: plasmaBreezeTypography,
       radius: plasmaBreezeRadius,
+      materials: opaqueMaterials,
       contrast: plasmaBreezeLightContrast,
     },
   },

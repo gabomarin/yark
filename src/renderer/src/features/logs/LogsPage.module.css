@@ -25,7 +25,6 @@
 
 .fleetAccordionItem,
 .eventAccordionItem {
-  background: var(--app-color-panel);
   border-radius: 0;
 }
 
@@ -134,8 +133,7 @@
   overflow: hidden;
   /* No border: the shared chrome surface already frames the page, and a bordered panel here put
    * every Logs card inside a box inside a box. The sibling tool pages use the same wrapper
-   * borderless (Backups' `.toolShell` keeps the padding and nothing else). */
-  background: transparent;
+   *   borderless (Backups' `.toolShell` keeps the padding and nothing else). */
   padding: var(--app-space-md);
 }
 

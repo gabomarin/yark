@@ -48,11 +48,8 @@
   flex: 1;
   min-height: 260px;
   min-width: 0;
-  border: 1px solid var(--app-color-border-subtle);
   border-radius: var(--app-radius-md);
   overflow: auto;
-  /* Same surface as the rows it holds: no blue wash, no darker "well" beneath them. */
-  background: var(--app-color-panel);
 }
 
 .tableHead,

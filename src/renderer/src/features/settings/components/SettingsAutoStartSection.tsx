@@ -4,6 +4,7 @@ import { Badge, Button, Group, Stack, Text, Title } from "@mantine/core";
 import { isInstallationReady } from "@shared/server/installation-health";
 import type { ServerInstallationInfo, ServerProfile } from "@shared/types";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
+import { appRaisedSurfaceClass, withAppSurface } from "@ui/AppSurface/appSurfaceClassName";
 import classes from "../SettingsPage.module.css";
 
 type AutoStartSummaryState = "armed" | "ignored" | "blocked";
@@ -89,7 +90,7 @@ export function SettingsAutoStartSection(props: Props): ReactElement {
           description="Open a server → Server tab → Auto-start with YARK."
         />
       ) : (
-        <Stack gap="sm" className={classes.autoStartList}>
+        <Stack gap="sm" className={withAppSurface(appRaisedSurfaceClass, classes.autoStartList)}>
           {rows.map((row) => (
             <Group
               key={row.server.id}
