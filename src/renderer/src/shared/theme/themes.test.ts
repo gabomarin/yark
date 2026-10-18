@@ -201,7 +201,7 @@ describe("theme registry (#PUX-004 Track B, #PUX-005-B)", () => {
   });
 
   it("copies materials onto surface roles without reading the family id", () => {
-    expect(JSON.parse(JSON.stringify(opaqueMaterials))).toEqual(opaqueMaterials);
+    // Plain strings so a theme pack can store materials as JSON.
     for (const value of Object.values(opaqueMaterials)) {
       expect(typeof value).toBe("string");
     }
