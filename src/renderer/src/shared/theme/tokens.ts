@@ -454,11 +454,53 @@ export const fluentRadius: AppThemeRadius = { sm: 4, md: 8, lg: 10, control: 4 }
 export const plasmaBreezeRadius: AppThemeRadius = { sm: 4, md: 6, lg: 8, control: 4 };
 
 /**
+ * Serializable surface material. Every value is a CSS string so a future pack can
+ * carry the same object as JSON. Shipped families use {@link opaqueMaterials};
+ * the resolver copies the fields onto `--app-*` and never branches on family id.
+ */
+export type AppThemeMaterials = {
+  surfaceFilter: string;
+  chromeFilter: string;
+  raisedFilter: string;
+  contentPaneBg: string;
+  contentPaneBorder: string;
+  contentPaneShadow: string;
+  contentPaneRadius: string;
+  shellMainBg: string;
+  /** Row fill inside a fused list. Identity matches today's panel rows. */
+  listRowBg: string;
+  navSelectedFill: string;
+  /** Width of the selected-nav notch. `0px` hides it when a fill carries selection. */
+  navSelectedNotch: string;
+  raisedBg: string;
+  raisedBorder: string;
+  raisedShadow: string;
+};
+
+/** Opaque families: no blur, no extra pane chrome, nav notch stays. */
+export const opaqueMaterials: AppThemeMaterials = {
+  surfaceFilter: "none",
+  chromeFilter: "none",
+  raisedFilter: "none",
+  contentPaneBg: "transparent",
+  contentPaneBorder: "none",
+  contentPaneShadow: "none",
+  contentPaneRadius: "0px",
+  shellMainBg: "var(--app-color-surface-chrome)",
+  listRowBg: "var(--app-color-panel)",
+  navSelectedFill: "var(--app-list-selected-bg)",
+  navSelectedNotch: "3px",
+  raisedBg: "var(--app-color-panel)",
+  raisedBorder: "1px solid var(--app-color-border-subtle)",
+  raisedShadow: "none",
+};
+
+/**
  * Documented contrast floors per theme (#PUX-005-B). The palette is swappable, so
  * "looks fine" is not a gate: each theme declares the floors it ships with and
  * `theme.contrast.test.ts` holds it to them. Fluent keeps the original Fluent 2
  * floors; Plasma Breeze declares the exact KDE Breeze accent behavior for
- * selection/focus while its primary action fill has a separate AA gate.
+ * selection, focus, and filled primary actions.
  */
 export type AppThemeContrast = {
   /** White label on the exact accent when used by a family-specific surface. */

@@ -5,6 +5,7 @@ import type { HostedResourceReferenceDto } from "@shared/ipc";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { appContentPaneClass, withAppSurface } from "@ui/AppSurface/appSurfaceClassName";
 import { AppPageHeader } from "@ui/AppPageHeader/AppPageHeader";
 import { LoadingState } from "@ui/LoadingState/LoadingState";
 import { DismissibleHint } from "@ui/DismissibleHint/DismissibleHint";
@@ -85,7 +86,7 @@ export function HostedResourcesPage({ onOpenReference = () => undefined }: Props
           }
         />
 
-        <Stack gap="md" className={classes.content}>
+        <Stack gap="md" className={withAppSurface(appContentPaneClass, classes.content)}>
           {/* Task guidance goes first: it is why the operator opened this page, and below the
            * status card it was easy to never reach. */}
           {overview !== null && (overview.resources.length > 0 || headerAlert !== null) && (

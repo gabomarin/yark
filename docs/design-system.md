@@ -33,8 +33,20 @@ CSS must continue to consume the roles rather than family-specific values. Each
 family owns its component recipes (`recipes/fluent.ts`, `recipes/plasmaBreeze.ts`);
 `recipes/plasmaBreeze.ts` composes the Fluent base and overrides only the
 components where Breeze genuinely differs (4px menus/popovers/modals, a flat
-SegmentedControl). Glassy can add a recipe set the same way, without executable
-JavaScript/JSX theme payloads or a change to the selection contract.
+SegmentedControl). `recipeSet` is an escape hatch for families that ship in the
+app. It is not a community-theme API.
+
+Surface material (blur, content-pane chrome, shell fill, list-row fill, nav
+selection, raised vessels) is data on `AppTheme.materials`, copied to `--app-*`
+for every family with no family-id branch. Shipped families use `opaqueMaterials`
+(`none` / `transparent` / today's panel), so feature CSS and shared atoms read
+the roles and look unchanged. A later family fills the same strings. Component
+CSS must not select on a theme family name.
+
+Community themes are not shipped. When they exist, a pack is this payload as
+JSON (palette, semantics, elevation, radius, typography, materials). Loading,
+signing, and an import UI are out of scope. A pack cannot add component recipes
+or new markup; those still take a release.
 
 ### Theme family radius
 
@@ -68,11 +80,12 @@ contrast floors. Each family declares its own floors in `AppThemeContrast` and
 - **Accent `#3daee9`** is a mid-tone: as a non-text UI element it sits ~2.3:1 on
   the light shell and a white label on it is ~2.49:1, both below AA. KDE ships
   Breeze that way, so the family declares those floors instead of darkening the
-  accent. Filled primary actions use the darker `#2475a5` (`#206b99` on hover),
-  which clears 4.5:1 with white labels while keeping `#3daee9` for focus/selection.
+  accent. Filled primary actions use that same `#3daee9`, with a white label, so
+  Start matches New server. The family keeps the `accentLabel` floor for that
+  label instead of a second, darker button blue.
 - **Semantic filled colors** (fossil/attention/red) keep Mantine's autoContrast,
-  which they still need. The Breeze `variantColorResolver` changes only the blue
-  primary fill and its white label.
+  which they still need. The Breeze `variantColorResolver` keeps the blue primary
+  fill on the accent and sets its label to white.
 - **Breeze status colours** (positive `#27ae60`, neutral `#f67400`, negative
   `#da4453`) are kept as hue anchors; the light variant darkens the green/amber and
   the danger-text tone so they clear AA on the near-white panel.

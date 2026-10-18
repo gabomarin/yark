@@ -11,6 +11,8 @@
 .root {
   min-height: 0;
   width: 100%;
+  backdrop-filter: var(--app-surface-filter);
+  -webkit-backdrop-filter: var(--app-surface-filter);
 }
 
 .root :global(.mantine-datatable) {

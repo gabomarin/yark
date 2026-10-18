@@ -10,6 +10,8 @@
   border-color: var(--app-color-border);
   background: var(--app-color-panel);
   box-shadow: none;
+  backdrop-filter: var(--app-surface-filter);
+  -webkit-backdrop-filter: var(--app-surface-filter);
   color: inherit;
   text-align: left;
   transition:

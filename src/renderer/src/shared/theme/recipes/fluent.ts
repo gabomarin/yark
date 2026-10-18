@@ -16,6 +16,12 @@ export function createFluentComponents(density: UiDensity, theme: AppTheme): Man
    * enlarge to `md`. Compact steps inputs/buttons to `xs`; Switch/Checkbox/Radio stay
    * at Mantine `sm` so hit targets remain usable (~24px+).
    */
+  /** Shared material. `none` on opaque families; a later payload can set a blur. */
+  const surfaceFilter = {
+    backdropFilter: "var(--app-surface-filter)",
+    WebkitBackdropFilter: "var(--app-surface-filter)",
+  } as const;
+
   const compactControlDefaults =
     density === "compact"
       ? ({
@@ -190,6 +196,9 @@ export function createFluentComponents(density: UiDensity, theme: AppTheme): Man
         radius: "sm",
         padding: "md",
       },
+      styles: {
+        root: surfaceFilter,
+      },
     },
     /* Fluent dialogs are 8px; lives here (not ModalsProvider) so Breeze can override. */
     Modal: {
@@ -200,6 +209,9 @@ export function createFluentComponents(density: UiDensity, theme: AppTheme): Man
     Paper: {
       defaultProps: {
         radius: "sm",
+      },
+      styles: {
+        root: surfaceFilter,
       },
     },
     ScrollArea: {
@@ -314,5 +326,18 @@ export function createFluentComponents(density: UiDensity, theme: AppTheme): Man
       },
     },
     ...compactControlDefaults,
+    /* After the compact spread so `Button` / `Input` defaultProps are kept. */
+    Input: {
+      ...compactControlDefaults.Input,
+      styles: {
+        input: surfaceFilter,
+      },
+    },
+    Button: {
+      ...compactControlDefaults.Button,
+      styles: {
+        root: surfaceFilter,
+      },
+    },
   };
 }

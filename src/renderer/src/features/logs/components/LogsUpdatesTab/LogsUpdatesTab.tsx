@@ -6,6 +6,7 @@ import type { ReactElement } from "react";
 import { ConsoleSurface } from "@ui/ConsoleSurface/ConsoleSurface";
 import { LoadingState } from "@ui/LoadingState/LoadingState";
 import { SelectableListRow } from "@ui/SelectableListRow/SelectableListRow";
+import { appContentPaneClass, withAppSurface } from "@ui/AppSurface/appSurfaceClassName";
 import { StatusWord } from "@ui/StatusWord/StatusWord";
 import classes from "../../LogsPage.module.css";
 import {
@@ -64,7 +65,7 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
         }
       />
       <div className={classes.updatesLayout}>
-        <div className={`${classes.historyPanel} ${classes.fillPanel}`}>
+        <div className={withAppSurface(appContentPaneClass, classes.historyPanel, classes.fillPanel)}>
           <Stack gap="sm" className={classes.panelStack}>
             <Title order={4} className={classes.panelTitle}>
               Job history
@@ -108,7 +109,7 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
           </Stack>
         </div>
 
-        <div className={`${classes.detailPanel} ${classes.fillPanel}`}>
+        <div className={withAppSurface(appContentPaneClass, classes.detailPanel, classes.fillPanel)}>
           <Stack gap="sm" className={classes.panelStack}>
             <Group justify="space-between" align="center" wrap="wrap" gap="sm" className={classes.detailHeader}>
               <Group gap="sm" wrap="nowrap">

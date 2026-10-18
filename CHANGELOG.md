@@ -18,6 +18,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Plasma Breeze **Start** uses the same accent blue as **New server**. Filled primaries stay on `#3daee9` instead of a darker button blue.
 - Outside-change Configuration banner clears when disk matches the Save baseline again, conflict Save captures disk details for View outside changes, and semantic INI edits keep mixed line endings / duplicate occurrence order (#667).
 
 ### Docs

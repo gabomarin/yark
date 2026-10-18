@@ -27,8 +27,8 @@ import {
  *
  * Breeze does not ship 12-step ramps, so the steps between the anchors are
  * authored here to satisfy YARK's role map and its contrast floors. Where YARK's
- * AA floors force a value away from Breeze (muted copy, status text, the filled
- * primary label) the deviation is recorded in `docs/design-system.md`. The two
+ * AA floors force a value away from Breeze (muted copy, status text) the
+ * deviation is recorded in `docs/design-system.md`. The two
  * variants are authored independently - Breeze Light is not an inversion of
  * Breeze Dark (the content/view polarity actually flips between them).
  */
@@ -328,8 +328,8 @@ export const plasmaBreezeTypography: AppThemeTypography = {
  * Documented floors for the exact Breeze accent. `#3daee9` is a mid-tone: as a
  * non-text UI element it sits ~2.3:1 on the light shell and a white label on the
  * selection is ~2.49:1, both below AA. KDE ships Breeze that way, so the family
- * declares those floors for selection/focus; primary actions have a separate AA
- * role. Every text and status tone still clears AA. See `docs/design-system.md`.
+ * declares those floors for selection, focus, and filled primary labels. Every
+ * text and status tone still clears AA. See `docs/design-system.md`.
  */
 export const plasmaBreezeLightContrast: AppThemeContrast = {
   accentLabel: 2.4,

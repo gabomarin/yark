@@ -4,6 +4,7 @@ import { Stack, Title } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import type { SteamCmdCacheKind, SteamCmdStatus, ServerInstallationInfo, ServerProfile } from "@shared/types";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { appContentPaneClass, withAppSurface } from "@ui/AppSurface/appSurfaceClassName";
 import { SettingsAboutCommunitySection } from "./components/SettingsAboutCommunitySection";
 import { SettingsAboutLegalSection } from "./components/SettingsAboutLegalSection";
 import { SettingsAppDataSection } from "./components/SettingsAppDataSection";
@@ -136,7 +137,7 @@ export function SettingsPage(props: Props): ReactElement {
           </div>
         </AppSurfaceCard>
 
-        <div className={classes.panel}>
+        <div className={withAppSurface(appContentPaneClass, classes.panel)}>
           <div ref={panelScrollRef} className={classes.panelScroll} {...{ [SETTINGS_PANEL_SCROLL_ATTR]: true }}>
             {category === "general" && (
               <SettingsGeneralSection

@@ -70,6 +70,8 @@
   overflow: visible;
   background: transparent;
   background-color: transparent;
+  backdrop-filter: var(--app-surface-chrome-filter);
+  -webkit-backdrop-filter: var(--app-surface-chrome-filter);
   --app-shell-border-color: color-mix(in srgb, var(--app-color-border) 35%, transparent);
   border-right: 1px solid color-mix(in srgb, var(--app-color-border) 28%, transparent);
   transition: width var(--app-motion-base) var(--app-ease-standard);
@@ -110,7 +112,7 @@
   z-index: 1;
   height: 100vh;
   overflow: hidden;
-  background-color: var(--app-color-surface-chrome);
+  background-color: var(--app-shell-main-bg);
   background-image: var(--app-shell-atmosphere);
   background-repeat: no-repeat;
   background-position: center;

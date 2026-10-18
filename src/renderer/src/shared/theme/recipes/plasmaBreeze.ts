@@ -4,9 +4,10 @@ import type { AppTheme } from "../themes";
 import { createFluentComponents } from "./fluent";
 
 /**
- * Breeze selection/focus keeps `#3daee9`; filled primary actions use a darker
- * AA-safe blue so their white labels remain readable. Semantic colors
- * (fossil/attention/red) stay on Mantine's autoContrast.
+ * Filled primary actions keep Breeze's accent (`#3daee9`), the same blue a
+ * primary paints when it omits `variant` (New server). White labels stay, so
+ * Start does not switch to a darker fill. Semantic colors (fossil/attention/red)
+ * stay on Mantine's autoContrast.
  */
 export const plasmaBreezeVariantColorsResolver: VariantColorsResolver = (input) => {
   const resolved = defaultVariantColorsResolver(input);
@@ -14,8 +15,6 @@ export const plasmaBreezeVariantColorsResolver: VariantColorsResolver = (input) 
   if (input.variant === "filled" && isAccent) {
     return {
       ...resolved,
-      background: "var(--app-color-accent-filled)",
-      hover: "var(--app-color-accent-filled-hover)",
       color: "var(--mantine-color-white)",
     };
   }
@@ -47,6 +46,7 @@ export function createPlasmaBreezeComponents(density: UiDensity, theme: AppTheme
       styles: {
         ...fluent.Input?.styles,
         input: {
+          ...(fluent.Input?.styles as { input?: Record<string, string> } | undefined)?.input,
           backgroundColor: theme.colorScheme === "light" ? "var(--ark-gray-1)" : "var(--ark-gray-2)",
           borderColor: "var(--app-color-border-control)",
         },

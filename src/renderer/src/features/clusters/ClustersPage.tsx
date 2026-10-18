@@ -3,6 +3,7 @@ import { Plus } from "@phosphor-icons/react";
 import { Button, Stack, Tabs, Tooltip } from "@mantine/core";
 import { PageScaffold } from "@layout/PageScaffold/PageScaffold";
 import { AppPageHeader } from "@ui/AppPageHeader/AppPageHeader";
+import { appContentPaneClass, withAppSurface } from "@ui/AppSurface/appSurfaceClassName";
 import type { ClusterComplianceReport, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -57,7 +58,7 @@ export function ClustersPage(props: Props): ReactElement {
       <div className={classes.pageShell} data-clusters-page>
         <AppPageHeader title="Clusters" />
 
-        <Stack gap="sm" className={classes.content}>
+        <Stack gap="sm" className={withAppSurface(appContentPaneClass, classes.content)}>
           <ClusterGuidanceCard defaultOpen={sortedReports.length === 0} />
           <ClusterSummaryBadges
             clusterCount={sortedReports.length}

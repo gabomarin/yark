@@ -2,10 +2,6 @@
   width: 100%;
 }
 
-.membersTable {
-  background: var(--app-color-panel);
-}
-
 .membersTable :global(thead),
 .membersTable :global(thead th) {
   background: var(--app-color-panel-raised);

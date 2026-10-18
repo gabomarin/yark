@@ -6,6 +6,7 @@ import { steamCmdProgressFallbackLabel } from "@shared/server/steamcmd-progress"
 import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppPathRow } from "@ui/AppPathRow/AppPathRow";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
+import { appRaisedSurfaceClass, withAppSurface } from "@ui/AppSurface/appSurfaceClassName";
 import { STEAMCMD_PATH_ATTR } from "../settingsTestIds";
 import classes from "../SettingsPage.module.css";
 
@@ -107,7 +108,7 @@ export function SettingsSteamCmdSection(props: Props): ReactElement {
         <Text size="xs" c="dimmed">
           Free disk space or inspect folders
         </Text>
-        <Stack gap="sm" className={classes.cacheList}>
+        <Stack gap="sm" className={withAppSurface(appRaisedSurfaceClass, classes.cacheList)}>
           <CacheRow
             label="Download cache"
             description="Temporary files Steam already downloaded. Clear this to free disk space – the next install or update will download them again."

@@ -5,6 +5,7 @@ import { formatLogDateTime } from "@shared/format-log-datetime";
 import type { ReactElement } from "react";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import { LoadingState } from "@ui/LoadingState/LoadingState";
+import { appContentPaneClass, withAppSurface } from "@ui/AppSurface/appSurfaceClassName";
 import classes from "../../LogsPage.module.css";
 import { LogsClearAction, LogsEmptyState, LogsTabIntro } from "../LogsPanelChrome/LogsPanelChrome";
 
@@ -24,7 +25,7 @@ export function LogsBackupsTab(props: LogsBackupsTabProps): ReactElement {
     props;
 
   return (
-    <div className={classes.fillPanel}>
+    <div className={withAppSurface(appContentPaneClass, classes.fillPanel)}>
       <Stack gap="sm" className={classes.panelStack}>
         <LogsTabIntro
           embedded={embedded}

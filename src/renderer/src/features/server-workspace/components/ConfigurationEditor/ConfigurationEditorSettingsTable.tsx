@@ -2,6 +2,7 @@ import { ArrowsInLineVertical, ArrowsOutLineVertical, CaretDown, CaretRight } fr
 import { ActionIcon, Badge, Group, Text, Tooltip } from "@mantine/core";
 import type { IniFileKey } from "@shared/types";
 import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
+import { appRaisedSurfaceClass, withAppSurface } from "@ui/AppSurface/appSurfaceClassName";
 import type { ReactElement } from "react";
 import {
   iniUiSectionCollapseKey,
@@ -165,7 +166,7 @@ export function ConfigurationEditorSettingsTable(props: Props): ReactElement {
   } = props;
 
   return (
-    <div className={classes.tableWrap}>
+    <div className={withAppSurface(appRaisedSurfaceClass, classes.tableWrap)}>
       <div className={classes.tableHead}>
         <span>Setting</span>
         <span>Value</span>

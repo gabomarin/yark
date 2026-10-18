@@ -5,6 +5,7 @@ import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { ConsoleSurface } from "@ui/ConsoleSurface/ConsoleSurface";
 import { LoadingState } from "@ui/LoadingState/LoadingState";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
+import { appContentPaneClass, withAppSurface } from "@ui/AppSurface/appSurfaceClassName";
 import classes from "./LogsPage.module.css";
 import {
   filterRuntimeLogLines,
@@ -29,7 +30,7 @@ export function RuntimeLogSection(props: Props): ReactElement {
   const showAsaApiLoading = props.asaApiLoading === true;
 
   return (
-    <div className={classes.fillPanel}>
+    <div className={withAppSurface(appContentPaneClass, classes.fillPanel)}>
       <Stack gap="sm" className={classes.panelStack}>
         {showAsaApiLoading ? (
           <AppAlert color="blue" variant="light" title="Loading Ark Server API">
