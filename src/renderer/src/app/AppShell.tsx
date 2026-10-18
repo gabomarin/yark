@@ -226,12 +226,6 @@ export function AppShell({
     [persistAppearance],
   );
 
-  const handleCanvasBackgroundChange = useCallback(
-    (canvasBackground: boolean) =>
-      void persistAppearance({ canvasBackground }, "Could not save canvas background"),
-    [persistAppearance],
-  );
-
   const extraClusterOptions = useMemo(
     () => (pendingSetupCluster === null ? undefined : [toSyntheticClusterOption(pendingSetupCluster)]),
     [pendingSetupCluster],
@@ -451,7 +445,6 @@ export function AppShell({
       density={uiDensity}
       themeSelection={{ family: appearance.themeFamily, scheme: appearance.scheme }}
       workspacePanels={appearance.panels}
-      canvasBackground={appearance.canvasBackground}
     >
       <AppSpotlight
         servers={servers}
@@ -601,8 +594,6 @@ export function AppShell({
           handleSchemeChange,
           workspacePanels: appearance.panels,
           handleWorkspacePanelsChange,
-          canvasBackground: appearance.canvasBackground,
-          handleCanvasBackgroundChange,
           defaultBaseFolder,
           setDefaultBaseFolder,
           extraClusterOptions,

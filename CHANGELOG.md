@@ -11,9 +11,13 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
-- Settings → Appearance adds the **Glassy** theme family (Glassy Dark and Glassy Light): frosted cards, menus and buttons over a cool-tinted canvas, with an optional **The Island** scene behind the glass (#669).
+- Settings → Appearance adds the **Glassy** theme family (Glassy Dark and Glassy Light): ARK-cyan frost on Fluent 2 layers across the shell, with rounded content hosts across Overview, workspace, Settings, Clusters, Downloads, Logs, Backups, and Hosted Resources (#669).
 - Configuration Save refuses to overwrite `Game.ini` / `GameUserSettings.ini` when those files changed outside YARK since the editor loaded; the editor also re-checks on window focus, auto-reloads when clean, and always offers Reload from disk (#665).
 - Configuration and cluster INI visual editors highlight unsaved rows, show the last saved value (or that a key is absent), and support per-row revert or discard without clearing other drafts (#661).
+
+### Fixed
+
+- Glassy now keeps its frost when Windows has *Transparency effects* turned off; the OS-level reduced-transparency signal no longer flattens the sidebar, server rail, and panels into opaque slabs (#669).
 
 ### Docs
 

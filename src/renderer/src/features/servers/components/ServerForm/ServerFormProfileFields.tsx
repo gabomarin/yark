@@ -75,7 +75,7 @@ export function ServerFormProfileFields(props: ServerFormProfileFieldsProps): Re
   const mapMod = props.mapModId === null ? null : (props.mapMods.find((mod) => mod.id === props.mapModId) ?? null);
 
   return (
-    <SimpleGrid cols={{ base: 1, md: 2 }} spacing={0} className={classes.fieldsGrid}>
+    <SimpleGrid cols={{ base: 1, md: 2 }} spacing={embedded ? "sm" : 0} className={classes.fieldsGrid}>
       <ServerFormSection padding={cardPadding}>
         <ServerFormIdentityHero
           name={props.name}

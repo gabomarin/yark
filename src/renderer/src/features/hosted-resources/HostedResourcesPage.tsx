@@ -99,7 +99,7 @@ export function HostedResourcesPage({ onOpenReference = () => undefined }: Props
             </AppAlert>
           )}
           {missingReferences.length > 0 && (
-            <AppSurfaceCard radius={0}>
+            <AppSurfaceCard radius="md">
               <Stack gap="xs">
                 <Text fw={600}>Unresolved Hosted Resource references</Text>
                 <Text size="sm" c="dimmed">
@@ -128,7 +128,7 @@ export function HostedResourcesPage({ onOpenReference = () => undefined }: Props
           </DismissibleHint>
 
           {state !== null && (
-            <AppSurfaceCard radius={0} data-hosted-resources-status>
+            <AppSurfaceCard radius="md" data-hosted-resources-status>
               <Stack gap="sm">
                 <Group justify="space-between" align="flex-start">
                   <div>
@@ -200,7 +200,7 @@ export function HostedResourcesPage({ onOpenReference = () => undefined }: Props
 
           {overview === null ? (
             controller.loadError !== null ? (
-              <AppSurfaceCard radius={0}>
+              <AppSurfaceCard radius="md">
                 <EmptyState
                   icon={<WarningCircle size={22} />}
                   title="Could not load Hosted Resources"
@@ -209,12 +209,12 @@ export function HostedResourcesPage({ onOpenReference = () => undefined }: Props
                 />
               </AppSurfaceCard>
             ) : (
-              <AppSurfaceCard radius={0}>
+              <AppSurfaceCard radius="md">
                 <LoadingState label="hosted resources" />
               </AppSurfaceCard>
             )
           ) : overview.resources.length === 0 ? (
-            <AppSurfaceCard radius={0}>
+            <AppSurfaceCard radius="md">
               <EmptyState
                 icon={<Broadcast size={22} />}
                 title="No resources yet"

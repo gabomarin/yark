@@ -242,12 +242,20 @@ describe("theme registry (#PUX-004 Track B, #PUX-005-B)", () => {
       THEME_FAMILIES.glassy.dark,
       "compact",
     )(DEFAULT_THEME).variables;
-    expect(vars["--app-color-accent-contrast"]).toBe("#071a28");
+    expect(vars["--app-color-accent-contrast"]).toBe("#03151c");
     expect(vars["--app-material-chrome-filter"]).toContain("blur(");
     expect(vars["--app-material-content-filter"]).toContain("blur(");
+    expect(vars["--app-material-raised-filter"]).toContain("blur(");
     expect(vars["--app-surface-filter"]).toContain("blur(");
     expect(vars["--app-color-panel"]).toBe("var(--app-material-content-bg)");
-    expect(vars["--app-color-border"]).toContain("color-mix");
+    expect(vars["--app-color-panel-raised"]).toBe("var(--app-material-raised-bg)");
+    expect(vars["--app-material-chrome-bg"]).toBe("rgba(14,42,56,0.42)");
+    expect(vars["--app-material-content-bg"]).toBe("rgba(32,72,90,0.60)");
+    expect(vars["--app-material-raised-bg"]).toBe("rgba(46,88,108,0.84)");
+    expect(vars["--app-material-overlay-bg"]).toBe("rgba(6,22,32,0.92)");
+    expect(vars["--app-color-border"]).toBe("rgba(95, 197, 220, 0.18)");
+    expect(vars["--app-collection-gap"]).toBe("var(--app-space-sm)");
+    expect(vars["--app-collection-radius"]).toBe("var(--app-radius-sm)");
     expect(
       createAppCssVariablesResolverForAppearance(THEMES.dark, "compact")(DEFAULT_THEME).variables[
         "--app-material-chrome-filter"
@@ -261,6 +269,15 @@ describe("theme registry (#PUX-004 Track B, #PUX-005-B)", () => {
     expect(cardStyles?.root?.backdropFilter).toBe("var(--app-material-content-filter)");
     const fluentCard = createAppThemeForAppearance(THEMES.dark, "compact").components?.Card?.styles;
     expect(fluentCard).toBeUndefined();
+    const lightVars = createAppCssVariablesResolverForAppearance(
+      THEME_FAMILIES.glassy.light,
+      "compact",
+    )(DEFAULT_THEME).variables;
+    expect(lightVars["--app-material-chrome-bg"]).toBe("rgba(255,255,255,0.40)");
+    expect(lightVars["--app-material-content-bg"]).toBe("rgba(255,255,255,0.64)");
+    expect(lightVars["--app-material-raised-bg"]).toBe("rgba(255,255,255,0.88)");
+    expect(lightVars["--ark-background"]).toBe("#e9f5fa");
+    expect(lightVars["--app-color-border"]).toBe("rgba(37, 152, 190, 0.18)");
   });
 
   it("composes with density: colours follow the theme, scales follow density", () => {

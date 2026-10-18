@@ -28,7 +28,7 @@ families ship today:
   shadows, a Noto Sans typography profile and the Breeze accent `#3daee9`.
 - **`glassy`** — operational glass (`Glassy Dark`, `Glassy Light`): a cool-neutral
   tinted canvas with frost on chrome, cards, controls and overlays so atmosphere
-  (or an optional The Island scene) reads between surfaces. Grain is off. Native
+  reads between surfaces. Grain is off. Native
   Windows Mica/Acrylic is out of scope.
 
 `--app-*` names are stable semantic roles. A family may change its palette,
@@ -43,8 +43,8 @@ theme payloads or a change to the selection contract.
 
 The corner ladder is family-owned (`AppThemeRadius`), scaled by Display size like
 the shared tokens. Fluent keeps `4 / 8 / 10` (sm / md / lg; control 4). Plasma
-Breeze uses KDE's smaller ladder, `4 / 6 / 8`. Glassy uses `6 / 10 / 14` with
-control `6`. Plasma Breeze controls are ~4px
+Breeze uses KDE's smaller ladder, `4 / 6 / 8`. Glassy uses `8 / 12 / 16` with
+control `8`. Plasma Breeze controls are ~4px
 (`kstyle/breezemetrics.h` `Frame_FrameRadius = 5` → `frameRadius()` ≈ 4.5,
 checkbox 4) and large surfaces follow `largeRadius = smallRadius * 2` ≈ 6px. Cards
 (`AppSurfaceCard` default `radius="md"`) and dialogs (`AppPanelModal` `radius="md"`)
@@ -67,18 +67,43 @@ which `globals.css` uses for the document.
 
 Glassy keeps solid `--app-color-*` roles for contrast and fallback, then remaps
 panel/border aliases onto content frost so feature CSS (`AppSurfaceCard`,
-`ServerCard`) becomes glass without reading `--app-material-*`. Translucent
-`--app-material-*` roles (chrome, content, overlay, scrim, inner highlight) are
-consumed only by the app shell and shared recipes. `--app-surface-filter` is the
-shared role feature CSS may use for backdrop blur (`none` on opaque families).
-`backdrop-filter` is progressive: no-filter, reduced-transparency, and forced-colors
-remap the same variables to opaque fills. The main pane stays transparent so
-individual cards frost; an optional **Canvas background** switch (Glassy only,
-default off) places a darkened The Island scene on the shell. Glassy Dark filled
-primaries use the cyan solid `#4ba8e8` with dark ink `#071a28`
-(`palette.blueContrast`); Glassy Light uses `#176fb3` with a white label. Grain is
-off. The first-run wizard still only offers display size — this checkbox stays in
-Settings → Appearance.
+`ServerCard`) becomes glass without reading `--app-material-*`. Nested cards
+inside an already-frosted host (the workspace Server form) keep a lighter frost
+tile so layers still read as glass without stacking into a slab. There is no
+second `surface="glass"` prop: chrome / content / raised / overlay *are* those
+material variants. Frost is blur + saturate + specular inset, not only alpha.
+Translucent
+`--app-material-*` roles (chrome, content, raised, overlay, scrim,
+inner highlight) are consumed only by the app shell and shared recipes. Opacity
+steps follow YARK Fluent 2's surface ladder, expressed as cover instead of grey
+fills: chrome (the workspace server rail, `--ark-gray-2`) is the most open
+*working* surface; content cards (`--ark-gray-3`) sit a step denser; raised
+controls (`--ark-gray-4` / `--ark-gray-5`) denser still; overlays stay
+near-solid. The sidebar and server rail use chrome; content panels are milkier
+and more covered; raised controls are densest. The shell remains a tinted color
+canvas without a background image.
+Feature CSS frosts through shared roles only: `--app-surface-chrome` /
+`--app-surface-chrome-filter` (rails), `--app-color-panel` /
+`--app-surface-filter` (content hosts), `--app-color-panel-raised` /
+`--app-surface-raised-filter` (dense lists/inputs). Never `--app-material-*`.
+Tool panes (Settings, Clusters, Downloads, Logs, Backups, Hosted Resources)
+use the same content-host frost as Overview cards so Glassy is one system, not
+Servers-only. `backdrop-filter` is progressive: no-filter support and
+forced-colors remap the same variables to opaque fills. In the first Glassy iteration,
+`prefers-reduced-transparency` is deliberately **not** honoured: on Windows it
+tracks the OS *Transparency effects* toggle, which silently flattened Glassy into
+opaque slabs. This is a temporary scope decision and should be revisited in a
+follow-up. The main pane stays transparent so individual cards frost. Collection
+lists (`--app-collection-gap` / radius) tile Overview server cards and fleet
+metrics instead of a fused slab. The dense workspace server rail keeps flat rows
+on its continuous chrome surface; hover and selection carry the row state. Surfaces, borders and
+chrome map the ARK glass reference (teal-navy frost, cyan hairlines, muted-accent
+selection, specular inset) onto existing atoms (`AppSurfaceCard`, `ServerCard`,
+NavLink, Button, Input, Badge, Tabs, Progress) — not a second class kit. Glassy
+Dark filled primaries use the cyan solid `#28d4ec` with dark ink `#03151c`
+(`palette.blueContrast`); Glassy Light keeps `#176fb3` with a white label so
+filled actions stay AA. Grain is off. The first-run wizard still only offers
+display size.
 
 ### Breeze deviations (intentional)
 
@@ -268,7 +293,7 @@ Mantine **does** have spacing tokens (`theme.spacing` → `gap="xs"` / `p="md"` 
 
 Preference key: SQLite `app_settings.uiDensity` (IPC `app:get-ui-density` / `app:set-ui-density`). Loaded in `main.tsx` **before** the first `AppProviders` theme mount (falls back to Compact if IPC fails). Persisted only from the Settings change handler (not a mount effect — Safe under `StrictMode`). Failed saves keep the previous density and show an error notification. A legacy `localStorage` value (`settings.uiDensity`) is migrated once when the SQLite row is missing — and only cleared after a successful write.
 
-**Theme registry** (`src/renderer/src/shared/theme/themes.ts`, #PUX-004 Track B / #PUX-005-B / #PUX-005-A). A theme is a **payload**, not a second design system: an entry carries everything that genuinely differs — the palette (ramps, canvas, contrasts, alpha ramps), the semantic colours (`ok` / `attention` / `bad` / `dangerBright` / `fossil`…), the elevation ladder, family typography/radius, the Mantine colour scales built from those semantics, and the `AppThemeMaterials` chrome/overlay contract. `theme.ts` reads all of it; the `--app-*` role map, the density tokens and the motion tokens stay shared, so feature CSS keeps reading roles and never gains a second colour language. `--app-material-*` roles are restricted to the app shell and shared recipes. Selection is `{ family, scheme }` over `THEME_FAMILIES` (**fluent**, **plasma-breeze**, and **glassy**, each with dark/light). Preference key: SQLite `app_settings.appearance.v1` (IPC `app:get-appearance` / `app:set-appearance`), JSON `{ "themeFamily": "fluent", "scheme": "dark", "panels": "auto", "canvasBackground": false }`, loaded in `main.tsx` before the first mount like density. `canvasBackground` is Glassy-only in the UI (default off); other families ignore it. Unknown family/scheme values fall back to Fluent Dark (`parseAppearanceSettings`); legacy `{ "theme": "dark"|"light" }` rows upgrade to Fluent plus that scheme (see [Internal theme contract](#internal-theme-contract)). `--app-color-accent-contrast` resolves from `palette.blueContrast` so Glassy Dark can use a measured dark ink label on its cyan solid.
+**Theme registry** (`src/renderer/src/shared/theme/themes.ts`, #PUX-004 Track B / #PUX-005-B / #PUX-005-A). A theme is a **payload**, not a second design system: an entry carries everything that genuinely differs — the palette (ramps, canvas, contrasts, alpha ramps), the semantic colours (`ok` / `attention` / `bad` / `dangerBright` / `fossil`…), the elevation ladder, family typography/radius, the Mantine colour scales built from those semantics, and the `AppThemeMaterials` chrome/overlay contract. `theme.ts` reads all of it; the `--app-*` role map, the density tokens and the motion tokens stay shared, so feature CSS keeps reading roles and never gains a second colour language. `--app-material-*` roles are restricted to the app shell and shared recipes. Selection is `{ family, scheme }` over `THEME_FAMILIES` (**fluent**, **plasma-breeze**, and **glassy**, each with dark/light). Preference key: SQLite `app_settings.appearance.v1` (IPC `app:get-appearance` / `app:set-appearance`), JSON `{ "themeFamily": "fluent", "scheme": "dark", "panels": "auto" }`, loaded in `main.tsx` before the first mount like density. Unknown family/scheme values fall back to Fluent Dark (`parseAppearanceSettings`); legacy `{ "theme": "dark"|"light" }` rows upgrade to Fluent plus that scheme (see [Internal theme contract](#internal-theme-contract)). `--app-color-accent-contrast` resolves from `palette.blueContrast` so Glassy Dark can use a measured dark ink label on its cyan solid.
 
 **Server-workspace panels** (`src/shared/workspace/workspacePanels.ts`, #PUX-004 Track B). Where the server workspace puts its server list and status panel is data, not a `matchMedia` buried in one component: `auto` (columns from 1600px, the shipped default) and `drawers` (never). `workspacePanelsModeFor(option, width)` is the pure decision, `drawersMediaQuery(option)` is what the workspace subscribes to, and a test keeps the two in step. CSS cannot read the option, so the one hand-written mirror — Overview's `@media (min-width: 1600px)` side-by-side — is pinned by that same test. This is **not** an app-level _layout_ (how the whole app is structured, sidebar + main content today): that is a separate ticket, so the word stays free for it.
 
@@ -335,11 +360,11 @@ selectors paint the preset colour, which is why the theme only sets the neutral 
 `color` is absent. The indicator must stay _lighter/stronger_ than the track — never a
 darker well.
 
-Theme `defaultRadius` is **`sm`**. Avoid raw `border-radius` when a token fits. Tek icon tiles keep asymmetric radius by design (`AccentIconTile shape="tek"`). Create/edit **Identity** map art uses `MapArtThumb shape="rounded"` so the thumb matches flush square form sections; default `tek` remains for brand-like thumbs elsewhere.
+Theme `defaultRadius` is **`sm`**. Avoid raw `border-radius` when a token fits. Tek icon tiles keep asymmetric radius by design (`AccentIconTile shape="tek"`). Create/edit **Identity** map art uses `MapArtThumb shape="rounded"` to match the shared form-grid boundary; default `tek` remains for brand-like thumbs elsewhere.
 
-**Square vs rounded:** Overview server **list rows** (`ServerCard`), create/edit **form sections**, Logs event/backup/update lists, and the Clusters **How transfers work** Accordion are square (`radius={0}`) so stacked chrome reads as one slab. **Row surfaces.** Every list that shows rows uses one recipe: solid `--app-color-panel`, square corners, hairline `--app-color-border-subtle`, contiguous rows (shared rule, not a gap), hover `--app-color-surface-control`, selection `--app-list-selected-bg`. **Rows share the card surface — do not add a darker "well" level beneath it.** Fluent 2 layers go base → card → flyout/dialog (surfaces _above_ the base), so a body darker than its card reads as a hole in the pane and leaves hover nowhere to go. Definition comes from the hairline and the `--app-color-panel-raised` header row, not from the body fill. Collapsed and expanded states of an item must share the same surface. `YarkDataTable` sets this through the library's own `--mantine-datatable-*` variables — never a translucent wash over whatever is behind, and never the library default (`--mantine-color-body`, which painted the page canvas inside a chrome pane). A table header is `--app-color-panel-raised`, solid. **Shell surface.** One surface is painted app-wide on `AppShell.Main` (`src/renderer/src/app/AppShellLayout.module.css`): `--app-color-surface-chrome` + the brand art (`--app-shell-atmosphere` is `none` for now; the radial glow read yellowish over chrome). Every page pane (Settings, Clusters, Logs, Backups, Downloads, Hosted Resources, Overview, and the whole server workspace body) is **transparent** on top of it and only owns padding and dividers, so panes never repaint or double the atmosphere. **Tool panes** use `PageScaffold edgeToEdge` with the page title/actions **inside** the pane (not a floating header above a card). **Server workspace body** uses the same grammar without `PageScaffold`: list rail | main | side rail, dividers only, and every full-pane tab shell (server form, mods, launch, INI, backups, logs, RCON, maintenance, ASA API, wizard, onboarding) is square (`radius={0}`) so the tabs read as the pane. Fused splits (Settings categories, Clusters list+detail) use `gap: 0` and a 1px divider. Raised **panel** cards/rows sit on the shell and are square (`radius={0}`) — every page-level card on Settings, Clusters, Logs, Backups, Downloads, Hosted Resources, and Overview. Only **modal interiors** keep the dialog radius (`md`). Never use a translucent `color-mix(…, transparent)` panel wash for a card or row surface: the result then depends on the brand art behind it instead of being a palette step. The canvas is only visible behind the app sidebar. Do not wrap the whole page canvas in an extra Card (#469).
+**Square vs rounded:** Overview server **list rows** (`ServerCard`), Logs event/backup/update lists, and the Clusters **How transfers work** Accordion are square (`radius={0}`) so stacked chrome reads as one slab. For Glassy, round the _outside edge_ of a meaningful group or freestanding panel (`--app-radius-md`) and keep its internal rows square with shared hairlines; do not round every setting or list row. Settings preference stacks and server form grids follow this pattern. Fluent retains its current square panel geometry. **Row surfaces.** Every list that shows rows uses one recipe: solid `--app-color-panel`, square corners, hairline `--app-color-border-subtle`, contiguous rows (shared rule, not a gap), hover `--app-color-surface-control`, selection `--app-list-selected-bg`. **Rows share the card surface — do not add a darker "well" level beneath it.** Fluent 2 layers go base → card → flyout/dialog (surfaces _above_ the base), so a body darker than its card reads as a hole in the pane and leaves hover nowhere to go. Definition comes from the hairline and the `--app-color-panel-raised` header row, not from the body fill. Collapsed and expanded states of an item must share the same surface. `YarkDataTable` sets this through the library's own `--mantine-datatable-*` variables — never a translucent wash over whatever is behind, and never the library default (`--mantine-color-body`, which painted the page canvas inside a chrome pane). A table header is `--app-color-panel-raised`, solid. **Shell surface.** One surface is painted app-wide on `AppShell.Main` (`src/renderer/src/app/AppShellLayout.module.css`): `--app-color-surface-chrome` + the brand art (`--app-shell-atmosphere` is `none` for now; the radial glow read yellowish over chrome). Every page pane (Settings, Clusters, Logs, Backups, Downloads, Hosted Resources, Overview, and the whole server workspace body) is **transparent** on top of it and only owns padding and dividers, so panes never repaint or double the atmosphere. **Tool panes** use `PageScaffold edgeToEdge` with the page title/actions **inside** the pane (not a floating header above a card). **Server workspace body** uses the same grammar without `PageScaffold`: list rail | main | side rail, dividers only, and every full-pane tab shell (server form, mods, launch, INI, backups, logs, RCON, maintenance, ASA API, wizard, onboarding) stays square (`radius={0}`) so the tabs read as the pane. Fused splits (Settings categories, Clusters list+detail) use `gap: 0` and a 1px divider. Fluent keeps its existing square page panels. Glassy may round the outside edge of a discrete group or freestanding panel while keeping list rows and inner divisions square. Only **modal interiors** keep the dialog radius (`md`). Never use a translucent `color-mix(…, transparent)` panel wash for a card or row surface: the result then depends on the brand art behind it instead of being a palette step. Do not wrap the whole page canvas in an extra Card (#469).
 
-**Settings preference rows:** consecutive `.settingRow` cells live in `.settingStack` — a square contiguous slab (`radius: 0`, shared hairlines, no gap). Title + one-line description, control on the right. Master toggles with child options use `.settingGroup` (one outer card; children are internal hairline rows, not indented mini-cards).
+**Settings preference rows:** consecutive `.settingRow` cells live in `.settingStack` — one contiguous slab with shared hairlines and no gap. Glassy rounds the outer stack boundary while keeping its rows square; Fluent keeps the square boundary. Title + one-line description, control on the right. Master toggles with child options use `.settingGroup` (one outer card; children are internal hairline rows, not indented mini-cards).
 
 ### 4. Color / status
 

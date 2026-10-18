@@ -190,8 +190,6 @@ function defaultSettingsProps(
     onSchemeChange: vi.fn(),
     workspacePanels: "auto",
     onWorkspacePanelsChange: vi.fn(),
-    canvasBackground: false,
-    onCanvasBackgroundChange: vi.fn(),
     defaultBaseFolder: null,
     onDefaultBaseFolderChange: vi.fn(),
     onPickSteamCmdPath: vi.fn(),
@@ -408,26 +406,6 @@ describe("SettingsPage", () => {
     expect(screen.getByLabelText("Server panels")).toBeInTheDocument();
     await user.click(screen.getByRole("radio", { name: "Drawers" }));
     expect(onWorkspacePanelsChange).toHaveBeenCalledWith("drawers");
-    expect(screen.queryByRole("switch", { name: "Canvas background" })).not.toBeInTheDocument();
-  });
-
-  it("shows the Glassy canvas background switch and notifies when it changes (#PUX-005-A)", async () => {
-    const user = userEvent.setup();
-    const onCanvasBackgroundChange = vi.fn();
-    stubSettingsApi();
-
-    renderSettings({
-      family: "glassy",
-      scheme: "dark",
-      canvasBackground: false,
-      onCanvasBackgroundChange,
-    });
-
-    await openCategory(user, "Appearance");
-    const canvasSwitch = screen.getByRole("switch", { name: "Canvas background" });
-    expect(canvasSwitch).not.toBeChecked();
-    await user.click(canvasSwitch);
-    expect(onCanvasBackgroundChange).toHaveBeenCalledWith(true);
   });
 
   it("lists the active family's scheme variants in Appearance (#PUX-005-B)", async () => {

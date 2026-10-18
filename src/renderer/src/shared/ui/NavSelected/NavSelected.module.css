@@ -30,13 +30,13 @@
   pointer-events: none;
 }
 
-/* Glassy: luminous selected pill instead of the Fluent notch. */
+/* Glassy: ARK selected pill — muted accent fill + glow, not the Fluent notch. */
 :global([data-theme-family="glassy"]) .root[data-active] {
   background: var(--app-list-selected-bg);
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--app-color-accent) 42%, transparent),
-    0 0 18px color-mix(in srgb, var(--app-color-accent) 22%, transparent);
-  border-radius: var(--app-radius-md);
+  color: var(--app-color-text);
+  box-shadow: var(--app-list-selected-inset);
+  border: 1px solid var(--app-color-border);
+  border-radius: var(--app-radius-sm);
 }
 
 :global([data-theme-family="glassy"]) .root[data-active]::before {

@@ -55,7 +55,7 @@ export function BackupsPage(props: Props): ReactElement {
 
         <Stack gap="md" className={classes.content}>
           {props.servers.length === 0 ? (
-            <AppSurfaceCard radius={0} className={classes.emptyFleetCard}>
+            <AppSurfaceCard radius="md" className={classes.emptyFleetCard}>
               <EmptyState
                 layout="stacked"
                 icon={<HardDrives size={22} />}
@@ -64,7 +64,7 @@ export function BackupsPage(props: Props): ReactElement {
               />
             </AppSurfaceCard>
           ) : fleet.loading && fleet.summary === null ? (
-            <AppSurfaceCard radius={0}>
+            <AppSurfaceCard radius="md">
               <LoadingState label="backup health" />
             </AppSurfaceCard>
           ) : fleet.summary !== null ? (

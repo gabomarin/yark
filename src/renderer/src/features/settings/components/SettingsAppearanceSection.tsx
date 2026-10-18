@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { SegmentedControl, Switch, Text, Title } from "@mantine/core";
+import { SegmentedControl, Text, Title } from "@mantine/core";
 import { THEME_FAMILY_LIST, themeVariantsForFamily } from "@theme/themes";
 import { isThemeFamilyId, isThemeScheme, isWorkspacePanelsId } from "@shared/settings/appearance";
 import { WORKSPACE_PANELS_OPTION_LIST, resolveWorkspacePanelsOption } from "@shared/workspace/workspacePanels";
@@ -15,8 +15,6 @@ interface Props {
   onSchemeChange: (scheme: ThemeScheme) => void;
   workspacePanels: WorkspacePanelsId;
   onWorkspacePanelsChange: (panels: WorkspacePanelsId) => void;
-  canvasBackground: boolean;
-  onCanvasBackgroundChange: (enabled: boolean) => void;
 }
 
 /**
@@ -34,7 +32,6 @@ export function SettingsAppearanceSection(props: Props): ReactElement {
       </Title>
       <Text size="sm" c="dimmed">
         Theme family, color scheme, display size and how the server workspace arranges its panels.
-        Glassy can optionally place The Island behind frosted cards.
       </Text>
 
       <div className={classes.settingStack}>
@@ -137,25 +134,6 @@ export function SettingsAppearanceSection(props: Props): ReactElement {
           </div>
         </div>
 
-        {props.family === "glassy" && (
-          <div className={classes.settingRow}>
-            <div className={classes.settingCopy}>
-              <Text size="sm" fw={600}>
-                Canvas background
-              </Text>
-              <Text size="xs" c="dimmed" mt={2}>
-                Places The Island behind Glassy cards. Turn it off for a plain tinted canvas.
-              </Text>
-            </div>
-            <div className={classes.settingControl}>
-              <Switch
-                checked={props.canvasBackground}
-                onChange={(event) => props.onCanvasBackgroundChange(event.currentTarget.checked)}
-                aria-label="Canvas background"
-              />
-            </div>
-          </div>
-        )}
       </div>
     </section>
   );

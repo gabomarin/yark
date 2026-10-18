@@ -27,7 +27,6 @@ describe("appearance shared helpers (#PUX-004 Track B)", () => {
       themeFamily: "fluent",
       scheme: "dark",
       panels: "auto",
-      canvasBackground: false,
     });
   });
 
@@ -45,7 +44,7 @@ describe("appearance shared helpers (#PUX-004 Track B)", () => {
   });
 
   it("falls back per field for a missing, corrupt or partial row", () => {
-    const defaults = { themeFamily: "fluent", scheme: "dark", panels: "auto", canvasBackground: false };
+    const defaults = { themeFamily: "fluent", scheme: "dark", panels: "auto" };
     expect(parseAppearanceSettings(null)).toEqual(defaults);
     expect(parseAppearanceSettings("")).toEqual(defaults);
     expect(parseAppearanceSettings("{not json")).toEqual(defaults);
@@ -56,7 +55,6 @@ describe("appearance shared helpers (#PUX-004 Track B)", () => {
       themeFamily: "fluent",
       scheme: "light",
       panels: "auto",
-      canvasBackground: false,
     });
     // Unknown values fall back per field, so one bad id does not reset the other.
     expect(parseAppearanceSettings(JSON.stringify({ theme: "dark", panels: "mosaic" }))).toEqual(defaults);
@@ -64,12 +62,11 @@ describe("appearance shared helpers (#PUX-004 Track B)", () => {
       themeFamily: "fluent",
       scheme: "light",
       panels: "drawers",
-      canvasBackground: false,
     });
   });
 
   it("round-trips the stored form", () => {
-    const stored = { themeFamily: "fluent", scheme: "light", panels: "drawers", canvasBackground: false } as const;
+    const stored = { themeFamily: "fluent", scheme: "light", panels: "drawers" } as const;
     expect(parseAppearanceSettings(encodeAppearanceSettings(stored))).toEqual(stored);
   });
 });
@@ -89,7 +86,6 @@ describe("appearance preference (IPC)", () => {
       themeFamily: "fluent",
       scheme: "dark",
       panels: "drawers",
-      canvasBackground: false,
     });
     expect(window.api.getAppearance).toHaveBeenCalled();
   });
@@ -106,7 +102,6 @@ describe("appearance preference (IPC)", () => {
       themeFamily: "plasma-breeze",
       scheme: "light",
       panels: "auto",
-      canvasBackground: false,
     });
   });
 
@@ -121,7 +116,6 @@ describe("appearance preference (IPC)", () => {
       themeFamily: "fluent",
       scheme: "dark",
       panels: "auto",
-      canvasBackground: false,
     });
     expect(setAppearance).not.toHaveBeenCalled();
   });
@@ -135,7 +129,6 @@ describe("appearance preference (IPC)", () => {
       themeFamily: "fluent",
       scheme: "dark",
       panels: "auto",
-      canvasBackground: false,
     });
 
     vi.stubGlobal("api", {
@@ -146,12 +139,11 @@ describe("appearance preference (IPC)", () => {
       themeFamily: "fluent",
       scheme: "dark",
       panels: "auto",
-      canvasBackground: false,
     });
   });
 
   it("persists through setAppearance and reports failure", async () => {
-    const stored = { themeFamily: "fluent", scheme: "dark", panels: "drawers", canvasBackground: false } as const;
+    const stored = { themeFamily: "fluent", scheme: "dark", panels: "drawers" } as const;
     const setAppearance = vi.fn().mockResolvedValue({ ok: true, data: stored });
     vi.stubGlobal("api", { getAppearance: vi.fn(), setAppearance });
     await expect(writeAppearancePref(stored)).resolves.toBe(true);

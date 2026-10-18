@@ -69,7 +69,6 @@ describe("schema-migrations.json E2E seed path", () => {
         themeFamily: "plasma-breeze",
         scheme: "light",
         panels: "auto",
-        canvasBackground: false,
       });
     } finally {
       db.close();

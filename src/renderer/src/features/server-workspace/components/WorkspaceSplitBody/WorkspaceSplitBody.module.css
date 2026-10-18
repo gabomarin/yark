@@ -17,6 +17,9 @@
   min-height: 0;
   height: 100%;
   overflow: hidden;
+  background-color: var(--app-surface-chrome);
+  backdrop-filter: var(--app-surface-chrome-filter);
+  -webkit-backdrop-filter: var(--app-surface-chrome-filter);
   transition:
     flex-basis var(--app-motion-base) var(--app-ease-standard),
     width var(--app-motion-base) var(--app-ease-standard);

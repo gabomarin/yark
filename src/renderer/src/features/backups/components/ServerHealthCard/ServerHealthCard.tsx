@@ -41,7 +41,7 @@ function healthTone(health: BackupServerHealth["health"]): "ok" | "warn" | "dang
 export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
   const { row, draft } = props;
   return (
-    <AppSurfaceCard radius={0}>
+    <AppSurfaceCard radius="md">
       <Stack gap="sm">
         <Group justify="space-between" align="flex-start" wrap="wrap" className={classes.healthCardHeader}>
           <div>

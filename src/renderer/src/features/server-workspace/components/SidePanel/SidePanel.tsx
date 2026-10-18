@@ -132,8 +132,8 @@ export function SidePanel(props: Props): ReactElement {
 
   return (
     <aside className={classes.panel}>
-      <AppSurfaceCard tone="flat" padding="sm" radius="md" className={classes.card}>
-        <Stack gap={6}>
+      <AppSurfaceCard tone="flat" padding="sm" radius={0} className={classes.card}>
+        <Stack gap="xs">
           <Text className={classes.widgetTitle}>Status</Text>
           <MetaRow
             label="Status"
@@ -151,8 +151,8 @@ export function SidePanel(props: Props): ReactElement {
         </Stack>
       </AppSurfaceCard>
 
-      <AppSurfaceCard tone="flat" padding="sm" radius="md" className={classes.card}>
-        <Stack gap={6}>
+      <AppSurfaceCard tone="flat" padding="sm" radius={0} className={classes.card}>
+        <Stack gap="xs">
           <Text className={classes.widgetTitle}>Quick actions</Text>
           <Button
             size="sm"
@@ -269,7 +269,8 @@ export function SidePanel(props: Props): ReactElement {
           <Button
             size="sm"
             color="red"
-            variant="filled"
+            variant="light"
+            className={classes.deleteAction}
             fullWidth
             justify="flex-start"
             leftSection={<Trash size={14} />}

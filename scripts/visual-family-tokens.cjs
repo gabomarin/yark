@@ -32,10 +32,10 @@ async function assertFamilyMounted(page, family) {
 
   if (family === "glassy") {
     const scheme = await page.evaluate(() => document.documentElement.getAttribute("data-mantine-color-scheme"));
-    const expectedAccent = scheme === "light" ? "#176fb3" : "#4ba8e8";
+    const expectedAccent = scheme === "light" ? "#176fb3" : "#28d4ec";
     assert.equal(mounted.accent, expectedAccent, `Glassy accent is "${mounted.accent}", expected ${expectedAccent}`);
     assert.ok(mounted.panel.length > 0, "--app-color-panel is not emitted by the resolver");
-    const expectedRadius = mounted.density === "compact" ? "8px" : "10px";
+    const expectedRadius = mounted.density === "compact" ? "10px" : "12px";
     assert.equal(
       mounted.radiusMd,
       expectedRadius,
@@ -57,7 +57,7 @@ async function assertFamilyMounted(page, family) {
       `Glassy content filter is "${materials.contentFilter}"`,
     );
     if (scheme === "dark") {
-      assert.equal(materials.contrast, "#071a28", `Glassy Dark accent-contrast is "${materials.contrast}"`);
+      assert.equal(materials.contrast, "#03151c", `Glassy Dark accent-contrast is "${materials.contrast}"`);
     }
   }
 

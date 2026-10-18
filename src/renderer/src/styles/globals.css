@@ -251,22 +251,22 @@ body {
     --app-material-overlay-filter: none !important;
     --app-material-content-bg: var(--app-material-content-fallback) !important;
     --app-material-content-filter: none !important;
+    --app-material-raised-bg: var(--app-material-raised-fallback) !important;
+    --app-material-raised-filter: none !important;
     --app-surface-filter: none !important;
+    --app-surface-chrome-filter: none !important;
+    --app-surface-raised-filter: none !important;
   }
 }
 
-@media (prefers-reduced-transparency: reduce) {
-  :root {
-    --app-material-chrome-bg: var(--app-material-chrome-fallback) !important;
-    --app-material-chrome-filter: none !important;
-    --app-material-overlay-bg: var(--app-material-overlay-fallback) !important;
-    --app-material-overlay-filter: none !important;
-    --app-material-content-bg: var(--app-material-content-fallback) !important;
-    --app-material-content-filter: none !important;
-    --app-surface-filter: none !important;
-  }
-}
-
+/*
+ * `prefers-reduced-transparency` is deliberately NOT honoured (#PUX-005-A):
+ * on Windows it tracks the OS *Transparency effects* toggle, so a machine-wide
+ * setting silently flattened Glassy into opaque navy slabs and the frost never
+ * shipped. Glassy is an explicit operator choice, so the material roles keep
+ * their blur. The hard needs stay: `@supports` above (no blur available) and
+ * `forced-colors` below (contrast is owned by the OS).
+ */
 @media (forced-colors: active) {
   .mantine-AppShell-main::before,
   .main::before {
@@ -303,7 +303,12 @@ body {
     --app-material-content-bg: Canvas !important;
     --app-material-content-fallback: Canvas !important;
     --app-material-content-filter: none !important;
+    --app-material-raised-bg: Canvas !important;
+    --app-material-raised-fallback: Canvas !important;
+    --app-material-raised-filter: none !important;
     --app-surface-filter: none !important;
+    --app-surface-chrome-filter: none !important;
+    --app-surface-raised-filter: none !important;
     --app-material-overlay-bg: Canvas !important;
     --app-material-overlay-fallback: Canvas !important;
     --app-material-overlay-filter: none !important;

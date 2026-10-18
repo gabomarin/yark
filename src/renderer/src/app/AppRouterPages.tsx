@@ -91,8 +91,6 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
     handleSchemeChange,
     workspacePanels,
     handleWorkspacePanelsChange,
-    canvasBackground,
-    handleCanvasBackgroundChange,
     defaultBaseFolder,
     setDefaultBaseFolder,
     desktopShell,
@@ -269,8 +267,6 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
             onSchemeChange={(nextScheme) => void handleSchemeChange(nextScheme)}
             workspacePanels={workspacePanels}
             onWorkspacePanelsChange={(panels) => void handleWorkspacePanelsChange(panels)}
-            canvasBackground={canvasBackground}
-            onCanvasBackgroundChange={(enabled) => void handleCanvasBackgroundChange(enabled)}
             defaultBaseFolder={defaultBaseFolder}
             onDefaultBaseFolderChange={setDefaultBaseFolder}
             onPickSteamCmdPath={() => void pickSteamCmdPath()}

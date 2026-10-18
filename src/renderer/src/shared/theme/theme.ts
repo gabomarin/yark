@@ -60,8 +60,8 @@ function createAppCssVariablesResolver(
       "--app-shell-atmosphere":
         theme.recipeSet === "glassy"
           ? theme.colorScheme === "light"
-            ? "radial-gradient(ellipse 70% 55% at 82% 0%, color-mix(in srgb, var(--ark-blue-9) 14%, transparent), transparent 72%), radial-gradient(ellipse 50% 40% at 10% 100%, color-mix(in srgb, var(--ark-blue-9) 8%, transparent), transparent 70%)"
-            : "radial-gradient(ellipse 70% 55% at 82% 0%, color-mix(in srgb, var(--ark-blue-9) 24%, transparent), transparent 72%), radial-gradient(ellipse 50% 40% at 10% 100%, color-mix(in srgb, var(--ark-blue-9) 14%, transparent), transparent 70%)"
+            ? "radial-gradient(circle at 14% 10%, rgba(20, 159, 211, 0.10), transparent 28%), radial-gradient(circle at 86% 18%, rgba(47, 142, 220, 0.10), transparent 24%)"
+            : "radial-gradient(circle at 14% 10%, rgba(40, 212, 236, 0.13), transparent 28%), radial-gradient(circle at 86% 18%, rgba(105, 186, 255, 0.12), transparent 24%)"
           : "none",
       /*
        * Brand, not theme: the logo lockup is a dark-navy mark with a light
@@ -72,6 +72,7 @@ function createAppCssVariablesResolver(
       "--app-color-surface-panel": "var(--ark-gray-3)",
       "--app-color-surface-control": "var(--ark-gray-5)",
       "--app-color-surface-control-hover": "var(--ark-gray-6)",
+      "--app-surface-hover": "var(--app-color-surface-control)",
       "--app-color-surface-alert": theme.surfaces.alert,
       "--app-color-border-subtle": "var(--ark-gray-7)",
       "--app-color-border-control": "var(--ark-gray-9)",
@@ -160,9 +161,23 @@ function createAppCssVariablesResolver(
       "--app-surface-cool-emphasis": "none",
       "--app-surface-flat": "var(--app-color-panel)",
       "--app-surface-chrome": "var(--app-color-surface-chrome)",
+      "--app-surface-chrome-filter": theme.materials.chrome.backdropFilter,
       "--app-surface-filter": theme.materials.content.backdropFilter,
+      /* Raised frost for feature CSS (inputs/lists) — never read `--app-material-*` there. */
+      "--app-surface-raised-filter": theme.materials.raised.backdropFilter,
       "--app-list-selected-bg": "var(--app-color-surface-control)",
       "--app-list-selected-inset": "inset 3px 0 0 var(--ark-blue-9)",
+      /*
+       * Collection lists (Overview server rows, fleet metrics). Fluent/Breeze
+       * keep a fused slab (gap 0, square). Glassy tiles each item.
+       */
+      "--app-collection-gap": "0px",
+      "--app-collection-radius": "0px",
+      "--app-collection-join": "0px",
+      "--app-collection-fuse": "1px",
+      "--app-collection-item-border": "none",
+      "--app-collection-strip-fill": "var(--app-color-panel)",
+      "--app-collection-item-shadow": "none",
       "--app-anchor-color": "var(--ark-blue-11)",
       "--app-anchor-hover-color": "var(--ark-blue-12)",
       "--app-material-chrome-bg": theme.materials.chrome.background,
@@ -171,6 +186,9 @@ function createAppCssVariablesResolver(
       "--app-material-content-bg": theme.materials.content.background,
       "--app-material-content-fallback": theme.materials.content.fallback,
       "--app-material-content-filter": theme.materials.content.backdropFilter,
+      "--app-material-raised-bg": theme.materials.raised.background,
+      "--app-material-raised-fallback": theme.materials.raised.fallback,
+      "--app-material-raised-filter": theme.materials.raised.backdropFilter,
       "--app-material-overlay-bg": theme.materials.overlay.background,
       "--app-material-overlay-fallback": theme.materials.overlay.fallback,
       "--app-material-overlay-filter": theme.materials.overlay.backdropFilter,
@@ -178,16 +196,34 @@ function createAppCssVariablesResolver(
       "--app-material-scrim": theme.materials.scrim,
       ...(theme.recipeSet === "glassy"
         ? {
+            "--app-color-surface-panel": "var(--app-material-content-bg)",
             "--app-color-panel": "var(--app-material-content-bg)",
             "--app-color-panel-cool": "var(--app-material-content-bg)",
             "--app-color-panel-cool-emphasis": "var(--app-material-content-bg)",
-            "--app-color-panel-alt": "var(--app-material-content-bg)",
+            "--app-color-panel-alt": "var(--app-material-raised-bg)",
+            "--app-color-panel-raised": "var(--app-material-raised-bg)",
+            "--app-surface-hover": "color-mix(in srgb, var(--app-color-accent) 18%, var(--app-color-panel-raised))",
             "--app-surface-flat": "var(--app-material-content-bg)",
             "--app-surface-chrome": "var(--app-material-chrome-bg)",
-            "--app-color-border-subtle": "color-mix(in srgb, var(--ark-blue-9) 32%, var(--ark-gray-7))",
-            "--app-color-border": "color-mix(in srgb, var(--ark-blue-9) 40%, var(--ark-gray-7))",
-            "--app-color-border-control": "color-mix(in srgb, var(--ark-blue-9) 45%, var(--ark-gray-9))",
-            "--app-list-selected-bg": "color-mix(in srgb, var(--ark-blue-9) 22%, transparent)",
+            "--app-color-border-subtle":
+              theme.colorScheme === "light" ? "rgba(37, 152, 190, 0.10)" : "rgba(95, 197, 220, 0.10)",
+            "--app-color-border":
+              theme.colorScheme === "light" ? "rgba(37, 152, 190, 0.18)" : "rgba(95, 197, 220, 0.18)",
+            "--app-color-border-control":
+              theme.colorScheme === "light" ? "rgba(20, 168, 215, 0.38)" : "rgba(71, 220, 242, 0.42)",
+            "--app-list-selected-bg":
+              theme.colorScheme === "light" ? "rgba(20, 159, 211, 0.10)" : "rgba(40, 212, 236, 0.13)",
+            "--app-list-selected-inset":
+              theme.colorScheme === "light"
+                ? "inset 3px 0 0 var(--app-color-accent), 0 0 0 1px rgba(20, 159, 211, 0.12), 0 0 14px rgba(20, 159, 211, 0.08)"
+                : "inset 3px 0 0 var(--app-color-accent), 0 0 0 1px rgba(40, 212, 236, 0.16), 0 0 16px rgba(40, 212, 236, 0.10)",
+            "--app-collection-gap": "var(--app-space-sm)",
+            "--app-collection-radius": "var(--app-radius-sm)",
+            "--app-collection-join": "1px",
+            "--app-collection-fuse": "0px",
+            "--app-collection-item-border": "1px solid var(--app-color-border)",
+            "--app-collection-strip-fill": "transparent",
+            "--app-collection-item-shadow": "var(--app-shadow-panel)",
           }
         : {}),
     },

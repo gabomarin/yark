@@ -115,6 +115,23 @@
   color: var(--app-color-text);
 }
 
+:global([data-theme-family="glassy"]) .tabChrome {
+  background: color-mix(in srgb, var(--app-surface-chrome) 70%, transparent);
+  backdrop-filter: var(--app-surface-chrome-filter);
+  -webkit-backdrop-filter: var(--app-surface-chrome-filter);
+  border-bottom: 1px solid var(--app-color-border-subtle);
+}
+
+:global([data-theme-family="glassy"]) .tabList :global(.mantine-Tabs-tab:hover) {
+  background: color-mix(in srgb, var(--app-color-accent) 8%, transparent);
+}
+
+:global([data-theme-family="glassy"]) .tabList :global(.mantine-Tabs-tab[data-active]),
+:global([data-theme-family="glassy"]) .tabList :global(.mantine-Tabs-tab[data-active]:hover) {
+  background: color-mix(in srgb, var(--app-color-accent) 10%, transparent);
+  box-shadow: inset 0 -2px 0 var(--app-color-accent);
+}
+
 .configHost {
   display: flex;
   flex-direction: column;

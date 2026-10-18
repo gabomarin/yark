@@ -55,6 +55,14 @@
   background: var(--app-color-panel);
 }
 
+:global([data-theme-family="glassy"]) .tableWrap {
+  border-radius: 0;
+  background: var(--app-color-panel);
+  box-shadow: none;
+  backdrop-filter: var(--app-surface-filter);
+  -webkit-backdrop-filter: var(--app-surface-filter);
+}
+
 .tableHead,
 .row {
   display: grid;

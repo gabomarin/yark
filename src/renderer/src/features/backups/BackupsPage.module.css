@@ -24,6 +24,17 @@
   gap: var(--app-space-sm);
 }
 
+:global([data-theme-family="glassy"]) .content {
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-md);
+  background: var(--app-color-panel);
+  box-shadow: var(--app-shadow-panel);
+  backdrop-filter: var(--app-surface-filter);
+  -webkit-backdrop-filter: var(--app-surface-filter);
+  padding: var(--app-space-sm);
+  overflow: auto;
+}
+
 .emptyFleetCard {
   width: min(100%, 960px);
   min-height: clamp(240px, 42vh, 360px);
@@ -41,6 +52,10 @@
 .volumeCard {
   border-radius: 0;
   background: var(--app-color-panel);
+}
+
+:global([data-theme-family="glassy"]) .volumeCard {
+  border-radius: var(--app-radius-md);
 }
 
 .statWarning {
@@ -92,6 +107,14 @@
   border-radius: 0;
   border: 1px solid var(--app-color-border-subtle);
   background: var(--app-color-panel);
+}
+
+:global([data-theme-family="glassy"]) .kindSettings {
+  border-radius: var(--app-radius-md);
+  background: var(--app-color-panel-raised);
+  box-shadow: var(--app-shadow-panel);
+  backdrop-filter: var(--app-surface-filter);
+  -webkit-backdrop-filter: var(--app-surface-filter);
 }
 
 .kindSettings :global(.mantine-InputWrapper-root) {

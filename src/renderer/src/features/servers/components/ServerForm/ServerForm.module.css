@@ -69,6 +69,16 @@
   margin-bottom: -1px;
 }
 
+:global([data-theme-family="glassy"]) .embedded .formSection {
+  margin: 0;
+  background: var(--app-color-panel-raised);
+  backdrop-filter: var(--app-surface-raised-filter);
+  -webkit-backdrop-filter: var(--app-surface-raised-filter);
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-sm) !important;
+  box-shadow: var(--app-shadow-panel);
+}
+
 .identityHero {
   display: flex;
   gap: var(--app-space-md);
@@ -105,6 +115,11 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+:global([data-theme-family="glassy"]) .embedded {
+  /* Beat Card recipe radius so the Server tab matches square workspace hosts. */
+  border-radius: 0 !important;
 }
 
 .embeddedHeader {

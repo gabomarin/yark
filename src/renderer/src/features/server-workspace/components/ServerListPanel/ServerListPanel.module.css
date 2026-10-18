@@ -138,6 +138,23 @@
   box-shadow: none;
 }
 
+:global([data-theme-family="glassy"]) .item {
+  /* The rail is already one continuous chrome surface. Keep its rows flat so
+   * the selected server, rather than repeated mini-cards, carries the focus. */
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+:global([data-theme-family="glassy"]) .item:hover {
+  background: color-mix(in srgb, var(--app-color-accent) 8%, transparent);
+}
+
+:global([data-theme-family="glassy"]) .item[data-selected] {
+  background: var(--app-list-selected-bg);
+  border-color: color-mix(in srgb, var(--app-color-accent) 22%, transparent);
+}
+
 /* Same Fluent short notch as sidebar / Settings nav (not full-height inset). */
 .item[data-selected]::before {
   position: absolute;

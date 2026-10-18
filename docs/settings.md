@@ -86,7 +86,6 @@ the Server tab / workspace.
 | Theme family  | SQLite `appearance.v1` | **fluent**  | `fluent` \| `plasma-breeze` \| `glassy` (`shared/theme/themes.ts`). An unknown or missing family falls back to Fluent                                                                |
 | Color scheme  | SQLite `appearance.v1` | **dark**    | `dark` \| `light` within the selected family (Fluent, Breeze, or Glassy Dark/Light). An unknown or missing scheme falls back to dark                                                 |
 | Server panels | SQLite `appearance.v1` | **auto**    | `auto` \| `drawers`; where the server workspace puts its server list and status panel (`src/shared/workspace/workspacePanels.ts`). Auto uses columns from 1600px, Drawers never does |
-| Canvas background | SQLite `appearance.v1` | **off**     | Glassy-only switch. Places a darkened The Island scene behind frosted cards. Other families store but ignore the flag. |
 
 Family, scheme, panels and density are independent: density scales the tokens of whichever theme is active, and the panels option only decides where the workspace puts its server list and status panel.
 

@@ -78,6 +78,17 @@
   flex-direction: column;
 }
 
+:global([data-theme-family="glassy"]) .sectionMain {
+  /* Square inset frost — matches INI/Server workspace hosts (not a floating card). */
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: 0;
+  background: var(--app-color-panel);
+  box-shadow: none;
+  backdrop-filter: var(--app-surface-filter);
+  -webkit-backdrop-filter: var(--app-surface-filter);
+  padding: var(--app-space-sm);
+}
+
 .search {
   flex: 1;
   min-width: 260px;

@@ -182,7 +182,7 @@ describe("SidePanel", () => {
 
     const deleteButton = screen.getByRole("button", { name: "Delete server" });
     expect(deleteButton).toBeEnabled();
-    expect(deleteButton).toHaveAttribute("data-variant", "filled");
+    expect(deleteButton).toHaveAttribute("data-variant", "light");
     await user.click(deleteButton);
     expect(onDelete).toHaveBeenCalledTimes(1);
   });

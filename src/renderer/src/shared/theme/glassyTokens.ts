@@ -17,41 +17,45 @@ import {
 /**
  * Glassy family tokens (#PUX-005-A).
  *
- * Cool-neutral operations glass: a tinted canvas, frost on chrome, cards,
- * controls and overlays so the atmosphere (or optional map scene) reads between
- * surfaces. Light and Dark are authored independently — Dark is not an inversion
- * of Light. Semantic status tones reuse Fluent's measured values so operational
- * state stays recognizable across families.
+ * ARK-cyan frost, but the *opacity ladder* is YARK Fluent 2's surface steps
+ * (canvas → chrome → panel → raised → control), not the ARK kit's glass-weak
+ * / glass / glass-strong scale. Relative luminance from the Fluent ramp
+ * (`tokens.ts` gray 1–5) is mapped onto glass as both cover *and* luminance —
+ * the same teal at 0.16/0.28/0.46 collapses to one navy slab over a night
+ * photo. Chrome (rail) is darker/more open; content panels are milkier and
+ * denser; raised controls denser still. Dark is teal-navy with
+ * accent `#28d4ec`; Light is milky sky glass. Semantic status tones reuse
+ * Fluent's measured values.
  */
 
 const glassyDarkBlue: AppThemeRamp = [
-  "#071a28",
-  "#082335",
-  "#0b3150",
-  "#104269",
-  "#165481",
-  "#1d6699",
-  "#2579b2",
-  "#2f8dcc",
-  "#4ba8e8",
-  "#68b8f0",
-  "#8dccf5",
-  "#c7eafc",
+  "#03151c",
+  "#042028",
+  "#063445",
+  "#0a4d63",
+  "#0d6884",
+  "#1285a6",
+  "#16a8c9",
+  "#1dc0dc",
+  "#28d4ec",
+  "#51e3f4",
+  "#7aedf8",
+  "#c5f6fb",
 ];
 
 const glassyDarkBlueAlpha: AppThemeRamp = [
-  "#4ba8e80d",
-  "#4ba8e819",
-  "#4ba8e845",
-  "#4ba8e855",
-  "#4ba8e865",
-  "#4ba8e874",
-  "#4ba8e885",
-  "#4ba8e899",
-  "#4ba8e8a8",
-  "#4ba8e896",
-  "#8dccf5",
-  "#c7eafc",
+  "#28d4ec0f",
+  "#28d4ec1f",
+  "#28d4ec33",
+  "#28d4ec45",
+  "#28d4ec59",
+  "#28d4ec6e",
+  "#28d4ec85",
+  "#28d4ec99",
+  "#28d4eca8",
+  "#28d4ec96",
+  "#7aedf8",
+  "#c5f6fb",
 ];
 
 const glassyLightBlue: AppThemeRamp = [
@@ -85,18 +89,18 @@ const glassyLightBlueAlpha: AppThemeRamp = [
 ];
 
 const glassyDarkGray: AppThemeRamp = [
-  "#070b12",
-  "#0d1420",
-  "#141e2c",
-  "#1a2636",
-  "#223146",
-  "#2b3b52",
-  "#43566f",
-  "#536984",
-  "#667d99",
-  "#7b91aa",
-  "#b4c3d5",
-  "#f2f7fc",
+  "#041017",
+  "#0a1b25",
+  "#0c2834",
+  "#123140",
+  "#164056",
+  "#1c4d60",
+  "#3d6a78",
+  "#4d7d8c",
+  "#638692",
+  "#7a9eaa",
+  "#86aeba",
+  "#e8f8fb",
 ];
 
 const glassyDarkGrayAlpha: AppThemeRamp = [
@@ -116,57 +120,57 @@ const glassyDarkGrayAlpha: AppThemeRamp = [
 
 const glassyLightGray: AppThemeRamp = [
   "#ffffff",
-  "#f7fafd",
-  "#f0f5fa",
-  "#e8eff6",
-  "#dce6ef",
-  "#cfdce8",
-  "#b9c8d7",
-  "#a5b6c7",
-  "#7a8fa5",
-  "#667b90",
-  "#4f6173",
-  "#182431",
+  "#eaf5fa",
+  "#f6fbfd",
+  "#f7fcfe",
+  "#eff8fc",
+  "#e5f3f8",
+  "#8bb0c6",
+  "#7aa0b4",
+  "#6d92aa",
+  "#5c8294",
+  "#557384",
+  "#102433",
 ];
 
 const glassyLightGrayAlpha: AppThemeRamp = [
-  "#18243100",
-  "#18243105",
-  "#1824310a",
-  "#18243112",
-  "#1824311c",
-  "#18243129",
-  "#18243138",
-  "#1824314d",
-  "#18243166",
-  "#1824319e",
-  "#182431e6",
-  "#182431f5",
+  "#10243300",
+  "#10243305",
+  "#1024330a",
+  "#10243312",
+  "#1024331c",
+  "#10243329",
+  "#10243338",
+  "#1024334d",
+  "#10243366",
+  "#1024339e",
+  "#102433e6",
+  "#102433f5",
 ];
 
 export const glassyDarkPalette: AppThemePalette = {
-  background: "#070b12",
+  background: "#06131b",
   blue: glassyDarkBlue,
   blueAlpha: glassyDarkBlueAlpha,
   gray: glassyDarkGray,
   grayAlpha: glassyDarkGrayAlpha,
-  /** Dark ink on the bright cyan solid — measured 6.79:1. */
-  blueContrast: "#071a28",
-  blueSurface: "#4ba8e840",
-  grayContrast: "#f2f7fc",
+  /** Dark ink on the ARK cyan solid — measured 10.39:1. */
+  blueContrast: "#03151c",
+  blueSurface: "#28d4ec1f",
+  grayContrast: "#e8f8fb",
   graySurface: "rgba(0, 0, 0, 0.05)",
 };
 
 export const glassyLightPalette: AppThemePalette = {
-  background: "#e8eff6",
+  background: "#e9f5fa",
   blue: glassyLightBlue,
   blueAlpha: glassyLightBlueAlpha,
   gray: glassyLightGray,
   grayAlpha: glassyLightGrayAlpha,
   blueContrast: "#ffffff",
-  blueSurface: "#176fb324",
-  grayContrast: "#182431",
-  graySurface: "rgba(0, 0, 0, 0.04)",
+  blueSurface: "#176fb31a",
+  grayContrast: "#102433",
+  graySurface: "rgba(16, 36, 51, 0.04)",
 };
 
 export const glassyDarkColors: AppThemeColors = darkColors;
@@ -178,61 +182,71 @@ export const glassyLightLadders = lightLadders;
 export const glassyTypography = fluentTypography;
 
 export const glassyDarkShadows: AppThemeShadows = {
-  panel: "inset 0 1px 0 rgba(255,255,255,.08), 0 1px 0 rgba(0,0,0,.32)",
-  elevation2: "0 1px 2px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.06)",
-  elevation4: "0 2px 6px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.07)",
-  elevation8: "0 6px 16px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.08)",
-  elevation16: "0 12px 28px rgba(0,0,0,.44), inset 0 1px 0 rgba(255,255,255,.10)",
-  elevation28: "0 20px 48px rgba(0,0,0,.52), inset 0 1px 0 rgba(255,255,255,.12)",
+  panel: "inset 0 1px 0 rgba(218,250,255,.28), inset 0 -1px 0 rgba(0,0,0,.14), 0 8px 28px rgba(0,0,0,.18)",
+  elevation2: "0 2px 8px rgba(0,0,0,.14), inset 0 1px 0 rgba(218,250,255,.12)",
+  elevation4: "inset 0 1px 0 rgba(218,250,255,.28), inset 0 -1px 0 rgba(0,0,0,.14), 0 8px 28px rgba(0,0,0,.18)",
+  elevation8: "inset 0 1px 0 rgba(218,250,255,.28), 0 10px 26px rgba(0,0,0,.18)",
+  elevation16: "inset 0 1px 0 rgba(225,250,255,.32), 0 14px 34px rgba(0,0,0,.22)",
+  elevation28: "inset 0 1px 0 rgba(225,250,255,.32), 0 18px 40px rgba(0,0,0,.26)",
 };
 
 export const glassyLightShadows: AppThemeShadows = {
-  panel: "inset 0 1px 0 rgba(255,255,255,.82), 0 1px 2px rgba(24,36,49,.08)",
-  elevation2: "0 1px 3px rgba(24,36,49,.10), inset 0 1px 0 rgba(255,255,255,.70)",
-  elevation4: "0 3px 8px rgba(24,36,49,.12), inset 0 1px 0 rgba(255,255,255,.74)",
-  elevation8: "0 8px 20px rgba(24,36,49,.15), inset 0 1px 0 rgba(255,255,255,.78)",
-  elevation16: "0 14px 32px rgba(24,36,49,.18), inset 0 1px 0 rgba(255,255,255,.82)",
-  elevation28: "0 24px 52px rgba(24,36,49,.22), inset 0 1px 0 rgba(255,255,255,.86)",
+  panel: "inset 0 1px 0 rgba(255,255,255,.84), inset 0 -1px 0 rgba(67,115,137,.08), 0 8px 24px rgba(43,85,104,.09)",
+  elevation2: "0 2px 8px rgba(43,85,104,.08), inset 0 1px 0 rgba(255,255,255,.42)",
+  elevation4: "inset 0 1px 0 rgba(255,255,255,.84), inset 0 -1px 0 rgba(67,115,137,.08), 0 8px 24px rgba(43,85,104,.09)",
+  elevation8: "inset 0 1px 0 rgba(255,255,255,.88), 0 10px 26px rgba(43,85,104,.10)",
+  elevation16: "inset 0 1px 0 rgba(255,255,255,.94), 0 14px 30px rgba(43,85,104,.12)",
+  elevation28: "inset 0 1px 0 rgba(255,255,255,.94), 0 18px 40px rgba(43,85,104,.14)",
 };
 
 export const glassyDarkMaterials: AppThemeMaterials = {
   chrome: {
-    background: "rgba(8,14,24,0.52)",
-    fallback: "#0d1420",
-    backdropFilter: "blur(22px) saturate(140%)",
+    background: "rgba(14,42,56,0.42)",
+    fallback: "#0a1b25",
+    backdropFilter: "blur(22px) saturate(150%)",
   },
   content: {
-    background: "rgba(12,20,34,0.62)",
-    fallback: "#141e2c",
-    backdropFilter: "blur(20px) saturate(150%)",
+    background: "rgba(32,72,90,0.60)",
+    fallback: "#0c2834",
+    backdropFilter: "blur(26px) saturate(155%)",
+  },
+  raised: {
+    background: "rgba(46,88,108,0.84)",
+    fallback: "#123140",
+    backdropFilter: "blur(14px) saturate(140%)",
   },
   overlay: {
-    background: "rgba(12,20,34,0.82)",
-    fallback: "#141e2c",
-    backdropFilter: "blur(28px) saturate(145%)",
+    background: "rgba(6,22,32,0.92)",
+    fallback: "#0a1b25",
+    backdropFilter: "blur(16px) saturate(130%)",
   },
-  innerHighlight: "rgba(255,255,255,0.16)",
-  scrim: "rgba(2,6,12,0.56)",
+  innerHighlight: "rgba(218,250,255,0.28)",
+  scrim: "rgba(3,11,17,0.55)",
 };
 
 export const glassyLightMaterials: AppThemeMaterials = {
   chrome: {
-    background: "rgba(247,250,253,0.55)",
-    fallback: "#f7fafd",
-    backdropFilter: "blur(22px) saturate(120%)",
+    background: "rgba(255,255,255,0.40)",
+    fallback: "#eaf5fa",
+    backdropFilter: "blur(22px) saturate(150%)",
   },
   content: {
-    background: "rgba(240,245,250,0.62)",
-    fallback: "#f0f5fa",
-    backdropFilter: "blur(20px) saturate(125%)",
+    background: "rgba(255,255,255,0.64)",
+    fallback: "#f6fbfd",
+    backdropFilter: "blur(26px) saturate(155%)",
+  },
+  raised: {
+    background: "rgba(255,255,255,0.88)",
+    fallback: "#eff8fc",
+    backdropFilter: "blur(14px) saturate(140%)",
   },
   overlay: {
-    background: "rgba(250,252,255,0.86)",
-    fallback: "#f7fafd",
-    backdropFilter: "blur(28px) saturate(120%)",
+    background: "rgba(246,251,253,0.94)",
+    fallback: "#fafdff",
+    backdropFilter: "blur(16px) saturate(130%)",
   },
-  innerHighlight: "rgba(255,255,255,0.78)",
-  scrim: "rgba(24,36,49,0.24)",
+  innerHighlight: "rgba(255,255,255,0.92)",
+  scrim: "rgba(43,85,104,0.18)",
 };
 
 export const glassyDarkContrast: AppThemeContrast = {

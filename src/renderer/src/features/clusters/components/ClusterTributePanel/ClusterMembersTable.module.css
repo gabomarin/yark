@@ -20,6 +20,29 @@
   background: var(--app-color-surface-control);
 }
 
+:global([data-theme-family="glassy"]) .membersTable {
+  overflow: hidden;
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-md);
+  background: var(--app-color-panel-raised);
+  box-shadow: var(--app-shadow-panel);
+  backdrop-filter: var(--app-surface-raised-filter);
+  -webkit-backdrop-filter: var(--app-surface-raised-filter);
+}
+
+:global([data-theme-family="glassy"]) .membersTable :global(thead),
+:global([data-theme-family="glassy"]) .membersTable :global(thead th) {
+  background: color-mix(in srgb, var(--app-color-panel-raised) 72%, transparent);
+}
+
+:global([data-theme-family="glassy"]) .membersTable :global(tbody tr:hover) {
+  background: color-mix(in srgb, var(--app-color-accent) 10%, transparent);
+}
+
+:global([data-theme-family="glassy"]) .differentCell {
+  background: color-mix(in srgb, var(--app-color-attention) 14%, transparent);
+}
+
 .memberHeader,
 .memberCell {
   min-width: 15rem;

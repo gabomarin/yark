@@ -21,6 +21,8 @@
   background-color: var(--app-surface-chrome);
   background-image: none;
   border-color: var(--app-color-border-subtle);
+  backdrop-filter: var(--app-surface-chrome-filter);
+  -webkit-backdrop-filter: var(--app-surface-chrome-filter);
 }
 
 .root[data-fill] {

@@ -452,8 +452,8 @@ export type AppThemeRadius = {
 
 export const fluentRadius: AppThemeRadius = { sm: 4, md: 8, lg: 10, control: 4 };
 export const plasmaBreezeRadius: AppThemeRadius = { sm: 4, md: 6, lg: 8, control: 4 };
-/** Glassy (#PUX-005-A): medium corners on floating surfaces, still compact on controls. */
-export const glassyRadius: AppThemeRadius = { sm: 6, md: 10, lg: 14, control: 6 };
+/** Glassy (#PUX-005-A): ARK glass corners (8 / 12 / 16), controls match sm. */
+export const glassyRadius: AppThemeRadius = { sm: 8, md: 12, lg: 16, control: 8 };
 
 /**
  * Progressive material payload (#PUX-005-A). Solid `--app-color-*` roles stay the
@@ -467,6 +467,12 @@ export type AppThemeMaterials = {
     backdropFilter: string;
   };
   content: {
+    background: string;
+    fallback: string;
+    backdropFilter: string;
+  };
+  /** Nested / control layer (Fluent 2 Background3 analogue). */
+  raised: {
     background: string;
     fallback: string;
     backdropFilter: string;
@@ -488,8 +494,13 @@ export function solidMaterials(
   const chrome = palette.gray[1];
   const panel = palette.gray[2];
   return {
-    chrome: { background: chrome, fallback: chrome, backdropFilter: "none" },
+    chrome: {
+      background: chrome,
+      fallback: chrome,
+      backdropFilter: "none",
+    },
     content: { background: panel, fallback: panel, backdropFilter: "none" },
+    raised: { background: panel, fallback: panel, backdropFilter: "none" },
     overlay: { background: panel, fallback: panel, backdropFilter: "none" },
     innerHighlight: extras.innerHighlight,
     scrim: extras.scrim,

@@ -36,7 +36,7 @@ export function HostedResourceCard(props: Props): ReactElement {
   // Pick the disabled one explicitly: the list can mix statuses, so `[0]` may be stale-port.
   const disabledReference = props.referenceIssues.find((reference) => reference.status === "disabled");
   return (
-    <AppSurfaceCard radius={0} data-hosted-resource-card={resource.id}>
+    <AppSurfaceCard radius="md" data-hosted-resource-card={resource.id}>
       <Stack gap="xs">
         <Group justify="space-between" wrap="nowrap" align="flex-start">
           <Group gap="xs" wrap="nowrap">

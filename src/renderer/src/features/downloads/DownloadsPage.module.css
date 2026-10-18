@@ -9,6 +9,18 @@
   gap: var(--app-space-sm);
 }
 
+/* One content-host frost per pane — queue rows sit inside; do not glass `.queueSection` again. */
+:global([data-theme-family="glassy"]) .upperPane,
+:global([data-theme-family="glassy"]) .consoleOnlyPane {
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-md);
+  background: var(--app-color-panel);
+  box-shadow: var(--app-shadow-panel);
+  backdrop-filter: var(--app-surface-filter);
+  -webkit-backdrop-filter: var(--app-surface-filter);
+  overflow: hidden;
+}
+
 .splitHost {
   flex: 1;
   min-height: 0;
@@ -131,6 +143,20 @@
   border-top: 1px solid color-mix(in srgb, var(--app-color-border) 58%, transparent);
 }
 
+:global([data-theme-family="glassy"]) .queueGroup {
+  padding: 0;
+}
+
+:global([data-theme-family="glassy"]) .queueGroup + .queueGroup {
+  margin-top: 0;
+  padding-top: var(--app-space-sm);
+  border-top: 1px solid var(--app-color-border-subtle);
+}
+
+:global([data-theme-family="glassy"]) .queueSection {
+  padding: var(--app-space-sm);
+}
+
 .rowButton {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -183,6 +209,14 @@
   border-color: var(--app-color-accent);
   background: var(--app-color-panel);
   box-shadow: inset 3px 0 0 var(--app-color-accent);
+}
+
+:global([data-theme-family="glassy"]) .queueRowList .rowButton {
+  background: transparent;
+}
+
+:global([data-theme-family="glassy"]) .queueRowList .rowButton:hover {
+  background: color-mix(in srgb, var(--app-color-accent) 9%, transparent);
 }
 
 .rowButton[data-kind="active"] .rowTitleText {

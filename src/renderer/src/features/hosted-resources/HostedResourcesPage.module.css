@@ -16,6 +16,16 @@
   overflow: auto;
 }
 
+:global([data-theme-family="glassy"]) .content {
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-md);
+  background: var(--app-color-panel);
+  box-shadow: var(--app-shadow-panel);
+  backdrop-filter: var(--app-surface-filter);
+  -webkit-backdrop-filter: var(--app-surface-filter);
+  padding: var(--app-space-sm);
+}
+
 /* Keep cards at content height so fillViewport does not crush them. */
 .content > * {
   flex-shrink: 0;

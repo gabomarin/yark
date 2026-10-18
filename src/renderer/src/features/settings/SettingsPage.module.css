@@ -36,6 +36,34 @@
   border-right: 1px solid var(--app-color-border-subtle) !important;
 }
 
+/* Glassy: category rail is chrome frost; content column is a content glass host
+ * so Settings stops reading as a solid slab over the canvas. */
+:global([data-theme-family="glassy"]) .layout {
+  gap: var(--app-space-sm);
+  padding: var(--app-space-md);
+}
+
+:global([data-theme-family="glassy"]) .navCard {
+  background: var(--app-surface-chrome) !important;
+  backdrop-filter: var(--app-surface-chrome-filter) !important;
+  -webkit-backdrop-filter: var(--app-surface-chrome-filter) !important;
+  border: 1px solid var(--app-color-border-subtle) !important;
+  border-radius: var(--app-radius-md) !important;
+  box-shadow: var(--app-shadow-panel) !important;
+}
+
+:global([data-theme-family="glassy"]) .panel {
+  max-width: none;
+  margin: 0;
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-md);
+  background: var(--app-color-panel);
+  box-shadow: var(--app-shadow-panel);
+  backdrop-filter: var(--app-surface-filter);
+  -webkit-backdrop-filter: var(--app-surface-filter);
+  overflow: hidden;
+}
+
 .navPane {
   display: flex;
   flex-direction: column;
@@ -172,6 +200,18 @@
   gap: 0;
 }
 
+/* Glassy groups the preference cells under one frosted boundary. Individual
+ * rows stay square so their separators read as one settings surface. */
+:global([data-theme-family="glassy"]) .settingStack {
+  overflow: hidden;
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-md);
+  background: var(--app-color-panel-raised);
+  box-shadow: var(--app-shadow-panel);
+  backdrop-filter: var(--app-surface-filter);
+  -webkit-backdrop-filter: var(--app-surface-filter);
+}
+
 /*
  * WinUI SettingsCard cell: square corners, shared hairlines, title + lede,
  * control on the right.
@@ -198,6 +238,17 @@
   margin-top: -1px;
 }
 
+:global([data-theme-family="glassy"]) .settingStack > .settingRow {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+:global([data-theme-family="glassy"]) .settingStack > * + * {
+  margin-top: 0;
+  border-top: 1px solid var(--app-color-border-subtle);
+}
+
 .settingCopy {
   flex: 1 1 auto;
   min-width: 0;
@@ -218,6 +269,14 @@
   border: 1px solid var(--app-color-border-subtle);
   border-radius: 0;
   background: var(--app-color-surface-panel);
+}
+
+:global([data-theme-family="glassy"]) .settingStack > .settingGroup,
+:global([data-theme-family="glassy"]) .settingStack > .settingBlock {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .settingGroup > .settingRow {
@@ -279,6 +338,15 @@
   background: var(--app-color-panel);
 }
 
+:global([data-theme-family="glassy"]) .cacheList,
+:global([data-theme-family="glassy"]) .autoStartList {
+  border-radius: var(--app-radius-md);
+  background: var(--app-color-panel-raised);
+  box-shadow: var(--app-shadow-panel);
+  backdrop-filter: var(--app-surface-filter);
+  -webkit-backdrop-filter: var(--app-surface-filter);
+}
+
 .cacheRow {
   display: flex;
   flex-direction: column;
@@ -315,6 +383,10 @@
   overflow: visible;
 }
 
+:global([data-theme-family="glassy"]) .discordConnectionCard {
+  border-radius: var(--app-radius-md);
+}
+
 .discordWebhookField {
   flex: 1 1 auto;
   min-width: 0;
@@ -325,12 +397,22 @@
   align-self: start;
 }
 
+:global([data-theme-family="glassy"]) .discordEventCard {
+  border-radius: var(--app-radius-md);
+}
+
 .discordEventCardHeader {
   min-height: 42px;
   padding: var(--app-space-sm) var(--app-space-md);
   border-bottom: 1px solid var(--app-color-border-subtle);
   color: var(--app-color-text);
   background: var(--app-color-surface-control);
+}
+
+:global([data-theme-family="glassy"]) .discordEventCardHeader {
+  background: var(--app-color-panel);
+  backdrop-filter: var(--app-surface-filter);
+  -webkit-backdrop-filter: var(--app-surface-filter);
 }
 
 .discordEventRow {
@@ -361,6 +443,10 @@
   padding: var(--app-space-xs) var(--app-space-sm);
   border-radius: 0;
   background: var(--app-color-panel);
+}
+
+:global([data-theme-family="glassy"]) .discordPrivacyNote {
+  border-radius: var(--app-radius-sm);
 }
 
 @media (max-width: 720px) {

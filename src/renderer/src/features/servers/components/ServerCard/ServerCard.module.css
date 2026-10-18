@@ -1,7 +1,7 @@
 .card {
   position: relative;
   overflow: hidden;
-  border-radius: 0;
+  border-radius: var(--app-collection-radius);
   cursor: pointer;
   border-color: var(--app-color-border);
   background-color: var(--app-color-panel);
@@ -76,12 +76,12 @@
 .card:hover {
   border-color: var(--app-color-accent);
   background-image: none;
-  background-color: var(--app-color-surface-control);
+  background-color: var(--app-surface-hover);
 }
 
 .card[data-tone="stopped"]:hover {
   background-image: none;
-  background-color: var(--app-color-surface-control);
+  background-color: var(--app-surface-hover);
 }
 
 .card[data-tone="running"]:hover {

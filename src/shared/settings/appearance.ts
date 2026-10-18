@@ -42,19 +42,12 @@ export interface AppearanceSettings {
   themeFamily: ThemeFamilyId;
   scheme: ThemeScheme;
   panels: WorkspacePanelsId;
-  /**
-   * Glassy-only map scene behind frosted cards. Stored for every family so
-   * switching away from Glassy and back restores the operator's choice; other
-   * families ignore it.
-   */
-  canvasBackground: boolean;
 }
 
 export const DEFAULT_APPEARANCE_SETTINGS: AppearanceSettings = {
   themeFamily: DEFAULT_THEME_FAMILY,
   scheme: DEFAULT_THEME_SCHEME,
   panels: DEFAULT_WORKSPACE_PANELS_ID,
-  canvasBackground: false,
 };
 
 export function isThemeFamilyId(value: unknown): value is ThemeFamilyId {
@@ -82,7 +75,6 @@ export function normalizeAppearanceSettings(
     themeFamily: isThemeFamilyId(family) ? family : DEFAULT_THEME_FAMILY,
     scheme: isThemeScheme(scheme) ? scheme : DEFAULT_THEME_SCHEME,
     panels: parseWorkspacePanelsId(input.panels),
-    canvasBackground: input.canvasBackground === true,
   };
 }
 

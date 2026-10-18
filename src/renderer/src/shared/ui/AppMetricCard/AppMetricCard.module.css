@@ -6,10 +6,10 @@
   min-width: 0;
   height: 100%;
   padding: var(--app-space-xs) var(--app-space-sm) !important;
-  border-radius: 0;
+  border-radius: var(--app-collection-radius);
   border-color: var(--app-color-border);
   background: var(--app-color-panel);
-  box-shadow: none;
+  box-shadow: var(--app-collection-item-shadow);
   color: inherit;
   text-align: left;
   transition:
