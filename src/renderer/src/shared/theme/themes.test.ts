@@ -128,8 +128,7 @@ describe("theme registry (#PUX-004 Track B, #PUX-005-B)", () => {
 
     // Fluent does not restyle the field fill. Both families share the surface filter.
     const fluentInput = createAppThemeForAppearance(THEMES.dark, "compact").components?.Input?.styles as
-      | { input?: { backgroundColor?: string; backdropFilter?: string } }
-      | undefined;
+      { input?: { backgroundColor?: string; backdropFilter?: string } } | undefined;
     expect(fluentInput?.input?.backgroundColor).toBeUndefined();
     expect(fluentInput?.input?.backdropFilter).toBe("var(--app-surface-filter)");
     expect(inputStyles?.input).toMatchObject({ backdropFilter: "var(--app-surface-filter)" });

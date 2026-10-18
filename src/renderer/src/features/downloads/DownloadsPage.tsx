@@ -189,7 +189,11 @@ export function DownloadsPage(props: Props): ReactElement {
   );
 
   const consolePane = (
-    <div className={withAppSurface(appContentPaneClass, classes.consoleOnlyPane)} aria-label="SteamCMD console" data-steamcmd-console>
+    <div
+      className={withAppSurface(appContentPaneClass, classes.consoleOnlyPane)}
+      aria-label="SteamCMD console"
+      data-steamcmd-console
+    >
       <ConsoleSurface fill text={consoleBody} />
     </div>
   );
