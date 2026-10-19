@@ -281,7 +281,7 @@ describe("ClusterTributePanel", () => {
   it("keeps per-map settings intact when Save and apply runs with an empty cluster template", async () => {
     const user = userEvent.setup();
     installApi((id) => snapshot(id, gus));
-    // Default installApi returns no template; Save and apply must still patch keys only.
+    // Default installApi returns no template; Save must seed from the member, not persist tribute-only GUS.
     render(
       <AppProviders>
         <ClusterTributePanel
@@ -303,6 +303,105 @@ describe("ClusterTributePanel", () => {
     expect(savedPayload.gameUserSettings).toContain("UnrelatedSetting=keep-me");
     expect(savedPayload.gameUserSettings).toContain("PreventUploadItems=False");
     expect(savedPayload.gameUserSettings).toMatch(/TributeItemExpirationSeconds=\d+/);
+    expect(window.api.saveClusterIniTemplate).toHaveBeenCalledWith(
+      "alpha",
+      expect.objectContaining({
+        gameUserSettings: expect.stringContaining("UnrelatedSetting=keep-me"),
+      }),
+    );
+    expect(window.api.saveClusterIniTemplate).toHaveBeenCalledWith(
+      "alpha",
+      expect.objectContaining({
+        gameUserSettings: expect.stringContaining("PreventUploadItems=False"),
+      }),
+    );
+  });
+
+  it("seeds the cluster template from a member when Save runs with a tribute-only template", async () => {
+    const user = userEvent.setup();
+    const getClusterIniTemplate = vi.fn(async () => ({
+      ok: true,
+      data: {
+        clusterId: "alpha",
+        payload: {
+          gameUserSettings:
+            "[ServerSettings]\nTributeItemExpirationSeconds=86400\nMaxTributeItems=50\nMaxTributeDinos=20\nMaxTributeCharacters=10\nTributeDinoExpirationSeconds=86400\nTributeCharacterExpirationSeconds=0\n",
+          game: "",
+        },
+        updatedAt: "2026-08-05T00:00:00.000Z",
+      },
+    }));
+    installApi((id) => snapshot(id, gus));
+    window.api = { ...window.api, getClusterIniTemplate } as typeof window.api;
+
+    render(
+      <AppProviders>
+        <ClusterTributePanel
+          {...panelActions()}
+          clusterId="alpha"
+          members={[island]}
+          statuses={new Map([["srv-a", runtime("stopped")]])}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: /edit transfer settings/i }));
+    const editor = await screen.findByRole("dialog", { name: /edit cluster transfer settings/i });
+    await user.click(within(editor).getByRole("button", { name: /^save$/i }));
+
+    await waitFor(() => expect(window.api.saveClusterIniTemplate).toHaveBeenCalledTimes(1));
+    const templatePayload = vi.mocked(window.api.saveClusterIniTemplate).mock.calls[0]?.[1] as ServerIniPayload;
+    expect(templatePayload.gameUserSettings).toContain("UnrelatedSetting=keep-me");
+    expect(templatePayload.gameUserSettings).toContain("PreventUploadItems=False");
+    expect(window.api.saveServerIni).not.toHaveBeenCalled();
+    expect(window.api.readServerIni).not.toHaveBeenCalled();
+  });
+
+  it("does not read member INI files when Save already has a populated cluster template", async () => {
+    const user = userEvent.setup();
+    const getClusterIniTemplate = vi.fn(async () => ({
+      ok: true,
+      data: {
+        clusterId: "alpha",
+        payload: {
+          gameUserSettings: "[ServerSettings]\nSessionName=KeepTemplate\nUnrelatedTemplateValue=keep-too\n",
+          game: "",
+        },
+        updatedAt: "2026-08-05T00:00:00.000Z",
+      },
+    }));
+    installApi((id) => snapshot(id, gus));
+    window.api = { ...window.api, getClusterIniTemplate } as typeof window.api;
+
+    render(
+      <AppProviders>
+        <ClusterTributePanel
+          {...panelActions()}
+          clusterId="alpha"
+          members={[island, scorched]}
+          statuses={
+            new Map([
+              ["srv-a", runtime("stopped")],
+              ["srv-b", { ...runtime("stopped"), serverId: "srv-b" }],
+            ])
+          }
+        />
+      </AppProviders>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: /edit transfer settings/i }));
+    const editor = await screen.findByRole("dialog", { name: /edit cluster transfer settings/i });
+    await user.click(within(editor).getByRole("button", { name: /^save$/i }));
+
+    await waitFor(() => expect(window.api.saveClusterIniTemplate).toHaveBeenCalledTimes(1));
+    expect(window.api.readServerIni).not.toHaveBeenCalled();
+    expect(window.api.saveServerIni).not.toHaveBeenCalled();
+    expect(window.api.saveClusterIniTemplate).toHaveBeenCalledWith(
+      "alpha",
+      expect.objectContaining({
+        gameUserSettings: expect.stringContaining("UnrelatedTemplateValue=keep-too"),
+      }),
+    );
   });
 
   it("keeps applying to later members when an earlier member's apply rejects", async () => {
