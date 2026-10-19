@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
 import { CaretDown, Info } from "@phosphor-icons/react";
 import { ActionIcon, Alert, Button, Group, Menu, NumberInput, Stack, Text, Tooltip } from "@mantine/core";
-import type { ServerIniPayload, ServerIniSnapshot, ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import type { ServerIniSnapshot, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import { resolveServerRuntime } from "../../createClusterModel";
 import { templateApplyIneligibilityReason } from "../../templateApplyModel";
@@ -13,6 +13,7 @@ import {
   TRIBUTE_SLOT_KEYS,
   formatTributeDuration,
   readTributeValues,
+  collectClusterIniTemplateSeedPayloads,
   seedClusterIniTemplateBase,
   tributeSettingMeta,
   validateClusterWideValue,
@@ -132,16 +133,15 @@ export function ClusterWideEditor(props: Props): ReactElement {
       if (!existing.ok) throw new Error(existing.error ?? "Could not load the current cluster template");
       // Never persist a tribute-only / empty GUS as the cluster INI template —
       // Apply INI template would later replace member files with that sparse text.
-      const memberPayloads: ServerIniPayload[] = [];
-      for (const member of props.members) {
-        const cached = props.snapshots.get(member.id);
-        if (cached !== undefined) {
-          memberPayloads.push(cached.payload);
-          continue;
-        }
-        const latest = await window.api.readServerIni(member.id);
-        if (latest.ok) memberPayloads.push(latest.data.payload);
-      }
+      const memberPayloads = await collectClusterIniTemplateSeedPayloads(
+        existing.data?.payload,
+        props.members,
+        props.snapshots,
+        async (serverId) => {
+          const latest = await window.api.readServerIni(serverId);
+          return latest.ok ? latest.data.payload : null;
+        },
+      );
       const basePayload = seedClusterIniTemplateBase(existing.data?.payload, memberPayloads);
       const payload = withClusterWideTributeValues(basePayload, parsedValues);
       const preview = await window.api.previewClusterIniTemplate(props.clusterId, payload);
