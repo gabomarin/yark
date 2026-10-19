@@ -63,30 +63,26 @@
   background-color: #00aabada;
   mask-image:
     var(--app-shell-scene-grid),
-    radial-gradient(
-      ellipse at 50% 50%,
-      #000 0%,
-      rgba(0, 0, 0, 0.82) 28%,
-      rgba(0, 0, 0, 0.4) 52%,
-      transparent 78%
-    );
-  mask-size: 65px 112px, 100% 100%;
+    radial-gradient(ellipse at 50% 50%, #000 0%, rgba(0, 0, 0, 0.82) 28%, rgba(0, 0, 0, 0.4) 52%, transparent 78%);
+  mask-size:
+    65px 112px,
+    100% 100%;
   mask-repeat: repeat, no-repeat;
-  mask-position: 0 0, center;
+  mask-position:
+    0 0,
+    center;
   mask-composite: intersect;
   mask-mode: alpha;
   -webkit-mask-image:
     var(--app-shell-scene-grid),
-    radial-gradient(
-      ellipse at 50% 50%,
-      #000 0%,
-      rgba(0, 0, 0, 0.82) 28%,
-      rgba(0, 0, 0, 0.4) 52%,
-      transparent 78%
-    );
-  -webkit-mask-size: 65px 112px, 100% 100%;
+    radial-gradient(ellipse at 50% 50%, #000 0%, rgba(0, 0, 0, 0.82) 28%, rgba(0, 0, 0, 0.4) 52%, transparent 78%);
+  -webkit-mask-size:
+    65px 112px,
+    100% 100%;
   -webkit-mask-repeat: repeat, no-repeat;
-  -webkit-mask-position: 0 0, center;
+  -webkit-mask-position:
+    0 0,
+    center;
   -webkit-mask-composite: source-in;
 }
 

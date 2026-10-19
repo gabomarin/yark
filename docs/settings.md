@@ -80,13 +80,13 @@ the Server tab / workspace.
 
 ### Appearance (#PUX-004 Track B)
 
-| Control       | Storage                | Default     | Notes                                                                                                                                                                                |
-| ------------- | ---------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Display size  | SQLite `uiDensity`     | **compact** | `compact` \| `comfortable`; scales the active theme's spacing / radius / font tokens — see [design-system.md](design-system.md)                                                      |
-| Theme family  | SQLite `appearance.v1` | **fluent**  | Picker offers `fluent` and `plasma-breeze`. `glassy` stays in the registry and still renders when already saved, but it is not listed. An unknown or missing family falls back to Fluent. Also on the setup assistant Windows step |
-| Color scheme      | SQLite `appearance.v1` | **dark**    | `dark` \| `light` within the selected family (Fluent, Breeze, or Glassy). An unknown or missing scheme falls back to dark. Also on the setup assistant Windows step |
-| Background image  | SQLite `appearance.v1` | **on**      | Glassy only. Off clears the day or night scene, hex grid, and veil. Glass panels stay. A missing value stays on                                                               |
-| Server panels | SQLite `appearance.v1` | **auto**    | `auto` \| `drawers`; where the server workspace puts its server list and status panel (`src/shared/workspace/workspacePanels.ts`). Auto uses columns from 1600px, Drawers never does |
+| Control          | Storage                | Default     | Notes                                                                                                                                                                                                                              |
+| ---------------- | ---------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Display size     | SQLite `uiDensity`     | **compact** | `compact` \| `comfortable`; scales the active theme's spacing / radius / font tokens — see [design-system.md](design-system.md)                                                                                                    |
+| Theme family     | SQLite `appearance.v1` | **fluent**  | Picker offers `fluent` and `plasma-breeze`. `glassy` stays in the registry and still renders when already saved, but it is not listed. An unknown or missing family falls back to Fluent. Also on the setup assistant Windows step |
+| Color scheme     | SQLite `appearance.v1` | **dark**    | `dark` \| `light` within the selected family (Fluent, Breeze, or Glassy). An unknown or missing scheme falls back to dark. Also on the setup assistant Windows step                                                                |
+| Background image | SQLite `appearance.v1` | **on**      | Glassy only. Off clears the day or night scene, hex grid, and veil. Glass panels stay. A missing value stays on                                                                                                                    |
+| Server panels    | SQLite `appearance.v1` | **auto**    | `auto` \| `drawers`; where the server workspace puts its server list and status panel (`src/shared/workspace/workspacePanels.ts`). Auto uses columns from 1600px, Drawers never does                                               |
 
 Family, scheme, the Glassy background image, panels and density are independent: density scales the tokens of whichever theme is active, and the panels option only decides where the workspace puts its server list and status panel.
 

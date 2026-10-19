@@ -130,7 +130,9 @@ async function run() {
       await page.setViewportSize({ width: SIZE.width, height: SIZE.height });
       await page.waitForTimeout(400);
 
-      const mounted = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--ark-blue-9").trim());
+      const mounted = await page.evaluate(() =>
+        getComputedStyle(document.documentElement).getPropertyValue("--ark-blue-9").trim(),
+      );
       const expected = scheme === "dark" ? "#28d4ec" : "#0c7490";
       assert.equal(mounted.toLowerCase(), expected, `${scheme} accent is ${mounted}`);
 
@@ -138,15 +140,18 @@ async function run() {
       await page.locator("[data-overview-page]").waitFor({ state: "visible", timeout: 15000 });
       await page.locator("[data-server-card]").first().waitFor({ state: "visible", timeout: 15000 });
       report.push({ scheme, view: "overview", ...(await sample(page)) });
-      const iconButton = await page.getByRole("button", { name: "More options" }).first().evaluate((node) => {
-        const style = getComputedStyle(node);
-        return {
-          background: style.backgroundColor,
-          border: style.borderTopColor,
-          shadow: style.boxShadow,
-          filter: style.backdropFilter,
-        };
-      });
+      const iconButton = await page
+        .getByRole("button", { name: "More options" })
+        .first()
+        .evaluate((node) => {
+          const style = getComputedStyle(node);
+          return {
+            background: style.backgroundColor,
+            border: style.borderTopColor,
+            shadow: style.boxShadow,
+            filter: style.backdropFilter,
+          };
+        });
       report.push({ scheme, view: "icon-button", ...iconButton });
       await shot(page, outDir, `overview-${scheme}`);
 
@@ -182,7 +187,10 @@ async function run() {
       await goNav(page, "Settings");
       await page.getByRole("heading", { name: "Settings", level: 1 }).waitFor({ timeout: 10000 });
       await shot(page, outDir, `settings-${scheme}`);
-      await page.getByRole("navigation", { name: "Settings categories" }).getByRole("button", { name: "Appearance" }).click();
+      await page
+        .getByRole("navigation", { name: "Settings categories" })
+        .getByRole("button", { name: "Appearance" })
+        .click();
       await page.getByRole("heading", { name: "Appearance", level: 3 }).waitFor({ timeout: 10000 });
       await shot(page, outDir, `appearance-${scheme}`);
 

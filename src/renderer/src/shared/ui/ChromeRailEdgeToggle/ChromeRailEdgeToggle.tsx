@@ -25,12 +25,7 @@ export function ChromeRailEdgeToggle(props: Props): ReactElement {
   return (
     <span className={anchorClassName} style={props.style} data-direction={direction}>
       {/* Collapse opens into the sidenav. Right paints the label on the server cards. */}
-      <Tooltip
-        label={label}
-        position={direction === "collapse" ? "left" : "right"}
-        withArrow
-        openDelay={200}
-      >
+      <Tooltip label={label} position={direction === "collapse" ? "left" : "right"} withArrow openDelay={200}>
         <UnstyledButton
           type="button"
           aria-label={label}

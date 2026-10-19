@@ -64,9 +64,7 @@ describe("appearance theme selection", () => {
       backgroundImage: true,
     });
     expect(
-      parseAppearanceSettings(
-        '{"themeFamily":"glassy","scheme":"dark","panels":"auto","backgroundImage":false}',
-      ),
+      parseAppearanceSettings('{"themeFamily":"glassy","scheme":"dark","panels":"auto","backgroundImage":false}'),
     ).toMatchObject({ backgroundImage: false });
   });
 });

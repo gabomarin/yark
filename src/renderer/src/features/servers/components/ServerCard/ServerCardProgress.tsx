@@ -24,7 +24,11 @@ function ProgressLabel({
 }): ReactElement {
   if (onOpenDownloads === undefined) {
     return (
-      <Text size="sm" className={waiting ? classes.progressWaitingLabel : undefined} data-progress-waiting={waiting || undefined}>
+      <Text
+        size="sm"
+        className={waiting ? classes.progressWaitingLabel : undefined}
+        data-progress-waiting={waiting || undefined}
+      >
         {shortProgressLabel}
       </Text>
     );

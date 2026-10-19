@@ -300,7 +300,8 @@ function glassyMaterials(input: {
     shellGrainOpacity: "0",
     chromeBorder: "color-mix(in srgb, var(--app-color-accent) 34%, transparent)",
     navSelectedBorder: "1px solid var(--app-color-border)",
-    navSelectedShadow: "inset 3px 0 0 var(--app-color-accent), 0 0 0 1px color-mix(in srgb, var(--app-color-accent) 16%, transparent)",
+    navSelectedShadow:
+      "inset 3px 0 0 var(--app-color-accent), 0 0 0 1px color-mix(in srgb, var(--app-color-accent) 16%, transparent)",
     surfaceHover: "color-mix(in srgb, var(--app-color-accent) 18%, var(--app-color-panel-raised))",
     splitGap: "var(--app-space-sm)",
     splitPadding: "var(--app-space-md)",
@@ -398,8 +399,7 @@ export const glassyDarkMaterials: AppThemeMaterials = glassyMaterials({
   contentPaneBg: "rgba(32,72,90,0.12)",
   nestedRowBg: "rgba(32,72,90,0.56)",
   chipBg: "rgba(46,88,108,0.30)",
-  glassSheen:
-    "linear-gradient(180deg, rgba(214, 248, 255, 0.10) 0%, rgba(214, 248, 255, 0.03) 14%, transparent 32%)",
+  glassSheen: "linear-gradient(180deg, rgba(214, 248, 255, 0.10) 0%, rgba(214, 248, 255, 0.03) 14%, transparent 32%)",
   glassRim: "inset 0 1px 0 rgba(226, 250, 255, 0.28)",
   borderSubtle: "rgba(95, 197, 220, 0.22)",
   border: "rgba(95, 197, 220, 0.38)",
@@ -481,8 +481,7 @@ export const glassyLightMaterials: AppThemeMaterials = glassyMaterials({
   contentPaneBg: "rgba(248,250,252,0.28)",
   nestedRowBg: "rgba(248,250,252,0.82)",
   chipBg: "rgba(220, 230, 236, 0.55)",
-  glassSheen:
-    "linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.12) 16%, transparent 38%)",
+  glassSheen: "linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.12) 16%, transparent 38%)",
   glassRim: "inset 0 1px 0 rgba(255, 255, 255, 0.75)",
   borderSubtle: "rgba(22, 32, 40, 0.08)",
   border: "rgba(22, 32, 40, 0.14)",

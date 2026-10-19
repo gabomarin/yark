@@ -86,9 +86,7 @@ describe("theme registry (#PUX-004 Track B, #PUX-005-B)", () => {
     expect(opaqueMaterials.menuShadow).toBe("var(--popover-shadow, none)");
     expect(THEME_FAMILIES.glassy.light.materials.notificationBg).toBe("rgba(248,250,252,0.82)");
     expect(THEME_FAMILIES.glassy.dark.materials.notificationBg).toBe("rgba(32,72,90,0.56)");
-    expect(opaqueMaterials.notificationBg).toBe(
-      "light-dark(var(--mantine-color-white), var(--mantine-color-dark-6))",
-    );
+    expect(opaqueMaterials.notificationBg).toBe("light-dark(var(--mantine-color-white), var(--mantine-color-dark-6))");
     expect(opaqueMaterials.notificationShadow).toBe("var(--mantine-shadow-lg)");
     expect(THEME_FAMILIES.glassy.dark.materials.downloadsConsoleInset).toBe("var(--app-space-md)");
     expect(opaqueMaterials.downloadsConsoleInset).toBe("var(--app-space-xs)");
@@ -114,9 +112,7 @@ describe("theme registry (#PUX-004 Track B, #PUX-005-B)", () => {
     expect(THEME_FAMILIES.glassy.light.materials.mastBg).toBe("rgba(248,250,252,0.64)");
     expect(THEME_FAMILIES.glassy.light.materials.overviewStageBg).toBe("rgba(248,250,252,0.64)");
     expect(THEME_FAMILIES.glassy.light.materials.overviewStagePad).toBe("var(--app-space-sm)");
-    expect(THEME_FAMILIES.glassy.light.materials.overviewStageBorder).toBe(
-      "1px solid var(--app-color-border-subtle)",
-    );
+    expect(THEME_FAMILIES.glassy.light.materials.overviewStageBorder).toBe("1px solid var(--app-color-border-subtle)");
     expect(THEME_FAMILIES.glassy.light.materials.overviewAsideBg).toBe("rgba(248,250,252,0.64)");
     expect(THEME_FAMILIES.glassy.dark.materials.overviewStageBg).toBe("transparent");
     expect(THEME_FAMILIES.glassy.dark.materials.overviewStagePad).toBe("0px");
@@ -168,9 +164,7 @@ describe("theme registry (#PUX-004 Track B, #PUX-005-B)", () => {
     expect(THEME_FAMILIES.glassy.light.materials.shellSceneGrid).toMatch(/url\(/);
     expect(THEME_FAMILIES.glassy.light.materials.shellSceneGrid).toMatch(/hexagon|\.svg|svg/i);
     expect(THEME_FAMILIES.glassy.light.materials.shellSceneVeil).toContain("radial-gradient");
-    expect(THEME_FAMILIES.glassy.light.materials.shellSceneFilter).toBe(
-      "blur(8px) saturate(140%) brightness(0.78)",
-    );
+    expect(THEME_FAMILIES.glassy.light.materials.shellSceneFilter).toBe("blur(8px) saturate(140%) brightness(0.78)");
     expect(opaqueMaterials.shellScene).toBe("none");
     expect(opaqueMaterials.shellSceneGrid).toBe("none");
     expect(opaqueMaterials.shellSceneVeil).toBe("transparent");
@@ -178,9 +172,7 @@ describe("theme registry (#PUX-004 Track B, #PUX-005-B)", () => {
     expect(glassyVars["--app-nav-selected-border"]).toBe("1px solid var(--app-color-border)");
     expect(glassyVars["--app-sidebar-edge"]).toBe("color-mix(in srgb, var(--app-color-accent) 45%, transparent)");
     expect(glassyVars["--app-input-well-bg"]).toBe("color-mix(in srgb, var(--ark-gray-2) 72%, transparent)");
-    expect(glassyVars["--app-attention-light"]).toBe(
-      "color-mix(in srgb, var(--app-color-attention) 12%, transparent)",
-    );
+    expect(glassyVars["--app-attention-light"]).toBe("color-mix(in srgb, var(--app-color-attention) 12%, transparent)");
     expect(glassyVars["--app-list-vessel-bg"]).toBe("rgba(42, 84, 102, 0.86)");
     expect(glassyVars["--app-icon-button-bg"]).toBe("rgba(46,88,108,0.28)");
     expect(glassyVars["--app-icon-button-filter"]).toBe("var(--app-surface-raised-filter)");

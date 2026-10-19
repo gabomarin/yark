@@ -27,7 +27,10 @@ export function createFluentComponents(density: UiDensity, theme: AppTheme): Man
    * ActionIcon's omitted variant is subtle, so the caller passes that default.
    * Red and other semantic fills stay solid.
    */
-  const isAccentFilled = (props: { variant?: string | undefined; color?: string | undefined }, omitted: "filled" | "subtle") => {
+  const isAccentFilled = (
+    props: { variant?: string | undefined; color?: string | undefined },
+    omitted: "filled" | "subtle",
+  ) => {
     const variant = props.variant ?? omitted;
     const accent = props.color === undefined || props.color === "blue";
     return variant === "filled" && accent;
@@ -461,7 +464,8 @@ export function createFluentComponents(density: UiDensity, theme: AppTheme): Man
       styles: (_mantineTheme: unknown, props: { variant?: string | undefined; color?: string | undefined }) => {
         if (isAccentFilled(props, "subtle")) return { root: accentFilledShine };
         const variant = props.variant;
-        const glass = variant === undefined || variant === "subtle" || variant === "transparent" || variant === "default";
+        const glass =
+          variant === undefined || variant === "subtle" || variant === "transparent" || variant === "default";
         if (!glass) return {};
         return {
           root: {
