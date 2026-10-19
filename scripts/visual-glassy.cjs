@@ -32,42 +32,45 @@ const ROUTES = [
 function seedServers(profileDir) {
   const dbPath = path.join(profileDir, "yark-server-manager.db");
   const db = new DatabaseSync(dbPath);
-  const now = new Date().toISOString();
-  const insert = db.prepare(
-    `INSERT INTO servers (
+  try {
+    const now = new Date().toISOString();
+    const insert = db.prepare(
+      `INSERT INTO servers (
       id, name, map, install_dir, enabled, session_name,
       game_port, query_port, rcon_port,
       server_password, admin_password,
       cluster_id, cluster_dir, extra_args, mods,
       disabled_mods, mod_metadata_cache, created_at, updated_at
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  );
-  for (let i = 0; i < 2; i += 1) {
-    const installDir = path.join(profileDir, "servers", `server-${i}`);
-    fs.mkdirSync(installDir, { recursive: true });
-    insert.run(
-      `visual-glassy-${i}`,
-      i === 0 ? "The Island" : "Lost Colony",
-      i === 0 ? "TheIsland_WP" : "LostColony_WP",
-      installDir,
-      1,
-      i === 0 ? "Island session" : "Colony session",
-      18000 + i * 10,
-      38000 + i * 10,
-      39000 + i * 10,
-      null,
-      "admin1234",
-      null,
-      null,
-      "[]",
-      "[]",
-      "[]",
-      "{}",
-      now,
-      now,
     );
+    for (let i = 0; i < 2; i += 1) {
+      const installDir = path.join(profileDir, "servers", `server-${i}`);
+      fs.mkdirSync(installDir, { recursive: true });
+      insert.run(
+        `visual-glassy-${i}`,
+        i === 0 ? "The Island" : "Lost Colony",
+        i === 0 ? "TheIsland_WP" : "LostColony_WP",
+        installDir,
+        1,
+        i === 0 ? "Island session" : "Colony session",
+        18000 + i * 10,
+        38000 + i * 10,
+        39000 + i * 10,
+        null,
+        "admin1234",
+        null,
+        null,
+        "[]",
+        "[]",
+        "[]",
+        "{}",
+        now,
+        now,
+      );
+    }
+  } finally {
+    db.close();
   }
-  db.close();
 }
 
 async function goNav(page, label) {
@@ -89,7 +92,7 @@ async function sample(page) {
     const pick = (name) => root.getPropertyValue(name).trim();
     const card = document.querySelector("[data-server-card]");
     const cardStyle = card === null ? null : getComputedStyle(card);
-    const dimmed = document.querySelector("[data-dimmed], .mantine-Text-root[data-c='dimmed'], .mantine-Text-root");
+    const dimmed = document.querySelector("[data-dimmed], .mantine-Text-root[data-c='dimmed']");
     return {
       scheme: document.documentElement.getAttribute("data-mantine-color-scheme"),
       panel: pick("--app-color-panel"),
@@ -120,11 +123,10 @@ async function run() {
 
   for (const scheme of SCHEMES) {
     const profileDir = fs.mkdtempSync(path.join(os.tmpdir(), `yark-visual-glassy-${scheme}-`));
-    seedAppearance(profileDir, { family: "glassy", scheme });
-    seedServers(profileDir);
-
     let app = null;
     try {
+      seedAppearance(profileDir, { family: "glassy", scheme });
+      seedServers(profileDir);
       app = await launchElectronApp({ profileDir });
       const page = await waitForOverview(app);
       await page.setViewportSize({ width: SIZE.width, height: SIZE.height });

@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import { ArrowDown, ArrowUp, ArrowCounterClockwise, Pause, Play, ProhibitInset, X } from "@phosphor-icons/react";
 import { ActionIcon, Progress, Tooltip, UnstyledButton } from "@mantine/core";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
+import { appRaisedSurfaceClass, withAppSurface } from "@ui/AppSurface/appSurfaceClassName";
 import { downloadRowMeta } from "./downloadsCopy";
 import type { DownloadRow, DownloadRowKind } from "./downloadsModel";
 import classes from "./DownloadsPage.module.css";
@@ -28,7 +29,7 @@ export function DownloadRowButton(props: {
   const { row } = props;
   return (
     <div
-      className={classes.rowButton}
+      className={withAppSurface(appRaisedSurfaceClass, classes.rowButton)}
       data-selected={props.selected || undefined}
       data-kind={row.kind}
       data-download-row={row.id}

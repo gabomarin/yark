@@ -1,6 +1,6 @@
 import { AppShell } from "@mantine/core";
 import { CloseButton, Group, Stack } from "@mantine/core";
-import { useUiDensity } from "@app/AppProviders";
+import { useShellScene, useUiDensity } from "@app/AppProviders";
 import { Sidebar, type Route } from "@layout/Sidebar/Sidebar";
 import { useSidebarRail } from "@layout/useSidebarRail";
 import { AppBusyOverlay, type AppBusyOverlayContent } from "@ui/AppBusyOverlay/AppBusyOverlay";
@@ -43,6 +43,7 @@ export function AppShellLayout({ children, ...props }: Props): ReactElement {
     ...shellProps
   } = props;
   const density = useUiDensity();
+  const shellScene = useShellScene();
   const fullNavbarWidth = density === "compact" ? 212 : 248;
   const sidebarRail = useSidebarRail(fullNavbarWidth);
 
@@ -56,9 +57,13 @@ export function AppShellLayout({ children, ...props }: Props): ReactElement {
         main: classes.main,
       }}
     >
-      <div className={classes.sceneBlur} aria-hidden="true" />
-      <div className={classes.sceneGrid} aria-hidden="true" />
-      <div className={classes.sceneVeil} aria-hidden="true" />
+      {shellScene ? (
+        <div className={classes.scene} data-shell-scene="">
+          <div className={classes.sceneBlur} aria-hidden="true" />
+          <div className={classes.sceneGrid} aria-hidden="true" />
+          <div className={classes.sceneVeil} aria-hidden="true" />
+        </div>
+      ) : null}
       <AppShell.Navbar>
         <Sidebar
           {...shellProps}

@@ -43,6 +43,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- On a short window the sidebar navigation scrolls, so Quit stays on screen. Download rows outside the flush queue keep their border.
 - **Glassy** light toasts keep a dark title and message. The message was using the hairline color, so it disappeared on the toast.
 - Fluent and Plasma Breeze dark primary buttons keep a white label and icon.
 - Plasma Breeze **Start** uses the same accent blue as **New server**. Filled primaries stay on `#3daee9` instead of a darker button blue.

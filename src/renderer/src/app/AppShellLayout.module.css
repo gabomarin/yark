@@ -36,6 +36,10 @@
  * Photo, then grid, then the lens. All sit under the navbar, so the sidebar
  * plate covers them. The grid mask fades the mesh away; the lens finishes that.
  */
+.scene {
+  display: contents;
+}
+
 .sceneBlur,
 .sceneGrid,
 .sceneVeil {
