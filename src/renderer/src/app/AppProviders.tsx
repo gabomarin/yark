@@ -5,7 +5,7 @@ import { MantineProvider } from "@mantine/core";
 import { DatesProvider } from "@mantine/dates";
 import { createContext, useContext, useLayoutEffect, useMemo, type PropsWithChildren } from "react";
 import { createAppCssVariablesResolverForAppearance, createAppThemeForAppearance } from "@theme/theme";
-import { resolveThemeSelection } from "@theme/themes";
+import { resolveThemeSelection, withoutSceneBackground } from "@theme/themes";
 import type { UiDensity } from "@theme/tokens";
 import {
   DEFAULT_WORKSPACE_PANELS_OPTION,
@@ -34,6 +34,8 @@ interface Props extends PropsWithChildren {
   density?: UiDensity;
   /** Appearance family + scheme. Unknown selections fall back to the shipped family/scheme. */
   themeSelection?: ThemeSelection | null;
+  /** Glassy night scene. Off clears the photo, grid, and veil. */
+  sceneBackground?: boolean;
   /** Server-workspace panels option. Unknown ids fall back to Auto. */
   workspacePanels?: WorkspacePanelsId | string | null;
 }
@@ -42,17 +44,17 @@ export function AppProviders({
   children,
   density = "compact",
   themeSelection = null,
+  sceneBackground = true,
   workspacePanels = null,
 }: Props): ReactElement {
   const themeFamily = themeSelection?.family;
   const themeScheme = themeSelection?.scheme;
-  const appearance = useMemo(
-    () =>
-      resolveThemeSelection(
-        themeFamily === undefined || themeScheme === undefined ? null : { family: themeFamily, scheme: themeScheme },
-      ),
-    [themeFamily, themeScheme],
-  );
+  const appearance = useMemo(() => {
+    const selected = resolveThemeSelection(
+      themeFamily === undefined || themeScheme === undefined ? null : { family: themeFamily, scheme: themeScheme },
+    );
+    return sceneBackground ? selected : withoutSceneBackground(selected);
+  }, [themeFamily, themeScheme, sceneBackground]);
   const panels = useMemo(() => resolveWorkspacePanelsOption(workspacePanels), [workspacePanels]);
   const theme = useMemo(() => {
     const base = createAppThemeForAppearance(appearance, density);

@@ -17,6 +17,7 @@
   min-height: 0;
   height: 100%;
   overflow: hidden;
+  background: var(--app-server-rail-bg);
   transition:
     flex-basis var(--app-motion-base) var(--app-ease-standard),
     width var(--app-motion-base) var(--app-ease-standard);
@@ -51,6 +52,8 @@
   min-height: 0;
   height: 100%;
   overflow: hidden;
+  /* Same plate as the server column, so the seam reads without a heavier line. */
+  background: var(--app-server-rail-bg);
 }
 
 .side > aside {

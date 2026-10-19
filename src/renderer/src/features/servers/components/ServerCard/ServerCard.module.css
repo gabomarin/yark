@@ -7,7 +7,8 @@
   cursor: pointer;
   border-color: var(--app-color-border);
   background-color: var(--app-panel-surface-bg);
-  background-image: none;
+  background-image: var(--app-glass-sheen);
+  box-shadow: var(--app-shadow-panel);
   /* The Card recipe sets an inline backdrop blur. Inside the overview
      scrollport that blur paints one vertical glow from the Stopped metric
      through every server card. The translucent fill stays. */

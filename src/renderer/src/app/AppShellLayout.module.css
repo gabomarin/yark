@@ -14,6 +14,95 @@
     );
 }
 
+/*
+ * One scene for the whole window, above the opaque shell wash and below the
+ * navbar and main. `none` paints nothing, so Fluent and Breeze stay flat.
+ * Fixed to the viewport so a translucent sidebar and the content column crop
+ * the same picture.
+ */
+.shell::before {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  content: "";
+  background-image: var(--app-shell-scene);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+}
+
+/*
+ * Photo, then grid, then the lens. All sit under the navbar, so the sidebar
+ * plate covers them. The grid mask fades the mesh away; the lens finishes that.
+ */
+.sceneBlur,
+.sceneGrid,
+.sceneVeil {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.sceneBlur {
+  backdrop-filter: var(--app-shell-scene-filter);
+  -webkit-backdrop-filter: var(--app-shell-scene-filter);
+}
+
+.sceneGrid {
+  /* Blur must live here. On the masked pane it runs before the hexes are cut, so a solid fill has no edge to soften. */
+  opacity: 0.09;
+  filter: blur(1.4px);
+}
+
+.sceneGrid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: #00aabada;
+  mask-image:
+    var(--app-shell-scene-grid),
+    radial-gradient(
+      ellipse at 50% 50%,
+      #000 0%,
+      rgba(0, 0, 0, 0.82) 28%,
+      rgba(0, 0, 0, 0.4) 52%,
+      transparent 78%
+    );
+  mask-size: 65px 112px, 100% 100%;
+  mask-repeat: repeat, no-repeat;
+  mask-position: 0 0, center;
+  mask-composite: intersect;
+  mask-mode: alpha;
+  -webkit-mask-image:
+    var(--app-shell-scene-grid),
+    radial-gradient(
+      ellipse at 50% 50%,
+      #000 0%,
+      rgba(0, 0, 0, 0.82) 28%,
+      rgba(0, 0, 0, 0.4) 52%,
+      transparent 78%
+    );
+  -webkit-mask-size: 65px 112px, 100% 100%;
+  -webkit-mask-repeat: repeat, no-repeat;
+  -webkit-mask-position: 0 0, center;
+  -webkit-mask-composite: source-in;
+}
+
+/* Daylight plate: a low cyan, not white, so it does not add to the milky veil. */
+:global([data-mantine-color-scheme="light"]) .sceneGrid {
+  opacity: 0.06;
+}
+
+:global([data-mantine-color-scheme="light"]) .sceneGrid::before {
+  background-color: rgba(12, 116, 144, 0.65);
+}
+
+.sceneVeil {
+  background: var(--app-shell-scene-veil);
+}
+
 /* Identity: the shell carries a faint brand texture on `.main::before` with
  * `z-index: -1`: above the pane fill, below every child, so the mask fades the
  * *texture* and not the UI. Strongest where the app is empty and gone under the

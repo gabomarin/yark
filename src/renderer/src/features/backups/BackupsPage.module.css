@@ -41,7 +41,9 @@
 
 .volumeCard {
   border-radius: var(--app-panel-radius);
-  background: var(--app-color-panel);
+  background-color: var(--app-float-panel-bg);
+  background-image: var(--app-glass-sheen);
+  box-shadow: var(--app-glass-rim);
 }
 
 .statWarning {
@@ -56,11 +58,13 @@
   background: color-mix(in srgb, var(--app-color-panel) 45%, transparent);
 }
 
-.healthCardHeader {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background: var(--app-color-panel);
+/* The scroll column must not paint its own sheet. A translucent page plate
+   showed as a square behind each rounded server card. */
+.toolShell .content {
+  background-color: transparent;
+  background-image: none;
+  border: none;
+  box-shadow: none;
 }
 
 .policyField {
@@ -92,10 +96,11 @@
   padding: var(--app-space-xs) var(--app-space-xs);
   border-radius: var(--app-tab-attached-radius);
   border: 1px solid var(--app-color-border-subtle);
-  background: var(--app-raised-surface-bg);
-  box-shadow: var(--app-raised-surface-shadow);
-  backdrop-filter: var(--app-surface-filter);
-  -webkit-backdrop-filter: var(--app-surface-filter);
+  /* The tab list already draws the rule this panel meets. */
+  border-top: none;
+  background-color: var(--app-raised-surface-bg);
+  background-image: var(--app-glass-sheen);
+  box-shadow: var(--app-glass-rim);
 }
 
 .kindSettings :global(.mantine-InputWrapper-root) {

@@ -69,6 +69,25 @@ body,
   background-clip: padding-box;
 }
 
+/*
+ * Tab plates. A theme `styles` background becomes an inline color and paints
+ * the active tab with the inactive fill, so the split lives here.
+ * `:not([data-active])` beats Mantine's transparent tab. Hover keeps Mantine's
+ * own hover color. Fluent and Breeze resolve these variables to clear / the
+ * existing accent wash.
+ */
+.mantine-Tabs-tab:not([data-active]) {
+  background-color: var(--app-tab-inactive-bg);
+}
+
+.mantine-Tabs-tab[data-active] {
+  background-color: var(--app-tab-active-bg);
+}
+
+.mantine-Tabs-tab[data-active]:hover {
+  background-color: var(--app-tab-active-hover-bg);
+}
+
 body {
   background: var(--app-color-bg);
   color: var(--app-color-text);
@@ -143,9 +162,27 @@ body {
   background: transparent;
 }
 
-/* Fluent 2 is square: toasts use the same square surface grammar as the panels. */
-.mantine-Notification-root {
-  border-radius: 0;
+/* Toasts follow the active plate: square and solid on Fluent, glass on Glassy. */
+[data-mantine-color-scheme] .mantine-Notification-root {
+  border-radius: var(--app-panel-radius);
+  background-color: var(--app-notification-bg);
+  background-image: var(--app-glass-sheen);
+  backdrop-filter: var(--app-surface-filter);
+  -webkit-backdrop-filter: var(--app-surface-filter);
+  box-shadow: var(--app-notification-shadow);
+}
+
+/*
+ * Toast copy. Mantine paints the message with gray-6, and the light map uses
+ * that step for the hairline, so Glassy light messages disappeared on the
+ * toast. Title and message use the text roles instead.
+ */
+[data-mantine-color-scheme="light"] .mantine-Notification-title {
+  color: var(--app-color-text);
+}
+
+[data-mantine-color-scheme="light"] .mantine-Notification-description {
+  color: var(--app-color-muted);
 }
 
 /*

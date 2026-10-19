@@ -56,6 +56,9 @@ export function AppShellLayout({ children, ...props }: Props): ReactElement {
         main: classes.main,
       }}
     >
+      <div className={classes.sceneBlur} aria-hidden="true" />
+      <div className={classes.sceneGrid} aria-hidden="true" />
+      <div className={classes.sceneVeil} aria-hidden="true" />
       <AppShell.Navbar>
         <Sidebar
           {...shellProps}

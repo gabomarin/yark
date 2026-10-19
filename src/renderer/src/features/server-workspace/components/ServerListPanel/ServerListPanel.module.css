@@ -206,8 +206,12 @@
 
 .item[data-status-tone="muted"] .statusDot,
 .item[data-status-tone="muted"] .statusDotInline,
-.statusDotInline[data-status-tone="muted"] {
-  background: var(--mantine-color-gray-6);
+.statusDotInline[data-status-tone="muted"],
+.item[data-status-tone="neutral"] .statusDot,
+.item[data-status-tone="neutral"] .statusDotInline,
+.statusDotInline[data-status-tone="neutral"] {
+  /* Stopped. gray-6 is the hairline, so the dot vanished on the light rail. */
+  background: var(--app-color-muted);
 }
 
 .itemBody {

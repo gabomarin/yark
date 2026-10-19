@@ -19,12 +19,31 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- **Glassy** dark shows the night scene between cards: a more open sidebar, denser working cards, and a denser row inside them. Attention banners use that same glass, and Start stays closer to solid. Light keeps the page sheet more open than the card and draws the hex in a faint cyan.
+- **Glassy** dark darkens the night scene across the whole window so the moon does not wash out the cards. Light dimmed copy, including the server-list summary, the server header, and section tabs, is darker so it stays readable on the day scene, and the day photo stays a step darker, with only a light blur.
+- Backup server cards no longer sit on a square page plate, and **Create cluster** sits above the cluster tab rule so that line does not show through the button.
+- Server backup kind tabs keep a single rule under the tab. Server information panels open a gap on Glassy. Launch section labels and flag names use the same text color as the other workspace sections. The cluster INI template footer matches the dialog surface and its bottom corners.
+- **Glassy** primary actions such as **Start** and **New server** use a solid accent. Idle buttons keep the glass plate. Stop stays solid.
+- **Glassy** dark **Start** and **New server** use a deeper teal with a white label, so the button sits apart from the night cyan.
+- **Glassy** **Start** and **New server** keep a short veil in dark and light. Hover lightens that teal one step, so it stays clear of a disabled control, and the button keeps the same top highlight as the other buttons.
+- **Glassy** inactive tabs keep a quiet plate so the label sits on a surface. The active tab is a step lighter and still carries the accent line.
+- **Glassy** menus, including the hosted-resource chooser, keep an edge shadow so the list sits above the glass.
+- **Glassy** toasts use the glass plate, with the same corner and edge as the other panels.
+- **Glassy** Downloads holds the queue on the server-rail plate, so the empty list is not the raw scene. The SteamCMD console stays black and sits inset in that pane.
+- **Glassy** light uses one neutral milk for the sidebar, the server column, and the workspace title, so the day photo does not dye that chrome green. The status column uses that same plate, so its seam stays visible. Overview holds the server list and Recent activity on that milk too, as separate plates with the card corner and a gap of the scene between them. The sidebar version stays text, so **Quit YARK** does not share a plate with it.
+- A stopped server keeps a visible status dot in the server list, expanded and collapsed.
 - The setup assistant Windows step includes theme family and color scheme, so first-run offers **Glassy** the same way Settings → Appearance does.
+- **Glassy** light uses the same cyan as dark, darkened to `#0c7490` so a white label still clears. Panels, borders, and idle buttons stay neutral white instead of the jungle green.
+- **Glassy** lets more of the scene through secondary plates and idle controls: Recent activity, nested workspace cards, backup volume cards, maintenance slabs, Discord notification cards, neutral chips, menus, and default or subtle buttons. Those plates carry a faint top highlight so they read as glass. Stop and the cluster members table stay as they were. Fluent and Plasma Breeze stay solid.
+- **Glassy** panels and cards use that same thin plate. The scene stays sharp through them, with the top highlight and no frost blur. List tables stay solid. Fluent and Plasma Breeze stay solid.
+- Settings → Appearance includes a **Background image** switch for Glassy. Off clears the day or night scene, hex grid, and veil; the glass panels stay. The choice is remembered, and a missing value stays on.
 - Queued and paused job labels on server cards use an accent chip, so a waiting install or update is visible on every theme.
 - Cluster **Remove servers** uses the same solid red fill as workspace **Delete server**.
 
 ### Fixed
 
+- **Glassy** light toasts keep a dark title and message. The message was using the hairline color, so it disappeared on the toast.
+- Fluent and Plasma Breeze dark primary buttons keep a white label and icon.
 - Plasma Breeze **Start** uses the same accent blue as **New server**. Filled primaries stay on `#3daee9` instead of a darker button blue.
 - Outside-change Configuration banner clears when disk matches the Save baseline again, conflict Save captures disk details for View outside changes, and semantic INI edits keep mixed line endings / duplicate occurrence order (#667).
 

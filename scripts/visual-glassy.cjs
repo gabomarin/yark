@@ -131,7 +131,7 @@ async function run() {
       await page.waitForTimeout(400);
 
       const mounted = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--ark-blue-9").trim());
-      const expected = scheme === "dark" ? "#28d4ec" : "#14786f";
+      const expected = scheme === "dark" ? "#28d4ec" : "#0c7490";
       assert.equal(mounted.toLowerCase(), expected, `${scheme} accent is ${mounted}`);
 
       await goNav(page, "Servers");

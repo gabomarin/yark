@@ -23,7 +23,9 @@
 
 .slab {
   border: 1px solid var(--app-color-border);
-  background: var(--app-color-panel);
+  background-color: var(--app-float-panel-bg);
+  background-image: var(--app-glass-sheen);
+  box-shadow: var(--app-glass-rim);
   border-radius: var(--app-panel-radius);
   overflow: hidden;
 }

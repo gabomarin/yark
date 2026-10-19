@@ -59,6 +59,7 @@
   min-height: 0;
   overflow: auto;
   padding: var(--app-queue-section-padding);
+  background: var(--app-server-rail-bg);
 }
 
 .consoleOnlyPane {
@@ -66,7 +67,7 @@
   height: 100%;
   min-height: 0;
   flex-direction: column;
-  padding: var(--app-space-xs);
+  padding: var(--app-downloads-console-inset);
 }
 
 .consoleStack {

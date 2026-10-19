@@ -99,9 +99,9 @@
   background: transparent;
 }
 
-/* Tabs sit on the chrome shell: transparent inactive, hover/active fill only. */
-.tabList :global(.mantine-Tabs-tab) {
-  background: transparent;
+/* Inactive tabs keep their own plate. The strip behind them stays clear. */
+.tabList :global(.mantine-Tabs-tab:not([data-active])) {
+  background: var(--app-tab-inactive-bg);
   color: var(--app-color-muted);
 }
 
@@ -111,13 +111,13 @@
 }
 
 .tabList :global(.mantine-Tabs-tab[data-active]) {
-  background: color-mix(in srgb, var(--app-color-accent) 12%, var(--app-color-surface-control-hover));
+  background: var(--app-tab-active-bg);
   color: var(--app-color-text);
   box-shadow: inset 0 -1px 0 var(--app-color-accent);
 }
 
 .tabList :global(.mantine-Tabs-tab[data-active]:hover) {
-  background: color-mix(in srgb, var(--app-color-accent) 16%, var(--app-color-surface-control-hover));
+  background: var(--app-tab-active-hover-bg);
   color: var(--app-color-text);
 }
 

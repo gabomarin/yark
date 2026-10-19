@@ -240,3 +240,20 @@ export function resolveThemeSelection(selection: ThemeSelection | null | undefin
   }
   return DEFAULT_APP_THEME;
 }
+
+/** Drops the photo, hex grid, and darkening wash. Glass panels stay. */
+export function withoutSceneBackground(theme: AppTheme): AppTheme {
+  if (theme.materials.shellScene === "none" && theme.materials.shellSceneGrid === "none") {
+    return theme;
+  }
+  return {
+    ...theme,
+    materials: {
+      ...theme.materials,
+      shellScene: "none",
+      shellSceneGrid: "none",
+      shellSceneVeil: "transparent",
+      shellSceneFilter: "none",
+    },
+  };
+}

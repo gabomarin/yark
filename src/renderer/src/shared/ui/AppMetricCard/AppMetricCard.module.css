@@ -8,8 +8,9 @@
   padding: var(--app-space-xs) var(--app-space-sm) !important;
   border-radius: var(--app-collection-radius) !important;
   border-color: var(--app-color-border);
-  background: var(--app-panel-surface-bg);
-  box-shadow: var(--app-collection-item-shadow);
+  background-color: var(--app-panel-surface-bg);
+  background-image: var(--app-glass-sheen);
+  box-shadow: var(--app-shadow-panel);
   /* Same seam as the server cards: an inline backdrop blur on these tiles
      continues as a vertical glow down the list. The fill and shadow stay. */
   backdrop-filter: none !important;

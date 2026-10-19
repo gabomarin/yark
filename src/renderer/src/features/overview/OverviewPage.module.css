@@ -49,11 +49,10 @@
 
 .content {
   display: flex;
-  flex: 1;
+  flex: 1 0 auto;
   flex-direction: column;
   gap: var(--app-space-lg);
   min-width: 0;
-  min-height: 0;
 }
 
 .serverSection {
@@ -63,6 +62,10 @@
   gap: var(--app-space-sm);
   min-width: 0;
   min-height: 0;
+  padding: var(--app-overview-stage-pad);
+  border: var(--app-overview-stage-border);
+  border-radius: var(--app-collection-radius);
+  background: var(--app-overview-stage-bg);
 }
 
 .fleetMetrics {
@@ -211,6 +214,7 @@
   .content {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+    grid-template-rows: 1fr;
     align-items: stretch;
     gap: var(--app-space-xl);
   }
@@ -221,15 +225,15 @@
 
   .recentSection {
     display: flex;
+    align-self: start;
     position: sticky;
     top: var(--app-space-lg);
     padding: var(--app-space-md) var(--app-space-md) var(--app-space-sm);
     border: 1px solid var(--app-color-border-subtle);
     border-radius: var(--app-collection-radius);
-    background: var(--app-color-panel);
-    box-shadow: var(--app-collection-item-shadow);
-    backdrop-filter: var(--app-surface-filter);
-    -webkit-backdrop-filter: var(--app-surface-filter);
+    background-color: var(--app-overview-aside-bg);
+    background-image: var(--app-glass-sheen);
+    box-shadow: var(--app-glass-rim);
   }
 }
 

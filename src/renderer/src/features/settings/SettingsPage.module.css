@@ -175,10 +175,9 @@
   overflow: var(--app-setting-stack-clip);
   border: var(--app-setting-stack-border);
   border-radius: var(--app-panel-radius);
-  background: var(--app-setting-stack-bg);
-  box-shadow: var(--app-raised-surface-shadow);
-  backdrop-filter: var(--app-surface-filter);
-  -webkit-backdrop-filter: var(--app-surface-filter);
+  background-color: var(--app-setting-stack-bg);
+  background-image: var(--app-glass-sheen);
+  box-shadow: var(--app-glass-rim);
 }
 
 /*
@@ -317,6 +316,12 @@
   min-width: 0;
 }
 
+.discordConnectionCard:global(.mantine-Card-root)[data-tone="flat"],
+.discordEventCard:global(.mantine-Card-root)[data-tone="flat"] {
+  background-color: var(--app-float-panel-bg);
+  background-image: var(--app-glass-sheen);
+}
+
 .discordConnectionCard {
   overflow: visible;
 }
@@ -336,7 +341,8 @@
   padding: var(--app-space-sm) var(--app-space-md);
   border-bottom: 1px solid var(--app-color-border-subtle);
   color: var(--app-color-text);
-  background: var(--app-color-surface-control);
+  background-color: var(--app-chip-bg);
+  background-image: var(--app-glass-sheen);
 }
 
 .discordEventRow {
@@ -350,7 +356,8 @@
 }
 
 .discordEventRow:hover {
-  background: var(--app-color-surface-control);
+  background-color: var(--app-chip-bg);
+  background-image: var(--app-glass-sheen);
 }
 
 .discordEventIdentity {
@@ -366,7 +373,9 @@
 .discordPrivacyNote {
   padding: var(--app-space-xs) var(--app-space-sm);
   border-radius: var(--app-panel-radius);
-  background: var(--app-color-panel);
+  background-color: var(--app-float-panel-bg);
+  background-image: var(--app-glass-sheen);
+  box-shadow: var(--app-glass-rim);
 }
 
 @media (max-width: 720px) {

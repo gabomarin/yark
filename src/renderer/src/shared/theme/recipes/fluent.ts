@@ -36,10 +36,17 @@ export function createFluentComponents(density: UiDensity, theme: AppTheme): Man
     [`--${prefix}-bg`]: "var(--app-primary-button-bg)",
     [`--${prefix}-hover`]: "var(--app-primary-button-hover)",
     [`--${prefix}-bd`]: "var(--app-primary-button-border)",
+    [`--${prefix}-color`]: "var(--app-primary-button-color)",
   });
   const accentFilledPlate = {
     backdropFilter: "var(--app-icon-button-filter)",
     WebkitBackdropFilter: "var(--app-icon-button-filter)",
+    boxShadow: "var(--app-icon-button-shadow)",
+  } as const;
+  /** Same top highlight as idle buttons. The fill stays unblurred. Opaque shadow is `none`. */
+  const accentFilledShine = {
+    backdropFilter: "none",
+    WebkitBackdropFilter: "none",
     boxShadow: "var(--app-icon-button-shadow)",
   } as const;
 
@@ -133,8 +140,13 @@ export function createFluentComponents(density: UiDensity, theme: AppTheme): Man
         /* Fluent keeps an info bar's severity to the icon and border. The icon needs its
          * own variable: Mantine paints it with `--alert-color`, which the title inherits
          * too, and the title has to stay in the text tone. An unmapped colour leaves
-         * `--alert-icon-color` unset, so the icon inherits the root colour as before. */
+         * `--alert-icon-color` unset, so the icon inherits the root colour as before.
+         * Sheen and rim are `none` on opaque families, so only Glassy picks up the glass. */
         icon: { color: "var(--alert-icon-color)" },
+        root: {
+          backgroundImage: "var(--app-glass-sheen)",
+          boxShadow: "var(--app-glass-rim)",
+        },
       },
       // Mantine paints via --alert-bg / --alert-bd; styles.backgroundColor does not win.
       vars: (_theme: unknown, props: { color?: string | undefined }) => {
@@ -145,10 +157,10 @@ export function createFluentComponents(density: UiDensity, theme: AppTheme): Man
         }
         return {
           root: {
-            /* Neutral base (see `--app-color-surface-alert`) so a tinted plate ramp cannot
-             * turn the bar into a slab, plus 12% of the tone: enough to type the alert
-             * without painting a saturated fill. */
-            "--alert-bg": `color-mix(in srgb, var(--app-color-surface-alert) 88%, ${toneToken})`,
+            /* Neutral base (`--app-alert-fill`, the solid alert surface on Fluent and
+             * Breeze, the card plate on Glassy) plus 12% of the tone: enough to type
+             * the alert without painting a saturated fill. The tone border stays. */
+            "--alert-bg": `color-mix(in srgb, var(--app-alert-fill) 88%, ${toneToken})`,
             "--alert-bd": `1px solid ${toneToken}`,
             "--alert-color": "var(--app-color-text)",
             "--alert-icon-color": toneToken,
@@ -191,7 +203,7 @@ export function createFluentComponents(density: UiDensity, theme: AppTheme): Man
         return neutral
           ? {
               root: {
-                "--badge-bg": "var(--app-color-surface-control)",
+                "--badge-bg": "var(--app-chip-bg)",
                 "--badge-bd": "1px solid var(--app-color-border-subtle)",
                 "--badge-color": "var(--app-color-text)",
               },
@@ -218,7 +230,10 @@ export function createFluentComponents(density: UiDensity, theme: AppTheme): Man
         padding: "md",
       },
       styles: {
-        root: surfaceFilter,
+        root: {
+          backdropFilter: "none",
+          WebkitBackdropFilter: "none",
+        },
       },
     },
     /* Fluent dialogs are 8px; lives here (not ModalsProvider) so Breeze can override. */
@@ -309,6 +324,10 @@ export function createFluentComponents(density: UiDensity, theme: AppTheme): Man
         dropdown: {
           "--menu-item-hover": "var(--app-color-surface-control-hover)",
           backgroundColor: "var(--app-menu-bg)",
+          backgroundImage: "var(--app-glass-sheen)",
+          backdropFilter: "var(--app-surface-filter)",
+          WebkitBackdropFilter: "var(--app-surface-filter)",
+          boxShadow: "var(--app-menu-shadow)",
         },
         item: {
           borderRadius: "var(--app-radius-control)",
@@ -323,6 +342,15 @@ export function createFluentComponents(density: UiDensity, theme: AppTheme): Man
     Popover: {
       defaultProps: {
         radius: "md",
+      },
+      styles: {
+        dropdown: {
+          backgroundColor: "var(--app-menu-bg)",
+          backgroundImage: "var(--app-glass-sheen)",
+          backdropFilter: "var(--app-surface-filter)",
+          WebkitBackdropFilter: "var(--app-surface-filter)",
+          boxShadow: "var(--app-menu-shadow)",
+        },
       },
     },
     /** Fluent ProgressBar is a thin 4px bar; call sites may still pass `size`. */
@@ -401,8 +429,9 @@ export function createFluentComponents(density: UiDensity, theme: AppTheme): Man
             },
           };
         }
-        const plate = isAccentFilled(props, "filled") || props.variant === "default" || props.variant === "subtle";
-        return { root: plate ? accentFilledPlate : surfaceFilter };
+        const idlePlate = props.variant === "default" || props.variant === "subtle";
+        if (isAccentFilled(props, "filled")) return { root: accentFilledShine };
+        return { root: idlePlate ? accentFilledPlate : surfaceFilter };
       },
     },
     /*
@@ -430,7 +459,7 @@ export function createFluentComponents(density: UiDensity, theme: AppTheme): Man
         };
       },
       styles: (_mantineTheme: unknown, props: { variant?: string | undefined; color?: string | undefined }) => {
-        if (isAccentFilled(props, "subtle")) return { root: accentFilledPlate };
+        if (isAccentFilled(props, "subtle")) return { root: accentFilledShine };
         const variant = props.variant;
         const glass = variant === undefined || variant === "subtle" || variant === "transparent" || variant === "default";
         if (!glass) return {};
