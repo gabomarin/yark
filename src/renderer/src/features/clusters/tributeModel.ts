@@ -122,6 +122,43 @@ export function validateClusterWideValue(key: ClusterWideTributeKey, value: numb
   return null;
 }
 
+/**
+ * True when GameUserSettings is empty or only contains the six cluster-wide
+ * tribute keys. Transfer Save used to persist that sparse text as the cluster
+ * INI template; a later Apply INI template then wiped unrelated member settings.
+ */
+export function isSparseClusterIniGameUserSettings(text: string): boolean {
+  if (text.trim().length === 0) return true;
+  const rows = parseIniTextRows(text).filter((row) => row.key.trim().length > 0);
+  if (rows.length === 0) return true;
+  const tributeKeys = new Set(CLUSTER_WIDE_TRIBUTE_KEYS.map((key) => key.toLowerCase()));
+  return rows.every((row) => tributeKeys.has(row.key.toLowerCase()));
+}
+
+/**
+ * Base payload for Transfer Save: keep a real template, otherwise seed from a
+ * member so the saved cluster template is not tribute-only.
+ */
+export function seedClusterIniTemplateBase(
+  existing: ServerIniPayload | null | undefined,
+  memberPayloads: readonly ServerIniPayload[],
+): ServerIniPayload {
+  const current = existing ?? { gameUserSettings: "", game: "" };
+  if (!isSparseClusterIniGameUserSettings(current.gameUserSettings)) {
+    return current;
+  }
+  for (const member of memberPayloads) {
+    if (isSparseClusterIniGameUserSettings(member.gameUserSettings)) continue;
+    return {
+      gameUserSettings: member.gameUserSettings,
+      game: current.game.trim().length > 0 ? current.game : member.game,
+    };
+  }
+  throw new Error(
+    "Cannot save transfer settings into an empty cluster INI template. Promote a member to the template first, or create an INI template with shared settings.",
+  );
+}
+
 export function withClusterWideTributeValues(
   payload: ServerIniPayload,
   values: ClusterWideTributeValues,

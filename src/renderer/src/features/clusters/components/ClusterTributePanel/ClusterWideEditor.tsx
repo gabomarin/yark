@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import { useEffect, useRef, useState } from "react";
 import { CaretDown, Info } from "@phosphor-icons/react";
 import { ActionIcon, Alert, Button, Group, Menu, NumberInput, Stack, Text, Tooltip } from "@mantine/core";
-import type { ServerIniSnapshot, ServerProfile, ServerRuntimeInfo } from "@shared/types";
+import type { ServerIniPayload, ServerIniSnapshot, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import { resolveServerRuntime } from "../../createClusterModel";
 import { templateApplyIneligibilityReason } from "../../templateApplyModel";
@@ -13,6 +13,7 @@ import {
   TRIBUTE_SLOT_KEYS,
   formatTributeDuration,
   readTributeValues,
+  seedClusterIniTemplateBase,
   tributeSettingMeta,
   validateClusterWideValue,
   validateClusterWideValues,
@@ -129,10 +130,20 @@ export function ClusterWideEditor(props: Props): ReactElement {
     try {
       const existing = await window.api.getClusterIniTemplate(props.clusterId);
       if (!existing.ok) throw new Error(existing.error ?? "Could not load the current cluster template");
-      const payload = withClusterWideTributeValues(
-        existing.data?.payload ?? { gameUserSettings: "", game: "" },
-        parsedValues,
-      );
+      // Never persist a tribute-only / empty GUS as the cluster INI template —
+      // Apply INI template would later replace member files with that sparse text.
+      const memberPayloads: ServerIniPayload[] = [];
+      for (const member of props.members) {
+        const cached = props.snapshots.get(member.id);
+        if (cached !== undefined) {
+          memberPayloads.push(cached.payload);
+          continue;
+        }
+        const latest = await window.api.readServerIni(member.id);
+        if (latest.ok) memberPayloads.push(latest.data.payload);
+      }
+      const basePayload = seedClusterIniTemplateBase(existing.data?.payload, memberPayloads);
+      const payload = withClusterWideTributeValues(basePayload, parsedValues);
       const preview = await window.api.previewClusterIniTemplate(props.clusterId, payload);
       if (!preview.ok) throw new Error(preview.error ?? "Could not preview the cluster template");
       if (!preview.data.valid) throw new Error(preview.data.issues.map((issue) => issue.message).join("; "));
@@ -316,9 +327,10 @@ export function ClusterWideEditor(props: Props): ReactElement {
         </Stack>
 
         <Text size="xs" c="dimmed">
-          Save updates only the cluster template. Save and apply updates the template and writes these six values onto
-          eligible stopped servers without replacing the rest of GameUserSettings.ini. Running or busy servers are
-          skipped. Use Apply INI template when you intend a full template restore.
+          Save updates the cluster template (seeding from a member when the template is missing or only has these six
+          transfer keys, so a later Apply INI template cannot wipe unrelated settings). Save and apply also writes these
+          six values onto eligible stopped servers without replacing the rest of GameUserSettings.ini. Running or busy
+          servers are skipped. Use Apply INI template when you intend a full template restore.
         </Text>
         {skipped.length > 0 && (
           <Stack gap="xs">

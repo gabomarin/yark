@@ -1,12 +1,53 @@
 import { describe, expect, it } from "vitest";
 import {
   defaultClusterWideValues,
+  isSparseClusterIniGameUserSettings,
   readTributeValues,
+  seedClusterIniTemplateBase,
   summarizeClusterWideValues,
   validateClusterWideValues,
 } from "./tributeModel";
 
 describe("cluster tribute settings model", () => {
+  it("treats empty or tribute-only GameUserSettings as a sparse cluster template", () => {
+    expect(isSparseClusterIniGameUserSettings("")).toBe(true);
+    expect(isSparseClusterIniGameUserSettings("[ServerSettings]\n")).toBe(true);
+    expect(
+      isSparseClusterIniGameUserSettings(
+        "[ServerSettings]\nTributeItemExpirationSeconds=86400\nMaxTributeItems=50\n",
+      ),
+    ).toBe(true);
+    expect(
+      isSparseClusterIniGameUserSettings(
+        "[ServerSettings]\nTributeItemExpirationSeconds=86400\nPreventUploadItems=False\n",
+      ),
+    ).toBe(false);
+  });
+
+  it("seeds a sparse cluster template from a member before Transfer Save", () => {
+    const member = {
+      gameUserSettings:
+        "[ServerSettings]\nPreventUploadItems=False\nUnrelatedSetting=keep-me\nTributeItemExpirationSeconds=1\n",
+      game: "[/script/shootergame.shootergamemode]\nHarvestAmountMultiplier=2\n",
+    };
+    expect(
+      seedClusterIniTemplateBase({ gameUserSettings: "", game: "" }, [member]).gameUserSettings,
+    ).toContain("UnrelatedSetting=keep-me");
+    expect(
+      seedClusterIniTemplateBase(
+        {
+          gameUserSettings: "[ServerSettings]\nTributeItemExpirationSeconds=86400\nMaxTributeItems=50\n",
+          game: "[Existing]\nKeepGame=True\n",
+        },
+        [member],
+      ),
+    ).toEqual({
+      gameUserSettings: member.gameUserSettings,
+      game: "[Existing]\nKeepGame=True\n",
+    });
+    expect(() => seedClusterIniTemplateBase(null, [])).toThrow(/empty cluster INI template/i);
+  });
+
   it("uses catalog defaults only to seed the editable form when a key is missing", () => {
     expect(defaultClusterWideValues()).toEqual({
       TributeItemExpirationSeconds: 86400,
