@@ -11,13 +11,41 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Settings → Appearance adds **Glassy** (dark and light): frosted panels on the ARK cyan palette. Cards and the sidebar stay readable in both schemes, path fields sit in the glass, and a panel under a tab line keeps a square top so the corner does not leave a gap. Delete, the other danger buttons, and the kebab Delete item use the same crimson as Plasma Breeze. On Glassy dark the kebab menu sits a step darker than the card, path fields use a dark well, cluster warning cells use a light gold veil on the cyan glass so the numbers stay readable, icon-only actions sit on a frosted plate, and primary actions such as New server and Start use that same frost on the accent. Glassy light uses that teal on a light sheet instead of sky blue, its buttons keep a frosted mint plate, and header links such as Check servers health stay clear. Disabled buttons stay a flat translucent fill instead of frosted glass, so actions such as Restart and an up-to-date Install recede next to Start. The Collapse navigation label opens into the sidebar, and hovering that control no longer draws a glow line from the fleet metrics through the server cards. RCON cards clear the tab line, server log panels and backup kind tabs meet their tabs, discrete panels such as Maintenance follow the panel radius, and the Downloads queue clears the splitter. Fluent and Plasma Breeze stay opaque and square.
 - Visual Configuration Save applies only the changed simple settings onto the latest INI on disk, so non-overlapping edits from Notepad (or other tools) can coexist; overlapping changes still refuse a silent overwrite (#667).
 - When INI files change outside YARK while the visual editor is dirty, an info banner summarizes how many settings changed outside YARK, offers a View outside changes link with a compact detail popover, and tells operators to click Save to merge when edits do not overlap (no Reload CTA in that banner); warning/error stay reserved for text-mode Save and real conflicts (#667).
 - Configuration Save refuses to overwrite `Game.ini` / `GameUserSettings.ini` when those files changed outside YARK since the editor loaded; the editor also re-checks on window focus, auto-reloads when clean, and always offers Reload from disk (#665).
 - Configuration and cluster INI visual editors highlight unsaved rows, show the last saved value (or that a key is absent), and support per-row revert or discard without clearing other drafts (#661).
 
+### Changed
+
+- **Glassy** dark shows the night scene between cards: a more open sidebar, denser working cards, and a denser row inside them. Attention banners use that same glass, and Start stays closer to solid. Light keeps the page sheet more open than the card and draws the hex in a faint cyan.
+- **Glassy** dark darkens the night scene across the whole window so the moon does not wash out the cards. Light dimmed copy, including the server-list summary, the server header, and section tabs, is darker so it stays readable on the day scene, and the day photo stays a step darker, with only a light blur.
+- Backup server cards no longer sit on a square page plate, and **Create cluster** sits above the cluster tab rule so that line does not show through the button.
+- Server backup kind tabs keep a single rule under the tab. Server information panels open a gap on Glassy. Launch section labels and flag names use the same text color as the other workspace sections. The cluster INI template footer matches the dialog surface and its bottom corners.
+- **Glassy** primary actions such as **Start** and **New server** use a solid accent. Idle buttons keep the glass plate. Stop stays solid.
+- **Glassy** dark **Start** and **New server** use a deeper teal with a white label, so the button sits apart from the night cyan.
+- **Glassy** **Start** and **New server** keep a short veil in dark and light. Hover lightens that teal one step, so it stays clear of a disabled control, and the button keeps the same top highlight as the other buttons.
+- **Glassy** inactive tabs keep a quiet plate so the label sits on a surface. The active tab is a step lighter and still carries the accent line.
+- **Glassy** menus, including the hosted-resource chooser, keep an edge shadow so the list sits above the glass.
+- **Glassy** stays out of the Appearance theme list and the setup assistant. A saved Glassy choice still applies.
+- **Glassy** toasts use the glass plate, with the same corner and edge as the other panels.
+- **Glassy** Downloads holds the queue on the server-rail plate, so the empty list is not the raw scene. The SteamCMD console stays black and sits inset in that pane.
+- **Glassy** light uses one neutral milk for the sidebar, the server column, and the workspace title, so the day photo does not dye that chrome green. The status column uses that same plate, so its seam stays visible. Overview holds the server list and Recent activity on that milk too, as separate plates with the card corner and a gap of the scene between them. The sidebar version stays text, so **Quit YARK** does not share a plate with it.
+- A stopped server keeps a visible status dot in the server list, expanded and collapsed.
+- The setup assistant Windows step includes theme family and color scheme, the same choices as Settings → Appearance.
+- **Glassy** light uses the same cyan as dark, darkened to `#0c7490` so a white label still clears. Panels, borders, and idle buttons stay neutral white instead of the jungle green.
+- **Glassy** lets more of the scene through secondary plates and idle controls: Recent activity, nested workspace cards, backup volume cards, maintenance slabs, Discord notification cards, neutral chips, menus, and default or subtle buttons. Those plates carry a faint top highlight so they read as glass. Stop and the cluster members table stay as they were. Fluent and Plasma Breeze stay solid.
+- **Glassy** panels and cards use that same thin plate. The scene stays sharp through them, with the top highlight and no frost blur. List tables stay solid. Fluent and Plasma Breeze stay solid.
+- Settings → Appearance includes a **Background image** switch for Glassy. Off clears the day or night scene, hex grid, and veil; the glass panels stay. The choice is remembered, and a missing value stays on.
+- Queued and paused job labels on server cards use an accent chip, so a waiting install or update is visible on every theme.
+- Cluster **Remove servers** uses the same solid red fill as workspace **Delete server**.
+
 ### Fixed
 
+- On a short window the sidebar navigation scrolls, so Quit stays on screen. Download rows outside the flush queue keep their border.
+- **Glassy** light toasts keep a dark title and message. The message was using the hairline color, so it disappeared on the toast.
+- Fluent and Plasma Breeze dark primary buttons keep a white label and icon.
 - Cluster **Transfer** Save no longer stores an empty or tribute-only INI template; it seeds from a member first so a later Apply INI template cannot wipe unrelated `GameUserSettings.ini` values.
 - Plasma Breeze **Start** uses the same accent blue as **New server**. Filled primaries stay on `#3daee9` instead of a darker button blue.
 - Outside-change Configuration banner clears when disk matches the Save baseline again, conflict Save captures disk details for View outside changes, and semantic INI edits keep mixed line endings / duplicate occurrence order (#667).

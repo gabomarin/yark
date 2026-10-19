@@ -3,6 +3,7 @@ import { FolderSimple } from "@phosphor-icons/react";
 import { Button, Stack, Text } from "@mantine/core";
 import { formatMapDisplayName } from "@shared/asa/map-identity";
 import type { ServerProfile } from "@shared/types";
+import { appContentPaneClass, withAppSurface } from "@ui/AppSurface/appSurfaceClassName";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import { groupServersByClusterDir } from "../clusterModel";
@@ -45,7 +46,7 @@ export function ClusterEmptyState(props: Props): ReactElement {
             </Text>
             <div className={classes.incompleteList} data-incomplete-clusters>
               {incompleteGroups.map(({ dir, members }) => (
-                <div key={dir} className={classes.incompleteGroup}>
+                <div key={dir} className={withAppSurface(appContentPaneClass, classes.incompleteGroup)}>
                   <ReadonlyPath
                     value={dir}
                     compact

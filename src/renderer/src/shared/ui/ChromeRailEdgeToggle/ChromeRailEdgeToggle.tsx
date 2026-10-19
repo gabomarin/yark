@@ -3,9 +3,6 @@ import { CaretRight } from "@phosphor-icons/react";
 import { UnstyledButton, Tooltip } from "@mantine/core";
 import classes from "./ChromeRailEdgeToggle.module.css";
 
-/** Visible control box (width × height); used by layout seam math. */
-const CHROME_RAIL_EDGE_TOGGLE_PX = 40;
-
 interface Props {
   iconMode: boolean;
   onToggle: () => void;
@@ -27,14 +24,14 @@ export function ChromeRailEdgeToggle(props: Props): ReactElement {
 
   return (
     <span className={anchorClassName} style={props.style} data-direction={direction}>
-      <Tooltip label={label} position="right" withArrow openDelay={200}>
+      {/* Collapse opens into the sidenav. Right paints the label on the server cards. */}
+      <Tooltip label={label} position={direction === "collapse" ? "left" : "right"} withArrow openDelay={200}>
         <UnstyledButton
           type="button"
           aria-label={label}
           onClick={props.onToggle}
           className={classes.toggle}
           data-direction={direction}
-          style={{ minHeight: CHROME_RAIL_EDGE_TOGGLE_PX }}
         >
           <CaretRight size={12} weight="bold" className={classes.caret} aria-hidden />
         </UnstyledButton>

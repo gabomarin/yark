@@ -26,6 +26,26 @@ families ship today:
 - **`plasma-breeze`** — a KDE Plasma/Breeze family (`Breeze Dark`, `Breeze Light`)
   anchored on the exact `KDE/breeze` colour schemes. Flat 4px chrome, restrained
   shadows, a Noto Sans typography profile and the Breeze accent `#3daee9`.
+- **`glassy`** — ARK-cyan frost (`Glassy Dark`, `Glassy Light`). Accent `#28d4ec`
+  on dark (dark label) and `#0c7490` on light (white label). It uses the Fluent recipe set.
+  Panel, raised, and chrome fills, plus the subtle / frame / control borders,
+  come from `materials`, so every card that already reads those roles frosts.
+  Discrete cards use `panelRadius` (square on Fluent and Breeze, `--app-radius-md`
+  on Glassy), including custom slabs such as Maintenance, cluster strips, and wizard
+  choice cards. List rows and fused settings cells stay square. A panel that sits on a tab rule uses `tabAttachedRadius`: the top
+  stays square so the tab line does not leave corner gaps, and the bottom keeps
+  the panel radius. Collections (Overview server rows, fleet metrics) use the
+  `collection*` roles: a fused square slab on the opaque themes, and on Glassy a
+  `sm` gap, `sm` radius, and no shared hairline so the canvas shows between tiles.
+  Backup health metrics use `metricGap` (`xs` / `sm`). Page hosts that the glass
+  panes inset (Backups, Clusters, Hosted resources) use `contentPanePadding`.
+  Log lists, cluster member lists, and the download queue use `listVessel*` /
+  `listRow*` so Glassy frosts the list and keeps rows flat. The sidebar seam
+  uses `sidebarEdge`. Dark danger actions, including kebab menu items, use Breeze's crimson `#da4453`.
+  Kebab menus use `menuBg`: the same popover fill as Fluent, and on Glassy dark one step under that fill so the menu separates from the card.
+  Path fields use `inputWellBg` (the dark chrome step on Glassy dark). Warning washes use `attentionLight`: the transparent mix on the opaque themes, and on Glassy dark a light gold veil so the cyan glass shows through. Cluster warning cells keep the body text color so the numbers stay readable. Idle icon buttons and default buttons use `iconButton*`: a thin glass plate on Glassy, Mantine's flat control on Fluent and Breeze. Filled accent buttons (New server, Start) use `primaryButton*`: a nearly solid accent with a short veil and no frost, and Mantine's solid primary on Fluent and Breeze. Hover lifts one step on that teal, and the button keeps the same top highlight as the idle buttons. On Glassy dark the fill is a deeper teal with a white label, so it sits apart from the night cyan; the bright accent stays for links, icons, and the hex. Inactive tabs use `tabInactiveBg`: a quiet plate on Glassy, clear on Fluent and Breeze. The active tab uses `tabActiveBg`, a step lighter than that plate on Glassy, and the same accent wash as before on Fluent and Breeze. Idle buttons use a cool gray plate on Glassy light instead of a near-white fill. Transparent header links stay clear. Disabled buttons drop the frost and use a flat translucent fill so they recede next to an enabled Start. Semantic fills such as Stop stay solid. Panels and cards share the thin Maintenance plate: the scene stays sharp through them, with a faint top highlight. Neutral chips and menus stay on that thinner glass too. List tables stay solid.
+  Glassy paints a scene behind the shell in dark and light (`shellScene`) with a blur (`shellSceneFilter`). A hexagon tile (`shellSceneGrid`) shows only in a patch of that photo and fades out under the lens (`shellSceneVeil`). Light softens the day photo with a light blur under a cool veil, keeps the panels closer to white, draws the hex as a faint cyan line, and keeps the page sheet more open than the card so the whites do not stack. Dimmed copy on that field is a darker neutral so labels on the scene stay readable. Dark keeps the night photo visible between cards, under a veil that darkens the whole plate so the moon does not wash the cards: an open sidebar, a working card, and a denser nested row. Settings → Appearance can turn that scene off; the glass panels stay on a flat canvas. The sidebar plate covers both, so the nav stays clear of the pattern. On Glassy light the sidebar, the server column (`serverRailBg`), the status column, and the workspace title (`mastBg`) share one neutral milk, a step more open than the card, so the day photo does not dye that chrome. Overview uses that milk for the server list (`overviewStageBg`) and Recent activity (`overviewAsideBg`). Downloads uses the server-rail plate behind the queue, and the SteamCMD console stays a black terminal with a margin around it. The list plate uses the card corner, a short inset (`overviewStagePad`), and a gap of the scene before Recent activity. Dark keeps the sidebar a step more open than the panels. Fluent and Plasma Breeze keep the scene `none` and the rail clear.
+  There is no family selector.
 
 `--app-*` names are stable semantic roles. A family may change its palette,
 semantic status values, elevation, typography and Mantine `recipeSet`, but feature
@@ -37,11 +57,11 @@ SegmentedControl). `recipeSet` is an escape hatch for families that ship in the
 app. It is not a community-theme API.
 
 Surface material (blur, content-pane chrome, shell fill, list-row fill, nav
-selection, raised vessels) is data on `AppTheme.materials`, copied to `--app-*`
-for every family with no family-id branch. Shipped families use `opaqueMaterials`
-(`none` / `transparent` / today's panel), so feature CSS and shared atoms read
-the roles and look unchanged. A later family fills the same strings. Component
-CSS must not select on a theme family name.
+selection, raised vessels, panel fill, navbar tint) is data on `AppTheme.materials`,
+copied to `--app-*` for every family with no family-id branch. Fluent and Plasma
+Breeze use `opaqueMaterials` (`none` / `transparent` / today's panel). Glassy fills
+the same strings with the PoC frost. Component CSS must not select on a theme
+family name.
 
 Community themes are not shipped. When they exist, a pack is this payload as
 JSON (palette, semantics, elevation, radius, typography, materials). Loading,
@@ -260,7 +280,7 @@ Mantine **does** have spacing tokens (`theme.spacing` → `gap="xs"` / `p="md"` 
 
 Preference key: SQLite `app_settings.uiDensity` (IPC `app:get-ui-density` / `app:set-ui-density`). Loaded in `main.tsx` **before** the first `AppProviders` theme mount (falls back to Compact if IPC fails). Persisted only from the Settings change handler (not a mount effect — Safe under `StrictMode`). Failed saves keep the previous density and show an error notification. A legacy `localStorage` value (`settings.uiDensity`) is migrated once when the SQLite row is missing — and only cleared after a successful write.
 
-**Theme registry** (`src/renderer/src/shared/theme/themes.ts`, #PUX-004 Track B / #PUX-005-B). A theme is a **payload**, not a second design system: an entry carries everything that genuinely differs — the palette (ramps, canvas, contrasts, alpha ramps), the semantic colours (`ok` / `attention` / `bad` / `dangerBright` / `fossil`…), the elevation ladder, family typography/radius, and the Mantine colour scales built from those semantics. `theme.ts` reads all of it; the `--app-*` role map, the density tokens and the motion tokens stay shared, so feature CSS keeps reading roles and never gains a second colour language. Selection is `{ family, scheme }` over `THEME_FAMILIES` (**fluent** and **plasma-breeze**, each with dark/light). Preference key: SQLite `app_settings.appearance.v1` (IPC `app:get-appearance` / `app:set-appearance`), JSON `{ "themeFamily": "fluent", "scheme": "dark", "panels": "auto" }`, loaded in `main.tsx` before the first mount like density. Unknown family/scheme values fall back to Fluent Dark (`parseAppearanceSettings`); legacy `{ "theme": "dark"|"light" }` rows upgrade to Fluent plus that scheme (see [Internal theme contract](#internal-theme-contract)).
+**Theme registry** (`src/renderer/src/shared/theme/themes.ts`, #PUX-004 Track B / #PUX-005-B). A theme is a **payload**, not a second design system: an entry carries everything that genuinely differs — the palette (ramps, canvas, contrasts, alpha ramps), the semantic colours (`ok` / `attention` / `bad` / `dangerBright` / `fossil`…), the elevation ladder, family typography/radius, and the Mantine colour scales built from those semantics. `theme.ts` reads all of it; the `--app-*` role map, the density tokens and the motion tokens stay shared, so feature CSS keeps reading roles and never gains a second colour language. Selection is `{ family, scheme }` over `THEME_FAMILIES` (**fluent**, **plasma-breeze**, and **glassy**, each with dark/light). `THEME_FAMILY_LIST` withholds **glassy** until that family ships; a saved `glassy` value still resolves. Preference key: SQLite `app_settings.appearance.v1` (IPC `app:get-appearance` / `app:set-appearance`), JSON `{ "themeFamily": "fluent", "scheme": "dark", "panels": "auto" }`, loaded in `main.tsx` before the first mount like density. Unknown family/scheme values fall back to Fluent Dark (`parseAppearanceSettings`); legacy `{ "theme": "dark"|"light" }` rows upgrade to Fluent plus that scheme (see [Internal theme contract](#internal-theme-contract)).
 
 **Server-workspace panels** (`src/shared/workspace/workspacePanels.ts`, #PUX-004 Track B). Where the server workspace puts its server list and status panel is data, not a `matchMedia` buried in one component: `auto` (columns from 1600px, the shipped default) and `drawers` (never). `workspacePanelsModeFor(option, width)` is the pure decision, `drawersMediaQuery(option)` is what the workspace subscribes to, and a test keeps the two in step. CSS cannot read the option, so the one hand-written mirror — Overview's `@media (min-width: 1600px)` side-by-side — is pinned by that same test. This is **not** an app-level _layout_ (how the whole app is structured, sidebar + main content today): that is a separate ticket, so the word stays free for it.
 

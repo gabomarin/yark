@@ -190,6 +190,8 @@ function defaultSettingsProps(
     onSchemeChange: vi.fn(),
     workspacePanels: "auto",
     onWorkspacePanelsChange: vi.fn(),
+    backgroundImage: true,
+    onBackgroundImageChange: vi.fn(),
     defaultBaseFolder: null,
     onDefaultBaseFolderChange: vi.fn(),
     onPickSteamCmdPath: vi.fn(),
@@ -415,6 +417,26 @@ describe("SettingsPage", () => {
     await openCategory(user, "Appearance");
     expect(screen.getByRole("radio", { name: "Breeze Light" })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Breeze Dark" })).toBeInTheDocument();
+  });
+
+  it("shows the background image switch only for Glassy", async () => {
+    const user = userEvent.setup();
+    const onBackgroundImageChange = vi.fn();
+    stubSettingsApi();
+
+    const view = renderSettings({ family: "fluent", backgroundImage: true, onBackgroundImageChange });
+    await openCategory(user, "Appearance");
+    expect(screen.queryByRole("switch", { name: "Background image" })).not.toBeInTheDocument();
+
+    view.rerender(
+      <AppProviders>
+        <SettingsPage {...defaultSettingsProps({ family: "glassy", backgroundImage: true, onBackgroundImageChange })} />
+      </AppProviders>,
+    );
+    const toggle = screen.getByRole("switch", { name: "Background image" });
+    expect(toggle).toBeChecked();
+    await user.click(toggle);
+    expect(onBackgroundImageChange).toHaveBeenCalledWith(false);
   });
 
   it("persists dismissing the tray-hide notification", async () => {

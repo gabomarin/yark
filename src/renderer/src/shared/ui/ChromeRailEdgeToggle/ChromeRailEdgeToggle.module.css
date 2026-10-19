@@ -1,4 +1,7 @@
 .anchor {
+  /* Seam math in AppShellLayout reads these. Change the size here only. */
+  --chrome-rail-edge-width: 24px;
+  --chrome-rail-edge-height: 40px;
   display: inline-flex;
   pointer-events: none;
 }
@@ -12,10 +15,10 @@
   align-items: center;
   justify-content: center;
   /* ≥24×24 touch/pointer target (WCAG 2.5.8) while keeping the half-circle look. */
-  width: 24px;
-  height: 40px;
-  min-width: 24px;
-  min-height: 40px;
+  width: var(--chrome-rail-edge-width);
+  height: var(--chrome-rail-edge-height);
+  min-width: var(--chrome-rail-edge-width);
+  min-height: var(--chrome-rail-edge-height);
   padding: 0;
   line-height: 0;
   color: color-mix(in srgb, var(--app-color-text) 88%, var(--app-color-accent));

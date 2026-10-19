@@ -2,9 +2,19 @@
   width: 100%;
 }
 
+.membersTable {
+  overflow: hidden;
+  border: var(--app-list-vessel-border);
+  border-radius: var(--app-panel-radius);
+  background: var(--app-list-vessel-bg);
+  box-shadow: var(--app-raised-surface-shadow);
+  backdrop-filter: var(--app-surface-raised-filter);
+  -webkit-backdrop-filter: var(--app-surface-raised-filter);
+}
+
 .membersTable :global(thead),
 .membersTable :global(thead th) {
-  background: var(--app-color-panel-raised);
+  background: var(--app-table-head-bg);
 }
 
 .membersTable :global(th),
@@ -13,7 +23,7 @@
 }
 
 .membersTable :global(tbody tr:hover) {
-  background: var(--app-color-surface-control);
+  background: var(--app-list-row-hover);
 }
 
 .memberHeader,
@@ -45,4 +55,5 @@
 
 .differentCell {
   background: var(--mantine-color-attention-light);
+  color: var(--app-color-text);
 }

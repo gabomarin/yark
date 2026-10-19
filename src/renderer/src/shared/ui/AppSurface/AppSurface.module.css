@@ -6,28 +6,24 @@
  */
 
 .contentPane {
-  background: var(--app-content-pane-bg);
+  background-color: var(--app-content-pane-bg);
+  background-image: var(--app-glass-sheen);
   border: var(--app-content-pane-border);
   box-shadow: var(--app-content-pane-shadow);
   border-radius: var(--app-content-pane-radius);
-  backdrop-filter: var(--app-surface-filter);
-  -webkit-backdrop-filter: var(--app-surface-filter);
-}
-
-/* Discrete panel fill (table body, metric strip) that should blur with the surface. */
-.panel {
-  background: var(--app-color-panel);
-  backdrop-filter: var(--app-surface-filter);
-  -webkit-backdrop-filter: var(--app-surface-filter);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 /* Bordered vessel. Identity matches the hairline panel boxes tool pages already draw. */
 .raised {
-  background: var(--app-raised-surface-bg);
+  border-radius: var(--app-panel-radius);
+  background-color: var(--app-raised-surface-bg);
+  background-image: var(--app-glass-sheen);
   border: var(--app-raised-surface-border);
   box-shadow: var(--app-raised-surface-shadow);
-  backdrop-filter: var(--app-surface-raised-filter);
-  -webkit-backdrop-filter: var(--app-surface-raised-filter);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 /* Fused list row. Identity matches `--app-color-panel`, so rows stay solid today. */

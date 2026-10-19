@@ -5,6 +5,8 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
   gap: var(--app-space-sm);
+  /* Workspace pulls the tab panel up to the tab rule. These cards are discrete, so they need their own inset or they sit on that line. */
+  padding-top: var(--app-space-sm);
   align-items: start;
   align-content: start;
   overflow-x: hidden;

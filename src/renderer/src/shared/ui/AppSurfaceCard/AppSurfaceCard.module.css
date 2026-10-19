@@ -1,19 +1,26 @@
 .root {
   border-color: var(--app-surface-border);
-  background-color: var(--app-color-panel-cool);
-  background-image: var(--app-surface-cool);
+  background-color: var(--app-panel-surface-bg);
+  background-image: var(--app-glass-sheen);
   box-shadow: var(--app-shadow-panel);
-  backdrop-filter: var(--app-surface-filter);
-  -webkit-backdrop-filter: var(--app-surface-filter);
+  overflow: clip;
+  /* Paper's backdrop blur paints a square behind the rounded card inside a
+     scrollport. The translucent fill stays. */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.root[data-panel-radius] {
+  border-radius: var(--app-panel-radius) !important;
 }
 
 .root[data-tone="coolEmphasis"] {
-  background-image: var(--app-surface-cool-emphasis);
+  background-image: var(--app-glass-sheen);
 }
 
 .root[data-tone="flat"] {
-  background-color: var(--app-surface-flat);
-  background-image: none;
+  background-color: var(--app-panel-surface-bg);
+  background-image: var(--app-glass-sheen);
   border-color: var(--app-color-border-subtle);
 }
 
@@ -21,8 +28,8 @@
   background-color: var(--app-surface-chrome);
   background-image: none;
   border-color: var(--app-color-border-subtle);
-  backdrop-filter: var(--app-surface-chrome-filter);
-  -webkit-backdrop-filter: var(--app-surface-chrome-filter);
+  backdrop-filter: var(--app-surface-chrome-filter) !important;
+  -webkit-backdrop-filter: var(--app-surface-chrome-filter) !important;
 }
 
 .root[data-fill] {

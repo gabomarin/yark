@@ -69,6 +69,25 @@ body,
   background-clip: padding-box;
 }
 
+/*
+ * Tab plates. A theme `styles` background becomes an inline color and paints
+ * the active tab with the inactive fill, so the split lives here.
+ * `:not([data-active])` beats Mantine's transparent tab. Hover keeps Mantine's
+ * own hover color. Fluent and Breeze resolve these variables to clear / the
+ * existing accent wash.
+ */
+.mantine-Tabs-tab:not([data-active]) {
+  background-color: var(--app-tab-inactive-bg);
+}
+
+.mantine-Tabs-tab[data-active] {
+  background-color: var(--app-tab-active-bg);
+}
+
+.mantine-Tabs-tab[data-active]:hover {
+  background-color: var(--app-tab-active-hover-bg);
+}
+
 body {
   background: var(--app-color-bg);
   color: var(--app-color-text);
@@ -114,20 +133,56 @@ body {
 }
 
 /*
+ * Disabled chrome drops the glass plate. The button recipe sets blur and an
+ * inset highlight as inline styles, which stay on a disabled control and keep
+ * it looking frosted. `!important` wins over those inline styles. Opaque
+ * themes already use none, so they do not move.
+ */
+.mantine-Button-root:where(:disabled, [data-disabled]):not([data-loading]),
+.mantine-ActionIcon-root:where(:disabled, [data-disabled]):not([data-loading]) {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  background: var(--app-button-disabled-bg);
+}
+
+/*
  * Disabled chrome is the enabled chrome, dimmed - not repainted. Mantine's
  * disabled rule fills *every* variant with `--mantine-color-disabled`, so a
  * subtle/text button turned into a filled one the moment it was disabled: the
  * workspace Backups Delete looked like a real button while nothing was selected
- * and went text-only as soon as a row selection enabled it.
+ * and went text-only as soon as a row selection enabled it. Glassy opts the
+ * subtle control into the thinned disabled fill via `--app-button-disabled-quiet-bg`.
  */
-.mantine-Button-root[data-variant="subtle"]:where(:disabled, [data-disabled]):not([data-loading]),
+.mantine-Button-root[data-variant="subtle"]:where(:disabled, [data-disabled]):not([data-loading]) {
+  background: var(--app-button-disabled-quiet-bg);
+}
+
 .mantine-Button-root[data-variant="transparent"]:where(:disabled, [data-disabled]):not([data-loading]) {
   background: transparent;
 }
 
-/* Fluent 2 is square: toasts use the same square surface grammar as the panels. */
-.mantine-Notification-root {
-  border-radius: 0;
+/* Toasts follow the active plate: square and solid on Fluent, glass on Glassy. */
+[data-mantine-color-scheme] .mantine-Notification-root {
+  border-radius: var(--app-panel-radius);
+  background-color: var(--app-notification-bg);
+  background-image: var(--app-glass-sheen);
+  backdrop-filter: var(--app-surface-filter);
+  -webkit-backdrop-filter: var(--app-surface-filter);
+  box-shadow: var(--app-notification-shadow);
+}
+
+/*
+ * Toast copy. Mantine paints the message with gray-6, and the light map uses
+ * that step for the hairline, so Glassy light messages disappeared on the
+ * toast. Title and message use the text roles instead.
+ */
+[data-mantine-color-scheme="light"] .mantine-Notification-title {
+  color: var(--app-color-text);
+}
+
+[data-mantine-color-scheme="light"] .mantine-Notification-description {
+  color: var(--app-color-muted);
 }
 
 /*

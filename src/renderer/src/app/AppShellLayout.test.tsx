@@ -108,4 +108,57 @@ describe("AppShellLayout", () => {
     await user.click(toggle);
     expect(screen.getByRole("button", { name: "Expand navigation" })).toBeInTheDocument();
   });
+
+  it("skips the scene layers unless the theme paints one", () => {
+    const { container, rerender } = render(
+      <AppProviders density="compact">
+        <AppShellLayout
+          route="overview"
+          onNavigate={vi.fn()}
+          steamCmdDetected={false}
+          steamCmdRunning={false}
+          officialVersion={null}
+          officialNetworkStatus="unknown"
+          appVersion="0.1.0"
+        >
+          <div>page-body</div>
+        </AppShellLayout>
+      </AppProviders>,
+    );
+    expect(container.querySelector("[data-shell-scene]")).toBeNull();
+
+    rerender(
+      <AppProviders density="compact" themeSelection={{ family: "glassy", scheme: "dark" }} sceneBackground>
+        <AppShellLayout
+          route="overview"
+          onNavigate={vi.fn()}
+          steamCmdDetected={false}
+          steamCmdRunning={false}
+          officialVersion={null}
+          officialNetworkStatus="unknown"
+          appVersion="0.1.0"
+        >
+          <div>page-body</div>
+        </AppShellLayout>
+      </AppProviders>,
+    );
+    expect(container.querySelector("[data-shell-scene]")).not.toBeNull();
+
+    rerender(
+      <AppProviders density="compact" themeSelection={{ family: "glassy", scheme: "dark" }} sceneBackground={false}>
+        <AppShellLayout
+          route="overview"
+          onNavigate={vi.fn()}
+          steamCmdDetected={false}
+          steamCmdRunning={false}
+          officialVersion={null}
+          officialNetworkStatus="unknown"
+          appVersion="0.1.0"
+        >
+          <div>page-body</div>
+        </AppShellLayout>
+      </AppProviders>,
+    );
+    expect(container.querySelector("[data-shell-scene]")).toBeNull();
+  });
 });

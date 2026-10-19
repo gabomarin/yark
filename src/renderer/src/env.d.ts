@@ -15,6 +15,16 @@ declare module "*.webp" {
   export default src;
 }
 
+declare module "*.svg" {
+  const src: string;
+  export default src;
+}
+
+declare module "*.jpeg" {
+  const src: string;
+  export default src;
+}
+
 declare global {
   interface Window {
     api: RendererApi;

@@ -43,7 +43,7 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
   return (
     <AppSurfaceCard radius={0}>
       <Stack gap="sm">
-        <Group justify="space-between" align="flex-start" wrap="wrap" className={classes.healthCardHeader}>
+        <Group justify="space-between" align="flex-start" wrap="wrap">
           <div>
             <Group gap="xs">
               <HardDrives size={16} />

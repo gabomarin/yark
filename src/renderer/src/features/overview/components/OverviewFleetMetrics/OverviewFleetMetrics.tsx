@@ -2,7 +2,6 @@ import type { ReactElement } from "react";
 import { Info } from "@phosphor-icons/react";
 import { ActionIcon } from "@mantine/core";
 import { AppMetricCard } from "@ui/AppMetricCard/AppMetricCard";
-import { appPanelSurfaceClass, withAppSurface } from "@ui/AppSurface/appSurfaceClassName";
 import type { AttentionIssue } from "../../model/attentionIssues";
 import type { OverviewFleetFilter, OverviewFleetStats } from "../../model/overviewFleetMetrics";
 import { toggleOverviewFleetFilter } from "../../model/overviewFleetMetrics";
@@ -22,7 +21,7 @@ export function OverviewFleetMetrics(props: Props): ReactElement {
   };
 
   return (
-    <div className={withAppSurface(appPanelSurfaceClass, classes.strip)} data-overview-fleet-metrics>
+    <div className={classes.strip} data-overview-fleet-metrics>
       <div className={classes.cell}>
         <AppMetricCard
           label="Running"

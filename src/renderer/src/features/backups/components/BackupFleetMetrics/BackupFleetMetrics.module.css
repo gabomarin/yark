@@ -2,3 +2,7 @@
   width: min(100%, 280px);
   flex: 1 1 200px;
 }
+
+.grid {
+  gap: var(--app-metric-gap) !important;
+}

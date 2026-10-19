@@ -56,17 +56,18 @@
 }
 
 .fieldsGrid {
-  overflow: hidden;
-  padding-right: 1px;
-  padding-bottom: 1px;
+  /* Fused on opaque themes (gap 0, 1px overlap). Glassy opens the same token. */
+  gap: var(--app-collection-gap) !important;
+  padding-right: var(--app-collection-fuse);
+  padding-bottom: var(--app-collection-fuse);
 }
 
 .formSection {
   min-width: 0;
   border-radius: 0;
   box-shadow: none;
-  margin-right: -1px;
-  margin-bottom: -1px;
+  margin-right: calc(var(--app-collection-fuse) * -1);
+  margin-bottom: calc(var(--app-collection-fuse) * -1);
 }
 
 .identityHero {

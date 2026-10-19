@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="623.538" height="1080" viewBox="0 0 623.538 1080">
+  <defs>
+    <linearGradient id="pane" x1="0.15" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.92"/>
+      <stop offset="0.14" stop-color="#ffffff" stop-opacity="0.45"/>
+      <stop offset="0.48" stop-color="#ffffff" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.32"/>
+    </linearGradient>
+  </defs>
+  <g fill="url(#pane)" stroke="#ffffff" stroke-opacity="0.88" stroke-width="12" stroke-linejoin="round">
+    <polygon points="311.769,0 623.538,180 623.538,540 311.769,720 0,540 0,180"/>
+    <polygon points="623.538,540 935.307,720 935.307,1080 623.538,1260 311.769,1080 311.769,720"/>
+    <polygon points="0,540 311.769,720 311.769,1080 0,1260 -311.769,1080 -311.769,720"/>
+    <polygon points="623.538,-540 935.307,-360 935.307,0 623.538,180 311.769,0 311.769,-360"/>
+    <polygon points="0,-540 311.769,-360 311.769,0 0,180 -311.769,0 -311.769,-360"/>
+  </g>
+</svg>

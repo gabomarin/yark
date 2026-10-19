@@ -14,6 +14,7 @@
   flex: 1;
   min-height: 0;
   overflow: auto;
+  padding: var(--app-content-pane-padding);
 }
 
 /* Keep cards at content height so fillViewport does not crush them. */

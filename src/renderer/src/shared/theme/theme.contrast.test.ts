@@ -76,7 +76,7 @@ describe.each(ALL_APP_THEMES)("$family $label theme contrast", (theme) => {
         failures.push(`accent-text on ${name} = ${textRatio.toFixed(2)} (min ${FLOOR.accentText})`);
       }
     }
-    const labelRatio = contrast("#ffffff", solid);
+    const labelRatio = contrast(theme.palette.blueContrast, solid);
     if (labelRatio < FLOOR.accentLabel) {
       failures.push(`white label on accent = ${labelRatio.toFixed(2)} (min ${FLOOR.accentLabel})`);
     }
@@ -85,7 +85,8 @@ describe.each(ALL_APP_THEMES)("$family $label theme contrast", (theme) => {
 
   it("keeps filled primary action labels on the family accent floor", () => {
     const filled = theme.family === "plasma-breeze" ? "#3daee9" : (theme.palette.blue[8] as string);
-    expect(contrast("#ffffff", filled)).toBeGreaterThanOrEqual(FLOOR.accentLabel);
+    const label = theme.family === "plasma-breeze" ? "#ffffff" : theme.palette.blueContrast;
+    expect(contrast(label, filled)).toBeGreaterThanOrEqual(FLOOR.accentLabel);
   });
 
   it("keeps every semantic status colour readable as text", () => {
@@ -103,8 +104,12 @@ describe.each(ALL_APP_THEMES)("$family $label theme contrast", (theme) => {
     for (const [name, value] of Object.entries(semantic)) {
       const ratio = contrast(value, SURFACE.panel);
       // `bad` is the filled/destructive tone, not a text tone: it must clear the
-      // 3:1 non-text bar; `dangerBright` is the text-safe red.
-      const min = name === "bad" ? FLOOR.statusFill : FLOOR.status;
+      // fill floor. Glassy dark uses that same crimson for menu items and other
+      // red controls (`dangerBright`), so it shares the fill floor. Every other
+      // theme keeps `dangerBright` on the text floor.
+      const destructiveControl =
+        name === "bad" || (name === "dangerBright" && theme.family === "glassy" && theme.scheme === "dark");
+      const min = destructiveControl ? FLOOR.statusFill : FLOOR.status;
       if (ratio < min) {
         failures.push(`${name} ${value} on panel = ${ratio.toFixed(2)} (min ${min})`);
       }

@@ -4,7 +4,7 @@ import { Button, Group, Stack, Stepper, Text } from "@mantine/core";
 import { AppPanelModal } from "@ui/AppPanelModal/AppPanelModal";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import type { ServerProfile, SteamCmdStatus } from "@shared/types";
-import type { UiDensity } from "@features/settings/settingsModel";
+import type { ThemeFamilyId, ThemeScheme, UiDensity } from "@features/settings/settingsModel";
 import type { DesktopShellPreferencesController } from "@features/settings/hooks/useDesktopShellPreferences";
 import {
   getClusterDirFormError,
@@ -35,6 +35,8 @@ interface Props {
   steamCmdBusy: boolean;
   defaultBaseFolder: string | null;
   uiDensity: UiDensity;
+  themeFamily: ThemeFamilyId;
+  scheme: ThemeScheme;
   openNativeTerminalOnStart: boolean;
   desktopShell: DesktopShellPreferencesController;
   busy: boolean;
@@ -42,6 +44,8 @@ interface Props {
   onInstallSteamCmd: () => void;
   onDefaultBaseFolderChange: (path: string | null) => void;
   onUiDensityChange: (density: UiDensity) => void;
+  onThemeFamilyChange: (family: ThemeFamilyId) => void;
+  onSchemeChange: (scheme: ThemeScheme) => void;
   onOpenNativeTerminalOnStartChange: (enabled: boolean) => void;
   onSkip: () => Promise<void>;
   onDismiss: () => void;
@@ -217,6 +221,10 @@ export function SetupWizard(props: Props): ReactElement {
           <SetupWizardShellStep
             uiDensity={props.uiDensity}
             onUiDensityChange={props.onUiDensityChange}
+            themeFamily={props.themeFamily}
+            onThemeFamilyChange={props.onThemeFamilyChange}
+            scheme={props.scheme}
+            onSchemeChange={props.onSchemeChange}
             openNativeTerminalOnStart={props.openNativeTerminalOnStart}
             onOpenNativeTerminalOnStartChange={props.onOpenNativeTerminalOnStartChange}
             desktopShell={props.desktopShell}

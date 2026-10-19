@@ -6,12 +6,15 @@
   min-width: 0;
   height: 100%;
   padding: var(--app-space-xs) var(--app-space-sm) !important;
-  border-radius: 0;
+  border-radius: var(--app-collection-radius) !important;
   border-color: var(--app-color-border);
-  background: var(--app-color-panel);
-  box-shadow: none;
-  backdrop-filter: var(--app-surface-filter);
-  -webkit-backdrop-filter: var(--app-surface-filter);
+  background-color: var(--app-panel-surface-bg);
+  background-image: var(--app-glass-sheen);
+  box-shadow: var(--app-shadow-panel);
+  /* Same seam as the server cards: an inline backdrop blur on these tiles
+     continues as a vertical glow down the list. The fill and shadow stay. */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   color: inherit;
   text-align: left;
   transition:

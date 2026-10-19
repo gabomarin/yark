@@ -115,6 +115,7 @@ export const appearanceSettingsSchema = z
     themeFamily: z.enum(THEME_FAMILY_IDS),
     scheme: z.enum(THEME_SCHEMES),
     panels: z.enum(WORKSPACE_PANELS_IDS),
+    backgroundImage: z.boolean(),
   })
   .strict();
 

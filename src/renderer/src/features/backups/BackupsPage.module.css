@@ -3,6 +3,7 @@
   flex: 1;
   min-height: 0;
   overflow: auto;
+  padding: var(--app-content-pane-padding);
 }
 
 /* Keep cards at content height so fillViewport does not crush them (mirrors HostedResourcesPage). */
@@ -39,8 +40,10 @@
 }
 
 .volumeCard {
-  border-radius: 0;
-  background: var(--app-color-panel);
+  border-radius: var(--app-panel-radius);
+  background-color: var(--app-float-panel-bg);
+  background-image: var(--app-glass-sheen);
+  box-shadow: var(--app-glass-rim);
 }
 
 .statWarning {
@@ -55,11 +58,13 @@
   background: color-mix(in srgb, var(--app-color-panel) 45%, transparent);
 }
 
-.healthCardHeader {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background: var(--app-color-panel);
+/* The scroll column must not paint its own sheet. A translucent page plate
+   showed as a square behind each rounded server card. */
+.toolShell .content {
+  background-color: transparent;
+  background-image: none;
+  border: none;
+  box-shadow: none;
 }
 
 .policyField {
@@ -89,9 +94,13 @@
 
 .kindSettings {
   padding: var(--app-space-xs) var(--app-space-xs);
-  border-radius: 0;
+  border-radius: var(--app-tab-attached-radius);
   border: 1px solid var(--app-color-border-subtle);
-  background: var(--app-color-panel);
+  /* The tab list already draws the rule this panel meets. */
+  border-top: none;
+  background-color: var(--app-raised-surface-bg);
+  background-image: var(--app-glass-sheen);
+  box-shadow: var(--app-glass-rim);
 }
 
 .kindSettings :global(.mantine-InputWrapper-root) {
@@ -173,7 +182,8 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--app-space-xs);
+  /* The kind settings panel uses the tab-attached radius, so it has to meet the tab rule. */
+  gap: 0;
 }
 
 .kindTabList {
@@ -218,7 +228,7 @@
   align-items: center;
   justify-content: center;
   padding: var(--app-space-md) var(--app-space-sm);
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
   border: 1px dashed var(--app-color-border);
   background: var(--app-color-panel);
 }

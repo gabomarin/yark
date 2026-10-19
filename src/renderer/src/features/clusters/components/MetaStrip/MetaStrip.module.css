@@ -4,7 +4,7 @@
   gap: var(--app-space-sm) var(--app-space-md);
   padding: var(--app-space-sm) var(--app-space-md);
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
   background: var(--app-color-panel);
 }
 

@@ -3,9 +3,6 @@ import classes from "./AppSurface.module.css";
 /** Tool-page column. Identity is transparent, so the shell keeps painting the pane. */
 export const appContentPaneClass = classes.contentPane;
 
-/** Panel fill plus the surface filter. */
-export const appPanelSurfaceClass = classes.panel;
-
 /**
  * Hairline panel vessel (border + fill + raised filter).
  * Only attach where the element already uses that recipe.

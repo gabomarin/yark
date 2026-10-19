@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { SegmentedControl, Text, Title } from "@mantine/core";
+import { SegmentedControl, Switch, Text, Title } from "@mantine/core";
 import { THEME_FAMILY_LIST, themeVariantsForFamily } from "@theme/themes";
 import { isThemeFamilyId, isThemeScheme, isWorkspacePanelsId } from "@shared/settings/appearance";
 import { WORKSPACE_PANELS_OPTION_LIST, resolveWorkspacePanelsOption } from "@shared/workspace/workspacePanels";
@@ -15,14 +15,15 @@ interface Props {
   onSchemeChange: (scheme: ThemeScheme) => void;
   workspacePanels: WorkspacePanelsId;
   onWorkspacePanelsChange: (panels: WorkspacePanelsId) => void;
+  backgroundImage: boolean;
+  onBackgroundImageChange: (enabled: boolean) => void;
 }
 
 /**
  * Appearance (#PUX-004 Track B, family split #PUX-005-B). Display size, theme
- * family, scheme and where the server workspace puts its panels - the four "how
- * it looks on this PC" choices, so density lives here instead of in General.
- * Every id control renders its registry, so shipping another family, variant or
- * option is data, not a UI change.
+ * family, scheme, the Glassy background image, and where the server workspace
+ * puts its panels. Every id control renders its registry, so shipping another
+ * family, variant or option is data, not a UI change.
  */
 export function SettingsAppearanceSection(props: Props): ReactElement {
   return (
@@ -109,6 +110,26 @@ export function SettingsAppearanceSection(props: Props): ReactElement {
             />
           </div>
         </div>
+
+        {props.family === "glassy" ? (
+          <div className={classes.settingRow}>
+            <div className={classes.settingCopy}>
+              <Text size="sm" fw={600}>
+                Background image
+              </Text>
+              <Text size="xs" c="dimmed" mt={2}>
+                Day or night scene behind Glassy. Off leaves a flat canvas. The glass panels stay.
+              </Text>
+            </div>
+            <div className={classes.settingControl}>
+              <Switch
+                checked={props.backgroundImage}
+                onChange={(event) => props.onBackgroundImageChange(event.currentTarget.checked)}
+                aria-label="Background image"
+              />
+            </div>
+          </div>
+        ) : null}
 
         <div className={classes.settingRow}>
           <div className={classes.settingCopy}>

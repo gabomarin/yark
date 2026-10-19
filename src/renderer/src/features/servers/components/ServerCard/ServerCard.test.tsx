@@ -1210,6 +1210,10 @@ describe("ServerCard", () => {
     );
 
     expect(screen.getByRole("button", { name: /^Start server$/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Paused · Updating server – open Downloads/i })).toHaveAttribute(
+      "data-progress-waiting",
+      "true",
+    );
     await user.click(screen.getByRole("button", { name: /Paused · Updating server – open Downloads/i }));
     expect(onOpenDownloads).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("button", { name: /Resume download/i })).not.toBeInTheDocument();
@@ -1283,7 +1287,10 @@ describe("ServerCard", () => {
     );
 
     expect(document.querySelector(SERVER_CARD_SELECTOR)).toHaveAttribute("data-queued");
-    expect(screen.getByText(/Queued · Verifying integrity/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Queued · Verifying integrity – open Downloads/i })).toHaveAttribute(
+      "data-progress-waiting",
+      "true",
+    );
     expect(screen.getByRole("button", { name: /^Start server$/i })).toBeDisabled();
     await user.click(screen.getByRole("button", { name: /Queued · Verifying integrity – open Downloads/i }));
     expect(onOpenDownloads).toHaveBeenCalledTimes(1);

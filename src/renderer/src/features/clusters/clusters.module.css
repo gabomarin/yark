@@ -13,6 +13,7 @@
   flex: 1;
   min-height: 0;
   overflow: hidden;
+  padding: var(--app-content-pane-padding);
 }
 
 .guidanceCard {
@@ -44,7 +45,7 @@
   min-height: clamp(240px, 42vh, 360px);
   align-self: center;
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
   background: transparent;
 }
 
@@ -65,6 +66,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--app-space-xs);
+  padding: var(--app-content-pane-padding);
 }
 
 .clusterTabs {
@@ -102,12 +104,20 @@
 
 .createClusterAction {
   flex: 0 0 auto;
+  position: relative;
+  z-index: 2;
+  /* The panel overlaps the tab rule. Keep the button above that line so the
+     border does not show through the translucent fill. */
+  margin-bottom: calc(6px + var(--tabs-list-border-width));
 }
 
 .clusterTabsList :global(.mantine-Tabs-tab) {
   flex: 0 0 auto;
   max-width: min(18rem, 70vw);
-  background: transparent;
+}
+
+.clusterTabsList :global(.mantine-Tabs-tab:not([data-active])) {
+  background: var(--app-tab-inactive-bg);
   color: var(--app-color-muted);
 }
 
@@ -117,13 +127,13 @@
 }
 
 .clusterTabsList :global(.mantine-Tabs-tab[data-active]) {
-  background: color-mix(in srgb, var(--app-color-accent) 12%, var(--app-color-surface-control-hover));
+  background: var(--app-tab-active-bg);
   color: var(--app-color-text);
   box-shadow: inset 0 -1px 0 var(--app-color-accent);
 }
 
 .clusterTabsList :global(.mantine-Tabs-tab[data-active]:hover) {
-  background: color-mix(in srgb, var(--app-color-accent) 16%, var(--app-color-surface-control-hover));
+  background: var(--app-tab-active-hover-bg);
 }
 
 .clusterTabName {
@@ -140,6 +150,10 @@
   min-height: 0;
   overflow: hidden;
   margin-top: calc(-2px - var(--tabs-list-border-width));
+}
+
+.clusterTabsPanel > [data-panel-radius][data-fill] {
+  border-radius: var(--app-tab-attached-radius) !important;
 }
 
 /* Path-first meta: long directory gets the leftover width; counts stay tight. */
@@ -186,6 +200,15 @@
   list-style: none;
 }
 
+.memberList {
+  overflow: hidden;
+  border: var(--app-list-vessel-border);
+  border-radius: var(--app-collection-radius);
+  background: var(--app-list-vessel-bg);
+  backdrop-filter: var(--app-surface-raised-filter);
+  -webkit-backdrop-filter: var(--app-surface-raised-filter);
+}
+
 .memberRow {
   display: flex;
   align-items: flex-start;
@@ -193,6 +216,11 @@
   gap: var(--app-space-sm);
   padding: var(--app-space-xs) var(--app-space-sm);
   border-radius: 0;
+  background: transparent;
+}
+
+.memberRow + .memberRow {
+  border-top: var(--app-list-row-edge);
 }
 
 .memberRow[data-clickable="true"] {
@@ -200,7 +228,7 @@
 }
 
 .memberRow[data-clickable="true"]:hover {
-  background: var(--app-color-surface-control);
+  background: var(--app-list-row-hover);
   border-color: var(--app-color-border-control);
 }
 
