@@ -46,6 +46,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - On a short window the sidebar navigation scrolls, so Quit stays on screen. Download rows outside the flush queue keep their border.
 - **Glassy** light toasts keep a dark title and message. The message was using the hairline color, so it disappeared on the toast.
 - Fluent and Plasma Breeze dark primary buttons keep a white label and icon.
+- Cluster **Transfer** Save no longer stores an empty or tribute-only INI template; it seeds from a member first so a later Apply INI template cannot wipe unrelated `GameUserSettings.ini` values.
 - Plasma Breeze **Start** uses the same accent blue as **New server**. Filled primaries stay on `#3daee9` instead of a darker button blue.
 - Outside-change Configuration banner clears when disk matches the Save baseline again, conflict Save captures disk details for View outside changes, and semantic INI edits keep mixed line endings / duplicate occurrence order (#667).
 
