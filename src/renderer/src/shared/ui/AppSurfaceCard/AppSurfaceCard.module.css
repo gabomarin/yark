@@ -1,10 +1,14 @@
 .root {
   border-color: var(--app-surface-border);
-  background-color: var(--app-color-panel-cool);
+  background-color: var(--app-panel-surface-bg);
   background-image: var(--app-surface-cool);
   box-shadow: var(--app-shadow-panel);
   backdrop-filter: var(--app-surface-filter);
   -webkit-backdrop-filter: var(--app-surface-filter);
+}
+
+.root[data-panel-radius] {
+  border-radius: var(--app-panel-radius) !important;
 }
 
 .root[data-tone="coolEmphasis"] {
@@ -12,7 +16,7 @@
 }
 
 .root[data-tone="flat"] {
-  background-color: var(--app-surface-flat);
+  background-color: var(--app-panel-surface-bg);
   background-image: none;
   border-color: var(--app-color-border-subtle);
 }

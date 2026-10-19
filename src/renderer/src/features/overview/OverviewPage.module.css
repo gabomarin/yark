@@ -115,23 +115,22 @@
 .serverGrid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 0;
+  gap: var(--app-collection-gap);
 }
 
-/* Adjacent rows share one 1px rule (the row above). Do not overlap with
-   negative margin — a later tone with a semantic border-color would paint
-   onto the row above. */
+/* Adjacent rows share one 1px rule when the collection is fused (gap 0).
+   A tiled collection keeps the top border via `--app-collection-join`. */
 .serverGrid > :global([data-server-card]) + :global([data-server-card]) {
-  border-top-width: 0;
+  border-top-width: var(--app-collection-join);
 }
 
 .serverSkeletons {
   display: grid;
-  gap: 0;
+  gap: var(--app-collection-gap);
 }
 
 .serverSkeletons > * + * {
-  border-top-width: 0;
+  border-top-width: var(--app-collection-join);
 }
 
 .serverSkeleton {
@@ -142,7 +141,7 @@
   min-height: 82px;
   padding: var(--app-space-sm) var(--app-space-md);
   border: 1px solid var(--app-color-border);
-  border-radius: 0;
+  border-radius: var(--app-collection-radius);
   background-clip: padding-box;
   background: color-mix(in srgb, var(--app-color-panel-cool) 74%, transparent);
 }
@@ -226,8 +225,11 @@
     top: var(--app-space-lg);
     padding: var(--app-space-md) var(--app-space-md) var(--app-space-sm);
     border: 1px solid var(--app-color-border-subtle);
-    border-radius: 0;
+    border-radius: var(--app-collection-radius);
     background: var(--app-color-panel);
+    box-shadow: var(--app-collection-item-shadow);
+    backdrop-filter: var(--app-surface-filter);
+    -webkit-backdrop-filter: var(--app-surface-filter);
   }
 }
 

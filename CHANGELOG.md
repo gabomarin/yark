@@ -11,10 +11,17 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Settings → Appearance adds **Glassy** (dark and light): frosted panels on the ARK cyan palette. Cards and the sidebar stay readable in both schemes, path fields sit in the glass, and a panel under a tab line keeps a square top so the corner does not leave a gap. Delete, the other danger buttons, and the kebab Delete item use the same crimson as Plasma Breeze. On Glassy dark the kebab menu sits a step darker than the card, path fields use a dark well, cluster warning cells use a light gold veil on the cyan glass so the numbers stay readable, icon-only actions sit on a frosted plate, and primary actions such as New server and Start use that same frost on the accent. Glassy light uses that teal on a light sheet instead of sky blue, its buttons keep a frosted mint plate, and header links such as Check servers health stay clear. Disabled buttons stay a flat translucent fill instead of frosted glass, so actions such as Restart and an up-to-date Install recede next to Start. The Collapse navigation label opens into the sidebar, and hovering that control no longer draws a glow line from the fleet metrics through the server cards. RCON cards clear the tab line, server log panels and backup kind tabs meet their tabs, discrete panels such as Maintenance follow the panel radius, and the Downloads queue clears the splitter. Fluent and Plasma Breeze stay opaque and square.
 - Visual Configuration Save applies only the changed simple settings onto the latest INI on disk, so non-overlapping edits from Notepad (or other tools) can coexist; overlapping changes still refuse a silent overwrite (#667).
 - When INI files change outside YARK while the visual editor is dirty, an info banner summarizes how many settings changed outside YARK, offers a View outside changes link with a compact detail popover, and tells operators to click Save to merge when edits do not overlap (no Reload CTA in that banner); warning/error stay reserved for text-mode Save and real conflicts (#667).
 - Configuration Save refuses to overwrite `Game.ini` / `GameUserSettings.ini` when those files changed outside YARK since the editor loaded; the editor also re-checks on window focus, auto-reloads when clean, and always offers Reload from disk (#665).
 - Configuration and cluster INI visual editors highlight unsaved rows, show the last saved value (or that a key is absent), and support per-row revert or discard without clearing other drafts (#661).
+
+### Changed
+
+- The setup assistant Windows step includes theme family and color scheme, so first-run offers **Glassy** the same way Settings → Appearance does.
+- Queued and paused job labels on server cards use an accent chip, so a waiting install or update is visible on every theme.
+- Cluster **Remove servers** uses the same solid red fill as workspace **Delete server**.
 
 ### Fixed
 

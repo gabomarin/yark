@@ -1,12 +1,18 @@
 import type { ReactElement } from "react";
 import { SegmentedControl, Stack, Switch, Text, Title } from "@mantine/core";
-import type { UiDensity } from "@features/settings/settingsModel";
+import type { ThemeFamilyId, ThemeScheme, UiDensity } from "@features/settings/settingsModel";
 import type { DesktopShellPreferencesController } from "@features/settings/hooks/useDesktopShellPreferences";
+import { isThemeFamilyId, isThemeScheme } from "@shared/settings/appearance";
+import { THEME_FAMILY_LIST, themeVariantsForFamily } from "@theme/themes";
 import classes from "../setupWizard.module.css";
 
 interface Props {
   uiDensity: UiDensity;
   onUiDensityChange: (density: UiDensity) => void;
+  themeFamily: ThemeFamilyId;
+  onThemeFamilyChange: (family: ThemeFamilyId) => void;
+  scheme: ThemeScheme;
+  onSchemeChange: (scheme: ThemeScheme) => void;
   openNativeTerminalOnStart: boolean;
   onOpenNativeTerminalOnStartChange: (enabled: boolean) => void;
   desktopShell: DesktopShellPreferencesController;
@@ -106,6 +112,57 @@ export function SetupWizardShellStep(props: Props): ReactElement {
               { label: "Compact", value: "compact" },
             ]}
             aria-label="Display size"
+          />
+        </div>
+      </div>
+
+      <div className={classes.settingRow}>
+        <div className={classes.settingCopy}>
+          <Text size="sm" fw={600}>
+            Theme family
+          </Text>
+          <Text size="xs" c="dimmed" mt={2}>
+            The visual language of the shell. The same choice as Settings → Appearance.
+          </Text>
+        </div>
+        <div className={classes.settingControl}>
+          <SegmentedControl
+            size="xs"
+            value={props.themeFamily}
+            onChange={(value) => {
+              if (isThemeFamilyId(value) && value !== props.themeFamily) {
+                props.onThemeFamilyChange(value);
+              }
+            }}
+            data={THEME_FAMILY_LIST.map((family) => ({ label: family.label, value: family.id }))}
+            aria-label="Theme family"
+          />
+        </div>
+      </div>
+
+      <div className={classes.settingRow}>
+        <div className={classes.settingCopy}>
+          <Text size="sm" fw={600}>
+            Color scheme
+          </Text>
+          <Text size="xs" c="dimmed" mt={2}>
+            Choose the light or dark scheme.
+          </Text>
+        </div>
+        <div className={classes.settingControl}>
+          <SegmentedControl
+            size="xs"
+            value={props.scheme}
+            onChange={(value) => {
+              if (isThemeScheme(value) && value !== props.scheme) {
+                props.onSchemeChange(value);
+              }
+            }}
+            data={themeVariantsForFamily(props.themeFamily).map((theme) => ({
+              label: theme.label,
+              value: theme.scheme,
+            }))}
+            aria-label="Color scheme"
           />
         </div>
       </div>

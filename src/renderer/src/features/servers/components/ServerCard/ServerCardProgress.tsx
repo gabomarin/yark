@@ -15,21 +15,35 @@ interface Props {
 function ProgressLabel({
   shortProgressLabel,
   onOpenDownloads,
+  waiting,
 }: {
   shortProgressLabel: string;
   onOpenDownloads?: () => void;
+  /** Queued or paused: no bar, so the label itself has to carry the job. */
+  waiting?: boolean;
 }): ReactElement {
   if (onOpenDownloads === undefined) {
-    return <Text size="sm">{shortProgressLabel}</Text>;
+    return (
+      <Text size="sm" className={waiting ? classes.progressWaitingLabel : undefined} data-progress-waiting={waiting || undefined}>
+        {shortProgressLabel}
+      </Text>
+    );
   }
 
   return (
     <UnstyledButton
-      className={classes.progressCta}
+      className={waiting ? `${classes.progressCta} ${classes.progressWaiting}` : classes.progressCta}
       aria-label={`${shortProgressLabel} – open Downloads`}
+      data-progress-waiting={waiting || undefined}
       onClick={onOpenDownloads}
     >
-      <Text span size="sm" fw={500} c="var(--mantine-color-blue-light-color)" className={classes.progressCtaLabel}>
+      <Text
+        span
+        size="sm"
+        fw={waiting ? 600 : 500}
+        c={waiting ? undefined : "var(--mantine-color-blue-light-color)"}
+        className={classes.progressCtaLabel}
+      >
         {shortProgressLabel}
       </Text>
     </UnstyledButton>
@@ -44,7 +58,13 @@ export function ServerCardProgress({
   showProgressBar = true,
   onOpenDownloads,
 }: Props): ReactElement {
-  const label = <ProgressLabel shortProgressLabel={shortProgressLabel} onOpenDownloads={onOpenDownloads} />;
+  const label = (
+    <ProgressLabel
+      shortProgressLabel={shortProgressLabel}
+      onOpenDownloads={onOpenDownloads}
+      waiting={!showProgressBar}
+    />
+  );
   const showByteLine =
     byteProgressLabel !== null && !byteProgressLineIsRedundant(shortProgressLabel, byteProgressLabel);
 

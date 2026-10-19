@@ -129,12 +129,12 @@
 }
 
 .item:hover {
-  background: color-mix(in srgb, var(--app-color-surface-control) 52%, transparent);
+  background: var(--app-server-list-hover);
 }
 
 .item[data-selected] {
   background: var(--app-list-selected-bg);
-  border-color: var(--app-color-accent-subtle);
+  border-color: var(--app-server-list-selected-border);
   box-shadow: none;
 }
 

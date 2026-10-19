@@ -16,13 +16,14 @@
 
 /* Discrete panel fill (table body, metric strip) that should blur with the surface. */
 .panel {
-  background: var(--app-color-panel);
+  background: var(--app-panel-surface-bg);
   backdrop-filter: var(--app-surface-filter);
   -webkit-backdrop-filter: var(--app-surface-filter);
 }
 
 /* Bordered vessel. Identity matches the hairline panel boxes tool pages already draw. */
 .raised {
+  border-radius: var(--app-panel-radius);
   background: var(--app-raised-surface-bg);
   border: var(--app-raised-surface-border);
   box-shadow: var(--app-raised-surface-shadow);

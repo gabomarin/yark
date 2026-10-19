@@ -1,6 +1,6 @@
 .table {
   overflow: hidden;
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
   border: 1px solid var(--app-color-border);
   background: var(--app-color-panel);
 }
@@ -109,7 +109,7 @@
 .secretNote {
   margin: 0;
   padding: 8px 12px;
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
   border: 1px solid var(--app-color-fossil);
   background: color-mix(in srgb, var(--app-color-fossil) 12%, transparent);
   color: var(--app-color-fossil);

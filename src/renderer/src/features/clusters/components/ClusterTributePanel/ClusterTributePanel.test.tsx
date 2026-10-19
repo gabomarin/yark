@@ -199,6 +199,7 @@ describe("ClusterTributePanel", () => {
     expect(screen.getAllByText(/86,400 seconds \(1 day\)/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/172,800 seconds \(2 days\)/).length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: /edit settings for this map/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove servers" })).toHaveAttribute("data-variant", "filled");
   });
 
   it("applies cluster-wide values only to stopped members and preserves other member INI keys", async () => {

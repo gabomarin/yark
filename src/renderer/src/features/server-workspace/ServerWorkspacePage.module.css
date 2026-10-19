@@ -70,6 +70,12 @@
   min-height: 0;
 }
 
+/* The shell under the tab rule meets it with a square top. Nested cards keep their own radius. */
+.tabPanel > [data-panel-radius][data-fill],
+.tabPanel > * > [data-panel-radius][data-fill] {
+  border-radius: var(--app-tab-attached-radius) !important;
+}
+
 .panelLoading {
   display: grid;
   place-items: center;

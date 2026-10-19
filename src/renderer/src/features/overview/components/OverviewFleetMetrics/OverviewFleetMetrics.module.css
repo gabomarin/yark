@@ -1,8 +1,9 @@
 .strip {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0;
-  border: 1px solid var(--app-color-border);
+  gap: var(--app-collection-gap);
+  border: var(--app-collection-fuse) solid var(--app-color-border);
+  background: var(--app-collection-strip-fill);
   min-width: 0;
 }
 
@@ -15,7 +16,7 @@
 .cell {
   position: relative;
   min-width: 0;
-  border-right: 1px solid var(--app-color-border-subtle);
+  border-right: var(--app-collection-fuse) solid var(--app-color-border-subtle);
 }
 
 .cell:last-child {
@@ -28,15 +29,15 @@
   }
 
   .cell:nth-child(-n + 2) {
-    border-bottom: 1px solid var(--app-color-border-subtle);
+    border-bottom: var(--app-collection-fuse) solid var(--app-color-border-subtle);
   }
 }
 
 /* Segmented strip: drop Card chrome; keep tone fill + inset selected border. */
 .cell :global([data-clickable]) {
-  border: none !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
+  border: var(--app-collection-item-border) !important;
+  border-radius: var(--app-collection-radius) !important;
+  box-shadow: var(--app-collection-item-shadow) !important;
   height: 100%;
 }
 

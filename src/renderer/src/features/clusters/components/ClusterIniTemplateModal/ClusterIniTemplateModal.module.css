@@ -55,7 +55,7 @@
   min-height: 0;
   min-width: 0;
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
   overflow: auto;
   /* Same surface as the rows it holds: no blue wash, no darker "well" beneath them. */
   background: var(--app-color-panel);
@@ -148,7 +148,7 @@
 }
 
 .notice {
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
   border: 1px solid var(--app-color-accent);
   background: color-mix(in srgb, var(--app-color-accent) 12%, transparent);
   color: color-mix(in srgb, var(--app-color-accent) 40%, var(--app-color-text));

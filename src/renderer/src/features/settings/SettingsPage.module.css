@@ -6,7 +6,8 @@
 .layout {
   display: grid;
   grid-template-columns: minmax(176px, 208px) minmax(0, 1fr);
-  gap: 0;
+  gap: var(--app-split-gap);
+  padding: var(--app-split-padding);
   flex: 1 1 0;
   min-height: 0;
   height: 100%;
@@ -29,10 +30,12 @@
 }
 
 .navCard {
-  border: none !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  background: transparent !important;
+  border: var(--app-split-rail-border) !important;
+  border-radius: var(--app-panel-radius) !important;
+  box-shadow: var(--app-split-rail-shadow) !important;
+  background: var(--app-shell-chrome-bg) !important;
+  backdrop-filter: var(--app-surface-chrome-filter) !important;
+  -webkit-backdrop-filter: var(--app-surface-chrome-filter) !important;
   border-right: 1px solid var(--app-color-border-subtle) !important;
 }
 
@@ -65,8 +68,8 @@
   height: 100%;
   /* Keep Settings rows at a readable line length on wide monitors without moving the rail. */
   width: 100%;
-  max-width: 1440px;
-  margin-inline: auto;
+  max-width: var(--app-split-panel-max);
+  margin-inline: var(--app-split-panel-margin);
 }
 
 .navStack {
@@ -169,6 +172,13 @@
   display: flex;
   flex-direction: column;
   gap: 0;
+  overflow: var(--app-setting-stack-clip);
+  border: var(--app-setting-stack-border);
+  border-radius: var(--app-panel-radius);
+  background: var(--app-setting-stack-bg);
+  box-shadow: var(--app-raised-surface-shadow);
+  backdrop-filter: var(--app-surface-filter);
+  -webkit-backdrop-filter: var(--app-surface-filter);
 }
 
 /*
@@ -181,9 +191,9 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--app-space-sm) var(--app-space-md);
-  border: 1px solid var(--app-color-border-subtle);
+  border: var(--app-setting-row-border);
   border-radius: 0;
-  background: var(--app-color-surface-panel);
+  background: var(--app-setting-row-bg);
 }
 
 .settingStack > .settingRow + .settingRow,
@@ -194,7 +204,8 @@
 .settingStack > .settingGroup + .settingGroup,
 .settingStack > .settingBlock + .settingGroup,
 .settingStack > .settingGroup + .settingBlock {
-  margin-top: -1px;
+  margin-top: var(--app-setting-row-join);
+  border-top: var(--app-setting-row-edge);
 }
 
 .settingCopy {
@@ -214,9 +225,9 @@
  * children as internal hairline rows (no separate bordered cards).
  */
 .settingGroup {
-  border: 1px solid var(--app-color-border-subtle);
+  border: var(--app-setting-row-border);
   border-radius: 0;
-  background: var(--app-color-surface-panel);
+  background: var(--app-setting-row-bg);
 }
 
 .settingGroup > .settingRow {
@@ -239,9 +250,9 @@
   flex-direction: column;
   gap: var(--app-space-sm);
   padding: var(--app-space-sm) var(--app-space-md);
-  border: 1px solid var(--app-color-border-subtle);
+  border: var(--app-setting-row-border);
   border-radius: 0;
-  background: var(--app-color-surface-panel);
+  background: var(--app-setting-row-bg);
 }
 
 .statusReady {
@@ -273,7 +284,7 @@
 
 .cacheList {
   padding: var(--app-space-sm);
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
 }
 
 .cacheRow {
@@ -294,7 +305,7 @@
 
 .autoStartList {
   padding: var(--app-space-sm);
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
 }
 
 .autoStartRow {
@@ -354,7 +365,7 @@
 
 .discordPrivacyNote {
   padding: var(--app-space-xs) var(--app-space-sm);
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
   background: var(--app-color-panel);
 }
 

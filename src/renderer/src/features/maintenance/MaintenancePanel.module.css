@@ -24,7 +24,8 @@
 .slab {
   border: 1px solid var(--app-color-border);
   background: var(--app-color-panel);
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
+  overflow: hidden;
 }
 
 .slabHeader {

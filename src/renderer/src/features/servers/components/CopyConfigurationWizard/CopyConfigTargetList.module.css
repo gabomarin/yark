@@ -1,5 +1,5 @@
 .root {
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
   border: 1px solid var(--app-color-border);
   background: color-mix(in srgb, var(--app-color-surface-chrome) 72%, transparent);
   padding: 14px 16px;
@@ -21,7 +21,7 @@
 
 .listScroll {
   border: 1px solid var(--app-color-border);
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
   background: color-mix(in srgb, var(--app-color-surface-chrome) 40%, transparent);
 }
 

@@ -30,6 +30,7 @@
   background-repeat: repeat;
   background-position: center;
   background-size: 160px 160px;
+  opacity: var(--app-shell-grain-opacity);
   -webkit-mask-image: radial-gradient(
     120% 100% at 32% -14%,
     #000 0%,
@@ -69,11 +70,8 @@
   z-index: 2;
   overflow: visible;
   background: transparent;
-  background-color: transparent;
-  backdrop-filter: var(--app-surface-chrome-filter);
-  -webkit-backdrop-filter: var(--app-surface-chrome-filter);
   --app-shell-border-color: color-mix(in srgb, var(--app-color-border) 35%, transparent);
-  border-right: 1px solid color-mix(in srgb, var(--app-color-border) 28%, transparent);
+  border-right: 1px solid var(--app-chrome-border);
   transition: width var(--app-motion-base) var(--app-ease-standard);
 }
 
@@ -81,16 +79,22 @@
   position: fixed;
   top: 50vh;
   z-index: 120;
+  /*
+   * Center on the seam without a transform. A transformed control in this row
+   * makes Chromium repaint a bright slab on backdrop-filter cards beside it.
+   * Width and height come from the toggle (`--chrome-rail-edge-*`).
+   */
+  margin-top: calc(var(--chrome-rail-edge-height) / -2);
 }
 
 /* Flat edge on the seam; curve into content when expanding. */
 .sidebarEdgeToggle[data-direction="expand"] {
-  transform: translateY(-50%);
+  margin-left: 0;
 }
 
 /* Flat edge on the seam; curve into the sidenav when collapsing. */
 .sidebarEdgeToggle[data-direction="collapse"] {
-  transform: translate(-100%, -50%);
+  margin-left: calc(-1 * var(--chrome-rail-edge-width));
 }
 
 /*
@@ -110,6 +114,8 @@
   flex-direction: column;
   position: relative;
   z-index: 1;
+  /* Backdrop root for the glass cards, so a hover in the navbar cannot retile them. */
+  isolation: isolate;
   height: 100vh;
   overflow: hidden;
   background-color: var(--app-shell-main-bg);

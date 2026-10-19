@@ -16,7 +16,7 @@
 }
 
 .root :global(.mantine-datatable) {
-  --mantine-datatable-background-color: var(--app-color-panel);
+  --mantine-datatable-background-color: var(--app-panel-surface-bg);
   --mantine-datatable-row-border-color: var(--app-color-border-subtle);
   --mantine-datatable-highlight-on-hover-color: var(--app-color-surface-control);
   --mantine-datatable-selection-color: var(--app-list-selected-bg);

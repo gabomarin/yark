@@ -3,6 +3,7 @@
   flex: 1;
   min-height: 0;
   overflow: auto;
+  padding: var(--app-content-pane-padding);
 }
 
 /* Keep cards at content height so fillViewport does not crush them (mirrors HostedResourcesPage). */
@@ -39,7 +40,7 @@
 }
 
 .volumeCard {
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
   background: var(--app-color-panel);
 }
 
@@ -89,9 +90,12 @@
 
 .kindSettings {
   padding: var(--app-space-xs) var(--app-space-xs);
-  border-radius: 0;
+  border-radius: var(--app-tab-attached-radius);
   border: 1px solid var(--app-color-border-subtle);
-  background: var(--app-color-panel);
+  background: var(--app-raised-surface-bg);
+  box-shadow: var(--app-raised-surface-shadow);
+  backdrop-filter: var(--app-surface-filter);
+  -webkit-backdrop-filter: var(--app-surface-filter);
 }
 
 .kindSettings :global(.mantine-InputWrapper-root) {
@@ -173,7 +177,8 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--app-space-xs);
+  /* The kind settings panel uses the tab-attached radius, so it has to meet the tab rule. */
+  gap: 0;
 }
 
 .kindTabList {
@@ -218,7 +223,7 @@
   align-items: center;
   justify-content: center;
   padding: var(--app-space-md) var(--app-space-sm);
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
   border: 1px dashed var(--app-color-border);
   background: var(--app-color-panel);
 }

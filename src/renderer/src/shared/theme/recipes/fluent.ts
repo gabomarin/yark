@@ -22,6 +22,27 @@ export function createFluentComponents(density: UiDensity, theme: AppTheme): Man
     WebkitBackdropFilter: "var(--app-surface-filter)",
   } as const;
 
+  /**
+   * Filled accent controls (New server, Start). Button's omitted variant is filled;
+   * ActionIcon's omitted variant is subtle, so the caller passes that default.
+   * Red and other semantic fills stay solid.
+   */
+  const isAccentFilled = (props: { variant?: string | undefined; color?: string | undefined }, omitted: "filled" | "subtle") => {
+    const variant = props.variant ?? omitted;
+    const accent = props.color === undefined || props.color === "blue";
+    return variant === "filled" && accent;
+  };
+  const accentFilledVars = (prefix: "button" | "ai") => ({
+    [`--${prefix}-bg`]: "var(--app-primary-button-bg)",
+    [`--${prefix}-hover`]: "var(--app-primary-button-hover)",
+    [`--${prefix}-bd`]: "var(--app-primary-button-border)",
+  });
+  const accentFilledPlate = {
+    backdropFilter: "var(--app-icon-button-filter)",
+    WebkitBackdropFilter: "var(--app-icon-button-filter)",
+    boxShadow: "var(--app-icon-button-shadow)",
+  } as const;
+
   const compactControlDefaults =
     density === "compact"
       ? ({
@@ -275,9 +296,10 @@ export function createFluentComponents(density: UiDensity, theme: AppTheme): Man
     },
     /*
      * Fluent flyout chrome: 8px shell, 4px rows on a 32px row height, 1px
-     * hairline separator (Mantine hardcodes its own divider colour). Row hover
-     * uses the app control-hover so menu rows match every other hover, and
-     * `--sc`-style colour props on an item still win over this inherited value.
+     * hairline separator (Mantine hardcodes its own divider colour). The fill is
+     * `--app-menu-bg` (the popover colour on opaque themes). Row hover uses the
+     * app control-hover so menu rows match every other hover, and `--sc`-style
+     * colour props on an item still win over this inherited value.
      */
     Menu: {
       defaultProps: {
@@ -286,6 +308,7 @@ export function createFluentComponents(density: UiDensity, theme: AppTheme): Man
       styles: {
         dropdown: {
           "--menu-item-hover": "var(--app-color-surface-control-hover)",
+          backgroundColor: "var(--app-menu-bg)",
         },
         item: {
           borderRadius: "var(--app-radius-control)",
@@ -335,8 +358,89 @@ export function createFluentComponents(density: UiDensity, theme: AppTheme): Man
     },
     Button: {
       ...compactControlDefaults.Button,
-      styles: {
-        root: surfaceFilter,
+      vars: (_mantineTheme: unknown, props: { variant?: string | undefined; color?: string | undefined }) => {
+        /*
+         * Transparent is a text link (Check servers health). A blur on a clear
+         * fill still paints a faint plate, so the filter and the wash both go.
+         */
+        if (props.variant === "transparent") {
+          return {
+            root: {
+              "--button-bg": "transparent",
+              "--button-hover": "transparent",
+              "--button-bd": "calc(0.0625rem * var(--mantine-scale)) solid transparent",
+            },
+          };
+        }
+        if (isAccentFilled(props, "filled")) return { root: accentFilledVars("button") };
+        if (props.variant === "default") {
+          return {
+            root: {
+              "--button-bg": "var(--app-icon-button-default-bg)",
+              "--button-bd": "var(--app-icon-button-default-border)",
+            },
+          };
+        }
+        if (props.variant === "subtle") {
+          return {
+            root: {
+              "--button-bg": "var(--app-icon-button-bg)",
+              "--button-bd": "var(--app-icon-button-border)",
+            },
+          };
+        }
+        return { root: {} };
+      },
+      styles: (_mantineTheme: unknown, props: { variant?: string | undefined; color?: string | undefined }) => {
+        if (props.variant === "transparent") {
+          return {
+            root: {
+              backdropFilter: "none",
+              WebkitBackdropFilter: "none",
+              boxShadow: "none",
+            },
+          };
+        }
+        const plate = isAccentFilled(props, "filled") || props.variant === "default" || props.variant === "subtle";
+        return { root: plate ? accentFilledPlate : surfaceFilter };
+      },
+    },
+    /*
+     * Idle icon buttons (subtle, transparent, and the bordered default). Filled
+     * stays the solid color. Opaque families keep Mantine's own plate; a theme
+     * can frost these roles without a family selector.
+     */
+    ActionIcon: {
+      ...compactControlDefaults.ActionIcon,
+      vars: (_mantineTheme: unknown, props: { variant?: string | undefined; color?: string | undefined }) => {
+        if (isAccentFilled(props, "subtle")) return { root: accentFilledVars("ai") };
+        const variant = props.variant;
+        const subtle = variant === undefined || variant === "subtle" || variant === "transparent";
+        if (!subtle && variant !== "default") return { root: {} };
+        return {
+          root: subtle
+            ? {
+                "--ai-bg": "var(--app-icon-button-bg)",
+                "--ai-bd": "var(--app-icon-button-border)",
+              }
+            : {
+                "--ai-bg": "var(--app-icon-button-default-bg)",
+                "--ai-bd": "var(--app-icon-button-default-border)",
+              },
+        };
+      },
+      styles: (_mantineTheme: unknown, props: { variant?: string | undefined; color?: string | undefined }) => {
+        if (isAccentFilled(props, "subtle")) return { root: accentFilledPlate };
+        const variant = props.variant;
+        const glass = variant === undefined || variant === "subtle" || variant === "transparent" || variant === "default";
+        if (!glass) return {};
+        return {
+          root: {
+            backdropFilter: "var(--app-icon-button-filter)",
+            WebkitBackdropFilter: "var(--app-icon-button-filter)",
+            boxShadow: "var(--app-icon-button-shadow)",
+          },
+        };
       },
     },
   };
