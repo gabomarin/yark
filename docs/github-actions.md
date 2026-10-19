@@ -16,10 +16,14 @@ human-readable version comment on the line above each `uses:` entry. Mutable tag
 | [`.github/workflows/release.yml`](../.github/workflows/release.yml)                               | Windows NSIS → GitHub Release; Discord `#releases` notify after assets upload                                                      | workflow `contents: read`; job elevates `contents: write` only to publish |
 | [`.github/workflows/open-code-review.yml`](../.github/workflows/open-code-review.yml)             | On-demand AI review for a PR with primary/fallback model selection; no automatic run on pushes                                     | `contents: read`, `pull-requests: write`                                  |
 | [`.github/workflows/discord-release-notify.yml`](../.github/workflows/discord-release-notify.yml) | Manual Discord re-announce for an existing tag (`workflow_dispatch`)                                                               | `contents: read`                                                          |
+| [`.github/workflows/real-host-validation.yml`](../.github/workflows/real-host-validation.yml)     | Manual `workflow_dispatch` real-ASA lifecycle + safe-update on a prepared self-hosted Windows runner (`yark-asa`); not PR CI (#12) | `contents: read`                                                          |
 
 Release runs only when `github.repository == 'gabomarin/yark'` (tag push or
 `workflow_dispatch`). It does not run on pull requests, so fork PRs cannot publish
 releases or consume release write tokens.
+
+Prepared-runner inputs, SteamCMD/ASA prerequisites, and sanitized evidence:
+[e2e-validation.md](e2e-validation.md#prepared-runner-automation).
 
 ### OpenCodeReview
 

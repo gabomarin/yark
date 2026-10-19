@@ -639,11 +639,35 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 </AppSurfaceCard>;
 ```
 
+### Surface material roles (#671)
+
+Blur, pane chrome, shell fill, list-row fill, nav selection, and raised vessels
+are **theme data**, not per-page CSS. Each `AppTheme` carries an
+`AppThemeMaterials` object (`tokens.ts`); `theme.ts` copies every field onto
+`--app-*` variables. Shipped Fluent and Plasma Breeze both use
+`opaqueMaterials` (`none` / `transparent` / today's panel and notch), so
+attaching a shared class does not add glass. A later family fills the same
+strings; feature CSS must not branch on family id.
+
+| Role helpers (`shared/ui/AppSurface/appSurfaceClassName.ts`) | CSS vars / recipe                         | Use for                                                                 |
+| ------------------------------------------------------------ | ----------------------------------------- | ----------------------------------------------------------------------- |
+| `appContentPaneClass`                                        | `--app-content-pane-*` + surface filter   | Tool-page column; identity is transparent under opaque families         |
+| `appPanelSurfaceClass`                                       | panel fill + `--app-surface-filter`       | Discrete panel strips (table body, metric strip)                        |
+| `appRaisedSurfaceClass`                                      | `--app-raised-surface-*` + raised filter  | Hairline vessels that already use the bordered panel recipe             |
+| `appFlatRowClass`                                            | `--app-color-list-row`                    | Row fill inside a fused list (hover/selection stay on the feature class)|
+| `withAppSurface(...)`                                        | —                                         | Join optional class parts without empty tokens                          |
+
+Nav selection fill/notch use `--app-nav-selected-fill` /
+`--app-nav-selected-notch` via `NavSelected`. Shell main fill uses
+`--app-shell-main-bg`. Prefer these helpers (or `AppSurfaceCard` tones) over
+copy-pasting `background` / `backdrop-filter` into feature modules.
+
 ## Shared atoms (start here)
 
 | Atom                       | Path                                  | Role                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | -------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `AppSurfaceCard`           | `shared/ui/AppSurfaceCard/`           | Homogeneous Card container                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `AppSurface` helpers       | `shared/ui/AppSurface/`               | Material role classes (`appContentPaneClass`, `appPanelSurfaceClass`, `appRaisedSurfaceClass`, `appFlatRowClass`) — see [Surface material roles](#surface-material-roles-671)                                                                                                                                                                                                                                                                                                   |
 | `EmptyState`               | `shared/ui/EmptyState/`               | Inline or stacked empties (`layout`)                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `RowActionMenu`            | `shared/ui/RowActionMenu/`            | Shared kebab + context-menu action model (`RowActionEntry`)                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `SelectableListRow`        | `shared/ui/SelectableListRow/`        | Selected list/row chrome                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
