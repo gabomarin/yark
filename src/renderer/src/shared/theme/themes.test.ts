@@ -7,6 +7,7 @@ import {
   APP_THEME_LIST,
   DEFAULT_APP_THEME,
   THEME_FAMILIES,
+  THEME_FAMILY_LIST,
   THEMES,
   resolveThemeSelection,
   themeVariantsForFamily,
@@ -32,6 +33,7 @@ describe("theme registry (#PUX-004 Track B, #PUX-005-B)", () => {
     expect(DEFAULT_APP_THEME.scheme).toBe("dark");
     expect(THEMES.light.colorScheme).toBe("light");
     expect(Object.keys(THEME_FAMILIES)).toEqual(["fluent", "plasma-breeze", "glassy"]);
+    expect(THEME_FAMILY_LIST.map((family) => family.id)).toEqual(["fluent", "plasma-breeze"]);
     expect(THEME_FAMILIES.fluent.light.scheme).toBe("light");
     expect(THEME_FAMILIES.fluent.dark.recipeSet).toBe("fluent");
   });

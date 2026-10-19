@@ -677,13 +677,12 @@ describe("SetupWizard", () => {
     expect(clusterDir).toHaveAttribute("title", `E:\\ARK\\Clusters\\${id}`);
   });
 
-  it("offers Glassy on the Windows step, the same families as Settings", async () => {
+  it("offers the same theme families as Settings, and withholds Glassy", async () => {
     const user = userEvent.setup();
     const onThemeFamilyChange = vi.fn();
-    const onSchemeChange = vi.fn();
     stubWizardApi();
 
-    const { rerender } = render(
+    render(
       <AppProviders>
         <SetupWizard
           opened
@@ -702,7 +701,7 @@ describe("SetupWizard", () => {
           onDefaultBaseFolderChange={vi.fn()}
           onUiDensityChange={vi.fn()}
           onThemeFamilyChange={onThemeFamilyChange}
-          onSchemeChange={onSchemeChange}
+          onSchemeChange={vi.fn()}
           openNativeTerminalOnStart={false}
           onOpenNativeTerminalOnStartChange={vi.fn()}
           onSkip={vi.fn()}
@@ -721,48 +720,11 @@ describe("SetupWizard", () => {
     expect(screen.getByLabelText("Theme family")).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Fluent" })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Plasma Breeze" })).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: "Glassy" })).toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "Glassy" })).not.toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Dark" })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Light" })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("radio", { name: "Glassy" }));
-    expect(onThemeFamilyChange).toHaveBeenCalledWith("glassy");
-
-    rerender(
-      <AppProviders>
-        <SetupWizard
-          opened
-          mode="first-run"
-          servers={[]}
-          desktopShell={desktopShell}
-          busy={false}
-          steamCmdStatus={null}
-          steamCmdBusy={false}
-          defaultBaseFolder={null}
-          uiDensity="compact"
-          themeFamily="glassy"
-          scheme="dark"
-          onPickSteamCmdPath={vi.fn()}
-          onInstallSteamCmd={vi.fn()}
-          onDefaultBaseFolderChange={vi.fn()}
-          onUiDensityChange={vi.fn()}
-          onThemeFamilyChange={onThemeFamilyChange}
-          onSchemeChange={onSchemeChange}
-          openNativeTerminalOnStart={false}
-          onOpenNativeTerminalOnStartChange={vi.fn()}
-          onSkip={vi.fn()}
-          onDismiss={vi.fn()}
-          onPathsShellDone={vi.fn()}
-          onCreateServer={vi.fn()}
-          onImport={vi.fn()}
-          onExplore={vi.fn()}
-        />
-      </AppProviders>,
-    );
-
-    expect(screen.getByRole("radio", { name: "Glassy Dark" })).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: "Glassy Light" })).toBeInTheDocument();
-    await user.click(screen.getByRole("radio", { name: "Glassy Light" }));
-    expect(onSchemeChange).toHaveBeenCalledWith("light");
+    await user.click(screen.getByRole("radio", { name: "Plasma Breeze" }));
+    expect(onThemeFamilyChange).toHaveBeenCalledWith("plasma-breeze");
   });
 });
