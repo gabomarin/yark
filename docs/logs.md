@@ -42,13 +42,13 @@ or seeds logs for development and QA.
 
 ## Ownership and retention (#84)
 
-| Source                                  | Owner          | Retention                                                                      |
-| --------------------------------------- | -------------- | ------------------------------------------------------------------------------ |
-| SQLite `events`                         | YARK           | Age-based: routine default **90** days; failure evidence **180** days          |
-| `userData/update-logs/{serverId}-*.log` | YARK           | Keep last **20** successful files per server; failed/unknown kept **180** days |
-| In-memory runtime buffer                | YARK (session) | Hard cap **1200** lines in `ProcessManager` — not a Settings control           |
-| `ShooterGame/Saved/Logs`                | ASA            | **Never** deleted by YARK; read/tail only                                      |
-| Backup ZIP history                      | BackupService  | Own retain counts — see [backups.md](backups.md)                               |
+| Source                                  | Owner          | Retention                                                                                   |
+| --------------------------------------- | -------------- | ------------------------------------------------------------------------------------------- |
+| SQLite `events`                         | YARK           | Age-based: routine default **90** days; failure evidence **180** days                       |
+| `userData/update-logs/{serverId}-*.log` | YARK           | Keep last **20** successful or cancelled files per server; failed/unknown kept **180** days |
+| In-memory runtime buffer                | YARK (session) | Hard cap **1200** lines in `ProcessManager` — not a Settings control                        |
+| `ShooterGame/Saved/Logs`                | ASA            | **Never** deleted by YARK; read/tail only                                                   |
+| Backup ZIP history                      | BackupService  | Own retain counts — see [backups.md](backups.md)                                            |
 
 Persisted policy key: `app_settings` → `logRetention.v1`. Invalid Settings values
 are rejected and the previous policy is kept.
@@ -56,6 +56,7 @@ are rejected and the previous policy is kept.
 **Failure evidence** (kept longer): event `severity` warning/error, or types such as
 `server_crashed`, `update_failed`, `update_rolled_back`, `auto_start_failed`,
 `install_move_failed`, `error`; update logs with non-zero / unknown exit status.
+A header `outcome=cancelled` is **Cancelled** even when `exitCode` is non-zero, and those files follow the success retain count (#86).
 
 **Automatic cleanup** (default on): once ~60s after app launch, then about daily.
 **Manual cleanup**: Settings → Log retention → Clean up now (preview → confirm).
@@ -128,7 +129,8 @@ console still opens the OS window; it does not replace Runtime. The buffer is
 kept after a crash and cleared on the next Start (or a manual Runtime clear).
 
 Sidebar **Logs** deep-links into the workspace via `logsFocus`
-(`ServerLogsFocus`: optional `section`, `eventId`, `updateFileName`).
+(`ServerLogsFocus`: optional `section`, `eventId`, `updateFileName`, `missingUpdateLog`).
+Downloads **Open in Logs** uses `updateFileName` when the job saved a file, or `missingUpdateLog` when it did not (#86).
 `App.openServerLogs` defaults to `{ section: "events" }` and clears focus after
 consume so it cannot stick to another server. Overview can open
 `{ section: "updates" }`; sidebar Backups can open `{ section: "backups" }`.

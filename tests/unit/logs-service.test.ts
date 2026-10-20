@@ -103,6 +103,37 @@ describe("LogsService runtime logs", () => {
     expect(logs.runtimeLogLines.join("\n")).toContain("MaxPlayers=70");
   });
 
+  it("classifies outcome=cancelled as cancelled even when exitCode is non-zero", async () => {
+    const root = mkdtempSync(join(tmpdir(), "ark-logs-cancel-"));
+    tmpDirs.push(root);
+    const updatesDir = join(root, "updates");
+    mkdirSync(updatesDir, { recursive: true });
+    writeFileSync(
+      join(updatesDir, "srv-logs-1-cancel.log"),
+      "exitCode=1\noutcome=cancelled\ndurationMs=4\n--- stdout ---\nOperation cancelled by the user.\n",
+      "utf8",
+    );
+    writeFileSync(join(updatesDir, "srv-logs-1-fail.log"), "exitCode=8\ndurationMs=4\n--- stdout ---\nerr\n", "utf8");
+
+    const profile = makeProfile(root);
+    const repo = {
+      get: (id: string) => (id === profile.id ? profile : null),
+      list: () => [profile],
+      recentEvents: () => [],
+    } as unknown as ServerRepository;
+    const service = new LogsService(
+      repo,
+      emptyBackupSource(),
+      updatesDir,
+      { getRuntimeLogSnapshot: () => [] } as unknown as ProcessManager,
+      memorySettings(),
+    );
+    const logs = await service.listServerLogs(profile.id);
+    const byName = new Map(logs.updateFiles.map((file) => [file.fileName, file.status]));
+    expect(byName.get("srv-logs-1-cancel.log")).toBe("cancelled");
+    expect(byName.get("srv-logs-1-fail.log")).toBe("failed");
+  });
+
   it("exports operational logs to a file", async () => {
     const root = mkdtempSync(join(tmpdir(), "ark-logs-export-"));
     tmpDirs.push(root);

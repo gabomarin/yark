@@ -16,6 +16,7 @@ import {
   statusLabel,
   statusTone,
 } from "../../model/serverLogsFormat";
+import type { MissingUpdateLog } from "../../hooks/useServerLogsPanel";
 import { LogsClearAction, LogsDetailItem, LogsEmptyState, LogsTabIntro } from "../LogsPanelChrome/LogsPanelChrome";
 
 export interface LogsUpdatesTabProps {
@@ -26,11 +27,61 @@ export interface LogsUpdatesTabProps {
   serverId: string;
   selectedUpdateFile: string | null;
   updateContent: string;
+  missingUpdateLog: MissingUpdateLog | null;
   selectedUpdateInfo: ServerUpdateLogFile | null;
   onOpenUpdateLog: (serverId: string, fileName: string) => void;
   onClearUpdateLogs: () => void;
   onOpenInExternalViewer: () => void;
   onDeleteSelectedUpdate: () => void;
+}
+
+function UpdateLogDetail(props: {
+  missingUpdateLog: MissingUpdateLog | null;
+  selectedUpdateInfo: ServerUpdateLogFile | null;
+  updateContent: string;
+}): ReactElement {
+  if (props.missingUpdateLog !== null && props.selectedUpdateInfo === null) {
+    const neverWritten = props.missingUpdateLog === "never-written";
+    const title = neverWritten ? "No update log for this download" : "Update log no longer on this PC";
+    const description = neverWritten
+      ? "This run finished before SteamCMD saved a log."
+      : "The file for this download was removed.";
+    return (
+      <div data-update-log-missing={props.missingUpdateLog}>
+        <LogsEmptyState icon={<FileText size={24} />} title={title} description={description} />
+      </div>
+    );
+  }
+  if (props.selectedUpdateInfo === null) {
+    return <Text c="dimmed">Select an update to see details.</Text>;
+  }
+  return (
+    <>
+      <div className={classes.detailsMeta}>
+        <LogsDetailItem
+          label="Date"
+          value={formatLogDateTime(props.selectedUpdateInfo.modifiedAt)}
+          icon={<ClockCounterClockwise size={16} />}
+        />
+        <LogsDetailItem
+          label="Duration"
+          value={formatDuration(props.selectedUpdateInfo.durationMs)}
+          icon={<ClockCounterClockwise size={16} />}
+        />
+        <LogsDetailItem
+          label="Size"
+          value={formatSize(props.selectedUpdateInfo.sizeBytes)}
+          icon={<FileText size={16} />}
+        />
+      </div>
+      <ConsoleSurface
+        fill
+        className={classes.squareConsole}
+        text={props.updateContent.length > 0 ? props.updateContent : "Loading log content…"}
+        data-logs-scroll-region="update-content"
+      />
+    </>
+  );
 }
 
 export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
@@ -42,6 +93,7 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
     serverId,
     selectedUpdateFile,
     updateContent,
+    missingUpdateLog,
     selectedUpdateInfo,
     onOpenUpdateLog,
     onClearUpdateLogs,
@@ -90,7 +142,11 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
                       title={file.fileName}
                       className={classes.updateHistoryRow}
                       trailing={
-                        <StatusWord tone={statusTone(file.status)} className={classes.updateStatus}>
+                        <StatusWord
+                          tone={statusTone(file.status)}
+                          className={classes.updateStatus}
+                          data-update-log-status={file.status}
+                        >
                           {statusLabel(file.status)}
                         </StatusWord>
                       }
@@ -117,7 +173,10 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
                   Update details
                 </Title>
                 {selectedUpdateInfo !== null && (
-                  <StatusWord tone={statusTone(selectedUpdateInfo.status)}>
+                  <StatusWord
+                    tone={statusTone(selectedUpdateInfo.status)}
+                    data-selected-update-status={selectedUpdateInfo.status}
+                  >
                     {statusLabel(selectedUpdateInfo.status)}
                   </StatusWord>
                 )}
@@ -149,35 +208,11 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
               )}
             </Group>
 
-            {selectedUpdateInfo === null ? (
-              <Text c="dimmed">Select an update to see details.</Text>
-            ) : (
-              <>
-                <div className={classes.detailsMeta}>
-                  <LogsDetailItem
-                    label="Date"
-                    value={formatLogDateTime(selectedUpdateInfo.modifiedAt)}
-                    icon={<ClockCounterClockwise size={16} />}
-                  />
-                  <LogsDetailItem
-                    label="Duration"
-                    value={formatDuration(selectedUpdateInfo.durationMs)}
-                    icon={<ClockCounterClockwise size={16} />}
-                  />
-                  <LogsDetailItem
-                    label="Size"
-                    value={formatSize(selectedUpdateInfo.sizeBytes)}
-                    icon={<FileText size={16} />}
-                  />
-                </div>
-                <ConsoleSurface
-                  fill
-                  className={classes.squareConsole}
-                  text={updateContent.length > 0 ? updateContent : "Loading log content…"}
-                  data-logs-scroll-region="update-content"
-                />
-              </>
-            )}
+            <UpdateLogDetail
+              missingUpdateLog={missingUpdateLog}
+              selectedUpdateInfo={selectedUpdateInfo}
+              updateContent={updateContent}
+            />
           </Stack>
         </div>
       </div>

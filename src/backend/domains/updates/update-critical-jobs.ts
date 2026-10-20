@@ -1,3 +1,4 @@
+import { basename } from "node:path";
 import type { CriticalJobStatus } from "@shared/types";
 import type { DurableCriticalJob } from "../../orchestration/critical-job-recovery";
 
@@ -70,6 +71,16 @@ const KNOWN_UPDATE_JOB_PHASES: ReadonlySet<string> = new Set([
   "failed",
   "cancelled",
 ]);
+
+/** Safe basename for Logs focus. Rejects paths that are not this server's update log. */
+export function updateLogFileNameForJob(job: Pick<UpdateCriticalJob, "serverId" | "context">): string | null {
+  const raw = job.context.updateLogPath?.trim() ?? "";
+  if (raw.length === 0) return null;
+  const fileName = basename(raw);
+  if (!fileName.startsWith(`${job.serverId}-`) || !fileName.toLowerCase().endsWith(".log")) return null;
+  if (fileName.includes("..") || fileName.includes("/") || fileName.includes("\\")) return null;
+  return fileName;
+}
 
 export function isKnownUpdateJobStatus(status: string): boolean {
   return KNOWN_UPDATE_JOB_STATUSES.has(status);

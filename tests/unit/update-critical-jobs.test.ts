@@ -12,6 +12,7 @@ import {
   reorderPendingUpdateJobs,
   resumePhaseForUpdateRetry,
   sanitizeUpdateJobContext,
+  updateLogFileNameForJob,
   shouldOmitInterruptedUpdateJobOnLoad,
   updateCriticalJobPhaseRank,
   type UpdateCriticalJob,
@@ -209,5 +210,31 @@ describe("status/phase and queue hold", () => {
         }),
       ]),
     ).toBe(true);
+  });
+});
+
+describe("updateLogFileNameForJob", () => {
+  it("returns this server's log basename and rejects other paths", () => {
+    expect(
+      updateLogFileNameForJob(
+        job({
+          id: "1",
+          status: "cancelled",
+          phase: "cancelled",
+          context: { updateLogPath: "C:\\YARK\\update-logs\\srv-1-2026-10-19T16-20-00-000Z.log" },
+        }),
+      ),
+    ).toBe("srv-1-2026-10-19T16-20-00-000Z.log");
+    expect(
+      updateLogFileNameForJob(
+        job({
+          id: "2",
+          status: "cancelled",
+          phase: "cancelled",
+          context: { updateLogPath: "C:\\YARK\\update-logs\\other-server.log" },
+        }),
+      ),
+    ).toBeNull();
+    expect(updateLogFileNameForJob(job({ id: "3", status: "cancelled", phase: "cancelled" }))).toBeNull();
   });
 });

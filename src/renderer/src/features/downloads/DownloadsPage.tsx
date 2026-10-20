@@ -37,6 +37,7 @@ interface Props {
   onResumeJob: (jobId: string) => void;
   onDismissJob: (jobId: string) => void;
   onReorderJob: (jobId: string, direction: "up" | "down") => void;
+  onOpenInLogs: (serverId: string, updateLogFileName: string | null) => void;
   onOpenSettings: () => void;
 }
 
@@ -177,6 +178,10 @@ export function DownloadsPage(props: Props): ReactElement {
                       if (row.job !== null) {
                         props.onReorderJob(row.job.id, "down");
                       }
+                    }}
+                    onOpenInLogs={() => {
+                      if (row.serverId === null) return;
+                      props.onOpenInLogs(row.serverId, row.job?.updateLogFileName ?? null);
                     }}
                   />
                 ))}
