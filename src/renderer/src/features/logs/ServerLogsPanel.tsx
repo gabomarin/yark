@@ -116,6 +116,7 @@ export function ServerLogsPanel(props: Props): ReactElement {
             serverId={props.server.id}
             selectedUpdateFile={panel.selectedUpdateFile}
             updateContent={panel.updateContent}
+            missingUpdateLog={panel.missingUpdateLog}
             selectedUpdateInfo={panel.selectedUpdateInfo}
             onOpenUpdateLog={(serverId, fileName) => void panel.openUpdateLog(serverId, fileName)}
             onClearUpdateLogs={panel.confirmClearUpdateLogs}

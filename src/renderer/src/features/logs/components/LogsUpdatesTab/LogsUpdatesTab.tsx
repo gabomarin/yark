@@ -16,6 +16,7 @@ import {
   statusLabel,
   statusTone,
 } from "../../model/serverLogsFormat";
+import type { MissingUpdateLog } from "../../hooks/useServerLogsPanel";
 import { LogsClearAction, LogsDetailItem, LogsEmptyState, LogsTabIntro } from "../LogsPanelChrome/LogsPanelChrome";
 
 export interface LogsUpdatesTabProps {
@@ -26,6 +27,7 @@ export interface LogsUpdatesTabProps {
   serverId: string;
   selectedUpdateFile: string | null;
   updateContent: string;
+  missingUpdateLog: MissingUpdateLog | null;
   selectedUpdateInfo: ServerUpdateLogFile | null;
   onOpenUpdateLog: (serverId: string, fileName: string) => void;
   onClearUpdateLogs: () => void;
@@ -42,6 +44,7 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
     serverId,
     selectedUpdateFile,
     updateContent,
+    missingUpdateLog,
     selectedUpdateInfo,
     onOpenUpdateLog,
     onClearUpdateLogs,
@@ -90,7 +93,11 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
                       title={file.fileName}
                       className={classes.updateHistoryRow}
                       trailing={
-                        <StatusWord tone={statusTone(file.status)} className={classes.updateStatus}>
+                        <StatusWord
+                          tone={statusTone(file.status)}
+                          className={classes.updateStatus}
+                          data-update-log-status={file.status}
+                        >
                           {statusLabel(file.status)}
                         </StatusWord>
                       }
@@ -117,7 +124,10 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
                   Update details
                 </Title>
                 {selectedUpdateInfo !== null && (
-                  <StatusWord tone={statusTone(selectedUpdateInfo.status)}>
+                  <StatusWord
+                    tone={statusTone(selectedUpdateInfo.status)}
+                    data-selected-update-status={selectedUpdateInfo.status}
+                  >
                     {statusLabel(selectedUpdateInfo.status)}
                   </StatusWord>
                 )}
@@ -149,7 +159,23 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
               )}
             </Group>
 
-            {selectedUpdateInfo === null ? (
+            {missingUpdateLog !== null && selectedUpdateInfo === null ? (
+              <div data-update-log-missing={missingUpdateLog}>
+                <LogsEmptyState
+                  icon={<FileText size={24} />}
+                  title={
+                    missingUpdateLog === "never-written"
+                      ? "No update log for this download"
+                      : "Update log no longer on this PC"
+                  }
+                  description={
+                    missingUpdateLog === "never-written"
+                      ? "This run finished before SteamCMD saved a log."
+                      : "The file for this download was removed."
+                  }
+                />
+              </div>
+            ) : selectedUpdateInfo === null ? (
               <Text c="dimmed">Select an update to see details.</Text>
             ) : (
               <>

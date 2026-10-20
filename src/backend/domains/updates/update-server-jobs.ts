@@ -1,4 +1,4 @@
-import { join } from "node:path";
+import { basename, isAbsolute, join, relative, resolve } from "node:path";
 import type { CriticalJobStatus } from "@shared/types";
 import type { BackupKind } from "@shared/types";
 import type { UpdateCriticalJobContext, UpdateCriticalJobType } from "./update-critical-jobs";
@@ -76,27 +76,59 @@ export function buildUpdateLogPath(updatesLogDir: string, serverId: string, star
   return join(updatesLogDir, `${serverId}-${timestamp}.log`);
 }
 
+/** Keep a persisted job path inside this server's update-logs folder. Otherwise mint a new file. */
+export function resolveCancelledUpdateLogPath(
+  updatesLogDir: string,
+  serverId: string,
+  startedAt: Date,
+  candidate: string | null,
+): string {
+  const fallback = buildUpdateLogPath(updatesLogDir, serverId, startedAt);
+  if (candidate === null || candidate.trim().length === 0) return fallback;
+  const root = resolve(updatesLogDir);
+  const resolved = resolve(candidate);
+  const rel = relative(root, resolved);
+  const fileName = basename(resolved);
+  if (
+    rel.length === 0 ||
+    rel.startsWith("..") ||
+    isAbsolute(rel) ||
+    !fileName.startsWith(`${serverId}-`) ||
+    !fileName.toLowerCase().endsWith(".log")
+  ) {
+    return fallback;
+  }
+  return resolved;
+}
+
 export function formatUpdateLogContent(input: {
   serverName: string;
   installDir: string;
-  exitCode: number;
+  /** Omit when the process never returned a code (operator cancel). */
+  exitCode: number | null;
+  /** Wins over `exitCode` when Logs classifies the file (#86). */
+  outcome?: "cancelled";
   startedAt: Date;
   durationMs: number;
   stdout: string;
   stderr: string;
 }): string {
-  return [
-    `time=${new Date().toISOString()}`,
-    `server=${input.serverName}`,
-    `installDir=${input.installDir}`,
-    `exitCode=${input.exitCode}`,
+  const lines = [`time=${new Date().toISOString()}`, `server=${input.serverName}`, `installDir=${input.installDir}`];
+  if (input.exitCode !== null) {
+    lines.push(`exitCode=${input.exitCode}`);
+  }
+  if (input.outcome === "cancelled") {
+    lines.push("outcome=cancelled");
+  }
+  lines.push(
     `startedAt=${input.startedAt.toISOString()}`,
     `durationMs=${input.durationMs}`,
     "--- stdout ---",
     input.stdout,
     "--- stderr ---",
     input.stderr,
-  ].join("\n");
+  );
+  return lines.join("\n");
 }
 
 export function queuedFilesJobProgressLabel(type: UpdateCriticalJobType): string {

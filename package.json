@@ -37,6 +37,7 @@
     "e2e:mods": "node scripts/e2e-mods.cjs",
     "e2e:critical-job-recovery": "node scripts/e2e-critical-job-recovery.cjs",
     "e2e:downloads-pause-resume": "node scripts/e2e-downloads-pause-resume.cjs",
+    "e2e:cancelled-update-log": "node scripts/e2e-cancelled-update-log.cjs",
     "e2e:personas": "node scripts/e2e-personas.cjs",
     "e2e:install-health": "node scripts/e2e-install-health.cjs",
     "e2e:move-install": "node scripts/e2e-move-install.cjs",

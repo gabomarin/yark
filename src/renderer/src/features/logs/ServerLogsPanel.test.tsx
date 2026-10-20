@@ -531,4 +531,56 @@ describe("ServerLogsPanel", () => {
       vi.useRealTimers();
     }
   });
+
+  it("opens a cancelled update log from focus and does not label it Failed", async () => {
+    vi.mocked(window.api.listServerLogs).mockResolvedValue({
+      ok: true,
+      data: {
+        serverId: server.id,
+        updateFiles: [
+          {
+            fileName: "srv-1-cancelled.log",
+            fullPath: "C:/logs/srv-1-cancelled.log",
+            modifiedAt: "2026-10-19T16:20:00.000Z",
+            sizeBytes: 80,
+            status: "cancelled",
+            exitCode: null,
+            durationMs: 4000,
+          },
+        ],
+        backups: [],
+        events: [],
+        runtimeLogLines: [],
+      },
+    });
+    vi.mocked(window.api.readServerUpdateLog).mockResolvedValue({
+      ok: true,
+      data: "outcome=cancelled\nOperation cancelled by the user.\n",
+    });
+
+    render(
+      <AppProviders>
+        <ServerLogsPanel
+          server={server}
+          embedded
+          focus={{ section: "updates", updateFileName: "srv-1-cancelled.log" }}
+        />
+      </AppProviders>,
+    );
+
+    expect(await screen.findByText(/Operation cancelled by the user/)).toBeInTheDocument();
+    expect(document.querySelector('[data-selected-update-status="cancelled"]')).not.toBeNull();
+    expect(document.querySelector('[data-selected-update-status="failed"]')).toBeNull();
+  });
+
+  it("explains a download that never saved an update log", async () => {
+    render(
+      <AppProviders>
+        <ServerLogsPanel server={server} embedded focus={{ section: "updates", missingUpdateLog: true }} />
+      </AppProviders>,
+    );
+
+    expect(await screen.findByText("No update log for this download")).toBeInTheDocument();
+    expect(document.querySelector('[data-update-log-missing="never-written"]')).not.toBeNull();
+  });
 });

@@ -199,6 +199,14 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
               onReorderJob={(id, direction) =>
                 void actions.runAction(() => window.api.reorderCriticalJob(id, direction))
               }
+              onOpenInLogs={(serverId, updateLogFileName) =>
+                actions.openServerLogs(
+                  serverId,
+                  updateLogFileName !== null && updateLogFileName.length > 0
+                    ? { section: "updates", updateFileName: updateLogFileName }
+                    : { section: "updates", missingUpdateLog: true },
+                )
+              }
               onOpenSettings={openSteamCmdSettings}
             />
           ) : null,

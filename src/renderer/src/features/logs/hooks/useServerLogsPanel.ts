@@ -11,9 +11,13 @@ export interface ServerLogsFocus {
   section?: LogsSection;
   eventId?: number;
   updateFileName?: string;
+  /** Downloads asked for a SteamCMD log that was never written (#86). */
+  missingUpdateLog?: boolean;
   /** Highlights a backup row under Logs → Backup history (failed fleet alerts). */
   backupId?: string;
 }
+
+export type MissingUpdateLog = "never-written" | "absent";
 
 interface UseServerLogsPanelOptions {
   server: ServerProfile;
@@ -29,6 +33,7 @@ export function useServerLogsPanel(options: UseServerLogsPanelOptions) {
   const [busy, setBusy] = useState(false);
   const [selectedUpdateFile, setSelectedUpdateFile] = useState<string | null>(null);
   const [updateContent, setUpdateContent] = useState("");
+  const [missingUpdateLog, setMissingUpdateLog] = useState<MissingUpdateLog | null>(null);
   const [highlightedEventId, setHighlightedEventId] = useState<number | null>(null);
   const [highlightedBackupId, setHighlightedBackupId] = useState<string | null>(null);
   const [expandedEventId, setExpandedEventId] = useState<number | null>(null);
@@ -50,11 +55,13 @@ export function useServerLogsPanel(options: UseServerLogsPanelOptions) {
     updateLoadGenRef.current += 1;
     setSelectedUpdateFile(null);
     setUpdateContent("");
+    setMissingUpdateLog(null);
     setBusy(false);
   }, []);
 
   const openUpdateLog = useCallback(async (serverId: string, fileName: string) => {
     const gen = ++updateLoadGenRef.current;
+    setMissingUpdateLog(null);
     setBusy(true);
     await runWithFinally(
       async () => {
@@ -189,7 +196,7 @@ export function useServerLogsPanel(options: UseServerLogsPanelOptions) {
       focusKeyRef.current = null;
       return;
     }
-    const key = `${server.id}:${focus.section ?? ""}:${focus.eventId ?? ""}:${focus.updateFileName ?? ""}:${focus.backupId ?? ""}`;
+    const key = `${server.id}:${focus.section ?? ""}:${focus.eventId ?? ""}:${focus.updateFileName ?? ""}:${focus.missingUpdateLog === true ? "missing" : ""}:${focus.backupId ?? ""}`;
     if (focusKeyRef.current === key) return;
     focusKeyRef.current = key;
     autoScrollDoneRef.current = false;
@@ -213,14 +220,26 @@ export function useServerLogsPanel(options: UseServerLogsPanelOptions) {
         return;
       }
       if (section === "updates") {
-        const preferred =
-          focus.updateFileName ??
-          data.updateFiles.find((file) => file.status === "failed")?.fileName ??
-          data.updateFiles[0]?.fileName ??
-          null;
-        if (preferred !== null) {
-          await openUpdateLog(server.id, preferred);
-          if (focusKeyRef.current !== key) return;
+        const named = focus.updateFileName;
+        if (focus.missingUpdateLog === true && (named === undefined || named.length === 0)) {
+          setMissingUpdateLog("never-written");
+        } else if (named !== undefined && named.length > 0) {
+          const exists = data.updateFiles.some((file) => file.fileName === named);
+          if (!exists) {
+            setMissingUpdateLog("absent");
+          } else {
+            await openUpdateLog(server.id, named);
+            if (focusKeyRef.current !== key) return;
+          }
+        } else {
+          const preferred =
+            data.updateFiles.find((file) => file.status === "failed")?.fileName ??
+            data.updateFiles[0]?.fileName ??
+            null;
+          if (preferred !== null) {
+            await openUpdateLog(server.id, preferred);
+            if (focusKeyRef.current !== key) return;
+          }
         }
       }
       if (section === "backups") {
@@ -284,6 +303,7 @@ export function useServerLogsPanel(options: UseServerLogsPanelOptions) {
     busy,
     selectedUpdateFile,
     updateContent,
+    missingUpdateLog,
     selectedUpdateInfo,
     highlightedEventId,
     highlightedBackupId,

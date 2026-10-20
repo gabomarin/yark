@@ -59,5 +59,6 @@ describe("log-retention helpers", () => {
     expect(isFailureUpdateLogStatus("success")).toBe(false);
     expect(isFailureUpdateLogStatus("failed")).toBe(true);
     expect(isFailureUpdateLogStatus("unknown")).toBe(true);
+    expect(isFailureUpdateLogStatus("cancelled")).toBe(false);
   });
 });

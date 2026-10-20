@@ -1,4 +1,4 @@
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   buildUpdateLogPath,
@@ -9,6 +9,7 @@ import {
   planDuplicateRecoveredUpdateJob,
   planInterruptedUpdateJobRecovery,
   queuedFilesJobProgressLabel,
+  resolveCancelledUpdateLogPath,
   resolveUpdateWasRunning,
   shouldBlockUpdateWhileServerRunning,
   shouldRestartServerAfterPreSteamCmdAbort,
@@ -103,6 +104,19 @@ describe("buildUpdateLogPath", () => {
       join("C:/logs", "srv-1-2026-01-01T12-30-45-123Z.log"),
     );
   });
+
+  it("keeps a persisted cancel path inside the update-logs folder", () => {
+    const startedAt = new Date("2026-01-01T12:30:45.123Z");
+    const inside = join("C:/logs", "srv-1-existing.log");
+    expect(resolveCancelledUpdateLogPath("C:/logs", "srv-1", startedAt, inside)).toBe(resolve(inside));
+  });
+
+  it("mints a new file when the persisted path leaves the update-logs folder", () => {
+    const startedAt = new Date("2026-01-01T12:30:45.123Z");
+    expect(resolveCancelledUpdateLogPath("C:/logs", "srv-1", startedAt, join("C:/Windows", "evil.log"))).toBe(
+      buildUpdateLogPath("C:/logs", "srv-1", startedAt),
+    );
+  });
 });
 
 describe("formatUpdateLogContent", () => {
@@ -117,8 +131,26 @@ describe("formatUpdateLogContent", () => {
       stderr: "",
     });
     expect(content).toContain("server=Island");
+    expect(content).toContain("exitCode=0");
     expect(content).toContain("--- stdout ---");
     expect(content).toContain("ok");
+    expect(content).not.toContain("outcome=");
+  });
+
+  it("records an operator cancel without a SteamCMD exit code", () => {
+    const content = formatUpdateLogContent({
+      serverName: "Island",
+      installDir: "C:/ARK",
+      exitCode: null,
+      outcome: "cancelled",
+      startedAt: new Date("2026-01-01T00:00:00.000Z"),
+      durationMs: 1000,
+      stdout: "Operation cancelled by the user.",
+      stderr: "",
+    });
+    expect(content).toContain("outcome=cancelled");
+    expect(content).not.toMatch(/^exitCode=/m);
+    expect(content).toContain("Operation cancelled by the user.");
   });
 });
 

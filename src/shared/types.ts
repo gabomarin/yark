@@ -385,6 +385,11 @@ export interface CriticalJobSummary {
   lastError: string | null;
   recoveryReason: string | null;
   nextActions: CriticalJobNextAction[];
+  /**
+   * Basename of the SteamCMD log saved for this job. Downloads uses it to open
+   * Logs → Updates. Absent when the run never wrote a file.
+   */
+  updateLogFileName?: string | null;
 }
 
 /** Shared SteamCMD cache folders next to steamcmd.exe. */
@@ -1211,7 +1216,7 @@ export interface ConfigTransferCommitResult {
   snapshotDir: string | null;
 }
 
-export type ServerUpdateLogStatus = "success" | "failed" | "unknown";
+export type ServerUpdateLogStatus = "success" | "failed" | "cancelled" | "unknown";
 
 export interface ServerUpdateLogFile {
   fileName: string;
