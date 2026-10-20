@@ -57,6 +57,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Docs
 
+- Documented AdminList CSV/CR-only parse vs LF publish, shared AppSurface material class roles, `ini:save-semantic` IPC bounds, and the prepared real-host workflow inventory (#652, #671, #12).
 - Added a prepared Windows runner workflow and sanitized evidence guidance for real-ASA lifecycle, backup-restore, and safe-update validation (#12).
 
 ## [0.24.0] - 2026-10-16

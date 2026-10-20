@@ -363,9 +363,9 @@ Operator copy: website `profiles-and-ports.mdx`.
 ### File-job notice placement (#630)
 
 While an Install / Update / Verify job owns the server, one attention
-`AppAlert` sits **above the workspace tab bar** on every tab (not inside
-Server / INI / Launch panels). That keeps Start/restore locks visible without
-duplicating notices when switching tabs.
+`AppAlert` sits **above the workspace tab bar** on every tab (status only;
+Retry / Dismiss / Cancel stay on Downloads). Details and restart recovery:
+[critical-job-recovery.md](critical-job-recovery.md).
 
 ### Auto-start on application launch (#53)
 

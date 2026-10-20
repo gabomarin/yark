@@ -67,7 +67,7 @@ by its resource token and marked **Previous port**; it still needs to be updated
 
 | Consumer                                           | Expected body                         | Where it is set                        |
 | -------------------------------------------------- | ------------------------------------- | -------------------------------------- |
-| `AdminListURL`                                     | Plain text, one EOS / Ark id per line | `GameUserSettings.ini` (RCON → Admins) |
+| `AdminListURL`                                     | Plain text ids (see body contract below) | `GameUserSettings.ini` (RCON → Admins) |
 | `BanListURL`                                       | Plain text ban entries                | `GameUserSettings.ini`                 |
 | `BadWordListURL` / `BadWordWhiteListURL`           | Plain text word list                  | `GameUserSettings.ini`                 |
 | `CustomDynamicConfigUrl` (+ `-UseDynamicConfig`)   | **INI** — flat `Key=Value` lines      | Launch arg or `GameUserSettings.ini`   |
@@ -124,6 +124,20 @@ field warns when its value points at:
 
 Resources created before types existed stay **untyped** and are not offered anywhere until
 a type is set in the resource editor.
+
+### AdminList body contract (#652)
+
+Typed `admin-list` resources and the wiki AllowedCheater file share one parser:
+
+- **Read:** `parseAdminListIds` — UTF-8; BOM stripped; LF / CRLF / CR-only newlines;
+  blank and `#…` lines skipped; comma-separated fields on one line are each an id;
+  within a field, only the first whitespace token counts (trailing junk ignored).
+- **Write (add/remove / sanitize):** UTF-8, no BOM, **LF only**, one id per line
+  (`formatAdminListIdsBody`). A CSV or CR-only paste is accepted on read, then
+  normalized on the next publish so ASA and Validate see the same shape.
+
+Do not hand-edit a Hosted Resource body expecting mixed separators to survive an
+Admins-tab membership edit. Full Admins UI: [rcon.md](rcon.md#administrator-whitelist-153).
 
 ### AdminListURL + loopback mode
 
