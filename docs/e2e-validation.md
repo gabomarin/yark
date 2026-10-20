@@ -87,23 +87,23 @@ modals, workspace tabs, PathFields):
    is on that real-host path (they install ASA).
 4. Keep `data-*` contracts stable unless you update every script that uses them.
 
-| UI surface                                        | Likely scripts                                                                                 |
-| ------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Shell nav, Overview, New server / Clone / Delete  | `e2e` (`e2e:smoke` for empty Overview locally)                                                 |
-| Keyboard: Ctrl+K, Shift+F10, Escape, search, tabs | `e2e:keyboard` (local)                                                                         |
-| Page titles without restating subtitles           | `e2e`, `e2e:clusters-membership` (`e2e:smoke` locally)                                         |
-| Settings category sidebar or labels               | `e2e:launch-args`, `e2e:quit-policy`, `e2e:log-retention`                                      |
-| First-run setup wizard / splash                   | Any launch that must set `YARK_E2E_USER_DATA`                                                  |
-| Workspace Mods                                    | `e2e:mods`                                                                                     |
-| Clone dialog / INI or folder copy                 | `e2e`, `e2e:clone-copy`                                                                        |
-| Import / move install                             | `e2e:import-install`, `e2e:move-install`                                                       |
-| Launch / Runtime / console-on-start               | `e2e:launch-args`                                                                              |
-| RCON console                                      | `e2e:rcon`                                                                                     |
-| Clusters membership / tribute panel               | `e2e:clusters-membership`                                                                      |
-| Copy configuration                                | `e2e:copy-configuration`                                                                       |
-| Downloads queue / critical-job recovery           | `e2e:critical-job-recovery`, `e2e:downloads-pause-resume`, `node scripts/visual-downloads.cjs` |
-| Log retention (Settings → Logs)                   | `e2e:log-retention`                                                                            |
-| Workspace Maintenance tab                         | `e2e:maintenance`                                                                              |
+| UI surface                                        | Likely scripts                                                                                                             |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Shell nav, Overview, New server / Clone / Delete  | `e2e` (`e2e:smoke` for empty Overview locally)                                                                             |
+| Keyboard: Ctrl+K, Shift+F10, Escape, search, tabs | `e2e:keyboard` (local)                                                                                                     |
+| Page titles without restating subtitles           | `e2e`, `e2e:clusters-membership` (`e2e:smoke` locally)                                                                     |
+| Settings category sidebar or labels               | `e2e:launch-args`, `e2e:quit-policy`, `e2e:log-retention`                                                                  |
+| First-run setup wizard / splash                   | Any launch that must set `YARK_E2E_USER_DATA`                                                                              |
+| Workspace Mods                                    | `e2e:mods`                                                                                                                 |
+| Clone dialog / INI or folder copy                 | `e2e`, `e2e:clone-copy`                                                                                                    |
+| Import / move install                             | `e2e:import-install`, `e2e:move-install`                                                                                   |
+| Launch / Runtime / console-on-start               | `e2e:launch-args`                                                                                                          |
+| RCON console                                      | `e2e:rcon`                                                                                                                 |
+| Clusters membership / tribute panel               | `e2e:clusters-membership`                                                                                                  |
+| Copy configuration                                | `e2e:copy-configuration`                                                                                                   |
+| Downloads queue / critical-job recovery           | `e2e:critical-job-recovery`, `e2e:downloads-pause-resume`, `e2e:cancelled-update-log`, `node scripts/visual-downloads.cjs` |
+| Log retention (Settings → Logs)                   | `e2e:log-retention`                                                                                                        |
+| Workspace Maintenance tab                         | `e2e:maintenance`                                                                                                          |
 
 Cursor rule: [`.cursor/rules/e2e-ui.mdc`](../.cursor/rules/e2e-ui.mdc).
 

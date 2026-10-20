@@ -11,8 +11,9 @@ import {
   computePreUpdateBackupProgressPercent,
   formatPreUpdateBackupKindLabel,
   buildUpdateLogPath,
+  confineCancelledUpdateLogPath,
   formatUpdateLogContent,
-  resolveCancelledUpdateLogPath,
+  startedAtFromUpdateLogPath,
   isPreUpdateBackupEvidenceComplete,
   resolveUpdateWasRunning,
   shouldBlockUpdateWhileServerRunning,
@@ -126,9 +127,12 @@ export class UpdatePerformer {
   }): void {
     try {
       mkdirSync(this.updatesLogDir, { recursive: true });
-      const logPath = resolveCancelledUpdateLogPath(this.updatesLogDir, input.serverId, input.startedAt, input.logPath);
-      if (input.job !== undefined) input.job.context.updateLogPath = logPath;
-      if (existsSync(logPath)) return;
+      const logPath = confineCancelledUpdateLogPath(this.updatesLogDir, input.serverId, input.startedAt, input.logPath);
+      if (logPath === null) return;
+      if (existsSync(logPath)) {
+        if (input.job !== undefined) input.job.context.updateLogPath = logPath;
+        return;
+      }
       writeFileSync(
         logPath,
         formatUpdateLogContent({
@@ -143,6 +147,7 @@ export class UpdatePerformer {
         }),
         "utf8",
       );
+      if (input.job !== undefined) input.job.context.updateLogPath = logPath;
     } catch {
       // Keep the cancel. Downloads can say the log was not saved.
     }
@@ -152,14 +157,15 @@ export class UpdatePerformer {
   recordOperatorCancelledLog(job: UpdateCriticalJob): void {
     const server = this.servers.get(job.serverId);
     if (server === null) return;
-    const startedAt = new Date(job.createdAt);
+    const logPath = job.context.updateLogPath ?? null;
+    const startedAt = startedAtFromUpdateLogPath(job.serverId, logPath) ?? new Date();
     this.recordCancelledUpdateLog({
       serverId: job.serverId,
       serverName: server.name,
       installDir: server.installDir,
-      startedAt: Number.isNaN(startedAt.getTime()) ? new Date() : startedAt,
+      startedAt,
       job,
-      logPath: job.context.updateLogPath ?? null,
+      logPath,
     });
   }
 
@@ -180,7 +186,6 @@ export class UpdatePerformer {
         this.checkpointJob(job, "applying-files");
         await mkdir(this.updatesLogDir, { recursive: true });
         updateLogPath = buildUpdateLogPath(this.updatesLogDir, serverId, startedAt);
-        if (job !== undefined) job.context.updateLogPath = updateLogPath;
         const cmd = await this.runSteamUpdate(server.installDir, "install-files", serverId);
         if (cmd.code !== 0) {
           this.addJobEvent(job, "update_failed", "error", `Base install failed (exit ${cmd.code})`);
@@ -560,7 +565,6 @@ export class UpdatePerformer {
         this.checkpointJob(job, "applying-files");
         await mkdir(this.updatesLogDir, { recursive: true });
         updateLogPath = buildUpdateLogPath(this.updatesLogDir, serverId, startedAt);
-        if (job !== undefined) job.context.updateLogPath = updateLogPath;
         const cmd = await this.runSteamUpdate(server.installDir, "verify-files", serverId);
         if (cmd.code !== 0) {
           this.addJobEvent(job, "update_failed", "error", `Integrity verification failed (exit ${cmd.code})`);

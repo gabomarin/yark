@@ -35,6 +35,55 @@ export interface LogsUpdatesTabProps {
   onDeleteSelectedUpdate: () => void;
 }
 
+function UpdateLogDetail(props: {
+  missingUpdateLog: MissingUpdateLog | null;
+  selectedUpdateInfo: ServerUpdateLogFile | null;
+  updateContent: string;
+}): ReactElement {
+  if (props.missingUpdateLog !== null && props.selectedUpdateInfo === null) {
+    const neverWritten = props.missingUpdateLog === "never-written";
+    const title = neverWritten ? "No update log for this download" : "Update log no longer on this PC";
+    const description = neverWritten
+      ? "This run finished before SteamCMD saved a log."
+      : "The file for this download was removed.";
+    return (
+      <div data-update-log-missing={props.missingUpdateLog}>
+        <LogsEmptyState icon={<FileText size={24} />} title={title} description={description} />
+      </div>
+    );
+  }
+  if (props.selectedUpdateInfo === null) {
+    return <Text c="dimmed">Select an update to see details.</Text>;
+  }
+  return (
+    <>
+      <div className={classes.detailsMeta}>
+        <LogsDetailItem
+          label="Date"
+          value={formatLogDateTime(props.selectedUpdateInfo.modifiedAt)}
+          icon={<ClockCounterClockwise size={16} />}
+        />
+        <LogsDetailItem
+          label="Duration"
+          value={formatDuration(props.selectedUpdateInfo.durationMs)}
+          icon={<ClockCounterClockwise size={16} />}
+        />
+        <LogsDetailItem
+          label="Size"
+          value={formatSize(props.selectedUpdateInfo.sizeBytes)}
+          icon={<FileText size={16} />}
+        />
+      </div>
+      <ConsoleSurface
+        fill
+        className={classes.squareConsole}
+        text={props.updateContent.length > 0 ? props.updateContent : "Loading log content…"}
+        data-logs-scroll-region="update-content"
+      />
+    </>
+  );
+}
+
 export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
   const {
     embedded,
@@ -159,51 +208,11 @@ export function LogsUpdatesTab(props: LogsUpdatesTabProps): ReactElement {
               )}
             </Group>
 
-            {missingUpdateLog !== null && selectedUpdateInfo === null ? (
-              <div data-update-log-missing={missingUpdateLog}>
-                <LogsEmptyState
-                  icon={<FileText size={24} />}
-                  title={
-                    missingUpdateLog === "never-written"
-                      ? "No update log for this download"
-                      : "Update log no longer on this PC"
-                  }
-                  description={
-                    missingUpdateLog === "never-written"
-                      ? "This run finished before SteamCMD saved a log."
-                      : "The file for this download was removed."
-                  }
-                />
-              </div>
-            ) : selectedUpdateInfo === null ? (
-              <Text c="dimmed">Select an update to see details.</Text>
-            ) : (
-              <>
-                <div className={classes.detailsMeta}>
-                  <LogsDetailItem
-                    label="Date"
-                    value={formatLogDateTime(selectedUpdateInfo.modifiedAt)}
-                    icon={<ClockCounterClockwise size={16} />}
-                  />
-                  <LogsDetailItem
-                    label="Duration"
-                    value={formatDuration(selectedUpdateInfo.durationMs)}
-                    icon={<ClockCounterClockwise size={16} />}
-                  />
-                  <LogsDetailItem
-                    label="Size"
-                    value={formatSize(selectedUpdateInfo.sizeBytes)}
-                    icon={<FileText size={16} />}
-                  />
-                </div>
-                <ConsoleSurface
-                  fill
-                  className={classes.squareConsole}
-                  text={updateContent.length > 0 ? updateContent : "Loading log content…"}
-                  data-logs-scroll-region="update-content"
-                />
-              </>
-            )}
+            <UpdateLogDetail
+              missingUpdateLog={missingUpdateLog}
+              selectedUpdateInfo={selectedUpdateInfo}
+              updateContent={updateContent}
+            />
           </Stack>
         </div>
       </div>

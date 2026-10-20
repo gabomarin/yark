@@ -1,7 +1,10 @@
-import { join, resolve } from "node:path";
+import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { basename, join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   buildUpdateLogPath,
+  confineCancelledUpdateLogPath,
   computePreUpdateBackupProgressPercent,
   formatPreUpdateBackupKindLabel,
   formatUpdateLogContent,
@@ -11,6 +14,7 @@ import {
   queuedFilesJobProgressLabel,
   resolveCancelledUpdateLogPath,
   resolveUpdateWasRunning,
+  startedAtFromUpdateLogPath,
   shouldBlockUpdateWhileServerRunning,
   shouldRestartServerAfterPreSteamCmdAbort,
   shouldResumeFromPreUpdateBackup,
@@ -116,6 +120,32 @@ describe("buildUpdateLogPath", () => {
     expect(resolveCancelledUpdateLogPath("C:/logs", "srv-1", startedAt, join("C:/Windows", "evil.log"))).toBe(
       buildUpdateLogPath("C:/logs", "srv-1", startedAt),
     );
+  });
+
+  it("reads the run start encoded in the log file name", () => {
+    const startedAt = new Date("2026-01-01T12:30:45.123Z");
+    const logPath = buildUpdateLogPath("C:/logs", "srv-1", startedAt);
+    expect(startedAtFromUpdateLogPath("srv-1", logPath)?.toISOString()).toBe("2026-01-01T12:30:45.123Z");
+    expect(startedAtFromUpdateLogPath("srv-1", join("C:/logs", "srv-1-paused.log"))).toBeNull();
+  });
+
+  it("does not follow a symlink inside the update-logs folder", () => {
+    const root = mkdtempSync(join(tmpdir(), "yark-log-link-"));
+    const logs = join(root, "logs");
+    mkdirSync(logs);
+    const outside = join(root, "outside.txt");
+    writeFileSync(outside, "secret");
+    const link = join(logs, "srv-1-link.log");
+    try {
+      symlinkSync(outside, link);
+    } catch {
+      return;
+    }
+    const startedAt = new Date("2026-01-01T12:30:45.123Z");
+    const chosen = confineCancelledUpdateLogPath(logs, "srv-1", startedAt, link);
+    expect(chosen).not.toBeNull();
+    expect(basename(chosen!)).toBe(basename(buildUpdateLogPath(logs, "srv-1", startedAt)));
+    expect(basename(chosen!)).not.toBe("srv-1-link.log");
   });
 });
 

@@ -77,7 +77,10 @@ export function DownloadRowButton(props: {
       </UnstyledButton>
       <span className={classes.rowActions}>
         {(row.kind === "cancelled" || row.kind === "attention" || row.kind === "interrupted") &&
-          row.serverId !== null && (
+          row.serverId !== null &&
+          (row.job?.operation === "install-files" ||
+            row.job?.operation === "update" ||
+            row.job?.operation === "verify-files") && (
             <Tooltip label="Open in Logs">
               <ActionIcon size="sm" variant="subtle" aria-label="Open in Logs" onClick={() => props.onOpenInLogs()}>
                 <FileText size={14} />

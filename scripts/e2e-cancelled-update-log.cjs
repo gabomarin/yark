@@ -174,11 +174,16 @@ async function run() {
   const errors = [];
   try {
     app = await launchElectronApp({ profileDir });
+    const early = await app.firstWindow();
+    const watchPage = (target) => {
+      target.on("console", (message) => {
+        if (message.type() === "error") errors.push(`console: ${message.text()}`);
+      });
+      target.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
+    };
+    watchPage(early);
+    app.on("window", watchPage);
     const page = await waitForOverview(app);
-    page.on("console", (message) => {
-      if (message.type() === "error") errors.push(`console: ${message.text()}`);
-    });
-    page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
     await page.setViewportSize({ width: 1440, height: 900 });
 
     await openDownloads(page);

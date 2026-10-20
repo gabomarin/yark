@@ -1,4 +1,5 @@
-import { basename, isAbsolute, join, relative, resolve } from "node:path";
+import { lstatSync, realpathSync } from "node:fs";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import type { CriticalJobStatus } from "@shared/types";
 import type { BackupKind } from "@shared/types";
 import type { UpdateCriticalJobContext, UpdateCriticalJobType } from "./update-critical-jobs";
@@ -99,6 +100,62 @@ export function resolveCancelledUpdateLogPath(
     return fallback;
   }
   return resolved;
+}
+
+/** Stamp embedded by `buildUpdateLogPath`, or null when the name is not one of ours. */
+export function startedAtFromUpdateLogPath(serverId: string, logPath: string | null | undefined): Date | null {
+  if (logPath === null || logPath === undefined || logPath.trim().length === 0) return null;
+  const fileName = basename(logPath);
+  const prefix = `${serverId}-`;
+  if (!fileName.startsWith(prefix) || !fileName.toLowerCase().endsWith(".log")) return null;
+  const stamp = fileName.slice(prefix.length, -".log".length);
+  const match = /^(\d{4}-\d{2}-\d{2}T)(\d{2})-(\d{2})-(\d{2})-(\d{3}Z)$/.exec(stamp);
+  if (match === null) return null;
+  const parsed = new Date(`${match[1]}${match[2]}:${match[3]}:${match[4]}.${match[5]}`);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function realUpdateLogFile(updatesLogDir: string, candidate: string): string | null {
+  let rootReal: string;
+  try {
+    rootReal = realpathSync(resolve(updatesLogDir));
+  } catch {
+    return null;
+  }
+  let parentReal: string;
+  try {
+    parentReal = realpathSync(dirname(candidate));
+  } catch {
+    return null;
+  }
+  const rel = relative(rootReal, parentReal);
+  if (rel.startsWith("..") || isAbsolute(rel)) return null;
+  const finalPath = join(parentReal, basename(candidate));
+  try {
+    if (lstatSync(finalPath).isSymbolicLink()) return null;
+  } catch {
+    // The file is not there yet. The real parent is still inside the log folder.
+  }
+  return finalPath;
+}
+
+/**
+ * Path we may create for a cancel log. A persisted path that leaves the folder,
+ * or a symlink inside it, is replaced with a new file so the write cannot follow
+ * a link out of update-logs.
+ */
+export function confineCancelledUpdateLogPath(
+  updatesLogDir: string,
+  serverId: string,
+  startedAt: Date,
+  candidate: string | null,
+): string | null {
+  const lexical = resolveCancelledUpdateLogPath(updatesLogDir, serverId, startedAt, candidate);
+  const safe = realUpdateLogFile(updatesLogDir, lexical);
+  if (safe !== null) return safe;
+  const fallback = resolveCancelledUpdateLogPath(updatesLogDir, serverId, startedAt, null);
+  if (resolve(fallback) === resolve(lexical)) return null;
+  return realUpdateLogFile(updatesLogDir, fallback);
 }
 
 export function formatUpdateLogContent(input: {

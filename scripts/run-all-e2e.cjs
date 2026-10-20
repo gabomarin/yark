@@ -20,6 +20,7 @@ const tests = [
   { name: "e2e:host-port-probe", cmd: "npm run e2e:host-port-probe" },
   { name: "e2e:critical-job-recovery", cmd: "npm run e2e:critical-job-recovery" },
   { name: "e2e:downloads-pause-resume", cmd: "npm run e2e:downloads-pause-resume" },
+  { name: "e2e:cancelled-update-log", cmd: "npm run e2e:cancelled-update-log" },
   { name: "e2e:mods", cmd: "npm run e2e:mods" },
   { name: "e2e:launch-args", cmd: "npm run e2e:launch-args" },
   { name: "e2e:log-retention", cmd: "npm run e2e:log-retention" },

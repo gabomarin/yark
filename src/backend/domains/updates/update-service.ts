@@ -357,13 +357,11 @@ export class UpdateService extends EventEmitter {
 
   cancelCriticalJob(jobId: string): boolean {
     const queued = this.queueRuntime.getJobs().find((job) => job.id === jobId);
-    const started =
-      queued !== undefined &&
-      (queued.status === "paused" ||
-        queued.context.updateLogPath !== undefined ||
-        (queued.phase !== "queued" && queued.status !== "pending"));
+    const wasPaused = queued?.status === "paused";
     const result = this.queueRuntime.cancelCriticalJob(jobId);
-    if (result === true && started === true && queued !== undefined) {
+    // Only a paused job has left the performer. A running job writes its own log
+    // when SteamCMD exits, and writing here would race that file.
+    if (result === true && wasPaused && queued !== undefined) {
       this.updatePerformer.recordOperatorCancelledLog(queued);
     }
     return result ?? this.backups.cancelCriticalJob(jobId);

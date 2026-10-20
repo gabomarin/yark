@@ -222,10 +222,16 @@ export function useServerLogsPanel(options: UseServerLogsPanelOptions) {
       if (section === "updates") {
         const named = focus.updateFileName;
         if (focus.missingUpdateLog === true && (named === undefined || named.length === 0)) {
+          updateLoadGenRef.current += 1;
+          setSelectedUpdateFile(null);
+          setUpdateContent("");
           setMissingUpdateLog("never-written");
         } else if (named !== undefined && named.length > 0) {
           const exists = data.updateFiles.some((file) => file.fileName === named);
           if (!exists) {
+            updateLoadGenRef.current += 1;
+            setSelectedUpdateFile(null);
+            setUpdateContent("");
             setMissingUpdateLog("absent");
           } else {
             await openUpdateLog(server.id, named);

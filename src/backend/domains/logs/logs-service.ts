@@ -49,13 +49,14 @@ function parseUpdateLogHeader(content: string): {
   const outcomeCancelled = /^outcome=cancelled$/m.test(header);
   const exitCode = exitCodeMatch !== null ? Number(exitCodeMatch[1]) : null;
   const durationMs = durationMatch !== null ? Number(durationMatch[1]) : null;
-  const status: ServerUpdateLogStatus = outcomeCancelled
-    ? "cancelled"
-    : exitCode === null
-      ? "unknown"
-      : exitCode === 0
-        ? "success"
-        : "failed";
+  let status: ServerUpdateLogStatus = "failed";
+  if (outcomeCancelled) {
+    status = "cancelled";
+  } else if (exitCode === null) {
+    status = "unknown";
+  } else if (exitCode === 0) {
+    status = "success";
+  }
   return { status, exitCode, durationMs };
 }
 

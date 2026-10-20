@@ -266,6 +266,24 @@ describe("DownloadsPage", () => {
     expect(withoutLog.onOpenInLogs).toHaveBeenCalledWith("srv-1", null);
   });
 
+  it("does not offer Open in Logs for a cancelled restore", () => {
+    renderPage(
+      baseStatus({
+        criticalJobs: [
+          job({
+            id: "job-restore",
+            operation: "restore",
+            status: "cancelled",
+            phase: "cancelled",
+            nextActions: ["dismiss"],
+          }),
+        ],
+      }),
+    );
+    expect(screen.getByText("Island")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open in Logs" })).not.toBeInTheDocument();
+  });
+
   it("puts Pause on the active row and keeps the console on the active job when a queued row is selected", async () => {
     const user = userEvent.setup();
     renderPage(populatedStatus());
