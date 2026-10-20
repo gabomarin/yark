@@ -51,8 +51,13 @@
 .tabs:global(.mantine-Tabs-root) {
   display: flex;
   flex-direction: column;
-  --tabs-list-border-width: 1px;
+  /* The panel's top edge is the divider. A list rule on top of that edge reads as a double line. */
+  --tabs-list-border-width: 0;
   --tabs-list-gap: 1px;
+}
+
+.tabs .tabList::before {
+  border-width: 0;
 }
 
 .tabPanel {
@@ -62,7 +67,6 @@
   min-height: 0;
   flex: 1 1 0%;
   overflow: hidden;
-  margin-top: -2px;
 }
 
 .tabPanel > * {

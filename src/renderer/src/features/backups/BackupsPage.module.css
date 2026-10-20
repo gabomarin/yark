@@ -149,15 +149,16 @@
   white-space: nowrap;
 }
 
+.embeddedShell {
+  overflow: hidden;
+}
+
 .embedded {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding-right: var(--app-space-xxs);
-}
-
-.embeddedHeader {
-  padding-bottom: var(--app-space-xxs);
+  padding: var(--app-space-md);
+  scrollbar-gutter: stable;
 }
 
 .sharedDestination {

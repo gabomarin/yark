@@ -39,24 +39,8 @@ export function ServerBackupPanel(props: Props): ReactElement {
       ? "Select backups to delete"
       : `Permanently delete ${panel.actionableSelectedIds.length} selected backup${panel.actionableSelectedIds.length === 1 ? "" : "s"}`;
 
-  return (
-    <Stack gap="md" className={embedded ? classes.embedded : undefined}>
-      {embedded ? (
-        <ServerBackupHeader
-          title="Backups"
-          subtitle="World schedule is separate from player join/leave and INI-on-save backups."
-        />
-      ) : (
-        <Group justify="space-between" wrap="wrap" gap="sm" align="flex-end">
-          <div>
-            <Title order={3}>Backups for {props.server.name}</Title>
-            <DismissibleHint storageKey={BACKUPS_KINDS_HINT_STORAGE_KEY} title="World vs players vs INI">
-              World schedule is separate from player join/leave and INI-on-save backups.
-            </DismissibleHint>
-          </div>
-        </Group>
-      )}
-
+  const sections = (
+    <>
       {panel.draftPolicy !== null && (
         <ServerBackupDestination
           draftPolicy={panel.draftPolicy}
@@ -180,6 +164,31 @@ export function ServerBackupPanel(props: Props): ReactElement {
         onClose={panel.closeRestoreModal}
         onConfirm={() => void panel.runRestore()}
       />
-    </Stack>
+    </>
+  );
+
+  if (!embedded) {
+    return (
+      <Stack gap="md">
+        <Group justify="space-between" wrap="wrap" gap="sm" align="flex-end">
+          <div>
+            <Title order={3}>Backups for {props.server.name}</Title>
+            <DismissibleHint storageKey={BACKUPS_KINDS_HINT_STORAGE_KEY} title="World vs players vs INI">
+              World schedule is separate from player join/leave and INI-on-save backups.
+            </DismissibleHint>
+          </div>
+        </Group>
+        {sections}
+      </Stack>
+    );
+  }
+
+  return (
+    <AppSurfaceCard tone="flat" fill padding={0} radius={0} className={classes.embeddedShell} data-server-backup-panel>
+      <ServerBackupHeader subtitle="World saves, player profiles, and INI archives. Each kind keeps its own schedule." />
+      <Stack gap="md" className={classes.embedded}>
+        {sections}
+      </Stack>
+    </AppSurfaceCard>
   );
 }

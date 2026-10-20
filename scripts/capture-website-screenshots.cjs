@@ -213,7 +213,7 @@ function applyDemoMapsInDb(userData) {
 
 async function ensureDemoMods(page) {
   await page.getByRole("tab", { name: "Mods" }).click();
-  await page.getByRole("heading", { name: "Mods", exact: true, level: 3 }).waitFor({
+  await page.getByRole("heading", { name: "Mods", exact: true, level: 4 }).waitFor({
     state: "visible",
     timeout: 10000,
   });
@@ -1080,7 +1080,7 @@ async function run() {
       await shot(page, path.join(outDir, "workspace-ini.png"));
 
       await page.getByRole("tab", { name: "Mods" }).click();
-      await page.getByRole("heading", { name: "Mods", exact: true, level: 3 }).waitFor({
+      await page.getByRole("heading", { name: "Mods", exact: true, level: 4 }).waitFor({
         state: "visible",
         timeout: 10000,
       });

@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from "react";
 import { ArrowClockwise, ArrowCounterClockwise, ArrowUUpLeft, FloppyDisk } from "@phosphor-icons/react";
-import { Button, Group, Stack, Text, Title } from "@mantine/core";
+import { Button, Group } from "@mantine/core";
+import { WorkspaceSectionHeader } from "@ui/WorkspaceSectionHeader/WorkspaceSectionHeader";
 import classes from "./ConfigurationEditor.module.css";
 
 interface Props {
@@ -37,60 +38,56 @@ export function ConfigurationEditorHeader(props: Props): ReactElement {
   } = props;
 
   return (
-    <Stack gap="sm">
-      <div>
-        <Group gap="xs" wrap="nowrap">
-          <Title order={3}>INI Files</Title>
-          {openFileAction}
-        </Group>
-        <Text c="dimmed" size="sm">
-          {subtitle.replace("{fileLabel}", fileLabel)}
-        </Text>
-      </div>
-      <div className={classes.headerToolbar}>
-        {iniNavigation}
-        <Group gap="xs" wrap="wrap" ml="auto">
-          {onReloadFromDisk !== undefined && (
+    <WorkspaceSectionHeader
+      title="INI Files"
+      subtitle={subtitle.replace("{fileLabel}", fileLabel)}
+      actions={openFileAction}
+      toolbar={
+        <div className={classes.headerToolbar}>
+          {iniNavigation}
+          <Group gap="xs" wrap="wrap" ml="auto">
+            {onReloadFromDisk !== undefined && (
+              <Button
+                size="xs"
+                variant="default"
+                leftSection={<ArrowClockwise size={16} />}
+                onClick={onReloadFromDisk}
+                disabled={busy || loading}
+              >
+                Reload from disk
+              </Button>
+            )}
+            {showRestoreFile && onRestoreFile !== undefined && (
+              <Button
+                size="xs"
+                variant="default"
+                leftSection={<ArrowUUpLeft size={16} />}
+                onClick={onRestoreFile}
+                disabled={restoreFileDisabled || busy || loading}
+              >
+                Restore file
+              </Button>
+            )}
             <Button
               size="xs"
               variant="default"
-              leftSection={<ArrowClockwise size={16} />}
-              onClick={onReloadFromDisk}
-              disabled={busy || loading}
+              leftSection={<ArrowCounterClockwise size={16} />}
+              onClick={onDiscard}
+              disabled={!dirty || busy}
             >
-              Reload from disk
+              Discard changes
             </Button>
-          )}
-          {showRestoreFile && onRestoreFile !== undefined && (
             <Button
               size="xs"
-              variant="default"
-              leftSection={<ArrowUUpLeft size={16} />}
-              onClick={onRestoreFile}
-              disabled={restoreFileDisabled || busy || loading}
+              leftSection={<FloppyDisk size={16} />}
+              onClick={onSave}
+              disabled={!dirty || busy || loading}
             >
-              Restore file
+              Save
             </Button>
-          )}
-          <Button
-            size="xs"
-            variant="default"
-            leftSection={<ArrowCounterClockwise size={16} />}
-            onClick={onDiscard}
-            disabled={!dirty || busy}
-          >
-            Discard changes
-          </Button>
-          <Button
-            size="xs"
-            leftSection={<FloppyDisk size={16} />}
-            onClick={onSave}
-            disabled={!dirty || busy || loading}
-          >
-            Save
-          </Button>
-        </Group>
-      </div>
-    </Stack>
+          </Group>
+        </div>
+      }
+    />
   );
 }

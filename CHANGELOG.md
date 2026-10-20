@@ -19,6 +19,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Workspace tabs share one header: a title, one line of help, and that tab's actions on the right. **Backups**, **Logs**, **RCON**, and **Maintenance** use the same parent panel as Server, INI files, and Mods.
 - **Glassy** dark shows the night scene between cards: a more open sidebar, denser working cards, and a denser row inside them. Attention banners use that same glass, and Start stays closer to solid. Light keeps the page sheet more open than the card and draws the hex in a faint cyan.
 - **Glassy** dark darkens the night scene across the whole window so the moon does not wash out the cards. Light dimmed copy, including the server-list summary, the server header, and section tabs, is darker so it stays readable on the day scene, and the day photo stays a step darker, with only a light blur.
 - Backup server cards no longer sit on a square page plate, and **Create cluster** sits above the cluster tab rule so that line does not show through the button.
@@ -43,6 +44,9 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Workspace tabs use the panel edge as the only line under the tab bar, so that divider is no longer doubled.
+- **Create cluster** stays in the cluster tab row. The panel edge is the only line under that row, so the button no longer covers it.
+- Maintenance **Up next** stays whole when job sections are expanded. The list scrolls instead of clipping that card.
 - A cancelled install, update, or verify is stored as **Cancelled** in Logs → Updates, including a cancel after Pause, and Downloads can open that log (#86).
 - On a short window the sidebar navigation scrolls, so Quit stays on screen. Download rows outside the flush queue keep their border.
 - **Glassy** light toasts keep a dark title and message. The message was using the hairline color, so it disappeared on the toast.

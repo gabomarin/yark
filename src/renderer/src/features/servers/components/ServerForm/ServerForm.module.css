@@ -108,12 +108,6 @@
   overflow: hidden;
 }
 
-.embeddedHeader {
-  flex-shrink: 0;
-  padding: var(--app-space-sm) var(--app-space-md);
-  border-bottom: 1px solid var(--app-color-border);
-}
-
 .embeddedScroll {
   flex: 1 1 auto;
   min-height: 0;
