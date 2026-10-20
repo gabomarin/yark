@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -15,6 +15,7 @@ import {
   resolveCancelledUpdateLogPath,
   resolveUpdateWasRunning,
   startedAtFromUpdateLogPath,
+  writeCancelledUpdateLogExclusive,
   shouldBlockUpdateWhileServerRunning,
   shouldRestartServerAfterPreSteamCmdAbort,
   shouldResumeFromPreUpdateBackup,
@@ -146,6 +147,30 @@ describe("buildUpdateLogPath", () => {
     expect(chosen).not.toBeNull();
     expect(basename(chosen!)).toBe(basename(buildUpdateLogPath(logs, "srv-1", startedAt)));
     expect(basename(chosen!)).not.toBe("srv-1-link.log");
+  });
+
+  it("creates a cancel log with an exclusive open and does not follow a symlink", () => {
+    const root = mkdtempSync(join(tmpdir(), "yark-log-wx-"));
+    const logs = join(root, "logs");
+    mkdirSync(logs);
+    const created = join(logs, "fresh.log");
+    expect(writeCancelledUpdateLogExclusive(created, "outcome=cancelled\n")).toBe("created");
+    expect(readFileSync(created, "utf8")).toContain("outcome=cancelled");
+
+    writeFileSync(created, "exitCode=1\n");
+    expect(writeCancelledUpdateLogExclusive(created, "outcome=cancelled\n")).toBe("kept");
+    expect(readFileSync(created, "utf8")).toBe("exitCode=1\n");
+
+    const outside = join(root, "outside.txt");
+    writeFileSync(outside, "secret");
+    const link = join(logs, "linked.log");
+    try {
+      symlinkSync(outside, link);
+    } catch {
+      return;
+    }
+    expect(writeCancelledUpdateLogExclusive(link, "outcome=cancelled\n")).toBe("rejected");
+    expect(readFileSync(outside, "utf8")).toBe("secret");
   });
 });
 

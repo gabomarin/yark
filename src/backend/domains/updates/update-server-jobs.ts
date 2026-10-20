@@ -1,4 +1,4 @@
-import { lstatSync, realpathSync } from "node:fs";
+import { closeSync, lstatSync, openSync, realpathSync, writeSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import type { CriticalJobStatus } from "@shared/types";
 import type { BackupKind } from "@shared/types";
@@ -156,6 +156,29 @@ export function confineCancelledUpdateLogPath(
   const fallback = resolveCancelledUpdateLogPath(updatesLogDir, serverId, startedAt, null);
   if (resolve(fallback) === resolve(lexical)) return null;
   return realUpdateLogFile(updatesLogDir, fallback);
+}
+
+/** Create the cancel log without following a symlink that wins the race (`wx` / O_EXCL). */
+export function writeCancelledUpdateLogExclusive(logPath: string, content: string): "created" | "kept" | "rejected" {
+  let fd: number;
+  try {
+    fd = openSync(logPath, "wx");
+  } catch (error) {
+    const code = typeof error === "object" && error !== null && "code" in error ? String(error.code) : "";
+    if (code !== "EEXIST") throw error;
+    try {
+      if (!lstatSync(logPath).isSymbolicLink()) return "kept";
+    } catch {
+      return "rejected";
+    }
+    return "rejected";
+  }
+  try {
+    writeSync(fd, content, 0, "utf8");
+  } finally {
+    closeSync(fd);
+  }
+  return "created";
 }
 
 export function formatUpdateLogContent(input: {

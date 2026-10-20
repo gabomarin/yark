@@ -226,6 +226,7 @@ export function useServerLogsPanel(options: UseServerLogsPanelOptions) {
           setSelectedUpdateFile(null);
           setUpdateContent("");
           setMissingUpdateLog("never-written");
+          setBusy(false);
         } else if (named !== undefined && named.length > 0) {
           const exists = data.updateFiles.some((file) => file.fileName === named);
           if (!exists) {
@@ -233,6 +234,7 @@ export function useServerLogsPanel(options: UseServerLogsPanelOptions) {
             setSelectedUpdateFile(null);
             setUpdateContent("");
             setMissingUpdateLog("absent");
+            setBusy(false);
           } else {
             await openUpdateLog(server.id, named);
             if (focusKeyRef.current !== key) return;
