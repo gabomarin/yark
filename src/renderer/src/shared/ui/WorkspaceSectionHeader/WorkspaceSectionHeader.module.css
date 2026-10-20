@@ -1,0 +1,34 @@
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex-shrink: 0;
+  gap: var(--app-space-sm);
+  padding: var(--app-space-sm) var(--app-space-md);
+  border-bottom: 1px solid var(--app-color-border);
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--app-space-sm);
+}
+
+.copy {
+  min-width: 0;
+  flex: 1 1 16rem;
+}
+
+.title {
+  margin: 0;
+}
+
+.actions {
+  flex-shrink: 0;
+}
+
+.toolbar {
+  min-width: 0;
+}

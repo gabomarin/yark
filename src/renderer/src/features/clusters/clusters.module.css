@@ -78,20 +78,19 @@
 }
 
 .clusterTabs:global(.mantine-Tabs-root) {
-  --tabs-list-border-width: 1px;
+  /* The panel edge is the divider. A list rule pulled under the row gets covered by Create cluster. */
+  --tabs-list-border-width: 0;
   --tabs-list-gap: 1px;
 }
 
 .clusterTabBar {
   display: flex;
   flex: 0 0 auto;
-  align-items: center;
+  align-items: flex-end;
   min-width: 0;
 }
 
 .clusterTabsList {
-  position: relative;
-  z-index: 1;
   flex: 1 1 auto;
   min-width: 0;
   flex-wrap: nowrap;
@@ -102,13 +101,12 @@
   background: transparent;
 }
 
+.clusterTabs .clusterTabsList::before {
+  border-width: 0;
+}
+
 .createClusterAction {
   flex: 0 0 auto;
-  position: relative;
-  z-index: 2;
-  /* The panel overlaps the tab rule. Keep the button above that line so the
-     border does not show through the translucent fill. */
-  margin-bottom: calc(6px + var(--tabs-list-border-width));
 }
 
 .clusterTabsList :global(.mantine-Tabs-tab) {
@@ -149,7 +147,6 @@
   flex: 1 1 0;
   min-height: 0;
   overflow: hidden;
-  margin-top: calc(-2px - var(--tabs-list-border-width));
 }
 
 .clusterTabsPanel > [data-panel-radius][data-fill] {

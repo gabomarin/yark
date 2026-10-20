@@ -8,6 +8,7 @@ import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppPanelConfirmModal } from "@ui/AppPanelConfirmModal/AppPanelConfirmModal";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
+import { WorkspaceSectionHeader } from "@ui/WorkspaceSectionHeader/WorkspaceSectionHeader";
 import { asaApiConfirmCopy } from "./asaApiPanelModel";
 import { ServerAsaApiInstalledSection } from "./ServerAsaApiInstalledSection";
 import { useServerAsaApiPanel } from "./useServerAsaApiPanel";
@@ -38,42 +39,39 @@ export function ServerAsaApiPanel(props: Props): ReactElement {
         data-testid="server-asaapi-panel"
         data-asa-api-panel
       >
+        <WorkspaceSectionHeader
+          title="Ark Server API"
+          subtitle="Optional server-side plugins."
+          actions={
+            installedOnDisk ? (
+              <Group gap="xs">
+                <Button
+                  size={inputSize}
+                  variant="default"
+                  leftSection={<DownloadSimple size={14} />}
+                  loading={panel.isBusy("install")}
+                  disabled={panel.locked && !panel.isBusy("install")}
+                  onClick={() => void panel.onInstall()}
+                >
+                  Check updates
+                </Button>
+                <Button
+                  size={inputSize}
+                  variant="subtle"
+                  color="red"
+                  leftSection={<Trash size={14} />}
+                  loading={panel.isBusy("uninstall")}
+                  disabled={panel.locked && !panel.isBusy("uninstall")}
+                  onClick={panel.onUninstall}
+                >
+                  Remove
+                </Button>
+              </Group>
+            ) : undefined
+          }
+        />
         <div className={classes.scroll}>
           <Stack gap="sm">
-            <Group justify="space-between" align="flex-start" wrap="wrap">
-              <div>
-                <Text fw={600}>Ark Server API</Text>
-                <Text size="xs" c="dimmed">
-                  Optional server-side plugins.
-                </Text>
-              </div>
-              {installedOnDisk ? (
-                <Group gap="xs">
-                  <Button
-                    size={inputSize}
-                    variant="default"
-                    leftSection={<DownloadSimple size={14} />}
-                    loading={panel.isBusy("install")}
-                    disabled={panel.locked && !panel.isBusy("install")}
-                    onClick={() => void panel.onInstall()}
-                  >
-                    Check updates
-                  </Button>
-                  <Button
-                    size={inputSize}
-                    variant="subtle"
-                    color="red"
-                    leftSection={<Trash size={14} />}
-                    loading={panel.isBusy("uninstall")}
-                    disabled={panel.locked && !panel.isBusy("uninstall")}
-                    onClick={panel.onUninstall}
-                  >
-                    Remove
-                  </Button>
-                </Group>
-              ) : null}
-            </Group>
-
             {panel.error !== null ? <AppAlert color="red">{panel.error}</AppAlert> : null}
 
             {panel.installProgress !== null ? (

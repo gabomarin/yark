@@ -1,8 +1,9 @@
-import { Button, Group, Stack, Text, TextInput } from "@mantine/core";
+import { Button, Text, TextInput } from "@mantine/core";
 import type { ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { WorkspaceSectionHeader } from "@ui/WorkspaceSectionHeader/WorkspaceSectionHeader";
 import searchFieldClasses from "@ui/SearchField/SearchField.module.css";
 import type { RconHistoryEntry } from "../../serverWorkspaceTypes";
 import { RconConsoleHistory } from "./RconConsoleHistory";
@@ -96,96 +97,91 @@ export function RconPanel(props: Props): ReactElement {
   };
 
   return (
-    <div className={classes.root}>
-      <div className={classes.mainColumn}>
-        <AppSurfaceCard tone="flat" padding="sm" radius={0} className={classes.mainPanel}>
-          <Stack gap="sm">
-            <div className={classes.header}>
-              <div>
-                <Text className={classes.title}>RCON</Text>
-                <Text size="sm" className={classes.helper}>
-                  {isRunning
-                    ? "Admin commands for the active server. Commands work best without the 'cheat' prefix (e.g., SaveWorld, ListPlayers, DestroyWildDinos)."
-                    : "Start the server to send RCON commands."}
-                </Text>
-              </div>
-            </div>
-
-            <div className={classes.chips}>
-              {QUICK_COMMANDS.map((item) => (
-                <Button
-                  key={item.label}
-                  size="xs"
-                  variant={item.danger ? "light" : "default"}
-                  color={item.danger ? "red" : "gray"}
-                  disabled={!isRunning}
-                  title={isRunning ? undefined : "Start the server to send commands"}
-                  onClick={() => {
-                    // ServerChat / Broadcast need a message — prefill for editing.
-                    if (item.command.endsWith(" ")) {
-                      setCommand(item.command);
-                      return;
-                    }
-                    void sendCommand(item.command);
-                  }}
-                >
-                  {item.label}
-                </Button>
-              ))}
-            </div>
-
-            <div className={classes.commandBlock}>
-              <TextInput
-                label="RCON command"
-                placeholder="e.g., ListPlayers, SaveWorld, or ServerChat"
+    <AppSurfaceCard tone="flat" fill padding={0} radius={0} className={classes.shell} data-rcon-panel>
+      <WorkspaceSectionHeader
+        title="RCON"
+        subtitle={
+          isRunning
+            ? "Admin commands for the active server. Commands work best without the 'cheat' prefix (e.g., SaveWorld, ListPlayers, DestroyWildDinos)."
+            : "Start the server to send RCON commands."
+        }
+        actions={
+          <Button
+            size="xs"
+            onClick={() => void sendCommand(command)}
+            disabled={!isRunning || identicalPending || commandTrimmed.length === 0}
+          >
+            Send
+          </Button>
+        }
+      />
+      <div className={classes.root}>
+        <div className={classes.mainColumn}>
+          <div className={classes.chips}>
+            {QUICK_COMMANDS.map((item) => (
+              <Button
+                key={item.label}
                 size="xs"
-                value={command}
-                classNames={{ input: searchFieldClasses.input }}
-                onChange={(event) => setCommand(event.currentTarget.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !event.shiftKey) {
-                    event.preventDefault();
-                    void sendCommand(command);
+                variant={item.danger ? "light" : "default"}
+                color={item.danger ? "red" : "gray"}
+                disabled={!isRunning}
+                title={isRunning ? undefined : "Start the server to send commands"}
+                onClick={() => {
+                  // ServerChat / Broadcast need a message — prefill for editing.
+                  if (item.command.endsWith(" ")) {
+                    setCommand(item.command);
+                    return;
                   }
+                  void sendCommand(item.command);
                 }}
-              />
-              <Group justify="space-between" align="flex-end" gap="xs">
-                <Text size="xs" c="dimmed">
-                  Press Enter to send. Commands are recorded in history below.
-                </Text>
-                <Button
-                  size="xs"
-                  onClick={() => void sendCommand(command)}
-                  disabled={!isRunning || identicalPending || commandTrimmed.length === 0}
-                >
-                  Send
-                </Button>
-              </Group>
-            </div>
-          </Stack>
-        </AppSurfaceCard>
+              >
+                {item.label}
+              </Button>
+            ))}
+          </div>
 
-        <RconConsoleHistory
-          history={props.rconHistory}
+          <div className={classes.commandBlock}>
+            <TextInput
+              label="RCON command"
+              placeholder="e.g., ListPlayers, SaveWorld, or ServerChat"
+              size="xs"
+              value={command}
+              classNames={{ input: searchFieldClasses.input }}
+              onChange={(event) => setCommand(event.currentTarget.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  void sendCommand(command);
+                }
+              }}
+            />
+            <Text size="xs" c="dimmed">
+              Press Enter to send. Commands are recorded in history below.
+            </Text>
+          </div>
+
+          <RconConsoleHistory
+            history={props.rconHistory}
+            serverRunning={isRunning}
+            onRerun={(next) => void sendCommand(next)}
+            onClear={() => props.onClearRconHistory(props.server.id)}
+          />
+        </div>
+
+        <PlayerListSection
+          serverId={props.server.id}
           serverRunning={isRunning}
-          onRerun={(next) => void sendCommand(next)}
-          onClear={() => props.onClearRconHistory(props.server.id)}
+          serverStarting={isStarting}
+          rconConnected={rconConnected}
+          playerList={props.playerList}
+          iniDirty={props.iniDirty === true}
+          playersPanelFocus={props.playersPanelFocus}
+          onPlayersPanelFocusConsumed={props.onPlayersPanelFocusConsumed}
+          onRefreshPlayers={props.onRefreshPlayers}
+          onKickPlayer={props.onKickPlayer}
+          onBanPlayer={props.onBanPlayer}
         />
       </div>
-
-      <PlayerListSection
-        serverId={props.server.id}
-        serverRunning={isRunning}
-        serverStarting={isStarting}
-        rconConnected={rconConnected}
-        playerList={props.playerList}
-        iniDirty={props.iniDirty === true}
-        playersPanelFocus={props.playersPanelFocus}
-        onPlayersPanelFocusConsumed={props.onPlayersPanelFocusConsumed}
-        onRefreshPlayers={props.onRefreshPlayers}
-        onKickPlayer={props.onKickPlayer}
-        onBanPlayer={props.onBanPlayer}
-      />
-    </div>
+    </AppSurfaceCard>
   );
 }

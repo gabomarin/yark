@@ -82,8 +82,32 @@ export function ConfigurationEditor(props: Props): ReactElement {
       />
     );
 
+  const visualMode = props.section === "iniFiles" && editor.iniMode === "visual";
+  const textMode = props.section === "iniFiles" && editor.iniMode === "text" && editor.payload !== null;
+
   return (
     <AppSurfaceCard tone="flat" fill padding={0} radius={0} className={classes.root} data-configuration-editor>
+      {(visualMode || textMode) && (
+        <ConfigurationEditorHeader
+          fileLabel={editor.fileLabel}
+          subtitle={
+            visualMode
+              ? "Edit {fileLabel} with visual controls and direct file access."
+              : "Direct editing of {fileLabel}. Useful for comparing or pasting blocks between servers."
+          }
+          openFileAction={openFileAction}
+          iniNavigation={iniNavigation}
+          showRestoreFile={visualMode}
+          restoreFileDisabled={editor.payload === null}
+          dirty={editor.dirty}
+          busy={editor.busy}
+          loading={editor.loading}
+          onReloadFromDisk={editor.requestReloadFromDisk}
+          onRestoreFile={visualMode ? editor.resetActiveFileToDefaults : undefined}
+          onDiscard={editor.resetChanges}
+          onSave={() => void saveAndNotify()}
+        />
+      )}
       <div className={classes.content}>
         <ConfigurationEditorStatusAlerts
           error={editor.error}
@@ -101,24 +125,8 @@ export function ConfigurationEditor(props: Props): ReactElement {
           pendingQueued={editor.pendingQueued}
         />
 
-        {props.section === "iniFiles" && editor.iniMode === "visual" && (
+        {visualMode && (
           <Stack gap="md" className={classes.editor}>
-            <ConfigurationEditorHeader
-              fileLabel={editor.fileLabel}
-              subtitle="Edit {fileLabel} with visual controls and direct file access."
-              openFileAction={openFileAction}
-              iniNavigation={iniNavigation}
-              showRestoreFile
-              restoreFileDisabled={editor.payload === null}
-              dirty={editor.dirty}
-              busy={editor.busy}
-              loading={editor.loading}
-              onReloadFromDisk={editor.requestReloadFromDisk}
-              onRestoreFile={editor.resetActiveFileToDefaults}
-              onDiscard={editor.resetChanges}
-              onSave={() => void saveAndNotify()}
-            />
-
             <ConfigurationEditorFilterBar
               search={editor.search}
               onSearchChange={editor.setSearch}
@@ -158,20 +166,8 @@ export function ConfigurationEditor(props: Props): ReactElement {
           </Stack>
         )}
 
-        {props.section === "iniFiles" && editor.iniMode === "text" && editor.payload !== null && (
+        {textMode && editor.payload !== null && (
           <Stack gap="md" className={classes.editor}>
-            <ConfigurationEditorHeader
-              fileLabel={editor.fileLabel}
-              subtitle="Direct editing of {fileLabel}. Useful for comparing or pasting blocks between servers."
-              openFileAction={openFileAction}
-              iniNavigation={iniNavigation}
-              dirty={editor.dirty}
-              busy={editor.busy}
-              loading={editor.loading}
-              onReloadFromDisk={editor.requestReloadFromDisk}
-              onDiscard={editor.resetChanges}
-              onSave={() => void saveAndNotify()}
-            />
             <ConfigurationEditorTextPanel
               iniFile={editor.iniFile}
               payload={editor.payload}

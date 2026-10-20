@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { useMemo, useState } from "react";
-import { Button, Group, Stack, Text, Textarea } from "@mantine/core";
+import { Button, Stack, Text, Textarea } from "@mantine/core";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import { validateMapIdentity } from "@shared/asa/map-identity";
 import type { ServerProfile } from "@shared/types";
@@ -15,6 +15,7 @@ import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { SearchField } from "@ui/SearchField/SearchField";
+import { WorkspaceSectionHeader } from "@ui/WorkspaceSectionHeader/WorkspaceSectionHeader";
 import { ServerLaunchOptionRow } from "./ServerLaunchOptionRow";
 import { ServerLaunchPreview } from "./ServerLaunchPreview";
 import {
@@ -84,21 +85,17 @@ export function ServerLaunchPanel(props: Props): ReactElement {
 
   return (
     <AppSurfaceCard tone="flat" fill padding={0} radius={0} className={classes.panel} data-testid="server-launch-panel">
+      <WorkspaceSectionHeader
+        title="Launch options"
+        subtitle="Hover a flag for its description. Map, port, and cluster stay YARK-owned. Platform defaults to ALL unless set here."
+        actions={
+          <Button size={inputSize} variant="default" onClick={() => setCatalogOpen(true)}>
+            Browse ASA catalog
+          </Button>
+        }
+      />
       <div className={classes.scroll}>
         <Stack gap="sm">
-          <Group justify="space-between" align="flex-start" wrap="wrap">
-            <div>
-              <Text fw={600}>Launch options</Text>
-              <Text size="xs" c="dimmed">
-                Hover a flag for its description. Map, port, and cluster stay YARK-owned. Platform defaults to ALL
-                unless set here.
-              </Text>
-            </div>
-            <Button size={inputSize} variant="default" onClick={() => setCatalogOpen(true)}>
-              Browse ASA catalog
-            </Button>
-          </Group>
-
           <SearchField
             value={searchQuery}
             onChange={setSearchQuery}

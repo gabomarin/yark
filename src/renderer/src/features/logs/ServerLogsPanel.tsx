@@ -2,6 +2,9 @@ import { ClockCounterClockwise, DownloadSimple } from "@phosphor-icons/react";
 import { Button, Group, Stack, Tabs, Text, Title } from "@mantine/core";
 import type { ServerProfile } from "@shared/types";
 import type { ReactElement } from "react";
+import { useUiDensity } from "@app/AppProviders";
+import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { WorkspaceSectionHeader } from "@ui/WorkspaceSectionHeader/WorkspaceSectionHeader";
 import { LogsBackupsTab } from "./components/LogsBackupsTab/LogsBackupsTab";
 import { LogsEventsTab } from "./components/LogsEventsTab/LogsEventsTab";
 import { LogsClearAction } from "./components/LogsPanelChrome/LogsPanelChrome";
@@ -32,112 +35,136 @@ export function ServerLogsPanel(props: Props): ReactElement {
     focus: props.focus,
     onFocusConsumed: props.onFocusConsumed,
   });
-  const rootClass = props.embedded === true ? classes.embedded : classes.logsContent;
+  const embedded = props.embedded === true;
+  const density = useUiDensity();
+  const inputSize = density === "compact" ? "xs" : "sm";
+  const rootClass = embedded ? classes.embedded : classes.logsContent;
+  const actions = (
+    <>
+      <Button
+        size={inputSize}
+        variant="default"
+        leftSection={<ClockCounterClockwise size={16} />}
+        onClick={() => void panel.load(props.server.id)}
+        disabled={panel.loading || panel.busy}
+      >
+        Reload
+      </Button>
+      <Button
+        size={inputSize}
+        leftSection={<DownloadSimple size={16} />}
+        onClick={() => void panel.exportLogs()}
+        disabled={panel.loading || panel.busy}
+      >
+        Export
+      </Button>
+    </>
+  );
+
+  const tabs = (
+    <Tabs
+      value={panel.activeSection}
+      onChange={(value) => panel.setActiveSection((value as LogsSection) ?? "events")}
+      keepMounted={false}
+      className={classes.tabs}
+    >
+      <Tabs.List className={classes.tabList}>
+        <Tabs.Tab value="events">Events</Tabs.Tab>
+        <Tabs.Tab value="runtime">Runtime</Tabs.Tab>
+        <Tabs.Tab value="updates">Updates</Tabs.Tab>
+        <Tabs.Tab value="backups">{BACKUP_HISTORY_TAB_LABEL}</Tabs.Tab>
+      </Tabs.List>
+
+      <Tabs.Panel value="events" className={classes.tabPanel}>
+        <LogsEventsTab
+          embedded={embedded}
+          loading={panel.loading}
+          busy={panel.busy}
+          logs={panel.logs}
+          highlightedEventId={panel.highlightedEventId}
+          expandedEventId={panel.expandedEventId}
+          onExpandedEventIdChange={panel.setExpandedEventId}
+          onClearEvents={panel.confirmClearEvents}
+        />
+      </Tabs.Panel>
+
+      <Tabs.Panel value="runtime" className={classes.tabPanel}>
+        <RuntimeLogSection
+          loading={panel.loading}
+          runtimeLogLines={panel.logs?.runtimeLogLines ?? null}
+          sourceFilter={panel.runtimeSourceFilter}
+          onSourceFilterChange={panel.setRuntimeSourceFilter}
+          asaApiLoading={props.asaApiLoading === true}
+          clearAction={
+            <LogsClearAction
+              label="Clear captured runtime console output"
+              onClick={panel.confirmClearRuntime}
+              disabled={panel.loading || panel.busy || panel.logs === null || panel.logs.runtimeLogLines.length === 0}
+            />
+          }
+        />
+      </Tabs.Panel>
+
+      <Tabs.Panel value="updates" className={classes.tabPanel}>
+        <LogsUpdatesTab
+          embedded={embedded}
+          loading={panel.loading}
+          busy={panel.busy}
+          logs={panel.logs}
+          serverId={props.server.id}
+          selectedUpdateFile={panel.selectedUpdateFile}
+          updateContent={panel.updateContent}
+          missingUpdateLog={panel.missingUpdateLog}
+          selectedUpdateInfo={panel.selectedUpdateInfo}
+          onOpenUpdateLog={(serverId, fileName) => void panel.openUpdateLog(serverId, fileName)}
+          onClearUpdateLogs={panel.confirmClearUpdateLogs}
+          onOpenInExternalViewer={() => void panel.openInExternalViewer()}
+          onDeleteSelectedUpdate={panel.confirmDeleteSelectedUpdate}
+        />
+      </Tabs.Panel>
+
+      <Tabs.Panel value="backups" className={classes.tabPanel}>
+        <LogsBackupsTab
+          embedded={embedded}
+          loading={panel.loading}
+          busy={panel.busy}
+          logs={panel.logs}
+          highlightedBackupId={panel.highlightedBackupId}
+          onClearBackups={panel.confirmClearBackups}
+          onDeleteBackup={panel.confirmDeleteBackup}
+          onOpenBackupsTab={props.onOpenBackupsTab}
+        />
+      </Tabs.Panel>
+    </Tabs>
+  );
+
+  if (!embedded) {
+    return (
+      <Stack gap="md" className={rootClass} data-server-logs-panel>
+        <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
+          <div>
+            <Title order={3}>Logs</Title>
+            <Text size="xs" c="dimmed">
+              {`Diagnostic views for ${props.server.name}. Use Events for manager history, Runtime for live console output, Updates for SteamCMD jobs, and Backup history for archive records.`}
+            </Text>
+          </div>
+          <Group gap="xs">{actions}</Group>
+        </Group>
+        {tabs}
+      </Stack>
+    );
+  }
 
   return (
-    <Stack gap="md" className={rootClass} data-server-logs-panel>
-      <Group justify="space-between" align="center" wrap="wrap" gap="sm">
-        <div>
-          <Title order={props.embedded === true ? 4 : 3}>Logs</Title>
-          <Text size="sm" c="dimmed">
-            {props.embedded === true
-              ? "Events, runtime console, SteamCMD jobs, and backup archive history for this server."
-              : `Diagnostic views for ${props.server.name}. Use Events for manager history, Runtime for live console output, Updates for SteamCMD jobs, and Backup history for archive records.`}
-          </Text>
-        </div>
-        <Group gap="sm">
-          <Button
-            variant="default"
-            leftSection={<ClockCounterClockwise size={16} />}
-            onClick={() => void panel.load(props.server.id)}
-            disabled={panel.loading || panel.busy}
-          >
-            Reload
-          </Button>
-          <Button
-            leftSection={<DownloadSimple size={16} />}
-            onClick={() => void panel.exportLogs()}
-            disabled={panel.loading || panel.busy}
-          >
-            Export
-          </Button>
-        </Group>
-      </Group>
-
-      <Tabs
-        value={panel.activeSection}
-        onChange={(value) => panel.setActiveSection((value as LogsSection) ?? "events")}
-        keepMounted={false}
-        className={classes.tabs}
-      >
-        <Tabs.List className={classes.tabList}>
-          <Tabs.Tab value="events">Events</Tabs.Tab>
-          <Tabs.Tab value="runtime">Runtime</Tabs.Tab>
-          <Tabs.Tab value="updates">Updates</Tabs.Tab>
-          <Tabs.Tab value="backups">{BACKUP_HISTORY_TAB_LABEL}</Tabs.Tab>
-        </Tabs.List>
-
-        <Tabs.Panel value="events" className={classes.tabPanel}>
-          <LogsEventsTab
-            embedded={props.embedded === true}
-            loading={panel.loading}
-            busy={panel.busy}
-            logs={panel.logs}
-            highlightedEventId={panel.highlightedEventId}
-            expandedEventId={panel.expandedEventId}
-            onExpandedEventIdChange={panel.setExpandedEventId}
-            onClearEvents={panel.confirmClearEvents}
-          />
-        </Tabs.Panel>
-
-        <Tabs.Panel value="runtime" className={classes.tabPanel}>
-          <RuntimeLogSection
-            loading={panel.loading}
-            runtimeLogLines={panel.logs?.runtimeLogLines ?? null}
-            sourceFilter={panel.runtimeSourceFilter}
-            onSourceFilterChange={panel.setRuntimeSourceFilter}
-            asaApiLoading={props.asaApiLoading === true}
-            clearAction={
-              <LogsClearAction
-                label="Clear captured runtime console output"
-                onClick={panel.confirmClearRuntime}
-                disabled={panel.loading || panel.busy || panel.logs === null || panel.logs.runtimeLogLines.length === 0}
-              />
-            }
-          />
-        </Tabs.Panel>
-
-        <Tabs.Panel value="updates" className={classes.tabPanel}>
-          <LogsUpdatesTab
-            embedded={props.embedded === true}
-            loading={panel.loading}
-            busy={panel.busy}
-            logs={panel.logs}
-            serverId={props.server.id}
-            selectedUpdateFile={panel.selectedUpdateFile}
-            updateContent={panel.updateContent}
-            missingUpdateLog={panel.missingUpdateLog}
-            selectedUpdateInfo={panel.selectedUpdateInfo}
-            onOpenUpdateLog={(serverId, fileName) => void panel.openUpdateLog(serverId, fileName)}
-            onClearUpdateLogs={panel.confirmClearUpdateLogs}
-            onOpenInExternalViewer={() => void panel.openInExternalViewer()}
-            onDeleteSelectedUpdate={panel.confirmDeleteSelectedUpdate}
-          />
-        </Tabs.Panel>
-
-        <Tabs.Panel value="backups" className={classes.tabPanel}>
-          <LogsBackupsTab
-            embedded={props.embedded === true}
-            loading={panel.loading}
-            busy={panel.busy}
-            logs={panel.logs}
-            highlightedBackupId={panel.highlightedBackupId}
-            onClearBackups={panel.confirmClearBackups}
-            onDeleteBackup={panel.confirmDeleteBackup}
-            onOpenBackupsTab={props.onOpenBackupsTab}
-          />
-        </Tabs.Panel>
-      </Tabs>
-    </Stack>
+    <AppSurfaceCard tone="flat" fill padding={0} radius={0} className={classes.embeddedShell} data-server-logs-panel>
+      <WorkspaceSectionHeader
+        title="Logs"
+        subtitle="Events, runtime console, SteamCMD jobs, and backup archive history for this server."
+        actions={actions}
+      />
+      <Stack gap="md" className={rootClass}>
+        {tabs}
+      </Stack>
+    </AppSurfaceCard>
   );
 }

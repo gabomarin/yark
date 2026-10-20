@@ -1,6 +1,8 @@
 import type { ReactElement, ReactNode } from "react";
-import { Button, Group, Stack, Text, Title } from "@mantine/core";
+import { MagicWand } from "@phosphor-icons/react";
+import { Button, Group, Stack } from "@mantine/core";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { WorkspaceSectionHeader } from "@ui/WorkspaceSectionHeader/WorkspaceSectionHeader";
 import { ServerFormAlerts } from "./ServerFormAlerts";
 import classes from "./ServerForm.module.css";
 
@@ -24,18 +26,15 @@ interface Props {
 export function ServerFormEmbedded(props: Props): ReactElement {
   return (
     <AppSurfaceCard tone="flat" fill padding={0} radius={0} className={classes.embedded} data-server-form="embedded">
-      <header className={classes.embeddedHeader}>
-        <Group justify="space-between" align="flex-start" wrap="nowrap" gap="sm">
-          <div>
-            <Title order={4}>Server information</Title>
-            <Text c="dimmed" fz="xs">
-              Name, ports, access, and cluster. Launch flags live on the Launch tab.
-            </Text>
-          </div>
-          {props.onOpenConfigurationAssistant !== undefined && (
+      <WorkspaceSectionHeader
+        title="Server information"
+        subtitle="Name, ports, access, and cluster. Launch flags live on the Launch tab."
+        actions={
+          props.onOpenConfigurationAssistant !== undefined ? (
             <Button
               size={props.inputSize}
               variant="default"
+              leftSection={<MagicWand size={16} />}
               onClick={props.onOpenConfigurationAssistant}
               disabled={props.configurationAssistantDisabled}
               title={
@@ -46,9 +45,9 @@ export function ServerFormEmbedded(props: Props): ReactElement {
             >
               Configuration wizard
             </Button>
-          )}
-        </Group>
-      </header>
+          ) : undefined
+        }
+      />
       <div className={classes.embeddedScroll} data-server-form-scroll>
         <Stack gap="md">
           <ServerFormAlerts

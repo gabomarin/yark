@@ -1,24 +1,29 @@
+.shell {
+  overflow: hidden;
+}
+
 /* Workspace tabPanel gives children flex:1 + min-height:0; scroll here so
-   Alerts / Up next are not flex-crushed when job sections expand. */
+   Alerts / Up next are not flex-crushed when job sections expand.
+   Slabs use overflow:hidden, which lets a flex item shrink to 0 and clip Up next
+   once two sections are open (one, on a short window). Keep each block intact. */
 .panel {
   display: flex;
   flex-direction: column;
   flex: 1 1 0%;
   min-height: 0;
   gap: var(--app-space-sm);
+  padding: var(--app-space-md);
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-gutter: stable;
 }
 
-.alert {
+.panel > * {
   flex-shrink: 0;
 }
 
-.honesty {
-  margin: 0;
-  color: var(--app-color-muted);
-  font-size: var(--mantine-font-size-xs);
+.alert {
+  flex-shrink: 0;
 }
 
 .slab {

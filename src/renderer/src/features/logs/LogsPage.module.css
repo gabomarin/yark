@@ -290,12 +290,17 @@
   gap: var(--app-space-xs);
 }
 
+.embeddedShell {
+  overflow: hidden;
+}
+
 .embedded {
   flex: 1;
   min-height: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  padding: var(--app-space-md);
 }
 
 .updatesLayout {
