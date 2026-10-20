@@ -42,13 +42,13 @@ or seeds logs for development and QA.
 
 ## Ownership and retention (#84)
 
-| Source                                  | Owner          | Retention                                                                      |
-| --------------------------------------- | -------------- | ------------------------------------------------------------------------------ |
-| SQLite `events`                         | YARK           | Age-based: routine default **90** days; failure evidence **180** days          |
+| Source                                  | Owner          | Retention                                                                                   |
+| --------------------------------------- | -------------- | ------------------------------------------------------------------------------------------- |
+| SQLite `events`                         | YARK           | Age-based: routine default **90** days; failure evidence **180** days                       |
 | `userData/update-logs/{serverId}-*.log` | YARK           | Keep last **20** successful or cancelled files per server; failed/unknown kept **180** days |
-| In-memory runtime buffer                | YARK (session) | Hard cap **1200** lines in `ProcessManager` — not a Settings control           |
-| `ShooterGame/Saved/Logs`                | ASA            | **Never** deleted by YARK; read/tail only                                      |
-| Backup ZIP history                      | BackupService  | Own retain counts — see [backups.md](backups.md)                               |
+| In-memory runtime buffer                | YARK (session) | Hard cap **1200** lines in `ProcessManager` — not a Settings control                        |
+| `ShooterGame/Saved/Logs`                | ASA            | **Never** deleted by YARK; read/tail only                                                   |
+| Backup ZIP history                      | BackupService  | Own retain counts — see [backups.md](backups.md)                                            |
 
 Persisted policy key: `app_settings` → `logRetention.v1`. Invalid Settings values
 are rejected and the previous policy is kept.

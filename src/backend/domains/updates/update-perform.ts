@@ -126,12 +126,7 @@ export class UpdatePerformer {
   }): void {
     try {
       mkdirSync(this.updatesLogDir, { recursive: true });
-      const logPath = resolveCancelledUpdateLogPath(
-        this.updatesLogDir,
-        input.serverId,
-        input.startedAt,
-        input.logPath,
-      );
+      const logPath = resolveCancelledUpdateLogPath(this.updatesLogDir, input.serverId, input.startedAt, input.logPath);
       if (input.job !== undefined) input.job.context.updateLogPath = logPath;
       if (existsSync(logPath)) return;
       writeFileSync(

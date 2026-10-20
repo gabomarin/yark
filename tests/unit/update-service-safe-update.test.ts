@@ -769,9 +769,9 @@ describe("UpdateService safe update orchestration", () => {
     });
 
     await expect(
-      (
-        h.service as unknown as { performInstallServerFiles: (id: string) => Promise<void> }
-      ).performInstallServerFiles(h.profile.id),
+      (h.service as unknown as { performInstallServerFiles: (id: string) => Promise<void> }).performInstallServerFiles(
+        h.profile.id,
+      ),
     ).rejects.toThrow(/cancelled/i);
 
     const logs = readdirSync(h.logDir).filter((name) => name.endsWith(".log"));
