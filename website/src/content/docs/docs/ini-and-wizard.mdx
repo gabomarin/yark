@@ -17,6 +17,10 @@ Paths under each install:
 ## Visual + raw editors
 
 - Read seeds missing files from built-in defaults and sanitizes client noise (resolution, volume, scalability keys, etc.)
+- A changed visual row shows an unsaved mark, the last saved value (or that the key was absent), and a per-row revert that leaves your other drafts alone
+- Visual Save writes only the simple settings you changed onto the latest file on disk, so a non-overlapping edit from Notepad can stay. If you both changed the same setting, Save refuses instead of overwriting silently
+- If the files change outside YARK while the visual editor is clean, YARK reloads them when the window regains focus. If you also have unsaved edits, an info note counts the outside changes and links to the detail; click Save to merge when the edits do not overlap
+- Raw/text Save refuses the write when the file changed outside YARK since the editor loaded. **Reload from disk** is always in the toolbar
 - Save sanitizes → validates a few semantic ranges → writes both files → best-effort INI backup
 - While the dedicated server is **running**, Save queues a durable draft instead of writing live files ASA can overwrite; YARK flushes that draft after **Stop** or before the next **Start**
 - Visual editor **Other** keeps custom mod `[Section]` keys nested by section (expand/collapse on the Other header)
