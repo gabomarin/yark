@@ -619,6 +619,12 @@ setting catalog: [ini-metadata.md](ini-metadata.md) (PINI-016 / #659).
   edits.
 - Do **not** use npm `ini` for ASA — dots in section headers are literal
   (`ini-text.ts`).
+- Complex tuple and list lines (loot, spawns, crafting, engrams, stat arrays)
+  are read by `ini-complex-value.ts` (PINI-010 / #680). A read with no adopted
+  edit does not rewrite the file. An edit reprints only that entry. A line
+  YARK does not understand stays as loaded. Scalar visual Save still leaves
+  those lines untouched. Contract:
+  [ini-metadata.md](ini-metadata.md#complex-values).
 - Semantic save checks (only when `[ServerSettings]` present): `RCONPort`
   1024–65535, `DifficultyOffset` 0–1. Profile `MaxPlayers` 1–255 is applied at
   start as `-WinLiveMaxPlayers` only. ASA ignores INI `MaxPlayers`; `0` omits

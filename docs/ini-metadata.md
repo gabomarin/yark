@@ -102,7 +102,7 @@ Unknown metadata remains unknown.
 3. Conflicts are reported, not treated as independent visual settings.
 4. Absence is not a catalog default.
 
-Full import UI is PINI-010 / PINI-011.
+Import compatibility reporting is PINI-011. Reading complex tuple and list lines without rewriting them is PINI-010 (#680). See [Complex values](#complex-values).
 
 ## Semantic visual Save (PINI-004 / #667)
 
@@ -126,6 +126,18 @@ when edits do not overlap (no Reload button in that banner). Text mode keeps an
 attention banner with Reload because Save will refuse until then. A failed Save
 with an overlapping conflict uses a red **INI conflict** alert (Reload offered
 there).
+
+## Complex values
+
+Loot, spawn, crafting, engram, and stat lines are parenthesized lists. `parseIniComplexEntries` in `src/shared/ini/ini-complex-value.ts` reads those assignments (PINI-010 / #680). Scalar settings stay on `parseIniTextRows` and semantic Set/Unset.
+
+Each complex entry keeps the raw text, its source range, file, section, key, and the same zero-based occurrence as scalar Save. Status is `supported`, `unknown`, `invalid`, or `ambiguous`. A semantic value is present only when the status is `supported`. Diagnostics describe the status and do not change the entry.
+
+`applyIniComplexEdits` with no edits returns the original text, including comments, blank lines, and line endings. An edit reprints only the adopted entry. Neighbors that are unknown, invalid, or ambiguous stay as loaded. This module does not strip client keys; that remains `stripClientIniKeys`.
+
+Supported shape: a comma-separated struct (`Name=Value`) or a positional list, including nested tuples, quoted strings (`\"`, `\\`, `\n`, `\r`, `\t`), numbers, booleans, and bare tokens. Mixed named and positional fields are `ambiguous` and have no semantic value. A balanced shape outside that grammar is `unknown`. Unclosed parentheses, unclosed quotes, and unrecognized escapes are `invalid`.
+
+No visual editor for these lines ships with this parser.
 
 ## Diagnostics
 
