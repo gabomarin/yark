@@ -49,7 +49,7 @@ show a footer teaser instead of a floating progress dock.
   />
   <figcaption>
     Downloads — one SteamCMD job runs at a time; Pause/Resume apply to install and update.
-    Verify uses Cancel. Open in Logs jumps to that server’s Events row.
+    Verify uses Cancel. A cancel is stored as **Cancelled** in Logs → Updates, and Open in Logs opens that file.
   </figcaption>
 </figure>
 
@@ -100,7 +100,7 @@ The Wildcard **ARK Version** string shown in the UI is informational only — do
 
 - Point Settings → SteamCMD at a disk with room for the shared cache
 - Prefer safe update over manual file copies into `installDir`
-- Check **Logs → Updates** for per-job log files under app userData
+- Check **Logs → Updates** for per-job log files under app userData, including jobs you cancelled
 - Live SteamCMD console streams on **Downloads** for the active job
 
 Related: [Backups](/docs/backups/), [Troubleshooting](/docs/troubleshooting/).

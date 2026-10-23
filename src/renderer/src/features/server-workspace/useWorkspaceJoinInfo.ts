@@ -42,10 +42,9 @@ export function useWorkspaceJoinInfo(isServerRunning: boolean): {
 
   useEffect(() => {
     if (!isServerRunning) {
-      if (wasRunningRef.current) {
-        requestIdRef.current += 1;
-        lookupRef.current = null;
-      }
+      // A start-triggered lookup may return after a short-lived process exits.
+      // The IP is for this PC, and the header still shows the join command while
+      // stopped, so that result should land. The next start forces a new lookup.
       wasRunningRef.current = false;
       return;
     }
