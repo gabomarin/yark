@@ -138,6 +138,7 @@ describe("parseIniComplexEntries", () => {
 
   it("marks unclosed tuples, unclosed strings, and unknown escapes invalid", () => {
     expect(entryAt("[S]\nK=(A=1\n").diagnostics[0]?.code).toBe("unclosed-tuple");
+    expect(entryAt('[S]\nK=(A="hi ; there\n').raw).toBe('(A="hi ; there');
     expect(entryAt('[S]\nK=(A="hi\n').diagnostics[0]?.code).toBe("unclosed-string");
     const escaped = entryAt('[S]\nK=(A="\\q") ; keep\n');
     expect(escaped.status).toBe("invalid");
@@ -194,6 +195,58 @@ describe("applyIniComplexEdits", () => {
     expect(next).toBe(
       "[/Script/ShooterGame.ShooterGameMode]\r\nGood=(A=2) ; keep\r\nBad=(A=\r\nOther=(B=2)\r\nWeird=(hello world)\r\nScalar=5\r\n",
     );
+  });
+
+  it("adopts an unclosed line and leaves the inline comment in place", () => {
+    const text = "[S]\nK=(A=1 ; keep\nNext=(B=2) # also\n";
+    expect(entryAt(text).raw).toBe("(A=1");
+    expect(entryAt(text, 0).status).toBe("invalid");
+    const next = applyIniComplexEdits(text, "game", [
+      {
+        section: "S",
+        key: "K",
+        occurrence: 0,
+        value: {
+          kind: "tuple",
+          fields: [{ name: "A", value: { kind: "scalar", literal: "number", value: "2" } }],
+        },
+      },
+    ]);
+    expect(next).toBe("[S]\nK=(A=2) ; keep\nNext=(B=2) # also\n");
+  });
+
+  it("edits a section whose header keeps surrounding spaces", () => {
+    const text = "[ Foo ]\nK=(A=1)\n";
+    const next = applyIniComplexEdits(text, "game", [
+      {
+        section: " Foo ",
+        key: "K",
+        occurrence: 0,
+        value: { kind: "tuple", fields: [] },
+      },
+    ]);
+    expect(next).toBe("[ Foo ]\nK=()\n");
+  });
+
+  it("rejects a blank identity or a non-integer occurrence before lookup", () => {
+    const text = "[S]\nK=(A=1)\n";
+    const value: IniComplexNode = { kind: "tuple", fields: [] };
+    for (const edit of [
+      { section: " ", key: "K", occurrence: 0, value },
+      { section: "S", key: " ", occurrence: 0, value },
+      { section: "S", key: "K", occurrence: -1, value },
+      { section: "S", key: "K", occurrence: 1.5, value },
+      { section: "S", key: "K", occurrence: Number.NaN, value },
+    ]) {
+      try {
+        applyIniComplexEdits(text, "game", [edit]);
+        expect.fail("expected invalid edit");
+      } catch (err) {
+        expect(err).toBeInstanceOf(IniComplexEditError);
+        expect((err as IniComplexEditError).code).toBe("INI_COMPLEX_EDIT_INVALID");
+      }
+    }
+    expect(text).toBe("[S]\nK=(A=1)\n");
   });
 
   it("adopts an unknown line without rewriting its neighbors", () => {

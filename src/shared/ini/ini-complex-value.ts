@@ -93,7 +93,7 @@ export interface IniComplexAdopt {
 }
 
 export type IniComplexEditErrorCode =
-  "INI_COMPLEX_EDIT_TARGET" | "INI_COMPLEX_EDIT_DUPLICATE" | "INI_COMPLEX_EDIT_VALUE";
+  "INI_COMPLEX_EDIT_TARGET" | "INI_COMPLEX_EDIT_DUPLICATE" | "INI_COMPLEX_EDIT_VALUE" | "INI_COMPLEX_EDIT_INVALID";
 
 export class IniComplexEditError extends Error {
   readonly code: IniComplexEditErrorCode;
@@ -169,6 +169,38 @@ function isCommentTail(tail: string): boolean {
   while (tail[index] === " " || tail[index] === "\t") index += 1;
   const ch = tail[index] ?? "";
   return ch === "" || ch === ";" || ch === "#";
+}
+
+/** Index of a `;` or `#` comment that is outside a quoted string, or -1. */
+function commentDelimiterOutsideString(source: string): number {
+  let inString = false;
+  for (let index = 0; index < source.length; index += 1) {
+    const ch = source[index] ?? "";
+    if (inString) {
+      if (ch === "\\") {
+        const esc = source[index + 1];
+        if (esc === "\\" || esc === '"' || esc === "n" || esc === "r" || esc === "t") index += 1;
+        continue;
+      }
+      if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+    if (ch === ";" || ch === "#") return index;
+  }
+  return -1;
+}
+
+/** Value span for an unclosed line, leaving an inline comment outside the range. */
+function rawLengthBeforeInlineComment(valueText: string): number {
+  const commentAt = commentDelimiterOutsideString(valueText);
+  if (commentAt < 0) return valueText.length;
+  let end = commentAt;
+  while (end > 0 && (valueText[end - 1] === " " || valueText[end - 1] === "\t")) end -= 1;
+  return end;
 }
 
 function classifyToken(raw: string): IniComplexScalar {
@@ -391,7 +423,12 @@ function classifyValue(valueText: string, base: number): ClassifiedValue {
   const scan = scanTuple(valueText, base);
   if (!scan.closed) {
     const fallback = diagnostic("unclosed-tuple", "Tuple is missing a closing parenthesis.", base);
-    return { status: "invalid", value: null, diagnostics: [scan.diagnostic ?? fallback], rawLength: valueText.length };
+    return {
+      status: "invalid",
+      value: null,
+      diagnostics: [scan.diagnostic ?? fallback],
+      rawLength: rawLengthBeforeInlineComment(valueText),
+    };
   }
 
   const tail = valueText.slice(scan.end);
@@ -548,8 +585,24 @@ export function printIniComplexNode(node: IniComplexNode): string {
   return printNode(node);
 }
 
+function assertEditShape(edit: IniComplexAdopt): void {
+  if (edit.section.trim().length === 0 || edit.key.trim().length === 0) {
+    throw new IniComplexEditError("INI_COMPLEX_EDIT_INVALID", "INI complex edit is missing section or key");
+  }
+  if (!Number.isInteger(edit.occurrence) || edit.occurrence < 0) {
+    throw new IniComplexEditError(
+      "INI_COMPLEX_EDIT_INVALID",
+      "INI complex edit occurrence must be a whole number >= 0",
+    );
+  }
+}
+
+/**
+ * Section text is the header capture, including surrounding spaces (`[ Foo ]`).
+ * Keys are stored trimmed. Occurrence is already validated as a whole number.
+ */
 function editIdentity(edit: IniComplexAdopt): string {
-  return `${edit.section.trim().toLowerCase()}\u001f${edit.key.trim().toLowerCase()}\u001f${edit.occurrence}`;
+  return `${edit.section.toLowerCase()}\u001f${edit.key.trim().toLowerCase()}\u001f${edit.occurrence}`;
 }
 
 /**
@@ -559,6 +612,8 @@ function editIdentity(edit: IniComplexAdopt): string {
  */
 export function applyIniComplexEdits(text: string, fileKey: IniFileKey, edits: readonly IniComplexAdopt[]): string {
   if (edits.length === 0) return text;
+
+  for (const edit of edits) assertEditShape(edit);
 
   const seen = new Set<string>();
   for (const edit of edits) {
@@ -576,7 +631,7 @@ export function applyIniComplexEdits(text: string, fileKey: IniFileKey, edits: r
   const entries = parseIniComplexEntries(text, fileKey);
   const replacements: { start: number; end: number; next: string }[] = [];
   for (const edit of edits) {
-    const section = edit.section.trim().toLowerCase();
+    const section = edit.section.toLowerCase();
     const key = edit.key.trim().toLowerCase();
     const entry = entries.find(
       (item) =>
