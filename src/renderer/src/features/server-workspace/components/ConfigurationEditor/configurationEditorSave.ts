@@ -73,12 +73,14 @@ export async function performConfigurationEditorSave(input: {
     const scopedOps = scope === undefined ? ops : ops.filter((op) => semanticOpInScope(op, scope));
     const engramEdits = resetEngrams ? lineEdits.engrams : [];
     const lootEdits = resetLoot ? lineEdits.crates : [];
-    const result =
-      lootEdits.length > 0
-        ? await window.api.saveServerIniSemantic(input.serverId, scopedOps, engramEdits, lootEdits)
-        : engramEdits.length > 0
-          ? await window.api.saveServerIniSemantic(input.serverId, scopedOps, engramEdits)
-          : await window.api.saveServerIniSemantic(input.serverId, scopedOps);
+    let result;
+    if (lootEdits.length > 0) {
+      result = await window.api.saveServerIniSemantic(input.serverId, scopedOps, engramEdits, lootEdits);
+    } else if (engramEdits.length > 0) {
+      result = await window.api.saveServerIniSemantic(input.serverId, scopedOps, engramEdits);
+    } else {
+      result = await window.api.saveServerIniSemantic(input.serverId, scopedOps);
+    }
     if (!result.ok) {
       return {
         ok: false,

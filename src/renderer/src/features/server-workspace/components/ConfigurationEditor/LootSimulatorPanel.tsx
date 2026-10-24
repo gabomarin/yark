@@ -6,6 +6,7 @@ import { lookupSupplyCrate } from "@shared/asa/asa-supply-crate-catalog";
 import {
   openSupplyCrate,
   simulateSupplyCrate,
+  supplyCrateRollIgnoresPower,
   type SupplyCrateOpening,
   type SupplyCrateSimulation,
 } from "@shared/ini/supply-crate-simulator";
@@ -32,9 +33,10 @@ function randomSeed(): number {
   return bytes[0] ?? 1;
 }
 
-function readNumber(value: number | string, fallback: number): number {
+function boundedInteger(value: number | string, min: number, max: number): number | null {
   const numeric = typeof value === "number" ? value : Number(value);
-  return Number.isFinite(numeric) ? numeric : fallback;
+  if (!Number.isInteger(numeric) || numeric < min || numeric > max) return null;
+  return numeric;
 }
 
 function blueprintLabel(quantity: number, blueprints: number): string | null {
@@ -58,15 +60,20 @@ export function LootSimulatorPanel(props: Props): ReactElement {
 
   const open = (): void => {
     if (props.body === null) return;
-    setOpening(openSupplyCrate(props.body, readNumber(seed, 1)));
+    const nextSeed = boundedInteger(seed, 0, 4294967295);
+    if (nextSeed === null) return;
+    setOpening(openSupplyCrate(props.body, nextSeed));
   };
 
   const roll = (): void => {
     if (props.body === null) return;
+    const nextSeed = boundedInteger(seed, 0, 4294967295);
+    const nextRolls = boundedInteger(rolls, 1, 500);
+    if (nextSeed === null || nextRolls === null) return;
     setResult(
       simulateSupplyCrate(props.body, {
-        rolls: readNumber(rolls, 1),
-        seed: readNumber(seed, 1),
+        rolls: nextRolls,
+        seed: nextSeed,
       }),
     );
   };
@@ -80,6 +87,9 @@ export function LootSimulatorPanel(props: Props): ReactElement {
   }
 
   const label = lookupSupplyCrate(props.body.className)?.label ?? props.body.className;
+  const seedValue = boundedInteger(seed, 0, 4294967295);
+  const rollValue = boundedInteger(rolls, 1, 500);
+  const ignoresPower = supplyCrateRollIgnoresPower(props.body);
 
   return (
     <Stack gap="sm">
@@ -91,12 +101,27 @@ export function LootSimulatorPanel(props: Props): ReactElement {
           </Text>
         </Stack>
         <Group align="flex-end">
-          <NumberInput label="Seed" size="xs" min={0} max={4294967295} value={seed} onChange={setSeed} w={140} />
+          <NumberInput
+            label="Seed"
+            size="xs"
+            min={0}
+            max={4294967295}
+            value={seed}
+            onChange={setSeed}
+            w={140}
+            error={seedValue === null ? "Enter a whole number from 0 to 4294967295." : undefined}
+          />
           <Button size="xs" variant="default" leftSection={<Shuffle size={14} />} onClick={() => setSeed(randomSeed())}>
             Random seed
           </Button>
         </Group>
       </Group>
+      {ignoresPower ? (
+        <Text size="sm">
+          Set quality power and item quality power are not part of this roll. Counts are an even chance between the
+          minimum and the maximum.
+        </Text>
+      ) : null}
       <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
         <AppSurfaceCard tone="flat" padding="sm">
           <Stack gap="xs">
@@ -106,7 +131,7 @@ export function LootSimulatorPanel(props: Props): ReactElement {
             <Text size="xs" c="dimmed">
               The items from one opened crate with this seed.
             </Text>
-            <Button size="xs" w="fit-content" onClick={open}>
+            <Button size="xs" w="fit-content" disabled={seedValue === null} onClick={open}>
               Open crate
             </Button>
             {opening?.shortfall === true ? (
@@ -125,7 +150,7 @@ export function LootSimulatorPanel(props: Props): ReactElement {
             {opening?.items.map((item, index) => {
               const blueprint = blueprintLabel(item.quantity, item.blueprints);
               return (
-                <Stack key={`${index}-${item.className}`} gap={0}>
+                <Stack key={`${item.className}:${item.quantity}:${item.blueprints}:${index}`} gap={0}>
                   <Group justify="space-between" wrap="nowrap" gap="xs">
                     <Text size="sm" truncate>
                       {itemLabel(item.className)}
@@ -149,8 +174,17 @@ export function LootSimulatorPanel(props: Props): ReactElement {
               Qty per drop is the average amount each time that item appears.
             </Text>
             <Group align="flex-end">
-              <NumberInput label="Rolls" size="xs" min={1} max={500} value={rolls} onChange={setRolls} w={100} />
-              <Button size="xs" variant="default" onClick={roll}>
+              <NumberInput
+                label="Rolls"
+                size="xs"
+                min={1}
+                max={500}
+                value={rolls}
+                onChange={setRolls}
+                w={100}
+                error={rollValue === null ? "Enter a whole number from 1 to 500." : undefined}
+              />
+              <Button size="xs" variant="default" disabled={seedValue === null || rollValue === null} onClick={roll}>
                 Roll crate
               </Button>
             </Group>

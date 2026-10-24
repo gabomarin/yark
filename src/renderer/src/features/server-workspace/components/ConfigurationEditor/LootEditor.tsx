@@ -95,7 +95,9 @@ export function LootEditor(props: Props): ReactElement {
   const review = reviewSupplyCrateState(summary.rows, drafts, pending);
   const statusKey = `${blankError}\n${String(review.blocked)}\n${JSON.stringify(review.edits)}`;
   const onStatusRef = useRef(props.onStatus);
-  onStatusRef.current = props.onStatus;
+  useEffect(() => {
+    onStatusRef.current = props.onStatus;
+  }, [props.onStatus]);
   useEffect(() => {
     onStatusRef.current({
       edits: review.edits,
@@ -105,16 +107,22 @@ export function LootEditor(props: Props): ReactElement {
   }, [statusKey, review.edits, review.blocked, blankError]);
 
   const query = search.trim().toLowerCase();
-  const visibleRows = summary.rows.filter((row) => {
-    const name = drafts[supplyCrateRowKey(row)]?.className ?? row.className;
-    return query.length === 0 || name.toLowerCase().includes(query) || crateLabel(name).toLowerCase().includes(query);
-  });
+  const matchesQuery = (className: string): boolean =>
+    query.length === 0 ||
+    className.toLowerCase().includes(query) ||
+    crateLabel(className).toLowerCase().includes(query);
+  const visibleRows = summary.rows.filter((row) =>
+    matchesQuery(drafts[supplyCrateRowKey(row)]?.className ?? row.className),
+  );
+  const visiblePending = pending.filter((item) => matchesQuery(item.body.className));
   const selectedRow = summary.rows.find((row) => supplyCrateRowKey(row) === selected);
   const selectedPending = pending.find((item) => item.id === selected);
   const selectedBody = selectedRow !== undefined ? drafts[supplyCrateRowKey(selectedRow)] : selectedPending?.body;
   const mapLabel = formatMapDisplayName(props.map);
   const onOpenCrateChange = useRef(props.onOpenCrateChange);
-  onOpenCrateChange.current = props.onOpenCrateChange;
+  useEffect(() => {
+    onOpenCrateChange.current = props.onOpenCrateChange;
+  }, [props.onOpenCrateChange]);
   const openClass = selectedBody?.className ?? null;
   useEffect(() => {
     onOpenCrateChange.current?.(
@@ -226,7 +234,7 @@ export function LootEditor(props: Props): ReactElement {
                   />
                 );
               })}
-              {pending.map((item) => {
+              {visiblePending.map((item) => {
                 const known = lookupSupplyCrate(item.body.className);
                 return (
                   <LootCrateRow

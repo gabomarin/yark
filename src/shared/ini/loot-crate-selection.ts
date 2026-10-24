@@ -20,6 +20,12 @@ export function keepSupplyCrateSelection(
   const needle = className.trim().toLowerCase();
   const matches = rows.filter((row) => row.className.trim().toLowerCase() === needle);
   const fresh = matches.filter((row) => drafts[supplyCrateRowKey(row)] === undefined);
+  const pendingOfClass = pending.filter((item) => item.body.className.trim().toLowerCase() === needle);
+  const pendingIndex = pendingOfClass.findIndex((item) => item.id === selected);
+  if (pendingIndex >= 0 && fresh.length === pendingOfClass.length) {
+    const chosen = fresh[pendingIndex];
+    if (chosen !== undefined) return supplyCrateRowKey(chosen);
+  }
   const match = fresh[fresh.length - 1] ?? matches[matches.length - 1];
   return match === undefined ? null : supplyCrateRowKey(match);
 }

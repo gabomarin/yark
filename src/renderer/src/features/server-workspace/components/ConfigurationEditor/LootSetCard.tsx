@@ -124,7 +124,7 @@ export function LootSetCard(props: Props): ReactElement {
         ) : null}
         {props.set.entries.map((entry, entryIndex) => (
           <LootEntryCard
-            key={entryIndex}
+            key={entry.editorKey ?? `entry-${entryIndex}`}
             entry={entry}
             map={props.map}
             soleItem={soleItem}

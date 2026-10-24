@@ -78,6 +78,17 @@ export function simulateSupplyCrate(
   return { incomplete: body.append === true, shortfall, rolls, classes };
 }
 
+/** True when a set-count or item-count power is not an even chance. The roll does not apply that power. */
+export function supplyCrateRollIgnoresPower(body: SupplyCrateBody): boolean {
+  return !uniformPower(body.numItemSetsPower) || body.sets.some((set) => !uniformPower(set.numItemsPower));
+}
+
+function uniformPower(value: string | null): boolean {
+  if (value === null || value.trim().length === 0) return true;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) && numeric === 1;
+}
+
 function rollOnce(body: SupplyCrateBody, rng: () => number): { grants: Grant[]; shortfall: boolean } {
   const grants: Grant[] = [];
   let shortfall = false;

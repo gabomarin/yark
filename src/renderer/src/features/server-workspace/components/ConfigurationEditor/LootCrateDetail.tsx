@@ -35,6 +35,7 @@ function updateSet(body: SupplyCrateBody, index: number, set: SupplyCrateItemSet
 
 function blankSet(): SupplyCrateItemSet {
   return {
+    editorKey: crypto.randomUUID(),
     name: "",
     minItems: "1",
     maxItems: "1",
@@ -122,7 +123,7 @@ export function LootCrateDetail(props: Props): ReactElement {
       </Text>
       {props.body.sets.map((set, setIndex) => (
         <LootSetCard
-          key={setIndex}
+          key={set.editorKey ?? `set-${setIndex}`}
           index={setIndex}
           set={set}
           map={props.map}

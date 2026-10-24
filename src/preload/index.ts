@@ -174,12 +174,15 @@ const api: RendererApi = {
     ops: IniSemanticOp[],
     engramEdits?: readonly NamedEngramEdit[],
     supplyCrateEdits?: readonly SupplyCrateEdit[],
-  ) =>
-    supplyCrateEdits !== undefined
-      ? ipcRenderer.invoke(IPC.iniSaveSemantic, serverId, ops, engramEdits ?? [], supplyCrateEdits)
-      : engramEdits === undefined
-        ? ipcRenderer.invoke(IPC.iniSaveSemantic, serverId, ops)
-        : ipcRenderer.invoke(IPC.iniSaveSemantic, serverId, ops, engramEdits),
+  ) => {
+    if (supplyCrateEdits !== undefined) {
+      return ipcRenderer.invoke(IPC.iniSaveSemantic, serverId, ops, engramEdits ?? [], supplyCrateEdits);
+    }
+    if (engramEdits !== undefined) {
+      return ipcRenderer.invoke(IPC.iniSaveSemantic, serverId, ops, engramEdits);
+    }
+    return ipcRenderer.invoke(IPC.iniSaveSemantic, serverId, ops);
+  },
   getClusterIniTemplate: (clusterId: string) => ipcRenderer.invoke(IPC.clusterIniGet, clusterId),
   getClusterIniTemplateOrDraft: (clusterId: string) => ipcRenderer.invoke(IPC.clusterIniGetOrDraft, clusterId),
   previewClusterIniTemplate: (clusterId: string, payload: ServerIniPayload) =>

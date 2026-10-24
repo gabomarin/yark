@@ -3,6 +3,7 @@ import { Button, Collapse, Group, Paper, Stack, Switch, Text, TextInput } from "
 import { Trash } from "@phosphor-icons/react";
 import {
   supplyCrateChanceIssue,
+  supplyCrateClassWeightsFor,
   supplyCrateEntryHasIssue,
   supplyCrateQualityIssue,
   supplyCrateQuantityIssue,
@@ -32,7 +33,7 @@ function withClasses(entry: SupplyCrateItemEntry, classes: string[]): SupplyCrat
   return {
     ...entry,
     classes,
-    classWeights: classes.map((_, index) => entry.classWeights[index] ?? "1"),
+    classWeights: supplyCrateClassWeightsFor(entry.classes, entry.classWeights, classes),
   };
 }
 

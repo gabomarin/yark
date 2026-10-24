@@ -39,11 +39,11 @@ export function lookupSupplyCrate(className: string): SupplyCrateCatalogEntry | 
 /**
  * A crate used on this map is active when it is the only map, or when it is one of the shared cave tiers.
  * A crate used on several maps is shared. A listed crate this map does not use is unused.
- * A class or map outside the list is unknown and stays editable.
+ * A listed crate with no map, or a class or map outside the list, is unknown and stays editable.
  */
 export function supplyCrateFit(className: string, map: string): SupplyCrateFit {
   const entry = lookupSupplyCrate(className);
-  if (entry === undefined || !KNOWN.has(map)) return "unknown";
+  if (entry === undefined || !KNOWN.has(map) || entry.maps.length === 0) return "unknown";
   if (!entry.maps.includes(map)) return "unused";
   if (entry.kind === "cave" || entry.maps.length === 1) return "active";
   return "shared";
@@ -100,6 +100,9 @@ export function supplyCrateFitHint(className: string, map: string): string {
     return `Colored drop used on ${mapList(entry.maps)}. The ring drop is a separate class and keeps the game's loot until you edit it.`;
   }
   if (fit === "active" && kind === "cave") return `Cave crate used on ${place}.`;
+  if (entry !== undefined && entry.maps.length === 0) {
+    return `${entry.label} is not tied to a map YARK knows. This override stays until you remove it.`;
+  }
   if (fit === "unused" && kind === "ring") {
     return `Ring drops are not used on ${place}. This override stays until you remove it.`;
   }
@@ -113,9 +116,6 @@ export function supplyCrateFitHint(className: string, map: string): string {
     return `This class is not in the crate list, or ${place} is not a map YARK knows. You can still edit it.`;
   }
   if (fit === "unused") {
-    if (entry.maps.length === 0) {
-      return `${entry.label} is not used on ${place}. The beacon list does not tie it to a map YARK knows. This override stays until you remove it.`;
-    }
     return `${entry.label} is not used on ${place}. This override stays until you remove it.`;
   }
   const where = entry.maps.length === 1 ? place : mapList(entry.maps);

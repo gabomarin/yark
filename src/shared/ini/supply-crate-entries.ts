@@ -73,6 +73,8 @@ export interface SupplyCrateItemEntry {
    */
   keepMinQuantity?: boolean;
   keepMaxQuantity?: boolean;
+  /** Stable card identity. Omitted from the INI. */
+  editorKey?: string;
 }
 
 export interface SupplyCrateItemSet {
@@ -83,6 +85,8 @@ export interface SupplyCrateItemSet {
   weight: string;
   itemsWithoutReplacement: boolean | null;
   entries: SupplyCrateItemEntry[];
+  /** Stable card identity. Omitted from the INI. */
+  editorKey?: string;
 }
 
 export interface SupplyCrateBody {
@@ -163,7 +167,9 @@ export function supplyCrateRowKey(row: Pick<SupplyCrateRow, "section" | "occurre
 export function draftFromSupplyCrate(row: SupplyCrateRow): SupplyCrateDraft {
   const body = cloneBody(row);
   for (const set of body.sets) {
+    set.editorKey ??= crypto.randomUUID();
     for (const entry of set.entries) {
+      entry.editorKey ??= crypto.randomUUID();
       entry.keepMinQuantity = entry.minQuantity.trim().length > 0;
       entry.keepMaxQuantity = entry.maxQuantity.trim().length > 0;
     }
@@ -182,6 +188,7 @@ export function draftForNewCrate(className: string): SupplyCrateDraft {
     removed: false,
     sets: [
       {
+        editorKey: crypto.randomUUID(),
         name: "",
         minItems: "1",
         maxItems: "1",
@@ -515,23 +522,25 @@ function printableBody(body: SupplyCrateBody): SupplyCrateBody {
   return {
     ...cloneBody(body),
     className: body.className.trim(),
-    sets: body.sets
-      .map((set) => ({
-        ...set,
-        name: set.name.trim(),
-        entries: set.entries.map((entry) => ({
-          weight: entry.weight.trim(),
-          classes: classPairs(entry).map((pair) => pair.className),
-          classWeights: classPairs(entry).map((pair) => pair.weight),
-          minQuantity: entry.minQuantity.trim(),
-          maxQuantity: entry.maxQuantity.trim(),
-          minQuality: entry.minQuality.trim(),
-          maxQuality: entry.maxQuality.trim(),
-          forceBlueprint: entry.forceBlueprint,
-          blueprintChance: entry.blueprintChance.trim(),
-        })),
-      }))
-      .filter((set) => set.entries.length > 0),
+    sets: body.sets.map((set) => ({
+      name: set.name.trim(),
+      minItems: set.minItems,
+      maxItems: set.maxItems,
+      numItemsPower: set.numItemsPower,
+      weight: set.weight,
+      itemsWithoutReplacement: set.itemsWithoutReplacement,
+      entries: set.entries.map((entry) => ({
+        weight: entry.weight.trim(),
+        classes: classPairs(entry).map((pair) => pair.className),
+        classWeights: classPairs(entry).map((pair) => pair.weight),
+        minQuantity: entry.minQuantity.trim(),
+        maxQuantity: entry.maxQuantity.trim(),
+        minQuality: entry.minQuality.trim(),
+        maxQuality: entry.maxQuality.trim(),
+        forceBlueprint: entry.forceBlueprint,
+        blueprintChance: entry.blueprintChance.trim(),
+      })),
+    })),
   };
 }
 
@@ -606,6 +615,26 @@ export function supplyCrateMissingItemIssue(classes: readonly string[]): string 
 /** The set's own fields. An entry error stays on that entry. */
 export function supplyCrateSetHasIssue(set: SupplyCrateItemSet): boolean {
   return itemSetIssue(set) !== null;
+}
+
+/** Keeps each remaining class with the weight it already had. A new class starts at 1. */
+export function supplyCrateClassWeightsFor(
+  previousClasses: readonly string[],
+  previousWeights: readonly string[],
+  nextClasses: readonly string[],
+): string[] {
+  const weights = new Map<string, string[]>();
+  previousClasses.forEach((className, index) => {
+    const key = className.trim().toLowerCase();
+    const list = weights.get(key) ?? [];
+    const weight = (previousWeights[index] ?? "1").trim();
+    list.push(weight.length > 0 ? weight : "1");
+    weights.set(key, list);
+  });
+  return nextClasses.map((className) => {
+    const weight = weights.get(className.trim().toLowerCase())?.shift();
+    return weight !== undefined && weight.length > 0 ? weight : "1";
+  });
 }
 
 function classPairs(entry: SupplyCrateItemEntry): { className: string; weight: string }[] {
@@ -826,6 +855,7 @@ function cloneBody(body: SupplyCrateBody): SupplyCrateBody {
 
 function blankEntry(): SupplyCrateItemEntry {
   return {
+    editorKey: crypto.randomUUID(),
     weight: "1",
     classes: [],
     classWeights: [],

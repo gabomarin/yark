@@ -29,6 +29,20 @@ describe("keepSupplyCrateSelection", () => {
     ).toBe("ShooterGameMode\u001f1");
   });
 
+  it("opens the first saved duplicate when that pending crate was first", () => {
+    const rows = [row(0, "SupplyCrate_Level03_C"), row(1, "SupplyCrate_Level03_C")];
+    expect(
+      keepSupplyCrateSelection(
+        "first",
+        [
+          { id: "first", body: { className: "SupplyCrate_Level03_C" } },
+          { id: "second", body: { className: "SupplyCrate_Level03_C" } },
+        ],
+        {},
+        rows,
+      ),
+    ).toBe("ShooterGameMode\u001f0");
+  });
   it("clears the selection when that crate is gone", () => {
     expect(keepSupplyCrateSelection("missing", [], {}, [row(0, "SupplyCrate_Level03_C")])).toBeNull();
     expect(keepSupplyCrateSelection(null, [], {}, [])).toBeNull();

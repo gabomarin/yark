@@ -398,7 +398,15 @@ const supplyCrateEntrySchema = z
     forceBlueprint: z.boolean().nullable(),
     blueprintChance: supplyCrateNumberSchema,
   })
-  .strict();
+  .strict()
+  .superRefine((entry, ctx) => {
+    if (entry.classes.length === entry.classWeights.length) return;
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Each item class needs one class weight.",
+      path: ["classWeights"],
+    });
+  });
 const supplyCrateSetSchema = z
   .object({
     name: z.string().max(200),

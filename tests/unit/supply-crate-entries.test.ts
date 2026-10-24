@@ -8,6 +8,7 @@ import {
   reviewSupplyCrateState,
   summarizeSupplyCrates,
   supplyCrateChanceIssue,
+  supplyCrateClassWeightsFor,
   supplyCrateCountIssue,
   supplyCrateEntryHasIssue,
   supplyCrateMissingItemIssue,
@@ -20,7 +21,7 @@ import {
   type SupplyCrateBody,
   type SupplyCrateDraft,
 } from "@shared/ini/supply-crate-entries";
-import { simulateSupplyCrate, openSupplyCrate } from "@shared/ini/supply-crate-simulator";
+import { simulateSupplyCrate, openSupplyCrate, supplyCrateRollIgnoresPower } from "@shared/ini/supply-crate-simulator";
 
 const SECTION = "[/Script/ShooterGame.ShooterGameMode]";
 const WHITE =
@@ -299,5 +300,39 @@ describe("supply crate field issues", () => {
     expect(supplyCrateEntryHasIssue(blankSupplyCrateEntry())).toBe(true);
     set.entries = [...set.entries, blankSupplyCrateEntry()];
     expect(reviewSupplyCrateState(rows, drafts, []).blocked).toBe(true);
+  });
+
+  it("keeps an empty set when another field on that crate changes", () => {
+    const text = game([
+      WHITE.replace(
+        "ChanceToBeBlueprintOverride=0.0)))))",
+        'ChanceToBeBlueprintOverride=0.0))),(SetName="Empty",MinNumItems=0,MaxNumItems=0,SetWeight=1.0,ItemEntries=())))',
+      ),
+    ]);
+    const { rows, drafts } = draftsFor(text);
+    const row = rows[0];
+    expect(row?.sets).toHaveLength(2);
+    if (row === undefined) return;
+    const draft = drafts[supplyCrateRowKey(row)];
+    const entry = draft?.sets[0]?.entries[0];
+    if (draft === undefined || entry === undefined) return;
+    entry.maxQuantity = "4";
+    const next = applySupplyCrateEdits(text, reviewSupplyCrateState(rows, drafts, []).edits);
+    expect(next).toContain('SetName="Empty"');
+    expect(next).toContain("MaxQuantity=4");
+  });
+
+  it("keeps a class weight with the class that stays", () => {
+    expect(supplyCrateClassWeightsFor(["Metal_C", "Crystal_C"], ["2", "5"], ["Crystal_C"])).toEqual(["5"]);
+    expect(supplyCrateClassWeightsFor(["Metal_C"], ["2"], ["Metal_C", "Crystal_C"])).toEqual(["2", "1"]);
+  });
+});
+
+describe("supplyCrateRollIgnoresPower", () => {
+  it("is quiet when the power is 1 and notes any other power", () => {
+    const even = draftForNewCrate("SupplyCrate_Level03_C");
+    expect(supplyCrateRollIgnoresPower(even)).toBe(false);
+    expect(supplyCrateRollIgnoresPower({ ...even, numItemSetsPower: "1.0" })).toBe(false);
+    expect(supplyCrateRollIgnoresPower({ ...even, numItemSetsPower: "2" })).toBe(true);
   });
 });

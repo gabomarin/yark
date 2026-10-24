@@ -95,10 +95,7 @@ export function LootItemClasses(props: Props): ReactElement {
         const known = lookupAsaItem(className);
         const label = known?.label ?? className;
         return (
-          <div
-            key={`${index}-${className}`}
-            className={showWeights ? classes.lootItemRowWeighted : classes.lootItemRow}
-          >
+          <div key={className} className={showWeights ? classes.lootItemRowWeighted : classes.lootItemRow}>
             <Stack gap={0} style={{ minWidth: 0 }}>
               <Text size="sm" truncate>
                 {label}

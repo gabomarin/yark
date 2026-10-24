@@ -20,7 +20,10 @@ interface Props {
 /** Default action is Keep all. Nothing is deleted because the map changed. */
 export function LootMapReview(props: Props): ReactElement {
   const removable = props.rows.filter((row) => supplyCrateRemovable(row.fit));
+  const removableKeys = new Set(removable.map((row) => row.key));
   const [checked, setChecked] = useState<string[]>([]);
+  const selected = checked.filter((key) => removableKeys.has(key));
+  const selectedKeys = new Set(selected);
   const unused = props.rows.filter((row) => row.fit === "unused").length;
   const unknown = props.rows.filter((row) => row.fit === "unknown").length;
 
@@ -36,7 +39,7 @@ export function LootMapReview(props: Props): ReactElement {
             key={row.key}
             size="xs"
             label={`${row.label} · ${supplyCrateFitLabel(row.fit)}`}
-            checked={checked.includes(row.key)}
+            checked={selectedKeys.has(row.key)}
             onChange={(event) =>
               setChecked((current) =>
                 event.currentTarget.checked ? [...current, row.key] : current.filter((key) => key !== row.key),
@@ -48,7 +51,7 @@ export function LootMapReview(props: Props): ReactElement {
           <Button size="xs" variant="default" onClick={props.onKeep}>
             Keep all
           </Button>
-          <Button size="xs" color="red" disabled={checked.length === 0} onClick={() => props.onRemove(checked)}>
+          <Button size="xs" color="red" disabled={selected.length === 0} onClick={() => props.onRemove(selected)}>
             Remove selected
           </Button>
         </Group>

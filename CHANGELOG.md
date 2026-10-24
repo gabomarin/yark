@@ -39,6 +39,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - The loot crate list shows a color mark and the class under the name (#686).
 - The Simulator tab rolls the selected crate and does not open the editor (#686).
 - Saving a supply crate no longer stops at 20 sets, 40 items, or 16 classes. The file can hold as many as the game line already has (#686).
+- Removing one item from a loot entry keeps the weights of the items that stay, and an empty set stays until that set is removed. A crate the beacon list does not tie to a map is marked unknown. The Simulator stays inside the seed and roll limits and says when a quality power is not part of the roll (#686).
 - The engram hint that a class alone does not change the game uses the lighter danger red, so it stays readable on Breeze dark. Clearing a saved line back to an empty cost and Hidden off is refused the same way. Save stays off while that error is showing on Overrides. Settings, Points per level, and GameUserSettings.ini still save their own lines. A dot on another view shows that it still has unsaved lines. The class box on a saved engram searches the official list. Named engram lines stay out of Settings, and a points-per-level key in GameUserSettings.ini stays on that file. A class name with a space is refused, and the field says so (#684).
 
 ## [0.25.0] - 2026-10-23

@@ -50,11 +50,12 @@ describe("supply crate map fit", () => {
     expect(supplyCrateFit("SupplyCrate_Level03_C", "ScorchedEarth_WP")).toBe("unused");
   });
 
-  it("keeps a crate with no YARK map unused and named", () => {
-    expect(supplyCrateFit("Fjo_SupplyCrate_Level15_C", "TheIsland_WP")).toBe("unused");
+  it("keeps a crate with no YARK map unknown", () => {
+    expect(supplyCrateFit("Fjo_SupplyCrate_Level15_C", "TheIsland_WP")).toBe("unknown");
     expect(supplyCrateFitHint("Fjo_SupplyCrate_Level15_C", "TheIsland_WP")).toBe(
-      "Fjordur green supply crate is not used on The Island. The beacon list does not tie it to a map YARK knows. This override stays until you remove it.",
+      "Fjordur green supply crate is not tied to a map YARK knows. This override stays until you remove it.",
     );
+    expect(supplyCrateFit("SupplyCrate_Gift_C", "TheIsland_WP")).toBe("unknown");
   });
 
   it("uses the wiki class for the Ragnarok desert crate", () => {
