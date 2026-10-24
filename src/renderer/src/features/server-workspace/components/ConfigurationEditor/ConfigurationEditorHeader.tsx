@@ -9,9 +9,15 @@ interface Props {
   subtitle: string;
   openFileAction: ReactNode;
   iniNavigation: ReactNode;
+  /** Game.ini Visual views. Own row under the file toolbar, so later editors do not push Save. */
+  gameViewNav?: ReactNode;
   showRestoreFile?: boolean;
   restoreFileDisabled?: boolean;
   dirty: boolean;
+  /** A visible error in the open view. Save stays off; Discard stays available. */
+  invalid?: boolean;
+  /** Any pending edit, including one on another view. */
+  discardDirty?: boolean;
   busy: boolean;
   loading?: boolean;
   onReloadFromDisk?: () => void;
@@ -26,9 +32,12 @@ export function ConfigurationEditorHeader(props: Props): ReactElement {
     subtitle,
     openFileAction,
     iniNavigation,
+    gameViewNav = null,
     showRestoreFile = false,
     restoreFileDisabled = false,
     dirty,
+    invalid = false,
+    discardDirty,
     busy,
     loading = false,
     onReloadFromDisk,
@@ -43,49 +52,52 @@ export function ConfigurationEditorHeader(props: Props): ReactElement {
       subtitle={subtitle.replace("{fileLabel}", fileLabel)}
       actions={openFileAction}
       toolbar={
-        <div className={classes.headerToolbar}>
-          {iniNavigation}
-          <Group gap="xs" wrap="wrap" ml="auto">
-            {onReloadFromDisk !== undefined && (
+        <div className={classes.headerToolbarStack}>
+          <div className={classes.headerToolbar}>
+            {iniNavigation}
+            <Group gap="xs" wrap="wrap" ml="auto">
+              {onReloadFromDisk !== undefined && (
+                <Button
+                  size="xs"
+                  variant="default"
+                  leftSection={<ArrowClockwise size={16} />}
+                  onClick={onReloadFromDisk}
+                  disabled={busy || loading}
+                >
+                  Reload from disk
+                </Button>
+              )}
+              {showRestoreFile && onRestoreFile !== undefined && (
+                <Button
+                  size="xs"
+                  variant="default"
+                  leftSection={<ArrowUUpLeft size={16} />}
+                  onClick={onRestoreFile}
+                  disabled={restoreFileDisabled || busy || loading}
+                >
+                  Restore file
+                </Button>
+              )}
               <Button
                 size="xs"
                 variant="default"
-                leftSection={<ArrowClockwise size={16} />}
-                onClick={onReloadFromDisk}
-                disabled={busy || loading}
+                leftSection={<ArrowCounterClockwise size={16} />}
+                onClick={onDiscard}
+                disabled={!(discardDirty ?? dirty) || busy}
               >
-                Reload from disk
+                Discard changes
               </Button>
-            )}
-            {showRestoreFile && onRestoreFile !== undefined && (
               <Button
                 size="xs"
-                variant="default"
-                leftSection={<ArrowUUpLeft size={16} />}
-                onClick={onRestoreFile}
-                disabled={restoreFileDisabled || busy || loading}
+                leftSection={<FloppyDisk size={16} />}
+                onClick={onSave}
+                disabled={!dirty || invalid || busy || loading}
               >
-                Restore file
+                Save
               </Button>
-            )}
-            <Button
-              size="xs"
-              variant="default"
-              leftSection={<ArrowCounterClockwise size={16} />}
-              onClick={onDiscard}
-              disabled={!dirty || busy}
-            >
-              Discard changes
-            </Button>
-            <Button
-              size="xs"
-              leftSection={<FloppyDisk size={16} />}
-              onClick={onSave}
-              disabled={!dirty || busy || loading}
-            >
-              Save
-            </Button>
-          </Group>
+            </Group>
+          </div>
+          {gameViewNav}
         </div>
       }
     />

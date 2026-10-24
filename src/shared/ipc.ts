@@ -1,3 +1,4 @@
+import type { NamedEngramEdit } from "./ini/engram-named-entries";
 import type { IniSemanticOp } from "./ini/ini-semantic-ops";
 import type { OnboardingRecord } from "./settings/onboarding";
 import type {
@@ -616,8 +617,15 @@ export interface RendererApi {
     payload: ServerIniPayload,
     expectedFingerprints: IniFileFingerprints,
   ): Promise<IpcResult<ServerIniSaveResult>>;
-  /** Visual Set/Unset patch save — merges onto latest disk under lock (#667). */
-  saveServerIniSemantic(serverId: string, ops: IniSemanticOp[]): Promise<IpcResult<ServerIniSemanticSaveResult>>;
+  /**
+   * Visual Set/Unset patch save — merges onto latest disk under lock (#667).
+   * Optional named engram edits reprint or delete those Game.ini lines only (#684).
+   */
+  saveServerIniSemantic(
+    serverId: string,
+    ops: IniSemanticOp[],
+    engramEdits?: readonly NamedEngramEdit[],
+  ): Promise<IpcResult<ServerIniSemanticSaveResult>>;
   getClusterIniTemplate(clusterId: string): Promise<IpcResult<ClusterIniTemplate | null>>;
   getClusterIniTemplateOrDraft(clusterId: string): Promise<IpcResult<ClusterIniTemplate>>;
   previewClusterIniTemplate(clusterId: string, payload: ServerIniPayload): Promise<IpcResult<IniPreview>>;

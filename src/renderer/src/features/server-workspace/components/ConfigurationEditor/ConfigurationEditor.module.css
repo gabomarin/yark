@@ -75,7 +75,9 @@
   box-shadow: inset 3px 0 0 var(--app-color-attention);
 }
 
-.tableHead {
+.tableHead,
+.engramHead,
+.levelPointsHead {
   position: sticky;
   top: 0;
   z-index: 2;
@@ -92,12 +94,87 @@
 
 /* Separators come from category header border-bottom only (avoids double lines when collapsed). */
 
+.headerToolbarStack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--app-space-sm);
+  width: 100%;
+  min-width: 0;
+}
+
 .headerToolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--app-space-sm);
   width: 100%;
+}
+
+.gameViewRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--app-space-sm);
+  width: 100%;
+  min-width: 0;
+}
+
+.engramHead,
+.engramRow {
+  display: grid;
+  grid-template-columns: minmax(200px, 1.6fr) 72px 108px 108px 88px 36px;
+  gap: var(--app-space-sm);
+  align-items: center;
+  padding: var(--app-space-xs) var(--app-space-sm);
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 760px;
+}
+
+.engramRow {
+  background: var(--app-color-panel);
+}
+
+.engramRow + .engramRow {
+  border-top: 1px solid color-mix(in srgb, var(--app-color-border-subtle) 68%, transparent);
+}
+
+.engramCenter {
+  display: flex;
+  justify-content: center;
+}
+
+.engramFieldHint {
+  color: var(--app-color-danger-bright);
+}
+
+.levelPointsHead,
+.levelPointsRow {
+  display: grid;
+  grid-template-columns: 72px minmax(120px, 180px) 36px;
+  gap: var(--app-space-sm);
+  align-items: center;
+  padding: var(--app-space-xs) var(--app-space-sm);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.levelPointsRow {
+  background: var(--app-color-panel);
+}
+
+.levelPointsRow + .levelPointsRow {
+  border-top: 1px solid color-mix(in srgb, var(--app-color-border-subtle) 68%, transparent);
+}
+
+.levelPointsBody {
+  width: 100%;
+  min-width: 0;
+}
+
+.engramRemoved {
+  opacity: 0.55;
 }
 
 .tableBody {
