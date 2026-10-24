@@ -199,22 +199,12 @@ export const THEME_FAMILIES: Readonly<Record<ThemeFamilyId, Readonly<Record<Them
   },
 };
 
-/** Human labels for the Appearance family control, in registry order. */
-const THEME_FAMILY_PICKER: ReadonlyArray<{ id: ThemeFamilyId; label: string }> = [
+/** Families offered in Settings and the setup assistant, in registry order. */
+export const THEME_FAMILY_LIST: ReadonlyArray<{ id: ThemeFamilyId; label: string }> = [
   { id: "fluent", label: "Fluent" },
   { id: "plasma-breeze", label: "Plasma Breeze" },
   { id: "glassy", label: "Glassy" },
 ];
-
-/**
- * Families offered in Settings and the setup assistant. Glassy stays in the
- * registry so a saved choice still renders, and comes back here when it ships.
- */
-const THEME_FAMILIES_OFFERED: ReadonlySet<ThemeFamilyId> = new Set(["fluent", "plasma-breeze"]);
-
-export const THEME_FAMILY_LIST: ReadonlyArray<{ id: ThemeFamilyId; label: string }> = THEME_FAMILY_PICKER.filter(
-  (family) => THEME_FAMILIES_OFFERED.has(family.id),
-);
 
 /**
  * Flat compatibility view for callers that still enumerate the shipped variants.

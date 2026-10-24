@@ -22,6 +22,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Loot names the supply crates from the beacon list, including map-specific drops, and says which maps use each one (#686).
 - A loot set says how many of its entries drop. Several items on one entry share that quantity, each with its own weight, and a class with no catalog name is marked as missing from the item list (#686).
 - The loot Simulator names the crate being rolled and puts one open beside many opens. It no longer repeats that an appended crate leaves out the game's items (#686).
+- Settings → Appearance and the setup assistant list **Glassy** beside Fluent and Plasma Breeze.
 
 ### Fixed
 
