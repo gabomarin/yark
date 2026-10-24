@@ -26,7 +26,7 @@ interface Grant {
   blueprints: number;
 }
 
-export interface SupplyCrateOpeningItem {
+interface SupplyCrateOpeningItem {
   className: string;
   quantity: number;
   blueprints: number;
