@@ -20,6 +20,7 @@ interface Props {
   configurationAssistantDisabled?: boolean;
   onRevert: () => void;
   onSubmit: () => void;
+  notice?: ReactNode;
 }
 
 /** Workspace-tab chrome: header, scroll body, cancel/save footer. */
@@ -50,6 +51,7 @@ export function ServerFormEmbedded(props: Props): ReactElement {
       />
       <div className={classes.embeddedScroll} data-server-form-scroll>
         <Stack gap="md">
+          {props.notice}
           <ServerFormAlerts
             filesJobActive={props.filesJobActive}
             moveJobActive={props.moveJobActive}

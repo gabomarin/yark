@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- When GameUserSettings.ini differs from the server form, the Server tab labels each changed field and shows its file and YARK values, with passwords hidden. Operators can copy the file values into YARK or keep the YARK values; copying checks for port clashes (#682).
+
 ## [0.25.0] - 2026-10-23
 
 ### Added
