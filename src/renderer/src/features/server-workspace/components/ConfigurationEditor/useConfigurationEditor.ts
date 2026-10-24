@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { modals } from "@mantine/modals";
-import type { NamedEngramEdit } from "@shared/ini/engram-named-entries";
+import { EMPTY_LINE_EDITS, visualLineEditsPending, type VisualLineEdits } from "@shared/ini/visual-line-edits";
 import { iniFingerprintsMatch } from "@shared/ini/ini-fingerprints";
 import type { IniFileKey, IniPreview, ServerIniPayload, ServerIniSnapshot } from "@shared/types";
 import { showOperatorToast } from "@ui/operatorToast";
@@ -36,12 +36,12 @@ export function useConfigurationEditor(options: {
   serverId: string;
   onDirtyChange?: (dirty: boolean) => void;
   onRegisterSave?: (save: (() => Promise<boolean>) | null) => void;
-  engramEditsRef?: { readonly current: readonly NamedEngramEdit[] };
+  engramEditsRef?: { readonly current: VisualLineEdits };
   engramBlockedRef?: { readonly current: boolean };
   saveScopeRef?: {
-    readonly current: "gameUserSettings" | "gameSettings" | "engramPoints" | "engramOverrides" | "gameText";
+    readonly current: "gameUserSettings" | "gameSettings" | "engramPoints" | "engramOverrides" | "loot" | "gameText";
   };
-  onEngramDraftsReset?: () => void;
+  onEngramDraftsReset?: (which?: "engrams" | "loot") => void;
 }): ConfigurationEditorApi {
   const { serverId, onRegisterSave } = options;
   const [snapshot, setSnapshot] = useState<ServerIniSnapshot | null>(null);
@@ -66,9 +66,8 @@ export function useConfigurationEditor(options: {
   const pendingQueued = snapshot?.pending === true;
   const dirtyRef = useRef(dirty);
   useEffect(() => {
-    const engramPending =
-      (options.engramEditsRef?.current.length ?? 0) > 0 || options.engramBlockedRef?.current === true;
-    dirtyRef.current = dirty || engramPending;
+    dirtyRef.current =
+      dirty || visualLineEditsPending(options.engramEditsRef?.current, options.engramBlockedRef?.current === true);
   });
   const payloadRef = useRef(payload);
   useEffect(() => {
@@ -317,7 +316,7 @@ export function useConfigurationEditor(options: {
           baseline,
           expectedFingerprints: snapshot.fingerprints,
           scope: options.saveScopeRef?.current,
-          engramEdits: iniMode === "visual" ? (options.engramEditsRef?.current ?? []) : [],
+          lineEdits: options.engramEditsRef?.current ?? EMPTY_LINE_EDITS,
           engramBlocked: options.engramBlockedRef?.current === true,
         });
         if (!outcome.ok) {
@@ -334,11 +333,12 @@ export function useConfigurationEditor(options: {
           return false;
         }
 
-        const { savedPayload, draftPayload, resetEngrams, preview, fingerprints, pending, changedCount } = outcome;
+        const { savedPayload, draftPayload, resetEngrams, resetLoot, preview, fingerprints, pending, changedCount } =
+          outcome;
         setPayload(draftPayload);
         setPreview(preview);
         setBaseline(savedPayload);
-        if (resetEngrams) options.onEngramDraftsReset?.();
+        if (resetEngrams || resetLoot) options.onEngramDraftsReset?.(resetLoot ? "loot" : "engrams");
         diskSync.setExternalChangeDetected(false);
         setSnapshot((prev) =>
           prev === null

@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Game.ini Visual adds **Loot** beside Settings and Engrams, so a supply crate override can be edited, checked against the server map, and rolled before Save rewrites only that line (#686).
 - Game.ini Visual adds **Engrams** on its own row under the file toolbar. Named overrides can be searched and edited. A blank row adds an official or custom engram after a cost, level, Hidden, or prerequisite is set. A new line does not add Hidden on its own. Points per level are edited there instead of Settings, and any level can be removed. Save rewrites only those lines (#684).
 - When GameUserSettings.ini differs from the server form, the Server tab labels each changed field and shows its file and YARK values, with passwords hidden. Operators can copy the file values into YARK or keep the YARK values; copying checks for port clashes (#682).
 

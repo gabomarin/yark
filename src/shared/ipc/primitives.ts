@@ -384,6 +384,89 @@ export const namedEngramEditsSchema = z
     }
   });
 
+const SUPPLY_CRATE_NUMBER_RE = /^(?:|(?:\d+\.\d+|\d+|\.\d+))$/;
+const supplyCrateNumberSchema = z.string().regex(SUPPLY_CRATE_NUMBER_RE);
+const supplyCrateEntrySchema = z
+  .object({
+    weight: supplyCrateNumberSchema,
+    classes: z.array(z.string().min(1).max(300).regex(NAMED_ENGRAM_CLASS_RE)).max(16),
+    classWeights: z.array(supplyCrateNumberSchema).max(16),
+    minQuantity: supplyCrateNumberSchema,
+    maxQuantity: supplyCrateNumberSchema,
+    minQuality: supplyCrateNumberSchema,
+    maxQuality: supplyCrateNumberSchema,
+    forceBlueprint: z.boolean().nullable(),
+    blueprintChance: supplyCrateNumberSchema,
+  })
+  .strict();
+const supplyCrateSetSchema = z
+  .object({
+    name: z.string().max(200),
+    minItems: supplyCrateNumberSchema,
+    maxItems: supplyCrateNumberSchema,
+    numItemsPower: supplyCrateNumberSchema.nullable(),
+    weight: supplyCrateNumberSchema,
+    itemsWithoutReplacement: z.boolean().nullable(),
+    entries: z.array(supplyCrateEntrySchema).max(40),
+  })
+  .strict();
+const supplyCrateBodySchema = z
+  .object({
+    className: z.string().min(1).max(300).regex(NAMED_ENGRAM_CLASS_RE),
+    minSets: supplyCrateNumberSchema,
+    maxSets: supplyCrateNumberSchema,
+    numItemSetsPower: supplyCrateNumberSchema.nullable(),
+    setsWithoutReplacement: z.boolean().nullable(),
+    append: z.boolean().nullable(),
+    sets: z.array(supplyCrateSetSchema).max(20),
+  })
+  .strict();
+
+/** Supply-crate line edits sent with `ini:save-semantic` (PINI-013 / #686). */
+export const supplyCrateEditsSchema = z
+  .array(
+    z.discriminatedUnion("kind", [
+      z
+        .object({
+          kind: z.literal("replace"),
+          section: z.string().min(1).max(MAX_STRING_PARAM_LENGTH),
+          occurrence: z.number().int().min(0).max(10_000),
+          expectedRaw: z.string().min(2).max(MAX_INI_SEMANTIC_VALUE_CHARS),
+          body: supplyCrateBodySchema,
+        })
+        .strict(),
+      z
+        .object({
+          kind: z.literal("delete"),
+          section: z.string().min(1).max(MAX_STRING_PARAM_LENGTH),
+          occurrence: z.number().int().min(0).max(10_000),
+          expectedRaw: z.string().min(2).max(MAX_INI_SEMANTIC_VALUE_CHARS),
+          className: z.string().min(1).max(300).regex(NAMED_ENGRAM_CLASS_RE),
+        })
+        .strict(),
+      z
+        .object({
+          kind: z.literal("append"),
+          body: supplyCrateBodySchema,
+        })
+        .strict(),
+    ]),
+  )
+  .max(200)
+  .superRefine((edits, ctx) => {
+    let chars = 0;
+    for (const edit of edits) {
+      chars += JSON.stringify(edit).length;
+      if (chars > MAX_INI_SEMANTIC_OPS_TOTAL_CHARS) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Supply crate edits exceed ${MAX_INI_SEMANTIC_OPS_TOTAL_CHARS} total characters`,
+        });
+        return;
+      }
+    }
+  });
+
 export const clusterIniFileSelectionSchema = z
   .object({
     gameUserSettings: z.boolean(),

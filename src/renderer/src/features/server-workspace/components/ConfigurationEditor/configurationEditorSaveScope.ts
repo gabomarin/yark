@@ -1,20 +1,23 @@
 import { applyIniSemanticOps, buildIniSemanticOps, type IniSemanticOp } from "@shared/ini/ini-semantic-ops";
 import { isNamedEngramEntriesKey } from "@shared/ini/engram-named-entries";
 import { isPlayerLevelEngramPointsKey } from "@shared/ini/player-level-engram-points";
+import { isSupplyCrateEntriesKey } from "@shared/ini/supply-crate-entries";
 import type { IniFileKey, ServerIniPayload } from "@shared/types";
 
 /** The open INI view. Save writes that file or section and leaves the others in the draft. */
-export type IniSaveScope = "gameUserSettings" | "gameSettings" | "engramPoints" | "engramOverrides" | "gameText";
+export type IniSaveScope =
+  "gameUserSettings" | "gameSettings" | "engramPoints" | "engramOverrides" | "loot" | "gameText";
 
 export function iniSaveScope(
   iniFile: IniFileKey,
   iniMode: "visual" | "text",
-  gameView: "settings" | "engrams",
+  gameView: "settings" | "engrams" | "loot",
   engramPane: "overrides" | "points",
 ): IniSaveScope {
   if (iniFile === "gameUserSettings") return "gameUserSettings";
   if (iniMode === "text") return "gameText";
   if (gameView === "settings") return "gameSettings";
+  if (gameView === "loot") return "loot";
   return engramPane === "points" ? "engramPoints" : "engramOverrides";
 }
 
@@ -22,13 +25,13 @@ function isGamePointsOp(op: IniSemanticOp): boolean {
   return op.fileKey === "game" && isPlayerLevelEngramPointsKey(op.key);
 }
 
-function isNamedEngramTextOp(op: IniSemanticOp): boolean {
-  return op.fileKey === "game" && isNamedEngramEntriesKey(op.key);
+function isVisualEditorLineOp(op: IniSemanticOp): boolean {
+  return op.fileKey === "game" && (isNamedEngramEntriesKey(op.key) || isSupplyCrateEntriesKey(op.key));
 }
 
-/** Semantic Set/Unset rows that belong to this view. Named engram lines are not semantic ops. */
+/** Semantic Set/Unset rows that belong to this view. Named engram and loot lines are not semantic ops. */
 export function semanticOpInScope(op: IniSemanticOp, scope: IniSaveScope): boolean {
-  if (isNamedEngramTextOp(op)) return false;
+  if (isVisualEditorLineOp(op)) return false;
   if (scope === "gameUserSettings") return op.fileKey === "gameUserSettings";
   if (scope === "engramPoints") return isGamePointsOp(op);
   if (scope === "gameSettings") return op.fileKey === "game" && !isGamePointsOp(op);
@@ -49,7 +52,7 @@ export function iniSectionPending(
   for (const op of buildIniSemanticOps(baseline, draft)) {
     if (op.fileKey === "gameUserSettings") gameUserSettings = true;
     else if (isGamePointsOp(op)) engramPoints = true;
-    else if (op.fileKey === "game" && !isNamedEngramTextOp(op)) gameSettings = true;
+    else if (op.fileKey === "game" && !isVisualEditorLineOp(op)) gameSettings = true;
   }
   return { gameUserSettings, gameSettings, engramPoints };
 }
@@ -59,9 +62,11 @@ export function iniViewDirty(
   baseline: ServerIniPayload | null,
   draft: ServerIniPayload | null,
   engramEditCount: number,
+  lootEditCount = 0,
 ): boolean {
   if (baseline === null || draft === null) return false;
   if (scope === "engramOverrides") return engramEditCount > 0;
+  if (scope === "loot") return lootEditCount > 0;
   if (scope === "gameUserSettings") return draft.gameUserSettings !== baseline.gameUserSettings;
   if (scope === "gameText") return draft.game !== baseline.game;
   return buildIniSemanticOps(baseline, draft).some((op) => semanticOpInScope(op, scope));

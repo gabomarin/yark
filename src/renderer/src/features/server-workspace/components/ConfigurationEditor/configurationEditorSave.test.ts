@@ -202,15 +202,27 @@ describe("performConfigurationEditorSave", () => {
       baseline,
       expectedFingerprints: fingerprints(baseline),
       scope: "gameUserSettings",
-      engramEdits: [
-        {
-          kind: "delete",
-          section: "ShooterGameMode",
-          occurrence: 0,
-          expectedRaw: "x",
-          className: "EngramEntry_Campfire_C",
-        },
-      ],
+      lineEdits: {
+        engrams: [
+          {
+            kind: "delete",
+            section: "ShooterGameMode",
+            occurrence: 0,
+            expectedRaw: "x",
+            className: "EngramEntry_Campfire_C",
+          },
+        ],
+        crates: [
+          {
+            kind: "delete",
+            section: "ShooterGame.ShooterGameMode",
+            occurrence: 0,
+            expectedRaw: '(SupplyCrateClassString="SupplyCrate_Level03_C")',
+            className: "SupplyCrate_Level03_C",
+          },
+        ],
+        lootBlocked: true,
+      },
       engramBlocked: true,
     });
 
@@ -286,6 +298,73 @@ describe("performConfigurationEditorSave", () => {
     });
     expect(window.api.saveServerIniSemantic).not.toHaveBeenCalled();
   });
+
+  it("saves loot lines without engram edits or Settings keys", async () => {
+    const baseline: ServerIniPayload = {
+      gameUserSettings: "",
+      game: "[/Script/ShooterGame.ShooterGameMode]\nDifficultyOffset=1\n",
+    };
+    const draft: ServerIniPayload = {
+      gameUserSettings: "",
+      game: "[/Script/ShooterGame.ShooterGameMode]\nDifficultyOffset=2\n",
+    };
+    vi.mocked(window.api.saveServerIniSemantic).mockResolvedValue({
+      ok: true,
+      data: {
+        valid: true,
+        issues: [],
+        diff: [],
+        changedCount: 1,
+        pending: false,
+        fingerprints: fingerprints(baseline),
+        payload: baseline,
+      },
+    });
+    const crate = {
+      kind: "delete" as const,
+      section: "ShooterGame.ShooterGameMode",
+      occurrence: 0,
+      expectedRaw: '(SupplyCrateClassString="SupplyCrate_Level03_C")',
+      className: "SupplyCrate_Level03_C",
+    };
+
+    const outcome = await performConfigurationEditorSave({
+      serverId: "srv-1",
+      mode: "visual",
+      draft,
+      baseline,
+      expectedFingerprints: fingerprints(baseline),
+      scope: "loot",
+      lineEdits: { engrams: [], crates: [crate], lootBlocked: false },
+      engramBlocked: true,
+    });
+
+    expect(window.api.saveServerIniSemantic).toHaveBeenCalledWith("srv-1", [], [], [crate]);
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) return;
+    expect(outcome.resetLoot).toBe(true);
+    expect(outcome.resetEngrams).toBe(false);
+    expect(outcome.draftPayload.game).toContain("DifficultyOffset=2");
+  });
+
+  it("refuses Loot Save while a crate line has no item", async () => {
+    const outcome = await performConfigurationEditorSave({
+      serverId: "srv-1",
+      mode: "visual",
+      draft: { gameUserSettings: "", game: "" },
+      baseline: { gameUserSettings: "", game: "" },
+      expectedFingerprints: { gameUserSettings: "a", game: "b" },
+      scope: "loot",
+      lineEdits: { engrams: [], crates: [], lootBlocked: true },
+    });
+
+    expect(outcome).toEqual({
+      ok: false,
+      error: "Fix the loot line before saving.",
+      conflict: false,
+    });
+    expect(window.api.saveServerIniSemantic).not.toHaveBeenCalled();
+  });
 });
 
 describe("iniSaveScope", () => {
@@ -294,6 +373,7 @@ describe("iniSaveScope", () => {
     expect(iniSaveScope("game", "visual", "settings", "overrides")).toBe("gameSettings");
     expect(iniSaveScope("game", "visual", "engrams", "points")).toBe("engramPoints");
     expect(iniSaveScope("game", "visual", "engrams", "overrides")).toBe("engramOverrides");
+    expect(iniSaveScope("game", "visual", "loot", "overrides")).toBe("loot");
     expect(iniSaveScope("game", "text", "engrams", "overrides")).toBe("gameText");
   });
 
@@ -310,6 +390,8 @@ describe("iniSaveScope", () => {
     expect(iniViewDirty("gameSettings", baseline, draft, 0)).toBe(false);
     expect(iniViewDirty("gameUserSettings", baseline, draft, 0)).toBe(false);
     expect(iniViewDirty("engramOverrides", baseline, draft, 0)).toBe(false);
+    expect(iniViewDirty("loot", baseline, draft, 0, 1)).toBe(true);
+    expect(iniViewDirty("gameSettings", baseline, draft, 0, 1)).toBe(false);
   });
 
   it("marks points per level without marking Settings", () => {
@@ -371,6 +453,25 @@ describe("iniSaveScope", () => {
     const restored = restoreUnsavedVisualEdits(saved, baseline, draft, "gameSettings");
     expect(restored.game).toContain(after);
     expect(restored.game).toContain("DifficultyOffset=2");
+  });
+
+  it("keeps a text edit of a supply crate line when Settings is saved", () => {
+    const section = "[/Script/ShooterGame.ShooterGameMode]";
+    const before =
+      'ConfigOverrideSupplyCrateItems=(SupplyCrateClassString="SupplyCrate_Level03_C",MinItemSets=1,MaxItemSets=1)';
+    const after =
+      'ConfigOverrideSupplyCrateItems=(SupplyCrateClassString="SupplyCrate_Level03_C",MinItemSets=1,MaxItemSets=2)';
+    const baseline = { gameUserSettings: "", game: `${section}\nDifficultyOffset=1\n${before}\n` };
+    const draft = { gameUserSettings: "", game: `${section}\nDifficultyOffset=2\n${after}\n` };
+    const saved = { gameUserSettings: "", game: `${section}\nDifficultyOffset=2\n${before}\n` };
+    const restored = restoreUnsavedVisualEdits(saved, baseline, draft, "gameSettings");
+    expect(restored.game).toContain(after);
+    expect(restored.game).toContain("DifficultyOffset=2");
+    const op = buildIniSemanticOps(baseline, draft).find((item) => item.key === "ConfigOverrideSupplyCrateItems");
+    expect(op).toBeDefined();
+    if (op === undefined) return;
+    expect(semanticOpInScope(op, "gameSettings")).toBe(false);
+    expect(semanticOpInScope(op, "loot")).toBe(false);
   });
 });
 
