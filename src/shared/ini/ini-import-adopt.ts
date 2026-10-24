@@ -20,23 +20,15 @@ export function serverToProfileInput(server: ServerProfile): ServerProfileInput 
   return input;
 }
 
-/** Identity the Server tab just chose. Survives the form remount that follows a profile refresh. */
+/**
+ * Identity the Server tab just chose. Survives the form remount that follows a profile refresh.
+ * Session name and ports only. Passwords stay in the profile update, not in tab state.
+ */
 export function importChoiceIdentity(
   serverId: string,
-  profile: Pick<
-    ServerProfileInput,
-    "sessionName" | "gamePort" | "queryPort" | "rconPort" | "adminPassword" | "serverPassword"
-  >,
+  profile: Pick<ServerProfileInput, "sessionName" | "gamePort" | "queryPort" | "rconPort">,
 ): string {
-  return [
-    serverId,
-    profile.sessionName,
-    profile.gamePort,
-    profile.queryPort,
-    profile.rconPort,
-    profile.adminPassword,
-    profile.serverPassword ?? "",
-  ].join("\u001f");
+  return [serverId, profile.sessionName, profile.gamePort, profile.queryPort, profile.rconPort].join("\u001f");
 }
 
 function replacement(report: IniImportCompatibilityReport, id: IniImportFieldId): IniImportIdentityField | undefined {
@@ -65,12 +57,27 @@ function takenPortKind(
   return "rcon";
 }
 
+function conflictsForCandidate(
+  serverName: string,
+  conflicts: PortConflict[],
+  candidate: { gamePort: number; queryPort: number; rconPort: number },
+): PortConflict[] {
+  return conflicts.filter((conflict) => {
+    const involvesServer = conflict.serverA === serverName || conflict.serverB === serverName;
+    const portIsCandidate =
+      conflict.port === candidate.gamePort ||
+      conflict.port === candidate.queryPort ||
+      conflict.port === candidate.rconPort;
+    return involvesServer && portIsCandidate;
+  });
+}
+
 function conflictReason(
   serverName: string,
   conflicts: PortConflict[],
   candidate: { gamePort: number; queryPort: number; rconPort: number },
 ): string {
-  return conflicts
+  return conflictsForCandidate(serverName, conflicts, candidate)
     .map((conflict) => {
       const other = conflict.serverA === serverName ? conflict.serverB : conflict.serverA;
       const kind = takenPortKind(conflict.port, candidate);
@@ -167,8 +174,9 @@ export function planAdoptExternalIni(
     name: server.name,
     ...candidate,
   });
-  if (conflicts.length > 0) {
-    return { ok: false, reason: conflictReason(server.name, conflicts, candidate) };
+  const reason = conflictReason(server.name, conflicts, candidate);
+  if (reason.length > 0) {
+    return { ok: false, reason };
   }
 
   return {

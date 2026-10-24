@@ -85,17 +85,17 @@ function sameSecret(fileValue: string | null, profileValue: string): boolean {
 }
 
 /**
- * Value the operator sees and YARK stores.
- * Session names turn control characters into spaces. Ports drop them.
+ * Session names turn control characters into spaces, and that is the stored value.
+ * Ports keep control characters so a broken value is rejected instead of becoming a different port.
  */
 function normalizeIniText(value: string | null, mode: "text" | "port"): string | null {
   if (value === null) return null;
-  const cleaned =
-    mode === "port"
-      ? value.replace(/[\u0000-\u001F\u007F]/g, "")
-      : value.replace(/[\u0000-\u001F\u007F]/g, " ").replace(/ {2,}/g, " ");
-  const trimmed = cleaned.trim();
-  return trimmed.length === 0 ? "" : trimmed;
+  if (mode === "port") return value.trim();
+  const cleaned = value
+    .replace(/[\u0000-\u001F\u007F]/g, " ")
+    .replace(/ {2,}/g, " ")
+    .trim();
+  return cleaned.length === 0 ? "" : cleaned;
 }
 
 function readIniText(text: string, section: string, key: string, mode: "text" | "port"): string | null {
@@ -121,6 +121,13 @@ export function formatIniImportReplacement(field: IniImportIdentityField): strin
       return `Session name in GameUserSettings.ini: not set.\n${yark}`;
     }
     return `Session name in GameUserSettings.ini: "${field.fileValue}".\n${yark}`;
+  }
+  if (
+    (field.id === "gamePort" || field.id === "queryPort" || field.id === "rconPort") &&
+    field.fileValue !== null &&
+    /[\u0000-\u001F\u007F]/.test(field.fileValue)
+  ) {
+    return `${field.label} in GameUserSettings.ini: not a plain number.\n${field.label} in YARK: ${field.profileValue}.`;
   }
   if (field.fileValue === null || field.fileValue.trim() === "") {
     return `${field.label} in GameUserSettings.ini: blank.\n${field.label} in YARK: ${field.profileValue}.`;

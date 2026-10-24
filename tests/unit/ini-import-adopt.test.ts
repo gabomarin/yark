@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { planAdoptExternalIni } from "@shared/ini/ini-import-adopt";
+import { importChoiceIdentity, planAdoptExternalIni } from "@shared/ini/ini-import-adopt";
 import { buildIniImportCompatibilityReport } from "@shared/ini/ini-import-compatibility";
 import type { ServerProfile } from "@shared/types";
 
@@ -139,6 +139,51 @@ describe("planAdoptExternalIni", () => {
     expect(plan.input.sessionName).toBe("Old Island");
     expect(plan.input.serverPassword).toBeNull();
     expect(plan.input.adminPassword).toBe("secret-admin");
+  });
+
+  it("keeps passwords out of the choice remembered by the Server tab", () => {
+    const withSecrets: ServerProfile = { ...server, serverPassword: "secret-join" };
+    const key = importChoiceIdentity("srv-a", withSecrets);
+    expect(key).toBe("srv-a\u001fIsland\u001f7777\u001f27015\u001f27020");
+    expect(key).not.toContain("secret-admin");
+    expect(key).not.toContain("secret-join");
+  });
+
+  it("ignores a port clash between two other servers", () => {
+    const alpha: ServerProfile = {
+      ...server,
+      id: "srv-b",
+      name: "Alpha",
+      gamePort: 7790,
+      queryPort: 27016,
+      rconPort: 27021,
+    };
+    const beta: ServerProfile = {
+      ...server,
+      id: "srv-c",
+      name: "Beta",
+      gamePort: 7790,
+      queryPort: 27017,
+      rconPort: 27022,
+    };
+    const plan = planAdoptExternalIni(
+      server,
+      [server, alpha, beta],
+      reportFor(matchingGus.replace("SessionName=Island", "SessionName=Old Island")),
+    );
+    expect(plan.ok).toBe(true);
+    if (!plan.ok) return;
+    expect(plan.input.sessionName).toBe("Old Island");
+    expect(plan.input.gamePort).toBe(7777);
+  });
+
+  it("refuses a port that hides a control character instead of turning it into another port", () => {
+    const plan = planAdoptExternalIni(server, [server], reportFor(matchingGus.replace("Port=7777", "Port=27\u000020")));
+    expect(plan.ok).toBe(false);
+    if (plan.ok) return;
+    expect(plan.reason).toBe("Game port in GameUserSettings.ini isn't a real port.");
+    expect(plan.reason).not.toContain("27020");
+    expect(plan.reason).not.toContain("270");
   });
 
   it("does not copy RCON off into the profile", () => {

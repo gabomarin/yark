@@ -123,6 +123,19 @@ ConfigOverrideItemMaxQuantity=(hello world)
     );
   });
 
+  it("does not show a port with a control character as a different number", () => {
+    const report = buildIniImportCompatibilityReport(
+      profile,
+      payload(matchingGus.replace("Port=7777", "Port=27\u000020")),
+    );
+    const gamePort = report.replacements.find((field) => field.id === "gamePort");
+    expect(gamePort?.fileValue).toBe("27\u000020");
+    expect(gamePort).toBeDefined();
+    const line = formatIniImportReplacement(gamePort!);
+    expect(line).toBe("Game port in GameUserSettings.ini: not a plain number.\nGame port in YARK: 7777.");
+    expect(line).not.toContain("27020");
+  });
+
   it("says a blank session name is blank instead of printing an empty value", () => {
     const report = buildIniImportCompatibilityReport(
       profile,
