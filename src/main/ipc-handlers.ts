@@ -829,8 +829,9 @@ export function registerIpcHandlers(
   handleValidated(IPC.iniSaveSemantic, ipcArgSchemas[IPC.iniSaveSemantic], async (args) => {
     const serverId = args[0];
     const ops = args[1];
-    const engramEdits = args.length === 3 ? args[2] : [];
-    const result = await ini.saveServerIniSemantic(serverId, ops, engramEdits);
+    const engramEdits = args.length >= 3 ? args[2] : [];
+    const supplyCrateEdits = args.length === 4 ? args[3] : [];
+    const result = await ini.saveServerIniSemantic(serverId, ops, engramEdits, supplyCrateEdits);
     if (!result.pending) {
       void backups.createIniSaveBackup(serverId).catch(() => undefined);
     }

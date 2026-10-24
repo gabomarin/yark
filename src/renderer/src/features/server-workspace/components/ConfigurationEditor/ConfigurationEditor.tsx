@@ -6,22 +6,16 @@ import {
   reviewNamedEngramState,
   summarizeNamedEngrams,
   type NamedEngramDraft,
-  type NamedEngramEdit,
   type NamedEngramPendingAdd,
   type NamedEngramRow,
 } from "@shared/ini/engram-named-entries";
-import { appendIniTextValue, removeIniTextValue } from "@shared/ini/ini-text";
-import { withFileText } from "../../iniModel";
-import {
-  PLAYER_LEVEL_ENGRAM_POINTS_KEY,
-  sectionForNewPlayerLevelEngramPoints,
-} from "@shared/ini/player-level-engram-points";
+import { EMPTY_LINE_EDITS, visualLineEditsPending, type VisualLineEdits } from "@shared/ini/visual-line-edits";
 import type { ServerProfile } from "@shared/types";
 import { IniEditorNav } from "@ui/IniEditorNav/IniEditorNav";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { useUiDensity } from "@app/AppProviders";
-import { EngramEditor } from "./EngramEditor";
-import { EngramLevelPoints } from "./EngramLevelPoints";
+import { EngramEditorSection } from "./EngramEditorSection";
+import { LootEditor, type LootEditorStatus } from "./LootEditor";
 import { ConfigurationEditorFilterBar } from "./ConfigurationEditorFilterBar";
 import { ConfigurationEditorHeader } from "./ConfigurationEditorHeader";
 import { ConfigurationEditorOpenFileAction } from "./ConfigurationEditorOpenFileAction";
@@ -31,7 +25,7 @@ import { ConfigurationEditorStatusAlerts } from "./ConfigurationEditorStatusAler
 import { ConfigurationEditorTextPanel } from "./ConfigurationEditorTextPanel";
 import { useConfigurationEditor } from "./useConfigurationEditor";
 import { iniSaveScope, iniSectionPending, iniViewDirty, type IniSaveScope } from "./configurationEditorSaveScope";
-import { EngramPaneSwitch, GameIniViewSwitch } from "./IniScopeSwitch";
+import { GameIniViewSwitch } from "./IniScopeSwitch";
 import classes from "./ConfigurationEditor.module.css";
 
 type ConfigSection = "iniFiles";
@@ -60,23 +54,34 @@ export function ConfigurationEditor(props: Props): ReactElement {
   const openFileIconSize = density === "compact" ? "sm" : "md";
   const openFileGlyphSize = density === "compact" ? 14 : 16;
   const { onRegisterSave, onSaved, onDirtyChange } = props;
-  const engramEditsRef = useRef<readonly NamedEngramEdit[]>([]);
+  const engramEditsRef = useRef<VisualLineEdits>(EMPTY_LINE_EDITS);
   const engramBlockedRef = useRef(false);
   const saveScopeRef = useRef<IniSaveScope>("gameSettings");
   const baselineGameRef = useRef("");
   const [engramDrafts, setEngramDrafts] = useState<Record<string, NamedEngramDraft>>({});
   const [pendingAdds, setPendingAdds] = useState<NamedEngramPendingAdd[]>([]);
-  const [gameView, setGameView] = useState<"settings" | "engrams">("settings");
+  const [gameView, setGameView] = useState<"settings" | "engrams" | "loot">("settings");
   const [engramPane, setEngramPane] = useState<"overrides" | "points">("overrides");
   const [engramDraftInvalid, setEngramDraftInvalid] = useState(false);
   const [engramEditorKey, setEngramEditorKey] = useState(0);
-  const resetEngramDrafts = useCallback(() => {
-    engramEditsRef.current = [];
-    engramBlockedRef.current = false;
-    setEngramDraftInvalid(false);
-    setEngramEditorKey((key) => key + 1);
-    setEngramDrafts(draftsFrom(summarizeNamedEngrams(baselineGameRef.current).rows));
-    setPendingAdds([]);
+  const [lootEditorKey, setLootEditorKey] = useState(0);
+  const [lootEditCount, setLootEditCount] = useState(0);
+  const [lootBlocked, setLootBlocked] = useState(false);
+  const resetDrafts = useCallback((which?: "engrams" | "loot") => {
+    if (which !== "loot") {
+      engramEditsRef.current = { ...engramEditsRef.current, engrams: [] };
+      engramBlockedRef.current = false;
+      setEngramDraftInvalid(false);
+      setEngramEditorKey((key) => key + 1);
+      setEngramDrafts(draftsFrom(summarizeNamedEngrams(baselineGameRef.current).rows));
+      setPendingAdds([]);
+    }
+    if (which !== "engrams") {
+      engramEditsRef.current = { ...engramEditsRef.current, crates: [], lootBlocked: false };
+      setLootEditCount(0);
+      setLootBlocked(false);
+      setLootEditorKey((key) => key + 1);
+    }
   }, []);
   /** Save, then let the workspace refresh once it succeeded. Both save paths share this. */
   const runSave = useCallback(
@@ -96,13 +101,13 @@ export function ConfigurationEditor(props: Props): ReactElement {
   const editor = useConfigurationEditor({
     serverId: props.server.id,
     onDirtyChange: (settingsDirty) => {
-      onDirtyChange?.(settingsDirty || engramEditsRef.current.length > 0 || engramBlockedRef.current);
+      onDirtyChange?.(settingsDirty || visualLineEditsPending(engramEditsRef.current, engramBlockedRef.current));
     },
     onRegisterSave: registerSave,
     engramEditsRef,
     engramBlockedRef,
     saveScopeRef,
-    onEngramDraftsReset: resetEngramDrafts,
+    onEngramDraftsReset: resetDrafts,
   });
   const gameText = editor.baseline?.game ?? "";
   const saveScope = iniSaveScope(editor.iniFile, editor.iniMode, gameView, engramPane);
@@ -130,9 +135,9 @@ export function ConfigurationEditor(props: Props): ReactElement {
     pending: readonly NamedEngramPendingAdd[],
   ): void => {
     const review = reviewNamedEngramState(engramSummary.rows, drafts, pending, engramSummary.onlySpecified);
-    engramEditsRef.current = review.edits;
+    engramEditsRef.current = { ...engramEditsRef.current, engrams: review.edits };
     engramBlockedRef.current = review.blocked;
-    onDirtyChange?.(editor.dirty || review.edits.length > 0 || review.blocked);
+    onDirtyChange?.(editor.dirty || visualLineEditsPending(engramEditsRef.current, review.blocked));
   };
   const onEngramDraftChange = (row: NamedEngramRow, draft: NamedEngramDraft) => {
     const next = { ...engramDrafts, [namedEngramRowKey(row)]: draft };
@@ -152,25 +157,12 @@ export function ConfigurationEditor(props: Props): ReactElement {
     publishEngramReview(engramDrafts, next);
   };
   const gameDraft = editor.payload?.game ?? "";
-  const onPointsChange = (section: string, occurrence: number, value: string) => {
-    editor.updateValue("game", section, PLAYER_LEVEL_ENGRAM_POINTS_KEY, value, occurrence);
-  };
-  const onAddLevel = () => {
-    if (editor.payload === null) return;
-    const section = sectionForNewPlayerLevelEngramPoints(gameDraft);
-    editor.publishPayloadChange(
-      withFileText(editor.payload, "game", appendIniTextValue(gameDraft, section, PLAYER_LEVEL_ENGRAM_POINTS_KEY, "0")),
-    );
-  };
-  const onRemoveLevel = (section: string, occurrence: number) => {
-    if (editor.payload === null) return;
-    editor.publishPayloadChange(
-      withFileText(
-        editor.payload,
-        "game",
-        removeIniTextValue(gameDraft, section, PLAYER_LEVEL_ENGRAM_POINTS_KEY, occurrence),
-      ),
-    );
+  const onLootStatus = (status: LootEditorStatus): void => {
+    const blocked = status.blocked || status.invalid;
+    engramEditsRef.current = { ...engramEditsRef.current, crates: status.edits, lootBlocked: blocked };
+    setLootEditCount((current) => (current === status.edits.length ? current : status.edits.length));
+    setLootBlocked((current) => (current === blocked ? current : blocked));
+    onDirtyChange?.(editor.dirty || visualLineEditsPending(engramEditsRef.current, engramBlockedRef.current));
   };
 
   const saveAndNotify = () => runSave(editor.saveIni);
@@ -182,16 +174,20 @@ export function ConfigurationEditor(props: Props): ReactElement {
     editor.payload !== null &&
     editor.baseline !== null &&
     editor.payload.gameUserSettings !== editor.baseline.gameUserSettings;
+  const lootDirty = lootEditCount > 0 || lootBlocked;
 
   const iniNavigation = (
     <IniEditorNav
       file={editor.iniFile}
       onFileChange={editor.setIniFile}
-      pendingFiles={{ gameUserSettings: gusTextDirty, game: gameTextDirty || engramPending }}
+      pendingFiles={{ gameUserSettings: gusTextDirty, game: gameTextDirty || engramPending || lootDirty }}
       mode={editor.iniMode}
       onModeChange={(value) => {
-        if (value === "text" && (engramEditsRef.current.length > 0 || engramBlockedRef.current)) {
-          editor.setError("Save or discard engram changes before switching to the text editor.");
+        if (
+          value === "text" &&
+          (visualLineEditsPending(engramEditsRef.current, engramBlockedRef.current) || lootBlocked)
+        ) {
+          editor.setError("Save or discard engram and loot changes before switching to the text editor.");
           return;
         }
         editor.setIniMode(value === "text" ? "text" : "visual");
@@ -219,11 +215,13 @@ export function ConfigurationEditor(props: Props): ReactElement {
   const textMode = props.section === "iniFiles" && editor.iniMode === "text" && editor.payload !== null;
   const showGameView = visualMode && editor.iniFile === "game";
   const showEngrams = showGameView && gameView === "engrams";
+  const showLoot = showGameView && gameView === "loot";
   const gameViewNav = showGameView ? (
     <GameIniViewSwitch
       value={gameView}
       settingsUnsaved={sectionPending.gameSettings}
       engramsUnsaved={sectionPending.engramPoints || engramPending}
+      lootUnsaved={lootDirty}
       onChange={setGameView}
     />
   ) : null;
@@ -243,9 +241,15 @@ export function ConfigurationEditor(props: Props): ReactElement {
           gameViewNav={gameViewNav}
           showRestoreFile={visualMode}
           restoreFileDisabled={editor.payload === null}
-          dirty={iniViewDirty(saveScope, editor.baseline, editor.payload, engramReview.edits.length)}
-          discardDirty={editor.dirty || engramDirty}
-          invalid={saveScope === "engramOverrides" && (engramReview.blocked || engramDraftInvalid)}
+          dirty={
+            iniViewDirty(saveScope, editor.baseline, editor.payload, engramReview.edits.length, lootEditCount) ||
+            (saveScope === "loot" && lootBlocked)
+          }
+          discardDirty={editor.dirty || engramDirty || lootDirty}
+          invalid={
+            (saveScope === "engramOverrides" && (engramReview.blocked || engramDraftInvalid)) ||
+            (saveScope === "loot" && lootBlocked)
+          }
           busy={editor.busy}
           loading={editor.loading}
           onReloadFromDisk={editor.requestReloadFromDisk}
@@ -271,44 +275,40 @@ export function ConfigurationEditor(props: Props): ReactElement {
           pendingQueued={editor.pendingQueued}
         />
 
-        <Stack gap="md" className={classes.editor} style={{ display: showEngrams ? undefined : "none" }}>
-          <EngramPaneSwitch
-            value={engramPane}
-            overridesUnsaved={engramPending}
-            pointsUnsaved={sectionPending.engramPoints}
-            onChange={setEngramPane}
+        <EngramEditorSection
+          show={showEngrams}
+          gameText={gameText}
+          gameDraft={gameDraft}
+          payload={editor.payload}
+          engramPane={engramPane}
+          overridesUnsaved={engramPending}
+          pointsUnsaved={sectionPending.engramPoints}
+          editorKey={engramEditorKey}
+          drafts={engramDrafts}
+          pending={pendingAdds}
+          loading={editor.loading || editor.payload === null}
+          busy={editor.busy}
+          onPaneChange={setEngramPane}
+          onDraftChange={onEngramDraftChange}
+          onPendingChange={onPendingChange}
+          onAdd={onAddEngram}
+          onDraftInvalidChange={setEngramDraftInvalid}
+          updateValue={editor.updateValue}
+          publishPayloadChange={editor.publishPayloadChange}
+        />
+
+        <Stack gap="md" className={classes.editor} style={{ display: showLoot ? undefined : "none" }}>
+          <LootEditor
+            key={lootEditorKey}
+            gameText={gameText}
+            map={props.server.map}
+            loading={editor.loading || editor.payload === null}
+            busy={editor.busy}
+            onStatus={onLootStatus}
           />
-          <Stack
-            gap="md"
-            className={classes.editor}
-            style={{ display: engramPane === "overrides" ? undefined : "none" }}
-          >
-            <EngramEditor
-              key={engramEditorKey}
-              gameText={gameText}
-              drafts={engramDrafts}
-              pending={pendingAdds}
-              loading={editor.loading || editor.payload === null}
-              busy={editor.busy}
-              onDraftChange={onEngramDraftChange}
-              onPendingChange={onPendingChange}
-              onAdd={onAddEngram}
-              onDraftInvalidChange={setEngramDraftInvalid}
-            />
-          </Stack>
-          {engramPane === "points" ? (
-            <EngramLevelPoints
-              gameText={gameDraft}
-              loading={editor.loading || editor.payload === null}
-              busy={editor.busy}
-              onChange={onPointsChange}
-              onAddLevel={onAddLevel}
-              onRemove={onRemoveLevel}
-            />
-          ) : null}
         </Stack>
 
-        {visualMode && !showEngrams && (
+        {visualMode && !showEngrams && !showLoot && (
           <Stack gap="md" className={classes.editor}>
             <ConfigurationEditorFilterBar
               search={editor.search}

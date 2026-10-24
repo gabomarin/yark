@@ -1,4 +1,5 @@
 import type { NamedEngramEdit } from "./ini/engram-named-entries";
+import type { SupplyCrateEdit } from "./ini/supply-crate-entries";
 import type { IniSemanticOp } from "./ini/ini-semantic-ops";
 import type { OnboardingRecord } from "./settings/onboarding";
 import type {
@@ -620,11 +621,13 @@ export interface RendererApi {
   /**
    * Visual Set/Unset patch save — merges onto latest disk under lock (#667).
    * Optional named engram edits reprint or delete those Game.ini lines only (#684).
+   * Optional supply-crate edits do the same for loot lines (#686).
    */
   saveServerIniSemantic(
     serverId: string,
     ops: IniSemanticOp[],
     engramEdits?: readonly NamedEngramEdit[],
+    supplyCrateEdits?: readonly SupplyCrateEdit[],
   ): Promise<IpcResult<ServerIniSemanticSaveResult>>;
   getClusterIniTemplate(clusterId: string): Promise<IpcResult<ClusterIniTemplate | null>>;
   getClusterIniTemplateOrDraft(clusterId: string): Promise<IpcResult<ClusterIniTemplate>>;
