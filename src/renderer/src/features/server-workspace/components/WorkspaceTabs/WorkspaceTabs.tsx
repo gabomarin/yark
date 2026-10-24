@@ -8,6 +8,7 @@ import { ServerForm } from "@features/servers/components/ServerForm/ServerForm";
 import { MoveInstallDialog } from "@features/servers/components/MoveInstallDialog/MoveInstallDialog";
 import type { RconHistoryEntry, WorkspaceTab } from "../../serverWorkspaceTypes";
 import { ConfigurationEditor } from "../ConfigurationEditor/ConfigurationEditor";
+import { ImportCompatibilityReport } from "../ImportCompatibilityReport/ImportCompatibilityReport";
 import type { PlayerListState } from "../RconPanel/PlayerListSection";
 import { WorkspaceTabList } from "../WorkspaceTabList/WorkspaceTabList";
 import { WorkspacePanelErrorBoundary } from "@ui/WorkspacePanelErrorBoundary/WorkspacePanelErrorBoundary";
@@ -55,6 +56,8 @@ interface Props {
   stopLockReason: string;
   startBusy?: boolean;
   iniDirty: boolean;
+  /** Embedded Server form has unsaved edits. The INI choice waits until those are saved or canceled. */
+  profileDirty?: boolean;
   iniEditorVersion: number;
   logsFocus?: ServerLogsFocus | null;
   onChange: (tab: WorkspaceTab) => void;
@@ -113,7 +116,7 @@ export function WorkspaceTabs(props: Props): ReactElement {
                 <ServerForm
                   // Remount when install path changes (Move) without remounting on every
                   // mods/metadata refresh (updatedAt), which closed the Map select mid-pick.
-                  key={`${props.server.id}:${props.server.installDir}`}
+                  key={`${props.server.id}:${props.server.installDir}:${props.server.sessionName}:${props.server.gamePort}:${props.server.queryPort}:${props.server.rconPort}:${props.server.adminPassword}:${props.server.serverPassword ?? ""}`}
                   initial={props.server}
                   servers={props.servers}
                   variant="embedded"
@@ -130,6 +133,14 @@ export function WorkspaceTabs(props: Props): ReactElement {
                   }}
                   onOpenConfigurationAssistant={props.onOpenAssistant}
                   configurationAssistantDisabled={props.iniDirty}
+                  notice={
+                    <ImportCompatibilityReport
+                      server={props.server}
+                      servers={props.servers}
+                      profileDirty={props.profileDirty === true}
+                      onUpdated={props.onServerUpdated}
+                    />
+                  }
                 />
               )}
 

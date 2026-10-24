@@ -691,6 +691,12 @@ from another manager) but YARK has no profile:
 4. No SteamCMD sync and **no INI writes** on import — profile-owned GUS keys
    sync on **Start** (same as other profiles). Discovered mod Project IDs import
    **disabled**. Incomplete import does **not** auto-start SteamCMD.
+   Before Start, the Server tab shows identity fields that differ between
+   `GameUserSettings.ini` and YARK. The operator can use the file values, after
+   a check that the ports do not clash with another server, or keep the YARK
+   values. RCON stays on. Rates, stacks, spawners, and every other line stay.
+   The choice does not block Start. Password rows name the field and omit the
+   secret (#682).
 5. Workspace opens on the new profile **without** first-steps onboarding.
    Create/import/clone uniqueness checks are serialized so concurrent imports
    cannot share an `installDir` or ports. Backend rejects incomplete import

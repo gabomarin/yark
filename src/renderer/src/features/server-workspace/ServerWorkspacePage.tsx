@@ -47,6 +47,7 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
   const { publicIp, refreshPublicIp, joinCommandFor, copyJoinCommandFor, copySessionName } = useWorkspaceJoinInfo(
     selectedServer !== null && props.statuses.get(selectedServer.id)?.status === "running",
   );
+  const [profileDirty, setProfileDirty] = useState(false);
   const [hostedResourceAlertDismissed, setHostedResourceAlertDismissed] = useState(false);
   const panels = useWorkspacePanels();
   // `null` = this option never uses columns, so the workspace stays compact at any width.
@@ -260,7 +261,11 @@ export function ServerWorkspacePage(props: ServerWorkspacePageProps): ReactEleme
           }}
           onIniDirtyChange={setIniDirty}
           onRegisterProfileLeaveGuard={registerProfileLeaveGuard}
-          onProfileDirtyChange={onProfileDirtyChange}
+          onProfileDirtyChange={(dirty) => {
+            setProfileDirty(dirty);
+            onProfileDirtyChange(dirty);
+          }}
+          profileDirty={profileDirty}
           onRegisterProfileSave={registerProfileSave}
           onRegisterIniSave={registerIniSave}
           onLogsFocusConsumed={props.onLogsFocusConsumed}
