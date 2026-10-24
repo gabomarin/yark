@@ -75,7 +75,7 @@ export interface NamedEngramDraft {
   removed: boolean;
 }
 
-export interface NamedEngramReplace {
+interface NamedEngramReplace {
   kind: "replace";
   section: string;
   occurrence: number;
@@ -87,7 +87,7 @@ export interface NamedEngramReplace {
   removePrereq: boolean | null;
 }
 
-export interface NamedEngramDelete {
+interface NamedEngramDelete {
   kind: "delete";
   section: string;
   occurrence: number;
@@ -95,7 +95,7 @@ export interface NamedEngramDelete {
   className: string;
 }
 
-export interface NamedEngramAppend {
+interface NamedEngramAppend {
   kind: "append";
   className: string;
   /** `null` omits the field so the game keeps its own value. */
@@ -169,7 +169,7 @@ export function namedEngramRowKey(row: Pick<NamedEngramRow, "section" | "occurre
   return `${row.section}\u001f${row.occurrence}`;
 }
 
-export function reviewNamedEngramDrafts(
+function reviewNamedEngramDrafts(
   rows: readonly NamedEngramRow[],
   drafts: Readonly<Record<string, NamedEngramDraft>>,
   onlySpecified = false,
