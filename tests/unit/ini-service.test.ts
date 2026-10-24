@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ServerIniPayload, ServerProfile } from "@shared/types";
+import { NamedEngramEditError, summarizeNamedEngrams } from "@shared/ini/engram-named-entries";
 import { IniStaleDocumentError } from "@shared/ini/ini-fingerprints";
 import { INI_SEMANTIC_CONFLICT_CODE, IniSemanticPatchError } from "@shared/ini/ini-semantic-ops";
 import { IniService } from "@backend/domains/config/ini-service";
@@ -507,6 +508,79 @@ describe("IniService semantic save (#667)", () => {
     expect(readFileSync(gameUserSettingsPath(installDir), "utf8")).toContain("XPMultiplier=1");
     expect(pending?.get(profile.id)?.payload.gameUserSettings).toContain("XPMultiplier=4");
     db?.close();
+  });
+
+  it("reprints one named engram line and leaves the next line as written (#684)", async () => {
+    const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
+    tmpDirs.push(installDir);
+    prepareIniFiles(installDir);
+    const hatchet = 'OverrideNamedEngramEntries=(EngramClassName="EngramEntry_StoneHatchet_C",EngramHidden=False)';
+    writeFileSync(
+      gameIniPath(installDir),
+      `[/Script/ShooterGame.ShooterGameMode]\nOverrideNamedEngramEntries=(EngramClassName="EngramEntry_Campfire_C",EngramHidden=False)\n${hatchet}\n`,
+      "utf8",
+    );
+
+    const { service, profile } = makeService(installDir);
+    const loaded = await service.readServerIni(profile.id);
+    const row = summarizeNamedEngrams(loaded.payload.game).rows[0];
+    expect(row).toBeDefined();
+    if (row === undefined) return;
+
+    const result = await service.saveServerIniSemantic(profile.id, [], [
+      {
+        kind: "replace",
+        section: row.section,
+        occurrence: row.occurrence,
+        expectedRaw: row.expectedRaw,
+        className: row.className,
+        hidden: true,
+        points: null,
+        level: null,
+        removePrereq: null,
+      },
+    ]);
+
+    expect(result.payload.game).toContain('(EngramClassName="EngramEntry_Campfire_C",EngramHidden=true)');
+    expect(result.payload.game).toContain(hatchet);
+    const written = readFileSync(gameIniPath(installDir), "utf8");
+    expect(written).toContain(hatchet);
+    expect(written).toContain("EngramHidden=true");
+  });
+
+  it("refuses a named engram save when that line changed on disk (#684)", async () => {
+    const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
+    tmpDirs.push(installDir);
+    prepareIniFiles(installDir);
+    const original = `[/Script/ShooterGame.ShooterGameMode]\nOverrideNamedEngramEntries=(EngramClassName="EngramEntry_Campfire_C",EngramHidden=False)\n`;
+    writeFileSync(gameIniPath(installDir), original, "utf8");
+
+    const { service, profile } = makeService(installDir);
+    const loaded = await service.readServerIni(profile.id);
+    const row = summarizeNamedEngrams(loaded.payload.game).rows[0];
+    expect(row).toBeDefined();
+    if (row === undefined) return;
+
+    const changed = `[/Script/ShooterGame.ShooterGameMode]\nOverrideNamedEngramEntries=(EngramClassName="EngramEntry_Campfire_C",EngramHidden=True)\n`;
+    writeFileSync(gameIniPath(installDir), changed, "utf8");
+
+    await expect(
+      service.saveServerIniSemantic(profile.id, [], [
+        {
+          kind: "replace",
+          section: row.section,
+          occurrence: row.occurrence,
+          expectedRaw: row.expectedRaw,
+          className: row.className,
+          hidden: false,
+          points: "1",
+          level: null,
+          removePrereq: null,
+        },
+      ]),
+    ).rejects.toBeInstanceOf(NamedEngramEditError);
+
+    expect(readFileSync(gameIniPath(installDir), "utf8")).toBe(changed);
   });
 });
 

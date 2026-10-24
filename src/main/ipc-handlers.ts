@@ -826,8 +826,11 @@ export function registerIpcHandlers(
     return result;
   });
 
-  handleValidated(IPC.iniSaveSemantic, ipcArgSchemas[IPC.iniSaveSemantic], async ([serverId, ops]) => {
-    const result = await ini.saveServerIniSemantic(serverId, ops);
+  handleValidated(IPC.iniSaveSemantic, ipcArgSchemas[IPC.iniSaveSemantic], async (args) => {
+    const serverId = args[0];
+    const ops = args[1];
+    const engramEdits = args.length === 3 ? args[2] : [];
+    const result = await ini.saveServerIniSemantic(serverId, ops, engramEdits);
     if (!result.pending) {
       void backups.createIniSaveBackup(serverId).catch(() => undefined);
     }

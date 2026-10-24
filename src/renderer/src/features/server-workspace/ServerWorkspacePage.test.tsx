@@ -919,8 +919,12 @@ describe("ServerWorkspacePage", () => {
     renderWorkspace();
 
     await user.click(screen.getByRole("tab", { name: "INI Files" }));
+    expect(screen.queryByRole("radiogroup", { name: "Game.ini view" })).not.toBeInTheDocument();
     const fileSwitch = screen.getByRole("radiogroup", { name: "INI file" });
     await user.click(within(fileSwitch).getByRole("radio", { name: "Game.ini" }));
+    const gameView = screen.getByRole("radiogroup", { name: "Game.ini view" });
+    expect(within(gameView).getByRole("radio", { name: "Settings" })).toBeChecked();
+    expect(within(gameView).getByRole("radio", { name: "Engrams" })).toBeVisible();
     await waitFor(() => {
       expect(screen.getAllByText("Totally Unknown Setting XYZ").length).toBeGreaterThan(0);
     });

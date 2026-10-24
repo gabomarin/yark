@@ -19,6 +19,8 @@ interface Props {
   modeOptions: ModeOption[];
   modeAriaLabel?: string;
   disabled?: boolean;
+  /** Files that still have unsaved lines. The open file does not show the dot. */
+  pendingFiles?: Partial<Record<IniFileKey, boolean>>;
 }
 
 function modeSegmentIcon(value: string): ReactNode {
@@ -42,7 +44,12 @@ function toModeSegmentData(options: ModeOption[]) {
 export function IniEditorNav(props: Props): ReactElement {
   return (
     <div className={chrome.nav} data-ini-editor-nav>
-      <IniFileSegmented value={props.file} onChange={props.onFileChange} disabled={props.disabled} />
+      <IniFileSegmented
+        value={props.file}
+        onChange={props.onFileChange}
+        disabled={props.disabled}
+        pending={props.pendingFiles}
+      />
       <SegmentedControl
         size="xs"
         aria-label={props.modeAriaLabel ?? "INI edit mode"}

@@ -1,6 +1,7 @@
 import type { IniFileKey, ServerIniPayload } from "@shared/types";
 import { resolveAsaUiCategory, type AsaUiCategoryId } from "@shared/asa/asa-setting-ui-categories";
 import { isVisuallyEditableIniSetting } from "@shared/ini/ini-setting-decisions";
+import { isPlayerLevelEngramPointsKey } from "@shared/ini/player-level-engram-points";
 import {
   parseIniRows,
   removeIniValue,
@@ -207,6 +208,7 @@ export function countUnsavedIniRowsForFile(
   let file = 0;
   for (const row of rows) {
     const ref: IniSettingReference = { ...row, fileKey };
+    if (isPlayerLevelEngramPointsKey(row.key)) continue;
     if (!isIniRowUnsaved(ref, matchIndex)) continue;
     file += 1;
     const category = resolveAsaUiCategory(fileKey, row.section, row.key);

@@ -327,6 +327,49 @@ export const iniSemanticOpsSchema = z
     }
   });
 
+const NAMED_ENGRAM_CLASS_RE = /^[^"\\\r\n,()=;#]+$/;
+const NAMED_ENGRAM_INTEGER_RE = /^(?:0|[1-9]\d{0,6})$/;
+
+/** Named engram line edits sent with `ini:save-semantic` (PINI-012 / #684). */
+export const namedEngramEditsSchema = z
+  .array(
+    z.discriminatedUnion("kind", [
+      z
+        .object({
+          kind: z.literal("replace"),
+          section: z.string().min(1).max(MAX_STRING_PARAM_LENGTH),
+          occurrence: z.number().int().min(0).max(10_000),
+          expectedRaw: z.string().min(2).max(MAX_INI_SEMANTIC_VALUE_CHARS),
+          className: z.string().min(1).max(300).regex(NAMED_ENGRAM_CLASS_RE),
+          hidden: z.boolean().nullable(),
+          points: z.string().regex(NAMED_ENGRAM_INTEGER_RE).nullable(),
+          level: z.string().regex(NAMED_ENGRAM_INTEGER_RE).nullable(),
+          removePrereq: z.boolean().nullable(),
+        })
+        .strict(),
+      z
+        .object({
+          kind: z.literal("delete"),
+          section: z.string().min(1).max(MAX_STRING_PARAM_LENGTH),
+          occurrence: z.number().int().min(0).max(10_000),
+          expectedRaw: z.string().min(2).max(MAX_INI_SEMANTIC_VALUE_CHARS),
+          className: z.string().min(1).max(300).regex(NAMED_ENGRAM_CLASS_RE),
+        })
+        .strict(),
+      z
+        .object({
+          kind: z.literal("append"),
+          className: z.string().min(1).max(300).regex(NAMED_ENGRAM_CLASS_RE),
+          hidden: z.boolean().nullable(),
+          points: z.string().regex(NAMED_ENGRAM_INTEGER_RE).nullable(),
+          level: z.string().regex(NAMED_ENGRAM_INTEGER_RE).nullable(),
+          removePrereq: z.boolean().nullable(),
+        })
+        .strict(),
+    ]),
+  )
+  .max(500);
+
 export const clusterIniFileSelectionSchema = z
   .object({
     gameUserSettings: z.boolean(),

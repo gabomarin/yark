@@ -143,7 +143,13 @@ Each complex entry keeps the raw text, its source range, file, section, key, and
 
 Supported shape: a comma-separated struct (`Name=Value`) or a positional list, including nested tuples, quoted strings (`\"`, `\\`, `\n`, `\r`, `\t`), numbers, booleans, and bare tokens. Mixed named and positional fields are `ambiguous` and have no semantic value. A balanced shape outside that grammar is `unknown`. Unclosed parentheses, unclosed quotes, and unrecognized escapes are `invalid`.
 
-No visual editor for these lines ships with this parser.
+Game.ini Visual has an Engrams view on its own row under the file toolbar, beside Settings, for `OverrideNamedEngramEntries` (PINI-012 / #684). That view edits `EngramClassName`, `EngramHidden`, `EngramPointsCost`, `EngramLevelRequirement`, and `RemoveEngramPreReq`. Save reprints only the named lines that changed. `OverrideEngramEntries`, broken lines, and named lines with any other field stay as loaded and are counted. Other complex lines still have no visual editor.
+
+Official ASA class names, display names, and the game's default level and point cost are in `src/shared/asa/asa-engram-catalog.json`. The blank row at the end of the Engrams list adds one `OverrideNamedEngramEntries` line at the end of ShooterGameMode, creating the section when it is missing. Choosing a catalog match writes that class. Entering a class name writes a custom engram. The class box on a saved line searches the same list. The line is saved only after a point cost, a level, Hidden, or Remove prerequisite is set. A new line does not add `EngramHidden` unless Hidden is turned on. Clearing a saved line back to an empty cost, an empty level, and Hidden off is refused the same way. A class alone is not written. Empty points and level stay off the new line. A class that is not in the catalog stays as the class name from the file.
+
+**Points per level** is the other control inside Engrams. It edits `OverridePlayerLevelEngramPoints`: one integer per line, and the first line is level 1. Any line can be removed, and the later levels move up. Those lines are hidden from the Settings table so they are not edited twice. Save still uses the visual Set/Unset path and rewrites only the lines that changed.
+
+Save follows the open view. An error on an override blocks Save only while Overrides is open. Settings writes the other Game.ini keys, Points per level writes `OverridePlayerLevelEngramPoints`, and GameUserSettings.ini writes that file. A dot on another view means that view still has unsaved lines.
 
 ## Diagnostics
 

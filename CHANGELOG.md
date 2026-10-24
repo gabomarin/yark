@@ -11,7 +11,12 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Game.ini Visual adds **Engrams** on its own row under the file toolbar. Named overrides can be searched and edited. A blank row adds an official or custom engram after a cost, level, Hidden, or prerequisite is set. A new line does not add Hidden on its own. Points per level are edited there instead of Settings, and any level can be removed. Save rewrites only those lines (#684).
 - When GameUserSettings.ini differs from the server form, the Server tab labels each changed field and shows its file and YARK values, with passwords hidden. Operators can copy the file values into YARK or keep the YARK values; copying checks for port clashes (#682).
+
+### Fixed
+
+- The engram hint that a class alone does not change the game uses the lighter danger red, so it stays readable on Breeze dark. Clearing a saved line back to an empty cost and Hidden off is refused the same way. Save stays off while that error is showing on Overrides. Settings, Points per level, and GameUserSettings.ini still save their own lines. A dot on another view shows that it still has unsaved lines. The class box on a saved engram searches the official list (#684).
 
 ## [0.25.0] - 2026-10-23
 
