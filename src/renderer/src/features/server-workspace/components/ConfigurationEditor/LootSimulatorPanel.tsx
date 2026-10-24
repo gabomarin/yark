@@ -1,10 +1,20 @@
 import { useState, type ReactElement } from "react";
-import { Button, Group, NumberInput, Stack, Table, Text } from "@mantine/core";
-import { simulateSupplyCrate, type SupplyCrateSimulation } from "@shared/ini/supply-crate-simulator";
+import { Button, Group, NumberInput, SimpleGrid, Stack, Table, Text } from "@mantine/core";
+import { Shuffle } from "@phosphor-icons/react";
+import { lookupAsaItem } from "@shared/asa/asa-item-catalog";
+import { lookupSupplyCrate } from "@shared/asa/asa-supply-crate-catalog";
+import {
+  openSupplyCrate,
+  simulateSupplyCrate,
+  type SupplyCrateOpening,
+  type SupplyCrateSimulation,
+} from "@shared/ini/supply-crate-simulator";
 import type { SupplyCrateBody } from "@shared/ini/supply-crate-entries";
+import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 
 interface Props {
   body: SupplyCrateBody | null;
+  selectionKey: string | null;
 }
 
 function formatQuantity(value: number): string {
@@ -12,73 +22,182 @@ function formatQuantity(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(2);
 }
 
+function itemLabel(className: string): string {
+  return lookupAsaItem(className)?.label ?? className;
+}
+
+function randomSeed(): number {
+  const bytes = new Uint32Array(1);
+  crypto.getRandomValues(bytes);
+  return bytes[0] ?? 1;
+}
+
+function readNumber(value: number | string, fallback: number): number {
+  const numeric = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(numeric) ? numeric : fallback;
+}
+
+function blueprintLabel(quantity: number, blueprints: number): string | null {
+  if (blueprints <= 0) return null;
+  if (blueprints >= quantity) return "Blueprint";
+  return blueprints === 1 ? "1 blueprint" : `${blueprints} blueprints`;
+}
+
 /** Rolls the selected override. It does not write the file. */
 export function LootSimulatorPanel(props: Props): ReactElement {
   const [rolls, setRolls] = useState<number | string>(100);
   const [seed, setSeed] = useState<number | string>(1);
+  const [opening, setOpening] = useState<SupplyCrateOpening | null>(null);
   const [result, setResult] = useState<SupplyCrateSimulation | null>(null);
+  const [seenKey, setSeenKey] = useState(props.selectionKey);
+  if (seenKey !== props.selectionKey) {
+    setSeenKey(props.selectionKey);
+    setOpening(null);
+    setResult(null);
+  }
+
+  const open = (): void => {
+    if (props.body === null) return;
+    setOpening(openSupplyCrate(props.body, readNumber(seed, 1)));
+  };
 
   const roll = (): void => {
     if (props.body === null) return;
-    const rollCount = typeof rolls === "number" ? rolls : Number(rolls);
-    const rollSeed = typeof seed === "number" ? seed : Number(seed);
     setResult(
       simulateSupplyCrate(props.body, {
-        rolls: Number.isFinite(rollCount) ? rollCount : 1,
-        seed: Number.isFinite(rollSeed) ? rollSeed : 1,
+        rolls: readNumber(rolls, 1),
+        seed: readNumber(seed, 1),
       }),
     );
   };
 
+  if (props.body === null) {
+    return (
+      <Text size="sm" c="dimmed">
+        Select a crate. One open shows that drop. Many opens shows how often each item appears.
+      </Text>
+    );
+  }
+
+  const label = lookupSupplyCrate(props.body.className)?.label ?? props.body.className;
+
   return (
     <Stack gap="sm">
-      <Text size="sm" c="dimmed">
-        One roll is one opened crate. Chance is the weight divided by the sum of the weights. This does not change the
-        file.
-      </Text>
-      <Group align="flex-end">
-        <NumberInput label="Rolls" size="xs" min={1} max={500} value={rolls} onChange={setRolls} w={100} />
-        <NumberInput label="Seed" size="xs" value={seed} onChange={setSeed} w={120} />
-        <Button size="xs" disabled={props.body === null} onClick={roll}>
-          Roll crate
-        </Button>
+      <Group justify="space-between" align="flex-end" wrap="wrap">
+        <Stack gap={2}>
+          <Text fw={600}>{label}</Text>
+          <Text size="xs" c="dimmed">
+            {props.body.className}
+          </Text>
+        </Stack>
+        <Group align="flex-end">
+          <NumberInput label="Seed" size="xs" min={0} max={4294967295} value={seed} onChange={setSeed} w={140} />
+          <Button size="xs" variant="default" leftSection={<Shuffle size={14} />} onClick={() => setSeed(randomSeed())}>
+            Random seed
+          </Button>
+        </Group>
       </Group>
-      {props.body === null ? (
-        <Text size="sm" c="dimmed">
-          Select a crate to roll it.
-        </Text>
-      ) : null}
-      {result?.incomplete === true ? (
-        <Text size="sm">This roll does not include the game's own items for this crate.</Text>
-      ) : null}
-      {result?.shortfall === true ? <Text size="sm">A roll stopped early because no set or item was left.</Text> : null}
-      {result !== null && result.classes.length === 0 ? (
-        <Text size="sm" c="dimmed">
-          This roll produced no items.
-        </Text>
-      ) : null}
-      {result !== null && result.classes.length > 0 ? (
-        <Table>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Item</Table.Th>
-              <Table.Th>Times</Table.Th>
-              <Table.Th>Mean quantity</Table.Th>
-              <Table.Th>Blueprints</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {result.classes.map((row) => (
-              <Table.Tr key={row.className}>
-                <Table.Td>{row.className}</Table.Td>
-                <Table.Td>{row.appearances}</Table.Td>
-                <Table.Td>{formatQuantity(row.meanQuantity)}</Table.Td>
-                <Table.Td>{row.blueprintCount}</Table.Td>
-              </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
-      ) : null}
+      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
+        <AppSurfaceCard tone="flat" padding="sm">
+          <Stack gap="xs">
+            <Text size="sm" fw={600}>
+              One open
+            </Text>
+            <Text size="xs" c="dimmed">
+              The items from one opened crate with this seed.
+            </Text>
+            <Button size="xs" w="fit-content" onClick={open}>
+              Open crate
+            </Button>
+            {opening?.shortfall === true ? (
+              <Text size="sm">This open stopped early because no set or item was left.</Text>
+            ) : null}
+            {opening === null ? (
+              <Text size="sm" c="dimmed">
+                Open this crate to see the drop.
+              </Text>
+            ) : null}
+            {opening !== null && opening.items.length === 0 ? (
+              <Text size="sm" c="dimmed">
+                This open produced no items.
+              </Text>
+            ) : null}
+            {opening?.items.map((item, index) => {
+              const blueprint = blueprintLabel(item.quantity, item.blueprints);
+              return (
+                <Stack key={`${index}-${item.className}`} gap={0}>
+                  <Group justify="space-between" wrap="nowrap" gap="xs">
+                    <Text size="sm" truncate>
+                      {itemLabel(item.className)}
+                    </Text>
+                    <Text size="sm">× {formatQuantity(item.quantity)}</Text>
+                  </Group>
+                  <Text size="xs" c="dimmed" truncate>
+                    {blueprint === null ? item.className : `${item.className} · ${blueprint}`}
+                  </Text>
+                </Stack>
+              );
+            })}
+          </Stack>
+        </AppSurfaceCard>
+        <AppSurfaceCard tone="flat" padding="sm">
+          <Stack gap="xs">
+            <Text size="sm" fw={600}>
+              Many opens
+            </Text>
+            <Text size="xs" c="dimmed">
+              Qty per drop is the average amount each time that item appears.
+            </Text>
+            <Group align="flex-end">
+              <NumberInput label="Rolls" size="xs" min={1} max={500} value={rolls} onChange={setRolls} w={100} />
+              <Button size="xs" variant="default" onClick={roll}>
+                Roll crate
+              </Button>
+            </Group>
+            {result?.shortfall === true ? (
+              <Text size="sm">A roll stopped early because no set or item was left.</Text>
+            ) : null}
+            {result === null ? (
+              <Text size="sm" c="dimmed">
+                Roll this crate to see how often each item appears.
+              </Text>
+            ) : null}
+            {result !== null && result.classes.length === 0 ? (
+              <Text size="sm" c="dimmed">
+                This roll produced no items.
+              </Text>
+            ) : null}
+            {result !== null && result.classes.length > 0 ? (
+              <Table.ScrollContainer minWidth={360}>
+                <Table>
+                  <Table.Thead>
+                    <Table.Tr>
+                      <Table.Th>Item</Table.Th>
+                      <Table.Th>Times</Table.Th>
+                      <Table.Th>Qty per drop</Table.Th>
+                      <Table.Th>Blueprints</Table.Th>
+                    </Table.Tr>
+                  </Table.Thead>
+                  <Table.Tbody>
+                    {result.classes.map((row) => (
+                      <Table.Tr key={row.className}>
+                        <Table.Td>
+                          <Text size="sm" truncate title={row.className}>
+                            {itemLabel(row.className)}
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>{row.appearances}</Table.Td>
+                        <Table.Td>{formatQuantity(row.meanQuantity)}</Table.Td>
+                        <Table.Td>{row.blueprintCount}</Table.Td>
+                      </Table.Tr>
+                    ))}
+                  </Table.Tbody>
+                </Table>
+              </Table.ScrollContainer>
+            ) : null}
+          </Stack>
+        </AppSurfaceCard>
+      </SimpleGrid>
     </Stack>
   );
 }

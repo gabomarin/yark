@@ -26,6 +26,28 @@ interface Grant {
   blueprints: number;
 }
 
+export interface SupplyCrateOpeningItem {
+  className: string;
+  quantity: number;
+  blueprints: number;
+}
+
+export interface SupplyCrateOpening {
+  incomplete: boolean;
+  shortfall: boolean;
+  items: SupplyCrateOpeningItem[];
+}
+
+/** The first open for this seed. The same seed opens the same crate. */
+export function openSupplyCrate(body: SupplyCrateBody, seed: number): SupplyCrateOpening {
+  const once = rollOnce(body, mulberry32(seed));
+  return {
+    incomplete: body.append === true,
+    shortfall: once.shortfall,
+    items: once.grants.filter((item) => item.quantity > 0),
+  };
+}
+
 export function simulateSupplyCrate(
   body: SupplyCrateBody,
   options: { seed: number; rolls: number },

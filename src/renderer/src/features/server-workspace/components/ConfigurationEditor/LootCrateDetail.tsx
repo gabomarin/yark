@@ -1,17 +1,29 @@
 import type { ReactElement } from "react";
-import { Button, Group, Stack, Switch, Text, TextInput } from "@mantine/core";
+import { Button, Group, Stack, Switch, Text } from "@mantine/core";
+import { Trash } from "@phosphor-icons/react";
 import { openDangerConfirmModal, dangerConfirmBody } from "@ui/DangerConfirmModal/openDangerConfirmModal";
+import {
+  lookupSupplyCrate,
+  supplyCrateFit,
+  supplyCrateFitHint,
+  supplyCrateRemovable,
+} from "@shared/asa/asa-supply-crate-catalog";
 import {
   blankSupplyCrateEntry,
   supplyCrateBodyIssue,
+  supplyCrateCountIssue,
+  supplyCrateMissingItemIssue,
   type SupplyCrateBody,
-  type SupplyCrateItemEntry,
   type SupplyCrateItemSet,
 } from "@shared/ini/supply-crate-entries";
 import classes from "./ConfigurationEditor.module.css";
+import { LootCountRange } from "./LootCountRange";
+import { LootFitBadge } from "./LootFitBadge";
+import { LootSetCard } from "./LootSetCard";
 
 interface Props {
   body: SupplyCrateBody;
+  map: string;
   disabled?: boolean;
   onChange: (body: SupplyCrateBody) => void;
   onDelete: () => void;
@@ -21,22 +33,50 @@ function updateSet(body: SupplyCrateBody, index: number, set: SupplyCrateItemSet
   return { ...body, sets: body.sets.map((item, itemIndex) => (itemIndex === index ? set : item)) };
 }
 
-function updateEntry(set: SupplyCrateItemSet, index: number, entry: SupplyCrateItemEntry): SupplyCrateItemSet {
-  return { ...set, entries: set.entries.map((item, itemIndex) => (itemIndex === index ? entry : item)) };
+function blankSet(): SupplyCrateItemSet {
+  return {
+    name: "",
+    minItems: "1",
+    maxItems: "1",
+    numItemsPower: null,
+    weight: "1",
+    itemsWithoutReplacement: true,
+    entries: [],
+  };
 }
 
 export function LootCrateDetail(props: Props): ReactElement {
   const issue = supplyCrateBodyIssue(props.body);
+  const setsError = supplyCrateCountIssue(props.body.minSets, props.body.maxSets, "Set count") ?? undefined;
+  const banner =
+    issue !== null && issue !== "Enter a quantity." && issue !== supplyCrateMissingItemIssue([]) ? issue : null;
+  const label = lookupSupplyCrate(props.body.className)?.label ?? props.body.className;
+  const fit = supplyCrateFit(props.body.className, props.map);
+  const hint = supplyCrateFitHint(props.body.className, props.map);
   const change = (body: SupplyCrateBody): void => props.onChange(body);
 
   return (
     <Stack gap="sm">
-      <Group justify="space-between">
-        <Text fw={600}>{props.body.className}</Text>
+      <Group justify="space-between" align="flex-start" wrap="nowrap">
+        <Stack gap={2}>
+          <Group gap="xs">
+            <Text fw={600}>{label}</Text>
+            <LootFitBadge fit={fit} hint={hint} />
+          </Group>
+          <Text size="xs" c="dimmed">
+            {props.body.className}
+          </Text>
+          {supplyCrateRemovable(fit) ? (
+            <Text size="xs" c="var(--app-color-attention)">
+              {hint}
+            </Text>
+          ) : null}
+        </Stack>
         <Button
           size="xs"
           color="red"
           variant="subtle"
+          leftSection={<Trash size={14} />}
           disabled={props.disabled}
           onClick={() =>
             openDangerConfirmModal({
@@ -50,27 +90,20 @@ export function LootCrateDetail(props: Props): ReactElement {
           Remove override
         </Button>
       </Group>
-      {issue !== null ? (
+      {banner !== null ? (
         <Text size="xs" className={classes.engramFieldHint}>
-          {issue}
+          {banner}
         </Text>
       ) : null}
-      <Group grow>
-        <TextInput
-          label="Minimum sets"
-          size="xs"
-          value={props.body.minSets}
-          disabled={props.disabled}
-          onChange={(event) => change({ ...props.body, minSets: event.currentTarget.value })}
-        />
-        <TextInput
-          label="Maximum sets"
-          size="xs"
-          value={props.body.maxSets}
-          disabled={props.disabled}
-          onChange={(event) => change({ ...props.body, maxSets: event.currentTarget.value })}
-        />
-      </Group>
+      <LootCountRange
+        label="Sets"
+        min={props.body.minSets}
+        max={props.body.maxSets}
+        error={setsError}
+        disabled={props.disabled}
+        onMin={(value) => change({ ...props.body, minSets: value })}
+        onMax={(value) => change({ ...props.body, maxSets: value })}
+      />
       <Switch
         label="Do not repeat a set"
         checked={props.body.setsWithoutReplacement === true}
@@ -79,245 +112,34 @@ export function LootCrateDetail(props: Props): ReactElement {
       />
       <Switch
         label="Add these sets to the game's crate"
-        description="The simulator then rolls only this override."
+        description="Turn this on to keep the crate's own loot. A roll then leaves out the game's items."
         checked={props.body.append === true}
         disabled={props.disabled}
         onChange={(event) => change({ ...props.body, append: event.currentTarget.checked })}
       />
+      <Text size="xs" c="dimmed">
+        A weight is a share of the other weights in that list. It is not a percent.
+      </Text>
       {props.body.sets.map((set, setIndex) => (
-        <Stack key={setIndex} gap="xs">
-          <Text size="sm" fw={600}>
-            Set {setIndex + 1}
-          </Text>
-          <Group grow>
-            <TextInput
-              label="Name"
-              size="xs"
-              value={set.name}
-              disabled={props.disabled}
-              onChange={(event) => change(updateSet(props.body, setIndex, { ...set, name: event.currentTarget.value }))}
-            />
-            <TextInput
-              label="Weight"
-              size="xs"
-              value={set.weight}
-              disabled={props.disabled}
-              onChange={(event) =>
-                change(updateSet(props.body, setIndex, { ...set, weight: event.currentTarget.value }))
-              }
-            />
-            <TextInput
-              label="Minimum items"
-              size="xs"
-              value={set.minItems}
-              disabled={props.disabled}
-              onChange={(event) =>
-                change(updateSet(props.body, setIndex, { ...set, minItems: event.currentTarget.value }))
-              }
-            />
-            <TextInput
-              label="Maximum items"
-              size="xs"
-              value={set.maxItems}
-              disabled={props.disabled}
-              onChange={(event) =>
-                change(updateSet(props.body, setIndex, { ...set, maxItems: event.currentTarget.value }))
-              }
-            />
-          </Group>
-          <Switch
-            label="Do not repeat an item in this set"
-            checked={set.itemsWithoutReplacement === true}
-            disabled={props.disabled}
-            onChange={(event) =>
-              change(updateSet(props.body, setIndex, { ...set, itemsWithoutReplacement: event.currentTarget.checked }))
-            }
-          />
-          {set.entries.map((entry, entryIndex) => (
-            <Stack key={entryIndex} gap={4}>
-              <Group justify="space-between">
-                <Text size="xs" c="dimmed">
-                  Entry {entryIndex + 1}
-                </Text>
-                <Button
-                  size="compact-xs"
-                  variant="subtle"
-                  color="red"
-                  disabled={props.disabled}
-                  onClick={() =>
-                    change(
-                      updateSet(props.body, setIndex, {
-                        ...set,
-                        entries: set.entries.filter((_, index) => index !== entryIndex),
-                      }),
-                    )
-                  }
-                >
-                  Remove entry
-                </Button>
-              </Group>
-              <Group grow>
-                <TextInput
-                  label="Item classes"
-                  description="Separate classes with commas."
-                  size="xs"
-                  value={entry.classes.join(", ")}
-                  disabled={props.disabled}
-                  onChange={(event) => {
-                    const raw = event.currentTarget.value;
-                    const classes = raw.split(",").map((part) => part.trim());
-                    if (!/,\s*$/.test(raw) && classes[classes.length - 1] === "") classes.pop();
-                    const classWeights = classes.map((_, index) => entry.classWeights[index] ?? "1");
-                    change(
-                      updateSet(
-                        props.body,
-                        setIndex,
-                        updateEntry(set, entryIndex, { ...entry, classes, classWeights }),
-                      ),
-                    );
-                  }}
-                />
-                <TextInput
-                  label="Weight"
-                  size="xs"
-                  value={entry.weight}
-                  disabled={props.disabled}
-                  onChange={(event) =>
-                    change(
-                      updateSet(
-                        props.body,
-                        setIndex,
-                        updateEntry(set, entryIndex, { ...entry, weight: event.currentTarget.value }),
-                      ),
-                    )
-                  }
-                />
-                <TextInput
-                  label="Minimum quantity"
-                  size="xs"
-                  value={entry.minQuantity}
-                  disabled={props.disabled}
-                  onChange={(event) =>
-                    change(
-                      updateSet(
-                        props.body,
-                        setIndex,
-                        updateEntry(set, entryIndex, { ...entry, minQuantity: event.currentTarget.value }),
-                      ),
-                    )
-                  }
-                />
-                <TextInput
-                  label="Maximum quantity"
-                  size="xs"
-                  value={entry.maxQuantity}
-                  disabled={props.disabled}
-                  onChange={(event) =>
-                    change(
-                      updateSet(
-                        props.body,
-                        setIndex,
-                        updateEntry(set, entryIndex, { ...entry, maxQuantity: event.currentTarget.value }),
-                      ),
-                    )
-                  }
-                />
-              </Group>
-              <Group grow>
-                <TextInput
-                  label="Minimum quality"
-                  size="xs"
-                  value={entry.minQuality}
-                  disabled={props.disabled}
-                  onChange={(event) =>
-                    change(
-                      updateSet(
-                        props.body,
-                        setIndex,
-                        updateEntry(set, entryIndex, { ...entry, minQuality: event.currentTarget.value }),
-                      ),
-                    )
-                  }
-                />
-                <TextInput
-                  label="Maximum quality"
-                  size="xs"
-                  value={entry.maxQuality}
-                  disabled={props.disabled}
-                  onChange={(event) =>
-                    change(
-                      updateSet(
-                        props.body,
-                        setIndex,
-                        updateEntry(set, entryIndex, { ...entry, maxQuality: event.currentTarget.value }),
-                      ),
-                    )
-                  }
-                />
-                <TextInput
-                  label="Blueprint chance"
-                  description="0 to 1"
-                  size="xs"
-                  value={entry.blueprintChance}
-                  disabled={props.disabled}
-                  onChange={(event) =>
-                    change(
-                      updateSet(
-                        props.body,
-                        setIndex,
-                        updateEntry(set, entryIndex, { ...entry, blueprintChance: event.currentTarget.value }),
-                      ),
-                    )
-                  }
-                />
-              </Group>
-              <Switch
-                label="Always a blueprint"
-                checked={entry.forceBlueprint === true}
-                disabled={props.disabled}
-                onChange={(event) =>
-                  change(
-                    updateSet(
-                      props.body,
-                      setIndex,
-                      updateEntry(set, entryIndex, { ...entry, forceBlueprint: event.currentTarget.checked }),
-                    ),
-                  )
-                }
-              />
-            </Stack>
-          ))}
-          <Button
-            size="compact-xs"
-            variant="light"
-            disabled={props.disabled}
-            onClick={() =>
-              change(updateSet(props.body, setIndex, { ...set, entries: [...set.entries, blankSupplyCrateEntry()] }))
-            }
-          >
-            Add entry
-          </Button>
-        </Stack>
+        <LootSetCard
+          key={setIndex}
+          index={setIndex}
+          set={set}
+          map={props.map}
+          disabled={props.disabled}
+          onChange={(next) => change(updateSet(props.body, setIndex, next))}
+          onRemove={() => change({ ...props.body, sets: props.body.sets.filter((_, index) => index !== setIndex) })}
+        />
       ))}
       <Button
         size="compact-xs"
         variant="light"
+        w="fit-content"
         disabled={props.disabled}
         onClick={() =>
           change({
             ...props.body,
-            sets: [
-              ...props.body.sets,
-              {
-                name: "",
-                minItems: "1",
-                maxItems: "1",
-                numItemsPower: null,
-                weight: "1",
-                itemsWithoutReplacement: true,
-                entries: [blankSupplyCrateEntry()],
-              },
-            ],
+            sets: [...props.body.sets, { ...blankSet(), entries: [blankSupplyCrateEntry()] }],
           })
         }
       >

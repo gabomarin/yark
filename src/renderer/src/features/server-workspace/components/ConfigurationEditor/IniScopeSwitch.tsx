@@ -95,6 +95,7 @@ export function LootPaneSwitch(props: LootPaneProps): ReactElement {
       size="xs"
       aria-label="Loot editor"
       value={props.value}
+      w="fit-content"
       className={compactLabeledSegmentedRootClass}
       data={[
         { value: "crates", label: "Crates" },

@@ -389,8 +389,8 @@ const supplyCrateNumberSchema = z.string().regex(SUPPLY_CRATE_NUMBER_RE);
 const supplyCrateEntrySchema = z
   .object({
     weight: supplyCrateNumberSchema,
-    classes: z.array(z.string().min(1).max(300).regex(NAMED_ENGRAM_CLASS_RE)).max(16),
-    classWeights: z.array(supplyCrateNumberSchema).max(16),
+    classes: z.array(z.string().min(1).max(300).regex(NAMED_ENGRAM_CLASS_RE)),
+    classWeights: z.array(supplyCrateNumberSchema),
     minQuantity: supplyCrateNumberSchema,
     maxQuantity: supplyCrateNumberSchema,
     minQuality: supplyCrateNumberSchema,
@@ -407,7 +407,7 @@ const supplyCrateSetSchema = z
     numItemsPower: supplyCrateNumberSchema.nullable(),
     weight: supplyCrateNumberSchema,
     itemsWithoutReplacement: z.boolean().nullable(),
-    entries: z.array(supplyCrateEntrySchema).max(40),
+    entries: z.array(supplyCrateEntrySchema),
   })
   .strict();
 const supplyCrateBodySchema = z
@@ -418,11 +418,14 @@ const supplyCrateBodySchema = z
     numItemSetsPower: supplyCrateNumberSchema.nullable(),
     setsWithoutReplacement: z.boolean().nullable(),
     append: z.boolean().nullable(),
-    sets: z.array(supplyCrateSetSchema).max(20),
+    sets: z.array(supplyCrateSetSchema),
   })
   .strict();
 
-/** Supply-crate line edits sent with `ini:save-semantic` (PINI-013 / #686). */
+/**
+ * Supply-crate line edits sent with `ini:save-semantic` (PINI-013 / #686).
+ * Set, item, and class counts follow the file. ARK does not cap them here.
+ */
 export const supplyCrateEditsSchema = z
   .array(
     z.discriminatedUnion("kind", [

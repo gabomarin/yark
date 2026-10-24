@@ -65,6 +65,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
   const [engramDraftInvalid, setEngramDraftInvalid] = useState(false);
   const [engramEditorKey, setEngramEditorKey] = useState(0);
   const [lootEditorKey, setLootEditorKey] = useState(0);
+  const openCrateRef = useRef<{ key: string; className: string } | null>(null);
   const [lootEditCount, setLootEditCount] = useState(0);
   const [lootBlocked, setLootBlocked] = useState(false);
   const resetDrafts = useCallback((which?: "engrams" | "loot") => {
@@ -302,6 +303,10 @@ export function ConfigurationEditor(props: Props): ReactElement {
             key={lootEditorKey}
             gameText={gameText}
             map={props.server.map}
+            initialCrate={openCrateRef.current}
+            onOpenCrateChange={(crate) => {
+              openCrateRef.current = crate;
+            }}
             loading={editor.loading || editor.payload === null}
             busy={editor.busy}
             onStatus={onLootStatus}

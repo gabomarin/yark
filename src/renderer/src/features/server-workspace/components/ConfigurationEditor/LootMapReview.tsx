@@ -28,8 +28,8 @@ export function LootMapReview(props: Props): ReactElement {
     <AppAlert color="attention" title={`${props.mapLabel} uses a different set of crates`}>
       <Stack gap="xs">
         <Text size="sm">
-          {unused} unused, {unknown} unknown. Keep all leaves every override. Only checked crates are removed, and the
-          crate in the game stays.
+          {unused} not used on {props.mapLabel}, {unknown} not in the crate list. Keep all leaves every override. Only
+          checked crates are removed, and the crate in the game stays.
         </Text>
         {removable.map((row) => (
           <Checkbox

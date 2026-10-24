@@ -12,6 +12,7 @@ import { appendIniTextValue, parseIniTextRows } from "./ini-text";
 
 export const SUPPLY_CRATE_STALE_CODE = "SUPPLY_CRATE_STALE";
 const SUPPLY_CRATE_CLASS_ONLY = "Add an item with a weight and a quantity. A class alone can empty the crate.";
+const SUPPLY_CRATE_NEEDS_ITEM = "Add an item to this entry.";
 
 const SUPPLY_KEY = "configoverridesupplycrateitems";
 const SHOOTER_GAME_MODE = "shootergame.shootergamemode";
@@ -66,6 +67,12 @@ export interface SupplyCrateItemEntry {
   /** `null` when the file omitted the field. */
   forceBlueprint: boolean | null;
   blueprintChance: string;
+  /**
+   * Loaded from a saved line. Clearing that side stays an error until another
+   * number is entered. Omitted from the INI.
+   */
+  keepMinQuantity?: boolean;
+  keepMaxQuantity?: boolean;
 }
 
 export interface SupplyCrateItemSet {
@@ -154,7 +161,14 @@ export function supplyCrateRowKey(row: Pick<SupplyCrateRow, "section" | "occurre
 }
 
 export function draftFromSupplyCrate(row: SupplyCrateRow): SupplyCrateDraft {
-  return { ...cloneBody(row), removed: false };
+  const body = cloneBody(row);
+  for (const set of body.sets) {
+    for (const entry of set.entries) {
+      entry.keepMinQuantity = entry.minQuantity.trim().length > 0;
+      entry.keepMaxQuantity = entry.maxQuantity.trim().length > 0;
+    }
+  }
+  return { ...body, removed: false };
 }
 
 export function draftForNewCrate(className: string): SupplyCrateDraft {
@@ -199,8 +213,6 @@ export function supplyCrateBodyIssue(body: SupplyCrateBody): string | null {
     const setIssue = itemSetIssue(set);
     if (setIssue !== null) return setIssue;
     for (const entry of set.entries) {
-      const completeness = entryCompleteness(entry);
-      if (completeness === "blank") continue;
       const issue = itemEntryIssue(entry);
       if (issue !== null) return issue;
       ready += 1;
@@ -507,19 +519,17 @@ function printableBody(body: SupplyCrateBody): SupplyCrateBody {
       .map((set) => ({
         ...set,
         name: set.name.trim(),
-        entries: set.entries
-          .filter((entry) => entryCompleteness(entry) !== "blank")
-          .map((entry) => ({
-            ...entry,
-            classes: classPairs(entry).map((pair) => pair.className),
-            classWeights: classPairs(entry).map((pair) => pair.weight),
-            weight: entry.weight.trim(),
-            minQuantity: entry.minQuantity.trim(),
-            maxQuantity: entry.maxQuantity.trim(),
-            minQuality: entry.minQuality.trim(),
-            maxQuality: entry.maxQuality.trim(),
-            blueprintChance: entry.blueprintChance.trim(),
-          })),
+        entries: set.entries.map((entry) => ({
+          weight: entry.weight.trim(),
+          classes: classPairs(entry).map((pair) => pair.className),
+          classWeights: classPairs(entry).map((pair) => pair.weight),
+          minQuantity: entry.minQuantity.trim(),
+          maxQuantity: entry.maxQuantity.trim(),
+          minQuality: entry.minQuality.trim(),
+          maxQuality: entry.maxQuality.trim(),
+          forceBlueprint: entry.forceBlueprint,
+          blueprintChance: entry.blueprintChance.trim(),
+        })),
       }))
       .filter((set) => set.entries.length > 0),
   };
@@ -557,40 +567,51 @@ function canonical(body: SupplyCrateBody): string {
 }
 
 function itemSetIssue(set: SupplyCrateItemSet): string | null {
-  const counts = wholePair(set.minItems, set.maxItems, "Item count");
+  const counts = supplyCrateCountIssue(set.minItems, set.maxItems, "Item count");
   if (counts !== null) return counts;
   const power = optionalNumber(set.numItemsPower, "Item quality power");
   if (power !== null) return power;
-  return optionalPositive(set.weight, "Set weight");
+  return supplyCrateWeightIssue(set.weight, "Set weight", false);
 }
 
 function itemEntryIssue(entry: SupplyCrateItemEntry): string | null {
   const pairs = classPairs(entry);
-  if (pairs.length === 0) return "Enter an item class.";
+  if (pairs.length === 0) return SUPPLY_CRATE_NEEDS_ITEM;
   if (pairs.some((pair) => !isSafeEngramClassName(pair.className))) return UNSAFE_ENGRAM_CLASS_MESSAGE;
-  const weight = optionalPositive(entry.weight, "Item weight");
-  if (entry.weight.trim().length === 0 || weight !== null) return weight ?? "Enter an item weight greater than 0.";
+  const weight = supplyCrateWeightIssue(entry.weight, "Item weight", true);
+  if (weight !== null) return weight;
   for (const pair of pairs) {
-    const classIssue = optionalPositive(pair.weight, "Class weight");
-    if (pair.weight.length === 0 || classIssue !== null) return classIssue ?? "Enter a class weight greater than 0.";
+    const classIssue = supplyCrateWeightIssue(pair.weight, "Class weight", true);
+    if (classIssue !== null) return classIssue;
   }
   const quantity = quantityIssue(entry.minQuantity, entry.maxQuantity);
   if (quantity !== null) return quantity;
-  const quality = quantityPair(entry.minQuality, entry.maxQuality, "Quality", true);
+  const savedQuantity = supplyCrateSavedQuantityIssue(entry);
+  if (savedQuantity.min !== null || savedQuantity.max !== null) return savedQuantity.min ?? savedQuantity.max;
+  const quality = supplyCrateQualityIssue(entry.minQuality, entry.maxQuality);
   if (quality !== null) return quality;
-  return chanceIssue(entry.blueprintChance);
+  return supplyCrateChanceIssue(entry.blueprintChance);
+}
+
+/** True when this entry would block save, including one with no item. */
+export function supplyCrateEntryHasIssue(entry: SupplyCrateItemEntry): boolean {
+  return itemEntryIssue(entry) !== null;
+}
+
+/** Shown on an entry that has no item class. */
+export function supplyCrateMissingItemIssue(classes: readonly string[]): string | null {
+  return classes.some((className) => className.trim().length > 0) ? null : SUPPLY_CRATE_NEEDS_ITEM;
+}
+
+/** The set's own fields. An entry error stays on that entry. */
+export function supplyCrateSetHasIssue(set: SupplyCrateItemSet): boolean {
+  return itemSetIssue(set) !== null;
 }
 
 function classPairs(entry: SupplyCrateItemEntry): { className: string; weight: string }[] {
   return entry.classes
     .map((className, index) => ({ className: className.trim(), weight: (entry.classWeights[index] ?? "").trim() }))
     .filter((pair) => pair.className.length > 0);
-}
-
-function entryCompleteness(entry: SupplyCrateItemEntry): "blank" | "filled" {
-  const classFilled = entry.classes.some((className) => className.trim().length > 0);
-  const quantityFilled = entry.minQuantity.trim().length > 0 || entry.maxQuantity.trim().length > 0;
-  return classFilled || quantityFilled ? "filled" : "blank";
 }
 
 function wholePair(min: string, max: string, label: string): string | null {
@@ -604,6 +625,55 @@ function wholePair(min: string, max: string, label: string): string | null {
 function quantityIssue(min: string, max: string): string | null {
   if (min.trim().length === 0 && max.trim().length === 0) return "Enter a quantity.";
   return quantityPair(min, max, "Quantity", false);
+}
+
+/** Same quantity message the save check uses, so the form can mark those fields. */
+export function supplyCrateQuantityIssue(min: string, max: string): string | null {
+  return quantityIssue(min, max);
+}
+
+/** A saved side that the operator cleared. The field may be empty; save stays blocked. */
+export function supplyCrateSavedQuantityIssue(entry: SupplyCrateItemEntry): { min: string | null; max: string | null } {
+  const message = "Enter a quantity.";
+  return {
+    min: entry.keepMinQuantity === true && entry.minQuantity.trim().length === 0 ? message : null,
+    max: entry.keepMaxQuantity === true && entry.maxQuantity.trim().length === 0 ? message : null,
+  };
+}
+
+/** Same weight message the save check uses. Required weights reject an empty box. */
+export function supplyCrateWeightIssue(value: string, label: string, required: boolean): string | null {
+  const issue = optionalPositive(value, label);
+  if (!required) return issue;
+  if (value.trim().length === 0 || issue !== null) {
+    return issue ?? `Enter ${label === "Class weight" ? "a class weight" : "an item weight"} greater than 0.`;
+  }
+  return null;
+}
+
+/** Whole-number min and max, matching the save check for set and item counts. */
+export function supplyCrateCountIssue(min: string, max: string, label: string): string | null {
+  return wholePair(min, max, label);
+}
+
+/** Quality range. An empty pair is allowed. */
+export function supplyCrateQualityIssue(min: string, max: string): string | null {
+  return quantityPair(min, max, "Quality", true);
+}
+
+/** Blueprint chance from 0 to 1. An empty box is allowed. */
+export function supplyCrateChanceIssue(value: string): string | null {
+  return chanceIssue(value);
+}
+
+/** The set asks for one of each entry and will not repeat one, so every entry is included. */
+export function supplyCrateSetIncludesEveryEntry(set: SupplyCrateItemSet): boolean {
+  if (set.itemsWithoutReplacement !== true || set.entries.length < 2) return false;
+  const count = Number(set.minItems);
+  if (!Number.isFinite(count) || count !== Number(set.maxItems) || count !== set.entries.length) return false;
+  return set.entries.every(
+    (entry) => Number(entry.weight) > 0 && entry.classes.some((className) => className.trim().length > 0),
+  );
 }
 
 function quantityPair(min: string, max: string, label: string, allowEmpty: boolean): string | null {

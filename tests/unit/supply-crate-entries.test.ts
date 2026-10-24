@@ -2,15 +2,25 @@ import { describe, expect, it } from "vitest";
 import { supplyCrateFit } from "@shared/asa/asa-supply-crate-catalog";
 import {
   applySupplyCrateEdits,
+  blankSupplyCrateEntry,
   draftForNewCrate,
   draftFromSupplyCrate,
   reviewSupplyCrateState,
   summarizeSupplyCrates,
+  supplyCrateChanceIssue,
+  supplyCrateCountIssue,
+  supplyCrateEntryHasIssue,
+  supplyCrateMissingItemIssue,
+  supplyCrateQualityIssue,
   supplyCrateRowKey,
+  supplyCrateSavedQuantityIssue,
+  supplyCrateSetHasIssue,
+  supplyCrateSetIncludesEveryEntry,
+  supplyCrateWeightIssue,
   type SupplyCrateBody,
   type SupplyCrateDraft,
 } from "@shared/ini/supply-crate-entries";
-import { simulateSupplyCrate } from "@shared/ini/supply-crate-simulator";
+import { simulateSupplyCrate, openSupplyCrate } from "@shared/ini/supply-crate-simulator";
 
 const SECTION = "[/Script/ShooterGame.ShooterGameMode]";
 const WHITE =
@@ -122,7 +132,7 @@ describe("reviewSupplyCrateState", () => {
     const text = game([WHITE, CAVE]);
     const { rows, drafts } = draftsFor(text);
     expect(reviewSupplyCrateState(rows, drafts, []).edits).toEqual([]);
-    expect(rows.map((row) => supplyCrateFit(row.className, "ScorchedEarth_WP"))).toEqual(["shared", "unused"]);
+    expect(rows.map((row) => supplyCrateFit(row.className, "ScorchedEarth_WP"))).toEqual(["unused", "unused"]);
 
     const cave = rows[1];
     expect(cave).toBeDefined();
@@ -175,5 +185,119 @@ describe("simulateSupplyCrate", () => {
       { className: "PrimalItemResource_Metal_C", appearances: 10, meanQuantity: 2, blueprintCount: 0 },
     ]);
     expect(simulateSupplyCrate({ ...body, append: true }, { seed: 7, rolls: 1 }).incomplete).toBe(true);
+    expect(openSupplyCrate(body, 7).items).toEqual([
+      { className: "PrimalItemResource_Metal_C", quantity: 2, blueprints: 0 },
+    ]);
+    expect(openSupplyCrate(body, 7)).toEqual(openSupplyCrate(body, 7));
+  });
+});
+
+describe("supplyCrateSetIncludesEveryEntry", () => {
+  const entry = (className: string, weight = "1"): SupplyCrateBody["sets"][number]["entries"][number] => ({
+    weight,
+    classes: className.length === 0 ? [] : [className],
+    classWeights: ["1"],
+    minQuantity: "1",
+    maxQuantity: "1",
+    minQuality: "",
+    maxQuality: "",
+    forceBlueprint: null,
+    blueprintChance: "0",
+  });
+
+  it("is true when the set asks for one of each entry", () => {
+    expect(
+      supplyCrateSetIncludesEveryEntry({
+        name: "",
+        minItems: "2",
+        maxItems: "2.0",
+        numItemsPower: null,
+        weight: "0.1",
+        itemsWithoutReplacement: true,
+        entries: [entry("PrimalItem_WeaponGun_C"), entry("PrimalItemAmmo_SimpleBullet_C")],
+      }),
+    ).toBe(true);
+  });
+
+  it("is false when an entry can be skipped or repeated", () => {
+    const set = {
+      name: "",
+      minItems: "2",
+      maxItems: "2",
+      numItemsPower: null,
+      weight: "1",
+      itemsWithoutReplacement: true,
+      entries: [entry("PrimalItemArmor_ClothHelmet_C"), entry("")],
+    };
+    expect(supplyCrateSetIncludesEveryEntry(set)).toBe(false);
+    expect(
+      supplyCrateSetIncludesEveryEntry({
+        ...set,
+        itemsWithoutReplacement: false,
+        entries: [entry("A_C"), entry("B_C")],
+      }),
+    ).toBe(false);
+    expect(supplyCrateSetIncludesEveryEntry({ ...set, minItems: "1", entries: [entry("A_C"), entry("B_C")] })).toBe(
+      false,
+    );
+  });
+});
+
+describe("supply crate field issues", () => {
+  it("uses the save messages for an empty quantity, a zero weight, and a chance above 1", () => {
+    expect(supplyCrateWeightIssue("", "Item weight", true)).toBe("Enter an item weight greater than 0.");
+    expect(supplyCrateWeightIssue("0", "Set weight", false)).toBe("Set weight must be greater than 0.");
+    expect(supplyCrateWeightIssue("", "Set weight", false)).toBeNull();
+    expect(supplyCrateCountIssue("3", "1", "Item count")).toBe("Item count minimum cannot be higher than the maximum.");
+    expect(supplyCrateQualityIssue("5", "1")).toBe("Quality minimum cannot be higher than the maximum.");
+    expect(supplyCrateChanceIssue("2")).toBe("Blueprint chance must be from 0 to 1.");
+    expect(supplyCrateChanceIssue("")).toBeNull();
+  });
+
+  it("blocks save when a saved quantity is cleared, and leaves that mark off the written line", () => {
+    const { rows, drafts } = draftsFor(game([WHITE]));
+    const row = rows[0];
+    expect(row).toBeDefined();
+    if (row === undefined) return;
+    const draft = drafts[supplyCrateRowKey(row)];
+    const entry = draft?.sets[0]?.entries[0];
+    expect(entry?.keepMinQuantity).toBe(true);
+    expect(entry?.keepMaxQuantity).toBe(true);
+    if (entry === undefined || draft === undefined) return;
+    entry.maxQuantity = "";
+    expect(supplyCrateSavedQuantityIssue(entry).max).toBe("Enter a quantity.");
+    expect(reviewSupplyCrateState(rows, drafts, []).blocked).toBe(true);
+    entry.maxQuantity = "9";
+    const review = reviewSupplyCrateState(rows, drafts, []);
+    expect(review.blocked).toBe(false);
+    const edit = review.edits[0];
+    expect(edit?.kind).toBe("replace");
+    if (edit?.kind !== "replace") return;
+    expect(edit.body.sets[0]?.entries[0]).not.toHaveProperty("keepMaxQuantity");
+  });
+
+  it("marks only the entry when a saved quantity is cleared, and the set when its own weight is wrong", () => {
+    const { rows, drafts } = draftsFor(game([WHITE]));
+    const row = rows[0];
+    expect(row).toBeDefined();
+    if (row === undefined) return;
+    const set = drafts[supplyCrateRowKey(row)]?.sets[0];
+    const entry = set?.entries[0];
+    expect(entry).toBeDefined();
+    if (entry === undefined || set === undefined) return;
+    expect(supplyCrateEntryHasIssue(entry)).toBe(false);
+    expect(supplyCrateSetHasIssue(set)).toBe(false);
+    entry.maxQuantity = "";
+    expect(supplyCrateEntryHasIssue(entry)).toBe(true);
+    expect(supplyCrateSetHasIssue(set)).toBe(false);
+    set.weight = "0";
+    expect(supplyCrateSetHasIssue(set)).toBe(true);
+    set.weight = "1";
+    entry.maxQuantity = "2";
+    expect(reviewSupplyCrateState(rows, drafts, []).blocked).toBe(false);
+    expect(supplyCrateMissingItemIssue(blankSupplyCrateEntry().classes)).toBe("Add an item to this entry.");
+    expect(supplyCrateEntryHasIssue(blankSupplyCrateEntry())).toBe(true);
+    set.entries = [...set.entries, blankSupplyCrateEntry()];
+    expect(reviewSupplyCrateState(rows, drafts, []).blocked).toBe(true);
   });
 });

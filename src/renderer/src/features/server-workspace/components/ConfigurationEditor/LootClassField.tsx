@@ -1,5 +1,5 @@
 import { useMemo, type ReactElement } from "react";
-import { Combobox, Text, TextInput, useCombobox } from "@mantine/core";
+import { Box, Button, Combobox, Group, Text, TextInput, useCombobox } from "@mantine/core";
 import {
   lookupSupplyCrate,
   supplyCrateCatalog,
@@ -19,6 +19,7 @@ interface Props {
   onChange: (value: string) => void;
   onConfirm: (className: string) => void;
   onReject: (reason: string) => void;
+  actionLabel?: string;
 }
 
 function matchingCrates(query: string): SupplyCrateCatalogEntry[] {
@@ -59,49 +60,58 @@ export function LootClassField(props: Props): ReactElement {
   };
 
   return (
-    <Combobox
-      store={combobox}
-      withinPortal
-      position="bottom-start"
-      width="target"
-      onOptionSubmit={(value) => confirm(value)}
-    >
-      <Combobox.Target>
-        <TextInput
-          aria-label={props.ariaLabel}
-          placeholder={props.placeholder ?? "Crate name or class"}
-          size="xs"
-          value={props.value}
-          disabled={props.disabled}
-          error={props.error !== undefined && props.error.length > 0 ? props.error : undefined}
-          onFocus={() => combobox.openDropdown()}
-          onChange={(event) => {
-            props.onChange(event.currentTarget.value);
-            combobox.openDropdown();
-          }}
-          onKeyDown={(event) => {
-            if (event.key !== "Enter" || combobox.getSelectedOptionIndex() >= 0) return;
-            event.preventDefault();
-            confirm(props.value);
-          }}
-        />
-      </Combobox.Target>
-      <Combobox.Dropdown>
-        <Combobox.Options style={{ maxHeight: 240, overflowY: "auto" }}>
-          {options.map((entry) => (
-            <Combobox.Option key={entry.className} value={entry.className}>
-              <Text size="sm">{entry.label}</Text>
-              <Text size="xs" c="dimmed">
-                {entry.className}
-              </Text>
-            </Combobox.Option>
-          ))}
-          {trimmed.length === 0 ? <Combobox.Empty>Type a crate name or class.</Combobox.Empty> : null}
-          {trimmed.length > 0 && options.length === 0 ? (
-            <Combobox.Empty>No listed crate matches. Enter accepts a class name.</Combobox.Empty>
-          ) : null}
-        </Combobox.Options>
-      </Combobox.Dropdown>
-    </Combobox>
+    <Group gap="xs" align="flex-start" wrap="nowrap">
+      <Box flex={1}>
+        <Combobox
+          store={combobox}
+          withinPortal
+          position="bottom-start"
+          width="target"
+          onOptionSubmit={(value) => confirm(value)}
+        >
+          <Combobox.Target>
+            <TextInput
+              aria-label={props.ariaLabel}
+              placeholder={props.placeholder ?? "Crate name or class"}
+              size="xs"
+              value={props.value}
+              disabled={props.disabled}
+              error={props.error !== undefined && props.error.length > 0 ? props.error : undefined}
+              onFocus={() => combobox.openDropdown()}
+              onChange={(event) => {
+                props.onChange(event.currentTarget.value);
+                combobox.openDropdown();
+              }}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter" || combobox.getSelectedOptionIndex() >= 0) return;
+                event.preventDefault();
+                confirm(props.value);
+              }}
+            />
+          </Combobox.Target>
+          <Combobox.Dropdown>
+            <Combobox.Options style={{ maxHeight: 240, overflowY: "auto" }}>
+              {options.map((entry) => (
+                <Combobox.Option key={entry.className} value={entry.className}>
+                  <Text size="sm">{entry.label}</Text>
+                  <Text size="xs" c="dimmed">
+                    {entry.className}
+                  </Text>
+                </Combobox.Option>
+              ))}
+              {trimmed.length === 0 ? <Combobox.Empty>Type a crate name or class.</Combobox.Empty> : null}
+              {trimmed.length > 0 && options.length === 0 ? (
+                <Combobox.Empty>No listed crate matches. Enter accepts a class name.</Combobox.Empty>
+              ) : null}
+            </Combobox.Options>
+          </Combobox.Dropdown>
+        </Combobox>
+      </Box>
+      {props.actionLabel !== undefined ? (
+        <Button size="xs" disabled={props.disabled || trimmed.length === 0} onClick={() => confirm(props.value)}>
+          {props.actionLabel}
+        </Button>
+      ) : null}
+    </Group>
   );
 }
