@@ -123,6 +123,16 @@ ConfigOverrideItemMaxQuantity=(hello world)
     );
   });
 
+  it("does not treat a trailing tab as part of a valid port", () => {
+    const report = buildIniImportCompatibilityReport(profile, payload(matchingGus.replace("Port=7777", "Port=7777\t")));
+    const gamePort = report.replacements.find((field) => field.id === "gamePort");
+    expect(gamePort?.fileValue).toBe("7777\t");
+    expect(gamePort).toBeDefined();
+    expect(formatIniImportReplacement(gamePort!)).toBe(
+      "Game port in GameUserSettings.ini: not a plain number.\nGame port in YARK: 7777.",
+    );
+  });
+
   it("does not show a port with a control character as a different number", () => {
     const report = buildIniImportCompatibilityReport(
       profile,

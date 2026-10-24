@@ -3,8 +3,7 @@
  * from GameUserSettings.ini into the YARK profile (#682).
  */
 
-import { findPortConflicts } from "../server/port-conflicts";
-import { PORT_MAX, PORT_MIN, type PortConflict, type ServerProfile, type ServerProfileInput } from "../types";
+import { PORT_MAX, PORT_MIN, type ServerProfile, type ServerProfileInput } from "../types";
 import type {
   IniImportCompatibilityReport,
   IniImportFieldId,
@@ -36,11 +35,11 @@ function replacement(report: IniImportCompatibilityReport, id: IniImportFieldId)
 }
 
 function parsePort(raw: string | null, label: string, problems: string[]): number | null {
-  if (raw === null || !/^\d+$/.test(raw.trim())) {
+  if (raw === null || !/^\d+$/.test(raw)) {
     problems.push(`${label} in GameUserSettings.ini isn't a real port.`);
     return null;
   }
-  const port = Number(raw.trim());
+  const port = Number(raw);
   if (port < PORT_MIN || port > PORT_MAX) {
     problems.push(`${label} in GameUserSettings.ini has to be between ${PORT_MIN} and ${PORT_MAX}.`);
     return null;
@@ -48,42 +47,27 @@ function parsePort(raw: string | null, label: string, problems: string[]): numbe
   return port;
 }
 
-function takenPortKind(
-  port: number,
+/** Compare this server's ports with each other profile by id. Names are not unique. */
+function portClashReason(
+  serverId: string,
   candidate: { gamePort: number; queryPort: number; rconPort: number },
-): PortConflict["kind"] {
-  if (port === candidate.gamePort) return "game";
-  if (port === candidate.queryPort) return "query";
-  return "rcon";
-}
-
-function conflictsForCandidate(
-  serverName: string,
-  conflicts: PortConflict[],
-  candidate: { gamePort: number; queryPort: number; rconPort: number },
-): PortConflict[] {
-  return conflicts.filter((conflict) => {
-    const involvesServer = conflict.serverA === serverName || conflict.serverB === serverName;
-    const portIsCandidate =
-      conflict.port === candidate.gamePort ||
-      conflict.port === candidate.queryPort ||
-      conflict.port === candidate.rconPort;
-    return involvesServer && portIsCandidate;
-  });
-}
-
-function conflictReason(
-  serverName: string,
-  conflicts: PortConflict[],
-  candidate: { gamePort: number; queryPort: number; rconPort: number },
+  fleet: ReadonlyArray<FleetServer>,
 ): string {
-  return conflictsForCandidate(serverName, conflicts, candidate)
-    .map((conflict) => {
-      const other = conflict.serverA === serverName ? conflict.serverB : conflict.serverA;
-      const kind = takenPortKind(conflict.port, candidate);
-      return `Port ${conflict.port} is already used by ${other}, so YARK can't take that ${kind} port.`;
-    })
-    .join(" ");
+  const mine = [
+    { port: candidate.gamePort, kind: "game" },
+    { port: candidate.queryPort, kind: "query" },
+    { port: candidate.rconPort, kind: "rcon" },
+  ] as const;
+  const lines: string[] = [];
+  for (const other of fleet) {
+    if (other.id === serverId) continue;
+    const used = new Set([other.gamePort, other.queryPort, other.rconPort]);
+    for (const left of mine) {
+      if (!used.has(left.port)) continue;
+      lines.push(`Port ${left.port} is already used by ${other.name}, so YARK can't take that ${left.kind} port.`);
+    }
+  }
+  return lines.join(" ");
 }
 
 /**
@@ -167,14 +151,7 @@ export function planAdoptExternalIni(
     return { ok: false, reason: problems.join(" ") };
   }
 
-  const candidate = { gamePort, queryPort, rconPort };
-  const others = fleet.filter((profile) => profile.id !== server.id);
-  const conflicts = findPortConflicts(others, {
-    id: server.id,
-    name: server.name,
-    ...candidate,
-  });
-  const reason = conflictReason(server.name, conflicts, candidate);
+  const reason = portClashReason(server.id, { gamePort, queryPort, rconPort }, fleet);
   if (reason.length > 0) {
     return { ok: false, reason };
   }

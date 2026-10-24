@@ -71,8 +71,8 @@ function sameText(fileValue: string | null, profileValue: string): boolean {
 }
 
 function samePort(fileValue: string | null, profileValue: string): boolean {
-  if (fileValue === null || !/^\d+$/.test(fileValue.trim())) return false;
-  return Number(fileValue.trim()) === Number(profileValue);
+  if (fileValue === null || !/^\d+$/.test(fileValue)) return false;
+  return Number(fileValue) === Number(profileValue);
 }
 
 function sameEnabled(fileValue: string | null): boolean {
@@ -84,13 +84,9 @@ function sameSecret(fileValue: string | null, profileValue: string): boolean {
   return fileValue === profileValue;
 }
 
-/**
- * Session names turn control characters into spaces, and that is the stored value.
- * Ports keep control characters so a broken value is rejected instead of becoming a different port.
- */
-function normalizeIniText(value: string | null, mode: "text" | "port"): string | null {
+/** Session names turn control characters into spaces, and that is the stored value. */
+function normalizeSessionName(value: string | null): string | null {
   if (value === null) return null;
-  if (mode === "port") return value.trim();
   const cleaned = value
     .replace(/[\u0000-\u001F\u007F]/g, " ")
     .replace(/ {2,}/g, " ")
@@ -98,8 +94,31 @@ function normalizeIniText(value: string | null, mode: "text" | "port"): string |
   return cleaned.length === 0 ? "" : cleaned;
 }
 
-function readIniText(text: string, section: string, key: string, mode: "text" | "port"): string | null {
-  return normalizeIniText(getIniTextValueAt(text, section, key, 0), mode);
+/**
+ * Port text exactly as written. The shared INI reader trims tabs and newlines,
+ * which would turn `123\t` into `123`. A port has to stay unchanged so that is rejected.
+ */
+function rawIniPort(text: string, section: string, key: string): string | null {
+  let current = "";
+  const sectionKey = section.trim().toLowerCase();
+  const wanted = key.trim().toLowerCase();
+  for (const rawLine of text.split(/\r?\n/)) {
+    const trimmed = rawLine.trim();
+    if (trimmed.length === 0 || trimmed.startsWith(";") || trimmed.startsWith("#")) continue;
+    const header = /^\[(.+)\]$/.exec(trimmed);
+    if (header !== null) {
+      current = (header[1] ?? "").trim().toLowerCase();
+      continue;
+    }
+    if (current !== sectionKey) continue;
+    const lead = rawLine.trimStart();
+    const eq = lead.indexOf("=");
+    if (eq <= 0) continue;
+    const rowKey = lead.slice(0, eq).trim().toLowerCase();
+    if (rowKey !== wanted) continue;
+    return lead.slice(eq + 1);
+  }
+  return null;
 }
 
 /**
@@ -125,7 +144,8 @@ export function formatIniImportReplacement(field: IniImportIdentityField): strin
   if (
     (field.id === "gamePort" || field.id === "queryPort" || field.id === "rconPort") &&
     field.fileValue !== null &&
-    /[\u0000-\u001F\u007F]/.test(field.fileValue)
+    field.fileValue !== "" &&
+    !/^\d+$/.test(field.fileValue)
   ) {
     return `${field.label} in GameUserSettings.ini: not a plain number.\n${field.label} in YARK: ${field.profileValue}.`;
   }
@@ -141,10 +161,10 @@ export function buildIniImportCompatibilityReport(
 ): IniImportCompatibilityReport {
   const gus = ini.gameUserSettings;
   const joinPassword = profile.serverPassword ?? "";
-  const sessionName = readIniText(gus, "SessionSettings", "SessionName", "text");
-  const gamePort = readIniText(gus, "SessionSettings", "Port", "port");
-  const queryPort = readIniText(gus, "SessionSettings", "QueryPort", "port");
-  const rconPort = readIniText(gus, "ServerSettings", "RCONPort", "port");
+  const sessionName = normalizeSessionName(getIniTextValueAt(gus, "SessionSettings", "SessionName", 0));
+  const gamePort = rawIniPort(gus, "SessionSettings", "Port");
+  const queryPort = rawIniPort(gus, "SessionSettings", "QueryPort");
+  const rconPort = rawIniPort(gus, "ServerSettings", "RCONPort");
   const rconEnabled = getIniTextValueAt(gus, "ServerSettings", "RCONEnabled", 0);
   const adminPassword = getIniTextValueAt(gus, "ServerSettings", "ServerAdminPassword", 0);
   const serverPassword = getIniTextValueAt(gus, "ServerSettings", "ServerPassword", 0);
