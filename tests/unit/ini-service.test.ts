@@ -527,19 +527,23 @@ describe("IniService semantic save (#667)", () => {
     expect(row).toBeDefined();
     if (row === undefined) return;
 
-    const result = await service.saveServerIniSemantic(profile.id, [], [
-      {
-        kind: "replace",
-        section: row.section,
-        occurrence: row.occurrence,
-        expectedRaw: row.expectedRaw,
-        className: row.className,
-        hidden: true,
-        points: null,
-        level: null,
-        removePrereq: null,
-      },
-    ]);
+    const result = await service.saveServerIniSemantic(
+      profile.id,
+      [],
+      [
+        {
+          kind: "replace",
+          section: row.section,
+          occurrence: row.occurrence,
+          expectedRaw: row.expectedRaw,
+          className: row.className,
+          hidden: true,
+          points: null,
+          level: null,
+          removePrereq: null,
+        },
+      ],
+    );
 
     expect(result.payload.game).toContain('(EngramClassName="EngramEntry_Campfire_C",EngramHidden=true)');
     expect(result.payload.game).toContain(hatchet);
@@ -565,19 +569,23 @@ describe("IniService semantic save (#667)", () => {
     writeFileSync(gameIniPath(installDir), changed, "utf8");
 
     await expect(
-      service.saveServerIniSemantic(profile.id, [], [
-        {
-          kind: "replace",
-          section: row.section,
-          occurrence: row.occurrence,
-          expectedRaw: row.expectedRaw,
-          className: row.className,
-          hidden: false,
-          points: "1",
-          level: null,
-          removePrereq: null,
-        },
-      ]),
+      service.saveServerIniSemantic(
+        profile.id,
+        [],
+        [
+          {
+            kind: "replace",
+            section: row.section,
+            occurrence: row.occurrence,
+            expectedRaw: row.expectedRaw,
+            className: row.className,
+            hidden: false,
+            points: "1",
+            level: null,
+            removePrereq: null,
+          },
+        ],
+      ),
     ).rejects.toBeInstanceOf(NamedEngramEditError);
 
     expect(readFileSync(gameIniPath(installDir), "utf8")).toBe(changed);

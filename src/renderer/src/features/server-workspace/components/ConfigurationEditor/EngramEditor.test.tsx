@@ -55,7 +55,9 @@ function Harness({
         onDraftChange={(row, draft) => setDrafts((prev) => ({ ...prev, [namedEngramRowKey(row)]: draft }))}
         onPendingChange={(id, draft) =>
           setPending((prev) =>
-            draft.removed ? prev.filter((item) => item.id !== id) : prev.map((item) => (item.id === id ? { ...item, draft } : item)),
+            draft.removed
+              ? prev.filter((item) => item.id !== id)
+              : prev.map((item) => (item.id === id ? { ...item, draft } : item)),
           )
         }
         onAdd={(draft, listEngram) =>

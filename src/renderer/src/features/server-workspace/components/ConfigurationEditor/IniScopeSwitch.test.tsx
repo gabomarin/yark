@@ -30,7 +30,11 @@ describe("unsaved view dots", () => {
   it("marks Game.ini while GameUserSettings.ini is open", () => {
     render(
       <AppProviders>
-        <IniFileSegmented value="gameUserSettings" onChange={vi.fn()} pending={{ game: true, gameUserSettings: true }} />
+        <IniFileSegmented
+          value="gameUserSettings"
+          onChange={vi.fn()}
+          pending={{ game: true, gameUserSettings: true }}
+        />
       </AppProviders>,
     );
 

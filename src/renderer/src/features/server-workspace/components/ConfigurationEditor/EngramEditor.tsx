@@ -86,14 +86,18 @@ export function EngramEditor(props: Props): ReactElement {
     const draftName = drafts[namedEngramRowKey(row)]?.className ?? row.className;
     return matchesQuery(query, draftName) || matchesQuery(query, row.className);
   });
-  const visiblePending = pending.filter((item) => matchesQuery(query, item.draft.className) || matchesQuery(query, item.originClass));
+  const visiblePending = pending.filter(
+    (item) => matchesQuery(query, item.draft.className) || matchesQuery(query, item.originClass),
+  );
   const showEmpty = !props.loading && summary.rows.length === 0 && pending.length === 0;
 
   return (
     <>
       {(summary.autoUnlockAll || summary.onlySpecified) && (
         <AppAlert color="attention" title="This list may not apply">
-          {summary.autoUnlockAll ? <Text size="sm">Auto unlock all engrams is on, so the game ignores this list.</Text> : null}
+          {summary.autoUnlockAll ? (
+            <Text size="sm">Auto unlock all engrams is on, so the game ignores this list.</Text>
+          ) : null}
           {summary.onlySpecified ? (
             <Text size="sm">Only listed engrams are allowed. An engram missing from the list is hidden.</Text>
           ) : null}

@@ -1,10 +1,7 @@
 import type { ReactElement } from "react";
 import { Plus, Trash } from "@phosphor-icons/react";
 import { ActionIcon, Button, Group, NumberInput, Text, Tooltip } from "@mantine/core";
-import {
-  isPlayerLevelEngramPointsValue,
-  listPlayerLevelEngramPoints,
-} from "@shared/ini/player-level-engram-points";
+import { isPlayerLevelEngramPointsValue, listPlayerLevelEngramPoints } from "@shared/ini/player-level-engram-points";
 import { appRaisedSurfaceClass, withAppSurface } from "@ui/AppSurface/appSurfaceClassName";
 import classes from "./ConfigurationEditor.module.css";
 
@@ -97,7 +94,8 @@ export function EngramLevelPoints(props: Props): ReactElement {
       </div>
 
       <Text c="dimmed" size="xs">
-        Each line is OverridePlayerLevelEngramPoints. The number of lines should match the player levels on this server. Removing a line moves the later levels up.
+        Each line is OverridePlayerLevelEngramPoints. The number of lines should match the player levels on this server.
+        Removing a line moves the later levels up.
       </Text>
     </>
   );

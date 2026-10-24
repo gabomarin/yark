@@ -35,7 +35,9 @@ export function EngramEditorRow(props: Props): ReactElement {
   const showClassOnly = classOnlyReason || (pending && review.ok && pendingEngramLacksEffect(draft, listEngram));
   const unsaved = pending || !review.ok || review.edit !== null;
   const catalog = lookupAsaEngram(draft.className);
-  const classLabel = pending ? `New engram ${draft.className || row.className}` : `Engram class name ${row.occurrence + 1}`;
+  const classLabel = pending
+    ? `New engram ${draft.className || row.className}`
+    : `Engram class name ${row.occurrence + 1}`;
   const [query, setQuery] = useState(draft.className);
   const [seenClass, setSeenClass] = useState(draft.className);
   const [searchError, setSearchError] = useState("");
@@ -150,7 +152,9 @@ export function EngramEditorRow(props: Props): ReactElement {
         />
       </div>
       <div className={classes.rowActions}>
-        <Tooltip label={pending ? "Remove this new line" : draft.removed ? "Keep this override" : "Remove this override"}>
+        <Tooltip
+          label={pending ? "Remove this new line" : draft.removed ? "Keep this override" : "Remove this override"}
+        >
           <ActionIcon
             variant="subtle"
             color={draft.removed ? "gray" : "attention"}

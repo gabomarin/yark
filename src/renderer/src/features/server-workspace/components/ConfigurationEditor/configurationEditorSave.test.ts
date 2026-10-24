@@ -196,7 +196,15 @@ describe("performConfigurationEditorSave", () => {
       baseline,
       expectedFingerprints: fingerprints(baseline),
       scope: "gameUserSettings",
-      engramEdits: [{ kind: "delete", section: "ShooterGameMode", occurrence: 0, expectedRaw: "x", className: "EngramEntry_Campfire_C" }],
+      engramEdits: [
+        {
+          kind: "delete",
+          section: "ShooterGameMode",
+          occurrence: 0,
+          expectedRaw: "x",
+          className: "EngramEntry_Campfire_C",
+        },
+      ],
       engramBlocked: true,
     });
 

@@ -133,9 +133,7 @@ export interface NamedEngramSummary {
   onlySpecified: boolean;
 }
 
-export type NamedEngramDraftReview =
-  | { ok: true; edit: NamedEngramEdit | null }
-  | { ok: false; reason: string };
+export type NamedEngramDraftReview = { ok: true; edit: NamedEngramEdit | null } | { ok: false; reason: string };
 
 export function summarizeNamedEngrams(text: string): NamedEngramSummary {
   const entries = parseIniComplexEntries(text, "game");
@@ -340,10 +338,7 @@ export function applyNamedEngramEdits(text: string, edits: readonly NamedEngramE
   return out;
 }
 
-function applyNamedEngramLineEdits(
-  text: string,
-  edits: readonly (NamedEngramReplace | NamedEngramDelete)[],
-): string {
+function applyNamedEngramLineEdits(text: string, edits: readonly (NamedEngramReplace | NamedEngramDelete)[]): string {
   const entries = parseIniComplexEntries(text, "game");
   const replacements: { start: number; end: number; next: string }[] = [];
 
@@ -569,7 +564,11 @@ function reviewInteger(
   }
   const value = trimmed === "" ? null : trimmed;
   const dirty = source !== value && !(source !== null && value !== null && Number(source) === Number(value));
-  return { ok: true, dirty, value: source !== null && value !== null && Number(source) === Number(value) ? source : value };
+  return {
+    ok: true,
+    dirty,
+    value: source !== null && value !== null && Number(source) === Number(value) ? source : value,
+  };
 }
 
 function assertUnique(edits: readonly NamedEngramEdit[]): void {

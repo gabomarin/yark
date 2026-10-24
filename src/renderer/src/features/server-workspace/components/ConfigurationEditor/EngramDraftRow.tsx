@@ -1,7 +1,11 @@
 import { useState, type ReactElement } from "react";
 import { NumberInput, Text } from "@mantine/core";
 import { lookupAsaEngram } from "@shared/asa/asa-engram-catalog";
-import { NAMED_ENGRAM_CLASS_ONLY, pendingEngramLacksEffect, type NamedEngramDraft } from "@shared/ini/engram-named-entries";
+import {
+  NAMED_ENGRAM_CLASS_ONLY,
+  pendingEngramLacksEffect,
+  type NamedEngramDraft,
+} from "@shared/ini/engram-named-entries";
 import { AppSwitch } from "@ui/AppSwitch/AppSwitch";
 import classes from "./ConfigurationEditor.module.css";
 import { EngramClassField } from "./EngramClassField";

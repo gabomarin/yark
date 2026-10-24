@@ -38,11 +38,9 @@ export function useConfigurationEditor(options: {
   onRegisterSave?: (save: (() => Promise<boolean>) | null) => void;
   engramEditsRef?: { readonly current: readonly NamedEngramEdit[] };
   engramBlockedRef?: { readonly current: boolean };
-  /** Open view. Save writes that file or section. */
   saveScopeRef?: {
     readonly current: "gameUserSettings" | "gameSettings" | "engramPoints" | "engramOverrides" | "gameText";
   };
-  /** Clears pending engram drafts after Overrides Save. */
   onEngramDraftsReset?: () => void;
 }): ConfigurationEditorApi {
   const { serverId, onRegisterSave } = options;
@@ -68,7 +66,8 @@ export function useConfigurationEditor(options: {
   const pendingQueued = snapshot?.pending === true;
   const dirtyRef = useRef(dirty);
   useEffect(() => {
-    const engramPending = (options.engramEditsRef?.current.length ?? 0) > 0 || options.engramBlockedRef?.current === true;
+    const engramPending =
+      (options.engramEditsRef?.current.length ?? 0) > 0 || options.engramBlockedRef?.current === true;
     dirtyRef.current = dirty || engramPending;
   });
   const payloadRef = useRef(payload);

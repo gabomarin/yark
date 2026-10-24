@@ -62,19 +62,11 @@ export function EngramPaneSwitch(props: EngramPaneProps): ReactElement {
       data={[
         {
           value: "overrides",
-          label: compactLabeledSegmentLabel(
-            "Overrides",
-            null,
-            props.value !== "overrides" && props.overridesUnsaved,
-          ),
+          label: compactLabeledSegmentLabel("Overrides", null, props.value !== "overrides" && props.overridesUnsaved),
         },
         {
           value: "points",
-          label: compactLabeledSegmentLabel(
-            "Points per level",
-            null,
-            props.value !== "points" && props.pointsUnsaved,
-          ),
+          label: compactLabeledSegmentLabel("Points per level", null, props.value !== "points" && props.pointsUnsaved),
         },
       ]}
       onChange={(value) => props.onChange(value === "points" ? "points" : "overrides")}

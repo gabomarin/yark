@@ -23,7 +23,7 @@ describe("summarizeNamedEngrams", () => {
       'OverrideNamedEngramEntries=(EngramClassName="EngramEntry_Campfire_C",EngramHidden=False,EngramPointsCost=3,EngramLevelRequirement=2,RemoveEngramPreReq=True)',
       'OverrideNamedEngramEntries=(EngramClassName="EngramEntry_StoneHatchet_C",EngramHidden=False,EngramPointsCost=3,EngramLevelRequirement=3, RemoveEngramPreReq=True)',
       'OverrideNamedEngramEntries=(EngramClassName="EngramEntry_Campfire_C",EngramHidden=True)',
-      'OverrideNamedEngramEntries=(EngramIndex=0,EngramHidden=False)',
+      "OverrideNamedEngramEntries=(EngramIndex=0,EngramHidden=False)",
       "OverrideEngramEntries=(EngramIndex=0,EngramHidden=False)",
       'OverrideNamedEngramEntries=(EngramClassName="EngramEntry_Torch_C",Extra=1)',
       "OverrideNamedEngramEntries=not-a-tuple",
@@ -119,7 +119,7 @@ describe("applyNamedEngramEdits", () => {
           kind: "replace",
           section: row.section,
           occurrence: row.occurrence,
-          expectedRaw: "(EngramClassName=\"EngramEntry_Other_C\")",
+          expectedRaw: '(EngramClassName="EngramEntry_Other_C")',
           className: row.className,
           hidden: true,
           points: null,
@@ -165,9 +165,7 @@ describe("applyNamedEngramEdits", () => {
     ]);
 
     expect(next).toContain("[/Script/ShooterGame.ShooterGameMode]");
-    expect(next).toContain(
-      'OverrideNamedEngramEntries=(EngramClassName="EngramEntry_Torch_C",EngramHidden=true)',
-    );
+    expect(next).toContain('OverrideNamedEngramEntries=(EngramClassName="EngramEntry_Torch_C",EngramHidden=true)');
     expect(next).toContain("bOnlyAllowSpecifiedEngrams=False");
   });
 });

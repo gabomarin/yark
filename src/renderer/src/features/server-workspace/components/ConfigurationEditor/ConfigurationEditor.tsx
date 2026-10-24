@@ -147,10 +147,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
     publishEngramReview(engramDrafts, next);
   };
   const onAddEngram = (draft: NamedEngramDraft, listEngram: boolean) => {
-    const next = [
-      ...pendingAdds,
-      { id: crypto.randomUUID(), originClass: draft.className, draft, listEngram },
-    ];
+    const next = [...pendingAdds, { id: crypto.randomUUID(), originClass: draft.className, draft, listEngram }];
     setPendingAdds(next);
     publishEngramReview(engramDrafts, next);
   };
@@ -179,9 +176,12 @@ export function ConfigurationEditor(props: Props): ReactElement {
   const saveAndNotify = () => runSave(editor.saveIni);
   const sectionPending = iniSectionPending(editor.baseline, editor.payload);
   const engramPending = engramReview.edits.length > 0 || engramReview.blocked || engramDraftInvalid;
-  const gameTextDirty = editor.payload !== null && editor.baseline !== null && editor.payload.game !== editor.baseline.game;
+  const gameTextDirty =
+    editor.payload !== null && editor.baseline !== null && editor.payload.game !== editor.baseline.game;
   const gusTextDirty =
-    editor.payload !== null && editor.baseline !== null && editor.payload.gameUserSettings !== editor.baseline.gameUserSettings;
+    editor.payload !== null &&
+    editor.baseline !== null &&
+    editor.payload.gameUserSettings !== editor.baseline.gameUserSettings;
 
   const iniNavigation = (
     <IniEditorNav
@@ -278,7 +278,11 @@ export function ConfigurationEditor(props: Props): ReactElement {
             pointsUnsaved={sectionPending.engramPoints}
             onChange={setEngramPane}
           />
-          <Stack gap="md" className={classes.editor} style={{ display: engramPane === "overrides" ? undefined : "none" }}>
+          <Stack
+            gap="md"
+            className={classes.editor}
+            style={{ display: engramPane === "overrides" ? undefined : "none" }}
+          >
             <EngramEditor
               key={engramEditorKey}
               gameText={gameText}

@@ -31,7 +31,9 @@ OverridePlayerLevelEngramPoints=12
   it("saves a changed level and an added level without rewriting the engram line", () => {
     const engram = 'OverrideNamedEngramEntries=(EngramClassName="EngramEntry_Campfire_C",EngramHidden=False)';
     const baseline = game(`${SECTION}\nOverridePlayerLevelEngramPoints=8\n${engram}\n`);
-    const draft = game(`${SECTION}\nOverridePlayerLevelEngramPoints=10\n${engram}\nOverridePlayerLevelEngramPoints=0\n`);
+    const draft = game(
+      `${SECTION}\nOverridePlayerLevelEngramPoints=10\n${engram}\nOverridePlayerLevelEngramPoints=0\n`,
+    );
     const ops = buildIniSemanticOps(baseline, draft);
     expect(ops).toEqual([
       {
