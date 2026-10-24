@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { modals } from "@mantine/modals";
 import type { NamedEngramEdit } from "@shared/ini/engram-named-entries";
 import { iniFingerprintsMatch } from "@shared/ini/ini-fingerprints";
-import { isPlayerLevelEngramPointsKey } from "@shared/ini/player-level-engram-points";
 import type { IniFileKey, IniPreview, ServerIniPayload, ServerIniSnapshot } from "@shared/types";
 import { showOperatorToast } from "@ui/operatorToast";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
@@ -25,6 +24,7 @@ import {
   buildIniRowMatchIndex,
   countUnsavedIniRowsForFile,
   iniPayloadsDirty,
+  isGameIniEngramEditorKey,
   isIniRowUnsaved,
   lookupMatchedBaselineValue,
 } from "./configurationEditorModel";
@@ -152,7 +152,7 @@ export function useConfigurationEditor(options: {
   const rows = useMemo<IniSettingReference[]>(
     () =>
       parseIniRows(activeText)
-        .filter((row) => !isPlayerLevelEngramPointsKey(row.key))
+        .filter((row) => !isGameIniEngramEditorKey(activeFileKey, row.key))
         .map((row) => ({
           ...row,
           fileKey: activeFileKey,

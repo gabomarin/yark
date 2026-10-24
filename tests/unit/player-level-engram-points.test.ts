@@ -28,6 +28,17 @@ OverridePlayerLevelEngramPoints=12
     expect(sectionForNewPlayerLevelEngramPoints("")).toBe("/Script/ShooterGame.ShooterGameMode");
   });
 
+  it("ignores the key outside ShooterGameMode", () => {
+    const text = `[CustomGameMode]
+OverridePlayerLevelEngramPoints=4
+${SECTION}
+OverridePlayerLevelEngramPoints=8
+`;
+    expect(listPlayerLevelEngramPoints(text)).toEqual([
+      { section: "/Script/ShooterGame.ShooterGameMode", occurrence: 0, level: 1, points: "8" },
+    ]);
+  });
+
   it("saves a changed level and an added level without rewriting the engram line", () => {
     const engram = 'OverrideNamedEngramEntries=(EngramClassName="EngramEntry_Campfire_C",EngramHidden=False)';
     const baseline = game(`${SECTION}\nOverridePlayerLevelEngramPoints=8\n${engram}\n`);

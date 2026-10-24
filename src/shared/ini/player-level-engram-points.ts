@@ -27,7 +27,7 @@ export function listPlayerLevelEngramPoints(text: string): PlayerLevelEngramPoin
   const seen = new Map<string, number>();
   const rows: PlayerLevelEngramPointsRow[] = [];
   for (const row of parseIniTextRows(text)) {
-    if (!isPlayerLevelEngramPointsKey(row.key)) continue;
+    if (!isShooterGameMode(row.section) || !isPlayerLevelEngramPointsKey(row.key)) continue;
     const id = `${row.section.toLowerCase()}\u001f${KEY}`;
     const occurrence = seen.get(id) ?? 0;
     seen.set(id, occurrence + 1);

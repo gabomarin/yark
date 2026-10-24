@@ -327,7 +327,7 @@ export const iniSemanticOpsSchema = z
     }
   });
 
-const NAMED_ENGRAM_CLASS_RE = /^[^"\\\r\n,()=;#]+$/;
+const NAMED_ENGRAM_CLASS_RE = /^[^\s"\\\r\n,()=;#]+$/;
 const NAMED_ENGRAM_INTEGER_RE = /^(?:0|[1-9]\d{0,6})$/;
 
 /** Named engram line edits sent with `ini:save-semantic` (PINI-012 / #684). */
@@ -368,7 +368,21 @@ export const namedEngramEditsSchema = z
         .strict(),
     ]),
   )
-  .max(500);
+  .max(500)
+  .superRefine((edits, ctx) => {
+    let chars = 0;
+    for (const edit of edits) {
+      chars += edit.className.length;
+      if (edit.kind !== "append") chars += edit.section.length + edit.expectedRaw.length;
+      if (chars > MAX_INI_SEMANTIC_OPS_TOTAL_CHARS) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Named engram edits exceed ${MAX_INI_SEMANTIC_OPS_TOTAL_CHARS} total characters`,
+        });
+        return;
+      }
+    }
+  });
 
 export const clusterIniFileSelectionSchema = z
   .object({

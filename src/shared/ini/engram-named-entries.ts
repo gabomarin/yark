@@ -39,6 +39,13 @@ const APPEND_ORDER = [FIELD_HIDDEN, FIELD_POINTS, FIELD_LEVEL, FIELD_PREREQ];
 const INTEGER_RE = /^(?:0|[1-9]\d{0,6})$/;
 const UNSAFE_CLASS_RE = /["\\\r\n,()=;#]/;
 
+export const UNSAFE_ENGRAM_CLASS_MESSAGE =
+  "Class name cannot include spaces, quotes, backslashes, commas, parentheses, or = ; #.";
+
+export function isNamedEngramEntriesKey(key: string): boolean {
+  return key.trim().toLowerCase() === NAMED_KEY;
+}
+
 export function isSafeEngramClassName(className: string): boolean {
   const trimmed = className.trim();
   return trimmed.length > 0 && !/\s/.test(trimmed) && !UNSAFE_CLASS_RE.test(trimmed);
@@ -283,8 +290,8 @@ export function reviewNamedEngramDraft(
 
   const className = draft.className.trim();
   const classDirty = className !== row.className;
-  if (classDirty && (className.length === 0 || UNSAFE_CLASS_RE.test(className))) {
-    return { ok: false, reason: "Class name cannot include quotes, commas, or parentheses." };
+  if (classDirty && !isSafeEngramClassName(className)) {
+    return { ok: false, reason: UNSAFE_ENGRAM_CLASS_MESSAGE };
   }
 
   const pointsReview = reviewInteger(row.points, draft.points, "Points cost");

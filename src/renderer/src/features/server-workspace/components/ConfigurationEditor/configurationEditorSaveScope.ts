@@ -1,4 +1,5 @@
 import { applyIniSemanticOps, buildIniSemanticOps, type IniSemanticOp } from "@shared/ini/ini-semantic-ops";
+import { isNamedEngramEntriesKey } from "@shared/ini/engram-named-entries";
 import { isPlayerLevelEngramPointsKey } from "@shared/ini/player-level-engram-points";
 import type { IniFileKey, ServerIniPayload } from "@shared/types";
 
@@ -17,11 +18,20 @@ export function iniSaveScope(
   return engramPane === "points" ? "engramPoints" : "engramOverrides";
 }
 
+function isGamePointsOp(op: IniSemanticOp): boolean {
+  return op.fileKey === "game" && isPlayerLevelEngramPointsKey(op.key);
+}
+
+function isNamedEngramTextOp(op: IniSemanticOp): boolean {
+  return op.fileKey === "game" && isNamedEngramEntriesKey(op.key);
+}
+
 /** Semantic Set/Unset rows that belong to this view. Named engram lines are not semantic ops. */
 export function semanticOpInScope(op: IniSemanticOp, scope: IniSaveScope): boolean {
+  if (isNamedEngramTextOp(op)) return false;
   if (scope === "gameUserSettings") return op.fileKey === "gameUserSettings";
-  if (scope === "engramPoints") return op.fileKey === "game" && isPlayerLevelEngramPointsKey(op.key);
-  if (scope === "gameSettings") return op.fileKey === "game" && !isPlayerLevelEngramPointsKey(op.key);
+  if (scope === "engramPoints") return isGamePointsOp(op);
+  if (scope === "gameSettings") return op.fileKey === "game" && !isGamePointsOp(op);
   return false;
 }
 
@@ -38,8 +48,8 @@ export function iniSectionPending(
   let engramPoints = false;
   for (const op of buildIniSemanticOps(baseline, draft)) {
     if (op.fileKey === "gameUserSettings") gameUserSettings = true;
-    else if (isPlayerLevelEngramPointsKey(op.key)) engramPoints = true;
-    else if (op.fileKey === "game") gameSettings = true;
+    else if (isGamePointsOp(op)) engramPoints = true;
+    else if (op.fileKey === "game" && !isNamedEngramTextOp(op)) gameSettings = true;
   }
   return { gameUserSettings, gameSettings, engramPoints };
 }

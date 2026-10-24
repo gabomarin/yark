@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { applyIniSemanticOps, buildIniSemanticOps } from "@shared/ini/ini-semantic-ops";
 import type { IniFileFingerprints, ServerIniPayload } from "@shared/types";
 import { configurationEditorSaveToastMessage, performConfigurationEditorSave } from "./configurationEditorSave";
-import { iniSaveScope, iniSectionPending, iniViewDirty } from "./configurationEditorSaveScope";
+import { iniSaveScope, iniSectionPending, iniViewDirty, semanticOpInScope } from "./configurationEditorSaveScope";
 
 function fingerprints(payload: ServerIniPayload): IniFileFingerprints {
   return {
@@ -320,6 +320,39 @@ describe("iniSaveScope", () => {
       gameSettings: false,
       engramPoints: true,
     });
+  });
+
+  it("keeps a GameUserSettings points key on that file", () => {
+    const baseline = {
+      gameUserSettings: "[ServerSettings]\nOverridePlayerLevelEngramPoints=8\n",
+      game: "",
+    };
+    const draft = {
+      gameUserSettings: "[ServerSettings]\nOverridePlayerLevelEngramPoints=10\n",
+      game: "",
+    };
+    expect(iniSectionPending(baseline, draft)).toEqual({
+      gameUserSettings: true,
+      gameSettings: false,
+      engramPoints: false,
+    });
+  });
+
+  it("does not treat a named engram line as a Settings change", () => {
+    const line = 'OverrideNamedEngramEntries=(EngramClassName="EngramEntry_Campfire_C",EngramPointsCost=3)';
+    const next = 'OverrideNamedEngramEntries=(EngramClassName="EngramEntry_Campfire_C",EngramPointsCost=4)';
+    const baseline = { gameUserSettings: "", game: `[/Script/ShooterGame.ShooterGameMode]\n${line}\n` };
+    const draft = { gameUserSettings: "", game: `[/Script/ShooterGame.ShooterGameMode]\n${next}\n` };
+    expect(iniSectionPending(baseline, draft)).toEqual({
+      gameUserSettings: false,
+      gameSettings: false,
+      engramPoints: false,
+    });
+    const op = buildIniSemanticOps(baseline, draft)[0];
+    expect(op).toBeDefined();
+    if (op === undefined) return;
+    expect(semanticOpInScope(op, "gameSettings")).toBe(false);
+    expect(semanticOpInScope(op, "engramOverrides")).toBe(false);
   });
 });
 

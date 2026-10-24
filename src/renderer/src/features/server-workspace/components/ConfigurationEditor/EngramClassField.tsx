@@ -1,11 +1,10 @@
 import { useMemo, type ReactElement } from "react";
 import { Combobox, Text, TextInput, useCombobox } from "@mantine/core";
 import { asaEngramEntries, lookupAsaEngram, type AsaEngramEntry } from "@shared/asa/asa-engram-catalog";
-import { isSafeEngramClassName } from "@shared/ini/engram-named-entries";
+import { isSafeEngramClassName, UNSAFE_ENGRAM_CLASS_MESSAGE } from "@shared/ini/engram-named-entries";
 
 const RESULT_LIMIT = 40;
 const CHOOSE_MATCH = "Choose a match, or enter the engram class name.";
-const UNSAFE_CLASS = "Class name cannot include quotes, commas, or parentheses.";
 
 interface Props {
   ariaLabel: string;
@@ -40,7 +39,7 @@ function resolveEngramClass(query: string): { className: string } | { reason: st
   const labelHit = asaEngramEntries.some((entry) => entry.label.toLowerCase() === trimmed.toLowerCase());
   if (labelHit || !isSafeEngramClassName(trimmed)) {
     const unsafe = /["\\\r\n,()=;#]/.test(trimmed);
-    return { reason: unsafe ? UNSAFE_CLASS : CHOOSE_MATCH };
+    return { reason: unsafe ? UNSAFE_ENGRAM_CLASS_MESSAGE : CHOOSE_MATCH };
   }
   return { className: trimmed };
 }
