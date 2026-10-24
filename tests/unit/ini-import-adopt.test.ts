@@ -58,7 +58,14 @@ describe("planAdoptExternalIni", () => {
   });
 
   it("refuses a port another server already uses", () => {
-    const other: ServerProfile = { ...server, id: "srv-b", name: "Other", gamePort: 7778, queryPort: 27016, rconPort: 27021 };
+    const other: ServerProfile = {
+      ...server,
+      id: "srv-b",
+      name: "Other",
+      gamePort: 7778,
+      queryPort: 27016,
+      rconPort: 27021,
+    };
     const plan = planAdoptExternalIni(
       server,
       [server, other],

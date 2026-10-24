@@ -99,7 +99,9 @@ ConfigOverrideItemMaxQuantity=(hello world)
       { ...server, id: "srv-b", name: "Other", gamePort: 7778, queryPort: 27016, rconPort: 27021 },
     ]);
     await user.click(await screen.findByRole("button", { name: "Use file values" }));
-    expect(await screen.findByText(/Port 7778 is already used by Other, so YARK can't take that game port/)).toBeVisible();
+    expect(
+      await screen.findByText(/Port 7778 is already used by Other, so YARK can't take that game port/),
+    ).toBeVisible();
     expect(window.api.updateServer).not.toHaveBeenCalled();
   });
 
