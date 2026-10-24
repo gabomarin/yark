@@ -2,7 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { applyIniSemanticOps, buildIniSemanticOps } from "@shared/ini/ini-semantic-ops";
 import type { IniFileFingerprints, ServerIniPayload } from "@shared/types";
 import { configurationEditorSaveToastMessage, performConfigurationEditorSave } from "./configurationEditorSave";
-import { iniSaveScope, iniSectionPending, iniViewDirty, semanticOpInScope } from "./configurationEditorSaveScope";
+import {
+  iniSaveScope,
+  iniSectionPending,
+  iniViewDirty,
+  restoreUnsavedVisualEdits,
+  semanticOpInScope,
+} from "./configurationEditorSaveScope";
 
 function fingerprints(payload: ServerIniPayload): IniFileFingerprints {
   return {
@@ -353,6 +359,18 @@ describe("iniSaveScope", () => {
     if (op === undefined) return;
     expect(semanticOpInScope(op, "gameSettings")).toBe(false);
     expect(semanticOpInScope(op, "engramOverrides")).toBe(false);
+  });
+
+  it("keeps a text edit of a named line when Settings is saved", () => {
+    const section = "[/Script/ShooterGame.ShooterGameMode]";
+    const before = 'OverrideNamedEngramEntries=(EngramClassName="EngramEntry_Campfire_C",EngramPointsCost=3)';
+    const after = 'OverrideNamedEngramEntries=(EngramClassName="EngramEntry_Campfire_C",EngramPointsCost=4)';
+    const baseline = { gameUserSettings: "", game: `${section}\nDifficultyOffset=1\n${before}\n` };
+    const draft = { gameUserSettings: "", game: `${section}\nDifficultyOffset=2\n${after}\n` };
+    const saved = { gameUserSettings: "", game: `${section}\nDifficultyOffset=2\n${before}\n` };
+    const restored = restoreUnsavedVisualEdits(saved, baseline, draft, "gameSettings");
+    expect(restored.game).toContain(after);
+    expect(restored.game).toContain("DifficultyOffset=2");
   });
 });
 

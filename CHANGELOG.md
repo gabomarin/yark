@@ -16,7 +16,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
-- The engram hint that a class alone does not change the game uses the lighter danger red, so it stays readable on Breeze dark. Clearing a saved line back to an empty cost and Hidden off is refused the same way. Save stays off while that error is showing on Overrides. Settings, Points per level, and GameUserSettings.ini still save their own lines. A dot on another view shows that it still has unsaved lines. The class box on a saved engram searches the official list. Named engram lines stay out of Settings, and a points-per-level key in GameUserSettings.ini stays on that file (#684).
+- The engram hint that a class alone does not change the game uses the lighter danger red, so it stays readable on Breeze dark. Clearing a saved line back to an empty cost and Hidden off is refused the same way. Save stays off while that error is showing on Overrides. Settings, Points per level, and GameUserSettings.ini still save their own lines. A dot on another view shows that it still has unsaved lines. The class box on a saved engram searches the official list. Named engram lines stay out of Settings, and a points-per-level key in GameUserSettings.ini stays on that file. A class name with a space is refused, and the field says so (#684).
 
 ## [0.25.0] - 2026-10-23
 

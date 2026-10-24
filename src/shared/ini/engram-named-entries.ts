@@ -238,7 +238,7 @@ function reviewNamedEngramAppends(pending: readonly NamedEngramPendingAdd[]): {
   for (const item of pending) {
     if (item.draft.removed) continue;
     const className = item.draft.className.trim();
-    if (className.length === 0 || UNSAFE_CLASS_RE.test(className)) {
+    if (!isSafeEngramClassName(className)) {
       blocked = true;
       continue;
     }

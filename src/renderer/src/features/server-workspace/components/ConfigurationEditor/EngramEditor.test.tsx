@@ -6,6 +6,7 @@ import {
   draftFromRow,
   namedEngramRowKey,
   NAMED_ENGRAM_CLASS_ONLY,
+  UNSAFE_ENGRAM_CLASS_MESSAGE,
   reviewNamedEngramState,
   summarizeNamedEngrams,
   type NamedEngramDraft,
@@ -118,6 +119,19 @@ describe("EngramEditor", () => {
 
     expect(draft).toHaveValue("Campfire");
     expect(screen.getByText("Choose a match, or enter the engram class name.")).toBeVisible();
+    expect(screen.getByRole("status")).toHaveTextContent("clean");
+  });
+
+  it("names spaces when the typed class is not a single token", async () => {
+    const user = setupUser();
+    render(<Harness />);
+
+    const draft = screen.getByRole("textbox", { name: "New engram class name" });
+    await user.type(draft, "Engram Entry");
+    await user.keyboard("{Enter}");
+
+    expect(draft).toHaveValue("Engram Entry");
+    expect(screen.getByText(UNSAFE_ENGRAM_CLASS_MESSAGE)).toBeVisible();
     expect(screen.getByRole("status")).toHaveTextContent("clean");
   });
 

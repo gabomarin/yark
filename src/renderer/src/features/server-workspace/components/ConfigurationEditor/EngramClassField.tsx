@@ -38,8 +38,7 @@ function resolveEngramClass(query: string): { className: string } | { reason: st
   if (byClass !== undefined) return { className: byClass.className };
   const labelHit = asaEngramEntries.some((entry) => entry.label.toLowerCase() === trimmed.toLowerCase());
   if (labelHit || !isSafeEngramClassName(trimmed)) {
-    const unsafe = /["\\\r\n,()=;#]/.test(trimmed);
-    return { reason: unsafe ? UNSAFE_ENGRAM_CLASS_MESSAGE : CHOOSE_MATCH };
+    return { reason: isSafeEngramClassName(trimmed) ? CHOOSE_MATCH : UNSAFE_ENGRAM_CLASS_MESSAGE };
   }
   return { className: trimmed };
 }

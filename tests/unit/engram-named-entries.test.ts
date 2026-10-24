@@ -199,6 +199,20 @@ describe("reviewNamedEngramState appends", () => {
     expect(review.blocked).toBe(true);
   });
 
+  it("blocks a new line whose class name contains a space", () => {
+    const review = reviewNamedEngramState([], {}, [
+      {
+        id: "1",
+        originClass: "Engram Entry",
+        draft: { ...draftForNewEngram("Engram Entry"), points: "3" },
+        listEngram: false,
+      },
+    ]);
+
+    expect(review.edits).toEqual([]);
+    expect(review.blocked).toBe(true);
+  });
+
   it("blocks a saved line that was cleared back to an empty cost and Hidden off", () => {
     const text = game([
       'OverrideNamedEngramEntries=(EngramClassName="EngramEntry_Campfire_C",EngramPointsCost=3,EngramLevelRequirement=2)',
