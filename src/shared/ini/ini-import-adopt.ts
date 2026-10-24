@@ -20,6 +20,25 @@ export function serverToProfileInput(server: ServerProfile): ServerProfileInput 
   return input;
 }
 
+/** Identity the Server tab just chose. Survives the form remount that follows a profile refresh. */
+export function importChoiceIdentity(
+  serverId: string,
+  profile: Pick<
+    ServerProfileInput,
+    "sessionName" | "gamePort" | "queryPort" | "rconPort" | "adminPassword" | "serverPassword"
+  >,
+): string {
+  return [
+    serverId,
+    profile.sessionName,
+    profile.gamePort,
+    profile.queryPort,
+    profile.rconPort,
+    profile.adminPassword,
+    profile.serverPassword ?? "",
+  ].join("\u001f");
+}
+
 function replacement(report: IniImportCompatibilityReport, id: IniImportFieldId): IniImportIdentityField | undefined {
   return report.replacements.find((field) => field.id === id);
 }
@@ -37,11 +56,25 @@ function parsePort(raw: string | null, label: string, problems: string[]): numbe
   return port;
 }
 
-function conflictReason(serverName: string, conflicts: PortConflict[]): string {
+function takenPortKind(
+  port: number,
+  candidate: { gamePort: number; queryPort: number; rconPort: number },
+): PortConflict["kind"] {
+  if (port === candidate.gamePort) return "game";
+  if (port === candidate.queryPort) return "query";
+  return "rcon";
+}
+
+function conflictReason(
+  serverName: string,
+  conflicts: PortConflict[],
+  candidate: { gamePort: number; queryPort: number; rconPort: number },
+): string {
   return conflicts
     .map((conflict) => {
       const other = conflict.serverA === serverName ? conflict.serverB : conflict.serverA;
-      return `Port ${conflict.port} is already used by ${other}, so YARK can't take that ${conflict.kind} port.`;
+      const kind = takenPortKind(conflict.port, candidate);
+      return `Port ${conflict.port} is already used by ${other}, so YARK can't take that ${kind} port.`;
     })
     .join(" ");
 }
@@ -49,6 +82,8 @@ function conflictReason(serverName: string, conflicts: PortConflict[]): string {
 /**
  * Build a profile update from the INI. Refuses when a port clashes with another
  * server, the three ports are not distinct, or a password or name cannot be stored.
+ * A missing or blank admin password is refused. YARK does not clear it.
+ * A missing or blank join password clears the join password.
  * RCON on/off is not a profile field. YARK keeps RCON on.
  */
 export function planAdoptExternalIni(
@@ -88,9 +123,13 @@ export function planAdoptExternalIni(
   );
 
   const admin = replacement(report, "adminPassword");
-  const adminPassword = admin === undefined ? server.adminPassword : (admin.fileValue ?? "");
-  if (admin !== undefined && adminPassword.length < 4) {
-    problems.push("The admin password in GameUserSettings.ini needs at least 4 characters.");
+  const adminPassword = admin === undefined ? server.adminPassword : admin.fileValue;
+  if (admin !== undefined) {
+    if (admin.fileValue === null || admin.fileValue === "") {
+      problems.push("GameUserSettings.ini has no admin password. Choose Keep YARK values to keep the one in YARK.");
+    } else if (admin.fileValue.length < 4) {
+      problems.push("The admin password in GameUserSettings.ini needs at least 4 characters.");
+    }
   }
 
   const join = replacement(report, "serverPassword");
@@ -110,20 +149,26 @@ export function planAdoptExternalIni(
     problems.push("The game, query, and RCON ports in GameUserSettings.ini have to be different.");
   }
 
-  if (problems.length > 0 || gamePort === null || queryPort === null || rconPort === null) {
+  if (
+    problems.length > 0 ||
+    gamePort === null ||
+    queryPort === null ||
+    rconPort === null ||
+    adminPassword === null ||
+    adminPassword.length < 4
+  ) {
     return { ok: false, reason: problems.join(" ") };
   }
 
+  const candidate = { gamePort, queryPort, rconPort };
   const others = fleet.filter((profile) => profile.id !== server.id);
   const conflicts = findPortConflicts(others, {
     id: server.id,
     name: server.name,
-    gamePort,
-    queryPort,
-    rconPort,
+    ...candidate,
   });
   if (conflicts.length > 0) {
-    return { ok: false, reason: conflictReason(server.name, conflicts) };
+    return { ok: false, reason: conflictReason(server.name, conflicts, candidate) };
   }
 
   return {

@@ -85,6 +85,24 @@ function sameSecret(fileValue: string | null, profileValue: string): boolean {
 }
 
 /**
+ * Value the operator sees and YARK stores.
+ * Session names turn control characters into spaces. Ports drop them.
+ */
+function normalizeIniText(value: string | null, mode: "text" | "port"): string | null {
+  if (value === null) return null;
+  const cleaned =
+    mode === "port"
+      ? value.replace(/[\u0000-\u001F\u007F]/g, "")
+      : value.replace(/[\u0000-\u001F\u007F]/g, " ").replace(/ {2,}/g, " ");
+  const trimmed = cleaned.trim();
+  return trimmed.length === 0 ? "" : trimmed;
+}
+
+function readIniText(text: string, section: string, key: string, mode: "text" | "port"): string | null {
+  return normalizeIniText(getIniTextValueAt(text, section, key, 0), mode);
+}
+
+/**
  * Operator sentence for one replacement. Password lines name the field and
  * omit both values so a log of the visible text does not carry the secret.
  */
@@ -116,62 +134,69 @@ export function buildIniImportCompatibilityReport(
 ): IniImportCompatibilityReport {
   const gus = ini.gameUserSettings;
   const joinPassword = profile.serverPassword ?? "";
+  const sessionName = readIniText(gus, "SessionSettings", "SessionName", "text");
+  const gamePort = readIniText(gus, "SessionSettings", "Port", "port");
+  const queryPort = readIniText(gus, "SessionSettings", "QueryPort", "port");
+  const rconPort = readIniText(gus, "ServerSettings", "RCONPort", "port");
+  const rconEnabled = getIniTextValueAt(gus, "ServerSettings", "RCONEnabled", 0);
+  const adminPassword = getIniTextValueAt(gus, "ServerSettings", "ServerAdminPassword", 0);
+  const serverPassword = getIniTextValueAt(gus, "ServerSettings", "ServerPassword", 0);
   const candidates: Array<IniImportIdentityField & { matches: boolean }> = [
     {
       id: "sessionName",
       label: "Session name",
-      fileValue: getIniTextValueAt(gus, "SessionSettings", "SessionName", 0),
+      fileValue: sessionName,
       profileValue: profile.sessionName,
       sensitive: false,
-      matches: sameText(getIniTextValueAt(gus, "SessionSettings", "SessionName", 0), profile.sessionName),
+      matches: sameText(sessionName, profile.sessionName),
     },
     {
       id: "gamePort",
       label: "Game port",
-      fileValue: getIniTextValueAt(gus, "SessionSettings", "Port", 0),
+      fileValue: gamePort,
       profileValue: String(profile.gamePort),
       sensitive: false,
-      matches: samePort(getIniTextValueAt(gus, "SessionSettings", "Port", 0), String(profile.gamePort)),
+      matches: samePort(gamePort, String(profile.gamePort)),
     },
     {
       id: "queryPort",
       label: "Query port",
-      fileValue: getIniTextValueAt(gus, "SessionSettings", "QueryPort", 0),
+      fileValue: queryPort,
       profileValue: String(profile.queryPort),
       sensitive: false,
-      matches: samePort(getIniTextValueAt(gus, "SessionSettings", "QueryPort", 0), String(profile.queryPort)),
+      matches: samePort(queryPort, String(profile.queryPort)),
     },
     {
       id: "rconPort",
       label: "RCON port",
-      fileValue: getIniTextValueAt(gus, "ServerSettings", "RCONPort", 0),
+      fileValue: rconPort,
       profileValue: String(profile.rconPort),
       sensitive: false,
-      matches: samePort(getIniTextValueAt(gus, "ServerSettings", "RCONPort", 0), String(profile.rconPort)),
+      matches: samePort(rconPort, String(profile.rconPort)),
     },
     {
       id: "rconEnabled",
       label: "RCON",
-      fileValue: getIniTextValueAt(gus, "ServerSettings", "RCONEnabled", 0),
+      fileValue: rconEnabled,
       profileValue: "True",
       sensitive: false,
-      matches: sameEnabled(getIniTextValueAt(gus, "ServerSettings", "RCONEnabled", 0)),
+      matches: sameEnabled(rconEnabled),
     },
     {
       id: "adminPassword",
       label: "Admin password",
-      fileValue: getIniTextValueAt(gus, "ServerSettings", "ServerAdminPassword", 0),
+      fileValue: adminPassword,
       profileValue: profile.adminPassword,
       sensitive: true,
-      matches: sameSecret(getIniTextValueAt(gus, "ServerSettings", "ServerAdminPassword", 0), profile.adminPassword),
+      matches: sameSecret(adminPassword, profile.adminPassword),
     },
     {
       id: "serverPassword",
       label: "Server password",
-      fileValue: getIniTextValueAt(gus, "ServerSettings", "ServerPassword", 0),
+      fileValue: serverPassword,
       profileValue: joinPassword,
       sensitive: true,
-      matches: sameSecret(getIniTextValueAt(gus, "ServerSettings", "ServerPassword", 0), joinPassword),
+      matches: sameSecret(serverPassword, joinPassword),
     },
   ];
 

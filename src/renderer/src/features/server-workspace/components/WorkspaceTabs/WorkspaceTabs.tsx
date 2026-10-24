@@ -1,4 +1,5 @@
 import { Tabs } from "@mantine/core";
+import { importChoiceIdentity } from "@shared/ini/ini-import-adopt";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import { lazy, Suspense, useEffect, useState, type ReactElement } from "react";
 import { ServerBackupPanel } from "@features/backups/ServerBackupPanel";
@@ -84,6 +85,8 @@ interface Props {
 export function WorkspaceTabs(props: Props): ReactElement {
   const { initialRconFocus, onRconFocusConsumed } = props;
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const [settledChoice, setSettledChoice] = useState<string | null>(null);
+  const choiceIdentity = importChoiceIdentity(props.server.id, props.server);
   /** Snapshot at open so refresh remounts do not rewrite the dialog mid-move. */
   const [moveServer, setMoveServer] = useState<ServerProfile | null>(null);
   const [rconPlayersFocus, setRconPlayersFocus] = useState<"survivors" | "admins" | null>(initialRconFocus ?? null);
@@ -95,6 +98,10 @@ export function WorkspaceTabs(props: Props): ReactElement {
     setRconPlayersFocus(initialRconFocus);
     onRconFocusConsumed?.();
   }, [initialRconFocus, onRconFocusConsumed]);
+
+  useEffect(() => {
+    setSettledChoice(null);
+  }, [props.server.id]);
 
   return (
     <>
@@ -138,6 +145,8 @@ export function WorkspaceTabs(props: Props): ReactElement {
                       server={props.server}
                       servers={props.servers}
                       profileDirty={props.profileDirty === true}
+                      choiceSettled={settledChoice === choiceIdentity}
+                      onChoiceSettled={setSettledChoice}
                       onUpdated={props.onServerUpdated}
                     />
                   }

@@ -1,7 +1,7 @@
 import { Button, Group, List, Text } from "@mantine/core";
 import type { ServerProfile } from "@shared/types";
-import { useEffect, useState, type ReactElement } from "react";
-import { planAdoptExternalIni, serverToProfileInput } from "@shared/ini/ini-import-adopt";
+import { useEffect, useRef, useState, type ReactElement } from "react";
+import { importChoiceIdentity, planAdoptExternalIni, serverToProfileInput } from "@shared/ini/ini-import-adopt";
 import {
   buildIniImportCompatibilityReport,
   formatIniImportKeptSummary,
@@ -18,16 +18,24 @@ export function ImportCompatibilityReport(props: {
   server: ServerProfile;
   servers: ServerProfile[];
   profileDirty?: boolean;
+  /** This profile identity was just chosen. A form remount must not read the file again. */
+  choiceSettled?: boolean;
+  onChoiceSettled?: (identity: string) => void;
   onUpdated?: () => void;
 }): ReactElement | null {
-  const { server, servers, profileDirty = false, onUpdated } = props;
+  const { server, servers, profileDirty = false, choiceSettled = false, onChoiceSettled, onUpdated } = props;
   const [report, setReport] = useState<IniImportCompatibilityReport | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<"file" | "yark" | null>(null);
+  const pendingRef = useRef<"file" | "yark" | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   /** Hide after a choice. Profile save writes the INI without waiting, so a re-read can still see the old file. */
-  const [resolved, setResolved] = useState(false);
+  const [resolved, setResolved] = useState(choiceSettled);
 
   useEffect(() => {
+    if (choiceSettled) {
+      setResolved(true);
+      return;
+    }
     let cancelled = false;
     setReport(null);
     setActionError(null);
@@ -62,22 +70,32 @@ export function ImportCompatibilityReport(props: {
     server.rconPort,
     server.adminPassword,
     server.serverPassword,
+    choiceSettled,
   ]);
 
   if (resolved || report === null || report.replacements.length === 0) return null;
   const kept = formatIniImportKeptSummary(report);
 
-  const apply = async (input: ReturnType<typeof serverToProfileInput>): Promise<void> => {
-    setBusy(true);
+  const apply = async (input: ReturnType<typeof serverToProfileInput>, which: "file" | "yark"): Promise<void> => {
+    if (pendingRef.current !== null) return;
+    pendingRef.current = which;
+    setPending(which);
     setActionError(null);
-    const result = await window.api.updateServer(server.id, input);
-    setBusy(false);
-    if (!result.ok) {
-      setActionError(result.error ?? "Could not update the server");
-      return;
+    try {
+      const result = await window.api.updateServer(server.id, input);
+      if (!result.ok) {
+        setActionError(result.error ?? "Could not update the server");
+        return;
+      }
+      onChoiceSettled?.(importChoiceIdentity(server.id, input));
+      setResolved(true);
+      onUpdated?.();
+    } catch {
+      setActionError("Could not update the server");
+    } finally {
+      pendingRef.current = null;
+      setPending(null);
     }
-    onUpdated?.();
-    setResolved(true);
   };
 
   const updateYark = (): void => {
@@ -90,7 +108,7 @@ export function ImportCompatibilityReport(props: {
       setActionError(plan.reason);
       return;
     }
-    void apply(plan.input);
+    void apply(plan.input, "file");
   };
 
   const discard = (): void => {
@@ -98,7 +116,7 @@ export function ImportCompatibilityReport(props: {
       setActionError("Save or cancel the edits on this form first.");
       return;
     }
-    void apply(serverToProfileInput(server));
+    void apply(serverToProfileInput(server), "yark");
   };
 
   return (
@@ -112,8 +130,8 @@ export function ImportCompatibilityReport(props: {
           <List.Item key={field.id}>
             {formatIniImportReplacement(field)
               .split("\n")
-              .map((line) => (
-                <Text key={line} size="sm">
+              .map((line, index) => (
+                <Text key={`${field.id}-${index}`} size="sm">
                   {line}
                 </Text>
               ))}
@@ -133,8 +151,8 @@ export function ImportCompatibilityReport(props: {
       <Group gap="xs" mt="sm">
         <Button
           size="xs"
-          loading={busy}
-          disabled={profileDirty}
+          loading={pending === "file"}
+          disabled={pending !== null || profileDirty}
           title={profileDirty ? "Save or cancel the edits on this form first." : undefined}
           onClick={updateYark}
         >
@@ -143,8 +161,8 @@ export function ImportCompatibilityReport(props: {
         <Button
           size="xs"
           variant="default"
-          loading={busy}
-          disabled={profileDirty}
+          loading={pending === "yark"}
+          disabled={pending !== null || profileDirty}
           title={profileDirty ? "Save or cancel the edits on this form first." : undefined}
           onClick={discard}
         >

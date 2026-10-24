@@ -110,6 +110,19 @@ ConfigOverrideItemMaxQuantity=(hello world)
     expect(formatIniImportKeptSummary(report)).toBe("1 line stays as it is. 1 stays word for word.");
   });
 
+  it("shows the session name YARK will save when the file hides a tab in it", () => {
+    const report = buildIniImportCompatibilityReport(
+      profile,
+      payload(matchingGus.replace("SessionName=Island", "SessionName=Old\tIsland")),
+    );
+    const session = report.replacements.find((field) => field.id === "sessionName");
+    expect(session?.fileValue).toBe("Old Island");
+    expect(session).toBeDefined();
+    expect(formatIniImportReplacement(session!)).toBe(
+      'Session name in GameUserSettings.ini: "Old Island".\nSession name in YARK: "Island".',
+    );
+  });
+
   it("says a blank session name is blank instead of printing an empty value", () => {
     const report = buildIniImportCompatibilityReport(
       profile,

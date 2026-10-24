@@ -90,6 +90,57 @@ describe("planAdoptExternalIni", () => {
     expect(plan.reason).not.toContain("ab");
   });
 
+  it("names the port this server would take when the other server uses that number for a different role", () => {
+    const other: ServerProfile = {
+      ...server,
+      id: "srv-b",
+      name: "Other",
+      gamePort: 7779,
+      queryPort: 7778,
+      rconPort: 27021,
+    };
+    const plan = planAdoptExternalIni(
+      server,
+      [server, other],
+      reportFor(matchingGus.replace("Port=7777", "Port=7778")),
+    );
+    expect(plan).toEqual({
+      ok: false,
+      reason: "Port 7778 is already used by Other, so YARK can't take that game port.",
+    });
+  });
+
+  it("refuses a missing admin password and does not clear the one in YARK", () => {
+    const plan = planAdoptExternalIni(
+      server,
+      [server],
+      reportFor(matchingGus.replace("ServerAdminPassword=secret-admin\n", "")),
+    );
+    expect(plan.ok).toBe(false);
+    if (plan.ok) return;
+    expect(plan.reason).toBe(
+      "GameUserSettings.ini has no admin password. Choose Keep YARK values to keep the one in YARK.",
+    );
+    expect(plan.reason).not.toContain("secret-admin");
+  });
+
+  it("clears a join password the file omits while copying the session name", () => {
+    const withJoin: ServerProfile = { ...server, serverPassword: "secret-join" };
+    const gameUserSettings = matchingGus
+      .replace("SessionName=Island", "SessionName=Old Island")
+      .replace("ServerPassword=\n", "");
+    const plan = planAdoptExternalIni(
+      withJoin,
+      [withJoin],
+      buildIniImportCompatibilityReport(withJoin, { gameUserSettings, game: "" }),
+    );
+    expect(plan.ok).toBe(true);
+    if (!plan.ok) return;
+    expect(plan.input.sessionName).toBe("Old Island");
+    expect(plan.input.serverPassword).toBeNull();
+    expect(plan.input.adminPassword).toBe("secret-admin");
+  });
+
   it("does not copy RCON off into the profile", () => {
     const plan = planAdoptExternalIni(
       server,
