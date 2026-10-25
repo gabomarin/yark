@@ -29,6 +29,125 @@
   flex-shrink: 0;
 }
 
+.editor > .lootEditor {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.lootColumns {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.lootList {
+  flex: 0 0 300px;
+  width: 300px;
+  align-self: stretch;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.lootListScroll {
+  flex: 1 1 0;
+  height: 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.lootCrateRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--app-space-xs);
+  width: 100%;
+  text-align: left;
+  border: 1px solid transparent;
+  border-radius: var(--app-radius-sm);
+  padding: 6px var(--app-space-xs);
+  color: var(--app-color-text);
+}
+
+.lootCrateRow:hover {
+  background: var(--app-color-surface-control-hover);
+}
+
+.lootCrateRow[data-selected] {
+  background: var(--app-color-surface-control);
+  border-color: var(--app-color-accent);
+}
+
+.lootCrateRow:focus-visible {
+  outline: 2px solid var(--app-color-accent);
+  outline-offset: 1px;
+}
+
+.lootCrateSwatch {
+  --swatch: var(--app-color-border-control);
+  width: 12px;
+  height: 12px;
+  margin-top: 4px;
+  border-radius: 999px;
+  flex: none;
+  background: var(--swatch);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app-color-text) 28%, transparent);
+}
+
+.lootCrateSwatch[data-color="white"] {
+  --swatch: #eceae4;
+}
+
+.lootCrateSwatch[data-color="green"] {
+  --swatch: #3f9d55;
+}
+
+.lootCrateSwatch[data-color="blue"] {
+  --swatch: #3d7ed6;
+}
+
+.lootCrateSwatch[data-color="purple"] {
+  --swatch: #8b52d6;
+}
+
+.lootCrateSwatch[data-color="yellow"] {
+  --swatch: #d2ae3a;
+}
+
+.lootCrateSwatch[data-color="red"] {
+  --swatch: #d45353;
+}
+
+.lootCrateSwatch[data-ring] {
+  background: transparent;
+  box-shadow:
+    inset 0 0 0 2px var(--swatch),
+    0 0 0 1px color-mix(in srgb, var(--app-color-text) 28%, transparent);
+}
+
+.lootDetail {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+.lootItemRow,
+.lootItemRowWeighted,
+.lootItemHead {
+  display: grid;
+  align-items: center;
+  column-gap: var(--app-space-xs);
+}
+
+.lootItemRow {
+  grid-template-columns: minmax(0, 1fr) 28px;
+}
+
+.lootItemRowWeighted,
+.lootItemHead {
+  grid-template-columns: minmax(0, 1fr) 72px 28px;
+}
+
 .search {
   flex: 1;
   min-width: 180px;

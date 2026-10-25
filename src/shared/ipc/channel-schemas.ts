@@ -49,6 +49,7 @@ import {
   iniFileFingerprintsSchema,
   iniSemanticOpsSchema,
   namedEngramEditsSchema,
+  supplyCrateEditsSchema,
   startServerOptionsSchema,
   steamCmdCacheKindSchema,
   uiDensitySchema,
@@ -421,6 +422,7 @@ export const ipcArgSchemas = {
   [IPC.iniSaveSemantic]: z.union([
     z.tuple([serverIdSchema, iniSemanticOpsSchema]),
     z.tuple([serverIdSchema, iniSemanticOpsSchema, namedEngramEditsSchema]),
+    z.tuple([serverIdSchema, iniSemanticOpsSchema, namedEngramEditsSchema, supplyCrateEditsSchema]),
   ]),
   [IPC.clusterIniGet]: z.tuple([clusterIdSchema]),
   [IPC.clusterIniGetOrDraft]: z.tuple([clusterIdSchema]),

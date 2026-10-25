@@ -3,6 +3,7 @@ import { resolveAsaUiCategory, type AsaUiCategoryId } from "@shared/asa/asa-sett
 import { isVisuallyEditableIniSetting } from "@shared/ini/ini-setting-decisions";
 import { isNamedEngramEntriesKey } from "@shared/ini/engram-named-entries";
 import { isPlayerLevelEngramPointsKey } from "@shared/ini/player-level-engram-points";
+import { isSupplyCrateEntriesKey } from "@shared/ini/supply-crate-entries";
 import {
   parseIniRows,
   removeIniValue,
@@ -193,8 +194,12 @@ export function applyIniRowRevertToPayload(
   };
 }
 
+/** Hides engram, points-per-level, and loot lines from the Game.ini Settings table. */
 export function isGameIniEngramEditorKey(fileKey: IniFileKey, key: string): boolean {
-  return fileKey === "game" && (isPlayerLevelEngramPointsKey(key) || isNamedEngramEntriesKey(key));
+  return (
+    fileKey === "game" &&
+    (isPlayerLevelEngramPointsKey(key) || isNamedEngramEntriesKey(key) || isSupplyCrateEntriesKey(key))
+  );
 }
 
 /** Count unsaved visual rows using a memoized match index (no baseline re-parse). */

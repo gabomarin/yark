@@ -677,7 +677,7 @@ describe("SetupWizard", () => {
     expect(clusterDir).toHaveAttribute("title", `E:\\ARK\\Clusters\\${id}`);
   });
 
-  it("offers the same theme families as Settings, and withholds Glassy", async () => {
+  it("offers the same theme families as Settings, including Glassy", async () => {
     const user = userEvent.setup();
     const onThemeFamilyChange = vi.fn();
     stubWizardApi();
@@ -720,11 +720,13 @@ describe("SetupWizard", () => {
     expect(screen.getByLabelText("Theme family")).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Fluent" })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Plasma Breeze" })).toBeInTheDocument();
-    expect(screen.queryByRole("radio", { name: "Glassy" })).not.toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Glassy" })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Dark" })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Light" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("radio", { name: "Plasma Breeze" }));
     expect(onThemeFamilyChange).toHaveBeenCalledWith("plasma-breeze");
+    await user.click(screen.getByRole("radio", { name: "Glassy" }));
+    expect(onThemeFamilyChange).toHaveBeenCalledWith("glassy");
   });
 });

@@ -405,6 +405,11 @@ function createAppCssVariablesResolver(
       "--mantine-color-red-light-color": "var(--app-color-danger-bright)",
       "--mantine-color-red-text": "var(--app-color-danger-bright)",
       "--mantine-color-red-6": "var(--app-color-danger-bright)",
+      /*
+       * Dark scheme paints Mantine error text with red-8 (`#7a2020`). That step
+       * disappears on a dark panel. Error copy uses the same bright danger text.
+       */
+      "--mantine-color-error": "var(--app-color-danger-bright)",
       "--mantine-color-attention-filled": "var(--app-color-attention)",
       "--mantine-color-attention-filled-hover": "color-mix(in srgb, var(--app-color-attention) 82%, white)",
       "--mantine-color-attention-light": "var(--app-attention-light)",

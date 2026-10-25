@@ -1,0 +1,5485 @@
+{
+  "version": "1",
+  "generatedAt": "2026-10-24",
+  "source": {
+    "note": "Item classes for ConfigOverrideSupplyCrateItems. Labels and map lists come from the LQA blueprint catalog. className is the INI class and ends in _C. Creatures are omitted. An empty maps list means this catalog does not limit the item to a map."
+  },
+  "count": 408,
+  "entries": [
+    {
+      "className": "PrimalItemArmor_AcroSaddle_C",
+      "label": "Acro Saddle",
+      "kind": "armor",
+      "maps": [
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemAmmo_AdvancedBullet_C",
+      "label": "Advanced Bullet",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemAmmo_AdvancedRifleBullet_C",
+      "label": "Advanced Rifle Bullet",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemAmmo_AdvancedSniperBullet_C",
+      "label": "Advanced Sniper Bullet",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_AlloSaddle_C",
+      "label": "Allosaurus Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemConsumable_Berry_Amarberry_C",
+      "label": "Amarberry",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_AngelFoxSaddle_C",
+      "label": "Angel Fox Saddle",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemResource_AnglerGel_C",
+      "label": "Angler Gel",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_AnkyloSaddle_C",
+      "label": "Ankylo Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemConsumable_Mushroom_Aquatic_C",
+      "label": "Aquatic Mushroom",
+      "kind": "resource",
+      "maps": ["Aberration_WP", "Genesis_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_SpiderSaddle_C",
+      "label": "Araneo Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_Armor_Archelon_Saddle_ASA_C",
+      "label": "Archelon Saddle",
+      "kind": "armor",
+      "maps": ["Astraeos_WP", "Genesis_WP", "Ragnarok_WP", "TheCenter_WP", "TheIsland_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_ArcticBoots_C",
+      "label": "Arctic Scout Boots",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_ArcticShirt_C",
+      "label": "Arctic Scout Chestpiece",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_ArcticGloves_C",
+      "label": "Arctic Scout Gauntlets",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_ArcticPants_C",
+      "label": "Arctic Scout Leggings",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_ArcticHelmet_C",
+      "label": "Arctic Scout Mask",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_ArgentavisSaddle_C",
+      "label": "Argentavis Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemAmmo_ArrowFlame_C",
+      "label": "Arrow Flame",
+      "kind": "weapon",
+      "maps": [
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_ArthroSaddle_C",
+      "label": "Arthropluera Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemConsumable_Mushroom_Ascerbic_C",
+      "label": "Ascerbic Mushroom",
+      "kind": "resource",
+      "maps": ["Aberration_WP", "Genesis_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItem_WeaponRifle_C",
+      "label": "Assault Rifle",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponRifle_Cursed_C",
+      "label": "Assault Rifle (Cursed)",
+      "kind": "weapon",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemConsumable_Mushroom_Auric_C",
+      "label": "Auric Mushroom",
+      "kind": "resource",
+      "maps": ["Aberration_WP", "Genesis_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemStructure_Turret_C",
+      "label": "Auto Turret",
+      "kind": "structure",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemConsumable_Berry_Azulberry_C",
+      "label": "Azulberry",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_BaryonyxSaddle_C",
+      "label": "Baryonyx Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_BasiliskSaddle_C",
+      "label": "Basilisk Saddle",
+      "kind": "armor",
+      "maps": ["Aberration_WP", "Astraeos_WP", "Genesis_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_BasiloSaddle_C",
+      "label": "Basilosaurus Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_ToadSaddle_C",
+      "label": "Beelzebufo Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemConsumable_BeerJar_C",
+      "label": "Beer",
+      "kind": "item",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_BisonSaddle_C",
+      "label": "Bison Saddle",
+      "kind": "armor",
+      "maps": ["Astraeos_WP", "Genesis_WP", "Ragnarok_WP"]
+    },
+    {
+      "className": "PrimalItemResource_BlackPearl_C",
+      "label": "Black Pearl",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponBola_C",
+      "label": "Bola",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponBoomerang_C",
+      "label": "Boomerang",
+      "kind": "weapon",
+      "maps": ["Astraeos_WP", "Ragnarok_WP", "ScorchedEarth_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_BossBatSaddle_C",
+      "label": "Boss Bat Saddle",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_BossBatSaddle_Platform_C",
+      "label": "Boss Bat Saddle Platform",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItem_WeaponBow_C",
+      "label": "Bow",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_SauroSaddle_Platform_C",
+      "label": "Bronto Platform Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_SauroSaddle_C",
+      "label": "Bronto Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemC4Ammo_C",
+      "label": "C4 Charge",
+      "kind": "item",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponC4_C",
+      "label": "C4 Remote Detonator",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemConsumable_CactusSap_C",
+      "label": "Cactus Sap",
+      "kind": "resource",
+      "maps": ["Astraeos_WP", "Extinction_WP", "Genesis_WP", "Ragnarok_WP", "ScorchedEarth_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemStructure_Campfire_C",
+      "label": "Campfire",
+      "kind": "structure",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemAmmo_CannonBall_C",
+      "label": "Cannon Ball",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_TurtleSaddle_C",
+      "label": "Carbonemys Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_CarchaSaddle_C",
+      "label": "Carcharo Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_CarnoSaddle_C",
+      "label": "Carno Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_BeaverSaddle_C",
+      "label": "Castoroides Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_ChitinPaste_C",
+      "label": "Cementing Paste",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_CeratosaurusSaddle_ASA_C",
+      "label": "Ceratosaurus Saddle",
+      "kind": "armor",
+      "maps": [
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemAmmo_ChainBola_C",
+      "label": "Chain Bola",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_ChainSaw_C",
+      "label": "Chainsaw",
+      "kind": "weapon",
+      "maps": ["Astraeos_WP", "Ragnarok_WP", "ScorchedEarth_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItem_ChainSaw_Cursed_C",
+      "label": "Chainsaw (Cursed)",
+      "kind": "weapon",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_ChalicoSaddle_C",
+      "label": "Chalicotherium Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_Charcoal_C",
+      "label": "Charcoal",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_Chitin_C",
+      "label": "Chitin",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_ChitinBoots_C",
+      "label": "Chitin Boots",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_ChitinShirt_C",
+      "label": "Chitin Chestpiece",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_ChitinGloves_C",
+      "label": "Chitin Gauntlets",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_ChitinHelmet_C",
+      "label": "Chitin Helmet",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_ChitinPants_C",
+      "label": "Chitin Leggings",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_Clay_C",
+      "label": "Clay",
+      "kind": "resource",
+      "maps": ["Astraeos_WP", "Extinction_WP", "Genesis_WP", "Ragnarok_WP", "ScorchedEarth_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItem_WeaponClimbPick_C",
+      "label": "Climb Pick",
+      "kind": "weapon",
+      "maps": ["Aberration_WP", "Astraeos_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_ClothBoots_C",
+      "label": "Cloth Boots",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_ClothGloves_C",
+      "label": "Cloth Gloves",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_ClothHelmet_C",
+      "label": "Cloth Hat",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_ClothPants_C",
+      "label": "Cloth Pants",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_ClothShirt_C",
+      "label": "Cloth Shirt",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_CommonMushroom_C",
+      "label": "Common Mushroom",
+      "kind": "resource",
+      "maps": ["Aberration_WP", "Genesis_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemStructure_CompostBin_C",
+      "label": "Compost Bin",
+      "kind": "structure",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponCompoundBow_C",
+      "label": "Compound Bow",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponCompoundBow_Cursed_C",
+      "label": "Compound Bow (Cursed)",
+      "kind": "weapon",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemAmmo_CompoundBowArrow_C",
+      "label": "Compound Bow Arrow",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_Gas_C",
+      "label": "Congealed Gas",
+      "kind": "resource",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemConsumable_CookedLambChop_C",
+      "label": "Cooked Lamb Chop",
+      "kind": "item",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemConsumable_CookedMeat_C",
+      "label": "Cooked Meat",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemConsumable_CookedMeat_Fish_C",
+      "label": "Cooked Meat Fish",
+      "kind": "item",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemConsumable_CookedPrimeMeat_C",
+      "label": "Cooked Prime Meat",
+      "kind": "item",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemConsumable_CookedPrimeMeat_Fish_C",
+      "label": "Cooked Prime Meat Fish",
+      "kind": "item",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_CrabSaddle_C",
+      "label": "Crab Saddle",
+      "kind": "armor",
+      "maps": ["Aberration_WP", "Astraeos_WP", "Genesis_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItem_WeaponCrossbow_C",
+      "label": "Crossbow",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponCrossbow_Cursed_C",
+      "label": "Crossbow (Cursed)",
+      "kind": "weapon",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_CryoSaddle_C",
+      "label": "Cryofridge",
+      "kind": "armor",
+      "maps": ["Genesis_WP", "LostColony_WP"]
+    },
+    {
+      "className": "PrimalItem_WeaponEmptyCryopod_C",
+      "label": "Cryopod",
+      "kind": "weapon",
+      "maps": ["Extinction_WP"]
+    },
+    {
+      "className": "PrimalItemResource_Crystal_C",
+      "label": "Crystal",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_DaeodonSaddle_C",
+      "label": "Daeodon Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_DeinonychusSaddle_C",
+      "label": "Deinonychus Saddle",
+      "kind": "armor",
+      "maps": ["Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_Deinosuchus_Saddle_ASA_C",
+      "label": "Deinosuchus Saddle",
+      "kind": "armor",
+      "maps": [
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_DeinotheriumSaddle_ASA_C",
+      "label": "Deinotherium Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_DesertClothBoots_C",
+      "label": "Desert Cloth Boots",
+      "kind": "armor",
+      "maps": ["Astraeos_WP", "Ragnarok_WP", "ScorchedEarth_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_DesertClothGloves_C",
+      "label": "Desert Cloth Gloves",
+      "kind": "armor",
+      "maps": ["Astraeos_WP", "Ragnarok_WP", "ScorchedEarth_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_DesertClothGogglesHelmet_C",
+      "label": "Desert Cloth Goggles Helmet",
+      "kind": "armor",
+      "maps": ["Astraeos_WP", "Ragnarok_WP", "ScorchedEarth_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_DesertClothPants_C",
+      "label": "Desert Cloth Pants",
+      "kind": "armor",
+      "maps": ["Astraeos_WP", "Ragnarok_WP", "ScorchedEarth_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_DesertClothShirt_C",
+      "label": "Desert Cloth Shirt",
+      "kind": "armor",
+      "maps": ["Astraeos_WP", "Ragnarok_WP", "ScorchedEarth_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_DesmodusSaddle_C",
+      "label": "Desmodus Saddle",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_DevilFoxSaddle_C",
+      "label": "Devil Fox Saddle",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_DinoCompanion_Gear_AmmoBox_C",
+      "label": "Dino Companion Gear Ammo Box",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_DinoCompanion_Gear_Bag_C",
+      "label": "Dino Companion Gear Bag",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_DinoCompanion_Gear_ExtraArmor_C",
+      "label": "Dino Companion Gear Extra Armor",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_DinoCompanion_Gear_FoodBasket_C",
+      "label": "Dino Companion Gear Food Basket",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_DinoCompanion_Gear_MeatSack_C",
+      "label": "Dino Companion Gear Meat Sack",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_DinoCompanion_Gear_Medkit_C",
+      "label": "Dino Companion Gear Medkit",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_DinoCompanion_Gear_Movespeed_C",
+      "label": "Dino Companion Gear Movespeed",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_DinoCompanion_Gear_OxygenTank_C",
+      "label": "Dino Companion Gear Oxygen Tank",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_DinoCompanion_Gear_RolledUpSleepingBag_C",
+      "label": "Dino Companion Gear Rolled Up Sleeping Bag",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_DinoCompanion_Gear_Spikes_C",
+      "label": "Dino Companion Gear Spikes",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_DinoCompanionSaddle_Doggo_C",
+      "label": "Dino Companion Saddle Doggo",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_DiplodocusSaddle_C",
+      "label": "Diplodocus Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_DireBearSaddle_C",
+      "label": "Dire Bear Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_DoedSaddle_C",
+      "label": "Doedicurus Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_DreadSaddle_Platform_C",
+      "label": "Dread Saddle Platform",
+      "kind": "armor",
+      "maps": ["Astraeos_WP", "Extinction_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_DunkleosteusSaddle_C",
+      "label": "Dunkleosteus Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemConsumable_Egg_Wyvern_Fertilized_Fire_C",
+      "label": "Egg Wyvern Fertilized Fire",
+      "kind": "resource",
+      "maps": ["Astraeos_WP", "Ragnarok_WP", "ScorchedEarth_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemConsumable_Egg_Wyvern_Fertilized_Lightning_C",
+      "label": "Egg Wyvern Fertilized Lightning",
+      "kind": "resource",
+      "maps": ["Astraeos_WP", "Ragnarok_WP", "ScorchedEarth_WP"]
+    },
+    {
+      "className": "PrimalItemConsumable_Egg_Wyvern_Fertilized_Poison_C",
+      "label": "Egg Wyvern Fertilized Poison",
+      "kind": "resource",
+      "maps": ["Astraeos_WP", "Ragnarok_WP", "ScorchedEarth_WP"]
+    },
+    {
+      "className": "PrimalItemResource_Electronics_C",
+      "label": "Electronics",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_Element_C",
+      "label": "Element",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_ElementOre_C",
+      "label": "Element Ore",
+      "kind": "resource",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemResource_ElementShard_C",
+      "label": "Element Shard",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_EquusSaddle_C",
+      "label": "Equus Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponCrossbow_Fab_C",
+      "label": "Fabricated Crossbow",
+      "kind": "weapon",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItem_WeaponMachinedPistol_C",
+      "label": "Fabricated Pistol",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponMachinedPistol_Cursed_C",
+      "label": "Fabricated Pistol (Cursed)",
+      "kind": "weapon",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItem_WeaponMachinedSniper_C",
+      "label": "Fabricated Sniper Rifle",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponMachinedSniper_Cursed_C",
+      "label": "Fabricated Sniper Rifle (Cursed)",
+      "kind": "weapon",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_FasolaSaddle_C",
+      "label": "Fasolasuchus Saddle",
+      "kind": "armor",
+      "maps": ["Aberration_WP", "Astraeos_WP", "Ragnarok_WP", "ScorchedEarth_WP"]
+    },
+    {
+      "className": "PrimalItemResource_Fibers_C",
+      "label": "Fiber",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponFishingRod_C",
+      "label": "Fishing Rod",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_MetalBoots_C",
+      "label": "Flak Boots",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_MetalBoots_Cursed_C",
+      "label": "Flak Boots (Cursed)",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_MetalShirt_C",
+      "label": "Flak Chestpiece",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_MetalShirt_Cursed_C",
+      "label": "Flak Chestpiece (Cursed)",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_MetalGloves_C",
+      "label": "Flak Gauntlets",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_MetalGloves_Cursed_C",
+      "label": "Flak Gauntlets (Cursed)",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_MetalHelmet_C",
+      "label": "Flak Helmet",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_MetalHelmet_Cursed_C",
+      "label": "Flak Helmet (Cursed)",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_MetalPants_C",
+      "label": "Flak Leggings",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_MetalPants_Cursed_C",
+      "label": "Flak Leggings (Cursed)",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemAmmo_Flamethrower_C",
+      "label": "Flamethrower",
+      "kind": "weapon",
+      "maps": ["Astraeos_WP", "Genesis_WP", "Ragnarok_WP", "ScorchedEarth_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItem_WeaponFlareGun_C",
+      "label": "Flare Gun",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_Flint_C",
+      "label": "Flint",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_FungalWood_C",
+      "label": "Fungal Wood",
+      "kind": "resource",
+      "maps": ["Aberration_WP", "Astraeos_WP", "Extinction_WP", "Genesis_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_FurBoots_C",
+      "label": "Fur Boots",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_FurHelmet_C",
+      "label": "Fur Cap",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_FurShirt_C",
+      "label": "Fur Chestpiece",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_FurGloves_C",
+      "label": "Fur Gauntlets",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_FurPants_C",
+      "label": "Fur Leggings",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_GachaSaddle_C",
+      "label": "Gacha Saddle",
+      "kind": "armor",
+      "maps": ["Extinction_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_Gallimimus_C",
+      "label": "Gallimimus Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_GasMask_C",
+      "label": "Gas Mask",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_GasBagsSaddle_C",
+      "label": "Gasbags Saddle",
+      "kind": "armor",
+      "maps": ["Extinction_WP"]
+    },
+    {
+      "className": "PrimalItemResource_Gasoline_C",
+      "label": "Gasoline",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_Gem_BioLum_C",
+      "label": "Gem Bio Lum",
+      "kind": "resource",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemResource_Gem_Element_C",
+      "label": "Gem Element",
+      "kind": "resource",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemResource_Gem_Fertile_C",
+      "label": "Gem Fertile",
+      "kind": "resource",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItem_WeaponGeneScanner_C",
+      "label": "Gene Scanner",
+      "kind": "weapon",
+      "maps": ["Aberration_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_GhillieBoots_C",
+      "label": "Ghillie Boots",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_GhillieShirt_C",
+      "label": "Ghillie Chestpiece",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_GhillieGloves_C",
+      "label": "Ghillie Gauntlets",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_GhilliePants_C",
+      "label": "Ghillie Leggings",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_GhillieHelmet_C",
+      "label": "Ghillie Mask",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_GigantSaddle_C",
+      "label": "Giganotosaurus Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_GigantoraptorSaddle_C",
+      "label": "Gigantoraptor Saddle",
+      "kind": "armor",
+      "maps": [
+        "Astraeos_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_Glider_C",
+      "label": "Glider Suit Skin",
+      "kind": "armor",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItem_WeaponGooGun_C",
+      "label": "Goo Gun",
+      "kind": "weapon",
+      "maps": ["Aberration_WP"]
+    },
+    {
+      "className": "PrimalItemAmmo_GrapplingHook_C",
+      "label": "Grappling Hook",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponGrenade_C",
+      "label": "Grenade",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_Gunpowder_C",
+      "label": "Gunpowder",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponHandCannon_ToF_C",
+      "label": "Hand Cannon",
+      "kind": "weapon",
+      "maps": ["Genesis_WP"]
+    },
+    {
+      "className": "PrimalItem_WeaponHandcuffs_C",
+      "label": "Handcuffs",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponHarpoon_C",
+      "label": "Harpoon",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponHarpoon_Cursed_C",
+      "label": "Harpoon (Cursed)",
+      "kind": "weapon",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_HazardSuitBoots_C",
+      "label": "Hazard Suit Boots",
+      "kind": "armor",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_HazardSuitGloves_C",
+      "label": "Hazard Suit Gloves",
+      "kind": "armor",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_HazardSuitHelmet_C",
+      "label": "Hazard Suit Hat",
+      "kind": "armor",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_HazardSuitPants_C",
+      "label": "Hazard Suit Pants",
+      "kind": "armor",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_HazardSuitShirt_C",
+      "label": "Hazard Suit Shirt",
+      "kind": "armor",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemStructure_HeavyTurret_C",
+      "label": "Heavy Auto Turret",
+      "kind": "structure",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_MinersHelmet_C",
+      "label": "Heavy Miner's Helmet",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_Helicoprion_C",
+      "label": "Helicoprion Saddle",
+      "kind": "armor",
+      "maps": ["Astraeos_WP", "Genesis_WP", "Ragnarok_WP", "TheCenter_WP", "TheIsland_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemResource_Hide_C",
+      "label": "Hide",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_HideBoots_C",
+      "label": "Hide Boots",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_HideGloves_C",
+      "label": "Hide Gloves",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_HideHelmet_C",
+      "label": "Hide Hat",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_HidePants_C",
+      "label": "Hide Pants",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_HideShirt_C",
+      "label": "Hide Shirt",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemConsumable_Honey_C",
+      "label": "Honey",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_HyaenodonSaddle_C",
+      "label": "Hyaenodon Meatpack",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_DolphinSaddle_C",
+      "label": "Ichthyosaurus Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_IguanodonSaddle_C",
+      "label": "Iguanodon Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponTripwireC4_C",
+      "label": "Improvised Explosive Device",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_KaprosuchusSaddle_C",
+      "label": "Kaprosuchus Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_Keratin_C",
+      "label": "Keratin",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponLance_C",
+      "label": "Lance",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemStructure_StorageBox_Large_C",
+      "label": "Large Storage Box",
+      "kind": "structure",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponOneShotRifle_C",
+      "label": "Longneck Rifle",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponOneShotRifle_Cursed_C",
+      "label": "Longneck Rifle (Cursed)",
+      "kind": "weapon",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_MothSaddle_C",
+      "label": "Lymantria Saddle",
+      "kind": "armor",
+      "maps": ["Astraeos_WP", "Ragnarok_WP", "ScorchedEarth_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_MekBackpack_Shield_C",
+      "label": "M.D.S.M.",
+      "kind": "armor",
+      "maps": ["Extinction_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_MaelizardSaddle_C",
+      "label": "Maeguana Saddle",
+      "kind": "armor",
+      "maps": ["Astraeos_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_CherufeSaddle_C",
+      "label": "Magmasaur Saddle",
+      "kind": "armor",
+      "maps": ["Genesis_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_MammothSaddle_C",
+      "label": "Mammoth Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_IceJumperSaddle_C",
+      "label": "Managarmr Saddle",
+      "kind": "armor",
+      "maps": ["Extinction_WP", "LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_MantaSaddle_C",
+      "label": "Manta Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_MantisSaddle_C",
+      "label": "Mantis Saddle",
+      "kind": "armor",
+      "maps": ["Astraeos_WP", "Extinction_WP", "Ragnarok_WP", "ScorchedEarth_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemConsumable_HealSoup_C",
+      "label": "Medical Brew",
+      "kind": "item",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_GiantTurtleSaddle_C",
+      "label": "Megachelon Platform Saddle",
+      "kind": "armor",
+      "maps": ["Genesis_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_MegalaniaSaddle_C",
+      "label": "Megalania Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_StagSaddle_C",
+      "label": "Megaloceros Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_MegalodonSaddle_C",
+      "label": "Megalodon Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_MegalodonSaddle_Tek_C",
+      "label": "Megalodon Tek Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_MegalosaurusSaddle_C",
+      "label": "Megalosaurus Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_MegatheriumSaddle_C",
+      "label": "Megatherium Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemConsumable_Berry_Mejoberry_C",
+      "label": "Mejoberry",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_MekBackpack_MissilePod_C",
+      "label": "Mek Backpack Missile Pod",
+      "kind": "armor",
+      "maps": ["Extinction_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_MekBackpack_SiegeCannon_C",
+      "label": "Mek Backpack Siege Cannon",
+      "kind": "armor",
+      "maps": ["Extinction_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_MekTransformer_C",
+      "label": "Mek Transformer",
+      "kind": "armor",
+      "maps": ["Extinction_WP"]
+    },
+    {
+      "className": "PrimalItemResource_Metal_C",
+      "label": "Metal",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponMetalHatchet_C",
+      "label": "Metal Hatchet",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponMetalHatchet_Cursed_C",
+      "label": "Metal Hatchet (Cursed)",
+      "kind": "weapon",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemResource_MetalIngot_C",
+      "label": "Metal Ingot",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponMetalPick_C",
+      "label": "Metal Pick",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponMetalPick_Cursed_C",
+      "label": "Metal Pick (Cursed)",
+      "kind": "weapon",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_MetalShield_C",
+      "label": "Metal Shield",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponMiningDrill_C",
+      "label": "Mining Drill",
+      "kind": "weapon",
+      "maps": ["Genesis_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_MoleRatSaddle_C",
+      "label": "Mole Rat Saddle",
+      "kind": "armor",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_CamelsaurusSaddle_C",
+      "label": "Morellatops Saddle",
+      "kind": "armor",
+      "maps": ["Astraeos_WP", "Extinction_WP", "Genesis_WP", "Ragnarok_WP", "ScorchedEarth_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemStructure_MortarAndPestle_C",
+      "label": "Mortar and Pestle",
+      "kind": "structure",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_MosaSaddle_Platform_C",
+      "label": "Mosasaur Platform Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_MosaSaddle_C",
+      "label": "Mosasaur Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_MosaSaddle_Tek_C",
+      "label": "Mosasaur Tek Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemConsumable_Berry_Narcoberry_C",
+      "label": "Narcoberry",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemConsumable_Narcotic_C",
+      "label": "Narcotic",
+      "kind": "item",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_NightVisionGoggles_C",
+      "label": "Night Vision Goggles",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_Obsidian_C",
+      "label": "Obsidian",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_Oil_C",
+      "label": "Oil",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_PachySaddle_C",
+      "label": "Pachy Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_PachyrhinoSaddle_C",
+      "label": "Pachyrhinosaurus Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponPaintbrush_C",
+      "label": "Paintbrush",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_PalaeoctopusSaddle_C",
+      "label": "Palaeoctopus Saddle",
+      "kind": "armor",
+      "maps": ["Genesis_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_ParacerSaddle_Platform_C",
+      "label": "Paracer Platform Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_Paracer_Saddle_C",
+      "label": "Paracer Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_ParaSaddle_C",
+      "label": "Parasaur Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_PelaSaddle_C",
+      "label": "Pelagornis Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_Pelt_C",
+      "label": "Pelt",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemAmmo_AggroTranqDart_C",
+      "label": "Pheromone Dart",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_PhiomiaSaddle_C",
+      "label": "Phiomia Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponPike_C",
+      "label": "Pike",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponPike_Cursed_C",
+      "label": "Pike (Cursed)",
+      "kind": "weapon",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_PlesiSaddle_Platform_C",
+      "label": "Plesiosaur Platform Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_PlesiaSaddle_C",
+      "label": "Plesiosaur Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_PoisonGrenade_C",
+      "label": "Poison Grenade",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_Polymer_C",
+      "label": "Polymer",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_Polymer_Organic_C",
+      "label": "Polymer Organic",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemStructure_PreservingBin_C",
+      "label": "Preserving Bin",
+      "kind": "structure",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_ProcoptodonSaddle_C",
+      "label": "Procoptodon Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponProd_C",
+      "label": "Prod",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_PteroSaddle_C",
+      "label": "Pteranodon Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_ScorpionSaddle_C",
+      "label": "Pulmonoscorpius Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponMachinedShotgun_C",
+      "label": "Pump-Action Shotgun",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponMachinedShotgun_Cursed_C",
+      "label": "Pump-Action Shotgun (Cursed)",
+      "kind": "weapon",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_QuetzSaddle_Platform_C",
+      "label": "Quetz Platform Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_QuetzSaddle_C",
+      "label": "Quetz Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemRadio_C",
+      "label": "Radio",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponRadioactiveLanternCharge_C",
+      "label": "Radioactive Lantern Charge",
+      "kind": "weapon",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "RAG_Item_Egg_Wyvern_Fertilized_Ice_C",
+      "label": "RAG Item Egg Wyvern Fertilized Ice",
+      "kind": "resource",
+      "maps": ["Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_RaptorSaddle_C",
+      "label": "Raptor Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_RareFlower_C",
+      "label": "Rare Flower",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_RareMushroom_C",
+      "label": "Rare Mushroom",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_CavewolfSaddle_C",
+      "label": "Ravager Saddle",
+      "kind": "armor",
+      "maps": ["Aberration_WP", "Astraeos_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemConsumable_RawMeat_C",
+      "label": "Raw Meat",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemConsumable_RawMeat_Fish_C",
+      "label": "Raw Meat Fish",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemConsumable_RawMutton_C",
+      "label": "Raw Mutton",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemConsumable_RawPrimeMeat_C",
+      "label": "Raw Prime Meat",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemConsumable_RawPrimeMeat_Fish_C",
+      "label": "Raw Prime Meat Fish",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_RawSalt_C",
+      "label": "Raw Salt",
+      "kind": "resource",
+      "maps": ["Astraeos_WP", "Extinction_WP", "Genesis_WP", "Ragnarok_WP", "ScorchedEarth_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemStructure_Forge_C",
+      "label": "Refining Forge",
+      "kind": "structure",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemStructure_IceBox_C",
+      "label": "Refrigerator",
+      "kind": "structure",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_RexSaddle_C",
+      "label": "Rex Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_RexSaddle_Tek_C",
+      "label": "Rex Tek Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_RhynioSaddle_C",
+      "label": "Rhyniognatha Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_RiotBoots_C",
+      "label": "Riot Boots",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_RiotBoots_Cursed_C",
+      "label": "Riot Boots (Cursed)",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_RiotShirt_C",
+      "label": "Riot Chestpiece",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_RiotShirt_Cursed_C",
+      "label": "Riot Chestpiece (Cursed)",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_RiotGloves_C",
+      "label": "Riot Gauntlets",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_RiotGloves_Cursed_C",
+      "label": "Riot Gauntlets (Cursed)",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_RiotHelmet_C",
+      "label": "Riot Helmet",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_RiotHelmet_Cursed_C",
+      "label": "Riot Helmet (Cursed)",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_RiotPants_C",
+      "label": "Riot Leggings",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_RiotPants_Cursed_C",
+      "label": "Riot Leggings (Cursed)",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_RockDrakeSaddle_C",
+      "label": "Rock Drake Saddle",
+      "kind": "armor",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_RockDrakeSaddle_Tek_C",
+      "label": "Rock Drake Tek Saddle",
+      "kind": "armor",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_RockGolemSaddle_C",
+      "label": "Rock Golem Saddle",
+      "kind": "armor",
+      "maps": ["Ragnarok_WP", "ScorchedEarth_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemAmmo_Rocket_C",
+      "label": "Rocket",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemAmmo_RocketHomingMissile_C",
+      "label": "Rocket Homing Missile",
+      "kind": "weapon",
+      "maps": ["Astraeos_WP", "Ragnarok_WP", "ScorchedEarth_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItem_WeaponRocketLauncher_C",
+      "label": "Rocket Launcher",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_SaberSaddle_C",
+      "label": "Sabertooth Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_Sand_C",
+      "label": "Sand",
+      "kind": "resource",
+      "maps": ["Astraeos_WP", "Extinction_WP", "Genesis_WP", "Ragnarok_WP", "ScorchedEarth_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemResource_Sap_C",
+      "label": "Sap",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_SarcoSaddle_C",
+      "label": "Sarco Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponScissors_C",
+      "label": "Scissors",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_ScubaBoots_Flippers_C",
+      "label": "SCUBA Flippers",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_ScubaPants_C",
+      "label": "SCUBA Leggings",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_ScubaHelmet_Goggles_C",
+      "label": "SCUBA Mask",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_ScubaShirt_SuitWithTank_C",
+      "label": "SCUBA Tank",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_ShastaSaddle_Submarine_C",
+      "label": "Shastasaurus Submarine Saddle",
+      "kind": "armor",
+      "maps": ["TheIsland_WP"]
+    },
+    {
+      "className": "PrimalItemAmmo_RefinedTranqDart_C",
+      "label": "Shocking Tranquilizer Dart",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponShotgun_C",
+      "label": "Shotgun",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponSickle_C",
+      "label": "Sickle",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_Silicon_C",
+      "label": "Silica Pearls",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_Silicate_C",
+      "label": "Silicate",
+      "kind": "resource",
+      "maps": ["Extinction_WP", "LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemResource_Silk_C",
+      "label": "Silk",
+      "kind": "resource",
+      "maps": ["Astraeos_WP", "Extinction_WP", "Ragnarok_WP", "ScorchedEarth_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemStructure_Bed_Simple_C",
+      "label": "Simple Bed",
+      "kind": "structure",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemAmmo_SimpleBullet_C",
+      "label": "Simple Bullet",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemAmmo_SimpleRifleBullet_C",
+      "label": "Simple Rifle Ammo",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemAmmo_SimpleShotgunBullet_C",
+      "label": "Simple Shotgun Ammo",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemStructure_SleepingBag_C",
+      "label": "Sleeping Bag",
+      "kind": "structure",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponSlingshot_C",
+      "label": "Slingshot",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemStructure_StorageBox_Small_C",
+      "label": "Small Storage Box",
+      "kind": "structure",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemStructure_AnvilBench_C",
+      "label": "Smithy",
+      "kind": "structure",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_GasGrenade_C",
+      "label": "Smoke Grenade",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_SnowDragonSaddle_C",
+      "label": "Snow Dragon Saddle",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_SnowMonsterSaddle_C",
+      "label": "Snow Monster Saddle",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_OwlSaddle_C",
+      "label": "Snow Owl Saddle",
+      "kind": "armor",
+      "maps": ["Extinction_WP"]
+    },
+    {
+      "className": "PrimalItemResource_Sparkpowder_C",
+      "label": "Sparkpowder",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponSpear_C",
+      "label": "Spear",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemAmmo_BallistaArrow_C",
+      "label": "Spear Bolt",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponSpear_Tek_C",
+      "label": "Spear Tek",
+      "kind": "weapon",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_SpinoSaddle_C",
+      "label": "Spino Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemConsumable_SpoiledMeat_C",
+      "label": "Spoiled Meat",
+      "kind": "item",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponSprayPaint_C",
+      "label": "Spray Paint",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_StegoSaddle_C",
+      "label": "Stego Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemConsumable_Berry_Stimberry_C",
+      "label": "Stimberry",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemConsumable_Stimulant_C",
+      "label": "Stimulant",
+      "kind": "item",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_Stone_C",
+      "label": "Stone",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemAmmo_ArrowStone_C",
+      "label": "Stone Arrow",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponStoneHatchet_C",
+      "label": "Stone Hatchet",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponStonePick_C",
+      "label": "Stone Pick",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_Stopwatch_C",
+      "label": "Stopwatch",
+      "kind": "weapon",
+      "maps": ["Aberration_WP"]
+    },
+    {
+      "className": "PrimalItemResource_Sulfur_C",
+      "label": "Sulfur",
+      "kind": "resource",
+      "maps": ["Astraeos_WP", "Extinction_WP", "Genesis_WP", "Ragnarok_WP", "ScorchedEarth_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemConsumable_SweetVeggieCake_C",
+      "label": "Sweet Veggie Cake",
+      "kind": "item",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponSword_C",
+      "label": "Sword",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponSword_Cursed_C",
+      "label": "Sword (Cursed)",
+      "kind": "weapon",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_TapejaraSaddle_C",
+      "label": "Tapejara Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_Tapejara_Tek_C",
+      "label": "Tapejara Tek Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_TekBoots_C",
+      "label": "Tek Boots",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_TekBoots_Cursed_C",
+      "label": "Tek Boots (Cursed)",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_TekShirt_C",
+      "label": "Tek Chestpiece",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_TekShirt_Cursed_C",
+      "label": "Tek Chestpiece (Cursed)",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItem_WeaponTekClaws_C",
+      "label": "Tek Claws",
+      "kind": "weapon",
+      "maps": ["Genesis_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_ShieldTek_C",
+      "label": "Tek Forcefield",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_TekGloves_C",
+      "label": "Tek Gauntlets",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_TekGloves_Cursed_C",
+      "label": "Tek Gauntlets (Cursed)",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemStructure_TekGenerator_C",
+      "label": "Tek Generator",
+      "kind": "structure",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponTekGravityGrenade_C",
+      "label": "Tek Gravity Grenade",
+      "kind": "weapon",
+      "maps": ["Extinction_WP", "Genesis_WP", "LostColony_WP"]
+    },
+    {
+      "className": "PrimalItem_TekGrenade_C",
+      "label": "Tek Grenade",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponTekGrenadeLauncher_C",
+      "label": "Tek Grenade Launcher",
+      "kind": "weapon",
+      "maps": ["Genesis_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_TekHelmet_C",
+      "label": "Tek Helmet",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_TekHelmet_Cursed_C",
+      "label": "Tek Helmet (Cursed)",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_TekPants_C",
+      "label": "Tek Leggings",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_TekPants_Cursed_C",
+      "label": "Tek Leggings (Cursed)",
+      "kind": "armor",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItem_TekRifle_C",
+      "label": "Tek Rifle",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_TekRifle_Cursed_C",
+      "label": "Tek Rifle (Cursed)",
+      "kind": "weapon",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItem_WeaponTekSword_C",
+      "label": "Tek Sword",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponTekSword_Cursed_C",
+      "label": "Tek Sword (Cursed)",
+      "kind": "weapon",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItemStructure_TekTransmitter_C",
+      "label": "Tek Transmitter",
+      "kind": "structure",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemStructure_TurretTek_C",
+      "label": "Tek Turret",
+      "kind": "structure",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_TerrorBirdSaddle_C",
+      "label": "Terror Bird Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemResource_Thatch_C",
+      "label": "Thatch",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemStructure_ThatchCeiling_C",
+      "label": "Thatch Ceiling",
+      "kind": "structure",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemStructure_ThatchDoor_C",
+      "label": "Thatch Door",
+      "kind": "structure",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemStructure_ThatchFloor_C",
+      "label": "Thatch Foundation",
+      "kind": "structure",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemStructure_ThatchWall_C",
+      "label": "Thatch Wall",
+      "kind": "structure",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_TherizinosaurusSaddle_C",
+      "label": "Therizinosaurus Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_SpineyLizardSaddle_C",
+      "label": "Thorny Dragon Saddle",
+      "kind": "armor",
+      "maps": ["Astraeos_WP", "Extinction_WP", "Ragnarok_WP", "ScorchedEarth_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_ThylacoSaddle_C",
+      "label": "Thylacoleo Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_AxolotlSaddle_C",
+      "label": "Tidepup Saddle",
+      "kind": "armor",
+      "maps": ["Genesis_WP"]
+    },
+    {
+      "className": "PrimalItemConsumable_Berry_Tintoberry_C",
+      "label": "Tintoberry",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_TitanSaddle_Platform_C",
+      "label": "Titanosaur Platform Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponTorch_C",
+      "label": "Torch",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemAmmo_ArrowTranq_C",
+      "label": "Tranq Arrow",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemAmmo_TranqSpearBolt_C",
+      "label": "Tranq Spear Bolt",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemAmmo_TranqDart_C",
+      "label": "Tranquilizer Dart",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_TransparentRiotShield_C",
+      "label": "Transparent Riot Shield",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_TrikeSaddle_C",
+      "label": "Trike Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponAlarmTrap_C",
+      "label": "Tripwire Alarm Trap",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponPoisonTrap_C",
+      "label": "Tripwire Narcotic Trap",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_TusoSaddle_C",
+      "label": "Tusoteuthis Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_ValMegaraptorSaddle_C",
+      "label": "Val Megaraptor Saddle",
+      "kind": "armor",
+      "maps": ["Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemStructure_StorageBox_Huge_C",
+      "label": "Vault",
+      "kind": "structure",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_SpindlesSaddle_C",
+      "label": "Velonasaur Saddle",
+      "kind": "armor",
+      "maps": ["Extinction_WP"]
+    },
+    {
+      "className": "PrimalItem_WeapFlamethrower_C",
+      "label": "Weap Flamethrower",
+      "kind": "weapon",
+      "maps": ["Ragnarok_WP", "ScorchedEarth_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItem_WeapFlamethrower_Cursed_C",
+      "label": "Weap Flamethrower (Cursed)",
+      "kind": "weapon",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "PrimalItem_WeaponWhip_C",
+      "label": "Whip",
+      "kind": "weapon",
+      "maps": ["Astraeos_WP", "Genesis_WP", "Ragnarok_WP", "ScorchedEarth_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemResource_Wood_C",
+      "label": "Wood",
+      "kind": "resource",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItem_WeaponStoneClub_C",
+      "label": "Wooden Club",
+      "kind": "weapon",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemStructure_WoodDoor_C",
+      "label": "Wooden Door",
+      "kind": "structure",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemStructure_WoodFloor_C",
+      "label": "Wooden Foundation",
+      "kind": "structure",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_WoodShield_C",
+      "label": "Wooden Shield",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemStructure_WoodWall_C",
+      "label": "Wooden Wall",
+      "kind": "structure",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_RhinoSaddle_C",
+      "label": "Woolly Rhino Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_XiphSaddle_ASA_C",
+      "label": "Xiphactinus Saddle",
+      "kind": "armor",
+      "maps": ["Astraeos_WP", "Genesis_WP", "Ragnarok_WP", "TheCenter_WP", "TheIsland_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_YiLingSaddle_C",
+      "label": "Yi Ling Saddle",
+      "kind": "armor",
+      "maps": ["Aberration_WP", "Genesis_WP"]
+    },
+    {
+      "className": "PrimalItemArmor_YutySaddle_C",
+      "label": "Yutyrannus Saddle",
+      "kind": "armor",
+      "maps": [
+        "Aberration_WP",
+        "Astraeos_WP",
+        "Extinction_WP",
+        "Genesis_WP",
+        "LostColony_WP",
+        "Ragnarok_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "TheIsland_WP",
+        "Valguero_WP"
+      ]
+    },
+    {
+      "className": "PrimalItemArmor_ZiplineMotor_C",
+      "label": "Zip-Line Motor Attachment Skin",
+      "kind": "armor",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "PrimalItemAmmo_Zipline_C",
+      "label": "Zipline",
+      "kind": "weapon",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    }
+  ]
+}

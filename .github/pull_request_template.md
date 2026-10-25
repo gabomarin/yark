@@ -17,6 +17,6 @@
 - [ ] Manual verification, if applicable
 - [ ] `## [Unreleased]` in `CHANGELOG.md` updated (or PR labeled `skip-changelog`)
 
-<!-- Replace the placeholder with the related issue number, or remove this line. -->
+<!-- Required when this PR finishes a tracked issue. Replace ISSUE with the number. A mention such as (#123) in the summary does not close the issue. Remove this line only when there is no issue. -->
 
 Closes #ISSUE

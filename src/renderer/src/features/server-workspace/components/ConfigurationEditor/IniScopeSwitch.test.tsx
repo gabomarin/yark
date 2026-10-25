@@ -8,7 +8,7 @@ describe("unsaved view dots", () => {
   it("marks Engrams while Settings is open", () => {
     render(
       <AppProviders>
-        <GameIniViewSwitch value="settings" settingsUnsaved engramsUnsaved onChange={vi.fn()} />
+        <GameIniViewSwitch value="settings" settingsUnsaved engramsUnsaved lootUnsaved={false} onChange={vi.fn()} />
       </AppProviders>,
     );
 

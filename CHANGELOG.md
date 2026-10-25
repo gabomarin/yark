@@ -11,11 +11,36 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Game.ini Visual adds **Loot** beside Settings and Engrams, so a supply crate override can be edited by crate and item name, checked against the server map, and rolled from the Simulator tab (#686).
 - Game.ini Visual adds **Engrams** on its own row under the file toolbar. Named overrides can be searched and edited. A blank row adds an official or custom engram after a cost, level, Hidden, or prerequisite is set. A new line does not add Hidden on its own. Points per level are edited there instead of Settings, and any level can be removed. Save rewrites only those lines (#684).
 - When GameUserSettings.ini differs from the server form, the Server tab labels each changed field and shows its file and YARK values, with passwords hidden. Operators can copy the file values into YARK or keep the YARK values; copying checks for port clashes (#682).
 
+### Changed
+
+- A loot crate shows a note only when that override is not used on the server map (#686).
+- Loot lists the ring drops and cave crate tier 4, and explains that a weight is a share of its list and that a full set includes every entry (#686).
+- Loot names the supply crates from the beacon list, including map-specific drops, and says which maps use each one (#686).
+- A loot set says how many of its entries drop. Several items on one entry share that quantity, each with its own weight, and a class with no catalog name is marked as missing from the item list (#686).
+- The loot Simulator names the crate being rolled and puts one open beside many opens. It no longer repeats that an appended crate leaves out the game's items (#686).
+- Settings → Appearance and the setup assistant list **Glassy** beside Fluent and Plasma Breeze.
+
 ### Fixed
 
+- The loot editor scrolls when a crate has more sets than fit on screen (#686).
+- The loot crate list scrolls when more crates are loaded than fit beside the editor (#686).
+- Loot item weight, blueprint chance, and quantity stay aligned when a hint or a missing quantity is showing (#686).
+- Dark themes draw field errors in the brighter danger red, so a message such as a missing quantity stays readable on Breeze (#686).
+- A loot set and entry show weight, count, quality, and blueprint errors on the field while you edit them (#686).
+- Clearing a quantity that was already saved empties the field and marks it until you enter another number (#686).
+- A loot error uses a red border only on the card that has it, and a set can be removed from the crate. The crate no longer has its own Roll button. The Simulator tab rolls that crate (#686).
+- Loot remove actions use a trash icon and the danger color so they stay visible on the card (#686).
+- An empty loot entry says to add an item, and save stays off until that entry has one or is removed (#686).
+- Saving a loot crate leaves that crate open (#686).
+- The loot crate list shows a color mark and the class under the name (#686).
+- The Simulator tab rolls the selected crate and does not open the editor (#686).
+- Saving a supply crate no longer stops at 20 sets, 40 items, or 16 classes. The file can hold as many as the game line already has (#686).
+- Removing one item from a loot entry keeps the weights of the items that stay, and an empty set stays until that set is removed. A crate the beacon list does not tie to a map is marked unknown. The Simulator stays inside the seed and roll limits and says when a quality power is not part of the roll (#686).
+- Clearing the loot Simulator seed stays an error instead of rolling as seed 0. A saved entry that lists the same class twice keeps a separate row for each one (#686).
 - The engram hint that a class alone does not change the game uses the lighter danger red, so it stays readable on Breeze dark. Clearing a saved line back to an empty cost and Hidden off is refused the same way. Save stays off while that error is showing on Overrides. Settings, Points per level, and GameUserSettings.ini still save their own lines. A dot on another view shows that it still has unsaved lines. The class box on a saved engram searches the official list. Named engram lines stay out of Settings, and a points-per-level key in GameUserSettings.ini stays on that file. A class name with a space is refused, and the field says so (#684).
 
 ## [0.25.0] - 2026-10-23

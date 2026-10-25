@@ -395,8 +395,11 @@ describe("SettingsPage", () => {
 
     // Family and scheme are independent controls, both rendered from the registry.
     expect(screen.getByLabelText("Theme family")).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Glassy" })).toBeInTheDocument();
     await user.click(screen.getByRole("radio", { name: "Plasma Breeze" }));
     expect(onFamilyChange).toHaveBeenCalledWith("plasma-breeze");
+    await user.click(screen.getByRole("radio", { name: "Glassy" }));
+    expect(onFamilyChange).toHaveBeenCalledWith("glassy");
 
     // Fluent is active, so the scheme control lists Fluent's variants.
     expect(screen.getByLabelText("Color scheme")).toBeInTheDocument();
