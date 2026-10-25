@@ -41,6 +41,10 @@ section when those stories change. Details:
   (rare).
 - Rebase merge is allowed for a linear history when squash is unsuitable, but is not
   the default.
+- When a PR finishes a tracked issue, the body must include a closing keyword on
+  its own line: `Closes #N`. A mention such as `(#N)` in the summary does not
+  close the issue. Remove that line only when the PR has no issue. The template
+  is `.github/pull_request_template.md`.
 
 ## Cursor Cloud specific instructions
 

@@ -107,7 +107,6 @@
   flex-direction: column;
   flex: 1 1 0;
   min-height: 0;
-  padding-top: var(--app-space-md);
   overflow: hidden;
 }
 
@@ -117,6 +116,10 @@
   flex: 1 1 0;
   min-height: 0;
   overflow: hidden;
+}
+
+.tabPanel .fillPanel {
+  border-radius: var(--app-tab-attached-radius);
 }
 
 .historyPanel,
@@ -186,6 +189,12 @@
   min-height: 0;
   padding-right: var(--app-space-xxs);
   overflow: auto;
+  border: var(--app-list-vessel-border);
+  border-radius: var(--app-panel-radius);
+  background: var(--app-list-vessel-bg);
+  box-shadow: var(--app-list-vessel-shadow);
+  backdrop-filter: var(--app-surface-raised-filter);
+  -webkit-backdrop-filter: var(--app-surface-raised-filter);
 }
 
 .updateHistoryRow {
@@ -193,11 +202,12 @@
 }
 
 .updateHistoryRow + .updateHistoryRow {
-  margin-top: -1px;
+  margin-top: var(--app-list-row-join);
+  border-top: var(--app-list-row-edge);
 }
 
 .squareConsole {
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
 }
 
 .eventMessage {
@@ -216,13 +226,14 @@
 
 .eventRow {
   padding: var(--app-space-sm);
-  border: 1px solid var(--app-color-border-subtle);
+  border: var(--app-list-row-border);
   border-radius: 0;
-  background: var(--app-color-panel);
+  background: var(--app-color-list-row);
 }
 
 .eventRow + .eventRow {
-  margin-top: -1px;
+  margin-top: var(--app-list-row-join);
+  border-top: var(--app-list-row-edge);
 }
 
 .backupPathRow {
@@ -279,12 +290,17 @@
   gap: var(--app-space-xs);
 }
 
+.embeddedShell {
+  overflow: hidden;
+}
+
 .embedded {
   flex: 1;
   min-height: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  padding: var(--app-space-md);
 }
 
 .updatesLayout {
@@ -361,7 +377,7 @@
   height: 58px;
   padding: var(--app-space-xxs) var(--app-space-xs);
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
   background: var(--app-color-surface-control);
 }
 

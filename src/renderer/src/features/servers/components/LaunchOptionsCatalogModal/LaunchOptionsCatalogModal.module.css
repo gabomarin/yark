@@ -30,7 +30,7 @@
 
 .versionCard {
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
   background: var(--app-color-panel);
   padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
   text-align: right;
@@ -103,7 +103,7 @@
   min-height: 0;
   flex: 1 1 0;
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
   overflow: hidden;
   background: var(--app-color-surface-panel);
 }

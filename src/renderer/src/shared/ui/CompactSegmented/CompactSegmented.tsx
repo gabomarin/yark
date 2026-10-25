@@ -19,14 +19,22 @@ export function compactIconSegmentLabel(tooltip: string, ariaLabel: string, icon
   );
 }
 
-/** Icon + visible text segment label (no tooltip). */
-export function compactLabeledSegmentLabel(text: string, icon: ReactNode): ReactElement {
+/** Icon + visible text segment label. `pending` adds the unsaved dot for another view. */
+export function compactLabeledSegmentLabel(text: string, icon: ReactNode, pending = false): ReactElement {
   return (
     <span className={classes.labeled}>
-      <span className={classes.icon} aria-hidden="true">
-        {icon}
-      </span>
+      {icon != null ? (
+        <span className={classes.icon} aria-hidden="true">
+          {icon}
+        </span>
+      ) : null}
       <span className={classes.labelText}>{text}</span>
+      {pending ? (
+        <>
+          <span className={classes.pendingDot} aria-hidden="true" />
+          <span className={classes.pendingNote}>Unsaved changes</span>
+        </>
+      ) : null}
     </span>
   );
 }

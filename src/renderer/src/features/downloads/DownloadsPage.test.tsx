@@ -92,6 +92,7 @@ function handlers() {
     onResumeJob: vi.fn(),
     onDismissJob: vi.fn(),
     onReorderJob: vi.fn(),
+    onOpenInLogs: vi.fn(),
     onOpenSettings: vi.fn(),
   };
 }
@@ -222,6 +223,65 @@ describe("DownloadsPage", () => {
     expect(document.querySelector('[data-queue-group="attention"]')).not.toBeNull();
     expect(document.querySelector('[data-download-row="job-active"]')).not.toBeNull();
     expect(screen.getByRole("button", { name: /Island/ })).toBeInTheDocument();
+  });
+
+  it("opens Logs for a cancelled leftover and says when no file was saved", async () => {
+    const user = userEvent.setup();
+    const withLog = handlers();
+    renderPage(
+      baseStatus({
+        criticalJobs: [
+          job({
+            id: "job-cancelled-log",
+            operation: "update",
+            status: "cancelled",
+            phase: "cancelled",
+            nextActions: ["retry", "dismiss"],
+            updateLogFileName: "srv-1-cancelled.log",
+          }),
+        ],
+      }),
+      { handlers: withLog },
+    );
+    await user.click(screen.getByRole("button", { name: "Open in Logs" }));
+    expect(withLog.onOpenInLogs).toHaveBeenCalledWith("srv-1", "srv-1-cancelled.log");
+
+    cleanup();
+    const withoutLog = handlers();
+    renderPage(
+      baseStatus({
+        criticalJobs: [
+          job({
+            id: "job-cancelled-bare",
+            operation: "update",
+            status: "cancelled",
+            phase: "cancelled",
+            nextActions: ["retry", "dismiss"],
+          }),
+        ],
+      }),
+      { handlers: withoutLog },
+    );
+    await user.click(screen.getByRole("button", { name: "Open in Logs" }));
+    expect(withoutLog.onOpenInLogs).toHaveBeenCalledWith("srv-1", null);
+  });
+
+  it("does not offer Open in Logs for a cancelled restore", () => {
+    renderPage(
+      baseStatus({
+        criticalJobs: [
+          job({
+            id: "job-restore",
+            operation: "restore",
+            status: "cancelled",
+            phase: "cancelled",
+            nextActions: ["dismiss"],
+          }),
+        ],
+      }),
+    );
+    expect(screen.getByText("Island")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open in Logs" })).not.toBeInTheDocument();
   });
 
   it("puts Pause on the active row and keeps the console on the active job when a queued row is selected", async () => {

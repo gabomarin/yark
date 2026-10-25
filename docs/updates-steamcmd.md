@@ -106,7 +106,7 @@ An update produces exactly one stable `pre_update` archive set and does not crea
 
 Pre-update archives use backup type `pre_update` and kind `world`
 (`CRITICAL_BACKUP_KINDS`; INI is not on the critical path — #518). Per-server update logs land under userData `update-logs/` as
-`{serverId}-{timestamp}.log`.
+`{serverId}-{timestamp}.log`. An operator cancel of install, update, or verify writes `outcome=cancelled` (no exit code) so Logs → Updates shows **Cancelled** instead of staying empty or reading **Failed** (#86).
 
 ## Update availability (not SteamCMD)
 

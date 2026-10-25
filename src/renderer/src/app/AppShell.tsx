@@ -226,6 +226,11 @@ export function AppShell({
     [persistAppearance],
   );
 
+  const handleBackgroundImageChange = useCallback(
+    (backgroundImage: boolean) => void persistAppearance({ backgroundImage }, "Could not save theme"),
+    [persistAppearance],
+  );
+
   const extraClusterOptions = useMemo(
     () => (pendingSetupCluster === null ? undefined : [toSyntheticClusterOption(pendingSetupCluster)]),
     [pendingSetupCluster],
@@ -444,6 +449,7 @@ export function AppShell({
     <AppProviders
       density={uiDensity}
       themeSelection={{ family: appearance.themeFamily, scheme: appearance.scheme }}
+      sceneBackground={appearance.backgroundImage}
       workspacePanels={appearance.panels}
     >
       <AppSpotlight
@@ -467,6 +473,8 @@ export function AppShell({
         steamCmdBusy={steamCmdBusy}
         defaultBaseFolder={defaultBaseFolder}
         uiDensity={uiDensity}
+        themeFamily={appearance.themeFamily}
+        scheme={appearance.scheme}
         openNativeTerminalOnStart={openNativeTerminalOnStart}
         desktopShell={desktopShell}
         busy={setupWizardBusy}
@@ -474,6 +482,8 @@ export function AppShell({
         onInstallSteamCmd={() => void runAction(() => window.api.installSteamCmd())}
         onDefaultBaseFolderChange={setDefaultBaseFolder}
         onUiDensityChange={(density) => void handleUiDensityChange(density)}
+        onThemeFamilyChange={handleFamilyChange}
+        onSchemeChange={handleSchemeChange}
         onOpenNativeTerminalOnStartChange={(enabled) => void handleOpenNativeConsoleChange(enabled)}
         onSkip={async () => {
           await finishSetupWizard("skipped", null);
@@ -594,6 +604,8 @@ export function AppShell({
           handleSchemeChange,
           workspacePanels: appearance.panels,
           handleWorkspacePanelsChange,
+          backgroundImage: appearance.backgroundImage,
+          handleBackgroundImageChange,
           defaultBaseFolder,
           setDefaultBaseFolder,
           extraClusterOptions,

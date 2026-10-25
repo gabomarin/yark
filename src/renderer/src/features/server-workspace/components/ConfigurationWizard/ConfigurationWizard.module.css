@@ -56,7 +56,7 @@
   padding: var(--app-space-sm);
   border: 1px solid var(--app-color-border-subtle);
 
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
   color: inherit;
   text-align: left;
   background: var(--app-color-surface-chrome);
@@ -175,7 +175,7 @@
   min-width: 0;
   padding: var(--app-space-xs) var(--app-space-sm);
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
   background: color-mix(in srgb, var(--app-color-panel) 78%, transparent);
 }
 
@@ -184,7 +184,7 @@
   gap: var(--app-space-sm);
   padding: var(--app-space-sm);
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
   background: var(--app-color-surface-chrome);
 }
 

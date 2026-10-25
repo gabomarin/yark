@@ -24,6 +24,36 @@ const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.25.0",
+    date: "2026-10-23",
+    sections: [
+      {
+        title: "Highlights",
+        items: [
+          "The visual INI editor marks unsaved rows, shows the last saved value, and can revert one row without discarding the rest.",
+          "Visual Save writes only the simple settings you changed onto the latest file, so a non-overlapping edit from another tool can stay. Overlapping changes are refused instead of overwritten.",
+          "A cancelled install, update, or verify is stored as Cancelled in Logs → Updates, and Downloads can open that log.",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "Server, INI files, Mods, Backups, Logs, RCON, and Maintenance share one workspace header: a title, one line of help, and that tab's actions.",
+          "The setup assistant Windows step includes the same theme family and color scheme choices as Settings → Appearance.",
+          "Queued and paused jobs show an accent chip on server cards.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "Cluster Transfer Save copies a member's INI first when the template is missing or tribute-only, so a later Apply INI template cannot wipe unrelated GameUserSettings.ini values.",
+          "The workspace join command still updates when the public IP lookup finishes after the server has already stopped.",
+          "Maintenance Up next stays whole when job sections are expanded.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.24.0",
     date: "2026-10-16",
     sections: [

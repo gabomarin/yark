@@ -13,7 +13,9 @@
 
 .card:global(.mantine-Card-root) {
   /* Nested widgets on the chrome rail — keep flat surface without double cool gradient. */
-  background: var(--app-color-surface-panel);
+  background-color: var(--app-float-panel-bg);
+  background-image: var(--app-glass-sheen);
+  box-shadow: var(--app-glass-rim);
 }
 
 .widgetTitle {

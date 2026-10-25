@@ -12,19 +12,34 @@ describe("appearance theme selection", () => {
       themeFamily: "fluent",
       scheme: "light",
       panels: "drawers",
+      backgroundImage: true,
     });
   });
 
   it("falls back independently when family or scheme is unknown", () => {
-    expect(normalizeAppearanceSettings({ themeFamily: "glassy", scheme: "sepia", panels: "auto" } as never)).toEqual(
-      DEFAULT_APPEARANCE_SETTINGS,
-    );
+    expect(
+      normalizeAppearanceSettings({ themeFamily: "not-a-family", scheme: "sepia", panels: "auto" } as never),
+    ).toEqual(DEFAULT_APPEARANCE_SETTINGS);
   });
 
   it("writes the new selection contract", () => {
-    expect(encodeAppearanceSettings({ themeFamily: "fluent", scheme: "light", panels: "auto" })).toBe(
-      '{"themeFamily":"fluent","scheme":"light","panels":"auto"}',
-    );
+    expect(
+      encodeAppearanceSettings({
+        themeFamily: "fluent",
+        scheme: "light",
+        panels: "auto",
+        backgroundImage: true,
+      }),
+    ).toBe('{"themeFamily":"fluent","scheme":"light","panels":"auto","backgroundImage":true}');
+  });
+
+  it("accepts Glassy independently of the scheme", () => {
+    expect(normalizeAppearanceSettings({ themeFamily: "glassy", scheme: "light", panels: "auto" })).toEqual({
+      themeFamily: "glassy",
+      scheme: "light",
+      panels: "auto",
+      backgroundImage: true,
+    });
   });
 
   it("accepts the Plasma Breeze family independently of the scheme (#PUX-005-B)", () => {
@@ -32,9 +47,24 @@ describe("appearance theme selection", () => {
       themeFamily: "plasma-breeze",
       scheme: "light",
       panels: "auto",
+      backgroundImage: true,
     });
-    expect(encodeAppearanceSettings({ themeFamily: "plasma-breeze", scheme: "dark", panels: "drawers" })).toBe(
-      '{"themeFamily":"plasma-breeze","scheme":"dark","panels":"drawers"}',
-    );
+    expect(
+      encodeAppearanceSettings({
+        themeFamily: "plasma-breeze",
+        scheme: "dark",
+        panels: "drawers",
+        backgroundImage: false,
+      }),
+    ).toBe('{"themeFamily":"plasma-breeze","scheme":"dark","panels":"drawers","backgroundImage":false}');
+  });
+
+  it("keeps a stored background image choice and defaults a missing one to on", () => {
+    expect(parseAppearanceSettings('{"themeFamily":"glassy","scheme":"dark","panels":"auto"}')).toMatchObject({
+      backgroundImage: true,
+    });
+    expect(
+      parseAppearanceSettings('{"themeFamily":"glassy","scheme":"dark","panels":"auto","backgroundImage":false}'),
+    ).toMatchObject({ backgroundImage: false });
   });
 });

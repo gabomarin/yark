@@ -1,13 +1,19 @@
 .card {
   position: relative;
-  overflow: hidden;
-  border-radius: 0;
+  /* `clip` still rounds the card. `hidden` is a scroll container, and Chromium
+     then paints a bright band across the glass when the seam control is hovered. */
+  overflow: clip;
+  border-radius: var(--app-collection-radius) !important;
   cursor: pointer;
   border-color: var(--app-color-border);
-  background-color: var(--app-color-panel);
-  background-image: none;
-  backdrop-filter: var(--app-surface-filter);
-  -webkit-backdrop-filter: var(--app-surface-filter);
+  background-color: var(--app-panel-surface-bg);
+  background-image: var(--app-glass-sheen);
+  box-shadow: var(--app-shadow-panel);
+  /* The Card recipe sets an inline backdrop blur. Inside the overview
+     scrollport that blur paints one vertical glow from the Stopped metric
+     through every server card. The translucent fill stays. */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   max-width: 100%;
   background-clip: padding-box;
   /* Stack / status-dot from card width (sidebar shrinks content vs viewport) (#302). */
@@ -32,11 +38,6 @@
   width: 3px;
   background: var(--app-color-border);
   content: "";
-}
-
-.card[data-tone="stopped"] {
-  background-image: none;
-  background-color: var(--app-color-panel);
 }
 
 .card[data-tone="stopped"]::before {
@@ -76,12 +77,7 @@
 .card:hover {
   border-color: var(--app-color-accent);
   background-image: none;
-  background-color: var(--app-color-surface-control);
-}
-
-.card[data-tone="stopped"]:hover {
-  background-image: none;
-  background-color: var(--app-color-surface-control);
+  background-color: var(--app-surface-hover);
 }
 
 .card[data-tone="running"]:hover {
@@ -121,7 +117,7 @@
   gap: var(--app-space-xl);
   width: 100%;
   min-width: 0;
-  overflow: hidden;
+  overflow: clip;
 }
 
 .identityRow {
@@ -159,7 +155,7 @@
 
 .card:hover .thumb {
   border-color: color-mix(in srgb, var(--app-color-accent) 55%, var(--app-color-border));
-  background: color-mix(in srgb, var(--app-color-accent) 14%, var(--app-color-panel));
+  background: color-mix(in srgb, var(--app-color-accent) 14%, var(--app-panel-surface-bg));
 }
 
 .identityOpen:focus-visible {
@@ -342,13 +338,37 @@
   border-radius: 0;
 }
 
+/* Queued and paused have no bar. The chip is the job, on every theme. */
+.progressWaiting,
+.progressWaitingLabel {
+  display: inline-flex;
+  align-items: center;
+  width: auto;
+  padding: 1px 8px;
+  border: 1px solid var(--app-color-accent-subtle-hover);
+  border-radius: var(--app-radius-control);
+  background: var(--ark-blue-a2);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.progressWaiting,
+.progressWaitingLabel,
+.progressWaiting .progressCtaLabel {
+  color: var(--app-color-accent-text);
+}
+
+.progressWaiting:focus-visible {
+  border-radius: var(--app-radius-control);
+}
+
 .progressBlock {
   position: relative;
   z-index: 1;
   padding: var(--app-space-xs) var(--app-space-sm);
   padding-bottom: calc(var(--app-space-xs) + 2px);
   overflow: visible;
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
   border: 1px solid var(--app-color-accent-subtle-hover);
   background: var(--ark-blue-a2);
 }

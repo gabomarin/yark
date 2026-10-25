@@ -11,19 +11,91 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Game.ini Visual adds **Loot** beside Settings and Engrams, so a supply crate override can be edited by crate and item name, checked against the server map, and rolled from the Simulator tab (#686).
+- Game.ini Visual adds **Engrams** on its own row under the file toolbar. Named overrides can be searched and edited. A blank row adds an official or custom engram after a cost, level, Hidden, or prerequisite is set. A new line does not add Hidden on its own. Points per level are edited there instead of Settings, and any level can be removed. Save rewrites only those lines (#684).
+- When GameUserSettings.ini differs from the server form, the Server tab labels each changed field and shows its file and YARK values, with passwords hidden. Operators can copy the file values into YARK or keep the YARK values; copying checks for port clashes (#682).
+
+### Changed
+
+- A loot crate shows a note only when that override is not used on the server map (#686).
+- Loot lists the ring drops and cave crate tier 4, and explains that a weight is a share of its list and that a full set includes every entry (#686).
+- Loot names the supply crates from the beacon list, including map-specific drops, and says which maps use each one (#686).
+- A loot set says how many of its entries drop. Several items on one entry share that quantity, each with its own weight, and a class with no catalog name is marked as missing from the item list (#686).
+- The loot Simulator names the crate being rolled and puts one open beside many opens. It no longer repeats that an appended crate leaves out the game's items (#686).
+- Settings → Appearance and the setup assistant list **Glassy** beside Fluent and Plasma Breeze.
+
+### Fixed
+
+- The loot editor scrolls when a crate has more sets than fit on screen (#686).
+- The loot crate list scrolls when more crates are loaded than fit beside the editor (#686).
+- Loot item weight, blueprint chance, and quantity stay aligned when a hint or a missing quantity is showing (#686).
+- Dark themes draw field errors in the brighter danger red, so a message such as a missing quantity stays readable on Breeze (#686).
+- A loot set and entry show weight, count, quality, and blueprint errors on the field while you edit them (#686).
+- Clearing a quantity that was already saved empties the field and marks it until you enter another number (#686).
+- A loot error uses a red border only on the card that has it, and a set can be removed from the crate. The crate no longer has its own Roll button. The Simulator tab rolls that crate (#686).
+- Loot remove actions use a trash icon and the danger color so they stay visible on the card (#686).
+- An empty loot entry says to add an item, and save stays off until that entry has one or is removed (#686).
+- Saving a loot crate leaves that crate open (#686).
+- The loot crate list shows a color mark and the class under the name (#686).
+- The Simulator tab rolls the selected crate and does not open the editor (#686).
+- Saving a supply crate no longer stops at 20 sets, 40 items, or 16 classes. The file can hold as many as the game line already has (#686).
+- Removing one item from a loot entry keeps the weights of the items that stay, and an empty set stays until that set is removed. A crate the beacon list does not tie to a map is marked unknown. The Simulator stays inside the seed and roll limits and says when a quality power is not part of the roll (#686).
+- Clearing the loot Simulator seed stays an error instead of rolling as seed 0. A saved entry that lists the same class twice keeps a separate row for each one (#686).
+- The engram hint that a class alone does not change the game uses the lighter danger red, so it stays readable on Breeze dark. Clearing a saved line back to an empty cost and Hidden off is refused the same way. Save stays off while that error is showing on Overrides. Settings, Points per level, and GameUserSettings.ini still save their own lines. A dot on another view shows that it still has unsaved lines. The class box on a saved engram searches the official list. Named engram lines stay out of Settings, and a points-per-level key in GameUserSettings.ini stays on that file. A class name with a space is refused, and the field says so (#684).
+
+## [0.25.0] - 2026-10-23
+
+### Added
+
+- Settings → Appearance adds **Glassy** (dark and light): frosted panels on the ARK cyan palette. Cards and the sidebar stay readable in both schemes, path fields sit in the glass, and a panel under a tab line keeps a square top so the corner does not leave a gap. Delete, the other danger buttons, and the kebab Delete item use the same crimson as Plasma Breeze. On Glassy dark the kebab menu sits a step darker than the card, path fields use a dark well, cluster warning cells use a light gold veil on the cyan glass so the numbers stay readable, icon-only actions sit on a frosted plate, and primary actions such as New server and Start use that same frost on the accent. Glassy light uses that teal on a light sheet instead of sky blue, its buttons keep a frosted mint plate, and header links such as Check servers health stay clear. Disabled buttons stay a flat translucent fill instead of frosted glass, so actions such as Restart and an up-to-date Install recede next to Start. The Collapse navigation label opens into the sidebar, and hovering that control no longer draws a glow line from the fleet metrics through the server cards. RCON cards clear the tab line, server log panels and backup kind tabs meet their tabs, discrete panels such as Maintenance follow the panel radius, and the Downloads queue clears the splitter. Fluent and Plasma Breeze stay opaque and square.
 - Visual Configuration Save applies only the changed simple settings onto the latest INI on disk, so non-overlapping edits from Notepad (or other tools) can coexist; overlapping changes still refuse a silent overwrite (#667).
 - When INI files change outside YARK while the visual editor is dirty, an info banner summarizes how many settings changed outside YARK, offers a View outside changes link with a compact detail popover, and tells operators to click Save to merge when edits do not overlap (no Reload CTA in that banner); warning/error stay reserved for text-mode Save and real conflicts (#667).
 - Configuration Save refuses to overwrite `Game.ini` / `GameUserSettings.ini` when those files changed outside YARK since the editor loaded; the editor also re-checks on window focus, auto-reloads when clean, and always offers Reload from disk (#665).
 - Configuration and cluster INI visual editors highlight unsaved rows, show the last saved value (or that a key is absent), and support per-row revert or discard without clearing other drafts (#661).
 
+### Changed
+
+- Workspace tabs share one header: a title, one line of help, and that tab's actions on the right. **Backups**, **Logs**, **RCON**, and **Maintenance** use the same parent panel as Server, INI files, and Mods.
+- **Glassy** dark shows the night scene between cards: a more open sidebar, denser working cards, and a denser row inside them. Attention banners use that same glass, and Start stays closer to solid. Light keeps the page sheet more open than the card and draws the hex in a faint cyan.
+- **Glassy** dark darkens the night scene across the whole window so the moon does not wash out the cards. Light dimmed copy, including the server-list summary, the server header, and section tabs, is darker so it stays readable on the day scene, and the day photo stays a step darker, with only a light blur.
+- Backup server cards no longer sit on a square page plate, and **Create cluster** sits above the cluster tab rule so that line does not show through the button.
+- Server backup kind tabs keep a single rule under the tab. Server information panels open a gap on Glassy. Launch section labels and flag names use the same text color as the other workspace sections. The cluster INI template footer matches the dialog surface and its bottom corners.
+- **Glassy** primary actions such as **Start** and **New server** use a solid accent. Idle buttons keep the glass plate. Stop stays solid.
+- **Glassy** dark **Start** and **New server** use a deeper teal with a white label, so the button sits apart from the night cyan.
+- **Glassy** **Start** and **New server** keep a short veil in dark and light. Hover lightens that teal one step, so it stays clear of a disabled control, and the button keeps the same top highlight as the other buttons.
+- **Glassy** inactive tabs keep a quiet plate so the label sits on a surface. The active tab is a step lighter and still carries the accent line.
+- **Glassy** menus, including the hosted-resource chooser, keep an edge shadow so the list sits above the glass.
+- **Glassy** stays out of the Appearance theme list and the setup assistant. A saved Glassy choice still applies.
+- **Glassy** toasts use the glass plate, with the same corner and edge as the other panels.
+- **Glassy** Downloads holds the queue on the server-rail plate, so the empty list is not the raw scene. The SteamCMD console stays black and sits inset in that pane.
+- **Glassy** light uses one neutral milk for the sidebar, the server column, and the workspace title, so the day photo does not dye that chrome green. The status column uses that same plate, so its seam stays visible. Overview holds the server list and Recent activity on that milk too, as separate plates with the card corner and a gap of the scene between them. The sidebar version stays text, so **Quit YARK** does not share a plate with it.
+- A stopped server keeps a visible status dot in the server list, expanded and collapsed.
+- The setup assistant Windows step includes theme family and color scheme, the same choices as Settings → Appearance.
+- **Glassy** light uses the same cyan as dark, darkened to `#0c7490` so a white label still clears. Panels, borders, and idle buttons stay neutral white instead of the jungle green.
+- **Glassy** lets more of the scene through secondary plates and idle controls: Recent activity, nested workspace cards, backup volume cards, maintenance slabs, Discord notification cards, neutral chips, menus, and default or subtle buttons. Those plates carry a faint top highlight so they read as glass. Stop and the cluster members table stay as they were. Fluent and Plasma Breeze stay solid.
+- **Glassy** panels and cards use that same thin plate. The scene stays sharp through them, with the top highlight and no frost blur. List tables stay solid. Fluent and Plasma Breeze stay solid.
+- Settings → Appearance includes a **Background image** switch for Glassy. Off clears the day or night scene, hex grid, and veil; the glass panels stay. The choice is remembered, and a missing value stays on.
+- Queued and paused job labels on server cards use an accent chip, so a waiting install or update is visible on every theme.
+- Cluster **Remove servers** uses the same solid red fill as workspace **Delete server**.
+
 ### Fixed
 
+- Workspace tabs use the panel edge as the only line under the tab bar, so that divider is no longer doubled.
+- **Create cluster** stays in the cluster tab row. The panel edge is the only line under that row, so the button no longer covers it.
+- Maintenance **Up next** stays whole when job sections are expanded. The list scrolls instead of clipping that card.
+- A cancelled install, update, or verify is stored as **Cancelled** in Logs → Updates, including a cancel after Pause, and Downloads can open that log (#86).
+- On a short window the sidebar navigation scrolls, so Quit stays on screen. Download rows outside the flush queue keep their border.
+- **Glassy** light toasts keep a dark title and message. The message was using the hairline color, so it disappeared on the toast.
+- Fluent and Plasma Breeze dark primary buttons keep a white label and icon.
+- Cluster **Transfer** Save no longer stores an empty or tribute-only INI template; it seeds from a member first so a later Apply INI template cannot wipe unrelated `GameUserSettings.ini` values.
 - Plasma Breeze **Start** uses the same accent blue as **New server**. Filled primaries stay on `#3daee9` instead of a darker button blue.
 - Outside-change Configuration banner clears when disk matches the Save baseline again, conflict Save captures disk details for View outside changes, and semantic INI edits keep mixed line endings / duplicate occurrence order (#667).
+- The workspace join command still updates when the public IP lookup finishes after the server has already stopped.
 
 ### Docs
 
 - Added a prepared Windows runner workflow and sanitized evidence guidance for real-ASA lifecycle, backup-restore, and safe-update validation (#12).
+- The public operator docs describe visual INI merge with outside edits, cancelled SteamCMD logs, and cluster Transfer Save seeding from a member.
 
 ## [0.24.0] - 2026-10-16
 

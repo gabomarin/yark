@@ -85,7 +85,7 @@ export function ClusterTributePanel(props: Props): ReactElement {
             <Text fw={600} size="sm">
               Cluster members
             </Text>
-            <Button color="red" variant="subtle" disabled={!props.canRemoveAny} onClick={props.onRemoveAll}>
+            <Button size="sm" color="red" variant="filled" disabled={!props.canRemoveAny} onClick={props.onRemoveAll}>
               Remove servers
             </Button>
           </Group>

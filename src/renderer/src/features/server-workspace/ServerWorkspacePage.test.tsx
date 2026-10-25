@@ -126,7 +126,7 @@ describe("ServerWorkspacePage", () => {
       getPublicIp: vi.fn(async () => ({ ok: true, data: "203.0.113.5" })),
       readServerIni: vi.fn(async (serverId: string) => {
         const payload = {
-          gameUserSettings: `[ServerSettings]\nXPMultiplier=1.5\nAllowFlyerCarryPVE=True\n`,
+          gameUserSettings: `[SessionSettings]\nSessionName=Island\nPort=7777\nQueryPort=27015\n\n[ServerSettings]\nRCONEnabled=True\nRCONPort=27020\nServerAdminPassword=admin\nServerPassword=\nXPMultiplier=1.5\nAllowFlyerCarryPVE=True\n`,
           game: `[/Script/ShooterGame.ShooterGameMode]\nXPMultiplier=1.0\n`,
         };
         return {
@@ -157,7 +157,7 @@ describe("ServerWorkspacePage", () => {
       })),
       saveServerIniSemantic: vi.fn(async (_serverId: string, ops: unknown[]) => {
         const payload = {
-          gameUserSettings: `[ServerSettings]\nXPMultiplier=1.5\nAllowFlyerCarryPVE=True\n`,
+          gameUserSettings: `[SessionSettings]\nSessionName=Island\nPort=7777\nQueryPort=27015\n\n[ServerSettings]\nRCONEnabled=True\nRCONPort=27020\nServerAdminPassword=admin\nServerPassword=\nXPMultiplier=1.5\nAllowFlyerCarryPVE=True\n`,
           game: `[/Script/ShooterGame.ShooterGameMode]\nXPMultiplier=1.0\n`,
         };
         return {
@@ -919,8 +919,12 @@ describe("ServerWorkspacePage", () => {
     renderWorkspace();
 
     await user.click(screen.getByRole("tab", { name: "INI Files" }));
+    expect(screen.queryByRole("radiogroup", { name: "Game.ini view" })).not.toBeInTheDocument();
     const fileSwitch = screen.getByRole("radiogroup", { name: "INI file" });
     await user.click(within(fileSwitch).getByRole("radio", { name: "Game.ini" }));
+    const gameView = screen.getByRole("radiogroup", { name: "Game.ini view" });
+    expect(within(gameView).getByRole("radio", { name: "Settings" })).toBeChecked();
+    expect(within(gameView).getByRole("radio", { name: "Engrams" })).toBeVisible();
     await waitFor(() => {
       expect(screen.getAllByText("Totally Unknown Setting XYZ").length).toBeGreaterThan(0);
     });
@@ -1028,16 +1032,19 @@ describe("ServerWorkspacePage", () => {
     expect(screen.getByRole("button", { name: "Configuration wizard" })).toBeEnabled();
   });
 
-  it("does not load INI until the INI Files tab is opened", async () => {
+  it("reads INI on the Server tab for the compatibility report and loads the editor when INI Files opens", async () => {
     renderWorkspace();
 
     await screen.findByRole("heading", { name: "Server information" });
-    expect(window.api.readServerIni).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(window.api.readServerIni).toHaveBeenCalledTimes(1);
+    });
+    expect(screen.queryByRole("alert", { name: "Choose which values to keep" })).not.toBeInTheDocument();
 
     const user = setupUser();
     await user.click(screen.getByRole("tab", { name: "INI Files" }));
     await waitFor(() => {
-      expect(window.api.readServerIni).toHaveBeenCalledTimes(1);
+      expect(window.api.readServerIni).toHaveBeenCalledTimes(2);
     });
     expect(await screen.findByLabelText("Reset XPMultiplier to default")).toBeVisible();
   });
@@ -1226,8 +1233,8 @@ describe("ServerWorkspacePage", () => {
     expect(await screen.findByText(/24 settings were updated on The Island/i)).toBeVisible();
     expect(window.api.previewServerIni).toHaveBeenCalledTimes(1);
     expect(window.api.saveServerIni).toHaveBeenCalledTimes(1);
-    // Wizard initial load + re-read before save (INI editor is not pre-mounted).
-    expect(window.api.readServerIni).toHaveBeenCalledTimes(2);
+    // Server-tab compatibility read + wizard initial load + re-read before save.
+    expect(window.api.readServerIni).toHaveBeenCalledTimes(3);
     const savedPayload = vi.mocked(window.api.saveServerIni).mock.calls[0]?.[1];
     expect(savedPayload?.gameUserSettings).toContain("TamingSpeedMultiplier=3");
     expect(savedPayload?.game).toContain("BabyMatureSpeedMultiplier=5");

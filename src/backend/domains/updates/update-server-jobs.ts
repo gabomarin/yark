@@ -1,4 +1,5 @@
-import { join } from "node:path";
+import { closeSync, lstatSync, openSync, realpathSync, writeSync } from "node:fs";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import type { CriticalJobStatus } from "@shared/types";
 import type { BackupKind } from "@shared/types";
 import type { UpdateCriticalJobContext, UpdateCriticalJobType } from "./update-critical-jobs";
@@ -76,27 +77,138 @@ export function buildUpdateLogPath(updatesLogDir: string, serverId: string, star
   return join(updatesLogDir, `${serverId}-${timestamp}.log`);
 }
 
+/** Keep a persisted job path inside this server's update-logs folder. Otherwise mint a new file. */
+export function resolveCancelledUpdateLogPath(
+  updatesLogDir: string,
+  serverId: string,
+  startedAt: Date,
+  candidate: string | null,
+): string {
+  const fallback = buildUpdateLogPath(updatesLogDir, serverId, startedAt);
+  if (candidate === null || candidate.trim().length === 0) return fallback;
+  const root = resolve(updatesLogDir);
+  const resolved = resolve(candidate);
+  const rel = relative(root, resolved);
+  const fileName = basename(resolved);
+  if (
+    rel.length === 0 ||
+    rel.startsWith("..") ||
+    isAbsolute(rel) ||
+    !fileName.startsWith(`${serverId}-`) ||
+    !fileName.toLowerCase().endsWith(".log")
+  ) {
+    return fallback;
+  }
+  return resolved;
+}
+
+/** Stamp embedded by `buildUpdateLogPath`, or null when the name is not one of ours. */
+export function startedAtFromUpdateLogPath(serverId: string, logPath: string | null | undefined): Date | null {
+  if (logPath === null || logPath === undefined || logPath.trim().length === 0) return null;
+  const fileName = basename(logPath);
+  const prefix = `${serverId}-`;
+  if (!fileName.startsWith(prefix) || !fileName.toLowerCase().endsWith(".log")) return null;
+  const stamp = fileName.slice(prefix.length, -".log".length);
+  const match = /^(\d{4}-\d{2}-\d{2}T)(\d{2})-(\d{2})-(\d{2})-(\d{3}Z)$/.exec(stamp);
+  if (match === null) return null;
+  const parsed = new Date(`${match[1]}${match[2]}:${match[3]}:${match[4]}.${match[5]}`);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function realUpdateLogFile(updatesLogDir: string, candidate: string): string | null {
+  let rootReal: string;
+  try {
+    rootReal = realpathSync(resolve(updatesLogDir));
+  } catch {
+    return null;
+  }
+  let parentReal: string;
+  try {
+    parentReal = realpathSync(dirname(candidate));
+  } catch {
+    return null;
+  }
+  const rel = relative(rootReal, parentReal);
+  if (rel.startsWith("..") || isAbsolute(rel)) return null;
+  const finalPath = join(parentReal, basename(candidate));
+  try {
+    if (lstatSync(finalPath).isSymbolicLink()) return null;
+  } catch {
+    // The file is not there yet. The real parent is still inside the log folder.
+  }
+  return finalPath;
+}
+
+/**
+ * Path we may create for a cancel log. A persisted path that leaves the folder,
+ * or a symlink inside it, is replaced with a new file so the write cannot follow
+ * a link out of update-logs.
+ */
+export function confineCancelledUpdateLogPath(
+  updatesLogDir: string,
+  serverId: string,
+  startedAt: Date,
+  candidate: string | null,
+): string | null {
+  const lexical = resolveCancelledUpdateLogPath(updatesLogDir, serverId, startedAt, candidate);
+  const safe = realUpdateLogFile(updatesLogDir, lexical);
+  if (safe !== null) return safe;
+  const fallback = resolveCancelledUpdateLogPath(updatesLogDir, serverId, startedAt, null);
+  if (resolve(fallback) === resolve(lexical)) return null;
+  return realUpdateLogFile(updatesLogDir, fallback);
+}
+
+/** Create the cancel log without following a symlink that wins the race (`wx` / O_EXCL). */
+export function writeCancelledUpdateLogExclusive(logPath: string, content: string): "created" | "kept" | "rejected" {
+  let fd: number;
+  try {
+    fd = openSync(logPath, "wx");
+  } catch (error) {
+    const code = typeof error === "object" && error !== null && "code" in error ? String(error.code) : "";
+    if (code !== "EEXIST") throw error;
+    try {
+      if (!lstatSync(logPath).isSymbolicLink()) return "kept";
+    } catch {
+      return "rejected";
+    }
+    return "rejected";
+  }
+  try {
+    writeSync(fd, content, 0, "utf8");
+  } finally {
+    closeSync(fd);
+  }
+  return "created";
+}
+
 export function formatUpdateLogContent(input: {
   serverName: string;
   installDir: string;
-  exitCode: number;
+  /** Omit when the process never returned a code (operator cancel). */
+  exitCode: number | null;
+  /** Wins over `exitCode` when Logs classifies the file (#86). */
+  outcome?: "cancelled";
   startedAt: Date;
   durationMs: number;
   stdout: string;
   stderr: string;
 }): string {
-  return [
-    `time=${new Date().toISOString()}`,
-    `server=${input.serverName}`,
-    `installDir=${input.installDir}`,
-    `exitCode=${input.exitCode}`,
+  const lines = [`time=${new Date().toISOString()}`, `server=${input.serverName}`, `installDir=${input.installDir}`];
+  if (input.exitCode !== null) {
+    lines.push(`exitCode=${input.exitCode}`);
+  }
+  if (input.outcome === "cancelled") {
+    lines.push("outcome=cancelled");
+  }
+  lines.push(
     `startedAt=${input.startedAt.toISOString()}`,
     `durationMs=${input.durationMs}`,
     "--- stdout ---",
     input.stdout,
     "--- stderr ---",
     input.stderr,
-  ].join("\n");
+  );
+  return lines.join("\n");
 }
 
 export function queuedFilesJobProgressLabel(type: UpdateCriticalJobType): string {

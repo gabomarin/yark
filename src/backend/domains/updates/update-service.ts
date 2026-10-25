@@ -21,7 +21,7 @@ import type { ProcessManager } from "../../infra/process/process-manager";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
 import type { AppSettingsRepository } from "../../infra/db/app-settings-repository";
 import { toCriticalJobSummary } from "../../orchestration/critical-job-recovery";
-import { type UpdateCriticalJob, type UpdateCriticalJobContext } from "./update-critical-jobs";
+import { updateLogFileNameForJob, type UpdateCriticalJob, type UpdateCriticalJobContext } from "./update-critical-jobs";
 import { isPreUpdateBackupEvidenceComplete } from "./update-server-jobs";
 import {
   deriveSteamCmdStatusOperation,
@@ -295,7 +295,11 @@ export class UpdateService extends EventEmitter {
       // Keep this.queue order so Downloads Move up/down matches execution order.
       // Backup leftovers append after file jobs (they are not reorderable).
       criticalJobs: [
-        ...this.queue.map((job) => toCriticalJobSummary(job, this.servers.get(job.serverId)?.name ?? null)),
+        ...this.queue.map((job) => {
+          const summary = toCriticalJobSummary(job, this.servers.get(job.serverId)?.name ?? null);
+          const updateLogFileName = updateLogFileNameForJob(job);
+          return updateLogFileName === null ? summary : { ...summary, updateLogFileName };
+        }),
         ...(this.backups.getCriticalJobs?.() ?? []).filter((job) => job.operation !== "pre-update-backup"),
       ],
       checkedAt: new Date().toISOString(),
@@ -352,7 +356,15 @@ export class UpdateService extends EventEmitter {
   }
 
   cancelCriticalJob(jobId: string): boolean {
-    return this.queueRuntime.cancelCriticalJob(jobId) ?? this.backups.cancelCriticalJob(jobId);
+    const queued = this.queueRuntime.getJobs().find((job) => job.id === jobId);
+    const wasPaused = queued?.status === "paused";
+    const result = this.queueRuntime.cancelCriticalJob(jobId);
+    // Only a paused job has left the performer. A running job writes its own log
+    // when SteamCMD exits, and writing here would race that file.
+    if (result === true && wasPaused && queued !== undefined) {
+      this.updatePerformer.recordOperatorCancelledLog(queued);
+    }
+    return result ?? this.backups.cancelCriticalJob(jobId);
   }
 
   async resumeCriticalJob(jobId: string): Promise<boolean> {

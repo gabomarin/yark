@@ -17,6 +17,7 @@ import {
   darkSurfaces,
   fluentRadius,
   fluentTypography,
+  glassyRadius,
   opaqueMaterials,
   type AppThemeMaterials,
   lightColors,
@@ -50,6 +51,17 @@ import {
   plasmaBreezeLightSurfaces,
   plasmaBreezeTypography,
 } from "./plasmaBreezeTokens";
+import {
+  glassyDarkColors,
+  glassyDarkContrast,
+  glassyDarkMaterials,
+  glassyDarkPalette,
+  glassyDarkShadows,
+  glassyLightContrast,
+  glassyLightMaterials,
+  glassyLightPalette,
+  glassyLightShadows,
+} from "./glassyTokens";
 
 /**
  * Theme registry (#PUX-004 Track B, #PUX-005-B).
@@ -151,12 +163,47 @@ export const THEME_FAMILIES: Readonly<Record<ThemeFamilyId, Readonly<Record<Them
       contrast: plasmaBreezeLightContrast,
     },
   },
+  glassy: {
+    dark: {
+      family: "glassy",
+      scheme: "dark",
+      recipeSet: "fluent",
+      label: "Glassy Dark",
+      colorScheme: "dark",
+      palette: glassyDarkPalette,
+      colors: glassyDarkColors,
+      shadows: glassyDarkShadows,
+      surfaces: darkSurfaces,
+      ladders: darkLadders,
+      typography: fluentTypography,
+      radius: glassyRadius,
+      materials: glassyDarkMaterials,
+      contrast: glassyDarkContrast,
+    },
+    light: {
+      family: "glassy",
+      scheme: "light",
+      recipeSet: "fluent",
+      label: "Glassy Light",
+      colorScheme: "light",
+      palette: glassyLightPalette,
+      colors: lightColors,
+      shadows: glassyLightShadows,
+      surfaces: lightSurfaces,
+      ladders: lightLadders,
+      typography: fluentTypography,
+      radius: glassyRadius,
+      materials: glassyLightMaterials,
+      contrast: glassyLightContrast,
+    },
+  },
 };
 
-/** Human labels for the Appearance family control, in registry order. */
+/** Families offered in Settings and the setup assistant, in registry order. */
 export const THEME_FAMILY_LIST: ReadonlyArray<{ id: ThemeFamilyId; label: string }> = [
   { id: "fluent", label: "Fluent" },
   { id: "plasma-breeze", label: "Plasma Breeze" },
+  { id: "glassy", label: "Glassy" },
 ];
 
 /**
@@ -192,4 +239,21 @@ export function resolveThemeSelection(selection: ThemeSelection | null | undefin
     return family[isThemeScheme(selection.scheme) ? selection.scheme : DEFAULT_THEME_SCHEME];
   }
   return DEFAULT_APP_THEME;
+}
+
+/** Drops the photo, hex grid, and darkening wash. Glass panels stay. */
+export function withoutSceneBackground(theme: AppTheme): AppTheme {
+  if (theme.materials.shellScene === "none" && theme.materials.shellSceneGrid === "none") {
+    return theme;
+  }
+  return {
+    ...theme,
+    materials: {
+      ...theme.materials,
+      shellScene: "none",
+      shellSceneGrid: "none",
+      shellSceneVeil: "transparent",
+      shellSceneFilter: "none",
+    },
+  };
 }

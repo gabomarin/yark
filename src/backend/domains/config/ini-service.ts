@@ -4,6 +4,8 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini/ini-defaults";
 import { IniStaleDocumentError, iniFingerprintsMatch } from "@shared/ini/ini-fingerprints";
+import { applyNamedEngramEdits, type NamedEngramEdit } from "@shared/ini/engram-named-entries";
+import { applySupplyCrateEdits, type SupplyCrateEdit } from "@shared/ini/supply-crate-entries";
 import { applyIniSemanticOps, type IniSemanticOp } from "@shared/ini/ini-semantic-ops";
 import { sanitizeServerIniPayload } from "@shared/ini/ini-text";
 import type { ServerIniChangedPush } from "@shared/ipc";
@@ -120,13 +122,22 @@ export class IniService extends EventEmitter {
    * Expected-previous values are the concurrency check — whole-file fingerprints
    * are not required (non-overlapping external edits can coexist).
    */
-  async saveServerIniSemantic(serverId: string, ops: readonly IniSemanticOp[]): Promise<ServerIniSemanticSaveResult> {
+  async saveServerIniSemantic(
+    serverId: string,
+    ops: readonly IniSemanticOp[],
+    engramEdits: readonly NamedEngramEdit[] = [],
+    supplyCrateEdits: readonly SupplyCrateEdit[] = [],
+  ): Promise<ServerIniSemanticSaveResult> {
     return this.locks.withLock(serverId, "ini-save", () =>
       this.withIniMutation(serverId, async () => {
         const current = await this.readServerIni(serverId);
         const patched = applyIniSemanticOps(current.payload, ops);
         const sanitized = sanitizeServerIniPayload(patched);
-        return this.commitSanitizedPayload(serverId, current, sanitized);
+        const withEngrams =
+          engramEdits.length === 0 ? sanitized.game : applyNamedEngramEdits(sanitized.game, engramEdits);
+        const game = supplyCrateEdits.length === 0 ? withEngrams : applySupplyCrateEdits(withEngrams, supplyCrateEdits);
+        const next = game === sanitized.game ? sanitized : { ...sanitized, game };
+        return this.commitSanitizedPayload(serverId, current, next);
       }),
     );
   }

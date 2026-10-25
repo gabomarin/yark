@@ -13,7 +13,8 @@
 
 .root[data-active] {
   background: var(--app-nav-selected-fill);
-  box-shadow: none;
+  box-shadow: var(--app-nav-selected-shadow);
+  border: var(--app-nav-selected-border);
 }
 
 /* Fluent NavigationView: short left accent notch, not a full-height inset. */

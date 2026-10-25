@@ -1,0 +1,868 @@
+{
+  "version": "1",
+  "generatedAt": "2026-10-24",
+  "source": {
+    "note": "Supply and loot crate classes from the ARK wiki Beacon IDs list. Mission loot, fishing inventories, element nodes, and boss drop inventories are omitted. Empty maps means that list does not tie the crate to a map YARK knows. The Center uses the Island beacon classes because that list has no Center IDs."
+  },
+  "count": 143,
+  "entries": [
+    {
+      "className": "SupplyCrate_Level03_C",
+      "label": "White supply crate",
+      "kind": "level",
+      "maps": ["TheIsland_WP", "TheCenter_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level03_Double_C",
+      "label": "White supply crate (ring)",
+      "kind": "ring",
+      "maps": ["TheIsland_WP", "TheCenter_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level15_C",
+      "label": "Green supply crate",
+      "kind": "level",
+      "maps": ["TheIsland_WP", "TheCenter_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level15_Double_C",
+      "label": "Green supply crate (ring)",
+      "kind": "ring",
+      "maps": ["TheIsland_WP", "TheCenter_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level25_C",
+      "label": "Blue supply crate",
+      "kind": "level",
+      "maps": ["TheIsland_WP", "TheCenter_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level25_Double_C",
+      "label": "Blue supply crate (ring)",
+      "kind": "ring",
+      "maps": ["TheIsland_WP", "TheCenter_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level35_C",
+      "label": "Purple supply crate",
+      "kind": "level",
+      "maps": ["TheIsland_WP", "TheCenter_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level35_Double_C",
+      "label": "Purple supply crate (ring)",
+      "kind": "ring",
+      "maps": ["TheIsland_WP", "TheCenter_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level45_C",
+      "label": "Yellow supply crate",
+      "kind": "level",
+      "maps": ["TheIsland_WP", "TheCenter_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level45_Double_C",
+      "label": "Yellow supply crate (ring)",
+      "kind": "ring",
+      "maps": ["TheIsland_WP", "TheCenter_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level60_C",
+      "label": "Red supply crate",
+      "kind": "level",
+      "maps": ["TheIsland_WP", "TheCenter_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level60_Double_C",
+      "label": "Red supply crate (ring)",
+      "kind": "ring",
+      "maps": ["TheIsland_WP", "TheCenter_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Cave_QualityTier1_C",
+      "label": "Cave crate tier 1",
+      "kind": "cave",
+      "maps": ["TheIsland_WP", "TheCenter_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Cave_QualityTier2_C",
+      "label": "Cave crate tier 2",
+      "kind": "cave",
+      "maps": ["TheIsland_WP", "TheCenter_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Cave_QualityTier3_C",
+      "label": "Cave crate tier 3",
+      "kind": "cave",
+      "maps": ["TheIsland_WP", "TheCenter_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Cave_QualityTier4_C",
+      "label": "Cave crate tier 4",
+      "kind": "cave",
+      "maps": ["TheIsland_WP", "TheCenter_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_SwampCaveTier1_C",
+      "label": "Swamp cave crate (blue)",
+      "kind": "drop",
+      "maps": ["TheIsland_WP"]
+    },
+    {
+      "className": "SupplyCrate_SwampCaveTier2_C",
+      "label": "Swamp cave crate (yellow)",
+      "kind": "drop",
+      "maps": ["TheIsland_WP"]
+    },
+    {
+      "className": "SupplyCrate_SwampCaveTier3_C",
+      "label": "Swamp cave crate (red)",
+      "kind": "drop",
+      "maps": ["TheIsland_WP"]
+    },
+    {
+      "className": "SupplyCrate_IceCaveTier1_C",
+      "label": "Ice cave crate (blue)",
+      "kind": "drop",
+      "maps": ["TheIsland_WP"]
+    },
+    {
+      "className": "SupplyCrate_IceCaveTier2_C",
+      "label": "Ice cave crate (yellow)",
+      "kind": "drop",
+      "maps": ["TheIsland_WP"]
+    },
+    {
+      "className": "SupplyCrate_IceCaveTier3_C",
+      "label": "Ice cave crate (red)",
+      "kind": "drop",
+      "maps": ["TheIsland_WP"]
+    },
+    {
+      "className": "SupplyCrate_UnderwaterCaveTier1_C",
+      "label": "Underwater cave crate (blue)",
+      "kind": "drop",
+      "maps": ["TheIsland_WP"]
+    },
+    {
+      "className": "SupplyCrate_UnderwaterCaveTier2_C",
+      "label": "Underwater cave crate (yellow)",
+      "kind": "drop",
+      "maps": ["TheIsland_WP"]
+    },
+    {
+      "className": "SupplyCrate_UnderwaterCaveTier3_C",
+      "label": "Underwater cave crate (red)",
+      "kind": "drop",
+      "maps": ["TheIsland_WP"]
+    },
+    {
+      "className": "SupplyCrate_OceanInstant_C",
+      "label": "Deep sea loot crate",
+      "kind": "drop",
+      "maps": ["TheIsland_WP"]
+    },
+    {
+      "className": "ArtifactCrate_1_C",
+      "label": "Artifact container Hunter",
+      "kind": "drop",
+      "maps": ["TheIsland_WP"]
+    },
+    {
+      "className": "ArtifactCrate_2_C",
+      "label": "Artifact container Pack",
+      "kind": "drop",
+      "maps": ["TheIsland_WP"]
+    },
+    {
+      "className": "ArtifactCrate_3_C",
+      "label": "Artifact container Massive",
+      "kind": "drop",
+      "maps": ["TheIsland_WP"]
+    },
+    {
+      "className": "ArtifactCrate_4_C",
+      "label": "Artifact container Devious",
+      "kind": "drop",
+      "maps": ["TheIsland_WP"]
+    },
+    {
+      "className": "ArtifactCrate_5_C",
+      "label": "Artifact container Clever",
+      "kind": "drop",
+      "maps": ["TheIsland_WP"]
+    },
+    {
+      "className": "ArtifactCrate_6_C",
+      "label": "Artifact container Skylord",
+      "kind": "drop",
+      "maps": ["TheIsland_WP"]
+    },
+    {
+      "className": "ArtifactCrate_7_C",
+      "label": "Artifact container Devourer",
+      "kind": "drop",
+      "maps": ["TheIsland_WP"]
+    },
+    {
+      "className": "ArtifactCrate_8_C",
+      "label": "Artifact container Immune",
+      "kind": "drop",
+      "maps": ["TheIsland_WP"]
+    },
+    {
+      "className": "ArtifactCrate_9_C",
+      "label": "Artifact container Strong",
+      "kind": "drop",
+      "maps": ["TheIsland_WP"]
+    },
+    {
+      "className": "ArtifactCrate_10_C",
+      "label": "Artifact container Cunning",
+      "kind": "drop",
+      "maps": ["TheIsland_WP"]
+    },
+    {
+      "className": "ArtifactCrate_11_C",
+      "label": "Artifact container Brute",
+      "kind": "drop",
+      "maps": ["TheIsland_WP"]
+    },
+    {
+      "className": "SupplyCrateBaseBP_Instantaneous_DamLogs_Child_C",
+      "label": "Giant beaver dam logs",
+      "kind": "drop",
+      "maps": ["TheIsland_WP"]
+    },
+    {
+      "className": "SupplyCrateBaseBP_Instantaneous_DenLogs_Child2_C",
+      "label": "Giant beaver dam",
+      "kind": "drop",
+      "maps": ["TheIsland_WP"]
+    },
+    {
+      "className": "SupplyCrate_Gift_C",
+      "label": "Raptor Claus present",
+      "kind": "drop",
+      "maps": []
+    },
+    {
+      "className": "SupplyCrate_Cave_QualityTier1_ScorchedEarth_C",
+      "label": "Scorched Earth cave crate tier 1",
+      "kind": "drop",
+      "maps": ["ScorchedEarth_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Cave_QualityTier2_ScorchedEarth_C",
+      "label": "Scorched Earth cave crate tier 2",
+      "kind": "drop",
+      "maps": ["ScorchedEarth_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Cave_QualityTier3_ScorchedEarth_C",
+      "label": "Scorched Earth cave crate tier 3",
+      "kind": "drop",
+      "maps": ["ScorchedEarth_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level03_ScorchedEarth_C",
+      "label": "Scorched Earth white supply crate",
+      "kind": "drop",
+      "maps": ["ScorchedEarth_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level03_Double_ScorchedEarth_C",
+      "label": "Scorched Earth white supply crate (ring)",
+      "kind": "drop",
+      "maps": ["ScorchedEarth_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level15_ScorchedEarth_C",
+      "label": "Scorched Earth green supply crate",
+      "kind": "drop",
+      "maps": ["ScorchedEarth_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level15_Double_ScorchedEarth_C",
+      "label": "Scorched Earth green supply crate (ring)",
+      "kind": "drop",
+      "maps": ["ScorchedEarth_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level30_ScorchedEarth_C",
+      "label": "Scorched Earth blue supply crate",
+      "kind": "drop",
+      "maps": ["ScorchedEarth_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level30_Double_ScorchedEarth_C",
+      "label": "Scorched Earth blue supply crate (ring)",
+      "kind": "drop",
+      "maps": ["ScorchedEarth_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level45_ScorchedEarth_C",
+      "label": "Scorched Earth purple supply crate",
+      "kind": "drop",
+      "maps": ["ScorchedEarth_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level45_Double_ScorchedEarth_C",
+      "label": "Scorched Earth purple supply crate (ring)",
+      "kind": "drop",
+      "maps": ["ScorchedEarth_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level55_ScorchedEarth_C",
+      "label": "Scorched Earth yellow supply crate",
+      "kind": "drop",
+      "maps": ["ScorchedEarth_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level55_Double_ScorchedEarth_C",
+      "label": "Scorched Earth yellow supply crate (ring)",
+      "kind": "drop",
+      "maps": ["ScorchedEarth_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level70_ScorchedEarth_C",
+      "label": "Scorched Earth red supply crate",
+      "kind": "drop",
+      "maps": ["ScorchedEarth_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level70_Double_ScorchedEarth_C",
+      "label": "Scorched Earth red supply crate (ring)",
+      "kind": "drop",
+      "maps": ["ScorchedEarth_WP", "Ragnarok_WP", "Valguero_WP"]
+    },
+    {
+      "className": "ArtifactCrate_SE_C",
+      "label": "Artifact container Destroyer",
+      "kind": "drop",
+      "maps": ["ScorchedEarth_WP"]
+    },
+    {
+      "className": "ArtifactCrate_2_SE_C",
+      "label": "Artifact container Gatekeeper",
+      "kind": "drop",
+      "maps": ["ScorchedEarth_WP"]
+    },
+    {
+      "className": "ArtifactCrate_3_SE_C",
+      "label": "Artifact container Crag",
+      "kind": "drop",
+      "maps": ["ScorchedEarth_WP"]
+    },
+    {
+      "className": "SupplyCrate_Chest_Treasure_JacksonL_C",
+      "label": "Ragnarok treasure chest",
+      "kind": "drop",
+      "maps": ["Ragnarok_WP"]
+    },
+    {
+      "className": "SupplyCreate_OceanInstant_High_C",
+      "label": "Ragnarok desert loot crate",
+      "kind": "drop",
+      "maps": ["Ragnarok_WP"]
+    },
+    {
+      "className": "SupplyCrate_Cave_Aberration_Level10_C",
+      "label": "Aberration white crate",
+      "kind": "drop",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Cave_Aberration_Level10_Double_C",
+      "label": "Aberration white crate (ring)",
+      "kind": "drop",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Cave_Aberration_Level25_C",
+      "label": "Aberration green crate",
+      "kind": "drop",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Cave_Aberration_Level25_Double_C",
+      "label": "Aberration green crate (ring)",
+      "kind": "drop",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Cave_Aberration_Level35_C",
+      "label": "Aberration blue crate",
+      "kind": "drop",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Cave_Aberration_Level35_Double_C",
+      "label": "Aberration blue crate (ring)",
+      "kind": "drop",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Cave_Aberration_Level50_C",
+      "label": "Aberration purple crate",
+      "kind": "drop",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Cave_Aberration_Level50_Double_C",
+      "label": "Aberration purple crate (ring)",
+      "kind": "drop",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Cave_Aberration_Level65_C",
+      "label": "Aberration yellow crate",
+      "kind": "drop",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Cave_Aberration_Level65_Double_C",
+      "label": "Aberration yellow crate (ring)",
+      "kind": "drop",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Cave_Aberration_Level80_C",
+      "label": "Aberration red crate",
+      "kind": "drop",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Cave_Aberration_Level80_Double_C",
+      "label": "Aberration red crate (ring)",
+      "kind": "drop",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Dungeon_Aberration_Level35_C",
+      "label": "Aberration blue dungeon crate",
+      "kind": "drop",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level35_Aberrant_Surface_C",
+      "label": "Aberration blue surface beacon",
+      "kind": "drop",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level35_Aberrant_Surface_Double_C",
+      "label": "Aberration blue surface beacon (ring)",
+      "kind": "drop",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Dungeon_Aberration_Level50_C",
+      "label": "Aberration purple dungeon crate",
+      "kind": "drop",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level50_Aberrant_Surface_C",
+      "label": "Aberration purple surface beacon",
+      "kind": "drop",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level50_Aberrant_Surface_Double_C",
+      "label": "Aberration purple surface beacon (ring)",
+      "kind": "drop",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Dungeon_Aberration_Level65_C",
+      "label": "Aberration yellow dungeon crate",
+      "kind": "drop",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level65_Aberrant_Surface_C",
+      "label": "Aberration yellow surface beacon",
+      "kind": "drop",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level65_Aberrant_Surface_Double_C",
+      "label": "Aberration yellow surface beacon (ring)",
+      "kind": "drop",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Dungeon_Aberration_Level80_C",
+      "label": "Aberration red dungeon crate",
+      "kind": "drop",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level80_Aberrant_Surface_C",
+      "label": "Aberration red surface beacon",
+      "kind": "drop",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "SupplyCrate_Level80_Aberrant_Surface_Double_C",
+      "label": "Aberration red surface beacon (ring)",
+      "kind": "drop",
+      "maps": ["Aberration_WP", "Valguero_WP"]
+    },
+    {
+      "className": "ArtifactCrate_AB_C",
+      "label": "Artifact container Depths",
+      "kind": "drop",
+      "maps": ["Aberration_WP"]
+    },
+    {
+      "className": "ArtifactCrate_2_AB_C",
+      "label": "Artifact container Shadows",
+      "kind": "drop",
+      "maps": ["Aberration_WP"]
+    },
+    {
+      "className": "ArtifactCrate_3_AB_C",
+      "label": "Artifact container Stalker",
+      "kind": "drop",
+      "maps": ["Aberration_WP"]
+    },
+    {
+      "className": "ArtifactCrate_4_AB_C",
+      "label": "Artifact container Lost",
+      "kind": "drop",
+      "maps": ["Aberration_WP"]
+    },
+    {
+      "className": "SupplyCrate_Cave_QualityTier1_EX_C",
+      "label": "Extinction cave crate (blue)",
+      "kind": "drop",
+      "maps": ["Extinction_WP"]
+    },
+    {
+      "className": "SupplyCrate_Cave_QualityTier2_EX_C",
+      "label": "Extinction cave crate (yellow)",
+      "kind": "drop",
+      "maps": ["Extinction_WP"]
+    },
+    {
+      "className": "SupplyCrate_Cave_QualityTier3_EX_C",
+      "label": "Extinction cave crate (red)",
+      "kind": "drop",
+      "maps": ["Extinction_WP"]
+    },
+    {
+      "className": "SupplyCrate_Base_Horde_Easy_C",
+      "label": "Extinction orbital supply drop (blue)",
+      "kind": "drop",
+      "maps": ["Extinction_WP"]
+    },
+    {
+      "className": "SupplyCrate_Base_Horde_Medium_C",
+      "label": "Extinction orbital supply drop (yellow)",
+      "kind": "drop",
+      "maps": ["Extinction_WP"]
+    },
+    {
+      "className": "SupplyCrate_Base_Horde_Hard_C",
+      "label": "Extinction orbital supply drop (red)",
+      "kind": "drop",
+      "maps": ["Extinction_WP"]
+    },
+    {
+      "className": "SupplyCrate_Base_Horde_Legendary_C",
+      "label": "Extinction orbital supply drop (purple)",
+      "kind": "drop",
+      "maps": ["Extinction_WP"]
+    },
+    {
+      "className": "ArtifactCrate_Desert_Kaiju_EX_C",
+      "label": "Artifact container Chaos",
+      "kind": "drop",
+      "maps": ["Extinction_WP"]
+    },
+    {
+      "className": "ArtifactCrate_ForestKaiju_EX_C",
+      "label": "Artifact container Growth",
+      "kind": "drop",
+      "maps": ["Extinction_WP"]
+    },
+    {
+      "className": "ArtifactCrate_IceKaiju_EX_C",
+      "label": "Artifact container Void",
+      "kind": "drop",
+      "maps": ["Extinction_WP"]
+    },
+    {
+      "className": "ArtifactCrate_KingKaiju_Alpha_EX_C",
+      "label": "King Titan alpha tribute",
+      "kind": "drop",
+      "maps": ["Extinction_WP"]
+    },
+    {
+      "className": "ArtifactCrate_KingKaiju_Beta_EX_C",
+      "label": "King Titan beta tribute",
+      "kind": "drop",
+      "maps": ["Extinction_WP"]
+    },
+    {
+      "className": "ArtifactCrate_KingKaiju_EX_C",
+      "label": "King Titan gamma tribute",
+      "kind": "drop",
+      "maps": ["Extinction_WP"]
+    },
+    {
+      "className": "Val_SupplyCrate_Level35_C",
+      "label": "Valguero purple supply crate",
+      "kind": "drop",
+      "maps": ["Valguero_WP"]
+    },
+    {
+      "className": "Val_SupplyCrate_Level35_Double_C",
+      "label": "Valguero purple supply crate (ring)",
+      "kind": "drop",
+      "maps": ["Valguero_WP"]
+    },
+    {
+      "className": "Val_SupplyCrate_Level45_C",
+      "label": "Valguero yellow supply crate",
+      "kind": "drop",
+      "maps": ["Valguero_WP"]
+    },
+    {
+      "className": "Val_SupplyCrate_Level45_Double_C",
+      "label": "Valguero yellow supply crate (ring)",
+      "kind": "drop",
+      "maps": ["Valguero_WP"]
+    },
+    {
+      "className": "Val_SupplyCrate_Level60_C",
+      "label": "Valguero red supply crate",
+      "kind": "drop",
+      "maps": ["Valguero_WP"]
+    },
+    {
+      "className": "Val_SupplyCrate_Level60_Double_C",
+      "label": "Valguero red supply crate (ring)",
+      "kind": "drop",
+      "maps": ["Valguero_WP"]
+    },
+    {
+      "className": "Lootcrate_lvl1_C",
+      "label": "Genesis tier 1 loot crate",
+      "kind": "drop",
+      "maps": ["Genesis_WP"]
+    },
+    {
+      "className": "Lootcrate_lvl2_C",
+      "label": "Genesis tier 2 loot crate",
+      "kind": "drop",
+      "maps": ["Genesis_WP"]
+    },
+    {
+      "className": "Lootcrate_lvl3_C",
+      "label": "Genesis tier 3 loot crate",
+      "kind": "drop",
+      "maps": ["Genesis_WP"]
+    },
+    {
+      "className": "SupplyCrate_Space_01_Ambergris_C",
+      "label": "Genesis Part 2 white supply crate",
+      "kind": "drop",
+      "maps": []
+    },
+    {
+      "className": "SupplyCrate_Space_02_Crystal_C",
+      "label": "Genesis Part 2 green supply crate",
+      "kind": "drop",
+      "maps": []
+    },
+    {
+      "className": "SupplyCrate_Space_03_Sulfur_C",
+      "label": "Genesis Part 2 blue supply crate",
+      "kind": "drop",
+      "maps": []
+    },
+    {
+      "className": "SupplyCrate_Space_04_ElementShards_C",
+      "label": "Genesis Part 2 purple supply crate",
+      "kind": "drop",
+      "maps": []
+    },
+    {
+      "className": "SupplyCrate_Space_05_Obsidian_C",
+      "label": "Genesis Part 2 yellow supply crate",
+      "kind": "drop",
+      "maps": []
+    },
+    {
+      "className": "SupplyCrate_Space_06_Oil_C",
+      "label": "Genesis Part 2 red supply crate",
+      "kind": "drop",
+      "maps": []
+    },
+    {
+      "className": "SupplyCrate_Space_07_ElementDust_C",
+      "label": "Genesis Part 2 cyan supply crate",
+      "kind": "drop",
+      "maps": []
+    },
+    {
+      "className": "SupplyCrate_Space_08_BlackPearls_C",
+      "label": "Genesis Part 2 orange supply crate",
+      "kind": "drop",
+      "maps": []
+    },
+    {
+      "className": "SupplyCrate_Level45_LostIsland_C",
+      "label": "Lost Island yellow supply crate",
+      "kind": "drop",
+      "maps": []
+    },
+    {
+      "className": "SupplyCrate_Level45_LostIsland_Double_C",
+      "label": "Lost Island yellow supply crate (ring)",
+      "kind": "drop",
+      "maps": []
+    },
+    {
+      "className": "SupplyCrate_Level60_LostIsland_C",
+      "label": "Lost Island red supply crate",
+      "kind": "drop",
+      "maps": []
+    },
+    {
+      "className": "SupplyCrate_Level60_LostIsland_Double_C",
+      "label": "Lost Island red supply crate (ring)",
+      "kind": "drop",
+      "maps": []
+    },
+    {
+      "className": "SupplyCrate_Ruins_LostIsland_C",
+      "label": "Lost Island ruins dungeon crate",
+      "kind": "drop",
+      "maps": []
+    },
+    {
+      "className": "Fjo_SupplyCrate_Level15_C",
+      "label": "Fjordur green supply crate",
+      "kind": "drop",
+      "maps": []
+    },
+    {
+      "className": "Fjo_SupplyCrate_Level15_Double_C",
+      "label": "Fjordur green supply crate (ring)",
+      "kind": "drop",
+      "maps": []
+    },
+    {
+      "className": "Fjo_SupplyCrate_Level25_C",
+      "label": "Fjordur blue supply crate",
+      "kind": "drop",
+      "maps": []
+    },
+    {
+      "className": "Fjo_SupplyCrate_Level25_Double_C",
+      "label": "Fjordur blue supply crate (ring)",
+      "kind": "drop",
+      "maps": []
+    },
+    {
+      "className": "Fjo_SupplyCrate_Level35_C",
+      "label": "Fjordur purple supply crate",
+      "kind": "drop",
+      "maps": []
+    },
+    {
+      "className": "Fjo_SupplyCrate_Level35_Double_C",
+      "label": "Fjordur purple supply crate (ring)",
+      "kind": "drop",
+      "maps": []
+    },
+    {
+      "className": "Fjo_SupplyCrate_Level45_C",
+      "label": "Fjordur yellow supply crate",
+      "kind": "drop",
+      "maps": []
+    },
+    {
+      "className": "Fjo_SupplyCrate_Level45_Double_C",
+      "label": "Fjordur yellow supply crate (ring)",
+      "kind": "drop",
+      "maps": []
+    },
+    {
+      "className": "Fjo_SupplyCrate_Level60_C",
+      "label": "Fjordur red supply crate",
+      "kind": "drop",
+      "maps": []
+    },
+    {
+      "className": "Fjo_SupplyCrate_Level60_Double_C",
+      "label": "Fjordur red supply crate (ring)",
+      "kind": "drop",
+      "maps": []
+    },
+    {
+      "className": "SupplyCrate_LostLootChest_Cave_T1_C",
+      "label": "Lost Colony blue cave drop",
+      "kind": "drop",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "SupplyCrate_LostLootChest_Cave_T2_C",
+      "label": "Lost Colony yellow cave drop",
+      "kind": "drop",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "SupplyCrate_LostLootChest_Cave_T3_C",
+      "label": "Lost Colony red cave drop",
+      "kind": "drop",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "StructureBP_Mission_Outpost_LootStructure_Attack_Training_Gamma_C",
+      "label": "Lost Colony attack outpost (gamma)",
+      "kind": "drop",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "StructureBP_Mission_Outpost_LootStructure_Attack_Training_Beta_C",
+      "label": "Lost Colony attack outpost (beta)",
+      "kind": "drop",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "StructureBP_Mission_Outpost_LootStructure_Attack_Training_Alpha_C",
+      "label": "Lost Colony attack outpost (alpha)",
+      "kind": "drop",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "StructureBP_Mission_Outpost_LootStructure_Defend_Gamma_C",
+      "label": "Lost Colony defend outpost (gamma)",
+      "kind": "drop",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "StructureBP_Mission_Outpost_LootStructure_Defend_Beta_C",
+      "label": "Lost Colony defend outpost (beta)",
+      "kind": "drop",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "StructureBP_Mission_Outpost_LootStructure_Defend_Alpha_C",
+      "label": "Lost Colony defend outpost (alpha)",
+      "kind": "drop",
+      "maps": ["LostColony_WP"]
+    },
+    {
+      "className": "SupplyCrate_BuriedTreasure_ShoulderDragon_C",
+      "label": "Dragon hoard",
+      "kind": "drop",
+      "maps": []
+    }
+  ]
+}

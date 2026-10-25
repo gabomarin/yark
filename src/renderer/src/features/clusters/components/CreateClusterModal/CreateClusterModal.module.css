@@ -9,7 +9,7 @@
 
 .previewCard {
   border: 1px solid var(--app-color-border-subtle);
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
   background: var(--app-color-panel);
   padding: var(--app-space-md);
 }

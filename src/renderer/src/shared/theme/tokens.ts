@@ -452,6 +452,8 @@ export type AppThemeRadius = {
 
 export const fluentRadius: AppThemeRadius = { sm: 4, md: 8, lg: 10, control: 4 };
 export const plasmaBreezeRadius: AppThemeRadius = { sm: 4, md: 6, lg: 8, control: 4 };
+/** Glassy rounds panels and controls a step past Fluent. */
+export const glassyRadius: AppThemeRadius = { sm: 8, md: 12, lg: 16, control: 8 };
 
 /**
  * Serializable surface material. Every value is a CSS string so a future pack can
@@ -462,16 +464,257 @@ export type AppThemeMaterials = {
   surfaceFilter: string;
   chromeFilter: string;
   raisedFilter: string;
+  /** Navbar tint. Identity is transparent so Fluent/Breeze keep a clear rail. */
+  chromeBg: string;
+  /** Chrome-tone card fill. Identity is the opaque chrome step. */
+  surfaceChromeBg: string;
+  /** Card and table fill. Identity is the opaque panel step, not `--app-color-panel` (that role reads this field). */
+  panelBg: string;
+  /**
+   * Floating plate on the scene (Recent activity, nested workspace cards).
+   * Identity matches the panel, so Fluent and Breeze stay solid.
+   */
+  floatPanelBg: string;
+  /** Neutral chip fill. Identity is the control step. */
+  chipBg: string;
+  /** Top-lit wash. Identity is `none`, so opaque families stay flat. */
+  glassSheen: string;
+  /** One-pixel catchlight on the top edge. Identity is `none`. */
+  glassRim: string;
+  /**
+   * Base of an alert before the 12% tone mix. Identity is the solid alert
+   * surface, so Fluent and Breeze keep today's bar. Glassy points it at the card.
+   */
+  alertFill: string;
+  /**
+   * Nested row inside a working card (Launch flags). Identity is the wash those
+   * rows already used, so Fluent and Breeze do not move.
+   */
+  nestedRowBg: string;
+  /** Raised step inside a panel (headers, alt wells). Identity stays gray-4. */
+  panelRaisedBg: string;
+  /** Alternate panel. Identity stays the control step; Glassy uses the raised frost. */
+  panelAltBg: string;
+  /** Hairline, frame, and control-border colours. Identity stays the gray ramp. */
+  borderSubtle: string;
+  border: string;
+  borderControl: string;
   contentPaneBg: string;
   contentPaneBorder: string;
   contentPaneShadow: string;
   contentPaneRadius: string;
+  /** Outer corner of discrete cards. Identity is square (`0px`). */
+  panelRadius: string;
+  /**
+   * Panel sitting on a tab rule. Identity is square. Glassy keeps the bottom
+   * radius and squares the top so the tab line does not leave corner gaps.
+   */
+  tabAttachedRadius: string;
+  /**
+   * Resting fill of an inactive tab. Identity is clear, so Fluent and Breeze
+   * stay on Mantine's transparent tab. A glass theme can lay a quiet plate
+   * under the label without a border.
+   */
+  tabInactiveBg: string;
+  /**
+   * Selected tab. Identity is the accent wash on the control hover, so Fluent
+   * and Breeze keep today's chip. A glass theme can lift it a step above the
+   * inactive plate.
+   */
+  tabActiveBg: string;
+  tabActiveHoverBg: string;
+  /** Space between backup metric tiles. Identity matches today's `xs` gap. */
+  metricGap: string;
+  /**
+   * Fused collections (Overview server rows, fleet metric strip). Identity is a
+   * square slab with shared hairlines. Glassy tiles each item.
+   */
+  collectionGap: string;
+  collectionRadius: string;
+  /** Top border of an adjacent item. `0px` fuses the hairline; `1px` keeps it. */
+  collectionJoin: string;
+  /** Outer strip border and cell dividers. `0px` drops them when items are tiled. */
+  collectionFuse: string;
+  collectionItemBorder: string;
+  collectionStripFill: string;
+  collectionItemShadow: string;
+  /** Inner inset of a page content host. Identity is `0px` so existing shells keep their padding. */
+  contentPanePadding: string;
+  /** `1` keeps the shell grain; `0` hides it so frost reads the canvas. */
+  shellGrainOpacity: string;
+  /** Navbar seam. Identity is the current border mix. */
+  chromeBorder: string;
+  navSelectedBorder: string;
+  navSelectedShadow: string;
+  /** Card hover fill. Identity is the control step. */
+  surfaceHover: string;
+  /** Settings split: fused slab vs two frosted columns. */
+  splitGap: string;
+  splitPadding: string;
+  splitRailBorder: string;
+  splitRailShadow: string;
+  splitPanelMax: string;
+  splitPanelMargin: string;
+  /** Settings preference stack. Identity is separate square cells. */
+  settingStackBorder: string;
+  settingStackBg: string;
+  settingStackClip: string;
+  settingRowBg: string;
+  settingRowBorder: string;
+  settingRowJoin: string;
+  settingRowEdge: string;
+  /** Sidebar seam. Identity is the plain border; Glassy adds the accent glow. */
+  sidebarEdge: string;
+  sidebarEdgeGlow: string;
+  sidebarFooterBorder: string;
+  sidebarFooterMargin: string;
+  sidebarFooterPadding: string;
+  sidebarFooterRadius: string;
+  sidebarFooterBg: string;
+  sidebarFooterFilter: string;
+  versionChipPaddingTop: string;
+  brandLightPadding: string;
+  brandLightRadius: string;
+  /** Light-scheme logo plate flex. Identity stretches the band; a chip uses `0 1 auto`. */
+  brandLightFlex: string;
+  /** Read-only path well. Identity is the chrome step at 72% so today's pills stay. */
+  inputWellBg: string;
+  /**
+   * Menu and kebab flyout fill. Identity is Mantine's popover fill (white in
+   * light, the control step in dark) so Fluent and Breeze do not move.
+   */
+  menuBg: string;
+  /**
+   * Flyout edge. Identity keeps Mantine's own popover shadow, so Fluent and
+   * Breeze stay put. A glass theme draws a ring and a drop so the list lifts
+   * off the scene.
+   */
+  menuShadow: string;
+  /**
+   * Toast fill. Identity is Mantine's white / dark-6 plate. A glass theme uses
+   * the same translucent card as the other panels.
+   */
+  notificationBg: string;
+  /**
+   * Toast edge. Identity is Mantine's large shadow. A glass theme uses the
+   * flyout ring and drop so the toast lifts off the scene.
+   */
+  notificationShadow: string;
+  /**
+   * SteamCMD console inset on Downloads. Identity keeps today's `xs` padding.
+   * A glass theme opens a margin so the black terminal is not a hole in the pane.
+   */
+  downloadsConsoleInset: string;
+  /**
+   * Attention wash (alerts, differing cluster cells). Identity is Mantine's
+   * transparent mix. A teal glass needs an opaque gold or the yellow goes olive.
+   */
+  attentionLight: string;
+  attentionLightHover: string;
+  /**
+   * Idle icon button plate (`subtle` / `transparent`). Identity is Mantine's
+   * transparent control, so Fluent and Breeze stay flat.
+   */
+  iconButtonBg: string;
+  iconButtonBorder: string;
+  /** `default` icon buttons. Identity is Mantine's default control fill. */
+  iconButtonDefaultBg: string;
+  iconButtonDefaultBorder: string;
+  iconButtonFilter: string;
+  iconButtonShadow: string;
+  /**
+   * Filled accent buttons (New server, Start). Identity is Mantine's solid
+   * primary, so Fluent and Breeze stay flat. A glass theme can veil the accent.
+   */
+  primaryButtonBg: string;
+  primaryButtonHover: string;
+  primaryButtonBorder: string;
+  /**
+   * Label and icon on a filled accent button. Identity is white, so Fluent and
+   * Breeze dark keep a light label. Mantine's autoContrast would paint those
+   * bright accents black.
+   */
+  primaryButtonColor: string;
+  /**
+   * Disabled button and icon-button fill. Identity is Mantine's solid disabled
+   * grey. A glass theme can thin it so the control recedes without a frost plate.
+   */
+  buttonDisabledBg: string;
+  /**
+   * Disabled `subtle` buttons. Identity stays clear so Fluent and Breeze do not
+   * turn a text button into a slab. A glass theme can use the thinned disabled fill.
+   */
+  buttonDisabledQuietBg: string;
+  navLinkColor: string;
+  /** Raised list host (logs, cluster members). Identity adds no chrome. */
+  listVesselBorder: string;
+  listVesselBg: string;
+  listVesselShadow: string;
+  listRowBorder: string;
+  listRowJoin: string;
+  listRowEdge: string;
+  listRowHover: string;
+  tableHeadBg: string;
+  queueSectionPadding: string;
+  queueGroupGap: string;
+  queueGroupRule: string;
+  queueRowHover: string;
+  serverListHover: string;
+  serverListSelectedBorder: string;
+  /**
+   * Workspace server-list column. Identity is clear so the fused chrome shell
+   * stays one surface. A glass theme can lay a light plate over the scene.
+   */
+  serverRailBg: string;
+  /**
+   * Workspace title and tab strip. Identity is clear, so Fluent and Breeze
+   * keep the scene. A light glass theme can lay the same milk as the sidebar.
+   */
+  mastBg: string;
+  /**
+   * Overview server list. Identity is clear so the fused Fluent page stays on
+   * the shell. A light glass theme can hold the rows on the sidebar milk.
+   */
+  overviewStageBg: string;
+  /**
+   * Inset of the overview list plate. Identity is `0px` so Fluent rows stay
+   * flush. A light glass theme insets the cards inside the rounded plate.
+   */
+  overviewStagePad: string;
+  /** Edge of that plate. Identity is `none`. */
+  overviewStageBorder: string;
+  /**
+   * Overview Recent activity. Identity is the float panel. A light glass theme
+   * can drop it to the same milk as the list.
+   */
+  overviewAsideBg: string;
   shellMainBg: string;
+  /** Canvas wash behind frosted panels. Identity is `none`. */
+  shellAtmosphere: string;
+  /**
+   * Scene plate behind the shell. Identity is `none`. A glass theme can set
+   * `url(...)` so frost and the gaps between tiles read a picture.
+   */
+  shellScene: string;
+  /**
+   * Grid painted on the scene, under the darkening wash. Identity is `none`.
+   */
+  shellSceneGrid: string;
+  /**
+   * Darkening wash above the scene grid. Identity is `transparent`.
+   */
+  shellSceneVeil: string;
+  /**
+   * Blur between the photo and the grid. Identity is `none`, so the grid stays sharp.
+   */
+  shellSceneFilter: string;
   /** Row fill inside a fused list. Identity matches today's panel rows. */
   listRowBg: string;
   navSelectedFill: string;
   /** Width of the selected-nav notch. `0px` hides it when a fill carries selection. */
   navSelectedNotch: string;
+  listSelectedBg: string;
+  listSelectedInset: string;
   raisedBg: string;
   raisedBorder: string;
   raisedShadow: string;
@@ -482,14 +725,122 @@ export const opaqueMaterials: AppThemeMaterials = {
   surfaceFilter: "none",
   chromeFilter: "none",
   raisedFilter: "none",
+  chromeBg: "transparent",
+  surfaceChromeBg: "var(--app-color-surface-chrome)",
+  panelBg: "var(--app-color-surface-panel)",
+  floatPanelBg: "var(--app-color-panel)",
+  chipBg: "var(--app-color-surface-control)",
+  glassSheen: "none",
+  glassRim: "none",
+  alertFill: "var(--app-color-surface-alert)",
+  nestedRowBg: "color-mix(in srgb, var(--app-color-bg) 35%, transparent)",
+  panelRaisedBg: "var(--ark-gray-4)",
+  panelAltBg: "var(--app-color-surface-control)",
+  borderSubtle: "var(--ark-gray-7)",
+  border: "var(--app-color-border-subtle)",
+  borderControl: "var(--ark-gray-9)",
   contentPaneBg: "transparent",
   contentPaneBorder: "none",
   contentPaneShadow: "none",
   contentPaneRadius: "0px",
+  panelRadius: "0px",
+  tabAttachedRadius: "0px",
+  tabInactiveBg: "transparent",
+  tabActiveBg: "color-mix(in srgb, var(--app-color-accent) 12%, var(--app-color-surface-control-hover))",
+  tabActiveHoverBg: "color-mix(in srgb, var(--app-color-accent) 16%, var(--app-color-surface-control-hover))",
+  metricGap: "var(--app-space-xs)",
+  collectionGap: "0px",
+  collectionRadius: "0px",
+  collectionJoin: "0px",
+  collectionFuse: "1px",
+  collectionItemBorder: "none",
+  collectionStripFill: "var(--app-color-panel)",
+  collectionItemShadow: "none",
+  contentPanePadding: "0px",
+  shellGrainOpacity: "1",
+  chromeBorder: "color-mix(in srgb, var(--app-color-border) 28%, transparent)",
+  navSelectedBorder: "none",
+  navSelectedShadow: "none",
+  surfaceHover: "var(--app-color-surface-control)",
+  splitGap: "0px",
+  splitPadding: "0px",
+  splitRailBorder: "none",
+  splitRailShadow: "none",
+  splitPanelMax: "1440px",
+  splitPanelMargin: "auto",
+  settingStackBorder: "none",
+  settingStackBg: "transparent",
+  settingStackClip: "visible",
+  settingRowBg: "var(--app-color-surface-panel)",
+  settingRowBorder: "1px solid var(--app-color-border-subtle)",
+  settingRowJoin: "-1px",
+  settingRowEdge: "none",
+  sidebarEdge: "var(--app-color-border)",
+  sidebarEdgeGlow: "none",
+  sidebarFooterBorder: "1px solid color-mix(in srgb, var(--app-color-border) 32%, transparent)",
+  sidebarFooterMargin: "var(--app-space-xxs)",
+  sidebarFooterPadding: "var(--app-space-sm)",
+  sidebarFooterRadius: "0px",
+  sidebarFooterBg: "transparent",
+  sidebarFooterFilter: "none",
+  versionChipPaddingTop: "var(--app-space-xs)",
+  brandLightPadding: "0px",
+  brandLightRadius: "0px",
+  brandLightFlex: "1",
+  inputWellBg: "color-mix(in srgb, var(--ark-gray-2) 72%, transparent)",
+  menuBg: "light-dark(var(--mantine-color-white), var(--mantine-color-dark-6))",
+  menuShadow: "var(--popover-shadow, none)",
+  notificationBg: "light-dark(var(--mantine-color-white), var(--mantine-color-dark-6))",
+  notificationShadow: "var(--mantine-shadow-lg)",
+  downloadsConsoleInset: "var(--app-space-xs)",
+  attentionLight:
+    "light-dark(color-mix(in srgb, var(--app-color-attention) 14%, transparent), color-mix(in srgb, var(--app-color-attention) 22%, transparent))",
+  attentionLightHover:
+    "light-dark(color-mix(in srgb, var(--app-color-attention) 22%, transparent), color-mix(in srgb, var(--app-color-attention) 32%, transparent))",
+  iconButtonBg: "transparent",
+  iconButtonBorder: "calc(0.0625rem * var(--mantine-scale)) solid transparent",
+  iconButtonDefaultBg: "var(--mantine-color-default)",
+  iconButtonDefaultBorder: "calc(0.0625rem * var(--mantine-scale)) solid var(--mantine-color-default-border)",
+  iconButtonFilter: "none",
+  iconButtonShadow: "none",
+  primaryButtonBg: "var(--mantine-primary-color-filled)",
+  primaryButtonHover: "var(--mantine-primary-color-filled-hover)",
+  primaryButtonBorder: "calc(0.0625rem * var(--mantine-scale)) solid transparent",
+  primaryButtonColor: "var(--mantine-color-white)",
+  buttonDisabledBg: "var(--mantine-color-disabled)",
+  buttonDisabledQuietBg: "transparent",
+  navLinkColor: "var(--app-color-text)",
+  listVesselBorder: "none",
+  listVesselBg: "transparent",
+  listVesselShadow: "none",
+  listRowBorder: "1px solid var(--app-color-border-subtle)",
+  listRowJoin: "-1px",
+  listRowEdge: "none",
+  listRowHover: "var(--app-color-surface-control)",
+  tableHeadBg: "var(--app-color-panel-raised)",
+  queueSectionPadding: "0 2px 0 0",
+  queueGroupGap: "var(--app-space-xs)",
+  queueGroupRule: "1px solid color-mix(in srgb, var(--app-color-border) 58%, transparent)",
+  queueRowHover: "var(--app-color-surface-control)",
+  serverListHover: "color-mix(in srgb, var(--app-color-surface-control) 52%, transparent)",
+  serverListSelectedBorder: "var(--app-color-accent-subtle)",
+  serverRailBg: "transparent",
+  mastBg: "transparent",
+  overviewStageBg: "transparent",
+  overviewStagePad: "0px",
+  overviewStageBorder: "none",
+  overviewAsideBg: "var(--app-float-panel-bg)",
   shellMainBg: "var(--app-color-surface-chrome)",
+  shellAtmosphere: "none",
+  shellScene: "none",
+  shellSceneGrid: "none",
+  shellSceneVeil: "transparent",
+  shellSceneFilter: "none",
   listRowBg: "var(--app-color-panel)",
   navSelectedFill: "var(--app-list-selected-bg)",
   navSelectedNotch: "3px",
+  listSelectedBg: "var(--app-color-surface-control)",
+  listSelectedInset: "inset 3px 0 0 var(--ark-blue-9)",
   raisedBg: "var(--app-color-panel)",
   raisedBorder: "1px solid var(--app-color-border-subtle)",
   raisedShadow: "none",

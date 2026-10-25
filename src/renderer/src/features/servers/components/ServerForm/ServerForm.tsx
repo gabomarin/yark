@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import type { ServerProfile } from "@shared/types";
 import type { KnownClusterOption } from "@features/clusters/knownClusterOptions";
@@ -44,6 +44,8 @@ interface Props {
   onOpenMoveInstall?: () => void;
   onOpenConfigurationAssistant?: () => void;
   configurationAssistantDisabled?: boolean;
+  /** Embedded workspace tab only. Sits above the fields. */
+  notice?: ReactNode;
 }
 
 export function ServerForm(props: Props): ReactElement {
@@ -174,6 +176,7 @@ export function ServerForm(props: Props): ReactElement {
       configurationAssistantDisabled={props.configurationAssistantDisabled}
       onRevert={form.revertProfile}
       onSubmit={() => void form.submit()}
+      notice={props.notice}
     />
   );
 }

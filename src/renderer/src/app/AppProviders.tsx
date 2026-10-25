@@ -5,7 +5,7 @@ import { MantineProvider } from "@mantine/core";
 import { DatesProvider } from "@mantine/dates";
 import { createContext, useContext, useLayoutEffect, useMemo, type PropsWithChildren } from "react";
 import { createAppCssVariablesResolverForAppearance, createAppThemeForAppearance } from "@theme/theme";
-import { resolveThemeSelection } from "@theme/themes";
+import { resolveThemeSelection, withoutSceneBackground } from "@theme/themes";
 import type { UiDensity } from "@theme/tokens";
 import {
   DEFAULT_WORKSPACE_PANELS_OPTION,
@@ -17,9 +17,15 @@ import { RowActionMenuProvider } from "@ui/RowActionMenu/RowActionMenuProvider";
 import { isRendererTest } from "@renderer/shared/isRendererTest";
 
 const UiDensityContext = createContext<UiDensity>("compact");
+const ShellSceneContext = createContext(false);
 
 export function useUiDensity(): UiDensity {
   return useContext(UiDensityContext);
+}
+
+/** True when the resolved theme still paints the photo, hex grid, or veil. */
+export function useShellScene(): boolean {
+  return useContext(ShellSceneContext);
 }
 
 const WorkspacePanelsContext = createContext<WorkspacePanelsOption>(DEFAULT_WORKSPACE_PANELS_OPTION);
@@ -34,6 +40,8 @@ interface Props extends PropsWithChildren {
   density?: UiDensity;
   /** Appearance family + scheme. Unknown selections fall back to the shipped family/scheme. */
   themeSelection?: ThemeSelection | null;
+  /** Glassy night scene. Off clears the photo, grid, and veil. */
+  sceneBackground?: boolean;
   /** Server-workspace panels option. Unknown ids fall back to Auto. */
   workspacePanels?: WorkspacePanelsId | string | null;
 }
@@ -42,18 +50,19 @@ export function AppProviders({
   children,
   density = "compact",
   themeSelection = null,
+  sceneBackground = true,
   workspacePanels = null,
 }: Props): ReactElement {
   const themeFamily = themeSelection?.family;
   const themeScheme = themeSelection?.scheme;
-  const appearance = useMemo(
-    () =>
-      resolveThemeSelection(
-        themeFamily === undefined || themeScheme === undefined ? null : { family: themeFamily, scheme: themeScheme },
-      ),
-    [themeFamily, themeScheme],
-  );
+  const appearance = useMemo(() => {
+    const selected = resolveThemeSelection(
+      themeFamily === undefined || themeScheme === undefined ? null : { family: themeFamily, scheme: themeScheme },
+    );
+    return sceneBackground ? selected : withoutSceneBackground(selected);
+  }, [themeFamily, themeScheme, sceneBackground]);
   const panels = useMemo(() => resolveWorkspacePanelsOption(workspacePanels), [workspacePanels]);
+  const shellScene = appearance.materials.shellScene !== "none" || appearance.materials.shellSceneGrid !== "none";
   const theme = useMemo(() => {
     const base = createAppThemeForAppearance(appearance, density);
     if (!isRendererTest()) {
@@ -128,35 +137,37 @@ export function AppProviders({
 
   return (
     <UiDensityContext.Provider value={density}>
-      <WorkspacePanelsContext.Provider value={panels}>
-        {/*
+      <ShellSceneContext.Provider value={shellScene}>
+        <WorkspacePanelsContext.Provider value={panels}>
+          {/*
           `forceColorScheme`, not `defaultColorScheme`: the latter only seeds the
           first mount, so a theme whose scheme differs from the mounted one would
           swap the palette and keep the old scheme (and a stale Mantine-stored
           scheme could override the stored preference). If a later slice lets the
           operator follow the OS scheme, this moves to the scheme manager.
         */}
-        <MantineProvider
-          theme={theme}
-          cssVariablesResolver={cssVariablesResolver}
-          forceColorScheme={appearance.colorScheme}
-        >
-          <DatesProvider settings={{ consistentWeeks: true }}>
-            <ModalsProvider
-              modalProps={{
-                centered: true,
-                ...(isRendererTest() ? { transitionProps: { duration: 0 } } : {}),
-              }}
-              labels={{ confirm: "Confirm", cancel: "Cancel" }}
-            >
-              <RowActionMenuProvider>
-                <Notifications position="bottom-right" autoClose={notificationsAutoClose} />
-                {children}
-              </RowActionMenuProvider>
-            </ModalsProvider>
-          </DatesProvider>
-        </MantineProvider>
-      </WorkspacePanelsContext.Provider>
+          <MantineProvider
+            theme={theme}
+            cssVariablesResolver={cssVariablesResolver}
+            forceColorScheme={appearance.colorScheme}
+          >
+            <DatesProvider settings={{ consistentWeeks: true }}>
+              <ModalsProvider
+                modalProps={{
+                  centered: true,
+                  ...(isRendererTest() ? { transitionProps: { duration: 0 } } : {}),
+                }}
+                labels={{ confirm: "Confirm", cancel: "Cancel" }}
+              >
+                <RowActionMenuProvider>
+                  <Notifications position="bottom-right" autoClose={notificationsAutoClose} />
+                  {children}
+                </RowActionMenuProvider>
+              </ModalsProvider>
+            </DatesProvider>
+          </MantineProvider>
+        </WorkspacePanelsContext.Provider>
+      </ShellSceneContext.Provider>
     </UiDensityContext.Provider>
   );
 }

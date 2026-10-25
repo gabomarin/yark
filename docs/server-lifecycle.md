@@ -619,6 +619,12 @@ setting catalog: [ini-metadata.md](ini-metadata.md) (PINI-016 / #659).
   edits.
 - Do **not** use npm `ini` for ASA — dots in section headers are literal
   (`ini-text.ts`).
+- Complex tuple and list lines (loot, spawns, crafting, engrams, stat arrays)
+  are read by `ini-complex-value.ts` (PINI-010 / #680). A read with no adopted
+  edit does not rewrite the file. An edit reprints only that entry. A line
+  YARK does not understand stays as loaded. Scalar visual Save still leaves
+  those lines untouched. Contract:
+  [ini-metadata.md](ini-metadata.md#complex-values).
 - Semantic save checks (only when `[ServerSettings]` present): `RCONPort`
   1024–65535, `DifficultyOffset` 0–1. Profile `MaxPlayers` 1–255 is applied at
   start as `-WinLiveMaxPlayers` only. ASA ignores INI `MaxPlayers`; `0` omits
@@ -685,6 +691,13 @@ from another manager) but YARK has no profile:
 4. No SteamCMD sync and **no INI writes** on import — profile-owned GUS keys
    sync on **Start** (same as other profiles). Discovered mod Project IDs import
    **disabled**. Incomplete import does **not** auto-start SteamCMD.
+   Before Start, the Server tab shows identity fields that differ between
+   `GameUserSettings.ini` and YARK. The operator can use the file values, after
+   a check that the ports do not clash with another server, or keep the YARK
+   values. A missing admin password is refused. A missing join password clears
+   that password. RCON stays on. Rates, stacks, spawners, and every other line stay.
+   The choice does not block Start. Password rows name the field and omit the
+   secret (#682).
 5. Workspace opens on the new profile **without** first-steps onboarding.
    Create/import/clone uniqueness checks are serialized so concurrent imports
    cannot share an `installDir` or ports. Backend rejects incomplete import
