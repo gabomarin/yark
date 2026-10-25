@@ -34,6 +34,7 @@ function randomSeed(): number {
 }
 
 function boundedInteger(value: number | string, min: number, max: number): number | null {
+  if (typeof value === "string" && value.trim().length === 0) return null;
   const numeric = typeof value === "number" ? value : Number(value);
   if (!Number.isInteger(numeric) || numeric < min || numeric > max) return null;
   return numeric;
