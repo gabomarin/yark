@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -755,6 +755,116 @@ describe("UpdateService safe update orchestration", () => {
 
     expect(h.backups.restoreBackupForJob).not.toHaveBeenCalled();
     expect(h.order).toEqual(["stop", "pre_update", "start"]);
+    const earlyLogs = readdirSync(h.logDir).filter((name) => name.endsWith(".log"));
+    expect(earlyLogs).toHaveLength(1);
+    expect(readFileSync(join(h.logDir, earlyLogs[0]!), "utf8")).toContain("outcome=cancelled");
+  });
+
+  it("writes a cancelled log when an install is cancelled during SteamCMD", async () => {
+    const h = createHarness({ wasRunning: false });
+    dirs.push(h.logDir);
+    const { OperationCancelledError } = await import("@backend/domains/updates/robocopy-tree");
+    h.runSteamUpdate.mockImplementation(async () => {
+      throw new OperationCancelledError();
+    });
+
+    await expect(
+      (h.service as unknown as { performInstallServerFiles: (id: string) => Promise<void> }).performInstallServerFiles(
+        h.profile.id,
+      ),
+    ).rejects.toThrow(/cancelled/i);
+
+    const logs = readdirSync(h.logDir).filter((name) => name.endsWith(".log"));
+    expect(logs).toHaveLength(1);
+    expect(readFileSync(join(h.logDir, logs[0]!), "utf8")).toContain("outcome=cancelled");
+  });
+
+  it("keeps the install log path when SteamCMD is paused so a later cancel can reuse it", async () => {
+    const h = createHarness({ wasRunning: false });
+    dirs.push(h.logDir);
+    const { OperationPausedError } = await import("@backend/domains/updates/robocopy-tree");
+    h.runSteamUpdate.mockImplementation(async () => {
+      throw new OperationPausedError();
+    });
+    const job: { id: string; serverId: string; context: { updateLogPath?: string } } = {
+      id: "paused-install",
+      serverId: h.profile.id,
+      context: {},
+    };
+
+    await expect(
+      (
+        h.service as unknown as {
+          performInstallServerFiles: (id: string, activeJob: { context: { updateLogPath?: string } }) => Promise<void>;
+        }
+      ).performInstallServerFiles(h.profile.id, job),
+    ).rejects.toThrow(/paused/i);
+
+    expect(job.context.updateLogPath).toBeTruthy();
+    expect(job.context.updateLogPath).toContain(h.profile.id);
+    expect(readdirSync(h.logDir).filter((name) => name.endsWith(".log"))).toHaveLength(0);
+  });
+
+  it("does not advertise an install log path when the install finishes without a file", async () => {
+    const h = createHarness({ wasRunning: false });
+    dirs.push(h.logDir);
+    const job: { id: string; serverId: string; context: { updateLogPath?: string } } = {
+      id: "done-install",
+      serverId: h.profile.id,
+      context: {},
+    };
+
+    await (
+      h.service as unknown as {
+        performInstallServerFiles: (id: string, activeJob: { context: { updateLogPath?: string } }) => Promise<void>;
+      }
+    ).performInstallServerFiles(h.profile.id, job);
+
+    expect(job.context.updateLogPath).toBeUndefined();
+  });
+
+  it("keeps the verify log path when SteamCMD is paused so a later cancel can reuse it", async () => {
+    const h = createHarness({ wasRunning: false });
+    dirs.push(h.logDir);
+    const { OperationPausedError } = await import("@backend/domains/updates/robocopy-tree");
+    h.runSteamUpdate.mockImplementation(async () => {
+      throw new OperationPausedError();
+    });
+    const job: { id: string; serverId: string; context: { updateLogPath?: string } } = {
+      id: "paused-verify",
+      serverId: h.profile.id,
+      context: {},
+    };
+
+    await expect(
+      (
+        h.service as unknown as {
+          performVerifyServerFiles: (id: string, activeJob: { context: { updateLogPath?: string } }) => Promise<void>;
+        }
+      ).performVerifyServerFiles(h.profile.id, job),
+    ).rejects.toThrow(/paused/i);
+
+    expect(job.context.updateLogPath).toContain(h.profile.id);
+    expect(readdirSync(h.logDir).filter((name) => name.endsWith(".log"))).toHaveLength(0);
+  });
+
+  it("writes outcome=cancelled when SteamCMD is cancelled after the log path exists", async () => {
+    const h = createHarness({ wasRunning: false });
+    dirs.push(h.logDir);
+    const { OperationCancelledError } = await import("@backend/domains/updates/robocopy-tree");
+    h.runSteamUpdate.mockImplementation(async () => {
+      h.order.push("steam");
+      throw new OperationCancelledError();
+    });
+
+    await expect(h.performUpdate()).rejects.toThrow(/cancelled/i);
+
+    const logs = readdirSync(h.logDir).filter((name) => name.endsWith(".log"));
+    expect(logs).toHaveLength(1);
+    const body = readFileSync(join(h.logDir, logs[0]!), "utf8");
+    expect(body).toContain("outcome=cancelled");
+    expect(body).toContain("Operation cancelled by the user.");
+    expect(body).not.toMatch(/^exitCode=/m);
   });
 
   it("rolls back pre_update backups and restarts when SteamCMD fails while wasRunning", async () => {

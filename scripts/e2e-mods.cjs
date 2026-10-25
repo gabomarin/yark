@@ -114,7 +114,7 @@ async function createServer(app, page, serverName, installDir, ports) {
 async function openModsTab(page) {
   const modsTab = page.getByRole("tab", { name: "Mods" });
   await modsTab.click();
-  await page.getByRole("heading", { name: "Mods", exact: true, level: 3 }).waitFor({
+  await page.getByRole("heading", { name: "Mods", exact: true, level: 4 }).waitFor({
     state: "visible",
     timeout: 10000,
   });

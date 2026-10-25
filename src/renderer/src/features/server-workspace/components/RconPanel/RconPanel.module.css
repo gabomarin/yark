@@ -1,19 +1,23 @@
+.shell {
+  overflow: hidden;
+}
+
 .root {
+  flex: 1 1 0%;
   min-width: 0;
   min-height: 0;
-  height: 100%;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
   gap: var(--app-space-sm);
-  align-items: start;
-  align-content: start;
-  overflow-x: hidden;
-  overflow-y: auto;
-  scrollbar-gutter: stable;
+  padding: var(--app-space-md);
+  align-items: stretch;
+  overflow: hidden;
 }
 
 .mainColumn {
   min-width: 0;
+  min-height: 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--app-space-sm);
@@ -52,10 +56,27 @@
 .responsesPanel,
 .playersPanel {
   min-width: 0;
+  min-height: 0;
+}
+
+.responsesPanel {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.responsesPanel > * {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .playersPanel {
-  max-width: none;
+  height: 100%;
+  overflow: auto;
 }
 
 .chips {
@@ -80,8 +101,9 @@
 .responseList {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
   gap: var(--app-space-xxs);
-  max-height: 360px;
+  min-height: 0;
   overflow: auto;
 }
 
@@ -206,6 +228,14 @@
 @media (max-width: 1100px) {
   .root {
     grid-template-columns: 1fr;
+    overflow: auto;
+    align-items: start;
+  }
+
+  .mainColumn,
+  .playersPanel,
+  .responsesPanel {
+    height: auto;
   }
 
   .playersPanel {

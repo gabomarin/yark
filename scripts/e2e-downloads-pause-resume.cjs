@@ -222,7 +222,7 @@ async function run() {
       state: "visible",
       timeout: 15_000,
     });
-    const pauseBtn = page.getByRole("button", { name: "Pause" });
+    const pauseBtn = page.getByRole("button", { name: "Pause download", exact: true });
     await pauseBtn.waitFor({ state: "visible", timeout: 10_000 });
     await pauseBtn.click();
 
@@ -248,9 +248,9 @@ async function run() {
       0,
       "Paused install must not keep the live progress action",
     );
-    assert.equal(await page.getByRole("button", { name: "Pause" }).count(), 0);
+    assert.equal(await page.getByRole("button", { name: "Pause download", exact: true }).count(), 0);
     await page.locator(`[data-download-row="${JOB_INSTALL}"]`).click();
-    const resumeBtn = page.getByRole("button", { name: "Resume" });
+    const resumeBtn = page.getByRole("button", { name: "Resume download", exact: true });
     await resumeBtn.waitFor({ state: "visible", timeout: 10_000 });
     await resumeBtn.click();
 
@@ -262,7 +262,7 @@ async function run() {
     }
     await waitRowKind(page, JOB_QUEUED, "queued", 5_000);
     await page.locator(`[data-download-row="${JOB_INSTALL}"]`).click();
-    await page.getByRole("button", { name: "Pause" }).waitFor({
+    await page.getByRole("button", { name: "Pause download", exact: true }).waitFor({
       state: "visible",
       timeout: 15_000,
     });

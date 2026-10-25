@@ -1,4 +1,6 @@
 import { contextBridge, ipcRenderer } from "electron";
+import type { NamedEngramEdit } from "../shared/ini/engram-named-entries";
+import type { SupplyCrateEdit } from "../shared/ini/supply-crate-entries";
 import type { IniSemanticOp } from "../shared/ini/ini-semantic-ops";
 import { IPC, IPC_PUSH, type RendererApi } from "../shared/ipc";
 import type { AppUpdateStatus } from "../shared/settings/app-update";
@@ -167,8 +169,20 @@ const api: RendererApi = {
     ipcRenderer.invoke(IPC.iniPreview, serverId, payload),
   saveServerIni: (serverId: string, payload: ServerIniPayload, expectedFingerprints: IniFileFingerprints) =>
     ipcRenderer.invoke(IPC.iniSave, serverId, payload, expectedFingerprints),
-  saveServerIniSemantic: (serverId: string, ops: IniSemanticOp[]) =>
-    ipcRenderer.invoke(IPC.iniSaveSemantic, serverId, ops),
+  saveServerIniSemantic: (
+    serverId: string,
+    ops: IniSemanticOp[],
+    engramEdits?: readonly NamedEngramEdit[],
+    supplyCrateEdits?: readonly SupplyCrateEdit[],
+  ) => {
+    if (supplyCrateEdits !== undefined) {
+      return ipcRenderer.invoke(IPC.iniSaveSemantic, serverId, ops, engramEdits ?? [], supplyCrateEdits);
+    }
+    if (engramEdits !== undefined) {
+      return ipcRenderer.invoke(IPC.iniSaveSemantic, serverId, ops, engramEdits);
+    }
+    return ipcRenderer.invoke(IPC.iniSaveSemantic, serverId, ops);
+  },
   getClusterIniTemplate: (clusterId: string) => ipcRenderer.invoke(IPC.clusterIniGet, clusterId),
   getClusterIniTemplateOrDraft: (clusterId: string) => ipcRenderer.invoke(IPC.clusterIniGetOrDraft, clusterId),
   previewClusterIniTemplate: (clusterId: string, payload: ServerIniPayload) =>

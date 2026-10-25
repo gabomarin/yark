@@ -91,6 +91,8 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
     handleSchemeChange,
     workspacePanels,
     handleWorkspacePanelsChange,
+    backgroundImage,
+    handleBackgroundImageChange,
     defaultBaseFolder,
     setDefaultBaseFolder,
     desktopShell,
@@ -197,6 +199,14 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
               onReorderJob={(id, direction) =>
                 void actions.runAction(() => window.api.reorderCriticalJob(id, direction))
               }
+              onOpenInLogs={(serverId, updateLogFileName) =>
+                actions.openServerLogs(
+                  serverId,
+                  updateLogFileName !== null && updateLogFileName.length > 0
+                    ? { section: "updates", updateFileName: updateLogFileName }
+                    : { section: "updates", missingUpdateLog: true },
+                )
+              }
               onOpenSettings={openSteamCmdSettings}
             />
           ) : null,
@@ -267,6 +277,8 @@ export function AppRouterPages(props: AppRouterPagesProps): ReactElement {
             onSchemeChange={(nextScheme) => void handleSchemeChange(nextScheme)}
             workspacePanels={workspacePanels}
             onWorkspacePanelsChange={(panels) => void handleWorkspacePanelsChange(panels)}
+            backgroundImage={backgroundImage}
+            onBackgroundImageChange={(enabled) => void handleBackgroundImageChange(enabled)}
             defaultBaseFolder={defaultBaseFolder}
             onDefaultBaseFolderChange={setDefaultBaseFolder}
             onPickSteamCmdPath={() => void pickSteamCmdPath()}

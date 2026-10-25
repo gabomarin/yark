@@ -6,7 +6,7 @@
  * Unknown families fall back to the default family; unknown schemes (including
  * the legacy `theme` value) fall back to the default scheme.
  */
-export const THEME_FAMILY_IDS = ["fluent", "plasma-breeze"] as const;
+export const THEME_FAMILY_IDS = ["fluent", "plasma-breeze", "glassy"] as const;
 export const THEME_SCHEMES = ["dark", "light"] as const;
 
 export type ThemeFamilyId = (typeof THEME_FAMILY_IDS)[number];
@@ -42,12 +42,15 @@ export interface AppearanceSettings {
   themeFamily: ThemeFamilyId;
   scheme: ThemeScheme;
   panels: WorkspacePanelsId;
+  /** Glassy night scene. Missing values stay on so existing installs keep the photo. */
+  backgroundImage: boolean;
 }
 
 export const DEFAULT_APPEARANCE_SETTINGS: AppearanceSettings = {
   themeFamily: DEFAULT_THEME_FAMILY,
   scheme: DEFAULT_THEME_SCHEME,
   panels: DEFAULT_WORKSPACE_PANELS_ID,
+  backgroundImage: true,
 };
 
 export function isThemeFamilyId(value: unknown): value is ThemeFamilyId {
@@ -75,6 +78,7 @@ export function normalizeAppearanceSettings(
     themeFamily: isThemeFamilyId(family) ? family : DEFAULT_THEME_FAMILY,
     scheme: isThemeScheme(scheme) ? scheme : DEFAULT_THEME_SCHEME,
     panels: parseWorkspacePanelsId(input.panels),
+    backgroundImage: typeof input.backgroundImage === "boolean" ? input.backgroundImage : true,
   };
 }
 

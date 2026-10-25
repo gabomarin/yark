@@ -1,3 +1,6 @@
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { UpdateService } from "@backend/domains/updates/update-service";
 import { InstanceLockManager } from "@backend/orchestration/instance-lock-manager";
@@ -59,7 +62,10 @@ function persistedJob(overrides: Record<string, unknown> = {}): Record<string, u
   };
 }
 
-function createRestartedService(jobs: unknown, options: { serverExists?: boolean; active?: boolean } = {}) {
+function createRestartedService(
+  jobs: unknown,
+  options: { serverExists?: boolean; active?: boolean; logDir?: string } = {},
+) {
   const values = new Map<string, string>([
     [QUEUE_KEY, JSON.stringify(jobs)],
     [STEAMCMD_PATH_SETTING_KEY, "C:\\steamcmd\\steamcmd.exe"],
@@ -100,7 +106,7 @@ function createRestartedService(jobs: unknown, options: { serverExists?: boolean
     processes,
     locks,
     settings,
-    "C:\\asa-e2e\\profiles\\restart-fixture\\update-logs",
+    options.logDir ?? "C:\\asa-e2e\\profiles\\restart-fixture\\update-logs",
     "C:\\asa-e2e\\profiles\\restart-fixture\\steamcmd",
   );
   return { service, settings, values, instances, servers, locks };
@@ -312,6 +318,56 @@ describe("UpdateService restart simulation at durable phase boundaries", () => {
 
     expect(service.cancelCriticalJob("job-pending")).toBe(true);
     expect(performUpdateServer).not.toHaveBeenCalled();
+  });
+
+  it("writes a cancelled update log when a paused download is cancelled", () => {
+    const logDir = mkdtempSync(join(tmpdir(), "yark-paused-cancel-"));
+    const logPath = join(logDir, "server-1-paused.log");
+    try {
+      const { service } = createRestartedService(
+        [
+          persistedJob({
+            id: "job-paused",
+            status: "paused",
+            phase: "applying-files",
+            context: { wasRunning: false, updateLogPath: logPath },
+          }),
+        ],
+        { logDir },
+      );
+
+      expect(service.cancelCriticalJob("job-paused")).toBe(true);
+      const text = readFileSync(logPath, "utf8");
+      expect(text).toContain("outcome=cancelled");
+      expect(text).not.toMatch(/^exitCode=/m);
+    } finally {
+      rmSync(logDir, { recursive: true, force: true });
+    }
+  });
+
+  it("does not replace an existing update log when a paused job is cancelled", () => {
+    const logDir = mkdtempSync(join(tmpdir(), "yark-paused-cancel-"));
+    const logPath = join(logDir, "server-1-paused.log");
+    writeFileSync(logPath, "exitCode=1\n--- stdout ---\nsteam\n", "utf8");
+    try {
+      const { service } = createRestartedService(
+        [
+          persistedJob({
+            id: "job-paused",
+            status: "paused",
+            phase: "applying-files",
+            context: { wasRunning: false, updateLogPath: logPath },
+          }),
+        ],
+        { logDir },
+      );
+
+      expect(service.cancelCriticalJob("job-paused")).toBe(true);
+      expect(readFileSync(logPath, "utf8")).toContain("exitCode=1");
+      expect(readFileSync(logPath, "utf8")).not.toContain("outcome=cancelled");
+    } finally {
+      rmSync(logDir, { recursive: true, force: true });
+    }
   });
 
   it("starts the next queued job after the running job is cancelled", async () => {

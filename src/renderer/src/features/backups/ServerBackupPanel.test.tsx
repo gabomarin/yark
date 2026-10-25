@@ -277,7 +277,8 @@ describe("ServerBackupPanel", () => {
     const user = setupUser();
     renderPanel();
 
-    expect(await screen.findByText("Backups", { selector: "[data-server-backup-header] *" })).toBeInTheDocument();
+    expect(await screen.findByText(/World saves, player profiles, and INI archives/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Backups" })).toBeInTheDocument();
     expect(screen.getByLabelText(/Destination/i)).toBeInTheDocument();
     expect(document.querySelector("[data-server-backup-destination]")).toBeTruthy();
     expect(document.querySelector("[data-server-backup-metrics]")).toBeNull();
@@ -413,7 +414,7 @@ describe("ServerBackupPanel", () => {
         }),
       );
     });
-    expect(screen.getByRole("status", { name: "World vs players vs INI" })).toBeVisible();
+    expect(screen.getByText(/World saves, player profiles, and INI archives/i)).toBeVisible();
 
     await user.click(screen.getByRole("tab", { name: "INI" }));
     await user.click(screen.getByRole("button", { name: /^Backup now$/i }));

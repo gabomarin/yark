@@ -1,6 +1,9 @@
 import type { IniFileKey, ServerIniPayload } from "@shared/types";
 import { resolveAsaUiCategory, type AsaUiCategoryId } from "@shared/asa/asa-setting-ui-categories";
 import { isVisuallyEditableIniSetting } from "@shared/ini/ini-setting-decisions";
+import { isNamedEngramEntriesKey } from "@shared/ini/engram-named-entries";
+import { isPlayerLevelEngramPointsKey } from "@shared/ini/player-level-engram-points";
+import { isSupplyCrateEntriesKey } from "@shared/ini/supply-crate-entries";
 import {
   parseIniRows,
   removeIniValue,
@@ -191,6 +194,14 @@ export function applyIniRowRevertToPayload(
   };
 }
 
+/** Hides engram, points-per-level, and loot lines from the Game.ini Settings table. */
+export function isGameIniEngramEditorKey(fileKey: IniFileKey, key: string): boolean {
+  return (
+    fileKey === "game" &&
+    (isPlayerLevelEngramPointsKey(key) || isNamedEngramEntriesKey(key) || isSupplyCrateEntriesKey(key))
+  );
+}
+
 /** Count unsaved visual rows using a memoized match index (no baseline re-parse). */
 export function countUnsavedIniRowsForFile(
   payload: ServerIniPayload | null,
@@ -207,6 +218,7 @@ export function countUnsavedIniRowsForFile(
   let file = 0;
   for (const row of rows) {
     const ref: IniSettingReference = { ...row, fileKey };
+    if (isGameIniEngramEditorKey(fileKey, row.key)) continue;
     if (!isIniRowUnsaved(ref, matchIndex)) continue;
     file += 1;
     const category = resolveAsaUiCategory(fileKey, row.section, row.key);

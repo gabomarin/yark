@@ -526,7 +526,7 @@ async function runHappyPathScenario(outDir, findings, errors, stubExe) {
     assert.equal(await page.locator("[data-download-live-action]").count(), 0);
     assert.equal(await page.getByRole("button", { name: "Remove from queue" }).count(), 0);
     assert.equal(await page.getByRole("button", { name: "Cancel" }).count(), 0);
-    assert.equal(await page.getByRole("button", { name: "Pause" }).count(), 0);
+    assert.equal(await page.getByRole("button", { name: "Pause download", exact: true }).count(), 0);
     await screenshot(page, outDir, "happy-detail-queued-no-steamcmd-bar-fhd");
 
     const aberration = page.locator('[data-download-row="job-aberration-update"]');

@@ -63,9 +63,12 @@ warns that increasing them may corrupt player or cluster data.
 When applying cluster-wide values, YARK previews which stopped members will be
 updated and which running members will be skipped. It patches only the six
 cluster-wide keys onto each eligible member's `GameUserSettings.ini` (same as
-the row apply action), leaving other INI values unchanged. Full **Apply INI
-template** restore remains available when you intend to replace selected files
-from the cluster template.
+the row apply action), leaving other INI values unchanged. **Save** on Transfer
+writes the cluster template. If that template is missing, or it only holds the
+six tribute keys, YARK copies a member's current `GameUserSettings.ini` first
+and then writes those keys, so a later full **Apply INI template** does not wipe
+the rest of the file. Full template restore remains available when you intend
+to replace selected files from the cluster template.
 
 Upload/download restrictions (`PreventUpload*`, `PreventDownload*`,
 `noTributeDownloads`, and `CrossARKAllowForeignDinoDownloads`) are **This map

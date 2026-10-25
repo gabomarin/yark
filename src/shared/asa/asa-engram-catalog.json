@@ -1,0 +1,5115 @@
+{
+  "version": "1",
+  "generatedAt": "2026-10-23",
+  "source": {
+    "url": "https://ark.wiki.gg/wiki/Engram_class_names",
+    "fetchedAt": "2026-09-09",
+    "note": "Base list is the 2026-09-09 wiki extract. Burrowbuck Saddle and Cerberax Saddle were added from that page on 2026-10-23. Boaratos Saddle and Galleon have empty class cells on the wiki; their specifiers, levels, and point costs come from Beacon. Crystal Isles, Lost Island, Fjordur, and Genesis Part 2 classes are omitted because those maps are not in ASA. level and points are the game defaults. They are not written until the operator sets them."
+  },
+  "count": 729,
+  "entries": [
+    {
+      "className": "EngramEntry_SubstrateAbsorbent_C",
+      "label": "Absorbent Substrate",
+      "level": 84,
+      "points": 60,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_SaddleAcro_C",
+      "label": "Acro Saddle",
+      "level": 43,
+      "points": 77,
+      "pack": "ARK: Survival Ascended Engrams"
+    },
+    {
+      "className": "EngramEntry_AdobeCeiling_C",
+      "label": "Adobe Ceiling",
+      "level": 15,
+      "points": 5,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdobeGateway_C",
+      "label": "Adobe Dinosaur Gate",
+      "level": 30,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdobeGate_C",
+      "label": "Adobe Dinosaur Gateway",
+      "level": 30,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdobeDoor_C",
+      "label": "Adobe Door",
+      "level": 15,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdobeWallWithDoor_C",
+      "label": "Adobe Doorframe",
+      "level": 15,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_DoubleDoor_Adobe_C",
+      "label": "Adobe Double Door",
+      "level": 22,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_DoubleDoorframe_Adobe_C",
+      "label": "Adobe Double Doorframe",
+      "level": 22,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdobeFenceFoundation_C",
+      "label": "Adobe Fence Foundation",
+      "level": 15,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_FenceSupport_Adobe_C",
+      "label": "Adobe Fence Support",
+      "level": 15,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdobeFloor_C",
+      "label": "Adobe Foundation",
+      "level": 15,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdobeCeilingWithTrapdoor_C",
+      "label": "Adobe Hatchframe",
+      "level": 16,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdobeLadder_C",
+      "label": "Adobe Ladder",
+      "level": 16,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdobePillar_C",
+      "label": "Adobe Pillar",
+      "level": 17,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdobeRailing_C",
+      "label": "Adobe Railing",
+      "level": 17,
+      "points": 2,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdobeRamp_C",
+      "label": "Adobe Ramp",
+      "level": 16,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdobeStairs_C",
+      "label": "Adobe Staircase",
+      "level": 17,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Ramp_Adobe_C",
+      "label": "Adobe Stairs",
+      "level": 16,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdobeTrapdoor_C",
+      "label": "Adobe Trapdoor",
+      "level": 16,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TriCeiling_Adobe_C",
+      "label": "Adobe Triangle Ceiling",
+      "level": 15,
+      "points": 5,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TriFoundation_Adobe_C",
+      "label": "Adobe Triangle Foundation",
+      "level": 15,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TriRoof_Adobe_C",
+      "label": "Adobe Triangle Roof",
+      "level": 18,
+      "points": 5,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdobeWall_C",
+      "label": "Adobe Wall",
+      "level": 15,
+      "points": 7,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdobeWindow_C",
+      "label": "Adobe Window",
+      "level": 20,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdobeWallWithWindow_C",
+      "label": "Adobe Windowframe",
+      "level": 20,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdvancedBullet_C",
+      "label": "Advanced Bullet",
+      "level": 55,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdvancedRifleBullet_C",
+      "label": "Advanced Rifle Bullet",
+      "level": 58,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdvancedSniperBullet_C",
+      "label": "Advanced Sniper Bullet",
+      "level": 83,
+      "points": 16,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AirConditioner_C",
+      "label": "Air Conditioner",
+      "level": 61,
+      "points": 21,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Allo_C",
+      "label": "Allosaurus Saddle",
+      "level": 67,
+      "points": 35,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AmmoBox_C",
+      "label": "Ammo Box",
+      "level": 29,
+      "points": 24,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Ankylo_C",
+      "label": "Ankylo Saddle",
+      "level": 36,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Fishtank_ToF_C",
+      "label": "Aquarium",
+      "level": 26,
+      "points": 5,
+      "pack": "Tides of Fortune Engrams"
+    },
+    {
+      "className": "EngramEntry_ReverseVacuumCompartment_C",
+      "label": "Aquatic Compartment",
+      "level": 60,
+      "points": 10,
+      "pack": "Tides of Fortune Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Spider_C",
+      "label": "Araneo Saddle",
+      "level": 40,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Archelon_ASA_C",
+      "label": "Archelon Saddle",
+      "level": 45,
+      "points": 44,
+      "pack": "ARK: Survival Ascended Engrams"
+    },
+    {
+      "className": "EngramEntry_ArcticBoots_C",
+      "label": "Arctic Scout Boots",
+      "level": 19,
+      "points": 9,
+      "pack": "Lost Colony Engrams"
+    },
+    {
+      "className": "EngramEntry_ArcticShirt_C",
+      "label": "Arctic Scout Chestpiece",
+      "level": 19,
+      "points": 10,
+      "pack": "Lost Colony Engrams"
+    },
+    {
+      "className": "EngramEntry_ArcticGloves_C",
+      "label": "Arctic Scout Gauntlets",
+      "level": 19,
+      "points": 9,
+      "pack": "Lost Colony Engrams"
+    },
+    {
+      "className": "EngramEntry_ArcticPants_C",
+      "label": "Arctic Scout Leggings",
+      "level": 19,
+      "points": 10,
+      "pack": "Lost Colony Engrams"
+    },
+    {
+      "className": "EngramEntry_ArcticHelmet_C",
+      "label": "Arctic Scout Mask",
+      "level": 19,
+      "points": 10,
+      "pack": "Lost Colony Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Argentavis_C",
+      "label": "Argentavis Saddle",
+      "level": 62,
+      "points": 21,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Wasteland_DoggoArmor_Saddle_C",
+      "label": "Armadoggo Armor",
+      "level": 21,
+      "points": 10,
+      "pack": "Wasteland War"
+    },
+    {
+      "className": "EngramEntry_Saddle_Arthro_C",
+      "label": "Arthropluera Saddle",
+      "level": 54,
+      "points": 30,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TrophyBase_C",
+      "label": "Artifact Pedestal",
+      "level": 25,
+      "points": 10,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MachinedRifle_C",
+      "label": "Assault Rifle",
+      "level": 58,
+      "points": 24,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekSpaceWhaleSaddle_C",
+      "label": "Astrocetus Tek Saddle",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_LostColony_Saddle_SnowDragon_C",
+      "label": "Aureliax Saddle",
+      "level": 80,
+      "points": 40,
+      "pack": "Lost Colony Engrams"
+    },
+    {
+      "className": "EngramEntry_Turret_C",
+      "label": "Auto Turret",
+      "level": 68,
+      "points": 40,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_BallistaTurret_C",
+      "label": "Ballista Turret",
+      "level": 29,
+      "points": 25,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Frontier_Barrel_C",
+      "label": "Barrel Storage",
+      "level": 23,
+      "points": 9,
+      "pack": "Frontier Showdown"
+    },
+    {
+      "className": "EngramEntry_Saddle_Baryonyx_C",
+      "label": "Baryonyx Saddle",
+      "level": 49,
+      "points": 24,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_BasiliskSaddle_C",
+      "label": "Basilisk Saddle",
+      "level": 85,
+      "points": 28,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Basilosaurus_C",
+      "label": "Basilosaurus Saddle",
+      "level": 60,
+      "points": 30,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Wasteland_VehicleGarage_C",
+      "label": "BattleRig Garage",
+      "level": 50,
+      "points": 30,
+      "pack": "Wasteland War"
+    },
+    {
+      "className": "EngramEntry_BearTrap_C",
+      "label": "Bear Trap",
+      "level": 28,
+      "points": 9,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Toad_C",
+      "label": "Beelzebufo Saddle",
+      "level": 40,
+      "points": 16,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_BeerBarrel_C",
+      "label": "Beer Barrel",
+      "level": 36,
+      "points": 24,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdobeGate_Large_C",
+      "label": "Behemoth Adobe Dinosaur Gate",
+      "level": 38,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdobeGateway_Large_C",
+      "label": "Behemoth Adobe Dinosaur Gateway",
+      "level": 38,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalGate_Large_C",
+      "label": "Behemoth Gate",
+      "level": 57,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalGateway_Large_C",
+      "label": "Behemoth Gateway",
+      "level": 57,
+      "points": 28,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StoneGateLarge_C",
+      "label": "Behemoth Reinforced Dinosaur Gate",
+      "level": 31,
+      "points": 16,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StoneGateway_Large_C",
+      "label": "Behemoth Stone Dinosaur Gateway",
+      "level": 31,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Tek_Gate_Large_C",
+      "label": "Behemoth Tek Gate",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Tek_Gategrame_Large_C",
+      "label": "Behemoth Tek Gateway",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Wasteland_BioGrinder_C",
+      "label": "Bio-Grinder",
+      "level": 85,
+      "points": 50,
+      "pack": "Wasteland War"
+    },
+    {
+      "className": "EngramEntry_Wasteland_AntiFlyerTurret_C",
+      "label": "Bladewasp Hive",
+      "level": 90,
+      "points": 30,
+      "pack": "Wasteland War"
+    },
+    {
+      "className": "EngramEntry_BloodExtractor_C",
+      "label": "Blood Extraction Syringe",
+      "level": 6,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_LostColony_Bloodforge_C",
+      "label": "Bloodforge",
+      "level": 75,
+      "points": 20,
+      "pack": "Lost Colony Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Boaratos_C",
+      "label": "Boaratos Saddle",
+      "level": 66,
+      "points": 35,
+      "pack": "Astraeos Engrams"
+    },
+    {
+      "className": "EngramEntry_Bola_C",
+      "label": "Bola",
+      "level": 9,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Bookshelf_C",
+      "label": "Bookshelf",
+      "level": 19,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Boomerang_C",
+      "label": "Boomerang",
+      "level": 9,
+      "points": 2,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TOF_BountyBoard_C",
+      "label": "Bounty Board",
+      "level": 34,
+      "points": 22,
+      "pack": "Tides of Fortune Engrams"
+    },
+    {
+      "className": "EngramEntry_Bow_C",
+      "label": "Bow",
+      "level": 10,
+      "points": 11,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TOF_Brigantine_C",
+      "label": "Brigantine",
+      "level": 58,
+      "points": 18,
+      "pack": "Tides of Fortune Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Sauro_Platform_C",
+      "label": "Bronto Platform Saddle",
+      "level": 82,
+      "points": 35,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Sauro_C",
+      "label": "Bronto Saddle",
+      "level": 63,
+      "points": 21,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_BugRepel_C",
+      "label": "Bug Repellant",
+      "level": 16,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ModernBed_C",
+      "label": "Bunk Bed",
+      "level": 54,
+      "points": 28,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Jackalope_C",
+      "label": "Burrowbuck Saddle",
+      "level": 33,
+      "points": 15,
+      "pack": "ARK: Survival Ascended Engrams"
+    },
+    {
+      "className": "EngramEntry_C4Ammo_C",
+      "label": "C4 Charge",
+      "level": 65,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WeaponC4_C",
+      "label": "C4 Remote Detonator",
+      "level": 65,
+      "points": 24,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Camera_C",
+      "label": "Camera",
+      "level": 50,
+      "points": 30,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Campfire_C",
+      "label": "Campfire",
+      "level": 2,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Cannon_C",
+      "label": "Cannon",
+      "level": 34,
+      "points": 25,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_CannonBall_C",
+      "label": "Cannon Ball",
+      "level": 34,
+      "points": 5,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MekCannonShell_C",
+      "label": "Cannon Shell",
+      "level": 97,
+      "points": 35,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Canteen_C",
+      "label": "Canteen",
+      "level": 54,
+      "points": 24,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Turtle_C",
+      "label": "Carbonemys Saddle",
+      "level": 10,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Carcha_C",
+      "label": "Carcharo Saddle",
+      "level": 96,
+      "points": 75,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_CargoLedger_ToF_C",
+      "label": "Cargo Ledger",
+      "level": 22,
+      "points": 5,
+      "pack": "Tides of Fortune Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Carno_C",
+      "label": "Carno Saddle",
+      "level": 46,
+      "points": 21,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Beaver_C",
+      "label": "Castoroides Saddle",
+      "level": 61,
+      "points": 50,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_CatapultTurret_C",
+      "label": "Catapult Turret",
+      "level": 31,
+      "points": 25,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ChitinPaste_C",
+      "label": "Cementing Paste",
+      "level": 13,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_CeratosaurusSaddle_ASA_C",
+      "label": "Ceratosaurus Saddle",
+      "level": 60,
+      "points": 40,
+      "pack": "ARK: Survival Ascended Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Cerberus_C",
+      "label": "Cerberax Saddle",
+      "level": 74,
+      "points": 40,
+      "pack": "ARK: Survival Ascended Engrams"
+    },
+    {
+      "className": "EngramEntry_ChainBola_C",
+      "label": "Chain Bola",
+      "level": 51,
+      "points": 30,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ChainSaw_C",
+      "label": "Chainsaw",
+      "level": 55,
+      "points": 21,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Chalico_C",
+      "label": "Chalicotherium Saddle",
+      "level": 42,
+      "points": 30,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ChargeBattery_C",
+      "label": "Charge Battery",
+      "level": 71,
+      "points": 22,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ChargeLantern_C",
+      "label": "Charge Lantern",
+      "level": 80,
+      "points": 32,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ChemBench_C",
+      "label": "Chemistry Bench",
+      "level": 82,
+      "points": 65,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ChitinBoots_C",
+      "label": "Chitin Boots",
+      "level": 37,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ChitinShirt_C",
+      "label": "Chitin Chestpiece",
+      "level": 37,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ChitinGloves_C",
+      "label": "Chitin Gauntlets",
+      "level": 37,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ChitinHelmet_C",
+      "label": "Chitin Helmet",
+      "level": 37,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ChitinPants_C",
+      "label": "Chitin Leggings",
+      "level": 37,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Clay_C",
+      "label": "Clay",
+      "level": 5,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ClimbingPick_C",
+      "label": "Climbing Pick",
+      "level": 34,
+      "points": 16,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Steampunk_TimeClock_C",
+      "label": "Clockface",
+      "level": 91,
+      "points": 29,
+      "pack": "Steampunk Ascent"
+    },
+    {
+      "className": "EngramEntry_TekCloningChamber_C",
+      "label": "Cloning Chamber",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ClothBoots_C",
+      "label": "Cloth Boots",
+      "level": 3,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ClothGloves_C",
+      "label": "Cloth Gloves",
+      "level": 3,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ClothHelmet_C",
+      "label": "Cloth Hat",
+      "level": 3,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ClothPants_C",
+      "label": "Cloth Pants",
+      "level": 3,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ClothShirt_C",
+      "label": "Cloth Shirt",
+      "level": 3,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ClusterGrenade_C",
+      "label": "Cluster Grenade",
+      "level": 80,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Frontier_Coffin_C",
+      "label": "Coffin",
+      "level": 20,
+      "points": 0,
+      "pack": "Frontier Showdown"
+    },
+    {
+      "className": "EngramEntry_Wasteland_DoggoArmor_AmmoBox_C",
+      "label": "Companion Ammo Box",
+      "level": 21,
+      "points": 10,
+      "pack": "Wasteland War"
+    },
+    {
+      "className": "EngramEntry_Wasteland_DoggoArmor_MeatSack_C",
+      "label": "Companion Bait Trap",
+      "level": 21,
+      "points": 10,
+      "pack": "Wasteland War"
+    },
+    {
+      "className": "EngramEntry_Wasteland_DoggoArmor_Spikes_C",
+      "label": "Companion Battle-Spikes",
+      "level": 21,
+      "points": 10,
+      "pack": "Wasteland War"
+    },
+    {
+      "className": "EngramEntry_Wasteland_DoggoArmor_SleepingBag_C",
+      "label": "Companion Camping Gear",
+      "level": 21,
+      "points": 10,
+      "pack": "Wasteland War"
+    },
+    {
+      "className": "EngramEntry_Wasteland_DoggoArmor_ChibiBasket_C",
+      "label": "Companion Chibi-Carrier",
+      "level": 21,
+      "points": 10,
+      "pack": "Wasteland War"
+    },
+    {
+      "className": "EngramEntry_Wasteland_DoggoArmor_ExtraArmor_C",
+      "label": "Companion Extra Armor",
+      "level": 21,
+      "points": 10,
+      "pack": "Wasteland War"
+    },
+    {
+      "className": "EngramEntry_Wasteland_DoggoArmor_Medkit_C",
+      "label": "Companion Medpack",
+      "level": 21,
+      "points": 10,
+      "pack": "Wasteland War"
+    },
+    {
+      "className": "EngramEntry_Wasteland_DoggoArmor_OxygenTank_C",
+      "label": "Companion Oxygen Tank",
+      "level": 21,
+      "points": 10,
+      "pack": "Wasteland War"
+    },
+    {
+      "className": "EngramEntry_Wasteland_DoggoArmor_FoodBasket_C",
+      "label": "Companion Picnic Set",
+      "level": 21,
+      "points": 10,
+      "pack": "Wasteland War"
+    },
+    {
+      "className": "EngramEntry_Wasteland_DoggoArmor_Bag_C",
+      "label": "Companion Rucksack",
+      "level": 21,
+      "points": 10,
+      "pack": "Wasteland War"
+    },
+    {
+      "className": "EngramEntry_Wasteland_DoggoArmor_Movespeed_C",
+      "label": "Companion Speed Booster",
+      "level": 21,
+      "points": 10,
+      "pack": "Wasteland War"
+    },
+    {
+      "className": "EngramEntry_Wasteland_DoggoArmor_Spyglass_C",
+      "label": "Companion Spykit",
+      "level": 21,
+      "points": 10,
+      "pack": "Wasteland War"
+    },
+    {
+      "className": "EngramEntry_Compass_C",
+      "label": "Compass",
+      "level": 8,
+      "points": 5,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_CompostBin_C",
+      "label": "Compost Bin",
+      "level": 15,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_CompoundBow_C",
+      "label": "Compound Bow",
+      "level": 79,
+      "points": 40,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_CookingPot_C",
+      "label": "Cooking Pot",
+      "level": 8,
+      "points": 9,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TOF_Cannonball_Corrosive_C",
+      "label": "Corrosive Ship Cannonball",
+      "level": 58,
+      "points": 5,
+      "pack": "Tides of Fortune Engrams"
+    },
+    {
+      "className": "EngramEntry_Crossbow_C",
+      "label": "Crossbow",
+      "level": 25,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_CruiseMissile_C",
+      "label": "Cruise Missile",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_LostColony_CryoHospital_C",
+      "label": "Cryo Hospital",
+      "level": 75,
+      "points": 20,
+      "pack": "Lost Colony Engrams"
+    },
+    {
+      "className": "EngramEntry_CryoFridge_C",
+      "label": "Cryofridge",
+      "level": 88,
+      "points": 60,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_EmptyCryopod_C",
+      "label": "Cryopod",
+      "level": 51,
+      "points": 20,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Daeodon_C",
+      "label": "Daeodon Saddle",
+      "level": 59,
+      "points": 24,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_DecorBox_C",
+      "label": "Decor Box",
+      "level": 4,
+      "points": 2,
+      "pack": "ARK: Survival Ascended Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Deinonychus_C",
+      "label": "Deinonychus Saddle",
+      "level": 32,
+      "points": 30,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Deinosuchus_ASA_C",
+      "label": "Deinosuchus Saddle",
+      "level": 74,
+      "points": 40,
+      "pack": "ARK: Survival Ascended Engrams"
+    },
+    {
+      "className": "EngramEntry_SaddleDeinotherium_ASA_C",
+      "label": "Deinotherium Saddle",
+      "level": 85,
+      "points": 50,
+      "pack": "ARK: Survival Ascended Engrams"
+    },
+    {
+      "className": "EngramEntry_StorageBox_Balloon_C",
+      "label": "Delivery Crate",
+      "level": 16,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_DesertClothBoots_C",
+      "label": "Desert Cloth Boots",
+      "level": 28,
+      "points": 7,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_DesertClothGloves_C",
+      "label": "Desert Cloth Gloves",
+      "level": 28,
+      "points": 7,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_DesertClothPants_C",
+      "label": "Desert Cloth Pants",
+      "level": 28,
+      "points": 5,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_DesertClothShirt_C",
+      "label": "Desert Cloth Shirt",
+      "level": 28,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_DesertClothGooglesHelmet_C",
+      "label": "Desert Goggles and Hat",
+      "level": 28,
+      "points": 7,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Desmodus_C",
+      "label": "Desmodus Saddle",
+      "level": 74,
+      "points": 45,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_DinoLeash_C",
+      "label": "Dino Leash",
+      "level": 22,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodGate_C",
+      "label": "Dinosaur Gate",
+      "level": 18,
+      "points": 5,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodGateway_C",
+      "label": "Dinosaur Gateway",
+      "level": 18,
+      "points": 7,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Diplodocus_C",
+      "label": "Diplodocus Saddle",
+      "level": 32,
+      "points": 30,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Direbear_C",
+      "label": "Dire Bear Saddle",
+      "level": 45,
+      "points": 24,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_DisplayCase_C",
+      "label": "Display Case",
+      "level": 35,
+      "points": 0,
+      "pack": "ARK: Survival Ascended Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Doed_C",
+      "label": "Doedicurus Saddle",
+      "level": 34,
+      "points": 20,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_DrakeClaw_C",
+      "label": "Drake Claw",
+      "level": 56,
+      "points": 25,
+      "pack": "Dragontopia Engrams"
+    },
+    {
+      "className": "EngramEntry_Frontier_DrawingSheet_C",
+      "label": "Drawing Paper",
+      "level": 21,
+      "points": 1,
+      "pack": "Frontier Showdown"
+    },
+    {
+      "className": "EngramEntry_DreadSaddle_C",
+      "label": "Dreadnoughtus Platform Saddle",
+      "level": 100,
+      "points": 100,
+      "pack": "ARK: Survival Ascended Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Dunkle_C",
+      "label": "Dunkleosteus Saddle",
+      "level": 44,
+      "points": 20,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_EggIncubator_C",
+      "label": "Egg Incubator",
+      "level": 89,
+      "points": 55,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ElectricProd_C",
+      "label": "Electric Prod",
+      "level": 95,
+      "points": 60,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_PowerCableIntersection_C",
+      "label": "Electrical Cable Intersection",
+      "level": 49,
+      "points": 24,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_PowerGenerator_C",
+      "label": "Electrical Generator",
+      "level": 49,
+      "points": 24,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_PowerOutlet_C",
+      "label": "Electrical Outlet",
+      "level": 49,
+      "points": 16,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Electronics_C",
+      "label": "Electronics",
+      "level": 48,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ElevatorTrack_C",
+      "label": "Elevator Track",
+      "level": 70,
+      "points": 40,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Steampunk_EmbryoIncubator_C",
+      "label": "Embryo Incubator",
+      "level": 89,
+      "points": 24,
+      "pack": "Steampunk Ascent"
+    },
+    {
+      "className": "EngramEntry_Saddle_Equus_C",
+      "label": "Equus Saddle",
+      "level": 20,
+      "points": 22,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Wasteland_ExplosiveSpear_C",
+      "label": "Explosive Spear",
+      "level": 58,
+      "points": 18,
+      "pack": "Wasteland War"
+    },
+    {
+      "className": "EngramEntry_Wasteland_AntifireGrenade_C",
+      "label": "Extinguisher Grenade",
+      "level": 58,
+      "points": 18,
+      "pack": "Wasteland War"
+    },
+    {
+      "className": "EngramEntry_LostColony_FabCrossbow_C",
+      "label": "Fabricated Crossbow",
+      "level": 58,
+      "points": 18,
+      "pack": "Lost Colony Engrams"
+    },
+    {
+      "className": "EngramEntry_MachinedPistol_C",
+      "label": "Fabricated Pistol",
+      "level": 55,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MachinedSniper_C",
+      "label": "Fabricated Sniper Rifle",
+      "level": 83,
+      "points": 36,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Fabricator_C",
+      "label": "Fabricator",
+      "level": 48,
+      "points": 24,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Frontier_FancyArmchair_C",
+      "label": "Fancy Armchair",
+      "level": 30,
+      "points": 0,
+      "pack": "Frontier Showdown"
+    },
+    {
+      "className": "EngramEntry_Frontier_FancyCouch_C",
+      "label": "Fancy Sofa",
+      "level": 30,
+      "points": 0,
+      "pack": "Frontier Showdown"
+    },
+    {
+      "className": "EngramEntry_Saddle_Fasola_C",
+      "label": "Fasolasuchus Saddle",
+      "level": 70,
+      "points": 40,
+      "pack": "ARK: Survival Ascended Engrams"
+    },
+    {
+      "className": "EngramEntry_FeedingTrough_C",
+      "label": "Feeding Trough",
+      "level": 18,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Fishbasket_C",
+      "label": "Fish Basket",
+      "level": 13,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_FishingNet_C",
+      "label": "Fish Net",
+      "level": 6,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_FishingRod_C",
+      "label": "Fishing Rod",
+      "level": 18,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalBoots_C",
+      "label": "Flak Boots",
+      "level": 56,
+      "points": 16,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalShirt_C",
+      "label": "Flak Chestpiece",
+      "level": 56,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalGloves_C",
+      "label": "Flak Gauntlets",
+      "level": 56,
+      "points": 16,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalHelmet_C",
+      "label": "Flak Helmet",
+      "level": 56,
+      "points": 20,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalPants_C",
+      "label": "Flak Leggings",
+      "level": 56,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_FlameArrow_C",
+      "label": "Flame Arrow",
+      "level": 26,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Flamethrower_C",
+      "label": "Flamethrower",
+      "level": 65,
+      "points": 25,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_FlamethrowerAmmo_C",
+      "label": "Flamethrower Ammo",
+      "level": 65,
+      "points": 10,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_FlareLauncher_C",
+      "label": "Flare Gun",
+      "level": 15,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Flashlight_C",
+      "label": "Flashlight Attachment",
+      "level": 52,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Wire_Flex_C",
+      "label": "Flexible Electrical Cable",
+      "level": 49,
+      "points": 24,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Frontier_OilLamp_C",
+      "label": "Frontier Lamp",
+      "level": 33,
+      "points": 12,
+      "pack": "Frontier Showdown"
+    },
+    {
+      "className": "EngramEntry_FurBoots_C",
+      "label": "Fur Boots",
+      "level": 23,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_FurHelmet_C",
+      "label": "Fur Cap",
+      "level": 23,
+      "points": 14,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_FurShirt_C",
+      "label": "Fur Chestpiece",
+      "level": 23,
+      "points": 16,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_FurGloves_C",
+      "label": "Fur Gauntlets",
+      "level": 23,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_FurPants_C",
+      "label": "Fur Leggings",
+      "level": 23,
+      "points": 16,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_GachaSaddle_C",
+      "label": "Gacha Saddle",
+      "level": 38,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TOF_Galleon_C",
+      "label": "Galleon",
+      "level": 76,
+      "points": 18,
+      "pack": "Tides of Fortune Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Galli_C",
+      "label": "Gallimimus Saddle",
+      "level": 29,
+      "points": 20,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_GasCollector_C",
+      "label": "Gas Collector",
+      "level": 40,
+      "points": 35,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_GasMask_C",
+      "label": "Gas Mask",
+      "level": 85,
+      "points": 100,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_GasBagsSaddle_C",
+      "label": "Gasbags Saddle",
+      "level": 43,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Steampunk_GeneScanner_C",
+      "label": "Gene Scanner",
+      "level": 86,
+      "points": 11,
+      "pack": "Steampunk Ascent"
+    },
+    {
+      "className": "EngramEntry_Steampunk_GeneInfuser_C",
+      "label": "Gene Storage",
+      "level": 86,
+      "points": 17,
+      "pack": "Steampunk Ascent"
+    },
+    {
+      "className": "EngramEntry_GhillieBoots_C",
+      "label": "Ghillie Boots",
+      "level": 33,
+      "points": 11,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_GhillieShirt_C",
+      "label": "Ghillie Chestpiece",
+      "level": 33,
+      "points": 11,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_GhillieGloves_C",
+      "label": "Ghillie Gauntlets",
+      "level": 33,
+      "points": 11,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_GhilliePants_C",
+      "label": "Ghillie Leggings",
+      "level": 33,
+      "points": 11,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_GhillieHelmet_C",
+      "label": "Ghillie Mask",
+      "level": 33,
+      "points": 13,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdobeCeilingWithDoorWay_Giant_C",
+      "label": "Giant Adobe Hatchframe",
+      "level": 34,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdobeCeilingDoorGiant_C",
+      "label": "Giant Adobe Trapdoor",
+      "level": 34,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalCeilingWithTrapdoorGiant_C",
+      "label": "Giant Metal Hatchframe",
+      "level": 54,
+      "points": 30,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalTrapdoorGiant_C",
+      "label": "Giant Metal Trapdoor",
+      "level": 54,
+      "points": 30,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StoneTrapdoorGiant_C",
+      "label": "Giant Reinforced Trapdoor",
+      "level": 30,
+      "points": 20,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StoneCeilingWithTrapdoorGiant_C",
+      "label": "Giant Stone Hatchframe",
+      "level": 30,
+      "points": 20,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_LostColony_BossBatSaddle_Platform_C",
+      "label": "Gigadesmodus Platform Saddle",
+      "level": 0,
+      "points": 0,
+      "pack": "Lost Colony Engrams"
+    },
+    {
+      "className": "EngramEntry_LostColony_BossBatSaddle_C",
+      "label": "Gigadesmodus Saddle",
+      "level": 0,
+      "points": 0,
+      "pack": "Lost Colony Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Gigant_C",
+      "label": "Giganotosaurus Saddle",
+      "level": 96,
+      "points": 75,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Gigantoraptor_C",
+      "label": "Gigantoraptor Saddle",
+      "level": 69,
+      "points": 40,
+      "pack": "ARK: Survival Ascended Engrams"
+    },
+    {
+      "className": "EngramEntry_Glider_C",
+      "label": "Glider Suit Skin",
+      "level": 62,
+      "points": 26,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Glowstick_C",
+      "label": "Glow Stick",
+      "level": 10,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Steampunk_GooGun_C",
+      "label": "Goo Gun",
+      "level": 58,
+      "points": 18,
+      "pack": "Steampunk Ascent"
+    },
+    {
+      "className": "EngramEntry_GPS_C",
+      "label": "GPS",
+      "level": 52,
+      "points": 21,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_GrandTortugar_Platform_C",
+      "label": "Grand Tortugar Platform Saddle",
+      "level": 18,
+      "points": 52,
+      "pack": "Astraeos Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_GrandTortugar_C",
+      "label": "Grand Tortugar Saddle",
+      "level": 18,
+      "points": 43,
+      "pack": "Astraeos Engrams"
+    },
+    {
+      "className": "EngramEntry_TOF_Grapeshot_TOF_C",
+      "label": "Grapeshot",
+      "level": 34,
+      "points": 6,
+      "pack": "Tides of Fortune Engrams"
+    },
+    {
+      "className": "EngramEntry_GrapplingHook_C",
+      "label": "Grappling Hook",
+      "level": 47,
+      "points": 40,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Gravestone_C",
+      "label": "Gravestone",
+      "level": 16,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_GreenhouseCeiling_C",
+      "label": "Greenhouse Ceiling",
+      "level": 42,
+      "points": 30,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_GreenhouseDoor_C",
+      "label": "Greenhouse Door",
+      "level": 43,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_GreenhouseWallWithDoor_C",
+      "label": "Greenhouse Doorframe",
+      "level": 43,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_DoubleDoor_Greenhouse_C",
+      "label": "Greenhouse Double Door",
+      "level": 50,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_DoubleDoorframe_Greenhouse_C",
+      "label": "Greenhouse Double Doorframe",
+      "level": 50,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TriCeiling_Greenhouse_C",
+      "label": "Greenhouse Triangle Ceiling",
+      "level": 42,
+      "points": 30,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TriRoof_Greenhouse_C",
+      "label": "Greenhouse Triangle Roof",
+      "level": 44,
+      "points": 30,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_GreenhouseWall_C",
+      "label": "Greenhouse Wall",
+      "level": 42,
+      "points": 30,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_GreenhouseWindow_C",
+      "label": "Greenhouse Window",
+      "level": 44,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Grenade_C",
+      "label": "Grenade",
+      "level": 38,
+      "points": 20,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Gunpowder_C",
+      "label": "Gunpowder",
+      "level": 15,
+      "points": 2,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_HandCannon_ToF_C",
+      "label": "Hand Cannon",
+      "level": 34,
+      "points": 15,
+      "pack": "Tides of Fortune Engrams"
+    },
+    {
+      "className": "EngramEntry_Handcuffs_C",
+      "label": "Handcuffs",
+      "level": 28,
+      "points": 16,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_HarpoonGun_C",
+      "label": "Harpoon Launcher",
+      "level": 43,
+      "points": 38,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_HazardSuit_Boots_C",
+      "label": "Hazard Suit Boots",
+      "level": 68,
+      "points": 16,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_HazardSuit_Gloves_C",
+      "label": "Hazard Suit Gloves",
+      "level": 68,
+      "points": 16,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_HazardSuit_Helmet_C",
+      "label": "Hazard Suit Hat",
+      "level": 68,
+      "points": 28,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_HazardSuit_Pants_C",
+      "label": "Hazard Suit Pants",
+      "level": 68,
+      "points": 22,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_HazardSuit_Chest_C",
+      "label": "Hazard Suit Shirt",
+      "level": 68,
+      "points": 22,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_HeavyTurret_C",
+      "label": "Heavy Auto Turret",
+      "level": 100,
+      "points": 100,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MinersHelmet_C",
+      "label": "Heavy Miner's Helmet",
+      "level": 63,
+      "points": 35,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_HemogoblinCocktail_ASA_C",
+      "label": "Hemogoblin Cocktail",
+      "level": 60,
+      "points": 25,
+      "pack": "ARK: Survival Ascended Engrams"
+    },
+    {
+      "className": "EngramEntry_HideBoots_C",
+      "label": "Hide Boots",
+      "level": 15,
+      "points": 7,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_HideGloves_C",
+      "label": "Hide Gloves",
+      "level": 15,
+      "points": 7,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_HideHelmet_C",
+      "label": "Hide Hat",
+      "level": 15,
+      "points": 9,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_HidePants_C",
+      "label": "Hide Pants",
+      "level": 15,
+      "points": 9,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_HideShirt_C",
+      "label": "Hide Shirt",
+      "level": 15,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_HideSleepingBag_C",
+      "label": "Hide Sleeping Bag",
+      "level": 4,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_LostColony_HoloDecoy_C",
+      "label": "Holo-Decoy Grenade",
+      "level": 51,
+      "points": 22,
+      "pack": "Lost Colony Engrams"
+    },
+    {
+      "className": "EngramEntry_HoloScope_C",
+      "label": "Holo-Scope Attachment",
+      "level": 77,
+      "points": 24,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_SeaMine_C",
+      "label": "Homing Underwater Mine",
+      "level": 88,
+      "points": 30,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Hyaenodon_C",
+      "label": "Hyaenodon Meatpack",
+      "level": 19,
+      "points": 14,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Dolphin_C",
+      "label": "Ichthyosaurus Saddle",
+      "level": 13,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Iguanodon_C",
+      "label": "Iguanodon Saddle",
+      "level": 30,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TripwireC4_C",
+      "label": "Improvised Explosive Device",
+      "level": 44,
+      "points": 30,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TOF_Cannonball_Incendiary_C",
+      "label": "Incendiary Ship Cannonball",
+      "level": 58,
+      "points": 5,
+      "pack": "Tides of Fortune Engrams"
+    },
+    {
+      "className": "EngramEntry_PowerCableIncline_C",
+      "label": "Inclined Electrical Cable",
+      "level": 49,
+      "points": 16,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_IndustrialCookingPot_C",
+      "label": "Industrial Cooker",
+      "level": 89,
+      "points": 60,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_IndustrialForge_C",
+      "label": "Industrial Forge",
+      "level": 80,
+      "points": 90,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Grill_C",
+      "label": "Industrial Grill",
+      "level": 50,
+      "points": 40,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Grinder_C",
+      "label": "Industrial Grinder",
+      "level": 64,
+      "points": 45,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Steampunk_IndustrialPreservingBin_C",
+      "label": "Industrial Preserving Bin",
+      "level": 68,
+      "points": 23,
+      "pack": "Steampunk Ascent"
+    },
+    {
+      "className": "EngramEntry_Saddle_Kaprosuchus_C",
+      "label": "Kaprosuchus Saddle",
+      "level": 39,
+      "points": 28,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_KarkinoSaddle_C",
+      "label": "Karkinos Saddle",
+      "level": 65,
+      "points": 28,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Lamppost_C",
+      "label": "Lamppost",
+      "level": 50,
+      "points": 20,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Lance_C",
+      "label": "Lance",
+      "level": 32,
+      "points": 30,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_LargeWall_Adobe_C",
+      "label": "Large Adobe Wall",
+      "level": 19,
+      "points": 9,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_BearTrap_Large_C",
+      "label": "Large Bear Trap",
+      "level": 31,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_CropPlot_Large_C",
+      "label": "Large Crop Plot",
+      "level": 36,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ElevatorPlatformLarge_C",
+      "label": "Large Elevator Platform",
+      "level": 73,
+      "points": 40,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_LargeWall_Metal_C",
+      "label": "Large Metal Wall",
+      "level": 49,
+      "points": 17,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_LargeWall_Stone_C",
+      "label": "Large Stone Wall",
+      "level": 28,
+      "points": 10,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StorageBox_Large_C",
+      "label": "Large Storage Box",
+      "level": 16,
+      "points": 9,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TaxidermyBase_Large_C",
+      "label": "Large Taxidermy Base",
+      "level": 32,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_LargeWall_Tek_C",
+      "label": "Large Tek Wall",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodElevatorPlatform_Large_C",
+      "label": "Large Wood Elevator Platform",
+      "level": 30,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_LargeWall_Wood_C",
+      "label": "Large Wooden Wall",
+      "level": 15,
+      "points": 9,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Laser_C",
+      "label": "Laser Attachment",
+      "level": 59,
+      "points": 24,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_CureLow_C",
+      "label": "Lesser Antidote",
+      "level": 18,
+      "points": 16,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Steampunk_LibraryStorage_C",
+      "label": "Library Storage",
+      "level": 51,
+      "points": 9,
+      "pack": "Steampunk Ascent"
+    },
+    {
+      "className": "EngramEntry_Steampunk_LinkedStorage_C",
+      "label": "Linked Storage Box",
+      "level": 100,
+      "points": 33,
+      "pack": "Steampunk Ascent"
+    },
+    {
+      "className": "EngramEntry_Frontier_Train_Car_C",
+      "label": "Locomotive",
+      "level": 43,
+      "points": 35,
+      "pack": "Frontier Showdown"
+    },
+    {
+      "className": "EngramEntry_SimpleRifle_C",
+      "label": "Longneck Rifle",
+      "level": 35,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_LostColony_Lights_C",
+      "label": "Lost Colony Lights",
+      "level": 48,
+      "points": 10,
+      "pack": "Lost Colony Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Lumina_C",
+      "label": "Lumina Saddle",
+      "level": 65,
+      "points": 18,
+      "pack": "Dragontopia Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Moth_C",
+      "label": "Lymantria Saddle",
+      "level": 36,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MekBackpack_Shield_C",
+      "label": "M.D.S.M.",
+      "level": 93,
+      "points": 40,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MekBackpack_Missiles_C",
+      "label": "M.R.L.M.",
+      "level": 95,
+      "points": 40,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MekBackpack_Cannon_C",
+      "label": "M.S.C.M.",
+      "level": 97,
+      "points": 40,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Maelizard_Saddle_C",
+      "label": "Maeguana Saddle",
+      "level": 21,
+      "points": 24,
+      "pack": "Astraeos Engrams"
+    },
+    {
+      "className": "EngramEntry_CherufeSaddle_C",
+      "label": "Magmasaur Saddle",
+      "level": 95,
+      "points": 35,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MagnifyingGlass_C",
+      "label": "Magnifying Glass",
+      "level": 25,
+      "points": 16,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Wasteland_TekChemBench_C",
+      "label": "Makeshift Megalab",
+      "level": 92,
+      "points": 50,
+      "pack": "Wasteland War"
+    },
+    {
+      "className": "EngramEntry_LostColony_Saddle_DevilFox_C",
+      "label": "Malwyn Saddle",
+      "level": 65,
+      "points": 40,
+      "pack": "Lost Colony Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Mammoth_C",
+      "label": "Mammoth Saddle",
+      "level": 31,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_IceJumperSaddle_C",
+      "label": "Managarmr Saddle",
+      "level": 66,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Manta_C",
+      "label": "Manta Saddle",
+      "level": 28,
+      "points": 16,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Mantis_C",
+      "label": "Mantis Saddle",
+      "level": 45,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TOF_Market_C",
+      "label": "Market",
+      "level": 42,
+      "points": 18,
+      "pack": "Tides of Fortune Engrams"
+    },
+    {
+      "className": "EngramEntry_LostColony_MedicalStand_C",
+      "label": "Medical Stand",
+      "level": 60,
+      "points": 20,
+      "pack": "Lost Colony Engrams"
+    },
+    {
+      "className": "EngramEntry_CropPlot_Medium_C",
+      "label": "Medium Crop Plot",
+      "level": 26,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ElevatorPlatformMedium_C",
+      "label": "Medium Elevator Platform",
+      "level": 72,
+      "points": 40,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TaxidermyBase_Medium_C",
+      "label": "Medium Taxidermy Base",
+      "level": 21,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekTeleporterSmall_C",
+      "label": "Medium Tek Teleporter",
+      "level": 0,
+      "points": 0,
+      "pack": "ARK: Survival Ascended Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodElevatorPlatform_Medium_C",
+      "label": "Medium Wood Elevator Platform",
+      "level": 23,
+      "points": 7,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_GiantTurtleSaddle_C",
+      "label": "Megachelon Platform Saddle",
+      "level": 45,
+      "points": 35,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Megalania_C",
+      "label": "Megalania Saddle",
+      "level": 73,
+      "points": 65,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Stag_C",
+      "label": "Megaloceros Saddle",
+      "level": 30,
+      "points": 20,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Megalodon_C",
+      "label": "Megalodon Saddle",
+      "level": 47,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekMegalodonSaddle_C",
+      "label": "Megalodon Tek Saddle",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Megalosaurus_C",
+      "label": "Megalosaurus Saddle",
+      "level": 57,
+      "points": 50,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Megatherium_C",
+      "label": "Megatherium Saddle",
+      "level": 52,
+      "points": 24,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_CompoundArrow_C",
+      "label": "Metal Arrow",
+      "level": 79,
+      "points": 35,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalSign_Large_C",
+      "label": "Metal Billboard",
+      "level": 46,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalCatwalk_C",
+      "label": "Metal Catwalk",
+      "level": 47,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalCeiling_C",
+      "label": "Metal Ceiling",
+      "level": 45,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalCliffPlatform_C",
+      "label": "Metal Cliff Platform",
+      "level": 51,
+      "points": 48,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalGate_C",
+      "label": "Metal Dinosaur Gate",
+      "level": 52,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalGateway_C",
+      "label": "Metal Dinosaur Gateway",
+      "level": 52,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalDoor_C",
+      "label": "Metal Door",
+      "level": 45,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalWallWithDoor_C",
+      "label": "Metal Doorframe",
+      "level": 45,
+      "points": 24,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_DoubleDoor_Metal_C",
+      "label": "Metal Double Door",
+      "level": 52,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_DoubleDoorframe_Metal_C",
+      "label": "Metal Double Doorframe",
+      "level": 52,
+      "points": 24,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalFenceFoundation_C",
+      "label": "Metal Fence Foundation",
+      "level": 48,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_FenceSupport_Metal_C",
+      "label": "Metal Fence Support",
+      "level": 48,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalFloor_C",
+      "label": "Metal Foundation",
+      "level": 45,
+      "points": 24,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalHatchet_C",
+      "label": "Metal Hatchet",
+      "level": 20,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalCeilingWithTrapdoor_C",
+      "label": "Metal Hatchframe",
+      "level": 48,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_PipeFlex_Metal_C",
+      "label": "Metal Irrigation Pipe - Flexible",
+      "level": 40,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalPipeIncline_C",
+      "label": "Metal Irrigation Pipe - Inclined",
+      "level": 40,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalPipeIntake_C",
+      "label": "Metal Irrigation Pipe - Intake",
+      "level": 40,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalPipeIntersection_C",
+      "label": "Metal Irrigation Pipe - Intersection",
+      "level": 40,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalPipeStraight_C",
+      "label": "Metal Irrigation Pipe - Straight",
+      "level": 40,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalPipeTap_C",
+      "label": "Metal Irrigation Pipe - Tap",
+      "level": 40,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalPipeVertical_C",
+      "label": "Metal Irrigation Pipe - Vertical",
+      "level": 40,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalLadder_C",
+      "label": "Metal Ladder",
+      "level": 48,
+      "points": 21,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_OceanPlatformMetal_C",
+      "label": "Metal Ocean Platform",
+      "level": 53,
+      "points": 50,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalPick_C",
+      "label": "Metal Pick",
+      "level": 20,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalPillar_C",
+      "label": "Metal Pillar",
+      "level": 46,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalRailing_C",
+      "label": "Metal Railing",
+      "level": 46,
+      "points": 7,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalRamp_C",
+      "label": "Metal Ramp",
+      "level": 47,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalShield_C",
+      "label": "Metal Shield",
+      "level": 39,
+      "points": 9,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalSickle_C",
+      "label": "Metal Sickle",
+      "level": 30,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalSign_C",
+      "label": "Metal Sign",
+      "level": 50,
+      "points": 10,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalSpikeWall_C",
+      "label": "Metal Spike Wall",
+      "level": 29,
+      "points": 11,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalStairs_C",
+      "label": "Metal Staircase",
+      "level": 46,
+      "points": 20,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Ramp_Metal_C",
+      "label": "Metal Stairs",
+      "level": 47,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalTrapdoor_C",
+      "label": "Metal Trapdoor",
+      "level": 48,
+      "points": 14,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TreePlatformMetal_C",
+      "label": "Metal Tree Platform",
+      "level": 59,
+      "points": 55,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TriCeiling_Metal_C",
+      "label": "Metal Triangle Ceiling",
+      "level": 45,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TriFoundation_Metal_C",
+      "label": "Metal Triangle Foundation",
+      "level": 45,
+      "points": 24,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TriRoof_Metal_C",
+      "label": "Metal Triangle Roof",
+      "level": 47,
+      "points": 10,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalWall_C",
+      "label": "Metal Wall",
+      "level": 45,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalSign_Wall_C",
+      "label": "Metal Wall Sign",
+      "level": 50,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WaterTankMetal_C",
+      "label": "Metal Water Reservoir",
+      "level": 41,
+      "points": 20,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalWindow_C",
+      "label": "Metal Window",
+      "level": 46,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalWallWithWindow_C",
+      "label": "Metal Windowframe",
+      "level": 46,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ChargeBattery_Mini_C",
+      "label": "Mini Charge Battery",
+      "level": 45,
+      "points": 5,
+      "pack": "Wasteland War"
+    },
+    {
+      "className": "EngramEntry_MinigunTurret_C",
+      "label": "Minigun Turret",
+      "level": 94,
+      "points": 80,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MiningDrill_C",
+      "label": "Mining Drill",
+      "level": 80,
+      "points": 35,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Mirror_C",
+      "label": "Mirror",
+      "level": 32,
+      "points": 25,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Camelsaurus_C",
+      "label": "Morellatops Saddle",
+      "level": 11,
+      "points": 11,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MortarAndPestle_C",
+      "label": "Mortar and Pestle",
+      "level": 6,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Mosa_Platform_C",
+      "label": "Mosasaur Platform Saddle",
+      "level": 93,
+      "points": 80,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Mosa_C",
+      "label": "Mosasaur Saddle",
+      "level": 78,
+      "points": 60,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekMosaSaddle_C",
+      "label": "Mosasaur Tek Saddle",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Motorboat_C",
+      "label": "Motorboat",
+      "level": 57,
+      "points": 45,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Flag_C",
+      "label": "Multi-Panel Flag",
+      "level": 8,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Narcotic_C",
+      "label": "Narcotic",
+      "level": 6,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_NightVisionGoggles_C",
+      "label": "Night Vision Goggles",
+      "level": 86,
+      "points": 100,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_NotePaper_C",
+      "label": "Note",
+      "level": 1,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_OilJar_C",
+      "label": "Oil Jar",
+      "level": 24,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_OilPump_C",
+      "label": "Oil Pump",
+      "level": 60,
+      "points": 24,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_LamppostOmni_C",
+      "label": "Omnidirectional Lamppost",
+      "level": 50,
+      "points": 20,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_LostColony_Saddle_SnowMonster_C",
+      "label": "Ossidon Saddle",
+      "level": 74,
+      "points": 40,
+      "pack": "Lost Colony Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Pachy_C",
+      "label": "Pachy Saddle",
+      "level": 14,
+      "points": 9,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_PachyRhino_C",
+      "label": "Pachyrhinosaurus Saddle",
+      "level": 27,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Paintbrush_C",
+      "label": "Paintbrush",
+      "level": 9,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_PaintingCanvas_C",
+      "label": "Painting Canvas",
+      "level": 21,
+      "points": 2,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Paracer_Platform_C",
+      "label": "Paracer Platform Saddle",
+      "level": 50,
+      "points": 24,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Paracer_C",
+      "label": "Paracer Saddle",
+      "level": 41,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Parachute_C",
+      "label": "Parachute",
+      "level": 22,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Para_C",
+      "label": "Parasaur Saddle",
+      "level": 9,
+      "points": 9,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Pela_C",
+      "label": "Pelagornis Saddle",
+      "level": 43,
+      "points": 30,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_LostColony_ShoulderPetDisplayStand_C",
+      "label": "Pet Display",
+      "level": 60,
+      "points": 20,
+      "pack": "Lost Colony Engrams"
+    },
+    {
+      "className": "EngramEntry_AggroTranqDart_C",
+      "label": "Pheromone Dart",
+      "level": 90,
+      "points": 60,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Phiomia_C",
+      "label": "Phiomia Saddle",
+      "level": 5,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Pike_C",
+      "label": "Pike",
+      "level": 25,
+      "points": 10,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Frontier_PlantPot_C",
+      "label": "Plant Pot",
+      "level": 31,
+      "points": 13,
+      "pack": "Frontier Showdown"
+    },
+    {
+      "className": "EngramEntry_Frontier_Saddle_Carriage_C",
+      "label": "Platform Cart",
+      "level": 22,
+      "points": 10,
+      "pack": "Frontier Showdown"
+    },
+    {
+      "className": "EngramEntry_Saddle_Plesio_Platform_C",
+      "label": "Plesiosaur Platform Saddle",
+      "level": 84,
+      "points": 80,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Plesia_C",
+      "label": "Plesiosaur Saddle",
+      "level": 64,
+      "points": 40,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Pliers_C",
+      "label": "Pliers",
+      "level": 45,
+      "points": 16,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_PoisonGrenade_C",
+      "label": "Poison Grenade",
+      "level": 40,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Frontier_PokerTable_C",
+      "label": "Poker Table",
+      "level": 26,
+      "points": 10,
+      "pack": "Frontier Showdown"
+    },
+    {
+      "className": "EngramEntry_Polymer_C",
+      "label": "Polymer",
+      "level": 48,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_PortableRopeLadder_C",
+      "label": "Portable Rope Ladder",
+      "level": 15,
+      "points": 7,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_PreservingBin_C",
+      "label": "Preserving Bin",
+      "level": 18,
+      "points": 9,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_PreservingSalt_C",
+      "label": "Preserving Salt",
+      "level": 5,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_PressurePlate_C",
+      "label": "Pressure Plate",
+      "level": 12,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Procop_C",
+      "label": "Procoptodon Saddle",
+      "level": 23,
+      "points": 35,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Propellant_C",
+      "label": "Propellant",
+      "level": 22,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Ptero_C",
+      "label": "Pteranodon Saddle",
+      "level": 38,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Scorpion_C",
+      "label": "Pulmonoscorpius Saddle",
+      "level": 22,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MachinedShotgun_C",
+      "label": "Pump-Action Shotgun",
+      "level": 55,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Quetz_Platform_C",
+      "label": "Quetz Platform Saddle",
+      "level": 97,
+      "points": 80,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Quetz_C",
+      "label": "Quetz Saddle",
+      "level": 76,
+      "points": 44,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Radio_C",
+      "label": "Radio",
+      "level": 51,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Raptor_C",
+      "label": "Raptor Saddle",
+      "level": 18,
+      "points": 9,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_RavagerSaddle_C",
+      "label": "Ravager Saddle",
+      "level": 47,
+      "points": 20,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MiracleGro_C",
+      "label": "Re-Fertilizer",
+      "level": 38,
+      "points": 20,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Forge_C",
+      "label": "Refining Forge",
+      "level": 20,
+      "points": 21,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_IceBox_C",
+      "label": "Refrigerator",
+      "level": 60,
+      "points": 20,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StoneGate_C",
+      "label": "Reinforced Dinosaur Gate",
+      "level": 27,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_DoubleDoor_Stone_C",
+      "label": "Reinforced Double Door",
+      "level": 31,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TOF_Cannonball_Reinforced_C",
+      "label": "Reinforced Ship Cannonball",
+      "level": 58,
+      "points": 5,
+      "pack": "Tides of Fortune Engrams"
+    },
+    {
+      "className": "EngramEntry_StoneTrapdoor_C",
+      "label": "Reinforced Trapdoor",
+      "level": 26,
+      "points": 10,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StoneWindow_C",
+      "label": "Reinforced Window",
+      "level": 26,
+      "points": 10,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StoneDoor_C",
+      "label": "Reinforced Wooden Door",
+      "level": 24,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Keypad_C",
+      "label": "Remote Keypad",
+      "level": 53,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Rex_C",
+      "label": "Rex Saddle",
+      "level": 74,
+      "points": 40,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekRexSaddle_C",
+      "label": "Rex Tek Saddle",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Rhynio_C",
+      "label": "Rhyniognatha Saddle",
+      "level": 90,
+      "points": 65,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_RiotBoots_C",
+      "label": "Riot Boots",
+      "level": 98,
+      "points": 40,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_RiotShirt_C",
+      "label": "Riot Chestpiece",
+      "level": 98,
+      "points": 40,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_RiotGloves_C",
+      "label": "Riot Gauntlets",
+      "level": 98,
+      "points": 40,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_RiotHelmet_C",
+      "label": "Riot Helmet",
+      "level": 98,
+      "points": 40,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_RiotPants_C",
+      "label": "Riot Leggings",
+      "level": 98,
+      "points": 40,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_RiotShield_C",
+      "label": "Riot Shield",
+      "level": 92,
+      "points": 35,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ShadowDrakeSaddle_C",
+      "label": "Rock Drake Saddle",
+      "level": 75,
+      "points": 26,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekRockDrakeSaddle_C",
+      "label": "Rock Drake Tek Saddle",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_RockGolem_C",
+      "label": "Rock Golem Saddle",
+      "level": 70,
+      "points": 40,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_RocketHommingAmmo_C",
+      "label": "Rocket Homing Missile",
+      "level": 90,
+      "points": 25,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_RocketLauncher_C",
+      "label": "Rocket Launcher",
+      "level": 87,
+      "points": 32,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MekRocketPod_C",
+      "label": "Rocket Pod",
+      "level": 95,
+      "points": 35,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_RocketAmmo_C",
+      "label": "Rocket Propelled Grenade",
+      "level": 87,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_RocketTurret_C",
+      "label": "Rocket Turret",
+      "level": 99,
+      "points": 100,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_RollratSaddle_C",
+      "label": "Roll Rat Saddle",
+      "level": 58,
+      "points": 26,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_RopeLadder_C",
+      "label": "Rope Ladder",
+      "level": 16,
+      "points": 5,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Saber_C",
+      "label": "Sabertooth Saddle",
+      "level": 37,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Frontier_SaloonChair_C",
+      "label": "Saloon Chair",
+      "level": 20,
+      "points": 1,
+      "pack": "Frontier Showdown"
+    },
+    {
+      "className": "EngramEntry_Frontier_SaloonPiano_C",
+      "label": "Saloon Piano",
+      "level": 31,
+      "points": 13,
+      "pack": "Frontier Showdown"
+    },
+    {
+      "className": "EngramEntry_Frontier_SaloonTable_C",
+      "label": "Saloon Table",
+      "level": 20,
+      "points": 0,
+      "pack": "Frontier Showdown"
+    },
+    {
+      "className": "EngramEntry_Saddle_Sarco_C",
+      "label": "Sarco Saddle",
+      "level": 35,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Scissors_C",
+      "label": "Scissors",
+      "level": 21,
+      "points": 10,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Scope_C",
+      "label": "Scope Attachment",
+      "level": 35,
+      "points": 13,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ScubaBoots_Flippers_C",
+      "label": "SCUBA Flippers",
+      "level": 81,
+      "points": 20,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ScubaPants_C",
+      "label": "SCUBA Leggings",
+      "level": 81,
+      "points": 35,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ScubaHelmet_Goggles_C",
+      "label": "SCUBA Mask",
+      "level": 81,
+      "points": 25,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ScubaShirt_SuitWithTank_C",
+      "label": "SCUBA Tank",
+      "level": 81,
+      "points": 35,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ShagRug_C",
+      "label": "Shag Rug",
+      "level": 17,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ShastaSaddle_C",
+      "label": "Shastasaurus Submarine Saddle",
+      "level": 100,
+      "points": 70,
+      "pack": "ARK: Survival Ascended Engrams"
+    },
+    {
+      "className": "EngramEntry_TOF_Shipyard_Large_C",
+      "label": "Shipyard",
+      "level": 42,
+      "points": 24,
+      "pack": "Tides of Fortune Engrams"
+    },
+    {
+      "className": "EngramEntry_RefinedTranqDart_C",
+      "label": "Shocking Tranquilizer Dart",
+      "level": 96,
+      "points": 30,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Frontier_ShootableBottle_C",
+      "label": "Shootable Bottle",
+      "level": 14,
+      "points": 4,
+      "pack": "Frontier Showdown"
+    },
+    {
+      "className": "EngramEntry_SimpleShotgun_C",
+      "label": "Shotgun",
+      "level": 39,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Frontier_Shovel_C",
+      "label": "Shovel",
+      "level": 20,
+      "points": 6,
+      "pack": "Frontier Showdown"
+    },
+    {
+      "className": "EngramEntry_Silencer_C",
+      "label": "Silencer Attachment",
+      "level": 41,
+      "points": 13,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_SimpleBed_C",
+      "label": "Simple Bed",
+      "level": 7,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_SimpleBullet_C",
+      "label": "Simple Bullet",
+      "level": 34,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Pistol_C",
+      "label": "Simple Pistol",
+      "level": 34,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_SimpleRifleBullet_C",
+      "label": "Simple Rifle Ammo",
+      "level": 35,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_SimpleShotgunBullet_C",
+      "label": "Simple Shotgun Ammo",
+      "level": 39,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_FlagSingle_C",
+      "label": "Single Panel Flag",
+      "level": 7,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Slingshot_C",
+      "label": "Slingshot",
+      "level": 5,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TOF_Sloop_C",
+      "label": "Sloop",
+      "level": 42,
+      "points": 12,
+      "pack": "Tides of Fortune Engrams"
+    },
+    {
+      "className": "EngramEntry_AdobeRoof_C",
+      "label": "Sloped Adobe Roof",
+      "level": 18,
+      "points": 5,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdobeSlopedWall_Left_C",
+      "label": "Sloped Adobe Wall Left",
+      "level": 18,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AdobeSlopedWall_Right_C",
+      "label": "Sloped Adobe Wall Right",
+      "level": 18,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_GreenhouseRoof_C",
+      "label": "Sloped Greenhouse Roof",
+      "level": 44,
+      "points": 30,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_GreenhouseSlopedWall_Left_C",
+      "label": "Sloped Greenhouse Wall Left",
+      "level": 44,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_GreenhouseSlopedWall_Right_C",
+      "label": "Sloped Greenhouse Wall Right",
+      "level": 44,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalRoof_C",
+      "label": "Sloped Metal Roof",
+      "level": 47,
+      "points": 10,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalSlopedWall_Left_C",
+      "label": "Sloped Metal Wall Left",
+      "level": 47,
+      "points": 7,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_MetalSlopedWall_Right_C",
+      "label": "Sloped Metal Wall Right",
+      "level": 47,
+      "points": 7,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StoneRoof_C",
+      "label": "Sloped Stone Roof",
+      "level": 27,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StoneSlopedWall_Left_C",
+      "label": "Sloped Stone Wall Left",
+      "level": 27,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StoneSlopedWall_Right_C",
+      "label": "Sloped Stone Wall Right",
+      "level": 27,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekRoof_C",
+      "label": "Sloped Tek Roof",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekSlopedWall_Left_C",
+      "label": "Sloped Tek Wall Left",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekSlopedWall_Right_C",
+      "label": "Sloped Tek Wall Right",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ThatchRoof_C",
+      "label": "Sloped Thatch Roof",
+      "level": 5,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ThatchSlopedWall_left_C",
+      "label": "Sloped Thatch Wall Left",
+      "level": 5,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ThatchSlopedWall_Right_C",
+      "label": "Sloped Thatch Wall Right",
+      "level": 5,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodSlopedWall_Left_C",
+      "label": "Sloped Wood Wall Left",
+      "level": 12,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodSlopedWall_Right_C",
+      "label": "Sloped Wood Wall Right",
+      "level": 12,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodRoof_C",
+      "label": "Sloped Wooden Roof",
+      "level": 14,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_CropPlot_Small_C",
+      "label": "Small Crop Plot",
+      "level": 10,
+      "points": 9,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ElevatorPlatformSmall_C",
+      "label": "Small Elevator Platform",
+      "level": 70,
+      "points": 40,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TaxidermyBase_Small_C",
+      "label": "Small Taxidermy Base",
+      "level": 10,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekTeleporterMini_C",
+      "label": "Small Tek Teleporter",
+      "level": 0,
+      "points": 0,
+      "pack": "ARK: Survival Ascended Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodElevatorPlatform_Small_C",
+      "label": "Small Wood Elevator Platform",
+      "level": 20,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AnvilBench_C",
+      "label": "Smithy",
+      "level": 20,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_GasGrenade_C",
+      "label": "Smoke Grenade",
+      "level": 24,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_OwlSaddle_C",
+      "label": "Snow Owl Saddle",
+      "level": 61,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_LostColony_Saddle_AngelFox_C",
+      "label": "Solwyn Saddle",
+      "level": 58,
+      "points": 40,
+      "pack": "Lost Colony Engrams"
+    },
+    {
+      "className": "EngramEntry_Sparkpowder_C",
+      "label": "Sparkpowder",
+      "level": 6,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Spear_C",
+      "label": "Spear",
+      "level": 2,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_BallistaArrow_C",
+      "label": "Spear Bolt",
+      "level": 29,
+      "points": 10,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Spino_C",
+      "label": "Spino Saddle",
+      "level": 71,
+      "points": 40,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Steampunk_Spotlight_C",
+      "label": "Spotlight",
+      "level": 54,
+      "points": 8,
+      "pack": "Steampunk Ascent"
+    },
+    {
+      "className": "EngramEntry_SprayPainter_C",
+      "label": "Spray Painter",
+      "level": 53,
+      "points": 30,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Spyglass_C",
+      "label": "Spyglass",
+      "level": 7,
+      "points": 2,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StandingTorch_C",
+      "label": "Standing Torch",
+      "level": 7,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Steampunk_MegaForge_C",
+      "label": "Steam Forge",
+      "level": 94,
+      "points": 36,
+      "pack": "Steampunk Ascent"
+    },
+    {
+      "className": "EngramEntry_Steampunk_Lights_C",
+      "label": "Steam Lights & Lamps",
+      "level": 48,
+      "points": 10,
+      "pack": "Steampunk Ascent"
+    },
+    {
+      "className": "EngramEntry_Saddle_Stego_C",
+      "label": "Stego Saddle",
+      "level": 26,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Stimulant_C",
+      "label": "Stimulant",
+      "level": 11,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ArrowStone_C",
+      "label": "Stone Arrow",
+      "level": 10,
+      "points": 2,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StoneCeiling_C",
+      "label": "Stone Ceiling",
+      "level": 24,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StoneCliffPlatform_C",
+      "label": "Stone Cliff Platform",
+      "level": 37,
+      "points": 28,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StoneGateway_C",
+      "label": "Stone Dinosaur Gateway",
+      "level": 27,
+      "points": 9,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StoneWallWithDoor_C",
+      "label": "Stone Doorframe",
+      "level": 24,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_DoubleDoorframe_Stone_C",
+      "label": "Stone Double Doorframe",
+      "level": 31,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StoneFenceFoundation_C",
+      "label": "Stone Fence Foundation",
+      "level": 25,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_FenceSupport_Stone_C",
+      "label": "Stone Fence Support",
+      "level": 25,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Fireplace_C",
+      "label": "Stone Fireplace",
+      "level": 28,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StoneFloor_C",
+      "label": "Stone Foundation",
+      "level": 24,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StoneHatchet_C",
+      "label": "Stone Hatchet",
+      "level": 2,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StoneCeilingWithTrapdoor_C",
+      "label": "Stone Hatchframe",
+      "level": 26,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_PipeFlex_Stone_C",
+      "label": "Stone Irrigation Pipe - Flexible",
+      "level": 17,
+      "points": 5,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StonePipeInclined_C",
+      "label": "Stone Irrigation Pipe - Inclined",
+      "level": 17,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StonePipeIntake_C",
+      "label": "Stone Irrigation Pipe - Intake",
+      "level": 17,
+      "points": 5,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StonePipeIntersection_C",
+      "label": "Stone Irrigation Pipe - Intersection",
+      "level": 17,
+      "points": 5,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StonePipeStraight_C",
+      "label": "Stone Irrigation Pipe - Straight",
+      "level": 17,
+      "points": 2,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StonePipeTap_C",
+      "label": "Stone Irrigation Pipe - Tap",
+      "level": 17,
+      "points": 5,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StonePipeVertical_C",
+      "label": "Stone Irrigation Pipe - Vertical",
+      "level": 17,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StonePick_C",
+      "label": "Stone Pick",
+      "level": 1,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StonePillar_C",
+      "label": "Stone Pillar",
+      "level": 25,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StoneRailing_C",
+      "label": "Stone Railing",
+      "level": 28,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StoneStairs_C",
+      "label": "Stone Staircase",
+      "level": 28,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Ramp_Stone_C",
+      "label": "Stone Stairs",
+      "level": 24,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TreePlatformStone_C",
+      "label": "Stone Tree Platform",
+      "level": 35,
+      "points": 30,
+      "pack": "ARK: Survival Ascended Engrams"
+    },
+    {
+      "className": "EngramEntry_TriCeiling_Stone_C",
+      "label": "Stone Triangle Ceiling",
+      "level": 24,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TriFoundation_Stone_C",
+      "label": "Stone Triangle Foundation",
+      "level": 24,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TriRoof_Stone_C",
+      "label": "Stone Triangle Roof",
+      "level": 27,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StoneWall_C",
+      "label": "Stone Wall",
+      "level": 24,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StoneWallWithWindow_C",
+      "label": "Stone Windowframe",
+      "level": 26,
+      "points": 11,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Steampunk_Stopwatch_C",
+      "label": "Stopwatch",
+      "level": 99,
+      "points": 27,
+      "pack": "Steampunk Ascent"
+    },
+    {
+      "className": "EngramEntry_StorageBox_Small_C",
+      "label": "Storage Box",
+      "level": 4,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_PowerCableStraight_C",
+      "label": "Straight Electrical Cable",
+      "level": 49,
+      "points": 16,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Frontier_SaloonStool_C",
+      "label": "Swivel Stool",
+      "level": 20,
+      "points": 6,
+      "pack": "Frontier Showdown"
+    },
+    {
+      "className": "EngramEntry_Sword_C",
+      "label": "Sword",
+      "level": 30,
+      "points": 11,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Tapejara_C",
+      "label": "Tapejara Saddle",
+      "level": 55,
+      "points": 21,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekTapejaraSaddle_C",
+      "label": "Tapejara Tek Saddle",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TaxidermyTool_C",
+      "label": "Taxidermy Tool",
+      "level": 10,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekATV_C",
+      "label": "Tek ATV",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Ceiling_Door_XL_Tek_C",
+      "label": "Tek Behemoth Cellar Door",
+      "level": 0,
+      "points": 0,
+      "pack": "ARK: Survival Ascended Engrams"
+    },
+    {
+      "className": "EngramEntry_TekBinoculars_C",
+      "label": "Tek Binoculars",
+      "level": 0,
+      "points": 0,
+      "pack": "ARK: Survival Ascended Engrams"
+    },
+    {
+      "className": "EngramEntry_TekBoots_C",
+      "label": "Tek Boots",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekBridge_C",
+      "label": "Tek Bridge",
+      "level": 72,
+      "points": 32,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_LostColony_TekBunker_C",
+      "label": "Tek Bunker",
+      "level": 80,
+      "points": 60,
+      "pack": "Lost Colony Engrams"
+    },
+    {
+      "className": "EngramEntry_TekCatwalk_C",
+      "label": "Tek Catwalk",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekCeiling_C",
+      "label": "Tek Ceiling",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekShirt_C",
+      "label": "Tek Chestpiece",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekClaws_C",
+      "label": "Tek Claws",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_DedicatedStorage_C",
+      "label": "Tek Dedicated Storage",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Tek_Gate_C",
+      "label": "Tek Dinosaur Gate",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Tek_Gategrame_C",
+      "label": "Tek Dinosaur Gateway",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekDoor_C",
+      "label": "Tek Door",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekWallWithDoor_C",
+      "label": "Tek Doorframe",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_DoubleDoor_Tek_C",
+      "label": "Tek Double Door",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_DoubleDoorframe_Tek_C",
+      "label": "Tek Double Doorframe",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekFenceFoundation_C",
+      "label": "Tek Fence Foundation",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_FenceSupport_Tek_C",
+      "label": "Tek Fence Support",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekShield_C",
+      "label": "Tek Forcefield",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekFloor_C",
+      "label": "Tek Foundation",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekGloves_C",
+      "label": "Tek Gauntlets",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekGenerator_C",
+      "label": "Tek Generator",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekGravityGrenade_C",
+      "label": "Tek Gravity Grenade",
+      "level": 79,
+      "points": 20,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekGrenade_C",
+      "label": "Tek Grenade",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekGrenadeLauncher_C",
+      "label": "Tek Grenade Launcher",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekCeilingWithTrapdoor_C",
+      "label": "Tek Hatchframe",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekHelmet_C",
+      "label": "Tek Helmet",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_JumpPad_C",
+      "label": "Tek Jump Pad",
+      "level": 70,
+      "points": 30,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekLadder_C",
+      "label": "Tek Ladder",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekCeilingDoor_Giant_C",
+      "label": "Tek Large Cellar Door",
+      "level": 0,
+      "points": 0,
+      "pack": "ARK: Survival Ascended Engrams"
+    },
+    {
+      "className": "EngramEntry_TekPants_C",
+      "label": "Tek Leggings",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekLight_C",
+      "label": "Tek Light",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekPillar_C",
+      "label": "Tek Pillar",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekSniper_C",
+      "label": "Tek Railgun",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekRailing_C",
+      "label": "Tek Railing",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekRamp_C",
+      "label": "Tek Ramp",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekReplicator_C",
+      "label": "Tek Replicator",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekRifle_C",
+      "label": "Tek Rifle",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekAlarm_C",
+      "label": "Tek Sensor",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekShieldArmor_C",
+      "label": "Tek Shield",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ShoulderCannon_C",
+      "label": "Tek Shoulder Cannon",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekBed_C",
+      "label": "Tek Sleeping Pod",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_LostColony_TekSpear_C",
+      "label": "Tek Spear",
+      "level": 0,
+      "points": 0,
+      "pack": "Lost Colony Engrams"
+    },
+    {
+      "className": "EngramEntry_TekStairs_C",
+      "label": "Tek Staircase",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Ramp_Tek_C",
+      "label": "Tek Stairs",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekSword_C",
+      "label": "Tek Sword",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekTeleporter_C",
+      "label": "Tek Teleporter",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekTransmitter_C",
+      "label": "Tek Transmitter",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekTrapdoor_C",
+      "label": "Tek Trapdoor",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TriCeiling_Tek_C",
+      "label": "Tek Triangle Ceiling",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TriFoundation_Tek_C",
+      "label": "Tek Triangle Foundation",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TriRoof_Tek_C",
+      "label": "Tek Triangle Roof",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekTrough_C",
+      "label": "Tek Trough",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TurretTek_C",
+      "label": "Tek Turret",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekWall_C",
+      "label": "Tek Wall",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekWindow_C",
+      "label": "Tek Window",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekWallWithWindow_C",
+      "label": "Tek Windowframe",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ClipboardHammer_C",
+      "label": "Template Hammer",
+      "level": 26,
+      "points": 5,
+      "pack": "Lost Colony Engrams"
+    },
+    {
+      "className": "EngramEntry_Tent_C",
+      "label": "Tent",
+      "level": 7,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_TerrorBird_C",
+      "label": "Terror Bird Saddle",
+      "level": 33,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Steampunk_TeslaCoil_C",
+      "label": "Tesla Coil",
+      "level": 103,
+      "points": 30,
+      "pack": "Steampunk Ascent"
+    },
+    {
+      "className": "EngramEntry_ThatchCeiling_C",
+      "label": "Thatch Ceiling",
+      "level": 4,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ThatchDoor_C",
+      "label": "Thatch Door",
+      "level": 4,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ThatchWallWithDoor_C",
+      "label": "Thatch Doorframe",
+      "level": 4,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ThatchFloor_C",
+      "label": "Thatch Foundation",
+      "level": 4,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ThatchWall_C",
+      "label": "Thatch Wall",
+      "level": 4,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Therizino_C",
+      "label": "Therizinosaurus Saddle",
+      "level": 69,
+      "points": 40,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_SpineyLizard_C",
+      "label": "Thorny Dragon Saddle",
+      "level": 40,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Thylaco_C",
+      "label": "Thylacoleo Saddle",
+      "level": 51,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Axolotl_C",
+      "label": "Tidepup Saddle",
+      "level": 36,
+      "points": 16,
+      "pack": "Tides of Fortune Engrams"
+    },
+    {
+      "className": "EngramEntry_Steampunk_TinkeringDesk_C",
+      "label": "Tinkering Desk",
+      "level": 64,
+      "points": 21,
+      "pack": "Steampunk Ascent"
+    },
+    {
+      "className": "EngramEntry_Saddle_Titano_Platform_C",
+      "label": "Titanosaur Platform Saddle",
+      "level": 100,
+      "points": 120,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TOF_Lights_C",
+      "label": "TOF Lights",
+      "level": 48,
+      "points": 10,
+      "pack": "Tides of Fortune Engrams"
+    },
+    {
+      "className": "EngramEntry_Toilet_C",
+      "label": "Toilet",
+      "level": 32,
+      "points": 35,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Torch_C",
+      "label": "Torch",
+      "level": 1,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Frontier_TownBell_C",
+      "label": "Town Bell",
+      "level": 28,
+      "points": 11,
+      "pack": "Frontier Showdown"
+    },
+    {
+      "className": "EngramEntry_Frontier_Train_Platform_C",
+      "label": "Train Platform Car",
+      "level": 43,
+      "points": 35,
+      "pack": "Frontier Showdown"
+    },
+    {
+      "className": "EngramEntry_Frontier_Train_TracksAuto_C",
+      "label": "Train Track",
+      "level": 43,
+      "points": 10,
+      "pack": "Frontier Showdown"
+    },
+    {
+      "className": "EngramEntry_TrainingDummy_C",
+      "label": "Training Dummy",
+      "level": 9,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ArrowTranq_C",
+      "label": "Tranq Arrow",
+      "level": 21,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TranqSpearBolt_C",
+      "label": "Tranq Spear Bolt",
+      "level": 72,
+      "points": 40,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TranqDart_C",
+      "label": "Tranquilizer Dart",
+      "level": 62,
+      "points": 30,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TransGPSAmmo_C",
+      "label": "Transponder Node",
+      "level": 66,
+      "points": 20,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TransGPS_C",
+      "label": "Transponder Tracker",
+      "level": 66,
+      "points": 30,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Frontier_TreasureCache_C",
+      "label": "Treasure Chest",
+      "level": 20,
+      "points": 8,
+      "pack": "Frontier Showdown"
+    },
+    {
+      "className": "EngramEntry_TreeSapTap_C",
+      "label": "Tree Sap Tap",
+      "level": 36,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Wasteland_TribeTower_C",
+      "label": "Tribe Tower",
+      "level": 41,
+      "points": 60,
+      "pack": "Wasteland War"
+    },
+    {
+      "className": "EngramEntry_Saddle_Trike_C",
+      "label": "Trike Saddle",
+      "level": 16,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_AlarmTrap_C",
+      "label": "Tripwire Alarm Trap",
+      "level": 22,
+      "points": 7,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_PoisonTrap_C",
+      "label": "Tripwire Narcotic Trap",
+      "level": 29,
+      "points": 9,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TrophyWall_C",
+      "label": "Trophy Wall-Mount",
+      "level": 22,
+      "points": 10,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Tuso_C",
+      "label": "Tusoteuthis Saddle",
+      "level": 91,
+      "points": 40,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Dragontopia_Saddle_Umbra_C",
+      "label": "Umbra Saddle",
+      "level": 65,
+      "points": 18,
+      "pack": "Dragontopia Engrams"
+    },
+    {
+      "className": "EngramEntry_MekSpawner_C",
+      "label": "Unassembled Mek",
+      "level": 91,
+      "points": 38,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Steampunk_HelperBot_C",
+      "label": "Unassembled Sir 5rM8",
+      "level": 86,
+      "points": 32,
+      "pack": "Steampunk Ascent"
+    },
+    {
+      "className": "EngramEntry_HoverSkiff_C",
+      "label": "Unassembled TEK Hover Skiff",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_RefinedElement_C",
+      "label": "Unstable Element",
+      "level": 58,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_RefinedShards_C",
+      "label": "Unstable Element Shard",
+      "level": 55,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekUnderwaterBase_C",
+      "label": "Vacuum Compartment",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TekUnderwaterBase_BottomEntry_C",
+      "label": "Vacuum Compartment Moonpool",
+      "level": 0,
+      "points": 0,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StorageBox_Huge_C",
+      "label": "Vault",
+      "level": 75,
+      "points": 30,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_SpindlesSaddle_C",
+      "label": "Velonasaur Saddle",
+      "level": 27,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_PowerCableVertical_C",
+      "label": "Vertical Electrical Cable",
+      "level": 49,
+      "points": 16,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Vessel_C",
+      "label": "Vessel",
+      "level": 13,
+      "points": 10,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WallTorch_C",
+      "label": "Wall Torch",
+      "level": 21,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WarMap_C",
+      "label": "War Map",
+      "level": 51,
+      "points": 15,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_LostColony_Warbench_C",
+      "label": "Warbench",
+      "level": 64,
+      "points": 21,
+      "pack": "Lost Colony Engrams"
+    },
+    {
+      "className": "EngramEntry_Wardrums_C",
+      "label": "Wardrums",
+      "level": 13,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Wasteland_Lights_C",
+      "label": "Wasteland Lights",
+      "level": 48,
+      "points": 10,
+      "pack": "Wasteland War"
+    },
+    {
+      "className": "EngramEntry_WaterJar_C",
+      "label": "Water Jar",
+      "level": 26,
+      "points": 12,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WaterTank_C",
+      "label": "Water Reservoir",
+      "level": 17,
+      "points": 7,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Frontier_WaterTank_Large_C",
+      "label": "Water Reservoir (Frontier Showdown)",
+      "level": 53,
+      "points": 25,
+      "pack": "Frontier Showdown"
+    },
+    {
+      "className": "EngramEntry_WaterWell_C",
+      "label": "Water Well",
+      "level": 15,
+      "points": 10,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Waterskin_C",
+      "label": "Waterskin",
+      "level": 3,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WeaponWhip_C",
+      "label": "Whip",
+      "level": 20,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WindTurbine_C",
+      "label": "Wind Turbine",
+      "level": 50,
+      "points": 18,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Frontier_Windmill_C",
+      "label": "Windmill",
+      "level": 55,
+      "points": 20,
+      "pack": "Frontier Showdown"
+    },
+    {
+      "className": "EngramEntry_WoodElevator_Switch_C",
+      "label": "Wood Elevator Top Switch",
+      "level": 20,
+      "points": 16,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodElevator_Track_C",
+      "label": "Wood Elevator Track",
+      "level": 20,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_OceanPlatformWood_C",
+      "label": "Wood Ocean Platform",
+      "level": 25,
+      "points": 24,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Frontier_Scaffolding_C",
+      "label": "Wood Scaffolding",
+      "level": 12,
+      "points": 1,
+      "pack": "Frontier Showdown"
+    },
+    {
+      "className": "EngramEntry_WoodBench_C",
+      "label": "Wooden Bench",
+      "level": 19,
+      "points": 10,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodSign_Large_C",
+      "label": "Wooden Billboard",
+      "level": 19,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodCage_C",
+      "label": "Wooden Cage",
+      "level": 12,
+      "points": 10,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodCatwalk_C",
+      "label": "Wooden Catwalk",
+      "level": 14,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodCeiling_C",
+      "label": "Wooden Ceiling",
+      "level": 11,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodChair_C",
+      "label": "Wooden Chair",
+      "level": 19,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_StoneClub_C",
+      "label": "Wooden Club",
+      "level": 8,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodDoor_C",
+      "label": "Wooden Door",
+      "level": 11,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodWallWithDoor_C",
+      "label": "Wooden Doorframe",
+      "level": 11,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_DoubleDoor_Wood_C",
+      "label": "Wooden Double Door",
+      "level": 18,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_DoubleDoorframe_Wood_C",
+      "label": "Wooden Double Doorframe",
+      "level": 18,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodFenceFoundation_C",
+      "label": "Wooden Fence Foundation",
+      "level": 11,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_FenceSupport_Wood_C",
+      "label": "Wooden Fence Support",
+      "level": 11,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodFloor_C",
+      "label": "Wooden Foundation",
+      "level": 11,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Frontier_Sign_Hanging_C",
+      "label": "Wooden Hanging Sign",
+      "level": 22,
+      "points": 5,
+      "pack": "Frontier Showdown"
+    },
+    {
+      "className": "EngramEntry_WoodCeilingWithTrapdoor_C",
+      "label": "Wooden Hatchframe",
+      "level": 13,
+      "points": 9,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodLadder_C",
+      "label": "Wooden Ladder",
+      "level": 13,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodPillar_C",
+      "label": "Wooden Pillar",
+      "level": 12,
+      "points": 9,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Raft_C",
+      "label": "Wooden Raft",
+      "level": 16,
+      "points": 11,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodRailing_C",
+      "label": "Wooden Railing",
+      "level": 14,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodRamp_C",
+      "label": "Wooden Ramp",
+      "level": 12,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodShield_C",
+      "label": "Wooden Shield",
+      "level": 12,
+      "points": 7,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodSign_C",
+      "label": "Wooden Sign",
+      "level": 5,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodSpikeWall_C",
+      "label": "Wooden Spike Wall",
+      "level": 13,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodStairs_C",
+      "label": "Wooden Staircase",
+      "level": 14,
+      "points": 10,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Ramp_Wood_C",
+      "label": "Wooden Stairs",
+      "level": 12,
+      "points": 3,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Furniture_WoodTable_C",
+      "label": "Wooden Table",
+      "level": 19,
+      "points": 7,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodTrapdoor_C",
+      "label": "Wooden Trapdoor",
+      "level": 13,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TreePlatformWood_C",
+      "label": "Wooden Tree Platform",
+      "level": 33,
+      "points": 28,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TriCeiling_Wood_C",
+      "label": "Wooden Triangle Ceiling",
+      "level": 11,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TriFoundation_Wood_C",
+      "label": "Wooden Triangle Foundation",
+      "level": 11,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_TriRoof_Wood_C",
+      "label": "Wooden Triangle Roof",
+      "level": 14,
+      "points": 4,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodWall_C",
+      "label": "Wooden Wall",
+      "level": 11,
+      "points": 7,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodSign_Wall_C",
+      "label": "Wooden Wall Sign",
+      "level": 19,
+      "points": 2,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodWindow_C",
+      "label": "Wooden Window",
+      "level": 14,
+      "points": 6,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_WoodWallWithWindow_C",
+      "label": "Wooden Windowframe",
+      "level": 14,
+      "points": 9,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Rhino_C",
+      "label": "Woolly Rhino Saddle",
+      "level": 53,
+      "points": 24,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Xiphactinus_ASA_C",
+      "label": "Xiphactinus Saddle",
+      "level": 55,
+      "points": 15,
+      "pack": "ARK: Survival Ascended Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_YiLing_C",
+      "label": "Yi Ling Saddle",
+      "level": 50,
+      "points": 35,
+      "pack": "ARK: Survival Ascended Engrams"
+    },
+    {
+      "className": "EngramEntry_Saddle_Yuty_C",
+      "label": "Yutyrannus Saddle",
+      "level": 80,
+      "points": 50,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_Steampunk_Zeppelin_C",
+      "label": "Zeppelin",
+      "level": 92,
+      "points": 22,
+      "pack": "Steampunk Ascent"
+    },
+    {
+      "className": "EngramEntry_ZiplineAmmo_C",
+      "label": "Zip-Line Anchor",
+      "level": 31,
+      "points": 8,
+      "pack": "Engrams"
+    },
+    {
+      "className": "EngramEntry_ZiplineMotor_C",
+      "label": "Zip-Line Motor Attachment Skin",
+      "level": 54,
+      "points": 34,
+      "pack": "Engrams"
+    }
+  ]
+}

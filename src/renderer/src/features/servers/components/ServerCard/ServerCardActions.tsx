@@ -274,7 +274,10 @@ export function ServerCardActions(props: Props): ReactElement {
               data-update-action
               data-files-action={updateAction.kind}
             >
-              <CloudArrowDown size={iconSize} color={actionGlyphColor(updateAction.color)} />
+              <CloudArrowDown
+                size={iconSize}
+                color={updateAction.disabled ? undefined : actionGlyphColor(updateAction.color)}
+              />
             </ActionIcon>
           </span>
         </Tooltip>

@@ -4,7 +4,7 @@
   padding: var(--app-space-sm) var(--app-space-md);
   border: 1px solid var(--app-color-border-subtle);
   border-radius: var(--app-radius-control);
-  background: color-mix(in srgb, var(--ark-gray-2) 72%, transparent);
+  background: var(--app-input-well-bg);
   color: var(--app-color-text);
   font-family: var(--app-font-mono);
   font-size: 11px;

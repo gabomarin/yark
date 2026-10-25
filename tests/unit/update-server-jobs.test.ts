@@ -1,7 +1,10 @@
-import { join } from "node:path";
+import { mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { basename, join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   buildUpdateLogPath,
+  confineCancelledUpdateLogPath,
   computePreUpdateBackupProgressPercent,
   formatPreUpdateBackupKindLabel,
   formatUpdateLogContent,
@@ -9,7 +12,10 @@ import {
   planDuplicateRecoveredUpdateJob,
   planInterruptedUpdateJobRecovery,
   queuedFilesJobProgressLabel,
+  resolveCancelledUpdateLogPath,
   resolveUpdateWasRunning,
+  startedAtFromUpdateLogPath,
+  writeCancelledUpdateLogExclusive,
   shouldBlockUpdateWhileServerRunning,
   shouldRestartServerAfterPreSteamCmdAbort,
   shouldResumeFromPreUpdateBackup,
@@ -103,6 +109,69 @@ describe("buildUpdateLogPath", () => {
       join("C:/logs", "srv-1-2026-01-01T12-30-45-123Z.log"),
     );
   });
+
+  it("keeps a persisted cancel path inside the update-logs folder", () => {
+    const startedAt = new Date("2026-01-01T12:30:45.123Z");
+    const inside = join("C:/logs", "srv-1-existing.log");
+    expect(resolveCancelledUpdateLogPath("C:/logs", "srv-1", startedAt, inside)).toBe(resolve(inside));
+  });
+
+  it("mints a new file when the persisted path leaves the update-logs folder", () => {
+    const startedAt = new Date("2026-01-01T12:30:45.123Z");
+    expect(resolveCancelledUpdateLogPath("C:/logs", "srv-1", startedAt, join("C:/Windows", "evil.log"))).toBe(
+      buildUpdateLogPath("C:/logs", "srv-1", startedAt),
+    );
+  });
+
+  it("reads the run start encoded in the log file name", () => {
+    const startedAt = new Date("2026-01-01T12:30:45.123Z");
+    const logPath = buildUpdateLogPath("C:/logs", "srv-1", startedAt);
+    expect(startedAtFromUpdateLogPath("srv-1", logPath)?.toISOString()).toBe("2026-01-01T12:30:45.123Z");
+    expect(startedAtFromUpdateLogPath("srv-1", join("C:/logs", "srv-1-paused.log"))).toBeNull();
+  });
+
+  it("does not follow a symlink inside the update-logs folder", () => {
+    const root = mkdtempSync(join(tmpdir(), "yark-log-link-"));
+    const logs = join(root, "logs");
+    mkdirSync(logs);
+    const outside = join(root, "outside.txt");
+    writeFileSync(outside, "secret");
+    const link = join(logs, "srv-1-link.log");
+    try {
+      symlinkSync(outside, link);
+    } catch {
+      return;
+    }
+    const startedAt = new Date("2026-01-01T12:30:45.123Z");
+    const chosen = confineCancelledUpdateLogPath(logs, "srv-1", startedAt, link);
+    expect(chosen).not.toBeNull();
+    expect(basename(chosen!)).toBe(basename(buildUpdateLogPath(logs, "srv-1", startedAt)));
+    expect(basename(chosen!)).not.toBe("srv-1-link.log");
+  });
+
+  it("creates a cancel log with an exclusive open and does not follow a symlink", () => {
+    const root = mkdtempSync(join(tmpdir(), "yark-log-wx-"));
+    const logs = join(root, "logs");
+    mkdirSync(logs);
+    const created = join(logs, "fresh.log");
+    expect(writeCancelledUpdateLogExclusive(created, "outcome=cancelled\n")).toBe("created");
+    expect(readFileSync(created, "utf8")).toContain("outcome=cancelled");
+
+    writeFileSync(created, "exitCode=1\n");
+    expect(writeCancelledUpdateLogExclusive(created, "outcome=cancelled\n")).toBe("kept");
+    expect(readFileSync(created, "utf8")).toBe("exitCode=1\n");
+
+    const outside = join(root, "outside.txt");
+    writeFileSync(outside, "secret");
+    const link = join(logs, "linked.log");
+    try {
+      symlinkSync(outside, link);
+    } catch {
+      return;
+    }
+    expect(writeCancelledUpdateLogExclusive(link, "outcome=cancelled\n")).toBe("rejected");
+    expect(readFileSync(outside, "utf8")).toBe("secret");
+  });
 });
 
 describe("formatUpdateLogContent", () => {
@@ -117,8 +186,26 @@ describe("formatUpdateLogContent", () => {
       stderr: "",
     });
     expect(content).toContain("server=Island");
+    expect(content).toContain("exitCode=0");
     expect(content).toContain("--- stdout ---");
     expect(content).toContain("ok");
+    expect(content).not.toContain("outcome=");
+  });
+
+  it("records an operator cancel without a SteamCMD exit code", () => {
+    const content = formatUpdateLogContent({
+      serverName: "Island",
+      installDir: "C:/ARK",
+      exitCode: null,
+      outcome: "cancelled",
+      startedAt: new Date("2026-01-01T00:00:00.000Z"),
+      durationMs: 1000,
+      stdout: "Operation cancelled by the user.",
+      stderr: "",
+    });
+    expect(content).toContain("outcome=cancelled");
+    expect(content).not.toMatch(/^exitCode=/m);
+    expect(content).toContain("Operation cancelled by the user.");
   });
 });
 

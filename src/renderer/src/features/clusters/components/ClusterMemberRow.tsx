@@ -3,7 +3,6 @@ import { ActionIcon, Group, Text, Tooltip } from "@mantine/core";
 import { ArrowDown, ArrowUp, X } from "@phosphor-icons/react";
 import type { ServerProfile, ServerStatus } from "@shared/types";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
-import { appRaisedSurfaceClass, withAppSurface } from "@ui/AppSurface/appSurfaceClassName";
 import { ServerRuntimeStatusBadge } from "@ui/ServerRuntimeStatusBadge/ServerRuntimeStatusBadge";
 import classes from "../clusters.module.css";
 
@@ -38,7 +37,7 @@ export function ClusterMemberRow(props: Props): ReactElement {
 
   return (
     <div
-      className={withAppSurface(appRaisedSurfaceClass, classes.memberRow)}
+      className={classes.memberRow}
       data-clickable="true"
       role="button"
       tabIndex={0}

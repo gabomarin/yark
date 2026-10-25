@@ -1,3 +1,4 @@
+import { mkdirSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import type { AppEventDetails } from "../../../shared/types";
 import { CRITICAL_BACKUP_KINDS, type BackupService } from "../backups/backup-service";
@@ -10,7 +11,10 @@ import {
   computePreUpdateBackupProgressPercent,
   formatPreUpdateBackupKindLabel,
   buildUpdateLogPath,
+  confineCancelledUpdateLogPath,
   formatUpdateLogContent,
+  startedAtFromUpdateLogPath,
+  writeCancelledUpdateLogExclusive,
   isPreUpdateBackupEvidenceComplete,
   resolveUpdateWasRunning,
   shouldBlockUpdateWhileServerRunning,
@@ -113,6 +117,66 @@ export class UpdatePerformer {
     return this.deps.isCancelRequested();
   }
 
+  private dropUnwrittenUpdateLog(job?: CriticalJob): void {
+    if (job !== undefined) delete job.context.updateLogPath;
+  }
+
+  /** Persist Cancelled for Logs → Updates. Install, verify, and early update cancels had no file (#86). */
+  private recordCancelledUpdateLog(input: {
+    serverId: string;
+    serverName: string;
+    installDir: string;
+    startedAt: Date;
+    job?: CriticalJob;
+    logPath: string | null;
+  }): boolean {
+    try {
+      mkdirSync(this.updatesLogDir, { recursive: true });
+      const content = formatUpdateLogContent({
+        serverName: input.serverName,
+        installDir: input.installDir,
+        exitCode: null,
+        outcome: "cancelled",
+        startedAt: input.startedAt,
+        durationMs: Date.now() - input.startedAt.getTime(),
+        stdout: "Operation cancelled by the user.",
+        stderr: "",
+      });
+      const primary = confineCancelledUpdateLogPath(this.updatesLogDir, input.serverId, input.startedAt, input.logPath);
+      if (primary === null) return false;
+      let target = primary;
+      let written = writeCancelledUpdateLogExclusive(target, content);
+      if (written === "rejected") {
+        const fallback = confineCancelledUpdateLogPath(this.updatesLogDir, input.serverId, input.startedAt, null);
+        if (fallback === null || fallback === target) return false;
+        target = fallback;
+        written = writeCancelledUpdateLogExclusive(target, content);
+        if (written === "rejected") return false;
+      }
+      if (input.job !== undefined) input.job.context.updateLogPath = target;
+      return true;
+    } catch {
+      // Keep the cancel. Downloads can say the log was not saved.
+      return false;
+    }
+  }
+
+  /** Queue Cancel after Pause never re-enters SteamCMD, so the performer catch does not run. */
+  recordOperatorCancelledLog(job: UpdateCriticalJob): void {
+    const server = this.servers.get(job.serverId);
+    if (server === null) return;
+    const logPath = job.context.updateLogPath ?? null;
+    const startedAt = startedAtFromUpdateLogPath(job.serverId, logPath) ?? new Date();
+    this.recordCancelledUpdateLog({
+      serverId: job.serverId,
+      serverName: server.name,
+      installDir: server.installDir,
+      startedAt,
+      job,
+      logPath,
+    });
+  }
+
   async performInstallServerFiles(serverId: string, job?: CriticalJob): Promise<void> {
     await this.locks.withLock(serverId, "install-files", async () => {
       this.checkpointJob(job, "validating");
@@ -124,19 +188,44 @@ export class UpdatePerformer {
       await mkdir(server.installDir, { recursive: true });
       this.addJobEvent(job, "update_started", "info", `Installing base files via SteamCMD on "${server.name}"`);
 
-      this.checkpointJob(job, "applying-files");
-      const cmd = await this.runSteamUpdate(server.installDir, "install-files", serverId);
-      if (cmd.code !== 0) {
-        this.addJobEvent(job, "update_failed", "error", `Base install failed (exit ${cmd.code})`);
-        throw new Error(`SteamCMD exited with code ${cmd.code}`);
-      }
-      if (job !== undefined) {
-        job.context.steamCmdExitCode = cmd.code;
-        job.context.appliedBuildId = readAsaManifestBuildId(server.installDir);
-      }
-      this.checkpointJob(job, "files-applied");
+      const startedAt = new Date();
+      let updateLogPath: string | null = null;
+      try {
+        this.checkpointJob(job, "applying-files");
+        await mkdir(this.updatesLogDir, { recursive: true });
+        updateLogPath = buildUpdateLogPath(this.updatesLogDir, serverId, startedAt);
+        if (job !== undefined) job.context.updateLogPath = updateLogPath;
+        const cmd = await this.runSteamUpdate(server.installDir, "install-files", serverId);
+        if (cmd.code !== 0) {
+          this.addJobEvent(job, "update_failed", "error", `Base install failed (exit ${cmd.code})`);
+          throw new Error(`SteamCMD exited with code ${cmd.code}`);
+        }
+        if (job !== undefined) {
+          job.context.steamCmdExitCode = cmd.code;
+          job.context.appliedBuildId = readAsaManifestBuildId(server.installDir);
+        }
+        this.checkpointJob(job, "files-applied");
 
-      this.addJobEvent(job, "update_completed", "info", `Base files installed for "${server.name}"`);
+        this.addJobEvent(job, "update_completed", "info", `Base files installed for "${server.name}"`);
+        this.dropUnwrittenUpdateLog(job);
+      } catch (err) {
+        const paused = this.isPauseRequested() || isOperationPausedError(err);
+        const cancelled = this.isCancelRequested() || isOperationCancelledError(err);
+        if (cancelled) {
+          const saved = this.recordCancelledUpdateLog({
+            serverId,
+            serverName: server.name,
+            installDir: server.installDir,
+            startedAt,
+            job,
+            logPath: updateLogPath,
+          });
+          if (!saved) this.dropUnwrittenUpdateLog(job);
+        } else if (!paused) {
+          this.dropUnwrittenUpdateLog(job);
+        }
+        throw err;
+      }
     });
   }
 
@@ -196,6 +285,7 @@ export class UpdatePerformer {
       });
 
       let preUpdateBackups: Awaited<ReturnType<BackupService["createPreUpdateBackupForJob"]>> = [];
+      let updateLogPath: string | null = null;
       try {
         // Stop before snapshotting — live SavedArks writes would tear rollback archives.
         if (isCurrentlyRunning) {
@@ -241,14 +331,14 @@ export class UpdatePerformer {
         this.setProgress(25, "Starting SteamCMD…", "Pre-update backups complete");
 
         await mkdir(this.updatesLogDir, { recursive: true });
-        const logPath = buildUpdateLogPath(this.updatesLogDir, serverId, startedAt);
-        if (job !== undefined) job.context.updateLogPath = logPath;
+        updateLogPath = buildUpdateLogPath(this.updatesLogDir, serverId, startedAt);
+        if (job !== undefined) job.context.updateLogPath = updateLogPath;
 
         this.checkpointJob(job, "applying-files");
         const cmd = await this.runSteamUpdate(server.installDir, "update", serverId);
         const durationMs = Date.now() - startedAt.getTime();
         await writeFile(
-          logPath,
+          updateLogPath,
           formatUpdateLogContent({
             serverName: server.name,
             installDir: server.installDir,
@@ -262,7 +352,7 @@ export class UpdatePerformer {
         );
 
         if (cmd.code !== 0) {
-          throw new Error(`SteamCMD exited with code ${cmd.code}. Check log: ${logPath}`);
+          throw new Error(`SteamCMD exited with code ${cmd.code}. Check log: ${updateLogPath}`);
         }
 
         if (job !== undefined) {
@@ -294,6 +384,16 @@ export class UpdatePerformer {
         const phaseAtFailure = job?.phase ?? "";
         const paused = this.isPauseRequested() || isOperationPausedError(err);
         const cancelled = this.isCancelRequested() || isOperationCancelledError(err);
+        if (cancelled) {
+          this.recordCancelledUpdateLog({
+            serverId,
+            serverName: server.name,
+            installDir: server.installDir,
+            startedAt,
+            job,
+            logPath: updateLogPath,
+          });
+        }
         const installMayHaveChanged = updateInstallMayHaveChanged({
           phase: phaseAtFailure,
           steamCmdExitCode: job?.context.steamCmdExitCode,
@@ -449,6 +549,8 @@ export class UpdatePerformer {
         captureWasRunningOnJob(job.context, isCurrentlyRunning);
       }
       this.checkpointJob(job, "validated");
+      const startedAt = new Date();
+      let updateLogPath: string | null = null;
       this.addJobEvent(
         job,
         "update_started",
@@ -476,6 +578,9 @@ export class UpdatePerformer {
       try {
         await mkdir(server.installDir, { recursive: true });
         this.checkpointJob(job, "applying-files");
+        await mkdir(this.updatesLogDir, { recursive: true });
+        updateLogPath = buildUpdateLogPath(this.updatesLogDir, serverId, startedAt);
+        if (job !== undefined) job.context.updateLogPath = updateLogPath;
         const cmd = await this.runSteamUpdate(server.installDir, "verify-files", serverId);
         if (cmd.code !== 0) {
           this.addJobEvent(job, "update_failed", "error", `Integrity verification failed (exit ${cmd.code})`);
@@ -506,8 +611,22 @@ export class UpdatePerformer {
             ? `Integrity verified for "${server.name}" and the server was restarted`
             : `Integrity verified for "${server.name}"`,
         );
+        this.dropUnwrittenUpdateLog(job);
       } catch (error) {
         const paused = this.isPauseRequested() || isOperationPausedError(error);
+        if (!paused && (this.isCancelRequested() || isOperationCancelledError(error))) {
+          const saved = this.recordCancelledUpdateLog({
+            serverId,
+            serverName: server.name,
+            installDir: server.installDir,
+            startedAt,
+            job,
+            logPath: updateLogPath,
+          });
+          if (!saved) this.dropUnwrittenUpdateLog(job);
+        } else if (!paused) {
+          this.dropUnwrittenUpdateLog(job);
+        }
         if (paused) {
           const phaseAtFailure = job?.phase ?? "";
           const installMayHaveChanged = updateInstallMayHaveChanged({

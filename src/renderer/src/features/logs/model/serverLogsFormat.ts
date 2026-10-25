@@ -130,6 +130,7 @@ export function statusTone(status: ServerUpdateLogFile["status"]): StatusWordTon
 export function statusLabel(status: ServerUpdateLogFile["status"]): string {
   if (status === "success") return "Success";
   if (status === "failed") return "Failed";
+  if (status === "cancelled") return "Cancelled";
   return "Unknown";
 }
 

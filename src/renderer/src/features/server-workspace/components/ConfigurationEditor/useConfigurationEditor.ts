@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { modals } from "@mantine/modals";
+import { EMPTY_LINE_EDITS, visualLineEditsPending, type VisualLineEdits } from "@shared/ini/visual-line-edits";
 import { iniFingerprintsMatch } from "@shared/ini/ini-fingerprints";
 import type { IniFileKey, IniPreview, ServerIniPayload, ServerIniSnapshot } from "@shared/types";
 import { showOperatorToast } from "@ui/operatorToast";
@@ -23,6 +24,7 @@ import {
   buildIniRowMatchIndex,
   countUnsavedIniRowsForFile,
   iniPayloadsDirty,
+  isGameIniEngramEditorKey,
   isIniRowUnsaved,
   lookupMatchedBaselineValue,
 } from "./configurationEditorModel";
@@ -34,6 +36,12 @@ export function useConfigurationEditor(options: {
   serverId: string;
   onDirtyChange?: (dirty: boolean) => void;
   onRegisterSave?: (save: (() => Promise<boolean>) | null) => void;
+  engramEditsRef?: { readonly current: VisualLineEdits };
+  engramBlockedRef?: { readonly current: boolean };
+  saveScopeRef?: {
+    readonly current: "gameUserSettings" | "gameSettings" | "engramPoints" | "engramOverrides" | "loot" | "gameText";
+  };
+  onEngramDraftsReset?: (which?: "engrams" | "loot") => void;
 }): ConfigurationEditorApi {
   const { serverId, onRegisterSave } = options;
   const [snapshot, setSnapshot] = useState<ServerIniSnapshot | null>(null);
@@ -58,7 +66,8 @@ export function useConfigurationEditor(options: {
   const pendingQueued = snapshot?.pending === true;
   const dirtyRef = useRef(dirty);
   useEffect(() => {
-    dirtyRef.current = dirty;
+    dirtyRef.current =
+      dirty || visualLineEditsPending(options.engramEditsRef?.current, options.engramBlockedRef?.current === true);
   });
   const payloadRef = useRef(payload);
   useEffect(() => {
@@ -103,9 +112,9 @@ export function useConfigurationEditor(options: {
     publishDirty,
   });
 
-  const applyLoadedSnapshot = (data: ServerIniSnapshot, options?: { preserveDirty?: boolean }): void => {
+  const applyLoadedSnapshot = (data: ServerIniSnapshot, loadOptions?: { preserveDirty?: boolean }): void => {
     const sanitized = sanitizeServerIniPayload(data.payload);
-    const keepDirty = options?.preserveDirty === true && dirtyRef.current && payloadRef.current !== null;
+    const keepDirty = loadOptions?.preserveDirty === true && dirtyRef.current && payloadRef.current !== null;
     if (keepDirty && payloadRef.current !== null) {
       // Keep in-editor edits and the Save baseline fingerprints. Advancing
       // fingerprints here would let Save overwrite the external change (#665).
@@ -130,6 +139,7 @@ export function useConfigurationEditor(options: {
     setBaseline(sanitized);
     setPreview(null);
     diskSync.clearExternalChangeFlags();
+    options.onEngramDraftsReset?.();
     publishDirty(sanitized, sanitized);
   };
   useEffect(() => {
@@ -140,10 +150,12 @@ export function useConfigurationEditor(options: {
   const activeText = payload !== null ? textForFile(payload, activeFileKey) : "";
   const rows = useMemo<IniSettingReference[]>(
     () =>
-      parseIniRows(activeText).map((row) => ({
-        ...row,
-        fileKey: activeFileKey,
-      })),
+      parseIniRows(activeText)
+        .filter((row) => !isGameIniEngramEditorKey(activeFileKey, row.key))
+        .map((row) => ({
+          ...row,
+          fileKey: activeFileKey,
+        })),
     [activeFileKey, activeText],
   );
   const availableRows = useMemo(() => filterIniSettingReferences(rows, "", "all"), [rows]);
@@ -194,6 +206,7 @@ export function useConfigurationEditor(options: {
     if (baseline === null) return;
     const nextPayload = sanitizeServerIniPayload(baseline);
     setPayload(nextPayload);
+    options.onEngramDraftsReset?.();
     publishDirty(nextPayload, baseline);
     setPreview(null);
     showOperatorToast({
@@ -302,6 +315,9 @@ export function useConfigurationEditor(options: {
           draft: payload,
           baseline,
           expectedFingerprints: snapshot.fingerprints,
+          scope: options.saveScopeRef?.current,
+          lineEdits: options.engramEditsRef?.current ?? EMPTY_LINE_EDITS,
+          engramBlocked: options.engramBlockedRef?.current === true,
         });
         if (!outcome.ok) {
           setError(outcome.error);
@@ -317,10 +333,12 @@ export function useConfigurationEditor(options: {
           return false;
         }
 
-        const { savedPayload, preview, fingerprints, pending, changedCount } = outcome;
-        setPayload(savedPayload);
+        const { savedPayload, draftPayload, resetEngrams, resetLoot, preview, fingerprints, pending, changedCount } =
+          outcome;
+        setPayload(draftPayload);
         setPreview(preview);
         setBaseline(savedPayload);
+        if (resetEngrams || resetLoot) options.onEngramDraftsReset?.(resetLoot ? "loot" : "engrams");
         diskSync.setExternalChangeDetected(false);
         setSnapshot((prev) =>
           prev === null
@@ -333,7 +351,7 @@ export function useConfigurationEditor(options: {
                 pendingUpdatedAt: pending ? (prev.pendingUpdatedAt ?? new Date().toISOString()) : null,
               },
         );
-        publishDirty(savedPayload, savedPayload);
+        publishDirty(draftPayload, savedPayload);
         showOperatorToast(configurationEditorSaveToastMessage(pending, changedCount));
         return true;
       },

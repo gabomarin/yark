@@ -16,6 +16,7 @@ binaries, SteamCMD, backups, rollback).
 | Install-health badges                         | `npm run build && npm run e2e:install-health`                      | **PR CI**                  | Fake FS fixtures only                                                                                                                          |
 | Host port probe modal                         | `npm run build && npm run e2e:host-port-probe`                     | **PR CI**                  | Occupies UDP then asserts modal                                                                                                                |
 | Downloads Pause → Resume                      | `npm run build && npm run e2e:downloads-pause-resume`              | Local / release audit      | Hanging SteamCMD stub; queued Install stays queued (#201)                                                                                      |
+| Cancelled update log                          | `npm run build && npm run e2e:cancelled-update-log`                | Local / release audit      | Seeded cancel log + leftover; Open in Logs shows Cancelled, missing file explains itself (#86)                                                 |
 | Persona walkthrough + viewport matrix         | `npm run build && npm run e2e:personas`                            | Local                      | Beginner/experienced flows at HD / Full HD / QHD                                                                                               |
 | Clone INI seed / folder copy                  | `npm run build && npm run e2e:clone-copy`                          | Local / release audit      | Fake ASA tree; profile-only vs robocopy (#160); always deletes fixtures                                                                        |
 | Clone after real SteamCMD install             | `npm run build && npm run e2e:clone-copy-real`                     | **Manual real-host**       | Installs ASA into `C:\asa-e2e`, then config-only + full-folder clone (#160); deletes fixtures unless `YARK_E2E_KEEP=1`                         |
@@ -23,6 +24,10 @@ binaries, SteamCMD, backups, rollback).
 | Move install                                  | `npm run build && npm run e2e:move-install`                        | Local / release audit      | Same-volume rename                                                                                                                             |
 | Launch args on Runtime                        | `npm run build && npm run e2e:launch-args`                         | Local / release audit      | Fake ready install                                                                                                                             |
 | RCON console (mock)                           | `npm run build && npm run e2e:rcon`                                | Local / release audit      | `YARK_E2E_RCON_MOCK=1`                                                                                                                         |
+| Game.ini Visual Engrams, Loot, file values    | `npm run build && npm run e2e:ini-visual`                          | Local                      | Seeds a drifted game port, then saves one engram and one crate                                                                                 |
+| Cluster tribute Save and apply                | `npm run build && npm run e2e:cluster-tribute`                     | Local                      | Applies survivor expiration and keeps an unrelated GUS key                                                                                     |
+| World backup create and restore               | `npm run build && npm run e2e:backup-restore`                      | Local                      | Fake `TheIsland_WP.ark` under `C:\asa-e2e`. Real worlds stay on the manual runbook                                                             |
+| Hosted Resources assign BanListURL            | `npm run build && npm run e2e:hosted-resources`                    | Local                      | Creates a ban list resource and saves that URL into GameUserSettings.ini                                                                       |
 | Safe-update A–F                               | `node scripts/validation/validate-safe-update.cjs --confirm`       | **Manual real-host**       | See [updates-steamcmd.md](updates-steamcmd.md#real-host-validation-windows); evidence linked from #12 / #14                                    |
 | Start → RCON ready → stop/restart on real ASA | Operator runbook (below)                                           | **Manual real-host**       | Not downloaded in CI                                                                                                                           |
 | Backup restore (test-owned)                   | Operator Backups UI + disposable profile                           | **Manual real-host**       | Never operator production worlds                                                                                                               |
@@ -86,23 +91,27 @@ modals, workspace tabs, PathFields):
    is on that real-host path (they install ASA).
 4. Keep `data-*` contracts stable unless you update every script that uses them.
 
-| UI surface                                        | Likely scripts                                                                                 |
-| ------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Shell nav, Overview, New server / Clone / Delete  | `e2e` (`e2e:smoke` for empty Overview locally)                                                 |
-| Keyboard: Ctrl+K, Shift+F10, Escape, search, tabs | `e2e:keyboard` (local)                                                                         |
-| Page titles without restating subtitles           | `e2e`, `e2e:clusters-membership` (`e2e:smoke` locally)                                         |
-| Settings category sidebar or labels               | `e2e:launch-args`, `e2e:quit-policy`, `e2e:log-retention`                                      |
-| First-run setup wizard / splash                   | Any launch that must set `YARK_E2E_USER_DATA`                                                  |
-| Workspace Mods                                    | `e2e:mods`                                                                                     |
-| Clone dialog / INI or folder copy                 | `e2e`, `e2e:clone-copy`                                                                        |
-| Import / move install                             | `e2e:import-install`, `e2e:move-install`                                                       |
-| Launch / Runtime / console-on-start               | `e2e:launch-args`                                                                              |
-| RCON console                                      | `e2e:rcon`                                                                                     |
-| Clusters membership / tribute panel               | `e2e:clusters-membership`                                                                      |
-| Copy configuration                                | `e2e:copy-configuration`                                                                       |
-| Downloads queue / critical-job recovery           | `e2e:critical-job-recovery`, `e2e:downloads-pause-resume`, `node scripts/visual-downloads.cjs` |
-| Log retention (Settings → Logs)                   | `e2e:log-retention`                                                                            |
-| Workspace Maintenance tab                         | `e2e:maintenance`                                                                              |
+| UI surface                                        | Likely scripts                                                                                                             |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Shell nav, Overview, New server / Clone / Delete  | `e2e` (`e2e:smoke` for empty Overview locally)                                                                             |
+| Keyboard: Ctrl+K, Shift+F10, Escape, search, tabs | `e2e:keyboard` (local)                                                                                                     |
+| Page titles without restating subtitles           | `e2e`, `e2e:clusters-membership` (`e2e:smoke` locally)                                                                     |
+| Settings category sidebar or labels               | `e2e:launch-args`, `e2e:quit-policy`, `e2e:log-retention`                                                                  |
+| First-run setup wizard / splash                   | Any launch that must set `YARK_E2E_USER_DATA`                                                                              |
+| Workspace Mods                                    | `e2e:mods`                                                                                                                 |
+| Clone dialog / INI or folder copy                 | `e2e`, `e2e:clone-copy`                                                                                                    |
+| Import / move install                             | `e2e:import-install`, `e2e:move-install`                                                                                   |
+| Launch / Runtime / console-on-start               | `e2e:launch-args`                                                                                                          |
+| RCON console                                      | `e2e:rcon`                                                                                                                 |
+| Clusters membership / tribute panel               | `e2e:clusters-membership`                                                                                                  |
+| Copy configuration                                | `e2e:copy-configuration`                                                                                                   |
+| Downloads queue / critical-job recovery           | `e2e:critical-job-recovery`, `e2e:downloads-pause-resume`, `e2e:cancelled-update-log`, `node scripts/visual-downloads.cjs` |
+| Log retention (Settings → Logs)                   | `e2e:log-retention`                                                                                                        |
+| Workspace Maintenance tab                         | `e2e:maintenance`                                                                                                          |
+| Game.ini Visual Engrams / Loot / file values      | `e2e:ini-visual`                                                                                                           |
+| Cluster tribute Save and apply                    | `e2e:cluster-tribute`                                                                                                      |
+| Workspace Backups create / restore                | `e2e:backup-restore`                                                                                                       |
+| Hosted Resources                                  | `e2e:hosted-resources`                                                                                                     |
 
 Cursor rule: [`.cursor/rules/e2e-ui.mdc`](../.cursor/rules/e2e-ui.mdc).
 

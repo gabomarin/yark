@@ -1,5 +1,14 @@
 import type { ReactElement } from "react";
-import { ArrowDown, ArrowUp, ArrowCounterClockwise, Pause, Play, ProhibitInset, X } from "@phosphor-icons/react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowCounterClockwise,
+  FileText,
+  Pause,
+  Play,
+  ProhibitInset,
+  X,
+} from "@phosphor-icons/react";
 import { ActionIcon, Progress, Tooltip, UnstyledButton } from "@mantine/core";
 import { MapArtThumb } from "@ui/MapArtThumb/MapArtThumb";
 import { appRaisedSurfaceClass, withAppSurface } from "@ui/AppSurface/appSurfaceClassName";
@@ -25,6 +34,7 @@ export function DownloadRowButton(props: {
   onDismiss: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
+  onOpenInLogs: () => void;
 }): ReactElement {
   const { row } = props;
   return (
@@ -66,6 +76,17 @@ export function DownloadRowButton(props: {
         <span className={classes.rowPercent}>{row.percent !== null ? `${row.percent.toFixed(0)}%` : ""}</span>
       </UnstyledButton>
       <span className={classes.rowActions}>
+        {(row.kind === "cancelled" || row.kind === "attention" || row.kind === "interrupted") &&
+          row.serverId !== null &&
+          (row.job?.operation === "install-files" ||
+            row.job?.operation === "update" ||
+            row.job?.operation === "verify-files") && (
+            <Tooltip label="Open in Logs">
+              <ActionIcon size="sm" variant="subtle" aria-label="Open in Logs" onClick={() => props.onOpenInLogs()}>
+                <FileText size={14} />
+              </ActionIcon>
+            </Tooltip>
+          )}
         {(row.canMoveUp || row.canMoveDown) && (
           <span className={classes.reorderGroup}>
             <Tooltip label="Move up in queue">

@@ -1,6 +1,6 @@
 .sectionsScroll {
   border: 1px solid var(--app-color-border);
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
 }
 
 .sections {
@@ -13,7 +13,7 @@
 
 .section {
   border: 1px solid var(--app-color-border);
-  border-radius: 0;
+  border-radius: var(--app-panel-radius);
   background: color-mix(in srgb, var(--app-color-surface-chrome) 55%, transparent);
   overflow: hidden;
 }

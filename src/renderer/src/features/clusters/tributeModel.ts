@@ -32,6 +32,7 @@ export const MAX_TRIBUTE_EXPIRATION_SECONDS = 31_536_000;
 
 const expirationKeys = new Set<string>(TRIBUTE_EXPIRATION_KEYS);
 const slotKeys = new Set<string>(TRIBUTE_SLOT_KEYS);
+const SERVER_SETTINGS_SECTION = "serversettings";
 
 export function tributeSettingMeta(key: ClusterWideTributeKey | MapTributeKey) {
   const meta = lookupIniSettingMeta("gameUserSettings", "ServerSettings", key);
@@ -46,7 +47,7 @@ export function defaultClusterWideValues(): ClusterWideTributeValues {
 }
 
 export function readTributeValues(text: string): TributeSettingValues {
-  const rows = parseIniTextRows(text).filter((row) => row.section.trim().toLowerCase() === "serversettings");
+  const rows = parseIniTextRows(text).filter((row) => row.section.trim().toLowerCase() === SERVER_SETTINGS_SECTION);
   const latest = rows.reduce<Record<string, string>>((values, row) => {
     values[row.key.toLowerCase()] = row.value;
     return values;
@@ -120,6 +121,78 @@ export function validateClusterWideValue(key: ClusterWideTributeKey, value: numb
   if (value < minimum) return `${key} cannot be below the catalog default of ${minimum}.`;
   if (input?.max !== undefined && value > input.max) return `${key} cannot exceed ${input.max}.`;
   return null;
+}
+
+/**
+ * True when GameUserSettings is empty or only contains the six cluster-wide
+ * tribute keys under ServerSettings. Keys with the same names in other sections
+ * are real content, not a tribute-only template.
+ */
+export function isSparseClusterIniGameUserSettings(text: string): boolean {
+  if (text.trim().length === 0) return true;
+  const rows = parseIniTextRows(text).filter((row) => row.key.trim().length > 0);
+  if (rows.length === 0) return true;
+  const tributeKeys = new Set(CLUSTER_WIDE_TRIBUTE_KEYS.map((key) => key.toLowerCase()));
+  return rows.every(
+    (row) => row.section.trim().toLowerCase() === SERVER_SETTINGS_SECTION && tributeKeys.has(row.key.toLowerCase()),
+  );
+}
+
+/**
+ * Member INI payloads needed to seed a missing or tribute-only cluster template.
+ * Skips member reads when the existing template already has real GUS content;
+ * otherwise uses cached snapshots and parallel-reads only the cache misses.
+ */
+export async function collectClusterIniTemplateSeedPayloads(
+  existing: ServerIniPayload | null | undefined,
+  members: ReadonlyArray<{ id: string }>,
+  snapshots: ReadonlyMap<string, { payload: ServerIniPayload }>,
+  readMemberIni: (serverId: string) => Promise<ServerIniPayload | null>,
+): Promise<ServerIniPayload[]> {
+  if (!isSparseClusterIniGameUserSettings(existing?.gameUserSettings ?? "")) {
+    return [];
+  }
+
+  const cached: ServerIniPayload[] = [];
+  const missingIds: string[] = [];
+  for (const member of members) {
+    const snapshot = snapshots.get(member.id);
+    if (snapshot !== undefined) {
+      cached.push(snapshot.payload);
+      continue;
+    }
+    missingIds.push(member.id);
+  }
+  if (cached.some((payload) => !isSparseClusterIniGameUserSettings(payload.gameUserSettings))) {
+    return cached;
+  }
+
+  const fetched = await Promise.all(missingIds.map((serverId) => readMemberIni(serverId)));
+  return [...cached, ...fetched.filter((payload): payload is ServerIniPayload => payload !== null)];
+}
+
+/**
+ * Base payload for Transfer Save: keep a real template, otherwise seed from a
+ * member so the saved cluster template is not tribute-only.
+ */
+export function seedClusterIniTemplateBase(
+  existing: ServerIniPayload | null | undefined,
+  memberPayloads: readonly ServerIniPayload[],
+): ServerIniPayload {
+  const current = existing ?? { gameUserSettings: "", game: "" };
+  if (!isSparseClusterIniGameUserSettings(current.gameUserSettings)) {
+    return current;
+  }
+  for (const member of memberPayloads) {
+    if (isSparseClusterIniGameUserSettings(member.gameUserSettings)) continue;
+    return {
+      gameUserSettings: member.gameUserSettings,
+      game: current.game.trim().length > 0 ? current.game : member.game,
+    };
+  }
+  throw new Error(
+    "Cannot save transfer settings into an empty cluster INI template. Promote a member to the template first, or create an INI template with shared settings.",
+  );
 }
 
 export function withClusterWideTributeValues(

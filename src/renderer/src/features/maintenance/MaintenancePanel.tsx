@@ -1,5 +1,7 @@
 import { Button, Group, Stack, Text } from "@mantine/core";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
+import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
+import { WorkspaceSectionHeader } from "@ui/WorkspaceSectionHeader/WorkspaceSectionHeader";
 import type { ServerInstallationInfo, ServerProfile, ServerRuntimeInfo } from "@shared/types";
 import type { ReactElement } from "react";
 import {
@@ -37,75 +39,77 @@ export function MaintenancePanel(props: Props): ReactElement {
   });
 
   return (
-    <Stack gap="sm" className={classes.panel} data-maintenance-panel>
-      <Text className={classes.honesty} size="xs">
-        Jobs run only while YARK is open (tray is fine). Everything defaults off.
-      </Text>
+    <AppSurfaceCard tone="flat" fill padding={0} radius={0} className={classes.shell} data-maintenance-panel>
+      <WorkspaceSectionHeader
+        title="Schedules"
+        subtitle="Jobs run only while YARK is open (tray is fine). Everything defaults off."
+      />
+      <Stack gap="sm" className={classes.panel}>
+        {panel.error !== null && (
+          <AppAlert className={classes.alert} color="red" title="Maintenance">
+            {panel.error}
+          </AppAlert>
+        )}
 
-      {panel.error !== null && (
-        <AppAlert className={classes.alert} color="red" title="Maintenance">
-          {panel.error}
-        </AppAlert>
-      )}
+        {policy?.schedulePaused === true && (
+          <AppAlert className={classes.alert} color="red" title="Paused after repeated failures">
+            <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
+              <Text size="sm" c="dimmed">
+                Automatic runs are paused for this YARK session. Policy stays enabled — resume when ready.
+              </Text>
+              <Button size="xs" variant="default" loading={panel.busy} onClick={() => void panel.resumeSchedules()}>
+                Resume schedules
+              </Button>
+            </Group>
+          </AppAlert>
+        )}
 
-      {policy?.schedulePaused === true && (
-        <AppAlert className={classes.alert} color="red" title="Paused after repeated failures">
-          <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
-            <Text size="sm" c="dimmed">
-              Automatic runs are paused for this YARK session. Policy stays enabled — resume when ready.
-            </Text>
-            <Button size="xs" variant="default" loading={panel.busy} onClick={() => void panel.resumeSchedules()}>
-              Resume schedules
-            </Button>
-          </Group>
-        </AppAlert>
-      )}
-
-      {policy !== null && (
-        <MaintenanceUpNext
-          policy={policy}
-          busy={panel.busy}
-          runRestartNowDisabled={!runRestartGate.allowed}
-          runRestartNowTooltip={runRestartGate.allowed ? MAINTENANCE_RUN_RESTART_NOW_HINT : runRestartGate.reason}
-          onRunRestartNow={panel.runRestartNow}
-          onRunUpdateNow={panel.runUpdateNow}
-          onCancelUpcoming={() => void panel.cancelUpcoming()}
-          patch={panel.patch}
-          onWipeEnable={() => panel.setRestartOpen(true)}
-        />
-      )}
-
-      {policy !== null && (
-        <>
-          <MaintenanceRestartSection
+        {policy !== null && (
+          <MaintenanceUpNext
             policy={policy}
             busy={panel.busy}
-            open={panel.restartOpen}
-            onToggleOpen={() => panel.setRestartOpen((v) => !v)}
-            onOpen={() => panel.setRestartOpen(true)}
+            runRestartNowDisabled={!runRestartGate.allowed}
+            runRestartNowTooltip={runRestartGate.allowed ? MAINTENANCE_RUN_RESTART_NOW_HINT : runRestartGate.reason}
+            onRunRestartNow={panel.runRestartNow}
+            onRunUpdateNow={panel.runUpdateNow}
+            onCancelUpcoming={() => void panel.cancelUpcoming()}
             patch={panel.patch}
+            onWipeEnable={() => panel.setRestartOpen(true)}
           />
-          <MaintenanceUpdateSection
-            policy={policy}
-            busy={panel.busy}
-            open={panel.updateOpen}
-            onToggleOpen={() => panel.setUpdateOpen((v) => !v)}
-            onOpen={() => panel.setUpdateOpen(true)}
-            patch={panel.patch}
-          />
-          <MaintenanceManualRestartSection
-            policy={policy}
-            busy={panel.busy}
-            open={panel.manualOpen}
-            manualRestartPending={props.runtime?.maintenance?.countdown?.kind === "manual"}
-            onToggleOpen={() => panel.setManualOpen((v) => !v)}
-            onOpen={() => panel.setManualOpen(true)}
-            patch={panel.patch}
-          />
-        </>
-      )}
+        )}
 
-      <CrashRecoverySection serverId={props.server.id} />
-    </Stack>
+        {policy !== null && (
+          <>
+            <MaintenanceRestartSection
+              policy={policy}
+              busy={panel.busy}
+              open={panel.restartOpen}
+              onToggleOpen={() => panel.setRestartOpen((v) => !v)}
+              onOpen={() => panel.setRestartOpen(true)}
+              patch={panel.patch}
+            />
+            <MaintenanceUpdateSection
+              policy={policy}
+              busy={panel.busy}
+              open={panel.updateOpen}
+              onToggleOpen={() => panel.setUpdateOpen((v) => !v)}
+              onOpen={() => panel.setUpdateOpen(true)}
+              patch={panel.patch}
+            />
+            <MaintenanceManualRestartSection
+              policy={policy}
+              busy={panel.busy}
+              open={panel.manualOpen}
+              manualRestartPending={props.runtime?.maintenance?.countdown?.kind === "manual"}
+              onToggleOpen={() => panel.setManualOpen((v) => !v)}
+              onOpen={() => panel.setManualOpen(true)}
+              patch={panel.patch}
+            />
+          </>
+        )}
+
+        <CrashRecoverySection serverId={props.server.id} />
+      </Stack>
+    </AppSurfaceCard>
   );
 }

@@ -54,7 +54,7 @@
 }
 
 .groupTitle {
-  color: var(--app-color-accent-text);
+  color: var(--app-color-text);
   font-size: var(--app-font-eyebrow);
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -76,7 +76,9 @@
 .optionRow {
   border: 1px solid var(--app-color-border-subtle);
   border-radius: var(--app-radius-sm);
-  background: color-mix(in srgb, var(--app-color-bg) 35%, transparent);
+  background-color: var(--app-nested-row-bg);
+  background-image: var(--app-glass-sheen);
+  box-shadow: var(--app-glass-rim);
   padding: 0.4rem 0.55rem;
 }
 
@@ -97,7 +99,7 @@
 .optionLabel {
   font-family: var(--app-font-mono);
   font-size: 0.7rem;
-  color: var(--app-color-cryo);
+  color: var(--app-color-text);
   cursor: default;
   border-radius: 2px;
   outline: none;

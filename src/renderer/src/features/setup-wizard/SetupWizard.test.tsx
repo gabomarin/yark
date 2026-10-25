@@ -105,6 +105,10 @@ describe("SetupWizard", () => {
           onInstallSteamCmd={vi.fn()}
           onDefaultBaseFolderChange={vi.fn()}
           onUiDensityChange={vi.fn()}
+          themeFamily="fluent"
+          scheme="dark"
+          onThemeFamilyChange={vi.fn()}
+          onSchemeChange={vi.fn()}
           openNativeTerminalOnStart={false}
           onOpenNativeTerminalOnStartChange={vi.fn()}
           onSkip={onSkip}
@@ -145,6 +149,10 @@ describe("SetupWizard", () => {
           onInstallSteamCmd={vi.fn()}
           onDefaultBaseFolderChange={vi.fn()}
           onUiDensityChange={vi.fn()}
+          themeFamily="fluent"
+          scheme="dark"
+          onThemeFamilyChange={vi.fn()}
+          onSchemeChange={vi.fn()}
           openNativeTerminalOnStart={false}
           onOpenNativeTerminalOnStartChange={vi.fn()}
           onSkip={onSkip}
@@ -186,6 +194,10 @@ describe("SetupWizard", () => {
           onInstallSteamCmd={vi.fn()}
           onDefaultBaseFolderChange={vi.fn()}
           onUiDensityChange={vi.fn()}
+          themeFamily="fluent"
+          scheme="dark"
+          onThemeFamilyChange={vi.fn()}
+          onSchemeChange={vi.fn()}
           openNativeTerminalOnStart={false}
           onOpenNativeTerminalOnStartChange={vi.fn()}
           onSkip={onSkip}
@@ -225,6 +237,10 @@ describe("SetupWizard", () => {
           onInstallSteamCmd={vi.fn()}
           onDefaultBaseFolderChange={vi.fn()}
           onUiDensityChange={vi.fn()}
+          themeFamily="fluent"
+          scheme="dark"
+          onThemeFamilyChange={vi.fn()}
+          onSchemeChange={vi.fn()}
           openNativeTerminalOnStart={false}
           onOpenNativeTerminalOnStartChange={vi.fn()}
           onSkip={vi.fn()}
@@ -269,6 +285,10 @@ describe("SetupWizard", () => {
           onInstallSteamCmd={vi.fn()}
           onDefaultBaseFolderChange={vi.fn()}
           onUiDensityChange={vi.fn()}
+          themeFamily="fluent"
+          scheme="dark"
+          onThemeFamilyChange={vi.fn()}
+          onSchemeChange={vi.fn()}
           onOpenNativeTerminalOnStartChange={onOpenNativeTerminalOnStartChange}
           onSkip={vi.fn()}
           onDismiss={vi.fn()}
@@ -311,6 +331,10 @@ describe("SetupWizard", () => {
           onInstallSteamCmd={vi.fn()}
           onDefaultBaseFolderChange={vi.fn()}
           onUiDensityChange={vi.fn()}
+          themeFamily="fluent"
+          scheme="dark"
+          onThemeFamilyChange={vi.fn()}
+          onSchemeChange={vi.fn()}
           openNativeTerminalOnStart={false}
           onOpenNativeTerminalOnStartChange={vi.fn()}
           onSkip={vi.fn()}
@@ -355,6 +379,10 @@ describe("SetupWizard", () => {
           onInstallSteamCmd={vi.fn()}
           onDefaultBaseFolderChange={vi.fn()}
           onUiDensityChange={vi.fn()}
+          themeFamily="fluent"
+          scheme="dark"
+          onThemeFamilyChange={vi.fn()}
+          onSchemeChange={vi.fn()}
           openNativeTerminalOnStart={false}
           onOpenNativeTerminalOnStartChange={vi.fn()}
           onSkip={vi.fn()}
@@ -407,6 +435,10 @@ describe("SetupWizard", () => {
           onInstallSteamCmd={vi.fn()}
           onDefaultBaseFolderChange={vi.fn()}
           onUiDensityChange={vi.fn()}
+          themeFamily="fluent"
+          scheme="dark"
+          onThemeFamilyChange={vi.fn()}
+          onSchemeChange={vi.fn()}
           openNativeTerminalOnStart={false}
           onOpenNativeTerminalOnStartChange={vi.fn()}
           onSkip={vi.fn()}
@@ -445,6 +477,10 @@ describe("SetupWizard", () => {
           onInstallSteamCmd={vi.fn()}
           onDefaultBaseFolderChange={vi.fn()}
           onUiDensityChange={vi.fn()}
+          themeFamily="fluent"
+          scheme="dark"
+          onThemeFamilyChange={vi.fn()}
+          onSchemeChange={vi.fn()}
           openNativeTerminalOnStart={false}
           onOpenNativeTerminalOnStartChange={vi.fn()}
           onSkip={vi.fn()}
@@ -486,6 +522,10 @@ describe("SetupWizard", () => {
           onInstallSteamCmd={vi.fn()}
           onDefaultBaseFolderChange={vi.fn()}
           onUiDensityChange={vi.fn()}
+          themeFamily="fluent"
+          scheme="dark"
+          onThemeFamilyChange={vi.fn()}
+          onSchemeChange={vi.fn()}
           openNativeTerminalOnStart={false}
           onOpenNativeTerminalOnStartChange={vi.fn()}
           onSkip={vi.fn()}
@@ -528,6 +568,10 @@ describe("SetupWizard", () => {
           onInstallSteamCmd={vi.fn()}
           onDefaultBaseFolderChange={vi.fn()}
           onUiDensityChange={vi.fn()}
+          themeFamily="fluent"
+          scheme="dark"
+          onThemeFamilyChange={vi.fn()}
+          onSchemeChange={vi.fn()}
           openNativeTerminalOnStart={false}
           onOpenNativeTerminalOnStartChange={vi.fn()}
           onSkip={vi.fn()}
@@ -570,6 +614,10 @@ describe("SetupWizard", () => {
           onInstallSteamCmd={vi.fn()}
           onDefaultBaseFolderChange={vi.fn()}
           onUiDensityChange={vi.fn()}
+          themeFamily="fluent"
+          scheme="dark"
+          onThemeFamilyChange={vi.fn()}
+          onSchemeChange={vi.fn()}
           openNativeTerminalOnStart={false}
           onOpenNativeTerminalOnStartChange={vi.fn()}
           onSkip={vi.fn()}
@@ -610,6 +658,10 @@ describe("SetupWizard", () => {
           onInstallSteamCmd={vi.fn()}
           onDefaultBaseFolderChange={vi.fn()}
           onUiDensityChange={vi.fn()}
+          themeFamily="fluent"
+          scheme="dark"
+          onThemeFamilyChange={vi.fn()}
+          onSchemeChange={vi.fn()}
           openNativeTerminalOnStart={false}
           onOpenNativeTerminalOnStartChange={vi.fn()}
           onSkip={vi.fn()}
@@ -623,5 +675,58 @@ describe("SetupWizard", () => {
     );
 
     expect(clusterDir).toHaveAttribute("title", `E:\\ARK\\Clusters\\${id}`);
+  });
+
+  it("offers the same theme families as Settings, including Glassy", async () => {
+    const user = userEvent.setup();
+    const onThemeFamilyChange = vi.fn();
+    stubWizardApi();
+
+    render(
+      <AppProviders>
+        <SetupWizard
+          opened
+          mode="first-run"
+          servers={[]}
+          desktopShell={desktopShell}
+          busy={false}
+          steamCmdStatus={null}
+          steamCmdBusy={false}
+          defaultBaseFolder={null}
+          uiDensity="compact"
+          themeFamily="fluent"
+          scheme="dark"
+          onPickSteamCmdPath={vi.fn()}
+          onInstallSteamCmd={vi.fn()}
+          onDefaultBaseFolderChange={vi.fn()}
+          onUiDensityChange={vi.fn()}
+          onThemeFamilyChange={onThemeFamilyChange}
+          onSchemeChange={vi.fn()}
+          openNativeTerminalOnStart={false}
+          onOpenNativeTerminalOnStartChange={vi.fn()}
+          onSkip={vi.fn()}
+          onDismiss={vi.fn()}
+          onPathsShellDone={vi.fn()}
+          onCreateServer={vi.fn()}
+          onImport={vi.fn()}
+          onExplore={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /^continue$/i }));
+    await user.click(screen.getByRole("button", { name: /^continue$/i }));
+
+    expect(screen.getByLabelText("Theme family")).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Fluent" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Plasma Breeze" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Glassy" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Dark" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Light" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("radio", { name: "Plasma Breeze" }));
+    expect(onThemeFamilyChange).toHaveBeenCalledWith("plasma-breeze");
+    await user.click(screen.getByRole("radio", { name: "Glassy" }));
+    expect(onThemeFamilyChange).toHaveBeenCalledWith("glassy");
   });
 });

@@ -38,7 +38,8 @@ export function AppSurfaceCard({
       {...cardProps}
       withBorder
       padding={padding}
-      radius={radius}
+      radius={radius === 0 ? undefined : radius}
+      data-panel-radius={radius === 0 ? true : undefined}
       className={[classes.root, className].filter(Boolean).join(" ")}
       data-tone={tone}
       data-fill={fill || undefined}

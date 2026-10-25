@@ -83,7 +83,7 @@ export function BackupFleetMetrics(props: Props): ReactElement {
   }
 
   return (
-    <SimpleGrid cols={{ base: 2, sm: 3, lg: 5 }} spacing="xs">
+    <SimpleGrid cols={{ base: 2, sm: 3, lg: 5 }} spacing={0} className={classes.grid}>
       <AppMetricCard
         label="Protected"
         value={`${props.summary.stats.protectedCount}/${props.summary.servers.length}`}

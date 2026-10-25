@@ -64,7 +64,8 @@ describe("SettingsDiscordSection", () => {
     );
 
     const input = await screen.findByLabelText("Webhook URL");
-    await user.type(input, "https://discord.com/api/webhooks/123/token");
+    await user.click(input);
+    await user.paste("https://discord.com/api/webhooks/123/token");
     await user.tab();
     await waitFor(() => expect(api.setDiscordWebhook).toHaveBeenCalled());
     await user.click(screen.getByRole("button", { name: "Send test" }));

@@ -6,8 +6,10 @@
   margin-block-start: var(--app-space-lg);
 }
 
-.card {
+.card:global(.mantine-Card-root) {
   border-color: color-mix(in srgb, var(--app-color-accent) 32%, var(--app-color-border));
+  background-color: var(--app-float-panel-bg);
+  background-image: var(--app-glass-sheen);
 }
 
 .layout {

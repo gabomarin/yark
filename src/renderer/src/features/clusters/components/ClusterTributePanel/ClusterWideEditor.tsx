@@ -13,6 +13,8 @@ import {
   TRIBUTE_SLOT_KEYS,
   formatTributeDuration,
   readTributeValues,
+  collectClusterIniTemplateSeedPayloads,
+  seedClusterIniTemplateBase,
   tributeSettingMeta,
   validateClusterWideValue,
   validateClusterWideValues,
@@ -129,10 +131,19 @@ export function ClusterWideEditor(props: Props): ReactElement {
     try {
       const existing = await window.api.getClusterIniTemplate(props.clusterId);
       if (!existing.ok) throw new Error(existing.error ?? "Could not load the current cluster template");
-      const payload = withClusterWideTributeValues(
-        existing.data?.payload ?? { gameUserSettings: "", game: "" },
-        parsedValues,
+      // Never persist a tribute-only / empty GUS as the cluster INI template —
+      // Apply INI template would later replace member files with that sparse text.
+      const memberPayloads = await collectClusterIniTemplateSeedPayloads(
+        existing.data?.payload,
+        props.members,
+        props.snapshots,
+        async (serverId) => {
+          const latest = await window.api.readServerIni(serverId);
+          return latest.ok ? latest.data.payload : null;
+        },
       );
+      const basePayload = seedClusterIniTemplateBase(existing.data?.payload, memberPayloads);
+      const payload = withClusterWideTributeValues(basePayload, parsedValues);
       const preview = await window.api.previewClusterIniTemplate(props.clusterId, payload);
       if (!preview.ok) throw new Error(preview.error ?? "Could not preview the cluster template");
       if (!preview.data.valid) throw new Error(preview.data.issues.map((issue) => issue.message).join("; "));
@@ -316,9 +327,10 @@ export function ClusterWideEditor(props: Props): ReactElement {
         </Stack>
 
         <Text size="xs" c="dimmed">
-          Save updates only the cluster template. Save and apply updates the template and writes these six values onto
-          eligible stopped servers without replacing the rest of GameUserSettings.ini. Running or busy servers are
-          skipped. Use Apply INI template when you intend a full template restore.
+          Save updates the cluster template (seeding from a member when the template is missing or only has these six
+          transfer keys, so a later Apply INI template cannot wipe unrelated settings). Save and apply also writes these
+          six values onto eligible stopped servers without replacing the rest of GameUserSettings.ini. Running or busy
+          servers are skipped. Use Apply INI template when you intend a full template restore.
         </Text>
         {skipped.length > 0 && (
           <Stack gap="xs">
