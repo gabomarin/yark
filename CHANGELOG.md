@@ -43,6 +43,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Clearing the loot Simulator seed stays an error instead of rolling as seed 0. A saved entry that lists the same class twice keeps a separate row for each one (#686).
 - The engram hint that a class alone does not change the game uses the lighter danger red, so it stays readable on Breeze dark. Clearing a saved line back to an empty cost and Hidden off is refused the same way. Save stays off while that error is showing on Overrides. Settings, Points per level, and GameUserSettings.ini still save their own lines. A dot on another view shows that it still has unsaved lines. The class box on a saved engram searches the official list. Named engram lines stay out of Settings, and a points-per-level key in GameUserSettings.ini stays on that file. A class name with a space is refused, and the field says so (#684).
 
+### Docs
+
+- Documented AdminList CSV/CR-only parse vs LF publish, shared AppSurface material class roles, `ini:save-semantic` IPC bounds, and the prepared real-host workflow inventory (#652, #671, #12).
+
 ## [0.25.0] - 2026-10-23
 
 ### Added

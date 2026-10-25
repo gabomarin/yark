@@ -26,6 +26,14 @@ Canonical list: `VALIDATED_IPC_CHANNELS` in `channel-schemas.ts` (must match `Ob
 
 Push channels (`push:*`) are main→renderer only and are out of scope for invoke arg validation.
 
+**INI Save channels:** `ini:save` takes full Game / GUS strings plus required
+fingerprints (#665). `ini:save-semantic` takes a capped Set/Unset op list
+(`iniSemanticOpsSchema` in `primitives.ts`: at most 2,000 ops, each value at
+most 100,000 characters, total characters twice `MAX_INI_FILE_CHARS`). Domain
+ownership and expected-previous conflict rules live in the INI service. Zod
+only bounds shape and size. Operator/save contract:
+[ini-metadata.md](ini-metadata.md#semantic-visual-save-pini-004--667).
+
 Follow-ups (optional polish, not required to keep the invoke boundary closed): derive TypeScript types from Zod schemas where practical; tighten profile create/update beyond `plainObjectSchema`; warn on INI read when payload exceeds `MAX_INI_FILE_CHARS`.
 
 ## How to verify
