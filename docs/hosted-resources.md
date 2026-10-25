@@ -65,14 +65,14 @@ by its resource token and marked **Previous port**; it still needs to be updated
 
 ## Known consumers (ASA)
 
-| Consumer                                           | Expected body                         | Where it is set                        |
-| -------------------------------------------------- | ------------------------------------- | -------------------------------------- |
+| Consumer                                           | Expected body                            | Where it is set                        |
+| -------------------------------------------------- | ---------------------------------------- | -------------------------------------- |
 | `AdminListURL`                                     | Plain text ids (see body contract below) | `GameUserSettings.ini` (RCON → Admins) |
-| `BanListURL`                                       | Plain text ban entries                | `GameUserSettings.ini`                 |
-| `BadWordListURL` / `BadWordWhiteListURL`           | Plain text word list                  | `GameUserSettings.ini`                 |
-| `CustomDynamicConfigUrl` (+ `-UseDynamicConfig`)   | **INI** — flat `Key=Value` lines      | Launch arg or `GameUserSettings.ini`   |
-| `CustomNotificationURL` (`-CustomNotificationURL`) | Plain text / HTML notification page   | Launch arg                             |
-| `CustomLiveTuningUrl`                              | **JSON**                              | Launch arg or `GameUserSettings.ini`   |
+| `BanListURL`                                       | Plain text ban entries                   | `GameUserSettings.ini`                 |
+| `BadWordListURL` / `BadWordWhiteListURL`           | Plain text word list                     | `GameUserSettings.ini`                 |
+| `CustomDynamicConfigUrl` (+ `-UseDynamicConfig`)   | **INI** — flat `Key=Value` lines         | Launch arg or `GameUserSettings.ini`   |
+| `CustomNotificationURL` (`-CustomNotificationURL`) | Plain text / HTML notification page      | Launch arg                             |
+| `CustomLiveTuningUrl`                              | **JSON**                                 | Launch arg or `GameUserSettings.ini`   |
 
 `CustomDynamicConfigUrl` only accepts **HTTP** (HTTPS is unsupported), which is exactly
 what the loopback host provides. ASA re-reads the dynamic config on world (auto)save or
