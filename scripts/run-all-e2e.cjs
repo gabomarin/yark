@@ -5,12 +5,28 @@
  *
  * Skips visual-only helpers (visual-downloads.cjs).
  * Real-host suites (crash-reattach, clone-copy-real) may take a long time.
+ * File-write suites (ini-visual, cluster-tribute, backup-restore, hosted-resources)
+ * run on Windows only.
  */
 const { execSync } = require("node:child_process");
 const path = require("node:path");
 const { killStrayElectronApps } = require("./e2e-launch.cjs");
 
 const projectRoot = path.resolve(__dirname, "..");
+
+const windowsFileSuites =
+  process.platform === "win32"
+    ? [
+        { name: "e2e:ini-visual", cmd: "npm run e2e:ini-visual" },
+        { name: "e2e:cluster-tribute", cmd: "npm run e2e:cluster-tribute" },
+        { name: "e2e:backup-restore", cmd: "npm run e2e:backup-restore" },
+        { name: "e2e:hosted-resources", cmd: "npm run e2e:hosted-resources" },
+      ]
+    : [];
+
+if (windowsFileSuites.length === 0) {
+  console.log("Skipping Windows file-write E2E: ini-visual, cluster-tribute, backup-restore, hosted-resources.");
+}
 
 const tests = [
   { name: "e2e:smoke", cmd: "npm run e2e:smoke" },
@@ -28,6 +44,7 @@ const tests = [
   { name: "e2e:quit-policy", cmd: "npm run e2e:quit-policy" },
   { name: "e2e:rcon", cmd: "npm run e2e:rcon" },
   { name: "e2e:clusters-membership", cmd: "npm run e2e:clusters-membership" },
+  ...windowsFileSuites,
   { name: "e2e:copy-configuration", cmd: "npm run e2e:copy-configuration" },
   { name: "e2e:clone-copy", cmd: "npm run e2e:clone-copy" },
   { name: "e2e:import-install", cmd: "npm run e2e:import-install" },
