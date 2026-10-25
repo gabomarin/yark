@@ -1,17 +1,28 @@
 /**
  * Shared create / reopen / INI path helpers for file-writing Electron suites.
  */
+const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const { SERVER_CARD } = require("./e2e-dom-hooks.cjs");
-const { pickPathField } = require("./e2e-launch.cjs");
+const {
+  pickPathField,
+  createE2eFixtureRoots,
+  launchElectronApp,
+  waitForOverview,
+  quitElectronApp,
+  removeFixtureDir,
+} = require("./e2e-launch.cjs");
 const { leaveWorkspaceToServers } = require("./e2e-leave-workspace.cjs");
 
 const MAP_TOKEN = "TheIsland_WP";
 const ADMIN_PASSWORD = "admin1234";
 
 function uniquePorts() {
-  const base = 25000 + (Math.floor(Date.now() / 1000) % 3000);
+  // Stride 20 leaves room for the drifted game port (base + 10) used by ini-visual.
+  // pid plus a random slot keeps two processes started in the same second apart.
+  const slot = (process.pid % 500) * 60 + Math.floor(Math.random() * 3) * 20;
+  const base = 30000 + slot;
   return { game: base, query: base + 1, rcon: base + 2 };
 }
 
@@ -135,10 +146,47 @@ async function waitForFileText(file, predicate, timeout = 20000) {
 }
 
 function pageErrorFilter(errors) {
-  return errors.filter(
-    (message) =>
-      !/ResizeObserver|Non-Error promise rejection|Failed to load resource|net::ERR_|dbus|GPU process/i.test(message),
-  );
+  return errors.filter((message) => !/ResizeObserver|dbus|GPU process/i.test(message));
+}
+
+async function runElectronSuite(label, body) {
+  delete process.env.ELECTRON_RUN_AS_NODE;
+  assert.equal(process.platform, "win32", `${label} E2E requires Windows paths`);
+  process.chdir(path.resolve(__dirname, ".."));
+  const roots = createE2eFixtureRoots(label);
+  const marker = label.toUpperCase().replaceAll("-", "_");
+  let app = null;
+  let succeeded = false;
+  const pageErrors = [];
+  try {
+    app = await launchElectronApp({ profileDir: roots.profileDir });
+    const page = await waitForOverview(app);
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+    page.on("dialog", async (dialog) => {
+      await dialog.accept();
+    });
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    await body({ app, page, ...roots, pageErrors });
+    assert.deepEqual(pageErrorFilter(pageErrors), []);
+    succeeded = true;
+    console.log(`E2E_${marker}_OK`);
+  } finally {
+    if (app !== null) {
+      try {
+        await quitElectronApp(app);
+      } catch (error) {
+        console.warn(`E2E_${marker}_CLOSE_WARN ${error?.message ?? String(error)}`);
+        await app.close().catch(() => {});
+      }
+    }
+    if (succeeded) {
+      await removeFixtureDir(roots.profileDir);
+      if (roots.serversDir !== null) await removeFixtureDir(roots.serversDir);
+    } else {
+      console.error(`E2E_${marker}_PROFILE_PRESERVED ${roots.profileDir}`);
+      console.error(`E2E_${marker}_SERVERS_PRESERVED ${roots.serversDir}`);
+    }
+  }
 }
 
 module.exports = {
@@ -157,5 +205,5 @@ module.exports = {
   openServerFromOverview,
   clickIniSave,
   waitForFileText,
-  pageErrorFilter,
+  runElectronSuite,
 };
