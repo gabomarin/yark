@@ -26,6 +26,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Transfer **Save** re-reads member INI files when seeding an empty or tribute-only cluster template, so a later **Apply INI template** cannot restore settings from a stale Transfer panel snapshot left under the server workspace overlay.
+- Overrides and Loot **Save** no longer replay stale named-engram or supply-crate text edits onto the draft, which could make Save look failed after a successful write or leave the draft missing live lines still on disk.
 - The loot editor scrolls when a crate has more sets than fit on screen (#686).
 - The loot crate list scrolls when more crates are loaded than fit beside the editor (#686).
 - Loot item weight, blueprint chance, and quantity stay aligned when a hint or a missing quantity is showing (#686).

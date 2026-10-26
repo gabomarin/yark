@@ -214,8 +214,10 @@ The **Cluster-wide settings** group aligns these keys across members:
 
 The editor saves the cluster template by default. When the template is missing
 or its `GameUserSettings.ini` only contains the six cluster-wide tribute keys,
-Save seeds from a member's current INI before writing those keys — so a later
-full **Apply INI template** cannot wipe unrelated settings. **Save and apply to
+Save re-reads each member's INI and seeds from a current non-sparse file before
+writing those keys — so a later full **Apply INI template** cannot wipe
+unrelated settings (and Transfer panel snapshots left stale under the server
+workspace overlay are not reused as the seed). **Save and apply to
 servers** also patches the six cluster-wide keys onto eligible stopped members
 (same as the row **Apply cluster transfer settings** action) without replacing
 the rest of `GameUserSettings.ini`. Table actions promote a member to the
@@ -303,7 +305,7 @@ tab. They are excluded from cluster-wide drift checks and applies.
 | `tests/unit/compliance.test.ts`                                                | Ready cluster, ignore unclustered, single-server warning, dir mismatch, port conflict, mod mismatch                                           |
 | `src/renderer/src/features/clusters/ClustersPage.test.tsx`                     | Empty / ready / broken UI, dir-without-id copy, create-cluster wizard, add/remove membership, INI template modal, promote/restore/seed        |
 | `src/renderer/src/features/clusters/components/ClusterTributePanel/*.test.tsx` | Tribute drift/missing display, stopped-member preview/apply, per-map-only write behavior                                                      |
-| `src/renderer/src/features/clusters/tributeModel.test.ts`                      | Catalog defaults, missing/different values, expiration and slot validation                                                                    |
+| `src/renderer/src/features/clusters/tributeModel.test.ts`                      | Catalog defaults, sparse-template seed re-reads, missing/different values, expiration and slot validation                                     |
 | `tests/unit/create-cluster-model.test.ts`                                      | Eligibility, ID/dir validation, create input                                                                                                  |
 | `tests/unit/membership-model.test.ts`                                          | Add/remove eligibility, join ports, leave input                                                                                               |
 | `tests/unit/yark-owned-ini-keys.test.ts`                                       | Owned-key strip / match                                                                                                                       |

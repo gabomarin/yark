@@ -318,7 +318,7 @@ describe("ClusterTributePanel", () => {
     );
   });
 
-  it("seeds the cluster template from a member when Save runs with a tribute-only template", async () => {
+  it("seeds the cluster template from a fresh member read when Save runs with a tribute-only template", async () => {
     const user = userEvent.setup();
     const getClusterIniTemplate = vi.fn(async () => ({
       ok: true,
@@ -332,13 +332,16 @@ describe("ClusterTributePanel", () => {
         updatedAt: "2026-08-05T00:00:00.000Z",
       },
     }));
-    installApi((id) => snapshot(id, gus));
+    const freshGus = gus.replace("UnrelatedSetting=keep-me", "UnrelatedSetting=fresh-after-overlay-edit");
+    installApi((id) => snapshot(id, freshGus));
     window.api = { ...window.api, getClusterIniTemplate } as typeof window.api;
 
     render(
       <AppProviders>
         <ClusterTributePanel
           {...panelActions()}
+          // Stale Transfer snapshots (workspace overlay can edit INI underneath).
+          snapshots={new Map([["srv-a", snapshot("srv-a", gus)]])}
           clusterId="alpha"
           members={[island]}
           statuses={new Map([["srv-a", runtime("stopped")]])}
@@ -351,11 +354,12 @@ describe("ClusterTributePanel", () => {
     await user.click(within(editor).getByRole("button", { name: /^save$/i }));
 
     await waitFor(() => expect(window.api.saveClusterIniTemplate).toHaveBeenCalledTimes(1));
+    expect(window.api.readServerIni).toHaveBeenCalledWith("srv-a");
     const templatePayload = vi.mocked(window.api.saveClusterIniTemplate).mock.calls[0]?.[1] as ServerIniPayload;
-    expect(templatePayload.gameUserSettings).toContain("UnrelatedSetting=keep-me");
+    expect(templatePayload.gameUserSettings).toContain("UnrelatedSetting=fresh-after-overlay-edit");
+    expect(templatePayload.gameUserSettings).not.toContain("UnrelatedSetting=keep-me");
     expect(templatePayload.gameUserSettings).toContain("PreventUploadItems=False");
     expect(window.api.saveServerIni).not.toHaveBeenCalled();
-    expect(window.api.readServerIni).not.toHaveBeenCalled();
   });
 
   it("does not read member INI files when Save already has a populated cluster template", async () => {
