@@ -38,35 +38,43 @@ describe("cluster tribute settings model", () => {
       collectClusterIniTemplateSeedPayloads(
         { gameUserSettings: "[ServerSettings]\nSessionName=KeepTemplate\n", game: "" },
         [{ id: "srv-a" }, { id: "srv-b" }],
-        new Map(),
         readMemberIni,
       ),
     ).resolves.toEqual([]);
     expect(readMemberIni).not.toHaveBeenCalled();
   });
 
-  it("uses cached member payloads and parallel-reads only cache misses when seeding", async () => {
-    const member = {
-      gameUserSettings: "[ServerSettings]\nUnrelatedSetting=keep-me\n",
+  it("re-reads every member when seeding a sparse template instead of trusting Transfer snapshots", async () => {
+    const stale = {
+      gameUserSettings: "[ServerSettings]\nUnrelatedSetting=stale\n",
+      game: "",
+    };
+    const fresh = {
+      gameUserSettings: "[ServerSettings]\nUnrelatedSetting=fresh-after-overlay-edit\n",
       game: "",
     };
     const readMemberIni = vi.fn(async (serverId: string) => {
-      if (serverId === "srv-b") return member;
-      return null;
+      if (serverId === "srv-a") return fresh;
+      return {
+        gameUserSettings: "[ServerSettings]\nMaxTributeItems=50\n",
+        game: "",
+      };
     });
+    // Stale Transfer-panel snapshots must not be preferred over a fresh read —
+    // the server workspace overlay can edit INI without remounting Clusters.
     await expect(
-      collectClusterIniTemplateSeedPayloads(
-        { gameUserSettings: "", game: "" },
-        [{ id: "srv-a" }, { id: "srv-b" }],
-        new Map([["srv-a", { payload: { gameUserSettings: "[ServerSettings]\nMaxTributeItems=50\n", game: "" } }]]),
-        readMemberIni,
-      ),
-    ).resolves.toEqual([{ gameUserSettings: "[ServerSettings]\nMaxTributeItems=50\n", game: "" }, member]);
-    expect(readMemberIni).toHaveBeenCalledTimes(1);
+      collectClusterIniTemplateSeedPayloads({ gameUserSettings: "", game: "" }, [{ id: "srv-a" }, { id: "srv-b" }], readMemberIni),
+    ).resolves.toEqual([
+      fresh,
+      { gameUserSettings: "[ServerSettings]\nMaxTributeItems=50\n", game: "" },
+    ]);
+    expect(readMemberIni).toHaveBeenCalledTimes(2);
+    expect(readMemberIni).toHaveBeenCalledWith("srv-a");
     expect(readMemberIni).toHaveBeenCalledWith("srv-b");
+    expect(stale.gameUserSettings).not.toContain("fresh-after-overlay-edit");
   });
 
-  it("starts cache-miss reads together instead of waiting sequentially", async () => {
+  it("starts member seed reads together instead of waiting sequentially", async () => {
     let started = 0;
     const blockers: Array<() => void> = [];
     const readMemberIni = vi.fn(async (serverId: string) => {
@@ -79,33 +87,23 @@ describe("cluster tribute settings model", () => {
         game: "",
       };
     });
-    const pending = collectClusterIniTemplateSeedPayloads(
-      null,
-      [{ id: "srv-a" }, { id: "srv-b" }],
-      new Map(),
-      readMemberIni,
-    );
+    const pending = collectClusterIniTemplateSeedPayloads(null, [{ id: "srv-a" }, { id: "srv-b" }], readMemberIni);
     await vi.waitFor(() => expect(started).toBe(2));
     for (const release of blockers) release();
     await pending;
     expect(readMemberIni).toHaveBeenCalledTimes(2);
   });
 
-  it("does not read cache misses once a cached member can seed the template", async () => {
-    const cached = {
+  it("drops failed member reads and keeps successful ones when seeding", async () => {
+    const member = {
       gameUserSettings: "[ServerSettings]\nUnrelatedSetting=keep-me\n",
       game: "",
     };
-    const readMemberIni = vi.fn(async () => cached);
+    const readMemberIni = vi.fn(async (serverId: string) => (serverId === "srv-b" ? member : null));
     await expect(
-      collectClusterIniTemplateSeedPayloads(
-        null,
-        [{ id: "srv-a" }, { id: "srv-b" }],
-        new Map([["srv-a", { payload: cached }]]),
-        readMemberIni,
-      ),
-    ).resolves.toEqual([cached]);
-    expect(readMemberIni).not.toHaveBeenCalled();
+      collectClusterIniTemplateSeedPayloads({ gameUserSettings: "", game: "" }, [{ id: "srv-a" }, { id: "srv-b" }], readMemberIni),
+    ).resolves.toEqual([member]);
+    expect(readMemberIni).toHaveBeenCalledTimes(2);
   });
 
   it("seeds a sparse cluster template from a member before Transfer Save", () => {

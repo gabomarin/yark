@@ -140,35 +140,21 @@ export function isSparseClusterIniGameUserSettings(text: string): boolean {
 
 /**
  * Member INI payloads needed to seed a missing or tribute-only cluster template.
- * Skips member reads when the existing template already has real GUS content;
- * otherwise uses cached snapshots and parallel-reads only the cache misses.
+ * Skips member reads when the existing template already has real GUS content.
+ * Always re-reads members when seeding — Transfer panel snapshots can be stale
+ * while the server workspace overlay edits INI without remounting Clusters.
  */
 export async function collectClusterIniTemplateSeedPayloads(
   existing: ServerIniPayload | null | undefined,
   members: ReadonlyArray<{ id: string }>,
-  snapshots: ReadonlyMap<string, { payload: ServerIniPayload }>,
   readMemberIni: (serverId: string) => Promise<ServerIniPayload | null>,
 ): Promise<ServerIniPayload[]> {
   if (!isSparseClusterIniGameUserSettings(existing?.gameUserSettings ?? "")) {
     return [];
   }
 
-  const cached: ServerIniPayload[] = [];
-  const missingIds: string[] = [];
-  for (const member of members) {
-    const snapshot = snapshots.get(member.id);
-    if (snapshot !== undefined) {
-      cached.push(snapshot.payload);
-      continue;
-    }
-    missingIds.push(member.id);
-  }
-  if (cached.some((payload) => !isSparseClusterIniGameUserSettings(payload.gameUserSettings))) {
-    return cached;
-  }
-
-  const fetched = await Promise.all(missingIds.map((serverId) => readMemberIni(serverId)));
-  return [...cached, ...fetched.filter((payload): payload is ServerIniPayload => payload !== null)];
+  const fetched = await Promise.all(members.map((member) => readMemberIni(member.id)));
+  return fetched.filter((payload): payload is ServerIniPayload => payload !== null);
 }
 
 /**
