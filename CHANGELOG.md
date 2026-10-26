@@ -45,6 +45,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Docs
 
+- Documented shared workspace tab headers (`WorkspaceSectionHeader`), BanList line format vs AdminList CSV, and the Electron `e2e-server-fixture` helper for server file-write suites (#678, #688).
 - Documented AdminList CSV/CR-only parse vs LF publish, shared AppSurface material class roles, `ini:save-semantic` IPC bounds, and the prepared real-host workflow inventory (#652, #671, #12).
 
 ## [0.25.0] - 2026-10-23

@@ -83,7 +83,7 @@ paths or the Notion hub URL in tracked files.
 - [credential-threat-model.md](credential-threat-model.md) — local admin/join password boundary (SQLite + INI plaintext; logs omit password settings).
 - [server-lifecycle.md](server-lifecycle.md) — launch args, profile→INI sync, spawn, start/stop/kill, INI sanitize / pending queue / assistant; custom / Maps pack launch + Start blockers (#65 Phase 1 / #190–#195). Research archive: [spikes/65-modded-asa-maps.md](spikes/65-modded-asa-maps.md).
 - [config-transfer.md](config-transfer.md) — one-shot Copy configuration between profiles (#95); pending-draft source/target rules (#530).
-- [ini-metadata.md](ini-metadata.md) — INI catalog ownership, absence, enforcement, provenance; visual dirty rows / per-row revert; `ini:save-semantic` + fingerprint external-edit Save (PINI / #659–#667).
+- [ini-metadata.md](ini-metadata.md) — INI catalog ownership, absence, enforcement, provenance; visual dirty rows / per-row revert; `ini:save-semantic` + fingerprint external-edit Save; Game.ini Visual **Engrams** / **Loot** (PINI / #659–#686).
 - [launch-options-catalog.md](launch-options-catalog.md) — verified ASA CLI catalog (#92); regenerates via `npm run catalog:launch-options`.
 - [rcon.md](rcon.md) — workspace RCON console, persistent session, players, ban list.
 - [hosted-resources.md](hosted-resources.md) — experimental, default-off loopback HTTP host for versioned text/INI/JSON URL bodies (#564).
@@ -102,13 +102,16 @@ paths or the Notion hub URL in tracked files.
 - **Remove from YARK** vs **Delete everything** (#267): `servers:delete` requires `{ deleteInstallFiles }`. Profile-only never wipes `installDir`; full wipe keeps shared-path and wipe-safety guards. Details: [server-lifecycle.md](server-lifecycle.md#remove-or-delete-a-server-267).
 - **Import install** (#254 / #283): ready trees continue by default; incomplete requires `allowIncompleteInstall` (UI checkbox + backend); empty/nested stay blocked. Details: [server-lifecycle.md](server-lifecycle.md#import-existing-asa-install-254--283).
 - Server Workspace keeps `Server`, **INI Files**, `Mods`, **Launch**, `Backups`,
-  `Logs`, **RCON**, **Maintenance**, and **Ark Server API** as its navigation. **Launch** edits curated
-  structured ASA flags plus raw Extra arguments (command preview / conflicts);
-  create/edit Server no longer hosts Mods IDs or Extra arguments. Workspace
-  **Backups** is operational (create / restore / history / destination for that
-  server) with kind subtabs (**World save** | **Player profiles** | **INI**).
-  Sidebar **Backups** is generalized configuration across servers (schedule /
-  destination / retention) with “Open in server” to jump into the workspace tab.
+  `Logs`, **RCON**, **Maintenance**, and **Ark Server API** as its navigation.
+  Every tab pins the same header band (`WorkspaceSectionHeader`: optional title,
+  one help line, right-side actions; `#678`) — do not invent a second tab chrome.
+  **Launch** edits curated structured ASA flags plus raw Extra arguments (command
+  preview / conflicts); create/edit Server no longer hosts Mods IDs or Extra
+  arguments. Workspace **Backups** is operational (create / restore / history /
+  destination for that server) with kind subtabs (**World save** | **Player
+  profiles** | **INI**). Sidebar **Backups** is generalized configuration across
+  servers (schedule / destination / retention) with “Open in server” to jump into
+  the workspace tab.
   **Maintenance** is per-server scheduled restart, optional wipe-after-restart, and
   opt-in Steam-newer auto-update — full map: [maintenance.md](maintenance.md)
   (#315 / #486–#489). **Mods** manages CurseForge Project IDs (enable/disable /
