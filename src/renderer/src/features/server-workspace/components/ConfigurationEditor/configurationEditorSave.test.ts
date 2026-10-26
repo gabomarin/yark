@@ -473,6 +473,53 @@ describe("iniSaveScope", () => {
     expect(semanticOpInScope(op, "gameSettings")).toBe(false);
     expect(semanticOpInScope(op, "loot")).toBe(false);
   });
+
+  it("does not replay a text-deleted named engram after Overrides Save", () => {
+    const section = "[/Script/ShooterGame.ShooterGameMode]";
+    const campfire =
+      'OverrideNamedEngramEntries=(EngramClassName="EngramEntry_Campfire_C",EngramPointsCost=3)';
+    const campfireSaved =
+      'OverrideNamedEngramEntries=(EngramClassName="EngramEntry_Campfire_C",EngramPointsCost=9)';
+    const hatchet =
+      'OverrideNamedEngramEntries=(EngramClassName="EngramEntry_StoneHatchet_C",EngramPointsCost=5)';
+    const baseline = { gameUserSettings: "", game: `${section}\nDifficultyOffset=1\n${campfire}\n` };
+    // Text view deleted the named line; Settings Save left that Unset in the draft.
+    const draft = { gameUserSettings: "", game: `${section}\nDifficultyOffset=2\n` };
+    const savedReplace = {
+      gameUserSettings: "",
+      game: `${section}\nDifficultyOffset=1\n${campfireSaved}\n`,
+    };
+    // Replace path: replaying the Unset conflicts with the lineEdits write.
+    expect(() => restoreUnsavedVisualEdits(savedReplace, baseline, draft, "engramOverrides")).not.toThrow();
+    expect(restoreUnsavedVisualEdits(savedReplace, baseline, draft, "engramOverrides").game).toContain(
+      campfireSaved,
+    );
+
+    const savedAppend = {
+      gameUserSettings: "",
+      game: `${section}\nDifficultyOffset=1\n${campfire}\n${hatchet}\n`,
+    };
+    const restoredAppend = restoreUnsavedVisualEdits(savedAppend, baseline, draft, "engramOverrides");
+    // Append path: draft must keep the live line still on disk so a later Text Save cannot wipe it.
+    expect(restoredAppend.game).toContain(campfire);
+    expect(restoredAppend.game).toContain(hatchet);
+    // Unrelated Settings draft edits still restore across an Overrides Save.
+    expect(restoredAppend.game).toContain("DifficultyOffset=2");
+  });
+
+  it("does not replay a text-deleted supply crate after Loot Save", () => {
+    const section = "[/Script/ShooterGame.ShooterGameMode]";
+    const before =
+      'ConfigOverrideSupplyCrateItems=(SupplyCrateClassString="SupplyCrate_Level03_C",MinItemSets=1,MaxItemSets=1)';
+    const after =
+      'ConfigOverrideSupplyCrateItems=(SupplyCrateClassString="SupplyCrate_Level03_C",MinItemSets=1,MaxItemSets=2)';
+    const baseline = { gameUserSettings: "", game: `${section}\nDifficultyOffset=1\n${before}\n` };
+    const draft = { gameUserSettings: "", game: `${section}\nDifficultyOffset=2\n` };
+    const saved = { gameUserSettings: "", game: `${section}\nDifficultyOffset=1\n${after}\n` };
+    const restored = restoreUnsavedVisualEdits(saved, baseline, draft, "loot");
+    expect(restored.game).toContain(after);
+    expect(restored.game).toContain("DifficultyOffset=2");
+  });
 });
 
 describe("configurationEditorSaveToastMessage", () => {

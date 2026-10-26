@@ -83,14 +83,28 @@ export function textPayloadForScope(
   return draft;
 }
 
-/** Put unsaved visual edits from the other views back on top of the saved files. */
+/**
+ * Put unsaved visual edits from the other views back on top of the saved files.
+ * Named engram / supply-crate keys on Overrides or Loot Save are written via
+ * lineEdits — do not replay stale Set/Unset for those keys or Save can conflict
+ * after a successful write, or leave the draft missing live lines still on disk.
+ */
 export function restoreUnsavedVisualEdits(
   saved: ServerIniPayload,
   baseline: ServerIniPayload,
   draft: ServerIniPayload,
   scope: IniSaveScope,
 ): ServerIniPayload {
-  const kept = buildIniSemanticOps(baseline, draft).filter((op) => !semanticOpInScope(op, scope));
+  const kept = buildIniSemanticOps(baseline, draft).filter((op) => {
+    if (semanticOpInScope(op, scope)) return false;
+    if (scope === "engramOverrides" && isNamedEngramEntriesKey(op.key) && op.fileKey === "game") {
+      return false;
+    }
+    if (scope === "loot" && isSupplyCrateEntriesKey(op.key) && op.fileKey === "game") {
+      return false;
+    }
+    return true;
+  });
   return applyIniSemanticOps(saved, kept);
 }
 
