@@ -66,6 +66,13 @@ Requirements:
 - Create/edit **Base folder** (and other PathFields) are browse-only chips
   (`aria-readonly`). Do not `.fill()` them — stub `dialog.showOpenDialog` and
   click **Browse** (`pickPathField` / `stubFolderPicker`).
+- Suites that create a profile and assert **server file writes** (INI visual,
+  cluster tribute, backup restore, Hosted Resources BanListURL) share
+  [`scripts/e2e-server-fixture.cjs`](../scripts/e2e-server-fixture.cjs) (#688):
+  unique ports (stride leaves room for ini-visual’s drifted game port), ready
+  fake `ArkAscendedServer.exe`, WindowsServer INI paths, create/reopen helpers.
+  Prefer that module over copying path/port seeding into a new `e2e:*-write`
+  script.
 
 Out of PR CI: SteamCMD depot download, real ASA process lifecycle, safe-update
 rollback demos, and long move/import suites (keep local / release audit).
