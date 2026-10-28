@@ -18,6 +18,9 @@ const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
 /**
  * Curated changelog for the public site and in-app What's new.
  * Keep in sync with root CHANGELOG.md when cutting releases.
+ * First-time features go under Highlights, not Changed or Fixed.
+ * Name the screen and what the operator can do. Do not mention that a
+ * feature was already on main or hidden in an earlier release.
  * website/src/data/changelog.ts re-exports this (website/ is a separate package).
  *
  * @lintignore
