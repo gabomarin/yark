@@ -38,9 +38,7 @@ export const changelog: ChangelogEntry[] = [
       },
       {
         title: "Fixed",
-        items: [
-          "Dark themes draw field errors in the brighter danger red, so they stay readable on Breeze.",
-        ],
+        items: ["Dark themes draw field errors in the brighter danger red, so they stay readable on Breeze."],
       },
     ],
   },
