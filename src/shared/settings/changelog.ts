@@ -24,6 +24,35 @@ const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.26.0",
+    date: "2026-10-28",
+    sections: [
+      {
+        title: "Highlights",
+        items: [
+          "Settings → Appearance and the setup assistant list Glassy beside Fluent and Plasma Breeze. The theme was already in 0.25 and stayed out of those lists; a saved Glassy choice still applied.",
+          "Game.ini Visual adds Engrams, so named overrides and points per level can be edited without hunting raw lines.",
+          "Game.ini Visual adds Loot, so a supply crate override can be edited by crate and item name and rolled from the Simulator tab.",
+          "When GameUserSettings.ini differs from the Server form, the Server tab shows each changed field. Copy the file values into YARK, or keep YARK's values.",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "A loot crate shows a note only when that override is not used on the server map.",
+          "Glassy can turn the day or night scene off. The glass panels stay.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "Dark themes draw field errors in the brighter danger red, so a message such as a missing quantity stays readable.",
+          "The loot editor scrolls when a crate or the crate list is taller than the pane.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.25.0",
     date: "2026-10-23",
     sections: [

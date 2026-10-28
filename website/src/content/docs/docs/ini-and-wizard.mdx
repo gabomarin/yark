@@ -26,6 +26,14 @@ Paths under each install:
 - Visual editor **Other** keeps custom mod `[Section]` keys nested by section (expand/collapse on the Other header)
 - Do not expect generic INI libraries to round-trip ASA — section names can contain dots literally
 
+## Engrams and loot
+
+On **Game.ini**, Visual adds **Engrams** and **Loot** beside Settings.
+
+**Engrams** edits named engram overrides. Search the official list, or type a custom class with no spaces. A new line is saved only after a point cost, a level, Hidden, or Remove prerequisite is set. A new line does not turn Hidden on by itself. **Points per level** is edited in that view, one integer per level, and those lines stay out of the Settings table. Save rewrites only the lines that changed.
+
+**Loot** edits a supply crate override by crate and item name. The list names the beacon crates and which maps use each one, and notes a crate when this server's map does not use it. A weight is a share of its list, not a percent. The Simulator rolls the open crate and does not write the file. Save rewrites only the loot lines that changed. Removing a row removes that override; the crate in the game stays and uses the game's loot.
+
 Semantic checks include RCON port range and `DifficultyOffset` 0–1 when `[ServerSettings]` is present, and leftover `MaxPlayers` 1–255 on `[/Script/Engine.GameSession]` or `[ServerSettings]` if those keys are present. **Max players** on the Server form (1–255) launches `-WinLiveMaxPlayers` — that is the live cap. ASA ignores INI `MaxPlayers`. Empty or **0** omits the flag (ASA then defaults to 70).
 
 Profile networking fields (RCON, passwords, session, ports) are also written on **start** via profile→INI sync. See [Start, stop, restart](/docs/lifecycle/).

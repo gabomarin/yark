@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-10-28
+
 ### Added
 
 - Game.ini Visual adds **Loot** beside Settings and Engrams, so a supply crate override can be edited by crate and item name, checked against the server map, and rolled from the Simulator tab (#686).
@@ -17,12 +19,12 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Changed
 
+- Settings → Appearance and the setup assistant list **Glassy** beside Fluent and Plasma Breeze. The theme was already on main for 0.25 and stayed out of those lists; a saved Glassy choice still applied.
 - A loot crate shows a note only when that override is not used on the server map (#686).
 - Loot lists the ring drops and cave crate tier 4, and explains that a weight is a share of its list and that a full set includes every entry (#686).
 - Loot names the supply crates from the beacon list, including map-specific drops, and says which maps use each one (#686).
 - A loot set says how many of its entries drop. Several items on one entry share that quantity, each with its own weight, and a class with no catalog name is marked as missing from the item list (#686).
 - The loot Simulator names the crate being rolled and puts one open beside many opens. It no longer repeats that an appended crate leaves out the game's items (#686).
-- Settings → Appearance and the setup assistant list **Glassy** beside Fluent and Plasma Breeze.
 
 ### Fixed
 
@@ -1065,6 +1067,9 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Tracked in-repo TODO / historical planning docs (moved to local agent context).
 
 [Unreleased]: #unreleased
+[0.26.0]: #0260---2026-10-28
+[0.25.0]: #0250---2026-10-23
+[0.24.0]: #0240---2026-10-16
 [0.23.0]: #0230---2026-09-23
 [0.22.0]: #0220---2026-09-21
 [0.21.0]: #0210---2026-09-16
