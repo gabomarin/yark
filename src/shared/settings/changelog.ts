@@ -31,8 +31,8 @@ export const changelog: ChangelogEntry[] = [
         title: "Highlights",
         items: [
           "Glassy joins Fluent and Plasma Breeze in Settings → Appearance and the setup assistant.",
-          "Game.ini Visual adds Engrams, including points per level.",
-          "Game.ini Visual adds Loot, so a supply crate override can be edited and rolled from the Simulator.",
+          "Open Game.ini and choose Engrams to set an engram's cost, level, and points per level, or to add an official or custom engram.",
+          "Open Game.ini and choose Loot to change a supply crate by name, see if this map uses it, and roll the drop in the Simulator.",
           "When GameUserSettings.ini differs from the Server form, copy the file values into YARK or keep YARK's values.",
         ],
       },
