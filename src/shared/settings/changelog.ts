@@ -30,15 +30,11 @@ export const changelog: ChangelogEntry[] = [
       {
         title: "Highlights",
         items: [
-          "Settings → Appearance and the setup assistant list Glassy beside Fluent and Plasma Breeze. The theme was already in 0.25 and stayed out of those lists; a saved Glassy choice still applied. Glassy can turn the day or night scene off, and the glass panels stay.",
-          "Game.ini Visual adds Engrams, so named overrides and points per level can be edited without hunting raw lines.",
-          "Game.ini Visual adds Loot, so a supply crate override can be edited by crate and item name, checked against the server map, and rolled from the Simulator tab.",
-          "When GameUserSettings.ini differs from the Server form, the Server tab shows each changed field. Copy the file values into YARK, or keep YARK's values.",
+          "Glassy joins Fluent and Plasma Breeze in Settings → Appearance and the setup assistant.",
+          "Game.ini Visual adds Engrams, including points per level.",
+          "Game.ini Visual adds Loot, so a supply crate override can be edited and rolled from the Simulator.",
+          "When GameUserSettings.ini differs from the Server form, copy the file values into YARK or keep YARK's values.",
         ],
-      },
-      {
-        title: "Fixed",
-        items: ["Dark themes draw field errors in the brighter danger red, so they stay readable on Breeze."],
       },
     ],
   },
