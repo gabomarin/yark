@@ -126,7 +126,7 @@ Report shape:
 
 - Guidance card: both ID + directory required; page ≠ live transfer validation.
 - **Create cluster** wizard: pick one or more stopped unclustered servers, set/generate a
-  unique Cluster ID (`yark-cluster-1`, then `yark-cluster-2`, …), choose a shared Windows directory, preview, then save
+  unique Cluster ID (`yark-cluster-` plus 8 hex digits, for example `yark-cluster-7f3a9c2e`, retried if this PC already uses that suffix), choose a shared Windows directory, preview, then save
   membership via `servers:update` (no standalone cluster entity). Partial save
   failures roll profiles back to the previous cluster fields when possible.
 - Summary badges: cluster count, ready (no errors), error clusters, warning-only

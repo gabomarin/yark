@@ -28,7 +28,7 @@ export function CreateClusterIdentityStep(props: Props): ReactElement {
         <TextInput
           style={{ flex: 1 }}
           label="Cluster ID"
-          description="ARK uses this ID so servers can transfer survivors, items, and creatures between maps."
+          description="ARK uses this ID so servers can transfer survivors, items, and creatures between maps. Generate adds a short random suffix so other players' servers do not share it."
           required
           value={props.clusterId}
           onChange={(event) => props.onClusterIdChange(event.currentTarget.value)}
