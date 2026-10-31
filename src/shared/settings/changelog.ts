@@ -18,11 +18,29 @@ const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
 /**
  * Curated changelog for the public site and in-app What's new.
  * Keep in sync with root CHANGELOG.md when cutting releases.
+ * First-time features go under Highlights, not Changed or Fixed.
+ * Name the screen and what the operator can do. Do not mention that a
+ * feature was already on main or hidden in an earlier release.
  * website/src/data/changelog.ts re-exports this (website/ is a separate package).
  *
  * @lintignore
  */
 export const changelog: ChangelogEntry[] = [
+  {
+    version: "0.26.0",
+    date: "2026-10-28",
+    sections: [
+      {
+        title: "Highlights",
+        items: [
+          "Glassy joins Fluent and Plasma Breeze in Settings → Appearance and the setup assistant.",
+          "Open Game.ini and choose Engrams to set an engram's cost, level, and points per level, or to add an official or custom engram.",
+          "Open Game.ini and choose Loot to change a supply crate by name, see if this map uses it, and roll the drop in the Simulator.",
+          "When GameUserSettings.ini differs from the Server form, copy the file values into YARK or keep YARK's values.",
+        ],
+      },
+    ],
+  },
   {
     version: "0.25.0",
     date: "2026-10-23",

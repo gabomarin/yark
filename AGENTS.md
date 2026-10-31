@@ -19,7 +19,10 @@ tracked Markdown or link the hub from the public repository.
 
 Update `CHANGELOG.md` under `## [Unreleased]` on feature branches (one short
 operator-facing bullet). CI fails PRs that leave that section unchanged unless
-the PR has the `skip-changelog` label. Details: [`.cursor/rules/changelog.mdc`](.cursor/rules/changelog.mdc),
+the PR has the `skip-changelog` label. What's new
+(`src/shared/settings/changelog.ts`) puts a first-time feature under
+**Highlights**, with copy an operator understands and wants to try. Details:
+[`.cursor/rules/changelog.mdc`](.cursor/rules/changelog.mdc),
 [docs/versioning.md](docs/versioning.md).
 
 ## Security policy

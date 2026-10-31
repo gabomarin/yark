@@ -22,18 +22,71 @@ export function listKnownClusterIds(servers: ServerProfile[]): string[] {
   ];
 }
 
+/** Generated Cluster IDs keep this prefix so the operator can recognize them. */
+const SUGGESTED_CLUSTER_ID_PREFIX = "yark-cluster-";
+
 /**
- * Short default Cluster ID (`yark-cluster-1`, then `yark-cluster-2`, …).
- * Pass current IDs so Generate bumps instead of repeating the slug.
+ * Hex digits after the prefix (32 bits). Short enough to read in the form and
+ * on `-clusterid=`. A shared sequence such as `yark-cluster-1` shows other
+ * players' servers in the in-game transfer list.
  */
-export function suggestClusterId(taken: Iterable<string> = []): string {
-  const takenSet = new Set([...taken].map((id) => id.trim().toLowerCase()).filter((id) => id.length > 0));
-  const prefix = "yark-cluster-";
-  let n = 1;
-  while (takenSet.has(`${prefix}${n}`)) {
-    n += 1;
+const SUGGESTED_CLUSTER_ID_SUFFIX_HEX_LENGTH = 8;
+
+const SUGGESTED_CLUSTER_ID_ATTEMPTS = 8;
+
+/** 8 lowercase hex digits from a UUID. */
+function randomClusterIdSuffix(): string {
+  return globalThis.crypto.randomUUID().replaceAll("-", "").slice(0, SUGGESTED_CLUSTER_ID_SUFFIX_HEX_LENGTH);
+}
+
+/** `yark-cluster-` plus exactly 8 hex digits, or null when the suffix is shorter. */
+function toSuggestedClusterId(rawSuffix: string): string | null {
+  const hex = rawSuffix
+    .trim()
+    .toLowerCase()
+    .replace(/[^0-9a-f]/g, "");
+  if (hex.length < SUGGESTED_CLUSTER_ID_SUFFIX_HEX_LENGTH) return null;
+  return `${SUGGESTED_CLUSTER_ID_PREFIX}${hex.slice(0, SUGGESTED_CLUSTER_ID_SUFFIX_HEX_LENGTH)}`;
+}
+
+function firstFreeSuggestedClusterId(taken: Set<string>, source: () => string, attempts: number): string | null {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const id = toSuggestedClusterId(source());
+    if (id !== null && !taken.has(id)) return id;
   }
-  return `${prefix}${n}`;
+  return null;
+}
+
+/**
+ * 8 hex digits that are not in `taken`. `taken.size + 1` distinct ids cannot all be taken.
+ */
+function unusedSuggestedClusterId(taken: Set<string>): string {
+  const parsed = Number.parseInt(randomClusterIdSuffix(), 16);
+  const base = Number.isFinite(parsed) ? parsed >>> 0 : 0;
+  for (let step = 0; step <= taken.size; step += 1) {
+    const suffix = ((base + step) >>> 0).toString(16).padStart(SUGGESTED_CLUSTER_ID_SUFFIX_HEX_LENGTH, "0");
+    const id = `${SUGGESTED_CLUSTER_ID_PREFIX}${suffix}`;
+    if (!taken.has(id)) return id;
+  }
+  throw new Error("No free cluster id suffix");
+}
+
+/**
+ * Default Cluster ID (`yark-cluster-` plus 8 hex digits, for example `yark-cluster-7f3a9c2e`).
+ * Pass current IDs so Generate skips a suffix this PC already uses.
+ * `nextSuffix` is for tests; the app draws the suffix from `crypto.randomUUID()`.
+ * A taken or empty suffix is skipped. The result stays 8 hex digits.
+ */
+export function suggestClusterId(
+  taken: Iterable<string> = [],
+  nextSuffix: () => string = randomClusterIdSuffix,
+): string {
+  const takenSet = new Set([...taken].map((id) => id.trim().toLowerCase()).filter((id) => id.length > 0));
+  return (
+    firstFreeSuggestedClusterId(takenSet, nextSuffix, SUGGESTED_CLUSTER_ID_ATTEMPTS) ??
+    firstFreeSuggestedClusterId(takenSet, randomClusterIdSuffix, SUGGESTED_CLUSTER_ID_ATTEMPTS) ??
+    unusedSuggestedClusterId(takenSet)
+  );
 }
 
 export type CreateClusterStep = 1 | 2 | 3;
