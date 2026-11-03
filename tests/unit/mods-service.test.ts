@@ -134,6 +134,9 @@ describe("ModsService (mock catalog)", () => {
       /No mock catalog entry for slug "speed_costumes"/,
     );
     await expect(service.getByReference(url)).rejects.toThrow(/No mock catalog entry for slug "speed_costumes"/);
+    await expect(service.getByReference(`${url}/files/123`)).rejects.toThrow(
+      /No mock catalog entry for slug "speed_costumes"/,
+    );
   });
 });
 

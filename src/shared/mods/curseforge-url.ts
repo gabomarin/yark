@@ -1,7 +1,10 @@
 const CURSEFORGE_HOST = /(^|\.)curseforge\.com$/i;
 /** CurseForge slugs use hyphens and underscores (`speed_costumes`, `super-spyglass-plus`). */
 const ASA_MOD_SLUG = "[a-z0-9]+(?:[_-][a-z0-9]+)*";
-const ASA_MOD_PATH = new RegExp(`^/ark-survival-ascended/mods/(${ASA_MOD_SLUG})/?$`, "i");
+const ASA_MOD_PATH = new RegExp(
+  `^/ark-survival-ascended/mods/(${ASA_MOD_SLUG})(?:/[^/]+)*/*$`,
+  "i",
+);
 const ASA_MOD_SLUG_ONLY = new RegExp(`^${ASA_MOD_SLUG}$`, "i");
 
 export function isCurseForgeAsaModSlug(raw: string): boolean {

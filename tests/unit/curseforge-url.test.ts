@@ -22,6 +22,17 @@ describe("CurseForge ASA mod URLs", () => {
     expect(canonicalCurseForgeAsaModUrl(input)).toBe(input);
   });
 
+  it("accepts a tab or file link and keeps the project slug (#692)", () => {
+    const files = "https://www.curseforge.com/ark-survival-ascended/mods/speed_costumes/files/123";
+    const relations = "https://www.curseforge.com/ark-survival-ascended/mods/speed_costumes/relations/dependencies";
+    expect(getCurseForgeAsaModUrlError(files)).toBeNull();
+    expect(curseForgeAsaSlugFromUrl(files)).toBe("speed_costumes");
+    expect(canonicalCurseForgeAsaModUrl(files)).toBe(
+      "https://www.curseforge.com/ark-survival-ascended/mods/speed_costumes",
+    );
+    expect(curseForgeAsaSlugFromUrl(relations)).toBe("speed_costumes");
+  });
+
   it.each([
     ["", "Enter a CurseForge mod URL."],
     ["not-a-url", "Enter a valid URL, including https://."],
@@ -29,6 +40,10 @@ describe("CurseForge ASA mod URLs", () => {
     ["https://example.com/ark-survival-ascended/mods/test", "curseforge.com"],
     ["https://curseforge.com/minecraft/mc-mods/test", "Ark: Survival Ascended"],
     ["https://www.curseforge.com/ark-survival-evolved/mods/speed_costumes", "Ark: Survival Ascended"],
+    [
+      "https://www.curseforge.com/ark-survival-ascended/mods/speed_costumes/../../minecraft/mc-mods/jei",
+      "Ark: Survival Ascended",
+    ],
   ])("rejects %j", (input, expected) => {
     expect(getCurseForgeAsaModUrlError(input)).toContain(expected);
   });
