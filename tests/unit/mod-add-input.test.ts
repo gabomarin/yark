@@ -38,6 +38,15 @@ describe("parseModAddInput", () => {
     });
   });
 
+  it("accepts an ASA mod URL whose slug contains underscores (#692)", () => {
+    const url = "https://www.curseforge.com/ark-survival-ascended/mods/speed_costumes";
+    expect(parseModAddInput(url)).toEqual({
+      ids: [],
+      urls: [url],
+      invalid: [],
+    });
+  });
+
   it("mixes IDs and a URL and reports invalid tokens", () => {
     const url = "https://www.curseforge.com/ark-survival-ascended/mods/cryopods";
     const parsed = parseModAddInput(`928793, not-a-mod, ${url}, abc`);
