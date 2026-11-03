@@ -27,6 +27,18 @@ const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.26.1",
+    date: "2026-11-03",
+    sections: [
+      {
+        title: "Fixed",
+        items: [
+          "Server Mods can add an ASA CurseForge project whose link contains an underscore, such as Speed_Costumes, including a link opened on the Files tab.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.26.0",
     date: "2026-10-28",
     sections: [

@@ -127,6 +127,17 @@ describe("ModsService (mock catalog)", () => {
     const meta = await service.getByReference("cryopods");
     expect(meta.id).toBe("928793");
   });
+
+  it("treats an underscore slug as an ASA mod reference (#692)", async () => {
+    const url = "https://www.curseforge.com/ark-survival-ascended/mods/speed_costumes";
+    await expect(service.getByReference("speed_costumes")).rejects.toThrow(
+      /No mock catalog entry for slug "speed_costumes"/,
+    );
+    await expect(service.getByReference(url)).rejects.toThrow(/No mock catalog entry for slug "speed_costumes"/);
+    await expect(service.getByReference(`${url}/files/123`)).rejects.toThrow(
+      /No mock catalog entry for slug "speed_costumes"/,
+    );
+  });
 });
 
 describe("ModsService proxy URL precedence (#151)", () => {
@@ -295,6 +306,57 @@ describe("ModsService.enrichNewServerMods", () => {
     );
     expect(fetchImpl).toHaveBeenCalled();
     expect(result.modMetadataCache?.["947033"]?.name).toBe("Awesome Spyglass");
+  });
+
+  it("keeps an ASA mod whose CurseForge slug contains underscores (#692)", async () => {
+    const speedCostumes: ModMetadata = {
+      ...awesome,
+      id: "932759",
+      name: "Speed_Costumes CrossPlay",
+      curseforgeUrl: "https://www.curseforge.com/ark-survival-ascended/mods/speed_costumes",
+      slug: "speed_costumes",
+    };
+    const service = new ModsService({
+      buildDefaultUrl: "",
+      baseUrl: "https://proxy.test",
+      fetchImpl: (async () =>
+        ({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            ok: true,
+            data: { items: [speedCostumes], skipped: [] },
+          }),
+        }) as Response) as typeof fetch,
+    });
+    const result = await service.enrichNewServerMods(profileInput(["932759"]), { mods: [] });
+    expect(result.mods).toEqual(["932759"]);
+    expect(result.modMetadataCache?.["932759"]?.slug).toBe("speed_costumes");
+  });
+
+  it("names the URL reason when a resolved project is not an ASA mod page", async () => {
+    const evolved: ModMetadata = {
+      ...awesome,
+      id: "932759",
+      curseforgeUrl: "https://www.curseforge.com/ark-survival-evolved/mods/speed_costumes",
+      slug: "speed_costumes",
+    };
+    const service = new ModsService({
+      buildDefaultUrl: "",
+      baseUrl: "https://proxy.test",
+      fetchImpl: (async () =>
+        ({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            ok: true,
+            data: { items: [evolved], skipped: [] },
+          }),
+        }) as Response) as typeof fetch,
+    });
+    await expect(service.enrichNewServerMods(profileInput(["932759"]), { mods: [] })).rejects.toThrow(
+      /non-ASA project: Use an Ark: Survival Ascended CurseForge mod detail URL/,
+    );
   });
 
   it("rejects a new ID the Worker cannot resolve", async () => {
