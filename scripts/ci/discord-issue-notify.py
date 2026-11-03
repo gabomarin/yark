@@ -123,6 +123,8 @@ def post_json(url: str, payload: dict, headers: dict[str, str]) -> tuple[int, st
     except urllib.error.HTTPError as e:
         detail = e.read().decode("utf-8", errors="replace")
         return e.code, detail
+    except (urllib.error.URLError, TimeoutError) as e:
+        return 0, str(e)
 
 
 def main() -> int:

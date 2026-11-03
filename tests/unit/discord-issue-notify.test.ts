@@ -157,4 +157,20 @@ describe("discord-issue-notify main", () => {
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("Skip: pull request");
   });
+
+  it("reports a Discord connection failure instead of raising", () => {
+    const py = `
+import importlib.util, json
+spec = importlib.util.spec_from_file_location("notify", r"${script}")
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+def fail(*_args, **_kwargs):
+    raise mod.urllib.error.URLError("dns failed")
+mod.urllib.request.urlopen = fail
+print(json.dumps(mod.post_json("https://discord.com/api/v10/channels/1/messages", {}, {})))
+`;
+    const [status, detail] = JSON.parse(runPython(py)) as [number, string];
+    expect(status).toBe(0);
+    expect(detail).toContain("dns failed");
+  });
 });
