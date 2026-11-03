@@ -16,6 +16,7 @@ human-readable version comment on the line above each `uses:` entry. Mutable tag
 | [`.github/workflows/release.yml`](../.github/workflows/release.yml)                               | Windows NSIS → GitHub Release; Discord `#releases` notify after assets upload                                                      | workflow `contents: read`; job elevates `contents: write` only to publish |
 | [`.github/workflows/open-code-review.yml`](../.github/workflows/open-code-review.yml)             | On-demand AI review for a PR with primary/fallback model selection; no automatic run on pushes                                     | `contents: read`, `pull-requests: write`                                  |
 | [`.github/workflows/discord-release-notify.yml`](../.github/workflows/discord-release-notify.yml) | Manual Discord re-announce for an existing tag (`workflow_dispatch`)                                                               | `contents: read`                                                          |
+| [`.github/workflows/discord-issue-notify.yml`](../.github/workflows/discord-issue-notify.yml)     | New issue → Discord, skipping the owner and bots                                                                                   | `contents: read`, `issues: read`                                          |
 | [`.github/workflows/real-host-validation.yml`](../.github/workflows/real-host-validation.yml)     | Manual `workflow_dispatch` real-ASA lifecycle + safe-update on a prepared self-hosted Windows runner (`yark-asa`); not PR CI (#12) | `contents: read`                                                          |
 
 Release runs only when `github.repository == 'gabomarin/yark'` (tag push or
@@ -130,6 +131,35 @@ notes are truncated to Discord’s 2000-character limit with a pointer to the fu
 GitHub release page. On **Release Windows**, Discord notify uses
 `continue-on-error` so a Discord outage does not fail the packaging job after
 assets are already published.
+
+### Discord issue notify
+
+[`.github/workflows/discord-issue-notify.yml`](../.github/workflows/discord-issue-notify.yml)
+posts to Discord when someone opens an issue on `gabomarin/yark`. The message is
+the issue number, title, author login, and link. The issue body is not posted.
+[`scripts/ci/discord-issue-notify.py`](../scripts/ci/discord-issue-notify.py)
+posts as **Yark Bot**, using the same secret `DISCORD_BOT_TOKEN` as release notify.
+
+The job does not post when:
+
+- repository variable `DISCORD_ISSUES_CHANNEL_ID` is unset (no hardcoded channel id)
+- the author login is `gabomarin` (any case)
+- `user.type` is `Bot`, or the login ends with `[bot]`
+- the payload is a pull request (manual dispatch only; the `issues` event does not fire for pull requests)
+
+1. Invite **Yark Bot** to the channel with **Send Messages** (the release-notify
+   bot token is reused).
+2. In GitHub: repo **Settings → Secrets and variables → Actions → Variables**,
+   set `DISCORD_ISSUES_CHANNEL_ID` to that channel’s snowflake
+   (Developer Mode → right-click channel → Copy Channel ID).
+3. Preview without posting: Actions → **Discord issue notify** → Run workflow →
+   enter an existing issue number and set **dry_run** to `true`. Owner and bot
+   issues print `Skip` and post nothing.
+
+Requests set an explicit `User-Agent` (Cloudflare returns `403` / error `1010`
+for Python-urllib’s default UA). Message `flags` include `SUPPRESS_EMBEDS`, and
+`allowed_mentions` is empty, so the issue link does not expand and the title
+cannot ping `@everyone` or a user.
 
 Official Windows packages require repository variable
 `YARK_CURSEFORGE_PROXY_URL` (baked into main at build time; see

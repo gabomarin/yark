@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Added
+
+- A GitHub issue opened by someone other than the maintainer or a bot is posted to Discord by Yark Bot (repository variable `DISCORD_ISSUES_CHANNEL_ID`).
+
 ### Fixed
 
 - Create cluster and the setup assistant suggest a Cluster ID like `yark-cluster-7f3a9c2e` instead of `yark-cluster-1`, so the in-game transfer list does not include other people's servers that reused the same default ID.

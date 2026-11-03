@@ -1,0 +1,71 @@
+name: Discord issue notify
+
+# Posts a newly opened issue to Discord as Yark Bot.
+# Skips gabomarin, GitHub bot accounts, and logins ending in [bot].
+# Requires secret DISCORD_BOT_TOKEN (same token as release notify) and
+# variable DISCORD_ISSUES_CHANNEL_ID. Skips when that variable is unset.
+# Does not post the issue body.
+
+on:
+  issues:
+    types: [opened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "Existing issue number to announce (owner and bots are still skipped)"
+        required: true
+        type: string
+      dry_run:
+        description: "Print the rendered message in the job log instead of posting"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: read
+
+concurrency:
+  group: discord-issue-notify-${{ github.event.issue.number || inputs.issue_number }}
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    if: >-
+      github.repository == 'gabomarin/yark' &&
+      vars.DISCORD_ISSUES_CHANNEL_ID != '' &&
+      (github.event_name == 'workflow_dispatch' ||
+        (github.event.issue.user.type != 'Bot' &&
+         github.event.issue.user.login != 'gabomarin' &&
+         !endsWith(github.event.issue.user.login, '[bot]')))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Post issue to Discord
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_ISSUES_CHANNEL_ID: ${{ vars.DISCORD_ISSUES_CHANNEL_ID }}
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_NUMBER: ${{ inputs.issue_number }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+          ISSUE_USER_TYPE: ${{ github.event.issue.user.type }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
+            case "${INPUT_NUMBER}" in
+              ''|*[!0-9]*)
+                echo "::error::issue_number must be a positive integer"
+                exit 1
+                ;;
+            esac
+            gh api "repos/${GITHUB_REPOSITORY}/issues/${INPUT_NUMBER}" > "${RUNNER_TEMP}/issue.json"
+            export ISSUE_JSON="${RUNNER_TEMP}/issue.json"
+          fi
+          python3 scripts/ci/discord-issue-notify.py
