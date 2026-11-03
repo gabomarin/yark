@@ -11,8 +11,13 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
-- Server Mods accepts an ASA CurseForge project whose slug contains an underscore, such as Speed_Costumes (932759), including a link opened on Files or another tab of that project (#692).
 - Create cluster and the setup assistant suggest a Cluster ID like `yark-cluster-7f3a9c2e` instead of `yark-cluster-1`, so the in-game transfer list does not include other people's servers that reused the same default ID.
+
+## [0.26.1] - 2026-11-03
+
+### Fixed
+
+- Server Mods accepts an ASA CurseForge project whose slug contains an underscore, such as Speed_Costumes (932759), including a link opened on Files or another tab of that project (#692).
 
 ## [0.26.0] - 2026-10-28
 
@@ -1069,6 +1074,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Tracked in-repo TODO / historical planning docs (moved to local agent context).
 
 [Unreleased]: #unreleased
+[0.26.1]: #0261---2026-11-03
 [0.26.0]: #0260---2026-10-28
 [0.25.0]: #0250---2026-10-23
 [0.24.0]: #0240---2026-10-16
