@@ -8,7 +8,7 @@ const CLOSING_BY_REQUEST = /closing by request/i;
 const LOG_FILE_CLOSED = /log file closed/i;
 
 /** How often Stop re-reads ShooterGame.log after DoExit. */
-export const SHUTDOWN_POLL_MS = 500;
+const SHUTDOWN_POLL_MS = 500;
 
 /**
  * How long Stop waits for the process to finish after DoExit before force-kill.
