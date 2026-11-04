@@ -44,19 +44,11 @@ function clock(host: ProcessGracefulStopHost): { sleep: (ms: number) => Promise<
   };
 }
 
-function sameProcess(
-  host: ProcessGracefulStopHost,
-  profile: ServerProfile,
-  managed: ProcessStartManaged,
-): boolean {
+function sameProcess(host: ProcessGracefulStopHost, profile: ServerProfile, managed: ProcessStartManaged): boolean {
   return host.getManaged(profile.id) === managed && managed.child.exitCode === null;
 }
 
-function releaseIfCurrent(
-  host: ProcessGracefulStopHost,
-  profile: ServerProfile,
-  managed: ProcessStartManaged,
-): void {
+function releaseIfCurrent(host: ProcessGracefulStopHost, profile: ServerProfile, managed: ProcessStartManaged): void {
   if (host.getManaged(profile.id) !== managed) return;
   host.stopManagedCapture(profile.id, managed);
   host.deleteManaged(profile.id);
@@ -80,7 +72,12 @@ async function forceKill(
   return exited || host.getManaged(profile.id) !== managed ? "killed" : "stuck";
 }
 
-function stuck(host: ProcessGracefulStopHost, profile: ServerProfile, managed: ProcessStartManaged, message: string): never {
+function stuck(
+  host: ProcessGracefulStopHost,
+  profile: ServerProfile,
+  managed: ProcessStartManaged,
+  message: string,
+): never {
   managed.status = "error";
   managed.lastError = message;
   host.appendRuntimeLog(profile.id, "error", message);

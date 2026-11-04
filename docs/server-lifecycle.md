@@ -199,13 +199,13 @@ Kill on win32 uses `taskkill /pid … /T /F`.
 
 IPC:
 
-| Channel               | Backend                                                                                                                                                                                                                                                                            |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `servers:start`       | sync INI → `ProcessManager.start`                                                                                                                                                                                                                                                  |
-| `servers:set-enabled` | Locked explicit enable/disable transition; never starts or stops ASA implicitly.                                                                                                                                                                                                   |
+| Channel               | Backend                                                                                                                                                                                                                                                                                                                                                                                                     |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `servers:start`       | sync INI → `ProcessManager.start`                                                                                                                                                                                                                                                                                                                                                                           |
+| `servers:set-enabled` | Locked explicit enable/disable transition; never starts or stops ASA implicitly.                                                                                                                                                                                                                                                                                                                            |
 | `servers:stop`        | `InstanceService.stop`: RCON `SaveWorld` → `DoExit` → wait until the process exits or `ShooterGame.log` prints `Log file closed` (cap 10 min) before any force-kill → best-effort stable `pre_stop` backup (world only; #518). `Closing by request` only means shutdown started. Progress via `push:server-stop-progress`. Pass `{ backup: false }` to skip the snapshot (SteamCMD update/verify, restart). |
-| `servers:restart`     | `InstanceService.restart`: lock `"restart"` → stop with `{ backup: false }` → fail-hard `pre_restart` backup → start. Options match `servers:start` (`StartServerOptions`).                                                                                                        |
-| `servers:kill`        | immediate terminate (warning event; UI confirms)                                                                                                                                                                                                                                   |
+| `servers:restart`     | `InstanceService.restart`: lock `"restart"` → stop with `{ backup: false }` → fail-hard `pre_restart` backup → start. Options match `servers:start` (`StartServerOptions`).                                                                                                                                                                                                                                 |
+| `servers:kill`        | immediate terminate (warning event; UI confirms)                                                                                                                                                                                                                                                                                                                                                            |
 
 Status push: `push:server-status`. Stop phase progress: `push:server-stop-progress`.
 While a dedicated PID is live **and** the UI needs samples (Overview, or
@@ -409,7 +409,7 @@ list: [rcon.md](rcon.md).
    prints `Closing by request` when shutdown starts. A finished close also
    prints `Log file closed`. Force-kill (`taskkill /F`) runs only if the
    process is still alive after 10 minutes without that line. `Closing by
-   request` alone does not start a 30s kill. Runtime logs the force-kill. A
+request` alone does not start a 30s kill. Runtime logs the force-kill. A
    replacement process is left untouched.
 4. Unless `{ backup: false }`, `BackupService.createPreStopBackup` packages
    stable stopped files (skip flush; kind world only — #518).
