@@ -27,6 +27,18 @@ const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.26.2",
+    date: "2026-11-04",
+    sections: [
+      {
+        title: "Fixed",
+        items: [
+          "Stop waits until the server process finishes closing, then says whether the map .ark file was rewritten.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.26.1",
     date: "2026-11-03",
     sections: [

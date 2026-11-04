@@ -15,8 +15,13 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
-- **Stop** no longer force-closes the server 30 seconds after DoExit. It waits until the process finishes, then says whether the map `.ark` file was rewritten.
 - Create cluster and the setup assistant suggest a Cluster ID like `yark-cluster-7f3a9c2e` instead of `yark-cluster-1`, so the in-game transfer list does not include other people's servers that reused the same default ID.
+
+## [0.26.2] - 2026-11-04
+
+### Fixed
+
+- **Stop** no longer force-closes the server 30 seconds after DoExit. It waits until the process finishes, then says whether the map `.ark` file was rewritten.
 
 ## [0.26.1] - 2026-11-03
 
