@@ -409,8 +409,11 @@ list: [rcon.md](rcon.md).
    prints `Closing by request` when shutdown starts. A finished close also
    prints `Log file closed`. Force-kill (`taskkill /F`) runs only if the
    process is still alive after 10 minutes without that line. `Closing by
-request` alone does not start a 30s kill. Runtime logs the force-kill. A
-   replacement process is left untouched.
+request` alone does not start a 30s kill. After the process leaves, Runtime
+   compares the map `.ark` mtime with the stamp taken before `SaveWorld` and
+   says whether that file was rewritten. This server build does not log the
+   save itself. Runtime logs the force-kill. A replacement process is left
+   untouched.
 4. Unless `{ backup: false }`, `BackupService.createPreStopBackup` packages
    stable stopped files (skip flush; kind world only — #518).
 5. Clear stop-progress. Event distinguishes saved, RCON-killed, externally

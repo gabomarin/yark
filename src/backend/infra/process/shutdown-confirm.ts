@@ -1,7 +1,12 @@
+import { statSync } from "node:fs";
+import { join } from "node:path";
+import { worldMapDirNameCandidates } from "../../domains/backups/world-snapshot";
+
 /**
  * Lost Colony's ShooterGame.log does not print `Saving world` / `World Save Complete`.
  * A clean DoExit ends with `Closing by request` and, once the process has finished, `Log file closed`.
  * A stop that dies in between leaves `Closing by request` as the last line.
+ * The world write itself shows up as a newer mtime on `{map}.ark`.
  */
 
 const CLOSING_BY_REQUEST = /closing by request/i;
@@ -32,6 +37,58 @@ export function assessShutdownLog(text: string): ShutdownLogState {
     if (LOG_FILE_CLOSED.test(line)) logFileClosed = true;
   }
   return { closingRequested, logFileClosed };
+}
+
+export interface WorldSaveStamp {
+  fileName: string;
+  mtimeMs: number;
+}
+
+export interface WorldSaveCheck {
+  source: "system" | "warning";
+  message: string;
+}
+
+/** Compare the map `.ark` mtime from before SaveWorld with the file after close. */
+export function describeWorldSaveCheck(before: WorldSaveStamp | null, after: WorldSaveStamp | null): WorldSaveCheck {
+  if (before === null) {
+    return { source: "warning", message: "World save file was not found; its timestamp was not checked" };
+  }
+  if (after === null) {
+    return { source: "warning", message: `${before.fileName} disappeared during shutdown` };
+  }
+  if (after.mtimeMs > before.mtimeMs) {
+    return { source: "system", message: `${after.fileName} updated (${new Date(after.mtimeMs).toISOString()})` };
+  }
+  return {
+    source: "warning",
+    message: `${before.fileName} was not updated (still ${new Date(before.mtimeMs).toISOString()})`,
+  };
+}
+
+/**
+ * Primary `{map}.ark` under SavedArks. Tries the launch-token folder first, then
+ * the `_WP`-stripped folder used by some mod maps.
+ */
+export function readPrimaryWorldSaveStamp(profile: {
+  installDir: string;
+  map: string;
+  mapSaveFolder?: string | null;
+}): WorldSaveStamp | null {
+  const token = profile.map.trim();
+  if (token.length === 0) return null;
+  const savedArks = join(profile.installDir, "ShooterGame", "Saved", "SavedArks");
+  for (const folder of worldMapDirNameCandidates(token, profile.mapSaveFolder)) {
+    const path = join(savedArks, folder, `${token}.ark`);
+    try {
+      const stats = statSync(path);
+      if (!stats.isFile()) continue;
+      return { fileName: `${token}.ark`, mtimeMs: stats.mtimeMs };
+    } catch {
+      continue;
+    }
+  }
+  return null;
 }
 
 export function delay(ms: number): Promise<void> {

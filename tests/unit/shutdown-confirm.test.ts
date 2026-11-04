@@ -1,4 +1,7 @@
 import type { ChildProcess } from "node:child_process";
+import { mkdirSync, mkdtempSync, utimesSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import type { ServerProfile } from "@shared/types";
 import type { AsaLogSessionAnchor } from "@backend/infra/process/asa-log-tail";
@@ -10,8 +13,11 @@ import {
 import type { ProcessStartManaged } from "@backend/infra/process/process-start";
 import {
   assessShutdownLog,
+  describeWorldSaveCheck,
+  readPrimaryWorldSaveStamp,
   SHUTDOWN_EXIT_TIMEOUT_MS,
   waitForCleanShutdown,
+  type WorldSaveStamp,
 } from "@backend/infra/process/shutdown-confirm";
 
 const MARK: AsaLogSessionAnchor = { identity: "log", size: 100, mtimeMs: 0 };
@@ -130,8 +136,13 @@ function stopHost(
     terminateManaged: vi.fn(async () => undefined),
     captureLogMark: () => MARK,
     readLogSince,
+    readWorldSaveStamp: () => null,
     ...extra,
   };
+}
+
+function stopHandle(identity: object, worldSave: WorldSaveStamp | null = null) {
+  return { serverId: "srv-1", identity, worldSave };
 }
 
 const profile = { id: "srv-1", installDir: "C:\\ARK" } as ServerProfile;
@@ -142,7 +153,7 @@ describe("beginGracefulStop", () => {
     const host = stopHost(managed, () => `${CLOSING}\n${MUTEX}`);
     await expect(beginGracefulStop(host, profile)).resolves.toEqual({
       phase: "saved",
-      handle: { serverId: "srv-1", identity: managed.identity },
+      handle: stopHandle(managed.identity),
     });
     expect(host.commands).toEqual(["SaveWorld"]);
     expect(host.logs).toContain("SaveWorld sent");
@@ -154,9 +165,7 @@ describe("finishGracefulStop", () => {
   it("does not force-kill when the log closes", async () => {
     const managed = managedProcess();
     const host = stopHost(managed, () => `${CLOSING}\n${MUTEX}\n${CLOSED}`);
-    await expect(finishGracefulStop(host, profile, { serverId: "srv-1", identity: managed.identity })).resolves.toBe(
-      "stopped",
-    );
+    await expect(finishGracefulStop(host, profile, stopHandle(managed.identity))).resolves.toBe("stopped");
     expect(host.commands).toEqual(["DoExit"]);
     expect(host.terminateManaged).not.toHaveBeenCalled();
     expect(host.logs).toContain("ShooterGame.log closed");
@@ -174,7 +183,7 @@ describe("finishGracefulStop", () => {
       now: () => 0,
       getManaged: () => (gone ? undefined : managed),
     });
-    const pending = finishGracefulStop(host, profile, { serverId: "srv-1", identity: managed.identity });
+    const pending = finishGracefulStop(host, profile, stopHandle(managed.identity));
     await vi.waitFor(() => {
       expect(host.commands).toEqual(["DoExit"]);
     });
@@ -194,11 +203,61 @@ describe("finishGracefulStop", () => {
         t += ms;
       },
     });
-    await expect(finishGracefulStop(host, profile, { serverId: "srv-1", identity: managed.identity })).resolves.toBe(
-      "stopped",
-    );
+    await expect(finishGracefulStop(host, profile, stopHandle(managed.identity))).resolves.toBe("stopped");
     expect(t).toBeGreaterThanOrEqual(SHUTDOWN_EXIT_TIMEOUT_MS);
     expect(host.terminateManaged).toHaveBeenCalledTimes(1);
     expect(host.logs).toContain("Server did not finish closing (no Log file closed); forcing shutdown");
+  });
+
+  it("reports when the map ark file is newer than the pre-save stamp", async () => {
+    const managed = managedProcess();
+    const before = { fileName: "LostColony_WP.ark", mtimeMs: Date.parse("2026-11-04T05:00:00.000Z") };
+    const after = { fileName: "LostColony_WP.ark", mtimeMs: Date.parse("2026-11-04T05:13:50.000Z") };
+    const host = stopHost(managed, () => `${CLOSING}\n${CLOSED}`, {
+      readWorldSaveStamp: () => after,
+    });
+    await finishGracefulStop(host, profile, stopHandle(managed.identity, before));
+    expect(host.logs).toContain("LostColony_WP.ark updated (2026-11-04T05:13:50.000Z)");
+    expect(host.terminateManaged).not.toHaveBeenCalled();
+  });
+
+  it("warns when the map ark file still has the pre-save timestamp", async () => {
+    const managed = managedProcess();
+    const stamp = { fileName: "LostColony_WP.ark", mtimeMs: Date.parse("2026-11-04T05:00:00.000Z") };
+    const host = stopHost(managed, () => `${CLOSING}\n${CLOSED}`, {
+      readWorldSaveStamp: () => stamp,
+    });
+    await finishGracefulStop(host, profile, stopHandle(managed.identity, stamp));
+    expect(host.logs).toContain("LostColony_WP.ark was not updated (still 2026-11-04T05:00:00.000Z)");
+  });
+});
+
+describe("readPrimaryWorldSaveStamp", () => {
+  it("reads LostColony_WP.ark from the launch-token folder", () => {
+    const root = mkdtempSync(join(tmpdir(), "yark-ark-stamp-"));
+    const file = join(root, "ShooterGame", "Saved", "SavedArks", "LostColony_WP", "LostColony_WP.ark");
+    mkdirSync(join(file, ".."), { recursive: true });
+    writeFileSync(file, "world");
+    const writtenAt = new Date("2026-11-04T05:13:50.000Z");
+    utimesSync(file, writtenAt, writtenAt);
+    const stamp = readPrimaryWorldSaveStamp({ installDir: root, map: "LostColony_WP" });
+    expect(stamp?.fileName).toBe("LostColony_WP.ark");
+    expect(stamp?.mtimeMs).toBeGreaterThan(writtenAt.getTime() - 2000);
+  });
+
+  it("finds the ark in the folder without the _WP suffix", () => {
+    const root = mkdtempSync(join(tmpdir(), "yark-ark-stamp-"));
+    const file = join(root, "ShooterGame", "Saved", "SavedArks", "LostColony", "LostColony_WP.ark");
+    mkdirSync(join(file, ".."), { recursive: true });
+    writeFileSync(file, "world");
+    expect(readPrimaryWorldSaveStamp({ installDir: root, map: "LostColony_WP" })?.fileName).toBe("LostColony_WP.ark");
+  });
+});
+
+describe("describeWorldSaveCheck", () => {
+  it("says the file was not checked when it was missing before the save", () => {
+    expect(describeWorldSaveCheck(null, null).message).toBe(
+      "World save file was not found; its timestamp was not checked",
+    );
   });
 });

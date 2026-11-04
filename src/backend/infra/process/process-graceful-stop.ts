@@ -2,12 +2,21 @@ import { type ChildProcess } from "node:child_process";
 import type { ServerProfile } from "@shared/types";
 import type { AsaLogSessionAnchor } from "./asa-log-tail";
 import type { ProcessStartManaged } from "./process-start";
-import { assessShutdownLog, delay, waitForCleanShutdown, type ShutdownWaitResult } from "./shutdown-confirm";
+import {
+  assessShutdownLog,
+  delay,
+  describeWorldSaveCheck,
+  waitForCleanShutdown,
+  type ShutdownWaitResult,
+  type WorldSaveStamp,
+} from "./shutdown-confirm";
 
 export interface GracefulStopHandle {
   readonly serverId: string;
   /** Opaque identity of the exact child that acknowledged SaveWorld. */
   readonly identity: object;
+  /** `{map}.ark` mtime taken before SaveWorld. Null when the file was missing. */
+  readonly worldSave: WorldSaveStamp | null;
 }
 
 export type BeginGracefulStopResult =
@@ -31,6 +40,8 @@ export interface ProcessGracefulStopHost {
   captureLogMark(installDir: string): AsaLogSessionAnchor;
   /** ShooterGame.log bytes written after `mark`. */
   readLogSince(installDir: string, mark: AsaLogSessionAnchor): string;
+  /** `{map}.ark` mtime, or null when that file is not on disk. */
+  readWorldSaveStamp(profile: ServerProfile): WorldSaveStamp | null;
   /** Test hook. Production uses real time. */
   sleep?(ms: number): Promise<void>;
   /** Test hook. Production uses `Date.now`. */
@@ -85,6 +96,11 @@ function stuck(
   throw new Error(message);
 }
 
+function reportWorldSave(host: ProcessGracefulStopHost, profile: ServerProfile, before: WorldSaveStamp | null): void {
+  const check = describeWorldSaveCheck(before, host.readWorldSaveStamp(profile));
+  host.appendRuntimeLog(profile.id, check.source, check.message);
+}
+
 /**
  * DoExit saves and exits. `Closing by request` means shutdown started.
  * Force-kill only if the process is still alive after the shutdown cap
@@ -94,11 +110,13 @@ async function shutdownAfterDoExit(
   host: ProcessGracefulStopHost,
   profile: ServerProfile,
   managed: ProcessStartManaged,
+  worldSave: WorldSaveStamp | null,
 ): Promise<"exited" | "killed" | "stuck"> {
   const mark = host.captureLogMark(profile.installDir);
   try {
     await host.executeRcon(profile, "DoExit");
   } catch {
+    reportWorldSave(host, profile, worldSave);
     return forceKill(host, profile, managed, "RCON DoExit failed; applying kill");
   }
 
@@ -110,11 +128,13 @@ async function shutdownAfterDoExit(
     hasExited: () => !sameProcess(host, profile, managed),
   });
   if (outcome === "timeout") {
+    reportWorldSave(host, profile, worldSave);
     return forceKill(host, profile, managed, "Server did not finish closing (no Log file closed); forcing shutdown");
   }
   if (assessShutdownLog(readLog()).logFileClosed) {
     host.appendRuntimeLog(profile.id, "system", "ShooterGame.log closed");
   }
+  reportWorldSave(host, profile, worldSave);
   return "exited";
 }
 
@@ -129,7 +149,11 @@ export async function beginGracefulStop(
   host.appendRuntimeLog(profile.id, "system", "Attempting safe stop via RCON");
   host.emitStatus(profile.id);
 
-  const handle: GracefulStopHandle = { serverId: profile.id, identity: managed.identity };
+  const handle: GracefulStopHandle = {
+    serverId: profile.id,
+    identity: managed.identity,
+    worldSave: host.readWorldSaveStamp(profile),
+  };
   try {
     await host.executeRcon(profile, "SaveWorld");
     host.appendRuntimeLog(profile.id, "system", "SaveWorld sent");
@@ -138,7 +162,7 @@ export async function beginGracefulStop(
     // Prefer DoExit before force-kill when SaveWorld is unavailable (e.g. still
     // bootstrapping after a readiness wait timeout on quit Stop).
     host.appendRuntimeLog(profile.id, "warning", "RCON SaveWorld unavailable; attempting DoExit before kill");
-    const outcome = await shutdownAfterDoExit(host, profile, managed);
+    const outcome = await shutdownAfterDoExit(host, profile, managed, handle.worldSave);
     if (outcome === "stuck") {
       stuck(host, profile, managed, "Could not terminate process after RCON SaveWorld failed");
     }
@@ -158,7 +182,7 @@ export async function finishGracefulStop(
     return "replaced";
   }
 
-  const outcome = await shutdownAfterDoExit(host, profile, managed);
+  const outcome = await shutdownAfterDoExit(host, profile, managed, handle.worldSave);
   if (outcome === "stuck") {
     stuck(host, profile, managed, "Could not terminate process after RCON DoExit");
   }

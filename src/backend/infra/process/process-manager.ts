@@ -34,6 +34,7 @@ import {
 import { type OperatorClosedExit } from "./process-stop";
 import { handleManagedProcessExit } from "./process-managed-exit";
 import { captureAsaLogSessionAnchor, readAsaLogSessionExcerpt } from "./asa-log-tail";
+import { readPrimaryWorldSaveStamp } from "./shutdown-confirm";
 import { AsaApiWindowPoller } from "./process-asa-api-loading";
 import {
   appendProcessRuntimeLog,
@@ -406,6 +407,7 @@ export class ProcessManager extends EventEmitter {
       terminateManaged: (serverId, managed) => this.terminateManaged(serverId, managed),
       captureLogMark: (installDir) => captureAsaLogSessionAnchor(installDir),
       readLogSince: (installDir, mark) => readAsaLogSessionExcerpt(installDir, mark, 256 * 1024),
+      readWorldSaveStamp: (profile) => readPrimaryWorldSaveStamp(profile),
     };
   }
 
