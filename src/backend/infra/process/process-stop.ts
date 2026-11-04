@@ -47,6 +47,3 @@ export function planManagedExitLastError(input: {
     ? `Process exited during startup (code ${input.exitCode ?? "unknown"})`
     : `Process exited unexpectedly (code ${input.exitCode ?? "unknown"})`;
 }
-
-export const SAVE_WAIT_MS = 8000;
-export const EXIT_WAIT_MS = 30000;
