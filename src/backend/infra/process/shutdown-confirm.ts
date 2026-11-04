@@ -107,8 +107,9 @@ export interface ShutdownWaitClock {
 export type ShutdownWaitResult = "exited" | "log-closed" | "timeout";
 
 /**
- * After DoExit, wait until the process leaves or ShooterGame.log prints
- * `Log file closed`. `Closing by request` alone keeps the wait open.
+ * After DoExit, wait until the process leaves. `Log file closed` is recorded
+ * when that exit is also visible, but it does not release the process by itself.
+ * `Closing by request` alone keeps the wait open.
  */
 export async function waitForCleanShutdown(input: ShutdownWaitClock): Promise<ShutdownWaitResult> {
   const timeoutMs = input.timeoutMs ?? SHUTDOWN_EXIT_TIMEOUT_MS;
@@ -116,8 +117,7 @@ export async function waitForCleanShutdown(input: ShutdownWaitClock): Promise<Sh
   const deadline = input.now() + timeoutMs;
   for (;;) {
     const closed = assessShutdownLog(input.readLog()).logFileClosed;
-    if (closed) return "log-closed";
-    if (input.hasExited()) return "exited";
+    if (input.hasExited()) return closed ? "log-closed" : "exited";
     if (input.now() >= deadline) return "timeout";
     await input.sleep(pollMs);
   }

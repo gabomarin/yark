@@ -43,18 +43,23 @@ describe("assessShutdownLog", () => {
 });
 
 describe("waitForCleanShutdown", () => {
-  it("returns when the log closes, without waiting out the cap", async () => {
-    let slept = 0;
+  it("does not treat Log file closed as the process exiting", async () => {
+    let t = 0;
+    let exited = false;
     const result = await waitForCleanShutdown({
       readLog: () => `${CLOSING}\n${CLOSED}`,
-      hasExited: () => false,
-      now: () => 0,
-      sleep: async () => {
-        slept += 1;
+      hasExited: () => exited,
+      now: () => t,
+      sleep: async (ms) => {
+        t += ms;
+        if (t >= 1_000) exited = true;
       },
+      timeoutMs: 60_000,
+      pollMs: 500,
     });
     expect(result).toBe("log-closed");
-    expect(slept).toBe(0);
+    expect(t).toBeGreaterThanOrEqual(1_000);
+    expect(t).toBeLessThan(60_000);
   });
 
   it("keeps waiting past 30s while the log is still on Closing by request", async () => {
@@ -162,8 +167,9 @@ describe("beginGracefulStop", () => {
 });
 
 describe("finishGracefulStop", () => {
-  it("does not force-kill when the log closes", async () => {
+  it("does not force-kill when the log closes and the process has exited", async () => {
     const managed = managedProcess();
+    (managed.child as { exitCode: number | null }).exitCode = 0;
     const host = stopHost(managed, () => `${CLOSING}\n${MUTEX}\n${CLOSED}`);
     await expect(finishGracefulStop(host, profile, stopHandle(managed.identity))).resolves.toBe("stopped");
     expect(host.commands).toEqual(["DoExit"]);
@@ -211,6 +217,7 @@ describe("finishGracefulStop", () => {
 
   it("reports when the map ark file is newer than the pre-save stamp", async () => {
     const managed = managedProcess();
+    (managed.child as { exitCode: number | null }).exitCode = 0;
     const before = { fileName: "LostColony_WP.ark", mtimeMs: Date.parse("2026-11-04T05:00:00.000Z") };
     const after = { fileName: "LostColony_WP.ark", mtimeMs: Date.parse("2026-11-04T05:13:50.000Z") };
     const host = stopHost(managed, () => `${CLOSING}\n${CLOSED}`, {
@@ -223,6 +230,7 @@ describe("finishGracefulStop", () => {
 
   it("warns when the map ark file still has the pre-save timestamp", async () => {
     const managed = managedProcess();
+    (managed.child as { exitCode: number | null }).exitCode = 0;
     const stamp = { fileName: "LostColony_WP.ark", mtimeMs: Date.parse("2026-11-04T05:00:00.000Z") };
     const host = stopHost(managed, () => `${CLOSING}\n${CLOSED}`, {
       readWorldSaveStamp: () => stamp,

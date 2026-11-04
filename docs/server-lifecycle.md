@@ -407,9 +407,10 @@ list: [rcon.md](rcon.md).
    (no backup).
 3. `finishGracefulStop` validates the ownership handle, then `DoExit`. The log
    prints `Closing by request` when shutdown starts. A finished close also
-   prints `Log file closed`. Force-kill (`taskkill /F`) runs only if the
-   process is still alive after 10 minutes without that line. `Closing by
-request` alone does not start a 30s kill. After the process leaves, Runtime
+   prints `Log file closed`. That line does not release the process; Stop waits
+   until the child has exited. Force-kill (`taskkill /F`) runs only if the
+   process is still alive after 10 minutes. `Closing by request` alone does
+   not start a 30s kill. After the process leaves, Runtime
    compares the map `.ark` mtime with the stamp taken before `SaveWorld` and
    says whether that file was rewritten. This server build does not log the
    save itself. Runtime logs the force-kill. A replacement process is left
