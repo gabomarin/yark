@@ -27,6 +27,18 @@ const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.26.2",
+    date: "2026-11-04",
+    sections: [
+      {
+        title: "Fixed",
+        items: [
+          "Stop could force-close the server mid-save and roll the map back. It now waits until the process finishes closing.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.26.1",
     date: "2026-11-03",
     sections: [
