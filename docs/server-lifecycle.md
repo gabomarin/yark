@@ -199,13 +199,13 @@ Kill on win32 uses `taskkill /pid … /T /F`.
 
 IPC:
 
-| Channel               | Backend                                                                                                                                                                                                                                                                            |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `servers:start`       | sync INI → `ProcessManager.start`                                                                                                                                                                                                                                                  |
-| `servers:set-enabled` | Locked explicit enable/disable transition; never starts or stops ASA implicitly.                                                                                                                                                                                                   |
-| `servers:stop`        | `InstanceService.stop`: RCON `SaveWorld` → wait `SAVE_WAIT_MS` (8s) → `DoExit` exact process → best-effort stable `pre_stop` backup (world only; #518). Progress via `push:server-stop-progress`. Pass `{ backup: false }` to skip the snapshot (SteamCMD update/verify, restart). |
-| `servers:restart`     | `InstanceService.restart`: lock `"restart"` → stop with `{ backup: false }` → fail-hard `pre_restart` backup → start. Options match `servers:start` (`StartServerOptions`).                                                                                                        |
-| `servers:kill`        | immediate terminate (warning event; UI confirms)                                                                                                                                                                                                                                   |
+| Channel               | Backend                                                                                                                                                                                                                                                                                                                                                                                                     |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `servers:start`       | sync INI → `ProcessManager.start`                                                                                                                                                                                                                                                                                                                                                                           |
+| `servers:set-enabled` | Locked explicit enable/disable transition; never starts or stops ASA implicitly.                                                                                                                                                                                                                                                                                                                            |
+| `servers:stop`        | `InstanceService.stop`: RCON `SaveWorld` → `DoExit` → wait until the process exits or `ShooterGame.log` prints `Log file closed` (cap 10 min) before any force-kill → best-effort stable `pre_stop` backup (world only; #518). `Closing by request` only means shutdown started. Progress via `push:server-stop-progress`. Pass `{ backup: false }` to skip the snapshot (SteamCMD update/verify, restart). |
+| `servers:restart`     | `InstanceService.restart`: lock `"restart"` → stop with `{ backup: false }` → fail-hard `pre_restart` backup → start. Options match `servers:start` (`StartServerOptions`).                                                                                                                                                                                                                                 |
+| `servers:kill`        | immediate terminate (warning event; UI confirms)                                                                                                                                                                                                                                                                                                                                                            |
 
 Status push: `push:server-status`. Stop phase progress: `push:server-stop-progress`.
 While a dedicated PID is live **and** the UI needs samples (Overview, or
@@ -400,11 +400,21 @@ list: [rcon.md](rcon.md).
 **Stop** (`InstanceService.stop`):
 
 1. Emit stop-progress (`saving`).
-2. `ProcessManager.beginGracefulStop` — status `stopping`, RCON `SaveWorld` + wait
-   and return an ownership handle for the exact child.
-   RCON failure → kill + clear (no backup).
-3. `finishGracefulStop` validates the ownership handle, then `DoExit` / kill
-   fallback. A replacement process is left untouched.
+2. `ProcessManager.beginGracefulStop` — status `stopping`, RCON `SaveWorld`,
+   then return an ownership handle for the exact child. This build of ASA does
+   not write `World Save Complete` to `ShooterGame.log`, so Stop does not wait
+   on that line. RCON `SaveWorld` failure → `DoExit`, then the same close wait
+   (no backup).
+3. `finishGracefulStop` validates the ownership handle, then `DoExit`. The log
+   prints `Closing by request` when shutdown starts. A finished close also
+   prints `Log file closed`. That line does not release the process; Stop waits
+   until the child has exited. Force-kill (`taskkill /F`) runs only if the
+   process is still alive after 10 minutes. `Closing by request` alone does
+   not start a 30s kill. After the process leaves, Runtime
+   compares the map `.ark` mtime with the stamp taken before `SaveWorld` and
+   says whether that file was rewritten. This server build does not log the
+   save itself. Runtime logs the force-kill. A replacement process is left
+   untouched.
 4. Unless `{ backup: false }`, `BackupService.createPreStopBackup` packages
    stable stopped files (skip flush; kind world only — #518).
 5. Clear stop-progress. Event distinguishes saved, RCON-killed, externally

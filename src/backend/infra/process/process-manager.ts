@@ -33,6 +33,8 @@ import {
 } from "./process-graceful-stop";
 import { type OperatorClosedExit } from "./process-stop";
 import { handleManagedProcessExit } from "./process-managed-exit";
+import { captureAsaLogSessionAnchor, readAsaLogSessionExcerpt } from "./asa-log-tail";
+import { readPrimaryWorldSaveStamp } from "./shutdown-confirm";
 import { AsaApiWindowPoller } from "./process-asa-api-loading";
 import {
   appendProcessRuntimeLog,
@@ -273,7 +275,7 @@ export class ProcessManager extends EventEmitter {
   }
 
   /**
-   * Safe stop: saveworld via RCON, wait, DoExit, then kill fallback.
+   * Safe stop: SaveWorld, DoExit, wait for Log file closed or process exit, then kill fallback.
    * Prefer {@link InstanceService.stop} for user-initiated stops (pre-stop backup).
    */
   async stop(profile: ServerProfile): Promise<void> {
@@ -403,6 +405,9 @@ export class ProcessManager extends EventEmitter {
       },
       clearProcessCheckpoint: (serverId) => this.clearProcessCheckpoint(serverId),
       terminateManaged: (serverId, managed) => this.terminateManaged(serverId, managed),
+      captureLogMark: (installDir) => captureAsaLogSessionAnchor(installDir),
+      readLogSince: (installDir, mark) => readAsaLogSessionExcerpt(installDir, mark, 256 * 1024),
+      readWorldSaveStamp: (profile) => readPrimaryWorldSaveStamp(profile),
     };
   }
 

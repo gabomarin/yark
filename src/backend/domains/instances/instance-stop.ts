@@ -199,7 +199,7 @@ export class InstanceStop {
         progress({
           active: true,
           phase: "stopping",
-          label: "Stopping server before backup…",
+          label: "Waiting for the server to close…",
           percent: 25,
         }),
       );
