@@ -33,7 +33,7 @@ export const changelog: ChangelogEntry[] = [
       {
         title: "Fixed",
         items: [
-          "Stop waits until the server process finishes closing, then says whether the map .ark file was rewritten.",
+          "Stop could force-close the server mid-save and roll the map back. It now waits until the process finishes closing.",
         ],
       },
     ],
