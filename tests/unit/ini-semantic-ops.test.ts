@@ -95,7 +95,48 @@ XPMultiplier=9
       expect(err).toBeInstanceOf(IniSemanticPatchError);
       expect((err as IniSemanticPatchError).code).toBe(INI_SEMANTIC_CONFLICT_CODE);
       expect((err as IniSemanticPatchError).actualValue).toBe("9");
+      expect((err as IniSemanticPatchError).conflicts).toEqual([
+        expect.objectContaining({ key: "XPMultiplier", loaded: "1", local: "3", disk: "9" }),
+      ]);
     }
+  });
+
+  it("lists every overlapping key and writes nothing", () => {
+    const disk = gus(`[ServerSettings]
+XPMultiplier=9
+TamingSpeedMultiplier=4
+`);
+    try {
+      applyIniSemanticOps(disk, [
+        {
+          kind: "set",
+          fileKey: "gameUserSettings",
+          section: "ServerSettings",
+          key: "XPMultiplier",
+          occurrence: 0,
+          expectedPreviousValue: "1",
+          nextValue: "3",
+        },
+        {
+          kind: "set",
+          fileKey: "gameUserSettings",
+          section: "ServerSettings",
+          key: "TamingSpeedMultiplier",
+          occurrence: 0,
+          expectedPreviousValue: "1",
+          nextValue: "2",
+        },
+      ]);
+      expect.fail("expected conflict");
+    } catch (err) {
+      expect(err).toBeInstanceOf(IniSemanticPatchError);
+      expect((err as IniSemanticPatchError).conflicts.map((row) => row.key)).toEqual([
+        "XPMultiplier",
+        "TamingSpeedMultiplier",
+      ]);
+    }
+    expect(disk.gameUserSettings).toContain("XPMultiplier=9");
+    expect(disk.gameUserSettings).toContain("TamingSpeedMultiplier=4");
   });
 
   it("rejects profile-owned keys", () => {

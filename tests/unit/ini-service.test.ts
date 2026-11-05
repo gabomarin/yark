@@ -3,9 +3,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ServerIniPayload, ServerProfile } from "@shared/types";
-import { NamedEngramEditError, summarizeNamedEngrams } from "@shared/ini/engram-named-entries";
+import { summarizeNamedEngrams } from "@shared/ini/engram-named-entries";
+import { IniConflictReviewError } from "@shared/ini/ini-conflict";
 import { IniStaleDocumentError } from "@shared/ini/ini-fingerprints";
-import { INI_SEMANTIC_CONFLICT_CODE, IniSemanticPatchError } from "@shared/ini/ini-semantic-ops";
+import { INI_SEMANTIC_CONFLICT_CODE } from "@shared/ini/ini-semantic-ops";
 import { IniService } from "@backend/domains/config/ini-service";
 import { openDatabase } from "@backend/infra/db/database";
 import { PendingServerIniRepository } from "@backend/infra/db/pending-server-ini-repository";
@@ -471,8 +472,11 @@ describe("IniService semantic save (#667)", () => {
       ]);
       expect.fail("expected conflict");
     } catch (err) {
-      expect(err).toBeInstanceOf(IniSemanticPatchError);
-      expect((err as IniSemanticPatchError).code).toBe(INI_SEMANTIC_CONFLICT_CODE);
+      expect(err).toBeInstanceOf(IniConflictReviewError);
+      expect((err as IniConflictReviewError).code).toBe(INI_SEMANTIC_CONFLICT_CODE);
+      expect((err as IniConflictReviewError).conflicts).toEqual([
+        expect.objectContaining({ key: "XPMultiplier", loaded: "1", local: "3", disk: "9" }),
+      ]);
     }
 
     expect(addEvent).not.toHaveBeenCalled();
@@ -586,7 +590,7 @@ describe("IniService semantic save (#667)", () => {
           },
         ],
       ),
-    ).rejects.toBeInstanceOf(NamedEngramEditError);
+    ).rejects.toBeInstanceOf(IniConflictReviewError);
 
     expect(readFileSync(gameIniPath(installDir), "utf8")).toBe(changed);
   });

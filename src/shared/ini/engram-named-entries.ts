@@ -7,6 +7,7 @@ import {
   type IniComplexField,
   type IniComplexNode,
 } from "./ini-complex-value";
+import type { IniConflictOccurrence } from "./ini-conflict";
 import { appendIniTextValue, parseIniTextRows } from "./ini-text";
 
 export const NAMED_ENGRAM_STALE_CODE = "NAMED_ENGRAM_STALE";
@@ -53,10 +54,12 @@ export function isSafeEngramClassName(className: string): boolean {
 
 export class NamedEngramEditError extends Error {
   readonly code = NAMED_ENGRAM_STALE_CODE;
+  readonly conflicts: readonly IniConflictOccurrence[];
 
-  constructor(message: string) {
+  constructor(message: string, conflicts: readonly IniConflictOccurrence[] = []) {
     super(message);
     this.name = "NamedEngramEditError";
+    this.conflicts = conflicts;
   }
 }
 
@@ -331,9 +334,25 @@ export function reviewNamedEngramDraft(
  * unchanged. A line whose raw value no longer matches is refused before any
  * splice, so neighbors stay byte-for-byte.
  */
+export function collectNamedEngramConflicts(
+  text: string,
+  edits: readonly NamedEngramEdit[],
+): IniConflictOccurrence[] {
+  if (edits.length === 0) return [];
+  assertUnique(edits);
+  const lineEdits = edits.filter((edit): edit is NamedEngramReplace | NamedEngramDelete => edit.kind !== "append");
+  return namedEngramLineConflicts(text, lineEdits);
+}
+
 export function applyNamedEngramEdits(text: string, edits: readonly NamedEngramEdit[]): string {
   if (edits.length === 0) return text;
-  assertUnique(edits);
+  const conflicts = collectNamedEngramConflicts(text, edits);
+  if (conflicts.length > 0) {
+    throw new NamedEngramEditError(
+      "An engram line changed on disk after it was loaded. Reload from disk, then save again.",
+      conflicts,
+    );
+  }
 
   const lineEdits = edits.filter((edit): edit is NamedEngramReplace | NamedEngramDelete => edit.kind !== "append");
   const appends = edits.filter((edit): edit is NamedEngramAppend => edit.kind === "append");
@@ -343,6 +362,47 @@ export function applyNamedEngramEdits(text: string, edits: readonly NamedEngramE
     out = appendIniTextValue(out, section, "OverrideNamedEngramEntries", printAppend(edit));
   }
   return out;
+}
+
+function namedEngramLineConflicts(
+  text: string,
+  edits: readonly (NamedEngramReplace | NamedEngramDelete)[],
+): IniConflictOccurrence[] {
+  const entries = parseIniComplexEntries(text, "game");
+  const conflicts: IniConflictOccurrence[] = [];
+  for (const edit of edits) {
+    const entry = entries.find(
+      (item) =>
+        item.section.toLowerCase() === edit.section.toLowerCase() &&
+        item.key.toLowerCase() === NAMED_KEY &&
+        item.occurrence === edit.occurrence,
+    );
+    if (entry !== undefined && entry.raw === edit.expectedRaw && readOwnedRow(entry) !== null) continue;
+    conflicts.push({
+      kind: "engram",
+      fileKey: "game",
+      section: edit.section,
+      key: "OverrideNamedEngramEntries",
+      occurrence: edit.occurrence,
+      loaded: edit.expectedRaw,
+      local: localNamedEngramRaw(edit),
+      removes: edit.kind === "delete",
+      disk: entry?.raw ?? null,
+    });
+  }
+  return conflicts;
+}
+
+function localNamedEngramRaw(edit: NamedEngramReplace | NamedEngramDelete): string | null {
+  if (edit.kind === "delete") return null;
+  const text = `[${edit.section}]\nOverrideNamedEngramEntries=${edit.expectedRaw}`;
+  const entry = parseIniComplexEntries(text, "game")[0];
+  if (entry === undefined) return null;
+  try {
+    return printReplacement({ ...entry, section: edit.section }, edit);
+  } catch {
+    return null;
+  }
 }
 
 function applyNamedEngramLineEdits(text: string, edits: readonly (NamedEngramReplace | NamedEngramDelete)[]): string {

@@ -329,4 +329,91 @@ describe("handleValidated", () => {
       code: "INI_STALE_DOCUMENT",
     });
   });
+
+  it("copies INI conflict values onto ok:false results", async () => {
+    const { handleValidated } = await import("../../src/main/ipc-validate");
+    handleValidated("test:conflict-err", z.tuple([]), () => {
+      const err = new Error("XPMultiplier changed outside YARK") as Error & {
+        code: string;
+        conflicts: unknown[];
+      };
+      err.code = "INI_SEMANTIC_CONFLICT";
+      err.conflicts = [
+        {
+          kind: "scalar",
+          fileKey: "gameUserSettings",
+          section: "ServerSettings",
+          key: "XPMultiplier",
+          occurrence: 0,
+          loaded: "1",
+          local: "",
+          disk: null,
+        },
+      ];
+      throw err;
+    });
+
+    const handler = handleMock.mock.calls[0]?.[1] as (
+      event: unknown,
+      ...args: unknown[]
+    ) => Promise<{ ok: boolean; conflicts?: unknown[] }>;
+
+    const result = await handler({});
+    expect(result.ok).toBe(false);
+    expect(result.conflicts).toEqual([
+      expect.objectContaining({ loaded: "1", local: "", disk: null, key: "XPMultiplier" }),
+    ]);
+  });
+
+  it("keeps valid INI conflicts when another row is malformed", async () => {
+    const { handleValidated } = await import("../../src/main/ipc-validate");
+    handleValidated("test:conflict-err-partial", z.tuple([]), () => {
+      const err = new Error("XPMultiplier changed outside YARK") as Error & {
+        code: string;
+        conflicts: unknown[];
+      };
+      err.code = "INI_SEMANTIC_CONFLICT";
+      err.conflicts = [
+        { kind: "nope", fileKey: "gameUserSettings", section: "ServerSettings", key: "Bad", occurrence: 0, loaded: "1", local: "2", disk: "3" },
+        {
+          kind: "scalar",
+          fileKey: "gameUserSettings",
+          section: "ServerSettings",
+          key: "XPMultiplier",
+          occurrence: 0,
+          loaded: "1",
+          local: "2",
+          disk: "3",
+        },
+      ];
+      throw err;
+    });
+
+    const handler = handleMock.mock.calls[0]?.[1] as (
+      event: unknown,
+      ...args: unknown[]
+    ) => Promise<{ ok: boolean; conflicts?: { key: string }[] }>;
+
+    const result = await handler({});
+    expect(result.ok).toBe(false);
+    expect(result.conflicts?.map((row) => row.key)).toEqual(["XPMultiplier"]);
+  });
+
+  it("omits conflicts when every INI conflict row is malformed", async () => {
+    const { handleValidated } = await import("../../src/main/ipc-validate");
+    handleValidated("test:conflict-err-none", z.tuple([]), () => {
+      const err = new Error("INI changed outside YARK") as Error & { conflicts: unknown[] };
+      err.conflicts = [{ kind: "scalar" }];
+      throw err;
+    });
+
+    const handler = handleMock.mock.calls[0]?.[1] as (
+      event: unknown,
+      ...args: unknown[]
+    ) => Promise<{ ok: boolean; conflicts?: unknown[] }>;
+
+    const result = await handler({});
+    expect(result.ok).toBe(false);
+    expect(result.conflicts).toBeUndefined();
+  });
 });
