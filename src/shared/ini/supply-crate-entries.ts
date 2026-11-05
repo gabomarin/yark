@@ -288,10 +288,7 @@ function assertSupplyCrateBodies(edits: readonly SupplyCrateEdit[]): void {
   }
 }
 
-export function collectSupplyCrateConflicts(
-  text: string,
-  edits: readonly SupplyCrateEdit[],
-): IniConflictOccurrence[] {
+export function collectSupplyCrateConflicts(text: string, edits: readonly SupplyCrateEdit[]): IniConflictOccurrence[] {
   if (edits.length === 0) return [];
   assertUnique(edits);
   assertSupplyCrateBodies(edits);

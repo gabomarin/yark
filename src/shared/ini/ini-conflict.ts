@@ -24,9 +24,7 @@ export class IniConflictReviewError extends Error {
 
   constructor(conflicts: readonly IniConflictOccurrence[]) {
     const key = conflicts[0]?.key ?? "INI";
-    super(
-      `${key} changed outside YARK since this editor loaded. Reload or resolve the conflict before saving.`,
-    );
+    super(`${key} changed outside YARK since this editor loaded. Reload or resolve the conflict before saving.`);
     this.name = "IniConflictReviewError";
     this.conflicts = conflicts;
     this.code = conflictReviewCode(conflicts);
@@ -128,7 +126,5 @@ export function payloadWithKeptValue(
         ? removeIniTextValue(text, conflict.section, conflict.key, conflict.occurrence)
         : text
       : setIniTextValue(text, conflict.section, conflict.key, kept, conflict.occurrence);
-  return conflict.fileKey === "gameUserSettings"
-    ? { ...payload, gameUserSettings: next }
-    : { ...payload, game: next };
+  return conflict.fileKey === "gameUserSettings" ? { ...payload, gameUserSettings: next } : { ...payload, game: next };
 }

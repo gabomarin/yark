@@ -64,4 +64,3 @@ export function conflictReviewNeedsModal(conflicts: readonly IniConflictOccurren
     [row.loaded, row.local, row.disk].some((value) => value !== null && (value.length > 24 || value.includes("\n"))),
   );
 }
-

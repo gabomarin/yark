@@ -374,7 +374,16 @@ describe("handleValidated", () => {
       };
       err.code = "INI_SEMANTIC_CONFLICT";
       err.conflicts = [
-        { kind: "nope", fileKey: "gameUserSettings", section: "ServerSettings", key: "Bad", occurrence: 0, loaded: "1", local: "2", disk: "3" },
+        {
+          kind: "nope",
+          fileKey: "gameUserSettings",
+          section: "ServerSettings",
+          key: "Bad",
+          occurrence: 0,
+          loaded: "1",
+          local: "2",
+          disk: "3",
+        },
         {
           kind: "scalar",
           fileKey: "gameUserSettings",

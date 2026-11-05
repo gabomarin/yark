@@ -183,9 +183,7 @@ function SaveErrorAlert(props: {
     >
       <Stack gap={4}>
         <Text size={review ? "xs" : "sm"}>{review ? conflictAlertSentence(props.conflicts.length) : props.error}</Text>
-        {review && (
-          <IniConflictReview conflicts={props.conflicts} busy={props.reloadBusy} onAccept={onAccept} />
-        )}
+        {review && <IniConflictReview conflicts={props.conflicts} busy={props.reloadBusy} onAccept={onAccept} />}
         {!review && <ReloadFromDiskButton busy={props.reloadBusy} onClick={props.onReload} />}
       </Stack>
     </AppAlert>

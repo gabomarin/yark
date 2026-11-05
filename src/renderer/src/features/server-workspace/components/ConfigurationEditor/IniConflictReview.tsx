@@ -22,7 +22,9 @@ interface Props {
 
 function ValueText(props: { value: string | null }): ReactElement {
   const shown = conflictValueText(props.value);
-  return <code className={`${classes.value} ${shown.kind === "value" ? "" : classes[shown.kind]}`.trim()}>{shown.text}</code>;
+  return (
+    <code className={`${classes.value} ${shown.kind === "value" ? "" : classes[shown.kind]}`.trim()}>{shown.text}</code>
+  );
 }
 
 function initialSides(conflicts: readonly IniConflictOccurrence[]): Record<string, ConflictKeepSide> {
@@ -31,12 +33,18 @@ function initialSides(conflicts: readonly IniConflictOccurrence[]): Record<strin
   return sides;
 }
 
-function ConflictTable(props: Props & { sides: Record<string, ConflictKeepSide>; onSide: (key: string, side: ConflictKeepSide) => void }): ReactElement {
+function ConflictTable(
+  props: Props & { sides: Record<string, ConflictKeepSide>; onSide: (key: string, side: ConflictKeepSide) => void },
+): ReactElement {
   return (
     <div className={classes.table} role="table">
       <div className={`${classes.row} ${classes.headRow}`} role="row">
-        <div className={classes.settingHead} role="columnheader">Setting</div>
-        <div className={classes.valueHead} role="columnheader">Last save</div>
+        <div className={classes.settingHead} role="columnheader">
+          Setting
+        </div>
+        <div className={classes.valueHead} role="columnheader">
+          Last save
+        </div>
         <div className={classes.valueHead} role="columnheader">
           <span className={classes.headLabel}>
             Your edit

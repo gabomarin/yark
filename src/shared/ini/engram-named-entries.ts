@@ -334,10 +334,7 @@ export function reviewNamedEngramDraft(
  * unchanged. A line whose raw value no longer matches is refused before any
  * splice, so neighbors stay byte-for-byte.
  */
-export function collectNamedEngramConflicts(
-  text: string,
-  edits: readonly NamedEngramEdit[],
-): IniConflictOccurrence[] {
+export function collectNamedEngramConflicts(text: string, edits: readonly NamedEngramEdit[]): IniConflictOccurrence[] {
   if (edits.length === 0) return [];
   assertUnique(edits);
   const lineEdits = edits.filter((edit): edit is NamedEngramReplace | NamedEngramDelete => edit.kind !== "append");

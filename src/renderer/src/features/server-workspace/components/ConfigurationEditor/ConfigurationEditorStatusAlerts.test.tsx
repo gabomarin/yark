@@ -148,18 +148,22 @@ describe("ConfigurationEditorStatusAlerts", () => {
         error="Several settings changed outside YARK"
         onDismissError={vi.fn()}
         staleDocument
-        conflicts={["XPMultiplier", "TamingSpeedMultiplier", "HarvestAmountMultiplier", "DifficultyOffset", "PlayerDamageMultiplier"].map(
-          (key) => ({
-            kind: "scalar" as const,
-            fileKey: "gameUserSettings" as const,
-            section: "ServerSettings",
-            key,
-            occurrence: 0,
-            loaded: "1",
-            local: "2",
-            disk: "3",
-          }),
-        )}
+        conflicts={[
+          "XPMultiplier",
+          "TamingSpeedMultiplier",
+          "HarvestAmountMultiplier",
+          "DifficultyOffset",
+          "PlayerDamageMultiplier",
+        ].map((key) => ({
+          kind: "scalar" as const,
+          fileKey: "gameUserSettings" as const,
+          section: "ServerSettings",
+          key,
+          occurrence: 0,
+          loaded: "1",
+          local: "2",
+          disk: "3",
+        }))}
         onAcceptConflicts={vi.fn()}
         iniMode="visual"
         serverActive={false}

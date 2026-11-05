@@ -25,8 +25,16 @@ function gus(body: string): ServerIniPayload {
 
 describe("semanticOpForKeptSide", () => {
   it("writes the last save or the YARK value onto the file value just shown", () => {
-    expect(semanticOpForKeptSide(conflict, "saved")).toMatchObject({ kind: "set", nextValue: "3", expectedPreviousValue: "9" });
-    expect(semanticOpForKeptSide(conflict, "yark")).toMatchObject({ kind: "set", nextValue: "6", expectedPreviousValue: "9" });
+    expect(semanticOpForKeptSide(conflict, "saved")).toMatchObject({
+      kind: "set",
+      nextValue: "3",
+      expectedPreviousValue: "9",
+    });
+    expect(semanticOpForKeptSide(conflict, "yark")).toMatchObject({
+      kind: "set",
+      nextValue: "6",
+      expectedPreviousValue: "9",
+    });
     expect(semanticOpForKeptSide(conflict, "file")).toBeNull();
   });
 

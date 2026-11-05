@@ -17,7 +17,9 @@ export interface ConfigurationEditorApi {
   /** Overlapping values from the last visual Save (#696). */
   conflicts: IniConflictOccurrence[];
   /** Keep the reviewed values in one write. Other draft edits stay. */
-  applyConflictChoices: (choices: readonly { conflict: IniConflictOccurrence; side: ConflictKeepSide }[]) => Promise<void>;
+  applyConflictChoices: (
+    choices: readonly { conflict: IniConflictOccurrence; side: ConflictKeepSide }[],
+  ) => Promise<void>;
   /** Disk/pending changed while the editor has unsaved edits (#665). */
   externalChangeDetected: boolean;
   setExternalChangeDetected: (value: boolean) => void;

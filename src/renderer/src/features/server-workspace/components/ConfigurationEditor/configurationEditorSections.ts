@@ -1,9 +1,6 @@
 import { iniUiSectionCollapseKey, type IniUiCategoryGroup } from "../../iniModel";
 
-export function toggleCollapsedSection(
-  prev: Record<string, boolean>,
-  sectionName: string,
-): Record<string, boolean> {
+export function toggleCollapsedSection(prev: Record<string, boolean>, sectionName: string): Record<string, boolean> {
   return { ...prev, [sectionName]: !prev[sectionName] };
 }
 

@@ -69,6 +69,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
   const [lootEditCount, setLootEditCount] = useState(0);
   const [lootBlocked, setLootBlocked] = useState(false);
   const [holdLineResync, setHoldLineResync] = useState(false);
+  const holdLineResyncRef = useRef(false);
   const resetDrafts = useCallback((which?: "engrams" | "loot") => {
     if (which !== "loot") {
       engramEditsRef.current = { ...engramEditsRef.current, engrams: [] };
@@ -112,8 +113,10 @@ export function ConfigurationEditor(props: Props): ReactElement {
     onEngramDraftsReset: resetDrafts,
     onBeforeConflictBaseline: (conflict, side) => {
       if (conflict.fileKey !== "game" || conflict.kind === "scalar") return;
-      if (side === "yark") setHoldLineResync(true);
-      else resetDrafts(conflict.kind === "engram" ? "engrams" : "loot");
+      if (side === "yark") {
+        holdLineResyncRef.current = true;
+        setHoldLineResync(true);
+      } else resetDrafts(conflict.kind === "engram" ? "engrams" : "loot");
     },
   });
   const gameText = editor.baseline?.game ?? "";
@@ -121,8 +124,12 @@ export function ConfigurationEditor(props: Props): ReactElement {
   useEffect(() => {
     baselineGameRef.current = gameText;
     saveScopeRef.current = saveScope;
-    if (holdLineResync) setHoldLineResync(false);
-  }, [gameText, saveScope, holdLineResync]);
+    // Clear from the ref. The flag is not a dependency, so this write does not
+    // run the effect again before the new baseline text has rendered.
+    if (!holdLineResyncRef.current) return;
+    holdLineResyncRef.current = false;
+    setHoldLineResync(false);
+  }, [gameText, saveScope]);
   const engramSummary = useMemo(() => summarizeNamedEngrams(gameText), [gameText]);
   const namedLineKey = engramSummary.rows.map((row) => `${row.occurrence}:${row.expectedRaw}`).join("\n");
   const [seenNamedLines, setSeenNamedLines] = useState(namedLineKey);
