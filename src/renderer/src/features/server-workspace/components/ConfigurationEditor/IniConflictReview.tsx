@@ -37,61 +37,65 @@ function ConflictTable(
   props: Props & { sides: Record<string, ConflictKeepSide>; onSide: (key: string, side: ConflictKeepSide) => void },
 ): ReactElement {
   return (
-    <div className={classes.table} role="table">
-      <div className={`${classes.row} ${classes.headRow}`} role="row">
-        <div className={classes.settingHead} role="columnheader">
-          Setting
-        </div>
-        <div className={classes.valueHead} role="columnheader">
-          Last save
-        </div>
-        <div className={classes.valueHead} role="columnheader">
-          <span className={classes.headLabel}>
-            Your edit
-            <span className={classes.delta}>Changed in YARK</span>
-          </span>
-        </div>
-        <div className={classes.valueHead} role="columnheader">
-          <span className={classes.headLabel}>
-            On disk
-            <span className={classes.delta}>Changed in the file</span>
-          </span>
-        </div>
-      </div>
-      {props.conflicts.map((conflict) => {
-        const key = conflictRowKey(conflict);
-        const side = props.sides[key] ?? defaultConflictSide(conflict);
-        const option = (keep: ConflictKeepSide, value: string | null): ReactElement => (
-          <div className={classes.cell} role="cell" data-conflict-side={keep}>
-            <ValueText value={value} />
-            <Radio
-              name={key}
-              size="xs"
-              value={keep}
-              checked={side === keep}
-              aria-label={conflictKeepName(keep, value)}
-              disabled={props.busy || !canKeepConflictSide(conflict, keep)}
-              onChange={() => {
-                props.onSide(key, keep);
-              }}
-            />
-          </div>
-        );
-        return (
-          <div key={key} className={classes.row} role="radiogroup" aria-label={conflictHeading(conflict)}>
-            <div className={classes.setting} role="cell">
-              <span className={classes.key}>{conflictHeading(conflict)}</span>
-              <span className={classes.meta}>
-                {conflictFileLabel(conflict.fileKey)} · {conflict.section}
-              </span>
-            </div>
-            {option("saved", conflict.loaded)}
-            {option("yark", conflict.local)}
-            {option("file", conflict.disk)}
-          </div>
-        );
-      })}
-    </div>
+    <table className={classes.table}>
+      <thead>
+        <tr className={classes.headRow}>
+          <th className={classes.settingHead} scope="col">
+            Setting
+          </th>
+          <th className={classes.valueHead} scope="col">
+            Last save
+          </th>
+          <th className={classes.valueHead} scope="col">
+            <span className={classes.headLabel}>
+              Your edit
+              <span className={classes.delta}>Changed in YARK</span>
+            </span>
+          </th>
+          <th className={classes.valueHead} scope="col">
+            <span className={classes.headLabel}>
+              On disk
+              <span className={classes.delta}>Changed in the file</span>
+            </span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {props.conflicts.map((conflict) => {
+          const key = conflictRowKey(conflict);
+          const side = props.sides[key] ?? defaultConflictSide(conflict);
+          const option = (keep: ConflictKeepSide, value: string | null): ReactElement => (
+            <td className={classes.cell} data-conflict-side={keep}>
+              <ValueText value={value} />
+              <Radio
+                name={key}
+                size="xs"
+                value={keep}
+                checked={side === keep}
+                aria-label={conflictKeepName(keep, value)}
+                disabled={props.busy || !canKeepConflictSide(conflict, keep)}
+                onChange={() => {
+                  props.onSide(key, keep);
+                }}
+              />
+            </td>
+          );
+          return (
+            <tr key={key}>
+              <th className={classes.setting} scope="row">
+                <span className={classes.key}>{conflictHeading(conflict)}</span>
+                <span className={classes.meta}>
+                  {conflictFileLabel(conflict.fileKey)} · {conflict.section}
+                </span>
+              </th>
+              {option("saved", conflict.loaded)}
+              {option("yark", conflict.local)}
+              {option("file", conflict.disk)}
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
   );
 }
 

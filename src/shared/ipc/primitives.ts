@@ -282,7 +282,9 @@ const MAX_INI_SEMANTIC_VALUE_CHARS = 100_000;
 /** Aggregate cap across all op strings in one `ini:save-semantic` request (#667). */
 const MAX_INI_SEMANTIC_OPS_TOTAL_CHARS = MAX_INI_FILE_CHARS * 2;
 
-/** Visual Set/Unset ops for `ini:save-semantic` (#667). */
+const iniSemanticKeyValuesSchema = z.array(z.string().max(MAX_INI_SEMANTIC_VALUE_CHARS)).max(10_000).optional();
+
+/** Visual Set/Unset ops for `ini:save-semantic` (#667). A check only verifies the reviewed disk value. */
 export const iniSemanticOpsSchema = z
   .array(
     z.discriminatedUnion("kind", [
@@ -295,6 +297,7 @@ export const iniSemanticOpsSchema = z
           occurrence: z.number().int().min(0).max(10_000),
           expectedPreviousValue: z.string().max(MAX_INI_SEMANTIC_VALUE_CHARS).nullable(),
           nextValue: z.string().max(MAX_INI_SEMANTIC_VALUE_CHARS),
+          expectedKeyValues: iniSemanticKeyValuesSchema,
         })
         .strict(),
       z
@@ -305,6 +308,18 @@ export const iniSemanticOpsSchema = z
           key: z.string().min(1).max(MAX_STRING_PARAM_LENGTH),
           occurrence: z.number().int().min(0).max(10_000),
           expectedPreviousValue: z.string().max(MAX_INI_SEMANTIC_VALUE_CHARS),
+          expectedKeyValues: iniSemanticKeyValuesSchema,
+        })
+        .strict(),
+      z
+        .object({
+          kind: z.literal("check"),
+          fileKey: iniFileKeySchema,
+          section: z.string().min(1).max(MAX_STRING_PARAM_LENGTH),
+          key: z.string().min(1).max(MAX_STRING_PARAM_LENGTH),
+          occurrence: z.number().int().min(0).max(10_000),
+          expectedPreviousValue: z.string().max(MAX_INI_SEMANTIC_VALUE_CHARS).nullable(),
+          expectedKeyValues: iniSemanticKeyValuesSchema,
         })
         .strict(),
     ]),
@@ -317,6 +332,7 @@ export const iniSemanticOpsSchema = z
       if (op.kind === "set") {
         chars += op.nextValue.length;
       }
+      for (const value of op.expectedKeyValues ?? []) chars += value.length;
       if (chars > MAX_INI_SEMANTIC_OPS_TOTAL_CHARS) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -340,6 +356,7 @@ export const namedEngramEditsSchema = z
           section: z.string().min(1).max(MAX_STRING_PARAM_LENGTH),
           occurrence: z.number().int().min(0).max(10_000),
           expectedRaw: z.string().min(2).max(MAX_INI_SEMANTIC_VALUE_CHARS),
+          expectedKeyRaws: z.array(z.string().max(MAX_INI_SEMANTIC_VALUE_CHARS)).max(10_000).optional(),
           className: z.string().min(1).max(300).regex(NAMED_ENGRAM_CLASS_RE),
           hidden: z.boolean().nullable(),
           points: z.string().regex(NAMED_ENGRAM_INTEGER_RE).nullable(),
@@ -353,6 +370,7 @@ export const namedEngramEditsSchema = z
           section: z.string().min(1).max(MAX_STRING_PARAM_LENGTH),
           occurrence: z.number().int().min(0).max(10_000),
           expectedRaw: z.string().min(2).max(MAX_INI_SEMANTIC_VALUE_CHARS),
+          expectedKeyRaws: z.array(z.string().max(MAX_INI_SEMANTIC_VALUE_CHARS)).max(10_000).optional(),
           className: z.string().min(1).max(300).regex(NAMED_ENGRAM_CLASS_RE),
         })
         .strict(),
@@ -373,7 +391,10 @@ export const namedEngramEditsSchema = z
     let chars = 0;
     for (const edit of edits) {
       chars += edit.className.length;
-      if (edit.kind !== "append") chars += edit.section.length + edit.expectedRaw.length;
+      if (edit.kind !== "append") {
+        chars += edit.section.length + edit.expectedRaw.length;
+        for (const raw of edit.expectedKeyRaws ?? []) chars += raw.length;
+      }
       if (chars > MAX_INI_SEMANTIC_OPS_TOTAL_CHARS) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -443,6 +464,7 @@ export const supplyCrateEditsSchema = z
           section: z.string().min(1).max(MAX_STRING_PARAM_LENGTH),
           occurrence: z.number().int().min(0).max(10_000),
           expectedRaw: z.string().min(2).max(MAX_INI_SEMANTIC_VALUE_CHARS),
+          expectedKeyRaws: z.array(z.string().max(MAX_INI_SEMANTIC_VALUE_CHARS)).max(10_000).optional(),
           body: supplyCrateBodySchema,
         })
         .strict(),
@@ -452,6 +474,7 @@ export const supplyCrateEditsSchema = z
           section: z.string().min(1).max(MAX_STRING_PARAM_LENGTH),
           occurrence: z.number().int().min(0).max(10_000),
           expectedRaw: z.string().min(2).max(MAX_INI_SEMANTIC_VALUE_CHARS),
+          expectedKeyRaws: z.array(z.string().max(MAX_INI_SEMANTIC_VALUE_CHARS)).max(10_000).optional(),
           className: z.string().min(1).max(300).regex(NAMED_ENGRAM_CLASS_RE),
         })
         .strict(),

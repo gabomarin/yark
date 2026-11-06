@@ -23,6 +23,8 @@ import { ConfigurationEditorPreviewAlert } from "./ConfigurationEditorPreviewAle
 import { ConfigurationEditorSettingsTable } from "./ConfigurationEditorSettingsTable";
 import { ConfigurationEditorStatusAlerts, editorStatusAlertProps } from "./ConfigurationEditorStatusAlerts";
 import { ConfigurationEditorTextPanel } from "./ConfigurationEditorTextPanel";
+import { type ConflictChoice } from "./configurationEditorConflict";
+import { useConflictLineHold } from "./useConflictLineHold";
 import { useConfigurationEditor } from "./useConfigurationEditor";
 import { iniSaveScope, iniSectionPending, iniViewDirty, type IniSaveScope } from "./configurationEditorSaveScope";
 import { GameIniViewSwitch } from "./IniScopeSwitch";
@@ -68,8 +70,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
   const openCrateRef = useRef<{ key: string; className: string } | null>(null);
   const [lootEditCount, setLootEditCount] = useState(0);
   const [lootBlocked, setLootBlocked] = useState(false);
-  const [holdLineResync, setHoldLineResync] = useState(false);
-  const holdLineResyncRef = useRef(false);
+  const prepareConflictBaseline = useRef<(choices: readonly ConflictChoice[]) => void>(() => {});
   const resetDrafts = useCallback((which?: "engrams" | "loot") => {
     if (which !== "loot") {
       engramEditsRef.current = { ...engramEditsRef.current, engrams: [] };
@@ -111,31 +112,23 @@ export function ConfigurationEditor(props: Props): ReactElement {
     engramBlockedRef,
     saveScopeRef,
     onEngramDraftsReset: resetDrafts,
-    onBeforeConflictBaseline: (conflict, side) => {
-      if (conflict.fileKey !== "game" || conflict.kind === "scalar") return;
-      if (side === "yark") {
-        holdLineResyncRef.current = true;
-        setHoldLineResync(true);
-      } else resetDrafts(conflict.kind === "engram" ? "engrams" : "loot");
+    onBeforeConflictBaseline: (choices) => {
+      prepareConflictBaseline.current(choices);
     },
   });
   const gameText = editor.baseline?.game ?? "";
+  const { holdEngram, holdLoot } = useConflictLineHold(gameText, resetDrafts, prepareConflictBaseline);
   const saveScope = iniSaveScope(editor.iniFile, editor.iniMode, gameView, engramPane);
   useEffect(() => {
     baselineGameRef.current = gameText;
     saveScopeRef.current = saveScope;
-    // Clear from the ref. The flag is not a dependency, so this write does not
-    // run the effect again before the new baseline text has rendered.
-    if (!holdLineResyncRef.current) return;
-    holdLineResyncRef.current = false;
-    setHoldLineResync(false);
   }, [gameText, saveScope]);
   const engramSummary = useMemo(() => summarizeNamedEngrams(gameText), [gameText]);
   const namedLineKey = engramSummary.rows.map((row) => `${row.occurrence}:${row.expectedRaw}`).join("\n");
   const [seenNamedLines, setSeenNamedLines] = useState(namedLineKey);
   if (seenNamedLines !== namedLineKey) {
     setSeenNamedLines(namedLineKey);
-    if (!holdLineResync) {
+    if (!holdEngram) {
       setEngramDrafts(draftsFrom(engramSummary.rows));
       setPendingAdds([]);
     }
@@ -147,7 +140,9 @@ export function ConfigurationEditor(props: Props): ReactElement {
     engramSummary.onlySpecified,
   );
   const engramDirty = engramReview.edits.length > 0 || engramReview.blocked;
-  engramEditsRef.current = { ...engramEditsRef.current, engrams: engramReview.edits };
+  useEffect(() => {
+    engramEditsRef.current = { ...engramEditsRef.current, engrams: engramReview.edits };
+  }, [engramReview.edits]);
   const publishEngramReview = (
     drafts: Record<string, NamedEngramDraft>,
     pending: readonly NamedEngramPendingAdd[],
@@ -308,7 +303,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
             key={lootEditorKey}
             gameText={gameText}
             map={props.server.map}
-            holdLineResync={holdLineResync}
+            holdLineResync={holdLoot}
             initialCrate={openCrateRef.current}
             onOpenCrateChange={(crate) => {
               openCrateRef.current = crate;

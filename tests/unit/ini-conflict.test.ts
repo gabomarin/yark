@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { getIniTextValueAt } from "@shared/ini/ini-semantic-ops";
 import {
   canKeepConflictSide,
+  parseIniConflictOccurrence,
+  payloadWithKeptChoices,
   payloadWithKeptValue,
   semanticOpForKeptSide,
   type IniConflictOccurrence,
@@ -35,7 +37,10 @@ describe("semanticOpForKeptSide", () => {
       nextValue: "6",
       expectedPreviousValue: "9",
     });
-    expect(semanticOpForKeptSide(conflict, "file")).toBeNull();
+    expect(semanticOpForKeptSide(conflict, "file")).toMatchObject({
+      kind: "check",
+      expectedPreviousValue: "9",
+    });
   });
 
   it("unsets when the kept value is absent and the file still has the key", () => {
@@ -57,5 +62,41 @@ describe("payloadWithKeptValue", () => {
     const next = payloadWithKeptValue(payload, conflict, "file");
     expect(getIniTextValueAt(next.gameUserSettings, "ServerSettings", "XPMultiplier", 0)).toBe("9");
     expect(getIniTextValueAt(next.gameUserSettings, "ServerSettings", "DifficultyOffset", 0)).toBe("1");
+  });
+
+  it("removes earlier copies after later ones so indexes do not shift", () => {
+    const payload = gus("[ServerSettings]\nCustomFlag=a\nCustomFlag=b\nCustomFlag=c\n");
+    const row = (occurrence: number, disk: string): IniConflictOccurrence => ({
+      ...conflict,
+      key: "CustomFlag",
+      occurrence,
+      loaded: null,
+      local: null,
+      disk,
+      removes: true,
+    });
+    const next = payloadWithKeptChoices(payload, [
+      { conflict: row(0, "a"), side: "saved" },
+      { conflict: row(1, "b"), side: "saved" },
+    ]);
+    expect(getIniTextValueAt(next.gameUserSettings, "ServerSettings", "CustomFlag", 0)).toBe("c");
+    expect(getIniTextValueAt(next.gameUserSettings, "ServerSettings", "CustomFlag", 1)).toBeNull();
+  });
+});
+
+describe("parseIniConflictOccurrence", () => {
+  it("keeps a secret value that would be redacted in a diagnostic message", () => {
+    expect(
+      parseIniConflictOccurrence({
+        ...conflict,
+        local: "hunter2-secret",
+        keyValues: ["hunter2-secret"],
+      }),
+    ).toMatchObject({ local: "hunter2-secret", keyValues: ["hunter2-secret"] });
+  });
+
+  it("drops a fractional or negative occurrence", () => {
+    expect(parseIniConflictOccurrence({ ...conflict, occurrence: 1.5 })).toBeNull();
+    expect(parseIniConflictOccurrence({ ...conflict, occurrence: -1 })).toBeNull();
   });
 });

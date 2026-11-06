@@ -6,25 +6,21 @@
 }
 
 .table {
-  display: grid;
-  grid-template-columns: max-content max-content max-content max-content;
-  column-gap: 1.25rem;
-  row-gap: 0.4rem;
+  border-collapse: separate;
+  border-spacing: 0 0.4rem;
   width: max-content;
   max-width: 100%;
-  align-items: center;
 }
 
-.row {
-  display: grid;
-  grid-column: 1 / -1;
-  grid-template-columns: subgrid;
-  column-gap: inherit;
-  align-items: center;
+.table :where(th, td) {
+  padding: 0 1.25rem 0 0;
+  font-weight: inherit;
+  text-align: start;
+  vertical-align: middle;
 }
 
-.headRow {
-  align-items: start;
+.headRow :where(th) {
+  vertical-align: top;
 }
 
 .settingHead,

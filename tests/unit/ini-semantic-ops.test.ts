@@ -5,6 +5,7 @@ import {
   INI_SEMANTIC_UNSET_FORBIDDEN_CODE,
   applyIniSemanticOps,
   buildIniSemanticOps,
+  collectIniSemanticConflicts,
   getIniTextValueAt,
   IniSemanticPatchError,
   type IniSemanticOp,
@@ -251,6 +252,7 @@ SessionName=Changed
         key: "XPMultiplier",
         occurrence: 0,
         expectedPreviousValue: "1",
+        expectedKeyValues: ["1"],
         nextValue: "3",
       },
     ]);
@@ -273,6 +275,7 @@ CustomFlag=a
         key: "CustomFlag",
         occurrence: 1,
         expectedPreviousValue: "b",
+        expectedKeyValues: ["a", "b"],
       },
     ]);
   });
@@ -294,6 +297,7 @@ CustomFlag=b2
         key: "CustomFlag",
         occurrence: 0,
         expectedPreviousValue: "a",
+        expectedKeyValues: ["a", "b"],
         nextValue: "b2",
       },
       {
@@ -303,6 +307,7 @@ CustomFlag=b2
         key: "CustomFlag",
         occurrence: 1,
         expectedPreviousValue: "b",
+        expectedKeyValues: ["a", "b"],
       },
     ]);
     const next = applyIniSemanticOps(baseline, ops);
@@ -328,6 +333,7 @@ CustomFlag=a
         key: "CustomFlag",
         occurrence: 0,
         expectedPreviousValue: "a",
+        expectedKeyValues: ["a", "b"],
         nextValue: "b",
       },
       {
@@ -337,6 +343,7 @@ CustomFlag=a
         key: "CustomFlag",
         occurrence: 1,
         expectedPreviousValue: "b",
+        expectedKeyValues: ["a", "b"],
         nextValue: "a",
       },
     ]);
@@ -412,5 +419,14 @@ CustomFlag=live
     ]);
     expect(next.gameUserSettings).toContain("\r\n");
     expect(next.gameUserSettings).toContain("CustomFlag=a\r\nCustomFlag=b\r\n");
+  });
+
+  it("reports a conflict when an identical line is inserted before the edited occurrence", () => {
+    const baseline = gus("[ServerSettings]\nCustomFlag=1\n");
+    const draft = gus("[ServerSettings]\nCustomFlag=9\n");
+    const ops = buildIniSemanticOps(baseline, draft);
+    const disk = gus("[ServerSettings]\nCustomFlag=1\nCustomFlag=1\n");
+    expect(collectIniSemanticConflicts(disk, ops)).toHaveLength(1);
+    expect(() => applyIniSemanticOps(disk, ops)).toThrow(IniSemanticPatchError);
   });
 });

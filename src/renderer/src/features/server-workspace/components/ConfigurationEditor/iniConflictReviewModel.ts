@@ -6,7 +6,7 @@ export function conflictFileLabel(fileKey: IniFileKey): string {
 }
 
 /** 1-based label. The first copy stays unlabeled. */
-export function conflictCopyLabel(occurrence: number): string | null {
+function conflictCopyLabel(occurrence: number): string | null {
   if (occurrence <= 0) return null;
   return `Copy ${occurrence + 1}`;
 }
@@ -15,10 +15,6 @@ export function conflictValueText(value: string | null): { text: string; kind: "
   if (value === null) return { text: "Not in the file", kind: "absent" };
   if (value.length === 0) return { text: "Empty", kind: "empty" };
   return { text: value, kind: "value" };
-}
-
-export function conflictMoved(loaded: string | null, value: string | null): boolean {
-  return value !== loaded;
 }
 
 export function conflictHeading(conflict: IniConflictOccurrence): string {
@@ -36,8 +32,10 @@ export function defaultConflictSide(conflict: IniConflictOccurrence): ConflictKe
   return conflict.local !== null || conflict.removes === true ? "yark" : "file";
 }
 
+/** Length-prefixed so a section or key that contains a period cannot collide with another row. */
 export function conflictRowKey(conflict: IniConflictOccurrence): string {
-  return `${conflict.fileKey}.${conflict.section}.${conflict.key}.${conflict.occurrence}`;
+  const token = (value: string): string => `${value.length}:${value}`;
+  return [conflict.fileKey, conflict.section, conflict.key, String(conflict.occurrence)].map(token).join("\u001f");
 }
 
 /** A short scalar can sit in the button. A blank, a missing line, or a long line stays generic. */
