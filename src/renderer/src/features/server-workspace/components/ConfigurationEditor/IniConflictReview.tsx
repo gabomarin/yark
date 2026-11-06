@@ -65,28 +65,32 @@ function ConflictTable(
           const key = conflictRowKey(conflict);
           const side = props.sides[key] ?? defaultConflictSide(conflict);
           const option = (keep: ConflictKeepSide, value: string | null): ReactElement => (
-            <td className={classes.cell} data-conflict-side={keep}>
-              <ValueText value={value} />
-              <Radio
-                name={key}
-                size="xs"
-                value={keep}
-                checked={side === keep}
-                aria-label={conflictKeepName(keep, value)}
-                disabled={props.busy || !canKeepConflictSide(conflict, keep)}
-                onChange={() => {
-                  props.onSide(key, keep);
-                }}
-              />
+            <td>
+              <div className={classes.cell} data-conflict-side={keep}>
+                <ValueText value={value} />
+                <Radio
+                  name={key}
+                  size="xs"
+                  value={keep}
+                  checked={side === keep}
+                  aria-label={conflictKeepName(keep, value)}
+                  disabled={props.busy || !canKeepConflictSide(conflict, keep)}
+                  onChange={() => {
+                    props.onSide(key, keep);
+                  }}
+                />
+              </div>
             </td>
           );
           return (
             <tr key={key}>
-              <th className={classes.setting} scope="row">
-                <span className={classes.key}>{conflictHeading(conflict)}</span>
-                <span className={classes.meta}>
-                  {conflictFileLabel(conflict.fileKey)} · {conflict.section}
-                </span>
+              <th scope="row">
+                <div className={classes.setting}>
+                  <span className={classes.key}>{conflictHeading(conflict)}</span>
+                  <span className={classes.meta}>
+                    {conflictFileLabel(conflict.fileKey)} · {conflict.section}
+                  </span>
+                </div>
               </th>
               {option("saved", conflict.loaded)}
               {option("yark", conflict.local)}
