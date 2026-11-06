@@ -68,79 +68,79 @@ export function ConfigurationEditorHeader(props: Props): ReactElement {
             {iniNavigation}
             <div className={classes.fileActions}>
               <div className={classes.fileActionsLabel}>
-              <Group gap="xs" wrap="wrap">
-                {showReload && (
+                <Group gap="xs" wrap="wrap">
+                  {showReload && (
+                    <Button
+                      size="xs"
+                      variant="default"
+                      leftSection={<ArrowClockwise size={16} />}
+                      onClick={onReloadFromDisk}
+                      disabled={reloadDisabled}
+                    >
+                      Reload from disk
+                    </Button>
+                  )}
+                  {showRestore && (
+                    <Button
+                      size="xs"
+                      variant="default"
+                      leftSection={<ArrowUUpLeft size={16} />}
+                      onClick={onRestoreFile}
+                      disabled={restoreDisabled}
+                    >
+                      Restore file
+                    </Button>
+                  )}
                   <Button
                     size="xs"
                     variant="default"
-                    leftSection={<ArrowClockwise size={16} />}
-                    onClick={onReloadFromDisk}
-                    disabled={reloadDisabled}
+                    leftSection={<ArrowCounterClockwise size={16} />}
+                    onClick={onDiscard}
+                    disabled={discardDisabled}
                   >
-                    Reload from disk
+                    Discard changes
                   </Button>
-                )}
-                {showRestore && (
-                  <Button
-                    size="xs"
-                    variant="default"
-                    leftSection={<ArrowUUpLeft size={16} />}
-                    onClick={onRestoreFile}
-                    disabled={restoreDisabled}
-                  >
-                    Restore file
+                  <Button size="xs" leftSection={<FloppyDisk size={16} />} onClick={onSave} disabled={saveDisabled}>
+                    Save
                   </Button>
-                )}
-                <Button
-                  size="xs"
-                  variant="default"
-                  leftSection={<ArrowCounterClockwise size={16} />}
-                  onClick={onDiscard}
-                  disabled={discardDisabled}
-                >
-                  Discard changes
-                </Button>
-                <Button size="xs" leftSection={<FloppyDisk size={16} />} onClick={onSave} disabled={saveDisabled}>
-                  Save
-                </Button>
-              </Group>
+                </Group>
               </div>
               <div className={classes.fileActionsIcon}>
-              <Group gap="xs" wrap="nowrap">
-                {showReload && (
+                <Group gap="xs" wrap="nowrap">
+                  {showReload && (
+                    <FileActionIcon
+                      label="Reload from disk"
+                      size={actionSize}
+                      disabled={reloadDisabled}
+                      onClick={onReloadFromDisk}
+                      icon={<ArrowClockwise size={iconSize} />}
+                    />
+                  )}
+                  {showRestore && (
+                    <FileActionIcon
+                      label="Restore file"
+                      size={actionSize}
+                      disabled={restoreDisabled}
+                      onClick={onRestoreFile}
+                      icon={<ArrowUUpLeft size={iconSize} />}
+                    />
+                  )}
                   <FileActionIcon
-                    label="Reload from disk"
+                    label="Discard changes"
                     size={actionSize}
-                    disabled={reloadDisabled}
-                    onClick={onReloadFromDisk}
-                    icon={<ArrowClockwise size={iconSize} />}
+                    disabled={discardDisabled}
+                    onClick={onDiscard}
+                    icon={<ArrowCounterClockwise size={iconSize} />}
                   />
-                )}
-                {showRestore && (
                   <FileActionIcon
-                    label="Restore file"
+                    label="Save"
                     size={actionSize}
-                    disabled={restoreDisabled}
-                    onClick={onRestoreFile}
-                    icon={<ArrowUUpLeft size={iconSize} />}
+                    variant="filled"
+                    disabled={saveDisabled}
+                    onClick={onSave}
+                    icon={<FloppyDisk size={iconSize} />}
                   />
-                )}
-                <FileActionIcon
-                  label="Discard changes"
-                  size={actionSize}
-                  disabled={discardDisabled}
-                  onClick={onDiscard}
-                  icon={<ArrowCounterClockwise size={iconSize} />}
-                />
-                <FileActionIcon
-                  label="Save"
-                  size={actionSize}
-                  variant="filled"
-                  disabled={saveDisabled}
-                  onClick={onSave}
-                  icon={<FloppyDisk size={iconSize} />}
-                />
-              </Group>
+                </Group>
               </div>
             </div>
           </div>

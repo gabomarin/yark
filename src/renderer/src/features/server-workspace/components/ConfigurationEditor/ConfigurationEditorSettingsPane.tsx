@@ -66,7 +66,8 @@ export function ConfigurationEditorSettingsPane(props: Props): ReactElement {
 
   const onAddSetting = (section: string, key: string, value: string) => {
     const category = resolveAsaUiCategory(editor.iniFile, section, key);
-    const reveal = tableSort === "unsorted" ? iniFileOrderCollapseKey(section) : collapseKeyForCategory(category, section);
+    const reveal =
+      tableSort === "unsorted" ? iniFileOrderCollapseKey(section) : collapseKeyForCategory(category, section);
     editor.updateValue(editor.iniFile, section, key, value, 0);
     editor.setCollapsedSections({ ...editor.collapsedSections, [reveal]: false });
     const nextFilter = editor.filter !== "all" && editor.filter !== category ? "all" : editor.filter;

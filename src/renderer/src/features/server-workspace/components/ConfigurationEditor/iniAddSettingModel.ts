@@ -82,7 +82,8 @@ export function defaultIniSection(fileKey: IniFileKey, sections: readonly string
   const preferred = fileKey === "game" ? ["ShooterGameMode", "ServerSettings"] : ["ServerSettings", "SessionSettings"];
   for (const name of preferred) {
     const hit = sections.find(
-      (section) => section.toLowerCase() === name.toLowerCase() || section.toLowerCase().endsWith(`.${name.toLowerCase()}`),
+      (section) =>
+        section.toLowerCase() === name.toLowerCase() || section.toLowerCase().endsWith(`.${name.toLowerCase()}`),
     );
     if (hit !== undefined) return hit;
   }

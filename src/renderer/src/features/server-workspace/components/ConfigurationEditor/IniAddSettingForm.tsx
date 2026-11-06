@@ -122,8 +122,7 @@ export function IniAddSettingForm(props: Props): ReactElement {
     return choice.key.toLowerCase().includes(needle) || choice.description.toLowerCase().includes(needle);
   });
   const matched = choices.find((choice) => choice.key.toLowerCase() === needle);
-  const helper =
-    matched?.description ?? "Known settings show up as you type. Any other name is added as plain text.";
+  const helper = matched?.description ?? "Known settings show up as you type. Any other name is added as plain text.";
 
   const applyChoice = (choice: AddableIniSetting): void => {
     setQuery(choice.key);

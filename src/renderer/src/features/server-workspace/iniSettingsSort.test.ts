@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { INI_SETTINGS_SORT_STORAGE_KEY, readStoredIniSettingsSort, writeStoredIniSettingsSort } from "./iniSettingsSort";
+import {
+  INI_SETTINGS_SORT_STORAGE_KEY,
+  readStoredIniSettingsSort,
+  writeStoredIniSettingsSort,
+} from "./iniSettingsSort";
 
 describe("INI settings sort preference", () => {
   beforeEach(() => {
