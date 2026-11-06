@@ -30,7 +30,7 @@ import {
 } from "./configurationEditorModel";
 import { applyEditorConflictChoices } from "./configurationEditorConflict";
 import { configurationEditorSaveToastMessage, performConfigurationEditorSave } from "./configurationEditorSave";
-import { collapseAllSections, collapseCategorySections, toggleCollapsedSection } from "./configurationEditorSections";
+import { toggleCollapsedSection } from "./configurationEditorSections";
 import type { ConfigurationEditorApi } from "./configurationEditorTypes";
 import { useConfigurationEditorDiskSync } from "./useConfigurationEditorDiskSync";
 
@@ -123,7 +123,8 @@ export function useConfigurationEditor(options: {
     const sanitized = sanitizeServerIniPayload(data.payload);
     const keepDirty = loadOptions?.preserveDirty === true && dirtyRef.current && payloadRef.current !== null;
     if (keepDirty && payloadRef.current !== null) {
-      // Keep the draft and its baseline fingerprints so Save cannot overwrite an outside edit (#665).
+      // Keep in-editor edits and the Save baseline fingerprints. Advancing
+      // fingerprints here would let Save overwrite the external change (#665).
       const previous = snapshotRef.current;
       const baselineFingerprints = previous?.fingerprints ?? data.fingerprints;
       setSnapshot({
@@ -135,6 +136,7 @@ export function useConfigurationEditor(options: {
         diskSync.setExternalDiskPayload(sanitized);
         diskSync.setExternalChangeDetected(true);
       } else {
+        // Disk restored to the Save baseline — clear a stale outside-change banner (#667).
         diskSync.clearExternalChangeFlags();
       }
       return;
@@ -273,14 +275,6 @@ export function useConfigurationEditor(options: {
 
   const toggleSection = (sectionName: string) => {
     setCollapsedSections((prev) => toggleCollapsedSection(prev, sectionName));
-  };
-
-  const setSectionGroupsCollapsed = (category: string, collapsed: boolean) => {
-    setCollapsedSections((prev) => collapseCategorySections(prev, groupedRows, category, collapsed) ?? prev);
-  };
-
-  const setAllSectionsCollapsed = (collapsed: boolean) => {
-    setCollapsedSections(collapseAllSections(groupedRows, collapsed));
   };
 
   const saveIni = async (): Promise<boolean> => {
@@ -430,6 +424,7 @@ export function useConfigurationEditor(options: {
     unsavedRowCount: unsavedCounts.file,
     pendingQueued,
     groupedRows,
+    visibleRows,
     categoryOptions,
     fileLabel,
     filePath,
@@ -441,8 +436,7 @@ export function useConfigurationEditor(options: {
     resetRowToDefault,
     revertRowToSaved,
     toggleSection,
-    setSectionGroupsCollapsed,
-    setAllSectionsCollapsed,
+    setCollapsedSections,
     saveIni,
     openExternal,
     publishPayloadChange,

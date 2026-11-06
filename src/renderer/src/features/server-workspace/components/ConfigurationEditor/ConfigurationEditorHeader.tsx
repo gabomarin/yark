@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from "react";
 import { ArrowClockwise, ArrowCounterClockwise, ArrowUUpLeft, FloppyDisk } from "@phosphor-icons/react";
-import { Button, Group } from "@mantine/core";
+import { ActionIcon, Button, Group, Tooltip } from "@mantine/core";
+import { useUiDensity } from "@app/AppProviders";
 import { WorkspaceSectionHeader } from "@ui/WorkspaceSectionHeader/WorkspaceSectionHeader";
 import classes from "./ConfigurationEditor.module.css";
 
@@ -46,6 +47,16 @@ export function ConfigurationEditorHeader(props: Props): ReactElement {
     onSave,
   } = props;
 
+  const density = useUiDensity();
+  const actionSize = density === "compact" ? "md" : "lg";
+  const iconSize = density === "compact" ? 16 : 18;
+  const reloadDisabled = busy || loading;
+  const restoreDisabled = restoreFileDisabled || busy || loading;
+  const discardDisabled = !(discardDirty ?? dirty) || busy;
+  const saveDisabled = !dirty || invalid || busy || loading;
+  const showReload = onReloadFromDisk !== undefined;
+  const showRestore = showRestoreFile && onRestoreFile !== undefined;
+
   return (
     <WorkspaceSectionHeader
       title="INI Files"
@@ -55,51 +66,112 @@ export function ConfigurationEditorHeader(props: Props): ReactElement {
         <div className={classes.headerToolbarStack}>
           <div className={classes.headerToolbar}>
             {iniNavigation}
-            <Group gap="xs" wrap="wrap" ml="auto">
-              {onReloadFromDisk !== undefined && (
+            <div className={classes.fileActions}>
+              <div className={classes.fileActionsLabel}>
+              <Group gap="xs" wrap="wrap">
+                {showReload && (
+                  <Button
+                    size="xs"
+                    variant="default"
+                    leftSection={<ArrowClockwise size={16} />}
+                    onClick={onReloadFromDisk}
+                    disabled={reloadDisabled}
+                  >
+                    Reload from disk
+                  </Button>
+                )}
+                {showRestore && (
+                  <Button
+                    size="xs"
+                    variant="default"
+                    leftSection={<ArrowUUpLeft size={16} />}
+                    onClick={onRestoreFile}
+                    disabled={restoreDisabled}
+                  >
+                    Restore file
+                  </Button>
+                )}
                 <Button
                   size="xs"
                   variant="default"
-                  leftSection={<ArrowClockwise size={16} />}
-                  onClick={onReloadFromDisk}
-                  disabled={busy || loading}
+                  leftSection={<ArrowCounterClockwise size={16} />}
+                  onClick={onDiscard}
+                  disabled={discardDisabled}
                 >
-                  Reload from disk
+                  Discard changes
                 </Button>
-              )}
-              {showRestoreFile && onRestoreFile !== undefined && (
-                <Button
-                  size="xs"
-                  variant="default"
-                  leftSection={<ArrowUUpLeft size={16} />}
-                  onClick={onRestoreFile}
-                  disabled={restoreFileDisabled || busy || loading}
-                >
-                  Restore file
+                <Button size="xs" leftSection={<FloppyDisk size={16} />} onClick={onSave} disabled={saveDisabled}>
+                  Save
                 </Button>
-              )}
-              <Button
-                size="xs"
-                variant="default"
-                leftSection={<ArrowCounterClockwise size={16} />}
-                onClick={onDiscard}
-                disabled={!(discardDirty ?? dirty) || busy}
-              >
-                Discard changes
-              </Button>
-              <Button
-                size="xs"
-                leftSection={<FloppyDisk size={16} />}
-                onClick={onSave}
-                disabled={!dirty || invalid || busy || loading}
-              >
-                Save
-              </Button>
-            </Group>
+              </Group>
+              </div>
+              <div className={classes.fileActionsIcon}>
+              <Group gap="xs" wrap="nowrap">
+                {showReload && (
+                  <FileActionIcon
+                    label="Reload from disk"
+                    size={actionSize}
+                    disabled={reloadDisabled}
+                    onClick={onReloadFromDisk}
+                    icon={<ArrowClockwise size={iconSize} />}
+                  />
+                )}
+                {showRestore && (
+                  <FileActionIcon
+                    label="Restore file"
+                    size={actionSize}
+                    disabled={restoreDisabled}
+                    onClick={onRestoreFile}
+                    icon={<ArrowUUpLeft size={iconSize} />}
+                  />
+                )}
+                <FileActionIcon
+                  label="Discard changes"
+                  size={actionSize}
+                  disabled={discardDisabled}
+                  onClick={onDiscard}
+                  icon={<ArrowCounterClockwise size={iconSize} />}
+                />
+                <FileActionIcon
+                  label="Save"
+                  size={actionSize}
+                  variant="filled"
+                  disabled={saveDisabled}
+                  onClick={onSave}
+                  icon={<FloppyDisk size={iconSize} />}
+                />
+              </Group>
+              </div>
+            </div>
           </div>
           {gameViewNav}
         </div>
       }
     />
+  );
+}
+
+function FileActionIcon(props: {
+  label: string;
+  size: "md" | "lg";
+  disabled: boolean;
+  variant?: "default" | "filled";
+  onClick: () => void;
+  icon: ReactElement;
+}): ReactElement {
+  return (
+    <Tooltip label={props.label}>
+      <span className={classes.tooltipTarget}>
+        <ActionIcon
+          variant={props.variant ?? "default"}
+          size={props.size}
+          aria-label={props.label}
+          disabled={props.disabled}
+          onClick={props.onClick}
+        >
+          {props.icon}
+        </ActionIcon>
+      </span>
+    </Tooltip>
   );
 }

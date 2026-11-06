@@ -27,6 +27,7 @@ describe("ConfigurationEditorHeader", () => {
 
     expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Discard changes" })).toBeEnabled();
+    expect(screen.getAllByRole("button", { name: "Discard changes", hidden: true })).toHaveLength(2);
   });
 
   it("enables Save when the editor is dirty and valid", () => {

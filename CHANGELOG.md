@@ -11,12 +11,17 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Configuration → INI Files sorts settings from a menu: **Unsorted** (INI sections, file order, and the default), **By category** (category groups, settings in the order they appear in the file), or **Alphabetical** (category groups, names A to Z). A filter or sort icon sits inside each menu, and each sort explains itself on hover. The menu keeps Collapse and Expand on screen when the window is narrow. The choice is remembered on this PC. Save still updates each value on its current line.
+- Configuration → INI Files adds a setting from **Add setting** above the table. The form asks for the section (ServerSettings, SessionSettings, Message of the day, or a mod section you confirm), the setting name, and the value. Known settings show up as you type, and any other name is added as plain text. The table stays a list of existing settings, and scrolls to the new row after you add it. The change stays a draft until Save (#705).
 - When Save overlaps a change made outside YARK, Configuration lists each setting so you can pick your edit, the file value, or the last save, then accept. The notice stays until you accept, and then the outside-change notice closes (#696).
 - A GitHub issue opened by someone other than the maintainer or a bot is posted to Discord by Yark Bot (repository variable `DISCORD_ISSUES_CHANNEL_ID`).
 
 ### Fixed
 
 - A malformed INI conflict row no longer hides the other rows in the Save conflict review (#696).
+- Configuration → INI Files uses the same gap between search, the category filter, and the sort menu. On a narrower pane, search sits on its own row, and Reload, Restore, Discard, and Save become icon buttons the same size as the server card actions. Each name shows on hover.
+- The settings sort tooltip closes when you pick a sort, so it does not flash in the corner of the window.
+- Changing the INI settings sort updates the menu immediately. The table redraws just after, because each setting is its own input.
 - Create cluster and the setup assistant suggest a Cluster ID like `yark-cluster-7f3a9c2e` instead of `yark-cluster-1`, so the in-game transfer list does not include other people's servers that reused the same default ID.
 
 ## [0.26.2] - 2026-11-04

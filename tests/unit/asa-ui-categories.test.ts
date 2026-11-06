@@ -5,7 +5,13 @@ import {
   lookupAsaUiCategory,
   resolveAsaUiCategory,
 } from "@shared/asa/asa-setting-ui-categories";
-import { filterIniRows, groupRowsByUiCategory, parseIniRows } from "@features/server-workspace/iniModel";
+import {
+  filterIniRows,
+  groupRowsByUiCategory,
+  groupSettingReferencesByFileOrder,
+  groupSettingReferencesByUiCategory,
+  parseIniRows,
+} from "@features/server-workspace/iniModel";
 
 describe("asa UI categories", () => {
   it("maps known catalog keys from the pregenerated JSON", () => {
@@ -72,5 +78,46 @@ CoolFeature=1
     const mods = groups.find((group) => group.category === "mods");
     expect(mods?.rows.map((row) => row.key)).toEqual(["ActiveMods"]);
     expect(mods?.sectionGroups).toBeUndefined();
+  });
+
+  it("keeps file order for the visual file-order sort", () => {
+    const text = `[SessionSettings]
+SessionName=B
+[ServerSettings]
+XPMultiplier=2
+ServerPassword=secret
+[SessionSettings]
+Port=7777
+`;
+    const rows = parseIniRows(text).map((row) => ({ ...row, fileKey: "gameUserSettings" as const }));
+    const sections = groupSettingReferencesByFileOrder(rows);
+    expect(sections.map((section) => section.section)).toEqual(["SessionSettings", "ServerSettings"]);
+    expect(sections[0]?.rows.map((row) => row.key)).toEqual(["SessionName", "Port"]);
+    expect(sections[1]?.rows.map((row) => row.key)).toEqual(["XPMultiplier", "ServerPassword"]);
+  });
+
+  it("keeps encounter order inside each category", () => {
+    const text = `[SessionSettings]
+SessionName=B
+[ServerSettings]
+XPMultiplier=2
+ServerPassword=secret
+[SessionSettings]
+Port=7777
+`;
+    const rows = parseIniRows(text).map((row) => ({ ...row, fileKey: "gameUserSettings" as const }));
+    const listed = groupSettingReferencesByUiCategory(rows, "file");
+    const named = groupSettingReferencesByUiCategory(rows, "name");
+
+    expect(listed.find((group) => group.category === "general")?.rows.map((row) => row.key)).toEqual([
+      "SessionName",
+      "ServerPassword",
+    ]);
+    expect(listed.find((group) => group.category === "rates")?.rows.map((row) => row.key)).toEqual(["XPMultiplier"]);
+    expect(listed.find((group) => group.category === "networking")?.rows.map((row) => row.key)).toEqual(["Port"]);
+    expect(named.find((group) => group.category === "general")?.rows.map((row) => row.key)).toEqual([
+      "ServerPassword",
+      "SessionName",
+    ]);
   });
 });

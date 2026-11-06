@@ -1,22 +1,28 @@
-import { ArrowsInLineVertical, ArrowsOutLineVertical, CaretDown, CaretRight } from "@phosphor-icons/react";
-import { ActionIcon, Badge, Group, Text, Tooltip } from "@mantine/core";
+import { Plus } from "@phosphor-icons/react";
+import { Button, Text } from "@mantine/core";
 import type { IniFileKey } from "@shared/types";
-import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
 import { appRaisedSurfaceClass, withAppSurface } from "@ui/AppSurface/appSurfaceClassName";
-import type { ReactElement } from "react";
-import {
-  iniUiSectionCollapseKey,
-  type IniSettingReference,
-  type IniUiCategoryGroup,
-  type IniUiSectionGroup,
-} from "../../iniModel";
+import { useMemo, useState, type ReactElement } from "react";
+import type { IniSettingReference, IniSettingsSort, IniUiCategoryGroup, IniUiSectionGroup } from "../../iniModel";
 import classes from "./ConfigurationEditor.module.css";
-import { iniRowIdentity } from "./configurationEditorModel";
-import { IniSettingRow } from "./IniSettingRow";
+import {
+  renderCategoryGroups,
+  renderFileOrderSections,
+  type SettingsGroupActions,
+} from "./ConfigurationEditorSettingsGroups";
+import { IniAddSettingForm } from "./IniAddSettingForm";
+import { defaultIniSection, iniSectionsForNewSetting } from "./iniAddSettingModel";
 
 interface Props {
   loading: boolean;
-  groupedRows: IniUiCategoryGroup[];
+  iniFile: IniFileKey;
+  fileSections: readonly string[];
+  sort: IniSettingsSort;
+  groupedRows: IniUiCategoryGroup<IniSettingReference>[];
+  fileOrderSections: IniUiSectionGroup<IniSettingReference>[];
+  highlightRowId: string | null;
+  keysInSection: ReadonlyMap<string, ReadonlySet<string>>;
+  onAddSetting?: (section: string, key: string, value: string) => void;
   collapsedSections: Record<string, boolean>;
   busy: boolean;
   isRowUnsaved: (row: IniSettingReference) => boolean;
@@ -29,227 +35,86 @@ interface Props {
   onOpenAdminList?: () => void;
 }
 
-function renderSettingRows(
-  rows: IniSettingReference[],
-  busy: boolean,
-  isRowUnsaved: Props["isRowUnsaved"],
-  savedValueForRow: Props["savedValueForRow"],
-  onUpdateValue: Props["onUpdateValue"],
-  onResetRowToDefault: Props["onResetRowToDefault"],
-  onRevertRowToSaved: Props["onRevertRowToSaved"],
-  onOpenAdminList: Props["onOpenAdminList"],
-): ReactElement[] {
-  return rows.map((row) => {
-    const controlId = iniRowIdentity(row.fileKey, row.section, row.key, row.occurrence);
-    return (
-      <IniSettingRow
-        key={controlId}
-        row={row}
-        busy={busy}
-        unsaved={isRowUnsaved(row)}
-        savedValue={savedValueForRow(row)}
-        onUpdateValue={onUpdateValue}
-        onResetRowToDefault={onResetRowToDefault}
-        onRevertRowToSaved={onRevertRowToSaved}
-        onOpenAdminList={onOpenAdminList}
-      />
-    );
-  });
-}
-
-function renderSectionGroups(
-  sectionGroups: IniUiSectionGroup[],
-  category: IniUiCategoryGroup["category"],
-  collapsedSections: Record<string, boolean>,
-  busy: boolean,
-  isRowUnsaved: Props["isRowUnsaved"],
-  savedValueForRow: Props["savedValueForRow"],
-  onToggleSection: (sectionName: string) => void,
-  onUpdateValue: Props["onUpdateValue"],
-  onResetRowToDefault: Props["onResetRowToDefault"],
-  onRevertRowToSaved: Props["onRevertRowToSaved"],
-  onOpenAdminList: Props["onOpenAdminList"],
-): ReactElement[] {
-  return sectionGroups.map((sectionGroup) => {
-    const collapseKey = iniUiSectionCollapseKey(category, sectionGroup.section);
-    const sectionCollapsed = collapsedSections[collapseKey] === true;
-    return (
-      <div key={collapseKey}>
-        <button
-          type="button"
-          className={chrome.subsectionHeader}
-          aria-expanded={!sectionCollapsed}
-          data-ini-section-subheader={sectionGroup.section}
-          onClick={() => onToggleSection(collapseKey)}
-        >
-          <Group gap="xs" wrap="nowrap">
-            {sectionCollapsed ? <CaretRight size={13} /> : <CaretDown size={13} />}
-            <Text fw={600} size="xs" className={chrome.subsectionHeaderLabel}>
-              {sectionGroup.label}
-            </Text>
-            <Badge variant="outline">{sectionGroup.rows.length}</Badge>
-          </Group>
-        </button>
-        {!sectionCollapsed &&
-          renderSettingRows(
-            sectionGroup.rows as IniSettingReference[],
-            busy,
-            isRowUnsaved,
-            savedValueForRow,
-            onUpdateValue,
-            onResetRowToDefault,
-            onRevertRowToSaved,
-            onOpenAdminList,
-          )}
-      </div>
-    );
-  });
-}
-
-function OtherCategoryHeader(props: {
-  label: string;
-  rowCount: number;
-  onCollapseSubgroups: () => void;
-  onExpandSubgroups: () => void;
-}): ReactElement {
-  return (
-    <div className={chrome.sectionHeaderStatic} data-ini-other-header>
-      <Group gap="xs" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
-        <Text fw={700} size="sm" className={chrome.sectionHeaderLabel}>
-          {props.label}
-        </Text>
-        <Badge variant="outline" className={chrome.sectionCount}>
-          {props.rowCount}
-        </Badge>
-      </Group>
-      <Group gap={4} wrap="nowrap">
-        <Tooltip label="Collapse all sections">
-          <ActionIcon
-            variant="subtle"
-            size="sm"
-            color="gray"
-            aria-label="Collapse all Other sections"
-            onClick={props.onCollapseSubgroups}
-          >
-            <ArrowsInLineVertical size={14} />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip label="Expand all sections">
-          <ActionIcon
-            variant="subtle"
-            size="sm"
-            color="gray"
-            aria-label="Expand all Other sections"
-            onClick={props.onExpandSubgroups}
-          >
-            <ArrowsOutLineVertical size={14} />
-          </ActionIcon>
-        </Tooltip>
-      </Group>
-    </div>
-  );
-}
-
 export function ConfigurationEditorSettingsTable(props: Props): ReactElement {
-  const {
-    loading,
-    groupedRows,
-    collapsedSections,
-    busy,
-    isRowUnsaved,
-    savedValueForRow,
-    onToggleSection,
-    onSetSectionGroupsCollapsed,
-    onUpdateValue,
-    onResetRowToDefault,
-    onRevertRowToSaved,
-  } = props;
+  const [formOpen, setFormOpen] = useState(false);
+  const [draftSection, setDraftSection] = useState<string | null>(null);
+  const canAdd = props.onAddSetting !== undefined;
+  const sections = useMemo(
+    () => iniSectionsForNewSetting(props.iniFile, props.fileSections),
+    [props.iniFile, props.fileSections],
+  );
+
+  const onStartDraft = () => {
+    setDraftSection((current) => current ?? defaultIniSection(props.iniFile, sections));
+    setFormOpen(true);
+  };
+
+  const onCommitDraft = (section: string, key: string, value: string) => {
+    setFormOpen(false);
+    props.onAddSetting?.(section, key, value);
+  };
+
+  const actions: SettingsGroupActions = {
+    busy: props.busy,
+    highlightRowId: props.highlightRowId,
+    isRowUnsaved: props.isRowUnsaved,
+    savedValueForRow: props.savedValueForRow,
+    onToggleSection: props.onToggleSection,
+    onSetSectionGroupsCollapsed: props.onSetSectionGroupsCollapsed,
+    onUpdateValue: props.onUpdateValue,
+    onResetRowToDefault: props.onResetRowToDefault,
+    onRevertRowToSaved: props.onRevertRowToSaved,
+    onOpenAdminList: props.onOpenAdminList,
+  };
 
   return (
-    <div className={withAppSurface(appRaisedSurfaceClass, classes.tableWrap)}>
-      <div className={classes.tableHead}>
-        <span>Setting</span>
-        <span>Value</span>
-        <span>Description</span>
-        <span />
+    <>
+      {canAdd && !formOpen ? (
+        <div className={classes.addSettingBar}>
+          <Button size="xs" variant="default" leftSection={<Plus size={14} />} onClick={onStartDraft}>
+            Add setting
+          </Button>
+        </div>
+      ) : null}
+      {canAdd && formOpen && draftSection !== null ? (
+        <IniAddSettingForm
+          fileKey={props.iniFile}
+          section={draftSection}
+          sections={sections}
+          keysInSection={props.keysInSection}
+          busy={props.busy}
+          onSectionChange={setDraftSection}
+          onCommit={onCommitDraft}
+          onCancel={() => setFormOpen(false)}
+        />
+      ) : null}
+      <div className={withAppSurface(appRaisedSurfaceClass, classes.tableWrap)}>
+        <div className={classes.tableHead}>
+          <span>Setting</span>
+          <span>Value</span>
+          <span>Description</span>
+          <span />
+        </div>
+        <div className={classes.tableBody} data-ini-settings-scroll>
+          {props.loading && (
+            <Text c="dimmed" p="md">
+              Loading INI…
+            </Text>
+          )}
+          {!props.loading &&
+            (props.sort === "unsorted" ? props.fileOrderSections.length === 0 : props.groupedRows.length === 0) && (
+              <Text c="dimmed" p="md">
+                No settings match this filter.
+              </Text>
+            )}
+          {!props.loading &&
+            props.sort === "unsorted" &&
+            renderFileOrderSections(props.fileOrderSections, props.collapsedSections, actions)}
+          {!props.loading &&
+            props.sort !== "unsorted" &&
+            renderCategoryGroups(props.groupedRows, props.collapsedSections, actions)}
+        </div>
       </div>
-      <div className={classes.tableBody} data-ini-settings-scroll>
-        {loading && (
-          <Text c="dimmed" p="md">
-            Loading INI…
-          </Text>
-        )}
-        {!loading && groupedRows.length === 0 && (
-          <Text c="dimmed" p="md">
-            No settings match this filter.
-          </Text>
-        )}
-        {!loading &&
-          groupedRows.map((group) => {
-            const sectionGroups = group.sectionGroups;
-            const nestedOther = group.category === "other" && sectionGroups !== undefined && sectionGroups.length > 0;
-
-            if (nestedOther) {
-              return (
-                <div key={group.category} className={classes.sectionBlock}>
-                  <OtherCategoryHeader
-                    label={group.label}
-                    rowCount={group.rows.length}
-                    onCollapseSubgroups={() => onSetSectionGroupsCollapsed(group.category, true)}
-                    onExpandSubgroups={() => onSetSectionGroupsCollapsed(group.category, false)}
-                  />
-                  {renderSectionGroups(
-                    sectionGroups,
-                    group.category,
-                    collapsedSections,
-                    busy,
-                    isRowUnsaved,
-                    savedValueForRow,
-                    onToggleSection,
-                    onUpdateValue,
-                    onResetRowToDefault,
-                    onRevertRowToSaved,
-                    props.onOpenAdminList,
-                  )}
-                </div>
-              );
-            }
-
-            const collapsed = collapsedSections[group.category] === true;
-            return (
-              <div key={group.category} className={classes.sectionBlock}>
-                <button
-                  type="button"
-                  className={chrome.sectionHeader}
-                  aria-expanded={!collapsed}
-                  onClick={() => onToggleSection(group.category)}
-                >
-                  <Group gap="xs" wrap="nowrap">
-                    {collapsed ? <CaretRight size={14} /> : <CaretDown size={14} />}
-                    <Text fw={700} size="sm" className={chrome.sectionHeaderLabel}>
-                      {group.label}
-                    </Text>
-                    <Badge variant="outline" className={chrome.sectionCount}>
-                      {group.rows.length}
-                    </Badge>
-                  </Group>
-                </button>
-
-                {!collapsed &&
-                  renderSettingRows(
-                    group.rows as IniSettingReference[],
-                    busy,
-                    isRowUnsaved,
-                    savedValueForRow,
-                    onUpdateValue,
-                    onResetRowToDefault,
-                    onRevertRowToSaved,
-                    props.onOpenAdminList,
-                  )}
-              </div>
-            );
-          })}
-      </div>
-    </div>
+    </>
   );
 }
