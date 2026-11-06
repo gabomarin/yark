@@ -32,6 +32,8 @@ export interface LootEditorStatus {
 interface Props {
   gameText: string;
   map: string;
+  /** One conflict write should not rebuild every crate draft (#696). */
+  holdLineResync?: boolean;
   loading: boolean;
   busy: boolean;
   initialCrate?: { key: string; className: string } | null;
@@ -82,9 +84,11 @@ export function LootEditor(props: Props): ReactElement {
   const [seenMap, setSeenMap] = useState(props.map);
   if (seenLines !== lineKey) {
     setSeenLines(lineKey);
-    setSelected(keepSupplyCrateSelection(selected, pending, drafts, summary.rows));
-    setDrafts(draftsFrom(summary.rows));
-    setPending([]);
+    if (props.holdLineResync !== true) {
+      setSelected(keepSupplyCrateSelection(selected, pending, drafts, summary.rows));
+      setDrafts(draftsFrom(summary.rows));
+      setPending([]);
+    }
   }
   if (seenMap !== props.map) {
     const previous = seenMap;

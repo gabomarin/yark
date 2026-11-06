@@ -191,8 +191,8 @@ must pass; a failure blocks the release until fixed.
    ```
 
    Add any **UI-changing** script from the mapping table in `e2e-validation.md`
-   (e.g. `e2e:mods`, `e2e:launch-args`, `e2e:clusters-membership`) when the
-   release touches those surfaces. All must pass on Windows.
+   (e.g. `e2e:mods`, `e2e:launch-args`, `e2e:clusters-membership`, `e2e:ini-conflict`)
+   when the release touches those surfaces. All must pass on Windows.
 
 6. **Production build + bundle report**
    ```

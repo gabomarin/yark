@@ -4,9 +4,18 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini/ini-defaults";
 import { IniStaleDocumentError, iniFingerprintsMatch } from "@shared/ini/ini-fingerprints";
-import { applyNamedEngramEdits, type NamedEngramEdit } from "@shared/ini/engram-named-entries";
-import { applySupplyCrateEdits, type SupplyCrateEdit } from "@shared/ini/supply-crate-entries";
-import { applyIniSemanticOps, type IniSemanticOp } from "@shared/ini/ini-semantic-ops";
+import {
+  applyNamedEngramEdits,
+  collectNamedEngramConflicts,
+  type NamedEngramEdit,
+} from "@shared/ini/engram-named-entries";
+import {
+  applySupplyCrateEdits,
+  collectSupplyCrateConflicts,
+  type SupplyCrateEdit,
+} from "@shared/ini/supply-crate-entries";
+import { IniConflictReviewError } from "@shared/ini/ini-conflict";
+import { applyIniSemanticOps, collectIniSemanticConflicts, type IniSemanticOp } from "@shared/ini/ini-semantic-ops";
 import { sanitizeServerIniPayload } from "@shared/ini/ini-text";
 import type { ServerIniChangedPush } from "@shared/ipc";
 import { MAX_INI_FILE_CHARS } from "@shared/ipc/primitives";
@@ -131,6 +140,14 @@ export class IniService extends EventEmitter {
     return this.locks.withLock(serverId, "ini-save", () =>
       this.withIniMutation(serverId, async () => {
         const current = await this.readServerIni(serverId);
+        const conflicts = [
+          ...collectIniSemanticConflicts(current.payload, ops),
+          ...collectNamedEngramConflicts(current.payload.game, engramEdits),
+          ...collectSupplyCrateConflicts(current.payload.game, supplyCrateEdits),
+        ];
+        if (conflicts.length > 0) {
+          throw new IniConflictReviewError(conflicts);
+        }
         const patched = applyIniSemanticOps(current.payload, ops);
         const sanitized = sanitizeServerIniPayload(patched);
         const withEngrams =

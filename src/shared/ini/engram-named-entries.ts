@@ -7,6 +7,7 @@ import {
   type IniComplexField,
   type IniComplexNode,
 } from "./ini-complex-value";
+import { sameStringList, type IniConflictOccurrence } from "./ini-conflict";
 import { appendIniTextValue, parseIniTextRows } from "./ini-text";
 
 export const NAMED_ENGRAM_STALE_CODE = "NAMED_ENGRAM_STALE";
@@ -53,10 +54,12 @@ export function isSafeEngramClassName(className: string): boolean {
 
 export class NamedEngramEditError extends Error {
   readonly code = NAMED_ENGRAM_STALE_CODE;
+  readonly conflicts: readonly IniConflictOccurrence[];
 
-  constructor(message: string) {
+  constructor(message: string, conflicts: readonly IniConflictOccurrence[] = []) {
     super(message);
     this.name = "NamedEngramEditError";
+    this.conflicts = conflicts;
   }
 }
 
@@ -87,6 +90,8 @@ interface NamedEngramReplace {
   section: string;
   occurrence: number;
   expectedRaw: string;
+  /** Every raw line of this section and key when the edit was built. */
+  expectedKeyRaws?: readonly string[];
   className: string;
   hidden: boolean | null;
   points: string | null;
@@ -99,6 +104,8 @@ interface NamedEngramDelete {
   section: string;
   occurrence: number;
   expectedRaw: string;
+  /** Every raw line of this section and key when the edit was built. */
+  expectedKeyRaws?: readonly string[];
   className: string;
 }
 
@@ -176,6 +183,19 @@ export function namedEngramRowKey(row: Pick<NamedEngramRow, "section" | "occurre
   return `${row.section}\u001f${row.occurrence}`;
 }
 
+function withNamedEngramKeyRaws<T extends NamedEngramReplace | NamedEngramDelete>(
+  edit: T,
+  rows: readonly NamedEngramRow[],
+): T {
+  return {
+    ...edit,
+    expectedKeyRaws: rows
+      .filter((item) => item.section.toLowerCase() === edit.section.toLowerCase())
+      .sort((left, right) => left.occurrence - right.occurrence)
+      .map((item) => item.expectedRaw),
+  };
+}
+
 function reviewNamedEngramDrafts(
   rows: readonly NamedEngramRow[],
   drafts: Readonly<Record<string, NamedEngramDraft>>,
@@ -191,7 +211,9 @@ function reviewNamedEngramDrafts(
       blocked = true;
       continue;
     }
-    if (review.edit !== null) edits.push(review.edit);
+    if (review.edit !== null && review.edit.kind !== "append") {
+      edits.push(withNamedEngramKeyRaws(review.edit, rows));
+    }
   }
   return { edits, blocked };
 }
@@ -331,9 +353,22 @@ export function reviewNamedEngramDraft(
  * unchanged. A line whose raw value no longer matches is refused before any
  * splice, so neighbors stay byte-for-byte.
  */
+export function collectNamedEngramConflicts(text: string, edits: readonly NamedEngramEdit[]): IniConflictOccurrence[] {
+  if (edits.length === 0) return [];
+  assertUnique(edits);
+  const lineEdits = edits.filter((edit): edit is NamedEngramReplace | NamedEngramDelete => edit.kind !== "append");
+  return namedEngramLineConflicts(text, lineEdits);
+}
+
 export function applyNamedEngramEdits(text: string, edits: readonly NamedEngramEdit[]): string {
   if (edits.length === 0) return text;
-  assertUnique(edits);
+  const conflicts = collectNamedEngramConflicts(text, edits);
+  if (conflicts.length > 0) {
+    throw new NamedEngramEditError(
+      "An engram line changed on disk after it was loaded. Reload from disk, then save again.",
+      conflicts,
+    );
+  }
 
   const lineEdits = edits.filter((edit): edit is NamedEngramReplace | NamedEngramDelete => edit.kind !== "append");
   const appends = edits.filter((edit): edit is NamedEngramAppend => edit.kind === "append");
@@ -343,6 +378,69 @@ export function applyNamedEngramEdits(text: string, edits: readonly NamedEngramE
     out = appendIniTextValue(out, section, "OverrideNamedEngramEntries", printAppend(edit));
   }
   return out;
+}
+
+function namedEngramKeyRaws(entries: readonly IniComplexEntry[], section: string): string[] {
+  return entries
+    .filter((item) => item.section.toLowerCase() === section.toLowerCase() && item.key.toLowerCase() === NAMED_KEY)
+    .sort((left, right) => left.occurrence - right.occurrence)
+    .map((item) => item.raw);
+}
+
+function namedEngramKeyShifted(
+  entries: readonly IniComplexEntry[],
+  edit: NamedEngramReplace | NamedEngramDelete,
+): boolean {
+  if (edit.expectedKeyRaws === undefined) return false;
+  return !sameStringList(edit.expectedKeyRaws, namedEngramKeyRaws(entries, edit.section));
+}
+
+function namedEngramLineConflicts(
+  text: string,
+  edits: readonly (NamedEngramReplace | NamedEngramDelete)[],
+): IniConflictOccurrence[] {
+  const entries = parseIniComplexEntries(text, "game");
+  const conflicts: IniConflictOccurrence[] = [];
+  for (const edit of edits) {
+    const entry = entries.find(
+      (item) =>
+        item.section.toLowerCase() === edit.section.toLowerCase() &&
+        item.key.toLowerCase() === NAMED_KEY &&
+        item.occurrence === edit.occurrence,
+    );
+    if (
+      entry !== undefined &&
+      entry.raw === edit.expectedRaw &&
+      readOwnedRow(entry) !== null &&
+      !namedEngramKeyShifted(entries, edit)
+    ) {
+      continue;
+    }
+    conflicts.push({
+      kind: "engram",
+      fileKey: "game",
+      section: edit.section,
+      key: "OverrideNamedEngramEntries",
+      occurrence: edit.occurrence,
+      loaded: edit.expectedRaw,
+      local: localNamedEngramRaw(edit),
+      removes: edit.kind === "delete",
+      disk: entry?.raw ?? null,
+    });
+  }
+  return conflicts;
+}
+
+function localNamedEngramRaw(edit: NamedEngramReplace | NamedEngramDelete): string | null {
+  if (edit.kind === "delete") return null;
+  const text = `[${edit.section}]\nOverrideNamedEngramEntries=${edit.expectedRaw}`;
+  const entry = parseIniComplexEntries(text, "game")[0];
+  if (entry === undefined) return null;
+  try {
+    return printReplacement({ ...entry, section: edit.section }, edit);
+  } catch {
+    return null;
+  }
 }
 
 function applyNamedEngramLineEdits(text: string, edits: readonly (NamedEngramReplace | NamedEngramDelete)[]): string {
@@ -356,7 +454,12 @@ function applyNamedEngramLineEdits(text: string, edits: readonly (NamedEngramRep
         item.key.toLowerCase() === NAMED_KEY &&
         item.occurrence === edit.occurrence,
     );
-    if (entry === undefined || entry.raw !== edit.expectedRaw || readOwnedRow(entry) === null) {
+    if (
+      entry === undefined ||
+      entry.raw !== edit.expectedRaw ||
+      readOwnedRow(entry) === null ||
+      namedEngramKeyShifted(entries, edit)
+    ) {
       throw new NamedEngramEditError(staleMessage(edit.className));
     }
     if (edit.kind === "delete") {

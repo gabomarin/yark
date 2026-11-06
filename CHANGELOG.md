@@ -11,10 +11,13 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- When Save overlaps a change made outside YARK, Configuration lists each setting so you can pick your edit, the file value, or the last save, then accept. The notice stays until you accept, and then the outside-change notice closes (#696).
 - A GitHub issue opened by someone other than the maintainer or a bot is posted to Discord by Yark Bot (repository variable `DISCORD_ISSUES_CHANNEL_ID`).
 
 ### Fixed
 
+- A malformed INI conflict row no longer hides the other rows in the Save conflict review (#696).
+- Accepting an INI conflict writes the value you picked, including a password, and the next Save uses that file. Choosing the value already on disk still checks the file has not changed again. Other edits already in the file stay, so the next Save does not write over them (#696).
 - Create cluster and the setup assistant suggest a Cluster ID like `yark-cluster-7f3a9c2e` instead of `yark-cluster-1`, so the in-game transfer list does not include other people's servers that reused the same default ID.
 
 ## [0.26.2] - 2026-11-04

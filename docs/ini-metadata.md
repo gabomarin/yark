@@ -117,8 +117,21 @@ key, occurrence, expected previous value; Set also carries the next value) via
 `ini:save-semantic`. The backend applies those ops to the **latest** read
 payload under the existing INI lock — not a blind overwrite of the editor
 buffer — so non-overlapping external edits can coexist. Overlapping
-expected-previous mismatches fail with `INI_SEMANTIC_CONFLICT` (no silent
-clobber; conflict-review UI is PINI-005). Profile/system-owned keys and
+expected-previous mismatches fail with `INI_SEMANTIC_CONFLICT` and write
+nothing (PINI-005 / #696). The attention **INI conflict** alert lists **Last save**,
+**Your edit**, and **On disk**. Last save is the last successful save, which
+stays at the editor load until the next save, and that value is muted. A missing
+assignment reads **Not in the file**. A blank assignment reads **Empty**. A row
+that differs from the last save says **Changed in YARK** or **Changed in the file**.
+Each value is a radio. **Your edit** starts selected. **Accept** writes every row
+at once. **Use my value** or **Revert to last save** writes that occurrence onto
+the file value just shown. **Use the file's value** adopts that value into the
+open draft and does not write. The alert stays open until **Accept** and has no
+close button. Up to four short settings stay in the alert. A longer list, or a
+long line, opens the same table from **Review conflicts**. Resolving the overlap
+closes the blue
+**INI updated outside YARK** notice. Engram and supply-crate line mismatches
+use the same review. Profile/system-owned keys and
 forbidden Unset policies are rejected (`INI_SEMANTIC_OWNERSHIP` /
 `INI_SEMANTIC_UNSET_FORBIDDEN`). Per-row **Revert** stays draft-only against the
 editor baseline. The Raw/text editor and other full-buffer writers still use
@@ -130,8 +143,11 @@ of outside setting changes, a compact **View outside changes** text link that
 opens a Needs-attention-style detail popover, and copy to click Save to merge
 when edits do not overlap (no Reload button in that banner). Text mode keeps an
 attention banner with Reload because Save will refuse until then. A failed Save
-with an overlapping conflict uses a red **INI conflict** alert (Reload offered
-there).
+with an overlapping conflict uses an attention **INI conflict** alert. That alert
+shows each overlapping setting on one row. A radio picks your edit, the file
+value, or the last save, and **Accept** keeps those values. The alert cannot be
+dismissed. Resolving the overlap closes the blue
+outside-change notice.
 
 ## Complex values
 
