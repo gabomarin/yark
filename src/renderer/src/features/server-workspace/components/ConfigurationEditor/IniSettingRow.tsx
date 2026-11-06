@@ -67,6 +67,7 @@ export function IniSettingRow(props: Props): ReactElement {
   return (
     <div
       className={`${classes.row}${unsaved ? ` ${classes.rowUnsaved}` : ""}`}
+      data-ini-setting-key={row.key}
       data-ini-row-unsaved={unsaved ? "true" : undefined}
     >
       <div>
