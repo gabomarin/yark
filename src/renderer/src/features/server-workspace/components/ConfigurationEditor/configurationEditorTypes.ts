@@ -45,6 +45,8 @@ export interface ConfigurationEditorApi {
   /** True when the editor baseline is a queued draft (#530). */
   pendingQueued: boolean;
   groupedRows: IniUiCategoryGroup[];
+  /** Filtered rows in file order. The table may regroup them for display. */
+  visibleRows: IniSettingReference[];
   categoryOptions: { value: string; label: string }[];
   fileLabel: string;
   filePath: string | null;
@@ -56,8 +58,7 @@ export interface ConfigurationEditorApi {
   resetRowToDefault: (row: IniSettingReference) => void;
   revertRowToSaved: (row: IniSettingReference) => void;
   toggleSection: (sectionName: string) => void;
-  setSectionGroupsCollapsed: (category: string, collapsed: boolean) => void;
-  setAllSectionsCollapsed: (collapsed: boolean) => void;
+  setCollapsedSections: (next: Record<string, boolean>) => void;
   saveIni: () => Promise<boolean>;
   openExternal: () => Promise<void>;
   publishPayloadChange: (nextPayload: ServerIniPayload) => void;

@@ -636,7 +636,17 @@ Where a row looked tight, that was the row’s problem, not the button’s.
 **Toolbars are flush rows.** A toolbar (list controls, sort bar, section actions) is a
 flex row on the pane surface — no rounded box, no translucent wash, hairlines only where
 the pane needs one. Reach for Mantine `Group` + `ml="auto"` before a bespoke
-`.listToolbar` / `.headerActions` CSS rule.
+`.listToolbar` / `.headerActions` CSS rule. A wrapped row stays left-aligned. Do not
+grow a field just to push the buttons to the far edge.
+
+**Desktop layout widths.** YARK has no phone layout. Use the pane widths in
+`globals.css`, not a one-off pixel width: `--app-layout-compact` (960) splits a
+toolbar row, `--app-layout-regular` (1100) stacks a side column, `--app-layout-wide`
+(1280) fits an extra column. When the sidebar shares the window, query the pane
+(`container-type: inline-size`), not the window. Write the query length in
+pixels. A `var()` in a container or media query does not match. On the INI
+file toolbar, Reload, Restore, Discard, and Save become icon buttons at
+compact, the same size as the server card actions. The name stays on hover.
 
 **Servers layout:** **Recent activity** is a wide-only side panel (`min-width: 1600px`). Below that breakpoint, hide the stacked panel so the server list keeps the viewport; keep a compact **View logs** link (Logs nav remains available).
 
@@ -695,6 +705,7 @@ copy-pasting `background` / `backdrop-filter` into feature modules.
 | `AccentIconTile`           | `shared/ui/AccentIconTile/`           | Tek / rounded icon tiles                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `MapArtThumb`              | `shared/ui/MapArtThumb/`              | ASA map artwork thumb (list + header). Default `tek`; form Identity is `rounded` (#469)                                                                                                                                                                                                                                                                                                                                                                                         |
 | `SearchField`              | `shared/ui/SearchField/`              | Search inputs — see **SearchField variants** below                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `SelectField`              | `shared/ui/SelectField/`              | Mantine `Select` with the SearchField leading-icon slot. Toolbar filters (category, sort) use this so the glyph stays centered.                                                                                                                                                                                                                                                                                                                                                 |
 | `ServerRuntimeStatusBadge` | `shared/ui/ServerRuntimeStatusBadge/` | Process status word + dot                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `StatusWord`               | `shared/ui/StatusWord/`               | Generic status word + dot (backup health/history; quieter than Badge)                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `DismissibleHint`          | `shared/ui/DismissibleHint/`          | Operator gotcha as Fluent-style InfoBar (solid panel + left accent + dismiss); stable localStorage key                                                                                                                                                                                                                                                                                                                                                                          |
