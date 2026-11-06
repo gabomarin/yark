@@ -22,6 +22,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Configuration → INI Files uses the same gap between search, the category filter, and the sort menu. On a narrower pane, search sits on its own row, and Reload, Restore, Discard, and Save become icon buttons the same size as the server card actions. Each name shows on hover.
 - The settings sort tooltip closes when you pick a sort, so it does not flash in the corner of the window.
 - Changing the INI settings sort updates the menu immediately. The table redraws just after, because each setting is its own input.
+- Accepting an INI conflict writes the value you picked, including a password, and the next Save uses that file. Choosing the value already on disk still checks the file has not changed again. Other edits already in the file stay, so the next Save does not write over them (#696).
 - Create cluster and the setup assistant suggest a Cluster ID like `yark-cluster-7f3a9c2e` instead of `yark-cluster-1`, so the in-game transfer list does not include other people's servers that reused the same default ID.
 
 ## [0.26.2] - 2026-11-04

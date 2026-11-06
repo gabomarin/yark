@@ -29,7 +29,11 @@ import {
   lookupMatchedBaselineValue,
 } from "./configurationEditorModel";
 import { applyEditorConflictChoices } from "./configurationEditorConflict";
-import { configurationEditorSaveToastMessage, performConfigurationEditorSave } from "./configurationEditorSave";
+import {
+  adoptIniSaveSnapshot,
+  configurationEditorSaveToastMessage,
+  performConfigurationEditorSave,
+} from "./configurationEditorSave";
 import { toggleCollapsedSection } from "./configurationEditorSections";
 import type { ConfigurationEditorApi } from "./configurationEditorTypes";
 import { useConfigurationEditorDiskSync } from "./useConfigurationEditorDiskSync";
@@ -45,7 +49,7 @@ export function useConfigurationEditor(options: {
   };
   onEngramDraftsReset?: (which?: "engrams" | "loot") => void;
   /** Runs before baseline changes so engram and loot drafts are not rebuilt (#696). */
-  onBeforeConflictBaseline?: (conflict: IniConflictOccurrence, side: ConflictKeepSide) => void;
+  onBeforeConflictBaseline?: (choices: readonly { conflict: IniConflictOccurrence; side: ConflictKeepSide }[]) => void;
 }): ConfigurationEditorApi {
   const { serverId, onRegisterSave } = options;
   const [snapshot, setSnapshot] = useState<ServerIniSnapshot | null>(null);
@@ -56,6 +60,7 @@ export function useConfigurationEditor(options: {
   const [error, setError] = useState<string | null>(null);
   const [staleDocument, setStaleDocument] = useState(false);
   const [conflicts, setConflicts] = useState<IniConflictOccurrence[]>([]);
+  const conflictsRef = useRef(conflicts);
   const [preview, setPreview] = useState<IniPreview | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<IniFilterId>("all");
@@ -79,6 +84,7 @@ export function useConfigurationEditor(options: {
   useEffect(() => {
     payloadRef.current = payload;
     baselineRef.current = baseline;
+    conflictsRef.current = conflicts;
   });
   const snapshotRef = useRef(snapshot);
   useEffect(() => {
@@ -317,17 +323,8 @@ export function useConfigurationEditor(options: {
         setBaseline(savedPayload);
         if (resetEngrams || resetLoot) options.onEngramDraftsReset?.(resetLoot ? "loot" : "engrams");
         diskSync.setExternalChangeDetected(false);
-        setSnapshot((prev) =>
-          prev === null
-            ? prev
-            : {
-                ...prev,
-                payload: savedPayload,
-                fingerprints,
-                pending,
-                pendingUpdatedAt: pending ? (prev.pendingUpdatedAt ?? new Date().toISOString()) : null,
-              },
-        );
+        setConflicts([]);
+        setSnapshot((prev) => adoptIniSaveSnapshot(prev, { payload: savedPayload, fingerprints, pending }));
         publishDirty(draftPayload, savedPayload);
         showOperatorToast(configurationEditorSaveToastMessage(pending, changedCount));
         return true;
@@ -399,8 +396,10 @@ export function useConfigurationEditor(options: {
         setConflicts,
         setPayload,
         setBaseline,
+        setSnapshot,
         payloadRef,
         baselineRef,
+        conflictsRef,
         publishDirty,
         clearExternalChange: () => diskSync.setExternalChangeDetected(false),
         onBeforeConflictBaseline: options.onBeforeConflictBaseline,

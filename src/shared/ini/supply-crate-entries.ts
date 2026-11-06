@@ -8,7 +8,7 @@ import {
   type IniComplexField,
   type IniComplexTuple,
 } from "./ini-complex-value";
-import type { IniConflictOccurrence } from "./ini-conflict";
+import { sameStringList, type IniConflictOccurrence } from "./ini-conflict";
 import { appendIniTextValue, parseIniTextRows } from "./ini-text";
 
 export const SUPPLY_CRATE_STALE_CODE = "SUPPLY_CRATE_STALE";
@@ -122,6 +122,8 @@ interface SupplyCrateReplace {
   section: string;
   occurrence: number;
   expectedRaw: string;
+  /** Every raw line of this section and key when the edit was built. */
+  expectedKeyRaws?: readonly string[];
   body: SupplyCrateBody;
 }
 
@@ -130,6 +132,8 @@ interface SupplyCrateDelete {
   section: string;
   occurrence: number;
   expectedRaw: string;
+  /** Every raw line of this section and key when the edit was built. */
+  expectedKeyRaws?: readonly string[];
   className: string;
 }
 
@@ -247,6 +251,7 @@ export function reviewSupplyCrateState(
         section: row.section,
         occurrence: row.occurrence,
         expectedRaw: row.expectedRaw,
+        expectedKeyRaws: supplyCrateSectionRaws(rows, row.section),
         className: row.className,
       });
       continue;
@@ -261,6 +266,7 @@ export function reviewSupplyCrateState(
       section: row.section,
       occurrence: row.occurrence,
       expectedRaw: row.expectedRaw,
+      expectedKeyRaws: supplyCrateSectionRaws(rows, row.section),
       body: printableBody(draft),
     });
   }
@@ -315,6 +321,28 @@ export function applySupplyCrateEdits(text: string, edits: readonly SupplyCrateE
   return out;
 }
 
+function supplyCrateSectionRaws(rows: readonly SupplyCrateRow[], section: string): string[] {
+  return rows
+    .filter((item) => item.section.toLowerCase() === section.toLowerCase())
+    .sort((left, right) => left.occurrence - right.occurrence)
+    .map((item) => item.expectedRaw);
+}
+
+function supplyCrateKeyRaws(entries: readonly IniComplexEntry[], section: string): string[] {
+  return entries
+    .filter((item) => item.section.toLowerCase() === section.toLowerCase() && item.key.toLowerCase() === SUPPLY_KEY)
+    .sort((left, right) => left.occurrence - right.occurrence)
+    .map((item) => item.raw);
+}
+
+function supplyCrateKeyShifted(
+  entries: readonly IniComplexEntry[],
+  edit: SupplyCrateReplace | SupplyCrateDelete,
+): boolean {
+  if (edit.expectedKeyRaws === undefined) return false;
+  return !sameStringList(edit.expectedKeyRaws, supplyCrateKeyRaws(entries, edit.section));
+}
+
 function supplyCrateLineConflicts(
   text: string,
   edits: readonly (SupplyCrateReplace | SupplyCrateDelete)[],
@@ -328,7 +356,14 @@ function supplyCrateLineConflicts(
         item.key.toLowerCase() === SUPPLY_KEY &&
         item.occurrence === edit.occurrence,
     );
-    if (entry !== undefined && entry.raw === edit.expectedRaw && readOwnedRow(entry) !== null) continue;
+    if (
+      entry !== undefined &&
+      entry.raw === edit.expectedRaw &&
+      readOwnedRow(entry) !== null &&
+      !supplyCrateKeyShifted(entries, edit)
+    ) {
+      continue;
+    }
     conflicts.push({
       kind: "crate",
       fileKey: "game",
@@ -355,7 +390,12 @@ function applyLineEdits(text: string, edits: readonly (SupplyCrateReplace | Supp
         item.occurrence === edit.occurrence,
     );
     const className = edit.kind === "delete" ? edit.className : edit.body.className;
-    if (entry === undefined || entry.raw !== edit.expectedRaw || readOwnedRow(entry) === null) {
+    if (
+      entry === undefined ||
+      entry.raw !== edit.expectedRaw ||
+      readOwnedRow(entry) === null ||
+      supplyCrateKeyShifted(entries, edit)
+    ) {
       throw new SupplyCrateEditError(staleMessage(className));
     }
     if (edit.kind === "delete") {

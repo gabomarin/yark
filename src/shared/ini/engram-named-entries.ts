@@ -7,7 +7,7 @@ import {
   type IniComplexField,
   type IniComplexNode,
 } from "./ini-complex-value";
-import type { IniConflictOccurrence } from "./ini-conflict";
+import { sameStringList, type IniConflictOccurrence } from "./ini-conflict";
 import { appendIniTextValue, parseIniTextRows } from "./ini-text";
 
 export const NAMED_ENGRAM_STALE_CODE = "NAMED_ENGRAM_STALE";
@@ -90,6 +90,8 @@ interface NamedEngramReplace {
   section: string;
   occurrence: number;
   expectedRaw: string;
+  /** Every raw line of this section and key when the edit was built. */
+  expectedKeyRaws?: readonly string[];
   className: string;
   hidden: boolean | null;
   points: string | null;
@@ -102,6 +104,8 @@ interface NamedEngramDelete {
   section: string;
   occurrence: number;
   expectedRaw: string;
+  /** Every raw line of this section and key when the edit was built. */
+  expectedKeyRaws?: readonly string[];
   className: string;
 }
 
@@ -179,6 +183,19 @@ export function namedEngramRowKey(row: Pick<NamedEngramRow, "section" | "occurre
   return `${row.section}\u001f${row.occurrence}`;
 }
 
+function withNamedEngramKeyRaws<T extends NamedEngramReplace | NamedEngramDelete>(
+  edit: T,
+  rows: readonly NamedEngramRow[],
+): T {
+  return {
+    ...edit,
+    expectedKeyRaws: rows
+      .filter((item) => item.section.toLowerCase() === edit.section.toLowerCase())
+      .sort((left, right) => left.occurrence - right.occurrence)
+      .map((item) => item.expectedRaw),
+  };
+}
+
 function reviewNamedEngramDrafts(
   rows: readonly NamedEngramRow[],
   drafts: Readonly<Record<string, NamedEngramDraft>>,
@@ -194,7 +211,9 @@ function reviewNamedEngramDrafts(
       blocked = true;
       continue;
     }
-    if (review.edit !== null) edits.push(review.edit);
+    if (review.edit !== null && review.edit.kind !== "append") {
+      edits.push(withNamedEngramKeyRaws(review.edit, rows));
+    }
   }
   return { edits, blocked };
 }
@@ -361,6 +380,21 @@ export function applyNamedEngramEdits(text: string, edits: readonly NamedEngramE
   return out;
 }
 
+function namedEngramKeyRaws(entries: readonly IniComplexEntry[], section: string): string[] {
+  return entries
+    .filter((item) => item.section.toLowerCase() === section.toLowerCase() && item.key.toLowerCase() === NAMED_KEY)
+    .sort((left, right) => left.occurrence - right.occurrence)
+    .map((item) => item.raw);
+}
+
+function namedEngramKeyShifted(
+  entries: readonly IniComplexEntry[],
+  edit: NamedEngramReplace | NamedEngramDelete,
+): boolean {
+  if (edit.expectedKeyRaws === undefined) return false;
+  return !sameStringList(edit.expectedKeyRaws, namedEngramKeyRaws(entries, edit.section));
+}
+
 function namedEngramLineConflicts(
   text: string,
   edits: readonly (NamedEngramReplace | NamedEngramDelete)[],
@@ -374,7 +408,14 @@ function namedEngramLineConflicts(
         item.key.toLowerCase() === NAMED_KEY &&
         item.occurrence === edit.occurrence,
     );
-    if (entry !== undefined && entry.raw === edit.expectedRaw && readOwnedRow(entry) !== null) continue;
+    if (
+      entry !== undefined &&
+      entry.raw === edit.expectedRaw &&
+      readOwnedRow(entry) !== null &&
+      !namedEngramKeyShifted(entries, edit)
+    ) {
+      continue;
+    }
     conflicts.push({
       kind: "engram",
       fileKey: "game",
@@ -413,7 +454,12 @@ function applyNamedEngramLineEdits(text: string, edits: readonly (NamedEngramRep
         item.key.toLowerCase() === NAMED_KEY &&
         item.occurrence === edit.occurrence,
     );
-    if (entry === undefined || entry.raw !== edit.expectedRaw || readOwnedRow(entry) === null) {
+    if (
+      entry === undefined ||
+      entry.raw !== edit.expectedRaw ||
+      readOwnedRow(entry) === null ||
+      namedEngramKeyShifted(entries, edit)
+    ) {
       throw new NamedEngramEditError(staleMessage(edit.className));
     }
     if (edit.kind === "delete") {

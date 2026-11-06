@@ -32,8 +32,10 @@ export function defaultConflictSide(conflict: IniConflictOccurrence): ConflictKe
   return conflict.local !== null || conflict.removes === true ? "yark" : "file";
 }
 
+/** Length-prefixed so a section or key that contains a period cannot collide with another row. */
 export function conflictRowKey(conflict: IniConflictOccurrence): string {
-  return `${conflict.fileKey}.${conflict.section}.${conflict.key}.${conflict.occurrence}`;
+  const token = (value: string): string => `${value.length}:${value}`;
+  return [conflict.fileKey, conflict.section, conflict.key, String(conflict.occurrence)].map(token).join("\u001f");
 }
 
 /** A short scalar can sit in the button. A blank, a missing line, or a long line stays generic. */
