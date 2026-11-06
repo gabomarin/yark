@@ -6,7 +6,7 @@ export function conflictFileLabel(fileKey: IniFileKey): string {
 }
 
 /** 1-based label. The first copy stays unlabeled. */
-export function conflictCopyLabel(occurrence: number): string | null {
+function conflictCopyLabel(occurrence: number): string | null {
   if (occurrence <= 0) return null;
   return `Copy ${occurrence + 1}`;
 }
@@ -15,10 +15,6 @@ export function conflictValueText(value: string | null): { text: string; kind: "
   if (value === null) return { text: "Not in the file", kind: "absent" };
   if (value.length === 0) return { text: "Empty", kind: "empty" };
   return { text: value, kind: "value" };
-}
-
-export function conflictMoved(loaded: string | null, value: string | null): boolean {
-  return value !== loaded;
 }
 
 export function conflictHeading(conflict: IniConflictOccurrence): string {

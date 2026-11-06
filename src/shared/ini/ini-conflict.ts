@@ -51,7 +51,7 @@ export function sameConflictOccurrence(left: IniConflictOccurrence, right: IniCo
 export type ConflictKeepSide = "saved" | "yark" | "file";
 
 /** Value the operator chose to keep. `null` means the occurrence should be absent. */
-export function keptConflictValue(conflict: IniConflictOccurrence, side: ConflictKeepSide): string | null {
+function keptConflictValue(conflict: IniConflictOccurrence, side: ConflictKeepSide): string | null {
   if (side === "saved") return conflict.loaded;
   if (side === "file") return conflict.disk;
   return conflict.local;
