@@ -21,7 +21,6 @@ const INI_ROOT_SECTION = "(root)";
 /** Internal separator for flat section+key maps (does not appear in ASA INIs). */
 export const INI_FLAT_SEP = "\u001f";
 
-
 /**
  * Typical Unreal client / graphics sections.
  * ASA required shells (`ScalabilityGroups`, `ShooterGameUserSettings`, …) are

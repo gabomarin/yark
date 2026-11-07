@@ -248,9 +248,7 @@ export class IniService extends EventEmitter {
     const pending = this.options?.pending.get(serverId) ?? null;
     // Post-ready heal must start from live disk (ASA rewrite), not a stale draft.
     const base =
-      options?.writeLiveDisk === true || pending === null
-        ? disk.payload
-        : sanitizeServerIniPayload(pending.payload);
+      options?.writeLiveDisk === true || pending === null ? disk.payload : sanitizeServerIniPayload(pending.payload);
 
     const gameUserSettings = applyProfileOwnedKeysToGameUserSettings(base.gameUserSettings, server);
     const next: ServerIniPayload = {
