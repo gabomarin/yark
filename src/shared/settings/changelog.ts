@@ -27,6 +27,21 @@ const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.26.3",
+    date: "2026-11-07",
+    sections: [
+      {
+        title: "Fixed",
+        items: [
+          "After ASA v97, a missing Version=5 in GameUserSettings.ini could wipe rates, RCON, and other settings on Start. YARK now seeds that marker and keeps the required shells so a later boot should not regenerate the file.",
+          "If a Start already wiped your rates or RCON, this build cannot put those values back. Open the server Backups tab, choose INI, and restore a backup from before the wipe (or copy GameUserSettings.ini from that archive into the WindowsServer config folder), then Start again.",
+          "New servers write your session name, ports, and passwords into GameUserSettings.ini instead of the template defaults, and YARK re-applies them if ASA rewrites the file near ready.",
+          "Stop no longer sits on Waiting for server to finish starting for up to 10 minutes when RCON never answers.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.26.2",
     date: "2026-11-04",
     sections: [
