@@ -21,6 +21,7 @@ describe("new-server GUS seed", () => {
     expect(getIniTextValueAt(seeded, "ServerSettings", "RCONPort", 0)).toBe("27030");
     expect(getIniTextValueAt(seeded, "ServerSettings", "RCONEnabled", 0)).toBe("True");
     expect(getIniTextValueAt(seeded, "ServerSettings", "ServerAdminPassword", 0)).toBe("seed-admin");
+    expect(getIniTextValueAt(seeded, "/Script/ShooterGame.ShooterGameUserSettings", "Version", 0)).toBe("5");
     expect(seeded).toMatch(/^\[ScalabilityGroups\]\s*$/m);
   });
 });

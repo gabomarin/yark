@@ -14,13 +14,8 @@ export const ASA_SHOOTER_GUS_SECTION = "/Script/ShooterGame.ShooterGameUserSetti
 /** UE 5.x GameUserSettings version marker required by ASA v97+ dedicated. */
 export const ASA_SHOOTER_GUS_VERSION = "5";
 
-/** Section headers ensured on disk (shells + GameSession). */
-export const ASA_DEDICATED_GUS_SKELETON_SECTIONS = [
-  ...ASA_REQUIRED_GUS_SHELL_SECTIONS,
-  "/Script/Engine.GameSession",
-] as const;
-
-const GAME_SESSION_SECTION = "/Script/Engine.GameSession";
+/** Section headers seeded when empty/missing (required UE client shells). */
+export const ASA_DEDICATED_GUS_SKELETON_SECTIONS = [...ASA_REQUIRED_GUS_SHELL_SECTIONS] as const;
 
 function normalizeIni(text: string): string {
   const normalized = text.replace(/^\uFEFF/, "").replace(/\r\n/g, "\n");
@@ -141,17 +136,6 @@ export function hasIniSectionHeader(text: string, section: string): boolean {
   return false;
 }
 
-function appendEmptySectionHeader(text: string, section: string): string {
-  let out = text;
-  if (out.length > 0 && !out.endsWith("\n")) {
-    out += "\n";
-  }
-  if (out.length > 0 && !out.endsWith("\n\n")) {
-    out += "\n";
-  }
-  return `${out}[${section}]\n`;
-}
-
 function flatLookup(flat: Record<string, string>, section: string, key: string): string | undefined {
   const exact = flat[`${section}${INI_FLAT_SEP}${key}`];
   if (exact !== undefined) {
@@ -208,10 +192,6 @@ export function ensureAsaGameUserSettingsSkeleton(gameUserSettings: string): str
 
   if (seedParts.length > 0) {
     text = mergeShellBlocks(text, seedParts);
-  }
-
-  if (!hasIniSectionHeader(text, GAME_SESSION_SECTION)) {
-    text = appendEmptySectionHeader(text, GAME_SESSION_SECTION);
   }
 
   return ensureAsaShooterGameUserSettingsVersion(text);

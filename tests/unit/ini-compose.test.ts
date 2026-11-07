@@ -47,9 +47,9 @@ describe("ini-compose", () => {
     expect(text).not.toMatch(/\[\/Script\/Engine\.GameSession\][\s\S]*MaxPlayers=/i);
     expect(text).toMatch(/^\[ScalabilityGroups\]\s*$/m);
     expect(text).toMatch(/^\[\/Script\/ShooterGame\.ShooterGameUserSettings\]\s*$/m);
+    expect(text).toMatch(/^Version=5$/m);
     expect(text).toMatch(/^\[\/Script\/Engine\.GameUserSettings\]\s*$/m);
     expect(text).toMatch(/^\[Startup\]\s*$/m);
-    expect(text).toMatch(/^\[\/Script\/Engine\.GameSession\]\s*$/m);
   });
 
   it("does not overwrite INI MaxPlayers from the profile", () => {

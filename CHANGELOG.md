@@ -16,7 +16,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
-- ASA v97 / UE 5.8: Start and INI restore seed minimal client shell stubs and ensure `Version=5` under `[/Script/ShooterGame.ShooterGameUserSettings]` (missing that marker regenerates the whole GUS and wipes rates/RCON). Sanitize keeps those shells on disk.
+- ASA v97 / UE 5.8: the default `GameUserSettings.ini` ships `[/Script/ShooterGame.ShooterGameUserSettings]` `Version=5`; Start and INI restore also seed minimal client shell stubs and ensure that marker (missing it regenerates the whole GUS and wipes rates/RCON). Sanitize keeps those shells on disk.
 - New servers seed `GameUserSettings.ini` with that profile’s session name, ports, and passwords (not the template’s 7777/27015/27020), and after the server becomes ready YARK re-writes those identity keys if ASA rewrote the file — so the Server-tab conflict banner should clear without a manual choice.
 - **Stop** no longer sits on **Waiting for server to finish starting…** for up to 10 minutes when RCON never becomes ready; it skips the rest of readiness and runs the graceful stop. Adopting INI ports or passwords while still starting also refreshes the live RCON probe.
 - **Use file values** on the Server tab keeps the admin password (and any blank ports) already in YARK when `GameUserSettings.ini` omitted them, so the rest of the file identity can still be adopted after an ASA rewrite.
