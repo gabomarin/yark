@@ -21,8 +21,6 @@ export {
   parseOfficialServerStatus,
   readOfficialArkBuildCached,
   readOfficialArkVersionCached,
-  resolveOfficialBuildCacheMaxAgeMs,
-  OFFICIAL_BUILD_TTL_WHILE_DEPLOYING_MS,
 } from "./official-ark-probe";
 export type { OfficialArkVersionProbe } from "./official-ark-probe";
 
