@@ -188,6 +188,7 @@ export async function reattachManagedProcess(
     launchArgs: [...record.launchArgs],
     expectedCommandLine: record.expectedCommandLine,
     runtimePorts: { ...runtimePorts },
+    adminPassword: profile.adminPassword,
     asaApiLoading: false,
   };
   host.setManaged(profile.id, managed);

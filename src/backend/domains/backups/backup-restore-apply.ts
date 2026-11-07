@@ -1,11 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
-import { readdir, readFile, rm } from "node:fs/promises";
+import { readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join, relative } from "node:path";
 import { isSafeMapToken } from "@shared/asa/map-identity";
 import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
+import { ensureAsaGameUserSettingsSkeleton } from "@shared/ini/asa-gus-skeleton";
 import type { BackupRecord, RestoreBackupOptions, ServerProfile } from "@shared/types";
+import { clearIniFilesReadOnly } from "../../infra/fs/ini-file-attrs";
 import { isTraversableDirectoryDirent, prepareWritableDirUnderRoot } from "../../infra/fs/reparse-points";
 import { extractZip, isZipBackupPath, parseBackupManifest } from "./backup-archive";
 import { copyFileTo, isPlayerProfileFile, listFilesRecursive } from "./backup-package";
@@ -208,9 +210,21 @@ async function restoreIni(server: ServerProfile, backupPath: string): Promise<vo
   await prepareWritableDirUnderRoot(server.installDir, live, {
     operationLabel: "restore INI files",
   });
+  const configLive = live;
+  const gameUserSettingsPath = join(configLive, "GameUserSettings.ini");
+  const gameIniPath = join(configLive, "Game.ini");
+  await clearIniFilesReadOnly([gameUserSettingsPath, gameIniPath]);
   for (const name of ["Game.ini", "GameUserSettings.ini"] as const) {
     const src = join(backupConfig, name);
     if (!existsSync(src)) continue;
     await copyFileTo(src, join(live, name));
+  }
+  if (existsSync(gameUserSettingsPath)) {
+    const restored = await readFile(gameUserSettingsPath, "utf8");
+    // Seed empty UE shells and ensure ShooterGameUserSettings Version=5.
+    const withShells = ensureAsaGameUserSettingsSkeleton(restored);
+    if (withShells !== restored) {
+      await writeFile(gameUserSettingsPath, withShells, "utf8");
+    }
   }
 }

@@ -411,4 +411,56 @@ describe("ProcessManager lifecycle ownership", () => {
 
     await manager.kill(profile.id);
   });
+
+  it("promotes starting to running immediately when Stop waits on readiness", async () => {
+    cleanupRoot = await mkdtemp(join(tmpdir(), "yark-process-stop-starting-"));
+    const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
+    await mkdir(binaryDir, { recursive: true });
+    await writeFile(join(binaryDir, "ArkAscendedServer.exe"), "");
+
+    const child = fakeChild();
+    const manager = new ProcessManager({
+      spawnProcess: () => child,
+      readyTimeoutMs: 60_000,
+    });
+    const profile = makeProfile(cleanupRoot);
+
+    manager.start(profile);
+    child.emit("spawn");
+    expect(manager.getStatus(profile.id).status).toBe("starting");
+
+    await manager.waitWhileStarting(profile.id);
+    expect(manager.getStatus(profile.id).status).toBe("running");
+    expect(manager.getRuntimeLogSnapshot(profile.id).join("\n")).toContain(
+      "Stop requested while starting; skipping remaining readiness wait",
+    );
+
+    await manager.kill(profile.id);
+  });
+
+  it("refreshes live RCON port for readiness after syncRuntimeAuth", async () => {
+    cleanupRoot = await mkdtemp(join(tmpdir(), "yark-process-sync-auth-"));
+    const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
+    await mkdir(binaryDir, { recursive: true });
+    await writeFile(join(binaryDir, "ArkAscendedServer.exe"), "");
+
+    const child = fakeChild();
+    const manager = new ProcessManager({
+      spawnProcess: () => child,
+    });
+    const profile = makeProfile(cleanupRoot);
+
+    manager.start(profile);
+    child.emit("spawn");
+    expect(manager.getRuntimePorts(profile.id)?.rconPort).toBe(27020);
+
+    manager.syncRuntimeAuth({ ...profile, rconPort: 27030, adminPassword: "new-admin" });
+    expect(manager.getRuntimePorts(profile.id)?.rconPort).toBe(27030);
+    expect(manager.applyRuntimePorts(profile).rconPort).toBe(27030);
+    expect(manager.getRuntimeLogSnapshot(profile.id).join("\n")).toContain(
+      "RCON readiness port updated to 27030 (was 27020)",
+    );
+
+    await manager.kill(profile.id);
+  });
 });
