@@ -221,7 +221,7 @@ export class IniService extends EventEmitter {
   async syncProfileOwnedKeys(
     serverId: string,
     profile?: ServerProfile,
-    options?: { writeLiveDisk?: boolean },
+    options?: { writeLiveDisk?: boolean; abortIf?: () => boolean },
   ): Promise<void> {
     const run = (): Promise<void> =>
       this.withIniMutation(serverId, () => this.syncProfileOwnedKeysBody(serverId, profile, options));
@@ -237,14 +237,20 @@ export class IniService extends EventEmitter {
   private async syncProfileOwnedKeysBody(
     serverId: string,
     profileOverride?: ServerProfile,
-    options?: { writeLiveDisk?: boolean },
+    options?: { writeLiveDisk?: boolean; abortIf?: () => boolean },
   ): Promise<void> {
+    if (options?.abortIf?.() === true) {
+      return;
+    }
     const server = profileOverride ?? this.repo.get(serverId);
     if (server === null) {
       throw new Error("Server does not exist");
     }
 
     const disk = await this.readDiskSnapshot(serverId);
+    if (options?.abortIf?.() === true) {
+      return;
+    }
     const pending = this.options?.pending.get(serverId) ?? null;
     // Post-ready heal must start from live disk (ASA rewrite), not a stale draft.
     const base =
@@ -266,6 +272,9 @@ export class IniService extends EventEmitter {
       return;
     }
 
+    if (options?.abortIf?.() === true) {
+      return;
+    }
     await this.writePayloadToDisk(disk, next);
     this.options?.pending.delete(serverId);
     this.emitChanged(serverId, false);

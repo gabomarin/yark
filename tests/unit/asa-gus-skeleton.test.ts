@@ -62,6 +62,23 @@ describe("asa-gus-skeleton", () => {
     expect(out).toContain("XPMultiplier=2");
   });
 
+  it("drops an empty shell that appears before a populated duplicate", () => {
+    const input = [
+      "[ScalabilityGroups]",
+      "",
+      "[ScalabilityGroups]",
+      "sg.ShadowQuality=3",
+      "",
+      "[ServerSettings]",
+      "XPMultiplier=2",
+      "",
+    ].join("\n");
+    const out = ensureAsaGameUserSettingsSkeleton(input);
+    expect(out).toContain("sg.ShadowQuality=3");
+    expect(out.match(/\[ScalabilityGroups\]/g)?.length).toBe(1);
+    expect(out.indexOf("[ScalabilityGroups]")).toBeLessThan(out.indexOf("sg.ShadowQuality=3"));
+  });
+
   it("seeds minimal shell defaults when sections are missing without touching rates", () => {
     const input = "[ServerSettings]\nXPMultiplier=2.5\nRCONPort=27020\n";
     const out = ensureAsaGameUserSettingsSkeleton(input);

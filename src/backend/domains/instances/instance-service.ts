@@ -118,13 +118,15 @@ export class InstanceService extends EventEmitter {
       const previous = this.previousRuntimeStatus.get(info.serverId);
       this.previousRuntimeStatus.set(info.serverId, info.status);
       if (info.status === "running" && previous === "starting") {
-        const epoch = (this.postReadyHealEpoch.get(info.serverId) ?? 0) + 1;
-        this.postReadyHealEpoch.set(info.serverId, epoch);
+        const epoch = this.bumpPostReadyHealEpoch(info.serverId);
         void this.reapplyProfileOwnedKeysAfterReady(info.serverId, epoch);
+      }
+      // Monotonic bump cancels in-flight heals; never delete (reset would revive an old epoch).
+      if (info.status === "stopping" || info.status === "stopped" || info.status === "error") {
+        this.bumpPostReadyHealEpoch(info.serverId);
       }
       if (info.status === "stopped" || info.status === "error") {
         this.previousRuntimeStatus.delete(info.serverId);
-        this.postReadyHealEpoch.delete(info.serverId);
       }
     });
     this.processes.on("unexpected-exit", (payload: UnexpectedManagedExit) => {
@@ -194,6 +196,19 @@ export class InstanceService extends EventEmitter {
     }
   }
 
+  /** Bump the per-server heal generation (never reset) so stale timers cannot revive. */
+  private bumpPostReadyHealEpoch(serverId: string): number {
+    const next = (this.postReadyHealEpoch.get(serverId) ?? 0) + 1;
+    this.postReadyHealEpoch.set(serverId, next);
+    return next;
+  }
+
+  private isPostReadyHealCurrent(serverId: string, epoch: number): boolean {
+    return (
+      this.postReadyHealEpoch.get(serverId) === epoch && this.processes.getStatus(serverId).status === "running"
+    );
+  }
+
   /**
    * ASA may still rewrite GameUserSettings.ini near ready. After a short delay,
    * re-apply the *effective* start identity (session ports + live admin password)
@@ -205,10 +220,7 @@ export class InstanceService extends EventEmitter {
       return;
     }
     await new Promise((resolve) => setTimeout(resolve, 8_000));
-    if (this.postReadyHealEpoch.get(serverId) !== epoch) {
-      return;
-    }
-    if (this.processes.getStatus(serverId).status !== "running") {
+    if (!this.isPostReadyHealCurrent(serverId, epoch)) {
       return;
     }
     const saved = this.repo.get(serverId);
@@ -217,7 +229,10 @@ export class InstanceService extends EventEmitter {
     }
     const effective = this.processes.applyRuntimePorts(saved);
     try {
-      await this.syncProfileOwnedKeys(serverId, effective, { writeLiveDisk: true });
+      await this.syncProfileOwnedKeys(serverId, effective, {
+        writeLiveDisk: true,
+        abortIf: () => !this.isPostReadyHealCurrent(serverId, epoch),
+      });
     } catch {
       // Best-effort heal; Start already synced before spawn and Stop flushes pending.
     }

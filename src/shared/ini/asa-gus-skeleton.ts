@@ -82,13 +82,21 @@ function splitIniSectionBlocks(text: string): {
 
 /**
  * Seed empty/missing required shells and drop empty duplicates.
- * Populated blocks stay as-is; empty duplicates after a populated sibling or
- * after a seed are removed so import quirks cannot wipe rates.
+ * Populated blocks stay as-is; empty siblings are dropped whenever any
+ * populated occurrence exists (even if the empty block appears first).
  */
 function mergeShellBlocks(baseGus: string, overrideBlocks: Array<{ name: string; body: string }>): string {
   const { preamble, blocks } = splitIniSectionBlocks(baseGus);
   const byLower = new Map(overrideBlocks.map((b) => [b.name.toLowerCase(), b] as const));
   const required = new Set(ASA_REQUIRED_GUS_SHELL_SECTIONS.map((s) => s.toLowerCase()));
+  const populatedKeys = new Set<string>();
+  for (const block of blocks) {
+    const key = block.name.toLowerCase();
+    if (required.has(key) && sectionBodyHasAssignment(block.body)) {
+      populatedKeys.add(key);
+    }
+  }
+
   const used = new Set<string>();
   const next: Array<{ name: string; body: string }> = [];
 
@@ -98,22 +106,19 @@ function mergeShellBlocks(baseGus: string, overrideBlocks: Array<{ name: string;
       next.push(block);
       continue;
     }
-    if (sectionBodyHasAssignment(block.body)) {
-      next.push(block);
-      used.add(key);
+    if (populatedKeys.has(key)) {
+      if (sectionBodyHasAssignment(block.body)) {
+        next.push(block);
+        used.add(key);
+      }
       continue;
     }
-    // Empty required shell: seed once, or drop if already covered.
+    // No populated sibling: seed once from defaults, else keep the first empty.
     if (used.has(key)) {
       continue;
     }
     const replacement = byLower.get(key);
-    if (replacement !== undefined) {
-      next.push(replacement);
-      used.add(key);
-      continue;
-    }
-    next.push(block);
+    next.push(replacement ?? block);
     used.add(key);
   }
   for (const section of ASA_REQUIRED_GUS_SHELL_SECTIONS) {

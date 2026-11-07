@@ -22,7 +22,7 @@ export interface InstanceServiceOptions {
   syncProfileOwnedKeys?: (
     serverId: string,
     profile?: ServerProfile,
-    options?: { writeLiveDisk?: boolean },
+    options?: { writeLiveDisk?: boolean; abortIf?: () => boolean },
   ) => Promise<void>;
 }
 
