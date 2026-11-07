@@ -120,7 +120,7 @@ Pre-update archives use backup type `pre_update` and kind `world`
 
 After Update/Verify, when the install-dir appmanifest is newer than `version.txt` / logs that feed the Version cell, the card keeps the **“Version refreshes after you start”** hint while Steam is already current so the UI does not look settled on a stale ARK label (#490).
 
-Official version and official build each cache for **15 minutes** in-process (`OFFICIAL_VERSION_TTL_MS`). `servers:installation` accepts `forceOfficialCheck` to bypass (used by **Check server updates**, **Update All**, and **Check installs**). The status line is also parsed for network state (`Online` / `Deploying` / `Offline`); Deploying tints the sidebar version and shows a pulsing indicator.
+Official version caches for **15 minutes** in-process (`OFFICIAL_VERSION_TTL_MS`). Official Steam build uses the same window when the network is stable, but only **~60 seconds** while status is **Deploying** (Steam `buildid` often moves after Wildcard publishes the ARK Version). A change in the cached official ARK Version also forces a fresh Steam build probe. `servers:installation` accepts `forceOfficialCheck` to bypass both caches (used by **Check server updates**, **Update All**, and **Check installs**). The status line is also parsed for network state (`Online` / `Deploying` / `Offline`); Deploying tints the sidebar version and shows a pulsing indicator.
 
 ### Fleet update all (#378)
 

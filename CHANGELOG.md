@@ -16,6 +16,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- While Wildcard is **Deploying** a new ARK Version, YARK refreshes the public Steam build more often (and again when that official version changes) so server cards do not stay on **Server is up to date** with Update disabled when SteamCMD already has a newer dedicated build.
 - A malformed INI conflict row no longer hides the other rows in the Save conflict review (#696).
 - Accepting an INI conflict writes the value you picked, including a password, and the next Save uses that file. Choosing the value already on disk still checks the file has not changed again. Other edits already in the file stay, so the next Save does not write over them (#696).
 - Create cluster and the setup assistant suggest a Cluster ID like `yark-cluster-7f3a9c2e` instead of `yark-cluster-1`, so the in-game transfer list does not include other people's servers that reused the same default ID.

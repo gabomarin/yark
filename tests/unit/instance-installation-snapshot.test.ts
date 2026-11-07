@@ -41,7 +41,7 @@ describe("InstanceService.installationInfo", () => {
       servers: [],
     });
     expect(readOfficialArkVersionCached).toHaveBeenCalledWith(false);
-    expect(readOfficialArkBuildCached).toHaveBeenCalledWith(false);
+    expect(readOfficialArkBuildCached).toHaveBeenCalledWith(false, expect.any(Number));
     expect(inspectServerInstallationAsync).not.toHaveBeenCalled();
   });
 
@@ -84,11 +84,34 @@ describe("InstanceService.installationInfo", () => {
     expect(inspectServerInstallationAsync).not.toHaveBeenCalled();
     expect(second.servers).toHaveLength(1);
 
+    vi.mocked(readOfficialArkBuildCached).mockClear();
     vi.mocked(readOfficialArkVersionCached).mockResolvedValue({
       version: "359.00",
       networkStatus: "online",
     });
     await service.installationInfo(false, "when-official-changed");
     expect(inspectServerInstallationAsync).toHaveBeenCalledTimes(1);
+    // Official ARK Version bump must force a fresh Steam build probe (not reuse TTL).
+    expect(readOfficialArkBuildCached).toHaveBeenCalledWith(true, expect.any(Number));
+  });
+
+  it("uses a forced Steam build refresh when official check is forced", async () => {
+    vi.mocked(readOfficialArkVersionCached).mockReset();
+    vi.mocked(readOfficialArkBuildCached).mockReset();
+    vi.mocked(readOfficialArkVersionCached).mockResolvedValue({
+      version: "97.5",
+      networkStatus: "deploying",
+    });
+    vi.mocked(readOfficialArkBuildCached).mockResolvedValue("build 26477280");
+
+    const service = new InstanceService(
+      { list: vi.fn(() => []) } as unknown as ServerRepository,
+      { on: vi.fn() } as unknown as ProcessManager,
+      {} as import("@backend/domains/backups/backup-service").BackupService,
+      new InstanceLockManager(),
+    );
+
+    await service.installationInfo(true);
+    expect(readOfficialArkBuildCached).toHaveBeenCalledWith(true, expect.any(Number));
   });
 });

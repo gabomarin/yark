@@ -11,6 +11,7 @@ import {
   readOfficialArkBuildCached,
   readOfficialArkVersionCached,
 } from "./server-installation";
+import { resolveOfficialBuildCacheMaxAgeMs } from "./official-ark-probe";
 import { isInstallHealthDegradation } from "@shared/server/installation-health";
 import { resolveDisplayedServerVersion } from "@shared/server/server-version-display";
 import { FLEET_INSPECT_CONCURRENCY, mapPool } from "./instance-lifecycle";
@@ -57,12 +58,17 @@ export class InstanceFleetInstall {
     officialSteamBuild: string | null;
     servers: ServerInstallationInfo[];
   }> {
-    const [officialProbe, officialSteamBuild] = await Promise.all([
-      readOfficialArkVersionCached(forceOfficialCheck),
-      readOfficialArkBuildCached(forceOfficialCheck),
-    ]);
+    // Version first, then Steam build: a Wildcard version bump / Deploying window must
+    // not reuse a stale public buildid (false "up to date" while ARK Version already moved).
+    const officialProbe = await readOfficialArkVersionCached(forceOfficialCheck);
     const officialVersion = officialProbe.version;
     const officialNetworkStatus = officialProbe.networkStatus;
+    const versionChanged =
+      this.lastOfficialVersion !== undefined && this.lastOfficialVersion !== officialVersion;
+    const officialSteamBuild = await readOfficialArkBuildCached(
+      forceOfficialCheck || versionChanged,
+      resolveOfficialBuildCacheMaxAgeMs(officialNetworkStatus),
+    );
 
     const profiles = this.deps.repo.list();
     const officialChanged =

@@ -3,7 +3,14 @@ import type { OfficialNetworkStatus } from "@shared/types";
 import { ASA_APP_ID, asaSteamCmdInfoUrl } from "@shared/asa/asa-steam";
 
 const OFFICIAL_VERSION_TTL_MS = 15 * 60 * 1000;
+/** While Wildcard is Deploying, Steam public buildid can move within minutes — keep this short. */
+export const OFFICIAL_BUILD_TTL_WHILE_DEPLOYING_MS = 60 * 1000;
 const OFFICIAL_SERVER_STATUS_URL = "https://cdn2.arkdedicated.com/asa/officialserverstatus.ini";
+
+/** Cache window for the public Steam build probe (longer when the network is stable). */
+export function resolveOfficialBuildCacheMaxAgeMs(networkStatus: OfficialNetworkStatus): number {
+  return networkStatus === "deploying" ? OFFICIAL_BUILD_TTL_WHILE_DEPLOYING_MS : OFFICIAL_VERSION_TTL_MS;
+}
 
 export interface OfficialArkVersionProbe {
   version: string | null;
@@ -221,9 +228,13 @@ export async function readOfficialArkVersionCached(force = false): Promise<Offic
   return officialVersionCache.inFlight;
 }
 
-export async function readOfficialArkBuildCached(force = false): Promise<string | null> {
+export async function readOfficialArkBuildCached(
+  force = false,
+  maxAgeMs: number = OFFICIAL_VERSION_TTL_MS,
+): Promise<string | null> {
   const now = Date.now();
-  if (!force && now - officialBuildCache.checkedAt < OFFICIAL_VERSION_TTL_MS) {
+  const ttlMs = Number.isFinite(maxAgeMs) && maxAgeMs > 0 ? maxAgeMs : OFFICIAL_VERSION_TTL_MS;
+  if (!force && now - officialBuildCache.checkedAt < ttlMs) {
     return officialBuildCache.value;
   }
 
