@@ -126,6 +126,21 @@ describe("planAdoptExternalIni", () => {
     expect(plan.input.adminPassword).toBe("secret-admin");
   });
 
+  it("keeps the YARK admin password when GameUserSettings.ini has only whitespace", () => {
+    const plan = planAdoptExternalIni(
+      server,
+      [server],
+      reportFor(
+        matchingGus
+          .replace("ServerAdminPassword=secret-admin", "ServerAdminPassword=   ")
+          .replace("SessionName=Island", "SessionName=Old Island"),
+      ),
+    );
+    expect(plan.ok).toBe(true);
+    if (!plan.ok) return;
+    expect(plan.input.adminPassword).toBe("secret-admin");
+  });
+
   it("keeps YARK game and query ports when the file leaves them blank", () => {
     const plan = planAdoptExternalIni(
       server,

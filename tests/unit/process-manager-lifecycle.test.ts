@@ -438,7 +438,7 @@ describe("ProcessManager lifecycle ownership", () => {
     await manager.kill(profile.id);
   });
 
-  it("refreshes live RCON port for readiness after syncRuntimeAuth", async () => {
+  it("refreshes live RCON port for readiness after syncRuntimeAuth while starting", async () => {
     cleanupRoot = await mkdtemp(join(tmpdir(), "yark-process-sync-auth-"));
     const binaryDir = join(cleanupRoot, "ShooterGame", "Binaries", "Win64");
     await mkdir(binaryDir, { recursive: true });
@@ -457,9 +457,15 @@ describe("ProcessManager lifecycle ownership", () => {
     manager.syncRuntimeAuth({ ...profile, rconPort: 27030, adminPassword: "new-admin" });
     expect(manager.getRuntimePorts(profile.id)?.rconPort).toBe(27030);
     expect(manager.applyRuntimePorts(profile).rconPort).toBe(27030);
+    expect(manager.applyRuntimePorts(profile).adminPassword).toBe("new-admin");
     expect(manager.getRuntimeLogSnapshot(profile.id).join("\n")).toContain(
       "RCON readiness port updated to 27030 (was 27020)",
     );
+
+    await manager.waitWhileStarting(profile.id);
+    manager.syncRuntimeAuth({ ...profile, rconPort: 27040, adminPassword: "ignored" });
+    expect(manager.getRuntimePorts(profile.id)?.rconPort).toBe(27030);
+    expect(manager.applyRuntimePorts(profile).adminPassword).toBe("new-admin");
 
     await manager.kill(profile.id);
   });

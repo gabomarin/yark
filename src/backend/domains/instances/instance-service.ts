@@ -70,6 +70,8 @@ export class InstanceService extends EventEmitter {
   private readonly syncProfileOwnedKeys?: InstanceServiceOptions["syncProfileOwnedKeys"];
   /** Tracks process status so starting→running can re-heal GUS after ASA rewrite. */
   private readonly previousRuntimeStatus = new Map<string, string>();
+  /** Cancels stale post-ready GUS heals when Stop/restart races the 8s timer. */
+  private readonly postReadyHealEpoch = new Map<string, number>();
 
   constructor(
     private readonly repo: ServerRepository,
@@ -116,10 +118,13 @@ export class InstanceService extends EventEmitter {
       const previous = this.previousRuntimeStatus.get(info.serverId);
       this.previousRuntimeStatus.set(info.serverId, info.status);
       if (info.status === "running" && previous === "starting") {
-        void this.reapplyProfileOwnedKeysAfterReady(info.serverId);
+        const epoch = (this.postReadyHealEpoch.get(info.serverId) ?? 0) + 1;
+        this.postReadyHealEpoch.set(info.serverId, epoch);
+        void this.reapplyProfileOwnedKeysAfterReady(info.serverId, epoch);
       }
       if (info.status === "stopped" || info.status === "error") {
         this.previousRuntimeStatus.delete(info.serverId);
+        this.postReadyHealEpoch.delete(info.serverId);
       }
     });
     this.processes.on("unexpected-exit", (payload: UnexpectedManagedExit) => {
@@ -191,18 +196,28 @@ export class InstanceService extends EventEmitter {
 
   /**
    * ASA may still rewrite GameUserSettings.ini near ready. After a short delay,
-   * re-apply profile identity and ensure Version=5 on the live file.
+   * re-apply the *effective* start identity (session ports + live admin password)
+   * and ensure Version=5 on the live file. `epoch` cancels heals from an older
+   * start if Stop/restart raced the timer.
    */
-  private async reapplyProfileOwnedKeysAfterReady(serverId: string): Promise<void> {
+  private async reapplyProfileOwnedKeysAfterReady(serverId: string, epoch: number): Promise<void> {
     if (this.syncProfileOwnedKeys === undefined) {
       return;
     }
     await new Promise((resolve) => setTimeout(resolve, 8_000));
+    if (this.postReadyHealEpoch.get(serverId) !== epoch) {
+      return;
+    }
     if (this.processes.getStatus(serverId).status !== "running") {
       return;
     }
+    const saved = this.repo.get(serverId);
+    if (saved === null) {
+      return;
+    }
+    const effective = this.processes.applyRuntimePorts(saved);
     try {
-      await this.syncProfileOwnedKeys(serverId, undefined, { writeLiveDisk: true });
+      await this.syncProfileOwnedKeys(serverId, effective, { writeLiveDisk: true });
     } catch {
       // Best-effort heal; Start already synced before spawn and Stop flushes pending.
     }

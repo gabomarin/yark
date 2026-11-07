@@ -34,9 +34,32 @@ describe("asa-gus-skeleton", () => {
     expect(out).toContain("bUseVSync=False");
   });
 
-  it("does not overwrite an existing Version value", () => {
-    const input = `[${ASA_SHOOTER_GUS_SECTION}]\nVersion=4\n`;
-    expect(ensureAsaShooterGameUserSettingsVersion(input)).toBe(input);
+  it("replaces blank or non-5 Version values with Version=5", () => {
+    expect(ensureAsaShooterGameUserSettingsVersion(`[${ASA_SHOOTER_GUS_SECTION}]\nVersion=4\n`)).toContain(
+      `Version=${ASA_SHOOTER_GUS_VERSION}`,
+    );
+    expect(ensureAsaShooterGameUserSettingsVersion(`[${ASA_SHOOTER_GUS_SECTION}]\nVersion=\n`)).toContain(
+      `Version=${ASA_SHOOTER_GUS_VERSION}`,
+    );
+    const alreadyOk = `[${ASA_SHOOTER_GUS_SECTION}]\nVersion=5\n`;
+    expect(ensureAsaShooterGameUserSettingsVersion(alreadyOk)).toBe(alreadyOk);
+  });
+
+  it("does not replace a populated shell when a later empty duplicate exists", () => {
+    const input = [
+      "[ScalabilityGroups]",
+      "sg.ShadowQuality=3",
+      "",
+      "[ScalabilityGroups]",
+      "",
+      "[ServerSettings]",
+      "XPMultiplier=2",
+      "",
+    ].join("\n");
+    const out = ensureAsaGameUserSettingsSkeleton(input);
+    expect(out).toContain("sg.ShadowQuality=3");
+    expect(out.match(/\[ScalabilityGroups\]/g)?.length).toBe(1);
+    expect(out).toContain("XPMultiplier=2");
   });
 
   it("seeds minimal shell defaults when sections are missing without touching rates", () => {

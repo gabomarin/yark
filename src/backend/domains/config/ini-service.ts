@@ -295,7 +295,7 @@ export class IniService extends EventEmitter {
     }
 
     const disk = await this.readDiskSnapshot(serverId);
-    const sanitized = await this.withProfileOwnedKeysAsync(serverId, sanitizeServerIniPayload(pending.payload));
+    const sanitized = this.withProfileOwnedKeys(serverId, sanitizeServerIniPayload(pending.payload));
     const preview = this.previewWithCurrent(disk.payload, sanitized);
     if (!preview.valid) {
       throw new Error(`Invalid pending INI: ${preview.issues.map((i) => `${i.fileKey}: ${i.message}`).join(" | ")}`);
@@ -331,10 +331,6 @@ export class IniService extends EventEmitter {
       gameUserSettings: applyProfileOwnedKeysToGameUserSettings(payload.gameUserSettings, server),
       game: payload.game,
     };
-  }
-
-  private async withProfileOwnedKeysAsync(serverId: string, payload: ServerIniPayload): Promise<ServerIniPayload> {
-    return this.withProfileOwnedKeys(serverId, payload);
   }
 
   private withFingerprints(snapshot: Omit<ServerIniSnapshot, "fingerprints">): ServerIniSnapshot {

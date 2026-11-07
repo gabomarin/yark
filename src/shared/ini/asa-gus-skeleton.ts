@@ -80,24 +80,41 @@ function splitIniSectionBlocks(text: string): {
   return { preamble: preambleLines.join("\n"), blocks };
 }
 
+/**
+ * Seed empty/missing required shells and drop empty duplicates.
+ * Populated blocks stay as-is; empty duplicates after a populated sibling or
+ * after a seed are removed so import quirks cannot wipe rates.
+ */
 function mergeShellBlocks(baseGus: string, overrideBlocks: Array<{ name: string; body: string }>): string {
-  if (overrideBlocks.length === 0) {
-    return baseGus;
-  }
   const { preamble, blocks } = splitIniSectionBlocks(baseGus);
   const byLower = new Map(overrideBlocks.map((b) => [b.name.toLowerCase(), b] as const));
+  const required = new Set(ASA_REQUIRED_GUS_SHELL_SECTIONS.map((s) => s.toLowerCase()));
   const used = new Set<string>();
   const next: Array<{ name: string; body: string }> = [];
 
   for (const block of blocks) {
     const key = block.name.toLowerCase();
+    if (!required.has(key)) {
+      next.push(block);
+      continue;
+    }
+    if (sectionBodyHasAssignment(block.body)) {
+      next.push(block);
+      used.add(key);
+      continue;
+    }
+    // Empty required shell: seed once, or drop if already covered.
+    if (used.has(key)) {
+      continue;
+    }
     const replacement = byLower.get(key);
     if (replacement !== undefined) {
       next.push(replacement);
       used.add(key);
-    } else {
-      next.push(block);
+      continue;
     }
+    next.push(block);
+    used.add(key);
   }
   for (const section of ASA_REQUIRED_GUS_SHELL_SECTIONS) {
     const key = section.toLowerCase();
@@ -158,11 +175,11 @@ function flatLookup(flat: Record<string, string>, section: string, key: string):
 
 /**
  * Ensures `Version=5` under `[/Script/ShooterGame.ShooterGameUserSettings]`.
- * Adds the key (and section if needed) only when missing.
+ * Adds or replaces the key when missing, blank, or not exactly `5`.
  */
 export function ensureAsaShooterGameUserSettingsVersion(gameUserSettings: string): string {
   const flat = flattenIniText(gameUserSettings);
-  if (flatLookup(flat, ASA_SHOOTER_GUS_SECTION, "Version") !== undefined) {
+  if (flatLookup(flat, ASA_SHOOTER_GUS_SECTION, "Version") === ASA_SHOOTER_GUS_VERSION) {
     return gameUserSettings;
   }
   return setIniTextValue(gameUserSettings, ASA_SHOOTER_GUS_SECTION, "Version", ASA_SHOOTER_GUS_VERSION);
@@ -175,24 +192,22 @@ export function ensureAsaShooterGameUserSettingsVersion(gameUserSettings: string
 export function ensureAsaGameUserSettingsSkeleton(gameUserSettings: string): string {
   let text = gameUserSettings;
   const { blocks } = splitIniSectionBlocks(text);
-  const byLower = new Map(blocks.map((b) => [b.name.toLowerCase(), b] as const));
   const defaultBlocks = splitIniSectionBlocks(ASA_DEDICATED_GUS_SHELL_DEFAULTS).blocks;
 
   const seedParts: Array<{ name: string; body: string }> = [];
   for (const section of ASA_REQUIRED_GUS_SHELL_SECTIONS) {
-    const existing = byLower.get(section.toLowerCase());
-    if (existing !== undefined && sectionBodyHasAssignment(existing.body)) {
+    const key = section.toLowerCase();
+    const anyPopulated = blocks.some((b) => b.name.toLowerCase() === key && sectionBodyHasAssignment(b.body));
+    if (anyPopulated) {
       continue;
     }
-    const defaults = defaultBlocks.find((b) => b.name.toLowerCase() === section.toLowerCase());
+    const defaults = defaultBlocks.find((b) => b.name.toLowerCase() === key);
     if (defaults !== undefined) {
       seedParts.push({ name: defaults.name, body: defaults.body.replace(/\n+$/, "") });
     }
   }
 
-  if (seedParts.length > 0) {
-    text = mergeShellBlocks(text, seedParts);
-  }
+  text = mergeShellBlocks(text, seedParts);
 
   return ensureAsaShooterGameUserSettingsVersion(text);
 }

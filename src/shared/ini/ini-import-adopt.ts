@@ -122,7 +122,7 @@ export function planAdoptExternalIni(
 
   const admin = replacement(report, "adminPassword");
   let adminPassword = server.adminPassword;
-  if (admin !== undefined && admin.fileValue !== null && admin.fileValue !== "") {
+  if (admin !== undefined && admin.fileValue !== null && admin.fileValue.trim() !== "") {
     if (admin.fileValue.length < 4) {
       problems.push("The admin password in GameUserSettings.ini needs at least 4 characters.");
     } else {

@@ -213,12 +213,15 @@ async function restoreIni(server: ServerProfile, backupPath: string): Promise<vo
   const configLive = live;
   const gameUserSettingsPath = join(configLive, "GameUserSettings.ini");
   const gameIniPath = join(configLive, "Game.ini");
+  // Clear RO before copy when a prior live file exists; again after copy in case
+  // the backup carried a read-only mode onto a newly created destination.
   await clearIniFilesReadOnly([gameUserSettingsPath, gameIniPath]);
   for (const name of ["Game.ini", "GameUserSettings.ini"] as const) {
     const src = join(backupConfig, name);
     if (!existsSync(src)) continue;
     await copyFileTo(src, join(live, name));
   }
+  await clearIniFilesReadOnly([gameUserSettingsPath, gameIniPath]);
   if (existsSync(gameUserSettingsPath)) {
     const restored = await readFile(gameUserSettingsPath, "utf8");
     // Seed empty UE shells and ensure ShooterGameUserSettings Version=5.

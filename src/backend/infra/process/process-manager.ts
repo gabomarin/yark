@@ -218,17 +218,18 @@ export class ProcessManager extends EventEmitter {
   }
 
   /**
-   * Overlay live runtime ports onto a saved profile for RCON / conflict checks
-   * while the process is active.
+   * Overlay live runtime ports (and admin password) onto a saved profile for
+   * RCON / conflict checks / post-ready GUS heal while the process is active.
    */
   applyRuntimePorts(profile: ServerProfile): ServerProfile {
-    const ports = this.getRuntimePorts(profile.id);
-    if (ports == null) return profile;
+    const managed = this.processes.get(profile.id);
+    if (managed === undefined) return profile;
     return {
       ...profile,
-      gamePort: ports.gamePort,
-      queryPort: ports.queryPort,
-      rconPort: ports.rconPort,
+      gamePort: managed.runtimePorts.gamePort,
+      queryPort: managed.runtimePorts.queryPort,
+      rconPort: managed.runtimePorts.rconPort,
+      adminPassword: managed.adminPassword,
     };
   }
 
@@ -331,12 +332,13 @@ export class ProcessManager extends EventEmitter {
   }
 
   /**
-   * Refresh live RCON port/password used by readiness probes and stop.
-   * No-op when the process is not managed (idle profile edits).
+   * Refresh live RCON port/password used by readiness probes while `"starting"`.
+   * No-op when idle or already running/stopping — launch-time credentials stay
+   * immutable for graceful SaveWorld/DoExit after ready.
    */
   syncRuntimeAuth(profile: Pick<ServerProfile, "id" | "gamePort" | "queryPort" | "rconPort" | "adminPassword">): void {
     const managed = this.processes.get(profile.id);
-    if (managed === undefined) {
+    if (managed === undefined || managed.status !== "starting") {
       return;
     }
     const prev = managed.runtimePorts.rconPort;
@@ -346,7 +348,7 @@ export class ProcessManager extends EventEmitter {
       rconPort: profile.rconPort,
     };
     managed.adminPassword = profile.adminPassword;
-    if (prev !== profile.rconPort && managed.status === "starting") {
+    if (prev !== profile.rconPort) {
       this.appendRuntimeLog(
         profile.id,
         "system",
