@@ -63,8 +63,7 @@ export class InstanceFleetInstall {
     const officialProbe = await readOfficialArkVersionCached(forceOfficialCheck);
     const officialVersion = officialProbe.version;
     const officialNetworkStatus = officialProbe.networkStatus;
-    const versionChanged =
-      this.lastOfficialVersion !== undefined && this.lastOfficialVersion !== officialVersion;
+    const versionChanged = this.lastOfficialVersion !== undefined && this.lastOfficialVersion !== officialVersion;
     const officialSteamBuild = await readOfficialArkBuildCached(
       forceOfficialCheck || versionChanged,
       resolveOfficialBuildCacheMaxAgeMs(officialNetworkStatus),
