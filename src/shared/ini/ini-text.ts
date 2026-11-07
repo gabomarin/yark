@@ -97,7 +97,7 @@ export function isClientIniNoise(section: string, key: string): boolean {
 }
 
 /** Whether sanitize may drop this assignment (required ASA shells are kept). */
-export function shouldStripClientIniRow(section: string, key: string): boolean {
+function shouldStripClientIniRow(section: string, key: string): boolean {
   if (isAsaRequiredGusShellSection(section)) {
     return false;
   }
@@ -108,7 +108,7 @@ export function shouldStripClientIniRow(section: string, key: string): boolean {
  * When true, {@link sanitizeServerIniPayload} strips client noise except ASA
  * required GUS shell sections (`ScalabilityGroups`, `ShooterGameUserSettings`, …).
  */
-export const STRIP_CLIENT_INI_NOISE = true;
+const STRIP_CLIENT_INI_NOISE = true;
 
 /**
  * Removes client lines/sections, preserving the rest of the file.

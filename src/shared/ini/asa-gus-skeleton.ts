@@ -20,8 +20,6 @@ export const ASA_DEDICATED_GUS_SKELETON_SECTIONS = [
   "/Script/Engine.GameSession",
 ] as const;
 
-export type AsaDedicatedGusSkeletonSection = (typeof ASA_DEDICATED_GUS_SKELETON_SECTIONS)[number];
-
 const GAME_SESSION_SECTION = "/Script/Engine.GameSession";
 
 function normalizeIni(text: string): string {

@@ -11,8 +11,6 @@ export const ASA_REQUIRED_GUS_SHELL_SECTIONS = [
   "Startup",
 ] as const;
 
-export type AsaRequiredGusShellSection = (typeof ASA_REQUIRED_GUS_SHELL_SECTIONS)[number];
-
 /** True for ASA shell sections that must remain on disk (not stripped as client noise). */
 export function isAsaRequiredGusShellSection(section: string): boolean {
   const wanted = section.trim().toLowerCase();
