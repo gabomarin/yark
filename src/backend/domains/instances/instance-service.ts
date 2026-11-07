@@ -204,9 +204,7 @@ export class InstanceService extends EventEmitter {
   }
 
   private isPostReadyHealCurrent(serverId: string, epoch: number): boolean {
-    return (
-      this.postReadyHealEpoch.get(serverId) === epoch && this.processes.getStatus(serverId).status === "running"
-    );
+    return this.postReadyHealEpoch.get(serverId) === epoch && this.processes.getStatus(serverId).status === "running";
   }
 
   /**
