@@ -257,7 +257,7 @@ describe("IniService semantic validation", () => {
     expect(saved).not.toContain("LastJoinedSessionPerCategory");
   });
 
-  it("ignores ASA-generated client noise when reading without modifying disk", async () => {
+  it("keeps ASA required ShooterGameUserSettings shells when reading without modifying disk", async () => {
     const installDir = mkdtempSync(join(tmpdir(), "ark-ini-"));
     tmpDirs.push(installDir);
     prepareIniFiles(installDir);
@@ -269,6 +269,7 @@ describe("IniService semantic validation", () => {
       "MaxPlayers=70",
       "",
       "[/Script/ShooterGame.ShooterGameUserSettings]",
+      "Version=5",
       "LastJoinedSessionPerCategory=Foo",
       "ResolutionSizeX=1920",
       "",
@@ -280,9 +281,10 @@ describe("IniService semantic validation", () => {
 
     expect(snapshot.pending).toBe(false);
     expect(snapshot.payload.gameUserSettings).toContain("MaxPlayers=70");
-    expect(snapshot.payload.gameUserSettings).not.toContain("ShooterGameUserSettings");
-    expect(snapshot.payload.gameUserSettings).not.toContain("LastJoinedSessionPerCategory");
-    expect(snapshot.payload.gameUserSettings).not.toContain("ResolutionSizeX");
+    expect(snapshot.payload.gameUserSettings).toContain("ShooterGameUserSettings");
+    expect(snapshot.payload.gameUserSettings).toContain("Version=5");
+    expect(snapshot.payload.gameUserSettings).toContain("LastJoinedSessionPerCategory");
+    expect(snapshot.payload.gameUserSettings).toContain("ResolutionSizeX");
     expect(readFileSync(settingsPath, "utf8")).toBe(rawSettings);
   });
 });

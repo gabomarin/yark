@@ -71,11 +71,30 @@ function portClashReason(
 }
 
 /**
+ * Resolve a port from a replacement row. Blank/missing file values keep the
+ * YARK port so ASA wipes can still adopt the rest of the identity.
+ */
+function resolveAdoptedPort(
+  field: IniImportIdentityField | undefined,
+  fallback: number,
+  label: string,
+  problems: string[],
+): number | null {
+  if (field === undefined) {
+    return fallback;
+  }
+  if (field.fileValue === null || field.fileValue.trim() === "") {
+    return fallback;
+  }
+  return parsePort(field.fileValue, label, problems);
+}
+
+/**
  * Build a profile update from the INI. Refuses when a port clashes with another
  * server, the three ports are not distinct, or a password or name cannot be stored.
- * A missing or blank admin password is refused. YARK does not clear it.
- * A missing or blank join password clears the join password.
- * RCON on/off is not a profile field. YARK keeps RCON on.
+ * A missing or blank admin password keeps the one already in YARK.
+ * A missing or blank port keeps the YARK port. A missing or blank join password
+ * clears the join password. RCON on/off is not a profile field. YARK keeps RCON on.
  */
 export function planAdoptExternalIni(
   server: ServerProfile,
@@ -97,29 +116,17 @@ export function planAdoptExternalIni(
     problems.push("That name is too long for YARK.");
   }
 
-  const gamePort = parsePort(
-    replacement(report, "gamePort")?.fileValue ?? String(server.gamePort),
-    "Game port",
-    problems,
-  );
-  const queryPort = parsePort(
-    replacement(report, "queryPort")?.fileValue ?? String(server.queryPort),
-    "Query port",
-    problems,
-  );
-  const rconPort = parsePort(
-    replacement(report, "rconPort")?.fileValue ?? String(server.rconPort),
-    "RCON port",
-    problems,
-  );
+  const gamePort = resolveAdoptedPort(replacement(report, "gamePort"), server.gamePort, "Game port", problems);
+  const queryPort = resolveAdoptedPort(replacement(report, "queryPort"), server.queryPort, "Query port", problems);
+  const rconPort = resolveAdoptedPort(replacement(report, "rconPort"), server.rconPort, "RCON port", problems);
 
   const admin = replacement(report, "adminPassword");
-  const adminPassword = admin === undefined ? server.adminPassword : admin.fileValue;
-  if (admin !== undefined) {
-    if (admin.fileValue === null || admin.fileValue === "") {
-      problems.push("GameUserSettings.ini has no admin password. Choose Keep YARK values to keep the one in YARK.");
-    } else if (admin.fileValue.length < 4) {
+  let adminPassword = server.adminPassword;
+  if (admin !== undefined && admin.fileValue !== null && admin.fileValue.trim() !== "") {
+    if (admin.fileValue.length < 4) {
       problems.push("The admin password in GameUserSettings.ini needs at least 4 characters.");
+    } else {
+      adminPassword = admin.fileValue;
     }
   }
 

@@ -31,6 +31,7 @@ import type {
 import type { PendingServerIniRepository } from "../../infra/db/pending-server-ini-repository";
 import type { ServerRepository } from "../../infra/db/server-repository";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
+import { clearIniFilesReadOnly } from "../../infra/fs/ini-file-attrs";
 import { applyProfileOwnedKeysToGameUserSettings } from "./ini-compose";
 import { fingerprintIniPayload } from "./ini-fingerprint";
 import { buildIniPreview } from "./ini-preview";
@@ -213,12 +214,17 @@ export class IniService extends EventEmitter {
   /**
    * Apply profile-owned GUS keys through the same queue/disk gate as INI save (#530).
    * While the process is live: merge into the pending draft (create one from disk
-   * if needed) — never write live install files. While idle: write disk and clear
-   * pending. Optional `profile` covers Start session-port overlays.
+   * if needed) — never write live install files unless `writeLiveDisk` (post-ready
+   * heal after ASA regenerates GUS). While idle: write disk and clear pending.
+   * Optional `profile` covers Start session-port overlays.
    */
-  async syncProfileOwnedKeys(serverId: string, profile?: ServerProfile): Promise<void> {
+  async syncProfileOwnedKeys(
+    serverId: string,
+    profile?: ServerProfile,
+    options?: { writeLiveDisk?: boolean; abortIf?: () => boolean },
+  ): Promise<void> {
     const run = (): Promise<void> =>
-      this.withIniMutation(serverId, () => this.syncProfileOwnedKeysBody(serverId, profile));
+      this.withIniMutation(serverId, () => this.syncProfileOwnedKeysBody(serverId, profile, options));
     // Reentrant for stop/start/restart that already hold the instance lock, but
     // still serialize with save/flush via withIniMutation.
     if (this.locks.isLocked(serverId)) {
@@ -228,22 +234,36 @@ export class IniService extends EventEmitter {
     await this.locks.withLock(serverId, "ini-save", run);
   }
 
-  private async syncProfileOwnedKeysBody(serverId: string, profileOverride?: ServerProfile): Promise<void> {
+  private async syncProfileOwnedKeysBody(
+    serverId: string,
+    profileOverride?: ServerProfile,
+    options?: { writeLiveDisk?: boolean; abortIf?: () => boolean },
+  ): Promise<void> {
+    if (options?.abortIf?.() === true) {
+      return;
+    }
     const server = profileOverride ?? this.repo.get(serverId);
     if (server === null) {
       throw new Error("Server does not exist");
     }
 
     const disk = await this.readDiskSnapshot(serverId);
+    if (options?.abortIf?.() === true) {
+      return;
+    }
     const pending = this.options?.pending.get(serverId) ?? null;
-    const base = pending !== null ? sanitizeServerIniPayload(pending.payload) : disk.payload;
+    // Post-ready heal must start from live disk (ASA rewrite), not a stale draft.
+    const base =
+      options?.writeLiveDisk === true || pending === null ? disk.payload : sanitizeServerIniPayload(pending.payload);
+
+    const gameUserSettings = applyProfileOwnedKeysToGameUserSettings(base.gameUserSettings, server);
     const next: ServerIniPayload = {
-      gameUserSettings: applyProfileOwnedKeysToGameUserSettings(base.gameUserSettings, server),
+      gameUserSettings,
       game: base.game,
     };
 
     const active = this.options?.isServerActive(serverId) === true;
-    if (active) {
+    if (active && options?.writeLiveDisk !== true) {
       if (this.options === undefined) {
         throw new Error("Pending INI queue is not configured");
       }
@@ -252,6 +272,9 @@ export class IniService extends EventEmitter {
       return;
     }
 
+    if (options?.abortIf?.() === true) {
+      return;
+    }
     await this.writePayloadToDisk(disk, next);
     this.options?.pending.delete(serverId);
     this.emitChanged(serverId, false);
@@ -366,6 +389,7 @@ export class IniService extends EventEmitter {
     current: Pick<ServerIniSnapshot, "gameUserSettingsPath" | "gameIniPath">,
     sanitized: ServerIniPayload,
   ): Promise<void> {
+    await clearIniFilesReadOnly([current.gameUserSettingsPath, current.gameIniPath]);
     await Promise.all([
       this.writeText(current.gameUserSettingsPath, sanitized.gameUserSettings),
       this.writeText(current.gameIniPath, sanitized.game),

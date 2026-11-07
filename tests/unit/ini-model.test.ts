@@ -38,19 +38,28 @@ LastJoinedSessionPerCategory=Three
     expect(rows[0]?.duplicateCount).toBe(3);
   });
 
-  it("strips client sections/keys so they are never persisted for dedicated servers", () => {
-    const cleaned = stripClientIniKeys(sample);
+  it("keeps ASA required shell sections on disk while still stripping other client noise", () => {
+    const withFlatClient = `${sample}
+
+[GameUserSettings]
+ResolutionSizeX=1920
+`;
+    const cleaned = stripClientIniKeys(withFlatClient);
     expect(cleaned).toContain("MaxPlayers=70");
-    expect(cleaned).not.toContain("ShooterGameUserSettings");
-    expect(cleaned).not.toContain("ResolutionSizeX");
-    expect(cleaned).not.toContain("LastJoinedSessionPerCategory");
-    expect(cleaned).not.toContain("bUseVSync");
+    // Required for ASA v97+ — must survive sanitize.
+    expect(cleaned).toContain("ShooterGameUserSettings");
+    expect(cleaned).toContain("ResolutionSizeX=1280");
+    expect(cleaned).toContain("LastJoinedSessionPerCategory");
+    expect(cleaned).toContain("bUseVSync");
+    // Flat client section is still stripped.
+    expect(cleaned).not.toMatch(/^\[GameUserSettings\]/m);
   });
 
   it("hides client graphics sections from dedicated editor filters", () => {
     expect(isClientNoiseKey("LastJoinedSessionPerCategory")).toBe(true);
     expect(isClientNoiseKey("GraphicsQuality", "/Script/ShooterGame.ShooterGameUserSettings")).toBe(true);
     expect(isClientNoiseKey("sg.ShadowQuality", "ScalabilityGroups")).toBe(true);
+    expect(isClientNoiseKey("FrameGenerationMethod", "Startup")).toBe(true);
     expect(isClientNoiseKey("MaxPlayers", "/Script/Engine.GameSession")).toBe(false);
     expect(inferControlKind("True")).toBe("boolean");
     const rows = parseIniRows(sample);

@@ -16,8 +16,14 @@ export interface InstanceServiceOptions {
   /**
    * Apply profile-owned GUS keys via IniService (queues while live) (#530).
    * When omitted, falls back to direct `syncProfileSettingsToIni` (tests).
+   * `writeLiveDisk` forces a disk write even while the process is active
+   * (post-ready heal after ASA rewrites GUS).
    */
-  syncProfileOwnedKeys?: (serverId: string, profile?: ServerProfile) => Promise<void>;
+  syncProfileOwnedKeys?: (
+    serverId: string,
+    profile?: ServerProfile,
+    options?: { writeLiveDisk?: boolean; abortIf?: () => boolean },
+  ) => Promise<void>;
 }
 
 export function defaultResolveOpenNativeConsole(): boolean {
