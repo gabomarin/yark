@@ -309,7 +309,7 @@ jobs:
 
       - name: Run OpenCodeReview
         id: ocr-review
-        uses: alibaba/open-code-review@1672852136fc87748249d22bce0819f33419ea79 # v1.13.0
+        uses: alibaba/open-code-review@891df1b63f380845d882a289a67a6e36c331120c # v1.13.6
         with:
           llm_url: ${{ steps.provider.outputs.provider == 'fallback' && vars.OCR_FALLBACK_URL || vars.OCR_PRIMARY_URL }}
           llm_auth_token: ${{ steps.provider.outputs.provider == 'fallback' && secrets.OCR_FALLBACK_API_KEY || secrets.OCR_PRIMARY_API_KEY }}
