@@ -14,6 +14,7 @@ import {
   type IniSettingReference,
 } from "../../iniModel";
 import { numberInputValueFromIni } from "../../iniNumberInput";
+import { iniRowIdentity } from "./configurationEditorModel";
 import classes from "./ConfigurationEditor.module.css";
 
 interface Props {
@@ -26,6 +27,7 @@ interface Props {
   onRevertRowToSaved?: (row: IniSettingReference) => void;
   /** Jump to RCON → Admins for AdminListURL (not edited in INI Files). */
   onOpenAdminList?: () => void;
+  highlighted?: boolean;
 }
 
 function isAdminListUrlRow(row: IniSettingReference): boolean {
@@ -66,7 +68,8 @@ export function IniSettingRow(props: Props): ReactElement {
 
   return (
     <div
-      className={`${classes.row}${unsaved ? ` ${classes.rowUnsaved}` : ""}`}
+      className={`${classes.row}${unsaved ? ` ${classes.rowUnsaved}` : ""}${props.highlighted === true ? ` ${classes.rowJustAdded}` : ""}`}
+      data-ini-row={iniRowIdentity(row.fileKey, row.section, row.key, row.occurrence)}
       data-ini-setting-key={row.key}
       data-ini-row-unsaved={unsaved ? "true" : undefined}
     >

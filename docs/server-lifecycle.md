@@ -678,8 +678,29 @@ the stock dedicated headers such as `ServerSettings`, `SessionSettings`,
 
 Renderer grouping: `iniUiCategoryGrouping.ts`. **Only Other** nests rows by
 `[Section]` (`sectionGroups`); Collapse/Expand on the Other header toggles those
-subgroups. Copy configuration and cluster template visual pickers reuse the same
-tree (`ini-ui-category-tree.ts`). Visual chrome exception:
+subgroups. The settings table defaults to **Unsorted**: sections in the order
+they first appear, keys in file order. **By category** uses the same category
+groups, and inside each group settings stay in the order they appear in the
+INI. **Alphabetical** keeps those category groups, with setting names from A
+to Z inside each group. The choice is a menu on the settings toolbar. A filter
+or sort icon sits inside each menu, and hovering a sort explains that mode.
+On a narrow pane, Reload, Restore, Discard, and Save are icon buttons the same size as the server card actions, and the name shows on hover.
+The choice is stored on this PC and is display-only; Save
+still updates each value on its existing line. **Add setting**, above the
+table, opens a form with its own fields: section, setting name, and value.
+The section list offers stock sections for that file (ServerSettings,
+SessionSettings, MessageOfTheDay, and the script sections) plus any section
+already in the INI. A name that is not in that list becomes a mod
+section when you choose **Add section**. Known settings show up as you
+type, and any other name is added as plain text. The name field is not
+focused, so the suggestion list stays closed until you click it. After you
+add it, the form closes and the table scrolls to the new row. The line stays
+a draft until Save. The row is placed by the setting's category in the UI
+catalog. A typed name that is not in the catalog lands in **Other** unless
+the name matches a small set of words such as password, breed, or multiplier.
+Copy configuration and cluster
+template visual pickers stay on the category tree (`ini-ui-category-tree.ts`).
+Visual chrome exception:
 [design-system.md](design-system.md) § surfaces (#516).
 
 ## Configuration assistant
