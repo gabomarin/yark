@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   INI_SETTINGS_SORT_STORAGE_KEY,
   readStoredIniSettingsSort,
@@ -27,5 +27,20 @@ describe("INI settings sort preference", () => {
     window.localStorage.setItem(INI_SETTINGS_SORT_STORAGE_KEY, "category");
 
     expect(readStoredIniSettingsSort()).toBe("unsorted");
+  });
+
+  it("falls back to unsorted when localStorage throws", () => {
+    const getItem = vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new DOMException("Denied", "SecurityError");
+    });
+    const setItem = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("Denied", "SecurityError");
+    });
+
+    expect(readStoredIniSettingsSort()).toBe("unsorted");
+    expect(() => writeStoredIniSettingsSort("alphabetical")).not.toThrow();
+
+    getItem.mockRestore();
+    setItem.mockRestore();
   });
 });

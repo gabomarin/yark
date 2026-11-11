@@ -117,18 +117,20 @@ describe("ConfigurationEditorSettingsTable sort", () => {
     expect(screen.getByRole("button", { name: "Add setting" })).toBeVisible();
   });
 
-  it("keeps the current section while the section name is only partly typed", async () => {
+  it("refuses Add setting while a section name is only partly typed", async () => {
     const user = userEvent.setup();
     const onAdd = vi.fn();
     renderTable("unsorted", onAdd);
 
     await user.click(screen.getByRole("button", { name: "Add setting" }));
     const section = screen.getByRole("textbox", { name: "Section" });
+    await user.clear(section);
     await user.type(section, "s");
     await user.type(screen.getByRole("textbox", { name: "Setting" }), "CustomName");
     await user.click(screen.getByRole("button", { name: "Add setting" }));
 
-    expect(onAdd).toHaveBeenCalledWith("ServerSettings", "CustomName", "");
+    expect(onAdd).not.toHaveBeenCalled();
+    expect(screen.getByText('Choose Add section "s" to use that section.')).toBeVisible();
   });
 
   it("adds a mod section only after that section is confirmed", async () => {
@@ -145,5 +147,21 @@ describe("ConfigurationEditorSettingsTable sort", () => {
     await user.click(screen.getByRole("button", { name: "Add setting" }));
 
     expect(onAdd).toHaveBeenCalledWith("CoolMod", "CustomName", "");
+  });
+
+  it("refuses Add setting when a mod section was typed but not confirmed", async () => {
+    const user = userEvent.setup();
+    const onAdd = vi.fn();
+    renderTable("unsorted", onAdd);
+
+    await user.click(screen.getByRole("button", { name: "Add setting" }));
+    const section = screen.getByRole("textbox", { name: "Section" });
+    await user.clear(section);
+    await user.type(section, "CoolMod");
+    await user.type(screen.getByRole("textbox", { name: "Setting" }), "CustomName");
+    await user.click(screen.getByRole("button", { name: "Add setting" }));
+
+    expect(onAdd).not.toHaveBeenCalled();
+    expect(screen.getByText('Choose Add section "CoolMod" to use that section.')).toBeVisible();
   });
 });
