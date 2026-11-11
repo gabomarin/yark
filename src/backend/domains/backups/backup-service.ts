@@ -424,12 +424,7 @@ export class BackupService extends EventEmitter {
     });
   }
 
-  setBackupProtection(
-    serverId: string,
-    backupId: string,
-    isProtected: boolean,
-    operatorNote: string,
-  ): BackupRecord {
+  setBackupProtection(serverId: string, backupId: string, isProtected: boolean, operatorNote: string): BackupRecord {
     this.mustServer(serverId);
     const backup = this.backups.getBackup(backupId);
     if (backup === null || backup.serverId !== serverId) {

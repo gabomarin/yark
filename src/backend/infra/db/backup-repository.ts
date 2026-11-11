@@ -352,11 +352,7 @@ export class BackupRepository {
   }
 
   /** Toggle protection on a completed backup; clamp note to BACKUP_OPERATOR_NOTE_MAX_LENGTH. */
-  setBackupProtection(input: {
-    id: string;
-    isProtected: boolean;
-    operatorNote: string;
-  }): BackupRecord | null {
+  setBackupProtection(input: { id: string; isProtected: boolean; operatorNote: string }): BackupRecord | null {
     const existing = this.getBackup(input.id);
     if (existing === null) return null;
     if (existing.status !== "completed") {
