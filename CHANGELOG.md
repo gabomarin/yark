@@ -11,25 +11,59 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Configuration → INI Files sorts settings from a menu: **Unsorted** (INI sections, file order, and the default), **By category** (category groups, settings in the order they appear in the file), or **Alphabetical** (category groups, names A to Z). A filter or sort icon sits inside each menu, and each sort explains itself on hover. The menu keeps Collapse and Expand on screen when the window is narrow. The choice is remembered on this PC. Save still updates each value on its current line.
+- Configuration → INI Files adds a setting from **Add setting** above the table. The form asks for the section (ServerSettings, SessionSettings, Message of the day, or a mod section you confirm), the setting name, and the value. Known settings show up as you type, and any other name is added as plain text. The table stays a list of existing settings, and scrolls to the new row after you add it. The change stays a draft until Save (#705).
+- When Save overlaps a change made outside YARK, Configuration lists each setting so you can pick your edit, the file value, or the last save, then accept. The notice stays until you accept, and then the outside-change notice closes (#696).
+- A GitHub issue opened by someone other than the maintainer or a bot is posted to Discord by Yark Bot (repository variable `DISCORD_ISSUES_CHANNEL_ID`).
+
+### Fixed
+
+- A malformed INI conflict row no longer hides the other rows in the Save conflict review (#696).
+- Configuration → INI Files uses the same gap between search, the category filter, and the sort menu. On a narrower pane, search sits on its own row, and Reload, Restore, Discard, and Save become icon buttons the same size as the server card actions. Each name shows on hover.
+- The settings sort tooltip closes when you pick a sort, so it does not flash in the corner of the window.
+- Changing the INI settings sort updates the menu immediately. The table redraws just after, because each setting is its own input.
+- Accepting an INI conflict writes the value you picked, including a password, and the next Save uses that file. Choosing the value already on disk still checks the file has not changed again. Other edits already in the file stay, so the next Save does not write over them (#696).
+- Create cluster and the setup assistant suggest a Cluster ID like `yark-cluster-7f3a9c2e` instead of `yark-cluster-1`, so the in-game transfer list does not include other people's servers that reused the same default ID.
+
+### Docs
+
+- Documented shared workspace tab headers (`WorkspaceSectionHeader`), BanList line format vs AdminList CSV, and the Electron `e2e-server-fixture` helper for server file-write suites (#678, #688).
+
+## [0.26.3] - 2026-11-07
+
+### Fixed
+
+- ASA v97 / UE 5.8: the default `GameUserSettings.ini` ships `[/Script/ShooterGame.ShooterGameUserSettings]` `Version=5`; Start and INI restore also seed minimal client shell stubs and ensure that marker (missing it regenerates the whole GUS and wipes rates/RCON). Sanitize keeps those shells on disk.
+- New servers seed `GameUserSettings.ini` with that profile’s session name, ports, and passwords (not the template’s 7777/27015/27020), and after the server becomes ready YARK re-writes those identity keys if ASA rewrote the file — so the Server-tab conflict banner should clear without a manual choice.
+- **Stop** no longer sits on **Waiting for server to finish starting…** for up to 10 minutes when RCON never becomes ready; it skips the rest of readiness and runs the graceful stop. Adopting INI ports or passwords while still starting also refreshes the live RCON probe.
+- **Use file values** on the Server tab keeps the admin password (and any blank ports) already in YARK when `GameUserSettings.ini` omitted them, so the rest of the file identity can still be adopted after an ASA rewrite.
+
+## [0.26.2] - 2026-11-04
+
+### Fixed
+
+- **Stop** no longer force-closes the server 30 seconds after DoExit. It waits until the process finishes, then says whether the map `.ark` file was rewritten.
+
+## [0.26.1] - 2026-11-03
+
+### Fixed
+
+- Server Mods accepts an ASA CurseForge project whose slug contains an underscore, such as Speed_Costumes (932759), including a link opened on Files or another tab of that project (#692).
+
+## [0.26.0] - 2026-10-28
+
+### Added
+
+- Settings → Appearance and the setup assistant list **Glassy** beside Fluent and Plasma Breeze. The theme was already on main for 0.25 and stayed out of those lists; a saved Glassy choice still applied. Glassy can turn the day or night scene off. The glass panels stay.
 - Game.ini Visual adds **Loot** beside Settings and Engrams, so a supply crate override can be edited by crate and item name, checked against the server map, and rolled from the Simulator tab (#686).
-- Game.ini Visual adds **Engrams** on its own row under the file toolbar. Named overrides can be searched and edited. A blank row adds an official or custom engram after a cost, level, Hidden, or prerequisite is set. A new line does not add Hidden on its own. Points per level are edited there instead of Settings, and any level can be removed. Save rewrites only those lines (#684).
-- When GameUserSettings.ini differs from the server form, the Server tab labels each changed field and shows its file and YARK values, with passwords hidden. Operators can copy the file values into YARK or keep the YARK values; copying checks for port clashes (#682).
-
-### Changed
-
 - A loot crate shows a note only when that override is not used on the server map (#686).
 - Loot lists the ring drops and cave crate tier 4, and explains that a weight is a share of its list and that a full set includes every entry (#686).
 - Loot names the supply crates from the beacon list, including map-specific drops, and says which maps use each one (#686).
 - A loot set says how many of its entries drop. Several items on one entry share that quantity, each with its own weight, and a class with no catalog name is marked as missing from the item list (#686).
 - The loot Simulator names the crate being rolled and puts one open beside many opens. It no longer repeats that an appended crate leaves out the game's items (#686).
-- Settings → Appearance and the setup assistant list **Glassy** beside Fluent and Plasma Breeze.
-
-### Fixed
-
 - The loot editor scrolls when a crate has more sets than fit on screen (#686).
 - The loot crate list scrolls when more crates are loaded than fit beside the editor (#686).
 - Loot item weight, blueprint chance, and quantity stay aligned when a hint or a missing quantity is showing (#686).
-- Dark themes draw field errors in the brighter danger red, so a message such as a missing quantity stays readable on Breeze (#686).
 - A loot set and entry show weight, count, quality, and blueprint errors on the field while you edit them (#686).
 - Clearing a quantity that was already saved empties the field and marks it until you enter another number (#686).
 - A loot error uses a red border only on the card that has it, and a set can be removed from the crate. The crate no longer has its own Roll button. The Simulator tab rolls that crate (#686).
@@ -41,11 +75,16 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Saving a supply crate no longer stops at 20 sets, 40 items, or 16 classes. The file can hold as many as the game line already has (#686).
 - Removing one item from a loot entry keeps the weights of the items that stay, and an empty set stays until that set is removed. A crate the beacon list does not tie to a map is marked unknown. The Simulator stays inside the seed and roll limits and says when a quality power is not part of the roll (#686).
 - Clearing the loot Simulator seed stays an error instead of rolling as seed 0. A saved entry that lists the same class twice keeps a separate row for each one (#686).
+- Game.ini Visual adds **Engrams** on its own row under the file toolbar. Named overrides can be searched and edited. A blank row adds an official or custom engram after a cost, level, Hidden, or prerequisite is set. A new line does not add Hidden on its own. Points per level are edited there instead of Settings, and any level can be removed. Save rewrites only those lines (#684).
 - The engram hint that a class alone does not change the game uses the lighter danger red, so it stays readable on Breeze dark. Clearing a saved line back to an empty cost and Hidden off is refused the same way. Save stays off while that error is showing on Overrides. Settings, Points per level, and GameUserSettings.ini still save their own lines. A dot on another view shows that it still has unsaved lines. The class box on a saved engram searches the official list. Named engram lines stay out of Settings, and a points-per-level key in GameUserSettings.ini stays on that file. A class name with a space is refused, and the field says so (#684).
+- When GameUserSettings.ini differs from the server form, the Server tab labels each changed field and shows its file and YARK values, with passwords hidden. Operators can copy the file values into YARK or keep the YARK values; copying checks for port clashes (#682).
+
+### Fixed
+
+- Dark themes draw field errors in the brighter danger red, so they stay readable on Breeze (#686).
 
 ### Docs
 
-- Documented shared workspace tab headers (`WorkspaceSectionHeader`), BanList line format vs AdminList CSV, and the Electron `e2e-server-fixture` helper for server file-write suites (#678, #688).
 - Documented AdminList CSV/CR-only parse vs LF publish, shared AppSurface material class roles, `ini:save-semantic` IPC bounds, and the prepared real-host workflow inventory (#652, #671, #12).
 
 ## [0.25.0] - 2026-10-23
@@ -1066,6 +1105,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Tracked in-repo TODO / historical planning docs (moved to local agent context).
 
 [Unreleased]: #unreleased
+[0.26.1]: #0261---2026-11-03
+[0.26.0]: #0260---2026-10-28
+[0.25.0]: #0250---2026-10-23
+[0.24.0]: #0240---2026-10-16
 [0.23.0]: #0230---2026-09-23
 [0.22.0]: #0220---2026-09-21
 [0.21.0]: #0210---2026-09-16

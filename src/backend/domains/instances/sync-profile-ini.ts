@@ -3,6 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { defaultGameUserSettingsIni } from "@shared/ini/ini-defaults";
 import type { ServerProfile } from "@shared/types";
+import { clearIniFilesReadOnly } from "../../infra/fs/ini-file-attrs";
 import { applyProfileOwnedKeysToGameUserSettings } from "../config/ini-compose";
 
 /** GameUserSettings.ini path under a server install. */
@@ -20,6 +21,7 @@ export function gameUserSettingsIniPath(installDir: string): string {
  * Keys (must stay aligned with `@shared/asa/yark-owned-ini-keys` `profileSync`):
  * - `[ServerSettings]` RCONEnabled, RCONPort, ServerAdminPassword, ServerPassword
  * - `[SessionSettings]` SessionName, Port, QueryPort
+ * - UE 5.8 / ASA v97+ shell stubs + `Version=5` on ShooterGameUserSettings
  * - Start composes `-WinLiveMaxPlayers=` when `maxPlayers` is 1–255
  *   (ASA ignores INI MaxPlayers; omitting the flag defaults to 70)
  *
@@ -33,6 +35,7 @@ export async function syncProfileSettingsToIni(profile: ServerProfile): Promise<
   const text = applyProfileOwnedKeysToGameUserSettings(existing, profile);
 
   await mkdir(dirname(path), { recursive: true });
+  await clearIniFilesReadOnly([path]);
   await writeFile(path, text, "utf8");
 }
 

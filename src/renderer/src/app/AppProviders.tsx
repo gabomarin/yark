@@ -80,6 +80,10 @@ export function AppProviders({
         Modal: {
           defaultProps: { transitionProps: { duration: 0 } },
         },
+        // AppPanelModal uses Modal.Root, which does not read Modal defaultProps.
+        ModalRoot: {
+          defaultProps: { transitionProps: { duration: 0 } },
+        },
         Drawer: {
           defaultProps: { transitionProps: { duration: 0 } },
         },

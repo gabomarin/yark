@@ -199,13 +199,13 @@ Kill on win32 uses `taskkill /pid … /T /F`.
 
 IPC:
 
-| Channel               | Backend                                                                                                                                                                                                                                                                            |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `servers:start`       | sync INI → `ProcessManager.start`                                                                                                                                                                                                                                                  |
-| `servers:set-enabled` | Locked explicit enable/disable transition; never starts or stops ASA implicitly.                                                                                                                                                                                                   |
-| `servers:stop`        | `InstanceService.stop`: RCON `SaveWorld` → wait `SAVE_WAIT_MS` (8s) → `DoExit` exact process → best-effort stable `pre_stop` backup (world only; #518). Progress via `push:server-stop-progress`. Pass `{ backup: false }` to skip the snapshot (SteamCMD update/verify, restart). |
-| `servers:restart`     | `InstanceService.restart`: lock `"restart"` → stop with `{ backup: false }` → fail-hard `pre_restart` backup → start. Options match `servers:start` (`StartServerOptions`).                                                                                                        |
-| `servers:kill`        | immediate terminate (warning event; UI confirms)                                                                                                                                                                                                                                   |
+| Channel               | Backend                                                                                                                                                                                                                                                                                                                                                                                                     |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `servers:start`       | sync INI → `ProcessManager.start`                                                                                                                                                                                                                                                                                                                                                                           |
+| `servers:set-enabled` | Locked explicit enable/disable transition; never starts or stops ASA implicitly.                                                                                                                                                                                                                                                                                                                            |
+| `servers:stop`        | `InstanceService.stop`: RCON `SaveWorld` → `DoExit` → wait until the process exits or `ShooterGame.log` prints `Log file closed` (cap 10 min) before any force-kill → best-effort stable `pre_stop` backup (world only; #518). `Closing by request` only means shutdown started. Progress via `push:server-stop-progress`. Pass `{ backup: false }` to skip the snapshot (SteamCMD update/verify, restart). |
+| `servers:restart`     | `InstanceService.restart`: lock `"restart"` → stop with `{ backup: false }` → fail-hard `pre_restart` backup → start. Options match `servers:start` (`StartServerOptions`).                                                                                                                                                                                                                                 |
+| `servers:kill`        | immediate terminate (warning event; UI confirms)                                                                                                                                                                                                                                                                                                                                                            |
 
 Status push: `push:server-status`. Stop phase progress: `push:server-stop-progress`.
 While a dedicated PID is live **and** the UI needs samples (Overview, or
@@ -393,18 +393,47 @@ grace (~45s), then require a successful probe, a settle window (~15s), and a
 confirming probe before `"running"` (poll `DEFAULT_READY_POLL_MS = 3000`, timeout
 `DEFAULT_READY_TIMEOUT_MS = 10 * 60 * 1000`). Log patterns can unlock probes
 early; `skipReadinessCheck` skips this for tests / binaries without RCON.
-Timeout → `"error"` + terminate. The persistent UI RCON session connects a few
-seconds after promotion to `"running"` — workspace console, players, and ban
-list: [rcon.md](rcon.md).
+Timeout → `"error"` + terminate. After promotion to `"running"`, YARK waits ~8s
+then force-writes profile-owned GUS keys (and `Version=5` if missing) to disk
+again (`writeLiveDisk`) so an ASA rewrite near boot does not leave blank ports /
+missing admin password. The persistent UI RCON session connects a few seconds
+after promotion to `"running"` — workspace console, players, and ban list:
+[rcon.md](rcon.md).
+
+**Create seed:** new profiles write default `GameUserSettings.ini` /
+`Game.ini` under `WindowsServer`, then apply that profile’s session name,
+ports, RCON, and passwords onto GUS (not the template’s 7777 / 27015 / 27020 /
+`RCONEnabled=False`).
+
+**ASA v97 / UE 5.8 GUS shells:**
+
+- Client-key strip stays on, but `ScalabilityGroups`,
+  `/Script/ShooterGame.ShooterGameUserSettings`, `/Script/Engine.GameUserSettings`,
+  and `Startup` are **required shells** (`isAsaRequiredGusShellSection`) —
+  sanitize keeps their bodies; the dedicated editor still hides them.
+- Start/sync and INI restore seed empty shells from the minimal
+  `asa-dedicated-gus-shells.ini` and ensure `Version=5` under
+  `ShooterGameUserSettings` when missing (that marker alone prevents a full GUS
+  regenerate).
 
 **Stop** (`InstanceService.stop`):
 
 1. Emit stop-progress (`saving`).
-2. `ProcessManager.beginGracefulStop` — status `stopping`, RCON `SaveWorld` + wait
-   and return an ownership handle for the exact child.
-   RCON failure → kill + clear (no backup).
-3. `finishGracefulStop` validates the ownership handle, then `DoExit` / kill
-   fallback. A replacement process is left untouched.
+2. `ProcessManager.beginGracefulStop` — status `stopping`, RCON `SaveWorld`,
+   then return an ownership handle for the exact child. This build of ASA does
+   not write `World Save Complete` to `ShooterGame.log`, so Stop does not wait
+   on that line. RCON `SaveWorld` failure → `DoExit`, then the same close wait
+   (no backup).
+3. `finishGracefulStop` validates the ownership handle, then `DoExit`. The log
+   prints `Closing by request` when shutdown starts. A finished close also
+   prints `Log file closed`. That line does not release the process; Stop waits
+   until the child has exited. Force-kill (`taskkill /F`) runs only if the
+   process is still alive after 10 minutes. `Closing by request` alone does
+   not start a 30s kill. After the process leaves, Runtime
+   compares the map `.ark` mtime with the stamp taken before `SaveWorld` and
+   says whether that file was rewritten. This server build does not log the
+   save itself. Runtime logs the force-kill. A replacement process is left
+   untouched.
 4. Unless `{ backup: false }`, `BackupService.createPreStopBackup` packages
    stable stopped files (skip flush; kind world only — #518).
 5. Clear stop-progress. Event distinguishes saved, RCON-killed, externally
@@ -412,10 +441,14 @@ list: [rcon.md](rcon.md).
 
 Stop is single-flight and holds the per-instance operation lock. Force close,
 start, update, and verify are rejected while its backup is active. If the
-server is still `"starting"`, stop waits for readiness (stop-progress phase
-`waiting`) before SaveWorld so RCON can succeed. Normal app close waits for
-active stop jobs before quitting. App-quit **Stop** uses the same graceful
-path (`InstanceService.stopAllForAppQuit`, including pre-stop backup).
+server is still `"starting"`, stop cancels the readiness wait immediately
+(stop-progress phase `waiting`) and treats the process as running so
+SaveWorld/DoExit can proceed — it does not wait up to the 10-minute readiness
+timeout when RCON never answers (e.g. ASA rewrote GUS ports). Profile updates
+while starting (`Use file values`) call `syncRuntimeAuth` so the live readiness
+probe uses the new RCON port/password. Normal app close waits for active stop
+jobs before quitting. App-quit **Stop** uses the same graceful path
+(`InstanceService.stopAllForAppQuit`, including pre-stop backup).
 
 **Restart** (`InstanceService.restart` via `servers:restart`):
 
@@ -614,9 +647,9 @@ setting catalog: [ini-metadata.md](ini-metadata.md) (PINI-016 / #659).
   `clearPending` when only one INI file was selected. INI backup restore also
   calls `clearPending` after writing disk so a draft left after crash cannot
   overwrite the restored files on the next Start flush.
-- Sanitize strips client noise (`ShooterGameUserSettings`, scalability /
-  resolution / volume keys, etc.). Never treat stripped noise as dirty pending
-  edits.
+- Sanitize strips client noise except ASA required GUS shells. Profile sync
+  seeds empty shells and ensures `Version=5` on `ShooterGameUserSettings`. Rates
+  and RCON stay profile/file-owned.
 - Do **not** use npm `ini` for ASA — dots in section headers are literal
   (`ini-text.ts`).
 - Complex tuple and list lines (loot, spawns, crafting, engrams, stat arrays)
@@ -645,8 +678,29 @@ the stock dedicated headers such as `ServerSettings`, `SessionSettings`,
 
 Renderer grouping: `iniUiCategoryGrouping.ts`. **Only Other** nests rows by
 `[Section]` (`sectionGroups`); Collapse/Expand on the Other header toggles those
-subgroups. Copy configuration and cluster template visual pickers reuse the same
-tree (`ini-ui-category-tree.ts`). Visual chrome exception:
+subgroups. The settings table defaults to **Unsorted**: sections in the order
+they first appear, keys in file order. **By category** uses the same category
+groups, and inside each group settings stay in the order they appear in the
+INI. **Alphabetical** keeps those category groups, with setting names from A
+to Z inside each group. The choice is a menu on the settings toolbar. A filter
+or sort icon sits inside each menu, and hovering a sort explains that mode.
+On a narrow pane, Reload, Restore, Discard, and Save are icon buttons the same size as the server card actions, and the name shows on hover.
+The choice is stored on this PC and is display-only; Save
+still updates each value on its existing line. **Add setting**, above the
+table, opens a form with its own fields: section, setting name, and value.
+The section list offers stock sections for that file (ServerSettings,
+SessionSettings, MessageOfTheDay, and the script sections) plus any section
+already in the INI. A name that is not in that list becomes a mod
+section when you choose **Add section**. Known settings show up as you
+type, and any other name is added as plain text. The name field is not
+focused, so the suggestion list stays closed until you click it. After you
+add it, the form closes and the table scrolls to the new row. The line stays
+a draft until Save. The row is placed by the setting's category in the UI
+catalog. A typed name that is not in the catalog lands in **Other** unless
+the name matches a small set of words such as password, breed, or multiplier.
+Copy configuration and cluster
+template visual pickers stay on the category tree (`ini-ui-category-tree.ts`).
+Visual chrome exception:
 [design-system.md](design-system.md) § surfaces (#516).
 
 ## Configuration assistant
@@ -694,8 +748,9 @@ from another manager) but YARK has no profile:
    Before Start, the Server tab shows identity fields that differ between
    `GameUserSettings.ini` and YARK. The operator can use the file values, after
    a check that the ports do not clash with another server, or keep the YARK
-   values. A missing admin password is refused. A missing join password clears
-   that password. RCON stays on. Rates, stacks, spawners, and every other line stay.
+   values. A missing admin password or blank port keeps the YARK value and still
+   adopts the rest. A missing join password clears that password. RCON stays on.
+   Rates, stacks, spawners, and every other line stay.
    The choice does not block Start. Password rows name the field and omit the
    secret (#682).
 5. Workspace opens on the new profile **without** first-steps onboarding.

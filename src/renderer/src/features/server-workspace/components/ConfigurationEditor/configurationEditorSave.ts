@@ -1,9 +1,10 @@
+import type { IniConflictOccurrence } from "@shared/ini/ini-conflict";
 import { NAMED_ENGRAM_STALE_CODE } from "@shared/ini/engram-named-entries";
 import { SUPPLY_CRATE_STALE_CODE } from "@shared/ini/supply-crate-entries";
 import { EMPTY_LINE_EDITS, type VisualLineEdits } from "@shared/ini/visual-line-edits";
 import { INI_STALE_DOCUMENT_CODE } from "@shared/ini/ini-fingerprints";
 import { buildIniSemanticOps, INI_SEMANTIC_CONFLICT_CODE } from "@shared/ini/ini-semantic-ops";
-import type { IniFileFingerprints, IniPreview, ServerIniPayload } from "@shared/types";
+import type { IniFileFingerprints, IniPreview, ServerIniPayload, ServerIniSnapshot } from "@shared/types";
 import { sanitizeServerIniPayload } from "../../iniModel";
 import {
   restoreUnsavedTextFile,
@@ -37,6 +38,8 @@ export type ConfigurationEditorSaveOutcome =
       error: string;
       /** True when Save lost a race with an overlapping external edit. */
       conflict: boolean;
+      /** Present when visual Save can show loaded / your edit / on disk (#696). */
+      conflicts?: IniConflictOccurrence[];
     };
 
 /**
@@ -82,13 +85,16 @@ export async function performConfigurationEditorSave(input: {
       result = await window.api.saveServerIniSemantic(input.serverId, scopedOps);
     }
     if (!result.ok) {
+      const conflicts = result.conflicts ?? [];
       return {
         ok: false,
         error: result.error ?? "Could not save the INI",
         conflict:
+          conflicts.length > 0 ||
           result.code === INI_SEMANTIC_CONFLICT_CODE ||
           result.code === NAMED_ENGRAM_STALE_CODE ||
           result.code === SUPPLY_CRATE_STALE_CODE,
+        ...(conflicts.length > 0 ? { conflicts } : {}),
       };
     }
     const savedPayload = sanitizeServerIniPayload(result.data.payload);
@@ -151,5 +157,20 @@ export function configurationEditorSaveToastMessage(
     title: "INI saved",
     message:
       changedCount > 0 ? `Saved ${changedCount} change${changedCount === 1 ? "" : "s"}.` : "Saved with no changes.",
+  };
+}
+
+/** Fingerprints from the save that just landed, so the next Save does not reuse the failed baseline. */
+export function adoptIniSaveSnapshot(
+  prev: ServerIniSnapshot | null,
+  next: { payload: ServerIniPayload; fingerprints: IniFileFingerprints; pending: boolean },
+): ServerIniSnapshot | null {
+  if (prev === null) return prev;
+  return {
+    ...prev,
+    payload: next.payload,
+    fingerprints: next.fingerprints,
+    pending: next.pending,
+    pendingUpdatedAt: next.pending ? (prev.pendingUpdatedAt ?? new Date().toISOString()) : null,
   };
 }

@@ -115,6 +115,7 @@ function harness(
   const processes = {
     on: vi.fn(),
     isActive: vi.fn(() => false),
+    syncRuntimeAuth: vi.fn(),
   } as unknown as ProcessManager;
   const backups = {
     hasServerWork: vi.fn(() => false),

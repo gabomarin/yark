@@ -28,6 +28,13 @@ Every user-visible or operator-facing change on a feature branch must update roo
 
 - Multi-sentence walkthroughs of scheduler order, DB migrations, component splits, or test filenames.
 
+## What's new (release cut)
+
+`src/shared/settings/changelog.ts` is the operator What's new: in-app Settings, getyark.com, and Discord `#releases`.
+
+- A feature operators see for the first time goes under **Highlights**. Do not file that feature, or polish that only exists because it is new, under **Changed** or **Fixed**. In root `CHANGELOG.md`, those same items go under **Added**.
+- Write so an operator understands it and wants to try it. Name the screen and what they can do there. Do not explain that the feature was already on `main` or hidden in an earlier release.
+
 ## When you may skip
 
 - Pure chore/CI/docs with **no** product or operator impact: ask for / apply the GitHub label `skip-changelog` (CI enforces this).

@@ -1,3 +1,4 @@
+import type { ConflictKeepSide, IniConflictOccurrence } from "@shared/ini/ini-conflict";
 import type { IniFileKey, IniPreview, ServerIniPayload, ServerIniSnapshot } from "@shared/types";
 import type { IniFilterId, IniSettingReference, IniUiCategoryGroup } from "../../iniModel";
 
@@ -13,6 +14,12 @@ export interface ConfigurationEditorApi {
   setError: (error: string | null) => void;
   /** True when the last Save failed because INI changed outside YARK (#665). */
   staleDocument: boolean;
+  /** Overlapping values from the last visual Save (#696). */
+  conflicts: IniConflictOccurrence[];
+  /** Keep the reviewed values in one write. Other draft edits stay. */
+  applyConflictChoices: (
+    choices: readonly { conflict: IniConflictOccurrence; side: ConflictKeepSide }[],
+  ) => Promise<void>;
   /** Disk/pending changed while the editor has unsaved edits (#665). */
   externalChangeDetected: boolean;
   setExternalChangeDetected: (value: boolean) => void;
@@ -38,6 +45,8 @@ export interface ConfigurationEditorApi {
   /** True when the editor baseline is a queued draft (#530). */
   pendingQueued: boolean;
   groupedRows: IniUiCategoryGroup[];
+  /** Filtered rows in file order. The table may regroup them for display. */
+  visibleRows: IniSettingReference[];
   categoryOptions: { value: string; label: string }[];
   fileLabel: string;
   filePath: string | null;
@@ -49,8 +58,7 @@ export interface ConfigurationEditorApi {
   resetRowToDefault: (row: IniSettingReference) => void;
   revertRowToSaved: (row: IniSettingReference) => void;
   toggleSection: (sectionName: string) => void;
-  setSectionGroupsCollapsed: (category: string, collapsed: boolean) => void;
-  setAllSectionsCollapsed: (collapsed: boolean) => void;
+  setCollapsedSections: (next: Record<string, boolean>) => void;
   saveIni: () => Promise<boolean>;
   openExternal: () => Promise<void>;
   publishPayloadChange: (nextPayload: ServerIniPayload) => void;

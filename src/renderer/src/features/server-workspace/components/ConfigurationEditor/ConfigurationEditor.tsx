@@ -16,13 +16,14 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { useUiDensity } from "@app/AppProviders";
 import { EngramEditorSection } from "./EngramEditorSection";
 import { LootEditor, type LootEditorStatus } from "./LootEditor";
-import { ConfigurationEditorFilterBar } from "./ConfigurationEditorFilterBar";
 import { ConfigurationEditorHeader } from "./ConfigurationEditorHeader";
 import { ConfigurationEditorOpenFileAction } from "./ConfigurationEditorOpenFileAction";
 import { ConfigurationEditorPreviewAlert } from "./ConfigurationEditorPreviewAlert";
-import { ConfigurationEditorSettingsTable } from "./ConfigurationEditorSettingsTable";
-import { ConfigurationEditorStatusAlerts } from "./ConfigurationEditorStatusAlerts";
+import { ConfigurationEditorSettingsPane } from "./ConfigurationEditorSettingsPane";
+import { ConfigurationEditorStatusAlerts, editorStatusAlertProps } from "./ConfigurationEditorStatusAlerts";
 import { ConfigurationEditorTextPanel } from "./ConfigurationEditorTextPanel";
+import { type ConflictChoice } from "./configurationEditorConflict";
+import { useConflictLineHold } from "./useConflictLineHold";
 import { useConfigurationEditor } from "./useConfigurationEditor";
 import { iniSaveScope, iniSectionPending, iniViewDirty, type IniSaveScope } from "./configurationEditorSaveScope";
 import { GameIniViewSwitch } from "./IniScopeSwitch";
@@ -68,6 +69,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
   const openCrateRef = useRef<{ key: string; className: string } | null>(null);
   const [lootEditCount, setLootEditCount] = useState(0);
   const [lootBlocked, setLootBlocked] = useState(false);
+  const prepareConflictBaseline = useRef<(choices: readonly ConflictChoice[]) => void>(() => {});
   const resetDrafts = useCallback((which?: "engrams" | "loot") => {
     if (which !== "loot") {
       engramEditsRef.current = { ...engramEditsRef.current, engrams: [] };
@@ -109,20 +111,26 @@ export function ConfigurationEditor(props: Props): ReactElement {
     engramBlockedRef,
     saveScopeRef,
     onEngramDraftsReset: resetDrafts,
+    onBeforeConflictBaseline: (choices) => {
+      prepareConflictBaseline.current(choices);
+    },
   });
   const gameText = editor.baseline?.game ?? "";
+  const { holdEngram, holdLoot } = useConflictLineHold(gameText, resetDrafts, prepareConflictBaseline);
   const saveScope = iniSaveScope(editor.iniFile, editor.iniMode, gameView, engramPane);
   useEffect(() => {
     baselineGameRef.current = gameText;
     saveScopeRef.current = saveScope;
-  });
+  }, [gameText, saveScope]);
   const engramSummary = useMemo(() => summarizeNamedEngrams(gameText), [gameText]);
   const namedLineKey = engramSummary.rows.map((row) => `${row.occurrence}:${row.expectedRaw}`).join("\n");
   const [seenNamedLines, setSeenNamedLines] = useState(namedLineKey);
   if (seenNamedLines !== namedLineKey) {
     setSeenNamedLines(namedLineKey);
-    setEngramDrafts(draftsFrom(engramSummary.rows));
-    setPendingAdds([]);
+    if (!holdEngram) {
+      setEngramDrafts(draftsFrom(engramSummary.rows));
+      setPendingAdds([]);
+    }
   }
   const engramReview = reviewNamedEngramState(
     engramSummary.rows,
@@ -131,6 +139,9 @@ export function ConfigurationEditor(props: Props): ReactElement {
     engramSummary.onlySpecified,
   );
   const engramDirty = engramReview.edits.length > 0 || engramReview.blocked;
+  useEffect(() => {
+    engramEditsRef.current = { ...engramEditsRef.current, engrams: engramReview.edits };
+  }, [engramReview.edits]);
   const publishEngramReview = (
     drafts: Record<string, NamedEngramDraft>,
     pending: readonly NamedEngramPendingAdd[],
@@ -261,19 +272,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
       )}
       <div className={classes.content}>
         <ConfigurationEditorStatusAlerts
-          error={editor.error}
-          onDismissError={() => editor.setError(null)}
-          staleDocument={editor.staleDocument}
-          externalChangeDetected={editor.externalChangeDetected}
-          iniMode={editor.iniMode}
-          baseline={editor.baseline}
-          externalDiskPayload={editor.externalDiskPayload}
-          onReloadStale={editor.requestReloadFromDisk}
-          onDismissExternalChange={() => editor.setExternalChangeDetected(false)}
-          reloadBusy={editor.busy}
-          serverActive={props.serverActive === true}
-          filesJobActive={filesJobActive}
-          pendingQueued={editor.pendingQueued}
+          {...editorStatusAlertProps(editor, props.serverActive === true, filesJobActive)}
         />
 
         <EngramEditorSection
@@ -303,6 +302,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
             key={lootEditorKey}
             gameText={gameText}
             map={props.server.map}
+            holdLineResync={holdLoot}
             initialCrate={openCrateRef.current}
             onOpenCrateChange={(crate) => {
               openCrateRef.current = crate;
@@ -315,32 +315,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
 
         {visualMode && !showEngrams && !showLoot && (
           <Stack gap="md" className={classes.editor}>
-            <ConfigurationEditorFilterBar
-              search={editor.search}
-              onSearchChange={editor.setSearch}
-              filter={editor.filter}
-              onFilterChange={editor.setFilter}
-              categoryOptions={editor.categoryOptions}
-              dirty={editor.dirty}
-              unsavedRowCount={editor.unsavedRowCount}
-              onCollapseAll={() => editor.setAllSectionsCollapsed(true)}
-              onExpandAll={() => editor.setAllSectionsCollapsed(false)}
-            />
-
-            <ConfigurationEditorSettingsTable
-              loading={editor.loading}
-              groupedRows={editor.groupedRows}
-              collapsedSections={editor.collapsedSections}
-              busy={editor.busy}
-              isRowUnsaved={editor.isRowUnsaved}
-              savedValueForRow={editor.savedValueForRow}
-              onToggleSection={editor.toggleSection}
-              onSetSectionGroupsCollapsed={editor.setSectionGroupsCollapsed}
-              onUpdateValue={editor.updateValue}
-              onResetRowToDefault={editor.resetRowToDefault}
-              onRevertRowToSaved={editor.revertRowToSaved}
-              onOpenAdminList={props.onOpenAdminList}
-            />
+            <ConfigurationEditorSettingsPane editor={editor} onOpenAdminList={props.onOpenAdminList} />
 
             <Group justify="space-between" className={classes.footer}>
               <Text c="dimmed" size="xs">

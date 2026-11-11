@@ -108,7 +108,7 @@ Reading complex tuple and list lines without rewriting them is PINI-010 (#680). 
 
 `buildIniImportCompatibilityReport` compares the Server form with the current INI. The only replacements are the seven identity fields Start already writes (`applyProfileOwnedKeysToGameUserSettings`): session name, game port, query port, RCON port, RCON enabled (always `True`), admin password, and server password. A field is a replacement only when the file value differs. An empty join password matches an absent or blank file value. Missing rates and other keys are not filled from catalog defaults.
 
-Complex lines are classified with `parseIniComplexEntries` and are not rewritten. The Server tab lists the differing identity values from `GameUserSettings.ini` and from YARK. **Use file values** copies the INI into the profile after `planAdoptExternalIni` rejects a port clash with another server, a non-distinct port trio, a blank session name, a missing admin password, or an admin password shorter than 4 characters. A missing join password clears that password. The clash message names the port this server would take. RCON enabled is not copied. YARK keeps RCON on. **Keep YARK values** writes the current profile back into the INI. Password lines name the field and omit both values. The banner is hidden when nothing will change. It does not block Start, and import still does not write INI.
+Complex lines are classified with `parseIniComplexEntries` and are not rewritten. The Server tab lists the differing identity values from `GameUserSettings.ini` and from YARK. **Use file values** copies the INI into the profile after `planAdoptExternalIni` rejects a port clash with another server, a non-distinct port trio, a blank session name, or an admin password shorter than 4 characters. A missing or blank admin password, or a blank game/query/RCON port, keeps the value already in YARK so the rest of the file identity can still be adopted. A missing join password clears that password. The clash message names the port this server would take. RCON enabled is not copied. YARK keeps RCON on. **Keep YARK values** writes the current profile back into the INI. Password lines name the field and omit both values. The banner is hidden when nothing will change. It does not block Start, and import still does not write INI.
 
 ## Semantic visual Save (PINI-004 / #667)
 
@@ -117,8 +117,21 @@ key, occurrence, expected previous value; Set also carries the next value) via
 `ini:save-semantic`. The backend applies those ops to the **latest** read
 payload under the existing INI lock — not a blind overwrite of the editor
 buffer — so non-overlapping external edits can coexist. Overlapping
-expected-previous mismatches fail with `INI_SEMANTIC_CONFLICT` (no silent
-clobber; conflict-review UI is PINI-005). Profile/system-owned keys and
+expected-previous mismatches fail with `INI_SEMANTIC_CONFLICT` and write
+nothing (PINI-005 / #696). The attention **INI conflict** alert lists **Last save**,
+**Your edit**, and **On disk**. Last save is the last successful save, which
+stays at the editor load until the next save, and that value is muted. A missing
+assignment reads **Not in the file**. A blank assignment reads **Empty**. A row
+that differs from the last save says **Changed in YARK** or **Changed in the file**.
+Each value is a radio. **Your edit** starts selected. **Accept** writes every row
+at once. **Use my value** or **Revert to last save** writes that occurrence onto
+the file value just shown. **Use the file's value** adopts that value into the
+open draft and does not write. The alert stays open until **Accept** and has no
+close button. Up to four short settings stay in the alert. A longer list, or a
+long line, opens the same table from **Review conflicts**. Resolving the overlap
+closes the blue
+**INI updated outside YARK** notice. Engram and supply-crate line mismatches
+use the same review. Profile/system-owned keys and
 forbidden Unset policies are rejected (`INI_SEMANTIC_OWNERSHIP` /
 `INI_SEMANTIC_UNSET_FORBIDDEN`). Per-row **Revert** stays draft-only against the
 editor baseline. The Raw/text editor and other full-buffer writers still use
@@ -130,8 +143,11 @@ of outside setting changes, a compact **View outside changes** text link that
 opens a Needs-attention-style detail popover, and copy to click Save to merge
 when edits do not overlap (no Reload button in that banner). Text mode keeps an
 attention banner with Reload because Save will refuse until then. A failed Save
-with an overlapping conflict uses a red **INI conflict** alert (Reload offered
-there).
+with an overlapping conflict uses an attention **INI conflict** alert. That alert
+shows each overlapping setting on one row. A radio picks your edit, the file
+value, or the last save, and **Accept** keeps those values. The alert cannot be
+dismissed. Resolving the overlap closes the blue
+outside-change notice.
 
 ## Complex values
 

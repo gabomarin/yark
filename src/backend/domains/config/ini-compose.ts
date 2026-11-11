@@ -1,4 +1,5 @@
 import { flattenIniText, INI_FLAT_SEP, setIniTextValue } from "@shared/ini/ini-text";
+import { ensureAsaGameUserSettingsSkeleton } from "@shared/ini/asa-gus-skeleton";
 import { isAsaIgnoredIniMaxPlayers, isYarkOwnedIniKey } from "@shared/asa/yark-owned-ini-keys";
 import type { IniDiffEntry, IniPreview, ServerIniPayload, ServerProfile } from "@shared/types";
 import { prepareClusterIniTemplatePayload } from "./cluster-ini-template-service";
@@ -65,6 +66,9 @@ export function resolveMemberIdentity(
 /**
  * Applies YARK profileSync keys into GameUserSettings text (in memory).
  * Must stay aligned with `syncProfileSettingsToIni` / `yark-owned-ini-keys`.
+ *
+ * Also seeds UE 5.8 / ASA v97+ shell sections and ensures ShooterGameUserSettings
+ * `Version=5` when missing (see `ensureAsaGameUserSettingsSkeleton`).
  */
 export function applyProfileOwnedKeysToGameUserSettings(gameUserSettings: string, profile: ProfileIniIdentity): string {
   let text = gameUserSettings;
@@ -75,7 +79,7 @@ export function applyProfileOwnedKeysToGameUserSettings(gameUserSettings: string
   text = setIniTextValue(text, "SessionSettings", "SessionName", profile.sessionName);
   text = setIniTextValue(text, "SessionSettings", "Port", String(profile.gamePort));
   text = setIniTextValue(text, "SessionSettings", "QueryPort", String(profile.queryPort));
-  return text;
+  return ensureAsaGameUserSettingsSkeleton(text);
 }
 
 /** Template → member: replace both INI files, then reapply per-server identity.

@@ -25,6 +25,10 @@ export interface ReadyWaitManaged {
   startedAt: string;
   readinessGeneration: number;
   asaApiLoading?: boolean;
+  /** Live RCON port; refreshed when the operator adopts INI ports while starting. */
+  runtimePorts: { rconPort: number };
+  /** Live admin password; refreshed with {@link runtimePorts} while starting. */
+  adminPassword: string;
 }
 
 export interface ReadyWaitTiming {
@@ -106,7 +110,11 @@ export async function waitUntilReady(
     loggedProbeStart = true;
 
     try {
-      await rconExec(RCON_HOST, profile.rconPort, profile.adminPassword, "ListPlayers", RCON_PROBE_TIMEOUT_MS, {
+      // Prefer live managed auth: profile ports can change (Use file values) while
+      // this wait is still polling the Start-time snapshot.
+      const rconPort = managed.runtimePorts.rconPort;
+      const adminPassword = managed.adminPassword;
+      await rconExec(RCON_HOST, rconPort, adminPassword, "ListPlayers", RCON_PROBE_TIMEOUT_MS, {
         quiet: true,
       });
       if (!isSameStartingGeneration(host.getManaged(profile.id), managed, generation)) {
@@ -125,9 +133,16 @@ export async function waitUntilReady(
         if (!isSameStartingGeneration(host.getManaged(profile.id), managed, generation)) {
           return;
         }
-        await rconExec(RCON_HOST, profile.rconPort, profile.adminPassword, "ListPlayers", RCON_PROBE_TIMEOUT_MS, {
-          quiet: true,
-        });
+        await rconExec(
+          RCON_HOST,
+          managed.runtimePorts.rconPort,
+          managed.adminPassword,
+          "ListPlayers",
+          RCON_PROBE_TIMEOUT_MS,
+          {
+            quiet: true,
+          },
+        );
         if (!isSameStartingGeneration(host.getManaged(profile.id), managed, generation)) {
           return;
         }

@@ -100,6 +100,8 @@ When creating a server you can pick **None** or an **existing fleet cluster** (f
 
 You can edit many profile fields while a server is running. **Ports and map** take effect on the **next restart**. Profile settings that belong in INI (RCON, passwords, query port, session name, game port) are synced to `GameUserSettings.ini` on start (and opportunistically on update).
 
+When that file and the Server form disagree on those identity fields, the Server tab names each changed field and shows the file value and the YARK value. Password rows name the field and hide both values. **Use file values** copies the file into YARK after a check that the ports do not clash with another server. **Keep YARK values** writes the profile back into the file. A missing admin password is refused. A missing join password clears that password. RCON stays on. The note does not block Start. Rates and other lines stay as they are.
+
 ## Install path tips
 
 - Prefer a dedicated folder per profile under a fast disk

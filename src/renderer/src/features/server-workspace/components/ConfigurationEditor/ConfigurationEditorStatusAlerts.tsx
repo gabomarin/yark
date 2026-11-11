@@ -1,7 +1,12 @@
 import { useEffect, useId, useState, type ReactElement } from "react";
 import { Anchor, Button, Group, Popover, Stack, Text } from "@mantine/core";
+import type { IniConflictOccurrence } from "@shared/ini/ini-conflict";
+import type { ConflictChoice } from "./configurationEditorConflict";
 import type { IniDiffEntry, ServerIniPayload } from "@shared/types";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
+import { IniConflictReview } from "./IniConflictReview";
+import { conflictAlertSentence } from "./iniConflictReviewModel";
+import type { ConfigurationEditorApi } from "./configurationEditorTypes";
 import {
   EXTERNAL_INI_DIFF_PREVIEW_LIMIT,
   formatExternalIniChangeSummary,
@@ -15,6 +20,9 @@ interface Props {
   onDismissError: () => void;
   /** Save lost a race with an external INI edit (#665 / #667). */
   staleDocument?: boolean;
+  /** Last YARK save, draft, and disk values for an overlapping Save (#696). */
+  conflicts?: readonly IniConflictOccurrence[];
+  onAcceptConflicts?: (choices: readonly ConflictChoice[]) => void;
   /** Disk/pending changed while the editor has unsaved edits (#665). */
   externalChangeDetected?: boolean;
   /** Visual Save can merge non-overlapping edits; Raw/text still needs Reload (#667). */
@@ -150,9 +158,11 @@ function OutsideChangesPopover(props: {
 function SaveErrorAlert(props: {
   error: string;
   staleDocument: boolean;
+  conflicts: readonly IniConflictOccurrence[];
   reloadBusy: boolean;
   onDismiss: () => void;
   onReload?: () => void;
+  onAcceptConflicts?: (choices: readonly ConflictChoice[]) => void;
 }): ReactElement {
   if (!props.staleDocument) {
     return (
@@ -161,11 +171,20 @@ function SaveErrorAlert(props: {
       </AppAlert>
     );
   }
+  const onAccept = props.onAcceptConflicts;
+  const review = props.conflicts.length > 0 && onAccept !== undefined;
   return (
-    <AppAlert color="red" mb="sm" title="INI conflict" onClose={props.onDismiss} withCloseButton>
-      <Stack gap="xs">
-        <Text size="sm">{props.error}</Text>
-        <ReloadFromDiskButton busy={props.reloadBusy} onClick={props.onReload} />
+    <AppAlert
+      color={review ? "attention" : "red"}
+      mb="sm"
+      title="INI conflict"
+      onClose={review ? undefined : props.onDismiss}
+      withCloseButton={!review}
+    >
+      <Stack gap={4}>
+        <Text size={review ? "xs" : "sm"}>{review ? conflictAlertSentence(props.conflicts.length) : props.error}</Text>
+        {review && <IniConflictReview conflicts={props.conflicts} busy={props.reloadBusy} onAccept={onAccept} />}
+        {!review && <ReloadFromDiskButton busy={props.reloadBusy} onClick={props.onReload} />}
       </Stack>
     </AppAlert>
   );
@@ -221,6 +240,8 @@ export function ConfigurationEditorStatusAlerts(props: Props): ReactElement | nu
     error,
     onDismissError,
     staleDocument = false,
+    conflicts = [],
+    onAcceptConflicts,
     externalChangeDetected = false,
     iniMode = "visual",
     baseline = null,
@@ -243,9 +264,11 @@ export function ConfigurationEditorStatusAlerts(props: Props): ReactElement | nu
         <SaveErrorAlert
           error={error}
           staleDocument={staleDocument}
+          conflicts={conflicts}
           reloadBusy={reloadBusy}
           onDismiss={onDismissError}
           onReload={onReloadStale}
+          onAcceptConflicts={onAcceptConflicts}
         />
       )}
       {externalChangeDetected && error === null && (
@@ -271,4 +294,30 @@ export function ConfigurationEditorStatusAlerts(props: Props): ReactElement | nu
       )}
     </>
   );
+}
+
+export function editorStatusAlertProps(
+  editor: ConfigurationEditorApi,
+  serverActive: boolean,
+  filesJobActive: boolean,
+): Props {
+  return {
+    error: editor.error,
+    onDismissError: () => editor.setError(null),
+    staleDocument: editor.staleDocument,
+    conflicts: editor.conflicts,
+    onAcceptConflicts: (choices) => {
+      void editor.applyConflictChoices(choices);
+    },
+    externalChangeDetected: editor.externalChangeDetected,
+    iniMode: editor.iniMode,
+    baseline: editor.baseline,
+    externalDiskPayload: editor.externalDiskPayload,
+    onReloadStale: editor.requestReloadFromDisk,
+    onDismissExternalChange: () => editor.setExternalChangeDetected(false),
+    reloadBusy: editor.busy,
+    serverActive,
+    filesJobActive,
+    pendingQueued: editor.pendingQueued,
+  };
 }

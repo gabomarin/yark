@@ -191,8 +191,8 @@ must pass; a failure blocks the release until fixed.
    ```
 
    Add any **UI-changing** script from the mapping table in `e2e-validation.md`
-   (e.g. `e2e:mods`, `e2e:launch-args`, `e2e:clusters-membership`) when the
-   release touches those surfaces. All must pass on Windows.
+   (e.g. `e2e:mods`, `e2e:launch-args`, `e2e:clusters-membership`, `e2e:ini-conflict`)
+   when the release touches those surfaces. All must pass on Windows.
 
 6. **Production build + bundle report**
    ```
@@ -213,8 +213,12 @@ must pass; a failure blocks the release until fixed.
 9. Confirm the sidebar shows `vX.Y.Z` after `npm run dev` / build (driven by
    `APP_VERSION` from `src/shared/app-version.ts`).
 10. Sync the curated changelog in `src/shared/settings/changelog.ts` (site +
-    in-app What's new; `website/src/data/changelog.ts` re-exports it). Version
-    pill / download CTA follow `package.json` via `website/src/data/site.ts`.
+    in-app What's new; `website/src/data/changelog.ts` re-exports it). A feature
+    operators see for the first time goes under **Highlights** (and under
+    **Added** in root `CHANGELOG.md`), not **Changed** or **Fixed**. Name the
+    screen and what they can do; do not explain that it was already on `main`
+    or hidden in an earlier release. Version pill / download CTA follow
+    `package.json` via `website/src/data/site.ts`.
 
 ### Phase 2 — Website / docs
 

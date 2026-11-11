@@ -16,6 +16,7 @@ import { EventEmitter } from "node:events";
 import { existsSync } from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
+import { applyProfileOwnedKeysToGameUserSettings } from "../config/ini-compose";
 import { defaultGameIni, defaultGameUserSettingsIni } from "@shared/ini/ini-defaults";
 import type { BackupService } from "../backups/backup-service";
 import type { InstanceLockManager } from "../../orchestration/instance-lock-manager";
@@ -46,7 +47,6 @@ import {
   withOpenNativeConsolePref,
   type InstanceServiceOptions,
 } from "./instance-start-options";
-
 export type { StopServerOptions } from "./instance-stop";
 export type { InstanceServiceOptions } from "./instance-start-options";
 
@@ -68,6 +68,10 @@ export class InstanceService extends EventEmitter {
   private readonly stops: InstanceStop;
   private readonly resolveOpenNativeConsole: () => boolean;
   private readonly syncProfileOwnedKeys?: InstanceServiceOptions["syncProfileOwnedKeys"];
+  /** Tracks process status so starting→running can re-heal GUS after ASA rewrite. */
+  private readonly previousRuntimeStatus = new Map<string, string>();
+  /** Cancels stale post-ready GUS heals when Stop/restart races the 8s timer. */
+  private readonly postReadyHealEpoch = new Map<string, number>();
 
   constructor(
     private readonly repo: ServerRepository,
@@ -83,7 +87,7 @@ export class InstanceService extends EventEmitter {
     this.creates = new InstanceCreate({
       repo,
       withFleetCreateLock: (work) => this.withFleetCreateLock(work),
-      ensureDefaultIniFiles: (installDir) => this.ensureDefaultIniFiles(installDir),
+      ensureDefaultIniFiles: (installDir, profile) => this.ensureDefaultIniFiles(installDir, profile),
     });
     this.rcon = new InstanceRcon(repo, processes, (info) => {
       this.emit("rcon-status-changed", info);
@@ -109,6 +113,21 @@ export class InstanceService extends EventEmitter {
       deleteProfile: (id, options) => this.delete(id, options),
       isStopInProgress: (id) => this.isStopInProgress(id),
       emitProgress: (payload) => this.emit("clone-progress", payload),
+    });
+    this.processes.on("status", (info: { serverId: string; status: string }) => {
+      const previous = this.previousRuntimeStatus.get(info.serverId);
+      this.previousRuntimeStatus.set(info.serverId, info.status);
+      if (info.status === "running" && previous === "starting") {
+        const epoch = this.bumpPostReadyHealEpoch(info.serverId);
+        void this.reapplyProfileOwnedKeysAfterReady(info.serverId, epoch);
+      }
+      // Monotonic bump cancels in-flight heals; never delete (reset would revive an old epoch).
+      if (info.status === "stopping" || info.status === "stopped" || info.status === "error") {
+        this.bumpPostReadyHealEpoch(info.serverId);
+      }
+      if (info.status === "stopped" || info.status === "error") {
+        this.previousRuntimeStatus.delete(info.serverId);
+      }
     });
     this.processes.on("unexpected-exit", (payload: UnexpectedManagedExit) => {
       recordUnexpectedProcessExit(this.repo, payload, (notify) => {
@@ -160,16 +179,60 @@ export class InstanceService extends EventEmitter {
     return this.creates.importExisting(input, options);
   }
 
-  private async ensureDefaultIniFiles(installDir: string): Promise<void> {
+  private async ensureDefaultIniFiles(installDir: string, profile?: ServerProfile): Promise<void> {
     const configDir = join(installDir, "ShooterGame", "Saved", "Config", "WindowsServer");
     await mkdir(configDir, { recursive: true });
     const gameUserSettingsPath = join(configDir, "GameUserSettings.ini");
     const gameIniPath = join(configDir, "Game.ini");
     if (!existsSync(gameUserSettingsPath)) {
-      await writeFile(gameUserSettingsPath, defaultGameUserSettingsIni, "utf8");
+      const seeded =
+        profile !== undefined
+          ? applyProfileOwnedKeysToGameUserSettings(defaultGameUserSettingsIni, profile)
+          : defaultGameUserSettingsIni;
+      await writeFile(gameUserSettingsPath, seeded, "utf8");
     }
     if (!existsSync(gameIniPath)) {
       await writeFile(gameIniPath, defaultGameIni, "utf8");
+    }
+  }
+
+  /** Bump the per-server heal generation (never reset) so stale timers cannot revive. */
+  private bumpPostReadyHealEpoch(serverId: string): number {
+    const next = (this.postReadyHealEpoch.get(serverId) ?? 0) + 1;
+    this.postReadyHealEpoch.set(serverId, next);
+    return next;
+  }
+
+  private isPostReadyHealCurrent(serverId: string, epoch: number): boolean {
+    return this.postReadyHealEpoch.get(serverId) === epoch && this.processes.getStatus(serverId).status === "running";
+  }
+
+  /**
+   * ASA may still rewrite GameUserSettings.ini near ready. After a short delay,
+   * re-apply the *effective* start identity (session ports + live admin password)
+   * and ensure Version=5 on the live file. `epoch` cancels heals from an older
+   * start if Stop/restart raced the timer.
+   */
+  private async reapplyProfileOwnedKeysAfterReady(serverId: string, epoch: number): Promise<void> {
+    if (this.syncProfileOwnedKeys === undefined) {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 8_000));
+    if (!this.isPostReadyHealCurrent(serverId, epoch)) {
+      return;
+    }
+    const saved = this.repo.get(serverId);
+    if (saved === null) {
+      return;
+    }
+    const effective = this.processes.applyRuntimePorts(saved);
+    try {
+      await this.syncProfileOwnedKeys(serverId, effective, {
+        writeLiveDisk: true,
+        abortIf: () => !this.isPostReadyHealCurrent(serverId, epoch),
+      });
+    } catch {
+      // Best-effort heal; Start already synced before spawn and Stop flushes pending.
     }
   }
 
@@ -194,6 +257,9 @@ export class InstanceService extends EventEmitter {
     if (updated === null) {
       throw new Error("Server does not exist");
     }
+    // Use file values / Server form edits while starting must refresh the live
+    // readiness probe (frozen Start-time ports left Stop stuck on RCON).
+    this.processes.syncRuntimeAuth(updated);
     void applyProfileOwnedIni(updated, this.syncProfileOwnedKeys).catch(() => {
       // INI may be missing until install; start() syncs again before launch.
     });

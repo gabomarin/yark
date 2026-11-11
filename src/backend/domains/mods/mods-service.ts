@@ -1,4 +1,8 @@
-import { curseForgeAsaSlugFromUrl, getCurseForgeAsaModUrlError } from "@shared/mods/curseforge-url";
+import {
+  curseForgeAsaSlugFromUrl,
+  getCurseForgeAsaModUrlError,
+  isCurseForgeAsaModSlug,
+} from "@shared/mods/curseforge-url";
 import { BUILD_CURSEFORGE_PROXY_URL } from "@shared/mods/curseforge-proxy-build-url";
 import { YARK_CLIENT_ID } from "@shared/mods/curseforge-proxy-headers";
 import { MetadataServiceNotConfiguredError, normalizeCurseforgeProxyUrl } from "@shared/mods/curseforge-proxy-url";
@@ -187,7 +191,7 @@ export class ModsService {
       const urlError = getCurseForgeAsaModUrlError(token);
       if (urlError !== null) throw new Error(urlError);
       slug = curseForgeAsaSlugFromUrl(token);
-    } else if (/^[a-z0-9]+(?:-[a-z0-9]+)*$/i.test(token)) {
+    } else if (isCurseForgeAsaModSlug(token)) {
       slug = token.toLowerCase();
     } else {
       throw new Error("Not a numeric CurseForge Project ID or ASA mod URL.");
@@ -426,5 +430,5 @@ function getCachedMetadataError(detail: ModMetadata, expectedId: string): string
     return `CurseForge returned Project ID ${detail.id} instead`;
   }
   const urlError = getCurseForgeAsaModUrlError(detail.curseforgeUrl);
-  return urlError === null ? null : `CurseForge returned a non-ASA project`;
+  return urlError === null ? null : `CurseForge returned a non-ASA project: ${urlError}`;
 }

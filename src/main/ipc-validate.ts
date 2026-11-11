@@ -5,6 +5,7 @@
 
 import { ipcMain } from "electron";
 import type { z } from "zod";
+import { parseIniConflictOccurrence, type IniConflictOccurrence } from "../shared/ini/ini-conflict";
 import type { IpcResult } from "../shared/ipc";
 import { formatZodError } from "../shared/ipc/primitives";
 import { sanitizeDiagnosticText } from "../shared/credential-redaction";
@@ -32,6 +33,19 @@ function ipcErrorCode(err: unknown): string | undefined {
   return typeof code === "string" && code.length > 0 ? code : undefined;
 }
 
+function ipcConflicts(err: unknown): IniConflictOccurrence[] | undefined {
+  if (typeof err !== "object" || err === null || !("conflicts" in err)) return undefined;
+  const value = (err as { conflicts: unknown }).conflicts;
+  if (!Array.isArray(value) || value.length === 0) return undefined;
+  const conflicts: IniConflictOccurrence[] = [];
+  for (const item of value) {
+    const row = parseIniConflictOccurrence(item);
+    // A bad row stays out. The valid rows still reach the conflict review.
+    if (row !== null) conflicts.push(row);
+  }
+  return conflicts.length > 0 ? conflicts : undefined;
+}
+
 function wrapIpcResult<T>(fn: () => T | Promise<T>): Promise<IpcResult<T>> {
   return Promise.resolve()
     .then(fn)
@@ -39,7 +53,13 @@ function wrapIpcResult<T>(fn: () => T | Promise<T>): Promise<IpcResult<T>> {
     .catch((err: unknown): IpcResult<T> => {
       const error = sanitizeDiagnosticText(err instanceof Error ? err.message : String(err), ipcKnownSecrets());
       const code = ipcErrorCode(err);
-      return code !== undefined ? { ok: false, error, code } : { ok: false, error };
+      const conflicts = ipcConflicts(err);
+      return {
+        ok: false,
+        error,
+        ...(code !== undefined ? { code } : {}),
+        ...(conflicts !== undefined ? { conflicts } : {}),
+      };
     });
 }
 

@@ -1,0 +1,103 @@
+.review {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
+}
+
+.table {
+  border-collapse: separate;
+  border-spacing: 0 0.4rem;
+  width: max-content;
+  max-width: 100%;
+}
+
+.table :where(th, td) {
+  padding: 0 1.25rem 0 0;
+  font-weight: inherit;
+  text-align: start;
+  vertical-align: middle;
+}
+
+.headRow :where(th) {
+  vertical-align: top;
+}
+
+.settingHead,
+.valueHead {
+  color: var(--app-color-muted);
+  font-size: var(--app-font-eyebrow);
+  font-weight: 700;
+}
+
+.valueHead {
+  text-align: center;
+}
+
+.headLabel {
+  display: block;
+  width: max-content;
+  margin-inline: auto;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.delta {
+  display: block;
+  margin-top: 0.1rem;
+  color: var(--app-color-attention);
+  font-size: var(--app-font-eyebrow);
+  font-weight: 600;
+}
+
+.setting {
+  display: flex;
+  flex-direction: column;
+}
+
+.key {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.meta {
+  color: var(--app-color-muted);
+  font-size: var(--mantine-font-size-xs);
+  white-space: nowrap;
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.cell[data-conflict-side="saved"] .value {
+  color: var(--app-color-muted);
+}
+
+.value {
+  display: inline-block;
+  min-width: 3rem;
+  max-width: 14rem;
+  max-height: 2.6rem;
+  overflow: auto;
+  font-family: var(--app-font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+  text-align: end;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.absent,
+.empty {
+  min-width: 0;
+  color: var(--app-color-muted);
+  font-family: inherit;
+  font-style: italic;
+  text-align: start;
+}
