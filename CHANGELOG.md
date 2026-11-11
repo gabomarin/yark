@@ -24,6 +24,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Changing the INI settings sort updates the menu immediately. The table redraws just after, because each setting is its own input.
 - Accepting an INI conflict writes the value you picked, including a password, and the next Save uses that file. Choosing the value already on disk still checks the file has not changed again. Other edits already in the file stay, so the next Save does not write over them (#696).
 - Create cluster and the setup assistant suggest a Cluster ID like `yark-cluster-7f3a9c2e` instead of `yark-cluster-1`, so the in-game transfer list does not include other people's servers that reused the same default ID.
+- Transfer **Save** re-reads member INI files when seeding an empty or tribute-only cluster template, so a later **Apply INI template** cannot restore settings from a stale Transfer panel snapshot left under the server workspace overlay.
+- Overrides and Loot **Save** no longer replay stale named-engram or supply-crate text edits onto the draft, which could make Save look failed after a successful write or leave the draft missing live lines still on disk.
 - **Add setting** no longer writes into the previous section when a mod section was typed but not confirmed; it asks for **Add section** first. The INI sort preference survives a blocked `localStorage`, and `SelectField` keeps caller `classNames` (#705).
 
 ### Docs

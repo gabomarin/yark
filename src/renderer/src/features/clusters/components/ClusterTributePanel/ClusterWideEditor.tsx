@@ -136,7 +136,6 @@ export function ClusterWideEditor(props: Props): ReactElement {
       const memberPayloads = await collectClusterIniTemplateSeedPayloads(
         existing.data?.payload,
         props.members,
-        props.snapshots,
         async (serverId) => {
           const latest = await window.api.readServerIni(serverId);
           return latest.ok ? latest.data.payload : null;
