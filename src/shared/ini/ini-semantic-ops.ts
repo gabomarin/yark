@@ -7,10 +7,11 @@
  */
 
 import type { IniFileKey, ServerIniPayload } from "../types";
+import { sameStringList, type IniConflictOccurrence } from "./ini-conflict";
 import { isVisuallyEditableIniSetting, lookupAbsencePolicy, lookupSettingOwner } from "./ini-setting-decisions";
 import { appendIniTextValue, parseIniTextRows, removeIniTextValue, setIniTextValue } from "./ini-text";
 
-type IniSemanticOpKind = "set" | "unset";
+type IniSemanticOpKind = "set" | "unset" | "check";
 
 interface IniSemanticOpBase {
   kind: IniSemanticOpKind;
@@ -24,6 +25,11 @@ interface IniSemanticOpBase {
    * `null` means the occurrence must be absent (insert / already gone).
    */
   expectedPreviousValue: string | null;
+  /**
+   * Every live value of this section and key before the op.
+   * Catches an inserted duplicate that leaves this occurrence's value unchanged.
+   */
+  expectedKeyValues?: readonly string[];
 }
 
 interface IniSemanticSetOp extends IniSemanticOpBase {
@@ -35,7 +41,11 @@ interface IniSemanticUnsetOp extends IniSemanticOpBase {
   kind: "unset";
 }
 
-export type IniSemanticOp = IniSemanticSetOp | IniSemanticUnsetOp;
+interface IniSemanticCheckOp extends IniSemanticOpBase {
+  kind: "check";
+}
+
+export type IniSemanticOp = IniSemanticSetOp | IniSemanticUnsetOp | IniSemanticCheckOp;
 
 /** Expected-previous mismatch — overlapping external edit (#667). */
 export const INI_SEMANTIC_CONFLICT_CODE = "INI_SEMANTIC_CONFLICT" as const;
@@ -56,17 +66,19 @@ export class IniSemanticPatchError extends Error {
   readonly code: IniSemanticErrorCode;
   readonly op: IniSemanticOp | null;
   readonly actualValue: string | null;
+  readonly conflicts: readonly IniConflictOccurrence[];
 
   constructor(
     code: IniSemanticErrorCode,
     message: string,
-    options?: { op?: IniSemanticOp | null; actualValue?: string | null },
+    options?: { op?: IniSemanticOp | null; actualValue?: string | null; conflicts?: readonly IniConflictOccurrence[] },
   ) {
     super(message);
     this.name = "IniSemanticPatchError";
     this.code = code;
     this.op = options?.op ?? null;
     this.actualValue = options?.actualValue ?? null;
+    this.conflicts = options?.conflicts ?? [];
   }
 }
 
@@ -106,10 +118,14 @@ function assertOpShape(op: IniSemanticOp): void {
       op,
     });
   }
-  if (!Number.isFinite(op.occurrence) || op.occurrence < 0) {
-    throw new IniSemanticPatchError(INI_SEMANTIC_INVALID_CODE, "INI semantic op occurrence must be >= 0", {
-      op,
-    });
+  if (!Number.isInteger(op.occurrence) || op.occurrence < 0 || op.occurrence > 10_000) {
+    throw new IniSemanticPatchError(
+      INI_SEMANTIC_INVALID_CODE,
+      "INI semantic op occurrence must be a whole number from 0 to 10000",
+      {
+        op,
+      },
+    );
   }
   if (op.kind === "set" && typeof op.nextValue !== "string") {
     throw new IniSemanticPatchError(INI_SEMANTIC_INVALID_CODE, "INI Set op requires nextValue", { op });
@@ -155,18 +171,61 @@ function assertUnsetAllowed(op: IniSemanticUnsetOp): void {
   }
 }
 
-function assertExpectedMatches(op: IniSemanticOp, actual: string | null): void {
-  if (actual === op.expectedPreviousValue) {
-    return;
+function listIniKeyValues(text: string, section: string, key: string): string[] {
+  const sectionLower = section.trim().toLowerCase();
+  const keyLower = key.trim().toLowerCase();
+  const values: string[] = [];
+  for (const row of parseIniTextRows(text)) {
+    if (row.section.toLowerCase() !== sectionLower || row.key.toLowerCase() !== keyLower) continue;
+    values.push(row.value);
   }
-  throw new IniSemanticPatchError(
-    INI_SEMANTIC_CONFLICT_CODE,
-    `${op.key} changed outside YARK since this editor loaded. Reload or resolve the conflict before saving.`,
-    { op, actualValue: actual },
-  );
+  return values;
+}
+
+function conflictFromOp(op: IniSemanticOp, actual: string | null, keyValues: readonly string[]): IniConflictOccurrence {
+  const kept = op.kind === "set" ? op.nextValue : op.kind === "check" ? op.expectedPreviousValue : null;
+  return {
+    kind: "scalar",
+    fileKey: op.fileKey,
+    section: op.section,
+    key: op.key,
+    occurrence: op.occurrence,
+    loaded: op.expectedPreviousValue,
+    local: kept,
+    removes: op.kind === "unset" || (op.kind === "check" && op.expectedPreviousValue === null),
+    disk: actual,
+    keyValues,
+  };
+}
+
+/**
+ * Expected-previous mismatches for every op. Ownership and unset policy still throw.
+ * Does not write.
+ */
+export function collectIniSemanticConflicts(
+  payload: ServerIniPayload,
+  ops: readonly IniSemanticOp[],
+): IniConflictOccurrence[] {
+  const conflicts: IniConflictOccurrence[] = [];
+  for (const op of ops) {
+    assertOpShape(op);
+    assertVisuallyMutable(op);
+    if (op.kind === "unset") {
+      assertUnsetAllowed(op);
+    }
+    const text = textForFile(payload, op.fileKey);
+    const actual = getIniTextValueAt(text, op.section, op.key, op.occurrence);
+    const live = listIniKeyValues(text, op.section, op.key);
+    const shifted = op.expectedKeyValues !== undefined && !sameStringList(op.expectedKeyValues, live);
+    if (actual !== op.expectedPreviousValue || shifted) {
+      conflicts.push(conflictFromOp(op, actual, live));
+    }
+  }
+  return conflicts;
 }
 
 function applyOneOpToText(text: string, op: IniSemanticOp): string {
+  if (op.kind === "check") return text;
   if (op.kind === "unset") {
     return removeIniTextValue(text, op.section, op.key, op.occurrence);
   }
@@ -215,19 +274,18 @@ export function applyIniSemanticOps(payload: ServerIniPayload, ops: readonly Ini
     return payload;
   }
 
-  for (const op of ops) {
-    assertOpShape(op);
-    assertVisuallyMutable(op);
-    if (op.kind === "unset") {
-      assertUnsetAllowed(op);
-    }
-    const text = textForFile(payload, op.fileKey);
-    const actual = getIniTextValueAt(text, op.section, op.key, op.occurrence);
-    assertExpectedMatches(op, actual);
+  const conflicts = collectIniSemanticConflicts(payload, ops);
+  if (conflicts.length > 0) {
+    const first = conflicts[0];
+    throw new IniSemanticPatchError(
+      INI_SEMANTIC_CONFLICT_CODE,
+      `${first?.key ?? "INI"} changed outside YARK since this editor loaded. Reload or resolve the conflict before saving.`,
+      { actualValue: first?.disk ?? null, conflicts },
+    );
   }
 
   let next = payload;
-  for (const op of sortOpsForApply(ops)) {
+  for (const op of sortOpsForApply(ops.filter((item) => item.kind !== "check"))) {
     const text = textForFile(next, op.fileKey);
     next = withFileText(next, op.fileKey, applyOneOpToText(text, op));
   }
@@ -324,6 +382,7 @@ export function buildIniSemanticOps(baseline: ServerIniPayload, draft: ServerIni
             occurrence,
             expectedPreviousValue: null,
             nextValue: entry.value,
+            expectedKeyValues: baselineEntries.map((item) => item.value),
           });
           continue;
         }
@@ -337,6 +396,7 @@ export function buildIniSemanticOps(baseline: ServerIniPayload, draft: ServerIni
           occurrence: match.baselineOccurrence,
           expectedPreviousValue: match.value,
           nextValue: entry.value,
+          expectedKeyValues: baselineEntries.map((item) => item.value),
         });
       }
 
@@ -350,6 +410,7 @@ export function buildIniSemanticOps(baseline: ServerIniPayload, draft: ServerIni
           key: baselineEntry.key,
           occurrence: removed.occurrence,
           expectedPreviousValue: removed.value,
+          expectedKeyValues: baselineEntries.map((item) => item.value),
         });
       }
     }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { modals } from "@mantine/modals";
+import type { ConflictKeepSide, IniConflictOccurrence } from "@shared/ini/ini-conflict";
 import { EMPTY_LINE_EDITS, visualLineEditsPending, type VisualLineEdits } from "@shared/ini/visual-line-edits";
 import { iniFingerprintsMatch } from "@shared/ini/ini-fingerprints";
 import type { IniFileKey, IniPreview, ServerIniPayload, ServerIniSnapshot } from "@shared/types";
@@ -9,7 +10,6 @@ import {
   defaultTextForFile,
   filterIniSettingReferences,
   groupSettingReferencesByUiCategory,
-  iniUiSectionCollapseKey,
   lookupDefaultValue,
   parseIniRows,
   sanitizeServerIniPayload,
@@ -28,7 +28,13 @@ import {
   isIniRowUnsaved,
   lookupMatchedBaselineValue,
 } from "./configurationEditorModel";
-import { configurationEditorSaveToastMessage, performConfigurationEditorSave } from "./configurationEditorSave";
+import { applyEditorConflictChoices } from "./configurationEditorConflict";
+import {
+  adoptIniSaveSnapshot,
+  configurationEditorSaveToastMessage,
+  performConfigurationEditorSave,
+} from "./configurationEditorSave";
+import { toggleCollapsedSection } from "./configurationEditorSections";
 import type { ConfigurationEditorApi } from "./configurationEditorTypes";
 import { useConfigurationEditorDiskSync } from "./useConfigurationEditorDiskSync";
 
@@ -42,6 +48,8 @@ export function useConfigurationEditor(options: {
     readonly current: "gameUserSettings" | "gameSettings" | "engramPoints" | "engramOverrides" | "loot" | "gameText";
   };
   onEngramDraftsReset?: (which?: "engrams" | "loot") => void;
+  /** Runs before baseline changes so engram and loot drafts are not rebuilt (#696). */
+  onBeforeConflictBaseline?: (choices: readonly { conflict: IniConflictOccurrence; side: ConflictKeepSide }[]) => void;
 }): ConfigurationEditorApi {
   const { serverId, onRegisterSave } = options;
   const [snapshot, setSnapshot] = useState<ServerIniSnapshot | null>(null);
@@ -51,6 +59,8 @@ export function useConfigurationEditor(options: {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [staleDocument, setStaleDocument] = useState(false);
+  const [conflicts, setConflicts] = useState<IniConflictOccurrence[]>([]);
+  const conflictsRef = useRef(conflicts);
   const [preview, setPreview] = useState<IniPreview | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<IniFilterId>("all");
@@ -70,8 +80,11 @@ export function useConfigurationEditor(options: {
       dirty || visualLineEditsPending(options.engramEditsRef?.current, options.engramBlockedRef?.current === true);
   });
   const payloadRef = useRef(payload);
+  const baselineRef = useRef(baseline);
   useEffect(() => {
     payloadRef.current = payload;
+    baselineRef.current = baseline;
+    conflictsRef.current = conflicts;
   });
   const snapshotRef = useRef(snapshot);
   useEffect(() => {
@@ -267,38 +280,7 @@ export function useConfigurationEditor(options: {
       : lookupMatchedBaselineValue(matchIndex, row.fileKey, row.section, row.key, row.occurrence);
 
   const toggleSection = (sectionName: string) => {
-    setCollapsedSections((prev) => ({
-      ...prev,
-      [sectionName]: !prev[sectionName],
-    }));
-  };
-
-  const setSectionGroupsCollapsed = (category: string, collapsed: boolean) => {
-    const group = groupedRows.find((item) => item.category === category);
-    if (group?.sectionGroups === undefined || group.sectionGroups.length === 0) {
-      return;
-    }
-    setCollapsedSections((prev) => {
-      const next = { ...prev };
-      for (const sectionGroup of group.sectionGroups ?? []) {
-        next[iniUiSectionCollapseKey(group.category, sectionGroup.section)] = collapsed;
-      }
-      return next;
-    });
-  };
-
-  const setAllSectionsCollapsed = (collapsed: boolean) => {
-    const next: Record<string, boolean> = {};
-    for (const group of groupedRows) {
-      if (group.sectionGroups !== undefined && group.sectionGroups.length > 0) {
-        for (const sectionGroup of group.sectionGroups) {
-          next[iniUiSectionCollapseKey(group.category, sectionGroup.section)] = collapsed;
-        }
-      } else {
-        next[group.category] = collapsed;
-      }
-    }
-    setCollapsedSections(next);
+    setCollapsedSections((prev) => toggleCollapsedSection(prev, sectionName));
   };
 
   const saveIni = async (): Promise<boolean> => {
@@ -321,6 +303,7 @@ export function useConfigurationEditor(options: {
         });
         if (!outcome.ok) {
           setError(outcome.error);
+          setConflicts(outcome.conflicts ?? []);
           setStaleDocument(outcome.conflict);
           if (outcome.conflict && iniMode === "visual") {
             // Capture current disk so the outside-changes popover has real details (#667).
@@ -340,17 +323,8 @@ export function useConfigurationEditor(options: {
         setBaseline(savedPayload);
         if (resetEngrams || resetLoot) options.onEngramDraftsReset?.(resetLoot ? "loot" : "engrams");
         diskSync.setExternalChangeDetected(false);
-        setSnapshot((prev) =>
-          prev === null
-            ? prev
-            : {
-                ...prev,
-                payload: savedPayload,
-                fingerprints,
-                pending,
-                pendingUpdatedAt: pending ? (prev.pendingUpdatedAt ?? new Date().toISOString()) : null,
-              },
-        );
+        setConflicts([]);
+        setSnapshot((prev) => adoptIniSaveSnapshot(prev, { payload: savedPayload, fingerprints, pending }));
         publishDirty(draftPayload, savedPayload);
         showOperatorToast(configurationEditorSaveToastMessage(pending, changedCount));
         return true;
@@ -407,9 +381,29 @@ export function useConfigurationEditor(options: {
       setError(next);
       if (next === null) {
         setStaleDocument(false);
+        setConflicts([]);
       }
     },
     staleDocument,
+    conflicts,
+    applyConflictChoices: (choices: readonly { conflict: IniConflictOccurrence; side: ConflictKeepSide }[]) =>
+      applyEditorConflictChoices({
+        serverId,
+        choices,
+        setBusy,
+        setError,
+        setStaleDocument,
+        setConflicts,
+        setPayload,
+        setBaseline,
+        setSnapshot,
+        payloadRef,
+        baselineRef,
+        conflictsRef,
+        publishDirty,
+        clearExternalChange: () => diskSync.setExternalChangeDetected(false),
+        onBeforeConflictBaseline: options.onBeforeConflictBaseline,
+      }),
     externalChangeDetected: diskSync.externalChangeDetected,
     setExternalChangeDetected: diskSync.setExternalChangeDetected,
     externalDiskPayload: diskSync.externalDiskPayload,
@@ -429,6 +423,7 @@ export function useConfigurationEditor(options: {
     unsavedRowCount: unsavedCounts.file,
     pendingQueued,
     groupedRows,
+    visibleRows,
     categoryOptions,
     fileLabel,
     filePath,
@@ -440,8 +435,7 @@ export function useConfigurationEditor(options: {
     resetRowToDefault,
     revertRowToSaved,
     toggleSection,
-    setSectionGroupsCollapsed,
-    setAllSectionsCollapsed,
+    setCollapsedSections,
     saveIni,
     openExternal,
     publishPayloadChange,

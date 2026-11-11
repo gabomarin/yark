@@ -8,6 +8,7 @@ import {
   type IniComplexField,
   type IniComplexTuple,
 } from "./ini-complex-value";
+import { sameStringList, type IniConflictOccurrence } from "./ini-conflict";
 import { appendIniTextValue, parseIniTextRows } from "./ini-text";
 
 export const SUPPLY_CRATE_STALE_CODE = "SUPPLY_CRATE_STALE";
@@ -49,10 +50,12 @@ const ENTRY_FIELDS = new Set([
 
 class SupplyCrateEditError extends Error {
   readonly code = SUPPLY_CRATE_STALE_CODE;
+  readonly conflicts: readonly IniConflictOccurrence[];
 
-  constructor(message: string) {
+  constructor(message: string, conflicts: readonly IniConflictOccurrence[] = []) {
     super(message);
     this.name = "SupplyCrateEditError";
+    this.conflicts = conflicts;
   }
 }
 
@@ -119,6 +122,8 @@ interface SupplyCrateReplace {
   section: string;
   occurrence: number;
   expectedRaw: string;
+  /** Every raw line of this section and key when the edit was built. */
+  expectedKeyRaws?: readonly string[];
   body: SupplyCrateBody;
 }
 
@@ -127,6 +132,8 @@ interface SupplyCrateDelete {
   section: string;
   occurrence: number;
   expectedRaw: string;
+  /** Every raw line of this section and key when the edit was built. */
+  expectedKeyRaws?: readonly string[];
   className: string;
 }
 
@@ -244,6 +251,7 @@ export function reviewSupplyCrateState(
         section: row.section,
         occurrence: row.occurrence,
         expectedRaw: row.expectedRaw,
+        expectedKeyRaws: supplyCrateSectionRaws(rows, row.section),
         className: row.className,
       });
       continue;
@@ -258,6 +266,7 @@ export function reviewSupplyCrateState(
       section: row.section,
       occurrence: row.occurrence,
       expectedRaw: row.expectedRaw,
+      expectedKeyRaws: supplyCrateSectionRaws(rows, row.section),
       body: printableBody(draft),
     });
   }
@@ -277,13 +286,30 @@ export function reviewSupplyCrateState(
  * unchanged. A line whose raw value no longer matches is refused before any
  * splice, so neighbors stay byte-for-byte.
  */
-export function applySupplyCrateEdits(text: string, edits: readonly SupplyCrateEdit[]): string {
-  if (edits.length === 0) return text;
-  assertUnique(edits);
+function assertSupplyCrateBodies(edits: readonly SupplyCrateEdit[]): void {
   for (const edit of edits) {
     if (edit.kind === "delete") continue;
     const issue = supplyCrateBodyIssue(edit.body);
     if (issue !== null) throw new Error(issue);
+  }
+}
+
+export function collectSupplyCrateConflicts(text: string, edits: readonly SupplyCrateEdit[]): IniConflictOccurrence[] {
+  if (edits.length === 0) return [];
+  assertUnique(edits);
+  assertSupplyCrateBodies(edits);
+  const lineEdits = edits.filter((edit): edit is SupplyCrateReplace | SupplyCrateDelete => edit.kind !== "append");
+  return supplyCrateLineConflicts(text, lineEdits);
+}
+
+export function applySupplyCrateEdits(text: string, edits: readonly SupplyCrateEdit[]): string {
+  if (edits.length === 0) return text;
+  const conflicts = collectSupplyCrateConflicts(text, edits);
+  if (conflicts.length > 0) {
+    throw new SupplyCrateEditError(
+      "A crate line changed on disk after it was loaded. Reload from disk, then save again.",
+      conflicts,
+    );
   }
   const lineEdits = edits.filter((edit): edit is SupplyCrateReplace | SupplyCrateDelete => edit.kind !== "append");
   const appends = edits.filter((edit): edit is SupplyCrateAppend => edit.kind === "append");
@@ -293,6 +319,64 @@ export function applySupplyCrateEdits(text: string, edits: readonly SupplyCrateE
     out = appendIniTextValue(out, section, "ConfigOverrideSupplyCrateItems", printBody(edit.body));
   }
   return out;
+}
+
+function supplyCrateSectionRaws(rows: readonly SupplyCrateRow[], section: string): string[] {
+  return rows
+    .filter((item) => item.section.toLowerCase() === section.toLowerCase())
+    .sort((left, right) => left.occurrence - right.occurrence)
+    .map((item) => item.expectedRaw);
+}
+
+function supplyCrateKeyRaws(entries: readonly IniComplexEntry[], section: string): string[] {
+  return entries
+    .filter((item) => item.section.toLowerCase() === section.toLowerCase() && item.key.toLowerCase() === SUPPLY_KEY)
+    .sort((left, right) => left.occurrence - right.occurrence)
+    .map((item) => item.raw);
+}
+
+function supplyCrateKeyShifted(
+  entries: readonly IniComplexEntry[],
+  edit: SupplyCrateReplace | SupplyCrateDelete,
+): boolean {
+  if (edit.expectedKeyRaws === undefined) return false;
+  return !sameStringList(edit.expectedKeyRaws, supplyCrateKeyRaws(entries, edit.section));
+}
+
+function supplyCrateLineConflicts(
+  text: string,
+  edits: readonly (SupplyCrateReplace | SupplyCrateDelete)[],
+): IniConflictOccurrence[] {
+  const entries = parseIniComplexEntries(text, "game");
+  const conflicts: IniConflictOccurrence[] = [];
+  for (const edit of edits) {
+    const entry = entries.find(
+      (item) =>
+        item.section.toLowerCase() === edit.section.toLowerCase() &&
+        item.key.toLowerCase() === SUPPLY_KEY &&
+        item.occurrence === edit.occurrence,
+    );
+    if (
+      entry !== undefined &&
+      entry.raw === edit.expectedRaw &&
+      readOwnedRow(entry) !== null &&
+      !supplyCrateKeyShifted(entries, edit)
+    ) {
+      continue;
+    }
+    conflicts.push({
+      kind: "crate",
+      fileKey: "game",
+      section: edit.section,
+      key: "ConfigOverrideSupplyCrateItems",
+      occurrence: edit.occurrence,
+      loaded: edit.expectedRaw,
+      local: edit.kind === "delete" ? null : printBody(edit.body),
+      removes: edit.kind === "delete",
+      disk: entry?.raw ?? null,
+    });
+  }
+  return conflicts;
 }
 
 function applyLineEdits(text: string, edits: readonly (SupplyCrateReplace | SupplyCrateDelete)[]): string {
@@ -306,7 +390,12 @@ function applyLineEdits(text: string, edits: readonly (SupplyCrateReplace | Supp
         item.occurrence === edit.occurrence,
     );
     const className = edit.kind === "delete" ? edit.className : edit.body.className;
-    if (entry === undefined || entry.raw !== edit.expectedRaw || readOwnedRow(entry) === null) {
+    if (
+      entry === undefined ||
+      entry.raw !== edit.expectedRaw ||
+      readOwnedRow(entry) === null ||
+      supplyCrateKeyShifted(entries, edit)
+    ) {
       throw new SupplyCrateEditError(staleMessage(className));
     }
     if (edit.kind === "delete") {

@@ -18,11 +18,68 @@ const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
 /**
  * Curated changelog for the public site and in-app What's new.
  * Keep in sync with root CHANGELOG.md when cutting releases.
+ * First-time features go under Highlights, not Changed or Fixed.
+ * Name the screen and what the operator can do. Do not mention that a
+ * feature was already on main or hidden in an earlier release.
  * website/src/data/changelog.ts re-exports this (website/ is a separate package).
  *
  * @lintignore
  */
 export const changelog: ChangelogEntry[] = [
+  {
+    version: "0.26.3",
+    date: "2026-11-07",
+    sections: [
+      {
+        title: "Fixed",
+        items: [
+          "After ASA v97, a missing Version=5 in GameUserSettings.ini could wipe rates, RCON, and other settings on Start. YARK now seeds that marker and keeps the required shells so a later boot should not regenerate the file.",
+          "If a Start already wiped your rates or RCON, this build cannot put those values back. Open the server Backups tab, choose INI, and restore a backup from before the wipe (or copy GameUserSettings.ini from that archive into the WindowsServer config folder), then Start again.",
+          "New servers write your session name, ports, and passwords into GameUserSettings.ini instead of the template defaults, and YARK re-applies them if ASA rewrites the file near ready.",
+          "Stop no longer sits on Waiting for server to finish starting for up to 10 minutes when RCON never answers.",
+        ],
+      },
+    ],
+  },
+  {
+    version: "0.26.2",
+    date: "2026-11-04",
+    sections: [
+      {
+        title: "Fixed",
+        items: [
+          "Stop could force-close the server mid-save and roll the map back. It now waits until the process finishes closing.",
+        ],
+      },
+    ],
+  },
+  {
+    version: "0.26.1",
+    date: "2026-11-03",
+    sections: [
+      {
+        title: "Fixed",
+        items: [
+          "Server Mods can add an ASA CurseForge project whose link contains an underscore, such as Speed_Costumes, including a link opened on the Files tab.",
+        ],
+      },
+    ],
+  },
+  {
+    version: "0.26.0",
+    date: "2026-10-28",
+    sections: [
+      {
+        title: "Highlights",
+        items: [
+          "Glassy joins Fluent and Plasma Breeze in Settings → Appearance and the setup assistant.",
+          "Open Game.ini and choose Engrams to set an engram's cost, level, and points per level, or to add an official or custom engram.",
+          "Open Game.ini and choose Loot to change a supply crate by name, see if this map uses it, and roll the drop in the Simulator.",
+          "When GameUserSettings.ini differs from the Server form, copy the file values into YARK or keep YARK's values.",
+        ],
+      },
+    ],
+  },
   {
     version: "0.25.0",
     date: "2026-10-23",

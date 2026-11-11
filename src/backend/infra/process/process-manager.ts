@@ -33,6 +33,8 @@ import {
 } from "./process-graceful-stop";
 import { type OperatorClosedExit } from "./process-stop";
 import { handleManagedProcessExit } from "./process-managed-exit";
+import { captureAsaLogSessionAnchor, readAsaLogSessionExcerpt } from "./asa-log-tail";
+import { readPrimaryWorldSaveStamp } from "./shutdown-confirm";
 import { AsaApiWindowPoller } from "./process-asa-api-loading";
 import {
   appendProcessRuntimeLog,
@@ -98,10 +100,6 @@ export interface ProcessManagerOptions {
 const RCON_HOST = "127.0.0.1";
 const DEFAULT_READY_TIMEOUT_MS = 10 * 60 * 1000;
 const DEFAULT_READY_POLL_MS = 3000;
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 /**
  * Manages ASA server process lifecycle on Windows.
@@ -220,17 +218,18 @@ export class ProcessManager extends EventEmitter {
   }
 
   /**
-   * Overlay live runtime ports onto a saved profile for RCON / conflict checks
-   * while the process is active.
+   * Overlay live runtime ports (and admin password) onto a saved profile for
+   * RCON / conflict checks / post-ready GUS heal while the process is active.
    */
   applyRuntimePorts(profile: ServerProfile): ServerProfile {
-    const ports = this.getRuntimePorts(profile.id);
-    if (ports == null) return profile;
+    const managed = this.processes.get(profile.id);
+    if (managed === undefined) return profile;
     return {
       ...profile,
-      gamePort: ports.gamePort,
-      queryPort: ports.queryPort,
-      rconPort: ports.rconPort,
+      gamePort: managed.runtimePorts.gamePort,
+      queryPort: managed.runtimePorts.queryPort,
+      rconPort: managed.runtimePorts.rconPort,
+      adminPassword: managed.adminPassword,
     };
   }
 
@@ -273,7 +272,7 @@ export class ProcessManager extends EventEmitter {
   }
 
   /**
-   * Safe stop: saveworld via RCON, wait, DoExit, then kill fallback.
+   * Safe stop: SaveWorld, DoExit, wait for Log file closed or process exit, then kill fallback.
    * Prefer {@link InstanceService.stop} for user-initiated stops (pre-stop backup).
    */
   async stop(profile: ServerProfile): Promise<void> {
@@ -311,30 +310,50 @@ export class ProcessManager extends EventEmitter {
   }
 
   /**
-   * Resolves when the server is no longer `"starting"` (ready, gone, error, or
-   * readiness timeout). Stop/quit must not hang forever on a stuck reattach.
+   * When Stop/quit arrives while still `"starting"`, cancel readiness immediately
+   * and treat the process as running so SaveWorld/DoExit can proceed. Waiting for
+   * the full readiness timeout (up to 10 minutes) left Stop stuck on
+   * "Waiting for server to finish starting…" whenever RCON never answered
+   * (port/password drift after an ASA GUS rewrite).
    */
   async waitWhileStarting(serverId: string): Promise<void> {
-    const deadline = Date.now() + this.readyTimeoutMs;
-    while (this.getStatus(serverId).status === "starting") {
-      if (Date.now() >= deadline) {
-        const managed = this.processes.get(serverId);
-        if (managed !== undefined && managed.status === "starting") {
-          // Cancel readiness wait (incl. infinite reattach poll) so quit/stop
-          // can attempt SaveWorld → DoExit instead of hanging forever.
-          managed.readinessGeneration += 1;
-          managed.status = "running";
-          managed.lastError = null;
-          this.appendRuntimeLog(
-            serverId,
-            "warning",
-            "Timed out waiting for starting server before stop; treating as running for graceful stop",
-          );
-          this.emitStatus(serverId);
-        }
-        return;
-      }
-      await delay(this.readyPollMs);
+    const managed = this.processes.get(serverId);
+    if (managed !== undefined && managed.status === "starting") {
+      managed.readinessGeneration += 1;
+      managed.status = "running";
+      managed.lastError = null;
+      this.appendRuntimeLog(
+        serverId,
+        "warning",
+        "Stop requested while starting; skipping remaining readiness wait so graceful stop can run",
+      );
+      this.emitStatus(serverId);
+    }
+  }
+
+  /**
+   * Refresh live RCON port/password used by readiness probes while `"starting"`.
+   * No-op when idle or already running/stopping — launch-time credentials stay
+   * immutable for graceful SaveWorld/DoExit after ready.
+   */
+  syncRuntimeAuth(profile: Pick<ServerProfile, "id" | "gamePort" | "queryPort" | "rconPort" | "adminPassword">): void {
+    const managed = this.processes.get(profile.id);
+    if (managed === undefined || managed.status !== "starting") {
+      return;
+    }
+    const prev = managed.runtimePorts.rconPort;
+    managed.runtimePorts = {
+      gamePort: profile.gamePort,
+      queryPort: profile.queryPort,
+      rconPort: profile.rconPort,
+    };
+    managed.adminPassword = profile.adminPassword;
+    if (prev !== profile.rconPort) {
+      this.appendRuntimeLog(
+        profile.id,
+        "system",
+        `RCON readiness port updated to ${profile.rconPort} (was ${prev}); continuing probes`,
+      );
     }
   }
 
@@ -403,6 +422,9 @@ export class ProcessManager extends EventEmitter {
       },
       clearProcessCheckpoint: (serverId) => this.clearProcessCheckpoint(serverId),
       terminateManaged: (serverId, managed) => this.terminateManaged(serverId, managed),
+      captureLogMark: (installDir) => captureAsaLogSessionAnchor(installDir),
+      readLogSince: (installDir, mark) => readAsaLogSessionExcerpt(installDir, mark, 256 * 1024),
+      readWorldSaveStamp: (profile) => readPrimaryWorldSaveStamp(profile),
     };
   }
 
@@ -649,7 +671,8 @@ export class ProcessManager extends EventEmitter {
     clearProcessRuntimePartials(this.runtimePartials, serverId);
   }
 
-  private appendRuntimeLog(serverId: string, source: string, message: string): void {
+  /** Append a line to the in-memory Runtime log (also used by temporary INI lock watch). */
+  appendRuntimeLog(serverId: string, source: string, message: string): void {
     appendProcessRuntimeLog(this.runtimeLogs, this.knownSecrets, serverId, source, message);
   }
 }

@@ -54,6 +54,7 @@ OverridePlayerLevelEngramPoints=8
         key: "OverridePlayerLevelEngramPoints",
         occurrence: 0,
         expectedPreviousValue: "8",
+        expectedKeyValues: ["8"],
         nextValue: "10",
       },
       {
@@ -63,6 +64,7 @@ OverridePlayerLevelEngramPoints=8
         key: "OverridePlayerLevelEngramPoints",
         occurrence: 1,
         expectedPreviousValue: null,
+        expectedKeyValues: ["8"],
         nextValue: "0",
       },
     ]);

@@ -173,10 +173,24 @@ describe("createClusterModel", () => {
     expect(input.name).toBe("Island");
   });
 
-  it("suggests yark-cluster-1, then yark-cluster-2 when that slug is taken", () => {
-    expect(suggestClusterId()).toBe("yark-cluster-1");
-    expect(suggestClusterId(["yark-cluster-1"])).toBe("yark-cluster-2");
-    expect(suggestClusterId(["YARK-CLUSTER-1", "yark-cluster-2"])).toBe("yark-cluster-3");
+  it("suggests yark-cluster- plus 8 hex digits and skips a taken suffix", () => {
+    const sequence = ["a1b2c3d4", "aaaaaaaa", "bbbbbbbb"];
+    let index = 0;
+    const next = (): string => sequence[index++] ?? "c0ffee00";
+
+    expect(suggestClusterId([], next)).toBe("yark-cluster-a1b2c3d4");
+    expect(suggestClusterId(["yark-cluster-aaaaaaaa"], next)).toBe("yark-cluster-bbbbbbbb");
+
+    const caseSequence = ["AAAAAAAA", "bbbbbbbb"];
+    let caseIndex = 0;
+    expect(suggestClusterId(["YARK-CLUSTER-AAAAAAAA"], () => caseSequence[caseIndex++] ?? "c0ffee00")).toBe(
+      "yark-cluster-bbbbbbbb",
+    );
+    expect(suggestClusterId()).toMatch(/^yark-cluster-[0-9a-f]{8}$/);
+
+    const exhausted = suggestClusterId(["yark-cluster-aaaaaaaa"], () => "AAAAAAAA");
+    expect(exhausted).toMatch(/^yark-cluster-[0-9a-f]{8}$/);
+    expect(exhausted).not.toBe("yark-cluster-aaaaaaaa");
     expect(
       listKnownClusterIds([
         makeServer({ id: "a", name: "A", clusterId: "ember" }),

@@ -136,12 +136,10 @@ describe("InstanceService.updatePatch concurrency (#209)", () => {
   beforeEach(() => {
     db = openDatabase(":memory:");
     repo = new ServerRepository(db);
-    instances = new InstanceService(
-      repo,
-      new EventEmitter() as unknown as ProcessManager,
-      {} as BackupService,
-      new InstanceLockManager(),
-    );
+    const processes = Object.assign(new EventEmitter(), {
+      syncRuntimeAuth: () => undefined,
+    }) as unknown as ProcessManager;
+    instances = new InstanceService(repo, processes, {} as BackupService, new InstanceLockManager());
   });
 
   afterEach(() => {

@@ -8,6 +8,8 @@
  * and that must remain a literal section + MaxPlayers key.
  */
 
+import { isAsaRequiredGusShellSection } from "./asa-gus-overrides";
+
 export interface IniTextRow {
   section: string;
   key: string;
@@ -21,9 +23,13 @@ export const INI_FLAT_SEP = "\u001f";
 
 /**
  * Typical Unreal client / graphics sections.
- * They do not apply on a dedicated server and clutter the editor.
+ * ASA required shells (`ScalabilityGroups`, `ShooterGameUserSettings`, …) are
+ * excluded — they must remain on disk or UE 5.8 / v97+ regenerates the whole GUS.
  */
 function isClientIniSection(section: string): boolean {
+  if (isAsaRequiredGusShellSection(section)) {
+    return false;
+  }
   const s = section.trim().toLowerCase();
   if (s.length === 0 || s === INI_ROOT_SECTION) {
     return false;
@@ -63,15 +69,23 @@ export function isClientIniKey(key: string): boolean {
   return false;
 }
 
-/** True if the row should not be shown/persisted in the dedicated manager. */
+/**
+ * True if the row is client noise for persistence (strip) or editor hide.
+ * ASA required shell sections are never noise for strip — see
+ * {@link shouldStripClientIniRow}; the dedicated editor still hides them via
+ * {@link isClientIniNoise}.
+ */
 export function isClientIniNoise(section: string, key: string): boolean {
+  if (isAsaRequiredGusShellSection(section)) {
+    return true;
+  }
   if (isClientIniSection(section)) {
     return true;
   }
   if (isClientIniKey(key)) {
     return true;
   }
-  // [Startup] often mixes client upscaling/frame-gen flags.
+  // [Startup] is a required shell; other stray startup-like keys elsewhere.
   const s = section.trim().toLowerCase();
   if (s === "startup") {
     const k = key.toLowerCase();
@@ -82,11 +96,28 @@ export function isClientIniNoise(section: string, key: string): boolean {
   return false;
 }
 
+/** Whether sanitize may drop this assignment (required ASA shells are kept). */
+function shouldStripClientIniRow(section: string, key: string): boolean {
+  if (isAsaRequiredGusShellSection(section)) {
+    return false;
+  }
+  return isClientIniNoise(section, key);
+}
+
+/**
+ * When true, {@link sanitizeServerIniPayload} strips client noise except ASA
+ * required GUS shell sections (`ScalabilityGroups`, `ShooterGameUserSettings`, …).
+ */
+const STRIP_CLIENT_INI_NOISE = true;
+
 /**
  * Removes client lines/sections, preserving the rest of the file.
- * Also drops sections that become empty after cleanup.
+ * Keeps ASA required shell sections intact. Drops other sections that become empty.
  */
 export function stripClientIniKeys(text: string): string {
+  if (!STRIP_CLIENT_INI_NOISE) {
+    return text;
+  }
   const lines = text.split(/\r?\n/);
   const kept: string[] = [];
   let sectionHeader: string | null = null;
@@ -94,12 +125,13 @@ export function stripClientIniKeys(text: string): string {
   let sectionBody: string[] = [];
   let sectionKeyCount = 0;
   let skipSection = false;
+  let requiredShell = false;
 
   const commitSection = () => {
     if (sectionHeader === null) {
       return;
     }
-    if (!skipSection && sectionKeyCount > 0) {
+    if (!skipSection && (sectionKeyCount > 0 || requiredShell)) {
       kept.push(sectionHeader, ...sectionBody);
     }
     sectionHeader = null;
@@ -107,6 +139,7 @@ export function stripClientIniKeys(text: string): string {
     sectionBody = [];
     sectionKeyCount = 0;
     skipSection = false;
+    requiredShell = false;
   };
 
   for (const line of lines) {
@@ -117,7 +150,8 @@ export function stripClientIniKeys(text: string): string {
       commitSection();
       sectionHeader = line;
       sectionName = (sectionMatch[1] ?? "").trim();
-      skipSection = isClientIniSection(sectionName);
+      requiredShell = isAsaRequiredGusShellSection(sectionName);
+      skipSection = !requiredShell && isClientIniSection(sectionName);
       continue;
     }
 
@@ -130,7 +164,7 @@ export function stripClientIniKeys(text: string): string {
 
     if (isAssignment) {
       const key = trimmed.slice(0, eq).trim();
-      if (isClientIniNoise(sectionName, key)) {
+      if (shouldStripClientIniRow(sectionName, key)) {
         continue;
       }
       if (sectionHeader !== null) {
@@ -162,6 +196,12 @@ export function sanitizeServerIniPayload(payload: { gameUserSettings: string; ga
   gameUserSettings: string;
   game: string;
 } {
+  if (!STRIP_CLIENT_INI_NOISE) {
+    return {
+      gameUserSettings: payload.gameUserSettings,
+      game: payload.game,
+    };
+  }
   return {
     gameUserSettings: stripClientIniKeys(payload.gameUserSettings),
     game: stripClientIniKeys(payload.game),

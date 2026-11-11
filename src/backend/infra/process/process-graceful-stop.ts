@@ -1,12 +1,22 @@
 import { type ChildProcess } from "node:child_process";
 import type { ServerProfile } from "@shared/types";
+import type { AsaLogSessionAnchor } from "./asa-log-tail";
 import type { ProcessStartManaged } from "./process-start";
-import { EXIT_WAIT_MS, SAVE_WAIT_MS } from "./process-stop";
+import {
+  assessShutdownLog,
+  delay,
+  describeWorldSaveCheck,
+  waitForCleanShutdown,
+  type ShutdownWaitResult,
+  type WorldSaveStamp,
+} from "./shutdown-confirm";
 
 export interface GracefulStopHandle {
   readonly serverId: string;
   /** Opaque identity of the exact child that acknowledged SaveWorld. */
   readonly identity: object;
+  /** `{map}.ark` mtime taken before SaveWorld. Null when the file was missing. */
+  readonly worldSave: WorldSaveStamp | null;
 }
 
 export type BeginGracefulStopResult =
@@ -26,10 +36,106 @@ export interface ProcessGracefulStopHost {
   deleteManaged(serverId: string): void;
   clearProcessCheckpoint(serverId: string): void;
   terminateManaged(serverId: string, managed: ProcessStartManaged): Promise<void>;
+  /** Byte offset of ShooterGame.log so a wait ignores older save lines. */
+  captureLogMark(installDir: string): AsaLogSessionAnchor;
+  /** ShooterGame.log bytes written after `mark`. */
+  readLogSince(installDir: string, mark: AsaLogSessionAnchor): string;
+  /** `{map}.ark` mtime, or null when that file is not on disk. */
+  readWorldSaveStamp(profile: ServerProfile): WorldSaveStamp | null;
+  /** Test hook. Production uses real time. */
+  sleep?(ms: number): Promise<void>;
+  /** Test hook. Production uses `Date.now`. */
+  now?(): number;
 }
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function clock(host: ProcessGracefulStopHost): { sleep: (ms: number) => Promise<void>; now: () => number } {
+  return {
+    sleep: host.sleep ?? delay,
+    now: host.now ?? Date.now,
+  };
+}
+
+function sameProcess(host: ProcessGracefulStopHost, profile: ServerProfile, managed: ProcessStartManaged): boolean {
+  return host.getManaged(profile.id) === managed && managed.child.exitCode === null;
+}
+
+function releaseIfCurrent(host: ProcessGracefulStopHost, profile: ServerProfile, managed: ProcessStartManaged): void {
+  if (host.getManaged(profile.id) !== managed) return;
+  host.stopManagedCapture(profile.id, managed);
+  host.deleteManaged(profile.id);
+  host.clearProcessCheckpoint(profile.id);
+  host.emitStatus(profile.id);
+}
+
+async function forceKill(
+  host: ProcessGracefulStopHost,
+  profile: ServerProfile,
+  managed: ProcessStartManaged,
+  message: string,
+): Promise<"killed" | "stuck"> {
+  host.appendRuntimeLog(profile.id, "warning", message);
+  await host.terminateManaged(profile.id, managed);
+  let exited = await host.waitForExit(managed.child, 5000);
+  if (!exited && host.getManaged(profile.id) === managed) {
+    await host.terminateManaged(profile.id, managed);
+    exited = await host.waitForExit(managed.child, 5000);
+  }
+  return exited || host.getManaged(profile.id) !== managed ? "killed" : "stuck";
+}
+
+function stuck(
+  host: ProcessGracefulStopHost,
+  profile: ServerProfile,
+  managed: ProcessStartManaged,
+  message: string,
+): never {
+  managed.status = "error";
+  managed.lastError = message;
+  host.appendRuntimeLog(profile.id, "error", message);
+  host.emitStatus(profile.id);
+  throw new Error(message);
+}
+
+function reportWorldSave(host: ProcessGracefulStopHost, profile: ServerProfile, before: WorldSaveStamp | null): void {
+  const check = describeWorldSaveCheck(before, host.readWorldSaveStamp(profile));
+  host.appendRuntimeLog(profile.id, check.source, check.message);
+}
+
+/**
+ * DoExit saves and exits. `Closing by request` means shutdown started.
+ * Force-kill only if the process is still alive after the shutdown cap
+ * and ShooterGame.log never prints `Log file closed`.
+ */
+async function shutdownAfterDoExit(
+  host: ProcessGracefulStopHost,
+  profile: ServerProfile,
+  managed: ProcessStartManaged,
+  worldSave: WorldSaveStamp | null,
+): Promise<"exited" | "killed" | "stuck"> {
+  const mark = host.captureLogMark(profile.installDir);
+  try {
+    await host.executeRcon(profile, "DoExit");
+  } catch {
+    reportWorldSave(host, profile, worldSave);
+    return forceKill(host, profile, managed, "RCON DoExit failed; applying kill");
+  }
+
+  host.appendRuntimeLog(profile.id, "system", "Waiting for the server to finish closing");
+  const readLog = (): string => host.readLogSince(profile.installDir, mark);
+  const outcome: ShutdownWaitResult = await waitForCleanShutdown({
+    ...clock(host),
+    readLog,
+    hasExited: () => !sameProcess(host, profile, managed),
+  });
+  if (outcome === "timeout") {
+    reportWorldSave(host, profile, worldSave);
+    return forceKill(host, profile, managed, "Server did not finish closing (no Log file closed); forcing shutdown");
+  }
+  if (assessShutdownLog(readLog()).logFileClosed) {
+    host.appendRuntimeLog(profile.id, "system", "ShooterGame.log closed");
+  }
+  reportWorldSave(host, profile, worldSave);
+  return "exited";
 }
 
 export async function beginGracefulStop(
@@ -43,52 +149,24 @@ export async function beginGracefulStop(
   host.appendRuntimeLog(profile.id, "system", "Attempting safe stop via RCON");
   host.emitStatus(profile.id);
 
+  const handle: GracefulStopHandle = {
+    serverId: profile.id,
+    identity: managed.identity,
+    worldSave: host.readWorldSaveStamp(profile),
+  };
   try {
     await host.executeRcon(profile, "SaveWorld");
-    await delay(SAVE_WAIT_MS);
-    return {
-      phase: "saved",
-      handle: { serverId: profile.id, identity: managed.identity },
-    };
+    host.appendRuntimeLog(profile.id, "system", "SaveWorld sent");
+    return { phase: "saved", handle };
   } catch {
     // Prefer DoExit before force-kill when SaveWorld is unavailable (e.g. still
     // bootstrapping after a readiness wait timeout on quit Stop).
     host.appendRuntimeLog(profile.id, "warning", "RCON SaveWorld unavailable; attempting DoExit before kill");
-    try {
-      await host.executeRcon(profile, "DoExit");
-      const exitedAfterDoExit = await host.waitForExit(managed.child, EXIT_WAIT_MS);
-      if (exitedAfterDoExit) {
-        if (host.getManaged(profile.id) === managed) {
-          host.stopManagedCapture(profile.id, managed);
-          host.deleteManaged(profile.id);
-          host.clearProcessCheckpoint(profile.id);
-          host.emitStatus(profile.id);
-        }
-        return { phase: "killed", handle: null };
-      }
-    } catch {
-      host.appendRuntimeLog(profile.id, "warning", "RCON DoExit unavailable; applying kill");
+    const outcome = await shutdownAfterDoExit(host, profile, managed, handle.worldSave);
+    if (outcome === "stuck") {
+      stuck(host, profile, managed, "Could not terminate process after RCON SaveWorld failed");
     }
-
-    await host.terminateManaged(profile.id, managed);
-    let exited = await host.waitForExit(managed.child, EXIT_WAIT_MS);
-    if (!exited && host.getManaged(profile.id) === managed) {
-      await host.terminateManaged(profile.id, managed);
-      exited = await host.waitForExit(managed.child, 5000);
-    }
-    if (!exited && host.getManaged(profile.id) === managed) {
-      managed.status = "error";
-      managed.lastError = "Could not terminate process after RCON SaveWorld failed";
-      host.appendRuntimeLog(profile.id, "error", managed.lastError);
-      host.emitStatus(profile.id);
-      throw new Error(managed.lastError);
-    }
-    if (host.getManaged(profile.id) === managed) {
-      host.stopManagedCapture(profile.id, managed);
-      host.deleteManaged(profile.id);
-      host.clearProcessCheckpoint(profile.id);
-      host.emitStatus(profile.id);
-    }
+    releaseIfCurrent(host, profile, managed);
     return { phase: "killed", handle: null };
   }
 }
@@ -104,30 +182,10 @@ export async function finishGracefulStop(
     return "replaced";
   }
 
-  try {
-    await host.executeRcon(profile, "DoExit");
-  } catch {
-    host.appendRuntimeLog(profile.id, "warning", "RCON DoExit failed; applying kill");
-    await host.terminateManaged(profile.id, managed);
+  const outcome = await shutdownAfterDoExit(host, profile, managed, handle.worldSave);
+  if (outcome === "stuck") {
+    stuck(host, profile, managed, "Could not terminate process after RCON DoExit");
   }
-
-  const exited = await host.waitForExit(managed.child, EXIT_WAIT_MS);
-  if (!exited) {
-    await host.terminateManaged(profile.id, managed);
-    const forcedExit = await host.waitForExit(managed.child, 5000);
-    if (!forcedExit && host.getManaged(profile.id) === managed) {
-      managed.status = "error";
-      managed.lastError = "Could not terminate process after RCON DoExit";
-      host.appendRuntimeLog(profile.id, "error", managed.lastError);
-      host.emitStatus(profile.id);
-      throw new Error(managed.lastError);
-    }
-  }
-  if (host.getManaged(profile.id) === managed) {
-    host.stopManagedCapture(profile.id, managed);
-    host.deleteManaged(profile.id);
-    host.clearProcessCheckpoint(profile.id);
-    host.emitStatus(profile.id);
-  }
+  releaseIfCurrent(host, profile, managed);
   return "stopped";
 }

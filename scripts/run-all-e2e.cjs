@@ -5,7 +5,7 @@
  *
  * Skips visual-only helpers (visual-downloads.cjs).
  * Real-host suites (crash-reattach, clone-copy-real) may take a long time.
- * File-write suites (ini-visual, cluster-tribute, backup-restore, hosted-resources)
+ * File-write suites (ini-visual, ini-conflict, cluster-tribute, backup-restore, hosted-resources)
  * run on Windows only.
  */
 const { execSync } = require("node:child_process");
@@ -18,6 +18,7 @@ const windowsFileSuites =
   process.platform === "win32"
     ? [
         { name: "e2e:ini-visual", cmd: "npm run e2e:ini-visual" },
+        { name: "e2e:ini-conflict", cmd: "npm run e2e:ini-conflict" },
         { name: "e2e:cluster-tribute", cmd: "npm run e2e:cluster-tribute" },
         { name: "e2e:backup-restore", cmd: "npm run e2e:backup-restore" },
         { name: "e2e:hosted-resources", cmd: "npm run e2e:hosted-resources" },
@@ -25,7 +26,9 @@ const windowsFileSuites =
     : [];
 
 if (windowsFileSuites.length === 0) {
-  console.log("Skipping Windows file-write E2E: ini-visual, cluster-tribute, backup-restore, hosted-resources.");
+  console.log(
+    "Skipping Windows file-write E2E: ini-visual, ini-conflict, cluster-tribute, backup-restore, hosted-resources.",
+  );
 }
 
 const tests = [

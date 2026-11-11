@@ -47,6 +47,7 @@ function makeProcesses(profile: ServerProfile, overrides: Record<string, unknown
     isActive: vi.fn(() => true),
     getStatus: vi.fn(() => ({ status: "running" })),
     waitWhileStarting: vi.fn(async () => undefined),
+    syncRuntimeAuth: vi.fn(),
     applyRuntimePorts: vi.fn((p: ServerProfile) => p),
     beginGracefulStop: vi.fn(async () => ({
       phase: "saved" as const,

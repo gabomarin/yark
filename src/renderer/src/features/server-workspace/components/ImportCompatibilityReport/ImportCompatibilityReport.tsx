@@ -30,6 +30,15 @@ export function ImportCompatibilityReport(props: {
   const [actionError, setActionError] = useState<string | null>(null);
   /** Hide after a choice. Profile save writes the INI without waiting, so a re-read can still see the old file. */
   const [resolved, setResolved] = useState(choiceSettled);
+  /** Bumps when live GUS is healed after ready so the banner re-reads disk. */
+  const [iniEpoch, setIniEpoch] = useState(0);
+
+  useEffect(() => {
+    return window.api.onServerIniChanged((event) => {
+      if (event.serverId !== server.id) return;
+      setIniEpoch((value) => value + 1);
+    });
+  }, [server.id]);
 
   useEffect(() => {
     if (choiceSettled) {
@@ -71,6 +80,7 @@ export function ImportCompatibilityReport(props: {
     server.adminPassword,
     server.serverPassword,
     choiceSettled,
+    iniEpoch,
   ]);
 
   if (resolved || report === null || report.replacements.length === 0) return null;

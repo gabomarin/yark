@@ -1,6 +1,6 @@
 {
   "name": "yark-server-manager",
-  "version": "0.25.0",
+  "version": "0.26.3",
   "description": "YARK server manager — local ARK Survival Ascended dedicated server manager for Windows",
   "homepage": "https://getyark.com",
   "main": "out/main/index.js",
@@ -56,6 +56,7 @@
     "e2e:clone-copy": "node scripts/e2e-clone-copy.cjs",
     "e2e:clone-copy-real": "node scripts/e2e-clone-copy-real.cjs",
     "e2e:ini-visual": "node scripts/e2e-ini-visual.cjs",
+    "e2e:ini-conflict": "node scripts/e2e-ini-conflict.cjs",
     "e2e:cluster-tribute": "node scripts/e2e-cluster-tribute.cjs",
     "e2e:backup-restore": "node scripts/e2e-backup-restore.cjs",
     "e2e:hosted-resources": "node scripts/e2e-hosted-resources.cjs",

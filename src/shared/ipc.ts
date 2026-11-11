@@ -1,3 +1,4 @@
+import type { IniConflictOccurrence } from "./ini/ini-conflict";
 import type { NamedEngramEdit } from "./ini/engram-named-entries";
 import type { SupplyCrateEdit } from "./ini/supply-crate-entries";
 import type { IniSemanticOp } from "./ini/ini-semantic-ops";
@@ -460,7 +461,15 @@ export type OsNotificationOpenPush =
   | { kind: "yarkUpdate" };
 
 /** Normalized result of IPC operations. Optional `code` for UI branching (#665). */
-export type IpcResult<T> = { ok: true; data: T } | { ok: false; error: string; code?: string };
+export type IpcResult<T> =
+  | { ok: true; data: T }
+  | {
+      ok: false;
+      error: string;
+      code?: string;
+      /** Overlapping INI values when Save wrote nothing (#696). */
+      conflicts?: IniConflictOccurrence[];
+    };
 
 /** API exposed to the renderer via contextBridge. */
 export interface RendererApi {
