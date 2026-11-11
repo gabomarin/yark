@@ -22,6 +22,17 @@ export function iniUiSectionCollapseKey(category: AsaUiCategoryId, section: stri
   return `${category}\u001f${section}`;
 }
 
+/** Visual sort for the INI settings table. Display only; save keeps file order. */
+export type IniSettingsSort = "unsorted" | "asInFile" | "alphabetical";
+
+/** Order of keys inside a UI category. `file` keeps the order lines were read. */
+export type IniCategoryRowOrder = "name" | "file";
+
+/** Collapse-state key for a section shown in file order. */
+export function iniFileOrderCollapseKey(section: string): string {
+  return `file\u001f${section}`;
+}
+
 export interface IniUiSectionGroup<T extends IniGroupingRow = IniGroupingRow> {
   section: string;
   label: string;
@@ -45,6 +56,25 @@ function compareIniRowsBySectionThenKey(
 
 function shouldNestByIniSection(category: AsaUiCategoryId, rows: IniGroupingRow[]): boolean {
   return category === "other" && rows.length > 0;
+}
+
+function buildIniSectionGroupsInEncounterOrder<T extends IniGroupingRow>(rows: T[]): IniUiSectionGroup<T>[] {
+  const buckets = new Map<string, T[]>();
+  const order: string[] = [];
+  for (const row of rows) {
+    const list = buckets.get(row.section);
+    if (list !== undefined) {
+      list.push(row);
+    } else {
+      order.push(row.section);
+      buckets.set(row.section, [row]);
+    }
+  }
+  return order.map((section) => ({
+    section,
+    label: sectionShortName(section),
+    rows: buckets.get(section) ?? [],
+  }));
 }
 
 function buildIniSectionGroups<T extends IniGroupingRow>(rows: T[]): IniUiSectionGroup<T>[] {
@@ -76,6 +106,32 @@ function sortCategoryRows<T extends IniGroupingRow>(category: AsaUiCategoryId, l
     return;
   }
   list.sort((a, b) => a.key.localeCompare(b.key) || a.section.localeCompare(b.section));
+}
+
+/**
+ * Sections in first-seen order, keys in input order.
+ * `rows` must already be file order. Do not write this arrangement back to the INI.
+ */
+export function groupSettingReferencesByFileOrder<T extends IniGroupingRow>(
+  rows: readonly T[],
+): IniUiSectionGroup<T>[] {
+  const buckets = new Map<string, T[]>();
+  const order: string[] = [];
+  for (const row of rows) {
+    const list = buckets.get(row.section);
+    if (list !== undefined) {
+      list.push(row);
+    } else {
+      order.push(row.section);
+      buckets.set(row.section, [row]);
+    }
+  }
+
+  return order.map((section) => ({
+    section,
+    label: section === "(root)" ? "Top of file" : section,
+    rows: buckets.get(section) ?? [],
+  }));
 }
 
 /** Group by UI category (heuristic JSON), in taxonomy order. */
@@ -114,7 +170,10 @@ export function groupRowsByUiCategory<T extends IniGroupingRow>(
   return groups;
 }
 
-export function groupSettingReferencesByUiCategory<T extends IniGroupingReference>(rows: T[]): IniUiCategoryGroup<T>[] {
+export function groupSettingReferencesByUiCategory<T extends IniGroupingReference>(
+  rows: T[],
+  order: IniCategoryRowOrder = "name",
+): IniUiCategoryGroup<T>[] {
   const buckets = new Map<AsaUiCategoryId, T[]>();
   for (const row of rows) {
     const category = resolveAsaUiCategory(row.fileKey, row.section, row.key);
@@ -131,12 +190,12 @@ export function groupSettingReferencesByUiCategory<T extends IniGroupingReferenc
     if (list === undefined || list.length === 0) {
       return [];
     }
-    if (definition.id === "other") {
+    if (order === "name" && definition.id === "other") {
       list.sort(
         (a, b) =>
           a.section.localeCompare(b.section) || a.key.localeCompare(b.key) || a.fileKey.localeCompare(b.fileKey),
       );
-    } else {
+    } else if (order === "name") {
       list.sort(
         (a, b) =>
           a.key.localeCompare(b.key) || a.fileKey.localeCompare(b.fileKey) || a.section.localeCompare(b.section),
@@ -148,7 +207,8 @@ export function groupSettingReferencesByUiCategory<T extends IniGroupingReferenc
       rows: list,
     };
     if (shouldNestByIniSection(definition.id, list)) {
-      group.sectionGroups = buildIniSectionGroups(list);
+      group.sectionGroups =
+        order === "file" ? buildIniSectionGroupsInEncounterOrder(list) : buildIniSectionGroups(list);
     }
     return [group];
   });

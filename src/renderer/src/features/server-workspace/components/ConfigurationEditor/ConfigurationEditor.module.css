@@ -154,12 +154,115 @@
 }
 
 .filterBar {
-  flex-wrap: nowrap;
+  width: 100%;
+  flex-wrap: wrap;
+  container-type: inline-size;
 }
 
-.categorySelect {
-  width: 240px;
-  flex-shrink: 0;
+.filterControls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex: 0 1 auto;
+  gap: var(--group-gap, var(--mantine-spacing-sm));
+  max-width: 100%;
+  min-width: 0;
+}
+
+.fieldControl {
+  width: 180px;
+  max-width: 100%;
+  flex: 0 0 auto;
+}
+
+.fieldControl :global(.mantine-Input-wrapper) {
+  width: 100%;
+}
+
+.sortOption {
+  display: block;
+  width: 100%;
+}
+
+.filterActions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--app-space-xs);
+  flex: 0 0 auto;
+}
+
+/*
+ * 960px is --app-layout-compact. The query uses the length directly: a var()
+ * here did not match, so the narrow pane never picked up the wrap.
+ */
+@container (max-width: 960px) {
+  .search {
+    flex: 1 0 100%;
+    min-width: 0;
+  }
+
+  .filterControls {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+}
+
+.sectionHeaderRow {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.sectionHeaderRow > button {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+}
+
+.addSettingBar {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: var(--app-space-xs);
+}
+
+.addSettingForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-sm);
+  margin-bottom: var(--app-space-xs);
+  padding: var(--app-space-sm);
+  border: 1px solid var(--app-color-border-subtle);
+  border-radius: var(--app-radius-md);
+  background: var(--app-color-panel);
+  container-type: inline-size;
+}
+
+.addSettingFields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--app-space-sm);
+  align-items: start;
+}
+
+/* 960px is --app-layout-compact. A var() in a container query does not match. */
+@container (max-width: 960px) {
+  .addSettingFields {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rowJustAdded {
+  animation: iniRowAdded 1.6s ease;
+}
+
+@keyframes iniRowAdded {
+  from {
+    background: var(--mantine-color-blue-light);
+  }
+  to {
+    background: var(--app-color-panel);
+  }
 }
 
 .tableWrap {
@@ -228,6 +331,31 @@
   align-items: center;
   gap: var(--app-space-sm);
   width: 100%;
+  container-type: inline-size;
+}
+
+.fileActions {
+  display: flex;
+  margin-inline-start: auto;
+}
+
+.fileActionsIcon {
+  display: none;
+}
+
+.tooltipTarget {
+  display: inline-flex;
+}
+
+/* 960px is --app-layout-compact. A var() in a container query does not match. */
+@container (max-width: 960px) {
+  .fileActionsLabel {
+    display: none;
+  }
+
+  .fileActionsIcon {
+    display: block;
+  }
 }
 
 .gameViewRow {
@@ -368,6 +496,7 @@
   resize: none;
 }
 
+/* 1100px is --app-layout-regular. A var() in a media query does not match. */
 @media (max-width: 1100px) {
   .root {
     grid-template-columns: 1fr;
@@ -378,17 +507,5 @@
     flex-wrap: wrap;
     border-right: none;
     border-bottom: 1px solid var(--app-color-border);
-  }
-}
-
-@media (max-width: 760px) {
-  .filterBar {
-    flex-wrap: wrap;
-  }
-
-  .search,
-  .categorySelect {
-    width: 100%;
-    flex-basis: 100%;
   }
 }

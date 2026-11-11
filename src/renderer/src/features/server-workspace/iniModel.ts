@@ -15,10 +15,12 @@ import {
 } from "@shared/ini/ini-text";
 import { isVisuallyEditableIniSetting } from "@shared/ini/ini-setting-decisions";
 
-export type { IniUiCategoryGroup, IniUiSectionGroup } from "./iniUiCategoryGrouping";
+export type { IniSettingsSort, IniUiCategoryGroup, IniUiSectionGroup } from "./iniUiCategoryGrouping";
 export {
   groupRowsByUiCategory,
+  groupSettingReferencesByFileOrder,
   groupSettingReferencesByUiCategory,
+  iniFileOrderCollapseKey,
   iniUiSectionCollapseKey,
 } from "./iniUiCategoryGrouping";
 

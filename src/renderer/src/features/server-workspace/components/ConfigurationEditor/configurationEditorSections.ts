@@ -1,4 +1,4 @@
-import { iniUiSectionCollapseKey, type IniUiCategoryGroup } from "../../iniModel";
+import { iniFileOrderCollapseKey, iniUiSectionCollapseKey, type IniUiCategoryGroup } from "../../iniModel";
 
 export function toggleCollapsedSection(prev: Record<string, boolean>, sectionName: string): Record<string, boolean> {
   return { ...prev, [sectionName]: !prev[sectionName] };
@@ -32,6 +32,17 @@ export function collapseAllSections(
     } else {
       next[group.category] = collapsed;
     }
+  }
+  return next;
+}
+
+export function collapseFileOrderSections(
+  sections: readonly { section: string }[],
+  collapsed: boolean,
+): Record<string, boolean> {
+  const next: Record<string, boolean> = {};
+  for (const sectionGroup of sections) {
+    next[iniFileOrderCollapseKey(sectionGroup.section)] = collapsed;
   }
   return next;
 }

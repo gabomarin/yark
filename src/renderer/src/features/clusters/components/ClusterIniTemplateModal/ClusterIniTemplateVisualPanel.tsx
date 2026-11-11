@@ -6,7 +6,7 @@ import {
   CaretRight,
   FunnelSimple,
 } from "@phosphor-icons/react";
-import { ActionIcon, Badge, Button, Group, Select, Text, Textarea, Tooltip } from "@mantine/core";
+import { ActionIcon, Badge, Button, Group, Text, Textarea, Tooltip } from "@mantine/core";
 import type { IniFileKey, ServerIniPayload } from "@shared/types";
 import { isCatalogOwnedIniKey, isVisuallyEditableIniSetting } from "@shared/ini/ini-setting-decisions";
 import {
@@ -31,6 +31,7 @@ import {
 import { useMemo, useState } from "react";
 import chrome from "@ui/IniEditorChrome/IniEditorChrome.module.css";
 import { SearchField } from "@ui/SearchField/SearchField";
+import { SelectField } from "@ui/SelectField/SelectField";
 import { ClusterIniTemplateSettingRow } from "./ClusterIniTemplateSettingRow";
 import classes from "./ClusterIniTemplateModal.module.css";
 
@@ -132,7 +133,7 @@ export function ClusterIniTemplateVisualPanel(props: Props): ReactElement {
           value={search}
           onChange={setSearch}
         />
-        <Select
+        <SelectField
           style={{ width: 240 }}
           aria-label="Filter by category"
           leftSection={<FunnelSimple size={15} />}
