@@ -222,6 +222,7 @@ export const IPC = {
   backupsRestore: "backups:restore",
   backupsGetPolicy: "backups:get-policy",
   backupsSetPolicy: "backups:set-policy",
+  backupsSetProtection: "backups:set-protection",
   maintenanceGetPolicy: "maintenance:get-policy",
   maintenanceSetPolicy: "maintenance:set-policy",
   maintenanceClearSchedulePause: "maintenance:clear-schedule-pause",
@@ -711,6 +712,12 @@ export interface RendererApi {
     serverId: string,
     policy: Omit<BackupPolicy, "serverId" | "updatedAt">,
   ): Promise<IpcResult<BackupPolicy>>;
+  setBackupProtection(
+    serverId: string,
+    backupId: string,
+    isProtected: boolean,
+    operatorNote: string,
+  ): Promise<IpcResult<BackupRecord>>;
   getMaintenancePolicy(serverId: string): Promise<IpcResult<MaintenancePolicyStatus>>;
   setMaintenancePolicy(
     serverId: string,

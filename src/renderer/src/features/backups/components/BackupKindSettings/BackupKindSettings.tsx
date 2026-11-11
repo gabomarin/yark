@@ -112,6 +112,18 @@ export function BackupKindSettings(props: Props): ReactElement {
               className={classes.policyField}
             />
           </Group>
+          <AppSwitch
+            size="sm"
+            label="Protect new manual backups"
+            checked={draftPolicy.protectNewManualWorld}
+            disabled={busy || !installReady}
+            onCheckedChange={(checked) =>
+              onDraftPolicyChange({
+                ...draftPolicy,
+                protectNewManualWorld: checked,
+              })
+            }
+          />
         </Group>
       )}
 
@@ -139,7 +151,7 @@ export function BackupKindSettings(props: Props): ReactElement {
       )}
 
       {settingsOpen && activeKind === "ini" && (
-        <Group gap="xs" align="center" wrap="nowrap" mt={4} className={classes.inlineRetain}>
+        <Group gap="xs" align="center" wrap="wrap" mt={4} className={classes.inlineRetain}>
           <Text size="xs" component="label" htmlFor="backup-retain-ini">
             Keep last INI
           </Text>
@@ -157,6 +169,18 @@ export function BackupKindSettings(props: Props): ReactElement {
               })
             }
             className={classes.compactRetain}
+          />
+          <AppSwitch
+            size="sm"
+            label="Protect new manual backups"
+            checked={draftPolicy.protectNewManualIni}
+            disabled={busy || !installReady}
+            onCheckedChange={(checked) =>
+              onDraftPolicyChange({
+                ...draftPolicy,
+                protectNewManualIni: checked,
+              })
+            }
           />
         </Group>
       )}

@@ -1,6 +1,13 @@
 import { randomUUID } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
-import type { BackupKind, BackupPolicy, BackupRecord, BackupStatus, BackupType } from "@shared/types";
+import {
+  BACKUP_OPERATOR_NOTE_MAX_LENGTH,
+  type BackupKind,
+  type BackupPolicy,
+  type BackupRecord,
+  type BackupStatus,
+  type BackupType,
+} from "@shared/types";
 
 const DEFAULT_INTERVAL_MINUTES = 60;
 const DEFAULT_RETAIN_COUNT_WORLD = 20;
@@ -20,6 +27,8 @@ interface BackupRow {
   completed_at: string | null;
   notes: string | null;
   map_token: string | null;
+  is_protected: number | null;
+  operator_note: string | null;
 }
 
 export interface RestoreHistoryRecord {
@@ -51,7 +60,14 @@ interface PolicyRow {
   retain_count_ini: number | null;
   retain_days: number;
   backup_dir: string | null;
+  protect_new_manual_world: number | null;
+  protect_new_manual_ini: number | null;
   updated_at: string;
+}
+
+export function clampBackupOperatorNote(value: string | null | undefined): string {
+  if (typeof value !== "string") return "";
+  return value.slice(0, BACKUP_OPERATOR_NOTE_MAX_LENGTH);
 }
 
 function normalizeKind(value: string | null | undefined): BackupKind {
@@ -80,6 +96,8 @@ function rowToBackup(row: BackupRow): BackupRecord {
     completedAt: row.completed_at,
     notes: row.notes,
     mapToken: normalizeMapToken(row.map_token),
+    isProtected: row.is_protected === 1,
+    operatorNote: clampBackupOperatorNote(row.operator_note),
   };
 }
 
@@ -99,6 +117,8 @@ function rowToPolicy(row: PolicyRow): BackupPolicy {
     retainCountPlayers: clampRetain(row.retain_count_players, DEFAULT_RETAIN_COUNT_PLAYERS),
     retainCountIni: clampRetain(row.retain_count_ini, DEFAULT_RETAIN_COUNT_INI),
     backupDir,
+    protectNewManualWorld: row.protect_new_manual_world === 1,
+    protectNewManualIni: row.protect_new_manual_ini === 1,
     updatedAt: row.updated_at,
   };
 }
@@ -137,6 +157,8 @@ export class BackupRepository {
       completedAt: null,
       notes: input.notes,
       mapToken,
+      isProtected: false,
+      operatorNote: "",
     };
   }
 
@@ -275,6 +297,8 @@ export class BackupRepository {
       retainCountPlayers: DEFAULT_RETAIN_COUNT_PLAYERS,
       retainCountIni: DEFAULT_RETAIN_COUNT_INI,
       backupDir: null,
+      protectNewManualWorld: false,
+      protectNewManualIni: false,
       updatedAt: now,
     };
   }
@@ -287,6 +311,8 @@ export class BackupRepository {
     retainCountPlayers: number;
     retainCountIni: number;
     backupDir: string | null;
+    protectNewManualWorld: boolean;
+    protectNewManualIni: boolean;
   }): BackupPolicy {
     const now = new Date().toISOString();
     const backupDir = input.backupDir !== null && input.backupDir.trim().length > 0 ? input.backupDir.trim() : null;
@@ -296,8 +322,9 @@ export class BackupRepository {
       .prepare(
         `INSERT INTO backup_policies (
           server_id, enabled, interval_minutes, retain_count,
-          retain_count_players, retain_count_ini, retain_days, backup_dir, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, 14, ?, ?)
+          retain_count_players, retain_count_ini, retain_days, backup_dir,
+          protect_new_manual_world, protect_new_manual_ini, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, 14, ?, ?, ?, ?)
         ON CONFLICT(server_id) DO UPDATE SET
           enabled = excluded.enabled,
           interval_minutes = excluded.interval_minutes,
@@ -305,6 +332,8 @@ export class BackupRepository {
           retain_count_players = excluded.retain_count_players,
           retain_count_ini = excluded.retain_count_ini,
           backup_dir = excluded.backup_dir,
+          protect_new_manual_world = excluded.protect_new_manual_world,
+          protect_new_manual_ini = excluded.protect_new_manual_ini,
           updated_at = excluded.updated_at`,
       )
       .run(
@@ -315,9 +344,29 @@ export class BackupRepository {
         input.retainCountPlayers,
         input.retainCountIni,
         backupDir,
+        input.protectNewManualWorld ? 1 : 0,
+        input.protectNewManualIni ? 1 : 0,
         now,
       );
     return this.getPolicy(input.serverId);
+  }
+
+  /** Toggle protection on a completed backup; clamp note to BACKUP_OPERATOR_NOTE_MAX_LENGTH. */
+  setBackupProtection(input: {
+    id: string;
+    isProtected: boolean;
+    operatorNote: string;
+  }): BackupRecord | null {
+    const existing = this.getBackup(input.id);
+    if (existing === null) return null;
+    if (existing.status !== "completed") {
+      throw new Error("Only completed backups can be protected");
+    }
+    const operatorNote = clampBackupOperatorNote(input.operatorNote);
+    this.db
+      .prepare("UPDATE backups SET is_protected = ?, operator_note = ? WHERE id = ?")
+      .run(input.isProtected ? 1 : 0, operatorNote, input.id);
+    return this.getBackup(input.id);
   }
 
   deleteBackupRecord(id: string): void {

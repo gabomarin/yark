@@ -10,6 +10,8 @@ export function toBackupPolicyDraft(policy: BackupPolicy): BackupPolicyDraft {
     retainCountPlayers: policy.retainCountPlayers,
     retainCountIni: policy.retainCountIni,
     backupDir: policy.backupDir,
+    protectNewManualWorld: policy.protectNewManualWorld,
+    protectNewManualIni: policy.protectNewManualIni,
   };
 }
 
@@ -20,7 +22,9 @@ export function isBackupPolicyDraftDirty(draft: BackupPolicyDraft, policy: Backu
     draft.retainCountWorld !== policy.retainCountWorld ||
     draft.retainCountPlayers !== policy.retainCountPlayers ||
     draft.retainCountIni !== policy.retainCountIni ||
-    (draft.backupDir ?? null) !== (policy.backupDir ?? null)
+    (draft.backupDir ?? null) !== (policy.backupDir ?? null) ||
+    draft.protectNewManualWorld !== policy.protectNewManualWorld ||
+    draft.protectNewManualIni !== policy.protectNewManualIni
   );
 }
 

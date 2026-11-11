@@ -192,6 +192,26 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
                 }
                 className={classes.policyField}
               />
+              <AppSwitch
+                label="Protect new manual world backups"
+                checked={draft.protectNewManualWorld}
+                onCheckedChange={(checked) =>
+                  props.onDraftChange({
+                    ...draft,
+                    protectNewManualWorld: checked,
+                  })
+                }
+              />
+              <AppSwitch
+                label="Protect new manual INI backups"
+                checked={draft.protectNewManualIni}
+                onCheckedChange={(checked) =>
+                  props.onDraftChange({
+                    ...draft,
+                    protectNewManualIni: checked,
+                  })
+                }
+              />
             </Group>
           </Stack>
         )}

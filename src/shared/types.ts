@@ -740,6 +740,9 @@ export type BackupKind = "world" | "players" | "ini";
 
 export type BackupStatus = "running" | "completed" | "failed";
 
+/** Max length for the operator-facing protect note (separate from `notes`). */
+export const BACKUP_OPERATOR_NOTE_MAX_LENGTH = 500;
+
 export interface BackupRecord {
   id: string;
   serverId: string;
@@ -756,6 +759,16 @@ export interface BackupRecord {
    * `null` for players/ini and pre-per-map world rows.
    */
   mapToken: string | null;
+  /**
+   * When true, retention and Cleanup skip this completed archive and it does
+   * not consume a Keep last slot. Explicit delete still removes it.
+   */
+  isProtected: boolean;
+  /**
+   * Optional operator note for a protected backup. Kept across unprotect/protect.
+   * Distinct from `notes` (player identity, failure text, critical markers).
+   */
+  operatorNote: string;
 }
 
 /** Options for restoring a completed backup archive. */
@@ -892,6 +905,10 @@ export interface BackupPolicy {
    * `null` = default under the server install dir (`{installDir}\\Backups`).
    */
   backupDir: string | null;
+  /** When true, World **Backup now** creates the archive already protected. Default false. */
+  protectNewManualWorld: boolean;
+  /** When true, INI **Backup now** creates the archive already protected. Default false. */
+  protectNewManualIni: boolean;
   updatedAt: string;
 }
 

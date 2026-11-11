@@ -9,6 +9,7 @@ import { BackupRestoreModal } from "./BackupRestoreModal";
 import classes from "./BackupsPage.module.css";
 import { BackupKindSettings } from "./components/BackupKindSettings/BackupKindSettings";
 import { BackupListToolbar } from "./components/BackupListToolbar/BackupListToolbar";
+import { BackupProtectionModal } from "./components/BackupProtectionModal/BackupProtectionModal";
 import { ServerBackupDestination } from "./components/ServerBackupDestination/ServerBackupDestination";
 import { ServerBackupHeader } from "./components/ServerBackupHeader/ServerBackupHeader";
 import { formatSize, KIND_TABS, BACKUPS_KINDS_HINT_STORAGE_KEY } from "./model/serverBackupPanelModel";
@@ -147,6 +148,8 @@ export function ServerBackupPanel(props: Props): ReactElement {
                 onExport={(row) => void panel.exportBackup(row)}
                 onRestore={panel.confirmRestore}
                 onDelete={panel.confirmDeleteOne}
+                onProtect={panel.openProtectModal}
+                onSaveProtection={panel.saveBackupProtection}
                 formatSize={formatSize}
               />
             </div>
@@ -163,6 +166,13 @@ export function ServerBackupPanel(props: Props): ReactElement {
         onRestoreProfilesTribesChange={panel.setRestoreProfilesTribes}
         onClose={panel.closeRestoreModal}
         onConfirm={() => void panel.runRestore()}
+      />
+
+      <BackupProtectionModal
+        backup={panel.protectTarget}
+        saving={panel.busyOp === "other"}
+        onClose={panel.closeProtectModal}
+        onSave={panel.saveBackupProtection}
       />
     </>
   );

@@ -19,6 +19,8 @@ function backup(partial: Partial<BackupRecord> & Pick<BackupRecord, "notes" | "t
     createdAt: "2026-07-24T12:00:00.000Z",
     completedAt: "2026-07-24T12:00:01.000Z",
     mapToken: null,
+    isProtected: false,
+    operatorNote: "",
     ...partial,
   };
 }

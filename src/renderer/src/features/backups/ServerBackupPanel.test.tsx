@@ -52,6 +52,8 @@ const worldBackup: BackupRecord = {
   completedAt: "2026-07-24T12:01:00.000Z",
   notes: null,
   mapToken: "TheIsland_WP",
+  isProtected: false,
+  operatorNote: "",
 };
 
 const playersBackup: BackupRecord = {
@@ -66,6 +68,8 @@ const playersBackup: BackupRecord = {
   completedAt: "2026-07-24T11:01:00.000Z",
   notes: null,
   mapToken: null,
+  isProtected: false,
+  operatorNote: "",
 };
 
 const aliceBackup: BackupRecord = {
@@ -80,6 +84,8 @@ const aliceBackup: BackupRecord = {
   completedAt: "2026-07-24T13:00:01.000Z",
   notes: formatPlayerSessionNotes("connect", "76561198000000001", "Alice"),
   mapToken: null,
+  isProtected: false,
+  operatorNote: "",
 };
 
 const bobBackup: BackupRecord = {
@@ -94,6 +100,8 @@ const bobBackup: BackupRecord = {
   completedAt: "2026-07-24T12:30:01.000Z",
   notes: formatPlayerSessionNotes("disconnect", "76561198000000002", "Bob"),
   mapToken: null,
+  isProtected: false,
+  operatorNote: "",
 };
 
 const iniBackup: BackupRecord = {
@@ -108,6 +116,8 @@ const iniBackup: BackupRecord = {
   completedAt: "2026-07-24T10:01:00.000Z",
   notes: null,
   mapToken: null,
+  isProtected: false,
+  operatorNote: "",
 };
 
 function renderPanel(list: BackupRecord[] = [worldBackup, playersBackup, aliceBackup, bobBackup, iniBackup]): void {
@@ -165,6 +175,8 @@ describe("ServerBackupPanel", () => {
             retainCountPlayers: 20,
             retainCountIni: 10,
             backupDir: null,
+            protectNewManualWorld: false,
+            protectNewManualIni: false,
             updatedAt: "2026-07-24T00:00:00.000Z",
             schedulePaused: false,
           },
@@ -214,6 +226,8 @@ describe("ServerBackupPanel", () => {
             completedAt: "2026-01-01T00:00:00.000Z",
             notes: "Imported",
             mapToken: "TheIsland_WP",
+            isProtected: false,
+            operatorNote: "",
           },
         }),
         pickPath: vi.fn(),
@@ -449,6 +463,8 @@ describe("ServerBackupPanel", () => {
       id: "bk-other-map",
       path: "C:/backups/other-map",
       mapToken: "ScorchedEarth_WP",
+      isProtected: false,
+      operatorNote: "",
     };
     renderPanel([worldBackup, otherMap]);
 
@@ -511,6 +527,8 @@ describe("ServerBackupPanel", () => {
       completedAt: "2026-07-24T14:00:00.000Z",
       notes: formatPlayerSessionNotes("disconnect", "76561198000000003", "Carol"),
       mapToken: null,
+      isProtected: false,
+      operatorNote: "",
     };
 
     renderPanel([worldBackup, playersBackup, aliceBackup, bobBackup, startedFirstFinishedLast, iniBackup]);
@@ -558,6 +576,8 @@ describe("ServerBackupPanel", () => {
         retainCountPlayers: 20,
         retainCountIni: 10,
         backupDir: null,
+        protectNewManualWorld: false,
+        protectNewManualIni: false,
         updatedAt: "2026-07-24T00:00:00.000Z",
         schedulePaused: false,
       },

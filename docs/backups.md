@@ -262,20 +262,29 @@ after a real ASA start/stop cycle; see [e2e-validation.md](e2e-validation.md).
   dated autosaves and `.arkrbf` / `.tmp`. Missing primary `.ark` fails the backup.
   World/players ZIPs use **moderate deflate (level 4)** for ASA save blobs;
   `manifest.json` and other small files still use default deflate.
-- Retention keeps the last N **completed** world backups **per map token** (and
-  players by `playersRetentionKey`). Fleet **Cleanup** has two retain-style rules:
+- Retention keeps the last N **completed unprotected** world backups **per map
+  token** (and players by `playersRetentionKey`). **Protected** completed archives
+  sit outside Keep last (they do not consume a slot) and are skipped by scheduled
+  retention and by Cleanup’s retain / age / keep-last rules. Explicit delete still
+  removes them after a stronger danger confirm. Failed rows are never “protected”
+  for Cleanup’s include-failed rule. Operators set protection from the history
+  shield / context menu (`operator_note`, max 500 chars); World/INI policy can
+  auto-protect new **Backup now** creates (`protect_new_manual_*`, default off).
+  Do not confuse this with fleet health “Protected” or Cleanup
+  `protectNewestWorld`.
+- Fleet **Cleanup** has two retain-style rules:
   - **Delete older backups past each server's keep limit** (`enforceRetention`) —
     same pools as scheduled retention (world **per map**, players **per player**,
-    flat INI).
+    flat INI), unprotected only.
   - **Keep only last N per kind** (`keepLastPerKind`) — same per-map / per-player
-    pools for world and players; flat INI (#497).
+    pools for world and players; flat INI (#497); unprotected only.
     Failed rows are not pruned by retain counts.
     Cannot delete `running` backups. Operators can **Clear failed** on the server
     Backups history tab to remove every failed row for that server and kind
     (catalog cleanup when the ZIP is already gone).
 - History UI: **Current map only** checkbox (default on) filters world rows to
   `server.map`. World/INI columns: **File**, **Map** (world only), **Date**, Size,
-  Status, Type, Actions. Players tab: **Player** (name + player id metadata),
+  Status, Type, Actions (including protect shield). Players tab: **Player** (name + player id metadata),
   **Date** (time only), Size, Status, Type, Actions. Columns are sortable
   (default Date newest-first) and resizable; content columns use `width: 0%`
   (hug content) and **Actions** uses `width: 100%` so leftover space stays on

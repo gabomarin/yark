@@ -57,6 +57,7 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
   const [playerSearch, setPlayerSearch] = useState("");
   const [currentMapOnly, setCurrentMapOnly] = useState(true);
   const [restoreTarget, setRestoreTarget] = useState<BackupRecord | null>(null);
+  const [protectTarget, setProtectTarget] = useState<BackupRecord | null>(null);
   const [restoreProfilesTribes, setRestoreProfilesTribes] = useState(true);
   // Always start open; collapse is session-local and resets when changing kind (#231).
   const [settingsOpen, setSettingsOpen] = useState(true);
@@ -248,8 +249,10 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
     server,
     activeKind,
     actionableSelectedIds,
+    kindBackups,
     draftPolicy,
     restoreTarget,
+    protectTarget,
     restoreProfilesTribes,
     opsLocked: restoreLocked,
     opsLockReason: restoreLockReason,
@@ -259,6 +262,7 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
     setDraftPolicy,
     setSelectedIds,
     setRestoreTarget,
+    setProtectTarget,
     setRestoreProfilesTribes,
     load,
   });
@@ -282,6 +286,7 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
     currentMapOnly,
     setCurrentMapOnly,
     restoreTarget,
+    protectTarget,
     restoreProfilesTribes,
     setRestoreProfilesTribes,
     settingsOpen,

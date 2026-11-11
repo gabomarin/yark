@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Mark completed backups **Protected** (optional note) so Keep last and Cleanup skip them; they do not consume a Keep last slot. Explicit delete still works with a stronger confirm. World and INI settings can auto-protect new **Backup now** archives (#701).
 - Configuration → INI Files sorts settings from a menu: **Unsorted** (INI sections, file order, and the default), **By category** (category groups, settings in the order they appear in the file), or **Alphabetical** (category groups, names A to Z). A filter or sort icon sits inside each menu, and each sort explains itself on hover. The menu keeps Collapse and Expand on screen when the window is narrow. The choice is remembered on this PC. Save still updates each value on its current line.
 - Configuration → INI Files adds a setting from **Add setting** above the table. The form asks for the section (ServerSettings, SessionSettings, Message of the day, or a mod section you confirm), the setting name, and the value. Known settings show up as you type, and any other name is added as plain text. The table stays a list of existing settings, and scrolls to the new row after you add it. The change stays a draft until Save (#705).
 - When Save overlaps a change made outside YARK, Configuration lists each setting so you can pick your edit, the file value, or the last save, then accept. The notice stays until you accept, and then the outside-change notice closes (#696).

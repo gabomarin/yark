@@ -419,7 +419,28 @@ export class BackupService extends EventEmitter {
       retainCountPlayers: policy.retainCountPlayers,
       retainCountIni: policy.retainCountIni,
       backupDir,
+      protectNewManualWorld: policy.protectNewManualWorld,
+      protectNewManualIni: policy.protectNewManualIni,
     });
+  }
+
+  setBackupProtection(
+    serverId: string,
+    backupId: string,
+    isProtected: boolean,
+    operatorNote: string,
+  ): BackupRecord {
+    this.mustServer(serverId);
+    const backup = this.backups.getBackup(backupId);
+    if (backup === null || backup.serverId !== serverId) {
+      throw new Error("Backup not found");
+    }
+    const updated = this.backups.setBackupProtection({ id: backupId, isProtected, operatorNote });
+    if (updated === null) {
+      throw new Error("Backup not found");
+    }
+    this.emitChanged(serverId);
+    return updated;
   }
 
   /** Effective folder for new backups (custom policy dir or `{installDir}\\Backups`). */

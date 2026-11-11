@@ -16,6 +16,8 @@ function makeBackup(overrides: Partial<BackupRecord> = {}): BackupRecord {
     completedAt: "2026-01-02T03:04:05.678Z",
     notes: null,
     mapToken: null,
+    isProtected: false,
+    operatorNote: "",
     ...overrides,
   };
 }

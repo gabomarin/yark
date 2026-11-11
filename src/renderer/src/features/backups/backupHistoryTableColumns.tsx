@@ -20,12 +20,14 @@ export interface BackupHistoryColumnInput {
   showMapColumn: boolean;
   busy: boolean;
   opsLocked: boolean;
+  protectionSaving: boolean;
   formatSize: (sizeBytes: number) => string;
   onCopyDetails: (backup: BackupRecord) => void;
   onOpenFolder: (backupId: string) => void;
   onExport: (backup: BackupRecord) => void;
   onRestore: (backup: BackupRecord) => void;
   onDelete: (backup: BackupRecord) => void;
+  onSaveProtection: (backup: BackupRecord, isProtected: boolean, operatorNote: string) => Promise<boolean>;
 }
 
 /**
@@ -173,11 +175,13 @@ export function buildBackupHistoryTableColumns(input: BackupHistoryColumnInput):
             backup={backup}
             busy={input.busy}
             opsLocked={input.opsLocked}
+            protectionSaving={input.protectionSaving}
             onCopyDetails={input.onCopyDetails}
             onOpenFolder={input.onOpenFolder}
             onExport={input.onExport}
             onRestore={input.onRestore}
             onDelete={input.onDelete}
+            onSaveProtection={input.onSaveProtection}
           />
         </div>
       ),

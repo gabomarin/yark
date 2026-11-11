@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PORT_MAX, PORT_MIN } from "../types";
+import { BACKUP_OPERATOR_NOTE_MAX_LENGTH, PORT_MAX, PORT_MIN } from "../types";
 import { MAX_WINDOWS_PATH_LENGTH } from "../server/server-install-path";
 import { MAX_LOG_RETENTION_DAYS, MIN_LOG_RETENTION_DAYS } from "../settings/log-retention";
 import { THEME_FAMILY_IDS, THEME_SCHEMES, WORKSPACE_PANELS_IDS } from "../settings/appearance";
@@ -201,6 +201,15 @@ export const backupPolicyWriteSchema = z
       (value) => (typeof value === "string" && value.trim().length === 0 ? null : value),
       z.union([windowsAbsPathSchema, z.null()]),
     ),
+    protectNewManualWorld: z.boolean(),
+    protectNewManualIni: z.boolean(),
+  })
+  .strict();
+
+export const backupSetProtectionSchema = z
+  .object({
+    isProtected: z.boolean(),
+    operatorNote: z.string().max(BACKUP_OPERATOR_NOTE_MAX_LENGTH),
   })
   .strict();
 

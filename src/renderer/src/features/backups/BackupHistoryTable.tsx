@@ -28,6 +28,8 @@ interface Props {
   onExport: (backup: BackupRecord) => void;
   onRestore: (backup: BackupRecord) => void;
   onDelete: (backup: BackupRecord) => void;
+  onProtect: (backup: BackupRecord) => void;
+  onSaveProtection: (backup: BackupRecord, isProtected: boolean, operatorNote: string) => Promise<boolean>;
   formatSize: (sizeBytes: number) => string;
 }
 
@@ -68,6 +70,8 @@ export function BackupHistoryTable(props: Props): ReactElement {
         onExport: props.onExport,
         onRestore: props.onRestore,
         onDelete: props.onDelete,
+        protectionSaving: props.busy,
+        onSaveProtection: props.onSaveProtection,
       }),
     [
       showMapColumn,
@@ -80,6 +84,7 @@ export function BackupHistoryTable(props: Props): ReactElement {
       props.onExport,
       props.onRestore,
       props.onDelete,
+      props.onSaveProtection,
     ],
   );
 
@@ -124,6 +129,7 @@ export function BackupHistoryTable(props: Props): ReactElement {
           onExport: props.onExport,
           onRestore: props.onRestore,
           onDelete: props.onDelete,
+          onProtect: props.onProtect,
         });
         event.preventDefault();
         event.stopPropagation();

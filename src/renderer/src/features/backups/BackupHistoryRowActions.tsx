@@ -1,9 +1,14 @@
 import type { ReactElement } from "react";
 import { ArrowCounterClockwise, ClipboardText, Export, FolderOpen, Trash } from "@phosphor-icons/react";
 import { ActionIcon, Group, Tooltip } from "@mantine/core";
+import type { BackupRecord } from "@shared/types";
+import { BackupProtectionPopover } from "./components/BackupProtectionPopover/BackupProtectionPopover";
 import { buildBackupHistoryRowActions, type BackupHistoryRowActionInput } from "./backupHistoryRowActionModel";
 
-type Props = BackupHistoryRowActionInput;
+type Props = BackupHistoryRowActionInput & {
+  protectionSaving?: boolean;
+  onSaveProtection?: (backup: BackupRecord, isProtected: boolean, operatorNote: string) => Promise<boolean>;
+};
 
 function itemDisabled(entries: ReturnType<typeof buildBackupHistoryRowActions>, key: string): boolean {
   const item = entries.find((entry) => entry.kind === "item" && entry.key === key);
@@ -15,6 +20,7 @@ function itemDisabled(entries: ReturnType<typeof buildBackupHistoryRowActions>, 
  */
 export function BackupHistoryRowActions(props: Props): ReactElement {
   const menuEntries = buildBackupHistoryRowActions(props);
+  const showProtect = props.backup.status === "completed" && props.onSaveProtection !== undefined;
 
   return (
     <Group gap={4} wrap="nowrap">
@@ -63,6 +69,14 @@ export function BackupHistoryRowActions(props: Props): ReactElement {
           <ArrowCounterClockwise size={16} />
         </ActionIcon>
       </Tooltip>
+      {showProtect && (
+        <BackupProtectionPopover
+          backup={props.backup}
+          busy={props.busy}
+          saving={props.protectionSaving === true}
+          onSave={props.onSaveProtection!}
+        />
+      )}
       <Tooltip label="Delete" withArrow>
         <ActionIcon
           variant="subtle"

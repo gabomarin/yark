@@ -19,7 +19,7 @@ export interface BackupRetentionHost {
 export class BackupRetention {
   constructor(private readonly host: BackupRetentionHost) {}
 
-  /** Retain last N completed backups; world uses per-map pools; players use per-player pools. */
+  /** Retain last N completed unprotected backups; world uses per-map pools; players use per-player pools. */
   async applyRetention(serverId: string, policy: BackupPolicy): Promise<void> {
     for (const kind of ALL_BACKUP_KINDS) {
       const retain = retainCountForKind(policy, kind);
@@ -34,8 +34,9 @@ export class BackupRetention {
           byPlayer.set(key, list);
         }
         for (const [, list] of byPlayer) {
-          if (list.length <= retain) continue;
-          for (const backup of list.slice(retain)) {
+          const unprotected = list.filter((backup) => !backup.isProtected);
+          if (unprotected.length <= retain) continue;
+          for (const backup of unprotected.slice(retain)) {
             await this.removeRetainedBackup(serverId, backup);
           }
         }
@@ -51,16 +52,18 @@ export class BackupRetention {
           byMap.set(key, list);
         }
         for (const [, list] of byMap) {
-          if (list.length <= retain) continue;
-          for (const backup of list.slice(retain)) {
+          const unprotected = list.filter((backup) => !backup.isProtected);
+          if (unprotected.length <= retain) continue;
+          for (const backup of unprotected.slice(retain)) {
             await this.removeRetainedBackup(serverId, backup);
           }
         }
         continue;
       }
 
-      if (completed.length <= retain) continue;
-      for (const backup of completed.slice(retain)) {
+      const unprotected = completed.filter((backup) => !backup.isProtected);
+      if (unprotected.length <= retain) continue;
+      for (const backup of unprotected.slice(retain)) {
         await this.removeRetainedBackup(serverId, backup);
       }
     }

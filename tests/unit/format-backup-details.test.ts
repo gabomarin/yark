@@ -16,6 +16,8 @@ describe("formatBackupDetails", () => {
       completedAt: "2026-07-28T12:01:00.000Z",
       notes: "ENOENT: no such file or directory, lstat 'C:\\SavedArks\\x.arkrbf'",
       mapToken: "TheIsland_WP",
+      isProtected: false,
+      operatorNote: "",
     };
     const text = formatBackupDetails({ id: "srv-a", name: "Island" }, backup);
     expect(text).toContain("Server: Island (srv-a)");
@@ -41,6 +43,8 @@ describe("formatBackupDetails", () => {
       completedAt: null,
       notes: null,
       mapToken: "TheIsland_WP",
+      isProtected: false,
+      operatorNote: "",
     };
 
     const text = formatBackupDetails({ id: "srv-a", name: "Island" }, backup);

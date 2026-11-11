@@ -347,10 +347,13 @@ export function createRendererApiMock(overrides: Partial<RendererApi> = {}): Ren
         retainCountPlayers: 20,
         retainCountIni: 10,
         backupDir: null,
+        protectNewManualWorld: false,
+        protectNewManualIni: false,
         updatedAt: TEST_NOW,
       },
     }),
     setBackupPolicy: vi.fn(),
+    setBackupProtection: vi.fn(),
     getMaintenancePolicy: vi.fn().mockResolvedValue({
       ok: true,
       data: {

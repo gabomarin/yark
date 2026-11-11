@@ -28,12 +28,15 @@ describe("BackupRepository", () => {
     expect(started.status).toBe("running");
     expect(started.kind).toBe("world");
     expect(started.mapToken).toBe("TheIsland_WP");
+    expect(started.isProtected).toBe(false);
+    expect(started.operatorNote).toBe("");
 
     const completed = repo.completeBackup(started.id, 1024);
     expect(completed?.status).toBe("completed");
     expect(completed?.sizeBytes).toBe(1024);
     expect(completed?.kind).toBe("world");
     expect(completed?.mapToken).toBe("TheIsland_WP");
+    expect(completed?.isProtected).toBe(false);
     expect(completed?.completedAt).toBeTruthy();
 
     const list = repo.listBackups("s1", 10);
@@ -113,6 +116,8 @@ describe("BackupRepository", () => {
     expect(initial.retainCountPlayers).toBe(20);
     expect(initial.retainCountIni).toBe(10);
     expect(initial.backupDir).toBeNull();
+    expect(initial.protectNewManualWorld).toBe(false);
+    expect(initial.protectNewManualIni).toBe(false);
     expect("retainCount" in initial).toBe(false);
     expect("retainDays" in initial).toBe(false);
 
@@ -124,6 +129,8 @@ describe("BackupRepository", () => {
       retainCountPlayers: 15,
       retainCountIni: 8,
       backupDir: "D:\\ASA\\MyServer\\Backups",
+      protectNewManualWorld: true,
+      protectNewManualIni: false,
     });
     expect(updated.enabled).toBe(true);
     expect(updated.intervalMinutes).toBe(30);
@@ -131,7 +138,43 @@ describe("BackupRepository", () => {
     expect(updated.retainCountPlayers).toBe(15);
     expect(updated.retainCountIni).toBe(8);
     expect(updated.backupDir).toBe("D:\\ASA\\MyServer\\Backups");
+    expect(updated.protectNewManualWorld).toBe(true);
+    expect(updated.protectNewManualIni).toBe(false);
     expect(repo.getPolicy("s1").backupDir).toBe("D:\\ASA\\MyServer\\Backups");
+  });
+
+  it("setBackupProtection toggles flag and keeps note across unprotect", () => {
+    const started = repo.createBackupStart({
+      serverId: "s1",
+      type: "manual",
+      kind: "world",
+      path: "C:\\backups\\protected.zip",
+      notes: null,
+    });
+    repo.completeBackup(started.id, 10);
+    const protectedRow = repo.setBackupProtection({
+      id: started.id,
+      isProtected: true,
+      operatorNote: "pre-wipe",
+    });
+    expect(protectedRow?.isProtected).toBe(true);
+    expect(protectedRow?.operatorNote).toBe("pre-wipe");
+
+    const unprotected = repo.setBackupProtection({
+      id: started.id,
+      isProtected: false,
+      operatorNote: "pre-wipe",
+    });
+    expect(unprotected?.isProtected).toBe(false);
+    expect(unprotected?.operatorNote).toBe("pre-wipe");
+
+    const again = repo.setBackupProtection({
+      id: started.id,
+      isProtected: true,
+      operatorNote: "pre-wipe",
+    });
+    expect(again?.isProtected).toBe(true);
+    expect(again?.operatorNote).toBe("pre-wipe");
   });
 
   it("retrieves the latest completed backup per kind", () => {

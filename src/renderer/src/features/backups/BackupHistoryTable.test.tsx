@@ -17,6 +17,8 @@ const backup: BackupRecord = {
   completedAt: "2026-07-23T00:01:00.000Z",
   notes: null,
   mapToken: "TheIsland_WP",
+  isProtected: false,
+  operatorNote: "",
 };
 
 const playersBackup: BackupRecord = {
@@ -25,6 +27,20 @@ const playersBackup: BackupRecord = {
   kind: "players",
   path: "C:/backups/players/bk-players.zip",
   mapToken: null,
+  isProtected: false,
+  operatorNote: "",
+};
+
+const tableHandlers = {
+  onSelectedIdsChange: vi.fn(),
+  onCopyDetails: vi.fn(),
+  onOpenFolder: vi.fn(),
+  onExport: vi.fn(),
+  onRestore: vi.fn(),
+  onDelete: vi.fn(),
+  onProtect: vi.fn(),
+  onSaveProtection: vi.fn().mockResolvedValue(true),
+  formatSize: () => "1.0 KB",
 };
 
 describe("BackupHistoryTable", () => {
@@ -42,13 +58,8 @@ describe("BackupHistoryTable", () => {
           opsLocked={false}
           fetching={false}
           emptyHint="No backups yet"
-          onSelectedIdsChange={vi.fn()}
-          onCopyDetails={vi.fn()}
-          onOpenFolder={vi.fn()}
-          onExport={vi.fn()}
+          {...tableHandlers}
           onRestore={onRestore}
-          onDelete={vi.fn()}
-          formatSize={() => "1.0 KB"}
         />
       </AppProviders>,
     );
@@ -78,13 +89,7 @@ describe("BackupHistoryTable", () => {
           opsLocked={false}
           fetching={false}
           emptyHint="No backups yet"
-          onSelectedIdsChange={vi.fn()}
-          onCopyDetails={vi.fn()}
-          onOpenFolder={vi.fn()}
-          onExport={vi.fn()}
-          onRestore={vi.fn()}
-          onDelete={vi.fn()}
-          formatSize={() => "1.0 KB"}
+          {...tableHandlers}
         />
       </AppProviders>,
     );
@@ -101,13 +106,7 @@ describe("BackupHistoryTable", () => {
           opsLocked={false}
           fetching={false}
           emptyHint="No backups yet"
-          onSelectedIdsChange={vi.fn()}
-          onCopyDetails={vi.fn()}
-          onOpenFolder={vi.fn()}
-          onExport={vi.fn()}
-          onRestore={vi.fn()}
-          onDelete={vi.fn()}
-          formatSize={() => "1.0 KB"}
+          {...tableHandlers}
         />
       </AppProviders>,
     );
@@ -160,13 +159,7 @@ describe("BackupHistoryTable", () => {
           opsLocked={false}
           fetching={false}
           emptyHint="No backups yet"
-          onSelectedIdsChange={vi.fn()}
-          onCopyDetails={vi.fn()}
-          onOpenFolder={vi.fn()}
-          onExport={vi.fn()}
-          onRestore={vi.fn()}
-          onDelete={vi.fn()}
-          formatSize={() => "1.0 KB"}
+          {...tableHandlers}
         />
       </AppProviders>,
     );

@@ -1,4 +1,4 @@
-import { ArrowCounterClockwise, ClipboardText, Export, FolderOpen, Trash } from "@phosphor-icons/react";
+import { ArrowCounterClockwise, ClipboardText, Export, FolderOpen, Shield, Trash } from "@phosphor-icons/react";
 import type { BackupRecord } from "@shared/types";
 import type { RowActionEntry } from "@ui/RowActionMenu/rowActionModel";
 
@@ -13,13 +13,15 @@ export interface BackupHistoryRowActionInput {
   onExport: (backup: BackupRecord) => void;
   onRestore: (backup: BackupRecord) => void;
   onDelete: (backup: BackupRecord) => void;
+  /** Opens the protect modal (context menu). Icon row uses the shield popover instead. */
+  onProtect?: (backup: BackupRecord) => void;
 }
 
 export function buildBackupHistoryRowActions(input: BackupHistoryRowActionInput): RowActionEntry[] {
   const canMutate = input.backup.status !== "running";
   const completed = input.backup.status === "completed";
 
-  return [
+  const entries: RowActionEntry[] = [
     {
       kind: "item",
       key: "copy-details",
@@ -61,16 +63,32 @@ export function buildBackupHistoryRowActions(input: BackupHistoryRowActionInput)
         input.onRestore(input.backup);
       },
     },
-    {
-      kind: "item",
-      key: "delete",
-      label: "Delete",
-      color: "red",
-      icon: <Trash size={ICON} />,
-      disabled: input.busy || !canMutate,
-      onClick: () => {
-        input.onDelete(input.backup);
-      },
-    },
   ];
+
+  if (input.onProtect !== undefined && completed) {
+    entries.push({
+      kind: "item",
+      key: "protect",
+      label: input.backup.isProtected ? "Edit protection…" : "Protect…",
+      icon: <Shield size={ICON} weight={input.backup.isProtected ? "fill" : "regular"} />,
+      disabled: input.busy,
+      onClick: () => {
+        input.onProtect?.(input.backup);
+      },
+    });
+  }
+
+  entries.push({
+    kind: "item",
+    key: "delete",
+    label: "Delete",
+    color: "red",
+    icon: <Trash size={ICON} />,
+    disabled: input.busy || !canMutate,
+    onClick: () => {
+      input.onDelete(input.backup);
+    },
+  });
+
+  return entries;
 }
