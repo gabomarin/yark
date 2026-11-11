@@ -25,6 +25,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Accepting an INI conflict writes the value you picked, including a password, and the next Save uses that file. Choosing the value already on disk still checks the file has not changed again. Other edits already in the file stay, so the next Save does not write over them (#696).
 - Create cluster and the setup assistant suggest a Cluster ID like `yark-cluster-7f3a9c2e` instead of `yark-cluster-1`, so the in-game transfer list does not include other people's servers that reused the same default ID.
 
+### Docs
+
+- Documented shared workspace tab headers (`WorkspaceSectionHeader`), BanList line format vs AdminList CSV, and the Electron `e2e-server-fixture` helper for server file-write suites (#678, #688).
+
 ## [0.26.3] - 2026-11-07
 
 ### Fixed
