@@ -63,11 +63,12 @@ describe("cluster tribute settings model", () => {
     // Stale Transfer-panel snapshots must not be preferred over a fresh read —
     // the server workspace overlay can edit INI without remounting Clusters.
     await expect(
-      collectClusterIniTemplateSeedPayloads({ gameUserSettings: "", game: "" }, [{ id: "srv-a" }, { id: "srv-b" }], readMemberIni),
-    ).resolves.toEqual([
-      fresh,
-      { gameUserSettings: "[ServerSettings]\nMaxTributeItems=50\n", game: "" },
-    ]);
+      collectClusterIniTemplateSeedPayloads(
+        { gameUserSettings: "", game: "" },
+        [{ id: "srv-a" }, { id: "srv-b" }],
+        readMemberIni,
+      ),
+    ).resolves.toEqual([fresh, { gameUserSettings: "[ServerSettings]\nMaxTributeItems=50\n", game: "" }]);
     expect(readMemberIni).toHaveBeenCalledTimes(2);
     expect(readMemberIni).toHaveBeenCalledWith("srv-a");
     expect(readMemberIni).toHaveBeenCalledWith("srv-b");
@@ -101,7 +102,11 @@ describe("cluster tribute settings model", () => {
     };
     const readMemberIni = vi.fn(async (serverId: string) => (serverId === "srv-b" ? member : null));
     await expect(
-      collectClusterIniTemplateSeedPayloads({ gameUserSettings: "", game: "" }, [{ id: "srv-a" }, { id: "srv-b" }], readMemberIni),
+      collectClusterIniTemplateSeedPayloads(
+        { gameUserSettings: "", game: "" },
+        [{ id: "srv-a" }, { id: "srv-b" }],
+        readMemberIni,
+      ),
     ).resolves.toEqual([member]);
     expect(readMemberIni).toHaveBeenCalledTimes(2);
   });

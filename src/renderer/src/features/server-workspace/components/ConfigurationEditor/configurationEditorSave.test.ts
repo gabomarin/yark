@@ -476,12 +476,9 @@ describe("iniSaveScope", () => {
 
   it("does not replay a text-deleted named engram after Overrides Save", () => {
     const section = "[/Script/ShooterGame.ShooterGameMode]";
-    const campfire =
-      'OverrideNamedEngramEntries=(EngramClassName="EngramEntry_Campfire_C",EngramPointsCost=3)';
-    const campfireSaved =
-      'OverrideNamedEngramEntries=(EngramClassName="EngramEntry_Campfire_C",EngramPointsCost=9)';
-    const hatchet =
-      'OverrideNamedEngramEntries=(EngramClassName="EngramEntry_StoneHatchet_C",EngramPointsCost=5)';
+    const campfire = 'OverrideNamedEngramEntries=(EngramClassName="EngramEntry_Campfire_C",EngramPointsCost=3)';
+    const campfireSaved = 'OverrideNamedEngramEntries=(EngramClassName="EngramEntry_Campfire_C",EngramPointsCost=9)';
+    const hatchet = 'OverrideNamedEngramEntries=(EngramClassName="EngramEntry_StoneHatchet_C",EngramPointsCost=5)';
     const baseline = { gameUserSettings: "", game: `${section}\nDifficultyOffset=1\n${campfire}\n` };
     // Text view deleted the named line; Settings Save left that Unset in the draft.
     const draft = { gameUserSettings: "", game: `${section}\nDifficultyOffset=2\n` };
@@ -491,9 +488,7 @@ describe("iniSaveScope", () => {
     };
     // Replace path: replaying the Unset conflicts with the lineEdits write.
     expect(() => restoreUnsavedVisualEdits(savedReplace, baseline, draft, "engramOverrides")).not.toThrow();
-    expect(restoreUnsavedVisualEdits(savedReplace, baseline, draft, "engramOverrides").game).toContain(
-      campfireSaved,
-    );
+    expect(restoreUnsavedVisualEdits(savedReplace, baseline, draft, "engramOverrides").game).toContain(campfireSaved);
 
     const savedAppend = {
       gameUserSettings: "",
