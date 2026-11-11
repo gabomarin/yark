@@ -941,6 +941,8 @@ describe("ServerWorkspacePage", () => {
     await user.click(screen.getByRole("option", { name: "Other (1)" }));
     expect(categorySelect).toHaveValue("Other (1)");
     expect(screen.getByRole("button", { name: /Custom/ })).toBeVisible();
+    await user.click(screen.getByRole("combobox", { name: "Sort settings" }));
+    await user.click(screen.getByRole("option", { name: "By category" }));
     expect(screen.getByLabelText("Collapse all Other sections")).toBeVisible();
     expect(screen.getByLabelText("Expand all Other sections")).toBeVisible();
 
@@ -992,7 +994,9 @@ describe("ServerWorkspacePage", () => {
     expect(screen.queryByText("LastJoinedSessionPerCategory")).not.toBeInTheDocument();
     expect(screen.queryByText("ResolutionSizeX")).not.toBeInTheDocument();
     expect(screen.queryByText("Unsaved")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+    for (const button of screen.getAllByRole("button", { name: "Save", hidden: true })) {
+      expect(button).toBeDisabled();
+    }
   });
 
   it("discards an assistant draft without writing INI files", async () => {
@@ -1054,7 +1058,9 @@ describe("ServerWorkspacePage", () => {
     renderWorkspace();
     await user.click(screen.getByRole("tab", { name: "INI Files" }));
     expect(await screen.findByDisplayValue("1.5")).toBeVisible();
-    expect(screen.getByRole("button", { name: "Reload from disk" })).toBeEnabled();
+    for (const button of screen.getAllByRole("button", { name: "Reload from disk", hidden: true })) {
+      expect(button).toBeEnabled();
+    }
 
     const newerPayload = {
       gameUserSettings: `[ServerSettings]\nXPMultiplier=9.9\nAllowFlyerCarryPVE=True\nExternalEdit=1\n`,

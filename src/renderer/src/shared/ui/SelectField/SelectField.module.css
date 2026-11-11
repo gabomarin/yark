@@ -1,0 +1,13 @@
+/* Same leading-icon slot as SearchField: a fixed square, glyph centered. */
+.section {
+  color: var(--app-color-muted);
+  width: var(--input-height);
+  height: var(--input-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.section svg {
+  display: block;
+}

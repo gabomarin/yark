@@ -16,11 +16,10 @@ import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { useUiDensity } from "@app/AppProviders";
 import { EngramEditorSection } from "./EngramEditorSection";
 import { LootEditor, type LootEditorStatus } from "./LootEditor";
-import { ConfigurationEditorFilterBar } from "./ConfigurationEditorFilterBar";
 import { ConfigurationEditorHeader } from "./ConfigurationEditorHeader";
 import { ConfigurationEditorOpenFileAction } from "./ConfigurationEditorOpenFileAction";
 import { ConfigurationEditorPreviewAlert } from "./ConfigurationEditorPreviewAlert";
-import { ConfigurationEditorSettingsTable } from "./ConfigurationEditorSettingsTable";
+import { ConfigurationEditorSettingsPane } from "./ConfigurationEditorSettingsPane";
 import { ConfigurationEditorStatusAlerts, editorStatusAlertProps } from "./ConfigurationEditorStatusAlerts";
 import { ConfigurationEditorTextPanel } from "./ConfigurationEditorTextPanel";
 import { type ConflictChoice } from "./configurationEditorConflict";
@@ -316,32 +315,7 @@ export function ConfigurationEditor(props: Props): ReactElement {
 
         {visualMode && !showEngrams && !showLoot && (
           <Stack gap="md" className={classes.editor}>
-            <ConfigurationEditorFilterBar
-              search={editor.search}
-              onSearchChange={editor.setSearch}
-              filter={editor.filter}
-              onFilterChange={editor.setFilter}
-              categoryOptions={editor.categoryOptions}
-              dirty={editor.dirty}
-              unsavedRowCount={editor.unsavedRowCount}
-              onCollapseAll={() => editor.setAllSectionsCollapsed(true)}
-              onExpandAll={() => editor.setAllSectionsCollapsed(false)}
-            />
-
-            <ConfigurationEditorSettingsTable
-              loading={editor.loading}
-              groupedRows={editor.groupedRows}
-              collapsedSections={editor.collapsedSections}
-              busy={editor.busy}
-              isRowUnsaved={editor.isRowUnsaved}
-              savedValueForRow={editor.savedValueForRow}
-              onToggleSection={editor.toggleSection}
-              onSetSectionGroupsCollapsed={editor.setSectionGroupsCollapsed}
-              onUpdateValue={editor.updateValue}
-              onResetRowToDefault={editor.resetRowToDefault}
-              onRevertRowToSaved={editor.revertRowToSaved}
-              onOpenAdminList={props.onOpenAdminList}
-            />
+            <ConfigurationEditorSettingsPane editor={editor} onOpenAdminList={props.onOpenAdminList} />
 
             <Group justify="space-between" className={classes.footer}>
               <Text c="dimmed" size="xs">

@@ -25,13 +25,20 @@ describe("ConfigurationEditorHeader", () => {
   it("keeps Save off while an error is showing and leaves Discard available", () => {
     renderHeader(true);
 
-    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Discard changes" })).toBeEnabled();
+    expect(screen.getAllByRole("button", { name: "Save", hidden: true })).toHaveLength(2);
+    for (const button of screen.getAllByRole("button", { name: "Save", hidden: true })) {
+      expect(button).toBeDisabled();
+    }
+    for (const button of screen.getAllByRole("button", { name: "Discard changes", hidden: true })) {
+      expect(button).toBeEnabled();
+    }
   });
 
   it("enables Save when the editor is dirty and valid", () => {
     renderHeader(false);
 
-    expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
+    for (const button of screen.getAllByRole("button", { name: "Save", hidden: true })) {
+      expect(button).toBeEnabled();
+    }
   });
 });

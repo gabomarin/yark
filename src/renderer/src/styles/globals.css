@@ -19,6 +19,20 @@ body,
   color-scheme: light;
 }
 
+/*
+ * Desktop pane widths. YARK is a desktop app: do not add a layout breakpoint
+ * below compact. Prefer these over a one-off width. When a sidebar shares the
+ * window, measure the pane (`container-type: inline-size`), not the window.
+ * compact 960 — a toolbar row splits
+ * regular 1100 — a side column stacks under the content
+ * wide 1280 — an extra column fits
+ */
+:root {
+  --app-layout-compact: 960px;
+  --app-layout-regular: 1100px;
+  --app-layout-wide: 1280px;
+}
+
 * {
   box-sizing: border-box;
   scrollbar-width: thin;
