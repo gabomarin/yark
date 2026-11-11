@@ -27,6 +27,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Transfer **Save** re-reads member INI files when seeding an empty or tribute-only cluster template, so a later **Apply INI template** cannot restore settings from a stale Transfer panel snapshot left under the server workspace overlay.
 - Overrides and Loot **Save** no longer replay stale named-engram or supply-crate text edits onto the draft, which could make Save look failed after a successful write or leave the draft missing live lines still on disk.
 
+### Docs
+
+- Documented shared workspace tab headers (`WorkspaceSectionHeader`), BanList line format vs AdminList CSV, and the Electron `e2e-server-fixture` helper for server file-write suites (#678, #688).
+
 ## [0.26.3] - 2026-11-07
 
 ### Fixed
