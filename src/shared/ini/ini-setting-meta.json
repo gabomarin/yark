@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-17T00:12:58.232Z",
+  "generatedAt": "2026-11-07T09:14:14.522Z",
   "settings": [
     {
       "id": "game:/script/shootergame.shootergamemode:AdjustableMutagenSpawnDelayMultiplier",
@@ -2535,6 +2535,31 @@
       "section": "/Script/Engine.GameSession",
       "key": "MaxPlayers",
       "defaultValue": "70",
+      "valueType": null,
+      "description": "",
+      "input": {
+        "type": "number",
+        "integer": true,
+        "step": 1
+      },
+      "owner": "iniVisual",
+      "absencePolicy": "allowed",
+      "enforcement": "advisory",
+      "applicability": {
+        "game": "asa"
+      },
+      "provenance": {
+        "source": "defaults-catalog",
+        "reviewedAt": null,
+        "confidence": "inferred"
+      }
+    },
+    {
+      "id": "gameUserSettings:/Script/ShooterGame.ShooterGameUserSettings:Version",
+      "file": "gameUserSettings",
+      "section": "/Script/ShooterGame.ShooterGameUserSettings",
+      "key": "Version",
+      "defaultValue": "5",
       "valueType": null,
       "description": "",
       "input": {

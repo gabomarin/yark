@@ -32,6 +32,8 @@ export interface ProcessStartManaged {
   launchArgs: string[];
   expectedCommandLine: string;
   runtimePorts: SessionPortSet;
+  /** RCON auth used by readiness probes; may be refreshed while still starting. */
+  adminPassword: string;
   /**
    * When Start used AsaApiLoader, the loader PID (for tree kill). After adopt,
    * `child` tracks ArkAscendedServer.exe (#243).
@@ -196,6 +198,7 @@ export function startManagedProcess(
       queryPort: profile.queryPort,
       rconPort: profile.rconPort,
     },
+    adminPassword: profile.adminPassword,
     loaderPid: viaLoader ? (child.pid ?? null) : null,
     asaApiLoading,
   };

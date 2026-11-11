@@ -110,18 +110,54 @@ describe("planAdoptExternalIni", () => {
     });
   });
 
-  it("refuses a missing admin password and does not clear the one in YARK", () => {
+  it("keeps the YARK admin password when GameUserSettings.ini omits it", () => {
     const plan = planAdoptExternalIni(
       server,
       [server],
-      reportFor(matchingGus.replace("ServerAdminPassword=secret-admin\n", "")),
+      reportFor(
+        matchingGus
+          .replace("ServerAdminPassword=secret-admin\n", "")
+          .replace("SessionName=Island", "SessionName=Old Island"),
+      ),
     );
-    expect(plan.ok).toBe(false);
-    if (plan.ok) return;
-    expect(plan.reason).toBe(
-      "GameUserSettings.ini has no admin password. Choose Keep YARK values to keep the one in YARK.",
+    expect(plan.ok).toBe(true);
+    if (!plan.ok) return;
+    expect(plan.input.sessionName).toBe("Old Island");
+    expect(plan.input.adminPassword).toBe("secret-admin");
+  });
+
+  it("keeps the YARK admin password when GameUserSettings.ini has only whitespace", () => {
+    const plan = planAdoptExternalIni(
+      server,
+      [server],
+      reportFor(
+        matchingGus
+          .replace("ServerAdminPassword=secret-admin", "ServerAdminPassword=   ")
+          .replace("SessionName=Island", "SessionName=Old Island"),
+      ),
     );
-    expect(plan.reason).not.toContain("secret-admin");
+    expect(plan.ok).toBe(true);
+    if (!plan.ok) return;
+    expect(plan.input.adminPassword).toBe("secret-admin");
+  });
+
+  it("keeps YARK game and query ports when the file leaves them blank", () => {
+    const plan = planAdoptExternalIni(
+      server,
+      [server],
+      reportFor(
+        matchingGus
+          .replace("Port=7777\n", "")
+          .replace("QueryPort=27015\n", "")
+          .replace("RCONPort=27020", "RCONPort=27030"),
+      ),
+    );
+    expect(plan.ok).toBe(true);
+    if (!plan.ok) return;
+    expect(plan.input.gamePort).toBe(7777);
+    expect(plan.input.queryPort).toBe(27015);
+    expect(plan.input.rconPort).toBe(27030);
+    expect(plan.input.adminPassword).toBe("secret-admin");
   });
 
   it("clears a join password the file omits while copying the session name", () => {

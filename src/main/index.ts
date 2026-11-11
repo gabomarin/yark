@@ -461,7 +461,7 @@ if (isPrimaryInstance) {
         }
         return flushed;
       },
-      syncProfileOwnedKeys: (serverId, profile) => iniService.syncProfileOwnedKeys(serverId, profile),
+      syncProfileOwnedKeys: (serverId, profile, options) => iniService.syncProfileOwnedKeys(serverId, profile, options),
     });
     const backupScheduler = new BackupScheduler(backupService);
     const logsService = new LogsService(repo, backupService, join(userData, "update-logs"), processManager, settings);

@@ -49,6 +49,7 @@ function renderReport(gameUserSettings: string, game = "", servers: ServerProfil
       data: { payload: { gameUserSettings, game } },
     })),
     updateServer: vi.fn(async () => ({ ok: true as const, data: server })),
+    onServerIniChanged: vi.fn(() => () => undefined),
   });
   render(
     <AppProviders>
@@ -119,6 +120,7 @@ ConfigOverrideItemMaxQuantity=(hello world)
             release = resolve;
           }),
       ),
+      onServerIniChanged: vi.fn(() => () => undefined),
     });
     render(
       <AppProviders>
@@ -143,6 +145,7 @@ ConfigOverrideItemMaxQuantity=(hello world)
       updateServer: vi.fn(async () => {
         throw new Error("ipc failed");
       }),
+      onServerIniChanged: vi.fn(() => () => undefined),
     });
     render(
       <AppProviders>
@@ -171,6 +174,7 @@ ConfigOverrideItemMaxQuantity=(hello world)
     vi.stubGlobal("api", {
       readServerIni,
       updateServer: vi.fn(async () => ({ ok: true as const, data: server })),
+      onServerIniChanged: vi.fn(() => () => undefined),
     });
     const view = render(
       <AppProviders>

@@ -111,6 +111,7 @@ function managedProcess(): ProcessStartManaged {
     launchArgs: [],
     expectedCommandLine: "",
     runtimePorts: { gamePort: 7777, queryPort: 27015, rconPort: 27020 },
+    adminPassword: "admin",
     asaApiLoading: false,
   };
 }

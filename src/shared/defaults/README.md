@@ -8,14 +8,18 @@ These files are the **only source of truth** for:
   via `npm run catalog:ini-meta` → `src/shared/ini/ini-setting-meta.json`
 
 - `GameUserSettings.ini` — `[ServerSettings]` plus
-  `[SessionSettings]`, `[/Script/Engine.GameSession]`, and `[MessageOfTheDay]`
+  `[SessionSettings]`, `[/Script/Engine.GameSession]`,
+  `[/Script/ShooterGame.ShooterGameUserSettings]` (`Version=5` only; ASA v97+),
+  and `[MessageOfTheDay]`
 - `Game.ini` — `[/script/shootergame.shootergamemode]` gameplay multipliers
 
 They are adapted from [Arkobat/ArkServerSettings](https://github.com/Arkobat/ArkServerSettings)
 (`SurvivalAscended/Default/`). See [THIRD_PARTY_NOTICES.md](../../../THIRD_PARTY_NOTICES.md).
 
 Do not put client-only keys here (e.g. `LastJoinedSessionPerCategory`,
-graphics / `ShooterGameUserSettings` / `ScalabilityGroups`).
+graphics / full `ShooterGameUserSettings` / `ScalabilityGroups`). The lone
+`Version=5` marker under `ShooterGameUserSettings` is required so ASA v97+ does
+not regenerate the whole GUS.
 
 Optional editor control overrides (ranges, etc.) live in
 `src/shared/ini/ini-setting-input-overrides.json`. Ownership annotations live in

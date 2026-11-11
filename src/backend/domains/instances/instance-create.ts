@@ -15,8 +15,11 @@ import { inspectServerInstallationAsync } from "./server-installation";
 export interface InstanceCreateHost {
   repo: ServerRepository;
   withFleetCreateLock: <T>(work: () => Promise<T> | T) => Promise<T>;
-  /** Kept on InstanceService so unit tests can spy the method. */
-  ensureDefaultIniFiles: (installDir: string) => Promise<void>;
+  /**
+   * Seed WindowsServer INI when missing. Pass the new profile so default GUS
+   * gets session/ports/RCON/password (not the template’s 7777/27015/27020).
+   */
+  ensureDefaultIniFiles: (installDir: string, profile?: ServerProfile) => Promise<void>;
 }
 
 /**
@@ -36,9 +39,9 @@ export class InstanceCreate {
       this.assertValidInput(normalized, { create: true });
       await this.assertCreateInstallTarget(installDir);
 
-      // ensureDefaultIniFiles async — mkdir root here synchronously via ensure
       const profile = this.host.repo.create(normalized);
-      void this.host.ensureDefaultIniFiles(profile.installDir);
+      // Await so Server tab / first Start see profile identity in GUS, not template ports.
+      await this.host.ensureDefaultIniFiles(profile.installDir, profile);
       this.host.repo.addEvent(
         profile.id,
         "server_created",
