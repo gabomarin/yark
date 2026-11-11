@@ -98,18 +98,18 @@ function ValueControl(props: {
   );
 }
 
+function sectionMatchesKnown(section: string, known: readonly string[]): boolean {
+  return known.some((item) => item.toLowerCase() === section.toLowerCase());
+}
+
 export function IniAddSettingForm(props: Props): ReactElement {
   const [query, setQuery] = useState("");
   const [value, setValue] = useState("");
   const [input, setInput] = useState<IniSettingInput | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sectionError, setSectionError] = useState<string | null>(null);
+  // Parent remounts this form with key={section} when the confirmed section changes.
   const [sectionQuery, setSectionQuery] = useState(props.section);
-  const [seenSection, setSeenSection] = useState(props.section);
-  if (props.section !== seenSection) {
-    setSeenSection(props.section);
-    setSectionQuery(props.section);
-  }
   const nameCombobox = useCombobox({ onDropdownClose: () => nameCombobox.resetSelectedOption() });
   const presentKeys = keysInSectionOrEmpty(props.keysInSection, props.section);
   const choices = useMemo(
@@ -150,20 +150,33 @@ export function IniAddSettingForm(props: Props): ReactElement {
   };
 
   const commit = (): void => {
-    const nextSectionError = iniSectionError(props.section);
-    if (nextSectionError !== null) {
-      setSectionError(nextSectionError);
+    const typedSection = canonicalIniSection(sectionQuery, props.sections);
+    const typedError = iniSectionError(typedSection);
+    if (typedError !== null) {
+      setSectionError(typedError);
       return;
     }
+    let commitSection = props.section;
+    if (typedSection.toLowerCase() !== props.section.toLowerCase()) {
+      if (!sectionMatchesKnown(typedSection, props.sections)) {
+        setSectionError(`Choose Add section "${typedSection}" to use that section.`);
+        return;
+      }
+      commitSection = typedSection;
+    }
     setSectionError(null);
-    setSectionQuery(props.section);
-    const key = canonicalIniSettingKey(query, choices);
-    const keyError = iniSettingKeyError(key, presentKeys);
+    const commitKeys = keysInSectionOrEmpty(props.keysInSection, commitSection);
+    const commitChoices =
+      commitSection.toLowerCase() === props.section.toLowerCase()
+        ? choices
+        : addableIniSettingsForSection(props.fileKey, commitSection, commitKeys);
+    const key = canonicalIniSettingKey(query, commitChoices);
+    const keyError = iniSettingKeyError(key, commitKeys);
     if (keyError !== null) {
       setError(keyError);
       return;
     }
-    props.onCommit(props.section, key, value);
+    props.onCommit(commitSection, key, value);
   };
 
   return (
@@ -182,10 +195,6 @@ export function IniAddSettingForm(props: Props): ReactElement {
             setSectionError(null);
           }}
           onConfirm={applySection}
-          onRevert={() => {
-            setSectionQuery(props.section);
-            setSectionError(null);
-          }}
           onCancel={props.onCancel}
         />
         <Combobox
@@ -276,13 +285,12 @@ function SectionField(props: {
   error: string | null;
   onQueryChange: (value: string) => void;
   onConfirm: (section: string) => void;
-  onRevert: () => void;
   onCancel: () => void;
 }): ReactElement {
   const combobox = useCombobox({ onDropdownClose: () => combobox.resetSelectedOption() });
   const needle = props.query.trim().toLowerCase();
   const typed = canonicalIniSection(props.query, props.sections);
-  const exact = props.sections.some((section) => section.toLowerCase() === typed.toLowerCase());
+  const exact = sectionMatchesKnown(typed, props.sections);
   const shown = exact ? props.sections : props.sections.filter((section) => section.toLowerCase().includes(needle));
   const showCreate = needle.length > 0 && !exact && iniSectionError(typed) === null;
 
@@ -317,8 +325,10 @@ function SectionField(props: {
           onFocus={() => combobox.openDropdown()}
           onClick={() => combobox.openDropdown()}
           onBlur={() => {
+            // Known section names apply on blur. A mod/custom name stays in the
+            // field until Add section, so Add setting can refuse a silent write
+            // into the previous section.
             if (exact) props.onConfirm(typed);
-            else props.onRevert();
             combobox.closeDropdown();
           }}
           onKeyDown={(event) => {

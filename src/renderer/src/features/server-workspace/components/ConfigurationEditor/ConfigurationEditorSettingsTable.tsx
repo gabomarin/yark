@@ -78,6 +78,7 @@ export function ConfigurationEditorSettingsTable(props: Props): ReactElement {
       ) : null}
       {canAdd && formOpen && draftSection !== null ? (
         <IniAddSettingForm
+          key={draftSection}
           fileKey={props.iniFile}
           section={draftSection}
           sections={sections}
