@@ -65,14 +65,14 @@ by its resource token and marked **Previous port**; it still needs to be updated
 
 ## Known consumers (ASA)
 
-| Consumer                                           | Expected body                            | Where it is set                        |
-| -------------------------------------------------- | ---------------------------------------- | -------------------------------------- |
-| `AdminListURL`                                     | Plain text ids (see body contract below) | `GameUserSettings.ini` (RCON → Admins) |
-| `BanListURL`                                       | Plain text ban entries                   | `GameUserSettings.ini`                 |
-| `BadWordListURL` / `BadWordWhiteListURL`           | Plain text word list                     | `GameUserSettings.ini`                 |
-| `CustomDynamicConfigUrl` (+ `-UseDynamicConfig`)   | **INI** — flat `Key=Value` lines         | Launch arg or `GameUserSettings.ini`   |
-| `CustomNotificationURL` (`-CustomNotificationURL`) | Plain text / HTML notification page      | Launch arg                             |
-| `CustomLiveTuningUrl`                              | **JSON**                                 | Launch arg or `GameUserSettings.ini`   |
+| Consumer                                           | Expected body                                    | Where it is set                        |
+| -------------------------------------------------- | ------------------------------------------------ | -------------------------------------- |
+| `AdminListURL`                                     | Plain text ids (see body contract below)         | `GameUserSettings.ini` (RCON → Admins) |
+| `BanListURL`                                       | Plain text ban entries (see body contract below) | `GameUserSettings.ini`                 |
+| `BadWordListURL` / `BadWordWhiteListURL`           | Plain text word list                             | `GameUserSettings.ini`                 |
+| `CustomDynamicConfigUrl` (+ `-UseDynamicConfig`)   | **INI** — flat `Key=Value` lines                 | Launch arg or `GameUserSettings.ini`   |
+| `CustomNotificationURL` (`-CustomNotificationURL`) | Plain text / HTML notification page              | Launch arg                             |
+| `CustomLiveTuningUrl`                              | **JSON**                                         | Launch arg or `GameUserSettings.ini`   |
 
 `CustomDynamicConfigUrl` only accepts **HTTP** (HTTPS is unsupported), which is exactly
 what the loopback host provides. ASA re-reads the dynamic config on world (auto)save or
@@ -138,6 +138,22 @@ Typed `admin-list` resources and the wiki AllowedCheater file share one parser:
 
 Do not hand-edit a Hosted Resource body expecting mixed separators to survive an
 Admins-tab membership edit. Full Admins UI: [rcon.md](rcon.md#administrator-whitelist-153).
+
+### BanList body contract
+
+Typed `ban-list` resources are **opaque bodies** YARK serves on `BanListURL`.
+There is no Admins-style membership edit path for ban lists. ASA (and the local
+Win64 `BanList.txt` helpers) treat **one line as one ban**:
+
+- Prefer LF, one entry per line: either a bare id or ASA’s `id,name,flags`
+  (commonly `eosId,playerName,0`).
+- Blank and `#` comment lines are ignored by YARK’s disk parser
+  (`parseBanListEntries` in `ban-list.ts`).
+- **Commas are not multi-id CSV.** On a BanList line they separate name/flags
+  from the id. Pasting Discord-style comma-separated **ids** onto one line is
+  correct for AdminList and wrong for BanList — put each ban on its own line.
+- Local unban rewrites only the primary Win64 file and preserves name/flags on
+  remaining rows ([rcon.md](rcon.md#ban-list)).
 
 ### AdminListURL + loopback mode
 

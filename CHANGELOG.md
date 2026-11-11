@@ -26,6 +26,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 - Create cluster and the setup assistant suggest a Cluster ID like `yark-cluster-7f3a9c2e` instead of `yark-cluster-1`, so the in-game transfer list does not include other people's servers that reused the same default ID.
 - **Add setting** no longer writes into the previous section when a mod section was typed but not confirmed; it asks for **Add section** first. The INI sort preference survives a blocked `localStorage`, and `SelectField` keeps caller `classNames` (#705).
 
+### Docs
+
+- Documented shared workspace tab headers (`WorkspaceSectionHeader`), BanList line format vs AdminList CSV, and the Electron `e2e-server-fixture` helper for server file-write suites (#678, #688).
+
 ## [0.26.3] - 2026-11-07
 
 ### Fixed

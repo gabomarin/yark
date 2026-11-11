@@ -123,6 +123,21 @@ Host is always `127.0.0.1`. Auth uses the profile `adminPassword` and the
 | BanListURL                        | If set in GUS (and not blank/N/A) → warning that remote list may still block |
 | Open file                         | `ensureBanListFile` then `shell.openPath`                                    |
 
+**Body parse / rewrite** (`src/backend/domains/instances/ban-list.ts`):
+
+- **Read:** `parseBanListEntries` — CR stripped then split on LF; blank and `#`
+  comment lines skipped; **each non-empty line is one ban**. Within a line,
+  commas are `id,name,flags` fields (ASA `BanPlayer` shape), not extra ban ids.
+  Duplicate ids (case-insensitive) keep the first id and fill missing name/flags
+  from later lines.
+- **Write after unban / ensure:** `formatBanListEntries` — LF, one entry per
+  line; when a name is known, rewrite as `id,name,flags` (default flags `0`);
+  id-only lines stay id-only. Comments on removed lines are not preserved; other
+  entries keep their metadata.
+- **Not AdminList CSV:** do not treat a BanList line’s commas as multiple player
+  ids the way `parseAdminListIds` does. Hosted `BanListURL` bodies are opaque
+  text ASA fetches — see [hosted-resources.md](hosted-resources.md#banlist-body-contract).
+
 ### Administrator whitelist (#153)
 
 Wiki: `ShooterGame/Saved/AllowedCheaterAccountIDs.txt` (one EOS / Ark id per
