@@ -65,7 +65,7 @@ interface PolicyRow {
   updated_at: string;
 }
 
-export function clampBackupOperatorNote(value: string | null | undefined): string {
+function clampBackupOperatorNote(value: string | null | undefined): string {
   if (typeof value !== "string") return "";
   return value.slice(0, BACKUP_OPERATOR_NOTE_MAX_LENGTH);
 }
