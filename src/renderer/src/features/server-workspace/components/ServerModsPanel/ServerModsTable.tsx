@@ -49,6 +49,12 @@ interface Props {
   onSetPassive?: (row: ModRow) => void;
   /** Persist load-order change (server mode only). */
   onReorder?: (orderedIds: string[]) => void;
+  /** Server inventory search/status filter active — drag would corrupt load order (#636). */
+  filterActive?: boolean;
+  /** Empty body when search/status filter hides every row (keep headers). */
+  filterEmptyState?: ReactNode;
+  onCopyProjectId?: (row: ModRow) => void;
+  onCopyCurseForgeUrl?: (row: ModRow) => void;
   /**
    * Discover: controlled CurseForge catalog sort. Clear sort resets to Popularity.
    * Server: omit for internal view-sort vs load-order.
@@ -70,6 +76,13 @@ function toSortStatus(status: DataTableSortStatus<ModRow>): ModRowSortStatus | n
   };
 }
 
+function dragReorderTooltip(input: { dragEnabled: boolean; filterActive: boolean; viewSorted: boolean }): string {
+  if (input.dragEnabled) return "Drag to change load order";
+  if (input.filterActive) return "Clear filter to reorder";
+  if (input.viewSorted) return "Clear column sort to reorder";
+  return "Reorder unavailable while busy";
+}
+
 /**
  * Mods inventory as YarkDataTable (#94): thumbs, actions, column sort.
  * Server: view-sort vs load-order drag. Discover: column sort drives CurseForge
@@ -83,9 +96,10 @@ export function ServerModsTable(props: Props): ReactElement {
   const setSortStatus = controlled ? props.onSortStatusChange! : setInternalSortStatus;
 
   const viewSorted = String(sortStatus.columnAccessor) !== "loadIndex";
+  const filterActive = props.filterActive === true;
   const useDnD = props.mode === "server" && props.onReorder !== undefined;
-  // Block drag while any row mutation (or reorder persist) is in flight.
-  const dragEnabled = useDnD && !viewSorted && props.busyKey === null;
+  // Block drag while sorted, filtered, or any row mutation / reorder persist is in flight.
+  const dragEnabled = useDnD && !viewSorted && !filterActive && props.busyKey === null;
 
   const records = useMemo(() => {
     if (props.remoteSorted) return props.rows;
@@ -102,6 +116,8 @@ export function ServerModsTable(props: Props): ReactElement {
     onOpenExternal: props.onOpenExternal,
     onSetPassive: props.onSetPassive,
     onReorder: props.onReorder,
+    onCopyProjectId: props.onCopyProjectId,
+    onCopyCurseForgeUrl: props.onCopyCurseForgeUrl,
   });
   useEffect(() => {
     handlersRef.current = {
@@ -112,6 +128,8 @@ export function ServerModsTable(props: Props): ReactElement {
       onOpenExternal: props.onOpenExternal,
       onSetPassive: props.onSetPassive,
       onReorder: props.onReorder,
+      onCopyProjectId: props.onCopyProjectId,
+      onCopyCurseForgeUrl: props.onCopyCurseForgeUrl,
     };
   });
 
@@ -183,6 +201,8 @@ export function ServerModsTable(props: Props): ReactElement {
         },
         onOpenExternal: (url) => handlersRef.current.onOpenExternal(url),
         onSetPassive: (row) => handlersRef.current.onSetPassive?.(row),
+        onCopyProjectId: (row) => handlersRef.current.onCopyProjectId?.(row),
+        onCopyCurseForgeUrl: (row) => handlersRef.current.onCopyCurseForgeUrl?.(row),
       });
       event.preventDefault();
       event.stopPropagation();
@@ -197,6 +217,7 @@ export function ServerModsTable(props: Props): ReactElement {
       idAccessor="key"
       records={records}
       columns={columns}
+      emptyState={props.filterEmptyState}
       /* Auto-height: viewport scrolls natively; hide DataTable ScrollArea chrome. */
       height="auto"
       minHeight={160}
@@ -224,16 +245,7 @@ export function ServerModsTable(props: Props): ReactElement {
                     className={[rowProps.className, classes.clickableRow].filter(Boolean).join(" ")}
                   >
                     <TableTd>
-                      <Tooltip
-                        label={
-                          dragEnabled
-                            ? "Drag to change load order"
-                            : viewSorted
-                              ? "Clear column sort to reorder"
-                              : "Reorder unavailable while busy"
-                        }
-                        withArrow
-                      >
+                      <Tooltip label={dragReorderTooltip({ dragEnabled, filterActive, viewSorted })} withArrow>
                         <Center
                           {...(dragEnabled ? provided.dragHandleProps : {})}
                           role="button"

@@ -59,6 +59,21 @@
   gap: var(--app-space-sm);
 }
 
+/* One row when inventory exists: Add (left) + Find/Status (right). */
+.serverToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--app-space-sm);
+  /* Shared by Add + Clear so both match TextInput height. */
+  --mods-add-control-height: 36px;
+}
+
+:global([data-ui-density="compact"]) .serverToolbar {
+  --mods-add-control-height: 26px;
+}
+
 .sectionMain {
   flex: 1;
   min-height: 0;
@@ -72,10 +87,84 @@
   min-width: 260px;
 }
 
+/*
+ * Row height for Add field + Button. `--input-height` only exists on
+ * `.mantine-Input-wrapper`, so the sibling Button cannot read it — pin an
+ * explicit token that matches globals compact xs (26) / Mantine sm (36).
+ * `.serverToolbar` also sets this for the Clear button.
+ */
+.addProminent {
+  width: 100%;
+  --mods-add-control-height: 36px;
+}
+
+:global([data-ui-density="compact"]) .addProminent {
+  --mods-add-control-height: 26px;
+}
+
+.addCompact {
+  flex: 1 1 280px;
+  min-width: 220px;
+  max-width: 520px;
+}
+
+.addCompactField {
+  flex: 1;
+  min-width: 0;
+}
+
+.addButton {
+  border-radius: var(--app-radius-control);
+}
+
+.addProgress {
+  width: 100%;
+}
+
 /* Discover SearchField — same atom chrome as elsewhere; fixed narrow width (#297). */
 .discoverSearch {
   width: 240px;
   flex: 0 0 240px;
+}
+
+/* Server inventory filters (#636) — right cluster of the shared toolbar. */
+.inventoryFilters {
+  flex: 0 1 auto;
+}
+
+.inventorySearch {
+  width: 220px;
+  flex: 0 0 220px;
+}
+
+.inventoryStatus {
+  width: 180px;
+  flex: 0 0 180px;
+}
+
+/* Button trigger stays one SearchField-tall row; summary truncates instead of wrapping. */
+.inventoryStatusTrigger {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  /* Match SearchField ::placeholder (`--app-color-muted`), not Mantine placeholder gray. */
+  --input-placeholder-color: var(--app-color-muted);
+}
+
+.inventoryStatusSummary {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: start;
+  color: var(--app-color-text);
+}
+
+.inventoryStatusCheckSpacer {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
 }
 
 .tableStack {

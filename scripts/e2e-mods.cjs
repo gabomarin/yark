@@ -174,9 +174,9 @@ async function run() {
     await createServer(app, page, serverName, path.join(installDir, runId), ports);
     await openModsTab(page);
 
-    const addInput = page.getByLabel("Add CurseForge Project ID or mod URL");
+    const addInput = page.getByRole("textbox", { name: /^Add/ });
     await addInput.fill(DEMO_MOD_ID);
-    await page.getByRole("button", { name: "Add mod" }).click();
+    await page.getByRole("button", { name: "Add", exact: true }).click();
 
     try {
       await page.getByText(DEMO_MOD_ID, { exact: true }).first().waitFor({

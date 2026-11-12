@@ -29,6 +29,14 @@ describe("parseModAddInput", () => {
     });
   });
 
+  it("accepts whitespace and newline separated Project IDs (#634)", () => {
+    expect(parseModAddInput("928793\n929420 930001")).toEqual({
+      ids: ["928793", "929420", "930001"],
+      urls: [],
+      invalid: [],
+    });
+  });
+
   it("accepts an ASA CurseForge mod URL", () => {
     const url = "https://www.curseforge.com/ark-survival-ascended/mods/awesomespyglass";
     expect(parseModAddInput(url)).toEqual({

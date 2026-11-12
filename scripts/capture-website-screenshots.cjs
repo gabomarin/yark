@@ -223,8 +223,8 @@ async function ensureDemoMods(page) {
     if ((await already.count()) > 0) {
       continue;
     }
-    await page.getByLabel("Add CurseForge Project ID or mod URL").fill(modId);
-    await page.getByRole("button", { name: "Add mod" }).click();
+    await page.getByRole("textbox", { name: /^Add/ }).fill(modId);
+    await page.getByRole("button", { name: "Add", exact: true }).click();
     try {
       await page.getByText(modId, { exact: true }).first().waitFor({
         state: "visible",

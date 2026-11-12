@@ -3,10 +3,15 @@ import type { ModMetadata } from "@shared/types";
 import {
   buildDiscoveryRows,
   buildServerRows,
+  EMPTY_SERVER_MODS_INVENTORY_FILTER,
+  filterServerModRows,
+  formatModIdsCsv,
+  isServerModsInventoryFilterActive,
   mergeMetadata,
   modsMetadataSyncKey,
   pickModListCategory,
   reorderModIds,
+  selectModIdsForCopy,
   sortModRows,
   type ModRow,
 } from "./serverModsModel";
@@ -111,6 +116,33 @@ describe("serverModsModel metadata sync", () => {
     });
     expect(next).not.toBe(previous);
     expect(next.get("1")?.screenshots).toEqual(["https://cdn.example/a.jpg"]);
+  });
+});
+
+describe("selectModIdsForCopy / filterServerModRows (#634, #636)", () => {
+  it("copies all, enabled (-mods=), and disabled ID lists in load order", () => {
+    const configured = ["10", "20", "30"];
+    const disabled = new Set(["20"]);
+    expect(selectModIdsForCopy(configured, disabled, "all")).toEqual(["10", "20", "30"]);
+    expect(selectModIdsForCopy(configured, disabled, "enabled")).toEqual(["10", "30"]);
+    expect(selectModIdsForCopy(configured, disabled, "disabled")).toEqual(["20"]);
+    expect(formatModIdsCsv(["10", "30"])).toBe("10,30");
+  });
+
+  it("filters inventory by name, Project ID, and Status options", () => {
+    const rows = [
+      row({ key: "1", id: "101", name: "Spyglass", loadIndex: 0, enabled: true, passive: false }),
+      row({ key: "2", id: "202", name: "Custom Map", loadIndex: 1, enabled: false, passive: false }),
+      row({ key: "3", id: "303", name: "Structures", loadIndex: 2, enabled: true, passive: true }),
+    ];
+    expect(filterServerModRows(rows, EMPTY_SERVER_MODS_INVENTORY_FILTER)).toHaveLength(3);
+    expect(filterServerModRows(rows, { query: "spy", statuses: [] }).map((r) => r.id)).toEqual(["101"]);
+    expect(filterServerModRows(rows, { query: "202", statuses: [] }).map((r) => r.id)).toEqual(["202"]);
+    expect(filterServerModRows(rows, { query: "", statuses: ["disabled"] }).map((r) => r.id)).toEqual(["202"]);
+    expect(filterServerModRows(rows, { query: "", statuses: ["passive"] }).map((r) => r.id)).toEqual(["303"]);
+    expect(filterServerModRows(rows, { query: "", statuses: ["enabled"] }).map((r) => r.id)).toEqual(["101", "303"]);
+    expect(isServerModsInventoryFilterActive({ query: "x", statuses: [] })).toBe(true);
+    expect(isServerModsInventoryFilterActive(EMPTY_SERVER_MODS_INVENTORY_FILTER)).toBe(false);
   });
 });
 

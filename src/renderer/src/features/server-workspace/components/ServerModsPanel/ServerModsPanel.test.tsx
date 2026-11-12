@@ -124,11 +124,12 @@ function renderPanel(): void {
   );
 }
 
-const addLabel = "Add CurseForge Project ID or mod URL";
+/** Compact toolbar label when the server already has mods; empty inventory uses the long label. */
+const addFieldName = /^Add( CurseForge Project ID or mod URL)?$/;
 
 /** Avoid per-keystroke typing of long CurseForge URLs (flaky under CI 5s timeout). */
 function fillAddField(value: string): void {
-  fireEvent.change(screen.getByLabelText(addLabel), { target: { value } });
+  fireEvent.change(screen.getByRole("textbox", { name: addFieldName }), { target: { value } });
 }
 
 describe("ServerModsPanel", () => {
@@ -446,7 +447,7 @@ describe("ServerModsPanel", () => {
     const url = superDetail.curseforgeUrl;
 
     fillAddField(url);
-    await user.click(screen.getByRole("button", { name: "Add mod" }));
+    await user.click(screen.getByRole("button", { name: "Add" }));
 
     expect(api.getModByReference).toHaveBeenCalledWith(url);
     expect(screen.queryByText("Mod details")).not.toBeInTheDocument();
@@ -470,7 +471,11 @@ describe("ServerModsPanel", () => {
         color: "attention",
       }),
     );
-    expect(screen.getByText("New mods start disabled", { exact: false })).toBeInTheDocument();
+    expect(notifySpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining("will not load until you enable it"),
+      }),
+    );
   });
 
   it("shows import progress while resolving multiple refs", async () => {
@@ -501,7 +506,7 @@ describe("ServerModsPanel", () => {
     ].join(",");
 
     fillAddField(urls);
-    await user.click(screen.getByRole("button", { name: "Add mod" }));
+    await user.click(screen.getByRole("button", { name: "Add" }));
 
     expect(await screen.findByText(/Importing mods 0\/2/)).toBeInTheDocument();
     releaseFirst();
@@ -518,8 +523,8 @@ describe("ServerModsPanel", () => {
     const user = userEvent.setup();
     renderPanel();
 
-    await user.type(screen.getByLabelText(addLabel), "929420");
-    await user.click(screen.getByRole("button", { name: "Add mod" }));
+    await user.type(screen.getByRole("textbox", { name: addFieldName }), "929420");
+    await user.click(screen.getByRole("button", { name: "Add" }));
 
     expect(api.getModByReference).toHaveBeenCalledWith("929420");
     await waitFor(() => {
@@ -539,8 +544,8 @@ describe("ServerModsPanel", () => {
     const user = userEvent.setup();
     renderPanel();
 
-    await user.type(screen.getByLabelText(addLabel), "not-a-url");
-    await user.click(screen.getByRole("button", { name: "Add mod" }));
+    await user.type(screen.getByRole("textbox", { name: addFieldName }), "not-a-url");
+    await user.click(screen.getByRole("button", { name: "Add" }));
 
     expect(await screen.findByText(/No valid mods to add/)).toBeInTheDocument();
     expect(api.getModByReference).not.toHaveBeenCalled();
@@ -789,5 +794,66 @@ describe("ServerModsPanel", () => {
     expect(await screen.findByRole("button", { name: "Enable all" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Disable all" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Remove all disabled" })).toBeDisabled();
+  });
+
+  it("filters the inventory by name without changing header counts (#636)", async () => {
+    installApi();
+    const user = userEvent.setup();
+    render(
+      <AppProviders>
+        <ServerModsPanel
+          server={{
+            ...server,
+            mods: ["947033", "962796"],
+            disabledMods: ["962796"],
+            modMetadataCache: { "947033": awesomeDetail, "962796": mapModDetail },
+          }}
+          onServerUpdated={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(await screen.findByText("Awesome Spyglass!")).toBeInTheDocument();
+    expect(screen.getByText("Svartalfheim Premium")).toBeInTheDocument();
+    expect(screen.getByText("1 active")).toBeInTheDocument();
+    expect(screen.getByText("1 disabled")).toBeInTheDocument();
+
+    await user.type(screen.getByRole("textbox", { name: /Find on this server/i }), "svart");
+    expect(screen.queryByText("Awesome Spyglass!")).not.toBeInTheDocument();
+    expect(screen.getByText("Svartalfheim Premium")).toBeInTheDocument();
+    expect(screen.getByText("1 of 2")).toBeInTheDocument();
+    expect(screen.getByText("1 active")).toBeInTheDocument();
+    // Toolbar Clear only — no extra “Clear filter to reorder” bar above the table.
+    expect(screen.getByRole("button", { name: "Clear" })).toBeInTheDocument();
+    expect(screen.queryByText(/Clear filter to reorder/i)).not.toBeInTheDocument();
+    // Drag column stays reserved while filtered (handle disabled, not removed).
+    expect(screen.getByLabelText(/Reorder unavailable for Svartalfheim Premium/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Clear" }));
+    expect(screen.getByText("Awesome Spyglass!")).toBeInTheDocument();
+  });
+
+  it("offers Copy all / enabled / disabled in the IDs menu (#634)", async () => {
+    installApi();
+    const user = userEvent.setup();
+    render(
+      <AppProviders>
+        <ServerModsPanel
+          server={{
+            ...server,
+            mods: ["947033", "962796"],
+            disabledMods: ["962796"],
+            modMetadataCache: { "947033": awesomeDetail, "962796": mapModDetail },
+          }}
+          onServerUpdated={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "IDs" }));
+    expect(await screen.findByRole("menuitem", { name: /Copy all/i })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /Copy enabled/i })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /Copy disabled/i })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: /Import IDs/i })).not.toBeInTheDocument();
   });
 });
