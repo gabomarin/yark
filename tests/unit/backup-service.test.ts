@@ -1425,7 +1425,7 @@ describe("BackupService kinds and retention", () => {
     expect(repo.getBackupByPath(profile.id, noiseZip)).toBeNull();
   });
 
-  it("drops DB rows when the archive was deleted from disk", async () => {
+  it("marks completed rows missing when the archive was deleted from disk", async () => {
     const created = await service.createManualBackup(profile.id, ["ini"]);
     const record = created[0];
     expect(record).toBeDefined();
@@ -1437,8 +1437,9 @@ describe("BackupService kinds and retention", () => {
     expect(repo.getBackup(record.id)).not.toBeNull();
 
     const listed = await service.list(profile.id, 50);
-    expect(listed.some((b) => b.id === record.id)).toBe(false);
-    expect(repo.getBackup(record.id)).toBeNull();
+    const missing = listed.find((b) => b.id === record.id);
+    expect(missing?.diskMissing).toBe(true);
+    expect(repo.getBackup(record.id)?.diskMissing).toBe(true);
   });
 
   it("keeps failed backup rows even when the zip was cleaned up", async () => {
