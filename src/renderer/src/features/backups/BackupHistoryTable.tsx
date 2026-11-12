@@ -47,6 +47,7 @@ const CONTEXT_SOURCE_ID = "backup-history-table";
  */
 export function BackupHistoryTable(props: Props): ReactElement {
   const { openAt } = useRowActionMenuApi();
+  const { selectedIds, onSelectedIdsChange } = props;
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<BackupRecord>>(DEFAULT_BACKUP_HISTORY_SORT);
   const [metaFilter, setMetaFilter] = useState<BackupHistoryMetaFilterState>(EMPTY_BACKUP_HISTORY_META_FILTER);
 
@@ -69,17 +70,17 @@ export function BackupHistoryTable(props: Props): ReactElement {
   }, [props.records, metaFilter, sortStatus]);
 
   const selectedRecords = useMemo(
-    () => sortedRecords.filter((row) => props.selectedIds.includes(row.id)),
-    [sortedRecords, props.selectedIds],
+    () => sortedRecords.filter((row) => selectedIds.includes(row.id)),
+    [sortedRecords, selectedIds],
   );
 
   // Drop selections hidden by Status/Type filters so Delete (N) matches what the operator sees.
   useEffect(() => {
     const visibleIds = new Set(sortedRecords.map((row) => row.id));
-    const next = props.selectedIds.filter((id) => visibleIds.has(id));
-    if (next.length === props.selectedIds.length) return;
-    props.onSelectedIdsChange(next);
-  }, [sortedRecords, props.selectedIds, props.onSelectedIdsChange]);
+    const next = selectedIds.filter((id) => visibleIds.has(id));
+    if (next.length === selectedIds.length) return;
+    onSelectedIdsChange(next);
+  }, [sortedRecords, selectedIds, onSelectedIdsChange]);
 
   const columns = useMemo(
     () =>
