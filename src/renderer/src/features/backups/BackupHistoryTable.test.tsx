@@ -325,4 +325,40 @@ describe("filterBackupRecordsByMeta", () => {
       filterBackupRecordsByMeta([backup, missing], { statuses: ["missing"], types: [] }).map((row) => row.id),
     ).toEqual(["bk-missing"]);
   });
+
+  it("clears selection that is hidden by the Status filter", async () => {
+    const user = userEvent.setup();
+    const onSelectedIdsChange = vi.fn();
+    const failed: BackupRecord = {
+      ...backup,
+      id: "bk-failed",
+      path: "C:/backups/world/bk-failed.zip",
+      status: "failed",
+      type: "scheduled",
+    };
+
+    render(
+      <AppProviders>
+        <BackupHistoryTable
+          kind="world"
+          records={[backup, failed]}
+          selectedIds={[backup.id, failed.id]}
+          busy={false}
+          opsLocked={false}
+          fetching={false}
+          emptyHint="No backups yet"
+          {...tableHandlers}
+          onSelectedIdsChange={onSelectedIdsChange}
+        />
+      </AppProviders>,
+    );
+
+    const fileHeader = document.querySelector('th[data-accessor="path"]');
+    const filterButton = fileHeader!.querySelector(".mantine-datatable-header-cell-filter-action-icon");
+    await user.click(filterButton!);
+    await user.click(await screen.findByRole("combobox", { name: /^Status$/i }));
+    await user.click(await screen.findByRole("option", { name: /^Failed$/i }));
+
+    expect(onSelectedIdsChange).toHaveBeenCalledWith([failed.id]);
+  });
 });

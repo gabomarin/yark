@@ -216,6 +216,12 @@ describe("BackupRepository", () => {
     repo.setBackupDiskMissing(worldB.id, true);
     expect(repo.latestCompleted("s1", "world")).toBeNull();
     expect(repo.listCompleted("s1", "world")).toEqual([]);
+    expect(
+      repo
+        .listDiskMissing("s1")
+        .map((row) => row.id)
+        .sort(),
+    ).toEqual([worldA.id, worldB.id].sort());
   });
 
   it("deletes backup records", () => {

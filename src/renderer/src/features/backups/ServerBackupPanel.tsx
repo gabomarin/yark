@@ -187,6 +187,7 @@ export function ServerBackupPanel(props: Props): ReactElement {
       />
 
       <BackupProtectionModal
+        key={panel.protectTarget?.id ?? "protect-closed"}
         backup={panel.protectTarget}
         saving={panel.busyOp === "other"}
         onClose={panel.closeProtectModal}

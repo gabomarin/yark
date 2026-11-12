@@ -202,16 +202,16 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
     }
   }, [missingOnDisk.missingCount]);
 
-  // Keep protect modal target in sync with list refreshes (same id).
+  // Keep protect modal target in sync with list refreshes (same id); close if archive goes missing.
   useEffect(() => {
     setProtectTarget((previous) => {
       if (previous === null) return null;
       const next = backups.find((backup) => backup.id === previous.id);
       if (next === undefined) return null;
+      if (next.diskMissing) return null;
       if (
         next.isProtected === previous.isProtected &&
         next.operatorNote === previous.operatorNote &&
-        next.diskMissing === previous.diskMissing &&
         next.status === previous.status
       ) {
         return previous;

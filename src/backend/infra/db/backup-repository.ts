@@ -203,6 +203,18 @@ export class BackupRepository {
     return rows.map(rowToBackup);
   }
 
+  /** All completed archives marked missing on disk (no LIMIT — banner/history must see them). */
+  listDiskMissing(serverId: string): BackupRecord[] {
+    const rows = this.db
+      .prepare(
+        `SELECT * FROM backups
+         WHERE server_id = ? AND status = 'completed' AND IFNULL(disk_missing, 0) = 1
+         ORDER BY COALESCE(completed_at, created_at) DESC, created_at DESC, rowid DESC`,
+      )
+      .all(serverId) as unknown as BackupRow[];
+    return rows.map(rowToBackup);
+  }
+
   listFailed(serverId: string, kind: BackupKind): BackupRecord[] {
     const rows = this.db
       .prepare(

@@ -13,10 +13,18 @@ interface Props {
 
 /** Context-menu path for editing backup protection (popover is used from the shield icon). */
 export function BackupProtectionModal(props: Props): ReactElement {
-  const [isProtected, setIsProtected] = useState(false);
-  const [operatorNote, setOperatorNote] = useState("");
+  const [isProtected, setIsProtected] = useState(() => props.backup?.isProtected ?? false);
+  const [operatorNote, setOperatorNote] = useState(() => props.backup?.operatorNote ?? "");
   const dirtyRef = useRef(false);
-  const lastSyncedRef = useRef<{ id: string; isProtected: boolean; operatorNote: string } | null>(null);
+  const lastSyncedRef = useRef<{ id: string; isProtected: boolean; operatorNote: string } | null>(
+    props.backup
+      ? {
+          id: props.backup.id,
+          isProtected: props.backup.isProtected,
+          operatorNote: props.backup.operatorNote,
+        }
+      : null,
+  );
 
   useEffect(() => {
     if (props.backup === null) {

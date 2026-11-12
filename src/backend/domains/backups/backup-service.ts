@@ -392,7 +392,14 @@ export class BackupService extends EventEmitter {
   async list(serverId: string, limit: number): Promise<BackupRecord[]> {
     this.mustServer(serverId);
     await this.reconcileDiskBackups(serverId);
-    return this.backups.listBackups(serverId, Math.max(1, Math.min(limit, 200)));
+    const capped = Math.max(1, Math.min(limit, 200));
+    const listed = this.backups.listBackups(serverId, capped);
+    // Always surface missing-on-disk rows even when they fall outside the page limit.
+    const missing = this.backups.listDiskMissing(serverId);
+    if (missing.length === 0) return listed;
+    const seen = new Set(listed.map((row) => row.id));
+    const extras = missing.filter((row) => !seen.has(row.id));
+    return extras.length === 0 ? listed : [...listed, ...extras];
   }
 
   /** Force re-scan of disk archives into the DB, then return the list. */

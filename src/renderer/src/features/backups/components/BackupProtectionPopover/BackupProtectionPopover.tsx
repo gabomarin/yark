@@ -18,11 +18,28 @@ export function BackupProtectionPopover(props: Props): ReactElement {
   const [operatorNote, setOperatorNote] = useState(props.backup.operatorNote);
   const dirtyRef = useRef(false);
   const lastSyncedRef = useRef({
+    id: props.backup.id,
     isProtected: props.backup.isProtected,
     operatorNote: props.backup.operatorNote,
   });
 
   useEffect(() => {
+    if (props.backup.diskMissing) {
+      setOpened(false);
+      return;
+    }
+    if (props.backup.id !== lastSyncedRef.current.id) {
+      setOpened(false);
+      setIsProtected(props.backup.isProtected);
+      setOperatorNote(props.backup.operatorNote);
+      dirtyRef.current = false;
+      lastSyncedRef.current = {
+        id: props.backup.id,
+        isProtected: props.backup.isProtected,
+        operatorNote: props.backup.operatorNote,
+      };
+      return;
+    }
     if (!opened || dirtyRef.current) return;
     if (
       props.backup.isProtected === lastSyncedRef.current.isProtected &&
@@ -33,16 +50,18 @@ export function BackupProtectionPopover(props: Props): ReactElement {
     setIsProtected(props.backup.isProtected);
     setOperatorNote(props.backup.operatorNote);
     lastSyncedRef.current = {
+      id: props.backup.id,
       isProtected: props.backup.isProtected,
       operatorNote: props.backup.operatorNote,
     };
-  }, [opened, props.backup.isProtected, props.backup.operatorNote]);
+  }, [opened, props.backup.id, props.backup.diskMissing, props.backup.isProtected, props.backup.operatorNote]);
 
   const resetFromBackup = () => {
     setIsProtected(props.backup.isProtected);
     setOperatorNote(props.backup.operatorNote);
     dirtyRef.current = false;
     lastSyncedRef.current = {
+      id: props.backup.id,
       isProtected: props.backup.isProtected,
       operatorNote: props.backup.operatorNote,
     };

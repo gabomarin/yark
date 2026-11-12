@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { HardDrives } from "@phosphor-icons/react";
 import type { DataTableSortStatus } from "mantine-datatable";
 import type { BackupKind, BackupRecord, BackupType } from "@shared/types";
@@ -73,6 +73,14 @@ export function BackupHistoryTable(props: Props): ReactElement {
     [sortedRecords, props.selectedIds],
   );
 
+  // Drop selections hidden by Status/Type filters so Delete (N) matches what the operator sees.
+  useEffect(() => {
+    const visibleIds = new Set(sortedRecords.map((row) => row.id));
+    const next = props.selectedIds.filter((id) => visibleIds.has(id));
+    if (next.length === props.selectedIds.length) return;
+    props.onSelectedIdsChange(next);
+  }, [sortedRecords, props.selectedIds, props.onSelectedIdsChange]);
+
   const columns = useMemo(
     () =>
       buildBackupHistoryTableColumns({
@@ -122,10 +130,7 @@ export function BackupHistoryTable(props: Props): ReactElement {
       onSortStatusChange={setSortStatus}
       selectedRecords={selectedRecords}
       onSelectedRecordsChange={(rows) => {
-        // Keep selections that are hidden by Status/Type filters; only replace visible ids.
-        const visibleIds = new Set(sortedRecords.map((row) => row.id));
-        const hiddenSelected = props.selectedIds.filter((id) => !visibleIds.has(id));
-        props.onSelectedIdsChange([...hiddenSelected, ...rows.map((row) => row.id)]);
+        props.onSelectedIdsChange(rows.map((row) => row.id));
       }}
       isRecordSelectable={(record) => record.status !== "running" && !props.busy}
       selectionCheckboxProps={{ size: "xs" }}
