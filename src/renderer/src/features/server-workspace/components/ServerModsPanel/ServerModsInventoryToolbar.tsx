@@ -1,15 +1,5 @@
 import type { ReactElement } from "react";
-import {
-  Button,
-  CheckIcon,
-  CloseButton,
-  Combobox,
-  Group,
-  Input,
-  InputBase,
-  Text,
-  useCombobox,
-} from "@mantine/core";
+import { Button, CheckIcon, CloseButton, Combobox, Group, Input, InputBase, Text, useCombobox } from "@mantine/core";
 import { CaretDown } from "@phosphor-icons/react";
 import { useUiDensity } from "@app/AppProviders";
 import { SearchField } from "@ui/SearchField/SearchField";
@@ -71,7 +61,11 @@ export function ServerModsInventoryToolbar(props: Props): ReactElement {
         onChange={(query) => props.onFilterChange({ ...props.filter, query })}
       />
       <Input.Wrapper label="Status" className={classes.inventoryStatus} size={size}>
-        <Combobox store={combobox} withinPortal onOptionSubmit={(value) => toggleStatus(value as ServerModsStatusFilter)}>
+        <Combobox
+          store={combobox}
+          withinPortal
+          onOptionSubmit={(value) => toggleStatus(value as ServerModsStatusFilter)}
+        >
           <Combobox.Target>
             <InputBase
               component="button"

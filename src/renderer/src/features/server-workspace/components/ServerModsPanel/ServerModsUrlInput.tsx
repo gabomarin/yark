@@ -58,7 +58,11 @@ export function ServerModsUrlInput(props: Props): ReactElement {
       <TextInput
         label={compact ? "Add" : "Add CurseForge Project ID or mod URL"}
         description={compact ? undefined : MOD_ADD_HELP}
-        placeholder={compact ? "Project ID or CurseForge URL" : "928793, 929420, https://www.curseforge.com/ark-survival-ascended/mods/..."}
+        placeholder={
+          compact
+            ? "Project ID or CurseForge URL"
+            : "928793, 929420, https://www.curseforge.com/ark-survival-ascended/mods/..."
+        }
         size={size}
         leftSection={<LinkSimple size={searchFieldIconSize(size)} />}
         rightSection={
