@@ -7,9 +7,8 @@ export const BACKUP_PROTECTION_ENSURE_SCHEMA_VERSION = 31;
 export const BACKUP_DISK_MISSING_ENSURE_SCHEMA_VERSION = 32;
 
 function tableExists(db: DatabaseSync, table: string): boolean {
-  const row = db
-    .prepare("SELECT 1 AS ok FROM sqlite_master WHERE type = 'table' AND name = ? LIMIT 1")
-    .get(table) as { ok: number } | undefined;
+  const row = db.prepare("SELECT 1 AS ok FROM sqlite_master WHERE type = 'table' AND name = ? LIMIT 1").get(table) as
+    { ok: number } | undefined;
   return row !== undefined;
 }
 
