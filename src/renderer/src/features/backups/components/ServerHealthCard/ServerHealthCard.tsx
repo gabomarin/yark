@@ -194,7 +194,7 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
                 className={classes.policyField}
               />
               <Tooltip label={BACKUP_PROTECT_HELP_TOOLTIP} multiline maw={320} withArrow>
-                <div>
+                <span className={classes.protectSwitchHit}>
                   <AppSwitch
                     label="Protect new manual world backups"
                     checked={draft.protectNewManualWorld}
@@ -205,10 +205,10 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
                       })
                     }
                   />
-                </div>
+                </span>
               </Tooltip>
               <Tooltip label={BACKUP_PROTECT_HELP_TOOLTIP} multiline maw={320} withArrow>
-                <div>
+                <span className={classes.protectSwitchHit}>
                   <AppSwitch
                     label="Protect new manual INI backups"
                     checked={draft.protectNewManualIni}
@@ -219,7 +219,7 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
                       })
                     }
                   />
-                </div>
+                </span>
               </Tooltip>
             </Group>
           </Stack>

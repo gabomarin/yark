@@ -3,6 +3,7 @@ import { Button, Group, Stack, Text, Textarea, Tooltip } from "@mantine/core";
 import { BACKUP_OPERATOR_NOTE_MAX_LENGTH } from "@shared/types";
 import { AppSwitch } from "@ui/AppSwitch/AppSwitch";
 import { BACKUP_PROTECT_HELP_TOOLTIP } from "../../model/serverBackupPanelModel";
+import classes from "../../BackupsPage.module.css";
 
 export interface BackupProtectionEditorProps {
   isProtected: boolean;
@@ -21,14 +22,14 @@ export function BackupProtectionEditor(props: BackupProtectionEditorProps): Reac
   return (
     <Stack gap="sm">
       <Tooltip label={BACKUP_PROTECT_HELP_TOOLTIP} multiline maw={320} withArrow>
-        <div>
+        <span className={classes.protectSwitchHit}>
           <AppSwitch
             label="Protected"
             checked={props.isProtected}
             disabled={props.saving}
             onCheckedChange={props.onIsProtectedChange}
           />
-        </div>
+        </span>
       </Tooltip>
       <Textarea
         label="Note"

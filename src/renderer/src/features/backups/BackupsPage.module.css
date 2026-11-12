@@ -120,6 +120,12 @@
   gap: var(--app-space-xs);
 }
 
+/* Tooltip target for Protect switches: keep the same inline height as Schedule / Keep last. */
+.protectSwitchHit {
+  display: inline-flex;
+  align-items: center;
+}
+
 .kindSettingsMeta {
   margin-top: 2px;
   line-height: 1.3;

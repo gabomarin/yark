@@ -113,7 +113,7 @@ export function BackupKindSettings(props: Props): ReactElement {
             />
           </Group>
           <Tooltip label={BACKUP_PROTECT_HELP_TOOLTIP} multiline maw={320} withArrow>
-            <div>
+            <span className={classes.protectSwitchHit}>
               <AppSwitch
                 size="sm"
                 label="Protect new manual backups"
@@ -126,7 +126,7 @@ export function BackupKindSettings(props: Props): ReactElement {
                   })
                 }
               />
-            </div>
+            </span>
           </Tooltip>
         </Group>
       )}
@@ -175,7 +175,7 @@ export function BackupKindSettings(props: Props): ReactElement {
             className={classes.compactRetain}
           />
           <Tooltip label={BACKUP_PROTECT_HELP_TOOLTIP} multiline maw={320} withArrow>
-            <div>
+            <span className={classes.protectSwitchHit}>
               <AppSwitch
                 size="sm"
                 label="Protect new manual backups"
@@ -188,7 +188,7 @@ export function BackupKindSettings(props: Props): ReactElement {
                   })
                 }
               />
-            </div>
+            </span>
           </Tooltip>
         </Group>
       )}
