@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { HardDrives } from "@phosphor-icons/react";
 import type { DataTableSortStatus } from "mantine-datatable";
 import type { BackupKind, BackupRecord, BackupType } from "@shared/types";
@@ -82,25 +82,25 @@ export function BackupHistoryTable(props: Props): ReactElement {
 
   // Drop selections hidden by Status/Type filters so Delete (N) matches what the operator sees.
   // Prune in the filter handlers (not an effect) to avoid pushing live state to the parent after paint.
-  const pruneSelectionToVisibleIds = (visibleIds: Set<string>) => {
-    const current = selectedIdsRef.current;
-    const next = current.filter((id) => visibleIds.has(id));
-    if (next.length !== current.length) {
-      onSelectedIdsChangeRef.current(next);
-    }
-  };
-
-  const handleMetaFilterChange = (next: BackupHistoryMetaFilterState) => {
+  const handleMetaFilterChange = useCallback((next: BackupHistoryMetaFilterState) => {
     setMetaFilter(next);
-    pruneSelectionToVisibleIds(
-      new Set(filterBackupRecordsByMeta(recordsRef.current, next).map((row) => row.id)),
-    );
-  };
+    const visibleIds = new Set(filterBackupRecordsByMeta(recordsRef.current, next).map((row) => row.id));
+    const current = selectedIdsRef.current;
+    const pruned = current.filter((id) => visibleIds.has(id));
+    if (pruned.length !== current.length) {
+      onSelectedIdsChangeRef.current(pruned);
+    }
+  }, []);
 
-  const handleMetaFilterClear = () => {
+  const handleMetaFilterClear = useCallback(() => {
     setMetaFilter(EMPTY_BACKUP_HISTORY_META_FILTER);
-    pruneSelectionToVisibleIds(new Set(recordsRef.current.map((row) => row.id)));
-  };
+    const visibleIds = new Set(recordsRef.current.map((row) => row.id));
+    const current = selectedIdsRef.current;
+    const pruned = current.filter((id) => visibleIds.has(id));
+    if (pruned.length !== current.length) {
+      onSelectedIdsChangeRef.current(pruned);
+    }
+  }, []);
 
   const columns = useMemo(
     () =>
@@ -130,6 +130,8 @@ export function BackupHistoryTable(props: Props): ReactElement {
       metaFilter,
       typeFilterOptions,
       metaFilterActive,
+      handleMetaFilterChange,
+      handleMetaFilterClear,
       props.onCopyDetails,
       props.onOpenFolder,
       props.onExport,
