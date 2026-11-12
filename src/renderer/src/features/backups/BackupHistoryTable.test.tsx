@@ -315,4 +315,14 @@ describe("filterBackupRecordsByMeta", () => {
     });
     expect(filtered.map((row) => row.id)).toEqual(["bk-failed"]);
   });
+
+  it("treats missing-on-disk separately from Completed", () => {
+    const missing: BackupRecord = { ...backup, id: "bk-missing", diskMissing: true };
+    expect(
+      filterBackupRecordsByMeta([backup, missing], { statuses: ["completed"], types: [] }).map((row) => row.id),
+    ).toEqual(["bk-world"]);
+    expect(
+      filterBackupRecordsByMeta([backup, missing], { statuses: ["missing"], types: [] }).map((row) => row.id),
+    ).toEqual(["bk-missing"]);
+  });
 });

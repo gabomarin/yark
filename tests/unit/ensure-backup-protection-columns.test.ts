@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { openDatabaseApplyingMigrations } from "@backend/infra/db/database";
 import {
   BACKUP_PROTECTION_ENSURE_SCHEMA_VERSION,
+  ensureBackupCatalogColumns,
   ensureBackupProtectionColumns,
 } from "@backend/infra/db/ensure-backup-protection-columns";
 import schemaMigrations from "@backend/infra/db/schema-migrations.json";
@@ -50,12 +51,32 @@ describe("ensureBackupProtectionColumns", () => {
     db.close();
   });
 
+  it("repairs columns when user_version is already ahead without the ALTERs", () => {
+    const dir = mkdtempSync(join(tmpdir(), "yark-protect-ensure-ahead-"));
+    dirs.push(dir);
+    const path = join(dir, "profile.db");
+    const through29 = schemaMigrations.filter((migration) => migration.version <= 29);
+    let db = openDatabaseApplyingMigrations(path, through29, { takeSnapshots: false });
+    db.exec("PRAGMA user_version = 32;");
+    db.close();
+
+    db = openDatabaseApplyingMigrations(path, schemaMigrations, { takeSnapshots: false });
+    const backupCols = (db.prepare("PRAGMA table_info(backups)").all() as Array<{ name: string }>).map(
+      (row) => row.name,
+    );
+    expect(backupCols).toContain("is_protected");
+    expect(backupCols).toContain("disk_missing");
+    expect(() => ensureBackupCatalogColumns(db)).not.toThrow();
+    db.close();
+  });
+
   it("is safe to run when columns already exist", () => {
     const dir = mkdtempSync(join(tmpdir(), "yark-protect-ensure-idem-"));
     dirs.push(dir);
     const path = join(dir, "profile.db");
     const db = openDatabaseApplyingMigrations(path, schemaMigrations, { takeSnapshots: false });
     expect(() => ensureBackupProtectionColumns(db)).not.toThrow();
+    expect(() => ensureBackupCatalogColumns(db)).not.toThrow();
     db.close();
   });
 });

@@ -65,8 +65,10 @@ Migrations are forward-only and keyed on `PRAGMA user_version`: only rows with
   be missing while its IPC handler exists. Align the number with what actually ships, or
   lower that profile's `user_version` so the pending migration runs. Migration **31**
   repairs Protected-backup columns (`is_protected` / notes / policy flags) when version
-  30 was recorded without those `ALTER`s. Migration **32** adds `backups.disk_missing`
-  so history rows stay when the ZIP was deleted outside YARK.
+  30 was recorded without those `ALTER`s. Migration **32** ensures `backups.disk_missing`
+  so history rows stay when the ZIP was deleted outside YARK. Both ensures also run
+  idempotently on every open, so a profile already at version ≥ 31/32 without the
+  columns is repaired without lowering `user_version`.
 
 ## Profile DB snapshots (#252)
 

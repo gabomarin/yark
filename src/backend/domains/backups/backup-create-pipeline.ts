@@ -282,12 +282,15 @@ export class BackupCreatePipeline {
         type === "manual" &&
         ((kind === "world" && policy.protectNewManualWorld) || (kind === "ini" && policy.protectNewManualIni))
       ) {
-        completed =
-          this.host.backups.setBackupProtection({
-            id: completed.id,
-            isProtected: true,
-            operatorNote: "",
-          }) ?? completed;
+        const protectedRow = this.host.backups.setBackupProtection({
+          id: completed.id,
+          isProtected: true,
+          operatorNote: "",
+        });
+        if (protectedRow === null) {
+          throw new Error("Could not apply auto-protect after backup completed");
+        }
+        completed = protectedRow;
       }
 
       const missingHint = packaged.meta.empty ? ` (no ${kind} data present yet)` : "";

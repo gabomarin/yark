@@ -23,7 +23,8 @@ export class BackupRetention {
   async applyRetention(serverId: string, policy: BackupPolicy): Promise<void> {
     for (const kind of ALL_BACKUP_KINDS) {
       const retain = retainCountForKind(policy, kind);
-      const completed = this.host.backups.listCompleted(serverId, kind);
+      // listCompleted already excludes disk_missing; keep the filter explicit for retention.
+      const completed = this.host.backups.listCompleted(serverId, kind).filter((backup) => !backup.diskMissing);
 
       if (kind === "players") {
         const byPlayer = new Map<string, BackupRecord[]>();

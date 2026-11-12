@@ -122,7 +122,10 @@ export function BackupHistoryTable(props: Props): ReactElement {
       onSortStatusChange={setSortStatus}
       selectedRecords={selectedRecords}
       onSelectedRecordsChange={(rows) => {
-        props.onSelectedIdsChange(rows.map((row) => row.id));
+        // Keep selections that are hidden by Status/Type filters; only replace visible ids.
+        const visibleIds = new Set(sortedRecords.map((row) => row.id));
+        const hiddenSelected = props.selectedIds.filter((id) => !visibleIds.has(id));
+        props.onSelectedIdsChange([...hiddenSelected, ...rows.map((row) => row.id)]);
       }}
       isRecordSelectable={(record) => record.status !== "running" && !props.busy}
       selectionCheckboxProps={{ size: "xs" }}

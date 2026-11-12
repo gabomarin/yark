@@ -201,7 +201,8 @@ export function createServerBackupPanelActions(options: BackupPanelActionOptions
     if (actionableSelectedIds.length === 0) return;
     const ids = [...actionableSelectedIds];
     const count = ids.length;
-    const selected = kindBackups.filter((row) => ids.includes(row.id));
+    const idSet = new Set(ids);
+    const selected = kindBackups.filter((row) => idSet.has(row.id));
     const protectedRows = selected.filter((row) => row.isProtected);
     const protectedCount = protectedRows.length;
     const body: Array<string | ReturnType<typeof createElement>> = [

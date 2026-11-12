@@ -1,11 +1,12 @@
 import type { ReactElement } from "react";
 import { Button, MultiSelect, Stack } from "@mantine/core";
-import type { BackupStatus, BackupType } from "@shared/types";
+import type { BackupType } from "@shared/types";
 import { formatBackupTypeLabel } from "../../model/serverBackupPanelModel";
-import type { BackupHistoryMetaFilterState } from "../../backupHistoryMetaFilter";
+import type { BackupHistoryMetaFilterState, BackupHistoryStatusFilter } from "../../backupHistoryMetaFilter";
 
-const STATUS_OPTIONS: Array<{ value: BackupStatus; label: string }> = [
+const STATUS_OPTIONS: Array<{ value: BackupHistoryStatusFilter; label: string }> = [
   { value: "completed", label: "Completed" },
+  { value: "missing", label: "Missing on disk" },
   { value: "failed", label: "Failed" },
   { value: "running", label: "Running" },
 ];
@@ -39,7 +40,7 @@ export function BackupHistoryMetaFilter(props: Props): ReactElement {
         onChange={(values) =>
           props.onChange({
             ...props.filter,
-            statuses: values as BackupStatus[],
+            statuses: values as BackupHistoryStatusFilter[],
           })
         }
         clearable

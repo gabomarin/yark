@@ -24,7 +24,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 ### Fixed
 
 - Profiles whose schema version was already 30 without the Protected-backup columns can mark backups protected again after a restart (migration 31).
-- Backup history no longer silently drops rows when the ZIP was deleted outside YARK: the row stays as missing on disk (highlighted in the list), restore/export are blocked, and the server Backups panel shows a dismissable warning while any archive is missing.
+- Backup history no longer silently drops rows when the ZIP was deleted outside YARK: the row stays as missing on disk (highlighted in the list), restore/export are blocked, and the server Backups panel shows a dismissable warning while any archive is missing. The File Status filter can isolate **Missing on disk**.
 - A malformed INI conflict row no longer hides the other rows in the Save conflict review (#696).
 - Configuration → INI Files uses the same gap between search, the category filter, and the sort menu. On a narrower pane, search sits on its own row, and Reload, Restore, Discard, and Save become icon buttons the same size as the server card actions. Each name shows on hover.
 - The settings sort tooltip closes when you pick a sort, so it does not flash in the corner of the window.

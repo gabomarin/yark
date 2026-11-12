@@ -1,7 +1,10 @@
 import type { BackupRecord, BackupStatus, BackupType } from "@shared/types";
 
+/** Status filter values; `missing` is derived from `diskMissing` (status stays completed). */
+export type BackupHistoryStatusFilter = BackupStatus | "missing";
+
 export type BackupHistoryMetaFilterState = {
-  statuses: BackupStatus[];
+  statuses: BackupHistoryStatusFilter[];
   types: BackupType[];
 };
 
@@ -14,15 +17,23 @@ export function isBackupHistoryMetaFilterActive(filter: BackupHistoryMetaFilterS
   return filter.statuses.length > 0 || filter.types.length > 0;
 }
 
+function matchesStatusFilter(row: BackupRecord, statuses: BackupHistoryStatusFilter[]): boolean {
+  if (statuses.length === 0) return true;
+  const selected = new Set(statuses);
+  if (row.diskMissing) return selected.has("missing");
+  return selected.has(row.status);
+}
+
 /** Apply Status / Type header filters (empty selection = all). */
 export function filterBackupRecordsByMeta(
   records: BackupRecord[],
   filter: BackupHistoryMetaFilterState,
 ): BackupRecord[] {
   if (!isBackupHistoryMetaFilterActive(filter)) return records;
+  const types = new Set(filter.types);
   return records.filter((row) => {
-    if (filter.statuses.length > 0 && !filter.statuses.includes(row.status)) return false;
-    if (filter.types.length > 0 && !filter.types.includes(row.type)) return false;
+    if (!matchesStatusFilter(row, filter.statuses)) return false;
+    if (types.size > 0 && !types.has(row.type)) return false;
     return true;
   });
 }

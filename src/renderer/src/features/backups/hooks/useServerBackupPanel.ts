@@ -194,6 +194,31 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
   const dismissMissingOnDiskAlert = () => {
     setDismissedMissingFingerprint(missingOnDisk.fingerprint);
   };
+
+  useEffect(() => {
+    // Recurring missing after a full clear should raise the banner again.
+    if (missingOnDisk.missingCount === 0) {
+      setDismissedMissingFingerprint(null);
+    }
+  }, [missingOnDisk.missingCount]);
+
+  // Keep protect modal target in sync with list refreshes (same id).
+  useEffect(() => {
+    setProtectTarget((previous) => {
+      if (previous === null) return null;
+      const next = backups.find((backup) => backup.id === previous.id);
+      if (next === undefined) return null;
+      if (
+        next.isProtected === previous.isProtected &&
+        next.operatorNote === previous.operatorNote &&
+        next.diskMissing === previous.diskMissing &&
+        next.status === previous.status
+      ) {
+        return previous;
+      }
+      return next;
+    });
+  }, [backups]);
   const displayedBackups = useMemo(
     () => filterBackups(backups, activeKind, playerSearch, currentMapOnly, server.map),
     [backups, activeKind, playerSearch, currentMapOnly, server.map],

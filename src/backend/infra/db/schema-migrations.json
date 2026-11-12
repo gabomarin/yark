@@ -125,6 +125,6 @@
   },
   {
     "version": 32,
-    "sql": "ALTER TABLE backups ADD COLUMN disk_missing INTEGER NOT NULL DEFAULT 0;"
+    "sql": "-- disk_missing ensured in JS (idempotent; repairs profiles that skipped the ALTER)"
   }
 ]

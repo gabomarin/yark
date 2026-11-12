@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Shield } from "@phosphor-icons/react";
 import { ActionIcon, Popover, Tooltip } from "@mantine/core";
 import type { BackupRecord } from "@shared/types";
@@ -16,6 +16,37 @@ export function BackupProtectionPopover(props: Props): ReactElement {
   const [opened, setOpened] = useState(false);
   const [isProtected, setIsProtected] = useState(props.backup.isProtected);
   const [operatorNote, setOperatorNote] = useState(props.backup.operatorNote);
+  const [dirty, setDirty] = useState(false);
+  const lastSyncedRef = useRef({
+    isProtected: props.backup.isProtected,
+    operatorNote: props.backup.operatorNote,
+  });
+
+  useEffect(() => {
+    if (!opened || dirty) return;
+    if (
+      props.backup.isProtected === lastSyncedRef.current.isProtected &&
+      props.backup.operatorNote === lastSyncedRef.current.operatorNote
+    ) {
+      return;
+    }
+    setIsProtected(props.backup.isProtected);
+    setOperatorNote(props.backup.operatorNote);
+    lastSyncedRef.current = {
+      isProtected: props.backup.isProtected,
+      operatorNote: props.backup.operatorNote,
+    };
+  }, [opened, dirty, props.backup.isProtected, props.backup.operatorNote]);
+
+  const resetFromBackup = () => {
+    setIsProtected(props.backup.isProtected);
+    setOperatorNote(props.backup.operatorNote);
+    setDirty(false);
+    lastSyncedRef.current = {
+      isProtected: props.backup.isProtected,
+      operatorNote: props.backup.operatorNote,
+    };
+  };
 
   const tooltip = props.backup.operatorNote.trim().length > 0 ? props.backup.operatorNote.trim() : "Protected";
 
@@ -25,10 +56,7 @@ export function BackupProtectionPopover(props: Props): ReactElement {
       onChange={(next) => {
         if (props.saving) return;
         setOpened(next);
-        if (next) {
-          setIsProtected(props.backup.isProtected);
-          setOperatorNote(props.backup.operatorNote);
-        }
+        if (next) resetFromBackup();
       }}
       position="bottom-end"
       withArrow
@@ -44,10 +72,9 @@ export function BackupProtectionPopover(props: Props): ReactElement {
             aria-label={
               props.backup.isProtected ? `Edit protection ${props.backup.id}` : `Protect backup ${props.backup.id}`
             }
-            disabled={props.busy || props.backup.status !== "completed"}
+            disabled={props.busy || props.backup.status !== "completed" || props.backup.diskMissing}
             onClick={() => {
-              setIsProtected(props.backup.isProtected);
-              setOperatorNote(props.backup.operatorNote);
+              resetFromBackup();
               setOpened((current) => !current);
             }}
           >
@@ -60,12 +87,21 @@ export function BackupProtectionPopover(props: Props): ReactElement {
           isProtected={isProtected}
           operatorNote={operatorNote}
           saving={props.saving}
-          onIsProtectedChange={setIsProtected}
-          onOperatorNoteChange={setOperatorNote}
+          onIsProtectedChange={(value) => {
+            setDirty(true);
+            setIsProtected(value);
+          }}
+          onOperatorNoteChange={(value) => {
+            setDirty(true);
+            setOperatorNote(value);
+          }}
           onCancel={() => setOpened(false)}
           onSave={async () => {
             const ok = await props.onSave(props.backup, isProtected, operatorNote);
-            if (ok) setOpened(false);
+            if (ok) {
+              setDirty(false);
+              setOpened(false);
+            }
           }}
         />
       </Popover.Dropdown>

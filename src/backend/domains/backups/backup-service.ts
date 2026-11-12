@@ -439,6 +439,9 @@ export class BackupService extends EventEmitter {
     if (backup === null || backup.serverId !== serverId) {
       throw new Error("Backup not found");
     }
+    if (backup.status !== "completed") {
+      throw new Error("Only completed backups can be protected");
+    }
     if (backup.diskMissing) {
       throw new Error("Cannot change protection while the archive is missing on disk");
     }
