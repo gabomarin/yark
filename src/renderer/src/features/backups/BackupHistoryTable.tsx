@@ -139,7 +139,8 @@ export function BackupHistoryTable(props: Props): ReactElement {
       props.onDelete,
       props.onSaveProtection,
     ],
-  );  return (
+  );
+  return (
     <YarkDataTable
       className={classes.historyTable}
       idAccessor="id"
