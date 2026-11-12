@@ -15,12 +15,12 @@ interface Props {
 export function BackupProtectionModal(props: Props): ReactElement {
   const [isProtected, setIsProtected] = useState(false);
   const [operatorNote, setOperatorNote] = useState("");
-  const [dirty, setDirty] = useState(false);
+  const dirtyRef = useRef(false);
   const lastSyncedRef = useRef<{ id: string; isProtected: boolean; operatorNote: string } | null>(null);
 
   useEffect(() => {
     if (props.backup === null) {
-      setDirty(false);
+      dirtyRef.current = false;
       lastSyncedRef.current = null;
       return;
     }
@@ -28,7 +28,7 @@ export function BackupProtectionModal(props: Props): ReactElement {
     if (!sameId) {
       setIsProtected(props.backup.isProtected);
       setOperatorNote(props.backup.operatorNote);
-      setDirty(false);
+      dirtyRef.current = false;
       lastSyncedRef.current = {
         id: props.backup.id,
         isProtected: props.backup.isProtected,
@@ -36,7 +36,7 @@ export function BackupProtectionModal(props: Props): ReactElement {
       };
       return;
     }
-    if (dirty) return;
+    if (dirtyRef.current) return;
     if (
       props.backup.isProtected === lastSyncedRef.current?.isProtected &&
       props.backup.operatorNote === lastSyncedRef.current.operatorNote
@@ -50,7 +50,7 @@ export function BackupProtectionModal(props: Props): ReactElement {
       isProtected: props.backup.isProtected,
       operatorNote: props.backup.operatorNote,
     };
-  }, [props.backup, dirty]);
+  }, [props.backup]);
 
   return (
     <Modal
@@ -67,18 +67,18 @@ export function BackupProtectionModal(props: Props): ReactElement {
           operatorNote={operatorNote}
           saving={props.saving}
           onIsProtectedChange={(value) => {
-            setDirty(true);
+            dirtyRef.current = true;
             setIsProtected(value);
           }}
           onOperatorNoteChange={(value) => {
-            setDirty(true);
+            dirtyRef.current = true;
             setOperatorNote(value);
           }}
           onCancel={props.onClose}
           onSave={async () => {
             if (props.backup === null) return;
             const ok = await props.onSave(props.backup, isProtected, operatorNote);
-            if (ok) setDirty(false);
+            if (ok) dirtyRef.current = false;
           }}
         />
       )}

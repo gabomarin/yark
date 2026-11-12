@@ -16,14 +16,14 @@ export function BackupProtectionPopover(props: Props): ReactElement {
   const [opened, setOpened] = useState(false);
   const [isProtected, setIsProtected] = useState(props.backup.isProtected);
   const [operatorNote, setOperatorNote] = useState(props.backup.operatorNote);
-  const [dirty, setDirty] = useState(false);
+  const dirtyRef = useRef(false);
   const lastSyncedRef = useRef({
     isProtected: props.backup.isProtected,
     operatorNote: props.backup.operatorNote,
   });
 
   useEffect(() => {
-    if (!opened || dirty) return;
+    if (!opened || dirtyRef.current) return;
     if (
       props.backup.isProtected === lastSyncedRef.current.isProtected &&
       props.backup.operatorNote === lastSyncedRef.current.operatorNote
@@ -36,12 +36,12 @@ export function BackupProtectionPopover(props: Props): ReactElement {
       isProtected: props.backup.isProtected,
       operatorNote: props.backup.operatorNote,
     };
-  }, [opened, dirty, props.backup.isProtected, props.backup.operatorNote]);
+  }, [opened, props.backup.isProtected, props.backup.operatorNote]);
 
   const resetFromBackup = () => {
     setIsProtected(props.backup.isProtected);
     setOperatorNote(props.backup.operatorNote);
-    setDirty(false);
+    dirtyRef.current = false;
     lastSyncedRef.current = {
       isProtected: props.backup.isProtected,
       operatorNote: props.backup.operatorNote,
@@ -88,18 +88,18 @@ export function BackupProtectionPopover(props: Props): ReactElement {
           operatorNote={operatorNote}
           saving={props.saving}
           onIsProtectedChange={(value) => {
-            setDirty(true);
+            dirtyRef.current = true;
             setIsProtected(value);
           }}
           onOperatorNoteChange={(value) => {
-            setDirty(true);
+            dirtyRef.current = true;
             setOperatorNote(value);
           }}
           onCancel={() => setOpened(false)}
           onSave={async () => {
             const ok = await props.onSave(props.backup, isProtected, operatorNote);
             if (ok) {
-              setDirty(false);
+              dirtyRef.current = false;
               setOpened(false);
             }
           }}
