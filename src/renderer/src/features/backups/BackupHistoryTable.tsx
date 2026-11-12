@@ -162,9 +162,7 @@ export function BackupHistoryTable(props: Props): ReactElement {
             icon={<HardDrives size={22} />}
             title={metaFilterActive ? "No matching backups" : "No backups"}
             description={
-              metaFilterActive
-                ? "Clear the File column filters to see backups for this kind again."
-                : props.emptyHint
+              metaFilterActive ? "Clear the File column filters to see backups for this kind again." : props.emptyHint
             }
           />
         </div>

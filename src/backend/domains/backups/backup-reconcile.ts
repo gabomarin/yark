@@ -27,10 +27,7 @@ interface BackupReconcilerDeps {
   servers: ServerRepository;
   backups: BackupRepository;
   creatingBackupIds: Set<string>;
-  emitChanged: (
-    serverId: string,
-    extras?: { newlyMissingOnDisk?: number; newlyMissingProtected?: number },
-  ) => void;
+  emitChanged: (serverId: string, extras?: { newlyMissingOnDisk?: number; newlyMissingProtected?: number }) => void;
 }
 
 type DiskMissingSyncResult = {
@@ -113,8 +110,7 @@ export class BackupReconciler {
     if (changed > 0 || missingSync.newlyMissing > 0) {
       this.deps.emitChanged(serverId, {
         newlyMissingOnDisk: missingSync.newlyMissing > 0 ? missingSync.newlyMissing : undefined,
-        newlyMissingProtected:
-          missingSync.newlyMissingProtected > 0 ? missingSync.newlyMissingProtected : undefined,
+        newlyMissingProtected: missingSync.newlyMissingProtected > 0 ? missingSync.newlyMissingProtected : undefined,
       });
     }
     return changed;

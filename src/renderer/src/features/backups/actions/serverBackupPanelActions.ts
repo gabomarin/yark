@@ -214,10 +214,7 @@ export function createServerBackupPanelActions(options: BackupPanelActionOptions
     }
     openDangerConfirmModal({
       title: `Delete selected ${activeKindLabel.toLowerCase()} backups?`,
-      children: deleteConfirmChildren(
-        body,
-        protectedCount === 1 ? (protectedRows[0]?.operatorNote ?? "") : undefined,
-      ),
+      children: deleteConfirmChildren(body, protectedCount === 1 ? (protectedRows[0]?.operatorNote ?? "") : undefined),
       confirmLabel: "Delete",
       onConfirm: () => void deleteBackupsByIds(ids),
     });

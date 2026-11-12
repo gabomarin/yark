@@ -6,10 +6,7 @@ import { backupFinishedAt, parsePlayerKeyFromNotes, playerBackupDisplayName } fr
 import type { BackupKind, BackupRecord, BackupType } from "@shared/types";
 import { BackupHistoryRowActions } from "./BackupHistoryRowActions";
 import { archiveFileName } from "./backupHistorySort";
-import {
-  backupHistoryStatusTone,
-  type BackupHistoryMetaFilterState,
-} from "./backupHistoryMetaFilter";
+import { backupHistoryStatusTone, type BackupHistoryMetaFilterState } from "./backupHistoryMetaFilter";
 import { BackupHistoryMetaFilter } from "./components/BackupHistoryMetaFilter/BackupHistoryMetaFilter";
 import { formatBackupHistoryTitle, formatBackupTypeLabel, formatBackupWhenLabel } from "./model/serverBackupPanelModel";
 import classes from "./BackupsPage.module.css";

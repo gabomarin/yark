@@ -27,10 +27,7 @@ export function filterBackupRecordsByMeta(
   });
 }
 
-export function backupHistoryStatusTone(
-  status: BackupRecord["status"],
-  diskMissing = false,
-): "ok" | "warn" | "danger" {
+export function backupHistoryStatusTone(status: BackupRecord["status"], diskMissing = false): "ok" | "warn" | "danger" {
   if (diskMissing) return "warn";
   if (status === "completed") return "ok";
   if (status === "failed") return "danger";

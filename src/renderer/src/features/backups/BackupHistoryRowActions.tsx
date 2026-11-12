@@ -21,9 +21,7 @@ function itemDisabled(entries: ReturnType<typeof buildBackupHistoryRowActions>, 
 export function BackupHistoryRowActions(props: Props): ReactElement {
   const menuEntries = buildBackupHistoryRowActions(props);
   const showProtect =
-    props.backup.status === "completed" &&
-    !props.backup.diskMissing &&
-    props.onSaveProtection !== undefined;
+    props.backup.status === "completed" && !props.backup.diskMissing && props.onSaveProtection !== undefined;
 
   return (
     <Group gap={4} wrap="nowrap">
@@ -63,10 +61,7 @@ export function BackupHistoryRowActions(props: Props): ReactElement {
           <Export size={16} />
         </ActionIcon>
       </Tooltip>
-      <Tooltip
-        label={props.backup.diskMissing ? "Archive missing on disk — restore blocked" : "Restore"}
-        withArrow
-      >
+      <Tooltip label={props.backup.diskMissing ? "Archive missing on disk — restore blocked" : "Restore"} withArrow>
         <ActionIcon
           variant="subtle"
           color="attention"
