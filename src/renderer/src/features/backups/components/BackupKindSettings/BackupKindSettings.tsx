@@ -59,18 +59,24 @@ export function BackupKindSettings(props: Props): ReactElement {
 
       {settingsOpen && activeKind === "world" && (
         <Group align="center" gap="xs" wrap="wrap" mt={4} className={classes.kindSettingsFields}>
-          <AppSwitch
-            size="sm"
-            label="Schedule"
-            checked={draftPolicy.enabled}
-            disabled={busy || !installReady}
-            onCheckedChange={(checked) =>
-              onDraftPolicyChange({
-                ...draftPolicy,
-                enabled: checked,
-              })
-            }
-          />
+          <Group gap={6} align="center" wrap="nowrap">
+            <Text size="xs" component="label" htmlFor="backup-schedule">
+              Schedule
+            </Text>
+            <AppSwitch
+              id="backup-schedule"
+              size="sm"
+              aria-label="Schedule"
+              checked={draftPolicy.enabled}
+              disabled={busy || !installReady}
+              onCheckedChange={(checked) =>
+                onDraftPolicyChange({
+                  ...draftPolicy,
+                  enabled: checked,
+                })
+              }
+            />
+          </Group>
           <Group gap={6} align="center" wrap="nowrap">
             <Text size="xs" component="label" htmlFor="backup-interval">
               Interval (min)
@@ -114,18 +120,24 @@ export function BackupKindSettings(props: Props): ReactElement {
           </Group>
           <Tooltip label={BACKUP_PROTECT_HELP_TOOLTIP} multiline maw={320} withArrow>
             <span className={classes.protectSwitchHit}>
-              <AppSwitch
-                size="sm"
-                label="Protect new manual backups"
-                checked={draftPolicy.protectNewManualWorld}
-                disabled={busy || !installReady}
-                onCheckedChange={(checked) =>
-                  onDraftPolicyChange({
-                    ...draftPolicy,
-                    protectNewManualWorld: checked,
-                  })
-                }
-              />
+              <Group gap={6} align="center" wrap="nowrap">
+                <Text size="xs" component="label" htmlFor="backup-protect-world">
+                  Protect new manual backups
+                </Text>
+                <AppSwitch
+                  id="backup-protect-world"
+                  size="sm"
+                  aria-label="Protect new manual backups"
+                  checked={draftPolicy.protectNewManualWorld}
+                  disabled={busy || !installReady}
+                  onCheckedChange={(checked) =>
+                    onDraftPolicyChange({
+                      ...draftPolicy,
+                      protectNewManualWorld: checked,
+                    })
+                  }
+                />
+              </Group>
             </span>
           </Tooltip>
         </Group>
@@ -176,18 +188,24 @@ export function BackupKindSettings(props: Props): ReactElement {
           />
           <Tooltip label={BACKUP_PROTECT_HELP_TOOLTIP} multiline maw={320} withArrow>
             <span className={classes.protectSwitchHit}>
-              <AppSwitch
-                size="sm"
-                label="Protect new manual backups"
-                checked={draftPolicy.protectNewManualIni}
-                disabled={busy || !installReady}
-                onCheckedChange={(checked) =>
-                  onDraftPolicyChange({
-                    ...draftPolicy,
-                    protectNewManualIni: checked,
-                  })
-                }
-              />
+              <Group gap={6} align="center" wrap="nowrap">
+                <Text size="xs" component="label" htmlFor="backup-protect-ini">
+                  Protect new manual backups
+                </Text>
+                <AppSwitch
+                  id="backup-protect-ini"
+                  size="sm"
+                  aria-label="Protect new manual backups"
+                  checked={draftPolicy.protectNewManualIni}
+                  disabled={busy || !installReady}
+                  onCheckedChange={(checked) =>
+                    onDraftPolicyChange({
+                      ...draftPolicy,
+                      protectNewManualIni: checked,
+                    })
+                  }
+                />
+              </Group>
             </span>
           </Tooltip>
         </Group>
