@@ -115,6 +115,7 @@ export function BackupKindSettings(props: Props): ReactElement {
           <AppSwitch
             size="sm"
             label="Protect new manual backups"
+            description="Keep last and Cleanup skip them. You can still delete one by hand."
             checked={draftPolicy.protectNewManualWorld}
             disabled={busy || !installReady}
             onCheckedChange={(checked) =>
@@ -173,6 +174,7 @@ export function BackupKindSettings(props: Props): ReactElement {
           <AppSwitch
             size="sm"
             label="Protect new manual backups"
+            description="Keep last and Cleanup skip them. You can still delete one by hand."
             checked={draftPolicy.protectNewManualIni}
             disabled={busy || !installReady}
             onCheckedChange={(checked) =>

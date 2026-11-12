@@ -24,7 +24,7 @@ describe("BackupProtectionEditor", () => {
       </AppProviders>,
     );
 
-    const note = screen.getByLabelText(/Operator note/i);
+    const note = screen.getByLabelText(/^Note$/i);
     expect(note).toBeEnabled();
     expect(note).toHaveValue("keep this");
 
@@ -45,8 +45,8 @@ describe("BackupProtectionEditor", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByLabelText(/Operator note/i)).toBeDisabled();
-    expect(screen.getByLabelText(/Operator note/i)).toHaveValue("keep this");
+    expect(screen.getByLabelText(/^Note$/i)).toBeDisabled();
+    expect(screen.getByLabelText(/^Note$/i)).toHaveValue("keep this");
   });
 
   it("keeps Save available while saving=false and Cancel calls onCancel", async () => {

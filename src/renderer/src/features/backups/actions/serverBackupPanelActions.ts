@@ -208,7 +208,7 @@ export function createServerBackupPanelActions(options: BackupPanelActionOptions
     const body: Array<string | ReturnType<typeof createElement>> = [
       "Permanently delete ",
       createElement("strong", { key: "count" }, count),
-      ` ${activeKindLabel.toLowerCase()} backup${count === 1 ? "" : "s"} from disk and the database? This cannot be undone.`,
+      ` ${activeKindLabel.toLowerCase()} backup${count === 1 ? "" : "s"} from this PC and from the backup list? This cannot be undone.`,
     ];
     if (protectedCount > 0) {
       body.push(` ${protectedCount} of these ${protectedCount === 1 ? "is" : "are"} protected.`);
@@ -251,7 +251,7 @@ export function createServerBackupPanelActions(options: BackupPanelActionOptions
     const body: Array<string | ReturnType<typeof createElement>> = [
       "Permanently delete this ",
       createElement("strong", { key: "label" }, label),
-      " backup from disk and the database? This cannot be undone.",
+      " backup from this PC and from the backup list? This cannot be undone.",
     ];
     if (backup.isProtected) {
       body.push(" This backup is protected.");

@@ -27,8 +27,8 @@ export function BackupProtectionEditor(props: BackupProtectionEditorProps): Reac
         onCheckedChange={props.onIsProtectedChange}
       />
       <Textarea
-        label="Operator note"
-        description="Optional reminder (kept when you turn protection off)."
+        label="Note"
+        description="Optional note (kept if you turn Protect off)."
         placeholder="Why this archive should stay…"
         minRows={3}
         maxLength={BACKUP_OPERATOR_NOTE_MAX_LENGTH}

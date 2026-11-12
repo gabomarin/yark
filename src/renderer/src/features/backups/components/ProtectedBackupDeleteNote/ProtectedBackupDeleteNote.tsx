@@ -11,7 +11,7 @@ export function ProtectedBackupDeleteNote(props: Props): ReactElement {
   return (
     <Box className={classes.noteBox} data-backup-protected-delete-note>
       <Text size="xs" c="dimmed" mb={4}>
-        Operator note
+        Note
       </Text>
       <Text size="sm">{props.note}</Text>
     </Box>

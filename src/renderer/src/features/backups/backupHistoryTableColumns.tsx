@@ -36,7 +36,7 @@ export interface BackupHistoryColumnInput {
 }
 
 function titleTooltip(backup: BackupRecord, isPlayersTab: boolean): string {
-  const status = backup.diskMissing ? "missing on disk" : backup.status;
+  const status = backup.diskMissing ? "Missing on disk" : backup.status;
   const typeLabel = formatBackupTypeLabel(backup.type);
   if (isPlayersTab) {
     return `${status} · ${typeLabel}`;
