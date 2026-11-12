@@ -21,7 +21,7 @@ export function BackupProtectionEditor(props: BackupProtectionEditorProps): Reac
     <Stack gap="sm">
       <AppSwitch
         label="Protected"
-        description="Protected backups are not deleted by Cleanup or retention policy. You can still delete one by hand."
+        description="Protected backups are not deleted by Cleanup or retention policy. You can still delete them manually."
         checked={props.isProtected}
         disabled={props.saving}
         onCheckedChange={props.onIsProtectedChange}

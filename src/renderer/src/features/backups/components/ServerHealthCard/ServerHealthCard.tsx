@@ -194,7 +194,7 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
               />
               <AppSwitch
                 label="Protect new manual world backups"
-                description="Protected backups are not deleted by Cleanup or retention policy. You can still delete one by hand."
+                description="Protected backups are not deleted by Cleanup or retention policy. You can still delete them manually."
                 checked={draft.protectNewManualWorld}
                 onCheckedChange={(checked) =>
                   props.onDraftChange({
@@ -205,7 +205,7 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
               />
               <AppSwitch
                 label="Protect new manual INI backups"
-                description="Protected backups are not deleted by Cleanup or retention policy. You can still delete one by hand."
+                description="Protected backups are not deleted by Cleanup or retention policy. You can still delete them manually."
                 checked={draft.protectNewManualIni}
                 onCheckedChange={(checked) =>
                   props.onDraftChange({

@@ -115,7 +115,7 @@ export function BackupKindSettings(props: Props): ReactElement {
           <AppSwitch
             size="sm"
             label="Protect new manual backups"
-            description="Protected backups are not deleted by Cleanup or retention policy. You can still delete one by hand."
+            description="Protected backups are not deleted by Cleanup or retention policy. You can still delete them manually."
             checked={draftPolicy.protectNewManualWorld}
             disabled={busy || !installReady}
             onCheckedChange={(checked) =>
@@ -174,7 +174,7 @@ export function BackupKindSettings(props: Props): ReactElement {
           <AppSwitch
             size="sm"
             label="Protect new manual backups"
-            description="Protected backups are not deleted by Cleanup or retention policy. You can still delete one by hand."
+            description="Protected backups are not deleted by Cleanup or retention policy. You can still delete them manually."
             checked={draftPolicy.protectNewManualIni}
             disabled={busy || !installReady}
             onCheckedChange={(checked) =>
