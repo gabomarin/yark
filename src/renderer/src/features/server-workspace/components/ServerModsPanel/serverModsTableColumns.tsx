@@ -29,16 +29,19 @@ export function buildServerModsTableColumns(input: {
   const columns: DataTableColumn<ModRow>[] = [];
 
   if (input.dragColumn) {
+    // Fixed widths so disabled drag (sort/filter) does not reflow neighboring columns.
     columns.push({
       accessor: "drag",
       title: "",
       width: 36,
+      noWrap: true,
       hiddenContent: true,
     });
     columns.push({
       accessor: "loadIndex",
       title: "#",
       width: 44,
+      noWrap: true,
       render: (row) => (
         <Text size="sm" c="dimmed" ff="monospace">
           {row.loadIndex + 1}

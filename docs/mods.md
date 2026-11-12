@@ -63,29 +63,39 @@ Workspace → **Mods** has two views (`SegmentedControl`):
 ### Server (inventory)
 
 1. Rows follow profile load order (`YarkDataTable` + drag handle).
-2. **Header quick actions** (Server view): **Enable all** clears `disabledMods`,
-   **Disable all** stages every configured ID, and **Remove all disabled**
-   (confirm, same copy as single Remove) drops the disabled IDs from `mods` /
-   `disabledMods` and clears their cache entries. Each is **one**
+2. **Header quick actions** (Server view): **IDs** menu copies All / Enabled
+   (`-mods=`) / Disabled Project IDs (comma-separated, load order). Paste a list
+   into **Add** (same field). **Enable all** clears `disabledMods`, **Disable
+   all** stages every configured ID, and **Remove all disabled** (confirm, same
+   copy as single Remove) drops the disabled IDs from `mods` / `disabledMods`
+   and clears their cache entries. Each bulk write is **one**
    `servers:update-patch`; the buttons are disabled while a write is in flight
    or the list is empty. Enabling several Maps mods shows **one** aggregated map
-   toast, not one per row (#637).
-3. **Enable / disable** toggles membership in `disabledMods` (ID stays in `mods`).
+   toast, not one per row (#634, #637).
+3. **Toolbar + inventory filters**. With mods on the list, **Add** (compact) and
+   **Find** / **Status** share one row — Add left, filters right. Empty inventory
+   keeps a prominent Add with the full paste help; compact Add exposes that help
+   via an info tooltip. Status is a fixed-height combobox (Enabled / Disabled /
+   Passive). Filters narrow visible rows only; header counts stay the full
+   inventory. Drag stays in the layout but is disabled while a filter hides rows
+   (toolbar **Clear** / handle tooltip); clearing restores load-order drag (#636).
+4. **Enable / disable** toggles membership in `disabledMods` (ID stays in `mods`).
    Disabled rows use a quieter background so the switch stays the control; the
    header also shows how many IDs are disabled when any are staged off Start.
    The Mod column shows one CurseForge category under the name (Maps uses
    attention color; extra tags collapse to **+N** with a hover list).
    Remaining tags stay in the detail drawer.
-4. **Passive** (row action icon, row context menu, and detail drawer) toggles
+5. **Passive** (row action icon, row context menu, and detail drawer) toggles
    membership in `passiveMods` for **enabled** rows. Passive mods load their data
    with functionality disabled (cluster transfer / no spawns): the row shows a
    **Passive** badge and the ID moves from `-mods=` to `-passivemods=`. A disabled
    row cannot be marked passive — enable it first (#509).
-5. **Remove** drops the ID from `mods` / `disabledMods` / `passiveMods` and clears
-   its cache entry (confirm dialog).
-6. Column sort is **view-only** — clear sort before drag-reorder (drag disabled
-   while sorted or while any row mutation / reorder persist is busy).
-7. Detail drawer / Open on CurseForge uses cached metadata or
+6. **Remove** drops the ID from `mods` / `disabledMods` / `passiveMods` and clears
+   its cache entry (confirm dialog). Row context also offers **Copy Project ID**
+   and **Copy CurseForge URL** (#634).
+7. Column sort is **view-only** — clear sort before drag-reorder (drag disabled
+   while sorted, filtered, or while any row mutation / reorder persist is busy).
+8. Detail drawer / Open on CurseForge uses cached metadata or
    `mods:get-by-reference`; external open is fail-closed to a validated ASA
    CurseForge mod URL (`mods:open-curseforge`). Configured mods can also be
    enabled/disabled, marked passive/active, and removed from the drawer (same
@@ -114,8 +124,8 @@ and Add by ID is paste — operators can close it for this PC.
 
 ### Add by Project ID / URL
 
-Comma-separated Project IDs and/or ASA CurseForge mod URLs
-(`parseModAddInput` / `prepareModAddApply`). URLs resolve in batches of
+Project IDs and/or ASA CurseForge mod URLs separated by commas, whitespace, or
+newlines (`parseModAddInput` / `prepareModAddApply`). URLs resolve in batches of
 **5** (`MOD_ADD_URL_BATCH_SIZE`) with progress UI; each successful batch
 persists immediately so a partial import is not lost.
 
@@ -274,8 +284,8 @@ Args are Zod-validated — [ipc-validation.md](ipc-validation.md).
   `YARK_CURSEFORGE_PROXY_URL`; do not embed Overwolf secrets in Electron.
 - **New mods are disabled** until the operator enables them — easy to miss when
   checking the Launch command preview.
-- **Column sort blocks drag.** Clear sort to edit load order; view sort never
-  mutates `mods`.
+- **Column sort or inventory filter blocks drag.** Clear sort / Clear filter to
+  edit load order; view sort and filters never mutate `mods`.
 - **Batch get is partial.** Callers that need every ID must compare result length
   to the request (enrich already fails hard on missing new IDs).
 - **Not-configured vs hard errors.** UI treats the not-configured message as a

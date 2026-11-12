@@ -21,7 +21,8 @@ export interface ParsedModAddInput {
 }
 
 /**
- * Parse Add-mod input: comma-separated Project IDs and/or ASA CurseForge mod URLs.
+ * Parse Add-mod input: Project IDs and/or ASA CurseForge mod URLs, separated by
+ * commas, whitespace, or newlines (paste from Copy IDs / a spreadsheet).
  */
 export function parseModAddInput(raw: string): ParsedModAddInput {
   const ids: string[] = [];
@@ -30,7 +31,7 @@ export function parseModAddInput(raw: string): ParsedModAddInput {
   const seenIds = new Set<string>();
   const seenUrls = new Set<string>();
 
-  for (const part of raw.split(",")) {
+  for (const part of raw.split(/[,\s]+/)) {
     const token = part.trim();
     if (token.length === 0) continue;
 

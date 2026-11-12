@@ -1,4 +1,4 @@
-import { ArrowSquareOut, MagnifyingGlass, Moon, Plus, Trash } from "@phosphor-icons/react";
+import { ArrowSquareOut, Copy, MagnifyingGlass, Moon, Plus, Trash } from "@phosphor-icons/react";
 import type { RowActionEntry } from "@ui/RowActionMenu/rowActionModel";
 import type { ModRow } from "./serverModsModel";
 
@@ -14,6 +14,8 @@ export interface ServerModsRowActionInput {
   onOpenExternal: (url: string) => void;
   /** Toggle passive load (`-passivemods=` only). Server mode, enabled rows. */
   onSetPassive?: (row: ModRow) => void;
+  onCopyProjectId?: (row: ModRow) => void;
+  onCopyCurseForgeUrl?: (row: ModRow) => void;
 }
 
 export function buildServerModsRowActions(input: ServerModsRowActionInput): RowActionEntry[] {
@@ -39,6 +41,31 @@ export function buildServerModsRowActions(input: ServerModsRowActionInput): RowA
       },
     },
   ];
+
+  if (input.mode === "server") {
+    entries.push(
+      {
+        kind: "item",
+        key: "copy-id",
+        label: "Copy Project ID",
+        icon: <Copy size={ICON} />,
+        disabled: input.row.id === null || input.onCopyProjectId === undefined,
+        onClick: () => {
+          input.onCopyProjectId?.(input.row);
+        },
+      },
+      {
+        kind: "item",
+        key: "copy-url",
+        label: "Copy CurseForge URL",
+        icon: <Copy size={ICON} />,
+        disabled: input.row.url === null || input.onCopyCurseForgeUrl === undefined,
+        onClick: () => {
+          input.onCopyCurseForgeUrl?.(input.row);
+        },
+      },
+    );
+  }
 
   if (input.mode === "server" && input.row.id !== null && input.onSetPassive !== undefined) {
     entries.push({

@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
-import { Button, Group, SegmentedControl, Stack } from "@mantine/core";
+import { SegmentedControl, Stack } from "@mantine/core";
 import { isMetadataServiceNotConfiguredMessage } from "@shared/mods/curseforge-proxy-url";
 import type { ModMetadata, ModSearchPage, ServerProfile } from "@shared/types";
 import { prepareModAddApply, type ModAddImportProgress } from "@shared/mods/mod-add-input";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
+import { copyModCurseForgeUrl, copyModProjectId } from "./copyModRowClipboard";
 import { ServerModDetailDrawer } from "./ServerModDetailDrawer";
 import { ServerModsDiscoverSection } from "./ServerModsDiscoverSection";
 import { ServerModsHeader } from "./ServerModsHeader";
+import { ServerModsServerHeaderActions } from "./ServerModsServerHeaderActions";
 import { ServerModsServerSection } from "./ServerModsServerSection";
 import {
   buildServerRows,
@@ -19,7 +21,6 @@ import {
   sameIdList,
   type ModRow,
 } from "./serverModsModel";
-import { confirmRemoveDisabledMods } from "./confirmRemoveServerMod";
 import { inspectServerMod } from "./serverModsInspect";
 import { notifyNewlyAddedMods } from "./notifyModsAddedDisabled";
 import { useServerModsListController } from "./useServerModsListController";
@@ -234,36 +235,17 @@ export function ServerModsPanel(props: Props): ReactElement {
   };
 
   const listBusy = busyKey !== null;
-  const hasMods = configuredIds.length > 0;
   const headerActions =
     view === "server" ? (
-      <Group gap={4} wrap="nowrap">
-        <Button
-          size="xs"
-          variant="default"
-          disabled={listBusy || !hasMods || disabledCount === 0}
-          onClick={() => void enableAll()}
-        >
-          Enable all
-        </Button>
-        <Button
-          size="xs"
-          variant="default"
-          disabled={listBusy || !hasMods || disabledCount === configuredIds.length}
-          onClick={() => void disableAll()}
-        >
-          Disable all
-        </Button>
-        <Button
-          size="xs"
-          variant="default"
-          color="red"
-          disabled={listBusy || !hasMods || disabledCount === 0}
-          onClick={() => confirmRemoveDisabledMods(disabledCount, removeAllDisabled)}
-        >
-          Remove all disabled
-        </Button>
-      </Group>
+      <ServerModsServerHeaderActions
+        configuredIds={configuredIds}
+        disabledIds={disabledSet}
+        disabledCount={disabledCount}
+        listBusy={listBusy}
+        onEnableAll={() => void enableAll()}
+        onDisableAll={() => void disableAll()}
+        onRemoveAllDisabled={() => void removeAllDisabled()}
+      />
     ) : undefined;
 
   return (
@@ -304,6 +286,7 @@ export function ServerModsPanel(props: Props): ReactElement {
           )}
           {view === "server" ? (
             <ServerModsServerSection
+              key={props.server.id}
               url={url}
               busyKey={busyKey}
               importProgress={importProgress}
@@ -320,6 +303,8 @@ export function ServerModsPanel(props: Props): ReactElement {
                 void setPassive(row.id, !row.passive);
               }}
               onReorder={(orderedIds) => void reorder(orderedIds)}
+              onCopyProjectId={copyModProjectId}
+              onCopyCurseForgeUrl={copyModCurseForgeUrl}
             />
           ) : (
             <ServerModsDiscoverSection

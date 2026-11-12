@@ -92,6 +92,65 @@ export function reorderModIds(ids: string[], fromIndex: number, toIndex: number)
   return next;
 }
 
+/** Copy-IDs menu variants (#634): All / Enabled (`-mods=`) / Disabled. */
+export type ModIdCopyVariant = "all" | "enabled" | "disabled";
+
+export function selectModIdsForCopy(
+  configuredIds: string[],
+  disabledIds: ReadonlySet<string>,
+  variant: ModIdCopyVariant,
+): string[] {
+  if (variant === "all") return [...configuredIds];
+  if (variant === "enabled") return configuredIds.filter((id) => !disabledIds.has(id));
+  return configuredIds.filter((id) => disabledIds.has(id));
+}
+
+export function formatModIdsCsv(ids: string[]): string {
+  return ids.join(",");
+}
+
+/**
+ * Inventory search + Status combobox (#636). View-only — never mutates load
+ * order. Options: Enabled / Disabled / Passive (fixed-height summary, no pills).
+ */
+export type ServerModsStatusFilter = "enabled" | "disabled" | "passive";
+
+export interface ServerModsInventoryFilter {
+  query: string;
+  statuses: ServerModsStatusFilter[];
+}
+
+export const EMPTY_SERVER_MODS_INVENTORY_FILTER: ServerModsInventoryFilter = {
+  query: "",
+  statuses: [],
+};
+
+export function isServerModsInventoryFilterActive(filter: ServerModsInventoryFilter): boolean {
+  return filter.query.trim().length > 0 || filter.statuses.length > 0;
+}
+
+function matchesStatusFilter(row: ModRow, statuses: ServerModsStatusFilter[]): boolean {
+  if (statuses.length === 0) return true;
+  return statuses.some((status) => {
+    if (status === "enabled") return row.enabled;
+    if (status === "disabled") return !row.enabled;
+    return row.passive;
+  });
+}
+
+export function filterServerModRows(rows: ModRow[], filter: ServerModsInventoryFilter): ModRow[] {
+  const query = filter.query.trim().toLowerCase();
+
+  return rows.filter((row) => {
+    if (query.length > 0) {
+      const nameHit = row.name.toLowerCase().includes(query);
+      const idHit = (row.id ?? "").toLowerCase().includes(query);
+      if (!nameHit && !idHit) return false;
+    }
+    return matchesStatusFilter(row, filter.statuses);
+  });
+}
+
 function compareModRows(left: ModRow, right: ModRow, accessor: ModRowSortAccessor): number {
   if (accessor === "name") {
     return left.name.localeCompare(right.name, undefined, {

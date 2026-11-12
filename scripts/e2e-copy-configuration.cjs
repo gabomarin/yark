@@ -154,10 +154,10 @@ async function configureSourceProfile(page, name, installDir) {
 
   // Mods / Extra args live on workspace tabs (#93), not the Server form.
   await page.getByRole("tab", { name: "Mods" }).click();
-  const addInput = page.getByLabel("Add CurseForge Project ID or mod URL");
+  const addInput = page.getByRole("textbox", { name: /^Add/ });
   await addInput.waitFor({ state: "visible", timeout: 10000 });
   await addInput.fill(SOURCE_MODS.join(", "));
-  await page.getByRole("button", { name: "Add mod" }).click();
+  await page.getByRole("button", { name: "Add", exact: true }).click();
   for (const modId of SOURCE_MODS) {
     await page.getByText(modId, { exact: true }).first().waitFor({
       state: "visible",
