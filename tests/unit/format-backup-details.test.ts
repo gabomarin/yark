@@ -18,6 +18,7 @@ describe("formatBackupDetails", () => {
       mapToken: "TheIsland_WP",
       isProtected: false,
       operatorNote: "",
+      diskMissing: false,
     };
     const text = formatBackupDetails({ id: "srv-a", name: "Island" }, backup);
     expect(text).toContain("Server: Island (srv-a)");
@@ -45,6 +46,7 @@ describe("formatBackupDetails", () => {
       mapToken: "TheIsland_WP",
       isProtected: false,
       operatorNote: "",
+      diskMissing: false,
     };
 
     const text = formatBackupDetails({ id: "srv-a", name: "Island" }, backup);

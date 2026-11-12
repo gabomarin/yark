@@ -122,6 +122,8 @@ export function planBackupCleanup(input: PlanBackupCleanupInput): BackupCleanupP
       for (const backup of records) {
         if (backup.status !== "completed") continue;
         if (backup.isProtected) continue;
+        // Keep missing-on-disk catalog rows until the operator deletes them explicitly.
+        if (backup.diskMissing) continue;
         if (backupFinishedAt(backup) < cutoffIso) {
           mark(backup, server.name, `older than ${olderThanDays}d`);
         }

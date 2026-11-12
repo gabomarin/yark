@@ -769,6 +769,12 @@ export interface BackupRecord {
    * Distinct from `notes` (player identity, failure text, critical markers).
    */
   operatorNote: string;
+  /**
+   * True when reconcile found the archive path gone (e.g. deleted in Explorer).
+   * Row stays in history for the operator; restore/export are blocked until the
+   * file returns or they delete the catalog row.
+   */
+  diskMissing: boolean;
 }
 
 /** Options for restoring a completed backup archive. */

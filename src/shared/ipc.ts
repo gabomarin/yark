@@ -297,6 +297,10 @@ export type AsaApiInstallProgressPush = AsaApiInstallProgress;
 
 export interface BackupsChangedPush {
   serverId: string;
+  /** Completed archives newly marked missing on disk during reconcile. */
+  newlyMissingOnDisk?: number;
+  /** Subset of {@link newlyMissingOnDisk} that were Protected. */
+  newlyMissingProtected?: number;
 }
 
 export interface ServerIniChangedPush {

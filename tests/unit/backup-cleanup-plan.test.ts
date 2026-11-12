@@ -19,6 +19,7 @@ function backup(partial: Partial<BackupRecord> & Pick<BackupRecord, "id" | "kind
     mapToken: null,
     isProtected: false,
     operatorNote: "",
+    diskMissing: false,
     ...partial,
   };
 }
@@ -302,6 +303,29 @@ describe("planBackupCleanup", () => {
       nowMs: Date.parse("2026-01-10T00:00:00.000Z"),
     });
     expect(agePlan.map((item) => item.backup.id).sort()).toEqual(["w-mid", "w-new", "w-old"]);
+
+    const missingOnDisk = backup({
+      id: "w-missing",
+      kind: "world",
+      status: "completed",
+      path: "C:/b/missing.zip",
+      completedAt: "2026-01-01T00:00:00.000Z",
+      diskMissing: true,
+    });
+    const ageSkipsMissing = planBackupCleanup({
+      options: {
+        serverIds: null,
+        includeFailed: false,
+        enforceRetention: false,
+        olderThanDays: 1,
+        keepLastPerKind: null,
+        protectNewestWorld: false,
+      },
+      servers: [{ id: "srv-1", name: "Island" }],
+      catalog: catalog({ backups: [missingOnDisk, older] }),
+      nowMs: Date.parse("2026-01-10T00:00:00.000Z"),
+    });
+    expect(ageSkipsMissing.map((item) => item.backup.id)).toEqual(["w-old"]);
 
     const keepLastPlan = planBackupCleanup({
       options: {

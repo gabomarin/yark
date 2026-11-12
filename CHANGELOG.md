@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- Backup history drops separate Map, Status, and Type columns: the File title shows status color (and map · type), and Status/Type filters sit on the File header so medium panels need less horizontal scroll. File absorbs leftover width (Date/Size/Actions stay fixed) so an empty filter result does not jump columns, and long archive names use a soft clamp only on narrower panes. Deleting a protected backup shows the operator note in a raised callout on the confirm dialog.
+
 ### Added
 
 - Mark completed backups **Protected** (optional note) so Keep last and Cleanup skip them; they do not consume a Keep last slot. Explicit delete still works with a stronger confirm. World and INI settings can auto-protect new **Backup now** archives (#701).
@@ -19,6 +23,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Profiles whose schema version was already 30 without the Protected-backup columns can mark backups protected again after a restart (migration 31).
+- Backup history no longer silently drops rows when the ZIP was deleted outside YARK: the row stays as missing on disk (highlighted in the list), restore/export are blocked, and the server Backups panel shows a dismissable warning while any archive is missing.
 - A malformed INI conflict row no longer hides the other rows in the Save conflict review (#696).
 - Configuration → INI Files uses the same gap between search, the category filter, and the sort menu. On a narrower pane, search sits on its own row, and Reload, Restore, Discard, and Save become icon buttons the same size as the server card actions. Each name shows on hover.
 - The settings sort tooltip closes when you pick a sort, so it does not flash in the corner of the window.

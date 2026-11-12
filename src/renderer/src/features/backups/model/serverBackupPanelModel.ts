@@ -14,6 +14,28 @@ export const KIND_TABS: Array<{ kind: BackupKind; label: string }> = [
 /** localStorage: operator dismissed the World/players/INI kinds hint (#456). */
 export const BACKUPS_KINDS_HINT_STORAGE_KEY = "yark.backups.kindsHint.dismissed.v1";
 
+/** Stable key for the current set of missing-on-disk backup ids (session dismiss). */
+export function missingOnDiskFingerprint(backups: BackupRecord[]): string {
+  return backups
+    .filter((backup) => backup.diskMissing)
+    .map((backup) => backup.id)
+    .sort()
+    .join("\0");
+}
+
+export function summarizeMissingOnDisk(backups: BackupRecord[]): {
+  missingCount: number;
+  protectedCount: number;
+  fingerprint: string;
+} {
+  const missing = backups.filter((backup) => backup.diskMissing);
+  return {
+    missingCount: missing.length,
+    protectedCount: missing.filter((backup) => backup.isProtected).length,
+    fingerprint: missingOnDiskFingerprint(backups),
+  };
+}
+
 const BACKUP_TYPE_LABELS: Record<BackupType, string> = {
   manual: "Manual",
   scheduled: "Scheduled",
@@ -127,6 +149,7 @@ export function backupsListKey(rows: BackupRecord[]): string {
         backup.mapToken ?? "",
         backup.isProtected ? "1" : "0",
         backup.operatorNote,
+        backup.diskMissing ? "1" : "0",
       ].join(":"),
     )
     .join("\0");

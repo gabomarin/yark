@@ -68,6 +68,26 @@ export function ServerBackupPanel(props: Props): ReactElement {
         </AppAlert>
       )}
 
+      {panel.showMissingOnDiskAlert && (
+        <AppAlert
+          color="attention"
+          variant="light"
+          title="Backup file missing"
+          data-backup-missing-on-disk
+          withCloseButton
+          onClose={panel.dismissMissingOnDiskAlert}
+        >
+          {panel.missingOnDisk.missingCount === 1
+            ? "1 backup is missing on disk"
+            : `${panel.missingOnDisk.missingCount} backups are missing on disk`}
+          {panel.missingOnDisk.protectedCount > 0
+            ? ` (${panel.missingOnDisk.protectedCount} protected)`
+            : ""}
+          . Those rows are highlighted in the list. Restore and export stay blocked until the file returns or you
+          remove the row from history.
+        </AppAlert>
+      )}
+
       <AppSurfaceCard className={classes.listPanel} radius={0}>
         <Tabs
           value={panel.activeKind}

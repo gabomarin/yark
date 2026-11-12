@@ -20,6 +20,7 @@ export interface BackupHistoryRowActionInput {
 export function buildBackupHistoryRowActions(input: BackupHistoryRowActionInput): RowActionEntry[] {
   const canMutate = input.backup.status !== "running";
   const completed = input.backup.status === "completed";
+  const onDisk = completed && !input.backup.diskMissing;
 
   const entries: RowActionEntry[] = [
     {
@@ -47,7 +48,7 @@ export function buildBackupHistoryRowActions(input: BackupHistoryRowActionInput)
       key: "export",
       label: "Export a copy",
       icon: <Export size={ICON} />,
-      disabled: input.busy || !completed,
+      disabled: input.busy || !onDisk,
       onClick: () => {
         input.onExport(input.backup);
       },
@@ -58,14 +59,14 @@ export function buildBackupHistoryRowActions(input: BackupHistoryRowActionInput)
       key: "restore",
       label: "Restore",
       icon: <ArrowCounterClockwise size={ICON} />,
-      disabled: input.busy || !completed || input.opsLocked,
+      disabled: input.busy || !onDisk || input.opsLocked,
       onClick: () => {
         input.onRestore(input.backup);
       },
     },
   ];
 
-  if (input.onProtect !== undefined && completed) {
+  if (input.onProtect !== undefined && onDisk) {
     entries.push({
       kind: "item",
       key: "protect",

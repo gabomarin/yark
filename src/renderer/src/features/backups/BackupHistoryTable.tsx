@@ -2,11 +2,17 @@ import type { ReactElement } from "react";
 import { useMemo, useState } from "react";
 import { HardDrives } from "@phosphor-icons/react";
 import type { DataTableSortStatus } from "mantine-datatable";
-import type { BackupKind, BackupRecord } from "@shared/types";
+import type { BackupKind, BackupRecord, BackupType } from "@shared/types";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { useRowActionMenuApi } from "@ui/RowActionMenu/RowActionMenuProvider";
 import { YarkDataTable } from "@ui/YarkDataTable/YarkDataTable";
 import { buildBackupHistoryRowActions } from "./backupHistoryRowActionModel";
+import {
+  EMPTY_BACKUP_HISTORY_META_FILTER,
+  filterBackupRecordsByMeta,
+  isBackupHistoryMetaFilterActive,
+  type BackupHistoryMetaFilterState,
+} from "./backupHistoryMetaFilter";
 import { DEFAULT_BACKUP_HISTORY_SORT, sortBackupRecords } from "./backupHistorySort";
 import { buildBackupHistoryTableColumns } from "./backupHistoryTableColumns";
 import classes from "./BackupsPage.module.css";
@@ -14,7 +20,6 @@ import classes from "./BackupsPage.module.css";
 export { sortBackupRecords } from "./backupHistorySort";
 
 interface Props {
-  /** Active history tab — Map column only for world. */
   kind: BackupKind;
   records: BackupRecord[];
   selectedIds: string[];
@@ -37,20 +42,31 @@ const CONTEXT_SOURCE_ID = "backup-history-table";
 
 /**
  * Backup history as a shared YARK DataTable (selection, density, empty/loading,
- * column sort + resize). Row actions and right-click context menu reuse the
- * existing action model.
+ * column sort + resize). Status/Type/Map live in the File title + header filters;
+ * row actions and right-click reuse the same action model.
  */
 export function BackupHistoryTable(props: Props): ReactElement {
   const { openAt } = useRowActionMenuApi();
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<BackupRecord>>(DEFAULT_BACKUP_HISTORY_SORT);
-  const showMapColumn = props.kind === "world";
+  const [metaFilter, setMetaFilter] = useState<BackupHistoryMetaFilterState>(EMPTY_BACKUP_HISTORY_META_FILTER);
+
+  const typeFilterOptions = useMemo(() => {
+    const seen = new Set<BackupType>();
+    const options: BackupType[] = [];
+    for (const row of props.records) {
+      if (seen.has(row.type)) continue;
+      seen.add(row.type);
+      options.push(row.type);
+    }
+    return options.sort((a, b) => a.localeCompare(b));
+  }, [props.records]);
+
+  const metaFilterActive = isBackupHistoryMetaFilterActive(metaFilter);
 
   const sortedRecords = useMemo(() => {
-    // Drop map sort when leaving the world tab so we do not sort on a hidden column.
-    const status =
-      !showMapColumn && String(sortStatus.columnAccessor) === "mapToken" ? DEFAULT_BACKUP_HISTORY_SORT : sortStatus;
-    return sortBackupRecords(props.records, status);
-  }, [props.records, sortStatus, showMapColumn]);
+    const filtered = filterBackupRecordsByMeta(props.records, metaFilter);
+    return sortBackupRecords(filtered, sortStatus);
+  }, [props.records, metaFilter, sortStatus]);
 
   const selectedRecords = useMemo(
     () => sortedRecords.filter((row) => props.selectedIds.includes(row.id)),
@@ -61,10 +77,14 @@ export function BackupHistoryTable(props: Props): ReactElement {
     () =>
       buildBackupHistoryTableColumns({
         kind: props.kind,
-        showMapColumn,
         busy: props.busy,
         opsLocked: props.opsLocked,
         formatSize: props.formatSize,
+        metaFilter,
+        typeFilterOptions,
+        metaFilterActive,
+        onMetaFilterChange: setMetaFilter,
+        onMetaFilterClear: () => setMetaFilter(EMPTY_BACKUP_HISTORY_META_FILTER),
         onCopyDetails: props.onCopyDetails,
         onOpenFolder: props.onOpenFolder,
         onExport: props.onExport,
@@ -74,11 +94,13 @@ export function BackupHistoryTable(props: Props): ReactElement {
         onSaveProtection: props.onSaveProtection,
       }),
     [
-      showMapColumn,
       props.kind,
       props.busy,
       props.opsLocked,
       props.formatSize,
+      metaFilter,
+      typeFilterOptions,
+      metaFilterActive,
       props.onCopyDetails,
       props.onOpenFolder,
       props.onExport,
@@ -95,10 +117,8 @@ export function BackupHistoryTable(props: Props): ReactElement {
       records={sortedRecords}
       fetching={props.fetching}
       minHeight={180}
-      storeColumnsKey={`yark-backup-history-v6-${props.kind}`}
-      sortStatus={
-        !showMapColumn && String(sortStatus.columnAccessor) === "mapToken" ? DEFAULT_BACKUP_HISTORY_SORT : sortStatus
-      }
+      storeColumnsKey={`yark-backup-history-v8-${props.kind}`}
+      sortStatus={sortStatus}
       onSortStatusChange={setSortStatus}
       selectedRecords={selectedRecords}
       onSelectedRecordsChange={(rows) => {
@@ -117,6 +137,7 @@ export function BackupHistoryTable(props: Props): ReactElement {
       customRowAttributes={(record) => ({
         "data-backup-row": true,
         "data-backup-id": record.id,
+        ...(record.diskMissing ? { "data-backup-disk-missing": "true" } : {}),
       })}
       onRowContextMenu={({ record, event }) => {
         if (props.busy) return;
@@ -137,7 +158,15 @@ export function BackupHistoryTable(props: Props): ReactElement {
       }}
       emptyState={
         <div className={classes.listEmpty} data-backup-list-empty>
-          <EmptyState icon={<HardDrives size={22} />} title="No backups" description={props.emptyHint} />
+          <EmptyState
+            icon={<HardDrives size={22} />}
+            title={metaFilterActive ? "No matching backups" : "No backups"}
+            description={
+              metaFilterActive
+                ? "Clear the File column filters to see backups for this kind again."
+                : props.emptyHint
+            }
+          />
         </div>
       }
       columns={columns}

@@ -27,8 +27,17 @@ interface BackupReconcilerDeps {
   servers: ServerRepository;
   backups: BackupRepository;
   creatingBackupIds: Set<string>;
-  emitChanged: (serverId: string) => void;
+  emitChanged: (
+    serverId: string,
+    extras?: { newlyMissingOnDisk?: number; newlyMissingProtected?: number },
+  ) => void;
 }
+
+type DiskMissingSyncResult = {
+  changed: number;
+  newlyMissing: number;
+  newlyMissingProtected: number;
+};
 
 function resolveServerBackupRoot(installDir: string, backupDir: string | null | undefined): string {
   if (typeof backupDir === "string" && backupDir.trim().length > 0) {
@@ -54,7 +63,8 @@ export class BackupReconciler {
 
   /**
    * Keep SQLite aligned with disk:
-   * - drop DB rows whose archive path no longer exists (Explorer deletes)
+   * - mark completed rows missing when the archive path is gone (Explorer deletes);
+   *   clear the flag if the file returns — do not silent-drop catalog rows
    * - import ZIP/folder archives present on disk but missing from SQLite
    *
    * Not `async`: returning an in-flight Promise must hand back the same
@@ -85,7 +95,8 @@ export class BackupReconciler {
     // Resolve interrupted creates (zip on disk, row still "running") before
     // path-known checks would block re-import of those archives.
     let changed = await this.reconcileInterruptedRunningBackups(serverId);
-    changed += this.pruneMissingDiskBackups(serverId);
+    const missingSync = this.syncMissingDiskBackups(serverId);
+    changed += missingSync.changed;
 
     if (existsSync(rootDir)) {
       const known = new Set(this.deps.backups.listBackupPaths(serverId).map((path) => resolve(path).toLowerCase()));
@@ -99,8 +110,12 @@ export class BackupReconciler {
       changed += await this.importArchivesFromDir(serverId, rootDir, null, known);
     }
 
-    if (changed > 0) {
-      this.deps.emitChanged(serverId);
+    if (changed > 0 || missingSync.newlyMissing > 0) {
+      this.deps.emitChanged(serverId, {
+        newlyMissingOnDisk: missingSync.newlyMissing > 0 ? missingSync.newlyMissing : undefined,
+        newlyMissingProtected:
+          missingSync.newlyMissingProtected > 0 ? missingSync.newlyMissingProtected : undefined,
+      });
     }
     return changed;
   }
@@ -215,20 +230,38 @@ export class BackupReconciler {
     return changed;
   }
 
-  /** Remove DB rows for archives deleted outside the app (e.g. Explorer). */
-  private pruneMissingDiskBackups(serverId: string): number {
+  /**
+   * Mark completed archives missing when the path is gone (Explorer); clear the
+   * flag when the file returns. Failed rows stay as history; running is skipped.
+   */
+  private syncMissingDiskBackups(serverId: string): DiskMissingSyncResult {
     const records = this.deps.backups.listBackups(serverId, 10_000);
-    let removed = 0;
+    let changed = 0;
+    let newlyMissing = 0;
+    let newlyMissingProtected = 0;
     for (const backup of records) {
       // In-progress creates may not have written the zip yet.
       if (backup.status === "running") continue;
       // Failed creates delete the partial zip on purpose — keep the row for history.
       if (backup.status === "failed") continue;
-      if (existsSync(backup.path)) continue;
-      this.deps.backups.deleteBackupRecord(backup.id);
-      removed += 1;
+
+      const onDisk = existsSync(backup.path);
+      if (onDisk) {
+        if (backup.diskMissing) {
+          this.deps.backups.setBackupDiskMissing(backup.id, false);
+          changed += 1;
+        }
+        continue;
+      }
+
+      if (!backup.diskMissing) {
+        this.deps.backups.setBackupDiskMissing(backup.id, true);
+        changed += 1;
+        newlyMissing += 1;
+        if (backup.isProtected) newlyMissingProtected += 1;
+      }
     }
-    return removed;
+    return { changed, newlyMissing, newlyMissingProtected };
   }
 
   private async importArchivesFromDir(

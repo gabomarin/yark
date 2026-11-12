@@ -76,6 +76,7 @@ describe("formatBackupHistoryTitle", () => {
         mapToken: "TheIsland_WP",
         isProtected: false,
         operatorNote: "",
+        diskMissing: false,
       }),
     ).toBe("The Island · Scheduled");
     expect(
@@ -93,6 +94,7 @@ describe("formatBackupHistoryTitle", () => {
         mapToken: null,
         isProtected: false,
         operatorNote: "",
+        diskMissing: false,
       }),
     ).toBe("INI save");
   });

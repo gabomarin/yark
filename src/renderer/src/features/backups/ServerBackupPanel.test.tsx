@@ -54,6 +54,7 @@ const worldBackup: BackupRecord = {
   mapToken: "TheIsland_WP",
   isProtected: false,
   operatorNote: "",
+  diskMissing: false,
 };
 
 const playersBackup: BackupRecord = {
@@ -70,6 +71,7 @@ const playersBackup: BackupRecord = {
   mapToken: null,
   isProtected: false,
   operatorNote: "",
+  diskMissing: false,
 };
 
 const aliceBackup: BackupRecord = {
@@ -86,6 +88,7 @@ const aliceBackup: BackupRecord = {
   mapToken: null,
   isProtected: false,
   operatorNote: "",
+  diskMissing: false,
 };
 
 const bobBackup: BackupRecord = {
@@ -102,6 +105,7 @@ const bobBackup: BackupRecord = {
   mapToken: null,
   isProtected: false,
   operatorNote: "",
+  diskMissing: false,
 };
 
 const iniBackup: BackupRecord = {
@@ -118,6 +122,7 @@ const iniBackup: BackupRecord = {
   mapToken: null,
   isProtected: false,
   operatorNote: "",
+  diskMissing: false,
 };
 
 function renderPanel(list: BackupRecord[] = [worldBackup, playersBackup, aliceBackup, bobBackup, iniBackup]): void {
@@ -228,6 +233,7 @@ describe("ServerBackupPanel", () => {
             mapToken: "TheIsland_WP",
             isProtected: false,
             operatorNote: "",
+            diskMissing: false,
           },
         }),
         pickPath: vi.fn(),
@@ -442,6 +448,35 @@ describe("ServerBackupPanel", () => {
     expect(window.api.createManualBackup).not.toHaveBeenCalledWith("srv-1", ["players"]);
   });
 
+  it("shows a dismissable warning for missing-on-disk archives", async () => {
+    const user = setupUser();
+    const missing: BackupRecord = {
+      ...worldBackup,
+      id: "bk-missing",
+      path: "C:/backups/missing.zip",
+      diskMissing: true,
+      isProtected: true,
+      operatorNote: "keep",
+    };
+    renderPanel([missing, playersBackup]);
+
+    expect(await screen.findByText(/Backup file missing/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 backup is missing on disk/i)).toBeInTheDocument();
+    expect(screen.getByText(/\(1 protected\)/i)).toBeInTheDocument();
+    expect(document.querySelector("[data-backup-missing-on-disk]")).not.toBeNull();
+    expect(document.querySelector('[data-backup-disk-missing="true"]')).not.toBeNull();
+
+    const alert = document.querySelector("[data-backup-missing-on-disk]") as HTMLElement;
+    const close = alert.querySelector(".mantine-Alert-closeButton");
+    expect(close).not.toBeNull();
+    await user.click(close!);
+    await waitFor(() => {
+      expect(document.querySelector("[data-backup-missing-on-disk]")).toBeNull();
+    });
+    // Row highlight remains after dismiss.
+    expect(document.querySelector('[data-backup-disk-missing="true"]')).not.toBeNull();
+  });
+
   it("scopes selection to the active kind subtab", async () => {
     const user = setupUser();
     renderPanel();
@@ -465,6 +500,7 @@ describe("ServerBackupPanel", () => {
       mapToken: "ScorchedEarth_WP",
       isProtected: false,
       operatorNote: "",
+      diskMissing: false,
     };
     renderPanel([worldBackup, otherMap]);
 
@@ -529,6 +565,7 @@ describe("ServerBackupPanel", () => {
       mapToken: null,
       isProtected: false,
       operatorNote: "",
+      diskMissing: false,
     };
 
     renderPanel([worldBackup, playersBackup, aliceBackup, bobBackup, startedFirstFinishedLast, iniBackup]);
@@ -591,13 +628,13 @@ describe("ServerBackupPanel", () => {
     expect(screen.getByLabelText(/Destination/i)).toHaveTextContent("D:\\Custom\\Backups");
   });
 
-  it("uses a human backup title with a type chip", async () => {
+  it("uses a human backup title with map and type in the File column", async () => {
     renderPanel([worldBackup]);
     await screen.findByRole("button", { name: /Open folder C:\/backups\/world/i });
     const title = document.querySelector("[data-backup-title]");
     expect(title).not.toBeNull();
     expect(title?.textContent).toBe("The Island · Manual");
-    expect(screen.getByText("Manual")).toBeInTheDocument();
+    expect(title).toHaveAttribute("data-backup-status", "completed");
     expect(screen.queryByText("C:/backups/world")).not.toBeInTheDocument();
   });
 });

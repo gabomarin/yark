@@ -47,6 +47,8 @@ export { CRITICAL_BACKUP_KINDS } from "./backup-critical-queue";
 
 export interface BackupChangedPush {
   serverId: string;
+  newlyMissingOnDisk?: number;
+  newlyMissingProtected?: number;
 }
 
 const INI_SAVE_BACKUP_DEBOUNCE_MS = 2_000;
@@ -118,7 +120,7 @@ export class BackupService extends EventEmitter {
       servers: this.servers,
       backups: this.backups,
       creatingBackupIds: this.creatingBackupIds,
-      emitChanged: (serverId) => this.emitChanged(serverId),
+      emitChanged: (serverId, extras) => this.emitChanged(serverId, extras),
     });
     this.retention = new BackupRetention({
       servers: this.servers,
@@ -203,8 +205,15 @@ export class BackupService extends EventEmitter {
     return this.scheduledWorldPaused.has(serverId);
   }
 
-  private emitChanged(serverId: string): void {
-    this.emit("changed", { serverId } satisfies BackupChangedPush);
+  private emitChanged(
+    serverId: string,
+    extras?: Pick<BackupChangedPush, "newlyMissingOnDisk" | "newlyMissingProtected">,
+  ): void {
+    this.emit("changed", {
+      serverId,
+      newlyMissingOnDisk: extras?.newlyMissingOnDisk,
+      newlyMissingProtected: extras?.newlyMissingProtected,
+    } satisfies BackupChangedPush);
   }
 
   async createManualBackup(serverId: string, kinds?: BackupKind[]): Promise<BackupRecord[]> {
@@ -430,6 +439,9 @@ export class BackupService extends EventEmitter {
     if (backup === null || backup.serverId !== serverId) {
       throw new Error("Backup not found");
     }
+    if (backup.diskMissing) {
+      throw new Error("Cannot change protection while the archive is missing on disk");
+    }
     const updated = this.backups.setBackupProtection({ id: backupId, isProtected, operatorNote });
     if (updated === null) {
       throw new Error("Backup not found");
@@ -582,6 +594,9 @@ export class BackupService extends EventEmitter {
     const backup = this.backups.getBackup(backupId);
     if (backup === null || backup.serverId !== serverId || backup.status !== "completed") {
       throw new Error("Invalid backup for restore");
+    }
+    if (backup.diskMissing) {
+      throw new Error("Backup archive is missing on disk");
     }
 
     const restoreHistoryId = this.backups.insertRestoreHistory({

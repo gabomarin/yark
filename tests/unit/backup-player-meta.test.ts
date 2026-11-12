@@ -21,6 +21,7 @@ function backup(partial: Partial<BackupRecord> & Pick<BackupRecord, "notes" | "t
     mapToken: null,
     isProtected: false,
     operatorNote: "",
+    diskMissing: false,
     ...partial,
   };
 }

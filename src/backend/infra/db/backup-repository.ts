@@ -29,6 +29,7 @@ interface BackupRow {
   map_token: string | null;
   is_protected: number | null;
   operator_note: string | null;
+  disk_missing: number | null;
 }
 
 export interface RestoreHistoryRecord {
@@ -98,6 +99,7 @@ function rowToBackup(row: BackupRow): BackupRecord {
     mapToken: normalizeMapToken(row.map_token),
     isProtected: row.is_protected === 1,
     operatorNote: clampBackupOperatorNote(row.operator_note),
+    diskMissing: row.disk_missing === 1,
   };
 }
 
@@ -159,6 +161,7 @@ export class BackupRepository {
       mapToken,
       isProtected: false,
       operatorNote: "",
+      diskMissing: false,
     };
   }
 
@@ -212,17 +215,18 @@ export class BackupRepository {
   }
 
   latestCompleted(serverId: string, kind?: BackupKind): BackupRecord | null {
+    // Align with listCompleted: missing-on-disk archives are not restorable "latest".
     if (kind !== undefined) {
       const row = this.db
         .prepare(
-          "SELECT * FROM backups WHERE server_id = ? AND kind = ? AND status = 'completed' ORDER BY completed_at DESC, created_at DESC, rowid DESC LIMIT 1",
+          "SELECT * FROM backups WHERE server_id = ? AND kind = ? AND status = 'completed' AND IFNULL(disk_missing, 0) = 0 ORDER BY completed_at DESC, created_at DESC, rowid DESC LIMIT 1",
         )
         .get(serverId, kind) as unknown as BackupRow | undefined;
       return row ? rowToBackup(row) : null;
     }
     const row = this.db
       .prepare(
-        "SELECT * FROM backups WHERE server_id = ? AND status = 'completed' ORDER BY completed_at DESC, created_at DESC, rowid DESC LIMIT 1",
+        "SELECT * FROM backups WHERE server_id = ? AND status = 'completed' AND IFNULL(disk_missing, 0) = 0 ORDER BY completed_at DESC, created_at DESC, rowid DESC LIMIT 1",
       )
       .get(serverId) as unknown as BackupRow | undefined;
     return row ? rowToBackup(row) : null;
@@ -351,6 +355,12 @@ export class BackupRepository {
     return this.getPolicy(input.serverId);
   }
 
+  /** Mark or clear "archive missing on disk" after reconcile. */
+  setBackupDiskMissing(id: string, diskMissing: boolean): BackupRecord | null {
+    this.db.prepare("UPDATE backups SET disk_missing = ? WHERE id = ?").run(diskMissing ? 1 : 0, id);
+    return this.getBackup(id);
+  }
+
   /** Toggle protection on a completed backup; clamp note to BACKUP_OPERATOR_NOTE_MAX_LENGTH. */
   setBackupProtection(input: { id: string; isProtected: boolean; operatorNote: string }): BackupRecord | null {
     const existing = this.getBackup(input.id);
@@ -424,17 +434,18 @@ export class BackupRepository {
   }
 
   listCompleted(serverId: string, kind?: BackupKind): BackupRecord[] {
+    // Exclude missing-on-disk: they must not fill Keep last slots or count as restorable.
     if (kind !== undefined) {
       const rows = this.db
         .prepare(
-          "SELECT * FROM backups WHERE server_id = ? AND kind = ? AND status = 'completed' ORDER BY completed_at DESC, created_at DESC, rowid DESC",
+          "SELECT * FROM backups WHERE server_id = ? AND kind = ? AND status = 'completed' AND IFNULL(disk_missing, 0) = 0 ORDER BY completed_at DESC, created_at DESC, rowid DESC",
         )
         .all(serverId, kind) as unknown as BackupRow[];
       return rows.map(rowToBackup);
     }
     const rows = this.db
       .prepare(
-        "SELECT * FROM backups WHERE server_id = ? AND status = 'completed' ORDER BY completed_at DESC, created_at DESC, rowid DESC",
+        "SELECT * FROM backups WHERE server_id = ? AND status = 'completed' AND IFNULL(disk_missing, 0) = 0 ORDER BY completed_at DESC, created_at DESC, rowid DESC",
       )
       .all(serverId) as unknown as BackupRow[];
     return rows.map(rowToBackup);

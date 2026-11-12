@@ -18,6 +18,7 @@ function makeBackup(overrides: Partial<BackupRecord> = {}): BackupRecord {
     mapToken: null,
     isProtected: false,
     operatorNote: "",
+    diskMissing: false,
     ...overrides,
   };
 }

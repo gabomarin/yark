@@ -1,10 +1,12 @@
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { playerBackupDisplayName } from "@shared/backups/backup-player-meta";
 import type { BackupKind, BackupRecord, ServerProfile } from "@shared/types";
+import { Stack } from "@mantine/core";
 import { dangerConfirmBody, openDangerConfirmModal } from "@ui/DangerConfirmModal/openDangerConfirmModal";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
-import { createElement, type Dispatch, type SetStateAction } from "react";
+import { createElement, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import { runBackupExport, runBackupImport } from "../backupPortability";
+import { ProtectedBackupDeleteNote } from "../components/ProtectedBackupDeleteNote/ProtectedBackupDeleteNote";
 import { formatBackupDetails } from "../formatBackupDetails";
 import { kindLabel, type DraftPolicy } from "../model/serverBackupPanelModel";
 
@@ -32,6 +34,19 @@ function truncateOperatorNote(note: string): string {
   const trimmed = note.trim();
   if (trimmed.length <= OPERATOR_NOTE_CONFIRM_MAX) return trimmed;
   return `${trimmed.slice(0, OPERATOR_NOTE_CONFIRM_MAX - 1)}…`;
+}
+
+function deleteConfirmChildren(body: ReactNode, operatorNote?: string): ReactNode {
+  const note = operatorNote !== undefined ? truncateOperatorNote(operatorNote) : "";
+  if (note.length === 0) {
+    return dangerConfirmBody(body);
+  }
+  return createElement(
+    Stack,
+    { gap: "sm" },
+    dangerConfirmBody(body),
+    createElement(ProtectedBackupDeleteNote, { note }),
+  );
 }
 
 interface BackupPanelActionOptions {
@@ -196,16 +211,13 @@ export function createServerBackupPanelActions(options: BackupPanelActionOptions
     ];
     if (protectedCount > 0) {
       body.push(` ${protectedCount} of these ${protectedCount === 1 ? "is" : "are"} protected.`);
-      if (protectedCount === 1) {
-        const note = truncateOperatorNote(protectedRows[0]?.operatorNote ?? "");
-        if (note.length > 0) {
-          body.push(` Note: “${note}”.`);
-        }
-      }
     }
     openDangerConfirmModal({
       title: `Delete selected ${activeKindLabel.toLowerCase()} backups?`,
-      children: dangerConfirmBody(body),
+      children: deleteConfirmChildren(
+        body,
+        protectedCount === 1 ? (protectedRows[0]?.operatorNote ?? "") : undefined,
+      ),
       confirmLabel: "Delete",
       onConfirm: () => void deleteBackupsByIds(ids),
     });
@@ -245,14 +257,10 @@ export function createServerBackupPanelActions(options: BackupPanelActionOptions
     ];
     if (backup.isProtected) {
       body.push(" This backup is protected.");
-      const note = truncateOperatorNote(backup.operatorNote);
-      if (note.length > 0) {
-        body.push(` Note: “${note}”.`);
-      }
     }
     openDangerConfirmModal({
       title: `Delete ${label.toLowerCase()} backup?`,
-      children: dangerConfirmBody(body),
+      children: deleteConfirmChildren(body, backup.isProtected ? backup.operatorNote : undefined),
       confirmLabel: "Delete",
       onConfirm: () => void deleteBackupsByIds([backup.id]),
     });

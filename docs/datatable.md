@@ -21,7 +21,7 @@ Mantine packages use `styles.layer.css` so app CSS modules sit above the
 
 | Surface                   | Decision                                       | Notes                                                                                                         |
 | ------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| **Backup history**        | **Adopt** (shipped first)                      | Multi-select, status/type, restore/delete actions; column sort + resize                                       |
+| **Backup history**        | **Adopt** (shipped first)                      | Multi-select; File title carries status color + map/type; Status/Type header filters; Date/Size/File sort + resize; row action icons + context menu |
 | **INI visual grid**       | Conditional / keep custom for now              | Needs sticky UI-category headers + in-cell editors                                                            |
 | **Fleet / server events** | **Keep** Accordion                             | Narrative expand (#102); poor table fit                                                                       |
 | **Updates job history**   | Keep `SelectableListRow` master–detail for now | Optional later                                                                                                |

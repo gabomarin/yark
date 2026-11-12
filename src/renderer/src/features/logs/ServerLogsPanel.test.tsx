@@ -162,6 +162,7 @@ describe("ServerLogsPanel", () => {
             mapToken: "TheIsland_WP",
             isProtected: false,
             operatorNote: "",
+            diskMissing: false,
           },
         ],
         events: [],
@@ -236,6 +237,7 @@ describe("ServerLogsPanel", () => {
             mapToken: "TheIsland_WP",
             isProtected: false,
             operatorNote: "",
+            diskMissing: false,
           },
           {
             id: "bak-fail",
@@ -251,6 +253,7 @@ describe("ServerLogsPanel", () => {
             mapToken: "TheIsland_WP",
             isProtected: false,
             operatorNote: "",
+            diskMissing: false,
           },
         ],
         events: [],
@@ -307,6 +310,7 @@ describe("ServerLogsPanel", () => {
           mapToken: "TheIsland_WP",
           isProtected: false,
           operatorNote: "",
+          diskMissing: false,
         },
       ],
       events: [

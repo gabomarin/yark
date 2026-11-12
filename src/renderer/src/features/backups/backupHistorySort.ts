@@ -36,20 +36,11 @@ export function sortBackupRecords(records: BackupRecord[], status: DataTableSort
           cmp = archiveFileName(a.path).localeCompare(archiveFileName(b.path));
         }
         break;
-      case "mapToken":
-        cmp = (a.mapToken ?? "\uffff").localeCompare(b.mapToken ?? "\uffff");
-        break;
       case "when":
         cmp = compareFinishedAt(a, b);
         break;
       case "sizeBytes":
         cmp = a.sizeBytes - b.sizeBytes;
-        break;
-      case "status":
-        cmp = a.status.localeCompare(b.status);
-        break;
-      case "type":
-        cmp = a.type.localeCompare(b.type);
         break;
       default:
         cmp = 0;

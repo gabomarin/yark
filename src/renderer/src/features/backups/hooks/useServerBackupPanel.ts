@@ -25,6 +25,7 @@ import {
   isServerActive,
   kindLabel,
   playersPolicySummary,
+  summarizeMissingOnDisk,
   toDraft,
   worldPolicySummary,
   type DraftPolicy,
@@ -61,6 +62,8 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
   const [restoreProfilesTribes, setRestoreProfilesTribes] = useState(true);
   // Always start open; collapse is session-local and resets when changing kind (#231).
   const [settingsOpen, setSettingsOpen] = useState(true);
+  /** Fingerprint of missing ids the operator dismissed this session; new ids re-show the alert. */
+  const [dismissedMissingFingerprint, setDismissedMissingFingerprint] = useState<string | null>(null);
   const loadGenRef = useRef(0);
   const saveGenRef = useRef(0);
 
@@ -146,9 +149,14 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
   useEffect(() => {
     if (typeof window.api.onBackupsChanged !== "function") return undefined;
     return window.api.onBackupsChanged((payload) => {
-      if (payload.serverId === server.id) void load(server.id, { quiet: true });
+      if (payload.serverId !== server.id) return;
+      void load(server.id, { quiet: true });
     });
   }, [server.id, load]);
+
+  useEffect(() => {
+    setDismissedMissingFingerprint(null);
+  }, [server.id]);
 
   useEffect(() => {
     if (draftPolicy === null || policy === null) return;
@@ -180,6 +188,12 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
   }, [draftPolicy, policy, server.id]);
 
   const kindBackups = useMemo(() => backups.filter((backup) => backup.kind === activeKind), [backups, activeKind]);
+  const missingOnDisk = useMemo(() => summarizeMissingOnDisk(backups), [backups]);
+  const showMissingOnDiskAlert =
+    missingOnDisk.missingCount > 0 && missingOnDisk.fingerprint !== dismissedMissingFingerprint;
+  const dismissMissingOnDiskAlert = () => {
+    setDismissedMissingFingerprint(missingOnDisk.fingerprint);
+  };
   const displayedBackups = useMemo(
     () => filterBackups(backups, activeKind, playerSearch, currentMapOnly, server.map),
     [backups, activeKind, playerSearch, currentMapOnly, server.map],
@@ -305,6 +319,9 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
     settingsTitle,
     settingsSummary,
     emptyHint,
+    missingOnDisk,
+    showMissingOnDiskAlert,
+    dismissMissingOnDiskAlert,
     forceRefresh,
     ...actions,
   };

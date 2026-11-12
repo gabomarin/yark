@@ -208,6 +208,14 @@ describe("BackupRepository", () => {
     expect(repo.latestCompleted("s1", "world")?.id).toBe(worldB.id);
     expect(repo.latestCompleted("s1", "players")?.id).toBe(players.id);
     expect(repo.listCompleted("s1", "world")).toHaveLength(2);
+
+    repo.setBackupDiskMissing(worldA.id, true);
+    expect(repo.listCompleted("s1", "world").map((row) => row.id)).toEqual([worldB.id]);
+    expect(repo.getBackup(worldA.id)?.diskMissing).toBe(true);
+
+    repo.setBackupDiskMissing(worldB.id, true);
+    expect(repo.latestCompleted("s1", "world")).toBeNull();
+    expect(repo.listCompleted("s1", "world")).toEqual([]);
   });
 
   it("deletes backup records", () => {

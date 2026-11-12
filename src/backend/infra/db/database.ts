@@ -8,6 +8,10 @@ import {
   backfillPassiveModsFromStructuredLaunchArgs,
   PASSIVE_MODS_BACKFILL_SCHEMA_VERSION,
 } from "./backfill-passive-mods";
+import {
+  BACKUP_PROTECTION_ENSURE_SCHEMA_VERSION,
+  ensureBackupProtectionColumns,
+} from "./ensure-backup-protection-columns";
 import { isOnDiskProfileDatabasePath, writeProfileDatabaseSnapshot } from "./database-snapshots";
 import schemaMigrations from "./schema-migrations.json";
 
@@ -134,6 +138,9 @@ export function openDatabaseApplyingMigrations(
           if (skipped.length > 0) {
             console.warn("[yark] Passive-mods backfill skipped malformed profile rows:", skipped.join(", "));
           }
+        }
+        if (migration.version === BACKUP_PROTECTION_ENSURE_SCHEMA_VERSION) {
+          ensureBackupProtectionColumns(db);
         }
         // Same transaction as E2E `initProfileDatabase`. WAL header writes
         // (`user_version`) are not rolled back; do not move this after COMMIT

@@ -51,14 +51,14 @@ export class BackupPortabilityOps {
     if (backup.status !== "completed") {
       throw new Error("Only completed backups can be exported");
     }
+    if (backup.diskMissing || !existsSync(backup.path)) {
+      throw new Error("Backup archive is missing on disk");
+    }
     const dest = destinationPath.trim();
     if (dest.length === 0) {
       throw new Error("Export destination is required");
     }
     const destZip = resolveExportZipDestination(dest);
-    if (!existsSync(backup.path)) {
-      throw new Error("Backup archive is missing on disk");
-    }
 
     await ensureParentDir(destZip);
     try {

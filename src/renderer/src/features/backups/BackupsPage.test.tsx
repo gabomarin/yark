@@ -63,6 +63,7 @@ const fleetSummary: BackupFleetSummary = {
         mapToken: "TheIsland_WP",
         isProtected: false,
         operatorNote: "",
+        diskMissing: false,
       },
       latestWorld: {
         id: "bk-1",
@@ -78,6 +79,7 @@ const fleetSummary: BackupFleetSummary = {
         mapToken: "TheIsland_WP",
         isProtected: false,
         operatorNote: "",
+        diskMissing: false,
       },
       counts: { world: 1, players: 0, ini: 0, failed24h: 0 },
       usedBytes: 2048,
