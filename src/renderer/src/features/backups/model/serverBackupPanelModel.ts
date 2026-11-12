@@ -15,7 +15,7 @@ export const KIND_TABS: Array<{ kind: BackupKind; label: string }> = [
 export const BACKUPS_KINDS_HINT_STORAGE_KEY = "yark.backups.kindsHint.dismissed.v1";
 
 /** Stable key for the current set of missing-on-disk backup ids (session dismiss). */
-export function missingOnDiskFingerprint(backups: BackupRecord[]): string {
+function missingOnDiskFingerprint(backups: BackupRecord[]): string {
   return backups
     .filter((backup) => backup.diskMissing)
     .map((backup) => backup.id)

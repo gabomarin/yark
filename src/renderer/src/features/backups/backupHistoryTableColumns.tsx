@@ -12,9 +12,9 @@ import { formatBackupHistoryTitle, formatBackupTypeLabel, formatBackupWhenLabel 
 import classes from "./BackupsPage.module.css";
 
 /** Fixed Actions width (~6 icon buttons) so empty filtered lists do not reflow columns. */
-export const BACKUP_HISTORY_ACTIONS_COLUMN_WIDTH = 220;
-export const BACKUP_HISTORY_DATE_COLUMN_WIDTH = 120;
-export const BACKUP_HISTORY_SIZE_COLUMN_WIDTH = 72;
+const BACKUP_HISTORY_ACTIONS_COLUMN_WIDTH = 220;
+const BACKUP_HISTORY_DATE_COLUMN_WIDTH = 120;
+const BACKUP_HISTORY_SIZE_COLUMN_WIDTH = 72;
 
 export interface BackupHistoryColumnInput {
   kind: BackupKind;
