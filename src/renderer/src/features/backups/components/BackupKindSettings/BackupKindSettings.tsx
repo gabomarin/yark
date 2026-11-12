@@ -1,9 +1,9 @@
 import type { ReactElement } from "react";
 import { CaretDown, CaretRight } from "@phosphor-icons/react";
-import { Group, NumberInput, Text, UnstyledButton } from "@mantine/core";
+import { Group, NumberInput, Text, Tooltip, UnstyledButton } from "@mantine/core";
 import type { BackupKind } from "@shared/types";
 import { AppSwitch } from "@ui/AppSwitch/AppSwitch";
-import type { DraftPolicy } from "../../model/serverBackupPanelModel";
+import { BACKUP_PROTECT_HELP_TOOLTIP, type DraftPolicy } from "../../model/serverBackupPanelModel";
 import classes from "../../BackupsPage.module.css";
 
 interface Props {
@@ -112,19 +112,22 @@ export function BackupKindSettings(props: Props): ReactElement {
               className={classes.policyField}
             />
           </Group>
-          <AppSwitch
-            size="sm"
-            label="Protect new manual backups"
-            description="Protected backups are not deleted by Cleanup or retention policy. You can still delete them manually."
-            checked={draftPolicy.protectNewManualWorld}
-            disabled={busy || !installReady}
-            onCheckedChange={(checked) =>
-              onDraftPolicyChange({
-                ...draftPolicy,
-                protectNewManualWorld: checked,
-              })
-            }
-          />
+          <Tooltip label={BACKUP_PROTECT_HELP_TOOLTIP} multiline maw={320} withArrow>
+            <div>
+              <AppSwitch
+                size="sm"
+                label="Protect new manual backups"
+                checked={draftPolicy.protectNewManualWorld}
+                disabled={busy || !installReady}
+                onCheckedChange={(checked) =>
+                  onDraftPolicyChange({
+                    ...draftPolicy,
+                    protectNewManualWorld: checked,
+                  })
+                }
+              />
+            </div>
+          </Tooltip>
         </Group>
       )}
 
@@ -171,19 +174,22 @@ export function BackupKindSettings(props: Props): ReactElement {
             }
             className={classes.compactRetain}
           />
-          <AppSwitch
-            size="sm"
-            label="Protect new manual backups"
-            description="Protected backups are not deleted by Cleanup or retention policy. You can still delete them manually."
-            checked={draftPolicy.protectNewManualIni}
-            disabled={busy || !installReady}
-            onCheckedChange={(checked) =>
-              onDraftPolicyChange({
-                ...draftPolicy,
-                protectNewManualIni: checked,
-              })
-            }
-          />
+          <Tooltip label={BACKUP_PROTECT_HELP_TOOLTIP} multiline maw={320} withArrow>
+            <div>
+              <AppSwitch
+                size="sm"
+                label="Protect new manual backups"
+                checked={draftPolicy.protectNewManualIni}
+                disabled={busy || !installReady}
+                onCheckedChange={(checked) =>
+                  onDraftPolicyChange({
+                    ...draftPolicy,
+                    protectNewManualIni: checked,
+                  })
+                }
+              />
+            </div>
+          </Tooltip>
         </Group>
       )}
     </div>

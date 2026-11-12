@@ -14,6 +14,10 @@ export const KIND_TABS: Array<{ kind: BackupKind; label: string }> = [
 /** localStorage: operator dismissed the World/players/INI kinds hint (#456). */
 export const BACKUPS_KINDS_HINT_STORAGE_KEY = "yark.backups.kindsHint.dismissed.v1";
 
+/** Hover help for Protect switches and the Protected editor control. */
+export const BACKUP_PROTECT_HELP_TOOLTIP =
+  "Protected backups are not deleted by Cleanup or retention policy. You can still delete them manually.";
+
 /** Stable key for the current set of missing-on-disk backup ids (session dismiss). */
 function missingOnDiskFingerprint(backups: BackupRecord[]): string {
   return backups
