@@ -53,6 +53,9 @@ function makePreUpdateBackups(serverId: string): BackupRecord[] {
     completedAt: now,
     notes: null,
     mapToken: kind === "world" ? "TheIsland_WP" : null,
+    isProtected: false,
+    operatorNote: "",
+    diskMissing: false,
   }));
 }
 
@@ -75,6 +78,9 @@ function makeLegacyPreUpdateBackupIds(serverId: string): {
     completedAt: now,
     notes: null,
     mapToken: null,
+    isProtected: false,
+    operatorNote: "",
+    diskMissing: false,
   };
   return {
     ids: [critical[0]!.id, players.id, "bu-ini"],

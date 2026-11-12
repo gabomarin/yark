@@ -25,6 +25,7 @@ import {
   isServerActive,
   kindLabel,
   playersPolicySummary,
+  summarizeMissingOnDisk,
   toDraft,
   worldPolicySummary,
   type DraftPolicy,
@@ -57,9 +58,12 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
   const [playerSearch, setPlayerSearch] = useState("");
   const [currentMapOnly, setCurrentMapOnly] = useState(true);
   const [restoreTarget, setRestoreTarget] = useState<BackupRecord | null>(null);
+  const [protectTarget, setProtectTarget] = useState<BackupRecord | null>(null);
   const [restoreProfilesTribes, setRestoreProfilesTribes] = useState(true);
   // Always start open; collapse is session-local and resets when changing kind (#231).
   const [settingsOpen, setSettingsOpen] = useState(true);
+  /** Fingerprint of missing ids the operator dismissed this session; new ids re-show the alert. */
+  const [dismissedMissingFingerprint, setDismissedMissingFingerprint] = useState<string | null>(null);
   const loadGenRef = useRef(0);
   const saveGenRef = useRef(0);
 
@@ -145,9 +149,14 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
   useEffect(() => {
     if (typeof window.api.onBackupsChanged !== "function") return undefined;
     return window.api.onBackupsChanged((payload) => {
-      if (payload.serverId === server.id) void load(server.id, { quiet: true });
+      if (payload.serverId !== server.id) return;
+      void load(server.id, { quiet: true });
     });
   }, [server.id, load]);
+
+  useEffect(() => {
+    setDismissedMissingFingerprint(null);
+  }, [server.id]);
 
   useEffect(() => {
     if (draftPolicy === null || policy === null) return;
@@ -179,6 +188,37 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
   }, [draftPolicy, policy, server.id]);
 
   const kindBackups = useMemo(() => backups.filter((backup) => backup.kind === activeKind), [backups, activeKind]);
+  const missingOnDisk = useMemo(() => summarizeMissingOnDisk(backups), [backups]);
+  const showMissingOnDiskAlert =
+    missingOnDisk.missingCount > 0 && missingOnDisk.fingerprint !== dismissedMissingFingerprint;
+  const dismissMissingOnDiskAlert = () => {
+    setDismissedMissingFingerprint(missingOnDisk.fingerprint);
+  };
+
+  useEffect(() => {
+    // Recurring missing after a full clear should raise the banner again.
+    if (missingOnDisk.missingCount === 0) {
+      setDismissedMissingFingerprint(null);
+    }
+  }, [missingOnDisk.missingCount]);
+
+  // Keep protect modal target in sync with list refreshes (same id); close if archive goes missing.
+  useEffect(() => {
+    setProtectTarget((previous) => {
+      if (previous === null) return null;
+      const next = backups.find((backup) => backup.id === previous.id);
+      if (next === undefined) return null;
+      if (next.diskMissing) return null;
+      if (
+        next.isProtected === previous.isProtected &&
+        next.operatorNote === previous.operatorNote &&
+        next.status === previous.status
+      ) {
+        return previous;
+      }
+      return next;
+    });
+  }, [backups]);
   const displayedBackups = useMemo(
     () => filterBackups(backups, activeKind, playerSearch, currentMapOnly, server.map),
     [backups, activeKind, playerSearch, currentMapOnly, server.map],
@@ -248,8 +288,10 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
     server,
     activeKind,
     actionableSelectedIds,
+    kindBackups,
     draftPolicy,
     restoreTarget,
+    protectTarget,
     restoreProfilesTribes,
     opsLocked: restoreLocked,
     opsLockReason: restoreLockReason,
@@ -259,6 +301,7 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
     setDraftPolicy,
     setSelectedIds,
     setRestoreTarget,
+    setProtectTarget,
     setRestoreProfilesTribes,
     load,
   });
@@ -282,6 +325,7 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
     currentMapOnly,
     setCurrentMapOnly,
     restoreTarget,
+    protectTarget,
     restoreProfilesTribes,
     setRestoreProfilesTribes,
     settingsOpen,
@@ -300,6 +344,9 @@ export function useServerBackupPanel(options: UseServerBackupPanelOptions) {
     settingsTitle,
     settingsSummary,
     emptyHint,
+    missingOnDisk,
+    showMissingOnDiskAlert,
+    dismissMissingOnDiskAlert,
     forceRefresh,
     ...actions,
   };

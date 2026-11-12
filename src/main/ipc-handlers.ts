@@ -1021,6 +1021,10 @@ export function registerIpcHandlers(
     backups.setPolicy(serverId, policy),
   );
 
+  handleValidated(IPC.backupsSetProtection, ipcArgSchemas[IPC.backupsSetProtection], ([serverId, backupId, payload]) =>
+    backups.setBackupProtection(serverId, backupId, payload.isProtected, payload.operatorNote),
+  );
+
   handleValidated(IPC.maintenanceGetPolicy, ipcArgSchemas[IPC.maintenanceGetPolicy], ([serverId]) =>
     maintenance.getPolicy(serverId),
   );

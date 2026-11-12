@@ -151,12 +151,31 @@ describe("validated arg schemas (reject)", () => {
         retainCountPlayers: 20,
         retainCountIni: 10,
         backupDir: "   ",
+        protectNewManualWorld: false,
+        protectNewManualIni: false,
       },
     ]);
     expect(parsed.success).toBe(true);
     if (parsed.success) {
       expect(parsed.data[1].backupDir).toBeNull();
     }
+  });
+
+  it("accepts backups:set-protection payload and clamps note length at schema", () => {
+    expect(
+      ipcArgSchemas[IPC.backupsSetProtection].safeParse([
+        "srv-1",
+        "bak-1",
+        { isProtected: true, operatorNote: "keep this wipe" },
+      ]).success,
+    ).toBe(true);
+    expect(
+      ipcArgSchemas[IPC.backupsSetProtection].safeParse([
+        "srv-1",
+        "bak-1",
+        { isProtected: true, operatorNote: "x".repeat(501) },
+      ]).success,
+    ).toBe(false);
   });
 
   it("accepts optional limit omits for list/runtime/search/console", () => {

@@ -114,5 +114,17 @@
   {
     "version": 29,
     "sql": "\n      ALTER TABLE servers ADD COLUMN passive_mods TEXT NOT NULL DEFAULT '[]';\n    "
+  },
+  {
+    "version": 30,
+    "sql": "\n      ALTER TABLE backups ADD COLUMN is_protected INTEGER NOT NULL DEFAULT 0;\n      ALTER TABLE backups ADD COLUMN operator_note TEXT NOT NULL DEFAULT '';\n      ALTER TABLE backup_policies ADD COLUMN protect_new_manual_world INTEGER NOT NULL DEFAULT 0;\n      ALTER TABLE backup_policies ADD COLUMN protect_new_manual_ini INTEGER NOT NULL DEFAULT 0;\n    "
+  },
+  {
+    "version": 31,
+    "sql": "-- backup protection columns ensured in JS (idempotent; repairs profiles that skipped v30 SQL)"
+  },
+  {
+    "version": 32,
+    "sql": "-- disk_missing ensured in JS (idempotent; repairs profiles that skipped the ALTER)"
   }
 ]

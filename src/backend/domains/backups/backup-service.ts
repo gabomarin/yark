@@ -47,6 +47,8 @@ export { CRITICAL_BACKUP_KINDS } from "./backup-critical-queue";
 
 export interface BackupChangedPush {
   serverId: string;
+  newlyMissingOnDisk?: number;
+  newlyMissingProtected?: number;
 }
 
 const INI_SAVE_BACKUP_DEBOUNCE_MS = 2_000;
@@ -118,7 +120,7 @@ export class BackupService extends EventEmitter {
       servers: this.servers,
       backups: this.backups,
       creatingBackupIds: this.creatingBackupIds,
-      emitChanged: (serverId) => this.emitChanged(serverId),
+      emitChanged: (serverId, extras) => this.emitChanged(serverId, extras),
     });
     this.retention = new BackupRetention({
       servers: this.servers,
@@ -203,8 +205,15 @@ export class BackupService extends EventEmitter {
     return this.scheduledWorldPaused.has(serverId);
   }
 
-  private emitChanged(serverId: string): void {
-    this.emit("changed", { serverId } satisfies BackupChangedPush);
+  private emitChanged(
+    serverId: string,
+    extras?: Pick<BackupChangedPush, "newlyMissingOnDisk" | "newlyMissingProtected">,
+  ): void {
+    this.emit("changed", {
+      serverId,
+      newlyMissingOnDisk: extras?.newlyMissingOnDisk,
+      newlyMissingProtected: extras?.newlyMissingProtected,
+    } satisfies BackupChangedPush);
   }
 
   async createManualBackup(serverId: string, kinds?: BackupKind[]): Promise<BackupRecord[]> {
@@ -383,7 +392,14 @@ export class BackupService extends EventEmitter {
   async list(serverId: string, limit: number): Promise<BackupRecord[]> {
     this.mustServer(serverId);
     await this.reconcileDiskBackups(serverId);
-    return this.backups.listBackups(serverId, Math.max(1, Math.min(limit, 200)));
+    const capped = Math.max(1, Math.min(limit, 200));
+    const listed = this.backups.listBackups(serverId, capped);
+    // Always surface missing-on-disk rows even when they fall outside the page limit.
+    const missing = this.backups.listDiskMissing(serverId);
+    if (missing.length === 0) return listed;
+    const seen = new Set(listed.map((row) => row.id));
+    const extras = missing.filter((row) => !seen.has(row.id));
+    return extras.length === 0 ? listed : [...listed, ...extras];
   }
 
   /** Force re-scan of disk archives into the DB, then return the list. */
@@ -419,7 +435,29 @@ export class BackupService extends EventEmitter {
       retainCountPlayers: policy.retainCountPlayers,
       retainCountIni: policy.retainCountIni,
       backupDir,
+      protectNewManualWorld: policy.protectNewManualWorld,
+      protectNewManualIni: policy.protectNewManualIni,
     });
+  }
+
+  setBackupProtection(serverId: string, backupId: string, isProtected: boolean, operatorNote: string): BackupRecord {
+    this.mustServer(serverId);
+    const backup = this.backups.getBackup(backupId);
+    if (backup === null || backup.serverId !== serverId) {
+      throw new Error("Backup not found");
+    }
+    if (backup.status !== "completed") {
+      throw new Error("Only completed backups can be protected");
+    }
+    if (backup.diskMissing) {
+      throw new Error("Cannot change protection while the archive is missing on disk");
+    }
+    const updated = this.backups.setBackupProtection({ id: backupId, isProtected, operatorNote });
+    if (updated === null) {
+      throw new Error("Backup not found");
+    }
+    this.emitChanged(serverId);
+    return updated;
   }
 
   /** Effective folder for new backups (custom policy dir or `{installDir}\\Backups`). */
@@ -566,6 +604,9 @@ export class BackupService extends EventEmitter {
     const backup = this.backups.getBackup(backupId);
     if (backup === null || backup.serverId !== serverId || backup.status !== "completed") {
       throw new Error("Invalid backup for restore");
+    }
+    if (backup.diskMissing) {
+      throw new Error("Backup archive is missing on disk");
     }
 
     const restoreHistoryId = this.backups.insertRestoreHistory({

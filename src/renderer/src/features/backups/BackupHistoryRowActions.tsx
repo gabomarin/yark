@@ -1,9 +1,14 @@
 import type { ReactElement } from "react";
 import { ArrowCounterClockwise, ClipboardText, Export, FolderOpen, Trash } from "@phosphor-icons/react";
 import { ActionIcon, Group, Tooltip } from "@mantine/core";
+import type { BackupRecord } from "@shared/types";
+import { BackupProtectionPopover } from "./components/BackupProtectionPopover/BackupProtectionPopover";
 import { buildBackupHistoryRowActions, type BackupHistoryRowActionInput } from "./backupHistoryRowActionModel";
 
-type Props = BackupHistoryRowActionInput;
+type Props = BackupHistoryRowActionInput & {
+  protectionSaving?: boolean;
+  onSaveProtection?: (backup: BackupRecord, isProtected: boolean, operatorNote: string) => Promise<boolean>;
+};
 
 function itemDisabled(entries: ReturnType<typeof buildBackupHistoryRowActions>, key: string): boolean {
   const item = entries.find((entry) => entry.kind === "item" && entry.key === key);
@@ -15,6 +20,8 @@ function itemDisabled(entries: ReturnType<typeof buildBackupHistoryRowActions>, 
  */
 export function BackupHistoryRowActions(props: Props): ReactElement {
   const menuEntries = buildBackupHistoryRowActions(props);
+  const showProtect =
+    props.backup.status === "completed" && !props.backup.diskMissing && props.onSaveProtection !== undefined;
 
   return (
     <Group gap={4} wrap="nowrap">
@@ -40,7 +47,10 @@ export function BackupHistoryRowActions(props: Props): ReactElement {
           <FolderOpen size={16} />
         </ActionIcon>
       </Tooltip>
-      <Tooltip label="Export a copy" withArrow>
+      <Tooltip
+        label={props.backup.diskMissing ? "Archive missing on disk — export blocked" : "Export a copy"}
+        withArrow
+      >
         <ActionIcon
           variant="subtle"
           size="sm"
@@ -51,7 +61,7 @@ export function BackupHistoryRowActions(props: Props): ReactElement {
           <Export size={16} />
         </ActionIcon>
       </Tooltip>
-      <Tooltip label="Restore" withArrow>
+      <Tooltip label={props.backup.diskMissing ? "Archive missing on disk — restore blocked" : "Restore"} withArrow>
         <ActionIcon
           variant="subtle"
           color="attention"
@@ -63,6 +73,14 @@ export function BackupHistoryRowActions(props: Props): ReactElement {
           <ArrowCounterClockwise size={16} />
         </ActionIcon>
       </Tooltip>
+      {showProtect && (
+        <BackupProtectionPopover
+          backup={props.backup}
+          busy={props.busy}
+          saving={props.protectionSaving === true}
+          onSave={props.onSaveProtection!}
+        />
+      )}
       <Tooltip label="Delete" withArrow>
         <ActionIcon
           variant="subtle"

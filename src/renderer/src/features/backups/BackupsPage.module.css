@@ -120,6 +120,12 @@
   gap: var(--app-space-xs);
 }
 
+/* Tooltip target for Protect switches: keep the same inline height as Schedule / Keep last. */
+.protectSwitchHit {
+  display: inline-flex;
+  align-items: center;
+}
+
 .kindSettingsMeta {
   margin-top: 2px;
   line-height: 1.3;
@@ -254,9 +260,10 @@
 }
 
 .historyTable :global(.mantine-datatable-table) {
-  /* Fill the panel even when content columns hug (0%) + Actions is 100%. */
+  /* File is 100%; Date/Size/Actions are fixed px — keep layout when the body is empty. */
   width: 100% !important;
   min-width: 100%;
+  table-layout: fixed;
 }
 
 .historyTable :global(.mantine-datatable-table th),
@@ -264,31 +271,101 @@
   box-sizing: border-box;
 }
 
-/* Actions is width 100% — keep icons on the trailing edge as the column grows. */
+.historyTable :global(td[data-accessor="path"]),
+.historyTable :global(th[data-accessor="path"]) {
+  min-width: 0;
+  overflow: hidden;
+}
+
 .historyTable :global(td[data-accessor="actions"]),
 .historyTable :global(th[data-accessor="actions"]) {
   text-align: right;
 }
 
-.backupTitle {
+/* Missing-on-disk archives: tint + left edge so they scan next to healthy rows. */
+.historyTable :global(tr[data-backup-disk-missing="true"] td) {
+  background: color-mix(in srgb, var(--app-color-attention) 12%, var(--app-color-panel));
+}
+
+.historyTable :global(tr[data-backup-disk-missing="true"] td:first-child) {
+  box-shadow: inset 3px 0 0 var(--app-color-attention);
+}
+
+.backupFileCell {
   min-width: 0;
+}
+
+.backupFileStack {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.backupTitleRow {
+  min-width: 0;
+  width: 100%;
+}
+
+.backupTitleClamp {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.backupTitle {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.backupDate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Status lives in the File/Player title (column removed); color + StatusWord dot. */
+.backupTitle[data-backup-status="completed"] {
+  color: var(--app-color-ok);
+}
+
+.backupTitle[data-backup-status="failed"] {
+  color: var(--app-color-danger-bright);
+}
+
+.backupTitle[data-backup-status="running"] {
+  color: var(--app-color-warn);
+}
+
+.backupTitle[data-backup-status="missing"] {
+  color: var(--app-color-attention);
+}
+
 .backupNotes {
+  display: block;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .backupFileName {
+  display: block;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-family: var(--app-font-mono);
   font-size: 11px;
+}
+
+/* Soft ch clamp only on narrower workspace panes (matches ServerWorkspace ~900px). */
+@media (max-width: 900px) {
+  .backupFileName {
+    max-width: min(100%, 42ch);
+  }
 }
 
 .backupActions {

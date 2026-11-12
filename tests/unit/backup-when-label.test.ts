@@ -74,6 +74,9 @@ describe("formatBackupHistoryTitle", () => {
         completedAt: "2026-09-14T00:01:00.000Z",
         notes: null,
         mapToken: "TheIsland_WP",
+        isProtected: false,
+        operatorNote: "",
+        diskMissing: false,
       }),
     ).toBe("The Island · Scheduled");
     expect(
@@ -89,6 +92,9 @@ describe("formatBackupHistoryTitle", () => {
         completedAt: "2026-09-14T00:01:00.000Z",
         notes: null,
         mapToken: null,
+        isProtected: false,
+        operatorNote: "",
+        diskMissing: false,
       }),
     ).toBe("INI save");
   });

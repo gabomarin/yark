@@ -8,6 +8,7 @@ import { ReadonlyPath } from "@ui/ReadonlyPath/ReadonlyPath";
 import { StatusWord } from "@ui/StatusWord/StatusWord";
 import type { BackupServerHealth, ServerProfile } from "@shared/types";
 import type { BackupPolicyDraft } from "../../backupPolicyDraft";
+import { BACKUP_PROTECT_HELP_TOOLTIP } from "../../model/serverBackupPanelModel";
 import { backupHealthLabel, backupHealthTooltip, formatBackupBytes } from "../../model/backupsPageModel";
 import {
   formatBackupKindLabel,
@@ -192,6 +193,34 @@ export function ServerHealthCard(props: ServerHealthCardProps): ReactElement {
                 }
                 className={classes.policyField}
               />
+              <Tooltip label={BACKUP_PROTECT_HELP_TOOLTIP} multiline maw={320} withArrow>
+                <span className={classes.protectSwitchHit}>
+                  <AppSwitch
+                    label="Protect new manual world backups"
+                    checked={draft.protectNewManualWorld}
+                    onCheckedChange={(checked) =>
+                      props.onDraftChange({
+                        ...draft,
+                        protectNewManualWorld: checked,
+                      })
+                    }
+                  />
+                </span>
+              </Tooltip>
+              <Tooltip label={BACKUP_PROTECT_HELP_TOOLTIP} multiline maw={320} withArrow>
+                <span className={classes.protectSwitchHit}>
+                  <AppSwitch
+                    label="Protect new manual INI backups"
+                    checked={draft.protectNewManualIni}
+                    onCheckedChange={(checked) =>
+                      props.onDraftChange({
+                        ...draft,
+                        protectNewManualIni: checked,
+                      })
+                    }
+                  />
+                </span>
+              </Tooltip>
             </Group>
           </Stack>
         )}

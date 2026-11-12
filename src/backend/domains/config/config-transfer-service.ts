@@ -47,6 +47,8 @@ function policyFingerprint(policy: BackupPolicy): string {
     retainCountPlayers: policy.retainCountPlayers,
     retainCountIni: policy.retainCountIni,
     backupDir: policy.backupDir,
+    protectNewManualWorld: policy.protectNewManualWorld,
+    protectNewManualIni: policy.protectNewManualIni,
   });
 }
 
@@ -274,6 +276,8 @@ export class ConfigTransferService {
             retainCountIni: sourcePolicy.retainCountIni,
             // Keep the target's backup root — never inherit the source path.
             backupDir: targetPolicy.backupDir,
+            protectNewManualWorld: sourcePolicy.protectNewManualWorld,
+            protectNewManualIni: sourcePolicy.protectNewManualIni,
           });
         }
       } catch (error) {
@@ -414,6 +418,8 @@ export class ConfigTransferService {
               retainCountPlayers: targetPolicy.retainCountPlayers,
               retainCountIni: targetPolicy.retainCountIni,
               backupDir: targetPolicy.backupDir,
+              protectNewManualWorld: targetPolicy.protectNewManualWorld,
+              protectNewManualIni: targetPolicy.protectNewManualIni,
             },
             after: {
               enabled: sourcePolicy.enabled,
@@ -422,6 +428,8 @@ export class ConfigTransferService {
               retainCountPlayers: sourcePolicy.retainCountPlayers,
               retainCountIni: sourcePolicy.retainCountIni,
               backupDir: targetPolicy.backupDir,
+              protectNewManualWorld: sourcePolicy.protectNewManualWorld,
+              protectNewManualIni: sourcePolicy.protectNewManualIni,
             },
           }
         : null,
@@ -549,6 +557,8 @@ export class ConfigTransferService {
           retainCountPlayers: policySnapshot.retainCountPlayers,
           retainCountIni: policySnapshot.retainCountIni,
           backupDir: policySnapshot.backupDir,
+          protectNewManualWorld: policySnapshot.protectNewManualWorld,
+          protectNewManualIni: policySnapshot.protectNewManualIni,
         });
       }
       if (selection.gameUserSettings.enabled || selection.game.enabled) {

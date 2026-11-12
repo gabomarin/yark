@@ -173,6 +173,8 @@ describe("BackupService kinds and retention", () => {
         retainCountPlayers: 20,
         retainCountIni: 10,
         backupDir: null,
+        protectNewManualWorld: false,
+        protectNewManualIni: false,
       }),
     ).toThrow(/5 minutes/i);
   });
@@ -766,6 +768,8 @@ describe("BackupService kinds and retention", () => {
       retainCountPlayers: 1,
       retainCountIni: 10,
       backupDir: null,
+      protectNewManualWorld: false,
+      protectNewManualIni: false,
     });
 
     const empty = await service.createPlayerSessionBackup(profile.id, "connect", "76561198001111111", "Ghost");
@@ -948,6 +952,8 @@ describe("BackupService kinds and retention", () => {
       retainCountPlayers: 20,
       retainCountIni: 1,
       backupDir: null,
+      protectNewManualWorld: false,
+      protectNewManualIni: false,
     });
 
     await service.createManualBackup(profile.id, ["world"]);
@@ -960,6 +966,40 @@ describe("BackupService kinds and retention", () => {
     expect(repo.listCompleted(profile.id, "ini")).toHaveLength(1);
   });
 
+  it("auto-protects manual world/ini backups when policy switches are on", async () => {
+    repo.setPolicy({
+      serverId: profile.id,
+      enabled: false,
+      intervalMinutes: 60,
+      retainCountWorld: 20,
+      retainCountPlayers: 20,
+      retainCountIni: 10,
+      backupDir: null,
+      protectNewManualWorld: true,
+      protectNewManualIni: true,
+    });
+
+    const [world] = await service.createManualBackup(profile.id, ["world"]);
+    const [ini] = await service.createManualBackup(profile.id, ["ini"]);
+    expect(world?.isProtected).toBe(true);
+    expect(world?.operatorNote).toBe("");
+    expect(ini?.isProtected).toBe(true);
+
+    repo.setPolicy({
+      serverId: profile.id,
+      enabled: false,
+      intervalMinutes: 60,
+      retainCountWorld: 20,
+      retainCountPlayers: 20,
+      retainCountIni: 10,
+      backupDir: null,
+      protectNewManualWorld: false,
+      protectNewManualIni: false,
+    });
+    const [unprotected] = await service.createManualBackup(profile.id, ["world"]);
+    expect(unprotected?.isProtected).toBe(false);
+  });
+
   it("prunes player session backups per player key", async () => {
     repo.setPolicy({
       serverId: profile.id,
@@ -969,6 +1009,8 @@ describe("BackupService kinds and retention", () => {
       retainCountPlayers: 1,
       retainCountIni: 10,
       backupDir: null,
+      protectNewManualWorld: false,
+      protectNewManualIni: false,
     });
 
     await service.createPlayerSessionBackup(profile.id, "connect", "76561198000000000", "A");
@@ -991,6 +1033,8 @@ describe("BackupService kinds and retention", () => {
       retainCountPlayers: 20,
       retainCountIni: 10,
       backupDir: null,
+      protectNewManualWorld: false,
+      protectNewManualIni: false,
     });
     const processes = mockActiveProcesses();
     const servers = {
@@ -1019,6 +1063,8 @@ describe("BackupService kinds and retention", () => {
       retainCountPlayers: 20,
       retainCountIni: 10,
       backupDir: null,
+      protectNewManualWorld: false,
+      protectNewManualIni: false,
     });
     const processes = mockActiveProcesses(60_000); // started 1 minute ago
     const servers = {
@@ -1045,6 +1091,8 @@ describe("BackupService kinds and retention", () => {
       retainCountPlayers: 20,
       retainCountIni: 10,
       backupDir: null,
+      protectNewManualWorld: false,
+      protectNewManualIni: false,
     });
     const first = (await service.createManualBackup(profile.id, ["world"]))[0]!;
     // Started long ago, but finished recently — must not schedule again yet.
@@ -1081,6 +1129,8 @@ describe("BackupService kinds and retention", () => {
       retainCountPlayers: 20,
       retainCountIni: 10,
       backupDir: null,
+      protectNewManualWorld: false,
+      protectNewManualIni: false,
     });
     const started = repo.createBackupStart({
       serverId: profile.id,
@@ -1120,6 +1170,8 @@ describe("BackupService kinds and retention", () => {
       retainCountPlayers: 20,
       retainCountIni: 10,
       backupDir: null,
+      protectNewManualWorld: false,
+      protectNewManualIni: false,
     });
     const processes = mockActiveProcesses();
     const servers = {
@@ -1161,6 +1213,8 @@ describe("BackupService kinds and retention", () => {
       retainCountPlayers: 20,
       retainCountIni: 10,
       backupDir: null,
+      protectNewManualWorld: false,
+      protectNewManualIni: false,
     });
     const running = repo.createBackupStart({
       serverId: profile.id,
@@ -1199,6 +1253,8 @@ describe("BackupService kinds and retention", () => {
       retainCountPlayers: 20,
       retainCountIni: 10,
       backupDir: null,
+      protectNewManualWorld: false,
+      protectNewManualIni: false,
     });
     const interrupted = repo.createBackupStart({
       serverId: profile.id,
@@ -1250,6 +1306,8 @@ describe("BackupService kinds and retention", () => {
       retainCountPlayers: 20,
       retainCountIni: 10,
       backupDir: null,
+      protectNewManualWorld: false,
+      protectNewManualIni: false,
     });
     const processes = mockActiveProcesses();
     const servers = {
@@ -1292,6 +1350,8 @@ describe("BackupService kinds and retention", () => {
         retainCountPlayers: 20,
         retainCountIni: 10,
         backupDir: null,
+        protectNewManualWorld: false,
+        protectNewManualIni: false,
       });
     }
     const processes = mockActiveProcesses();
@@ -1365,7 +1425,7 @@ describe("BackupService kinds and retention", () => {
     expect(repo.getBackupByPath(profile.id, noiseZip)).toBeNull();
   });
 
-  it("drops DB rows when the archive was deleted from disk", async () => {
+  it("marks completed rows missing when the archive was deleted from disk", async () => {
     const created = await service.createManualBackup(profile.id, ["ini"]);
     const record = created[0];
     expect(record).toBeDefined();
@@ -1377,8 +1437,9 @@ describe("BackupService kinds and retention", () => {
     expect(repo.getBackup(record.id)).not.toBeNull();
 
     const listed = await service.list(profile.id, 50);
-    expect(listed.some((b) => b.id === record.id)).toBe(false);
-    expect(repo.getBackup(record.id)).toBeNull();
+    const missing = listed.find((b) => b.id === record.id);
+    expect(missing?.diskMissing).toBe(true);
+    expect(repo.getBackup(record.id)?.diskMissing).toBe(true);
   });
 
   it("keeps failed backup rows even when the zip was cleaned up", async () => {
@@ -1423,6 +1484,8 @@ describe("BackupService kinds and retention", () => {
       retainCountPlayers: 20,
       retainCountIni: 10,
       backupDir: null,
+      protectNewManualWorld: false,
+      protectNewManualIni: false,
     });
     let releaseReconcile: ((value: number) => void) | undefined;
     const reconcileGate = new Promise<number>((resolve) => {
@@ -1684,6 +1747,8 @@ describe("BackupService kinds and retention", () => {
       retainCountPlayers: 20,
       retainCountIni: 1,
       backupDir: null,
+      protectNewManualWorld: false,
+      protectNewManualIni: false,
     });
     await service.createManualBackup(profile.id, ["ini"]);
     await service.createManualBackup(profile.id, ["ini"]);
@@ -1723,6 +1788,8 @@ describe("BackupService kinds and retention", () => {
       retainCountPlayers: 20,
       retainCountIni: 10,
       backupDir: null,
+      protectNewManualWorld: false,
+      protectNewManualIni: false,
     });
 
     isActive.mockReturnValue(false);

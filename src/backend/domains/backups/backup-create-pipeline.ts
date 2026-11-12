@@ -272,9 +272,25 @@ export class BackupCreatePipeline {
       }
       await rm(stagingDir, { recursive: true, force: true });
 
-      const completed = this.host.backups.completeBackup(record.id, sizeBytes);
+      let completed = this.host.backups.completeBackup(record.id, sizeBytes);
       if (completed === null) {
         throw new Error("Could not mark backup as completed");
+      }
+
+      // Manual Backup now: optional auto-protect for world / INI (policy switches; empty note).
+      if (
+        type === "manual" &&
+        ((kind === "world" && policy.protectNewManualWorld) || (kind === "ini" && policy.protectNewManualIni))
+      ) {
+        const protectedRow = this.host.backups.setBackupProtection({
+          id: completed.id,
+          isProtected: true,
+          operatorNote: "",
+        });
+        if (protectedRow === null) {
+          throw new Error("Could not apply auto-protect after backup completed");
+        }
+        completed = protectedRow;
       }
 
       const missingHint = packaged.meta.empty ? ` (no ${kind} data present yet)` : "";

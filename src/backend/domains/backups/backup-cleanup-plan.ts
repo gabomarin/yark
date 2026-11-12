@@ -52,6 +52,9 @@ export function planBackupCleanup(input: PlanBackupCleanupInput): BackupCleanupP
 
   const mark = (backup: BackupRecord, serverName: string, reason: string): void => {
     if (backup.status === "running") return;
+    // Protected archives are excluded from retention / age / keep-last rules only.
+    // Failed cleanup (`includeFailed`) may still select them when status is failed.
+    if (backup.isProtected && reason !== "failed") return;
     const existing = selected.get(backup.id);
     if (existing === undefined) {
       selected.set(backup.id, { backup, serverName, reason });
@@ -78,7 +81,7 @@ export function planBackupCleanup(input: PlanBackupCleanupInput): BackupCleanupP
     if (enforceRetention) {
       for (const kind of ALL_BACKUP_KINDS) {
         const retain = retainCountForKind(policy, kind);
-        const completed = catalog.listCompleted(server.id, kind);
+        const completed = catalog.listCompleted(server.id, kind).filter((backup) => !backup.isProtected);
         if (kind === "players") {
           const byPlayer = new Map<string, BackupRecord[]>();
           for (const backup of completed) {
@@ -118,6 +121,9 @@ export function planBackupCleanup(input: PlanBackupCleanupInput): BackupCleanupP
     if (cutoffIso !== null) {
       for (const backup of records) {
         if (backup.status !== "completed") continue;
+        if (backup.isProtected) continue;
+        // Keep missing-on-disk catalog rows until the operator deletes them explicitly.
+        if (backup.diskMissing) continue;
         if (backupFinishedAt(backup) < cutoffIso) {
           mark(backup, server.name, `older than ${olderThanDays}d`);
         }
@@ -126,7 +132,7 @@ export function planBackupCleanup(input: PlanBackupCleanupInput): BackupCleanupP
 
     if (keepLastPerKind !== null) {
       for (const kind of ALL_BACKUP_KINDS) {
-        const completed = catalog.listCompleted(server.id, kind);
+        const completed = catalog.listCompleted(server.id, kind).filter((backup) => !backup.isProtected);
         if (kind === "players") {
           const byPlayer = new Map<string, BackupRecord[]>();
           for (const backup of completed) {

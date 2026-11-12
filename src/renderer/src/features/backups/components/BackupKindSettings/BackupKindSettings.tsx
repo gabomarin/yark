@@ -4,6 +4,7 @@ import { Group, NumberInput, Text, UnstyledButton } from "@mantine/core";
 import type { BackupKind } from "@shared/types";
 import { AppSwitch } from "@ui/AppSwitch/AppSwitch";
 import type { DraftPolicy } from "../../model/serverBackupPanelModel";
+import { BackupProtectSwitch } from "../BackupProtectSwitch/BackupProtectSwitch";
 import classes from "../../BackupsPage.module.css";
 
 interface Props {
@@ -59,18 +60,24 @@ export function BackupKindSettings(props: Props): ReactElement {
 
       {settingsOpen && activeKind === "world" && (
         <Group align="center" gap="xs" wrap="wrap" mt={4} className={classes.kindSettingsFields}>
-          <AppSwitch
-            size="sm"
-            label="Schedule"
-            checked={draftPolicy.enabled}
-            disabled={busy || !installReady}
-            onCheckedChange={(checked) =>
-              onDraftPolicyChange({
-                ...draftPolicy,
-                enabled: checked,
-              })
-            }
-          />
+          <Group gap={6} align="center" wrap="nowrap">
+            <Text size="xs" component="label" htmlFor="backup-schedule">
+              Schedule
+            </Text>
+            <AppSwitch
+              id="backup-schedule"
+              size="sm"
+              aria-label="Schedule"
+              checked={draftPolicy.enabled}
+              disabled={busy || !installReady}
+              onCheckedChange={(checked) =>
+                onDraftPolicyChange({
+                  ...draftPolicy,
+                  enabled: checked,
+                })
+              }
+            />
+          </Group>
           <Group gap={6} align="center" wrap="nowrap">
             <Text size="xs" component="label" htmlFor="backup-interval">
               Interval (min)
@@ -112,6 +119,18 @@ export function BackupKindSettings(props: Props): ReactElement {
               className={classes.policyField}
             />
           </Group>
+          <BackupProtectSwitch
+            id="backup-protect-world"
+            label="Protect new manual backups"
+            checked={draftPolicy.protectNewManualWorld}
+            disabled={busy || !installReady}
+            onCheckedChange={(checked) =>
+              onDraftPolicyChange({
+                ...draftPolicy,
+                protectNewManualWorld: checked,
+              })
+            }
+          />
         </Group>
       )}
 
@@ -139,7 +158,7 @@ export function BackupKindSettings(props: Props): ReactElement {
       )}
 
       {settingsOpen && activeKind === "ini" && (
-        <Group gap="xs" align="center" wrap="nowrap" mt={4} className={classes.inlineRetain}>
+        <Group gap="xs" align="center" wrap="wrap" mt={4} className={classes.inlineRetain}>
           <Text size="xs" component="label" htmlFor="backup-retain-ini">
             Keep last INI
           </Text>
@@ -157,6 +176,18 @@ export function BackupKindSettings(props: Props): ReactElement {
               })
             }
             className={classes.compactRetain}
+          />
+          <BackupProtectSwitch
+            id="backup-protect-ini"
+            label="Protect new manual backups"
+            checked={draftPolicy.protectNewManualIni}
+            disabled={busy || !installReady}
+            onCheckedChange={(checked) =>
+              onDraftPolicyChange({
+                ...draftPolicy,
+                protectNewManualIni: checked,
+              })
+            }
           />
         </Group>
       )}

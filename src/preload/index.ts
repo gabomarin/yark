@@ -230,6 +230,8 @@ const api: RendererApi = {
   restoreBackup: (serverId, backupId, options) => ipcRenderer.invoke(IPC.backupsRestore, serverId, backupId, options),
   getBackupPolicy: (serverId: string) => ipcRenderer.invoke(IPC.backupsGetPolicy, serverId),
   setBackupPolicy: (serverId, policy) => ipcRenderer.invoke(IPC.backupsSetPolicy, serverId, policy),
+  setBackupProtection: (serverId, backupId, isProtected, operatorNote) =>
+    ipcRenderer.invoke(IPC.backupsSetProtection, serverId, backupId, { isProtected, operatorNote }),
   getMaintenancePolicy: (serverId: string) => ipcRenderer.invoke(IPC.maintenanceGetPolicy, serverId),
   setMaintenancePolicy: (serverId, policy) => ipcRenderer.invoke(IPC.maintenanceSetPolicy, serverId, policy),
   clearMaintenanceSchedulePause: (serverId: string) => ipcRenderer.invoke(IPC.maintenanceClearSchedulePause, serverId),

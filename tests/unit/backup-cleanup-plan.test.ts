@@ -17,6 +17,9 @@ function backup(partial: Partial<BackupRecord> & Pick<BackupRecord, "id" | "kind
     completedAt: "2026-01-01T00:00:00.000Z",
     notes: null,
     mapToken: null,
+    isProtected: false,
+    operatorNote: "",
+    diskMissing: false,
     ...partial,
   };
 }
@@ -30,6 +33,8 @@ function policy(overrides: Partial<BackupPolicy> = {}): BackupPolicy {
     retainCountPlayers: 2,
     retainCountIni: 2,
     backupDir: null,
+    protectNewManualWorld: false,
+    protectNewManualIni: false,
     updatedAt: "2026-01-01T00:00:00.000Z",
     ...overrides,
   };
@@ -235,6 +240,109 @@ describe("planBackupCleanup", () => {
 
     expect(plan.map((item) => item.backup.id).sort()).toEqual(["a-old", "i-old"]);
     expect(plan.every((item) => item.reason === "keep last 2/world")).toBe(true);
+  });
+
+  it("omits protected completed backups from retention, age, and keep-last rules", () => {
+    const protectedRow = backup({
+      id: "w-protected",
+      kind: "world",
+      status: "completed",
+      completedAt: "2026-01-01T00:00:00.000Z",
+      isProtected: true,
+      operatorNote: "keep",
+    });
+    const older = backup({
+      id: "w-old",
+      kind: "world",
+      status: "completed",
+      completedAt: "2026-01-02T00:00:00.000Z",
+    });
+    const mid = backup({
+      id: "w-mid",
+      kind: "world",
+      status: "completed",
+      completedAt: "2026-01-03T00:00:00.000Z",
+    });
+    const newest = backup({
+      id: "w-new",
+      kind: "world",
+      status: "completed",
+      completedAt: "2026-01-04T00:00:00.000Z",
+    });
+    const newestFirst = [newest, mid, older, protectedRow];
+
+    const retentionPlan = planBackupCleanup({
+      options: {
+        serverIds: null,
+        includeFailed: false,
+        enforceRetention: true,
+        olderThanDays: null,
+        keepLastPerKind: null,
+        protectNewestWorld: false,
+      },
+      servers: [{ id: "srv-1", name: "Island" }],
+      catalog: catalog({
+        policy: policy({ retainCountWorld: 2 }),
+        backups: newestFirst,
+        completedByKind: { world: newestFirst },
+      }),
+    });
+    expect(retentionPlan.map((item) => item.backup.id)).toEqual(["w-old"]);
+
+    const agePlan = planBackupCleanup({
+      options: {
+        serverIds: null,
+        includeFailed: false,
+        enforceRetention: false,
+        olderThanDays: 1,
+        keepLastPerKind: null,
+        protectNewestWorld: false,
+      },
+      servers: [{ id: "srv-1", name: "Island" }],
+      catalog: catalog({ backups: newestFirst }),
+      nowMs: Date.parse("2026-01-10T00:00:00.000Z"),
+    });
+    expect(agePlan.map((item) => item.backup.id).sort()).toEqual(["w-mid", "w-new", "w-old"]);
+
+    const missingOnDisk = backup({
+      id: "w-missing",
+      kind: "world",
+      status: "completed",
+      path: "C:/b/missing.zip",
+      completedAt: "2026-01-01T00:00:00.000Z",
+      diskMissing: true,
+    });
+    const ageSkipsMissing = planBackupCleanup({
+      options: {
+        serverIds: null,
+        includeFailed: false,
+        enforceRetention: false,
+        olderThanDays: 1,
+        keepLastPerKind: null,
+        protectNewestWorld: false,
+      },
+      servers: [{ id: "srv-1", name: "Island" }],
+      catalog: catalog({ backups: [missingOnDisk, older] }),
+      nowMs: Date.parse("2026-01-10T00:00:00.000Z"),
+    });
+    expect(ageSkipsMissing.map((item) => item.backup.id)).toEqual(["w-old"]);
+
+    const keepLastPlan = planBackupCleanup({
+      options: {
+        serverIds: null,
+        includeFailed: false,
+        enforceRetention: false,
+        olderThanDays: null,
+        keepLastPerKind: 2,
+        protectNewestWorld: false,
+      },
+      servers: [{ id: "srv-1", name: "Island" }],
+      catalog: catalog({
+        backups: newestFirst,
+        completedByKind: { world: newestFirst },
+      }),
+    });
+    expect(keepLastPlan.map((item) => item.backup.id)).toEqual(["w-old"]);
   });
 });
 

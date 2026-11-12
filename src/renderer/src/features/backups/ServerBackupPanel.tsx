@@ -9,6 +9,7 @@ import { BackupRestoreModal } from "./BackupRestoreModal";
 import classes from "./BackupsPage.module.css";
 import { BackupKindSettings } from "./components/BackupKindSettings/BackupKindSettings";
 import { BackupListToolbar } from "./components/BackupListToolbar/BackupListToolbar";
+import { BackupProtectionModal } from "./components/BackupProtectionModal/BackupProtectionModal";
 import { ServerBackupDestination } from "./components/ServerBackupDestination/ServerBackupDestination";
 import { ServerBackupHeader } from "./components/ServerBackupHeader/ServerBackupHeader";
 import { formatSize, KIND_TABS, BACKUPS_KINDS_HINT_STORAGE_KEY } from "./model/serverBackupPanelModel";
@@ -64,6 +65,24 @@ export function ServerBackupPanel(props: Props): ReactElement {
         <AppAlert color="red" variant="light" title="World schedule paused" data-backup-schedule-paused>
           Scheduled world backups are paused for this YARK session after repeated failures. Policy stays enabled;
           restart YARK to resume after fixing the cause (destination, map folder, or disk space).
+        </AppAlert>
+      )}
+
+      {panel.showMissingOnDiskAlert && (
+        <AppAlert
+          color="attention"
+          variant="light"
+          title="Backup file missing"
+          data-backup-missing-on-disk
+          withCloseButton
+          onClose={panel.dismissMissingOnDiskAlert}
+        >
+          {panel.missingOnDisk.missingCount === 1
+            ? "1 backup is missing on disk"
+            : `${panel.missingOnDisk.missingCount} backups are missing on disk`}
+          {panel.missingOnDisk.protectedCount > 0 ? ` (${panel.missingOnDisk.protectedCount} protected)` : ""}. Those
+          rows are highlighted in the list. Restore and export stay blocked until the file returns or you remove the row
+          from history.
         </AppAlert>
       )}
 
@@ -147,6 +166,8 @@ export function ServerBackupPanel(props: Props): ReactElement {
                 onExport={(row) => void panel.exportBackup(row)}
                 onRestore={panel.confirmRestore}
                 onDelete={panel.confirmDeleteOne}
+                onProtect={panel.openProtectModal}
+                onSaveProtection={panel.saveBackupProtection}
                 formatSize={formatSize}
               />
             </div>
@@ -163,6 +184,14 @@ export function ServerBackupPanel(props: Props): ReactElement {
         onRestoreProfilesTribesChange={panel.setRestoreProfilesTribes}
         onClose={panel.closeRestoreModal}
         onConfirm={() => void panel.runRestore()}
+      />
+
+      <BackupProtectionModal
+        key={panel.protectTarget?.id ?? "protect-closed"}
+        backup={panel.protectTarget}
+        saving={panel.busyOp === "other"}
+        onClose={panel.closeProtectModal}
+        onSave={panel.saveBackupProtection}
       />
     </>
   );

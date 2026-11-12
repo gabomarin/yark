@@ -9,8 +9,13 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- Backup history drops separate Map, Status, and Type columns: the File title shows status color (and map · type), and Status/Type filters sit on the File header so medium panels need less horizontal scroll. File absorbs leftover width (Date/Size/Actions stay fixed) so an empty filter result does not jump columns, and long archive names use a soft clamp only on narrower panes. Deleting a protected backup shows the operator note in a raised callout on the confirm dialog.
+
 ### Added
 
+- Mark completed backups **Protected** (optional note) so Cleanup and retention do not delete them; they do not consume a Keep last slot. Explicit delete still works with a stronger confirm. World and INI settings can auto-protect new **Backup now** archives (#701).
 - Configuration → INI Files sorts settings from a menu: **Unsorted** (INI sections, file order, and the default), **By category** (category groups, settings in the order they appear in the file), or **Alphabetical** (category groups, names A to Z). A filter or sort icon sits inside each menu, and each sort explains itself on hover. The menu keeps Collapse and Expand on screen when the window is narrow. The choice is remembered on this PC. Save still updates each value on its current line.
 - Configuration → INI Files adds a setting from **Add setting** above the table. The form asks for the section (ServerSettings, SessionSettings, Message of the day, or a mod section you confirm), the setting name, and the value. Known settings show up as you type, and any other name is added as plain text. The table stays a list of existing settings, and scrolls to the new row after you add it. The change stays a draft until Save (#705).
 - When Save overlaps a change made outside YARK, Configuration lists each setting so you can pick your edit, the file value, or the last save, then accept. The notice stays until you accept, and then the outside-change notice closes (#696).
@@ -18,6 +23,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Profiles whose schema version was already 30 without the Protected-backup columns can mark backups protected again after a restart (migration 31).
+- Backup history no longer silently drops rows when the ZIP was deleted outside YARK: the row stays as missing on disk (highlighted in the list), restore/export are blocked, and the server Backups panel shows a dismissable warning while any archive is missing. The File Status filter can isolate **Missing on disk**.
 - A malformed INI conflict row no longer hides the other rows in the Save conflict review (#696).
 - Configuration → INI Files uses the same gap between search, the category filter, and the sort menu. On a narrower pane, search sits on its own row, and Reload, Restore, Discard, and Save become icon buttons the same size as the server card actions. Each name shows on hover.
 - The settings sort tooltip closes when you pick a sort, so it does not flash in the corner of the window.

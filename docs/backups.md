@@ -105,10 +105,18 @@ Zip extract rejects zip-slip paths. Listeners are registered **before**
 
 `list` / `getFleetSummary` call `reconcileDiskBackups` (serialized per server):
 
-1. Drop DB rows whose archive path is gone (skip `running` / keep `failed` history).
+1. Mark completed rows **missing on disk** when the archive path is gone (e.g. Explorer
+   delete); clear the flag if the file returns. Do not silent-drop catalog rows
+   (`running` skipped; `failed` kept as history). The server Backups panel shows a
+   dismissable warning while any listed archive is missing, and those history rows are
+   highlighted with a visible **Missing** status. Restore/export stay blocked until the
+   file returns or the operator deletes the row. Dismiss hides the banner for the current
+   missing set; a newly missing archive shows it again.
 2. Import `.zip` and legacy folder archives present on disk but missing from SQLite.
 3. Reuse `manifest.json` backup `id` when free; **mint a new id** when that id is
    already in the DB (copied archives must not collide).
+
+Missing-on-disk completed rows do not fill Keep last / Cleanup retain pools.
 
 ## Public IPC
 
@@ -262,27 +270,38 @@ after a real ASA start/stop cycle; see [e2e-validation.md](e2e-validation.md).
   dated autosaves and `.arkrbf` / `.tmp`. Missing primary `.ark` fails the backup.
   World/players ZIPs use **moderate deflate (level 4)** for ASA save blobs;
   `manifest.json` and other small files still use default deflate.
-- Retention keeps the last N **completed** world backups **per map token** (and
-  players by `playersRetentionKey`). Fleet **Cleanup** has two retain-style rules:
+- Retention keeps the last N **completed unprotected** world backups **per map
+  token** (and players by `playersRetentionKey`). **Protected** completed archives
+  sit outside Keep last (they do not consume a slot) and are skipped by scheduled
+  retention and by Cleanup’s retain / age / keep-last rules. Explicit delete still
+  removes them after a stronger danger confirm. Failed rows are never “protected”
+  for Cleanup’s include-failed rule. Operators set protection from the history
+  shield / context menu (`operator_note`, max 500 chars); World/INI policy can
+  auto-protect new **Backup now** creates (`protect_new_manual_*`, default off).
+  Do not confuse this with fleet health “Protected” or Cleanup
+  `protectNewestWorld`.
+- Fleet **Cleanup** has two retain-style rules:
   - **Delete older backups past each server's keep limit** (`enforceRetention`) —
     same pools as scheduled retention (world **per map**, players **per player**,
-    flat INI).
+    flat INI), unprotected only.
   - **Keep only last N per kind** (`keepLastPerKind`) — same per-map / per-player
-    pools for world and players; flat INI (#497).
+    pools for world and players; flat INI (#497); unprotected only.
     Failed rows are not pruned by retain counts.
     Cannot delete `running` backups. Operators can **Clear failed** on the server
     Backups history tab to remove every failed row for that server and kind
     (catalog cleanup when the ZIP is already gone).
 - History UI: **Current map only** checkbox (default on) filters world rows to
-  `server.map`. World/INI columns: **File**, **Map** (world only), **Date**, Size,
-  Status, Type, Actions. Players tab: **Player** (name + player id metadata),
-  **Date** (time only), Size, Status, Type, Actions. Columns are sortable
-  (default Date newest-first) and resizable; content columns use `width: 0%`
-  (hug content) and **Actions** uses `width: 100%` so leftover space stays on
-  the right without inflating File/Status/Type. Status is a word + dot
-  (`StatusWord`); Type is dimmed text. Toolbar **Delete** / **Clear failed**
-  are subtle; filled red stays on the confirm modal. A dismissible World vs
-  players vs INI hint lives on the panel header.
+  `server.map`. Columns: **File** / **Player**, **Date**, **Size**, **Actions**
+  (including protect shield). Map, Status, and Type are folded into the File
+  title (status color + `StatusWord` dot; world/INI title is map · type) with
+  Status/Type filters on the File header. Sortable columns are File, Date, and
+  Size (default Date newest-first) and are resizable; **File** uses
+  `width: 100%` and Date/Size/Actions use fixed px widths so an empty filter
+  result does not reflow the header. Archive names use a soft `ch` clamp only
+  below ~900px; wider panes keep full column width with ellipsis as needed.
+  Toolbar **Delete** / **Clear failed** are subtle;
+  filled red stays on the confirm modal. A dismissible World vs players vs INI
+  hint lives on the panel header.
 
 ### Backup health and alerts (all servers)
 

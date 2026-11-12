@@ -8,6 +8,13 @@ import {
   backfillPassiveModsFromStructuredLaunchArgs,
   PASSIVE_MODS_BACKFILL_SCHEMA_VERSION,
 } from "./backfill-passive-mods";
+import {
+  BACKUP_DISK_MISSING_ENSURE_SCHEMA_VERSION,
+  BACKUP_PROTECTION_ENSURE_SCHEMA_VERSION,
+  ensureBackupCatalogColumns,
+  ensureBackupDiskMissingColumn,
+  ensureBackupProtectionColumns,
+} from "./ensure-backup-protection-columns";
 import { isOnDiskProfileDatabasePath, writeProfileDatabaseSnapshot } from "./database-snapshots";
 import schemaMigrations from "./schema-migrations.json";
 
@@ -135,6 +142,12 @@ export function openDatabaseApplyingMigrations(
             console.warn("[yark] Passive-mods backfill skipped malformed profile rows:", skipped.join(", "));
           }
         }
+        if (migration.version === BACKUP_PROTECTION_ENSURE_SCHEMA_VERSION) {
+          ensureBackupProtectionColumns(db);
+        }
+        if (migration.version === BACKUP_DISK_MISSING_ENSURE_SCHEMA_VERSION) {
+          ensureBackupDiskMissingColumn(db);
+        }
         // Same transaction as E2E `initProfileDatabase`. WAL header writes
         // (`user_version`) are not rolled back; do not move this after COMMIT
         // unless both paths change together.
@@ -149,6 +162,10 @@ export function openDatabaseApplyingMigrations(
         throw error;
       }
     }
+
+    // Always repair: profiles can sit at user_version >= 31/32 without the ALTERs
+    // (skipped SQL, E2E SQL-only bump). Idempotent when columns already exist.
+    ensureBackupCatalogColumns(db);
 
     assertProfileDatabaseUsable(db, path);
 

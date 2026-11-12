@@ -14,6 +14,32 @@ export const KIND_TABS: Array<{ kind: BackupKind; label: string }> = [
 /** localStorage: operator dismissed the World/players/INI kinds hint (#456). */
 export const BACKUPS_KINDS_HINT_STORAGE_KEY = "yark.backups.kindsHint.dismissed.v1";
 
+/** Hover help for Protect switches and the Protected editor control. */
+export const BACKUP_PROTECT_HELP_TOOLTIP =
+  "Protected backups are not deleted by Cleanup or retention policy. You can still delete them manually.";
+
+/** Stable key for the current set of missing-on-disk backup ids (session dismiss). */
+function missingOnDiskFingerprint(backups: BackupRecord[]): string {
+  return backups
+    .filter((backup) => backup.diskMissing)
+    .map((backup) => backup.id)
+    .sort()
+    .join("\0");
+}
+
+export function summarizeMissingOnDisk(backups: BackupRecord[]): {
+  missingCount: number;
+  protectedCount: number;
+  fingerprint: string;
+} {
+  const missing = backups.filter((backup) => backup.diskMissing);
+  return {
+    missingCount: missing.length,
+    protectedCount: missing.filter((backup) => backup.isProtected).length,
+    fingerprint: missingOnDiskFingerprint(backups),
+  };
+}
+
 const BACKUP_TYPE_LABELS: Record<BackupType, string> = {
   manual: "Manual",
   scheduled: "Scheduled",
@@ -74,6 +100,8 @@ export function toDraft(policy: BackupPolicy): DraftPolicy {
     retainCountPlayers: policy.retainCountPlayers,
     retainCountIni: policy.retainCountIni,
     backupDir: policy.backupDir,
+    protectNewManualWorld: policy.protectNewManualWorld,
+    protectNewManualIni: policy.protectNewManualIni,
   };
 }
 
@@ -84,7 +112,9 @@ export function draftEqualsPolicy(draft: DraftPolicy, policy: BackupPolicy): boo
     draft.retainCountWorld === policy.retainCountWorld &&
     draft.retainCountPlayers === policy.retainCountPlayers &&
     draft.retainCountIni === policy.retainCountIni &&
-    draft.backupDir === policy.backupDir
+    draft.backupDir === policy.backupDir &&
+    draft.protectNewManualWorld === policy.protectNewManualWorld &&
+    draft.protectNewManualIni === policy.protectNewManualIni
   );
 }
 
@@ -95,7 +125,9 @@ export function draftEqualsDraft(a: DraftPolicy, b: DraftPolicy): boolean {
     a.retainCountWorld === b.retainCountWorld &&
     a.retainCountPlayers === b.retainCountPlayers &&
     a.retainCountIni === b.retainCountIni &&
-    a.backupDir === b.backupDir
+    a.backupDir === b.backupDir &&
+    a.protectNewManualWorld === b.protectNewManualWorld &&
+    a.protectNewManualIni === b.protectNewManualIni
   );
 }
 
@@ -119,6 +151,9 @@ export function backupsListKey(rows: BackupRecord[]): string {
         backup.path,
         backup.notes ?? "",
         backup.mapToken ?? "",
+        backup.isProtected ? "1" : "0",
+        backup.operatorNote,
+        backup.diskMissing ? "1" : "0",
       ].join(":"),
     )
     .join("\0");

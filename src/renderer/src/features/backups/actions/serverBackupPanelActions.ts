@@ -1,10 +1,12 @@
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { playerBackupDisplayName } from "@shared/backups/backup-player-meta";
 import type { BackupKind, BackupRecord, ServerProfile } from "@shared/types";
+import { Stack } from "@mantine/core";
 import { dangerConfirmBody, openDangerConfirmModal } from "@ui/DangerConfirmModal/openDangerConfirmModal";
 import { showOperatorError, showOperatorToast } from "@ui/operatorToast";
-import { createElement, type Dispatch, type SetStateAction } from "react";
+import { createElement, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import { runBackupExport, runBackupImport } from "../backupPortability";
+import { ProtectedBackupDeleteNote } from "../components/ProtectedBackupDeleteNote/ProtectedBackupDeleteNote";
 import { formatBackupDetails } from "../formatBackupDetails";
 import { kindLabel, type DraftPolicy } from "../model/serverBackupPanelModel";
 
@@ -26,12 +28,36 @@ export function showBackupError(message: string): void {
   showOperatorError(message, "Backups");
 }
 
+const OPERATOR_NOTE_CONFIRM_MAX = 120;
+
+function truncateOperatorNote(note: string): string {
+  const trimmed = note.trim();
+  if (trimmed.length <= OPERATOR_NOTE_CONFIRM_MAX) return trimmed;
+  return `${trimmed.slice(0, OPERATOR_NOTE_CONFIRM_MAX - 1)}…`;
+}
+
+function deleteConfirmChildren(body: ReactNode, operatorNote?: string): ReactNode {
+  const note = operatorNote !== undefined ? truncateOperatorNote(operatorNote) : "";
+  if (note.length === 0) {
+    return dangerConfirmBody(body);
+  }
+  return createElement(
+    Stack,
+    { gap: "sm" },
+    dangerConfirmBody(body),
+    createElement(ProtectedBackupDeleteNote, { note }),
+  );
+}
+
 interface BackupPanelActionOptions {
   server: ServerProfile;
   activeKind: BackupKind;
   actionableSelectedIds: string[];
+  /** Current kind-filtered list — used to count protected rows in bulk delete. */
+  kindBackups: BackupRecord[];
   draftPolicy: DraftPolicy | null;
   restoreTarget: BackupRecord | null;
+  protectTarget: BackupRecord | null;
   restoreProfilesTribes: boolean;
   opsLocked: boolean;
   opsLockReason?: string;
@@ -41,6 +67,7 @@ interface BackupPanelActionOptions {
   setDraftPolicy: Dispatch<SetStateAction<DraftPolicy | null>>;
   setSelectedIds: Dispatch<SetStateAction<string[]>>;
   setRestoreTarget: Dispatch<SetStateAction<BackupRecord | null>>;
+  setProtectTarget: Dispatch<SetStateAction<BackupRecord | null>>;
   setRestoreProfilesTribes: Dispatch<SetStateAction<boolean>>;
   load: (serverId: string, options?: { quiet?: boolean }) => Promise<void>;
 }
@@ -50,8 +77,10 @@ export function createServerBackupPanelActions(options: BackupPanelActionOptions
     server,
     activeKind,
     actionableSelectedIds,
+    kindBackups,
     draftPolicy,
     restoreTarget,
+    protectTarget,
     restoreProfilesTribes,
     opsLocked,
     opsLockReason,
@@ -61,6 +90,7 @@ export function createServerBackupPanelActions(options: BackupPanelActionOptions
     setDraftPolicy,
     setSelectedIds,
     setRestoreTarget,
+    setProtectTarget,
     setRestoreProfilesTribes,
     load,
   } = options;
@@ -171,13 +201,21 @@ export function createServerBackupPanelActions(options: BackupPanelActionOptions
     if (actionableSelectedIds.length === 0) return;
     const ids = [...actionableSelectedIds];
     const count = ids.length;
+    const idSet = new Set(ids);
+    const selected = kindBackups.filter((row) => idSet.has(row.id));
+    const protectedRows = selected.filter((row) => row.isProtected);
+    const protectedCount = protectedRows.length;
+    const body: Array<string | ReturnType<typeof createElement>> = [
+      "Permanently delete ",
+      createElement("strong", { key: "count" }, count),
+      ` ${activeKindLabel.toLowerCase()} backup${count === 1 ? "" : "s"} from this PC and from the backup list? This cannot be undone.`,
+    ];
+    if (protectedCount > 0) {
+      body.push(` ${protectedCount} of these ${protectedCount === 1 ? "is" : "are"} protected.`);
+    }
     openDangerConfirmModal({
       title: `Delete selected ${activeKindLabel.toLowerCase()} backups?`,
-      children: dangerConfirmBody([
-        "Permanently delete ",
-        createElement("strong", { key: "count" }, count),
-        ` ${activeKindLabel.toLowerCase()} backup${count === 1 ? "" : "s"} from disk and the database? This cannot be undone.`,
-      ]),
+      children: deleteConfirmChildren(body, protectedCount === 1 ? (protectedRows[0]?.operatorNote ?? "") : undefined),
       confirmLabel: "Delete",
       onConfirm: () => void deleteBackupsByIds(ids),
     });
@@ -210,16 +248,51 @@ export function createServerBackupPanelActions(options: BackupPanelActionOptions
   const confirmDeleteOne = (backup: BackupRecord) => {
     if (backup.status === "running") return;
     const label = backup.kind === "players" ? playerBackupDisplayName(backup) : activeKindLabel;
+    const body: Array<string | ReturnType<typeof createElement>> = [
+      "Permanently delete this ",
+      createElement("strong", { key: "label" }, label),
+      " backup from this PC and from the backup list? This cannot be undone.",
+    ];
+    if (backup.isProtected) {
+      body.push(" This backup is protected.");
+    }
     openDangerConfirmModal({
       title: `Delete ${label.toLowerCase()} backup?`,
-      children: dangerConfirmBody([
-        "Permanently delete this ",
-        createElement("strong", { key: "label" }, label),
-        " backup from disk and the database? This cannot be undone.",
-      ]),
+      children: deleteConfirmChildren(body, backup.isProtected ? backup.operatorNote : undefined),
       confirmLabel: "Delete",
       onConfirm: () => void deleteBackupsByIds([backup.id]),
     });
+  };
+
+  const openProtectModal = (backup: BackupRecord) => {
+    if (backup.status !== "completed") return;
+    setProtectTarget(backup);
+  };
+
+  const closeProtectModal = () => {
+    if (busyOp !== "other") setProtectTarget(null);
+  };
+
+  const saveBackupProtection = async (
+    backup: BackupRecord,
+    isProtected: boolean,
+    operatorNote: string,
+  ): Promise<boolean> => {
+    let ok = false;
+    await runBusy(async () => {
+      const result = await window.api.setBackupProtection(server.id, backup.id, isProtected, operatorNote);
+      if (!result.ok) {
+        showBackupError(result.error ?? "Could not update backup protection");
+        return;
+      }
+      ok = true;
+      if (protectTarget?.id === backup.id) {
+        setProtectTarget(null);
+      }
+      await load(server.id);
+      showBackupToast(isProtected ? "Backup protected." : "Backup protection removed.");
+    });
+    return ok;
   };
 
   const copyBackupDetails = async (backup: BackupRecord) => {
@@ -273,6 +346,9 @@ export function createServerBackupPanelActions(options: BackupPanelActionOptions
     confirmDeleteSelected,
     confirmClearFailed,
     confirmDeleteOne,
+    openProtectModal,
+    closeProtectModal,
+    saveBackupProtection,
     copyBackupDetails,
     confirmRestore,
     closeRestoreModal,
