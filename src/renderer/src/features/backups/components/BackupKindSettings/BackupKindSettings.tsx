@@ -1,9 +1,10 @@
 import type { ReactElement } from "react";
 import { CaretDown, CaretRight } from "@phosphor-icons/react";
-import { Group, NumberInput, Text, Tooltip, UnstyledButton } from "@mantine/core";
+import { Group, NumberInput, Text, UnstyledButton } from "@mantine/core";
 import type { BackupKind } from "@shared/types";
 import { AppSwitch } from "@ui/AppSwitch/AppSwitch";
-import { BACKUP_PROTECT_HELP_TOOLTIP, type DraftPolicy } from "../../model/serverBackupPanelModel";
+import type { DraftPolicy } from "../../model/serverBackupPanelModel";
+import { BackupProtectSwitch } from "../BackupProtectSwitch/BackupProtectSwitch";
 import classes from "../../BackupsPage.module.css";
 
 interface Props {
@@ -118,28 +119,18 @@ export function BackupKindSettings(props: Props): ReactElement {
               className={classes.policyField}
             />
           </Group>
-          <Tooltip label={BACKUP_PROTECT_HELP_TOOLTIP} multiline maw={320} withArrow>
-            <span className={classes.protectSwitchHit}>
-              <Group gap={6} align="center" wrap="nowrap">
-                <Text size="xs" component="label" htmlFor="backup-protect-world">
-                  Protect new manual backups
-                </Text>
-                <AppSwitch
-                  id="backup-protect-world"
-                  size="sm"
-                  aria-label="Protect new manual backups"
-                  checked={draftPolicy.protectNewManualWorld}
-                  disabled={busy || !installReady}
-                  onCheckedChange={(checked) =>
-                    onDraftPolicyChange({
-                      ...draftPolicy,
-                      protectNewManualWorld: checked,
-                    })
-                  }
-                />
-              </Group>
-            </span>
-          </Tooltip>
+          <BackupProtectSwitch
+            id="backup-protect-world"
+            label="Protect new manual backups"
+            checked={draftPolicy.protectNewManualWorld}
+            disabled={busy || !installReady}
+            onCheckedChange={(checked) =>
+              onDraftPolicyChange({
+                ...draftPolicy,
+                protectNewManualWorld: checked,
+              })
+            }
+          />
         </Group>
       )}
 
@@ -186,28 +177,18 @@ export function BackupKindSettings(props: Props): ReactElement {
             }
             className={classes.compactRetain}
           />
-          <Tooltip label={BACKUP_PROTECT_HELP_TOOLTIP} multiline maw={320} withArrow>
-            <span className={classes.protectSwitchHit}>
-              <Group gap={6} align="center" wrap="nowrap">
-                <Text size="xs" component="label" htmlFor="backup-protect-ini">
-                  Protect new manual backups
-                </Text>
-                <AppSwitch
-                  id="backup-protect-ini"
-                  size="sm"
-                  aria-label="Protect new manual backups"
-                  checked={draftPolicy.protectNewManualIni}
-                  disabled={busy || !installReady}
-                  onCheckedChange={(checked) =>
-                    onDraftPolicyChange({
-                      ...draftPolicy,
-                      protectNewManualIni: checked,
-                    })
-                  }
-                />
-              </Group>
-            </span>
-          </Tooltip>
+          <BackupProtectSwitch
+            id="backup-protect-ini"
+            label="Protect new manual backups"
+            checked={draftPolicy.protectNewManualIni}
+            disabled={busy || !installReady}
+            onCheckedChange={(checked) =>
+              onDraftPolicyChange({
+                ...draftPolicy,
+                protectNewManualIni: checked,
+              })
+            }
+          />
         </Group>
       )}
     </div>

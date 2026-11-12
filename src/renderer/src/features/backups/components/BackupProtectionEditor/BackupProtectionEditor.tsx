@@ -1,9 +1,7 @@
 import type { ReactElement } from "react";
-import { Button, Group, Stack, Text, Textarea, Tooltip } from "@mantine/core";
+import { Button, Group, Stack, Text, Textarea } from "@mantine/core";
 import { BACKUP_OPERATOR_NOTE_MAX_LENGTH } from "@shared/types";
-import { AppSwitch } from "@ui/AppSwitch/AppSwitch";
-import { BACKUP_PROTECT_HELP_TOOLTIP } from "../../model/serverBackupPanelModel";
-import classes from "../../BackupsPage.module.css";
+import { BackupProtectSwitch } from "../BackupProtectSwitch/BackupProtectSwitch";
 
 export interface BackupProtectionEditorProps {
   isProtected: boolean;
@@ -21,16 +19,13 @@ export interface BackupProtectionEditorProps {
 export function BackupProtectionEditor(props: BackupProtectionEditorProps): ReactElement {
   return (
     <Stack gap="sm">
-      <Tooltip label={BACKUP_PROTECT_HELP_TOOLTIP} multiline maw={320} withArrow>
-        <span className={classes.protectSwitchHit}>
-          <AppSwitch
-            label="Protected"
-            checked={props.isProtected}
-            disabled={props.saving}
-            onCheckedChange={props.onIsProtectedChange}
-          />
-        </span>
-      </Tooltip>
+      <BackupProtectSwitch
+        id="backup-protect-editor"
+        label="Protected"
+        checked={props.isProtected}
+        disabled={props.saving}
+        onCheckedChange={props.onIsProtectedChange}
+      />
       <Textarea
         label="Note"
         description="Optional note (kept if you turn Protect off)."

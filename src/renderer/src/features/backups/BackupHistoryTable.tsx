@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { HardDrives } from "@phosphor-icons/react";
 import type { DataTableSortStatus } from "mantine-datatable";
 import type { BackupKind, BackupRecord, BackupType } from "@shared/types";
@@ -50,6 +50,12 @@ export function BackupHistoryTable(props: Props): ReactElement {
   const { selectedIds, onSelectedIdsChange } = props;
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<BackupRecord>>(DEFAULT_BACKUP_HISTORY_SORT);
   const [metaFilter, setMetaFilter] = useState<BackupHistoryMetaFilterState>(EMPTY_BACKUP_HISTORY_META_FILTER);
+  const recordsRef = useRef(props.records);
+  recordsRef.current = props.records;
+  const selectedIdsRef = useRef(selectedIds);
+  selectedIdsRef.current = selectedIds;
+  const onSelectedIdsChangeRef = useRef(onSelectedIdsChange);
+  onSelectedIdsChangeRef.current = onSelectedIdsChange;
 
   const typeFilterOptions = useMemo(() => {
     const seen = new Set<BackupType>();
@@ -75,12 +81,26 @@ export function BackupHistoryTable(props: Props): ReactElement {
   );
 
   // Drop selections hidden by Status/Type filters so Delete (N) matches what the operator sees.
-  useEffect(() => {
-    const visibleIds = new Set(sortedRecords.map((row) => row.id));
-    const next = selectedIds.filter((id) => visibleIds.has(id));
-    if (next.length === selectedIds.length) return;
-    onSelectedIdsChange(next);
-  }, [sortedRecords, selectedIds, onSelectedIdsChange]);
+  // Prune in the filter handlers (not an effect) to avoid pushing live state to the parent after paint.
+  const pruneSelectionToVisibleIds = (visibleIds: Set<string>) => {
+    const current = selectedIdsRef.current;
+    const next = current.filter((id) => visibleIds.has(id));
+    if (next.length !== current.length) {
+      onSelectedIdsChangeRef.current(next);
+    }
+  };
+
+  const handleMetaFilterChange = (next: BackupHistoryMetaFilterState) => {
+    setMetaFilter(next);
+    pruneSelectionToVisibleIds(
+      new Set(filterBackupRecordsByMeta(recordsRef.current, next).map((row) => row.id)),
+    );
+  };
+
+  const handleMetaFilterClear = () => {
+    setMetaFilter(EMPTY_BACKUP_HISTORY_META_FILTER);
+    pruneSelectionToVisibleIds(new Set(recordsRef.current.map((row) => row.id)));
+  };
 
   const columns = useMemo(
     () =>
@@ -92,8 +112,8 @@ export function BackupHistoryTable(props: Props): ReactElement {
         metaFilter,
         typeFilterOptions,
         metaFilterActive,
-        onMetaFilterChange: setMetaFilter,
-        onMetaFilterClear: () => setMetaFilter(EMPTY_BACKUP_HISTORY_META_FILTER),
+        onMetaFilterChange: handleMetaFilterChange,
+        onMetaFilterClear: handleMetaFilterClear,
         onCopyDetails: props.onCopyDetails,
         onOpenFolder: props.onOpenFolder,
         onExport: props.onExport,
@@ -117,9 +137,7 @@ export function BackupHistoryTable(props: Props): ReactElement {
       props.onDelete,
       props.onSaveProtection,
     ],
-  );
-
-  return (
+  );  return (
     <YarkDataTable
       className={classes.historyTable}
       idAccessor="id"
