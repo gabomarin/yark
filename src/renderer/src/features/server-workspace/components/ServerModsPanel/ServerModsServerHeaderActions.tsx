@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import { Button, Group } from "@mantine/core";
+import { useUiDensity } from "@app/AppProviders";
 import { ServerModsIdsMenu } from "./ServerModsIdsMenu";
 import { confirmRemoveDisabledMods } from "./confirmRemoveServerMod";
 
@@ -17,6 +18,8 @@ interface Props {
  * Server-view header actions: IDs menu (#634) + bulk enable/disable/remove (#637).
  */
 export function ServerModsServerHeaderActions(props: Props): ReactElement {
+  const density = useUiDensity();
+  const size = density === "compact" ? "xs" : "sm";
   const hasMods = props.configuredIds.length > 0;
   return (
     <Group gap={4} wrap="nowrap">
@@ -26,7 +29,7 @@ export function ServerModsServerHeaderActions(props: Props): ReactElement {
         disabled={props.listBusy}
       />
       <Button
-        size="xs"
+        size={size}
         variant="default"
         disabled={props.listBusy || !hasMods || props.disabledCount === 0}
         onClick={props.onEnableAll}
@@ -34,7 +37,7 @@ export function ServerModsServerHeaderActions(props: Props): ReactElement {
         Enable all
       </Button>
       <Button
-        size="xs"
+        size={size}
         variant="default"
         disabled={props.listBusy || !hasMods || props.disabledCount === props.configuredIds.length}
         onClick={props.onDisableAll}
@@ -42,7 +45,7 @@ export function ServerModsServerHeaderActions(props: Props): ReactElement {
         Disable all
       </Button>
       <Button
-        size="xs"
+        size={size}
         variant="default"
         color="red"
         disabled={props.listBusy || !hasMods || props.disabledCount === 0}

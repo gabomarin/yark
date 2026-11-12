@@ -25,8 +25,8 @@ const STATUS_OPTIONS: Array<{ value: ServerModsStatusFilter; label: string }> = 
   { value: "passive", label: "Passive" },
 ];
 
-function statusSummary(statuses: ServerModsStatusFilter[]): string {
-  return STATUS_OPTIONS.filter((option) => statuses.includes(option.value))
+function statusSummary(statuses: ReadonlySet<ServerModsStatusFilter>): string {
+  return STATUS_OPTIONS.filter((option) => statuses.has(option.value))
     .map((option) => option.label)
     .join(", ");
 }
@@ -43,10 +43,12 @@ export function ServerModsInventoryToolbar(props: Props): ReactElement {
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
   const statuses = props.filter.statuses;
-  const summary = statusSummary(statuses);
+  const statusSet = new Set(statuses);
+  const summary = statusSummary(statusSet);
+  const dropdownOpen = combobox.dropdownOpened;
 
   const toggleStatus = (value: ServerModsStatusFilter) => {
-    const next = statuses.includes(value) ? statuses.filter((entry) => entry !== value) : [...statuses, value];
+    const next = statusSet.has(value) ? statuses.filter((entry) => entry !== value) : [...statuses, value];
     props.onFilterChange({ ...props.filter, statuses: next });
   };
 
@@ -67,13 +69,19 @@ export function ServerModsInventoryToolbar(props: Props): ReactElement {
           onOptionSubmit={(value) => toggleStatus(value as ServerModsStatusFilter)}
         >
           <Combobox.Target>
+            {/*
+              Div trigger (not button) so CloseButton in rightSection is not nested
+              interactive content — OpenCodeReview on #713.
+            */}
             <InputBase
-              component="button"
-              type="button"
+              component="div"
+              tabIndex={0}
               pointer
               size={size}
               role="combobox"
               aria-label="Status"
+              aria-expanded={dropdownOpen}
+              aria-haspopup="listbox"
               classNames={{
                 input: `${searchFieldClasses.input} ${classes.inventoryStatusTrigger}`,
                 section: searchFieldClasses.section,
@@ -94,6 +102,12 @@ export function ServerModsInventoryToolbar(props: Props): ReactElement {
               }
               rightSectionPointerEvents={statuses.length > 0 ? "all" : "none"}
               onClick={() => combobox.toggleDropdown()}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  combobox.toggleDropdown();
+                }
+              }}
             >
               {summary.length > 0 ? (
                 <span className={classes.inventoryStatusSummary}>{summary}</span>
@@ -105,7 +119,7 @@ export function ServerModsInventoryToolbar(props: Props): ReactElement {
           <Combobox.Dropdown>
             <Combobox.Options>
               {STATUS_OPTIONS.map((option) => {
-                const selected = statuses.includes(option.value);
+                const selected = statusSet.has(option.value);
                 return (
                   <Combobox.Option key={option.value} value={option.value} active={selected}>
                     <Group gap="sm" wrap="nowrap">
