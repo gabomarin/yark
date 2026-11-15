@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+<!-- Next operator-facing changes go here. -->
+
 ## [0.27.0] - 2026-11-15
 
 ### Changed
