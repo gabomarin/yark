@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { HardDrives } from "@phosphor-icons/react";
 import type { DataTableSortStatus } from "mantine-datatable";
 import type { BackupKind, BackupRecord, BackupType } from "@shared/types";
@@ -51,11 +51,13 @@ export function BackupHistoryTable(props: Props): ReactElement {
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<BackupRecord>>(DEFAULT_BACKUP_HISTORY_SORT);
   const [metaFilter, setMetaFilter] = useState<BackupHistoryMetaFilterState>(EMPTY_BACKUP_HISTORY_META_FILTER);
   const recordsRef = useRef(props.records);
-  recordsRef.current = props.records;
   const selectedIdsRef = useRef(selectedIds);
-  selectedIdsRef.current = selectedIds;
   const onSelectedIdsChangeRef = useRef(onSelectedIdsChange);
-  onSelectedIdsChangeRef.current = onSelectedIdsChange;
+  useEffect(() => {
+    recordsRef.current = props.records;
+    selectedIdsRef.current = selectedIds;
+    onSelectedIdsChangeRef.current = onSelectedIdsChange;
+  }, [props.records, selectedIds, onSelectedIdsChange]);
 
   const typeFilterOptions = useMemo(() => {
     const seen = new Set<BackupType>();

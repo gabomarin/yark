@@ -18,8 +18,10 @@ Paths under each install:
 
 - Read seeds missing files from built-in defaults and sanitizes client noise (resolution, volume, scalability keys, etc.)
 - A changed visual row shows an unsaved mark, the last saved value (or that the key was absent), and a per-row revert that leaves your other drafts alone
-- Visual Save writes only the simple settings you changed onto the latest file on disk, so a non-overlapping edit from Notepad can stay. If you both changed the same setting, Save refuses instead of overwriting silently
-- If the files change outside YARK while the visual editor is clean, YARK reloads them when the window regains focus. If you also have unsaved edits, an info note counts the outside changes and links to the detail; click Save to merge when the edits do not overlap
+- The settings list can stay in file order (**Unsorted**), group **By category**, or sort **Alphabetical** inside those groups. YARK remembers the choice on this PC. Save still updates each value on its current line.
+- **Add setting**, above the table, asks for a section, a name, and a value. Stock sections are listed; a mod section has to be confirmed before it is used. Known settings appear as you type. The new row stays a draft until Save.
+- Visual Save writes only the simple settings you changed onto the latest file on disk, so a non-overlapping edit from Notepad can stay. When Save overlaps a change made outside YARK, Configuration lists each setting so you can keep your edit, the file value, or the last save, then accept.
+- If the files change outside YARK while the visual editor is clean, YARK reloads them when the window regains focus. If you also have unsaved edits, an info note counts the outside changes and links to the detail; click Save to merge when the edits do not overlap.
 - Raw/text Save refuses the write when the file changed outside YARK since the editor loaded. **Reload from disk** is always in the toolbar
 - Save sanitizes → validates a few semantic ranges → writes both files → best-effort INI backup
 - While the dedicated server is **running**, Save queues a durable draft instead of writing live files ASA can overwrite; YARK flushes that draft after **Stop** or before the next **Start**

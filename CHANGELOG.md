@@ -9,6 +9,8 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-11-15
+
 ### Changed
 
 - Backup history drops separate Map, Status, and Type columns: the File title shows status color (and map · type), and Status/Type filters sit on the File header so medium panels need less horizontal scroll. File absorbs leftover width (Date/Size/Actions stay fixed) so an empty filter result does not jump columns, and long archive names use a soft clamp only on narrower panes. Deleting a protected backup shows the operator note in a raised callout on the confirm dialog.

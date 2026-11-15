@@ -1031,7 +1031,11 @@ async function run() {
         await mapPicker.first().click();
         const searchMaps = page.getByRole("button", { name: /Search Maps/i });
         if ((await searchMaps.count()) > 0) {
-          await searchMaps.first().click();
+          // The map menu can place this item outside Playwright's viewport hit box.
+          await searchMaps.first().evaluate((el) => {
+            el.scrollIntoView({ block: "nearest" });
+            el.click();
+          });
           await page.getByRole("dialog").waitFor({ state: "visible", timeout: 10000 });
           // The map catalog fetch is asynchronous; do not capture the modal's transient loader.
           await page.getByRole("button", { name: "Use map" }).first().waitFor({

@@ -27,6 +27,36 @@ const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.27.0",
+    date: "2026-11-15",
+    sections: [
+      {
+        title: "Highlights",
+        items: [
+          "On Server Mods, IDs copies All, Enabled, or Disabled Project IDs. Paste a list into Add. Find and Status narrow the list without changing load order.",
+          "Mark a completed backup Protected so Cleanup and Keep last leave it alone. You can still delete it, and World or INI can protect a new Backup now.",
+          "On Configuration → INI Files, sort the list or add a setting from the form above the table. The new row stays a draft until Save.",
+          "When Save overlaps a change made outside YARK, pick your edit, the file value, or the last save for each setting.",
+        ],
+      },
+      {
+        title: "Changed",
+        items: [
+          "Backup history puts status, map, and type on the File title, with those filters on the File header.",
+          "A backup whose ZIP was deleted outside YARK stays in history as missing on disk. Restore and export stay off until the file is back or you delete the row.",
+        ],
+      },
+      {
+        title: "Fixed",
+        items: [
+          "Create cluster and the setup assistant suggest an ID like yark-cluster-7f3a9c2e, so the in-game transfer list does not include other hosts that reused yark-cluster-1.",
+          "Transfer Save re-reads each member's INI when the cluster template is empty or only has tribute keys, so a later Apply INI template does not restore a stale snapshot.",
+          "Overrides and Loot Save no longer replay a stale draft after the file was already written.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.26.3",
     date: "2026-11-07",
     sections: [

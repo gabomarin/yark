@@ -29,7 +29,7 @@ When both are set, launch adds:
 
 The Clusters page shows **compliance** for Cluster ID / shared directory, and supports:
 
-- **Create cluster** — assign a Cluster ID and shared folder to one or more stopped servers
+- **Create cluster** — assign a Cluster ID and shared folder to one or more stopped servers. The suggested ID looks like `yark-cluster-7f3a9c2e`, so the in-game transfer list does not mix with other hosts that reused `yark-cluster-1`.
 - **Add / remove** membership on an existing cluster (stopped servers only; transfer files are not deleted)
 - **INI templates** — edit Game.ini / GameUserSettings.ini for the cluster, then **Promote**, **Restore**, or **Seed** onto members (ports, passwords, and session stay profile-owned)
 - **Transfer / tribute** — inspect expiration timers and upload slot caps across members, align cluster-wide values, and edit upload/download restrictions for one map
@@ -65,9 +65,9 @@ updated and which running members will be skipped. It patches only the six
 cluster-wide keys onto each eligible member's `GameUserSettings.ini` (same as
 the row apply action), leaving other INI values unchanged. **Save** on Transfer
 writes the cluster template. If that template is missing, or it only holds the
-six tribute keys, YARK copies a member's current `GameUserSettings.ini` first
-and then writes those keys, so a later full **Apply INI template** does not wipe
-the rest of the file. Full template restore remains available when you intend
+six tribute keys, YARK re-reads each member's current `GameUserSettings.ini`
+and copies a current file before writing those keys, so a later full **Apply
+INI template** does not wipe the rest of the file. Full template restore remains available when you intend
 to replace selected files from the cluster template.
 
 Upload/download restrictions (`PreventUpload*`, `PreventDownload*`,
