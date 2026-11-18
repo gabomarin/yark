@@ -14,7 +14,8 @@ import { ServerModsServerSection } from "./ServerModsServerSection";
 import { ServerModsUnverifiedAddAlert } from "./ServerModsUnverifiedAddAlert";
 import {
   buildServerRows,
-  mergeMissingMetadata,
+  isUnresolvedProjectStub,
+  mergeConfirmedMetadataFetch,
   mergeMetadata,
   metadataMap,
   modsMetadataSyncKey,
@@ -99,7 +100,7 @@ export function ServerModsPanel(props: Props): ReactElement {
     void window.api.getModsMetadata(missingIds).then((result) => {
       if (!alive) return;
       if (!result.ok) {
-        // Soft-fail: IDs without a page stay as No page rows (#698 / import).
+        // Soft-fail without seeding No page stubs — transient errors stay pending.
         if (isMetadataServiceNotConfiguredMessage(result.error)) {
           setError(null);
           setWarning(result.error);
@@ -108,7 +109,7 @@ export function ServerModsPanel(props: Props): ReactElement {
         setWarning(result.error);
         return;
       }
-      setMetadata((previous) => mergeMissingMetadata(previous, result.data));
+      setMetadata((previous) => mergeConfirmedMetadataFetch(previous, missingIds, result.data));
     });
     return () => {
       alive = false;
@@ -163,6 +164,7 @@ export function ServerModsPanel(props: Props): ReactElement {
     setError,
     setWarning,
     setDetail,
+    setMetadata,
     persist,
   });
 
@@ -311,12 +313,7 @@ export function ServerModsPanel(props: Props): ReactElement {
         configured={detail !== null && configuredIds.includes(detail.id)}
         enabled={detail !== null && !disabledSet.has(detail.id)}
         passive={detail !== null && passiveSet.has(detail.id)}
-        noPage={
-          detail !== null &&
-          configuredIds.includes(detail.id) &&
-          !metadata.has(detail.id) &&
-          cacheRef.current[detail.id] === undefined
-        }
+        noPage={detail !== null && configuredIds.includes(detail.id) && isUnresolvedProjectStub(detail)}
         busy={
           detail !== null &&
           (busyKey === `detail:${detail.slug}` || busyKey === `detail:${detail.id}` || isModsListBusy(busyKey))

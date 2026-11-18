@@ -1,8 +1,13 @@
-import { useState, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
+import { useRef, useState, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
 import type { ModMetadata } from "@shared/types";
 import { prepareModAddApply, type ModAddImportProgress } from "@shared/mods/mod-add-input";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { notifyNewlyAddedMods } from "./notifyModsAddedDisabled";
+import {
+  mergeMissingMetadata,
+  shouldApplyDetailRefresh,
+  unresolvedProjectMetadata,
+} from "./serverModsModel";
 import { stageUnverifiedProjectIds } from "./unverifiedModAdd";
 
 interface Input {
@@ -18,6 +23,7 @@ interface Input {
   setError: Dispatch<SetStateAction<string | null>>;
   setWarning: Dispatch<SetStateAction<string | null>>;
   setDetail: Dispatch<SetStateAction<ModMetadata | null>>;
+  setMetadata: Dispatch<SetStateAction<Map<string, ModMetadata>>>;
   persist: (
     nextIds: string[],
     nextDisabled: string[],
@@ -34,6 +40,7 @@ interface Input {
 export function useServerModsAddFlow(input: Input) {
   const [unverifiedProjectIds, setUnverifiedProjectIds] = useState<string[]>([]);
   const [importProgress, setImportProgress] = useState<ModAddImportProgress | null>(null);
+  const refreshGenerationRef = useRef(0);
 
   const addFromInput = async () => {
     input.setBusyKey("url");
@@ -104,6 +111,13 @@ export function useServerModsAddFlow(input: Input) {
           await input.persist(next.configuredIds, next.disabledIds, next.cache, input.passiveIdsRef.current, {
             allowUnverifiedModIds: ids,
           });
+          // Seed No page stubs in memory only — profile cache stays empty (#698).
+          input.setMetadata((previous) =>
+            mergeMissingMetadata(
+              previous,
+              ids.filter((id) => !previous.has(id)).map(unresolvedProjectMetadata),
+            ),
+          );
           setUnverifiedProjectIds([]);
           input.setUrl("");
           notifyNewlyAddedMods(previousIds, next);
@@ -118,6 +132,7 @@ export function useServerModsAddFlow(input: Input) {
   };
 
   const refreshDetailMetadata = async (modId: string) => {
+    const generation = ++refreshGenerationRef.current;
     input.setBusyKey(`detail:${modId}`);
     input.setError(null);
     input.setWarning(null);
@@ -125,12 +140,9 @@ export function useServerModsAddFlow(input: Input) {
       async () => {
         try {
           const result = await window.api.getModByReference(modId);
+          if (generation !== refreshGenerationRef.current) return;
           if (!result.ok) throw new Error(result.error);
-          if (
-            input.inspectTargetRef.current !== null &&
-            input.inspectTargetRef.current !== modId &&
-            input.inspectTargetRef.current !== result.data.slug
-          ) {
+          if (!shouldApplyDetailRefresh(input.inspectTargetRef.current, modId, result.data)) {
             return;
           }
           input.setDetail(result.data);
@@ -141,11 +153,15 @@ export function useServerModsAddFlow(input: Input) {
             });
           }
         } catch (cause) {
+          if (generation !== refreshGenerationRef.current) return;
+          if (input.inspectTargetRef.current === null) return;
           input.setWarning(cause instanceof Error ? cause.message : "Could not refresh CurseForge metadata");
         }
       },
       () => {
-        input.setBusyKey(null);
+        if (generation === refreshGenerationRef.current) {
+          input.setBusyKey(null);
+        }
       },
     );
   };

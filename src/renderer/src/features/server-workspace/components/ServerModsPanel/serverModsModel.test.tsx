@@ -7,12 +7,16 @@ import {
   filterServerModRows,
   formatModIdsCsv,
   isServerModsInventoryFilterActive,
+  isUnresolvedProjectStub,
+  mergeConfirmedMetadataFetch,
   mergeMetadata,
   modsMetadataSyncKey,
   pickModListCategory,
   reorderModIds,
   selectModIdsForCopy,
+  shouldApplyDetailRefresh,
   sortModRows,
+  unresolvedProjectMetadata,
   type ModRow,
 } from "./serverModsModel";
 
@@ -72,8 +76,23 @@ describe("serverModsModel sort/reorder", () => {
 });
 
 describe("serverModsModel missing metadata (#698)", () => {
-  it("shows Project ID / No page copy when cache is empty", () => {
+  it("keeps pending rows without a No page badge when metadata is still missing", () => {
     const rows = buildServerRows(["932759"], new Set(["932759"]), new Map());
+    expect(rows[0]).toMatchObject({
+      name: "Project 932759",
+      author: "Unknown author",
+      noPage: false,
+      downloads: "Unknown",
+      enabled: false,
+    });
+  });
+
+  it("shows Project ID / No page copy for confirmed unresolved stubs", () => {
+    const rows = buildServerRows(
+      ["932759"],
+      new Set(["932759"]),
+      new Map([["932759", unresolvedProjectMetadata("932759")]]),
+    );
     expect(rows[0]).toMatchObject({
       name: "Project 932759",
       author: "No CurseForge page yet",
@@ -81,6 +100,20 @@ describe("serverModsModel missing metadata (#698)", () => {
       downloads: "Unknown",
       enabled: false,
     });
+    expect(isUnresolvedProjectStub(unresolvedProjectMetadata("932759"))).toBe(true);
+  });
+
+  it("seeds No page stubs only for IDs omitted from a successful fetch", () => {
+    const next = mergeConfirmedMetadataFetch(new Map(), ["1", "2"], [baseMeta]);
+    expect(next.get("1")).toEqual(baseMeta);
+    expect(next.get("2")).toEqual(unresolvedProjectMetadata("2"));
+  });
+
+  it("ignores Check CurseForge again responses after the drawer closes", () => {
+    expect(shouldApplyDetailRefresh(null, "932759", { id: "932759", slug: "mod" })).toBe(false);
+    expect(shouldApplyDetailRefresh("932759", "932759", { id: "932759", slug: "mod" })).toBe(true);
+    expect(shouldApplyDetailRefresh("mod", "932759", { id: "932759", slug: "mod" })).toBe(true);
+    expect(shouldApplyDetailRefresh("other", "932759", { id: "932759", slug: "mod" })).toBe(false);
   });
 });
 

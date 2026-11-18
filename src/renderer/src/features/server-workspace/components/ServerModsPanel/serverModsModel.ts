@@ -44,6 +44,15 @@ export function unresolvedProjectMetadata(id: string): ModMetadata {
   };
 }
 
+/**
+ * True for the in-memory No page stub — not for a missing Map entry.
+ * Missing entries can mean a pending or failed metadata fetch; only a stub
+ * (or an operator-confirmed unverified add that seeded one) is "No page".
+ */
+export function isUnresolvedProjectStub(item: ModMetadata): boolean {
+  return item.curseforgeUrl.trim().length === 0 && item.dateModified === new Date(0).toISOString();
+}
+
 export const NO_CURSEFORGE_PAGE_BADGE = "No page";
 export const NO_CURSEFORGE_PAGE_TOOLTIP =
   "CurseForge has no page YARK can use yet. The Project ID is still sent on Start when this mod is enabled.";
@@ -197,21 +206,26 @@ function metadataRow(
   passive: boolean,
   loadIndex: number,
 ): ModRow {
-  const noPage = item === undefined;
-  const unknownUpdated = noPage || item.dateModified === new Date(0).toISOString();
+  const noPage = item !== undefined && isUnresolvedProjectStub(item);
+  const unknownUpdated =
+    item === undefined || noPage || item.dateModified === new Date(0).toISOString();
   return {
     key: `id:${id}`,
     id,
     slug: item?.slug ?? id,
     name: item?.name ?? `Project ${id}`,
-    author: noPage ? NO_CURSEFORGE_PAGE_SUBLINE : item.authors.join(", ") || "Unknown author",
-    summary: item?.summary ?? NO_CURSEFORGE_PAGE_SUBLINE,
+    author: noPage
+      ? NO_CURSEFORGE_PAGE_SUBLINE
+      : item === undefined
+        ? "Unknown author"
+        : item.authors.join(", ") || "Unknown author",
+    summary: noPage ? NO_CURSEFORGE_PAGE_SUBLINE : (item?.summary ?? ""),
     thumbnailUrl: item?.thumbnailUrl ?? null,
     categories: item?.categories ?? [],
-    downloads: formatModDownloadCount(noPage ? undefined : item.downloadCount),
-    downloadCount: noPage ? null : (item.downloadCount ?? null),
-    updated: unknownUpdated ? "Unknown update" : new Date(item!.dateModified).toLocaleDateString(),
-    updatedAt: unknownUpdated ? null : Date.parse(item!.dateModified),
+    downloads: formatModDownloadCount(noPage || item === undefined ? undefined : item.downloadCount),
+    downloadCount: noPage || item === undefined ? null : (item.downloadCount ?? null),
+    updated: unknownUpdated ? "Unknown update" : new Date(item.dateModified).toLocaleDateString(),
+    updatedAt: unknownUpdated ? null : Date.parse(item.dateModified),
     loadIndex,
     url: item?.curseforgeUrl && item.curseforgeUrl.length > 0 ? item.curseforgeUrl : null,
     configured: true,
@@ -373,4 +387,34 @@ export function mergeMissingMetadata(
     }
   }
   return changed ? next : previous;
+}
+
+/**
+ * Apply a successful getModsMetadata response: merge returned rows, and seed
+ * No page stubs only for requested IDs the service omitted (confirmed missing).
+ * Failed fetches must not call this — missing Map entries stay pending.
+ */
+export function mergeConfirmedMetadataFetch(
+  previous: Map<string, ModMetadata>,
+  requestedIds: readonly string[],
+  fetched: ModMetadata[],
+): Map<string, ModMetadata> {
+  const withFetched = mergeMissingMetadata(previous, fetched);
+  const found = new Set(fetched.map((item) => item.id));
+  const stubs = requestedIds
+    .filter((id) => !found.has(id) && !withFetched.has(id))
+    .map(unresolvedProjectMetadata);
+  return stubs.length === 0 ? withFetched : mergeMissingMetadata(withFetched, stubs);
+}
+
+/** Whether a Check CurseForge again response may update the open drawer (#698). */
+export function shouldApplyDetailRefresh(
+  inspectTarget: string | null,
+  requestModId: string,
+  result: Pick<ModMetadata, "id" | "slug">,
+): boolean {
+  if (inspectTarget === null) return false;
+  return (
+    inspectTarget === requestModId || inspectTarget === result.id || inspectTarget === result.slug
+  );
 }

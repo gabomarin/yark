@@ -5,12 +5,14 @@ export function stageUnverifiedProjectIds(current: ModAddApplyState, ids: readon
   let nextIds = [...current.configuredIds];
   const idSet = new Set(nextIds);
   let nextDisabled = [...current.disabledIds];
+  const disabledSet = new Set(nextDisabled);
   for (const id of ids) {
     if (idSet.has(id)) continue;
     nextIds = [...nextIds, id];
     idSet.add(id);
-    if (!nextDisabled.includes(id)) {
+    if (!disabledSet.has(id)) {
       nextDisabled = [...nextDisabled, id];
+      disabledSet.add(id);
     }
   }
   return {
