@@ -132,11 +132,10 @@ describe("prepareModAddApply", () => {
   });
 
   it("lists unresolved numeric Project IDs for the Add Project ID alert (#698)", async () => {
-    const outcome = await prepareModAddApply(
-      "932759",
-      { configuredIds: [], disabledIds: [], cache: {} },
-      async () => ({ ok: false, error: "not found" }),
-    );
+    const outcome = await prepareModAddApply("932759", { configuredIds: [], disabledIds: [], cache: {} }, async () => ({
+      ok: false,
+      error: "not found",
+    }));
     expect(outcome.status).toBe("ready");
     if (outcome.status !== "ready") return;
     expect(outcome.next.configuredIds).toEqual([]);
@@ -149,10 +148,7 @@ describe("prepareModAddApply", () => {
     const outcome = await prepareModAddApply(
       "929420, 932759",
       { configuredIds: [], disabledIds: [], cache: {} },
-      async (ref) =>
-        ref === "929420"
-          ? { ok: true, data: sampleDetail }
-          : { ok: false, error: "proxy down" },
+      async (ref) => (ref === "929420" ? { ok: true, data: sampleDetail } : { ok: false, error: "proxy down" }),
     );
     expect(outcome.status).toBe("ready");
     if (outcome.status !== "ready") return;
@@ -169,11 +165,10 @@ describe("prepareModAddApply", () => {
       curseforgeUrl: "https://www.curseforge.com/ark-survival-evolved/mods/speed_costumes",
       slug: "speed_costumes",
     };
-    const outcome = await prepareModAddApply(
-      "932759",
-      { configuredIds: [], disabledIds: [], cache: {} },
-      async () => ({ ok: true, data: evolved }),
-    );
+    const outcome = await prepareModAddApply("932759", { configuredIds: [], disabledIds: [], cache: {} }, async () => ({
+      ok: true,
+      data: evolved,
+    }));
     expect(outcome.status).toBe("ready");
     if (outcome.status !== "ready") return;
     expect(outcome.unverifiedProjectIds).toEqual([]);

@@ -17,10 +17,9 @@ describe("stageUnverifiedProjectIds (#698)", () => {
   });
 
   it("does not duplicate an ID that is already configured", () => {
-    const next = stageUnverifiedProjectIds(
-      { configuredIds: ["932759"], disabledIds: ["932759"], cache: {} },
-      ["932759"],
-    );
+    const next = stageUnverifiedProjectIds({ configuredIds: ["932759"], disabledIds: ["932759"], cache: {} }, [
+      "932759",
+    ]);
     expect(next.configuredIds).toEqual(["932759"]);
     expect(next.disabledIds).toEqual(["932759"]);
   });

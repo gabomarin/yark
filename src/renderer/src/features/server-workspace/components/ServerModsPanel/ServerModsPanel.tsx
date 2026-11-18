@@ -319,9 +319,7 @@ export function ServerModsPanel(props: Props): ReactElement {
         }
         busy={
           detail !== null &&
-          (busyKey === `detail:${detail.slug}` ||
-            busyKey === `detail:${detail.id}` ||
-            isModsListBusy(busyKey))
+          (busyKey === `detail:${detail.slug}` || busyKey === `detail:${detail.id}` || isModsListBusy(busyKey))
         }
         onClose={() => {
           inspectTargetRef.current = null;

@@ -14,14 +14,8 @@ import { useUiDensity } from "@app/AppProviders";
 import { confirmRemoveServerMod } from "./confirmRemoveServerMod";
 import { ModDetailDescription } from "./ModDetailDescription";
 import { ModDetailScreenshotCarousel } from "./ModDetailScreenshotCarousel";
-import {
-  NO_CURSEFORGE_PAGE_SUBLINE,
-  NO_CURSEFORGE_PAGE_TOOLTIP,
-} from "./serverModsModel";
-import {
-  UNVERIFIED_ADD_BODY,
-  unverifiedAddAlertTitle,
-} from "./ServerModsUnverifiedAddAlert";
+import { NO_CURSEFORGE_PAGE_SUBLINE, NO_CURSEFORGE_PAGE_TOOLTIP } from "./serverModsModel";
+import { UNVERIFIED_ADD_BODY, unverifiedAddAlertTitle } from "./ServerModsUnverifiedAddAlert";
 import classes from "./ServerModsPanel.module.css";
 
 /** Matches workspace secondary drawers (`ServerWorkspacePage`). */
@@ -201,10 +195,7 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                   </Button>
                 </Group>
                 <Stack gap="xs" className={classes.detailDrawerMeta}>
-                  <MetaRow
-                    label="Downloads"
-                    value={noPage ? "Unknown" : detail.downloadCount.toLocaleString()}
-                  />
+                  <MetaRow label="Downloads" value={noPage ? "Unknown" : detail.downloadCount.toLocaleString()} />
                   <MetaRow
                     label="Updated"
                     value={

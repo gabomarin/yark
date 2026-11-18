@@ -234,9 +234,7 @@ export class ModsService {
     options: { allowUnverifiedModIds?: readonly string[] } = {},
   ): Promise<ServerProfileInput> {
     const existingIds = new Set(existing.mods.map((id) => normalizeModId(id)));
-    const allowUnverified = new Set(
-      (options.allowUnverifiedModIds ?? []).map((id) => normalizeModId(id)),
-    );
+    const allowUnverified = new Set((options.allowUnverifiedModIds ?? []).map((id) => normalizeModId(id)));
     const cache: Record<string, ModMetadata> = {
       ...(existing.modMetadataCache ?? {}),
     };

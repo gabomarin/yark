@@ -13,7 +13,6 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 - Server Mods can **Add Project ID** when CurseForge has no usable page for a numeric ID: the row stays on the list without metadata until **Check CurseForge again**, and Start still loads it once you enable it (#698).
 
-
 ## [0.27.0] - 2026-11-15
 
 ### Changed
