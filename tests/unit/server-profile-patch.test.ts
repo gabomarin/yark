@@ -199,6 +199,27 @@ describe("InstanceService.updatePatch concurrency (#209)", () => {
       }),
     ).toBe(true);
   });
+
+  it("accepts optional allowUnverifiedModIds on mods patches (#698)", () => {
+    expect(
+      isServerProfilePatch({
+        group: "mods",
+        mods: ["932759"],
+        disabledMods: ["932759"],
+        passiveMods: [],
+        allowUnverifiedModIds: ["932759"],
+      }),
+    ).toBe(true);
+    expect(
+      isServerProfilePatch({
+        group: "mods",
+        mods: ["932759"],
+        disabledMods: ["932759"],
+        passiveMods: [],
+        allowUnverifiedModIds: [1],
+      }),
+    ).toBe(false);
+  });
 });
 
 describe("normalizeDisabledMods (#637)", () => {

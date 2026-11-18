@@ -1,13 +1,18 @@
 import type { ReactElement } from "react";
 import { Badge, Group, Text, Tooltip } from "@mantine/core";
 import { ModThumbnail } from "./ModThumbnail";
-import { pickModListCategory, type ModRow } from "./serverModsModel";
+import {
+  NO_CURSEFORGE_PAGE_BADGE,
+  NO_CURSEFORGE_PAGE_TOOLTIP,
+  pickModListCategory,
+  type ModRow,
+} from "./serverModsModel";
 import classes from "./ServerModsPanel.module.css";
 
 export function ModIdentityCell(props: { row: ModRow }): ReactElement {
   const row = props.row;
   const category = pickModListCategory(row.categories);
-  const hasBadges = category.label !== null || row.passive;
+  const hasBadges = category.label !== null || row.passive || row.noPage;
   return (
     <Group wrap="nowrap" gap="sm" miw={0} className={classes.identityGroup}>
       <ModThumbnail src={row.thumbnailUrl} />
@@ -24,6 +29,7 @@ export function ModIdentityCell(props: { row: ModRow }): ReactElement {
             extraLabels={category.extraLabels}
             isMap={category.isMap}
             passive={row.passive}
+            noPage={row.noPage}
           />
         )}
       </div>
@@ -36,10 +42,18 @@ function CategoryBadges(props: {
   extraLabels: string[];
   isMap: boolean;
   passive: boolean;
+  noPage: boolean;
 }): ReactElement {
   const extras = props.extraLabels.join(", ");
   const badges = (
     <div className={classes.categoryRow}>
+      {props.noPage && (
+        <Tooltip label={NO_CURSEFORGE_PAGE_TOOLTIP} withArrow openDelay={200} multiline maw={260}>
+          <Badge variant="light" color="attention" className={classes.categoryBadge}>
+            {NO_CURSEFORGE_PAGE_BADGE}
+          </Badge>
+        </Tooltip>
+      )}
       {props.label !== null && (
         <Badge
           variant="light"

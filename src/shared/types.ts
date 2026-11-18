@@ -93,6 +93,12 @@ type ServerProfileModsPatch = {
   disabledMods: string[];
   passiveMods: string[];
   modMetadataCache?: Record<string, ModMetadata>;
+  /**
+   * Operator-confirmed Project IDs that may be added without Worker metadata
+   * (#698). Ordinary create / update / mods patch still reject unresolved new
+   * IDs unless they appear here.
+   */
+  allowUnverifiedModIds?: string[];
 };
 
 type ServerProfileAsaApiPatch = {

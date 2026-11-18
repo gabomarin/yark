@@ -33,6 +33,7 @@ function row(partial: Partial<ModRow> & Pick<ModRow, "key" | "name" | "loadIndex
     enabled: true,
     ...partial,
     passive: partial.passive ?? false,
+    noPage: partial.noPage ?? false,
   };
 }
 
@@ -67,6 +68,19 @@ describe("serverModsModel sort/reorder", () => {
     expect(reorderModIds(["1", "2", "3"], 0, 2)).toEqual(["2", "3", "1"]);
     expect(reorderModIds(["1", "2", "3"], 2, 0)).toEqual(["3", "1", "2"]);
     expect(reorderModIds(["1", "2", "3"], 1, 1)).toEqual(["1", "2", "3"]);
+  });
+});
+
+describe("serverModsModel missing metadata (#698)", () => {
+  it("shows Project ID / No page copy when cache is empty", () => {
+    const rows = buildServerRows(["932759"], new Set(["932759"]), new Map());
+    expect(rows[0]).toMatchObject({
+      name: "Project 932759",
+      author: "No CurseForge page yet",
+      noPage: true,
+      downloads: "Unknown",
+      enabled: false,
+    });
   });
 });
 

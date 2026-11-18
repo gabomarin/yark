@@ -24,7 +24,30 @@ export interface ModRow {
   enabled: boolean;
   /** Enabled + marked passive: emitted on `-passivemods=` only. */
   passive: boolean;
+  /** No CurseForge metadata cache yet (#698 / import without names). */
+  noPage: boolean;
 }
+
+/** Drawer / table placeholder when a Project ID has no metadata cache (#698). */
+export function unresolvedProjectMetadata(id: string): ModMetadata {
+  return {
+    id,
+    name: `Project ${id}`,
+    summary: "No CurseForge page yet",
+    thumbnailUrl: null,
+    authors: [],
+    downloadCount: 0,
+    dateModified: new Date(0).toISOString(),
+    curseforgeUrl: "",
+    slug: id,
+    categories: [],
+  };
+}
+
+export const NO_CURSEFORGE_PAGE_BADGE = "No page";
+export const NO_CURSEFORGE_PAGE_TOOLTIP =
+  "CurseForge has no page YARK can use yet. The Project ID is still sent on Start when this mod is enabled.";
+export const NO_CURSEFORGE_PAGE_SUBLINE = "No CurseForge page yet";
 
 export type ModRowSortAccessor = "name" | "downloadCount" | "updatedAt";
 
@@ -174,25 +197,27 @@ function metadataRow(
   passive: boolean,
   loadIndex: number,
 ): ModRow {
-  const unknownUpdated = item === undefined || item.dateModified === new Date(0).toISOString();
+  const noPage = item === undefined;
+  const unknownUpdated = noPage || item.dateModified === new Date(0).toISOString();
   return {
     key: `id:${id}`,
     id,
     slug: item?.slug ?? id,
-    name: item?.name ?? `Mod ${id}`,
-    author: item?.authors.join(", ") || "Unknown author",
-    summary: item?.summary ?? "No metadata available.",
+    name: item?.name ?? `Project ${id}`,
+    author: noPage ? NO_CURSEFORGE_PAGE_SUBLINE : item.authors.join(", ") || "Unknown author",
+    summary: item?.summary ?? NO_CURSEFORGE_PAGE_SUBLINE,
     thumbnailUrl: item?.thumbnailUrl ?? null,
     categories: item?.categories ?? [],
-    downloads: formatModDownloadCount(item?.downloadCount),
-    downloadCount: item?.downloadCount ?? null,
+    downloads: formatModDownloadCount(noPage ? undefined : item.downloadCount),
+    downloadCount: noPage ? null : (item.downloadCount ?? null),
     updated: unknownUpdated ? "Unknown update" : new Date(item!.dateModified).toLocaleDateString(),
     updatedAt: unknownUpdated ? null : Date.parse(item!.dateModified),
     loadIndex,
-    url: item?.curseforgeUrl ?? null,
+    url: item?.curseforgeUrl && item.curseforgeUrl.length > 0 ? item.curseforgeUrl : null,
     configured: true,
     enabled,
     passive,
+    noPage,
   };
 }
 
@@ -221,6 +246,7 @@ function catalogRow(
     configured: configuredMetadata !== undefined,
     enabled,
     passive,
+    noPage: false,
   };
 }
 

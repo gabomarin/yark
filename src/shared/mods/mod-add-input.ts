@@ -4,9 +4,15 @@ import type { ModMetadata } from "../types";
 /** Default references resolved per persist/progress batch. */
 const MOD_ADD_URL_BATCH_SIZE = 5;
 
-/** Numeric CurseForge Project ID (same rule as backend `normalizeModId`). */
+/**
+ * Numeric CurseForge Project ID (same rules as backend `normalizeModId`:
+ * digits only, no leading zeros, safe integer).
+ */
 export function isCurseForgeProjectId(raw: string): boolean {
-  return /^\d+$/.test(raw.trim());
+  const id = raw.trim();
+  if (!/^\d+$/.test(id)) return false;
+  if (/^0\d/.test(id)) return false;
+  return Number.isSafeInteger(Number(id));
 }
 
 export interface InvalidModAddToken {
@@ -96,6 +102,12 @@ export type ModAddApplyOutcome =
       clearInput: boolean;
       warning: string | null;
       error: string | null;
+      /**
+       * Numeric Project IDs that CurseForge could not verify as ASA mods, but
+       * the operator may still add without metadata (#698). Explicit non-ASA
+       * pages and non-numeric tokens are never listed here.
+       */
+      unverifiedProjectIds: string[];
     };
 
 type FetchDetailResult = { ok: true; data: ModMetadata } | { ok: false; error: string };
@@ -136,6 +148,8 @@ export async function prepareModAddApply(
   let nextDisabled = [...current.disabledIds];
   let nextCache = { ...current.cache };
   const resolutionFailures: string[] = [];
+  const unverifiedProjectIds: string[] = [];
+  const unverifiedSeen = new Set<string>();
   let completed = 0;
   let succeeded = 0;
   let failed = 0;
@@ -163,13 +177,19 @@ export async function prepareModAddApply(
       completed += 1;
       if (!result.ok) {
         failed += 1;
-        resolutionFailures.push(`"${ref}" (${result.error})`);
+        if (isCurseForgeProjectId(ref) && !unverifiedSeen.has(ref) && !nextIdSet.has(ref)) {
+          unverifiedSeen.add(ref);
+          unverifiedProjectIds.push(ref);
+        } else {
+          resolutionFailures.push(`"${ref}" (${result.error})`);
+        }
         emitProgress(batchIndex);
         continue;
       }
       const detailError = getResolvedDetailError(result.data);
       if (detailError !== null) {
         failed += 1;
+        // Explicit non-ASA (or invalid) pages stay errors — no Add Project ID.
         resolutionFailures.push(`"${ref}" (${detailError})`);
         emitProgress(batchIndex);
         continue;
@@ -208,6 +228,13 @@ export async function prepareModAddApply(
     skipParts.push(`Could not verify as ASA mod(s): ${resolutionFailures.join("; ")}`);
   }
   const skipMessage = skipParts.length > 0 ? skipParts.join(" ") : null;
+  // Unverified Project IDs use the attention alert + Add action instead of a
+  // dead-end error. Keep skip text (invalid tokens / URL failures) as a warning
+  // beside that alert so mixed pastes are not silent.
+  const hasUnverified = unverifiedProjectIds.length > 0;
+  const deferError = hadWork || hasUnverified;
+  const errorMessage = deferError ? null : skipMessage;
+  const warningMessage = deferError ? skipMessage : null;
 
   return {
     status: "ready",
@@ -217,8 +244,9 @@ export async function prepareModAddApply(
       cache: nextCache,
     },
     clearInput: hadWork,
-    warning: hadWork ? skipMessage : null,
-    error: hadWork ? null : skipMessage,
+    warning: warningMessage,
+    error: errorMessage,
+    unverifiedProjectIds,
   };
 }
 

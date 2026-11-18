@@ -107,7 +107,10 @@ export function isServerProfilePatch(value: unknown): value is ServerProfilePatc
       (body.modMetadataCache === undefined ||
         (body.modMetadataCache !== null &&
           typeof body.modMetadataCache === "object" &&
-          !Array.isArray(body.modMetadataCache)))
+          !Array.isArray(body.modMetadataCache))) &&
+      (body.allowUnverifiedModIds === undefined ||
+        (Array.isArray(body.allowUnverifiedModIds) &&
+          body.allowUnverifiedModIds.every((item) => typeof item === "string")))
     );
   }
   if (body.group === "asaApi") {

@@ -26,7 +26,7 @@ import type { ClusterIniTemplateService } from "../backend/domains/config/cluste
 import type { ClusterIniTemplateApplyService } from "../backend/domains/config/cluster-ini-template-apply-service";
 import type { ConfigTransferService } from "../backend/domains/config/config-transfer-service";
 import type { LogsService } from "../backend/domains/logs/logs-service";
-import type { ModsService } from "../backend/domains/mods/mods-service";
+import { normalizeModId, type ModsService } from "../backend/domains/mods/mods-service";
 import { AsaApiService } from "../backend/domains/asa-api/asa-api-service";
 import type { UpdateService } from "../backend/domains/updates/update-service";
 import type { MoveInstallService } from "../backend/domains/instances/move-install-service";
@@ -152,12 +152,20 @@ export function registerIpcHandlers(
       if (typedPatch.group !== "mods") {
         return merged;
       }
-      return mods.enrichNewServerMods(merged, {
-        mods: existing.mods,
-        disabledMods: existing.disabledMods,
-        passiveMods: existing.passiveMods,
-        modMetadataCache: existing.modMetadataCache,
-      });
+      const allowUnverifiedModIds =
+        typedPatch.allowUnverifiedModIds === undefined
+          ? undefined
+          : [...new Set(typedPatch.allowUnverifiedModIds.map((id) => normalizeModId(id)))];
+      return mods.enrichNewServerMods(
+        merged,
+        {
+          mods: existing.mods,
+          disabledMods: existing.disabledMods,
+          passiveMods: existing.passiveMods,
+          modMetadataCache: existing.modMetadataCache,
+        },
+        { allowUnverifiedModIds },
+      );
     });
   });
 

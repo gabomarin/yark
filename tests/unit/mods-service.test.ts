@@ -378,6 +378,52 @@ describe("ModsService.enrichNewServerMods", () => {
     );
   });
 
+  it("allows operator-confirmed unverified IDs without metadata (#698)", async () => {
+    const fetchImpl = vi.fn();
+    const service = new ModsService({
+      buildDefaultUrl: "",
+      baseUrl: "https://proxy.test",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+    const forged: ModMetadata = {
+      ...awesome,
+      id: "932759",
+      name: "Client forged",
+    };
+    const result = await service.enrichNewServerMods(
+      {
+        ...profileInput(["932759"]),
+        disabledMods: ["932759"],
+        modMetadataCache: { "932759": forged },
+      },
+      { mods: [] },
+      { allowUnverifiedModIds: ["932759"] },
+    );
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(result.mods).toEqual(["932759"]);
+    expect(result.disabledMods).toEqual(["932759"]);
+    expect(result.modMetadataCache?.["932759"]).toBeUndefined();
+  });
+
+  it("still rejects other new IDs when allowUnverifiedModIds is present (#698)", async () => {
+    const service = new ModsService({
+      buildDefaultUrl: "",
+      baseUrl: "https://proxy.test",
+      fetchImpl: (async () =>
+        ({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            ok: true,
+            data: { items: [], skipped: [{ id: "1", reason: "not_found" }] },
+          }),
+        }) as Response) as typeof fetch,
+    });
+    await expect(
+      service.enrichNewServerMods(profileInput(["932759", "1"]), { mods: [] }, { allowUnverifiedModIds: ["932759"] }),
+    ).rejects.toThrow(/Project ID 1 was not added/);
+  });
+
   it("preserves IDs already stored on the profile without re-fetch", async () => {
     const fetchImpl = vi.fn();
     const service = new ModsService({

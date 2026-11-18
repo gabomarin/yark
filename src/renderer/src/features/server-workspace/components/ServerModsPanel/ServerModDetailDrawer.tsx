@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { ReactElement } from "react";
 import { Badge, Button, Drawer, Group, Image, Stack, Switch, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { ArrowSquareOut, Copy, Moon, Plus, PuzzlePiece, X } from "@phosphor-icons/react";
+import { ArrowSquareOut, ArrowsClockwise, Copy, Moon, Plus, PuzzlePiece, X } from "@phosphor-icons/react";
 import { isMapCategoryLabel, isMapModCandidate, suggestMapTokenFromMetadata } from "@shared/asa/map-token-suggest";
 import type { ModMetadata } from "@shared/types";
 import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
@@ -14,6 +14,14 @@ import { useUiDensity } from "@app/AppProviders";
 import { confirmRemoveServerMod } from "./confirmRemoveServerMod";
 import { ModDetailDescription } from "./ModDetailDescription";
 import { ModDetailScreenshotCarousel } from "./ModDetailScreenshotCarousel";
+import {
+  NO_CURSEFORGE_PAGE_SUBLINE,
+  NO_CURSEFORGE_PAGE_TOOLTIP,
+} from "./serverModsModel";
+import {
+  UNVERIFIED_ADD_BODY,
+  unverifiedAddAlertTitle,
+} from "./ServerModsUnverifiedAddAlert";
 import classes from "./ServerModsPanel.module.css";
 
 /** Matches workspace secondary drawers (`ServerWorkspacePage`). */
@@ -25,12 +33,15 @@ interface Props {
   configured: boolean;
   enabled: boolean;
   passive: boolean;
+  /** Configured Project ID with no metadata cache (#698). */
+  noPage?: boolean;
   busy: boolean;
   onClose: () => void;
   onOpenExternal: (url: string) => void;
   onToggle: (id: string, enabled: boolean) => void;
   onSetPassive: (id: string, passive: boolean) => void;
   onAdd: (detail: ModMetadata) => void;
+  onCheckCurseForge?: (id: string) => void;
   onRemove: (id: string) => void | Promise<boolean | void>;
 }
 
@@ -40,6 +51,7 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
   const footerButtonSize = density === "compact" ? "sm" : "md";
   const [removeConfirmPending, setRemoveConfirmPending] = useState(false);
   const detail = props.detail;
+  const noPage = props.noPage === true;
   const drawerLocked = removeConfirmPending || props.busy;
 
   const handleClose = () => {
@@ -76,13 +88,45 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                       {detail.name}
                     </Text>
                     <Text size="sm" c="dimmed" lineClamp={1} mt={4}>
-                      {detail.authors.join(", ")}
+                      {noPage ? NO_CURSEFORGE_PAGE_SUBLINE : detail.authors.join(", ") || "Unknown author"}
                     </Text>
                   </div>
                 </Group>
               </div>
               <Drawer.CloseButton disabled={drawerLocked} />
             </Drawer.Header>
+
+            {noPage && props.configured && (
+              <div className={classes.detailDrawerLoadBand}>
+                <AppAlert
+                  variant="light"
+                  color="attention"
+                  title={unverifiedAddAlertTitle([detail.id])}
+                  className={classes.statusAlert}
+                >
+                  <Stack gap="sm">
+                    <Text size="sm">{UNVERIFIED_ADD_BODY}</Text>
+                    <Text size="xs" c="dimmed">
+                      {NO_CURSEFORGE_PAGE_TOOLTIP}
+                    </Text>
+                    {props.onCheckCurseForge !== undefined && (
+                      <Group>
+                        <Button
+                          size="xs"
+                          variant="default"
+                          leftSection={<ArrowsClockwise size={14} />}
+                          loading={props.busy}
+                          disabled={drawerLocked}
+                          onClick={() => props.onCheckCurseForge?.(detail.id)}
+                        >
+                          Check CurseForge again
+                        </Button>
+                      </Group>
+                    )}
+                  </Stack>
+                </AppAlert>
+              </div>
+            )}
 
             {props.configured && (
               <div className={classes.detailDrawerLoadBand}>
@@ -157,16 +201,19 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                   </Button>
                 </Group>
                 <Stack gap="xs" className={classes.detailDrawerMeta}>
-                  <MetaRow label="Downloads" value={detail.downloadCount.toLocaleString()} />
+                  <MetaRow
+                    label="Downloads"
+                    value={noPage ? "Unknown" : detail.downloadCount.toLocaleString()}
+                  />
                   <MetaRow
                     label="Updated"
                     value={
-                      detail.dateModified === new Date(0).toISOString()
+                      noPage || detail.dateModified === new Date(0).toISOString()
                         ? "Unknown"
                         : new Date(detail.dateModified).toLocaleString()
                     }
                   />
-                  <MetaRow label="Slug" value={detail.slug} mono />
+                  {!noPage && <MetaRow label="Slug" value={detail.slug} mono />}
                 </Stack>
                 {(detail.categories ?? []).length > 0 && (
                   <Group gap="xs" className={classes.detailDrawerCategories}>
@@ -186,6 +233,7 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                 size={footerButtonSize}
                 variant="default"
                 leftSection={<ArrowSquareOut size={16} />}
+                disabled={noPage || detail.curseforgeUrl.trim().length === 0}
                 onClick={() => props.onOpenExternal(detail.curseforgeUrl)}
               >
                 Open on CurseForge

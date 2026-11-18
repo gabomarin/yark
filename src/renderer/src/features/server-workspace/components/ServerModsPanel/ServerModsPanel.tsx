@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { SegmentedControl, Stack } from "@mantine/core";
 import { isMetadataServiceNotConfiguredMessage } from "@shared/mods/curseforge-proxy-url";
 import type { ModMetadata, ModSearchPage, ServerProfile } from "@shared/types";
-import { prepareModAddApply, type ModAddImportProgress } from "@shared/mods/mod-add-input";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
@@ -12,6 +11,7 @@ import { ServerModsDiscoverSection } from "./ServerModsDiscoverSection";
 import { ServerModsHeader } from "./ServerModsHeader";
 import { ServerModsServerHeaderActions } from "./ServerModsServerHeaderActions";
 import { ServerModsServerSection } from "./ServerModsServerSection";
+import { ServerModsUnverifiedAddAlert } from "./ServerModsUnverifiedAddAlert";
 import {
   buildServerRows,
   mergeMissingMetadata,
@@ -22,7 +22,7 @@ import {
   type ModRow,
 } from "./serverModsModel";
 import { inspectServerMod } from "./serverModsInspect";
-import { notifyNewlyAddedMods } from "./notifyModsAddedDisabled";
+import { useServerModsAddFlow } from "./useServerModsAddFlow";
 import { useServerModsListController } from "./useServerModsListController";
 import { isModsListBusy } from "./serverModsBusy";
 import classes from "./ServerModsPanel.module.css";
@@ -57,7 +57,6 @@ export function ServerModsPanel(props: Props): ReactElement {
   const [detail, setDetail] = useState<ModMetadata | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
-  const [importProgress, setImportProgress] = useState<ModAddImportProgress | null>(null);
 
   useEffect(() => {
     const nextCache = props.server.modMetadataCache ?? {};
@@ -100,12 +99,13 @@ export function ServerModsPanel(props: Props): ReactElement {
     void window.api.getModsMetadata(missingIds).then((result) => {
       if (!alive) return;
       if (!result.ok) {
+        // Soft-fail: IDs without a page stay as No page rows (#698 / import).
         if (isMetadataServiceNotConfiguredMessage(result.error)) {
           setError(null);
           setWarning(result.error);
           return;
         }
-        setError(result.error);
+        setWarning(result.error);
         return;
       }
       setMetadata((previous) => mergeMissingMetadata(previous, result.data));
@@ -143,51 +143,28 @@ export function ServerModsPanel(props: Props): ReactElement {
       setMetadata,
     });
 
-  const addFromInput = async () => {
-    setBusyKey("url");
-    setError(null);
-    setWarning(null);
-    setImportProgress(null);
-    await runWithFinally(
-      async () => {
-        try {
-          const outcome = await prepareModAddApply(
-            url,
-            {
-              configuredIds,
-              disabledIds,
-              cache: cacheRef.current,
-            },
-            (ref) => window.api.getModByReference(ref),
-            {
-              onProgress: setImportProgress,
-              onBatchComplete: async (next) => {
-                await persist(next.configuredIds, next.disabledIds, next.cache);
-              },
-            },
-          );
-          if (outcome.status === "validation-error") {
-            setError(outcome.message);
-            return;
-          }
-          if (outcome.clearInput) {
-            setUrl("");
-          }
-          if (outcome.warning !== null) setWarning(outcome.warning);
-          if (outcome.error !== null) setError(outcome.error);
-          if (outcome.status === "ready") {
-            notifyNewlyAddedMods(configuredIds, outcome.next);
-          }
-        } catch (cause) {
-          setError(cause instanceof Error ? cause.message : "Could not add the mod");
-        }
-      },
-      () => {
-        setBusyKey(null);
-        setImportProgress(null);
-      },
-    );
-  };
+  const {
+    unverifiedProjectIds,
+    setUnverifiedProjectIds,
+    importProgress,
+    addFromInput,
+    addUnverifiedProjectIds,
+    refreshDetailMetadata,
+  } = useServerModsAddFlow({
+    url,
+    setUrl,
+    configuredIds,
+    configuredIdsRef,
+    disabledIdsRef,
+    passiveIdsRef,
+    cacheRef,
+    inspectTargetRef,
+    setBusyKey,
+    setError,
+    setWarning,
+    setDetail,
+    persist,
+  });
 
   const activateCatalogMod = async (mod: ModMetadata) => {
     setBusyKey(mod.slug);
@@ -284,6 +261,12 @@ export function ServerModsPanel(props: Props): ReactElement {
               {warning}
             </AppAlert>
           )}
+          <ServerModsUnverifiedAddAlert
+            ids={unverifiedProjectIds}
+            busy={busyKey === "url"}
+            onAdd={() => void addUnverifiedProjectIds()}
+            onDismiss={() => setUnverifiedProjectIds([])}
+          />
           {view === "server" ? (
             <ServerModsServerSection
               key={props.server.id}
@@ -328,7 +311,18 @@ export function ServerModsPanel(props: Props): ReactElement {
         configured={detail !== null && configuredIds.includes(detail.id)}
         enabled={detail !== null && !disabledSet.has(detail.id)}
         passive={detail !== null && passiveSet.has(detail.id)}
-        busy={detail !== null && (busyKey === `detail:${detail.slug}` || isModsListBusy(busyKey))}
+        noPage={
+          detail !== null &&
+          configuredIds.includes(detail.id) &&
+          !metadata.has(detail.id) &&
+          cacheRef.current[detail.id] === undefined
+        }
+        busy={
+          detail !== null &&
+          (busyKey === `detail:${detail.slug}` ||
+            busyKey === `detail:${detail.id}` ||
+            isModsListBusy(busyKey))
+        }
         onClose={() => {
           inspectTargetRef.current = null;
           setDetail(null);
@@ -337,6 +331,7 @@ export function ServerModsPanel(props: Props): ReactElement {
         onToggle={(id, enabled) => void toggle(id, enabled)}
         onSetPassive={(id, passive) => void setPassive(id, passive)}
         onAdd={(mod) => void add(mod)}
+        onCheckCurseForge={(id) => void refreshDetailMetadata(id)}
         onRemove={(id) =>
           void remove(id).then((ok) => {
             if (ok) setDetail(null);

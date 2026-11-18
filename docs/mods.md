@@ -132,7 +132,18 @@ persists immediately so a partial import is not lost.
 **New IDs start disabled.** After Add, YARK toasts **Mod Added** (at most two of
 those toasts stay on screen; a third add dismisses the oldest). Re-adding an
 already-configured ID keeps its enable state and refreshes cache when metadata
-is returned. **Import install** (#254)
+is returned.
+
+When CurseForge (or the proxy) cannot return a usable ASA page for a **numeric
+Project ID**, Add does not write yet. An attention alert offers **Add Project
+ID**: the ID is stored with no metadata cache entry, starts disabled, and shows
+as **Project {id}** / **No CurseForge page yet** with a **No page** badge. Start
+still emits the ID once enabled. Explicit non-ASA pages and non-numeric tokens
+do not get that action. The detail drawer can **Check CurseForge again** to fill
+metadata when a page appears (#698). Ordinary create / update / mods patch still
+reject unresolved new IDs unless the write includes `allowUnverifiedModIds`.
+
+**Import install** (#254)
 discovers Project IDs from
 `ShooterGame/Binaries/Win64/ShooterGame/Mods/83374/{projectId}_{fileId}/`
 (and optionally top-level `ShooterGame/Mods/83374/`), then persists them all in
@@ -231,6 +242,9 @@ currently ignores it (Worker Cache-API still applies on the edge).
 
 - **New** Project IDs must be numeric (no leading zeros) and Worker-resolvable
   as ASA mods; client-supplied cache for new IDs is **not** trusted.
+- Exception: `allowUnverifiedModIds` on a mods patch (#698) stages those new IDs
+  without Worker metadata (operator-confirmed Add Project ID only). Other new
+  IDs in the same write still require resolution.
 - Existing IDs keep prior cache without re-fetch (offline / legacy edits).
 - Cache keys not in the configured list are pruned.
 

@@ -88,6 +88,7 @@ describe("parseModAddInput", () => {
   it("detects numeric project IDs", () => {
     expect(isCurseForgeProjectId("123")).toBe(true);
     expect(isCurseForgeProjectId("abc")).toBe(false);
+    expect(isCurseForgeProjectId("0123")).toBe(false);
   });
 });
 
@@ -103,6 +104,7 @@ describe("prepareModAddApply", () => {
     expect(outcome.next.disabledIds).toEqual(["929420"]);
     expect(outcome.next.cache["929420"]).toEqual(sampleDetail);
     expect(outcome.clearInput).toBe(true);
+    expect(outcome.unverifiedProjectIds).toEqual([]);
   });
 
   it("reports validation error when nothing is valid", async () => {
@@ -127,5 +129,67 @@ describe("prepareModAddApply", () => {
     if (outcome.status !== "ready") return;
     expect(outcome.next.configuredIds).toEqual(["929420"]);
     expect(outcome.next.disabledIds).toEqual(["929420"]);
+  });
+
+  it("lists unresolved numeric Project IDs for the Add Project ID alert (#698)", async () => {
+    const outcome = await prepareModAddApply(
+      "932759",
+      { configuredIds: [], disabledIds: [], cache: {} },
+      async () => ({ ok: false, error: "not found" }),
+    );
+    expect(outcome.status).toBe("ready");
+    if (outcome.status !== "ready") return;
+    expect(outcome.next.configuredIds).toEqual([]);
+    expect(outcome.error).toBeNull();
+    expect(outcome.unverifiedProjectIds).toEqual(["932759"]);
+    expect(outcome.clearInput).toBe(false);
+  });
+
+  it("keeps resolved mods and still lists unverified IDs from a mixed paste (#698)", async () => {
+    const outcome = await prepareModAddApply(
+      "929420, 932759",
+      { configuredIds: [], disabledIds: [], cache: {} },
+      async (ref) =>
+        ref === "929420"
+          ? { ok: true, data: sampleDetail }
+          : { ok: false, error: "proxy down" },
+    );
+    expect(outcome.status).toBe("ready");
+    if (outcome.status !== "ready") return;
+    expect(outcome.next.configuredIds).toEqual(["929420"]);
+    expect(outcome.clearInput).toBe(true);
+    expect(outcome.unverifiedProjectIds).toEqual(["932759"]);
+    expect(outcome.error).toBeNull();
+  });
+
+  it("does not offer Add Project ID for an explicit non-ASA page (#698)", async () => {
+    const evolved: typeof sampleDetail = {
+      ...sampleDetail,
+      id: "932759",
+      curseforgeUrl: "https://www.curseforge.com/ark-survival-evolved/mods/speed_costumes",
+      slug: "speed_costumes",
+    };
+    const outcome = await prepareModAddApply(
+      "932759",
+      { configuredIds: [], disabledIds: [], cache: {} },
+      async () => ({ ok: true, data: evolved }),
+    );
+    expect(outcome.status).toBe("ready");
+    if (outcome.status !== "ready") return;
+    expect(outcome.unverifiedProjectIds).toEqual([]);
+    expect(outcome.error).toMatch(/Could not verify/);
+  });
+
+  it("keeps skip text as a warning next to unverified Project IDs (#698)", async () => {
+    const outcome = await prepareModAddApply(
+      "932759, not-a-mod",
+      { configuredIds: [], disabledIds: [], cache: {} },
+      async () => ({ ok: false, error: "not found" }),
+    );
+    expect(outcome.status).toBe("ready");
+    if (outcome.status !== "ready") return;
+    expect(outcome.unverifiedProjectIds).toEqual(["932759"]);
+    expect(outcome.error).toBeNull();
+    expect(outcome.warning).toMatch(/Skipped:.*"not-a-mod"/);
   });
 });

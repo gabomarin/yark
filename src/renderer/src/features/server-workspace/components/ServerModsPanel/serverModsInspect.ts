@@ -1,7 +1,7 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 import type { ModMetadata } from "@shared/types";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
-import { sameModMetadata, type ModRow } from "./serverModsModel";
+import { sameModMetadata, unresolvedProjectMetadata, type ModRow } from "./serverModsModel";
 
 interface InspectInput {
   row: ModRow;
@@ -19,16 +19,25 @@ interface InspectInput {
 /**
  * Open drawer from cache when present, then always refresh via get-by-id so
  * screenshots + long description land for Server mods / Discover (#342).
- * Ignores stale responses after close or a newer inspect target.
+ * Configured IDs without cache open a No page stub; refresh stays opt-in via
+ * Check CurseForge again (#698). Ignores stale responses after close or a
+ * newer inspect target.
  */
 export async function inspectServerMod(input: InspectInput): Promise<void> {
   const { row } = input;
   const cachedDetail = row.id === null ? undefined : input.cacheRef.current[row.id];
   if (cachedDetail !== undefined) {
     input.setDetail(cachedDetail);
+  } else if (row.configured && row.id !== null && row.noPage) {
+    input.setDetail(unresolvedProjectMetadata(row.id));
   }
   const ref = row.id ?? row.slug;
   if (ref.length === 0) return;
+  // No-page inventory rows: stub is enough; operator uses Check CurseForge again.
+  if (row.configured && row.noPage && cachedDetail === undefined) {
+    input.inspectTargetRef.current = ref;
+    return;
+  }
   input.inspectTargetRef.current = ref;
   input.setBusyKey(`detail:${row.slug}`);
   input.setError(null);

@@ -19,6 +19,7 @@ const row: ModRow = {
   configured: true,
   enabled: true,
   passive: false,
+  noPage: false,
   loadIndex: 0,
 };
 

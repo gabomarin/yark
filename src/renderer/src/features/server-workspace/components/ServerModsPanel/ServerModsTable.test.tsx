@@ -23,6 +23,7 @@ const rows: ModRow[] = [
     configured: true,
     enabled: true,
     passive: false,
+    noPage: false,
     loadIndex: 0,
   },
   {
@@ -42,6 +43,7 @@ const rows: ModRow[] = [
     configured: true,
     enabled: true,
     passive: false,
+    noPage: false,
     loadIndex: 1,
   },
 ];

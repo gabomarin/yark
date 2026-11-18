@@ -552,6 +552,37 @@ describe("ServerModsPanel", () => {
     expect(api.updateServerPatch).not.toHaveBeenCalled();
   });
 
+  it("offers Add Project ID when CurseForge cannot verify a numeric ID (#698)", async () => {
+    const api = installApi();
+    vi.mocked(api.getModByReference).mockResolvedValue({ ok: false, error: "not found" });
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.type(screen.getByRole("textbox", { name: addFieldName }), "932759");
+    await user.click(screen.getByRole("button", { name: "Add" }));
+
+    expect(await screen.findByText("No CurseForge page for 932759")).toBeInTheDocument();
+    expect(api.updateServerPatch).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Add Project ID" }));
+
+    await waitFor(() => {
+      expect(api.updateServerPatch).toHaveBeenCalledWith(
+        "server-1",
+        expect.objectContaining({
+          group: "mods",
+          mods: ["947033", "932759"],
+          disabledMods: ["932759"],
+          allowUnverifiedModIds: ["932759"],
+        }),
+      );
+    });
+    const patch = vi.mocked(api.updateServerPatch).mock.calls.at(-1)?.[1] as {
+      modMetadataCache?: Record<string, unknown>;
+    };
+    expect(patch.modMetadataCache?.["932759"]).toBeUndefined();
+  });
+
   it("removes a configured mod and its cached metadata after confirmation", async () => {
     const api = installApi();
     const user = userEvent.setup();

@@ -218,6 +218,10 @@ export class ModsService {
    * Ensures newly configured mod IDs have Worker-verified ASA metadata in cache.
    * Existing profile IDs are preserved without re-fetch (legacy / offline edits).
    * Client-supplied cache for new IDs is not trusted — always re-fetch from Worker.
+   *
+   * Pass operator-confirmed IDs in `allowUnverifiedModIds` (#698) so a dedicated
+   * Add Project ID write can stage them without metadata. Ordinary patches omit
+   * that list and still reject unresolved new IDs.
    */
   async enrichNewServerMods(
     input: ServerProfileInput,
@@ -227,11 +231,21 @@ export class ModsService {
       passiveMods?: string[];
       modMetadataCache?: Record<string, ModMetadata>;
     },
+    options: { allowUnverifiedModIds?: readonly string[] } = {},
   ): Promise<ServerProfileInput> {
-    const existingIds = new Set(existing.mods);
+    const existingIds = new Set(existing.mods.map((id) => normalizeModId(id)));
+    const allowUnverified = new Set(
+      (options.allowUnverifiedModIds ?? []).map((id) => normalizeModId(id)),
+    );
     const cache: Record<string, ModMetadata> = {
       ...(existing.modMetadataCache ?? {}),
     };
+    // Never trust client-invented metadata for operator-confirmed unverified adds.
+    for (const id of allowUnverified) {
+      if (!existingIds.has(id)) {
+        delete cache[id];
+      }
+    }
     const toVerify: string[] = [];
 
     for (const id of input.mods) {
@@ -240,6 +254,7 @@ export class ModsService {
       }
       const normalized = normalizeModId(id);
       if (existingIds.has(normalized)) continue;
+      if (allowUnverified.has(normalized)) continue;
       toVerify.push(normalized);
     }
 
@@ -260,6 +275,8 @@ export class ModsService {
     }
 
     for (const [id, detail] of Object.entries(input.modMetadataCache ?? {})) {
+      // Existing IDs only — new IDs use Worker fetch (or stay empty when
+      // allowUnverifiedModIds skipped verification).
       if (existingIds.has(id)) {
         cache[id] = detail;
       }

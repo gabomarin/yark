@@ -34,6 +34,7 @@ export function useServerModsListController(input: Input) {
     nextDisabled: string[],
     nextCache: Record<string, ModMetadata>,
     nextPassive: string[] = input.passiveIdsRef.current,
+    options: { allowUnverifiedModIds?: string[] } = {},
   ): Promise<void> => {
     // Snapshot the server id so a workspace switch mid-await does not apply this write.
     const targetServerId = input.serverRef.current.id;
@@ -44,6 +45,9 @@ export function useServerModsListController(input: Input) {
         disabledMods: nextDisabled,
         passiveMods: nextPassive,
         modMetadataCache: nextCache,
+        ...(options.allowUnverifiedModIds !== undefined
+          ? { allowUnverifiedModIds: options.allowUnverifiedModIds }
+          : {}),
       });
       if (!result.ok) throw new Error(result.error);
       if (input.serverRef.current.id !== targetServerId) return;
