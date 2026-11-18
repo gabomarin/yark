@@ -6,10 +6,10 @@ import classes from "./ServerModsPanel.module.css";
 export const UNVERIFIED_ADD_BODY =
   "YARK can still add this Project ID. It stays off until you enable it. Start will load that ID.";
 
-export const UNVERIFIED_ADD_BODY_PLURAL =
+const UNVERIFIED_ADD_BODY_PLURAL =
   "YARK can still add these Project IDs. They stay off until you enable them. Start will load those IDs.";
 
-export const UNVERIFIED_ADD_ACTION_LABEL = "Add Project ID";
+const UNVERIFIED_ADD_ACTION_LABEL = "Add Project ID";
 
 export function unverifiedAddAlertTitle(ids: readonly string[]): string {
   if (ids.length === 1) return `No CurseForge page for ${ids[0]}`;
