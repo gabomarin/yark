@@ -207,8 +207,7 @@ function metadataRow(
   loadIndex: number,
 ): ModRow {
   const noPage = item !== undefined && isUnresolvedProjectStub(item);
-  const unknownUpdated =
-    item === undefined || noPage || item.dateModified === new Date(0).toISOString();
+  const unknownUpdated = item === undefined || noPage || item.dateModified === new Date(0).toISOString();
   return {
     key: `id:${id}`,
     id,
@@ -401,9 +400,7 @@ export function mergeConfirmedMetadataFetch(
 ): Map<string, ModMetadata> {
   const withFetched = mergeMissingMetadata(previous, fetched);
   const found = new Set(fetched.map((item) => item.id));
-  const stubs = requestedIds
-    .filter((id) => !found.has(id) && !withFetched.has(id))
-    .map(unresolvedProjectMetadata);
+  const stubs = requestedIds.filter((id) => !found.has(id) && !withFetched.has(id)).map(unresolvedProjectMetadata);
   return stubs.length === 0 ? withFetched : mergeMissingMetadata(withFetched, stubs);
 }
 
@@ -414,7 +411,5 @@ export function shouldApplyDetailRefresh(
   result: Pick<ModMetadata, "id" | "slug">,
 ): boolean {
   if (inspectTarget === null) return false;
-  return (
-    inspectTarget === requestModId || inspectTarget === result.id || inspectTarget === result.slug
-  );
+  return inspectTarget === requestModId || inspectTarget === result.id || inspectTarget === result.slug;
 }

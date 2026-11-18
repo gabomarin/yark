@@ -3,11 +3,7 @@ import type { ModMetadata } from "@shared/types";
 import { prepareModAddApply, type ModAddImportProgress } from "@shared/mods/mod-add-input";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
 import { notifyNewlyAddedMods } from "./notifyModsAddedDisabled";
-import {
-  mergeMissingMetadata,
-  shouldApplyDetailRefresh,
-  unresolvedProjectMetadata,
-} from "./serverModsModel";
+import { mergeMissingMetadata, shouldApplyDetailRefresh, unresolvedProjectMetadata } from "./serverModsModel";
 import { stageUnverifiedProjectIds } from "./unverifiedModAdd";
 
 interface Input {
@@ -113,10 +109,7 @@ export function useServerModsAddFlow(input: Input) {
           });
           // Seed No page stubs in memory only — profile cache stays empty (#698).
           input.setMetadata((previous) =>
-            mergeMissingMetadata(
-              previous,
-              ids.filter((id) => !previous.has(id)).map(unresolvedProjectMetadata),
-            ),
+            mergeMissingMetadata(previous, ids.filter((id) => !previous.has(id)).map(unresolvedProjectMetadata)),
           );
           setUnverifiedProjectIds([]);
           input.setUrl("");
