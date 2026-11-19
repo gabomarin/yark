@@ -11,6 +11,23 @@ export const NO_LOCAL_MOD_FILES_YET = "No local files for this mod yet.";
 /** Operator label: deletes local ASA folders only; Start downloads again (#702). */
 export const CLEAR_DOWNLOADED_FILES_LABEL = "Clear downloaded files";
 
+/** Tooltip / disabled title for Clear downloaded files (#702). */
+export function clearDownloadedFilesHint(input: { hasLocalFiles: boolean; serverActive: boolean }): string {
+  if (!input.hasLocalFiles) return NO_LOCAL_MOD_FILES_YET;
+  if (input.serverActive) return STOP_SERVER_BEFORE_DELETE_MOD_FILES;
+  return CLEAR_DOWNLOADED_FILES_LABEL;
+}
+
+/** Disabled-only title (omit when the action is available). */
+export function clearDownloadedFilesDisabledTitle(input: {
+  hasLocalFiles: boolean;
+  serverActive: boolean;
+}): string | undefined {
+  if (!input.hasLocalFiles) return NO_LOCAL_MOD_FILES_YET;
+  if (input.serverActive) return STOP_SERVER_BEFORE_DELETE_MOD_FILES;
+  return undefined;
+}
+
 export interface ServerModsRowActionInput {
   row: ModRow;
   mode: "server" | "discover";
@@ -121,20 +138,16 @@ export function buildServerModsRowActions(input: ServerModsRowActionInput): RowA
       });
     }
     if (input.onClearDownloadedFiles !== undefined) {
-      const clearDisabled = input.busy || input.serverActive === true || input.hasLocalFiles !== true;
-      const clearTitle =
-        input.hasLocalFiles !== true
-          ? NO_LOCAL_MOD_FILES_YET
-          : input.serverActive === true
-            ? STOP_SERVER_BEFORE_DELETE_MOD_FILES
-            : undefined;
+      const hasLocalFiles = input.hasLocalFiles === true;
+      const serverActive = input.serverActive === true;
+      const clearDisabled = input.busy || serverActive || !hasLocalFiles;
       entries.push({
         kind: "item",
         key: "clear-downloaded-files",
         label: CLEAR_DOWNLOADED_FILES_LABEL,
         icon: <Broom size={ICON} />,
         disabled: clearDisabled,
-        title: clearTitle,
+        title: clearDownloadedFilesDisabledTitle({ hasLocalFiles, serverActive }),
         onClick: () => {
           input.onClearDownloadedFiles?.(input.row);
         },

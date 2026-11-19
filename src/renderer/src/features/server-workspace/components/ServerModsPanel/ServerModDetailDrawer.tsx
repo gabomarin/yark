@@ -28,7 +28,7 @@ import { NO_CURSEFORGE_PAGE_SUBLINE, NO_CURSEFORGE_PAGE_TOOLTIP } from "./server
 import {
   CLEAR_DOWNLOADED_FILES_LABEL,
   NO_LOCAL_MOD_FILES_YET,
-  STOP_SERVER_BEFORE_DELETE_MOD_FILES,
+  clearDownloadedFilesDisabledTitle,
 } from "./serverModsRowActions";
 import { UNVERIFIED_ADD_BODY, unverifiedAddAlertTitle } from "./ServerModsUnverifiedAddAlert";
 import classes from "./ServerModsPanel.module.css";
@@ -270,13 +270,10 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                   variant="default"
                   leftSection={<Broom size={16} />}
                   disabled={drawerLocked || props.serverActive === true || props.hasLocalFiles !== true}
-                  title={
-                    props.hasLocalFiles !== true
-                      ? NO_LOCAL_MOD_FILES_YET
-                      : props.serverActive === true
-                        ? STOP_SERVER_BEFORE_DELETE_MOD_FILES
-                        : undefined
-                  }
+                  title={clearDownloadedFilesDisabledTitle({
+                    hasLocalFiles: props.hasLocalFiles === true,
+                    serverActive: props.serverActive === true,
+                  })}
                   onClick={() => props.onClearDownloadedFiles?.(detail)}
                 >
                   {CLEAR_DOWNLOADED_FILES_LABEL}

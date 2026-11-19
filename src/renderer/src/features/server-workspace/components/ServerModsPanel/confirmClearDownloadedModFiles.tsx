@@ -8,6 +8,7 @@ export function confirmClearDownloadedModFiles(
   onConfirm: () => void | Promise<void>,
   options?: {
     onPendingChange?: (pending: boolean) => void;
+    onError?: (message: string) => void;
   },
 ): void {
   if (row.id === null) return;
@@ -32,9 +33,14 @@ export function confirmClearDownloadedModFiles(
     onCancel: () => options?.onPendingChange?.(false),
     onConfirm: () => {
       started = true;
-      void Promise.resolve(onConfirm()).finally(() => {
-        options?.onPendingChange?.(false);
-      });
+      void Promise.resolve()
+        .then(onConfirm)
+        .catch((cause) => {
+          options?.onError?.(cause instanceof Error ? cause.message : "Could not clear downloaded files");
+        })
+        .finally(() => {
+          options?.onPendingChange?.(false);
+        });
     },
   });
 }

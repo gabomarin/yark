@@ -1,12 +1,8 @@
 import type { ReactElement } from "react";
 import { ActionIcon, Group, Tooltip } from "@mantine/core";
-import { ArrowSquareOut, Broom, FolderOpen, MagnifyingGlass, Plus, Trash } from "@phosphor-icons/react";
+import { ArrowSquareOut, MagnifyingGlass, Plus, Trash } from "@phosphor-icons/react";
 import { confirmRemoveServerMod } from "./confirmRemoveServerMod";
-import {
-  CLEAR_DOWNLOADED_FILES_LABEL,
-  NO_LOCAL_MOD_FILES_YET,
-  STOP_SERVER_BEFORE_DELETE_MOD_FILES,
-} from "./serverModsRowActions";
+import { ServerModsLocalFileActions } from "./ServerModsLocalFileActions";
 import type { ModRow } from "./serverModsModel";
 
 interface Props {
@@ -32,14 +28,6 @@ interface Props {
 export function ServerModsActionsCell(props: Props): ReactElement {
   const { row } = props;
   const curseForgeDisabled = row.url === null || props.busy;
-  const noLocalFiles = props.hasLocalFiles !== true;
-  const openDisabled = props.busy || noLocalFiles;
-  const clearDisabled = props.busy || props.serverActive === true || noLocalFiles;
-  const clearTooltip = noLocalFiles
-    ? NO_LOCAL_MOD_FILES_YET
-    : props.serverActive === true
-      ? STOP_SERVER_BEFORE_DELETE_MOD_FILES
-      : CLEAR_DOWNLOADED_FILES_LABEL;
 
   return (
     <Group gap={4} justify="flex-end" wrap="nowrap">
@@ -68,31 +56,15 @@ export function ServerModsActionsCell(props: Props): ReactElement {
           <ArrowSquareOut size={16} />
         </ActionIcon>
       </Tooltip>
-      {props.mode === "server" && row.id !== null && props.onOpenLocalFolder !== undefined ? (
-        <Tooltip label={noLocalFiles ? NO_LOCAL_MOD_FILES_YET : "Open local folder"} withArrow>
-          <ActionIcon
-            variant="subtle"
-            size="sm"
-            aria-label={`Open local folder ${row.name}`}
-            disabled={openDisabled}
-            onClick={() => props.onOpenLocalFolder?.(row)}
-          >
-            <FolderOpen size={16} />
-          </ActionIcon>
-        </Tooltip>
-      ) : null}
-      {props.mode === "server" && row.id !== null && props.onClearDownloadedFiles !== undefined ? (
-        <Tooltip label={clearTooltip} withArrow>
-          <ActionIcon
-            variant="subtle"
-            size="sm"
-            aria-label={`${CLEAR_DOWNLOADED_FILES_LABEL} ${row.name}`}
-            disabled={clearDisabled}
-            onClick={() => props.onClearDownloadedFiles?.(row)}
-          >
-            <Broom size={16} />
-          </ActionIcon>
-        </Tooltip>
+      {props.mode === "server" ? (
+        <ServerModsLocalFileActions
+          row={row}
+          busy={props.busy}
+          serverActive={props.serverActive === true}
+          hasLocalFiles={props.hasLocalFiles === true}
+          onOpenLocalFolder={props.onOpenLocalFolder}
+          onClearDownloadedFiles={props.onClearDownloadedFiles}
+        />
       ) : null}
       {props.mode === "discover" ? (
         <Tooltip label={row.configured ? "Already added" : `Add ${row.name}`} withArrow>

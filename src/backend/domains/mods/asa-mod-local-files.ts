@@ -3,17 +3,15 @@
  * YARK does not download mod bytes — ASA writes these on Start.
  */
 
-import { existsSync } from "node:fs";
-import { readdir, rm } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { lstat, readdir, rm } from "node:fs/promises";
+import { dirname, join, resolve } from "node:path";
 import { normalizeModId } from "./mods-service";
 import { isPathInside } from "../instances/move-install-service";
 import { isTraversableDirectoryDirent } from "../../infra/fs/reparse-points";
-import { normalizeWindowsPath } from "@shared/server/server-install-path";
 
-/** Same trees import scans for Project IDs. */
+/** Same trees import scans for Project IDs. Native path join — do not Windows-normalize for FS. */
 function asaMod83374Trees(installDir: string): string[] {
-  const root = normalizeWindowsPath(installDir);
+  const root = resolve(installDir);
   return [
     join(root, "ShooterGame", "Binaries", "Win64", "ShooterGame", "Mods", "83374"),
     join(root, "ShooterGame", "Mods", "83374"),
@@ -23,18 +21,28 @@ function asaMod83374Trees(installDir: string): string[] {
 /** Any `{projectId}_{fileId}` child name under an 83374 tree. */
 const ANY_PROJECT_FOLDER_RE = /^(\d+)_(\d+)$/;
 
+function isNotFoundErrno(error: unknown): boolean {
+  return (
+    typeof error === "object" && error !== null && "code" in error && (error as NodeJS.ErrnoException).code === "ENOENT"
+  );
+}
+
+function pathsEqualIgnoreCase(a: string, b: string): boolean {
+  return a.toLowerCase() === b.toLowerCase();
+}
+
 async function forEachLocalModFolder(
   installDir: string,
   onFolder: (projectId: string, resolvedPath: string) => void,
 ): Promise<void> {
   for (const tree of asaMod83374Trees(installDir)) {
-    if (!existsSync(tree)) continue;
     const treeResolved = resolve(tree);
     let entries;
     try {
       entries = await readdir(tree, { withFileTypes: true });
-    } catch {
-      continue;
+    } catch (error) {
+      if (isNotFoundErrno(error)) continue;
+      throw error;
     }
     for (const entry of entries) {
       const match = ANY_PROJECT_FOLDER_RE.exec(entry.name);
@@ -42,10 +50,10 @@ async function forEachLocalModFolder(
       if (!isTraversableDirectoryDirent(entry)) continue;
       const full = join(tree, entry.name);
       const resolved = resolve(full);
-      if (!isPathInside(treeResolved, resolved) && resolved.toLowerCase() !== treeResolved.toLowerCase()) {
+      if (!isPathInside(treeResolved, resolved) && !pathsEqualIgnoreCase(resolved, treeResolved)) {
         continue;
       }
-      if (resolved.toLowerCase() === treeResolved.toLowerCase()) continue;
+      if (pathsEqualIgnoreCase(resolved, treeResolved)) continue;
       onFolder(match[1]!, resolved);
     }
   }
@@ -103,6 +111,29 @@ export const NO_LOCAL_MOD_FILES_OPEN = "No local files for this mod yet.";
 export const STOP_SERVER_BEFORE_DELETE_MOD_FILES = "Stop the server before deleting mod files.";
 
 /**
+ * Re-check immediately before `rm` so a swapped junction cannot escape the tree (#702 TOCTOU).
+ */
+async function assertSafeModFolderForDelete(targetPath: string): Promise<void> {
+  const treeResolved = resolve(dirname(targetPath));
+  let info;
+  try {
+    info = await lstat(targetPath);
+  } catch (error) {
+    if (isNotFoundErrno(error)) {
+      throw new Error(`Mod folder disappeared before delete: "${targetPath}"`);
+    }
+    throw error;
+  }
+  if (info.isSymbolicLink() || !info.isDirectory()) {
+    throw new Error(`Refusing to delete non-directory or reparse point: "${targetPath}"`);
+  }
+  const resolved = resolve(targetPath);
+  if (!isPathInside(treeResolved, resolved) || pathsEqualIgnoreCase(resolved, treeResolved)) {
+    throw new Error(`Refusing to delete path outside mod tree: "${targetPath}"`);
+  }
+}
+
+/**
  * Delete every matching local folder for one Project ID. Does not touch the profile.
  */
 export async function deleteLocalModFolders(
@@ -115,14 +146,24 @@ export async function deleteLocalModFolders(
   }
 
   const deletedPaths: string[] = [];
+  const failures: string[] = [];
   for (const target of targets) {
     try {
+      await assertSafeModFolderForDelete(target);
       await rm(target, { recursive: true, force: false });
       deletedPaths.push(target);
     } catch (cause) {
       const detail = cause instanceof Error ? cause.message : String(cause);
-      throw new Error(`Could not delete mod files at "${target}": ${detail}`);
+      failures.push(`"${target}": ${detail}`);
     }
+  }
+
+  if (failures.length > 0) {
+    const deletedNote =
+      deletedPaths.length === 0
+        ? "No folders were deleted."
+        : `Already deleted ${deletedPaths.length}: ${deletedPaths.map((path) => `"${path}"`).join(", ")}.`;
+    throw new Error(`Could not delete all mod folders. ${deletedNote} Failures: ${failures.join("; ")}`);
   }
 
   // Confirm nothing matching remains (partial failure / race).

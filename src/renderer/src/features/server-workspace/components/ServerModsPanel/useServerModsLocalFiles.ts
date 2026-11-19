@@ -28,25 +28,25 @@ export function useServerModsLocalFiles(input: Input): {
   const [presence, setPresence] = useState<Record<string, boolean>>({});
   const projectIdsKey = input.projectIds.join("\0");
   const prevServerActiveRef = useRef(input.serverActive);
+  const presenceRequestRef = useRef(0);
 
-  const refreshPresence = useCallback(
-    async (projectIds: readonly string[]) => {
-      if (projectIds.length === 0) {
-        setPresence({});
-        return;
-      }
-      const result = await window.api.listLocalModPresence(input.serverId, [...projectIds]);
-      if (!result.ok) {
-        // Soft-fail: keep previous map; actions stay conservative (no local = disabled).
-        return;
-      }
-      setPresence(result.data);
-    },
-    [input.serverId],
-  );
+  const refreshPresence = useCallback(async (serverId: string, projectIds: readonly string[]) => {
+    const requestId = ++presenceRequestRef.current;
+    if (projectIds.length === 0) {
+      if (requestId === presenceRequestRef.current) setPresence({});
+      return;
+    }
+    const result = await window.api.listLocalModPresence(serverId, [...projectIds]);
+    if (requestId !== presenceRequestRef.current) return;
+    if (!result.ok) {
+      // Soft-fail: keep previous map; actions stay conservative (no local = disabled).
+      return;
+    }
+    setPresence(result.data);
+  }, []);
 
   useEffect(() => {
-    void refreshPresence(input.projectIds);
+    void refreshPresence(input.serverId, input.projectIds);
     // Content key — avoid refetch on identical id list with new array identity.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional projectIdsKey
   }, [input.serverId, projectIdsKey, refreshPresence]);
@@ -56,9 +56,9 @@ export function useServerModsLocalFiles(input: Input): {
     prevServerActiveRef.current = input.serverActive;
     // After Stop, ASA may have written folders — refresh once when the lock clears.
     if (wasActive && input.serverActive !== true) {
-      void refreshPresence(input.projectIds);
+      void refreshPresence(input.serverId, input.projectIds);
     }
-  }, [input.serverActive, input.projectIds, refreshPresence]);
+  }, [input.serverActive, input.serverId, input.projectIds, refreshPresence]);
 
   const hasLocalFiles = useCallback((projectId: string) => presence[projectId] === true, [presence]);
 
@@ -109,7 +109,7 @@ export function useServerModsLocalFiles(input: Input): {
         });
       },
       () => {
-        input.setBusyKey(null);
+        input.setBusyKey((current) => (current === busy ? null : current));
       },
     );
   };
@@ -124,7 +124,9 @@ export function useServerModsLocalFiles(input: Input): {
       input.setWarning(NO_LOCAL_MOD_FILES_YET);
       return;
     }
-    confirmClearDownloadedModFiles(row, () => clearDownloadedFiles(row.id!));
+    confirmClearDownloadedModFiles(row, () => clearDownloadedFiles(row.id!), {
+      onError: (message) => input.setError(message),
+    });
   };
 
   return { localFilesById: presence, hasLocalFiles, openLocalFolder, requestClearDownloadedFiles };
