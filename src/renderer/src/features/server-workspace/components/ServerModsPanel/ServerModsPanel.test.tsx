@@ -110,6 +110,12 @@ function installApi(): RendererApi {
       return { ok: true, data: match ?? superDetail };
     }),
     openCurseForgeMod: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
+    redownloadLocalModFiles: vi.fn().mockResolvedValue({
+      ok: true,
+      data: { deletedPaths: [], message: "No local files for this mod. ARK will download them on the next start." },
+    }),
+    openLocalModFolder: vi.fn().mockResolvedValue({ ok: true, data: { openedPaths: [], message: null } }),
+    listLocalModPresence: vi.fn().mockResolvedValue({ ok: true, data: {} }),
     updateServerPatch: vi.fn().mockResolvedValue({ ok: true, data: server }),
   } as unknown as RendererApi;
   Object.defineProperty(window, "api", { configurable: true, value: api });

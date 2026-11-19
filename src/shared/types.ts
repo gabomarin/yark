@@ -1319,6 +1319,19 @@ export function offsetPort(port: number, offset: number): number {
 }
 
 /** CurseForge mod metadata cached/exposed to the renderer. */
+/** Result of deleting one mod's local ASA folders (#702). */
+export interface RedownloadLocalModFilesResult {
+  deletedPaths: string[];
+  message: string;
+}
+
+/** Result of opening one mod's local ASA folders in Explorer (#702). */
+export interface OpenLocalModFolderResult {
+  openedPaths: string[];
+  /** Set when nothing was opened (no local files). */
+  message: string | null;
+}
+
 export interface ModMetadata {
   id: string;
   name: string;

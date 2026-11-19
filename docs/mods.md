@@ -38,6 +38,7 @@ Research archive: [spikes/65-modded-asa-maps.md](spikes/65-modded-asa-maps.md).
 | Profile patch merge                        | `src/shared/server/server-profile.ts`                                                                                      |
 | Workspace UI                               | `…/ServerModsPanel/*` (`AppSurfaceCard` shell, Discover `SearchField`, `serverModsModel.ts`, `serverModsListMutations.ts`) |
 | Load-order table                           | `ServerModsTable.tsx` via [YarkDataTable](datatable.md)                                                                    |
+| Local `{projectId}_{fileId}` folders       | `src/backend/domains/mods/asa-mod-local-files.ts` (list / delete; Explorer open in IPC)                                    |
 | Enrich on create / full update / patch     | `src/main/ipc-handlers.ts` → `ModsService.enrichNewServerMods`                                                             |
 | IPC                                        | `mods:*` channels in `src/shared/ipc.ts` (+ Zod in `channel-schemas.ts`)                                                   |
 
@@ -93,15 +94,27 @@ Workspace → **Mods** has two views (`SegmentedControl`):
 6. **Remove** drops the ID from `mods` / `disabledMods` / `passiveMods` and clears
    its cache entry (confirm dialog). Row context also offers **Copy Project ID**
    and **Copy CurseForge URL** (#634).
-7. Column sort is **view-only** — clear sort before drag-reorder (drag disabled
+7. **Open local folder** (row icon, context menu, and detail drawer) opens every
+   matching `{projectId}_{fileId}` directory under both ASA `Mods/83374` trees in
+   File Explorer (`mods:open-local-folder`). Disabled until
+   `mods:list-local-presence` finds folders for that Project ID. YARK never
+   downloads mod bytes (#702).
+8. **Clear downloaded files** (row broom icon, context menu, and detail drawer)
+   deletes those local folders after confirm so the next Start lets ASA fetch
+   them again (`mods:redownload-local-files`). It does **not** download now —
+   only clears disk. Disabled when no local folders exist, or while this server
+   or another profile on the same install is active/ops-locked. Presence
+   refreshes after Stop and after Clear. The Project ID stays on the list (#702).
+9. Column sort is **view-only** — clear sort before drag-reorder (drag disabled
    while sorted, filtered, or while any row mutation / reorder persist is busy).
-8. Detail drawer / Open on CurseForge uses cached metadata or
-   `mods:get-by-reference`; external open is fail-closed to a validated ASA
-   CurseForge mod URL (`mods:open-curseforge`). Configured mods can also be
-   enabled/disabled, marked passive/active, and removed from the drawer (same
-   persist as the table). Discover inspect can **Add to this server** (same
-   persist as table Add; starts disabled). Maps packs show a launch-token hint in
-   the drawer; YARK does not change `map` / `mapModId` from that surface.
+10. Detail drawer / Open on CurseForge uses cached metadata or
+    `mods:get-by-reference`; external open is fail-closed to a validated ASA
+    CurseForge mod URL (`mods:open-curseforge`). Configured mods can also be
+    enabled/disabled, marked passive/active, opened locally, cleared on disk, and
+    removed from the drawer (same persist as the table). Discover inspect can
+    **Add to this server** (same persist as table Add; starts disabled). Maps packs
+    show a launch-token hint in the drawer; YARK does not change `map` /
+    `mapModId` from that surface.
 
 ### Discover
 

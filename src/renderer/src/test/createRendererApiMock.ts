@@ -440,6 +440,12 @@ export function createRendererApiMock(overrides: Partial<RendererApi> = {}): Ren
     listModCategories: vi.fn().mockResolvedValue({ ok: true, data: [] }),
     getModByReference: vi.fn(),
     openCurseForgeMod: vi.fn(),
+    redownloadLocalModFiles: vi.fn().mockResolvedValue({
+      ok: true,
+      data: { deletedPaths: [], message: "No local files for this mod. ARK will download them on the next start." },
+    }),
+    openLocalModFolder: vi.fn().mockResolvedValue({ ok: true, data: { openedPaths: [], message: null } }),
+    listLocalModPresence: vi.fn().mockResolvedValue({ ok: true, data: {} }),
     getHostedResourcesOverview: vi.fn().mockResolvedValue({
       ok: true,
       data: {

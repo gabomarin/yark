@@ -55,6 +55,12 @@ interface Props {
   filterEmptyState?: ReactNode;
   onCopyProjectId?: (row: ModRow) => void;
   onCopyCurseForgeUrl?: (row: ModRow) => void;
+  /** True while this server is active — disables Clear downloaded files (#702). */
+  serverActive?: boolean;
+  /** Project ID → local ASA folders present (#702). */
+  localFilesById?: Record<string, boolean>;
+  onOpenLocalFolder?: (row: ModRow) => void;
+  onClearDownloadedFiles?: (row: ModRow) => void;
   /**
    * Discover: controlled CurseForge catalog sort. Clear sort resets to Popularity.
    * Server: omit for internal view-sort vs load-order.
@@ -118,6 +124,8 @@ export function ServerModsTable(props: Props): ReactElement {
     onReorder: props.onReorder,
     onCopyProjectId: props.onCopyProjectId,
     onCopyCurseForgeUrl: props.onCopyCurseForgeUrl,
+    onOpenLocalFolder: props.onOpenLocalFolder,
+    onClearDownloadedFiles: props.onClearDownloadedFiles,
   });
   useEffect(() => {
     handlersRef.current = {
@@ -130,6 +138,8 @@ export function ServerModsTable(props: Props): ReactElement {
       onReorder: props.onReorder,
       onCopyProjectId: props.onCopyProjectId,
       onCopyCurseForgeUrl: props.onCopyCurseForgeUrl,
+      onOpenLocalFolder: props.onOpenLocalFolder,
+      onClearDownloadedFiles: props.onClearDownloadedFiles,
     };
   });
 
@@ -139,14 +149,18 @@ export function ServerModsTable(props: Props): ReactElement {
         mode: props.mode,
         busyKey: props.busyKey,
         dragColumn: props.mode === "server",
+        serverActive: props.serverActive,
+        hasLocalFiles: (projectId) => props.localFilesById?.[projectId] === true,
         onInspect: (row) => handlersRef.current.onInspect(row),
         onAdd: (row) => handlersRef.current.onAdd(row),
         onToggle: (id, enabled) => handlersRef.current.onToggle(id, enabled),
         onRemove: (id) => handlersRef.current.onRemove(id),
         onOpenExternal: (url) => handlersRef.current.onOpenExternal(url),
         onSetPassive: (row) => handlersRef.current.onSetPassive?.(row),
+        onOpenLocalFolder: (row) => handlersRef.current.onOpenLocalFolder?.(row),
+        onClearDownloadedFiles: (row) => handlersRef.current.onClearDownloadedFiles?.(row),
       }),
-    [props.mode, props.busyKey],
+    [props.mode, props.busyKey, props.serverActive, props.localFilesById],
   );
 
   const handleDragEnd = useCallback(
@@ -192,6 +206,8 @@ export function ServerModsTable(props: Props): ReactElement {
         row: record,
         mode: props.mode,
         busy,
+        serverActive: props.serverActive,
+        hasLocalFiles: record.id !== null ? props.localFilesById?.[record.id] === true : false,
         onInspect: (row) => handlersRef.current.onInspect(row),
         onAdd: (row) => handlersRef.current.onAdd(row),
         onRemove: (target: ModRow) => {
@@ -203,12 +219,14 @@ export function ServerModsTable(props: Props): ReactElement {
         onSetPassive: (row) => handlersRef.current.onSetPassive?.(row),
         onCopyProjectId: (row) => handlersRef.current.onCopyProjectId?.(row),
         onCopyCurseForgeUrl: (row) => handlersRef.current.onCopyCurseForgeUrl?.(row),
+        onOpenLocalFolder: (row) => handlersRef.current.onOpenLocalFolder?.(row),
+        onClearDownloadedFiles: (row) => handlersRef.current.onClearDownloadedFiles?.(row),
       });
       event.preventDefault();
       event.stopPropagation();
       openAt(CONTEXT_SOURCE_ID, entries, event.clientX, event.clientY);
     },
-    [openAt, props.busyKey, props.mode],
+    [openAt, props.busyKey, props.mode, props.serverActive, props.localFilesById],
   );
 
   const table = (

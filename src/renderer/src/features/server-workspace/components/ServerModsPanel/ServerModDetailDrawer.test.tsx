@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -31,7 +32,7 @@ const baseDetail: ModMetadata = {
   categories: ["Maps"],
 };
 
-function renderDrawer(detail: ModMetadata | null) {
+function renderDrawer(detail: ModMetadata | null, overrides?: Partial<ComponentProps<typeof ServerModDetailDrawer>>) {
   return render(
     <AppProviders>
       <ServerModDetailDrawer
@@ -47,6 +48,7 @@ function renderDrawer(detail: ModMetadata | null) {
         onSetPassive={() => undefined}
         onAdd={() => undefined}
         onRemove={() => undefined}
+        {...overrides}
       />
     </AppProviders>,
   );
@@ -74,5 +76,49 @@ describe("ServerModDetailDrawer #342", () => {
   it("hides description when absent", () => {
     renderDrawer({ ...baseDetail, description: null, screenshots: [] });
     expect(screen.queryByText(/^description$/i)).not.toBeInTheDocument();
+  });
+
+  it("offers Open local folder and Clear downloaded files when configured (#702)", async () => {
+    const user = userEvent.setup();
+    const onOpenLocalFolder = vi.fn();
+    const onClearDownloadedFiles = vi.fn();
+    renderDrawer(baseDetail, {
+      configured: true,
+      enabled: true,
+      hasLocalFiles: true,
+      onOpenLocalFolder,
+      onClearDownloadedFiles,
+    });
+
+    await user.click(screen.getByRole("button", { name: /open local folder/i }));
+    expect(onOpenLocalFolder).toHaveBeenCalledWith(baseDetail.id);
+
+    await user.click(screen.getByRole("button", { name: /clear downloaded files/i }));
+    expect(onClearDownloadedFiles).toHaveBeenCalledWith(baseDetail);
+  });
+
+  it("disables Open and Clear when no local files exist (#702)", () => {
+    renderDrawer(baseDetail, {
+      configured: true,
+      enabled: true,
+      hasLocalFiles: false,
+      onOpenLocalFolder: vi.fn(),
+      onClearDownloadedFiles: vi.fn(),
+    });
+    expect(screen.getByRole("button", { name: /open local folder/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /clear downloaded files/i })).toBeDisabled();
+  });
+
+  it("disables Clear downloaded files while the server is active (#702)", () => {
+    renderDrawer(baseDetail, {
+      configured: true,
+      enabled: true,
+      hasLocalFiles: true,
+      serverActive: true,
+      onOpenLocalFolder: vi.fn(),
+      onClearDownloadedFiles: vi.fn(),
+    });
+    expect(screen.getByRole("button", { name: /clear downloaded files/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /open local folder/i })).toBeEnabled();
   });
 });

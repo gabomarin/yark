@@ -264,6 +264,10 @@ const api: RendererApi = {
   listModCategories: () => ipcRenderer.invoke(IPC.modsListCategories),
   getModByReference: (ref) => ipcRenderer.invoke(IPC.modsGetByReference, ref),
   openCurseForgeMod: (url) => ipcRenderer.invoke(IPC.modsOpenCurseForge, url),
+  redownloadLocalModFiles: (serverId, projectId) =>
+    ipcRenderer.invoke(IPC.modsRedownloadLocalFiles, serverId, projectId),
+  openLocalModFolder: (serverId, projectId) => ipcRenderer.invoke(IPC.modsOpenLocalFolder, serverId, projectId),
+  listLocalModPresence: (serverId, projectIds) => ipcRenderer.invoke(IPC.modsListLocalPresence, serverId, projectIds),
   getHostedResourcesOverview: () => ipcRenderer.invoke(IPC.hostedResourcesGetOverview),
   setHostedResourcesEnabled: (enabled) => ipcRenderer.invoke(IPC.hostedResourcesSetEnabled, enabled),
   setHostedResourcesPort: (port) => ipcRenderer.invoke(IPC.hostedResourcesSetPort, port),

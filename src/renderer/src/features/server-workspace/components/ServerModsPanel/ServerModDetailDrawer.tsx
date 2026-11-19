@@ -2,7 +2,17 @@ import { useEffect, useState } from "react";
 import type { ReactElement } from "react";
 import { Badge, Button, Drawer, Group, Image, Stack, Switch, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { ArrowSquareOut, ArrowsClockwise, Copy, Moon, Plus, PuzzlePiece, X } from "@phosphor-icons/react";
+import {
+  ArrowSquareOut,
+  ArrowsClockwise,
+  Broom,
+  Copy,
+  FolderOpen,
+  Moon,
+  Plus,
+  PuzzlePiece,
+  X,
+} from "@phosphor-icons/react";
 import { isMapCategoryLabel, isMapModCandidate, suggestMapTokenFromMetadata } from "@shared/asa/map-token-suggest";
 import type { ModMetadata } from "@shared/types";
 import { MAP_NAME_COPY } from "@shared/asa/map-name-copy";
@@ -15,6 +25,11 @@ import { confirmRemoveServerMod } from "./confirmRemoveServerMod";
 import { ModDetailDescription } from "./ModDetailDescription";
 import { ModDetailScreenshotCarousel } from "./ModDetailScreenshotCarousel";
 import { NO_CURSEFORGE_PAGE_SUBLINE, NO_CURSEFORGE_PAGE_TOOLTIP } from "./serverModsModel";
+import {
+  CLEAR_DOWNLOADED_FILES_LABEL,
+  NO_LOCAL_MOD_FILES_YET,
+  STOP_SERVER_BEFORE_DELETE_MOD_FILES,
+} from "./serverModsRowActions";
 import { UNVERIFIED_ADD_BODY, unverifiedAddAlertTitle } from "./ServerModsUnverifiedAddAlert";
 import classes from "./ServerModsPanel.module.css";
 
@@ -29,9 +44,15 @@ interface Props {
   passive: boolean;
   /** Configured Project ID with no metadata cache (#698). */
   noPage?: boolean;
+  /** True while this server (or shared-install ops) is locked — disables Clear downloaded files (#702). */
+  serverActive?: boolean;
+  /** True when this mod has local ASA folders (#702). */
+  hasLocalFiles?: boolean;
   busy: boolean;
   onClose: () => void;
   onOpenExternal: (url: string) => void;
+  onOpenLocalFolder?: (id: string) => void;
+  onClearDownloadedFiles?: (detail: ModMetadata) => void;
   onToggle: (id: string, enabled: boolean) => void;
   onSetPassive: (id: string, passive: boolean) => void;
   onAdd: (detail: ModMetadata) => void;
@@ -229,6 +250,38 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
               >
                 Open on CurseForge
               </Button>
+              {props.configured && props.onOpenLocalFolder !== undefined ? (
+                <Button
+                  className={classes.detailDrawerSecondaryAction}
+                  size={footerButtonSize}
+                  variant="default"
+                  leftSection={<FolderOpen size={16} />}
+                  disabled={drawerLocked || props.hasLocalFiles !== true}
+                  title={props.hasLocalFiles !== true ? NO_LOCAL_MOD_FILES_YET : undefined}
+                  onClick={() => props.onOpenLocalFolder?.(detail.id)}
+                >
+                  Open local folder
+                </Button>
+              ) : null}
+              {props.configured && props.onClearDownloadedFiles !== undefined ? (
+                <Button
+                  className={classes.detailDrawerSecondaryAction}
+                  size={footerButtonSize}
+                  variant="default"
+                  leftSection={<Broom size={16} />}
+                  disabled={drawerLocked || props.serverActive === true || props.hasLocalFiles !== true}
+                  title={
+                    props.hasLocalFiles !== true
+                      ? NO_LOCAL_MOD_FILES_YET
+                      : props.serverActive === true
+                        ? STOP_SERVER_BEFORE_DELETE_MOD_FILES
+                        : undefined
+                  }
+                  onClick={() => props.onClearDownloadedFiles?.(detail)}
+                >
+                  {CLEAR_DOWNLOADED_FILES_LABEL}
+                </Button>
+              ) : null}
               {props.configured ? (
                 <Button
                   className={classes.detailDrawerRemoveAction}

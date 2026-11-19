@@ -12,7 +12,13 @@ import classes from "./ServerModsPanel.module.css";
 export { MODS_REORDER_BUSY_KEY, isModsListBusy } from "./serverModsBusy";
 
 export function isModRowBusy(busyKey: string | null, row: ModRow): boolean {
-  return isModsListBusy(busyKey) || busyKey === row.id || busyKey === row.slug || busyKey === `detail:${row.slug}`;
+  return (
+    isModsListBusy(busyKey) ||
+    busyKey === row.id ||
+    busyKey === row.slug ||
+    busyKey === `detail:${row.slug}` ||
+    (row.id !== null && busyKey === `redownload:${row.id}`)
+  );
 }
 
 export function buildServerModsTableColumns(input: {
@@ -25,6 +31,10 @@ export function buildServerModsTableColumns(input: {
   onRemove: (id: string) => void;
   onOpenExternal: (url: string) => void;
   onSetPassive?: (row: ModRow) => void;
+  onOpenLocalFolder?: (row: ModRow) => void;
+  onClearDownloadedFiles?: (row: ModRow) => void;
+  hasLocalFiles?: (projectId: string) => boolean;
+  serverActive?: boolean;
 }): DataTableColumn<ModRow>[] {
   const columns: DataTableColumn<ModRow>[] = [];
 
@@ -144,7 +154,7 @@ export function buildServerModsTableColumns(input: {
     {
       accessor: "actions",
       title: "",
-      width: 112,
+      width: input.mode === "server" ? 168 : 112,
       textAlign: "right",
       cellsClassName: classes.actionsCell,
       render: (row): ReactElement => (
@@ -153,10 +163,14 @@ export function buildServerModsTableColumns(input: {
             row={row}
             mode={input.mode}
             busy={isModRowBusy(input.busyKey, row)}
+            serverActive={input.serverActive}
+            hasLocalFiles={row.id !== null ? input.hasLocalFiles?.(row.id) : false}
             onInspect={input.onInspect}
             onAdd={input.onAdd}
             onRemove={input.onRemove}
             onOpenExternal={input.onOpenExternal}
+            onOpenLocalFolder={input.onOpenLocalFolder}
+            onClearDownloadedFiles={input.onClearDownloadedFiles}
           />
         </div>
       ),

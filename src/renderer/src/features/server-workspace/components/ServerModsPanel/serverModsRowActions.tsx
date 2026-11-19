@@ -1,13 +1,24 @@
-import { ArrowSquareOut, Copy, MagnifyingGlass, Moon, Plus, Trash } from "@phosphor-icons/react";
+import { ArrowSquareOut, Broom, Copy, FolderOpen, MagnifyingGlass, Moon, Plus, Trash } from "@phosphor-icons/react";
 import type { RowActionEntry } from "@ui/RowActionMenu/rowActionModel";
 import type { ModRow } from "./serverModsModel";
 
 const ICON = 16;
 
+export const STOP_SERVER_BEFORE_DELETE_MOD_FILES = "Stop the server before deleting mod files.";
+
+export const NO_LOCAL_MOD_FILES_YET = "No local files for this mod yet.";
+
+/** Operator label: deletes local ASA folders only; Start downloads again (#702). */
+export const CLEAR_DOWNLOADED_FILES_LABEL = "Clear downloaded files";
+
 export interface ServerModsRowActionInput {
   row: ModRow;
   mode: "server" | "discover";
   busy: boolean;
+  /** True while this server (or ops lock) is active — disables Clear downloaded files (#702). */
+  serverActive?: boolean;
+  /** True when `{projectId}_{fileId}` folders exist under the install (#702). */
+  hasLocalFiles?: boolean;
   onInspect: (row: ModRow) => void;
   onAdd: (row: ModRow) => void;
   onRemove: (row: ModRow) => void;
@@ -16,6 +27,8 @@ export interface ServerModsRowActionInput {
   onSetPassive?: (row: ModRow) => void;
   onCopyProjectId?: (row: ModRow) => void;
   onCopyCurseForgeUrl?: (row: ModRow) => void;
+  onOpenLocalFolder?: (row: ModRow) => void;
+  onClearDownloadedFiles?: (row: ModRow) => void;
 }
 
 export function buildServerModsRowActions(input: ServerModsRowActionInput): RowActionEntry[] {
@@ -93,6 +106,40 @@ export function buildServerModsRowActions(input: ServerModsRowActionInput): RowA
       },
     });
   } else if (input.row.id !== null) {
+    if (input.onOpenLocalFolder !== undefined) {
+      const openDisabled = input.busy || input.hasLocalFiles !== true;
+      entries.push({
+        kind: "item",
+        key: "open-local-folder",
+        label: "Open local folder",
+        icon: <FolderOpen size={ICON} />,
+        disabled: openDisabled,
+        title: input.hasLocalFiles !== true ? NO_LOCAL_MOD_FILES_YET : undefined,
+        onClick: () => {
+          input.onOpenLocalFolder?.(input.row);
+        },
+      });
+    }
+    if (input.onClearDownloadedFiles !== undefined) {
+      const clearDisabled = input.busy || input.serverActive === true || input.hasLocalFiles !== true;
+      const clearTitle =
+        input.hasLocalFiles !== true
+          ? NO_LOCAL_MOD_FILES_YET
+          : input.serverActive === true
+            ? STOP_SERVER_BEFORE_DELETE_MOD_FILES
+            : undefined;
+      entries.push({
+        kind: "item",
+        key: "clear-downloaded-files",
+        label: CLEAR_DOWNLOADED_FILES_LABEL,
+        icon: <Broom size={ICON} />,
+        disabled: clearDisabled,
+        title: clearTitle,
+        onClick: () => {
+          input.onClearDownloadedFiles?.(input.row);
+        },
+      });
+    }
     entries.push(
       { kind: "divider", key: "div-danger" },
       {

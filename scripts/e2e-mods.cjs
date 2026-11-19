@@ -187,6 +187,15 @@ async function run() {
       throw new Error(`Mod ${DEMO_MOD_ID} did not appear after Add mod (Worker/network?). ${error?.message ?? error}`);
     }
 
+    // Row local-files actions (#702): icons visible; disabled until ASA folders exist.
+    const openLocal = page.getByRole("button", { name: /^Open local folder /i }).first();
+    const clearLocal = page.getByRole("button", { name: /^Clear downloaded files /i }).first();
+    await openLocal.waitFor({ state: "visible", timeout: 10000 });
+    await clearLocal.waitFor({ state: "visible", timeout: 10000 });
+    assert.equal(await openLocal.isDisabled(), true, "Open local folder should stay off without ASA folders");
+    assert.equal(await clearLocal.isDisabled(), true, "Clear downloaded files should stay off without ASA folders");
+    console.log("E2E_MODS_LOCAL_FILE_ACTIONS_DISABLED_WITHOUT_FILES");
+
     // Enable/disable: assert the control exists, toggle both ways, assert final states.
     const modSwitch = page.getByRole("switch", { name: /^(Disable|Enable) /i }).first();
     await modSwitch.waitFor({ state: "attached", timeout: 10000 });

@@ -32,6 +32,10 @@ interface Props {
   onReorder: (orderedIds: string[]) => void;
   onCopyProjectId: (row: ModRow) => void;
   onCopyCurseForgeUrl: (row: ModRow) => void;
+  serverActive?: boolean;
+  localFilesById: Record<string, boolean>;
+  onOpenLocalFolder: (row: ModRow) => void;
+  onClearDownloadedFiles: (row: ModRow) => void;
 }
 
 export function ServerModsServerSection(props: Props): ReactElement {
@@ -113,6 +117,10 @@ export function ServerModsServerSection(props: Props): ReactElement {
             onReorder={props.onReorder}
             onCopyProjectId={props.onCopyProjectId}
             onCopyCurseForgeUrl={props.onCopyCurseForgeUrl}
+            serverActive={props.serverActive}
+            localFilesById={props.localFilesById}
+            onOpenLocalFolder={props.onOpenLocalFolder}
+            onClearDownloadedFiles={props.onClearDownloadedFiles}
           />
         )}
       </div>

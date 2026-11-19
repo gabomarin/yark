@@ -27,6 +27,7 @@ import type { ClusterIniTemplateApplyService } from "../backend/domains/config/c
 import type { ConfigTransferService } from "../backend/domains/config/config-transfer-service";
 import type { LogsService } from "../backend/domains/logs/logs-service";
 import { normalizeModId, type ModsService } from "../backend/domains/mods/mods-service";
+import { NO_LOCAL_MOD_FILES_OPEN } from "../backend/domains/mods/asa-mod-local-files";
 import { AsaApiService } from "../backend/domains/asa-api/asa-api-service";
 import type { UpdateService } from "../backend/domains/updates/update-service";
 import type { MoveInstallService } from "../backend/domains/instances/move-install-service";
@@ -988,6 +989,28 @@ export function registerIpcHandlers(
     // Fail closed: only open a validated ASA CurseForge mod detail URL.
     await shell.openExternal(canonicalCurseForgeAsaModUrl(url));
   });
+
+  handleValidated(IPC.modsRedownloadLocalFiles, ipcArgSchemas[IPC.modsRedownloadLocalFiles], ([serverId, projectId]) =>
+    instances.redownloadLocalModFiles(serverId, projectId),
+  );
+
+  handleValidated(IPC.modsOpenLocalFolder, ipcArgSchemas[IPC.modsOpenLocalFolder], async ([serverId, projectId]) => {
+    const paths = await instances.listLocalModFolders(serverId, projectId);
+    if (paths.length === 0) {
+      return { openedPaths: [], message: NO_LOCAL_MOD_FILES_OPEN };
+    }
+    for (const targetPath of paths) {
+      const error = await shell.openPath(targetPath);
+      if (error.length > 0) {
+        throw new Error(`Could not open mod folder "${targetPath}": ${error}`);
+      }
+    }
+    return { openedPaths: paths, message: null };
+  });
+
+  handleValidated(IPC.modsListLocalPresence, ipcArgSchemas[IPC.modsListLocalPresence], ([serverId, projectIds]) =>
+    instances.listLocalModPresence(serverId, projectIds),
+  );
 
   handleValidated(IPC.backupsList, ipcArgSchemas[IPC.backupsList], ([serverId, limit]) =>
     backups.list(serverId, typeof limit === "number" ? limit : 50),

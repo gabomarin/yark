@@ -25,11 +25,14 @@ import {
 import { inspectServerMod } from "./serverModsInspect";
 import { useServerModsAddFlow } from "./useServerModsAddFlow";
 import { useServerModsListController } from "./useServerModsListController";
+import { useServerModsLocalFiles } from "./useServerModsLocalFiles";
 import { isModsListBusy } from "./serverModsBusy";
 import classes from "./ServerModsPanel.module.css";
 
 interface Props {
   server: ServerProfile;
+  /** True while this server (or shared-install ops) is locked — disables Clear downloaded files (#702). */
+  serverActive?: boolean;
   onServerUpdated: () => void;
 }
 
@@ -193,6 +196,15 @@ export function ServerModsPanel(props: Props): ReactElement {
     if (!result.ok) setError(result.error);
   };
 
+  const { localFilesById, hasLocalFiles, openLocalFolder, requestClearDownloadedFiles } = useServerModsLocalFiles({
+    serverId: props.server.id,
+    projectIds: configuredIds,
+    serverActive: props.serverActive,
+    setBusyKey,
+    setError,
+    setWarning,
+  });
+
   const inspect = async (row: ModRow) => {
     await inspectServerMod({
       row,
@@ -276,6 +288,8 @@ export function ServerModsPanel(props: Props): ReactElement {
               busyKey={busyKey}
               importProgress={importProgress}
               rows={serverRows}
+              serverActive={props.serverActive}
+              localFilesById={localFilesById}
               onUrlChange={setUrl}
               onAdd={() => void addFromInput()}
               onDiscover={() => setView("discover")}
@@ -290,6 +304,11 @@ export function ServerModsPanel(props: Props): ReactElement {
               onReorder={(orderedIds) => void reorder(orderedIds)}
               onCopyProjectId={copyModProjectId}
               onCopyCurseForgeUrl={copyModCurseForgeUrl}
+              onOpenLocalFolder={(row) => {
+                if (row.id === null) return;
+                void openLocalFolder(row.id);
+              }}
+              onClearDownloadedFiles={(row) => requestClearDownloadedFiles(row)}
             />
           ) : (
             <ServerModsDiscoverSection
@@ -314,15 +333,28 @@ export function ServerModsPanel(props: Props): ReactElement {
         enabled={detail !== null && !disabledSet.has(detail.id)}
         passive={detail !== null && passiveSet.has(detail.id)}
         noPage={detail !== null && configuredIds.includes(detail.id) && isUnresolvedProjectStub(detail)}
+        serverActive={props.serverActive}
+        hasLocalFiles={detail !== null && hasLocalFiles(detail.id)}
         busy={
           detail !== null &&
-          (busyKey === `detail:${detail.slug}` || busyKey === `detail:${detail.id}` || isModsListBusy(busyKey))
+          (busyKey === `detail:${detail.slug}` ||
+            busyKey === `detail:${detail.id}` ||
+            busyKey === `redownload:${detail.id}` ||
+            isModsListBusy(busyKey))
         }
         onClose={() => {
           inspectTargetRef.current = null;
           setDetail(null);
         }}
         onOpenExternal={(target) => void openExternal(target)}
+        onOpenLocalFolder={(id) => void openLocalFolder(id)}
+        onClearDownloadedFiles={(mod) =>
+          requestClearDownloadedFiles({
+            id: mod.id,
+            name: mod.name,
+            noPage: configuredIds.includes(mod.id) && isUnresolvedProjectStub(mod),
+          })
+        }
         onToggle={(id, enabled) => void toggle(id, enabled)}
         onSetPassive={(id, passive) => void setPassive(id, passive)}
         onAdd={(mod) => void add(mod)}

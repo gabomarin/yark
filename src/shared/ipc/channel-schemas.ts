@@ -202,6 +202,9 @@ export const VALIDATED_IPC_CHANNELS = [
   IPC.modsListCategories,
   IPC.modsGetByReference,
   IPC.modsOpenCurseForge,
+  IPC.modsRedownloadLocalFiles,
+  IPC.modsOpenLocalFolder,
+  IPC.modsListLocalPresence,
   IPC.backupsList,
   IPC.backupsCreate,
   IPC.backupsGetPolicy,
@@ -471,6 +474,12 @@ export const ipcArgSchemas = {
   [IPC.modsListCategories]: z.tuple([]),
   [IPC.modsGetByReference]: z.tuple([nonEmptyStringSchema("Mod reference", MAX_STRING_PARAM_LENGTH)]),
   [IPC.modsOpenCurseForge]: z.tuple([nonEmptyStringSchema("CurseForge URL", MAX_URL_LENGTH)]),
+  [IPC.modsRedownloadLocalFiles]: z.tuple([serverIdSchema, nonEmptyStringSchema("Project ID", 64)]),
+  [IPC.modsOpenLocalFolder]: z.tuple([serverIdSchema, nonEmptyStringSchema("Project ID", 64)]),
+  [IPC.modsListLocalPresence]: z.tuple([
+    serverIdSchema,
+    z.array(nonEmptyStringSchema("Project ID", 64)).max(MAX_MOD_IDS_PER_REQUEST),
+  ]),
   [IPC.backupsList]: ipcTuple(serverIdSchema, z.number().int().positive().max(5_000).nullish()),
   [IPC.backupsCreate]: ipcTuple(serverIdSchema, z.array(backupKindSchema).max(3).nullish()),
   [IPC.backupsDelete]: z.tuple([

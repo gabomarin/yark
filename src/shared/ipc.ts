@@ -38,6 +38,8 @@ import type {
   ModMetadata,
   ModSearchOptions,
   ModSearchPage,
+  OpenLocalModFolderResult,
+  RedownloadLocalModFilesResult,
   CloneInstallProgress,
   MoveInstallProgress,
   IniFileFingerprints,
@@ -250,6 +252,9 @@ export const IPC = {
   modsListCategories: "mods:list-categories",
   modsGetByReference: "mods:get-by-reference",
   modsOpenCurseForge: "mods:open-curseforge",
+  modsRedownloadLocalFiles: "mods:redownload-local-files",
+  modsOpenLocalFolder: "mods:open-local-folder",
+  modsListLocalPresence: "mods:list-local-presence",
   hostedResourcesGetOverview: "hosted-resources:get-overview",
   hostedResourcesSetEnabled: "hosted-resources:set-enabled",
   hostedResourcesSetPort: "hosted-resources:set-port",
@@ -757,6 +762,12 @@ export interface RendererApi {
   listModCategories(): Promise<IpcResult<ModCategory[]>>;
   getModByReference(ref: string): Promise<IpcResult<ModMetadata>>;
   openCurseForgeMod(url: string): Promise<IpcResult<void>>;
+  /** Delete one mod's local ASA folders so the next Start redownloads (#702). */
+  redownloadLocalModFiles(serverId: string, projectId: string): Promise<IpcResult<RedownloadLocalModFilesResult>>;
+  /** Open one mod's local ASA folder(s) in File Explorer (#702). */
+  openLocalModFolder(serverId: string, projectId: string): Promise<IpcResult<OpenLocalModFolderResult>>;
+  /** Which Project IDs have local ASA folders on disk (#702). */
+  listLocalModPresence(serverId: string, projectIds: string[]): Promise<IpcResult<Record<string, boolean>>>;
   getHostedResourcesOverview(): Promise<IpcResult<HostedResourcesOverviewDto>>;
   setHostedResourcesEnabled(enabled: boolean): Promise<IpcResult<HostedResourcesStateDto>>;
   setHostedResourcesPort(port: number): Promise<IpcResult<HostedResourcesStateDto>>;

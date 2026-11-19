@@ -11,6 +11,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
+- Server Mods can **Open local folder** and **Clear downloaded files** per row (table icons, context menu, and detail drawer). Clear only deletes that mod’s ASA folders after confirm so the next Start fetches them again; it stays off while the server is running (#702).
 - Server Mods can **Add Project ID** when CurseForge has no usable page for a numeric ID: the row stays on the list without metadata until **Check CurseForge again**, and Start still loads it once you enable it (#698).
 
 ## [0.27.0] - 2026-11-15

@@ -154,7 +154,12 @@ export function WorkspaceTabs(props: Props): ReactElement {
               )}
 
               {props.value === "mods" && (
-                <ServerModsPanel key={props.server.id} server={props.server} onServerUpdated={props.onServerUpdated} />
+                <ServerModsPanel
+                  key={props.server.id}
+                  server={props.server}
+                  serverActive={props.opsLocked}
+                  onServerUpdated={props.onServerUpdated}
+                />
               )}
 
               {props.value === "launch" && (

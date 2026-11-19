@@ -30,6 +30,13 @@ import type { ListedPlayer } from "../backups/list-players";
 import type { BanListEntry } from "./ban-list";
 import { assertSafeInstallDirForWipe, installDirKey } from "./install-dir-safety";
 import { assertNotInsideAsaInstall } from "./import-existing-install";
+import {
+  deleteLocalModFolders,
+  listLocalModFolders,
+  listLocalModPresence,
+  STOP_SERVER_BEFORE_DELETE_MOD_FILES,
+  type DeleteLocalModFoldersResult,
+} from "../mods/asa-mod-local-files";
 import { ProfileWriteQueue } from "./profile-write-queue";
 import { invalidateInstallInspectCache, inspectServerInstallationAsync } from "./server-installation";
 import { applyProfileOwnedIni } from "./sync-profile-ini";
@@ -634,6 +641,45 @@ export class InstanceService extends EventEmitter {
       throw new Error(`Server folder does not exist: ${profile.installDir}`);
     }
     return profile.installDir;
+  }
+
+  /**
+   * Delete local `{projectId}_{fileId}` folders so the next Start redownloads (#702).
+   * Refuses while this server or another profile on the same install is active.
+   */
+  async redownloadLocalModFiles(serverId: string, projectId: string): Promise<DeleteLocalModFoldersResult> {
+    const profile = this.mustGet(serverId);
+    this.assertInstallIdleForModFileDelete(profile);
+    if (!existsSync(profile.installDir)) {
+      throw new Error(`Server folder does not exist: ${profile.installDir}`);
+    }
+    return deleteLocalModFolders(profile.installDir, projectId);
+  }
+
+  /** Absolute paths of local folders for one Project ID (may be empty) (#702). */
+  async listLocalModFolders(serverId: string, projectId: string): Promise<string[]> {
+    const installDir = this.installDirFor(serverId);
+    return listLocalModFolders(installDir, projectId);
+  }
+
+  /** Which Project IDs have local ASA folders under this install (#702). */
+  async listLocalModPresence(serverId: string, projectIds: readonly string[]): Promise<Record<string, boolean>> {
+    const installDir = this.installDirFor(serverId);
+    return listLocalModPresence(installDir, projectIds);
+  }
+
+  private assertInstallIdleForModFileDelete(profile: ServerProfile): void {
+    if (this.processes.isActive(profile.id)) {
+      throw new Error(STOP_SERVER_BEFORE_DELETE_MOD_FILES);
+    }
+    const key = installDirKey(profile.installDir);
+    for (const other of this.repo.list()) {
+      if (other.id === profile.id) continue;
+      if (installDirKey(other.installDir) !== key) continue;
+      if (this.processes.isActive(other.id)) {
+        throw new Error(STOP_SERVER_BEFORE_DELETE_MOD_FILES);
+      }
+    }
   }
 
   async installationInfo(

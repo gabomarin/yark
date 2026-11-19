@@ -565,6 +565,11 @@
   min-width: 100%;
 }
 
+.detailDrawerSecondaryAction {
+  flex: 1 1 calc(50% - var(--app-space-sm) / 2);
+  min-width: 10rem;
+}
+
 .detailDrawerRemoveAction {
   flex: 1 1 100%;
 }
