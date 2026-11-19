@@ -1,7 +1,12 @@
 import type { ReactElement } from "react";
 import { ActionIcon, Tooltip } from "@mantine/core";
 import { Broom, FolderOpen } from "@phosphor-icons/react";
-import { CLEAR_DOWNLOADED_FILES_LABEL, NO_LOCAL_MOD_FILES_YET, clearDownloadedFilesHint } from "./serverModsRowActions";
+import {
+  CLEAR_DOWNLOADED_FILES_LABEL,
+  NO_LOCAL_MOD_FILES_YET,
+  OPEN_LOCAL_FOLDER_LABEL,
+  clearDownloadedFilesHint,
+} from "./serverModsRowActions";
 import type { ModRow } from "./serverModsModel";
 
 interface Props {
@@ -25,11 +30,11 @@ export function ServerModsLocalFileActions(props: Props): ReactElement | null {
   return (
     <>
       {props.onOpenLocalFolder !== undefined ? (
-        <Tooltip label={props.hasLocalFiles ? "Open local folder" : NO_LOCAL_MOD_FILES_YET} withArrow>
+        <Tooltip label={props.hasLocalFiles ? OPEN_LOCAL_FOLDER_LABEL : NO_LOCAL_MOD_FILES_YET} withArrow>
           <ActionIcon
             variant="subtle"
             size="sm"
-            aria-label={`Open local folder ${row.name}`}
+            aria-label={`${OPEN_LOCAL_FOLDER_LABEL} ${row.name}`}
             disabled={openDisabled}
             onClick={() => props.onOpenLocalFolder?.(row)}
           >

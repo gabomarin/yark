@@ -28,6 +28,7 @@ export function useServerModsLocalFiles(input: Input): {
   const [presence, setPresence] = useState<Record<string, boolean>>({});
   const projectIdsKey = input.projectIds.join("\0");
   const prevServerActiveRef = useRef(input.serverActive);
+  const prevServerIdRef = useRef(input.serverId);
   const presenceRequestRef = useRef(0);
 
   const refreshPresence = useCallback(async (serverId: string, projectIds: readonly string[]) => {
@@ -36,16 +37,29 @@ export function useServerModsLocalFiles(input: Input): {
       if (requestId === presenceRequestRef.current) setPresence({});
       return;
     }
-    const result = await window.api.listLocalModPresence(serverId, [...projectIds]);
-    if (requestId !== presenceRequestRef.current) return;
-    if (!result.ok) {
-      // Soft-fail: keep previous map; actions stay conservative (no local = disabled).
-      return;
+    try {
+      const result = await window.api.listLocalModPresence(serverId, [...projectIds]);
+      if (requestId !== presenceRequestRef.current) return;
+      if (!result.ok) {
+        // Soft-fail: keep previous map; actions stay conservative (no local = disabled).
+        return;
+      }
+      setPresence(result.data);
+    } catch {
+      if (requestId !== presenceRequestRef.current) return;
+      // Transport failure — do not enable Open/Clear from a stale map.
+      setPresence({});
     }
-    setPresence(result.data);
   }, []);
 
   useEffect(() => {
+    // Drop the previous server's presence immediately so shared Project IDs cannot
+    // briefly enable Open/Clear against the new serverId (#702).
+    if (prevServerIdRef.current !== input.serverId) {
+      prevServerIdRef.current = input.serverId;
+      presenceRequestRef.current += 1;
+      setPresence({});
+    }
     void refreshPresence(input.serverId, input.projectIds);
     // Content key — avoid refetch on identical id list with new array identity.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional projectIdsKey

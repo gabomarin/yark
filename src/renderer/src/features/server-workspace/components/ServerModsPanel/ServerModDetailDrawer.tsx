@@ -28,6 +28,7 @@ import { NO_CURSEFORGE_PAGE_SUBLINE, NO_CURSEFORGE_PAGE_TOOLTIP } from "./server
 import {
   CLEAR_DOWNLOADED_FILES_LABEL,
   NO_LOCAL_MOD_FILES_YET,
+  OPEN_LOCAL_FOLDER_LABEL,
   clearDownloadedFilesDisabledTitle,
 } from "./serverModsRowActions";
 import { UNVERIFIED_ADD_BODY, unverifiedAddAlertTitle } from "./ServerModsUnverifiedAddAlert";
@@ -260,7 +261,7 @@ export function ServerModDetailDrawer(props: Props): ReactElement {
                   title={props.hasLocalFiles !== true ? NO_LOCAL_MOD_FILES_YET : undefined}
                   onClick={() => props.onOpenLocalFolder?.(detail.id)}
                 >
-                  Open local folder
+                  {OPEN_LOCAL_FOLDER_LABEL}
                 </Button>
               ) : null}
               {props.configured && props.onClearDownloadedFiles !== undefined ? (

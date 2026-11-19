@@ -4,9 +4,8 @@
  */
 
 import { lstat, readdir, rm } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { normalizeModId } from "./mods-service";
-import { isPathInside } from "../instances/move-install-service";
 import { isTraversableDirectoryDirent } from "../../infra/fs/reparse-points";
 
 /** Same trees import scans for Project IDs. Native path join — do not Windows-normalize for FS. */
@@ -31,6 +30,12 @@ function pathsEqualIgnoreCase(a: string, b: string): boolean {
   return a.toLowerCase() === b.toLowerCase();
 }
 
+/** Portable containment via `relative` (works with `/` and `\\`). */
+function isStrictlyUnder(parent: string, child: string): boolean {
+  const rel = relative(resolve(parent), resolve(child));
+  return rel.length > 0 && !rel.startsWith("..") && !isAbsolute(rel);
+}
+
 async function forEachLocalModFolder(
   installDir: string,
   onFolder: (projectId: string, resolvedPath: string) => void,
@@ -50,10 +55,7 @@ async function forEachLocalModFolder(
       if (!isTraversableDirectoryDirent(entry)) continue;
       const full = join(tree, entry.name);
       const resolved = resolve(full);
-      if (!isPathInside(treeResolved, resolved) && !pathsEqualIgnoreCase(resolved, treeResolved)) {
-        continue;
-      }
-      if (pathsEqualIgnoreCase(resolved, treeResolved)) continue;
+      if (!isStrictlyUnder(treeResolved, resolved)) continue;
       onFolder(match[1]!, resolved);
     }
   }
@@ -111,10 +113,52 @@ export const NO_LOCAL_MOD_FILES_OPEN = "No local files for this mod yet.";
 export const STOP_SERVER_BEFORE_DELETE_MOD_FILES = "Stop the server before deleting mod files.";
 
 /**
+ * Walk install → target with `lstat` and refuse any symlink/junction on the chain (#702).
+ * Skips the install root itself (operator may point a profile at a junctioned folder).
+ */
+async function assertNoReparseOnPathChain(installDir: string, targetPath: string): Promise<void> {
+  const root = resolve(installDir);
+  const target = resolve(targetPath);
+  if (!isStrictlyUnder(root, target) && !pathsEqualIgnoreCase(root, target)) {
+    throw new Error(`Refusing to delete path outside install: "${targetPath}"`);
+  }
+  if (pathsEqualIgnoreCase(root, target)) {
+    throw new Error(`Refusing to delete the install root: "${targetPath}"`);
+  }
+  const rel = relative(root, target);
+  const segments = rel.split(/[/\\]/).filter((part) => part.length > 0);
+  let current = root;
+  for (const segment of segments) {
+    current = join(current, segment);
+    let info;
+    try {
+      info = await lstat(current);
+    } catch (error) {
+      if (isNotFoundErrno(error)) {
+        throw new Error(`Mod folder disappeared before delete: "${current}"`);
+      }
+      throw error;
+    }
+    if (info.isSymbolicLink()) {
+      throw new Error(`Refusing to delete through a reparse point: "${current}"`);
+    }
+  }
+}
+
+/**
  * Re-check immediately before `rm` so a swapped junction cannot escape the tree (#702 TOCTOU).
  */
-async function assertSafeModFolderForDelete(targetPath: string): Promise<void> {
-  const treeResolved = resolve(dirname(targetPath));
+async function assertSafeModFolderForDelete(installDir: string, targetPath: string): Promise<void> {
+  const resolved = resolve(targetPath);
+  const tree = dirname(resolved);
+  const allowedTrees = asaMod83374Trees(installDir).map((path) => resolve(path));
+  if (!allowedTrees.some((allowed) => pathsEqualIgnoreCase(allowed, tree))) {
+    throw new Error(`Refusing to delete path outside mod tree: "${targetPath}"`);
+  }
+  if (!isStrictlyUnder(tree, resolved)) {
+    throw new Error(`Refusing to delete path outside mod tree: "${targetPath}"`);
+  }
+
   let info;
   try {
     info = await lstat(targetPath);
@@ -127,10 +171,8 @@ async function assertSafeModFolderForDelete(targetPath: string): Promise<void> {
   if (info.isSymbolicLink() || !info.isDirectory()) {
     throw new Error(`Refusing to delete non-directory or reparse point: "${targetPath}"`);
   }
-  const resolved = resolve(targetPath);
-  if (!isPathInside(treeResolved, resolved) || pathsEqualIgnoreCase(resolved, treeResolved)) {
-    throw new Error(`Refusing to delete path outside mod tree: "${targetPath}"`);
-  }
+
+  await assertNoReparseOnPathChain(installDir, resolved);
 }
 
 /**
@@ -149,7 +191,7 @@ export async function deleteLocalModFolders(
   const failures: string[] = [];
   for (const target of targets) {
     try {
-      await assertSafeModFolderForDelete(target);
+      await assertSafeModFolderForDelete(installDir, target);
       await rm(target, { recursive: true, force: false });
       deletedPaths.push(target);
     } catch (cause) {

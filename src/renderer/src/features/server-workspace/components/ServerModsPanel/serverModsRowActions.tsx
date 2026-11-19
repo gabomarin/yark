@@ -8,6 +8,9 @@ export const STOP_SERVER_BEFORE_DELETE_MOD_FILES = "Stop the server before delet
 
 export const NO_LOCAL_MOD_FILES_YET = "No local files for this mod yet.";
 
+/** Operator label: open ASA `{projectId}_{fileId}` folders in Explorer (#702). */
+export const OPEN_LOCAL_FOLDER_LABEL = "Open local folder";
+
 /** Operator label: deletes local ASA folders only; Start downloads again (#702). */
 export const CLEAR_DOWNLOADED_FILES_LABEL = "Clear downloaded files";
 
@@ -128,7 +131,7 @@ export function buildServerModsRowActions(input: ServerModsRowActionInput): RowA
       entries.push({
         kind: "item",
         key: "open-local-folder",
-        label: "Open local folder",
+        label: OPEN_LOCAL_FOLDER_LABEL,
         icon: <FolderOpen size={ICON} />,
         disabled: openDisabled,
         title: input.hasLocalFiles !== true ? NO_LOCAL_MOD_FILES_YET : undefined,
