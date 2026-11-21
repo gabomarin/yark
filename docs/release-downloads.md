@@ -42,10 +42,10 @@ Public Worker URL (workers.dev; no custom domain attached):
 
 `https://yark-release-downloads.gabomarin26.workers.dev/`
 
-| Consumer      | How it reads                                                                                                                                                                       |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Shields badge | `https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fyark-release-downloads.gabomarin26.workers.dev%2F&query=$.downloads&label=.exe%20downloads`                           |
-| getyark.com   | client-side `fetch` of the Worker URL on the home page (below the hero); the site is static (Astro/Pages) so a build-time fetch would freeze the number until the next site deploy |
+| Consumer      | How it reads                                                                                                                                                                                                                                                                                         |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Shields badge | `https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fyark-release-downloads.gabomarin26.workers.dev%2F&query=$.downloads&label=.exe%20downloads`                                                                                                                                             |
+| getyark.com   | client-side `fetch` of the Worker URL on the home page (below the hero); the site is static (Astro/Pages) so a build-time fetch would freeze the number until the next site deploy. Default URL is baked into `website/src/data/site.ts`; override at build time with `PUBLIC_RELEASE_DOWNLOADS_URL` |
 
 The endpoint sends `Access-Control-Allow-Origin: *` for the website fetch.
 Shields fetches server-side and needs no CORS.

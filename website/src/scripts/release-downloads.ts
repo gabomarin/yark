@@ -3,6 +3,10 @@
  * and reveal the home strip when a number is available.
  * Runbook: docs/release-downloads.md
  */
+const DOWNLOAD_COUNT_FORMAT = new Intl.NumberFormat(undefined, {
+  maximumFractionDigits: 0,
+});
+
 export function initReleaseDownloads(): void {
   const root = document.querySelector<HTMLElement>("[data-release-downloads]");
   if (!root) return;
@@ -21,9 +25,7 @@ export function initReleaseDownloads(): void {
       if (typeof downloads !== "number" || !Number.isFinite(downloads) || downloads < 0) {
         return;
       }
-      countEl.textContent = new Intl.NumberFormat(undefined, {
-        maximumFractionDigits: 0,
-      }).format(downloads);
+      countEl.textContent = DOWNLOAD_COUNT_FORMAT.format(downloads);
       root.hidden = false;
     } catch {
       // Keep the strip hidden; do not invent a number.

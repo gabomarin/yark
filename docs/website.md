@@ -9,7 +9,7 @@ Public product site and operator docs for YARK server manager.
 ## Intent
 
 - Product overview, screenshots, FAQ, changelog, and download CTA
-- Home page installer-download count (runtime fetch of the `release-downloads` Worker; see [release-downloads.md](release-downloads.md))
+- Home page installer-download count (runtime fetch of the `release-downloads` Worker; override URL with `PUBLIC_RELEASE_DOWNLOADS_URL`; see [release-downloads.md](release-downloads.md))
 - Operator documentation (Starlight) distilled from repo runbooks
 - Honest prerelease framing (not production-ready)
 - Official-download provenance and SHA-256 verification guidance

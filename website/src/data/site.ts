@@ -18,6 +18,24 @@ function windowsSetupDownloadUrl(ver: string): string {
  */
 export const siteOrigin = "https://getyark.com";
 
+/**
+ * Cloudflare Worker that sums GitHub Release `.exe` downloads only
+ * (excludes `.blockmap`, `latest.yml`, `.sha256`). Override at build time with
+ * `PUBLIC_RELEASE_DOWNLOADS_URL`. Same default as the README Shields badge.
+ * See docs/release-downloads.md.
+ */
+const DEFAULT_RELEASE_DOWNLOADS_URL =
+  "https://yark-release-downloads.gabomarin26.workers.dev/";
+
+function resolveReleaseDownloadsUrl(): string {
+  const fromEnv = import.meta.env.PUBLIC_RELEASE_DOWNLOADS_URL;
+  if (typeof fromEnv !== "string") {
+    return DEFAULT_RELEASE_DOWNLOADS_URL;
+  }
+  const trimmed = fromEnv.trim();
+  return trimmed || DEFAULT_RELEASE_DOWNLOADS_URL;
+}
+
 /** Site content config — version + download URL come from the root package.json. */
 export const site = {
   name: "YARK server manager",
@@ -45,12 +63,7 @@ export const site = {
   discordUrl: "https://discord.gg/DQ8nes63w7",
   downloadUrl: windowsSetupDownloadUrl(version),
   downloadLabel: "Download for Windows",
-  /**
-   * Cloudflare Worker that sums GitHub Release `.exe` downloads only
-   * (excludes `.blockmap`, `latest.yml`, `.sha256`). Runtime fetch for the
-   * home strip; same URL as the README Shields badge. See docs/release-downloads.md.
-   */
-  releaseDownloadsUrl: "https://yark-release-downloads.gabomarin26.workers.dev/",
+  releaseDownloadsUrl: resolveReleaseDownloadsUrl(),
   ogImagePath: "/screenshots/overview.png",
 } as const;
 
