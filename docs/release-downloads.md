@@ -38,10 +38,14 @@ throws before writing, so the endpoint keeps serving the previous count. KV
 
 ## Consumers
 
+Public Worker URL (workers.dev; no custom domain attached):
+
+`https://yark-release-downloads.gabomarin26.workers.dev/`
+
 | Consumer      | How it reads                                                                                                                                  |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Shields badge | `https://img.shields.io/badge/dynamic/json?url=<worker-url>/&query=$.downloads&label=.exe%20downloads`                                        |
-| getyark.com   | client-side `fetch(<worker-url>/)`; the site is static (Astro/Pages) so a build-time fetch would freeze the number until the next site deploy |
+| Shields badge | `https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fyark-release-downloads.gabomarin26.workers.dev%2F&query=$.downloads&label=.exe%20downloads` |
+| getyark.com   | client-side `fetch` of the Worker URL on the home page (below the hero); the site is static (Astro/Pages) so a build-time fetch would freeze the number until the next site deploy |
 
 The endpoint sends `Access-Control-Allow-Origin: *` for the website fetch.
 Shields fetches server-side and needs no CORS.
@@ -61,7 +65,7 @@ travels in the `Authorization` header, never the query string, so it does not
 land in Cloudflare invocation logs, `wrangler tail`, or browser history:
 
 ```bash
-curl -H "Authorization: Bearer $REFRESH_TOKEN" "https://<worker-url>/refresh"
+curl -H "Authorization: Bearer $REFRESH_TOKEN" "https://yark-release-downloads.gabomarin26.workers.dev/refresh"
 ```
 
 - Requires the `REFRESH_TOKEN` secret; the route is `404` when it is unset or

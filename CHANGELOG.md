@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- README and getyark.com show **installer (.exe) downloads** only (Worker-backed), instead of Shields' all-asset GitHub total that also counted blockmaps and update manifests (#632).
+
 ### Added
 
 - Server Mods can **Open local folder** and **Clear downloaded files** per row (table icons, context menu, and detail drawer). Clear only deletes that mod’s ASA folders after confirm so the next Start fetches them again; it stays off while the server is running (#702).

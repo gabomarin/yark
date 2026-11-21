@@ -45,6 +45,12 @@ export const site = {
   discordUrl: "https://discord.gg/DQ8nes63w7",
   downloadUrl: windowsSetupDownloadUrl(version),
   downloadLabel: "Download for Windows",
+  /**
+   * Cloudflare Worker that sums GitHub Release `.exe` downloads only
+   * (excludes `.blockmap`, `latest.yml`, `.sha256`). Runtime fetch for the
+   * home strip; same URL as the README Shields badge. See docs/release-downloads.md.
+   */
+  releaseDownloadsUrl: "https://yark-release-downloads.gabomarin26.workers.dev/",
   ogImagePath: "/screenshots/overview.png",
 } as const;
 

@@ -17,7 +17,7 @@
     <img src="https://img.shields.io/github/v/release/gabomarin/yark?include_prereleases&label=release" alt="Latest release">
   </a>
   <a href="https://github.com/gabomarin/yark/releases">
-    <img src="https://img.shields.io/github/downloads/gabomarin/yark/total" alt="Cumulative downloads">
+    <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fyark-release-downloads.gabomarin26.workers.dev%2F&query=%24.downloads&label=.exe%20downloads&color=brightgreen" alt="Installer downloads">
   </a>
   <a href="https://discord.gg/DQ8nes63w7">
     <img src="https://img.shields.io/badge/Discord-join_chat-5865F2?logo=discord&logoColor=white" alt="Join the YARK Discord">

@@ -52,10 +52,16 @@ unauthenticated 60 req/h limit becomes a problem (Worker IPs are shared).
 
 Local dev: `npm run dev`, then `GET http://localhost:8787/`.
 
+## Public URL
+
+```
+https://yark-release-downloads.gabomarin26.workers.dev/
+```
+
 ## Badge
 
 ```
-https://img.shields.io/badge/dynamic/json?url=<worker-url>/&query=$.downloads&label=.exe%20downloads&color=brightgreen
+https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fyark-release-downloads.gabomarin26.workers.dev%2F&query=$.downloads&label=.exe%20downloads&color=brightgreen
 ```
 
 Shields fetches server-side, so no CORS is needed for the badge. getyark.com
