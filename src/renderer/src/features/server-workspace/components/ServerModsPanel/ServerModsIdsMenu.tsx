@@ -9,16 +9,19 @@ import { formatModIdsCsv, selectModIdsForCopy, type ModIdCopyVariant } from "./s
 interface Props {
   configuredIds: string[];
   disabledIds: ReadonlySet<string>;
+  /** Inventory row selection (#635); drives Copy selected. */
+  selectedIds?: readonly string[];
   disabled: boolean;
 }
 
 async function copyVariant(
   configuredIds: string[],
   disabledIds: ReadonlySet<string>,
+  selectedIds: ReadonlySet<string>,
   variant: ModIdCopyVariant,
   successMessage: string,
 ): Promise<void> {
-  const ids = selectModIdsForCopy(configuredIds, disabledIds, variant);
+  const ids = selectModIdsForCopy(configuredIds, disabledIds, variant, selectedIds);
   if (ids.length === 0) {
     showOperatorError("No Project IDs to copy for that list", "Nothing to copy");
     return;
@@ -32,13 +35,15 @@ async function copyVariant(
 }
 
 /**
- * Header menu: copy All / Enabled / Disabled ID lists (#634).
+ * Header menu: copy All / Enabled / Disabled / Selected ID lists (#634, #635).
  * Paste lists into Add by ID — same apply path, no separate Import surface.
  */
 export function ServerModsIdsMenu(props: Props): ReactElement {
   const density = useUiDensity();
   const size = density === "compact" ? "xs" : "sm";
   const hasMods = props.configuredIds.length > 0;
+  const selectedSet = new Set(props.selectedIds ?? []);
+  const selectedCount = selectModIdsForCopy(props.configuredIds, props.disabledIds, "selected", selectedSet).length;
 
   return (
     <Menu position="bottom-end" withinPortal>
@@ -58,7 +63,9 @@ export function ServerModsIdsMenu(props: Props): ReactElement {
         <Menu.Item
           disabled={!hasMods}
           leftSection={<Copy size={14} />}
-          onClick={() => void copyVariant(props.configuredIds, props.disabledIds, "all", "All Project IDs copied")}
+          onClick={() =>
+            void copyVariant(props.configuredIds, props.disabledIds, selectedSet, "all", "All Project IDs copied")
+          }
         >
           Copy all
         </Menu.Item>
@@ -66,7 +73,13 @@ export function ServerModsIdsMenu(props: Props): ReactElement {
           disabled={selectModIdsForCopy(props.configuredIds, props.disabledIds, "enabled").length === 0}
           leftSection={<Copy size={14} />}
           onClick={() =>
-            void copyVariant(props.configuredIds, props.disabledIds, "enabled", "Enabled Project IDs copied (-mods=)")
+            void copyVariant(
+              props.configuredIds,
+              props.disabledIds,
+              selectedSet,
+              "enabled",
+              "Enabled Project IDs copied (-mods=)",
+            )
           }
         >
           Copy enabled
@@ -75,10 +88,31 @@ export function ServerModsIdsMenu(props: Props): ReactElement {
           disabled={selectModIdsForCopy(props.configuredIds, props.disabledIds, "disabled").length === 0}
           leftSection={<Copy size={14} />}
           onClick={() =>
-            void copyVariant(props.configuredIds, props.disabledIds, "disabled", "Disabled Project IDs copied")
+            void copyVariant(
+              props.configuredIds,
+              props.disabledIds,
+              selectedSet,
+              "disabled",
+              "Disabled Project IDs copied",
+            )
           }
         >
           Copy disabled
+        </Menu.Item>
+        <Menu.Item
+          disabled={selectedCount === 0}
+          leftSection={<Copy size={14} />}
+          onClick={() =>
+            void copyVariant(
+              props.configuredIds,
+              props.disabledIds,
+              selectedSet,
+              "selected",
+              "Selected Project IDs copied",
+            )
+          }
+        >
+          Copy selected
         </Menu.Item>
       </Menu.Dropdown>
     </Menu>

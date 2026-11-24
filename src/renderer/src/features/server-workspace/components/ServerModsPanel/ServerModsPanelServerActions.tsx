@@ -26,6 +26,7 @@ export function ServerModsPanelServerActions(props: Props): ReactElement {
       disabledIds={props.disabledIds}
       disabledCount={props.disabledCount}
       listBusy={props.listBusy}
+      selectedIds={props.selectedIds}
       onEnableAll={props.onEnableAll}
       onDisableAll={props.onDisableAll}
       onRemoveAllDisabled={props.onRemoveAllDisabled}

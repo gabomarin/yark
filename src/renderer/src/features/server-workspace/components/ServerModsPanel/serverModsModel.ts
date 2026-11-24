@@ -124,17 +124,20 @@ export function reorderModIds(ids: string[], fromIndex: number, toIndex: number)
   return next;
 }
 
-/** Copy-IDs menu variants (#634): All / Enabled (`-mods=`) / Disabled. */
-export type ModIdCopyVariant = "all" | "enabled" | "disabled";
+/** Copy-IDs menu variants (#634 / #635): All / Enabled (`-mods=`) / Disabled / Selected. */
+export type ModIdCopyVariant = "all" | "enabled" | "disabled" | "selected";
 
 export function selectModIdsForCopy(
   configuredIds: string[],
   disabledIds: ReadonlySet<string>,
   variant: ModIdCopyVariant,
+  selectedIds: ReadonlySet<string> = new Set(),
 ): string[] {
   if (variant === "all") return [...configuredIds];
   if (variant === "enabled") return configuredIds.filter((id) => !disabledIds.has(id));
-  return configuredIds.filter((id) => disabledIds.has(id));
+  if (variant === "disabled") return configuredIds.filter((id) => disabledIds.has(id));
+  // Selected: load-order slice of the current inventory selection (#635).
+  return configuredIds.filter((id) => selectedIds.has(id));
 }
 
 export function formatModIdsCsv(ids: string[]): string {

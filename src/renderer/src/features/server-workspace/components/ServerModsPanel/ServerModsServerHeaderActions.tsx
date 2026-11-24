@@ -9,6 +9,8 @@ interface Props {
   disabledIds: ReadonlySet<string>;
   disabledCount: number;
   listBusy: boolean;
+  /** Inventory selection for Copy selected in the IDs menu (#635). */
+  selectedIds?: readonly string[];
   onEnableAll: () => void;
   onDisableAll: () => void;
   onRemoveAllDisabled: () => void;
@@ -29,6 +31,7 @@ export function ServerModsServerHeaderActions(props: Props): ReactElement {
       <ServerModsIdsMenu
         configuredIds={props.configuredIds}
         disabledIds={props.disabledIds}
+        selectedIds={props.selectedIds}
         disabled={props.listBusy}
       />
       {props.selectionActions !== undefined ? (

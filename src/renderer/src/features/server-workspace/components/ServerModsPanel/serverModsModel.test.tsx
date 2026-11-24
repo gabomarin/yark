@@ -173,6 +173,8 @@ describe("selectModIdsForCopy / filterServerModRows (#634, #636)", () => {
     expect(selectModIdsForCopy(configured, disabled, "all")).toEqual(["10", "20", "30"]);
     expect(selectModIdsForCopy(configured, disabled, "enabled")).toEqual(["10", "30"]);
     expect(selectModIdsForCopy(configured, disabled, "disabled")).toEqual(["20"]);
+    expect(selectModIdsForCopy(configured, disabled, "selected", new Set(["30", "10"]))).toEqual(["10", "30"]);
+    expect(selectModIdsForCopy(configured, disabled, "selected", new Set())).toEqual([]);
     expect(formatModIdsCsv(["10", "30"])).toBe("10,30");
   });
 

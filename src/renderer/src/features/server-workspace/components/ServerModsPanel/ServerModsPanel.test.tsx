@@ -957,6 +957,40 @@ describe("ServerModsPanel", () => {
     expect(await screen.findByRole("menuitem", { name: /Copy all/i })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: /Copy enabled/i })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: /Copy disabled/i })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /Copy selected/i })).toBeDisabled();
     expect(screen.queryByRole("menuitem", { name: /Import IDs/i })).not.toBeInTheDocument();
+  });
+
+  it("copies selected Project IDs in load order from the IDs menu (#635)", async () => {
+    installApi();
+    const user = userEvent.setup();
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+    render(
+      <AppProviders>
+        <ServerModsPanel
+          server={{
+            ...server,
+            mods: ["947033", "962796"],
+            disabledMods: ["962796"],
+            modMetadataCache: { "947033": awesomeDetail, "962796": mapModDetail },
+          }}
+          onServerUpdated={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("checkbox", { name: "Select mod Svartalfheim Premium" }));
+    await user.click(screen.getByRole("checkbox", { name: "Select mod Awesome Spyglass!" }));
+    await user.click(await screen.findByRole("button", { name: "IDs" }));
+    const copySelected = await screen.findByRole("menuitem", { name: /Copy selected/i });
+    expect(copySelected).toBeEnabled();
+    await user.click(copySelected);
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalledWith("947033,962796");
+    });
   });
 });
