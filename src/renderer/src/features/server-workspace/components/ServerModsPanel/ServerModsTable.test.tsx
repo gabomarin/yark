@@ -75,6 +75,33 @@ describe("ServerModsTable", () => {
     expect(toggle).toBeChecked();
   });
 
+  it("exposes selection checkboxes and reports selected rows (#635)", async () => {
+    const user = userEvent.setup();
+    const onSelectedRecordsChange = vi.fn();
+    render(
+      <AppProviders>
+        <ServerModsTable
+          rows={rows}
+          mode="server"
+          busyKey={null}
+          onInspect={vi.fn()}
+          onAdd={vi.fn()}
+          onToggle={vi.fn()}
+          onRemove={vi.fn()}
+          onOpenExternal={vi.fn()}
+          onReorder={vi.fn()}
+          selectedRecords={[]}
+          onSelectedRecordsChange={onSelectedRecordsChange}
+        />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("checkbox", { name: "Select mod Alpha Mod" }));
+    expect(onSelectedRecordsChange).toHaveBeenCalled();
+    const next = onSelectedRecordsChange.mock.calls.at(-1)?.[0] as ModRow[];
+    expect(next.map((row) => row.id)).toEqual(["1"]);
+  });
+
   it("preserves the switch thumb when its controlled state changes", () => {
     const props = {
       mode: "server" as const,

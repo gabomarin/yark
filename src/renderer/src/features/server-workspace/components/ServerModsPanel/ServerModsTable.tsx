@@ -69,6 +69,11 @@ interface Props {
   onSortStatusChange?: (status: DataTableSortStatus<ModRow>) => void;
   /** Discover: rows are already ordered by CurseForge — do not re-sort the page. */
   remoteSorted?: boolean;
+  /** Server inventory multi-select (#635). Omit on Discover. */
+  selectedRecords?: ModRow[];
+  onSelectedRecordsChange?: (rows: ModRow[]) => void;
+  /** When true, selection checkboxes stay visible but cannot change (bulk write). */
+  selectionDisabled?: boolean;
 }
 
 function toSortStatus(status: DataTableSortStatus<ModRow>): ModRowSortStatus | null {
@@ -104,8 +109,10 @@ export function ServerModsTable(props: Props): ReactElement {
   const viewSorted = String(sortStatus.columnAccessor) !== "loadIndex";
   const filterActive = props.filterActive === true;
   const useDnD = props.mode === "server" && props.onReorder !== undefined;
-  // Block drag while sorted, filtered, or any row mutation / reorder persist is in flight.
+  // Block drag while sorted, filtered, bulk/reorder persist, or selection write is in flight.
   const dragEnabled = useDnD && !viewSorted && !filterActive && props.busyKey === null;
+  const selectionEnabled = props.mode === "server" && props.onSelectedRecordsChange !== undefined;
+  const selectionDisabled = props.selectionDisabled === true;
 
   const records = useMemo(() => {
     if (props.remoteSorted) return props.rows;
@@ -249,6 +256,26 @@ export function ServerModsTable(props: Props): ReactElement {
       highlightOnHover={false}
       onRowClick={onRowClick}
       onRowContextMenu={onRowContextMenu}
+      selectedRecords={selectionEnabled ? (props.selectedRecords ?? []) : undefined}
+      onSelectedRecordsChange={selectionEnabled ? props.onSelectedRecordsChange : undefined}
+      isRecordSelectable={selectionEnabled ? () => !selectionDisabled : undefined}
+      selectionCheckboxProps={selectionEnabled ? { size: "xs" } : undefined}
+      getRecordSelectionCheckboxProps={
+        selectionEnabled
+          ? (record) => ({
+              "aria-label": `Select mod ${record.name}`,
+              disabled: selectionDisabled,
+            })
+          : undefined
+      }
+      allRecordsSelectionCheckboxProps={
+        selectionEnabled
+          ? {
+              "aria-label": "Select all mods",
+              disabled: selectionDisabled || records.length === 0,
+            }
+          : undefined
+      }
       tableWrapper={useDnD ? ServerModsTableWrapper : undefined}
       rowFactory={
         useDnD

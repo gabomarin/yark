@@ -73,6 +73,12 @@ Workspace → **Mods** has two views (`SegmentedControl`):
    `servers:update-patch`; the buttons are disabled while a write is in flight
    or the list is empty. Enabling several Maps mods shows **one** aggregated map
    toast, not one per row (#634, #637).
+   While one or more inventory rows are checked, those all-actions are replaced
+   by **N selected** plus **Enable selected** / **Disable selected** /
+   **Remove selected** (confirm) / **Clear selection** — still one patch per
+   action, drag stays off while the write runs, and selection clears on view
+   switch, server switch, successful remove, or when a refresh drops those IDs
+   (#635).
 3. **Toolbar + inventory filters**. With mods on the list, **Add** (compact) and
    **Find** / **Status** share one row — Add left, filters right. Empty inventory
    keeps a prominent Add with the full paste help; compact Add exposes that help

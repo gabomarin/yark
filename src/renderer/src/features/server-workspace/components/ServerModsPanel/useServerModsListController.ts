@@ -82,6 +82,7 @@ export function useServerModsListController(input: Input) {
     metadata: input.metadata,
     cacheRef: input.cacheRef,
     setBusyKey: input.setBusyKey,
+    setConfiguredIds: input.setConfiguredIds,
     setDisabledIds: input.setDisabledIds,
     setPassiveIds: input.setPassiveIds,
     setError: input.setError,

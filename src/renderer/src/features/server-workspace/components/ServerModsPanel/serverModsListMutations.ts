@@ -12,6 +12,7 @@ interface Input {
   metadata: Map<string, ModMetadata>;
   cacheRef: MutableRefObject<Record<string, ModMetadata>>;
   setBusyKey: Dispatch<SetStateAction<string | null>>;
+  setConfiguredIds?: Dispatch<SetStateAction<string[]>>;
   setDisabledIds: Dispatch<SetStateAction<string[]>>;
   setPassiveIds?: Dispatch<SetStateAction<string[]>>;
   setError: Dispatch<SetStateAction<string | null>>;
@@ -245,5 +246,118 @@ export function createServerModsListMutations(input: Input) {
     );
   };
 
-  return { add, toggle, remove, reorder, enableAll, disableAll, removeAllDisabled, setPassive };
+  /** Selection bulk (#635): enable chosen IDs in one patch; one aggregated Maps-mod toast. */
+  const enableSelected = async (ids: readonly string[]) => {
+    const configuredSet = new Set(input.configuredIdsRef.current);
+    const selectedSet = new Set(ids.filter((id) => configuredSet.has(id)));
+    if (selectedSet.size === 0) return;
+    const previousDisabled = input.disabledIdsRef.current;
+    const selectedDisabled = previousDisabled.filter((id) => selectedSet.has(id));
+    if (selectedDisabled.length === 0) return;
+    const disableSet = new Set(selectedDisabled);
+    const nextDisabled = previousDisabled.filter((id) => !disableSet.has(id));
+    input.disabledIdsRef.current = nextDisabled;
+    input.setDisabledIds(nextDisabled);
+    let persisted = false;
+    await runListWrite(MODS_BULK_BUSY_KEY, "Could not enable selected mods", async () => {
+      await input.persist(input.configuredIdsRef.current, nextDisabled, input.cacheRef.current);
+      persisted = true;
+      notifyMapModsEnabled(selectedDisabled, input.cacheRef.current);
+    });
+    if (!persisted && sameIdSet(input.disabledIdsRef.current, nextDisabled)) {
+      input.disabledIdsRef.current = previousDisabled;
+      input.setDisabledIds(previousDisabled);
+    }
+  };
+
+  /** Selection bulk (#635): disable chosen IDs in one patch; drops passive marks on those rows. */
+  const disableSelected = async (ids: readonly string[]) => {
+    const configuredIds = input.configuredIdsRef.current;
+    const configuredSet = new Set(configuredIds);
+    const selectedConfigured = ids.filter((id) => configuredSet.has(id));
+    if (selectedConfigured.length === 0) return;
+    const previousDisabled = input.disabledIdsRef.current;
+    const previousPassive = readPassive();
+    const nextDisabled = [...new Set([...previousDisabled, ...selectedConfigured])];
+    // Union size unchanged ⇒ every selected ID was already disabled.
+    if (nextDisabled.length === previousDisabled.length) return;
+    const selectedSet = new Set(selectedConfigured);
+    const nextPassive = previousPassive.filter((id) => !selectedSet.has(id));
+    input.disabledIdsRef.current = nextDisabled;
+    input.setDisabledIds(nextDisabled);
+    writePassive(nextPassive);
+    let persisted = false;
+    await runListWrite(MODS_BULK_BUSY_KEY, "Could not disable selected mods", async () => {
+      await input.persist(configuredIds, nextDisabled, input.cacheRef.current, nextPassive);
+      persisted = true;
+    });
+    if (
+      !persisted &&
+      sameIdSet(input.disabledIdsRef.current, nextDisabled) &&
+      sameIdSet(readPassive(), nextPassive)
+    ) {
+      input.disabledIdsRef.current = previousDisabled;
+      input.setDisabledIds(previousDisabled);
+      writePassive(previousPassive);
+    }
+  };
+
+  /** Selection bulk (#635): remove chosen IDs from mods / disabled / passive / cache. One patch. */
+  const removeSelected = async (ids: readonly string[]): Promise<boolean> => {
+    const configuredIds = input.configuredIdsRef.current;
+    const configuredSet = new Set(configuredIds);
+    const selectedConfigured = ids.filter((id) => configuredSet.has(id));
+    if (selectedConfigured.length === 0) return true;
+    const selectedSet = new Set(selectedConfigured);
+    const previousDisabled = input.disabledIdsRef.current;
+    const previousPassive = readPassive();
+    const previousCache = input.cacheRef.current;
+    const nextIds = configuredIds.filter((id) => !selectedSet.has(id));
+    const nextDisabled = previousDisabled.filter((id) => !selectedSet.has(id));
+    const nextPassive = previousPassive.filter((id) => !selectedSet.has(id));
+    const nextCache = { ...previousCache };
+    for (const id of selectedConfigured) {
+      delete nextCache[id];
+    }
+    // Optimistic list update so header counts and rows move with the confirm action.
+    input.configuredIdsRef.current = nextIds;
+    input.setConfiguredIds?.(nextIds);
+    input.disabledIdsRef.current = nextDisabled;
+    input.setDisabledIds(nextDisabled);
+    writePassive(nextPassive);
+    input.cacheRef.current = nextCache;
+    let persisted = false;
+    await runListWrite(MODS_BULK_BUSY_KEY, "Could not remove selected mods", async () => {
+      await input.persist(nextIds, nextDisabled, nextCache, nextPassive);
+      persisted = true;
+    });
+    if (
+      !persisted &&
+      sameIdSet(input.configuredIdsRef.current, nextIds) &&
+      sameIdSet(input.disabledIdsRef.current, nextDisabled) &&
+      sameIdSet(readPassive(), nextPassive)
+    ) {
+      input.configuredIdsRef.current = configuredIds;
+      input.setConfiguredIds?.(configuredIds);
+      input.disabledIdsRef.current = previousDisabled;
+      input.setDisabledIds(previousDisabled);
+      writePassive(previousPassive);
+      input.cacheRef.current = previousCache;
+    }
+    return persisted;
+  };
+
+  return {
+    add,
+    toggle,
+    remove,
+    reorder,
+    enableAll,
+    disableAll,
+    removeAllDisabled,
+    enableSelected,
+    disableSelected,
+    removeSelected,
+    setPassive,
+  };
 }

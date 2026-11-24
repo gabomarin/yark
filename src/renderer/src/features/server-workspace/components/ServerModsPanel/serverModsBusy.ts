@@ -1,7 +1,7 @@
 /** Busy key while load-order persist is in flight (`createServerModsListMutations`). */
 export const MODS_REORDER_BUSY_KEY = "reorder";
 
-/** Busy key while a bulk enable/disable/remove-all write is in flight. */
+/** Busy key while a bulk enable/disable/remove (all or selected) write is in flight. */
 export const MODS_BULK_BUSY_KEY = "bulk";
 
 /** True for list-wide writes that disable drag and every row action. */

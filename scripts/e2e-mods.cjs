@@ -242,6 +242,19 @@ async function run() {
       );
     }
 
+    // Row selection bulk (#635): select → disable selected → enable selected → clear.
+    const selectMod = page.getByRole("checkbox", { name: /^Select mod /i }).first();
+    await selectMod.waitFor({ state: "visible", timeout: 10000 });
+    await selectMod.check();
+    await page.getByText(/^\d+ selected$/).waitFor({ state: "visible", timeout: 5000 });
+    await page.getByRole("button", { name: "Disable selected", exact: true }).click();
+    await waitForModSwitchChecked(page, "Enable", false);
+    await page.getByRole("button", { name: "Enable selected", exact: true }).click();
+    await waitForModSwitchChecked(page, "Disable", true);
+    await page.getByRole("button", { name: "Clear selection", exact: true }).click();
+    await page.getByRole("button", { name: "Enable all", exact: true }).waitFor({ state: "visible", timeout: 5000 });
+    console.log("E2E_MODS_SELECTION_BULK_OK");
+
     // Header quick actions (#637): one patch each, from the current switch state.
     const hasDisabledMod = (await page.getByRole("switch", { name: /^Enable /i }).count()) > 0;
     if (hasDisabledMod) {

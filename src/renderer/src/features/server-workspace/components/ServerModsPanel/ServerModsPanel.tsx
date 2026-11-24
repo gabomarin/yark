@@ -9,23 +9,21 @@ import { copyModCurseForgeUrl, copyModProjectId } from "./copyModRowClipboard";
 import { ServerModDetailDrawer } from "./ServerModDetailDrawer";
 import { ServerModsDiscoverSection } from "./ServerModsDiscoverSection";
 import { ServerModsHeader } from "./ServerModsHeader";
-import { ServerModsServerHeaderActions } from "./ServerModsServerHeaderActions";
+import { ServerModsPanelServerActions } from "./ServerModsPanelServerActions";
 import { ServerModsServerSection } from "./ServerModsServerSection";
 import { ServerModsUnverifiedAddAlert } from "./ServerModsUnverifiedAddAlert";
+import { useServerModsInventorySelection } from "./useServerModsInventorySelection";
 import {
   buildServerRows,
   isUnresolvedProjectStub,
   mergeConfirmedMetadataFetch,
-  mergeMetadata,
-  metadataMap,
-  modsMetadataSyncKey,
-  sameIdList,
   type ModRow,
 } from "./serverModsModel";
 import { inspectServerMod } from "./serverModsInspect";
 import { useServerModsAddFlow } from "./useServerModsAddFlow";
 import { useServerModsListController } from "./useServerModsListController";
 import { useServerModsLocalFiles } from "./useServerModsLocalFiles";
+import { useServerModsProfileState } from "./useServerModsProfileState";
 import { isModsListBusy } from "./serverModsBusy";
 import classes from "./ServerModsPanel.module.css";
 
@@ -38,23 +36,22 @@ interface Props {
 
 export function ServerModsPanel(props: Props): ReactElement {
   const [view, setView] = useState<"server" | "discover">("server");
-  const [configuredIds, setConfiguredIds] = useState(props.server.mods);
-  const [disabledIds, setDisabledIds] = useState(props.server.disabledMods ?? []);
-  const [passiveIds, setPassiveIds] = useState(props.server.passiveMods ?? []);
-  const configuredIdsRef = useRef(configuredIds);
-  const disabledIdsRef = useRef(disabledIds);
-  const passiveIdsRef = useRef(passiveIds);
-  const serverRef = useRef(props.server);
-  useEffect(() => {
-    configuredIdsRef.current = configuredIds;
-    disabledIdsRef.current = disabledIds;
-    passiveIdsRef.current = passiveIds;
-    serverRef.current = props.server;
-  });
-  const cacheRef = useRef(props.server.modMetadataCache ?? {});
-  /** In-flight inspect target (`id` or `slug`); cleared on close / newer inspect. */
+  const {
+    configuredIds,
+    setConfiguredIds,
+    disabledIds,
+    setDisabledIds,
+    passiveIds,
+    setPassiveIds,
+    configuredIdsRef,
+    disabledIdsRef,
+    passiveIdsRef,
+    serverRef,
+    cacheRef,
+    metadata,
+    setMetadata,
+  } = useServerModsProfileState(props.server);
   const inspectTargetRef = useRef<string | null>(null);
-  const [metadata, setMetadata] = useState<Map<string, ModMetadata>>(() => metadataMap(props.server.modMetadataCache));
   const [url, setUrl] = useState("");
   const [catalog, setCatalog] = useState<ModSearchPage | null>(null);
   const [busyKey, setBusyKey] = useState<string | null>(null);
@@ -63,38 +60,17 @@ export function ServerModsPanel(props: Props): ReactElement {
   const [warning, setWarning] = useState<string | null>(null);
 
   useEffect(() => {
-    const nextCache = props.server.modMetadataCache ?? {};
-    setConfiguredIds(props.server.mods);
-    setDisabledIds(props.server.disabledMods ?? []);
-    setPassiveIds(props.server.passiveMods ?? []);
-    cacheRef.current = nextCache;
-    setMetadata(metadataMap(nextCache));
     setView("server");
     setCatalog(null);
     setDetail(null);
     inspectTargetRef.current = null;
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset on server id change only; mods/disabledMods/cache are reset below by content-key effect
   }, [props.server.id]);
 
-  const modsKey = props.server.mods.join("\0");
-  const disabledModsKey = (props.server.disabledMods ?? []).join("\0");
-  const passiveModsKey = (props.server.passiveMods ?? []).join("\0");
-  const metadataCacheKey = modsMetadataSyncKey(props.server.modMetadataCache);
-
-  useEffect(() => {
-    const nextMods = props.server.mods;
-    const nextDisabled = props.server.disabledMods ?? [];
-    const nextPassive = props.server.passiveMods ?? [];
-    const nextCache = props.server.modMetadataCache ?? {};
-    setConfiguredIds((previous) => (sameIdList(previous, nextMods) ? previous : nextMods));
-    setDisabledIds((previous) => (sameIdList(previous, nextDisabled) ? previous : nextDisabled));
-    setPassiveIds((previous) => (sameIdList(previous, nextPassive) ? previous : nextPassive));
-    cacheRef.current = nextCache;
-    setMetadata((previous) => mergeMetadata(previous, nextCache));
-    // Content keys — App polls listServers with new object identities even when
-    // the profile is unchanged; reference deps would reset mid-drag / open menus.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional content keys
-  }, [modsKey, disabledModsKey, passiveModsKey, metadataCacheKey]);
+  const { selectedIds, setSelectedIds, clearSelection } = useServerModsInventorySelection({
+    serverId: props.server.id,
+    view,
+    profileModIds: props.server.mods,
+  });
 
   useEffect(() => {
     const missingIds = configuredIds.filter((id) => !metadata.has(id));
@@ -103,7 +79,6 @@ export function ServerModsPanel(props: Props): ReactElement {
     void window.api.getModsMetadata(missingIds).then((result) => {
       if (!alive) return;
       if (!result.ok) {
-        // Soft-fail without seeding No page stubs — transient errors stay pending.
         if (isMetadataServiceNotConfiguredMessage(result.error)) {
           setError(null);
           setWarning(result.error);
@@ -129,23 +104,35 @@ export function ServerModsPanel(props: Props): ReactElement {
     [configuredIds, disabledSet, metadata, passiveSet],
   );
 
-  const { persist, add, toggle, remove, reorder, enableAll, disableAll, removeAllDisabled, setPassive } =
-    useServerModsListController({
-      serverRef,
-      configuredIdsRef,
-      disabledIdsRef,
-      passiveIdsRef,
-      cacheRef,
-      metadata,
-      onServerUpdated: props.onServerUpdated,
-      setConfiguredIds,
-      setDisabledIds,
-      setPassiveIds,
-      setBusyKey,
-      setError,
-      setWarning,
-      setMetadata,
-    });
+  const {
+    persist,
+    add,
+    toggle,
+    remove,
+    reorder,
+    enableAll,
+    disableAll,
+    removeAllDisabled,
+    enableSelected,
+    disableSelected,
+    removeSelected,
+    setPassive,
+  } = useServerModsListController({
+    serverRef,
+    configuredIdsRef,
+    disabledIdsRef,
+    passiveIdsRef,
+    cacheRef,
+    metadata,
+    onServerUpdated: props.onServerUpdated,
+    setConfiguredIds,
+    setDisabledIds,
+    setPassiveIds,
+    setBusyKey,
+    setError,
+    setWarning,
+    setMetadata,
+  });
 
   const {
     unverifiedProjectIds,
@@ -228,14 +215,23 @@ export function ServerModsPanel(props: Props): ReactElement {
   const listBusy = busyKey !== null;
   const headerActions =
     view === "server" ? (
-      <ServerModsServerHeaderActions
+      <ServerModsPanelServerActions
         configuredIds={configuredIds}
         disabledIds={disabledSet}
         disabledCount={disabledCount}
         listBusy={listBusy}
+        selectedIds={selectedIds}
         onEnableAll={() => void enableAll()}
         onDisableAll={() => void disableAll()}
         onRemoveAllDisabled={() => void removeAllDisabled()}
+        onEnableSelected={(ids) => void enableSelected(ids)}
+        onDisableSelected={(ids) => void disableSelected(ids)}
+        onRemoveSelected={(ids) => {
+          void removeSelected(ids).then((ok) => {
+            if (ok) clearSelection();
+          });
+        }}
+        onClearSelection={clearSelection}
       />
     ) : undefined;
 
@@ -309,6 +305,8 @@ export function ServerModsPanel(props: Props): ReactElement {
                 void openLocalFolder(row.id);
               }}
               onClearDownloadedFiles={(row) => requestClearDownloadedFiles(row)}
+              selectedIds={selectedIds}
+              onSelectedIdsChange={setSelectedIds}
             />
           ) : (
             <ServerModsDiscoverSection

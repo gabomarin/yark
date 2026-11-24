@@ -54,3 +54,20 @@ export function confirmRemoveDisabledMods(count: number, onConfirm: () => void |
     },
   });
 }
+
+/** Confirm before removing the current inventory selection (#635). */
+export function confirmRemoveSelectedMods(count: number, onConfirm: () => void | Promise<void>): void {
+  openDangerConfirmModal({
+    title: "Remove selected mods?",
+    children: dangerConfirmBody(
+      <>
+        Remove <strong>{count}</strong> selected {count === 1 ? "mod" : "mods"} from this server and discard their
+        cached metadata?
+      </>,
+    ),
+    confirmLabel: "Remove selected",
+    onConfirm: () => {
+      void onConfirm();
+    },
+  });
+}

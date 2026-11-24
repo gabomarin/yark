@@ -36,12 +36,20 @@ interface Props {
   localFilesById: Record<string, boolean>;
   onOpenLocalFolder: (row: ModRow) => void;
   onClearDownloadedFiles: (row: ModRow) => void;
+  /** Inventory multi-select (#635). */
+  selectedIds: string[];
+  onSelectedIdsChange: (ids: string[]) => void;
 }
 
 export function ServerModsServerSection(props: Props): ReactElement {
   const [inventoryFilter, setInventoryFilter] = useState<ServerModsInventoryFilter>(EMPTY_SERVER_MODS_INVENTORY_FILTER);
   const filterActive = isServerModsInventoryFilterActive(inventoryFilter);
   const visibleRows = useMemo(() => filterServerModRows(props.rows, inventoryFilter), [props.rows, inventoryFilter]);
+  const selectedIdSet = useMemo(() => new Set(props.selectedIds), [props.selectedIds]);
+  const selectedRecords = useMemo(
+    () => visibleRows.filter((row) => row.id !== null && selectedIdSet.has(row.id)),
+    [visibleRows, selectedIdSet],
+  );
   const hasMods = props.rows.length > 0;
 
   return (
@@ -121,6 +129,17 @@ export function ServerModsServerSection(props: Props): ReactElement {
             localFilesById={props.localFilesById}
             onOpenLocalFolder={props.onOpenLocalFolder}
             onClearDownloadedFiles={props.onClearDownloadedFiles}
+            selectedRecords={selectedRecords}
+            selectionDisabled={props.busyKey !== null}
+            onSelectedRecordsChange={(rows) => {
+              const visibleIdSet = new Set(
+                visibleRows.map((row) => row.id).filter((id): id is string => id !== null),
+              );
+              // Keep IDs that are selected but hidden by the inventory filter.
+              const hiddenSelected = props.selectedIds.filter((id) => !visibleIdSet.has(id));
+              const nextVisible = rows.map((row) => row.id).filter((id): id is string => id !== null);
+              props.onSelectedIdsChange([...hiddenSelected, ...nextVisible]);
+            }}
           />
         )}
       </div>

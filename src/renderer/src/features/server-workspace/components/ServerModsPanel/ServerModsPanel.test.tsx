@@ -778,6 +778,72 @@ describe("ServerModsPanel", () => {
     expect(await screen.findByText("Loading…")).toBeInTheDocument();
   });
 
+  it("writes one patch per selected enable/disable/remove (#635)", async () => {
+    const api = installApi();
+    const user = userEvent.setup();
+    render(
+      <AppProviders>
+        <ServerModsPanel
+          server={{
+            ...server,
+            mods: ["947033", "962796"],
+            disabledMods: ["947033", "962796"],
+            modMetadataCache: { "947033": awesomeDetail, "962796": mapModDetail },
+          }}
+          onServerUpdated={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(await screen.findByText("2 disabled")).toBeInTheDocument();
+    await user.click(screen.getByRole("checkbox", { name: "Select mod Awesome Spyglass!" }));
+    expect(await screen.findByText("1 selected")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Enable selected" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Enable all" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Enable selected" }));
+    await waitFor(() => {
+      expect(api.updateServerPatch).toHaveBeenCalledTimes(1);
+      expect(api.updateServerPatch).toHaveBeenLastCalledWith(
+        "server-1",
+        expect.objectContaining({
+          group: "mods",
+          mods: ["947033", "962796"],
+          disabledMods: ["962796"],
+        }),
+      );
+    });
+
+    await user.click(screen.getByRole("button", { name: "Disable selected" }));
+    await waitFor(() => {
+      expect(api.updateServerPatch).toHaveBeenCalledTimes(2);
+      expect(api.updateServerPatch).toHaveBeenLastCalledWith(
+        "server-1",
+        expect.objectContaining({
+          group: "mods",
+          mods: ["947033", "962796"],
+          disabledMods: ["962796", "947033"],
+        }),
+      );
+    });
+
+    await user.click(screen.getByRole("button", { name: "Remove selected" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Remove selected" }));
+    await waitFor(() => {
+      expect(api.updateServerPatch).toHaveBeenCalledTimes(3);
+      expect(api.updateServerPatch).toHaveBeenLastCalledWith(
+        "server-1",
+        expect.objectContaining({
+          group: "mods",
+          mods: ["962796"],
+          disabledMods: ["962796"],
+        }),
+      );
+    });
+    expect(screen.queryByText("1 selected")).not.toBeInTheDocument();
+  });
+
   it("writes one patch per bulk enable/disable/remove-all (#637)", async () => {
     const api = installApi();
     const user = userEvent.setup();

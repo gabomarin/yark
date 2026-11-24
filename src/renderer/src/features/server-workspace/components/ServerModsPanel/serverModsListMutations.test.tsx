@@ -409,6 +409,141 @@ describe("createServerModsListMutations", () => {
 
     expect(persist).not.toHaveBeenCalled();
   });
+
+  it("enables only the selected disabled ids in one patch (#635)", async () => {
+    const persist = vi.fn(async () => undefined);
+    const setBusyKey = vi.fn();
+    const setDisabledIds = vi.fn();
+    const { enableSelected } = createServerModsListMutations({
+      configuredIdsRef: { current: ["a", "b", "c"] },
+      disabledIdsRef: { current: ["a", "b"] },
+      metadata: new Map(),
+      cacheRef: { current: {} },
+      setBusyKey,
+      setDisabledIds,
+      setError: vi.fn(),
+      setWarning: vi.fn(),
+      persist,
+      notifyMapModIfNeeded: vi.fn(),
+    });
+
+    await enableSelected(["a", "c"]);
+
+    expect(setBusyKey).toHaveBeenCalledWith(MODS_BULK_BUSY_KEY);
+    expect(setDisabledIds).toHaveBeenCalledWith(["b"]);
+    expect(persist).toHaveBeenCalledWith(["a", "b", "c"], ["b"], {});
+    expect(persist).toHaveBeenCalledTimes(1);
+  });
+
+  it("disables selected ids and clears their passive marks in one patch (#635)", async () => {
+    const persist = vi.fn(async () => undefined);
+    const passiveIdsRef = { current: ["a", "c"] };
+    const setPassiveIds = vi.fn();
+    const { disableSelected } = createServerModsListMutations({
+      configuredIdsRef: { current: ["a", "b", "c"] },
+      disabledIdsRef: { current: [] },
+      passiveIdsRef,
+      metadata: new Map(),
+      cacheRef: { current: {} },
+      setBusyKey: vi.fn(),
+      setDisabledIds: vi.fn(),
+      setPassiveIds,
+      setError: vi.fn(),
+      setWarning: vi.fn(),
+      persist,
+      notifyMapModIfNeeded: vi.fn(),
+    });
+
+    await disableSelected(["a", "b"]);
+
+    expect(setPassiveIds).toHaveBeenCalledWith(["c"]);
+    expect(persist).toHaveBeenCalledWith(["a", "b", "c"], ["a", "b"], {}, ["c"]);
+  });
+
+  it("removes selected ids from mods, disabled, passive, and cache in one patch (#635)", async () => {
+    const persist = vi.fn(async () => undefined);
+    const setConfiguredIds = vi.fn();
+    const { removeSelected } = createServerModsListMutations({
+      configuredIdsRef: { current: ["a", "b", "c"] },
+      disabledIdsRef: { current: ["b"] },
+      passiveIdsRef: { current: ["a"] },
+      metadata: new Map(),
+      cacheRef: { current: { a: { id: "a" } as ModMetadata, b: { id: "b" } as ModMetadata, c: { id: "c" } as ModMetadata } },
+      setBusyKey: vi.fn(),
+      setConfiguredIds,
+      setDisabledIds: vi.fn(),
+      setPassiveIds: vi.fn(),
+      setError: vi.fn(),
+      setWarning: vi.fn(),
+      persist,
+      notifyMapModIfNeeded: vi.fn(),
+    });
+
+    const ok = await removeSelected(["a", "b"]);
+
+    expect(ok).toBe(true);
+    expect(setConfiguredIds).toHaveBeenCalledWith(["c"]);
+    expect(persist).toHaveBeenCalledWith(["c"], [], { c: { id: "c" } }, []);
+  });
+
+  it("shows one aggregated map toast when enabling selected map mods (#635)", async () => {
+    const persist = vi.fn(async () => undefined);
+    const notifySpy = vi.spyOn(notifications, "show").mockImplementation(() => "id");
+    const { enableSelected } = createServerModsListMutations({
+      configuredIdsRef: { current: ["a", "b", "c"] },
+      disabledIdsRef: { current: ["a", "b"] },
+      metadata: new Map(),
+      cacheRef: {
+        current: {
+          a: { id: "a", name: "Map One", categories: ["Maps"] } as ModMetadata,
+          b: { id: "b", name: "Map Two", categories: ["Maps"] } as ModMetadata,
+        },
+      },
+      setBusyKey: vi.fn(),
+      setDisabledIds: vi.fn(),
+      setError: vi.fn(),
+      setWarning: vi.fn(),
+      persist,
+      notifyMapModIfNeeded: vi.fn(),
+    });
+
+    await enableSelected(["a", "b"]);
+
+    expect(notifySpy).toHaveBeenCalledTimes(1);
+    expect(notifySpy).toHaveBeenCalledWith(expect.objectContaining({ title: "2 map mods available" }));
+  });
+
+  it("skips selection writes that would change nothing (#635)", async () => {
+    const persist = vi.fn(async () => undefined);
+    const alreadyEnabled = createServerModsListMutations({
+      configuredIdsRef: { current: ["a"] },
+      disabledIdsRef: { current: [] },
+      metadata: new Map(),
+      cacheRef: { current: {} },
+      setBusyKey: vi.fn(),
+      setDisabledIds: vi.fn(),
+      setError: vi.fn(),
+      setWarning: vi.fn(),
+      persist,
+      notifyMapModIfNeeded: vi.fn(),
+    });
+    await alreadyEnabled.enableSelected(["a"]);
+    const alreadyDisabled = createServerModsListMutations({
+      configuredIdsRef: { current: ["a"] },
+      disabledIdsRef: { current: ["a"] },
+      metadata: new Map(),
+      cacheRef: { current: {} },
+      setBusyKey: vi.fn(),
+      setDisabledIds: vi.fn(),
+      setError: vi.fn(),
+      setWarning: vi.fn(),
+      persist,
+      notifyMapModIfNeeded: vi.fn(),
+    });
+    await alreadyDisabled.disableSelected(["a"]);
+
+    expect(persist).not.toHaveBeenCalled();
+  });
 });
 
 describe("useServerModsListController persistence", () => {
