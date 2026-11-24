@@ -291,11 +291,7 @@ export function createServerModsListMutations(input: Input) {
       await input.persist(configuredIds, nextDisabled, input.cacheRef.current, nextPassive);
       persisted = true;
     });
-    if (
-      !persisted &&
-      sameIdSet(input.disabledIdsRef.current, nextDisabled) &&
-      sameIdSet(readPassive(), nextPassive)
-    ) {
+    if (!persisted && sameIdSet(input.disabledIdsRef.current, nextDisabled) && sameIdSet(readPassive(), nextPassive)) {
       input.disabledIdsRef.current = previousDisabled;
       input.setDisabledIds(previousDisabled);
       writePassive(previousPassive);

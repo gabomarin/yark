@@ -19,12 +19,12 @@ Mantine packages use `styles.layer.css` so app CSS modules sit above the
 
 ## Candidate decisions
 
-| Surface                   | Decision                                       | Notes                                                                                                                                               |
-| ------------------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Backup history**        | **Adopt** (shipped first)                      | Multi-select; File title carries status color + map/type; Status/Type header filters; Date/Size/File sort + resize; row action icons + context menu |
-| **INI visual grid**       | Conditional / keep custom for now              | Needs sticky UI-category headers + in-cell editors                                                                                                  |
-| **Fleet / server events** | **Keep** Accordion                             | Narrative expand (#102); poor table fit                                                                                                             |
-| **Updates job history**   | Keep `SelectableListRow` master–detail for now | Optional later                                                                                                                                      |
+| Surface                   | Decision                                       | Notes                                                                                                                                                                                              |
+| ------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Backup history**        | **Adopt** (shipped first)                      | Multi-select; File title carries status color + map/type; Status/Type header filters; Date/Size/File sort + resize; row action icons + context menu                                                |
+| **INI visual grid**       | Conditional / keep custom for now              | Needs sticky UI-category headers + in-cell editors                                                                                                                                                 |
+| **Fleet / server events** | **Keep** Accordion                             | Narrative expand (#102); poor table fit                                                                                                                                                            |
+| **Updates job history**   | Keep `SelectableListRow` master–detail for now | Optional later                                                                                                                                                                                     |
 | **Mods inventory**        | **Adopt**                                      | Dual order (load order vs view sort); drag only when unsorted; row multi-select + selection bulk actions (#635); status filter is toolbar combobox; thumbs + icon-only actions (context menu kept) |
 
 ## Follow-ups

@@ -13,12 +13,7 @@ import { ServerModsPanelServerActions } from "./ServerModsPanelServerActions";
 import { ServerModsServerSection } from "./ServerModsServerSection";
 import { ServerModsUnverifiedAddAlert } from "./ServerModsUnverifiedAddAlert";
 import { useServerModsInventorySelection } from "./useServerModsInventorySelection";
-import {
-  buildServerRows,
-  isUnresolvedProjectStub,
-  mergeConfirmedMetadataFetch,
-  type ModRow,
-} from "./serverModsModel";
+import { buildServerRows, isUnresolvedProjectStub, mergeConfirmedMetadataFetch, type ModRow } from "./serverModsModel";
 import { inspectServerMod } from "./serverModsInspect";
 import { useServerModsAddFlow } from "./useServerModsAddFlow";
 import { useServerModsListController } from "./useServerModsListController";

@@ -25,12 +25,7 @@ export function ServerModsSelectionActions(props: Props): ReactElement {
       <Text size="sm" c="dimmed" data-mods-selection-count>
         {props.selectedCount} selected
       </Text>
-      <Button
-        size={size}
-        variant="default"
-        disabled={props.listBusy || !hasSelection}
-        onClick={props.onEnableSelected}
-      >
+      <Button size={size} variant="default" disabled={props.listBusy || !hasSelection} onClick={props.onEnableSelected}>
         Enable selected
       </Button>
       <Button

@@ -132,9 +132,7 @@ export function ServerModsServerSection(props: Props): ReactElement {
             selectedRecords={selectedRecords}
             selectionDisabled={props.busyKey !== null}
             onSelectedRecordsChange={(rows) => {
-              const visibleIdSet = new Set(
-                visibleRows.map((row) => row.id).filter((id): id is string => id !== null),
-              );
+              const visibleIdSet = new Set(visibleRows.map((row) => row.id).filter((id): id is string => id !== null));
               // Keep IDs that are selected but hidden by the inventory filter.
               const hiddenSelected = props.selectedIds.filter((id) => !visibleIdSet.has(id));
               const nextVisible = rows.map((row) => row.id).filter((id): id is string => id !== null);

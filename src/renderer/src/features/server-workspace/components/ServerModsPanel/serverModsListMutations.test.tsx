@@ -468,7 +468,9 @@ describe("createServerModsListMutations", () => {
       disabledIdsRef: { current: ["b"] },
       passiveIdsRef: { current: ["a"] },
       metadata: new Map(),
-      cacheRef: { current: { a: { id: "a" } as ModMetadata, b: { id: "b" } as ModMetadata, c: { id: "c" } as ModMetadata } },
+      cacheRef: {
+        current: { a: { id: "a" } as ModMetadata, b: { id: "b" } as ModMetadata, c: { id: "c" } as ModMetadata },
+      },
       setBusyKey: vi.fn(),
       setConfiguredIds,
       setDisabledIds: vi.fn(),
