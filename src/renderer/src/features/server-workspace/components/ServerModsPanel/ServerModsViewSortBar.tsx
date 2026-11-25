@@ -21,14 +21,16 @@ export function ServerModsViewSortBar(props: Props): ReactElement {
         </Button>
         {props.showApplySortAsLoadOrder ? (
           <Tooltip label={props.applyDisabledReason} withArrow>
-            <Button
-              variant="default"
-              leftSection={<SortAscending size={14} />}
-              disabled={props.applyDisabled}
-              onClick={props.onApplySortAsLoadOrder}
-            >
-              Apply sort as load order
-            </Button>
+            <span>
+              <Button
+                variant="default"
+                leftSection={<SortAscending size={14} />}
+                disabled={props.applyDisabled}
+                onClick={props.onApplySortAsLoadOrder}
+              >
+                Apply sort as load order
+              </Button>
+            </span>
           </Tooltip>
         ) : null}
       </Group>

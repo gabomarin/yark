@@ -66,15 +66,13 @@ export function ServerModsActionsCell(props: Props): ReactElement {
         </ActionIcon>
       </Tooltip>
       <Menu shadow="md" withinPortal position="bottom-end">
-        <Tooltip label="More actions" withArrow>
-          <span>
-            <Menu.Target>
-              <ActionIcon variant="subtle" size="sm" aria-label={`More actions ${row.name}`} disabled={props.busy}>
-                <DotsThreeVertical size={16} />
-              </ActionIcon>
-            </Menu.Target>
-          </span>
-        </Tooltip>
+        <Menu.Target>
+          <Tooltip label="More actions" withArrow>
+            <ActionIcon variant="subtle" size="sm" aria-label={`More actions ${row.name}`} disabled={props.busy}>
+              <DotsThreeVertical size={16} />
+            </ActionIcon>
+          </Tooltip>
+        </Menu.Target>
         <Menu.Dropdown>
           <RowActionMenuItems entries={menuEntries} />
         </Menu.Dropdown>
