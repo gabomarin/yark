@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { ActionIcon, Button, Group, Text, Tooltip } from "@mantine/core";
-import { Copy, Trash, X } from "@phosphor-icons/react";
+import { CheckCircle, Copy, Prohibit, Trash, X } from "@phosphor-icons/react";
 import { useUiDensity } from "@app/AppProviders";
 import { confirmRemoveSelectedMods } from "./confirmRemoveServerMod";
 import classes from "./ServerModsPanel.module.css";
@@ -33,10 +33,22 @@ export function ServerModsSelectionActions(props: Props): ReactElement {
         {props.selectedCount} selected
       </Text>
       <Group gap={4} wrap="nowrap">
-        <Button size={size} variant="default" disabled={iconsDisabled} onClick={props.onEnableSelected}>
+        <Button
+          size={size}
+          variant="default"
+          disabled={iconsDisabled}
+          leftSection={<CheckCircle size={16} />}
+          onClick={props.onEnableSelected}
+        >
           Enable
         </Button>
-        <Button size={size} variant="default" disabled={iconsDisabled} onClick={props.onDisableSelected}>
+        <Button
+          size={size}
+          variant="default"
+          disabled={iconsDisabled}
+          leftSection={<Prohibit size={16} />}
+          onClick={props.onDisableSelected}
+        >
           Disable
         </Button>
         <Tooltip label="Copy selected Project IDs" withArrow>
