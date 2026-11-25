@@ -232,7 +232,12 @@ export function ServerModsPanel(props: Props): ReactElement {
 
   return (
     <AppSurfaceCard tone="flat" fill padding={0} radius={0} className={classes.root}>
-      <ServerModsHeader activeCount={activeCount} disabledCount={disabledCount} actions={headerActions} />
+      <ServerModsHeader
+        activeCount={activeCount}
+        disabledCount={disabledCount}
+        selectedCount={selectedIds.length}
+        actions={headerActions}
+      />
       <div className={classes.content}>
         <Stack gap="md" className={classes.contentStack}>
           <SegmentedControl

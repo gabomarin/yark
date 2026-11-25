@@ -168,7 +168,7 @@ describe("ServerModsPanel", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByText("1 disabled")).toBeInTheDocument();
+    expect(screen.getByText("0 active · 1 disabled")).toBeInTheDocument();
     expect(document.querySelector('[data-mod-enabled="false"]')).not.toBeNull();
 
     await user.click(screen.getByRole("switch", { name: "Enable Svartalfheim Premium" }));
@@ -795,7 +795,7 @@ describe("ServerModsPanel", () => {
       </AppProviders>,
     );
 
-    expect(await screen.findByText("2 disabled")).toBeInTheDocument();
+    expect(await screen.findByText("0 active · 2 disabled")).toBeInTheDocument();
     await user.click(screen.getByRole("checkbox", { name: "Select mod Awesome Spyglass!" }));
     expect(await screen.findByText("1 selected")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Enable all" })).not.toBeInTheDocument();
@@ -860,7 +860,7 @@ describe("ServerModsPanel", () => {
       </AppProviders>,
     );
 
-    expect(await screen.findByText("1 disabled")).toBeInTheDocument();
+    expect(await screen.findByText("0 active · 1 disabled")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Enable all" }));
     await waitFor(() => {
@@ -925,14 +925,13 @@ describe("ServerModsPanel", () => {
 
     expect(await screen.findByText("Awesome Spyglass!")).toBeInTheDocument();
     expect(screen.getByText("Svartalfheim Premium")).toBeInTheDocument();
-    expect(screen.getByText("1 active")).toBeInTheDocument();
-    expect(screen.getByText("1 disabled")).toBeInTheDocument();
+    expect(screen.getByText("1 active · 1 disabled")).toBeInTheDocument();
 
     await user.type(screen.getByRole("textbox", { name: /Find on this server/i }), "svart");
     expect(screen.queryByText("Awesome Spyglass!")).not.toBeInTheDocument();
     expect(screen.getByText("Svartalfheim Premium")).toBeInTheDocument();
     expect(screen.getByText("1 of 2")).toBeInTheDocument();
-    expect(screen.getByText("1 active")).toBeInTheDocument();
+    expect(screen.getByText("1 active · 1 disabled")).toBeInTheDocument();
     // Toolbar Clear only — no extra “Clear filter to reorder” bar above the table.
     expect(screen.getByRole("button", { name: "Clear" })).toBeInTheDocument();
     expect(screen.queryByText(/Clear filter to reorder/i)).not.toBeInTheDocument();
