@@ -71,9 +71,8 @@ export function ServerModsServerHeaderActions(props: Props): ReactElement {
           <Button
             size={size}
             variant="default"
-            color="red"
             disabled={props.listBusy || !hasMods || props.disabledCount === 0}
-            leftSection={<Trash size={16} />}
+            leftSection={<Trash size={16} color="var(--app-color-danger-bright)" />}
             onClick={() => confirmRemoveDisabledMods(props.disabledCount, props.onRemoveAllDisabled)}
           >
             Remove all disabled

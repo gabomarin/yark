@@ -48,9 +48,8 @@ export function ServerModsSelectionActions(props: Props): ReactElement {
       <Button
         size={size}
         variant="default"
-        color="red"
         disabled={actionsDisabled}
-        leftSection={<Trash size={16} />}
+        leftSection={<Trash size={16} color="var(--app-color-danger-bright)" />}
         onClick={() => confirmRemoveSelectedMods(props.selectedCount, props.onRemoveSelected)}
       >
         Remove
