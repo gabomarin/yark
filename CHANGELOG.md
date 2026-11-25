@@ -36,6 +36,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Fixed
 
+- Server Mods pauses profile→inventory sync for the length of an optimistic enable/disable/remove write so a mid-write poll cannot clobber the mirror or skip rollback (#635).
 - Profiles whose schema version was already 30 without the Protected-backup columns can mark backups protected again after a restart (migration 31).
 - Backup history no longer silently drops rows when the ZIP was deleted outside YARK: the row stays as missing on disk (highlighted in the list), restore/export are blocked, and the server Backups panel shows a dismissable warning while any archive is missing. The File Status filter can isolate **Missing on disk**.
 - A malformed INI conflict row no longer hides the other rows in the Save conflict review (#696).

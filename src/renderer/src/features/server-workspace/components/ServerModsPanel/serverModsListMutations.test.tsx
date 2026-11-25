@@ -585,6 +585,8 @@ describe("useServerModsListController persistence", () => {
         setError: vi.fn(),
         setWarning: vi.fn(),
         setMetadata: vi.fn(),
+        profileSyncPausedRef: { current: false },
+        flushProfileSync: vi.fn(),
       }),
     );
 

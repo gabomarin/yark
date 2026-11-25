@@ -45,6 +45,8 @@ export function ServerModsPanel(props: Props): ReactElement {
     cacheRef,
     metadata,
     setMetadata,
+    profileSyncPausedRef,
+    flushProfileSync,
   } = useServerModsProfileState(props.server);
   const inspectTargetRef = useRef<string | null>(null);
   const [url, setUrl] = useState("");
@@ -127,6 +129,8 @@ export function ServerModsPanel(props: Props): ReactElement {
     setError,
     setWarning,
     setMetadata,
+    profileSyncPausedRef,
+    flushProfileSync,
   });
 
   const {

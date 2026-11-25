@@ -19,6 +19,8 @@ interface Input {
   setError: Dispatch<SetStateAction<string | null>>;
   setWarning: Dispatch<SetStateAction<string | null>>;
   setMetadata: Dispatch<SetStateAction<Map<string, ModMetadata>>>;
+  profileSyncPausedRef: MutableRefObject<boolean>;
+  flushProfileSync: () => void;
 }
 
 /**
@@ -87,6 +89,8 @@ export function useServerModsListController(input: Input) {
     setPassiveIds: input.setPassiveIds,
     setError: input.setError,
     setWarning: input.setWarning,
+    profileSyncPausedRef: input.profileSyncPausedRef,
+    flushProfileSync: input.flushProfileSync,
     persist,
     notifyMapModIfNeeded,
   });

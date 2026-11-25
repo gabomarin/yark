@@ -17,6 +17,12 @@ interface Input {
   setPassiveIds?: Dispatch<SetStateAction<string[]>>;
   setError: Dispatch<SetStateAction<string | null>>;
   setWarning: Dispatch<SetStateAction<string | null>>;
+  /**
+   * When set, optimistic writers pause profile content sync for the write so a
+   * stale poll cannot clobber the mirror or skip sameIdSet rollback (#635).
+   */
+  profileSyncPausedRef?: MutableRefObject<boolean>;
+  flushProfileSync?: () => void;
   persist: (
     nextIds: string[],
     nextDisabled: string[],
@@ -47,6 +53,19 @@ export function createServerModsListMutations(input: Input) {
   const writePassive = (next: string[]): void => {
     if (input.passiveIdsRef) input.passiveIdsRef.current = next;
     input.setPassiveIds?.(next);
+  };
+
+  /** Pause profile→mirror sync for the duration of an optimistic write. */
+  const withProfileSyncPaused = async <T>(work: () => Promise<T>): Promise<T> => {
+    const pauseRef = input.profileSyncPausedRef;
+    if (pauseRef === undefined) return work();
+    pauseRef.current = true;
+    try {
+      return await work();
+    } finally {
+      pauseRef.current = false;
+      input.flushProfileSync?.();
+    }
   };
 
   const add = async (modDetail: ModMetadata) => {
@@ -89,34 +108,36 @@ export function createServerModsListMutations(input: Input) {
       : [...new Set([...previousDisabled, id])];
     // Passive implies enabled: disabling a row drops its passive mark.
     const nextPassive = enabled ? previousPassive : previousPassive.filter((candidate) => candidate !== id);
-    input.disabledIdsRef.current = nextDisabled;
-    input.setDisabledIds(nextDisabled);
-    writePassive(nextPassive);
-    let persisted = false;
-    try {
-      await input.persist(configuredIds, nextDisabled, input.cacheRef.current, nextPassive);
-      persisted = true;
-      if (enabled) {
-        const meta = input.cacheRef.current[id] ?? input.metadata.get(id);
-        await input.notifyMapModIfNeeded(id, meta);
+    await withProfileSyncPaused(async () => {
+      input.disabledIdsRef.current = nextDisabled;
+      input.setDisabledIds(nextDisabled);
+      writePassive(nextPassive);
+      let persisted = false;
+      try {
+        await input.persist(configuredIds, nextDisabled, input.cacheRef.current, nextPassive);
+        persisted = true;
+        if (enabled) {
+          const meta = input.cacheRef.current[id] ?? input.metadata.get(id);
+          await input.notifyMapModIfNeeded(id, meta);
+        }
+      } catch (cause) {
+        /*
+         * Undo this call's own optimistic flip only: a write that landed must not be reverted
+         * because the notification after it threw, and a late failure must not clobber the
+         * value a newer toggle has already written.
+         */
+        if (
+          !persisted &&
+          sameIdSet(input.disabledIdsRef.current, nextDisabled) &&
+          sameIdSet(readPassive(), nextPassive)
+        ) {
+          input.disabledIdsRef.current = previousDisabled;
+          input.setDisabledIds(previousDisabled);
+          writePassive(previousPassive);
+        }
+        input.setError(cause instanceof Error ? cause.message : "Could not update the mod");
       }
-    } catch (cause) {
-      /*
-       * Undo this call's own optimistic flip only: a write that landed must not be reverted
-       * because the notification after it threw, and a late failure must not clobber the
-       * value a newer toggle has already written.
-       */
-      if (
-        !persisted &&
-        sameIdSet(input.disabledIdsRef.current, nextDisabled) &&
-        sameIdSet(readPassive(), nextPassive)
-      ) {
-        input.disabledIdsRef.current = previousDisabled;
-        input.setDisabledIds(previousDisabled);
-        writePassive(previousPassive);
-      }
-      input.setError(cause instanceof Error ? cause.message : "Could not update the mod");
-    }
+    });
   };
 
   /** Optimistic like {@link toggle}; passive requires the row to be enabled. */
@@ -256,18 +277,20 @@ export function createServerModsListMutations(input: Input) {
     if (selectedDisabled.length === 0) return;
     const disableSet = new Set(selectedDisabled);
     const nextDisabled = previousDisabled.filter((id) => !disableSet.has(id));
-    input.disabledIdsRef.current = nextDisabled;
-    input.setDisabledIds(nextDisabled);
-    let persisted = false;
-    await runListWrite(MODS_BULK_BUSY_KEY, "Could not enable selected mods", async () => {
-      await input.persist(input.configuredIdsRef.current, nextDisabled, input.cacheRef.current);
-      persisted = true;
-      notifyMapModsEnabled(selectedDisabled, input.cacheRef.current);
+    await withProfileSyncPaused(async () => {
+      input.disabledIdsRef.current = nextDisabled;
+      input.setDisabledIds(nextDisabled);
+      let persisted = false;
+      await runListWrite(MODS_BULK_BUSY_KEY, "Could not enable selected mods", async () => {
+        await input.persist(input.configuredIdsRef.current, nextDisabled, input.cacheRef.current);
+        persisted = true;
+        notifyMapModsEnabled(selectedDisabled, input.cacheRef.current);
+      });
+      if (!persisted && sameIdSet(input.disabledIdsRef.current, nextDisabled)) {
+        input.disabledIdsRef.current = previousDisabled;
+        input.setDisabledIds(previousDisabled);
+      }
     });
-    if (!persisted && sameIdSet(input.disabledIdsRef.current, nextDisabled)) {
-      input.disabledIdsRef.current = previousDisabled;
-      input.setDisabledIds(previousDisabled);
-    }
   };
 
   /** Selection bulk (#635): disable chosen IDs in one patch; drops passive marks on those rows. */
@@ -283,19 +306,25 @@ export function createServerModsListMutations(input: Input) {
     if (nextDisabled.length === previousDisabled.length) return;
     const selectedSet = new Set(selectedConfigured);
     const nextPassive = previousPassive.filter((id) => !selectedSet.has(id));
-    input.disabledIdsRef.current = nextDisabled;
-    input.setDisabledIds(nextDisabled);
-    writePassive(nextPassive);
-    let persisted = false;
-    await runListWrite(MODS_BULK_BUSY_KEY, "Could not disable selected mods", async () => {
-      await input.persist(configuredIds, nextDisabled, input.cacheRef.current, nextPassive);
-      persisted = true;
+    await withProfileSyncPaused(async () => {
+      input.disabledIdsRef.current = nextDisabled;
+      input.setDisabledIds(nextDisabled);
+      writePassive(nextPassive);
+      let persisted = false;
+      await runListWrite(MODS_BULK_BUSY_KEY, "Could not disable selected mods", async () => {
+        await input.persist(configuredIds, nextDisabled, input.cacheRef.current, nextPassive);
+        persisted = true;
+      });
+      if (
+        !persisted &&
+        sameIdSet(input.disabledIdsRef.current, nextDisabled) &&
+        sameIdSet(readPassive(), nextPassive)
+      ) {
+        input.disabledIdsRef.current = previousDisabled;
+        input.setDisabledIds(previousDisabled);
+        writePassive(previousPassive);
+      }
     });
-    if (!persisted && sameIdSet(input.disabledIdsRef.current, nextDisabled) && sameIdSet(readPassive(), nextPassive)) {
-      input.disabledIdsRef.current = previousDisabled;
-      input.setDisabledIds(previousDisabled);
-      writePassive(previousPassive);
-    }
   };
 
   /** Selection bulk (#635): remove chosen IDs from mods / disabled / passive / cache. One patch. */
@@ -315,32 +344,34 @@ export function createServerModsListMutations(input: Input) {
     for (const id of selectedConfigured) {
       delete nextCache[id];
     }
-    // Optimistic list update so header counts and rows move with the confirm action.
-    input.configuredIdsRef.current = nextIds;
-    input.setConfiguredIds?.(nextIds);
-    input.disabledIdsRef.current = nextDisabled;
-    input.setDisabledIds(nextDisabled);
-    writePassive(nextPassive);
-    input.cacheRef.current = nextCache;
-    let persisted = false;
-    await runListWrite(MODS_BULK_BUSY_KEY, "Could not remove selected mods", async () => {
-      await input.persist(nextIds, nextDisabled, nextCache, nextPassive);
-      persisted = true;
+    return withProfileSyncPaused(async () => {
+      // Optimistic list update so header counts and rows move with the confirm action.
+      input.configuredIdsRef.current = nextIds;
+      input.setConfiguredIds?.(nextIds);
+      input.disabledIdsRef.current = nextDisabled;
+      input.setDisabledIds(nextDisabled);
+      writePassive(nextPassive);
+      input.cacheRef.current = nextCache;
+      let persisted = false;
+      await runListWrite(MODS_BULK_BUSY_KEY, "Could not remove selected mods", async () => {
+        await input.persist(nextIds, nextDisabled, nextCache, nextPassive);
+        persisted = true;
+      });
+      if (
+        !persisted &&
+        sameIdSet(input.configuredIdsRef.current, nextIds) &&
+        sameIdSet(input.disabledIdsRef.current, nextDisabled) &&
+        sameIdSet(readPassive(), nextPassive)
+      ) {
+        input.configuredIdsRef.current = configuredIds;
+        input.setConfiguredIds?.(configuredIds);
+        input.disabledIdsRef.current = previousDisabled;
+        input.setDisabledIds(previousDisabled);
+        writePassive(previousPassive);
+        input.cacheRef.current = previousCache;
+      }
+      return persisted;
     });
-    if (
-      !persisted &&
-      sameIdSet(input.configuredIdsRef.current, nextIds) &&
-      sameIdSet(input.disabledIdsRef.current, nextDisabled) &&
-      sameIdSet(readPassive(), nextPassive)
-    ) {
-      input.configuredIdsRef.current = configuredIds;
-      input.setConfiguredIds?.(configuredIds);
-      input.disabledIdsRef.current = previousDisabled;
-      input.setDisabledIds(previousDisabled);
-      writePassive(previousPassive);
-      input.cacheRef.current = previousCache;
-    }
-    return persisted;
   };
 
   return {
