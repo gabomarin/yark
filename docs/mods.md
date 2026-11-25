@@ -120,8 +120,8 @@ Workspace → **Mods** has two views (`SegmentedControl`):
    up / down / bottom**, **Alt+↑/↓** on a focused row moves load order, and
    **Apply sort as load order** writes the current column order into `mods` in
    one patch then returns to load-order view (disabled while a filter is active).
-   The actions column keeps View details and Remove (or Add on Discover); Copy,
-   CurseForge, local folder, and Clear files live in the kebab (#638).
+   The actions column keeps View details and Remove (or Add on Discover) as
+   shortcuts; kebab and right-click share the same full action list (#638).
 10. Detail drawer / Open on CurseForge uses cached metadata or
     `mods:get-by-reference`; external open is fail-closed to a validated ASA
     CurseForge mod URL (`mods:open-curseforge`). Configured mods can also be

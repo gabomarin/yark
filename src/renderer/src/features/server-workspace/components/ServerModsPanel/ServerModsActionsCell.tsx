@@ -2,16 +2,9 @@ import type { ReactElement } from "react";
 import { ActionIcon, Group, Menu, Tooltip } from "@mantine/core";
 import { DotsThreeVertical, MagnifyingGlass, Plus, Trash } from "@phosphor-icons/react";
 import { RowActionMenuItems } from "@ui/RowActionMenu/RowActionMenuItems";
-import { normalizeRowActionEntries, type RowActionEntry } from "@ui/RowActionMenu/rowActionModel";
 import { confirmRemoveServerMod } from "./confirmRemoveServerMod";
 import { buildServerModsRowActions } from "./serverModsRowActions";
 import type { ModLoadOrderMove, ModRow } from "./serverModsModel";
-
-/**
- * Icon-primary keys stay outside the kebab. Passive has its own column.
- * Move / Copy / CurseForge / local files live in More actions (#638).
- */
-const KEBAB_OMIT_KEYS = new Set(["inspect", "add", "remove", "passive"]);
 
 interface Props {
   row: ModRow;
@@ -32,21 +25,13 @@ interface Props {
   onMoveLoadOrder?: (row: ModRow, move: ModLoadOrderMove) => void;
 }
 
-function kebabEntries(entries: RowActionEntry[]): RowActionEntry[] {
-  return normalizeRowActionEntries(
-    entries.map((entry) =>
-      entry.kind === "item" && KEBAB_OMIT_KEYS.has(entry.key) ? { ...entry, hidden: true } : entry,
-    ),
-  );
-}
-
 /**
- * Primary icons (details / add / remove) + kebab for less-used actions including
- * Move / Copy / CurseForge / local files (#638, #702).
+ * Primary icons (details / add / remove) as shortcuts. Kebab and right-click
+ * share the same full `buildServerModsRowActions` list (#638).
  */
 export function ServerModsActionsCell(props: Props): ReactElement {
   const { row } = props;
-  const allEntries = buildServerModsRowActions({
+  const menuEntries = buildServerModsRowActions({
     row,
     mode: props.mode,
     busy: props.busy,
@@ -66,8 +51,6 @@ export function ServerModsActionsCell(props: Props): ReactElement {
     onClearDownloadedFiles: props.onClearDownloadedFiles,
     onMoveLoadOrder: props.onMoveLoadOrder,
   });
-  const menuEntries = kebabEntries(allEntries);
-  const showKebab = menuEntries.some((entry) => entry.kind === "item");
 
   return (
     <Group gap={4} justify="flex-end" wrap="nowrap">
@@ -82,22 +65,20 @@ export function ServerModsActionsCell(props: Props): ReactElement {
           <MagnifyingGlass size={16} />
         </ActionIcon>
       </Tooltip>
-      {showKebab ? (
-        <Menu shadow="md" withinPortal position="bottom-end">
-          <Tooltip label="More actions" withArrow>
-            <span>
-              <Menu.Target>
-                <ActionIcon variant="subtle" size="sm" aria-label={`More actions ${row.name}`} disabled={props.busy}>
-                  <DotsThreeVertical size={16} />
-                </ActionIcon>
-              </Menu.Target>
-            </span>
-          </Tooltip>
-          <Menu.Dropdown>
-            <RowActionMenuItems entries={menuEntries} />
-          </Menu.Dropdown>
-        </Menu>
-      ) : null}
+      <Menu shadow="md" withinPortal position="bottom-end">
+        <Tooltip label="More actions" withArrow>
+          <span>
+            <Menu.Target>
+              <ActionIcon variant="subtle" size="sm" aria-label={`More actions ${row.name}`} disabled={props.busy}>
+                <DotsThreeVertical size={16} />
+              </ActionIcon>
+            </Menu.Target>
+          </span>
+        </Tooltip>
+        <Menu.Dropdown>
+          <RowActionMenuItems entries={menuEntries} />
+        </Menu.Dropdown>
+      </Menu>
       {props.mode === "discover" ? (
         <Tooltip label={row.configured ? "Already added" : `Add ${row.name}`} withArrow>
           <ActionIcon
