@@ -5,7 +5,7 @@ import type { ModMetadata, ModSearchPage, ServerProfile } from "@shared/types";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
-import { copyModCurseForgeUrl, copyModProjectId, copySelectedModProjectIds } from "./copyModRowClipboard";
+import { copyModCurseForgeUrl, copyModProjectId } from "./copyModRowClipboard";
 import { ServerModDetailDrawer } from "./ServerModDetailDrawer";
 import { ServerModsDiscoverSection } from "./ServerModsDiscoverSection";
 import { ServerModsHeader } from "./ServerModsHeader";
@@ -219,12 +219,25 @@ export function ServerModsPanel(props: Props): ReactElement {
         onEnableAll={() => void enableAll()}
         onDisableAll={() => void disableAll()}
         onRemoveAllDisabled={() => void removeAllDisabled()}
+        onEnableSelected={(ids) => void enableSelected(ids)}
+        onDisableSelected={(ids) => void disableSelected(ids)}
+        onRemoveSelected={(ids) => {
+          void removeSelected(ids).then((ok) => {
+            if (ok) clearSelection();
+          });
+        }}
+        onClearSelection={clearSelection}
       />
     ) : undefined;
 
   return (
     <AppSurfaceCard tone="flat" fill padding={0} radius={0} className={classes.root}>
-      <ServerModsHeader activeCount={activeCount} disabledCount={disabledCount} actions={headerActions} />
+      <ServerModsHeader
+        activeCount={activeCount}
+        disabledCount={disabledCount}
+        selectedCount={selectedIds.length}
+        actions={headerActions}
+      />
       <div className={classes.content}>
         <Stack gap="md" className={classes.contentStack}>
           <SegmentedControl
@@ -294,15 +307,6 @@ export function ServerModsPanel(props: Props): ReactElement {
               onClearDownloadedFiles={(row) => requestClearDownloadedFiles(row)}
               selectedIds={selectedIds}
               onSelectedIdsChange={setSelectedIds}
-              onEnableSelected={(ids) => void enableSelected(ids)}
-              onDisableSelected={(ids) => void disableSelected(ids)}
-              onCopySelected={(ids) => copySelectedModProjectIds(configuredIds, ids)}
-              onRemoveSelected={(ids) => {
-                void removeSelected(ids).then((ok) => {
-                  if (ok) clearSelection();
-                });
-              }}
-              onClearSelection={clearSelection}
             />
           ) : (
             <ServerModsDiscoverSection

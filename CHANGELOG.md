@@ -15,7 +15,7 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ### Added
 
-- Server Mods inventory supports **row selection**: a strip above the table with Enable / Disable and icon actions for Copy / Remove / Clear (tooltips on icons; Remove asks for confirm). While rows are checked, header Enable all / Disable all / Remove all disabled hide so only one action row shows; **IDs** stays. The **IDs** menu can also **Copy selected** Project IDs in load order. Selection clears on view or server switch (#635).
+- Server Mods inventory supports **row selection**: checking rows replaces header Enable all / Disable all / Remove all disabled in place with Enable / Disable and icon Remove / Clear (tooltips on icons; Remove asks for confirm). **N selected** sits on its own header line; **IDs** stays and can **Copy selected** Project IDs in load order. Selection clears on view or server switch (#635).
 - Server Mods can **Open local folder** and **Clear downloaded files** per row (table icons, context menu, and detail drawer). Clear only deletes that mod’s ASA folders after confirm so the next Start fetches them again; it stays off while the server is running (#702).
 - Server Mods can **Add Project ID** when CurseForge has no usable page for a numeric ID: the row stays on the list without metadata until **Check CurseForge again**, and Start still loads it once you enable it (#698).
 

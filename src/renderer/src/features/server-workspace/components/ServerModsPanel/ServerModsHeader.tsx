@@ -5,11 +5,14 @@ import { WorkspaceSectionHeader } from "@ui/WorkspaceSectionHeader/WorkspaceSect
 interface Props {
   activeCount: number;
   disabledCount: number;
+  /** When &gt; 0, shown on its own header toolbar line (#635). */
+  selectedCount?: number;
   /** Server-view quick actions (#637); omitted on Discover. */
   actions?: ReactNode;
 }
 
 export function ServerModsHeader(props: Props): ReactElement {
+  const selectedCount = props.selectedCount ?? 0;
   return (
     <WorkspaceSectionHeader
       title="Mods"
@@ -26,6 +29,13 @@ export function ServerModsHeader(props: Props): ReactElement {
           )}
           {props.actions}
         </Group>
+      }
+      toolbar={
+        selectedCount > 0 ? (
+          <Text size="sm" fw={600} data-mods-selection-count>
+            {selectedCount} selected
+          </Text>
+        ) : undefined
       }
     />
   );

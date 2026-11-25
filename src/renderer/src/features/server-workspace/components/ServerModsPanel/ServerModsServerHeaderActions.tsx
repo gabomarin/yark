@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import { Button, Group } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
 import { ServerModsIdsMenu } from "./ServerModsIdsMenu";
+import { ServerModsSelectionActions } from "./ServerModsSelectionActions";
 import { confirmRemoveDisabledMods } from "./confirmRemoveServerMod";
 
 interface Props {
@@ -9,23 +10,26 @@ interface Props {
   disabledIds: ReadonlySet<string>;
   disabledCount: number;
   listBusy: boolean;
-  /** Inventory selection for Copy selected in the IDs menu (#635). */
-  selectedIds?: readonly string[];
+  selectedIds: readonly string[];
   onEnableAll: () => void;
   onDisableAll: () => void;
   onRemoveAllDisabled: () => void;
+  onEnableSelected: (ids: readonly string[]) => void;
+  onDisableSelected: (ids: readonly string[]) => void;
+  onRemoveSelected: (ids: readonly string[]) => void;
+  onClearSelection: () => void;
 }
 
 /**
- * Server-view header actions: IDs menu (#634) + bulk enable/disable/remove (#637).
- * While rows are selected, Enable all / Disable all / Remove all disabled hide so the
- * selection strip above the table is the only bulk action row (#635).
+ * Server-view header actions (#634 / #637 / #635).
+ * IDs always stays. Selection replaces Enable all / Disable all / Remove all
+ * disabled in the same row — one action group. Copy selected lives in IDs.
  */
 export function ServerModsServerHeaderActions(props: Props): ReactElement {
   const density = useUiDensity();
   const size = density === "compact" ? "xs" : "sm";
   const hasMods = props.configuredIds.length > 0;
-  const selectionActive = (props.selectedIds?.length ?? 0) > 0;
+  const selectionActive = props.selectedIds.length > 0;
   return (
     <Group gap={4} wrap="nowrap">
       <ServerModsIdsMenu
@@ -34,7 +38,16 @@ export function ServerModsServerHeaderActions(props: Props): ReactElement {
         selectedIds={props.selectedIds}
         disabled={props.listBusy}
       />
-      {selectionActive ? null : (
+      {selectionActive ? (
+        <ServerModsSelectionActions
+          selectedCount={props.selectedIds.length}
+          listBusy={props.listBusy}
+          onEnableSelected={() => props.onEnableSelected(props.selectedIds)}
+          onDisableSelected={() => props.onDisableSelected(props.selectedIds)}
+          onRemoveSelected={() => props.onRemoveSelected(props.selectedIds)}
+          onClearSelection={props.onClearSelection}
+        />
+      ) : (
         <>
           <Button
             size={size}

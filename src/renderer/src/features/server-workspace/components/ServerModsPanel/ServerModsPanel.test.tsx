@@ -801,9 +801,9 @@ describe("ServerModsPanel", () => {
     expect(screen.queryByRole("button", { name: "Enable all" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Disable all" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Remove all disabled" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Copy selected Project IDs" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "IDs" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Enable" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Copy selected Project IDs" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Remove selected" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Clear selection" })).toBeInTheDocument();
 
