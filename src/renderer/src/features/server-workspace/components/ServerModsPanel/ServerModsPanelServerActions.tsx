@@ -13,6 +13,7 @@ interface Props {
   onRemoveAllDisabled: () => void;
   onEnableSelected: (ids: string[]) => void;
   onDisableSelected: (ids: string[]) => void;
+  onCopySelected: (ids: string[]) => void;
   onRemoveSelected: (ids: string[]) => void;
   onClearSelection: () => void;
 }
@@ -37,6 +38,7 @@ export function ServerModsPanelServerActions(props: Props): ReactElement {
             listBusy={props.listBusy}
             onEnableSelected={() => props.onEnableSelected(props.selectedIds)}
             onDisableSelected={() => props.onDisableSelected(props.selectedIds)}
+            onCopySelected={() => props.onCopySelected(props.selectedIds)}
             onRemoveSelected={() => props.onRemoveSelected(props.selectedIds)}
             onClearSelection={props.onClearSelection}
           />

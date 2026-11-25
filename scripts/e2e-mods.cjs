@@ -247,9 +247,9 @@ async function run() {
     await selectMod.waitFor({ state: "visible", timeout: 10000 });
     await selectMod.check();
     await page.getByText(/^\d+ selected$/).waitFor({ state: "visible", timeout: 5000 });
-    await page.getByRole("button", { name: "Disable selected", exact: true }).click();
+    await page.getByRole("button", { name: "Disable", exact: true }).click();
     await waitForModSwitchChecked(page, "Enable", false);
-    await page.getByRole("button", { name: "Enable selected", exact: true }).click();
+    await page.getByRole("button", { name: "Enable", exact: true }).click();
     await waitForModSwitchChecked(page, "Disable", true);
     await page.getByRole("button", { name: "Clear selection", exact: true }).click();
     await page.getByRole("button", { name: "Enable all", exact: true }).waitFor({ state: "visible", timeout: 5000 });

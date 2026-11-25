@@ -5,7 +5,7 @@ import type { ModMetadata, ModSearchPage, ServerProfile } from "@shared/types";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
 import { runWithFinally } from "@renderer/shared/async/runWithFinally";
-import { copyModCurseForgeUrl, copyModProjectId } from "./copyModRowClipboard";
+import { copyModCurseForgeUrl, copyModProjectId, copySelectedModProjectIds } from "./copyModRowClipboard";
 import { ServerModDetailDrawer } from "./ServerModDetailDrawer";
 import { ServerModsDiscoverSection } from "./ServerModsDiscoverSection";
 import { ServerModsHeader } from "./ServerModsHeader";
@@ -221,6 +221,7 @@ export function ServerModsPanel(props: Props): ReactElement {
         onRemoveAllDisabled={() => void removeAllDisabled()}
         onEnableSelected={(ids) => void enableSelected(ids)}
         onDisableSelected={(ids) => void disableSelected(ids)}
+        onCopySelected={(ids) => copySelectedModProjectIds(configuredIds, ids)}
         onRemoveSelected={(ids) => {
           void removeSelected(ids).then((ok) => {
             if (ok) clearSelection();

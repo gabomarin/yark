@@ -798,10 +798,13 @@ describe("ServerModsPanel", () => {
     expect(await screen.findByText("2 disabled")).toBeInTheDocument();
     await user.click(screen.getByRole("checkbox", { name: "Select mod Awesome Spyglass!" }));
     expect(await screen.findByText("1 selected")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Enable selected" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Enable" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy selected Project IDs" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove selected" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Clear selection" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Enable all" })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Enable selected" }));
+    await user.click(screen.getByRole("button", { name: "Enable" }));
     await waitFor(() => {
       expect(api.updateServerPatch).toHaveBeenCalledTimes(1);
       expect(api.updateServerPatch).toHaveBeenLastCalledWith(
@@ -814,7 +817,7 @@ describe("ServerModsPanel", () => {
       );
     });
 
-    await user.click(screen.getByRole("button", { name: "Disable selected" }));
+    await user.click(screen.getByRole("button", { name: "Disable" }));
     await waitFor(() => {
       expect(api.updateServerPatch).toHaveBeenCalledTimes(2);
       expect(api.updateServerPatch).toHaveBeenLastCalledWith(
