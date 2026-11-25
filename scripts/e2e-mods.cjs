@@ -123,9 +123,7 @@ async function openModsTab(page) {
 /** Mantine SegmentedControl radios are visually hidden — click the label text. */
 async function clickModsView(page, label) {
   const target =
-    label === "Discover mods"
-      ? page.getByText("Discover mods", { exact: true })
-      : page.getByText(/^Server mods/);
+    label === "Discover mods" ? page.getByText("Discover mods", { exact: true }) : page.getByText(/^Server mods/);
   await target.first().click({ timeout: 10000 });
 }
 
