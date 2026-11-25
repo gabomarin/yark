@@ -16,7 +16,7 @@
   flex-direction: column;
 }
 
-/* Stack fills the content pane; last child (server/discover section) grows. */
+/* Stack fills the content pane; last child (server/discover host) grows. */
 .contentStack {
   flex: 1;
   min-height: 0;
@@ -28,6 +28,26 @@
   flex: 1 1 auto;
   min-height: 0;
   min-width: 0;
+}
+
+/* Keeps Discover mounted while Server is shown so query/sort/page survive (#639). */
+.viewHost {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.viewHost > * {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.viewHost > [hidden] {
+  display: none !important;
 }
 
 .viewSelector {

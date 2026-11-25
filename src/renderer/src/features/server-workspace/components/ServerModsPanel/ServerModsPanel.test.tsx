@@ -1033,4 +1033,42 @@ describe("ServerModsPanel", () => {
       expect(writeText).toHaveBeenCalledWith("947033,962796");
     });
   });
+
+  it("hides already-added Discover rows without a re-query (#639)", async () => {
+    const api = installApi();
+    vi.mocked(api.searchMods).mockResolvedValue({
+      ok: true,
+      data: {
+        items: [awesomeDetail, superDetail],
+        pagination: { index: 0, pageSize: 50, resultCount: 2, totalCount: 2 },
+      },
+    });
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.click(screen.getByRole("radio", { name: "Discover mods" }));
+    await screen.findByText("Awesome Spyglass!");
+    expect(screen.getByText("Super Spyglass Plus")).toBeInTheDocument();
+    const searchCalls = vi.mocked(api.searchMods).mock.calls.length;
+
+    await user.click(screen.getByRole("checkbox", { name: "Hide already added" }));
+    expect(screen.queryByText("Awesome Spyglass!")).not.toBeInTheDocument();
+    expect(screen.getByText("Super Spyglass Plus")).toBeInTheDocument();
+    expect(vi.mocked(api.searchMods).mock.calls.length).toBe(searchCalls);
+  });
+
+  it("keeps Discover search when switching back from Server mods (#639)", async () => {
+    installApi();
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.click(screen.getByRole("radio", { name: "Discover mods" }));
+    const search = screen.getByRole("textbox", { name: "Search" });
+    await user.clear(search);
+    await user.type(search, "structures");
+    await user.click(screen.getByRole("radio", { name: /Server mods/i }));
+    expect(screen.getByText("Awesome Spyglass!")).toBeInTheDocument();
+    await user.click(screen.getByRole("radio", { name: "Discover mods" }));
+    expect(screen.getByRole("textbox", { name: "Search" })).toHaveValue("structures");
+  });
 });

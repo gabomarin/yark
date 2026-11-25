@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { Group, Select } from "@mantine/core";
+import { Checkbox, Group, Select } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
 import { SearchField } from "@ui/SearchField/SearchField";
 import classes from "./ServerModsPanel.module.css";
@@ -9,13 +9,16 @@ interface Props {
   searching: boolean;
   categoryValue: string;
   categoryOptions: Array<{ value: string; label: string }>;
+  /** When checked, configured catalog rows are hidden without a re-query (#639). */
+  hideAlreadyAdded: boolean;
   onQueryChange: (value: string) => void;
   onSearch: () => void;
   onCategoryChange: (value: string) => void;
+  onHideAlreadyAddedChange: (value: boolean) => void;
 }
 
 /**
- * Discover toolbar: submit SearchField + category (#297).
+ * Discover toolbar: submit SearchField + category (#297) + hide-already-added (#639).
  * Catalog sort is column headers on the table (CurseForge-wide).
  */
 export function ServerModsDiscoverToolbar(props: Props): ReactElement {
@@ -52,6 +55,14 @@ export function ServerModsDiscoverToolbar(props: Props): ReactElement {
         onChange={(value) => {
           if (value !== null) props.onCategoryChange(value);
         }}
+      />
+      <Checkbox
+        label="Hide already added"
+        size={size}
+        checked={props.hideAlreadyAdded}
+        disabled={props.searching}
+        mb={4}
+        onChange={(event) => props.onHideAlreadyAddedChange(event.currentTarget.checked)}
       />
     </Group>
   );

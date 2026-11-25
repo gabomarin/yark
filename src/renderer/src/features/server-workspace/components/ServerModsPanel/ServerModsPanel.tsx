@@ -4,13 +4,12 @@ import { isMetadataServiceNotConfiguredMessage } from "@shared/mods/curseforge-p
 import type { ModMetadata, ModSearchPage, ServerProfile } from "@shared/types";
 import { AppAlert } from "@ui/AppAlert/AppAlert";
 import { AppSurfaceCard } from "@ui/AppSurfaceCard/AppSurfaceCard";
-import { runWithFinally } from "@renderer/shared/async/runWithFinally";
+import { activateCatalogMod } from "./activateCatalogMod";
 import { copyModCurseForgeUrl, copyModProjectId } from "./copyModRowClipboard";
 import { ServerModDetailDrawer } from "./ServerModDetailDrawer";
-import { ServerModsDiscoverSection } from "./ServerModsDiscoverSection";
 import { ServerModsHeader } from "./ServerModsHeader";
 import { ServerModsServerHeaderActions } from "./ServerModsServerHeaderActions";
-import { ServerModsServerSection } from "./ServerModsServerSection";
+import { ServerModsPanelViews } from "./ServerModsPanelViews";
 import { ServerModsUnverifiedAddAlert } from "./ServerModsUnverifiedAddAlert";
 import { useServerModsInventorySelection } from "./useServerModsInventorySelection";
 import { buildServerRows, isUnresolvedProjectStub, mergeConfirmedMetadataFetch, type ModRow } from "./serverModsModel";
@@ -31,6 +30,8 @@ interface Props {
 
 export function ServerModsPanel(props: Props): ReactElement {
   const [view, setView] = useState<"server" | "discover">("server");
+  /** Keep Discover mounted after first visit so its view state survives Server ↔ Discover (#639). */
+  const [discoverVisited, setDiscoverVisited] = useState(false);
   const {
     configuredIds,
     setConfiguredIds,
@@ -58,10 +59,16 @@ export function ServerModsPanel(props: Props): ReactElement {
 
   useEffect(() => {
     setView("server");
+    setDiscoverVisited(false);
     setCatalog(null);
     setDetail(null);
     inspectTargetRef.current = null;
   }, [props.server.id]);
+
+  const openDiscover = () => {
+    setDiscoverVisited(true);
+    setView("discover");
+  };
 
   const { selectedIds, setSelectedIds, clearSelection } = useServerModsInventorySelection({
     serverId: props.server.id,
@@ -157,26 +164,6 @@ export function ServerModsPanel(props: Props): ReactElement {
     persist,
   });
 
-  const activateCatalogMod = async (mod: ModMetadata) => {
-    setBusyKey(mod.slug);
-    setError(null);
-    setWarning(null);
-    await runWithFinally(
-      async () => {
-        try {
-          const result = await window.api.getModByReference(mod.id || mod.slug);
-          if (!result.ok) throw new Error(result.error);
-          await add(result.data);
-        } catch (cause) {
-          setError(cause instanceof Error ? cause.message : "Could not add the mod");
-        }
-      },
-      () => {
-        setBusyKey(null);
-      },
-    );
-  };
-
   const openExternal = async (curseForgeUrl: string) => {
     const result = await window.api.openCurseForgeMod(curseForgeUrl);
     if (!result.ok) setError(result.error);
@@ -208,7 +195,14 @@ export function ServerModsPanel(props: Props): ReactElement {
 
   const addDiscovered = (row: ModRow) => {
     const mod = catalog?.items.find((item) => item.slug === row.slug);
-    if (mod !== undefined) void activateCatalogMod(mod);
+    if (mod === undefined) return;
+    void activateCatalogMod({
+      mod,
+      setBusyKey,
+      setError,
+      setWarning,
+      add,
+    });
   };
 
   const listBusy = busyKey !== null;
@@ -246,7 +240,7 @@ export function ServerModsPanel(props: Props): ReactElement {
         <Stack gap="md" className={classes.contentStack}>
           <SegmentedControl
             value={view}
-            onChange={(value) => setView(value as "server" | "discover")}
+            onChange={(value) => (value === "discover" ? openDiscover() : setView("server"))}
             data={[
               { value: "server", label: `Server mods (${configuredIds.length})` },
               { value: "discover", label: "Discover mods" },
@@ -281,51 +275,45 @@ export function ServerModsPanel(props: Props): ReactElement {
             onAdd={() => void addUnverifiedProjectIds()}
             onDismiss={() => setUnverifiedProjectIds([])}
           />
-          {view === "server" ? (
-            <ServerModsServerSection
-              key={props.server.id}
-              url={url}
-              busyKey={busyKey}
-              importProgress={importProgress}
-              rows={serverRows}
-              serverActive={props.serverActive}
-              localFilesById={localFilesById}
-              onUrlChange={setUrl}
-              onAdd={() => void addFromInput()}
-              onDiscover={() => setView("discover")}
-              onInspect={(row) => void inspect(row)}
-              onToggle={(id, enabled) => void toggle(id, enabled)}
-              onRemove={(id) => void remove(id)}
-              onOpenExternal={(target) => void openExternal(target)}
-              onSetPassive={(row) => {
-                if (row.id === null) return;
-                void setPassive(row.id, !row.passive);
-              }}
-              onReorder={(orderedIds) => void reorder(orderedIds)}
-              onCopyProjectId={copyModProjectId}
-              onCopyCurseForgeUrl={copyModCurseForgeUrl}
-              onOpenLocalFolder={(row) => {
-                if (row.id === null) return;
-                void openLocalFolder(row.id);
-              }}
-              onClearDownloadedFiles={(row) => requestClearDownloadedFiles(row)}
-              selectedIds={selectedIds}
-              onSelectedIdsChange={setSelectedIds}
-            />
-          ) : (
-            <ServerModsDiscoverSection
-              configuredIds={configuredIds}
-              disabledIds={disabledIds}
-              passiveIds={passiveIds}
-              metadata={metadata}
-              busyKey={busyKey}
-              onError={setError}
-              onCatalogChange={setCatalog}
-              onInspect={(row) => void inspect(row)}
-              onAdd={addDiscovered}
-              onOpenExternal={(target) => void openExternal(target)}
-            />
-          )}
+          <ServerModsPanelViews
+            serverId={props.server.id}
+            view={view}
+            discoverVisited={discoverVisited}
+            url={url}
+            busyKey={busyKey}
+            importProgress={importProgress}
+            serverRows={serverRows}
+            serverActive={props.serverActive}
+            localFilesById={localFilesById}
+            configuredIds={configuredIds}
+            disabledIds={disabledIds}
+            passiveIds={passiveIds}
+            metadata={metadata}
+            selectedIds={selectedIds}
+            onUrlChange={setUrl}
+            onAddFromInput={() => void addFromInput()}
+            onDiscover={openDiscover}
+            onInspect={(row) => void inspect(row)}
+            onToggle={(id, enabled) => void toggle(id, enabled)}
+            onRemove={(id) => void remove(id)}
+            onOpenExternal={(target) => void openExternal(target)}
+            onSetPassive={(row) => {
+              if (row.id === null) return;
+              void setPassive(row.id, !row.passive);
+            }}
+            onReorder={(orderedIds) => void reorder(orderedIds)}
+            onCopyProjectId={copyModProjectId}
+            onCopyCurseForgeUrl={copyModCurseForgeUrl}
+            onOpenLocalFolder={(row) => {
+              if (row.id === null) return;
+              void openLocalFolder(row.id);
+            }}
+            onClearDownloadedFiles={(row) => requestClearDownloadedFiles(row)}
+            onSelectedIdsChange={setSelectedIds}
+            onError={setError}
+            onCatalogChange={setCatalog}
+            onAddDiscovered={addDiscovered}
+          />
         </Stack>
       </div>
       <ServerModDetailDrawer

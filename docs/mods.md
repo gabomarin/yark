@@ -120,8 +120,9 @@ Workspace → **Mods** has two views (`SegmentedControl`):
    up / down / bottom**, **Alt+↑/↓** on a focused row moves load order, and
    **Apply sort as load order** writes the current column order into `mods` in
    one patch then returns to load-order view (disabled while a filter is active).
-   The actions column keeps View details and Remove (or Add on Discover) as
-   shortcuts; kebab and right-click share the same full action list (#638).
+   The actions column keeps shortcuts: Discover is **Add**, View details, and
+   Open CurseForge (no kebab); Server keeps View details, kebab, and Remove. On
+   Server, kebab and right-click share the same full action list (#638).
 10. Detail drawer / Open on CurseForge uses cached metadata or
     `mods:get-by-reference`; external open is fail-closed to a validated ASA
     CurseForge mod URL (`mods:open-curseforge`). Configured mods can also be
@@ -144,8 +145,13 @@ Workspace → **Mods** has two views (`SegmentedControl`):
 4. Catalog order is **column sort** on the table (Name / Downloads / Updated) —
    each click re-queries CurseForge for the full result set, not only the page.
    **Clear sort** restores Popularity descending (default browse).
-5. Add resolves the row through `mods:get-by-reference`, then persists. New IDs
+5. **Hide already added** (checkbox, off by default) filters configured rows out
+   of the current page without a re-query (#639). Turning it off shows them again.
+6. Add resolves the row through `mods:get-by-reference`, then persists. New IDs
    start disabled (same toast as Add by URL).
+7. Switching Server ↔ Discover keeps the last Discover query / category / sort /
+   page for this server session (Discover stays mounted after the first visit).
+   Changing servers resets it.
 
 A dismissible **Project ID vs Discover** hint explains that Discover is search
 and Add by ID is paste — operators can close it for this PC.
