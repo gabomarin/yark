@@ -70,6 +70,19 @@
   --mods-add-control-height: 36px;
 }
 
+/* Selection bulk strip above the table — separate from header Enable all (#635). */
+.selectionStrip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--app-space-sm);
+  padding: var(--app-space-xs) var(--app-space-sm);
+  border-radius: var(--mantine-radius-sm);
+  border: 1px solid var(--app-color-border-subtle);
+  background: var(--app-color-surface-chrome);
+}
+
 :global([data-ui-density="compact"]) .serverToolbar {
   --mods-add-control-height: 26px;
 }

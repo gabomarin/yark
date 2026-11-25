@@ -73,14 +73,14 @@ Workspace → **Mods** has two views (`SegmentedControl`):
    `servers:update-patch`; the buttons are disabled while a write is in flight
    or the list is empty. Enabling several Maps mods shows **one** aggregated map
    toast, not one per row (#634, #637).
-   While one or more inventory rows are checked, those all-actions are replaced
-   by **N selected** plus **Enable** / **Disable**, then icon buttons for
-   **Copy selected Project IDs**, **Remove selected** (confirm), and **Clear
-   selection** (each with a tooltip). Still one patch per enable/disable/remove;
-   drag stays off while the write runs; selection clears on view switch, server
-   switch, successful remove, or when a refresh drops those IDs. The **IDs**
-   menu also offers **Copy selected** (load order) alongside Copy all / enabled
-   / disabled (#635).
+   While one or more inventory rows are checked, a **selection strip** appears
+   above the table (**N selected**, **Enable** / **Disable**, then icon buttons
+   for Copy / Remove / Clear with tooltips). Header **Enable all** / **Disable
+   all** / **Remove all disabled** stay as they are — selection does not replace
+   them. Still one patch per enable/disable/remove; drag stays off while the
+   write runs; selection clears on view switch, server switch, successful
+   remove, or when a refresh drops those IDs. The **IDs** menu also offers
+   **Copy selected** (load order) alongside Copy all / enabled / disabled (#635).
 3. **Toolbar + inventory filters**. With mods on the list, **Add** (compact) and
    **Find** / **Status** share one row — Add left, filters right. Empty inventory
    keeps a prominent Add with the full paste help; compact Add exposes that help

@@ -5,6 +5,7 @@ import { PuzzlePiece } from "@phosphor-icons/react";
 import type { ModAddImportProgress } from "@shared/mods/mod-add-input";
 import { EmptyState } from "@ui/EmptyState/EmptyState";
 import { ServerModsInventoryToolbar } from "./ServerModsInventoryToolbar";
+import { ServerModsSelectionActions } from "./ServerModsSelectionActions";
 import { ServerModsTable } from "./ServerModsTable";
 import { MOD_ADD_HELP, ServerModsAddProgress, ServerModsUrlInput } from "./ServerModsUrlInput";
 import {
@@ -39,6 +40,11 @@ interface Props {
   /** Inventory multi-select (#635). */
   selectedIds: string[];
   onSelectedIdsChange: (ids: string[]) => void;
+  onEnableSelected: (ids: string[]) => void;
+  onDisableSelected: (ids: string[]) => void;
+  onCopySelected: (ids: string[]) => void;
+  onRemoveSelected: (ids: string[]) => void;
+  onClearSelection: () => void;
 }
 
 export function ServerModsServerSection(props: Props): ReactElement {
@@ -51,6 +57,8 @@ export function ServerModsServerSection(props: Props): ReactElement {
     [visibleRows, selectedIdSet],
   );
   const hasMods = props.rows.length > 0;
+  const selectionActive = props.selectedIds.length > 0;
+  const listBusy = props.busyKey !== null;
 
   return (
     <div className={classes.sectionLayout}>
@@ -81,6 +89,17 @@ export function ServerModsServerSection(props: Props): ReactElement {
           />
         )}
         {props.importProgress !== null ? <ServerModsAddProgress progress={props.importProgress} /> : null}
+        {selectionActive ? (
+          <ServerModsSelectionActions
+            selectedCount={props.selectedIds.length}
+            listBusy={listBusy}
+            onEnableSelected={() => props.onEnableSelected(props.selectedIds)}
+            onDisableSelected={() => props.onDisableSelected(props.selectedIds)}
+            onCopySelected={() => props.onCopySelected(props.selectedIds)}
+            onRemoveSelected={() => props.onRemoveSelected(props.selectedIds)}
+            onClearSelection={props.onClearSelection}
+          />
+        ) : null}
       </div>
       <div className={classes.sectionMain}>
         {!hasMods ? (
@@ -130,7 +149,7 @@ export function ServerModsServerSection(props: Props): ReactElement {
             onOpenLocalFolder={props.onOpenLocalFolder}
             onClearDownloadedFiles={props.onClearDownloadedFiles}
             selectedRecords={selectedRecords}
-            selectionDisabled={props.busyKey !== null}
+            selectionDisabled={listBusy}
             onSelectedRecordsChange={(rows) => {
               const visibleIdSet = new Set(visibleRows.map((row) => row.id).filter((id): id is string => id !== null));
               // Keep IDs that are selected but hidden by the inventory filter.

@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from "react";
+import type { ReactElement } from "react";
 import { Button, Group } from "@mantine/core";
 import { useUiDensity } from "@app/AppProviders";
 import { ServerModsIdsMenu } from "./ServerModsIdsMenu";
@@ -14,13 +14,11 @@ interface Props {
   onEnableAll: () => void;
   onDisableAll: () => void;
   onRemoveAllDisabled: () => void;
-  /** When set (selection ≥ 1), replaces Enable/Disable/Remove all (#635). */
-  selectionActions?: ReactNode;
 }
 
 /**
- * Server-view header actions: IDs menu (#634) + bulk enable/disable/remove (#637),
- * or the selection toolbar while rows are checked (#635).
+ * Server-view header actions: IDs menu (#634) + bulk enable/disable/remove (#637).
+ * Selection bulk actions live in a strip above the table (#635) — this chrome stays stable.
  */
 export function ServerModsServerHeaderActions(props: Props): ReactElement {
   const density = useUiDensity();
@@ -34,37 +32,31 @@ export function ServerModsServerHeaderActions(props: Props): ReactElement {
         selectedIds={props.selectedIds}
         disabled={props.listBusy}
       />
-      {props.selectionActions !== undefined ? (
-        props.selectionActions
-      ) : (
-        <>
-          <Button
-            size={size}
-            variant="default"
-            disabled={props.listBusy || !hasMods || props.disabledCount === 0}
-            onClick={props.onEnableAll}
-          >
-            Enable all
-          </Button>
-          <Button
-            size={size}
-            variant="default"
-            disabled={props.listBusy || !hasMods || props.disabledCount === props.configuredIds.length}
-            onClick={props.onDisableAll}
-          >
-            Disable all
-          </Button>
-          <Button
-            size={size}
-            variant="default"
-            color="red"
-            disabled={props.listBusy || !hasMods || props.disabledCount === 0}
-            onClick={() => confirmRemoveDisabledMods(props.disabledCount, props.onRemoveAllDisabled)}
-          >
-            Remove all disabled
-          </Button>
-        </>
-      )}
+      <Button
+        size={size}
+        variant="default"
+        disabled={props.listBusy || !hasMods || props.disabledCount === 0}
+        onClick={props.onEnableAll}
+      >
+        Enable all
+      </Button>
+      <Button
+        size={size}
+        variant="default"
+        disabled={props.listBusy || !hasMods || props.disabledCount === props.configuredIds.length}
+        onClick={props.onDisableAll}
+      >
+        Disable all
+      </Button>
+      <Button
+        size={size}
+        variant="default"
+        color="red"
+        disabled={props.listBusy || !hasMods || props.disabledCount === 0}
+        onClick={() => confirmRemoveDisabledMods(props.disabledCount, props.onRemoveAllDisabled)}
+      >
+        Remove all disabled
+      </Button>
     </Group>
   );
 }

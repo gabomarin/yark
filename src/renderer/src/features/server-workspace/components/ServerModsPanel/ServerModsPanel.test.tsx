@@ -798,11 +798,11 @@ describe("ServerModsPanel", () => {
     expect(await screen.findByText("2 disabled")).toBeInTheDocument();
     await user.click(screen.getByRole("checkbox", { name: "Select mod Awesome Spyglass!" }));
     expect(await screen.findByText("1 selected")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Enable all" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Enable" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Copy selected Project IDs" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Remove selected" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Clear selection" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Enable all" })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Enable" }));
     await waitFor(() => {
